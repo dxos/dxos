@@ -42,9 +42,9 @@ changes to dxos code that runs on EDGE, see [Link local dxos into edge](#link-lo
 - 1Password with the desktop app's CLI integration on (Settings → Developer). `pnpm dev:env` reads `eng-dev` and some
   legacy `CI` items, and prompts for approval, so no `op signin` is needed. With several accounts signed in, set
   `OP_ACCOUNT=<account>.1password.com`.
-- `wrangler login`, and `DX_CLOUDFLARE_TOKEN` in your environment: local EDGE opens a remote session for Workers AI.
-  If wrangler reports an expired login while `CLOUDFLARE_API_TOKEN` is set, run
-  `env -u CLOUDFLARE_API_TOKEN npx wrangler login`.
+- `wrangler login`: local EDGE opens a remote session for Workers AI. The workers' own Cloudflare token
+  (`DX_CLOUDFLARE_TOKEN`) comes from `pnpm dev:env`, not your shell. If wrangler reports an expired login while
+  `CLOUDFLARE_API_TOKEN` is set, run `env -u CLOUDFLARE_API_TOKEN npx wrangler login`.
 - Chrome for persistent Storybook stories. The Claude desktop browser blocks SharedWorker.
 - `mkcert`, only for Composer against EDGE dev.
 
@@ -211,6 +211,24 @@ Each Kai app's portal settings, set once:
 3. **Installation:** Guild Install only, install link None. Composer builds the install link itself.
 4. Don't **Reset Token** unless the 1Password value is lost; a reset invalidates the stored one.
 
+### Install Kai without signing in
+
+Kai only needs to be in your server; signing in to Discord just lists the servers you administer. Open the link for
+your EDGE, pick the server, then press refresh in the agent's **Discord** companion: the server shows as
+**Installed**.
+
+| EDGE       | Install link                                                                                            |
+| ---------- | ------------------------------------------------------------------------------------------------------- |
+| local      | <https://discord.com/oauth2/authorize?client_id=1559967387972009984&scope=bot&permissions=326417583104> |
+| dev        | <https://discord.com/oauth2/authorize?client_id=1559736753990926390&scope=bot&permissions=326417583104> |
+| preview    | <https://discord.com/oauth2/authorize?client_id=1559967457274372126&scope=bot&permissions=326417583104> |
+| production | <https://discord.com/oauth2/authorize?client_id=1555777706459660288&scope=bot&permissions=326417583104> |
+
+The permissions are the ones Composer's install link asks for: View Channels, Send Messages, Send Messages in Threads,
+Create Public Threads, Manage Threads and Read Message History. You need Manage Server in the target server. With
+**Public Bot** off, only the app's owner, or members of the Developer Team that owns it, can install it; a private
+app also needs **Installation → Install Link** set to None.
+
 ### Your own bot
 
 A team can bring its own bot instead of Kai; its token is an `AccessToken` in the space.
@@ -229,8 +247,10 @@ covers ownership, bindings and the `/discord/bots/*` routes.
 
 ### Connect an agent
 
-1. Open the agent's **Discord** companion and sign in to Discord.
-2. Pick your server. If Kai isn't **Installed**, install it with **+**.
+1. Open the agent's **Discord** companion and sign in to Discord, or skip the sign-in once Kai is in your server
+   ([install links](#install-kai-without-signing-in)).
+2. Pick your server. Signed in, a server without Kai offers **+** to install it; without signing in, only servers Kai
+   is already in appear.
 3. Connect a channel with its plug button. This creates a Discord-backed `Channel` in the agent's `AgentChannels`
    and binds it on EDGE.
 4. **Start** in the agent's **Activity** companion. The channel's status, polled every 5 s, should read
@@ -318,20 +338,21 @@ plugin-inbox's [PLUGIN.mdl](../../plugin-inbox/PLUGIN.mdl).
 
 ## Troubleshooting
 
-| Symptom                                              | Check                                                                                                                                                                                                                                                                                                                |
-| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm dev:env`: "account is not signed in"           | The 1Password app is locked or its CLI integration is off.                                                                                                                                                                                                                                                           |
-| Every EDGE request fails                             | The stack is down: `pnpm stack status`, then `pnpm stack:start`.                                                                                                                                                                                                                                                     |
-| `403 No Composer account is linked to this identity` | Composer has no `DX_HUB_URL`, or you skipped the account gate.                                                                                                                                                                                                                                                       |
-| The bot stopped answering, or your bindings vanished | Another space bound or started the same bot and took it over ([Bindings and shared bots](#bindings-and-shared-bots)).                                                                                                                                                                                                |
-| Start returns 401/403                                | Your identity isn't a member of the space, or local EDGE doesn't accept a fresh identity. For a curl test without a presentation, set `"EDGE_CONFIG": { "functions": { "noAuth": true } }` in the local-only block of `discord-service/wrangler.jsonc` (never commit it) and `PUT` as edge's agent-bot README shows. |
-| **Connect Discord** fails at Discord                 | The Composer app lacks the localhost redirect, or `pnpm dev:env` hasn't run.                                                                                                                                                                                                                                         |
-| **Install** is missing                               | Composer's EDGE origin isn't one of the four in [Environments](#environments).                                                                                                                                                                                                                                       |
-| Gateway never `ready`                                | `GET localhost:8787/discord/bots/<appId>` → `lastError`. Usually a missing token (re-run `pnpm dev:env`) or Message Content Intent off.                                                                                                                                                                              |
-| Messages arrive with no text                         | Message Content Intent is off on that Kai app.                                                                                                                                                                                                                                                                       |
-| No reply in the thread                               | Tail discord-service (the bot), compute-service (the agent process) and operation-service (the tools). Confirm `ensureChannelChat` is registered and ai-service has its key.                                                                                                                                         |
-| Bundle errors in operation-service                   | A package lacks `dist/`, or the link mixes versions: rebuild `<dxos>` and re-link with `--all`.                                                                                                                                                                                                                      |
-| Start/Stop do nothing in Composer                    | Check plugin-discord and plugin-thread are enabled and Composer is on the EDGE you think (`DX_EDGE_BASE_URL`).                                                                                                                                                                                                       |
+| Symptom                                                     | Check                                                                                                                                                                                                                                                                                                                |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm dev:env`: "account is not signed in"                  | The 1Password app is locked or its CLI integration is off.                                                                                                                                                                                                                                                           |
+| Every EDGE request fails                                    | The stack is down: `pnpm stack status`, then `pnpm stack:start`.                                                                                                                                                                                                                                                     |
+| `403 No Composer account is linked to this identity`        | Composer has no `DX_HUB_URL`, or you skipped the account gate.                                                                                                                                                                                                                                                       |
+| The bot stopped answering, or your bindings vanished        | Another space bound or started the same bot and took it over ([Bindings and shared bots](#bindings-and-shared-bots)).                                                                                                                                                                                                |
+| Start returns 401/403                                       | Your identity isn't a member of the space, or local EDGE doesn't accept a fresh identity. For a curl test without a presentation, set `"EDGE_CONFIG": { "functions": { "noAuth": true } }` in the local-only block of `discord-service/wrangler.jsonc` (never commit it) and `PUT` as edge's agent-bot README shows. |
+| "Discord setup failed: Internal server error" on local EDGE | kms-service has no `DX_HUB_SERVICE_KEYPAIR` (edge before dxos/edge#1436): `POST /oauth/initiate` returns 500. Pull an edge with the fix, re-run `pnpm dev:env` and restart, or [skip the sign-in](#install-kai-without-signing-in).                                                                                  |
+| **Connect Discord** fails at Discord                        | The Composer app lacks the localhost redirect, or `pnpm dev:env` hasn't run.                                                                                                                                                                                                                                         |
+| **Install** is missing                                      | Composer's EDGE origin isn't one of the four in [Environments](#environments).                                                                                                                                                                                                                                       |
+| Gateway never `ready`                                       | `GET localhost:8787/discord/bots/<appId>` → `lastError`. Usually a missing token (re-run `pnpm dev:env`) or Message Content Intent off.                                                                                                                                                                              |
+| Messages arrive with no text                                | Message Content Intent is off on that Kai app.                                                                                                                                                                                                                                                                       |
+| No reply in the thread                                      | Tail discord-service (the bot), compute-service (the agent process) and operation-service (the tools). Confirm `ensureChannelChat` is registered and ai-service has its key.                                                                                                                                         |
+| Bundle errors in operation-service                          | A package lacks `dist/`, or the link mixes versions: rebuild `<dxos>` and re-link with `--all`.                                                                                                                                                                                                                      |
+| Start/Stop do nothing in Composer                           | Check plugin-discord and plugin-thread are enabled and Composer is on the EDGE you think (`DX_EDGE_BASE_URL`).                                                                                                                                                                                                       |
 
 ## Without Discord or a model key
 
