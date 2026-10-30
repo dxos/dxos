@@ -14,11 +14,14 @@ import type * as Operation from './Operation.ts';
 /**
  * A lifecycle hook an agent host can run, contributed by a plugin beside its skills rather than declared on a
  * {@link Skill}, so a skill stays to the Agent Skills spec's fields. Static: a hook is code, never stored in a
- * space. A contributed hook runs only where {@link SettingsAnnotation} turns its key on.
+ * space. Whether it runs is up to its plugin's {@link SettingsAnnotation} entry (see {@link resolve}).
  */
 export type Definition = {
-  /** Stable id that settings name the hook by, e.g. `org.dxos.hook.planning.planReminder`. */
+  /** Stable id the trace names the hook by, e.g. `org.dxos.hook.planning.planReminder`. */
   key: string;
+
+  /** Id of the plugin that contributes the hook; settings turn hooks on and off by plugin. */
+  plugin: string;
 
   /**
    * When the hook fires. `end-request` is after the model has driven a request to completion: the
@@ -26,7 +29,7 @@ export type Definition = {
    */
   event: 'end-request';
 
-  /** Key of a skill that must be bound to the conversation for an enabled hook to fire; absent ⇒ any conversation. */
+  /** Key of a skill that must be bound to the conversation for the hook to fire; absent ⇒ every conversation. */
   skill?: string;
 
   /** Runs with the conversation in its environment; may return {@link Output}. */
@@ -53,42 +56,55 @@ export const Output = Schema.Struct({
 
 export type Output = Schema.Schema.Type<typeof Output>;
 
-/** Hook keys turned on (`true`) or off (`false`); a key not listed is off. */
+/** A hook as a plugin declares it; the plugin adds its id when it contributes the hook ({@link forPlugin}). */
+export type Declaration = Omit<Definition, 'plugin'>;
+
+/** `hooks` as `plugin` contributes them. */
+export const forPlugin = (plugin: string, hooks: readonly Declaration[]): Definition[] =>
+  hooks.map((hook) => ({ ...hook, plugin }));
+
+/** Plugin ids whose hooks are turned on (`true`) or off (`false`); a plugin not listed has its default. */
 export type Settings = Readonly<Record<string, boolean>>;
 
 /**
- * Which hooks run, on a space's properties (for every agent in the space, wherever it runs) and on an
- * agent's instructions (for runs with those instructions, overriding the space key by key).
+ * Which plugins' hooks run, on a space's properties (for every agent in the space, wherever it runs) and on an
+ * agent's instructions (for runs with those instructions, overriding the space plugin by plugin).
  */
 export const SettingsAnnotation = Annotation.make({
   id: 'org.dxos.annotation.hooks',
   schema: Schema.Record(Schema.String, Schema.Boolean),
 });
 
-/** Turns `hooks` on in `target`'s settings (a space's properties or an agent's instructions), keeping its other keys. */
-export const enable = (target: Obj.Unknown, hooks: readonly Definition[]): void => {
+/** Turns `plugin`'s hooks on or off in `target`'s settings (a space's properties or an agent's instructions). */
+export const setEnabled = (target: Obj.Unknown, plugin: string, enabled: boolean): void => {
   Obj.update(target, (target) => {
     const settings = Annotation.get(target, SettingsAnnotation).pipe(Option.getOrElse(() => ({})));
-    Annotation.set(target, SettingsAnnotation, {
-      ...settings,
-      ...Object.fromEntries(hooks.map((hook) => [hook.key, true])),
-    });
+    Annotation.set(target, SettingsAnnotation, { ...settings, [plugin]: enabled });
   });
 };
 
-/** The hooks enabled for one request, as the trace records them. */
+/**
+ * Whether `plugin`'s hooks run when no setting names it: only if every one of them is gated by a skill, so a
+ * host that has every plugin (EDGE) runs nothing a conversation did not opt into by binding the skill.
+ */
+export const isOnByDefault = (catalog: readonly Definition[], plugin: string): boolean =>
+  catalog.every((hook) => hook.plugin !== plugin || hook.skill !== undefined);
+
+/** The hooks one request runs, and what the trace records about the rest. */
 export type Resolution = {
-  /** Enabled, available on this host, and their skill condition holds. */
+  /** On, available on this host, and their skill condition holds. */
   run: Definition[];
-  /** Enabled and available, but their skill is not bound. */
+  /** Keys of the hooks in `run` that are on by their plugin's default rather than a setting. */
+  byDefault: string[];
+  /** Keys of hooks a setting turns on whose skill is not bound. */
   inactive: string[];
-  /** Enabled, but this host has no hook with the key (e.g. its plugin is not enabled here). */
+  /** Plugins a setting turns on that contribute no hook on this host (e.g. not enabled here). */
   missing: string[];
 };
 
 /**
- * The hooks for `event` that `space` and `instructions` turn on, sorted by what this host can do with each.
- * Hooks run in catalog order.
+ * The hooks for `event` whose plugin `space` and `instructions` leave on, given the skills bound to the
+ * conversation. Hooks run in catalog order.
  */
 export const resolve = ({
   catalog,
@@ -103,20 +119,27 @@ export const resolve = ({
   instructions?: Settings;
   skillKeys: ReadonlySet<string>;
 }): Resolution => {
-  const settings = { ...space, ...instructions };
-  const enabled = new Set(Object.keys(settings).filter((key) => settings[key]));
+  const settings: Settings = { ...space, ...instructions };
   const resolution: Resolution = {
     run: [],
+    byDefault: [],
     inactive: [],
-    missing: [...enabled].filter((key) => !catalog.some((hook) => hook.key === key)).sort(),
+    missing: Object.keys(settings)
+      .filter((plugin) => settings[plugin] && !catalog.some((hook) => hook.plugin === plugin))
+      .sort(),
   };
   for (const hook of catalog) {
-    if (enabled.has(hook.key) && hook.event === event) {
-      if (hook.skill === undefined || skillKeys.has(hook.skill)) {
-        resolution.run.push(hook);
-      } else {
-        resolution.inactive.push(hook.key);
+    const setting = settings[hook.plugin];
+    if (hook.event !== event || !(setting ?? isOnByDefault(catalog, hook.plugin))) {
+      continue;
+    }
+    if (hook.skill === undefined || skillKeys.has(hook.skill)) {
+      resolution.run.push(hook);
+      if (setting === undefined) {
+        resolution.byDefault.push(hook.key);
       }
+    } else if (setting !== undefined) {
+      resolution.inactive.push(hook.key);
     }
   }
   return resolution;

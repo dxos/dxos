@@ -18,10 +18,9 @@ import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Chat from '@dxos/assistant/Chat';
 import { ProcessManager } from '@dxos/compute-runtime';
 import * as Hook from '@dxos/compute/Hook';
-import * as Instructions from '@dxos/compute/Instructions';
 import * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, Feed, Obj } from '@dxos/echo';
+import { Feed, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import * as Observability from '@dxos/observability/Observability';
@@ -32,6 +31,7 @@ import { AssistantOperationHandlerSet } from '#operations';
 import { TurnReviewSkill } from '#skills';
 import { type Assistant, AssistantCapabilities } from '#types';
 
+import { AssistantNamespace } from '../namespace.ts';
 import { REVIEW_SYSTEM_PROMPT, STRUGGLE_EVENT, type TurnVerdict } from '../review/turn-review.ts';
 
 EntityId.dangerouslyDisableRandomness();
@@ -104,9 +104,9 @@ const setup = ({ reportStruggles, telemetry }: { reportStruggles: boolean; telem
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: AssistantOperationHandlerSet,
-  types: [Chat.Chat, Feed.Feed, Instructions.Instructions, Message.Message, Skill.Skill],
+  types: [Chat.Chat, Feed.Feed, Message.Message, Skill.Skill],
   skills: [TurnReviewSkill.make()],
-  agent: { hooks: () => TurnReviewSkill.hooks },
+  agent: { hooks: () => Hook.forPlugin(AssistantNamespace.key, TurnReviewSkill.hooks) },
   // The reviewer gets the verdict; the conversational turn gets a plain reply.
   aiService: ScriptedLanguageModel.scriptedAiService((request) => ({
     parts: [
@@ -122,9 +122,7 @@ const MODEL = DXN.make('com.anthropic.model.claude-sonnet-5.default');
 
 /** Runs one turn with the turn-review skill bound and waits for the agent process, hooks included, to finish. */
 const runTurn = Effect.fnUntraced(function* () {
-  const instructions = yield* Database.add(Instructions.make({}));
-  Hook.enable(instructions, TurnReviewSkill.hooks);
-  const session = yield* AgentService.createSession({ skills: [TurnReviewSkill.make()], model: MODEL, instructions });
+  const session = yield* AgentService.createSession({ skills: [TurnReviewSkill.make()], model: MODEL });
   yield* session.submitPrompt('Find my notes.');
   yield* session.waitForCompletion();
   const processManager = yield* ProcessManager.ProcessManagerService;

@@ -333,8 +333,8 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           yield* ctx.setAlarm(0);
         });
 
-        // Snapshots the end-request hooks the settings turn on for the request now beginning, and records any
-        // enabled hook this host lacks or whose skill is not bound, so a hook that did not run is still on file.
+        // Snapshots the end-request hooks for the request now beginning, and records why each runs and any plugin a
+        // setting turns on that this host lacks, so a hook that did not run is still on file.
         const resolveRequestHooks = Effect.gen(function* () {
           const [properties] = yield* Database.query(Filter.type(DXN.make(SPACE_PROPERTIES_TYPENAME))).run;
           const resolution = Hook.resolve({

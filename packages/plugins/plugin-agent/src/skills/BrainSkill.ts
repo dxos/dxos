@@ -86,6 +86,6 @@ export const make = (): Skill.Skill =>
   });
 
 /** Fires after every turn: the turn's facts are recorded first, so a trigger sees what was just said. */
-export const hooks: Hook.Definition[] = [
+export const hooks: Hook.Declaration[] = [
   { key: 'org.dxos.hook.agent.runTriggers', event: 'end-request', skill: key, operation: RunTriggers },
 ];

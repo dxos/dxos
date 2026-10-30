@@ -45,6 +45,6 @@ export const make = (): Skill.Skill =>
   });
 
 /** Runs in the background, so the user never waits on the review. */
-export const hooks: Hook.Definition[] = [
+export const hooks: Hook.Declaration[] = [
   { key: 'org.dxos.hook.assistant.turnReview', event: 'end-request', skill: key, operation: AnalyzeTurn, async: true },
 ];

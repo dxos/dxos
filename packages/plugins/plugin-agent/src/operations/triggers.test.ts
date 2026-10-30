@@ -12,6 +12,7 @@ import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Evaluator from '@dxos/brain/Evaluator';
 import * as AgentService from '@dxos/compute/AgentService';
+import * as Hook from '@dxos/compute/Hook';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
@@ -39,6 +40,7 @@ import {
 } from '#types';
 
 import { TEST_MEMBERS, createLocalAgent, makeTestBrain, noChannelBackends, testSpaceLayer } from '../brain/testing.ts';
+import { AgentNamespace } from '../namespace.ts';
 import { RELAY_RULES } from '../skills/relay-rules.ts';
 import { TriggerRegistry } from '../triggers.ts';
 import { COMPOSE_PROMPT } from './compose-update.ts';
@@ -316,7 +318,7 @@ const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
         Message.Message,
       ],
       skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make(), BrainSkill.make()],
-      agent: { hooks: () => BrainSkill.hooks },
+      agent: { hooks: () => Hook.forPlugin(AgentNamespace.key, BrainSkill.hooks) },
       extraServices: Layer.mergeAll(brain.layer, testSpaceLayer, noChannelBackends),
       aiService: ScriptedLanguageModel.scriptedAiService(makeScript(refs)),
     }),
@@ -663,7 +665,7 @@ const PostedTestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
         Message.Message,
       ],
       skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make(), BrainSkill.make()],
-      agent: { hooks: () => BrainSkill.hooks },
+      agent: { hooks: () => Hook.forPlugin(AgentNamespace.key, BrainSkill.hooks) },
       extraServices: Layer.mergeAll(brain.layer, testSpaceLayer, noChannelBackends),
       aiService: ScriptedLanguageModel.scriptedAiService(makePostedScript(postedRefs)),
     }),

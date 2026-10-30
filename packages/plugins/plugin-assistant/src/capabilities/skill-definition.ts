@@ -18,11 +18,14 @@ import * as MemorySkill from '@dxos/assistant-toolkit/MemorySkill';
 import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
 import * as WebSearchSkill from '@dxos/assistant-toolkit/WebSearchSkill';
+import * as Hook from '@dxos/compute/Hook';
 import * as RegistryPlugin from '@dxos/plugin-registry/RegistryPlugin';
 import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 
 import { AssistantSkill, PluginManagerSkill, TurnReviewSkill } from '#skills';
+
+import { AssistantNamespace } from '../namespace.ts';
 
 const skillDefinition = Effect.fnUntraced(function* () {
   const manager = yield* Plugin.Service;
@@ -50,7 +53,10 @@ const skillDefinition = Effect.fnUntraced(function* () {
       AlarmSkill,
       TurnReviewSkill,
     ]),
-    Capability.contributeAll(AppCapabilities.HookDefinition, [...PlanningSkill.hooks, ...TurnReviewSkill.hooks]),
+    Capability.contributeAll(
+      AppCapabilities.HookDefinition,
+      Hook.forPlugin(AssistantNamespace.key, [...PlanningSkill.hooks, ...TurnReviewSkill.hooks]),
+    ),
 
     // Run the conversational agent as a supervisor: delegate in-progress plan tasks to sub-agents
     // and fold their results back into the conversation (consumed by the AgentService LayerSpec).

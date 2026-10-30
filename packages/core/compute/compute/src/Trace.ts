@@ -677,12 +677,14 @@ export const AgentRequestEnd = EventType('assistant.agentRequestEnd', {
 });
 
 /**
- * The end-request hooks a request's settings turn on, resolved when it begins (see `Hook.resolve`).
- * Written only when a hook is enabled, so the record of a hook that could not run here outlives the run.
+ * The end-request hooks a request runs, resolved when it begins (see `Hook.resolve`): which ran by their plugin's
+ * default, which a setting turned on but whose skill is unbound, and which plugins a setting turned on that this
+ * host lacks. Written only when one of those is non-empty.
  */
 export const AgentHooksResolved = EventType('assistant.agentHooksResolved', {
   schema: Schema.Struct({
     run: Schema.Array(Schema.String),
+    byDefault: Schema.Array(Schema.String),
     inactive: Schema.Array(Schema.String),
     missing: Schema.Array(Schema.String),
   }),

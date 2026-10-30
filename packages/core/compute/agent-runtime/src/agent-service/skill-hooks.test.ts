@@ -15,7 +15,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
-import { Annotation, Database, Feed, Filter, Obj } from '@dxos/echo';
+import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { Message } from '@dxos/types';
@@ -46,6 +46,12 @@ const QuickHook = Operation.make({
 
 const FailingHook = Operation.make({
   meta: { key: DXN.make('com.example.operation.failingHook'), name: 'Failing hook' },
+  input: Schema.Struct({}),
+  output: Schema.Void,
+});
+
+const EveryAgentHook = Operation.make({
+  meta: { key: DXN.make('com.example.operation.everyAgentHook'), name: 'Every-agent hook' },
   input: Schema.Struct({}),
   output: Schema.Void,
 });
@@ -84,6 +90,7 @@ const handlers = OperationHandlerSet.make(
   ),
   FailingHook.pipe(Operation.withHandler(() => Effect.die(new Error('hook failed')))),
   QuickHook.pipe(Operation.withHandler(() => Effect.sync(() => void hookLog.events.push('quick')))),
+  EveryAgentHook.pipe(Operation.withHandler(() => Effect.sync(() => void hookLog.events.push('every-agent')))),
   // Asks for one more turn, then lets the request end.
   FollowUpHook.pipe(
     Operation.withHandler(() =>
@@ -101,7 +108,12 @@ const FailingHookSkill = Skill.make({ key: 'com.example.skill.failingHooks', nam
 const QuickHookSkill = Skill.make({ key: 'com.example.skill.quickHooks', name: 'Quick hooks' });
 const FollowUpSkill = Skill.make({ key: 'com.example.skill.followUp', name: 'Follow-up' });
 
-const hook = (skill: Skill.Skill, operation: Operation.Definition.Any, async = false): Hook.Definition => ({
+// Every hook here names a skill, so the plugin's hooks are on by default.
+const SKILL_HOOKS = 'com.example.plugin.skillHooks';
+// Its hook runs for every agent, so the plugin's hooks are off until a setting turns them on.
+const EVERY_AGENT = 'com.example.plugin.everyAgent';
+
+const hook = (skill: Skill.Skill, operation: Operation.Definition.Any, async = false): Hook.Declaration => ({
   key: `${String(operation.meta.key)}.hook`,
   event: 'end-request',
   skill: Skill.getKey(skill),
@@ -110,11 +122,16 @@ const hook = (skill: Skill.Skill, operation: Operation.Definition.Any, async = f
 });
 
 const HOOKS = [
-  hook(HookSkill, InlineHook),
-  hook(HookSkill, BackgroundHook, true),
-  hook(FailingHookSkill, FailingHook, true),
-  hook(QuickHookSkill, QuickHook, true),
-  hook(FollowUpSkill, FollowUpHook),
+  ...Hook.forPlugin(SKILL_HOOKS, [
+    hook(HookSkill, InlineHook),
+    hook(HookSkill, BackgroundHook, true),
+    hook(FailingHookSkill, FailingHook, true),
+    hook(QuickHookSkill, QuickHook, true),
+    hook(FollowUpSkill, FollowUpHook),
+  ]),
+  ...Hook.forPlugin(EVERY_AGENT, [
+    { key: 'com.example.hook.everyAgent', event: 'end-request', operation: EveryAgentHook },
+  ]),
 ];
 
 const TestLayer = AssistantTestLayer({
@@ -125,25 +142,22 @@ const TestLayer = AssistantTestLayer({
   agent: { hooks: () => HOOKS },
 });
 
-/** Instructions whose hook settings are `settings`. */
-const withHooks = Effect.fnUntraced(function* (settings: Hook.Settings) {
-  const instructions = yield* Database.add(Instructions.make({}));
-  Obj.update(instructions, (instructions) => Annotation.set(instructions, Hook.SettingsAnnotation, settings));
-  return instructions;
-});
-
-/** Instructions with every hook in the catalog turned on. */
-const allHooks = Effect.fnUntraced(function* () {
-  const instructions = yield* Database.add(Instructions.make({}));
-  Hook.enable(instructions, HOOKS);
-  return instructions;
-});
-
 /** The agent process serving the session's chat. */
 const agentProcess = Effect.fnUntraced(function* (session: { chat: Obj.Unknown }) {
   const processManager = yield* ProcessManager.ProcessManagerService;
   const [handle] = yield* processManager.list({ target: Obj.getURI(session.chat), key: AGENT_PROCESS_KEY });
   return handle;
+});
+
+/** Runs one request with `QuickHookSkill` bound and waits for its process, background hooks included, to finish. */
+const runQuickRequest = Effect.fnUntraced(function* (instructions?: Instructions.Instructions) {
+  const session = yield* AgentService.createSession({ skills: [QuickHookSkill], instructions });
+  yield* session.submitPrompt('Hello.');
+  yield* session.waitForCompletion();
+  const handle = yield* agentProcess(session);
+  yield* Effect.promise(async () => {
+    await expect.poll(() => handle.status.state, { timeout: 5_000 }).toBe(Process.State.SUCCEEDED);
+  });
 });
 
 describe('end-request hooks', () => {
@@ -155,7 +169,7 @@ describe('end-request hooks', () => {
     'a background hook does not hold up the request, and the process awaits it before finishing',
     Effect.fnUntraced(
       function* (_) {
-        const session = yield* AgentService.createSession({ skills: [HookSkill], instructions: yield* allHooks() });
+        const session = yield* AgentService.createSession({ skills: [HookSkill] });
         yield* session.submitPrompt('Hello.');
         yield* session.waitForCompletion();
 
@@ -179,7 +193,7 @@ describe('end-request hooks', () => {
     "a hook's follow-up is queued as the next prompt and continues the request",
     Effect.fnUntraced(
       function* (_) {
-        const session = yield* AgentService.createSession({ skills: [FollowUpSkill], instructions: yield* allHooks() });
+        const session = yield* AgentService.createSession({ skills: [FollowUpSkill] });
         yield* session.submitPrompt('Hello.');
         yield* session.waitForCompletion();
 
@@ -201,18 +215,9 @@ describe('end-request hooks', () => {
     'a background hook that finishes at once still lets the process finish',
     Effect.fnUntraced(
       function* (_) {
-        const session = yield* AgentService.createSession({
-          skills: [QuickHookSkill],
-          instructions: yield* allHooks(),
-        });
-        yield* session.submitPrompt('Hello.');
-        yield* session.waitForCompletion();
-
-        const handle = yield* agentProcess(session);
-        yield* Effect.promise(async () => {
-          await expect.poll(() => handle.status.state, { timeout: 5_000 }).toBe(Process.State.SUCCEEDED);
-        });
-        // Only this skill's hook fired: the others are scoped to skills the session did not bind.
+        yield* runQuickRequest();
+        // Only this skill's hook fired: the others are scoped to skills the session did not bind, and the
+        // every-agent hook's plugin is off with no setting.
         expect(hookLog.events).toEqual(['quick']);
       },
       Effect.provide(TestLayer),
@@ -224,10 +229,7 @@ describe('end-request hooks', () => {
     'a failing background hook still lets the process finish',
     Effect.fnUntraced(
       function* (_) {
-        const session = yield* AgentService.createSession({
-          skills: [FailingHookSkill],
-          instructions: yield* allHooks(),
-        });
+        const session = yield* AgentService.createSession({ skills: [FailingHookSkill] });
         yield* session.submitPrompt('Hello.');
         yield* session.waitForCompletion();
 
@@ -242,37 +244,21 @@ describe('end-request hooks', () => {
   );
 
   it.effect(
-    'a hook no setting turns on does not fire',
+    'the space turns plugins on and off, and the instructions override it plugin by plugin',
     Effect.fnUntraced(
       function* (_) {
-        const session = yield* AgentService.createSession({ skills: [QuickHookSkill] });
-        yield* session.submitPrompt('Hello.');
-        yield* session.waitForCompletion();
+        const properties = yield* Database.add(Obj.make(SpaceProperties, {}));
+        Hook.setEnabled(properties, SKILL_HOOKS, false);
+        Hook.setEnabled(properties, EVERY_AGENT, true);
+        yield* runQuickRequest();
+        expect(hookLog.events).toEqual(['every-agent']);
 
-        const handle = yield* agentProcess(session);
-        yield* Effect.promise(async () => {
-          await expect.poll(() => handle.status.state, { timeout: 5_000 }).toBe(Process.State.SUCCEEDED);
-        });
-        expect(hookLog.events).toEqual([]);
-      },
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-  );
-
-  it.effect(
-    "the space's settings apply, and the instructions override them key by key",
-    Effect.fnUntraced(
-      function* (_) {
-        const [inline, background] = HOOKS;
-        Hook.enable(yield* Database.add(Obj.make(SpaceProperties, {})), [inline, background]);
-        const instructions = yield* withHooks({ [background.key]: false });
-
-        const session = yield* AgentService.createSession({ skills: [HookSkill], instructions });
-        yield* session.submitPrompt('Hello.');
-        yield* session.waitForCompletion();
-
-        expect(hookLog.events).toEqual(['inline']);
+        hookLog = makeHookLog();
+        const instructions = yield* Database.add(Instructions.make({}));
+        Hook.setEnabled(instructions, SKILL_HOOKS, true);
+        Hook.setEnabled(instructions, EVERY_AGENT, false);
+        yield* runQuickRequest(instructions);
+        expect(hookLog.events).toEqual(['quick']);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
