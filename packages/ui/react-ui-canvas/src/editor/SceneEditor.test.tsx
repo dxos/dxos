@@ -28,7 +28,12 @@ const config = (dim: Scene.Dimension): DimensionConfig<{ zoom: number }> => ({
     { id: dim === '3d' ? 'cube' : 'rect', icon: 'ph--square--regular', label: 'Shape', category: 'create' },
   ],
   geometry: { pasteOffset: (pasted) => ({ x: pasted, y: pasted }), snap: { move: 1 } },
-  camera: { fit: (camera) => camera, zoom: (camera, factor) => ({ zoom: camera.zoom / factor }), percent: () => 100 },
+  camera: {
+    fit: (camera) => camera,
+    reset: (authored) => ({ zoom: authored.zoom * 3 }),
+    zoom: (camera, factor) => ({ zoom: camera.zoom / factor }),
+    percent: () => 100,
+  },
   display: { themes: [{ id: 'default', label: 'Default' }], grids: ['lines'], guides: dim === '2d' },
   propertyForm: () => null,
 });
@@ -45,10 +50,12 @@ const Editor = ({
   dim,
   role,
   onDisplayChange,
+  onCameraChange = () => {},
 }: {
   dim: Scene.Dimension;
   role?: string;
   onDisplayChange?: (display: Partial<EditorDisplay>) => void;
+  onCameraChange?: (camera: { zoom: number }) => void;
 }) => (
   <SceneEditor.Root
     config={config(dim)}
@@ -60,7 +67,7 @@ const Editor = ({
     onDisplayChange={onDisplayChange}
     camera={{ zoom: 1 }}
     authoredCamera={{ zoom: 1 }}
-    onCameraChange={() => {}}
+    onCameraChange={onCameraChange}
     onReadonlyChange={() => {}}
   >
     <SceneEditor.Viewport>
@@ -106,5 +113,12 @@ describe('SceneEditor', () => {
     await userEvent.click(screen.getByTestId('toolbar-axes'));
     expect(onDisplayChange).toHaveBeenLastCalledWith({ axes: true });
     expect(screen.getByTestId('viewport').dataset.grid).toBe('true');
+  });
+
+  test("Actual size returns to the dimension's reset camera, which frames the content at the authored scale", async () => {
+    const onCameraChange = vi.fn();
+    render(<Editor dim='2d' onCameraChange={onCameraChange} />);
+    await userEvent.click(screen.getByTestId('toolbar-zoom-reset'));
+    expect(onCameraChange).toHaveBeenLastCalledWith({ zoom: 3 });
   });
 });

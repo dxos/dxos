@@ -7,13 +7,13 @@ import React, { type ComponentType } from 'react';
 
 import {
   type Camera,
-  type CanvasPropertiesProps,
   CanvasPropertiesForm,
+  type CanvasPropertiesProps,
   type CanvasServices,
   CanvasServicesProvider,
   type DimensionConfig,
-  type PropertyFormProps,
   MAX_ZOOM,
+  type PropertyFormProps,
   createPropertyForm,
   defaultThemeRegistry,
   fitBounds,
@@ -115,6 +115,18 @@ export const createConfig2D = ({
       fit: (camera, document, layout, size) => {
         const bounds = layoutBounds(document, layout);
         return bounds && size.width > 0 ? fitBounds(bounds, size, FIT_INSET, 1) : camera;
+      },
+      reset: (authored, document, layout, size) => {
+        const bounds = layoutBounds(document, layout);
+        if (!bounds || size.width <= 0) {
+          return authored;
+        }
+        const { zoom } = authored;
+        return {
+          zoom,
+          x: size.width / (2 * zoom) - (bounds.x + bounds.width / 2),
+          y: size.height / (2 * zoom) - (bounds.y + bounds.height / 2),
+        };
       },
       // About the view's centre, as the camera bar's buttons zoom.
       zoom: (camera, factor) => zoomAt(camera, { x: 0, y: 0 }, Math.min(MAX_ZOOM, camera.zoom / factor)),

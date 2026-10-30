@@ -167,6 +167,11 @@ export const config3d: DimensionConfig<Scene.Camera3D> = {
       const elements = record?.dim === '3d' ? resolveLayout3D(document, record) : {};
       return fitCamera(camera, bounds3D(elements), size);
     },
+    reset: (authored, document, layout) => {
+      const record = findLayout(document, layout);
+      const bounds = bounds3D(record?.dim === '3d' ? resolveLayout3D(document, record) : {});
+      return bounds.radius > 0 ? { ...authored, target: { ...bounds.center } } : authored;
+    },
     zoom: zoomBy,
     percent: zoomPercent,
   },

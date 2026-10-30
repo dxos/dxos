@@ -72,4 +72,9 @@ describe('config3d', () => {
     expect(intents).toEqual([{ kind: 'join', id: 'union-1', operands: ['a', 'b'] }]);
     expect(selected).toEqual(['union-1']);
   });
+
+  test('reset keeps the authored view and its distance, looking at the middle of the content', () => {
+    const reset = config3d.camera.reset(CAMERA, document, 'root', { width: 800, height: 600 });
+    expect(reset).toEqual({ ...CAMERA, target: { x: 11, y: 0, z: 0 } });
+  });
 });

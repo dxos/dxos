@@ -65,7 +65,7 @@ const CONFIG: DimensionConfig = {
   viewport: TestViewport,
   tools: [],
   geometry: { pasteOffset: (pasted) => ({ x: pasted, y: 0, z: pasted }), snap: { move: 1 } },
-  camera: { fit: (camera) => camera, zoom: (camera) => camera, percent: () => 100 },
+  camera: { fit: (camera) => camera, reset: (camera) => camera, zoom: (camera) => camera, percent: () => 100 },
   display: { themes: [], grids: ['lines'], guides: false },
   propertyForm: () => null,
 };

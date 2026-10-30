@@ -324,7 +324,8 @@ const SceneEditorRoot = <C,>({
             actions: {
               fit: () => layout && onCameraChange(config.camera.fit(current, document, layout, size)),
               fitting: false,
-              zoomReset: () => onCameraChange(authoredCamera),
+              zoomReset: () =>
+                onCameraChange(layout ? config.camera.reset(authoredCamera, document, layout, size) : authoredCamera),
               zoomIn: () => onCameraChange(config.camera.zoom(current, 1 / ZOOM_STEP)),
               zoomOut: () => onCameraChange(config.camera.zoom(current, ZOOM_STEP)),
             },
