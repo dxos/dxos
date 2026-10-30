@@ -23,8 +23,9 @@ import {
   setKey,
   setPath,
 } from '@dxos/animation';
+import { type Node } from '@dxos/scene';
 
-import { BASE_ANIMATABLE, type Intent, type Node, type NodeValues, type View, sampleView } from '../model/index.ts';
+import { BASE_ANIMATABLE, type Intent, type NodeValues, type View, sampleView } from '../model/index.ts';
 import { resizeNode } from '../utils/index.ts';
 import { type Projection } from './projection.ts';
 

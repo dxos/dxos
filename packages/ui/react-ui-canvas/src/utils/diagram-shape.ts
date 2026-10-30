@@ -9,9 +9,17 @@
 //
 
 import { Diagnostics, Scene as Dsl, SvgFile, UmlGrid } from '@dxos/diagram';
-import { type Bounds, type Point, Shape } from '@dxos/scene';
+import {
+  type Bounds,
+  type DiagramConnector,
+  type DiagramNode,
+  type Link,
+  type Node,
+  type Point,
+  Shape,
+  isDiagramNode,
+} from '@dxos/scene';
 
-import { type DiagramConnector, type DiagramNode, type Link, type Node, isDiagramNode } from '../model/index.ts';
 import { nodeBounds } from './shapes.ts';
 
 /** How far (scene px) a route's end may sit from its node's outline and still be the route the layout gave it. */

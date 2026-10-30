@@ -25,28 +25,29 @@ import {
   type RefFieldDataProps,
 } from '@dxos/react-ui-form';
 import * as Input from '@dxos/react-ui/Input';
-import { BaseNode, type Layer, type NodeStyle, type StyleClass, type StyleMap } from '@dxos/scene';
+import {
+  BaseNode,
+  CurveLink,
+  type Element,
+  type Layer,
+  LineLink,
+  type LinkType,
+  type Node,
+  type NodeStyle,
+  SmartLink,
+  SplineLink,
+  type StyleClass,
+  type StyleMap,
+  isLink,
+  isNoteNode,
+  isViewNode,
+  showsContents,
+} from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 import { type CanvasAtoms, type Projection } from '../../../engine/index.ts';
 import { SCENE_OVERLAY_ATTRIBUTE, useRegistry } from '../../../hooks/index.ts';
-import {
-  CurveLink,
-  type Element,
-  LineLink,
-  type LinkType,
-  NO_STYLES,
-  type Node,
-  type NodeRegistry,
-  SmartLink,
-  SplineLink,
-  getElement,
-  isLink,
-  isNoteNode,
-  isViewNode,
-  nodeDef,
-  showsContents,
-} from '../../../model/index.ts';
+import { NO_STYLES, type NodeRegistry, getElement, nodeDef } from '../../../model/index.ts';
 import {
   type ViewOption,
   classedLink,

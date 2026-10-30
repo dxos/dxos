@@ -17,7 +17,6 @@ import {
   type FreehandProjectionOptions,
   type GraphModel,
   type LatticeSpec,
-  type Node,
   type NodeViewProps,
   type Overlay,
   createCanvasAtoms,
@@ -28,7 +27,7 @@ import {
   defaultNodeTypes,
 } from '@dxos/react-ui-canvas/scene';
 import * as Layout from '@dxos/react-ui/Layout';
-import { type Point, nodeBase } from '@dxos/scene';
+import { type Node, type Point, nodeBase } from '@dxos/scene';
 
 import { FeatureCard, type FeatureLookup, type FeatureModel, makeFeatureLookup } from '../FeatureCard/index.ts';
 

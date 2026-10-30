@@ -3,19 +3,19 @@
 //
 
 import {
-  type BuiltinNodeType,
   DEFAULT_LAYER,
-  type Link,
-  type LinkType,
   type MemoryViewStore,
-  type Node,
   type View,
   createMemoryStore,
   createNode,
   initialKeys,
 } from '@dxos/react-ui-canvas/headless';
 import {
+  type BuiltinNodeType,
   type Endpoint,
+  type Link,
+  type LinkType,
+  type Node,
   type NodeStyle,
   type Resolved2D,
   type Scene,

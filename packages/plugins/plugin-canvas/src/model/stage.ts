@@ -21,8 +21,8 @@ import {
 } from '@dxos/animation';
 import type * as AnimatorCapabilities from '@dxos/plugin-animator/AnimatorCapabilities';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { CAMERA_TARGET, type Node, OPACITY_PATH, sampleView } from '@dxos/react-ui-canvas/headless';
-import { type Point, endpointNode } from '@dxos/scene';
+import { CAMERA_TARGET, OPACITY_PATH, sampleView } from '@dxos/react-ui-canvas/headless';
+import { type Node, type Point, endpointNode } from '@dxos/scene';
 
 import { readViews, rootOf } from './content.ts';
 import { isSceneCanvas } from './view-node.ts';

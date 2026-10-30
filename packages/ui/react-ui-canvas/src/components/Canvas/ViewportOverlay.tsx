@@ -6,9 +6,9 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useMemo } from 'react';
 
 import * as Menu from '@dxos/react-ui/Menu';
-import { MAJOR_GRID } from '@dxos/scene';
+import { MAJOR_GRID, isInstanceNode } from '@dxos/scene';
 
-import { type Camera, type SceneLook, isInstanceNode } from '../../model/index.ts';
+import { type Camera, type SceneLook } from '../../model/index.ts';
 import { isAnonymous, sceneMenuItems } from '../../utils/index.ts';
 import { GrainOverlay } from '../Background/index.ts';
 import { SceneContextMenu } from '../SceneContextMenu/index.ts';

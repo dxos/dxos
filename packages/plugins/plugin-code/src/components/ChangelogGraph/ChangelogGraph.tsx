@@ -15,7 +15,6 @@ import {
   type FreehandProjectionOptions,
   type GraphEdge,
   type GraphModel,
-  type Node,
   type NodeViewProps,
   type Overlay,
   createCanvasAtoms,
@@ -31,7 +30,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
-import { nodeBase } from '@dxos/scene';
+import { type Node, nodeBase } from '@dxos/scene';
 
 import { CodeNamespace } from '../../namespace.ts';
 import {

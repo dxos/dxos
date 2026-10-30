@@ -18,18 +18,8 @@ import * as Atom from 'effect/reactivity/Atom';
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
-import {
-  type Link,
-  LINK_TYPES,
-  type LinkType,
-  type Node,
-  type View,
-  type ViewMap,
-  type ViewStore,
-  initialKeys,
-  sortByZ,
-} from '@dxos/react-ui-canvas/scene';
-import { type NodeStyle, type ViewId } from '@dxos/scene';
+import { type View, type ViewMap, type ViewStore, initialKeys, sortByZ } from '@dxos/react-ui-canvas/scene';
+import { type Link, LINK_TYPES, type LinkType, type Node, type NodeStyle, type ViewId } from '@dxos/scene';
 
 import { createAnchorId, parseAnchorId } from '../shapes/defs.ts';
 import { type CanvasBoard } from '../types/index.ts';

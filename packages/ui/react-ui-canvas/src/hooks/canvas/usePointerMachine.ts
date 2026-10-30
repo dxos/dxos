@@ -15,11 +15,17 @@ import {
 import {
   type ElementId,
   type Endpoint,
+  type Link,
+  type Node,
   type NodeId,
+  type NodeType,
   type Point,
   type Port,
+  type SplineLink,
   endpointNode,
   isPointEndpoint,
+  isPolylineNode,
+  isViewNode,
 } from '@dxos/scene';
 
 import {
@@ -36,16 +42,10 @@ import {
   type Camera,
   type Capabilities,
   type CreateProps,
-  type Link,
-  type Node,
   type NodeRegistry,
-  type NodeType,
-  type SplineLink,
   type View,
   type ViewStore,
   isHandDrag,
-  isPolylineNode,
-  isViewNode,
   nodeDef,
 } from '../../model/index.ts';
 import {

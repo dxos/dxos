@@ -9,26 +9,26 @@
 
 import {
   type HorizontalAlign,
+  type Link,
+  type Node,
   type NodeStyle,
   type NodeTone,
   STYLE_HUES,
   type StyleHue,
   type StyleMap,
   type VerticalAlign,
+  isEllipseNode,
+  isViewNode,
+  showsContents,
 } from '@dxos/scene';
 
 import {
   DEFAULT_LOOK,
-  type Link,
   type LookTone,
-  type Node,
   type NodeSurface,
   type Radius,
   type SceneLook,
   type StyleVariant,
-  isEllipseNode,
-  isViewNode,
-  showsContents,
   styleVariant,
 } from '../model/index.ts';
 import { DEFAULT_TEXT, NEAREST_HUE, RADIUS_CLASSES, type SetSurface, SURFACES, VIEW_FILLS } from './surfaces.ts';

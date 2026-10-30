@@ -7,10 +7,10 @@
 // a named Object by the library. A record nothing kept reaches is an orphan, deleted with the edit that orphaned it.
 //
 
-import { type ViewId } from '@dxos/scene';
+import { type Node, type ViewId, isInstanceNode, isViewNode } from '@dxos/scene';
 
 import { type ViewMap } from './store.ts';
-import { type Node, type View, isInstanceNode, isViewNode } from './types.ts';
+import { type View } from './types.ts';
 
 /** The record a node opens: a view node's child View, or an Instance's Object. */
 export const openedRecord = (node: Node): ViewId | undefined =>

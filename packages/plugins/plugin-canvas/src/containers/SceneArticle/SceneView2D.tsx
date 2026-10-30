@@ -24,11 +24,9 @@ import {
   Canvas,
   type CanvasPropertiesProps,
   type ConstrainedModel,
-  type Element,
   type FreehandProjectionOptions,
   type GraphModel,
   MAX_ZOOM,
-  type Node,
   type Overlay,
   type Projection,
   type SceneChoice,
@@ -39,14 +37,12 @@ import {
   createLatticeProjection,
   createLocalHistory,
   defaultNodeRegistry,
-  isLink,
-  isViewNode,
   useRegistry,
 } from '@dxos/react-ui-canvas/scene';
 import * as Banner from '@dxos/react-ui/Banner';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
-import { Scene, type ViewId } from '@dxos/scene';
+import { type Element, type Node, Scene, type ViewId, isLink, isViewNode } from '@dxos/scene';
 
 import {
   generatorCompiler,

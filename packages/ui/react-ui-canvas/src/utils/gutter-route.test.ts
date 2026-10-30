@@ -4,8 +4,10 @@
 
 import { describe, test } from 'vitest';
 
+import { type Link, type Node } from '@dxos/scene';
+
 import { defaultNodeRegistry } from '../components/index.ts';
-import { type Link, type Node, type View } from '../model/index.ts';
+import { type View } from '../model/index.ts';
 import { gutterRoute } from './gutter-route.ts';
 import { DEFAULT_LATTICE, cellBounds } from './lattice.ts';
 import { viewLinkGeometry } from './route.ts';

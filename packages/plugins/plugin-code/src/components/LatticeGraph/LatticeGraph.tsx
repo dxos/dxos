@@ -23,7 +23,6 @@ import {
   type FreehandProjectionOptions,
   type GraphModel,
   type LatticeSpec,
-  type Node,
   type NodeViewProps,
   type Overlay,
   SCENE_OVERLAY_ATTRIBUTE,
@@ -35,7 +34,7 @@ import {
   defaultNodeTypes,
 } from '@dxos/react-ui-canvas/scene';
 import * as Layout from '@dxos/react-ui/Layout';
-import { nodeBase } from '@dxos/scene';
+import { type Node, nodeBase } from '@dxos/scene';
 
 const LATTICE_NODE_TYPE = 'lattice-node';
 

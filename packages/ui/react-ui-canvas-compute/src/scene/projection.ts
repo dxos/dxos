@@ -16,14 +16,12 @@ import * as JsonSchema from '@dxos/echo/JsonSchema';
 import {
   type FreehandProjectionOptions,
   type Intent,
-  type Link,
-  type Node,
   type Projection,
   type View,
   createFreehandProjection,
   reduceIntent,
 } from '@dxos/react-ui-canvas/scene';
-import { endpointNode } from '@dxos/scene';
+import { type Link, type Node, endpointNode } from '@dxos/scene';
 
 import {
   type ComputeGraphController,

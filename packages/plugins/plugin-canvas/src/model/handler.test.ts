@@ -12,12 +12,10 @@ import {
   defaultNodeRegistry,
   diagramLinkMarkup,
   diagramNodeMarkup,
-  isDiagramNode,
-  isEllipseNode,
-  isRectNode,
   linkGeometry,
   sortByZ,
 } from '@dxos/react-ui-canvas/scene';
+import { isDiagramNode, isEllipseNode, isRectNode } from '@dxos/scene';
 
 import { ROOT_VIEW_ID, readViews, rootOf, seedContent, updateCanvasRecord, writeViews } from './content.ts';
 import { BACKDROP_LAYER, SceneHandler, elementId } from './handler.ts';

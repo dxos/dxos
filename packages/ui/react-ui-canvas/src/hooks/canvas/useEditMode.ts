@@ -4,10 +4,10 @@
 
 import { useCallback } from 'react';
 
-import { type ElementId, type NodeId } from '@dxos/scene';
+import { type ElementId, type Node, type NodeId } from '@dxos/scene';
 
 import { type CanvasAtoms } from '../../engine/index.ts';
-import { type Capabilities, type Node, type NodeRegistry, nodeDef } from '../../model/index.ts';
+import { type Capabilities, type NodeRegistry, nodeDef } from '../../model/index.ts';
 import { type PartKey, hasVertices, nodeParts, partText } from '../../utils/index.ts';
 import { type useRegistry } from '../useRegistry.ts';
 

@@ -6,10 +6,10 @@ import * as Atom from 'effect/reactivity/Atom';
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { type EllipseNode, type NoteNode } from '@dxos/scene';
+import { type EllipseNode, type NoteNode, isEllipseNode, isNoteNode } from '@dxos/scene';
 
 import { defaultNodeRegistry } from '../../components/index.ts';
-import { type View, isEllipseNode, isNoteNode } from '../../model/index.ts';
+import { type View } from '../../model/index.ts';
 import { type ConstrainedModel, createConstrainedProjection, rewriteForDrop, solve } from './constrained.ts';
 
 const model: ConstrainedModel = {

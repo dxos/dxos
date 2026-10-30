@@ -8,9 +8,9 @@
 // the diagram re-attaches its links.
 //
 
-import { type Bounds, type Point, type Port, type PortDirection, type Side } from '@dxos/scene';
+import { type Bounds, type Node, type Point, type Port, type PortDirection, type Side } from '@dxos/scene';
 
-import { type Node, type NodeRegistry, nodeDef } from '../model/index.ts';
+import { type NodeRegistry, nodeDef } from '../model/index.ts';
 import { nodeBounds } from './shapes.ts';
 
 export const SIDES: readonly Side[] = ['n', 'e', 's', 'w'];

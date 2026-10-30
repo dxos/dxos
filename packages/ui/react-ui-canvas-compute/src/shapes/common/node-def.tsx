@@ -13,14 +13,13 @@ import React, { type ComponentType, type FC } from 'react';
 import {
   type CreateProps,
   DEFAULT_CELL,
-  type Node,
   type NodeDef,
   type NodeViewProps,
   UnknownNodeView,
   nodeDef,
 } from '@dxos/react-ui-canvas/scene';
 import * as Icon from '@dxos/react-ui/Icon';
-import { type Port, type Size } from '@dxos/scene';
+import { type Node, type Port, type Size } from '@dxos/scene';
 
 import { ComputeNodeDefContext, useComputeContext } from '../../hooks/compute-context.ts';
 import { useControllerUpdates } from '../../hooks/useControllerUpdates.ts';

@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ViewId } from '@dxos/scene';
+import { type ViewId, isViewNode } from '@dxos/scene';
 
-import { type View, type ViewMap, isViewNode } from '../model/index.ts';
+import { type View, type ViewMap } from '../model/index.ts';
 
 /** A scene a scene shape may open, as the properties panel lists it. */
 export type ViewOption = { value: ViewId; label: string };

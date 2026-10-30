@@ -9,9 +9,11 @@
 
 import {
   CloudNode,
+  DiagramNode,
   EllipseNode,
   GeneratorNode,
   InstanceNode,
+  type NodeType,
   NoteNode,
   PathNode,
   PolygonNode,
@@ -19,19 +21,12 @@ import {
   RectNode,
   type Size,
   ViewNode,
-} from '@dxos/scene';
-
-import {
-  DiagramNode,
-  type LinkRegistry,
-  type NodeDefSpec,
-  type NodeRegistry,
-  type NodeType,
-  createNodeRegistry,
   isCloudNode,
   isPolygonNode,
   isPolylineNode,
-} from '../../model/index.ts';
+} from '@dxos/scene';
+
+import { type LinkRegistry, type NodeDefSpec, type NodeRegistry, createNodeRegistry } from '../../model/index.ts';
 import { NOMINAL_SIZES, cloudPath, createNode, polygonPath, polylinePath } from '../../utils/index.ts';
 import {
   BoxNodeView,

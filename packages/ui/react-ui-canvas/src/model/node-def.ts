@@ -7,10 +7,10 @@
 
 import { animatableProperties } from '@dxos/animation';
 import { type AnimatableKind } from '@dxos/animation';
+import { type Node } from '@dxos/scene';
 
 import { type NodeDef, type NodeRegistry } from './registry.ts';
 import { BASE_ANIMATABLE } from './timeline.ts';
-import { type Node } from './types.ts';
 
 /** The definition of a node's type, when the registry has it. */
 export const nodeDef = (registry: NodeRegistry, node: Node): NodeDef | undefined => registry[node.type];

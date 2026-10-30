@@ -3,9 +3,8 @@
 //
 
 import { Dsl } from '@dxos/diagram';
-import { type Link, type Node } from '@dxos/react-ui-canvas/headless';
 import { flattenLayout, fromCanvasView, liftLayout, toCanvasView } from '@dxos/react-ui-scene/canvas';
-import { type Fragment, Scene, resolveLayout2D, resolveLayout3D } from '@dxos/scene';
+import { type Fragment, type Link, type Node, Scene, resolveLayout2D, resolveLayout3D } from '@dxos/scene';
 
 type SceneDocument = Scene.SceneDocument;
 

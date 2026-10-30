@@ -6,10 +6,11 @@ import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
 import { type Timeline, createTimeline, keyTimes } from '@dxos/animation';
+import { isInstanceNode, isViewNode } from '@dxos/scene';
 
 import { ViewBuilder, type ViewTree } from '../builder/index.ts';
 import { defaultNodeRegistry } from '../components/index.ts';
-import { type BackgroundGrid, createMemoryStore, isInstanceNode, isViewNode, storeVersions } from '../model/index.ts';
+import { type BackgroundGrid, createMemoryStore, storeVersions } from '../model/index.ts';
 import { createCanvasAtoms } from './atoms.ts';
 import { type LookHandlers, createCanvasController } from './controller.ts';
 import { createLocalHistory, withHistory } from './history.ts';

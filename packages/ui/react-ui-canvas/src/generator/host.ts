@@ -9,9 +9,9 @@
 //
 
 import { type ModuleCompiler, type Timeline } from '@dxos/animation';
-import { type NodeId } from '@dxos/scene';
+import { type NodeId, isGeneratorNode } from '@dxos/scene';
 
-import { type View, isGeneratorNode } from '../model/index.ts';
+import { type View } from '../model/index.ts';
 import { type CoreRequest, type CoreResponse, GeneratorCore, type GeneratorFrameNode } from './core.ts';
 import { type GeneratorFrame, type GeneratorSource } from './types.ts';
 

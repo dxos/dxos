@@ -13,12 +13,14 @@ import {
   type ElementId,
   type Endpoint,
   type LayerId,
+  type Link,
+  type Node,
   type Point,
   type ViewId,
   isPointEndpoint,
 } from '@dxos/scene';
 
-import { type Intent, type Link, type Node, type View, type ViewMap, openedRecord } from '../model/index.ts';
+import { type Intent, type View, type ViewMap, openedRecord } from '../model/index.ts';
 import { promotedBy } from './compose.ts';
 import { unionBounds } from './hit.ts';
 import { between, topZ } from './order.ts';

@@ -5,9 +5,9 @@
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { type Point } from '@dxos/scene';
+import { type Point, isRectNode } from '@dxos/scene';
 
-import { type View, createMemoryStore, isRectNode, updateView } from '../model/index.ts';
+import { type View, createMemoryStore, updateView } from '../model/index.ts';
 import { createViewTree } from '../testing/index.ts';
 import { createFreehandProjection, reduceIntent } from './projection.ts';
 

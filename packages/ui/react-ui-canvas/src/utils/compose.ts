@@ -14,24 +14,19 @@ import {
   type InstanceFit,
   type InstanceNode,
   type LayerId,
+  type Link,
+  type Node,
   type NodeId,
   type Point,
   type Port,
   type Side,
   type ViewId,
   endpointNode,
-} from '@dxos/scene';
-
-import {
-  type Intent,
-  type Link,
-  type Node,
-  type View,
-  type ViewMap,
   isInstanceNode,
   isViewNode,
-  pruneOrphaned,
-} from '../model/index.ts';
+} from '@dxos/scene';
+
+import { type Intent, type View, type ViewMap, pruneOrphaned } from '../model/index.ts';
 import { unionBounds } from './hit.ts';
 import { elementLayer, viewLayers } from './layers.ts';
 import { topZ } from './order.ts';

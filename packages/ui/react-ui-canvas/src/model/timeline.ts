@@ -8,8 +8,9 @@
 //
 
 import { type AnimatableKind, type Timeline, type Track, setPath, trackId, trackValue } from '@dxos/animation';
+import { type Node } from '@dxos/scene';
 
-import { type Camera, CAMERA_TARGET, type Node, type View } from './types.ts';
+import { type Camera, CAMERA_TARGET, type View } from './types.ts';
 
 /** The node with `next` at a dot path; its id and type never change. */
 export const setNodePath = (node: Node, path: string, next: unknown): Node => {

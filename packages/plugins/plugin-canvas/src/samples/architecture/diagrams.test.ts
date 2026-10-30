@@ -8,7 +8,8 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { DEFAULT_LATTICE, isViewNode, nodeBounds, onLattice, quantize } from '@dxos/react-ui-canvas/scene';
+import { DEFAULT_LATTICE, nodeBounds, onLattice, quantize } from '@dxos/react-ui-canvas/scene';
+import { isViewNode } from '@dxos/scene';
 
 import { bindCanvasStore, elementId, isNodeRecord, nodeKey, parseLinkedViewId } from '#model';
 

@@ -5,9 +5,10 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { type ModuleCompiler, type Timeline } from '@dxos/animation';
+import { isGeneratorNode } from '@dxos/scene';
 
 import { type GeneratorFrames, GeneratorHost, type GeneratorSource } from '../generator/index.ts';
-import { type View, isGeneratorNode } from '../model/index.ts';
+import { type View } from '../model/index.ts';
 
 export type UseGeneratorFramesOptions = {
   /** The scene as stored: the worker samples it per step. */

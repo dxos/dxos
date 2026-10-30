@@ -4,7 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { type SplineLink } from '../model/index.ts';
+import { type SplineLink } from '@dxos/scene';
+
 import { cloneShape, createNode, flipLink } from './shapes.ts';
 
 describe('shapes', () => {

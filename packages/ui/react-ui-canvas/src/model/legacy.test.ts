@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { withLegacyParams } from './types.ts';
+import { withLegacyParams } from '@dxos/scene';
 
 describe('withLegacyParams', () => {
   const frame = { z: 'a0', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } };

@@ -5,10 +5,10 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useMemo } from 'react';
 
-import { type Bounds, type ElementId } from '@dxos/scene';
+import { type Bounds, type ElementId, isViewNode } from '@dxos/scene';
 
 import { GRID_LEVELS, GRID_RANGE, useChanging } from '../../hooks/index.ts';
-import { type Camera, type SceneLook, isViewNode } from '../../model/index.ts';
+import { type Camera, type SceneLook } from '../../model/index.ts';
 import { GRID_CLASSES, cameraTransform, enterPortal, nodeBounds, screenBounds } from '../../utils/index.ts';
 import {
   BackgroundField,

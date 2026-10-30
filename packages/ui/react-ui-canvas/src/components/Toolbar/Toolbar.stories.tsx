@@ -7,9 +7,9 @@ import React, { useState } from 'react';
 
 import { log } from '@dxos/log';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { type NodeType } from '@dxos/scene';
 
 import { freehandCapabilities } from '../../engine/index.ts';
-import { type NodeType } from '../../model/index.ts';
 import { defaultNodeRegistry } from '../SceneLayer/index.ts';
 import { ActionToolbar, CameraToolbar, NavigationToolbar, type ToolbarActions } from './Toolbar.tsx';
 

@@ -4,7 +4,9 @@
 
 import { describe, test } from 'vitest';
 
-import { type BuiltinNode, type View } from '../model/index.ts';
+import { type BuiltinNode } from '@dxos/scene';
+
+import { type View } from '../model/index.ts';
 import { boundsFromPoints, contentBounds, hitTest, nodesIntersecting } from './hit.ts';
 
 const nodes: Record<string, BuiltinNode> = {

@@ -20,12 +20,10 @@ import {
   type Arrangement,
   Canvas,
   type CreateProps,
-  type DiagramNode,
   DYNAMIC_VIEW_ID,
   type DynamicOptions,
   type FreehandProjectionOptions,
   type GraphModel,
-  type Node,
   type NodeViewProps,
   type Overlay,
   createCanvasAtoms,
@@ -39,7 +37,7 @@ import * as HoverCard from '@dxos/react-ui/HoverCard';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
-import { type Layer, type Point, nodeBase } from '@dxos/scene';
+import { type DiagramNode, type Layer, type Node, type Point, nodeBase } from '@dxos/scene';
 
 import { Kind, Model, Semantic } from '#graph';
 import { type CodeGraph } from '#types';

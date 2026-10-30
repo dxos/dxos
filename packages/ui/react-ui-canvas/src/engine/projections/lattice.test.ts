@@ -5,7 +5,9 @@
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { type Node, type View, createMemoryStore } from '../../model/index.ts';
+import { type Node } from '@dxos/scene';
+
+import { type View, createMemoryStore } from '../../model/index.ts';
 import { DEFAULT_LATTICE, createNode, nodeBounds } from '../../utils/index.ts';
 import { constrainIntent, createLatticeProjection } from './lattice.ts';
 

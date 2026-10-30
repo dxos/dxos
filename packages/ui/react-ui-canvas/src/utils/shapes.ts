@@ -10,22 +10,20 @@
 
 import {
   type Bounds,
+  type BuiltinNode,
+  type BuiltinNodeType,
   DEFAULT_GRID,
   type Endpoint,
+  type Link,
   type LinkEnds,
+  type LinkType,
   MAJOR_GRID_RATIO,
+  type Node,
   type Point,
   type Size,
 } from '@dxos/scene';
 
-import {
-  type BuiltinNode,
-  type BuiltinNodeType,
-  type Link,
-  type LinkType,
-  type LinkValues,
-  type Node,
-} from '../model/index.ts';
+import { type LinkValues } from '../model/index.ts';
 import { type PartField } from './parts.ts';
 import { DEFAULT_POLYLINE_POINTS } from './polyline.ts';
 import { DEFAULT_CLOUD_BUMPS, DEFAULT_POLYGON_SIDES } from './silhouette.ts';

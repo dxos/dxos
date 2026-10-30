@@ -11,8 +11,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { isGeneratorNode } from '@dxos/react-ui-canvas/headless';
-import { Scene } from '@dxos/scene';
+import { Scene, isGeneratorNode } from '@dxos/scene';
 
 import { addCanvas, createCanvas, openScene, readViews, rootOf } from '#model';
 import { CanvasOperationHandlerSet } from '#operations';

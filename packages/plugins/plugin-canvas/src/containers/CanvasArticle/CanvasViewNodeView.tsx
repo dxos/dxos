@@ -11,10 +11,11 @@ import { useResolveRef } from '@dxos/echo-react';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { useAttentionAttributes, useAttentionContext } from '@dxos/react-ui-attention';
 import { Attention } from '@dxos/react-ui-attention/types';
-import { type NodeViewProps, SCENE_OVERLAY_ATTRIBUTE, ViewNodeView, isViewNode } from '@dxos/react-ui-canvas/scene';
+import { type NodeViewProps, SCENE_OVERLAY_ATTRIBUTE, ViewNodeView } from '@dxos/react-ui-canvas/scene';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
+import { isViewNode } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 import { type ViewRole, isSceneCanvas, objectRef, objectUri, parseLinkedViewId, viewRole } from '#model';

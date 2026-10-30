@@ -15,10 +15,10 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Menu from '@dxos/react-ui/Menu';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
-import { type ViewId } from '@dxos/scene';
+import { type NodeType, type ViewId } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
-import { type Capabilities, type NodeRegistry, type NodeType, shortcutFor } from '../../model/index.ts';
+import { type Capabilities, type NodeRegistry, shortcutFor } from '../../model/index.ts';
 import { FLOATING_BAR } from '../../utils/index.ts';
 import { Breadcrumbs } from '../Breadcrumbs/index.ts';
 

@@ -12,14 +12,13 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import {
   type GeneratorSource,
-  type Node,
   type NodeRegistry,
   createNodeRegistry,
   defaultNodePrototypes,
   defaultNodeTypes,
   useRegistry,
 } from '@dxos/react-ui-canvas/scene';
-import { Scene } from '@dxos/scene';
+import { type Node, Scene } from '@dxos/scene';
 
 import {
   type BoundCanvasStore,

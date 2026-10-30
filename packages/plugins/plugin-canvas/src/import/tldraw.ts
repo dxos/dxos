@@ -11,11 +11,8 @@
 import * as Schema from 'effect/Schema';
 
 import {
-  type BuiltinNode,
   DEFAULT_LAYER,
   type Intent,
-  type Link,
-  type Node,
   type View,
   type ViewMap,
   between,
@@ -23,15 +20,18 @@ import {
   initialKeys,
 } from '@dxos/react-ui-canvas/headless';
 import {
+  type BuiltinNode,
   type CloudNode,
   type EllipseNode,
   Endpoint,
   type HorizontalAlign,
   type Layer,
   type LineStyle,
+  type Link,
   type LinkEnds,
   MAJOR_GRID,
   type Marker,
+  type Node,
   type NodeStyle,
   type NodeTone,
   type NoteNode,

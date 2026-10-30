@@ -4,11 +4,11 @@
 
 import { describe, test } from 'vitest';
 
-import { type Endpoint } from '@dxos/scene';
+import { type Endpoint, type Link } from '@dxos/scene';
 
 import { ViewBuilder } from '../builder/index.ts';
 import { defaultNodeRegistry } from '../components/index.ts';
-import { type Link, type View } from '../model/index.ts';
+import { type View } from '../model/index.ts';
 import { DEFAULT_LATTICE } from './lattice.ts';
 import { insertIndex, linkGeometry, linkPath, sideToward, smartPoints, splinePath, viewLinkGeometry } from './route.ts';
 

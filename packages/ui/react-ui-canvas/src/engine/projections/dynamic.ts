@@ -14,23 +14,23 @@ import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { Layout } from '@dxos/diagram';
 import {
+  type BuiltinNodeType,
   type Layer,
   type LayerId,
   type LineStyle,
+  type Link,
   type LinkEnds,
+  type LinkType,
+  type Node,
   type Point,
   type Size,
   endpointNode,
 } from '@dxos/scene';
 
 import {
-  type BuiltinNodeType,
   type Capabilities,
   type CreateProps,
   type Intent,
-  type Link,
-  type LinkType,
-  type Node,
   type NodeRegistry,
   type View,
   atomSource,

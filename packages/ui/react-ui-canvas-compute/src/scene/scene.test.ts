@@ -9,8 +9,6 @@ import { describe, test } from 'vitest';
 import { Event } from '@dxos/async';
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 import {
-  type Link,
-  type Node,
   createLocalHistory,
   createMemoryStore,
   createViewSchema,
@@ -18,6 +16,7 @@ import {
   storeVersions,
   withHistory,
 } from '@dxos/react-ui-canvas/scene';
+import { type Link, type Node } from '@dxos/scene';
 
 import { createComputeGraph } from '../hooks/index.ts';
 import { computeNodeDefs, computeNodeRegistry } from '../registry.ts';

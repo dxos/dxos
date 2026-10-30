@@ -8,9 +8,9 @@
 //
 
 import { EffectRunner, type EffectStatus, type EffectStep, type RunnerOptions, type Timeline } from '@dxos/animation';
-import { type Bounds, type NodeId } from '@dxos/scene';
+import { type Bounds, type NodeId, isGeneratorNode } from '@dxos/scene';
 
-import { type View, isGeneratorNode, sampleView } from '../model/index.ts';
+import { type View, sampleView } from '../model/index.ts';
 import { flattenPath, nodeBounds, viewLinkGeometry } from '../utils/index.ts';
 import {
   type BoundLink,

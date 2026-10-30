@@ -23,18 +23,15 @@ import { type Database, Entity, Obj } from '@dxos/echo';
 import { type URI } from '@dxos/keys';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import {
-  type Node,
   type VersionedSource,
   type View,
   type ViewMap,
   type ViewStore,
   createMemoryStore,
-  isViewNode,
   readPath,
   storeVersions,
-  withLegacyNodeType,
 } from '@dxos/react-ui-canvas/headless';
-import { type ViewId, type ViewNode } from '@dxos/scene';
+import { type Node, type ViewId, type ViewNode, isViewNode, withLegacyNodeType } from '@dxos/scene';
 
 import { Canvas } from '#types';
 

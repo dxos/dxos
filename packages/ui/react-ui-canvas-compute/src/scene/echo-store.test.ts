@@ -5,8 +5,8 @@
 import { describe, test } from 'vitest';
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
-import { type Link, type Node, type View, reduceIntent, sortByZ } from '@dxos/react-ui-canvas/scene';
-import { type NodeStyle } from '@dxos/scene';
+import { type View, reduceIntent, sortByZ } from '@dxos/react-ui-canvas/scene';
+import { type Link, type Node, type NodeStyle } from '@dxos/scene';
 
 import { type ComputeShape } from '../shapes/index.ts';
 import { type CanvasBoard } from '../types/index.ts';

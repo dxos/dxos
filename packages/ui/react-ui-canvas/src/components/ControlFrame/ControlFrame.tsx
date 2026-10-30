@@ -14,11 +14,15 @@ import {
   type Bounds,
   type ElementId,
   type Endpoint,
+  type Link,
   type LinkId,
+  type Node,
   type Point,
   type Port,
+  type SplineLink,
   endpointNode,
   isPointEndpoint,
+  isPolylineNode,
 } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
@@ -30,16 +34,7 @@ import {
   type LinkEnd,
   isMoving,
 } from '../../engine/index.ts';
-import {
-  type Capabilities,
-  type Link,
-  type Node,
-  type NodeRegistry,
-  type SplineLink,
-  type View,
-  isPolylineNode,
-  nodeDef,
-} from '../../model/index.ts';
+import { type Capabilities, type NodeRegistry, type View, nodeDef } from '../../model/index.ts';
 import {
   type LatticeSpec,
   VERTEX_SNAP_PX,

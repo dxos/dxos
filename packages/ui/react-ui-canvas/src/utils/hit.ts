@@ -7,9 +7,9 @@
 // same for every renderer.
 //
 
-import { type Bounds, MAJOR_GRID, type Point } from '@dxos/scene';
+import { type Bounds, MAJOR_GRID, type Node, type Point } from '@dxos/scene';
 
-import { type Node, type View } from '../model/index.ts';
+import { type View } from '../model/index.ts';
 import { sortByZ } from './order.ts';
 import { nodeBounds } from './shapes.ts';
 

@@ -5,10 +5,10 @@
 import type * as Atom from 'effect/reactivity/Atom';
 import { useCallback, useMemo, useRef } from 'react';
 
-import { type Size } from '@dxos/scene';
+import { type NodeType, type Size } from '@dxos/scene';
 
 import { type CanvasAtoms, type CanvasHistory, type HistoryState, type Projection } from '../../engine/index.ts';
-import { type Capabilities, type NodeRegistry, type NodeType } from '../../model/index.ts';
+import { type Capabilities, type NodeRegistry } from '../../model/index.ts';
 import { createId, nominalSize, screenToScene } from '../../utils/index.ts';
 import { type useRegistry } from '../useRegistry.ts';
 import { type PointerMachine } from './usePointerMachine.ts';

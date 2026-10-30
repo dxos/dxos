@@ -9,7 +9,8 @@ import { Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { isViewNode, patchSource, recordChanges, storeVersions, updateView } from '@dxos/react-ui-canvas/scene';
+import { patchSource, recordChanges, storeVersions, updateView } from '@dxos/react-ui-canvas/scene';
+import { isViewNode } from '@dxos/scene';
 
 import { clone, isNodeRecord, nodeKey, readViews } from './content.ts';
 import { bindCanvasStore, createCanvas } from './store.ts';

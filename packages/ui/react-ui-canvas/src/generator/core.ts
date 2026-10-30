@@ -8,9 +8,9 @@
 //
 
 import { type RunnerOptions, type Timeline, hashSeed } from '@dxos/animation';
-import { type NodeId } from '@dxos/scene';
+import { type NodeId, isGeneratorNode } from '@dxos/scene';
 
-import { type View, isGeneratorNode } from '../model/index.ts';
+import { type View } from '../model/index.ts';
 import { loadGenerator } from './compile.ts';
 import { GeneratorRunner } from './runner.ts';
 import { type GeneratorFrame, type GeneratorModule } from './types.ts';

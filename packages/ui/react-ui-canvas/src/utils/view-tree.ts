@@ -2,9 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ElementId, type Endpoint, type ViewId } from '@dxos/scene';
+import {
+  type ElementId,
+  type Endpoint,
+  type Link,
+  type Node,
+  type ViewId,
+  isInstanceNode,
+  isViewNode,
+} from '@dxos/scene';
 
-import { type Link, type Node, type View, type ViewMap, isInstanceNode, isViewNode } from '../model/index.ts';
+import { type View, type ViewMap } from '../model/index.ts';
 import { between, sortByZ } from './order.ts';
 
 /** What a row of the views tree stands for (VIEWS.md §2). */

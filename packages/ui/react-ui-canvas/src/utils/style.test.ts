@@ -4,10 +4,10 @@
 
 import { describe, test } from 'vitest';
 
-import { type StyleMap } from '@dxos/scene';
+import { type Node, type StyleMap } from '@dxos/scene';
 
 import { ViewBuilder } from '../builder/index.ts';
-import { CLASSIC_LOOK, type Node, defaultThemeRegistry, resolveLook } from '../model/index.ts';
+import { CLASSIC_LOOK, defaultThemeRegistry, resolveLook } from '../model/index.ts';
 import { classedLink, classedNode, frameClasses, hueClasses, splitClassEdit, surfaceClasses } from './style.ts';
 
 describe('style classes', () => {

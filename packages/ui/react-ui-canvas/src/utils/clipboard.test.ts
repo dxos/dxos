@@ -4,10 +4,10 @@
 
 import { describe, test } from 'vitest';
 
-import { endpointNode } from '@dxos/scene';
+import { type Link, endpointNode } from '@dxos/scene';
 
 import { reduceIntent } from '../engine/index.ts';
-import { type Link, type View } from '../model/index.ts';
+import { type View } from '../model/index.ts';
 import { createViewTree } from '../testing/index.ts';
 import { copySelection, duplicateSelection, pasteFragment } from './clipboard.ts';
 

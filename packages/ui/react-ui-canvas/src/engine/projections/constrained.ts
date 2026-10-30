@@ -12,19 +12,17 @@ import * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { Layout } from '@dxos/diagram';
-import { type NodeStyle, type Point, type Size } from '@dxos/scene';
-
 import {
   type BuiltinNodeType,
-  type Capabilities,
-  type Intent,
   type Node,
-  type NodeRegistry,
-  type View,
-  atomSource,
+  type NodeStyle,
+  type Point,
+  type Size,
   isBuiltinNode,
   isViewNode,
-} from '../../model/index.ts';
+} from '@dxos/scene';
+
+import { type Capabilities, type Intent, type NodeRegistry, type View, atomSource } from '../../model/index.ts';
 import { centeredOrigin, createNode, initialKeys, withTitle } from '../../utils/index.ts';
 import { type Projection } from '../projection.ts';
 

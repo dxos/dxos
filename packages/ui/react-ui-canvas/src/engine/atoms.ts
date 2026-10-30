@@ -16,13 +16,15 @@ import {
   type Endpoint,
   type LayerId,
   type LinkId,
+  type LinkType,
   type NodeId,
+  type NodeType,
   type Point,
   type Side,
   type ViewId,
 } from '@dxos/scene';
 
-import { type Camera, type LinkType, type NodeType, type Tool } from '../model/index.ts';
+import { type Camera, type Tool } from '../model/index.ts';
 import { type Clipboard, type PartKey } from '../utils/index.ts';
 
 export type Handle = 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw';

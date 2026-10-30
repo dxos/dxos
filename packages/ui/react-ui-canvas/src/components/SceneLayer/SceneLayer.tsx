@@ -32,8 +32,17 @@ import {
   type LinkId,
   MAJOR_GRID_RATIO,
   type Marker,
+  type Node,
   type NodeId,
   type StyleMap,
+  isDiagramNode,
+  isGeneratorNode,
+  isInstanceNode,
+  isNoteNode,
+  isPathNode,
+  isViewNode,
+  linkMarkers,
+  showsContents,
 } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
@@ -42,22 +51,13 @@ import { type ElementHandlers, useSceneLook } from '../../hooks/index.ts';
 import {
   type LinkKind,
   NO_STYLES,
-  type Node,
   type NodeDef,
   type NodeRegistry,
   type NodeViewProps,
   RADIUS_PX,
   type View,
   type ViewStore,
-  isDiagramNode,
-  isGeneratorNode,
-  isInstanceNode,
-  isNoteNode,
-  isPathNode,
-  isViewNode,
-  linkMarkers,
   nodeDef,
-  showsContents,
   styleVariant,
 } from '../../model/index.ts';
 import {

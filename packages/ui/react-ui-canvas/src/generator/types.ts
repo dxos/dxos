@@ -8,9 +8,9 @@
 //
 
 import { type EffectStatus, type Shape2D, type StatefulEffect, type StatelessEffect } from '@dxos/animation';
-import { type Bounds, type Point } from '@dxos/scene';
+import { type Bounds, type Node, type Point } from '@dxos/scene';
 
-import { type Node, type View } from '../model/index.ts';
+import { type View } from '../model/index.ts';
 
 /**
  * What a generator draws, in scene coordinates: the `2d` effect items of `@dxos/animation`, plus a composite placed as

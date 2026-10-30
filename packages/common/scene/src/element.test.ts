@@ -25,7 +25,7 @@ describe('element base', () => {
       ].sort(),
     );
     expect(Object.keys(linkBase).sort()).toEqual(
-      ['class', 'ends', 'id', 'layer', 'locked', 'source', 'style', 'target', 'text', 'z'].sort(),
+      ['class', 'connector', 'ends', 'id', 'layer', 'locked', 'source', 'style', 'target', 'text', 'z'].sort(),
     );
     expect(Object.keys(boxFields)).toEqual(['label']);
   });
