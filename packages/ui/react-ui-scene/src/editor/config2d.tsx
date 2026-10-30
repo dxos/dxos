@@ -29,7 +29,7 @@ import {
   elementForm2DIntents,
   elementForm2DValues,
 } from './element-form2d.ts';
-import { tools2D } from './tools2d.ts';
+import { toolDragData2D, tools2D } from './tools2d.ts';
 import { type Viewport2DOptions, createViewport2D } from './Viewport2D.tsx';
 
 const isElement2D = Schema.is(Scene.Element2D);
@@ -105,6 +105,7 @@ export const createConfig2D = ({
     dim: '2d',
     viewport: createViewport2D({ ...options, bridge }),
     tools: tools2D(options.nodes),
+    toolDragData: toolDragData2D,
     geometry: {
       // One major cell aside per paste, as the canvas has always offset a duplicate.
       pasteOffset: (pasted) => ({ x: pasted * MAJOR_GRID, y: pasted * MAJOR_GRID }),

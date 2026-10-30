@@ -158,6 +158,31 @@ describe('SceneEditor sections', () => {
     expect((await screen.findByTestId('property-form')).textContent).toBe('a');
   });
 
+  test('a create tool on the rail drags the element type the config gives it', async () => {
+    render(
+      <SceneEditor.Root
+        config={{
+          ...CONFIG,
+          tools: [
+            ...CONFIG.tools,
+            { id: 'node:rect', icon: 'ph--square--regular', label: 'Rect', category: 'create', kind: 'rect' },
+          ],
+          toolDragData: (tool) => (tool.kind ? { type: 'test/node', node: tool.kind } : undefined),
+        }}
+        document={document()}
+        scene='s'
+        onIntent={() => {}}
+        display={{ theme: 'cad', grid: true, snap: false }}
+      >
+        <SceneEditor.Viewport>
+          <SceneEditor.Tools />
+        </SceneEditor.Viewport>
+      </SceneEditor.Root>,
+    );
+    expect((await screen.findByTestId('canvas3d.tool.node:rect')).getAttribute('draggable')).toBe('true');
+    expect(screen.getByTestId('canvas3d.tool.select').getAttribute('draggable')).not.toBe('true');
+  });
+
   test('Properties shows the element as drawn: the fields its object gives it apply', async () => {
     // `c` stores no type of its own; it places the `gear` object, whose type it draws as.
     render(<Editor select={['c']} />);

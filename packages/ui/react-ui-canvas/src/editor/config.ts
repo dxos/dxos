@@ -144,6 +144,8 @@ export type DimensionConfig<C = unknown> = {
   dim: Scene.Dimension;
   viewport: ComponentType<ViewportProps<C>>;
   tools: readonly ToolDef[];
+  /** What dragging a rail tool onto the viewport drops (2D: a node of the tool's type); undefined, the tool does not drag. */
+  toolDragData?: (tool: ToolDef) => Record<string, unknown> | undefined;
   geometry: GeometryOps;
   camera: CameraOps<C>;
   display: DisplayOptions;

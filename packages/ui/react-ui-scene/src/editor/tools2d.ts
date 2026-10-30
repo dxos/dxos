@@ -12,6 +12,7 @@ import {
   defaultLinkRegistry,
   defaultNodeRegistry,
   freehandCapabilities,
+  nodeDragData,
   toolGroups,
 } from '@dxos/react-ui-canvas';
 import { type LinkType } from '@dxos/scene';
@@ -60,3 +61,7 @@ export const tools2D = (
       ...(entry.key ? { key: entry.key } : {}),
     })),
   );
+
+/** A node tool drags a node of its type onto the canvas, as the canvas's palette did; other tools do not drag. */
+export const toolDragData2D = (tool: ToolDef): Record<string, unknown> | undefined =>
+  tool.id.startsWith('node:') && tool.kind ? nodeDragData(tool.kind) : undefined;

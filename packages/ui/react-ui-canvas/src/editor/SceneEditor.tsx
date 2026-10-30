@@ -508,10 +508,21 @@ const SceneEditorTools = ({ classNames = 'top-2 bottom-14 left-2' }: { className
       })),
     }));
   }, [config.tools, readonly]);
+  const dragData = useMemo(() => {
+    const { toolDragData } = config;
+    if (!toolDragData) {
+      return undefined;
+    }
+    return (tool: ActiveTool) => {
+      const def = config.tools.find((candidate) => candidate.id === tool.id);
+      return def && toolDragData(def);
+    };
+  }, [config]);
   return (
     <div className={mx('absolute pointer-events-none', classNames)}>
       <ToolRail
         groups={groups}
+        dragData={dragData}
         tool={tool}
         same={sameTool}
         testId={(entry) => `${config.dim === '3d' ? 'canvas3d' : 'canvas'}.tool.${entry.tool.id}`}
