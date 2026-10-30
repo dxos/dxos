@@ -1,6 +1,6 @@
 # Scene editor: one core for 2D and 3D
 
-Status: draft for review, 2026-10-30. Nothing here is built. Supersedes the per-dimension editors that stage 3
+Status: draft for review, 2026-10-30; all questions answered. Nothing here is built. Supersedes the per-dimension editors that stage 3
 produced (`SceneView2D` on react-ui-canvas's own model, `SceneView3D` on `@dxos/scene`).
 
 ## Decided by the user (2026-10-30)
@@ -169,8 +169,8 @@ react-ui-canvas stories; 2D behaviour stays at parity throughout.
 
 ## Open questions
 
-1. The uncommitted display-panel edits left by the stopped frame agent (3D grid kinds, renderer, styles): keep them
-   as the start of step 2, or discard?
+None. The stopped frame agent's uncommitted display-panel edits were set aside (2026-10-30), since they assumed the
+shared `Style` tokens and 3D-only themes this design replaces.
 
 ## Not in scope
 
