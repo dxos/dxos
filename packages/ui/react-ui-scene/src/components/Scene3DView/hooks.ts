@@ -16,7 +16,7 @@ import {
   panBy,
   zoomBy,
 } from '../../three/index.ts';
-import { orbitGesture } from './orbit-gesture.ts';
+import { orbitGesture, wheelGesture } from './orbit-gesture.ts';
 
 export const DEFAULT_CAMERA: Scene.Camera3D = {
   target: { x: 0, y: 0, z: 0 },
@@ -147,7 +147,7 @@ export const orbitView = (
 
 /**
  * The camera the pointer moves, starting from `given` and starting over whenever `given` changes value: a drag orbits,
- * a shift-drag or a right-drag pans, the wheel zooms.
+ * a shift-drag or a right-drag pans; a trackpad pinch or a mouse wheel zooms, and a two-finger swipe orbits (Shift pans).
  */
 export const useOrbit = (
   containerRef: RefObject<HTMLDivElement | null>,
@@ -203,7 +203,14 @@ export const useOrbit = (
       }
       // Not passive, so the page does not scroll under a zoom.
       event.preventDefault();
-      move((current) => zoomBy(current, Math.exp(event.deltaY * 0.002)));
+      const gesture = wheelGesture(event);
+      move((current) =>
+        gesture.kind === 'zoom'
+          ? zoomBy(current, gesture.factor)
+          : gesture.kind === 'pan'
+            ? panBy(current, gesture.delta, sizeRef.current)
+            : orbitBy(current, gesture.delta),
+      );
     };
     const onContextMenu = (event: Event) => onScene(event) && event.preventDefault();
     container.addEventListener('pointerdown', onPointerDown);

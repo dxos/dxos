@@ -6,8 +6,9 @@ import { type MutableRefObject, type RefObject, useCallback } from 'react';
 
 import { type CanvasAtoms } from '../../engine/index.ts';
 import { panBy, zoomAt } from '../../utils/index.ts';
+import { isTrackpadScroll } from '../../utils/index.ts';
 import { type useRegistry } from '../useRegistry.ts';
-import { isTrackpadScroll, useWheel } from '../useWheel.ts';
+import { useWheel } from '../useWheel.ts';
 import { type SceneCamera } from './useSceneCamera.ts';
 
 export type UseSceneWheelOptions = {

@@ -32,3 +32,4 @@ export * from './surfaces.ts';
 export * from './scene-menu.ts';
 export * from './tools.ts';
 export * from './view-tree.ts';
+export * from './wheel.ts';
