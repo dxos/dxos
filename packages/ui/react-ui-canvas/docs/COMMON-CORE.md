@@ -36,6 +36,16 @@ produced (`SceneView2D` on react-ui-canvas's own model, `SceneView3D` on `@dxos/
     its Upsert/Remove/Move commands) is retired as a data model, the illustrator's SVG renderer draws `Layout2D`, and
     the canvas builder's translation layer disappears. This is step 0, before 2D's data moves.
 
+## Expectations (user, 2026-10-30)
+
+These are the acceptance criteria; any place the work would break one is raised with the user before it is built.
+
+1. The canvas data-structure changes are mechanical and map cleanly from the current records to the new types — a
+   field-by-field mapping table, checked by round-trip tests.
+2. The diagram DSL changes little and maps cleanly onto the new structure — only its output target changes.
+3. The shared editor has common components (panels, inspectors, canvas, context menu), common behaviours (cut, copy,
+   paste, undo, redo, selection, lock, roles) and pluggable behaviours only where the dimensions truly differ.
+
 ## Why
 
 Stage 3 shared leaf components but not the editor. 2D still edits react-ui-canvas records and an adapter translates
