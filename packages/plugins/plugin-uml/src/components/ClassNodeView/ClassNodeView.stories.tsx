@@ -130,6 +130,7 @@ const DefaultStory = () => {
         <SceneEditor.Tools />
         <SceneEditor.Actions />
         <SceneEditor.Camera />
+        <SceneEditor.Display />
         <SceneEditor.ContextMenu />
       </SceneEditor.Viewport>
       <SceneEditor.Inspector />
