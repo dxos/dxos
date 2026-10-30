@@ -66,8 +66,8 @@ const Scene3DViewStateSchema = Schema.Struct({
   snap: Schema.optional(Schema.Boolean),
   /** Whether this viewer draws the x, y and z axes through the origin; hidden until turned on. */
   axes: Schema.optional(Schema.Boolean),
-  /** The look this viewer picked over the scene's own (`cad` or `presentation`). */
-  theme: Schema.optional(Schema.Literals(['cad', 'presentation'])),
+  /** The look this viewer picked over the scene's own (`cad`, `presentation` or `clay`). */
+  theme: Schema.optional(Schema.Literals(['cad', 'presentation', 'clay'])),
 });
 
 export type Scene3DViewState = Schema.Schema.Type<typeof Scene3DViewStateSchema>;

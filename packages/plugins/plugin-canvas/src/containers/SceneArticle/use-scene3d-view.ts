@@ -6,13 +6,12 @@ import { useCallback } from 'react';
 
 import { Entity } from '@dxos/echo';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
+import { type Theme3D } from '@dxos/react-ui-scene';
 import { type Scene } from '@dxos/scene';
 
 import { type Canvas } from '#types';
 
 import { scene3dViewAspect } from './view-state.ts';
-
-type Theme3D = 'cad' | 'presentation';
 
 export type Scene3DView = {
   camera: Scene.Camera3D | undefined;

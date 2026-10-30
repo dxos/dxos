@@ -4,6 +4,8 @@
 
 import { type RefObject, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
+import { type ThemeMode } from '@dxos/react-ui-canvas';
+import { useThemeContext } from '@dxos/react-ui/Theme';
 import { type Scene, resolveLayout3D } from '@dxos/scene';
 
 import {
@@ -69,15 +71,19 @@ export const useManifoldGeometry = (
   return given ?? geometry;
 };
 
-/** A renderer over the canvas, made again when the look changes, and the container's size as it resizes. */
 /** Whether an event started on the scene's canvas, not on a panel or other overlay drawn over it. */
 export const onScene = (event: Event): boolean => event.target instanceof HTMLCanvasElement;
 
+/**
+ * A renderer over the canvas, made again when the look or the app's light or dark mode changes (both pick the
+ * background and clay's ground), the container's size as it resizes, and the mode.
+ */
 export const useSceneRenderer = (
   containerRef: RefObject<HTMLDivElement | null>,
   canvasRef: RefObject<HTMLCanvasElement | null>,
   look: Theme3D,
-): { renderer?: SceneRenderer3D; size: { width: number; height: number } } => {
+): { renderer?: SceneRenderer3D; size: { width: number; height: number }; mode: ThemeMode } => {
+  const { themeMode: mode } = useThemeContext();
   const [renderer, setRenderer] = useState<SceneRenderer3D>();
   const [size, setSize] = useState({ width: 0, height: 0 });
   useLayoutEffect(() => {
@@ -89,6 +95,7 @@ export const useSceneRenderer = (
     const next = new SceneRenderer3D({
       canvas,
       theme: look,
+      mode,
       background: cssColorToHex(getComputedStyle(container).backgroundColor, '#f4f5f7'),
       selection: focusColor(container),
     });
@@ -103,13 +110,13 @@ export const useSceneRenderer = (
       next.dispose();
       setRenderer(undefined);
     };
-  }, [look]);
+  }, [look, mode]);
   // The focus colour follows the app's theme (light or dark), so it is read again as the view re-renders.
   useLayoutEffect(() => {
     const container = containerRef.current;
     container && renderer?.setSelectionColor(focusColor(container));
   });
-  return { renderer, size };
+  return { renderer, size, mode };
 };
 
 /** The theme's focus colour, which the 2D canvas draws its selection frame in, as a hex string. */

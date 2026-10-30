@@ -5,6 +5,7 @@
 import { NullEngine } from '@babylonjs/core';
 import { describe, expect, test } from 'vitest';
 
+import { SOFT_PALETTE } from '@dxos/react-ui-canvas';
 import { type Scene } from '@dxos/scene';
 
 import { renderList } from './render-list.ts';
@@ -17,6 +18,50 @@ describe('itemSignature', () => {
     expect(itemSignature('solid', spec, mesh())).not.toBe(itemSignature('solid', spec, mesh()));
     const same = mesh();
     expect(itemSignature('solid', spec, same)).toBe(itemSignature('solid', spec, same));
+  });
+});
+
+describe('SceneRenderer3D clay', () => {
+  const engine = () =>
+    new NullEngine({
+      renderWidth: 800,
+      renderHeight: 600,
+      textureSize: 256,
+      deterministicLockstep: false,
+      lockstepMaxSteps: 1,
+    });
+
+  test('the ground is the 2D soft ground of the mode, under the lowest item', () => {
+    const camera: Scene.Camera3D = {
+      target: { x: 0, y: 0, z: 0 },
+      yaw: 0,
+      pitch: 30,
+      distance: 10,
+      fov: 0.8,
+      projection: 'perspective',
+    };
+    const document: Scene.SceneDocument = {
+      scenes: [{ id: 's', dim: '3d', layout: 'root', camera }],
+      layouts: [
+        {
+          id: 'root',
+          dim: '3d',
+          elements: { a: { id: 'a', type: 'cube', center: { x: 0, y: 1, z: 0 }, scale: { x: 2, y: 2, z: 2 } } },
+        },
+      ],
+      models: [],
+    };
+    for (const mode of ['light', 'dark'] as const) {
+      const view = new SceneRenderer3D({ engine: engine(), theme: 'clay', mode, background: '#ffffff' });
+      view.render(renderList(document), camera);
+      expect(view.background).toBe(SOFT_PALETTE[mode].ground);
+      expect(view.groundLevel).toBeCloseTo(0);
+      view.dispose();
+    }
+    // Other looks draw no ground of their own.
+    const cad = new SceneRenderer3D({ engine: engine(), theme: 'cad', background: '#ffffff' });
+    expect(cad.groundLevel).toBeUndefined();
+    cad.dispose();
   });
 });
 

@@ -27,14 +27,25 @@ import {
   DEFAULT_LOOK,
   type LookTone,
   type NodeSurface,
+  type Opacity,
   type Radius,
   type SceneLook,
   type StyleVariant,
   styleVariant,
 } from '../model/index.ts';
-import { DEFAULT_TEXT, NEAREST_HUE, RADIUS_CLASSES, type SetSurface, SURFACES, VIEW_FILLS } from './surfaces.ts';
+import {
+  CANVAS_FILLS,
+  DEFAULT_TEXT,
+  NEAREST_HUE,
+  RADIUS_CLASSES,
+  type SetSurface,
+  SOFT_CANVAS_FILL,
+  SURFACES,
+  VIEW_FILLS,
+} from './surfaces.ts';
 
-export type HueClasses = { surface: string; text: string; border: string };
+/** A hue's classes; `pressed` replaces `surface` on a selected shape whose surface presses in. */
+export type HueClasses = { surface: string; text: string; border: string; pressed?: string };
 
 const HUES: Record<string, HueClasses> = {
   neutral: { surface: 'bg-neutral-surface', text: 'text-neutral-fg', border: 'border-neutral-border' },
@@ -237,7 +248,14 @@ export const frameClasses = (
   // grid behind it would read as part of the child scene.
   const opaque = isViewNode(node) && showsContents(node);
   const clear = !filled || hue.surface === 'bg-transparent';
-  const surface = opaque && clear ? VIEW_FILLS[view.contents][look.tone] : filled ? hue.surface : '';
+  const surface =
+    opaque && clear
+      ? VIEW_FILLS[view.contents][look.tone]
+      : filled
+        ? selected && hue.pressed
+          ? hue.pressed
+          : hue.surface
+        : '';
   const lineStyle = style.lineStyle ?? tokens.borderStyle;
   return [
     surface,
@@ -264,6 +282,13 @@ export const cornerRadius = (
   style: NodeStyle | undefined,
   tokens: Pick<StyleVariant, 'radius' | 'roundedRadius'>,
 ): Radius => (style?.rounded === false ? 'none' : style?.rounded ? tokens.roundedRadius : tokens.radius);
+
+/**
+ * The canvas colour in SVG, under a link's caption and inside a hollow end marker: the soft ground on the soft
+ * background, else the canvas's own surface.
+ */
+export const canvasFillClass = (look: SceneLook, opacity: Opacity): string =>
+  look.background.surface === 'soft' ? SOFT_CANVAS_FILL : CANVAS_FILLS[opacity][look.tone];
 
 export type LineClasses = { stroke: string; fill: string };
 

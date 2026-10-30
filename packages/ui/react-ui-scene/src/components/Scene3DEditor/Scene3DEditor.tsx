@@ -147,7 +147,7 @@ export const Scene3DEditor = ({
   const given = camera ?? (scene?.dim === '3d' ? scene.camera : DEFAULT_CAMERA);
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { renderer, size } = useSceneRenderer(containerRef, canvasRef, look);
+  const { renderer, size, mode } = useSceneRenderer(containerRef, canvasRef, look);
   useEffect(() => onResize?.(size), [size, onResize]);
   const view = useOrbit(containerRef, given, size, {
     enabled: true,
@@ -600,7 +600,7 @@ export const Scene3DEditor = ({
       }}
     >
       <canvas ref={canvasRef} className='dx-cover dx-fill block outline-none' />
-      {size.width > 0 && <SceneLabels items={shown.items} camera={view} viewport={size} theme={look} />}
+      {size.width > 0 && <SceneLabels items={shown.items} camera={view} viewport={size} theme={look} mode={mode} />}
       {children}
     </div>
   );

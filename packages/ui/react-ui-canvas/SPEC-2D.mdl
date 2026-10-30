@@ -862,6 +862,21 @@ feat F-15: Modes
     flight) takes the plain smart route, so its ports change only where the geometry turns and never back and forth.
 ```
 
+```mdl
+feat F-16: The Soft theme
+  req F-16.1: The Soft theme (neumorphism) follows the app's light or dark mode. Every soft shape is the ground colour,
+    and its hue colours only its border and label; a shape with no hue has no border of its own.
+  req F-16.2: The soft style set draws a shape Flat (flush with the ground), Inset (cut into it) or Raised (the default),
+    a raised shape casting a light shadow up and to the left and a dark one down and to the right.
+  req F-16.3: A selected soft shape is pressed in: its shadows fall inside it, deeper than an inset shape's, and the
+    selection outline and handles still draw.
+  req F-16.4: A soft link is a groove: a channel pressed into the ground, in shade on its upper wall and in light on its
+    lower; its arrowheads take the link's hue, and a selected or hovered groove is floored in the focus colour.
+  req F-16.5: The soft background is the ground alone, with no grid, and a link caption's backdrop is the ground.
+  req F-16.6: The ground and shadow tones are one set of tokens per mode (`SOFT_PALETTE`), shared with the 3D Clay
+    look so both dimensions sit on the same ground.
+```
+
 ## Planned
 
 - **Diagram objects as relative composites** ([F-13.3]): done with the diagram handler's rewrite onto the scene
@@ -1322,6 +1337,86 @@ decision D-32: A link that names no type reads as `smart` wherever a stored layo
   why: Generated diagrams and fixtures mostly store no link type, so changing the default reaches them all at once; a stored type still wins, so a link someone chose by hand keeps its shape.
   rejected:
     - Writing `smart` into each fixture and generator while the absent type still reads as a line, which leaves every existing generated document and any new generator on the old default.
+```
+
+```mdl
+decision D-33: Add a neumorphism (Soft) theme to the 2D canvas, in light and dark mode. The hue is an accent only: shapes are the ground colour, raised by soft dual shadows (a light shadow up and to the left, a dark one down and to the right), and the element's hue colours only the border and label.
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [F-16.1, F-16.2]
+```
+
+```mdl
+decision D-34: A selected soft shape is pressed in (inner shadows instead of raised), and the usual selection outline and handles stay.
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [F-16.3]
+```
+
+```mdl
+decision D-35: Soft links are grooves: channels pressed into the ground, with an inset shadow either side, and arrowheads in the accent hue.
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [F-16.4]
+```
+
+```mdl
+decision D-36: The 2D Soft theme and the 3D Clay theme share the decision and, where possible, the implementation: the soft ground and body tones for light and dark, and the shadow parameters, live in one shared place that the 3D theme reads, so both have the same ground colour in each mode.
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [F-16.6]
+```
+
+```mdl
+decision D-37: The soft tokens are `SOFT_PALETTE` (ground #e3e7ee light and #2a2e35 dark, a groove floor a step darker, a white highlight and a blue-grey or black shade) and `SOFT_RELIEF` (raised 6px offset and 14px blur, inset 4 and 8, pressed 6 and 12, in scene px), published to the canvas as CSS variables whose colours are `light-dark()` pairs. Fills in [D-33] and [D-36].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-16.1, F-16.6]
+  why: The 3D renderer needs the ground as a hex value, so the TypeScript constant is the source; `light-dark()` lets one set of classes follow the app's mode and a theme's forced mode without a class per tone. The dark ground sits well above black so its dark shadow still reads.
+  rejected:
+    - Literal Tailwind classes per tone, which would copy every value into class names the 3D renderer cannot read.
+    - A theme stylesheet, which would split the values from the TypeScript the 3D theme imports.
+```
+
+```mdl
+decision D-38: The soft style set's variants are Flat, Inset and Raised, in tone order, Raised the default; shapes have a 1px border and large (`xl`, rounded `2xl`) corners. Fills in [D-33].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-16.2]
+  why: Like every set, tone 0 is the plainest (flush with the ground); a node with no tone draws raised, the look the theme is named for; soft relief reads best on generous corners.
+  rejected:
+    - A fourth, higher Raised variant, which would add a shadow step the theme does not need.
+```
+
+```mdl
+decision D-39: A selected soft shape swaps its surface for a pressed one, an inner shadow deeper than Inset's, so a selected Inset shape still sinks and a Flat one goes in. Fills in [D-34].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-16.3]
+  why: The frame already knows its selection, so the surface table carries the pressed classes beside the resting ones; other sets have none and keep their fill.
+```
+
+```mdl
+decision D-40: A groove is three copies of the link's path: one nudged up and to the left in the shade colour, one nudged down and to the right in the highlight colour, each a quarter of the groove's width, under a floor a step darker than the ground; the soft set draws grooves 8px wide, and a selected or hovered groove floors in the focus colour. Fills in [D-35].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-16.4]
+  why: An SVG stroke can be neither offset nor inset-shadowed; nudged copies cost three plain paths, where a blur filter per link would be far dearer on a large drawing. A groove takes no hue, so selection needs a fill of its own.
+  rejected:
+    - An SVG drop-shadow filter per link.
+```
+
+```mdl
+decision D-41: The soft background has no grid, and a link caption's backdrop and a hollow end marker's inside are the ground rather than the canvas's surface. Fills in [D-33].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-16.5]
+  why: The shapes' relief is the theme's only texture, and a grid reads as print over it; a white caption backdrop would break the single-tone ground. The display panel's grid buttons still draw one on request.
 ```
 
 ---

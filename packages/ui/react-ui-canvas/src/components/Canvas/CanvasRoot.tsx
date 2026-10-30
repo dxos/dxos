@@ -44,7 +44,7 @@ import {
   useViewport,
   useViewProjection,
 } from '../../hooks/index.ts';
-import { defaultThemeRegistry, keyAction, nodeAnimatable } from '../../model/index.ts';
+import { defaultThemeRegistry, keyAction, nodeAnimatable, softVars } from '../../model/index.ts';
 import { fitFrame, visibleView } from '../../utils/index.ts';
 import { InspectorPanel } from '../panels/index.ts';
 import { defaultLinkRegistry, defaultNodeRegistry } from '../SceneLayer/index.ts';
@@ -58,6 +58,9 @@ import {
 import { useSelectionActions } from './CanvasInspectors.tsx';
 import { type CanvasRootProps } from './CanvasRootProps.ts';
 import { DEFAULT_MARGIN, LIGHT_MODE } from './constants.ts';
+
+/** The soft tokens, for whichever look draws with them: a few inherited variables cost nothing to a look that does not. */
+const SOFT_STYLE = softVars();
 
 /** No generators: what a view given none reads. */
 const NO_GENERATORS: Readonly<Record<string, GeneratorSource>> = {};
@@ -597,7 +600,11 @@ export const CanvasRoot = ({
                         (tool.kind === 'hand' || commandHeld) && 'cursor-grab',
                         tool.kind === 'node' && !commandHeld && 'cursor-crosshair',
                       )}
-                      style={look.tone === 'light' ? { ...LIGHT_MODE, contain: 'strict' } : { contain: 'strict' }}
+                      style={
+                        look.tone === 'light'
+                          ? { ...LIGHT_MODE, ...SOFT_STYLE, contain: 'strict' }
+                          : { ...SOFT_STYLE, contain: 'strict' }
+                      }
                       data-testid='scene-view'
                       data-mode={look.tone === 'theme' ? undefined : look.tone}
                       onPointerDown={onBackgroundPointerDown}

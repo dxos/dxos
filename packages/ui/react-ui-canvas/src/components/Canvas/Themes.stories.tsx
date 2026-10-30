@@ -123,3 +123,6 @@ export const Paper: Story = { args: { theme: 'paper' } };
 export const Flat: Story = { args: { theme: 'flat' } };
 
 export const Outline: Story = { args: { theme: 'outline' } };
+
+/** Neumorphism: shapes raised from a ground of their own tone, links as grooves; light or dark with the app. */
+export const Soft: Story = { args: { theme: 'soft' } };

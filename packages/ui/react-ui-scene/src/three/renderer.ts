@@ -17,6 +17,7 @@ import {
   Constants,
   CreateBox,
   CreateCylinder,
+  CreateGround,
   CreateIcoSphere,
   CreateLines,
   CreateLineSystem,
@@ -34,6 +35,7 @@ import {
   Quaternion,
   Scene,
   type ShaderMaterial,
+  ShadowGenerator,
   StandardMaterial,
   UtilityLayerRenderer,
   Vector3,
@@ -41,6 +43,7 @@ import {
 } from '@babylonjs/core';
 
 import { type Instance3D } from '@dxos/animation';
+import { SOFT_PALETTE, type SoftPalette, type ThemeMode } from '@dxos/react-ui-canvas';
 import { type Scene as Model } from '@dxos/scene';
 
 import { groundPoint, orthoHalfHeight, toOrbit } from './camera.ts';
@@ -53,6 +56,7 @@ import {
   createLatticeMaterial,
   createRimMaterial,
   createSurfaceMaterial,
+  setClayAccent,
   setLattice,
   setRim,
   setSurface,
@@ -63,6 +67,18 @@ import { type MaterialSpec, type Theme3D, materialSpec } from './style.ts';
 /** The outline of a selected item: the theme's focus blue. */
 /** The selection colour when the host gives none. */
 const DEFAULT_SELECTION = '#3b82f6';
+
+/** The half-width of the clay theme's ground plane: past the camera's reach, so its edge never shows. */
+const CLAY_GROUND_EXTENT = 1000;
+
+/** How far a clay contact shadow darkens the ground (0 black, 1 none), per mode: dark grounds have less room to darken. */
+const CLAY_SHADOW_DARKNESS: Record<ThemeMode, number> = { light: 0.72, dark: 0.55 };
+
+/** Clay's sky and key light per mode: a dark ground is lit harder, so a body's top still rises above it. */
+const CLAY_LIGHTS: Record<ThemeMode, { sky: number; key: number }> = {
+  light: { sky: 0.72, key: 0.3 },
+  dark: { sky: 1.15, key: 0.6 },
+};
 
 /** The radius of the faint lattice sphere the presentation theme draws behind everything. */
 const BACKDROP_RADIUS = 4000;
@@ -87,6 +103,8 @@ type ItemMeshes = {
 
 export type SceneRenderer3DOptions = {
   theme: Theme3D;
+  /** Light or dark, which picks the clay theme's ground; light when unset. */
+  mode?: ThemeMode;
   /** The CAD background, read from the surface the view sits on. */
   background: string;
   /** The selection colour (the theme's focus colour, as the 2D canvas's selection frame); a blue when unset. */
@@ -188,15 +206,29 @@ export class SceneRenderer3D {
   /** The selected face: the item's key and the face's axis-aligned outward normal, drawn as a pane over that side. */
   #faceSelection?: { key: string; normal: Model.Vec3 };
   #faceMesh?: { mesh: Mesh; center: Vector3 };
+  /** The clay theme's tones: the 2D soft theme's, so the two dimensions share a ground in each mode. */
+  readonly #palette?: SoftPalette;
+  /** The clay theme's ground plane and the shadows the items cast on it. */
+  readonly #ground?: { mesh: Mesh; shadows: ShadowGenerator };
+  readonly #background: string;
 
-  constructor({ canvas, engine, theme, background, selection = DEFAULT_SELECTION }: SceneRenderer3DOptions) {
+  constructor({
+    canvas,
+    engine,
+    theme,
+    mode = 'light',
+    background,
+    selection = DEFAULT_SELECTION,
+  }: SceneRenderer3DOptions) {
     this.#theme = theme;
     this.#selection = selection;
     const presentation = theme === 'presentation';
+    this.#palette = theme === 'clay' ? SOFT_PALETTE[mode] : undefined;
+    this.#background = this.#palette?.ground ?? (presentation ? PRESENTATION_BACKGROUND : background);
     this.#engine =
       engine ?? new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, adaptToDeviceRatio: true });
     this.#scene = new Scene(this.#engine);
-    this.#scene.clearColor = Color4.FromHexString(`${presentation ? PRESENTATION_BACKGROUND : background}ff`);
+    this.#scene.clearColor = Color4.FromHexString(`${this.#background}ff`);
     // Dithering keeps the smooth shading of large spheres from banding in 8-bit colour.
     this.#scene.imageProcessingConfiguration.ditheringEnabled = true;
 
@@ -213,6 +245,8 @@ export class SceneRenderer3D {
       const key = new DirectionalLight('key', new Vector3(-20, -40, -30), this.#scene);
       key.intensity = 2.4;
       this.#createBackdrop();
+    } else if (this.#palette) {
+      this.#ground = this.#createClayGround(this.#palette, mode);
     } else {
       const light = new HemisphericLight('light', new Vector3(0.3, 1, -0.4), this.#scene);
       light.intensity = 1;
@@ -241,6 +275,16 @@ export class SceneRenderer3D {
     this.#scene.onAfterCameraRenderObservable.add(() => this.#engine.setStencilOperationDepthFail(Constants.KEEP));
     // Selection boxes draw over the scene, as 2D's frame does, so a face that an edge lies on cannot z-fight with it.
     this.#scene.setRenderingAutoClearDepthStencil(OVERLAY_GROUP, true, true, false);
+  }
+
+  /** The colour the view clears to, as `#rrggbb`. */
+  get background(): string {
+    return this.#background;
+  }
+
+  /** The height of the clay ground: the grid's plane, or under the lowest item; none in other looks. */
+  get groundLevel(): number | undefined {
+    return this.#ground?.mesh.position.y;
   }
 
   /** The selection colour, as a hex string. */
@@ -355,6 +399,7 @@ export class SceneRenderer3D {
     { geometry, effects = [] }: { geometry?: GeometrySource; effects?: readonly Instance3D[] } = {},
   ): void {
     this.#updateItems(list.items, geometry);
+    this.#placeGround();
     this.#outline();
     this.#drawFace();
     this.#updateLinks(list);
@@ -659,7 +704,9 @@ export class SceneRenderer3D {
 
   #createGrid(): LinesMesh {
     const { lines } = groundGrid({ extent: GRID_EXTENT, majorEvery: GRID_MAJOR_EVERY });
-    const tint = Color3.FromHexString(this.#theme === 'presentation' ? '#8da2e0' : '#9aa1ad');
+    const tint = this.#palette
+      ? Color3.FromHexString(this.#palette.ground).scale(0.8)
+      : Color3.FromHexString(this.#theme === 'presentation' ? '#8da2e0' : '#9aa1ad');
     const grid = CreateLineSystem(
       'grid',
       {
@@ -691,6 +738,44 @@ export class SceneRenderer3D {
     // A guide, as the grid is.
     mesh.isPickable = false;
     return mesh;
+  }
+
+  /**
+   * Clay's ground: a plane in the ground tone lit by one light straight down, so it matches the background exactly where
+   * nothing shades it, and darkens softly under each item. The items' own lights are a soft sky and a weak key from the
+   * upper left, which model the bodies without a hard edge.
+   */
+  #createClayGround(palette: SoftPalette, mode: ThemeMode): { mesh: Mesh; shadows: ShadowGenerator } {
+    const ground = Color3.FromHexString(palette.ground);
+    const sky = new HemisphericLight('ambient', new Vector3(0, 1, 0), this.#scene);
+    sky.intensity = CLAY_LIGHTS[mode].sky;
+    sky.groundColor = ground.scale(0.75);
+    const key = new DirectionalLight('key', new Vector3(1, -2, -1), this.#scene);
+    key.intensity = CLAY_LIGHTS[mode].key;
+    key.specular = Color3.Black();
+
+    const mesh = CreateGround('ground', { width: CLAY_GROUND_EXTENT * 2, height: CLAY_GROUND_EXTENT * 2 }, this.#scene);
+    mesh.isPickable = false;
+    mesh.receiveShadows = true;
+    const material = new StandardMaterial('ground', this.#scene);
+    material.diffuseColor = ground;
+    material.specularColor = Color3.Black();
+    mesh.material = material;
+    sky.excludedMeshes.push(mesh);
+    key.excludedMeshes.push(mesh);
+
+    const contact = new DirectionalLight('contact', new Vector3(0, -1, 0), this.#scene);
+    contact.position = new Vector3(0, 100, 0);
+    contact.intensity = 1;
+    contact.specular = Color3.Black();
+    contact.includedOnlyMeshes.push(mesh);
+    // A coarse map blurred wide: a soft pool under each item rather than a sharp footprint.
+    const shadows = new ShadowGenerator(512, contact);
+    shadows.useBlurExponentialShadowMap = true;
+    shadows.useKernelBlur = true;
+    shadows.blurKernel = 64;
+    shadows.setDarkness(CLAY_SHADOW_DARKNESS[mode]);
+    return { mesh, shadows };
   }
 
   #createBackdrop(): void {
@@ -750,15 +835,17 @@ export class SceneRenderer3D {
     const surface = this.#createSurface(item, data);
     // Picking finds an item by the key its surface carries; a composite's frame says so, to be looked through.
     surface.metadata = { key: item.key, frame: item.frame === true };
-    const material = createSurfaceMaterial(this.#scene, `surface-${item.key}`, spec.kind !== 'standard');
+    const material = createSurfaceMaterial(this.#scene, `surface-${item.key}`, spec.kind === 'rim' ? 'pbr' : spec.kind);
     surface.material = material;
-    if (spec.edges) {
+    // A sphere has no edge, and its pole fans would draw as stray dots; clay's rim carries its hue instead.
+    if (spec.edges && !(spec.kind === 'clay' && item.type === 'sphere')) {
       surface.enableEdgesRendering();
       surface.edgesWidth = 2;
-      // Darker than the surface, so the edges read against it.
-      const edge = Color3.FromHexString(spec.color).scale(0.45);
+      // Darker than the surface, so the edges read against it; clay's body is the ground, so its edges are the hue itself.
+      const edge = Color3.FromHexString(spec.color).scale(spec.kind === 'clay' ? 1 : 0.45);
       surface.edgesColor = new Color4(edge.r, edge.g, edge.b, 1);
     }
+    this.#ground?.shadows.addShadowCaster(surface);
     const meshes: ItemMeshes = { signature, surface, material };
     // A see-through shell in the presentation theme carries a rim and a lattice, parented so they move with it.
     if (spec.kind === 'rim') {
@@ -779,6 +866,25 @@ export class SceneRenderer3D {
       meshes.lattice = { mesh: lattice, material: latticeMaterial };
     }
     return meshes;
+  }
+
+  /**
+   * Sets the clay ground at the grid's plane, or just under the lowest visible item when one reaches below it, so no item
+   * sinks into the ground and the grid is never under it.
+   */
+  #placeGround(): void {
+    if (!this.#ground) {
+      return;
+    }
+    let lowest = Infinity;
+    for (const { surface } of this.#items.values()) {
+      if (surface.isEnabled()) {
+        surface.computeWorldMatrix(true);
+        lowest = Math.min(lowest, surface.getBoundingInfo().boundingBox.minimumWorld.y);
+      }
+    }
+    // A hair below, so a face resting on the ground does not fight it.
+    this.#ground.mesh.position.y = Math.min(lowest, 0) - 0.002;
   }
 
   #updateItems(items: readonly RenderItem[], geometry: GeometrySource | undefined): void {
@@ -814,8 +920,14 @@ export class SceneRenderer3D {
         radians(item.rotation.z),
       );
       const color = Color3.FromHexString(spec.color);
-      // A rim shell's surface is nearly clear; the rim and lattice carry its colour.
-      setSurface(material, color, spec.kind === 'rim' ? spec.alpha * 0.25 : spec.alpha);
+      // A rim shell's surface is nearly clear; the rim and lattice carry its colour. A clay body is the ground's tone.
+      const body = this.#palette && spec.kind === 'clay' ? Color3.FromHexString(this.#palette.ground) : color;
+      setSurface(material, body, spec.kind === 'rim' ? spec.alpha * 0.25 : spec.alpha);
+      if (spec.kind === 'clay') {
+        // A sphere's rim carries its hue; any other body's edges do, and a rim on its flat faces would wash them.
+        setClayAccent(material, item.type === 'sphere' ? color : Color3.Black());
+        surface.edgesColor = new Color4(color.r, color.g, color.b, 1);
+      }
       rim && setRim(rim.material, color, RIM_STRENGTH * Math.min(1, spec.alpha / 0.4));
       lattice && setLattice(lattice.material, color, LATTICE_OPACITY * Math.min(1, spec.alpha / 0.4));
     }
@@ -829,7 +941,10 @@ export class SceneRenderer3D {
       const existing = this.#links.get(link.key);
       const line = CreateLines(`link-${link.key}`, { points, updatable: true, instance: existing }, this.#scene);
       if (!existing) {
-        line.color = Color3.FromHexString(this.#theme === 'presentation' ? '#8ea2e6' : '#555b66');
+        // A clay link is a darker line of the ground, as a 2D soft link is a groove in it.
+        line.color = this.#palette
+          ? Color3.FromHexString(this.#palette.ground).scale(0.6)
+          : Color3.FromHexString(this.#theme === 'presentation' ? '#8ea2e6' : '#555b66');
         line.isPickable = false;
         this.#links.set(link.key, line);
       }

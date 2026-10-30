@@ -26,7 +26,7 @@ import {
 import { TOOLS_3D } from './tools3d.ts';
 import { Viewport3D } from './Viewport3D.tsx';
 
-/** The 3D looks, each a default style catalog: CAD's flat parts, Presentation's lit materials. */
+/** The 3D looks, each a default style catalog: CAD's flat parts, Presentation's lit materials, Clay's matte solids. */
 export const CATALOGS_3D: readonly EditorCatalog[] = [
   {
     id: 'cad',
@@ -44,6 +44,15 @@ export const CATALOGS_3D: readonly EditorCatalog[] = [
       metal: { name: 'Metal', hue: 'neutral', metalness: 0.9, roughness: 0.3 } satisfies NamedStyle3D,
       glass: { name: 'Glass', hue: 'sky', surface: 'glass' } satisfies NamedStyle3D,
       glow: { name: 'Glow', hue: 'amber', emissive: 0.8 } satisfies NamedStyle3D,
+    },
+  },
+  {
+    id: 'clay',
+    name: 'Clay',
+    styles: {
+      body: { name: 'Body', hue: 'neutral' } satisfies NamedStyle3D,
+      accent: { name: 'Accent', hue: 'blue' } satisfies NamedStyle3D,
+      ghost: { name: 'Ghost', hue: 'violet', surface: 'tint' } satisfies NamedStyle3D,
     },
   },
 ];

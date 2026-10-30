@@ -56,6 +56,7 @@ import {
   type NodeRegistry,
   type NodeViewProps,
   RADIUS_PX,
+  SOFT_GROOVE_LIP,
   type View,
   type ViewStore,
   nodeDef,
@@ -63,13 +64,14 @@ import {
 } from '../../model/index.ts';
 import {
   BORDER_CLASSES,
-  CANVAS_FILLS,
   CAPTION_TEXT,
   DEFAULT_CELL,
+  GROOVE_CLASSES,
   type LatticeSpec,
   type PartEditing,
   type PartKey,
   alignClasses,
+  canvasFillClass,
   classedLink,
   classedNode,
   compositeBounds,
@@ -220,7 +222,7 @@ export const SceneLayer = memo(
     const linkWidth = look.styleSet.link.width * weight;
     // End markers keep the line's own weight whatever the set draws the link as, so an arrowhead stays crisp.
     const markerWidth = LINK_WIDTH * weight;
-    const canvasFill = CANVAS_FILLS.opaque[look.tone];
+    const canvasFill = canvasFillClass(look, 'opaque');
     // Everything but the portal being zoomed into fades with the zoom (see `layerOpacity`).
     const fadeStyle: CSSProperties | undefined = focus && focus.opacity < 1 ? { opacity: focus.opacity } : undefined;
     // One set of end markers per line colour in use, sized in scene units so they scale with the nodes they join.
@@ -299,6 +301,7 @@ export const SceneLayer = memo(
                                   ? 'stroke-focus/50'
                                   : lineClasses(lines.get(link.id)?.hue).stroke
                           }
+                          emphasis={!plain && (selected?.has(link.id) || hoveredLink === link.id)}
                           width={linkWidth}
                           lineStyle={lines.get(link.id)?.lineStyle}
                           linkId={link.id}
@@ -308,7 +311,7 @@ export const SceneLayer = memo(
                         <LinkText
                           path={path}
                           text={link.text}
-                          backdrop={CANVAS_FILLS[look.styleSet.link.caption][look.tone]}
+                          backdrop={canvasFillClass(look, look.styleSet.link.caption)}
                           textClass={CAPTION_TEXT[look.tone]}
                           fontSize={lines.get(link.id)?.fontSize ?? LINK_FONT_SIZE}
                         />
@@ -682,6 +685,8 @@ type LinkStrokeProps = {
   kind: LinkKind;
   path: string;
   stroke: string;
+  /** Selected or hovered: a groove, which draws no hue, then floors its channel in `stroke`. */
+  emphasis?: boolean;
   width: number;
   lineStyle: LineStyle['lineStyle'];
   linkId: string;
@@ -689,10 +694,37 @@ type LinkStrokeProps = {
 
 /**
  * A link's visible stroke as its style set draws it: a line; a tube, its hue lit along the middle; rails, two edges over
- * a faint strip; or glass, a translucent strip with fine edges.
+ * a faint strip; glass, a translucent strip with fine edges; or a groove, a channel pressed into the soft ground.
  */
-const LinkStroke = ({ id, kind, path, stroke, width, lineStyle, linkId }: LinkStrokeProps) => {
+const LinkStroke = ({ id, kind, path, stroke, emphasis, width, lineStyle, linkId }: LinkStrokeProps) => {
   const dash = dashArray(lineStyle, width);
+  if (kind === 'groove') {
+    // Copies of the channel nudged up-left in shade and down-right in light, under its floor: an SVG stroke cannot be
+    // offset or inset-shadowed, and a filter per link would be far dearer to draw.
+    const lip = Math.max(0.75, width * SOFT_GROOVE_LIP);
+    return (
+      <g strokeLinejoin='round' strokeLinecap='round' strokeDasharray={dash} data-link-id={linkId}>
+        <path
+          d={path}
+          className={mx('fill-none', GROOVE_CLASSES.highlight)}
+          strokeWidth={width}
+          transform={`translate(${lip} ${lip})`}
+        />
+        <path
+          d={path}
+          className={mx('fill-none', GROOVE_CLASSES.shade)}
+          strokeWidth={width}
+          transform={`translate(${-lip} ${-lip})`}
+        />
+        <path
+          d={path}
+          className={mx('fill-none', emphasis ? stroke : GROOVE_CLASSES.floor)}
+          strokeWidth={width}
+          opacity={emphasis ? 0.6 : 1}
+        />
+      </g>
+    );
+  }
   if (kind === 'line') {
     return (
       <path

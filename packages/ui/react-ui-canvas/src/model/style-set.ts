@@ -18,7 +18,8 @@ import { LINE_STYLES, StyleHue } from '@dxos/scene';
  * How a hue fills a node. `hue-clear`, `hue-strong`, `hue-role` and `hue-light` are the canvas's own tones (outline,
  * strong, medium, light); `muted-subtle`, `muted` and `muted-solid` are soft to firm solid fills, `muted-clear` the subtle edge with no fill; `outline` draws no
  * fill and a hue border; `glass-clear`, `glass-frost`, `glass-tint` and `glass-solid` run from an edge alone to an
- * opaque glass colour.
+ * opaque glass colour; `soft-flat`, `soft-inset` and `soft-raised` are the soft ground flush with, cut into, or raised out of
+ * the background by dual shadows, the hue marking only the border and label.
  */
 export const NodeSurface = Schema.Literals([
   'hue-clear',
@@ -34,6 +35,9 @@ export const NodeSurface = Schema.Literals([
   'glass-frost',
   'glass-tint',
   'glass-solid',
+  'soft-flat',
+  'soft-inset',
+  'soft-raised',
 ]);
 export type NodeSurface = Schema.Schema.Type<typeof NodeSurface>;
 
@@ -46,9 +50,9 @@ export const RADIUS_PX: Record<Radius, number> = { 'none': 0, 'sm': 4, 'md': 6, 
 
 /**
  * How a link is drawn: `line`, a single stroke; `tube`, a shaded strip; `rails`, two edges over a faint strip;
- * `glass`, a translucent strip with fine edges.
+ * `glass`, a translucent strip with fine edges; `groove`, a channel pressed into the soft ground.
  */
-export const LinkKind = Schema.Literals(['line', 'tube', 'rails', 'glass']);
+export const LinkKind = Schema.Literals(['line', 'tube', 'rails', 'glass', 'groove']);
 export type LinkKind = Schema.Schema.Type<typeof LinkKind>;
 
 /** Whether a surface hides what is behind it or lets it show through. */
@@ -114,8 +118,8 @@ export type BackgroundGrid = Schema.Schema.Type<typeof BackgroundGrid>;
 export const Background = Schema.Struct({
   id: Schema.String,
   name: Schema.String,
-  /** The canvas fill: the theme's base surface, warm paper, or the near-black of a film's frame. */
-  surface: Schema.Literals(['base', 'paper', 'film']),
+  /** The canvas fill: the theme's base surface, warm paper, the near-black of a film's frame, or the soft ground. */
+  surface: Schema.Literals(['base', 'paper', 'film', 'soft']),
   grid: BackgroundGrid,
   washes: Schema.Array(Wash),
   /** The field fades out towards its edges rather than ending at the scene's padded bounds. */
@@ -231,6 +235,28 @@ export const GLASS_STYLE_SET: StyleSet = {
   view: { contents: 'translucent' },
 };
 
+const SOFT_SHAPE = {
+  borderWidth: 1,
+  borderStyle: 'solid',
+  radius: 'xl',
+  roundedRadius: '2xl',
+  label: 'surface',
+} as const;
+
+/** Neumorphism: every shape is the ground, flush, cut in or (by default) raised; the hue is only an accent. */
+export const SOFT_STYLE_SET: StyleSet = {
+  id: 'soft',
+  name: 'Soft',
+  variants: [
+    { id: 'flat', name: 'Flat', surface: 'soft-flat', ...SOFT_SHAPE },
+    { id: 'inset', name: 'Inset', surface: 'soft-inset', ...SOFT_SHAPE },
+    { id: 'raised', name: 'Raised', surface: 'soft-raised', ...SOFT_SHAPE },
+  ],
+  defaultVariant: 2,
+  link: { kind: 'groove', width: 8, caption: 'opaque' },
+  view: { contents: 'opaque' },
+};
+
 export const PLAIN_BACKGROUND: Background = {
   id: 'plain',
   name: 'Plain',
@@ -274,6 +300,9 @@ export const PAPER_BACKGROUND: Background = {
 /** A film's ground: near-black, with nothing drawn on it, for a scene that is animated and exported. */
 export const FILM_BACKGROUND: Background = { ...PLAIN_BACKGROUND, id: 'film', name: 'Film', surface: 'film' };
 
+/** The soft ground with no grid: the shapes' relief is the only texture. */
+export const SOFT_BACKGROUND: Background = { ...PLAIN_BACKGROUND, id: 'soft', name: 'Soft', surface: 'soft' };
+
 export const GLASS_NIGHT_THEME: Theme = {
   id: 'glass-night',
   name: 'Glass',
@@ -301,10 +330,14 @@ export const OUTLINE_THEME: Theme = { id: 'outline', name: 'Outline', styleSet: 
 /** Flat shapes on the film ground, always dark: for titles and motion graphics. */
 export const FILM_THEME: Theme = { id: 'film', name: 'Film', styleSet: 'flat', background: 'film', mode: 'dark' };
 
+/** Soft shapes raised from a ground of the same tone, light or dark with the app. */
+export const SOFT_THEME: Theme = { id: 'soft', name: 'Soft', styleSet: 'soft', background: 'soft' };
+
 export const DEFAULT_STYLE_SETS: Readonly<Record<string, StyleSet>> = {
   flat: FLAT_STYLE_SET,
   outline: OUTLINE_STYLE_SET,
   glass: GLASS_STYLE_SET,
+  soft: SOFT_STYLE_SET,
 };
 
 export const DEFAULT_BACKGROUNDS: Readonly<Record<string, Background>> = {
@@ -314,6 +347,7 @@ export const DEFAULT_BACKGROUNDS: Readonly<Record<string, Background>> = {
   glow: GLOW_BACKGROUND,
   paper: PAPER_BACKGROUND,
   film: FILM_BACKGROUND,
+  soft: SOFT_BACKGROUND,
 };
 
 export const DEFAULT_THEMES: Readonly<Record<string, Theme>> = {
@@ -323,12 +357,13 @@ export const DEFAULT_THEMES: Readonly<Record<string, Theme>> = {
   'flat': FLAT_THEME,
   'outline': OUTLINE_THEME,
   'film': FILM_THEME,
+  'soft': SOFT_THEME,
 };
 
 /** The ids of the built-ins, for pickers. */
-export const THEME_IDS = ['glass-night', 'night', 'paper', 'flat', 'outline', 'film'] as const;
-export const STYLE_SET_IDS = ['flat', 'outline', 'glass'] as const;
-export const BACKGROUND_IDS = ['plain', 'dots', 'lines', 'glow', 'paper', 'film'] as const;
+export const THEME_IDS = ['glass-night', 'night', 'paper', 'flat', 'outline', 'film', 'soft'] as const;
+export const STYLE_SET_IDS = ['flat', 'outline', 'glass', 'soft'] as const;
+export const BACKGROUND_IDS = ['plain', 'dots', 'lines', 'glow', 'paper', 'film', 'soft'] as const;
 
 //
 // Registry.

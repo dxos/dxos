@@ -20,6 +20,7 @@ import {
   resolveBackground,
   resolveStyleSet,
   shortcutFor,
+  softVars,
   styleVariant,
 } from '../../../model/index.ts';
 import { BACKGROUND_FILLS, FLOATING_BAR, RADIUS_CLASSES, variantClasses } from '../../../utils/index.ts';
@@ -33,6 +34,9 @@ const SWATCH_CANVAS: Record<LookTone, string> = {
 };
 
 /** A wash in a swatch, as the background draws it across the field: a soft spot of its hue. */
+/** The soft tokens at a swatch's size, since the picker's menu is portalled out of the canvas that sets them. */
+const SWATCH_SOFT = softVars(0.2);
+
 const washGradient = (theme: Theme, registry: ThemeRegistry): CSSProperties | undefined => {
   const background = resolveBackground(registry, theme.background);
   if (background.washes.length === 0) {
@@ -69,7 +73,7 @@ export const ThemeSwatch = ({ classNames, theme, registry }: ThemeSwatchProps) =
         BACKGROUND_FILLS[background.surface] || SWATCH_CANVAS[tone],
         classNames,
       )}
-      style={washGradient(theme, registry)}
+      style={{ ...SWATCH_SOFT, ...washGradient(theme, registry) }}
       data-testid={`theme-swatch-${theme.id}`}
     >
       <span className={shape('blue')} />

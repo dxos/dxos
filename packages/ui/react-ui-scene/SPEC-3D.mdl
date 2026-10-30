@@ -131,10 +131,14 @@ feat F-5: Meshes
 
 ```mdl
 feat F-6: Looks and materials
-  req F-6.1: The looks are CAD (flat parts with edges) and Presentation (lit materials), each a default style
-    catalog: CAD offers Part, Highlight and Clearance, Presentation Metal, Glass and Glow.
+  req F-6.1: The looks are CAD (flat parts with edges), Presentation (lit materials) and Clay (matte solids), each a
+    default style catalog: CAD offers Part, Highlight and Clearance, Presentation Metal, Glass and Glow, Clay Body,
+    Accent and Ghost.
   req F-6.2: An element's `Style3D` draws as a material over its hue and tone: a solid, tinted or glass surface,
     edges, opacity, metalness, roughness and glow.
+  req F-6.3: Clay follows the app's light or dark mode: its bodies and the ground plane under them are the 2D soft
+    ground of that mode (`SOFT_PALETTE`), lit softly and casting soft contact shadows, and an element's hue draws only
+    as its edges, or as a rim on a sphere.
 ```
 
 ```mdl
@@ -214,6 +218,43 @@ decision D-7: Escape steps back one thing at a time in 3D: a shape being sized, 
   for: user:richburdon
   affects: [F-2.5]
   why: Each is a state the person entered last, so one key leaves them in reverse order, as 2D's Escape leaves an edit before a drill.
+```
+
+```mdl
+decision D-8: Add a Clay look to 3D, in light and dark mode: matte solids in the ground colour under soft, wide light, with soft contact shadows on a ground plane of the same tone, and the element's hue as edge or accent. Light and dark follow the app.
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [F-6.1, F-6.3]
+```
+
+```mdl
+decision D-9: The 3D Clay look and the 2D Soft theme share the decision and, where possible, the implementation: Clay reads the same soft ground tones per mode as the 2D theme, so both have the same ground colour in each mode.
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [F-6.3]
+```
+
+```mdl
+decision D-10: Clay clears to the 2D soft ground of the app's mode and lays a ground plane in that tone at the grid's plane, or just under the lowest item when one reaches below it, lit by one light straight down that casts the items' shadows through a coarse, widely blurred map; the bodies are lit by a sky light and a weak key from the upper left, harder in dark mode. Fills in [D-8] and [D-9].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-6.3]
+  why: A ground lit only by a light straight down matches the background exactly where nothing shades it, so the plane has no visible edge; a coarse blurred map gives a soft pool under each item rather than a sharp footprint; on the dark ground the bodies need more light for their tops to rise above it.
+  rejected:
+    - A ground always at y = 0, which hides any item that reaches below it.
+    - A shadow-only material, which needs a Babylon package the renderer does not otherwise load.
+```
+
+```mdl
+decision D-11: A clay body's hue draws as its edges, in the hue itself, on every element whatever its `border`; a sphere, which has no edges, carries it as a narrow Fresnel rim instead. Clay links are a darker line of the ground, and the Clay catalog offers Body, Accent and Ghost. Fills in [D-8].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-6.1, F-6.3]
+  why: Edge rendering on a sphere draws stray dots at its poles, and a rim on a flat face washes the whole face in the hue, so each shape takes the accent it can carry.
+  rejected:
+    - Tinting the whole body a little towards the hue, which breaks the single-tone ground.
 ```
 
 ---

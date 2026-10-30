@@ -16,7 +16,7 @@ import { NodeStyle, type NodeTone, STYLE_HUES, type StyleHue } from '@dxos/scene
 import { mx } from '@dxos/ui-theme';
 
 import { useSceneLook } from '../../hooks/index.ts';
-import { CLASSIC_LOOK, type SceneLook, styleVariant } from '../../model/index.ts';
+import { CLASSIC_LOOK, type SceneLook, softVars, styleVariant } from '../../model/index.ts';
 import { BORDER_CLASSES, TONES, variantClasses } from '../../utils/index.ts';
 
 export type StyleChoice = { hue: StyleHue; tone: NodeTone };
@@ -36,6 +36,9 @@ const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1
 
 /** No item background, pressed or hovered: the swatch is the target, and the selection is drawn around it. */
 const ITEM_CLASSES = 'min-w-0 px-0 bg-transparent hover:bg-transparent aria-checked:bg-transparent';
+
+/** The soft tokens at a swatch's size, since the grid may sit outside the canvas that sets them. */
+const SWATCH_SOFT = softVars(0.25);
 
 export type StyleGridProps = {
   /** The look whose style set's variants the rows show; the enclosing view's by default. */
@@ -112,6 +115,7 @@ export const StyleGrid = ({
                   classes.border,
                   selected === key && 'outline-2 outline-offset-2 outline-primary-500',
                 )}
+                style={SWATCH_SOFT}
               />
             </ToggleGroup.Item>
           );

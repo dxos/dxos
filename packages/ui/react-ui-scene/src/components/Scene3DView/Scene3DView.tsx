@@ -16,7 +16,7 @@ export type Scene3DViewProps = Util.ThemedClassName<{
   document: Scene.SceneDocument;
   /** The scene to draw, by id; the document's root scene when unset. */
   scene?: string;
-  /** `cad` or `presentation`; the scene's own when unset. */
+  /** `cad`, `presentation` or `clay`; the scene's own when unset. */
   theme?: Theme3D;
   /** Draws the ground grid. */
   grid?: boolean;
@@ -56,7 +56,7 @@ export const Scene3DView = ({
   const given = camera ?? (root?.dim === '3d' ? root.camera : DEFAULT_CAMERA);
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { renderer, size } = useSceneRenderer(containerRef, canvasRef, look);
+  const { renderer, size, mode } = useSceneRenderer(containerRef, canvasRef, look);
   const view = useOrbit(containerRef, given, size, { enabled: orbit });
 
   const list = useMemo(() => renderList(doc, root, overrides), [doc, root, overrides]);
@@ -81,7 +81,7 @@ export const Scene3DView = ({
       data-testid='scene.3d'
     >
       <canvas ref={canvasRef} className='dx-cover dx-fill block outline-none' />
-      {size.width > 0 && <SceneLabels items={list.items} camera={view} viewport={size} theme={look} />}
+      {size.width > 0 && <SceneLabels items={list.items} camera={view} viewport={size} theme={look} mode={mode} />}
     </div>
   );
 };

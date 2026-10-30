@@ -8,7 +8,15 @@ import { type Node, type StyleMap } from '@dxos/scene';
 
 import { ViewBuilder } from '../builder/index.ts';
 import { CLASSIC_LOOK, defaultThemeRegistry, resolveLook } from '../model/index.ts';
-import { classedLink, classedNode, frameClasses, hueClasses, splitClassEdit, surfaceClasses } from './style.ts';
+import {
+  canvasFillClass,
+  classedLink,
+  classedNode,
+  frameClasses,
+  hueClasses,
+  splitClassEdit,
+  surfaceClasses,
+} from './style.ts';
 
 describe('style classes', () => {
   const styles: StyleMap = {
@@ -120,5 +128,29 @@ describe('style sets', () => {
     expect(frameClasses(nodes.blue, false, false, false, outline)[3]).toBe('');
     // Selection still draws in the focus colour.
     expect(frameClasses(nodes.blue, true, false, false, glass)[2]).toBe('border-focus');
+  });
+
+  test('soft shapes are the ground colour, hue only accents them, and a selected one is pressed in', ({ expect }) => {
+    const soft = resolveLook(defaultThemeRegistry, { theme: 'soft' });
+    const [surface, text, border] = frameClasses(nodes.blue, false, false, false, soft);
+    expect(surface).toBe('bg-(--dx-soft-ground) shadow-(--dx-soft-raised)');
+    expect(text).toBe('text-blue-700 dark:text-blue-300');
+    expect(border).toBe('border-blue-500/45 dark:border-blue-400/45');
+    // A shape with no hue is pure relief: no edge of its own.
+    expect(frameClasses(nodes.plain, false, false, false, soft)[2]).toBe('border-transparent');
+    // Selected: the same ground pressed in, with the focus outline kept.
+    const selected = frameClasses(nodes.blue, true, false, false, soft);
+    expect(selected[0]).toBe('bg-(--dx-soft-ground) shadow-(--dx-soft-pressed)');
+    expect(selected[2]).toBe('border-focus');
+    // Other sets have no pressed state, so selection leaves their fill alone.
+    const glass = resolveLook(defaultThemeRegistry, { theme: 'paper' });
+    expect(frameClasses(nodes.blue, true, false, false, glass)[0]).toBe('bg-white/55');
+  });
+
+  test('the canvas fill under captions and hollow markers is the soft ground on a soft background', ({ expect }) => {
+    const soft = resolveLook(defaultThemeRegistry, { theme: 'soft' });
+    expect(canvasFillClass(soft, 'opaque')).toBe('fill-(--dx-soft-ground)');
+    const glass = resolveLook(defaultThemeRegistry, { theme: 'paper' });
+    expect(canvasFillClass(glass, 'opaque')).toBe('fill-white');
   });
 });

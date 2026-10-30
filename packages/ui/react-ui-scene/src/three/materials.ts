@@ -11,6 +11,7 @@
 import {
   Color3,
   Constants,
+  FresnelParameters,
   Material,
   PBRMaterial,
   type Scene,
@@ -84,9 +85,12 @@ export const setRim = (material: ShaderMaterial, color: Color3, opacity: number)
   material.setFloat('uOpacity', opacity);
 };
 
-/** A shaded sphere: PBR for the presentation look (dithered by the scene's image processing), flat for CAD. */
-export const createSurfaceMaterial = (scene: Scene, name: string, presentation: boolean): Material => {
-  if (presentation) {
+/**
+ * A shaded surface: PBR for the presentation look (dithered by the scene's image processing), matte for clay, flat for
+ * CAD.
+ */
+export const createSurfaceMaterial = (scene: Scene, name: string, kind: 'standard' | 'pbr' | 'clay'): Material => {
+  if (kind === 'pbr') {
     const material = new PBRMaterial(name, scene);
     material.metallic = 0;
     material.roughness = 0.6;
@@ -94,8 +98,37 @@ export const createSurfaceMaterial = (scene: Scene, name: string, presentation: 
     return material;
   }
   const material = new StandardMaterial(name, scene);
-  material.specularColor = new Color3(0.1, 0.1, 0.1);
+  // Clay is matte: a sheen would read as plastic.
+  material.specularColor = kind === 'clay' ? new Color3(0.02, 0.02, 0.02) : new Color3(0.1, 0.1, 0.1);
+  if (kind === 'clay') {
+    // The accent at a sphere's silhouette, where it has no edge to draw its hue on; the Fresnel colours scale the
+    // emissive colour, so it is white.
+    material.emissiveColor = Color3.White();
+    material.emissiveFresnelParameters = new FresnelParameters({
+      leftColor: Color3.Black(),
+      rightColor: Color3.Black(),
+      bias: CLAY_RIM_BIAS,
+      power: CLAY_RIM_POWER,
+    });
+  }
   return material;
+};
+
+/**
+ * How far clay's hue rim reaches in from the silhouette: Babylon weighs it by one less (bias + facing) to the power, so a
+ * bias and a power below one keep it to a band at the edge.
+ */
+export const CLAY_RIM_BIAS = 0.25;
+export const CLAY_RIM_POWER = 0.6;
+
+/** How strongly clay's rim takes the hue, so it tints the body's edge rather than glowing. */
+export const CLAY_RIM_STRENGTH = 0.6;
+
+/** Sets a clay body's hue rim. */
+export const setClayAccent = (material: Material, accent: Color3): void => {
+  if (material instanceof StandardMaterial && material.emissiveFresnelParameters) {
+    material.emissiveFresnelParameters.leftColor = accent.scale(CLAY_RIM_STRENGTH);
+  }
 };
 
 export const setSurface = (material: Material, color: Color3, opacity: number): void => {

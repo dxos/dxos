@@ -104,7 +104,7 @@ const DepthDefs = ({ raised, inset }: { raised: string; inset: string }) => (
 /**
  * How containers, channels and app content are drawn: one of the canvas's built-in style sets, so the sample and the
  * canvas name their looks alike. `flat`, cards with hairline borders and solid channels; `outline`, line art with no fills and channels as rails;
- * `glass`, translucent frosted cards and channels.
+ * `glass`, translucent frosted cards and channels; `soft`, flat's cards raised by the wash with their wells inset.
  */
 export type Look = (typeof STYLE_SET_IDS)[number];
 
@@ -138,24 +138,27 @@ type Palette = {
   outline: string;
 };
 
+const DARK_FLAT: Palette = {
+  frame: 'fill-neutral-800',
+  frameStroke: 'stroke-neutral-700',
+  raised: false,
+  group: 'fill-neutral-900',
+  label: 'fill-neutral-200',
+  well: 'fill-neutral-900',
+  inset: false,
+  channel: 'solid',
+  molecule: 'fill-neutral-300 stroke-neutral-300',
+  settled: 'fill-neutral-600',
+  decor: 'fill-neutral-600',
+  faint: 'fill-neutral-700',
+  empty: 'fill-neutral-800',
+  emptyStroke: 'fill-none stroke-neutral-700',
+  outline: 'fill-none stroke-neutral-600',
+};
+
 const DARK_PALETTES: Record<Look, Palette> = {
-  flat: {
-    frame: 'fill-neutral-800',
-    frameStroke: 'stroke-neutral-700',
-    raised: false,
-    group: 'fill-neutral-900',
-    label: 'fill-neutral-200',
-    well: 'fill-neutral-900',
-    inset: false,
-    channel: 'solid',
-    molecule: 'fill-neutral-300 stroke-neutral-300',
-    settled: 'fill-neutral-600',
-    decor: 'fill-neutral-600',
-    faint: 'fill-neutral-700',
-    empty: 'fill-neutral-800',
-    emptyStroke: 'fill-none stroke-neutral-700',
-    outline: 'fill-none stroke-neutral-600',
-  },
+  flat: DARK_FLAT,
+  soft: { ...DARK_FLAT, raised: true, inset: true },
   outline: {
     frame: 'fill-none',
     frameStroke: 'stroke-neutral-500',
@@ -195,25 +198,28 @@ const DARK_PALETTES: Record<Look, Palette> = {
 };
 
 /** The looks retuned for a light background such as paper: dark labels, mid-gray content, dark hairlines. */
+const LIGHT_FLAT: Palette = {
+  frame: 'fill-neutral-100',
+  frameStroke: 'stroke-neutral-300',
+  raised: false,
+  group: 'fill-neutral-50',
+  label: 'fill-neutral-700',
+  well: 'fill-white',
+  wellStroke: 'stroke-neutral-200',
+  inset: false,
+  channel: 'solid',
+  molecule: 'fill-neutral-400 stroke-neutral-400',
+  settled: 'fill-neutral-400',
+  decor: 'fill-neutral-400',
+  faint: 'fill-neutral-200',
+  empty: 'fill-neutral-100',
+  emptyStroke: 'fill-none stroke-neutral-300',
+  outline: 'fill-none stroke-neutral-300',
+};
+
 const LIGHT_PALETTES: Record<Look, Palette> = {
-  flat: {
-    frame: 'fill-neutral-100',
-    frameStroke: 'stroke-neutral-300',
-    raised: false,
-    group: 'fill-neutral-50',
-    label: 'fill-neutral-700',
-    well: 'fill-white',
-    wellStroke: 'stroke-neutral-200',
-    inset: false,
-    channel: 'solid',
-    molecule: 'fill-neutral-400 stroke-neutral-400',
-    settled: 'fill-neutral-400',
-    decor: 'fill-neutral-400',
-    faint: 'fill-neutral-200',
-    empty: 'fill-neutral-100',
-    emptyStroke: 'fill-none stroke-neutral-300',
-    outline: 'fill-none stroke-neutral-300',
-  },
+  flat: LIGHT_FLAT,
+  soft: { ...LIGHT_FLAT, raised: true, inset: true },
   outline: {
     frame: 'fill-none',
     frameStroke: 'stroke-neutral-500',

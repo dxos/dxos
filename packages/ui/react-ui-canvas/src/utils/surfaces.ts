@@ -11,7 +11,8 @@ import { type StyleHue } from '@dxos/scene';
 
 import { type LookTone, type NodeSurface, type Opacity, type Radius } from '../model/index.ts';
 
-export type SurfaceClasses = { surface: string; text: string; border: string };
+/** A surface's classes; `pressed` replaces `surface` while the shape is selected, for a surface that presses in. */
+export type SurfaceClasses = { surface: string; text: string; border: string; pressed?: string };
 
 type ByTone<T> = Record<LookTone, T>;
 
@@ -133,6 +134,87 @@ const withoutFill = (
     sky: clear(table.sky),
     blue: clear(table.blue),
     violet: clear(table.violet),
+  };
+};
+
+/**
+ * A soft shape's accent: its hue marks only the border and the label, since the shape itself is the ground. A shape with
+ * no hue is pure relief, with no edge of its own.
+ */
+const SOFT_ACCENTS: Record<StyleHue | 'default', ByTone<{ text: string; border: string }>> = {
+  default: {
+    theme: { text: '', border: 'border-transparent' },
+    light: { text: 'text-neutral-700', border: 'border-transparent' },
+    dark: { text: 'text-neutral-200', border: 'border-transparent' },
+  },
+  neutral: {
+    theme: {
+      text: 'text-neutral-700 dark:text-neutral-300',
+      border: 'border-neutral-500/45 dark:border-neutral-400/45',
+    },
+    light: { text: 'text-neutral-700', border: 'border-neutral-500/45' },
+    dark: { text: 'text-neutral-300', border: 'border-neutral-400/45' },
+  },
+  red: {
+    theme: { text: 'text-red-700 dark:text-red-300', border: 'border-red-500/45 dark:border-red-400/45' },
+    light: { text: 'text-red-700', border: 'border-red-500/45' },
+    dark: { text: 'text-red-300', border: 'border-red-400/45' },
+  },
+  orange: {
+    theme: { text: 'text-orange-700 dark:text-orange-300', border: 'border-orange-500/45 dark:border-orange-400/45' },
+    light: { text: 'text-orange-700', border: 'border-orange-500/45' },
+    dark: { text: 'text-orange-300', border: 'border-orange-400/45' },
+  },
+  amber: {
+    theme: { text: 'text-amber-700 dark:text-amber-300', border: 'border-amber-500/45 dark:border-amber-400/45' },
+    light: { text: 'text-amber-700', border: 'border-amber-500/45' },
+    dark: { text: 'text-amber-300', border: 'border-amber-400/45' },
+  },
+  green: {
+    theme: { text: 'text-green-700 dark:text-green-300', border: 'border-green-500/45 dark:border-green-400/45' },
+    light: { text: 'text-green-700', border: 'border-green-500/45' },
+    dark: { text: 'text-green-300', border: 'border-green-400/45' },
+  },
+  teal: {
+    theme: { text: 'text-teal-700 dark:text-teal-300', border: 'border-teal-500/45 dark:border-teal-400/45' },
+    light: { text: 'text-teal-700', border: 'border-teal-500/45' },
+    dark: { text: 'text-teal-300', border: 'border-teal-400/45' },
+  },
+  sky: {
+    theme: { text: 'text-sky-700 dark:text-sky-300', border: 'border-sky-500/45 dark:border-sky-400/45' },
+    light: { text: 'text-sky-700', border: 'border-sky-500/45' },
+    dark: { text: 'text-sky-300', border: 'border-sky-400/45' },
+  },
+  blue: {
+    theme: { text: 'text-blue-700 dark:text-blue-300', border: 'border-blue-500/45 dark:border-blue-400/45' },
+    light: { text: 'text-blue-700', border: 'border-blue-500/45' },
+    dark: { text: 'text-blue-300', border: 'border-blue-400/45' },
+  },
+  violet: {
+    theme: { text: 'text-violet-700 dark:text-violet-300', border: 'border-violet-500/45 dark:border-violet-400/45' },
+    light: { text: 'text-violet-700', border: 'border-violet-500/45' },
+    dark: { text: 'text-violet-300', border: 'border-violet-400/45' },
+  },
+};
+
+/** The soft accents over one relief: the same ground in every tone, as its `light-dark()` variables follow the scheme. */
+const soft = (surface: string, pressed: string): Record<StyleHue | 'default', ByTone<SurfaceClasses>> => {
+  const relief = (accent: ByTone<{ text: string; border: string }>): ByTone<SurfaceClasses> => ({
+    theme: { ...accent.theme, surface, pressed },
+    light: { ...accent.light, surface, pressed },
+    dark: { ...accent.dark, surface, pressed },
+  });
+  return {
+    default: relief(SOFT_ACCENTS.default),
+    neutral: relief(SOFT_ACCENTS.neutral),
+    red: relief(SOFT_ACCENTS.red),
+    orange: relief(SOFT_ACCENTS.orange),
+    amber: relief(SOFT_ACCENTS.amber),
+    green: relief(SOFT_ACCENTS.green),
+    teal: relief(SOFT_ACCENTS.teal),
+    sky: relief(SOFT_ACCENTS.sky),
+    blue: relief(SOFT_ACCENTS.blue),
+    violet: relief(SOFT_ACCENTS.violet),
   };
 };
 
@@ -767,6 +849,16 @@ export const SURFACES: Record<SetSurface, Record<StyleHue | 'default', ByTone<Su
       dark: { surface: 'bg-violet-900', text: 'text-violet-100', border: 'border-white/20' },
     },
   },
+  // Pressed is deeper than inset, so a selected inset shape still sinks.
+  'soft-flat': soft('bg-(--dx-soft-ground)', 'bg-(--dx-soft-ground) shadow-(--dx-soft-inset)'),
+  'soft-inset': soft(
+    'bg-(--dx-soft-ground) shadow-(--dx-soft-inset)',
+    'bg-(--dx-soft-ground) shadow-(--dx-soft-pressed)',
+  ),
+  'soft-raised': soft(
+    'bg-(--dx-soft-ground) shadow-(--dx-soft-raised)',
+    'bg-(--dx-soft-ground) shadow-(--dx-soft-pressed)',
+  ),
 };
 
 /** A theme hue outside the pickers' set, drawn by a set as the nearest picker hue. */
@@ -849,8 +941,19 @@ export const WASH_TEXT: Record<StyleHue, string> = {
 };
 
 /** The canvas fill a background's surface draws, screen-wide under the scene; the base surface draws none. */
-export const BACKGROUND_FILLS: Record<'base' | 'paper' | 'film', string> = {
+export const BACKGROUND_FILLS: Record<'base' | 'paper' | 'film' | 'soft', string> = {
   base: '',
   paper: 'bg-[#f4f0e6]',
   film: 'bg-[#050505]',
+  soft: 'bg-(--dx-soft-ground)',
 };
+
+/** The soft ground in SVG, for a caption's backdrop and a hollow marker's inside on the soft background. */
+export const SOFT_CANVAS_FILL = 'fill-(--dx-soft-ground)';
+
+/** A groove's floor and its two lips: shade on the upper wall, light on the lower. */
+export const GROOVE_CLASSES = {
+  floor: 'stroke-(--dx-soft-well)',
+  shade: 'stroke-(--dx-soft-shade)',
+  highlight: 'stroke-(--dx-soft-highlight)',
+} as const;
