@@ -844,6 +844,8 @@ feat F-15: Modes
     layout's `lattice`.
   req F-15.5: (planned) A constrained layout's constraints are its `constraints`, naming element ids: a dropped shape
     is re-related to its nearest neighbour and the solver re-places every shape.
+  req F-15.6: Scored mode grades a 2D layout as the canvas draws it: its elements become diagram objects and the
+    objective's scorers (the default one unless given) score them.
   req F-15.3: (planned) The viewport draws diagram `arc`, free `curve` and open `polyline` elements.
   req F-15.4: A layout's mode is a rule between an edit and its write, which the editor applies to every write (a
     drag, a command, a paste, the Properties form). A layout with a `lattice` snaps every frame onto whole cells
@@ -1190,6 +1192,16 @@ decision D-19: A 2D layout is dynamic when its `arrange` is of kind `dynamic`: i
   affects: [F-15.2, F-15.5]
   why: `arrange` already says how a layout places elements with no position, and a person's move already pins an element of an arranged layout, so the graph needs no second copy of the elements.
   rejected: A separate `graph` field on the layout, which would duplicate the links and centres the elements hold.
+```
+
+```mdl
+decision D-20: Scored mode reads a 2D layout through the same read model the 2D viewport draws from, so a layout scores exactly as it looks. Fills in [D-1].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-15.6]
+  why: The viewport still reads layouts through the canvas adapter, so scoring through it measures what the person sees, including routed links.
+  rejected: A second element-to-diagram conversion for scoring, which could drift from what the canvas draws.
 ```
 
 ---

@@ -73,6 +73,12 @@ react-ui-canvas's current schema, decision 12). Spec decisions are recorded in
   canvases keep the engine projection over `layout.props.constrained`. Cost if wrong: none yet; the rule is pure.
 - **R-13 (2026-10-30, agent, D.2, parity): 3D gets neither dynamic nor constrained mode in this phase.** Both are
   2D-only today (the engine's projections); the shared `constrain` hook is where a 3D arrangement would plug in.
+- **R-14 (2026-10-30, agent, D.3): scoring reads a `Layout2D` through the 2D viewport's read model, not a
+  `RenderList2D`.** C.1's `RenderList2D` was not built (the viewport reads layouts through react-ui-scene's
+  `toCanvasView`), so `scoreLayout2D(document, layout, registry, objective?)` and `layoutDiagramObjects` live beside
+  that adapter in react-ui-scene `src/canvas/score.ts` and grade the layout exactly as the canvas draws it. Cost if
+  wrong: a move next to `toRenderList2D` once it exists; the scorers do not change. Parity: scoring is 2D-only, as the
+  diagram `Objective` grades 2D diagram objects.
 
 ## Global Constraints
 
@@ -689,7 +695,7 @@ intent: LayoutIntent): LayoutIntent | undefined`; config2d selects it when `layo
 
 **Files:** The scoring utilities read `RenderList2D`.
 
-- [ ] Failing test `test('the score over a Layout2D equals the score over the corpus', …)` → implement → PASS →
+- [x] Failing test `test('the score over a Layout2D equals the score over the corpus', …)` → implement → PASS →
       commit `react-ui-canvas: scored mode on Layout2D`.
 
 ---
