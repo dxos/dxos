@@ -76,7 +76,7 @@ describe('Demo template', () => {
         'projection'?: { pivotFieldId?: string; fields?: Array<{ id: string; path: string }> };
         'coordinates'?: number[][];
         'description'?: string;
-        'objects'?: Record<string, { kind?: string; props?: { mesh?: { indices?: number[] } } }>;
+        'objects'?: Record<string, { type?: string; props?: { mesh?: { indices?: number[] } } }>;
         'elements'?: Record<string, { object?: string }>;
         'name'?: string;
         'voxels'?: Record<string, { hue: string }>;
@@ -85,7 +85,7 @@ describe('Demo template', () => {
     // Each preset is stored once with its parsed geometry, and every vehicle places one, so the canvas renders as is.
     const model = objects.find((object) => object['@type']?.includes('type.scene.model3d'));
     const meshes = Object.values(model?.objects ?? {});
-    expect(meshes.map(({ kind }) => kind)).toEqual(['mesh', 'mesh']);
+    expect(meshes.map(({ type }) => type)).toEqual(['mesh', 'mesh']);
     expect(meshes.every(({ props }) => (props?.mesh?.indices?.length ?? 0) > 300)).toBe(true);
     const layout = objects.find((object) => object['@type']?.includes('type.scene.layout3d'));
     // An archived record keeps its keys, not their order.
