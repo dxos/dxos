@@ -22,6 +22,7 @@ import noErrorClassName from './rules/no-error-class-name.js';
 import noSimilarSiblingFiles from './rules/no-similar-sibling-files.js';
 import operationKeyShape from './rules/operation-key-shape.js';
 import preferSizingUtilities from './rules/prefer-sizing-utilities.js';
+import rpcUnmanagedDisposal from './rules/rpc-unmanaged-disposal.js';
 import translationKeyFormat from './rules/translation-key-format.js';
 
 const pkg = JSON.parse(fs.readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
@@ -48,6 +49,7 @@ const plugin = {
     'no-effect-run-promise': noEffectRunPromise,
     'operation-key-shape': operationKeyShape,
     'prefer-sizing-utilities': preferSizingUtilities,
+    'rpc-unmanaged-disposal': rpcUnmanagedDisposal,
     'no-empty-promise-catch': noEmptyPromiseCatch,
     'no-error-class-name': noErrorClassName,
     'no-similar-sibling-files': noSimilarSiblingFiles,
