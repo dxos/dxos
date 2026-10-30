@@ -9,7 +9,7 @@
 
 import { type Element, type Layer, type LayerId, type Link, type Node, endpointNode } from '@dxos/scene';
 
-import { type View } from '../model/index.ts';
+import { type RenderList2D } from '../model/index.ts';
 import { type SceneEdit, chainEdits, updateElement } from './edits.ts';
 import { between, sortByZ } from './order.ts';
 
@@ -17,7 +17,7 @@ import { between, sortByZ } from './order.ts';
 export const DEFAULT_LAYER: Layer = { id: 'layer', name: 'Layer 1', z: between() };
 
 /** A scene's layers, bottom first; a scene with none has the implicit `DEFAULT_LAYER`. */
-export const viewLayers = (scene: View): Layer[] => {
+export const viewLayers = (scene: RenderList2D): Layer[] => {
   const layers = sortByZ(Object.values(scene.layers ?? {}));
   return layers.length > 0 ? layers : [DEFAULT_LAYER];
 };
@@ -29,7 +29,7 @@ export const elementLayer = (element: Element, layers: readonly Layer[]): LayerI
     : (layers[0]?.id ?? DEFAULT_LAYER.id);
 
 /** The layer new elements go on: the active one when the scene has it, else the top layer. */
-export const activeLayer = (scene: View, active: LayerId | undefined): LayerId => {
+export const activeLayer = (scene: RenderList2D, active: LayerId | undefined): LayerId => {
   const layers = viewLayers(scene);
   return layers.find((layer) => layer.id === active)?.id ?? layers[layers.length - 1].id;
 };
@@ -45,7 +45,7 @@ export const layerOrder = (nodes: readonly Node[], layers: readonly Layer[]): No
  * The scene as drawn and hit: without the elements of hidden layers, or the links to a node that is hidden. The same
  * scene when no layer is hidden, so a memo over it holds.
  */
-export const visibleView = (scene: View): View => {
+export const visibleView = (scene: RenderList2D): RenderList2D => {
   const layers = viewLayers(scene);
   const hidden = new Set(layers.filter((layer) => layer.hidden).map((layer) => layer.id));
   if (hidden.size === 0) {
@@ -65,14 +65,14 @@ export const visibleView = (scene: View): View => {
 };
 
 /** The scene's layers as a record, the implicit layer made real so a new layer does not take its elements. */
-const layerRecord = (scene: View): Record<LayerId, Layer> =>
+const layerRecord = (scene: RenderList2D): Record<LayerId, Layer> =>
   scene.layers && Object.keys(scene.layers).length > 0 ? { ...scene.layers } : { [DEFAULT_LAYER.id]: DEFAULT_LAYER };
 
 /**
  * The scene with its layers named and every element on one by name: an element with no layer, or one the scene does not
  * have, takes the layer it is drawn on (`elementLayer`). The same scene when nothing changes, so a memo over it holds.
  */
-export const pinLayers = (scene: View): View => {
+export const pinLayers = (scene: RenderList2D): RenderList2D => {
   const layers = viewLayers(scene);
   const pin = <T extends Element>(record: Record<string, T>): Record<string, T> | undefined => {
     const loose = Object.values(record).filter((element) => element.layer !== elementLayer(element, layers));
@@ -128,7 +128,7 @@ export const removeLayer =
   };
 
 /** A new layer below the others, so it ends the top-first list, named after the first `Layer <n>` not taken. */
-export const createLayer = (scene: View, id: LayerId): Layer => {
+export const createLayer = (scene: RenderList2D, id: LayerId): Layer => {
   const layers = viewLayers(scene);
   const names = new Set(layers.map((layer) => layer.name));
   let index = layers.length + 1;
@@ -139,7 +139,7 @@ export const createLayer = (scene: View, id: LayerId): Layer => {
 };
 
 /** The layer moved to `index` in the bottom-first order. */
-export const moveLayer = (scene: View, id: LayerId, index: number): Layer | undefined => {
+export const moveLayer = (scene: RenderList2D, id: LayerId, index: number): Layer | undefined => {
   const layers = viewLayers(scene);
   const layer = layers.find((candidate) => candidate.id === id);
   if (!layer) {
@@ -153,7 +153,7 @@ export const moveLayer = (scene: View, id: LayerId, index: number): Layer | unde
  * Merging layers into `into`, as one batch: the elements of every layer in `from` move onto `into`, keeping their own
  * order, and those layers are removed. None unless `into` and at least one other of `from` are layers of the scene.
  */
-export const mergeLayers = (scene: View, from: readonly LayerId[], into: LayerId): SceneEdit | undefined => {
+export const mergeLayers = (scene: RenderList2D, from: readonly LayerId[], into: LayerId): SceneEdit | undefined => {
   const layers = viewLayers(scene);
   const ids = new Set(layers.map((layer) => layer.id));
   const merged = new Set(from.filter((id) => id !== into && ids.has(id)));

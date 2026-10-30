@@ -14,9 +14,8 @@ import { type ContentMap } from '@dxos/diagram';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import {
   DEFAULT_LAYER,
-  type View,
-  ViewKind,
-  type ViewMap,
+  type RenderList2D,
+  type RenderLists2D,
   elementLayer,
   orphanViews,
   sortByZ,
@@ -60,8 +59,8 @@ export const SceneRecord = Schema.Struct({
   /** The scene's layers, kept with it since they are few and change together. */
   layers: Schema.optional(Schema.Record(Schema.String, Layer)),
   /** A composite object's definition rather than a plain scene (`Scene.kind`; `kind` here names the record). */
-  sceneKind: Schema.optional(ViewKind),
-  /** An Object the Group command made, kept out of the library until it is named or placed again (`View.anonymous`). */
+  sceneKind: Schema.optional(Scene.LayoutKind),
+  /** An Object the Group command made, kept out of the library until it is named or placed again (`RenderList2D.anonymous`). */
   anonymous: Schema.optional(Schema.Boolean),
 });
 export type SceneRecord = Schema.Schema.Type<typeof SceneRecord>;
@@ -489,7 +488,7 @@ export const upgradeSceneContent = (content: ContentMap): ContentMap => {
 };
 
 /** Scenes assembled from the records; nodes and links of an unknown scene are dropped. */
-export const readViews = (content: ContentMap): ViewMap => {
+export const readViews = (content: ContentMap): RenderLists2D => {
   const headers: Record<ViewId, SceneRecord> = {};
   const nodes: Record<ViewId, Record<string, Node>> = {};
   const links: Record<ViewId, Record<string, Link>> = {};
@@ -507,7 +506,7 @@ export const readViews = (content: ContentMap): ViewMap => {
       links[record.scene][record.link.id] = upgradeLink(record.link);
     }
   }
-  const scenes: Record<ViewId, View> = {};
+  const scenes: Record<ViewId, RenderList2D> = {};
   for (const header of Object.values(headers)) {
     scenes[header.id] = {
       id: header.id,
@@ -527,7 +526,7 @@ export const readViews = (content: ContentMap): ViewMap => {
  * DSL identity of a record whose element the canvas edited. Scenes, nodes and links absent from
  * `scenes` are removed. Returns whether anything was written.
  */
-export const writeViews = (content: ContentMap, scenes: ViewMap): boolean => {
+export const writeViews = (content: ContentMap, scenes: RenderLists2D): boolean => {
   let changed = false;
   const same = (left: unknown, right: unknown) => JSON.stringify(left) === JSON.stringify(right);
 

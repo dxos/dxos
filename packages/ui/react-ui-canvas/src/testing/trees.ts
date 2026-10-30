@@ -8,7 +8,7 @@
 import { type InstanceNode, MAJOR_GRID, type Node, type ViewId } from '@dxos/scene';
 
 import { type Box, ViewBuilder, type ViewTree } from '../builder/index.ts';
-import { type View } from '../model/index.ts';
+import { type RenderList2D } from '../model/index.ts';
 import { DEFAULT_LATTICE, DEFAULT_SHAPE_SIZE, TONES, cellBounds } from '../utils/index.ts';
 
 /**
@@ -219,7 +219,7 @@ export const createObjectsTree = (): ViewTree => {
   ])
     .name('root')
     .build();
-  const definition = (id: ViewId, name: string, elements: Parameters<typeof ViewBuilder.view>[1]): View => ({
+  const definition = (id: ViewId, name: string, elements: Parameters<typeof ViewBuilder.view>[1]): RenderList2D => ({
     ...ViewBuilder.view(id, elements).name(name).build().views[0],
     kind: 'composite',
   });
@@ -235,7 +235,7 @@ export const createObjectsTree = (): ViewTree => {
     ]),
     definition('badge', 'Badge', [ViewBuilder.ellipse('dot', at(0)).properties({ label: 'Badge' })]),
   ];
-  const toInstances = (scene: View): View => ({
+  const toInstances = (scene: RenderList2D): RenderList2D => ({
     ...scene,
     nodes: Object.fromEntries(
       Object.entries(scene.nodes).map(([id, node]): [string, Node] => {

@@ -20,7 +20,7 @@ import {
   isPointEndpoint,
 } from '@dxos/scene';
 
-import { type View, type ViewMap, openedRecord } from '../model/index.ts';
+import { type RenderList2D, type RenderLists2D, openedRecord } from '../model/index.ts';
 import { promotedBy } from './compose.ts';
 import { type SceneEdit, chainEdits, insertLink, insertNode } from './edits.ts';
 import { unionBounds } from './hit.ts';
@@ -37,12 +37,12 @@ export type Clipboard = {
    * The records the nodes open (child Views and Objects, and the records those open) as they were copied, so a paste
    * after a cut, which deleted them as orphans, puts them back.
    */
-  views?: ViewMap;
+  views?: RenderLists2D;
 };
 
 /** The records `nodes` open in `views`, and the records those open, by id. */
-const openedRecords = (views: ViewMap, nodes: readonly Node[]): ViewMap => {
-  const result: Record<ViewId, View> = {};
+const openedRecords = (views: RenderLists2D, nodes: readonly Node[]): RenderLists2D => {
+  const result: Record<ViewId, RenderList2D> = {};
   const pending = nodes.flatMap((node) => openedRecord(node) ?? []);
   for (let id = pending.pop(); id !== undefined; id = pending.pop()) {
     const view = views[id];
@@ -58,7 +58,11 @@ const openedRecords = (views: ViewMap, nodes: readonly Node[]): ViewMap => {
  * The selected nodes and the links joining them; a link is copied whether or not it was selected. Given the store's
  * `views`, the records the nodes open come too.
  */
-export const copySelection = (scene: View, selection: Iterable<ElementId>, views?: ViewMap): Clipboard | undefined => {
+export const copySelection = (
+  scene: RenderList2D,
+  selection: Iterable<ElementId>,
+  views?: RenderLists2D,
+): Clipboard | undefined => {
   const ids = new Set(selection);
   const nodes = Object.values(scene.nodes).filter((node) => ids.has(node.id));
   const nodeIds = new Set(nodes.map(({ id }) => id));
@@ -85,7 +89,7 @@ export const clipboardBounds = (clipboard: Clipboard): Bounds | undefined =>
  * The records a paste of `clipboard` writes into the store: those it copied that are gone (cut with their nodes) come
  * back as they were, and an anonymous Object still present is placed a second time, so it joins the library.
  */
-export const pastedRecords = (scenes: ViewMap, clipboard: Clipboard): Record<ViewId, View> => {
+export const pastedRecords = (scenes: RenderLists2D, clipboard: Clipboard): Record<ViewId, RenderList2D> => {
   const restored = Object.fromEntries(Object.entries(clipboard.views ?? {}).filter(([id]) => !scenes[id]));
   return { ...promotedBy(scenes, clipboard.nodes), ...restored };
 };
@@ -136,7 +140,7 @@ export const pasteFragment = ({ clipboard, offset, createId, nodeZ, linkZ, layer
  * else, and the ids it creates; nothing when the selection holds no node.
  */
 export const duplicateSelection = (
-  scene: View,
+  scene: RenderList2D,
   selection: Iterable<ElementId>,
   offset: Point,
   createId: (prefix: string) => string,

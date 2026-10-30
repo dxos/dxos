@@ -7,7 +7,6 @@ import {
   type BuiltinNodeType,
   type ElementEndpoint,
   type Endpoint,
-  type Layer,
   type Link,
   type LinkType,
   type NamedStyle2D,
@@ -27,25 +26,8 @@ import {
   sceneLayout,
 } from '@dxos/scene';
 
+import { type RenderList2D } from '../model/index.ts';
 import { DEFAULT_LAYER, createNode, initialKeys } from '../utils/index.ts';
-
-/**
- * What the 2D engine draws for one layout (COMMON-CORE C.1): its elements resolved against the document's objects and
- * styles into the engine's node and link shapes, with the layout's layers. Derived from the layout on every change and
- * never stored or edited: the engine's edits reach the document as `LayoutIntent`s.
- */
-export type RenderList2D = {
-  readonly id: ViewId;
-  readonly name?: string;
-  readonly nodes: Readonly<Record<string, Node>>;
-  readonly links: Readonly<Record<string, Link>>;
-  readonly layers?: Readonly<Record<string, Layer>>;
-  readonly kind?: Scene.LayoutKind;
-  readonly anonymous?: boolean;
-};
-
-/** Every layout's render list, by layout id. */
-export type RenderLists2D = Readonly<Record<ViewId, RenderList2D>>;
 
 /** The scene kinds the 2D renderer draws as react-ui-canvas nodes of the same name. */
 const NODE_TYPES: Readonly<Record<string, BuiltinNodeType>> = {

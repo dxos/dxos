@@ -27,7 +27,7 @@ import {
   nodeFrame,
 } from '@dxos/scene';
 
-import { type View, type ViewMap, pruneOrphaned } from '../model/index.ts';
+import { type RenderList2D, type RenderLists2D, pruneOrphaned } from '../model/index.ts';
 import { type SceneEdit, chainEdits, deleteElements, insertLink, insertNode, updateElement } from './edits.ts';
 import { unionBounds } from './hit.ts';
 import { elementLayer, viewLayers } from './layers.ts';
@@ -35,22 +35,24 @@ import { topZ } from './order.ts';
 import { nodeBounds } from './shapes.ts';
 
 /** Whether a scene is a composite's definition. */
-export const isComposite = (scene: View | undefined): boolean => scene?.kind === 'composite';
+export const isComposite = (scene: RenderList2D | undefined): boolean => scene?.kind === 'composite';
 
 /** The composites of a drawing, by name. */
-export const compositeViews = (scenes: ViewMap): View[] =>
+export const compositeViews = (scenes: RenderLists2D): RenderList2D[] =>
   Object.values(scenes)
     .filter(isComposite)
     .sort((left, right) => (left.name ?? left.id).localeCompare(right.name ?? right.id));
 
 /** Whether a scene is an anonymous Object: one the Group command made, not yet named or placed again. */
-export const isAnonymous = (scene: View | undefined): boolean => isComposite(scene) && scene?.anonymous === true;
+export const isAnonymous = (scene: RenderList2D | undefined): boolean =>
+  isComposite(scene) && scene?.anonymous === true;
 
 /** The Objects library: the composites by name, without the anonymous ones (VIEWS.md §4.4). */
-export const libraryViews = (scenes: ViewMap): View[] => compositeViews(scenes).filter((scene) => !isAnonymous(scene));
+export const libraryViews = (scenes: RenderLists2D): RenderList2D[] =>
+  compositeViews(scenes).filter((scene) => !isAnonymous(scene));
 
 /** `scene` named or placed again, so it joins the library; the same scene when it was not anonymous. */
-export const promoted = (scene: View): View => {
+export const promoted = (scene: RenderList2D): RenderList2D => {
   if (scene.anonymous === undefined) {
     return scene;
   }
@@ -62,8 +64,8 @@ export const promoted = (scene: View): View => {
  * The anonymous Objects that `nodes` place again, promoted (VIEWS.md §4.4): what a paste or a duplicate writes into
  * the store with its edit. Empty when none of them is an Instance of an anonymous Object in `scenes`.
  */
-export const promotedBy = (scenes: ViewMap, nodes: Iterable<Node>): Record<ViewId, View> => {
-  const result: Record<ViewId, View> = {};
+export const promotedBy = (scenes: RenderLists2D, nodes: Iterable<Node>): Record<ViewId, RenderList2D> => {
+  const result: Record<ViewId, RenderList2D> = {};
   for (const node of nodes) {
     const definition = isInstanceNode(node) ? scenes[node.composite] : undefined;
     if (definition && isAnonymous(definition)) {
@@ -74,7 +76,7 @@ export const promotedBy = (scenes: ViewMap, nodes: Iterable<Node>): Record<ViewI
 };
 
 /** How many instances of each composite the drawing holds, in any scene. */
-export const instanceCounts = (scenes: ViewMap): Record<ViewId, number> => {
+export const instanceCounts = (scenes: RenderLists2D): Record<ViewId, number> => {
   const counts: Record<ViewId, number> = {};
   for (const scene of Object.values(scenes)) {
     for (const node of Object.values(scene.nodes)) {
@@ -92,16 +94,16 @@ export const instanceCounts = (scenes: ViewMap): Record<ViewId, number> => {
  * composite is still placed and `instances` is off, as deleting it would leave Instances drawing nothing.
  */
 export const removeComposite = (
-  views: ViewMap,
+  views: RenderLists2D,
   composite: ViewId,
   { instances, roots }: { instances: boolean; roots: readonly ViewId[] },
-): ViewMap | undefined => {
+): RenderLists2D | undefined => {
   if (!instances && (instanceCounts(views)[composite] ?? 0) > 0) {
     return undefined;
   }
   const { [composite]: _, ...rest } = views;
   const next = Object.fromEntries(
-    Object.entries(rest).map(([id, view]): [ViewId, View] => {
+    Object.entries(rest).map(([id, view]): [ViewId, RenderList2D] => {
       const gone = new Set(
         Object.values(view.nodes).flatMap((node) =>
           isInstanceNode(node) && node.composite === composite ? [node.id] : [],
@@ -125,7 +127,7 @@ export const removeComposite = (
 };
 
 /** The box a composite's nodes fill, unpadded: what an instance scales into its frame. */
-export const compositeBounds = (composite: View): Bounds | undefined =>
+export const compositeBounds = (composite: RenderList2D): Bounds | undefined =>
   unionBounds(Object.values(composite.nodes).map(nodeBounds));
 
 /** How an instance maps its composite's coordinates into its own frame: scaled, then moved. */
@@ -173,7 +175,7 @@ export const overriddenNode = (instance: InstanceNode, node: Node): Node => {
 };
 
 /** The composite with an instance's overrides applied to its nodes, as the instance draws it. */
-export const instanceView = (instance: InstanceNode, composite: View): View =>
+export const instanceView = (instance: InstanceNode, composite: RenderList2D): RenderList2D =>
   instance.overrides
     ? {
         ...composite,
@@ -199,7 +201,7 @@ const sideToward = (frame: Bounds, point: Point): { side: Side; offset: number }
  * An instance's ports: one per exposed node of its composite, named by that node's id, on the side of the instance
  * that faces where the node is drawn.
  */
-export const instancePorts = (frame: Bounds, composite: View, fit?: InstanceFit): Port[] => {
+export const instancePorts = (frame: Bounds, composite: RenderList2D, fit?: InstanceFit): Port[] => {
   const transform = instanceTransform(frame, compositeBounds(composite), fit);
   return Object.values(composite.nodes)
     .filter((node) => node.exposed)
@@ -219,7 +221,7 @@ export type ComposeOptions = {
 };
 
 /** What grouping a selection as an object makes: the composite, and the edit that puts an instance in its place. */
-export type Composition = { composite: View; edit: SceneEdit };
+export type Composition = { composite: RenderList2D; edit: SceneEdit };
 
 /**
  * Groups the selected nodes as an object (`compose`): they and the links wholly inside the selection move into a new
@@ -228,7 +230,7 @@ export type Composition = { composite: View; edit: SceneEdit };
  * moved nodes move with them. None when no node is selected or a selected node is locked.
  */
 export const composeSelection = (
-  scene: View,
+  scene: RenderList2D,
   ids: Iterable<string>,
   { compositeId, instanceId, name, layer, anonymous }: ComposeOptions,
 ): Composition | undefined => {
@@ -271,7 +273,7 @@ export const composeSelection = (
     }),
   );
   const used = new Set([...childNodes, ...childLinks].map((element) => element.layer));
-  const composite: View = {
+  const composite: RenderList2D = {
     id: compositeId,
     name: name ?? 'Object',
     kind: 'composite',
@@ -316,9 +318,9 @@ export type Ungrouping = { edit: SceneEdit; created: NodeId[] };
  * definition is left as it is, for any other instance.
  */
 export const ungroupInstance = (
-  scene: View,
+  scene: RenderList2D,
   instance: InstanceNode,
-  composite: View,
+  composite: RenderList2D,
   createId: (prefix: string) => string,
 ): Ungrouping => {
   const transform = instanceTransform(
@@ -387,10 +389,10 @@ const isSizeValue = (value: unknown): value is { width: number; height: number }
  * the renaming it used, for the instances that move onto the copy (`retargetInstance`).
  */
 export const copyComposite = (
-  composite: View,
+  composite: RenderList2D,
   compositeId: ViewId,
   createId: (prefix: string) => string,
-): { composite: View; rename: (id: NodeId) => NodeId } => {
+): { composite: RenderList2D; rename: (id: NodeId) => NodeId } => {
   const ids = new Map(Object.keys(composite.nodes).map((id) => [id, createId('node')]));
   const rename = (id: NodeId) => ids.get(id) ?? id;
   const renameEnd = (end: Endpoint): Endpoint => ('node' in end ? { ...end, node: rename(end.node) } : end);
@@ -428,7 +430,7 @@ export const retargetInstance = (
 });
 
 /** The links in `scene` attached to an instance's ports, renamed after `copyComposite` renamed the ports. */
-export const renamePortLinks = (scene: View, before: InstanceNode, after: InstanceNode): SceneEdit[] => {
+export const renamePortLinks = (scene: RenderList2D, before: InstanceNode, after: InstanceNode): SceneEdit[] => {
   const names = new Map((before.ports ?? []).map((port, index) => [port.id, after.ports?.[index]?.id ?? port.id]));
   const rename = (end: Endpoint): Endpoint =>
     'node' in end && end.node === before.id && end.port ? { ...end, port: names.get(end.port) ?? end.port } : end;

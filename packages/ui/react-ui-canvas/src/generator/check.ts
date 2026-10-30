@@ -11,7 +11,7 @@
 import { type EffectStatus, type ModuleCompiler, STEP_BUDGET_MS, hashSeed } from '@dxos/animation';
 import { type Bounds, type NodeId } from '@dxos/scene';
 
-import { type View } from '../model/index.ts';
+import { type RenderList2D } from '../model/index.ts';
 import { nodeBounds, unionBounds } from '../utils/index.ts';
 import { loadGenerator } from './compile.ts';
 import { GeneratorRunner } from './runner.ts';
@@ -23,7 +23,7 @@ export type CheckOptions = {
   /** The parameter schema, for bindings. */
   schema?: Record<string, unknown>;
   /** The scene holding the generator node. */
-  scene: View;
+  scene: RenderList2D;
   node: NodeId;
   /** The times to draw, in seconds. */
   times: readonly number[];

@@ -17,7 +17,7 @@ import { type ElementId, type Layer } from '@dxos/scene';
 import { ViewBuilder } from '../../../builder/index.ts';
 import { createCanvasAtoms, createDrawState } from '../../../engine/index.ts';
 import { useCanvasHistory, useDrawScene, useRegistry } from '../../../hooks/index.ts';
-import { type View, getElement } from '../../../model/index.ts';
+import { type RenderList2D, getElement } from '../../../model/index.ts';
 import { between } from '../../../utils/index.ts';
 import { InspectorFrame } from '../../panels/testing.ts';
 import { PropertiesInspector } from './PropertiesInspector.tsx';
@@ -32,7 +32,7 @@ const LAYERS: Layer[] = (() => {
   return [background, notes, diagram];
 })();
 
-const VIEW: View = (() => {
+const VIEW: RenderList2D = (() => {
   const {
     views: [scene],
   } = ViewBuilder.view('root', [

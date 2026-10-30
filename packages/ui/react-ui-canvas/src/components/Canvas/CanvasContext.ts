@@ -32,9 +32,9 @@ import {
   type Capabilities,
   type LinkRegistry,
   type NodeRegistry,
+  type RenderList2D,
   type SceneLook,
   type ThemeRegistry,
-  type View,
 } from '../../model/index.ts';
 
 /**
@@ -161,7 +161,7 @@ export const [CanvasEditingProvider, useCanvasEditing] = createContext<CanvasEdi
  */
 export type CanvasGesture = {
   /** The scene as drawn while a gesture is in flight. */
-  displayScene: View;
+  displayScene: RenderList2D;
   /** The gesture in flight would be refused by the layout's mode (e.g. an overlap on the lattice). */
   blocked: boolean;
   /** The bounds a create gesture would land, drawn whether or not the node itself previews. */

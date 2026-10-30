@@ -7,7 +7,7 @@ import { type MouseEvent, type PointerEvent, useCallback, useEffect, useMemo, us
 import { type Link, type LinkId, type Node } from '@dxos/scene';
 
 import { type CanvasAtoms, type DrawScene, type NavigationCommands } from '../../engine/index.ts';
-import { type Capabilities, type NodeRegistry, type View, nodeDef } from '../../model/index.ts';
+import { type Capabilities, type NodeRegistry, type RenderList2D, nodeDef } from '../../model/index.ts';
 import { type PartKey, hitTest, partText, partValues, updateElement } from '../../utils/index.ts';
 import { type useRegistry } from '../useRegistry.ts';
 import { SCENE_OVERLAY_ATTRIBUTE } from '../useWheel.ts';
@@ -38,7 +38,7 @@ export type UseElementHandlersOptions = {
   draw: DrawScene;
   capabilities: Capabilities;
   navigation: NavigationCommands;
-  scene: View;
+  scene: RenderList2D;
 } & Pick<
   PointerMachine,
   'toScene' | 'onNodePointerDown' | 'onLinkPointerDown' | 'onLinkDoubleClick' | 'onLinkContextMenu'

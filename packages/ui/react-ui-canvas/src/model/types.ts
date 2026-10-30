@@ -23,6 +23,7 @@ import {
   NodeBase,
   type NodeId,
   type NodeType,
+  type Scene,
   type ViewId,
 } from '@dxos/scene';
 
@@ -34,25 +35,28 @@ export type Camera = Schema.Schema.Type<typeof Camera>;
 // Scene
 //
 
-/** A plain View, or the definition of a composite object that instances draw (ANIMATION.md §4.1). */
-export const ViewKind = Schema.Literals(['view', 'composite']);
-export type ViewKind = Schema.Schema.Type<typeof ViewKind>;
-
-export type View = {
+/**
+ * What the 2D engine draws for one layout (COMMON-CORE C.1): its elements resolved against the document's objects and
+ * styles into the engine's node and link shapes, with the layout's layers. Derived from the layout on every change and
+ * never stored: the engine's edits reach the document as `LayoutIntent`s.
+ */
+export type RenderList2D = {
   readonly id: ViewId;
   readonly name?: string;
   readonly nodes: Readonly<Record<NodeId, Node>>;
   readonly links: Readonly<Record<LinkId, Link>>;
   readonly layers?: Readonly<Record<LayerId, Layer>>;
-  readonly kind?: ViewKind;
+  /** A plain scene, or the definition of a composite object that instances draw (ANIMATION.md §4.1). */
+  readonly kind?: Scene.LayoutKind;
   readonly anonymous?: boolean;
 };
 
-/** Every list, by id. */
-export type ViewMap = Readonly<Record<ViewId, View>>;
+/** Every layout's render list, by layout id. */
+export type RenderLists2D = Readonly<Record<ViewId, RenderList2D>>;
 
-/** A node or link of the View by id. */
-export const getElement = (scene: View, id: ElementId): Element | undefined => scene.nodes[id] ?? scene.links[id];
+/** A node or link of the render list by id. */
+export const getElement = (scene: RenderList2D, id: ElementId): Element | undefined =>
+  scene.nodes[id] ?? scene.links[id];
 
 /** Property edits: the shared fields typed, a type's own fields by name. */
 export type NodeValues = Partial<Omit<NodeBase, 'id' | 'type'>> & { readonly [key: string]: unknown };

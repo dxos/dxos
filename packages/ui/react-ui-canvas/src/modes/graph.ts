@@ -21,7 +21,7 @@ import {
   type Size,
 } from '@dxos/scene';
 
-import { type CreateProps, type NodeRegistry, type View } from '../model/index.ts';
+import { type CreateProps, type NodeRegistry, type RenderList2D } from '../model/index.ts';
 import {
   type Arrangement,
   type ForceOptions,
@@ -146,7 +146,7 @@ export const layoutGraph = (
   options: DynamicOptions,
   /** Slots already arranged for `options`, reused for a graph seen before. */
   slotsCache?: SlotsCache,
-): View => {
+): RenderList2D => {
   const { size } = options.lattice ? latticeSlots(options.lattice) : { ...DEFAULTS, ...options };
   const known = new Set(graph.nodes.map(({ id }) => id));
   const centers = graphCenters(graph, overlay, options, slotsCache);
@@ -256,7 +256,7 @@ const routedSlots = (
         ? options.createNode(node, props)
         : createNode({ type: node.type ?? 'rect', ...props });
     }
-    const view: View = { id: DYNAMIC_VIEW_ID, name: 'Dynamic', nodes, links: {} };
+    const view: RenderList2D = { id: DYNAMIC_VIEW_ID, name: 'Dynamic', nodes, links: {} };
     const route = { spec: lattice, nodes: Object.values(nodes) };
     const routes = links.flatMap((link) => {
       const routed = latticeEnds(view, options.nodes, link, route);

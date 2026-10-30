@@ -10,7 +10,7 @@
 import { Layout } from '@dxos/diagram';
 import { type BuiltinNodeType, type Node, type NodeStyle, type Point, type Size } from '@dxos/scene';
 
-import { type NodeRegistry, type View } from '../model/index.ts';
+import { type NodeRegistry, type RenderList2D } from '../model/index.ts';
 import { centeredOrigin, createNode, initialKeys, withTitle } from '../utils/index.ts';
 
 /** `subject <relation> object`: "A east of B", "A aligned with B" (same row). */
@@ -163,7 +163,7 @@ export const solveRanks = (model: ConstrainedModel): Solution => {
 };
 
 /** Solve the model to a positioned scene. */
-export const solve = (model: ConstrainedModel, options: ConstrainedOptions): View => {
+export const solve = (model: ConstrainedModel, options: ConstrainedOptions): RenderList2D => {
   const { pitch, size } = { ...CONSTRAINED_GRID, ...options };
   const { rows, columns } = solveRanks(model);
   const extent = {

@@ -19,12 +19,12 @@ import {
   isViewNode,
 } from '@dxos/scene';
 
-import { type LinkValues, type NodeValues, type View } from '../model/index.ts';
+import { type LinkValues, type NodeValues, type RenderList2D } from '../model/index.ts';
 import { layoutView } from './layout.ts';
 import { resizeNode } from './shapes.ts';
 
 /** A change to the open scene; the same scene back when there is nothing to change. */
-export type SceneEdit = (scene: View) => View;
+export type SceneEdit = (scene: RenderList2D) => RenderList2D;
 
 /** The edits applied in order, as one change (one undo step). */
 export const chainEdits =

@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { type Bounds, type Node, type Size, type ViewId, isViewNode } from '@dxos/scene';
 
 import { type CanvasAtoms, type Drag, type NavigationCommands } from '../../engine/index.ts';
-import { type Camera, type NodeRegistry, type View, nodeDef } from '../../model/index.ts';
+import { type Camera, type NodeRegistry, type RenderList2D, nodeDef } from '../../model/index.ts';
 import { coverage, nodeBounds } from '../../utils/index.ts';
 import { type useRegistry } from '../useRegistry.ts';
 import { type SceneCamera } from './useSceneCamera.ts';
@@ -22,8 +22,8 @@ export type UseSceneNavigationOptions = {
   atoms: CanvasAtoms;
   navigation: NavigationCommands;
   nodeRegistry: NodeRegistry;
-  scenes: Record<ViewId, View>;
-  scene: View;
+  scenes: Record<ViewId, RenderList2D>;
+  scene: RenderList2D;
   path: ViewId[];
   camera: Camera;
   viewport: Size;

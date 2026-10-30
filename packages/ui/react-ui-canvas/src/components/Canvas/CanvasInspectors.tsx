@@ -16,7 +16,7 @@ import * as Button from '@dxos/react-ui/Button';
 import { type ElementId, type Layer, type LayerId, type ViewId, isInstanceNode, isLink } from '@dxos/scene';
 
 import { type CanvasController, type DrawState } from '../../engine/index.ts';
-import { type Capabilities, type View, getElement } from '../../model/index.ts';
+import { type Capabilities, type RenderList2D, getElement } from '../../model/index.ts';
 import {
   activeLayer,
   chainEdits,
@@ -117,7 +117,7 @@ CanvasProperties.displayName = 'Canvas.Properties';
 //
 
 export type UseSelectionActionsOptions = {
-  scene: View;
+  scene: RenderList2D;
   selection: ReadonlySet<ElementId>;
   store: DrawState;
   capabilities: Capabilities;

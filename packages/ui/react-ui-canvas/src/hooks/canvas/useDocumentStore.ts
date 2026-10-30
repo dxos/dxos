@@ -8,7 +8,7 @@ import { type Scene, type ViewId, applyIntent, findLayout, rootScene, sceneLayou
 
 import { type ConstrainIntent, type ViewportProps } from '../../editor/index.ts';
 import { type DrawState, createDrawState } from '../../engine/index.ts';
-import { type ViewMap } from '../../model/index.ts';
+import { type RenderLists2D } from '../../model/index.ts';
 import { type SceneEdit } from '../../utils/index.ts';
 import {
   type LayoutWrite,
@@ -87,13 +87,13 @@ export const useDocumentStore = (
   const latest = useRef({ document, constrain, snap, onIntent, onModelIntent, onTransaction });
   latest.current = { document, constrain, snap, onIntent, onModelIntent, onTransaction };
   const reading = useRef(false);
-  const last = useRef<ViewMap>(registry.get(store.views));
+  const last = useRef<RenderLists2D>(registry.get(store.views));
 
   // The document as stored, read into the draw state before paint, so an animation's samples draw in their own frame.
   useLayoutEffect(() => {
     reading.current = true;
     try {
-      const lists: ViewMap = Object.fromEntries(read(document).lists.map((list) => [list.id, list]));
+      const lists: RenderLists2D = Object.fromEntries(read(document).lists.map((list) => [list.id, list]));
       registry.set(store.views, lists);
       registry.set(store.styles, stylesOf(document));
       last.current = lists;

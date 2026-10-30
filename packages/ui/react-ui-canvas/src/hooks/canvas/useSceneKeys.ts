@@ -19,7 +19,7 @@ import {
   type Capabilities,
   type LinkRegistry,
   type NodeRegistry,
-  type View,
+  type RenderList2D,
   isToolKey,
   keyAction,
   nodeDef,
@@ -33,7 +33,7 @@ import { type SceneSnap } from './useSceneSnap.ts';
 export type UseSceneKeysOptions = {
   registry: ReturnType<typeof useRegistry>;
   atoms: CanvasAtoms;
-  scene: View;
+  scene: RenderList2D;
   nodeRegistry: NodeRegistry;
   linkRegistry: LinkRegistry;
   draw: DrawScene;

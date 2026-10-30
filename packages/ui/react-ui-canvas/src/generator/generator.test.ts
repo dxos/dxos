@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { createEsbuildCompiler } from '@dxos/animation';
 import { type GeneratorNode } from '@dxos/scene';
 
-import { type View } from '../model/index.ts';
+import { type RenderList2D } from '../model/index.ts';
 import { pathBounds } from '../utils/index.ts';
 import { checkGenerator } from './check.ts';
 import { loadGenerator } from './compile.ts';
@@ -26,7 +26,7 @@ const generatorNode: GeneratorNode = {
   params: { count: 8, target: 'box' },
 };
 
-const scene: View = {
+const scene: RenderList2D = {
   id: 's',
   nodes: {
     g: generatorNode,
@@ -85,7 +85,7 @@ describe('GeneratorRunner', () => {
 
   test('bindings are read from the scene as the host draws it', ({ expect }) => {
     const box = scene.nodes.box;
-    const moved: View = { ...scene, nodes: { ...scene.nodes, box: { ...box, center: { x: -100, y: 0 } } } };
+    const moved: RenderList2D = { ...scene, nodes: { ...scene.nodes, box: { ...box, center: { x: -100, y: 0 } } } };
     const still = new GeneratorRunner(drift, { seed: 3 }).frame(2, input).shapes;
     const followed = new GeneratorRunner(drift, { seed: 3 }).frame(2, { ...input, scene: moved }).shapes;
     expect(JSON.stringify(followed)).not.toBe(JSON.stringify(still));

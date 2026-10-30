@@ -5,7 +5,7 @@
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { type View } from '../model/index.ts';
+import { type RenderList2D } from '../model/index.ts';
 import { createViewTree } from '../testing/index.ts';
 import { deleteElements, moveNodes } from '../utils/index.ts';
 import { createDrawState, updateView } from './draw-state.ts';
@@ -22,7 +22,7 @@ describe('draw scene', () => {
     if (!before) {
       throw new Error('fixture has no node scene:r/a');
     }
-    const seen: View[] = [];
+    const seen: RenderList2D[] = [];
     const unsubscribe = registry.subscribe(draw.scene, (scene) => seen.push(scene));
 
     draw.apply(moveNodes(['scene:r/a'], { x: 5, y: 5 }));

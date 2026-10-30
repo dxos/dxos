@@ -8,7 +8,7 @@ import { type Endpoint, type Link } from '@dxos/scene';
 
 import { ViewBuilder } from '../builder/index.ts';
 import { defaultNodeRegistry } from '../components/index.ts';
-import { type View } from '../model/index.ts';
+import { type RenderList2D } from '../model/index.ts';
 import { DEFAULT_LATTICE } from './lattice.ts';
 import { insertIndex, linkGeometry, linkPath, sideToward, smartPoints, splinePath, viewLinkGeometry } from './route.ts';
 
@@ -123,7 +123,7 @@ describe('route', () => {
       size: { width: 256, height: 128 },
     });
     const link: Link = { type: 'smart', id: 'link', z: 'a1', source: { node: 'mesh' }, target: { node: 'edge' } };
-    const scene: View = {
+    const scene: RenderList2D = {
       id: 'root',
       nodes: { mesh: box('mesh', 4, 1), edge: box('edge', 3, 4) },
       links: { link },
@@ -155,7 +155,7 @@ describe('route', () => {
     const link: Link = { type: 'smart', id: 'ac', z: 'a1', source: { node: 'a' }, target: { node: 'c' } };
     // C dragged along a diagonal between cells: gutter routing flipped its ports between two tied pairs every few px.
     const sides = Array.from({ length: 60 }, (_, step) => {
-      const scene: View = {
+      const scene: RenderList2D = {
         id: 'root',
         nodes: { a: box('a', 0, 0), c: box('c', 6 + step * 6.4, 195 + step * 3.2) },
         links: { link },

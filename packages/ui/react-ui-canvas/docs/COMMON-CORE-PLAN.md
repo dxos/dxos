@@ -266,8 +266,8 @@ intent, { snap })` is applied by `SceneEditor` to every write (gestures, command
 - **R-64 (2026-10-30, agent, E.6): `Scene2DView` takes `transparent`,** which a legacy slide passes so the slide shows
   through, as the scene article's picture viewport already does. 2D-only: no 3D picture view has a slide surface yet.
   Cost if wrong: none.
-- **R-65 (2026-10-30, agent, E.6): the engine's View model, `Intent`, `ViewStore` and per-View timeline are NOT deleted;
-  E.6's gate is not met (open question).** Deleting them means the 2D engine drawing elements and emitting
+- **R-65 (2026-10-30, agent, E.6; superseded by R-67..R-70 once C.1/C.2 landed): the engine's View model, `Intent`,
+  `ViewStore` and per-View timeline are NOT deleted; E.6's gate is not met (open question).** Deleting them means the 2D engine drawing elements and emitting
   `LayoutIntent`s itself, which is C.1/C.2 (both unchecked, size L): `SceneLayer`, the controller, projections, gesture
   hooks, inspectors, the generator host and the animated projection all read `View`s from a `ViewStore`. Renaming the
   store to pass the grep was rejected as hiding the model rather than retiring it. What the gate still finds outside
@@ -326,6 +326,19 @@ layout)` takes the layout record and `toRenderLists2D(doc, scene)` every 2D layo
   no control points (`createLink`, unchanged). This supersedes R-8's engine lattice projection. **Parity:** 3D has no
   engine projection; its edits pass the same editor `constrain`, and 3D has no splines. Cost if wrong: a preview runs
   the mode once per pointer move (a diff and a render-list read of the open layout).
+- **R-70 (2026-10-30, agent, E.6): the View model retires; the engine draws `RenderList2D`s from a draw state of its
+  own.** `model/store.ts` (`ViewStore`, `createMemoryStore`, `MemoryViewStore`, `putView`, `isRoot`, `versions`) moves to
+  `engine/draw-state.ts` as `DrawState` (`createDrawState`, `updateView`, `drawStateVersions`), which only the engine
+  writes: hosts supply documents (R-67), so nothing outside the engine builds one. Node views and `SceneLayer` read
+  `DrawnLists` (`model/lists.ts`: `view(id)` and `styles`; `staticLists` for a test or a still) in place of
+  `NodeViewProps.store`. The `View` type and `ViewMap` are renamed `RenderList2D` and `RenderLists2D`, defined once in
+  `model/types.ts` (the engine's own type, so `viewport2d` imports it, not the other way), and `kind` is
+  `Scene.LayoutKind`; `ViewKind`, `createViewSchema`, the `View` schema, `OpenView` and `withLegacyView` are deleted.
+  A legacy `frame` node is read by plugin-canvas's `upgradeNode`, where stored canvas records are upgraded, and tested
+  there. The engine's root is its path's first entry, not an `isRoot` hook. Kept: geometry, camera and layout
+  utilities. plugin-canvas's `readViews`/`writeViews` keep their names (they read and write the canvas content records
+  as render lists). **Parity:** 3D draws its document through `Viewport3D` with no View model and no draw state of this
+  kind; nothing to retire there. Cost if wrong: a host that drew a bare store passes a document instead.
 
 ## Global Constraints
 
@@ -1007,14 +1020,15 @@ Delete react-ui-canvas `model/types.ts`'s `View`/`Node`/`Link`/`Intent`, `model/
 `createMemoryStore`), `model/intent.ts`, engine projection plumbing that only served them; keep geometry/camera/layout
 utilities.
 
-- [ ] **Gate:** `grep -rnE "\b(ViewStore|createMemoryStore|reduceIntent|withLegacyView)\b|type Intent\b" packages --include=*.ts --include=*.tsx`
-      returns nothing outside migration code; every package's tsc/lint/tests pass (`MOON_CONCURRENCY=4 moon run
-:test -- --no-file-parallelism` in the background).
-- [ ] Commit `react-ui-canvas: retire the View model, Intent and ViewStore`.
+- [x] **Gate:** `grep -rnE "\b(ViewStore|createMemoryStore|reduceIntent|withLegacyView)\b|type Intent\b" packages --include=*.ts --include=*.tsx`
+      returns nothing outside migration code (only plugin-lighthouse's unrelated `type Intent`).
+- [ ] Every package's tsc/lint/tests pass (`MOON_CONCURRENCY=4 moon run :test -- --no-file-parallelism` in the
+      background); the touched packages pass from source.
+- [x] Commit `react-ui-canvas: retire the View model, Intent and ViewStore`.
 - [x] Legacy drawings read only through the migration (R-61, R-62, R-63, R-64); tldraw to `Element2D`s (R-60).
 - [x] The engine timeline retires; the end card plays a shot (R-68).
 - [x] `Intent`, `reduceIntent` and the engine projections (R-69).
-- [ ] The View model and `ViewStore`.
+- [x] The View model and `ViewStore` (R-70).
 
 ---
 

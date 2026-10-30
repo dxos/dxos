@@ -13,7 +13,7 @@ import type * as Types from 'effect/Types';
 
 import { type Database, Obj, Ref } from '@dxos/echo';
 import { fromRenderList2D } from '@dxos/react-ui-canvas/headless';
-import { type View, type ViewMap } from '@dxos/react-ui-canvas/headless';
+import { type RenderList2D, type RenderLists2D } from '@dxos/react-ui-canvas/headless';
 import { Scene, type ViewId, layoutChanges, reachedObjects } from '@dxos/scene';
 
 import { type Canvas } from '#types';
@@ -38,12 +38,12 @@ const overObject = (
 };
 
 /** A View's node or link by id, as compared between writes. */
-const elementOf = (view: View | undefined, id: string): unknown => view?.nodes[id] ?? view?.links[id];
+const elementOf = (view: RenderList2D | undefined, id: string): unknown => view?.nodes[id] ?? view?.links[id];
 
-const elementIds = (view: View): string[] => [...Object.keys(view.nodes), ...Object.keys(view.links)];
+const elementIds = (view: RenderList2D): string[] => [...Object.keys(view.nodes), ...Object.keys(view.links)];
 
 /** The View-level fields a layout keeps. */
-const viewFields = (view: View | undefined) => view && [view.name, view.layers, view.kind, view.anonymous];
+const viewFields = (view: RenderList2D | undefined) => view && [view.name, view.layers, view.kind, view.anonymous];
 
 /**
  * Writes what changed between two Views to the layout the View was read from: each changed node or link as its
@@ -52,8 +52,8 @@ const viewFields = (view: View | undefined) => view && [view.name, view.layers, 
  */
 const writeLayout = (
   layout: Scene.Layout2D,
-  view: View,
-  previous: View | undefined,
+  view: RenderList2D,
+  previous: RenderList2D | undefined,
   record: Scene.LayoutRecord2D,
   objectOf: (object: string) => Scene.StoredObject2D | undefined,
 ) => {
@@ -116,7 +116,7 @@ export type LayoutWriter = {
   /** Reads again what the scene reaches, returning every object it reaches. */
   track: () => Set<Obj.Any>;
   /** Writes what changed from `previous` (every element, without it) to the layouts. */
-  write: (views: ViewMap, previous?: ViewMap, decorate?: DecorateLayout) => void;
+  write: (views: RenderLists2D, previous?: RenderLists2D, decorate?: DecorateLayout) => void;
 };
 
 /** The object an `instance` node of a composite places, which an unplaced composite takes too, so it is reached. */
@@ -169,7 +169,7 @@ export const makeLayoutWriter = (scene: Scene.Scene2D, { canvas }: LayoutWriterO
     return model;
   };
 
-  const layoutFor = (view: View): Scene.Layout2D => {
+  const layoutFor = (view: RenderList2D): Scene.Layout2D => {
     const existing = layouts.get(view.id);
     if (existing) {
       return existing;
@@ -198,9 +198,9 @@ export const makeLayoutWriter = (scene: Scene.Scene2D, { canvas }: LayoutWriterO
     return { ...plain(rest), ...(isLayout2D(target) ? { parts: target.key } : {}) };
   };
 
-  const write = (views: ViewMap, previous: ViewMap = {}, decorate: DecorateLayout = (record) => record) => {
+  const write = (views: RenderLists2D, previous: RenderLists2D = {}, decorate: DecorateLayout = (record) => record) => {
     const placed: Scene.Object2D[] = [];
-    const written: Array<{ layout: Scene.Layout2D; view: View; record: Scene.LayoutRecord2D }> = [];
+    const written: Array<{ layout: Scene.Layout2D; view: RenderList2D; record: Scene.LayoutRecord2D }> = [];
     for (const view of Object.values(views)) {
       if (previous[view.id] === view) {
         continue;

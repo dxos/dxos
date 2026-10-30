@@ -34,7 +34,7 @@ import {
   type LinkEnd,
   isMoving,
 } from '../../engine/index.ts';
-import { type Capabilities, type NodeRegistry, type View, nodeDef } from '../../model/index.ts';
+import { type Capabilities, type NodeRegistry, type RenderList2D, nodeDef } from '../../model/index.ts';
 import {
   type LatticeSpec,
   VERTEX_SNAP_PX,
@@ -59,7 +59,7 @@ const cursorFor = (handle: Handle) =>
   ({ n: 'ns', s: 'ns', e: 'ew', w: 'ew', ne: 'nesw', sw: 'nesw', nw: 'nwse', se: 'nwse' })[handle] + '-resize';
 
 export type ControlFrameProps = {
-  scene: View;
+  scene: RenderList2D;
   registry: NodeRegistry;
   /** What the view may do: no handle is drawn for a gesture that could not apply. */
   capabilities: Capabilities;

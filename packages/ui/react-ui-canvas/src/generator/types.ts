@@ -10,7 +10,7 @@
 import { type EffectStatus, type Shape2D, type StatefulEffect, type StatelessEffect } from '@dxos/animation';
 import { type Bounds, type Node, type Point } from '@dxos/scene';
 
-import { type View } from '../model/index.ts';
+import { type RenderList2D } from '../model/index.ts';
 
 /**
  * What a generator draws, in scene coordinates: the `2d` effect items of `@dxos/animation`, plus a composite placed as
@@ -40,7 +40,7 @@ export type GeneratorContext<P = Record<string, unknown>> = {
   /** Seeded per node and run: the only source of randomness a generator may use. */
   random: () => number;
   /** The scene sampled at `t`. */
-  scene: View;
+  scene: RenderList2D;
   /** The generator node's own frame. */
   bounds: Bounds;
   /** Parameters marked as bindings (`x-binding` in the schema), resolved: node or link ids become their geometry. */

@@ -8,6 +8,7 @@ import { Dsl } from '@dxos/diagram';
 import { EXEMPLAR_NAMES, EXEMPLARS } from '@dxos/diagram/testing';
 import { LINK_TYPES, MAJOR_GRID, type Node, NODE_TYPES, type Scene, readDocument, toEcho } from '@dxos/scene';
 
+import { type RenderList2D } from '../model/index.ts';
 import {
   createLatticeTree,
   createLinkedPairTree,
@@ -20,14 +21,7 @@ import {
   createViewTree,
 } from '../testing/index.ts';
 import { between } from '../utils/index.ts';
-import {
-  type RenderList2D,
-  fromRenderList2D,
-  namedStyles,
-  styleClasses,
-  toRenderList2D,
-  toRenderLists2D,
-} from './render-list.ts';
+import { fromRenderList2D, namedStyles, styleClasses, toRenderList2D, toRenderLists2D } from './render-list.ts';
 
 /** A board whose layout declares two layers and names a style on two elements. */
 const DOCUMENT_2D: Scene.SceneDocument = (() => {

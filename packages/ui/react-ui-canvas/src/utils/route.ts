@@ -25,7 +25,7 @@ import {
   isPointEndpoint,
 } from '@dxos/scene';
 
-import { type NodeRegistry, type View } from '../model/index.ts';
+import { type NodeRegistry, type RenderList2D } from '../model/index.ts';
 import { type DiagramRoute, diagramRoute, isRouteObstacle } from './diagram-shape.ts';
 import { gutterRoute, gutterRouteWithCost } from './gutter-route.ts';
 import { type LatticeSpec, onLattice, quantize } from './lattice.ts';
@@ -155,7 +155,7 @@ export type LatticeRoute = { spec: LatticeSpec; nodes: readonly Node[] };
  * cells (one in flight) would re-route on every pixel, two port pairs tying on bends and the nearer one flipping, so
  * its links take the plain route until it lands.
  */
-const onCells = (scene: View, link: Link, spec: LatticeSpec): boolean =>
+const onCells = (scene: RenderList2D, link: Link, spec: LatticeSpec): boolean =>
   [link.source, link.target].every((end) => {
     const node = isPointEndpoint(end) ? undefined : scene.nodes[end.node];
     if (!node || !onLattice(node)) {
@@ -195,7 +195,7 @@ const polylinePath = (points: readonly Point[]): string =>
   points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${pt(point)}`).join(' ');
 
 /** A diagram connector between two nodes, routed as the diagram renderer draws it (`diagramRoute`). */
-const diagramGeometry = (scene: View, link: Link): LinkGeometry | undefined => {
+const diagramGeometry = (scene: RenderList2D, link: Link): LinkGeometry | undefined => {
   if (!link.connector || isPointEndpoint(link.source) || isPointEndpoint(link.target)) {
     return undefined;
   }
@@ -229,7 +229,7 @@ export const sideToward = (from: Point, to: Point): Side => {
 };
 
 /** A node end as the port picker sees it, or nothing when the node is gone. */
-const terminalOf = (scene: View, registry: NodeRegistry, end: PortEndpoint): PortTerminal | undefined => {
+const terminalOf = (scene: RenderList2D, registry: NodeRegistry, end: PortEndpoint): PortTerminal | undefined => {
   const node = scene.nodes[end.node];
   return node ? { bounds: nodeBounds(node), ports: nodePorts(registry, node), port: end.port } : undefined;
 };
@@ -272,7 +272,7 @@ const leastBends = (from: RouteEnd, to: RouteEnd): number => {
  * rather than from the nearest port round a corner. Pairs are tried nearest first, so a tie keeps the nearest.
  */
 export const latticeEnds = (
-  scene: View,
+  scene: RenderList2D,
   registry: NodeRegistry,
   link: Link,
   route: LatticeRoute,
@@ -328,7 +328,7 @@ export const latticeEnds = (
  * a node end facing a free point takes the port nearest that point, and two free points face each other.
  */
 export const linkGeometry = (
-  scene: View,
+  scene: RenderList2D,
   registry: NodeRegistry,
   link: Link,
   lattice?: LatticeSpec,
@@ -376,7 +376,7 @@ const centredEnd = (node: Node, toward: Point): RouteEnd => {
  * A plain (non-smart) link's ends: a free point stays where it is, a named port is used as given, and a node end with
  * no port points at the node's centre, from the other end's centre (or port, or point), stopping at its outline.
  */
-const centredEnds = (scene: View, registry: NodeRegistry, source: Endpoint, target: Endpoint) => {
+const centredEnds = (scene: RenderList2D, registry: NodeRegistry, source: Endpoint, target: Endpoint) => {
   const anchor = (end: Endpoint): Point | undefined => {
     if (isPointEndpoint(end)) {
       return end.point;
@@ -407,7 +407,7 @@ const centredEnds = (scene: View, registry: NodeRegistry, source: Endpoint, targ
 };
 
 const resolveEnds = (
-  scene: View,
+  scene: RenderList2D,
   registry: NodeRegistry,
   source: Endpoint,
   target: Endpoint,
@@ -456,7 +456,7 @@ const resolveEnds = (
  * Other links, and any scene without a lattice, route one by one as `linkGeometry` does.
  */
 export const viewLinkGeometry = (
-  scene: View,
+  scene: RenderList2D,
   registry: NodeRegistry,
   links: readonly Link[],
   lattice?: LatticeSpec,

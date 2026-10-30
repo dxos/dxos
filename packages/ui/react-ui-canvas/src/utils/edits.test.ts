@@ -6,11 +6,11 @@ import { describe, test } from 'vitest';
 
 import { type Point, isRectNode } from '@dxos/scene';
 
-import { type View } from '../model/index.ts';
+import { type RenderList2D } from '../model/index.ts';
 import { createViewTree } from '../testing/index.ts';
 import { chainEdits, deleteElements, insertLink, insertNode, moveNodes, resizeTo, updateElement } from './edits.ts';
 
-const fixture = (): View => {
+const fixture = (): RenderList2D => {
   const { views, root } = createViewTree(1, 'r');
   const scene = views.find((scene) => scene.id === root);
   if (!scene) {
@@ -19,10 +19,10 @@ const fixture = (): View => {
   return scene;
 };
 
-const centerOf = (scene: View, id: string) => scene.nodes[id]?.center;
+const centerOf = (scene: RenderList2D, id: string) => scene.nodes[id]?.center;
 
 /** The centre of a node the fixture is known to hold; the throw names the id rather than asserting it away. */
-const originOf = (scene: View, id: string): Point => {
+const originOf = (scene: RenderList2D, id: string): Point => {
   const center = centerOf(scene, id);
   if (!center) {
     throw new Error(`fixture has no node ${id}`);
@@ -41,7 +41,7 @@ describe('scene edits', () => {
       size: { width: 64, height: 64 },
       scene: 'x',
     };
-    const object: View = { ...scene, kind: 'composite' };
+    const object: RenderList2D = { ...scene, kind: 'composite' };
     expect(insertNode(node)(object)).toBe(object);
     expect(chainEdits([insertNode(node)])(object)).toBe(object);
     expect(insertNode(node)(scene).nodes.v).toEqual(node);

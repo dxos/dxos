@@ -63,6 +63,7 @@ import {
   type NodeRegistry,
   type NodeViewProps,
   RADIUS_PX,
+  type RenderList2D,
   nodeDef,
   styleVariant,
 } from '../../model/index.ts';
@@ -109,7 +110,6 @@ import {
   viewLinkGeometry,
   visibleView,
 } from '../../utils/index.ts';
-import { type RenderList2D } from '../../viewport2d/index.ts';
 import { TextPart } from '../PartEditor/index.ts';
 import { renderMarkup } from './markup.ts';
 

@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { type Drag } from '../../engine/index.ts';
-import { type View } from '../../model/index.ts';
+import { type RenderList2D } from '../../model/index.ts';
 import { latticeConstrain } from '../../modes/index.ts';
 import { type SceneEdit } from '../../utils/index.ts';
 import { constrainEdit, fromRenderLists2D } from '../../viewport2d/index.ts';
@@ -23,7 +23,7 @@ const box = (id: string, x: number, y: number) => ({
   size: { width: 256, height: 128 },
 });
 
-const scene: View = { id: 'root', nodes: { a: box('a', 0, 0), c: box('c', 0, 192) }, links: {} };
+const scene: RenderList2D = { id: 'root', nodes: { a: box('a', 0, 0), c: box('c', 0, 192) }, links: {} };
 
 const move = (raw: { x: number; y: number }): Extract<Drag, { kind: 'move' }> => ({
   kind: 'move',

@@ -14,7 +14,7 @@ import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import { DEFAULT_LATTICE } from '@dxos/react-ui-canvas';
 import { toRenderList2D } from '@dxos/react-ui-canvas/headless';
-import { type View, type ViewMap, createNode } from '@dxos/react-ui-canvas/headless';
+import { type RenderList2D, type RenderLists2D, createNode } from '@dxos/react-ui-canvas/headless';
 import {
   createLatticeTree,
   createLinkedPairTree,
@@ -71,7 +71,7 @@ const SAMPLES = {
 };
 
 /** A 2D scene's layouts read as the engine's Views, by layout key, with the scene's own layout as the root. */
-const sceneViews = (scene: Scene.Scene2D): { root: string; views: ViewMap } => {
+const sceneViews = (scene: Scene.Scene2D): { root: string; views: RenderLists2D } => {
   const doc = fromEcho(scene);
   return {
     root: scene.layout.target?.key ?? scene.key,
@@ -104,7 +104,7 @@ describe('migrateSceneDrawing', () => {
     EffectEx.runPromise(migrateSceneDrawing(drawing).pipe(Effect.provide(Database.layer(db))));
 
   /** A scene drawing stored the v2 way, holding `views` with `root` first. */
-  const legacyDrawing = (views: readonly View[], root: string, settings = {}) => {
+  const legacyDrawing = (views: readonly RenderList2D[], root: string, settings = {}) => {
     const canvas = db.add(createCanvas(settings));
     Obj.update(canvas, (canvas) => {
       // The sample's root takes the place of the seeded one.
@@ -224,7 +224,7 @@ describe('migrateSceneDrawing', () => {
       }),
       link: { object: Ref.make(other) },
     };
-    const linked: View = { ...root, nodes: { ...root.nodes, portal } };
+    const linked: RenderList2D = { ...root, nodes: { ...root.nodes, portal } };
     const drawing = legacyDrawing([linked, ...tree.views.filter((view) => view !== root)], tree.root);
     await db.flush();
     expect(await migrate(drawing)).toBe(true);

@@ -17,7 +17,7 @@ import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import * as Animation from '@dxos/plugin-animator/Animation';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { fromRenderList2D, namedStyles } from '@dxos/react-ui-canvas/headless';
-import { type View } from '@dxos/react-ui-canvas/headless';
+import { type RenderList2D } from '@dxos/react-ui-canvas/headless';
 import { Scene, type StyleMap, bounds2D, toEcho } from '@dxos/scene';
 import { CreatedFrom } from '@dxos/types';
 
@@ -92,7 +92,7 @@ export const legacyDocument = (content: Drawing.Canvas['content'], classes: Styl
   migrateLayers(copy);
   pruneOrphanedViews(copy);
   const root = rootOf(copy);
-  const views: View[] = Object.values(readViews(copy)).sort(
+  const views: RenderList2D[] = Object.values(readViews(copy)).sort(
     (left, right) => Number(right.id === root) - Number(left.id === root),
   );
   const objects: Record<string, Scene.Object2D> = {};

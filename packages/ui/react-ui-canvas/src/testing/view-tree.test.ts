@@ -7,13 +7,13 @@ import { describe, test } from 'vitest';
 import { MAJOR_GRID, type Point } from '@dxos/scene';
 
 import { defaultNodeRegistry } from '../components/index.ts';
-import { type View } from '../model/index.ts';
+import { type RenderList2D } from '../model/index.ts';
 import { layoutGraph, solve } from '../modes/index.ts';
 import { nodeBounds } from '../utils/index.ts';
 import { createModelViewTree, createViewTree } from './view-tree.ts';
 
 /** Every edge of every node lies on the grid, which is what move and resize snap to. */
-const offGrid = (scene: View): string[] =>
+const offGrid = (scene: RenderList2D): string[] =>
   Object.values(scene.nodes)
     .filter((node) => {
       const { x, y, width, height } = nodeBounds(node);
@@ -22,7 +22,7 @@ const offGrid = (scene: View): string[] =>
     .map(({ id }) => id);
 
 /** How far the middle of the scene's content sits from the origin. */
-const offCenter = (scene: View): Point => {
+const offCenter = (scene: RenderList2D): Point => {
   const bounds = Object.values(scene.nodes).map(nodeBounds);
   const spread = (low: number[], high: number[]) => (Math.min(...low) + Math.max(...high)) / 2;
   return {
@@ -81,7 +81,7 @@ describe('generated layouts straddle the origin', () => {
   });
 });
 
-const constrained = (): View =>
+const constrained = (): RenderList2D =>
   solve(
     {
       nodes: [{ id: 'A' }, { id: 'B' }, { id: 'C' }],
@@ -93,7 +93,7 @@ const constrained = (): View =>
     { nodes: defaultNodeRegistry },
   );
 
-const dynamic = (): View =>
+const dynamic = (): RenderList2D =>
   layoutGraph(
     {
       nodes: [{ id: 'a' }, { id: 'b' }, { id: 'c' }],

@@ -13,7 +13,7 @@ import {
   type DrawState,
   type NavigationCommands,
 } from '../../engine/index.ts';
-import { type View } from '../../model/index.ts';
+import { type RenderList2D } from '../../model/index.ts';
 import {
   type SceneEdit,
   activeLayer,
@@ -71,7 +71,7 @@ export const useObjectActions = ({
   viewportRef.current = viewport;
   return useMemo<ObjectActions>(() => {
     /** Writes `scenes` into the store and applies `edits`, as one undo step. */
-    const commit = (scenes: Record<ViewId, View>, edits: SceneEdit[]) =>
+    const commit = (scenes: Record<ViewId, RenderList2D>, edits: SceneEdit[]) =>
       commitStep(() => {
         registry.set(store.views, { ...registry.get(store.views), ...scenes });
         if (edits.length > 0) {

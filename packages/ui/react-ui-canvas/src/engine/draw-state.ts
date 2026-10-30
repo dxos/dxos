@@ -15,16 +15,16 @@ import { type StyleMap, type ViewId } from '@dxos/scene';
 
 import {
   type DrawnLists,
+  type RenderList2D,
+  type RenderLists2D,
   type VersionedSource,
-  type View,
-  type ViewMap,
   atomSource,
   withoutOrphans,
 } from '../model/index.ts';
 
 export type DrawState = DrawnLists & {
   /** Every list, keyed by id. Written through the registry. */
-  readonly views: Atom.Writable<ViewMap>;
+  readonly views: Atom.Writable<RenderLists2D>;
   readonly styles: Atom.Writable<StyleMap>;
 };
 
@@ -34,14 +34,14 @@ export type DrawStateOptions = {
 };
 
 export const createDrawState = (
-  initial: readonly View[] = [],
+  initial: readonly RenderList2D[] = [],
   initialStyles: StyleMap = {},
   { root }: DrawStateOptions = {},
 ): DrawState => {
   const styles = Atom.keepAlive(Atom.make<StyleMap>(initialStyles));
-  const loaded: ViewMap = Object.fromEntries(initial.map((view) => [view.id, view]));
-  const views = Atom.keepAlive(Atom.make<ViewMap>(root === undefined ? loaded : withoutOrphans(loaded, [root])));
-  const derived = new Map<ViewId, Atom.Atom<View | undefined>>();
+  const loaded: RenderLists2D = Object.fromEntries(initial.map((view) => [view.id, view]));
+  const views = Atom.keepAlive(Atom.make<RenderLists2D>(root === undefined ? loaded : withoutOrphans(loaded, [root])));
+  const derived = new Map<ViewId, Atom.Atom<RenderList2D | undefined>>();
   return {
     views,
     styles,
@@ -61,7 +61,7 @@ export const updateView = (
   registry: Registry.AtomRegistry,
   state: DrawState,
   id: ViewId,
-  update: (scene: View) => View,
+  update: (scene: RenderList2D) => RenderList2D,
 ): void => {
   const scenes = registry.get(state.views);
   const current = scenes[id];
@@ -78,7 +78,7 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
 /** Whether `value` is a map of lists, as a patch must leave the draw state. */
-export const isViewMap = (value: unknown): value is ViewMap =>
+export const isViewMap = (value: unknown): value is RenderLists2D =>
   isRecord(value) &&
   Object.values(value).every(
     (list) => isRecord(list) && typeof list.id === 'string' && isRecord(list.nodes) && isRecord(list.links),

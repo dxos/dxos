@@ -13,7 +13,7 @@ import { type ContentMap, applyCommands } from '@dxos/diagram';
 import { Obj } from '@dxos/echo';
 import type * as IllustratorModel from '@dxos/plugin-illustrator/IllustratorModel';
 import { toRenderList2D } from '@dxos/react-ui-canvas/headless';
-import { type View, type ViewMap } from '@dxos/react-ui-canvas/headless';
+import { type RenderList2D, type RenderLists2D } from '@dxos/react-ui-canvas/headless';
 import { Scene, fromEcho } from '@dxos/scene';
 
 import { Canvas } from '#types';
@@ -56,7 +56,7 @@ export const readCanvasContent = (canvas: Canvas.Canvas): ContentMap => {
   const doc = fromEcho(scene);
   const root = scene.layout.target?.key ?? scene.key;
   content[CANVAS_KEY] = { kind: 'canvas', root, ...clone(canvas.settings) };
-  const views: ViewMap = Object.fromEntries(
+  const views: RenderLists2D = Object.fromEntries(
     doc.layouts.flatMap((layout) => (layout.dim === '2d' ? [[layout.id, toRenderList2D(doc, layout)]] : [])),
   );
   writeViews(content, views);
@@ -104,8 +104,8 @@ export const writeCanvasContent = (canvas: Canvas.Canvas, content: ContentMap, p
       }),
     ),
   });
-  const views: ViewMap = readViews(clone(content));
-  const before: Record<string, View> | undefined = previous && readViews(clone(previous));
+  const views: RenderLists2D = readViews(clone(content));
+  const before: Record<string, RenderList2D> | undefined = previous && readViews(clone(previous));
   makeLayoutWriter(scene, { canvas }).write(views, before, decorate);
 
   const record = canvasRecordOf(content);

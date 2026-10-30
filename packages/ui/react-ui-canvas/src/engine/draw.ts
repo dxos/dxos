@@ -13,14 +13,14 @@ import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { type ViewId } from '@dxos/scene';
 
-import { type Capabilities, type View } from '../model/index.ts';
+import { type Capabilities, type RenderList2D } from '../model/index.ts';
 import { type LatticeSpec, type SceneEdit } from '../utils/index.ts';
 import { type DrawState, updateView } from './draw-state.ts';
 import { type CanvasHistory } from './history.ts';
 
 export type DrawScene = {
   /** The open scene, re-emitted on every change. */
-  readonly scene: Atom.Atom<View>;
+  readonly scene: Atom.Atom<RenderList2D>;
   /** Applies `edit` to the open scene. */
   apply: (edit: SceneEdit) => void;
   /** What a person may do to the scene. */
@@ -81,7 +81,7 @@ export type DrawSceneOptions = {
   lattice?: LatticeSpec;
 };
 
-const EMPTY: View = { id: '', nodes: {}, links: {} };
+const EMPTY: RenderList2D = { id: '', nodes: {}, links: {} };
 
 /** The scene `sceneId` of the draw state, every edit written straight into it. */
 export const createDrawScene = ({

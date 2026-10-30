@@ -7,7 +7,7 @@ import { useMemo } from 'react';
 import { type Bounds, type Endpoint, type Point, isPointEndpoint } from '@dxos/scene';
 
 import { type Drag, type DrawScene } from '../../engine/index.ts';
-import { type View } from '../../model/index.ts';
+import { type RenderList2D } from '../../model/index.ts';
 import {
   type SceneEdit,
   createLink,
@@ -29,7 +29,7 @@ import { detentOf } from './useSceneSnap.ts';
 const PREVIEW_LINK_ID = 'preview-link';
 
 export type UseGesturePreviewOptions = {
-  scene: View;
+  scene: RenderList2D;
   drag: Drag | undefined;
   draw: DrawScene;
   /** The finest grid level drawn: a link previews once it has gone this far. */
@@ -40,7 +40,7 @@ export type UseGesturePreviewOptions = {
 
 export type GesturePreview = {
   /** The scene as drawn while the gesture is in flight. */
-  displayScene: View;
+  displayScene: RenderList2D;
   /** The gesture would be refused by the layout's mode (e.g. an overlap on the lattice). */
   blocked: boolean;
   /** Where a move in flight will land (snapped and constrained), while the nodes follow the pointer. */
@@ -50,7 +50,7 @@ export type GesturePreview = {
 };
 
 type Preview = {
-  displayScene: View;
+  displayScene: RenderList2D;
   blocked: boolean;
   /** Where a move in flight will land (snapped and constrained), while the nodes follow the pointer. */
   landing?: Bounds[];
@@ -62,7 +62,7 @@ type Preview = {
  * rather than jumping there.
  */
 export const movePreview = (
-  scene: View,
+  scene: RenderList2D,
   drag: Extract<Drag, { kind: 'move' }>,
   draw: Pick<DrawScene, 'constrain'>,
   detent: number,

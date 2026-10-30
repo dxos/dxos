@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { type InstanceNode, type Node, isInstanceNode } from '@dxos/scene';
 
 import { ViewBuilder } from '../builder/index.ts';
-import { type View } from '../model/index.ts';
+import { type RenderList2D } from '../model/index.ts';
 import {
   composeSelection,
   compositeBounds,
@@ -42,7 +42,7 @@ const counter = () => {
   return (prefix: string) => `${prefix}-${next++}`;
 };
 
-const instanceOf = (parent: View, id: string): InstanceNode => {
+const instanceOf = (parent: RenderList2D, id: string): InstanceNode => {
   const node = parent.nodes[id];
   if (!node || !isInstanceNode(node)) {
     throw new Error(`no instance ${id}`);
@@ -89,7 +89,7 @@ describe('instances', () => {
   });
 
   test('overrides apply per field, style per key', ({ expect }) => {
-    const composite: View = {
+    const composite: RenderList2D = {
       id: 'obj',
       kind: 'composite',
       nodes: { a: { ...scene.nodes.a, style: { hue: 'red', rounded: true } } },
@@ -199,7 +199,12 @@ describe('removeComposite', () => {
     size: { width: 100, height: 50 },
     composite,
   });
-  const view = (id: string, nodes: View['nodes'], links: View['links'] = {}, extra: Partial<View> = {}): View => ({
+  const view = (
+    id: string,
+    nodes: RenderList2D['nodes'],
+    links: RenderList2D['links'] = {},
+    extra: Partial<RenderList2D> = {},
+  ): RenderList2D => ({
     id,
     nodes,
     links,

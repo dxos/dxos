@@ -27,7 +27,7 @@ import {
 } from '@dxos/scene';
 
 import { defaultNodeRegistry } from '../components/index.ts';
-import { type NodeRegistry, type View } from '../model/index.ts';
+import { type NodeRegistry, type RenderList2D } from '../model/index.ts';
 import { DEFAULT_LAYER, createNode, initialKeys } from '../utils/index.ts';
 
 /** Top-left box geometry; the builder stores the centre. */
@@ -134,15 +134,15 @@ export class ViewElement {
 
   /** Every View of the tree, the root first, checked against `registry`'s node schemas. */
   build(registry: NodeRegistry = defaultNodeRegistry): ViewTree {
-    const views: View[] = [];
+    const views: RenderList2D[] = [];
     buildView(this, registry, views);
     return { root: this.id, views };
   }
 }
 
-export type ViewTree = { root: ViewId; views: View[] };
+export type ViewTree = { root: ViewId; views: RenderList2D[] };
 
-const buildView = (element: ViewElement, registry: NodeRegistry, views: View[]): void => {
+const buildView = (element: ViewElement, registry: NodeRegistry, views: RenderList2D[]): void => {
   // Maps, so any id (`constructor`, `__proto__`) is an ordinary key; `fromEntries` keeps them own properties.
   const nodes = new Map<string, Node>();
   const links = new Map<string, Link>();

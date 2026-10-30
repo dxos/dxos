@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { MAJOR_GRID, type Node } from '@dxos/scene';
 
-import { type View } from '../model/index.ts';
+import { type RenderList2D } from '../model/index.ts';
 import { arrangeScene } from './edits.ts';
 import { layoutView } from './layout.ts';
 
@@ -19,7 +19,7 @@ const node = (id: string, center = { x: 0, y: 0 }, size = { width: 128, height: 
 });
 
 /** a → b → c with a second branch a → d, all piled on the origin. */
-const fixture = (): View => ({
+const fixture = (): RenderList2D => ({
   id: 'scene',
   nodes: Object.fromEntries([node('a'), node('b'), node('c'), node('d')].map((node) => [node.id, node])),
   links: Object.fromEntries(
@@ -34,7 +34,7 @@ const fixture = (): View => ({
   ),
 });
 
-const rowOf = (scene: View, id: string) => scene.nodes[id].center.y;
+const rowOf = (scene: RenderList2D, id: string) => scene.nodes[id].center.y;
 
 describe('layout', () => {
   test('a chain ranks into rows, branches share one', ({ expect }) => {
@@ -96,7 +96,7 @@ describe('layout', () => {
   });
 
   test('an empty scene is returned as it was', ({ expect }) => {
-    const empty: View = { id: 'scene', nodes: {}, links: {} };
+    const empty: RenderList2D = { id: 'scene', nodes: {}, links: {} };
     expect(layoutView(empty)).toBe(empty);
   });
 });

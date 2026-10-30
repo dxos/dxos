@@ -6,8 +6,9 @@ import { describe, expect, test, vi } from 'vitest';
 
 import { type LayoutIntent, type Scene, applyIntent } from '@dxos/scene';
 
+import { type RenderList2D } from '../model/index.ts';
 import { createNode } from '../utils/index.ts';
-import { type RenderList2D, toRenderList2D } from './render-list.ts';
+import { toRenderList2D } from './render-list.ts';
 import { type LayoutWrite, applyLayoutWrites, layoutWrites } from './writes.ts';
 
 const rects = (count: number): Record<string, Scene.Element2D> =>

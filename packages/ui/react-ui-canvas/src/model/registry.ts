@@ -21,11 +21,11 @@ import { type LinkType, type Node, type NodeBase, type NodeType, type Point, typ
 
 import { type PartEditing, type PartField } from '../utils/index.ts';
 import { type DrawnLists } from './lists.ts';
-import { type View } from './types.ts';
+import { type RenderList2D } from './types.ts';
 
 export type NodeViewProps = {
   node: Node;
-  scene: View;
+  scene: RenderList2D;
   /** The lists the view may draw from (a portal's scene, an instance's parts). */
   lists: DrawnLists;
   registry: NodeRegistry;

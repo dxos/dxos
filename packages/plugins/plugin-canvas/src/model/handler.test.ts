@@ -8,7 +8,7 @@ import { type ContentMap, Dsl, SvgFile, applyCommands } from '@dxos/diagram';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import {
   DEFAULT_LAYER,
-  type View,
+  type RenderList2D,
   defaultNodeRegistry,
   diagramLinkMarkup,
   diagramNodeMarkup,
@@ -213,7 +213,7 @@ edge Worker -> Db "writes"
 `;
 
 /** Every SVG element the canvas draws for a scene's diagram shapes and connectors, as text. */
-const drawn = (scene: View): string[] =>
+const drawn = (scene: RenderList2D): string[] =>
   [
     ...Object.values(scene.nodes).flatMap((node) => (isDiagramNode(node) ? diagramNodeMarkup(node) : [])),
     ...Object.values(scene.links).flatMap((link) => {
@@ -263,7 +263,7 @@ describe('SceneHandler on a canvas of diagram shapes', () => {
     const before = readViews(content);
     const root = before[ROOT_VIEW_ID];
     const cache = root.nodes[elementId('Cache', 'box')];
-    const moved: View = {
+    const moved: RenderList2D = {
       ...root,
       nodes: { ...root.nodes, [cache.id]: { ...cache, center: { x: cache.center.x + 200, y: cache.center.y + 160 } } },
     };

@@ -8,7 +8,7 @@ import { Dsl } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
 import { Obj } from '@dxos/echo';
 import { toRenderList2D } from '@dxos/react-ui-canvas/headless';
-import { type View, type ViewMap, createNode } from '@dxos/react-ui-canvas/headless';
+import { type RenderList2D, type RenderLists2D, createNode } from '@dxos/react-ui-canvas/headless';
 import { Scene, fromEcho, toEcho } from '@dxos/scene';
 
 import { type Canvas } from '#types';
@@ -27,7 +27,7 @@ const stored = (name: keyof typeof EXEMPLARS) => {
 };
 
 /** A 2D scene's layouts read as the engine's Views, by layout key, with the scene's own layout as the root. */
-const sceneViews = (scene: Scene.Scene2D): { root: string; views: ViewMap } => {
+const sceneViews = (scene: Scene.Scene2D): { root: string; views: RenderLists2D } => {
   const doc = fromEcho(scene);
   return {
     root: scene.layout.target?.key ?? scene.key,
@@ -37,7 +37,7 @@ const sceneViews = (scene: Scene.Scene2D): { root: string; views: ViewMap } => {
   };
 };
 
-const moveNode = (view: View, id: string, center: { x: number; y: number }): View => ({
+const moveNode = (view: RenderList2D, id: string, center: { x: number; y: number }): RenderList2D => ({
   ...view,
   nodes: { ...view.nodes, [id]: { ...view.nodes[id], center } },
 });
@@ -84,7 +84,7 @@ describe('makeLayoutWriter', () => {
     const writer = makeLayoutWriter(scene, { canvas });
     const { root, views } = sceneViews(scene);
     const size = { width: 128, height: 128 };
-    const inner: View = {
+    const inner: RenderList2D = {
       id: 'g',
       nodes: { x: createNode({ type: 'rect', id: 'x', z: 'a0', center: { x: 0, y: 0 }, size }) },
       links: {},

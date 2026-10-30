@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { type Layer } from '@dxos/scene';
 
 import { ViewBuilder } from '../builder/index.ts';
-import { type View } from '../model/index.ts';
+import { type RenderList2D } from '../model/index.ts';
 import { reorderElement, updateElement } from './edits.ts';
 import {
   DEFAULT_LAYER,
@@ -35,7 +35,7 @@ describe('layers', () => {
   ]).build();
 
   /** The base scene with a second layer above, holding `b`. */
-  const layered = (): View => {
+  const layered = (): RenderList2D => {
     const top: Layer = { id: 'top', name: 'Top', z: between(DEFAULT_LAYER.z) };
     const scene = putLayer(top)(base);
     return updateElement('b', { layer: 'top' })(scene);
@@ -55,7 +55,7 @@ describe('layers', () => {
   });
 
   /** The base scene as a drawing saved before layers: no layers, and no element naming one. */
-  const legacy = (): View => {
+  const legacy = (): RenderList2D => {
     const { layers: _, ...scene } = base;
     return {
       ...scene,

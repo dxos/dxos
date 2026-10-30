@@ -17,7 +17,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { ViewBuilder } from '../../builder/index.ts';
 import { type CanvasAtoms, createCanvasAtoms } from '../../engine/index.ts';
-import { type View } from '../../model/index.ts';
+import { type RenderList2D } from '../../model/index.ts';
 import { createModelViewTree, useDocumentHost } from '../../testing/index.ts';
 import { diagnosticElements, toDiagramObjects } from '../../utils/index.ts';
 import { fromRenderLists2D, toRenderList2D } from '../../viewport2d/index.ts';
@@ -57,7 +57,7 @@ const PLATFORM = `
     Edge --> Echo
 `;
 
-type Seed = { views: View[]; root: ViewId; engine?: Objective.Evaluation };
+type Seed = { views: RenderList2D[]; root: ViewId; engine?: Objective.Evaluation };
 
 /**
  * Places the diagram with the mermaid engine, then rebuilds it as editable nodes: groups become guide
@@ -106,7 +106,7 @@ type Graded = {
   layout: Objective.Layout;
 };
 
-const grade = (scene: View): Graded => {
+const grade = (scene: RenderList2D): Graded => {
   const converted = toDiagramObjects(scene, defaultNodeRegistry);
   return { converted, layout: { objects: converted.objects, report: Diagnostics.analyze(converted.objects) } };
 };
@@ -164,7 +164,7 @@ const Section = ({ title, children }: { title: string; children: ReactNode }) =>
 
 type ScorecardProps = {
   /** The scene as the editor draws it. */
-  scene: View | undefined;
+  scene: RenderList2D | undefined;
   atoms: CanvasAtoms;
   engine?: Objective.Evaluation;
   /** Every judge of the layout, of any kind; defaults to the objective's constraints and cost terms. */

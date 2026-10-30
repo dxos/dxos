@@ -24,9 +24,9 @@ import {
   type Camera,
   type Capabilities,
   type NodeRegistry,
+  type RenderList2D,
+  type RenderLists2D,
   type Tool,
-  type View,
-  type ViewMap,
   getElement,
   nodeDef,
   pruneOrphaned,
@@ -162,9 +162,9 @@ export type NavigationCommands = {
   /** Back to true size about the view's centre, from where the camera is now. */
   resetZoom: () => void;
   /** A child scene's frame inside its portal, as drilling in maps it. */
-  childFrame: (portal: Node, child: View) => Bounds;
+  childFrame: (portal: Node, child: RenderList2D) => Bounds;
   /** The frame of the scene at the head of `path`: once entered through a portal, the one it arrived with. */
-  frame: (path: ViewId[], scene: View) => Bounds;
+  frame: (path: ViewId[], scene: RenderList2D) => Bounds;
 };
 
 /** Theme and background (DESIGN.md §13.1, the Look aspect). */
@@ -291,7 +291,7 @@ export const createCanvasController = ({
   const applyWithRecords = (
     target: DrawScene,
     edit: SceneEdit,
-    records: (views: ViewMap) => ViewMap = (views) => views,
+    records: (views: RenderLists2D) => RenderLists2D = (views) => views,
   ): boolean =>
     commit(() => {
       const before = registry.get(store.views);
@@ -461,13 +461,13 @@ export const createCanvasController = ({
   const noFit: ViewFit = { enterFit: () => {}, exitFit: () => {}, takeOver: () => {} };
   const fitMode = () => viewFit?.() ?? noFit;
   const centre = () => ({ x: viewport().width / 2, y: viewport().height / 2 });
-  const frameIn = (portal: Node, child: View) => childFrame(portal, child, viewport());
+  const frameIn = (portal: Node, child: RenderList2D) => childFrame(portal, child, viewport());
 
   const portalTo = (parentId: ViewId | undefined, childId: ViewId): Node | undefined => {
     const parent = parentId ? registry.get(store.views)[parentId] : undefined;
     return parent ? Object.values(parent.nodes).find((node) => isViewNode(node) && node.scene === childId) : undefined;
   };
-  const frameOf = (path: ViewId[], current: View): Bounds => {
+  const frameOf = (path: ViewId[], current: RenderList2D): Bounds => {
     const portal = portalTo(path[path.length - 2], current.id);
     return portal ? frameIn(portal, current) : (contentBounds(current) ?? EMPTY_FRAME);
   };
@@ -724,7 +724,7 @@ export const createCanvasController = ({
       }
       const node = host.nodes[element];
       const link = host.links[element];
-      const moved: View = node
+      const moved: RenderList2D = node
         ? { ...host, nodes: { ...host.nodes, [element]: { ...node, z } } }
         : link
           ? { ...host, links: { ...host.links, [element]: { ...link, z } } }

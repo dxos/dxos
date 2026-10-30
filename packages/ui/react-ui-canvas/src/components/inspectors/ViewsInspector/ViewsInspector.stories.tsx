@@ -11,7 +11,7 @@ import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 import { type ElementId, type ViewId } from '@dxos/scene';
 
-import { type ViewMap } from '../../../model/index.ts';
+import { type RenderLists2D } from '../../../model/index.ts';
 import { createNestedDeepTree, createNestedSimpleTree, createObjectsTree } from '../../../testing/index.ts';
 import { type ViewPlace, type ViewRowSelection, reorderElement, restackZ } from '../../../utils/index.ts';
 import { withInspectorFrame } from '../../panels/testing.ts';
@@ -31,7 +31,7 @@ type StoryArgs = {
 
 /** The views tree over a shared fixture; picking a row opens its View and selects its element, as the canvas would. */
 const DefaultStory = ({ fixture, onSelect, onOpen }: StoryArgs) => {
-  const initial = useMemo((): { scenes: ViewMap; root: ViewId } => {
+  const initial = useMemo((): { scenes: RenderLists2D; root: ViewId } => {
     const tree = FIXTURES[fixture]();
     return { scenes: Object.fromEntries(tree.views.map((scene) => [scene.id, scene])), root: tree.root };
   }, [fixture]);

@@ -10,7 +10,7 @@
 import { EffectRunner, type EffectStatus, type EffectStep, type RunnerOptions } from '@dxos/animation';
 import { type Bounds, type NodeId, isGeneratorNode } from '@dxos/scene';
 
-import { type View } from '../model/index.ts';
+import { type RenderList2D } from '../model/index.ts';
 import { flattenPath, nodeBounds, viewLinkGeometry } from '../utils/index.ts';
 import {
   type BoundLink,
@@ -23,7 +23,7 @@ import {
 
 /** What a frame is computed from: the scene as the host draws it, and the generator's node in it. */
 export type RunnerInput = {
-  scene: View;
+  scene: RenderList2D;
   node: NodeId;
   /** The parameter schema, whose `x-binding` properties name nodes or links to resolve. */
   schema?: Record<string, unknown>;
@@ -50,7 +50,7 @@ export const bindingsOf = (schema: Record<string, unknown> | undefined): Record<
 
 /** The bindings among `params`, resolved against `scene`: ids that name nothing there are left out. */
 export const resolveBindings = (
-  scene: View,
+  scene: RenderList2D,
   params: Record<string, unknown>,
   bindings: Record<string, 'node' | 'link'>,
 ): Record<string, ReadonlyArray<BoundNode | BoundLink>> => {

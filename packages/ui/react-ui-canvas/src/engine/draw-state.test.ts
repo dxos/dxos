@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 
 import { type NodeBase } from '@dxos/scene';
 
-import { type View, orphanViews, pruneOrphaned } from '../model/index.ts';
+import { type RenderList2D, orphanViews, pruneOrphaned } from '../model/index.ts';
 import { createDrawState } from './draw-state.ts';
 
 const box = { z: 'a0', center: { x: 0, y: 0 }, size: { width: 256, height: 128 } };
@@ -19,7 +19,7 @@ const instance = (id: string, composite: string): NodeBase & { composite: string
   composite,
   ...box,
 });
-const view = (id: string, nodes: NodeBase[] = [], extra: Partial<View> = {}): View => ({
+const view = (id: string, nodes: NodeBase[] = [], extra: Partial<RenderList2D> = {}): RenderList2D => ({
   id,
   nodes: Object.fromEntries(nodes.map((node) => [node.id, node])),
   links: {},
@@ -27,7 +27,7 @@ const view = (id: string, nodes: NodeBase[] = [], extra: Partial<View> = {}): Vi
 });
 
 /** A root opening `child`, which places the anonymous `group`; a stray View, a stray anonymous and a named Object. */
-const drawing = (): View[] => [
+const drawing = (): RenderList2D[] => [
   view('root', [viewNode('c', 'child')]),
   view('child', [instance('i', 'group')]),
   view('group', [], { kind: 'composite', anonymous: true }),

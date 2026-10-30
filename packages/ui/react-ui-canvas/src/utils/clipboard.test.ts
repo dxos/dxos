@@ -6,11 +6,11 @@ import { describe, test } from 'vitest';
 
 import { type Link, endpointNode } from '@dxos/scene';
 
-import { type View } from '../model/index.ts';
+import { type RenderList2D } from '../model/index.ts';
 import { createViewTree } from '../testing/index.ts';
 import { copySelection, duplicateSelection, pasteFragment } from './clipboard.ts';
 
-const fixture = (): View => {
+const fixture = (): RenderList2D => {
   const { views, root } = createViewTree(1, 'r');
   const scene = views.find((scene) => scene.id === root);
   if (!scene) {

@@ -8,7 +8,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, type Ref } from '@dxos/echo';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { toRenderList2D } from '@dxos/react-ui-canvas/headless';
-import { type View, checkGenerator } from '@dxos/react-ui-canvas/headless';
+import { type RenderList2D, checkGenerator } from '@dxos/react-ui-canvas/headless';
 import { type GeneratorNode } from '@dxos/scene';
 
 import { Canvas, CanvasOperation, Generator } from '#types';
@@ -81,7 +81,7 @@ const standalone = (
   reference: string,
   params: Record<string, unknown> | undefined,
   bounds: { x: number; y: number; width: number; height: number } = { x: -256, y: -256, width: 512, height: 512 },
-): View => {
+): RenderList2D => {
   const node: GeneratorNode = {
     type: 'generator',
     id: STANDALONE_NODE,

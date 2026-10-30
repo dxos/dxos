@@ -11,7 +11,7 @@
 import { type Easing, type Timeline, createTimeline, setKey } from '@dxos/animation';
 import { DXOS_HORIZONTAL_LOCKUP, DXOS_LOCKUP_GLYPHS, type DXOSLockupGlyph } from '@dxos/brand/paths';
 import { fromRenderLists2D } from '@dxos/react-ui-canvas/headless';
-import { type View, compositeBounds, instancePorts, pathBounds } from '@dxos/react-ui-canvas/scene';
+import { type RenderList2D, compositeBounds, instancePorts, pathBounds } from '@dxos/react-ui-canvas/scene';
 import {
   type Bounds,
   type InstanceNode,
@@ -74,7 +74,7 @@ const glyphNode = (glyph: DXOSLockupGlyph, index: number): PathNode => {
 };
 
 /** The logo's definition: a composite scene of the mark and the four letters. */
-export const logoComposite = (): View => {
+export const logoComposite = (): RenderList2D => {
   const nodes = DXOS_LOCKUP_GLYPHS.map(glyphNode);
   return {
     id: LOGO_OBJECT,
@@ -125,7 +125,7 @@ export const LAYOUT = {
 const RULE_PATH = 'M 2 0 L 238 0 Q 240 0 240 2 Q 240 4 238 4 L 2 4 Q 0 4 0 2 Q 0 0 2 0 Z';
 
 /** The end card's root scene at rest: the logo instance, the tagline, the rule and the call to action. */
-export const rootScene = (): View => {
+export const rootScene = (): RenderList2D => {
   const composite = logoComposite();
   const content = compositeBounds(composite) ?? { x: 0, y: 0, width: 0, height: 0 };
   const logo: InstanceNode = {

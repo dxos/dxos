@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import { describe, expect, test } from 'vitest';
 
 import { Diagnostics, Objective, Score } from '@dxos/diagram';
-import { type View, defaultNodeRegistry, toDiagramObjects } from '@dxos/react-ui-canvas';
+import { type RenderList2D, defaultNodeRegistry, toDiagramObjects } from '@dxos/react-ui-canvas';
 import { fromRenderList2D } from '@dxos/react-ui-canvas/headless';
 import { createModelViewTree, createNestedViewTree, createSquareTree } from '@dxos/react-ui-canvas/testing';
 import { type Scene } from '@dxos/scene';
@@ -14,7 +14,7 @@ import { type Scene } from '@dxos/scene';
 import { scoreLayout2D } from './score.ts';
 
 /** A canvas sample's Views as the scene document the editor holds. */
-const documentOf = (views: readonly View[], root: string): Scene.SceneDocument => {
+const documentOf = (views: readonly RenderList2D[], root: string): Scene.SceneDocument => {
   const read = views.map(fromRenderList2D);
   const objects = Object.fromEntries(read.flatMap(({ objects }) => objects.map((object) => [object.id, object])));
   return {
@@ -25,7 +25,7 @@ const documentOf = (views: readonly View[], root: string): Scene.SceneDocument =
 };
 
 /** The scores the Scored story shows for a View: the default objective's scorers over its diagram objects. */
-const scoreView = (view: View) => {
+const scoreView = (view: RenderList2D) => {
   const { objects } = toDiagramObjects(view, defaultNodeRegistry);
   return Score.evaluate(Score.fromObjective(Objective.DEFAULT), { objects, report: Diagnostics.analyze(objects) });
 };

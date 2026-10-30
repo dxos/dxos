@@ -6,7 +6,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, test } from 'vitest';
 
-import { type NodeViewProps, type View, staticLists } from '@dxos/react-ui-canvas/scene';
+import { type NodeViewProps, type RenderList2D, staticLists } from '@dxos/react-ui-canvas/scene';
 import { type Node } from '@dxos/scene';
 
 import { ComputeGraphController } from '../../graph/index.ts';
@@ -26,11 +26,11 @@ const setup = () => {
   if (!gpt || typeof gpt.node !== 'string') {
     throw new Error('The circuit has no GPT shape with a compute node.');
   }
-  const shape = { ...gpt, z: 'a', node: gpt.node };
-  const scene: View = { id: 'circuit', nodes: { [shape.id]: shape as Node }, links: {} };
-  const View = computeNodeRegistry.gpt.component;
+  const shape: Node = { ...gpt, z: 'a' };
+  const scene: RenderList2D = { id: 'circuit', nodes: { [shape.id]: shape }, links: {} };
+  const NodeView = computeNodeRegistry.gpt.component;
   const props: NodeViewProps = {
-    node: shape as Node,
+    node: shape,
     scene,
     lists: staticLists([scene]),
     registry: computeNodeRegistry,
@@ -42,10 +42,10 @@ const setup = () => {
   const render = () =>
     renderToStaticMarkup(
       <ComputeContext.Provider value={{ controller }}>
-        <View {...props} />
+        <NodeView {...props} />
       </ComputeContext.Provider>,
     );
-  return { model, computeId: shape.node, render };
+  return { model, computeId: gpt.node, render };
 };
 
 describe('compute node view', () => {

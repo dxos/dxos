@@ -12,7 +12,7 @@ import {
   isViewNode,
 } from '@dxos/scene';
 
-import { type View, type ViewMap } from '../model/index.ts';
+import { type RenderList2D, type RenderLists2D } from '../model/index.ts';
 import { between, sortByZ } from './order.ts';
 
 /** What a row of the views tree stands for (VIEWS.md §2). */
@@ -57,13 +57,13 @@ const textOf = (element: Node | Link): string | undefined => {
 };
 
 /** A node as its row names it: its own text, else the View or Object it shows, else its type. */
-const nodeLabel = (scenes: ViewMap, node: Node): string =>
+const nodeLabel = (scenes: RenderLists2D, node: Node): string =>
   textOf(node) ??
   (isViewNode(node) ? scenes[node.scene]?.name : isInstanceNode(node) ? scenes[node.composite]?.name : undefined) ??
   node.type;
 
 /** A link end as its row names it, by its node's label; a free end is a point. */
-const endLabel = (scenes: ViewMap, scene: View, end: Endpoint): string => {
+const endLabel = (scenes: RenderLists2D, scene: RenderList2D, end: Endpoint): string => {
   if (!('node' in end)) {
     return 'point';
   }
@@ -77,9 +77,9 @@ const endLabel = (scenes: ViewMap, scene: View, end: Endpoint): string => {
  * children; an instance shows its object's contents, read-only. A scene reached twice on one branch is not expanded
  * again, so a cycle cannot recurse.
  */
-export const buildViewTree = (scenes: ViewMap, root: ViewId): ViewTreeItem => {
+export const buildViewTree = (scenes: RenderLists2D, root: ViewId): ViewTreeItem => {
   const contents = (
-    scene: View,
+    scene: RenderList2D,
     path: ViewId[],
     prefix: string,
     object: ViewPlace | undefined,
@@ -176,7 +176,7 @@ export const buildViewTree = (scenes: ViewMap, root: ViewId): ViewTreeItem => {
  * links), or undefined when the two are not siblings or the move changes nothing.
  */
 export const restackZ = (
-  scene: View,
+  scene: RenderList2D,
   id: ElementId,
   target: ElementId,
   position: 'before' | 'after',

@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { type Link, type Node } from '@dxos/scene';
 
 import { defaultNodeRegistry } from '../components/index.ts';
-import { type View } from '../model/index.ts';
+import { type RenderList2D } from '../model/index.ts';
 import { gutterRoute } from './gutter-route.ts';
 import { DEFAULT_LATTICE, cellBounds } from './lattice.ts';
 import { viewLinkGeometry } from './route.ts';
@@ -168,7 +168,7 @@ describe('gutter route', () => {
   });
 
   test('links sharing a gutter are nudged into separate lanes', ({ expect }) => {
-    const scene: View = { id: 's', nodes: Object.fromEntries(nodes.map((node) => [node.id, node])), links: {} };
+    const scene: RenderList2D = { id: 's', nodes: Object.fromEntries(nodes.map((node) => [node.id, node])), links: {} };
     const link = (id: string, source: string, sourcePort: string, target: string, targetPort: string): Link =>
       createLink({
         type: 'smart',

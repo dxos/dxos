@@ -9,7 +9,7 @@
 
 import { type Bounds, MAJOR_GRID, type Node, type Point } from '@dxos/scene';
 
-import { type View } from '../model/index.ts';
+import { type RenderList2D } from '../model/index.ts';
 import { sortByZ } from './order.ts';
 import { nodeBounds } from './shapes.ts';
 
@@ -70,13 +70,13 @@ export const alignBounds = (bounds: Bounds, unit: number): Bounds => {
   };
 };
 
-export const nodeList = (scene: View): Node[] => Object.values(scene.nodes);
+export const nodeList = (scene: RenderList2D): Node[] => Object.values(scene.nodes);
 
 /**
  * What a scene holds (decision 6): the union of its nodes plus padding, grown to the major grid. Fit and a
  * portal's preview frame it; an empty scene has none.
  */
-export const contentBounds = (scene: View, padding = BOUNDS_PADDING, unit = MAJOR_GRID): Bounds | undefined => {
+export const contentBounds = (scene: RenderList2D, padding = BOUNDS_PADDING, unit = MAJOR_GRID): Bounds | undefined => {
   const content = unionBounds(nodeList(scene).map(nodeBounds));
   return content ? alignBounds(padBounds(content, padding), unit) : undefined;
 };
@@ -97,7 +97,7 @@ export const unrotatePoint = (node: Node, point: Point): Point => {
 };
 
 /** Topmost node under `point`, or none; `margin` widens every node, e.g. to reach its ports. */
-export const hitTest = (scene: View, point: Point, margin = 0): Node | undefined => {
+export const hitTest = (scene: RenderList2D, point: Point, margin = 0): Node | undefined => {
   const nodes = sortByZ(nodeList(scene));
   for (let index = nodes.length - 1; index >= 0; index--) {
     if (containsPoint(padBounds(nodeBounds(nodes[index]), margin), unrotatePoint(nodes[index], point))) {
@@ -108,5 +108,5 @@ export const hitTest = (scene: View, point: Point, margin = 0): Node | undefined
 };
 
 /** Nodes whose bounds intersect `bounds` (marquee semantics). */
-export const nodesIntersecting = (scene: View, bounds: Bounds): Node[] =>
+export const nodesIntersecting = (scene: RenderList2D, bounds: Bounds): Node[] =>
   nodeList(scene).filter((node) => intersects(nodeBounds(node), bounds));

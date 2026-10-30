@@ -10,7 +10,7 @@
 import { type RunnerOptions, hashSeed } from '@dxos/animation';
 import { type NodeId, isGeneratorNode } from '@dxos/scene';
 
-import { type View } from '../model/index.ts';
+import { type RenderList2D } from '../model/index.ts';
 import { loadGenerator } from './compile.ts';
 import { GeneratorRunner } from './runner.ts';
 import { type GeneratorFrame, type GeneratorModule } from './types.ts';
@@ -20,7 +20,7 @@ export type GeneratorFrameNode = { id: NodeId; key: string; schema?: Record<stri
 
 export type CoreRequest =
   | { type: 'load'; key: string; code: string }
-  | { type: 'scene'; scene: View }
+  | { type: 'scene'; scene: RenderList2D }
   | { type: 'frame'; id: number; t: number; nodes: GeneratorFrameNode[] };
 
 export type CoreResponse = { type: 'frame'; id: number; t: number; frames: Record<NodeId, GeneratorFrame> };
@@ -29,7 +29,7 @@ export class GeneratorCore {
   readonly #modules = new Map<string, GeneratorModule | Error>();
   readonly #runners = new Map<NodeId, { key: string; runner: GeneratorRunner }>();
   readonly #options: Omit<RunnerOptions, 'seed'>;
-  #scene: View | undefined;
+  #scene: RenderList2D | undefined;
 
   constructor(options: Omit<RunnerOptions, 'seed'> = {}) {
     this.#options = options;
@@ -80,7 +80,7 @@ export class GeneratorCore {
     }
   }
 
-  #runner(node: GeneratorFrameNode, module: GeneratorModule, scene: View): GeneratorRunner {
+  #runner(node: GeneratorFrameNode, module: GeneratorModule, scene: RenderList2D): GeneratorRunner {
     const existing = this.#runners.get(node.id);
     if (existing?.key === node.key) {
       return existing.runner;

@@ -21,7 +21,7 @@ import { type ElementId, type ViewId } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 import { useRegistry } from '../../../hooks/index.ts';
-import { type ViewMap } from '../../../model/index.ts';
+import { type RenderLists2D } from '../../../model/index.ts';
 import {
   type ViewPlace,
   type ViewReorder,
@@ -51,7 +51,7 @@ export type SceneChoice = {
 export type ViewsInspectorProps = InspectorProps & {
   /** The canvas's scenes, picked and added above the hierarchy, the same in both dimensions. */
   sceneChoice?: SceneChoice;
-  scenes?: ViewMap;
+  scenes?: RenderLists2D;
   /** The canvas's root View. */
   root?: ViewId;
   /** The rows to show, built by the caller; otherwise built from `scenes` under `root`. */

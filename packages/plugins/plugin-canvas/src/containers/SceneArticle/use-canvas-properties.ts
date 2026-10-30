@@ -8,7 +8,7 @@ import * as ObjectCombobox from '@dxos/app-toolkit/ObjectCombobox';
 import { Entity, Obj } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
-import { type CanvasPropertiesProps, type ViewMap } from '@dxos/react-ui-canvas/scene';
+import { type CanvasPropertiesProps, type RenderLists2D } from '@dxos/react-ui-canvas/scene';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import { type Element, type ViewId, isLink, isViewNode } from '@dxos/scene';
 
@@ -23,7 +23,7 @@ const isLocalScene = (id: ViewId) => !parseLinkedViewId(id);
  * What a canvas adds to its Properties form, in either 2D view: the database a frame's object comes from, the objects
  * it may show, the fields a frame's state locks or hides, and which groups this viewer left open.
  */
-export const useCanvasProperties = (canvas: Obj.Unknown, readViews: () => ViewMap): CanvasPropertiesProps => {
+export const useCanvasProperties = (canvas: Obj.Unknown, readViews: () => RenderLists2D): CanvasPropertiesProps => {
   const db = Obj.getDatabase(canvas);
   const contextId = Entity.getURI(canvas);
   const { groups } = useViewState(canvasViewAspect, contextId);

@@ -44,7 +44,7 @@ import {
   type Capabilities,
   type CreateProps,
   type NodeRegistry,
-  type View,
+  type RenderList2D,
   isHandDrag,
   nodeDef,
 } from '../../model/index.ts';
@@ -120,7 +120,7 @@ const overCanvas = (target: EventTarget | null, root: HTMLElement | null): boole
 };
 
 /** Whether a link between two endpoints has a direction: either pinned port declares `in` or `out`. */
-const isDirected = (scene: View, registry: NodeRegistry, source: Endpoint, target: Endpoint): boolean =>
+const isDirected = (scene: RenderList2D, registry: NodeRegistry, source: Endpoint, target: Endpoint): boolean =>
   [source, target].some((end) => {
     if (isPointEndpoint(end)) {
       return false;
@@ -140,7 +140,7 @@ export type UsePointerMachineOptions = {
   /** Drops a copy of the dragged nodes where the drag ends (⌘-drag). */
   duplicate: DocumentEditCommands['duplicate'];
   store: DrawState;
-  scene: View;
+  scene: RenderList2D;
   nodeRegistry: NodeRegistry;
   draw: DrawScene;
   capabilities: Capabilities;

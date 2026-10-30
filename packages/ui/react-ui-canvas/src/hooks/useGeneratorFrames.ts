@@ -8,11 +8,11 @@ import { type ModuleCompiler } from '@dxos/animation';
 import { isGeneratorNode } from '@dxos/scene';
 
 import { type GeneratorFrames, GeneratorHost, type GeneratorSource } from '../generator/index.ts';
-import { type View } from '../model/index.ts';
+import { type RenderList2D } from '../model/index.ts';
 
 export type UseGeneratorFramesOptions = {
   /** The scene as drawn: what the generators bind to. */
-  scene: View;
+  scene: RenderList2D;
   /** The clock's time. */
   time: number;
   sources: Readonly<Record<string, GeneratorSource>>;
