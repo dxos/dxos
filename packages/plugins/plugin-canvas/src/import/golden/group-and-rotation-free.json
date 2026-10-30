@@ -1,0 +1,393 @@
+{
+  "layout": {
+    "id": "root",
+    "dim": "2d",
+    "elements": {
+      "tilted": {
+        "id": "tilted",
+        "type": "rect",
+        "z": "zV",
+        "center": {
+          "x": -50,
+          "y": -30
+        },
+        "size": {
+          "width": 100,
+          "height": 60
+        },
+        "rotation": 180,
+        "overrides": {
+          "tone": 0
+        },
+        "props": {
+          "canvas": {}
+        }
+      },
+      "neighbour": {
+        "id": "neighbour",
+        "type": "rect",
+        "z": "zl",
+        "center": {
+          "x": 750,
+          "y": 150
+        },
+        "size": {
+          "width": 100,
+          "height": 100
+        },
+        "overrides": {
+          "tone": 0
+        },
+        "props": {
+          "canvas": {}
+        }
+      },
+      "group": {
+        "id": "group",
+        "object": "instance:group-object",
+        "z": "V",
+        "center": {
+          "x": 975,
+          "y": 150
+        },
+        "size": {
+          "width": 100,
+          "height": 250
+        },
+        "props": {
+          "canvas": {
+            "composite": "group-object",
+            "ports": [
+              {
+                "id": "member",
+                "side": "n",
+                "offset": 0.5
+              }
+            ],
+            "type": "instance"
+          }
+        }
+      },
+      "polyline": {
+        "id": "polyline",
+        "type": "link",
+        "z": "l",
+        "source": {
+          "point": {
+            "x": 900,
+            "y": 0
+          }
+        },
+        "target": {
+          "point": {
+            "x": 900,
+            "y": 100
+          }
+        },
+        "overrides": {
+          "hue": "orange",
+          "lineStyle": "dotted"
+        },
+        "props": {
+          "canvas": {
+            "type": "line"
+          }
+        }
+      },
+      "polyline-1": {
+        "id": "polyline-1",
+        "type": "link",
+        "z": "t",
+        "source": {
+          "point": {
+            "x": 900,
+            "y": 100
+          }
+        },
+        "target": {
+          "point": {
+            "x": 800,
+            "y": 100
+          }
+        },
+        "overrides": {
+          "hue": "orange",
+          "lineStyle": "dotted"
+        },
+        "props": {
+          "canvas": {
+            "type": "line"
+          }
+        }
+      },
+      "tie": {
+        "id": "tie",
+        "type": "link",
+        "z": "zt",
+        "source": {
+          "node": "neighbour"
+        },
+        "target": {
+          "node": "group",
+          "port": "member"
+        },
+        "props": {
+          "canvas": {
+            "type": "line",
+            "ends": {
+              "end": "arrow"
+            }
+          }
+        }
+      }
+    }
+  },
+  "parts": [
+    {
+      "id": "group-object",
+      "dim": "2d",
+      "name": "Object",
+      "layers": {
+        "layer": {
+          "id": "layer",
+          "name": "Layer 1",
+          "z": "V"
+        }
+      },
+      "kind": "composite",
+      "anonymous": true,
+      "elements": {
+        "member": {
+          "id": "member",
+          "type": "rect",
+          "z": "V",
+          "center": {
+            "x": 0,
+            "y": -100
+          },
+          "size": {
+            "width": 100,
+            "height": 50
+          },
+          "rotation": 90,
+          "layer": "layer",
+          "overrides": {
+            "tone": 0
+          },
+          "props": {
+            "canvas": {
+              "exposed": true
+            }
+          }
+        },
+        "partner": {
+          "id": "partner",
+          "type": "rect",
+          "z": "x",
+          "center": {
+            "x": 0,
+            "y": 100
+          },
+          "size": {
+            "width": 100,
+            "height": 50
+          },
+          "rotation": 90,
+          "layer": "layer",
+          "overrides": {
+            "tone": 0
+          },
+          "props": {
+            "canvas": {}
+          }
+        },
+        "pair": {
+          "id": "pair",
+          "type": "link",
+          "z": "z",
+          "source": {
+            "node": "member"
+          },
+          "target": {
+            "node": "partner"
+          },
+          "layer": "layer",
+          "props": {
+            "canvas": {
+              "type": "line",
+              "ends": {
+                "end": "arrow"
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "objects": [
+    {
+      "id": "instance:group-object",
+      "type": "rect",
+      "parts": "group-object"
+    }
+  ],
+  "intents": [
+    {
+      "kind": "create",
+      "element": {
+        "id": "tilted",
+        "type": "rect",
+        "z": "zV",
+        "center": {
+          "x": -50,
+          "y": -30
+        },
+        "size": {
+          "width": 100,
+          "height": 60
+        },
+        "rotation": 180,
+        "overrides": {
+          "tone": 0
+        },
+        "props": {
+          "canvas": {}
+        }
+      }
+    },
+    {
+      "kind": "create",
+      "element": {
+        "id": "neighbour",
+        "type": "rect",
+        "z": "zl",
+        "center": {
+          "x": 750,
+          "y": 150
+        },
+        "size": {
+          "width": 100,
+          "height": 100
+        },
+        "overrides": {
+          "tone": 0
+        },
+        "props": {
+          "canvas": {}
+        }
+      }
+    },
+    {
+      "kind": "create",
+      "element": {
+        "id": "group",
+        "object": "instance:group-object",
+        "z": "V",
+        "center": {
+          "x": 975,
+          "y": 150
+        },
+        "size": {
+          "width": 100,
+          "height": 250
+        },
+        "props": {
+          "canvas": {
+            "composite": "group-object",
+            "ports": [
+              {
+                "id": "member",
+                "side": "n",
+                "offset": 0.5
+              }
+            ],
+            "type": "instance"
+          }
+        }
+      }
+    },
+    {
+      "kind": "create",
+      "element": {
+        "id": "polyline",
+        "type": "link",
+        "z": "l",
+        "source": {
+          "point": {
+            "x": 900,
+            "y": 0
+          }
+        },
+        "target": {
+          "point": {
+            "x": 900,
+            "y": 100
+          }
+        },
+        "overrides": {
+          "hue": "orange",
+          "lineStyle": "dotted"
+        },
+        "props": {
+          "canvas": {
+            "type": "line"
+          }
+        }
+      }
+    },
+    {
+      "kind": "create",
+      "element": {
+        "id": "polyline-1",
+        "type": "link",
+        "z": "t",
+        "source": {
+          "point": {
+            "x": 900,
+            "y": 100
+          }
+        },
+        "target": {
+          "point": {
+            "x": 800,
+            "y": 100
+          }
+        },
+        "overrides": {
+          "hue": "orange",
+          "lineStyle": "dotted"
+        },
+        "props": {
+          "canvas": {
+            "type": "line"
+          }
+        }
+      }
+    },
+    {
+      "kind": "create",
+      "element": {
+        "id": "tie",
+        "type": "link",
+        "z": "zt",
+        "source": {
+          "node": "neighbour"
+        },
+        "target": {
+          "node": "group",
+          "port": "member"
+        },
+        "props": {
+          "canvas": {
+            "type": "line",
+            "ends": {
+              "end": "arrow"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "skipped": {},
+  "approximated": {}
+}

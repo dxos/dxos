@@ -3,29 +3,24 @@
 //
 
 //
-// Maps a tldraw document (the records plugin-tldraw keeps in `Drawing.Canvas.content`) to canvas Views, and those to
-// the 2D layouts and create intents a `Canvas` takes. Pure and React-free so it runs in an operation on any host. A group becomes what the canvas's Group command makes (an
-// anonymous Object and its Instance), so arrows bound into it stay attached through the Instance's ports.
+// Maps a tldraw document (the records plugin-tldraw keeps in `Drawing.Canvas.content`) to the 2D layout of Element2Ds
+// and the create intents a `Canvas` takes. Pure and React-free so it runs in an operation on any host. A group becomes
+// what the canvas's Group command makes (an anonymous composite and the element placing it), so arrows bound into it
+// stay attached through the placing element's ports.
 //
 
 import * as Schema from 'effect/Schema';
 
+import { DEFAULT_LAYER, between, initialKeys } from '@dxos/react-ui-canvas/headless';
 import {
-  DEFAULT_LAYER,
-  type Intent,
-  type View,
-  type ViewMap,
-  between,
-  composeSelection,
-  initialKeys,
-} from '@dxos/react-ui-canvas/headless';
-import { fromCanvasView } from '@dxos/react-ui-scene/canvas';
-import {
+  type Bounds,
   type BuiltinNode,
   type CloudNode,
+  type ElementEndpoint,
   type EllipseNode,
   Endpoint,
   type HorizontalAlign,
+  type InstanceNode,
   type Layer,
   type LayoutIntent,
   type LineStyle,
@@ -39,11 +34,13 @@ import {
   type NoteNode,
   type Point,
   type PolygonNode,
+  type Port,
   type RectNode,
   type Scene,
+  type Side,
   STYLE_HUES,
   type StyleHue,
-  type ViewId,
+  endpointNode,
 } from '@dxos/scene';
 
 import { ROOT_VIEW_ID } from '../model/content.ts';
@@ -95,28 +92,18 @@ const isEndpoint = Schema.is(Endpoint);
 // Result.
 //
 
-/** The canvas Views a tldraw document maps to, with what the mapping could not carry over. */
-export type TldrawImport = {
-  root: ViewId;
-  views: ViewMap;
-  /** Shapes left out, by tldraw shape type (and `page` for shapes on any page after the first). */
-  skipped: Record<string, number>;
-  /** Shapes carried over with a loss, by reason (`rotation`, `geo:<kind>`, `group`, …). */
-  approximated: Record<string, number>;
-};
-
 export type TldrawImportOptions = {
-  /** The root View's id; the canvas's default root by default. */
-  root?: ViewId;
+  /** The page layout's key; the canvas's default root by default. */
+  root?: string;
   /**
-   * Snap every node's position and size, and every free link end, to the grid the canvas shows (`MAJOR_GRID`, the
+   * Snap every shape's position and size, and every free link end, to the grid the canvas shows (`MAJOR_GRID`, the
    * cell moves and resizes snap to), so the shapes line up as ones drawn on the canvas do; on by default.
    */
   snap?: boolean;
 };
 
 /** A tldraw document as a `Canvas` takes it: its first page as a 2D layout of Element2Ds, created by intents. */
-export type TldrawLayout = Pick<TldrawImport, 'skipped' | 'approximated'> & {
+export type TldrawLayout = {
   /** The first page. */
   layout: Scene.LayoutRecord2D;
   /** The composite layouts its groups place, and the objects that place them. */
@@ -124,34 +111,10 @@ export type TldrawLayout = Pick<TldrawImport, 'skipped' | 'approximated'> & {
   objects: Scene.Object2D[];
   /** One create per element of the page, the shapes before the links bound to them. */
   intents: LayoutIntent[];
-};
-
-/**
- * Maps a tldraw document to 2D layouts: the Views {@link tldrawToViews} makes, each read as the layout the canvas
- * engine writes for it, so an imported shape is the element a drawn one would be.
- */
-export const tldrawToLayout = (
-  content: Readonly<Record<string, unknown>>,
-  options: TldrawImportOptions = {},
-): TldrawLayout => {
-  const { root, views, skipped, approximated } = tldrawToViews(content, options);
-  const read = Object.values(views).map(fromCanvasView);
-  const layout = read.find((entry) => entry.layout.id === root)?.layout ?? { id: root, dim: '2d', elements: {} };
-  const objects = new Map(read.flatMap((entry) => entry.objects.map((object) => [object.id, object] as const)));
-  const elements = Object.values(layout.elements);
-  // A link is created after its ends, since a create bound to a missing element is refused.
-  const ordered = [
-    ...elements.filter((element) => element.type !== 'link'),
-    ...elements.filter((element) => element.type === 'link'),
-  ];
-  return {
-    layout,
-    parts: read.map((entry) => entry.layout).filter((entry) => entry.id !== root),
-    objects: [...objects.values()],
-    intents: ordered.map((element) => ({ kind: 'create', element })),
-    skipped,
-    approximated,
-  };
+  /** Shapes left out, by tldraw shape type (and `page` for shapes on any page after the first). */
+  skipped: Record<string, number>;
+  /** Shapes carried over with a loss, by reason (`rotation`, `geo:<kind>`, `group`, …). */
+  approximated: Record<string, number>;
 };
 
 //
@@ -207,38 +170,43 @@ const POLYGON_SIDES: Readonly<Record<string, number>> = { triangle: 3, pentagon:
 // Mapper.
 //
 
-/** A View under construction: its id and its elements in paint order (bottom first). */
-type Draft = {
-  id: ViewId;
-  name?: string;
-  elements: Array<Node | PendingLink>;
-  /** The nodes tldraw frames became, drawn on the frames layer under everything else. */
-  frames: Set<string>;
-};
+/** A shape or link the page will hold, in the canvas's node vocabulary until it is written as its element. */
+type Drawn = Node | Link;
 
-/** Where a View's frames go: below the content layer, so a frame reads as the backdrop its shapes sit on. */
-const FRAMES_LAYER: Layer = { id: 'frames', name: 'Frames', z: between(undefined, DEFAULT_LAYER.z) };
-
-/** An element built once every node is known, since an arrow binds to shapes anywhere in the document. */
+/** A link built once every shape is known, since an arrow binds to shapes anywhere in the document. */
 type PendingLink = { pending: true; build: (resolve: Resolver) => Link[] };
 
-/** Where a shape landed: its View and node id, if it became a node. */
-type Resolver = (shapeId: string, view: ViewId) => string | undefined;
+/** The node a shape became, if it became one. */
+type Resolver = (shapeId: string) => string | undefined;
 
-/** A rigid transform from a shape's parent space into its View's space. */
+/** A layout under construction: its nodes and links by id, in paint order, and its layers when it names them. */
+type Draft = {
+  nodes: Record<string, Node>;
+  links: Record<string, Link>;
+  layers?: Record<string, Layer>;
+};
+
+/** Where a page's frames go: below the content layer, so a frame reads as the backdrop its shapes sit on. */
+const FRAMES_LAYER: Layer = { id: 'frames', name: 'Frames', z: between(undefined, DEFAULT_LAYER.z) };
+
+/** A rigid transform from a shape's parent space into the page's space. */
 type Transform = { x: number; y: number; rotation: number };
 
 const IDENTITY: Transform = { x: 0, y: 0, rotation: 0 };
 
+/** The object a placing element names for the composite `parts`, as the canvas names a placed composite's. */
+const objectId = (parts: string) => `instance:${parts}`;
+
 /**
- * Maps a tldraw document's records to canvas Views: the first page becomes the root View. tldraw has no nested scenes,
- * so a frame becomes a labelled rectangle on a frames layer under the content, with its shapes beside it in the same
- * View, where arrows into and out of the frame stay bound.
+ * Maps a tldraw document to 2D layouts: its first page becomes the layout `root`. tldraw has no nested scenes, so a
+ * frame becomes a labelled rectangle on a frames layer under the content, with its shapes beside it in the same layout,
+ * where arrows into and out of the frame stay bound. Each element is the one the canvas engine writes for a shape drawn
+ * there, so an imported shape edits as a drawn one does.
  */
-export const tldrawToViews = (
+export const tldrawToLayout = (
   content: Readonly<Record<string, unknown>>,
   { root = ROOT_VIEW_ID, snap = true }: TldrawImportOptions = {},
-): TldrawImport => {
+): TldrawLayout => {
   const records = Object.values(content);
   const shapes = records.filter(isShapeRecord);
   /** `<arrow id> <terminal>` → the shape that end is bound to; the first binding wins, as a lookup per end. */
@@ -270,21 +238,24 @@ export const tldrawToViews = (
     target[key] = (target[key] ?? 0) + by;
   };
 
-  const drafts: Draft[] = [];
-  /** Shape id → the View and node it became. */
-  const placed = new Map<string, { view: ViewId; node: string }>();
-  /** Groups, innermost first, so an inner group's Instance is a member of the outer one. */
-  const groups: Array<{ view: ViewId; id: string; members: string[] }> = [];
+  /** The page's elements in paint order (bottom first). */
+  const drawn: Array<Drawn | PendingLink> = [];
+  /** The nodes tldraw frames became, drawn on the frames layer under everything else. */
+  const frames = new Set<string>();
+  /** Shape id → the node it became. */
+  const placed = new Map<string, string>();
+  /** Groups, innermost first, so an inner group's placing element is a member of the outer one. */
+  const groups: Array<{ id: string; members: string[] }> = [];
 
-  const visit = (shape: ShapeRecord, draft: Draft, transform: Transform) => {
-    const local = toView(transform, shape);
+  const visit = (shape: ShapeRecord, transform: Transform) => {
+    const local = toPage(transform, shape);
     const id = nodeId(shape.id);
     // The canvas turns a node clockwise about its centre, in degrees; `centerOf` already places the turned centre.
     const degrees = round(((local.rotation * 180) / Math.PI) % 360);
     const rotation = degrees === 0 ? {} : { rotation: degrees };
     const add = (node: BuiltinNode) => {
-      draft.elements.push(node);
-      placed.set(shape.id, { view: draft.id, node: node.id });
+      drawn.push(node);
+      placed.set(shape.id, node.id);
     };
 
     switch (shape.type) {
@@ -373,10 +344,10 @@ export const tldrawToViews = (
           // An outline with its name in the corner, as tldraw draws a frame, clear of the shapes inside.
           style: { tone: 0, alignHorizontal: 'left', alignVertical: 'top' },
         } satisfies RectNode);
-        draft.frames.add(id);
+        frames.add(id);
         // A frame's children are placed in its space, as a group's are.
         for (const grandchild of children.get(shape.id) ?? []) {
-          visit(grandchild, draft, local);
+          visit(grandchild, local);
         }
         break;
       }
@@ -384,28 +355,27 @@ export const tldrawToViews = (
       case 'group': {
         const members = children.get(shape.id) ?? [];
         for (const member of members) {
-          visit(member, draft, local);
+          visit(member, local);
         }
-        // Only a group holding a node becomes an Object; arrows bound to it then attach to its Instance.
-        if (members.some((member) => placed.get(member.id)?.view === draft.id)) {
-          groups.push({ view: draft.id, id, members: members.map((member) => member.id) });
-          placed.set(shape.id, { view: draft.id, node: id });
+        // Only a group holding a node becomes a composite; arrows bound to it then attach to its placing element.
+        if (members.some((member) => placed.has(member.id))) {
+          groups.push({ id, members: members.map((member) => member.id) });
+          placed.set(shape.id, id);
         }
         break;
       }
 
       case 'arrow': {
-        const view = draft.id;
         const terminal =
           (name: 'start' | 'end') =>
           (resolve: Resolver): Endpoint => {
             const bound = boundTo.get(`${shape.id} ${name}`) ?? legacyBound(shape.props[name]);
-            const node = bound ? resolve(bound, view) : undefined;
+            const node = bound ? resolve(bound) : undefined;
             return node ? { node } : { point: apply(local, vec(shape.props[name])) };
           };
         const start = terminal('start');
         const end = terminal('end');
-        draft.elements.push({
+        drawn.push({
           pending: true,
           build: (resolve) => [
             {
@@ -455,7 +425,7 @@ export const tldrawToViews = (
                 ...ends(index),
                 ...style,
               }));
-        draft.elements.push({ pending: true, build: () => links });
+        drawn.push({ pending: true, build: () => links });
         break;
       }
 
@@ -465,11 +435,9 @@ export const tldrawToViews = (
   };
 
   const [page, ...otherPages] = pages;
-  const rootDraft: Draft = { id: root, elements: [], frames: new Set() };
-  drafts.unshift(rootDraft);
   if (page) {
     for (const shape of children.get(page.id) ?? []) {
-      visit(shape, rootDraft, IDENTITY);
+      visit(shape, IDENTITY);
     }
   }
   for (const other of otherPages) {
@@ -479,82 +447,77 @@ export const tldrawToViews = (
     }
   }
 
-  const resolve: Resolver = (shapeId, view) => {
-    const target = placed.get(shapeId);
-    return target && target.view === view ? target.node : undefined;
-  };
-
-  const views: Record<ViewId, View> = {};
-  for (const draft of drafts) {
-    const elements = draft.elements.flatMap((element): Array<Node | Link> =>
-      'pending' in element ? element.build(resolve) : [element],
-    );
-    const keys = initialKeys(elements.length);
-    const nodes: Record<string, Node> = {};
-    const links: Record<string, Link> = {};
-    elements.forEach((element, index) => {
-      const z = keys[index];
-      if ('source' in element) {
-        links[element.id] = { ...element, z };
-      } else {
-        nodes[element.id] = { ...element, z };
-      }
-    });
-    // Frames go on their own layer, so every element names its layer: one naming none is on the bottom one.
-    const layered =
-      (layer: string) =>
-      <T extends Node | Link>(element: T): T => ({ ...element, layer });
-    const view: View =
-      draft.frames.size === 0
-        ? { id: draft.id, ...(draft.name ? { name: draft.name } : {}), nodes, links }
-        : {
-            id: draft.id,
-            ...(draft.name ? { name: draft.name } : {}),
-            nodes: Object.fromEntries(
-              Object.entries(nodes).map(([id, node]) => [
-                id,
-                layered(draft.frames.has(id) ? FRAMES_LAYER.id : DEFAULT_LAYER.id)(node),
-              ]),
-            ),
-            links: Object.fromEntries(Object.entries(links).map(([id, link]) => [id, layered(DEFAULT_LAYER.id)(link)])),
-            layers: { [FRAMES_LAYER.id]: FRAMES_LAYER, [DEFAULT_LAYER.id]: DEFAULT_LAYER },
-          };
-    views[draft.id] = snap ? snapView(view, MAJOR_GRID) : view;
-  }
-
-  // A group becomes what the canvas's Group command makes: an anonymous Object, placed by one Instance.
-  for (const group of groups) {
-    const view = views[group.view];
-    const members = group.members.flatMap((member) => {
-      const target = placed.get(member);
-      return target && target.view === group.view && target.node !== group.id ? [target.node] : [];
-    });
-    const composition = composeSelection(view, members, {
-      compositeId: `${group.id}-object`,
-      instanceId: group.id,
-      anonymous: true,
-    });
-    if (composition) {
-      views[composition.composite.id] = composition.composite;
-      // The Instance paints where its lowest member did, not on top.
-      const z = members.map((member) => view.nodes[member].z).sort()[0];
-      views[group.view] = composition.intents.reduce((next, intent) => applyIntent(next, intent, z), view);
+  const resolve: Resolver = (shapeId) => placed.get(shapeId);
+  const elements = drawn.flatMap((element): Drawn[] => ('pending' in element ? element.build(resolve) : [element]));
+  const keys = initialKeys(elements.length);
+  const draft: Draft = { nodes: {}, links: {} };
+  elements.forEach((element, index) => {
+    const z = keys[index];
+    if ('source' in element) {
+      draft.links[element.id] = { ...element, z };
+    } else {
+      draft.nodes[element.id] = { ...element, z };
     }
+  });
+  // Frames go on their own layer, so every element names its layer: one naming none is on the bottom one.
+  if (frames.size > 0) {
+    draft.nodes = Object.fromEntries(
+      Object.entries(draft.nodes).map(([id, node]) => [
+        id,
+        { ...node, layer: frames.has(id) ? FRAMES_LAYER.id : DEFAULT_LAYER.id },
+      ]),
+    );
+    draft.links = Object.fromEntries(
+      Object.entries(draft.links).map(([id, link]) => [id, { ...link, layer: DEFAULT_LAYER.id }]),
+    );
+    draft.layers = { [FRAMES_LAYER.id]: FRAMES_LAYER, [DEFAULT_LAYER.id]: DEFAULT_LAYER };
+  }
+  const page2d = snap ? snapDraft(draft, MAJOR_GRID) : draft;
+
+  // A group becomes what the canvas's Group command makes: an anonymous composite, placed by one element.
+  const composites: Array<{ id: string; draft: Draft }> = [];
+  for (const group of groups) {
+    const members = group.members.flatMap((member) => {
+      const node = placed.get(member);
+      return node !== undefined && node !== group.id && page2d.nodes[node] ? [node] : [];
+    });
+    const composite = composeGroup(page2d, members, `${group.id}-object`, group.id);
+    composite && composites.push(composite);
   }
 
-  return { root, views, skipped, approximated };
+  const layout = layoutRecord(root, page2d);
+  const parts = composites.map(({ id, draft }) => ({
+    ...layoutRecord(id, draft),
+    name: 'Object',
+    kind: 'composite' as const,
+    anonymous: true,
+  }));
+  const objects = composites.map(({ id }): Scene.Object2D => ({ id: objectId(id), type: 'rect', parts: id }));
+  const ordered = Object.values(layout.elements);
+  return {
+    layout,
+    parts,
+    objects,
+    // A link is created after its ends, since a create bound to a missing element is refused.
+    intents: [
+      ...ordered.filter((element) => element.type !== 'link'),
+      ...ordered.filter((element) => element.type === 'link'),
+    ].map((element) => ({ kind: 'create', element })),
+    skipped,
+    approximated,
+  };
 };
 
 /**
- * `view` with its nodes' frames and its free link ends on a grid of `unit` px, each frame keeping at least one cell. A
+ * `draft` with its nodes' frames and its free link ends on a grid of `unit` px, each frame keeping at least one cell. A
  * tldraw frame grows out to the grid, so it still holds its shapes once they are snapped.
  */
-const snapView = (view: View, unit: number): View => {
+const snapDraft = (draft: Draft, unit: number): Draft => {
   const toGrid = (value: number) => Math.round(value / unit) * unit;
   const snapPoint = (point: Point): Point => ({ x: toGrid(point.x), y: toGrid(point.y) });
-  const snapEnd = (end: Link['source']): Link['source'] => ('point' in end ? { point: snapPoint(end.point) } : end);
+  const snapEnd = (end: Endpoint): Endpoint => ('point' in end ? { point: snapPoint(end.point) } : end);
   const nodes = Object.fromEntries(
-    Object.entries(view.nodes).map(([id, node]): [string, Node] => {
+    Object.entries(draft.nodes).map(([id, node]): [string, Node] => {
       const left = node.center.x - node.size.width / 2;
       const top = node.center.y - node.size.height / 2;
       const outward = node.layer === FRAMES_LAYER.id;
@@ -571,55 +534,247 @@ const snapView = (view: View, unit: number): View => {
     }),
   );
   const links = Object.fromEntries(
-    Object.entries(view.links).map(([id, link]): [string, Link] => [
+    Object.entries(draft.links).map(([id, link]): [string, Link] => [
       id,
       { ...link, source: snapEnd(link.source), target: snapEnd(link.target) },
     ]),
   );
-  return { ...view, nodes, links };
+  return { ...draft, nodes, links };
 };
 
-/** Applies the intents `composeSelection` returns: the Instance's creation, re-attached links, the moved members' removal. */
-const applyIntent = (view: View, intent: Intent, z: string): View => {
-  switch (intent.kind) {
-    case 'create':
-      return { ...view, nodes: { ...view.nodes, [intent.node.id]: { ...intent.node, z } } };
-    case 'update': {
-      const link = view.links[intent.id];
-      const { source, target } = intent.values;
-      return link
-        ? {
-            ...view,
-            links: {
-              ...view.links,
-              [intent.id]: {
-                ...link,
-                ...(isEndpoint(source) ? { source } : {}),
-                ...(isEndpoint(target) ? { target } : {}),
-              },
-            },
-          }
-        : view;
-    }
-    case 'delete': {
-      const ids = new Set(intent.ids);
-      return {
-        ...view,
-        nodes: Object.fromEntries(Object.entries(view.nodes).filter(([id]) => !ids.has(id))),
-        links: Object.fromEntries(Object.entries(view.links).filter(([id]) => !ids.has(id))),
-      };
-    }
-    default:
-      return view;
+//
+// Groups.
+//
+
+const nodeBounds = (node: Node): Bounds => ({
+  x: node.center.x - node.size.width / 2,
+  y: node.center.y - node.size.height / 2,
+  width: node.size.width,
+  height: node.size.height,
+});
+
+const unionBounds = (list: readonly Bounds[]): Bounds | undefined => {
+  if (list.length === 0) {
+    return undefined;
   }
+  const x = Math.min(...list.map((bounds) => bounds.x));
+  const y = Math.min(...list.map((bounds) => bounds.y));
+  const right = Math.max(...list.map((bounds) => bounds.x + bounds.width));
+  const bottom = Math.max(...list.map((bounds) => bounds.y + bounds.height));
+  return { x, y, width: right - x, height: bottom - y };
 };
+
+/** The side of `frame` that a ray from its centre through `point` leaves by, and how far along it (0 to 1). */
+const sideToward = (frame: Bounds, point: Point): { side: Side; offset: number } => {
+  const halfWidth = frame.width / 2 || 1;
+  const halfHeight = frame.height / 2 || 1;
+  const dx = (point.x - (frame.x + halfWidth)) / halfWidth;
+  const dy = (point.y - (frame.y + halfHeight)) / halfHeight;
+  const clamp = (value: number) => Math.min(1, Math.max(0, value));
+  return Math.abs(dx) >= Math.abs(dy)
+    ? { side: dx >= 0 ? 'e' : 'w', offset: clamp((point.y - frame.y) / (frame.height || 1)) }
+    : { side: dy >= 0 ? 's' : 'n', offset: clamp((point.x - frame.x) / (frame.width || 1)) };
+};
+
+/** Where a composite point lands in `frame` when the placing element fits the composite's `content` into it, centred. */
+const fitInto = (frame: Bounds, content: Bounds | undefined): ((point: Point) => Point) => {
+  const middle = { x: frame.x + frame.width / 2, y: frame.y + frame.height / 2 };
+  if (!content || content.width <= 0 || content.height <= 0) {
+    return (point) => ({ x: middle.x + point.x, y: middle.y + point.y });
+  }
+  const scale = Math.min(frame.width / content.width, frame.height / content.height);
+  const offset = {
+    x: middle.x - (content.x + content.width / 2) * scale,
+    y: middle.y - (content.y + content.height / 2) * scale,
+  };
+  return (point) => ({ x: offset.x + point.x * scale, y: offset.y + point.y * scale });
+};
+
+/**
+ * Groups `members` of `page` in place, as the canvas's Group command does: they and the links wholly inside the group
+ * move into a new composite, re-centred on their bounds, and one element placing it replaces them, painting where the
+ * lowest member did. A link crossing the group's edge stays, re-attached to the port of the placing element that the
+ * inner node it left now exposes. None when the group holds no node.
+ */
+const composeGroup = (
+  page: Draft,
+  members: readonly string[],
+  compositeId: string,
+  instanceId: string,
+): { id: string; draft: Draft } | undefined => {
+  const inside = new Set(members);
+  const nodes = Object.values(page.nodes).filter((node) => inside.has(node.id));
+  const bounds = unionBounds(nodes.map(nodeBounds));
+  if (!bounds) {
+    return undefined;
+  }
+  const centre = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 };
+  const shiftPoint = (point: Point): Point => ({ x: point.x - centre.x, y: point.y - centre.y });
+  const shiftEnd = (end: Endpoint): Endpoint => ('point' in end ? { point: shiftPoint(end.point) } : end);
+  const isInside = (end: Endpoint) => {
+    const node = endpointNode(end);
+    return node === undefined || inside.has(node);
+  };
+  const touches = (link: Link) => [link.source, link.target].some((end) => inside.has(endpointNode(end) ?? ''));
+  const links = Object.values(page.links).filter(touches);
+  const moved = links.filter((link) => isInside(link.source) && isInside(link.target));
+  const crossing = links.filter((link) => !moved.includes(link));
+  // The inner node at each crossing link's inside end is exposed, so the placing element offers a port for it.
+  const exposed = new Set(
+    crossing.flatMap((link) => [link.source, link.target].map(endpointNode).filter((id) => id && inside.has(id))),
+  );
+
+  // Every member names its layer: the page's own, else the bottom one.
+  const layers = Object.values(page.layers ?? {}).sort((left, right) => (left.z < right.z ? -1 : 1));
+  const bottom = layers.length > 0 ? layers : [DEFAULT_LAYER];
+  const layerOf = (element: Drawn): string =>
+    element.layer !== undefined && bottom.some((layer) => layer.id === element.layer) ? element.layer : bottom[0].id;
+  const childNodes = nodes.map((node): Node => ({
+    ...node,
+    center: shiftPoint(node.center),
+    ...(exposed.has(node.id) ? { exposed: true } : {}),
+    layer: layerOf(node),
+  }));
+  const childLinks = moved.map((link): Link => ({
+    ...link,
+    source: shiftEnd(link.source),
+    target: shiftEnd(link.target),
+    ...(link.type === 'spline' ? { points: link.points.map(shiftPoint) } : {}),
+    layer: layerOf(link),
+  }));
+  const used = new Set([...childNodes, ...childLinks].map((element) => element.layer));
+  const place = fitInto(bounds, unionBounds(childNodes.map(nodeBounds)));
+  const ports: Port[] = childNodes
+    .filter((node) => node.exposed)
+    .map((node) => ({ id: node.id, ...sideToward(bounds, place(node.center)) }));
+  const reattach = (end: Endpoint): Endpoint => {
+    const node = endpointNode(end);
+    return node !== undefined && inside.has(node) ? { node: instanceId, port: node } : end;
+  };
+  const gone = new Set([...inside, ...moved.map((link) => link.id)]);
+  const instance: InstanceNode = {
+    type: 'instance',
+    id: instanceId,
+    z: nodes.map((node) => node.z).sort()[0],
+    center: centre,
+    size: { width: bounds.width, height: bounds.height },
+    composite: compositeId,
+    ports,
+  };
+  page.nodes = {
+    ...Object.fromEntries(Object.entries(page.nodes).filter(([id]) => !gone.has(id))),
+    [instanceId]: instance,
+  };
+  const kept: Record<string, Link> = {};
+  for (const link of Object.values(page.links)) {
+    if (!gone.has(link.id)) {
+      kept[link.id] = crossing.includes(link)
+        ? { ...link, source: reattach(link.source), target: reattach(link.target) }
+        : link;
+    }
+  }
+  page.links = kept;
+  return {
+    id: compositeId,
+    draft: {
+      nodes: Object.fromEntries(childNodes.map((node) => [node.id, node])),
+      links: Object.fromEntries(childLinks.map((link) => [link.id, link])),
+      layers: Object.fromEntries(bottom.filter((layer) => used.has(layer.id)).map((layer) => [layer.id, layer])),
+    },
+  };
+};
+
+//
+// Elements.
+//
+
+type Fields = Record<string, unknown>;
+
+/** The node fields an element keeps in its own slots; the rest are the canvas's, under `props.canvas`. */
+const NODE_SLOTS = [
+  'type',
+  'id',
+  'z',
+  'center',
+  'size',
+  'rotation',
+  'label',
+  'layer',
+  'locked',
+  'style',
+  'class',
+  'frame',
+];
+
+/** The link fields an element keeps in its own slots. */
+const LINK_SLOTS = ['id', 'z', 'source', 'target', 'text', 'layer', 'locked', 'style', 'class'];
+
+const canvasFields = (record: object, slots: readonly string[]): Fields =>
+  Object.fromEntries(Object.entries(record).filter(([key]) => !slots.includes(key)));
+
+const elementEndpoint = (end: Endpoint): ElementEndpoint =>
+  'node' in end
+    ? end.port === undefined
+      ? { node: end.node }
+      : { node: end.node, port: end.port }
+    : { point: end.point };
+
+/** The element the canvas writes for a node: a group's placing element names its composite's object. */
+const nodeElement = (node: Node): Scene.Element2D => {
+  const canvas = canvasFields(node, NODE_SLOTS);
+  const composite = node.type === 'instance' ? canvas.composite : undefined;
+  if (typeof composite === 'string') {
+    canvas.type = 'instance';
+  }
+  const label = Reflect.get(node, 'label');
+  return {
+    id: node.id,
+    ...(typeof composite === 'string' ? { object: objectId(composite) } : { type: node.type }),
+    z: node.z,
+    center: node.center,
+    size: node.size,
+    ...(node.rotation !== undefined ? { rotation: node.rotation } : {}),
+    ...(typeof label === 'string' ? { label } : {}),
+    ...(node.layer !== undefined ? { layer: node.layer } : {}),
+    ...(node.locked !== undefined ? { locked: node.locked } : {}),
+    ...(node.class !== undefined ? { style: node.class } : {}),
+    ...(node.style ? { overrides: node.style } : {}),
+    props: { canvas },
+  };
+};
+
+const linkElement = (link: Link): Scene.Element2D => ({
+  id: link.id,
+  type: 'link',
+  z: link.z,
+  source: elementEndpoint(link.source),
+  target: elementEndpoint(link.target),
+  ...(link.text !== undefined ? { label: link.text } : {}),
+  ...(link.layer !== undefined ? { layer: link.layer } : {}),
+  ...(link.locked !== undefined ? { locked: link.locked } : {}),
+  ...(link.class !== undefined ? { style: link.class } : {}),
+  ...(link.style ? { overrides: link.style } : {}),
+  props: { canvas: canvasFields(link, LINK_SLOTS) },
+});
+
+const layoutRecord = (id: string, draft: Draft): Scene.LayoutRecord2D => ({
+  id,
+  dim: '2d',
+  ...(draft.layers !== undefined ? { layers: draft.layers } : {}),
+  elements: Object.fromEntries(
+    [...Object.values(draft.nodes).map(nodeElement), ...Object.values(draft.links).map(linkElement)].map((element) => [
+      element.id,
+      element,
+    ]),
+  ),
+});
 
 //
 // Geometry.
 //
 
-/** The shape's own transform in View space: its parent's transform applied to its position and rotation. */
-const toView = (parent: Transform, shape: ShapeRecord): Transform => {
+/** The shape's own transform in page space: its parent's transform applied to its position and rotation. */
+const toPage = (parent: Transform, shape: ShapeRecord): Transform => {
   const origin = apply(parent, { x: shape.x, y: shape.y });
   return { ...origin, rotation: parent.rotation + (shape.rotation ?? 0) };
 };

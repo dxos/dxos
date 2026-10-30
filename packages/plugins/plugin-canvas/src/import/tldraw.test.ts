@@ -9,40 +9,40 @@ import { sortByZ } from '@dxos/react-ui-canvas/headless';
 import { MAJOR_GRID, Scene } from '@dxos/scene';
 
 import { frameWithChildren, groupAndRotation, shapesAndArrow, textNoteAndFreeArrow, twoPages } from './testing.ts';
-import { nearestHue, tldrawToLayout, tldrawToViews } from './tldraw.ts';
+import { nearestHue, tldrawToLayout } from './tldraw.ts';
 
-describe('tldrawToViews', () => {
-  test('geo shapes map to rect and ellipse nodes, and a bound arrow to a link between them', ({ expect }) => {
-    const { root, views, skipped, approximated } = tldrawToViews(shapesAndArrow(), { snap: false });
-    expect(root).toBe('root');
+describe('tldrawToLayout shapes', () => {
+  test('geo shapes map to rect and ellipse elements, and a bound arrow to a link between them', ({ expect }) => {
+    const { layout, skipped, approximated } = tldrawToLayout(shapesAndArrow(), { snap: false });
+    expect(layout.id).toBe('root');
     expect(skipped).toEqual({});
     expect(approximated).toEqual({});
-    const { nodes, links } = views.root;
+    const { elements } = layout;
 
-    expect(nodes.box).toMatchObject({
+    expect(elements.box).toMatchObject({
       type: 'rect',
       center: { x: 100, y: 50 },
       size: { width: 200, height: 100 },
       label: 'Box',
-      style: { hue: 'blue', tone: 1, lineStyle: 'dashed' },
+      overrides: { hue: 'blue', tone: 1, lineStyle: 'dashed' },
     });
-    expect(nodes.oval).toMatchObject({
+    expect(elements.oval).toMatchObject({
       type: 'ellipse',
       center: { x: 460, y: 40 },
       size: { width: 120, height: 80 },
       label: 'Oval',
-      style: { hue: 'red', tone: 3, fontSize: 26 },
+      overrides: { hue: 'red', tone: 3, fontSize: 26 },
     });
-    expect(links.arrow).toMatchObject({
-      type: 'line',
+    expect(elements.arrow).toMatchObject({
+      type: 'link',
       source: { node: 'box' },
       target: { node: 'oval' },
-      text: 'calls',
-      ends: { end: 'arrow' },
-      style: { hue: 'teal' },
+      label: 'calls',
+      overrides: { hue: 'teal' },
+      props: { canvas: { type: 'line', ends: { end: 'arrow' } } },
     });
     // Paint order follows the tldraw index.
-    expect(sortByZ([...Object.values(nodes), ...Object.values(links)]).map(({ id }) => id)).toEqual([
+    expect(sortByZ(Object.values(elements).map(({ id, z }) => ({ id, z: z ?? '' }))).map(({ id }) => id)).toEqual([
       'box',
       'oval',
       'arrow',
@@ -50,117 +50,145 @@ describe('tldrawToViews', () => {
   });
 
   test('text becomes a note, a sticky a filled rect, and an unbound arrow a link with free ends', ({ expect }) => {
-    const { views, skipped, approximated } = tldrawToViews(textNoteAndFreeArrow(), { snap: false });
-    const { nodes, links } = views.root;
+    const { layout, skipped, approximated } = tldrawToLayout(textNoteAndFreeArrow(), { snap: false });
+    const { elements } = layout;
     expect(skipped).toEqual({ draw: 1 });
     expect(approximated).toEqual({ 'geo:star': 1, 'geo:hexagon': 1 });
 
-    expect(nodes.text).toMatchObject({
+    expect(elements.text).toMatchObject({
       type: 'note',
-      text: 'Title\nSubtitle',
       size: { width: 240, height: 97 },
-      style: { hue: 'violet', fontSize: 36, fontFamily: 'monospace', alignHorizontal: 'center' },
+      overrides: { hue: 'violet', fontSize: 36, fontFamily: 'monospace', alignHorizontal: 'center' },
+      props: { canvas: { text: 'Title\nSubtitle' } },
     });
-    expect(nodes.sticky).toMatchObject({
+    expect(elements.sticky).toMatchObject({
       type: 'rect',
       label: 'Remember',
       center: { x: 400, y: 100 },
       size: { width: 200, height: 200 },
-      style: { hue: 'amber' },
+      overrides: { hue: 'amber' },
     });
-    expect(nodes.sticky.style).not.toHaveProperty('tone');
-    expect(nodes.star).toMatchObject({ type: 'rect' });
-    expect(nodes.cloud).toMatchObject({ type: 'cloud', label: 'Sky' });
-    expect(nodes.hexagon).toMatchObject({ type: 'polygon', params: { sides: 6 } });
-    expect(links.free).toMatchObject({
-      type: 'curve',
+    expect(elements.sticky.overrides).not.toHaveProperty('tone');
+    expect(elements.star).toMatchObject({ type: 'rect' });
+    expect(elements.cloud).toMatchObject({ type: 'cloud', label: 'Sky' });
+    expect(elements.hexagon).toMatchObject({ type: 'polygon', props: { canvas: { params: { sides: 6 } } } });
+    expect(elements.free).toMatchObject({
+      type: 'link',
       source: { point: { x: 10, y: 300 } },
       target: { point: { x: 160, y: 350 } },
-      ends: { start: 'circle', end: 'triangle' },
+      props: { canvas: { type: 'curve', ends: { start: 'circle', end: 'triangle' } } },
     });
   });
 
   test('a frame becomes a labelled rectangle on the frames layer, its shapes beside it, arrows bound across it', ({
     expect,
   }) => {
-    const { views } = tldrawToViews(frameWithChildren(), { snap: false });
-    // tldraw has no nested scenes: everything stays in the root View.
-    expect(Object.keys(views)).toEqual(['root']);
-    const { nodes, links, layers } = views.root;
+    const { layout, parts } = tldrawToLayout(frameWithChildren(), { snap: false });
+    // tldraw has no nested scenes: everything stays in the page's layout.
+    expect(parts).toEqual([]);
+    const { elements, layers } = layout;
 
-    expect(nodes.frame).toMatchObject({
+    expect(elements.frame).toMatchObject({
       type: 'rect',
       label: 'Stage',
       layer: 'frames',
       center: { x: 300, y: 250 },
       size: { width: 400, height: 300 },
-      style: { tone: 0, alignHorizontal: 'left', alignVertical: 'top' },
+      overrides: { tone: 0, alignHorizontal: 'left', alignVertical: 'top' },
     });
     // The frames layer is under the content layer, which every other element names.
     expect(layers?.frames?.z.localeCompare(layers?.layer?.z ?? '')).toBe(-1);
-    expect(nodes['inner-a']).toMatchObject({ center: { x: 170, y: 170 }, label: 'A', layer: 'layer' });
-    expect(nodes['inner-b']).toMatchObject({ center: { x: 400, y: 300 }, label: 'B', layer: 'layer' });
-    expect(links['inner-arrow']).toMatchObject({
+    expect(elements['inner-a']).toMatchObject({ center: { x: 170, y: 170 }, label: 'A', layer: 'layer' });
+    expect(elements['inner-b']).toMatchObject({ center: { x: 400, y: 300 }, label: 'B', layer: 'layer' });
+    expect(elements['inner-arrow']).toMatchObject({
       source: { node: 'inner-a' },
       target: { node: 'inner-b' },
       layer: 'layer',
     });
 
     // The arrow from outside the frame stays bound to the shape inside it.
-    expect(links.cross).toMatchObject({ source: { node: 'outside' }, target: { node: 'inner-a' } });
+    expect(elements.cross).toMatchObject({ source: { node: 'outside' }, target: { node: 'inner-a' } });
   });
 
-  test('a group becomes an anonymous Object placed by an Instance; rotation carries over', ({ expect }) => {
-    const { views, approximated } = tldrawToViews(groupAndRotation(), { snap: false });
-    const { nodes, links } = views.root;
+  test('a group becomes an anonymous composite placed by one element; rotation carries over', ({ expect }) => {
+    const { layout, parts, objects, approximated } = tldrawToLayout(groupAndRotation(), { snap: false });
+    const { elements } = layout;
     expect(approximated).toEqual({});
 
-    // Half a turn about its corner: the centre is up and to the left of the origin, and the node keeps the turn.
-    expect(nodes.tilted).toMatchObject({ center: { x: -50, y: -30 }, size: { width: 100, height: 60 }, rotation: 180 });
+    // Half a turn about its corner: the centre is up and to the left of the origin, and the shape keeps the turn.
+    expect(elements.tilted).toMatchObject({
+      center: { x: -50, y: -30 },
+      size: { width: 100, height: 60 },
+      rotation: 180,
+    });
 
-    // The group is replaced by an Instance over the members' bounds: turned a quarter about (1000, 0), the members'
-    // centres land at (975, 50) and (975, 250).
-    expect(nodes.group).toMatchObject({ type: 'instance', composite: 'group-object', center: { x: 975, y: 150 } });
-    expect(nodes).not.toHaveProperty('member');
-    expect(nodes).not.toHaveProperty('partner');
+    // The group is replaced by an element placing the composite over the members' bounds: turned a quarter about
+    // (1000, 0), the members' centres land at (975, 50) and (975, 250).
+    expect(elements.group).toMatchObject({
+      object: 'instance:group-object',
+      center: { x: 975, y: 150 },
+      props: { canvas: { type: 'instance', composite: 'group-object' } },
+    });
+    expect(objects).toEqual([{ id: 'instance:group-object', type: 'rect', parts: 'group-object' }]);
+    expect(elements).not.toHaveProperty('member');
+    expect(elements).not.toHaveProperty('partner');
+    // The link wholly inside the group moved with it.
+    expect(elements).not.toHaveProperty('pair');
 
-    const object = views['group-object'];
-    expect(object).toMatchObject({ kind: 'composite', anonymous: true });
-    // Members keep the group's turn and are re-centred on the Instance.
-    expect(object.nodes.member).toMatchObject({ center: { x: 0, y: -100 }, rotation: 90, exposed: true });
-    expect(object.nodes.partner).toMatchObject({ center: { x: 0, y: 100 }, rotation: 90 });
-    expect(object.links.pair).toMatchObject({ source: { node: 'member' }, target: { node: 'partner' } });
+    const [object] = parts;
+    expect(object).toMatchObject({ id: 'group-object', kind: 'composite', anonymous: true });
+    // Members keep the group's turn and are re-centred on the placing element.
+    expect(object.elements.member).toMatchObject({
+      center: { x: 0, y: -100 },
+      rotation: 90,
+      props: { canvas: { exposed: true } },
+    });
+    expect(object.elements.partner).toMatchObject({ center: { x: 0, y: 100 }, rotation: 90 });
+    expect(object.elements.pair).toMatchObject({ source: { node: 'member' }, target: { node: 'partner' } });
 
-    // The arrow from outside stays in the root, attached to the Instance's port for the member it was bound to.
-    expect(links.tie).toMatchObject({ source: { node: 'neighbour' }, target: { node: 'group', port: 'member' } });
-    expect(nodes.group.ports).toEqual([expect.objectContaining({ id: 'member' })]);
-    // The Instance paints where its lowest member did, below the shapes drawn after the group.
-    expect(nodes.group.z < nodes.tilted.z).toBe(true);
+    // The arrow from outside stays in the page, attached to the placing element's port for the member it was bound to.
+    expect(elements.tie).toMatchObject({ source: { node: 'neighbour' }, target: { node: 'group', port: 'member' } });
+    expect(elements.group.props?.canvas).toMatchObject({ ports: [expect.objectContaining({ id: 'member' })] });
+    // The placing element paints where its lowest member did, below the shapes drawn after the group.
+    expect((elements.group.z ?? '') < (elements.tilted.z ?? '')).toBe(true);
 
-    // A polyline in the group joins no node, so it stays in the root: a chain of line links with free ends.
-    expect(links.polyline).toMatchObject({
-      type: 'line',
+    // A polyline in the group joins no shape, so it stays in the page: a chain of line links with free ends.
+    expect(elements.polyline).toMatchObject({
+      type: 'link',
       source: { point: { x: 900, y: 0 } },
       target: { point: { x: 900, y: 100 } },
-      style: { hue: 'orange', lineStyle: 'dotted' },
+      overrides: { hue: 'orange', lineStyle: 'dotted' },
+      props: { canvas: { type: 'line' } },
     });
-    expect(links['polyline-1']).toMatchObject({
+    expect(elements['polyline-1']).toMatchObject({
       source: { point: { x: 900, y: 100 } },
       target: { point: { x: 800, y: 100 } },
     });
   });
 
   test('only the first page is imported', ({ expect }) => {
-    const { views, skipped } = tldrawToViews(twoPages(), { root: 'main', snap: false });
-    expect(Object.keys(views)).toEqual(['main']);
-    expect(Object.keys(views.main.nodes)).toEqual(['first']);
+    const { layout, parts, skipped } = tldrawToLayout(twoPages(), { root: 'main', snap: false });
+    expect(layout.id).toBe('main');
+    expect(parts).toEqual([]);
+    expect(Object.keys(layout.elements)).toEqual(['first']);
     expect(skipped).toEqual({ page: 1 });
   });
 
-  test('an empty document maps to an empty root View', ({ expect }) => {
-    expect(tldrawToViews({}).views).toEqual({ root: { id: 'root', nodes: {}, links: {} } });
+  test('an empty document maps to an empty page layout', ({ expect }) => {
+    expect(tldrawToLayout({})).toMatchObject({
+      layout: { id: 'root', dim: '2d', elements: {} },
+      parts: [],
+      objects: [],
+      intents: [],
+    });
   });
 });
+
+/** The shapes among `elements`, each with the frame every shape the mapper writes has. */
+const shapesOf = (elements: Readonly<Record<string, Scene.Element2D | undefined>>) =>
+  Object.values(elements).flatMap((element) =>
+    element?.center && element.size ? [{ id: element.id, center: element.center, size: element.size }] : [],
+  );
 
 describe('nearestHue', () => {
   test('greys are neutral; colours take the hue nearest them around the wheel', ({ expect }) => {
@@ -179,9 +207,9 @@ describe('nearestHue', () => {
   });
 
   test('snaps every frame to the grid the canvas shows by default, keeping at least one cell', ({ expect }) => {
-    const { views } = tldrawToViews(shapesAndArrow());
-    const exact = tldrawToViews(shapesAndArrow(), { snap: false }).views;
-    for (const node of Object.values(views.root.nodes)) {
+    const { elements } = tldrawToLayout(shapesAndArrow()).layout;
+    const exact = tldrawToLayout(shapesAndArrow(), { snap: false }).layout.elements;
+    for (const node of shapesOf(elements)) {
       const left = node.center.x - node.size.width / 2;
       const top = node.center.y - node.size.height / 2;
       for (const value of [left, top, node.size.width, node.size.height]) {
@@ -189,15 +217,15 @@ describe('nearestHue', () => {
       }
       expect(node.size.width).toBeGreaterThanOrEqual(MAJOR_GRID);
       // Within half a cell of where tldraw drew it.
-      const source = exact.root.nodes[node.id];
+      const [source] = shapesOf({ [node.id]: exact[node.id] });
       expect(Math.abs(left - (source.center.x - source.size.width / 2))).toBeLessThanOrEqual(MAJOR_GRID / 2);
     }
   });
 
   test('a snapped frame grows out to the grid, so it still holds its shapes', ({ expect }) => {
-    const { nodes } = tldrawToViews(frameWithChildren()).views.root;
+    const { elements } = tldrawToLayout(frameWithChildren()).layout;
     const bounds = (id: string) => {
-      const { center, size } = nodes[id];
+      const [{ center, size }] = shapesOf({ [id]: elements[id] });
       return {
         left: center.x - size.width / 2,
         top: center.y - size.height / 2,

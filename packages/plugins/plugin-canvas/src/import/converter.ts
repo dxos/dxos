@@ -4,8 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type ContentMap } from '@dxos/diagram';
-import { Database, Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import type * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import * as IllustratorError from '@dxos/plugin-illustrator/IllustratorError';
@@ -14,13 +13,12 @@ import { Scene } from '@dxos/scene';
 
 import { Canvas } from '#types';
 
-import { canvasDocument, openScene } from '../model/canvas-document.ts';
-import { seedContent, writeViews } from '../model/content.ts';
+import { addCanvas, canvasDocument, openScene } from '../model/canvas-document.ts';
 import { applyLayoutIntent } from '../model/layout-source.ts';
 import { writeDocument } from '../model/model-writer.ts';
 import { plain } from '../model/records.ts';
 import { DrawingDialectError } from '../operations/canvas.ts';
-import { type TldrawImportOptions, tldrawToLayout, tldrawToViews } from './tldraw.ts';
+import { type TldrawImportOptions, tldrawToLayout } from './tldraw.ts';
 
 /**
  * Writes a tldraw document into a canvas's open 2D layout: the composite layouts its groups place and the objects that
@@ -78,21 +76,10 @@ export const tldrawConverter: IllustratorCapabilities.DrawingConverter = {
                 new DrawingDialectError({ message: 'The tldraw converter reads a tldraw canvas.' }),
               );
             }
-            // A canvas variant with its own type writes the shapes into the layout its new canvas opens.
-            if (variants.to.canvasType !== undefined) {
-              const canvas = yield* variants.to.createCanvas();
-              if (!Canvas.isCanvas(canvas)) {
-                return { canvas, upserted: [] };
-              }
-              return { canvas, upserted: importTldraw(canvas, source.content) };
-            }
-            const content: ContentMap = {};
-            const root = seedContent(content);
-            const { views } = tldrawToViews(source.content, { root });
-            writeViews(content, views);
-            const upserted = Object.values(views).flatMap((view) => Object.keys(view.nodes));
-            const canvas = yield* Database.add(Drawing.makeCanvas({ schema: Canvas.SCENE_SCHEMA, content }));
-            return { canvas, upserted };
+            // A legacy scene canvas is read only through the scene migration, so an untyped target gets a `Canvas` too.
+            const canvas =
+              variants.to.canvasType !== undefined ? yield* variants.to.createCanvas() : yield* addCanvas();
+            return { canvas, upserted: Canvas.isCanvas(canvas) ? importTldraw(canvas, source.content) : [] };
           }),
       ),
     ),
