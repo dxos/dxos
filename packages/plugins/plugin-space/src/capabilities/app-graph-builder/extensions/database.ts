@@ -165,7 +165,11 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
                 schema,
                 space,
                 get,
-                hidden: Type.getDatabase(schema) == null && !contributedTypeUris.has(Type.getURI(schema)),
+                // A view over the type lives under this node, so the node stays visible while it has one.
+                hidden:
+                  Type.getDatabase(schema) == null &&
+                  !contributedTypeUris.has(Type.getURI(schema)) &&
+                  !viewIndex.typeUrisWithViews.has(Type.getURI(schema)),
               }),
             )
             .toSorted((nodeA, nodeB) => labelOf(nodeA).localeCompare(labelOf(nodeB))),
