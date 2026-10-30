@@ -94,17 +94,9 @@ export type TargetRefreshScope = { target: object; key: string };
  */
 export type DeletionMemo = Map<ObjectCore, boolean[]>;
 
-/** The system fields a deletion walk reads, decoded once per document generation. */
-type DeletionFields = {
-  /** The document root, mount path and database they were read under; a write replaces the root. */
-  readonly root: unknown;
-  readonly mountPath: Doc.KeyPath;
-  readonly binding: IDatabaseBinding | undefined;
-  readonly deleted: boolean;
-  /** Same-space strong dependencies — the parent, and a relation's endpoints — whose deletion deletes this one. */
-  readonly dependencies: readonly EntityId[];
-  readonly mergedInto: EntityId | undefined;
-};
+/** Dependency lookups during a deletion walk; shared so the walk allocates no options per hop. */
+const LOOKUP_LOADING: GetObjectCoreByIdOptions = { load: true };
+const LOOKUP_HELD: GetObjectCoreByIdOptions = { load: false };
 
 /**
  *
@@ -136,8 +128,17 @@ export class ObjectCore {
 
   #snapshot?: ObjectSnapshot = undefined;
 
-  /** See {@link DeletionFields}; each read of the document is a call into wasm. */
-  #deletionFields?: DeletionFields = undefined;
+  /**
+   * The system fields a deletion walk reads, decoded at {@link #deletionRoot}: each document read is a
+   * call into wasm, and a write replaces the root. Binding and remounting replace it too.
+   */
+  #deletionRoot: unknown = undefined;
+  #ownDeleted = false;
+  /** Same-space strong dependencies, whose deletion deletes this entity. */
+  #parentId: EntityId | undefined = undefined;
+  #sourceId: EntityId | undefined = undefined;
+  #targetId: EntityId | undefined = undefined;
+  #mergedIntoId: EntityId | undefined = undefined;
 
   /** When the document last loaded or changed (`performance.now()`); the space releases it after a TTL. */
   public activeAt = 0;
@@ -938,49 +939,36 @@ export class ObjectCore {
   }
 
   #computeIsDeleted(remainingDepth: number, memo: DeletionMemo | undefined): boolean {
-    const fields = this.#readDeletionFields();
-    if (fields.deleted) {
+    this.#readDeletionFields();
+    if (this.#ownDeleted) {
       return true;
     }
 
     // An entity is transitively deleted when one of its strong dependencies is deleted: a child
     // when its parent is removed, or a relation when either endpoint is removed — a dangling
     // relation has no valid graph edge, so it is treated as deleted and excluded from queries.
-    if (this.entityManager && remainingDepth > 0) {
-      for (const dependency of fields.dependencies) {
-        if (this.#isDependencyDeleted(dependency, remainingDepth, memo)) {
-          return true;
-        }
-      }
-    }
-    return false;
+    return (
+      this.entityManager !== undefined &&
+      remainingDepth > 0 &&
+      (this.#isDependencyDeleted(this.#parentId, remainingDepth, memo) ||
+        this.#isDependencyDeleted(this.#sourceId, remainingDepth, memo) ||
+        this.#isDependencyDeleted(this.#targetId, remainingDepth, memo))
+    );
   }
 
-  #readDeletionFields(): DeletionFields {
+  #readDeletionFields(): void {
     const root = this.#root();
-    const cached = this.#deletionFields;
-    if (cached?.root === root && cached.mountPath === this.mountPath && cached.binding === this.entityManager) {
-      return cached;
+    if (root === this.#deletionRoot) {
+      return;
     }
-
-    const deleted = this.getRaw([SYSTEM_NAMESPACE, 'deleted']);
-    const refs = [this.getParent()];
-    if (this.getKind() === EntityKind.Relation) {
-      refs.push(this.getSource(), this.getTarget());
-    }
-    const fields: DeletionFields = {
-      root,
-      mountPath: this.mountPath,
-      binding: this.entityManager,
-      deleted: typeof deleted === 'boolean' ? deleted : false,
-      dependencies: refs.flatMap((ref) => {
-        const entityId = this.#sameSpaceEntityId(ref);
-        return entityId ? [entityId] : [];
-      }),
-      mergedInto: this.getMergedInto(),
-    };
-    this.#deletionFields = fields;
-    return fields;
+    this.#deletionRoot = root;
+    const deleted: unknown = this.getRaw([SYSTEM_NAMESPACE, 'deleted']);
+    this.#ownDeleted = deleted === true;
+    this.#parentId = this.#sameSpaceEntityId(this.getParent());
+    const relation = this.getKind() === EntityKind.Relation;
+    this.#sourceId = relation ? this.#sameSpaceEntityId(this.getSource()) : undefined;
+    this.#targetId = relation ? this.#sameSpaceEntityId(this.getTarget()) : undefined;
+    this.#mergedIntoId = this.getMergedInto();
   }
 
   /** The entity `ref` points at, if it is in this core's space; cross-space and unparseable refs have none. */
@@ -998,7 +986,7 @@ export class ObjectCore {
   }
 
   get #dependencyLookup(): GetObjectCoreByIdOptions {
-    return { load: this.#snapshot === undefined };
+    return this.#snapshot === undefined ? LOOKUP_LOADING : LOOKUP_HELD;
   }
 
   /**
@@ -1010,7 +998,14 @@ export class ObjectCore {
    * redirects and judges deletion at the survivor, so relations and children anchored at a merge
    * loser stay visible while the survivor lives.
    */
-  #isDependencyDeleted(entityId: EntityId, remainingDepth: number, memo: DeletionMemo | undefined): boolean {
+  #isDependencyDeleted(
+    entityId: EntityId | undefined,
+    remainingDepth: number,
+    memo: DeletionMemo | undefined,
+  ): boolean {
+    if (entityId === undefined) {
+      return false;
+    }
     const core = this._resolveMergeRedirect(this.entityManager?.getObjectCoreById(entityId, this.#dependencyLookup));
     return core != null && core.isDeleted(remainingDepth - 1, memo);
   }
@@ -1024,7 +1019,8 @@ export class ObjectCore {
   private _resolveMergeRedirect(core: ObjectCore | undefined): ObjectCore | undefined {
     let current = core;
     while (current) {
-      const next = current.#readDeletionFields().mergedInto;
+      current.#readDeletionFields();
+      const next = current.#mergedIntoId;
       if (next === undefined || next >= current.id) {
         return current;
       }
