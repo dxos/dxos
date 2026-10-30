@@ -26,9 +26,9 @@ import {
   RESULT_COMPANION,
   RESULT_COMPANION_DATA,
 } from '../constants.ts';
+import { LighthouseNamespace } from '../namespace.ts';
 import { RESEARCH_KEY, newestFirst } from '../paths.ts';
 import { startNewResearch } from '../util/new-research.ts';
-import { LighthouseNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
