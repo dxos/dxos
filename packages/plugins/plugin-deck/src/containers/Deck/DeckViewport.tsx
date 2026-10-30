@@ -57,7 +57,6 @@ import {
   isCompanionOpen,
   isCompanionShown,
   layoutAppliesTopbar,
-  setWorkspaceFadeTarget,
 } from '../../util/index.ts';
 import {
   ToggleComplementarySidebarButton as NaturalToggleComplementarySidebarButton,
@@ -1444,8 +1443,6 @@ export const DeckPlanks = () => {
   const viewportRef = useRef<HTMLDivElement>(null);
   const stackRef = useRef<HTMLDivElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
-  // Every commit: fullscreen unmounts the viewport and leaving it mounts a new one.
-  useLayoutEffect(() => (viewportRef.current ? setWorkspaceFadeTarget(viewportRef.current) : undefined));
 
   // The plank a scroll-into-view is currently travelling to, shared between the scroller and the fold
   // hysteresis so the two do not fight over focus mid-scroll. A ref, not state: it changes per scroll

@@ -3,7 +3,7 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import { useCallback, useMemo } from 'react';
+import { createContext, useCallback, useContext, useMemo } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Hooks from '@dxos/app-framework/Hooks';
@@ -21,6 +21,9 @@ export type DeckStateHook = {
   /** Update ephemeral state. */
   updateEphemeral: (fn: (current: DeckSchema.EphemeralDeckState) => DeckSchema.EphemeralDeckState) => void;
 };
+
+/** The deck state a deck renders when it is not the live one: the workspace being left, during the crossfade. */
+export const ShownDeckState = createContext<DeckStateHook | undefined>(undefined);
 
 /**
  * Hook to access the deck plugin state reactively.
@@ -66,5 +69,9 @@ export const useDeckState = (): DeckStateHook => {
     [registry, ephemeralAtom],
   );
 
-  return useMemo(() => ({ state, deck, updateState, updateEphemeral }), [state, deck, updateState, updateEphemeral]);
+  const live = useMemo(
+    () => ({ state, deck, updateState, updateEphemeral }),
+    [state, deck, updateState, updateEphemeral],
+  );
+  return useContext(ShownDeckState) ?? live;
 };
