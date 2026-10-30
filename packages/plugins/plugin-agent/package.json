@@ -26,8 +26,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/AgentPlugin.workerd.mjs",
-      "node": "./dist/lib/AgentPlugin.node.mjs",
       "default": "./dist/lib/AgentPlugin.mjs"
     },
     "#operations": {
@@ -100,8 +98,6 @@
     "./AgentPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/AgentPlugin.workerd.mjs",
-      "node": "./dist/lib/AgentPlugin.node.mjs",
       "import": "./dist/lib/AgentPlugin.mjs"
     },
     "./AgentSkills": {
@@ -345,6 +341,7 @@
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
+    "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-explorer": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",

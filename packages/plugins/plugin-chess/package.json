@@ -26,8 +26,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/ChessPlugin.workerd.mjs",
-      "node": "./dist/lib/ChessPlugin.node.mjs",
       "default": "./dist/lib/ChessPlugin.mjs"
     },
     "#operations": {
@@ -82,8 +80,6 @@
     "./ChessPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/ChessPlugin.workerd.mjs",
-      "node": "./dist/lib/ChessPlugin.node.mjs",
       "import": "./dist/lib/ChessPlugin.mjs"
     },
     "./ChessPositionIndex": {

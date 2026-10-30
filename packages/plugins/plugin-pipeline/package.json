@@ -31,8 +31,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/PipelinePlugin.workerd.mjs",
-      "node": "./dist/lib/PipelinePlugin.node.mjs",
       "default": "./dist/lib/PipelinePlugin.mjs"
     },
     "#translations": {
@@ -56,8 +54,6 @@
     "./PipelinePlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/PipelinePlugin.workerd.mjs",
-      "node": "./dist/lib/PipelinePlugin.node.mjs",
       "import": "./dist/lib/PipelinePlugin.mjs"
     }
   },

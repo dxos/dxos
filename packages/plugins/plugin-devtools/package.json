@@ -21,8 +21,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/DevtoolsPlugin.workerd.mjs",
-      "node": "./dist/lib/DevtoolsPlugin.node.mjs",
       "default": "./dist/lib/DevtoolsPlugin.mjs"
     },
     "#translations": {
@@ -62,8 +60,6 @@
     "./DevtoolsPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/DevtoolsPlugin.workerd.mjs",
-      "node": "./dist/lib/DevtoolsPlugin.node.mjs",
       "import": "./dist/lib/DevtoolsPlugin.mjs"
     }
   },

@@ -92,7 +92,14 @@ const config: Plugin.PluginConfig<ObservabilityOptions.ObservabilityPluginOption
         },
         () => import('./src/capabilities/state.ts', { with: { type: 'module-url' } }),
       ),
-      AppCapability.operationHandler(() => import('#operation-handler', { with: { type: 'module-url' } })),
+      AppCapability.operationHandler(
+        () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
+        { environments: ['browser', 'node', 'tauri'] },
+      ),
+      AppCapability.operationHandler(
+        () => import('./src/capabilities/operation-handler.workerd.ts', { with: { type: 'module-url' } }),
+        { name: 'OperationHandlerWorkerd', environments: ['workerd'] },
+      ),
       Capability.lazyModule(
         'PrivacyBanner',
         {

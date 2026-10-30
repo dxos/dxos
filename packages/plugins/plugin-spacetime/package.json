@@ -26,8 +26,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/SpacetimePlugin.workerd.mjs",
-      "node": "./dist/lib/SpacetimePlugin.node.mjs",
       "default": "./dist/lib/SpacetimePlugin.mjs"
     },
     "#translations": {
@@ -87,8 +85,6 @@
     "./SpacetimePlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/SpacetimePlugin.workerd.mjs",
-      "node": "./dist/lib/SpacetimePlugin.node.mjs",
       "import": "./dist/lib/SpacetimePlugin.mjs"
     },
     "./SpacetimePresets": {

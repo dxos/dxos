@@ -22,6 +22,7 @@ import { Context } from '@dxos/context';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { Config2, EdgeCallFailedError } from '@dxos/protocols';
 
+import * as BundleDescriber from '../../BundleDescriber.ts';
 import { RegistryCommandError } from './errors.ts';
 import { PublishError } from './errors.ts';
 import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './util.ts';
@@ -55,7 +56,8 @@ const sha256Base64 = async (bytes: Uint8Array): Promise<string> => {
  * `dx registry publish` — config-driven build + publish.
  *
  * Reads the build/publish orchestration from `dx.config.ts`, runs the declared build command,
- * reads the emitted `manifest.json`, hosts the bundle (default: upload the build
+ * reads the emitted `manifest.json`, runs the bundle's `describe()` on a local workerd as EDGE would (failing the
+ * publish when a module does not activate there), hosts the bundle (default: upload the build
  * output to the DXOS edge registry; override with `publish.assetBaseUrl` to point
  * at your own already-hosted directory), then writes the `plugin.profile` and
  * `plugin.release` records to the authenticated publisher's PDS. Release
@@ -118,6 +120,13 @@ export const publish = Command.make(
             new PublishError({ message: 'Failed to load dx.config.ts.', context: { dir }, cause: error }),
         });
 
+        const describer = yield* Effect.serviceOption(BundleDescriber.Service);
+        if (Option.isNone(describer)) {
+          return yield* Effect.fail(
+            new PublishError({ message: 'This host cannot run describe() on the bundle, which every publish needs.' }),
+          );
+        }
+
         // Build (unless skipped). Prepend the project's `node_modules/.bin` to PATH so
         // locally-installed tools (e.g. `vite`) resolve like they do in an npm script.
         const buildCommand = config.publish?.buildCommand;
@@ -130,6 +139,8 @@ export const publish = Command.make(
           const exitCode = yield* spawner.exitCode(
             PlatformCommand.make('sh', ['-c', `export PATH="${binDir}:$PATH"; ${buildCommand}`], {
               cwd: dir,
+              env: { ...(yield* describer.value.buildEnv) },
+              extendEnv: true,
               stdout: 'inherit',
               stderr: 'inherit',
             }),
@@ -154,6 +165,10 @@ export const publish = Command.make(
         const key = manifest.key;
         const version = manifest.version;
         const manifestHash = `sha256-${yield* Effect.promise(() => sha256Base64(new TextEncoder().encode(manifestRaw)))}`;
+
+        // Before anything is uploaded: a hosted version is immutable, so a bundle EDGE cannot run must not burn it.
+        yield* Console.log(`Describing ${outdir}`);
+        yield* Console.log(`Described: ${yield* describer.value.describe(outdir)}`);
 
         if (options.private) {
           const client = yield* ClientService;

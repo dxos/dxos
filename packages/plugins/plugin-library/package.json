@@ -27,8 +27,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/LibraryPlugin.workerd.mjs",
-      "node": "./dist/lib/LibraryPlugin.node.mjs",
       "default": "./dist/lib/LibraryPlugin.mjs"
     },
     "#translations": {
@@ -67,8 +65,6 @@
     "./LibraryPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/LibraryPlugin.workerd.mjs",
-      "node": "./dist/lib/LibraryPlugin.node.mjs",
       "import": "./dist/lib/LibraryPlugin.mjs"
     }
   },

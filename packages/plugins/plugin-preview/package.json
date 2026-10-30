@@ -16,8 +16,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/PreviewPlugin.workerd.mjs",
-      "node": "./dist/lib/PreviewPlugin.node.mjs",
       "default": "./dist/lib/PreviewPlugin.mjs"
     },
     "#translations": {
@@ -50,8 +48,6 @@
     "./PreviewPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/PreviewPlugin.workerd.mjs",
-      "node": "./dist/lib/PreviewPlugin.node.mjs",
       "import": "./dist/lib/PreviewPlugin.mjs"
     },
     "./testing": {

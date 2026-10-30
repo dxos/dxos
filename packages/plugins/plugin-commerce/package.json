@@ -17,8 +17,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/CommercePlugin.workerd.mjs",
-      "node": "./dist/lib/CommercePlugin.node.mjs",
       "default": "./dist/lib/CommercePlugin.mjs"
     },
     "#types": {
@@ -43,8 +41,6 @@
     "./CommercePlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/CommercePlugin.workerd.mjs",
-      "node": "./dist/lib/CommercePlugin.node.mjs",
       "import": "./dist/lib/CommercePlugin.mjs"
     },
     "./Provider": {

@@ -1,0 +1,25 @@
+$schema: https://moonrepo.dev/schemas/tasks.json
+tasks:
+  check-edge-release:
+    # Builds the package's one plugin bundle (as `dx registry publish` does) and the bundles of its
+    # `dependsOn` plugins, loads it in workerd as EDGE does, and fails when the bundle check fails, a
+    # module does not import or activate, or it contributes no operations, skills or types.
+    # See `@dxos/plugin-host-cloudflare/bundle`.
+    command: node $workspaceRoot/packages/core/compute/plugin-host-cloudflare/dist/lib/bin/check-release.mjs --package .
+    deps:
+      # The bundle is built from source; dependencies' `dist` provide their types and the shared packages.
+      - ^:build
+      - plugin-host-cloudflare:build
+    inputs:
+      - '@group(sources)'
+      - package.json
+      - dx.config.ts
+      - /packages/core/compute/plugin-host-cloudflare/src/**/*
+      - /packages/sdk/app-framework/src/vite-plugin/**/*
+    outputs:
+      - dist/plugin
+    options:
+      timeout: 900
+
+inheritedBy:
+  tags: edge-release

@@ -36,8 +36,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/SpacePlugin.workerd.mjs",
-      "node": "./dist/lib/SpacePlugin.node.mjs",
       "default": "./dist/lib/SpacePlugin.mjs"
     },
     "#operations": {
@@ -137,8 +135,6 @@
     "./SpacePlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/SpacePlugin.workerd.mjs",
-      "node": "./dist/lib/SpacePlugin.node.mjs",
       "import": "./dist/lib/SpacePlugin.mjs"
     },
     "./SpaceSchema": {

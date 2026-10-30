@@ -514,6 +514,9 @@
       "path": "packages/plugins/plugin-higgsfield/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/plugin-host-cloudflare/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-ibkr/tsconfig.json"
     },
     {

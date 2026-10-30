@@ -31,8 +31,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/TranscriptionPlugin.workerd.mjs",
-      "node": "./dist/lib/TranscriptionPlugin.node.mjs",
       "default": "./dist/lib/TranscriptionPlugin.mjs"
     },
     "#operations": {
@@ -97,8 +95,6 @@
     "./TranscriptionPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/TranscriptionPlugin.workerd.mjs",
-      "node": "./dist/lib/TranscriptionPlugin.node.mjs",
       "import": "./dist/lib/TranscriptionPlugin.mjs"
     },
     "./TranscriptionSkill": {

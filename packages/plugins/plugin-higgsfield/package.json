@@ -17,8 +17,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/HiggsfieldPlugin.workerd.mjs",
-      "node": "./dist/lib/HiggsfieldPlugin.node.mjs",
       "default": "./dist/lib/HiggsfieldPlugin.mjs"
     },
     "#services": {
@@ -41,8 +39,6 @@
     "./HiggsfieldPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/HiggsfieldPlugin.workerd.mjs",
-      "node": "./dist/lib/HiggsfieldPlugin.node.mjs",
       "import": "./dist/lib/HiggsfieldPlugin.mjs"
     }
   },

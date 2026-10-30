@@ -27,8 +27,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/VideoPlugin.workerd.mjs",
-      "node": "./dist/lib/VideoPlugin.node.mjs",
       "default": "./dist/lib/VideoPlugin.mjs"
     },
     "#operations": {
@@ -73,8 +71,6 @@
     "./VideoPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/VideoPlugin.workerd.mjs",
-      "node": "./dist/lib/VideoPlugin.node.mjs",
       "import": "./dist/lib/VideoPlugin.mjs"
     }
   },

@@ -71,6 +71,9 @@
       "path": "../../core/compute/mcp-server"
     },
     {
+      "path": "../../core/compute/plugin-host-cloudflare"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {

@@ -27,8 +27,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/TerraPlugin.workerd.mjs",
-      "node": "./dist/lib/TerraPlugin.node.mjs",
       "default": "./dist/lib/TerraPlugin.mjs"
     },
     "#translations": {
@@ -73,8 +71,6 @@
     "./TerraPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/TerraPlugin.workerd.mjs",
-      "node": "./dist/lib/TerraPlugin.node.mjs",
       "import": "./dist/lib/TerraPlugin.mjs"
     }
   },

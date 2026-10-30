@@ -29,8 +29,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/ExcalidrawPlugin.workerd.mjs",
-      "node": "./dist/lib/ExcalidrawPlugin.node.mjs",
       "default": "./dist/lib/ExcalidrawPlugin.mjs"
     },
     "#model": {
@@ -79,8 +77,6 @@
     "./ExcalidrawPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/ExcalidrawPlugin.workerd.mjs",
-      "node": "./dist/lib/ExcalidrawPlugin.node.mjs",
       "import": "./dist/lib/ExcalidrawPlugin.mjs"
     },
     "./Settings": {

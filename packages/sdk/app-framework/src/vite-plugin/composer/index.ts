@@ -4,15 +4,17 @@
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { type Plugin as VitePlugin } from 'vite';
+import { type Plugin as VitePlugin, type Rollup } from 'vite';
 
 import { Plugin, PluginManifest } from '../../core/index.ts';
-import { findDxConfigFile, loadDxConfig } from '../load.ts';
+import { findDxConfigFile, loadDxConfigWithVite } from '../load.ts';
 import { type BuildMeta, ENTRY_FILENAME, MANIFEST_ASSET_NAME, serializeManifest, toBuildMeta } from '../manifest.ts';
 import { DEFAULT_PACKAGES, isSharedPackage } from '../packages.ts';
-import { moduleBodyAttributePlugin, pluginConfigPlugin } from '../plugin-config/index.ts';
+import { type LibraryModule, moduleBodyAttributePlugin, pluginConfigPlugin } from '../plugin-config/index.ts';
+import { type VendorSpecifier, buildVendor } from './vendor.ts';
 
 export { ENTRY_FILENAME, MANIFEST_ASSET_NAME, serializeManifest };
+export type { VendorSpecifier } from './vendor.ts';
 export type { BuildMeta };
 
 const JSX_DEV_RUNTIME = 'react/jsx-dev-runtime';
@@ -86,6 +88,9 @@ const isExternal = (id: string) => id !== JSX_DEV_RUNTIME && isSharedPackage(id)
  * adding entries here is safe (unused imports get tree-shaken), but the list is
  * deliberately small to keep the banner noise-free.
  */
+/** What {@link REQUIRE_SHIM_BANNER} imports into every chunk, outside the module graph. */
+const REQUIRE_SHIM_SPECIFIERS = ['react', 'react-dom', 'react/jsx-runtime'];
+
 const REQUIRE_SHIM_BANNER = [
   '// --- composer-plugin: CJS require shim ---',
   '// See @dxos/app-framework/vite-plugin/composer-plugin.ts for rationale.',
@@ -108,6 +113,54 @@ const REQUIRE_SHIM_BANNER = [
   '// --- end CJS require shim ---',
 ].join('\n');
 
+/** The package EDGE starts a plugin with; `vendor/` carries it when the build is given its entry. */
+export const PLUGIN_HOST_SPECIFIER = '@dxos/plugin-host-cloudflare';
+
+/**
+ * Names the EDGE plugin host's entry file for a build whose config the publisher does not control (`dx registry
+ * publish` runs the plugin's own build command), so `vendor/` carries the host.
+ */
+export const PLUGIN_HOST_ENTRY_ENV = 'DX_PLUGIN_HOST_ENTRY';
+
+type OutputChunk = Extract<Rollup.OutputBundle[string], { type: 'chunk' }>;
+
+/**
+ * The chunks EDGE can load: the entry, the bodies of modules that run on `workerd`, and what they import. The entry's
+ * dynamic imports are its module loaders, so only those of `workerd` bodies are followed; a bundle with no module list
+ * (an app-mode build) is all reachable.
+ */
+const edgeChunks = (bundle: Rollup.OutputBundle, modules: readonly LibraryModule[]): OutputChunk[] => {
+  const chunks = Object.values(bundle).filter((output): output is OutputChunk => output.type === 'chunk');
+  if (modules.length === 0) {
+    return chunks;
+  }
+  const chunkOf = (file: string | undefined) =>
+    file === undefined
+      ? undefined
+      : chunks.find((chunk) => chunk.facadeModuleId === file || chunk.moduleIds.includes(file));
+  const byName = new Map(chunks.map((chunk) => [chunk.fileName, chunk]));
+  const bodies = modules
+    .filter(({ environments }) => !environments || environments.includes('workerd'))
+    .flatMap(({ bodyFile, adapterFile }) => [chunkOf(bodyFile), chunkOf(adapterFile)])
+    .filter((chunk): chunk is OutputChunk => chunk !== undefined);
+  const reached = new Set<OutputChunk>();
+  const visit = (chunk: OutputChunk, followDynamic: boolean) => {
+    if (reached.has(chunk)) {
+      return;
+    }
+    reached.add(chunk);
+    for (const name of [...chunk.imports, ...(followDynamic ? chunk.dynamicImports : [])]) {
+      const next = byName.get(name);
+      if (next) {
+        visit(next, true);
+      }
+    }
+  };
+  chunks.filter((chunk) => chunk.isEntry).forEach((chunk) => visit(chunk, false));
+  bodies.forEach((chunk) => visit(chunk, true));
+  return [...reached];
+};
+
 export type ComposerPluginOptions = {
   /** Entry point for the plugin bundle. Defaults to `src/plugin.tsx`. */
   entry?: string;
@@ -127,6 +180,12 @@ export type ComposerPluginOptions = {
    * always written as {@link ENTRY_FILENAME} (`index.mjs`).
    */
   meta?: BuildMeta;
+  /**
+   * Writes `vendor/`: a `workerd` build of every package the bundle keeps external, which EDGE loads the bundle
+   * against since Cloudflare has no import map. Defaults to `true`; `extra` adds packages the plugin does not import,
+   * such as the EDGE plugin host, resolved from their `importers`.
+   */
+  vendor?: boolean | { extra?: readonly VendorSpecifier[] };
 };
 
 /**
@@ -160,7 +219,7 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
       ? Promise.resolve(options.meta)
       : Promise.resolve(options?.config ?? findDxConfigFile(projectRoot)).then((configFile) =>
           configFile
-            ? loadDxConfig(configFile).then((config) =>
+            ? loadDxConfigWithVite(configFile, projectRoot).then((config) =>
                 toBuildMeta(
                   Plugin.getMetaFromConfig(config),
                   readPackageVersion(projectRoot),
@@ -173,6 +232,7 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
   const getMeta = () => (metaPromise ??= loadMeta(process.cwd()));
   const resolved = new Set<string>();
   let base = '/';
+  let libraryModules: readonly LibraryModule[] = [];
 
   const plugins: VitePlugin[] = [
     // Configure vite for library-mode builds with externalized deps.
@@ -200,7 +260,9 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
           rolldownOptions: {
             external: (id: string) => isExternal(id),
             output: {
-              chunkFileNames: 'chunks/[name]-[hash].js',
+              // Flat at the bundle root: on EDGE a bare import resolves against the importing file's directory, so the
+              // loader rewrites each one to `vendor/`, which is simplest when every plugin file sits beside the manifest.
+              chunkFileNames: '[name]-[hash].mjs',
               assetFileNames: 'assets/[name]-[hash][extname]',
               // Install the CJS require shim at the top of plugin.mjs so transitively
               // bundled CJS helpers (that call `require('react')` et al. at runtime) can
@@ -346,10 +408,23 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
       const assets = Object.keys(bundle)
         .filter((name) => name !== MANIFEST_ASSET_NAME && !name.endsWith('.map'))
         .sort();
+      // The chunk each module body was emitted as, so the manifest names files in this bundle.
+      const chunkOf = (file: string | undefined) => {
+        const chunk = Object.values(bundle).find(
+          (output) =>
+            output.type === 'chunk' && (output.facadeModuleId === file || output.moduleIds.includes(file ?? '')),
+        );
+        return chunk ? `./${chunk.fileName}` : undefined;
+      };
+      const modules = libraryModules.map(({ bodyFile, adapterFile, ...module }) => ({
+        ...module,
+        url: chunkOf(bodyFile) ?? module.url,
+        ...(module.adapter ? { adapter: { ...module.adapter, url: chunkOf(adapterFile) ?? module.adapter.url } } : {}),
+      }));
       this.emitFile({
         type: 'asset',
         fileName: MANIFEST_ASSET_NAME,
-        source: serializeManifest(meta, { assets }),
+        source: serializeManifest(meta, { assets, ...(modules.length > 0 ? { modules } : {}) }),
       });
     },
   });
@@ -389,9 +464,64 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
     },
   });
 
+  const vendor = options?.vendor ?? true;
+  if (vendor !== false) {
+    let root = process.cwd();
+    let outDir = 'dist';
+    // Each external, with the source modules that import it: a transitive package resolves from them, not from the root.
+    const externals = new Map<string, Set<string>>();
+    plugins.push({
+      name: 'composer-plugin:vendor',
+      apply: 'build',
+      enforce: 'post',
+      configResolved: (config) => {
+        root = config.root;
+        outDir = config.build.outDir;
+      },
+      generateBundle(_options, bundle) {
+        const emitted = new Set(Object.keys(bundle));
+        for (const output of edgeChunks(bundle, libraryModules)) {
+          for (const id of [...output.imports, ...output.dynamicImports, ...REQUIRE_SHIM_SPECIFIERS]) {
+            if (!emitted.has(id) && isExternal(id)) {
+              const importers = externals.get(id) ?? new Set<string>();
+              output.moduleIds
+                .filter((moduleId) => moduleId.startsWith('/'))
+                .forEach((moduleId) => importers.add(moduleId));
+              externals.set(id, importers);
+            }
+          }
+        }
+      },
+      async closeBundle() {
+        const hostEntry = process.env[PLUGIN_HOST_ENTRY_ENV];
+        const configured = vendor === true ? [] : (vendor.extra ?? []);
+        const extra = [
+          ...configured,
+          ...(hostEntry && !configured.some((entry) => entry.specifier === PLUGIN_HOST_SPECIFIER)
+            ? [{ specifier: PLUGIN_HOST_SPECIFIER, importers: [], path: hostEntry }]
+            : []),
+        ];
+        await buildVendor({
+          root,
+          isShared: isExternal,
+          outDir: join(root, outDir, 'vendor'),
+          specifiers: [
+            ...[...externals]
+              .filter(([specifier]) => !extra.some((entry) => entry.specifier === specifier))
+              .map(([specifier, importers]) => ({ specifier, importers: [...importers] })),
+            ...extra,
+          ],
+        });
+      },
+    });
+  }
+
   if (definesPlugin) {
     // Emits the config as a manifest whose bodies are code-split chunks of the bundle.
-    plugins.push(pluginConfigPlugin(), moduleBodyAttributePlugin());
+    plugins.push(
+      pluginConfigPlugin({ onLibraryManifest: ({ modules }) => (libraryModules = modules) }),
+      moduleBodyAttributePlugin(),
+    );
   }
   return plugins;
 };

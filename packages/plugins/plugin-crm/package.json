@@ -17,8 +17,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/CrmPlugin.workerd.mjs",
-      "node": "./dist/lib/CrmPlugin.node.mjs",
       "default": "./dist/lib/CrmPlugin.mjs"
     },
     "#operations": {
@@ -72,8 +70,6 @@
     "./CrmPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/CrmPlugin.workerd.mjs",
-      "node": "./dist/lib/CrmPlugin.node.mjs",
       "import": "./dist/lib/CrmPlugin.mjs"
     },
     "./CrmSkill": {

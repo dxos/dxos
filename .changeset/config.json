@@ -292,6 +292,7 @@
       "@dxos/plugin-handpan",
       "@dxos/plugin-heygen",
       "@dxos/plugin-higgsfield",
+      "@dxos/plugin-host-cloudflare",
       "@dxos/plugin-ibkr",
       "@dxos/plugin-ideogram",
       "@dxos/plugin-illustrator",

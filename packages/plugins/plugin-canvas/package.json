@@ -21,8 +21,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/CanvasPlugin.workerd.mjs",
-      "node": "./dist/lib/CanvasPlugin.node.mjs",
       "default": "./dist/lib/CanvasPlugin.mjs"
     },
     "#model": {
@@ -76,8 +74,6 @@
     "./CanvasPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/CanvasPlugin.workerd.mjs",
-      "node": "./dist/lib/CanvasPlugin.node.mjs",
       "import": "./dist/lib/CanvasPlugin.mjs"
     },
     "./Settings": {

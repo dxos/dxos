@@ -60,13 +60,19 @@ export const toBuildMeta = (meta: Plugin.Meta, version: string, dependencies?: R
  */
 export const serializeManifest = (
   meta: BuildMeta,
-  { assets, devEntry }: { assets: readonly string[]; devEntry?: string },
+  {
+    assets,
+    devEntry,
+    modules,
+  }: { assets: readonly string[]; devEntry?: string; modules?: readonly Plugin.ManifestModule[] },
 ): string => {
   return JSON.stringify(
     {
       ...meta,
       assets,
       ...(devEntry !== undefined ? { devEntry } : {}),
+      // Every module with its environments and the chunk its body is, so any runtime reads what it loads from here.
+      ...(modules !== undefined ? { modules } : {}),
     },
     null,
     2,

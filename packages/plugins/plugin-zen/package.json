@@ -32,8 +32,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/ZenPlugin.workerd.mjs",
-      "node": "./dist/lib/ZenPlugin.node.mjs",
       "default": "./dist/lib/ZenPlugin.mjs"
     },
     "#translations": {
@@ -73,8 +71,6 @@
     "./ZenPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/ZenPlugin.workerd.mjs",
-      "node": "./dist/lib/ZenPlugin.node.mjs",
       "import": "./dist/lib/ZenPlugin.mjs"
     }
   },

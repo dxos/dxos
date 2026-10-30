@@ -26,8 +26,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/GamePlugin.workerd.mjs",
-      "node": "./dist/lib/GamePlugin.node.mjs",
       "default": "./dist/lib/GamePlugin.mjs"
     },
     "#translations": {
@@ -77,8 +75,6 @@
     "./GamePlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/GamePlugin.workerd.mjs",
-      "node": "./dist/lib/GamePlugin.node.mjs",
       "import": "./dist/lib/GamePlugin.mjs"
     },
     "./GameUtil": {

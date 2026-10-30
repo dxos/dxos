@@ -17,8 +17,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/TrelloPlugin.workerd.mjs",
-      "node": "./dist/lib/TrelloPlugin.node.mjs",
       "default": "./dist/lib/TrelloPlugin.mjs"
     },
     "#operations": {
@@ -63,8 +61,6 @@
     "./TrelloPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/TrelloPlugin.workerd.mjs",
-      "node": "./dist/lib/TrelloPlugin.node.mjs",
       "import": "./dist/lib/TrelloPlugin.mjs"
     }
   },

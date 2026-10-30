@@ -17,8 +17,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/OnboardingPlugin.workerd.mjs",
-      "node": "./dist/lib/OnboardingPlugin.node.mjs",
       "default": "./dist/lib/OnboardingPlugin.mjs"
     }
   },
@@ -36,8 +34,6 @@
     "./OnboardingPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/OnboardingPlugin.workerd.mjs",
-      "node": "./dist/lib/OnboardingPlugin.node.mjs",
       "import": "./dist/lib/OnboardingPlugin.mjs"
     }
   },

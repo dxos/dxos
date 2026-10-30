@@ -26,8 +26,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/ProjectsPlugin.workerd.mjs",
-      "node": "./dist/lib/ProjectsPlugin.node.mjs",
       "default": "./dist/lib/ProjectsPlugin.mjs"
     },
     "#operations": {
@@ -131,8 +129,6 @@
     "./ProjectsPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/ProjectsPlugin.workerd.mjs",
-      "node": "./dist/lib/ProjectsPlugin.node.mjs",
       "import": "./dist/lib/ProjectsPlugin.mjs"
     },
     "./ProjectView": {

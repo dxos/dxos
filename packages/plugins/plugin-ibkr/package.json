@@ -47,8 +47,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/IbkrPlugin.workerd.mjs",
-      "node": "./dist/lib/IbkrPlugin.node.mjs",
       "default": "./dist/lib/IbkrPlugin.mjs"
     }
   },
@@ -83,8 +81,6 @@
     "./IbkrPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/IbkrPlugin.workerd.mjs",
-      "node": "./dist/lib/IbkrPlugin.node.mjs",
       "import": "./dist/lib/IbkrPlugin.mjs"
     }
   },

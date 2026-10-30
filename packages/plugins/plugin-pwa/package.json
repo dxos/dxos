@@ -21,8 +21,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/PwaPlugin.workerd.mjs",
-      "node": "./dist/lib/PwaPlugin.node.mjs",
       "default": "./dist/lib/PwaPlugin.mjs"
     },
     "#translations": {
@@ -50,8 +48,6 @@
     "./PwaPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/PwaPlugin.workerd.mjs",
-      "node": "./dist/lib/PwaPlugin.node.mjs",
       "import": "./dist/lib/PwaPlugin.mjs"
     }
   },

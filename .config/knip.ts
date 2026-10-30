@@ -432,15 +432,20 @@ const BUNDLER_RESOLVED: Record<string, string[]> = {
   'packages/apps/composer-app': [
     '@dxos/app-graph',
     '@dxos/echo',
+    '@dxos/echo-doc',
     '@dxos/echo-react',
     '@dxos/graph',
     '@dxos/react-ui-attention',
     '@dxos/react-ui-geo',
+    'decode-named-character-reference',
   ],
   // edge-compute generates a function entrypoint containing
   // `await import('@dxos/functions-runtime-cloudflare')` and gives esbuild a `resolveDir` of its
   // own source directory, so the import resolves from here rather than from any importing file.
   'packages/core/compute/edge-compute': ['@dxos/functions-runtime-cloudflare'],
+  // `check-edge-release` bundles a plugin's `dependsOn` closure from its `@dxos/plugin-*` dependencies, and the agent
+  // plugin depends on the assistant plugin by key in `dx.config.ts` without importing it.
+  'packages/plugins/plugin-agent': ['@dxos/plugin-assistant'],
   // `index.html` links these by path rather than importing them, so no module graph reaches them —
   // and unstyled, `#spaces` becomes a full-flow block over the todo list that swallows every click.
   'packages/apps/todomvc': ['todomvc-app-css', 'todomvc-common'],

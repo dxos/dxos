@@ -118,7 +118,20 @@ for (const { name, path: pkgPath } of packages) {
   // so a fresh checkout legitimately lacks them — the moon task graph, not the checkout,
   // guarantees their existence.
   const isGeneratedSource = (value) => /\/gen\//.test(value);
+  const isPlugin = Object.values(pkgJson.exports ?? {}).some((value) => value?.source === './dx.config.ts');
+  const hasCondition = (value, condition) =>
+    typeof value === 'object' &&
+    value !== null &&
+    (condition in value || Object.values(value).some((nested) => hasCondition(nested, condition)));
   for (const [importPath, importValue] of Object.entries(pkgImports)) {
+    // One bundle serves EDGE too, built for the browser, so a `workerd` condition is never resolved there.
+    if (isPlugin && hasCondition(importValue, 'workerd')) {
+      addDiagnostic(
+        'error',
+        'plugin-runtime-condition',
+        `import "${importPath}" picks a workerd variant by condition; a plugin has one bundle, so declare one module per environment instead`,
+      );
+    }
     if (typeof importValue === 'string') {
       // A single target answers every condition, so the emitted `.d.ts` and `.mjs` resolve the
       // alias out of `src/`. Expand it with `pnpm toolbox --lint-package-exports`.
@@ -291,6 +304,18 @@ for (const { name, path: pkgPath } of packages) {
         } else {
           addDiagnostic('conventional', 'source-exists', `export "${exportPath}": source file exists`);
         }
+      }
+    }
+
+    // A plugin is one bundle for every runtime: its modules' `environments` decide at load what runs.
+    if (exportValue.source === './dx.config.ts') {
+      const perRuntime = conditions.filter((c) => ['workerd', 'node', 'tauri', 'browser'].includes(c));
+      if (perRuntime.length > 0) {
+        addDiagnostic(
+          'error',
+          'plugin-runtime-condition',
+          `export "${exportPath}" builds dx.config.ts per runtime (${perRuntime.join(', ')}); a plugin has one bundle for every runtime`,
+        );
       }
     }
 

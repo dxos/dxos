@@ -31,8 +31,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/AssistantPlugin.workerd.mjs",
-      "node": "./dist/lib/AssistantPlugin.node.mjs",
       "default": "./dist/lib/AssistantPlugin.mjs"
     },
     "#operations": {
@@ -96,8 +94,6 @@
     "./AssistantPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/AssistantPlugin.workerd.mjs",
-      "node": "./dist/lib/AssistantPlugin.node.mjs",
       "import": "./dist/lib/AssistantPlugin.mjs"
     },
     "./AssistantPreset": {

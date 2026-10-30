@@ -26,8 +26,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/IllustratorPlugin.workerd.mjs",
-      "node": "./dist/lib/IllustratorPlugin.node.mjs",
       "default": "./dist/lib/IllustratorPlugin.mjs"
     },
     "#model": {
@@ -39,17 +37,6 @@
       "source": "./src/operations/index.ts",
       "types": "./dist/types/src/operations/index.d.ts",
       "default": "./dist/lib/operations.mjs"
-    },
-    "#svg-variant": {
-      "source": {
-        "workerd": "./src/capabilities/svg-variant.node.ts",
-        "node": "./src/capabilities/svg-variant.node.ts",
-        "default": "./src/capabilities/svg-variant.ts"
-      },
-      "types": "./dist/types/src/capabilities/svg-variant.d.ts",
-      "workerd": "./dist/lib/svg-variant/node.mjs",
-      "node": "./dist/lib/svg-variant/node.mjs",
-      "default": "./dist/lib/svg-variant.mjs"
     },
     "#skills": {
       "source": "./src/skills/index.ts",
@@ -122,8 +109,6 @@
     "./IllustratorPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/IllustratorPlugin.workerd.mjs",
-      "node": "./dist/lib/IllustratorPlugin.node.mjs",
       "import": "./dist/lib/IllustratorPlugin.mjs"
     },
     "./SceneSvg": {

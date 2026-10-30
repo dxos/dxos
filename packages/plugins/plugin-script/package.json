@@ -31,8 +31,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/ScriptPlugin.workerd.mjs",
-      "node": "./dist/lib/ScriptPlugin.node.mjs",
       "default": "./dist/lib/ScriptPlugin.mjs"
     },
     "#operations": {
@@ -102,8 +100,6 @@
     "./ScriptPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/ScriptPlugin.workerd.mjs",
-      "node": "./dist/lib/ScriptPlugin.node.mjs",
       "import": "./dist/lib/ScriptPlugin.mjs"
     },
     "./ScriptSkill": {

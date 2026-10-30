@@ -1,0 +1,54 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": [
+      "@cloudflare/vitest-pool-workers/types",
+      "@cloudflare/workers-types",
+      "@dxos/typings"
+    ]
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../../common/effect"
+    },
+    {
+      "path": "../../../common/errors"
+    },
+    {
+      "path": "../../../common/invariant"
+    },
+    {
+      "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/log"
+    },
+    {
+      "path": "../../../sdk/app-framework"
+    },
+    {
+      "path": "../../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../echo/echo"
+    },
+    {
+      "path": "../../protocols"
+    },
+    {
+      "path": "../ai"
+    },
+    {
+      "path": "../compute"
+    },
+    {
+      "path": "../compute-runtime"
+    },
+    {
+      "path": "../functions-runtime-cloudflare"
+    }
+  ]
+}

@@ -32,8 +32,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/MessengerPlugin.workerd.mjs",
-      "node": "./dist/lib/MessengerPlugin.node.mjs",
       "default": "./dist/lib/MessengerPlugin.mjs"
     },
     "#operations": {
@@ -77,8 +75,6 @@
     "./MessengerPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/MessengerPlugin.workerd.mjs",
-      "node": "./dist/lib/MessengerPlugin.node.mjs",
       "import": "./dist/lib/MessengerPlugin.mjs"
     },
     "./Notifications": {

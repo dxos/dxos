@@ -31,8 +31,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/ReviewPlugin.workerd.mjs",
-      "node": "./dist/lib/ReviewPlugin.node.mjs",
       "default": "./dist/lib/ReviewPlugin.mjs"
     },
     "#operations": {
@@ -107,8 +105,6 @@
     "./ReviewPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/ReviewPlugin.workerd.mjs",
-      "node": "./dist/lib/ReviewPlugin.node.mjs",
       "import": "./dist/lib/ReviewPlugin.mjs"
     },
     "./Settings": {

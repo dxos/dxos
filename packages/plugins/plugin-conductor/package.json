@@ -26,8 +26,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/ConductorPlugin.workerd.mjs",
-      "node": "./dist/lib/ConductorPlugin.node.mjs",
       "default": "./dist/lib/ConductorPlugin.mjs"
     },
     "#translations": {
@@ -57,8 +55,6 @@
     "./ConductorPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/ConductorPlugin.workerd.mjs",
-      "node": "./dist/lib/ConductorPlugin.node.mjs",
       "import": "./dist/lib/ConductorPlugin.mjs"
     }
   },

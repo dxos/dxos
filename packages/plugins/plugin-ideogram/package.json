@@ -17,8 +17,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/IdeogramPlugin.workerd.mjs",
-      "node": "./dist/lib/IdeogramPlugin.node.mjs",
       "default": "./dist/lib/IdeogramPlugin.mjs"
     },
     "#services": {
@@ -41,8 +39,6 @@
     "./IdeogramPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/IdeogramPlugin.workerd.mjs",
-      "node": "./dist/lib/IdeogramPlugin.node.mjs",
       "import": "./dist/lib/IdeogramPlugin.mjs"
     }
   },
