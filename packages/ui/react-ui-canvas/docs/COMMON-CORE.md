@@ -29,6 +29,13 @@ produced (`SceneView2D` on react-ui-canvas's own model, `SceneView3D` on `@dxos/
 10. (2026-10-30) react-ui-canvas-compute (and plugin-conductor through it) moves onto the shared model and editor in
     this work too: one data structure everywhere, no frozen copy of the old model.
 
+11. (2026-10-30) One text language and one data model for diagrams: `.dx` semantic statements (`diagram`/`node`/`edge`/
+    `group`) and scene statements (`scene`/`layout`/`model`/`element`) both target `@dxos/scene`. The layout engines
+    output `Layout2D` elements and model objects as one `LayoutIntent` batch, each element keeping its DSL identity in
+    a typed field; `@dxos/diagram`'s own scene model (objects of Box/Circle/Polyline/Curve/Arc/Text/Arrow/Portal and
+    its Upsert/Remove/Move commands) is retired as a data model, the illustrator's SVG renderer draws `Layout2D`, and
+    the canvas builder's translation layer disappears. This is step 0, before 2D's data moves.
+
 ## Why
 
 Stage 3 shared leaf components but not the editor. 2D still edits react-ui-canvas records and an adapter translates
@@ -182,6 +189,12 @@ So the model removal touches two large consumers (plugin-canvas, react-ui-canvas
 medium (plugin-uml, plugin-code) and several small ones; geometry/camera/layout utilities stay where they are.
 
 ## Order of work
+
+0. **One DSL target.** The semantic diagram engines (semantic, sequence, UML, mermaid) emit `Layout2D` + model objects
+   through `LayoutIntent` instead of `@dxos/diagram` `Scene.Command`s; the DSL identity becomes a typed element field;
+   the illustrator's SVG renderer (`SceneSvg`, `.dx.svg` export) reads `Layout2D`; plugin-illustrator's draw/convert
+   operations and plugin-canvas's builder use it directly. The diagram corpus, snapshots and render-diagrams task are
+   the regression suite.
 
 1. **Data parity for 2D.** Inventory every field react-ui-canvas records carry that `Element2D`/`Layout2D` do not
    (ports, points, links to views, lattice cells, constraint and dynamic models, style classes, z order) and give each
