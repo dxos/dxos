@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { applyIntent, isLayoutIntent } from './intent.ts';
+import { applyIntent, isLayoutIntent, layoutChanges } from './intent.ts';
 import type * as Scene from './Scene.ts';
 import { layout2D, layout3D } from './testing.ts';
 
@@ -197,5 +197,28 @@ describe('solid intents', () => {
     const flat = layout2D('f', [{ id: 'r', type: 'rect' }]);
     expect(isLayoutIntent({ kind: 'join', id: 'u', operands: ['r'] }, '2d')).toBe(false);
     expect(applyIntent(flat, { kind: 'join', id: 'u', operands: ['r'] })).toBe(flat);
+  });
+});
+
+describe('layoutChanges', () => {
+  test('one batch takes a 2D layout to another: creates, updates and deletes, and applying it reproduces the target', () => {
+    const before = layout2D('l', [
+      { id: 'a', type: 'rect', center: { x: 0, y: 0 } },
+      { id: 'b', type: 'rect', center: { x: 64, y: 0 } },
+    ]);
+    const after = layout2D('l', [
+      { id: 'a', type: 'rect', center: { x: 32, y: 0 }, dsl: { object: 'pm', element: 'box' } },
+      { id: 'c', type: 'ellipse', center: { x: 0, y: 64 } },
+    ]);
+    const intent = layoutChanges(before.elements, after.elements);
+    expect(intent.kind).toBe('batch');
+    expect(applyIntent(before, intent).elements).toEqual(after.elements);
+    expect(layoutChanges(after.elements, after.elements)).toEqual({ kind: 'batch', intents: [] });
+  });
+
+  test('the same helper diffs 3D layouts, so both dimensions write through one intent vocabulary', () => {
+    const before = layout3D('l', [cube('a'), cube('b', 1)]);
+    const after = layout3D('l', [cube('a', 2)]);
+    expect(applyIntent(before, layoutChanges(before.elements, after.elements)).elements).toEqual(after.elements);
   });
 });

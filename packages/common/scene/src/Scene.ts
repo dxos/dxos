@@ -114,6 +114,19 @@ export type Model<O, S = unknown, C = string> = {
 // Layout: positioned elements.
 //
 
+/** Where an element came from in DSL source: the object and element statement, and what else the source said. */
+export const DslIdentity = Schema.Struct({
+  object: Schema.String,
+  element: Schema.String,
+  /** Set on companion elements that belong to an element rather than being one (an arrow's label). */
+  part: Schema.optional(Schema.String),
+  ref: Schema.optional(Schema.String),
+  index: Schema.optional(Schema.String),
+  /** The scene a portal opens. */
+  portal: Schema.optional(Schema.String),
+});
+export type DslIdentity = Schema.Schema.Type<typeof DslIdentity>;
+
 /**
  * Fields every element has, in either dimension (the canvas element base, COMMON-CORE.md decision 12): an element
  * places a model object or has a type of its own; a link is an element with endpoints.
@@ -137,6 +150,8 @@ export const BaseElement = Schema.Struct({
   target: Schema.optional(ElementEndpoint),
   /** Set when a person placed the element, so arranging its layout leaves it where it is. */
   pinned: Schema.optional(Schema.Boolean),
+  /** The DSL statement that made the element, so compiling the source again updates it rather than adding a copy. */
+  dsl: Schema.optional(DslIdentity),
   /** Kind-specific fields, validated by the kind's registration. */
   props: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
 });

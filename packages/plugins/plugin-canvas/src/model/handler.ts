@@ -36,6 +36,7 @@ import {
   type NodeStyle,
   type NoteNode,
   type RectNode,
+  Scene,
   Shape,
   endpointNode,
   isDiagramNode,
@@ -44,7 +45,6 @@ import {
 } from '@dxos/scene';
 
 import {
-  type DslIdentity,
   type ElementRecord,
   type LinkRecord,
   type NodeRecord,
@@ -213,7 +213,7 @@ export const SceneHandler: ContentHandler = {
     const existing = managed(content).find((record) => record.dsl?.object === object.id)?.dsl;
     const ref = ('ref' in object && object.ref) || existing?.ref;
     const index = ('index' in object && object.index) || existing?.index;
-    const identity = (element: string): DslIdentity => ({
+    const identity = (element: string): Scene.DslIdentity => ({
       object: object.id,
       element,
       ...(ref ? { ref } : {}),

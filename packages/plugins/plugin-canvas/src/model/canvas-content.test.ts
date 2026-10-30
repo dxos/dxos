@@ -25,8 +25,10 @@ import types from '../capabilities/schema.ts';
 import { tldrawConverter } from '../import/converter.ts';
 import { frameWithChildren } from '../import/testing.ts';
 import { CanvasBuilder } from './builder.ts';
-import { CanvasLayoutBuilder } from './canvas-content.ts';
+import { CanvasLayoutBuilder, readCanvasContent } from './canvas-content.ts';
 import { addCanvas, openScene } from './canvas-document.ts';
+import { readViews } from './content.ts';
+import { makeLayoutWriter } from './layout-writer.ts';
 import { createCanvas } from './store.ts';
 
 const FLOW = 'flowchart LR\n  A[Client] --> B[Server]';
@@ -83,7 +85,39 @@ describe('CanvasLayoutBuilder', () => {
     CanvasBuilder.apply(legacy, scene);
     expect(CanvasLayoutBuilder.read(canvas).scene.objects).toEqual(CanvasBuilder.read(legacy).scene.objects);
     const layout = layoutOf(canvas);
-    expect(Object.values(layout.elements).some((element) => element.props?.dsl?.object !== undefined)).toBe(true);
+    expect(
+      Object.values(layout.elements).some(
+        (element) => element.dsl?.object !== undefined && element.props?.dsl === undefined,
+      ),
+    ).toBe(true);
+  });
+
+  test("an edit written without the DSL's identities keeps each element's typed dsl field", async () => {
+    const scene = await MermaidEngine.compile(FLOW);
+    const canvas = await run(addCanvas());
+    CanvasLayoutBuilder.apply(canvas, scene);
+    const layout = layoutOf(canvas);
+    const [id, element] =
+      Object.entries(layout.elements).find(([, element]) => element.dsl !== undefined && element.center) ?? [];
+    const identity = element?.dsl && { ...element.dsl };
+    expect(id && identity).toBeTruthy();
+    const opened = openScene(canvas);
+    if (!id || !Obj.instanceOf(Scene.Scene2D, opened)) {
+      throw new Error('A canvas opens a 2D scene.');
+    }
+    const views = readViews(readCanvasContent(canvas));
+    const view = Object.values(views).find((view) => id in view.nodes);
+    const node = view?.nodes[id];
+    if (!view || !node) {
+      throw new Error('The element reads back as a node.');
+    }
+    const moved = {
+      ...view,
+      nodes: { ...view.nodes, [id]: { ...node, center: { x: node.center.x + 64, y: node.center.y } } },
+    };
+    makeLayoutWriter(opened).write({ ...views, [view.id]: moved }, views);
+    expect(layout.elements[id].center?.x).toBe(node.center.x + 64);
+    expect({ ...layout.elements[id].dsl }).toEqual(identity);
   });
 
   test('a second apply updates the elements it manages rather than adding more', async () => {

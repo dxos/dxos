@@ -328,3 +328,33 @@ export function applyIntent(layout: LayoutRecord, intent: LayoutIntent): LayoutR
   const elements = reduce(layout.elements, intent, isElement3D, geometry3D, solid3D, !!layout.arrange);
   return elements ? { ...layout, elements } : layout;
 }
+
+const sameElement = (left: unknown, right: unknown): boolean => JSON.stringify(left) === JSON.stringify(right);
+
+/**
+ * One batch that takes a layout's elements from `before` to `after`, in either dimension: deletions, then creations
+ * (shapes before links, so a link's ends exist when it is created), then whole-element updates. Writers emit it rather
+ * than assigning records, so every write goes through the one intent vocabulary.
+ */
+export const layoutChanges = <E extends Element>(
+  before: { readonly [id: string]: E },
+  after: { readonly [id: string]: E },
+): LayoutIntent => {
+  const removed = Object.keys(before).filter((id) => after[id] === undefined);
+  const added = Object.values(after).filter((element) => before[element.id] === undefined);
+  const isLink = (element: E) => element.source !== undefined || element.target !== undefined;
+  const changed = Object.values(after).filter(
+    (element) => before[element.id] !== undefined && !sameElement(before[element.id], element),
+  );
+  return {
+    kind: 'batch',
+    intents: [
+      ...(removed.length > 0 ? [{ kind: 'delete' as const, ids: removed }] : []),
+      ...[...added.filter((element) => !isLink(element)), ...added.filter(isLink)].map((element) => ({
+        kind: 'create' as const,
+        element,
+      })),
+      ...changed.map((element) => ({ kind: 'update' as const, id: element.id, path: [], value: element })),
+    ],
+  };
+};

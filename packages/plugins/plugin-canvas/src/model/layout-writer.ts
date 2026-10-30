@@ -5,7 +5,8 @@
 //
 // Writes react-ui-canvas Views back to the Layout2D objects a scene reaches, element by element: each View is the
 // layout of its id, a View with no layout is written as a new one, and the composite objects its portals and
-// instances place go to the root layout's model. The layout store and the content facade both write through it.
+// instances place go to the root layout's model. The layout store and the content facade both write through it, and
+// its element writes are one `LayoutIntent` batch, the vocabulary every editor writes in.
 //
 
 import type * as Types from 'effect/Types';
@@ -13,9 +14,11 @@ import type * as Types from 'effect/Types';
 import { type Database, Obj, Ref } from '@dxos/echo';
 import { type View, type ViewMap } from '@dxos/react-ui-canvas/headless';
 import { fromCanvasView } from '@dxos/react-ui-scene/canvas';
-import { Scene, type ViewId, reachedObjects } from '@dxos/scene';
+import { Scene, type ViewId, layoutChanges, reachedObjects } from '@dxos/scene';
 
 import { type Canvas } from '#types';
+
+import { applyLayoutIntent } from './layout-source.ts';
 
 /** A deep copy free of ECHO proxies, writable as a new record of an object. */
 export const plain = <T>(value: T): Types.DeepMutable<T> => JSON.parse(JSON.stringify(value));
@@ -75,23 +78,28 @@ const writeLayout = (
   if (set.length === 0 && remove.length === 0 && !fieldsChanged) {
     return;
   }
-  Obj.update(layout, (layout) => {
-    for (const id of set) {
-      // Props other than the canvas's own belong to other writers (the DSL identity, say), so they are kept.
-      const { canvas: _canvas, ...kept } = plain(layout.elements[id]?.props ?? {});
-      const written = plain(record.elements[id]);
-      const { type, ...element } = { ...written, props: { ...kept, ...written.props } };
-      const placed = layout.elements[id]?.object;
-      const object = placed === undefined ? undefined : objectOf(placed);
-      layout.elements[id] =
-        placed !== undefined && object && element.object === undefined && type === object.type
-          ? overObject({ ...element, object: placed }, object)
-          : { ...element, ...(type === undefined ? {} : { type }) };
-    }
-    for (const id of remove) {
-      delete layout.elements[id];
-    }
-    if (fieldsChanged) {
+  const current: Record<string, Scene.Element2D> = plain(layout.elements);
+  const next: Record<string, Scene.Element2D> = { ...current };
+  for (const id of set) {
+    // Props other than the canvas's own belong to other writers, so they are kept, as is the DSL identity.
+    const { canvas: _canvas, ...kept } = current[id]?.props ?? {};
+    const written = plain(record.elements[id]);
+    const { type, ...element } = { ...written, props: { ...kept, ...written.props } };
+    const dsl = element.dsl ?? current[id]?.dsl;
+    const placed = current[id]?.object;
+    const object = placed === undefined ? undefined : objectOf(placed);
+    const value =
+      placed !== undefined && object && element.object === undefined && type === object.type
+        ? overObject({ ...element, object: placed }, object)
+        : { ...element, ...(type === undefined ? {} : { type }) };
+    next[id] = dsl === undefined ? value : { ...value, dsl };
+  }
+  for (const id of remove) {
+    delete next[id];
+  }
+  applyLayoutIntent(layout, layoutChanges(current, next));
+  if (fieldsChanged) {
+    Obj.update(layout, (layout) => {
       if (layout.name !== record.name) {
         layout.name = record.name;
       }
@@ -105,8 +113,8 @@ const writeLayout = (
       if (layout.anonymous !== record.anonymous) {
         layout.anonymous = record.anonymous;
       }
-    }
-  });
+    });
+  }
 };
 
 /** Adds fields to a layout record before it is written, such as the DSL identities the content facade keeps. */

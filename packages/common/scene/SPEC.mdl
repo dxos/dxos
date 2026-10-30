@@ -898,3 +898,12 @@ decision D-96: A group is a composite placed by an instance (COMMON-CORE decisio
   for: user:richburdon
   why: One grouping mechanism in both dimensions, the canvas's composites, lets the editor core treat a group like any other instance; keeping the text grammar keeps every file valid.
 ```
+
+```mdl
+decision D-97: An element's DSL identity is a typed `dsl` field of the shared element base (`DslIdentity`: object, element, part, ref, index, portal), not an untyped `props.dsl` entry, and a write that does not carry it keeps the element's stored one. The canvas's layout writer writes elements as one `LayoutIntent` batch (`layoutChanges` from the stored elements to the written ones, applied by `applyLayoutIntent` field by field), and `applyLayoutIntent` takes a layout of either dimension. Fills in [D-92].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  why: The illustrator's compile path then lands on the canvas through the same intent vocabulary as every editor write, and the identity that keeps a recompile from duplicating elements is part of the shared data rather than a convention.
+  rejected: Moving the command-to-element translation into `@dxos/diagram` now; it depends on react-ui-canvas node helpers, so it moves with the 2D viewport in phase C.
+```

@@ -5,7 +5,7 @@
 //
 // A plugin-canvas `Canvas` seen as the v2 content records the scene handler, its builder and the canvas operations
 // edit: the open scene's layouts read as records, and records written back to those layouts element by element. The
-// DSL identity a record carries is kept on its element as `props.dsl`, so the illustrator's commands still find the
+// DSL identity a record carries is kept on its element as its typed `dsl` field, so the illustrator's commands still find the
 // elements they manage.
 //
 
@@ -20,7 +20,6 @@ import { Canvas } from '#types';
 
 import { openScene } from './canvas-document.ts';
 import {
-  type DslIdentity,
   canvasRecordOf,
   clone,
   isLinkRecord,
@@ -40,7 +39,7 @@ const openScene2D = (canvas: Canvas.Canvas): Scene.Scene2D | undefined => {
   return Obj.instanceOf(Scene.Scene2D, scene) ? scene : undefined;
 };
 
-const isDslIdentity = (value: unknown): value is DslIdentity =>
+const isDslIdentity = (value: unknown): value is Scene.DslIdentity =>
   typeof value === 'object' &&
   value !== null &&
   typeof Reflect.get(value, 'object') === 'string' &&
@@ -62,7 +61,7 @@ export const readCanvasContent = (canvas: Canvas.Canvas): ContentMap => {
   writeViews(content, views);
   for (const layout of doc.layouts) {
     for (const [id, element] of Object.entries(layout.elements)) {
-      const dsl: unknown = element.props?.dsl;
+      const dsl: unknown = element.dsl;
       const key = element.type === 'link' ? linkKey(id) : nodeKey(id);
       const record = content[key];
       if (isDslIdentity(dsl) && (isNodeRecord(record) || isLinkRecord(record))) {
@@ -74,7 +73,7 @@ export const readCanvasContent = (canvas: Canvas.Canvas): ContentMap => {
 };
 
 /** Each record's DSL identity, by element id, for the layouts a write updates. */
-const identities = (content: ContentMap): ReadonlyMap<string, DslIdentity> =>
+const identities = (content: ContentMap): ReadonlyMap<string, Scene.DslIdentity> =>
   new Map(
     Object.values(content).flatMap((record) =>
       isNodeRecord(record) && record.dsl
@@ -100,7 +99,7 @@ export const writeCanvasContent = (canvas: Canvas.Canvas, content: ContentMap, p
     elements: Object.fromEntries(
       Object.entries(record.elements).map(([id, element]) => {
         const identity = dsl.get(id);
-        return [id, identity ? { ...element, props: { ...element.props, dsl: identity } } : element];
+        return [id, identity ? { ...element, dsl: identity } : element];
       }),
     ),
   });

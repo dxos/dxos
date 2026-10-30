@@ -47,7 +47,7 @@ const MODEL_ID = 'model';
 /** The object id an `instance` node of a composite places, which an unplaced composite takes as well. */
 const COMPOSITE_PREFIX = 'instance:';
 
-/** Each record's DSL identity as its element's `props.dsl`, which the illustrator's commands find elements by. */
+/** Each record's DSL identity as its element's `dsl` field, which the illustrator's commands find elements by. */
 const withIdentities = (layout: Scene.LayoutRecord2D, content: Drawing.Canvas['content']): Scene.LayoutRecord2D => {
   const identities = new Map(
     Object.values(content).flatMap((record) =>
@@ -63,7 +63,7 @@ const withIdentities = (layout: Scene.LayoutRecord2D, content: Drawing.Canvas['c
     elements: Object.fromEntries(
       Object.entries(layout.elements).map(([id, element]) => {
         const dsl = identities.get(id);
-        return [id, dsl ? { ...element, props: { ...element.props, dsl: clone(dsl) } } : element];
+        return [id, dsl ? { ...element, dsl: clone(dsl) } : element];
       }),
     ),
   };

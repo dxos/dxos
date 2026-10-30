@@ -53,28 +53,44 @@ export const layoutSource = (layout: Scene.Layout3D): VersionedSource => ({
     }),
 });
 
-/** Applies `intent` to a stored 3D layout, writing only the elements it changed, in one change. */
-export const applyLayoutIntent = (layout: Scene.Layout3D, intent: LayoutIntent): void => {
-  const before: Scene.LayoutRecord3D = { id: layout.key, dim: '3d', elements: plain(layout.elements) };
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const isLayout3D = (layout: Scene.Layout2D | Scene.Layout3D): layout is Scene.Layout3D =>
+  Obj.instanceOf(Scene.Layout3D, layout);
+
+/**
+ * Applies `intent` to a stored layout of either dimension, writing only the elements it changed, field by field, in one
+ * change: the one write path for elements, so 2D and 3D edits go through the same intent vocabulary.
+ */
+export const applyLayoutIntent = (layout: Scene.Layout2D | Scene.Layout3D, intent: LayoutIntent): void => {
+  const arrange = layout.arrange && plain(layout.arrange);
+  const before: Scene.LayoutRecord = isLayout3D(layout)
+    ? { id: layout.key, dim: '3d', elements: plain(layout.elements), ...(arrange ? { arrange } : {}) }
+    : { id: layout.key, dim: '2d', elements: plain(layout.elements), ...(arrange ? { arrange } : {}) };
   const after = applyIntent(before, intent);
   if (after === before) {
     return;
   }
-  const ids = new Set([...Object.keys(before.elements), ...Object.keys(after.elements)]);
-  const changed = [...ids].filter((id) => !sameValue(before.elements[id], after.elements[id]));
+  const beforeElements: Record<string, unknown> = before.elements;
+  const afterElements: Record<string, unknown> = after.elements;
+  const ids = new Set([...Object.keys(beforeElements), ...Object.keys(afterElements)]);
+  const changed = [...ids].filter((id) => !sameValue(beforeElements[id], afterElements[id]));
   if (changed.length === 0) {
     return;
   }
   Obj.update(layout, (layout) => {
+    const elements: Record<string, Record<string, unknown>> = layout.elements;
     for (const id of changed) {
-      const element = after.elements[id];
-      const current = layout.elements[id];
-      if (element === undefined) {
-        delete layout.elements[id];
+      const raw = afterElements[id];
+      const element = raw === undefined ? undefined : plain(raw);
+      const current = elements[id];
+      if (!isRecord(element)) {
+        delete elements[id];
       } else if (current === undefined) {
-        layout.elements[id] = plain(element);
+        elements[id] = element;
       } else {
-        writeFields(current, before.elements[id], plain(element));
+        writeFields(current, beforeElements[id], element);
       }
     }
   });

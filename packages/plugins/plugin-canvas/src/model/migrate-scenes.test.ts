@@ -228,9 +228,9 @@ describe('migrateSceneDrawing', () => {
       'link:ab': { kind: 'link', scene: 'root', link, dsl: { object: 'calls', element: 'calls' } },
     });
     const elements = doc.layouts[0].elements;
-    expect(elements.a.props?.dsl).toEqual({ object: 'server', element: 'server' });
-    expect(elements.ab.props?.dsl).toEqual({ object: 'calls', element: 'calls' });
-    expect(elements.b.props?.dsl).toBeUndefined();
+    expect(elements.a.dsl).toEqual({ object: 'server', element: 'server' });
+    expect(elements.ab.dsl).toEqual({ object: 'calls', element: 'calls' });
+    expect(elements.b.dsl).toBeUndefined();
   });
 
   test('named style classes become the model styles and settings move onto the Canvas', async () => {

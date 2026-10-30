@@ -26,6 +26,7 @@ import {
   Link,
   type Node,
   NodeBase,
+  Scene,
   StyleClass,
   type StyleMap,
   type ViewId,
@@ -41,14 +42,6 @@ import { Canvas } from '#types';
  * DSL identity of a record the illustrator bridge manages; `ref` and `index` are the object's, `portal`
  * the drawing a portal element shows.
  */
-export const DslIdentity = Schema.Struct({
-  object: Schema.String,
-  element: Schema.String,
-  ref: Schema.optional(Schema.String),
-  index: Schema.optional(Schema.String),
-  portal: Schema.optional(Schema.String),
-});
-export type DslIdentity = Schema.Schema.Type<typeof DslIdentity>;
 
 /** Names the root scene and holds the drawing's settings; one per canvas, under the key `canvas`. */
 export const CanvasRecord = Schema.Struct({
@@ -77,7 +70,7 @@ export const NodeRecord = Schema.Struct({
   kind: Schema.Literal('node'),
   scene: Schema.String,
   node: NodeBase,
-  dsl: Schema.optional(DslIdentity),
+  dsl: Schema.optional(Scene.DslIdentity),
 });
 export type NodeRecord = Schema.Schema.Type<typeof NodeRecord>;
 
@@ -86,7 +79,7 @@ export const LinkRecord = Schema.Struct({
   kind: Schema.Literal('link'),
   scene: Schema.String,
   link: Link,
-  dsl: Schema.optional(DslIdentity),
+  dsl: Schema.optional(Scene.DslIdentity),
 });
 export type LinkRecord = Schema.Schema.Type<typeof LinkRecord>;
 
