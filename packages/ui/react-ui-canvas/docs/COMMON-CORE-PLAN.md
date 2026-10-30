@@ -19,6 +19,20 @@ Manifold (solids), vitest, storybook (localhost:9009).
 react-ui-canvas's current schema, decision 12). Spec decisions are recorded in
 `packages/common/scene/SPEC.mdl` (latest D-89+).
 
+## Rulings during execution (pending user review)
+
+- **R-1 (2026-10-30, coordinator): `Scene.Command` stays as the interchange protocol for external formats.** It is a
+  protocol between the diagram engines and four backends (`ContentHandler`: SVG, tldraw, excalidraw, canvas), not
+  just the canvas's input. The canvas backend and the SVG renderer move to `Layout2D` (the canvas handler emits
+  `LayoutIntent`s); tldraw and excalidraw keep consuming commands. Task 0.5 retires the commands as a _data model_
+  only. Rejected: three new `Layout2D` → tldraw/excalidraw/SVG converters with read-back (not in scope). Cost if
+  wrong: those converters later.
+- **R-2: phase A's data re-base (A.1, A.4) runs before tasks 0.2–0.4,** so phase 0 emits the final element shape
+  instead of stage 2's (`kind`/`order`/`from`/`to`) and nothing is redone. Order: 0.1 (done) → A → 0.2–0.5 → B → C.
+- **R-3: diagram objects become relative composites (decision 18) once the canvas renders instance `scale` (C.1).**
+  Until then canvas output stays flattened, so diagrams don't change appearance. The composite switch is a task at the
+  end of C.
+
 ## Global Constraints
 
 - One PR (decision 9): dxos/dxos#14282. Basics first, then tests and storybooks for review (Phase F).
