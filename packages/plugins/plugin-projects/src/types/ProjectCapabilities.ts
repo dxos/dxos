@@ -9,6 +9,7 @@ import type * as Effect from 'effect/Effect';
 import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import type * as Translations from '@dxos/app-toolkit/Translations';
 import * as Project from '@dxos/compute/Project';
 import type * as Spec from '@dxos/compute/Spec';
 import type { Database, Obj } from '@dxos/echo';
@@ -85,3 +86,15 @@ export type SpecExtensionOptions = {
 export type SpecExtensions = (spec: Spec.Spec, options: SpecExtensionOptions) => Extension[];
 
 export const SpecExtensions = Capability.make<SpecExtensions>()(`${ProjectsNamespace.key}.capability.specExtensions`);
+
+/**
+ * A dialect a spec can use: a set of block kinds beyond the core and changelog ones, offered by the plugin that reads
+ * them. A spec lists the dialects it uses in `dialects`, and a dialect's views and editing show only for those specs.
+ */
+export type SpecDialect = {
+  /** The id a spec's `dialects` lists, as a `.mdl` file's front matter lists it in `extends`. */
+  id: string;
+  label: Translations.Label;
+};
+
+export const SpecDialect = Capability.make<SpecDialect>()(`${ProjectsNamespace.key}.capability.specDialect`);

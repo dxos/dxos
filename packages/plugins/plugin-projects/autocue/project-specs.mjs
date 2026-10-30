@@ -4,8 +4,8 @@
 
 /**
  * A project owns several specs: a feature map and a spec of prose sit side by side, the Overview sums up each, and the
- * Specs tab shows one at a time, picked from a dropdown in its toolbar that also adds a spec. The feature map's canvas
- * still draws the features its spec holds.
+ * Specs tab shows one at a time, picked from a dropdown in its toolbar that also adds a spec. The toolbar follows the
+ * tab, a spec offers the views its extensions give, and the feature map's canvas adds a feature in an empty cell.
  *
  * @mdl packages/plugins/plugin-projects/PLUGIN.mdl test QA-8
  * @app storybook-react, narrowed to plugin-projects, on :9009
@@ -33,6 +33,30 @@ const NEW_SPEC = 'Release notes';
 
 const PICKER = '[data-testid="projectsPlugin.specPicker"]';
 const DOCUMENT = '[data-testid="feature-map.document"]';
+const ADD_ARTIFACT = '[data-testid="projectsPlugin.addArtifact"]';
+const CANVAS_TOGGLE = '[data-testid="projectsPlugin.featureMap.canvas"]';
+const EXTENSIONS = '[data-testid="projectsPlugin.specDialects"]';
+
+const expectCount = async (page, selector, count, what) => {
+  const seen = await page.locator(selector).count();
+  if (seen !== count) {
+    throw new Error(`expected ${count} ${what}, saw ${seen}`);
+  }
+};
+
+/** The first canvas `+` the pointer can reach: the outer ring's can sit under the toolbar or past the viewport. */
+const reachableAdd = async (page) => {
+  const index = await page.evaluate(() =>
+    [...document.querySelectorAll('[data-testid="feature-canvas.add"]')].findIndex((button) => {
+      const { x, y, width, height } = button.getBoundingClientRect();
+      return button.contains(document.elementFromPoint(x + width / 2, y + height / 2));
+    }),
+  );
+  if (index === -1) {
+    throw new Error('no reachable add button');
+  }
+  return `[data-testid="feature-canvas.add"] >> nth=${index}`;
+};
 
 const caption = (demo, step, text) => demo.caption({ value: `Step ${step} — ${text}`, subtitle: SUBTITLE, hold: READ });
 
@@ -68,10 +92,8 @@ export const steps = [
     run: async ({ demo, page }) => {
       await demo.title({ value: 'Specs', subtitle: 'A project owns several specs' });
       await caption(demo, 1, 'The Overview sums up each spec the project owns');
-      const summaries = page.getByTestId('projectsPlugin.specSummary');
-      if ((await summaries.count()) !== 2) {
-        throw new Error('expected two spec summaries');
-      }
+      await expectCount(page, '[data-testid="projectsPlugin.specSummary"]', 2, 'spec summaries');
+      await expectCount(page, ADD_ARTIFACT, 1, 'Create artifact buttons');
       await demo.hover({ selector: '[data-testid="projectsPlugin.specSummary"] >> nth=0', label: MAP_SPEC });
       await demo.sleep({ ms: 1_500 });
       await demo.hover({ selector: '[data-testid="projectsPlugin.specSummary"] >> nth=1', label: TALK_SPEC });
@@ -81,10 +103,13 @@ export const steps = [
   {
     name: 'Open the Specs tab',
     run: async ({ demo, page }) => {
-      await caption(demo, 2, 'The Specs tab opens on the first spec, a feature map');
+      await caption(demo, 2, 'The Specs tab opens on the first spec, with its own tools');
       await demo.click({ selector: '[data-testid="projectsPlugin.tab.spec"]', label: 'Specs' });
       await waitForDocument(page, MAP_SPEC);
       await page.locator('[data-testid="feature-embed"]').first().waitFor({ state: 'visible', timeout: 10_000 });
+      await expectCount(page, ADD_ARTIFACT, 0, 'Create artifact buttons');
+      await expectCount(page, CANVAS_TOGGLE, 1, 'view toggles');
+      await expectCount(page, EXTENSIONS, 1, 'Extensions menus');
       await demo.sleep({ ms: LOOK });
     },
   },
@@ -99,12 +124,28 @@ export const steps = [
   {
     name: 'Pick the other spec',
     run: async ({ demo, page }) => {
-      await caption(demo, 4, `"${TALK_SPEC}" is prose, with no features`);
+      await caption(demo, 4, `"${TALK_SPEC}" is prose, so it has no other views`);
       await demo.click({ selector: `[role="menu"] >> [role^="menuitem"]:has-text("${TALK_SPEC}")`, label: TALK_SPEC });
       await waitForDocument(page, TALK_SPEC);
-      if ((await page.locator('[data-testid="feature-embed"]').count()) !== 0) {
-        throw new Error(`"${TALK_SPEC}" shows feature sections`);
-      }
+      await expectCount(page, '[data-testid="feature-embed"]', 0, 'feature sections');
+      await expectCount(page, CANVAS_TOGGLE, 0, 'view toggles');
+      await demo.sleep({ ms: LOOK });
+    },
+  },
+  {
+    name: 'Give it the features extension',
+    run: async ({ demo, page }) => {
+      await caption(demo, 5, 'Extensions lists what a spec can use');
+      await demo.click({ selector: EXTENSIONS, label: 'Extensions' });
+      await page.getByRole('menu').waitFor({ state: 'visible', timeout: 5_000 });
+      await demo.sleep({ ms: 1_500 });
+      await demo.click({
+        selector: '[role="menu"] >> [role="menuitemcheckbox"]:has-text("Features")',
+        label: 'Features',
+      });
+      await page.locator(CANVAS_TOGGLE).waitFor({ state: 'visible', timeout: 5_000 });
+      await demo.press({ key: 'Escape' });
+      await caption(demo, 5, 'With Features checked, the canvas and board views appear');
       await demo.sleep({ ms: LOOK });
     },
   },
@@ -112,7 +153,7 @@ export const steps = [
     name: 'Add a spec',
     done: async ({ page }) => (await page.locator(`${PICKER}:has-text("${NEW_SPEC}")`).count()) > 0,
     run: async ({ demo, page }) => {
-      await caption(demo, 5, 'Add spec asks for a name');
+      await caption(demo, 6, 'Add spec asks for a name');
       await openPicker(demo, page);
       await demo.click({ selector: '[role="menu"] >> [role^="menuitem"]:has-text("Add spec")', label: 'Add spec' });
       const name = page.getByLabel(/^name\*?$/i);
@@ -122,7 +163,7 @@ export const steps = [
       await page.keyboard.type(NEW_SPEC, { delay: 120 });
       await demo.click({ selector: '[data-testid="save-button"]', label: 'Create' });
       await waitForDocument(page, NEW_SPEC);
-      await caption(demo, 5, `"${NEW_SPEC}" starts as its name alone`);
+      await caption(demo, 6, `"${NEW_SPEC}" starts as its name alone`);
       await openPicker(demo, page);
       await demo.sleep({ ms: LOOK });
       await demo.press({ key: 'Escape' });
@@ -131,14 +172,22 @@ export const steps = [
   {
     name: 'Go back to the feature map',
     run: async ({ demo, page }) => {
-      await caption(demo, 6, `Back on "${MAP_SPEC}", the canvas draws its features`);
+      await caption(demo, 7, `Back on "${MAP_SPEC}", the canvas draws its features`);
       await pickSpec(demo, page, MAP_SPEC);
-      await demo.click({ selector: '[data-testid="projectsPlugin.featureMap.canvas"]', label: 'Canvas' });
+      await demo.click({ selector: CANVAS_TOGGLE, label: 'Canvas' });
       await page.getByTestId('feature-card').nth(7).waitFor({ state: 'visible', timeout: 10_000 });
-      const cards = await page.getByTestId('feature-card').count();
-      if (cards !== 8) {
-        throw new Error(`expected eight feature cards, saw ${cards}`);
-      }
+      await expectCount(page, '[data-testid="feature-card"]', 8, 'feature cards');
+      await demo.sleep({ ms: LOOK });
+    },
+  },
+  {
+    name: 'Add a feature on the canvas',
+    done: async ({ page }) => (await page.getByTestId('feature-card').count()) > 8,
+    run: async ({ demo, page }) => {
+      await caption(demo, 8, 'Each empty cell offers a + that adds a feature there');
+      await demo.click({ selector: await reachableAdd(page), label: 'Add a feature here' });
+      await demo.click({ selector: '[data-testid="feature-map.new-feature"]', label: 'New feature' });
+      await page.getByTestId('feature-card').nth(8).waitFor({ state: 'visible', timeout: 10_000 });
       await demo.clearCaption();
       await demo.sleep({ ms: 6_000 });
     },

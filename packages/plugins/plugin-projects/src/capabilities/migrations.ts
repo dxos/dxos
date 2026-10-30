@@ -108,7 +108,7 @@ const getContainer = async (db: Database.Database, state: SpecsState, placement:
   if (parent) {
     let spec = await findNested(db, state, parent);
     if (!spec) {
-      spec = db.add(Spec.make({ name: parent.name }));
+      spec = db.add(Spec.make({ name: parent.name, dialects: [FeatureMap.DIALECT] }));
       Obj.setParent(spec, parent);
       state.byParent.set(parent.id, spec);
     }
@@ -129,7 +129,7 @@ const getContainer = async (db: Database.Database, state: SpecsState, placement:
       if (Spec.instanceOf(existing)) {
         spec = existing;
       } else {
-        const made = db.add(Spec.make({ name: project.name ?? '' }));
+        const made = db.add(Spec.make({ name: project.name ?? '', dialects: [FeatureMap.DIALECT] }));
         Obj.update(project, (project) => {
           project.specs.push(Ref.make(made));
         });
@@ -147,7 +147,7 @@ const getContainer = async (db: Database.Database, state: SpecsState, placement:
   const [existing] = await db
     .query(Filter.and(Filter.type(Spec.Spec, { name: UNPLACED_NAME }), Filter.hasParent(false)))
     .run();
-  const unplaced = existing ?? db.add(Spec.make({ name: UNPLACED_NAME }));
+  const unplaced = existing ?? db.add(Spec.make({ name: UNPLACED_NAME, dialects: [FeatureMap.DIALECT] }));
   state.unplaced = unplaced;
   return unplaced;
 };
@@ -319,7 +319,14 @@ export const makeSpecContent = (): Migration.ObjectMigration => {
           (key, index, all) => all.findIndex(({ source, id }) => source === key.source && id === key.id) === index,
         )
         .map(({ source, id }) => ({ source, id }));
-      return { name, description, dialects: [], content: Ref.fromURI(content.uri), [Obj.Meta]: { keys } };
+      // Every 0.2.0 spec was a feature map.
+      return {
+        name,
+        description,
+        dialects: [FeatureMap.DIALECT],
+        content: Ref.fromURI(content.uri),
+        [Obj.Meta]: { keys },
+      };
     },
     onMigration: async ({ before, object, db }) => {
       // The refs are written here rather than in the transform, which cannot carry refs in meta.

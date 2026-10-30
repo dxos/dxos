@@ -28,7 +28,7 @@ import { Feature, FeatureMap, FeatureMapView } from '#types';
 import { FeatureCanvas } from '../../components/FeatureCanvas/index.ts';
 import { useFeatureEditing, useFeatureGraph } from '../../hooks/index.ts';
 import { ProjectsNamespace } from '../../namespace.ts';
-import { useFeatureSelection, useLevelIds, useSpecMapActions } from './spec-map-actions.ts';
+import { useAddFeature, useFeatureSelection, useLevelIds, useSpecMapActions } from './spec-map-actions.ts';
 
 type Point = FeatureMap.Position;
 
@@ -38,6 +38,8 @@ export type SpecMapProps = {
   spec: Spec.Spec;
   mode: FeatureMapView.Mode;
   attendableId?: string;
+  /** Not offered when adding an existing feature, besides the map's own features: the features above it. */
+  exclude?: readonly string[];
   /** Opens the level breaking the feature down: a double-click on its card. */
   onZoom: (id: string) => void;
 };
@@ -46,7 +48,7 @@ export type SpecMapProps = {
  * One level of a feature map — the features on `spec`, on a canvas or by status — or the spec's `.mdl` text. A
  * click selects a feature and shows it in the plank's feature companion.
  */
-export const SpecMap = ({ spec, mode, attendableId, onZoom }: SpecMapProps) => {
+export const SpecMap = ({ spec, mode, attendableId, exclude, onZoom }: SpecMapProps) => {
   const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
   const db = Obj.getDatabase(spec);
   const ids = useLevelIds(spec);
@@ -73,6 +75,7 @@ export const SpecMap = ({ spec, mode, attendableId, onZoom }: SpecMapProps) => {
   );
   const editing = useFeatureEditing(db, spec);
   const { selectedId, select } = useFeatureSelection(attendableId);
+  const { createAt, addAt } = useAddFeature({ db, spec, attendableId, exclude });
   const handleZoom = useCallback((id: string | undefined) => id && onZoom(id), [onZoom]);
 
   // Only the boxes that moved are written, so a drag touches one entry of the layout rather than all of it.
@@ -103,7 +106,8 @@ export const SpecMap = ({ spec, mode, attendableId, onZoom }: SpecMapProps) => {
     );
   }
 
-  if (ids.length === 0) {
+  // The canvas shows even when empty: its empty cells are where features are added.
+  if (mode === 'kanban' && ids.length === 0) {
     return <Status.Empty classNames='h-full'>{t('feature-map.empty.message')}</Status.Empty>;
   }
 
@@ -130,6 +134,8 @@ export const SpecMap = ({ spec, mode, attendableId, onZoom }: SpecMapProps) => {
         onLink={editing.addDependency}
         onUnlink={editing.removeDependency}
         onRemove={editing.removeFeature}
+        onCreate={(position) => void createAt(position)}
+        onAdd={addAt}
       />
     </div>
   );
@@ -194,18 +200,8 @@ export const SpecFeatures = ({ role, spec, attendableId }: SpecFeaturesProps) =>
     [updateView],
   );
 
-  const { mode, actions, featureActions } = useSpecMapActions({
-    db,
-    spec: level ?? spec,
-    parentId: level ? undefined : zoomed?.id,
-    viewId: spec.id,
-    attendableId,
-    exclude,
-  });
-  const menu = useMenuBuilder(() => {
-    const builder = MenuBuilder.make().subgraph(actions);
-    return (featureActions ? builder.menu('overflow', featureActions, 'feature-map.overflow') : builder).build();
-  }, [actions, featureActions]);
+  const { mode, actions } = useSpecMapActions({ spec: level ?? spec, viewId: spec.id });
+  const menu = useMenuBuilder(() => MenuBuilder.make().subgraph(actions).build(), [actions]);
 
   return (
     <Panel.Root role={role}>
@@ -254,7 +250,7 @@ export const SpecFeatures = ({ role, spec, attendableId }: SpecFeaturesProps) =>
       </Panel.Header>
       <Panel.Body>
         {level ? (
-          <SpecMap spec={level} mode={mode} attendableId={attendableId} onZoom={handleZoom} />
+          <SpecMap spec={level} mode={mode} attendableId={attendableId} exclude={exclude} onZoom={handleZoom} />
         ) : (
           <Status.Empty classNames='h-full'>{t('feature-map.empty.message')}</Status.Empty>
         )}

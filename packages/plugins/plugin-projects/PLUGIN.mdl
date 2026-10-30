@@ -38,7 +38,7 @@ feat F-1: A spec's document is the spec
              block for a feature it embeds.
   req F-1.3: No structure is required. A document may be prose alone, embeds may sit anywhere in it, and the prose
              around them is kept as written.
-  req F-1.4: A feature added from the canvas, the board or an operation is embedded at the end of the document's
+  req F-1.4: A feature added from the canvas or an operation is embedded at the end of the document's
              `## Features` section, or at the end of the document when it has none.
   req F-1.5: A feature the spec holds that its document has never embedded, such as one a seed or a migration added, is
              embedded when the spec is synced, never dropped.
@@ -115,6 +115,18 @@ feat F-4: A project's specs
   req F-4.6: The nav tree lists each spec under the project's Specs branch, and each level beneath it at
              `project/<id>/specs/<spec>/<feature>/…`, the same path however many specs the project has. A spec's node
              holds the spec, and a spec a project owns opens as the project's article on that spec.
+  req F-4.7: The project article's toolbar holds its tabs, then the tools of the tab shown: Create artifact on the
+             Overview; the spec dropdown, the view toggle and the Extensions menu on the Specs tab; Assign to agent and
+             the Gantt toggle on the Tasks tab. It has no overflow menu and no button to start a session, which is the
+             assistant companion's.
+  req F-4.8: A spec offers the views its dialects give: its text always, and the canvas and the board when it uses the
+             features dialect (`org.dxos.spec.features`), whose feature embeds and `/feature` its text then also has.
+             The view toggle shows only when a spec has more than one view. The Extensions menu lists the dialects
+             plugins contribute (`ProjectCapabilities.SpecDialect`) and checks the ones the spec uses. Adding a
+             feature to a spec turns the features dialect on.
+  req F-4.9: The canvas offers a `+` in each empty cell next to its cards, or in the centre of an empty map, which adds
+             a new feature or an existing one in that cell, fixing the other cards where they are drawn. It has no up
+             or home button: a feature map does not nest scenes, and a double-click opens a feature's own level.
 ```
 
 ## QA
@@ -356,7 +368,7 @@ test QA-6: Walk a spec's feature map
       do: Double-click the "Provider sync" card.
       expect: the canvas shows its two subfeatures, and the trail reads All features › Provider sync
     - name: Add a subfeature
-      do: Click New feature.
+      do: Click the `+` in an empty cell, then New feature.
       expect: a third card appears on the nested spec and the companion shows "New feature"
     - name: Zoom back out
       do: Click "All features" in the trail.
@@ -416,7 +428,7 @@ test QA-8: Switch between a project's specs
     a dropdown in the toolbar, which also adds a spec. Walked by the autocue flow `project-specs` against the ProjectArticle story "Default",
     whose project "Project 1" owns the specs "Inbox and agents" and "Launch talk".
   actors: human
-  covers: [F-4.1, F-4.4, F-4.5]
+  covers: [F-4.1, F-4.4, F-4.5, F-4.7, F-4.8, F-4.9]
   status: unverified
   given:
     - storybook serves plugin-projects
@@ -425,22 +437,30 @@ test QA-8: Switch between a project's specs
   steps:
     - name: See the project's specs
       do: Open the project "Project 1" on its Overview.
-      expect: one summary line per spec, "Inbox and agents" counting its features and then "Launch talk"
+      expect: one summary line per spec, "Inbox and agents" counting its features and then "Launch talk", and the
+        toolbar offers Create artifact
     - name: Open the Specs tab
       do: Click the Specs tab.
-      expect: the tab shows "Inbox and agents", whose document embeds each of its features as a section
+      expect: the tab shows "Inbox and agents", whose document embeds each of its features as a section, and the
+        toolbar holds the spec dropdown, the view toggle and Extensions instead of Create artifact
     - name: List the specs
       do: Click the spec dropdown in the toolbar.
       expect: the menu lists "Inbox and agents", checked, and "Launch talk", and ends in Add spec
     - name: Pick the other spec
       do: Click "Launch talk".
-      expect: the tab shows "Launch talk", three paragraphs of prose and no feature sections
+      expect: the tab shows "Launch talk", three paragraphs of prose and no feature sections, and no view toggle
+    - name: Give it the features extension
+      do: Open Extensions and check Features.
+      expect: the view toggle appears, offering the spec's text, Canvas and Kanban
     - name: Add a spec
       do: Click Add spec in the dropdown, name the spec "Release notes" and click Create.
       expect: the tab shows "Release notes", whose document is its front matter alone, and the dropdown lists it third
     - name: Go back to the feature map
       do: Pick "Inbox and agents" from the dropdown, then click Canvas.
-      expect: the canvas shows the eight feature cards of "Inbox and agents"
+      expect: the canvas shows the eight feature cards of "Inbox and agents", and no up or home button
+    - name: Add a feature on the canvas
+      do: Click the `+` in an empty cell, then New feature.
+      expect: a ninth card, "New feature", appears in that cell
 ```
 
 ## Changelog
@@ -955,4 +975,129 @@ decision D-59: Creating a spec asks for its name, which is required and heads th
   why: The spec form opened by Add spec had no field to show, so the dialog stayed empty and no spec could be added.
   rejected:
     - Creating an unnamed spec at once, which leaves a picker entry with no label.
+```
+
+```mdl
+decision D-60: The project article's toolbar is contextual: the tabs stay on the left, and what follows them changes with the tab shown.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.7]
+```
+
+```mdl
+decision D-61: The toolbar has no button to start a session: that is the assistant companion's, which already has a place.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.7]
+```
+
+```mdl
+decision D-62: Assign to agent and the Gantt chart toggle are relevant only to the task list, so they show only on the Tasks tab.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.7]
+```
+
+```mdl
+decision D-63: Create artifact is not in the overflow menu, and it shows only on the Overview.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.7]
+```
+
+```mdl
+decision D-64: On the Specs tab the toolbar holds the dropdown that picks the spec, the toggle between the spec's views, and a multi-select menu of the extensions the spec has.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.7, F-4.8]
+```
+
+```mdl
+decision D-65: Adding a feature is not a toolbar action: the canvas has a plus button in each of its cells that adds a feature there.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.9]
+```
+
+```mdl
+decision D-66: A spec has only the views its extensions give. A spec without the features extension, such as "Launch talk", has no canvas or kanban view.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.8]
+```
+
+```mdl
+decision D-67: The feature map's canvas has no up or home button. Those belong to a diagram that nests scenes within one object.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-4.9]
+```
+
+```mdl
+decision D-68: The extensions are the spec's dialects. Plugins contribute the dialects a spec can use as `ProjectCapabilities.SpecDialect`, and the Extensions menu lists them and checks the ones in `Spec.dialects`. This plugin contributes the features dialect, `org.dxos.spec.features`, from the module that contributes its editor extensions. Fills in [D-64] and [D-66].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.8]
+  why: The dialect is what a spec already records about the blocks its text uses, so the menu edits data the spec has rather than a new field.
+  rejected:
+    - A separate list of enabled views on the spec, which could disagree with the dialects its text uses.
+```
+
+```mdl
+decision D-69: A spec in the features dialect offers its text, the canvas and the board; any other spec offers its text alone, and the view toggle hides. Its editor draws feature embeds as sections and offers `/feature` only in the dialect. Fills in [D-66].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.8, F-2.6]
+  why: Without the dialect the text holds no feature blocks, so neither the map's views nor `/feature` apply to it.
+```
+
+```mdl
+decision D-70: Adding a feature to a spec, from the canvas, `/feature`, an operation or a file read in, turns the features dialect on. `FeatureMap.make` makes a spec in the dialect, and the `Spec` 0.2.0 migration gives it to every spec it migrates, all of which were feature maps. Fills in [D-66].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.8]
+  why: An agent adds features through the feature operations without knowing about dialects, and a spec holding features must keep its map.
+  rejected:
+    - Refusing to add a feature to a spec outside the dialect, which would make every agent check the dialect first.
+```
+
+```mdl
+decision D-71: The canvas's plus sits in each empty cell next to the cards, or in the centre cell of an empty map, faint until pointed at, and opens a menu of New feature and Add existing feature, which place the feature in that cell. Placing it first fixes every card where it is drawn, since a new card changes the automatic layout's extent and would shift the cards around that cell. The canvas shows even when the spec holds no features. Fills in [D-65].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.9]
+  why: Only the button takes the pointer, so the empty cells still pan and select; one button per cell with a menu keeps the grid quiet.
+  rejected:
+    - A plus shown only while the pointer is over a cell, which needs the cells to take the pointer and so stops panning from them.
+    - Two buttons per cell, which doubles the marks on the grid.
+```
+
+```mdl
+decision D-72: The board offers no way to add a feature: its empty state points to the canvas and the spec's text. Fills in [D-65].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.9]
+  why: Adding moved off the toolbar, and a new card's column is its status, which the companion sets once it is named.
+```
+
+```mdl
+decision D-73: The project tour drops its step on starting a session from the toolbar. Fills in [D-61].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: The step pointed at the button D-61 removes.
+```
+
+```mdl
+decision D-74: QA-8 also checks each tab's tools, that "Launch talk" has no view toggle until Features is checked in Extensions, and that the canvas adds a feature in an empty cell and has no up or home button. Fills in [D-60] to [D-67].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-8]
+  why: QA-8 is the walk of a project's specs, so it carries the toolbar and the views those decisions change.
 ```

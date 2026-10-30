@@ -34,6 +34,20 @@ const waitForCount = (page, count) =>
     { timeout: 15_000 },
   );
 
+/** The first canvas `+` the pointer can reach: the outer ring's can sit under the toolbar or past the viewport. */
+const reachableAdd = async (page) => {
+  const index = await page.evaluate(() =>
+    [...document.querySelectorAll('[data-testid="feature-canvas.add"]')].findIndex((button) => {
+      const { x, y, width, height } = button.getBoundingClientRect();
+      return button.contains(document.elementFromPoint(x + width / 2, y + height / 2));
+    }),
+  );
+  if (index === -1) {
+    throw new Error('no reachable add button');
+  }
+  return `[data-testid="feature-canvas.add"] >> nth=${index}`;
+};
+
 export const steps = [
   {
     name: 'Prep (off camera): warm the story',
@@ -76,7 +90,8 @@ export const steps = [
   {
     name: 'Add a subfeature',
     run: async ({ demo, page }) => {
-      await caption(demo, 4, 'Click New feature');
+      await caption(demo, 4, 'Click the + in an empty cell, then New feature');
+      await demo.click({ selector: await reachableAdd(page), label: 'Add a feature here' });
       await demo.click({ selector: '[data-testid="feature-map.new-feature"]', label: 'New feature' });
       await waitForCount(page, 3);
       await demo.sleep({ ms: BEAT });

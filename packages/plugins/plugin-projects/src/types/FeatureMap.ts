@@ -20,6 +20,12 @@ import * as FeatureEmbed from './FeatureEmbed.ts';
  * them. A feature belongs to one spec (its ECHO parent), and nests by owning a spec of its own that breaks it down.
  */
 
+/** The dialect whose `feat` blocks a feature map's features are; a spec uses it to be drawn as a map. */
+export const DIALECT = 'org.dxos.spec.features';
+
+/** Whether the spec uses the features dialect, which its map views, its feature embeds and `/feature` need. */
+export const usesDialect = (spec: Pick<Spec.Spec, 'dialects'>): boolean => spec.dialects.includes(DIALECT);
+
 /** Where a feature's card sits on its spec's canvas. */
 export const Position = Schema.Struct({ x: Schema.Number, y: Schema.Number });
 export type Position = Schema.Schema.Type<typeof Position>;
@@ -51,8 +57,18 @@ export const getFeatures = (spec: Spec.Spec | Entity.Snapshot): readonly Ref.Ref
 export const getLayout = (spec: Spec.Spec | Entity.Snapshot): Layout | undefined =>
   Annotation.get(spec, LayoutAnnotation).pipe(Option.getOrUndefined);
 
+/** Turns the features dialect on for a spec about to hold features. */
+const addDialect = (spec: Spec.Spec): void => {
+  if (!usesDialect(spec)) {
+    Obj.update(spec, (spec) => {
+      spec.dialects.push(DIALECT);
+    });
+  }
+};
+
 /** Adds the feature to the end of the spec's features, or at `index`, and makes the spec its owner. */
 export const attach = (spec: Spec.Spec, feature: Feature.Feature, index?: number): void => {
+  addDialect(spec);
   const ref = Ref.make(feature);
   if (Option.isNone(Annotation.get(spec, FeaturesAnnotation))) {
     Obj.update(spec, (spec) => {
@@ -90,6 +106,9 @@ export const setFeatures = (spec: Spec.Spec, features: readonly Feature.Feature[
   if (current.length === features.length && features.every((feature, index) => feature.id === current[index])) {
     return;
   }
+  if (features.length > 0) {
+    addDialect(spec);
+  }
   const refs = features.map((feature) => Ref.make(feature));
   if (Option.isNone(Annotation.get(spec, FeaturesAnnotation))) {
     Obj.update(spec, (spec) => {
@@ -125,9 +144,9 @@ export type MakeProps = Omit<Spec.MakeProps, 'content'> & {
   features?: readonly Feature.Feature[];
 };
 
-/** A spec holding `features`, its text headed with its name and embedding each of them. */
-export const make = ({ features = [], ...props }: MakeProps): Spec.Spec => {
-  const spec = Spec.make({ ...props, content: makeContent(props.name, features) });
+/** A spec in the features dialect holding `features`, its text headed with its name and embedding each of them. */
+export const make = ({ features = [], dialects = [DIALECT], ...props }: MakeProps): Spec.Spec => {
+  const spec = Spec.make({ ...props, dialects, content: makeContent(props.name, features) });
   if (features.length > 0) {
     setFeatures(spec, features);
   }

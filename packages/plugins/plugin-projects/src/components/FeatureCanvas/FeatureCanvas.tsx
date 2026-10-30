@@ -32,6 +32,7 @@ import {
 import * as Layout from '@dxos/react-ui/Layout';
 
 import { FeatureCard, type FeatureLookup, type FeatureModel, makeFeatureLookup } from '../FeatureCard/index.ts';
+import { FeatureCanvasCells } from './FeatureCanvasCells.tsx';
 
 const FEATURE_NODE_TYPE = 'feature';
 
@@ -148,6 +149,10 @@ export type FeatureCanvasProps = {
   onRemove?: (id: string) => void;
   /** A box to select from outside, as for a feature just created. */
   selectedId?: string;
+  /** A new feature in the empty cell centred on a point; without it and `onAdd`, empty cells offer nothing. */
+  onCreate?: (position: Point) => void;
+  /** An existing feature moved into the empty cell centred on a point. */
+  onAdd?: (position: Point) => void;
   /** How boxes take their lattice cells (see `Arrangement`); fewest crossing arrows by default. */
   arrange?: Arrangement;
   /** Strengths of the force arrangements. */
@@ -158,9 +163,9 @@ export type FeatureCanvasProps = {
 
 /**
  * The canvas view of one level of a spec's features: each feature's card in a box, laid out by dependency rank with
- * a gutter-routed arrow per dependency. A click selects a box and a double-click zooms into it. Boxes always move;
- * drawing and deleting arrows and boxes are offered for each callback given, and change the model rather than the
- * picture, so a refused edit never appears.
+ * a gutter-routed arrow per dependency. A click selects a box and a double-click zooms into it; a `+` in an empty cell
+ * next to the boxes adds a feature there. Boxes always move; drawing and deleting arrows and boxes are offered for each
+ * callback given, and change the model rather than the picture, so a refused edit never appears.
  */
 export const FeatureCanvas = ({
   features,
@@ -172,6 +177,8 @@ export const FeatureCanvas = ({
   onUnlink,
   onRemove,
   selectedId,
+  onCreate,
+  onAdd,
   arrange = 'crossings',
   force,
   lattice = true,
@@ -214,6 +221,12 @@ export const FeatureCanvas = ({
       }
     }
   }, [atomRegistry, atoms, selectedId, lookup]);
+
+  const handlePin = useCallback(
+    (centers: Record<string, Point>) =>
+      atomRegistry.set(overlay, { positions: { ...centers, ...atomRegistry.get(overlay).positions } }),
+    [atomRegistry, overlay],
+  );
 
   // Positions come back from the database after every drag and from other peers; only a real change re-lays out.
   useEffect(() => {
@@ -290,8 +303,8 @@ export const FeatureCanvas = ({
         // The lattice guides are the board's structure; dots between them would only add noise.
         backgroundGrid='none'
       >
-        <Canvas.Viewport />
-        <Canvas.Navigation />
+        {/* No navigation bar: a feature map does not nest scenes, a double-click opens the feature's own level. */}
+        <Canvas.Viewport overlay={<FeatureCanvasCells onCreate={onCreate} onAdd={onAdd} onPin={handlePin} />} />
       </Canvas.Root>
     </FeatureNodeContext.Provider>
   );

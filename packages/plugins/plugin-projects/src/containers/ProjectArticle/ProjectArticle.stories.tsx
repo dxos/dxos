@@ -303,6 +303,20 @@ const MockDeckOperationsPlugin = Plugin.define(
   }),
 ).pipe(Plugin.addModule(MockDeckOperations), Plugin.make);
 
+/** A canvas cell's `+` the pointer can reach: the outer ring's can sit under the toolbar or past the viewport. */
+const findReachableAdd = (container: HTMLElement) =>
+  waitFor(() => {
+    const button = within(container)
+      .getAllByTestId('feature-canvas.add')
+      .find((button) => {
+        const { x, y, width, height } = button.getBoundingClientRect();
+        return button.contains(document.elementFromPoint(x + width / 2, y + height / 2));
+      });
+    if (!button) {
+      throw new Error('no reachable add button');
+    }
+    return button;
+  });
 const meta = {
   title: 'plugins/plugin-projects/containers/ProjectArticle',
   render: DefaultStory,
@@ -413,20 +427,44 @@ export const WithSpec: Story = {
     await expect(canvas.getByTestId('projectsPlugin.tab.spec').getAttribute('aria-selected')).toBe('true');
     await expect(canvas.queryByTestId('projectsPlugin.addSpec')).toBeNull();
 
-    // The view modes sit on the toolbar; on a map, adding features is in its overflow, ahead of Create artifact.
+    // The toolbar holds the Specs tab's tools only: the views sit on it, and adding features is on the canvas.
+    await expect(canvas.queryByTestId('projectsPlugin.addArtifact')).toBeNull();
+    await expect(canvas.queryByTestId('projectsPlugin.delegateTasks')).toBeNull();
+    await expect(canvas.queryByTestId('projectsPlugin.overflow')).toBeNull();
     await userEvent.click(canvas.getByTestId('projectsPlugin.featureMap.canvas'));
     await expect(canvas.findByTestId('feature-map.canvas', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    await userEvent.click(canvas.getByTestId('projectsPlugin.overflow'));
+    await userEvent.click(await findReachableAdd(canvasElement));
     const menu = await screen.findByRole('menu', undefined, { timeout: 10_000 });
     const items = within(menu)
       .getAllByRole('menuitem')
       .map((item) => item.getAttribute('data-testid'));
-    await expect(items).toEqual(['feature-map.new-feature', 'feature-map.add-feature', 'projectsPlugin.addArtifact']);
-    await expect(within(menu).getAllByRole('separator')).toHaveLength(1);
+    await expect(items).toEqual(['feature-map.new-feature', 'feature-map.add-feature']);
   },
 };
 
-/** Add existing feature, in the overflow, moves a feature from elsewhere onto the level's map, picked in a dialog. */
+/** Each tab's tools follow the tabs: Create artifact on the Overview, the agent and the chart on the Tasks tab. */
+export const ToolbarByTab: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+    await expect(
+      canvas.findByTestId('projectsPlugin.addArtifact', undefined, { timeout: 10_000 }),
+    ).resolves.toBeTruthy();
+    await expect(canvas.queryByTestId('projectsPlugin.delegateTasks')).toBeNull();
+    await expect(canvas.queryByTestId('projectsPlugin.createChat')).toBeNull();
+
+    await showTab(canvas, 'tasks');
+    await expect(
+      canvas.findByTestId('projectsPlugin.delegateTasks', undefined, { timeout: 10_000 }),
+    ).resolves.toBeTruthy();
+    await expect(canvas.getByTestId('projectsPlugin.pipeline')).toBeTruthy();
+    await expect(canvas.queryByTestId('projectsPlugin.addArtifact')).toBeNull();
+    await expect(canvas.queryByTestId('projectsPlugin.specPicker')).toBeNull();
+  },
+};
+
+/** The `+` in an empty cell of the canvas moves a feature from elsewhere onto the level's map, picked in a dialog. */
 export const AddExistingFeature: Story = {
   ...Default,
   play: async ({ canvasElement }) => {
@@ -437,7 +475,7 @@ export const AddExistingFeature: Story = {
       await canvas.findByTestId('projectsPlugin.featureMap.canvas', undefined, { timeout: 10_000 }),
     );
     await expect(canvas.findByTestId('feature-map.canvas', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    await userEvent.click(canvas.getByTestId('projectsPlugin.overflow'));
+    await userEvent.click(await findReachableAdd(canvasElement));
     await userEvent.click(await screen.findByTestId('feature-map.add-feature'));
     const dialog = await screen.findByRole('dialog', undefined, { timeout: 10_000 });
     // The map's own features are not offered; a subfeature from beneath one is.
@@ -478,6 +516,8 @@ export const SpecPicker: Story = {
       () => expect(canvas.getByTestId('feature-map.document').textContent).toContain(`name: ${TALK_SPEC_NAME}`),
       { timeout: 10_000 },
     );
+    // A spec of prose has only its text, so there is no view toggle.
+    await expect(canvas.queryByTestId('projectsPlugin.featureMap.canvas')).toBeNull();
 
     // Add spec asks for a name, then shows the new spec.
     await userEvent.click(canvas.getByTestId('projectsPlugin.specPicker'));
@@ -491,6 +531,32 @@ export const SpecPicker: Story = {
       () => expect(canvas.getByTestId('feature-map.document').textContent).toContain(`name: ${NEW_SPEC_NAME}`),
       { timeout: 10_000 },
     );
+  },
+};
+
+/** Checking the features dialect in the Extensions menu gives a spec of prose the map's views. */
+export const SpecDialects: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+    await showTab(canvas, 'spec');
+    await userEvent.click(await canvas.findByTestId('projectsPlugin.specPicker', undefined, { timeout: 10_000 }));
+    await userEvent.click(
+      within(await screen.findByRole('menu', undefined, { timeout: 10_000 })).getByText(TALK_SPEC_NAME),
+    );
+    await waitFor(() => expect(canvas.queryByTestId('projectsPlugin.featureMap.canvas')).toBeNull(), {
+      timeout: 10_000,
+    });
+
+    await userEvent.click(await canvas.findByTestId('projectsPlugin.specDialects', undefined, { timeout: 10_000 }));
+    const menu = await screen.findByRole('menu', undefined, { timeout: 10_000 });
+    const features = within(menu).getByText('Features');
+    await expect(features.closest('[role="menuitemcheckbox"]')?.getAttribute('aria-checked')).toBe('false');
+    await userEvent.click(features);
+    await expect(
+      canvas.findByTestId('projectsPlugin.featureMap.canvas', undefined, { timeout: 10_000 }),
+    ).resolves.toBeTruthy();
   },
 };
 

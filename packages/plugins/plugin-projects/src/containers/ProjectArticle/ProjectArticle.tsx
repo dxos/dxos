@@ -22,7 +22,6 @@ import * as Spec from '@dxos/compute/Spec';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
-import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as InstructionsEditor from '@dxos/plugin-routine/InstructionsEditor';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as TasksUtil from '@dxos/plugin-tasks/TasksUtil';
@@ -154,17 +153,8 @@ export const ProjectArticle = ({ role, subject, attendableId, spec: levelSpec, f
     [openLevel, feature, spec],
   );
   const lineage = useMemo(() => (feature ? FeatureMap.getLineage(feature).map(({ id }) => id) : []), [feature]);
-  const {
-    mode,
-    actions: specActions,
-    featureActions,
-  } = useSpecMapActions({
-    db,
-    spec,
-    viewId: subject.id,
-    attendableId,
-    exclude: lineage,
-  });
+  const { mode, actions: specActions } = useSpecMapActions({ spec, viewId: subject.id });
+  const dialectActions = useSpecDialectActions(spec);
   // A level's tasks are the ones working on its feature or any feature beneath it.
   const scope = useLevelTaskIds(feature, spec);
   // The rows the embedded `TaskSetArticle` has checked; the toolbar arms its delegate action on them.
@@ -268,13 +258,13 @@ export const ProjectArticle = ({ role, subject, attendableId, spec: levelSpec, f
     selectSpec(added);
   }, [subject, attendableId, invokePromise, updateProject, selectSpec]);
 
-  // The spec picker leads the Specs tab's tools at the top of a spec; a feature's level is inside one spec already.
   const pickerActions = useSpecPickerActions({
     specs,
     selected: feature ? undefined : spec,
     onSelect: selectSpec,
     onAdd: () => void handleAddSpec(),
   });
+  // The Specs tab's tools: which spec, its views, and its dialects. A feature's level is inside one spec already.
   const levelActions = useCallback<ActionGroupBuilderFn>(
     (group) => {
       if (!feature) {
@@ -282,16 +272,17 @@ export const ProjectArticle = ({ role, subject, attendableId, spec: levelSpec, f
       }
       if (spec) {
         specActions(group);
+        dialectActions(group);
       }
     },
-    [feature, spec, pickerActions, specActions],
+    [feature, spec, pickerActions, specActions, dialectActions],
   );
 
   const menuActions = useToolbarActions({
     project: subject,
+    tab,
     tabs,
-    specActions: tab === 'spec' && spec ? levelActions : undefined,
-    featureActions: tab === 'spec' && spec ? featureActions : undefined,
+    specActions: spec ? levelActions : undefined,
     checkedTasks: delegatableTasks,
     showPipeline,
     onAddArtifact: () => void handleAddArtifact(),
@@ -479,7 +470,7 @@ export const ProjectArticle = ({ role, subject, attendableId, spec: levelSpec, f
           {tab === 'spec' &&
             (spec ? (
               <Suspense fallback={null}>
-                <SpecMap spec={spec} mode={mode} attendableId={attendableId} onZoom={handleZoom} />
+                <SpecMap spec={spec} mode={mode} attendableId={attendableId} exclude={lineage} onZoom={handleZoom} />
               </Suspense>
             ) : (
               <AddSpec project={subject} feature={feature} />
@@ -666,6 +657,52 @@ const useSpecPickerActions = ({ specs, selected, onSelect, onAdd }: SpecPickerAc
   );
 };
 
+/** A multi-select of the dialects plugins offer, checking the ones the spec uses; a dialect's views show once checked. */
+const useSpecDialectActions = (spec: Spec.Spec | undefined) => {
+  const dialects = Hooks.useCapabilities(ProjectCapabilities.SpecDialect);
+  const [used] = useObject(spec, 'dialects');
+  const toggle = useCallback(
+    (id: string) =>
+      spec &&
+      Obj.update(spec, (spec) => {
+        const index = spec.dialects.indexOf(id);
+        if (index === -1) {
+          spec.dialects.push(id);
+        } else {
+          spec.dialects.splice(index, 1);
+        }
+      }),
+    [spec],
+  );
+  return useCallback<ActionGroupBuilderFn>(
+    (group) => {
+      if (!spec || dialects.length === 0) {
+        return;
+      }
+      group.group(
+        'dialects',
+        {
+          variant: 'dropdownMenu',
+          selectCardinality: 'multiple',
+          value: [...(used ?? [])],
+          icon: 'ph--puzzle-piece--regular',
+          label: ['spec-dialects.label', { ns: ProjectsNamespace.key }],
+          testId: 'projectsPlugin.specDialects',
+        },
+        (group) =>
+          dialects.forEach(({ id, label }) =>
+            group.action(
+              id,
+              { label, checked: used?.includes(id) ?? false, testId: `projectsPlugin.specDialect.${id}` },
+              () => toggle(id),
+            ),
+          ),
+      );
+    },
+    [spec, dialects, used, toggle],
+  );
+};
+
 /**
  * Ids of the tasks working on the feature or any feature beneath it, through its breakdown; undefined at the project's
  * own level, whose tasks are all of them.
@@ -776,12 +813,12 @@ export const SpecLevelArticle = ({ subject, ...props }: SpecLevelArticleProps) =
 
 export type ToolbarActionsProps = {
   project: Project.Project;
+  /** The tab shown, whose tools follow the tabs. */
+  tab: ProjectView.Tab;
   /** The view tabs, rendered as the bar's leading item. */
   tabs: ReactNode;
-  /** The level's spec picker and map actions, on the Specs tab: placed after the tabs. */
+  /** The level's spec picker, view toggle and dialects, shown on the Specs tab. */
   specActions?: ActionGroupBuilderFn;
-  /** Adding features to the level's map, offered with the same condition: grouped first in the overflow. */
-  featureActions?: ActionGroupBuilderFn;
   /** The checked rows not already with the agent, which the delegate action hands to one chat, in this order. */
   checkedTasks: readonly Task.Task[];
   /** Whether the pipeline chart is shown under the ledger. */
@@ -793,15 +830,14 @@ export type ToolbarActionsProps = {
 };
 
 /**
- * The toolbar's own actions. Deliberately not spliced from the app graph: toolbar and navtree
- * actions are expected to diverge as the toolbar grows, and the graph's create-chat action serves
- * the navtree row.
+ * The toolbar: the tabs, then the shown tab's own tools. Deliberately not spliced from the app graph: toolbar and
+ * navtree actions are expected to diverge, and a session with the project is the assistant companion's to start.
  */
 const useToolbarActions = ({
   project,
+  tab,
   tabs,
   specActions,
-  featureActions,
   checkedTasks,
   showPipeline,
   onAddArtifact,
@@ -812,25 +848,6 @@ const useToolbarActions = ({
   // The handler resolves `Database.Service`, which only the space context supplies — without this
   // the invocation fails with ServiceNotAvailable.
   const spaceId = Obj.getDatabase(project)?.spaceId;
-
-  // Persisted on click rather than on the first message, so the chat is in the navtree straight away;
-  // the parent edge before the add is what files it under the project rather than the space root.
-  const createChat = useCallback(async () => {
-    if (!spaceId) {
-      return;
-    }
-
-    const { data } = await invokePromise(AssistantOperation.CreateChat, {}, { spaceId });
-    const chat = data?.object;
-    if (!chat) {
-      return;
-    }
-
-    Chat.linkCompanion({ chat, subject: project });
-    Chat.seedSession(chat, project.session);
-    await invokePromise(SpaceOperation.AddObject, { object: chat }, { spaceId });
-    await invokePromise(AssistantOperation.SetCurrentChat, { companionTo: project, chat }, { spaceId });
-  }, [invokePromise, project, spaceId]);
 
   // Held in state so the bar redraws disabled for the whole invocation: a ref would guard the
   // handler but leave the button live, and the operation runs long enough (chat, bind, first turn)
@@ -873,93 +890,71 @@ const useToolbarActions = ({
           },
           () => {},
         )
-        // The map's views sit between two gaps, centred between the tabs and the tools, so the level needs no second bar.
         .separator()
+        .subgraph(tab === 'spec' ? specActions : undefined)
         .subgraph(
-          specActions &&
-            ((group) => {
-              specActions(group);
-              group.separator();
-            }),
+          tab === 'overview'
+            ? (group) =>
+                group.action(
+                  'add-artifact',
+                  {
+                    label: ['create-artifact.label', { ns: ProjectsNamespace.key }],
+                    icon: 'ph--plus--regular',
+                    disposition: 'toolbar',
+                    testId: 'projectsPlugin.addArtifact',
+                  },
+                  onAddArtifact,
+                )
+            : undefined,
         )
-        .action(
-          'create-chat',
-          {
-            label: ['create-chat.label', { ns: ProjectsNamespace.key }],
-            icon: 'ph--sparkle--regular',
-            disposition: 'toolbar',
-            testId: 'projectsPlugin.createChat',
-          },
-          () => void createChat(),
-        )
-        // Beside create-chat rather than in the overflow: it is the same gesture — start a session
-        // — and it is dead until rows are checked, so a reader who checks some needs to see it.
-        .action(
-          'delegate-tasks',
-          {
-            label: ['delegate-tasks.label', { ns: ProjectsNamespace.key }],
-            icon: 'ph--paper-plane-tilt--regular',
-            disposition: 'toolbar',
-            disabled: checkedTasks.length === 0 || delegating,
-            testId: 'projectsPlugin.delegateTasks',
-          },
-          () => void delegateTasks(),
-        )
-        // A toggle rather than a tab: the chart accompanies the ledger rather than replacing it.
-        .group(
-          'view',
-          {
-            label: ['view.label', { ns: ProjectsNamespace.key }],
-            variant: 'toggleGroup',
-            selectCardinality: 'multiple',
-            value: showPipeline ? ['pipeline'] : [],
-          },
-          (group) =>
-            group.action(
-              'pipeline',
-              {
-                label: [showPipeline ? 'hide-pipeline.label' : 'show-pipeline.label', { ns: ProjectsNamespace.key }],
-                icon: 'ph--chart-bar-horizontal--regular',
-                testId: 'projectsPlugin.pipeline',
-              },
-              onTogglePipeline,
-            ),
-        )
-        // In the trailing overflow rather than on the toolbar: adding an artifact or a feature is
-        // occasional next to starting a chat, and a bare `+` beside the tabs read as adding a tab.
-        .menu(
-          'overflow',
-          (group) =>
-            group
-              .subgraph(
-                featureActions &&
-                  ((group) => {
-                    featureActions(group);
-                    group.separator('line');
-                  }),
-              )
-              .action(
-                'add-artifact',
-                {
-                  label: ['create-artifact.label', { ns: ProjectsNamespace.key }],
-                  icon: 'ph--plus--regular',
-                  testId: 'projectsPlugin.addArtifact',
-                },
-                onAddArtifact,
-              ),
-          'projectsPlugin.overflow',
+        .subgraph(
+          tab === 'tasks'
+            ? (group) =>
+                group
+                  // Dead until rows are checked, so a reader who checks some sees it come alive.
+                  .action(
+                    'delegate-tasks',
+                    {
+                      label: ['delegate-tasks.label', { ns: ProjectsNamespace.key }],
+                      icon: 'ph--paper-plane-tilt--regular',
+                      disposition: 'toolbar',
+                      disabled: checkedTasks.length === 0 || delegating,
+                      testId: 'projectsPlugin.delegateTasks',
+                    },
+                    () => void delegateTasks(),
+                  )
+                  // A toggle rather than a tab: the chart accompanies the ledger rather than replacing it.
+                  .group(
+                    'view',
+                    {
+                      label: ['view.label', { ns: ProjectsNamespace.key }],
+                      variant: 'toggleGroup',
+                      selectCardinality: 'multiple',
+                      value: showPipeline ? ['pipeline'] : [],
+                    },
+                    (group) =>
+                      group.action(
+                        'pipeline',
+                        {
+                          label: [
+                            showPipeline ? 'hide-pipeline.label' : 'show-pipeline.label',
+                            { ns: ProjectsNamespace.key },
+                          ],
+                          icon: 'ph--chart-bar-horizontal--regular',
+                          testId: 'projectsPlugin.pipeline',
+                        },
+                        onTogglePipeline,
+                      ),
+                  )
+            : undefined,
         )
         .build(),
     [
-      project,
+      tab,
       tabs,
-      spaceId,
-      invokePromise,
       onAddArtifact,
-      createChat,
       delegateTasks,
       specActions,
-      featureActions,
       checkedTasks.length,
       delegating,
       showPipeline,

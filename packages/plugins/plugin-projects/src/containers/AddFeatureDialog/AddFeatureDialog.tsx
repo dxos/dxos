@@ -14,7 +14,7 @@ import * as Dialog from '@dxos/react-ui/Dialog';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 
-import { Feature } from '#types';
+import { Feature, FeatureMap } from '#types';
 
 import { useFeatureEditing } from '../../hooks/index.ts';
 import { ProjectsNamespace } from '../../namespace.ts';
@@ -26,10 +26,12 @@ export type AddFeatureDialogProps = {
   parentId?: string;
   /** Not offered besides the map's own features: the features above it. */
   exclude?: readonly string[];
+  /** Where the feature's card goes on the spec's canvas. */
+  position?: FeatureMap.Position;
 };
 
 /** Picks a feature from elsewhere in the space and moves it onto a spec's map. */
-export const AddFeatureDialog = ({ spec, parentId, exclude }: AddFeatureDialogProps) => {
+export const AddFeatureDialog = ({ spec, parentId, exclude, position }: AddFeatureDialogProps) => {
   const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(spec);
@@ -47,9 +49,12 @@ export const AddFeatureDialog = ({ spec, parentId, exclude }: AddFeatureDialogPr
   const handleSelect = useCallback(
     (feature: Feature.Feature) => {
       editing.moveFeature(feature.id, parentId);
+      if (position && !parentId) {
+        FeatureMap.setPosition(spec, feature.id, position);
+      }
       void invokePromise(LayoutOperation.UpdateDialog, { state: false });
     },
-    [editing, parentId, invokePromise],
+    [editing, spec, parentId, position, invokePromise],
   );
 
   return (

@@ -111,6 +111,20 @@ const findKanbanColumn = (canvasElement: HTMLElement, status: string) => {
   return column;
 };
 
+/** A canvas cell's `+` the pointer can reach: the outer ring's can sit under the toolbar or past the viewport. */
+const findReachableAdd = (container: HTMLElement) =>
+  waitFor(() => {
+    const button = within(container)
+      .getAllByTestId('feature-canvas.add')
+      .find((button) => {
+        const { x, y, width, height } = button.getBoundingClientRect();
+        return button.contains(document.elementFromPoint(x + width / 2, y + height / 2));
+      });
+    if (!button) {
+      throw new Error('no reachable add button');
+    }
+    return button;
+  });
 const meta = {
   title: 'plugins/plugin-projects/containers/SpecFeatures',
   render: DefaultStory,
@@ -202,13 +216,13 @@ export const EditInCompanion: Story = {
   },
 };
 
-/** The overflow's Add new feature adds one to the level shown and selects it, so it is named in the companion. */
+/** A `+` in an empty cell adds a new feature there and selects it, so it is named in the companion. */
 export const NewFeature: Story = {
   play: async ({ canvasElement }) => {
     await showCanvas(canvasElement);
     const canvas = within(canvasElement);
     await waitFor(() => expect(canvas.getAllByTestId('feature-canvas-node')).toHaveLength(8), { timeout: 10_000 });
-    await userEvent.click(canvas.getByTestId('feature-map.overflow'));
+    await userEvent.click(await findReachableAdd(canvasElement));
     await userEvent.click(await screen.findByTestId('feature-map.new-feature'));
     await waitFor(() => expect(canvas.getAllByTestId('feature-canvas-node')).toHaveLength(9), { timeout: 5_000 });
     const detail = await companion();
