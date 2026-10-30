@@ -18,6 +18,14 @@ produced (`SceneView2D` on react-ui-canvas's own model, `SceneView3D` on `@dxos/
    id with per-element overrides, and resolved through shared **style catalogs** (custom catalogs as ECHO objects;
    themes as the default catalogs).
 
+7. (2026-10-30) Every field react-ui-canvas records carry today (ports, path/polyline points, view and portal links,
+   z order, lattice cells, constraint and dynamic models, generators, diagram shapes, timelines) becomes a typed field
+   of `Element2D` (or `Layout2D` where it belongs to the layout), not an untyped `props` entry.
+8. (2026-10-30) Gestures stay in memory while they run (drag, resize, rotate, orbit, drag-to-create) and commit one
+   intent on release, in both dimensions, so editing is smooth on ECHO.
+9. (2026-10-30) Work stays in one PR: get the basics working, then focus on tests and storybooks to review each
+   aspect.
+
 ## Why
 
 Stage 3 shared leaf components but not the editor. 2D still edits react-ui-canvas records and an adapter translates
@@ -49,8 +57,8 @@ LayoutIntent | ModelIntent                                        // the one edi
 ```
 
 2D-only data that today lives in react-ui-canvas records (ports, path points, view/portal links, lattice and
-constraint models) moves into `props` under documented keys or into typed fields on `BaseElement` where both
-dimensions need it. Deciding each is part of step 1 below.
+constraint models) becomes typed fields of `Element2D` or `Layout2D` (decision 7); fields both dimensions need move to
+`BaseElement`.
 
 ### Styles
 
