@@ -22,7 +22,7 @@ import type * as Types from 'effect/Types';
 
 import { Annotation, DXN, JsonSchema, type Key, Migration, Obj, Ref, Type } from '@dxos/echo';
 import { assertArgument, invariant } from '@dxos/invariant';
-import type { URI } from '@dxos/keys';
+import { EntityId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type NoHandlerError, RunAgainError } from './errors.ts';
@@ -853,7 +853,9 @@ export const serialize = (operation: Definition.Any, options?: Obj.MakeOptions):
         key: operation.meta.key,
         version: operation.meta.version ?? '0.0.0',
         keys: operation.meta.deployedId ? [{ source: FUNCTION_META_KEY, id: operation.meta.deployedId }] : [],
-        annotations: operation.meta.annotations,
+        // A copy: `Obj.make` adopts the meta object it is given, which would tie the definition's own annotations to
+        // (and re-prototype them for) the last record serialized from it.
+        annotations: operation.meta.annotations && structuredClone(operation.meta.annotations),
       },
       name: operation.meta.name ?? '',
       description: operation.meta.description,
@@ -866,6 +868,39 @@ export const serialize = (operation: Definition.Any, options?: Obj.MakeOptions):
     },
     options,
   );
+};
+
+/**
+ * The JSON form of the record {@link serialize} would build: `Obj.toJSON(serialize(operation))`, without creating the
+ * ECHO object. For hosts that only ever send the record over a wire (an operation catalog), where validating, stamping
+ * and proxying every record dominates the cost.
+ *
+ * Unlike {@link serialize}, the id is derived from the operation's key and version, so the same definition always
+ * yields the same JSON. Throws, like {@link serialize}, when the input or output schema cannot render as JSON Schema.
+ */
+export const toJSON = (operation: Definition.Any): Obj.JSON => {
+  const key = operation.meta.key;
+  const version = operation.meta.version ?? '0.0.0';
+  const annotations = operation.meta.annotations;
+  return {
+    'id': EntityId.deterministic(key, version),
+    '@type': Type.getURI(PersistentOperation),
+    '@meta': {
+      keys: operation.meta.deployedId ? [{ source: FUNCTION_META_KEY, id: operation.meta.deployedId }] : [],
+      key,
+      version,
+      // Omitted when empty, as `Obj.toJSON` does.
+      ...(annotations != null && Object.keys(annotations).length > 0
+        ? { annotations: structuredClone(annotations) }
+        : {}),
+    },
+    'name': operation.meta.name ?? '',
+    'description': operation.meta.description,
+    'icon': operation.meta.icon,
+    'inputSchema': JsonSchema.toJsonSchema(operation.input),
+    'outputSchema': JsonSchema.toJsonSchema(operation.output),
+    'services': operation.services.map((service) => service.key),
+  };
 };
 
 /**

@@ -6,7 +6,9 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { DXN } from '@dxos/keys';
+import { Obj } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
+import { DXN, EntityId } from '@dxos/keys';
 
 import * as Operation from './Operation.ts';
 
@@ -156,5 +158,72 @@ describe('Operation consent preview', () => {
 
   test('previews nothing for an operation that names no field', ({ expect }) => {
     expect(Operation.getConsentPreview(op, { to: 'dana', body: 'Hi Dana' })).toBeUndefined();
+  });
+});
+
+describe('Operation.toJSON', () => {
+  const definitions = [
+    Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY, name: 'Test Op' } }),
+    Operation.make({
+      input: Schema.Struct({ query: Schema.String, limit: Schema.optional(Schema.Number) }),
+      output: Schema.Array(Schema.String),
+      meta: {
+        key: DXN.make('com.example.operation.search'),
+        name: 'Search',
+        description: 'Searches.',
+        icon: 'ph--magnifying-glass--regular',
+        version: '1.2.0',
+        deployedId: 'dxn:com.example.operation.search',
+      },
+    }).pipe(Operation.visible),
+    Operation.make({
+      input: Schema.Unknown,
+      output: Schema.Void,
+      meta: { key: DXN.make('com.example.operation.unknown'), name: 'Unknown' },
+    }),
+  ];
+
+  test('matches Obj.toJSON of the serialized record, apart from the id', ({ expect }) => {
+    for (const definition of definitions) {
+      const { id: _plainId, ...plain } = Operation.toJSON(definition);
+      const { id: _recordId, ...record } = Obj.toJSON(Operation.serialize(definition));
+      // Compared as JSON, which is what crosses the wire: key order included, `undefined` fields dropped.
+      expect(JSON.stringify(plain)).toEqual(JSON.stringify(record));
+    }
+  });
+
+  test('derives a stable, valid id from key and version', ({ expect }) => {
+    const ids = definitions.map((definition) => Operation.toJSON(definition).id);
+    expect(definitions.map((definition) => Operation.toJSON(definition).id)).toEqual(ids);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const id of ids) {
+      expect(EntityId.isValid(id)).toBe(true);
+    }
+  });
+
+  test('round-trips through Obj.fromJSON and deserialize', async ({ expect }) => {
+    const [, definition] = definitions;
+    const record = await Obj.fromJSON(Operation.toJSON(definition));
+    expect(Obj.instanceOf(Operation.PersistentOperation, record)).toBe(true);
+    invariant(Obj.instanceOf(Operation.PersistentOperation, record));
+    expect(Operation.getKey(record)).toBe(String(definition.meta.key));
+    expect(Operation.isVisible(record)).toBe(true);
+    expect(Operation.deserialize(record).meta.deployedId).toBe(definition.meta.deployedId);
+  });
+});
+
+describe('Operation.serialize', () => {
+  test('does not adopt the definition annotations', ({ expect }) => {
+    const definition = Operation.make({
+      input: Schema.Void,
+      output: Schema.String,
+      meta: { key: KEY, name: 'Test Op' },
+    }).pipe(Operation.visible);
+    const annotations = definition.meta.annotations;
+    const prototype = Object.getPrototypeOf(annotations);
+    const record = Operation.serialize(definition);
+    expect(Obj.getMeta(record).annotations).not.toBe(annotations);
+    expect(Object.getPrototypeOf(annotations)).toBe(prototype);
+    expect(Operation.isVisible(record)).toBe(true);
   });
 });
