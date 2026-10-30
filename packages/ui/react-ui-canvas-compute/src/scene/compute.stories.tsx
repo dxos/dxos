@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
@@ -35,12 +35,25 @@ import { CanvasBoard } from '../types/index.ts';
 // compute projection mirrors into the controller's graph.
 //
 
+type Circuit = ReturnType<typeof createEmptyCircuit>;
+
 type StoryProps = {
   controller: ComputeGraphController;
-  board: CanvasBoard.CanvasBoard;
+  circuit: Circuit;
 };
 
-const DefaultStory = ({ controller, board }: StoryProps) => {
+const DefaultStory = ({ controller, circuit }: StoryProps) => {
+  // Made in the render, not the args: storybook rewrites the args' functions, which an ECHO object refuses.
+  const board = useMemo(
+    () =>
+      CanvasBoard.make({
+        name: 'Circuit',
+        layout: { nodes: [...circuit.nodes], edges: [...circuit.edges] },
+        computeGraph: Ref.make(controller.graph.root),
+      }),
+    [controller, circuit],
+  );
+
   useEffect(() => {
     void controller.open();
     return () => {
@@ -65,7 +78,7 @@ const meta = {
   parameters: { layout: 'fullscreen', translations: uiTranslations },
   argTypes: {
     controller: { table: { disable: true } },
-    board: { table: { disable: true } },
+    circuit: { table: { disable: true } },
   },
 } satisfies Meta<typeof DefaultStory>;
 
@@ -73,15 +86,10 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** The controller over the circuit (`createComputeGraph` writes each shape's compute node id first) and its board. */
-const circuitArgs = (build: () => ReturnType<typeof createEmptyCircuit>): StoryProps => {
+/** The controller over the circuit, whose shapes `createComputeGraph` gave their compute node ids. */
+const circuitArgs = (build: () => Circuit): StoryProps => {
   const { controller, graph } = createComputeGraphController(build(), createStoryRuntime());
-  const board = CanvasBoard.make({
-    name: 'Circuit',
-    layout: { nodes: [...graph.nodes], edges: [...graph.edges] },
-    computeGraph: Ref.make(controller.graph.root),
-  });
-  return { controller, board };
+  return { controller, circuit: graph };
 };
 
 export const Default: Story = { args: circuitArgs(createEmptyCircuit) };

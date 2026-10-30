@@ -82,6 +82,8 @@ const computeNodeView = <S extends ComputeShape>(
   Component: FC<ComputeNodeViewProps<S>>,
 ): ComponentType<NodeViewProps> => {
   const View = (props: NodeViewProps) => {
+    // The compiler would cache the shape's element on its unchanged props, so a controller update never reached it.
+    'use no memo';
     const { node, registry } = props;
     const { controller } = useComputeContext();
     useControllerUpdates(controller);

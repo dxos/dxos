@@ -21,6 +21,7 @@ import { ComputeContext } from '../../hooks/index.ts';
 import {
   Bullets,
   boardDocument,
+  boardLayout,
   createBoardStore,
   createComputeConfig,
   createComputeProjection,
@@ -52,7 +53,11 @@ export const ComputeBoard = ({ board, controller, role }: ComputeBoardProps) => 
     () => createBoardStore(board, { projection: createComputeProjection({ controller }) }),
     [board, controller],
   );
-  const document = useMemo(() => boardDocument(store.read()), [store, snapshot]);
+  // Built from the snapshot, which the compiler keys on; `store.read()` alone would keep the first document.
+  const document = useMemo(
+    () => boardDocument(snapshot ? boardLayout(store.layout, snapshot.layout, snapshot.name) : store.read()),
+    [store, snapshot],
+  );
   const history = useMemo(() => createHistory({ steps: sessionHistory(board), source: store.source }), [board, store]);
   const handleIntent = useCallback((_layout: string, intent: LayoutIntent) => store.write(intent), [store]);
 

@@ -55,6 +55,8 @@ const createComputeViewport = (
   controller: ComputeGraphController,
 ): ComponentType<ViewportProps<Camera>> => {
   const ComputeViewport = (props: ViewportProps<Camera>) => {
+    // The compiler would key the ports on the document alone, missing the controller's runtime schemas.
+    'use no memo';
     const { document, onIntent } = props;
     const version = useControllerVersion(controller);
     const ports = useMemo(() => {
@@ -102,6 +104,8 @@ export const COMPUTE_INSPECTOR: InspectorSectionDef = {
 
 /** The selected shape's compute node: its type, and the values on its inputs and outputs as the runtime last saw them. */
 const ComputeSection = ({ controller }: { controller: ComputeGraphController }) => {
+  // The compiler would cache the runtime values on the unchanged selection, so they would never refresh.
+  'use no memo';
   const { document, layout, store } = useSceneEditor('ComputeSection');
   const selection = useAtomValue(store.atoms.selection);
   useControllerVersion(controller);
