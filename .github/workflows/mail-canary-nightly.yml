@@ -1,0 +1,79 @@
+name: Mail canary nightly
+
+# End-to-end canary for Gmail sync on preview EDGE (packages/plugins/plugin-google/canary/README.md).
+# It signs in to the canary identity with its recovery phrase on every run, so no device key ever sits
+# in an Actions cache a fork could read.
+
+on:
+  schedule:
+    # 03:17 UTC: after `EDGE nightly` (02:00), off the hour so it is not queued behind other crons.
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+    inputs:
+      count:
+        type: string
+        description: 'Pool messages to rotate into fresh copies'
+        default: '100'
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
+  MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+  MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
+
+# Two runs at once would rotate the same mailbox and judge each other's copies.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  canary:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+      - uses: ./.github/actions/setup
+
+      - name: Run canary
+        env:
+          DX_CANARY_RECOVERY_PHRASE: ${{ secrets.MAIL_CANARY_RECOVERY_PHRASE }}
+          DX_CANARY_SPACE_ID: ${{ vars.MAIL_CANARY_SPACE_ID }}
+          DX_CANARY_SEED_COUNT: ${{ inputs.count || '100' }}
+          DX_CANARY_REPORT_DIR: ${{ runner.temp }}/mail-canary
+          GMAIL_CLIENT_ID: ${{ secrets.MAIL_CANARY_GMAIL_CLIENT_ID }}
+          GMAIL_CLIENT_SECRET: ${{ secrets.MAIL_CANARY_GMAIL_CLIENT_SECRET }}
+          GMAIL_REFRESH_TOKEN: ${{ secrets.MAIL_CANARY_GMAIL_REFRESH_TOKEN }}
+        run: moon run plugin-google:mail-canary
+
+      - name: Report
+        if: always()
+        run: cat "${{ runner.temp }}/mail-canary/summary.md" >> "$GITHUB_STEP_SUMMARY" || true
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: mail-canary-report
+          path: ${{ runner.temp }}/mail-canary
+          retention-days: 14
+          if-no-files-found: ignore
+
+      # One event per run, so PostHog can alert on a failed night and on a night with no event at all.
+      - name: Record the run
+        if: always()
+        continue-on-error: true
+        timeout-minutes: 2
+        env:
+          DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
+        run: |
+          SUMMARY="${{ runner.temp }}/mail-canary/summary.json"
+          if [ ! -f "$SUMMARY" ]; then
+            mkdir -p "$(dirname "$SUMMARY")"
+            echo '{"ok":false,"failedChecks":"NO_REPORT"}' > "$SUMMARY"
+          fi
+          node scripts/ci-event.mjs --event ci.mail-canary --timestamp now --properties "$SUMMARY"
