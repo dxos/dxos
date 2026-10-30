@@ -132,9 +132,19 @@ const SceneEditorRoot = <C,>({
   const readonly = readonlyProp || !editing;
   // Inside a transaction, writes go straight to the host and the transaction records them as one step.
   const transacting = useRef(false);
+  // Read when an edit is written, which may be after the render that made the callback.
+  const latest = useRef({ document, constrain: config.constrain, snap: display.snap });
+  latest.current = { document, constrain: config.constrain, snap: display.snap };
   const onIntent = useCallback(
-    (layout: string, intent: LayoutIntent) =>
-      history && !transacting.current ? history.record(() => write(layout, intent)) : write(layout, intent),
+    (layout: string, edit: LayoutIntent) => {
+      const { document, constrain, snap } = latest.current;
+      const record = constrain && findLayout(document, layout);
+      const intent = record && constrain ? constrain(record, edit, { snap }) : edit;
+      if (!intent) {
+        return;
+      }
+      history && !transacting.current ? history.record(() => write(layout, intent)) : write(layout, intent);
+    },
     [history, write],
   );
   const store = useMemo(() => createEditorStore(registry, { onIntent }), [registry, onIntent]);

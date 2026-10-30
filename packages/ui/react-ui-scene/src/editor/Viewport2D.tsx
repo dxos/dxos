@@ -9,6 +9,7 @@ import { type ModuleCompiler } from '@dxos/animation';
 import {
   type Camera,
   Canvas,
+  type ConstrainIntent,
   type FreehandProjectionOptions,
   type GeneratorSource,
   type KeyAction,
@@ -18,6 +19,8 @@ import {
   type ViewMap,
   type ViewportProps,
   createCanvasAtoms,
+  createFreehandProjection,
+  createLatticeProjection,
   createMemoryStore,
 } from '@dxos/react-ui-canvas';
 import { type Scene, findLayout, rootScene } from '@dxos/scene';
@@ -25,7 +28,7 @@ import { type Scene, findLayout, rootScene } from '@dxos/scene';
 import { styleClasses, toCanvasViews } from '../canvas/index.ts';
 import { type CanvasBridge, CanvasBridgeCapture } from './canvas-bridge.tsx';
 import { fromTool2D, toTool2D } from './tools2d.ts';
-import { applyViewWrites, viewWrites } from './view-writes.ts';
+import { type ViewWrite, applyViewWrites, viewWrites } from './view-writes.ts';
 
 /** The shortcuts the shared editor's command table handles, which the 2D engine leaves to it. */
 const HOST_KEYS: ReadonlySet<KeyAction> = new Set<KeyAction>([
@@ -43,8 +46,10 @@ const HOST_KEYS: ReadonlySet<KeyAction> = new Set<KeyAction>([
 export type Viewport2DOptions = {
   /** The node types the canvas draws (a host's object frames among them); the default set when unset. */
   nodes?: NodeRegistry;
-  /** The canvas's mode (lattice, constrained, dynamic) over its store; freehand when unset. */
+  /** The canvas's mode (lattice, constrained, dynamic) over its store; when unset, each layout's own (its lattice). */
   createProjection?: (options: FreehandProjectionOptions) => Projection;
+  /** The layout's mode, which the editor applies to every write; a refused or rewritten drag is redrawn as stored. */
+  constrain?: ConstrainIntent;
   generators?: Readonly<Record<string, GeneratorSource>>;
   compileGenerator?: ModuleCompiler;
   createGeneratorWorker?: () => Worker;
@@ -72,6 +77,16 @@ const sameTool = (left: Tool, right: Tool): boolean => JSON.stringify(left) === 
  * mirrored into the engine's atoms both ways.
  */
 export const createViewport2D = (options: Viewport2DOptions = {}) => {
+  /** Whether the layout's mode refuses or rewrites one of the engine's writes to a stored layout. */
+  const changedByMode = (doc: Scene.SceneDocument, next: ViewWrite, snap: boolean): boolean => {
+    const record = next.kind === 'layout' && !next.created ? findLayout(doc, next.layout) : undefined;
+    if (!options.constrain || !record || next.kind !== 'layout') {
+      return false;
+    }
+    const constrained = options.constrain(record, next.intent, { snap });
+    return constrained === undefined || JSON.stringify(constrained) !== JSON.stringify(next.intent);
+  };
+
   const Viewport2D = ({
     document,
     scene: sceneId,
@@ -114,8 +129,8 @@ export const createViewport2D = (options: Viewport2DOptions = {}) => {
     const atoms = useMemo(() => createCanvasAtoms(root), [root]);
 
     // The latest props, read by the store's subscription, which outlives a render.
-    const latest = useRef({ document, onIntent, onModelIntent, onTransaction });
-    latest.current = { document, onIntent, onModelIntent, onTransaction };
+    const latest = useRef({ document, snap, onIntent, onModelIntent, onTransaction });
+    latest.current = { document, snap, onIntent, onModelIntent, onTransaction };
     const reading = useRef(false);
     const last = useRef<ViewMap>(registry.get(store.views));
 
@@ -139,9 +154,20 @@ export const createViewport2D = (options: Viewport2DOptions = {}) => {
           if (reading.current) {
             return;
           }
-          const { document: doc, ...handlers } = latest.current;
+          const { document: doc, snap: snapping, ...handlers } = latest.current;
           const writes = viewWrites(doc, last.current, views);
-          last.current = views;
+          // The engine drew the drag as made; one the mode refuses or moves is drawn as stored until the write lands.
+          const constrained = options.constrain && writes.some((next) => changedByMode(doc, next, snapping));
+          if (constrained) {
+            reading.current = true;
+            try {
+              registry.set(store.views, last.current);
+            } finally {
+              reading.current = false;
+            }
+          } else {
+            last.current = views;
+          }
           applyViewWrites(writes, { model: rootModel(doc), ...handlers });
         }),
       [registry, store],
@@ -165,6 +191,22 @@ export const createViewport2D = (options: Viewport2DOptions = {}) => {
     useEffect(() => registry.set(atoms.snap, snap && !picture), [registry, atoms, snap, picture]);
     useEffect(() => registry.set(atoms.axes, !!axes && !picture), [registry, atoms, axes, picture]);
     useEffect(() => registry.set(atoms.guides, !!guides && !picture), [registry, atoms, guides, picture]);
+
+    // A layout with a lattice snaps the drag itself, so the engine previews the cells it lands on and draws the guides.
+    const lattices = JSON.stringify(
+      document.layouts.map((layout) => (layout.dim === '2d' ? layout.lattice : undefined)),
+    );
+    const createProjection = useMemo(
+      () =>
+        options.createProjection ??
+        ((projection: FreehandProjectionOptions) => {
+          const layout = findLayout(latest.current.document, projection.sceneId);
+          return layout?.dim === '2d' && layout.lattice
+            ? createLatticeProjection({ ...projection, spec: layout.lattice })
+            : createFreehandProjection(projection);
+        }),
+      [lattices],
+    );
 
     // The engine's own changes back to the editor.
     const handlers = useRef({ onSelect, onToolChange, onEdit, selection, tool, editing });
@@ -192,7 +234,7 @@ export const createViewport2D = (options: Viewport2DOptions = {}) => {
         root={root}
         atoms={atoms}
         nodes={options.nodes}
-        createProjection={options.createProjection}
+        createProjection={createProjection}
         theme={theme}
         backgroundGrid={grid && !picture ? 'lines' : 'none'}
         readonly={readonly || !!picture}

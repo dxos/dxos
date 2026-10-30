@@ -163,4 +163,19 @@ export type DimensionConfig<C = unknown> = {
   /** The element fields the Timeline panel keys (`placementFields` when unset). */
   animatable?: AnimatableFields;
   commands?: readonly ExtraCommandDef[];
+  /** The layout's mode, between every edit and its write (2D's lattice, dynamic). */
+  constrain?: ConstrainIntent;
 };
+
+/** What a mode sees of the editor when it constrains an edit. */
+export type ConstrainContext = { snap: boolean };
+
+/**
+ * A layout mode's rule: `intent` rewritten so `layout` keeps the mode (snapped onto a lattice, re-placed by a solver),
+ * or undefined when the mode refuses it.
+ */
+export type ConstrainIntent = (
+  layout: Scene.LayoutRecord,
+  intent: LayoutIntent,
+  context: ConstrainContext,
+) => LayoutIntent | undefined;

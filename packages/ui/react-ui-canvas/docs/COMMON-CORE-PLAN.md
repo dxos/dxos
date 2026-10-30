@@ -42,6 +42,21 @@ react-ui-canvas's current schema, decision 12). Spec decisions are recorded in
 - **R-6 (2026-10-30, user): the engine's `class`/`style` rename (C.5) folds into E.1.** The names are retired with
   the View model that stores them; no ECHO migration.
 - **R-7 (2026-10-30, user): decision 20's `black`/`white` hues are approved.**
+- **R-8 (2026-10-30, agent, D.1): a mode is a rule between an edit and its write, over the document's
+  `Scene.LayoutRecord2D`.** `latticeConstrain(layout: Scene.LayoutRecord2D, intent: LayoutIntent)` lives in
+  react-ui-canvas `src/modes/` (the editor holds records, not the ECHO `Layout2D` class). `DimensionConfig.constrain(layout,
+  intent, { snap })` is applied by `SceneEditor` to every write (gestures, commands, paste, the Properties form);
+  config2d selects the lattice when `layout.lattice` is set and snapping is on. The 2D viewport still wraps the canvas
+  engine (C.1's `RenderList2D` was not built), so it also drives the engine with a lattice projection from
+  `layout.lattice` for the drag preview and guides, and redraws a drag the mode refuses or rewrites as stored. The
+  engine projections stay until E.6. Cost if wrong: the rule runs twice per drag (engine and editor), which is
+  idempotent but redundant until E.6 removes the engine's.
+- **R-9 (2026-10-30, agent, D.1): plugin-canvas keeps the Canvas settings (`lattice`, `projection`) as its mode
+  switch until E.2.** The scene/2 migration does not write `Layout2D.lattice`, and config2d leaves the layout's mode
+  off when a host passes its own projection. Cost if wrong: in plugin-canvas a lattice canvas is held to its cells by
+  the engine only (a paste or a Properties edit is not snapped) until E.2 moves the switch onto the layout.
+- **R-10 (2026-10-30, agent, D.1, parity): 3D gets no lattice.** `lattice` is a 2D-only layout field (A.1); the
+  `constrain` hook is shared, so a 3D mode would plug in the same way.
 
 ## Global Constraints
 
@@ -643,7 +658,7 @@ point edit) and `engine/controller.ts` to call `onPreview`/`onIntent` with `Layo
 **Files:** Port `engine/projections/lattice.ts` to a `LayoutIntent` rewriter: `latticeConstrain(layout: Layout2D,
 intent: LayoutIntent): LayoutIntent | undefined`; config2d selects it when `layout.lattice` is set.
 
-- [ ] Failing test `test('a move lands on whole lattice cells', …)` (port the existing lattice tests) → implement →
+- [x] Failing test `test('a move lands on whole lattice cells', …)` (port the existing lattice tests) → implement →
       PASS → commit `react-ui-canvas: lattice mode on Layout2D`.
 
 ### Task D.2: Constrained and dynamic

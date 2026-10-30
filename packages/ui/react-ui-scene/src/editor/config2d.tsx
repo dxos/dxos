@@ -11,12 +11,14 @@ import {
   type CanvasPropertiesProps,
   type CanvasServices,
   CanvasServicesProvider,
+  type ConstrainIntent,
   type DimensionConfig,
   MAX_ZOOM,
   type PropertyFormProps,
   createPropertyForm,
   defaultThemeRegistry,
   fitBounds,
+  latticeConstrain,
   zoomAt,
 } from '@dxos/react-ui-canvas';
 import { DEFAULT_GRID, MAJOR_GRID, Scene, findLayout, resolveLayout2D } from '@dxos/scene';
@@ -92,6 +94,10 @@ const layoutBounds = (document: Scene.SceneDocument, layout: string) => {
   return { x: left, y: top, width: right - left, height: bottom - top };
 };
 
+/** A 2D layout's mode, from its own fields: a lattice snaps every frame onto its cells while snapping is on. */
+export const constrain2D: ConstrainIntent = (layout, intent, { snap }) =>
+  layout.dim === '2d' && layout.lattice && snap ? latticeConstrain(layout, intent) : intent;
+
 /**
  * The 2D editor's config: react-ui-canvas's engine as the viewport, the canvas palette's tools, steps on the grid, the
  * canvas themes as looks and a centre/size/rotation form. A host passes its node types, mode and generators.
@@ -101,9 +107,11 @@ export const createConfig2D = ({
   ...options
 }: Viewport2DOptions & { useProperties?: UseProperties2D } = {}): DimensionConfig<Camera> => {
   const bridge = options.bridge ?? createCanvasBridge();
+  // A host's own projection owns the canvas's mode, so the layout's fields are not applied over it.
+  const constrain = options.createProjection ? undefined : constrain2D;
   return {
     dim: '2d',
-    viewport: createViewport2D({ ...options, bridge }),
+    viewport: createViewport2D({ ...options, bridge, constrain }),
     tools: tools2D(options.nodes),
     toolDragData: toolDragData2D,
     geometry: {
@@ -139,6 +147,7 @@ export const createConfig2D = ({
     },
     propertyForm: createPropertyForm2D(bridge, useProperties),
     propertyFormSelection: true,
+    constrain,
   };
 };
 

@@ -244,4 +244,40 @@ describe('SceneEditor', () => {
       outside.remove();
     }
   });
+  test("the config's constrain rewrites or refuses every write, and sees the snap toggle", () => {
+    const write = vi.fn();
+    const seen: boolean[] = [];
+    let send: ViewportProps<{ zoom: number }>['onIntent'] = () => {};
+    const CapturingViewport = ({ onIntent }: ViewportProps<{ zoom: number }>) => {
+      send = onIntent;
+      return null;
+    };
+    render(
+      <SceneEditor.Root
+        config={{
+          ...config('2d'),
+          viewport: CapturingViewport,
+          // Refuses a delete and turns a move into one along x only.
+          constrain: (layout, intent, { snap }) => {
+            seen.push(snap);
+            return layout.id !== 'root' || intent.kind === 'delete'
+              ? undefined
+              : intent.kind === 'move'
+                ? { ...intent, delta: { x: intent.delta.x, y: 0 } }
+                : intent;
+          },
+        }}
+        document={DOCUMENT}
+        scene='s'
+        onIntent={write}
+        display={{ ...DISPLAY, snap: true }}
+      >
+        <SceneEditor.Viewport />
+      </SceneEditor.Root>,
+    );
+    send('root', { kind: 'move', ids: ['a'], delta: { x: 3, y: 4 } });
+    send('root', { kind: 'delete', ids: ['a'] });
+    expect(write.mock.calls).toEqual([['root', { kind: 'move', ids: ['a'], delta: { x: 3, y: 0 } }]]);
+    expect(seen).toEqual([true, true]);
+  });
 });

@@ -8,5 +8,6 @@ export * from './engine/index.ts';
 export * from './generator/index.ts';
 export * from './hooks/index.ts';
 export * from './model/index.ts';
+export * from './modes/index.ts';
 export * from './utils/index.ts';
 export * from './editor/index.ts';

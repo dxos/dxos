@@ -842,6 +842,10 @@ feat F-15: Modes
     a graph's edges are link elements and overlay positions are element centres; the lattice is the layout's
     `lattice`.
   req F-15.3: (planned) The viewport draws diagram `arc`, free `curve` and open `polyline` elements.
+  req F-15.4: A layout's mode is a rule between an edit and its write, which the editor applies to every write (a
+    drag, a command, a paste, the Properties form). A layout with a `lattice` snaps every frame onto whole cells
+    while snapping is on and refuses an edit that would overlap another shape's cells; a drag the mode refuses or
+    moves is drawn as stored. A host's own projection owns the mode instead.
 ```
 
 ## Planned
@@ -1163,6 +1167,16 @@ decision D-17: The engine's `class`/`style` field names are not migrated: they a
   date: 2026-10-30
   by: user:richburdon
   affects: [F-14]
+```
+
+```mdl
+decision D-18: A layout's mode is a rule the editor applies between every edit and its write (`DimensionConfig.constrain`), and 2D's lattice is selected by the layout's own `lattice` field while snapping is on; a host that passes its own projection keeps the mode. Fills in [D-1] and [D-4].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-15.4]
+  why: Applying the rule at the write, not only in the engine's drag, holds commands, pastes and form edits to the lattice too, and reading it from the layout lets it travel with the drawing.
+  rejected: A rule inside the 2D viewport only, which a paste or a Properties edit would bypass.
 ```
 
 ---
