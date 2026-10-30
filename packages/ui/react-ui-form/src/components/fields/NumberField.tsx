@@ -6,6 +6,7 @@ import * as Option from 'effect/Option';
 import React, { useEffect, useState } from 'react';
 
 import * as Input from '@dxos/react-ui/Input';
+import { type NumberLayout } from '@dxos/ui-types';
 
 import { type FormFieldRendererProps } from '#types';
 
@@ -21,29 +22,43 @@ import { getNumericConstraints } from './numeric-constraints.ts';
 const defaultStep = (value: number | undefined, integer: boolean): number =>
   integer ? 1 : value !== undefined && Math.abs(value) < 1 ? 0.01 : 0.1;
 
+/** What {@link useNumberFieldInput} reads: the property's type, bounds and form state. */
+export type NumberFieldInputProps = Pick<
+  FormFieldRendererProps<number>,
+  'type' | 'readonly' | 'placeholder' | 'min' | 'max' | 'step' | 'getValue' | 'onValueChange' | 'onBlur' | 'onRevert'
+>;
+
+/** What a number field binds to its `Input.Number`, and its committed value for a static presentation. */
+export type NumberFieldInput = {
+  committed: number | undefined;
+  inputProps: Input.NumberProps;
+};
+
 /**
  * Ark's number input parses, steps and clamps on blur. A stepper press commits at once; a typed value commits as it
- * parses, or on blur and Enter when the form commits on blur; Escape puts the committed value back.
+ * parses, or on blur and Enter when the form commits on blur; Escape puts the committed value back. Shared by every
+ * number control the form draws (a field, a vector's axes); `defaultLayout` applies where the schema declares none.
  */
-export const NumberField = ({
-  type,
-  format,
-  readonly,
-  placeholder,
-  presentation,
-  min: minProp,
-  max: maxProp,
-  step: stepProp,
-  getValue,
-  onValueChange,
-  onBlur,
-  onRevert,
-}: FormFieldRendererProps<number>) => {
+export const useNumberFieldInput = (
+  {
+    type,
+    readonly,
+    placeholder,
+    min: minProp,
+    max: maxProp,
+    step: stepProp,
+    getValue,
+    onValueChange,
+    onBlur,
+    onRevert,
+  }: NumberFieldInputProps,
+  defaultLayout: NumberLayout = {},
+): NumberFieldInput => {
   const {
     form: { commitOn },
   } = useFormContext('NumberField');
   const constraints = getNumericConstraints(type);
-  const layout = numberLayoutOf(type);
+  const layout = { ...defaultLayout, ...numberLayoutOf(type) };
   // A caller's override narrows the schema's bounds for this form; a whole-number step reads as an integer.
   const min = minProp ?? constraints.min;
   const max = maxProp ?? constraints.max;
@@ -78,34 +93,41 @@ export const NumberField = ({
     }
   };
 
-  if (presentationFor(presentation).isStatic) {
-    return <FormStaticValue value={committed} format={format} />;
-  }
-
-  return (
-    <Input.Number
-      disabled={!!readonly}
-      placeholder={placeholder}
-      align={layout.align}
-      stepperOnHover={layout.stepperOnHover}
-      size={layout.size}
-      min={min}
-      max={max}
-      step={step ?? defaultStep(committed, integer)}
-      formatOptions={integer ? { maximumFractionDigits: 0 } : { useGrouping: false }}
-      value={edit.text}
-      onValueChange={(next, valueAsNumber, source) => {
+  return {
+    committed,
+    inputProps: {
+      disabled: !!readonly,
+      placeholder,
+      align: layout.align,
+      stepperOnHover: layout.stepperOnHover,
+      size: layout.size,
+      min,
+      max,
+      step: step ?? defaultStep(committed, integer),
+      formatOptions: integer ? { maximumFractionDigits: 0 } : { useGrouping: false },
+      value: edit.text,
+      onValueChange: (next, valueAsNumber, source) => {
         const rounded = Number.isNaN(valueAsNumber) ? valueAsNumber : round(valueAsNumber);
         // A digit past the step's precision is dropped as it is typed, so the text is what commits.
         const text = rounded === valueAsNumber || Number.isNaN(rounded) ? next : String(rounded);
         dispatch({ kind: source, text, value: rounded });
-      }}
-      onValueCommit={() => dispatch({ kind: 'commit' })}
-      onKeyDown={(event) => {
+      },
+      onValueCommit: () => dispatch({ kind: 'commit' }),
+      onKeyDown: (event) => {
         if (event.key === 'Escape') {
           dispatch({ kind: 'revert' });
         }
-      }}
-    />
-  );
+      },
+    },
+  };
+};
+
+/** A number property's control (see {@link useNumberFieldInput}). */
+export const NumberField = (props: FormFieldRendererProps<number>) => {
+  const { committed, inputProps } = useNumberFieldInput(props);
+  if (presentationFor(props.presentation).isStatic) {
+    return <FormStaticValue value={committed} format={props.format} />;
+  }
+
+  return <Input.Number {...inputProps} />;
 };

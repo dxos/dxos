@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { Format } from '@dxos/echo';
+import { VectorAnnotationId } from '@dxos/ui-types';
 
 import { type FormFieldRendererProps } from '#types';
 
@@ -52,6 +53,12 @@ describe('resolveFieldRenderer', () => {
     expect(resolve(Schema.Literals(['a', 'b']))).toEqual({ kind: 'select', options: ['a', 'b'] });
     const nested = resolve(Schema.Struct({ street: Schema.String }));
     expect(nested?.kind).toBe('object');
+  });
+
+  test('a struct marked as a vector is a vector, not a nested group', ({ expect }) => {
+    const Vec2 = Schema.Struct({ x: Schema.Number, y: Schema.Number });
+    expect(resolve(Vec2.annotate({ [VectorAnnotationId]: true }))).toEqual({ kind: 'vector' });
+    expect(resolve(Vec2)?.kind).toBe('object');
   });
 
   test('a discriminated union picks its member by the value', ({ expect }) => {
