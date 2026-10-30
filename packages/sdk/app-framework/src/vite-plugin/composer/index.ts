@@ -4,7 +4,7 @@
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { type Plugin as VitePlugin, type Rollup } from 'vite';
+import { type Rollup, type Plugin as VitePlugin } from 'vite';
 
 import { Plugin, PluginManifest } from '../../core/index.ts';
 import { findDxConfigFile, loadDxConfig, loadDxConfigWithVite } from '../load.ts';
