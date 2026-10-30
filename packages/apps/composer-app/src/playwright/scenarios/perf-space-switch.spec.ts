@@ -7,6 +7,7 @@ import { statSync } from 'node:fs';
 
 import { BASE_URL, defineScenario, invokeInPage, waitForReady } from '../perf/scenario.ts';
 import { importProfileArchive } from './memory-soak.ts';
+import { waitForCountersQuiet } from './work-counters.ts';
 
 /** A `.dxprofile` export or raw `.sqlite` to load. It holds private keys: named by path and never copied. */
 const ARCHIVE = process.env.DX_PERF_PROFILE_ARCHIVE;
@@ -34,38 +35,6 @@ const EVICTION_IDLE_MS = 45_000;
 
 /** The counters that move while the worker indexes. */
 const INDEX_COUNTERS = ['echo.indexPasses', 'echo.indexedObjects'];
-
-/** Resolves once the tab has gone `quietMs` without any of `names` moving. */
-const waitForCountersQuiet = async (
-  page: Page,
-  names: string[],
-  { timeoutMs, quietMs, pollMs = 100 }: { timeoutMs: number; quietMs: number; pollMs?: number },
-): Promise<void> => {
-  const read = () =>
-    page.evaluate((names) => {
-      const counters: unknown = Reflect.get(globalThis, '__dxosWorkCounters');
-      if (typeof counters !== 'function') {
-        throw new Error('the tab publishes no work counters');
-      }
-      const totals: Record<string, number> = counters();
-      return names.map((name) => totals[name] ?? 0).join(',');
-    }, names);
-
-  const deadline = Date.now() + timeoutMs;
-  let last = await read();
-  let quietSince = Date.now();
-  while (Date.now() - quietSince < quietMs) {
-    if (Date.now() > deadline) {
-      throw new Error(`${names.join(', ')} still moving after ${timeoutMs} ms`);
-    }
-    await page.waitForTimeout(pollMs);
-    const current = await read();
-    if (current !== last) {
-      last = current;
-      quietSince = Date.now();
-    }
-  }
-};
 
 const waitForSpacesReady = (page: Page, timeout: number) =>
   page.waitForFunction(

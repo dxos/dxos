@@ -7,6 +7,7 @@ import { statSync } from 'node:fs';
 
 import { BASE_URL, defineScenario, invokeInPage, waitForReady } from '../perf/scenario.ts';
 import { importProfileArchive } from './memory-soak.ts';
+import { waitForCountersQuiet } from './work-counters.ts';
 
 /** A `.dxprofile` export or raw `.sqlite` to load. It holds private keys: named by path and never copied. */
 const ARCHIVE = process.env.DX_PERF_PROFILE_ARCHIVE;
@@ -23,33 +24,6 @@ const INDEX_COUNTERS = ['echo.indexPasses', 'echo.indexedObjects'];
 const collections = () => `root/${SPACE}/content/collections`;
 const row = (id: string) => `[data-tree-row][data-object-id="${id}"]`;
 
-/** Resolves once the tab has gone `quietMs` without any of `names` moving. */
-const waitForCountersQuiet = async (page: Page, names: string[], timeoutMs: number, quietMs: number) => {
-  const read = () =>
-    page.evaluate((names) => {
-      const counters: unknown = Reflect.get(globalThis, '__dxosWorkCounters');
-      if (typeof counters !== 'function') {
-        throw new Error('the tab publishes no work counters');
-      }
-      const totals: Record<string, number> = counters();
-      return names.map((name) => totals[name] ?? 0).join(',');
-    }, names);
-  const deadline = Date.now() + timeoutMs;
-  let last = await read();
-  let quietSince = Date.now();
-  while (Date.now() - quietSince < quietMs) {
-    if (Date.now() > deadline) {
-      throw new Error(`${names.join(', ')} still moving after ${timeoutMs} ms`);
-    }
-    await page.waitForTimeout(1_000);
-    const current = await read();
-    if (current !== last) {
-      last = current;
-      quietSince = Date.now();
-    }
-  }
-};
-
 const switchTo = async (page: Page, workspace: string, timeout: number) => {
   // Boot navigates twice, and a switch landing between the two is overwritten, so an unanswered one is sent again.
   for (let attempt = 0; ; attempt++) {
@@ -65,7 +39,7 @@ const switchTo = async (page: Page, workspace: string, timeout: number) => {
   }
 };
 
-/** The space's root collection, expanded in the navtree; its direct children are the objects the stages open. */
+/** The first `OBJECTS` direct children of the space's root collection, expanded in the navtree: the objects the stages open. */
 const objectRows = async (page: Page, timeout: number): Promise<string[]> => {
   const branch = page.locator(row(collections()));
   await branch.waitFor({ timeout });
@@ -75,14 +49,20 @@ const objectRows = async (page: Page, timeout: number): Promise<string[]> => {
   if (expanded === 'false') {
     await branch.locator('[data-part="branch-indicator"]').click();
   }
-  await page.locator(`[data-tree-row][data-object-id^="${collections()}/"]`).first().waitFor({ timeout });
-  return page.evaluate(
-    (prefix) =>
-      [...document.querySelectorAll(`[data-tree-row][data-object-id^="${prefix}/"]`)]
-        .map((element) => element.getAttribute('data-object-id') ?? '')
-        .filter((id) => !id.slice(prefix.length + 1).includes('/')),
-    collections(),
-  );
+  const children = (prefix: string) =>
+    [...document.querySelectorAll(`[data-tree-row][data-object-id^="${prefix}/"]`)]
+      .map((element) => element.getAttribute('data-object-id') ?? '')
+      .filter((id) => !id.slice(prefix.length + 1).includes('/'));
+  const deadline = Date.now() + timeout;
+  let ids = await page.evaluate(children, collections());
+  while (ids.length < OBJECTS) {
+    if (Date.now() > deadline) {
+      throw new Error(`the root collection shows ${ids.length} objects, fewer than DX_PERF_OBJECTS=${OBJECTS}`);
+    }
+    await page.waitForTimeout(250);
+    ids = await page.evaluate(children, collections());
+  }
+  return ids.slice(0, OBJECTS);
 };
 
 /** Resolves on the first frame after the object's plank holds rendered content. */
@@ -120,14 +100,14 @@ defineScenario({
     await page.goto(`${BASE_URL}/?profiler=1&model=scripted`, { timeout: 120_000 });
     await waitForReady(page);
     await switchTo(page, SPACE, 120_000);
-    await waitForCountersQuiet(page, INDEX_COUNTERS, 15 * 60_000, 15_000);
+    await waitForCountersQuiet(page, INDEX_COUNTERS, { timeoutMs: 15 * 60_000, quietMs: 15_000, pollMs: 1_000 });
   },
   fixture: async ({ page, budget }) => {
     await switchTo(page, SPACE, budget);
     await objectRows(page, budget);
   },
   stages: async ({ page, stage, budget }) => {
-    const ids = (await objectRows(page, budget)).slice(0, OBJECTS);
+    const ids = await objectRows(page, budget);
     for (const pass of ['cold', 'warm']) {
       for (const [index, id] of ids.entries()) {
         await stage(`${pass}-${index + 1}`, async () => {

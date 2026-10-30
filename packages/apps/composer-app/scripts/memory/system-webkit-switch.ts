@@ -62,10 +62,23 @@ const startHost = (proxyPort: number, store: string) => {
     waiting.get(reply.id)?.(reply);
     waiting.delete(reply.id);
   });
+  // Once the host is gone every request fails, so a caller's retry guard runs instead of a wait that never ends.
+  let exited = false;
+  proc.once('exit', () => {
+    exited = true;
+    for (const resolve of waiting.values()) {
+      resolve({ id: '', ok: false, error: 'host exited' });
+    }
+    waiting.clear();
+  });
   const ready = new Promise<Reply>((resolve) => waiting.set('ready', resolve));
   let next = 0;
   const send = (command: Record<string, string>): Promise<Reply> =>
     new Promise((resolve) => {
+      if (exited) {
+        resolve({ id: '', ok: false, error: 'host exited' });
+        return;
+      }
       const id = String(next++);
       waiting.set(id, resolve);
       proc.stdin.write(`${JSON.stringify({ id, ...command })}\n`);
@@ -84,8 +97,11 @@ const startHost = (proxyPort: number, store: string) => {
     return JSON.parse(reply.value ?? 'null') as T;
   };
   const stop = async () => {
-    proc.kill();
-    await new Promise((resolve) => proc.once('exit', resolve));
+    if (!exited) {
+      const exit = new Promise((resolve) => proc.once('exit', resolve));
+      proc.kill();
+      await exit;
+    }
     await sleep(3_000);
   };
   return { proc, ready, load, evaluate, stop };
@@ -198,8 +214,17 @@ const main = async () => {
   const outDir = path.join(WORKSPACE_ROOT, '.perf', 'system-webkit-switch', stamp);
   mkdirSync(outDir, { recursive: true, mode: 0o700 });
   const store = randomUUID();
-  const preview = await servePreview(path.resolve(values.dist!), port);
-  const proxy = await startPartitionProxy({ allow: [] });
+  // A signal would end the process without the `finally` that removes the imported profile, which holds private keys.
+  // Instead it kills the host, so every request fails, and cuts the waits between them short.
+  const interrupt = new AbortController();
+  for (const signal of ['SIGINT', 'SIGTERM'] as const) {
+    process.once(signal, () => interrupt.abort(new Error(`interrupted by ${signal}`)));
+  }
+  const pause = (ms: number) => sleep(ms, undefined, { signal: interrupt.signal });
+  let preview: Awaited<ReturnType<typeof servePreview>> | undefined;
+  let proxy: Awaited<ReturnType<typeof startPartitionProxy>> | undefined;
+  const hosts: ReturnType<typeof startHost>[] = [];
+  interrupt.signal.addEventListener('abort', () => hosts.forEach((started) => started.proc.kill()));
   const before = webkitPids();
   const contentPid = () => {
     const pids = [...webkitPids()].filter((pid) => !before.has(pid));
@@ -210,42 +235,50 @@ const main = async () => {
   };
   const rows: unknown[] = [];
 
-  let host = startHost(proxy.port, store);
-  const boot = async () => {
-    host = startHost(proxy.port, store);
-    await host.ready;
-    await host.load(`${origin}/?profiler=1&model=scripted`);
-    for (let attempt = 0; ; attempt++) {
-      const ready = await host
-        .evaluate<boolean>(
-          `return !!document.querySelector('[data-testid="treeView.userAccount"]') && ${JSON.stringify(spaces)}.every((id) => globalThis.dxos?.spaces?.().find((s) => s.id === id)?.state.get() === 3);`,
-        )
-        .catch(() => false);
-      if (ready) {
-        return;
-      }
-      if (attempt > 480) {
-        throw new Error('the app never became ready');
-      }
-      await sleep(500);
-    }
-  };
-  const switchSettled = async (workspace: string) => {
-    for (let attempt = 0; attempt < 8; attempt++) {
-      await host.evaluate(
-        `await globalThis.composer.invoke('org.dxos.operation.appToolkit.switchWorkspace', { subject: 'root/${workspace}' }); return true;`,
-      );
-      for (let wait = 0; wait < 30; wait++) {
-        if (await host.evaluate<boolean>(`return location.pathname.includes('/w/${workspace}');`)) {
+  try {
+    preview = await servePreview(path.resolve(values.dist!), port);
+    const proxyPort = (proxy = await startPartitionProxy({ allow: [] })).port;
+    const launch = () => {
+      interrupt.signal.throwIfAborted();
+      const started = startHost(proxyPort, store);
+      hosts.push(started);
+      return started;
+    };
+    let host = launch();
+    const boot = async () => {
+      host = launch();
+      await host.ready;
+      await host.load(`${origin}/?profiler=1&model=scripted`);
+      for (let attempt = 0; ; attempt++) {
+        const ready = await host
+          .evaluate<boolean>(
+            `return !!document.querySelector('[data-testid="treeView.userAccount"]') && ${JSON.stringify(spaces)}.every((id) => globalThis.dxos?.spaces?.().find((s) => s.id === id)?.state.get() === 3);`,
+          )
+          .catch(() => false);
+        if (ready) {
           return;
         }
-        await sleep(500);
+        if (attempt > 480) {
+          throw new Error('the app never became ready');
+        }
+        await pause(500);
       }
-    }
-    throw new Error(`switch to ${workspace} never landed`);
-  };
+    };
+    const switchSettled = async (workspace: string) => {
+      for (let attempt = 0; attempt < 8; attempt++) {
+        await host.evaluate(
+          `await globalThis.composer.invoke('org.dxos.operation.appToolkit.switchWorkspace', { subject: 'root/${workspace}' }); return true;`,
+        );
+        for (let wait = 0; wait < 30; wait++) {
+          if (await host.evaluate<boolean>(`return location.pathname.includes('/w/${workspace}');`)) {
+            return;
+          }
+          await pause(500);
+        }
+      }
+      throw new Error(`switch to ${workspace} never landed`);
+    };
 
-  try {
     // Import, as the soak does: the host answers the file picker with the archive.
     await host.ready;
     await host.load(`${origin}/recovery.html`);
@@ -253,7 +286,7 @@ const main = async () => {
       if (await host.evaluate<boolean>(`return !!globalThis.dxos?.recovery?.importSqlite;`).catch(() => false)) {
         break;
       }
-      await sleep(500);
+      await pause(500);
     }
     await host.evaluate(`await globalThis.dxos.recovery.importSqlite(); return true;`);
     await host.stop();
@@ -276,7 +309,7 @@ const main = async () => {
 
     for (let iteration = 0; iteration < Number(values.boots); iteration++) {
       await boot();
-      await sleep(SETTLE_MS);
+      await pause(SETTLE_MS);
       const pid = contentPid();
       const stage = async (id: string, body: () => Promise<unknown>) => {
         const cpu = cpuSeconds(pid);
@@ -297,7 +330,7 @@ const main = async () => {
       // \`novt\` is a warm pass with the View Transitions API hidden; \`warm2\` repeats warm after it, to bound drift.
       for (const pass of ['cold', 'warm', 'novt', 'warm2', 'revisit'].filter((pass) => passes.includes(pass))) {
         if (pass === 'revisit') {
-          await sleep(EVICTION_IDLE_MS);
+          await pause(EVICTION_IDLE_MS);
         }
         await host.evaluate(`globalThis.__setViewTransitions(${pass !== 'novt' && transitions}); return true;`);
         for (const [index, spaceId] of spaces.entries()) {
@@ -331,7 +364,7 @@ const main = async () => {
   } finally {
     writeFileSync(path.join(outDir, 'rows.json'), JSON.stringify(rows, null, 2));
     process.stdout.write(`rows ${path.join(outDir, 'rows.json')}\n`);
-    host.proc.kill();
+    hosts.forEach((started) => started.proc.kill());
     await sleep(2_000);
     // The imported profile lives in the host's data store and holds private keys; none of it may outlive the
     // run. The removal's completion handler does not always fire, so the directory is what is checked.
@@ -351,8 +384,8 @@ const main = async () => {
     if (existsSync(storeDir)) {
       process.stderr.write(`data store still on disk: ${storeDir}\n`);
     }
-    await proxy.close();
-    await preview.stop();
+    await proxy?.close();
+    await preview?.stop();
   }
 };
 
