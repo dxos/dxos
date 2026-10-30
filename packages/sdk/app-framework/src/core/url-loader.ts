@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 
@@ -233,6 +234,28 @@ const loadStylesheets = (
     }
   });
 
+/**
+ * Builds a plugin from the modules its manifest lists, without importing any code: each body is imported, through the
+ * asset cache, when its module activates.
+ */
+const fromDefinition = (
+  pluginId: string,
+  manifestUrl: string,
+  definition: Plugin.Manifest,
+  cache: PluginAssetCache.Cache,
+): Plugin.Plugin => {
+  const loaders = Object.fromEntries(
+    definition.modules.map(({ url }) => [
+      url,
+      () =>
+        EffectEx.runPromise(cache.resolve(pluginId, new URL(url, manifestUrl).toString())).then(
+          (resolved) => import(/* @vite-ignore */ resolved),
+        ),
+    ]),
+  );
+  return Plugin.fromManifest(definition, loaders).make();
+};
+
 const loadFromManifest = (
   manifestUrl: string,
   cache: PluginAssetCache.Cache,
@@ -260,15 +283,18 @@ const loadFromManifest = (
         manifest.assetUrls.indexOf(manifestUrl) === -1 ? [manifestUrl, ...manifest.assetUrls] : manifest.assetUrls;
       yield* cache.cache(manifest.key, cachedUrls).pipe(wrapCacheError);
     }
-    const entryUrl = manifest.dev
-      ? manifest.entryUrl
-      : yield* cache.resolve(manifest.key, manifest.entryUrl).pipe(wrapCacheError);
-    const mod = yield* Effect.tryPromise({
-      try: () => import(/* @vite-ignore */ entryUrl),
-      catch: (cause) =>
-        new RemotePluginLoadError({ context: { locator: manifestUrl, reason: 'import-failed' }, cause }),
-    });
-    const plugin = normalizePluginExport(mod);
+    const plugin = manifest.definition
+      ? fromDefinition(manifest.key, manifestUrl, manifest.definition, cache)
+      : normalizePluginExport(
+          yield* Effect.tryPromise({
+            try: () =>
+              EffectEx.runPromise(
+                manifest.dev ? Effect.succeed(manifest.entryUrl) : cache.resolve(manifest.key, manifest.entryUrl),
+              ).then((entryUrl) => import(/* @vite-ignore */ entryUrl)),
+            catch: (cause) =>
+              new RemotePluginLoadError({ context: { locator: manifestUrl, reason: 'import-failed' }, cause }),
+          }),
+        );
     if (!plugin.meta.profile.key || !plugin.meta.profile.name) {
       return yield* Effect.fail(
         new RemotePluginLoadError({ context: { locator: manifestUrl, reason: 'meta-missing' } }),

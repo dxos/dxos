@@ -13,7 +13,6 @@ export type Files = Readonly<Record<string, Uint8Array>>;
 
 export const MANIFEST_FILE = 'manifest.json';
 export const CATALOG_FILE = 'catalog.json';
-export const ENTRY_FILE = 'index.mjs';
 export const VENDOR_DIR = 'vendor/';
 export const VENDOR_MANIFEST_FILE = `${VENDOR_DIR}manifest.json`;
 
@@ -273,10 +272,8 @@ export const check = (files: Files): CheckResult => {
     }
   }
 
-  const roots = [
-    ...(files[ENTRY_FILE] !== undefined ? [ENTRY_FILE] : []),
-    ...[...bodies].filter(([, module]) => runsHere(module)).map(([path]) => path),
-  ];
+  // A host builds the plugin from the manifest and imports each body itself; the entry module is never loaded.
+  const roots = [...bodies].filter(([, module]) => runsHere(module)).map(([path]) => path);
 
   // What a workerd host evaluates: each root and everything it imports statically. Dynamic imports are followed only
   // when a manifest module runs here, since the entry's loaders name every body, browser-only ones included.
@@ -306,8 +303,8 @@ export const check = (files: Files): CheckResult => {
   };
   roots.forEach((root) => visit(root, []));
 
-  // What a workerd host can load, lazily included: the entry's dynamic imports are its module loaders, so they are
-  // followed only into bodies that run here. A browser or node body need not resolve on EDGE.
+  // What a workerd host can load: the bodies that run here and everything they import, lazily included. A browser or
+  // node body need not resolve on EDGE.
   const loaded = new Set<string>();
   const load = (path: string, followDynamic: boolean) => {
     const body = bodies.get(path);
@@ -321,7 +318,7 @@ export const check = (files: Files): CheckResult => {
       }
     }
   };
-  roots.forEach((root) => load(root, root !== ENTRY_FILE));
+  roots.forEach((root) => load(root, true));
   problems.push(...unvendored.filter(({ path }) => loaded.has(path) || isVendored(path)));
 
   return { problems, roots, vendor };
@@ -394,6 +391,23 @@ export const HOST_SPECIFIER = '@dxos/plugin-host-cloudflare';
 
 export const MAIN_MODULE = '__plugin_main__.js';
 
+/**
+ * One bundle's plugin as main-module source: its manifest, and a loader for each module body and adapter, keyed by the
+ * URL the manifest gives it. The loaders import literal paths, since a computed specifier cannot resolve in Worker
+ * Loader: a body by its path under `prefix`, an adapter's bare specifier by the file the import map gives it.
+ */
+const pluginSource = (bundle: Files, prefix: string, imports: Readonly<Record<string, string>>): string => {
+  const manifest: { modules?: { url: string; adapter?: { url: string } }[] } = JSON.parse(
+    text(bundle, MANIFEST_FILE) ?? '{}',
+  );
+  const loaders = (manifest.modules ?? []).flatMap(({ url, adapter }) => [
+    [url, `${prefix}${posix.normalize(url)}`],
+    ...(adapter && imports[adapter.url] ? [[adapter.url, imports[adapter.url]]] : []),
+  ]);
+  const entries = loaders.map(([key, path]) => `${JSON.stringify(key)}: () => import(${JSON.stringify(`./${path}`)})`);
+  return `{ manifest: ${text(bundle, MANIFEST_FILE) ?? '{}'}, loaders: { ${entries.join(', ')} } }`;
+};
+
 /** What Worker Loader runs for a bundle: its rewritten files, the main module's name and source. */
 export type WorkerCode = {
   readonly files: Record<string, Uint8Array>;
@@ -420,22 +434,24 @@ export const workerCode = (files: Files, vendor: VendorMap, dependencies: readon
     }
   });
   const host = imports[HOST_SPECIFIER];
-  const roots = [
-    // Without a vendored host the bundle still loads, so its modules can be checked; only starting the plugin fails.
-    host === undefined
-      ? `Promise.reject(new Error(${JSON.stringify(`vendor/ does not provide ${HOST_SPECIFIER}, which EDGE starts the plugin with.`)}))`
-      : `import('./${host}')`,
-    `import('./${ENTRY_FILE}')`,
-    ...dependencies.map((_, index) => `import('./${DEPENDENCY_DIR}${index}/${ENTRY_FILE}')`),
-  ];
+  const plugins = [files, ...dependencies].map((bundle, index) =>
+    pluginSource(bundle, index === 0 ? '' : `${DEPENDENCY_DIR}${index - 1}/`, imports),
+  );
   const main = [
     "import { WorkerEntrypoint } from 'cloudflare:workers';",
     'let host;',
     // Imported inside a request: module evaluation runs in global scope, where workerd disallows timers.
     'const getHost = async () => {',
     '  if (host === undefined) {',
-    `    const [{ PluginHost }, primary, ...dependencies] = await Promise.all([${roots.join(', ')}]);`,
-    '    host ??= PluginHost.make(() => ({ primary: primary.make(), dependencies: dependencies.map((plugin) => plugin.make()) }));',
+    // Without a vendored host the bundle still loads, so its modules can be checked; only starting the plugin fails.
+    host === undefined
+      ? `    throw new Error(${JSON.stringify(`vendor/ does not provide ${HOST_SPECIFIER}, which EDGE starts the plugin with.`)});`
+      : `    const { PluginHost } = await import('./${host}');`,
+    `    const [primary, ...dependencies] = [${plugins.join(', ')}];`,
+    '    host ??= PluginHost.make(() => ({',
+    '      primary: PluginHost.fromManifest(primary.manifest, primary.loaders),',
+    '      dependencies: dependencies.map(({ manifest, loaders }) => PluginHost.fromManifest(manifest, loaders)),',
+    '    }));',
     '  }',
     '  return host;',
     '};',

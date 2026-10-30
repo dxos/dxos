@@ -25,7 +25,7 @@ describe('PluginManifest', () => {
       ]);
     });
 
-    test('throws if the canonical entry filename is not listed in assets', ({ expect }) => {
+    test('throws if it lists neither modules nor the entry module in assets', ({ expect }) => {
       expect(() =>
         PluginManifest.parse('https://example.com/manifest.json', {
           key: 'a',
@@ -34,6 +34,28 @@ describe('PluginManifest', () => {
           assets: ['style.css'],
         }),
       ).toThrow();
+    });
+
+    test('a manifest that lists its modules defines the plugin without an entry module', ({ expect }) => {
+      const resolved = PluginManifest.parse('https://example.com/plugins/foo/manifest.json', {
+        key: 'com.example.foo',
+        name: 'Foo',
+        description: 'A plugin.',
+        version: '1.0.0',
+        assets: ['operations-abc.mjs'],
+        modules: [
+          {
+            id: 'Operations',
+            url: './operations-abc.mjs',
+            activatesOn: { type: 'one-of', events: [{ id: 'dxn:com.example.foo.event.start' }] },
+            requires: [],
+            provides: [{ identifier: 'org.dxos.app-framework.capability.operationHandler', arity: 'multi' }],
+            environments: ['browser', 'workerd'],
+          },
+        ],
+      });
+      expect(resolved.definition?.plugin).toEqual({ key: 'com.example.foo', name: 'Foo', description: 'A plugin.' });
+      expect(resolved.definition?.modules).toMatchObject([{ id: 'Operations', url: './operations-abc.mjs' }]);
     });
 
     test('throws on missing required fields', ({ expect }) => {

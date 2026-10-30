@@ -69,7 +69,7 @@ describe('PluginBundle', () => {
   test('a well-formed bundle passes, with its workerd modules as roots', ({ expect }) => {
     const { problems, roots } = PluginBundle.check(makeBundle());
     expect(problems).toEqual([]);
-    expect(roots).toEqual(['index.mjs', 'schema.mjs', 'operations.mjs']);
+    expect(roots).toEqual(['schema.mjs', 'operations.mjs']);
   });
 
   test('a browser body may import styles; a workerd module may not reach one', ({ expect }) => {
@@ -112,7 +112,6 @@ describe('PluginBundle', () => {
       'vendor/manifest.json: effect: no file effect/missing.mjs in vendor/',
       'schema.mjs: imports ../outside.mjs, which is not in the bundle',
       'schema.mjs: imports ./missing.mjs, which is not in the bundle',
-      'index.mjs: imports @dxos/app-framework/Plugin, which vendor/ does not provide',
       'operations.mjs: imports effect, which vendor/ does not provide',
       'vendor/@dxos/app-framework/Plugin.mjs: imports effect, which vendor/ does not provide',
       'vendor/@dxos/app-framework/Plugin.mjs: imports effect, which vendor/ does not provide',

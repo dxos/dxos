@@ -25,6 +25,8 @@ export const MANIFEST_FILENAME = 'manifest.json';
 const Manifest = Schema.Struct({
   ...PluginManifestSchema.fields,
   assets: Schema.optional(Schema.Array(Schema.String)),
+  // Read only for whether the plugin loads from its modules or through its entry module.
+  modules: Schema.optional(Schema.Array(Schema.Unknown)),
 });
 
 /** A `dx.config.ts` module's default export. */
@@ -84,7 +86,7 @@ const resolveDirectory = (locator: string): Effect.Effect<Resolved, PluginInstal
         Effect.flatMap(Schema.decodeUnknownEffect(Manifest)),
         Effect.mapError((cause) => new PluginInstallError({ context: { locator, reason: 'manifest-invalid' }, cause })),
       );
-      const { assets: _assets, ...plugin } = manifest;
+      const { assets: _assets, modules: _modules, ...plugin } = manifest;
       const record: PluginRecord = { id: manifest.key, source: { kind: 'link', path: directory }, meta: plugin };
       return { record, assets: [] };
     }
@@ -178,9 +180,10 @@ const resolveUrl = (manifestUrl: string): Effect.Effect<Resolved, PluginInstallE
       ),
     );
 
-    const { assets = [], ...plugin } = manifest;
-    // The entry is always fetched, whether or not the manifest bothered to list it.
-    const assetPaths = assets.includes(PLUGIN_ENTRY_FILENAME) ? assets : [PLUGIN_ENTRY_FILENAME, ...assets];
+    const { assets = [], modules, ...plugin } = manifest;
+    // A plugin without modules loads through its entry, which is fetched whether or not the manifest listed it.
+    const assetPaths =
+      modules !== undefined || assets.includes(PLUGIN_ENTRY_FILENAME) ? assets : [PLUGIN_ENTRY_FILENAME, ...assets];
     const record: PluginRecord = {
       id: manifest.key,
       source: { kind: 'copy', origin: manifestUrl, version: manifest.version },

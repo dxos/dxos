@@ -6,10 +6,13 @@
 
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as PluginManifest from '@dxos/app-framework/PluginManifest';
 import { wrapFunctionHandler } from '@dxos/compute-runtime';
 import type * as Operation from '@dxos/compute/Operation';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -53,6 +56,18 @@ const DEFAULT_ACTIVATION_TIMEOUT = 20_000;
  */
 /** EDGE invokes operations by their bare key (`org.example.op`); an operation's own key is a DXN (`dxn:org.example.op`). */
 const operationKeyName = (key: string): string => (DXN.isDXN(key) ? DXN.getName(key) : key);
+
+/**
+ * A plugin from its bundle's `manifest.json`, the way every host builds one: each module body loads through `loaders`,
+ * keyed by the URL the manifest gives it, when the module activates.
+ */
+export const fromManifest = (manifest: unknown, loaders: Plugin.ManifestLoaders): Plugin.Plugin => {
+  const definition = PluginManifest.toDefinition(Schema.decodeUnknownSync(PluginManifest.Manifest)(manifest));
+  if (definition === undefined) {
+    throw new InvalidRequestError({ message: 'The plugin manifest lists no modules.' });
+  }
+  return Plugin.fromManifest(definition, loaders).make();
+};
 
 export const make = (makePlugins: () => PluginActivation.Plugins, options: Options = {}): Host => {
   const getActivation = memoizeActivation(makePlugins, options.activationTimeout ?? DEFAULT_ACTIVATION_TIMEOUT);

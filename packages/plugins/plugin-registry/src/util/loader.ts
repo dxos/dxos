@@ -2,11 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
+
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as PluginManifest from '@dxos/app-framework/PluginManifest';
 import { log } from '@dxos/log';
 import { PLUGIN_ENTRY_FILENAME } from '@dxos/protocols';
 
 import { type PluginRecord, getPluginInstallPath } from '../storage.ts';
+import { MANIFEST_FILENAME } from './resolve.ts';
 
 /**
  * Absolute path of the module a record's plugin is imported from.
@@ -27,6 +33,43 @@ export const getEntryPath = (record: PluginRecord): string | undefined => {
     default:
       return undefined;
   }
+};
+
+/** The directory a record's bundle sits in: a linked directory, or the CLI's install directory for a copy. */
+const getBundleDir = (record: PluginRecord): string | undefined => {
+  switch (record.source?.kind) {
+    case 'link':
+      return record.source.path;
+    case 'copy':
+      return getPluginInstallPath(record.id);
+    default:
+      return undefined;
+  }
+};
+
+/**
+ * Loads a record's plugin: from the modules its `manifest.json` lists when it has one, each body imported when its
+ * module activates; otherwise through its entry module.
+ */
+const loadPlugin = async (record: PluginRecord, entryPath: string): Promise<Plugin.Plugin> => {
+  const bundleDir = getBundleDir(record);
+  const manifestPath = bundleDir === undefined ? undefined : join(bundleDir, MANIFEST_FILENAME);
+  const manifestJson =
+    manifestPath === undefined ? undefined : await readFile(manifestPath, 'utf8').catch(() => undefined);
+  if (manifestPath !== undefined && manifestJson !== undefined) {
+    const manifestUrl = pathToFileURL(manifestPath).toString();
+    const { definition } = PluginManifest.parse(manifestUrl, JSON.parse(manifestJson));
+    if (definition) {
+      const loaders = Object.fromEntries(
+        definition.modules.map(({ url }) => [
+          url,
+          () => import(/* @vite-ignore */ new URL(url, manifestUrl).toString()),
+        ]),
+      );
+      return Plugin.fromManifest(definition, loaders).make();
+    }
+  }
+  return normalizePluginExport(await import(/* @vite-ignore */ entryPath));
 };
 
 /**
@@ -88,8 +131,8 @@ export const makeInstalledPlugin = (record: PluginRecord): Plugin.Plugin | undef
   // and `plugin remove` the user needs to get out of it. The failure is recorded instead, and
   // `plugin list` reads it back.
   const loader: Plugin.LazyLoader<void> = () =>
-    import(/* @vite-ignore */ entryPath).then(
-      (mod) => ({ default: Object.assign(() => normalizePluginExport(mod), { meta }) }),
+    loadPlugin(record, entryPath).then(
+      (plugin) => ({ default: Object.assign(() => plugin, { meta }) }),
       (error) => {
         log.warn('plugin failed to load', { id: record.id, entryPath, error });
         loadFailures.set(record.id, error instanceof Error ? error : new Error(String(error)));
