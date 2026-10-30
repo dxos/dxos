@@ -4,6 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import * as Harness from '@dxos/assistant/Harness';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -37,7 +39,8 @@ const handler: Operation.WithHandler<typeof ConversationSkill.EnsureReplySent> =
         return {};
       }
 
-      const handlers = yield* OperationHandlerSet.OperationHandlerProvider;
+      // Every plugin's operations: on EDGE the hook runs in operation-service, which has no handler provider.
+      const handlers = OperationHandlerSet.merge(...(yield* Capability.getAll(Capabilities.OperationHandler)));
       const sends = yield* Effect.forEach(succeededOperations(request), (key) =>
         OperationHandlerSet.getHandlerByKey(handlers, key).pipe(
           Effect.map(AgentChannels.isChannelSend),

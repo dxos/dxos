@@ -4,8 +4,13 @@
 
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
@@ -21,9 +26,17 @@ import { REMINDER } from './ensure-reply-sent.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
+const manager = CapabilityManager.make({ registry: AtomRegistry.make() });
+manager.contribute({
+  module: 'test',
+  interface: Capabilities.OperationHandler,
+  implementation: AgentOperationHandlerSet,
+});
+
 const TestLayer = AssistantTestLayer({
   operationHandlers: AgentOperationHandlerSet,
   types: [Chat.Chat, Feed.Feed, Message.Message],
+  extraServices: Layer.succeed(Capability.Service, manager),
   disableLlmMemoization: true,
 });
 
