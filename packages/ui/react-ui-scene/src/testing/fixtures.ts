@@ -4,9 +4,9 @@
 
 import { createTimeline, setKey } from '@dxos/animation';
 import { Dsl } from '@dxos/diagram';
-import { type EditorShot } from '@dxos/react-ui-canvas';
+import { CONSTRAINED_GRID, type EditorShot, constrainedPlacement } from '@dxos/react-ui-canvas';
 import { between } from '@dxos/react-ui-canvas/headless';
-import { type Layer, type Scene } from '@dxos/scene';
+import { type Layer, type Scene, applyIntent } from '@dxos/scene';
 
 const background: Layer = { id: 'background', name: 'Background', z: between() };
 const diagram: Layer = { id: 'diagram', name: 'Diagram', z: between(background.z) };
@@ -155,6 +155,39 @@ export const DYNAMIC_2D: Scene.SceneDocument = modeDocument({
     e3: modeLink('e3', 'left', 'leaf'),
   },
 });
+
+/** A shape the size of a constrained grid cell; the solver writes its centre. */
+const constrainedShape = (id: string, label: string): Scene.Element2D => ({
+  ...modeShape(id, label, { x: 0, y: 0 }),
+  size: CONSTRAINED_GRID.size,
+});
+
+/** The four shapes and their relations, before the solver places them. */
+const CONSTRAINED_LAYOUT: Scene.LayoutRecord2D = {
+  id: 'mode',
+  dim: '2d',
+  elements: {
+    a: constrainedShape('a', 'A'),
+    b: constrainedShape('b', 'B'),
+    c: constrainedShape('c', 'C'),
+    d: constrainedShape('d', 'D'),
+    ab: modeLink('ab', 'a', 'b'),
+    ac: modeLink('ac', 'a', 'c'),
+    bd: modeLink('bd', 'b', 'd'),
+  },
+  constraints: [
+    { subject: 'b', relation: 'east', object: 'a' },
+    { subject: 'b', relation: 'aligned', object: 'a' },
+    { subject: 'c', relation: 'south', object: 'a' },
+    { subject: 'd', relation: 'south', object: 'b' },
+    { subject: 'd', relation: 'east', object: 'c' },
+  ],
+};
+
+/** Constrained mode: four shapes related east/west, north/south and aligned, where the solver places them. */
+export const CONSTRAINED_2D: Scene.SceneDocument = modeDocument(
+  applyIntent(CONSTRAINED_LAYOUT, constrainedPlacement(CONSTRAINED_LAYOUT)),
+);
 
 /** One 4s shot moving A across the 2D board and back. */
 export const SHOTS_2D: readonly EditorShot[] = [

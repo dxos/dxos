@@ -842,8 +842,11 @@ feat F-15: Modes
     the edges. A shape a person moves is pinned where it lands, and an edit that adds or removes a shape or link
     re-places every unpinned shape by the layout engine, on the layout's lattice when it has one. The lattice is the
     layout's `lattice`.
-  req F-15.5: (planned) A constrained layout's constraints are its `constraints`, naming element ids: a dropped shape
-    is re-related to its nearest neighbour and the solver re-places every shape.
+  req F-15.5: A layout with `constraints` is constrained; its constraints name element ids. A shape an edit moves or
+    creates is re-related to its nearest neighbour where it lands, a deleted shape takes its constraints with it, and
+    the solver re-places every shape. The new constraints are written by a `layout` intent in the same batch as the
+    positions, so one undo restores both. Snapping does not free a constrained layout, and its constraints take
+    precedence over a lattice and a dynamic arrangement.
   req F-15.6: Scored mode grades a 2D layout as the canvas draws it: its elements become diagram objects and the
     objective's scorers (the default one unless given) score them.
   req F-15.3: (planned) The viewport draws diagram `arc`, free `curve` and open `polyline` elements.
@@ -1202,6 +1205,36 @@ decision D-20: Scored mode reads a 2D layout through the same read model the 2D 
   affects: [F-15.6]
   why: The viewport still reads layouts through the canvas adapter, so scoring through it measures what the person sees, including routed links.
   rejected: A second element-to-diagram conversion for scoring, which could drift from what the canvas draws.
+```
+
+```mdl
+decision D-21: Constraints are written through a layout-field intent, undone together with the elements (R-12 option 1).
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [F-15.5]
+```
+
+```mdl
+decision D-22: The layout-field intent is `{ kind: 'layout', patch }`, a `LayoutIntent` whose patch holds the 2D layout fields a mode owns (`lattice`, `constraints`): a key with a value sets the field, a key set to `undefined` unsets it, an absent key leaves it, and a batch's patches merge in order. The shared reducer applies it with the element intents, the canvas's layout writer writes the changed fields in the same change, and the layout's versioned source covers those fields, so undo and redo restore them with the elements. Fills in [D-21].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-15.5]
+  why: One patch over named layout fields lets lattice (and later layers) use the same write path without a new intent kind each, and keeping it inside `LayoutIntent` gives it the editor's existing recording, undo and sharing for free.
+  rejected:
+    - A path-and-value update on the layout (like the element `update`), which loses the field types.
+    - One intent kind per field (`constraints`, `lattice`), which grows the vocabulary with every mode.
+```
+
+```mdl
+decision D-23: A 2D layout is constrained when its `constraints` field is set, even to an empty list; constrained mode then takes precedence over the layout's lattice and dynamic arrangement and runs whether or not snapping is on, and an edit that moves, creates or deletes no shape passes through unchanged with no layout patch. Fills in [D-21] and [D-19].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-15.5]
+  why: The solver owns every shape's position, so a second mode or turning snapping off would only produce positions the next constrained edit overwrites; an empty list is a constrained layout whose first drop starts its relations.
+  rejected:
+    - A separate mode field naming the layout's mode, which would duplicate what the fields already say.
 ```
 
 ---

@@ -79,6 +79,18 @@ react-ui-canvas's current schema, decision 12). Spec decisions are recorded in
   that adapter in react-ui-scene `src/canvas/score.ts` and grade the layout exactly as the canvas draws it. Cost if
   wrong: a move next to `toRenderList2D` once it exists; the scorers do not change. Parity: scoring is 2D-only, as the
   diagram `Objective` grades 2D diagram objects.
+- **R-15 (2026-10-30, user, D.2): R-12 option 1 — constraints are written through a layout-field intent, undone
+  together with the elements.** The agent's shape (2026-10-30, agent): `LayoutIntent` gains
+  `{ kind: 'layout'; patch: LayoutPatch }`, where `LayoutPatch` is the 2D layout fields a mode owns (`lattice`,
+  `constraints`; `layers` can join later): a key with a value sets the field, a key set to `undefined` unsets it, an
+  absent key leaves it; a batch's patches merge in order. `applyIntent` applies it with the element intents (3D ignores
+  it; `isLayoutIntent(…, '3d')` refuses it), plugin-canvas `applyLayoutIntent` writes the changed fields in the same
+  `Obj.update`, and `layoutSource` versions `['lattice', …]` and `['constraints']` so undo/redo restores both.
+  `constrain2D` selects constrained mode when the layout's `constraints` is set (even empty), ahead of lattice and
+  dynamic and regardless of snapping (the solver owns placement), and emits `batch[rewritten intent, layout patch]`
+  only when the edit moved, created or deleted a shape. plugin-canvas still keeps its engine projection as the mode
+  switch (R-9). Cost if wrong: the patch shape is in the intent schema, so a rename touches stored-intent consumers
+  (none persist intents today).
 
 ## Global Constraints
 
@@ -687,9 +699,10 @@ intent: LayoutIntent): LayoutIntent | undefined`; config2d selects it when `layo
 
 **Files:** Port `constrained.ts` and `dynamic.ts` (their models are `Layout2D.constraints` / `graph`, A.1).
 
-- [ ] Failing tests ported from `constrained.test.ts`/`dynamic.test.ts` (solver re-places after a move; renaming the
+- [x] Failing tests ported from `constrained.test.ts`/`dynamic.test.ts` (solver re-places after a move; renaming the
       layout keeps the model) → implement → PASS → commit `react-ui-canvas: constrained and dynamic modes on Layout2D`.
-      Dynamic done (R-11); constrained's rule ported, its wiring blocked on a write path for `Layout2D.constraints` (R-12).
+      Dynamic done (R-11); constrained wired through a `layout` intent that writes `Layout2D.constraints` in the same
+      batch as the positions (R-15).
 
 ### Task D.3: Scored
 

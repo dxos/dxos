@@ -2,9 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, expect, test } from 'vitest';
 
-import { createFreehandProjection } from '@dxos/react-ui-canvas';
+import { atomSource, constrainedPlacement, createFreehandProjection, createHistory } from '@dxos/react-ui-canvas';
 import { type LayoutIntent, type Scene, applyIntent } from '@dxos/scene';
 
 import { createConfig2D } from './config2d.tsx';
@@ -76,5 +78,71 @@ describe('config2d', () => {
     const move: LayoutIntent = { kind: 'move', ids: ['a'], delta: { x: 10, y: 0 } };
     const moved = constrain?.(dynamic, move, { snap: false });
     expect(moved && applyIntent(dynamic, moved).elements.a.pinned).toBe(true);
+  });
+  test('a constrained layout re-relates a dropped shape and writes the new constraints in the same batch', () => {
+    const shape = (id: string): Scene.Element2D => ({
+      id,
+      type: 'rect',
+      center: { x: 0, y: 0 },
+      size: { width: 192, height: 128 },
+    });
+    const unsolved: Scene.LayoutRecord2D = {
+      id: 'constrained',
+      dim: '2d',
+      elements: { a: shape('a'), b: shape('b'), c: shape('c') },
+      constraints: [
+        { subject: 'b', relation: 'east', object: 'a' },
+        { subject: 'b', relation: 'aligned', object: 'a' },
+        { subject: 'c', relation: 'south', object: 'a' },
+      ],
+    };
+    const layout = applyIntent(unsolved, constrainedPlacement(unsolved));
+    const a = layout.elements.a.center ?? { x: 0, y: 0 };
+    const c = layout.elements.c.center ?? { x: 0, y: 0 };
+    const { constrain } = createConfig2D();
+    // Drop C well to the right of B, on A's row; snapping off does not free a constrained layout.
+    const move: LayoutIntent = { kind: 'move', ids: ['c'], delta: { x: a.x + 600 - c.x, y: a.y - c.y } };
+    const written = constrain?.(layout, move, { snap: false });
+    const after = written && applyIntent(layout, written);
+    expect(after?.constraints?.filter(({ subject }) => subject === 'c')).toEqual([
+      { subject: 'c', relation: 'east', object: 'b' },
+      { subject: 'c', relation: 'aligned', object: 'b' },
+    ]);
+    expect(after?.elements.c.center?.y).toBe(after?.elements.a.center?.y);
+    expect(after?.elements.c.center?.x).toBeGreaterThan(after?.elements.b.center?.x ?? Infinity);
+    // An edit that moves nothing leaves the constraints alone.
+    const label: LayoutIntent = { kind: 'update', id: 'a', path: ['label'], value: 'A' };
+    expect(constrain?.(layout, label, { snap: true })).toBe(label);
+  });
+
+  test('a constrained drag is one undo step for the positions and the constraints', () => {
+    const shape = (id: string, x: number): Scene.Element2D => ({
+      id,
+      type: 'rect',
+      center: { x, y: 0 },
+      size: { width: 192, height: 128 },
+    });
+    const registry = Registry.make();
+    const isLayouts = (value: unknown): value is Record<string, Scene.LayoutRecord2D> =>
+      typeof value === 'object' && value !== null;
+    const layouts = Atom.make<Record<string, Scene.LayoutRecord2D>>({
+      root: { id: 'root', dim: '2d', elements: { a: shape('a', 0), b: shape('b', 400) }, constraints: [] },
+    });
+    const history = createHistory({
+      steps: { done: [], undone: [] },
+      source: atomSource(registry, layouts, isLayouts),
+    });
+    const before = registry.get(layouts).root;
+    const { constrain } = createConfig2D();
+    const intent = constrain?.(before, { kind: 'move', ids: ['b'], delta: { x: -380, y: 400 } }, { snap: true });
+    expect(intent).toBeDefined();
+    history.record(() => intent && registry.set(layouts, { root: applyIntent(before, intent) }));
+    const after = registry.get(layouts).root;
+    expect(after.constraints).toEqual([{ subject: 'b', relation: 'south', object: 'a' }]);
+    history.undo();
+    expect(registry.get(layouts).root.constraints).toEqual([]);
+    expect(registry.get(layouts).root.elements).toEqual(before.elements);
+    history.redo();
+    expect(registry.get(layouts).root).toEqual(after);
   });
 });
