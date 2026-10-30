@@ -60,8 +60,6 @@ const AUXILIARY_ENTRY = [
   // Solid and Lit storybooks use their own suffix so the react storybook does not pick them up.
   'src/**/*.{stories,solid-stories,lit-stories}.{ts,tsx}',
   'src/**/*.eval.{ts,tsx}',
-  // Run by path with `vitest bench`, imported by nothing.
-  'src/**/*.bench.{ts,tsx}',
   // `.js` too: a testing helper can be a plain script a package runs by path (`node
   // ./src/testing/build.js`), which nothing imports.
   'src/testing/**/*.{ts,tsx,js,mjs,cjs}',
@@ -539,6 +537,9 @@ for (const manifest of globSync(
       ),
       ...supplemental.map((p) => `${p}!`),
       ...AUXILIARY_ENTRY,
+      // Run by path with `vitest bench`, imported by nothing. Only where entries are declared: without
+      // them the whole-source glob above already reaches benches as production code.
+      ...(entry.length && !isApp ? ['src/**/*.bench.{ts,tsx}'] : []),
     ],
     project: PROJECT.map((path) => `${path}!`),
     paths: { ...WORKSPACE_PATHS, ...paths },
