@@ -1147,6 +1147,44 @@ const buildTestConfig = (
 };
 
 /**
+ * Re-exports each entry from the name `package.json` points at when per-module output emitted it elsewhere.
+ *
+ * With `preserveModules` an entry chunk is named after its source path (`src/platform/browser/index.ts` becomes
+ * `platform/browser/index.mjs`), not after the entry's key, so every manifest target named by key needs a one-line
+ * re-export at `<key>.mjs`.
+ */
+const DxEntryAliasPlugin = (cwd: string, entries: string | Record<string, string>): Plugin => {
+  const byModule = new Map(
+    Object.entries(typeof entries === 'string' ? { index: entries } : entries).map(([name, source]) => [
+      path.resolve(cwd, source),
+      name,
+    ]),
+  );
+  return {
+    name: 'dx-entry-alias',
+    generateBundle(_, bundle) {
+      for (const chunk of Object.values(bundle)) {
+        const name = chunk.type === 'chunk' && chunk.isEntry && chunk.facadeModuleId && byModule.get(chunk.facadeModuleId);
+        if (!name || chunk.type !== 'chunk') {
+          continue;
+        }
+        const fileName = `${name}.mjs`;
+        if (chunk.fileName === fileName || bundle[fileName]) {
+          continue;
+        }
+        const target = path.posix.relative(path.posix.dirname(fileName), chunk.fileName);
+        const specifier = JSON.stringify(target.startsWith('.') ? target : `./${target}`);
+        const source = [
+          `export * from ${specifier};`,
+          ...(chunk.exports.includes('default') ? [`export { default } from ${specifier};`] : []),
+        ].join('\n');
+        this.emitFile({ type: 'asset', fileName, source: `${source}\n` });
+      }
+    },
+  };
+};
+
+/**
  * Build entries for every per-condition subpath the package declares in `imports`.
  *
  * Derived from the manifest rather than listed by hand: a hand-maintained entry list drifts
@@ -1376,6 +1414,7 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
         },
         output: {
           ...(injectGlobals ? { banner: "import '@dxos/node-std/globals';" } : {}),
+          ...(process.env.DX_PRESERVE_MODULES ? { preserveModules: true, preserveModulesRoot: 'src' } : {}),
           chunkFileNames: 'chunk-[name].mjs',
           // Keep emitted assets adjacent to the entry chunks so consumers' bundlers
           // can resolve them via the same relative path the JS already references.
@@ -1400,6 +1439,7 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
       ...(bundle.length > 0 ? [DxHoistRequirePlugin()] : []),
       ...(declarations ? [DxDeclarationsPlugin()] : []),
       ...(hasDxConfigEntry ? [dxConfigPlugin(process.cwd())] : []),
+      ...(process.env.DX_PRESERVE_MODULES ? [DxEntryAliasPlugin(process.cwd(), resolvedEntry)] : []),
     ],
     ...(test ? { test: buildTestConfig(process.cwd(), test, jsx) } : {}),
   });
