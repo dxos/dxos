@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Equal from 'effect/Equal';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
@@ -21,15 +22,7 @@ import { type MakeOptional, shallowEqual } from '@dxos/util';
 import { scheduleTask } from '#scheduler';
 
 import * as Node from './AppGraphNode.ts';
-import {
-  normalizeRelation,
-  primaryKey,
-  primaryParts,
-  secondaryKey,
-  secondaryParts,
-  valueEqual,
-  withLabel,
-} from './util.ts';
+import { normalizeRelation, primaryKey, primaryParts, secondaryKey, secondaryParts, withLabel } from './util.ts';
 
 //
 // The app graph: the vocabulary, the store that holds it, and the operations over it. One module
@@ -890,7 +883,7 @@ export const addNode = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg
       const nextData = stableData(internal, existing.data, data);
       const dataChanged = !shallowEqual(existing.data, nextData);
       const propertiesChanged = Object.keys(properties).some(
-        (key) => !valueEqual(existing.properties[key], properties[key]),
+        (key) => !Equal.equals(existing.properties[key], properties[key]),
       );
       // `changed` is on the visit log because counting `existing node` lines alone measures how often a
       // node was re-offered, not how often it actually changed — two very different costs.

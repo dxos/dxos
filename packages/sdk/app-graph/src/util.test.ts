@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
 import * as Node from './AppGraphNode.ts';
-import { nodeArgsUnchanged, valueEqual } from './util.ts';
+import { nodeArgsUnchanged } from './util.ts';
 
 const node = (overrides: Partial<Node.NodeArg<unknown>> = {}): Node.NodeArg<unknown> => ({
   id: 'node',
@@ -69,29 +69,18 @@ describe('nodeArgsUnchanged', () => {
   });
 });
 
-describe('valueEqual', () => {
-  test('rebuilt label tuples and option bags compare equal', ({ expect }) => {
+describe('nodeArgsUnchanged properties', () => {
+  // Builders rebuild label tuples on every run, so property values compare by content.
+  test('rebuilt label tuples compare unchanged', ({ expect }) => {
     const label = () => ['delete-object.label', { ns: 'org.dxos.type.example', defaultValue: 'Delete' }];
-    expect(valueEqual(label(), label())).to.be.true;
     expect(nodeArgsUnchanged([node({ properties: { label: label() } })], [node({ properties: { label: label() } })])).to
       .be.true;
   });
 
   test('a differing nested value, length or key reads as changed', ({ expect }) => {
-    expect(valueEqual(['key', { ns: 'a' }], ['key', { ns: 'b' }])).to.be.false;
-    expect(valueEqual(['key'], ['key', {}])).to.be.false;
-    expect(valueEqual({ a: 1 }, { b: 1 })).to.be.false;
-    expect(valueEqual({ a: undefined }, {})).to.be.false;
-    expect(valueEqual([], {})).to.be.false;
-  });
-
-  test('class instances and functions compare by identity', ({ expect }) => {
-    expect(valueEqual(new Date(0), new Date(0))).to.be.false;
-    expect(
-      valueEqual(
-        () => 1,
-        () => 1,
-      ),
-    ).to.be.false;
+    const withLabel = (label: unknown) => [node({ properties: { label } })];
+    expect(nodeArgsUnchanged(withLabel(['key', { ns: 'a' }]), withLabel(['key', { ns: 'b' }]))).to.be.false;
+    expect(nodeArgsUnchanged(withLabel(['key']), withLabel(['key', {}]))).to.be.false;
+    expect(nodeArgsUnchanged([node({ properties: { a: 1 } })], [node({ properties: { b: 1 } })])).to.be.false;
   });
 });

@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Equal from 'effect/Equal';
 import * as Atom from 'effect/reactivity/Atom';
 
 import { shallowEqual } from '@dxos/util';
@@ -59,48 +60,9 @@ export const nodeArgsUnchanged = (prev: readonly Node.NodeArg<any>[], next: read
       prevNode.id === nextNode.id &&
       prevNode.type === nextNode.type &&
       shallowEqual(prevNode.data, nextNode.data) &&
-      propertiesEqual(prevNode.properties, nextNode.properties) &&
+      Equal.equals(prevNode.properties ?? {}, nextNode.properties ?? {}) &&
       nodeArgsUnchanged(prevNode.nodes ?? [], nextNode.nodes ?? []) &&
       nodeArgsUnchanged(prevNode.actions ?? [], nextNode.actions ?? [])
     );
   });
 };
-
-const isPlainRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && Object.getPrototypeOf(value) === Object.prototype;
-
-/**
- * Structural equality for the plain values builders put in node properties: a builder rebuilds them
- * on every run, so a label tuple such as `['key', { ns }]` is a new array each time. Depth-bounded,
- * and anything but arrays and plain objects is compared by identity.
- */
-export const valueEqual = (left: unknown, right: unknown, depth = 4): boolean => {
-  if (left === right) {
-    return true;
-  }
-  if (depth === 0) {
-    return false;
-  }
-  if (Array.isArray(left) || Array.isArray(right)) {
-    return (
-      Array.isArray(left) &&
-      Array.isArray(right) &&
-      left.length === right.length &&
-      left.every((item, index) => valueEqual(item, right[index], depth - 1))
-    );
-  }
-  if (!isPlainRecord(left) || !isPlainRecord(right)) {
-    return false;
-  }
-  const keys = Object.keys(left);
-  return (
-    keys.length === Object.keys(right).length &&
-    keys.every((key) => Object.hasOwn(right, key) && valueEqual(left[key], right[key], depth - 1))
-  );
-};
-
-/** Whether two property bags hold the same keys with {@link valueEqual} values. */
-export const propertiesEqual = (
-  left: Record<string, unknown> | undefined,
-  right: Record<string, unknown> | undefined,
-): boolean => valueEqual(left ?? {}, right ?? {}, 5);
