@@ -1299,6 +1299,12 @@ decision D-29: The detent is per axis and 8 screen pixels wide, applied by the m
     - Snapping a freehand drop to the major grid wherever it is released, which jumps on release.
 ```
 
+```mdl
+decision D-30: Approve [D-29].
+  date: 2026-10-30
+  by: user:richburdon
+```
+
 ---
 
 ## Appendix: Extension Definitions
