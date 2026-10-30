@@ -6,7 +6,6 @@
 
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 
 import * as Capability from '@dxos/app-framework/Capability';
@@ -15,41 +14,13 @@ import { wrapFunctionHandler } from '@dxos/compute-runtime';
 import type * as Operation from '@dxos/compute/Operation';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError, messageOf } from '@dxos/errors';
-import {
-  FUNCTION_ROUTE_HEADER,
-  FunctionRouteValue,
-  ServiceContainer,
-  createFunctionContext,
-} from '@dxos/functions-runtime-cloudflare';
+import { ServiceContainer, createFunctionContext } from '@dxos/functions-runtime-cloudflare';
 import { DXN, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { EdgeResponse } from '@dxos/protocols';
-import type { EdgeFunctionEnv, FunctionProtocol } from '@dxos/protocols';
+import type { FunctionProtocol, PluginProtocol } from '@dxos/protocols';
 
 import * as PluginActivation from './PluginActivation.ts';
 import * as PluginCatalog from './PluginCatalog.ts';
-
-/** Names the operation a fetch invocation runs; the rest of the request is the functions protocol's. */
-export const OPERATION_KEY_HEADER = 'X-DXOS-Operation';
-
-/**
- * The bindings compute-service hands a release. They are the same for every space and caller, so one isolate serves
- * them all; all optional, since an invocation outside a space, or a test, runs without them.
- */
-export type Env = Partial<Pick<EdgeFunctionEnv.Env, 'DATA_SERVICE' | 'QUEUE_SERVICE' | 'FUNCTIONS_AI_SERVICE'>>;
-
-/** One invocation. */
-export type InvokeRequest = {
-  readonly operationKey: string;
-  readonly input?: unknown;
-  readonly spaceId?: string;
-};
-
-/** What differs between two calls to the same isolate, passed with each call rather than in `env`. */
-export type InvocationScope = {
-  /** Mints the caller's credentials; bound by compute-service to this caller and space. */
-  readonly accessTokenService?: EdgeFunctionEnv.AccessTokenService;
-};
 
 export class OperationNotFoundError extends BaseError.extend('OperationNotFoundError', 'Operation not found') {}
 
@@ -57,16 +28,14 @@ export class InvalidRequestError extends BaseError.extend('InvalidRequestError',
 
 /** The host of one release's plugins. */
 export interface Host {
-  /** The release's catalog. */
-  describe(): Promise<PluginCatalog.Catalog>;
-  /** Runs an operation and returns its output; rejects with the handler's error. */
-  invoke(request: InvokeRequest, env: Env, scope?: InvocationScope): Promise<unknown>;
-  /**
-   * The functions protocol compute-service uses for Worker Loader functions: the `meta` route header returns the
-   * catalog; any other request invokes the operation named by {@link OPERATION_KEY_HEADER} with the JSON body
-   * `{ data }`, in the space of the `spaceId` query parameter, answering with an {@link EdgeResponse} envelope.
-   */
-  fetch(request: Request, env: Env & Pick<Partial<EdgeFunctionEnv.Env>, 'ACCESS_TOKEN_SERVICE'>): Promise<Response>;
+  /** The bundle's catalog. */
+  describe(): Promise<PluginProtocol.Catalog>;
+  /** Runs an operation; a failure is returned as data, since Workers RPC drops an error's class and stack. */
+  invoke(
+    request: PluginProtocol.InvokeRequest,
+    env: PluginProtocol.Env,
+    scope?: PluginProtocol.InvocationScope,
+  ): Promise<PluginProtocol.InvokeResult>;
 }
 
 export type Options = {
@@ -75,9 +44,6 @@ export type Options = {
 };
 
 const DEFAULT_ACTIVATION_TIMEOUT = 20_000;
-
-/** The functions protocol's invocation body. */
-const decodeBody = Schema.decodeUnknownSync(Schema.Struct({ data: Schema.optional(Schema.Unknown) }));
 
 /**
  * Hosts plugins as the main module of an EDGE plugin release.
@@ -93,7 +59,11 @@ export const make = (makePlugins: () => PluginActivation.Plugins, options: Optio
 
   const describe = async () => PluginCatalog.make(await getActivation());
 
-  const invoke = async (request: InvokeRequest, env: Env, scope: InvocationScope = {}) => {
+  const run = async (
+    request: PluginProtocol.InvokeRequest,
+    env: PluginProtocol.Env,
+    scope: PluginProtocol.InvocationScope,
+  ): Promise<unknown> => {
     const activation = await getActivation();
     const operationKey = operationKeyName(request.operationKey);
     const handler = activation.operationHandlers.find(
@@ -123,37 +93,28 @@ export const make = (makePlugins: () => PluginActivation.Plugins, options: Optio
     }
   };
 
-  const fetch: Host['fetch'] = async (request, env) => {
+  const invoke: Host['invoke'] = async (request, env, scope = {}) => {
     try {
-      if (request.headers.get(FUNCTION_ROUTE_HEADER) === FunctionRouteValue.Meta) {
-        return Response.json(await describe());
-      }
-      const operationKey = request.headers.get(OPERATION_KEY_HEADER);
-      if (!operationKey) {
-        return EdgeResponse.failure({ message: `Missing ${OPERATION_KEY_HEADER} header`, status: 400 });
-      }
-      const { data } = decodeBody(await request.json());
-      const output = await invoke(
-        { operationKey, input: data, spaceId: new URL(request.url).searchParams.get('spaceId') ?? undefined },
-        env,
-        { accessTokenService: env.ACCESS_TOKEN_SERVICE },
-      );
-      return EdgeResponse.success(output);
+      return { ok: true, output: await run(request, env, scope) };
     } catch (error) {
-      log.error('plugin host request failed', { error });
-      return EdgeResponse.failure({
-        message: messageOf(error) ?? 'Internal error',
-        error: error instanceof Error ? error : undefined,
-        status: statusOf(error),
-      });
+      log.error('plugin operation failed', { operationKey: request.operationKey, error });
+      return { ok: false, error: toFailure(error) };
     }
   };
 
-  return { describe, invoke, fetch };
+  return { describe, invoke };
 };
 
-const statusOf = (error: unknown): number =>
-  error instanceof OperationNotFoundError ? 404 : error instanceof InvalidRequestError ? 400 : 500;
+const toFailure = (error: unknown): PluginProtocol.Failure => ({
+  code:
+    error instanceof OperationNotFoundError
+      ? 'operation-not-found'
+      : error instanceof InvalidRequestError
+        ? 'invalid-request'
+        : 'failed',
+  message: messageOf(error) ?? String(error),
+  ...(error instanceof Error ? { name: error.name, stack: error.stack } : {}),
+});
 
 /**
  * Activates the plugins once per isolate.
@@ -191,8 +152,8 @@ const memoizeActivation = (
 };
 
 const makeContext = async (
-  env: Env,
-  scope: InvocationScope,
+  env: PluginProtocol.Env,
+  scope: PluginProtocol.InvocationScope,
   spaceId: SpaceId | undefined,
   serviceScope: Scope.Scope,
 ): Promise<FunctionProtocol.Context> => {

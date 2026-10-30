@@ -405,7 +405,7 @@ export type WorkerCode = {
  * The modules a Dynamic Worker loads for a bundle: its files and the bundles of its `dependsOn` plugins (under
  * `deps/<n>/`), with every bare import rewritten through one import map joining their `vendor/` directories (the
  * primary's first, so the isolate holds one copy of each package), and a main module that starts the vendored host and
- * exports its `describe`, `invoke` and `fetch`.
+ * exports its `describe` and `invoke` as a `PluginProtocol.Entrypoint`.
  */
 export const workerCode = (files: Files, vendor: VendorMap, dependencies: readonly Files[] = []): WorkerCode => {
   const imports: Record<string, string> = { ...vendor.specifiers };
@@ -439,8 +439,8 @@ export const workerCode = (files: Files, vendor: VendorMap, dependencies: readon
     '  }',
     '  return host;',
     '};',
+    // Implements `PluginProtocol.Entrypoint` from `@dxos/protocols`.
     'export default class PluginEntrypoint extends WorkerEntrypoint {',
-    '  async fetch(request) { return (await getHost()).fetch(request, this.env); }',
     // Workers RPC drops an error's stack, which is the whole diagnosis of a failed activation.
     '  async describe() {',
     '    try {',

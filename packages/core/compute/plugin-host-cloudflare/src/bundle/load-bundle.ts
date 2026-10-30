@@ -4,7 +4,8 @@
 
 import { Miniflare } from 'miniflare';
 
-import type * as PluginCatalog from '../PluginCatalog.ts';
+import { type PluginProtocol } from '@dxos/protocols';
+
 import * as PluginRelease from '../PluginRelease.ts';
 import * as PluginBundle from './PluginBundle.ts';
 
@@ -14,7 +15,7 @@ export type ImportFailure = { readonly path: string; readonly message: string };
 /** A plugin bundle loaded into workerd through Worker Loader, as EDGE loads it, driven from Node. */
 export interface LoadedBundle extends AsyncDisposable {
   /** Activates the plugin with the vendored host and returns what it contributes. */
-  describe(): Promise<PluginCatalog.Catalog>;
+  describe(): Promise<PluginProtocol.Catalog>;
   /** Imports each path of the bundle once and reports the ones that throw. */
   importModules(paths: readonly string[]): Promise<readonly ImportFailure[]>;
 }
@@ -127,7 +128,7 @@ export const loadBundle = async (files: PluginBundle.Files, options: LoadBundleO
 
   return {
     describe: async () => {
-      const { result }: { result: PluginCatalog.Catalog } = JSON.parse(await call('describe'));
+      const { result }: { result: PluginProtocol.Catalog } = JSON.parse(await call('describe'));
       return result;
     },
     importModules: async (paths) => {

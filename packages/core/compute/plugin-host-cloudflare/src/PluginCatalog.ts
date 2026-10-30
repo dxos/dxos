@@ -10,71 +10,16 @@ import * as Skill from '@dxos/compute/Skill';
 import { Obj, Type } from '@dxos/echo';
 import * as JsonSchema from '@dxos/echo/JsonSchema';
 import { log } from '@dxos/log';
+import { type PluginProtocol } from '@dxos/protocols';
 
 import type * as PluginActivation from './PluginActivation.ts';
-
-/** A plugin a release activates. */
-export type PluginRecord = {
-  readonly key: string;
-  readonly name?: string;
-};
-
-/** A skill as data: the instructions are resolved because their `Text` lives in no database. */
-export type SkillRecord = {
-  readonly key: string;
-  readonly name: string;
-  readonly description?: string;
-  readonly instructions?: string;
-  readonly mcpPrompt: boolean;
-  readonly tools: readonly string[];
-  readonly hooks: readonly SkillHookRecord[];
-};
-
-/** A skill hook, by the key of the operation it runs. */
-export type SkillHookRecord = {
-  readonly phase: string;
-  readonly operation: string;
-  readonly input?: Record<string, unknown>;
-};
-
-/** An ECHO type a release contributes. */
-export type TypeRecord = {
-  readonly typename: string;
-  readonly version: string;
-  readonly jsonSchema: JsonSchema.JsonSchema;
-};
-
-/** A plugin module that failed to load or activate; a release with any is not fit to publish. */
-export type FailureRecord = {
-  readonly id: string;
-  readonly phase: string;
-  readonly reason: string;
-  readonly message: string;
-};
-
-/**
- * What a release contributes, as JSON: read by the registry, the router and MCP without starting an isolate.
- *
- * Operations are `PersistentOperation` records in `Obj.toJSON` form, the shape operation-service publishes, so a
- * consumer hydrates them with `Obj.fromJSON`.
- */
-export type Catalog = {
-  /** The plugin the release publishes; everything else in the catalog is its own. */
-  readonly plugin: PluginRecord;
-  /** Plugins of its `dependsOn` closure, bundled to activate it. */
-  readonly dependencies: readonly PluginRecord[];
-  readonly operations: readonly Obj.JSON[];
-  readonly skills: readonly SkillRecord[];
-  readonly types: readonly TypeRecord[];
-  readonly failures: readonly FailureRecord[];
-};
 
 /**
  * Builds the catalog of an activation.
  *
  * Must run inside a request: serializing an operation and making a skill mint ids with `crypto.getRandomValues()`.
  */
-export const make = (activation: PluginActivation.Activation): Catalog => ({
+export const make = (activation: PluginActivation.Activation): PluginProtocol.Catalog => ({
   plugin: toPluginRecord(activation.primary),
   dependencies: activation.plugins.filter((plugin) => plugin !== activation.primary).map(toPluginRecord),
   operations: serializeOperations(activation.operationHandlers).map((record) => Obj.toJSON(record)),
@@ -87,7 +32,7 @@ export const make = (activation: PluginActivation.Activation): Catalog => ({
   failures: activation.failures.map(({ id, phase, reason, error }) => ({ id, phase, reason, message: error.message })),
 });
 
-const toPluginRecord = (plugin: Plugin.Plugin): PluginRecord => ({
+const toPluginRecord = (plugin: Plugin.Plugin): PluginProtocol.PluginRecord => ({
   key: plugin.meta.profile.key,
   name: plugin.meta.profile.name,
 });
@@ -111,7 +56,7 @@ const serializeOperations = (
     }
   });
 
-const toSkillRecord = (key: string, skill: Skill.Skill): SkillRecord => ({
+const toSkillRecord = (key: string, skill: Skill.Skill): PluginProtocol.SkillRecord => ({
   key,
   name: skill.name,
   description: skill.description,

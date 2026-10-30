@@ -7,26 +7,13 @@ import { describe, test } from 'vitest';
 import { Fibonacci, Reply } from '@dxos/compute/testing';
 import { Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { FUNCTION_ROUTE_HEADER, FunctionRouteValue } from '@dxos/functions-runtime-cloudflare';
 
-import type * as PluginCatalog from './PluginCatalog.ts';
 import * as PluginHost from './PluginHost.ts';
 import { TEST_BASE_PLUGIN_KEY, TEST_PLUGIN_KEY, TestBasePlugin, TestPlugin, TestSkill } from './testing/index.ts';
 
-const URL = 'https://plugin.test/';
 const SPACE_ID = 'B2N35FBQKXIOTC5XEOCRVORIYQZHM2IBM';
 
 const makeHost = () => PluginHost.make(() => ({ primary: TestPlugin(), dependencies: [TestBasePlugin()] }));
-
-const fetchInvoke = (host: PluginHost.Host, key: string, data: unknown, search = '') =>
-  host.fetch(
-    new Request(`${URL}${search}`, {
-      method: 'POST',
-      headers: { [PluginHost.OPERATION_KEY_HEADER]: key },
-      body: JSON.stringify({ data }),
-    }),
-    {},
-  );
 
 describe('PluginHost', () => {
   test('describes what the primary plugin contributes, not its dependencies', async ({ expect }) => {
@@ -53,13 +40,19 @@ describe('PluginHost', () => {
   test('invokes an operation of the primary plugin by key', async ({ expect }) => {
     const host = makeHost();
     expect(await host.invoke({ operationKey: String(Reply.meta.key), input: { hello: 'world' } }, {})).toEqual({
-      hello: 'world',
+      ok: true,
+      output: { hello: 'world' },
     });
     // EDGE names an operation by its bare key.
-    expect(await host.invoke({ operationKey: 'com.example.operation.reply', input: 'bare' }, {})).toEqual('bare');
-    await expect(host.invoke({ operationKey: String(Fibonacci.meta.key), input: {} }, {})).rejects.toBeInstanceOf(
-      PluginHost.OperationNotFoundError,
-    );
+    expect(await host.invoke({ operationKey: 'com.example.operation.reply', input: 'bare' }, {})).toEqual({
+      ok: true,
+      output: 'bare',
+    });
+    // A dependency's operation is not the release's own.
+    expect(await host.invoke({ operationKey: String(Fibonacci.meta.key), input: {} }, {})).toMatchObject({
+      ok: false,
+      error: { code: 'operation-not-found' },
+    });
   });
 
   test('activates once per host and reuses it across calls', async ({ expect }) => {
@@ -76,45 +69,20 @@ describe('PluginHost', () => {
     expect(made).toBe(1);
   });
 
-  test('rejects an unknown operation and an invalid or unserved space', async ({ expect }) => {
+  test('returns failures as data: an unknown operation and an invalid or unserved space', async ({ expect }) => {
     const host = makeHost();
-    await expect(host.invoke({ operationKey: 'com.example.operation.missing' }, {})).rejects.toBeInstanceOf(
-      PluginHost.OperationNotFoundError,
-    );
-    await expect(host.invoke({ operationKey: String(Reply.meta.key), spaceId: 'nope' }, {})).rejects.toBeInstanceOf(
-      PluginHost.InvalidRequestError,
-    );
-    // A space needs the data bindings, which this host was not given.
-    await expect(host.invoke({ operationKey: String(Reply.meta.key), spaceId: SPACE_ID }, {})).rejects.toBeInstanceOf(
-      PluginHost.InvalidRequestError,
-    );
-  });
-
-  describe('functions protocol', () => {
-    test('meta route returns the catalog', async ({ expect }) => {
-      const response = await makeHost().fetch(
-        new Request(URL, { headers: { [FUNCTION_ROUTE_HEADER]: FunctionRouteValue.Meta } }),
-        {},
-      );
-      expect(response.status).toBe(200);
-      const catalog: PluginCatalog.Catalog = await response.json();
-      expect(catalog.plugin.key).toBe(TEST_PLUGIN_KEY);
+    expect(await host.invoke({ operationKey: 'com.example.operation.missing' }, {})).toMatchObject({
+      ok: false,
+      error: { code: 'operation-not-found', name: 'OperationNotFoundError' },
     });
-
-    test('answers with EdgeResponse envelopes', async ({ expect }) => {
-      const host = makeHost();
-      const ok = await fetchInvoke(host, String(Reply.meta.key), { hello: 'world' });
-      expect(await ok.json()).toEqual({ success: true, data: { hello: 'world' } });
-
-      const unknown = await fetchInvoke(host, 'com.example.operation.missing', {});
-      expect(unknown.status).toBe(404);
-      expect(await unknown.json()).toMatchObject({ success: false });
-
-      const invalidSpace = await fetchInvoke(host, String(Reply.meta.key), {}, '?spaceId=nope');
-      expect(invalidSpace.status).toBe(400);
-
-      const missingKey = await host.fetch(new Request(URL, { method: 'POST', body: JSON.stringify({ data: {} }) }), {});
-      expect(missingKey.status).toBe(400);
+    expect(await host.invoke({ operationKey: String(Reply.meta.key), spaceId: 'nope' }, {})).toMatchObject({
+      ok: false,
+      error: { code: 'invalid-request', message: expect.stringContaining('nope') },
+    });
+    // A space needs the data bindings, which this host was not given.
+    expect(await host.invoke({ operationKey: String(Reply.meta.key), spaceId: SPACE_ID }, {})).toMatchObject({
+      ok: false,
+      error: { code: 'invalid-request' },
     });
   });
 });
