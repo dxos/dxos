@@ -20,6 +20,7 @@ export const translations = [
         'unsupported-type.title': 'Nothing here can open this',
         'unsupported-type.message':
           'No enabled plugin supports {{typename}}, so there is nothing to show. The item itself is unchanged and still stored in the space.',
+        'find-plugin.label': 'Find plugin',
       },
     },
   },

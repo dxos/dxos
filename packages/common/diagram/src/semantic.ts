@@ -178,9 +178,9 @@ export type Bus = {
   hub: End;
   direction: 'out' | 'in';
   edges: readonly Edge[];
-  /** Text on the trunk, from a multi-target statement's label. */
+  /** Text on the trunk, from a multi-target statement's label or the property its edges share. */
   label?: string;
-  /** Gathered by relation rather than by a `bus` statement, so the router may still split it. */
+  /** Gathered by inheritance rather than by a `bus` statement, so the router may still split it. */
   implicit?: boolean;
 };
 
@@ -262,17 +262,83 @@ export const inheritanceKey = (edge: Edge): string | undefined =>
     ? `${edge.to.node}|${edge.relation}|in`
     : undefined;
 
+/** Prefix of the keys `propertyKeys` gives, which carry their label to the trunk. */
+const PROPERTY = '@';
+
+/**
+ * The implicit bus keys of labelled edges: edges that carry one property (same label and style)
+ * out of one node — from one pinned side, if pinned — share a trunk, and so do those into one node.
+ * Fanning out wins over gathering in, so an edge joins at most one such bus.
+ */
+const propertyKeys = (edges: readonly Edge[]): Map<Edge, string> => {
+  const candidates = edges.filter(
+    (edge) =>
+      edge.bus === undefined &&
+      edge.label !== undefined &&
+      inheritanceKey(edge) === undefined &&
+      edge.via.length === 0 &&
+      edge.from.node !== edge.to.node,
+  );
+  const property = (edge: Edge, end: End, direction: Bus['direction']) =>
+    `${PROPERTY}${busKey(
+      end.node,
+      JSON.stringify([
+        edge.label,
+        end.sides,
+        end.soft,
+        edge.relation,
+        edge.head,
+        edge.tail,
+        edge.stroke,
+        edge.color,
+        edge.message,
+      ]),
+      direction,
+    )}`;
+  const keys = new Map<Edge, string>();
+  const claim = (pool: readonly Edge[], keyOf: (edge: Edge) => string) => {
+    const families = new Map<string, Edge[]>();
+    pool.forEach((edge) => families.set(keyOf(edge), [...(families.get(keyOf(edge)) ?? []), edge]));
+    for (const [key, family] of families) {
+      if (family.length > 1) {
+        family.forEach((edge) => keys.set(edge, key));
+      }
+    }
+  };
+  claim(candidates, (edge) => property(edge, edge.from, 'out'));
+  claim(
+    candidates.filter((edge) => !keys.has(edge)),
+    (edge) => property(edge, edge.to, 'in'),
+  );
+  return keys;
+};
+
+/**
+ * The key each edge shares a trunk under: a `bus` statement's, an inheritance edge's (`~`), or a
+ * property's (`@`); edges with none are drawn alone.
+ */
+export const busKeys = (diagram: Diagram): Map<Edge, string> => {
+  const properties = propertyKeys(diagram.edges);
+  return new Map(
+    diagram.edges.flatMap((edge) => {
+      const inherited = inheritanceKey(edge);
+      const key = edge.bus ?? (inherited === undefined ? properties.get(edge) : `~${inherited}`);
+      return key === undefined ? [] : [[edge, key] as const];
+    }),
+  );
+};
+
 /** The edges grouped into buses (two or more edges with one key) and the rest. */
 export const buses = (diagram: Diagram): { buses: Bus[]; single: Edge[] } => {
   const byKey = new Map<string, { hub: End; direction: Bus['direction']; edges: Edge[]; implicit: boolean }>();
+  const keys = busKeys(diagram);
   for (const edge of diagram.edges) {
-    const implicit = inheritanceKey(edge);
-    const key = edge.bus ?? (implicit === undefined ? undefined : `~${implicit}`);
+    const key = keys.get(edge);
     if (key === undefined) {
       continue;
     }
     const [hub, direction] = key.endsWith('|in') ? [edge.to, 'in' as const] : [edge.from, 'out' as const];
-    const entry = byKey.get(key) ?? { hub, direction, edges: [], implicit: edge.bus === undefined };
+    const entry = byKey.get(key) ?? { hub, direction, edges: [], implicit: key.startsWith('~') };
     entry.edges.push(edge);
     byKey.set(key, entry);
   }
@@ -288,7 +354,11 @@ export const buses = (diagram: Diagram): { buses: Bus[]; single: Edge[] } => {
       hub,
       direction,
       edges,
-      ...(diagram.busLabels.has(key) ? { label: diagram.busLabels.get(key) } : {}),
+      ...(diagram.busLabels.has(key)
+        ? { label: diagram.busLabels.get(key) }
+        : key.startsWith(PROPERTY)
+          ? { label: edges[0].label }
+          : {}),
       ...(implicit ? { implicit } : {}),
     });
   }
