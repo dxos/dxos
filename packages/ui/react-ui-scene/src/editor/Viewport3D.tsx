@@ -25,6 +25,7 @@ export const Viewport3D = ({
   picture,
   grid,
   snap,
+  axes,
   theme,
   face,
   camera,
@@ -52,6 +53,7 @@ export const Viewport3D = ({
       theme={look}
       grid={grid}
       snap={snap}
+      axes={axes}
       face={face}
       camera={camera}
       onSelect={onSelect}

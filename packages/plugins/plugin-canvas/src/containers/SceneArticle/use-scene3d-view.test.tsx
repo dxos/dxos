@@ -77,4 +77,21 @@ describe('useScene3DView', () => {
     expect(again.result.current.grid).toBe(false);
     expect(theirs.result.current.grid).toBe(true);
   });
+
+  test("snapping and axes are the viewer's own: snap follows the grid until set, axes start hidden", () => {
+    const { canvas } = makeCanvas({ dimension: '3d' });
+    const wrapper = viewer();
+    const mine = renderHook(() => useScene3DView(canvas), { wrapper });
+    expect(mine.result.current.snap).toBe(true);
+    expect(mine.result.current.axes).toBe(false);
+    act(() => {
+      mine.result.current.onSnapChange(false);
+      mine.result.current.onAxesChange(true);
+    });
+    mine.unmount();
+    const again = renderHook(() => useScene3DView(canvas), { wrapper });
+    expect(again.result.current.snap).toBe(false);
+    expect(again.result.current.axes).toBe(true);
+    expect(again.result.current.grid).toBe(true);
+  });
 });

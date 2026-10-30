@@ -62,6 +62,8 @@ const Scene3DViewStateSchema = Schema.Struct({
   grid: Schema.optional(Schema.Boolean),
   /** Whether gizmos and placing snap to the grid, apart from whether it is drawn; follows the grid until set. */
   snap: Schema.optional(Schema.Boolean),
+  /** Whether this viewer draws the x, y and z axes through the origin; hidden until turned on. */
+  axes: Schema.optional(Schema.Boolean),
   /** The look this viewer picked over the scene's own (`cad` or `presentation`). */
   theme: Schema.optional(Schema.Literals(['cad', 'presentation'])),
 });

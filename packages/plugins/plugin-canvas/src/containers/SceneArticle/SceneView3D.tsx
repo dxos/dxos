@@ -33,6 +33,7 @@ import { type Canvas } from '#types';
 import { useSceneDocument } from '../SceneStage/index.ts';
 import { useInspectorDock } from './use-inspector-dock.ts';
 import { useSceneChoice } from './use-scene-choice.ts';
+import { useSceneShots } from './use-scene-shots.ts';
 import { useScene3DView } from './use-scene3d-view.ts';
 import { canvasViewAspect } from './view-state.ts';
 
@@ -136,17 +137,21 @@ export const SceneView3D = ({ canvas, role }: SceneView3DProps) => {
       themeOverride: view.theme,
       grid: view.grid,
       snap: view.snap,
+      axes: view.axes,
     }),
-    [view.theme, view.grid, view.snap, authoredTheme],
+    [view.theme, view.grid, view.snap, view.axes, authoredTheme],
   );
   const handleDisplayChange = useCallback(
     (next: Partial<EditorDisplay>) => {
       'themeOverride' in next && view.onThemeChange(isTheme3D(next.themeOverride) ? next.themeOverride : undefined);
       next.grid !== undefined && view.onGridChange(next.grid);
       next.snap !== undefined && view.onSnapChange(next.snap);
+      next.axes !== undefined && view.onAxesChange(next.axes);
     },
     [view],
   );
+
+  const { shots, onShotChange } = useSceneShots(stored);
 
   const [element, setElement] = useState<HTMLElement | null>(null);
   if (!stored || !document) {
@@ -177,6 +182,8 @@ export const SceneView3D = ({ canvas, role }: SceneView3DProps) => {
           docked={dock.docked}
           onDockedChange={dock.onDockedChange}
           sceneChoice={sceneChoice}
+          shots={shots}
+          onShotChange={onShotChange}
         >
           <SceneEditCommands element={element} />
           <SceneEditor.Viewport>
@@ -186,6 +193,7 @@ export const SceneView3D = ({ canvas, role }: SceneView3DProps) => {
             <SceneEditor.Display />
             <SceneEditor.ContextMenu />
             <SceneEditor.Notice />
+            <SceneEditor.Timeline />
           </SceneEditor.Viewport>
           <SceneEditor.Inspector catalogs={CATALOGS_3D} />
         </SceneEditor.Root>

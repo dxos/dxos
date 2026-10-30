@@ -12,3 +12,4 @@ export * from './scene-rows.ts';
 export * from './SceneEditor.tsx';
 export * from './property-form.tsx';
 export * from './sections.tsx';
+export * from './timeline.ts';

@@ -14,6 +14,8 @@ import React, {
   useState,
 } from 'react';
 
+import { type Timeline, keyTimes, timelineFps } from '@dxos/animation';
+import { TimelineBar } from '@dxos/react-ui-animation';
 import * as Button from '@dxos/react-ui/Button';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { type Layer, type LayoutIntent, type ModelIntent, type Scene, findLayout, resolveLayout } from '@dxos/scene';
@@ -37,6 +39,7 @@ import { type History } from './history.ts';
 import { withoutHidden } from './scene-rows.ts';
 import { SceneEditorInspector } from './sections.tsx';
 import { type ActiveTool, createEditorStore } from './store.ts';
+import { type EditorShot, keySelection, placementFields, sampleDocument } from './timeline.ts';
 
 /** The rail's group for each tool category, as 2D's rail names them. */
 const CATEGORY_GROUPS: Readonly<Record<ToolCategory, string>> = {
@@ -44,6 +47,9 @@ const CATEGORY_GROUPS: Readonly<Record<ToolCategory, string>> = {
   transform: 'Transform',
   create: CREATE_GROUP,
 };
+
+/** A new shot's length, in seconds, before the animator changes it. */
+const DEFAULT_SHOT_SECONDS = 5;
 
 /** How far one camera-bar zoom step moves the camera, in both dimensions. */
 const ZOOM_STEP = 1.25;
@@ -81,6 +87,10 @@ export type SceneEditorRootProps<C> = PropsWithChildren<{
   docked?: boolean;
   onDockedChange?: (docked: boolean) => void;
   sceneChoice?: SceneChoice;
+  /** The shots staging the scene, for the Timeline panel. */
+  shots?: readonly EditorShot[];
+  /** Writes a shot's timeline; an undefined shot id makes a new shot staging the scene. */
+  onShotChange?: (shot: string | undefined, timeline: Timeline) => void;
 }>;
 
 /**
@@ -109,6 +119,8 @@ const SceneEditorRoot = <C,>({
   docked = false,
   onDockedChange,
   sceneChoice,
+  shots,
+  onShotChange,
   children,
 }: SceneEditorRootProps<C>) => {
   const registry = useContext(RegistryContext);
@@ -128,7 +140,17 @@ const SceneEditorRoot = <C,>({
   const sceneRecord = document.scenes.find((record) => record.id === scene);
   const rootLayout = sceneRecord?.layout;
   const layout = path.at(-1) ?? rootLayout;
-  const shown = useMemo(() => withoutHidden(document), [document]);
+  // While the Timeline panel's playhead is off the start (or it plays), the viewport draws the shot sampled there.
+  const shotId = useAtomValue(store.atoms.shot);
+  const time = useAtomValue(store.atoms.time);
+  const playing = useAtomValue(store.atoms.playing);
+  const shotTimeline = (shots?.find((shot) => shot.id === shotId) ?? shots?.[0])?.timeline;
+  const shown = useMemo(() => {
+    const visible = withoutHidden(document);
+    return shotTimeline && layout !== undefined && (playing || time > 0)
+      ? sampleDocument(visible, layout, shotTimeline, time)
+      : visible;
+  }, [document, shotTimeline, layout, playing, time]);
   const model = document.models[0]?.id;
   const record = layout === undefined ? undefined : findLayout(document, layout);
   const selected = selection.length === 1 ? record?.elements[selection[0]] : undefined;
@@ -325,6 +347,7 @@ const SceneEditorRoot = <C,>({
         picture={!editing}
         grid={editing && display.grid}
         snap={editing && display.snap}
+        axes={editing && (display.axes ?? false)}
         theme={display.theme}
         face={face}
         camera={viewerCamera}
@@ -382,6 +405,8 @@ const SceneEditorRoot = <C,>({
       docked={!readonly && docked}
       onDockedChange={onDockedChange}
       sceneChoice={sceneChoice}
+      shots={shots}
+      onShotChange={onShotChange}
       renderViewport={renderViewport}
     >
       {editing ? (
@@ -570,6 +595,9 @@ const SceneEditorDisplay = ({ classNames = 'bottom-2 right-2' }: { classNames?: 
         onGridChange={onDisplayChange && ((grid) => onDisplayChange({ grid: grid !== undefined && grid !== 'none' }))}
         snap={display.snap}
         onSnapToggle={onDisplayChange && (() => onDisplayChange({ snap: !display.snap }))}
+        dim={config.dim}
+        axes={display.axes}
+        onAxesToggle={onDisplayChange && (() => onDisplayChange({ axes: !display.axes }))}
         guides={config.display.guides ? display.guides : undefined}
         onGuidesToggle={
           config.display.guides && onDisplayChange ? () => onDisplayChange({ guides: !display.guides }) : undefined
@@ -614,6 +642,89 @@ const SceneEditorNotice = () => {
 
 SceneEditorNotice.displayName = 'SceneEditor.Notice';
 
+/**
+ * The Timeline panel (decision 16), shared by both dimensions: the shots staging the open scene, played and scrubbed
+ * by sampling the shot into the viewport (never written), and keyed from the selection's animatable fields into the
+ * shot's timeline; with no shot, the first key makes one.
+ */
+const SceneEditorTimeline = ({ classNames = 'bottom-14 left-1/2 -translate-x-1/2' }: { classNames?: string }) => {
+  const { config, document, layout, store, readonly, shots, onShotChange } = useSceneEditor('SceneEditor.Timeline');
+  const selection = useAtomValue(store.atoms.selection);
+  const shotId = useAtomValue(store.atoms.shot);
+  const time = useAtomValue(store.atoms.time);
+  const playing = useAtomValue(store.atoms.playing);
+  const registry = useContext(RegistryContext);
+  const shot = shots?.find((entry) => entry.id === shotId) ?? shots?.[0];
+  const timeline = shot?.timeline;
+  const duration = timeline?.duration ?? DEFAULT_SHOT_SECONDS;
+  const fps = timelineFps(timeline);
+  const keys = useMemo(() => keyTimes(timeline, selection), [timeline, selection]);
+
+  // Playback advances the playhead each frame and stops at the end.
+  useEffect(() => {
+    if (!playing) {
+      return;
+    }
+    let last = performance.now();
+    let frame = requestAnimationFrame(function step(now) {
+      const next = registry.get(store.atoms.time) + (now - last) / 1000;
+      last = now;
+      if (next >= duration) {
+        registry.set(store.atoms.time, duration);
+        registry.set(store.atoms.playing, false);
+        return;
+      }
+      registry.set(store.atoms.time, next);
+      frame = requestAnimationFrame(step);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [playing, duration, registry, store]);
+
+  if (!shots || !onShotChange) {
+    return null;
+  }
+  const key = () =>
+    layout !== undefined &&
+    onShotChange(
+      shot?.id,
+      keySelection({ timeline, document, layout, selection, t: time, fields: config.animatable ?? placementFields }),
+    );
+  return (
+    <div className={mx('absolute w-max max-w-[calc(100%-2rem)] flex gap-1 items-center', classNames)}>
+      {shots.length > 1 && (
+        <Toolbar.Root classNames={FLOATING_BAR} data-testid='timeline-shots'>
+          {shots.map((entry, index) => (
+            <Button.Root
+              key={entry.id}
+              variant={entry.id === shot?.id ? 'primary' : 'ghost'}
+              label={entry.name ?? `Shot ${index + 1}`}
+              data-testid={`timeline-shot-${entry.id}`}
+              onClick={() => store.setShot(entry.id)}
+            />
+          ))}
+        </Toolbar.Root>
+      )}
+      <TimelineBar
+        classNames={FLOATING_BAR}
+        time={time}
+        duration={duration}
+        playing={playing}
+        fps={fps}
+        keys={keys}
+        readonly={readonly}
+        onPlayingChange={(next) => {
+          next && time >= duration && store.setTime(0);
+          store.setPlaying(next);
+        }}
+        onTimeChange={store.setTime}
+        onAddKey={selection.length > 0 && !readonly ? key : undefined}
+      />
+    </div>
+  );
+};
+
+SceneEditorTimeline.displayName = 'SceneEditor.Timeline';
+
 export const SceneEditor = {
   Root: SceneEditorRoot,
   Inspector: SceneEditorInspector,
@@ -624,4 +735,5 @@ export const SceneEditor = {
   Display: SceneEditorDisplay,
   ContextMenu: SceneEditorContextMenu,
   Notice: SceneEditorNotice,
+  Timeline: SceneEditorTimeline,
 };

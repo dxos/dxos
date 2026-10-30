@@ -103,6 +103,8 @@ describe('SceneEditor', () => {
     render(<Editor dim='3d' onDisplayChange={onDisplayChange} />);
     await userEvent.click(screen.getByTestId('toolbar-snap'));
     expect(onDisplayChange).toHaveBeenLastCalledWith({ snap: true });
+    await userEvent.click(screen.getByTestId('toolbar-axes'));
+    expect(onDisplayChange).toHaveBeenLastCalledWith({ axes: true });
     expect(screen.getByTestId('viewport').dataset.grid).toBe('true');
   });
 });

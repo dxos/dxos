@@ -34,6 +34,10 @@ export type EditorAtoms = {
   menu: Atom.Writable<MenuAnchor | undefined>;
   /** A message about the last command (a refused paste, a failed import). */
   notice: Atom.Writable<string | undefined>;
+  /** The Timeline panel's shot, playhead (seconds) and whether it plays; sampled for the viewport, never written. */
+  shot: Atom.Writable<string | undefined>;
+  time: Atom.Writable<number>;
+  playing: Atom.Writable<boolean>;
 };
 
 export type EditorStoreOptions = {
@@ -54,6 +58,9 @@ export type EditorStore = {
   commit: () => void;
   setMenu: (menu: MenuAnchor | undefined) => void;
   setNotice: (notice: string | undefined) => void;
+  setShot: (shot: string | undefined) => void;
+  setTime: (time: number) => void;
+  setPlaying: (playing: boolean) => void;
 };
 
 /** Fresh editor state, kept alive for the editor's lifetime (strict-mode remounts reuse it). */
@@ -66,6 +73,9 @@ export const createEditorStore = (registry: Registry.AtomRegistry, options: Edit
     preview: Atom.keepAlive(Atom.make<EditorPreview | undefined>(undefined)),
     menu: Atom.keepAlive(Atom.make<MenuAnchor | undefined>(undefined)),
     notice: Atom.keepAlive(Atom.make<string | undefined>(undefined)),
+    shot: Atom.keepAlive(Atom.make<string | undefined>(undefined)),
+    time: Atom.keepAlive(Atom.make(0)),
+    playing: Atom.keepAlive(Atom.make(false)),
   };
   const select = (ids: readonly string[]) => {
     registry.set(atoms.selection, ids);
@@ -89,5 +99,12 @@ export const createEditorStore = (registry: Registry.AtomRegistry, options: Edit
     },
     setMenu: (menu) => registry.set(atoms.menu, menu),
     setNotice: (notice) => registry.set(atoms.notice, notice),
+    setShot: (shot) => {
+      registry.set(atoms.shot, shot);
+      registry.set(atoms.time, 0);
+      registry.set(atoms.playing, false);
+    },
+    setTime: (time) => registry.set(atoms.time, Math.max(0, time)),
+    setPlaying: (playing) => registry.set(atoms.playing, playing),
   };
 };

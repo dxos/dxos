@@ -9,6 +9,7 @@ import { type Fragment, type LayoutIntent, type ModelIntent, type Scene } from '
 import { type InspectorSectionDef } from '../components/index.ts';
 import { type BackgroundGrid } from '../model/index.ts';
 import { type ActiveTool, type FaceSelection } from './store.ts';
+import { type AnimatableFields } from './timeline.ts';
 
 type Point = { x: number; y: number };
 
@@ -35,6 +36,8 @@ export type ViewportProps<C = unknown> = {
   /** The grid drawn, and snapping (both follow the display panel). */
   grid: boolean;
   snap: boolean;
+  /** The axes through the origin drawn. */
+  axes?: boolean;
   /** The look's id (a default style catalog). */
   theme: string;
   face?: FaceSelection;
@@ -132,5 +135,7 @@ export type DimensionConfig<C = unknown> = {
   /** A line over the properties form (3D: the selected face). */
   propertyInfo?: (state: { face?: FaceSelection }) => ReactNode;
   sections?: readonly SectionDef[];
+  /** The element fields the Timeline panel keys (`placementFields` when unset). */
+  animatable?: AnimatableFields;
   commands?: readonly ExtraCommandDef[];
 };

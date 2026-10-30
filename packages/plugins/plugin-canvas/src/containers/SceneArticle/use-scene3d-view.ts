@@ -21,6 +21,8 @@ export type Scene3DView = {
   onGridChange: (grid: boolean) => void;
   snap: boolean;
   onSnapChange: (snap: boolean) => void;
+  axes: boolean;
+  onAxesChange: (axes: boolean) => void;
   /** The look picked over the scene's own; undefined until picked. */
   theme: Theme3D | undefined;
   onThemeChange: (theme: Theme3D | undefined) => void;
@@ -33,7 +35,7 @@ export type Scene3DView = {
  */
 export const useScene3DView = (canvas: Canvas.Canvas): Scene3DView => {
   const contextId = Entity.getURI(canvas);
-  const { camera, grid = true, snap = grid, theme } = useViewState(scene3dViewAspect, contextId);
+  const { camera, grid = true, snap = grid, axes = false, theme } = useViewState(scene3dViewAspect, contextId);
   const { update } = useViewStateActions(scene3dViewAspect, contextId);
   const onCameraChange = useCallback(
     (next: Scene.Camera3D) => update((state) => ({ ...state, camera: { ...next, target: { ...next.target } } })),
@@ -41,10 +43,11 @@ export const useScene3DView = (canvas: Canvas.Canvas): Scene3DView => {
   );
   const onGridChange = useCallback((next: boolean) => update((state) => ({ ...state, grid: next })), [update]);
   const onSnapChange = useCallback((next: boolean) => update((state) => ({ ...state, snap: next })), [update]);
+  const onAxesChange = useCallback((next: boolean) => update((state) => ({ ...state, axes: next })), [update]);
   const onThemeChange = useCallback(
     (next: Theme3D | undefined) =>
       update(({ theme: _theme, ...state }) => (next === undefined ? state : { ...state, theme: next })),
     [update],
   );
-  return { camera, onCameraChange, grid, onGridChange, snap, onSnapChange, theme, onThemeChange };
+  return { camera, onCameraChange, grid, onGridChange, snap, onSnapChange, axes, onAxesChange, theme, onThemeChange };
 };
