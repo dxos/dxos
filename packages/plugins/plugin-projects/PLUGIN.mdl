@@ -408,6 +408,40 @@ test QA-7: Grow a spec from prose
       expect: the section lists "Search" under "Depends on"
 ```
 
+```mdl
+test QA-8: Switch between a project's specs
+  desc: |
+    A project holds a feature map and a spec of prose side by side, and its Specs tab shows one at a time, picked from
+    a dropdown in the toolbar, which also adds a spec. Walked by the autocue flow `project-specs` against the ProjectArticle story "Default",
+    whose project "Project 1" owns the specs "Inbox and agents" and "Launch talk".
+  actors: human
+  covers: [F-4.1, F-4.4, F-4.5]
+  status: unverified
+  given:
+    - storybook serves plugin-projects
+    - the project "Project 1" owns the spec "Inbox and agents", which holds eight features, and then the spec
+      "Launch talk", whose document is three paragraphs of prose
+  steps:
+    - name: See the project's specs
+      do: Open the project "Project 1" on its Overview.
+      expect: one summary line per spec, "Inbox and agents" counting its features and then "Launch talk"
+    - name: Open the Specs tab
+      do: Click the Specs tab.
+      expect: the tab shows "Inbox and agents", whose document embeds each of its features as a section
+    - name: List the specs
+      do: Click the spec dropdown in the toolbar.
+      expect: the menu lists "Inbox and agents", checked, and "Launch talk", and ends in Add spec
+    - name: Pick the other spec
+      do: Click "Launch talk".
+      expect: the tab shows "Launch talk", three paragraphs of prose and no feature sections
+    - name: Add a spec
+      do: Click Add spec in the dropdown, name the spec "Release notes" and click Create.
+      expect: the tab shows "Release notes", whose document is its front matter alone, and the dropdown lists it third
+    - name: Go back to the feature map
+      do: Pick "Inbox and agents" from the dropdown, then click Canvas.
+      expect: the canvas shows the eight feature cards of "Inbox and agents"
+```
+
 ## Changelog
 
 ```mdl
@@ -864,4 +898,31 @@ decision D-53: A spec's nav-tree node holds the spec itself, as a feature level 
   why: A spec is an object, like a feature, so its level should behave like one rather than wrap the project and the spec.
   rejected:
     - A spec node holding the project and the spec, which loses the companions an object gets.
+```
+
+```mdl
+decision D-54: A QA walk shows a project's several specs working, so the change can be seen in the app.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [QA-8]
+```
+
+```mdl
+decision D-55: QA-8 opens a project holding a feature map and a spec of prose, lists both on the Overview, switches between them from the Specs tab's dropdown, adds a third spec from it, and ends on the feature map's canvas. Fills in [D-54].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-8]
+  why: A prose spec next to a feature map shows that a spec need not hold features, and the canvas at the end shows the features still read from the spec after they moved into an annotation.
+```
+
+```mdl
+decision D-56: Creating a spec asks for its name, which is required and heads the new spec's document. Fills in [D-51].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-8]
+  why: The spec form opened by Add spec had no field to show, so the dialog stayed empty and no spec could be added.
+  rejected:
+    - Creating an unnamed spec at once, which leaves a picker entry with no label.
 ```

@@ -257,7 +257,7 @@ export const ProjectArticle = ({ role, subject, attendableId, spec: levelSpec, f
       targetNodeId: attendableId,
       navigable: false,
     });
-    const added = ref?.target;
+    const added = await ref?.load();
     if (!Spec.instanceOf(added)) {
       return;
     }
@@ -616,7 +616,7 @@ type SpecPickerActionsProps = {
   onAdd: () => void;
 };
 
-/** A dropdown of the project's specs, the one shown checked, ending in an action to add another. */
+/** A dropdown of the project's specs, named after the one shown and checking it, ending in an action to add another. */
 const useSpecPickerActions = ({ specs, selected, onSelect, onAdd }: SpecPickerActionsProps) => {
   const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
   return useCallback<ActionGroupBuilderFn>(
@@ -629,7 +629,9 @@ const useSpecPickerActions = ({ specs, selected, onSelect, onAdd }: SpecPickerAc
         {
           variant: 'dropdownMenu',
           selectCardinality: 'single',
+          // The trigger names the spec shown.
           applyActive: true,
+          iconOnly: false,
           value: selected.id,
           icon: 'ph--blueprint--regular',
           label: ['specs.label', { ns: ProjectsNamespace.key }],

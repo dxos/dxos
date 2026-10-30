@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
@@ -18,6 +19,11 @@ import { ProjectOperation } from '#types';
 
 type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObject']>[1];
 
+/** A spec is named when it is created: its name heads its text. */
+const CreateSpecSchema = Schema.Struct({
+  name: Schema.String.annotate({ title: 'Name' }),
+});
+
 /**
  * Contributes the "create Project" entry so a new `Project` can be created from the nav menu (the
  * Projects type-section `+` action). The panel offers contributed project templates (the default by
@@ -28,7 +34,7 @@ type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObjec
  * field offers inline create only for a typename some plugin can create — without this the
  * project's repository picker had no `+`.
  *
- * Specs are created empty from the nav menu; a spec's features are made on its map.
+ * Specs are created with only a name; a spec's features are made on its map.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -57,10 +63,11 @@ export default Capability.makeModule(
       },
       {
         id: Type.getTypename(Spec.Spec),
-        createObject: (props: { name?: string }, options: CreateOptions) =>
+        inputSchema: CreateSpecSchema,
+        createObject: (props: Schema.Schema.Type<typeof CreateSpecSchema>, options: CreateOptions) =>
           Operation.invoke(
             SpaceOperation.AddObject,
-            { object: Spec.make({ name: props.name ?? '' }), target: options.target },
+            { object: Spec.make({ name: props.name }), target: options.target },
             { spaceId: options.db.spaceId },
           ),
       },

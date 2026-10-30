@@ -18,6 +18,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
+import * as Spec from '@dxos/compute/Spec';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
@@ -65,6 +66,19 @@ const MILESTONE_NAME = 'Beta';
 const OUTLINE_ITEM = 'Draft the launch checklist';
 const OTHER_PROJECT_NAME = 'Project 2';
 const SPEC_NAME = 'Inbox and agents';
+const TALK_SPEC_NAME = 'Launch talk';
+const NEW_SPEC_NAME = 'Release notes';
+const TALK_SPEC_CONTENT = [
+  '---',
+  `name: ${TALK_SPEC_NAME}`,
+  '---',
+  '',
+  'A ten-minute talk that introduces Composer to people who have not used it.',
+  '',
+  'It opens on a space someone already works in, then shows the same space on a second device.',
+  '',
+  'It ends by asking the audience to try it on their own notes.',
+].join('\n');
 const MOVE_ACTION_LABEL = 'Move to…';
 
 /**
@@ -171,8 +185,13 @@ const createProject = (space: Space, storyGeneration: number) => {
     text.content = `- [ ] ${OUTLINE_ITEM}\n- [ ] Review #12752 before the release\n- [ ] [${TASK_TITLE}](${Obj.getURI(task)})\n`;
   });
 
-  // The project's spec, which puts the Spec tab and the overview's summary line on the article.
+  // The project's specs, which put the Specs tab and the overview's summary lines on the article: a feature map, then a
+  // spec of prose alone.
   FeatureSeed.seed(space.db, { name: SPEC_NAME, project });
+  const talk = space.db.add(Spec.make({ name: TALK_SPEC_NAME, content: TALK_SPEC_CONTENT }));
+  Obj.update(project, (project) => {
+    project.specs.push(Ref.make(talk));
+  });
 
   // A second project, so a task row's `Move to…` has somewhere to go; it has no spec.
   const destination = space.db.add(Project.make({ name: OTHER_PROJECT_NAME }));
@@ -385,7 +404,9 @@ export const WithSpec: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await seedContent();
-    const summary = await canvas.findByTestId('projectsPlugin.specSummary', undefined, { timeout: 10_000 });
+    const summaries = await canvas.findAllByTestId('projectsPlugin.specSummary', undefined, { timeout: 10_000 });
+    await expect(summaries).toHaveLength(2);
+    const [summary] = summaries;
     await waitFor(() => expect(summary.textContent).toMatch(/\d+ features/), { timeout: 10_000 });
     await userEvent.click(within(summary).getByRole('button', { name: SPEC_NAME }));
     await expect(canvas.findByTestId('feature-map.document', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
@@ -436,6 +457,40 @@ export const SpecDocument: Story = {
     await showTab(canvas, 'spec');
     const document = await canvas.findByTestId('feature-map.document', undefined, { timeout: 10_000 });
     await waitFor(() => expect(document.textContent).toContain(`name: ${SPEC_NAME}`), { timeout: 10_000 });
+  },
+};
+
+/** The Specs tab shows one spec at a time; the dropdown in its toolbar lists every spec, switches between them and adds one. */
+export const SpecPicker: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await seedContent();
+    await showTab(canvas, 'spec');
+    const document = await canvas.findByTestId('feature-map.document', undefined, { timeout: 10_000 });
+    await waitFor(() => expect(document.textContent).toContain(`name: ${SPEC_NAME}`), { timeout: 10_000 });
+
+    await userEvent.click(await canvas.findByTestId('projectsPlugin.specPicker', undefined, { timeout: 10_000 }));
+    const menu = await screen.findByRole('menu', undefined, { timeout: 10_000 });
+    await expect(within(menu).getByText(SPEC_NAME)).toBeTruthy();
+    await userEvent.click(within(menu).getByText(TALK_SPEC_NAME));
+    await waitFor(
+      () => expect(canvas.getByTestId('feature-map.document').textContent).toContain(`name: ${TALK_SPEC_NAME}`),
+      { timeout: 10_000 },
+    );
+
+    // Add spec asks for a name, then shows the new spec.
+    await userEvent.click(canvas.getByTestId('projectsPlugin.specPicker'));
+    await userEvent.click(
+      within(await screen.findByRole('menu', undefined, { timeout: 10_000 })).getByText('Add spec'),
+    );
+    await userEvent.click(await screen.findByLabelText(/^name\*?$/i, undefined, { timeout: 10_000 }));
+    await userEvent.paste(NEW_SPEC_NAME);
+    await userEvent.click(screen.getByTestId('save-button'));
+    await waitFor(
+      () => expect(canvas.getByTestId('feature-map.document').textContent).toContain(`name: ${NEW_SPEC_NAME}`),
+      { timeout: 10_000 },
+    );
   },
 };
 
