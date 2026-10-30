@@ -12,14 +12,16 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { NativeSettings } from '#containers';
 
 import { NativeNamespace } from '../namespace.ts';
+import { type NativeOptions } from '../settings-store.ts';
 
-export default Capability.makeModule(() =>
+export default Capability.makeModule((options: NativeOptions) =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, NativeNamespace.key),
         component: NativeSettings,
+        props: ({ data: { subject } }) => ({ subject, defaultAutoUpdate: options.defaultAutoUpdate }),
       }),
     ]),
   ),
