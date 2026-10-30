@@ -16,8 +16,9 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as Tabs from '@dxos/react-ui/Tabs';
 import { Video } from '@dxos/types';
 
-import { meta } from '#meta';
 import { VideoOperation } from '#types';
+
+import { VideoNamespace } from '../../namespace.ts';
 
 export type VideoArticleProps = AppSurface.ObjectArticleProps<Video.Video>;
 
@@ -56,7 +57,7 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
       { video: Ref.make(subject) },
       {
         spaceId: Obj.getDatabase(subject)?.spaceId,
-        notify: { error: ['fetch-description-error.message', { ns: meta.profile.key }] },
+        notify: { error: ['fetch-description-error.message', { ns: VideoNamespace.key }] },
       },
     ).finally(() => {
       fetchingDescriptionRef.current = false;
@@ -74,7 +75,7 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
       { video: Ref.make(subject) },
       {
         spaceId: Obj.getDatabase(subject)?.spaceId,
-        notify: { error: ['summarize-error.message', { ns: meta.profile.key }] },
+        notify: { error: ['summarize-error.message', { ns: VideoNamespace.key }] },
       },
     ).finally(() => setSummarizing(false));
   }, [invokePromise, subject, hasTranscript]);
@@ -85,7 +86,7 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
         .action(
           'openOriginal',
           {
-            label: ['open-original.label', { ns: meta.profile.key }],
+            label: ['open-original.label', { ns: VideoNamespace.key }],
             icon: 'ph--arrow-square-out--regular',
             disabled: !isExternalHttpUrl(video.url),
             disposition: 'toolbar',
@@ -157,7 +158,7 @@ const TranscriptTabs = ({
   onTabChange,
   onRegenerate,
 }: TranscriptTabsProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(VideoNamespace.key);
   // The selected tab reads as primary while this article has attention.
   const { hasAttention } = useAttention(attendableId);
 
@@ -182,14 +183,14 @@ const TranscriptTabs = ({
       MenuBuilder.make()
         .action(
           'tabs',
-          { variant: 'custom', label: ['transcript.tab.label', { ns: meta.profile.key }], render: () => tabs },
+          { variant: 'custom', label: ['transcript.tab.label', { ns: VideoNamespace.key }], render: () => tabs },
           () => {},
         )
         .separator()
         .action(
           'regenerate',
           {
-            label: ['regenerate.label', { ns: meta.profile.key }],
+            label: ['regenerate.label', { ns: VideoNamespace.key }],
             icon: 'ph--arrows-clockwise--regular',
             disposition: 'toolbar',
             hidden: tab !== 'summary',

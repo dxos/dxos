@@ -18,7 +18,7 @@ import * as Select from '@dxos/react-ui/Select';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { ContactPicker } from '@dxos/shell/react';
 
-import { meta } from '#meta';
+import { ClientNamespace } from '../../namespace.ts';
 
 const ROLES = [SpaceMember_Role.READER, SpaceMember_Role.EDITOR, SpaceMember_Role.ADMIN] as const;
 
@@ -33,7 +33,7 @@ const roleLabel: Record<AdmitRole, string> = {
 export type ContactPickerContainerProps = AppSurface.ContactPickerData;
 
 export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ClientNamespace.key);
   const contacts = useContacts();
   const members = useMembers(space.key);
   const spaces = useSpaces();

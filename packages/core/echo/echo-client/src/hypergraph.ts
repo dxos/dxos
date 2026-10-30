@@ -78,6 +78,9 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   readonly #spaceBackends = new Map<SpaceId, LoadBackend>();
   readonly #blobManager = new BlobManager();
 
+  /** Malformed `echo:` URIs already warned about; a ref is read on every render, so one warning each. */
+  readonly #reportedMalformedUris = new Set<string>();
+
   constructor() {
     this._registry = makeRegistry();
     this._registry.add([Type.Type]);
@@ -233,9 +236,19 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
       // TODO(dmaretskyi): Respect `load` flag.
       resolveSync: (uri: URI.URI, load: boolean, onLoad?: () => void) => {
-        if (EID.isEID(uri)) {
-          const res = this._resolveSync(uri, context, onLoad);
+        // Parsed rather than prefix-checked: a malformed `echo:` URI in stored data resolves to nothing
+        // instead of throwing out of every caller that walks an object's refs.
+        const eid = EID.tryParse(uri);
+        if (eid) {
+          const res = this._resolveSync(eid, context, onLoad);
           return res ? materializeStoredSchema(res) : undefined;
+        }
+        if (EID.isEID(uri)) {
+          if (!this.#reportedMalformedUris.has(uri)) {
+            this.#reportedMalformedUris.add(uri);
+            log.warn('malformed echo reference', { uri, space: context.space });
+          }
+          return undefined;
         }
 
         // Registry refs (DXNs) resolve to the entity held in the registry — a type entity by
@@ -433,12 +446,14 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       }
     };
 
+    const done = () => settled || cancelled;
     const diskOnly = source !== 'network';
     for (const candidateSpaceId of candidateSpaceIds) {
       const db = this._databases.get(candidateSpaceId);
+      let dbAttempt: Promise<unknown> = Promise.resolve();
       if (db) {
         pendingDb++;
-        void db
+        dbAttempt = db
           .loadObjectCoreById(entityId, { diskOnly, returnWithUnsatisfiedDeps: true })
           .then((core) => {
             pendingDb--;
@@ -461,10 +476,16 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         const handles = [...db._knownFeedHandles()];
         if (handles.length > 0) {
           pendingQueue++;
-          void this.#searchFeedHandles(candidateSpaceId, entityId, handles)
+          // A disk load misses definitively, and most ids name document objects, so the feeds (each
+          // read whole on a miss) are searched only once the database has not answered.
+          void this.#searchFeedHandles(candidateSpaceId, entityId, handles, {
+            before: diskOnly ? dbAttempt : undefined,
+            done,
+          })
             .then((item) => {
               pendingQueue--;
-              if (cancelled) {
+              // Settled by the database: polling now would outlive the cleanup that already ran.
+              if (done()) {
                 return;
               }
               if (item != null) {
@@ -508,6 +529,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     spaceId: SpaceId,
     entityId: EntityId,
     handles: ReturnType<DatabaseImpl['_knownFeedHandles']>,
+    { before, done }: { before?: Promise<unknown>; done?: () => boolean } = {},
   ): Promise<Entity.Unknown | undefined> {
     for (const handle of handles) {
       const cached = handle.getCachedObjectById(entityId);
@@ -515,11 +537,18 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         return cached;
       }
     }
+    await before;
     for (const handle of handles) {
+      if (done?.()) {
+        return undefined;
+      }
       const [item] = await handle.getObjectsById([entityId]);
       if (item != null) {
         return item;
       }
+    }
+    if (done?.()) {
+      return undefined;
     }
     return this._resolveObjectInSpaceFeeds(spaceId, entityId);
   }
@@ -576,7 +605,6 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       loadedStack: new StackTrace().getStack(),
     }));
 
-    log('trap', { spaceId, objectId });
     if (onResolve) {
       entry(this._resolveEvents, spaceId)
         .orInsert(new Map())

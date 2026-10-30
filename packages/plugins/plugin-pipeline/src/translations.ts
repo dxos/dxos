@@ -6,7 +6,7 @@ import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 import { Pipeline } from '@dxos/types';
 
-import { meta } from '#meta';
+import { PipelineNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -22,7 +22,7 @@ export const translations = [
         'delete-object.label': 'Delete pipeline',
         'object-deleted.label': 'Pipeline deleted',
       },
-      [meta.profile.key]: {
+      [PipelineNamespace.key]: {
         'plugin.name': 'Pipelines',
         'add-column.label': 'Add column',
         'add-card.label': 'Add object',

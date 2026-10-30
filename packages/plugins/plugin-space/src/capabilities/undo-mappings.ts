@@ -8,20 +8,13 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as UndoMapping from '@dxos/app-framework/UndoMapping';
 import { Entity } from '@dxos/echo';
-import { type PublicKey } from '@dxos/keys';
 
-import { meta } from '#meta';
 import { SpaceOperation } from '#types';
 
-import { SpaceOperationConfig } from '../operations/helpers.ts';
-
-type UndoMappingsOptions = {
-  createInvitationUrl: (invitationCode: string) => string;
-  createJoinUrl: (spaceKey: PublicKey) => string;
-};
+import { SpaceNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* ({ createInvitationUrl, createJoinUrl }: UndoMappingsOptions) {
+  Effect.fnUntraced(function* () {
     return [
       Capability.contribute(Capabilities.UndoMapping, [
         UndoMapping.make({
@@ -33,7 +26,7 @@ export default Capability.makeModule(
             props: output.props,
             index: output.index,
           }),
-          message: ['field-deleted.label', { ns: meta.profile.key }],
+          message: ['field-deleted.label', { ns: SpaceNamespace.key }],
         }),
         UndoMapping.make({
           operation: SpaceOperation.RemoveObjects,
@@ -50,8 +43,8 @@ export default Capability.makeModule(
             const removed = output.objects[0];
             const ns = removed && Entity.getTypename(removed);
             return ns && output.objects.length === 1
-              ? ['object-deleted.label', { ns: [ns, meta.profile.key] }]
-              : ['objects-deleted.label', { ns: meta.profile.key }];
+              ? ['object-deleted.label', { ns: [ns, SpaceNamespace.key] }]
+              : ['objects-deleted.label', { ns: SpaceNamespace.key }];
           },
         }),
         UndoMapping.make({
@@ -60,11 +53,10 @@ export default Capability.makeModule(
           deriveContext: (input, output) => ({ objects: output.objects, archived: !input.archived }),
           message: (input) => [
             input.archived ? 'objects-archived.label' : 'objects-unarchived.label',
-            { ns: meta.profile.key },
+            { ns: SpaceNamespace.key },
           ],
         }),
       ]),
-      Capability.contribute(SpaceOperationConfig, { createInvitationUrl, createJoinUrl }),
     ];
   }),
 );

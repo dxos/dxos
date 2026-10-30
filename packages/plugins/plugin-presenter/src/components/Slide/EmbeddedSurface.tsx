@@ -11,9 +11,9 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import { Text } from '@dxos/schema';
 
-import { meta } from '#meta';
 import { Presentation } from '#types';
 
+import { PresenterNamespace } from '../../namespace.ts';
 import { MarkdownSlide, type SlideSurfaceRole } from '../MarkdownSlide/index.ts';
 import { SlideCanvas } from './canvas.tsx';
 import { ObjectSurface } from './ObjectSurface.tsx';
@@ -127,7 +127,7 @@ const EmbeddedTextSlide = ({ text }: { text: Text.Text }) => {
 };
 
 const Placeholder = ({ testId, label }: { testId: string; label: string }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(PresenterNamespace.key);
   return (
     <div
       data-testid={testId}

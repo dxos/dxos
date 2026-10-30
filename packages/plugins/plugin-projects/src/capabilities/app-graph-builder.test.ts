@@ -9,20 +9,31 @@ import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import { setupGraphBuilder } from '@dxos/app-graph/testing';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
-import { Obj, Ref } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
+import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import { Text } from '@dxos/schema';
+import { Outline, TaskSet } from '@dxos/types';
 
+import { Feature, Spec } from '#types';
+
+import { attach } from '../operations/feature/util.ts';
 import {
   ARTIFACTS_SECTION_TYPE,
   ARTIFACTS_SEGMENT,
+  SPEC_BRANCH_TYPE,
+  SPEC_LEVEL_TYPE,
+  SPEC_SEGMENT,
   createProjectActionExtension,
   createProjectArtifactsActionExtension,
   createProjectArtifactsExtension,
+  createProjectSpecExtension,
+  createSpecBreakdownsExtension,
 } from './app-graph-builder.ts';
 
 describe('project app graph builder', () => {
@@ -75,6 +86,103 @@ describe('project app graph builder', () => {
       GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID, SpaceOperation.OpenObjectForm.meta.key),
     ]);
     expect(actions[0].properties.disposition).toEqual('list-item-primary');
+  });
+
+  test("lists the specs that break down a spec's features as its children, nested to any depth", async ({ expect }) => {
+    await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const root = yield* Database.add(Spec.make({ name: 'DXOS' }));
+        const addFeature = Effect.fn(function* (spec: Spec.Spec, name: string) {
+          const feature = yield* Database.add(Feature.make({ name, status: 'planned' }));
+          attach(spec, feature);
+          return feature;
+        });
+        const addBreakdown = Effect.fn(function* (feature: Feature.Feature) {
+          const breakdown = yield* Database.add(Spec.make({ name: feature.name }));
+          Obj.update(feature, (feature) => {
+            feature.spec = Ref.make(breakdown);
+          });
+          return breakdown;
+        });
+
+        // Two features with breakdowns, added in reverse of the order they are listed in, and one without.
+        const sync = yield* addFeature(root, 'Sync');
+        yield* addFeature(root, 'Search');
+        const compose = yield* addFeature(root, 'Compose');
+        const composeSpec = yield* addBreakdown(compose);
+        const syncSpec = yield* addBreakdown(sync);
+        const drafts = yield* addFeature(syncSpec, 'Drafts');
+        const draftsSpec = yield* addBreakdown(drafts);
+        yield* Database.flush();
+
+        const extensions = yield* createSpecBreakdownsExtension();
+        const children = yield* Effect.promise(() => getSubjectChildren(root, extensions));
+        expect(children.map((node) => node.data)).toEqual([syncSpec, composeSpec]);
+        const grandchildren = yield* Effect.promise(() => getSubjectChildren(syncSpec, extensions));
+        expect(grandchildren.map((node) => node.data)).toEqual([draftsSpec]);
+        expect(yield* Effect.promise(() => getSubjectChildren(draftsSpec, extensions))).toEqual([]);
+      }).pipe(Effect.provide(TestDatabaseLayer({ types: [Spec.Spec, Feature.Feature] }))),
+    );
+  });
+
+  test("lists a project's spec as a Spec branch, each feature a level beneath it, nested to any depth", async ({
+    expect,
+  }) => {
+    await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const project = yield* Database.add(Project.make({ name: 'Inbox' }));
+        const root = yield* Database.add(Spec.make({ name: 'Inbox' }));
+        Obj.update(project, (project) => {
+          project.spec = Ref.make(root);
+        });
+        const addFeature = Effect.fn(function* (spec: Spec.Spec, name: string) {
+          const feature = yield* Database.add(Feature.make({ name, status: 'planned' }));
+          attach(spec, feature);
+          return feature;
+        });
+        const sync = yield* addFeature(root, 'Sync');
+        const compose = yield* addFeature(root, 'Compose');
+        const syncSpec = yield* Database.add(Spec.make({ name: 'Sync' }));
+        Obj.update(sync, (sync) => {
+          sync.spec = Ref.make(syncSpec);
+        });
+        const gmail = yield* addFeature(syncSpec, 'Gmail');
+        yield* Database.flush();
+
+        const context = yield* Effect.promise(async () =>
+          setupSubject(project, await EffectEx.runPromise(createProjectSpecExtension())),
+        );
+        const children = async (...path: string[]) => {
+          const id = GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID, ...path);
+          await context.expand(id);
+          return context.registry.get(context.graph.connections(id, 'child'));
+        };
+
+        // The branch only groups the levels: it stands for no object, and the project's own spec is its Spec tab.
+        const [branch] = yield* Effect.promise(() => children());
+        expect(branch.id).toEqual(GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID, SPEC_SEGMENT));
+        expect(branch.type).toEqual(SPEC_BRANCH_TYPE);
+        expect(branch.data).toBeNull();
+        expect(branch.properties.selectable).toBe(false);
+
+        // A level per feature, by name, holding the feature, addressed by the lineage of features above it.
+        const levels = yield* Effect.promise(() => children(SPEC_SEGMENT));
+        expect(levels.map((node) => node.data)).toEqual([compose, sync]);
+        expect(levels.map((node) => node.type)).toEqual([SPEC_LEVEL_TYPE, SPEC_LEVEL_TYPE]);
+        const nested = yield* Effect.promise(() => children(SPEC_SEGMENT, sync.id));
+        expect(nested.map((node) => node.id)).toEqual([
+          GraphNode.qualifyId(GraphNode.RootId, SUBJECT_ID, SPEC_SEGMENT, sync.id, gmail.id),
+        ]);
+        // A feature without a breakdown is a level with nothing beneath it.
+        expect(yield* Effect.promise(() => children(SPEC_SEGMENT, compose.id))).toEqual([]);
+      }).pipe(
+        Effect.provide(
+          TestDatabaseLayer({
+            types: [Project.Project, Spec.Spec, Feature.Feature, Outline.Outline, TaskSet.TaskSet, Text.Text],
+          }),
+        ),
+      ),
+    );
   });
 });
 

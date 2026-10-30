@@ -16,7 +16,7 @@ import { translations as taskTranslations } from '@dxos/react-ui-task/translatio
 import { translations as traceTranslations } from '@dxos/react-ui-trace/translations';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { AssistantNamespace } from './namespace.ts';
 
 export const translations: Theme.Resource[] = [
   ...assistantTranslations,
@@ -83,7 +83,7 @@ export const translations: Theme.Resource[] = [
         'object-deleted.label': 'Agent deleted',
       },
       // TODO(burdon): Reconcile with react-ui-chat.
-      [meta.profile.key]: {
+      [AssistantNamespace.key]: {
         'delete-task.label': 'Delete task',
         'execute-task.label': 'Execute task',
         'execute-task.prompt': 'Implement task #{{ordinal}}',
@@ -186,6 +186,13 @@ export const translations: Theme.Resource[] = [
         'connectors-empty.label': 'No connectors with MCP servers',
         'agent-picker.label': 'Agent',
         'model-picker.models.label': 'Models',
+        'agent-setting-default.label': 'Default',
+        'agent-setting.agentModel.label': 'Model',
+        'agent-setting.agentModel.locked.label': 'Model (fixed once the chat has started)',
+        'agent-setting.agentEffort.label': 'Effort',
+        'agent-setting.agentEffort.locked.label': 'Effort (fixed once the chat has started)',
+        'agent-setting.agentMode.label': 'Permissions',
+        'agent-setting.agentMode.locked.label': 'Permissions (fixed once the chat has started)',
         'model-picker.environment.label': 'Agent runs on',
         'send.label': 'Send',
         'prompt-options.label': 'Prompt options',
@@ -238,6 +245,16 @@ export const translations: Theme.Resource[] = [
         'settings.ollama.unload.label': 'Unload from memory',
         'settings.ollama.remove.label': 'Delete model',
         'settings.ollama.failed.message': 'Could not reach the local model service: {{error}}',
+
+        // Space settings
+        'space-settings.label': 'Assistant',
+        'space-settings-hooks.label': 'Hooks',
+        'space-settings-hooks.description':
+          'Plugins whose hooks run when an agent in this space finishes a request. Instructions can override this per plugin.',
+        'space-settings-hooks.empty.message': 'No enabled plugin provides hooks.',
+        'space-settings-hooks.scoped.description': 'Runs when one of its skills is added to the conversation.',
+        'space-settings-hooks.every-agent.description': 'Runs for every agent in this space.',
+        'space-settings-hooks.missing.description': 'On for this space, but the plugin is not enabled on this device.',
 
         'debug.button': 'Debug',
         'model-unavailable.label': '{{label}} (unavailable)',

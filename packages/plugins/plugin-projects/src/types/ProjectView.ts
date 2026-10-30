@@ -10,8 +10,8 @@ import * as Role from '@dxos/app-framework/Role';
 import type * as Project from '@dxos/compute/Project';
 import { ViewState } from '@dxos/react-ui-attention/types';
 
-/** Overview is everything the project owns; Tasks gives the ledger the whole panel. */
-export const Tab = Schema.Literals(['overview', 'tasks', 'features']);
+/** Overview is everything the project owns; Spec is its feature map, when it has a spec; Tasks gives the ledger the whole panel. */
+export const Tab = Schema.Literals(['overview', 'spec', 'tasks']);
 export type Tab = Schema.Schema.Type<typeof Tab>;
 
 /** The pipeline chart's axis: `time` fits the run to the pane, `unit` steps per event and scrolls. */

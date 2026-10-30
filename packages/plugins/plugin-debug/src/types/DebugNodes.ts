@@ -6,12 +6,12 @@
 
 import * as GraphNode from '@dxos/graph/GraphNode';
 
-import { meta } from '#meta';
+import { DebugNamespace } from '../namespace.ts';
 
 /** Extracts the last dot-separated segment of a namespaced ID string for use as a node segment id. */
 export const nodeId = (fullId: string): string => fullId.split('.').at(-1) ?? '';
 
-const debugId = meta.profile.key;
+const debugId = DebugNamespace.key;
 
 /** Top-level Debug node, under the debug category. */
 export const id = `${debugId}.debug`;

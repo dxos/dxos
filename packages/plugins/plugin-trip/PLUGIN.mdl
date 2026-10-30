@@ -320,12 +320,16 @@ type MatchResult
     matched: boolean
     confidence?: number             # 0–1; used to rank multiple matches and gate auto-on-arrival
     reason?: string
+```
 
+```mdl
 type ExtractCtx
   fields:
     space: Space
     database: Database
+```
 
+```mdl
 type ExtractResult
   fields:
     created: AnyEchoObject[]        # objects created in the space
@@ -518,13 +522,17 @@ scenario parseUnitedFlight
   cases:
     - canonical eTicket itinerary → expected Booking + Flight Segment.
     - missing confirmation code → returns null.
+```
 
+```mdl
 scenario parseBookingComHotel
   desc: Parser unit tests against fixture emails.
   cases:
     - canonical hotel confirmation → expected Booking + Accommodation Segment.
     - missing check-in/check-out → returns null.
+```
 
+```mdl
 scenario TravelMessageExtractor
   desc: Dispatch, Trip resolution, and Account dedup.
   cases:
@@ -532,7 +540,9 @@ scenario TravelMessageExtractor
     - flight email + one existing Trip → appends to most-recently-updated Trip.
     - flight email + target Trip ref → appends to target.
     - same provider + account number twice → reuses existing Account.
+```
 
+```mdl
 scenario extract-message operation
   desc: Operation handler integrates with the capability registry.
   cases:

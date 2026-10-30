@@ -7,17 +7,19 @@ version: 0.1.0
 ```mdl
 plugin CodePlugin: Authors, reviews and syncs DEUS specs, and scaffolds the code they describe.
   id: org.dxos.plugin.code
+  dependsOn: [org.dxos.plugin.projects]
   modules:
     - AppGraphBuilder: graph nodes for specs and code projects
     - BuildRunState: the state of the running build agent, from CodeEvents.Start
-    - CreateObject: create entries for Spec and CodeProject
+    - CreateObject: create entries for SpecDocument and CodeProject
     - NavigationTargetResolver: resolves a github: key to the spec or file it names
     - OperationHandler: the plugin's operations (importSpec, listLocalSpecs, the Coder tools)
     - PluginAsset: this document, served as the plugin's own spec
-    - ReactSurface: the spec article and section surfaces
-    - Schema: the Spec and CodeProject types
+    - ReactSurface: the spec article surface, and the code project's article and section surfaces
+    - Schema: the SpecDocument and CodeProject types
     - Settings: repos to sync and build settings
     - SkillDefinition: the Coder skill
+    - SpecFileMapping: the GitHubCapabilities.FileMapping for `**/*.mdl`, so a GitHub file binding syncs specs (org.dxos.plugin.github.file-sync#F-6)
     - SpecSync: two-way sync of specs with files on disk (plugin-file-system's FileSystem)
     - Translations: the plugin's strings
 ```
@@ -42,6 +44,28 @@ The plugin reuses `react-ui-editor`'s `Editor.Root` / `Editor.Toolbar` /
 `Editor.Content` together with the existing `mdl()` CodeMirror extensions
 instead of a bespoke editor implementation.
 
+## Dependencies
+
+```mdl
+uses org.dxos.echo: Spec and CodeProject are ECHO objects, read and written through its Database.
+```
+
+```mdl
+uses org.dxos.plugin.fileSystem: Its FileSystem service is the only way spec sync reaches local files.
+```
+
+```mdl
+uses org.dxos.plugin.devShell: Its dev-only `bash` route is the pattern the sync dev route follows.
+```
+
+```mdl
+uses org.dxos.plugin.github.file-sync: Its FileMapping contract, which the `.mdl` mapping implements.
+```
+
+```mdl
+uses org.dxos.spec.review: The review dialect whose verdicts the spec viewer reads and marks.
+```
+
 ## Extensions
 
 The following extension dialects are used in this document.
@@ -57,15 +81,17 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `service`   | `org.dxos.mdl.service@1.0`    |
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `decision`  | `org.dxos.mdl.decision@1.0`   |
+| `question`  | `org.dxos.mdl.question@1.0`   |
 | `plugin`    | `org.dxos.mdl.plugin@1.0`     |
+| `uses`      | `dxos.spec.core/uses`         |
 
 ## Types
 
 ```mdl
-type Spec
+type SpecDocument
   desc: |
     A DEUS spec document. Carries `.mdl` content and a human-readable name.
-    Existing typename `org.dxos.type.spec` is preserved across the rename.
+    Typename `org.dxos.type.specDocument`; objects stored as `org.dxos.type.spec` migrate to it.
   fields:
     name?: string
     content: Ref<Text>          # mdl source
@@ -74,12 +100,12 @@ type Spec
 ```mdl
 type CodeProject
   desc: |
-    A coding project. Pairs a name with a Spec used to drive code generation
+    A coding project. Pairs a name with a SpecDocument used to drive code generation
     and the set of TypeScript source files that compose the plugin.
     Typename `org.dxos.type.codeProject`.
   fields:
     name?: string
-    spec: Ref<Spec>             # the DEUS spec authored for this project
+    spec: Ref<SpecDocument>     # the DEUS spec authored for this project
     files?: Ref<SourceFile>[]   # source tree, hierarchy implicit in path
 ```
 
@@ -154,27 +180,28 @@ component FileTree
 ```mdl
 component SpecArticle
   desc: |
-    Article surface for a Spec, laid out as an IDE page: the MDL editor beside a
-    panel of views (definitions graph, review, code, decisions, data model, API).
+    Article surface for a SpecDocument, laid out as an IDE page: the MDL editor beside a
+    panel of views (definitions graph, review, code, decisions by person, decision graph,
+    data model, API).
     Uses `react-ui-editor`'s Editor primitives with the `mdl()` extensions.
     Source keys to other specs are links (F-15); the latest review marks each
     reviewed item and links it to its code (F-16).
   props:
     role: string
-    subject?: Spec
+    subject?: SpecDocument
     content?: string            # static text, e.g. a bundled PLUGIN.mdl
     sourceKey?: string          # github: key of static content
     attendableId?: string
   state:
-    view: definitions | review | code | decisions | data | api
+    view: definitions | review | code | log | decisions | data | api
     codeTarget?: string         # the github: key open in the code view
   layout: |
     ┌──────────────────────────┬──────────────────────────────┐
     │ key · sync status        │ [Defs|Review|Code|…]         │
     ├──────────────────────────┼──────────────────────────────┤
     │ ```mdl   [</> make][Done]│  ┌─────┐   ┌ ─ ─ ─ ┐         │
-    │ feat F-1: …   [Missing]  │  │ F-1 │──▶  Obj (echo)      │
-    │   github:…SPEC.mdl#Obj   │  └─────┘   └ ─ ─ ─ ┘         │
+    │ feat F-1: …   [Missing]  │  │ F-1 │──▶  Database        │
+    │  org.dxos.echo#Database  │  └─────┘   └ ─ ─ ─ ┘         │
     └──────────────────────────┴──────────────────────────────┘
 ```
 
@@ -211,11 +238,11 @@ service Credentials
 service BuildAgent
   desc: |
     The remote EDGE service that runs the Claude Agent SDK to generate
-    Composer plugins from a Spec. Out of scope for this PR — phase 1 only
+    Composer plugins from a SpecDocument. Out of scope for this PR — phase 1 only
     declares the contract surface. Will live in `dxos/edge`.
   loading: lazy
   ops:
-    verify(spec: Spec) → { ok: bool, messages: string[] }
+    verify(spec: SpecDocument) → { ok: bool, messages: string[] }
     build(project: CodeProject) → { runId: string, status: string }
 ```
 
@@ -233,7 +260,7 @@ op verifySpec
     stub returns `{ ok: true, messages: [] }`. Will eventually delegate to
     BuildAgent.verify.
   input:
-    spec: Ref<Spec>
+    spec: Ref<SpecDocument>
   output: { ok: bool, messages: string[] }
   effects: [echo:read]
   requires: [Database]
@@ -398,15 +425,35 @@ op runBuild
 op importSpec
   key: org.dxos.operation.code.importSpec
   desc: |
-    Links a spec file in a local checkout to a Spec, keyed by its source key;
-    returns the existing Spec when one already carries the key (F-14.6).
+    Links a spec file in a local checkout to a SpecDocument, keyed by its source key;
+    returns the existing SpecDocument when one already carries the key (F-14.6).
   input:
     key: string                 # github:<owner>/<repo>/<path>.mdl
-  output: { spec: Ref<Spec>, created: boolean }
+  output: { spec: Ref<SpecDocument>, created: boolean }
   errors:
     - CodeOperationError: not a spec key, no checkout of the repository, or no such file
   effects: [fs, echo:write]
-  requires: [github:dxos/dxos/packages/plugins/plugin-file-system/PLUGIN.mdl#FileSystem]
+  requires: [org.dxos.plugin.fileSystem#FileSystem]
+```
+
+```mdl
+op importSpecFile
+  key: org.dxos.operation.code.importSpecFile
+  desc: |
+    The import of the `.mdl` FileMapping: creates a SpecDocument for a new file, or applies the remote
+    change to SpecDocument.content with TextMerge.applyAt as of the heads of the last sync.
+  input: FileImportInput        # org.dxos.plugin.github.file-sync#FileMapping
+  output: FileImportOutput
+  effects: [echo:read, echo:write]
+```
+
+```mdl
+op exportSpecFile
+  key: org.dxos.operation.code.exportSpecFile
+  desc: The export of the `.mdl` FileMapping: SpecDocument.content as it stands, with the heads it was read at.
+  input: FileExportInput
+  output: FileExportOutput
+  effects: [echo:read]
 ```
 
 ```mdl
@@ -417,7 +464,7 @@ op listLocalSpecs
     (none)
   output: { roots: { repo: string, path: string }[], keys: string[] }
   effects: [fs]
-  requires: [github:dxos/dxos/packages/plugins/plugin-file-system/PLUGIN.mdl#FileSystem]
+  requires: [org.dxos.plugin.fileSystem#FileSystem]
 ```
 
 ## Skills
@@ -458,17 +505,18 @@ feat F-1: Rename plugin-spec → plugin-code
   req F-1.2: Directory renamed `packages/plugins/plugin-spec` → `packages/plugins/plugin-code`.
   req F-1.3: Plugin id renamed `org.dxos.plugin.spec` → `org.dxos.plugin.code`.
   req F-1.4: SpecPlugin → CodePlugin; SpecArticle → CodeArticle.
-  req F-1.5: Spec ECHO type retains typename `org.dxos.type.spec` (no migration).
+  req F-1.5: The spec document type keeps its data across renames: objects stored as `org.dxos.type.spec` migrate to
+    `org.dxos.type.specDocument`.
   req F-1.6:
     when: composer-app loads after rename
-    then: existing Spec objects continue to render; no schema migration needed
+    then: existing spec documents continue to render
 ```
 
 ```mdl
 feat F-2: CodeProject type
 
   req F-2.1: New ECHO type `CodeProject` with typename `org.dxos.type.codeProject`.
-  req F-2.2: Fields `name?: string`, `spec: Ref<Spec>`; both reactive.
+  req F-2.2: Fields `name?: string`, `spec: Ref<SpecDocument>`; both reactive.
   req F-2.3:
     when: user creates a CodeProject from the navtree
     then: an empty Spec is created and referenced by the new CodeProject
@@ -692,10 +740,10 @@ feat F-14: Two-way spec sync with a local checkout
     for specs that live in the repository.
 
   req F-14.1: Sync reaches local files only through plugin-file-system's
-              github:dxos/dxos/packages/plugins/plugin-file-system/PLUGIN.mdl#FileSystem service: the
+              org.dxos.plugin.fileSystem#FileSystem service: the
               Tauri fs plugin in the desktop app, and a dev-only route in a
               Composer dev server, the same pattern as
-              github:dxos/dxos/packages/plugins/plugin-dev-shell/PLUGIN.mdl#bash.
+              org.dxos.plugin.devShell#bash.
               Sync writes only `.mdl` files; a deployed web app has neither
               backend and leaves sync off.
   req F-14.2: A key's repository resolves to a checkout from the `repos` setting
@@ -715,8 +763,8 @@ feat F-14: Two-way spec sync with a local checkout
 ```mdl
 feat F-15: Source-key references to other specs
   desc: |
-    A spec names a block of another spec by source key with a fragment, e.g.
-    github:dxos/dxos/packages/core/echo/echo/SPEC.mdl#Database. Links to the code
+    A spec names a block of another spec by the spec's id and the block's id, e.g.
+    org.dxos.echo#Database. Links to the code
     that implements a spec are not spec text; they are annotations (F-16.5).
 
   req F-15.1: The definitions graph draws each named external block as a dashed
@@ -732,7 +780,7 @@ feat F-15: Source-key references to other specs
 feat F-16: Compliance review annotations
   desc: |
     The `spec-review` skill writes `<SPEC>.review.mdl` beside a spec: one verdict
-    per item (github:dxos/dxos/packages/reflect/deus/lang/review.mdl).
+    per item, in the review dialect (`org.dxos.spec.review`).
 
   req F-16.1: SpecArticle reads the review beside the spec from the checkout and
               re-reads it every 3 seconds.
@@ -780,6 +828,24 @@ feat F-17: Diff mode
               (status, file at a commit), which the dev route answers.
 ```
 
+```mdl
+feat F-18: Spec questions
+  desc: |
+    A `question` in a spec's changelog is a choice nobody has made yet. It is answered in
+    Composer, and the answer is recorded as a decision.
+
+  req F-18.1: SpecArticle has a decisions-by-person view: the changelog's decisions grouped by
+              decider, with the spec's questions above them, open ones first.
+  req F-18.2: Each question is drawn with the question component the chat uses: its context,
+              its options, and a free-form answer field.
+  req F-18.3: In an editable spec, an answer appends to `## Changelog` a decision by the person
+              who answered, with `answers:` naming the question. A read-only spec lists its
+              questions without the answer controls.
+  req F-18.4: The decision graph draws each question as a card, with an edge to the decision
+              that answers it. A question's `affects:` puts a chip on each block it names, and the
+              chip opens the decisions-by-person view.
+```
+
 ## Acceptance
 
 ```mdl
@@ -787,9 +853,9 @@ scenario T-1: Rename preserves Spec compatibility
   given: a space already containing a Spec object created by plugin-spec
   when: the renamed plugin-code is loaded
   then:
-    - the Spec object is queryable
+    - the object is queryable as a SpecDocument
     - opening it renders CodeArticle with the same content
-    - typename remains `org.dxos.type.spec`
+    - its typename is `org.dxos.type.specDocument`
 ```
 
 ```mdl
@@ -1272,6 +1338,82 @@ decision D-26: Git is reached through new read-only `git` queries on the FileSys
   affects: [F-17.4]
   why: The dev route already runs git, while the desktop app would need a new shell scope for git.
   rejected: Reading `.git` objects directly, which needs packfile and zlib decoding in the page.
+```
+
+```mdl
+decision D-27: Specs in a GitHub repository that plugin-github syncs as files are mapped by the module SpecFileMapping, with op:importSpecFile and op:exportSpecFile; the mapping is registered at Startup so a sync on EDGE finds it. It sits beside SpecSync, which keeps syncing local checkouts.
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [importSpecFile, exportSpecFile]
+  why: plugin-github's file sync owns detection, merging and commits, and asks the plugin that owns a format only to import and export it; op:importSpec already names the local-checkout import.
+```
+
+```mdl
+decision D-28: The `Spec` type is renamed `SpecDocument`, typename `org.dxos.type.specDocument`, with a migration from `org.dxos.type.spec`. Replaces the no-migration rule of F-1.5.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-1.5, F-1.6, F-2.2, T-1]
+  why: `Spec` now names plugin-projects' feature map, which holds at most one SpecDocument as its normative text.
+```
+
+```mdl
+decision D-29: The spec refers to another spec's item as `<spec id>#<item>`, never by a `github:` key into a `.mdl` file, and declares every spec it refers to as a dependency. A reference names the spec by id ([F-15]).
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-15, F-14.1, importSpec, listLocalSpecs, importSpecFile, SpecArticle]
+```
+
+```mdl
+decision D-30: plugin-code declares its dependencies with `uses` (it has no runtime plugin dependencies in dx.config.ts): `org.dxos.echo`, `org.dxos.plugin.fileSystem`, `org.dxos.plugin.devShell`, `org.dxos.plugin.github.file-sync` and `org.dxos.spec.review`, each with a one-line reason. The SpecArticle layout mock shows `org.dxos.echo#Database` as its example reference. Fills in [D-29].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-15, F-16, SpecArticle]
+  why: Each id is a spec the body already referred to by path or key; the review dialect is named without an item, and ECHO's Database is the example F-15 already used.
+```
+
+```mdl
+decision D-31: A spec can ask questions; an answered question is recorded as a decision. Every surface that renders a spec shows its questions, drawn with the question component the chat uses. The decisions-by-person view is back in SpecArticle, with the questions at its top.
+  date: 2026-10-29
+  by: user:dmaretskyi
+  affects: [SpecArticle, F-18]
+```
+
+```mdl
+decision D-32: A question is a `question Q-n` block in `## Changelog`, append-only like a decision; it is answered by a later decision with `answers: Q-n`, so "answered" is derived. Fills in [D-31].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-18.3]
+  why: Keeping the question unedited keeps the log append-only, and the answer carries the authority of the person who gave it.
+  rejected:
+    - An `answer:` field written into the question: edits an entry, which the changelog forbids.
+```
+
+```mdl
+decision D-33: Open questions come before answered ones, and the answering decision is `by:` the current identity's display name with whitespace replaced by `-`, dated today. Fills in [D-31].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-18.1, F-18.3]
+  why: Composer knows the person by their identity, not their GitHub username; an open question is the one that needs the reader.
+```
+
+```mdl
+decision D-34: The decision graph draws questions as cards with an `answers` edge, and a question's `affects:` adds a margin chip that opens the decisions-by-person view. Fills in [D-31].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-18.4]
+  why: The graph and the margin are the other places a spec shows its changelog.
+```
+
+```mdl
+decision D-35: This plugin depends on plugin-projects and renders a spec document only as an article. A spec document embedded as a section, as in a project's Document view, is plugin-projects' plain MDL editor. Supersedes [D-30] where it says the plugin has no runtime plugin dependencies.
+  date: 2026-10-29
+  by: user:wittjosiah
+  why: plugin-projects owns specs and their documents, and a plugin reaches another's UI through surfaces, never its components. This page's margins, diff view and jumps need the editor itself, so it keeps its own.
 ```
 
 ---

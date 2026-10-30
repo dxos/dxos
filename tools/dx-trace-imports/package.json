@@ -21,6 +21,7 @@
   "dependencies": {
     "@swc/core": "catalog:",
     "picomatch": "catalog:",
+    "yaml": "catalog:",
     "yargs": "catalog:"
   },
   "devDependencies": {

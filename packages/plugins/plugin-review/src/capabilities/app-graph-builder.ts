@@ -17,9 +17,9 @@ import { Selection } from '@dxos/react-ui-attention/types';
 import { createComment } from '@dxos/ui-editor/headless';
 import * as Position from '@dxos/util/Position';
 
-import { meta } from '#meta';
 import { CommentOperation } from '#types';
 
+import { ReviewNamespace } from '../namespace.ts';
 // Not the `../util` barrel: it re-exports `author-hue`, whose palette lookup is UI-only.
 import { findCommentConfig, getCommentConfig } from '../util/commentable.ts';
 import { getAnchor } from '../util/message.ts';
@@ -43,7 +43,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeCompanion({
               variant: 'comments',
-              label: ['comments.label', { ns: meta.profile.key }],
+              label: ['comments.label', { ns: ReviewNamespace.key }],
               icon: 'ph--chat-text--regular',
               data: 'comments',
               position: Position.first,
@@ -84,7 +84,12 @@ export default Capability.makeModule(
                 // placeholder is not a cursor range the resolver could span.
                 const typename = Obj.getTypename(object);
                 const selection = viewState.get(Selection.aspect, objectUri);
-                const cursorAnchor = config.comments === 'anchored' ? getAnchor(selection) : undefined;
+                const cursorAnchor =
+                  config.comments !== 'anchored'
+                    ? undefined
+                    : config.anchorFromSelection
+                      ? config.anchorFromSelection(object, selection)
+                      : getAnchor(selection);
                 yield* Operation.invoke(CommentOperation.Create, {
                   anchor: cursorAnchor ?? Date.now().toString(),
                   name:
@@ -93,7 +98,7 @@ export default Capability.makeModule(
                 });
               }),
               properties: {
-                label: ['add-comment.label', { ns: meta.profile.key }],
+                label: ['add-comment.label', { ns: ReviewNamespace.key }],
                 icon: 'ph--chat-text--regular',
                 disposition: 'toolbar',
                 // Always enabled: the create-comment command snaps to a sensible region, so a precise

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { EditorState } from '@codemirror/state';
+import { EditorState, type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
 export type SnippetOptions = {
@@ -15,6 +15,37 @@ export type SnippetOptions = {
   maxHeight: string;
   /** Zoom factor applied to the editor (e.g. 0.5 renders at 50%). @default 1 */
   scale?: number;
+};
+
+// One per size: every `EditorView.theme` call mints a new stylesheet, which restyles the whole document.
+const snippetThemes = new Map<string, Extension>();
+
+const snippetTheme = (maxHeight: string, scale: number): Extension => {
+  const key = `${maxHeight}:${scale}`;
+  let theme = snippetThemes.get(key);
+  if (!theme) {
+    theme = EditorView.theme({
+      // Outer editor element: clip to the caller-specified cap, but only once content reaches it.
+      '&': {
+        maxHeight,
+        overflow: 'hidden',
+      },
+      '.cm-scroller': {
+        // Prevent scroll; scale up the inner clip so the final visual height matches `maxHeight`.
+        maxHeight: `calc(${maxHeight} / ${scale})`,
+        overflow: 'hidden !important',
+        padding: '0',
+      },
+      '.cm-content': {
+        // zoom (unlike transform: scale) affects layout, so line-wrapping fills the full visual width of the container.
+        zoom: scale,
+        margin: '0',
+        padding: '0',
+      },
+    });
+    snippetThemes.set(key, theme);
+  }
+  return theme;
 };
 
 /**
@@ -37,24 +68,6 @@ export const snippet = ({ maxHeight, scale = 1 }: SnippetOptions) => {
 
       return tr;
     }),
-    EditorView.theme({
-      // Outer editor element: clip to the caller-specified cap, but only once content reaches it.
-      '&': {
-        maxHeight,
-        overflow: 'hidden',
-      },
-      '.cm-scroller': {
-        // Prevent scroll; scale up the inner clip so the final visual height matches `maxHeight`.
-        maxHeight: `calc(${maxHeight} / ${scale})`,
-        overflow: 'hidden !important',
-        padding: '0',
-      },
-      '.cm-content': {
-        // zoom (unlike transform: scale) affects layout, so line-wrapping fills the full visual width of the container.
-        zoom: scale,
-        margin: '0',
-        padding: '0',
-      },
-    }),
+    snippetTheme(maxHeight, scale),
   ];
 };

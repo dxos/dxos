@@ -4090,6 +4090,65 @@ describe('Query', () => {
       expect(objects[0]).toMatchObject({ name: 'Child' });
     });
 
+    for (const queryExecutor of ['sql', 'memory'] as const) {
+      test(`transitive childOf stops at the depth bound (${queryExecutor})`, async () => {
+        const peer = await builder.createPeer({ queryExecutor });
+        const db = await peer.createDatabase();
+        const root = db.add(Obj.make(TestSchema.Expando, { name: 'Root' }));
+        let parent: Obj.Any = root;
+        for (const level of range(12)) {
+          parent = db.add(Obj.make(TestSchema.Expando, { [Obj.Parent]: parent, name: `Level${level + 1}` }));
+        }
+        await db.flush();
+
+        const objects = await db.query(Query.select(Filter.childOf(root))).run();
+        const levels = objects.map((obj) => Number(String(obj.name).slice('Level'.length))).sort((a, b) => a - b);
+        expect(levels).toEqual(range(10).map((level) => level + 1));
+      });
+
+      test(`and(type, transitive childOf) keeps only the objects of that type inside the subtree (${queryExecutor})`, async () => {
+        const peer = await builder.createPeer({ types: [TestSchema.Task], queryExecutor });
+        const db = await peer.createDatabase();
+        const project = db.add(Obj.make(TestSchema.Expando, { name: 'Project' }));
+        const otherProject = db.add(Obj.make(TestSchema.Expando, { name: 'OtherProject' }));
+        const taskSet = db.add(Obj.make(TestSchema.Expando, { [Obj.Parent]: project, name: 'TaskSet' }));
+        const otherTaskSet = db.add(Obj.make(TestSchema.Expando, { [Obj.Parent]: otherProject, name: 'OtherTaskSet' }));
+        db.add(Obj.make(TestSchema.Task, { [Obj.Parent]: taskSet, title: 'Nested' }));
+        db.add(Obj.make(TestSchema.Task, { [Obj.Parent]: project, title: 'Direct' }));
+        db.add(Obj.make(TestSchema.Task, { [Obj.Parent]: otherTaskSet, title: 'Elsewhere' }));
+        db.add(Obj.make(TestSchema.Task, { title: 'Orphan' }));
+        await db.flush();
+
+        const objects = await db
+          .query(Query.select(Filter.and(Filter.type(TestSchema.Task), Filter.childOf(project, { transitive: true }))))
+          .run();
+        expect(objects.map((obj) => obj.title).sort()).toEqual(['Direct', 'Nested']);
+      });
+
+      test(`A -> B -> Feed -> item: transitive childOf([A]) reaches the item through a document and a feed (${queryExecutor})`, async () => {
+        const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task], queryExecutor });
+        const db = await peer.createDatabase();
+        const grandparent = db.add(Obj.make(TestSchema.Expando, { name: 'A' }));
+        const parent = db.add(Obj.make(TestSchema.Expando, { [Obj.Parent]: grandparent, name: 'B' }));
+        const feed = db.add(Obj.make(Feed.Feed, { [Obj.Parent]: parent, name: 'nested-feed' }));
+        const otherFeed = db.add(Feed.make({ name: 'other-feed' }));
+        await db.flush();
+
+        await db.appendToFeed(feed, [Obj.make(TestSchema.Task, { title: 'Inside' })]);
+        await db.appendToFeed(otherFeed, [Obj.make(TestSchema.Task, { title: 'Outside' })]);
+        await db.flush();
+
+        const objects = await db
+          .query(
+            Query.select(Filter.and(Filter.type(TestSchema.Task), Filter.childOf(grandparent))).from(db, {
+              includeFeeds: true,
+            }),
+          )
+          .run();
+        expect(objects.map((obj) => obj.title)).toEqual(['Inside']);
+      });
+    }
+
     test('childOf with array of parents', async () => {
       const { db } = await builder.createDatabase();
       const parent1 = db.add(Obj.make(TestSchema.Expando, { name: 'Parent1' }));

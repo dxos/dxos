@@ -9,7 +9,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as Dialog from '@dxos/react-ui/Dialog';
 
-import { ClientPlugin } from '#plugin';
+import * as ClientPlugin from '#meta';
 import { translations } from '#translations';
 
 import { JoinDialog } from './JoinDialog.tsx';
@@ -26,7 +26,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withPluginManager({
-      plugins: [...CorePlugins.make(), ClientPlugin({})],
+      plugins: [...CorePlugins.make(), ClientPlugin.make({})],
     }),
   ],
   parameters: {

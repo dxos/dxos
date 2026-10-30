@@ -8,13 +8,9 @@ export default defineConfig({
   entry: {
     'ns/Templates': 'src/Templates.ts',
     'index': 'src/index.ts',
-    'StudioPlugin': 'src/StudioPlugin.ts',
-    'plugin': 'src/plugin.tsx',
-    'capabilities': 'src/capabilities/index.ts',
     'components': 'src/components/index.ts',
     'containers': 'src/containers/index.ts',
     'StudioHooks': 'src/hooks/StudioHooks.ts',
-    'meta': 'src/meta.ts',
     'operations': 'src/operations/index.ts',
     'surfaces': 'src/surfaces.ts',
     'translations': 'src/translations.ts',

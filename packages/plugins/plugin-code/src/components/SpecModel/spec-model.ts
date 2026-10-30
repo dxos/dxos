@@ -2,9 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type MdlBlock, parseMdlBlocks } from '@dxos/deus/extension';
+import { type MdlBlock, findSpecRefs, parseMdlBlocks, specReferenceFilter } from '@dxos/deus/extension';
+import {
+  type Annotation,
+  type SourceKey,
+  findSourceKeys,
+  formatSourceKey,
+  isSpecKey,
+  parseFields,
+} from '@dxos/deus/review';
+import { type SpecIndex } from '@dxos/deus/spec-index';
 
-import { type SourceKey, findSourceKeys, formatSourceKey, isSpecKey } from '#sync';
+import { resolveSpecRef } from '../SpecEditor/spec-ref.ts';
 
 /** A top-level spec block that other blocks can depend on. */
 export type DefinitionModel = {
@@ -128,34 +137,6 @@ const firstSentence = (prose: string): string => prose.split(/(?<=\.)\s/)[0];
 /** Dotted identifiers, so `CallsCapabilities.Manager` and `F-1.2` each read as one token. */
 const IDENTIFIER = /[A-Za-z][\w-]*(?:\.[\w-]+)*/g;
 
-const indentOf = (line: string): number => line.length - line.trimStart().length;
-
-/**
- * The top-level fields of a block body: a field's inline value, or for a `|` block or nested map, its
- * indented lines with the common indent removed.
- */
-export const parseFields = (body: string): Map<string, { inline?: string; lines: string[] }> => {
-  const lines = body.split('\n');
-  const contentIndents = lines.filter((line) => line.trim() !== '').map(indentOf);
-  const base = contentIndents.length > 0 ? Math.min(...contentIndents) : 0;
-  const fields = new Map<string, { inline?: string; lines: string[] }>();
-  let current: { inline?: string; lines: string[] } | undefined;
-  for (const line of lines) {
-    if (line.trim() === '') {
-      continue;
-    }
-    const match = indentOf(line) === base && line.trim().match(/^([\w-]+)(\??):(?:\s+(.*))?$/);
-    if (match) {
-      const inline = match[3]?.trim();
-      current = { inline: inline && inline !== '|' && inline !== '>' ? inline : undefined, lines: [] };
-      fields.set(match[1], current);
-    } else if (current && indentOf(line) > base) {
-      current.lines.push(line.trim());
-    }
-  }
-  return fields;
-};
-
 const proseOf = (field?: { inline?: string; lines: string[] }): string | undefined => {
   const text = [field?.inline, ...(field?.lines ?? [])].filter(Boolean).join(' ').trim();
   return text || undefined;
@@ -267,27 +248,19 @@ const externalDefinition = (key: SourceKey, specs: SpecTexts): DefinitionModel =
   };
 };
 
-/** Keys attached to a spec item from outside its text, e.g. a review's evidence; `id` may name a nested req (`F-1.2`). */
-export type Annotation = {
-  id: string;
-  /** The code that implements the item. */
-  keys: readonly SourceKey[];
-  /** Whether a review found tests for the item; absent when it does not say. */
-  testing?: 'tested' | 'untested';
-  /** The tests that exercise the item. */
-  tests?: readonly SourceKey[];
-};
-
 /**
  * Every definition of a spec with an edge to each other definition its title or body names, plus a node for each
- * block of another spec it names by `github:` key and for each code symbol an annotation links to one of its items,
- * so a spec's graph shows what it rests on elsewhere and where it is implemented.
+ * block of another spec it names (by `<spec id>#<item>` resolved through `index`, or by `github:` key) and for each
+ * code symbol an annotation links to one of its items, so a spec's graph shows what it rests on elsewhere and where
+ * it is implemented.
  */
 export const buildDefinitionGraph = (
   text: string,
   specs: SpecTexts = new Map(),
   annotations: readonly Annotation[] = [],
+  index?: SpecIndex,
 ): DefinitionGraphModel => {
+  const isReference = index ? specReferenceFilter(index) : () => false;
   const blocks = definitionBlocks(text);
   const ids = new Set(blocks.map(({ id }) => id));
   const externals = new Map<string, DefinitionModel>();
@@ -306,13 +279,21 @@ export const buildDefinitionGraph = (
   }
   const definitions = blocks.map(({ type, id, title, body }): DefinitionModel => {
     const prose = `${title ?? ''}\n${body}`;
-    const linked = [...findSourceKeys(prose).map(({ key }) => key), ...(annotated.get(id) ?? [])].map(link);
+    const refs = findSpecRefs(prose).filter((ref) => isReference(ref.id));
+    const refKeys = refs.flatMap((ref) => {
+      const resolved = index && resolveSpecRef(index, ref.id, ref.item);
+      return resolved && !('error' in resolved) ? [resolved] : [];
+    });
+    const linked = [...findSourceKeys(prose).map(({ key }) => key), ...refKeys, ...(annotated.get(id) ?? [])].map(link);
+    // References and keys are removed first so their words are not read as names of this spec's blocks.
+    const local = refs
+      .reduceRight((stripped, { from, to }) => `${stripped.slice(0, from)} ${stripped.slice(to)}`, prose)
+      .replace(SOURCE_KEYS, ' ');
     return {
       id,
       kind: type,
       ...(title && { title }),
-      // Keys are removed first so their paths' words are not read as names of this spec's blocks.
-      dependsOn: [...new Set([...namedIds(prose.replace(SOURCE_KEYS, ' '), ids, id), ...linked])],
+      dependsOn: [...new Set([...namedIds(local, ids, id), ...linked])],
     };
   });
   const all = [...definitions, ...externals.values()];

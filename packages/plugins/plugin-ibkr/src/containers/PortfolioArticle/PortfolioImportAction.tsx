@@ -13,7 +13,7 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { Ibkr, IbkrOperation } from '#types';
 
-import { meta } from '../../meta.ts';
+import { IbkrNamespace } from '../../namespace.ts';
 
 export type PortfolioImportActionProps = {
   /** The Portfolio whose space owns the report feed the imported report is appended to. */
@@ -28,7 +28,7 @@ export type PortfolioImportActionProps = {
  * {@link IconButton}.
  */
 export const PortfolioImportAction = ({ subject }: PortfolioImportActionProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(IbkrNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(subject);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -47,7 +47,7 @@ export const PortfolioImportAction = ({ subject }: PortfolioImportActionProps) =
           await invokePromise(LayoutOperation.AddToast, {
             id: 'org.dxos.plugin.ibkr.import-error',
             icon: 'ph--warning--regular',
-            title: ['import-error.label', { ns: meta.profile.key }],
+            title: ['import-error.label', { ns: IbkrNamespace.key }],
             description: error.message,
           });
         }

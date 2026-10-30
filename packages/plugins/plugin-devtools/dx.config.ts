@@ -2,12 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Config2 } from '@dxos/app-framework/config';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { trim } from '@dxos/util';
 
-export default Config2.make({
+import { DevtoolsNamespace } from './src/namespace.ts';
+
+// Annotated: the capability modules import `meta` from here, so inferring it would be circular.
+const config: Plugin.PluginConfig = Plugin.config({
   plugin: {
-    key: 'org.dxos.plugin.devtools',
+    key: DevtoolsNamespace.key,
     name: 'Devtools',
     author: 'DXOS',
     description: trim`
@@ -25,4 +31,37 @@ export default Config2.make({
     spec: 'PLUGIN.mdl',
     tags: ['labs'],
   },
+  modules: [
+    AppCapability.appGraphBuilder(
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
+      {
+        requires: [AppCapabilities.AppGraph],
+        environments: ['browser', 'node', 'tauri'],
+      },
+    ),
+    AppCapability.pluginAsset({
+      pluginId: DevtoolsNamespace.key,
+      path: 'PLUGIN.mdl',
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
+      mimeType: 'application/x-mdl',
+    }),
+    AppCapability.reactContext(() => import('./src/capabilities/react-context.tsx', { with: { type: 'module-url' } })),
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
+      roles: [
+        'org.dxos.plugin.debug.surface.page',
+        'org.dxos.role.deckCompanion.devtoolsOverview',
+        'org.dxos.role.devtoolsOverview',
+      ],
+    }),
+    Capability.lazyModule(
+      'setup-devtools',
+      { environments: ['browser', 'tauri'], provides: [] },
+      () => import('./src/capabilities/setup-devtools.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
+  ],
 });
+
+export const { meta, make } = config;
+
+export default config;

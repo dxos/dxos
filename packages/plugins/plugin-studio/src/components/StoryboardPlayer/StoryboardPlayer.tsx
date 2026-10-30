@@ -13,7 +13,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Util from '@dxos/react-ui/Util';
 
-import { meta } from '#meta';
+import { StudioNamespace } from '../../namespace.ts';
 
 /** One playable frame: the artifact's cover variant. */
 export type StoryboardClip = {
@@ -46,7 +46,7 @@ export const StoryboardPlayer = ({
   attendableId,
   onClose,
 }: StoryboardPlayerProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(StudioNamespace.key);
   const toolbarRef = useRef<HTMLButtonElement>(null);
   const [index, setIndex] = useState(0);
   const clip = clips[index];

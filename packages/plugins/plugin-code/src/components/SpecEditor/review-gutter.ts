@@ -5,16 +5,17 @@
 import { type EditorState, type Extension, RangeSetBuilder } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
 
-import { type SourceKey, formatSourceKey } from '#sync';
-
 import {
   type Annotation,
   type ReviewModel,
-  STATUS_STYLE,
+  type SourceKey,
   type Verdict,
+  formatSourceKey,
   reviewAnnotations,
   walkthroughOf,
-} from '../SpecModel/index.ts';
+} from '@dxos/deus/review';
+
+import { STATUS_STYLE } from '../SpecModel/index.ts';
 import { type SnippetCard, type SourceReader, snippetCard, walkthroughCard } from './snippet-card.ts';
 
 /** A block declaration line, `feat F-1: …`, `  req F-1.2: …` or `type Scene`, captured as its kind and id. */
@@ -306,6 +307,15 @@ const buildDecorations = (
   return builder.finish();
 };
 
+// Built once: every `EditorView.theme` call mints a new stylesheet, which restyles the whole document.
+const reviewGutterTheme = EditorView.theme({
+  '.dx-review-done': { boxShadow: 'inset 3px 0 0 var(--color-success-text, #16a34a)' },
+  '.dx-review-untested': { boxShadow: 'inset 3px 0 0 var(--color-info-text, #2563eb)' },
+  '.dx-review-partial': { boxShadow: 'inset 3px 0 0 var(--color-warning-text, #d97706)' },
+  '.dx-review-diverged': { boxShadow: 'inset 3px 0 0 var(--color-orange-text, #ea580c)' },
+  '.dx-review-missing': { boxShadow: 'inset 3px 0 0 var(--color-error-text, #dc2626)' },
+});
+
 /**
  * Marks each reviewed spec item's declaration line with its verdict, the code that implements it and whether tests
  * exercise it. These come from the review, not the spec text, so they render as decorations like the decision chips.
@@ -320,12 +330,6 @@ export const reviewGutter = (review: ReviewModel, callbacks: ReviewGutterCallbac
     EditorView.decorations.compute(['doc'], (state) =>
       buildDecorations(state, verdicts, annotations, callbacks, hover),
     ),
-    EditorView.theme({
-      '.dx-review-done': { boxShadow: 'inset 3px 0 0 var(--color-success-text, #16a34a)' },
-      '.dx-review-untested': { boxShadow: 'inset 3px 0 0 var(--color-info-text, #2563eb)' },
-      '.dx-review-partial': { boxShadow: 'inset 3px 0 0 var(--color-warning-text, #d97706)' },
-      '.dx-review-diverged': { boxShadow: 'inset 3px 0 0 var(--color-orange-text, #ea580c)' },
-      '.dx-review-missing': { boxShadow: 'inset 3px 0 0 var(--color-error-text, #dc2626)' },
-    }),
+    reviewGutterTheme,
   ];
 };

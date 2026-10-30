@@ -1,74 +1,14 @@
 # @dxos/stories-agent
 
 Storybook stories that prototype agents on Discord end to end: installing the DXOS Discord app (Kai) in a server,
-connecting Discord channels to an agent in a durable test space, and talking to the agent from Discord, all against a
-locally running EDGE stack. Design: [plugin-agent `docs/DISCORD.md`](../../plugins/plugin-agent/docs/DISCORD.md).
+connecting Discord channels to an agent in a durable test space, and talking to the agent from Discord. Design:
+[plugin-agent `docs/DISCORD.md`](../../plugins/plugin-agent/docs/DISCORD.md).
 
 ## Setup
 
-You need a dxos checkout (this repo, `<dxos>` below), an edge checkout (`<edge>` below), Chrome, and access to the
-`eng-dev` 1Password vault (and `eng-ops` for a deployed environment's Kai token) with the 1Password app's CLI
-integration on (Settings → Developer).
-
-### 1. The Discord apps
-
-Two kinds of Discord app take part, and each EDGE environment has its own Kai:
-
-| App | Job | Where EDGE configures it |
-| --- | --- | --- |
-| Composer (`1135690429833171105`) | **Connect Discord**: the OAuth sign-in that lists your servers | kms-service `DISCORD_CLIENT_ID` and `DISCORD_CLIENT_SECRET` |
-| Kai | The bot you install and mention | discord-service `DISCORD_KAI_APPLICATION_ID` and `DISCORD_KAI_BOT_TOKEN` |
-
-| EDGE | Kai app | Application id |
-| --- | --- | --- |
-| local | Kai Local | `1559967387972009984` |
-| dev | Kai Dev | `1559736753990926390` |
-| preview | Kai Preview | `1559967457274372126` |
-| staging | Kai Staging | `1559968567775072356` |
-| production | Kai | `1555777706459660288` |
-
-Composer picks the Kai of the EDGE it talks to (`KAI_APPLICATION_IDS` in plugin-discord's `src/constants.ts`), so a
-space records no bot; staging has no entry there, since `EDGE_URLS` names no staging EDGE. Each Kai's bot token is the `credential` field of the `com.discord.bot.kai` record, in that environment's
-section: `op://eng-dev/com.discord.bot.kai/<local|dev>/credential` or
-`op://eng-ops/com.discord.bot.kai/<preview|staging|production>/credential`.
-
-In each Kai app's portal, once:
-
-1. **Bot → Message Content Intent:** on. Without it, follow-ups in a Kai thread arrive with empty content.
-2. **Bot → Requires OAuth2 Code Grant:** off. **Public Bot** is on for Kai only.
-3. **Installation:** Guild Install only, install link None. Composer builds the install link itself.
-4. Do not **Reset Token** unless the 1Password value is lost: a reset invalidates the stored one.
-
-The Composer app's **OAuth2 → Redirects** must include `http://localhost:8787/oauth/callback`, which local EDGE
-issues for sign-ins started from `localhost:8787`.
-
-### 2. Local EDGE
-
-From `<edge>`:
-
-1. Write every worker's `.env`, including Kai Local's bot token and the Composer app's client secret. 1Password
-   asks you to unlock:
-
-   ```bash
-   pnpm dev:env
-   ```
-
-2. Start the stack (EDGE listens on `:8787`):
-
-   ```bash
-   node scripts/stack.mjs start
-   ```
-
-   Re-run `pnpm dev:env` and restart the stack after pulling `secrets.jsonc` changes.
-
-EDGE runs the `@dxos/*` build edge's catalog pins. To run local changes to dxos code that runs on EDGE (plugin-agent
-operations and skills, `agent-runtime`, `assistant`), build `<dxos>` and link it into edge with
-`node scripts/link-packages.mjs <dxos> --all --install`; never commit the resulting `file:` overrides. Composer-only
-changes need no link.
-
-### 3. Storybook
-
-From `<dxos>`:
+The stories talk to a real EDGE, so set that up first with plugin-agent's
+[SETUP.md](../../plugins/plugin-agent/docs/SETUP.md): the Discord apps and Kai's portal settings, local EDGE, and
+the environment table. Then, from `<dxos>`:
 
 ```bash
 moon run storybook-react:serve
@@ -79,11 +19,11 @@ stories use persistent storage, which runs the client in a SharedWorker; the Cla
 blocks SharedWorker requests, so they cannot boot there unless the `persistent` arg is off.
 
 The **Setup** story's `persistent` arg (Controls) keeps the profile across reloads; changing it reboots the story. Its
-toolbar picks the EDGE the client talks to (local, dev, preview or production) and has **Reset**, which wipes the
-profile so setup seeds a fresh space. Both take effect on reload; moving a persistent profile to another EDGE resets
-it, since it is registered with the old one.
+toolbar picks the EDGE the client talks to (local, dev, preview or production; local by default) and has **Reset**,
+which wipes the profile so setup seeds a fresh space. Both take effect on reload. Moving a persistent profile to
+another EDGE resets it, since it is registered with the old one.
 
-### 4. Try it
+## Try it
 
 In the **Setup** story:
 
@@ -97,12 +37,9 @@ In the **Setup** story:
 In the **DiscordPipeline → Setup** story (`?path=/story/stories-stories-agent-discordpipeline--setup`), a Discord
 back-index runs as a remote timer trigger on EDGE: plugin-discord's `CrawlDiscordChannels` reads the channels' history
 with the Discord token stored in the space, keeps its progress in a `CrawlState` object and appends the facts it
-extracts to a fact feed; the agent's brain indexes the fact feed once it is registered. It needs an EDGE that serves
-the brain's `/compute/brain/:spaceId/:agentId/fact-feeds` routes and runs operation-service with this branch's
-plugin-discord: the edge branch `dm/elegant-euler-at56gd`, either checked out in `<edge>` and started with
-`node scripts/stack.mjs start` (section 2), or deployed to the EDGE the toolbar picks.
+extracts to a fact feed; the agent's brain indexes the fact feed once it is registered.
 
-1. **Discord** panel: sign in, install Kai and **Connect** a channel, as steps 1–3 above. The sign-in stores the
+1. **Discord** panel: sign in, install Kai and **Connect** a channel, as steps 1 to 3 above. The sign-in stores the
    Discord connection, and its token, in the space.
 2. **Discord back-index** panel: pick the **Connection**, check the channel under **Channels**, set **Max days**
    (e.g. 30), leave **Descend threads** on, and pick an **Interval**.
@@ -116,33 +53,14 @@ plugin-discord: the edge branch `dm/elegant-euler-at56gd`, either checked out in
 The **DiscordPipeline → Scripted** story runs the same panel with EDGE faked (`startFakeBackIndexRunner` steps the
 crawl state while the trigger is on, `installFakeBrain` answers the fact feed routes), with no Discord or EDGE at all.
 
-### 5. Check the bot
-
-With Kai Local's bot token in your shell
-(`export DISCORD_BOT_TOKEN="$(op read -n op://eng-dev/com.discord.bot.kai/local/credential)"`), each of
-these prints without revealing the token:
-
-```bash
-curl -s -H "Authorization: Bot $DISCORD_BOT_TOKEN" https://discord.com/api/v10/applications/@me | jq '{id, name, message_content_intent: (((.flags // 0) / 262144 | floor) % 4 > 0)}'
-```
-
-```bash
-curl -s -H "Authorization: Bot $DISCORD_BOT_TOKEN" https://discord.com/api/v10/users/@me/guilds | jq '[.[] | {id, name}]'
-```
-
-The first must show `message_content_intent: true`; the second lists the servers Kai is installed in.
-
 ## Troubleshooting
+
+Problems with EDGE, the Discord apps or the bot are in [SETUP.md](../../plugins/plugin-agent/docs/SETUP.md#troubleshooting).
+These are specific to the stories:
 
 | Symptom | Cause |
 | --- | --- |
-| `pnpm dev:env`: "account is not signed in" | The 1Password app is locked or its CLI integration is off. |
-| **Could not reach EDGE** with a 403 | Another space owns the bot (the last tab to bind or start it). |
-| **Could not reach EDGE**, every request failing | The stack is down: `node scripts/stack.mjs status`, then `start`. |
 | The story never finishes loading, "coordinator worker error" | Opened in the Claude desktop app's browser; use Chrome. |
-| **Connect Discord** fails at Discord | The Composer app lacks the localhost redirect (§1), or `pnpm dev:env` has not run (§2.1). |
 | **Install** opens a different Kai, or the bot never starts | The profile predates per-environment Kai apps and records the old app id; **Reset** it. |
-| **Connect channels** is greyed out | No channel is connected yet (§4.3). |
+| **Connect channels** is greyed out | No channel is connected yet (Try it, step 3). |
 | Agent messages fail with "No process is hosted by this object" | The space outlived the EDGE state its agent ran on; clear the site data for `localhost:9009` and reload. |
-| The bot never reaches ready | discord-service has no bot token: re-run `pnpm dev:env` (§2.1). |
-| Messages arrive with no text | Message Content Intent is off on that Kai app (§1). |

@@ -129,14 +129,14 @@ verdict F-3.2: The widget background is var(--color-group-surface).
 ```mdl
 verdict F-4.1: The plugin contributes the extension via MarkdownCapabilities.ExtensionProvider.
   status: done
-  evidence: [github:dxos/dxos/packages/plugins/plugin-mermaid/src/capabilities/markdown.ts, github:dxos/dxos/packages/plugins/plugin-mermaid/src/capabilities/index.ts#MarkdownExtension]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-mermaid/src/capabilities/markdown.ts, github:dxos/dxos/packages/plugins/plugin-mermaid/dx.config.ts]
   tests: [github:dxos/dxos/packages/plugins/plugin-mermaid/src/plugin.browser.test.ts]
 ```
 
 ```mdl
 verdict F-4.2: The module activates on MarkdownEvents.Start, not SetupExtensions.
   status: diverged
-  evidence: [github:dxos/dxos/packages/plugins/plugin-mermaid/src/capabilities/index.ts#MarkdownExtension]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-mermaid/dx.config.ts]
   tests: [github:dxos/dxos/packages/plugins/plugin-mermaid/src/plugin.browser.test.ts]
   note: The browser test fires `MarkdownEvents.Start` and checks `MarkdownExtension` activates.
 ```
@@ -171,7 +171,7 @@ verdict T-4: Nothing tests read-only mode.
 verdict T-5: The activation test fires MarkdownEvents.Start rather than SetupExtensions.
   status: diverged
   tests: [github:dxos/dxos/packages/plugins/plugin-mermaid/src/plugin.browser.test.ts]
-  evidence: [github:dxos/dxos/packages/plugins/plugin-mermaid/src/capabilities/index.ts#MarkdownExtension]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-mermaid/dx.config.ts]
   note: The module is `MarkdownExtension`, and the event is `Start`; the scenario names `SetupExtensions` and a `markdown` module.
 ```
 

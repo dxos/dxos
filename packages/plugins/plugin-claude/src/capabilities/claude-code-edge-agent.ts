@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import { type Chat } from '@dxos/assistant';
 import { Database, Query } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
@@ -14,6 +15,7 @@ import { isManagedAccessToken } from '@dxos/protocols';
 
 import { ClaudeCapabilities } from '#types';
 
+import * as ClaudeChoices from '../agents/ClaudeChoices.ts';
 import * as EdgeAgent from '../agents/EdgeAgent.ts';
 import { claudeCodeToken } from '../claude-code-token.ts';
 import { ANTHROPIC_SOURCE, CLAUDE_CODE_AGENT, CLAUDE_CODE_EDGE_AGENT, OAUTH_TOKEN_PREFIX } from '../constants.ts';
@@ -25,11 +27,12 @@ import { ANTHROPIC_SOURCE, CLAUDE_CODE_AGENT, CLAUDE_CODE_EDGE_AGENT, OAUTH_TOKE
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const manager = yield* Capability.Service;
-    // The Code plugin's permission setting governs both coding agents; a chat keeps the mode it was spawned with.
-    const mode = (): string | undefined => {
+    // A chat's own choice, else the plugin's permission setting, which governs both coding agents; a chat keeps
+    // the mode it was spawned with.
+    const mode = (chat: Chat.Chat): string => {
       const [settings] = manager.getAll(ClaudeCapabilities.Settings);
       const [registry] = manager.getAll(Capabilities.AtomRegistry);
-      return settings && registry ? registry.get(settings).agentPermissionMode : undefined;
+      return ClaudeChoices.permissionMode(chat.session, settings && registry ? registry.get(settings) : undefined);
     };
     const agent = yield* EdgeAgent.make({
       id: CLAUDE_CODE_EDGE_AGENT,
@@ -37,12 +40,19 @@ export default Capability.makeModule(
       icon: 'px--anthropic--regular',
       credentials,
       mode,
+      // Read by the ACP adapter in the sandbox as Agent SDK options.
+      sessionMeta: (chat) => {
+        const options = ClaudeChoices.sdkOptions(chat.session);
+        return Object.keys(options).length > 0 ? { claudeCode: { options } } : undefined;
+      },
     });
     return Capability.contribute(AssistantCapabilities.Agent, {
       ...agent,
       locations: ['edge'],
       variantOf: CLAUDE_CODE_AGENT,
       ownModel: true,
+      // Also offered here, since a web app registers no local Claude Code to offer them.
+      choices: ClaudeChoices.CHOICES,
     });
   }),
 );

@@ -8,6 +8,5 @@
 // keeps a single definition.
 // TODO(wittjosiah): Factor these out into a package that does not carry a UI dependency at all.
 
-export { cherryPickHunk, revertHunk } from './extensions/review/diff.ts';
 export { createComment, isRangeVisible, scrollCommentIntoView } from './extensions/review/comments.ts';
 export { Cursor } from './util/cursor.ts';

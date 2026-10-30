@@ -12,11 +12,12 @@ app-level test suites a Routine runs. The navigation and presentation structure 
 
 ## Extensions
 
-| Term    | URI                       |
-| ------- | ------------------------- |
-| `test`  | `org.dxos.mdl.test@1.0`   |
-| `step`  | `org.dxos.mdl.step@1.0`   |
-| `suite` | `org.dxos.mdl.suite@1.0`  |
+| Term       | URI                         |
+| ---------- | --------------------------- |
+| `test`     | `org.dxos.mdl.test@1.0`     |
+| `step`     | `org.dxos.mdl.step@1.0`     |
+| `suite`    | `org.dxos.mdl.suite@1.0`    |
+| `decision` | `org.dxos.mdl.decision@1.0` |
 
 The dialect is [`packages/reflect/deus/lang/qa.mdl`](../../../reflect/deus/lang/qa.mdl); the runner
 is the `composer-qa` skill, through `/dxos:qa`.
@@ -641,7 +642,8 @@ test QA-9: The guided tours
   status: unverified        # 2026-09-20, written from composer-e2e/src/playwright/tour.spec.ts
   automated:
     - composer-e2e:tour.spec.ts#Tour tests › the global tour runs from the Home help companion and advances
-    - composer-e2e:tour.spec.ts#Tour tests › a document tour picks up steps contributed by other plugins
+    - composer-e2e:tour.spec.ts#Tour tests › a document tour picks up contributed steps, however the toolbar collapses
+    - composer-e2e:tour.spec.ts#Tour tests › leaving a document ends its tour
   given:
     - an identity exists and the app is on Home
   steps:
@@ -668,6 +670,20 @@ test QA-9: The guided tours
     - name: The global tour still works afterwards
       do: Reload the page and run the global tour again.
       expect: it runs from "Sharing" to "Feedback" as before
+    - name: Run a document's tour on a narrow plank
+      do: Narrow the window until the editor toolbar folds view mode into its overflow (⋮) menu, then run the document tour.
+      expect: |
+        every step still runs, and the step for a folded control opens the ⋮ menu and points at it
+        there
+      note: |
+        Which control folds first is decided by a pixel budget the tour cannot see, so a tour that
+        only works at one window size is passing by luck.
+    - name: Leave a document mid-tour
+      do: Start a document's tour, load the space's Home URL before finishing it, then reopen the document.
+      expect: |
+        the tour stays gone on Home and on the reopened document, and the global tour starts from Home;
+        a tour left running floats its card in the window's corner and its backdrop swallows every click
+      note: The backdrop blocks the sidebar, so a reader leaves mid-tour only by a load such as a boot onto Home.
 ```
 
 ```mdl
@@ -904,7 +920,9 @@ test QA-12: Two people collaborate, then one invites the other from the notifica
       expect: neither "QA:" space remains on either profile
   then:
     - no error is logged on either peer, and EDGE `/inbox` calls return 2xx throughout
+```
 
+```mdl
 test QA-15: Showcase clip
   desc: |
     The 20s showcase clip: Walk the Bramble Coffee Roasters space: a project, its tasks, and the roastery handbook. Recorded light at 60 fps with no ident, captions or
@@ -1004,7 +1022,9 @@ test QA-14: Bramble — Kai locks the Spring Blend
     - name: Close
       do: Return to the Inbox and hold.
       expect: the inbox, as the take began
+```
 
+```mdl
 test QA-16: Hot-reload a plugin capability
   desc: |
     Dev-server demo of plugin hot replacement: edits to plugin-space's app-graph builder (a capability with
@@ -1028,7 +1048,7 @@ test QA-16: Hot-reload a plugin capability
       do: Replace the section's emerald icon hue with rose.
       expect: the row's icon turns rose, and the page does not reload
     - name: Drop the module from the plugin
-      do: Comment out `Plugin.addModule(AppGraphBuilder)` in plugin-space's src/plugin.ts.
+      do: Comment out `AppGraphBuilder,` in plugin-space's module list in dx.config.ts.
       expect: the Settings row disappears, and the page does not reload
     - name: Restore the module
       do: Uncomment the line again.
@@ -1068,4 +1088,30 @@ decision D-4: QA-16 drops its full-reload contrast and instead drops and restore
   affects: [QA-16]
   supersedes: D-2
   why: The plugin-definition edit no longer reloads the page, so the old last step had nothing left to contrast.
+```
+
+```mdl
+decision D-5: QA-9 covers a document tour on a plank narrow enough to fold a step's target into the overflow menu.
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-9]
+  why: A tour exercised at one window size passes or fails on a pixel budget it cannot see; #14053 broke the tour that way and the suite did not notice.
+```
+
+```mdl
+decision D-6: A plugin's definition is its dx.config.ts, so QA-16 edits the module list there. Fills in [D-3].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-16]
+  why: Plugins are defined by Plugin.config in dx.config.ts; src/plugin.ts no longer exists.
+```
+
+```mdl
+decision D-7: A document's tour ends when the reader leaves the document, and QA-9 checks it.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [QA-9]
+  why: The toolbar its steps point at unmounts with the document, so the card fell back to the window's top-left corner.
 ```

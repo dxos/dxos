@@ -24,8 +24,7 @@ import { type LinkWidgetState, type WidgetProps, releaseBlockHeight, setLinkWidg
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
-import { meta } from '#meta';
-
+import { MarkdownNamespace } from '../../namespace.ts';
 import { parseEmbedLabel } from './parse-embed-label.ts';
 
 // Persisted height (px) lives in the image alt text after the label, Obsidian-style: `![label|320](eid)`.
@@ -104,7 +103,7 @@ export const PreviewComponent = ({
   onOpen,
   isSurfaceAvailable: isSurfaceAvailableProp,
 }: PreviewComponentProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(MarkdownNamespace.key);
   // Optional, not `useOperationInvoker`: that hook SUSPENDS until the capability exists, and a
   // suspending portal holds the whole editor tree un-committed — embeds never appeared on the
   // first document render. The invoker is only the open-click fallback; absence is tolerable.

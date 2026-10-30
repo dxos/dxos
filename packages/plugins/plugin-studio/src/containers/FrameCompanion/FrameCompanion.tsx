@@ -14,9 +14,9 @@ import { useSelection } from '@dxos/react-ui-attention';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Status from '@dxos/react-ui/Status';
 
-import { meta } from '#meta';
 import { Frame, MediaArtifact, type Storyboard } from '#types';
 
+import { StudioNamespace } from '../../namespace.ts';
 import { FrameDetail } from '../StoryboardArticle/FrameDetail.tsx';
 
 const isArtifact = Obj.instanceOf(MediaArtifact.MediaArtifact);
@@ -35,7 +35,7 @@ export type FrameCompanionProps = {
  * picked — so the companion follows the stack without either holding state of its own.
  */
 export const FrameCompanion = ({ companionTo: storyboard, attendableId }: FrameCompanionProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(StudioNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const selectedId = useSelection(attendableId, 'single');
   const [refs] = useObject(storyboard, 'frames');

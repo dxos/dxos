@@ -19,6 +19,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.1`          |
 | `test`      | `org.dxos.mdl.test@1.0`        |
+| `decision`  | `org.dxos.mdl.decision@1.0`    |
 
 ## Types
 
@@ -156,7 +157,7 @@ op scrollToAnchor
   desc: Programmatically scrolls and highlights a cell range in an active grid instance.
   input:
     subject: string              # attendable ID of the target sheet
-    cursor: string               # A1-notation cell or range
+    cursor: string               # comment anchor (see [F-7.3])
     ref?: any                    # active refs for highlight overlay
   output: void
   effects: [ui:scroll]
@@ -175,7 +176,9 @@ op create
   output: { id: string }         # DXN of the created sheet
   effects: [echo:write]
   requires: [Database.Service]
+```
 
+```mdl
 op getRange
   key: org.dxos.operation.sheet.getRange
   desc: Reads cell values from a sheet as a 2D array. Omit `range` for the entire occupied area.
@@ -185,7 +188,9 @@ op getRange
   output: { values: any[][], range: string }
   effects: [echo:read]
   requires: [Database.Service]
+```
 
+```mdl
 op setRange
   key: org.dxos.operation.sheet.setRange
   desc: Sets multiple cell values in a sheet at once, keyed by A1 address.
@@ -269,7 +274,18 @@ feat F-7: Anchor Navigation
     when: op:scrollToAnchor is invoked with a sheet attendable ID and cursor
     then: the corresponding SheetArticle scrolls to the target cell and applies the active-ref highlight
 
-  req F-7.2: AnchorSort contributes a sort comparator so sheet anchors appear in canonical order in navigation menus.
+  req F-7.2: AnchorSort contributes a sort comparator so sheet anchors appear in canonical order in navigation menus: by the range's top-left cell, row first, with anchors that no longer resolve last.
+
+  req F-7.3:
+    when: a comment is added on a selected cell range
+    then:
+      - its anchor names the range's first and last cells by row and column id (`colId@rowId:colId@rowId`), so the thread stays on those cells as rows and columns are inserted, deleted or moved
+      - the anchor no longer resolves once a row or column it names is deleted
+      - anchors in A1 notation or `col,row,col,row` resolve to those positions in the current sheet
+
+  req F-7.4:
+    when: the reader moves the cell cursor into a commented range
+    then: that range's thread becomes the current comment
 ```
 
 ## Acceptance
@@ -326,7 +342,7 @@ scenario T-5: Real-time collaboration
 ```mdl
 scenario T-6: Scroll to anchor
   given: a SheetArticle is mounted with attendableId "sheet-1"
-  when: op:scrollToAnchor runs with subject="sheet-1", cursor="E10"
+  when: op:scrollToAnchor runs with subject="sheet-1" and the anchor of a comment on E10
   then:
     - the grid scrolls so that E10 is visible
     - E10 is highlighted via activeRefs
@@ -450,7 +466,9 @@ test QA-3: Chart a sales report in the Charts companion
     - name: Switch back to the bags sold chart
       do: Click "Bags sold by blend".
       expect: the bar chart returns and A1:D7 is selected in the sheet
+```
 
+```mdl
 test QA-4: Showcase clip
   desc: |
     The 10s showcase clip: Fill a sheet with values and formulas. Recorded light at 60 fps with no ident, captions or
@@ -468,6 +486,30 @@ test QA-4: Showcase clip
     - name: Enter values and formulas
       do: Type four rows of a label, a value and a formula.
       expect: the formulas compute as each row is entered
+```
+
+## Changelog
+
+```mdl
+decision D-1: A sheet comment anchors to its cells' row and column ids, not their positions, so it follows its cells when rows or columns are inserted, deleted or moved; the sheet's comment config builds the anchor from its A1 selection.
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.3, F-7.4, op:scrollToAnchor]
+  why: Positional anchors pointed at whatever cell moved into place, and the creation path, cell focus and scroll-to-anchor each parsed a different format, so none of them matched the stored A1 anchor.
+  rejected:
+    - Publish the sheet's selection as an index range: the range list, charts companion and assistant read it in A1 notation.
+```
+
+```mdl
+decision D-2: Anchors stored before [D-1], in A1 notation or `col,row,col,row`, are read as positions on every read and never rewritten. Fills in [D-1].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.3]
+  why: Anchors live on `AnchoredTo` relations the sheet does not own, so a sheet migration cannot reach them, and their position is all they ever recorded.
+  rejected:
+    - Rewrite legacy anchors to index ranges when the sheet opens: a read would write to every peer's copy of the comments.
 ```
 
 ---

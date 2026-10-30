@@ -49,6 +49,7 @@ feat F-3: Linting
   req F-3.1: The editor linter and `deus lint` report decisions that break F-1.1 or F-1.3.
   req F-3.2: `deus lint --only <source>` restricts output to one check, so the block-type check (which knows only built-in types) does not hide decision errors.
   req F-3.3: `.agents/skills/mdl/scripts/check-decisions.ts` asks TypeSafe System One whether each decision a branch adds breaks F-1.8, giving it the spec's name and introduction so a spec whose system is itself a process is judged on that system. A probability of 0.8 or more fails. It runs in CI as "Check spec decisions" and passes with a notice when `TYPESAFE_API_KEY` is not set.
+  req F-3.4: Each block has its own ```` ```mdl ```` fence. The editor linter and `deus lint` report a second block header inside one fence as an `mdl/block` error: a line after the fence's first line, at column 0, whose first word is a built-in block type or a term in the document's `## Extensions` table.
 ```
 
 ```mdl
@@ -75,6 +76,17 @@ feat F-6: SQL tables
   req F-6.3: A `table` is a spec item that requirements cite as `table:<name>` or `table:<name>.<column>`, and `deus lint` knows the block type.
   req F-6.4: A spec refers to code by component or symbol name and to another spec by its frontmatter `id`, never by file path; a `table` names its store and migration-history table, not a migrations directory.
   req F-6.5: A `table` is part of the spec's data model: the viewer's Data model view shows it as a stored root with its columns as fields, its store as a tag, and a `REFERENCES <table>(<column>)` column as a reference to that table.
+```
+
+```mdl
+feat F-7: Spec dependencies
+  req F-7.1: A spec declares each spec it builds on in its body, never its frontmatter: one core `uses` block per spec under `## Dependencies`, after the opening prose and before `## Extensions`, whose required one-line prose says what it takes from that spec.
+  req F-7.2: A plugin spec's `plugin` block lists the plugin's runtime dependencies in `dependsOn` (plugin dialect 1.1), exactly as `dx.config.ts` declares them. An id in `dependsOn` is never repeated under `uses`; a spec's dependencies are the union of both.
+  req F-7.3: A reference into another spec is `<spec id>#<item>`, where the item is a block id or `req` id of that spec. It is recognised in prose and anywhere in an `mdl` block; other code fences are not scanned. A `github:` key into a `.mdl` file is not a reference.
+  req F-7.4: `deus index` maps every tracked `.mdl` spec's frontmatter id to its path and items, leaving out spec reviews, test fixtures and the illustrative `lang/examples/`. Two files with one id is an error reported on both.
+  req F-7.5: The editor linter and `deus lint` report, as `mdl/ref` and `mdl/uses` errors: a reference to an unknown spec or item, a reference to a spec outside the dependencies, a `github:` key into a `.mdl` file outside `## Changelog`, an unknown, repeated or self dependency, and an id in both `dependsOn` and `uses`. Dependency cycles are allowed, and dependencies are not transitive.
+  req F-7.6: `deus review check` judges a `plugin` block's `dependsOn` against `dx.config.ts`; a plugin in one and not the other is valid only under a `diverged` verdict.
+  req F-7.7: The spec index of the dxos repository is generated at build time and bundled with plugin-code. The spec viewer opens a referenced spec scrolled to the item (to the top for a bare id), and draws a reference it cannot resolve as a broken link with the lint message on hover.
 ```
 
 ## Changelog
@@ -416,4 +428,216 @@ decision D-38: A table is always a stored root; its columns are its fields and a
   for: user:dmaretskyi
   affects: [F-6.5]
   why: A table is persisted by definition, and a foreign key is the SQL form of the `Ref<…>` field that makes a `type` reference another.
+```
+
+```mdl
+decision D-39: A spec's dependencies on other specs are declared in its body, not in its frontmatter.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-7.1]
+```
+
+```mdl
+decision D-40: A plugin spec lists the plugins it depends on in a field of the plugin dialect, and any spec lists the specs it builds on in a core Dependencies section.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-7.1, F-7.2]
+```
+
+```mdl
+decision D-41: A dependency is never declared twice: a plugin listed in the plugin dialect's field is not repeated in the Dependencies section.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-7.2]
+```
+
+```mdl
+decision D-42: A reference into another spec is fully qualified as `<spec id>#<item>`.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-7.3]
+```
+
+```mdl
+decision D-43: A reference to a spec that is not among the spec's dependencies is a lint error.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-7.5]
+```
+
+```mdl
+decision D-44: The spec viewer opens a referenced spec scrolled to the referenced item.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-7.7]
+```
+
+```mdl
+decision D-45: Existing `github:` keys into `.mdl` files are converted to `<spec id>#<item>` references, and lint rejects such keys.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-7.3, F-7.5]
+```
+
+```mdl
+decision D-46: A plugin's `dependsOn` is exactly its runtime dependencies as `dx.config.ts` declares them, and every other spec it builds on goes under `uses`. A review that finds a plugin in one and not the other judges it `diverged`.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-7.2, F-7.6]
+```
+
+```mdl
+decision D-47: The viewer's spec index is generated at build time and bundled with plugin-code. It covers the dxos repository only; another repository gets its own index later, and until then its specs cannot reference dxos specs.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-7.7]
+```
+
+```mdl
+decision D-48: The spec index leaves out `*.review.mdl` files and test fixtures. Fills in [D-42].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-7.4]
+  why: A review and a fixture are not specs a reference can name, and fixtures reuse ids on purpose.
+```
+
+```mdl
+decision D-49: Deus owns the spec index: lint builds it from the checkout and the build emits the same index for the viewer. Fills in [D-43] and [D-47].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-7.4, F-7.7]
+  why: One builder means lint and the viewer cannot disagree about what an id resolves to.
+```
+
+```mdl
+decision D-50: The core block is `uses`, one per dependency, and `## Dependencies` sits after the opening prose and before `## Extensions`. Fills in [D-40].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-7.1]
+  why: A reader learns what the spec is before what it builds on, and the declarations precede the block types they may need.
+```
+
+```mdl
+decision D-51: A `uses` block's one-line prose, saying why the dependency exists, is required. Fills in [D-40].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-7.1]
+  why: An id alone does not tell a reader what this spec takes from the other.
+```
+
+```mdl
+decision D-52: The plugin dialect's field is `dependsOn`, named as in `dx.config.ts`. Fills in [D-40].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-7.2]
+  why: One name for one concept in the config and the spec makes the review comparison obvious.
+```
+
+```mdl
+decision D-53: The plugin dialect moves to version 1.1 for `dependsOn`. Fills in [D-40].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-7.2]
+  why: The field is optional and additive, so existing plugin blocks stay valid: a minor bump.
+```
+
+```mdl
+decision D-54: The editor linter and `deus lint` share the reference diagnostics, under the sources `mdl/ref` (references and keys) and `mdl/uses` (declarations). Fills in [D-43] and [D-45].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-7.5]
+  why: Shared checks keep the editor and CI in step, and two sources let `--only` select either.
+```
+
+```mdl
+decision D-55: A dependency cycle is allowed. Fills in [D-43].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-7.5]
+  why: Specs can legitimately describe each other, as a host and the engine it embeds do.
+```
+
+```mdl
+decision D-56: The viewer draws an unresolvable reference as a broken link, with the lint message on hover. Fills in [D-44].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-7.7]
+  why: The reader sees the break where it is, with the same explanation lint gives.
+```
+
+```mdl
+decision D-57: References are recognised in prose and anywhere inside an `mdl` block, `#` comments included; any other code fence is not scanned. Fills in [D-42].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-7.3]
+  why: An ASCII diagram or a code example can show a reference without declaring a dependency, while spec text is always checked.
+```
+
+```mdl
+decision D-58: Approve [D-48], [D-49], [D-50], [D-51], [D-52], [D-53], [D-54], [D-55], [D-56] and [D-57].
+  date: 2026-10-27
+  by: user:richburdon
+```
+
+```mdl
+decision D-59: The spec index also leaves out `lang/examples/`. Fills in [D-48].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-7.4]
+  why: The examples are successive versions of one illustrative chess spec and share its id, so indexing them reports a duplicate on every file.
+```
+
+```mdl
+decision D-60: A `github:` key into a `.mdl` file inside `## Changelog` is not reported. Fills in [D-45].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-7.5]
+  why: The changelog is append-only, so a decision written before references existed cannot be rewritten to satisfy the rule.
+  rejected:
+    - Rewriting such decisions, which `deus changelog check` rejects as an edit to the log.
+```
+
+```mdl
+decision D-61: In a reference, the spec id's segments after the first may be camelCase. Fills in [D-42].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-7.3]
+  why: Plugin ids such as `org.dxos.plugin.fileSystem` are camelCase, and a lowercase-only grammar never recognised a reference into them.
+```
+
+```mdl
+decision D-62: Approve [D-59], [D-60] and [D-61].
+  date: 2026-10-27
+  by: user:richburdon
+```
+
+```mdl
+decision D-63: Each block gets its own ```` ```mdl ```` fence, and a second block header inside one fence is a lint error. Every existing multi-block fence in the repo's specs is split into one block per fence.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-3.4]
+```
+
+```mdl
+decision D-64: A block header inside a fence is a line after the fence's first line, at column 0, of the form `<type> [<id>][: <title>]`, whose type is a built-in block type or a term in the document's `## Extensions` table. Fills in [D-63].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-3.4]
+  why: A block body is always indented, so a column-0 line of a known type is never body text; on the repo's specs this finds exactly the hidden headers and no prose line.
+  rejected:
+    - Any column-0 line of the header form, which would also flag undeclared types such as `surface` lines that list surfaces.
 ```

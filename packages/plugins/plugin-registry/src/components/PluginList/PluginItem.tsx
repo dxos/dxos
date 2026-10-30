@@ -16,9 +16,9 @@ import * as Tag from '@dxos/react-ui/Tag';
 import * as Typography from '@dxos/react-ui/Typography';
 import { ACCENT_HUES } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
 import { type RegistryTagType } from '#types';
 
+import { RegistryNamespace } from '../../namespace.ts';
 import { PluginFailureBadge } from '../PluginFailureBadge/index.ts';
 
 export type PluginItemProps = {
@@ -79,7 +79,7 @@ export const PluginItem = ({
   failure,
   readOnly,
 }: PluginItemProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(RegistryNamespace.key);
   const { key: id, name, description, tags, icon: rawIcon } = plugin.meta.profile;
   const icon = rawIcon?.key ?? 'ph--circle--regular';
   // The manifest's hue is a free string; only a palette hue reaches the icon.

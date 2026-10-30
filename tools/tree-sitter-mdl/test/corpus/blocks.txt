@@ -1,0 +1,68 @@
+==================
+Header, fields and a block scalar
+==================
+feat F-1: Open things
+  req F-1.1: The action is registered.
+  desc: |
+    Free text: with a colon.
+  kind?: a | b  # pick one
+
+---
+
+(block
+  (header
+    type: (block_type)
+    id: (identifier)
+    title: (title))
+  (field
+    key: (key)
+    id: (identifier)
+    value: (value (word) (word) (word) (word)))
+  (field
+    key: (key)
+    value: (value (operator)))
+  (text_line
+    (text (word) (word) (word) (word) (word) (word)))
+  (field
+    key: (key)
+    value: (value (word) (operator) (word) (comment))))
+
+==================
+Lists, comments, references and actors
+==================
+decision D-1: Keep it.
+  # why it matters
+  affects: [F-1, F-2]
+  - see org.dxos.spec.b#Other and github:dxos/dxos/a.ts#run
+  by: agent:claude
+
+---
+
+(block
+  (header
+    type: (block_type)
+    id: (identifier)
+    title: (title))
+  (comment_line (comment))
+  (field
+    key: (key)
+    value: (value (bracket) (word) (delimiter) (word) (bracket)))
+  (list_item
+    value: (value (word) (spec_ref) (word) (source_key)))
+  (field
+    key: (key)
+    value: (value (actor))))
+
+==================
+Header with a label and a comment
+==================
+surface skill     -> SkillArticle    # article for Skill objects
+
+---
+
+(block
+  (header
+    type: (block_type)
+    id: (identifier)
+    label: (label)
+    (comment)))

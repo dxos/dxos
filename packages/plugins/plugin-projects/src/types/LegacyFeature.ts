@@ -47,3 +47,23 @@ export class Feature extends Type.makeObject<Feature>(DXN.make('org.dxos.type.fe
 /** Work in progress is now read from a feature's tasks, so `in-progress` keeps only what it said about maturity. */
 export const toStatus = (status: Status): Exclude<Status, 'in-progress'> =>
   status === 'in-progress' ? 'planned' : status;
+
+/**
+ * The 0.2.0 `Feature`, before specs: a feature sat on a project's map (`project`) or under another feature
+ * (`parent`), and held its own canvas position. Kept solely so `Migration.define` can read existing data.
+ */
+export class FeatureV2 extends Type.makeObject<FeatureV2>(DXN.make('org.dxos.type.feature', '0.2.0'))(
+  Schema.Struct({
+    name: Schema.String,
+    description: Schema.optional(Schema.String),
+    requirements: Schema.optional(
+      Schema.Array(Schema.Struct({ id: Schema.optional(Schema.String), text: Schema.String })),
+    ),
+    status: Schema.Literals(['planned', 'prototype', 'operational', 'failing']),
+    specs: Schema.optional(Schema.Array(Schema.String)),
+    parent: Schema.optional(Schema.suspend((): Ref.RefSchema<FeatureV2> => Ref.Ref(FeatureV2))),
+    project: Schema.optional(Ref.Ref(Project.Project)),
+    code: Schema.optional(Schema.Array(CodeLink)),
+    position: Schema.optional(Position),
+  }),
+) {}

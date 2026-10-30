@@ -20,6 +20,23 @@ export type TranscriptionOptions = {
   started?: Date;
 };
 
+// Built once: every `EditorView.theme` call mints a new stylesheet, which restyles the whole document.
+const transcriptionTheme = EditorView.theme({
+  '.cm-gutters': {
+    backgroundColor: 'var(--color-base-surface)',
+  },
+  '.cm-timestamp-gutter': {
+    width: '6rem',
+    paddingLeft: '0.5rem',
+    paddingRight: '1rem',
+  },
+  '.cm-timestamp-gutter > .cm-gutterElement > div': {
+    display: 'inline-flex',
+    textAlign: 'right',
+    padding: '3px',
+  },
+});
+
 /**
  * Scrolling transcript with timestamps.
  */
@@ -130,21 +147,7 @@ export const transcription = ({ model, started }: TranscriptionOptions): Extensi
       },
     ),
 
-    EditorView.theme({
-      '.cm-gutters': {
-        backgroundColor: 'var(--color-base-surface)',
-      },
-      '.cm-timestamp-gutter': {
-        width: '6rem',
-        paddingLeft: '0.5rem',
-        paddingRight: '1rem',
-      },
-      '.cm-timestamp-gutter > .cm-gutterElement > div': {
-        display: 'inline-flex',
-        textAlign: 'right',
-        padding: '3px',
-      },
-    }),
+    transcriptionTheme,
   ];
 };
 

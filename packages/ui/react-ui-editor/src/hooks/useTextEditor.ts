@@ -57,9 +57,18 @@ export type UseTextEditorProps = Pick<EditorStateConfig, 'extensions'> & {
   debug?: boolean;
 };
 
-/** Whether every position in a recorded state lies within a document of `length`. */
-const fitsDocument = ({ scrollTo, selection }: EditorSelectionState, length: number): boolean =>
-  (scrollTo ?? 0) <= length && (selection?.anchor ?? 0) <= length && (selection?.head ?? 0) <= length;
+/** The parts of a saved state that fit the document: one that shrank while closed keeps its scroll or its selection. */
+const fitting = ({ scrollTo, scrollOffset, selection }: EditorSelectionState, length: number) => {
+  const scrolls = scrollTo != null && scrollTo <= length;
+  const selects = selection !== undefined && selection.anchor <= length && (selection.head ?? 0) <= length;
+  return scrolls || selects
+    ? {
+        scrollTo: scrolls ? scrollTo : undefined,
+        scrollOffset: scrolls ? scrollOffset : undefined,
+        selection: selects ? selection : undefined,
+      }
+    : undefined;
+};
 
 /**
  * Creates codemirror text editor.
@@ -114,8 +123,6 @@ export const useTextEditor = (
       view = new EditorView({
         parent: parentRef.current,
         state,
-        // `scrollTo` is the position recorded at the top of the viewport, so restore it there.
-        scrollTo: scrollTo != null ? EditorView.scrollIntoView(scrollTo, { y: 'start', yMargin: 0 }) : undefined,
         dispatchTransactions: debug ? debugDispatcher : undefined,
       });
 
@@ -134,30 +141,44 @@ export const useTextEditor = (
     };
   }, deps);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!view || (scrollTo == null && !selection)) {
       return;
     }
 
-    const state: EditorSelectionState = { scrollTo, scrollOffset, selection };
-    if (fitsDocument(state, view.state.doc.length)) {
-      restoreEditorState(view, state);
+    // Restored part by part as the document grows to hold it: a bound editor is created before its content arrives (the
+    // automerge binding fills the document on attach, possibly over several updates), and a restore against a document
+    // too short for it would be dropped.
+    let remaining: EditorSelectionState | undefined = { scrollTo, scrollOffset, selection };
+    const restore = (target: EditorView, length: number) => {
+      const restorable = remaining && fitting(remaining, length);
+      if (!remaining || !restorable) {
+        return;
+      }
+      restoreEditorState(target, restorable);
+      const scrolled = restorable.scrollTo !== undefined;
+      const rest = {
+        scrollTo: scrolled ? undefined : remaining.scrollTo,
+        scrollOffset: scrolled ? undefined : remaining.scrollOffset,
+        selection: restorable.selection ? undefined : remaining.selection,
+      };
+      remaining = rest.scrollTo != null || rest.selection ? rest : undefined;
+    };
+
+    restore(view, view.state.doc.length);
+    if (!remaining) {
       return;
     }
 
-    // A bound editor is created before its content arrives (the automerge binding fills the document
-    // on attach), so a restore against the empty document would be dropped; restore on the fill instead.
     let active = true;
-    let pending = true;
     view.dispatch({
       effects: StateEffect.appendConfig.of(
         EditorView.updateListener.of((update) => {
-          if (pending && update.docChanged && fitsDocument(state, update.state.doc.length)) {
-            pending = false;
+          if (remaining && update.docChanged) {
             // A view cannot be dispatched to from within its own update.
             queueMicrotask(() => {
               if (active) {
-                restoreEditorState(update.view, state);
+                restore(update.view, update.view.state.doc.length);
               }
             });
           }

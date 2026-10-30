@@ -14,7 +14,7 @@ import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as SupportSurface from '@dxos/plugin-support/SupportSurface';
 import * as Position from '@dxos/util/Position';
 
-import { meta } from '../meta.ts';
+import { OnboardingNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -31,7 +31,7 @@ export default Capability.makeModule(
               });
             }),
             properties: {
-              label: ['open-about.label', { ns: meta.profile.key }],
+              label: ['open-about.label', { ns: OnboardingNamespace.key }],
               icon: 'ph--info--regular',
               disposition: 'menu',
               // The only entry with an explicit position: every other contributor ties at the

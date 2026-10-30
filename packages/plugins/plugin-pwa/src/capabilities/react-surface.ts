@@ -10,15 +10,18 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 
 import { PwaSettings } from '#containers';
-import { meta } from '#meta';
 
-export default Capability.makeModule(() =>
+import { PwaNamespace } from '../namespace.ts';
+import { type PwaOptions } from '../settings-store.ts';
+
+export default Capability.makeModule((options: PwaOptions) =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'pluginSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
+        filter: AppSurface.settings(AppSurface.Article, PwaNamespace.key),
         component: PwaSettings,
+        props: ({ data: { subject } }) => ({ subject, defaultAutoUpdate: options.defaultAutoUpdate }),
       }),
     ]),
   ),

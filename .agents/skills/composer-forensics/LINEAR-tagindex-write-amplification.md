@@ -193,7 +193,7 @@ For each document over a threshold (e.g. binary > 1 MiB or ops/change > 1000):
 
 **Option B — space epoch migration**
 
-Use existing epoch / `MigrationBuilder` flow when many objects or whole-space cleanup is needed. Avoid `migrateDocument` alone if the goal is to **drop** history — it preserves history by design.
+Use the epoch migration flow (`db.beginMigration()`, `Migration.Transaction`) when many objects or whole-space cleanup is needed. Avoid `migrateDocument` alone if the goal is to **drop** history — it preserves history by design.
 
 **Option C — lazy compaction on load**
 

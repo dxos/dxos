@@ -11,10 +11,10 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
-import { meta } from '#meta';
 import { Assistant, AssistantCapabilities, AssistantOperation } from '#types';
 
 import { useChatContext } from '../components/Chat/context.ts';
+import { AssistantNamespace } from '../namespace.ts';
 
 /**
  * Scopes the toolbar's chat switcher: which chats it lists, and what picking one does.
@@ -49,14 +49,14 @@ export const useChatToolbarActions = ({ chat, companionTo, switcher }: ChatToolb
           : []);
 
       const builder = MenuBuilder.make().root({
-        label: ['chat-toolbar.title', { ns: meta.profile.key }],
+        label: ['chat-toolbar.title', { ns: AssistantNamespace.key }],
       });
 
       if (companionTo) {
         builder.action(
           'new',
           {
-            label: ['new-thread.button', { ns: meta.profile.key }],
+            label: ['new-thread.button', { ns: AssistantNamespace.key }],
             icon: 'ph--plus--regular',
             type: 'new',
           },
@@ -74,7 +74,7 @@ export const useChatToolbarActions = ({ chat, companionTo, switcher }: ChatToolb
         .action(
           'branch',
           {
-            label: ['branch-thread.menu', { ns: meta.profile.key }],
+            label: ['branch-thread.menu', { ns: AssistantNamespace.key }],
             icon: 'ph--git-branch--regular',
             type: 'branch',
             disabled: !chat || !db,
@@ -88,7 +88,7 @@ export const useChatToolbarActions = ({ chat, companionTo, switcher }: ChatToolb
         .action(
           'rename',
           {
-            label: ['rename-thread.button', { ns: meta.profile.key }],
+            label: ['rename-thread.button', { ns: AssistantNamespace.key }],
             icon: 'ph--magic-wand--regular',
             type: 'rename',
             disabled: !chat,
@@ -105,7 +105,7 @@ export const useChatToolbarActions = ({ chat, companionTo, switcher }: ChatToolb
         builder.group(
           'view',
           {
-            label: ['chat-view.title', { ns: meta.profile.key }],
+            label: ['chat-view.title', { ns: AssistantNamespace.key }],
             icon: 'ph--eye--regular',
             iconOnly: true,
             variant: 'dropdownMenu',
@@ -118,7 +118,7 @@ export const useChatToolbarActions = ({ chat, companionTo, switcher }: ChatToolb
               group.action(
                 view,
                 {
-                  label: [`chat-view.${view}.label`, { ns: meta.profile.key }],
+                  label: [`chat-view.${view}.label`, { ns: AssistantNamespace.key }],
                   checked: viewType === view,
                   testId: `assistant.view.${view}`,
                 },
@@ -137,7 +137,7 @@ export const useChatToolbarActions = ({ chat, companionTo, switcher }: ChatToolb
         builder.separator().group(
           'chats',
           {
-            label: ['chat-history.label', { ns: meta.profile.key }],
+            label: ['chat-history.label', { ns: AssistantNamespace.key }],
             icon: 'ph--clock-counter-clockwise--regular',
             selectCardinality: 'single',
             variant: 'dropdownMenu',

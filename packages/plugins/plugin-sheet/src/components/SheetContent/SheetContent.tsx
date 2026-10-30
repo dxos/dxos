@@ -43,11 +43,11 @@ import * as Menu from '@dxos/react-ui/Menu';
 import * as Util from '@dxos/react-ui/Util';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 
-import { meta } from '#meta';
 import { SheetCapabilities, SheetOperation, SheetUtil } from '#types';
 
 import { type RangeController, rangeExtension, sheetExtension } from '../../extensions/index.ts';
 import { useSelectThreadOnCellFocus } from '../../integrations/index.ts';
+import { SheetNamespace } from '../../namespace.ts';
 import { useSheetContext } from '../SheetRoot/index.ts';
 import { FitBox, naturalSize, useUsedExtent } from './fit.tsx';
 import { colLabelCell, rowLabelCell, useSheetModelDxGridProps } from './util.ts';
@@ -86,7 +86,7 @@ export type SheetContentProps = {
 };
 
 export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>(({ fit, ...props }, forwardedRef) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(SheetNamespace.key);
   const {
     id,
     attendableId,
@@ -371,10 +371,10 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
   const [gridInstances] = Hooks.useCapabilities(SheetCapabilities.GridInstances);
   useEffect(() => {
     if (dxGrid && gridInstances) {
-      gridInstances.register(attendableId, dxGrid, setActiveRefs);
+      gridInstances.register(attendableId, { sheet: model.sheet, grid: dxGrid, setActiveRefs });
       return () => gridInstances.unregister(attendableId);
     }
-  }, [dxGrid, gridInstances, attendableId, setActiveRefs]);
+  }, [dxGrid, gridInstances, attendableId, model.sheet, setActiveRefs]);
 
   useSelectThreadOnCellFocus();
 

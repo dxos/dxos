@@ -10,10 +10,10 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { type EditorState, commentsState, documentId, overlap } from '@dxos/ui-editor';
 
-import { meta } from '#meta';
 import { CommentCapabilities } from '#types';
 
 import { commentSync } from '../extensions/index.ts';
+import { ReviewNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -25,7 +25,7 @@ export default Capability.makeModule(
     const suggestingViewMode = Capability.contribute(MarkdownCapabilities.ViewModeExtension, {
       id: 'suggesting',
       icon: 'ph--note-pencil--regular',
-      label: ['view-mode.suggesting.label', { ns: meta.profile.key }],
+      label: ['view-mode.suggesting.label', { ns: ReviewNamespace.key }],
       reviewMode: 'suggesting',
       order: 3,
     });

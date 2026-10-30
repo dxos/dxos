@@ -2,5 +2,5 @@
 // Copyright 2023 DXOS.org
 //
 
-export * as SheetPlugin from './SheetPlugin.ts';
+export * as SheetPlugin from '#meta';
 export * from '#types';

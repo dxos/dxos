@@ -14,7 +14,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 
-import { getPluginPath, getPluginSpecPath } from '../paths.ts';
+import { getPluginSpecPath } from '../paths.ts';
 import { useDisableConfirmation } from './useDisableConfirmation.ts';
 
 export type PluginActionsProps = {
@@ -75,12 +75,8 @@ export const usePluginActions = ({
   const specPath = getPluginSpecPath(pluginId);
   const hasSpecNode = !!GraphHooks.useNode(graph, specPath);
   const handleOpenSpec = useCallback(() => {
-    void invokePromise(LayoutOperation.Open, {
-      subject: [specPath],
-      pivotId: getPluginPath(pluginId),
-      disposition: 'detail',
-    });
-  }, [invokePromise, specPath, pluginId]);
+    void invokePromise(LayoutOperation.Open, { subject: [specPath] });
+  }, [invokePromise, specPath]);
 
   const handleEnableChange = useCallback(
     (enabled: boolean) => {

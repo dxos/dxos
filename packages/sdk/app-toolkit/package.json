@@ -46,6 +46,36 @@
       "types": "./dist/types/src/app-framework/AppCapability.d.ts",
       "import": "./dist/lib/app-framework/AppCapability.mjs"
     },
+    "./SchemaAdapter": {
+      "source": "./src/app-framework/SchemaAdapter.ts",
+      "types": "./dist/types/src/app-framework/SchemaAdapter.d.ts",
+      "import": "./dist/lib/app-framework/SchemaAdapter.mjs"
+    },
+    "./CommandsAdapter": {
+      "source": "./src/app-framework/CommandsAdapter.ts",
+      "types": "./dist/types/src/app-framework/CommandsAdapter.d.ts",
+      "import": "./dist/lib/app-framework/CommandsAdapter.mjs"
+    },
+    "./PluginAssetAdapter": {
+      "source": "./src/app-framework/PluginAssetAdapter.ts",
+      "types": "./dist/types/src/app-framework/PluginAssetAdapter.d.ts",
+      "import": "./dist/lib/app-framework/PluginAssetAdapter.mjs"
+    },
+    "./SurfaceAdapter": {
+      "source": "./src/app-framework/SurfaceAdapter.ts",
+      "types": "./dist/types/src/app-framework/SurfaceAdapter.d.ts",
+      "import": "./dist/lib/app-framework/SurfaceAdapter.mjs"
+    },
+    "./TranslationsAdapter": {
+      "source": "./src/app-framework/TranslationsAdapter.ts",
+      "types": "./dist/types/src/app-framework/TranslationsAdapter.d.ts",
+      "import": "./dist/lib/app-framework/TranslationsAdapter.mjs"
+    },
+    "./SpaceTemplatesAdapter": {
+      "source": "./src/app-framework/SpaceTemplatesAdapter.ts",
+      "types": "./dist/types/src/app-framework/SpaceTemplatesAdapter.d.ts",
+      "import": "./dist/lib/app-framework/SpaceTemplatesAdapter.mjs"
+    },
     "./AppMigrations": {
       "source": "./src/echo/AppMigrations.ts",
       "types": "./dist/types/src/echo/AppMigrations.d.ts",

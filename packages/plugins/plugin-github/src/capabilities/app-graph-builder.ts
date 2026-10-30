@@ -12,8 +12,10 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 
-import { IMPORT_PULL_REQUEST_DIALOG, meta } from '#meta';
 import { GitHubOperation } from '#types';
+
+import { IMPORT_PULL_REQUEST_DIALOG } from '../constants.ts';
+import { GitHubNamespace } from '../namespace.ts';
 
 /**
  * Contributes "Import pull request" to the root, so the commands dialog carries it: a reviewer who
@@ -35,7 +37,7 @@ export default Capability.makeModule(
               });
             }),
             properties: {
-              label: ['import-pull-request.label', { ns: meta.profile.key }],
+              label: ['import-pull-request.label', { ns: GitHubNamespace.key }],
               icon: 'ph--git-pull-request--regular',
             },
           }),

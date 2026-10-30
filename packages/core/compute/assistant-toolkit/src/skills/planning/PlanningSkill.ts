@@ -4,10 +4,9 @@
 
 // @import-as-namespace
 
-import * as Operation from '@dxos/compute/Operation';
+import type * as Hook from '@dxos/compute/Hook';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
-import { Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
 import { AskQuestion, PlanReminder, UpdateTasks } from './operations/definitions.ts';
@@ -40,15 +39,12 @@ export const make = () =>
         and makes you its assignee; unassign takes it off and clears the assignee, never deleting it.
       `,
     }),
-    // At the end of every request, remind the agent to keep working while its plan has open tasks.
-    // The reminder enqueues onto the owning host (Tier B), which keeps the process alive.
-    hooks: [
-      {
-        spec: { _tag: 'end-request' },
-        function: Ref.make(Operation.serialize(PlanReminder)),
-      },
-    ],
   });
+
+/** At the end of every request, reminds the agent to keep working while its plan has open tasks. */
+export const hooks: Hook.Declaration[] = [
+  { key: 'org.dxos.hook.planning.planReminder', event: 'end-request', skill: key, operation: PlanReminder },
+];
 
 export { PlanningHandlers as Handlers } from './operations/index.ts';
 export * as Operations from './operations/definitions.ts';

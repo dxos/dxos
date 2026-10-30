@@ -601,20 +601,21 @@ type Item = { kind: 'piece'; piece: Piece } | { kind: 'bus'; bus: BusRequest; pi
 const piecesOf = (items: readonly Item[]): Piece[] =>
   items.flatMap((item) => (item.kind === 'piece' ? [item.piece] : item.pieces));
 
-/** Junctions worth trying for a bus: channel crossings and channel-to-spoke alignments near the spokes. */
+/** Junctions worth trying for a bus: channel crossings and channel-to-hub or channel-to-spoke alignments near the spokes. */
 const junctions = (bus: BusRequest, context: Context): Point[] => {
   const rects = [bus.hub.rect, ...bus.spokes.map((spoke) => spoke.end.rect)];
   const x0 = Math.min(...rects.map((rect) => rect.x)) - GRID * 8;
   const x1 = Math.max(...rects.map((rect) => rect.x + rect.w)) + GRID * 8;
   const y0 = Math.min(...rects.map((rect) => rect.y)) - GRID * 8;
   const y1 = Math.max(...rects.map((rect) => rect.y + rect.h)) + GRID * 8;
+  // The hub's own centre lets the trunk leave it straight.
   const xs = [
     ...context.channels.xs.filter((x) => x > x0 && x < x1),
-    ...bus.spokes.map((spoke) => spoke.end.rect.x + spoke.end.rect.w / 2),
+    ...[bus.hub, ...bus.spokes.map((spoke) => spoke.end)].map((end) => end.rect.x + end.rect.w / 2),
   ];
   const ys = [
     ...context.channels.ys.filter((y) => y > y0 && y < y1),
-    ...bus.spokes.map((spoke) => spoke.end.rect.y + spoke.end.rect.h / 2),
+    ...[bus.hub, ...bus.spokes.map((spoke) => spoke.end)].map((end) => end.rect.y + end.rect.h / 2),
   ];
   const points = xs.flatMap((x) => ys.map((y) => ({ x, y })));
   // Inside a box is never a junction.

@@ -8,7 +8,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
+import { HandpanNamespace } from '../../namespace.ts';
 
 export type NoteDisplayProps = {
   /** Handpan notation label (`D`, `1`…); omitted when nothing is detected. */
@@ -36,7 +36,7 @@ export const NoteDisplay = ({
   dimmed,
   classNames,
 }: NoteDisplayProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(HandpanNamespace.key);
   const offset = Math.max(-50, Math.min(50, cents ?? 0));
   const inTune = cents !== undefined && Math.abs(cents) <= 10;
   // `|| 0` folds -0, which would otherwise render as "-0¢".
