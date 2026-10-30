@@ -11,6 +11,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 
@@ -84,6 +85,8 @@ export type SceneEditorRootProps<C> = PropsWithChildren<{
   camera?: C;
   authoredCamera?: C;
   onCameraChange?: (camera: C) => void;
+  /** A new key frames the open layout's content (an agent's edit asks for it), even after the viewer moved the camera. */
+  refitKey?: string | number;
   docked?: boolean;
   onDockedChange?: (docked: boolean) => void;
   sceneChoice?: SceneChoice;
@@ -116,6 +119,7 @@ const SceneEditorRoot = <C,>({
   camera: viewerCamera,
   authoredCamera,
   onCameraChange,
+  refitKey,
   docked = false,
   onDockedChange,
   sceneChoice,
@@ -334,6 +338,16 @@ const SceneEditorRoot = <C,>({
         : undefined,
     [current, authoredCamera, onCameraChange, config.camera, layout, document, size],
   );
+
+  const refitRef = useRef(refitKey);
+  const fitNow = useRef(camera?.actions.fit);
+  fitNow.current = camera?.actions.fit;
+  useEffect(() => {
+    if (refitRef.current !== refitKey) {
+      refitRef.current = refitKey;
+      fitNow.current?.();
+    }
+  }, [refitKey]);
 
   const Viewport = config.viewport;
   const renderViewport = useCallback(

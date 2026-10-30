@@ -3,7 +3,6 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -96,14 +95,13 @@ import { display2D, sceneChrome } from './scene-chrome.ts';
 import { SceneEditCommands } from './SceneEditCommands.tsx';
 import { useCanvasProperties } from './use-canvas-properties.ts';
 import { useInspectorDock } from './use-inspector-dock.ts';
+import { useRefitKey } from './use-refit-key.ts';
 import { useSceneChoice } from './use-scene-choice.ts';
 import { useSceneShots } from './use-scene-shots.ts';
 import { canvasViewAspect } from './view-state.ts';
 
 /** What a drawing surface passes a scene view, beside the canvas it shows. */
 export type SceneSurfaceProps = Omit<IllustratorCapabilities.DrawingVariantSurfaceProps<Obj.Unknown>, 'canvas'>;
-
-const NO_REFITS = Atom.make<Record<string, number>>({});
 
 /** Why a canvas a newer plugin saved opens read-only, and what unlocks it. */
 const NewerFormatBanner = () => {
@@ -305,6 +303,7 @@ export const SceneView2D = ({ canvas, ...props }: SceneSurfaceProps & { canvas: 
 
   // The look and grid are the drawing's, shared with collaborators; snapping, guides, axes and the camera are this
   // viewer's own.
+  const refitKey = useRefitKey(canvas);
   const contextId = Entity.getURI(canvas);
   const { camera, readonly: viewReadonly, grid: snap, guides, axes } = useViewState(canvasViewAspect, contextId);
   const { update: updateViewState } = useViewStateActions(canvasViewAspect, contextId);
@@ -374,6 +373,7 @@ export const SceneView2D = ({ canvas, ...props }: SceneSurfaceProps & { canvas: 
             camera={camera}
             authoredCamera={AUTHORED_CAMERA}
             onCameraChange={handleCameraChange}
+            refitKey={refitKey}
             docked={dock.docked}
             onDockedChange={dock.onDockedChange}
             sceneChoice={sceneChoice}
@@ -460,10 +460,7 @@ export const CanvasEngineView = ({
     [tracker, invoker, canvas],
   );
   const nodes = useCanvasNodes(openObject);
-  // An agent's drawing edit asks for a refit, so the view frames what changed rather than where the viewer left it.
-  const [refitAtom] = Hooks.useCapabilities(IllustratorCapabilities.Refit);
-  const refits = useAtomValue(refitAtom ?? NO_REFITS);
-  const refitKey = refits[Obj.getURI(canvas)];
+  const refitKey = useRefitKey(canvas);
   const generators = useCanvasGenerators(db);
 
   // The drawing's look is shared with collaborators, so it wins over the viewer's own default.

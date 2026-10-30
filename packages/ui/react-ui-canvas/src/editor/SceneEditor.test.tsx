@@ -29,7 +29,7 @@ const config = (dim: Scene.Dimension): DimensionConfig<{ zoom: number }> => ({
   ],
   geometry: { pasteOffset: (pasted) => ({ x: pasted, y: pasted }), snap: { move: 1 } },
   camera: {
-    fit: (camera) => camera,
+    fit: () => ({ zoom: 7 }),
     reset: (authored) => ({ zoom: authored.zoom * 3 }),
     zoom: (camera, factor) => ({ zoom: camera.zoom / factor }),
     percent: () => 100,
@@ -51,11 +51,13 @@ const Editor = ({
   role,
   onDisplayChange,
   onCameraChange = () => {},
+  refitKey,
 }: {
   dim: Scene.Dimension;
   role?: string;
   onDisplayChange?: (display: Partial<EditorDisplay>) => void;
   onCameraChange?: (camera: { zoom: number }) => void;
+  refitKey?: string | number;
 }) => (
   <SceneEditor.Root
     config={config(dim)}
@@ -68,6 +70,7 @@ const Editor = ({
     camera={{ zoom: 1 }}
     authoredCamera={{ zoom: 1 }}
     onCameraChange={onCameraChange}
+    refitKey={refitKey}
     onReadonlyChange={() => {}}
   >
     <SceneEditor.Viewport>
@@ -120,5 +123,16 @@ describe('SceneEditor', () => {
     render(<Editor dim='2d' onCameraChange={onCameraChange} />);
     await userEvent.click(screen.getByTestId('toolbar-zoom-reset'));
     expect(onCameraChange).toHaveBeenLastCalledWith({ zoom: 3 });
+  });
+
+  test('a new refit key from the host frames the content, in either dimension; the first one does not', () => {
+    for (const dim of ['2d', '3d'] as const) {
+      const onCameraChange = vi.fn();
+      const { rerender } = render(<Editor dim={dim} onCameraChange={onCameraChange} refitKey={1} />);
+      expect(onCameraChange).not.toHaveBeenCalled();
+      rerender(<Editor dim={dim} onCameraChange={onCameraChange} refitKey={2} />);
+      expect(onCameraChange).toHaveBeenLastCalledWith({ zoom: 7 });
+      cleanup();
+    }
   });
 });
