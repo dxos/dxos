@@ -142,6 +142,33 @@ describe('route', () => {
     expect([single?.source.side, single?.target.side]).toEqual(['s', 'e']);
   });
 
+  test('a smart link to a shape off the lattice cells, as one in flight is, takes no gutter, so it does not flicker', ({
+    expect,
+  }) => {
+    const box = (id: string, x: number, y: number) => ({
+      type: 'rect',
+      id,
+      z: 'a0',
+      center: { x, y },
+      size: { width: 256, height: 128 },
+    });
+    const link: Link = { type: 'smart', id: 'ac', z: 'a1', source: { node: 'a' }, target: { node: 'c' } };
+    // C dragged along a diagonal between cells: gutter routing flipped its ports between two tied pairs every few px.
+    const sides = Array.from({ length: 60 }, (_, step) => {
+      const scene: View = {
+        id: 'root',
+        nodes: { a: box('a', 0, 0), c: box('c', 6 + step * 6.4, 195 + step * 3.2) },
+        links: { link },
+      };
+      const [geometry] = viewLinkGeometry(scene, defaultNodeRegistry, [link], DEFAULT_LATTICE);
+      expect(geometry.path).toBe(linkGeometry(scene, defaultNodeRegistry, link)?.path);
+      return `${geometry.source.side}${geometry.target.side}`;
+    });
+    // The ports change only where the geometry turns a corner, never back and forth: no pair returns once left.
+    const runs = sides.filter((side, index) => index === 0 || side !== sides[index - 1]);
+    expect(new Set(runs).size).toBe(runs.length);
+  });
+
   test('a plain line to a node with no port points at its centre and stops at its outline; a smart one takes ports', ({
     expect,
   }) => {

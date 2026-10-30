@@ -43,15 +43,11 @@ type Preview = {
   landing?: Bounds[];
 };
 
-/**
- * What a move in flight draws. Off a lattice the nodes follow the pointer and snap once it rests (`settled`); on a
- * lattice they are drawn on the cells they land on, since a node between cells re-routes its gutter links on every
- * pixel (a tie between two port pairs flips as it moves), so following the pointer there makes the links flicker.
- */
+/** What a move in flight draws: the nodes follow the pointer and snap to where they will land once it rests (`settled`). */
 export const movePreview = (
   scene: View,
   drag: Extract<Drag, { kind: 'move' }>,
-  projection: Pick<Projection, 'constrain' | 'lattice'>,
+  projection: Pick<Projection, 'constrain'>,
   settled: boolean,
 ): Preview => {
   // A copy previews beside the originals, which stay; the drop mints the copies' real ids.
@@ -67,7 +63,7 @@ export const movePreview = (
   const constrained = projection.constrain ? projection.constrain(intent) : intent;
   const landed = reduceIntent(scene, constrained ?? intent);
   const blocked = constrained === undefined;
-  if (settled || (projection.lattice && !blocked)) {
+  if (settled) {
     return { displayScene: landed, blocked };
   }
   const moved = copy
@@ -99,8 +95,7 @@ export const useGesturePreview = ({
   // a link being drawn or re-attached over a drop target looks exactly as it will once dropped. Geometry
   // previews pass through the projection's `constrain`, so a drag shows where the drop will land, and
   // `blocked` says when the drop would be refused (drawn as is, outlined in red).
-  // Off a lattice a move follows the pointer; once it rests for `SETTLE_MS` (a debounce), the shapes snap to where they
-  // will land. Settling is keyed by the position it settled at, so the first frame of the next move already follows.
+  // A move follows the pointer; once it rests for `SETTLE_MS` (a debounce), the shapes snap to where they will land. Settling is keyed by the position it settled at, so the first frame of the next move already follows.
   const moveRaw = drag?.kind === 'move' ? drag.raw : undefined;
   const rawKey = moveRaw ? `${moveRaw.x},${moveRaw.y}` : undefined;
   const [settledAt, setSettledAt] = useState<string>();

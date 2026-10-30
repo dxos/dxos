@@ -854,9 +854,9 @@ feat F-15: Modes
     drag, a command, a paste, the Properties form). A layout with a `lattice` snaps every frame onto whole cells
     while snapping is on and refuses an edit that would overlap another shape's cells; a drag the mode refuses or
     moves is drawn as stored. A host's own projection owns the mode instead.
-  req F-15.7: A move on a lattice previews the cells it lands on while the drag is in flight, so the moved shapes and
-    their links change only when the landing cell does; a move the lattice refuses follows the pointer, outlined as
-    blocked. Off a lattice a move follows the pointer and snaps to where it lands once the pointer rests.
+  req F-15.7: A move follows the pointer and snaps to where it lands once the pointer rests. On a lattice a smart link
+    takes the gutters only while each of its shapes sits on whole cells; a link to a shape between cells (one in
+    flight) takes the plain smart route, so its ports change only where the geometry turns and never back and forth.
 ```
 
 ## Planned
@@ -1257,6 +1257,25 @@ decision D-25: A move on a lattice previews its landing cells rather than follow
   rejected:
     - Keeping each link's ports for the length of the drag until another pair bends strictly less, which leaves the jump between the pointer's layout and the settled one when the pointer rests.
     - Plain routing for links on a moving shape until the drop, which changes the link's shape on release.
+```
+
+```mdl
+decision D-26: Shapes are dragged live: a move follows the pointer on a lattice too.
+  date: 2026-10-30
+  by: user:richburdon
+  supersedes: D-25
+  affects: [F-15.7]
+```
+
+```mdl
+decision D-27: A smart link takes the gutters only while each of its shapes sits exactly on whole cells; otherwise it takes the plain smart route and stays out of the gutter lanes. Fills in [D-24] and [D-26].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-15.7]
+  why: Gutter routing assumes shapes on cells; for a shape between them two port pairs tie on bends and the nearer one flips every few pixels, while the plain route changes its ports only where the geometry turns. Reading it from the geometry, not from the drag, keeps the canvas layer and the selection overlay on the same route without passing the drag down.
+  rejected:
+    - Keeping each link's ports for the length of the drag until another pair bends strictly less, which still jumps when the gutter route's bend count changes under a moving shape.
 ```
 
 ---

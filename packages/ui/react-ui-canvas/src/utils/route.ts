@@ -28,7 +28,7 @@ import {
 import { type NodeRegistry, type View } from '../model/index.ts';
 import { type DiagramRoute, diagramRoute, isRouteObstacle } from './diagram-shape.ts';
 import { gutterRoute, gutterRouteWithCost } from './gutter-route.ts';
-import { type LatticeSpec } from './lattice.ts';
+import { type LatticeSpec, onLattice, quantize } from './lattice.ts';
 import {
   type PortTerminal,
   nearestPort,
@@ -149,6 +149,23 @@ export const linkPath = (link: Link, from: RouteEnd, to: RouteEnd, lattice?: Lat
 
 /** What gutter routing needs: the lattice and the nodes whose frames block it. */
 export type LatticeRoute = { spec: LatticeSpec; nodes: readonly Node[] };
+
+/**
+ * Whether a link may take the gutters: each node end that keeps to the lattice sits on whole cells. A shape between
+ * cells (one in flight) would re-route on every pixel, two port pairs tying on bends and the nearer one flipping, so
+ * its links take the plain route until it lands.
+ */
+const onCells = (scene: View, link: Link, spec: LatticeSpec): boolean =>
+  [link.source, link.target].every((end) => {
+    const node = isPointEndpoint(end) ? undefined : scene.nodes[end.node];
+    if (!node || !onLattice(node)) {
+      return true;
+    }
+    const bounds = nodeBounds(node);
+    const cell = quantize(bounds, spec);
+    // A snapped shape sits exactly on its cells, so any offset at all means it is between them.
+    return (['x', 'y', 'width', 'height'] as const).every((key) => Math.abs(cell[key] - bounds[key]) < 1e-6);
+  });
 
 /**
  * The polyline a smart link follows: a stub out of each port along its side's normal, then one segment
@@ -320,7 +337,8 @@ export const linkGeometry = (
   if (diagram) {
     return diagram;
   }
-  const route = lattice ? { spec: lattice, nodes: Object.values(scene.nodes) } : undefined;
+  const route =
+    lattice && onCells(scene, link, lattice) ? { spec: lattice, nodes: Object.values(scene.nodes) } : undefined;
   const routed = route && latticeEnds(scene, registry, link, route);
   if (routed) {
     return { link, path: splinePath(routed.points), source: routed.from, target: routed.to };
@@ -468,6 +486,11 @@ export const viewLinkGeometry = (
   const routed = links
     .filter((link) => !diagrams.has(link.id))
     .flatMap((link) => {
+      if (!onCells(scene, link, lattice)) {
+        // Routed on its own and left out of the lanes, which are for gutter routes.
+        const geometry = linkGeometry(scene, registry, link);
+        return geometry ? [{ link, from: geometry.source, to: geometry.target, points: undefined }] : [];
+      }
       const chosen = latticeEnds(scene, registry, link, route);
       if (chosen) {
         return [{ link, from: chosen.from, to: chosen.to, points: chosen.points }];

@@ -30,22 +30,14 @@ const move = (raw: { x: number; y: number }): Extract<Drag, { kind: 'move' }> =>
 });
 
 describe('movePreview', () => {
-  test('on a lattice a move in flight draws the cell it lands on, not the pointer', ({ expect }) => {
+  test('on a lattice a move in flight follows the pointer until it settles on the cell it lands on', ({ expect }) => {
     const projection = {
       lattice: SPEC,
       constrain: (intent: Intent) => constrainIntent(scene, intent, SPEC),
     };
-    // Each step moves C a few pixels along a diagonal and every one lands it on the same cell, so the drawing holds still.
-    const centres = [
-      { x: 290, y: 150 },
-      { x: 297, y: 153 },
-      { x: 303, y: 157 },
-    ].map((raw) => movePreview(scene, move(raw), projection, false).displayScene.nodes.c.center);
-    expect(centres).toEqual([
-      { x: 384, y: 384 },
-      { x: 384, y: 384 },
-      { x: 384, y: 384 },
-    ]);
+    const drag = move({ x: 290, y: 150 });
+    expect(movePreview(scene, drag, projection, false).displayScene.nodes.c.center).toEqual({ x: 290, y: 342 });
+    expect(movePreview(scene, drag, projection, true).displayScene.nodes.c.center).toEqual({ x: 384, y: 384 });
   });
 
   test('off a lattice a move in flight follows the pointer until it settles', ({ expect }) => {
