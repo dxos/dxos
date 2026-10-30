@@ -154,6 +154,60 @@ export conditions `vendor/` was built with.
   package registry, which is why the rewrite is needed. The rewrite changes only specifiers; no
   code is recompiled.
 
+## Plugin interface
+
+A built plugin meets EDGE at three boundaries. Plugin code sees only the first.
+
+### Module body and host
+
+The app-framework contract, the same as in the browser. A module body's default export is a
+`Capability.makeModule(...)`: an Effect that returns capability contributions. `PluginHost` activates
+the bundle's plugins with `Environment.current` set to `workerd`, so only modules whose `environments`
+include `workerd` load, on the usual events (Startup, Idle, AssistantStart). EDGE reads four
+contributions: operation handlers (served by `invoke`), schemas (catalog types), skill definitions
+(catalog skills) and layer specs (services the handlers get).
+
+### Host and EDGE
+
+The bundle's main module exports a `WorkerEntrypoint` that implements `PluginProtocol.Entrypoint` from
+`@dxos/protocols`, the one contract both repositories compile against. EDGE calls it over Workers RPC;
+there is no HTTP protocol.
+
+```ts
+interface Entrypoint {
+  describe(): Promise<Catalog>; // { plugin, dependencies, operations, skills, types, failures }
+  invoke(request: InvokeRequest, scope?: InvocationScope): Promise<InvokeResult>;
+}
+
+type InvokeRequest = { operationKey: string; input?: unknown; spaceId?: string };
+type InvocationScope = { accessTokenService?: AccessTokenService };
+type InvokeResult = { ok: true; output: unknown } | { ok: false; error: Failure };
+type Failure = {
+  code: 'operation-not-found' | 'invalid-request' | 'failed';
+  message: string;
+  name?: string;
+  stack?: string;
+};
+```
+
+- **Failures are data.** Workers RPC drops an error's class and stack, so `invoke` returns them in
+  `InvokeResult` rather than throwing. `describe` rejects only when the host itself cannot start;
+  modules that fail to activate are listed in `Catalog.failures`.
+- **`env`** holds the space-agnostic bindings `DATA_SERVICE`, `QUEUE_SERVICE` and
+  `FUNCTIONS_AI_SERVICE` (`PluginProtocol.Env`). Everything that differs per call travels in `scope`
+  ([D-6]).
+- **Operation keys** may be bare or DXNs; they are matched in bare form ([D-22]).
+- **Isolation.** The entrypoint serves only the primary plugin's operations, never a dependency's
+  ([D-21]).
+
+### EDGE and Cloudflare
+
+PluginLoader calls `LOADER.get(id, () => WorkerCode)` with the bundle's content hash as `id`. The
+`WorkerCode` holds the rewritten module map ([Bundle format](#bundle-format)), the generated main
+module, compatibility date `2026-03-17` and flags `nodejs_compat`, `nodejs_als` and
+`no_handle_cross_request_promise_resolution`, the `env` above, and `globalOutbound: null`: the isolate
+reaches the network only through its bindings.
+
 ## Architecture
 
 | Component          | Lives in                             | Role                                                                          |
@@ -325,15 +379,16 @@ service PluginLoader
 ```mdl
 service PluginEntrypoint
   desc: |
-    The RPC surface `PluginHost` exports from inside the Dynamic Worker, as a WorkerEntrypoint. It serves
-    only the primary plugin: its `dependsOn` closure is activated for the capabilities the primary
-    uses, and those plugins' own operations, skills and types belong to their own bundles. It also
-    answers the functions fetch protocol compute-service uses for Worker Loader functions.
+    The RPC surface `PluginHost` exports from inside the Dynamic Worker, as a WorkerEntrypoint
+    implementing `PluginProtocol.Entrypoint` (see the Plugin interface section). It serves only the
+    primary plugin: its `dependsOn` closure is activated for the capabilities the primary uses, and
+    those plugins' own operations, skills and types belong to their own bundles. Failures are returned
+    as data in `InvokeResult`, since Workers RPC drops an error's class and stack.
   ops:
     describe() → PluginCatalog
-    invoke(request: { operationKey, input, spaceId?, pid?, runId? }, scope: InvocationScope) → unknown
+    invoke(request: { operationKey, input, spaceId? }, scope: InvocationScope) → InvokeResult
   errors:
-    OperationNotFound: the primary plugin has no handler for the key
+    OperationNotFound: the primary plugin has no handler for the key (code `operation-not-found`)
 ```
 
 ```mdl
@@ -975,3 +1030,13 @@ decision D-33: `vendor/` holds only what a `workerd` host can reach: the entry, 
   affects: [VendorMap, PluginBuilder, F-1.4, F-12.1]
   why: A plugin that bundles another plugin's definition (plugin-assistant through plugin-registry's operations) carries that plugin's node-only bodies, whose imports (Vite, the CLI) cannot build for workerd and never run there.
 ```
+
+
+```mdl
+decision D-34: The spec states the interface between a built plugin and EDGE. The host is reached only through typed Workers RPC, `PluginProtocol.Entrypoint` in `@dxos/protocols`, which both repositories compile against; the functions fetch protocol is dropped, and `invoke` returns failures as data.
+  date: 2026-10-30
+  by: user:dmaretskyi
+  affects: [PluginEntrypoint, PluginHost, PluginLoader]
+  rejected:
+    - Keep the functions `fetch` protocol beside RPC: a second, untyped way in that nothing on EDGE calls.
+    - A copy of the types in each repository (edge-protocol's `PluginReleaseService.Entrypoint`): they drift.
