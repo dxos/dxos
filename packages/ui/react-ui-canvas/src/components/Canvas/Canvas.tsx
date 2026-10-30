@@ -12,8 +12,8 @@
 import {
   CanvasActions,
   CanvasCamera,
+  CanvasDisplay,
   CanvasNavigation,
-  CanvasTheme,
   CanvasTimeline,
   CanvasTools,
 } from './CanvasBars.tsx';
@@ -27,7 +27,7 @@ export const Canvas = {
   Navigation: CanvasNavigation,
   Actions: CanvasActions,
   Camera: CanvasCamera,
-  Theme: CanvasTheme,
+  Display: CanvasDisplay,
   Tools: CanvasTools,
   Properties: CanvasProperties,
   Views: CanvasViews,

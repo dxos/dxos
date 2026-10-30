@@ -104,7 +104,7 @@ const Editor = ({
       <Canvas.Navigation />
       <Canvas.Actions />
       <Canvas.Camera />
-      <Canvas.Theme />
+      <Canvas.Display />
       <Canvas.Tools />
       <Canvas.Properties />
       <Canvas.Views />

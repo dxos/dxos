@@ -5,6 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import { type ReactNode } from 'react';
 
+import { type Timeline } from '@dxos/animation';
 import { createContext } from '@dxos/react-hooks';
 import { type Layer, type LayoutIntent, type ModelIntent, type Scene } from '@dxos/scene';
 
@@ -14,8 +15,9 @@ import { type CommandTable } from './commands.ts';
 import { type DimensionConfig } from './config.ts';
 import { type History } from './history.ts';
 import { type EditorStore } from './store.ts';
+import { type EditorShot } from './timeline.ts';
 
-/** What the display panel shows and sets: this viewer's look, grid, snapping and guides. */
+/** What the display panel shows and sets: this viewer's look, grid, snapping, guides and axes. */
 export type EditorDisplay = {
   /** The look's id: the viewer's pick over the scene's own. */
   theme: string;
@@ -24,6 +26,8 @@ export type EditorDisplay = {
   grid: boolean;
   snap: boolean;
   guides?: boolean;
+  /** The axes through the origin drawn. */
+  axes?: boolean;
 };
 
 /** The config's parts that do not depend on its camera type, which the parts read through the context. */
@@ -59,6 +63,10 @@ export type SceneEditorContextValue = {
   docked: boolean;
   onDockedChange?: (docked: boolean) => void;
   sceneChoice?: SceneChoice;
+  /** The shots staging the open scene, for the Timeline panel; undefined when the host offers no animation. */
+  shots?: readonly EditorShot[];
+  /** Writes a shot's timeline; an undefined shot id makes a new shot staging the scene. */
+  onShotChange?: (shot: string | undefined, timeline: Timeline) => void;
   /** Draws the dimension's viewport with the floating panels over it. */
   renderViewport: (overlay: ReactNode) => ReactNode;
 };

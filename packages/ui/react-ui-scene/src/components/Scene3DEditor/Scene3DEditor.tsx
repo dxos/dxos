@@ -59,6 +59,8 @@ export type Scene3DEditorProps = Util.ThemedClassName<{
   theme?: Theme3D;
   /** Draws the ground grid. */
   grid?: boolean;
+  /** Draws the x, y and z axes, in red, green and blue. */
+  axes?: boolean;
   /** Gizmos and placing snap to the grid; holding Alt frees one gesture. */
   snap?: boolean;
   /** Overlays drawn over the scene (floating panels); their pointer events never reach the scene. */
@@ -117,6 +119,7 @@ export const Scene3DEditor = ({
   readonly = false,
   theme,
   grid = false,
+  axes = false,
   snap = false,
   children,
   onResize,
@@ -217,6 +220,7 @@ export const Scene3DEditor = ({
     }
   }, [renderer, shown, view, geometry, size]);
   useLayoutEffect(() => renderer?.setGrid(grid), [renderer, grid]);
+  useLayoutEffect(() => renderer?.setAxes(axes), [renderer, axes]);
   // Holding Alt frees the gesture under way from the grid.
   const [alt, setAlt] = useState(false);
   useEffect(() => {

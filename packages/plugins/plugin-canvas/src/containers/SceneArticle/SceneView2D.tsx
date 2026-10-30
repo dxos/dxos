@@ -403,7 +403,7 @@ export const CanvasEngineView = ({
                   <Canvas.Navigation />
                   <Canvas.Actions />
                   <Canvas.Camera />
-                  <Canvas.Theme />
+                  <Canvas.Display />
                 </>
               )}
               {!embedded && (

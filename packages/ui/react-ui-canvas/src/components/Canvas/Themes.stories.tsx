@@ -82,7 +82,7 @@ const ThemeView = ({ theme: initialTheme, defaultTheme }: StoryArgs) => {
       <Canvas.Navigation />
       <Canvas.Actions />
       <Canvas.Camera />
-      <Canvas.Theme />
+      <Canvas.Display />
     </Canvas.Root>
   );
 };

@@ -44,7 +44,7 @@ import { type Instance3D } from '@dxos/animation';
 import { type Scene as Model } from '@dxos/scene';
 
 import { groundPoint, orthoHalfHeight, toOrbit } from './camera.ts';
-import { GRID_MAJOR_EVERY, groundGrid } from './grid.ts';
+import { GRID_MAJOR_EVERY, groundAxes, groundGrid } from './grid.ts';
 import { meshData } from './io/mesh.ts';
 import {
   LATTICE_OPACITY,
@@ -178,6 +178,7 @@ export class SceneRenderer3D {
   readonly #links = new Map<string, LinesMesh>();
   readonly #instances: Record<Instance3D['primitive'], Mesh>;
   #grid?: LinesMesh;
+  #axes?: LinesMesh;
   readonly #highlight: HighlightLayer;
   /** The meshes kept out of the outline's mask and stencil: every mesh but the selected items'. */
   readonly #excluded = new Set<Mesh>();
@@ -320,6 +321,23 @@ export class SceneRenderer3D {
       this.#grid = this.#createGrid();
     }
     this.#grid?.setEnabled(visible);
+    this.#view && this.#scene.render();
+  }
+
+  /** Whether the axes are drawn. */
+  get axes(): boolean {
+    return this.#axes?.isEnabled() ?? false;
+  }
+
+  /** Shows or hides the x, y and z axes in red, green and blue, made the first time they show. */
+  setAxes(visible: boolean): void {
+    if (visible === this.axes) {
+      return;
+    }
+    if (visible && !this.#axes) {
+      this.#axes = this.#createAxes();
+    }
+    this.#axes?.setEnabled(visible);
     this.#view && this.#scene.render();
   }
 
@@ -646,6 +664,21 @@ export class SceneRenderer3D {
     // A guide, not content: clicks land on what is above it, or on the ground point beneath.
     grid.isPickable = false;
     return grid;
+  }
+
+  #createAxes(): LinesMesh {
+    const axes = groundAxes(GRID_EXTENT);
+    const mesh = CreateLineSystem(
+      'axes',
+      {
+        lines: axes.map(({ from, to }) => [Vector3.FromArray(from), Vector3.FromArray(to)]),
+        colors: axes.map(({ color }) => [Color4.FromHexString(`${color}ff`), Color4.FromHexString(`${color}ff`)]),
+      },
+      this.#scene,
+    );
+    // A guide, as the grid is.
+    mesh.isPickable = false;
+    return mesh;
   }
 
   #createBackdrop(): void {

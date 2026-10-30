@@ -64,7 +64,7 @@ const DefaultStory = () => {
       </Counted>
       <Canvas.Camera />
       <Counted id='theme'>
-        <Canvas.Theme />
+        <Canvas.Display />
       </Counted>
       <Counted id='tools'>
         <Canvas.Tools />

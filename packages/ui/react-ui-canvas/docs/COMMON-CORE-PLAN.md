@@ -501,7 +501,7 @@ DimensionConfig`.
 
 **Files:** Create `src/editor/SceneEditor.tsx` (+stories later in F), generalising existing pieces in
 `components/panels/*` (ToolsPanel/ToolRail, DisplayPanel, InspectorPanel), `Canvas/CanvasBars.tsx` (`CanvasActions`,
-`CanvasCamera`, `CanvasTheme`), `SceneContextMenu`.
+`CanvasCamera`, `CanvasDisplay`), `SceneContextMenu`.
 
 **Interfaces:**
 

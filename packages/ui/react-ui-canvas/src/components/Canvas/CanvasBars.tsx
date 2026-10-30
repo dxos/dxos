@@ -158,15 +158,16 @@ export const CanvasCamera = ({ classNames = 'bottom-2 left-2' }: CanvasBarProps)
 CanvasCamera.displayName = 'Canvas.Camera';
 
 //
-// Theme
+// Display
 //
 
-/** The theme picker and the grid over its background, at the bottom right. */
-export const CanvasTheme = ({ classNames = 'bottom-2 right-2' }: CanvasBarProps) => {
-  const { look, themes, themeOverride, themeGrid, setTheme, setBackgroundGrid } = useCanvasLook('Canvas.Theme');
-  const { atoms, commands } = useCanvasTools('Canvas.Theme');
-  const { projection, readonly } = useCanvasDocument('Canvas.Theme');
+/** The display panel, at the bottom right: snapping, guides, axes, the grid over the background and the theme. */
+export const CanvasDisplay = ({ classNames = 'bottom-2 right-2' }: CanvasBarProps) => {
+  const { look, themes, themeOverride, themeGrid, setTheme, setBackgroundGrid } = useCanvasLook('Canvas.Display');
+  const { atoms, commands } = useCanvasTools('Canvas.Display');
+  const { projection, readonly } = useCanvasDocument('Canvas.Display');
   const guides = useAtomValue(atoms.guides);
+  const axes = useAtomValue(atoms.axes);
   const snap = useAtomValue(atoms.snap);
   return (
     <div className={mx(barFrame, classNames)}>
@@ -181,6 +182,8 @@ export const CanvasTheme = ({ classNames = 'bottom-2 right-2' }: CanvasBarProps)
         guides={guides}
         // The guides are the lattice's cells, so only a lattice scene has any to show.
         onGuidesToggle={projection.lattice ? commands.toggleGuides : undefined}
+        axes={axes}
+        onAxesToggle={commands.toggleAxes}
         // Snap applies to edits, so a read-only canvas offers none.
         snap={snap}
         onSnapToggle={readonly ? undefined : commands.toggleSnap}
@@ -190,7 +193,7 @@ export const CanvasTheme = ({ classNames = 'bottom-2 right-2' }: CanvasBarProps)
   );
 };
 
-CanvasTheme.displayName = 'Canvas.Theme';
+CanvasDisplay.displayName = 'Canvas.Display';
 
 //
 // Tools

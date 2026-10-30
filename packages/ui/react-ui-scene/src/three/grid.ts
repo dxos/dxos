@@ -28,3 +28,23 @@ export const groundGrid = ({ extent, majorEvery }: GroundGridOptions): { lines: 
     }),
   ),
 });
+
+/** The axes' colours, by the usual convention: x red, y green, z blue. */
+export const AXIS_COLORS = { x: '#e5484d', y: '#30a46c', z: '#3e63dd' } as const;
+
+/** Lifts the ground axes off the y = 0 plane, where the grid's centre lines would z-fight with them. */
+const AXIS_LIFT = 0.002;
+
+export type AxisLine = {
+  axis: 'x' | 'y' | 'z';
+  color: string;
+  from: [number, number, number];
+  to: [number, number, number];
+};
+
+/** The x and z axes across the ground grid, and the y axis rising from its centre to the same height. */
+export const groundAxes = (extent: number): AxisLine[] => [
+  { axis: 'x', color: AXIS_COLORS.x, from: [-extent, AXIS_LIFT, 0], to: [extent, AXIS_LIFT, 0] },
+  { axis: 'y', color: AXIS_COLORS.y, from: [0, 0, 0], to: [0, extent, 0] },
+  { axis: 'z', color: AXIS_COLORS.z, from: [0, AXIS_LIFT, -extent], to: [0, AXIS_LIFT, extent] },
+];

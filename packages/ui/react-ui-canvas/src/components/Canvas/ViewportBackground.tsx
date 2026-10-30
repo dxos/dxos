@@ -46,6 +46,7 @@ export const ViewportBackground = ({
   const tools = useCanvasTools('Canvas.Viewport');
   const { childFrame } = useCanvasNavigation('Canvas.Viewport').commands;
   const snapEnabled = useAtomValue(tools.atoms.snap);
+  const axesShown = useAtomValue(tools.atoms.axes);
   const field = useMemo(
     () => backgroundField(look.background, backgroundBounds ?? bounds, latticeBounds),
     [look.background, backgroundBounds, bounds, latticeBounds],
@@ -149,6 +150,16 @@ export const ViewportBackground = ({
                 }
               : undefined
           }
+        />
+      )}
+      {/* The axes through the origin, in the grid's colour but stronger; whatever grid is drawn, or none. */}
+      {measured && axesShown && (
+        <GridComponent
+          scale={camera.zoom}
+          offset={{ x: camera.x * camera.zoom, y: camera.y * camera.zoom }}
+          showAxes
+          ratios={[]}
+          opacity={gridOpacity}
         />
       )}
       {measured && subGrid && (snapGridDrawn || dotsDrawn) && (

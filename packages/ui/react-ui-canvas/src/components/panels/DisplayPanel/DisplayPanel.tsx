@@ -116,6 +116,9 @@ export type DisplayPanelProps = PanelProps & {
   /** Whether the lattice cells are drawn; with `onGuidesToggle`, a toggle follows the grid options. */
   guides?: boolean;
   onGuidesToggle?: () => void;
+  /** Whether the axes are drawn (3D's in red, green and blue, 2D's in a stronger grid colour); with `onAxesToggle`, a toggle. */
+  axes?: boolean;
+  onAxesToggle?: () => void;
   /** Whether moves, resizes and new nodes snap to the grid; with `onSnapToggle`, a toggle leads the grid controls. */
   snap?: boolean;
   onSnapToggle?: () => void;
@@ -124,7 +127,7 @@ export type DisplayPanelProps = PanelProps & {
 };
 
 /**
- * The canvas's look: the snap and guides toggles, a switch between dots and lines over the background (pressing the one
+ * The canvas's look: the snap, guides and axes toggles, a switch between dots and lines over the background (pressing the one
  * drawn turns the grid off), and the theme selector last.
  */
 export const DisplayPanel = ({
@@ -141,6 +144,8 @@ export const DisplayPanel = ({
   onGridChange,
   guides,
   onGuidesToggle,
+  axes,
+  onAxesToggle,
   snap,
   onSnapToggle,
   lattice,
@@ -173,6 +178,18 @@ export const DisplayPanel = ({
         pressed={guides === true}
         data-testid='toolbar-guides'
         onPressedChange={onGuidesToggle}
+      />
+    )}
+    {onAxesToggle && (
+      <Button.Toggle
+        variant='ghost'
+        iconOnly
+        icon='ph--crosshair-simple--regular'
+        label='Axes: show the axes through the origin'
+        disabled={readonly}
+        pressed={axes === true}
+        data-testid='toolbar-axes'
+        onPressedChange={onAxesToggle}
       />
     )}
     {/* One group of toggles, at most one pressed: pressing the one drawn turns the grid off; hidden on a lattice scene. */}

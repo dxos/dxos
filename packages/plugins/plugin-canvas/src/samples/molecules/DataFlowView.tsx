@@ -271,7 +271,7 @@ export const DataFlowView = ({
         <>
           <Canvas.Navigation />
           <Canvas.Camera />
-          <Canvas.Theme />
+          <Canvas.Display />
         </>
       )}
     </Canvas.Root>
