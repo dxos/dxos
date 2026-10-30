@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import type * as Project from '@dxos/compute/Project';
+import * as Project from '@dxos/compute/Project';
 import * as Spec from '@dxos/compute/Spec';
 import { Database, EID, Obj, Ref, Relation } from '@dxos/echo';
 
@@ -43,7 +43,7 @@ export const setProject = Effect.fn(function* (spec: Spec.Spec, projectRef: Ref.
       }),
     );
   }
-  if (Spec.getProject(spec)?.id === project.id) {
+  if (Project.getOwner(spec)?.id === project.id) {
     return;
   }
   clearProject(spec);
@@ -54,7 +54,7 @@ export const setProject = Effect.fn(function* (spec: Spec.Spec, projectRef: Ref.
 
 /** Releases the spec from the project that owns it, leaving the spec top-level. */
 export const clearProject = (spec: Spec.Spec): void => {
-  const project = Spec.getProject(spec);
+  const project = Project.getOwner(spec);
   if (project) {
     const index = project.specs.findIndex((ref) => refId(ref) === spec.id);
     if (index !== -1) {

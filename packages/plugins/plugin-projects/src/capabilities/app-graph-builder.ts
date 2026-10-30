@@ -411,7 +411,7 @@ const matchSpecLevel = (node: AppGraphNode.Node): Option.Option<{ level: Level; 
 
 /** The project a level lies in: the one owning its spec, or the top-level spec above its feature. */
 const getLevelProject = (level: Level): Project.Project | undefined =>
-  Spec.instanceOf(level) ? Spec.getProject(level) : FeatureMap.findProject(level);
+  Spec.instanceOf(level) ? Project.getOwner(level) : FeatureMap.findProject(level);
 
 /** The spec a level maps: the spec itself, or the one breaking the feature down. */
 const getLevelSpec = (level: Level, get: Atom.AtomContext): Spec.Spec | undefined => {

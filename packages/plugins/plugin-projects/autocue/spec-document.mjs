@@ -5,8 +5,8 @@
 /**
  * A spec starts as prose and takes structure a paragraph at a time: `/feature` at the end of a paragraph makes it the
  * description of a new feature, drawn in place as the feature's editable section. The section moves like a line, and
- * Backspace deletes it, and its feature, until undo brings both back. A section also lists the features its feature
- * depends on, and adds one.
+ * Backspace deletes it, and its feature, until undo brings both back. Each feature, and each requirement added to it,
+ * is numbered as its `feat` block will be. A section also lists the features its feature depends on, and adds one.
  *
  * @mdl packages/plugins/plugin-projects/PLUGIN.mdl test QA-7
  * @app storybook-react, narrowed to plugin-projects, on :9009
@@ -37,6 +37,18 @@ const waitForNames = (page, expected) =>
     ([selector, expected]) =>
       JSON.stringify(
         [...document.querySelectorAll(`${selector} input[data-testid="name"]`)].map((input) => input.value),
+      ) === JSON.stringify(expected),
+    [SECTION, expected],
+    { timeout: 10_000 },
+  );
+
+const waitForBlockIds = (page, expected) =>
+  page.waitForFunction(
+    ([selector, expected]) =>
+      JSON.stringify(
+        [...document.querySelectorAll(`${selector} [data-testid="feature-section.block-id"]`)].map((element) =>
+          element.textContent.trim(),
+        ),
       ) === JSON.stringify(expected),
     [SECTION, expected],
     { timeout: 10_000 },
@@ -105,6 +117,8 @@ export const steps = [
       await caption(demo, 3, 'Type its name, then press Escape to go back to the text');
       await nameFeature(demo, page, 'Search');
       await waitForNames(page, ['Search']);
+      await waitForBlockIds(page, ['F-1']);
+      await caption(demo, 3, 'Search is F-1, the id its feat block will have in the file');
       await demo.sleep({ ms: LOOK });
     },
   },
@@ -127,7 +141,8 @@ export const steps = [
       await demo.sleep({ ms: 1_000 });
       await demo.press({ key: 'Alt+ArrowDown' });
       await waitForNames(page, ['Search', 'Instant inbox']);
-      await caption(demo, 5, "The spec's features follow the text: Search is first");
+      await waitForBlockIds(page, ['F-1', 'F-2']);
+      await caption(demo, 5, "The spec's features follow the text, and each keeps its id");
       await demo.sleep({ ms: LOOK });
     },
   },
@@ -153,11 +168,28 @@ export const steps = [
     },
   },
   {
+    name: 'Add a requirement',
+    run: async ({ demo, page }) => {
+      // After the reorder, "Search" is the first section.
+      const section = `${SECTION} >> nth=0`;
+      await caption(demo, 8, 'A requirement added in the app takes the next id under its feature');
+      await demo.click({ selector: section, label: 'Search' });
+      await demo.click({ selector: `${section} >> [data-testid="requirement-editor.add"]`, label: 'Add requirement' });
+      await demo.keys({ key: 'Results appear as you type.' });
+      await page.keyboard.type('Results appear as you type.', { delay: 80 });
+      await demo.press({ key: 'Enter' });
+      await page
+        .locator(`${section} >> [data-testid="requirement-editor"] >> text=F-1.1`)
+        .waitFor({ state: 'visible', timeout: 5_000 });
+      await demo.sleep({ ms: LOOK });
+    },
+  },
+  {
     name: 'Depend on another feature',
     run: async ({ demo, page }) => {
       // After the undo, "Instant inbox" is the second section.
       const section = `${SECTION} >> nth=1`;
-      await caption(demo, 8, 'A section also holds what its feature depends on');
+      await caption(demo, 9, 'A section also holds what its feature depends on');
       await demo.click({ selector: section, label: 'Instant inbox' });
       await demo.click({
         selector: `${section} >> [data-testid="feature-section.add-dependency"]`,

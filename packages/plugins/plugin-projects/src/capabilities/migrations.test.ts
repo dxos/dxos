@@ -116,7 +116,7 @@ describe('feature migrations', () => {
     expect(specs.map(({ name }) => name).sort()).toEqual(['Features', 'Inbox', 'Sync']);
 
     const inbox = specs.find(({ name }) => name === 'Inbox');
-    expect(inbox && Spec.getProject(inbox)?.id).toBe(project.id);
+    expect(inbox && Project.getOwner(inbox)?.id).toBe(project.id);
     expect(project.specs.map((ref) => ref.peek()?.id)).toEqual([inbox?.id]);
     const compose = byName('Compose');
     expect((await featureNames(inbox))?.sort()).toEqual(['Compose', 'Sync']);
@@ -310,7 +310,7 @@ describe('feature migrations', () => {
     const [migrated] = await db.query(Filter.type(Project.Project)).run();
     const [spec] = await db.query(Filter.type(Spec.Spec)).run();
     expect(spec.id).toBe(legacy.id);
-    expect(Spec.getProject(spec)?.id).toBe(migrated.id);
+    expect(Project.getOwner(spec)?.id).toBe(migrated.id);
     expect(migrated.specs.map((ref) => ref.peek()?.id)).toEqual([spec.id]);
     expect(await featureNames(spec)).toEqual(['Sync']);
     expect(await SpecText.read(spec)).toContain('name: Inbox');

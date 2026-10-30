@@ -133,6 +133,12 @@ export const make = (
 };
 
 /** Adds a routine to the project as an owned child; `SetParent` on the field cascades it. */
+/** The project that owns the spec: its ECHO parent; undefined for a spec no project owns. */
+export const getOwner = (spec: Spec.Spec): Project | undefined => {
+  const parent = Obj.getParent(spec);
+  return Obj.instanceOf(Project, parent) ? parent : undefined;
+};
+
 export const addRoutine = (project: Project, routine: Routine.Routine): void => {
   Obj.update(project, (project) => {
     project.routines.push(Ref.make(routine));

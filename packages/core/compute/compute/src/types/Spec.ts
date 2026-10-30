@@ -9,8 +9,6 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
-import * as Project from './Project.ts';
-
 /**
  * A spec: normative `.mdl` text that its project's work delivers. Its dialects say which block kinds beyond the core
  * and changelog ones the text uses, which a plugin then extracts into objects of its own and keeps as annotations on
@@ -63,9 +61,3 @@ export const make = ({ content, dialects = [], ...props }: MakeProps): Spec =>
 export const makeContent = (name: string): string => ['---', `name: ${name}`, '---'].join('\n');
 
 export const instanceOf = (value: unknown): value is Spec => Obj.instanceOf(Spec, value);
-
-/** The project that owns the spec: its ECHO parent; undefined for a spec no project owns. */
-export const getProject = (spec: Spec): Project.Project | undefined => {
-  const parent = Obj.getParent(spec);
-  return Obj.instanceOf(Project.Project, parent) ? parent : undefined;
-};

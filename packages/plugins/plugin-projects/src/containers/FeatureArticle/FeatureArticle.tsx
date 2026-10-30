@@ -74,9 +74,12 @@ export const useFeatureValues = (subject: Feature.Feature) => {
         if (values.status !== undefined) {
           feature.status = values.status;
         }
-        feature.requirements = values.requirements?.map((requirement) => ({ ...requirement }));
+        const requirements = values.requirements?.map((requirement) => ({ ...requirement }));
+        const blockId = Feature.getBlockId(subject);
+        feature.requirements =
+          requirements && blockId ? Feature.numberRequirements(blockId, requirements) : requirements;
       }),
-    [updateFeature],
+    [subject, updateFeature],
   );
 
   return { values, onValuesChanged, updateFeature };

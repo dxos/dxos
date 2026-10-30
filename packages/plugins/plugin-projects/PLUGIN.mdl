@@ -42,6 +42,11 @@ feat F-1: A spec's document is the spec
              `## Features` section, or at the end of the document when it has none.
   req F-1.5: A feature the spec holds that its document has never embedded, such as one a seed or a migration added, is
              embedded when the spec is synced, never dropped.
+  req F-1.6: Every feature the spec holds has a block id, as its `feat` block does, and every requirement an id under
+             it (`F-3.2`). A feature read in from a file keeps the file's id; one made in the app takes the next `F-n`
+             after the highest in the spec when the spec is synced, and a requirement added to it takes the next id
+             under the feature. Ids are kept once given: moving or removing a feature or a requirement leaves the
+             others' ids as they were.
 ```
 
 ```mdl
@@ -74,8 +79,8 @@ feat F-2: Feature embeds in the editor
 ```mdl
 feat F-3: A spec as a file
   req F-3.1: Importing a file (`op:ImportSpec`) maps each `feat` block to the feature read in from it before, found by
-             its source `path#F-n` wherever it has moved since, or to a new one, and puts the feature's embed in place
-             of the block. The file states the feature's name, description, requirements and, when it has a
+             its source `path#F-n` wherever it has moved since, to the feature the spec numbered `F-n` before any file
+             held its block, or to a new one, and puts the feature's embed in place of the block. The file states the feature's name, description, requirements and, when it has a
              `status:` line, its status. The description is the block's `desc:` field, or its bare prose before the
              first `req`.
   req F-3.7: A fence that holds several `feat` blocks, or other blocks before one, is split so each `feat` block is a
@@ -368,7 +373,7 @@ test QA-7: Grow a spec from prose
     autocue flow `spec-document` against the SpecDocumentArticle story "Prose", whose spec "Mail" is three paragraphs
     of prose with no features.
   actors: human
-  covers: [F-1.3, F-2.1, F-2.2, F-2.3, F-2.6, F-2.7, F-2.10]
+  covers: [F-1.3, F-1.6, F-2.1, F-2.2, F-2.3, F-2.6, F-2.7, F-2.10]
   status: unverified
   given:
     - storybook serves plugin-projects
@@ -382,19 +387,22 @@ test QA-7: Grow a spec from prose
       expect: the paragraph becomes a feature's section, whose description is the paragraph, with the cursor in its name
     - name: Name it
       do: Type "Search" and press Escape.
-      expect: the section is named "Search", and the cursor is back in the text, after the section
+      expect: the section is named "Search" with block id F-1, and the cursor is back in the text, after the section
     - name: Turn another paragraph into a feature
       do: Put the cursor at the end of the paragraph "Mail should feel instant…", type " /feature", accept it, type "Instant inbox" and press Escape.
-      expect: a second section, "Instant inbox", above "Search", with the cursor after it; the last paragraph is still prose
+      expect: a second section, "Instant inbox" with block id F-2, above "Search", with the cursor after it; the last paragraph is still prose
     - name: Reorder by moving the embed
       do: Press Alt+Down twice.
-      expect: the "Instant inbox" section sits below "Search", and the spec lists Search first
+      expect: the "Instant inbox" section sits below "Search", the spec lists Search first, and each keeps its block id
     - name: Delete a feature by deleting its embed
       do: With the cursor still after the "Instant inbox" section, press Backspace.
       expect: the section is gone and the spec holds only Search
     - name: Undo restores it
       do: Press Cmd+Z.
       expect: the "Instant inbox" section returns, the same feature with its description
+    - name: Add a requirement
+      do: Click the "Search" section, click "Add requirement" in it, type "Results appear as you type." and press Enter.
+      expect: the requirement shows its id, F-1.1
     - name: Depend on another feature
       do: Click the "Instant inbox" section, click "Add dependency" in it and pick "Search".
       expect: the section lists "Search" under "Depends on"
@@ -703,28 +711,55 @@ decision D-35: Approve [D-33]: a feature's dependencies stay in ECHO only. An em
 ```
 
 ```mdl
-decision D-36: A spec is one document. The canvas, the board and any other view are lenses over it, such as canvas positions or a kanban pivot, and the view toggle shows only when a spec has more than one view.
+decision D-36: Every feature and requirement in a spec is numbered in the app, as it is in the `.mdl` text, not only those synced from a file or added by a seed. A spec in Composer is the MDL text made structured and must stay fully compatible with it. Numbers might follow the features' positions and need not be stored, though they may need to be.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-1.6, F-2.10]
+```
+
+```mdl
+decision D-37: Ids are stored and never renumbered. A feature made in the app takes the next `F-n` after the highest in its spec when the spec is synced, and a requirement added to it takes the next id under the feature. A feature or requirement that moves or goes leaves the others' ids as they were. Fills in [D-36].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-1.6, QA-7]
+  why: Specs, decisions and `@feature` tags in code cite features and requirements by id, so an id must name the same thing after a reorder. The `feat` dialect stores ids in the text for the same reason.
+  rejected:
+    - Numbering by position, which renumbers every feature after one that moves and breaks what cites them.
+```
+
+```mdl
+decision D-38: An id the app gives a feature names no file until import reads its block in from one; import then maps that block to the feature numbered with its id. Fills in [D-37].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-3.1, F-3.2]
+  why: An id recorded with the file's path would mark the feature as read in from the file, so importing the file before its block was written out would delete a feature added in the app. An id never written back left a file pulled after an export with a block no feature matched, which import then made a second feature of.
+```
+
+```mdl
+decision D-39: A spec is one document. The canvas, the board and any other view are lenses over it, such as canvas positions or a kanban pivot, and the view toggle shows only when a spec has more than one view.
   date: 2026-10-30
   by: user:wittjosiah
   affects: [F-4.2]
 ```
 
 ```mdl
-decision D-37: Each dialect is one bundle, and the blocks it defines map to plugin capabilities when the text is synced. Composer's editor stays fully compatible with MDL as plain text.
+decision D-40: Each dialect is one bundle, and the blocks it defines map to plugin capabilities when the text is synced. Composer's editor stays fully compatible with MDL as plain text.
   date: 2026-10-30
   by: user:wittjosiah
   affects: [F-4.3]
 ```
 
 ```mdl
-decision D-38: What a dialect adds to a spec is kept as ECHO annotations on the spec, so it is strongly typed.
+decision D-41: What a dialect adds to a spec is kept as ECHO annotations on the spec, so it is strongly typed.
   date: 2026-10-30
   by: user:wittjosiah
   affects: [F-4.4]
 ```
 
 ```mdl
-decision D-39: A spec declares its dialects as structured data, not in its text, and the sync to the text form uses them. A presentation dialect's blocks are inserted as templates by slash commands such as `/slide`, with no views of their own.
+decision D-42: A spec declares its dialects as structured data, not in its text, and the sync to the text form uses them. A presentation dialect's blocks are inserted as templates by slash commands such as `/slide`, with no views of their own.
   date: 2026-10-30
   by: user:wittjosiah
   affects: [F-4.3]
@@ -732,7 +767,7 @@ decision D-39: A spec declares its dialects as structured data, not in its text,
 ```
 
 ```mdl
-decision D-40: A project has several top-level specs. The project article's Specs tab picks the current spec from a dropdown in its toolbar. Only feature specs nest, so a presentation spec is a top-level spec. Replaces the part of [D-9] where a project has at most one spec.
+decision D-43: A project has several top-level specs. The project article's Specs tab picks the current spec from a dropdown in its toolbar. Only feature specs nest, so a presentation spec is a top-level spec. Replaces the part of [D-9] where a project has at most one spec.
   date: 2026-10-30
   by: user:wittjosiah
   affects: [F-4.1, F-4.5]
@@ -740,28 +775,28 @@ decision D-40: A project has several top-level specs. The project article's Spec
 ```
 
 ```mdl
-decision D-41: `Spec` is generic, so it moves to `@dxos/compute`.
+decision D-44: `Spec` is generic, so it moves to `@dxos/compute`.
   date: 2026-10-30
   by: user:wittjosiah
   affects: [F-4.2]
 ```
 
 ```mdl
-decision D-42: A spec level's nav path is `project/<id>/specs/<spec>/<feature>/…`, the same however many specs the project has.
+decision D-45: A spec level's nav path is `project/<id>/specs/<spec>/<feature>/…`, the same however many specs the project has.
   date: 2026-10-30
   by: user:wittjosiah
   affects: [F-4.6]
 ```
 
 ```mdl
-decision D-43: A spec that lists no dialects uses the core and changelog blocks only.
+decision D-46: A spec that lists no dialects uses the core and changelog blocks only.
   date: 2026-10-30
   by: user:wittjosiah
   affects: [F-4.3]
 ```
 
 ```mdl
-decision D-44: The spec document folds into the spec: a spec's text is its own `content`, and `SpecDocument` goes away. Replaces the part of [D-12] where a spec refers to a separate document.
+decision D-47: The spec document folds into the spec: a spec's text is its own `content`, and `SpecDocument` goes away. Replaces the part of [D-12] where a spec refers to a separate document.
   date: 2026-10-30
   by: user:wittjosiah
   affects: [F-1, F-4.2]
@@ -769,19 +804,19 @@ decision D-44: The spec document folds into the spec: a spec's text is its own `
 ```
 
 ```mdl
-decision D-45: `Spec` 0.3.0 (`org.dxos.type.projects.spec`) holds `name`, `description`, `dialects` and `content`, a `Text` it owns. `Project` 0.7.0 holds `specs`, a list of refs, in place of `spec`. The migrations move a 0.6.0 project's spec into the list, move a 0.2.0 spec's document's `Text` and file links onto the spec and delete the document, and make a spec of each `SpecDocument` no spec held. A migrated spec lists no dialects. Fills in [D-40], [D-41] and [D-44].
+decision D-48: `Spec` 0.3.0 (`org.dxos.type.projects.spec`) holds `name`, `description`, `dialects` and `content`, a `Text` it owns. `Project` 0.7.0 holds `specs`, a list of refs, in place of `spec`. The migrations move a 0.6.0 project's spec into the list, move a 0.2.0 spec's document's `Text` and file links onto the spec and delete the document, and make a spec of each `SpecDocument` no spec held. A migrated spec lists no dialects. Fills in [D-43], [D-44] and [D-47].
   date: 2026-10-30
   by: agent:claude-code
   for: user:wittjosiah
   affects: [F-4.1, F-4.2]
-  why: Moving the `Text` rather than copying it keeps its id, its history and the cursors anchored in it. No dialect registry exists yet to say which dialects an old spec used, and none listed reads as core and changelog only ([D-43]).
+  why: Moving the `Text` rather than copying it keeps its id, its history and the cursors anchored in it. No dialect registry exists yet to say which dialects an old spec used, and none listed reads as core and changelog only ([D-46]).
   rejected:
     - Copying the document's text into a new `Text` on the spec.
     - Listing the `feat` dialect on every migrated spec.
 ```
 
 ```mdl
-decision D-46: The spec's features are the `org.dxos.projects.features` annotation, a list of feature refs in the document's order, and its canvas layout is the `org.dxos.projects.layout` annotation. The refs keep the spec each feature's ECHO parent, so deleting the spec still deletes its features. Fills in [D-38]. Replaces the part of [D-17] where the features are a field of `Spec`.
+decision D-49: The spec's features are the `org.dxos.projects.features` annotation, a list of feature refs in the document's order, and its canvas layout is the `org.dxos.projects.layout` annotation. The refs keep the spec each feature's ECHO parent, so deleting the spec still deletes its features. Fills in [D-41]. Replaces the part of [D-17] where the features are a field of `Spec`.
   date: 2026-10-30
   by: agent:claude-code
   for: user:wittjosiah
@@ -793,7 +828,7 @@ decision D-46: The spec's features are the `org.dxos.projects.features` annotati
 ```
 
 ```mdl
-decision D-47: A breakdown spec takes the dialects of the spec its feature is on, when made by `op:CreateSpec` or when a feature is first broken down. Fills in [D-39].
+decision D-50: A breakdown spec takes the dialects of the spec its feature is on, when made by `op:CreateSpec` or when a feature is first broken down. Fills in [D-42].
   date: 2026-10-30
   by: agent:claude-code
   for: user:wittjosiah
@@ -802,7 +837,7 @@ decision D-47: A breakdown spec takes the dialects of the spec its feature is on
 ```
 
 ```mdl
-decision D-48: `op:CreateSpec` and `op:UpdateSpec` no longer refuse a project that already has a spec; a spec given to a project joins the end of its specs. The Specs tab opens on the spec last picked, kept in the project's view state, or the project's first spec, and Add spec opens the spec form and selects the new spec. Fills in [D-40].
+decision D-51: `op:CreateSpec` and `op:UpdateSpec` no longer refuse a project that already has a spec; a spec given to a project joins the end of its specs. The Specs tab opens on the spec last picked, kept in the project's view state, or the project's first spec, and Add spec opens the spec form and selects the new spec. Fills in [D-43].
   date: 2026-10-30
   by: agent:claude-code
   for: user:wittjosiah
@@ -811,7 +846,7 @@ decision D-48: `op:CreateSpec` and `op:UpdateSpec` no longer refuse a project th
 ```
 
 ```mdl
-decision D-49: The codec takes a spec only when its document embeds a feature or the file holds a `feat` block, and otherwise leaves the spec to the plain text sync. `ProjectCapabilities.SpecDocumentCodec` and `SpecDocumentExtensions` are renamed `SpecCodec` and `SpecExtensions` and take a `Spec`. Fills in [D-44]. Replaces [D-29], since no document exists apart from a spec.
+decision D-52: The codec takes a spec only when its document embeds a feature or the file holds a `feat` block, and otherwise leaves the spec to the plain text sync. `ProjectCapabilities.SpecDocumentCodec` and `SpecDocumentExtensions` are renamed `SpecCodec` and `SpecExtensions` and take a `Spec`. Fills in [D-47]. Replaces [D-29], since no document exists apart from a spec.
   date: 2026-10-30
   by: agent:claude-code
   for: user:wittjosiah
@@ -821,7 +856,7 @@ decision D-49: The codec takes a spec only when its document embeds a feature or
 ```
 
 ```mdl
-decision D-50: A spec's nav-tree node holds the spec itself, as a feature level holds its feature, so it gets every companion an object gets. A spec a project owns opens as that project's article on the spec, with the feature companion beside it; a spec no project owns keeps its own article. The Specs branch holds no object and opens nothing. Fills in [D-40] and [D-42], following [D-13].
+decision D-53: A spec's nav-tree node holds the spec itself, as a feature level holds its feature, so it gets every companion an object gets. A spec a project owns opens as that project's article on the spec, with the feature companion beside it; a spec no project owns keeps its own article. The Specs branch holds no object and opens nothing. Fills in [D-43] and [D-45], following [D-13].
   date: 2026-10-30
   by: agent:claude-code
   for: user:wittjosiah

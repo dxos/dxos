@@ -768,7 +768,7 @@ export type SpecLevelArticleProps = AppSurface.ObjectArticleProps<Spec.Spec>;
 
 /** A spec's level of the project owning it: the project article on that spec. */
 export const SpecLevelArticle = ({ subject, ...props }: SpecLevelArticleProps) => {
-  const project = Spec.getProject(subject);
+  const project = Project.getOwner(subject);
   return project ? <ProjectArticle {...props} subject={project} spec={subject} /> : null;
 };
 

@@ -36,7 +36,9 @@ const handler: Operation.WithHandler<typeof FeatureOperation.Update> = FeatureOp
           feature.description = description;
         }
         if (requirements !== undefined) {
-          feature.requirements = requirements.map((requirement) => ({ ...requirement }));
+          const blockId = Feature.getBlockId(feature);
+          const copied = requirements.map((requirement) => ({ ...requirement }));
+          feature.requirements = blockId ? Feature.numberRequirements(blockId, copied) : copied;
         }
         if (status !== undefined) {
           feature.status = status;

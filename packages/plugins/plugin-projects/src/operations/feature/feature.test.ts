@@ -149,7 +149,7 @@ describe('FeatureOperation.CreateSpec', () => {
       });
       expect(project.specs.map((spec) => spec.peek()?.id)).toEqual([inbox.id, talk.id]);
       expect(talk.dialects).toEqual(['org.dxos.dialect.presenter']);
-      expect(Spec.getProject(talk)?.id).toBe(project.id);
+      expect(Project.getOwner(talk)?.id).toBe(project.id);
 
       const { feature: sync } = yield* create.handler({ name: 'Sync', spec: ref(inbox) });
       const breakdown = yield* Effect.flip(
@@ -180,12 +180,12 @@ describe('FeatureOperation.UpdateSpec', () => {
       const { spec: talk } = yield* createSpec.handler({ name: 'Talk', project: ref(chat) });
 
       yield* updateSpec.handler({ spec: ref(inbox), project: ref(chat) });
-      expect(Spec.getProject(inbox)?.id).toBe(chat.id);
+      expect(Project.getOwner(inbox)?.id).toBe(chat.id);
       expect(mail.specs).toEqual([]);
       expect(chat.specs.map((spec) => spec.peek()?.id)).toEqual([talk.id, inbox.id]);
 
       yield* updateSpec.handler({ spec: ref(inbox), project: null });
-      expect(Spec.getProject(inbox)).toBeUndefined();
+      expect(Project.getOwner(inbox)).toBeUndefined();
       expect(chat.specs.map((spec) => spec.peek()?.id)).toEqual([talk.id]);
     }).pipe(Effect.provide(testLayer())),
   );
@@ -212,7 +212,7 @@ feat F-1: Sync
       expect(first.created).toHaveLength(1);
       const [target] = yield* Database.query(Filter.type(Spec.Spec)).run;
       expect(target).toMatchObject({ id: first.spec, name: 'Inbox' });
-      expect(Spec.getProject(target)?.id).toBe(project.id);
+      expect(Project.getOwner(target)?.id).toBe(project.id);
       expect(Obj.getMeta(target).keys).toEqual([{ source: Feature.SPEC_KEY_SOURCE, id: 'packages/a/PLUGIN.mdl' }]);
       const [feature] = yield* Database.query(Filter.type(Feature.Feature)).run;
       expect(feature).toMatchObject({

@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import type * as Project from '@dxos/compute/Project';
+import * as Project from '@dxos/compute/Project';
 import * as Spec from '@dxos/compute/Spec';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
@@ -161,6 +161,6 @@ export type SpecLevelCompanionProps = Omit<ProjectFeatureCompanionProps, 'projec
 
 /** The feature companion beside a spec's level of the project owning it. */
 export const SpecLevelCompanion = ({ spec, ...props }: SpecLevelCompanionProps) => {
-  const project = Spec.getProject(spec);
+  const project = Project.getOwner(spec);
   return project ? <ProjectFeatureCompanion {...props} project={project} spec={spec} /> : null;
 };

@@ -41,10 +41,10 @@ const isTracked = (feature: Feature.Feature) => FeatureMap.findProject(feature) 
 
 /** A spec a project owns is a level of the project: the project article on that spec. */
 const isProjectSpec = (value: unknown): value is Spec.Spec =>
-  Spec.instanceOf(value) && Spec.getProject(value) !== undefined;
+  Spec.instanceOf(value) && Project.getOwner(value) !== undefined;
 
 const isFreeSpec = (value: unknown): value is Spec.Spec =>
-  Spec.instanceOf(value) && Spec.getProject(value) === undefined;
+  Spec.instanceOf(value) && Project.getOwner(value) === undefined;
 
 /** React surfaces contributed by plugin-projects — articles and cards for projects, specs, features and showcases. */
 export default Capability.makeModule(() =>

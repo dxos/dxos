@@ -7,7 +7,7 @@
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import type * as Project from '@dxos/compute/Project';
+import * as Project from '@dxos/compute/Project';
 import * as Spec from '@dxos/compute/Spec';
 import { Annotation, type Entity, Obj, Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
@@ -191,5 +191,5 @@ export const findRoot = (feature: Feature.Feature): Spec.Spec | undefined => get
 /** The project that tracks the feature's work: the one owning the top-level spec above it. */
 export const findProject = (feature: Feature.Feature): Project.Project | undefined => {
   const root = findRoot(feature);
-  return root && Spec.getProject(root);
+  return root && Project.getOwner(root);
 };
