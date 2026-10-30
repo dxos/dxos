@@ -129,10 +129,8 @@ export type CanvasAtoms = {
   active: Atom.Writable<NodeId | undefined>;
   /** Frames show their id, type and geometry. */
   debug: Atom.Writable<boolean>;
-  /** The time the view shows and whether it plays (ANIMATION.md §5.1). */
+  /** The time the view shows and whether it plays (ANIMATION.md §5.1): the host samples the document at it. */
   clock: Clock;
-  /** Edits away from t = 0 key the properties they change (ANIMATION.md §5.4). */
-  autoKey: Atom.Writable<boolean>;
   /** The composite open in isolation, if any. */
   isolation: Atom.Writable<Isolation | undefined>;
 };
@@ -161,6 +159,5 @@ export const createCanvasAtoms = (root: ViewId): CanvasAtoms => ({
   active: Atom.keepAlive(Atom.make<NodeId | undefined>(undefined)),
   debug: Atom.keepAlive(Atom.make<boolean>(false)),
   clock: createClock(),
-  autoKey: Atom.keepAlive(Atom.make<boolean>(true)),
   isolation: Atom.keepAlive(Atom.make<Isolation | undefined>(undefined)),
 });

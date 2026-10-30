@@ -9,14 +9,7 @@
 // the projection as an intent; the view never writes coordinates itself (decision 11).
 //
 
-import {
-  CanvasActions,
-  CanvasCamera,
-  CanvasDisplay,
-  CanvasNavigation,
-  CanvasTimeline,
-  CanvasTools,
-} from './CanvasBars.tsx';
+import { CanvasActions, CanvasCamera, CanvasDisplay, CanvasNavigation, CanvasTools } from './CanvasBars.tsx';
 import { CanvasLayers, CanvasObjects, CanvasProperties, CanvasViews } from './CanvasInspectors.tsx';
 import { CanvasRoot } from './CanvasRoot.tsx';
 import { CanvasViewport } from './CanvasViewport.tsx';
@@ -33,5 +26,4 @@ export const Canvas = {
   Views: CanvasViews,
   Layers: CanvasLayers,
   Objects: CanvasObjects,
-  Timeline: CanvasTimeline,
 };

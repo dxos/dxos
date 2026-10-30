@@ -3,13 +3,14 @@
 //
 
 //
-// The DXOS end card (tools/autocue `EndCard`) as a canvas document: the logo is a composite object of path nodes, the
-// tagline, rule and call to action are nodes, and their entrances are timeline keys. Scene units are the 1920x1080
-// video's pixels with the origin at the frame's centre, so `EndCard`'s sizes and offsets carry over as they are.
+// The DXOS end card (tools/autocue `EndCard`) as a scene document: the logo is a composite object of path nodes, the
+// tagline, rule and call to action are elements, and their entrances are a shot's keys on the elements. Scene units are
+// the 1920x1080 video's pixels with the origin at the frame's centre, so `EndCard`'s sizes and offsets carry over.
 //
 
-import { type Easing } from '@dxos/animation';
+import { type Easing, type Timeline, createTimeline, setKey } from '@dxos/animation';
 import { DXOS_HORIZONTAL_LOCKUP, DXOS_LOCKUP_GLYPHS, type DXOSLockupGlyph } from '@dxos/brand/paths';
+import { fromRenderLists2D } from '@dxos/react-ui-canvas/headless';
 import { type View, compositeBounds, instancePorts, pathBounds } from '@dxos/react-ui-canvas/scene';
 import {
   type Bounds,
@@ -18,7 +19,9 @@ import {
   type NoteNode,
   type PathNode,
   type Point,
+  type Scene,
   type Size,
+  findLayout,
 } from '@dxos/scene';
 
 /** The video's frame in scene units. */
@@ -48,7 +51,7 @@ const ARTWORK_ORIGIN: Point = {
 };
 
 /** The logo scales about 50% across and 60% down its 680x340 box (`transformOrigin: '50% 60%'`). */
-const SCALE_ORIGIN: Point = { x: 0, y: 0.15 * 1080 + 340 * 0.6 - 540 };
+export const SCALE_ORIGIN: Point = { x: 0, y: 0.15 * 1080 + 340 * 0.6 - 540 };
 
 /** A glyph of the lockup as a path node, framed by its own outline. */
 const glyphNode = (glyph: DXOSLockupGlyph, index: number): PathNode => {
@@ -133,6 +136,8 @@ export const rootScene = (): View => {
     size: { width: content.width, height: content.height },
     composite: LOGO_OBJECT,
     ports: instancePorts(content, composite),
+    // Its parts' region, so the placed logo is an origin and a scale, which the shot's keys scale it by.
+    frame: content,
   };
   const rule: PathNode = {
     type: 'path',
@@ -160,26 +165,35 @@ export const rootScene = (): View => {
   };
 };
 
-/** One key on the end card's timeline. */
+/** The end card at rest, as a scene document over the root scene, with the logo's parts as its object's layout. */
+export const endCardDocument = (): Scene.SceneDocument =>
+  fromRenderLists2D([rootScene(), logoComposite()], { root: ROOT, theme: 'film' });
+
+/** One key of the end card's shot, on an element's field. */
 export type KeySpec = { target: string; property: string; t: number; value: unknown; easing?: Easing };
 
-/** The logo's frame at scale `scale` about the scale origin: its size and centre scale together. */
-const logoAt = (scale: number): { center: Point; size: Size } => {
-  const content = compositeBounds(logoComposite()) ?? { x: 0, y: 0, width: 0, height: 0 };
-  const centre = { x: content.x + content.width / 2, y: content.y + content.height / 2 };
-  return {
-    center: {
-      x: SCALE_ORIGIN.x + (centre.x - SCALE_ORIGIN.x) * scale,
-      y: SCALE_ORIGIN.y + (centre.y - SCALE_ORIGIN.y) * scale,
-    },
-    size: { width: content.width * scale, height: content.height * scale },
-  };
+/** The path of an element's own opacity. */
+const OPACITY = 'overrides.opacity';
+
+/** The logo's origin at rest: where its parts' own origin is placed, which the shot scales about the scale origin. */
+const logoRest = (): Point => {
+  const layout = findLayout(endCardDocument(), ROOT);
+  return layout?.dim === '2d' ? (layout.elements[LOGO]?.center ?? { x: 0, y: 0 }) : { x: 0, y: 0 };
 };
+
+/** The logo's placement at scale `scale` about the scale origin: its centre moves as its size scales. */
+export const logoAt = (scale: number, rest: Point = logoRest()): { center: Point; scale: Point } => ({
+  center: {
+    x: SCALE_ORIGIN.x + (rest.x - SCALE_ORIGIN.x) * scale,
+    y: SCALE_ORIGIN.y + (rest.y - SCALE_ORIGIN.y) * scale,
+  },
+  scale: { x: scale, y: scale },
+});
 
 /** A fade and a rise of `rise` scene units from `from` to `to` seconds, as `EndCard` gives each line. */
 const entrance = (target: string, rest: Point, from: number, to: number, rise: number, opacity = 1): KeySpec[] => [
-  { target, property: 'style.opacity', t: from, value: 0 },
-  { target, property: 'style.opacity', t: to, value: opacity, easing: OUT },
+  { target, property: OPACITY, t: from, value: 0 },
+  { target, property: OPACITY, t: to, value: opacity, easing: OUT },
   { target, property: 'center', t: from, value: { x: rest.x, y: rest.y + rise } },
   { target, property: 'center', t: to, value: rest, easing: OUT },
 ];
@@ -196,14 +210,15 @@ export const endCardKeys = (): KeySpec[] => {
     [0.6, 1, BACK_OUT],
     [DURATION, 1.012, 'linear'],
   ];
+  const rest = logoRest();
   return [
-    { target: LOGO, property: 'style.opacity', t: 0, value: 0 },
-    { target: LOGO, property: 'style.opacity', t: 0.3, value: 1, easing: OUT },
+    { target: LOGO, property: OPACITY, t: 0, value: 0 },
+    { target: LOGO, property: OPACITY, t: 0.3, value: 1, easing: OUT },
     ...scales.flatMap(([t, scale, easing]): KeySpec[] => {
-      const { center, size } = logoAt(scale);
+      const placement = logoAt(scale, rest);
       return [
-        { target: LOGO, property: 'center', t, value: center, ...(easing ? { easing } : {}) },
-        { target: LOGO, property: 'size', t, value: size, ...(easing ? { easing } : {}) },
+        { target: LOGO, property: 'center', t, value: placement.center, ...(easing ? { easing } : {}) },
+        { target: LOGO, property: 'scale', t, value: placement.scale, ...(easing ? { easing } : {}) },
       ];
     }),
     ...entrance('tagline', LAYOUT.tagline, 0.55, 0.95, 24),
@@ -213,3 +228,11 @@ export const endCardKeys = (): KeySpec[] => {
     ...entrance('url', LAYOUT.url, 1.05, 1.45, 18),
   ];
 };
+
+/** Every entrance keyed, as an animator shot over the end card holds them: a drawing stores no timeline (F-2.3). */
+export const endCardShot = (): Timeline =>
+  endCardKeys().reduce(
+    (timeline, { target, property, t, value, easing }) =>
+      setKey(timeline, target, property, { t, value, ...(easing !== undefined ? { easing } : {}) }),
+    createTimeline(DURATION),
+  );

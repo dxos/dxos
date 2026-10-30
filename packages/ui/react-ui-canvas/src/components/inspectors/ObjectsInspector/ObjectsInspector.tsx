@@ -31,8 +31,6 @@ export type ObjectsInspectorProps = InspectorProps & {
   onDelete?: (id: ViewId, instances: boolean) => void;
   /** A small picture of a composite, drawn after its name. */
   thumbnail?: (id: ViewId) => ReactNode;
-  /** Gives the scene a timeline; absent while it has one or cannot be edited. */
-  onAnimate?: () => void;
   /** Makes an object of the canvas selection (in 2D, Group does this); absent where nothing can be made. */
   onMakeObject?: () => void;
   /** Whether the selection can become an object now. */
@@ -60,7 +58,6 @@ export const ObjectsInspector = ({
   onDuplicate,
   onDelete,
   thumbnail,
-  onAnimate,
 }: ObjectsInspectorProps) => {
   const [editingId, setEditingId] = useState<ViewId>();
   const current = objects.find((entry) => entry.id === selected);
@@ -98,15 +95,6 @@ export const ObjectsInspector = ({
             onClick={onImport}
           />
         )}
-        <Button.Root
-          variant='ghost'
-          iconOnly
-          icon='ph--film-strip--regular'
-          label='Animate'
-          disabled={!onAnimate}
-          data-testid='objects-animate'
-          onClick={onAnimate}
-        />
         <Toolbar.Separator variant='gap' />
         <InspectorMenu data-testid='objects-menu'>
           <Menu.Item

@@ -49,13 +49,6 @@ export type Camera = Schema.Schema.Type<typeof Camera>;
 // Scene
 //
 
-//
-// Timeline (ANIMATION.md §5.2)
-//
-
-/** The target of the camera's tracks; a node track names the node's id. The camera's are `x`, `y` and `zoom`. */
-export const CAMERA_TARGET = 'camera';
-
 /** A plain View, or the definition of a composite object that instances draw (ANIMATION.md §4.1). */
 export const ViewKind = Schema.Literals(['view', 'composite']);
 export type ViewKind = Schema.Schema.Type<typeof ViewKind>;

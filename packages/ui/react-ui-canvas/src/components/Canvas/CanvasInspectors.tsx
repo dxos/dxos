@@ -12,7 +12,6 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
-import { createTimeline } from '@dxos/animation';
 import * as Button from '@dxos/react-ui/Button';
 import { type ElementId, type Layer, type LayerId, type ViewId, isInstanceNode, isLink } from '@dxos/scene';
 
@@ -369,19 +368,11 @@ const ObjectThumbnail = ({ id }: { id: ViewId }) => {
 
 /** The drawing's composite objects: a docked inspector beside the layers. */
 export const CanvasObjects = () => {
-  const {
-    store,
-    projection,
-    readonly,
-    capabilities,
-    timeline: timelineAtom,
-    onTimelineChange,
-  } = useCanvasDocument('Canvas.Objects');
+  const { store, projection, capabilities } = useCanvasDocument('Canvas.Objects');
   const { objectActions } = useCanvasServices('Canvas.Objects');
   const navigation = useCanvasNavigation('Canvas.Objects');
   const selection = useAtomValue(useCanvasSelection('Canvas.Objects').atoms.selection);
   const isolation = useAtomValue(navigation.atoms.isolation);
-  const timeline = useAtomValue(timelineAtom);
   // The scene as stored rather than as a gesture draws it: a gesture never changes which object an instance shows.
   const scene = useAtomValue(projection.scene);
   const scenes = useAtomValue(store.views);
@@ -419,7 +410,6 @@ export const CanvasObjects = () => {
         onDuplicate={objectActions.duplicate}
         onDelete={objectActions.remove}
         thumbnail={(id) => <ObjectThumbnail id={id} />}
-        onAnimate={timeline || readonly || !onTimelineChange ? undefined : () => onTimelineChange(createTimeline())}
       />
     </InspectorSection>
   );

@@ -11,6 +11,5 @@ export * from './registry.ts';
 export * from './style-set.ts';
 export * from './store.ts';
 export * from './theme-choice.ts';
-export * from './timeline.ts';
 export * from './types.ts';
 export * from './versioned.ts';

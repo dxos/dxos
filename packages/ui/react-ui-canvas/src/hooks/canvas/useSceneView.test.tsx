@@ -37,8 +37,6 @@ const setup = () => {
         path: ['root'],
         camera: { x: 0, y: 0, zoom: 1 },
         drag: undefined,
-        timeline: undefined,
-        time: 0,
         fitTarget: TARGET,
         inset: INSET,
         setCamera,

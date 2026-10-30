@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './animate.ts';
 export * from './atoms.ts';
 export * from './controller.ts';
 export * from './history.ts';

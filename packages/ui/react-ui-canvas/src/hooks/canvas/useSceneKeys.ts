@@ -30,19 +30,6 @@ import { type EditMode } from './useEditMode.ts';
 import { type PointerMachine } from './usePointerMachine.ts';
 import { type SceneSnap } from './useSceneSnap.ts';
 
-/** What the timeline keys (space, `,` `.`, `[` `]`, `K`) do; inactive while the scene has no timeline. */
-export type TimelineKeys = {
-  active: boolean;
-  togglePlay: () => void;
-  /** Moves the playhead by whole frames. */
-  step: (frames: number) => void;
-  /** Moves the playhead to the selection's next or previous key. */
-  jumpKey: (direction: 1 | -1) => void;
-  addKey: () => void;
-  /** Removes the selection's keys at the playhead. */
-  removeKey: () => void;
-};
-
 export type UseSceneKeysOptions = {
   registry: ReturnType<typeof useRegistry>;
   atoms: CanvasAtoms;
@@ -64,7 +51,6 @@ export type UseSceneKeysOptions = {
   duplicate: () => void;
   /** Runs an edit as an undo step; a run of nudges of one selection is one step. */
   commit: CanvasHistory['commit'];
-  timeline?: TimelineKeys;
 } & Pick<SceneSnap, 'major'> &
   Pick<EditingCommands, 'copy' | 'cut' | 'paste'> &
   Pick<SelectionCommands, 'delete' | 'group' | 'ungroup'> &
@@ -108,7 +94,6 @@ export const useSceneKeys = ({
   removeVertex,
   deleteVertex,
   setTool,
-  timeline,
   editNode,
   exitEdit,
 }: UseSceneKeysOptions): ((event: KeyboardEvent) => void) => {
@@ -156,35 +141,6 @@ export const useSceneKeys = ({
           }
           event.preventDefault();
           return;
-        }
-      }
-      // The timeline's keys act only while the scene has one; otherwise `K` is still a tool's.
-      if (timeline?.active) {
-        switch (action) {
-          case 'play':
-            timeline.togglePlay();
-            event.preventDefault();
-            return;
-          case 'stepBack':
-            timeline.step(-1);
-            return;
-          case 'stepForward':
-            timeline.step(1);
-            return;
-          // ⌘← and ⌘→ also go back and forward in the browser's history, which a jump must not do.
-          case 'previousKey':
-            timeline.jumpKey(-1);
-            event.preventDefault();
-            return;
-          case 'nextKey':
-            timeline.jumpKey(1);
-            event.preventDefault();
-            return;
-          case 'addKey':
-            if (selected.length > 0) {
-              timeline.addKey();
-            }
-            return;
         }
       }
       switch (action) {
@@ -294,12 +250,6 @@ export const useSceneKeys = ({
         case 'debug':
           toggleDebug();
           break;
-        case 'play':
-        case 'stepBack':
-        case 'stepForward':
-        case 'previousKey':
-        case 'nextKey':
-        case 'addKey':
         case undefined:
           if (isToolKey(event)) {
             const next = toolForKey(nodeRegistry, linkRegistry, capabilities, event.key);
@@ -346,7 +296,6 @@ export const useSceneKeys = ({
       deleteSelection,
       group,
       ungroup,
-      timeline,
     ],
   );
 };

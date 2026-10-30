@@ -297,6 +297,19 @@ layout)` takes the layout record and `toRenderLists2D(doc, scene)` every 2D layo
   SceneAnimation stories cover them. A resize writes a `size` update (a whole-element `update`, as `layoutChanges`
   emits), not the plan's `scale` intent, which scales uniformly. **Parity:** 3D's `Viewport3D` already takes the
   document and emits on release. Cost if wrong: a host that wanted the store back wraps the document in its own.
+- **R-68 (2026-10-30, agent, E.6): the engine plays no timeline; a host draws the document as its shot samples it.**
+  `Canvas.Root` drops `timeline`/`onTimelineChange` for `playback` (duration, fps, loop), which bounds its clock and what
+  `useExposedClock` publishes (it now takes that span, not a `Timeline`). Deleted: `model/timeline.ts` (`sampleView`,
+  `sampleCamera`, camera keys), `engine/animate.ts`, the controller's time commands, `Canvas.Timeline`, the timeline
+  keys (space, `,` `.`, `[` `]`, `K`), the Objects panel's Animate action, the `autoKey` atom and the camera track.
+  `BASE_ANIMATABLE`/`OPACITY_PATH` move to `model/node-def.ts` for the legacy canvas stage, and `sampleDocument` is in
+  the headless entry. The end card's keys are element paths (`overrides.opacity`; the logo's `center` and `scale` about
+  its scale origin, its instance now carrying its parts' `frame` so it places as an origin and a scale); its film draws
+  `sampleDocument` at the view's clock, and its Editor story is `SceneEditor` with the shot on the Timeline panel.
+  Generators bind to the scene as drawn: per-step replay of bound motion goes, and a scene sampled anew each frame
+  restarts their runs (a cost only for long generator films, of which there are none). **Parity:** 3D had no engine
+  timeline; both dimensions key and play shots through `SceneEditor.Timeline` (decision 16). Cost if wrong: a host that
+  keys in a bare `Canvas.Root` moves to `SceneEditor`.
 
 ## Global Constraints
 
@@ -982,7 +995,8 @@ utilities.
 :test -- --no-file-parallelism` in the background).
 - [ ] Commit `react-ui-canvas: retire the View model, Intent and ViewStore`.
 - [x] Legacy drawings read only through the migration (R-61, R-62, R-63, R-64); tldraw to `Element2D`s (R-60).
-- [ ] The View model, `Intent`, `ViewStore` and timeline: blocked on C.1/C.2 (R-65).
+- [x] The engine timeline retires; the end card plays a shot (R-68).
+- [ ] The View model, `Intent`, `ViewStore`: blocked on C.2 (R-65).
 
 ---
 

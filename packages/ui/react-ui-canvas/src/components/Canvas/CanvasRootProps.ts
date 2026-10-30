@@ -26,6 +26,9 @@ import {
   type ThemeRegistry,
 } from '../../model/index.ts';
 
+/** How long the view's clock plays, at what rate, and whether it wraps. */
+export type CanvasPlayback = Pick<Timeline, 'duration' | 'fps' | 'loop'>;
+
 export type CanvasRootProps = Util.ThemedClassName<{
   /** The drawing: the engine draws the scene's layouts and writes nothing to it but through the handlers below. */
   document: Scene.SceneDocument;
@@ -126,12 +129,10 @@ export type CanvasRootProps = Util.ThemedClassName<{
    */
   exportable?: boolean;
   /**
-   * The timeline that animates the scenes, held by the host (an animator shot, plugin-animator F-2.3): a View stores
-   * none. Unset, nothing is animated.
+   * The span the view's clock plays and a frame renderer exports (an animator shot's length and rate). The host draws
+   * the document as sampled at the clock's time; unset, the clock runs unbounded.
    */
-  timeline?: Timeline;
-  /** Takes the timeline with the keys an edit or a time command made; absent, the timeline is only played. */
-  onTimelineChange?: (timeline: Timeline) => void;
+  playback?: CanvasPlayback;
   /** The generators the scene's generator nodes reference, by reference (ANIMATION.md §6.6). */
   generators?: Readonly<Record<string, GeneratorSource>>;
   /** Compiles a generator's source (`createEsbuildCompiler`); without it generator nodes draw nothing. */

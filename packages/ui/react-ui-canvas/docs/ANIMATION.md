@@ -2,6 +2,8 @@
 
 Status: phases 1 and 2 built (2026-10-15); §12 records what was built and where it differs from the design below.
 Superseded in part (2026-10-27) by plugin-animator: a View no longer holds a timeline (decisions 2 and 3, §12).
+Superseded in part (2026-10-30) by COMMON-CORE R-68: the engine plays no timeline; the host draws the document as a
+shot samples it, and keys are the scene editor's (§5.3–§5.5 and §5.8 describe the retired engine timeline).
 Phases 3 and 4 are still design. Extends `DESIGN.md` (data model §4, layers §4b, prototypes §4c). Source
 material: the data-flow sample in `packages/plugins/plugin-canvas/src/samples/molecules/` and the frame renderer
 `scripts/render-story.mjs`, built for PR dxos/dxos#13992.

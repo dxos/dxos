@@ -10,15 +10,13 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import * as Atom from 'effect/reactivity/Atom';
 import React, { type MouseEvent, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { type Timeline } from '@dxos/animation';
 import { useClock, useExposedClock } from '@dxos/react-ui-animation';
 import { DEFAULT_GRID, MAJOR_GRID_RATIO, type ViewId } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
-import { animate, createCanvasAtoms, readonlyCapabilities } from '../../engine/index.ts';
+import { createCanvasAtoms, readonlyCapabilities } from '../../engine/index.ts';
 import { type GeneratorSource } from '../../generator/index.ts';
 import {
   SceneLookContext,
@@ -52,7 +50,6 @@ import {
   defaultThemeRegistry,
   keyAction,
   neuVars,
-  nodeAnimatable,
 } from '../../model/index.ts';
 import { fitFrame, visibleView } from '../../utils/index.ts';
 import { InspectorPanel } from '../panels/index.ts';
@@ -148,8 +145,7 @@ const CanvasEngine = ({
   onBackgroundGridChange,
   frame,
   exportable,
-  timeline,
-  onTimelineChange,
+  playback,
   generators = NO_GENERATORS,
   compileGenerator,
   createGeneratorWorker,
@@ -179,40 +175,18 @@ const CanvasEngine = ({
   const path = useAtomValue(atoms.path);
   snapRef.current = () => registry.get(atoms.snap);
   const history = useCanvasHistory({ registry, atoms, store });
-  const baseProjection = useViewProjection({ store, atoms, createProjection, history });
-  history.view.projection = baseProjection;
-  // The host's timeline as an atom, so the animated projection follows it without being rebuilt.
-  const timelineAtom = useMemo(() => Atom.keepAlive(Atom.make<Timeline | undefined>(undefined)), []);
-  useLayoutEffect(() => registry.set(timelineAtom, timeline), [registry, timelineAtom, timeline]);
-  // Read when an edit is made, so a new callback does not rebuild the projection.
-  const onTimelineChangeRef = useRef(onTimelineChange);
-  onTimelineChangeRef.current = onTimelineChange;
-  const editable = onTimelineChange !== undefined;
-  // Sampled at the view's clock; an edit away from the start becomes keys (ANIMATION.md §5.3, §5.4).
-  const projection = useMemo(
-    () =>
-      animate(baseProjection, {
-        registry,
-        clock: atoms.clock,
-        timeline: timelineAtom,
-        onTimelineChange: editable ? (next) => onTimelineChangeRef.current?.(next) : undefined,
-        autoKey: () => registry.get(atoms.autoKey),
-        animatable: (node) => nodeAnimatable(nodeRegistry, node),
-      }),
-    [baseProjection, registry, atoms, nodeRegistry, timelineAtom, editable],
-  );
+  const projection = useViewProjection({ store, atoms, createProjection, history });
+  history.view.projection = projection;
   const scene = useAtomValue(projection.scene);
-  const baseScene = useAtomValue(baseProjection.scene);
   const time = useAtomValue(atoms.clock.time);
   const generated = useGeneratorFrames({
-    scene: baseScene,
-    timeline,
+    scene,
     time,
     sources: generators,
     compile: compileGenerator,
     createWorker: createGeneratorWorker,
   });
-  useClock(atoms.clock, { duration: timeline?.duration, loop: timeline?.loop });
+  useClock(atoms.clock, { duration: playback?.duration, loop: playback?.loop });
   const visible = useMemo(() => visibleView(scene), [scene]);
   const scenes = useAtomValue(store.views);
   const camera = useAtomValue(atoms.camera);
@@ -256,7 +230,7 @@ const CanvasEngine = ({
   const interactedRef = useRef(initialCamera !== undefined);
   const { minor, major, detent, snap, snapMinor, isClick, moveDelta } = useSceneSnap(grid, camera.zoom, snapEnabled);
   const fitTarget = useMemo(() => frame ?? fitFrame(scene), [frame, scene]);
-  const { fitting, enterFit, exitFit, hasCameraTrack } = useSceneView({
+  const { fitting, enterFit, exitFit } = useSceneView({
     registry,
     atoms,
     rootRef,
@@ -265,8 +239,6 @@ const CanvasEngine = ({
     path,
     camera,
     drag,
-    timeline,
-    time,
     fitTarget,
     inset,
     fitZoom,
@@ -289,9 +261,6 @@ const CanvasEngine = ({
     store,
     live: {
       projection,
-      baseProjection,
-      timeline,
-      onTimelineChange,
       nodeRegistry,
       readonly,
       grid: { major, snap },
@@ -335,37 +304,22 @@ const CanvasEngine = ({
   });
   const measured = viewport.width > 0 && viewport.height > 0;
 
-  useExposedClock(registry, atoms.clock, timeline, exportable);
+  useExposedClock(registry, atoms.clock, playback, exportable);
 
   useSceneWheel({
     rootRef,
-    registry,
-    atoms,
     interactedRef,
     exitFit,
     cancelAnimation,
     touchNavigation,
-    hasCameraTrack,
     setCamera,
   });
-
-  const timelineKeys = useMemo(
-    () => ({
-      active: timeline !== undefined,
-      togglePlay: controller.time.togglePlay,
-      step: controller.time.step,
-      jumpKey: controller.time.jumpKey,
-      addKey: controller.time.addKey,
-      removeKey: controller.time.removeKey,
-    }),
-    [timeline, controller],
-  );
 
   const objectActions = useObjectActions({
     registry,
     atoms,
     store,
-    baseProjection,
+    projection,
     commit: history.commit,
     select,
     navigation,
@@ -491,7 +445,6 @@ const CanvasEngine = ({
     removeVertex,
     deleteVertex,
     setTool,
-    timeline: timelineKeys,
     editNode,
     exitEdit,
   });
@@ -564,10 +517,7 @@ const CanvasEngine = ({
   useNodeDrop({ rootRef, capabilities, nodeRegistry, cell, toScene, snapMinor, setDrag, cancelDrag, onPointerUp });
 
   // Once per atoms, so the providers' values hold still while the root re-renders.
-  const timeAtoms = useMemo(
-    () => ({ time: atoms.clock.time, playing: atoms.clock.playing, autoKey: atoms.autoKey }),
-    [atoms],
-  );
+  const timeAtoms = useMemo(() => ({ time: atoms.clock.time, playing: atoms.clock.playing }), [atoms]);
   const editingAtoms = useMemo(
     () => ({ editing: atoms.editing, active: atoms.active, clipboard: atoms.clipboard }),
     [atoms],
@@ -583,7 +533,6 @@ const CanvasEngine = ({
       store={store}
       root={root}
       projection={projection}
-      baseProjection={baseProjection}
       capabilities={capabilities}
       readonly={readonly}
       transparent={transparent}
@@ -592,8 +541,6 @@ const CanvasEngine = ({
       linkRegistry={linkRegistry}
       grid={grid}
       fitting={fitting}
-      timeline={timelineAtom}
-      onTimelineChange={onTimelineChange}
       document={documentCommands}
       objectActions={objectActions}
     >
@@ -606,7 +553,7 @@ const CanvasEngine = ({
         setTheme={controller.look.setTheme}
         setBackgroundGrid={onBackgroundGridChange && controller.look.setBackgroundGrid}
       >
-        <CanvasTimeProvider atoms={timeAtoms} commands={controller.time} timeline={timelineAtom} generated={generated}>
+        <CanvasTimeProvider atoms={timeAtoms} generated={generated}>
           <CanvasEditingProvider atoms={editingAtoms} commands={controller.editing}>
             <CanvasGestureProvider
               displayScene={displayScene}

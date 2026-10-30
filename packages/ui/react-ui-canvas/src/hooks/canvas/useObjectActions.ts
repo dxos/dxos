@@ -37,7 +37,7 @@ export type UseObjectActionsOptions = {
   registry: ReturnType<typeof useRegistry>;
   atoms: CanvasAtoms;
   store: ViewStore;
-  baseProjection: Projection;
+  projection: Projection;
   /** Runs each action as one undo step. */
   commit: CanvasHistory['commit'];
   select: (ids: Iterable<ElementId>) => void;
@@ -50,7 +50,7 @@ export const useObjectActions = ({
   registry,
   atoms,
   store,
-  baseProjection,
+  projection,
   commit: commitStep,
   select,
   navigation,
@@ -65,13 +65,13 @@ export const useObjectActions = ({
       commitStep(() => {
         registry.set(store.views, { ...registry.get(store.views), ...scenes });
         if (intents.length > 0) {
-          baseProjection.apply({ kind: 'batch', intents });
+          projection.apply({ kind: 'batch', intents });
         }
       });
     return {
       /** Points an instance at a copy of its composite, so editing one no longer edits the other. */
       makeUnique: (id: NodeId) => {
-        const current = registry.get(baseProjection.scene);
+        const current = registry.get(projection.scene);
         const instance = current.nodes[id];
         const composite =
           instance && isInstanceNode(instance) ? registry.get(store.views)[instance.composite] : undefined;
@@ -115,7 +115,7 @@ export const useObjectActions = ({
           width: content.width,
           height: content.height,
         };
-        const current = registry.get(baseProjection.scene);
+        const current = registry.get(projection.scene);
         const instance: InstanceNode = {
           type: 'instance',
           id: createId('instance'),
@@ -129,7 +129,7 @@ export const useObjectActions = ({
         if (isAnonymous(definition)) {
           commit({ [composite]: promoted(definition) }, [{ kind: 'create', node: instance }]);
         } else {
-          baseProjection.apply({ kind: 'create', node: instance });
+          projection.apply({ kind: 'create', node: instance });
         }
         select([instance.id]);
       },
@@ -155,5 +155,5 @@ export const useObjectActions = ({
         commitStep(() => registry.set(store.views, next));
       },
     };
-  }, [registry, atoms, store, baseProjection, commitStep, select, navigation]);
+  }, [registry, atoms, store, projection, commitStep, select, navigation]);
 };

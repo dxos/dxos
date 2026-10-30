@@ -12,12 +12,10 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useMemo } from 'react';
 
-import { keyTimes, timelineFps } from '@dxos/animation';
-import { TimelineBar } from '@dxos/react-ui-animation';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { FLOATING_BAR, NOMINAL_ZOOM } from '../../utils/index.ts';
+import { NOMINAL_ZOOM } from '../../utils/index.ts';
 import { DisplayPanel, ToolsPanel } from '../panels/index.ts';
 import {
   ActionToolbar,
@@ -34,7 +32,6 @@ import {
   useCanvasNavigation,
   useCanvasSelection,
   useCanvasServices,
-  useCanvasTime,
   useCanvasTools,
 } from './CanvasContext.ts';
 import { OBJECTS_CRUMB, ZOOM_STEP } from './constants.ts';
@@ -222,50 +219,3 @@ export const CanvasTools = ({ classNames = 'absolute top-14 bottom-14 left-2' }:
 };
 
 CanvasTools.displayName = 'Canvas.Tools';
-
-//
-// Timeline
-//
-
-export type CanvasTimelineProps = CanvasBarProps;
-
-/**
- * The collapsed timeline bar (ANIMATION.md §5.8), over the bottom of the canvas: shown while the scene has a timeline
- * (the Objects panel's Animate action gives it one).
- */
-export const CanvasTimeline = ({ classNames = 'bottom-14 left-1/2 -translate-x-1/2' }: CanvasTimelineProps) => {
-  const { readonly, capabilities } = useCanvasDocument('Canvas.Timeline');
-  const { atoms, commands, timeline: timelineAtom } = useCanvasTime('Canvas.Timeline');
-  const selectionAspect = useCanvasSelection('Canvas.Timeline');
-  const timeline = useAtomValue(timelineAtom);
-  const time = useAtomValue(atoms.time);
-  const playing = useAtomValue(atoms.playing);
-  const autoKey = useAtomValue(atoms.autoKey);
-  const selection = useAtomValue(selectionAspect.atoms.selection);
-  const keys = useMemo(() => keyTimes(timeline, selection), [timeline, selection]);
-  if (!timeline) {
-    return null;
-  }
-  return (
-    <div className={mx(barFrame, 'max-w-[calc(100%-2rem)]', classNames)}>
-      <TimelineBar
-        classNames={FLOATING_BAR}
-        time={time}
-        duration={timeline.duration}
-        playing={playing}
-        fps={timelineFps(timeline)}
-        keys={keys}
-        autoKey={autoKey}
-        readonly={readonly || !capabilities.update}
-        onPlayingChange={commands.setPlaying}
-        onTimeChange={commands.seek}
-        onAutoKeyChange={commands.setAutoKey}
-        onMoveKey={readonly || !capabilities.update ? undefined : commands.moveKey}
-        onAddKey={selection.size > 0 ? commands.addKey : undefined}
-        onRemoveKey={selection.size > 0 ? commands.removeKey : undefined}
-      />
-    </div>
-  );
-};
-
-CanvasTimeline.displayName = 'Canvas.Timeline';

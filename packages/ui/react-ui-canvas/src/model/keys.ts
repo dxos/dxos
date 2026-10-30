@@ -39,13 +39,7 @@ export type KeyAction =
   | 'ungroup'
   | 'snap'
   | 'guides'
-  | 'debug'
-  | 'play'
-  | 'stepBack'
-  | 'stepForward'
-  | 'previousKey'
-  | 'nextKey'
-  | 'addKey';
+  | 'debug';
 
 /** Every action's chords; the first is the one shown in labels. */
 export const KEY_BINDINGS: Record<KeyAction, KeyBinding[]> = {
@@ -70,13 +64,6 @@ export const KEY_BINDINGS: Record<KeyAction, KeyBinding[]> = {
   snap: [{ key: 'g', shift: false }],
   guides: [{ key: ';' }],
   debug: [{ key: 'd' }],
-  // The timeline's (ANIMATION.md §5.8); the view hands them on to the tools while the scene has no timeline.
-  play: [{ key: ' ' }],
-  stepBack: [{ key: ',' }],
-  stepForward: [{ key: '.' }],
-  previousKey: [{ key: '[' }, { key: 'ArrowLeft', meta: true }],
-  nextKey: [{ key: ']' }, { key: 'ArrowRight', meta: true }],
-  addKey: [{ key: 'k', shift: false }],
 };
 
 /** The subset of a keyboard event the bindings read, so tests and non-React callers can pass a literal. */

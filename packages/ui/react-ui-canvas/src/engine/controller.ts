@@ -6,17 +6,6 @@ import type * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import {
-  type Timeline,
-  clampTime,
-  createTimeline,
-  getPath,
-  keyTimes,
-  moveKeys,
-  removeKey as removeTimelineKey,
-  setKey,
-  timelineFps,
-} from '@dxos/animation';
-import {
   type Bounds,
   type ElementId,
   type Node,
@@ -35,13 +24,11 @@ import {
   type Capabilities,
   type Intent,
   type NodeRegistry,
-  OPACITY_PATH,
   type Tool,
   type View,
   type ViewMap,
   type ViewStore,
   getElement,
-  nodeAnimatable,
   nodeDef,
   pruneOrphaned,
   storeVersions,
@@ -114,13 +101,7 @@ export type CanvasControllerOptions = {
   store: ViewStore;
   /** The open View's projection, read when a command runs: it changes as the View changes. */
   projection: () => Projection;
-  /** The projection under the animated one. */
-  baseProjection: () => Projection;
-  /** The host's timeline, which animates the scenes; none, the time commands have nothing to key. */
-  timeline?: () => Timeline | undefined;
-  /** Takes the timeline with keys added, moved or removed; absent, the timeline cannot be edited here. */
-  onTimelineChange?: () => ((timeline: Timeline) => void) | undefined;
-  /** What each node type animates, for keying the selection. */
+  /** The node types, for how a portal opens. */
   nodeRegistry: () => NodeRegistry;
   /** Read when a command runs: the host may toggle it. */
   readonly: () => boolean;
@@ -243,26 +224,6 @@ export type ToolsCommands = {
   toggleDebug: () => void;
 };
 
-/** The clock and keyframing (DESIGN.md §13.1, the Time aspect). */
-export type TimeCommands = {
-  /** Pauses and moves the playhead, kept within the timeline. */
-  seek: (t: number) => void;
-  /** Plays from the start when stopped at the end. */
-  togglePlay: () => void;
-  setPlaying: (playing: boolean) => void;
-  setAutoKey: (autoKey: boolean) => void;
-  /** Moves the playhead by whole frames. */
-  step: (frames: number) => void;
-  /** Moves the playhead to the selection's next (1) or previous (-1) key, or to the end (or start) when there is none. */
-  jumpKey: (direction: 1 | -1) => void;
-  /** Keys the selected nodes' animatable properties at the playhead, as they are drawn there. */
-  addKey: () => void;
-  /** Removes the selected nodes' keys at the playhead, on every one of their tracks. */
-  removeKey: () => void;
-  /** Moves the selected nodes' keys at `from` to `to`, and the playhead with them. */
-  moveKey: (from: number, to: number) => void;
-};
-
 /**
  * The canvas's commands, organised by aspect. Each reads the state it needs from the registry when it runs, so the
  * controller is created once per canvas and its identity never changes with the state (DESIGN.md §13).
@@ -274,7 +235,6 @@ export type CanvasController = {
   selection: SelectionCommands;
   editing: EditingCommands;
   tools: ToolsCommands;
-  time: TimeCommands;
 };
 
 export const createCanvasController = ({
@@ -282,9 +242,6 @@ export const createCanvasController = ({
   atoms,
   store,
   projection,
-  baseProjection,
-  timeline: hostTimeline = () => undefined,
-  onTimelineChange = () => undefined,
   nodeRegistry,
   readonly,
   grid,
@@ -300,7 +257,7 @@ export const createCanvasController = ({
   const unrecorded = createCommitter(
     {
       store: storeVersions(registry, store),
-      model: () => baseProjection().model,
+      model: () => projection().model,
       context: () => ({ path: [], selection: [] }),
     },
     () => {},
@@ -362,7 +319,7 @@ export const createCanvasController = ({
       if (!capabilities().create || !capabilities().delete) {
         return undefined;
       }
-      const base = baseProjection();
+      const base = projection();
       const current = registry.get(base.scene);
       const instanceId = newId('instance');
       const composition = composeSelection(current, registry.get(atoms.selection), {
@@ -388,7 +345,7 @@ export const createCanvasController = ({
       if (!capabilities().create || !capabilities().delete) {
         return [];
       }
-      const base = baseProjection();
+      const base = projection();
       const views = registry.get(store.views);
       // Each Instance is exploded into the scene the ones before it left, so their new nodes stack in order.
       let scene = registry.get(base.scene);
@@ -487,91 +444,6 @@ export const createCanvasController = ({
     toggleGuides: toggle(atoms.guides),
     toggleAxes: toggle(atoms.axes),
     toggleDebug: toggle(atoms.debug),
-  };
-
-  const timeline = hostTimeline;
-  const setTimeline = (next: Timeline) => onTimelineChange()?.(next);
-  const seek = (t: number) => {
-    registry.set(atoms.clock.playing, false);
-    registry.set(atoms.clock.time, clampTime(timeline(), t));
-  };
-  const time: TimeCommands = {
-    seek,
-    togglePlay: () => {
-      const playing = registry.get(atoms.clock.playing);
-      if (!playing && registry.get(atoms.clock.time) >= (timeline()?.duration ?? 0)) {
-        registry.set(atoms.clock.time, 0);
-      }
-      registry.set(atoms.clock.playing, !playing);
-    },
-    setPlaying: (playing) => registry.set(atoms.clock.playing, playing),
-    setAutoKey: (autoKey) => registry.set(atoms.autoKey, autoKey),
-    step: (frames) => {
-      const fps = timelineFps(timeline());
-      seek(Math.round((registry.get(atoms.clock.time) + frames / fps) * fps) / fps);
-    },
-    jumpKey: (direction) => {
-      const now = registry.get(atoms.clock.time);
-      const times = keyTimes(timeline(), registry.get(atoms.selection));
-      // No key that way: the end (or the start), so the jump always goes somewhere.
-      const target =
-        (direction > 0 ? times.find((t) => t > now + 1e-6) : times.findLast((t) => t < now - 1e-6)) ??
-        (direction > 0 ? (timeline()?.duration ?? now) : 0);
-      seek(target);
-    },
-    addKey: () => {
-      const shown = currentScene();
-      const t = registry.get(atoms.clock.time);
-      const styles = store.styles ? registry.get(store.styles) : undefined;
-      let next = timeline() ?? createTimeline();
-      for (const id of registry.get(atoms.selection)) {
-        const node = shown.nodes[id];
-        if (!node) {
-          continue;
-        }
-        // As drawn: a class's opacity is the node's until it sets its own.
-        const drawn = classedNode(node, styles);
-        for (const property of Object.keys(nodeAnimatable(nodeRegistry(), node))) {
-          const value = getPath(drawn, property) ?? (property === OPACITY_PATH ? 1 : undefined);
-          if (value !== undefined) {
-            next = setKey(next, id, property, { t, value });
-          }
-        }
-      }
-      setTimeline(next);
-    },
-    moveKey: (from, to) => {
-      const current = timeline();
-      const target = clampTime(current, to);
-      if (!current || Math.abs(target - from) < 1e-6) {
-        return;
-      }
-      const next = moveKeys(current, registry.get(atoms.selection), from, target, 0.5 / timelineFps(current));
-      if (next !== current) {
-        setTimeline(next);
-      }
-      seek(target);
-    },
-    removeKey: () => {
-      const current = timeline();
-      if (!current) {
-        return;
-      }
-      const t = registry.get(atoms.clock.time);
-      const ids = registry.get(atoms.selection);
-      const tolerance = 0.5 / timelineFps(current);
-      let next = current;
-      for (const track of Object.values(current.tracks)) {
-        if (ids.has(track.target)) {
-          for (const key of track.keys.filter((key) => Math.abs(key.t - t) < tolerance)) {
-            next = removeTimelineKey(next, track.target, track.property, key.t);
-          }
-        }
-      }
-      if (next !== current) {
-        setTimeline(next);
-      }
-    },
   };
 
   const setCamera = (next: Camera) => registry.set(atoms.camera, next);
@@ -877,5 +749,5 @@ export const createCanvasController = ({
     },
   };
 
-  return { document, navigation, look, selection, editing, tools, time };
+  return { document, navigation, look, selection, editing, tools };
 };
