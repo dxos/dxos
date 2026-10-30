@@ -7,6 +7,8 @@ import { type EditorState, type Extension, type Range, StateField } from '@codem
 import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
 import Mermaid, { type MermaidConfig } from 'mermaid';
 
+import { type DiagramCache, createDiagramCache } from './diagram-cache.ts';
+
 export type MermaidOptions = Pick<MermaidConfig, 'theme' | 'themeVariables' | 'themeCSS'>;
 
 /**
@@ -34,6 +36,34 @@ const createConfig = (options: MermaidOptions, dark: boolean): MermaidConfig => 
   ...options,
 });
 
+// Built once: every `EditorView.theme` call mints a new stylesheet, which restyles the whole document.
+const mermaidTheme = EditorView.theme({
+  '& .cm-mermaid': {
+    position: 'relative',
+    display: 'flex',
+    width: '100%',
+    margin: '4px 0',
+    // The top band holds the label, so it never lies over the diagram's own top-right corner.
+    padding: '28px 16px 16px',
+    justifyContent: 'center',
+    backgroundColor: 'var(--color-group-surface)',
+    borderRadius: '8px',
+  },
+  '& .cm-mermaid-label': {
+    position: 'absolute',
+    top: '6px',
+    right: '16px',
+    fontSize: '0.75rem',
+    lineHeight: '1rem',
+    fontFamily: 'unset',
+    color: 'var(--color-fg-subtle)',
+  },
+  '& .cm-mermaid-error': {
+    display: 'block',
+    color: 'var(--color-error)',
+  },
+});
+
 /**
  * Extension to create mermaid diagrams.
  *
@@ -42,10 +72,16 @@ const createConfig = (options: MermaidOptions, dark: boolean): MermaidConfig => 
  * `@dxos/ui-editor`'s markdown bundle rather than here: `codeLanguages` is read once when the
  * markdown parser is built, so an extension contributed afterwards cannot add a fenced-code language.
  */
-export const mermaid = (options: MermaidOptions = {}): Extension => {
+export const mermaid = ({
+  cache = createDiagramCache(),
+  ...options
+}: MermaidOptions & { cache?: DiagramCache } = {}): Extension => {
   // One config per colour mode, built once: the widget's identity includes its config, so a fresh
   // object per rebuild would replace (and re-render) every diagram on each selection change.
-  const configs = { light: createConfig(options, false), dark: createConfig(options, true) };
+  const configs = {
+    light: withKey(createConfig(options, false)),
+    dark: withKey(createConfig(options, true)),
+  };
 
   /**
    * Each mermaid block the cursor is outside of, replaced by its rendered diagram: a block widget over the block's
@@ -77,7 +113,7 @@ export const mermaid = (options: MermaidOptions = {}): Extension => {
             .map((line) => line.trim())
             .find((line) => line.length > 0 && !line.startsWith('%%'))
             ?.split(/\s/)[0] ?? '';
-        const widget = new MermaidWidget(`mermaid-${node.from}`, content, config, label);
+        const widget = new MermaidWidget(cache, content, config.config, `${config.key}\n${content}`, label);
         const from = state.doc.lineAt(node.from).from;
         const to = state.doc.lineAt(node.to).to;
         decorations.push(Decoration.replace({ widget, block: true }).range(from, to));
@@ -102,44 +138,26 @@ export const mermaid = (options: MermaidOptions = {}): Extension => {
       },
       provide: (field) => EditorView.decorations.from(field),
     }),
-    EditorView.theme({
-      '& .cm-mermaid': {
-        position: 'relative',
-        display: 'flex',
-        width: '100%',
-        margin: '4px 0',
-        // The top band holds the label, so it never lies over the diagram's own top-right corner.
-        padding: '28px 16px 16px',
-        justifyContent: 'center',
-        backgroundColor: 'var(--color-group-surface)',
-        borderRadius: '8px',
-      },
-      '& .cm-mermaid-label': {
-        position: 'absolute',
-        top: '6px',
-        right: '16px',
-        fontSize: '0.75rem',
-        lineHeight: '1rem',
-        fontFamily: 'unset',
-        color: 'var(--color-fg-subtle)',
-      },
-      '& .cm-mermaid-error': {
-        display: 'block',
-        color: 'var(--color-error)',
-      },
-    }),
+    mermaidTheme,
   ];
 };
 
-class MermaidWidget extends WidgetType {
-  _svg: string | undefined;
-  _error: string | undefined;
+/** A config with the key its diagrams are cached under. */
+const withKey = (config: MermaidConfig) => ({ config, key: JSON.stringify(config) });
 
-  // TODO(burdon): Mermaid API requires unique id.
+/** What a diagram not yet rendered this session reserves, so the text below it moves less when it arrives. */
+const DIAGRAM_PLACEHOLDER = 240;
+
+/** Mermaid removes the element with a render's id before rendering, so no two renders, cached or not, share one. */
+let renders = 0;
+
+class MermaidWidget extends WidgetType {
   constructor(
-    private readonly _id: string,
+    private readonly _cache: DiagramCache,
     private readonly _source: string,
     private readonly _config: MermaidConfig,
+    /** The config and source, which together decide what the diagram renders as. */
+    private readonly _key: string,
     private readonly _label?: string,
   ) {
     super();
@@ -147,7 +165,11 @@ class MermaidWidget extends WidgetType {
 
   // The config too: a widget kept across a colour-mode switch would keep the old theme's SVG.
   override eq(other: this) {
-    return this._source === other._source && this._config === other._config;
+    return this._key === other._key;
+  }
+
+  override get estimatedHeight() {
+    return DIAGRAM_PLACEHOLDER;
   }
 
   override ignoreEvent(ev: Event) {
@@ -158,47 +180,47 @@ class MermaidWidget extends WidgetType {
     const div = document.createElement('div');
     div.className = 'cm-mermaid';
 
+    const svg = this._cache.get(this._key);
+    if (svg !== undefined) {
+      this.fill(div, view, svg);
+      return div;
+    }
+    div.style.minHeight = `${DIAGRAM_PLACEHOLDER}px`;
+
     setTimeout(async () => {
       // https://github.com/mermaid-js/mermaid/blob/master/packages/mermaid/src/config.type.ts
       // Global, so it is applied per render; the diagram-type style files list the selectors:
       // https://github.com/mermaid-js/mermaid/blob/master/packages/mermaid/src/diagrams/flowchart/styles.ts
       Mermaid.initialize(this._config);
-
-      // TODO(burdon): Cache?
-      const svg = await this.render(div);
-      if (this._error) {
-        div.className = 'cm-mermaid-error';
-        div.innerText = this._error;
-      } else {
-        div.className = 'cm-mermaid';
-        div.innerHTML = svg!;
-
-        if (this._label) {
-          const label = document.createElement('span');
-          label.innerText = this._label;
-          label.className = 'cm-mermaid-label';
-          div.appendChild(label);
-          view.requestMeasure();
-        }
+      try {
+        // https://github.com/mermaid-js/mermaid
+        await Mermaid.parse(this._source);
+        const { svg } = await Mermaid.render(`mermaid-${++renders}`, this._source);
+        this._cache.set(this._key, svg);
+        this.fill(div, view, svg);
+      } catch (err) {
+        this.fill(div, view, undefined, String(err));
       }
     });
 
     return div;
   }
 
-  async render(_container: Element): Promise<string | undefined> {
-    try {
-      // https://github.com/mermaid-js/mermaid
-      const valid = await Mermaid.parse(this._source);
-      if (valid) {
-        const result = await Mermaid.render(this._id, this._source);
-        this._error = undefined;
-        this._svg = result.svg;
-        return result.svg;
+  private fill(div: HTMLElement, view: EditorView, svg: string | undefined, error?: string) {
+    div.style.minHeight = '';
+    if (svg === undefined) {
+      div.className = 'cm-mermaid-error';
+      div.innerText = error ?? '';
+    } else {
+      div.className = 'cm-mermaid';
+      div.innerHTML = svg;
+      if (this._label) {
+        const label = document.createElement('span');
+        label.innerText = this._label;
+        label.className = 'cm-mermaid-label';
+        div.appendChild(label);
       }
-    } catch (err: any) {
-      this._error = String(err);
-      this._svg = undefined;
     }
+    view.requestMeasure();
   }
 }

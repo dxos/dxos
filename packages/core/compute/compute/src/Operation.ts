@@ -479,6 +479,9 @@ export interface DurableDefinition<_Input, _Output, _Requirements = never, _Rpcs
   /** Schemas to register with the process's database; see {@link DurableProps.types}. */
   readonly types?: readonly Type.AnyEntity[];
 
+  /** See {@link DurableProps.resumable}. */
+  readonly resumable?: boolean;
+
   // Runtime RPC group, stored as `any`. `RpcGroup`/`RpcClient` are invariant in their type
   // argument (and `DurableHandler.rpcHandlers` is contravariant in it), so referencing `_Rpcs` in the
   // structural fields would block `Durable<…, never>` from being assignable to `Durable.Any`.
@@ -594,6 +597,12 @@ export interface DurableProps {
    * rather than a missing schema.
    */
   readonly types?: readonly Type.AnyEntity[];
+
+  /**
+   * False when a process interrupted by a restart could only fail on resuming. Such a process is kept in
+   * memory rather than persisted, unless a persisted parent waits on it. Defaults to true.
+   */
+  readonly resumable?: boolean;
 }
 
 /**

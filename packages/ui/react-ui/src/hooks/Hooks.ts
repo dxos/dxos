@@ -50,6 +50,7 @@ export {
 export { useTranslation } from '../providers/ThemeProvider/TranslationsContext.ts';
 export * from './theme.ts';
 export * from '../util/animation.ts';
+export * from '../util/height-memory.ts';
 export * from '../util/usePx.ts';
 export * from './usePositioning.ts';
 export * from './useSafeArea.ts';
