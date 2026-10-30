@@ -1164,7 +1164,8 @@ const DxEntryAliasPlugin = (cwd: string, entries: string | Record<string, string
     name: 'dx-entry-alias',
     generateBundle(_, bundle) {
       for (const chunk of Object.values(bundle)) {
-        const name = chunk.type === 'chunk' && chunk.isEntry && chunk.facadeModuleId && byModule.get(chunk.facadeModuleId);
+        const name =
+          chunk.type === 'chunk' && chunk.isEntry && chunk.facadeModuleId && byModule.get(chunk.facadeModuleId);
         if (!name || chunk.type !== 'chunk') {
           continue;
         }
@@ -1414,7 +1415,10 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
         },
         output: {
           ...(injectGlobals ? { banner: "import '@dxos/node-std/globals';" } : {}),
-          ...(process.env.DX_PRESERVE_MODULES ? { preserveModules: true, preserveModulesRoot: 'src' } : {}),
+          // One module per source file, so a consumer's bundler can drop the files it never uses under the package's
+          // `"sideEffects": false`; a single bundled file is kept whole as soon as one export is imported.
+          preserveModules: true,
+          preserveModulesRoot: 'src',
           chunkFileNames: 'chunk-[name].mjs',
           // Keep emitted assets adjacent to the entry chunks so consumers' bundlers
           // can resolve them via the same relative path the JS already references.
@@ -1439,7 +1443,7 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
       ...(bundle.length > 0 ? [DxHoistRequirePlugin()] : []),
       ...(declarations ? [DxDeclarationsPlugin()] : []),
       ...(hasDxConfigEntry ? [dxConfigPlugin(process.cwd())] : []),
-      ...(process.env.DX_PRESERVE_MODULES ? [DxEntryAliasPlugin(process.cwd(), resolvedEntry)] : []),
+      DxEntryAliasPlugin(process.cwd(), resolvedEntry),
     ],
     ...(test ? { test: buildTestConfig(process.cwd(), test, jsx) } : {}),
   });
