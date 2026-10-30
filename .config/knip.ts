@@ -432,6 +432,7 @@ const BUNDLER_RESOLVED: Record<string, string[]> = {
   'packages/apps/composer-app': [
     '@dxos/app-graph',
     '@dxos/echo',
+    '@dxos/echo-doc',
     '@dxos/echo-react',
     '@dxos/graph',
     '@dxos/react-ui-attention',

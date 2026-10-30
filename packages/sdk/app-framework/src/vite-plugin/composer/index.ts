@@ -10,9 +10,11 @@ import { Plugin, PluginManifest } from '../../core/index.ts';
 import { findDxConfigFile, loadDxConfig } from '../load.ts';
 import { type BuildMeta, ENTRY_FILENAME, MANIFEST_ASSET_NAME, serializeManifest, toBuildMeta } from '../manifest.ts';
 import { DEFAULT_PACKAGES, isSharedPackage } from '../packages.ts';
-import { moduleBodyAttributePlugin, pluginConfigPlugin } from '../plugin-config/index.ts';
+import { type LibraryModule, moduleBodyAttributePlugin, pluginConfigPlugin } from '../plugin-config/index.ts';
+import { type VendorSpecifier, buildVendor } from './vendor.ts';
 
 export { ENTRY_FILENAME, MANIFEST_ASSET_NAME, serializeManifest };
+export type { VendorSpecifier } from './vendor.ts';
 export type { BuildMeta };
 
 const JSX_DEV_RUNTIME = 'react/jsx-dev-runtime';
@@ -127,6 +129,12 @@ export type ComposerPluginOptions = {
    * always written as {@link ENTRY_FILENAME} (`index.mjs`).
    */
   meta?: BuildMeta;
+  /**
+   * Writes `vendor/`: a `workerd` build of every package the bundle keeps external, which EDGE loads the bundle
+   * against since Cloudflare has no import map. Defaults to `true`; `extra` adds packages the plugin does not import,
+   * such as the EDGE plugin host, resolved from their `importers`.
+   */
+  vendor?: boolean | { extra?: readonly VendorSpecifier[] };
 };
 
 /**
@@ -173,6 +181,7 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
   const getMeta = () => (metaPromise ??= loadMeta(process.cwd()));
   const resolved = new Set<string>();
   let base = '/';
+  let libraryModules: readonly LibraryModule[] = [];
 
   const plugins: VitePlugin[] = [
     // Configure vite for library-mode builds with externalized deps.
@@ -200,7 +209,9 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
           rolldownOptions: {
             external: (id: string) => isExternal(id),
             output: {
-              chunkFileNames: 'chunks/[name]-[hash].js',
+              // Flat at the bundle root: on EDGE a bare import resolves against the importing file's directory, so the
+              // loader rewrites each one to `vendor/`, which is simplest when every plugin file sits beside the manifest.
+              chunkFileNames: '[name]-[hash].mjs',
               assetFileNames: 'assets/[name]-[hash][extname]',
               // Install the CJS require shim at the top of plugin.mjs so transitively
               // bundled CJS helpers (that call `require('react')` et al. at runtime) can
@@ -346,10 +357,23 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
       const assets = Object.keys(bundle)
         .filter((name) => name !== MANIFEST_ASSET_NAME && !name.endsWith('.map'))
         .sort();
+      // The chunk each module body was emitted as, so the manifest names files in this bundle.
+      const chunkOf = (file: string | undefined) => {
+        const chunk = Object.values(bundle).find(
+          (output) =>
+            output.type === 'chunk' && (output.facadeModuleId === file || output.moduleIds.includes(file ?? '')),
+        );
+        return chunk ? `./${chunk.fileName}` : undefined;
+      };
+      const modules = libraryModules.map(({ bodyFile, adapterFile, ...module }) => ({
+        ...module,
+        url: chunkOf(bodyFile) ?? module.url,
+        ...(module.adapter ? { adapter: { ...module.adapter, url: chunkOf(adapterFile) ?? module.adapter.url } } : {}),
+      }));
       this.emitFile({
         type: 'asset',
         fileName: MANIFEST_ASSET_NAME,
-        source: serializeManifest(meta, { assets }),
+        source: serializeManifest(meta, { assets, ...(modules.length > 0 ? { modules } : {}) }),
       });
     },
   });
@@ -389,9 +413,58 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
     },
   });
 
+  const vendor = options?.vendor ?? true;
+  if (vendor !== false) {
+    let root = process.cwd();
+    let outDir = 'dist';
+    // Each external, with the source modules that import it: a transitive package resolves from them, not from the root.
+    const externals = new Map<string, Set<string>>();
+    plugins.push({
+      name: 'composer-plugin:vendor',
+      apply: 'build',
+      enforce: 'post',
+      configResolved: (config) => {
+        root = config.root;
+        outDir = config.build.outDir;
+      },
+      generateBundle(_options, bundle) {
+        const emitted = new Set(Object.keys(bundle));
+        for (const output of Object.values(bundle)) {
+          if (output.type === 'chunk') {
+            for (const id of [...output.imports, ...output.dynamicImports]) {
+              if (!emitted.has(id) && isExternal(id)) {
+                const importers = externals.get(id) ?? new Set<string>();
+                output.moduleIds
+                  .filter((moduleId) => moduleId.startsWith('/'))
+                  .forEach((moduleId) => importers.add(moduleId));
+                externals.set(id, importers);
+              }
+            }
+          }
+        }
+      },
+      async closeBundle() {
+        const extra = vendor === true ? [] : (vendor.extra ?? []);
+        await buildVendor({
+          root,
+          outDir: join(root, outDir, 'vendor'),
+          specifiers: [
+            ...[...externals]
+              .filter(([specifier]) => !extra.some((entry) => entry.specifier === specifier))
+              .map(([specifier, importers]) => ({ specifier, importers: [...importers] })),
+            ...extra,
+          ],
+        });
+      },
+    });
+  }
+
   if (definesPlugin) {
     // Emits the config as a manifest whose bodies are code-split chunks of the bundle.
-    plugins.push(pluginConfigPlugin(), moduleBodyAttributePlugin());
+    plugins.push(
+      pluginConfigPlugin({ onLibraryManifest: ({ modules }) => (libraryModules = modules) }),
+      moduleBodyAttributePlugin(),
+    );
   }
   return plugins;
 };

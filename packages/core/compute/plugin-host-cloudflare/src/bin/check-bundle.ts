@@ -7,41 +7,67 @@
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 
-import { importInWorkerd } from '../bundle/import-bundle.ts';
+import { loadBundle } from '../bundle/load-bundle.ts';
 import * as PluginBundle from '../bundle/PluginBundle.ts';
 
 /**
  * Checks a built plugin bundle before it is published: the manifest, that every module parses and its imports resolve
- * inside the bundle, that every bare import is vendored, that no workerd module reaches a stylesheet or a browser-only
- * body, and that the workerd modules import in workerd once their imports are rewritten to `vendor/`.
+ * inside the bundle, that every bare import is vendored, and that no workerd module reaches a stylesheet or a
+ * browser-only body. Then it loads the bundle in workerd as EDGE does, imports each workerd module, and, when `vendor/`
+ * carries the host, calls `describe()` and fails on an activation failure or a plugin that contributes nothing.
  *
- * Usage: `check-bundle <dir> [--no-import]`.
+ * Usage: `check-bundle <dir> [--dependency <dir>]... [--no-load]`.
  */
 const main = async () => {
   const { values, positionals } = parseArgs({
     allowPositionals: true,
-    options: { 'no-import': { type: 'boolean' } },
+    options: { 'dependency': { type: 'string', multiple: true }, 'no-load': { type: 'boolean' } },
   });
   if (positionals.length !== 1) {
-    console.error('Usage: check-bundle <dir> [--no-import]');
+    console.error('Usage: check-bundle <dir> [--dependency <dir>]... [--no-load]');
     process.exit(2);
   }
   const dir = resolve(positionals[0]);
   const files = await PluginBundle.readBundle(dir);
   const { problems, roots, vendor } = PluginBundle.check(files);
-  const failures =
-    problems.length === 0 && !values['no-import']
-      ? await importInWorkerd(files, vendor ?? { specifiers: {} }, roots)
-      : [];
-
-  const all = [...problems, ...failures.map(({ path, message }) => ({ path, message: `does not import: ${message}` }))];
-  if (all.length > 0) {
+  const fail = (messages: readonly { path: string; message: string }[]) => {
     console.error(`✗ ${dir}`);
-    all.forEach(({ path, message }) => console.error(`  - ${path}: ${message}`));
+    messages.forEach(({ path, message }) => console.error(`  - ${path}: ${message}`));
     process.exit(1);
+  };
+  if (problems.length > 0) {
+    fail(problems);
   }
-  const imported = values['no-import'] ? '' : `, ${roots.length} workerd modules imported`;
-  console.log(`✓ ${dir} (${Object.keys(files).length} files${imported})`);
+  if (values['no-load']) {
+    console.log(`✓ ${dir} (${Object.keys(files).length} files)`);
+    return;
+  }
+
+  const dependencies = await Promise.all(
+    (values.dependency ?? []).map((dependency) => PluginBundle.readBundle(resolve(dependency))),
+  );
+  await using bundle = await loadBundle(files, { dependencies });
+  const failures = await bundle.importModules(roots);
+  if (failures.length > 0) {
+    fail(failures.map(({ path, message }) => ({ path, message: `does not import: ${message}` })));
+  }
+  if (!vendor?.specifiers[PluginBundle.HOST_SPECIFIER]) {
+    console.log(`✓ ${dir} (${roots.length} workerd modules imported; no vendored host, so describe() was not run)`);
+    return;
+  }
+  const catalog = await bundle.describe();
+  const contributions = catalog.operations.length + catalog.skills.length + catalog.types.length;
+  const activation = [
+    ...catalog.failures.map(({ id, phase, message }) => ({ path: id, message: `failed to ${phase}: ${message}` })),
+    ...(contributions === 0
+      ? [{ path: PluginBundle.MANIFEST_FILE, message: 'contributes no operations, skills or types on EDGE' }]
+      : []),
+  ];
+  if (activation.length > 0) {
+    fail(activation);
+  }
+  const summary = `${catalog.operations.length} operations, ${catalog.skills.length} skills, ${catalog.types.length} types`;
+  console.log(`✓ ${dir} (${roots.length} workerd modules imported; ${summary})`);
 };
 
 void main().catch((error) => {

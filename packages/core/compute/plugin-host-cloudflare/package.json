@@ -70,7 +70,8 @@
     "effect": "catalog:",
     "esbuild": "catalog:",
     "miniflare": "catalog:",
-    "oxc-parser": "catalog:"
+    "oxc-parser": "catalog:",
+    "vite": "catalog:"
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "catalog:",

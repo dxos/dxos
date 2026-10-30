@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { importInWorkerd } from './import-bundle.ts';
+import { loadBundle } from './load-bundle.ts';
 import * as PluginBundle from './PluginBundle.ts';
 
 const tag = (identifier: string) => ({ identifier, arity: 'one' });
@@ -13,7 +13,9 @@ const tag = (identifier: string) => ({ identifier, arity: 'one' });
 const makeBundle = (overrides: Record<string, string | undefined> = {}): PluginBundle.Files => {
   const files: Record<string, string | undefined> = {
     'manifest.json': JSON.stringify({
-      plugin: { key: 'org.example.plugin.sample', name: 'Sample' },
+      key: 'org.example.plugin.sample',
+      name: 'Sample',
+      version: '1.0.0',
       modules: [
         { id: 'Schema', url: './schema.mjs', requires: [], provides: [tag('org.example.schema')] },
         {
@@ -117,16 +119,20 @@ describe('PluginBundle', () => {
 
   test('a malformed manifest, a module that does not parse and a missing body are reported', ({ expect }) => {
     const manifest = JSON.stringify({
-      plugin: { key: 'org.example.plugin.sample', name: 'Sample' },
+      key: 'org.example.plugin.sample',
+      name: 'Sample',
+      version: '1.0.0',
       modules: [{ id: 'Gone', url: './gone.mjs', requires: [], provides: [] }],
     });
     expect(messages(makeBundle({ 'manifest.json': manifest, 'chunk.mjs': 'export const = 1;' }))).toEqual([
       'chunk.mjs: does not parse: Unexpected token',
       'manifest.json: Gone: ./gone.mjs is not a file in the bundle',
     ]);
-    expect(messages(makeBundle({ 'manifest.json': JSON.stringify({ plugin: { key: 1 }, modules: [] }) }))).toEqual([
-      expect.stringMatching(/^manifest\.json: .*key/s),
-    ]);
+    expect(
+      messages(
+        makeBundle({ 'manifest.json': JSON.stringify({ key: 1, name: 'Sample', version: '1.0.0', modules: [] }) }),
+      ),
+    ).toEqual([expect.stringMatching(/^manifest\.json: .*key/s)]);
   });
 
   test('rewriteImports points the plugin bare imports at vendor/ and leaves vendor/ alone', ({ expect }) => {
@@ -143,11 +149,18 @@ describe('PluginBundle', () => {
 
   test('the workerd modules import in workerd once rewritten', { timeout: 60_000 }, async ({ expect }) => {
     const files = makeBundle();
-    const { roots, vendor } = PluginBundle.check(files);
-    expect(await importInWorkerd(files, vendor ?? { specifiers: {} }, roots)).toEqual([]);
+    const { roots } = PluginBundle.check(files);
+    {
+      await using bundle = await loadBundle(files);
+      expect(await bundle.importModules(roots)).toEqual([]);
+      // describe() needs the host, which this bundle does not vendor.
+      await expect(bundle.describe()).rejects.toThrow(/does not provide @dxos\/plugin-host-cloudflare/);
+    }
 
-    const throwing = makeBundle({ 'schema.mjs': "throw new Error('boom'); export default () => 1;" });
-    const failures = await importInWorkerd(throwing, vendor ?? { specifiers: {} }, ['schema.mjs']);
+    await using throwing = await loadBundle(
+      makeBundle({ 'schema.mjs': "throw new Error('boom'); export default () => 1;" }),
+    );
+    const failures = await throwing.importModules(['schema.mjs']);
     expect(failures.map(({ path }) => path)).toEqual(['schema.mjs']);
     expect(failures[0].message).toContain('boom');
   });

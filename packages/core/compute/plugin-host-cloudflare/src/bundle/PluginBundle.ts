@@ -29,9 +29,11 @@ export type VendorMap = Schema.Schema.Type<typeof VendorMap>;
 
 const ManifestTag = Schema.Struct({ identifier: Schema.String, arity: Schema.String });
 
-/** The fields of `Plugin.Manifest` a host reads to load a bundle. */
+/** The fields of the bundle's `manifest.json` (plugin metadata, flat, plus its modules) a host reads to load it. */
 const Manifest = Schema.Struct({
-  plugin: Schema.Struct({ key: Schema.String, name: Schema.String }),
+  key: Schema.String,
+  name: Schema.String,
+  version: Schema.String,
   modules: Schema.Array(
     Schema.Struct({
       id: Schema.String,
@@ -255,6 +257,13 @@ export const check = (files: Files): CheckResult => {
   const bodies = new Map<string, ManifestModule>();
   for (const module of modules) {
     for (const url of [module.url, module.adapter?.url].filter((url): url is string => url !== undefined)) {
+      // A shared package's export (e.g. an adapter) loads through the same bare specifier the plugin's files use.
+      if (isBare(url) && !/^[a-z][a-z0-9+.-]*:/i.test(url)) {
+        if (!vendor?.specifiers[url]) {
+          problems.push({ path: MANIFEST_FILE, message: `${module.id}: ${url}, which vendor/ does not provide` });
+        }
+        continue;
+      }
       const path = resolveUrl(url);
       if (path === undefined || files[path] === undefined) {
         problems.push({ path: MANIFEST_FILE, message: `${module.id}: ${url} is not a file in the bundle` });
@@ -326,4 +335,70 @@ export const rewriteImports = (files: Files, vendor: VendorMap): Record<string, 
       return [path, rewritten === source ? content : encoder.encode(rewritten)];
     }),
   );
+};
+
+/** The vendored package whose `PluginHost` the main module starts. */
+export const HOST_SPECIFIER = '@dxos/plugin-host-cloudflare';
+
+/** Where a `dependsOn` plugin's bundle sits beside the primary's, one directory per dependency. */
+export const DEPENDENCY_DIR = 'deps/';
+
+export const MAIN_MODULE = '__plugin_main__.js';
+
+/** What Worker Loader runs for a bundle: its rewritten files, the main module's name and source. */
+export type WorkerCode = {
+  readonly files: Record<string, Uint8Array>;
+  readonly mainModule: string;
+  readonly main: string;
+};
+
+/**
+ * The modules a Dynamic Worker loads for a bundle: its files with bare imports rewritten to `vendor/`, the bundles of
+ * its `dependsOn` plugins under `deps/<n>/` rewritten to the same `vendor/` (so the isolate holds one copy of each
+ * package), and a main module that starts the vendored host and exports its `describe`, `invoke` and `fetch`.
+ */
+export const workerCode = (files: Files, vendor: VendorMap, dependencies: readonly Files[] = []): WorkerCode => {
+  const host = vendor.specifiers[HOST_SPECIFIER];
+  const combined: Record<string, Uint8Array> = { ...files };
+  dependencies.forEach((dependency, index) => {
+    for (const [path, content] of Object.entries(dependency)) {
+      // A dependency's own `vendor/` is not loaded: its imports resolve against the primary's.
+      if (!isVendored(path)) {
+        combined[`${DEPENDENCY_DIR}${index}/${path}`] = content;
+      }
+    }
+  });
+  const imports = [
+    // Without a vendored host the bundle still loads, so its modules can be checked; only starting the plugin fails.
+    host === undefined
+      ? `Promise.reject(new Error(${JSON.stringify(`vendor/ does not provide ${HOST_SPECIFIER}, which EDGE starts the plugin with.`)}))`
+      : `import('./${host}')`,
+    `import('./${ENTRY_FILE}')`,
+    ...dependencies.map((_, index) => `import('./${DEPENDENCY_DIR}${index}/${ENTRY_FILE}')`),
+  ];
+  const main = [
+    "import { WorkerEntrypoint } from 'cloudflare:workers';",
+    'let host;',
+    // Imported inside a request: module evaluation runs in global scope, where workerd disallows timers.
+    'const getHost = async () => {',
+    '  if (host === undefined) {',
+    `    const [{ PluginHost }, primary, ...dependencies] = await Promise.all([${imports.join(', ')}]);`,
+    '    host ??= PluginHost.make(() => ({ primary: primary.make(), dependencies: dependencies.map((plugin) => plugin.make()) }));',
+    '  }',
+    '  return host;',
+    '};',
+    'export default class PluginEntrypoint extends WorkerEntrypoint {',
+    '  async fetch(request) { return (await getHost()).fetch(request, this.env); }',
+    // Workers RPC drops an error's stack, which is the whole diagnosis of a failed activation.
+    '  async describe() {',
+    '    try {',
+    '      return await (await getHost()).describe();',
+    '    } catch (error) {',
+    '      throw new Error(String(error?.stack ?? error));',
+    '    }',
+    '  }',
+    '  async invoke(request, scope) { return (await getHost()).invoke(request, this.env, scope); }',
+    '}',
+  ].join('\n');
+  return { files: rewriteImports(combined, vendor), mainModule: MAIN_MODULE, main };
 };

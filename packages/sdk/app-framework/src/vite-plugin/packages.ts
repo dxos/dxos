@@ -29,6 +29,8 @@
  * Spread into {@link DEFAULT_PACKAGES} so the third-party set lives in one place.
  */
 const THIRD_PARTY_SHARED_PACKAGES = [
+  // One instance of its wasm per host, and on EDGE the `workerd` build, which never compiles wasm at runtime.
+  '@automerge/automerge',
   '@effect/atom-react',
   '@effect/platform',
   'effect',
@@ -67,6 +69,7 @@ export const DEFAULT_PACKAGES = [
   // packages/core/echo
   '@dxos/echo',
   '@dxos/echo-client',
+  '@dxos/echo-doc',
   '@dxos/echo-host',
   '@dxos/echo-protocol',
   '@dxos/echo-query',
