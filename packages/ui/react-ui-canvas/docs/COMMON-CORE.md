@@ -90,6 +90,11 @@ produced (`SceneView2D` on react-ui-canvas's own model, `SceneView3D` on `@dxos/
    split by aspect, with a hook per aspect (as `Canvas` has `useCanvasDocument`, `useCanvasTools`, `useCanvasLook`,
    `useCanvasNavigation`, `useCanvasEditing`); panels and inspectors are composite parts reading those hooks; each
    dimension's `DimensionConfig` supplies its implementations behind the same hooks.
+   0b. Once both editors work, the canvas MDL spec (`packages/ui/react-ui-canvas/SPEC.mdl`) is rewritten as a **core spec**
+   for the shared editor (data, context and aspect hooks, panels, inspectors, commands, history, clipboard, styles,
+   timeline, roles, lock) plus **2D and 3D variant specs** that reference the core by id and state only what differs
+   (viewport, tools, geometry, display options, dimension-only sections and modes). plugin-canvas's `PLUGIN.mdl` and
+   `@dxos/scene`'s `SPEC.mdl` are reconciled with them; every spec change carries its changelog decisions (mdl skill).
    0a. The work runs phases 0 → A → B → C (order kept) until both editors run on the shared core, delivering storybooks
    for every panel and inspector with 2D and 3D variants (including the new **Styles** inspector, added as a section of the shared inspector panel in both dimensions), storybooks for the
    2D and 3D editors, and storybooks for 2D and 3D animations (the shared Timeline panel over animator shots).
