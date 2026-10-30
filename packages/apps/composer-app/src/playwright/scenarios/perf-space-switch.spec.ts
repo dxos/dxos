@@ -34,8 +34,11 @@ const PLUGINS = (process.env.DX_PERF_PLUGINS ?? '')
 /** The tab's counters that move while it brings objects in. */
 const OBJECT_LOAD_COUNTERS = ['echo.objectDocumentsLoaded', 'echo.snapshotObjects', 'echo.queryRecomputes'];
 
-/** Passes to run (`DX_PERF_SWITCH_PASSES`, comma-separated): `cold`, `warm`, `revisit`, `reindex`; all by default. */
-const PASSES = (process.env.DX_PERF_SWITCH_PASSES ?? 'cold,warm,revisit,reindex').split(',').map((pass) => pass.trim());
+/**
+ * Passes to run (`DX_PERF_SWITCH_PASSES`, comma-separated): `cold`, `warm`, `revisit`, `reindex`. Switch time,
+ * `cold,warm`, by default; `revisit` and `reindex` time eviction and index catch-up and run only when named.
+ */
+const PASSES = (process.env.DX_PERF_SWITCH_PASSES ?? 'cold,warm').split(',').map((pass) => pass.trim());
 
 /** Past the worker's idle-document eviction delay (`EVICT_IDLE_DELAY`, 30 s). */
 const EVICTION_IDLE_MS = 45_000;

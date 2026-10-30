@@ -22,10 +22,6 @@ on:
         type: string
         description: 'Repeats of the whole flow per mode (DX_PERF_ITERATIONS)'
         default: '10'
-      scenario-iterations:
-        type: string
-        description: 'Repeats of each scenario (DX_PERF_ITERATIONS for the scenarios step)'
-        default: '5'
 
 permissions:
   contents: read
@@ -74,8 +70,9 @@ jobs:
         env:
           MODES: ${{ inputs.modes || 'measure' }}
           # Ten, because one sample per night cannot separate a regression from the ~20% run-to-run
-          # spread on a stage. Each repeat is a fresh browser and a fresh fixture, ~1.5 min, so ten
-          # is ~18 min against this job's 180-minute bound. Every row carries its `iteration`, so
+          # spread on a stage. Each repeat is a fresh browser and a fresh fixture: ~1.5 min for
+          # projects-tasks and ~4 min for the nightly scenarios, so ten is ~55 min against this job's
+          # 180-minute bound. Every row carries its `iteration`, so
           # the repeats are distinct rows to take a median over, not overwrites of each other.
           ITERATIONS: ${{ inputs.iterations || '10' }}
           DX_PWA: 'false'
@@ -95,24 +92,6 @@ jobs:
           # The modes run serially inside one invocation — two flows measured at once contend for
           # the same cores and measure each other.
           DX_PERF_MODES="$MODES" DX_PERF_ITERATIONS="$ITERATIONS" moon run composer-app:e2e-perf
-
-      # The scenarios that reproduce field reports (`packages/apps/composer-app/src/playwright/scenarios/`), named
-      # one by one: `DX_PERF_SCENARIOS` alone runs the whole folder. Each seeds its own spaces before the measured
-      # browser boots. After the flows, on the same runner and bundle, and into the same `test-results/perf`;
-      # unscored, since the scorer reads only the flows' rows and a scenario has no budgets yet.
-      - name: Run the scenarios
-        id: scenarios
-        continue-on-error: true
-        env:
-          ITERATIONS: ${{ inputs.scenario-iterations || '5' }}
-          # Switch time only: `revisit` and `reindex` time eviction and index catch-up, not a switch.
-          DX_PERF_SWITCH_PASSES: cold,warm
-          DX_PWA: 'false'
-          DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
-        run: |
-          set -o pipefail
-          DX_PERF_SCENARIOS=1 DX_PERF_MODES=measure DX_PERF_ITERATIONS="$ITERATIONS" moon run composer-app:e2e-perf -- \
-            src/playwright/scenarios/perf-space-switch.spec.ts src/playwright/scenarios/perf-object-open.spec.ts
 
       - name: Summarize
         if: always()
@@ -188,9 +167,9 @@ jobs:
           retention-days: 14
 
       - name: Fail on an incomplete run
-        if: always() && (steps.flows.outcome != 'success' || steps.scenarios.outcome != 'success')
+        if: always() && steps.flows.outcome != 'success'
         run: |
-          echo "::error::A flow or scenario did not complete; see the summary and the perf-nightly artifact."
+          echo "::error::A flow did not complete; see the summary and the perf-nightly artifact."
           exit 1
 
   # The ECHO benchmarks (`packages/core/echo/echo-client-e2e/src/*.bench.ts`), scored against
@@ -379,9 +358,11 @@ jobs:
           DX_PERF_ITERATIONS: '5'
           DX_PERF_COUNTERS: trace,calls,react
           DX_PWA: 'false'
+        # The projects-tasks flow alone: the work budgets cover it, and the nightly scenarios would
+        # double this job's runtime for counts nothing scores.
         run: |
           rm -rf test-results/perf
-          moon run composer-app:e2e-perf
+          moon run composer-app:e2e-perf -- src/playwright/perf-projects.spec.ts
 
       - name: Score the flow
         if: always()
