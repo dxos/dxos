@@ -113,4 +113,17 @@ describe('useTextEditor', () => {
     });
     expect(view?.state.selection.main.anchor).toBe(5);
   });
+
+  test('restores a selection once content arriving over several updates reaches it', async ({ expect }) => {
+    let view: EditorView | undefined;
+    await mount(<RestoringEditor id='doc' selection={{ anchor: 8 }} onView={(next) => (view = next)} />);
+
+    for (const insert of ['hello', ' world']) {
+      await act(async () => {
+        view?.dispatch({ changes: { from: view.state.doc.length, insert } });
+        await Promise.resolve();
+      });
+    }
+    expect(view?.state.selection.main.anchor).toBe(8);
+  });
 });

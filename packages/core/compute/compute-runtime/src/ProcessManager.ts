@@ -202,8 +202,11 @@ export class Impl implements Manager {
   readonly #handles = new Map<Process.ID, ProcessHandle.Impl<any, any, any>>();
   /** Guards of live processes, kept beside the handles because a guard is a closure and is never persisted. */
   readonly #guards = new Map<Process.ID, Process.Guard>();
-  /** Live processes kept out of the durable store; see {@link Operation.DurableProps.resumable}. */
-  readonly #inMemory = new Set<Process.ID>();
+  /**
+   * Live processes kept out of the durable store, each with the clear of its storage in {@link #memoryKvStore}; see
+   * {@link Operation.DurableProps.resumable}.
+   */
+  readonly #inMemory = new Map<Process.ID, Effect.Effect<void>>();
   readonly #memoryKvStore = Effect.runSync(
     Effect.gen(function* () {
       return yield* KeyValueStore.KeyValueStore;
@@ -358,7 +361,11 @@ export class Impl implements Manager {
     }
     this.#handles.delete(pid);
     this.#guards.delete(pid);
+    const clearStorage = this.#inMemory.get(pid);
     this.#inMemory.delete(pid);
+    if (clearStorage) {
+      Effect.runSync(clearStorage);
+    }
     this.#finished.push(handle.snapshotProcessInfo());
     if (this.#finished.length > FINISHED_PROCESS_RETENTION) {
       this.#finished.shift();
@@ -394,6 +401,9 @@ export class Impl implements Manager {
         }
         this.#handles.clear();
         this.#guards.clear();
+        for (const clearStorage of this.#inMemory.values()) {
+          yield* clearStorage;
+        }
         this.#inMemory.clear();
         this.#finished.length = 0;
         this.#shutDown = true;
@@ -447,10 +457,10 @@ export class Impl implements Manager {
         options?.parentProcessId !== undefined
           ? !this.#inMemory.has(options.parentProcessId)
           : definition.resumable !== false;
-      if (!persisted) {
-        this.#inMemory.add(id);
-      }
       const storage = storageServiceLayer(persisted ? this.#kvStore : this.#memoryKvStore, `process/${id}/`);
+      if (!persisted) {
+        this.#inMemory.set(id, storage.clear());
+      }
 
       const parentOption = Option.fromNullishOr(options?.parentProcessId);
 
