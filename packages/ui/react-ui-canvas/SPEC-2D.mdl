@@ -854,6 +854,9 @@ feat F-15: Modes
     drag, a command, a paste, the Properties form). A layout with a `lattice` snaps every frame onto whole cells
     while snapping is on and refuses an edit that would overlap another shape's cells; a drag the mode refuses or
     moves is drawn as stored. A host's own projection owns the mode instead.
+  req F-15.7: A move on a lattice previews the cells it lands on while the drag is in flight, so the moved shapes and
+    their links change only when the landing cell does; a move the lattice refuses follows the pointer, outlined as
+    blocked. Off a lattice a move follows the pointer and snaps to where it lands once the pointer rests.
 ```
 
 ## Planned
@@ -1235,6 +1238,25 @@ decision D-23: A 2D layout is constrained when its `constraints` field is set, e
   why: The solver owns every shape's position, so a second mode or turning snapping off would only produce positions the next constrained edit overwrites; an empty list is a constrained layout whose first drop starts its relations.
   rejected:
     - A separate mode field naming the layout's mode, which would duplicate what the fields already say.
+```
+
+```mdl
+decision D-24: Dragging a shape on a lattice must not make its links flicker between the layout under the pointer and the settled layout.
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [F-15.7]
+```
+
+```mdl
+decision D-25: A move on a lattice previews its landing cells rather than following the pointer. Fills in [D-24].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-15.7]
+  why: A shape between cells re-routes its gutter links on every pixel, since two port pairs tie on bends and the nearer one flips along a diagonal; drawing the landing changes the drawing only when the cell changes, and shows what the drop will do.
+  rejected:
+    - Keeping each link's ports for the length of the drag until another pair bends strictly less, which leaves the jump between the pointer's layout and the settled one when the pointer rests.
+    - Plain routing for links on a moving shape until the drop, which changes the link's shape on release.
 ```
 
 ---
