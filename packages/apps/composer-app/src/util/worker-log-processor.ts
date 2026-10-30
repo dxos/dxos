@@ -20,11 +20,20 @@ import type * as OtelSpanSink from '@dxos/observability/OtelSpanSink';
 
 const DEFAULT_LOG_FILTER = 'debug';
 
-/** One pre-serialized JSONL log line; the hot path carries no envelope. */
+/**
+ * Lines posted together at most: a thread stuck in a long synchronous task still hands the worker
+ * all but the last partial batch, while a burst costs one `postMessage` per batch, not per line.
+ */
+export const MAX_LINES_PER_BATCH = 64;
+
+/** One pre-serialized JSONL log line. */
 export type SerializedLogLine = string;
 
+/** The lines logged since the last batch, in order. */
+export type LogBatch = { type: 'log-batch'; lines: SerializedLogLine[] };
+
 export type ObservabilityWorkerMessage =
-  | SerializedLogLine
+  | LogBatch
   | { type: 'flush' }
   | OtelLogSink.Message
   | OtelMetricsSink.Message
@@ -41,13 +50,12 @@ export type WorkerLogProcessorOptions = {
 };
 
 /**
- * Log processor that forwards each pre-serialized JSONL line to the observability worker, which
- * owns the queue, flush timer, IDB writes and eviction. `postMessage` enqueues synchronously
- * inside the log call and delivery does not need this thread's event loop to turn, so the
- * worker keeps persisting while this thread is blocked by a long synchronous task. Filtering
- * and serialization stay on the calling thread — log entries are not reliably
- * structured-cloneable. Reads (log downloads, feedback exports) instantiate `IdbLogStore`
- * directly — IDB keeps the data.
+ * Log processor that forwards pre-serialized JSONL lines to the observability worker, which owns
+ * the queue, flush timer, IDB writes and eviction. Lines are posted in batches: at the end of the
+ * task that logged them, or as soon as {@link MAX_LINES_PER_BATCH} accumulate, so the worker keeps
+ * persisting while this thread is blocked by a long synchronous task. Filtering and serialization
+ * stay on the calling thread — log entries are not reliably structured-cloneable. Reads (log
+ * downloads, feedback exports) instantiate `IdbLogStore` directly — IDB keeps the data.
  */
 export class WorkerLogProcessor {
   readonly #worker: Pick<Worker, 'postMessage'>;
@@ -55,6 +63,8 @@ export class WorkerLogProcessor {
   readonly #traceContext?: () => TraceContext | undefined;
   #filters: LogFilter[] = [];
   #minLevel = Infinity;
+  #pending: SerializedLogLine[] = [];
+  #scheduled = false;
 
   constructor(options: WorkerLogProcessorOptions) {
     this.#worker = options.worker;
@@ -78,7 +88,16 @@ export class WorkerLogProcessor {
     if (line === undefined) {
       return;
     }
-    this.#post(line);
+    this.#pending.push(line);
+    if (this.#pending.length >= MAX_LINES_PER_BATCH) {
+      this.#postPending();
+    } else if (!this.#scheduled) {
+      this.#scheduled = true;
+      queueMicrotask(() => {
+        this.#scheduled = false;
+        this.#postPending();
+      });
+    }
   };
 
   /**
@@ -97,7 +116,17 @@ export class WorkerLogProcessor {
    * flushes — the worker's own timer bounds staleness to one flush interval either way.
    */
   flush(): void {
+    this.#postPending();
     this.#post({ type: 'flush' });
+  }
+
+  #postPending(): void {
+    if (this.#pending.length === 0) {
+      return;
+    }
+    const lines = this.#pending;
+    this.#pending = [];
+    this.#post({ type: 'log-batch', lines });
   }
 
   #post(message: ObservabilityWorkerMessage): void {
