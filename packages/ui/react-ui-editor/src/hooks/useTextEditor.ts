@@ -61,6 +61,19 @@ export type UseTextEditorProps = Pick<EditorStateConfig, 'extensions'> & {
 const fitsDocument = ({ scrollTo, selection }: EditorSelectionState, length: number): boolean =>
   (scrollTo ?? 0) <= length && (selection?.anchor ?? 0) <= length && (selection?.head ?? 0) <= length;
 
+/** The parts of a saved state that fit the document: one that shrank while closed keeps its scroll or its selection. */
+const fitting = ({ scrollTo, scrollOffset, selection }: EditorSelectionState, length: number) => {
+  const scrolls = scrollTo != null && scrollTo <= length;
+  const selects = selection !== undefined && selection.anchor <= length && (selection.head ?? 0) <= length;
+  return scrolls || selects
+    ? {
+        scrollTo: scrolls ? scrollTo : undefined,
+        scrollOffset: scrolls ? scrollOffset : undefined,
+        selection: selects ? selection : undefined,
+      }
+    : undefined;
+};
+
 /**
  * Creates codemirror text editor.
  */
@@ -138,8 +151,12 @@ export const useTextEditor = (
     }
 
     const state: EditorSelectionState = { scrollTo, scrollOffset, selection };
-    if (fitsDocument(state, view.state.doc.length)) {
-      restoreEditorState(view, state);
+    const length = view.state.doc.length;
+    if (length > 0 || fitsDocument(state, length)) {
+      const restorable = fitting(state, length);
+      if (restorable) {
+        restoreEditorState(view, restorable);
+      }
       return;
     }
 
@@ -150,12 +167,13 @@ export const useTextEditor = (
     view.dispatch({
       effects: StateEffect.appendConfig.of(
         EditorView.updateListener.of((update) => {
-          if (pending && update.docChanged && fitsDocument(state, update.state.doc.length)) {
+          if (pending && update.docChanged && update.state.doc.length > 0) {
             pending = false;
+            const restorable = fitting(state, update.state.doc.length);
             // A view cannot be dispatched to from within its own update.
             queueMicrotask(() => {
-              if (active) {
-                restoreEditorState(update.view, state);
+              if (active && restorable) {
+                restoreEditorState(update.view, restorable);
               }
             });
           }

@@ -62,6 +62,8 @@ export const transitionWhenRendered = (
     quiet = setTimeout(reveal, quietMs);
   });
   observer.observe(entering, { childList: true, subtree: true, characterData: true });
+  // From now, so an entered element that has already rendered is not held until the cap.
+  quiet = setTimeout(reveal, quietMs);
   const cap = setTimeout(reveal, maxHoldMs);
 
   return () => {

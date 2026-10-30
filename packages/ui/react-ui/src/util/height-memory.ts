@@ -13,6 +13,7 @@ export type HeightMemory = {
 /** Entries kept at most; the least recently used go first. */
 const MAX_HEIGHTS = 1_000;
 
+/** A height memory for the session, holding up to {@link MAX_HEIGHTS} entries. */
 export const createHeightMemory = (): HeightMemory => {
   const heights = new Map<string, number>();
   return {
@@ -81,12 +82,14 @@ export const useReservedHeight = (
         return;
       }
       const slot = `${key}@${Math.round(box.inlineSize / WIDTH_STEP)}`;
+      // The reservation this box was laid out under, which a new width's reservation replaces only for the next one.
+      const laidOutUnder = reserved;
       if (!released && slot !== reservedFor) {
         reservedFor = slot;
         reserve(memory.get(slot) ?? reserved);
       }
       // While reserved, only a height past the reservation is the content's own.
-      if (box.blockSize > 0 && (released || reserved === undefined || box.blockSize > reserved)) {
+      if (box.blockSize > 0 && (released || box.blockSize > Math.max(laidOutUnder ?? 0, reserved ?? 0))) {
         const height = Math.round(box.blockSize);
         memory.set(slot, height);
         memory.set(key, height);

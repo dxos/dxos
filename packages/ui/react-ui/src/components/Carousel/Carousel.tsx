@@ -126,11 +126,15 @@ const CarouselItem = forwardRef<HTMLDivElement, CarouselItemProps>(
     { classNames, index, src, kind, alt, controls, autoPlay, loop, muted, crossOrigin, children, ...props },
     forwardedRef,
   ) => {
-    const { page } = useCarouselContext();
-    // Slides keep their size empty, so media mounts only where it is seen: playable media on the slide in view, which
+    const { page, isInView } = useCarouselContext();
+    // Slides keep their size empty, so media mounts only where it is seen: playable media on a slide in view, which
     // also stops it when the slide is left (an embed cannot be paused from here), and an image on its neighbours too.
+    // A page can hold several slides, so "in view" is the machine's own measure; the page's index covers the first
+    // render, before it has measured.
+    const seen = (slide: number) => isInView(slide) || slide === page;
     const mounted =
-      src !== undefined && (resolveMediaElement(src, kind) === 'image' ? Math.abs(index - page) <= 1 : index === page);
+      src !== undefined &&
+      (resolveMediaElement(src, kind) === 'image' ? [index - 1, index, index + 1].some(seen) : seen(index));
     return (
       <CarouselPrimitive.Item
         {...props}

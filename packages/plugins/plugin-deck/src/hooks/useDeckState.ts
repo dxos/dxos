@@ -25,6 +25,9 @@ export type DeckStateHook = {
 /** The deck state a deck renders when it is not the live one: the workspace being left, during the transition. */
 export const ShownDeckState = createContext<DeckStateHook | undefined>(undefined);
 
+/** Whether this deck is the live one: what it listens for outside its own DOM, such as keys, belongs to that one only. */
+export const useIsLiveDeck = (): boolean => useContext(ShownDeckState) === undefined;
+
 /**
  * Hook to access the deck plugin state reactively.
  * Returns the combined state, the active deck, and update functions for each atom.

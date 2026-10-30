@@ -13,6 +13,7 @@ const MAX_CHARS = 4_000_000;
 
 const size = (key: string, svg: string) => key.length + svg.length;
 
+/** A diagram cache for the session, holding up to {@link MAX_CHARS} characters. */
 export const createDiagramCache = (): DiagramCache => {
   const diagrams = new Map<string, string>();
   let chars = 0;

@@ -70,6 +70,12 @@ describe('transitionWhenRendered', () => {
     expect(done).toBe(1);
   });
 
+  test('fades out once the quiet window passes when the entered DOM has already rendered', async () => {
+    transitionWhenRendered(leaving, entering, onDone, { quietMs: 80, maxHoldMs: 700 });
+    await vi.advanceTimersByTimeAsync(100);
+    expect(fades).toHaveLength(1);
+  });
+
   test('fades out after the hold limit while the entered DOM keeps changing', async () => {
     transitionWhenRendered(leaving, entering, onDone, { quietMs: 80, maxHoldMs: 300 });
     for (let i = 0; i < 8; i++) {

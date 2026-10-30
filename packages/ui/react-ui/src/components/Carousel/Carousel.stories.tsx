@@ -23,12 +23,18 @@ const IMAGES = HUES.map(
     )}`,
 );
 
-type StoryArgs = { count: number; continuous?: boolean; autoAdvance?: number; video?: boolean };
+type StoryArgs = { count: number; continuous?: boolean; autoAdvance?: number; video?: boolean; slidesPerMove?: number };
 
-const DefaultStory = ({ count, continuous, autoAdvance, video }: StoryArgs) => {
+const DefaultStory = ({ count, continuous, autoAdvance, video, slidesPerMove }: StoryArgs) => {
   const images = IMAGES.slice(0, count);
   return (
-    <Carousel.Root count={images.length} continuous={continuous} autoAdvance={autoAdvance} data-testid='carousel'>
+    <Carousel.Root
+      count={images.length}
+      continuous={continuous}
+      autoAdvance={autoAdvance}
+      slidesPerMove={slidesPerMove}
+      data-testid='carousel'
+    >
       <Carousel.PrevTrigger />
       <Carousel.ItemGroup>
         {images.map((src, index) => (
@@ -142,7 +148,21 @@ export const TestVideo: Story = {
 
     await userEvent.click(within(canvasElement).getByRole('button', { name: 'Next slide' }));
     await waitFor(() => expect(media(1)).not.toBeNull());
-    await expect(media(0)).toBeNull();
+    await waitFor(() => expect(media(0)).toBeNull());
+  },
+};
+
+/** A page need not start at its own index: with two slides per move, the second page shows the third slide. */
+export const TestVideoPerMove: Story = {
+  args: { video: true, slidesPerMove: 2 },
+  play: async ({ canvasElement }) => {
+    const slides = part(canvasElement, 'item');
+    const media = (index: number) => slides[index].querySelector('video');
+    await waitFor(() => expect(media(0)).not.toBeNull());
+
+    await userEvent.click(within(canvasElement).getByRole('button', { name: 'Next slide' }));
+    await waitFor(() => expect(media(2)).not.toBeNull());
+    await waitFor(() => expect(media(0)).toBeNull());
   },
 };
 

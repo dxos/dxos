@@ -646,7 +646,8 @@ export class Impl implements Manager {
         () => this.#terminateChildren(id),
         persistence,
         false,
-        encodeInput,
+        // Encoded only to be stored, so a process kept in memory hands its input straight through.
+        persisted ? encodeInput : undefined,
         undefined,
         cancellation,
       );

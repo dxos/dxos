@@ -6,8 +6,6 @@ import { describe, expect, test } from 'vitest';
 
 import { createDiagramCache } from './diagram-cache.ts';
 
-const svg = (chars: number) => 'x'.repeat(chars);
-
 describe('diagram cache', () => {
   test('keeps at most 4M characters, dropping the least recently used diagram first', () => {
     const { get: getDiagram, set: setDiagram } = createDiagramCache();
@@ -28,3 +26,5 @@ describe('diagram cache', () => {
     expect(getDiagram('small')).toBeDefined();
   });
 });
+
+const svg = (chars: number) => 'x'.repeat(chars);

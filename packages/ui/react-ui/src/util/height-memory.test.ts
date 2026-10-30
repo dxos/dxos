@@ -73,6 +73,27 @@ describe('height memory', () => {
     observed.resize(640, 80);
     expect(element.style.minHeight).toBe('300px');
   });
+
+  test('a height laid out under the previous width’s reservation is not remembered for the new width', async () => {
+    const memory = createHeightMemory();
+    const element = document.createElement('div');
+    const observed = observeResizes();
+    for (const [width, height] of [
+      [1200, 200],
+      [640, 300],
+    ]) {
+      const visit = renderHook(() => useReservedHeight(memory, 'section', { current: element }));
+      await vi.advanceTimersByTimeAsync(1_000);
+      observed.resize(width, height);
+      visit.unmount();
+    }
+
+    // It mounts held at the narrow 300 px, and the first box at the wide width still shows that hold.
+    renderHook(() => useReservedHeight(memory, 'section', { current: element }));
+    observed.resize(1200, 300);
+    expect(element.style.minHeight).toBe('200px');
+    expect(memory.get('section@38')).toBe(200);
+  });
 });
 
 type Box = { inlineSize: number; blockSize: number };
