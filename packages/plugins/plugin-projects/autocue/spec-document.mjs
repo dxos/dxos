@@ -5,7 +5,8 @@
 /**
  * A spec starts as prose and takes structure a paragraph at a time: `/feature` at the end of a paragraph makes it the
  * description of a new feature, drawn in place as the feature's editable section. The section moves like a line, and
- * Backspace deletes it, and its feature, until undo brings both back.
+ * Backspace deletes it, and its feature, until undo brings both back. A section also lists the features its feature
+ * depends on, and adds one.
  *
  * @mdl packages/plugins/plugin-projects/PLUGIN.mdl test QA-7
  * @app storybook-react, narrowed to plugin-projects, on :9009
@@ -147,6 +148,30 @@ export const steps = [
       await caption(demo, 7, 'Cmd+Z brings back the same feature, description and all');
       await demo.press({ key: 'ControlOrMeta+z' });
       await waitForNames(page, ['Search', 'Instant inbox']);
+      await demo.sleep({ ms: LOOK });
+    },
+  },
+  {
+    name: 'Depend on another feature',
+    run: async ({ demo, page }) => {
+      // After the undo, "Instant inbox" is the second section.
+      const section = `${SECTION} >> nth=1`;
+      await caption(demo, 8, 'A section also holds what its feature depends on');
+      await demo.click({ selector: section, label: 'Instant inbox' });
+      await demo.click({
+        selector: `${section} >> [data-testid="feature-section.add-dependency"]`,
+        label: 'Add dependency',
+      });
+      await page.keyboard.type('Search', { delay: 140 });
+      await demo.click({ selector: '[role="option"]:has-text("Search")', label: 'Search' });
+      await page
+        .locator(`${section} >> [data-testid="feature-section.dependencies"]:has-text("Search")`)
+        .waitFor({ state: 'visible', timeout: 5_000 });
+      // Clear of the caption banner pinned to the bottom of the page.
+      await page
+        .locator(`${section} >> [data-testid="feature-section.dependencies"]`)
+        .evaluate((element) => element.scrollIntoView({ block: 'center', behavior: 'smooth' }));
+      await demo.sleep({ ms: LOOK });
       await demo.caption({ value: 'Each feature is an ECHO object, embedded in the text', subtitle: SUBTITLE });
       await demo.sleep({ ms: 6_000 });
     },

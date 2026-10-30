@@ -350,7 +350,7 @@ test QA-7: Grow a spec from prose
     autocue flow `spec-document` against the SpecDocumentArticle story "Prose", whose spec "Mail" is three paragraphs
     of prose with no features.
   actors: human
-  covers: [F-1.3, F-2.1, F-2.2, F-2.3, F-2.6, F-2.7]
+  covers: [F-1.3, F-2.1, F-2.2, F-2.3, F-2.6, F-2.7, F-2.10]
   status: unverified
   given:
     - storybook serves plugin-projects
@@ -377,6 +377,9 @@ test QA-7: Grow a spec from prose
     - name: Undo restores it
       do: Press Cmd+Z.
       expect: the "Instant inbox" section returns, the same feature with its description
+    - name: Depend on another feature
+      do: Click the "Instant inbox" section, click "Add dependency" in it and pick "Search".
+      expect: the section lists "Search" under "Depends on"
 ```
 
 ## Changelog
@@ -651,4 +654,13 @@ decision D-31: The features a feature depends on stay `DependsOn` relations and 
   why: The `feat` dialect defines `desc` and `req` only, so a written `depends:` line would be outside the language every other spec reader uses.
   rejected:
     - Adding a `depends:` field to the `feat` dialect in this change.
+```
+
+```mdl
+decision D-32: QA-7 ends by making "Instant inbox" depend on "Search" from its section. Fills in [D-29].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-7, F-2.10]
+  why: The walk already has two features in one document, so a dependency between them is one more step, and it is the part of the section the earlier steps never reach.
 ```
