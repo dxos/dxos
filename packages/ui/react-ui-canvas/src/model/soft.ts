@@ -41,14 +41,13 @@ export const SOFT_PALETTE: Readonly<Record<ThemeMode, SoftPalette>> = {
 /** A shadow's offset along each axis and its blur, in scene px. */
 export type SoftDepth = { readonly offset: number; readonly blur: number };
 
-/**
- * The relief of a soft shape: `raised` stands out of the ground, `inset` is cut into it, and `pressed` (a selected shape)
- * is pushed further in than an inset one.
- */
-export const SOFT_RELIEF: Readonly<Record<'raised' | 'inset' | 'pressed', SoftDepth>> = {
+/** How a soft shape meets the ground: `raised` stands out of it and `inset` is cut into it. */
+export type SoftRelief = 'raised' | 'inset';
+
+/** The geometry of each relief. */
+export const SOFT_RELIEF: Readonly<Record<SoftRelief, SoftDepth>> = {
   raised: { offset: 6, blur: 14 },
   inset: { offset: 4, blur: 8 },
-  pressed: { offset: 6, blur: 12 },
 };
 
 /** The lit and shaded lip either side of a groove, as a fraction of the groove's width. */
@@ -62,7 +61,6 @@ export const SOFT_VARS = {
   shade: '--dx-soft-shade',
   raised: '--dx-soft-raised',
   inset: '--dx-soft-inset',
-  pressed: '--dx-soft-pressed',
 } as const;
 
 const lightDark = (key: keyof SoftPalette) => `light-dark(${SOFT_PALETTE.light[key]}, ${SOFT_PALETTE.dark[key]})`;
@@ -91,5 +89,4 @@ export const softVars = (scale = 1): Record<`--${string}`, string> => ({
   [SOFT_VARS.shade]: lightDark('shade'),
   [SOFT_VARS.raised]: relief(SOFT_RELIEF.raised, scale, false),
   [SOFT_VARS.inset]: relief(SOFT_RELIEF.inset, scale, true),
-  [SOFT_VARS.pressed]: relief(SOFT_RELIEF.pressed, scale, true),
 });

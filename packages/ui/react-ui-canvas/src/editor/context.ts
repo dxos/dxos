@@ -59,6 +59,8 @@ export type SceneEditorContextValue = {
   onLayersChange?: (layout: string, layers: readonly Layer[]) => void;
   display: EditorDisplay;
   onDisplayChange?: (display: Partial<EditorDisplay>) => void;
+  /** Picks the theme: the host's override when it stores one, otherwise this view's own. */
+  onThemeChange: (theme: string | undefined) => void;
   camera?: { actions: CameraActions; percent?: number };
   docked: boolean;
   onDockedChange?: (docked: boolean) => void;

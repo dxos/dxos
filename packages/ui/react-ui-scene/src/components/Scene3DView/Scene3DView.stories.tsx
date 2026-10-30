@@ -13,7 +13,7 @@ import { type Scene } from '@dxos/scene';
 import { Scene3DView } from './Scene3DView.tsx';
 
 const EXEMPLARS_3D = ['cube', 'cluster', 'encapsulated', 'hierarchy', 'solid'] as const;
-const THEMES = ['cad', 'presentation', 'clay'] as const;
+const THEMES = ['cad', 'presentation', 'clay', 'clay-light'] as const;
 const CAMERAS = ['iso', 'front', 'close', 'wide'] as const;
 
 type StoryProps = {
@@ -64,3 +64,6 @@ export const Default: Story = {};
 
 /** Matte solids in the soft ground's tone on a ground of the same tone, edged in their hue; light or dark with the app. */
 export const Clay: Story = { args: { theme: 'clay' } };
+
+/** Clay held light whatever the app's mode, as 2D's Soft Light is. */
+export const ClayLight: Story = { args: { theme: 'clay-light' } };

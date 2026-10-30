@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { materialSpec } from './style.ts';
+import { materialSpec, themeMode3D } from './style.ts';
 
 describe('materialSpec', () => {
   test('glass is a rim shell in the presentation look', () => {
@@ -18,6 +18,13 @@ describe('materialSpec', () => {
     const spec = materialSpec({ surface: 'glass' }, 'cad');
     expect(spec.kind).toBe('standard');
     expect(spec.alpha).toBeLessThan(1);
+  });
+
+  test('Clay Light draws as Clay, held light; the other looks follow the app', () => {
+    expect(materialSpec({ hue: 'blue' }, 'clay-light')).toEqual(materialSpec({ hue: 'blue' }, 'clay'));
+    expect(themeMode3D('clay-light', 'dark')).toBe('light');
+    expect(themeMode3D('clay', 'dark')).toBe('dark');
+    expect(themeMode3D('cad', 'light')).toBe('light');
   });
 
   test('clay is a matte body whose hue is its edge accent, edged whatever the border', () => {

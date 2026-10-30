@@ -15,6 +15,7 @@ export * from './dnd.ts';
 export * from './frames.ts';
 export * from './hit.ts';
 export * from './lattice.ts';
+export * from './link-ends.ts';
 export * from './layers.ts';
 export * from './layout.ts';
 export * from './order.ts';

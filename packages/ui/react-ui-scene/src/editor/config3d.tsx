@@ -26,6 +26,12 @@ import {
 import { TOOLS_3D } from './tools3d.ts';
 import { Viewport3D } from './Viewport3D.tsx';
 
+const CLAY_STYLES = {
+  body: { name: 'Body', hue: 'neutral' } satisfies NamedStyle3D,
+  accent: { name: 'Accent', hue: 'blue' } satisfies NamedStyle3D,
+  ghost: { name: 'Ghost', hue: 'violet', surface: 'tint' } satisfies NamedStyle3D,
+};
+
 /** The 3D looks, each a default style catalog: CAD's flat parts, Presentation's lit materials, Clay's matte solids. */
 export const CATALOGS_3D: readonly EditorCatalog[] = [
   {
@@ -49,11 +55,13 @@ export const CATALOGS_3D: readonly EditorCatalog[] = [
   {
     id: 'clay',
     name: 'Clay',
-    styles: {
-      body: { name: 'Body', hue: 'neutral' } satisfies NamedStyle3D,
-      accent: { name: 'Accent', hue: 'blue' } satisfies NamedStyle3D,
-      ghost: { name: 'Ghost', hue: 'violet', surface: 'tint' } satisfies NamedStyle3D,
-    },
+    styles: CLAY_STYLES,
+  },
+  // Clay held light whatever the app's mode, as 2D's Soft Light is.
+  {
+    id: 'clay-light',
+    name: 'Clay Light',
+    styles: CLAY_STYLES,
   },
 ];
 

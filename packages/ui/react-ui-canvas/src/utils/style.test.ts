@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type Node, type StyleMap } from '@dxos/scene';
+import { type Node, type NodeTone, type StyleMap } from '@dxos/scene';
 
 import { ViewBuilder } from '../builder/index.ts';
 import { CLASSIC_LOOK, defaultThemeRegistry, resolveLook } from '../model/index.ts';
@@ -14,6 +14,7 @@ import {
   classedNode,
   frameClasses,
   hueClasses,
+  nodeRelief,
   splitClassEdit,
   surfaceClasses,
 } from './style.ts';
@@ -130,7 +131,9 @@ describe('style sets', () => {
     expect(frameClasses(nodes.blue, true, false, false, glass)[2]).toBe('border-focus');
   });
 
-  test('soft shapes are the ground colour, hue only accents them, and a selected one is pressed in', ({ expect }) => {
+  test('soft shapes are the ground colour, hue only accents them, and selection leaves the surface alone', ({
+    expect,
+  }) => {
     const soft = resolveLook(defaultThemeRegistry, { theme: 'soft' });
     const [surface, text, border] = frameClasses(nodes.blue, false, false, false, soft);
     expect(surface).toBe('bg-(--dx-soft-ground) shadow-(--dx-soft-raised)');
@@ -138,13 +141,29 @@ describe('style sets', () => {
     expect(border).toBe('border-blue-500/45 dark:border-blue-400/45');
     // A shape with no hue is pure relief: no edge of its own.
     expect(frameClasses(nodes.plain, false, false, false, soft)[2]).toBe('border-transparent');
-    // Selected: the same ground pressed in, with the focus outline kept.
+    // Selected: still raised; only the outline shows it.
     const selected = frameClasses(nodes.blue, true, false, false, soft);
-    expect(selected[0]).toBe('bg-(--dx-soft-ground) shadow-(--dx-soft-pressed)');
+    expect(selected[0]).toBe(surface);
     expect(selected[2]).toBe('border-focus');
-    // Other sets have no pressed state, so selection leaves their fill alone.
+    // The tone carries indentation: tone 0 is cut in, 1 is level, 2 stands out.
+    const toned = (tone: NodeTone): Node => ({ ...nodes.blue, style: { ...nodes.blue.style, tone } });
+    expect(frameClasses(toned(0), false, false, false, soft)[0]).toBe('bg-(--dx-soft-ground) shadow-(--dx-soft-inset)');
+    expect(frameClasses(toned(1), false, false, false, soft)[0]).toBe('bg-(--dx-soft-ground)');
+    expect(frameClasses(toned(2), true, false, false, soft)[0]).toBe(surface);
     const glass = resolveLook(defaultThemeRegistry, { theme: 'paper' });
     expect(frameClasses(nodes.blue, true, false, false, glass)[0]).toBe('bg-white/55');
+  });
+
+  test('a silhouette takes its relief from the tone, never from selection', ({ expect }) => {
+    const soft = resolveLook(defaultThemeRegistry, { theme: 'soft' });
+    const toned = (tone: NodeTone): Node => ({ ...nodes.blue, style: { ...nodes.blue.style, tone } });
+    expect(nodeRelief(nodes.blue, soft)).toBe('raised');
+    expect(nodeRelief(toned(0), soft)).toBe('inset');
+    expect(nodeRelief(toned(1), soft)).toBeUndefined();
+    // Unfilled shapes and other sets draw no relief.
+    expect(nodeRelief(nodes.bare, soft)).toBeUndefined();
+    expect(nodeRelief(nodes.guide, soft)).toBeUndefined();
+    expect(nodeRelief(nodes.blue, resolveLook(defaultThemeRegistry, { theme: 'paper' }))).toBeUndefined();
   });
 
   test('the canvas fill under captions and hollow markers is the soft ground on a soft background', ({ expect }) => {

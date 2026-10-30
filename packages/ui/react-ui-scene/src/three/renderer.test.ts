@@ -9,7 +9,7 @@ import { SOFT_PALETTE } from '@dxos/react-ui-canvas';
 import { type Scene } from '@dxos/scene';
 
 import { renderList } from './render-list.ts';
-import { SceneRenderer3D, itemSignature } from './renderer.ts';
+import { SceneRenderer3D, castsClayShadow, itemSignature } from './renderer.ts';
 
 describe('itemSignature', () => {
   test('new geometry of the same size rebuilds the mesh', () => {
@@ -252,5 +252,62 @@ describe('SceneRenderer3D.pick', () => {
     second.dispose();
     expect(first.gizmoLayer?.utilityLayerScene.isDisposed).toBe(false);
     first.dispose();
+  });
+});
+
+describe('SceneRenderer3D clay ground', () => {
+  const engine = () =>
+    new NullEngine({
+      renderWidth: 800,
+      renderHeight: 600,
+      textureSize: 256,
+      deterministicLockstep: false,
+      lockstepMaxSteps: 1,
+    });
+
+  const camera: Scene.Camera3D = {
+    target: { x: 0, y: 0, z: 0 },
+    yaw: 0,
+    pitch: 30,
+    distance: 10,
+    fov: 0.8,
+    projection: 'perspective',
+  };
+  const sceneOf = (elements: Record<string, Scene.Element3D>): Scene.SceneDocument => ({
+    scenes: [{ id: 's', dim: '3d', layout: 'root', camera }],
+    layouts: [{ id: 'root', dim: '3d', elements }],
+    models: [],
+  });
+
+  test('the ground lies under the lowest solid body, not a see-through shell round it', () => {
+    const document = sceneOf({
+      shell: {
+        id: 'shell',
+        type: 'sphere',
+        center: { x: 0, y: 0, z: 0 },
+        scale: { x: 8, y: 8, z: 8 },
+        overrides: { surface: 'glass' },
+      },
+      body: { id: 'body', type: 'cube', center: { x: 0, y: -1, z: 0 }, scale: { x: 1, y: 1, z: 1 } },
+    });
+    const view = new SceneRenderer3D({ engine: engine(), theme: 'clay', background: '#ffffff' });
+    view.render(renderList(document), camera);
+    // Under the cube's foot at -1.5, not the shell's at -4.
+    expect(view.groundLevel).toBeCloseTo(-1.5, 1);
+    view.dispose();
+  });
+
+  test('Clay Light keeps the light ground under a dark app', () => {
+    const view = new SceneRenderer3D({ engine: engine(), theme: 'clay-light', mode: 'dark', background: '#ffffff' });
+    expect(view.background).toBe(SOFT_PALETTE.light.ground);
+    view.dispose();
+  });
+
+  test('only solid bodies cast a contact shadow', () => {
+    const clay = { color: '#000000', kind: 'clay' as const, alpha: 1, edges: true };
+    expect(castsClayShadow(clay, {})).toBe(true);
+    expect(castsClayShadow({ ...clay, alpha: 0.4 }, {})).toBe(false);
+    expect(castsClayShadow(clay, { frame: true })).toBe(false);
+    expect(castsClayShadow({ ...clay, kind: 'standard' }, {})).toBe(false);
   });
 });

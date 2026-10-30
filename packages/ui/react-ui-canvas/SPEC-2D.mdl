@@ -802,7 +802,9 @@ feat F-11: 2D tools, geometry and camera
     along each axis.
   req F-11.3: Fit frames the open layout's elements with a major cell of margin; actual size keeps the authored zoom
     and centres the content; the camera bar zooms about the view's centre, up to the engine's largest zoom.
-  req F-11.4: The display panel offers the canvas themes as looks, the lines grid, and guides.
+  req F-11.4: The display panel offers the canvas themes as looks, the lines grid, and guides. Every theme is listed
+    and can be picked in either mode, in a read-only scene too; a host that stores no theme choice keeps the pick for
+    the view alone.
 ```
 
 ```mdl
@@ -866,15 +868,27 @@ feat F-15: Modes
 feat F-16: The Soft theme
   req F-16.1: The Soft theme (neumorphism) follows the app's light or dark mode. Every soft shape is the ground colour,
     and its hue colours only its border and label; a shape with no hue has no border of its own.
-  req F-16.2: The soft style set draws a shape Flat (flush with the ground), Inset (cut into it) or Raised (the default),
-    a raised shape casting a light shadow up and to the left and a dark one down and to the right.
-  req F-16.3: A selected soft shape is pressed in: its shadows fall inside it, deeper than an inset shape's, and the
-    selection outline and handles still draw.
+  req F-16.2: A soft shape's tone is its height: Inset (cut into the ground, tone 0), Flat (flush with it, tone 1) or
+    Raised (tone 2, the default), a raised shape casting a light shadow up and to the left and a dark one down and to
+    the right, an inset one the same shadows inside it. Shapes drawn as outlines (polygons, clouds, closed polylines)
+    take the same relief as boxes.
+  req F-16.3: Selection never changes a soft shape's relief: a selected shape keeps its tone's surface and shows the
+    selection outline and handles.
   req F-16.4: A soft link is a groove: a channel pressed into the ground, in shade on its upper wall and in light on its
-    lower; its arrowheads take the link's hue, and a selected or hovered groove is floored in the focus colour.
+    lower, and its ends are heads of the same channel (an open chevron, a hollow triangle, a ring); a selected or
+    hovered groove and its heads are floored in the focus colour.
   req F-16.5: The soft background is the ground alone, with no grid, and a link caption's backdrop is the ground.
   req F-16.6: The ground and shadow tones are one set of tokens per mode (`SOFT_PALETTE`), shared with the 3D Clay
     look so both dimensions sit on the same ground.
+  req F-16.7: Soft Light is the Soft theme held light whatever the app's mode.
+```
+
+```mdl
+feat F-17: Link ends
+  req F-17.1: An arrowhead ends in a point at the connection point on the shape's edge, and the link's line never
+    shows past or through it, in every theme, link style and width.
+  req F-17.2: The other ends sit the same way: a triangle's point and a circle's far side at the connection point, the
+    line stopping under the end.
 ```
 
 ## Planned
@@ -1417,6 +1431,124 @@ decision D-41: The soft background has no grid, and a link caption's backdrop an
   for: user:richburdon
   affects: [F-16.5]
   why: The shapes' relief is the theme's only texture, and a grid reads as print over it; a white caption backdrop would break the single-tone ground. The display panel's grid buttons still draw one on request.
+```
+
+```mdl
+decision D-42: Do not show selected soft shapes as indented; indentation is a style choice, carried by one of the tone values.
+  date: 2026-10-30
+  by: user:richburdon
+  supersedes: D-34
+  affects: [F-16.2, F-16.3]
+```
+
+```mdl
+decision D-43: A selected soft shape keeps its tone's surface; the pressed relief and its CSS variable are removed, and only the selection outline and handles show selection. Fills in [D-42].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  supersedes: D-39
+  affects: [F-16.3]
+  why: With selection no longer a relief, nothing else used the pressed shadow, so keeping it would leave a token no surface draws.
+```
+
+```mdl
+decision D-44: The soft style set's variants are Inset, Flat and Raised, in tone order (tones 0, 1 and 2), Raised the default; shapes have a 1px border and large (`xl`, rounded `2xl`) corners. Fills in [D-33] and [D-42].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  supersedes: D-38
+  affects: [F-16.2]
+  why: The tone reads as height out of the ground, so the scale is monotonic like the other sets' fills (clear to solid); the default stays at index 2, so a shape given the flat and classic sets' default tone explicitly draws raised here too, and tone 3 draws as the last, raised.
+  rejected:
+    - Flat, Inset, Raised (the earlier order), which puts the cut-in shape between two above it.
+    - Flat, Raised, Inset (by emphasis), which makes the deepest relief the strongest tone though it recedes.
+```
+
+```mdl
+decision D-45: A soft shape drawn as an outline gets its relief from an SVG layer per shape: its outline in the ground colour under one filter that merges two blurred, offset copies of its alpha (the highlight up-left, the shade down-right). Raised, the layer sits beside the frame, which clips, so the shadow falls outside; inset, it draws the fill itself with the shadows inside, over which the masked border draws. Fills in [D-33] and [D-42].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-16.2]
+  why: An outline shape is a box masked to its path, which masks away any box-shadow; the filter matches the box-shadow's offset and blur (deviation half the blur) and runs only on outline shapes in a soft theme.
+  rejected:
+    - A CSS drop-shadow on the masked layers, which the mask clips and which has no inset form.
+    - Unblurred offset copies of the mask, which draw hard steps rather than soft relief.
+```
+
+```mdl
+decision D-46: Create light-mode versions of the soft themes alongside the ones that follow the app.
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [F-16.7]
+```
+
+```mdl
+decision D-47: Soft Light (`soft-light`) is a theme of its own: the soft style set and background with mode `light`, listed after Soft in the picker and the stories. Fills in [D-46].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-16.7]
+  why: A theme's `mode` is how Paper and Film already hold a look light or dark, so the picker shows its sun and every host that stores a theme id stores it unchanged.
+  rejected:
+    - A separate light-mode switch on the theme, which no host stores and the picker has no place for.
+```
+
+```mdl
+decision D-48: Every theme is always selectable, in read-only scenes and in hosts that store no theme choice.
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [F-11.4]
+```
+
+```mdl
+decision D-49: The theme picker is a way of viewing, like the axes toggle, so read-only no longer disables it, and it lists every built-in theme whatever the app's mode. A host that takes the pick stores it as before; one that does not keeps it in the view's memory, over the host's theme, until the view unmounts. The 2D canvas and the shared scene editor (2D and 3D) work the same way. Fills in [D-48].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-11.4]
+  why: A read-only viewer still chooses how to look at a drawing; holding the pick in memory needs no host change and cannot outlive the view in a host that never meant to store it.
+  rejected:
+    - Browser storage per drawing, which would persist a choice the host never offered to keep.
+    - Hiding themes that force the other mode, which would hide Paper and Film from half the users.
+```
+
+```mdl
+decision D-50: Soft-theme arrowheads are drawn in the link's groove style.
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [F-16.4]
+```
+
+```mdl
+decision D-51: A groove's ends are scene paths stroked in the track's three layers, as wide as the track, every lip drawn before any floor, so track and head read as one channel: an open chevron for an arrow, a hollow triangle and a ring. The heads take no hue, as the track takes none, and floor in the focus colour with it when selected or hovered. Fills in [D-50], replacing the accent-hue arrowheads of [D-35].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-16.4]
+  why: An SVG marker draws in its own rotated frame, so lip copies nudged inside it would turn with the link while the track's lips stay fixed in the scene; paths in the scene frame share the track's nudge and cost three plain paths per link, no filter. The canvas's markers are arrow, triangle and circle only, so there is no diamond or bar to draw.
+  rejected:
+    - Groove markers (`<marker>` with nudged copies), whose light and shade would rotate with each link.
+    - A hued head on a hueless track, which reads as a separate part rather than the end of the channel.
+```
+
+```mdl
+decision D-52: An arrowhead ends in a point at the connection point, and the link's line never shows past or through it.
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [F-17.1, F-17.2]
+```
+
+```mdl
+decision D-53: A pointed end is stroked with a mitred join and placed so the mitre's point, not its vertex, is the connection point; a circle sits with its far side there. The line is cut along its route (curves split, not flattened) to where the end covers it: where its edges meet an open arrow's inner edges (half its width further for a round cap), at a triangle's base, at a circle's centre; a groove's track stops at its chevron's vertex, its triangle's base or its ring's near side, where the head's channel covers its round cap. This holds for every link style and width. 3D links draw no heads, so the rule has nothing to apply to there. Fills in [D-52].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-17.1, F-17.2]
+  why: A round join or cap reaches half the stroke past its vertex, so a rounded tip either stops short of the edge or runs into the shape; cutting the line under the end is the one way an open arrow hides it, and the cut lengths depend only on the end, the stroke and the line's width, so they are pure functions tested on their own.
+  rejected:
+    - Filled arrowheads, which would hide the line but change the open arrow's look in every theme.
+    - Drawing the line to the connection point under an opaque end, which an open arrow cannot cover.
 ```
 
 ---

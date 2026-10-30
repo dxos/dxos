@@ -9,7 +9,7 @@ import { type Scene } from '@dxos/scene';
 
 import { type Viewport, project } from './camera.ts';
 import { type RenderItem } from './render-list.ts';
-import { type Theme3D } from './style.ts';
+import { type Theme3D, isClayTheme, themeMode3D } from './style.ts';
 
 export type SceneLabelsProps = {
   items: readonly RenderItem[];
@@ -22,7 +22,7 @@ export type SceneLabelsProps = {
 
 /** HTML labels over the projected items: a frame's above it, an element's on it. */
 export const SceneLabels = ({ items, camera, viewport, theme, mode = 'light' }: SceneLabelsProps) => {
-  const dark = theme === 'presentation' || (theme === 'clay' && mode === 'dark');
+  const dark = theme === 'presentation' || (isClayTheme(theme) && themeMode3D(theme, mode) === 'dark');
   return (
     <div className='dx-cover pointer-events-none overflow-hidden' data-testid='scene.3d.labels'>
       {items.map((item) => {

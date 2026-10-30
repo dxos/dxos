@@ -62,11 +62,15 @@ import {
   setSurface,
 } from './materials.ts';
 import { type RenderItem, type RenderList } from './render-list.ts';
-import { type MaterialSpec, type Theme3D, materialSpec } from './style.ts';
+import { type MaterialSpec, type Theme3D, isClayTheme, materialSpec, themeMode3D } from './style.ts';
 
 /** The outline of a selected item: the theme's focus blue. */
 /** The selection colour when the host gives none. */
 const DEFAULT_SELECTION = '#3b82f6';
+
+/** Whether a clay item casts a contact shadow: a solid body, not a see-through shell or a composite's frame. */
+export const castsClayShadow = (spec: MaterialSpec, item: Pick<RenderItem, 'frame'>): boolean =>
+  spec.kind === 'clay' && spec.alpha >= 0.999 && item.frame !== true;
 
 /** The half-width of the clay theme's ground plane: past the camera's reach, so its edge never shows. */
 const CLAY_GROUND_EXTENT = 1000;
@@ -223,7 +227,8 @@ export class SceneRenderer3D {
     this.#theme = theme;
     this.#selection = selection;
     const presentation = theme === 'presentation';
-    this.#palette = theme === 'clay' ? SOFT_PALETTE[mode] : undefined;
+    const clayMode = themeMode3D(theme, mode);
+    this.#palette = isClayTheme(theme) ? SOFT_PALETTE[clayMode] : undefined;
     this.#background = this.#palette?.ground ?? (presentation ? PRESENTATION_BACKGROUND : background);
     this.#engine =
       engine ?? new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, adaptToDeviceRatio: true });
@@ -246,7 +251,7 @@ export class SceneRenderer3D {
       key.intensity = 2.4;
       this.#createBackdrop();
     } else if (this.#palette) {
-      this.#ground = this.#createClayGround(this.#palette, mode);
+      this.#ground = this.#createClayGround(this.#palette, clayMode);
     } else {
       const light = new HemisphericLight('light', new Vector3(0.3, 1, -0.4), this.#scene);
       light.intensity = 1;
@@ -760,6 +765,8 @@ export class SceneRenderer3D {
     const material = new StandardMaterial('ground', this.#scene);
     material.diffuseColor = ground;
     material.specularColor = Color3.Black();
+    // Drawn first (its material is the scene's first) and leaving no depth, so a body reaching below it still shows.
+    material.disableDepthWrite = true;
     mesh.material = material;
     sky.excludedMeshes.push(mesh);
     key.excludedMeshes.push(mesh);
@@ -769,11 +776,11 @@ export class SceneRenderer3D {
     contact.intensity = 1;
     contact.specular = Color3.Black();
     contact.includedOnlyMeshes.push(mesh);
-    // A coarse map blurred wide: a soft pool under each item rather than a sharp footprint.
-    const shadows = new ShadowGenerator(512, contact);
+    // Blurred a little past the footprint: a soft pool at each body's foot, not a halo trailing away from it.
+    const shadows = new ShadowGenerator(1024, contact);
     shadows.useBlurExponentialShadowMap = true;
     shadows.useKernelBlur = true;
-    shadows.blurKernel = 64;
+    shadows.blurKernel = 32;
     shadows.setDarkness(CLAY_SHADOW_DARKNESS[mode]);
     return { mesh, shadows };
   }
@@ -845,7 +852,6 @@ export class SceneRenderer3D {
       const edge = Color3.FromHexString(spec.color).scale(spec.kind === 'clay' ? 1 : 0.45);
       surface.edgesColor = new Color4(edge.r, edge.g, edge.b, 1);
     }
-    this.#ground?.shadows.addShadowCaster(surface);
     const meshes: ItemMeshes = { signature, surface, material };
     // A see-through shell in the presentation theme carries a rim and a lattice, parented so they move with it.
     if (spec.kind === 'rim') {
@@ -869,15 +875,16 @@ export class SceneRenderer3D {
   }
 
   /**
-   * Sets the clay ground at the grid's plane, or just under the lowest visible item when one reaches below it, so no item
-   * sinks into the ground and the grid is never under it.
+   * Sets the clay ground at the grid's plane, or just under the lowest solid body when one reaches below it, so each
+   * contact shadow lies at its body's foot. A see-through shell or a composite's frame casts no shadow and is left out:
+   * a large one would drop the ground far below the bodies inside it and part their shadows from them.
    */
   #placeGround(): void {
     if (!this.#ground) {
       return;
     }
     let lowest = Infinity;
-    for (const { surface } of this.#items.values()) {
+    for (const surface of this.#ground.shadows.getShadowMap()?.renderList ?? []) {
       if (surface.isEnabled()) {
         surface.computeWorldMatrix(true);
         lowest = Math.min(lowest, surface.getBoundingInfo().boundingBox.minimumWorld.y);
@@ -909,6 +916,13 @@ export class SceneRenderer3D {
       const { surface, material, rim, lattice } = meshes;
       const visible = spec.alpha > 0.001;
       surface.setEnabled(visible);
+      if (this.#ground) {
+        if (castsClayShadow(spec, item)) {
+          this.#ground.shadows.addShadowCaster(surface);
+        } else {
+          this.#ground.shadows.removeShadowCaster(surface);
+        }
+      }
       if (!visible) {
         continue;
       }
@@ -924,8 +938,9 @@ export class SceneRenderer3D {
       const body = this.#palette && spec.kind === 'clay' ? Color3.FromHexString(this.#palette.ground) : color;
       setSurface(material, body, spec.kind === 'rim' ? spec.alpha * 0.25 : spec.alpha);
       if (spec.kind === 'clay') {
-        // A sphere's rim carries its hue; any other body's edges do, and a rim on its flat faces would wash them.
-        setClayAccent(material, item.type === 'sphere' ? color : Color3.Black());
+        // A solid sphere's rim carries its hue; any other body's edges do, a rim on its flat faces would wash them, and
+        // one round a see-through shell tints everything seen through it.
+        setClayAccent(material, item.type === 'sphere' && castsClayShadow(spec, item) ? color : Color3.Black());
         surface.edgesColor = new Color4(color.r, color.g, color.b, 1);
       }
       rim && setRim(rim.material, color, RIM_STRENGTH * Math.min(1, spec.alpha / 0.4));

@@ -131,14 +131,15 @@ feat F-5: Meshes
 
 ```mdl
 feat F-6: Looks and materials
-  req F-6.1: The looks are CAD (flat parts with edges), Presentation (lit materials) and Clay (matte solids), each a
-    default style catalog: CAD offers Part, Highlight and Clearance, Presentation Metal, Glass and Glow, Clay Body,
-    Accent and Ghost.
+  req F-6.1: The looks are CAD (flat parts with edges), Presentation (lit materials), Clay (matte solids) and Clay
+    Light (Clay held light), each a default style catalog: CAD offers Part, Highlight and Clearance, Presentation
+    Metal, Glass and Glow, the two Clays Body, Accent and Ghost. Every look can be picked in a read-only scene and in a
+    host that stores no look.
   req F-6.2: An element's `Style3D` draws as a material over its hue and tone: a solid, tinted or glass surface,
     edges, opacity, metalness, roughness and glow.
-  req F-6.3: Clay follows the app's light or dark mode: its bodies and the ground plane under them are the 2D soft
-    ground of that mode (`SOFT_PALETTE`), lit softly and casting soft contact shadows, and an element's hue draws only
-    as its edges, or as a rim on a sphere.
+  req F-6.3: Clay follows the app's light or dark mode, and Clay Light is always light: its bodies and the ground
+    plane under them are the 2D soft ground of that mode (`SOFT_PALETTE`), lit softly, each solid body casting a soft
+    contact shadow at its foot; an element's hue draws only as its edges, or as a rim on a solid sphere.
 ```
 
 ```mdl
@@ -255,6 +256,57 @@ decision D-11: A clay body's hue draws as its edges, in the hue itself, on every
   why: Edge rendering on a sphere draws stray dots at its poles, and a rim on a flat face washes the whole face in the hue, so each shape takes the accent it can carry.
   rejected:
     - Tinting the whole body a little towards the hue, which breaks the single-tone ground.
+```
+
+```mdl
+decision D-12: Clay's ground lies at the grid's plane, or just under the lowest solid body when one reaches below it, and only solid bodies (fully opaque, not a composite's frame) cast shadows on it, through a 1024 map blurred with a 32 kernel; the ground writes no depth, so anything reaching below it still shows. The lights and colours of [D-10] stand. Fills in [D-8] and [D-9].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  supersedes: D-10
+  affects: [F-6.3]
+  why: A see-through shell round the bodies (the encapsulated exemplar's Team sphere) put the ground at its foot, far below the bodies inside it, so their shadows landed away from them; the wide blur then spread each shadow into a halo that read as a shadow of nothing.
+  rejected:
+    - Lowering the key light's slant, which does not move a shadow cast straight down onto a ground set too low.
+```
+
+```mdl
+decision D-13: A clay body's hue draws as its edges, in the hue itself, on every element whatever its `border`; a solid sphere carries it as a narrow Fresnel rim instead (bias 0, power 0.2), and a see-through sphere or a composite's frame carries none. Clay links are a darker line of the ground, and both Clay catalogs offer Body, Accent and Ghost. Fills in [D-8].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  supersedes: D-11
+  affects: [F-6.1, F-6.3]
+  why: A rim round a large see-through shell tinted everything seen through it in the hue, which broke the single-tone ground; edge rendering on a sphere draws stray dots at its poles, so a solid sphere keeps the rim.
+```
+
+```mdl
+decision D-14: Create a light-mode version of Clay alongside the one that follows the app.
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [F-6.1, F-6.3]
+```
+
+```mdl
+decision D-15: Clay Light (`clay-light`) is a 3D look of its own, drawn as Clay in the light mode whatever the app's; `themeMode3D` resolves a look's mode as a 2D theme's `mode` does. Fills in [D-14].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-6.1, F-6.3]
+  why: It mirrors 2D's Soft Light, a theme id with a fixed mode, so the look picker, the stored view state and the stories treat it as any other look.
+  rejected:
+    - A mode override beside the look, which the 3D view state has no field for and the picker no control for.
+```
+
+```mdl
+decision D-16: The 3D look picker is the scene editor's shared display panel, so the 2D rule that every theme is always selectable, in read-only scenes and in hosts that store no choice, holds for the 3D looks unchanged. Clay has no inset tone: 3D styles carry no tone, and a body sunk into the ground would need cut geometry, so indentation stays a 2D style choice. 3D links draw no arrowheads, so 2D's rule for where a head ends has nothing to apply to. Fills in [D-9].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-6.1, F-6.3]
+  why: Recording where 2D's choices stop keeps the two dimensions' parity explicit rather than implied.
+  rejected:
+    - A recessed Clay body for an inset tone, which needs boolean geometry the renderer only has for solids.
 ```
 
 ---

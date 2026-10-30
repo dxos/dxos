@@ -11,8 +11,8 @@ import { type StyleHue } from '@dxos/scene';
 
 import { type LookTone, type NodeSurface, type Opacity, type Radius } from '../model/index.ts';
 
-/** A surface's classes; `pressed` replaces `surface` while the shape is selected, for a surface that presses in. */
-export type SurfaceClasses = { surface: string; text: string; border: string; pressed?: string };
+/** A surface's classes. */
+export type SurfaceClasses = { surface: string; text: string; border: string };
 
 type ByTone<T> = Record<LookTone, T>;
 
@@ -198,11 +198,11 @@ const SOFT_ACCENTS: Record<StyleHue | 'default', ByTone<{ text: string; border: 
 };
 
 /** The soft accents over one relief: the same ground in every tone, as its `light-dark()` variables follow the scheme. */
-const soft = (surface: string, pressed: string): Record<StyleHue | 'default', ByTone<SurfaceClasses>> => {
+const soft = (surface: string): Record<StyleHue | 'default', ByTone<SurfaceClasses>> => {
   const relief = (accent: ByTone<{ text: string; border: string }>): ByTone<SurfaceClasses> => ({
-    theme: { ...accent.theme, surface, pressed },
-    light: { ...accent.light, surface, pressed },
-    dark: { ...accent.dark, surface, pressed },
+    theme: { ...accent.theme, surface },
+    light: { ...accent.light, surface },
+    dark: { ...accent.dark, surface },
   });
   return {
     default: relief(SOFT_ACCENTS.default),
@@ -849,16 +849,9 @@ export const SURFACES: Record<SetSurface, Record<StyleHue | 'default', ByTone<Su
       dark: { surface: 'bg-violet-900', text: 'text-violet-100', border: 'border-white/20' },
     },
   },
-  // Pressed is deeper than inset, so a selected inset shape still sinks.
-  'soft-flat': soft('bg-(--dx-soft-ground)', 'bg-(--dx-soft-ground) shadow-(--dx-soft-inset)'),
-  'soft-inset': soft(
-    'bg-(--dx-soft-ground) shadow-(--dx-soft-inset)',
-    'bg-(--dx-soft-ground) shadow-(--dx-soft-pressed)',
-  ),
-  'soft-raised': soft(
-    'bg-(--dx-soft-ground) shadow-(--dx-soft-raised)',
-    'bg-(--dx-soft-ground) shadow-(--dx-soft-pressed)',
-  ),
+  'soft-flat': soft('bg-(--dx-soft-ground)'),
+  'soft-inset': soft('bg-(--dx-soft-ground) shadow-(--dx-soft-inset)'),
+  'soft-raised': soft('bg-(--dx-soft-ground) shadow-(--dx-soft-raised)'),
 };
 
 /** A theme hue outside the pickers' set, drawn by a set as the nearest picker hue. */

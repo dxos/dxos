@@ -111,7 +111,10 @@ export type CanvasRootProps = Util.ThemedClassName<{
   background?: string;
   /** Overrides the background's grid; the theme bar picks it. */
   backgroundGrid?: BackgroundGrid;
-  /** Called when the theme bar picks a theme, or `undefined` to take the default; the picker shows only when given. */
+  /**
+   * Called when the theme bar picks a theme, or `undefined` to take the default. Unset, a pick holds for this view
+   * alone: the picker works whether or not the host stores the choice.
+   */
   onThemeChange?: (theme: string | undefined) => void;
   /** Called when the theme bar picks a grid, or `undefined` to take the background's own. */
   onBackgroundGridChange?: (grid: BackgroundGrid | undefined) => void;

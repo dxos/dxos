@@ -11,7 +11,7 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
-import React, { type MouseEvent, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import React, { type MouseEvent, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { type Timeline } from '@dxos/animation';
 import { useClock, useExposedClock } from '@dxos/react-ui-animation';
@@ -44,7 +44,14 @@ import {
   useViewport,
   useViewProjection,
 } from '../../hooks/index.ts';
-import { defaultThemeRegistry, keyAction, nodeAnimatable, softVars } from '../../model/index.ts';
+import {
+  type ThemeChoice,
+  chooseTheme,
+  defaultThemeRegistry,
+  keyAction,
+  nodeAnimatable,
+  softVars,
+} from '../../model/index.ts';
 import { fitFrame, visibleView } from '../../utils/index.ts';
 import { InspectorPanel } from '../panels/index.ts';
 import { defaultLinkRegistry, defaultNodeRegistry } from '../SceneLayer/index.ts';
@@ -110,7 +117,20 @@ export const CanvasRoot = ({
   onContextMenu: onHostContextMenu,
   children,
 }: CanvasRootProps) => {
-  const { look, themeGrid } = useResolvedLook(themes, { theme, defaultTheme, styleSet, background, backgroundGrid });
+  // A host that stores no theme choice still lets the viewer pick one, for this view alone.
+  const [themeChoice, setThemeChoice] = useState<ThemeChoice>();
+  const shownTheme = chooseTheme(theme, themeChoice);
+  const handleThemeChange = useCallback(
+    (next: string | undefined) => (onThemeChange ? onThemeChange(next) : setThemeChoice({ theme: next })),
+    [onThemeChange],
+  );
+  const { look, themeGrid } = useResolvedLook(themes, {
+    theme: shownTheme,
+    defaultTheme,
+    styleSet,
+    background,
+    backgroundGrid,
+  });
   const registry = useRegistry();
   const atoms = useMemo(() => atomsProp ?? createCanvasAtoms(root), [atomsProp, root]);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -246,7 +266,7 @@ export const CanvasRoot = ({
       frame,
       camera: { animateTo, target: cameraTarget, setOpening },
       fit: { enterFit, exitFit, takeOver: () => (interactedRef.current = true) },
-      look: { onThemeChange, onBackgroundGridChange },
+      look: { onThemeChange: handleThemeChange, onBackgroundGridChange },
       history,
     },
   });
@@ -546,10 +566,10 @@ export const CanvasRoot = ({
       <CanvasLookProvider
         look={look}
         themes={themes}
-        themeOverride={theme}
+        themeOverride={shownTheme}
         themeGrid={themeGrid}
-        // The pickers show only when the host takes their changes.
-        setTheme={onThemeChange && controller.look.setTheme}
+        // The grid picker shows only when the host takes its changes; the theme picker always works.
+        setTheme={controller.look.setTheme}
         setBackgroundGrid={onBackgroundGridChange && controller.look.setBackgroundGrid}
       >
         <CanvasTimeProvider atoms={timeAtoms} commands={controller.time} timeline={timelineAtom} generated={generated}>

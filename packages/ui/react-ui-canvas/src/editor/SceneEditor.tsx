@@ -31,6 +31,7 @@ import {
   SceneContextMenu,
   ToolRail,
 } from '../components/index.ts';
+import { type ThemeChoice, withThemeChoice } from '../model/index.ts';
 import { CREATE_GROUP, FLOATING_BAR, type ToolGroup, TOOLS_GROUP } from '../utils/index.ts';
 import { copyFragment, getSessionClipboard, pasteInto, setSessionClipboard } from './clipboard.ts';
 import { SHARED_COMMANDS, buildCommands } from './commands.ts';
@@ -114,7 +115,7 @@ const SceneEditorRoot = <C,>({
   readDocument,
   onLayersChange,
   codec,
-  display,
+  display: hostDisplay,
   onDisplayChange,
   camera: viewerCamera,
   authoredCamera,
@@ -128,6 +129,14 @@ const SceneEditorRoot = <C,>({
   children,
 }: SceneEditorRootProps<C>) => {
   const registry = useContext(RegistryContext);
+  // A host that stores no theme choice still lets the viewer pick one, for this view alone.
+  const [themeChoice, setThemeChoice] = useState<ThemeChoice>();
+  const display = useMemo(() => withThemeChoice(hostDisplay, themeChoice), [hostDisplay, themeChoice]);
+  const onThemeChange = useCallback(
+    (theme: string | undefined) =>
+      onDisplayChange ? onDisplayChange({ themeOverride: theme }) : setThemeChoice({ theme }),
+    [onDisplayChange],
+  );
   const editing = editsInRole(role);
   const readonly = readonlyProp || !editing;
   // Inside a transaction, writes go straight to the host and the transaction records them as one step.
@@ -463,6 +472,7 @@ const SceneEditorRoot = <C,>({
       onLayersChange={onLayersChange}
       display={display}
       onDisplayChange={onDisplayChange}
+      onThemeChange={onThemeChange}
       camera={camera}
       docked={!readonly && docked}
       onDockedChange={onDockedChange}
@@ -669,7 +679,7 @@ SceneEditorCamera.displayName = 'SceneEditor.Camera';
 
 /** The display panel: the look (a default style catalog), the grid, snapping (apart from the grid) and 2D's guides. */
 const SceneEditorDisplay = ({ classNames = 'bottom-2 right-2' }: { classNames?: string }) => {
-  const { config, display, onDisplayChange, readonly } = useSceneEditor('SceneEditor.Display');
+  const { config, display, onDisplayChange, onThemeChange, readonly } = useSceneEditor('SceneEditor.Display');
   const themes = useMemo(() => config.display.themes.map(({ id, label }) => ({ id, name: label })), [config.display]);
   return (
     <div className={mx('absolute w-max', classNames)}>
@@ -681,7 +691,7 @@ const SceneEditorDisplay = ({ classNames = 'bottom-2 right-2' }: { classNames?: 
         }
         themes={themes}
         override={display.themeOverride}
-        onThemeChange={onDisplayChange && ((theme) => onDisplayChange({ themeOverride: theme }))}
+        onThemeChange={onThemeChange}
         grid={display.grid ? (config.display.grids[0] ?? 'lines') : 'none'}
         gridOptions={config.display.grids}
         onGridChange={onDisplayChange && ((grid) => onDisplayChange({ grid: grid !== undefined && grid !== 'none' }))}

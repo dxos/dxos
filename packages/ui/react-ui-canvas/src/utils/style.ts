@@ -30,6 +30,7 @@ import {
   type Opacity,
   type Radius,
   type SceneLook,
+  type SoftRelief,
   type StyleVariant,
   styleVariant,
 } from '../model/index.ts';
@@ -44,8 +45,8 @@ import {
   VIEW_FILLS,
 } from './surfaces.ts';
 
-/** A hue's classes; `pressed` replaces `surface` on a selected shape whose surface presses in. */
-export type HueClasses = { surface: string; text: string; border: string; pressed?: string };
+/** A hue's classes. */
+export type HueClasses = { surface: string; text: string; border: string };
 
 const HUES: Record<string, HueClasses> = {
   neutral: { surface: 'bg-neutral-surface', text: 'text-neutral-fg', border: 'border-neutral-border' },
@@ -248,14 +249,7 @@ export const frameClasses = (
   // grid behind it would read as part of the child scene.
   const opaque = isViewNode(node) && showsContents(node);
   const clear = !filled || hue.surface === 'bg-transparent';
-  const surface =
-    opaque && clear
-      ? VIEW_FILLS[view.contents][look.tone]
-      : filled
-        ? selected && hue.pressed
-          ? hue.pressed
-          : hue.surface
-        : '';
+  const surface = opaque && clear ? VIEW_FILLS[view.contents][look.tone] : filled ? hue.surface : '';
   const lineStyle = style.lineStyle ?? tokens.borderStyle;
   return [
     surface,
@@ -289,6 +283,23 @@ export const cornerRadius = (
  */
 export const canvasFillClass = (look: SceneLook, opacity: Opacity): string =>
   look.background.surface === 'soft' ? SOFT_CANVAS_FILL : CANVAS_FILLS[opacity][look.tone];
+
+const SURFACE_RELIEF: Partial<Record<NodeSurface, SoftRelief>> = {
+  'soft-raised': 'raised',
+  'soft-inset': 'inset',
+};
+
+/**
+ * The soft relief a filled node stands in by its tone, for a shape drawn as a silhouette (its box-shadow would be
+ * masked away with the box); none for a flat or unfilled shape or another style set. Selection never changes it.
+ */
+export const nodeRelief = (node: Node, look: SceneLook = DEFAULT_LOOK): SoftRelief | undefined => {
+  const style = resolveStyle(node.style);
+  if (!style.fill || style.guide) {
+    return undefined;
+  }
+  return SURFACE_RELIEF[styleVariant(look.styleSet, style.tone).surface];
+};
 
 export type LineClasses = { stroke: string; fill: string };
 

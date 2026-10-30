@@ -248,8 +248,8 @@ export const SOFT_STYLE_SET: StyleSet = {
   id: 'soft',
   name: 'Soft',
   variants: [
-    { id: 'flat', name: 'Flat', surface: 'soft-flat', ...SOFT_SHAPE },
     { id: 'inset', name: 'Inset', surface: 'soft-inset', ...SOFT_SHAPE },
+    { id: 'flat', name: 'Flat', surface: 'soft-flat', ...SOFT_SHAPE },
     { id: 'raised', name: 'Raised', surface: 'soft-raised', ...SOFT_SHAPE },
   ],
   defaultVariant: 2,
@@ -333,6 +333,15 @@ export const FILM_THEME: Theme = { id: 'film', name: 'Film', styleSet: 'flat', b
 /** Soft shapes raised from a ground of the same tone, light or dark with the app. */
 export const SOFT_THEME: Theme = { id: 'soft', name: 'Soft', styleSet: 'soft', background: 'soft' };
 
+/** The Soft theme always light, whatever the app's mode. */
+export const SOFT_LIGHT_THEME: Theme = {
+  id: 'soft-light',
+  name: 'Soft Light',
+  styleSet: 'soft',
+  background: 'soft',
+  mode: 'light',
+};
+
 export const DEFAULT_STYLE_SETS: Readonly<Record<string, StyleSet>> = {
   flat: FLAT_STYLE_SET,
   outline: OUTLINE_STYLE_SET,
@@ -358,10 +367,11 @@ export const DEFAULT_THEMES: Readonly<Record<string, Theme>> = {
   'outline': OUTLINE_THEME,
   'film': FILM_THEME,
   'soft': SOFT_THEME,
+  'soft-light': SOFT_LIGHT_THEME,
 };
 
 /** The ids of the built-ins, for pickers. */
-export const THEME_IDS = ['glass-night', 'night', 'paper', 'flat', 'outline', 'film', 'soft'] as const;
+export const THEME_IDS = ['glass-night', 'night', 'paper', 'flat', 'outline', 'film', 'soft', 'soft-light'] as const;
 export const STYLE_SET_IDS = ['flat', 'outline', 'glass', 'soft'] as const;
 export const BACKGROUND_IDS = ['plain', 'dots', 'lines', 'glow', 'paper', 'film', 'soft'] as const;
 

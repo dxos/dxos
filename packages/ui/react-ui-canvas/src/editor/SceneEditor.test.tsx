@@ -15,8 +15,8 @@ import { type EditorDisplay } from './context.ts';
 import { type History } from './history.ts';
 import { SceneEditor } from './SceneEditor.tsx';
 
-const TestViewport = ({ children, grid, snap }: ViewportProps<{ zoom: number }>) => (
-  <div data-testid='viewport' data-grid={grid} data-snap={snap}>
+const TestViewport = ({ children, grid, snap, theme }: ViewportProps<{ zoom: number }>) => (
+  <div data-testid='viewport' data-grid={grid} data-snap={snap} data-theme={theme}>
     {children}
   </div>
 );
@@ -35,7 +35,14 @@ const config = (dim: Scene.Dimension): DimensionConfig<{ zoom: number }> => ({
     zoom: (camera, factor) => ({ zoom: camera.zoom / factor }),
     percent: () => 100,
   },
-  display: { themes: [{ id: 'default', label: 'Default' }], grids: ['lines'], guides: dim === '2d' },
+  display: {
+    themes: [
+      { id: 'default', label: 'Default' },
+      { id: 'other', label: 'Other' },
+    ],
+    grids: ['lines'],
+    guides: dim === '2d',
+  },
   propertyForm: () => null,
 });
 
@@ -50,12 +57,14 @@ const DISPLAY: EditorDisplay = { theme: 'default', grid: true, snap: false };
 const Editor = ({
   dim,
   role,
+  readonly,
   onDisplayChange,
   onCameraChange = () => {},
   refitKey,
 }: {
   dim: Scene.Dimension;
   role?: string;
+  readonly?: boolean;
   onDisplayChange?: (display: Partial<EditorDisplay>) => void;
   onCameraChange?: (camera: { zoom: number }) => void;
   refitKey?: string | number;
@@ -65,6 +74,7 @@ const Editor = ({
     document={DOCUMENT}
     scene='s'
     role={role}
+    readonly={readonly}
     onIntent={() => {}}
     display={DISPLAY}
     onDisplayChange={onDisplayChange}
@@ -137,6 +147,27 @@ describe('SceneEditor', () => {
       expect(renders).toBeLessThan(10);
       cleanup();
     }
+  });
+
+  test('the theme picker works in a read-only scene and, with no host to store the pick, switches the drawn theme', async () => {
+    for (const dim of ['2d', '3d'] as const) {
+      render(<Editor dim={dim} readonly />);
+      const trigger = screen.getByTestId('theme-trigger');
+      expect(trigger.hasAttribute('disabled')).toBe(false);
+      expect(screen.getByTestId('viewport').dataset.theme).toBe('default');
+      await userEvent.click(trigger);
+      await userEvent.click(await screen.findByTestId('theme-option-other'));
+      expect(screen.getByTestId('viewport').dataset.theme).toBe('other');
+      cleanup();
+    }
+  });
+
+  test('a host that stores the theme takes the pick', async () => {
+    const onDisplayChange = vi.fn();
+    render(<Editor dim='2d' readonly onDisplayChange={onDisplayChange} />);
+    await userEvent.click(screen.getByTestId('theme-trigger'));
+    await userEvent.click(await screen.findByTestId('theme-option-other'));
+    expect(onDisplayChange).toHaveBeenCalledWith({ themeOverride: 'other' });
   });
 
   test('snap toggle is independent of the grid toggle', async () => {

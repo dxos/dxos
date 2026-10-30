@@ -223,7 +223,8 @@ export const DisplayPanel = ({
     )}
     <Toolbar.Separator variant='line' />
     <Menu.Root positioning={{ placement: 'top-end', gutter: 4 }}>
-      <Menu.Trigger asChild disabled={readonly || !onThemeChange}>
+      {/* A way of viewing, as the axes are: open in a read-only scene. */}
+      <Menu.Trigger asChild disabled={!onThemeChange}>
         <Button.Root variant='ghost' classNames='gap-2 px-2' data-testid='theme-trigger'>
           {registry && isTheme(theme) && <ThemeSwatch theme={theme} registry={registry} />}
           <span className='truncate'>{theme.name}</span>

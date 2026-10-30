@@ -118,8 +118,8 @@ export const createSurfaceMaterial = (scene: Scene, name: string, kind: 'standar
  * How far clay's hue rim reaches in from the silhouette: Babylon weighs it by one less (bias + facing) to the power, so a
  * bias and a power below one keep it to a band at the edge.
  */
-export const CLAY_RIM_BIAS = 0.25;
-export const CLAY_RIM_POWER = 0.6;
+export const CLAY_RIM_BIAS = 0;
+export const CLAY_RIM_POWER = 0.2;
 
 /** How strongly clay's rim takes the hue, so it tints the body's edge rather than glowing. */
 export const CLAY_RIM_STRENGTH = 0.6;

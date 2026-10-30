@@ -26,7 +26,8 @@ const createSample = () =>
     ViewBuilder.rect('plain', cell(0, 0)).properties({ label: 'Plain' }),
     ViewBuilder.rect('blue', cell(6, 0)).properties({ label: 'Blue', style: { hue: 'blue' } }),
     ViewBuilder.rect('strong', cell(12, 0)).properties({ label: 'Strong', style: { hue: 'violet', tone: 1 } }),
-    ViewBuilder.ellipse('ellipse', cell(0, 4, 4, 3)).properties({ label: 'Ellipse', style: { hue: 'teal' } }),
+    // A circle, centred on its row.
+    ViewBuilder.ellipse('ellipse', cell(0.5, 3.5, 3, 3)).properties({ label: 'Ellipse', style: { hue: 'teal' } }),
     ViewBuilder.rect('rounded', cell(6, 4)).properties({
       label: 'Rounded',
       style: { hue: 'amber', rounded: true },
@@ -56,13 +57,47 @@ const createSample = () =>
       .properties({ style: { hue: 'red', lineStyle: 'dashed' } }),
   ]).build();
 
-type StoryArgs = { theme?: string; defaultTheme?: string };
+/** Each tone side by side, as boxes and as outline shapes, joined by links with each kind of end. */
+const createTones = () =>
+  ViewBuilder.view('root', [
+    ViewBuilder.rect('inset', cell(0, 0)).properties({ label: 'Inset (tone 0)', style: { hue: 'blue', tone: 0 } }),
+    ViewBuilder.rect('flat', cell(6, 0)).properties({ label: 'Flat (tone 1)', style: { hue: 'blue', tone: 1 } }),
+    ViewBuilder.rect('blue', cell(12, 0)).properties({ label: 'Raised (tone 2)', style: { hue: 'blue', tone: 2 } }),
+    ViewBuilder.polygon('polygon-inset', cell(0, 4, 4, 3)).properties({
+      label: 'Inset',
+      style: { hue: 'teal', tone: 0 },
+    }),
+    ViewBuilder.cloud('cloud-flat', cell(6, 4, 4, 3)).properties({ label: 'Flat', style: { hue: 'teal', tone: 1 } }),
+    ViewBuilder.polygon('polygon-raised', cell(12, 4, 4, 3)).properties({ label: 'Raised', style: { hue: 'teal' } }),
+    ViewBuilder.cloud('cloud-inset', cell(0, 9, 4, 3)).properties({
+      label: 'Inset',
+      style: { hue: 'violet', tone: 0 },
+    }),
+    ViewBuilder.cloud('cloud-raised', cell(12, 9, 4, 3)).properties({ label: 'Raised', style: { hue: 'violet' } }),
+    ViewBuilder.link('smart', 'inset', 'flat')
+      .id('arrow')
+      .properties({ ends: { end: 'arrow' } }),
+    ViewBuilder.link('smart', 'flat', 'blue')
+      .id('triangle')
+      .properties({ ends: { end: 'triangle' } }),
+    ViewBuilder.link('smart', 'blue', 'polygon-raised')
+      .id('circle')
+      .properties({ ends: { start: 'circle', end: 'arrow' } }),
+    ViewBuilder.link('smart', 'polygon-inset', 'cloud-inset')
+      .id('down')
+      .properties({ style: { hue: 'teal' }, ends: { end: 'arrow' } }),
+    ViewBuilder.link('smart', 'cloud-inset', 'cloud-raised')
+      .id('across')
+      .properties({ style: { lineStyle: 'dashed' }, ends: { start: 'triangle', end: 'arrow' } }),
+  ]).build();
 
-const ThemeView = ({ theme: initialTheme, defaultTheme }: StoryArgs) => {
+type StoryArgs = { theme?: string; defaultTheme?: string; sample?: 'elements' | 'tones' };
+
+const ThemeView = ({ theme: initialTheme, defaultTheme, sample = 'elements' }: StoryArgs) => {
   const { store, root } = useMemo(() => {
-    const tree = createSample();
+    const tree = sample === 'tones' ? createTones() : createSample();
     return { store: createMemoryStore(tree.views), root: tree.root };
-  }, []);
+  }, [sample]);
   // The args are where the view starts; the theme bar changes it from there.
   const [theme, setTheme] = useState(initialTheme);
   useEffect(() => setTheme(initialTheme), [initialTheme]);
@@ -91,7 +126,8 @@ const ThemeView = ({ theme: initialTheme, defaultTheme }: StoryArgs) => {
  * A theme pairs a style set with a background, and may hold the canvas in light or dark whatever the app's mode.
  *
  * Test:
- * 1. Each story draws the same scene: rectangles at several tones, an ellipse, a note, a frame and links.
+ * 1. Each story draws the same scene (SoftTones its own): rectangles at several tones, an ellipse, a note, a frame and
+ *    links.
  * 2. The bar at the bottom right opens the theme list: each theme with a swatch, and a sun or moon when it has a mode;
  *    picking one restyles every element and the background; Default takes `defaultTheme`.
  * 3. The grid buttons draw dots, lines or no grid over the theme's background.
@@ -126,3 +162,13 @@ export const Outline: Story = { args: { theme: 'outline' } };
 
 /** Neumorphism: shapes raised from a ground of their own tone, links as grooves; light or dark with the app. */
 export const Soft: Story = { args: { theme: 'soft' } };
+
+/** Soft held light whatever the app's mode. */
+export const SoftLight: Story = { args: { theme: 'soft-light' } };
+
+/**
+ * The soft tones side by side, as boxes and as outline shapes: inset, flat and raised, raised the default. Links end in
+ * an arrow, a triangle and a circle, each a head of the same groove as its track. Selecting a shape outlines it and
+ * leaves its relief alone.
+ */
+export const SoftTones: Story = { args: { theme: 'soft', sample: 'tones' } };

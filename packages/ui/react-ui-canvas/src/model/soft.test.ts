@@ -8,7 +8,9 @@ import { SOFT_PALETTE, SOFT_RELIEF, SOFT_VARS, softVars } from './soft.ts';
 import {
   DEFAULT_THEMES,
   SOFT_BACKGROUND,
+  SOFT_LIGHT_THEME,
   SOFT_STYLE_SET,
+  THEME_IDS,
   defaultThemeRegistry,
   resolveLook,
   styleVariant,
@@ -29,9 +31,8 @@ describe('soft tokens', () => {
     expect(vars[SOFT_VARS.raised]).toBe(
       `-${offset}px -${offset}px ${blur}px var(--dx-soft-highlight), ${offset}px ${offset}px ${blur}px var(--dx-soft-shade)`,
     );
-    // Pressed and inset shadows fall inside the shape.
+    // Inset shadows fall inside the shape.
     expect(vars[SOFT_VARS.inset].startsWith('inset ')).toBe(true);
-    expect(vars[SOFT_VARS.pressed].startsWith('inset ')).toBe(true);
     // A miniature scales the relief, not the colours.
     expect(softVars(0.5)[SOFT_VARS.raised]).toContain(`${offset / 2}px`);
     expect(softVars(0.5)[SOFT_VARS.ground]).toBe(vars[SOFT_VARS.ground]);
@@ -46,12 +47,22 @@ describe('soft theme', () => {
     expect(look.styleSet).toBe(SOFT_STYLE_SET);
     expect(look.background).toBe(SOFT_BACKGROUND);
     expect(styleVariant(SOFT_STYLE_SET, undefined).surface).toBe('soft-raised');
+    // Tone is height out of the ground: cut in, level, standing out.
     expect(SOFT_STYLE_SET.variants.map((variant) => variant.surface)).toEqual([
-      'soft-flat',
       'soft-inset',
+      'soft-flat',
       'soft-raised',
     ]);
     expect(SOFT_STYLE_SET.link.kind).toBe('groove');
     expect(SOFT_BACKGROUND.surface).toBe('soft');
+  });
+
+  test('Soft Light is the same look held light whatever the app', ({ expect }) => {
+    expect(THEME_IDS).toContain('soft-light');
+    expect(DEFAULT_THEMES['soft-light']).toBe(SOFT_LIGHT_THEME);
+    const look = resolveLook(defaultThemeRegistry, { theme: 'soft-light' });
+    expect(look.tone).toBe('light');
+    expect(look.styleSet).toBe(SOFT_STYLE_SET);
+    expect(look.background).toBe(SOFT_BACKGROUND);
   });
 });

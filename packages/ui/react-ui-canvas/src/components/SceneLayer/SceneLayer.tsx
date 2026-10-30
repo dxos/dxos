@@ -29,6 +29,7 @@ import {
   type ElementId,
   type LineStyle,
   LINK_FONT_SIZE,
+  type LinkEnds,
   type LinkId,
   MAJOR_GRID_RATIO,
   type Marker,
@@ -57,6 +58,9 @@ import {
   type NodeViewProps,
   RADIUS_PX,
   SOFT_GROOVE_LIP,
+  SOFT_RELIEF,
+  SOFT_VARS,
+  type SoftRelief,
   type View,
   type ViewStore,
   nodeDef,
@@ -68,8 +72,10 @@ import {
   DEFAULT_CELL,
   GROOVE_CLASSES,
   type LatticeSpec,
+  type MarkerFrame,
   type PartEditing,
   type PartKey,
+  SOFT_CANVAS_FILL,
   alignClasses,
   canvasFillClass,
   classedLink,
@@ -81,16 +87,22 @@ import {
   diagramNodeMarkup,
   elementLayer,
   frameClasses,
+  grooveHeads,
+  grooveTrim,
   instanceTransform,
   instanceView,
   isMultiline,
   lineClasses,
+  markerFrame,
+  markerTrim,
   nodeBounds,
   nodeParts,
+  nodeRelief,
   portalFrame,
   portalScale,
   portalTransform,
   sortByZ,
+  trimPath,
   viewLayers,
   viewLinkGeometry,
   visibleView,
@@ -305,6 +317,9 @@ export const SceneLayer = memo(
                           width={linkWidth}
                           lineStyle={lines.get(link.id)?.lineStyle}
                           linkId={link.id}
+                          ends={linkMarkers(link)}
+                          endSize={END_BOX * cell}
+                          markerWidth={markerWidth}
                         />
                       )}
                       {link.text && !diagram && (
@@ -358,7 +373,8 @@ export const SceneLayer = memo(
                 {/* The ends paint over the layer's nodes, so an end centred on a node's edge shows whole. */}
                 <svg className='absolute overflow-visible pointer-events-none' style={fadeStyle} width={1} height={1}>
                   {group.links.map(({ link, path, diagram }) =>
-                    diagram ? null : (
+                    // A groove draws its ends with its track.
+                    diagram || look.styleSet.link.kind === 'groove' ? null : (
                       <path
                         key={link.id}
                         d={path}
@@ -595,68 +611,53 @@ type MarkersProps = {
 
 const Markers = ({ id, cell, hue, width, canvasFill }: MarkersProps) => {
   const line = lineClasses(hue);
-  // Each end fills a box of `END_BOX` nominal units, so it scales with the grid and the shapes it joins: the
-  // arrow and the triangle 10 of their 12 view units, the circle 8 of its 10.
+  // Each end fills a box of `END_BOX` nominal units, so it scales with the grid and the shapes it joins.
   const box = END_BOX * cell;
-  const arrow = box;
-  const triangle = (box * 12) / 10;
-  const circle = (box * 10) / 8;
+  const arrow = markerFrame('arrow', box, width);
+  const triangle = markerFrame('triangle', box, width);
+  const circle = markerFrame('circle', box, width);
   // An outline matches the line's width, in its marker's view units.
-  const outline = (size: number, view: number) => (width * view) / size;
+  const outline = ({ size, view }: MarkerFrame) => (width * view) / size;
   const ends = ['start', 'end'] as const;
+  // The mitred tip and the circle's far side sit at the anchor, so a marker reaches past its view box.
+  const frame = ({ size, refX, refY }: MarkerFrame, end: 'start' | 'end') => ({
+    refX,
+    refY,
+    markerWidth: size,
+    markerHeight: size,
+    markerUnits: 'userSpaceOnUse',
+    overflow: 'visible',
+    orient: end === 'start' ? 'auto-start-reverse' : 'auto',
+  });
   return (
     <>
       {ends.map((end) => (
-        <marker
-          key={`arrow-${end}`}
-          id={`${id}-arrow-${end}`}
-          viewBox='-1 -1 12 12'
-          refX={10}
-          refY={5}
-          markerWidth={(arrow * 12) / 10}
-          markerHeight={(arrow * 12) / 10}
-          markerUnits='userSpaceOnUse'
-          orient={end === 'start' ? 'auto-start-reverse' : 'auto'}
-        >
-          {/* An open arrowhead: two strokes, not a filled head. */}
+        <marker key={`arrow-${end}`} id={`${id}-arrow-${end}`} viewBox='-1 -1 12 12' {...frame(arrow, end)}>
+          {/* An open arrowhead: two strokes meeting in a mitred point, not a filled head. */}
           <path
             d='M 0 0 L 10 5 L 0 10'
             className={mx('fill-none', line.stroke)}
-            strokeWidth={outline((arrow * 12) / 10, 12)}
+            strokeWidth={outline(arrow)}
             strokeLinecap='round'
-            strokeLinejoin='round'
+            strokeLinejoin='miter'
           />
         </marker>
       ))}
       {/* Inheritance (UML generalization): a triangle filled with the canvas, so the line stops at its base. */}
       {ends.map((end) => (
-        <marker
-          key={`triangle-${end}`}
-          id={`${id}-triangle-${end}`}
-          viewBox='-1 -1 12 12'
-          refX={10}
-          refY={5}
-          markerWidth={triangle}
-          markerHeight={triangle}
-          markerUnits='userSpaceOnUse'
-          orient={end === 'start' ? 'auto-start-reverse' : 'auto'}
-        >
-          <path d='M 0 0 L 10 5 L 0 10 z' className={mx(canvasFill, line.stroke)} strokeWidth={outline(triangle, 12)} />
+        <marker key={`triangle-${end}`} id={`${id}-triangle-${end}`} viewBox='-1 -1 12 12' {...frame(triangle, end)}>
+          <path
+            d='M 0 0 L 10 5 L 0 10 z'
+            className={mx(canvasFill, line.stroke)}
+            strokeWidth={outline(triangle)}
+            strokeLinejoin='miter'
+          />
         </marker>
       ))}
-      {/* A circle centred on the connection point, filled with the canvas so the line stops at its rim. */}
+      {/* A circle filled with the canvas, its far side on the connection point, so the line stops under it. */}
       {ends.map((end) => (
-        <marker
-          key={`circle-${end}`}
-          id={`${id}-circle-${end}`}
-          viewBox='0 0 10 10'
-          refX={5}
-          refY={5}
-          markerWidth={circle}
-          markerHeight={circle}
-          markerUnits='userSpaceOnUse'
-        >
-          <circle cx={5} cy={5} r={4} className={mx(canvasFill, line.stroke)} strokeWidth={outline(circle, 10)} />
+        <marker key={`circle-${end}`} id={`${id}-circle-${end}`} viewBox='0 0 10 10' {...frame(circle, end)}>
+          <circle cx={5} cy={5} r={4} className={mx(canvasFill, line.stroke)} strokeWidth={outline(circle)} />
         </marker>
       ))}
     </>
@@ -690,39 +691,60 @@ type LinkStrokeProps = {
   width: number;
   lineStyle: LineStyle['lineStyle'];
   linkId: string;
+  /** The link's end markers: the line stops under them, and a groove draws them as more channel. */
+  ends: LinkEnds;
+  /** An end's nominal size, in scene units. */
+  endSize: number;
+  /** The width of a marker's outline, in scene units. */
+  markerWidth: number;
 };
 
 /**
  * A link's visible stroke as its style set draws it: a line; a tube, its hue lit along the middle; rails, two edges over
- * a faint strip; glass, a translucent strip with fine edges; or a groove, a channel pressed into the soft ground.
+ * a faint strip; glass, a translucent strip with fine edges; or a groove, a channel pressed into the soft ground. The
+ * line stops under each end, so it never shows past or through an end's point.
  */
-const LinkStroke = ({ id, kind, path, stroke, emphasis, width, lineStyle, linkId }: LinkStrokeProps) => {
+const LinkStroke = ({
+  id,
+  kind,
+  path: route,
+  stroke,
+  emphasis,
+  width,
+  lineStyle,
+  linkId,
+  ends,
+  endSize,
+  markerWidth,
+}: LinkStrokeProps) => {
   const dash = dashArray(lineStyle, width);
-  if (kind === 'groove') {
-    // Copies of the channel nudged up-left in shade and down-right in light, under its floor: an SVG stroke cannot be
-    // offset or inset-shadowed, and a filter per link would be far dearer to draw.
-    const lip = Math.max(0.75, width * SOFT_GROOVE_LIP);
+  const groove = kind === 'groove';
+  const round = groove || (kind === 'line' && lineStyle === 'dotted');
+  const { start, end } = ends;
+  const path = useMemo(() => {
+    const trim = (marker: Marker | undefined) =>
+      marker === undefined
+        ? 0
+        : groove
+          ? grooveTrim(marker, width, endSize)
+          : markerTrim(marker, endSize, markerWidth, { width, round });
+    return trimPath(route, trim(start), trim(end));
+  }, [route, start, end, groove, round, width, endSize, markerWidth]);
+  const heads = useMemo(
+    () => (groove && (start || end) ? grooveHeads(route, { start, end }, width, endSize) : ''),
+    [groove, route, start, end, width, endSize],
+  );
+  if (groove) {
     return (
-      <g strokeLinejoin='round' strokeLinecap='round' strokeDasharray={dash} data-link-id={linkId}>
-        <path
-          d={path}
-          className={mx('fill-none', GROOVE_CLASSES.highlight)}
-          strokeWidth={width}
-          transform={`translate(${lip} ${lip})`}
-        />
-        <path
-          d={path}
-          className={mx('fill-none', GROOVE_CLASSES.shade)}
-          strokeWidth={width}
-          transform={`translate(${-lip} ${-lip})`}
-        />
-        <path
-          d={path}
-          className={mx('fill-none', emphasis ? stroke : GROOVE_CLASSES.floor)}
-          strokeWidth={width}
-          opacity={emphasis ? 0.6 : 1}
-        />
-      </g>
+      <GrooveStroke
+        path={path}
+        heads={heads}
+        stroke={stroke}
+        emphasis={emphasis}
+        width={width}
+        dash={dash}
+        linkId={linkId}
+      />
     );
   }
   if (kind === 'line') {
@@ -732,7 +754,7 @@ const LinkStroke = ({ id, kind, path, stroke, emphasis, width, lineStyle, linkId
         className={mx('fill-none', stroke)}
         strokeWidth={width}
         strokeDasharray={dash}
-        strokeLinecap={lineStyle === 'dotted' ? 'round' : undefined}
+        strokeLinecap={round ? 'round' : undefined}
         data-link-id={linkId}
       />
     );
@@ -762,6 +784,57 @@ const LinkStroke = ({ id, kind, path, stroke, emphasis, width, lineStyle, linkId
         mask={`url(#${maskId})`}
         opacity={kind === 'rails' ? 1 : 0.7}
       />
+    </g>
+  );
+};
+
+type GrooveStrokeProps = Pick<LinkStrokeProps, 'path' | 'stroke' | 'emphasis' | 'width' | 'linkId'> & {
+  /** The ends as more channel. */
+  heads: string;
+  dash: string | undefined;
+};
+
+/**
+ * A channel pressed into the soft ground, its ends heads of the same channel: every lip is drawn before any floor, so
+ * the track and its heads read as one cut. The lips are copies nudged down-right in light and up-left in shade, as an
+ * SVG stroke cannot be offset or inset-shadowed and a filter per link would be far dearer to draw. The track stops
+ * under each head, whose mitred point is the end.
+ */
+const GrooveStroke = ({ path, heads, stroke, emphasis, width, dash, linkId }: GrooveStrokeProps) => {
+  const lip = Math.max(0.75, width * SOFT_GROOVE_LIP);
+  const floor = emphasis ? stroke : GROOVE_CLASSES.floor;
+  const layer = (className: string, offset: number, opacity?: number) => {
+    const transform = offset ? `translate(${offset} ${offset})` : undefined;
+    return (
+      <>
+        {path && (
+          <path
+            d={path}
+            className={mx('fill-none', className)}
+            strokeWidth={width}
+            strokeDasharray={dash}
+            transform={transform}
+            opacity={opacity}
+          />
+        )}
+        {heads && (
+          <path
+            d={heads}
+            className={mx('fill-none', className)}
+            strokeWidth={width}
+            strokeLinejoin='miter'
+            transform={transform}
+            opacity={opacity}
+          />
+        )}
+      </>
+    );
+  };
+  return (
+    <g strokeLinejoin='round' strokeLinecap='round' data-link-id={linkId}>
+      {layer(GROOVE_CLASSES.highlight, lip)}
+      {layer(GROOVE_CLASSES.shade, -lip)}
+      {layer(floor, 0, emphasis ? 0.6 : undefined)}
     </g>
   );
 };
@@ -967,8 +1040,30 @@ const NodeFrame = memo(
     const frameLook = props.opening
       ? frameClasses(drawn, false, false, def?.ellipse, look).slice(1)
       : frameClasses(drawn, selected, hovered, def?.ellipse, look);
+    const silhouetteFilled = def?.filled?.(drawn) ?? true;
+    const silhouetteRadius = RADIUS_PX[cornerRadius(drawn.style, styleVariant(look.styleSet, drawn.style?.tone))];
+    const relief = silhouette && silhouetteFilled ? nodeRelief(drawn, look) : undefined;
     return (
       <>
+        {silhouette &&
+          relief && (
+            // Beside the frame, which clips: a raised shadow falls outside the shape.
+            <SilhouetteRelief
+              outline={silhouette}
+              node={drawn}
+              border={border}
+              radius={silhouetteRadius}
+              relief={relief}
+              className={mx(ghost && 'opacity-50')}
+              style={{
+                left: bounds.x,
+                top: bounds.y,
+                ...(drawn.rotation ? { transform: `rotate(${drawn.rotation}deg)` } : {}),
+                ...fade,
+                ...nodeOpacity(drawn, fade),
+              }}
+            />
+          )}
         <div
           className={mx(
             'absolute box-border',
@@ -1013,10 +1108,12 @@ const NodeFrame = memo(
             <div className={mx('contents', ...frameLook)}>
               <Silhouette
                 outline={silhouette}
-                filled={def?.filled?.(drawn) ?? true}
+                filled={silhouetteFilled}
+                // An inset relief draws the fill itself, under its inner shadow.
+                fill={relief !== 'inset'}
                 node={drawn}
                 border={border}
-                radius={RADIUS_PX[cornerRadius(drawn.style, styleVariant(look.styleSet, drawn.style?.tone))]}
+                radius={silhouetteRadius}
                 // A guide is dashed whatever its line style, as a box's border is.
                 lineStyle={
                   drawn.style?.guide
@@ -1082,6 +1179,8 @@ type SilhouetteProps = {
   outline: NonNullable<NodeDef['silhouette']>;
   /** False for an open outline, which has no inside to fill. */
   filled: boolean;
+  /** False when another layer draws the fill. */
+  fill?: boolean;
   node: Node;
   border: number;
   radius: number;
@@ -1093,7 +1192,7 @@ type SilhouetteProps = {
  * A frame's fill and border cut to an outline: a layer inheriting the fill and one the border colour, each masked by
  * the path (filled, then stroked), so the shape draws with every look a box has.
  */
-const Silhouette = ({ outline, filled, node, border, radius, lineStyle }: SilhouetteProps) => {
+const Silhouette = ({ outline, filled, fill = true, node, border, radius, lineStyle }: SilhouetteProps) => {
   const { width, height } = node.size;
   const dash = dashArray(lineStyle, border);
   const masks = useMemo(() => {
@@ -1112,7 +1211,7 @@ const Silhouette = ({ outline, filled, node, border, radius, lineStyle }: Silhou
   const layer: CSSProperties = { maskSize: '100% 100%', maskRepeat: 'no-repeat' };
   return (
     <>
-      {filled && (
+      {filled && fill && (
         <div
           aria-hidden
           className='dx-cover pointer-events-none'
@@ -1131,6 +1230,94 @@ const Silhouette = ({ outline, filled, node, border, radius, lineStyle }: Silhou
         }}
       />
     </>
+  );
+};
+
+type SilhouetteReliefProps = {
+  outline: NonNullable<NodeDef['silhouette']>;
+  node: Node;
+  border: number;
+  radius: number;
+  relief: SoftRelief;
+  className?: string;
+  /** Position, rotation and fade, as the frame's. */
+  style: CSSProperties;
+};
+
+const SHADE_FLOOD: CSSProperties = { floodColor: `var(${SOFT_VARS.shade})` };
+const HIGHLIGHT_FLOOD: CSSProperties = { floodColor: `var(${SOFT_VARS.highlight})` };
+
+/**
+ * A silhouette's soft relief, which its masked layers cannot cast: the outline in the ground colour under one filter of
+ * two blurred, offset copies of its alpha, as the box-shadow a box draws with. Raised, the copies fall outside the shape
+ * behind the frame; inset, they fall inside it over this layer's own fill.
+ */
+const SilhouetteRelief = ({ outline, node, border, radius, relief, className, style }: SilhouetteReliefProps) => {
+  const id = useId();
+  const { width, height } = node.size;
+  const path = useMemo(() => outline(node, border / 2, radius), [outline, node, border, radius]);
+  const { offset, blur } = SOFT_RELIEF[relief];
+  // Box-shadow blur is twice the Gaussian deviation.
+  const deviation = blur / 2;
+  const pad = offset + blur * 2;
+  const inset = relief === 'inset';
+  const copy = (dx: number, flood: CSSProperties, name: string) => (
+    <>
+      <feOffset in='blur' dx={dx} dy={dx} result={`${name}-at`} />
+      <feFlood style={flood} />
+      <feComposite in2={`${name}-at`} operator='in' result={inset ? `${name}-all` : name} />
+      {inset && <feComposite in={`${name}-all`} in2='SourceAlpha' operator='in' result={name} />}
+    </>
+  );
+  return (
+    <svg
+      aria-hidden
+      className={mx('absolute overflow-visible pointer-events-none', className)}
+      width={width}
+      height={height}
+      style={style}
+    >
+      <defs>
+        <filter
+          id={id}
+          filterUnits='userSpaceOnUse'
+          x={-pad}
+          y={-pad}
+          width={width + pad * 2}
+          height={height + pad * 2}
+        >
+          {inset ? (
+            <>
+              {/* The outside of the shape, so its shadow falls on the inner walls. */}
+              <feComponentTransfer in='SourceAlpha' result='outside'>
+                <feFuncA type='table' tableValues='1 0' />
+              </feComponentTransfer>
+              <feGaussianBlur in='outside' stdDeviation={deviation} result='blur' />
+            </>
+          ) : (
+            <feGaussianBlur in='SourceAlpha' stdDeviation={deviation} result='blur' />
+          )}
+          {copy(-offset, HIGHLIGHT_FLOOD, 'highlight')}
+          {copy(offset, SHADE_FLOOD, 'shade')}
+          <feMerge>
+            {inset ? (
+              <>
+                <feMergeNode in='SourceGraphic' />
+                <feMergeNode in='shade' />
+                <feMergeNode in='highlight' />
+              </>
+            ) : (
+              <>
+                <feMergeNode in='highlight' />
+                <feMergeNode in='shade' />
+                <feMergeNode in='SourceGraphic' />
+              </>
+            )}
+          </feMerge>
+        </filter>
+      </defs>
+      <path d={path} className={SOFT_CANVAS_FILL} filter={`url(#${id})`} />
+    </svg>
   );
 };
 
