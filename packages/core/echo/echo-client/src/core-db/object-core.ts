@@ -94,6 +94,18 @@ export type TargetRefreshScope = { target: object; key: string };
  */
 export type DeletionMemo = Map<ObjectCore, boolean[]>;
 
+/** The system fields a deletion walk reads, decoded once per document generation. */
+type DeletionFields = {
+  /** The document root, mount path and database they were read under; a write replaces the root. */
+  readonly root: unknown;
+  readonly mountPath: Doc.KeyPath;
+  readonly binding: IDatabaseBinding | undefined;
+  readonly deleted: boolean;
+  /** Same-space strong dependencies — the parent, and a relation's endpoints — whose deletion deletes this one. */
+  readonly dependencies: readonly EntityId[];
+  readonly mergedInto: EntityId | undefined;
+};
+
 /**
  *
  */
@@ -123,6 +135,9 @@ export class ObjectCore {
   public docHandle?: DocHandleProxy<DatabaseDirectory> = undefined;
 
   #snapshot?: ObjectSnapshot = undefined;
+
+  /** See {@link DeletionFields}; each read of the document is a call into wasm. */
+  #deletionFields?: DeletionFields = undefined;
 
   /** When the document last loaded or changed (`performance.now()`); the space releases it after a TTL. */
   public activeAt = 0;
@@ -923,24 +938,17 @@ export class ObjectCore {
   }
 
   #computeIsDeleted(remainingDepth: number, memo: DeletionMemo | undefined): boolean {
-    const value = this.getRaw([SYSTEM_NAMESPACE, 'deleted']);
-    const ownDeleted = typeof value === 'boolean' ? value : false;
-    if (ownDeleted) {
+    const fields = this.#readDeletionFields();
+    if (fields.deleted) {
       return true;
     }
 
+    // An entity is transitively deleted when one of its strong dependencies is deleted: a child
+    // when its parent is removed, or a relation when either endpoint is removed — a dangling
+    // relation has no valid graph edge, so it is treated as deleted and excluded from queries.
     if (this.entityManager && remainingDepth > 0) {
-      // An entity is transitively deleted when one of its strong dependencies is deleted: a child
-      // when its parent is removed, or a relation when either endpoint is removed — a dangling
-      // relation has no valid graph edge, so it is treated as deleted and excluded from queries.
-      if (this._isReferencedCoreDeleted(this.getParent(), remainingDepth, memo)) {
-        return true;
-      }
-      if (this.getKind() === EntityKind.Relation) {
-        if (
-          this._isReferencedCoreDeleted(this.getSource(), remainingDepth, memo) ||
-          this._isReferencedCoreDeleted(this.getTarget(), remainingDepth, memo)
-        ) {
+      for (const dependency of fields.dependencies) {
+        if (this.#isDependencyDeleted(dependency, remainingDepth, memo)) {
           return true;
         }
       }
@@ -948,35 +956,62 @@ export class ObjectCore {
     return false;
   }
 
-  get #dependencyLookup(): GetObjectCoreByIdOptions {
-    return { load: this.#snapshot === undefined };
+  #readDeletionFields(): DeletionFields {
+    const root = this.#root();
+    const cached = this.#deletionFields;
+    if (cached?.root === root && cached.mountPath === this.mountPath && cached.binding === this.entityManager) {
+      return cached;
+    }
+
+    const deleted = this.getRaw([SYSTEM_NAMESPACE, 'deleted']);
+    const refs = [this.getParent()];
+    if (this.getKind() === EntityKind.Relation) {
+      refs.push(this.getSource(), this.getTarget());
+    }
+    const fields: DeletionFields = {
+      root,
+      mountPath: this.mountPath,
+      binding: this.entityManager,
+      deleted: typeof deleted === 'boolean' ? deleted : false,
+      dependencies: refs.flatMap((ref) => {
+        const entityId = this.#sameSpaceEntityId(ref);
+        return entityId ? [entityId] : [];
+      }),
+      mergedInto: this.getMergedInto(),
+    };
+    this.#deletionFields = fields;
+    return fields;
   }
 
-  /**
-   * Whether the same-space entity referenced by `ref` is (transitively) deleted. Cross-space and
-   * unresolved references are treated as not-deleted. Strong dependencies guarantee parent/relation
-   * endpoints load alongside the dependent entity, so this stays a synchronous core lookup —
-   * `loadObjectCoreById` is avoided because it may be async.
-   *
-   * A merged-away dependency is a renamed one, not a removed one: the walk follows `mergedInto`
-   * redirects and judges deletion at the survivor, so relations and children anchored at a merge
-   * loser stay visible while the survivor lives.
-   */
-  private _isReferencedCoreDeleted(
-    ref: EncodedReference | undefined,
-    remainingDepth: number,
-    memo: DeletionMemo | undefined,
-  ): boolean {
+  /** The entity `ref` points at, if it is in this core's space; cross-space and unparseable refs have none. */
+  #sameSpaceEntityId(ref: EncodedReference | undefined): EntityId | undefined {
     if (!ref || !this.entityManager) {
-      return false;
+      return undefined;
     }
     const echoUri = EID.tryParse(EncodedReference.toURI(ref));
     const spaceId = echoUri ? EID.getSpaceId(echoUri) : undefined;
     const entityId = echoUri ? EID.getEntityId(echoUri) : undefined;
     if (!entityId || (spaceId !== undefined && spaceId !== this.entityManager.spaceId)) {
-      return false;
+      return undefined;
     }
-    const core = this._resolveMergeRedirect(this.entityManager.getObjectCoreById(entityId, this.#dependencyLookup));
+    return entityId;
+  }
+
+  get #dependencyLookup(): GetObjectCoreByIdOptions {
+    return { load: this.#snapshot === undefined };
+  }
+
+  /**
+   * Whether the same-space entity `entityId` is (transitively) deleted; an unresolved one is treated as
+   * not-deleted. Strong dependencies guarantee parent/relation endpoints load alongside the dependent
+   * entity, so this stays a synchronous core lookup — `loadObjectCoreById` is avoided because it may be async.
+   *
+   * A merged-away dependency is a renamed one, not a removed one: the walk follows `mergedInto`
+   * redirects and judges deletion at the survivor, so relations and children anchored at a merge
+   * loser stay visible while the survivor lives.
+   */
+  #isDependencyDeleted(entityId: EntityId, remainingDepth: number, memo: DeletionMemo | undefined): boolean {
+    const core = this._resolveMergeRedirect(this.entityManager?.getObjectCoreById(entityId, this.#dependencyLookup));
     return core != null && core.isDeleted(remainingDepth - 1, memo);
   }
 
@@ -989,7 +1024,7 @@ export class ObjectCore {
   private _resolveMergeRedirect(core: ObjectCore | undefined): ObjectCore | undefined {
     let current = core;
     while (current) {
-      const next = current.getMergedInto();
+      const next = current.#readDeletionFields().mergedInto;
       if (next === undefined || next >= current.id) {
         return current;
       }
