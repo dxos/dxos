@@ -3,6 +3,5 @@
 //
 
 export * as MarkdownPlugin from '#meta';
-export * from '#operations';
 export * from '#skills';
 export * from '#types';

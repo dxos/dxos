@@ -50,7 +50,7 @@ import { translations as assistantTranslations } from '@dxos/plugin-assistant/tr
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import * as MarkdownOperationHandlerSet from '@dxos/plugin-markdown/MarkdownOperationHandlerSet';
+import { operations as MarkdownOperations } from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
@@ -334,7 +334,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
         // against `AgentService`'s layer — that layer reads this capability once, at build time.
         Capability.contribute(RoutineCapabilities.AgentDelegationStrategy, DelegationStrategy.make()),
         Capability.contributeAll(Capabilities.OperationHandler, [
-          MarkdownOperationHandlerSet.handlers,
+          MarkdownOperations,
           PlanningSkill.Handlers,
           DelegationSkill.Handlers,
           AgentOperationHandlerSet.handlers,

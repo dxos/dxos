@@ -10,14 +10,13 @@ import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability$ from '@dxos/app-framework/Capability';
-import type * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { type Type } from '@dxos/echo';
 
 import { type Translations } from '../app/index.ts';
 import * as AppActivationEvents from './AppActivationEvents.ts';
 import * as AppCapabilities from './AppCapabilities.ts';
 import * as CommandsAdapter from './CommandsAdapter.ts';
-import * as OperationHandlerAdapter from './OperationHandlerAdapter.ts';
 import * as PluginAssetAdapter from './PluginAssetAdapter.ts';
 import * as SchemaAdapter from './SchemaAdapter.ts';
 import * as SpaceTemplatesAdapter from './SpaceTemplatesAdapter.ts';
@@ -106,9 +105,11 @@ const operationHandlerMaker: Maker<typeof Capabilities.OperationHandler> = Capab
 );
 
 /**
- * Module maker contributing operation handlers. Declaring `operations` (the definitions the module's
- * handler sets implement) records their keys in the build manifest, so the operations a plugin
- * provides are known without loading its handler module; the body reports any drift when it loads.
+ * Module contributing operation handlers. Given a handler set authored literally in `dx.config.ts`
+ * (`OperationHandlerSet.lazy([...])` with `module-url` loaders), the build records each operation's
+ * key and emits each handler as its own chunk, so no hand-written module body is needed and the set
+ * is the single source of truth for what the plugin provides. Given a loader, it behaves as a plain
+ * module maker over a body that contributes the set itself.
  */
 export const operationHandler = <
   Props = void,
@@ -116,39 +117,26 @@ export const operationHandler = <
   const Requires extends readonly Capability$.AnyTag[] = readonly [],
   const Extra extends readonly Capability$.AnyTag[] = readonly [],
 >(
-  loader: Capability$.LoadModule<Props, Requires, readonly [typeof Capabilities.OperationHandler, ...Extra]>,
-  options?: Capability$.MakerOptions<Requires, Extra, Props, Options> & {
-    operations?: readonly Operation.Definition.Any[];
-  },
+  source:
+    | OperationHandlerSet.OperationHandlerSet
+    | Capability$.LoadModule<Props, Requires, readonly [typeof Capabilities.OperationHandler, ...Extra]>,
+  options?: Capability$.MakerOptions<Requires, Extra, Props, Options>,
 ): Capability$.Module<Options> => {
-  const { operations, ...rest } = options ?? {};
-  return operationHandlerMaker(
-    operations?.length ? withDeclaredOperationsCheck(loader, operationKeys(operations)) : loader,
-    rest,
+  if (!OperationHandlerSet.isOperationHandlerSet(source)) {
+    return operationHandlerMaker(source, options);
+  }
+
+  const module = Capability$.inlineModule<readonly [typeof Capabilities.OperationHandler], readonly [], void, Options>(
+    options?.name ?? 'OperationHandler',
+    {
+      provides: [Capabilities.OperationHandler],
+      activatesOn: options?.activatesOn ?? ActivationEvents.Startup,
+      environments: options?.environments ?? ['browser', 'node', 'tauri', 'workerd'],
+    },
+    () => Effect.succeed(Capability$.contribute(Capabilities.OperationHandler, source)),
   );
+  return Object.assign(module, { [Capability$.OperationsTag]: source });
 };
-
-/**
- * Reports, when an operation-handler module loads, drift between the operations it declares and the
- * ones its handler sets implement: the declared list is what the build manifest records.
- */
-const withDeclaredOperationsCheck = <
-  Props,
-  Requires extends readonly Capability$.AnyTag[],
-  Provides extends readonly Capability$.AnyTag[],
->(
-  loader: Capability$.LoadModule<Props, Requires, Provides>,
-  operations: readonly string[],
-): Capability$.LoadModule<Props, Requires, Provides> =>
-  Capability$.wrapLoader(
-    () => loader().then((module) => OperationHandlerAdapter.default(module, { operations })),
-    loader,
-    { module: '@dxos/app-toolkit/OperationHandlerAdapter', args: { operations } },
-  );
-
-// Keys rather than definitions: adapter args travel through the JSON manifest.
-const operationKeys = (operations: readonly Operation.Definition.Any[]): string[] =>
-  operations.map((operation) => OperationHandlerAdapter.normalizeKey(operation.meta.key));
 
 /**
  * Module maker contributing a {@link Capabilities.LayerSpec}.

@@ -10,6 +10,7 @@ import * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
 import type * as Types from 'effect/Types';
 
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -686,6 +687,11 @@ export type PluginConfig<T = void> = Config2.Config & {
   make: PluginFactory<T>;
   /** The authored module list, read by build tools to emit the plugin's {@link Manifest}. */
   modules: ReadonlyArray<Capability.Module<any> | undefined>;
+  /**
+   * Every operation the plugin's modules handle, for hosts that run operations without a plugin
+   * manager (the CLI, tests).
+   */
+  operations: OperationHandlerSet.OperationHandlerSet;
 };
 
 /**
@@ -702,8 +708,19 @@ export type PluginConfig<T = void> = Config2.Config & {
  */
 export const config = <T = void>({ modules, ...data }: ConfigOptions): PluginConfig<T> => {
   const meta = getMetaFromConfig(data);
-  return { ...data, meta, make: fromModules<T>(meta, modules), modules };
+  return { ...data, meta, make: fromModules<T>(meta, modules), modules, operations: getOperations(modules) };
 };
+
+/** The merged operation handler sets a module list carries under {@link Capability.OperationsTag}. */
+export const getOperations = (
+  modules: ReadonlyArray<Capability.Module<any> | undefined>,
+): OperationHandlerSet.OperationHandlerSet =>
+  OperationHandlerSet.merge(
+    ...modules.flatMap((module) => {
+      const operations = module && Capability.getOperations(module);
+      return operations ? [operations] : [];
+    }),
+  );
 
 /**
  * The module named `name` in a plugin's config, for tests and stories that compose a plugin from a
@@ -729,6 +746,8 @@ export type ManifestModule = {
   adapter?: { url: string; args?: unknown };
   /** Runtimes the module loads in; present only in a library build, which serves every runtime. */
   environments?: readonly Capability.Environment[];
+  /** Keys of the operations the module handles, when it is an operations module. */
+  operations?: readonly string[];
 };
 
 /**

@@ -26,7 +26,6 @@ export default defineConfig({
     'app-framework/SchemaAdapter': 'src/app-framework/SchemaAdapter.ts',
     'app-framework/CommandsAdapter': 'src/app-framework/CommandsAdapter.ts',
     'app-framework/PluginAssetAdapter': 'src/app-framework/PluginAssetAdapter.ts',
-    'app-framework/OperationHandlerAdapter': 'src/app-framework/OperationHandlerAdapter.ts',
     'app-framework/SurfaceAdapter': 'src/app-framework/SurfaceAdapter.ts',
     'app-framework/TranslationsAdapter': 'src/app-framework/TranslationsAdapter.ts',
     'app-framework/SpaceTemplatesAdapter': 'src/app-framework/SpaceTemplatesAdapter.ts',

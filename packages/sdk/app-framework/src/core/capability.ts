@@ -9,6 +9,7 @@ import * as Option from 'effect/Option';
 import type * as Atom from 'effect/reactivity/Atom';
 import type * as Scope from 'effect/Scope';
 
+import type * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import type { DXN } from '@dxos/keys';
 
 import type * as ActivationEvent from './activation-event.ts';
@@ -154,6 +155,16 @@ export const ModuleTag: unique symbol = Symbol.for('@dxos/app-framework/ModuleTa
 
 /** Symbol carrying a lazy module's body loader, so build tools can read where the body lives. */
 export const LoaderTag: unique symbol = Symbol.for('@dxos/app-framework/LoaderTag');
+
+/**
+ * Symbol carrying the operation handler set an operations module contributes, so the build can emit
+ * each operation's handler as its own chunk instead of loading a hand-written module body.
+ */
+export const OperationsTag: unique symbol = Symbol.for('@dxos/app-framework/OperationsTag');
+
+/** The operation handler set a module carries under {@link OperationsTag}, if any. */
+export const getOperations = (module: Module<any>): OperationHandlerSet.OperationHandlerSet | undefined =>
+  module[OperationsTag];
 
 /** Symbol carrying a wrapped loader's {@link LoaderAdapter}. */
 export const AdapterTag: unique symbol = Symbol.for('@dxos/app-framework/AdapterTag');
@@ -546,6 +557,7 @@ export interface Module<Options = void> {
   readonly mapsProps?: boolean;
   readonly [LoaderTag]?: () => Promise<unknown>;
   readonly [AdapterTag]?: LoaderAdapter;
+  readonly [OperationsTag]?: OperationHandlerSet.OperationHandlerSet;
 }
 
 /**

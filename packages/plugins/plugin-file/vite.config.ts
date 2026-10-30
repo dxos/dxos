@@ -11,7 +11,6 @@ export default defineConfig({
     FileSkill: 'src/skills/FileSkill.ts',
     components: 'src/components/index.ts',
     containers: 'src/containers/index.ts',
-    operations: 'src/operations/index.ts',
     translations: 'src/translations.ts',
     FileLimits: 'src/types/FileLimits.ts',
     FileCapabilities: 'src/types/FileCapabilities.ts',

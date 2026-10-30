@@ -8,7 +8,6 @@ export * as AppCapability from './AppCapability.ts';
 export * as ObjectAction from './ObjectAction.ts';
 export * as SchemaAdapter from './SchemaAdapter.ts';
 export * as CommandsAdapter from './CommandsAdapter.ts';
-export * as OperationHandlerAdapter from './OperationHandlerAdapter.ts';
 export * as PluginAssetAdapter from './PluginAssetAdapter.ts';
 export * as SurfaceAdapter from './SurfaceAdapter.ts';
 export * as TranslationsAdapter from './TranslationsAdapter.ts';

@@ -8,6 +8,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
@@ -101,17 +103,28 @@ const config: Plugin.PluginConfig = Plugin.config({
       () => import('./src/capabilities/markdown-extension.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
-      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
-      {
-        activatesOn: ActivationEvents.Idle,
-        operations: [
-          FileOperation.Create,
-          FileOperation.CreateFromSource,
-          FileOperation.CreateFromUpload,
-          FileOperation.Read,
-          FileOperation.ResolveDownload,
-        ],
-      },
+      OperationHandlerSet.lazy([
+        FileOperation.Create.pipe(
+          Operation.lazyHandler(() => import('./src/operations/create.ts', { with: { type: 'module-url' } })),
+        ),
+        FileOperation.CreateFromSource.pipe(
+          Operation.lazyHandler(
+            () => import('./src/operations/create-from-source.ts', { with: { type: 'module-url' } }),
+          ),
+        ),
+        FileOperation.CreateFromUpload.pipe(
+          Operation.lazyHandler(
+            () => import('./src/operations/create-from-upload.ts', { with: { type: 'module-url' } }),
+          ),
+        ),
+        FileOperation.ResolveDownload.pipe(
+          Operation.lazyHandler(() => import('./src/operations/resolve-download.ts', { with: { type: 'module-url' } })),
+        ),
+        FileOperation.Read.pipe(
+          Operation.lazyHandler(() => import('./src/operations/read.ts', { with: { type: 'module-url' } })),
+        ),
+      ]),
+      { activatesOn: ActivationEvents.Idle },
     ),
     AppCapability.pluginAsset({
       pluginId: FileNamespace.key,
@@ -141,6 +154,6 @@ const config: Plugin.PluginConfig = Plugin.config({
   ],
 });
 
-export const { meta, make } = config;
+export const { meta, make, operations } = config;
 
 export default config;
