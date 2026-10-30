@@ -19,7 +19,7 @@ produced (`SceneView2D` on react-ui-canvas's own model, `SceneView3D` on `@dxos/
    themes as the default catalogs).
 
 7. (2026-10-30) Every field react-ui-canvas records carry today (ports, path/polyline points, view and portal links,
-   z order, lattice cells, constraint and dynamic models, generators, diagram shapes, timelines) becomes a typed field
+   z order, lattice cells, constraint and dynamic models, generators, diagram shapes) becomes a typed field
    of `Element2D` (or `Layout2D` where it belongs to the layout), not an untyped `props` entry.
 8. (2026-10-30) Gestures stay in memory while they run (drag, resize, rotate, orbit, drag-to-create) and commit one
    intent on release, in both dimensions, so editing is smooth on ECHO.
@@ -57,6 +57,17 @@ produced (`SceneView2D` on react-ui-canvas's own model, `SceneView3D` on `@dxos/
     `object/element`). Diagram styles: kept as today — `diagram` nodes and link `connector`s keep the diagram vocabulary
     (`color`/`fill`/`stroke`/`weight`); plain nodes map it onto `NodeStyle`; `Style2D` is `NodeStyle`.
 
+16. (2026-10-30) **One animation system.** `@dxos/animation`'s `Timeline` is the only timeline model, owned by
+    plugin-animator's `Shot` (a shot stages a scene with a timeline and effects; sampled, never written — D-28).
+    react-ui-canvas's own timeline (`model/timeline.ts`, `sampleView`, `sampleCamera`, the per-View timeline field) is
+    retired. A shared **Timeline panel** in `SceneEditor` (2D and 3D) lists and plays the shots staging the open scene,
+    keyframes the selected elements and the camera, and creates a shot when none exists. Existing 2D timeline data
+    migrates into a shot over the migrated scene, its keys rewritten to element paths. Supersedes decision 14's
+    "timeline as a typed `Layout2D` field".
+17. (2026-10-30) 3D groups become composites placed by `instance` elements, as in 2D; the ring and grid arrangers move
+    onto composites; the 3D-only `members`/`arrange` fields are removed; the `.dx` reader/printer map the existing group
+    text onto composites (no grammar change).
+
 ## Expectations (user, 2026-10-30)
 
 These are the acceptance criteria; any place the work would break one is raised with the user before it is built.
@@ -90,7 +101,7 @@ DimensionConfig               2D: SVG/DOM viewport, Vec2 geometry   ·   3D: Bab
 ```ts
 type Model<O, S>  = { name?; objects: Record<string, O>; styles: Record<string, S>; catalogs?: Ref<StyleCatalog>[] }
 type Layout<E, S> = { name?; model?; elements: Record<string, E>; layers?; styles?: Record<string, Partial<S>>;
-                      lattice?; constraints?; timeline? }
+                      lattice?; constraints? }
 type Scene<C>     = { name?; theme?; layout; camera: C }          // camera = authored view only (D-47)
 
 // The shared base: react-ui-canvas's nodeBase/linkBase, names kept (decision 12).
