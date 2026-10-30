@@ -7,13 +7,20 @@ import { statSync } from 'node:fs';
 
 import { BASE_URL, defineScenario, invokeInPage, waitForReady } from '../perf/scenario.ts';
 import { importProfileArchive } from './memory-soak.ts';
+import { SEEDED_DOCUMENTS, seedLabel, seedSpaces } from './seeded-spaces.ts';
 import { readCounters, waitForCountersQuiet } from './work-counters.ts';
 
-/** A `.dxprofile` export or raw `.sqlite` to load. It holds private keys: named by path and never copied. */
+/**
+ * A `.dxprofile` export or raw `.sqlite` to load. It holds private keys: named by path and never copied. Without one, the
+ * scenario seeds spaces of its own, which is what the nightly runs.
+ */
 const ARCHIVE = process.env.DX_PERF_PROFILE_ARCHIVE;
 
-/** Space ids to switch to, in order (`DX_PERF_SWITCH_SPACES`, comma-separated); each visit runs cold, then warm. */
-const SPACES = (process.env.DX_PERF_SWITCH_SPACES ?? '')
+/**
+ * Space ids to switch to, in order (`DX_PERF_SWITCH_SPACES`, comma-separated); each visit runs cold, then warm. Set with
+ * an archive; the seeded spaces otherwise.
+ */
+let SPACES = (process.env.DX_PERF_SWITCH_SPACES ?? '')
   .split(',')
   .map((id) => id.trim())
   .filter(Boolean);
@@ -27,8 +34,11 @@ const PLUGINS = (process.env.DX_PERF_PLUGINS ?? '')
 /** The tab's counters that move while it brings objects in. */
 const OBJECT_LOAD_COUNTERS = ['echo.objectDocumentsLoaded', 'echo.snapshotObjects', 'echo.queryRecomputes'];
 
-/** Passes to run (`DX_PERF_SWITCH_PASSES`, comma-separated): `cold`, `warm`, `revisit`, `reindex`; all by default. */
-const PASSES = (process.env.DX_PERF_SWITCH_PASSES ?? 'cold,warm,revisit,reindex').split(',').map((pass) => pass.trim());
+/**
+ * Passes to run (`DX_PERF_SWITCH_PASSES`, comma-separated): `cold`, `warm`, `revisit`, `reindex`. Switch time,
+ * `cold,warm`, by default; `revisit` and `reindex` time eviction and index catch-up and run only when named.
+ */
+const PASSES = (process.env.DX_PERF_SWITCH_PASSES ?? 'cold,warm').split(',').map((pass) => pass.trim());
 
 /** Past the worker's idle-document eviction delay (`EVICT_IDLE_DELAY`, 30 s). */
 const EVICTION_IDLE_MS = 45_000;
@@ -50,27 +60,34 @@ const waitForSpacesReady = (page: Page, timeout: number) =>
     { timeout },
   );
 
-// `DX_PERF_PROFILE_ARCHIVE=<file> DX_PERF_SWITCH_SPACES=<id>,<id> pnpm perf run --scenario space-switch --offline` runs it.
+// `pnpm perf run --scenario space-switch` runs it on seeded spaces;
+// `DX_PERF_PROFILE_ARCHIVE=<file> DX_PERF_SWITCH_SPACES=<id>,<id> pnpm perf run --scenario space-switch --offline` on a profile.
 defineScenario({
   flow: 'space-switch',
   reproduces:
     "Switching workspaces lags on the reporter's own profile, whose largest space holds 2,590 objects; dev fixtures do not show it (2026-10-27 debug session).",
   scale: ARCHIVE
     ? `archive=${Math.round(statSync(ARCHIVE).size / 1e6)}MB,spaces=${SPACES.length},plugins=+${PLUGINS.length}`
-    : 'no-archive',
+    : `${seedLabel(SEEDED_DOCUMENTS)},plugins=+${PLUGINS.length}`,
   timeoutMs: 30 * 60_000,
-  privateData: true,
+  privateData: ARCHIVE !== undefined,
+  // Seeded or imported in a browser of its own, so the measured one boots on the profile as a returning user does.
   persistentProfile: true,
   prepare: async (page) => {
-    if (!ARCHIVE || SPACES.length === 0) {
-      throw new Error('set DX_PERF_PROFILE_ARCHIVE and DX_PERF_SWITCH_SPACES');
+    if (ARCHIVE) {
+      if (SPACES.length === 0) {
+        throw new Error('set DX_PERF_SWITCH_SPACES with DX_PERF_PROFILE_ARCHIVE');
+      }
+      await importProfileArchive(page, BASE_URL, ARCHIVE);
     }
-    await importProfileArchive(page, BASE_URL, ARCHIVE);
 
     // The first boot after an import reindexes every document; the reporter's app is a returning boot, so
     // the index is built here, in every space the stages visit, rather than inside the measured stages.
     await page.goto(`${BASE_URL}/?profiler=1&model=scripted`, { timeout: 120_000 });
     await waitForReady(page);
+    if (!ARCHIVE) {
+      SPACES = await seedSpaces(page, Date.now().toString(36), SEEDED_DOCUMENTS);
+    }
     if (PLUGINS.length > 0) {
       // The enabled set persists in the profile, so the measured boot starts with it.
       await invokeInPage(page, 'org.dxos.operation.registry.enablePlugins', { ids: PLUGINS });

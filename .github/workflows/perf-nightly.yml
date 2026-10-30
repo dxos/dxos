@@ -70,8 +70,9 @@ jobs:
         env:
           MODES: ${{ inputs.modes || 'measure' }}
           # Ten, because one sample per night cannot separate a regression from the ~20% run-to-run
-          # spread on a stage. Each repeat is a fresh browser and a fresh fixture, ~1.5 min, so ten
-          # is ~18 min against this job's 180-minute bound. Every row carries its `iteration`, so
+          # spread on a stage. Each repeat is a fresh browser and a fresh fixture: ~1.5 min for
+          # projects-tasks and ~4 min for the nightly scenarios, so ten is ~55 min against this job's
+          # 180-minute bound. Every row carries its `iteration`, so
           # the repeats are distinct rows to take a median over, not overwrites of each other.
           ITERATIONS: ${{ inputs.iterations || '10' }}
           DX_PWA: 'false'
@@ -357,9 +358,11 @@ jobs:
           DX_PERF_ITERATIONS: '5'
           DX_PERF_COUNTERS: trace,calls,react
           DX_PWA: 'false'
+        # The projects-tasks flow alone: the work budgets cover it, and the nightly scenarios would
+        # double this job's runtime for counts nothing scores.
         run: |
           rm -rf test-results/perf
-          moon run composer-app:e2e-perf
+          moon run composer-app:e2e-perf -- src/playwright/perf-projects.spec.ts
 
       - name: Score the flow
         if: always()

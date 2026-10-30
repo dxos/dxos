@@ -7,13 +7,20 @@ import { statSync } from 'node:fs';
 
 import { BASE_URL, defineScenario, invokeInPage, waitForReady } from '../perf/scenario.ts';
 import { importProfileArchive } from './memory-soak.ts';
+import { SEEDED_DOCUMENTS, seedLabel, seedSpaces } from './seeded-spaces.ts';
 import { waitForCountersQuiet } from './work-counters.ts';
 
-/** A `.dxprofile` export or raw `.sqlite` to load. It holds private keys: named by path and never copied. */
+/**
+ * A `.dxprofile` export or raw `.sqlite` to load. It holds private keys: named by path and never copied. Without one, the
+ * scenario seeds spaces of its own, which is what the nightly runs.
+ */
 const ARCHIVE = process.env.DX_PERF_PROFILE_ARCHIVE;
 
-/** The space whose root collection the stages open objects from (`DX_PERF_OBJECT_SPACE`). */
-const SPACE = process.env.DX_PERF_OBJECT_SPACE ?? '';
+/**
+ * The space whose root collection the stages open objects from (`DX_PERF_OBJECT_SPACE`). Set with an archive; the
+ * largest seeded space otherwise.
+ */
+let SPACE = process.env.DX_PERF_OBJECT_SPACE ?? '';
 
 /** How many of the collection's objects to open (`DX_PERF_OBJECTS`); each opens cold, then warm. */
 const OBJECTS = Number.parseInt(process.env.DX_PERF_OBJECTS ?? '', 10) || 8;
@@ -81,24 +88,33 @@ const waitForPlank = (page: Page, id: string, timeout: number) =>
     { timeout, polling: 'raf' },
   );
 
-// `DX_PERF_PROFILE_ARCHIVE=<file> DX_PERF_OBJECT_SPACE=<id> pnpm perf run --scenario object-open --offline` runs it.
+// `pnpm perf run --scenario object-open` runs it on seeded spaces;
+// `DX_PERF_PROFILE_ARCHIVE=<file> DX_PERF_OBJECT_SPACE=<id> pnpm perf run --scenario object-open --offline` on a profile.
 defineScenario({
   flow: 'object-open',
   reproduces:
     "Opening an object from the navtree takes 70-450 ms and frames of 150-350 ms on the reporter's own profile, against a 40 ms target (2026-10-28 debug session).",
-  scale: ARCHIVE ? `archive=${Math.round(statSync(ARCHIVE).size / 1e6)}MB,objects=${OBJECTS}` : 'no-archive',
+  scale: ARCHIVE
+    ? `archive=${Math.round(statSync(ARCHIVE).size / 1e6)}MB,objects=${OBJECTS}`
+    : `${seedLabel(SEEDED_DOCUMENTS)},objects=${OBJECTS}`,
   timeoutMs: 30 * 60_000,
-  privateData: true,
+  privateData: ARCHIVE !== undefined,
+  // Seeded or imported in a browser of its own, so the measured one boots on the profile as a returning user does.
   persistentProfile: true,
   prepare: async (page) => {
-    if (!ARCHIVE || !SPACE) {
-      throw new Error('set DX_PERF_PROFILE_ARCHIVE and DX_PERF_OBJECT_SPACE');
+    if (ARCHIVE) {
+      if (!SPACE) {
+        throw new Error('set DX_PERF_OBJECT_SPACE with DX_PERF_PROFILE_ARCHIVE');
+      }
+      await importProfileArchive(page, BASE_URL, ARCHIVE);
     }
-    await importProfileArchive(page, BASE_URL, ARCHIVE);
     // The first boot after an import reindexes every document; the reporter's app is a returning boot, so the
     // index is built here rather than inside the measured stages. The measured boot reopens this workspace.
     await page.goto(`${BASE_URL}/?profiler=1&model=scripted`, { timeout: 120_000 });
     await waitForReady(page);
+    if (!ARCHIVE) {
+      [SPACE] = await seedSpaces(page, Date.now().toString(36), SEEDED_DOCUMENTS);
+    }
     await switchTo(page, SPACE, 120_000);
     await waitForCountersQuiet(page, INDEX_COUNTERS, { timeoutMs: 15 * 60_000, quietMs: 15_000, pollMs: 1_000 });
   },
