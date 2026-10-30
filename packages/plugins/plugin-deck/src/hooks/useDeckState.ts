@@ -22,7 +22,7 @@ export type DeckStateHook = {
   updateEphemeral: (fn: (current: DeckSchema.EphemeralDeckState) => DeckSchema.EphemeralDeckState) => void;
 };
 
-/** The deck state a deck renders when it is not the live one: the workspace being left, during the crossfade. */
+/** The deck state a deck renders when it is not the live one: the workspace being left, during the transition. */
 export const ShownDeckState = createContext<DeckStateHook | undefined>(undefined);
 
 /**
