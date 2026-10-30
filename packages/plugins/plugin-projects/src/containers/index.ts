@@ -13,6 +13,7 @@ import {
   type FeatureLevelCompanionProps,
   type ProjectFeatureCompanionProps,
 } from './FeatureCompanion/index.ts';
+import { type FeatureSectionProps } from './FeatureSection/index.ts';
 import { type MoveTaskDialogProps } from './MoveTaskDialog/index.ts';
 import { type FeatureLevelArticleProps } from './ProjectArticle/index.ts';
 import { type ProjectBranchArticleProps } from './ProjectBranchArticle/index.ts';
@@ -41,6 +42,10 @@ export const FeatureLevelArticle: ComponentType<FeatureLevelArticleProps> = lazy
 
 export const FeatureLevelCompanion: ComponentType<FeatureLevelCompanionProps> = lazy(() =>
   import('./FeatureCompanion/index.ts').then((module) => ({ default: module.FeatureLevelCompanion })),
+);
+
+export const FeatureSection: ComponentType<FeatureSectionProps> = lazy(() =>
+  import('./FeatureSection/index.ts').then((module) => ({ default: module.FeatureSection })),
 );
 
 export const ProjectFeatureCompanion: ComponentType<ProjectFeatureCompanionProps> = lazy(() =>

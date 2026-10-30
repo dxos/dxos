@@ -85,7 +85,7 @@ export type StubWidgetOptions<TProps> = {
   debug?: boolean;
 };
 
-/** Marks the placeholder a portaled widget renders into. */
+/** Marks the placeholder a portaled widget renders into; its value is the widget's id. */
 export const WIDGET_ROOT_ATTRIBUTE = 'data-widget-root';
 
 /**
@@ -247,7 +247,7 @@ export class StubWidget<TProps extends WidgetProps> extends WidgetType {
     const cached = this.#keepAlive && this.#root != null;
     if (!this.#root) {
       this.#root = this.block ? Domino.of('div').classNames('min-h-[24px]').root : Domino.of('span').root;
-      this.#root.setAttribute(WIDGET_ROOT_ATTRIBUTE, '');
+      this.#root.setAttribute(WIDGET_ROOT_ATTRIBUTE, this.id);
       this.#applyBlockHeight(this.#root);
     }
 
@@ -275,6 +275,11 @@ export class StubWidget<TProps extends WidgetProps> extends WidgetType {
     // CodeMirror offers the outgoing DOM to any widget of the same class; a block cannot continue
     // in an inline span (or the reverse), so decline and let `toDOM` build the right element.
     if (this.block !== (dom.tagName === 'DIV')) {
+      return false;
+    }
+    // Another widget's element still holds that widget's portal (a kept block's is never torn down), so
+    // rendering this one into it too would draw both in one placeholder.
+    if (dom.getAttribute(WIDGET_ROOT_ATTRIBUTE) !== this.id) {
       return false;
     }
     this.#root = dom;

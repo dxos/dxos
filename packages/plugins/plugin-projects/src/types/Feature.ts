@@ -63,11 +63,13 @@ export const Requirement = Schema.Struct({
 export type Requirement = Schema.Schema.Type<typeof Requirement>;
 
 /**
- * A goal state: something the product should do, with the requirements that define it. A feature belongs to one
- * spec (its ECHO parent, which lists it in `features`), and nests by owning a spec of its own that breaks it down. A
- * spec block (`feat F-3` and its `req` lines) is the unstructured source a feature's requirements are extracted from.
+ * A goal state: something the product should do, with the requirements that define it. A feature belongs to the spec
+ * whose document embeds it (its ECHO parent, which lists it in `features`), and nests by owning a spec of its own that
+ * breaks it down. The feature is the canonical record of its content; a spec file's `feat` block is that content as
+ * text, read in on import and written out on export. Where a block came from is a foreign key in its meta
+ * ({@link SPEC_KEY_SOURCE}, `path#F-3`).
  */
-export class Feature extends Type.makeObject<Feature>(DXN.make('org.dxos.type.feature', '0.3.0'))(
+export class Feature extends Type.makeObject<Feature>(DXN.make('org.dxos.type.feature', '0.4.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Schema.annotate({ title: 'Name', description: 'A noun phrase of two to five words.' })),
 
@@ -101,12 +103,6 @@ export class Feature extends Type.makeObject<Feature>(DXN.make('org.dxos.type.fe
     ),
 
     /**
-     * The spec blocks the requirements were extracted from, e.g. `packages/plugins/plugin-inbox/PLUGIN.mdl#F-3`;
-     * provenance, so a re-import updates the feature rather than adding another.
-     */
-    specs: Schema.optional(Schema.Array(Schema.String).pipe(Annotation.FormInputAnnotation.set(false))),
-
-    /**
      * The spec that breaks this feature down into features of its own; owned, so deleting the feature deletes it.
      * Suspended because the spec module refers back to this one.
      */
@@ -137,6 +133,52 @@ export const make = (props: Obj.MakeProps<typeof Feature>): Feature =>
   Obj.make(Feature, { requirements: [], ...props });
 
 export const instanceOf = (value: unknown): value is Feature => Obj.instanceOf(Feature, value);
+
+/**
+ * The spec blocks the feature was read in from, e.g. `packages/plugins/plugin-inbox/PLUGIN.mdl#F-3`: its foreign keys
+ * under {@link SPEC_KEY_SOURCE}, so a re-import updates the feature rather than adding another.
+ */
+export const getSources = (feature: Feature | Obj.Snapshot<Feature>): string[] =>
+  Obj.getMeta(feature)
+    .keys.filter(({ source }) => source === SPEC_KEY_SOURCE)
+    .map(({ id }) => id);
+
+/** The feature's block id (`F-3`): the one it was read in from, or the one its spec numbered it with. */
+export const getBlockId = (feature: Feature | Obj.Snapshot<Feature>): string | undefined =>
+  getSources(feature)
+    .map((source) => source.match(/#(.+)$/)?.[1])
+    .find((id) => id !== undefined);
+
+/** Sets the spec blocks the feature was read in from, leaving its other foreign keys. */
+export const setSources = (feature: Feature, sources: readonly string[]): void => {
+  const current = getSources(feature);
+  if (current.length === sources.length && current.every((source, index) => source === sources[index])) {
+    return;
+  }
+  Obj.update(feature, (feature) => {
+    const keys = Obj.getMeta(feature).keys;
+    keys.splice(
+      0,
+      keys.length,
+      ...keys.filter(({ source }) => source !== SPEC_KEY_SOURCE),
+      ...sources.map((id) => ({ source: SPEC_KEY_SOURCE, id })),
+    );
+  });
+};
+
+/**
+ * The requirements with an id for each that has none, numbered under the feature's block id after the highest given
+ * (`F-3.4`); ids once given are kept, since text and code cite them.
+ */
+export const numberRequirements = (blockId: string, requirements: readonly Requirement[]): Requirement[] => {
+  const prefix = `${blockId}.`;
+  let next =
+    Math.max(0, ...requirements.map(({ id }) => (id?.startsWith(prefix) ? Number(id.slice(prefix.length)) || 0 : 0))) +
+    1;
+  return requirements.map((requirement) =>
+    requirement.id ? requirement : { ...requirement, id: `${prefix}${next++}` },
+  );
+};
 
 /**
  * Whether adding `source → target` to the `DependsOn` edges would close a cycle, i.e. `source` is already

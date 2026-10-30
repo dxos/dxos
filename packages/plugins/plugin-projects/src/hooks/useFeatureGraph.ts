@@ -93,7 +93,7 @@ export const useFeatureGraph = (
     ...new Set(
       members
         .filter(Feature.instanceOf)
-        .flatMap((feature) => feature.specs ?? [])
+        .flatMap((feature) => Feature.getSources(feature))
         .map(Feature.getSpecPath),
     ),
   ]
@@ -132,7 +132,7 @@ export const useFeatureGraph = (
         const input: FeatureGraphInput = {
           features: features.filter(Feature.instanceOf).map((feature) => {
             const snapshot = get(Obj.atom(feature));
-            const { id, name, description, requirements, status, specs, code } = snapshot;
+            const { id, name, description, requirements, status, code } = snapshot;
             // The feature this one breaks down: the owner of the spec that lists it.
             const container = Spec.getContainer(feature);
             const parent = container && Spec.getOwner(container);
@@ -142,7 +142,7 @@ export const useFeatureGraph = (
               description,
               requirements,
               status,
-              specs,
+              specs: Feature.getSources(snapshot),
               spec: container?.id,
               parent: parent?.id,
               link: Feature.getLink(snapshot),

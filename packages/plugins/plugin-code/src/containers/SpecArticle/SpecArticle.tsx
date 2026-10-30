@@ -40,6 +40,7 @@ import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { SpecDocument } from '@dxos/types';
 import {
+  type WidgetState,
   createBasicExtensions,
   createDataExtensions,
   createMarkdownExtensions,
@@ -48,6 +49,7 @@ import {
   diffView,
   documentSlots,
   editorClassNames,
+  widgetHost,
 } from '@dxos/ui-editor';
 import { isTruthy, openExternalUrl } from '@dxos/util';
 
@@ -79,6 +81,7 @@ import { useGitHubText } from './useGitHubText.ts';
 import {
   type DiffAgainst,
   fileKey,
+  useContributedExtensions,
   useLocalTexts,
   useResolvedPath,
   useSpecDiff,
@@ -167,6 +170,9 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
     const space = spec ? getSpace(spec) : undefined;
     const { invokePromise } = AppHooks.useOperationInvoker();
     const sync = useSpecSyncState();
+    // Objects the text embeds render as their own plugin's widgets, through the editor's widget host.
+    const contributed = useContributedExtensions(spec, { attendableId, t });
+    const [widgets, setWidgets] = useState<WidgetState[]>([]);
 
     // Trigger re-render when the bound content ref resolves (no-op when there is no spec).
     const [snapshot] = useObject(spec?.content);
@@ -373,6 +379,8 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
               read: readLatest,
             }),
           diagramPreview(),
+          widgetHost({ setWidgets }),
+          ...contributed,
           baseText !== undefined &&
             diffView({
               original: baseText,
@@ -403,6 +411,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
         readLatest,
         baseText,
         fold,
+        contributed,
       ],
     );
 
@@ -455,7 +464,8 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
     );
 
     return (
-      <Editor.Root extensions={extensions}>
+      <Editor.Root extensions={extensions} widgets={widgets}>
+        <Editor.Blocks />
         <Panel.Root role={role} ref={forwardedRef}>
           <Panel.Header>{!readOnly && <Editor.Toolbar role={role} attendableId={attendableId} />}</Panel.Header>
           <Panel.Body>

@@ -47,10 +47,6 @@ export const seed = (
     project = db.add(Project.make({ name })),
   }: { name?: string; features?: readonly FeatureModel[]; project?: Project.Project } = {},
 ): Spec.Spec => {
-  const spec = db.add(Spec.make({ name }));
-  Obj.update(project, (project) => {
-    project.spec = Ref.make(spec);
-  });
   const objects = new Map<string, Feature.Feature>();
   for (const model of features) {
     const feature = db.add(
@@ -59,13 +55,10 @@ export const seed = (
         description: model.description,
         status: model.status,
         requirements: model.requirements.map((requirement) => ({ ...requirement })),
-        specs: [...model.specs],
         code: model.code.map((link) => ({ ...link })),
       }),
     );
-    Obj.update(spec, (spec) => {
-      spec.features.push(Ref.make(feature));
-    });
+    Feature.setSources(feature, model.specs);
     if (model.subfeatures.length > 0) {
       const subfeatures = model.subfeatures.map((subfeature) =>
         Ref.make(db.add(Feature.make({ name: subfeature.name, status: subfeature.status }))),
@@ -84,6 +77,11 @@ export const seed = (
     }
     objects.set(model.id, feature);
   }
+  // Made once its features exist, so its document embeds them.
+  const spec = db.add(Spec.make({ name, features: [...objects.values()].map((feature) => Ref.make(feature)) }));
+  Obj.update(project, (project) => {
+    project.spec = Ref.make(spec);
+  });
 
   const milestones = new Map<string, Milestone.Milestone>();
   const milestone = (name: string) => {

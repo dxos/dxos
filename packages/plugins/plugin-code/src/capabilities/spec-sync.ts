@@ -12,6 +12,7 @@ import { Filter } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
+import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 import { SpecDocument } from '@dxos/types';
 
 import { SyncBases, getSpecKey, resolveRoots, syncSpec } from '#sync';
@@ -52,6 +53,7 @@ export default Capability.makeModule(
         return;
       }
       const roots = yield* resolveRoots(fs, registry.get(settings).repos);
+      const codecs = yield* Capability.getAll(ProjectCapabilities.SpecDocumentCodec);
       const specs: Record<string, CodeCapabilities.SpecSyncEntry> = {};
       for (const space of client.spaces.get()) {
         if (!space.isOpen) {
@@ -63,7 +65,7 @@ export default Capability.makeModule(
         for (const spec of linked) {
           // Loads the text the first time a spec is synced; later passes find it resolved.
           yield* Effect.promise(() => spec.content.load());
-          const result = yield* syncSpec(spec, { fs, roots, bases });
+          const result = yield* syncSpec(spec, { fs, roots, bases, codecs });
           specs[spec.id] = { ...result, timestamp: Date.now() };
         }
       }

@@ -56,7 +56,7 @@ const handler: Operation.WithHandler<typeof FeatureOperation.GetFeatures> = Feat
           description: feature.description,
           status: feature.status,
           requirements: (feature.requirements ?? []).map((requirement) => ({ ...requirement })),
-          specs: [...(feature.specs ?? [])],
+          specs: Feature.getSources(feature),
           spec: spec.id,
           parent: parent?.id,
           breakdown: feature.spec && refId(feature.spec),

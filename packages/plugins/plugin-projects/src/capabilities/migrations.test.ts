@@ -7,12 +7,13 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { Doc } from '@dxos/echo-doc';
 import { Text } from '@dxos/schema';
 import { SpecDocument } from '@dxos/types';
 
-import { Feature, LegacyFeature, LegacyShowcase, LegacySpec, Showcase, Spec } from '#types';
+import { Feature, FeatureEmbed, LegacyFeature, LegacyShowcase, LegacySpec, Showcase, Spec, SpecText } from '#types';
 
-import { featureSubfeatures, makeFeatureSpecs, makeSpecOwners } from './migrations.ts';
+import { featureSources, featureSubfeatures, makeFeatureSpecs, makeSpecOwners } from './migrations.ts';
 
 describe('feature migrations', () => {
   let builder: EchoTestBuilder;
@@ -30,6 +31,7 @@ describe('feature migrations', () => {
     graph.registry.add([
       LegacyFeature.Feature,
       LegacyFeature.FeatureV2,
+      LegacyFeature.FeatureV3,
       Feature.Feature,
       Spec.Spec,
       SpecDocument.SpecDocument,
@@ -97,6 +99,8 @@ describe('feature migrations', () => {
     expect(project.spec?.peek()?.id).toBe(inbox?.id);
     const compose = byName('Compose');
     expect(inbox?.features.map((ref) => ref.target?.name).sort()).toEqual(['Compose', 'Sync']);
+    const embedded = inbox && FeatureEmbed.parse(await SpecText.read(inbox)).map(({ label }) => label);
+    expect(embedded?.sort()).toEqual(['Compose', 'Sync']);
     expect(compose && inbox?.layout?.positions[compose.id]).toEqual({ x: 3, y: 4 });
 
     const nested = byName('Sync')?.spec?.target;
@@ -107,6 +111,33 @@ describe('feature migrations', () => {
 
     const loose = byName('Loose');
     expect(loose && Spec.getContainer(loose)?.name).toBe('Features');
+  });
+
+  test('0.3.0 sources become foreign keys, and each feat block in its document becomes an embed', async ({
+    expect,
+  }) => {
+    const db = await open();
+    const inbox = db.add(Spec.make({ name: 'Inbox' }));
+    const document = await inbox.document.load();
+    const text = 'Mail.\n\n```mdl\nfeat F-1: Sync\n  req F-1.1: Mail arrives within a minute.\n```\n\nMore prose.\n';
+    Doc.updateText(await document.content.load(), 'content', text);
+    const sync = db.add(
+      Obj.make(LegacyFeature.FeatureV3, { name: 'Sync', status: 'planned', specs: ['packages/a/PLUGIN.mdl#F-1'] }),
+    );
+    const archive = db.add(Obj.make(LegacyFeature.FeatureV3, { name: 'Archive', status: 'planned' }));
+    Obj.setParent(sync, inbox);
+    Obj.setParent(archive, inbox);
+    await db.flush();
+    await db.runMigrations([featureSources]);
+
+    const features = await db.query(Filter.type(Feature.Feature)).run();
+    const byName = (name: string) => features.find((feature) => feature.name === name)!;
+    expect(Feature.getSources(byName('Sync'))).toEqual(['packages/a/PLUGIN.mdl#F-1']);
+    const content = await SpecText.read(inbox);
+    expect(content).toBe(
+      `Mail.\n\n${SpecText.makeEmbed(byName('Sync'))}\n\nMore prose.\n\n${SpecText.makeEmbed(byName('Archive'))}\n`,
+    );
+    expect(FeatureEmbed.parse(content)).toHaveLength(2);
   });
 
   test('a nested spec left by an earlier run is reused rather than made again', async ({ expect }) => {

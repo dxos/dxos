@@ -500,7 +500,8 @@ const FeatureCardRequirements = (_: FeatureCardRequirementsProps) => {
     <Card.Section title={t('feature-card.requirements.title')}>
       {feature.requirements.map((requirement, index) => (
         <Card.Row key={requirement.id ?? index} leading={<RequirementIcon />} data-testid='feature-card.requirement'>
-          <Card.Text>
+          {/* A structured requirement keeps each field (`when:`, `then:`) on a line of its own. */}
+          <Card.Text classNames='whitespace-pre-line'>
             {requirement.id && (
               <>
                 <RequirementId id={requirement.id} />{' '}

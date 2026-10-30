@@ -169,6 +169,7 @@
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-file-system": "workspace:*",
     "@dxos/plugin-github": "workspace:*",
+    "@dxos/plugin-projects": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",

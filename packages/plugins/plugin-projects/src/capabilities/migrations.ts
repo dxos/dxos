@@ -9,7 +9,7 @@ import * as Project from '@dxos/compute/Project';
 import { type Database, Filter, Migration, Obj, Ref } from '@dxos/echo';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import { Feature, LegacyFeature, LegacySpec, Showcase, Spec } from '#types';
+import { Feature, LegacyFeature, LegacySpec, Showcase, Spec, SpecText } from '#types';
 
 /**
  * `Feature` 0.1.0 → 0.2.0: `in-progress` leaves the status (work is read from linked tasks), and each subfeature record
@@ -63,7 +63,7 @@ type SpecsState = {
   byParent: Map<string, Spec.Spec>;
   /** The spec collecting features that sat on no map. */
   unplaced?: Spec.Spec;
-  /** Features already rewritten to 0.3.0, by id, so a late child can hang its spec on its parent. */
+  /** Features already rewritten to the current version, by id, so a late child can hang its spec on its parent. */
   migrated: Map<string, Feature.Feature>;
 };
 
@@ -151,9 +151,10 @@ const getContainer = async (db: Database.Database, state: SpecsState, placement:
 };
 
 /**
- * `Feature` 0.2.0 → 0.3.0: features leave projects for specs. Each project's map becomes a spec that names the
+ * `Feature` 0.2.0 → 0.4.0: features leave projects for specs. Each project's map becomes a spec that names the
  * project, each parent's subfeatures become the features of a spec the parent owns, and canvas positions move from the
- * feature onto its spec's layout. The specs made so far are held per database in this migration's own closure.
+ * feature onto its spec's layout. Its `specs` become foreign keys and its spec's document embeds it, as in
+ * {@link featureSources}. The specs made so far are held per database in this migration's own closure.
  */
 export const makeFeatureSpecs = (): Migration.ObjectMigration => {
   const states = new WeakMap<Database.Database, SpecsState>();
@@ -176,10 +177,11 @@ export const makeFeatureSpecs = (): Migration.ObjectMigration => {
         parent: Feature.instanceOf(parent) || Obj.instanceOf(LegacyFeature.FeatureV2, parent) ? parent : undefined,
         position: from.position ? { x: from.position.x, y: from.position.y } : undefined,
       });
-      const { name, description, requirements, status, specs, code } = from;
-      return { name, description, requirements, status, specs, code };
+      const { name, description, requirements, status, code } = from;
+      return { name, description, requirements, status, code };
     },
-    onMigration: async ({ object, db }) => {
+    onMigration: async ({ before, object, db }) => {
+      Feature.setSources(object, before.specs ?? []);
       const state = getState(db);
       const placement = state.placements.get(object.id) ?? {};
       state.migrated.set(object.id, object);
@@ -198,9 +200,34 @@ export const makeFeatureSpecs = (): Migration.ObjectMigration => {
           container.layout.positions[object.id] = placement.position;
         }
       });
+      await SpecText.replaceBlock(container, object, Feature.getBlockId(object));
     },
   });
 };
+
+/**
+ * `Feature` 0.3.0 → 0.4.0: where a feature was read in from moves from `specs` to foreign keys, and its spec's document
+ * embeds it, in place of the `feat` block it came from when the document still holds it, else at the end.
+ */
+export const featureSources = Migration.define({
+  from: LegacyFeature.FeatureV3,
+  to: Feature.Feature,
+  transform: async ({ name, description, requirements, status, spec, code }) => ({
+    name,
+    description,
+    requirements,
+    status,
+    spec: spec && Ref.fromURI(spec.uri),
+    code,
+  }),
+  onMigration: async ({ before, object }) => {
+    Feature.setSources(object, before.specs ?? []);
+    const container = Spec.getContainer(object);
+    if (container) {
+      await SpecText.replaceBlock(container, object, Feature.getBlockId(object));
+    }
+  },
+});
 
 /**
  * `Spec` 0.1.0 → 0.2.0: the project owns its spec (`Project.spec`, which makes it the spec's ECHO parent) where the spec
@@ -245,6 +272,8 @@ export default Capability.makeModule(
       featureSubfeatures,
       makeFeatureSpecs(),
       makeSpecOwners(),
+      // After the specs' own migration, so a feature's container reads as a current spec.
+      featureSources,
       Showcase.demonstratesMigration,
     ]);
   }),
