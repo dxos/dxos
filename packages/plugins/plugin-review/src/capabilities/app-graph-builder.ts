@@ -84,7 +84,12 @@ export default Capability.makeModule(
                 // placeholder is not a cursor range the resolver could span.
                 const typename = Obj.getTypename(object);
                 const selection = viewState.get(Selection.aspect, objectUri);
-                const cursorAnchor = config.comments === 'anchored' ? getAnchor(selection) : undefined;
+                const cursorAnchor =
+                  config.comments !== 'anchored'
+                    ? undefined
+                    : config.anchorFromSelection
+                      ? config.anchorFromSelection(object, selection)
+                      : getAnchor(selection);
                 yield* Operation.invoke(CommentOperation.Create, {
                   anchor: cursorAnchor ?? Date.now().toString(),
                   name:

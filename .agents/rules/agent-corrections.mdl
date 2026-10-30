@@ -701,14 +701,14 @@ rule workerd-variant-imports-conditioned-barrel: A plugin's workerd build is the
 ```mdl
 rule headless-leak-check-per-workerd-plugin: Every plugin with a workerd variant has a React-leak check tracing only worker conditions, with a target of zero
   Without a per-plugin check a UI import into the worker bundle goes
-  unnoticed until the host fails to activate the plugin. Flag a plugin that
-  ships a workerd/headless entry with no `dx-trace-imports` /
-  `check-module-structure` task; a check whose `--conditions` include `node`
-  or `browser`; `--to` targets missing `react`, `@dxos/react-ui`, or
-  `@dxos/lit-ui`; one task per export instead of one task with repeated
-  `--export`; a tolerated non-zero count. Fix: one task per plugin with
-  `--conditions workerd,worker`, every headless export, all three UI
-  targets, and zero allowed.
+  unnoticed until the host fails to activate the plugin. Every composer
+  plugin inherits `check-module-structure`, which traces each export
+  declaring `workerd` against `.config/import-bans.yml`. Flag a plugin
+  package without the `composer-plugin` tag; a local
+  `check-module-structure` that replaces the inherited args; a ban copied
+  into a `moon.yml` instead of the shared file; a tolerated non-zero count.
+  Fix: keep the tag, put the ban in `.config/import-bans.yml`, and fix the
+  violation at its source.
   Source: 4 corrections, e.g. "every plug-in should have a check for that. Why didn't we catch it?"
   scope: repo
   files:

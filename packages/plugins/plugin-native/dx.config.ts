@@ -32,7 +32,7 @@ const config: Plugin.PluginConfig<NativeOptions> = Plugin.config<NativeOptions>(
       Manages over-the-air application updates via the Tauri updater plugin, automatically
       checking for new releases in the background, streaming download progress, and surfacing
       a toast notification with a one-click Relaunch action when an update is ready. With
-      "Update automatically" on, it installs an update while the app starts and relaunches.
+      "Update on startup" on, it installs an update while the app starts and relaunches.
 
       Spawns the bundled Ollama process on localhost for local AI model inference, registering
       it as an AiModelResolver so Assistant features can resolve model requests without any
