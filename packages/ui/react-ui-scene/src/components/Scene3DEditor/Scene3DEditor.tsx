@@ -458,6 +458,8 @@ export const Scene3DEditor = ({
         if (!onScene(event.nativeEvent)) {
           return;
         }
+        // The canvas takes no focus of its own, so a press focuses the editor and Delete and the shortcuts reach it, as in 2D.
+        event.currentTarget.focus({ preventScroll: true });
         renderer?.takeDrag();
         press.current = event.button === 0 ? { x: event.clientX, y: event.clientY } : undefined;
         // The click that fixes a dragged shape's height commits it, and is no other click.
@@ -576,8 +578,8 @@ export const Scene3DEditor = ({
         onContextMenu(at, element === undefined ? 'canvas' : 'element');
       }}
       onKeyDown={(event) => {
-        // A key typed in a panel (a form field) is the panel's.
-        if (event.target !== event.currentTarget) {
+        // A key typed in a panel (a form field) is the panel's; one on the scene's own canvas (which Babylon focuses) is ours.
+        if (event.target !== event.currentTarget && event.target !== canvasRef.current) {
           return;
         }
         if (event.key === 'Escape' && sizing.current) {
