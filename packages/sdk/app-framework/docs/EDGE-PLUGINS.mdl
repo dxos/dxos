@@ -43,11 +43,12 @@ differently.
   package, at the version Composer was built with.
 - **EDGE.** A Dynamic Worker has no import map, and Worker Loader resolves a bare specifier against
   the importing file's directory, never against a package registry. So the build also writes a
-  `vendor/` directory into the bundle: one build of every package it kept external, built for
-  `workerd`, at the version the plugin was built with, and `vendor/manifest.json` mapping each
-  specifier to its file. When compute-service loads the bundle, it rewrites each bare import in the
-  plugin's files to the matching `vendor/` file. That is a textual rewrite of import specifiers,
-  not a second build: no plugin code is recompiled.
+  `vendor/` directory into the bundle: one build of every package it kept external, and of every
+  shared package those import, built for `workerd`, at the version the plugin was built with, and
+  `vendor/manifest.json` mapping each specifier to its file. Vendored packages keep importing each
+  other bare, so `vendor/manifest.json` is an import map. When compute-service loads the bundle, it
+  rewrites each bare import in the bundle, `vendor/` included, to the file the map names. That is a
+  textual rewrite of import specifiers, not a second build: no plugin code is recompiled.
 
 The browser ignores `vendor/`; EDGE never loads a module whose `environments` exclude `workerd`, so
 browser-only modules and their stylesheets are in the bundle but are never read.
@@ -80,12 +81,13 @@ dist/plugin/
     │   │   └── Plugin.mjs
     │   └── plugin-host-cloudflare/
     │       └── index.mjs  the host, at the plugin's dxos version
-    └── chunk-5e21.mjs     code shared between vendored packages
+    └── chunk-5e21.mjs     code shared between vendored packages (never a shared package)
 ```
 
 The plugin's own files sit at the bundle root and import each other relatively, so the browser
-loads them unchanged. Vendored packages import each other relatively, inside `vendor/`, so only
-the plugin's files are rewritten at load.
+loads them unchanged. A vendored package imports another shared package bare, never a copy of it,
+so the loader can resolve each specifier once for the whole isolate, across the bundle and the
+bundles of its `dependsOn` plugins, as the browser's import map does for the whole page.
 
 ## Architecture
 
@@ -151,9 +153,10 @@ type PluginBundle
 ```mdl
 type VendorMap
   desc: |
-    `vendor/manifest.json`: every specifier the plugin's files import bare, mapped to the file under
-    `vendor/` that PluginLoader rewrites the import to. It lists exactly the specifiers the build kept
-    external, so a bare import with no entry is a build error, not a runtime one.
+    `vendor/manifest.json`: an import map. Every specifier the plugin's files import bare, and every
+    shared package a vendored package imports, mapped to the file under `vendor/` that PluginLoader
+    rewrites the import to. A bare import with no entry, in the plugin or in `vendor/`, is a build
+    error, not a runtime one.
   fields:
     specifiers: Record<string, string>   # e.g. "@dxos/echo/Obj" → "@dxos/echo/Obj.mjs"
     conditions: string[]                 # the conditions vendor/ was built with, e.g. [workerd, worker, import]
@@ -241,10 +244,10 @@ service PluginLoader
   desc: |
     compute-service's Worker Loader client for plugin bundles. Uses `LOADER.get` with the bundle hash
     as the id, so one warm isolate serves every space and every caller of that version, and the
-    callback reads R2 only on a cold start. The callback rewrites each bare import in the plugin's
-    files to its `vendor/` file by VendorMap, adds bundles of the plugin's `dependsOn` closure the
-    same way, rewritten to the primary's `vendor/` so every plugin shares one copy of each package,
-    and adds a main module that starts `PluginHost` from `vendor/`. `env` holds only space-agnostic
+    callback reads R2 only on a cold start. The callback adds the bundles of the plugin's `dependsOn`
+    closure beside it, joins their VendorMaps into one import map (the primary's entry wins, so the
+    isolate holds one copy of each package), rewrites every bare import by it, drops vendored files
+    nothing reaches, and adds a main module that starts `PluginHost` from `vendor/`. `env` holds only space-agnostic
     bindings: DATA_SERVICE, QUEUE_SERVICE, an AI service and loopback entrypoints from `ctx.exports`
     whose props name the plugin, never a space. `tails` routes logs to FunctionsLoggerEntrypoint.
   loading: lazy
@@ -302,7 +305,9 @@ service PluginSupervisor
 op publishPlugin
   desc: |
     CLI `dx registry publish [--private]`, the command that already publishes a plugin's bundle: it
-    runs the plugin's vite build, loads the bundle in a local workerd and calls `describe()`, and
+    runs the plugin's vite build with `DX_PLUGIN_HOST_ENTRY` naming the CLI's `PluginHost`, so the
+    build vendors the host whatever the plugin's own vite config says, loads the bundle in a local
+    workerd and calls `describe()`, and
     uploads the one bundle, `vendor/` included, through `/upload` with a verifiable presentation, API
     token or admin key; PluginStore calls `describe()` again on upload. Publishing fails when either
     call fails. Nothing is built or uploaded separately for EDGE.
@@ -600,8 +605,9 @@ per-space setting, with an override per DXN, picks a version for a space.
   opening a space root. Whether a manifest records the SDK version it was built from, and
   compute-service refuses a bundle the data plane cannot serve, or the data service protocol is
   versioned instead.
-- **Dependencies across bundles.** PluginLoader rewrites a `dependsOn` plugin's imports to the
-  primary's `vendor/`; that is safe only while their vendored versions agree.
+- **Dependencies across bundles.** PluginLoader resolves a package both bundles vendor to the
+  primary's copy, as Composer's import map serves one version to every plugin; that is safe only
+  while the two versions are compatible. Whether a bundle records the version range it accepts.
 
 ## Changelog
 
@@ -865,3 +871,26 @@ decision D-29: A plugin's catalog belongs at build time; that is a TODO. Until t
   supersedes: D-28
   affects: [PluginBundle, PluginBuilder, PluginStore, publishPlugin, F-1.3]
 ```
+
+```mdl
+decision D-30: `vendor/manifest.json` is an import map: the vendor build keeps every shared package a vendored package imports as a bare import and vendors it too, and PluginLoader rewrites every bare import of the bundle and its `dependsOn` bundles through one map joined from their `vendor/` directories, the primary's entry first. Supersedes the single-`vendor/` rewrite of [D-26]; the flat root and the vendored `PluginHost` stand.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:dmaretskyi
+  supersedes: D-26
+  affects: [VendorMap, PluginBuilder, PluginLoader, F-1.4]
+  why: A `dependsOn` bundle imports shared packages its primary does not, and a vendored package that inlines another shared package carries a second instance of it; plugin-agent's dependencies failed to activate for both reasons until each package was vendored once and resolved by name.
+  rejected:
+    - Rewrite a dependency only to the primary's `vendor/` — fails for every package only the dependency imports (`@dxos/ai/resolvers` for plugin-assistant).
+    - Load each bundle against its own `vendor/` — two copies of Effect and ECHO in one isolate, whose services and schemas no longer match.
+```
+
+```mdl
+decision D-31: The CLI vendors `PluginHost` into a published bundle by naming its entry in `DX_PLUGIN_HOST_ENTRY` while it runs the plugin's own build command, and the plugin's `composerPlugin` adds it to `vendor/`; a bundle without the host fails `describe()` and is not published. Fills in [D-29].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [PluginBuilder, publishPlugin]
+  why: `dx registry publish` runs whatever build the plugin's `dx.config.ts` names, so the environment is the one channel into it, and the host is private to the monorepo, so a plugin cannot depend on it.
+  rejected:
+    - Add the host to `vendor/` after the build — a second vendor build would carry its own copies of the packages the plugin's `vendor/` already has.
