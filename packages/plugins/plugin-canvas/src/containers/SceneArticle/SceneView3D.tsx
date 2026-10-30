@@ -346,12 +346,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
         return;
       }
       Obj.update(target, (target) => {
-        const props = target.props ?? {};
-        const canvasProps = typeof props.canvas === 'object' && props.canvas !== null ? props.canvas : {};
-        target.props = {
-          ...props,
-          canvas: { ...canvasProps, layers: Object.fromEntries(next.map((layer) => [layer.id, layer])) },
-        };
+        target.layers = Object.fromEntries(next.map((layer) => [layer.id, layer]));
       });
     },
     [editingLayout, layouts],

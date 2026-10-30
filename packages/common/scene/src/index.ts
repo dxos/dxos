@@ -9,6 +9,7 @@ export * from './echo.ts';
 export * from './element.ts';
 export * as Shape from './shape.ts';
 export * from './hierarchy.ts';
+export * from './kinds.ts';
 export * from './style.ts';
 export * from './intent.ts';
 export * from './model-intent.ts';

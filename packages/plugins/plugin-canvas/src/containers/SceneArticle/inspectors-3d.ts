@@ -16,18 +16,11 @@ import {
 // The 2D inspectors (Views, Objects, Layers) read their rows from these over a 3D document, so both dimensions share
 // one component each; the 2D side builds the same rows from its View store.
 
-type LayoutLike = Pick<Scene.LayoutRecord, 'elements'> & { props?: Readonly<Record<string, unknown>> };
+type LayoutLike = Pick<Scene.LayoutRecord, 'elements' | 'layers'>;
 
-const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
-
-/** The layers a layout keeps, where the 2D canvas keeps them (`props.canvas.layers`), bottom first. */
-export const layersOf = (layout: LayoutLike): Layer[] => {
-  const canvas = layout.props?.canvas;
-  const layers = isRecord(canvas) && isRecord(canvas.layers) ? Object.values(canvas.layers) : [];
-  return layers
-    .filter((layer): layer is Layer => isRecord(layer) && typeof layer.id === 'string' && typeof layer.z === 'string')
-    .sort((left, right) => (left.z < right.z ? -1 : left.z > right.z ? 1 : 0));
-};
+/** The layers a layout keeps, bottom first. */
+export const layersOf = (layout: LayoutLike): Layer[] =>
+  Object.values(layout.layers ?? {}).sort((left, right) => (left.z < right.z ? -1 : left.z > right.z ? 1 : 0));
 
 /** The elements on a hidden layer, which are neither drawn nor picked. */
 export const hiddenElements = (layout: LayoutLike): ReadonlySet<string> => {

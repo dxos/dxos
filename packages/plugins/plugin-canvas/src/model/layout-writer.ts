@@ -89,16 +89,15 @@ const writeLayout = (
       if (layout.name !== record.name) {
         layout.name = record.name;
       }
-      // Only the canvas's own props are written: the projections keep their models beside them, under other keys.
-      const canvas = record.props?.canvas;
-      if (!same(layout.props?.canvas, canvas)) {
-        if (canvas === undefined) {
-          layout.props && delete layout.props.canvas;
-        } else if (layout.props) {
-          layout.props.canvas = plain(canvas);
-        } else {
-          layout.props = { canvas: plain(canvas) };
-        }
+      // Props are not written: the projections keep their models there.
+      if (!same(layout.layers, record.layers)) {
+        layout.layers = record.layers && plain(record.layers);
+      }
+      if (layout.kind !== record.kind) {
+        layout.kind = record.kind;
+      }
+      if (layout.anonymous !== record.anonymous) {
+        layout.anonymous = record.anonymous;
       }
     }
   });

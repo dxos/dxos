@@ -35,9 +35,7 @@ describe('3D inspectors', () => {
     const layout = {
       id: 'l',
       dim: '3d' as const,
-      props: {
-        canvas: { layers: { a: { id: 'a', name: 'A', z: 'a0' }, b: { id: 'b', name: 'B', z: 'a1', hidden: true } } },
-      },
+      layers: { a: { id: 'a', name: 'A', z: 'a0' }, b: { id: 'b', name: 'B', z: 'a1', hidden: true } },
       elements: {
         x: { id: 'x', type: 'cube', layer: 'a' },
         y: { id: 'y', type: 'cube', layer: 'b' },
@@ -59,7 +57,7 @@ describe('3D inspectors', () => {
       layouts: [
         {
           ...layout,
-          props: { canvas: { layers: { h: { id: 'h', name: 'H', z: 'a0', hidden: true } } } },
+          layers: { h: { id: 'h', name: 'H', z: 'a0', hidden: true } },
           elements: { ...layout.elements, a: { ...layout.elements.a, layer: 'h' } },
         },
       ],

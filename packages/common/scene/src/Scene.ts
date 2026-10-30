@@ -173,6 +173,40 @@ export type Element3D = Schema.Schema.Type<typeof Element3D>;
 
 export type Element = Element2D | Element3D;
 
+/**
+ * The stored form of an element: the shared base is validated and any other field (a plugin kind's own, decision 13)
+ * is kept, for the kind registry to validate.
+ */
+const elementRecord = <E extends Schema.Struct<Schema.Struct.Fields>>(element: E) =>
+  Schema.StructWithRest(element, [Schema.Record(Schema.String, Schema.Unknown)]);
+
+/** A plain View, or the definition of a composite object that instances place. */
+export const LayoutKind = Schema.Literals(['view', 'composite']);
+export type LayoutKind = Schema.Schema.Type<typeof LayoutKind>;
+
+/** Lattice mode's grid: shapes span whole cells and links route along the gutters between them. */
+export const Lattice = Schema.Struct({
+  width: Schema.Number,
+  height: Schema.Number,
+  gutterX: Schema.Number,
+  gutterY: Schema.Number,
+});
+export type Lattice = Schema.Schema.Type<typeof Lattice>;
+
+/** Constrained mode's relation of one element to another, by element id. */
+export const Constraint = Schema.Struct({
+  subject: Schema.String,
+  relation: Schema.Literals(['east', 'west', 'north', 'south', 'aligned']),
+  object: Schema.String,
+});
+export type Constraint = Schema.Schema.Type<typeof Constraint>;
+
+/** The fields only a 2D layout has: its lattice and constraints (the modes that place its elements). */
+const layout2DFields = {
+  lattice: Schema.optional(Lattice),
+  constraints: Schema.optional(Schema.Array(Constraint)),
+};
+
 /** The fields every layout has, over its element schema and the form its model reference takes. */
 export const makeLayoutSchema = <E extends Schema.Top, M extends Schema.Top, S extends Schema.Top>(
   element: E,
@@ -185,7 +219,10 @@ export const makeLayoutSchema = <E extends Schema.Top, M extends Schema.Top, S e
     elements: Schema.Record(Schema.String, element),
     /** The layout's overrides of the model's named styles, by key. */
     styles: Schema.optional(Schema.Record(Schema.String, style)),
-    layers: Schema.optional(Schema.Array(Layer)),
+    layers: Schema.optional(Schema.Record(Schema.String, Layer)),
+    kind: Schema.optional(LayoutKind),
+    /** A composite the Group command made: kept out of the library until it is named or placed again. */
+    anonymous: Schema.optional(Schema.Boolean),
     /** Renderer-specific fields, as an element's `props` (a canvas View's layers, say). */
     props: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
   });
@@ -196,7 +233,9 @@ export type Layout<E, M = string, S = unknown> = {
   readonly model?: M;
   readonly elements: { readonly [id: string]: E };
   readonly styles?: { readonly [id: string]: Partial<S> };
-  readonly layers?: readonly Layer[];
+  readonly layers?: { readonly [id: string]: Layer };
+  readonly kind?: LayoutKind;
+  readonly anonymous?: boolean;
   readonly props?: { readonly [key: string]: any };
 };
 
@@ -258,14 +297,15 @@ export type ModelRecord = ModelRecord2D | ModelRecord3D;
 export const LayoutRecord2D = Schema.Struct({
   id: Schema.String,
   dim: Schema.Literal('2d'),
-  ...makeLayoutSchema(Element2D, Schema.String, Style2D).fields,
+  ...makeLayoutSchema(elementRecord(Element2D), Schema.String, Style2D).fields,
+  ...layout2DFields,
 });
 export type LayoutRecord2D = Schema.Schema.Type<typeof LayoutRecord2D>;
 
 export const LayoutRecord3D = Schema.Struct({
   id: Schema.String,
   dim: Schema.Literal('3d'),
-  ...makeLayoutSchema(Element3D, Schema.String, Style3D).fields,
+  ...makeLayoutSchema(elementRecord(Element3D), Schema.String, Style3D).fields,
 });
 export type LayoutRecord3D = Schema.Schema.Type<typeof LayoutRecord3D>;
 
@@ -318,7 +358,11 @@ export class Model3D extends Type.makeObject<Model3D>(DXN.make('org.dxos.type.sc
 
 /** A 2D layout: its elements are records inside this one object, and its model is a Ref. */
 export class Layout2D extends Type.makeObject<Layout2D>(DXN.make('org.dxos.type.scene.layout2d', '0.1.0'))(
-  Schema.Struct({ key: Schema.String, ...makeLayoutSchema(Element2D, Ref.Ref(Obj.Unknown), Style2D).fields }).pipe(
+  Schema.Struct({
+    key: Schema.String,
+    ...makeLayoutSchema(elementRecord(Element2D), Ref.Ref(Obj.Unknown), Style2D).fields,
+    ...layout2DFields,
+  }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--squares-four--regular', hue: 'sky' }),
     Annotation.UserType.set(),
@@ -327,7 +371,10 @@ export class Layout2D extends Type.makeObject<Layout2D>(DXN.make('org.dxos.type.
 
 /** A 3D layout, stored as Layout2D is. */
 export class Layout3D extends Type.makeObject<Layout3D>(DXN.make('org.dxos.type.scene.layout3d', '0.1.0'))(
-  Schema.Struct({ key: Schema.String, ...makeLayoutSchema(Element3D, Ref.Ref(Obj.Unknown), Style3D).fields }).pipe(
+  Schema.Struct({
+    key: Schema.String,
+    ...makeLayoutSchema(elementRecord(Element3D), Ref.Ref(Obj.Unknown), Style3D).fields,
+  }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--squares-four--regular', hue: 'sky' }),
     Annotation.UserType.set(),

@@ -193,7 +193,7 @@ describe('fromCanvasView', () => {
   test('keeps a node field Element2D has no slot for under props.canvas', () => {
     const { layout } = fromCanvasView(EVERY_TYPE);
     expect(layout.elements.note.props?.canvas).toMatchObject({ text: 'Note' });
-    expect(layout.elements.styled.props?.canvas).toMatchObject({ class: 'warning' });
+    expect(layout.elements.styled.style).toBe('warning');
     expect(layout.elements.styled.overrides).toMatchObject({ guide: true });
   });
 

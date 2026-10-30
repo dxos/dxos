@@ -874,3 +874,11 @@ decision D-93: 3D elements and objects use the canvas element base's names: `typ
   for: user:richburdon
   why: One element base for both dimensions lets the editor core, clipboard and inspectors read either; keeping the text grammar keeps every `.dx` file and exemplar valid.
 ```
+
+```mdl
+decision D-94: A layout carries the canvas View's own fields as typed fields: `layers` (by id), `kind` (`view` or `composite`), `anonymous`, and in 2D `lattice` and `constraints`; `props` holds only renderer and projection extras. A layout's `elements` store validates the shared element base and keeps any other field, and a `KindRegistry` validates each registered kind's own fields; an unregistered kind is kept as stored. A canvas node's `class` is the element's `style`. Layers move from `props.canvas.layers` ([D-76]) to `layers` in both dimensions. Fills in COMMON-CORE decisions 13 and 14.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  why: Typed fields let both dimensions' inspectors read layers without knowing the 2D adapter's layout; keeping unknown fields lets a plugin define a kind without changing this package.
+```

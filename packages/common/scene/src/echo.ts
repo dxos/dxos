@@ -44,15 +44,25 @@ const isStoredLayout = (value: unknown): value is StoredLayout =>
 const isStoredModel = (value: unknown): value is StoredModel =>
   Obj.instanceOf(Model2D, value) || Obj.instanceOf(Model3D, value);
 
-const storeLayout = (record: LayoutRecord): StoredLayout => {
-  const fields = {
-    ...(record.name === undefined ? {} : { name: record.name }),
-    ...(record.props === undefined ? {} : { props: record.props }),
-  };
-  return record.dim === '2d'
-    ? Obj.make(Layout2D, { key: record.id, ...fields, elements: record.elements })
-    : Obj.make(Layout3D, { key: record.id, ...fields, elements: record.elements });
+/** The fields of `record` named by `keys` that are set, so an unset optional field is not stored as `undefined`. */
+const defined = <T extends object, K extends keyof T>(record: T, keys: readonly K[]): Partial<Pick<T, K>> => {
+  const fields: Partial<Pick<T, K>> = {};
+  for (const key of keys) {
+    if (record[key] !== undefined) {
+      fields[key] = record[key];
+    }
+  }
+  return fields;
 };
+
+/** The optional fields a layout record and its stored object share, 2D's modes included. */
+const LAYOUT_FIELDS = ['name', 'styles', 'layers', 'kind', 'anonymous', 'props'] as const;
+const LAYOUT_2D_FIELDS = [...LAYOUT_FIELDS, 'lattice', 'constraints'] as const;
+
+const storeLayout = (record: LayoutRecord): StoredLayout =>
+  record.dim === '2d'
+    ? Obj.make(Layout2D, { key: record.id, ...defined(record, LAYOUT_2D_FIELDS), elements: record.elements })
+    : Obj.make(Layout3D, { key: record.id, ...defined(record, LAYOUT_FIELDS), elements: record.elements });
 
 const storeObject = <O extends Object2D | Object3D>(
   object: O,
@@ -69,13 +79,13 @@ const storeModel = (record: ModelRecord, layouts: ReadonlyMap<string, StoredLayo
     for (const [key, object] of Object.entries(record.objects)) {
       objects[key] = storeObject(object, layouts);
     }
-    return Obj.make(Model2D, { key: record.id, ...(record.name ? { name: record.name } : {}), objects });
+    return Obj.make(Model2D, { key: record.id, ...defined(record, ['name', 'styles']), objects });
   }
   const objects: Record<string, StoredObject3D> = {};
   for (const [key, object] of Object.entries(record.objects)) {
     objects[key] = storeObject(object, layouts);
   }
-  return Obj.make(Model3D, { key: record.id, ...(record.name ? { name: record.name } : {}), objects });
+  return Obj.make(Model3D, { key: record.id, ...defined(record, ['name', 'styles']), objects });
 };
 
 const storeScene = (record: SceneRecord, layout: StoredLayout | undefined): StoredScene | undefined => {
@@ -162,7 +172,7 @@ export const readDocument = ({
       return;
     }
     seenModels.add(model.key);
-    const name = model.name === undefined ? {} : { name: model.name };
+    const name = plain(defined(model, ['name', 'styles']));
     const reached: StoredLayout[] = [];
     if (Obj.instanceOf(Model2D, model)) {
       const objects: Record<string, Object2D> = {};
@@ -191,18 +201,13 @@ export const readDocument = ({
     seenLayouts.add(layout.key);
     const target = layout.model?.target;
     const model = isStoredModel(target) ? target : undefined;
-    const base = {
-      id: layout.key,
-      ...(layout.name === undefined ? {} : { name: layout.name }),
-      ...(model ? { model: model.key } : {}),
-      ...(layout.props === undefined ? {} : { props: plain({ ...layout.props }) }),
-    };
+    const base = { id: layout.key, ...(model ? { model: model.key } : {}) };
     if (Obj.instanceOf(Layout2D, layout)) {
       const elements: Record<string, Element2D> = plain({ ...layout.elements });
-      layouts.push({ ...base, dim: '2d', elements });
+      layouts.push({ ...base, ...plain(defined(layout, LAYOUT_2D_FIELDS)), dim: '2d', elements });
     } else {
       const elements: Record<string, Element3D> = plain({ ...layout.elements });
-      layouts.push({ ...base, dim: '3d', elements });
+      layouts.push({ ...base, ...plain(defined(layout, LAYOUT_FIELDS)), dim: '3d', elements });
     }
     model && visitModel(model);
   };

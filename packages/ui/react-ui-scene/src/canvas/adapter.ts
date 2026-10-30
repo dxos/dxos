@@ -108,9 +108,6 @@ type Fields = Record<string, unknown>;
 
 const isRecord = (value: unknown): value is Fields => typeof value === 'object' && value !== null;
 
-const pick = (fields: Fields, keys: readonly string[]): Fields =>
-  Object.fromEntries(Object.entries(fields).filter(([key]) => keys.includes(key)));
-
 const omit = (fields: Fields, keys: readonly string[]): Fields =>
   Object.fromEntries(Object.entries(fields).filter(([key]) => !keys.includes(key)));
 
@@ -120,8 +117,8 @@ const VIEW_PREFIX = 'view:';
 const INSTANCE_PREFIX = 'instance:';
 
 /** The fields a node keeps in its element's own slots. */
-const NODE_SLOTS = ['type', 'id', 'z', 'center', 'size', 'rotation', 'label', 'layer', 'locked', 'style'];
-const LINK_SLOTS = ['id', 'z', 'source', 'target', 'text', 'layer', 'locked', 'style'];
+const NODE_SLOTS = ['type', 'id', 'z', 'center', 'size', 'rotation', 'label', 'layer', 'locked', 'style', 'class'];
+const LINK_SLOTS = ['id', 'z', 'source', 'target', 'text', 'layer', 'locked', 'style', 'class'];
 
 const canvasExtra = (fields: Fields, slots: readonly string[]): Fields => omit(fields, slots);
 
@@ -154,6 +151,7 @@ const nodeElement = (node: Node, objects: Map<string, Scene.Object2D>): Scene.El
     ...(typeof fields.label === 'string' ? { label: fields.label } : {}),
     ...(node.layer !== undefined ? { layer: node.layer } : {}),
     ...(node.locked !== undefined ? { locked: node.locked } : {}),
+    ...(node.class !== undefined ? { style: node.class } : {}),
     ...(node.style ? { overrides: node.style } : {}),
     props: { canvas: extra },
   };
@@ -170,6 +168,7 @@ const linkElement = (link: Link): Scene.Element2D => {
     ...(link.text !== undefined ? { label: link.text } : {}),
     ...(link.layer !== undefined ? { layer: link.layer } : {}),
     ...(link.locked !== undefined ? { locked: link.locked } : {}),
+    ...(link.class !== undefined ? { style: link.class } : {}),
     ...(link.style ? { overrides: link.style } : {}),
     props: { canvas: extra },
   };
@@ -189,14 +188,15 @@ export const fromCanvasView = (view: View): { layout: Scene.LayoutRecord2D; obje
   for (const link of Object.values(view.links)) {
     elements[link.id] = linkElement(link);
   }
-  const canvas = nonEmpty(pick({ ...view }, ['layers', 'kind', 'anonymous']));
   return {
     layout: {
       id: view.id,
       dim: '2d',
       ...(view.name !== undefined ? { name: view.name } : {}),
+      ...(view.layers !== undefined ? { layers: view.layers } : {}),
+      ...(view.kind !== undefined ? { kind: view.kind } : {}),
+      ...(view.anonymous !== undefined ? { anonymous: view.anonymous } : {}),
       elements,
-      ...(canvas ? { props: { canvas } } : {}),
     },
     objects: [...objects.values()],
   };
@@ -232,6 +232,7 @@ const canvasNode = (element: Resolved2D, canvas: Fields): Node | undefined => {
     ...(element.label !== undefined ? { label: element.label } : {}),
     ...(element.layer !== undefined ? { layer: element.layer } : {}),
     ...(element.locked !== undefined ? { locked: element.locked } : {}),
+    ...(element.style !== undefined ? { class: element.style } : {}),
     ...(style ? { style } : {}),
     ...(element.parts === undefined
       ? {}
@@ -285,6 +286,7 @@ const canvasLink = (element: Resolved2D, canvas: Fields): Link | undefined => {
     ...(element.label !== undefined ? { text: element.label } : {}),
     ...(element.layer !== undefined ? { layer: element.layer } : {}),
     ...(element.locked !== undefined ? { locked: element.locked } : {}),
+    ...(element.style !== undefined ? { class: element.style } : {}),
     ...(Object.keys(style).length > 0 ? { style } : {}),
   };
   const type = typeof storedType === 'string' ? (LINK_TYPES_BY_NAME[storedType] ?? 'line') : 'line';
@@ -295,14 +297,14 @@ const canvasLink = (element: Resolved2D, canvas: Fields): Link | undefined => {
  * A 2D layout as a react-ui-canvas View. A layout {@link fromCanvasView} wrote reads back as the View it was; any
  * other (a `.dx` document's) is drawn with the default layer and the scene kinds react-ui-canvas has nodes for.
  */
-export const toCanvasView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): View => {
-  const canvas = layout.props?.canvas;
-  return isRecord(canvas) || Object.values(layout.elements).some((element) => isRecord(element.props?.canvas))
-    ? storedView(doc, layout, isRecord(canvas) ? canvas : {})
+export const toCanvasView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): View =>
+  layout.layers !== undefined ||
+  layout.kind !== undefined ||
+  Object.values(layout.elements).some((element) => isRecord(element.props?.canvas))
+    ? storedView(doc, layout)
     : toView(doc, layout);
-};
 
-const storedView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D, canvas: Fields): View => {
+const storedView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): View => {
   const elements = Object.values(resolveLayout2D(doc, layout)).filter((element) => !element.hidden);
   // Elements a `.dx` document wrote have no canvas fields: they draw as `toView` draws them, among the rest.
   const native = elements.filter((element) => !isRecord(element.props?.canvas));
@@ -332,7 +334,9 @@ const storedView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D, canv
   }
   return {
     ...(native.length > 0 ? { layers: { [DEFAULT_LAYER.id]: DEFAULT_LAYER } } : {}),
-    ...pick(canvas, ['layers', 'kind', 'anonymous']),
+    ...(layout.layers !== undefined ? { layers: layout.layers } : {}),
+    ...(layout.kind !== undefined ? { kind: layout.kind } : {}),
+    ...(layout.anonymous !== undefined ? { anonymous: layout.anonymous } : {}),
     id: layout.id,
     ...(layout.name !== undefined ? { name: layout.name } : {}),
     nodes,
