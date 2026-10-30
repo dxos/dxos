@@ -944,9 +944,9 @@ export const BACKGROUND_FILLS: Record<'base' | 'paper' | 'film' | 'neu', string>
 /** The Neu ground in SVG, for a caption's backdrop and a hollow marker's inside on the Neu background. */
 export const NEU_CANVAS_FILL = 'fill-(--dx-neu-ground)';
 
-/** A groove's floor and its two lips: shade on the upper wall, light on the lower. */
-export const GROOVE_CLASSES = {
-  floor: 'stroke-(--dx-neu-well)',
-  shade: 'stroke-(--dx-neu-shade)',
-  highlight: 'stroke-(--dx-neu-highlight)',
+/** A groove's floor and its two walls, as fills painted through the channel's masks: shade upper-left, light lower-right. */
+export const GROOVE_FILLS = {
+  floor: 'fill-(--dx-neu-well)',
+  shade: 'fill-(--dx-neu-shade)',
+  highlight: 'fill-(--dx-neu-highlight)',
 } as const;

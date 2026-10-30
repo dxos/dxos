@@ -1585,6 +1585,26 @@ decision D-56: A stored id from before the rename resolves through one table, `R
     - Migrating stored ids, which would write to every drawing that names one and still miss offline peers.
 ```
 
+```mdl
+decision D-57: A groove link's head and track are drawn as one channel.
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [F-16.4]
+```
+
+```mdl
+decision D-58: A groove is one shape, the track and its heads less the inside of a hollow head, painted through masks: the floor fills the shape; the shade wall is the shape less itself nudged down and to the right, and the light wall the shape less itself nudged up and to the left, each a quarter of the groove's width, so the walls lie inside the channel. Each layer is one fill over the whole link, so overlaps merge and translucent walls never double; a triangle's or ring's hollow shows the ground, and nothing reaches past a head's point. Fills in [D-57], replacing the nudged copies of [D-40] and [D-51].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-16.4]
+  supersedes: D-40
+  why: Copies nudged per piece stack where the track runs under its head, leave the track's lip inside a hollow head and cross at the head's corners; a mask is the one way to subtract the shifted channel from itself in SVG, and five masks per link are plain paths, still far cheaper than a filter. Walls inside the channel keep the point of the head on the connection point ([D-53]).
+  rejected:
+    - Ordering the nudged copies by layer, which still stacks translucent lips and still draws the track's lip in the hollow.
+    - A blur or lighting filter per link, which costs far more on a large drawing.
+```
+
 ---
 
 ## Appendix: Extension Definitions

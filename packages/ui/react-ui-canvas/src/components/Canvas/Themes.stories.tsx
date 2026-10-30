@@ -91,6 +91,13 @@ const createTones = () =>
     ViewBuilder.link('smart', 'cloud-inset', 'cloud-raised')
       .id('across')
       .properties({ style: { lineStyle: 'dashed' }, ends: { start: 'triangle', end: 'arrow' } }),
+    // Straight and vertical, as a UML class diagram draws inheritance and composition.
+    ViewBuilder.link('line', 'cloud-flat', 'flat')
+      .id('inherits')
+      .properties({ ends: { end: 'triangle' } }),
+    ViewBuilder.link('line', 'cloud-raised', 'polygon-raised')
+      .id('owns')
+      .properties({ ends: { end: 'circle' } }),
   ]).build();
 
 type StoryArgs = { theme?: string; defaultTheme?: string; sample?: 'elements' | 'tones' };

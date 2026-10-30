@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { grooveHeads, grooveTrim, markerFrame, markerTrim, trimPath } from './link-ends.ts';
+import { grooveBounds, grooveHeads, grooveTrim, markerFrame, markerTrim, trimPath } from './link-ends.ts';
 import { flattenPath } from './path.ts';
 
 /** How far a mitred tip reaches past its vertex, for arms at the ends' half-angle. */
@@ -48,7 +48,7 @@ describe('groove heads', () => {
   }) => {
     // Arriving left to right at (100, 0), as a smart link's last straight run does.
     const path = 'M 0 40 L 50 40 Q 60 40, 60 30 L 60 0 L 100 0';
-    const [upper, vertex, lower] = corners(grooveHeads(path, { end: 'arrow' }, 8, 16));
+    const [upper, vertex, lower] = corners(grooveHeads(path, { end: 'arrow' }, 8, 16).outline);
     expect(vertex.x + miter(8)).toBeCloseTo(100);
     expect(vertex.y).toBeCloseTo(0);
     expect(upper.x).toBeLessThan(vertex.x);
@@ -57,13 +57,13 @@ describe('groove heads', () => {
   });
 
   test('a start head points back along the route', ({ expect }) => {
-    const [, vertex] = corners(grooveHeads('M 0 0 L 0 100', { start: 'arrow' }, 8, 16));
+    const [, vertex] = corners(grooveHeads('M 0 0 L 0 100', { start: 'arrow' }, 8, 16).outline);
     expect(vertex.x).toBeCloseTo(0);
     expect(vertex.y).toBeCloseTo(miter(8));
   });
 
   test("a ring's far side is at the end, and the track stops at its near side", ({ expect }) => {
-    const head = grooveHeads('M 0 0 L 100 0', { end: 'circle' }, 8, 16);
+    const head = grooveHeads('M 0 0 L 100 0', { end: 'circle' }, 8, 16).outline;
     // Radius 12 about 84: its outer edge, half the channel out, is at the end; its near side at 72.
     expect(head).toContain('A 12 12');
     expect(head.startsWith('M 72 0')).toBe(true);
@@ -71,8 +71,36 @@ describe('groove heads', () => {
   });
 
   test('a degenerate route draws no heads', ({ expect }) => {
-    expect(grooveHeads('M 5 5', { end: 'arrow' }, 8, 16)).toBe('');
-    expect(grooveHeads('M 5 5 L 5 5', { end: 'arrow' }, 8, 16)).toBe('');
+    expect(grooveHeads('M 5 5', { end: 'arrow' }, 8, 16)).toEqual({ outline: '', hollow: '' });
+    expect(grooveHeads('M 5 5 L 5 5', { end: 'arrow' }, 8, 16)).toEqual({ outline: '', hollow: '' });
+  });
+
+  test("a hollow head's inside is its own outline, so the track stops at its base and the hollow shows the ground", ({
+    expect,
+  }) => {
+    const triangle = grooveHeads('M 0 0 L 100 0', { end: 'triangle' }, 8, 16);
+    expect(triangle.hollow).toBe(triangle.outline);
+    // The track's cap ends on the base, inside the hollow it is cut from.
+    const [tip, upper, lower] = corners(triangle.hollow);
+    expect(tip.x + miter(8)).toBeCloseTo(100);
+    expect(upper.x).toBeCloseTo(100 - grooveTrim('triangle', 8, 16));
+    expect(lower.x).toBeCloseTo(upper.x);
+    const ring = grooveHeads('M 0 0 L 100 0', { end: 'circle' }, 8, 16);
+    expect(ring.hollow).toBe(ring.outline);
+  });
+
+  test('an open arrow has no hollow, and only hollow ends are cut from the track', ({ expect }) => {
+    expect(grooveHeads('M 0 0 L 100 0', { end: 'arrow' }, 8, 16).hollow).toBe('');
+    const both = grooveHeads('M 0 0 L 100 0', { start: 'arrow', end: 'triangle' }, 8, 16);
+    expect(flattenPath(both.hollow)).toHaveLength(1);
+  });
+
+  test("a groove's mask region holds its route and its heads", ({ expect }) => {
+    const bounds = grooveBounds('M 0 0 L 100 0', 8, 16);
+    expect(bounds.x).toBeLessThanOrEqual(-24);
+    expect(bounds.x + bounds.width).toBeGreaterThanOrEqual(124);
+    expect(bounds.y).toBeLessThanOrEqual(-24);
+    expect(bounds.y + bounds.height).toBeGreaterThanOrEqual(24);
   });
 });
 

@@ -26,6 +26,7 @@ import { frameTimeAttribute } from '@dxos/animation';
 import { SvgFile } from '@dxos/diagram';
 import * as Button from '@dxos/react-ui/Button';
 import {
+  type Bounds,
   type ElementId,
   type LineStyle,
   LINK_FONT_SIZE,
@@ -69,7 +70,8 @@ import {
   BORDER_CLASSES,
   CAPTION_TEXT,
   DEFAULT_CELL,
-  GROOVE_CLASSES,
+  GROOVE_FILLS,
+  type GrooveHeads,
   type LatticeSpec,
   type MarkerFrame,
   NEU_CANVAS_FILL,
@@ -86,6 +88,7 @@ import {
   diagramNodeMarkup,
   elementLayer,
   frameClasses,
+  grooveBounds,
   grooveHeads,
   grooveTrim,
   instanceTransform,
@@ -732,14 +735,20 @@ const LinkStroke = ({
     return trimPath(route, trim(start), trim(end));
   }, [route, start, end, groove, round, width, endSize, markerWidth]);
   const heads = useMemo(
-    () => (groove && (start || end) ? grooveHeads(route, { start, end }, width, endSize) : ''),
+    () => (groove && (start || end) ? grooveHeads(route, { start, end }, width, endSize) : NO_HEADS),
     [groove, route, start, end, width, endSize],
   );
-  if (groove) {
+  const bounds = useMemo(
+    () => (groove ? grooveBounds(route, width, endSize) : undefined),
+    [groove, route, width, endSize],
+  );
+  if (groove && bounds) {
     return (
       <GrooveStroke
+        id={id}
         path={path}
         heads={heads}
+        bounds={bounds}
         stroke={stroke}
         emphasis={emphasis}
         width={width}
@@ -789,53 +798,91 @@ const LinkStroke = ({
   );
 };
 
-type GrooveStrokeProps = Pick<LinkStrokeProps, 'path' | 'stroke' | 'emphasis' | 'width' | 'linkId'> & {
+type GrooveStrokeProps = Pick<LinkStrokeProps, 'id' | 'path' | 'stroke' | 'emphasis' | 'width' | 'linkId'> & {
   /** The ends as more channel. */
-  heads: string;
+  heads: GrooveHeads;
+  /** The region the channel and its masks lie in. */
+  bounds: Bounds;
   dash: string | undefined;
 };
 
+/** No groove heads: a link without ends. */
+const NO_HEADS: GrooveHeads = { outline: '', hollow: '' };
+
 /**
- * A channel pressed into the Neu ground, its ends heads of the same channel: every lip is drawn before any floor, so
- * the track and its heads read as one cut. The lips are copies nudged down-right in light and up-left in shade, as an
- * SVG stroke cannot be offset or inset-shadowed and a filter per link would be far dearer to draw. The track stops
- * under each head, whose mitred point is the end.
+ * A channel pressed into the Neu ground, its ends heads of the same channel. The channel is one shape, the track and
+ * its heads less the inside of a hollow head, so the hollow shows the ground; its floor fills it and its walls are bands
+ * inside it, shade on the upper-left (the channel less itself nudged down-right) and light on the lower-right, so every
+ * overlap merges, every corner is cut the same way and nothing reaches past the head's point. Masks, not offset copies,
+ * as an SVG stroke cannot be inset; a filter per link would be far dearer to draw.
  */
-const GrooveStroke = ({ path, heads, stroke, emphasis, width, dash, linkId }: GrooveStrokeProps) => {
+const GrooveStroke = ({ id, path, heads, bounds, stroke, emphasis, width, dash, linkId }: GrooveStrokeProps) => {
   const lip = Math.max(0.75, width * NEU_GROOVE_LIP);
-  const floor = emphasis ? stroke : GROOVE_CLASSES.floor;
-  const layer = (className: string, offset: number, opacity?: number) => {
-    const transform = offset ? `translate(${offset} ${offset})` : undefined;
-    return (
-      <>
-        {path && (
-          <path
-            d={path}
-            className={mx('fill-none', className)}
-            strokeWidth={width}
-            strokeDasharray={dash}
-            transform={transform}
-            opacity={opacity}
-          />
-        )}
-        {heads && (
-          <path
-            d={heads}
-            className={mx('fill-none', className)}
-            strokeWidth={width}
-            strokeLinejoin='miter'
-            transform={transform}
-            opacity={opacity}
-          />
-        )}
-      </>
-    );
+  const key = id.replace(/[^\w-]/g, '_');
+  const masks = {
+    channel: `${key}-channel`,
+    downRight: `${key}-down-right`,
+    upLeft: `${key}-up-left`,
+    shade: `${key}-shade`,
+    light: `${key}-light`,
   };
+  const region = { maskUnits: 'userSpaceOnUse', ...bounds } as const;
+  // The channel in a mask's white, nudged by `offset` on both axes.
+  const shape = (offset = 0) => (
+    <g transform={offset ? `translate(${offset} ${offset})` : undefined}>
+      {path && (
+        <path d={path} fill='none' stroke='white' strokeWidth={width} strokeDasharray={dash} strokeLinecap='round' />
+      )}
+      {heads.hollow && <path d={heads.hollow} fill='black' />}
+      {heads.outline && (
+        <path d={heads.outline} fill='none' stroke='white' strokeWidth={width} strokeLinejoin='miter' />
+      )}
+    </g>
+  );
+  // The region filled in `className`, cut by `mask` to the part drawn: one fill, so a translucent lip never doubles.
+  const fill = (className: string, mask: string) => <rect {...bounds} className={className} mask={`url(#${mask})`} />;
   return (
-    <g strokeLinejoin='round' strokeLinecap='round' data-link-id={linkId}>
-      {layer(GROOVE_CLASSES.highlight, lip)}
-      {layer(GROOVE_CLASSES.shade, -lip)}
-      {layer(floor, 0, emphasis ? 0.6 : undefined)}
+    <g strokeLinejoin='round' data-link-id={linkId}>
+      <defs>
+        <mask id={masks.channel} {...region}>
+          {shape()}
+        </mask>
+        <mask id={masks.downRight} {...region}>
+          {shape(lip)}
+        </mask>
+        <mask id={masks.upLeft} {...region}>
+          {shape(-lip)}
+        </mask>
+        <mask id={masks.shade} {...region}>
+          {shape()}
+          <rect {...bounds} fill='black' mask={`url(#${masks.downRight})`} />
+        </mask>
+        <mask id={masks.light} {...region}>
+          {shape()}
+          <rect {...bounds} fill='black' mask={`url(#${masks.upLeft})`} />
+        </mask>
+      </defs>
+      {emphasis ? (
+        // The hue is a stroke class, so the emphasised floor is the channel stroked, merged under one opacity.
+        <g mask={`url(#${masks.channel})`} opacity={0.6}>
+          {path && (
+            <path
+              d={path}
+              className={mx('fill-none', stroke)}
+              strokeWidth={width}
+              strokeDasharray={dash}
+              strokeLinecap='round'
+            />
+          )}
+          {heads.outline && (
+            <path d={heads.outline} className={mx('fill-none', stroke)} strokeWidth={width} strokeLinejoin='miter' />
+          )}
+        </g>
+      ) : (
+        fill(GROOVE_FILLS.floor, masks.channel)
+      )}
+      {fill(GROOVE_FILLS.shade, masks.shade)}
+      {fill(GROOVE_FILLS.highlight, masks.light)}
     </g>
   );
 };

@@ -10,7 +10,7 @@
 // groove's lips are offset in the scene's frame.
 //
 
-import { type LinkEnds, type Marker, type Point } from '@dxos/scene';
+import { type Bounds, type LinkEnds, type Marker, type Point } from '@dxos/scene';
 
 import { flattenPath } from './path.ts';
 
@@ -102,17 +102,25 @@ const arrival = (points: readonly Point[], tip: Point): Point | undefined => {
   return undefined;
 };
 
+/** A groove's heads: their channel, stroked as wide as the track, and the hollows inside them. */
+export type GrooveHeads = {
+  /** The heads' centrelines, as one path in scene units, stroked with mitred joins. */
+  outline: string;
+  /** The inside of each hollow head (the triangle's and the ring's), filled: the track draws nothing there. */
+  hollow: string;
+};
+
 /**
- * The groove heads for a link's ends, as one path in scene units, stroked as wide as the track with mitred joins: an
- * open chevron for `arrow`, a hollow triangle and a ring for `triangle` and `circle`. A pointed head's mitred tip, and
- * the ring's far side, are at the route's end.
+ * The groove heads for a link's ends: an open chevron for `arrow`, a hollow triangle and a ring for `triangle` and
+ * `circle`. A pointed head's mitred tip, and the ring's far side, are at the route's end.
  */
-export const grooveHeads = (path: string, ends: LinkEnds, width: number, size: number): string => {
+export const grooveHeads = (path: string, ends: LinkEnds, width: number, size: number): GrooveHeads => {
   const points = flattenPath(path)[0] ?? [];
   if (points.length < 2) {
-    return '';
+    return { outline: '', hollow: '' };
   }
-  const heads: string[] = [];
+  const outline: string[] = [];
+  const hollow: string[] = [];
   const build = (marker: Marker | undefined, tip: Point, toward: Point | undefined) => {
     if (!marker || !toward) {
       return;
@@ -126,7 +134,7 @@ export const grooveHeads = (path: string, ends: LinkEnds, width: number, size: n
     switch (marker) {
       case 'arrow': {
         const back = miter(width);
-        heads.push(
+        outline.push(
           `M ${at(local(back + length, length / 2))} L ${at(local(back, 0))} L ${at(local(back + length, -length / 2))}`,
         );
         break;
@@ -134,14 +142,18 @@ export const grooveHeads = (path: string, ends: LinkEnds, width: number, size: n
       case 'triangle': {
         const back = miter(width);
         const corners = [local(back, 0), local(back + length, length / 2), local(back + length, -length / 2)];
-        heads.push(`M ${corners.map(at).join(' L ')} Z`);
+        const triangle = `M ${corners.map(at).join(' L ')} Z`;
+        outline.push(triangle);
+        hollow.push(triangle);
         break;
       }
       case 'circle': {
         const centre = local(length + width / 2, 0);
         const radius = round(length);
         const side = (sign: number) => at({ x: centre.x + sign * length, y: centre.y });
-        heads.push(`M ${side(-1)} A ${radius} ${radius} 0 1 0 ${side(1)} A ${radius} ${radius} 0 1 0 ${side(-1)} Z`);
+        const ring = `M ${side(-1)} A ${radius} ${radius} 0 1 0 ${side(1)} A ${radius} ${radius} 0 1 0 ${side(-1)} Z`;
+        outline.push(ring);
+        hollow.push(ring);
         break;
       }
     }
@@ -150,7 +162,18 @@ export const grooveHeads = (path: string, ends: LinkEnds, width: number, size: n
   const last = points[points.length - 1];
   build(ends.start, first, arrival(points.slice(1), first));
   build(ends.end, last, arrival([...points].reverse().slice(1), last));
-  return heads.join(' ');
+  return { outline: outline.join(' '), hollow: hollow.join(' ') };
+};
+
+/** The box a groove's channel and its lips lie in, its route's box grown by a head's reach: a mask's region. */
+export const grooveBounds = (path: string, width: number, size: number): Bounds => {
+  const points = flattenPath(path).flat();
+  const reach = Math.max(size * 1.5, width * 4) + width;
+  const xs = points.map(({ x }) => x);
+  const ys = points.map(({ y }) => y);
+  const left = Math.min(...xs) - reach;
+  const top = Math.min(...ys) - reach;
+  return { x: left, y: top, width: Math.max(...xs) + reach - left, height: Math.max(...ys) + reach - top };
 };
 
 //
