@@ -119,7 +119,7 @@ const focusColor = (element: HTMLElement): string =>
 export type OrbitOptions = {
   /** Off where something else drives the camera. */
   enabled: boolean;
-  /** `all`: a left drag orbits too; `secondary`: only the middle and right buttons, while a tool owns the left. */
+  /** `all`: a left drag orbits too; `secondary`: only the middle button, while a tool owns the left. */
   buttons?: 'all' | 'secondary';
   onChange?: (camera: Scene.Camera3D) => void;
 };
@@ -147,7 +147,7 @@ export const orbitView = (
 
 /**
  * The camera the pointer moves, starting from `given` and starting over whenever `given` changes value: a drag orbits,
- * a shift-drag or a right-drag pans; a trackpad pinch or a mouse wheel zooms, and a two-finger swipe orbits (Shift pans).
+ * a shift-drag pans; a trackpad pinch or a mouse wheel zooms, and a two-finger swipe orbits (Shift pans).
  */
 export const useOrbit = (
   containerRef: RefObject<HTMLDivElement | null>,

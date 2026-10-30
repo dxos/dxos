@@ -107,7 +107,7 @@ const isGizmoMode = (tool: Tool3D): tool is GizmoMode => tool === 'move' || tool
  * Arranges a 3D layout: click selects (shift toggles, empty space clears), a gizmo moves, rotates or scales the one
  * selected element, the link tool binds two clicked elements, and a create or place tool puts an element where the
  * pointer meets the ground. A double-click on a composite edits its parts, with the rest of the scene faded; Escape
- * goes back out. The middle button orbits and the right button pans while a tool owns the left.
+ * goes back out. The middle button orbits (Shift pans) while a tool owns the left; the right button opens the menu.
  */
 export const Scene3DEditor = ({
   classNames,

@@ -29,7 +29,7 @@ export type Scene3DViewProps = Util.ThemedClassName<{
   /** Geometry for items Babylon has no builder for; Manifold's, loaded when the scene has solids, by default. */
   geometry?: GeometrySource;
   effects?: readonly Instance3D[];
-  /** Drag orbits, shift- or right-drag pans, the wheel zooms; off where something else drives the camera. */
+  /** Drag orbits, shift-drag pans, the wheel zooms; off where something else drives the camera. */
   orbit?: boolean;
   /** Called after each frame is drawn, with the size it was drawn at. */
   onFrameDrawn?: (viewport: { width: number; height: number }) => void;
