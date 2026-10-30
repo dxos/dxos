@@ -19,7 +19,7 @@ describe('layoutSource', () => {
   beforeEach(async () => {
     builder = await new EchoTestBuilder().open();
     const created = await builder.createDatabase();
-    created.graph.registry.add([Scene.Layout3D]);
+    created.graph.registry.add([Scene.Layout3D, Scene.Layout2D]);
     db = created.db;
   });
 
@@ -54,6 +54,21 @@ describe('layoutSource', () => {
     expect(root.elements.a.center).toEqual({ x: 0, y: 0, z: 0 });
     patchSource(source, { from: change.before, to: change.after, paths: change.paths });
     expect(root.elements.a.center).toEqual({ x: 0, y: 2, z: 0 });
+  });
+
+  test('a 2D layout: undoing a create removes the element and redo makes it again', () => {
+    const root = db.add(Obj.make(Scene.Layout2D, { key: 'root', elements: {} }));
+    const source = layoutSource(root);
+    const element = { id: 'r', type: 'rect', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } };
+    const [change] = recordChanges([source], () => applyLayoutIntent(root, { kind: 'create', element }));
+    expect(root.elements.r?.center).toEqual({ x: 0, y: 0 });
+    if (!change) {
+      throw new Error('The create was recorded.');
+    }
+    patchSource(source, { from: change.after, to: change.before, paths: change.paths });
+    expect(root.elements.r).toBeUndefined();
+    patchSource(source, { from: change.before, to: change.after, paths: change.paths });
+    expect(root.elements.r?.size).toEqual({ width: 64, height: 64 });
   });
 
   test('undo skips an element someone else changed since', () => {

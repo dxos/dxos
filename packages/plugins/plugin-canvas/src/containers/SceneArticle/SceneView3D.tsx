@@ -2,19 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
-import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { Entity, Obj } from '@dxos/echo';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type VersionedSource, combinedSource } from '@dxos/react-ui-canvas/headless';
-import {
-  type EditorDisplay,
-  SceneEditor,
-  createHistory,
-  sessionHistory,
-  useEditorCommands,
-} from '@dxos/react-ui-canvas/scene';
+import { type EditorDisplay, SceneEditor, createHistory, sessionHistory } from '@dxos/react-ui-canvas/scene';
 import { CATALOGS_3D, config3d, isTheme3D } from '@dxos/react-ui-scene';
 import * as Panel from '@dxos/react-ui/Panel';
 import { type Layer, type LayoutIntent, type ModelIntent, Scene, reachedObjects } from '@dxos/scene';
@@ -31,6 +24,7 @@ import {
 import { type Canvas } from '#types';
 
 import { useSceneDocument } from '../SceneStage/index.ts';
+import { SceneEditCommands } from './SceneEditCommands.tsx';
 import { useInspectorDock } from './use-inspector-dock.ts';
 import { useSceneChoice } from './use-scene-choice.ts';
 import { useSceneShots } from './use-scene-shots.ts';
@@ -44,28 +38,6 @@ export type SceneView3DProps = {
 };
 
 const isLayout3D = (value: unknown): value is Scene.Layout3D => Obj.instanceOf(Scene.Layout3D, value);
-
-/** The app's edit commands (undo, redo, cut, copy, paste) on the article, from the editor's command table. */
-const SceneEditCommands = ({ element }: { element: HTMLElement | null }) => {
-  const commands = useEditorCommands('SceneEditCommands');
-  useEffect(() => {
-    if (!element) {
-      return;
-    }
-    const editCommand = (id: 'undo' | 'redo' | 'cut' | 'copy' | 'paste') => ({
-      run: () => commands.get(id)?.run(),
-      enabled: () => commands.get(id)?.enabled ?? false,
-    });
-    return AppNode.registerEditCommands(element, {
-      undo: editCommand('undo'),
-      redo: editCommand('redo'),
-      cut: editCommand('cut'),
-      copy: editCommand('copy'),
-      paste: editCommand('paste'),
-    });
-  }, [element, commands]);
-  return null;
-};
 
 /**
  * A 3D canvas: its open `Scene3D` in the shared scene editor with the 3D config. Every edit is a `LayoutIntent`

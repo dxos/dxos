@@ -18,12 +18,14 @@ import { useObject } from '@dxos/echo-react';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
+import { type VersionedSource, combinedSource } from '@dxos/react-ui-canvas/headless';
 import {
   type BackgroundGrid,
   type Camera,
   Canvas,
   type CanvasPropertiesProps,
   type ConstrainedModel,
+  type EditorDisplay,
   type FreehandProjectionOptions,
   type GraphModel,
   MAX_ZOOM,
@@ -31,32 +33,54 @@ import {
   type Projection,
   type SceneChoice,
   type SceneDisplay,
+  SceneEditor,
   type ViewStore,
   createConstrainedProjection,
   createDynamicProjection,
+  createHistory,
   createLatticeProjection,
   createLocalHistory,
   defaultNodeRegistry,
+  sessionHistory,
   sessionStacks,
   useRegistry,
 } from '@dxos/react-ui-canvas/scene';
+import { createConfig2D } from '@dxos/react-ui-scene';
 import * as Banner from '@dxos/react-ui/Banner';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
-import { type Element, type Node, Scene, type ViewId, isLink, isViewNode } from '@dxos/scene';
+import {
+  type Element,
+  type Layer,
+  type LayoutIntent,
+  type ModelIntent,
+  type Node,
+  Scene,
+  type ViewId,
+  isLink,
+  isViewNode,
+  reachedObjects,
+} from '@dxos/scene';
 
 import {
+  applyLayoutIntent,
+  canvasDocument,
+  canvasModel2D,
   generatorCompiler,
   isCanvasDrawing,
   isConstrainedModel,
   isGraphModel,
   isOverlay,
   layoutModelAtom,
+  layoutSource,
   objectRef,
   objectUri,
   openScene,
   parseLinkedViewId,
   resolveDrawingLook,
+  sceneClipboardCodec,
+  writeDocument,
+  writeModelIntent,
 } from '#model';
 // Aliased: `Canvas` here is the scene engine's component namespace.
 import { CanvasCapabilities, Canvas as CanvasFormat } from '#types';
@@ -67,15 +91,17 @@ import { CanvasDatabaseContext } from '../CanvasArticle/CanvasViewNodeView.tsx';
 import { createTrackerHistory } from '../CanvasArticle/tracker-history.ts';
 import {
   createGeneratorWorker,
-  useBoundLayoutStore,
   useCanvasGenerators,
   useCanvasNodes,
   useReconciledMigrations,
 } from '../CanvasArticle/use-canvas-scene.ts';
+import { useSceneDocument } from '../SceneStage/index.ts';
 import { CanvasClipboardText } from './CanvasClipboardText.tsx';
 import { display2D, sceneChrome } from './scene-chrome.ts';
+import { SceneEditCommands } from './SceneEditCommands.tsx';
 import { useInspectorDock } from './use-inspector-dock.ts';
 import { useSceneChoice } from './use-scene-choice.ts';
+import { useSceneShots } from './use-scene-shots.ts';
 import { canvasViewAspect } from './view-state.ts';
 
 /** What a drawing surface passes a scene view, beside the canvas it shows. */
@@ -94,12 +120,24 @@ const NewerFormatBanner = () => {
   );
 };
 
-/** A 2D `Canvas`: its open scene's layouts, its settings, and the mode its settings name. */
+/** The camera a 2D viewer's camera bar resets to: the scene's origin at 1:1. */
+const AUTHORED_CAMERA: Camera = { x: 0, y: 0, zoom: 1 };
+
+/** The theme a canvas draws when neither it nor the app names one. */
+const FALLBACK_THEME = 'flat';
+
+const isStoredLayout2D = (value: unknown): value is Scene.Layout2D => Obj.instanceOf(Scene.Layout2D, value);
+
+/**
+ * A 2D `Canvas`: its open `Scene2D` in the shared scene editor with the 2D config (react-ui-canvas's engine as the
+ * viewport, in the mode the canvas's settings name). Every edit is a `LayoutIntent` written to the layout that owns the
+ * element, recorded for undo over every 2D layout the scene reaches. Outside an article it is a picture.
+ */
 export const SceneView2D = ({ canvas, ...props }: SceneSurfaceProps & { canvas: CanvasFormat.Canvas }) => {
+  const { role } = props;
   const registry = useRegistry();
   const { key: sceneKey, choice: sceneChoice } = useSceneChoice(canvas);
-  const bound = useBoundLayoutStore(canvas, sceneKey);
-  useReconciledMigrations(props.drawing, canvas, props.role === AppSurface.Article.role);
+  useReconciledMigrations(props.drawing, canvas, role === AppSurface.Article.role);
   const [snapshot] = useObject(canvas);
   const settings = snapshot.settings;
   const handleSettingsChange = useCallback(
@@ -112,8 +150,11 @@ export const SceneView2D = ({ canvas, ...props }: SceneSurfaceProps & { canvas: 
       }),
     [canvas],
   );
+  const scene = openScene(canvas, sceneKey);
+  const stored = Obj.instanceOf(Scene.Scene2D, scene) ? scene : undefined;
+  const document = useSceneDocument(stored);
   const mode = CanvasFormat.projectionOf(settings);
-  const layout = bound ? openScene(canvas, sceneKey)?.layout.target : undefined;
+  const layout = stored?.layout.target;
   // The projection's own model lives in the layout, so it persists with the arrangement; its atoms follow the layout
   // until the mode or layout changes, then let it go.
   const models = useMemo(() => {
@@ -165,18 +206,191 @@ export const SceneView2D = ({ canvas, ...props }: SceneSurfaceProps & { canvas: 
     }
     return undefined;
   }, [mode, models]);
+
+  // A frame showing an object (not a canvas drawing) opens it in the app.
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const db = Obj.getDatabase(canvas);
+  const openObject = useCallback(
+    (node: Node) => {
+      const object = objectRef(node, db)?.target;
+      if (!object || !isViewNode(node) || parseLinkedViewId(node.scene) || isCanvasDrawing(object) !== false) {
+        return undefined;
+      }
+      return () => {
+        void invokePromise(LayoutOperation.Open, { subject: [GraphPath.getObjectPathFromObject(object)] });
+      };
+    },
+    [invokePromise, db],
+  );
+  const nodes = useCanvasNodes(openObject);
+  const generators = useCanvasGenerators(db);
+  const appSettings = useAtomValue(Hooks.useCapability(CanvasCapabilities.Settings));
+  const config = useMemo(
+    () =>
+      createConfig2D({
+        nodes,
+        createProjection,
+        generators,
+        compileGenerator: generatorCompiler,
+        createGeneratorWorker,
+        liveDepth: appSettings.liveDepth,
+      }),
+    [nodes, createProjection, generators, appSettings.liveDepth],
+  );
+
+  // Every 2D layout the scene reaches, by key, as the objects edits are written to.
+  const layouts = useMemo(
+    () =>
+      new Map((stored ? reachedObjects(stored) : []).filter(isStoredLayout2D).map((layout) => [layout.key, layout])),
+    [stored, document],
+  );
+  const source = useMemo<VersionedSource>(
+    () =>
+      combinedSource(Object.fromEntries([...layouts.entries()].map(([key, layout]) => [key, layoutSource(layout)]))),
+    [layouts],
+  );
+  // The canvas's history for the session, so reopening the article keeps its steps.
+  const history = useMemo(
+    () =>
+      createHistory({ steps: sessionHistory(canvas), source, writeDocument: (next) => writeDocument(canvas, next) }),
+    [canvas, source],
+  );
+  /** The canvas's 2D layout `key`, made (empty, on the canvas's model) when the engine opened a new View for it. */
+  const layoutFor = useCallback(
+    (key: string): Scene.Layout2D | undefined => {
+      const listed = (): Scene.Layout2D | undefined =>
+        layouts.get(key) ??
+        canvas.layouts.flatMap((ref) =>
+          isStoredLayout2D(ref.target) && ref.target.key === key ? [ref.target] : [],
+        )[0];
+      if (listed()) {
+        return listed();
+      }
+      const before = canvasDocument(canvas);
+      const model = canvasModel2D(canvas)?.key;
+      writeDocument(canvas, {
+        ...before,
+        layouts: [...before.layouts, { id: key, dim: '2d', ...(model ? { model } : {}), elements: {} }],
+      });
+      return listed();
+    },
+    [layouts, canvas],
+  );
+  const handleIntent = useCallback(
+    (key: string, intent: LayoutIntent) => {
+      const target = layoutFor(key);
+      target && applyLayoutIntent(target, intent);
+    },
+    [layoutFor],
+  );
+  const handleModelIntent = useCallback(
+    (intent: ModelIntent) => writeModelIntent(canvas, intent).map(({ message }) => message),
+    [canvas],
+  );
+  const readDocument = useCallback(() => canvasDocument(canvas), [canvas]);
+  const handleLayersChange = useCallback(
+    (key: string, next: readonly Layer[]) => {
+      const target = layouts.get(key);
+      target &&
+        Obj.update(target, (target) => {
+          target.layers = Object.fromEntries(next.map((layer) => [layer.id, layer]));
+        });
+    },
+    [layouts],
+  );
+
+  // The look and grid are the drawing's, shared with collaborators; snapping, guides, axes and the camera are this
+  // viewer's own.
+  const contextId = Entity.getURI(canvas);
+  const { camera, readonly: viewReadonly, grid: snap, guides, axes } = useViewState(canvasViewAspect, contextId);
+  const { update: updateViewState } = useViewStateActions(canvasViewAspect, contextId);
+  const readonly = viewReadonly ?? settings?.readonly ?? false;
+  const handleReadonlyChange = useCallback(
+    (next: boolean) => updateViewState((state) => ({ ...state, readonly: next })),
+    [updateViewState],
+  );
+  const handleCameraChange = useCallback(
+    (next: Camera) => updateViewState((state) => ({ ...state, camera: next })),
+    [updateViewState],
+  );
+  const display = useMemo<EditorDisplay>(
+    () => ({
+      theme: settings?.theme ?? appSettings.theme ?? FALLBACK_THEME,
+      themeOverride: settings?.theme,
+      grid: (settings?.backgroundGrid ?? 'none') !== 'none',
+      snap: snap ?? true,
+      guides: guides ?? true,
+      axes: axes ?? false,
+    }),
+    [settings?.theme, settings?.backgroundGrid, appSettings.theme, snap, guides, axes],
+  );
+  const handleDisplayChange = useCallback(
+    (next: Partial<EditorDisplay>) => {
+      'themeOverride' in next && handleSettingsChange({ theme: next.themeOverride });
+      next.grid !== undefined && handleSettingsChange({ backgroundGrid: next.grid ? 'lines' : 'none' });
+      (next.snap !== undefined || next.guides !== undefined || next.axes !== undefined) &&
+        updateViewState((state) => ({
+          ...state,
+          ...(next.snap !== undefined ? { grid: next.snap } : {}),
+          ...(next.guides !== undefined ? { guides: next.guides } : {}),
+          ...(next.axes !== undefined ? { axes: next.axes } : {}),
+        }));
+    },
+    [handleSettingsChange, updateViewState],
+  );
+
+  // Docked or floating as this viewer last left the canvas, in either dimension.
+  const dock = useInspectorDock(canvas);
+  const { shots, onShotChange } = useSceneShots(stored);
+
+  const [element, setElement] = useState<HTMLElement | null>(null);
+  if (!stored || !document) {
+    return null;
+  }
+
   return (
-    <CanvasEngineView
-      {...props}
-      canvas={canvas}
-      registry={registry}
-      bound={bound}
-      settings={settings}
-      onSettingsChange={handleSettingsChange}
-      createProjection={createProjection}
-      newer={false}
-      sceneChoice={sceneChoice}
-    />
+    <Panel.Root role={role} ref={setElement}>
+      <Panel.Body>
+        <CanvasDatabaseContext.Provider value={db}>
+          <SceneEditor.Root
+            config={config}
+            document={document}
+            scene={stored.key}
+            role={role}
+            readonly={readonly}
+            onReadonlyChange={handleReadonlyChange}
+            onIntent={handleIntent}
+            history={history}
+            onModelIntent={handleModelIntent}
+            readDocument={readDocument}
+            onLayersChange={handleLayersChange}
+            codec={sceneClipboardCodec}
+            display={display}
+            onDisplayChange={handleDisplayChange}
+            camera={camera}
+            authoredCamera={AUTHORED_CAMERA}
+            onCameraChange={handleCameraChange}
+            docked={dock.docked}
+            onDockedChange={dock.onDockedChange}
+            sceneChoice={sceneChoice}
+            shots={shots}
+            onShotChange={onShotChange}
+          >
+            <SceneEditCommands element={element} />
+            <SceneEditor.Viewport>
+              <SceneEditor.Tools />
+              <SceneEditor.Actions />
+              <SceneEditor.Camera />
+              <SceneEditor.Display />
+              <SceneEditor.ContextMenu />
+              <SceneEditor.Notice />
+              <SceneEditor.Timeline />
+            </SceneEditor.Viewport>
+            <SceneEditor.Inspector />
+          </SceneEditor.Root>
+        </CanvasDatabaseContext.Provider>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 

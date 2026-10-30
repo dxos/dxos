@@ -11,8 +11,8 @@ import { type LayoutIntent, Scene, applyIntent } from '@dxos/scene';
 import { plain } from './layout-writer.ts';
 import { writeFields } from './write-fields.ts';
 
-/** A 3D layout's elements as plain data, at its Automerge `heads` or now. */
-const snapshot = (layout: Scene.Layout3D, heads?: readonly string[]) => {
+/** A layout's elements as plain data, at its Automerge `heads` or now. */
+const snapshot = (layout: Scene.Layout2D | Scene.Layout3D, heads?: readonly string[]) => {
   const at = heads && heads.length > 0 ? Obj.getVersion(layout, [...heads]) : layout;
   return { elements: plain(at.elements) };
 };
@@ -21,37 +21,45 @@ const isHeads = (value: unknown): value is readonly string[] =>
   Array.isArray(value) && value.every((head) => typeof head === 'string');
 
 const isElement3D = Schema.is(Scene.Element3D);
+const isElement2D = Schema.is(Scene.Element2D);
 
 /**
- * A 3D layout as a versioned source over `{ elements }` (paths `['elements', id, …]`), its heads its Automerge heads,
+ * A layout of either dimension as a versioned source over `{ elements }` (paths `['elements', id, …]`), its heads its Automerge heads,
  * so react-ui-canvas's `recordChanges` and `patchSource` undo and redo edits to it without clobbering a peer's.
  */
-export const layoutSource = (layout: Scene.Layout3D): VersionedSource => ({
-  heads: () => [...(Obj.version(layout).automergeHeads ?? [])],
-  read: (path, heads) =>
-    heads === undefined
-      ? readPath(snapshot(layout), path)
-      : isHeads(heads)
-        ? readPath(snapshot(layout, heads), path)
-        : undefined,
-  write: (writes) =>
-    Obj.update(layout, (layout) => {
-      for (const { path, value } of writes) {
-        const [field, id, ...rest] = path;
-        if (field !== 'elements' || id === undefined) {
-          continue;
+export const layoutSource = (layout: Scene.Layout2D | Scene.Layout3D): VersionedSource => {
+  const dim = Obj.instanceOf(Scene.Layout3D, layout) ? '3d' : '2d';
+  return {
+    heads: () => [...(Obj.version(layout).automergeHeads ?? [])],
+    read: (path, heads) =>
+      heads === undefined
+        ? readPath(snapshot(layout), path)
+        : isHeads(heads)
+          ? readPath(snapshot(layout, heads), path)
+          : undefined,
+    write: (writes) =>
+      Obj.update(layout, (layout) => {
+        for (const { path, value } of writes) {
+          const [field, id, ...rest] = path;
+          if (field !== 'elements' || id === undefined) {
+            continue;
+          }
+          const current = layout.elements[id];
+          const before = current === undefined ? undefined : plain(current);
+          const next = rest.length === 0 ? value : writePath(before ?? {}, rest, value);
+          if (next === undefined) {
+            delete layout.elements[id];
+          } else if (current !== undefined) {
+            (dim === '3d' ? isElement3D(next) : isElement2D(next)) && writeFields(current, before, plain(next));
+          } else if (Obj.instanceOf(Scene.Layout3D, layout)) {
+            isElement3D(next) && (layout.elements[id] = plain(next));
+          } else if (Obj.instanceOf(Scene.Layout2D, layout)) {
+            isElement2D(next) && (layout.elements[id] = plain(next));
+          }
         }
-        const current = layout.elements[id];
-        const before = current === undefined ? undefined : plain(current);
-        const next = rest.length === 0 ? value : writePath(before ?? {}, rest, value);
-        if (next === undefined) {
-          delete layout.elements[id];
-        } else if (isElement3D(next)) {
-          current === undefined ? (layout.elements[id] = plain(next)) : writeFields(current, before, plain(next));
-        }
-      }
-    }),
-});
+      }),
+  };
+};
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
