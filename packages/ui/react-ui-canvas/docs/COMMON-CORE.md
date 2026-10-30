@@ -36,6 +36,27 @@ produced (`SceneView2D` on react-ui-canvas's own model, `SceneView3D` on `@dxos/
     its Upsert/Remove/Move commands) is retired as a data model, the illustrator's SVG renderer draws `Layout2D`, and
     the canvas builder's translation layer disappears. This is step 0, before 2D's data moves.
 
+12. (2026-10-30) The element schema is re-based on react-ui-canvas's **current** schema (`src/model/types.ts`:
+    `nodeBase`, node types, `NodeStyle`, links, `source`/`target` endpoints `{ node, port } | { point }`, ports, spline
+    points, connectors, view and instance nodes), keeping its field names and shapes (`type`, `z`, …). Only what the user
+    decided changes: one element type for nodes **and** links (a link is an element with endpoints); a named `style`
+    reference (today's `class`) plus `overrides` (today's inline `style`), with `Style2D`/`Style3D` and catalogs; and
+    the Model/Layout/Scene split. `Element3D` shares the same base, so 3D adopts the canvas names (`type`, `z`,
+    endpoints, ports). `@dxos/scene`'s current `kind`, `order`, `from`/`to` `Binding`, `members` and shared `Style`
+    tokens are replaced, with no aliases; the 3D code, `.dx` scene statements, exemplars and stages follow.
+13. (2026-10-30) Plugin-defined kinds extend the element schema exactly as today
+    (`Schema.Struct({ ...elementBase, type: Schema.Literal('class'), …own fields })`) and register in the kind registry;
+    a layout's `elements` store validates the shared base and preserves unknown fields, and the registry validates each
+    kind's own fields.
+14. (2026-10-30) Constrained and dynamic models are normalised onto the layout's elements (constraints reference
+    element ids; graph edges are link elements; overlay positions are element centers). The canvas timeline is a typed
+    `Layout2D` field now; moving it to an animator shot is a follow-up. The 2D viewport gets new draw code for diagram
+    `arc`, free `curve` and open `polyline` elements.
+15. (2026-10-30, recommended, pending user confirmation) Diagram object frames: reuse plugin-canvas `SceneHandler`'s
+    existing translation (objects flattened to absolute canvas elements, `origin`/`scale` baked in, ids
+    `object/element`). Diagram styles: kept as today — `diagram` nodes and link `connector`s keep the diagram vocabulary
+    (`color`/`fill`/`stroke`/`weight`); plain nodes map it onto `NodeStyle`; `Style2D` is `NodeStyle`.
+
 ## Expectations (user, 2026-10-30)
 
 These are the acceptance criteria; any place the work would break one is raised with the user before it is built.
@@ -68,22 +89,28 @@ DimensionConfig               2D: SVG/DOM viewport, Vec2 geometry   ·   3D: Bab
 
 ```ts
 type Model<O, S>  = { name?; objects: Record<string, O>; styles: Record<string, S>; catalogs?: Ref<StyleCatalog>[] }
-type Layout<E, S> = { name?; model?; elements: Record<string, E>; styles?: Record<string, Partial<S>>; props? }
+type Layout<E, S> = { name?; model?; elements: Record<string, E>; layers?; styles?: Record<string, Partial<S>>;
+                      lattice?; constraints?; timeline? }
 type Scene<C>     = { name?; theme?; layout; camera: C }          // camera = authored view only (D-47)
-BaseElement       = { id; object?; kind?; style?: string; label?; layer?; from?; to?; members?; arrange?; props? }
-Element2D         = BaseElement & { center?: Vec2; size?: Size2; rotation?: number; overrides?: Partial<Style2D> }
-Element3D         = BaseElement & { center?: Vec3; scale?: Vec3; rotation?: Vec3; overrides?: Partial<Style3D> }
+
+// The shared base: react-ui-canvas's nodeBase/linkBase, names kept (decision 12).
+elementBase = { id; type; z; locked?; layer?; label?; text?; style?: string /* was class */; object?;
+                ports?: Port[]; portsPerSide?; exposed?;                      // nodes
+                source?: Endpoint; target?: Endpoint; ends?; connector? }     // links: an element with endpoints
+Endpoint    = { node: string; port?: string } | { point: Vec2 | Vec3 }
+Element2D   = elementBase & { center?: Vec2; size?: Size2; rotation?: number; points?: Vec2[];
+                              overrides?: Partial<Style2D> /* was style */ } & <type's own fields>
+Element3D   = elementBase & { center?: Vec3; scale?: Vec3; rotation?: Vec3; points?: Vec3[];
+                              overrides?: Partial<Style3D> } & <type's own fields>
+// Plugin kinds: Schema.Struct({ ...elementBase, type: Schema.Literal('class'), ...own }) registered in the kind
+// registry (decision 13).
 LayoutIntent | ModelIntent                                        // the one edit vocabulary
 ```
-
-2D-only data that today lives in react-ui-canvas records (ports, path points, view/portal links, lattice and
-constraint models) becomes typed fields of `Element2D` or `Layout2D` (decision 7); fields both dimensions need move to
-`BaseElement`.
 
 ### Styles
 
 ```ts
-Style2D = { name?; fill?; stroke?; lineStyle?; fontFamily?; fontSize?; opacity?; … }       // CSS-like
+Style2D = NodeStyle /* hue, tone, opacity, lineStyle, rounded, fill, border, guide, fontFamily, fontSize, align… */ // CSS-like
 Style3D = { name?; color?; metalness?; roughness?; opacity?; glass?; emissive?; … }         // material-like
 class StyleCatalog /* ECHO */ { name; dim: '2d' | '3d'; styles: Record<string, Style2D | Style3D> }
 
