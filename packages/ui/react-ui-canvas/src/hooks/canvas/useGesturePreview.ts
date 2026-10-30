@@ -36,6 +36,51 @@ export type GesturePreview = {
   createFrame: Bounds | undefined;
 };
 
+type Preview = {
+  displayScene: View;
+  blocked: boolean;
+  /** Where a move in flight will land (snapped and constrained), while the nodes follow the pointer. */
+  landing?: Bounds[];
+};
+
+/**
+ * What a move in flight draws. Off a lattice the nodes follow the pointer and snap once it rests (`settled`); on a
+ * lattice they are drawn on the cells they land on, since a node between cells re-routes its gutter links on every
+ * pixel (a tie between two port pairs flips as it moves), so following the pointer there makes the links flicker.
+ */
+export const movePreview = (
+  scene: View,
+  drag: Extract<Drag, { kind: 'move' }>,
+  projection: Pick<Projection, 'constrain' | 'lattice'>,
+  settled: boolean,
+): Preview => {
+  // A copy previews beside the originals, which stay; the drop mints the copies' real ids.
+  const { ids, copy } = drag;
+  const moveBy = (delta: Point): Intent => {
+    let next = 0;
+    const duplicate = copy
+      ? duplicateSelection(scene, ids, delta, (prefix) => `${PREVIEW_NODE_ID}-${prefix}-${next++}`)
+      : undefined;
+    return duplicate ? duplicate.intent : { kind: 'move', ids, delta };
+  };
+  const intent = moveBy(drag.delta);
+  const constrained = projection.constrain ? projection.constrain(intent) : intent;
+  const landed = reduceIntent(scene, constrained ?? intent);
+  const blocked = constrained === undefined;
+  if (settled || (projection.lattice && !blocked)) {
+    return { displayScene: landed, blocked };
+  }
+  const moved = copy
+    ? Object.values(landed.nodes).filter((node) => !scene.nodes[node.id])
+    : ids.flatMap((id) => landed.nodes[id] ?? []);
+  return {
+    displayScene: reduceIntent(scene, moveBy(drag.raw ?? drag.delta)),
+    blocked,
+    // The landing is drawn only when the drop would be refused, the one thing following the pointer hides.
+    landing: blocked ? moved.map(nodeBounds) : undefined,
+  };
+};
+
 /** What the gesture in flight draws: the scene as it would be once the gesture lands. */
 export const useGesturePreview = ({
   scene,
@@ -54,51 +99,27 @@ export const useGesturePreview = ({
   // a link being drawn or re-attached over a drop target looks exactly as it will once dropped. Geometry
   // previews pass through the projection's `constrain`, so a drag shows where the drop will land, and
   // `blocked` says when the drop would be refused (drawn as is, outlined in red).
-  // A move follows the pointer while it moves; once it rests for `SETTLE_MS`, the shapes snap to where they will land.
+  // Off a lattice a move follows the pointer; once it rests for `SETTLE_MS` (a debounce), the shapes snap to where they
+  // will land. Settling is keyed by the position it settled at, so the first frame of the next move already follows.
   const moveRaw = drag?.kind === 'move' ? drag.raw : undefined;
-  const [settled, setSettled] = useState(false);
+  const rawKey = moveRaw ? `${moveRaw.x},${moveRaw.y}` : undefined;
+  const [settledAt, setSettledAt] = useState<string>();
   useEffect(() => {
-    setSettled(false);
-    if (!moveRaw) {
+    if (!rawKey) {
       return;
     }
-    const timer = setTimeout(() => setSettled(true), SETTLE_MS);
+    const timer = setTimeout(() => setSettledAt(rawKey), SETTLE_MS);
     return () => clearTimeout(timer);
-  }, [moveRaw?.x, moveRaw?.y]);
+  }, [rawKey]);
+  const settled = rawKey !== undefined && settledAt === rawKey;
 
-  const { displayScene, blocked, landing } = useMemo<{
-    displayScene: View;
-    blocked: boolean;
-    /** Where a move in flight will land (snapped and constrained), while the nodes follow the pointer. */
-    landing?: Bounds[];
-  }>(() => {
+  const { displayScene, blocked, landing } = useMemo<Preview>(() => {
     const preview = (intent: Intent) => {
       const constrained = projection.constrain ? projection.constrain(intent) : intent;
       return { displayScene: reduceIntent(scene, constrained ?? intent), blocked: constrained === undefined };
     };
     if (drag?.kind === 'move') {
-      // A copy previews beside the originals, which stay; the drop mints the copies' real ids.
-      const { ids, copy } = drag;
-      const moveBy = (delta: Point): Intent => {
-        let next = 0;
-        const duplicate = copy
-          ? duplicateSelection(scene, ids, delta, (prefix) => `${PREVIEW_NODE_ID}-${prefix}-${next++}`)
-          : undefined;
-        return duplicate ? duplicate.intent : { kind: 'move', ids, delta };
-      };
-      // The nodes follow the pointer smoothly; the frames they will snap to on the drop are drawn under them.
-      const landed = preview(moveBy(drag.delta));
-      const moved = copy
-        ? Object.values(landed.displayScene.nodes).filter((node) => !scene.nodes[node.id])
-        : ids.flatMap((id) => landed.displayScene.nodes[id] ?? []);
-      return settled
-        ? { displayScene: landed.displayScene, blocked: landed.blocked }
-        : {
-            displayScene: reduceIntent(scene, moveBy(drag.raw ?? drag.delta)),
-            blocked: landed.blocked,
-            // The landing is drawn only when the drop would be refused, the one thing following the pointer hides.
-            landing: landed.blocked ? moved.map(nodeBounds) : undefined,
-          };
+      return movePreview(scene, drag, projection, settled);
     }
     if (drag?.kind === 'resize') {
       return preview({ kind: 'resize', id: drag.id, bounds: drag.bounds });
