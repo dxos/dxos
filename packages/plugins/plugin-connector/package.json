@@ -13,15 +13,6 @@
   "sideEffects": false,
   "type": "module",
   "imports": {
-    "#commands": {
-      "source": {
-        "node": "./src/capabilities/commands.ts",
-        "default": "./src/capabilities/commands.browser.ts"
-      },
-      "types": "./dist/types/src/capabilities/commands.d.ts",
-      "node": "./dist/lib/commands.mjs",
-      "default": "./dist/lib/commands.browser.mjs"
-    },
     "#create-panel": {
       "source": {
         "node": "./src/capabilities/create-panel.ts",
@@ -49,8 +40,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/ConnectorPlugin.workerd.mjs",
-      "node": "./dist/lib/ConnectorPlugin.node.mjs",
       "default": "./dist/lib/ConnectorPlugin.mjs"
     },
     "#operations": {
@@ -119,8 +108,6 @@
     "./ConnectorPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/ConnectorPlugin.workerd.mjs",
-      "node": "./dist/lib/ConnectorPlugin.node.mjs",
       "import": "./dist/lib/ConnectorPlugin.mjs"
     },
     "./ConnectorSpec": {

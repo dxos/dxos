@@ -49,7 +49,8 @@ const makeBundle = (overrides: Record<string, string | undefined> = {}): PluginB
       specifiers: { 'effect': 'effect/index.mjs', '@dxos/app-framework/Plugin': '@dxos/app-framework/Plugin.mjs' },
     }),
     'vendor/effect/index.mjs': "import { base } from '../chunk-vendor.mjs'; export const name = 'effect:' + base;",
-    'vendor/@dxos/app-framework/Plugin.mjs': 'export const make = (loaders) => loaders;',
+    'vendor/@dxos/app-framework/Plugin.mjs':
+      "import { name } from 'effect'; export { name, name as alias } from 'effect'; export const make = (loaders) => name && loaders;",
     'vendor/chunk-vendor.mjs': "export const base = 'base';",
     ...overrides,
   };
@@ -85,7 +86,7 @@ describe('PluginBundle', () => {
     ]);
   });
 
-  test('every bare import of the plugin is vendored, and vendor/ imports only itself', ({ expect }) => {
+  test('every bare import is vendored, in the plugin and in vendor/', ({ expect }) => {
     expect(
       messages(
         makeBundle({
@@ -95,7 +96,7 @@ describe('PluginBundle', () => {
       ),
     ).toEqual([
       'operations.mjs: imports zod, which vendor/ does not provide',
-      'vendor/chunk-vendor.mjs: vendor/ imports react bare; vendored packages import each other relatively',
+      'vendor/chunk-vendor.mjs: imports react, which vendor/ does not provide',
     ]);
   });
 
@@ -114,6 +115,8 @@ describe('PluginBundle', () => {
       'schema.mjs: imports ../outside.mjs, which is not in the bundle',
       'schema.mjs: imports ./missing.mjs, which is not in the bundle',
       'surfaces.mjs: imports effect, which vendor/ does not provide',
+      'vendor/@dxos/app-framework/Plugin.mjs: imports effect, which vendor/ does not provide',
+      'vendor/@dxos/app-framework/Plugin.mjs: imports effect, which vendor/ does not provide',
     ]);
   });
 
@@ -135,16 +138,45 @@ describe('PluginBundle', () => {
     ).toEqual([expect.stringMatching(/^manifest\.json: .*key/s)]);
   });
 
-  test('rewriteImports points the plugin bare imports at vendor/ and leaves vendor/ alone', ({ expect }) => {
+  test('rewriteImports points every bare import at its vendored file', ({ expect }) => {
     const files = makeBundle();
     const { vendor } = PluginBundle.check(files);
-    const rewritten = PluginBundle.rewriteImports(files, vendor ?? { specifiers: {} });
+    const rewritten = PluginBundle.rewriteImports(files, vendor?.specifiers ?? {});
     const decoded = (path: string) => new TextDecoder().decode(rewritten[path]);
     expect(decoded('operations.mjs')).toBe(
       'import { name } from "./vendor/effect/index.mjs"; import { shared } from \'./chunk.mjs\'; export default () => name + shared;',
     );
     expect(decoded('index.mjs')).toContain('from "./vendor/@dxos/app-framework/Plugin.mjs"');
+    expect(decoded('vendor/@dxos/app-framework/Plugin.mjs')).toBe(
+      'import { name } from "../../effect/index.mjs"; export { name, name as alias } from "../../effect/index.mjs"; export const make = (loaders) => name && loaders;',
+    );
     expect(rewritten['vendor/effect/index.mjs']).toBe(files['vendor/effect/index.mjs']);
+  });
+
+  test('workerCode resolves each package once across the bundle and its dependencies', ({ expect }) => {
+    const files = makeBundle();
+    const dependency = makeBundle({
+      'operations.mjs': "import { name } from 'effect'; import { z } from 'zod'; export default () => name + z;",
+      'vendor/manifest.json': JSON.stringify({
+        specifiers: {
+          'effect': 'effect/index.mjs',
+          '@dxos/app-framework/Plugin': '@dxos/app-framework/Plugin.mjs',
+          'zod': 'zod.mjs',
+        },
+      }),
+      'vendor/zod.mjs': "import { name } from 'effect'; export const z = name;",
+    });
+    const { files: code } = PluginBundle.workerCode(files, PluginBundle.readVendor(files) ?? { specifiers: {} }, [
+      dependency,
+    ]);
+    const decoded = (path: string) => new TextDecoder().decode(code[path]);
+    // The primary's `effect` serves the dependency and the dependency's vendored `zod`.
+    expect(decoded('deps/0/operations.mjs')).toContain('from "../../vendor/effect/index.mjs"');
+    expect(decoded('deps/0/operations.mjs')).toContain('from "./vendor/zod.mjs"');
+    expect(decoded('deps/0/vendor/zod.mjs')).toContain('from "../../../vendor/effect/index.mjs"');
+    // The dependency's own copy is never loaded, so it is not shipped.
+    expect(code['deps/0/vendor/effect/index.mjs']).toBeUndefined();
+    expect(code['vendor/effect/index.mjs']).toBeDefined();
   });
 
   test('the workerd modules import in workerd once rewritten', { timeout: 60_000 }, async ({ expect }) => {

@@ -3,7 +3,7 @@
 //
 
 import type { Plugin as EsbuildPlugin } from 'esbuild';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { builtinModules } from 'node:module';
 import { dirname, join } from 'node:path';
 
@@ -40,6 +40,8 @@ export type BuildVendorOptions = {
   /** `<outDir>/vendor` of the plugin build. */
   outDir: string;
   specifiers: readonly VendorSpecifier[];
+  /** Whether a package is shared: one a vendored package imports bare, so it is vendored once, beside it. */
+  isShared: (specifier: string) => boolean;
 };
 
 /** Entry name for a specifier; esbuild writes `vendor/<name>.mjs`. */
@@ -73,16 +75,72 @@ const resolveEntries = (specifiers: readonly VendorSpecifier[], root: string): E
 });
 
 /**
- * Builds `vendor/`: one ESM entry per specifier, at `vendor/<specifier>.mjs`, sharing chunks so each package is
- * loaded once, plus `vendor/manifest.json` mapping each specifier to its file. EDGE rewrites the plugin's bare
- * imports to these files, as Composer's import map resolves them in the browser.
+ * Keeps each shared package a vendored package imports as a bare import and records it, so `vendor/` holds one copy of
+ * it that the loader resolves across the bundle and its dependencies, as an import map does. A `require` keeps its
+ * package bundled: workerd's `require` cannot load a module of the Worker Loader graph.
  */
-export const buildVendor = async ({ root, outDir, specifiers }: BuildVendorOptions): Promise<void> => {
+const sharedExternals = (
+  isShared: (specifier: string) => boolean,
+  discovered: Map<string, Set<string>>,
+): EsbuildPlugin => ({
+  name: 'dx-vendor-shared',
+  setup: (build) => {
+    build.onResolve({ filter: /^[^./]/ }, (args) => {
+      if (args.kind === 'entry-point' || args.kind === 'require-call' || !isShared(args.path)) {
+        return undefined;
+      }
+      const importers = discovered.get(args.path) ?? new Set<string>();
+      importers.add(args.importer);
+      discovered.set(args.path, importers);
+      return { path: args.path, external: true };
+    });
+  },
+});
+
+/**
+ * Builds `vendor/`: one ESM entry per specifier, at `vendor/<specifier>.mjs`, plus one for every shared package those
+ * import, and `vendor/manifest.json` mapping each specifier to its file. Vendored packages import each other bare. EDGE
+ * rewrites every bare import to these files, as Composer's import map resolves them in the browser.
+ */
+export const buildVendor = async ({ root, outDir, specifiers, isShared }: BuildVendorOptions): Promise<void> => {
   if (specifiers.length === 0) {
     return;
   }
   // Loaded here: a plugin built without a vendor step never needs esbuild.
   const { build } = await import('esbuild');
+  const all = new Map(specifiers.map((entry) => [entry.specifier, entry]));
+  // Each pass may find shared packages the vendored ones import; build again with those until none is new.
+  for (;;) {
+    const discovered = new Map<string, Set<string>>();
+    await rm(outDir, { recursive: true, force: true });
+    await buildOnce(build, root, outDir, [...all.values()], sharedExternals(isShared, discovered));
+    const added = [...discovered].filter(([specifier]) => !all.has(specifier));
+    if (added.length === 0) {
+      break;
+    }
+    added.forEach(([specifier, importers]) => all.set(specifier, { specifier, importers: [...importers] }));
+  }
+  await mkdir(outDir, { recursive: true });
+  await writeFile(
+    join(outDir, VENDOR_MANIFEST),
+    JSON.stringify(
+      {
+        specifiers: Object.fromEntries([...all.keys()].sort().map((specifier) => [specifier, `${specifier}.mjs`])),
+        conditions: VENDOR_CONDITIONS,
+      },
+      null,
+      2,
+    ),
+  );
+};
+
+const buildOnce = async (
+  build: typeof import('esbuild').build,
+  root: string,
+  outDir: string,
+  specifiers: readonly VendorSpecifier[],
+  shared: EsbuildPlugin,
+): Promise<void> => {
   await build({
     absWorkingDir: root,
     entryPoints: Object.fromEntries(specifiers.map(({ specifier }) => [specifier, `${ENTRY_PREFIX}${specifier}`])),
@@ -100,24 +158,14 @@ export const buildVendor = async ({ root, outDir, specifiers }: BuildVendorOptio
     external: RUNTIME_MODULES,
     // Workerd imports a `.wasm` file as a `WebAssembly.Module`, so it stays a file beside the code that imports it.
     loader: { '.wasm': 'copy', ...Object.fromEntries(BROWSER_ASSETS.map((extension) => [extension, 'empty'])) },
-    plugins: [resolveEntries(specifiers, root), nodeBuiltins()],
+    plugins: [resolveEntries(specifiers, root), nodeBuiltins(), shared],
     // CommonJS dependencies keep their `require` calls in ESM output; workerd provides `require` only through `node:module`, and leaves `import.meta.url` unset, so the path is fixed.
     banner: {
       js: "import { createRequire as __dxCreateRequire } from 'node:module'; const require = __dxCreateRequire('/vendor/');",
     },
     sourcemap: true,
     logLevel: 'warning',
+    // Packages that declare `sideEffects: false` import their own chunks for effect; dropping those imports is intended.
+    logOverride: { 'ignored-bare-import': 'silent' },
   });
-  await mkdir(outDir, { recursive: true });
-  await writeFile(
-    join(outDir, VENDOR_MANIFEST),
-    JSON.stringify(
-      {
-        specifiers: Object.fromEntries(specifiers.map(({ specifier }) => [specifier, `${specifier}.mjs`])),
-        conditions: VENDOR_CONDITIONS,
-      },
-      null,
-      2,
-    ),
-  );
 };

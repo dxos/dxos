@@ -88,6 +88,9 @@ const isExternal = (id: string) => id !== JSX_DEV_RUNTIME && isSharedPackage(id)
  * adding entries here is safe (unused imports get tree-shaken), but the list is
  * deliberately small to keep the banner noise-free.
  */
+/** What {@link REQUIRE_SHIM_BANNER} imports into every chunk, outside the module graph. */
+const REQUIRE_SHIM_SPECIFIERS = ['react', 'react-dom', 'react/jsx-runtime'];
+
 const REQUIRE_SHIM_BANNER = [
   '// --- composer-plugin: CJS require shim ---',
   '// See @dxos/app-framework/vite-plugin/composer-plugin.ts for rationale.',
@@ -109,6 +112,15 @@ const REQUIRE_SHIM_BANNER = [
   '};',
   '// --- end CJS require shim ---',
 ].join('\n');
+
+/** The package EDGE starts a plugin with; `vendor/` carries it when the build is given its entry. */
+export const PLUGIN_HOST_SPECIFIER = '@dxos/plugin-host-cloudflare';
+
+/**
+ * Names the EDGE plugin host's entry file for a build whose config the publisher does not control (`dx registry
+ * publish` runs the plugin's own build command), so `vendor/` carries the host.
+ */
+export const PLUGIN_HOST_ENTRY_ENV = 'DX_PLUGIN_HOST_ENTRY';
 
 export type ComposerPluginOptions = {
   /** Entry point for the plugin bundle. Defaults to `src/plugin.tsx`. */
@@ -431,7 +443,7 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
         const emitted = new Set(Object.keys(bundle));
         for (const output of Object.values(bundle)) {
           if (output.type === 'chunk') {
-            for (const id of [...output.imports, ...output.dynamicImports]) {
+            for (const id of [...output.imports, ...output.dynamicImports, ...REQUIRE_SHIM_SPECIFIERS]) {
               if (!emitted.has(id) && isExternal(id)) {
                 const importers = externals.get(id) ?? new Set<string>();
                 output.moduleIds
@@ -444,9 +456,17 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
         }
       },
       async closeBundle() {
-        const extra = vendor === true ? [] : (vendor.extra ?? []);
+        const hostEntry = process.env[PLUGIN_HOST_ENTRY_ENV];
+        const configured = vendor === true ? [] : (vendor.extra ?? []);
+        const extra = [
+          ...configured,
+          ...(hostEntry && !configured.some((entry) => entry.specifier === PLUGIN_HOST_SPECIFIER)
+            ? [{ specifier: PLUGIN_HOST_SPECIFIER, importers: [], path: hostEntry }]
+            : []),
+        ];
         await buildVendor({
           root,
+          isShared: isExternal,
           outDir: join(root, outDir, 'vendor'),
           specifiers: [
             ...[...externals]

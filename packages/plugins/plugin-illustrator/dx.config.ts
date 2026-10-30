@@ -105,8 +105,19 @@ const config: Plugin.PluginConfig = Plugin.config({
       {
         provides: [IllustratorCapabilities.VariantProvider],
         activatesOn: ActivationEvent.oneOf(IllustratorEvents.Start, AppActivationEvents.AssistantStart),
+        environments: ['browser', 'tauri'],
       },
-      () => import('#svg-variant', { with: { type: 'module-url' } }),
+      () => import('./src/capabilities/svg-variant.ts', { with: { type: 'module-url' } }),
+    ),
+    // The same variant without its React surfaces.
+    Capability.lazyModule(
+      'IllustratorSvgVariantHeadless',
+      {
+        provides: [IllustratorCapabilities.VariantProvider],
+        activatesOn: ActivationEvent.oneOf(IllustratorEvents.Start, AppActivationEvents.AssistantStart),
+        environments: ['node', 'workerd'],
+      },
+      () => import('./src/capabilities/svg-variant.node.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } }), {
       environments: ['browser', 'node', 'tauri'],

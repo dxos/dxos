@@ -20,7 +20,10 @@ export const VENDOR_MANIFEST_FILE = `${VENDOR_DIR}manifest.json`;
 /** The runtime this checker loads bundles for. */
 export const RUNTIME = 'workerd';
 
-/** `vendor/manifest.json`: each bare specifier the plugin's files import, mapped to its file under `vendor/`. */
+/**
+ * `vendor/manifest.json`: each bare specifier the plugin's files import, and every shared package those import, mapped
+ * to its file under `vendor/`.
+ */
 export const VendorMap = Schema.Struct({
   specifiers: Schema.Record(Schema.String, Schema.String),
   conditions: Schema.optional(Schema.Array(Schema.String)),
@@ -129,20 +132,19 @@ const parseImports = (path: string, source: string): { imports: ImportRecord[]; 
     end,
     dynamic: false,
   });
-  return {
-    imports: [
-      ...module.staticImports.map(({ moduleRequest }) => literal(moduleRequest)),
-      ...module.staticExports.flatMap(({ entries }) =>
-        entries.flatMap(({ moduleRequest }) => (moduleRequest ? [literal(moduleRequest)] : [])),
-      ),
-      ...module.dynamicImports.map(({ moduleRequest: { start, end } }): ImportRecord => {
-        const expression = source.slice(start, end);
-        const quoted = /^(['"`])([^'"`$]*)\1$/.exec(expression);
-        return { specifier: quoted?.[2], start, end, dynamic: true };
-      }),
-    ],
-    errors: [],
-  };
+  const imports = [
+    ...module.staticImports.map(({ moduleRequest }) => literal(moduleRequest)),
+    ...module.staticExports.flatMap(({ entries }) =>
+      entries.flatMap(({ moduleRequest }) => (moduleRequest ? [literal(moduleRequest)] : [])),
+    ),
+    ...module.dynamicImports.map(({ moduleRequest: { start, end } }): ImportRecord => {
+      const expression = source.slice(start, end);
+      const quoted = /^(['"`])([^'"`$]*)\1$/.exec(expression);
+      return { specifier: quoted?.[2], start, end, dynamic: true };
+    }),
+  ];
+  // `export { a, b } from 'x'` lists its specifier once per name; a rewrite must replace each span once.
+  return { imports: [...new Map(imports.map((record) => [record.start, record])).values()], errors: [] };
 };
 
 /** The bundle path a relative specifier names from `from`, or `undefined` when it leaves the bundle. */
@@ -198,8 +200,8 @@ export type CheckResult = {
 
 /**
  * Checks that a built plugin bundle loads on EDGE as is: the manifest and `vendor/manifest.json` are well formed, every
- * module parses, every relative import and manifest URL names a file in the bundle, every bare import of the plugin's
- * files is vendored, `vendor/` imports nothing outside itself, and nothing a workerd module imports statically is a
+ * module parses, every relative import and manifest URL names a file in the bundle, every bare import is vendored,
+ * `vendor/` imports nothing outside itself, and nothing a workerd module imports statically is a
  * stylesheet, another asset, or a browser-only module body.
  */
 export const check = (files: Files): CheckResult => {
@@ -231,12 +233,7 @@ export const check = (files: Files): CheckResult => {
         continue;
       }
       if (isBare(specifier)) {
-        if (isVendored(path)) {
-          problems.push({
-            path,
-            message: `vendor/ imports ${specifier} bare; vendored packages import each other relatively`,
-          });
-        } else if (!vendor?.specifiers[specifier]) {
+        if (!vendor?.specifiers[specifier]) {
           problems.push({ path, message: `imports ${specifier}, which vendor/ does not provide` });
         }
         edges.push({ path: vendor?.specifiers[specifier], specifier, dynamic });
@@ -309,23 +306,27 @@ export const check = (files: Files): CheckResult => {
   return { problems, roots, vendor };
 };
 
+/** Each bare specifier mapped to the bundle path it loads, as an import map maps it to a URL. */
+export type ImportMap = Readonly<Record<string, string>>;
+
 /**
- * Rewrites each bare import of the plugin's files to its file under `vendor/`, as EDGE's loader does before handing the
- * bundle to Worker Loader, which resolves a bare specifier against the importing file's directory. Files under
- * `vendor/`, and specifiers `vendor/` does not provide, are returned unchanged.
+ * Rewrites each bare import to the file `imports` maps it to, relative to the importing file, as EDGE's loader does
+ * before handing the bundle to Worker Loader, which resolves a bare specifier against the importing file's directory.
+ * Specifiers `imports` does not map are left unchanged.
  */
-export const rewriteImports = (files: Files, vendor: VendorMap): Record<string, Uint8Array> => {
+export const rewriteImports = (files: Files, imports: ImportMap): Record<string, Uint8Array> => {
   const encoder = new TextEncoder();
   return Object.fromEntries(
     Object.entries(files).map(([path, content]) => {
-      if (!JS_FILE.test(path) || isVendored(path)) {
+      if (!JS_FILE.test(path)) {
         return [path, content];
       }
       const source = decoder.decode(content);
-      const { imports } = parseImports(path, source);
       let rewritten = source;
-      for (const { specifier, start, end } of [...imports].sort((a, b) => b.start - a.start)) {
-        const target = specifier !== undefined && isBare(specifier) ? vendor.specifiers[specifier] : undefined;
+      for (const { specifier, start, end } of [...parseImports(path, source).imports].sort(
+        (a, b) => b.start - a.start,
+      )) {
+        const target = specifier !== undefined && isBare(specifier) ? imports[specifier] : undefined;
         if (target !== undefined) {
           const relativePath = posix.relative(posix.dirname(path), target);
           const replacement = JSON.stringify(relativePath.startsWith('.') ? relativePath : `./${relativePath}`);
@@ -337,11 +338,38 @@ export const rewriteImports = (files: Files, vendor: VendorMap): Record<string, 
   );
 };
 
-/** The vendored package whose `PluginHost` the main module starts. */
-export const HOST_SPECIFIER = '@dxos/plugin-host-cloudflare';
+/** `vendor/manifest.json` with each file resolved to its bundle path, or `undefined` when the bundle has none. */
+export const readVendor = (files: Files): VendorMap | undefined => checkVendor(files, []);
 
 /** Where a `dependsOn` plugin's bundle sits beside the primary's, one directory per dependency. */
 export const DEPENDENCY_DIR = 'deps/';
+
+const VENDOR_FILE = new RegExp(`^(${DEPENDENCY_DIR}\\d+/)?${VENDOR_DIR}`);
+
+/**
+ * Keeps every file outside the `vendor/` directories, the vendored `roots`, and the vendored files reachable from those
+ * by literal imports: the import map joins several bundles' `vendor/`, and each package is loaded from one of them.
+ */
+const pruneVendor = (files: Record<string, Uint8Array>, roots: readonly string[]): Record<string, Uint8Array> => {
+  const kept = new Set([...Object.keys(files).filter((path) => !VENDOR_FILE.test(path)), ...roots]);
+  const queue = [...kept].filter((path) => JS_FILE.test(path));
+  for (let path = queue.pop(); path !== undefined; path = queue.pop()) {
+    for (const { specifier } of parseImports(path, decoder.decode(files[path])).imports) {
+      const target = specifier !== undefined && !isBare(specifier) ? resolveRelative(path, specifier) : undefined;
+      if (target !== undefined && files[target] !== undefined && !kept.has(target)) {
+        kept.add(target);
+        // A copied `.wasm` or source map is kept; only modules import further.
+        if (JS_FILE.test(target)) {
+          queue.push(target);
+        }
+      }
+    }
+  }
+  return Object.fromEntries(Object.entries(files).filter(([path]) => kept.has(path)));
+};
+
+/** The vendored package whose `PluginHost` the main module starts. */
+export const HOST_SPECIFIER = '@dxos/plugin-host-cloudflare';
 
 export const MAIN_MODULE = '__plugin_main__.js';
 
@@ -353,22 +381,25 @@ export type WorkerCode = {
 };
 
 /**
- * The modules a Dynamic Worker loads for a bundle: its files with bare imports rewritten to `vendor/`, the bundles of
- * its `dependsOn` plugins under `deps/<n>/` rewritten to the same `vendor/` (so the isolate holds one copy of each
- * package), and a main module that starts the vendored host and exports its `describe`, `invoke` and `fetch`.
+ * The modules a Dynamic Worker loads for a bundle: its files and the bundles of its `dependsOn` plugins (under
+ * `deps/<n>/`), with every bare import rewritten through one import map joining their `vendor/` directories (the
+ * primary's first, so the isolate holds one copy of each package), and a main module that starts the vendored host and
+ * exports its `describe`, `invoke` and `fetch`.
  */
 export const workerCode = (files: Files, vendor: VendorMap, dependencies: readonly Files[] = []): WorkerCode => {
-  const host = vendor.specifiers[HOST_SPECIFIER];
+  const imports: Record<string, string> = { ...vendor.specifiers };
   const combined: Record<string, Uint8Array> = { ...files };
   dependencies.forEach((dependency, index) => {
+    const prefix = `${DEPENDENCY_DIR}${index}/`;
+    for (const [specifier, path] of Object.entries(readVendor(dependency)?.specifiers ?? {})) {
+      imports[specifier] ??= `${prefix}${path}`;
+    }
     for (const [path, content] of Object.entries(dependency)) {
-      // A dependency's own `vendor/` is not loaded: its imports resolve against the primary's.
-      if (!isVendored(path)) {
-        combined[`${DEPENDENCY_DIR}${index}/${path}`] = content;
-      }
+      combined[`${prefix}${path}`] = content;
     }
   });
-  const imports = [
+  const host = imports[HOST_SPECIFIER];
+  const roots = [
     // Without a vendored host the bundle still loads, so its modules can be checked; only starting the plugin fails.
     host === undefined
       ? `Promise.reject(new Error(${JSON.stringify(`vendor/ does not provide ${HOST_SPECIFIER}, which EDGE starts the plugin with.`)}))`
@@ -382,7 +413,7 @@ export const workerCode = (files: Files, vendor: VendorMap, dependencies: readon
     // Imported inside a request: module evaluation runs in global scope, where workerd disallows timers.
     'const getHost = async () => {',
     '  if (host === undefined) {',
-    `    const [{ PluginHost }, primary, ...dependencies] = await Promise.all([${imports.join(', ')}]);`,
+    `    const [{ PluginHost }, primary, ...dependencies] = await Promise.all([${roots.join(', ')}]);`,
     '    host ??= PluginHost.make(() => ({ primary: primary.make(), dependencies: dependencies.map((plugin) => plugin.make()) }));',
     '  }',
     '  return host;',
@@ -400,5 +431,9 @@ export const workerCode = (files: Files, vendor: VendorMap, dependencies: readon
     '  async invoke(request, scope) { return (await getHost()).invoke(request, this.env, scope); }',
     '}',
   ].join('\n');
-  return { files: rewriteImports(combined, vendor), mainModule: MAIN_MODULE, main };
+  return {
+    files: pruneVendor(rewriteImports(combined, imports), host === undefined ? [] : [host]),
+    mainModule: MAIN_MODULE,
+    main,
+  };
 };

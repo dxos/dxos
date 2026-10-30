@@ -27,8 +27,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/TripPlugin.workerd.mjs",
-      "node": "./dist/lib/TripPlugin.node.mjs",
       "default": "./dist/lib/TripPlugin.mjs"
     },
     "#operations": {
@@ -123,8 +121,6 @@
     "./TripPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/TripPlugin.workerd.mjs",
-      "node": "./dist/lib/TripPlugin.node.mjs",
       "import": "./dist/lib/TripPlugin.mjs"
     }
   },

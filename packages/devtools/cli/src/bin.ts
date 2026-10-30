@@ -53,7 +53,7 @@ import {
   initializeObservability,
   observabilityNamespace,
 } from './observability.ts';
-import { installStderrFilter, registerSharedScope } from './util/index.ts';
+import { bundleDescriberLayer, installStderrFilter, registerSharedScope } from './util/index.ts';
 
 // Filter background `warnAfterTimeout` chatter out of stderr for the lifetime
 // of the process. The warnings come from eager space initialisation in
@@ -232,7 +232,7 @@ const program = Effect.gen(function* () {
     }),
   ).pipe(Layer.provide(commandConfigLayer(argv)));
   const context = yield* Layer.build(
-    Layer.mergeAll(pluginLayer, fromConfig(config), commandConfigLayer(argv), deusJsonLayer),
+    Layer.mergeAll(pluginLayer, fromConfig(config), commandConfigLayer(argv), deusJsonLayer, bundleDescriberLayer),
   );
   const layer = Layer.succeedContext(context);
 

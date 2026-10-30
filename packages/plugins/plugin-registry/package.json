@@ -13,15 +13,6 @@
   "sideEffects": false,
   "type": "module",
   "imports": {
-    "#commands": {
-      "source": {
-        "node": "./src/capabilities/commands.ts",
-        "default": "./src/capabilities/commands.browser.ts"
-      },
-      "types": "./dist/types/src/capabilities/commands.d.ts",
-      "node": "./dist/lib/commands.mjs",
-      "default": "./dist/lib/commands.browser.mjs"
-    },
     "#components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
@@ -35,8 +26,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/RegistryPlugin.workerd.mjs",
-      "node": "./dist/lib/RegistryPlugin.node.mjs",
       "default": "./dist/lib/RegistryPlugin.mjs"
     },
     "#operations": {
@@ -66,6 +55,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./BundleDescriber": {
+      "source": "./src/BundleDescriber.ts",
+      "types": "./dist/types/src/BundleDescriber.d.ts",
+      "import": "./dist/lib/ns/BundleDescriber.mjs"
+    },
     "./Operations": {
       "source": "./src/Operations.ts",
       "types": "./dist/types/src/Operations.d.ts",
@@ -94,8 +88,6 @@
     "./RegistryPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/RegistryPlugin.workerd.mjs",
-      "node": "./dist/lib/RegistryPlugin.node.mjs",
       "import": "./dist/lib/RegistryPlugin.mjs"
     },
     "./translations": {

@@ -26,8 +26,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/TasksPlugin.workerd.mjs",
-      "node": "./dist/lib/TasksPlugin.node.mjs",
       "default": "./dist/lib/TasksPlugin.mjs"
     },
     "#operations": {
@@ -97,8 +95,6 @@
     "./TasksPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/TasksPlugin.workerd.mjs",
-      "node": "./dist/lib/TasksPlugin.node.mjs",
       "import": "./dist/lib/TasksPlugin.mjs"
     },
     "./TasksUtil": {

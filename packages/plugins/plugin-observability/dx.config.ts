@@ -48,8 +48,10 @@ const config: Plugin.PluginConfig<ObservabilityOptions.ObservabilityPluginOption
         },
         () => import('./src/capabilities/client-ready.ts', { with: { type: 'module-url' } }),
       ),
-      // `#commands` resolves per condition: only a host with a CLI has anywhere to put them.
-      AppCapability.commands(() => import('#commands', { with: { type: 'module-url' } })),
+      // Only a host with a CLI has anywhere to put them.
+      AppCapability.commands(() => import('./src/capabilities/commands.node.ts', { with: { type: 'module-url' } }), {
+        environments: ['node'],
+      }),
       Capability.lazyModule(
         'InvocationListener',
         {
@@ -92,16 +94,24 @@ const config: Plugin.PluginConfig<ObservabilityOptions.ObservabilityPluginOption
         },
         () => import('./src/capabilities/state.ts', { with: { type: 'module-url' } }),
       ),
-      AppCapability.operationHandler(() => import('#operation-handler', { with: { type: 'module-url' } })),
+      AppCapability.operationHandler(
+        () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
+        { environments: ['browser', 'node', 'tauri'] },
+      ),
+      AppCapability.operationHandler(
+        () => import('./src/capabilities/operation-handler.workerd.ts', { with: { type: 'module-url' } }),
+        { name: 'OperationHandlerWorkerd', environments: ['workerd'] },
+      ),
       Capability.lazyModule(
         'PrivacyBanner',
         {
-          environments: ['browser', 'node', 'tauri'],
+          // A terminal banner; the browser shows PrivacyNotice instead.
+          environments: ['node'],
           requires: [ObservabilityCapabilities.Namespace],
           provides: [],
           activatesOn: ObservabilityEvents.IdentityCreatedEvent,
         },
-        () => import('#privacy-banner', { with: { type: 'module-url' } }),
+        () => import('./src/capabilities/privacy-banner.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
         'PrivacyNotice',

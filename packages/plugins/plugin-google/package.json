@@ -21,8 +21,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/GooglePlugin.workerd.mjs",
-      "node": "./dist/lib/GooglePlugin.node.mjs",
       "default": "./dist/lib/GooglePlugin.mjs"
     },
     "#operations": {
@@ -69,8 +67,6 @@
     "./GooglePlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/GooglePlugin.workerd.mjs",
-      "node": "./dist/lib/GooglePlugin.node.mjs",
       "import": "./dist/lib/GooglePlugin.mjs"
     },
     "./GoogleOperationHandlerSet": {

@@ -27,8 +27,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/BookmarksPlugin.workerd.mjs",
-      "node": "./dist/lib/BookmarksPlugin.node.mjs",
       "default": "./dist/lib/BookmarksPlugin.mjs"
     },
     "#operations": {
@@ -78,8 +76,6 @@
     "./BookmarksPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/BookmarksPlugin.workerd.mjs",
-      "node": "./dist/lib/BookmarksPlugin.node.mjs",
       "import": "./dist/lib/BookmarksPlugin.mjs"
     }
   },

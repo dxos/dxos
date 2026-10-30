@@ -13,15 +13,6 @@
   "sideEffects": false,
   "type": "module",
   "imports": {
-    "#commands": {
-      "source": {
-        "node": "./src/capabilities/commands.node.ts",
-        "default": "./src/capabilities/commands.ts"
-      },
-      "types": "./dist/types/src/capabilities/commands.d.ts",
-      "node": "./dist/lib/commands.node.mjs",
-      "default": "./dist/lib/commands.mjs"
-    },
     "#components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
@@ -35,8 +26,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/ClientPlugin.workerd.mjs",
-      "node": "./dist/lib/ClientPlugin.node.mjs",
       "default": "./dist/lib/ClientPlugin.mjs"
     },
     "#operations": {
@@ -104,8 +93,6 @@
     "./ClientPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/ClientPlugin.workerd.mjs",
-      "node": "./dist/lib/ClientPlugin.node.mjs",
       "import": "./dist/lib/ClientPlugin.mjs"
     },
     "./CliLogin": {

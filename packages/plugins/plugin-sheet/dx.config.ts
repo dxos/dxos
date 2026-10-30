@@ -107,6 +107,16 @@ const config: Plugin.PluginConfig = Plugin.config({
       () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       {
         activatesOn: ActivationEvents.Idle,
+        environments: ['browser', 'tauri'],
+      },
+    ),
+    // Only the operations a host without a live editor view can serve.
+    AppCapability.operationHandler(
+      () => import('./src/capabilities/operation-handler.headless.ts', { with: { type: 'module-url' } }),
+      {
+        name: 'OperationHandlerHeadless',
+        activatesOn: ActivationEvents.Idle,
+        environments: ['node', 'workerd'],
       },
     ),
     AppCapability.pluginAsset({

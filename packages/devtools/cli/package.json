@@ -53,6 +53,7 @@
     "@dxos/plugin-file": "workspace:*",
     "@dxos/plugin-game": "workspace:*",
     "@dxos/plugin-google": "workspace:*",
+    "@dxos/plugin-host-cloudflare": "workspace:*",
     "@dxos/plugin-illustrator": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-jmap": "workspace:*",

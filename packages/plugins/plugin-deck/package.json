@@ -33,8 +33,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/DeckPlugin.workerd.mjs",
-      "node": "./dist/lib/DeckPlugin.node.mjs",
       "default": "./dist/lib/DeckPlugin.mjs"
     },
     "#operations": {
@@ -78,8 +76,6 @@
     "./DeckPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/DeckPlugin.workerd.mjs",
-      "node": "./dist/lib/DeckPlugin.node.mjs",
       "import": "./dist/lib/DeckPlugin.mjs"
     },
     "./DeckRole": {

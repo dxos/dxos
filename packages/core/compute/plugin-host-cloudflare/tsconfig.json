@@ -27,9 +27,6 @@
       "path": "../../../common/log"
     },
     {
-      "path": "../../../common/util"
-    },
-    {
       "path": "../../../sdk/app-framework"
     },
     {
@@ -49,9 +46,6 @@
     },
     {
       "path": "../compute-runtime"
-    },
-    {
-      "path": "../edge-compute"
     },
     {
       "path": "../functions-runtime-cloudflare"

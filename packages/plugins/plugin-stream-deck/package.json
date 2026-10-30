@@ -32,8 +32,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/StreamDeckPlugin.workerd.mjs",
-      "node": "./dist/lib/StreamDeckPlugin.node.mjs",
       "default": "./dist/lib/StreamDeckPlugin.mjs"
     },
     "#protocol": {
@@ -78,8 +76,6 @@
     "./StreamDeckPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/StreamDeckPlugin.workerd.mjs",
-      "node": "./dist/lib/StreamDeckPlugin.node.mjs",
       "import": "./dist/lib/StreamDeckPlugin.mjs"
     },
     "./translations": {

@@ -5893,9 +5893,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo
-      '@dxos/edge-compute':
-        specifier: workspace:*
-        version: link:../edge-compute
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
@@ -5917,15 +5914,9 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../protocols
-      '@dxos/util':
-        specifier: workspace:*
-        version: link:../../../common/util
       effect:
         specifier: 4.0.4
         version: 4.0.4
-      esbuild:
-        specifier: '>=0.28.0'
-        version: 0.28.2
       miniflare:
         specifier: 'catalog:'
         version: 4.20260714.0
@@ -7396,6 +7387,9 @@ importers:
       '@dxos/plugin-google':
         specifier: workspace:*
         version: link:../../plugins/plugin-google
+      '@dxos/plugin-host-cloudflare':
+        specifier: workspace:*
+        version: link:../../core/compute/plugin-host-cloudflare
       '@dxos/plugin-illustrator':
         specifier: workspace:*
         version: link:../../plugins/plugin-illustrator

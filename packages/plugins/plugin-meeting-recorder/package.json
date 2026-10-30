@@ -27,8 +27,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/MeetingRecorderPlugin.workerd.mjs",
-      "node": "./dist/lib/MeetingRecorderPlugin.node.mjs",
       "default": "./dist/lib/MeetingRecorderPlugin.mjs"
     },
     "#operations": {
@@ -83,8 +81,6 @@
     "./MeetingRecorderPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/MeetingRecorderPlugin.workerd.mjs",
-      "node": "./dist/lib/MeetingRecorderPlugin.node.mjs",
       "import": "./dist/lib/MeetingRecorderPlugin.mjs"
     },
     "./Settings": {

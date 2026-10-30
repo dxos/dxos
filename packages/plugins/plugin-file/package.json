@@ -28,8 +28,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/FilePlugin.workerd.mjs",
-      "node": "./dist/lib/FilePlugin.node.mjs",
       "default": "./dist/lib/FilePlugin.mjs"
     },
     "#operations": {
@@ -83,8 +81,6 @@
     "./FilePlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/FilePlugin.workerd.mjs",
-      "node": "./dist/lib/FilePlugin.node.mjs",
       "import": "./dist/lib/FilePlugin.mjs"
     },
     "./FileSkill": {

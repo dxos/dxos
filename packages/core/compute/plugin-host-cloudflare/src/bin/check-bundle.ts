@@ -7,8 +7,7 @@
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 
-import { loadBundle } from '../bundle/load-bundle.ts';
-import * as PluginBundle from '../bundle/PluginBundle.ts';
+import { verifyBundle } from '../bundle/verify-bundle.ts';
 
 /**
  * Checks a built plugin bundle before it is published: the manifest, that every module parses and its imports resolve
@@ -28,46 +27,16 @@ const main = async () => {
     process.exit(2);
   }
   const dir = resolve(positionals[0]);
-  const files = await PluginBundle.readBundle(dir);
-  const { problems, roots, vendor } = PluginBundle.check(files);
-  const fail = (messages: readonly { path: string; message: string }[]) => {
-    console.error(`✗ ${dir}`);
-    messages.forEach(({ path, message }) => console.error(`  - ${path}: ${message}`));
-    process.exit(1);
-  };
+  const { problems, summary } = await verifyBundle(dir, {
+    dependencies: (values.dependency ?? []).map((dependency) => resolve(dependency)),
+    load: !values['no-load'],
+  });
   if (problems.length > 0) {
-    fail(problems);
+    console.error(`✗ ${dir}`);
+    problems.forEach(({ path, message }) => console.error(`  - ${path}: ${message}`));
+    process.exit(1);
   }
-  if (values['no-load']) {
-    console.log(`✓ ${dir} (${Object.keys(files).length} files)`);
-    return;
-  }
-
-  const dependencies = await Promise.all(
-    (values.dependency ?? []).map((dependency) => PluginBundle.readBundle(resolve(dependency))),
-  );
-  await using bundle = await loadBundle(files, { dependencies });
-  const failures = await bundle.importModules(roots);
-  if (failures.length > 0) {
-    fail(failures.map(({ path, message }) => ({ path, message: `does not import: ${message}` })));
-  }
-  if (!vendor?.specifiers[PluginBundle.HOST_SPECIFIER]) {
-    console.log(`✓ ${dir} (${roots.length} workerd modules imported; no vendored host, so describe() was not run)`);
-    return;
-  }
-  const catalog = await bundle.describe();
-  const contributions = catalog.operations.length + catalog.skills.length + catalog.types.length;
-  const activation = [
-    ...catalog.failures.map(({ id, phase, message }) => ({ path: id, message: `failed to ${phase}: ${message}` })),
-    ...(contributions === 0
-      ? [{ path: PluginBundle.MANIFEST_FILE, message: 'contributes no operations, skills or types on EDGE' }]
-      : []),
-  ];
-  if (activation.length > 0) {
-    fail(activation);
-  }
-  const summary = `${catalog.operations.length} operations, ${catalog.skills.length} skills, ${catalog.types.length} types`;
-  console.log(`✓ ${dir} (${roots.length} workerd modules imported; ${summary})`);
+  console.log(`✓ ${dir} (${summary})`);
 };
 
 void main().catch((error) => {

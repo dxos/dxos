@@ -91,6 +91,16 @@ const config: Plugin.PluginConfig = Plugin.config({
       () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
       {
         activatesOn: ActivationEvents.Idle,
+        environments: ['browser', 'node', 'tauri'],
+      },
+    ),
+    // Without the builds, whose TypeScript compiler crashes workerd on load.
+    AppCapability.operationHandler(
+      () => import('./src/capabilities/operation-handler.workerd.ts', { with: { type: 'module-url' } }),
+      {
+        name: 'OperationHandlerWorkerd',
+        activatesOn: ActivationEvents.Idle,
+        environments: ['workerd'],
       },
     ),
     AppCapability.pluginAsset({

@@ -17,8 +17,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/OsrmPlugin.workerd.mjs",
-      "node": "./dist/lib/OsrmPlugin.node.mjs",
       "default": "./dist/lib/OsrmPlugin.mjs"
     },
     "#services": {
@@ -41,8 +39,6 @@
     "./OsrmPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/OsrmPlugin.workerd.mjs",
-      "node": "./dist/lib/OsrmPlugin.node.mjs",
       "import": "./dist/lib/OsrmPlugin.mjs"
     }
   },

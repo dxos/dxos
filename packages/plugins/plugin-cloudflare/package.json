@@ -17,8 +17,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/CloudflarePlugin.workerd.mjs",
-      "node": "./dist/lib/CloudflarePlugin.node.mjs",
       "default": "./dist/lib/CloudflarePlugin.mjs"
     },
     "#services": {
@@ -42,8 +40,6 @@
     "./CloudflarePlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/CloudflarePlugin.workerd.mjs",
-      "node": "./dist/lib/CloudflarePlugin.node.mjs",
       "import": "./dist/lib/CloudflarePlugin.mjs"
     },
     "./translations": {

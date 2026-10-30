@@ -17,8 +17,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/LinearPlugin.workerd.mjs",
-      "node": "./dist/lib/LinearPlugin.node.mjs",
       "default": "./dist/lib/LinearPlugin.mjs"
     },
     "#operations": {
@@ -63,8 +61,6 @@
     "./LinearPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/LinearPlugin.workerd.mjs",
-      "node": "./dist/lib/LinearPlugin.node.mjs",
       "import": "./dist/lib/LinearPlugin.mjs"
     }
   },

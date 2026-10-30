@@ -3,14 +3,14 @@
 Hosts Composer plugins on EDGE, inside a Cloudflare Dynamic Worker loaded through the Worker Loader API. The design is the
 EDGE-side plugins spec (`org.dxos.app-framework.edge-plugins`).
 
-- `PluginHost` — the main module of a release: activates its plugins once per isolate, `describe()`s what they contribute
-  and `invoke()`s their operations. It also speaks the functions fetch protocol compute-service uses for Worker Loader
-  functions.
-- `PluginCatalog` — a release's operations, skills, types and activation failures, as JSON.
-- `PluginRelease` — release files to Worker Loader modules, the content hash that names a release, and its manifest.
-- `@dxos/plugin-host-cloudflare/bundler` (Node) — `bundlePlugin` bundles a plugin's `workerd` build and the host into one
-  self-contained module graph; `loadRelease` loads it through Worker Loader in a local workerd; `checkRelease` reports
-  whether it is fit to publish.
+- `PluginHost` — the host a plugin bundle starts on EDGE: activates its plugins once per isolate, `describe()`s what
+  they contribute and `invoke()`s their operations. It also speaks the functions fetch protocol compute-service uses
+  for Worker Loader functions. A plugin's build adds it to the bundle's `vendor/`.
+- `PluginCatalog` — a plugin's operations, skills, types and activation failures, as JSON.
+- `@dxos/plugin-host-cloudflare/bundle` (Node) — `buildBundle` builds a plugin package's one bundle with
+  `composerPlugin`; `PluginBundle.check` and `PluginBundle.rewriteImports` are the static checks and the load-time
+  rewrite of bare imports to `vendor/`; `loadBundle` loads a bundle through Worker Loader in a local workerd;
+  `verifyBundle` runs all of it.
 
 ## Checking a plugin
 
@@ -20,22 +20,8 @@ A plugin package tagged `edge-release` in its `moon.yml` inherits `check-edge-re
 moon run plugin-markdown:check-edge-release
 ```
 
-It fails when the release imports a module it does not contain, a module fails to activate, or the plugin contributes
-no operations, skills or types on EDGE.
-
-## Writing a release
-
-`--release-dir <dir>` also writes each release that passes to `<dir>/<pluginKey>/<version>/`, the files registry-service
-publishes. `--entry` checks one module that exports a plugin's `make` instead of the package's exports, with
-`--dependency` for each plugin it may depend on. The test plugin's release, which the EDGE e2e suite publishes when
-`DX_PLUGIN_RELEASE_DIR` points at it:
-
-```bash
-node dist/lib/bin/check-release.mjs \
-  --entry src/testing/test-plugin-entry.ts \
-  --dependency src/testing/test-base-plugin-entry.ts \
-  --release-dir /tmp/edge-releases
-```
+It builds the package's bundle into `dist/plugin` (the same build `dx registry publish` uploads), builds the bundles of
+the plugins in its `dependsOn` closure, and runs the bundle check below with them beside it.
 
 ## Checking a plugin bundle
 
@@ -43,14 +29,17 @@ node dist/lib/bin/check-release.mjs \
 shared packages in `vendor/`), before it is published:
 
 ```bash
-node dist/lib/bin/check-bundle.mjs <bundle dir> [--no-import]
+node dist/lib/bin/check-bundle.mjs <bundle dir> [--dependency <bundle dir>]... [--no-load]
 ```
 
 It fails when:
+
 - the manifest or `vendor/manifest.json` is malformed;
 - a module does not parse;
 - an import or manifest URL names no file in the bundle;
 - a bare import of the plugin is not vendored;
 - a workerd module reaches a stylesheet or a browser-only body.
 
-Unless `--no-import` is given, it then rewrites the bundle's bare imports to `vendor/`, as EDGE's loader does, and imports each workerd module in workerd through Worker Loader. `@dxos/plugin-host-cloudflare/bundle` exports the same checks as `PluginBundle.check` and `PluginBundle.rewriteImports`.
+Unless `--no-load` is given, it then rewrites the bundle's bare imports to `vendor/`, as EDGE's loader does, imports
+each workerd module in workerd through Worker Loader, and, when `vendor/` carries the host, calls `describe()`. It fails
+when a module does not import, a module fails to activate, or the plugin contributes no operations, skills or types.

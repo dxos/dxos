@@ -26,8 +26,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/TransformerPlugin.workerd.mjs",
-      "node": "./dist/lib/TransformerPlugin.node.mjs",
       "default": "./dist/lib/TransformerPlugin.mjs"
     },
     "#translations": {
@@ -51,8 +49,6 @@
     "./TransformerPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/TransformerPlugin.workerd.mjs",
-      "node": "./dist/lib/TransformerPlugin.node.mjs",
       "import": "./dist/lib/TransformerPlugin.mjs"
     }
   },

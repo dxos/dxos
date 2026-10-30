@@ -26,8 +26,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/FileSystemPlugin.workerd.mjs",
-      "node": "./dist/lib/FileSystemPlugin.node.mjs",
       "default": "./dist/lib/FileSystemPlugin.mjs"
     },
     "#operations": {
@@ -82,8 +80,6 @@
     "./FileSystemPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/FileSystemPlugin.workerd.mjs",
-      "node": "./dist/lib/FileSystemPlugin.node.mjs",
       "import": "./dist/lib/FileSystemPlugin.mjs"
     }
   },

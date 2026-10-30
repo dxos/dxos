@@ -27,8 +27,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/AtprotoPlugin.workerd.mjs",
-      "node": "./dist/lib/AtprotoPlugin.node.mjs",
       "default": "./dist/lib/AtprotoPlugin.mjs"
     },
     "#translations": {
@@ -72,8 +70,6 @@
     "./AtprotoPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/AtprotoPlugin.workerd.mjs",
-      "node": "./dist/lib/AtprotoPlugin.node.mjs",
       "import": "./dist/lib/AtprotoPlugin.mjs"
     },
     "./AtprotoPublication": {

@@ -31,8 +31,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/CallsPlugin.workerd.mjs",
-      "node": "./dist/lib/CallsPlugin.node.mjs",
       "default": "./dist/lib/CallsPlugin.mjs"
     },
     "#operations": {
@@ -81,8 +79,6 @@
     "./CallsPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/CallsPlugin.workerd.mjs",
-      "node": "./dist/lib/CallsPlugin.node.mjs",
       "import": "./dist/lib/CallsPlugin.mjs"
     },
     "./package.json": "./package.json",
