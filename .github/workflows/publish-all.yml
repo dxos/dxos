@@ -157,6 +157,16 @@ jobs:
           DX_CLI_POSTHOG_API_KEY: ${{ secrets.DX_CLI_POSTHOG_API_KEY }}
           NPM_CONFIG_PROVENANCE: 'true' # provenance via OIDC; trusted publisher means no NPM_TOKEN.
 
+      # The same binaries, for agents and setup scripts that install with `curl …/cli/install.sh | sh`.
+      - name: Upload the CLI to R2 (@latest)
+        if: github.event_name == 'push'
+        run: moon run cli:publish-r2 -- --release
+        env:
+          NODE_ENV: production
+          DX_CLI_POSTHOG_API_KEY: ${{ secrets.DX_CLI_POSTHOG_API_KEY }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+
       - name: Publish the CLI (@next snapshot)
         if: github.event_name == 'workflow_dispatch'
         run: moon run cli:publish -- --tag next
@@ -164,6 +174,16 @@ jobs:
           NODE_ENV: production
           DX_CLI_POSTHOG_API_KEY: ${{ secrets.DX_CLI_POSTHOG_API_KEY }}
           NPM_CONFIG_PROVENANCE: 'true'
+
+      # A snapshot is uploaded under its commit and never becomes `latest`.
+      - name: Upload the CLI to R2 (@next snapshot)
+        if: github.event_name == 'workflow_dispatch'
+        run: moon run cli:publish-r2 -- --no-latest
+        env:
+          NODE_ENV: production
+          DX_CLI_POSTHOG_API_KEY: ${{ secrets.DX_CLI_POSTHOG_API_KEY }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
 
       # One tag + one GitHub Release per lockstep group (`v<version>` for core/SDK, `plugins-v<version>` for
       # plugins + CLI), both refs in a single push. No `always()`/`!cancelled()`: a failed publish must not be
