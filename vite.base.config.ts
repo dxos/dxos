@@ -1064,6 +1064,11 @@ export interface DxConfigOptions {
   /** Skip DxNodeStdPlugin (for node-only packages that don't target browser). Default: false. */
   nodeTarget?: boolean;
   /**
+   * Emit one module per source file, so a consumer's bundler can drop the ones it never imports. Default: true. Off
+   * for a vendored library whose modules import each other in a cycle, which only one bundled file can initialize.
+   */
+  preserveModules?: boolean;
+  /**
    * Emit `.d.ts` via `tsc` alongside the JS bundle. Default: true. Off for the vendored
    * bundles, which ship hand-written declarations next to their sources and have no
    * TypeScript of their own for `tsc` to read.
@@ -1328,6 +1333,7 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
     jsxRuntime,
     assetsAsFiles = false,
     bundle = [],
+    preserveModules = true,
     alias,
     mainFields,
     injectGlobals = false,
@@ -1419,8 +1425,7 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
           ...(injectGlobals ? { banner: "import '@dxos/node-std/globals';" } : {}),
           // One module per source file, so a consumer's bundler can drop the files it never uses under the package's
           // `"sideEffects": false`; a single bundled file is kept whole as soon as one export is imported.
-          preserveModules: true,
-          preserveModulesRoot: 'src',
+          ...(preserveModules ? { preserveModules: true, preserveModulesRoot: 'src' } : {}),
           chunkFileNames: 'chunk-[name].mjs',
           // Keep emitted assets adjacent to the entry chunks so consumers' bundlers
           // can resolve them via the same relative path the JS already references.
@@ -1445,7 +1450,7 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
       ...(bundle.length > 0 ? [DxHoistRequirePlugin()] : []),
       ...(declarations ? [DxDeclarationsPlugin()] : []),
       ...(hasDxConfigEntry ? [dxConfigPlugin(process.cwd())] : []),
-      DxEntryAliasPlugin(process.cwd(), resolvedEntry),
+      ...(preserveModules ? [DxEntryAliasPlugin(process.cwd(), resolvedEntry)] : []),
     ],
     ...(test ? { test: buildTestConfig(process.cwd(), test, jsx) } : {}),
   });

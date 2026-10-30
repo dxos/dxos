@@ -13,6 +13,8 @@ export default defineConfig({
     'hyperformula': 'src/hyperformula.js',
   },
   mainFields: ['browser', 'module', 'main'],
+  // chevrotain's lexer and regexp modules import each other, which only one bundled file can initialize.
+  preserveModules: false,
   // The vendored dependency tree, inlined — that is what this package exists to ship.
   bundle: [
     'hyperformula',
