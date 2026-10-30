@@ -55,6 +55,7 @@ export const createBasicCircuit = () => {
     const d = model.createNode(createNot(position({ x: 0, y: 2 })));
 
     model.createEdge({ source: a.id, target: b.id });
+    model.createEdge({ source: a.id, target: d.id });
     model.createEdge({ source: d.id, target: c.id });
   }
 
