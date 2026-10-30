@@ -12,22 +12,30 @@ import { isNonNullable } from '@dxos/util';
 
 import { Feature, Spec } from '#types';
 
-/** The instructions travel by reference, so the chat follows later edits to the project's. */
-const projectBindings = Effect.fnUntraced(function* (project: Project.Project) {
+/**
+ * The instructions travel by reference, so the chat follows later edits to the project's. Instructions that no longer
+ * exist bind nothing.
+ */
+const projectBindings = Effect.fnUntraced(function* (
+  project: Project.Project,
+): Effect.fn.Return<AssistantCapabilities.SubjectBindings> {
   const instructions = project.instructions;
   if (!instructions) {
     return {};
   }
 
   // Loaded rather than probed for availability: `contextBindings` reads `.target`.
-  yield* Database.load(instructions);
-  return { ...Project.contextBindings(project), instructions };
+  const loaded = yield* Database.load(instructions).pipe(
+    Effect.as(true),
+    Effect.catchTag('EntityNotFoundError', () => Effect.succeed(false)),
+  );
+  return loaded ? { ...Project.contextBindings(project), instructions } : {};
 });
 
 /** A feature's chat runs in its project's context, with the spec that lists the feature and the project bound. */
 export const featureBindings = Effect.fnUntraced(function* (
   feature: Feature.Feature,
-): Effect.fn.Return<AssistantCapabilities.SubjectBindings, Error, Database.Service> {
+): Effect.fn.Return<AssistantCapabilities.SubjectBindings> {
   const spec = Spec.getContainer(feature);
   const project = Spec.findProject(feature);
   const bindings: AssistantCapabilities.SubjectBindings = project ? yield* projectBindings(project) : {};
