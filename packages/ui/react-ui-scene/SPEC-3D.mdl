@@ -1,0 +1,257 @@
+---
+id: org.dxos.ui.react-ui-scene.3d
+name: SceneEditor3D
+version: 0.1.0
+---
+
+The 3D variant of the scene editor: what `SceneEditor` does when its dimension config is `config3d`. The core spec
+states everything both dimensions share; this spec states only what 3D adds or does differently — the Babylon
+viewport and its camera, gizmos, face selection, drag-to-create with height, solids, mesh import and export,
+materials and the coloured axes.
+
+The 3D viewport (`Viewport3D`) draws the open scene's 3D layouts with Babylon through `Scene3DEditor`, which picks
+with a ray against the scene and the ground plane, runs every gesture in memory and reports its end to the editor as
+one `LayoutIntent`. As a picture it is `Scene3DView`: the authored view alone, with no grid and no orbit. This package
+also holds the 2D config and viewport adapter; the 2D variant spec states them, beside the 2D engine.
+
+## Dependencies
+
+```mdl
+uses org.dxos.ui.react-ui-canvas: The shared scene editor this variant configures — its parts, store, commands, history, clipboard, lock, roles, panels, inspectors and timeline hold in 3D and are not restated.
+```
+
+```mdl
+uses org.dxos.scene: The data the 3D viewport reads and writes — `Layout3D`, `Element3D`, `Style3D`, `Camera3D`, solids and the composite transform.
+```
+
+## Extensions
+
+| Term        | URI                          |
+| ----------- | ---------------------------- |
+| `uses`      | `dxos.spec.core/uses`        |
+| `type`      | `org.dxos.mdl.type@1.0`      |
+| `component` | `org.dxos.mdl.component@1.0` |
+| `feat`      | `org.dxos.mdl.feat@1.0`      |
+| `decision`  | `org.dxos.mdl.decision@1.0`  |
+
+## Types
+
+```mdl
+type Tool3D
+  desc: >
+    What a left press does in the 3D viewport, mapped from the editor's tool: select, orbit (the hand), a gizmo's
+    move, rotate or scale, extrude a face, link two elements, create an element of a kind, or place a model object.
+  literals: 'select' | 'orbit' | 'move' | 'rotate' | 'scale' | 'extrude' | 'link' | { create: kind } | { place: object }
+```
+
+## Components
+
+```mdl
+component Viewport3D
+  desc: >
+    The 3D viewport the editor draws: `Scene3DEditor` over the open scene, or `Scene3DView` as a picture. The look
+    is the display panel's when it is a 3D look, CAD otherwise.
+```
+
+```mdl
+component Scene3DEditor
+  desc: >
+    Arranges a 3D layout: picking, gizmos, linking, creating and placing on the ground, face selection and extrusion,
+    and drilling into a composite's parts with the rest of the scene faded. Locked, only select and orbit work.
+  props:
+    document, scene, editing, selection, tool: Tool3D, readonly, theme, grid, snap, axes, face, camera
+  emits:
+    onSelect, onIntent, onEdit, onContextMenu, onFaceChange, onCameraChange, onResize
+```
+
+```mdl
+component SceneRenderer3D
+  desc: >
+    The Babylon renderer under both: draws the render list (each element of the layout and of every composite's parts
+    inside its frame, keyed by its path), outlines the selection, draws its bounding boxes, a selected face, the ground
+    grid, the axes and the gizmos, and picks.
+```
+
+## Features
+
+```mdl
+feat F-1: Camera
+  req F-1.1: The camera orbits a target: a drag with the hand (Orbit) or the middle button orbits, Shift pans, and
+    the wheel zooms; the right button opens the context menu, as in 2D.
+  req F-1.2: A trackpad pinch zooms, a two-finger swipe orbits the way the fingers move (Shift pans) where 2D pans,
+    and a mouse-wheel notch zooms.
+  req F-1.3: Holding Cmd lends the left button to the camera whatever the tool: a drag orbits, and Cmd+Shift pans.
+  req F-1.4: Fit frames the bounds of the open layout's elements from the same angle; actual size keeps the authored
+    camera and looks at the content's centre; zoom moves the camera nearer or further, and the readout is how near it
+    is to the authored view, nearer reading higher.
+```
+
+```mdl
+feat F-2: Selection, gizmos and faces
+  req F-2.1: A click selects, Shift toggles and empty space clears; a selection is drawn in the theme's focus colour
+    as a silhouette outline and a world-aligned bounding box per element ([org.dxos.scene#D-58]).
+  req F-2.2: Move, Rotate and Scale put a gizmo on the one selected element; it moves the mesh in memory and its
+    release is one intent in the open layout's coordinates. A scale sets the scale it ends at ([org.dxos.scene#D-48]).
+  req F-2.3: Snapping moves a gizmo by the grid unit, turns it by 15 degrees and scales by a tenth, and places a new
+    element on a grid point ([org.dxos.scene#D-64]).
+  req F-2.4: Double-clicking a plain element selects the face it lands on, drawn as a translucent pane in the
+    selection colour over that side of its bounds; the Properties section names it. Double-clicking a composite drills
+    into its parts instead ([org.dxos.scene#D-86], [org.dxos.scene#D-87]).
+  req F-2.5: Escape cancels a shape being sized, then clears a selected face, then drills out of a composite.
+```
+
+```mdl
+feat F-3: Creating
+  req F-3.1: The create tools are cube, sphere, cylinder and cone, then Link, which binds two clicked elements.
+  req F-3.2: A drag on empty ground sweeps a shape's base, both corners snapped to the grid; releasing fixes it, the
+    pointer's rise then sets the height (not for a sphere), and a click fixes that and makes the shape; Escape
+    cancels, and a plain click places the default size ([org.dxos.scene#D-88], [org.dxos.scene#D-89]).
+  req F-3.3: A shape created on the ground rests on it, its centre half its height above the point
+    ([org.dxos.scene#D-60]).
+  req F-3.4: A paste lands one grid unit further along each ground axis per paste.
+```
+
+```mdl
+feat F-4: Solids
+  req F-4.1: Join makes a union of the selection and Subtract a difference of two (the first is the base, the
+    second the tool cut from it), each a new solid element selected after it is made ([org.dxos.scene#D-52]).
+  req F-4.2: Extrude drags a face along its normal by the distance the pointer moves along it on screen; a selected
+    face is the one extruded, wherever the drag starts.
+  req F-4.3: A solid is recomputed with Manifold when drawn, the WASM module loaded on first use; a solid that cannot
+    be built draws the operands that exist, each as itself.
+```
+
+```mdl
+feat F-5: Meshes
+  req F-5.1: Import mesh reads an `.obj` or `.glb` file into a model object and arms the place tool with it, so a
+    mesh is defined once and each placement stores no more triangles; it is offered in the Objects section, and a
+    file that cannot be read is reported as the notice.
+  req F-5.2: Export STL saves the selection as drawn, or every visible element when nothing is selected.
+```
+
+```mdl
+feat F-6: Looks and materials
+  req F-6.1: The looks are CAD (flat parts with edges) and Presentation (lit materials), each a default style
+    catalog: CAD offers Part, Highlight and Clearance, Presentation Metal, Glass and Glow.
+  req F-6.2: An element's `Style3D` draws as a material over its hue and tone: a solid, tinted or glass surface,
+    edges, opacity, metalness, roughness and glow.
+```
+
+```mdl
+feat F-7: Display
+  req F-7.1: The ground grid is faint minor lines one unit apart with stronger major lines, fading out from the
+    centre; the display panel offers the lines grid and no guides.
+  req F-7.2: The axes are drawn in red, green and blue: x and z across the ground grid, lifted off it, and y rising
+    from its centre.
+```
+
+```mdl
+feat F-8: The 3D Properties form and extras
+  req F-8.1: The Properties form shows centre, rotation and scale as vectors, then label, layer and style; with a
+    face selected, a line above it names the face.
+  req F-8.2: A 2D scene can be drawn in 3D on the ground plane, each shape lifted to the 3D kind that matches it, and
+    a 3D layout flattened to its top-down view; the clipboard lifts and flattens the same way.
+  req F-8.3: A group is a composite placed by an element, as in 2D, and the ring and grid arrangers place a
+    composite's elements.
+```
+
+## Changelog
+
+```mdl
+decision D-1: In 3D the axes are coloured red, green and blue.
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [F-7.2]
+```
+
+```mdl
+decision D-2: 3D groups become composites placed by elements, as in 2D; the ring and grid arrangers move onto composites, the 3D-only `members` and `arrange` element fields are removed, and the `.dx` reader and printer map the existing group text onto composites with no grammar change.
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [F-8.3]
+```
+
+```mdl
+decision D-3: The x axis is red, y green and z blue; x and z lie across the ground grid, lifted off it so its centre lines do not fight them, and y rises from its centre to the same height. Fills in [D-1].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-7.2]
+  why: The usual convention, with y up as Babylon's scene has it.
+```
+
+```mdl
+decision D-4: A trackpad's two-finger swipe orbits the camera the way the fingers move, where it pans in 2D; Shift pans, a pinch zooms, and a mouse-wheel notch zooms. Fills in org.dxos.ui.react-ui-canvas#D-13.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1.2]
+  why: The wheel is classified as 2D classifies it, and orbit is 3D's counterpart of 2D's pan, so the same fingers do the same kind of move.
+```
+
+```mdl
+decision D-5: The 3D rail is Select and Orbit, then Move, Rotate, Scale and Extrude, then cube, sphere, cylinder, cone and Link; the extra commands are Join, Subtract, Export STL and Import mesh, the last offered in the Objects section. Fills in org.dxos.ui.react-ui-canvas#D-25.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-3.1, F-4.1, F-5]
+  why: These are the tools and commands 3D had, grouped by the shared rail's categories.
+```
+
+```mdl
+decision D-6: The 3D looks are CAD and Presentation, each a default style catalog with three named styles (CAD: Part, Highlight, Clearance; Presentation: Metal, Glass, Glow). Fills in org.dxos.ui.react-ui-canvas#D-15.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-6.1]
+  why: Themes are default catalogs, so each look offers styles a person can apply as well as its defaults.
+```
+
+```mdl
+decision D-7: Escape steps back one thing at a time in 3D: a shape being sized, then a selected face, then a drilled composite. Fills in org.dxos.ui.react-ui-canvas#D-13.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-2.5]
+  why: Each is a state the person entered last, so one key leaves them in reverse order, as 2D's Escape leaves an edit before a drill.
+```
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap
+    literals?: UnionList
+    extends?: TypeRef[]
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap
+    state?: FieldMap
+    slots?: FieldMap
+    actions?: ActionMap
+    emits?: EventMap
+    layout?: CodeBlock
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+  inline-prose: true
+```

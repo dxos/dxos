@@ -7,8 +7,9 @@ version: 0.1.0
 One data structure for 2D drawings and 3D scenes. The editor, the assistant and the animator all read and write it.
 It has three aspects: a Model of reusable objects, a Layout of positioned elements that place them, and a Scene that
 views a layout through a camera. `@dxos/scene` holds the schemas, validation, arrangement and the ECHO form;
-`@dxos/diagram` holds its text form (the `scene`, `layout` and `model` blocks of `.dx`); `@dxos/react-ui-scene` draws
-it; plugin-canvas makes it an animator stage. The design is `agents/superpowers/specs/2026-10-28-scene-model-design.md`.
+`@dxos/diagram` holds its text form (the `scene`, `layout` and `model` blocks of `.dx`); react-ui-canvas's `SceneEditor`
+edits it in both dimensions, through `LayoutIntent`s and `ModelIntent`s only; `@dxos/react-ui-scene` draws it; plugin-canvas
+makes it an animator stage. This spec states the data and its edits; how the editor behaves is the editor's spec. The design is `agents/superpowers/specs/2026-10-28-scene-model-design.md`.
 
 ## Extensions
 
@@ -26,22 +27,29 @@ Each extension is defined in the Appendix or resolved via its URI.
 ```mdl
 type Model
   desc: >
-    `Model<O>`: a library of reusable objects of type O, with no positions; `Model2D` and `Model3D` are its ECHO
-    objects (typenames `org.dxos.type.scene.model2d` and `.model3d`), keyed by `key` because ECHO reserves `id`.
+    `Model<O, S>`: a library of reusable objects of type O and the drawing's named styles of type S, with no
+    positions; `Model2D` and `Model3D` are its ECHO objects (typenames `org.dxos.type.scene.model2d` and `.model3d`),
+    keyed by `key` because ECHO reserves `id`.
   fields:
     name?: string
     objects: Record<string, O>
+    styles?: Record<string, S>        # NamedStyle2D | NamedStyle3D, by key
+    catalogs?: Ref<StyleCatalog>[]    # searched in order after the model's own styles
 ```
 
 ```mdl
 type Object
   desc: >
-    A reusable definition an element places: a kind, a size (2D `size`, 3D `scale`), style and props. A composite
-    object's `parts` is a nested Layout, shown fitted to the frame of each element that places it.
+    A reusable definition an element places: a type, a size (2D `size`, 3D `scale`), a named style with overrides,
+    and props. A composite object's `parts` is a nested Layout in its own local units, drawn through the transform of
+    each element that places it.
   fields:
     id: string
-    kind: string
-    style?: Style
+    type: string
+    style?: string                    # a named style; overrides win over it
+    overrides?: Style2D | Style3D
+    size?: Size2                      # 2D
+    scale?: Vec3                      # 3D
     props?: Record<string, any>
     parts?: Ref<Layout2D | Layout3D>  # an id in record form
 ```
@@ -49,56 +57,80 @@ type Object
 ```mdl
 type Layout
   desc: >
-    `Layout<E>`: elements of type E positioned in one coordinate space, placing objects of its model; `Layout2D` and
-    `Layout3D` are its ECHO objects (`org.dxos.type.scene.layout2d` and `.layout3d`), keyed as Model is.
+    `Layout<E, S>`: elements of type E positioned in one coordinate space, placing objects of its model;
+    `Layout2D` and `Layout3D` are its ECHO objects (`org.dxos.type.scene.layout2d` and `.layout3d`), keyed as Model
+    is. Element records keep any field beyond the shared base, for the kind registry to validate.
   fields:
     name?: string
     model?: Ref<Model2D | Model3D>    # an id in record form
     elements: Record<string, E>
+    styles?: Record<string, Partial<S>>  # the layout's overrides of the model's named styles
+    layers?: Record<string, Layer>
+    kind?: 'view' | 'composite'       # a composite is a model object's parts
+    anonymous?: boolean               # a composite the Group command made, kept out of the library
+    arrange?: Arrangement             # places the layout's unplaced, unpinned elements
+    lattice?: Lattice                 # 2D only
+    constraints?: Constraint[]        # 2D only
+    props?: Record<string, any>       # renderer-specific fields
 ```
 
 ```mdl
 type Scene
   desc: >
     `Scene<C>`: a layout seen through a camera of type C; several scenes may share one layout. `Scene2D` and `Scene3D`
-    are its ECHO objects (`org.dxos.type.scene.scene2d` and `.scene3d`), keyed as Model is.
+    are its ECHO objects (`org.dxos.type.scene.scene2d` and `.scene3d`), keyed as Model is. The camera is the
+    authored view; a viewer's own camera is view state ([D-47]).
   fields:
     name?: string
     theme?: string
     layout: Ref<Layout2D | Layout3D>  # an id in record form
-    camera: C
+    camera: C                         # Camera2D | Camera3D
 ```
 
 ```mdl
 type BaseElement
   desc: >
-    Every item in a layout: a shape, a link, a label or a group. An element places a model `object` or names its own
-    `kind`; its own fields win over the object's, and style and props merge.
+    Every item in a layout, in either dimension, with the canvas element base's names ([D-93]): a shape, a link, a
+    label or a placed object. An element places a model `object` or has a `type` of its own; its own fields win over
+    the object's. A link is an element with endpoints.
   fields:
-    id: string                      # fixed when the element is created
-    object?: string                 # the model object it places
-    kind?: string                   # its own kind, when it places no object
-    order?: string                  # paint order; z is depth
+    id: string                        # fixed when the element is created
+    object?: string                   # the model object it places
+    type?: string                     # its own type, when it places no object
+    z?: string                        # paint order, a fractional index
     layer?: string
     hidden?: boolean
     locked?: boolean
     label?: string
-    style?: Style
-    from?: Binding                  # a link's ends
-    to?: Binding
-    members?: string[]              # a group's elements
-    arrange?: Arrangement           # how a group places its members
-    pinned?: boolean                # placed by a person; arranging leaves it
-    props?: Record<string, any>     # kind-specific fields
+    style?: string                    # a named style: the layout's, the model's or a catalog's (`catalog:key`)
+    source?: Endpoint                 # a link's ends
+    target?: Endpoint
+    pinned?: boolean                  # placed by a person; arranging leaves it
+    dsl?: DslIdentity                 # the DSL statement that made it ([D-97])
+    props?: Record<string, any>       # kind-specific fields
+```
+
+```mdl
+type Endpoint
+  desc: A link end: an element and an optional port on it, or a free point.
+  fields:
+    node?: string
+    port?: string
+    point?: Vec2 | Vec3
 ```
 
 ```mdl
 type Element2D
-  desc: BaseElement with 2D geometry, in canvas pixels.
+  desc: >
+    BaseElement with 2D geometry, in canvas pixels. On an element that places a composite, `scale` maps the parts'
+    units to the layout's and `fit` says whether the parts fill the frame instead.
   fields:
     center?: Vec2
     size?: Size2
-    rotation?: number
+    rotation?: number                 # degrees
+    scale?: Vec2
+    fit?: 'none' | 'frame'
+    overrides?: Style2D
 ```
 
 ```mdl
@@ -107,27 +139,66 @@ type Element3D
   fields:
     center?: Vec3
     scale?: Vec3
-    rotation?: Vec3                 # Euler degrees
+    rotation?: Vec3                   # Euler degrees
+    fit?: 'none' | 'frame'
+    overrides?: Style3D
 ```
 
 ```mdl
 type Arrangement
-  desc: How a group places its members (ring, grid), kept so it can be re-run.
+  desc: How a layout places its elements that have no position yet (ring, grid), kept so it can be re-run.
   fields:
     kind: string
     params?: Record<string, any>
 ```
 
 ```mdl
-type Style
-  desc: Semantic style tokens shared by both dimensions; a theme resolves them to CSS in 2D and materials in 3D.
+type Style2D
+  desc: >
+    A 2D look ([D-92]): the canvas node style (hue, tone, fill, border, rounded, guide, font and alignment) extended
+    with the diagram vocabulary, so one set serves both. Hues include the theme-independent `black` and `white`.
   fields:
     hue?: string
-    tone?: number
-    surface?: string                # solid | tint | glass | none
+    lineStyle?: string                # the canvas line styles, or 'sketchy'
+    pattern?: boolean                 # a hatched fill
+    weight?: 's' | 'm' | 'l' | 'xl'   # scales stroke and text together
+```
+
+```mdl
+type Style3D
+  desc: A 3D look ([D-92]): a material over the theme's hue and tone.
+  fields:
+    hue?: string
+    tone?: 0 | 1 | 2 | 3
+    surface?: 'solid' | 'tint' | 'glass' | 'none'
     border?: boolean
     rounded?: boolean
     opacity?: number
+    metalness?: number
+    roughness?: number
+    emissive?: number
+```
+
+```mdl
+type StyleCatalog
+  desc: >
+    A reusable set of named styles that drawings reference by `catalog:key` (ECHO,
+    `org.dxos.type.scene.styleCatalog`); a theme's defaults are a catalog too. `resolveStyle` reads an element's look
+    nearest first, field by field: its overrides, the layout's override of its named style, the model's definition,
+    each catalog in order, then the defaults.
+  fields:
+    key: string
+    name: string
+    dim: '2d' | '3d'
+    styles: Record<string, Style2D | Style3D>
+```
+
+```mdl
+type Camera2D
+  desc: Where a 2D view looks: the scene point at the view's centre and the zoom.
+  fields:
+    center: Vec2
+    zoom: number
 ```
 
 ```mdl
@@ -148,11 +219,12 @@ type Camera3D
 feat F-1: One model for 2D and 3D
 
   req F-1.1: A drawing is a Model of objects, Layouts of elements and Scenes over layouts, each one ECHO object whose records live inside it; types are shared only where 2D and 3D share properties.
-  req F-1.2: There is one record kind, Element, for shapes and links alike; a link's ends are Bindings to other elements of its layout.
+  req F-1.2: There is one record kind, Element, for shapes and links alike; a link's ends are endpoints on other elements of its layout, or free points.
   req F-1.3: Element ids are never positional, and the id `camera` is reserved for the animator's camera target.
-  req F-1.4: A composite object's parts are a nested layout with its own units, scaled to fit the frame of the element that places it.
-  req F-1.5: A group keeps its members in its layout's coordinates, and stores its arrangement so it can be re-run; a pinned member is not moved.
+  req F-1.4: A composite object's parts are a nested layout in its own local units; the element that places it carries the transform (centre, scale, rotation, and `fit: frame` to fill its frame instead), and parts draw through it with strokes and text scaled too.
+  req F-1.5: A group is a composite placed by an instance: its members live in an anonymous composite layout placed with fit `none`, so they keep their places; a layout's arrangement places its unplaced elements and can be re-run, and a pinned element is not moved.
   req F-1.6: A solid is an operation tree (union, difference, extrude) over operand elements, recomputed when drawn.
+  req F-1.7: A layout changes only through `LayoutIntent`s, applied by one pure reducer, and a model only through `ModelIntent`s, which refuse an intent with its problems and leave the document unchanged.
 ```
 
 ```mdl
@@ -906,4 +978,15 @@ decision D-97: An element's DSL identity is a typed `dsl` field of the shared el
   for: user:richburdon
   why: The illustrator's compile path then lands on the canvas through the same intent vocabulary as every editor write, and the identity that keeps a recompile from duplicating elements is part of the shared data rather than a convention.
   rejected: Moving the command-to-element translation into `@dxos/diagram` now; it depends on react-ui-canvas node helpers, so it moves with the 2D viewport in phase C.
+```
+
+```mdl
+decision D-98: The types state the shared element base, the per-dimension styles and catalogs, the layout's typed fields and the composite transform as [D-90] to [D-97] decided them, and [F-1.7] states the intent vocabulary of [D-45] and [D-46]. Editing behaviour is not a requirement of this spec: the editor's spec states it and cites the editor decisions from [D-53] to [D-89] that this log records.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Model, Object, Layout, Scene, BaseElement, Endpoint, Element2D, Element3D, Style2D, Style3D, StyleCatalog, Camera2D, F-1.2, F-1.4, F-1.5, F-1.7]
+  why: The body still described the element base those decisions replaced (`kind`, `order`, `from`/`to` bindings, `members`, shared style tokens), and the editor's specs need one place that states the data they edit.
+  rejected:
+    - Restating the element base in the editor's spec, which would give the data two descriptions that drift apart.
 ```

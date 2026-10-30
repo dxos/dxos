@@ -25,17 +25,31 @@ plugin CanvasPlugin: An infinite, zoomable canvas of typed nodes and links at mu
 ```
 
 An infinite, zoomable canvas of typed nodes and links at multiple depths, contributed to the illustrator
-plugin as a drawing variant (`dxos.org/scene/1`). A drawing is stored in ECHO as one record per View,
-node and link; a `view` node opens a child View in place and can show its contents live.
+plugin as two drawing variants, Canvas and 3D Canvas (`dxos.org/scene/2`). A drawing is a `Canvas` over the scene
+model's ECHO objects (a model, layouts and scenes); its article and card render the shared scene editor with the
+dimension config its scene asks for. A drawing saved before `Canvas` keeps a hidden legacy variant, which renders the
+2D engine on its own until its article migrates it.
 
 This plugin is the ECHO host between the illustrator plugin, a runtime dependency that provides the
-`Drawing` type, the variant contract and the converters this plugin registers with, and the canvas
-engine below.
+`Drawing` type, the variant contract and the converters this plugin registers with, and the scene editor
+below.
 
 ## Dependencies
 
 ```mdl
-uses org.dxos.ui.react-ui-canvas: The engine — its Ontology, types, operations and features are the canvas's model, and this spec does not restate them.
+uses org.dxos.ui.react-ui-canvas: The shared scene editor the article renders — its parts, commands, history, clipboard, lock, roles, panels, inspectors and timeline, which this spec does not restate.
+```
+
+```mdl
+uses org.dxos.ui.react-ui-canvas.2d: The 2D variant — the canvas engine's Views, links, portals and modes — which a 2D drawing and a legacy canvas show.
+```
+
+```mdl
+uses org.dxos.ui.react-ui-scene.3d: The 3D variant, which a 3D Canvas drawing shows.
+```
+
+```mdl
+uses org.dxos.scene: The data a drawing stores — models, layouts and scenes as ECHO objects — and the migration target of its legacy content.
 ```
 
 ## Extensions
@@ -267,4 +281,13 @@ decision D-8: Migrating a scene drawing turns the timelines its Views stored int
   by: agent:claude-code
   for: user:richburdon
   why: Canvas animation moved to the animator and Views stopped storing timelines, so a drawing saved before that keeps its animation only if the migration carries it over.
+```
+
+```mdl
+decision D-9: The plugin contributes a Canvas and a 3D Canvas variant over the scene model's ECHO objects; a drawing's article and card render the shared scene editor with the 2D or 3D config its scene asks for, and a drawing saved before `Canvas` keeps a hidden legacy variant that renders the 2D engine on its own until its article migrates it. Fills in [D-3].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: The canvas engine is now the 2D viewport of a shared editor rather than the whole of a drawing's model, so the plugin builds on the editor, its two variants and the scene model.
 ```
