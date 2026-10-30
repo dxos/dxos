@@ -2,6 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+// Installed by the entry rather than the modules that read `Symbol.dispose`: per-module output lets a bundler drop
+// any one of those, and WebKit has no native symbols.
+import '@hazae41/symbol-dispose-polyfill';
+
 export * from './array-to-hex.ts';
 export * from './array.ts';
 export * from './assume.ts';
