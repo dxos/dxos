@@ -172,6 +172,26 @@ export const useSceneView = ({
       setCamera(fitBounds(fitTarget, size, inset, fitZoom));
     }
   }, [fitting, measured, viewport, fitTarget, inset, fitZoom, setCamera, sceneId, refitKey]);
+  // Until the size has held still for `FIT_DEBOUNCE_MS` the view is still opening (a docked panel mounts once its
+  // sections register), so a resize refits in the same frame rather than sliding the drawing across after load.
+  const settledRef = useRef(false);
+  useLayoutEffect(() => {
+    const fitted = fittedRef.current;
+    if (!fitting || !measured || !fitted || settledRef.current || fitted.scene !== sceneId || fitted.key === fitKey) {
+      return;
+    }
+    fittedRef.current = { scene: sceneId, key: fitKey };
+    setCamera(fitBounds(fitTarget, viewport, inset, fitZoom));
+  }, [fitting, measured, sceneId, fitKey, fitTarget, viewport, inset, fitZoom, setCamera]);
+  useEffect(() => {
+    if (!fittedRef.current || settledRef.current) {
+      return;
+    }
+    const timeout = setTimeout(() => {
+      settledRef.current = true;
+    }, FIT_DEBOUNCE_MS);
+    return () => clearTimeout(timeout);
+  }, [fitting, measured, fitKey]);
   // Keyed on values, not identities: the scene and the camera helpers are rebuilt on unrelated renders, and each rerun
   // would restart the debounce before it fires. The latest helpers and frame are read when it does.
   const fitLatestRef = useRef({
