@@ -63,8 +63,8 @@ specifiers.
 
 ```
 dist/plugin/
-├── manifest.json                      Plugin.Manifest (see below)
-├── index.mjs                          entry: Plugin.fromManifest({ plugin, modules }, loaders)
+├── manifest.json                      what every host loads the plugin from (see below)
+├── index.mjs                          the compiled dx.config.ts; shared code bodies import, never loaded as the entry
 ├── operation-handler-varxbE3e.mjs     module body, environments [browser, node, tauri, workerd]
 ├── schema-D3Oofm5R.mjs                module body, adapter @dxos/app-toolkit/SchemaAdapter
 ├── react-surface-L_9dYgXp.mjs         module body, environments [browser, tauri]
@@ -83,8 +83,11 @@ dist/plugin/
 
 1. **Flat root.** The plugin's own files sit at the bundle root as `<name>-<hash>.mjs`, ESM, and
    import each other relatively (`./chunk-…mjs`). Nothing of the plugin lives in a subdirectory.
-2. **Entry.** `index.mjs` exports the plugin built by `Plugin.fromManifest`: the plugin metadata,
-   every module's spec, and one loader per module (`() => import('./<body>.mjs')`).
+2. **No entry module.** A host builds the plugin from `manifest.json` alone (`PluginManifest.toDefinition`,
+   `Plugin.fromManifest`) and imports each module body by its `url` when the module activates. `index.mjs`
+   remains as the compiled `dx.config.ts`, because bodies import `meta` from it, but no host imports it to
+   get the plugin. Only a plugin built from `src/plugin.tsx`, whose manifest lists no modules, still loads
+   through `index.mjs`.
 3. **Module bodies.** Each `Plugin.config` module is its own chunk, named after its source file.
    Code two bodies share goes to a `chunk-*` file. A body's `environments` say which hosts run it;
    all bodies are in the one bundle.
@@ -102,7 +105,7 @@ The plugin's `Config2.Plugin` metadata flat at the top level (`key`, `name`, `de
 | -------------- | --------------------------------------------------------------------------------------- |
 | `version`      | The package version.                                                                    |
 | `dependencies` | Resolved versions of the packages the plugin depends on.                                |
-| `assets`       | Every file of the bundle except source maps and `vendor/`, for the browser's offline cache. |
+| `assets`       | Every file of the bundle except source maps and `vendor/`, for the browser's offline cache; `index.mjs` is required only when `modules` is absent. |
 | `modules`      | One `ManifestModule` per module, in `Plugin.config` order.                              |
 
 A `ManifestModule` is `{ id, url, requires, provides, activatesOn?, environments?, adapter? }`:
@@ -144,13 +147,18 @@ export conditions `vendor/` was built with.
 
 ### Loading
 
-- **Browser.** Composer's import map supplies every bare specifier at the version Composer was
-  built with; `vendor/` is never read.
+- **Browser.** Composer fetches `manifest.json`, builds the plugin from its modules and imports each
+  body, through the plugin asset cache, when its module activates. Composer's import map supplies every
+  bare specifier at the version Composer was built with; `vendor/` is never read.
+- **CLI.** `dx` reads the installed bundle's `manifest.json` the same way and imports each body from
+  the install directory when its module activates.
 - **EDGE.** PluginLoader puts the bundle and the bundles of its `dependsOn` closure (under
   `deps/<n>/`) in one Worker Loader module map, joins their `vendor/manifest.json` maps into one
   import map (the primary's entry wins), rewrites every bare import in every file to a relative path
   by it, drops vendored files nothing reaches, and adds a main module that starts `PluginHost` from
-  `vendor/`. Worker Loader resolves a bare specifier against the importing file's directory, never a
+  `vendor/`. The main module embeds each bundle's `manifest.json` with one literal `import()` per module
+  body and adapter (Worker Loader cannot resolve a computed specifier), and `PluginHost.fromManifest`
+  builds each plugin from them. Worker Loader resolves a bare specifier against the importing file's directory, never a
   package registry, which is why the rewrite is needed. The rewrite changes only specifiers; no
   code is recompiled.
 
@@ -1040,3 +1048,11 @@ decision D-34: The spec states the interface between a built plugin and EDGE. Th
   rejected:
     - Keep the functions `fetch` protocol beside RPC: a second, untyped way in that nothing on EDGE calls.
     - A copy of the types in each repository (edge-protocol's `PluginReleaseService.Entrypoint`): they drift.
+
+```mdl
+decision D-35: Every host builds a plugin from its `manifest.json` and imports each module body when the module activates; no host imports the bundle's `index.mjs` to get the plugin. Composer, the `dx` CLI and EDGE share `PluginManifest.toDefinition` and `Plugin.fromManifest`. A plugin built from `src/plugin.tsx`, whose manifest lists no modules, still loads through its entry. Fills in [D-32].
+  date: 2026-10-30
+  by: user:dmaretskyi
+  affects: [PluginBundle, PluginLoader, PluginHost, F-1.1]
+  why: The manifest already carries every module's spec and body URL, so an entry module that re-encodes it as code is a second source of truth and the one file every host had to execute first.
+```
