@@ -28,6 +28,15 @@ describe('rangeFromAnchor', () => {
     expect(SheetUtil.rangeFromAnchor(sheet, anchor)).toEqual(range('C1:D2'));
   });
 
+  test('spans top-left to bottom-right after a move reverses its rows', ({ expect }) => {
+    const sheet = Sheet.make({ rows: 5, columns: 5 });
+    const anchor = SheetUtil.rangeToAnchor(sheet, rangeFromA1Notation('A2:A3'));
+
+    Obj.update(sheet, (sheet) => sheet.rows.splice(1, 0, ...sheet.rows.splice(2, 1)));
+
+    expect(SheetUtil.rangeFromAnchor(sheet, anchor)).toEqual(range('A2:A3'));
+  });
+
   test('no longer resolves once a row it names is deleted', ({ expect }) => {
     const sheet = Sheet.make({ rows: 5, columns: 5 });
     const anchor = SheetUtil.rangeToAnchor(sheet, rangeFromA1Notation('B2'));
@@ -44,6 +53,14 @@ describe('rangeFromAnchor', () => {
     expect(SheetUtil.rangeFromAnchor(sheet, 'B2')).toEqual(range('B2'));
     expect(SheetUtil.rangeFromAnchor(sheet, '1,1,2,2')).toEqual(range('B2:C3'));
     expect(SheetUtil.rangeFromAnchor(sheet, '1730000000000')).toBeUndefined();
+  });
+});
+
+describe('anchorFromSelection', () => {
+  test('makes no anchor for a selection outside the sheet', ({ expect }) => {
+    const sheet = Sheet.make({ rows: 5, columns: 5 });
+
+    expect(SheetUtil.anchorFromSelection(sheet, { mode: 'range', from: 'B2', to: 'B9' })).toBeUndefined();
   });
 });
 

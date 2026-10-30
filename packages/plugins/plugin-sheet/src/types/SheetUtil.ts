@@ -138,13 +138,17 @@ export const rangeToAnchor = (sheet: Sheet.Sheet, range: CellRange): string => r
 export const anchorFromSelection = (
   sheet: Sheet.Sheet,
   selection: Selection.Selection | undefined,
-): string | undefined =>
-  selection?.mode === 'range' && selection.from && selection.to
-    ? rangeToAnchor(sheet, rangeFromA1Notation(`${selection.from}:${selection.to}`))
-    : undefined;
+): string | undefined => {
+  if (selection?.mode !== 'range' || !selection.from || !selection.to) {
+    return undefined;
+  }
+
+  const range = completeRange(rangeFromA1Notation(`${selection.from}:${selection.to}`));
+  return isInSheet(sheet, range.from) && isInSheet(sheet, range.to) ? rangeToAnchor(sheet, range) : undefined;
+};
 
 /**
- * The cells a comment anchor spans, or `undefined` once a row or column it names is deleted.
+ * The cells a comment anchor spans, top-left to bottom-right, or `undefined` once a row or column it names is deleted.
  * Also reads the positional anchors stored before {@link rangeToAnchor}: A1 notation (`B2:C3`) and `col,row,col,row`.
  */
 export const rangeFromAnchor = (sheet: Sheet.Sheet, anchor: string): CompleteCellRange | undefined => {
@@ -155,13 +159,19 @@ export const rangeFromAnchor = (sheet: Sheet.Sheet, anchor: string): CompleteCel
       : COORDINATE_RANGE.test(anchor)
         ? rangeFromCoordinates(anchor)
         : undefined;
-  return range && isInSheet(sheet, range.from) && isInSheet(sheet, range.to) ? range : undefined;
+  return range && isInSheet(sheet, range.from) && isInSheet(sheet, range.to) ? normalizeRange(range) : undefined;
 };
 
 const INDEX_RANGE = /^[a-zA-Z0-9]+@[a-zA-Z0-9]+:[a-zA-Z0-9]+@[a-zA-Z0-9]+$/;
 const COORDINATE_RANGE = /^\d+,\d+,\d+,\d+$/;
 
 const completeRange = ({ from, to = from }: CellRange): CompleteCellRange => ({ from, to });
+
+/** Moving rows or columns can reverse an index range's endpoints. */
+const normalizeRange = ({ from, to }: CompleteCellRange): CompleteCellRange => ({
+  from: { col: Math.min(from.col, to.col), row: Math.min(from.row, to.row) },
+  to: { col: Math.max(from.col, to.col), row: Math.max(from.row, to.row) },
+});
 
 const rangeFromCoordinates = (anchor: string): CompleteCellRange => {
   const [fromCol, fromRow, toCol, toRow] = anchor.split(',').map((coord) => parseInt(coord, 10));
