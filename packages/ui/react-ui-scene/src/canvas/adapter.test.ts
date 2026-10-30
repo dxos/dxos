@@ -46,6 +46,44 @@ describe('toCanvasViews', () => {
     expect(all.map((view) => view.id)).toContain('b-detail');
   });
 
+  test('a placed composite with a scale draws its parts at that scale about its origin, as decision 18 places them', () => {
+    const document: Scene.SceneDocument = {
+      scenes: [{ id: 's', dim: '2d', layout: 'root', camera: { center: { x: 0, y: 0 }, zoom: 1 } }],
+      layouts: [
+        {
+          id: 'root',
+          dim: '2d',
+          model: 'm',
+          elements: { o: { id: 'o', object: 'box', center: { x: 100, y: 0 }, scale: { x: 2, y: 2 } } },
+        },
+        {
+          id: 'inside',
+          dim: '2d',
+          elements: { r: { id: 'r', type: 'rect', center: { x: 10, y: 0 }, size: { width: 20, height: 20 } } },
+        },
+      ],
+      models: [{ id: 'm', dim: '2d', objects: { box: { id: 'box', type: 'rect', parts: 'inside' } } }],
+    };
+    const root = toCanvasViews(document).views.find((view) => view.id === 'root');
+    // The parts span x 0..20, y -10..10; at scale 2 about the origin (100, 0) that is x 100..140, y -20..20.
+    expect(root?.nodes.o).toMatchObject({
+      type: 'view',
+      scene: 'inside',
+      center: { x: 120, y: 0 },
+      size: { width: 40, height: 40 },
+      frame: { x: 0, y: -10, width: 20, height: 20 },
+    });
+
+    // Moved on the canvas, it writes its origin and keeps its scale; the box and region are read from the parts.
+    const node = root?.nodes.o;
+    const moved: View | undefined =
+      root && node ? { ...root, nodes: { ...root.nodes, o: { ...node, center: { x: 130, y: 0 } } } } : undefined;
+    const written = moved && fromCanvasView(moved).layout.elements.o;
+    expect(written).toMatchObject({ center: { x: 110, y: 0 }, scale: { x: 2, y: 2 } });
+    expect(written?.size).toBeUndefined();
+    expect(written?.props?.canvas).not.toHaveProperty('frame');
+  });
+
   test("an element placing an object draws with the object's kind and size", () => {
     const {
       views: [root],

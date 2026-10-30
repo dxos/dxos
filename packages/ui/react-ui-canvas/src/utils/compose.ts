@@ -24,6 +24,7 @@ import {
   endpointNode,
   isInstanceNode,
   isViewNode,
+  nodeFrame,
 } from '@dxos/scene';
 
 import { type Intent, type View, type ViewMap, pruneOrphaned } from '../model/index.ts';
@@ -318,7 +319,11 @@ export const ungroupInstance = (
   composite: View,
   createId: (prefix: string) => string,
 ): Intent[] => {
-  const transform = instanceTransform(nodeBounds(instance), compositeBounds(composite), instance.fit);
+  const transform = instanceTransform(
+    nodeBounds(instance),
+    nodeFrame(instance) ?? compositeBounds(composite),
+    instance.fit,
+  );
   const ids = new Map(Object.keys(composite.nodes).map((id) => [id, createId('node')]));
   const map = (point: Point) => toInstance(transform, point);
   const mapEnd = (end: Endpoint): Endpoint =>

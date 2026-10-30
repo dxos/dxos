@@ -11,6 +11,7 @@ import {
   initialKeys,
 } from '@dxos/react-ui-canvas/headless';
 import {
+  type Bounds,
   type BuiltinNodeType,
   type ElementEndpoint,
   type Endpoint,
@@ -26,6 +27,8 @@ import {
   type StyleHue,
   type StyleMap,
   type ViewId,
+  findLayout,
+  nodeFrame,
   resolveLayout2D,
   rootScene,
   sceneLayout,
@@ -64,15 +67,51 @@ export const styleClasses = (styles: Readonly<Record<string, NamedStyle2D>> | un
 export const namedStyles = (classes: StyleMap): Record<string, NamedStyle2D> =>
   Object.fromEntries(Object.values(classes).map(({ id, name, style }) => [id, { name, ...style }]));
 
+/** A placed composite's box and fixed region: its parts' bounds at its `scale` about its origin (decision 18). */
+type ScaledFrame = { center: { x: number; y: number }; size: { width: number; height: number }; frame: Bounds };
+
+/** Undefined for an element with no scale, or whose parts have nothing with a frame. */
+const scaledFrame = (doc: Scene.SceneDocument, element: Resolved2D): ScaledFrame | undefined => {
+  const parts = element.parts === undefined ? undefined : findLayout(doc, element.parts);
+  if (!element.scale || !element.center || parts?.dim !== '2d') {
+    return undefined;
+  }
+  const boxes = Object.values(resolveLayout2D(doc, parts)).flatMap(({ center, size }) =>
+    center && size ? [{ x: center.x - size.width / 2, y: center.y - size.height / 2, ...size }] : [],
+  );
+  if (boxes.length === 0) {
+    return undefined;
+  }
+  const x = Math.min(...boxes.map((box) => box.x));
+  const y = Math.min(...boxes.map((box) => box.y));
+  const width = Math.max(...boxes.map((box) => box.x + box.width)) - x;
+  const height = Math.max(...boxes.map((box) => box.y + box.height)) - y;
+  const { center, scale } = element;
+  return {
+    center: { x: center.x + scale.x * (x + width / 2), y: center.y + scale.y * (y + height / 2) },
+    size: { width: width * scale.x, height: height * scale.y },
+    frame: { x, y, width, height },
+  };
+};
+
 /** A composite element (its object has parts) is a `view` node over its parts layout's View. */
-const toNode = (element: Resolved2D, z: string): Node | undefined => {
+const toNode = (doc: Scene.SceneDocument, element: Resolved2D, z: string): Node | undefined => {
   const type = element.parts !== undefined ? 'view' : NODE_TYPES[element.type];
   if (!type || !element.center) {
     return undefined;
   }
   const style = nodeStyle(element.overrides);
+  const scaled = scaledFrame(doc, element);
   return {
-    ...createNode({ type, id: element.id, z, center: element.center, size: element.size, scene: element.parts }),
+    ...createNode({
+      type,
+      id: element.id,
+      z,
+      center: scaled?.center ?? element.center,
+      size: scaled?.size ?? element.size,
+      scene: element.parts,
+    }),
+    ...(scaled ? { frame: scaled.frame } : {}),
     layer: DEFAULT_LAYER.id,
     ...(element.label !== undefined ? { label: element.label } : {}),
     ...(element.rotation !== undefined ? { rotation: element.rotation } : {}),
@@ -132,7 +171,36 @@ const VIEW_PREFIX = 'view:';
 const INSTANCE_PREFIX = 'instance:';
 
 /** The fields a node keeps in its element's own slots. */
-const NODE_SLOTS = ['type', 'id', 'z', 'center', 'size', 'rotation', 'label', 'layer', 'locked', 'style', 'class'];
+const NODE_SLOTS = [
+  'type',
+  'id',
+  'z',
+  'center',
+  'size',
+  'rotation',
+  'label',
+  'layer',
+  'locked',
+  'style',
+  'class',
+  'frame',
+];
+
+/** A placed composite's origin and scale back from its box and the region of its parts it shows. */
+const unscaled = (node: Node): Pick<Scene.Element2D, 'center' | 'size' | 'scale'> => {
+  const frame = nodeFrame(node);
+  if (!frame || frame.width <= 0 || frame.height <= 0) {
+    return { center: node.center, size: node.size };
+  }
+  const scale = { x: node.size.width / frame.width, y: node.size.height / frame.height };
+  return {
+    center: {
+      x: node.center.x - scale.x * (frame.x + frame.width / 2),
+      y: node.center.y - scale.y * (frame.y + frame.height / 2),
+    },
+    scale,
+  };
+};
 const LINK_SLOTS = ['id', 'z', 'source', 'target', 'text', 'layer', 'locked', 'style', 'class'];
 
 const canvasExtra = (fields: Fields, slots: readonly string[]): Fields => omit(fields, slots);
@@ -160,8 +228,7 @@ const nodeElement = (node: Node, objects: Map<string, Scene.Object2D>): Scene.El
     id: node.id,
     ...placed,
     z: node.z,
-    center: node.center,
-    size: node.size,
+    ...unscaled(node),
     ...(node.rotation !== undefined ? { rotation: node.rotation } : {}),
     ...(typeof fields.label === 'string' ? { label: fields.label } : {}),
     ...(node.layer !== undefined ? { layer: node.layer } : {}),
@@ -224,8 +291,11 @@ const canvasStyle = (style: Style2D | undefined, extra: unknown): Fields | undef
 };
 
 /** An element written by {@link fromCanvasView} as the node it was. */
-const canvasNode = (element: Resolved2D, canvas: Fields): Node | undefined => {
-  if (!element.center || !element.size || element.z === undefined) {
+const canvasNode = (doc: Scene.SceneDocument, element: Resolved2D, canvas: Fields): Node | undefined => {
+  const scaled = scaledFrame(doc, element);
+  const center = scaled?.center ?? element.center;
+  const size = scaled?.size ?? element.size;
+  if (!center || !size || element.z === undefined) {
     return undefined;
   }
   const { style: extraStyle, type: storedType, ...extra } = canvas;
@@ -241,8 +311,9 @@ const canvasNode = (element: Resolved2D, canvas: Fields): Node | undefined => {
     type,
     id: element.id,
     z: element.z,
-    center: element.center,
-    size: element.size,
+    center,
+    size,
+    ...(scaled ? { frame: scaled.frame } : {}),
     ...(element.rotation !== undefined ? { rotation: element.rotation } : {}),
     ...(element.label !== undefined ? { label: element.label } : {}),
     ...(element.layer !== undefined ? { layer: element.layer } : {}),
@@ -334,11 +405,11 @@ const storedView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): Vie
     if (!isRecord(stored) || element.type === 'link') {
       continue;
     }
-    const node = canvasNode(own(element), stored);
+    const node = canvasNode(doc, own(element), stored);
     node && (nodes[node.id] = node);
   }
   for (const element of native) {
-    const node = toNode(element, keyOf(element));
+    const node = toNode(doc, element, keyOf(element));
     node && (nodes[node.id] = node);
   }
   for (const element of elements) {
@@ -366,7 +437,7 @@ const toView = (doc: Scene.SceneDocument, layout: Scene.LayoutRecord2D): View =>
   const keys = initialKeys(elements.length);
   const nodes: Record<string, Node> = {};
   elements.forEach((element, index) => {
-    const node = toNode(element, element.z ?? keys[index]);
+    const node = toNode(doc, element, element.z ?? keys[index]);
     node && (nodes[node.id] = node);
   });
   const links: Record<string, Link> = {};

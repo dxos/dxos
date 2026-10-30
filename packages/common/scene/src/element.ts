@@ -323,6 +323,8 @@ export const ViewNode = Schema.Struct({
   ...boxFields,
   scene: Schema.String,
   link: Schema.optional(ViewLink),
+  /** The child region the frame shows, fixed: a placed composite's parts at its scale (decision 18). */
+  frame: Schema.optional(Bounds),
 });
 export type ViewNode = Schema.Schema.Type<typeof ViewNode>;
 
@@ -341,6 +343,8 @@ export const InstanceNode = Schema.Struct({
   composite: Schema.String,
   overrides: Schema.optional(Schema.Record(Schema.String, Schema.Record(Schema.String, Schema.Unknown))),
   fit: Schema.optional(Schema.Literals(INSTANCE_FITS).annotate({ title: 'Fit' })),
+  /** The composite region the frame shows, fixed: its parts at the instance's scale (decision 18). */
+  frame: Schema.optional(Bounds),
 });
 export type InstanceNode = Schema.Schema.Type<typeof InstanceNode>;
 
@@ -569,6 +573,10 @@ export const isPolylineNode = (node: NodeBase): node is PolylineNode => node.typ
 export const isNoteNode = (node: NodeBase): node is NoteNode => node.type === 'note';
 export const isViewNode = (node: NodeBase): node is ViewNode => node.type === 'view';
 export const isInstanceNode = (node: NodeBase): node is InstanceNode => node.type === 'instance';
+
+/** The fixed child region a portal or instance shows, when it places a composite at a scale. */
+export const nodeFrame = (node: NodeBase): Bounds | undefined =>
+  isViewNode(node) || isInstanceNode(node) ? node.frame : undefined;
 export const isPathNode = (node: NodeBase): node is PathNode => node.type === 'path';
 export const isGeneratorNode = (node: NodeBase): node is GeneratorNode => node.type === 'generator';
 export const isDiagramNode = (node: NodeBase): node is DiagramNode => node.type === 'diagram';

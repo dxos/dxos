@@ -42,6 +42,7 @@ import {
   isPathNode,
   isViewNode,
   linkMarkers,
+  nodeFrame,
   showsContents,
 } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
@@ -1269,7 +1270,10 @@ export const InstanceNodeView = ({ node, store, registry, zoom, depth, liveDepth
   );
   const bounds = nodeBounds(node);
   const transform = useMemo(
-    () => (drawn && isInstanceNode(node) ? instanceTransform(bounds, compositeBounds(drawn), node.fit) : undefined),
+    () =>
+      drawn && isInstanceNode(node)
+        ? instanceTransform(bounds, nodeFrame(node) ?? compositeBounds(drawn), node.fit)
+        : undefined,
     // Keyed on the geometry rather than the bounds object, which is new on every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [drawn, node, bounds.x, bounds.y, bounds.width, bounds.height],
