@@ -9,7 +9,7 @@
 
 import { type Node, type ViewId, isInstanceNode, isViewNode } from '@dxos/scene';
 
-import { type ViewMap } from './store.ts';
+import { type ViewMap } from './types.ts';
 import { type View } from './types.ts';
 
 /** The record a node opens: a view node's child View, or an Instance's Object. */

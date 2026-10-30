@@ -213,7 +213,7 @@ export type PropertiesInspectorProps = InspectorProps & {
   overrides?: (elements: readonly Element[]) => Record<string, FormFieldOverride>;
   /** The scenes a scene shape may open (`viewOptions`); without them its scene is not editable here. */
   viewOptions?: readonly ViewOption[];
-  /** The drawing's style classes (`ViewStore.styles`); without them elements take no class. */
+  /** The drawing's style classes (`DrawState.styles`); without them elements take no class. */
   styles?: Atom.Writable<StyleMap>;
   /** Whether each group (`style`, `center`, …) is open, by path, for a host that keeps it; unset, a group is open. */
   groups?: Readonly<Record<string, boolean>>;

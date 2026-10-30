@@ -13,8 +13,9 @@ import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { type ViewId } from '@dxos/scene';
 
-import { type Capabilities, type View, type ViewStore, updateView } from '../model/index.ts';
+import { type Capabilities, type View } from '../model/index.ts';
 import { type LatticeSpec, type SceneEdit } from '../utils/index.ts';
+import { type DrawState, updateView } from './draw-state.ts';
 import { type CanvasHistory } from './history.ts';
 
 export type DrawScene = {
@@ -73,7 +74,7 @@ export const readonlyCapabilities: Capabilities = {
 
 export type DrawSceneOptions = {
   registry: Registry.AtomRegistry;
-  store: ViewStore;
+  store: DrawState;
   sceneId: ViewId;
   capabilities?: Capabilities;
   constrain?: DrawScene['constrain'];

@@ -54,7 +54,7 @@ export type HistoryView = {
 /** What the canvas gives its history. */
 export type HistoryBinding = {
   registry: Registry.AtomRegistry;
-  /** The store, versioned (`storeVersions`). */
+  /** The store, versioned (`drawStateVersions`). */
   store: VersionedSource;
   context: () => HistoryContext;
   view: HistoryView;

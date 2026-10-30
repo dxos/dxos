@@ -16,7 +16,7 @@ import { useClock, useExposedClock } from '@dxos/react-ui-animation';
 import { DEFAULT_GRID, MAJOR_GRID_RATIO, type ViewId, findLayout } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
-import { createCanvasAtoms, readonlyCapabilities } from '../../engine/index.ts';
+import { type DrawState, createCanvasAtoms, readonlyCapabilities } from '../../engine/index.ts';
 import { type GeneratorSource } from '../../generator/index.ts';
 import {
   SceneLookContext,
@@ -44,14 +44,7 @@ import {
   useSceneWheel,
   useViewport,
 } from '../../hooks/index.ts';
-import {
-  type MemoryViewStore,
-  type ThemeChoice,
-  chooseTheme,
-  defaultThemeRegistry,
-  keyAction,
-  neuVars,
-} from '../../model/index.ts';
+import { type ThemeChoice, chooseTheme, defaultThemeRegistry, keyAction, neuVars } from '../../model/index.ts';
 import { fitFrame, visibleView } from '../../utils/index.ts';
 import { InspectorPanel } from '../panels/index.ts';
 import { defaultLinkRegistry, defaultNodeRegistry } from '../SceneLayer/index.ts';
@@ -124,7 +117,7 @@ type CanvasEngineProps = Omit<
   CanvasRootProps,
   'document' | 'scene' | 'constrain' | 'onIntent' | 'onModelIntent' | 'onTransaction'
 > & {
-  store: MemoryViewStore;
+  store: DrawState;
   root: ViewId;
   snapRef: { current: () => boolean };
 } & Pick<UseDrawSceneOptions, 'lattice'> & { preview: UseDrawSceneOptions['constrain'] };

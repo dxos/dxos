@@ -11,6 +11,7 @@ import {
   type CanvasAtoms,
   type CanvasController,
   type DrawScene,
+  type DrawState,
   type EditingCommands,
   type LookCommands,
   type NavigationCommands,
@@ -34,7 +35,6 @@ import {
   type SceneLook,
   type ThemeRegistry,
   type View,
-  type ViewStore,
 } from '../../model/index.ts';
 
 /**
@@ -47,7 +47,7 @@ export type CanvasServices = {
   /** The canvas's commands by aspect, made once per canvas (DESIGN.md §13). */
   controller: CanvasController;
   atoms: CanvasAtoms;
-  store: ViewStore;
+  store: DrawState;
   /** The canvas's root View, which navigation starts from. */
   root: ViewId;
   draw: DrawScene;

@@ -15,8 +15,8 @@ import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 import * as Button from '@dxos/react-ui/Button';
 import { type ElementId, type Layer, type LayerId, type ViewId, isInstanceNode, isLink } from '@dxos/scene';
 
-import { type CanvasController } from '../../engine/index.ts';
-import { type Capabilities, type View, type ViewStore, getElement } from '../../model/index.ts';
+import { type CanvasController, type DrawState } from '../../engine/index.ts';
+import { type Capabilities, type View, getElement } from '../../model/index.ts';
 import {
   activeLayer,
   chainEdits,
@@ -119,7 +119,7 @@ CanvasProperties.displayName = 'Canvas.Properties';
 export type UseSelectionActionsOptions = {
   scene: View;
   selection: ReadonlySet<ElementId>;
-  store: ViewStore;
+  store: DrawState;
   capabilities: Capabilities;
   readonly: boolean;
   controller: CanvasController;
@@ -364,7 +364,7 @@ const ObjectThumbnail = ({ id }: { id: ViewId }) => {
       className='absolute pointer-events-none'
       style={{ transform: `translate(${x}px, ${y}px) scale(${scale})`, transformOrigin: '0 0' }}
     >
-      <SceneLayer store={store} scene={composite} registry={nodeRegistry} zoom={scale} depth={1} liveDepth={1} />
+      <SceneLayer lists={store} scene={composite} registry={nodeRegistry} zoom={scale} depth={1} liveDepth={1} />
     </div>
   );
 };

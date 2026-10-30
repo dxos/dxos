@@ -9,9 +9,10 @@ import { isInstanceNode, isViewNode } from '@dxos/scene';
 
 import { ViewBuilder, type ViewTree } from '../builder/index.ts';
 import { defaultNodeRegistry } from '../components/index.ts';
-import { type BackgroundGrid, createMemoryStore, storeVersions } from '../model/index.ts';
+import { type BackgroundGrid } from '../model/index.ts';
 import { createCanvasAtoms } from './atoms.ts';
 import { type LookHandlers, createCanvasController } from './controller.ts';
+import { createDrawState, drawStateVersions } from './draw-state.ts';
 import { createDrawScene, withHistory } from './draw.ts';
 import { createLocalHistory } from './history.ts';
 
@@ -52,11 +53,11 @@ const setup = ({
   look = {},
 }: { readonly?: boolean; tree?: ViewTree; look?: LookHandlers } = {}) => {
   const registry = Registry.make();
-  const store = createMemoryStore(tree.views);
+  const store = createDrawState(tree.views);
   const atoms = createCanvasAtoms(tree.root);
   const history = createLocalHistory()({
     registry,
-    store: storeVersions(registry, store),
+    store: drawStateVersions(registry, store),
     context: () => ({ path: registry.get(atoms.path), selection: [...registry.get(atoms.selection)] }),
     view: {},
   });

@@ -52,6 +52,7 @@ import { mx } from '@dxos/ui-theme';
 import { type GeneratorFrames, type Shape } from '../../generator/index.ts';
 import { type ElementHandlers, useSceneLook } from '../../hooks/index.ts';
 import {
+  type DrawnLists,
   type LinkKind,
   NEU_GROOVE_LIP,
   NEU_RELIEF,
@@ -62,7 +63,6 @@ import {
   type NodeRegistry,
   type NodeViewProps,
   RADIUS_PX,
-  type ViewStore,
   nodeDef,
   styleVariant,
 } from '../../model/index.ts';
@@ -134,7 +134,7 @@ export const tierFor = (node: Node, zoom: number, depth: number, liveDepth: numb
 };
 
 export type SceneLayerProps = {
-  store: ViewStore;
+  lists: DrawnLists;
   /** The layout to draw, as the engine's render list. */
   scene: RenderList2D;
   registry: NodeRegistry;
@@ -174,7 +174,7 @@ export type SceneLayerProps = {
 
 export const SceneLayer = memo(
   ({
-    store,
+    lists,
     scene: sceneProp,
     registry,
     zoom,
@@ -227,7 +227,7 @@ export const SceneLayer = memo(
       });
     }, [scene, links, selected]);
     // Each element is drawn with its class's look under its own; the handlers still get the element as stored.
-    const styles = useAtomValue(store.styles ?? NO_STYLES);
+    const styles = useAtomValue(lists.styles ?? NO_STYLES);
     const lines = useMemo(
       () => new Map(links.map(({ link }) => [link.id, classedLink(link, styles).style])),
       [links, styles],
@@ -341,7 +341,7 @@ export const SceneLayer = memo(
                 {/* Above the layer's links, below its nodes; marked with the time it drew, which export waits on. */}
                 {generated && group.nodes.some(isGeneratorNode) && (
                   <GeneratedShapes
-                    store={store}
+                    lists={lists}
                     registry={registry}
                     zoom={zoom}
                     depth={depth}
@@ -353,7 +353,7 @@ export const SceneLayer = memo(
                 {group.nodes.map((node) => (
                   <NodeFrame
                     key={node.id}
-                    store={store}
+                    lists={lists}
                     scene={scene}
                     registry={registry}
                     node={node}
@@ -403,7 +403,7 @@ SceneLayer.displayName = 'SceneLayer';
 /** The generator frames of the root layer, for the generator nodes' own views (their status). */
 const GeneratedContext = createContext<GeneratorFrames | undefined>(undefined);
 
-type GeneratedShapesProps = Pick<SceneLayerProps, 'store' | 'registry' | 'zoom' | 'depth'> & {
+type GeneratedShapesProps = Pick<SceneLayerProps, 'lists' | 'registry' | 'zoom' | 'depth'> & {
   t: number;
   shapes: readonly Shape[];
   style?: CSSProperties;
@@ -428,7 +428,7 @@ export type ShapeLayerProps = {
 
 /**
  * Shapes in scene coordinates, as one SVG under the camera: a generator's or an animator effect's `2d` items. Instances
- * are left to the caller, since drawing a composite needs the scene store.
+ * are left to the caller, since drawing a composite needs the scene lists.
  */
 export const ShapeLayer = ({ t, shapes, style, testId = 'generator-layer' }: ShapeLayerProps) => (
   <svg
@@ -480,14 +480,14 @@ export const ShapeLayer = ({ t, shapes, style, testId = 'generator-layer' }: Sha
 );
 
 /** A generator layer: the shapes the layer's generators returned, in scene coordinates. */
-const GeneratedShapes = ({ store, registry, zoom, depth, t, shapes, style }: GeneratedShapesProps) => (
+const GeneratedShapes = ({ lists, registry, zoom, depth, t, shapes, style }: GeneratedShapesProps) => (
   <>
     <ShapeLayer t={t} shapes={shapes} style={style} />
     {shapes.map((shape, index) =>
       shape.kind === 'instance' ? (
         <InstanceShape
           key={index}
-          store={store}
+          lists={lists}
           registry={registry}
           zoom={zoom}
           depth={depth}
@@ -501,7 +501,7 @@ const GeneratedShapes = ({ store, registry, zoom, depth, t, shapes, style }: Gen
   </>
 );
 
-type InstanceShapeProps = Pick<SceneLayerProps, 'store' | 'registry' | 'zoom' | 'depth'> & {
+type InstanceShapeProps = Pick<SceneLayerProps, 'lists' | 'registry' | 'zoom' | 'depth'> & {
   composite: string;
   center: { x: number; y: number };
   scale: number;
@@ -509,8 +509,8 @@ type InstanceShapeProps = Pick<SceneLayerProps, 'store' | 'registry' | 'zoom' | 
 };
 
 /** A composite a generator placed: drawn about `center`, scaled, read-only. */
-const InstanceShape = ({ store, registry, zoom, depth, composite, center, scale, opacity }: InstanceShapeProps) => {
-  const scene = useAtomValue(store.view(composite));
+const InstanceShape = ({ lists, registry, zoom, depth, composite, center, scale, opacity }: InstanceShapeProps) => {
+  const scene = useAtomValue(lists.view(composite));
   const content = useMemo(() => (scene ? compositeBounds(scene) : undefined), [scene]);
   if (!scene || !content) {
     return null;
@@ -522,7 +522,7 @@ const InstanceShape = ({ store, registry, zoom, depth, composite, center, scale,
       className='absolute pointer-events-none'
       style={{ transform: `translate(${x}px, ${y}px) scale(${scale})`, transformOrigin: '0 0', opacity }}
     >
-      <SceneLayer store={store} scene={scene} registry={registry} zoom={zoom * scale} depth={depth + 1} liveDepth={0} />
+      <SceneLayer lists={lists} scene={scene} registry={registry} zoom={zoom * scale} depth={depth + 1} liveDepth={0} />
     </div>
   );
 };
@@ -1462,8 +1462,8 @@ export const NoteNodeView = ({ node, editing }: NodeViewProps) => {
  * preview, then the live scene as it grows on screen), and a zoom-in control at the top-right.
  */
 export const ViewNodeView = (props: NodeViewProps) => {
-  const { node, store, registry, zoom, depth, liveDepth, opening, editing, onOpen } = props;
-  const child = useAtomValue(store.view(isViewNode(node) ? node.scene : ''));
+  const { node, lists, registry, zoom, depth, liveDepth, opening, editing, onOpen } = props;
+  const child = useAtomValue(lists.view(isViewNode(node) ? node.scene : ''));
   const contents = opening || (isViewNode(node) && showsContents(node));
   // Being entered, the portal is already the child scene on the canvas: live.
   const tier = !child ? 'dot' : opening ? 'live' : tierFor(node, zoom, depth, liveDepth);
@@ -1507,7 +1507,7 @@ export const ViewNodeView = (props: NodeViewProps) => {
             }}
           >
             <SceneLayer
-              store={store}
+              lists={lists}
               scene={child}
               registry={registry}
               zoom={zoom * portalScale(node, bounds)}
@@ -1529,8 +1529,8 @@ export const ViewNodeView = (props: NodeViewProps) => {
  * A composite object's instance: the composite scene, with the instance's overrides, scaled into the frame
  * (ANIMATION.md §4.1). The nested layer is read-only; the instance is selected and moved as one node.
  */
-export const InstanceNodeView = ({ node, store, registry, zoom, depth, liveDepth }: NodeViewProps) => {
-  const composite = useAtomValue(store.view(isInstanceNode(node) ? node.composite : ''));
+export const InstanceNodeView = ({ node, lists, registry, zoom, depth, liveDepth }: NodeViewProps) => {
+  const composite = useAtomValue(lists.view(isInstanceNode(node) ? node.composite : ''));
   const drawn = useMemo(
     () => (composite && isInstanceNode(node) ? instanceView(node, composite) : undefined),
     [node, composite],
@@ -1561,7 +1561,7 @@ export const InstanceNodeView = ({ node, store, registry, zoom, depth, liveDepth
       data-instance={node.id}
     >
       <SceneLayer
-        store={store}
+        lists={lists}
         scene={drawn}
         registry={registry}
         zoom={zoom * transform.scale}

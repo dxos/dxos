@@ -7,7 +7,8 @@ import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { type Scene, type ViewId, applyIntent, findLayout, rootScene, sceneLayout } from '@dxos/scene';
 
 import { type ConstrainIntent, type ViewportProps } from '../../editor/index.ts';
-import { type MemoryViewStore, type ViewMap, createMemoryStore } from '../../model/index.ts';
+import { type DrawState, createDrawState } from '../../engine/index.ts';
+import { type ViewMap } from '../../model/index.ts';
 import { type SceneEdit } from '../../utils/index.ts';
 import {
   type LayoutWrite,
@@ -54,7 +55,7 @@ const drawnDifferently = (left: Scene.LayoutRecord, right: Scene.LayoutRecord): 
  * refuses or moves is drawn as stored until the document comes back with it.
  */
 export type DocumentStore = {
-  store: MemoryViewStore;
+  store: DrawState;
   root: ViewId;
   /**
    * What the layout's mode would store of `edit` to scene `sceneId`: the edit, the scene as the mode would rewrite it,
@@ -80,7 +81,7 @@ export const useDocumentStore = (
     const model = doc.models.find((model) => model.id === rootModel(doc));
     return styleClasses(model?.dim === '2d' ? model.styles : undefined);
   };
-  const store = useMemo(() => createMemoryStore(initial.lists, stylesOf(document), { root }), [initial]);
+  const store = useMemo(() => createDrawState(initial.lists, stylesOf(document), { root }), [initial]);
 
   // The latest props, read by the store's subscription, which outlives a render.
   const latest = useRef({ document, constrain, snap, onIntent, onModelIntent, onTransaction });

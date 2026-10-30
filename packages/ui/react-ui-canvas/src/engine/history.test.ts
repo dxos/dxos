@@ -7,8 +7,8 @@ import { describe, test } from 'vitest';
 
 import { type NodeBase } from '@dxos/scene';
 
-import { createMemoryStore, storeVersions } from '../model/index.ts';
 import { type SceneEdit, deleteElements, moveNodes } from '../utils/index.ts';
+import { createDrawState, drawStateVersions } from './draw-state.ts';
 import { createDrawScene, withHistory } from './draw.ts';
 import { type HistoryContext, createLocalHistory, createLocalStacks } from './history.ts';
 
@@ -22,13 +22,13 @@ const box = (id: string, x = 0): NodeBase => ({
 
 const setup = () => {
   const registry = Registry.make();
-  const store = createMemoryStore([{ id: 'root', nodes: { a: box('a') }, links: {} }]);
+  const store = createDrawState([{ id: 'root', nodes: { a: box('a') }, links: {} }]);
   let clock = 0;
   const restored: HistoryContext[] = [];
   let context: HistoryContext = { path: ['root'], selection: ['a'] };
   const history = createLocalHistory({ now: () => clock })({
     registry,
-    store: storeVersions(registry, store),
+    store: drawStateVersions(registry, store),
     context: () => context,
     view: { restore: (entry) => restored.push(entry) },
   });
@@ -109,12 +109,12 @@ describe('local history', () => {
 
   test('stacks the host keeps outlive the view: a remounted view undoes the steps made before it', ({ expect }) => {
     const registry = Registry.make();
-    const store = createMemoryStore([{ id: 'root', nodes: { a: box('a') }, links: {} }]);
+    const store = createDrawState([{ id: 'root', nodes: { a: box('a') }, links: {} }]);
     const stacks = createLocalStacks();
     const mount = () => {
       const history = createLocalHistory({ stacks })({
         registry,
-        store: storeVersions(registry, store),
+        store: drawStateVersions(registry, store),
         context: () => ({ path: ['root'], selection: ['a'] }),
         view: { restore: () => {} },
       });

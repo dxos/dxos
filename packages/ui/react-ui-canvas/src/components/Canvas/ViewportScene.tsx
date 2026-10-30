@@ -91,7 +91,7 @@ export const ViewportScene = ({ camera, latticeBounds, focus, liveDepth, overlay
       )}
       <div className='pointer-events-auto'>
         <SceneLayer
-          store={store}
+          lists={store}
           scene={displayScene}
           registry={nodeRegistry}
           zoom={camera.zoom}

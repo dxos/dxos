@@ -34,6 +34,7 @@ import {
   type DocumentEditCommands,
   type Drag,
   type DrawScene,
+  type DrawState,
   type Handle,
   type LinkEnd,
   type ToolsCommands,
@@ -44,7 +45,6 @@ import {
   type CreateProps,
   type NodeRegistry,
   type View,
-  type ViewStore,
   isHandDrag,
   nodeDef,
 } from '../../model/index.ts';
@@ -139,7 +139,7 @@ export type UsePointerMachineOptions = {
   setTool: ToolsCommands['setTool'];
   /** Drops a copy of the dragged nodes where the drag ends (⌘-drag). */
   duplicate: DocumentEditCommands['duplicate'];
-  store: ViewStore;
+  store: DrawState;
   scene: View;
   nodeRegistry: NodeRegistry;
   draw: DrawScene;

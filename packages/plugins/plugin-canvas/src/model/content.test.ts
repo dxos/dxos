@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { type ContentMap } from '@dxos/diagram';
 import { DEFAULT_LAYER } from '@dxos/react-ui-canvas/scene';
-import { type InstanceNode, type ViewNode } from '@dxos/scene';
+import { type InstanceNode, type NodeBase, type ViewNode, isViewNode } from '@dxos/scene';
 
 import {
   ROOT_VIEW_ID,
@@ -26,6 +26,7 @@ import {
   seedContent,
   styleClassUses,
   updateCanvasRecord,
+  upgradeNode,
   writeStyles,
   writeViews,
 } from './content.ts';
@@ -33,6 +34,20 @@ import {
 const box = { z: 'a0', center: { x: 0, y: 0 }, size: { width: 256, height: 128 } };
 
 describe('content', () => {
+  test('a node stored with the legacy `frame` type reads as a `view` node', ({ expect }) => {
+    const stored: NodeBase & { scene: string } = {
+      id: 'f',
+      type: 'frame',
+      z: 'a0',
+      scene: 'child',
+      center: { x: 0, y: 0 },
+      size: { width: 64, height: 64 },
+    };
+    const node = upgradeNode(stored);
+    expect(node).toEqual({ ...stored, type: 'view' });
+    expect(isViewNode(node)).toBe(true);
+  });
+
   test('a composite scene survives a write and a read; a scene stores no timeline', ({ expect }) => {
     const content: ContentMap = {};
     seedContent(content);

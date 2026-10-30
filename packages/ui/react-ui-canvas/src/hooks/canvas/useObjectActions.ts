@@ -6,8 +6,14 @@ import { useMemo, useRef } from 'react';
 
 import { type ElementId, type InstanceNode, type NodeId, type Size, type ViewId, isInstanceNode } from '@dxos/scene';
 
-import { type CanvasAtoms, type CanvasHistory, type DrawScene, type NavigationCommands } from '../../engine/index.ts';
-import { type View, type ViewStore } from '../../model/index.ts';
+import {
+  type CanvasAtoms,
+  type CanvasHistory,
+  type DrawScene,
+  type DrawState,
+  type NavigationCommands,
+} from '../../engine/index.ts';
+import { type View } from '../../model/index.ts';
 import {
   type SceneEdit,
   activeLayer,
@@ -40,7 +46,7 @@ export type ObjectActions = {
 export type UseObjectActionsOptions = {
   registry: ReturnType<typeof useRegistry>;
   atoms: CanvasAtoms;
-  store: ViewStore;
+  store: DrawState;
   draw: DrawScene;
   /** Runs each action as one undo step. */
   commit: CanvasHistory['commit'];
@@ -144,8 +150,7 @@ export const useObjectActions = ({
       remove: (composite: ViewId, instances: boolean) => {
         const before = registry.get(store.views);
         const path = registry.get(atoms.isolation)?.back.path ?? registry.get(atoms.path);
-        const roots = [...path.slice(0, 1), ...Object.keys(before).filter((id) => store.isRoot?.(id))];
-        const next = removeComposite(before, composite, { instances, roots });
+        const next = removeComposite(before, composite, { instances, roots: path.slice(0, 1) });
         if (!next) {
           return;
         }

@@ -15,9 +15,9 @@ import { translations as uiTranslations } from '@dxos/react-ui/translations';
 import { type ElementId, type Layer } from '@dxos/scene';
 
 import { ViewBuilder } from '../../../builder/index.ts';
-import { createCanvasAtoms } from '../../../engine/index.ts';
+import { createCanvasAtoms, createDrawState } from '../../../engine/index.ts';
 import { useCanvasHistory, useDrawScene, useRegistry } from '../../../hooks/index.ts';
-import { type View, createMemoryStore, getElement } from '../../../model/index.ts';
+import { type View, getElement } from '../../../model/index.ts';
 import { between } from '../../../utils/index.ts';
 import { InspectorFrame } from '../../panels/testing.ts';
 import { PropertiesInspector } from './PropertiesInspector.tsx';
@@ -55,7 +55,7 @@ type StoryArgs = {
 /** The panel alone, over an in-memory scene and a fixed selection: no canvas, so every field can be read in full. */
 const DefaultStory = ({ select }: StoryArgs) => {
   const registry = useRegistry();
-  const store = useMemo(() => createMemoryStore([VIEW]), []);
+  const store = useMemo(() => createDrawState([VIEW]), []);
   const atoms = useMemo(() => createCanvasAtoms(VIEW.id), []);
   const history = useCanvasHistory({ registry, atoms, store });
   const draw = useDrawScene({ store, atoms, history });

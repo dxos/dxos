@@ -4,14 +4,20 @@
 
 import { useEffect, useMemo } from 'react';
 
-import { type CanvasAtoms, type CanvasHistory, type CreateHistory, createLocalHistory } from '../../engine/index.ts';
-import { type ViewStore, storeVersions } from '../../model/index.ts';
+import {
+  type CanvasAtoms,
+  type CanvasHistory,
+  type CreateHistory,
+  type DrawState,
+  createLocalHistory,
+  drawStateVersions,
+} from '../../engine/index.ts';
 import { type useRegistry } from '../useRegistry.ts';
 
 export type UseCanvasHistoryOptions = {
   registry: ReturnType<typeof useRegistry>;
   atoms: CanvasAtoms;
-  store: ViewStore;
+  store: DrawState;
   /** The host's history (Composer's tracker); a local one by default. */
   history?: CreateHistory;
 };
@@ -25,7 +31,7 @@ export const useCanvasHistory = ({ registry, atoms, store, history: createHistor
     () =>
       (createHistory ?? createLocalHistory())({
         registry,
-        store: storeVersions(registry, store),
+        store: drawStateVersions(registry, store),
         context: () => {
           const isolation = registry.get(atoms.isolation);
           return {

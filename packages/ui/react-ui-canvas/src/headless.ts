@@ -11,7 +11,6 @@ export * from './generator/types.ts';
 export * from './model/keys.ts';
 export { BASE_ANIMATABLE, OPACITY_PATH } from './model/node-def.ts';
 export * from './model/orphans.ts';
-export * from './model/store.ts';
 export * from './model/style-set.ts';
 export * from './model/types.ts';
 export * from './model/versioned.ts';

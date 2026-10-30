@@ -5,26 +5,12 @@
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { type NodeBase, isViewNode } from '@dxos/scene';
+import { type NodeBase } from '@dxos/scene';
 
-import { orphanViews, pruneOrphaned } from './orphans.ts';
-import { createMemoryStore } from './store.ts';
-import { type View } from './types.ts';
+import { type View, orphanViews, pruneOrphaned } from '../model/index.ts';
+import { createDrawState } from './draw-state.ts';
 
 const box = { z: 'a0', center: { x: 0, y: 0 }, size: { width: 256, height: 128 } };
-
-describe('memory store', () => {
-  test('a node stored with the legacy `frame` type loads as a `view` node', ({ expect }) => {
-    const stored: NodeBase & { scene: string } = { id: 'f', type: 'frame', scene: 'child', ...box };
-    const store = createMemoryStore([
-      { id: 'root', nodes: { f: stored }, links: {} },
-      { id: 'child', nodes: {}, links: {} },
-    ]);
-    const node = Registry.make().get(store.view('root'))?.nodes.f;
-    expect(node).toEqual({ ...stored, type: 'view' });
-    expect(node && isViewNode(node)).toBe(true);
-  });
-});
 
 const viewNode = (id: string, scene: string): NodeBase & { scene: string } => ({ id, type: 'view', scene, ...box });
 const instance = (id: string, composite: string): NodeBase & { composite: string } => ({
@@ -72,16 +58,16 @@ describe('orphans', () => {
     expect(pruneOrphaned(before, before, ['root'])).toBe(before);
   });
 
-  test('the memory store drops orphans on load when it is given the root, and keeps everything without one', ({
+  test('the draw state drops orphans on load when it is given the root, and keeps everything without one', ({
     expect,
   }) => {
     const registry = Registry.make();
-    expect(Object.keys(registry.get(createMemoryStore(drawing(), {}, { root: 'root' }).views)).sort()).toEqual([
+    expect(Object.keys(registry.get(createDrawState(drawing(), {}, { root: 'root' }).views)).sort()).toEqual([
       'child',
       'group',
       'named',
       'root',
     ]);
-    expect(Object.keys(registry.get(createMemoryStore(drawing()).views))).toHaveLength(7);
+    expect(Object.keys(registry.get(createDrawState(drawing()).views))).toHaveLength(7);
   });
 });

@@ -6,7 +6,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, test } from 'vitest';
 
-import { type NodeViewProps, type View, createMemoryStore } from '@dxos/react-ui-canvas/scene';
+import { type NodeViewProps, type View, staticLists } from '@dxos/react-ui-canvas/scene';
 import { type Node } from '@dxos/scene';
 
 import { ComputeGraphController } from '../../graph/index.ts';
@@ -32,7 +32,7 @@ const setup = () => {
   const props: NodeViewProps = {
     node: shape as Node,
     scene,
-    store: createMemoryStore([scene]),
+    lists: staticLists([scene]),
     registry: computeNodeRegistry,
     zoom: 1,
     depth: 0,

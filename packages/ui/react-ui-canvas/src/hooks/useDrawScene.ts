@@ -11,18 +11,19 @@ import {
   type CanvasAtoms,
   type CanvasHistory,
   type DrawScene,
+  type DrawState,
   createDrawScene,
   freehandCapabilities,
   intersectCapabilities,
   latticeCapabilities,
   withHistory,
 } from '../engine/index.ts';
-import { type Capabilities, type ViewStore } from '../model/index.ts';
+import { type Capabilities } from '../model/index.ts';
 import { type LatticeSpec, type SceneEdit } from '../utils/index.ts';
 import { useRegistry } from './useRegistry.ts';
 
 export type UseDrawSceneOptions = {
-  store: ViewStore;
+  store: DrawState;
   atoms: CanvasAtoms;
   /** What a person may do, within what the layout allows; everything it allows when unset. */
   capabilities?: Capabilities;

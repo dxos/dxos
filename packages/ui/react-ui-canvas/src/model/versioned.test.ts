@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 
 import { type NodeBase } from '@dxos/scene';
 
-import { createMemoryStore, storeVersions, updateView } from './store.ts';
+import { createDrawState, drawStateVersions, updateView } from '../engine/index.ts';
 import { diffPaths, patchSource, readPath, recordChanges, sameValue, writePath } from './versioned.ts';
 
 const box = (id: string, x = 0): NodeBase => ({
@@ -20,8 +20,8 @@ const box = (id: string, x = 0): NodeBase => ({
 
 const setup = () => {
   const registry = Registry.make();
-  const store = createMemoryStore([{ id: 'root', nodes: { a: box('a'), b: box('b') }, links: {} }]);
-  const versions = storeVersions(registry, store);
+  const store = createDrawState([{ id: 'root', nodes: { a: box('a'), b: box('b') }, links: {} }]);
+  const versions = drawStateVersions(registry, store);
   const node = (id: string) => registry.get(store.views).root?.nodes[id];
   const move = (id: string, x: number) =>
     updateView(registry, store, 'root', (view) => ({

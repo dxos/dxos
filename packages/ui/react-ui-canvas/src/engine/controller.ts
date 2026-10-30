@@ -27,11 +27,9 @@ import {
   type Tool,
   type View,
   type ViewMap,
-  type ViewStore,
   getElement,
   nodeDef,
   pruneOrphaned,
-  storeVersions,
 } from '../model/index.ts';
 import {
   DRILL_ANIMATION_MS,
@@ -70,6 +68,7 @@ import {
   zoomAt,
 } from '../utils/index.ts';
 import { type CanvasAtoms, type HistoryEntry } from './atoms.ts';
+import { type DrawState, drawStateVersions } from './draw-state.ts';
 import { type DrawScene, readonlyCapabilities } from './draw.ts';
 import { type CanvasHistory, createCommitter } from './history.ts';
 
@@ -103,7 +102,7 @@ export type LookHandlers = {
 export type CanvasControllerOptions = {
   registry: Registry.AtomRegistry;
   atoms: CanvasAtoms;
-  store: ViewStore;
+  store: DrawState;
   /** The open View's draw scene, read when a command runs: it changes as the View changes. */
   draw: () => DrawScene;
   /** The node types, for how a portal opens. */
@@ -261,7 +260,7 @@ export const createCanvasController = ({
 }: CanvasControllerOptions): CanvasController => {
   const unrecorded = createCommitter(
     {
-      store: storeVersions(registry, store),
+      store: drawStateVersions(registry, store),
       context: () => ({ path: [], selection: [] }),
     },
     () => {},
@@ -278,10 +277,10 @@ export const createCanvasController = ({
     registry.set(atoms.point, undefined);
   };
 
-  /** The Views kept with no node opening them: the drawing's root, and any root of its own the store declares. */
-  const roots = (views: ViewMap): ViewId[] => {
+  /** The Views kept with no node opening them: the drawing's root. */
+  const roots = (): ViewId[] => {
     const path = registry.get(atoms.isolation)?.back.path ?? registry.get(atoms.path);
-    return [...path.slice(0, 1), ...Object.keys(views).filter((id) => store.isRoot?.(id))];
+    return path.slice(0, 1);
   };
 
   /**
@@ -301,7 +300,7 @@ export const createCanvasController = ({
       }
       const after = registry.get(store.views);
       const edited = records(after);
-      const next = pruneOrphaned(before, edited, roots(edited));
+      const next = pruneOrphaned(before, edited, roots());
       if (next !== after) {
         registry.set(store.views, next);
       }
