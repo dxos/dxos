@@ -321,7 +321,7 @@ export class SceneRenderer3D {
       this.#grid = this.#createGrid();
     }
     this.#grid?.setEnabled(visible);
-    this.#view && this.#scene.render();
+    this.#redraw();
   }
 
   /** Whether the axes are drawn. */
@@ -338,7 +338,7 @@ export class SceneRenderer3D {
       this.#axes = this.#createAxes();
     }
     this.#axes?.setEnabled(visible);
-    this.#view && this.#scene.render();
+    this.#redraw();
   }
 
   /** Matches the drawing buffer to the canvas's size. */
@@ -486,6 +486,18 @@ export class SceneRenderer3D {
     gizmos?.positionGizmo && (gizmos.positionGizmo.snapDistance = move);
     gizmos?.rotationGizmo && (gizmos.rotationGizmo.snapDistance = (rotate * Math.PI) / 180);
     gizmos?.scaleGizmo && (gizmos.scaleGizmo.snapDistance = scale);
+  }
+
+  /**
+   * Draws a still view again after a guide shows or hides; a guide shown for the first time compiles its shader
+   * asynchronously, so its first frame draws without it and the view draws again once it is ready.
+   */
+  #redraw(): void {
+    if (!this.#view) {
+      return;
+    }
+    this.#scene.render();
+    this.#scene.executeWhenReady(() => this.#scene.render());
   }
 
   /** Whether the scene's materials and the selection outline's layer have compiled. */

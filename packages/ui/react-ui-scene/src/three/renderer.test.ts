@@ -150,6 +150,16 @@ describe('SceneRenderer3D.pick', () => {
     view.dispose();
   });
 
+  test('the axes are hidden until shown, and hide again', () => {
+    const view = renderer(doc([{ id: 'a', type: 'cube', center: { x: 0, y: 0, z: 0 } }]));
+    expect(view.axes).toBe(false);
+    view.setAxes(true);
+    expect(view.axes).toBe(true);
+    view.setAxes(false);
+    expect(view.axes).toBe(false);
+    view.dispose();
+  });
+
   test('the ground grid is never picked', () => {
     const view = renderer(doc([{ id: 'a', type: 'cube', center: { x: 20, y: 0, z: 0 } }]));
     view.setGrid(true);

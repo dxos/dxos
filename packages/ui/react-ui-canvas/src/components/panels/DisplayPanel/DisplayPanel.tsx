@@ -190,7 +190,7 @@ export const DisplayPanel = ({
         iconOnly
         icon={dim === '3d' ? 'ph--vector-three--regular' : 'ph--vector-two--regular'}
         label='Axes: show the axes through the origin'
-        disabled={readonly}
+        // A viewing aid, not an edit, so a read-only scene offers it too.
         pressed={axes === true}
         data-testid='toolbar-axes'
         onPressedChange={onAxesToggle}
