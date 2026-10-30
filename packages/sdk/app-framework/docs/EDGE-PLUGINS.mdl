@@ -58,9 +58,8 @@ What the vite build of `plugin-markdown` emits, and what `dx registry publish` u
 
 ```
 dist/plugin/
-├── manifest.json          Plugin.Manifest: plugin metadata, and per module its URL, environments,
-│                          requires/provides and activatesOn
-├── catalog.json           operations, skills and types of the workerd modules
+├── manifest.json          Plugin.Manifest: plugin metadata, the asset list, and per module its
+│                          chunk, environments, requires/provides and activatesOn
 ├── index.mjs              entry: Plugin.fromManifest(manifest, loaders)
 ├── schema-3fa9.mjs        module body, every runtime
 ├── operations-91c2.mjs    module body, environments [node, workerd]
@@ -145,7 +144,7 @@ type PluginBundle
     hash: string                 # sha-256 over the bundle's files; the Worker Loader id
     owner: DID | realm:dxos      # from the ATProto release record, or PrivatePlugin.ownerDid
     manifest: Plugin.Manifest    # manifest.json
-    catalog: PluginCatalog       # catalog.json
+    catalog: PluginCatalog       # derived by PluginStore at upload, not shipped in the bundle
     vendor: VendorMap            # vendor/manifest.json
 ```
 
@@ -208,21 +207,19 @@ service PluginBuilder
     The plugin's own vite build (`composerPlugin`), with no separate build for EDGE. It emits the
     plugin's files flat at the bundle root, `manifest.json` with every module and its
     `environments`, and `vendor/`: one build, for `workerd`, of every package the plugin build kept
-    external, with `vendor/manifest.json`. It then activates the workerd modules headless, with
-    `vendor/` as their packages, to write `catalog.json`.
+    external, with `vendor/manifest.json`. It never runs plugin code.
   ops:
     build(configPath: string, options: { version }) → PluginBundle
   errors:
     UnvendoredImport: a plugin file imports a bare specifier that vendor/ does not provide
-    CatalogMismatch: an operation key in the catalog has no handler, or a handler has no key in the catalog
 ```
 
 ```mdl
 service PluginStore
   desc: |
     registry-service's existing plugin store (`/upload`, `/private/upload`, `GET /modules/...`). On
-    upload it loads the bundle once through Worker Loader, checks `describe()` against
-    `catalog.json`, and adds the bundle's operation keys to the operation index.
+    upload it loads the bundle once through Worker Loader, stores what `describe()` returns as the
+    bundle's catalog, and adds the bundle's operation keys to the operation index.
   ops:
     upload(bundle: PluginBundle) → PluginBundle
     getManifest(pluginKey: NSID, version?: SemVer) → Plugin.Manifest
@@ -312,7 +309,7 @@ op publishPlugin
   errors:
     VersionExists: the version is already uploaded with another hash
     KeyConflict: the catalog claims an operation key owned by another plugin
-    CatalogMismatch: the loaded bundle describes a different catalog than the build wrote
+    PluginLoadError: the bundle failed to load or activate when the registry described it
 ```
 
 ```mdl
@@ -363,8 +360,8 @@ feat F-1: Publish a plugin from the CLI
 
   req F-1.3:
     when: a bundle is uploaded
-    then: registry-service loads it in a fresh isolate and compares `describe()` with its catalog;
-          the operation index is updated only when they match
+    then: registry-service loads it in a fresh isolate and stores what `describe()` returns as its
+          catalog; a bundle that fails to load or activate is refused
 
   req F-1.4: The bundle carries `vendor/`, so a Dynamic Worker loads it from its `modules` map alone:
     after PluginLoader's rewrite, its files import nothing but each other, `vendor/` and
@@ -497,8 +494,8 @@ feat F-9: Continuous delivery from DXOS
 feat F-10: Readable manifests and registry query
   Anyone can read what a published plugin contains before running it.
 
-  req F-10.1: `GET /registry/modules/:slug/:version/manifest.json` and `.../catalog.json` return the
-    bundle's manifest and catalog as JSON.
+  req F-10.1: `GET /registry/modules/:slug/:version/manifest.json` returns the bundle's manifest, and
+    `GET /registry/plugins/:key/:version/catalog` the catalog the registry derived at upload.
 
   req F-10.2: queryPlugins finds published plugins by text, plugin key, operation key, typename or
     skill key.
@@ -570,7 +567,7 @@ per-space setting, with an override per DXN, picks a version for a space.
 
 ## Rollout
 
-1. **One bundle.** Plugin builds emit one bundle, with `vendor/` and `catalog.json`; the per-runtime
+1. **One bundle.** Plugin builds emit one bundle, with `vendor/`; the per-runtime
    `dx-env` builds are removed ([F-1]).
 2. **Store and index.** registry-service indexes the operation keys of uploaded bundles and serves
    their catalogs ([F-2], [F-10]).
@@ -844,4 +841,15 @@ decision D-27: A light script in Composer checks a built plugin directory before
   date: 2026-10-30
   by: user:dmaretskyi
   affects: [PluginBuilder, F-12.1]
+```
+
+```mdl
+decision D-28: A bundle carries no `catalog.json`; registry-service derives a bundle's catalog by calling `describe()` when it loads the bundle at upload, and stores it. Fills in [D-24].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [PluginBundle, PluginBuilder, PluginStore, F-1.3, F-10.1]
+  why: The registry already loads every uploaded bundle once in workerd; deriving the catalog there keeps the plugin build from running plugin code and leaves nothing in the bundle to drift from its modules.
+  rejected:
+    - Write `catalog.json` at build time by activating the workerd modules headless — the build would need workerd, and the store would have to check the file against `describe()` anyway.
 ```
