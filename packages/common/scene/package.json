@@ -28,7 +28,8 @@
   ],
   "dependencies": {
     "@dxos/animation": "workspace:*",
-    "@dxos/echo": "workspace:*"
+    "@dxos/echo": "workspace:*",
+    "@dxos/ui-types": "workspace:*"
   },
   "devDependencies": {
     "effect": "catalog:"

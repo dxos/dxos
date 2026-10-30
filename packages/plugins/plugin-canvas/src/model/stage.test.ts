@@ -6,7 +6,8 @@ import { describe, test } from 'vitest';
 
 import { compileScript, setKey, trackValue } from '@dxos/animation';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { BASE_ANIMATABLE, type RectNode, sampleCamera, sampleView } from '@dxos/react-ui-canvas/headless';
+import { BASE_ANIMATABLE, sampleCamera, sampleView } from '@dxos/react-ui-canvas/headless';
+import { type RectNode } from '@dxos/scene';
 
 import { Canvas } from '#types';
 

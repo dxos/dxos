@@ -9,14 +9,9 @@
 
 import {
   CloudNode,
-  DiagramNode,
   EllipseNode,
   GeneratorNode,
   InstanceNode,
-  type LinkRegistry,
-  type NodeDefSpec,
-  type NodeRegistry,
-  type NodeType,
   NoteNode,
   PathNode,
   PolygonNode,
@@ -24,6 +19,14 @@ import {
   RectNode,
   type Size,
   ViewNode,
+} from '@dxos/scene';
+
+import {
+  DiagramNode,
+  type LinkRegistry,
+  type NodeDefSpec,
+  type NodeRegistry,
+  type NodeType,
   createNodeRegistry,
   isCloudNode,
   isPolygonNode,

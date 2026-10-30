@@ -10,23 +10,18 @@
 //
 
 import { Nudge } from '@dxos/diagram';
-
 import {
   DEFAULT_GRID,
   type Endpoint,
-  type Link,
   MAJOR_GRID,
-  type Node,
-  type NodeRegistry,
   type Point,
   type Port,
   type PortEndpoint,
   type Side,
-  type View,
-  isCloudNode,
-  isEllipseNode,
   isPointEndpoint,
-} from '../model/index.ts';
+} from '@dxos/scene';
+
+import { type Link, type Node, type NodeRegistry, type View, isCloudNode, isEllipseNode } from '../model/index.ts';
 import { type DiagramRoute, diagramRoute, isRouteObstacle } from './diagram-shape.ts';
 import { gutterRoute, gutterRouteWithCost } from './gutter-route.ts';
 import { type LatticeSpec } from './lattice.ts';

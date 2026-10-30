@@ -12,7 +12,7 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
-import { type Node, type StyleClass, type View, createNode } from '@dxos/react-ui-canvas/headless';
+import { type Node, type View, createNode } from '@dxos/react-ui-canvas/headless';
 import {
   createLatticeTree,
   createLinkedPairTree,
@@ -24,7 +24,7 @@ import {
   createSquareTree,
   createViewTree,
 } from '@dxos/react-ui-canvas/testing';
-import { Scene } from '@dxos/scene';
+import { Scene, type StyleClass } from '@dxos/scene';
 import { CreatedFrom } from '@dxos/types';
 
 import { Canvas } from '#types';

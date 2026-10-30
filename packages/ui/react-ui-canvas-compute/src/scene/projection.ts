@@ -21,9 +21,9 @@ import {
   type Projection,
   type View,
   createFreehandProjection,
-  endpointNode,
   reduceIntent,
 } from '@dxos/react-ui-canvas/scene';
+import { endpointNode } from '@dxos/scene';
 
 import {
   type ComputeGraphController,

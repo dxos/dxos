@@ -10,22 +10,19 @@
 import * as Atom from 'effect/reactivity/Atom';
 
 import { type Clock, createClock } from '@dxos/animation';
-
 import {
   type Bounds,
-  type Camera,
   type ElementId,
   type Endpoint,
   type LayerId,
   type LinkId,
-  type LinkType,
   type NodeId,
-  type NodeType,
   type Point,
   type Side,
-  type Tool,
   type ViewId,
-} from '../model/index.ts';
+} from '@dxos/scene';
+
+import { type Camera, type LinkType, type NodeType, type Tool } from '../model/index.ts';
 import { type Clipboard, type PartKey } from '../utils/index.ts';
 
 export type Handle = 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw';

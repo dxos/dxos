@@ -8,8 +8,8 @@ import React, { useCallback, useMemo } from 'react';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { DEFAULT_GRID, type StyleClass } from '@dxos/react-ui-canvas/scene';
 import { Form, type FormFieldOverride } from '@dxos/react-ui-form';
+import { DEFAULT_GRID, type StyleClass } from '@dxos/scene';
 
 import {
   canvasRecordOf,

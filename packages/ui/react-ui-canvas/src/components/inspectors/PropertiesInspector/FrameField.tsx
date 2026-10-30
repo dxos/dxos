@@ -7,8 +7,8 @@ import React from 'react';
 import { Form, type FormFieldRenderer, useFormFieldState } from '@dxos/react-ui-form';
 import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
+import { NodeBase } from '@dxos/scene';
 
-import { NodeBase } from '../../../model/index.ts';
 import { MAX_PORTS_PER_SIDE } from '../../../utils/index.ts';
 
 type NumberControlProps = {

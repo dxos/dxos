@@ -8,8 +8,8 @@
 //
 
 import { type Easing, ease, seeded } from '@dxos/animation';
+import { type Point } from '@dxos/scene';
 
-import { type Point } from '../model/index.ts';
 import { type Polyline, flattenPath, measure, pointAlong } from '../utils/index.ts';
 import { type GeneratorModule } from './types.ts';
 

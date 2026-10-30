@@ -33,9 +33,9 @@ import {
   createNodeRegistry,
   defaultNodePrototypes,
   defaultNodeTypes,
-  nodeBase,
 } from '@dxos/react-ui-canvas/scene';
 import * as Layout from '@dxos/react-ui/Layout';
+import { nodeBase } from '@dxos/scene';
 
 const LATTICE_NODE_TYPE = 'lattice-node';
 

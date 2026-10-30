@@ -8,8 +8,8 @@ import * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { Database, Obj, type Ref } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { type VersionedSource, type ViewId, type ViewStore, storeVersions } from '@dxos/react-ui-canvas/headless';
-import { Scene } from '@dxos/scene';
+import { type VersionedSource, type ViewStore, storeVersions } from '@dxos/react-ui-canvas/headless';
+import { Scene, type ViewId } from '@dxos/scene';
 
 import { Canvas } from '#types';
 

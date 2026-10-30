@@ -15,7 +15,6 @@ import type * as Registry from 'effect/reactivity/AtomRegistry';
 import { type Database, Obj } from '@dxos/echo';
 import {
   type VersionedSource,
-  type ViewId,
   type ViewMap,
   type ViewStore,
   createMemoryStore,
@@ -23,7 +22,7 @@ import {
   storeVersions,
 } from '@dxos/react-ui-canvas/headless';
 import { toCanvasView } from '@dxos/react-ui-scene/canvas';
-import { type Scene, fromEcho } from '@dxos/scene';
+import { type Scene, type ViewId, fromEcho } from '@dxos/scene';
 
 import { type Canvas } from '#types';
 

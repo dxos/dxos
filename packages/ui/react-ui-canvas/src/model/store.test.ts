@@ -5,9 +5,11 @@
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
+import { type NodeBase } from '@dxos/scene';
+
 import { orphanViews, pruneOrphaned } from './orphans.ts';
 import { createMemoryStore } from './store.ts';
-import { type NodeBase, type View, isViewNode } from './types.ts';
+import { type View, isViewNode } from './types.ts';
 
 const box = { z: 'a0', center: { x: 0, y: 0 }, size: { width: 256, height: 128 } };
 

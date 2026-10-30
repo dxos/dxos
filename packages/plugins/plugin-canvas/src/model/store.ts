@@ -26,9 +26,7 @@ import {
   type Node,
   type VersionedSource,
   type View,
-  type ViewId,
   type ViewMap,
-  type ViewNode,
   type ViewStore,
   createMemoryStore,
   isViewNode,
@@ -36,6 +34,7 @@ import {
   storeVersions,
   withLegacyNodeType,
 } from '@dxos/react-ui-canvas/headless';
+import { type ViewId, type ViewNode } from '@dxos/scene';
 
 import { Canvas } from '#types';
 

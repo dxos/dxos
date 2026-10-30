@@ -23,14 +23,13 @@ import {
   LINK_TYPES,
   type LinkType,
   type Node,
-  type NodeStyle,
   type View,
-  type ViewId,
   type ViewMap,
   type ViewStore,
   initialKeys,
   sortByZ,
 } from '@dxos/react-ui-canvas/scene';
+import { type NodeStyle, type ViewId } from '@dxos/scene';
 
 import { createAnchorId, parseAnchorId } from '../shapes/defs.ts';
 import { type CanvasBoard } from '../types/index.ts';

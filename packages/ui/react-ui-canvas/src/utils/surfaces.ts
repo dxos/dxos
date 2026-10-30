@@ -7,7 +7,9 @@
 // so every class is spelled out; the `theme` variant pairs the light classes with `dark:` ones so it follows the app.
 //
 
-import { type LookTone, type NodeSurface, type Opacity, type Radius, type StyleHue } from '../model/index.ts';
+import { type StyleHue } from '@dxos/scene';
+
+import { type LookTone, type NodeSurface, type Opacity, type Radius } from '../model/index.ts';
 
 export type SurfaceClasses = { surface: string; text: string; border: string };
 

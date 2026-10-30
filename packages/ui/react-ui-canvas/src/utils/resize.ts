@@ -7,8 +7,9 @@
 // view only feeds it the drag and the projection receives one `resize` intent.
 //
 
+import { type Bounds, type Point, type Size } from '@dxos/scene';
+
 import { type Handle } from '../engine/index.ts';
-import { type Bounds, type Point, type Size } from '../model/index.ts';
 
 export type ResizeOptions = {
   minSize: Size;

@@ -5,8 +5,7 @@
 import React from 'react';
 
 import { Form, type FormFieldRenderer, SelectControl, useFormFieldState } from '@dxos/react-ui-form';
-
-import { LINE_STYLES, NodeStyle } from '../../../model/index.ts';
+import { LINE_STYLES, NodeStyle } from '@dxos/scene';
 
 /** Unset: the style set's own line for the element (`borderStyle`), stored as no value. */
 const DEFAULT_VALUE = 'default';

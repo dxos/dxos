@@ -9,8 +9,8 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
+import { type Layer, type LayerId } from '@dxos/scene';
 
-import { type Layer, type LayerId } from '../../../model/index.ts';
 import { between } from '../../../utils/index.ts';
 import { withInspectorFrame } from '../../panels/testing.ts';
 import { LayersInspector } from './LayersInspector.tsx';

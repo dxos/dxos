@@ -7,9 +7,8 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { describe, expect, test } from 'vitest';
 
 import { NumberLayoutAnnotation } from '@dxos/react-ui-form';
+import { nodeBase } from '@dxos/scene';
 import { VECTOR_AXIS_LAYOUT } from '@dxos/ui-types';
-
-import { nodeBase } from './types.ts';
 
 const axisLayout = (schema: { ast: SchemaAST.AST }, axis: string) => {
   const field = SchemaAST.isObjects(schema.ast)

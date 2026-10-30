@@ -16,12 +16,11 @@ import {
   type Node,
   type NodeDef,
   type NodeViewProps,
-  type Port,
-  type Size,
   UnknownNodeView,
   nodeDef,
 } from '@dxos/react-ui-canvas/scene';
 import * as Icon from '@dxos/react-ui/Icon';
+import { type Port, type Size } from '@dxos/scene';
 
 import { ComputeNodeDefContext, useComputeContext } from '../../hooks/compute-context.ts';
 import { useControllerUpdates } from '../../hooks/useControllerUpdates.ts';

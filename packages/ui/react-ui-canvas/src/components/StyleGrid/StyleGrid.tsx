@@ -12,18 +12,11 @@ import {
   useFormFieldState,
 } from '@dxos/react-ui-form';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
+import { NodeStyle, type NodeTone, STYLE_HUES, type StyleHue } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 import { useSceneLook } from '../../hooks/index.ts';
-import {
-  CLASSIC_LOOK,
-  NodeStyle,
-  type NodeTone,
-  type SceneLook,
-  STYLE_HUES,
-  type StyleHue,
-  styleVariant,
-} from '../../model/index.ts';
+import { CLASSIC_LOOK, type SceneLook, styleVariant } from '../../model/index.ts';
 import { BORDER_CLASSES, TONES, variantClasses } from '../../utils/index.ts';
 
 export type StyleChoice = { hue: StyleHue; tone: NodeTone };

@@ -6,7 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
-import { type GeneratorNode, topZ } from '@dxos/react-ui-canvas/headless';
+import { topZ } from '@dxos/react-ui-canvas/headless';
+import { type GeneratorNode } from '@dxos/scene';
 
 import { CanvasOperation, Generator } from '#types';
 

@@ -10,7 +10,9 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type ReactNode, useMemo } from 'react';
 
-import { type Bounds, type ElementId, PLAIN_BACKGROUND, isViewNode, nodeDef } from '../../model/index.ts';
+import { type Bounds, type ElementId } from '@dxos/scene';
+
+import { PLAIN_BACKGROUND, isViewNode, nodeDef } from '../../model/index.ts';
 import { boundsFromPoints, layerOpacity, nodeBounds, sceneToScreen, screenToScene } from '../../utils/index.ts';
 import { MAX_LIVE_DEPTH } from '../SceneLayer/index.ts';
 import { useCanvasGesture, useCanvasLook, useCanvasNavigation, useCanvasServices } from './CanvasContext.ts';

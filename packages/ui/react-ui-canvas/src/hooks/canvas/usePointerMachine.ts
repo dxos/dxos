@@ -13,6 +13,16 @@ import {
 } from 'react';
 
 import {
+  type ElementId,
+  type Endpoint,
+  type NodeId,
+  type Point,
+  type Port,
+  endpointNode,
+  isPointEndpoint,
+} from '@dxos/scene';
+
+import {
   type CanvasAtoms,
   type ControlPointRef,
   type DocumentIntentCommands,
@@ -26,21 +36,14 @@ import {
   type Camera,
   type Capabilities,
   type CreateProps,
-  type ElementId,
-  type Endpoint,
   type Link,
   type Node,
-  type NodeId,
   type NodeRegistry,
   type NodeType,
-  type Point,
-  type Port,
   type SplineLink,
   type View,
   type ViewStore,
-  endpointNode,
   isHandDrag,
-  isPointEndpoint,
   isPolylineNode,
   isViewNode,
   nodeDef,

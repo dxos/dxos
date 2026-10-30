@@ -36,6 +36,9 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/scene"
+    },
+    {
       "path": "../../common/test-utils"
     },
     {

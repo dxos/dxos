@@ -4,9 +4,11 @@
 
 import { describe, test } from 'vitest';
 
+import { type InstanceNode } from '@dxos/scene';
+
 import { ViewBuilder } from '../builder/index.ts';
 import { reduceIntent } from '../engine/index.ts';
-import { type InstanceNode, type Node, type View, isInstanceNode } from '../model/index.ts';
+import { type Node, type View, isInstanceNode } from '../model/index.ts';
 import {
   composeSelection,
   compositeBounds,

@@ -15,17 +15,10 @@ import {
 } from 'react';
 
 import { type Timeline } from '@dxos/animation';
+import { type Bounds, type Point, type Size, type ViewId } from '@dxos/scene';
 
 import { type CanvasAtoms, type Drag } from '../../engine/index.ts';
-import {
-  type Bounds,
-  type Camera,
-  type Point,
-  type Size,
-  type ViewId,
-  applyCameraKey,
-  sampleCamera,
-} from '../../model/index.ts';
+import { type Camera, applyCameraKey, sampleCamera } from '../../model/index.ts';
 import { NOMINAL_ZOOM, fitBounds, panBy } from '../../utils/index.ts';
 import { type useRegistry } from '../useRegistry.ts';
 import { type SceneCamera } from './useSceneCamera.ts';

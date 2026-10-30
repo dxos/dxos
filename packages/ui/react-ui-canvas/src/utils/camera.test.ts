@@ -4,7 +4,9 @@
 
 import { type ExpectStatic, describe, test } from 'vitest';
 
-import { type Bounds, type Camera, type ViewNode } from '../model/index.ts';
+import { type Bounds, type ViewNode } from '@dxos/scene';
+
+import { type Camera } from '../model/index.ts';
 import {
   MAX_ZOOM,
   MIN_ZOOM,

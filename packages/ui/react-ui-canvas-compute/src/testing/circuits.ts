@@ -4,7 +4,7 @@
 
 import { createSystemPrompt } from '@dxos/assistant';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
-import { type Point, type Size } from '@dxos/react-ui-canvas/scene';
+import { type Point, type Size } from '@dxos/scene';
 
 import {
   type ComputeShape,

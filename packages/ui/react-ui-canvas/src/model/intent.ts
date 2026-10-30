@@ -4,7 +4,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Bounds, type Intent, Layer, Link, NodeBase, Point, nodeBase } from './types.ts';
+import { Bounds, Layer, NodeBase, Point, nodeBase } from '@dxos/scene';
+
+import { type Intent, Link } from './types.ts';
 
 const isPoint = Schema.is(Point);
 const isBounds = Schema.is(Bounds);

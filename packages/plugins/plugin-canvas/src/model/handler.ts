@@ -25,18 +25,12 @@ import {
   type DiagramConnector,
   type DiagramNode,
   type DiagramShape,
-  type EllipseNode,
-  type Layer,
   type Link,
   type Node,
-  type NodeStyle,
-  type NoteNode,
-  type RectNode,
   between,
   createLink,
   defaultNodeRegistry,
   diagramNodeElements,
-  endpointNode,
   isDiagramBackdrop,
   isDiagramNode,
   isEllipseNode,
@@ -46,6 +40,7 @@ import {
   sortByZ,
   topZ,
 } from '@dxos/react-ui-canvas/scene';
+import { type EllipseNode, type Layer, type NodeStyle, type NoteNode, type RectNode, endpointNode } from '@dxos/scene';
 
 import {
   type DslIdentity,

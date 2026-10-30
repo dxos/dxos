@@ -5,8 +5,10 @@
 // Hierarchical drawings shared by the canvas's stories and tests: one square, a lattice, nested views shallow and deep,
 // a labelled frame, and objects placed across views.
 
+import { type InstanceNode, MAJOR_GRID, type ViewId } from '@dxos/scene';
+
 import { type Box, ViewBuilder, type ViewTree } from '../builder/index.ts';
-import { type InstanceNode, MAJOR_GRID, type Node, type View, type ViewId } from '../model/index.ts';
+import { type Node, type View } from '../model/index.ts';
 import { DEFAULT_LATTICE, DEFAULT_SHAPE_SIZE, TONES, cellBounds } from '../utils/index.ts';
 
 /**

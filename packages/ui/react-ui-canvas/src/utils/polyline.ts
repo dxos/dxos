@@ -1,8 +1,7 @@
+import { type Bounds, type Point, type PolylineNode, type Size } from '@dxos/scene';
 //
 // Copyright 2026 DXOS.org
 //
-
-import { type Bounds, type Point, type PolylineNode, type Size } from '../model/index.ts';
 
 /** How near a placed vertex a press must be, in screen px, to land on it: on the first, it closes the line. */
 export const VERTEX_SNAP_PX = 8;

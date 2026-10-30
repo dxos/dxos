@@ -12,21 +12,17 @@
 import * as Exit from 'effect/Exit';
 import * as Schema from 'effect/Schema';
 
+import { type Endpoint, type NodeBase, type NodeStyle, type Point, type ViewId, type ViewNode } from '@dxos/scene';
+
 import { defaultNodeRegistry } from '../components/index.ts';
 import {
   type BuiltinNode,
   type BuiltinNodeType,
-  type Endpoint,
   type Link,
   type LinkType,
   type Node,
-  type NodeBase,
   type NodeRegistry,
-  type NodeStyle,
-  type Point,
   type View,
-  type ViewId,
-  type ViewNode,
 } from '../model/index.ts';
 import { DEFAULT_LAYER, createNode, initialKeys } from '../utils/index.ts';
 

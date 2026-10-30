@@ -9,11 +9,12 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
+import { type Layer } from '@dxos/scene';
 
 import { ViewBuilder } from '../../../builder/index.ts';
 import { type InspectorMode, createCanvasAtoms } from '../../../engine/index.ts';
 import { useRegistry } from '../../../hooks/index.ts';
-import { type Layer, createMemoryStore } from '../../../model/index.ts';
+import { createMemoryStore } from '../../../model/index.ts';
 import { between } from '../../../utils/index.ts';
 import { Canvas } from '../../Canvas/index.ts';
 

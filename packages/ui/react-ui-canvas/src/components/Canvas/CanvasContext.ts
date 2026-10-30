@@ -6,6 +6,7 @@ import type * as Atom from 'effect/reactivity/Atom';
 
 import { type Timeline } from '@dxos/animation';
 import { createContext } from '@dxos/react-hooks';
+import { type Bounds, type Size, type ViewId } from '@dxos/scene';
 
 import {
   type CanvasAtoms,
@@ -29,15 +30,12 @@ import {
 } from '../../hooks/index.ts';
 import {
   type BackgroundGrid,
-  type Bounds,
   type Capabilities,
   type LinkRegistry,
   type NodeRegistry,
   type SceneLook,
-  type Size,
   type ThemeRegistry,
   type View,
-  type ViewId,
   type ViewStore,
 } from '../../model/index.ts';
 

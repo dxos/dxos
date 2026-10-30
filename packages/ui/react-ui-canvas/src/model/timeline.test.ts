@@ -14,11 +14,12 @@ import {
   setKey,
   trackValue,
 } from '@dxos/animation';
+import { InstanceNode, RectNode } from '@dxos/scene';
 
 import { ViewBuilder } from '../builder/index.ts';
 import { reduceIntent } from '../engine/index.ts';
 import { BASE_ANIMATABLE, applyCameraKey, cameraKey, sampleCamera, sampleView } from './timeline.ts';
-import { CAMERA_TARGET, InstanceNode, RectNode } from './types.ts';
+import { CAMERA_TARGET } from './types.ts';
 
 const {
   views: [base],

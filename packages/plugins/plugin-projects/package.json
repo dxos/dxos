@@ -226,6 +226,7 @@
     "@dxos/react-ui-search": "workspace:*",
     "@dxos/react-ui-task": "workspace:*",
     "@dxos/react-ui-trace": "workspace:*",
+    "@dxos/scene": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"

@@ -5,8 +5,7 @@
 import React, { Fragment } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
-
-import { type ViewId } from '../../model/index.ts';
+import { type ViewId } from '@dxos/scene';
 
 export type BreadcrumbsProps = {
   path: ViewId[];

@@ -13,26 +13,28 @@ import * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { Layout } from '@dxos/diagram';
+import {
+  type Layer,
+  type LayerId,
+  type LineStyle,
+  type LinkEnds,
+  type Point,
+  type Size,
+  endpointNode,
+} from '@dxos/scene';
 
 import {
   type BuiltinNodeType,
   type Capabilities,
   type CreateProps,
   type Intent,
-  type Layer,
-  type LayerId,
-  type LineStyle,
   type Link,
-  type LinkEnds,
   type LinkType,
   type Node,
   type NodeRegistry,
-  type Point,
-  type Size,
   type View,
   atomSource,
   combinedSource,
-  endpointNode,
 } from '../../model/index.ts';
 import {
   type Arrangement,

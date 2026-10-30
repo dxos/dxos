@@ -2,7 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Bounds, MAJOR_GRID_RATIO, type Node, type Size, type View } from '../model/index.ts';
+import { type Bounds, MAJOR_GRID_RATIO, type Size } from '@dxos/scene';
+
+import { type Node, type View } from '../model/index.ts';
 import { portalFrame } from './camera.ts';
 import { contentBounds } from './hit.ts';
 import { nodeBounds } from './shapes.ts';

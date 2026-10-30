@@ -4,8 +4,10 @@
 
 import { describe, test } from 'vitest';
 
+import { MAJOR_GRID } from '@dxos/scene';
+
 import { reduceIntent } from '../engine/index.ts';
-import { MAJOR_GRID, type Node, type View } from '../model/index.ts';
+import { type Node, type View } from '../model/index.ts';
 import { layoutView } from './layout.ts';
 
 const node = (id: string, center = { x: 0, y: 0 }, size = { width: 128, height: 64 }): Node => ({

@@ -14,16 +14,13 @@ import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
 import { createTimeline } from '@dxos/animation';
 import * as Button from '@dxos/react-ui/Button';
+import { type ElementId, type Layer, type LayerId, type ViewId } from '@dxos/scene';
 
 import { type CanvasController } from '../../engine/index.ts';
 import {
   type Capabilities,
-  type ElementId,
   type Intent,
-  type Layer,
-  type LayerId,
   type View,
-  type ViewId,
   type ViewStore,
   getElement,
   isInstanceNode,

@@ -17,19 +17,11 @@ import type * as Schema from 'effect/Schema';
 import { type ComponentType } from 'react';
 
 import { type FormFieldMap } from '@dxos/react-ui-form';
+import { type NodeBase, type Point, type Port, type Size } from '@dxos/scene';
 
 import { type PartEditing, type PartField } from '../utils/index.ts';
 import { type ViewStore } from './store.ts';
-import {
-  type LinkType,
-  type Node,
-  type NodeBase,
-  type NodeType,
-  type Point,
-  type Port,
-  type Size,
-  type View,
-} from './types.ts';
+import { type LinkType, type Node, type NodeType, type View } from './types.ts';
 
 export type NodeViewProps = {
   node: Node;

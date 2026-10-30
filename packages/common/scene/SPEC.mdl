@@ -840,3 +840,11 @@ decision D-89: The base is swept with 2D's own `boundsFromPoints` over the groun
   for: user:richburdon
   why: Sharing 2D's sweep keeps one rule for what a drag spans; a sphere's height is its diameter, so a second step would only contradict the base.
 ```
+
+```mdl
+decision D-90: The 2D element base lives in this package: react-ui-canvas's node and link base fields, `NodeStyle`, ports, endpoints, markers, layers, style classes and every node type not tied to `@dxos/diagram`, moved with their names and shapes; react-ui-canvas imports them. The diagram-coupled types follow when `@dxos/diagram`'s shapes move (plan 0.5), and the `class`/`style` rename lands with the data model (plan A.1). Fills in COMMON-CORE decision 12.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  why: A pure move keeps phase 0 mechanical and every consumer green; the renames and the diagram types each belong with the task that changes their data.
+```

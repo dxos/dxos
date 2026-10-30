@@ -1,3 +1,4 @@
+import { type Bounds, type Point } from '@dxos/scene';
 //
 // Copyright 2026 DXOS.org
 //
@@ -7,8 +8,6 @@
 // logo's outline is path data. Paths are flattened to polylines once; length and points along them are measured on
 // the polyline.
 //
-
-import { type Bounds, type Point } from '../model/index.ts';
 
 /** Segments a curve is cut into when flattened; enough that the error is far under a pixel at the sizes drawn. */
 const CURVE_STEPS = 16;

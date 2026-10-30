@@ -27,6 +27,9 @@
       "path": "../../common/random"
     },
     {
+      "path": "../../common/scene"
+    },
+    {
       "path": "../../common/test-utils"
     },
     {

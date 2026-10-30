@@ -9,9 +9,10 @@ import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
+import { type ElementId, type ViewId } from '@dxos/scene';
 
 import { reduceIntent } from '../../../engine/index.ts';
-import { type ElementId, type ViewId, type ViewMap } from '../../../model/index.ts';
+import { type ViewMap } from '../../../model/index.ts';
 import { createNestedDeepTree, createNestedSimpleTree, createObjectsTree } from '../../../testing/index.ts';
 import { type ViewPlace, type ViewRowSelection, restackZ } from '../../../utils/index.ts';
 import { withInspectorFrame } from '../../panels/testing.ts';

@@ -6,8 +6,9 @@ import { describe, test } from 'vitest';
 
 import { createTimeline, setKey } from '@dxos/animation';
 import { createEsbuildCompiler } from '@dxos/animation';
+import { type GeneratorNode } from '@dxos/scene';
 
-import { type GeneratorNode, type View } from '../model/index.ts';
+import { type View } from '../model/index.ts';
 import { pathBounds } from '../utils/index.ts';
 import { checkGenerator } from './check.ts';
 import { loadGenerator } from './compile.ts';

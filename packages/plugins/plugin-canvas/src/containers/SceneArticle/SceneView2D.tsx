@@ -33,7 +33,6 @@ import {
   type Projection,
   type SceneChoice,
   type SceneDisplay,
-  type ViewId,
   type ViewStore,
   createConstrainedProjection,
   createDynamicProjection,
@@ -47,7 +46,7 @@ import {
 import * as Banner from '@dxos/react-ui/Banner';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
-import { Scene } from '@dxos/scene';
+import { Scene, type ViewId } from '@dxos/scene';
 
 import {
   generatorCompiler,

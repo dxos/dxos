@@ -4116,6 +4116,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/ui-types':
+        specifier: workspace:*
+        version: link:../../ui/ui-types
     devDependencies:
       effect:
         specifier: 4.0.4
@@ -10314,6 +10317,9 @@ importers:
       '@dxos/react-ui-task':
         specifier: workspace:*
         version: link:../../ui/react-ui-task
+      '@dxos/scene':
+        specifier: workspace:*
+        version: link:../../common/scene
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -10426,6 +10432,9 @@ importers:
       '@dxos/react-ui-transcription':
         specifier: workspace:*
         version: link:../../ui/react-ui-transcription
+      '@dxos/scene':
+        specifier: workspace:*
+        version: link:../../common/scene
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -16085,6 +16094,9 @@ importers:
       '@dxos/react-ui-trace':
         specifier: workspace:*
         version: link:../../ui/react-ui-trace
+      '@dxos/scene':
+        specifier: workspace:*
+        version: link:../../common/scene
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
@@ -19864,6 +19876,9 @@ importers:
       '@dxos/react-ui-canvas':
         specifier: workspace:*
         version: link:../../ui/react-ui-canvas
+      '@dxos/scene':
+        specifier: workspace:*
+        version: link:../../common/scene
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -23641,6 +23656,9 @@ importers:
       '@dxos/react-ui-list':
         specifier: workspace:*
         version: link:../react-ui-list
+      '@dxos/scene':
+        specifier: workspace:*
+        version: link:../../common/scene
       '@dxos/ui-editor':
         specifier: workspace:*
         version: link:../ui-editor
@@ -23774,6 +23792,9 @@ importers:
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../react-ui-syntax-highlighter
+      '@dxos/scene':
+        specifier: workspace:*
+        version: link:../../common/scene
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
@@ -26620,6 +26641,9 @@ importers:
       '@dxos/brand':
         specifier: workspace:*
         version: link:../../packages/ui/brand
+      '@dxos/scene':
+        specifier: workspace:*
+        version: link:../../packages/common/scene
       '@fontsource/poiret-one':
         specifier: 'catalog:'
         version: 5.2.8

@@ -10,6 +10,16 @@
 
 import React, { memo } from 'react';
 
+import {
+  type Bounds,
+  type ElementId,
+  type Endpoint,
+  type LinkId,
+  type Point,
+  type Port,
+  endpointNode,
+  isPointEndpoint,
+} from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 import {
@@ -21,20 +31,12 @@ import {
   isMoving,
 } from '../../engine/index.ts';
 import {
-  type Bounds,
   type Capabilities,
-  type ElementId,
-  type Endpoint,
   type Link,
-  type LinkId,
   type Node,
   type NodeRegistry,
-  type Point,
-  type Port,
   type SplineLink,
   type View,
-  endpointNode,
-  isPointEndpoint,
   isPolylineNode,
   nodeDef,
 } from '../../model/index.ts';

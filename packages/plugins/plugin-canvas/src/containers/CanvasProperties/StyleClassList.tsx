@@ -5,10 +5,11 @@
 import * as Schema from 'effect/Schema';
 import React, { useMemo, useState } from 'react';
 
-import { type StyleClass, hueClasses } from '@dxos/react-ui-canvas/scene';
+import { hueClasses } from '@dxos/react-ui-canvas/scene';
 import { Form } from '@dxos/react-ui-form';
 import { OrderedList } from '@dxos/react-ui-list';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
+import { type StyleClass } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 const NameSchema = Schema.Struct({

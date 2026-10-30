@@ -6,11 +6,12 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type ReactNode, useMemo } from 'react';
 
 import { frameTimeAttribute } from '@dxos/animation';
+import { type Bounds, type ElementId, MAJOR_GRID_RATIO } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 import { isMoving } from '../../engine/index.ts';
 import { PREVIEW_NODE_ID } from '../../hooks/index.ts';
-import { type Bounds, type Camera, type ElementId, MAJOR_GRID_RATIO } from '../../model/index.ts';
+import { type Camera } from '../../model/index.ts';
 import { MIN_ZOOM, cameraTransform, visibleView } from '../../utils/index.ts';
 import { ControlFrame } from '../ControlFrame/index.ts';
 import { LatticeGrid } from '../LatticeGrid/index.ts';

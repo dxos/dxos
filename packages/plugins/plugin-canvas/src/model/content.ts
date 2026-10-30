@@ -13,18 +13,11 @@ import * as Schema from 'effect/Schema';
 import { type ContentMap } from '@dxos/diagram';
 import {
   DEFAULT_LAYER,
-  Layer,
-  LINE_STYLES,
   Link,
   type Node,
-  NodeBase,
-  StyleClass,
-  type StyleMap,
   type View,
-  type ViewId,
   ViewKind,
   type ViewMap,
-  type ViewNode,
   elementLayer,
   isViewNode,
   orphanViews,
@@ -32,6 +25,7 @@ import {
   withLegacyNodeType,
   withLegacyParams,
 } from '@dxos/react-ui-canvas/headless';
+import { Layer, LINE_STYLES, NodeBase, StyleClass, type StyleMap, type ViewId, type ViewNode } from '@dxos/scene';
 
 import { Canvas } from '#types';
 

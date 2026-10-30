@@ -4,7 +4,7 @@
 
 import { useMemo } from 'react';
 
-import { MAJOR_GRID_RATIO, type Point } from '../../model/index.ts';
+import { MAJOR_GRID_RATIO, type Point } from '@dxos/scene';
 
 /**
  * Grid levels a fourfold apart, from a quarter of the minor grid to far past the major one, so the levels

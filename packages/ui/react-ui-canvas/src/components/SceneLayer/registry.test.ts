@@ -5,18 +5,16 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
+import { type NodeBase, NoteNode, RectNode, nodeBase } from '@dxos/scene';
+
 import {
   type CreateProps,
-  type NodeBase,
   type NodeDef,
   type NodeRegistry,
-  NoteNode,
-  RectNode,
   View,
   createNodeRegistry,
   createViewSchema,
   isBuiltinNode,
-  nodeBase,
   nodeDef,
 } from '../../model/index.ts';
 import { createNode, nodeBounds, nodePorts, nominalSize } from '../../utils/index.ts';

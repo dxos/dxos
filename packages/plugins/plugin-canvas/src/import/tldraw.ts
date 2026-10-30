@@ -12,19 +12,26 @@ import * as Schema from 'effect/Schema';
 
 import {
   type BuiltinNode,
-  type CloudNode,
   DEFAULT_LAYER,
+  type Intent,
+  type Link,
+  type Node,
+  type View,
+  type ViewMap,
+  between,
+  composeSelection,
+  initialKeys,
+} from '@dxos/react-ui-canvas/headless';
+import {
+  type CloudNode,
   type EllipseNode,
   Endpoint,
   type HorizontalAlign,
-  type Intent,
   type Layer,
   type LineStyle,
-  type Link,
   type LinkEnds,
   MAJOR_GRID,
   type Marker,
-  type Node,
   type NodeStyle,
   type NodeTone,
   type NoteNode,
@@ -33,13 +40,8 @@ import {
   type RectNode,
   STYLE_HUES,
   type StyleHue,
-  type View,
   type ViewId,
-  type ViewMap,
-  between,
-  composeSelection,
-  initialKeys,
-} from '@dxos/react-ui-canvas/headless';
+} from '@dxos/scene';
 
 import { ROOT_VIEW_ID } from '../model/content.ts';
 

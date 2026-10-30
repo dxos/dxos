@@ -5,9 +5,9 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation } from '@dxos/echo';
-import { LayerField, STYLE_FIELD_OVERRIDES, STYLE_FIELDS, styleFields } from '@dxos/react-ui-canvas';
+import { LayerField, STYLE_FIELD_OVERRIDES, STYLE_FIELDS } from '@dxos/react-ui-canvas';
 import { type FormFieldMap, type FormFieldOverride, NumberLayoutAnnotation, StepAnnotation } from '@dxos/react-ui-form';
-import { type LayoutIntent, Scene } from '@dxos/scene';
+import { type LayoutIntent, Scene, styleFields } from '@dxos/scene';
 import { VECTOR_AXIS_LAYOUT } from '@dxos/ui-types';
 
 /** An axis as the form edits it: clearable while typing, and stepped by `step` with the stepper. */

@@ -15,6 +15,7 @@ import React, { type MouseEvent, useCallback, useEffect, useLayoutEffect, useMem
 
 import { type Timeline } from '@dxos/animation';
 import { useClock, useExposedClock } from '@dxos/react-ui-animation';
+import { DEFAULT_GRID, MAJOR_GRID_RATIO } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 import { animate, createCanvasAtoms, noHistory, readonlyCapabilities } from '../../engine/index.ts';
@@ -43,7 +44,7 @@ import {
   useViewport,
   useViewProjection,
 } from '../../hooks/index.ts';
-import { DEFAULT_GRID, MAJOR_GRID_RATIO, defaultThemeRegistry, keyAction, nodeAnimatable } from '../../model/index.ts';
+import { defaultThemeRegistry, keyAction, nodeAnimatable } from '../../model/index.ts';
 import { fitFrame, visibleView } from '../../utils/index.ts';
 import { InspectorPanel } from '../panels/index.ts';
 import { defaultLinkRegistry, defaultNodeRegistry } from '../SceneLayer/index.ts';

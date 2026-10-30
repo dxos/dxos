@@ -9,16 +9,10 @@ import { useObject } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import type * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
-import {
-  Canvas,
-  type NodeRegistry,
-  type ViewId,
-  type ViewStore,
-  createLatticeProjection,
-} from '@dxos/react-ui-canvas/scene';
+import { Canvas, type NodeRegistry, type ViewStore, createLatticeProjection } from '@dxos/react-ui-canvas/scene';
 import { Scene3DView } from '@dxos/react-ui-scene';
 import * as Card from '@dxos/react-ui/Card';
-import { Scene } from '@dxos/scene';
+import { Scene, type ViewId } from '@dxos/scene';
 
 import { canvasDimension, canvasRecordOf, openScene } from '#model';
 import { Canvas as CanvasFormat } from '#types';

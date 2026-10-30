@@ -6,11 +6,12 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
-import { type Arrangement, DEFAULT_FORCE, type ForceOptions, type Point } from '@dxos/react-ui-canvas/scene';
+import { type Arrangement, DEFAULT_FORCE, type ForceOptions } from '@dxos/react-ui-canvas/scene';
 import * as Button from '@dxos/react-ui/Button';
 import * as Input from '@dxos/react-ui/Input';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
+import { type Point } from '@dxos/scene';
 
 import { translations } from '#translations';
 

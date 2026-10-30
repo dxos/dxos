@@ -16,23 +16,18 @@ import {
   setKey,
   timelineFps,
 } from '@dxos/animation';
+import { type Bounds, type ElementId, type Point, type Size, type StyleClass, type ViewId } from '@dxos/scene';
 
 import {
   type BackgroundGrid,
-  type Bounds,
   type Camera,
   type Capabilities,
-  type ElementId,
   type Intent,
   type Node,
   type NodeRegistry,
   OPACITY_PATH,
-  type Point,
-  type Size,
-  type StyleClass,
   type Tool,
   type View,
-  type ViewId,
   type ViewMap,
   type ViewStore,
   getElement,

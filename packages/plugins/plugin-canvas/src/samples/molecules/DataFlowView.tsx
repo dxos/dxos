@@ -7,13 +7,13 @@ import React, { useCallback, useContext, useEffect, useLayoutEffect, useMemo, us
 
 import {
   type BackgroundGrid,
-  type Bounds,
   Canvas,
   createMemoryStore,
   defaultThemeRegistry,
   resolveLook,
 } from '@dxos/react-ui-canvas/scene';
 import { useThemeContext } from '@dxos/react-ui/Theme';
+import { type Bounds } from '@dxos/scene';
 
 import {
   DATA_FLOW_VIEW_ID,

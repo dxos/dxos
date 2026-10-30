@@ -11,15 +11,9 @@
 import * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 
-import {
-  type ElementId,
-  type VersionChange,
-  type VersionedSource,
-  type ViewId,
-  patchSource,
-  recordChanges,
-  unionPaths,
-} from '../model/index.ts';
+import { type ElementId, type ViewId } from '@dxos/scene';
+
+import { type VersionChange, type VersionedSource, patchSource, recordChanges, unionPaths } from '../model/index.ts';
 import { type Projection } from './projection.ts';
 
 /** Where an edit happened: the View path it was made in (inside an isolated Object), and the selection before it. */

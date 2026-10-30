@@ -20,6 +20,9 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../ui/ui-types"
+    },
+    {
       "path": "../animation"
     }
   ]

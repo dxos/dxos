@@ -10,7 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { Bounds } from '@dxos/react-ui-canvas/headless';
+import { Bounds } from '@dxos/scene';
 
 import * as Generator from './Generator.ts';
 

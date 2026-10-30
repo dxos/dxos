@@ -6,7 +6,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type CreateProps, type NodeDefSpec, type NodeType, nodeBase } from '@dxos/react-ui-canvas/scene';
+import { type CreateProps, type NodeDefSpec, type NodeType } from '@dxos/react-ui-canvas/scene';
+import { nodeBase } from '@dxos/scene';
 
 /** The canvas node type a UML class is stored as. */
 export const TYPE: NodeType = 'class';

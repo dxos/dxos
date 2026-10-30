@@ -4,7 +4,8 @@
 
 import React, { memo } from 'react';
 
-import { type Bounds } from '../../model/index.ts';
+import { type Bounds } from '@dxos/scene';
+
 import { type LatticeSpec, cellBounds } from '../../utils/index.ts';
 
 /** Above this many cells the lattice reads as texture rather than places, so it is not drawn. */

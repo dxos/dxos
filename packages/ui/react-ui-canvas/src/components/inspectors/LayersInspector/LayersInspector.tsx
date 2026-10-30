@@ -9,8 +9,8 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Editable from '@dxos/react-ui/Editable';
 import * as Menu from '@dxos/react-ui/Menu';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
+import { type Layer, type LayerId } from '@dxos/scene';
 
-import { type Layer, type LayerId } from '../../../model/index.ts';
 import { InspectorMenu } from '../InspectorMenu/index.ts';
 import { type InspectorProps } from '../types.ts';
 

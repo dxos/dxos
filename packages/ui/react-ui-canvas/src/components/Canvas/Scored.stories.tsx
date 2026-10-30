@@ -13,11 +13,12 @@ import { Diagnostics, type Scene as Diagram, Mermaid, MermaidEngine, Objective, 
 import { BASIC } from '@dxos/diagram/testing';
 import * as Layout from '@dxos/react-ui/Layout';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
+import { type ViewId } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 import { ViewBuilder } from '../../builder/index.ts';
 import { type CanvasAtoms, createCanvasAtoms } from '../../engine/index.ts';
-import { type View, type ViewId, type ViewStore, createMemoryStore } from '../../model/index.ts';
+import { type View, type ViewStore, createMemoryStore } from '../../model/index.ts';
 import { createModelViewTree } from '../../testing/index.ts';
 import { diagnosticElements, toDiagramObjects } from '../../utils/index.ts';
 import { defaultNodeRegistry } from '../SceneLayer/index.ts';

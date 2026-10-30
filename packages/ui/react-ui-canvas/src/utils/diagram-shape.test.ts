@@ -5,8 +5,9 @@
 import { describe, test } from 'vitest';
 
 import { SvgFile } from '@dxos/diagram';
+import { type Point } from '@dxos/scene';
 
-import { type DiagramNode, type Link, type Point } from '../model/index.ts';
+import { type DiagramNode, type Link } from '../model/index.ts';
 import { diagramLinkElements, diagramNodeMarkup, diagramRoute } from './diagram-shape.ts';
 
 const source = { x: 0, y: 0, width: 192, height: 96 };

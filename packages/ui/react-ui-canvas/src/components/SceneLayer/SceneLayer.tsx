@@ -25,26 +25,28 @@ import { type EffectStatus } from '@dxos/animation';
 import { frameTimeAttribute } from '@dxos/animation';
 import { SvgFile } from '@dxos/diagram';
 import * as Button from '@dxos/react-ui/Button';
-import { mx } from '@dxos/ui-theme';
-
-import { type GeneratorFrames, type Shape } from '../../generator/index.ts';
-import { type ElementHandlers, useSceneLook } from '../../hooks/index.ts';
 import {
   type ElementId,
   type LineStyle,
   LINK_FONT_SIZE,
   type LinkId,
-  type LinkKind,
   MAJOR_GRID_RATIO,
   type Marker,
+  type NodeId,
+  type StyleMap,
+} from '@dxos/scene';
+import { mx } from '@dxos/ui-theme';
+
+import { type GeneratorFrames, type Shape } from '../../generator/index.ts';
+import { type ElementHandlers, useSceneLook } from '../../hooks/index.ts';
+import {
+  type LinkKind,
   NO_STYLES,
   type Node,
   type NodeDef,
-  type NodeId,
   type NodeRegistry,
   type NodeViewProps,
   RADIUS_PX,
-  type StyleMap,
   type View,
   type ViewStore,
   isDiagramNode,

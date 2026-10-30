@@ -4,8 +4,10 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
+import { type Bounds, type Endpoint, type Point, isPointEndpoint } from '@dxos/scene';
+
 import { type Drag, type Projection, reduceIntent } from '../../engine/index.ts';
-import { type Bounds, type Endpoint, type Intent, type Point, type View, isPointEndpoint } from '../../model/index.ts';
+import { type Intent, type View } from '../../model/index.ts';
 import { createLink, duplicateSelection, hasVertices, nodeBounds, refitPolyline, topZ } from '../../utils/index.ts';
 import { type PointerMachine, PREVIEW_NODE_ID, isLinkDrawn } from './usePointerMachine.ts';
 

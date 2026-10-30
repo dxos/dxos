@@ -4,7 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { MAJOR_GRID, sortByZ } from '@dxos/react-ui-canvas/headless';
+import { sortByZ } from '@dxos/react-ui-canvas/headless';
+import { MAJOR_GRID } from '@dxos/scene';
 
 import { frameWithChildren, groupAndRotation, shapesAndArrow, textNoteAndFreeArrow, twoPages } from './testing.ts';
 import { nearestHue, tldrawToViews } from './tldraw.ts';

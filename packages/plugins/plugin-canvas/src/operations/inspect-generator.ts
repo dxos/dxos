@@ -7,7 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, type Ref } from '@dxos/echo';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { type GeneratorNode, type View, checkGenerator } from '@dxos/react-ui-canvas/headless';
+import { type View, checkGenerator } from '@dxos/react-ui-canvas/headless';
+import { type GeneratorNode } from '@dxos/scene';
 
 import { CanvasOperation, Generator } from '#types';
 

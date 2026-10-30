@@ -5,21 +5,27 @@
 import {
   type BuiltinNodeType,
   DEFAULT_LAYER,
-  type Endpoint,
   type Link,
   type LinkType,
   type MemoryViewStore,
   type Node,
-  type NodeStyle,
-  STYLE_HUES,
-  type StyleHue,
   type View,
-  type ViewId,
   createMemoryStore,
   createNode,
   initialKeys,
 } from '@dxos/react-ui-canvas/headless';
-import { type Resolved2D, type Scene, resolveLayout2D, rootScene, sceneLayout } from '@dxos/scene';
+import {
+  type Endpoint,
+  type NodeStyle,
+  type Resolved2D,
+  type Scene,
+  STYLE_HUES,
+  type StyleHue,
+  type ViewId,
+  resolveLayout2D,
+  rootScene,
+  sceneLayout,
+} from '@dxos/scene';
 
 /** The scene kinds the 2D renderer draws as react-ui-canvas nodes of the same name. */
 const NODE_TYPES: Readonly<Record<string, BuiltinNodeType>> = {

@@ -8,14 +8,9 @@
 // pixels, so a lattice scene is stored exactly as a freehand one; the rule lives here, not in the data.
 //
 
-import {
-  type Bounds,
-  type Capabilities,
-  type ElementId,
-  type Intent,
-  type Node,
-  type View,
-} from '../../model/index.ts';
+import { type Bounds, type ElementId } from '@dxos/scene';
+
+import { type Capabilities, type Intent, type Node, type View } from '../../model/index.ts';
 import {
   DEFAULT_LATTICE,
   type LatticeSpec,

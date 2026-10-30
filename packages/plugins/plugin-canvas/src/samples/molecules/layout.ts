@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Node, type RectNode, type View, initialKeys } from '@dxos/react-ui-canvas/scene';
+import { type Node, type View, initialKeys } from '@dxos/react-ui-canvas/scene';
+import { type RectNode } from '@dxos/scene';
 
 import { type Point } from './molecule.ts';
 

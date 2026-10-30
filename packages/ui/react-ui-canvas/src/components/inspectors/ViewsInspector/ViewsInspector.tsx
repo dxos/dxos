@@ -17,10 +17,11 @@ import {
 import * as Button from '@dxos/react-ui/Button';
 import * as Input from '@dxos/react-ui/Input';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
+import { type ElementId, type ViewId } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 import { useRegistry } from '../../../hooks/index.ts';
-import { type ElementId, type ViewId, type ViewMap } from '../../../model/index.ts';
+import { type ViewMap } from '../../../model/index.ts';
 import {
   type ViewPlace,
   type ViewReorder,

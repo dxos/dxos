@@ -7,16 +7,9 @@
 // hit. A scene that names no layers has one, implicitly, which the first layer edit makes real.
 //
 
-import {
-  type Element,
-  type Intent,
-  type Layer,
-  type LayerId,
-  type Link,
-  type Node,
-  type View,
-  endpointNode,
-} from '../model/index.ts';
+import { type Layer, type LayerId, endpointNode } from '@dxos/scene';
+
+import { type Element, type Intent, type Link, type Node, type View } from '../model/index.ts';
 import { between, sortByZ } from './order.ts';
 
 /** The layer of a scene that names none: every element is on it. */

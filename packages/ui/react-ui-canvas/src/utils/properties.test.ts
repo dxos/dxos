@@ -6,8 +6,9 @@ import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { getPropertySignatures } from '@dxos/effect/SchemaAST';
+import { EllipseNode, NoteNode, RectNode } from '@dxos/scene';
 
-import { EllipseNode, LineLink, NoteNode, RectNode } from '../model/index.ts';
+import { LineLink } from '../model/index.ts';
 import { commonSchema, mergeValues, patchValues } from './properties.ts';
 
 const names = (schema: Schema.Codec<any, any> | undefined) =>

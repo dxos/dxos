@@ -4,7 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { DEFAULT_GRID } from '../../model/index.ts';
+import { DEFAULT_GRID } from '@dxos/scene';
+
 import { resizeBounds } from '../../utils/index.ts';
 import { sceneSnap } from './useSceneSnap.ts';
 

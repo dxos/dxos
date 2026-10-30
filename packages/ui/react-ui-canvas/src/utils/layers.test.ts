@@ -4,9 +4,11 @@
 
 import { describe, test } from 'vitest';
 
+import { type Layer } from '@dxos/scene';
+
 import { ViewBuilder } from '../builder/index.ts';
 import { reduceIntent } from '../engine/index.ts';
-import { type Layer, type View } from '../model/index.ts';
+import { type View } from '../model/index.ts';
 import {
   DEFAULT_LAYER,
   createLayer,

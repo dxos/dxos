@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { type ContentMap } from '@dxos/diagram';
 import { Database, Obj, type Ref } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { type ViewId } from '@dxos/react-ui-canvas/headless';
+import { type ViewId } from '@dxos/scene';
 
 import { Canvas } from '#types';
 

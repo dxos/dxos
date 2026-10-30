@@ -4,16 +4,10 @@
 
 import { type MouseEvent, type PointerEvent, useCallback, useEffect, useMemo, useRef } from 'react';
 
+import { type LinkId } from '@dxos/scene';
+
 import { type CanvasAtoms, type NavigationCommands, type Projection } from '../../engine/index.ts';
-import {
-  type Capabilities,
-  type Link,
-  type LinkId,
-  type Node,
-  type NodeRegistry,
-  type View,
-  nodeDef,
-} from '../../model/index.ts';
+import { type Capabilities, type Link, type Node, type NodeRegistry, type View, nodeDef } from '../../model/index.ts';
 import { type PartKey, hitTest, partText, partValues } from '../../utils/index.ts';
 import { type useRegistry } from '../useRegistry.ts';
 import { SCENE_OVERLAY_ATTRIBUTE } from '../useWheel.ts';

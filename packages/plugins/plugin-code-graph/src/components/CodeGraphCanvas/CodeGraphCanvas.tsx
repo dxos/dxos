@@ -25,23 +25,21 @@ import {
   type DynamicOptions,
   type FreehandProjectionOptions,
   type GraphModel,
-  type Layer,
   type Node,
   type NodeViewProps,
   type Overlay,
-  type Point,
   createCanvasAtoms,
   createDynamicProjection,
   createMemoryStore,
   createNodeRegistry,
   defaultNodePrototypes,
   defaultNodeTypes,
-  nodeBase,
 } from '@dxos/react-ui-canvas/scene';
 import * as HoverCard from '@dxos/react-ui/HoverCard';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
+import { type Layer, type Point, nodeBase } from '@dxos/scene';
 
 import { Kind, Model, Semantic } from '#graph';
 import { type CodeGraph } from '#types';

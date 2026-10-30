@@ -11,9 +11,9 @@
 import type * as Types from 'effect/Types';
 
 import { type Database, Obj, Ref } from '@dxos/echo';
-import { type View, type ViewId, type ViewMap } from '@dxos/react-ui-canvas/headless';
+import { type View, type ViewMap } from '@dxos/react-ui-canvas/headless';
 import { fromCanvasView } from '@dxos/react-ui-scene/canvas';
-import { Scene, reachedObjects } from '@dxos/scene';
+import { Scene, type ViewId, reachedObjects } from '@dxos/scene';
 
 import { type Canvas } from '#types';
 

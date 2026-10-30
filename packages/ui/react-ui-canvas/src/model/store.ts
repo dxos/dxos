@@ -11,8 +11,10 @@ import * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 
+import { type StyleMap, type ViewId } from '@dxos/scene';
+
 import { withoutOrphans } from './orphans.ts';
-import { OpenView, type StyleMap, type View, type ViewId, withLegacyView } from './types.ts';
+import { OpenView, type View, withLegacyView } from './types.ts';
 import { type VersionedSource, atomSource } from './versioned.ts';
 
 export type ViewMap = Readonly<Record<ViewId, View>>;

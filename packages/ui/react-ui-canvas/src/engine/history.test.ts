@@ -6,8 +6,10 @@ import * as Atom from 'effect/reactivity/Atom';
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
+import { type NodeBase } from '@dxos/scene';
+
 import { defaultNodeRegistry } from '../components/index.ts';
-import { type Intent, type NodeBase, createMemoryStore, storeVersions } from '../model/index.ts';
+import { type Intent, createMemoryStore, storeVersions } from '../model/index.ts';
 import { type HistoryContext, createLocalHistory, createLocalStacks, withHistory } from './history.ts';
 import { type Projection, createFreehandProjection } from './projection.ts';
 import { type ConstrainedModel, createConstrainedProjection } from './projections/index.ts';

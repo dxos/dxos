@@ -8,8 +8,7 @@ import React from 'react';
 import { Form, type FormFieldRenderer, useFormFieldState } from '@dxos/react-ui-form';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
-
-import { type HorizontalAlign, NodeStyle, type VerticalAlign } from '../../../model/index.ts';
+import { type HorizontalAlign, NodeStyle, type VerticalAlign } from '@dxos/scene';
 
 export type IconToggleOption<T extends string> = { value: T; icon: string; label: string };
 

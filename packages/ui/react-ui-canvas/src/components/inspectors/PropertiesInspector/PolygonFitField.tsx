@@ -5,8 +5,7 @@
 import React from 'react';
 
 import { Form, type FormFieldRenderer, SelectControl, useFormFieldState } from '@dxos/react-ui-form';
-
-import { POLYGON_FITS, type PolygonFit, PolygonParams } from '../../../model/index.ts';
+import { POLYGON_FITS, type PolygonFit, PolygonParams } from '@dxos/scene';
 
 const FIT_LABELS: Record<PolygonFit, string> = { frame: 'Frame', circle: 'Circle' };
 

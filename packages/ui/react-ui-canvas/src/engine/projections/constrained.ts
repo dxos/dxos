@@ -12,6 +12,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { Layout } from '@dxos/diagram';
+import { type NodeStyle, type Point, type Size } from '@dxos/scene';
 
 import {
   type BuiltinNodeType,
@@ -19,9 +20,6 @@ import {
   type Intent,
   type Node,
   type NodeRegistry,
-  type NodeStyle,
-  type Point,
-  type Size,
   type View,
   atomSource,
   isBuiltinNode,

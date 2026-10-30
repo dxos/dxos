@@ -12,11 +12,12 @@ import { translations as formTranslations } from '@dxos/react-ui-form/translatio
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
+import { type ElementId, type Layer } from '@dxos/scene';
 
 import { ViewBuilder } from '../../../builder/index.ts';
 import { createCanvasAtoms } from '../../../engine/index.ts';
 import { useCanvasHistory, useRegistry, useViewProjection } from '../../../hooks/index.ts';
-import { type ElementId, type Layer, type View, createMemoryStore, getElement } from '../../../model/index.ts';
+import { type View, createMemoryStore, getElement } from '../../../model/index.ts';
 import { between } from '../../../utils/index.ts';
 import { InspectorFrame } from '../../panels/testing.ts';
 import { PropertiesInspector } from './PropertiesInspector.tsx';

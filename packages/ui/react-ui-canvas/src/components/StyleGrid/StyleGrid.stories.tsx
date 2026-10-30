@@ -7,15 +7,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { type NodeTone, type StyleHue } from '@dxos/scene';
 
-import {
-  type NodeTone,
-  type StyleHue,
-  THEME_IDS,
-  defaultThemeRegistry,
-  resolveLook,
-  styleVariant,
-} from '../../model/index.ts';
+import { THEME_IDS, defaultThemeRegistry, resolveLook, styleVariant } from '../../model/index.ts';
 import { DisplayPanel } from '../panels/index.ts';
 import { StyleGrid, type StyleGridProps } from './StyleGrid.tsx';
 

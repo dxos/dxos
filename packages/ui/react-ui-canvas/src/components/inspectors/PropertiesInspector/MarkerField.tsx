@@ -7,8 +7,7 @@ import React, { createContext, useContext } from 'react';
 
 import { Form, type FormFieldRenderer, SelectControl, useFormFieldState } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
-
-import { Marker } from '../../../model/index.ts';
+import { Marker } from '@dxos/scene';
 
 /** Unset: the link draws no marker at that end, stored as no value. */
 const NONE_VALUE = 'none';

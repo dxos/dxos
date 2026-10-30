@@ -15,7 +15,6 @@ import {
   FLOATING_BAR,
   InspectorPanel,
   InspectorSection,
-  type Layer,
   LayersContext,
   LayersInspector,
   ObjectsInspector,
@@ -48,6 +47,7 @@ import {
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import {
+  type Layer,
   type LayoutIntent,
   Scene,
   bounds3D,

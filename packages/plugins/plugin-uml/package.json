@@ -84,6 +84,7 @@
     "@dxos/plugin-canvas": "workspace:*",
     "@dxos/plugin-illustrator": "workspace:*",
     "@dxos/react-ui-canvas": "workspace:*",
+    "@dxos/scene": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },

@@ -1,8 +1,7 @@
+import { type PolygonFit, type Size } from '@dxos/scene';
 //
 // Copyright 2026 DXOS.org
 //
-
-import { type PolygonFit, type Size } from '../model/index.ts';
 
 /** Bumps around a cloud's outline when the node sets none. */
 export const DEFAULT_CLOUD_BUMPS = 9;

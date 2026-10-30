@@ -12,7 +12,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { LINE_STYLES, StyleHue } from './types.ts';
+import { LINE_STYLES, StyleHue } from '@dxos/scene';
 
 /**
  * How a hue fills a node. `hue-clear`, `hue-strong`, `hue-role` and `hue-light` are the canvas's own tones (outline,

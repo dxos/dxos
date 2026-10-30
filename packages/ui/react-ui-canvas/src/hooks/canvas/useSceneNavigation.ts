@@ -4,18 +4,10 @@
 
 import { useCallback, useEffect, useMemo } from 'react';
 
+import { type Bounds, type Size, type ViewId } from '@dxos/scene';
+
 import { type CanvasAtoms, type Drag, type NavigationCommands } from '../../engine/index.ts';
-import {
-  type Bounds,
-  type Camera,
-  type Node,
-  type NodeRegistry,
-  type Size,
-  type View,
-  type ViewId,
-  isViewNode,
-  nodeDef,
-} from '../../model/index.ts';
+import { type Camera, type Node, type NodeRegistry, type View, isViewNode, nodeDef } from '../../model/index.ts';
 import { coverage, nodeBounds } from '../../utils/index.ts';
 import { type useRegistry } from '../useRegistry.ts';
 import { type SceneCamera } from './useSceneCamera.ts';

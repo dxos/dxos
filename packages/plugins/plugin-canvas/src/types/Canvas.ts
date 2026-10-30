@@ -7,7 +7,8 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { BackgroundGrid, StyleClass } from '@dxos/react-ui-canvas/headless';
+import { BackgroundGrid } from '@dxos/react-ui-canvas/headless';
+import { StyleClass } from '@dxos/scene';
 
 /** The scene revision this plugin reads and writes; a canvas at a later one was written by a newer plugin. */
 export const SCENE_REVISION = 2;

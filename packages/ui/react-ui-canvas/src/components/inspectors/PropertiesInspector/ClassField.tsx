@@ -5,8 +5,7 @@
 import React, { createContext, useContext, useMemo } from 'react';
 
 import { Form, type FormFieldRenderer, SelectControl } from '@dxos/react-ui-form';
-
-import { type StyleMap } from '../../../model/index.ts';
+import { type StyleMap } from '@dxos/scene';
 
 /** The drawing's style classes, for the class field; unset when the host offers none, so the field is hidden. */
 export const StyleClassesContext = createContext<StyleMap | undefined>(undefined);

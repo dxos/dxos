@@ -4,6 +4,8 @@
 
 import { type KeyboardEvent, useCallback } from 'react';
 
+import { type ElementId } from '@dxos/scene';
+
 import {
   type CanvasAtoms,
   type CanvasHistory,
@@ -15,7 +17,6 @@ import {
 } from '../../engine/index.ts';
 import {
   type Capabilities,
-  type ElementId,
   type LinkRegistry,
   type NodeRegistry,
   type View,

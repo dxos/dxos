@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Layer, type ObjectEntry, type ViewTreeItem } from '@dxos/react-ui-canvas';
-import { type Scene, findLayout, resolveLayout, rootScene, sceneLayout } from '@dxos/scene';
+import { type ObjectEntry, type ViewTreeItem } from '@dxos/react-ui-canvas';
+import { type Layer, type Scene, findLayout, resolveLayout, rootScene, sceneLayout } from '@dxos/scene';
 
 // The 2D inspectors (Views, Objects, Layers) read their rows from these over a 3D document, so both dimensions share
 // one component each; the 2D side builds the same rows from its View store.

@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Dsl } from '@dxos/diagram';
 import { EXEMPLAR_NAMES, EXEMPLARS } from '@dxos/diagram/testing';
-import { MAJOR_GRID, type Node, type View, withLegacyView } from '@dxos/react-ui-canvas';
+import { type Node, type View, withLegacyView } from '@dxos/react-ui-canvas';
 import {
   createLatticeTree,
   createLinkedPairTree,
@@ -19,7 +19,7 @@ import {
   createSquareTree,
   createViewTree,
 } from '@dxos/react-ui-canvas/testing';
-import { type Scene, readDocument, toEcho } from '@dxos/scene';
+import { MAJOR_GRID, type Scene, readDocument, toEcho } from '@dxos/scene';
 
 import { fromCanvasView, toCanvasView, toCanvasViews } from './adapter.ts';
 

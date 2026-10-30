@@ -5,6 +5,7 @@
 import { useMemo, useRef } from 'react';
 
 import { type Timeline } from '@dxos/animation';
+import { type Bounds, type Size } from '@dxos/scene';
 
 import {
   type CameraMotion,
@@ -17,7 +18,7 @@ import {
   type ViewFit,
   createCanvasController,
 } from '../../engine/index.ts';
-import { type Bounds, type NodeRegistry, type Size, type ViewStore } from '../../model/index.ts';
+import { type NodeRegistry, type ViewStore } from '../../model/index.ts';
 import { type useRegistry } from '../useRegistry.ts';
 
 /** What the controller's commands read of the view when they run. */

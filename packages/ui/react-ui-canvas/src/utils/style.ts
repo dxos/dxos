@@ -8,21 +8,24 @@
 //
 
 import {
-  DEFAULT_LOOK,
   type HorizontalAlign,
-  type Link,
-  type LookTone,
-  type Node,
   type NodeStyle,
-  type NodeSurface,
   type NodeTone,
-  type Radius,
-  type SceneLook,
   STYLE_HUES,
   type StyleHue,
   type StyleMap,
-  type StyleVariant,
   type VerticalAlign,
+} from '@dxos/scene';
+
+import {
+  DEFAULT_LOOK,
+  type Link,
+  type LookTone,
+  type Node,
+  type NodeSurface,
+  type Radius,
+  type SceneLook,
+  type StyleVariant,
   isEllipseNode,
   isViewNode,
   showsContents,

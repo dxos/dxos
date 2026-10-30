@@ -9,7 +9,9 @@
 
 import { interpolateZoom } from 'd3';
 
-import { type Bounds, type Camera, type Node, type Point, type Size } from '../model/index.ts';
+import { type Bounds, type Point, type Size } from '@dxos/scene';
+
+import { type Camera, type Node } from '../model/index.ts';
 import { nodeBounds } from './shapes.ts';
 
 export const MIN_ZOOM = 1 / 32;

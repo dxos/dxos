@@ -20,16 +20,15 @@ import {
   type Node,
   type NodeViewProps,
   type Overlay,
-  type Point,
   createCanvasAtoms,
   createDynamicProjection,
   createMemoryStore,
   createNodeRegistry,
   defaultNodePrototypes,
   defaultNodeTypes,
-  nodeBase,
 } from '@dxos/react-ui-canvas/scene';
 import * as Layout from '@dxos/react-ui/Layout';
+import { type Point, nodeBase } from '@dxos/scene';
 
 import { FeatureCard, type FeatureLookup, type FeatureModel, makeFeatureLookup } from '../FeatureCard/index.ts';
 

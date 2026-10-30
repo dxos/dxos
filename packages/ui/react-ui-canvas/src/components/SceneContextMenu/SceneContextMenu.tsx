@@ -6,8 +6,8 @@ import React, { type ReactNode, useRef } from 'react';
 
 import * as Menu from '@dxos/react-ui/Menu';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
+import { type Point } from '@dxos/scene';
 
-import { type Point } from '../../model/index.ts';
 import { type SceneMenuCommand, type SceneMenuItem } from '../../utils/index.ts';
 
 export type SceneContextMenuProps = {

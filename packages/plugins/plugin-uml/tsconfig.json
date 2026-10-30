@@ -19,6 +19,9 @@
   ],
   "references": [
     {
+      "path": "../../common/scene"
+    },
+    {
       "path": "../../common/util"
     },
     {

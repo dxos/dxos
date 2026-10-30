@@ -4,18 +4,10 @@
 
 import { useMemo, useRef } from 'react';
 
+import { type ElementId, type InstanceNode, type NodeId, type Size, type ViewId } from '@dxos/scene';
+
 import { type CanvasAtoms, type CanvasHistory, type NavigationCommands, type Projection } from '../../engine/index.ts';
-import {
-  type ElementId,
-  type InstanceNode,
-  type Intent,
-  type NodeId,
-  type Size,
-  type View,
-  type ViewId,
-  type ViewStore,
-  isInstanceNode,
-} from '../../model/index.ts';
+import { type Intent, type View, type ViewStore, isInstanceNode } from '../../model/index.ts';
 import {
   activeLayer,
   compositeBounds,

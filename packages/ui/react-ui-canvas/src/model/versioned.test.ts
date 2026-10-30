@@ -5,8 +5,9 @@
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
+import { type NodeBase } from '@dxos/scene';
+
 import { createMemoryStore, storeVersions, updateView } from './store.ts';
-import { type NodeBase } from './types.ts';
 import { diffPaths, patchSource, readPath, recordChanges, sameValue, writePath } from './versioned.ts';
 
 const box = (id: string, x = 0): NodeBase => ({

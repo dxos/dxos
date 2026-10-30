@@ -8,8 +8,8 @@ import React, { useState } from 'react';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
+import { type ViewId } from '@dxos/scene';
 
-import { type ViewId } from '../../../model/index.ts';
 import { createObjectsTree } from '../../../testing/index.ts';
 import { compositeViews, instanceCounts } from '../../../utils/index.ts';
 import { withInspectorFrame } from '../../panels/testing.ts';

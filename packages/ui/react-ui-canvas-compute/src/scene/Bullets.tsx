@@ -12,7 +12,8 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useEffect, useRef } from 'react';
 
 import { DEFAULT_OUTPUT } from '@dxos/conductor';
-import { type Projection, type View, endpointNode } from '@dxos/react-ui-canvas/scene';
+import { type Projection, type View } from '@dxos/react-ui-canvas/scene';
+import { endpointNode } from '@dxos/scene';
 
 import { type ComputeGraphController } from '../graph/index.ts';
 import { parseAnchorId } from '../shapes/index.ts';

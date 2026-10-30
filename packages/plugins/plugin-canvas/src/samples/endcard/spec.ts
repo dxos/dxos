@@ -10,19 +10,8 @@
 
 import { type Easing } from '@dxos/animation';
 import { DXOS_HORIZONTAL_LOCKUP, DXOS_LOCKUP_GLYPHS, type DXOSLockupGlyph } from '@dxos/brand/paths';
-import {
-  type Bounds,
-  type InstanceNode,
-  type Node,
-  type NoteNode,
-  type PathNode,
-  type Point,
-  type Size,
-  type View,
-  compositeBounds,
-  instancePorts,
-  pathBounds,
-} from '@dxos/react-ui-canvas/scene';
+import { type Node, type View, compositeBounds, instancePorts, pathBounds } from '@dxos/react-ui-canvas/scene';
+import { type Bounds, type InstanceNode, type NoteNode, type PathNode, type Point, type Size } from '@dxos/scene';
 
 /** The video's frame in scene units. */
 export const FRAME: Bounds = { x: -960, y: -540, width: 1920, height: 1080 };

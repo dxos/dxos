@@ -24,7 +24,6 @@ import {
   createNodeRegistry,
   defaultNodePrototypes,
   defaultNodeTypes,
-  nodeBase,
 } from '@dxos/react-ui-canvas/scene';
 import * as Avatar from '@dxos/react-ui/Avatar';
 import * as Card from '@dxos/react-ui/Card';
@@ -32,6 +31,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
+import { nodeBase } from '@dxos/scene';
 
 import { CodeNamespace } from '../../namespace.ts';
 import {

@@ -6,7 +6,8 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 import React, { type CSSProperties, type FC } from 'react';
 
-import { DEFAULT_GRID, type NodeDef } from '@dxos/react-ui-canvas/scene';
+import { type NodeDef } from '@dxos/react-ui-canvas/scene';
+import { DEFAULT_GRID } from '@dxos/scene';
 
 import { createRowPorts, defineComputeNode, getRowPoints } from './common/index.ts';
 import { ComputeShape, type CreateShapeProps, createAnchorId, createShape, withZ } from './defs.ts';

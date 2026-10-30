@@ -6,9 +6,9 @@ import React, { forwardRef, useId, useMemo } from 'react';
 
 import * as Hooks from '@dxos/react-ui/Hooks';
 import type * as Util from '@dxos/react-ui/Util';
+import { type Bounds, type Point } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
-import { type Bounds, type Point } from '../../model/index.ts';
 import { easedStops } from '../Background/index.ts';
 
 const gridRatios = [1 / 4, 1, 4, 16];

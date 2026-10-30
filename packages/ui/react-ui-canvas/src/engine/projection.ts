@@ -11,6 +11,8 @@
 import * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 
+import { type ViewId, endpointNode } from '@dxos/scene';
+
 import {
   type Capabilities,
   type Intent,
@@ -18,9 +20,7 @@ import {
   type Node,
   type VersionedSource,
   type View,
-  type ViewId,
   type ViewStore,
-  endpointNode,
   isViewNode,
   updateView,
 } from '../model/index.ts';

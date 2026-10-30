@@ -4,7 +4,8 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { type PolylineNode } from '../model/index.ts';
+import { type PolylineNode } from '@dxos/scene';
+
 import { polylineFrame, polylineMidpoints, polylinePath, polylineVertices, refitPolyline } from './polyline.ts';
 
 const polyline = (rotation?: number): PolylineNode => ({

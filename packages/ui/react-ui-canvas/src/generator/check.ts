@@ -9,8 +9,9 @@
 //
 
 import { type EffectStatus, type ModuleCompiler, STEP_BUDGET_MS, hashSeed } from '@dxos/animation';
+import { type Bounds, type NodeId } from '@dxos/scene';
 
-import { type Bounds, type NodeId, type View } from '../model/index.ts';
+import { type View } from '../model/index.ts';
 import { nodeBounds, unionBounds } from '../utils/index.ts';
 import { loadGenerator } from './compile.ts';
 import { GeneratorRunner } from './runner.ts';

@@ -6,6 +6,7 @@ import { type ReactNode } from 'react';
 
 import { type ModuleCompiler, type Timeline } from '@dxos/animation';
 import type * as Util from '@dxos/react-ui/Util';
+import { type Bounds, type Point, type ViewId } from '@dxos/scene';
 
 import {
   type CanvasAtoms,
@@ -19,13 +20,10 @@ import { type GeneratorSource } from '../../generator/index.ts';
 import { type SceneDisplay } from '../../hooks/index.ts';
 import {
   type BackgroundGrid,
-  type Bounds,
   type Camera,
   type LinkRegistry,
   type NodeRegistry,
-  type Point,
   type ThemeRegistry,
-  type ViewId,
   type ViewStore,
 } from '../../model/index.ts';
 
