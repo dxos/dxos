@@ -212,9 +212,13 @@
     color: inherit;
   }
   /* A trailing icon-only Button ends flush with the row, its inset cell standing in for the row's padding. */
-  /* A short label inside the row's start (a vector axis's letter); muted with the adornment, so the figure reads first. */
+  /* A short label inside the row's start (a vector axis's letter), centred in its own cell; muted with the adornment. */
   .dx-input-prefix {
-    padding-inline-start: var(--dx-control-pad, var(--dx-gap-size));
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    /* A square cell the height of the control, so the letter is centred in it whatever its width. */
+    width: var(--dx-control-size);
     font-size: var(--dx-label-font-size);
     user-select: none;
   }
