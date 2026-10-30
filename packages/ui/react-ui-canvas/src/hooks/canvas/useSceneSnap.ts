@@ -16,6 +16,13 @@ export const GRID_LEVELS = [1 / MAJOR_GRID_RATIO, 1, MAJOR_GRID_RATIO, MAJOR_GRI
 /** Screen px a cell must cover to be drawn, and the most lines a level may draw before it is dropped. */
 export const GRID_RANGE: [number, number] = [6, 2048];
 
+/** Screen px within which a moved shape is held on the line or cell it would snap to: a detent, not a jump. */
+export const DETENT_PX = 8;
+
+/** `value` held on `snapped` while within `detent` of it, otherwise left where it is. */
+export const detentOf = (value: number, snapped: number, detent: number): number =>
+  Math.abs(snapped - value) <= detent ? snapped : value;
+
 export type SceneSnap = {
   /** The finest level drawn, in scene units; control points land on it. */
   minor: number;
@@ -25,7 +32,12 @@ export type SceneSnap = {
   snapMinor: (value: number) => number;
   /** A press that has moved less than half a minor cell with snap on: a click, which moves and resizes nothing. */
   isClick: (offset: Point) => boolean;
-  /** The offset a move applies, so the pressed node's top-left (`anchor`) lands on the major grid. */
+  /** {@link DETENT_PX} in scene units at the zoom. */
+  detent: number;
+  /**
+   * The offset a move applies: on each axis the pressed node's top-left (`anchor`) is held on the major grid while
+   * within the detent of a line, and follows the pointer otherwise.
+   */
   moveDelta: (anchor: Point, offset: Point) => Point;
 };
 
@@ -42,27 +54,28 @@ const minorLevel = (grid: number, zoom: number): number => {
   return levels.find((size) => size * zoom >= GRID_RANGE[0]) ?? levels[levels.length - 1];
 };
 
-const snapOn = (minor: number, enabled: boolean): SceneSnap => {
+const snapOn = (minor: number, enabled: boolean, detent: number): SceneSnap => {
   const major = minor * MAJOR_GRID_RATIO;
   const snap = (value: number) => (enabled ? Math.round(value / major) * major : value);
   // A link's control point is finer than a node: a bend need not sit on a major line.
   const snapMinor = (value: number) => (enabled ? Math.round(value / minor) * minor : value);
-  // A node off the major grid (a palette drop sits on the minor one) would otherwise jump up to half a major
-  // cell on a click's jitter, so a press that has not left half a minor cell does not snap.
+  // A node off the major grid (a palette drop sits on the minor one) would otherwise jump to a line on a click's
+  // jitter, so a press that has not left half a minor cell does not move.
   const isClick = (offset: Point) => enabled && Math.hypot(offset.x, offset.y) < minor / 2;
+  const hold = (value: number) => detentOf(value, snap(value), detent);
   const moveDelta = (anchor: Point, offset: Point): Point =>
     isClick(offset)
       ? { x: 0, y: 0 }
-      : { x: snap(anchor.x + offset.x) - anchor.x, y: snap(anchor.y + offset.y) - anchor.y };
-  return { minor, major, snap, snapMinor, isClick, moveDelta };
+      : { x: hold(anchor.x + offset.x) - anchor.x, y: hold(anchor.y + offset.y) - anchor.y };
+  return { minor, major, detent, snap, snapMinor, isClick, moveDelta };
 };
 
 /** The snap for a view's grid, zoom and snap toggle. */
 export const sceneSnap = (grid: number, zoom: number, enabled: boolean): SceneSnap =>
-  snapOn(minorLevel(grid, zoom), enabled);
+  snapOn(minorLevel(grid, zoom), enabled, DETENT_PX / zoom);
 
-/** `sceneSnap`, stable while the drawn level and the toggle hold, however the zoom moves within the level. */
+/** `sceneSnap`, stable while the zoom, the drawn level and the toggle hold. */
 export const useSceneSnap = (grid: number, zoom: number, enabled: boolean): SceneSnap => {
   const minor = minorLevel(grid, zoom);
-  return useMemo(() => snapOn(minor, enabled), [minor, enabled]);
+  return useMemo(() => snapOn(minor, enabled, DETENT_PX / zoom), [minor, enabled, zoom]);
 };

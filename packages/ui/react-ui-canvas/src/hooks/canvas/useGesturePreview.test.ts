@@ -10,6 +10,8 @@ import { movePreview } from './useGesturePreview.ts';
 
 const SPEC = { width: 256, height: 128, gutterX: 128, gutterY: 64 };
 
+const DETENT = 8;
+
 const box = (id: string, x: number, y: number) => ({
   type: 'rect',
   id,
@@ -30,20 +32,26 @@ const move = (raw: { x: number; y: number }): Extract<Drag, { kind: 'move' }> =>
 });
 
 describe('movePreview', () => {
-  test('on a lattice a move in flight follows the pointer until it settles on the cell it lands on', ({ expect }) => {
+  test('on a lattice a move holds each axis on its landing cell within the detent and follows the pointer outside it', ({
+    expect,
+  }) => {
     const projection = {
-      lattice: SPEC,
       constrain: (intent: Intent) => constrainIntent(scene, intent, SPEC),
     };
-    const drag = move({ x: 290, y: 150 });
-    expect(movePreview(scene, drag, projection, false).displayScene.nodes.c.center).toEqual({ x: 290, y: 342 });
-    expect(movePreview(scene, drag, projection, true).displayScene.nodes.c.center).toEqual({ x: 384, y: 384 });
+    const centre = (delta: { x: number; y: number }) =>
+      movePreview(scene, move(delta), projection, DETENT).displayScene.nodes.c.center;
+    // Far from the landing cell (384, 384) on both axes: C follows the pointer.
+    expect(centre({ x: 290, y: 150 })).toEqual({ x: 290, y: 342 });
+    // Within the detent on both axes: C sits on the cell.
+    expect(centre({ x: 380, y: 190 })).toEqual({ x: 384, y: 384 });
+    // Within it on x only: x holds on the cell's column while y follows.
+    expect(centre({ x: 380, y: 150 })).toEqual({ x: 384, y: 342 });
   });
 
-  test('off a lattice a move in flight follows the pointer until it settles', ({ expect }) => {
-    const raw = { x: 13, y: 7 };
-    const drag = { ...move(raw), delta: { x: 16, y: 0 } };
-    expect(movePreview(scene, drag, {}, false).displayScene.nodes.c.center).toEqual({ x: 13, y: 199 });
-    expect(movePreview(scene, drag, {}, true).displayScene.nodes.c.center).toEqual({ x: 16, y: 192 });
+  test('off a lattice a move draws the offset the snap gave it', ({ expect }) => {
+    expect(movePreview(scene, move({ x: 13, y: 7 }), {}, DETENT).displayScene.nodes.c.center).toEqual({
+      x: 13,
+      y: 199,
+    });
   });
 });

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
 import { type Bounds, type Endpoint, type Point, isPointEndpoint } from '@dxos/scene';
 
@@ -10,9 +10,7 @@ import { type Drag, type Projection, reduceIntent } from '../../engine/index.ts'
 import { type Intent, type View } from '../../model/index.ts';
 import { createLink, duplicateSelection, hasVertices, nodeBounds, refitPolyline, topZ } from '../../utils/index.ts';
 import { type PointerMachine, PREVIEW_NODE_ID, isLinkDrawn } from './usePointerMachine.ts';
-
-/** How long a move's pointer rests before the shapes snap to where they will land. */
-const SETTLE_MS = 200;
+import { detentOf } from './useSceneSnap.ts';
 
 /** The link drawn as a preview during a drag; it never reaches the model. */
 const PREVIEW_LINK_ID = 'preview-link';
@@ -23,6 +21,8 @@ export type UseGesturePreviewOptions = {
   projection: Projection;
   /** The finest grid level drawn: a link previews once it has gone this far. */
   minor: number;
+  /** How near, in scene units, a moved shape must come to where it lands to be held there. */
+  detent: number;
 } & Pick<PointerMachine, 'createdNode'>;
 
 export type GesturePreview = {
@@ -43,12 +43,16 @@ type Preview = {
   landing?: Bounds[];
 };
 
-/** What a move in flight draws: the nodes follow the pointer and snap to where they will land once it rests (`settled`). */
+/**
+ * What a move in flight draws: the nodes at the offset the snap gave the drag, each held on the axis of where the
+ * projection lands it (a lattice cell) while within `detent` of it, so a shape clicks into place and out again
+ * rather than jumping there.
+ */
 export const movePreview = (
   scene: View,
   drag: Extract<Drag, { kind: 'move' }>,
   projection: Pick<Projection, 'constrain'>,
-  settled: boolean,
+  detent: number,
 ): Preview => {
   // A copy previews beside the originals, which stay; the drop mints the copies' real ids.
   const { ids, copy } = drag;
@@ -60,21 +64,31 @@ export const movePreview = (
     return duplicate ? duplicate.intent : { kind: 'move', ids, delta };
   };
   const intent = moveBy(drag.delta);
+  const followed = reduceIntent(scene, intent);
   const constrained = projection.constrain ? projection.constrain(intent) : intent;
   const landed = reduceIntent(scene, constrained ?? intent);
-  const blocked = constrained === undefined;
-  if (settled) {
-    return { displayScene: landed, blocked };
+  const moved = copy ? Object.keys(followed.nodes).filter((id) => !scene.nodes[id]) : ids;
+  if (constrained === undefined) {
+    return {
+      displayScene: followed,
+      blocked: true,
+      // The landing is drawn only when the drop would be refused, the one thing following the pointer hides.
+      landing: moved.flatMap((id) => (landed.nodes[id] ? [nodeBounds(landed.nodes[id])] : [])),
+    };
   }
-  const moved = copy
-    ? Object.values(landed.nodes).filter((node) => !scene.nodes[node.id])
-    : ids.flatMap((id) => landed.nodes[id] ?? []);
-  return {
-    displayScene: reduceIntent(scene, moveBy(drag.raw ?? drag.delta)),
-    blocked,
-    // The landing is drawn only when the drop would be refused, the one thing following the pointer hides.
-    landing: blocked ? moved.map(nodeBounds) : undefined,
-  };
+  const nodes = { ...followed.nodes };
+  for (const id of moved) {
+    const [follow, land] = [followed.nodes[id], landed.nodes[id]];
+    if (follow && land) {
+      const center = {
+        x: detentOf(follow.center.x, land.center.x, detent),
+        y: detentOf(follow.center.y, land.center.y, detent),
+      };
+      // Held on both axes it is the landing itself, size included (a lattice may round the span).
+      nodes[id] = center.x === land.center.x && center.y === land.center.y ? land : { ...follow, center };
+    }
+  }
+  return { displayScene: { ...followed, nodes }, blocked: false };
 };
 
 /** What the gesture in flight draws: the scene as it would be once the gesture lands. */
@@ -83,6 +97,7 @@ export const useGesturePreview = ({
   drag,
   projection,
   minor,
+  detent,
   createdNode,
 }: UseGesturePreviewOptions): GesturePreview => {
   /** The node a create gesture would land while one is in flight; the ghost and the frame both read it. */
@@ -95,26 +110,13 @@ export const useGesturePreview = ({
   // a link being drawn or re-attached over a drop target looks exactly as it will once dropped. Geometry
   // previews pass through the projection's `constrain`, so a drag shows where the drop will land, and
   // `blocked` says when the drop would be refused (drawn as is, outlined in red).
-  // A move follows the pointer; once it rests for `SETTLE_MS` (a debounce), the shapes snap to where they will land. Settling is keyed by the position it settled at, so the first frame of the next move already follows.
-  const moveRaw = drag?.kind === 'move' ? drag.raw : undefined;
-  const rawKey = moveRaw ? `${moveRaw.x},${moveRaw.y}` : undefined;
-  const [settledAt, setSettledAt] = useState<string>();
-  useEffect(() => {
-    if (!rawKey) {
-      return;
-    }
-    const timer = setTimeout(() => setSettledAt(rawKey), SETTLE_MS);
-    return () => clearTimeout(timer);
-  }, [rawKey]);
-  const settled = rawKey !== undefined && settledAt === rawKey;
-
   const { displayScene, blocked, landing } = useMemo<Preview>(() => {
     const preview = (intent: Intent) => {
       const constrained = projection.constrain ? projection.constrain(intent) : intent;
       return { displayScene: reduceIntent(scene, constrained ?? intent), blocked: constrained === undefined };
     };
     if (drag?.kind === 'move') {
-      return movePreview(scene, drag, projection, settled);
+      return movePreview(scene, drag, projection, detent);
     }
     if (drag?.kind === 'resize') {
       return preview({ kind: 'resize', id: drag.id, bounds: drag.bounds });
@@ -162,7 +164,7 @@ export const useGesturePreview = ({
       };
     }
     return { displayScene: scene, blocked: false };
-  }, [scene, drag, settled, createPreview, projection, minor]);
+  }, [scene, drag, detent, createPreview, projection, minor]);
 
   /** The bounds a create gesture would land, drawn as a frame whether or not the node itself previews. */
   const createFrame = useMemo(() => {

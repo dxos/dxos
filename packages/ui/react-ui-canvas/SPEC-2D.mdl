@@ -854,7 +854,9 @@ feat F-15: Modes
     drag, a command, a paste, the Properties form). A layout with a `lattice` snaps every frame onto whole cells
     while snapping is on and refuses an edit that would overlap another shape's cells; a drag the mode refuses or
     moves is drawn as stored. A host's own projection owns the mode instead.
-  req F-15.7: A move follows the pointer and snaps to where it lands once the pointer rests. On a lattice a smart link
+  req F-15.7: A move follows the pointer, and on each axis a moved shape is held where it would snap (the major grid,
+    or its landing cell on a lattice) while within a detent of it, so it clicks into place and out again rather than
+    jumping there. A freehand drop lands where the shape is drawn; a lattice drop lands on its cells. On a lattice a smart link
     takes the gutters only while each of its shapes sits on whole cells; a link to a shape between cells (one in
     flight) takes the plain smart route, so its ports change only where the geometry turns and never back and forth.
 ```
@@ -997,7 +999,7 @@ test QA-1: The editor surface end to end
       expect: the first drag selects both; the Alt drag removes them from the selection
     - name: Move and snap
       do: Drag a node with snap on (G toggles it).
-      expect: the node's edges land on major grid lines; the readout follows the pointer
+      expect: the node follows the pointer and holds on a major grid line on each axis that comes within the detent of one; the readout follows the pointer
     - name: Draw a link
       do: Hover a node, drag from one of its ports onto another node.
       expect: a band follows the pointer, the target's ports show, and a link is created on release
@@ -1276,6 +1278,25 @@ decision D-27: A smart link takes the gutters only while each of its shapes sits
   why: Gutter routing assumes shapes on cells; for a shape between them two port pairs tie on bends and the nearer one flips every few pixels, while the plain route changes its ports only where the geometry turns. Reading it from the geometry, not from the drag, keeps the canvas layer and the selection overlay on the same route without passing the drag down.
   rejected:
     - Keeping each link's ports for the length of the drag until another pair bends strictly less, which still jumps when the gutter route's bend count changes under a moving shape.
+```
+
+```mdl
+decision D-28: Snapping is a detent, not a timed settle: a moved shape snaps to where it lands when it comes close and snaps out once it leaves that threshold.
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [F-15.7]
+```
+
+```mdl
+decision D-29: The detent is per axis and 8 screen pixels wide, applied by the move's offset to the major grid and by the move preview to the projection's landing cell; a freehand drop lands where the shape is drawn. Fills in [D-28].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-15.7]
+  why: Per axis lets a shape run along a line while it slides freely across it, and a screen-sized detent feels the same at every zoom. The freehand offset is what the drop applies, so detenting it there keeps the drop where the shape is drawn; a lattice keeps every shape on cells, so its drop still lands on them.
+  rejected:
+    - One detent on the distance to the landing point, which drops a shape off a line it is sliding along as soon as it moves away across it.
+    - Snapping a freehand drop to the major grid wherever it is released, which jumps on release.
 ```
 
 ---
