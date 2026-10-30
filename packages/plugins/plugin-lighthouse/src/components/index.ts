@@ -16,3 +16,4 @@ export * from './SubjectGraph/index.ts';
 export * from './TracePanel/index.ts';
 export * from './ImageAttach/index.ts';
 export * from './InputImages/index.ts';
+export * from './ResearchList/index.ts';
