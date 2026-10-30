@@ -144,7 +144,7 @@ type PluginBundle
     hash: string                 # sha-256 over the bundle's files; the Worker Loader id
     owner: DID | realm:dxos      # from the ATProto release record, or PrivatePlugin.ownerDid
     manifest: Plugin.Manifest    # manifest.json
-    catalog: PluginCatalog       # derived by PluginStore at upload, not shipped in the bundle
+    catalog: PluginCatalog       # from describe() during publish; TODO: written at build time
     vendor: VendorMap            # vendor/manifest.json
 ```
 
@@ -207,7 +207,8 @@ service PluginBuilder
     The plugin's own vite build (`composerPlugin`), with no separate build for EDGE. It emits the
     plugin's files flat at the bundle root, `manifest.json` with every module and its
     `environments`, and `vendor/`: one build, for `workerd`, of every package the plugin build kept
-    external, with `vendor/manifest.json`. It never runs plugin code.
+    external, with `vendor/manifest.json`. TODO: write the bundle's catalog at build time; until then
+    it is produced by `describe()` during publish.
   ops:
     build(configPath: string, options: { version }) → PluginBundle
   errors:
@@ -218,8 +219,9 @@ service PluginBuilder
 service PluginStore
   desc: |
     registry-service's existing plugin store (`/upload`, `/private/upload`, `GET /modules/...`). On
-    upload it loads the bundle once through Worker Loader, stores what `describe()` returns as the
-    bundle's catalog, and adds the bundle's operation keys to the operation index.
+    upload it loads the bundle once through Worker Loader and calls `describe()`, which is how publish
+    produces the bundle's catalog until the build writes it (TODO); it stores the catalog and adds
+    the bundle's operation keys to the operation index. A bundle whose `describe()` fails is refused.
   ops:
     upload(bundle: PluginBundle) → PluginBundle
     getManifest(pluginKey: NSID, version?: SemVer) → Plugin.Manifest
@@ -299,9 +301,10 @@ service PluginSupervisor
 op publishPlugin
   desc: |
     CLI `dx registry publish [--private]`, the command that already publishes a plugin's bundle: it
-    runs the plugin's vite build and uploads the one bundle, `vendor/` included, through `/upload`
-    with a verifiable presentation, API token or admin key. Nothing is built or uploaded separately
-    for EDGE.
+    runs the plugin's vite build, loads the bundle in a local workerd and calls `describe()`, and
+    uploads the one bundle, `vendor/` included, through `/upload` with a verifiable presentation, API
+    token or admin key; PluginStore calls `describe()` again on upload. Publishing fails when either
+    call fails. Nothing is built or uploaded separately for EDGE.
   status: unimplemented
   input:
     configPath: string
@@ -852,4 +855,12 @@ decision D-28: A bundle carries no `catalog.json`; registry-service derives a bu
   why: The registry already loads every uploaded bundle once in workerd; deriving the catalog there keeps the plugin build from running plugin code and leaves nothing in the bundle to drift from its modules.
   rejected:
     - Write `catalog.json` at build time by activating the workerd modules headless — the build would need workerd, and the store would have to check the file against `describe()` anyway.
+```
+
+```mdl
+decision D-29: A plugin's catalog belongs at build time; that is a TODO. Until then `describe()` runs during publish: the CLI calls it on the built bundle before upload, and the registry calls it on upload, and a failure fails the publish. Supersedes the upload-only catalog of [D-28].
+  date: 2026-10-30
+  by: user:dmaretskyi
+  supersedes: D-28
+  affects: [PluginBundle, PluginBuilder, PluginStore, publishPlugin, F-1.3]
 ```
