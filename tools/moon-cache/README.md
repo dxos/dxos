@@ -253,9 +253,7 @@ operator's machine and whatever the team uses for shared secrets.
 
 All six files live in the `dev.moonrepo` record in the `eng-ops` vault, one concealed field per
 file: the three client files in its `ci` section (`CA_PEM`, `CLIENT_PEM`, `CLIENT_KEY`) and `CA_KEY`,
-`SERVER_PEM`, `SERVER_KEY` at the top level. Every developer needs the client files, so the three
-`ci` fields are also copied to a `dev.moonrepo` record in the `eng-dev` vault, which is what
-`install-certs.sh --op` reads; `ca.key` and the server files stay in `eng-ops` only.
+`SERVER_PEM`, `SERVER_KEY` at the top level. `install-certs.sh --op` reads the three `ci` fields.
 
 CI reads three of them from repository secrets — `MOON_CACHE_CA_PEM`, `MOON_CACHE_CLIENT_PEM`,
 `MOON_CACHE_CLIENT_KEY`. Set them from files rather than pasting, so the trailing newline
