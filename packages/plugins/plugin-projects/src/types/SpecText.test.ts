@@ -173,6 +173,32 @@ describe('SpecText', () => {
     );
   });
 
+  test('a fence holding several feat blocks is taken in as an embed per block', async ({ expect }) => {
+    const file = [
+      '```mdl',
+      'feat F-1: Verdict',
+      '  desc: The answer first.',
+      '  req F-1.1: Covers three hours.',
+      '',
+      'feat F-2: Chart',
+      '  req F-2.1: One column per hour.',
+      '```',
+      '',
+    ].join('\n');
+    const map = addSpec('Ride Check');
+    await SpecText.take(map, { path: 'SPEC.mdl', text: file });
+    const features = await Ref.loadAll(map.features);
+    expect(features.map(({ name, description, requirements }) => ({ name, description, requirements }))).toEqual([
+      {
+        name: 'Verdict',
+        description: 'The answer first.',
+        requirements: [{ id: 'F-1.1', text: 'Covers three hours.' }],
+      },
+      { name: 'Chart', description: undefined, requirements: [{ id: 'F-2.1', text: 'One column per hour.' }] },
+    ]);
+    expect(await embedded(map)).toEqual(features.map(({ id }) => id));
+  });
+
   test('the codec makes a spec of a document no object owns, once its file holds a feat block', async ({ expect }) => {
     const document = db.add(SpecDocument.make({ name: 'a/PLUGIN.mdl', content: '' }));
     const path = 'packages/a/PLUGIN.mdl';

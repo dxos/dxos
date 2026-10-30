@@ -61,6 +61,9 @@ feat F-2: Feature embeds in the editor
   req F-2.7: A section is inert until it has attention, so the cursor and scrolling pass through it. A click gives it
              attention, its form then edits the feature's name, description, requirements and status in place, and
              Escape returns the cursor to the text.
+  req F-2.10: A section shows everything the feature's `feat` block says: its block id, name, status, description and
+              requirements, a structured requirement with each field on a line of its own. It also lists the features
+              the feature depends on, which it can add and remove.
   req F-2.8: org.dxos.plugin.code#SpecArticle draws the same sections, through
              `ProjectCapabilities.SpecDocumentExtensions`, which this plugin contributes, so plugin-code imports none of
              its components.
@@ -73,11 +76,14 @@ feat F-3: A spec as a file
   req F-3.1: Importing a file (`op:ImportSpec`) maps each `feat` block to the feature read in from it before, found by
              its source `path#F-n` wherever it has moved since, or to a new one, and puts the feature's embed in place
              of the block. The file states the feature's name, description, requirements and, when it has a
-             `status:` line, its status.
+             `status:` line, its status. The description is the block's `desc:` field, or its bare prose before the
+             first `req`.
+  req F-3.7: A fence that holds several `feat` blocks, or other blocks before one, is split so each `feat` block is a
+             fence of its own, which its embed replaces on import and an export writes back.
   req F-3.2: A feature the document embedded that no block of the file names is kept at the end when it was added in
              the app, and deleted when the file dropped its block.
   req F-3.3: Exporting (`op:ExportSpec`) writes each embed of a feature the spec holds as its `feat` block with a
-             `status:` line. An embed of another spec's feature stays an embed.
+             `status:` line and the description as a `desc:` field. An embed of another spec's feature stays an embed.
   req F-3.4: Written against the file text last synced, the block of a feature that has not changed is copied as it was,
              and a changed one has only its changed lines rewritten.
   req F-3.5: org.dxos.plugin.code#F-14 syncs a spec's document with its file through export and import, by
@@ -605,4 +611,44 @@ decision D-27: The codec makes a new spec of a document no object owns when a fi
   why: Both syncs make a bare document for a file they find, with nothing that owns it; the codec only handles a spec's document, so without this a file's blocks would stay text. A file with no `feat` block has nothing to be a spec of.
   rejected:
     - Making plugin-code create the spec, which would put plugin-projects' notion of a spec into plugin-code.
+```
+
+```mdl
+decision D-28: A feature's section shows everything the feature's spec block would show if it were written in the document, including the features it depends on.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [F-2.10]
+```
+
+```mdl
+decision D-29: The section shows the block id above the form, and lists the features the feature depends on with the same add and remove actions as its article. Dependents, tasks and showcases stay in the article and the companion. Fills in [D-28].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-2.10]
+  why: The block id and the dependencies are what the request names that the form lacked; the other relations are not part of the block.
+  rejected:
+    - Embedding the whole article, which adds tasks, showcases and code links to every section in the document.
+```
+
+```mdl
+decision D-30: Import reads a `desc:` field as the description and keeps each field of a structured requirement (`when:`, `then:`, `errors:`) on a line of its own; export writes the description as a `desc:` field. A fence that holds several `feat` blocks is split into one fence per block. Fills in [D-28].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-2.10, F-3.1, F-3.3, F-3.7]
+  why: The section showed what import read, and import read a `desc:` field as prose starting with "desc:", joined a structured requirement's fields into one run-on line, and read only the first block of a fence, folding the rest into its last requirement.
+  rejected:
+    - Embedding a grouped fence's blocks inside the fence, where the editor does not draw embeds.
+```
+
+```mdl
+decision D-31: The features a feature depends on stay `DependsOn` relations and are not written into its `feat` block, which has no field for them. Fills in [D-28].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-2.10, F-3.3]
+  why: The `feat` dialect defines `desc` and `req` only, so a written `depends:` line would be outside the language every other spec reader uses.
+  rejected:
+    - Adding a `depends:` field to the `feat` dialect in this change.
 ```

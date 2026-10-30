@@ -112,7 +112,7 @@ export const FeatureEmbedSection = ({ eid, label, view, db, attendableId, claimF
         className={`border rounded-md ${hasAttention ? 'border-focus-ring-subtle' : 'border-separator-subtle'}`}
         inert={hasAttention ? undefined : true}
       >
-        <FeatureSection subject={feature} />
+        <FeatureSection subject={feature} attendableId={embedId} />
       </div>
     </div>
   );

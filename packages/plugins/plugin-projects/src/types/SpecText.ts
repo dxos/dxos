@@ -183,7 +183,9 @@ export type ExpandOptions = {
 export const expand = async (spec: Spec.Spec, { base }: ExpandOptions = {}): Promise<string> => {
   const text = await read(spec);
   const owned = new Map((await Ref.loadAll(spec.features)).map((feature) => [feature.id, feature]));
-  const blocks = new Map(base === undefined ? [] : FeatureSpec.parse(base).map((block) => [block.id, block]));
+  // Split, so a block that shares a fence with others is updated in a fence of its own.
+  const fenced = base === undefined ? undefined : FeatureSpec.split(base);
+  const blocks = new Map(fenced === undefined ? [] : FeatureSpec.parse(fenced).map((block) => [block.id, block]));
   const used = new Set([
     ...FeatureSpec.parse(text).map(({ id }) => id),
     ...blocks.keys(),
@@ -197,10 +199,10 @@ export const expand = async (spec: Spec.Spec, { base }: ExpandOptions = {}): Pro
     }
     owned.delete(id);
     const blockId = Feature.getBlockId(feature) ?? `F-${next++}`;
-    const block = base !== undefined ? blocks.get(blockId) : undefined;
+    const block = blocks.get(blockId);
     const insert =
-      base !== undefined && block
-        ? FeatureSpec.update(base.slice(block.from, block.to), feature)
+      fenced !== undefined && block
+        ? FeatureSpec.update(fenced.slice(block.from, block.to), feature)
         : FeatureSpec.print(blockId, feature);
     return [{ from, to, insert }];
   });
@@ -219,9 +221,9 @@ export type TakeResult = { created: string[]; updated: string[] };
  * Takes a spec file's text into the spec's document. Each `feat` block becomes an embed of the feature it maps to,
  * found by the source it records wherever it has moved since, or made; the file states the feature's fields. A feature
  * the document embedded that came from no block of this file was added in the app and keeps its place at the end; one
- * whose block the file dropped is deleted.
+ * whose block the file dropped is deleted. A fence that holds several blocks becomes an embed per block.
  */
-export const take = async (spec: Spec.Spec, { path, text }: TakeOptions): Promise<TakeResult> => {
+export const take = async (spec: Spec.Spec, { path, text: file }: TakeOptions): Promise<TakeResult> => {
   const db = Obj.getDatabase(spec);
   const content = await loadContent(spec);
   const result: TakeResult = { created: [], updated: [] };
@@ -229,6 +231,7 @@ export const take = async (spec: Spec.Spec, { path, text }: TakeOptions): Promis
     return result;
   }
   const previous = new Set(FeatureEmbed.parse(content.content ?? '').map(({ id }) => id));
+  const text = FeatureSpec.split(file);
 
   const blocks = FeatureSpec.parse(text);
   const existing = new Map<string, Feature.Feature>();
@@ -328,7 +331,7 @@ const adopt = (document: SpecDocument.SpecDocument, { path, text }: TakeOptions)
     return parent;
   }
   const db = Obj.getDatabase(document);
-  if (parent || !db || FeatureSpec.parse(text).length === 0) {
+  if (parent || !db || FeatureSpec.parse(FeatureSpec.split(text)).length === 0) {
     return undefined;
   }
   return db.add(Spec.make({ name: document.name ?? path, document: Ref.make(document) }));

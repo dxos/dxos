@@ -56,6 +56,77 @@ describe('FeatureSpec', () => {
     expect(text.slice(feature.from, feature.to)).toBe(text.slice(text.indexOf('```'), text.lastIndexOf('```') + 3));
   });
 
+  test('parse reads a desc field, and keeps each field of a structured requirement on a line of its own', ({
+    expect,
+  }) => {
+    const text = [
+      '```mdl',
+      'feat F-2: Make Move',
+      '  desc: A move is checked',
+      '    before the board changes.',
+      '  req F-2.1:',
+      '    when: player submits a Move',
+      '      on their turn',
+      '    then: Move validated; turn advances',
+      '    errors: [InvalidMove, WrongTurn]',
+      '```',
+    ].join('\n');
+    expect(FeatureSpec.parse(text)).toMatchObject([
+      {
+        description: 'A move is checked before the board changes.',
+        requirements: [
+          {
+            id: 'F-2.1',
+            text: 'when: player submits a Move on their turn\nthen: Move validated; turn advances\nerrors: [InvalidMove, WrongTurn]',
+          },
+        ],
+      },
+    ]);
+    expect(FeatureSpec.parse(FeatureSpec.print('F-2', FeatureSpec.parse(text)[0]))).toMatchObject(
+      FeatureSpec.parse(text).map(({ from: _from, to: _to, ...feature }) => feature),
+    );
+  });
+
+  test('split gives every feat block a fence of its own, so none is read as part of another', ({ expect }) => {
+    const text = [
+      '```mdl',
+      'type Hour',
+      '  time: string',
+      '',
+      'feat F-1: Verdict',
+      '  req F-1.1: Covers three hours.',
+      '',
+      'feat F-2: Chart',
+      '  req F-2.1: One column per hour.',
+      '```',
+    ].join('\n');
+    expect(FeatureSpec.parse(text)).toEqual([]);
+    const split = FeatureSpec.split(text);
+    expect(split).toBe(
+      [
+        '```mdl',
+        'type Hour',
+        '  time: string',
+        '```',
+        '',
+        '```mdl',
+        'feat F-1: Verdict',
+        '  req F-1.1: Covers three hours.',
+        '```',
+        '',
+        '```mdl',
+        'feat F-2: Chart',
+        '  req F-2.1: One column per hour.',
+        '```',
+      ].join('\n'),
+    );
+    expect(FeatureSpec.parse(split).map(({ id, requirements }) => [id, requirements.length])).toEqual([
+      ['F-1', 1],
+      ['F-2', 1],
+    ]);
+    expect(FeatureSpec.split(split)).toBe(split);
+  });
+
   test('print writes a block that parse reads back, numbering requirements without an id', ({ expect }) => {
     const printed = FeatureSpec.print('F-4', {
       name: 'Search',
