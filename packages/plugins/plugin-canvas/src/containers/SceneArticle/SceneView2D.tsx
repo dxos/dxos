@@ -37,6 +37,7 @@ import {
   createLatticeProjection,
   createLocalHistory,
   defaultNodeRegistry,
+  sessionStacks,
   useRegistry,
 } from '@dxos/react-ui-canvas/scene';
 import * as Banner from '@dxos/react-ui/Banner';
@@ -71,7 +72,6 @@ import {
   useCanvasNodes,
   useReconciledMigrations,
 } from '../CanvasArticle/use-canvas-scene.ts';
-import { sessionStacks } from './canvas-history.ts';
 import { CanvasClipboardText } from './CanvasClipboardText.tsx';
 import { display2D, sceneChrome } from './scene-chrome.ts';
 import { useInspectorDock } from './use-inspector-dock.ts';

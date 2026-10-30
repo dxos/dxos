@@ -6,10 +6,17 @@ import { describe, expect, test } from 'vitest';
 
 import { Dsl } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
+import { nextPaste } from '@dxos/react-ui-canvas/scene';
 import { toCanvasViews } from '@dxos/react-ui-scene/canvas';
 import { type Scene, copyElements } from '@dxos/scene';
 
-import { canvasClipboardFrom, canvasClipboardText, fragmentText, readFragment } from './clipboard-text.ts';
+import {
+  canvasClipboardFrom,
+  canvasClipboardText,
+  fragmentText,
+  readFragment,
+  sceneClipboardCodec,
+} from './clipboard-text.ts';
 
 const linksDoc = () => Dsl.readScenes(EXEMPLARS.links).document;
 const cubeLayout: Scene.LayoutRecord3D = {
@@ -60,5 +67,16 @@ describe('clipboard text', () => {
     const doc: Scene.SceneDocument = { scenes: [], layouts: [cubeLayout], models: [] };
     const back = canvasClipboardFrom(fragmentText(doc, cubeLayout, copyElements(cubeLayout, ['box'])));
     expect(back?.nodes).toEqual([expect.objectContaining({ id: 'box', type: 'rect', center: { x: 100, y: 0 } })]);
+  });
+
+  test('a copy from the other dimension pastes converted: 3D flattened into 2D', () => {
+    const copied = {
+      fragment: cubeLayout,
+      text: 'layout clipboard dim=3d {\n  element box cube @ 0,1,0\n}',
+      pasted: 0,
+    };
+    const next = nextPaste(copied, undefined, '2d', sceneClipboardCodec);
+    expect(next?.fragment.dim).toBe('2d');
+    expect(next?.fragment.elements.box).toMatchObject({ type: 'rect' });
   });
 });

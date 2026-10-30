@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { Entity, Obj } from '@dxos/echo';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
-import { type VersionedSource, combinedSource, patchSource, recordChanges } from '@dxos/react-ui-canvas/headless';
+import { type VersionedSource, combinedSource } from '@dxos/react-ui-canvas/headless';
 import {
   CameraToolbar,
   DisplayPanel,
@@ -26,7 +26,13 @@ import {
   ViewsInspector,
   between,
   buildCommands,
+  copyFragment,
+  createHistory,
+  getSessionClipboard,
+  pasteInto,
   propertiesShown,
+  sessionHistory,
+  setSessionClipboard,
 } from '@dxos/react-ui-canvas/scene';
 import { Form } from '@dxos/react-ui-form';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -51,10 +57,7 @@ import {
   type ModelIntent,
   Scene,
   bounds3D,
-  copyElements,
   findLayout,
-  pasteIntent,
-  placesCycle,
   reachedObjects,
   resolveLayout3D,
 } from '@dxos/scene';
@@ -64,9 +67,9 @@ import { downloadBlob } from '@dxos/util';
 import {
   applyLayoutIntent,
   canvasDocument,
-  fragmentText,
   layoutSource,
   openScene,
+  sceneClipboardCodec,
   writeDocument,
   writeModelIntent,
 } from '#model';
@@ -74,7 +77,6 @@ import { type Canvas } from '#types';
 
 import { CanvasNamespace } from '../../namespace.ts';
 import { useSceneDocument } from '../SceneStage/index.ts';
-import { type SessionHistory, isDocumentStep, sessionHistory } from './canvas-history.ts';
 import {
   ELEMENT_FORM_FIELDS,
   ELEMENT_FORM_OVERRIDES,
@@ -84,7 +86,6 @@ import {
 } from './element-form.ts';
 import { layersOf, layoutTree3D, objectEntries, withoutHidden } from './inspectors-3d.ts';
 import { SECTIONS_3D, grid3D, sceneChrome } from './scene-chrome.ts';
-import { getSessionClipboard, nextPaste, pasteOffset, setSessionClipboard } from './scene-clipboard.ts';
 import { TOOL_GROUPS_3D } from './tools-3d.ts';
 import { useInspectorDock } from './use-inspector-dock.ts';
 import { useSceneChoice } from './use-scene-choice.ts';
@@ -171,55 +172,26 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
     [layouts],
   );
   // The canvas's history for the session, so reopening the article keeps its steps.
-  const history = useMemo(
-    () => ({
-      get current() {
-        return sessionHistory(canvas);
-      },
-      set current(next: SessionHistory) {
-        Object.assign(sessionHistory(canvas), next);
-      },
-    }),
-    [canvas],
-  );
   const [historyVersion, setHistoryVersion] = useState(0);
+  const history = useMemo(
+    () =>
+      createHistory({
+        steps: sessionHistory(canvas),
+        source,
+        writeDocument: (next) => writeDocument(canvas, next),
+        onChange: () => setHistoryVersion((version) => version + 1),
+      }),
+    [canvas, source],
+  );
 
   const handleIntent = useCallback(
     (layout: string, intent: LayoutIntent) => {
       const target = layouts.get(layout);
-      if (!target) {
-        return;
-      }
-      const [change] = recordChanges([source], () => applyLayoutIntent(target, intent));
-      if (change) {
-        history.current = { done: [...history.current.done, change], undone: [] };
-        setHistoryVersion((version) => version + 1);
-      }
+      target && history.record(() => applyLayoutIntent(target, intent));
     },
-    [layouts, source],
+    [layouts, history],
   );
-  const step = useCallback(
-    (direction: 'undo' | 'redo') => {
-      const { done, undone } = history.current;
-      const change = direction === 'undo' ? done.at(-1) : undone.at(-1);
-      if (!change) {
-        return;
-      }
-      if (isDocumentStep(change)) {
-        writeDocument(canvas, direction === 'undo' ? change.before : change.after);
-      } else {
-        direction === 'undo'
-          ? patchSource(source, { from: change.after, to: change.before, paths: change.paths })
-          : patchSource(source, { from: change.before, to: change.after, paths: change.paths });
-      }
-      history.current =
-        direction === 'undo'
-          ? { done: done.slice(0, -1), undone: [...undone, change] }
-          : { done: [...done, change], undone: undone.slice(0, -1) };
-      setHistoryVersion((version) => version + 1);
-    },
-    [source, canvas],
-  );
+  const step = useCallback((direction: 'undo' | 'redo') => history[direction](), [history]);
 
   // The orbit, grid and look are this viewer's own view; the scene's camera and theme are the authored ones.
   const view = useScene3DView(canvas);
@@ -266,44 +238,36 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
 
   // The clipboard: the selection as a fragment (kept for this session) and as `.dx` text on the system clipboard.
   const copy = useCallback((): boolean => {
-    if (!document || !record || record.dim !== '3d' || selection.length === 0) {
+    const copied = document && editingLayout && copyFragment(sceneClipboardCodec, document, editingLayout, selection);
+    if (!copied) {
       return false;
     }
-    const fragment = copyElements(record, selection);
-    const text = fragmentText(document, record, fragment);
-    setSessionClipboard({ fragment, text, pasted: 0 });
-    void navigator.clipboard?.writeText(text).catch(() => undefined);
+    setSessionClipboard(copied);
+    void navigator.clipboard?.writeText(copied.text).catch(() => undefined);
     return true;
-  }, [document, record, selection]);
+  }, [document, editingLayout, selection]);
   const pasteFrom = useCallback(
     (text: string | undefined) => {
-      const layout = editingLayout;
-      const next = nextPaste(getSessionClipboard(), text, '3d');
-      if (!layout || !record || !document || !next) {
+      if (!document || !editingLayout) {
         return;
       }
-      const taken = new Set(Object.keys(record.elements));
-      const paste = pasteIntent(record, next.fragment, {
-        offset: pasteOffset(next.pasted, '3d'),
-        newId: (prefix) => {
-          let index = 1;
-          while (taken.has(`${prefix}-${index}`)) {
-            index++;
-          }
-          taken.add(`${prefix}-${index}`);
-          return `${prefix}-${index}`;
-        },
-        refuses: (object) => placesCycle(document, layout, object),
+      const result = pasteInto({
+        codec: sceneClipboardCodec,
+        document,
+        layout: editingLayout,
+        copied: getSessionClipboard(),
+        text,
+        offset: (pasted) => ({ x: pasted, y: 0, z: pasted }),
       });
-      if (!paste) {
+      if (result.kind === 'refused') {
         setNotice(t('paste.refused.message'));
-        return;
+      } else if (result.kind === 'paste') {
+        setSessionClipboard(result.clipboard);
+        handleIntent(editingLayout, result.intent);
+        setSelection(result.ids);
       }
-      setSessionClipboard(next);
-      handleIntent(layout, paste.intent);
-      setSelection(paste.ids);
     },
-    [editingLayout, record, document, handleIntent, t],
+    [editingLayout, document, handleIntent, t],
   );
   const paste = useCallback(() => {
     // Read the system clipboard when it can be, so text copied elsewhere pastes; the session's copy otherwise.
@@ -405,11 +369,7 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
       }
       setNotice(undefined);
       setSelection(selection);
-      history.current = {
-        done: [...history.current.done, { kind: 'document', before, after: canvasDocument(canvas) }],
-        undone: [],
-      };
-      setHistoryVersion((version) => version + 1);
+      history.recordDocument(before, canvasDocument(canvas));
     },
     [canvas, history],
   );
@@ -447,8 +407,8 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
         state: {
           readonly,
           selection,
-          canUndo: history.current.done.length > 0,
-          canRedo: history.current.undone.length > 0,
+          canUndo: history.canUndo,
+          canRedo: history.canRedo,
           canUngroup: resolved?.type === 'group',
           canMakeObject: modelId !== undefined,
         },

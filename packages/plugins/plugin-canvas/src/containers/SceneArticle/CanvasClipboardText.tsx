@@ -4,11 +4,15 @@
 
 import { useEffect, useRef } from 'react';
 
-import { useCanvasDocument, useCanvasEditing, useRegistry } from '@dxos/react-ui-canvas/scene';
+import {
+  getSessionClipboard,
+  setSessionClipboard,
+  useCanvasDocument,
+  useCanvasEditing,
+  useRegistry,
+} from '@dxos/react-ui-canvas/scene';
 
 import { canvasClipboardFrom, canvasClipboardText, readFragment } from '#model';
-
-import { getSessionClipboard, setSessionClipboard } from './scene-clipboard.ts';
 
 const CONSUMER = 'CanvasClipboardText';
 

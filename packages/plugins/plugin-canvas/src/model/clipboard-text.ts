@@ -3,6 +3,7 @@
 //
 
 import { Dsl } from '@dxos/diagram';
+import { type ClipboardCodec } from '@dxos/react-ui-canvas/scene';
 import { flattenLayout, fromCanvasView, liftLayout, toCanvasView } from '@dxos/react-ui-scene/canvas';
 import { type Fragment, type Link, type Node, Scene, resolveLayout2D, resolveLayout3D } from '@dxos/scene';
 
@@ -50,6 +51,9 @@ export const readFragment = (text: string, dim: Scene.Dimension): Fragment | und
   }
   return dim === '3d' ? liftLayout(layout) : flattenLayout(layout);
 };
+
+/** The canvas's `.dx` clipboard text, which the scene editor's copy writes and paste reads in either dimension. */
+export const sceneClipboardCodec: ClipboardCodec = { write: fragmentText, read: readFragment };
 
 /** The 2D canvas's own clipboard: its nodes and the links between them. */
 export type CanvasClipboard = { nodes: Node[]; links: Link[] };
