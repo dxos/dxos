@@ -258,7 +258,7 @@ export const check = (files: Files): CheckResult => {
     for (const url of [module.url, module.adapter?.url].filter((url): url is string => url !== undefined)) {
       // A shared package's export (e.g. an adapter) loads through the same bare specifier the plugin's files use.
       if (isBare(url) && !/^[a-z][a-z0-9+.-]*:/i.test(url)) {
-        if (!vendor?.specifiers[url]) {
+        if (runsHere(module) && !vendor?.specifiers[url]) {
           problems.push({ path: MANIFEST_FILE, message: `${module.id}: ${url}, which vendor/ does not provide` });
         }
         continue;

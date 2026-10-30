@@ -125,9 +125,9 @@ export const PLUGIN_HOST_ENTRY_ENV = 'DX_PLUGIN_HOST_ENTRY';
 type OutputChunk = Extract<Rollup.OutputBundle[string], { type: 'chunk' }>;
 
 /**
- * The chunks EDGE can load: the entry, the bodies of modules that run on `workerd`, and what they import. The entry's
- * dynamic imports are its module loaders, so only those of `workerd` bodies are followed; a bundle with no module list
- * (an app-mode build) is all reachable.
+ * The chunks EDGE can load: the bodies of modules that run on `workerd` and what they import. EDGE builds the plugin
+ * from the manifest, so the entry chunk counts only where a body imports it; a bundle with no module list (an app-mode
+ * build) is all reachable.
  */
 const edgeChunks = (bundle: Rollup.OutputBundle, modules: readonly LibraryModule[]): OutputChunk[] => {
   const chunks = Object.values(bundle).filter((output): output is OutputChunk => output.type === 'chunk');
@@ -144,20 +144,19 @@ const edgeChunks = (bundle: Rollup.OutputBundle, modules: readonly LibraryModule
     .flatMap(({ bodyFile, adapterFile }) => [chunkOf(bodyFile), chunkOf(adapterFile)])
     .filter((chunk): chunk is OutputChunk => chunk !== undefined);
   const reached = new Set<OutputChunk>();
-  const visit = (chunk: OutputChunk, followDynamic: boolean) => {
+  const visit = (chunk: OutputChunk) => {
     if (reached.has(chunk)) {
       return;
     }
     reached.add(chunk);
-    for (const name of [...chunk.imports, ...(followDynamic ? chunk.dynamicImports : [])]) {
+    for (const name of [...chunk.imports, ...chunk.dynamicImports]) {
       const next = byName.get(name);
       if (next) {
-        visit(next, true);
+        visit(next);
       }
     }
   };
-  chunks.filter((chunk) => chunk.isEntry).forEach((chunk) => visit(chunk, false));
-  bodies.forEach((chunk) => visit(chunk, true));
+  bodies.forEach(visit);
   return [...reached];
 };
 
@@ -483,6 +482,14 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
       },
       generateBundle(_options, bundle) {
         const emitted = new Set(Object.keys(bundle));
+        // A module's adapter is a shared package the host imports beside the body, not through it.
+        for (const { adapter, bodyFile, environments } of libraryModules) {
+          if (adapter && isExternal(adapter.url) && (!environments || environments.includes('workerd'))) {
+            const importers = externals.get(adapter.url) ?? new Set<string>();
+            importers.add(bodyFile);
+            externals.set(adapter.url, importers);
+          }
+        }
         for (const output of edgeChunks(bundle, libraryModules)) {
           for (const id of [...output.imports, ...output.dynamicImports, ...REQUIRE_SHIM_SPECIFIERS]) {
             if (!emitted.has(id) && isExternal(id)) {
