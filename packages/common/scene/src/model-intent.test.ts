@@ -29,6 +29,24 @@ const doc = (): Scene.SceneDocument => ({
 });
 
 describe('applyModelIntent', () => {
+  test('style sets a named style of the model, valid for its dimension, and with no style removes it', () => {
+    const styled = applyModelIntent(doc(), {
+      kind: 'style',
+      model: 'm',
+      id: 'steel',
+      style: { name: 'Steel', hue: 'neutral', metalness: 0.8 },
+    });
+    expect(styled.problems).toEqual([]);
+    expect(styled.doc.models[0].styles?.steel).toEqual({ name: 'Steel', hue: 'neutral', metalness: 0.8 });
+    expect(validateDocument(styled.doc)).toEqual([]);
+    const removed = applyModelIntent(styled.doc, { kind: 'style', model: 'm', id: 'steel' });
+    expect(removed.doc.models[0].styles?.steel).toBeUndefined();
+    // A value of the wrong type is no style.
+    expect(applyModelIntent(doc(), { kind: 'style', model: 'm', id: 'bad', style: { tone: 9 } }).problems).toHaveLength(
+      1,
+    );
+  });
+
   test('define adds an object, and update changes it, both as valid documents', () => {
     const defined = applyModelIntent(doc(), { kind: 'define', model: 'm', object: { id: 'lamp', type: 'cylinder' } });
     expect(defined.problems).toEqual([]);

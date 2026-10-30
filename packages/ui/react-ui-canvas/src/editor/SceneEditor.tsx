@@ -35,6 +35,7 @@ import { type ClipboardCodec, type DimensionConfig, type ToolCategory, type Tool
 import { type EditorDisplay, SceneEditorProvider, useSceneEditor } from './context.ts';
 import { type History } from './history.ts';
 import { withoutHidden } from './scene-rows.ts';
+import { SceneEditorInspector } from './sections.tsx';
 import { type ActiveTool, createEditorStore } from './store.ts';
 
 /** The rail's group for each tool category, as 2D's rail names them. */
@@ -608,6 +609,7 @@ SceneEditorNotice.displayName = 'SceneEditor.Notice';
 
 export const SceneEditor = {
   Root: SceneEditorRoot,
+  Inspector: SceneEditorInspector,
   Viewport: SceneEditorViewport,
   Tools: SceneEditorTools,
   Actions: SceneEditorActions,

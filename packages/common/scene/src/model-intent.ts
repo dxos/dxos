@@ -17,6 +17,7 @@ import {
   Object3D,
   type SceneDocument,
 } from './Scene.ts';
+import { NamedStyle2D, NamedStyle3D } from './style.ts';
 import { type Problem } from './validate.ts';
 
 /** One edit to a model's objects; `extract` also edits the layout its elements come from. */
@@ -45,12 +46,34 @@ export type ModelIntent =
       readonly members: readonly string[];
       readonly arrange?: Arrangement;
     }
-  | { readonly kind: 'ungroup'; readonly model: string; readonly layout: string; readonly id: string };
+  | { readonly kind: 'ungroup'; readonly model: string; readonly layout: string; readonly id: string }
+  /** Sets the model's named style `id` (a new one from a selection, or an edit); with no style, removes it. */
+  | { readonly kind: 'style'; readonly model: string; readonly id: string; readonly style?: unknown };
 
 export type ModelIntentResult = { doc: SceneDocument; problems: Problem[] };
 
 const isObject2D = Schema.is(Object2D);
 const isObject3D = Schema.is(Object3D);
+const isStyle2D = Schema.is(NamedStyle2D);
+const isStyle3D = Schema.is(NamedStyle3D);
+
+/** The model with its named style `id` set to `style`, or removed; undefined when `style` is no style of its dimension. */
+const withStyle = (model: ModelRecord, id: string, style: unknown): ModelRecord | undefined => {
+  if (model.dim === '2d') {
+    const { [id]: _removed, ...styles } = model.styles ?? {};
+    return style === undefined
+      ? { ...model, styles }
+      : isStyle2D(style)
+        ? { ...model, styles: { ...styles, [id]: style } }
+        : undefined;
+  }
+  const { [id]: _removed, ...styles } = model.styles ?? {};
+  return style === undefined
+    ? { ...model, styles }
+    : isStyle3D(style)
+      ? { ...model, styles: { ...styles, [id]: style } }
+      : undefined;
+};
 
 const round = (value: number): number => Math.round(value * 1000) / 1000 + 0;
 
@@ -378,6 +401,10 @@ export const applyModelIntent = (doc: SceneDocument, intent: ModelIntent): Model
       return placing.length > 0
         ? problem(`"${intent.id}" is still placed by ${placing.join(', ')}.`)
         : replace(withoutObject(model, intent.id));
+    }
+    case 'style': {
+      const next = withStyle(model, intent.id, intent.style);
+      return next ? replace(next) : problem(`The style "${intent.id}" is not a ${model.dim} style.`);
     }
     case 'extract':
     case 'group':
