@@ -12,20 +12,11 @@ import type * as Scene from './Scene.ts';
 
 const ORIGIN: Vec3 = { x: 0, y: 0, z: 0 };
 
-const cluster = (members: Scene.Element3D[]): Scene.LayoutRecord3D => ({
+const cluster = (elements: Scene.Element3D[]): Scene.LayoutRecord3D => ({
   id: 'cluster',
   dim: '3d',
-  elements: Object.fromEntries(
-    [
-      ...members,
-      {
-        id: 'g',
-        type: 'group',
-        members: members.map((member) => member.id),
-        arrange: { kind: 'ring', params: { radius: 3 } },
-      },
-    ].map((element) => [element.id, element]),
-  ),
+  arrange: { kind: 'ring', params: { radius: 3 } },
+  elements: Object.fromEntries(elements.map((element) => [element.id, element])),
 });
 
 describe('arrange', () => {
@@ -43,7 +34,7 @@ describe('arrange', () => {
     expect(Schema.decodeUnknownSync(Vec3)(positions.b)).toEqual({ x: -3, y: 0, z: 0 });
   });
 
-  test('applyArrangement places unpositioned members and keeps a pinned member', () => {
+  test("applyArrangement places a layout's unpositioned elements and keeps a pinned one", () => {
     const pinned: Vec3 = { x: 9, y: 9, z: 9 };
     const layout = applyArrangement(
       cluster([

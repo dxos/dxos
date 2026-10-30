@@ -77,10 +77,17 @@ export const writeDocument = (canvas: Canvas.Canvas, doc: Scene.SceneDocument): 
     }
     const model = record.model === undefined ? undefined : models.get(record.model);
     const ref = model ? { model: Ref.make(model) } : {};
+    // A group's composite keeps what makes it one: its kind, that it is anonymous, and its arrangement.
+    const fields = plain({
+      ...(record.name === undefined ? {} : { name: record.name }),
+      ...(record.kind === undefined ? {} : { kind: record.kind }),
+      ...(record.anonymous === undefined ? {} : { anonymous: record.anonymous }),
+      ...(record.arrange === undefined ? {} : { arrange: record.arrange }),
+    });
     const layout =
       record.dim === '3d'
-        ? Obj.make(Scene.Layout3D, { key: record.id, elements: plain(record.elements), ...ref })
-        : Obj.make(Scene.Layout2D, { key: record.id, elements: plain(record.elements), ...ref });
+        ? Obj.make(Scene.Layout3D, { key: record.id, elements: plain(record.elements), ...fields, ...ref })
+        : Obj.make(Scene.Layout2D, { key: record.id, elements: plain(record.elements), ...fields, ...ref });
     db?.add(layout);
     layouts.set(record.id, layout);
     created.push(layout);

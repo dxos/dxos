@@ -29,13 +29,7 @@ describe('clipboard', () => {
     expect(Object.keys(fragment.elements).sort()).toEqual(['a', 'ab', 'b']);
   });
 
-  test('a copied group brings its members, and keeps only members that came along', () => {
-    const layout = layout3D('l', [cube('a'), cube('b', 2), { id: 'g', type: 'group', members: ['a', 'b'] }]);
-    const fragment = copyElements(layout, ['g']);
-    expect(Object.keys(fragment.elements).sort()).toEqual(['a', 'b', 'g']);
-  });
-
-  test('a paste gives every element a new id, rebinds links and members to them, and shifts each centre', () => {
+  test('a paste gives every element a new id, rebinds links to them, and shifts each centre', () => {
     const fragment = copyElements(scene(), ['a', 'b']);
     const paste = pasteIntent(scene(), fragment, { offset: { x: 1, y: 0, z: 1 }, newId: counter() });
     const after = applyIntent(scene(), paste!.intent);

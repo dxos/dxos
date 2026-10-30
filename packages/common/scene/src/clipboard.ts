@@ -12,20 +12,12 @@ export type Fragment = LayoutRecord;
 const elementsOf = (layout: LayoutRecord): Record<string, Element2D | Element3D> => layout.elements;
 
 /**
- * The elements `ids` names as a fragment: a group brings its members, and a link comes only when both its ends do, so
+ * The elements `ids` names as a fragment: a link comes only when both its ends do, so
  * nothing in the fragment points outside it.
  */
 export const copyElements = (layout: LayoutRecord, ids: Iterable<string>): Fragment => {
   const elements = elementsOf(layout);
-  const chosen = new Set<string>();
-  const pending = [...ids];
-  for (let id = pending.pop(); id !== undefined; id = pending.pop()) {
-    const element = elements[id];
-    if (element && !chosen.has(id)) {
-      chosen.add(id);
-      pending.push(...(element.members ?? []));
-    }
-  }
+  const chosen = new Set([...ids].filter((id) => elements[id] !== undefined));
   // A link comes along when both its ends do, whether or not it was selected itself.
   for (const [id, element] of Object.entries(elements)) {
     if (
@@ -48,10 +40,7 @@ export const copyElements = (layout: LayoutRecord, ids: Iterable<string>): Fragm
   const copied = Object.fromEntries(
     Object.entries(elements)
       .filter(([id]) => keptIds.has(id))
-      .map(([id, element]) => [
-        id,
-        element.members ? { ...element, members: element.members.filter((member) => keptIds.has(member)) } : element,
-      ]),
+      .map(([id, element]) => [id, element]),
   );
   return layout.dim === '2d'
     ? { id: 'clipboard', dim: '2d', elements: copied as Record<string, Element2D> }
@@ -68,7 +57,7 @@ export type PasteOptions = {
 };
 
 /**
- * One undoable batch that pastes `fragment` into `layout`: new ids, links and members rebound to them, each centre
+ * One undoable batch that pastes `fragment` into `layout`: new ids, links rebound to them, each centre
  * shifted by the offset. Undefined for a fragment of the other dimension, or one that would place an object in its own
  * parts.
  */
@@ -90,7 +79,6 @@ export const pasteIntent = (
     id: idMap.get(element.id) ?? element.id,
     ...(element.source ? { source: rebindEndpoint(element.source, (node) => idMap.get(node) ?? node) } : {}),
     ...(element.target ? { target: rebindEndpoint(element.target, (node) => idMap.get(node) ?? node) } : {}),
-    ...(element.members ? { members: element.members.map((member) => idMap.get(member) ?? member) } : {}),
   });
   const intents: LayoutIntent[] =
     fragment.dim === '2d'

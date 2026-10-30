@@ -15,6 +15,7 @@ import {
   type Resolved2D,
   type Resolved3D,
   Scene,
+  findLayout,
   radiusOf,
   resolveLayout2D,
   resolveLayout3D,
@@ -116,6 +117,7 @@ export const sceneBinding = (
     return { objects: {}, links: [] };
   }
   const objects: Record<string, AnimatorCapabilities.BoundObject> = {};
+  const groups = new Set<string>();
   const bind = (element: Resolved, position: Scene.Vec3, radius: number) => {
     objects[element.id] = {
       id: element.id,
@@ -137,12 +139,28 @@ export const sceneBinding = (
       if (isTarget(element) && element.center) {
         bind(element, { ...element.center }, radiusOf(element));
       }
+      // A group's members are drawn where they are relative to it, so effects find them there.
+      const parts =
+        element.type === 'group' && element.parts !== undefined ? findLayout(doc, element.parts) : undefined;
+      if (!element.hidden && parts?.dim === '3d') {
+        groups.add(element.id);
+        const offset = element.center ?? { x: 0, y: 0, z: 0 };
+        for (const member of Object.values(resolveLayout3D(doc, parts))) {
+          if (isTarget(member) && member.center) {
+            const { x, y, z } = member.center;
+            bind(member, { x: x + offset.x, y: y + offset.y, z: z + offset.z }, radiusOf(member));
+          }
+        }
+      }
     }
   }
+  // An end on a group's port is the member the port names.
+  const nodeOf = (end: Scene.Element3D['source']) =>
+    end?.port !== undefined && groups.has(end.node ?? '') ? end.port : (end?.node ?? '');
   const elements: readonly Resolved[] = root.elements;
   const links = elements.flatMap((element) => {
-    const from = element.source && objects[element.source.node ?? ''];
-    const to = element.target && objects[element.target.node ?? ''];
+    const from = element.source && objects[nodeOf(element.source)];
+    const to = element.target && objects[nodeOf(element.target)];
     return element.type === 'link' && from && to
       ? [{ id: element.id, from: from.id, to: to.id, points: [{ ...from.position }, { ...to.position }] }]
       : [];

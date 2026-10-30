@@ -3,6 +3,7 @@
 //
 
 import {
+  type ElementEndpoint,
   type Resolved3D,
   Scene,
   type Style3D,
@@ -62,6 +63,28 @@ const compose = (outer: Transform, inner: Transform): Transform => ({
   scale: outer.scale * inner.scale,
 });
 
+/** A layout's resolved elements with each group's members in their place: what a frame round the layout must hold. */
+const drawnElements = (
+  doc: Scene.SceneDocument,
+  layout: Scene.LayoutRecord3D,
+  path: readonly string[] = [layout.id],
+): Record<string, Resolved3D> => {
+  const elements = resolveLayout3D(doc, layout);
+  return Object.fromEntries(
+    Object.entries(elements).flatMap(([key, element]): [string, Resolved3D][] => {
+      const parts = element.parts === undefined ? undefined : findLayout(doc, element.parts);
+      if (element.type !== 'group' || parts?.dim !== '3d' || path.includes(parts.id)) {
+        return [[key, element]];
+      }
+      const offset = element.center ?? ZERO;
+      return Object.entries(drawnElements(doc, parts, [...path, parts.id])).map(([member, part]) => [
+        `${key}/${member}`,
+        part.center ? { ...part, center: apply({ offset, scale: 1 }, part.center) } : part,
+      ]);
+    }),
+  );
+};
+
 /**
  * Everything a document's 3D scene draws, in world space: its layout's elements and links, with each composite's parts
  * layout placed inside its frame (design call 23). Hidden elements, groups and unplaced elements draw nothing; a link
@@ -75,7 +98,13 @@ export const renderList = (
   const items: RenderItem[] = [];
   const links: RenderLink[] = [];
 
-  const visit = (layout: Scene.LayoutRecord3D, transform: Transform, prefix: string, path: readonly string[]) => {
+  /** Draws a layout's elements; returns where each was placed, so links to a group's ports find its members. */
+  const visit = (
+    layout: Scene.LayoutRecord3D,
+    transform: Transform,
+    prefix: string,
+    path: readonly string[],
+  ): ReadonlyMap<string, Vec3> => {
     const keyOf = (id: string) => (prefix ? `${prefix}/${id}` : id);
     // Overrides apply to the scene's own layout only, before resolving, as an element's own values would.
     const own =
@@ -89,10 +118,23 @@ export const renderList = (
         : layout;
     const elements = resolveLayout3D(doc, own);
     const placed = new Map<string, Vec3>();
+    const ports = new Map<string, ReadonlyMap<string, Vec3>>();
     for (const element of Object.values(elements)) {
+      const parts = element.parts === undefined ? undefined : findLayout(doc, element.parts);
+      // A group draws only its members, where they are relative to it (fit `none`, decision 18).
+      if (element.type === 'group') {
+        if (!element.hidden && parts?.dim === '3d' && !path.includes(parts.id)) {
+          const placement = {
+            offset: apply(transform, element.center ?? ZERO),
+            scale: transform.scale * (element.scale?.x ?? 1),
+          };
+          ports.set(element.id, visit(parts, placement, keyOf(element.id), [...path, parts.id]));
+        }
+        continue;
+      }
       // A solid's geometry is its operands', placed where they are, so it needs no position of its own.
       const local = element.center ?? (element.type === 'solid' ? ZERO : undefined);
-      if (element.hidden || !local || element.type === 'link' || element.type === 'group') {
+      if (element.hidden || !local || element.type === 'link') {
         continue;
       }
       const center = apply(transform, local);
@@ -111,9 +153,8 @@ export const renderList = (
         ...(composite ? { frame: true } : {}),
       };
       items.push(item);
-      const parts = element.parts === undefined ? undefined : findLayout(doc, element.parts);
       if (parts?.dim === '3d' && !path.includes(parts.id)) {
-        const fit = fitChild({ center: local, radius: radiusOf(element) }, bounds3D(resolveLayout3D(doc, parts)));
+        const fit = fitChild({ center: local, radius: radiusOf(element) }, bounds3D(drawnElements(doc, parts)));
         visit(parts, compose(transform, fit), item.key, [...path, parts.id]);
       }
     }
@@ -121,12 +162,19 @@ export const renderList = (
       if (element.type !== 'link' || element.hidden || !element.source || !element.target) {
         continue;
       }
-      const from = element.source.node === undefined ? undefined : placed.get(element.source.node);
-      const to = element.target.node === undefined ? undefined : placed.get(element.target.node);
+      const at = (end: ElementEndpoint) =>
+        end.node === undefined
+          ? undefined
+          : end.port !== undefined && ports.has(end.node)
+            ? ports.get(end.node)?.get(end.port)
+            : placed.get(end.node);
+      const from = at(element.source);
+      const to = at(element.target);
       if (from && to) {
         links.push({ key: keyOf(element.id), from, to, ...(element.overrides ? { style: element.overrides } : {}) });
       }
     }
+    return placed;
   };
 
   const layout = scene && findLayout(doc, scene.layout);

@@ -40,6 +40,82 @@ const SURFACES = ['solid', 'tint', 'glass', 'none'] as const;
 const TONES = [0, 1, 2, 3] as const;
 const ARRANGE_PARAM = 'arrange-';
 
+/** Suffix of the model the reader makes for a layout with groups and no model of its own; the printer leaves it out. */
+const GROUPS_MODEL = '/groups';
+
+/** A `group` statement's members and arrangement, read before they become a composite. */
+type GroupSpec = { readonly members: readonly string[]; readonly arrange?: Model.Arrangement };
+
+/** What printing a layout's elements needs: the composite each of its groups places, by element id. */
+type LayoutContext = { readonly groups: ReadonlyMap<string, Model.LayoutRecord> };
+
+const byId = <T extends { readonly id: string }>(items: readonly T[]): Record<string, T> =>
+  Object.fromEntries(items.map((item) => [item.id, item]));
+
+/** `element` with its centre moved by `center` times `sign`, so members move between a layout's units and a group's. */
+const offsetCenter = <E extends Model.Element2D | Model.Element3D>(
+  element: E,
+  center: E['center'],
+  sign: 1 | -1,
+): E => {
+  if (!center || !element.center) {
+    return element;
+  }
+  const at = (axis: 'x' | 'y' | 'z') =>
+    formatRound(Number(Reflect.get(element.center ?? {}, axis)) + sign * Number(Reflect.get(center, axis)));
+  return { ...element, center: 'z' in center ? { x: at('x'), y: at('y'), z: at('z') } : { x: at('x'), y: at('y') } };
+};
+
+const formatRound = (value: number): number => Math.round(value * 1000) / 1000 + 0;
+
+/**
+ * A layout's `group` statements as composites (decision 17): each group's members move into its composite, relative to
+ * the group's centre, the group becomes an element placing the composite with no fit, and a link to a member ends on
+ * the group's port of that name. A member that is itself a group stays where it is.
+ */
+const groupElements = <E extends Model.Element2D | Model.Element3D>(
+  elements: Readonly<Record<string, E>>,
+  groups: ReadonlyMap<string, GroupSpec>,
+  composite: (id: string) => string,
+  place: (group: E, object: string) => E,
+): { elements: Record<string, E>; parts: Map<string, Record<string, E>> } => {
+  const groupOf = new Map<string, string>();
+  for (const [id, spec] of groups) {
+    for (const member of spec.members) {
+      elements[member] && !groups.has(member) && !groupOf.has(member) && groupOf.set(member, id);
+    }
+  }
+  const toPort = (end: ElementEndpoint | undefined): ElementEndpoint | undefined => {
+    const group = end?.node === undefined ? undefined : groupOf.get(end.node);
+    return group && end?.node !== undefined ? { node: group, port: end.node } : end;
+  };
+  const outside: Record<string, E> = {};
+  for (const [key, element] of Object.entries(elements)) {
+    if (groupOf.has(key)) {
+      continue;
+    }
+    if (groups.has(key)) {
+      outside[key] = place(element, composite(key));
+    } else {
+      outside[key] =
+        element.source || element.target
+          ? { ...element, source: toPort(element.source), target: toPort(element.target) }
+          : element;
+    }
+  }
+  const parts = new Map(
+    [...groups.keys()].map((id) => [
+      id,
+      Object.fromEntries(
+        [...groupOf]
+          .filter(([, group]) => group === id)
+          .map(([member]) => [member, offsetCenter(elements[member], elements[id]?.center, -1)]),
+      ),
+    ]),
+  );
+  return { elements: outside, parts };
+};
+
 const isVec2 = (value: AttrValue | undefined): value is Model.Vec2 =>
   typeof value === 'object' && 'x' in value && !('z' in value);
 const isVec3 = (value: AttrValue | undefined): value is Model.Vec3 => typeof value === 'object' && 'z' in value;
@@ -198,13 +274,19 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
       ...(style ? { tokens: style } : {}),
       ...optionalBinding('source', attrs.get('from')),
       ...optionalBinding('target', attrs.get('to')),
-      ...(members ? { members } : {}),
-      ...(arrangeKind
+      ...(members
         ? {
-            arrange:
-              Object.keys(arrangeParams).length > 0
-                ? { kind: arrangeKind, params: arrangeParams }
-                : { kind: arrangeKind },
+            group: {
+              members,
+              ...(arrangeKind
+                ? {
+                    arrange:
+                      Object.keys(arrangeParams).length > 0
+                        ? { kind: arrangeKind, params: arrangeParams }
+                        : { kind: arrangeKind },
+                  }
+                : {}),
+            },
           }
         : {}),
       ...(props ? { props } : {}),
@@ -221,7 +303,10 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
   const readScale = (value: AttrValue | undefined): Model.Vec3 | undefined =>
     isVec3(value) ? value : typeof value === 'number' ? { x: value, y: value, z: value } : undefined;
 
-  const readElement2D = (statement: SyntaxNode, objects: ReadonlySet<string>): Model.Element2D => {
+  const readElement2D = (
+    statement: SyntaxNode,
+    objects: ReadonlySet<string>,
+  ): { record: Model.Element2D; group?: GroupSpec } => {
     const attrs = readAttrs(statement);
     const position = statement.getChild('Position');
     const at = position && readPosition(position);
@@ -230,17 +315,21 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
     if (at && isVec3(at)) {
       report(position, 'A 2D element takes an x,y position.');
     }
-    const { tokens, ...base } = readBase(statement, attrs, objects);
-    return {
+    const { tokens, group, ...base } = readBase(statement, attrs, objects);
+    const record: Model.Element2D = {
       ...base,
       ...(tokens ? { overrides: flattenStyle(tokens) } : {}),
       ...(at && isVec2(at) ? { center: at } : {}),
       ...(isSize2(size) ? { size } : {}),
       ...(rotation !== undefined ? { rotation } : {}),
     };
+    return { record, group };
   };
 
-  const readElement3D = (statement: SyntaxNode, objects: ReadonlySet<string>): Model.Element3D => {
+  const readElement3D = (
+    statement: SyntaxNode,
+    objects: ReadonlySet<string>,
+  ): { record: Model.Element3D; group?: GroupSpec } => {
     const attrs = readAttrs(statement);
     const position = statement.getChild('Position');
     const at = position && readPosition(position);
@@ -249,14 +338,15 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
     if (at && !isVec3(at)) {
       report(position, 'A 3D element takes an x,y,z position.');
     }
-    const { tokens, ...base } = readBase(statement, attrs, objects);
-    return {
+    const { tokens, group, ...base } = readBase(statement, attrs, objects);
+    const record: Model.Element3D = {
       ...base,
       ...(tokens ? { overrides: tokens satisfies Style3D } : {}),
       ...(at && isVec3(at) ? { center: at } : {}),
       ...(scale ? { scale } : {}),
       ...(isVec3(rotation) ? { rotation } : {}),
     };
+    return { record, group };
   };
 
   const readPosition = (node: SyntaxNode): Model.Vec2 | Model.Vec3 | undefined => {
@@ -379,27 +469,80 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
     if (!head) {
       continue;
     }
-    const modelId = asString(head.attrs.get('model'));
-    const model = models.find((candidate) => candidate.id === modelId && candidate.dim === head.dim);
+    const declared = asString(head.attrs.get('model'));
+    const model = models.find((candidate) => candidate.id === declared && candidate.dim === head.dim);
     const objects = new Set(model ? Object.keys(model.objects) : []);
-    const base = { id: head.id, ...head.name, ...optional('model', modelId) };
     const statements = bodyOf(statement, 'LayoutBody', 'ElementStmt');
+    const groups = new Map<string, GroupSpec>();
+    // A group's composite object goes in the layout's model, or in one made for the layout when it names none.
+    const composite = (id: string) => `${head.id}/${id}`;
+    const modelId = (): string | undefined => (groups.size === 0 || model ? declared : `${head.id}${GROUPS_MODEL}`);
+    const addComposites = () => {
+      const id = modelId();
+      if (groups.size === 0 || id === undefined) {
+        return;
+      }
+      const created = [...groups.keys()].map((group) => ({
+        id: composite(group),
+        type: 'group',
+        parts: composite(group),
+      }));
+      const index = models.findIndex((candidate) => candidate.id === id && candidate.dim === head.dim);
+      const current = models[index];
+      if (current?.dim === '2d') {
+        models[index] = { ...current, objects: { ...current.objects, ...byId(created) } };
+      } else if (current?.dim === '3d') {
+        models[index] = { ...current, objects: { ...current.objects, ...byId(created) } };
+      } else if (head.dim === '2d') {
+        models.push({ id, dim: '2d', objects: byId(created) });
+      } else {
+        models.push({ id, dim: '3d', objects: byId(created) });
+      }
+    };
+    const base = () => ({ id: head.id, ...head.name, ...optional('model', modelId()) });
+    const compositeLayout = (id: string) => ({
+      id: composite(id),
+      ...optional('model', modelId()),
+      kind: 'composite' as const,
+      anonymous: true,
+      ...optional('arrange', groups.get(id)?.arrange),
+    });
     if (head.dim === '2d') {
       const elements: Record<string, Model.Element2D> = {};
       for (const element of statements) {
-        const record = readElement2D(element, objects);
+        const { record, group } = readElement2D(element, objects);
         ranges.set(`layout:${head.id}/${record.id}`, element);
         elements[keyFor(elements, record.id, element)] = record;
+        group && groups.set(record.id, group);
       }
-      layouts.push({ ...base, dim: '2d', elements });
+      const grouped = groupElements(elements, groups, composite, ({ type: _type, ...group }, object) => ({
+        ...group,
+        object,
+        fit: 'none',
+      }));
+      addComposites();
+      layouts.push({ ...base(), dim: '2d', elements: grouped.elements });
+      for (const [id, parts] of grouped.parts) {
+        layouts.push({ ...compositeLayout(id), dim: '2d', elements: parts });
+      }
     } else {
       const elements: Record<string, Model.Element3D> = {};
       for (const element of statements) {
-        const record = readElement3D(element, objects);
+        const { record, group } = readElement3D(element, objects);
         ranges.set(`layout:${head.id}/${record.id}`, element);
         elements[keyFor(elements, record.id, element)] = record;
+        group && groups.set(record.id, group);
       }
-      layouts.push(applyArrangement({ ...base, dim: '3d', elements }));
+      const grouped = groupElements(elements, groups, composite, ({ type: _type, ...group }, object) => ({
+        ...group,
+        object,
+        fit: 'none',
+      }));
+      addComposites();
+      layouts.push({ ...base(), dim: '3d', elements: grouped.elements });
+      for (const [id, parts] of grouped.parts) {
+        layouts.push(applyArrangement({ ...compositeLayout(id), dim: '3d', elements: parts }));
+      }
     }
   }
 
@@ -513,22 +656,33 @@ const formatStyleAndProps = (tokens: StyleTokens, item: { props?: Record<string,
 ];
 
 /** The attributes every element shares, in the canonical order after its geometry. */
-const formatBase = (element: Model.Element, tokens: StyleTokens): string[] => [
+const formatBase = (element: Model.Element, tokens: StyleTokens, context: LayoutContext): string[] => [
   ...attr('order', element.z),
   ...attr('layer', element.layer),
   ...attr('hidden', element.hidden),
   ...attr('locked', element.locked),
   ...attr('pinned', element.pinned),
-  ...(element.source ? [`from=${formatBinding(element.source)}`] : []),
-  ...(element.target ? [`to=${formatBinding(element.target)}`] : []),
-  ...(element.members ? [`members=${formatString(element.members.join(' '))}`] : []),
-  ...attr('arrange', element.arrange?.kind),
-  ...Object.entries(element.arrange?.params ?? {}).flatMap(([key, value]) => attr(`${ARRANGE_PARAM}${key}`, value)),
+  ...(element.source ? [`from=${formatBinding(element.source, context)}`] : []),
+  ...(element.target ? [`to=${formatBinding(element.target, context)}`] : []),
+  ...formatGroup(context.groups.get(element.id)),
   ...formatStyleAndProps(tokens, element),
 ];
 
-const formatBinding = ({ node, port }: ElementEndpoint): string =>
-  formatWord(port === undefined ? (node ?? '') : `${node ?? ''}#${port}`);
+/** A group's members, in its composite's order, and the arrangement its composite runs. */
+const formatGroup = (parts: Model.LayoutRecord | undefined): string[] =>
+  parts
+    ? [
+        `members=${formatString(Object.keys(parts.elements).join(' '))}`,
+        ...attr('arrange', parts.arrange?.kind),
+        ...Object.entries(parts.arrange?.params ?? {}).flatMap(([key, value]) => attr(`${ARRANGE_PARAM}${key}`, value)),
+      ]
+    : [];
+
+/** An end on a group's port is written as the member it names, as the text binds it. */
+const formatBinding = ({ node, port }: ElementEndpoint, context: LayoutContext): string =>
+  formatWord(
+    port === undefined ? (node ?? '') : node !== undefined && context.groups.has(node) ? port : `${node ?? ''}#${port}`,
+  );
 
 /** `element <id> <object or kind> ["label"]`; an element placing an object names it where a kind would go. */
 const formatHead = (element: Model.Element): string[] => [
@@ -538,23 +692,43 @@ const formatHead = (element: Model.Element): string[] => [
   ...(element.label === undefined ? [] : [formatString(element.label)]),
 ];
 
-const formatElement2D = (element: Model.Element2D): string =>
+const formatElement2D = (element: Model.Element2D, context: LayoutContext): string =>
   [
     ...formatHead(element),
     ...(element.center ? ['@', formatVec2(element.center)] : []),
     ...attr('size', element.size),
     ...attr('rotation', element.rotation),
-    ...formatBase(element, tokensOf2D(element.overrides)),
+    ...formatBase(element, tokensOf2D(element.overrides), context),
   ].join(' ');
 
-const formatElement3D = (element: Model.Element3D): string =>
+const formatElement3D = (element: Model.Element3D, context: LayoutContext): string =>
   [
     ...formatHead(element),
     ...(element.center ? ['@', formatVec3(element.center)] : []),
     ...(element.scale ? [`scale=${formatScale(element.scale)}`] : []),
     ...attr('rotation', element.rotation),
-    ...formatBase(element, tokensOf3D(element.overrides)),
+    ...formatBase(element, tokensOf3D(element.overrides), context),
   ].join(' ');
+
+/**
+ * A layout's element lines: a group (an element placing a group composite) is written as its members, back in the
+ * layout's units, followed by the `group` line naming them.
+ */
+const elementLines = <E extends Model.Element2D | Model.Element3D>(
+  elements: Readonly<Record<string, E>>,
+  partsOf: (element: E) => Readonly<Record<string, E>> | undefined,
+  format: (element: E) => string,
+  asGroup: (element: E) => E,
+): string[] =>
+  Object.values(elements).flatMap((element) => {
+    const parts = partsOf(element);
+    return parts
+      ? [
+          ...Object.values(parts).map((member) => format(offsetCenter(member, element.center, 1))),
+          format(asGroup(element)),
+        ]
+      : [format(element)];
+  });
 
 const formatObject = (object: Model.Object2D | Model.Object3D, tokens: StyleTokens): string =>
   [
@@ -599,35 +773,94 @@ const formatSceneRecord = (scene: Model.SceneRecord): string =>
     [formatCamera(scene)],
   );
 
-const formatLayoutRecord = (layout: Model.LayoutRecord): string =>
-  formatBlock(
+const formatLayoutRecord = (
+  layout: Model.LayoutRecord,
+  composites: ReadonlyMap<string, Model.LayoutRecord>,
+): string => {
+  const groups = new Map(
+    Object.values(layout.elements).flatMap((element) => {
+      const parts = element.object === undefined ? undefined : composites.get(element.object);
+      return parts ? [[element.id, parts]] : [];
+    }),
+  );
+  const context: LayoutContext = { groups };
+  return formatBlock(
     [
       'layout',
       formatId(layout.id),
       `dim=${layout.dim}`,
-      ...(layout.model === undefined ? [] : [`model=${formatWord(layout.model)}`]),
+      ...(layout.model === undefined || layout.model === `${layout.id}${GROUPS_MODEL}`
+        ? []
+        : [`model=${formatWord(layout.model)}`]),
       ...name(layout.name),
     ],
     layout.dim === '2d'
-      ? Object.values(layout.elements).map(formatElement2D)
-      : Object.values(layout.elements).map(formatElement3D),
+      ? elementLines(
+          layout.elements,
+          (element) => {
+            const parts = groups.get(element.id);
+            return parts?.dim === '2d' ? parts.elements : undefined;
+          },
+          (element) => formatElement2D(element, context),
+          ({ object: _object, fit: _fit, ...group }) => ({ ...group, type: 'group' }),
+        )
+      : elementLines(
+          layout.elements,
+          (element) => {
+            const parts = groups.get(element.id);
+            return parts?.dim === '3d' ? parts.elements : undefined;
+          },
+          (element) => formatElement3D(element, context),
+          ({ object: _object, fit: _fit, ...group }) => ({ ...group, type: 'group' }),
+        ),
   );
+};
 
-const formatModelRecord = (model: Model.ModelRecord): string =>
+const formatModelRecord = (model: Model.ModelRecord, composites: ReadonlyMap<string, Model.LayoutRecord>): string =>
   formatBlock(
     ['model', formatId(model.id), `dim=${model.dim}`, ...name(model.name)],
     model.dim === '2d'
-      ? Object.values(model.objects).map((object) => formatObject(object, tokensOf2D(object.overrides)))
-      : Object.values(model.objects).map((object) => formatObject(object, tokensOf3D(object.overrides))),
+      ? Object.values(model.objects)
+          .filter((object) => !composites.has(object.id))
+          .map((object) => formatObject(object, tokensOf2D(object.overrides)))
+      : Object.values(model.objects)
+          .filter((object) => !composites.has(object.id))
+          .map((object) => formatObject(object, tokensOf3D(object.overrides))),
   );
+
+/**
+ * The group composites of a document by id: anonymous composite layouts that a `group` object of the same id places,
+ * which the text writes as `group` elements rather than as layouts and objects of their own.
+ */
+const groupComposites = (doc: Model.SceneDocument): Map<string, Model.LayoutRecord> => {
+  const groupObjects = new Set(
+    doc.models.flatMap((model) =>
+      Object.values(model.objects).flatMap((object) =>
+        object.type === 'group' && object.parts === object.id ? [object.id] : [],
+      ),
+    ),
+  );
+  return new Map(
+    doc.layouts.flatMap((layout) =>
+      layout.anonymous && layout.kind === 'composite' && groupObjects.has(layout.id) ? [[layout.id, layout]] : [],
+    ),
+  );
+};
 
 /**
  * Canonical text for a document: its scenes, then its layouts, then its models, one block each separated by a blank
  * line, with every placed element's position written out so the text is the whole of the records.
  */
-export const printScenes = (doc: Model.SceneDocument): string =>
-  [
+export const printScenes = (doc: Model.SceneDocument): string => {
+  const composites = groupComposites(doc);
+  // A model the reader made only to hold a layout's groups is left out with them.
+  const made = (model: Model.ModelRecord) =>
+    model.id.endsWith(GROUPS_MODEL) && Object.keys(model.objects).every((id) => composites.has(id));
+  return [
     ...doc.scenes.map(formatSceneRecord),
-    ...doc.layouts.map(formatLayoutRecord),
-    ...doc.models.map(formatModelRecord),
+    ...doc.layouts
+      .filter((layout) => !composites.has(layout.id))
+      .map((layout) => formatLayoutRecord(layout, composites)),
+    ...doc.models.filter((model) => !made(model)).map((model) => formatModelRecord(model, composites)),
   ].join('\n');
+};

@@ -26,6 +26,24 @@ model shapes dim=2d {
 `;
 
 describe('readScenes', () => {
+  test('a group is a composite placed by an element with no fit; links to its members end on its ports', () => {
+    const { document } = readScenes(EXEMPLARS.cluster);
+    const cluster = document.layouts.find((layout) => layout.id === 'cluster');
+    const parts = document.layouts.find((layout) => layout.id === 'cluster/team');
+    expect(cluster?.elements.team).toEqual({ id: 'team', object: 'cluster/team', fit: 'none' });
+    expect(cluster?.elements.l1?.target).toEqual({ node: 'team', port: 's1' });
+    expect(parts).toMatchObject({ kind: 'composite', anonymous: true, model: 'nodes', arrange: { kind: 'ring' } });
+    expect(Object.keys(parts?.elements ?? {})).toEqual(['s1', 's2', 's3', 's4']);
+    const model = document.models.find((candidate) => candidate.id === 'nodes');
+    expect(model?.objects['cluster/team']).toEqual({ id: 'cluster/team', type: 'group', parts: 'cluster/team' });
+  });
+
+  test('a layout with groups and no model gets one made for its groups, which printing leaves out', () => {
+    const { document } = readScenes(EXEMPLARS.hierarchy);
+    expect(document.layouts.find((layout) => layout.id === 'team-b')?.model).toBe('team-b/groups');
+    expect(printScenes(document)).toBe(EXEMPLARS.hierarchy);
+  });
+
   test('reads a scene, the layout it views and the model the layout places objects from', () => {
     const { document, problems } = readScenes(LINKS);
     expect(problems).toEqual([]);

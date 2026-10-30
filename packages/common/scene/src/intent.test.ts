@@ -5,6 +5,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { applyIntent, isLayoutIntent } from './intent.ts';
+import type * as Scene from './Scene.ts';
 import { layout2D, layout3D } from './testing.ts';
 
 const cube = (id: string, x = 0) => ({ id, type: 'cube', center: { x, y: 0, z: 0 } });
@@ -38,42 +39,23 @@ describe('applyIntent', () => {
       cube('c'),
       { id: 'ab', type: 'link', source: { node: 'a' }, target: { node: 'b' } },
       { id: 'bc', type: 'link', source: { node: 'b' }, target: { node: 'c' } },
-      { id: 'g', type: 'group', members: ['a', 'c'] },
     ]);
     const after = applyIntent(layout, { kind: 'delete', ids: ['a'] });
-    expect(Object.keys(after.elements).sort()).toEqual(['b', 'bc', 'c', 'g']);
-    expect(after.elements.g.members).toEqual(['c']);
+    expect(Object.keys(after.elements).sort()).toEqual(['b', 'bc', 'c']);
   });
 
-  test('group adds a group element over its members; ungroup removes it and keeps the members', () => {
-    const layout = layout3D('l', [cube('a'), cube('b')]);
-    const grouped = applyIntent(layout, {
-      kind: 'group',
-      id: 'g',
-      members: ['a', 'b'],
-      arrange: { kind: 'ring' },
-    });
-    expect(grouped.elements.g).toEqual({ id: 'g', type: 'group', members: ['a', 'b'], arrange: { kind: 'ring' } });
-    const ungrouped = applyIntent(grouped, { kind: 'ungroup', id: 'g' });
-    expect(Object.keys(ungrouped.elements).sort()).toEqual(['a', 'b']);
-  });
-
-  test('moving an arranged member sets pinned', () => {
-    const layout = layout3D('l', [
-      cube('a'),
-      cube('b'),
-      { id: 'g', type: 'group', members: ['a'], arrange: { kind: 'ring' } },
-    ]);
-    const moved = applyIntent(layout, { kind: 'move', ids: ['a', 'b'], delta: { x: 1, y: 0, z: 0 } });
-    expect(moved.elements.a.pinned).toBe(true);
-    expect(moved.elements.b.pinned).toBeUndefined();
+  test('moving an element of an arranged layout sets pinned', () => {
+    const plain = layout3D('l', [cube('a')]);
+    const arranged: Scene.LayoutRecord3D = { ...plain, arrange: { kind: 'ring' } };
+    const delta = { x: 1, y: 0, z: 0 };
+    expect(applyIntent(arranged, { kind: 'move', ids: ['a'], delta }).elements.a.pinned).toBe(true);
+    expect(applyIntent(plain, { kind: 'move', ids: ['a'], delta }).elements.a.pinned).toBeUndefined();
   });
 
   test('an intent naming a missing id returns the layout unchanged', () => {
     const layout = layout3D('l', [cube('a')]);
     expect(applyIntent(layout, { kind: 'move', ids: ['missing'], delta: { x: 1, y: 0, z: 0 } })).toBe(layout);
     expect(applyIntent(layout, { kind: 'update', id: 'missing', path: ['label'], value: 'x' })).toBe(layout);
-    expect(applyIntent(layout, { kind: 'ungroup', id: 'a' })).toBe(layout);
   });
 
   test('update writes a nested path, and unsets it with no value', () => {
@@ -102,7 +84,7 @@ describe('applyIntent', () => {
         { kind: 'reorder', id: 'b', order: 'a5' },
       ],
     });
-    expect(after.elements.b).toMatchObject({ center: { x: 3, y: 0, z: 0 }, order: 'a5' });
+    expect(after.elements.b).toMatchObject({ center: { x: 3, y: 0, z: 0 }, z: 'a5' });
   });
 
   test('create of an element placing an object keeps object and sets no kind', () => {

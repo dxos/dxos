@@ -91,28 +91,44 @@ describe('applyModelIntent', () => {
     ).toHaveLength(1);
   });
 
-  test('extract keeps groups and links whole: members follow their group, outside groups name the new element', () => {
-    const base = doc();
-    const root = base.layouts[0];
-    const elements = {
-      ...root.elements,
-      g: { id: 'g', type: 'group', members: ['a', 'b'] },
-      outer: { id: 'outer', type: 'group', members: ['c', 'a'] },
-    };
-    const start: Scene.SceneDocument = { ...base, layouts: [{ ...root, elements } as Scene.LayoutRecord3D] };
-    // Selecting the group g extracts its members too; the selected link bc has an end (c) left outside, so it stays.
-    const { doc: after, problems } = applyModelIntent(start, {
+  test('extract keeps links whole: a selected link with an end left outside stays, bound to the new element', () => {
+    const { doc: after, problems } = applyModelIntent(doc(), {
       kind: 'extract',
       model: 'm',
       layout: 'root',
-      ids: ['g', 'bc'],
+      ids: ['a', 'b', 'bc'],
       object: { id: 'pair', type: 'sphere' },
     });
     expect(problems).toEqual([]);
     const parts = after.layouts.find((layout) => layout.id === 'pair-parts');
-    expect(Object.keys(parts?.elements ?? {}).sort()).toEqual(['a', 'ab', 'b', 'g']);
+    expect(Object.keys(parts?.elements ?? {}).sort()).toEqual(['a', 'ab', 'b']);
     const host = after.layouts.find((layout) => layout.id === 'root');
     expect(host?.elements.bc?.source).toEqual({ node: 'pair' });
-    expect(host?.elements.outer?.members).toEqual(['c', 'pair']);
+  });
+
+  test('group makes an anonymous composite placed with no fit; links from outside end on its ports; ungroup undoes it', () => {
+    const grouped = applyModelIntent(doc(), {
+      kind: 'group',
+      model: 'm',
+      layout: 'root',
+      id: 'g',
+      members: ['a', 'b'],
+      arrange: { kind: 'ring' },
+    });
+    expect(grouped.problems).toEqual([]);
+    const parts = grouped.doc.layouts.find((layout) => layout.id === 'root/g');
+    expect(parts).toMatchObject({ kind: 'composite', anonymous: true, arrange: { kind: 'ring' }, model: 'm' });
+    expect(Object.keys(parts?.elements ?? {}).sort()).toEqual(['a', 'ab', 'b']);
+    expect(grouped.doc.models[0].objects['root/g']).toEqual({ id: 'root/g', type: 'group', parts: 'root/g' });
+    const host = grouped.doc.layouts.find((layout) => layout.id === 'root');
+    expect(host?.elements.g).toEqual({ id: 'g', object: 'root/g', fit: 'none' });
+    expect(host?.elements.bc?.source).toEqual({ node: 'g', port: 'b' });
+
+    const ungrouped = applyModelIntent(grouped.doc, { kind: 'ungroup', model: 'm', layout: 'root', id: 'g' });
+    expect(ungrouped.problems).toEqual([]);
+    expect(ungrouped.doc.layouts.map((layout) => layout.id)).toEqual(['root']);
+    expect(ungrouped.doc.models[0].objects['root/g']).toBeUndefined();
+    expect(ungrouped.doc.layouts[0].elements.bc?.source).toEqual({ node: 'b' });
+    expect(Object.keys(ungrouped.doc.layouts[0].elements).sort()).toEqual(['a', 'ab', 'b', 'bc', 'c']);
   });
 });

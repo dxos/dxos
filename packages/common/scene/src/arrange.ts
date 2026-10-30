@@ -69,34 +69,31 @@ export const grid: Arranger = (input) => {
   );
 };
 
-/** The arrangements a 3D group may name. */
+/** The arrangements a 3D layout may name. */
 export const ARRANGERS_3D: Readonly<Record<string, Arranger>> = { ring, grid };
 
 /**
- * Runs each group's stored arrangement over its members that are neither pinned nor already placed, so text written
- * as intent alone gets positions while a placed or hand-moved member stays put.
+ * Runs the layout's arrangement over its elements that are neither links, pinned nor already placed, so text written as
+ * intent alone gets positions while a placed or hand-moved element stays put.
  */
 export const applyArrangement = (layout: LayoutRecord3D): LayoutRecord3D => {
+  const arranger = layout.arrange && ARRANGERS_3D[layout.arrange.kind];
+  if (!arranger) {
+    return layout;
+  }
   const elements: Record<string, Element3D> = { ...layout.elements };
-  for (const group of Object.values(layout.elements)) {
-    const arranger = group.arrange && ARRANGERS_3D[group.arrange.kind];
-    if (!arranger || !group.members) {
-      continue;
-    }
-    const targets = group.members.filter((id) => {
-      const member = elements[id];
-      return member !== undefined && !member.pinned && member.center === undefined;
-    });
-    const placed = arranger({
-      targets,
-      params: { centre: group.center ?? ORIGIN, ...group.arrange?.params },
-      values: (id) => ({ center: elements[id]?.center }),
-    });
-    for (const [id, center] of Object.entries(placed)) {
-      const member = elements[id];
-      if (member && isVec3(center)) {
-        elements[id] = { ...member, center };
-      }
+  const targets = Object.values(elements)
+    .filter((element) => element.type !== 'link' && !element.pinned && element.center === undefined)
+    .map((element) => element.id);
+  const placed = arranger({
+    targets,
+    params: { centre: ORIGIN, ...layout.arrange?.params },
+    values: (id) => ({ center: elements[id]?.center }),
+  });
+  for (const [id, center] of Object.entries(placed)) {
+    const element = elements[id];
+    if (element && isVec3(center)) {
+      elements[id] = { ...element, center };
     }
   }
   return { ...layout, elements };

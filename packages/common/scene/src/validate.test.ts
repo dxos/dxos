@@ -48,12 +48,6 @@ describe('validateDocument', () => {
     expect(problems.map((problem) => problem.element)).toEqual(['ab']);
   });
 
-  test('reports a group member that does not exist', () => {
-    const group: Scene.Element2D = { id: 'g', type: 'group', members: ['a', 'missing'] };
-    const problems = validateDocument(doc([layout2D('l', [rect('a'), group])]));
-    expect(problems.map((problem) => problem.element)).toEqual(['g']);
-  });
-
   test('reports a kind from the other dimension', () => {
     const problems = validateDocument(doc([layout2D('l', [{ id: 's', type: 'sphere' }])]));
     expect(problems.map((problem) => problem.element)).toEqual(['s']);

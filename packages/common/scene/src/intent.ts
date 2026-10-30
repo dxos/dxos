@@ -6,7 +6,6 @@ import * as Schema from 'effect/Schema';
 
 import { endpointNode } from './element.ts';
 import {
-  Arrangement,
   type Dimension,
   Element2D,
   Element3D,
@@ -26,8 +25,6 @@ export type LayoutIntent =
   | { readonly kind: 'delete'; readonly ids: readonly string[] }
   | { readonly kind: 'update'; readonly id: string; readonly path: readonly string[]; readonly value?: unknown }
   | { readonly kind: 'reorder'; readonly id: string; readonly order: string }
-  | { readonly kind: 'group'; readonly id: string; readonly members: readonly string[]; readonly arrange?: Arrangement }
-  | { readonly kind: 'ungroup'; readonly id: string }
   | { readonly kind: 'bind'; readonly link: Element }
   | { readonly kind: 'move'; readonly ids: readonly string[]; readonly delta: Vec2 | Vec3 }
   | { readonly kind: 'rotate'; readonly ids: readonly string[]; readonly delta: number | Vec3 }
@@ -56,13 +53,6 @@ export const LayoutIntent: Schema.Codec<LayoutIntent> = Schema.Union([
     value: Schema.optional(Schema.Unknown),
   }),
   Schema.Struct({ kind: Schema.Literal('reorder'), id: Schema.String, order: Schema.String }),
-  Schema.Struct({
-    kind: Schema.Literal('group'),
-    id: Schema.String,
-    members: ids,
-    arrange: Schema.optional(Arrangement),
-  }),
-  Schema.Struct({ kind: Schema.Literal('ungroup'), id: Schema.String }),
   Schema.Struct({ kind: Schema.Literal('bind'), link: ElementSchema }),
   Schema.Struct({ kind: Schema.Literal('move'), ids, delta: Schema.Union([Vec3, Vec2]) }),
   Schema.Struct({ kind: Schema.Literal('rotate'), ids, delta: Schema.Union([Schema.Number, Vec3]) }),
@@ -164,6 +154,7 @@ const reduce = <E extends Element>(
   isElement: (value: unknown) => value is E,
   geometry: (element: E, intent: LayoutIntent) => E | undefined,
   solid: (intent: SolidIntent) => E | undefined,
+  arranged = false,
 ): Elements<E> | undefined => {
   switch (intent.kind) {
     case 'create':
@@ -194,10 +185,8 @@ const reduce = <E extends Element>(
           if (gone.has(id) || boundTo(element)) {
             return [];
           }
-          const members = element.members?.filter((member) => !gone.has(member));
-          const next = members && members.length !== element.members?.length ? { ...element, members } : element;
-          const unhidden = shown.has(id) ? setPath(next, ['hidden'], undefined) : next;
-          return [[id, isElement(unhidden) ? unhidden : next]];
+          const unhidden = shown.has(id) ? setPath(element, ['hidden'], undefined) : element;
+          return [[id, isElement(unhidden) ? unhidden : element]];
         }),
       );
     }
@@ -234,21 +223,7 @@ const reduce = <E extends Element>(
     }
     case 'reorder': {
       const element = elements[intent.id];
-      return element ? { ...elements, [intent.id]: { ...element, order: intent.order } } : undefined;
-    }
-    case 'group': {
-      const members = intent.members.filter((id) => elements[id] !== undefined);
-      const group = { id: intent.id, type: 'group', members, ...(intent.arrange ? { arrange: intent.arrange } : {}) };
-      return members.length > 0 && elements[intent.id] === undefined && isElement(group)
-        ? { ...elements, [intent.id]: group }
-        : undefined;
-    }
-    case 'ungroup': {
-      if (elements[intent.id]?.type !== 'group') {
-        return undefined;
-      }
-      const { [intent.id]: _group, ...rest } = elements;
-      return rest;
+      return element ? { ...elements, [intent.id]: { ...element, z: intent.order } } : undefined;
     }
     case 'move':
     case 'rotate':
@@ -261,16 +236,13 @@ const reduce = <E extends Element>(
       if (changed.length === 0) {
         return undefined;
       }
-      // A person moving a member of an arranged group placed it, so re-arranging leaves it there.
-      const arranged = new Set(
-        Object.values(elements).flatMap((element) => (element.arrange ? (element.members ?? []) : [])),
-      );
+      // A person moving an element of an arranged layout placed it, so re-arranging leaves it there.
       return {
         ...elements,
         ...Object.fromEntries(
           changed.map(([id, element]) => [
             id,
-            intent.kind === 'move' && arranged.has(id) ? { ...element, pinned: true } : element,
+            intent.kind === 'move' && arranged ? { ...element, pinned: true } : element,
           ]),
         ),
       };
@@ -278,7 +250,7 @@ const reduce = <E extends Element>(
     case 'batch': {
       let current = elements;
       for (const inner of intent.intents) {
-        current = reduce(current, inner, isElement, geometry, solid) ?? current;
+        current = reduce(current, inner, isElement, geometry, solid, arranged) ?? current;
       }
       return current === elements ? undefined : current;
     }
@@ -350,9 +322,9 @@ export function applyIntent(layout: LayoutRecord3D, intent: LayoutIntent): Layou
 export function applyIntent(layout: LayoutRecord, intent: LayoutIntent): LayoutRecord;
 export function applyIntent(layout: LayoutRecord, intent: LayoutIntent): LayoutRecord {
   if (layout.dim === '2d') {
-    const elements = reduce(layout.elements, intent, isElement2D, geometry2D, () => undefined);
+    const elements = reduce(layout.elements, intent, isElement2D, geometry2D, () => undefined, !!layout.arrange);
     return elements ? { ...layout, elements } : layout;
   }
-  const elements = reduce(layout.elements, intent, isElement3D, geometry3D, solid3D);
+  const elements = reduce(layout.elements, intent, isElement3D, geometry3D, solid3D, !!layout.arrange);
   return elements ? { ...layout, elements } : layout;
 }

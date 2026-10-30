@@ -17,7 +17,7 @@ const duplicates = (part: Part, ids: readonly string[]): Problem[] =>
     .map((id) => ({ part, id, message: `Duplicate ${part} id "${id}".` }));
 
 /**
- * Problems with ids, kinds, references between scenes, layouts and models, bindings and group members, in document
+ * Problems with ids, kinds, references between scenes, layouts and models, and bindings, in document
  * order: scenes, then layouts, then models.
  */
 export const validateDocument = (doc: SceneDocument): Problem[] => {
@@ -82,10 +82,6 @@ export const validateDocument = (doc: SceneDocument): Problem[] => {
         if (end?.node !== undefined && !ids.has(end.node)) {
           report(element.id, `Bound to "${end.node}", which is not in the layout.`);
         }
-      }
-      const missing = element.members?.filter((member: string) => !ids.has(member)) ?? [];
-      if (missing.length > 0) {
-        report(element.id, `Members not in the layout: ${missing.join(', ')}.`);
       }
     }
   }

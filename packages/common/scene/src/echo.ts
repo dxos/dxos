@@ -56,7 +56,7 @@ const defined = <T extends object, K extends keyof T>(record: T, keys: readonly 
 };
 
 /** The optional fields a layout record and its stored object share, 2D's modes included. */
-const LAYOUT_FIELDS = ['name', 'styles', 'layers', 'kind', 'anonymous', 'props'] as const;
+const LAYOUT_FIELDS = ['name', 'styles', 'layers', 'kind', 'anonymous', 'arrange', 'props'] as const;
 const LAYOUT_2D_FIELDS = [...LAYOUT_FIELDS, 'lattice', 'constraints'] as const;
 
 const storeLayout = (record: LayoutRecord): StoredLayout =>

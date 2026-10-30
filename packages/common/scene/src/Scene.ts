@@ -134,9 +134,7 @@ export const BaseElement = Schema.Struct({
   /** A link's ends. */
   source: Schema.optional(ElementEndpoint),
   target: Schema.optional(ElementEndpoint),
-  members: Schema.optional(Schema.Array(Schema.String)),
-  arrange: Schema.optional(Arrangement),
-  /** Set when a person placed the element, so arranging leaves it where it is. */
+  /** Set when a person placed the element, so arranging its layout leaves it where it is. */
   pinned: Schema.optional(Schema.Boolean),
   /** Kind-specific fields, validated by the kind's registration. */
   props: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
@@ -223,6 +221,8 @@ export const makeLayoutSchema = <E extends Schema.Top, M extends Schema.Top, S e
     kind: Schema.optional(LayoutKind),
     /** A composite the Group command made: kept out of the library until it is named or placed again. */
     anonymous: Schema.optional(Schema.Boolean),
+    /** How the layout places its elements that have no position yet (a group's ring, say). */
+    arrange: Schema.optional(Arrangement),
     /** Renderer-specific fields, as an element's `props` (a canvas View's layers, say). */
     props: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
   });
@@ -236,6 +236,7 @@ export type Layout<E, M = string, S = unknown> = {
   readonly layers?: { readonly [id: string]: Layer };
   readonly kind?: LayoutKind;
   readonly anonymous?: boolean;
+  readonly arrange?: Arrangement;
   readonly props?: { readonly [key: string]: any };
 };
 

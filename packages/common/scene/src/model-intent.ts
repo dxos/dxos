@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { type ElementEndpoint, endpointNode, rebindEndpoint } from './element.ts';
 import {
+  type Arrangement,
   type Element2D,
   type Element3D,
   type LayoutRecord,
@@ -35,7 +36,16 @@ export type ModelIntent =
       readonly layout: string;
       readonly ids: readonly string[];
       readonly object: { readonly id: string; readonly type: string };
-    };
+    }
+  | {
+      readonly kind: 'group';
+      readonly model: string;
+      readonly layout: string;
+      readonly id: string;
+      readonly members: readonly string[];
+      readonly arrange?: Arrangement;
+    }
+  | { readonly kind: 'ungroup'; readonly model: string; readonly layout: string; readonly id: string };
 
 export type ModelIntentResult = { doc: SceneDocument; problems: Problem[] };
 
@@ -96,18 +106,11 @@ const split = <E extends Element2D | Element3D>(
   ids: ReadonlySet<string>,
   id: string,
   placing: (inside: readonly E[]) => E,
+  rebindOut: (end: ElementEndpoint, taken: ReadonlySet<string>, id: string) => ElementEndpoint = (end, taken, id) =>
+    rebindEndpoint(end, (node) => (taken.has(node) ? id : node)),
 ): Split<E> => {
-  // A selected group brings its members; a selected link with an end left outside stays out, bound to the new element.
-  const taken = new Set<string>();
-  const take = (key: string) => {
-    const element = elements[key];
-    if (!element || taken.has(key)) {
-      return;
-    }
-    taken.add(key);
-    element.members?.forEach(take);
-  };
-  ids.forEach(take);
+  // A selected link with an end left outside stays out, bound to the new element.
+  const taken = new Set([...ids].filter((key) => elements[key] !== undefined));
   const isBound = (element: E) => element.source !== undefined || element.target !== undefined;
   const endsInside = (element: E) =>
     (element.source === undefined || taken.has(endpointNode(element.source) ?? '')) &&
@@ -122,13 +125,10 @@ const split = <E extends Element2D | Element3D>(
       inside[key] = element;
       continue;
     }
-    const rebind = (end: ElementEndpoint | undefined) =>
-      end && rebindEndpoint(end, (node) => (taken.has(node) ? id : node));
-    const members = element.members && [...new Set(element.members.map((member) => (taken.has(member) ? id : member)))];
+    const rebind = (end: ElementEndpoint | undefined) => end && rebindOut(end, taken, id);
     outside[key] = {
       ...element,
       ...(isBound(element) ? { source: rebind(element.source), target: rebind(element.target) } : {}),
-      ...(members ? { members } : {}),
     };
   }
   const element = placing(Object.values(inside).filter((element) => element.type !== 'link'));
@@ -202,6 +202,137 @@ const extract = (
   };
 };
 
+/** A link end at an element moved into a group ends at the group, on the port that names the element. */
+const toPort = (end: ElementEndpoint, taken: ReadonlySet<string>, id: string): ElementEndpoint =>
+  end.node !== undefined && taken.has(end.node) ? { node: id, port: end.node } : end;
+
+/**
+ * Groups elements of a layout into an anonymous composite (decision 17) that one new element places with no fit, so
+ * they stay where they are; a link from outside ends at the group, on the port named by the element it bound.
+ */
+const group = (
+  doc: SceneDocument,
+  model: ModelRecord,
+  layout: LayoutRecord,
+  intent: Extract<ModelIntent, { kind: 'group' }>,
+): ModelIntentResult => {
+  const problem = (message: string): ModelIntentResult => ({
+    doc,
+    problems: [{ part: 'layout', id: layout.id, message }],
+  });
+  const ids = new Set(
+    intent.members.filter((id) => layout.elements[id] !== undefined && layout.elements[id].type !== 'link'),
+  );
+  if (ids.size === 0) {
+    return problem('A group needs at least one element of the layout.');
+  }
+  if (layout.elements[intent.id] !== undefined) {
+    return problem(`The layout already has an element "${intent.id}".`);
+  }
+  const compositeId = freeKey(
+    (key) => doc.layouts.some((record) => record.id === key) || model.objects[key] !== undefined,
+    `${layout.id}/${intent.id}`,
+  );
+  const nextModel = withObject(model, { id: compositeId, type: 'group', parts: compositeId });
+  if (!nextModel) {
+    return problem(`A group does not fit a ${model.dim} model.`);
+  }
+  const composite = {
+    id: compositeId,
+    model: model.id,
+    kind: 'composite' as const,
+    anonymous: true,
+    ...(intent.arrange ? { arrange: intent.arrange } : {}),
+  };
+  const instance = { id: intent.id, object: compositeId, fit: 'none' as const };
+  let parts: LayoutRecord;
+  let host: LayoutRecord;
+  if (layout.dim === '3d') {
+    const result = split<Element3D>(layout.elements, ids, intent.id, () => instance, toPort);
+    parts = { ...composite, dim: '3d', elements: result.inside } satisfies LayoutRecord3D;
+    host = { ...layout, model: layout.model ?? model.id, elements: result.outside };
+  } else {
+    const result = split<Element2D>(layout.elements, ids, intent.id, () => instance, toPort);
+    parts = { ...composite, dim: '2d', elements: result.inside } satisfies LayoutRecord2D;
+    host = { ...layout, model: layout.model ?? model.id, elements: result.outside };
+  }
+  return {
+    doc: {
+      ...doc,
+      layouts: [...doc.layouts.map((record) => (record.id === layout.id ? host : record)), parts],
+      models: doc.models.map((record) => (record.id === model.id ? nextModel : record)),
+    },
+    problems: [],
+  };
+};
+
+/** An element moved out of a group placed at `center`: its position in the group's layout, offset by the group's. */
+const shifted = <E extends Element2D | Element3D>(element: E, center: E['center']): E => {
+  if (!center || !element.center) {
+    return element;
+  }
+  const add = (axis: 'x' | 'y' | 'z') => round(Reflect.get(element.center ?? {}, axis) + Reflect.get(center, axis));
+  return {
+    ...element,
+    center: 'z' in center ? { x: add('x'), y: add('y'), z: add('z') } : { x: add('x'), y: add('y') },
+  };
+};
+
+/** Undoes `group`: the group's elements return to the layout where they are drawn, and links to its ports rebind. */
+const ungroup = (
+  doc: SceneDocument,
+  model: ModelRecord,
+  layout: LayoutRecord,
+  intent: Extract<ModelIntent, { kind: 'ungroup' }>,
+): ModelIntentResult => {
+  const problem = (message: string): ModelIntentResult => ({
+    doc,
+    problems: [{ part: 'layout', id: layout.id, message }],
+  });
+  const element = layout.elements[intent.id];
+  const object = element?.object === undefined ? undefined : model.objects[element.object];
+  const parts = object?.parts === undefined ? undefined : doc.layouts.find((record) => record.id === object.parts);
+  if (!element || !object || object.type !== 'group' || !parts || parts.dim !== layout.dim) {
+    return problem(`"${intent.id}" is not a group.`);
+  }
+  const fromPort = (end: ElementEndpoint | undefined) =>
+    end && end.node === intent.id && end.port !== undefined ? { node: end.port } : end;
+  const rebound = <E extends Element2D | Element3D>(each: E): E =>
+    each.source || each.target ? { ...each, source: fromPort(each.source), target: fromPort(each.target) } : each;
+  const placedElsewhere = doc.layouts.some((record) =>
+    Object.values(record.elements).some((other) => other.object === object.id && other !== element),
+  );
+  const merged = <E extends Element2D | Element3D>(
+    own: Readonly<Record<string, E>>,
+    inner: Readonly<Record<string, E>>,
+    center: E['center'],
+  ): Record<string, E> =>
+    Object.fromEntries([
+      ...Object.entries(own)
+        .filter(([key]) => key !== intent.id)
+        .map(([key, each]): [string, E] => [key, rebound(each)]),
+      ...Object.entries(inner).map(([key, each]): [string, E] => [key, shifted(each, center)]),
+    ]);
+  const host: LayoutRecord =
+    layout.dim === '3d' && parts.dim === '3d'
+      ? { ...layout, elements: merged(layout.elements, parts.elements, layout.elements[intent.id]?.center) }
+      : layout.dim === '2d' && parts.dim === '2d'
+        ? { ...layout, elements: merged(layout.elements, parts.elements, layout.elements[intent.id]?.center) }
+        : layout;
+  return {
+    doc: {
+      ...doc,
+      layouts: doc.layouts
+        .filter((record) => placedElsewhere || record.id !== parts.id)
+        .map((record) => (record.id === layout.id ? host : record)),
+      models: doc.models.map((record) =>
+        record.id === model.id && !placedElsewhere ? withoutObject(model, object.id) : record,
+      ),
+    },
+    problems: [],
+  };
+};
+
 /**
  * The document with `intent` applied to a model, and the problems that stopped it: on any problem the document is
  * returned unchanged. Removing an object an element still places is refused, so no element is left placing nothing.
@@ -248,12 +379,18 @@ export const applyModelIntent = (doc: SceneDocument, intent: ModelIntent): Model
         ? problem(`"${intent.id}" is still placed by ${placing.join(', ')}.`)
         : replace(withoutObject(model, intent.id));
     }
-    case 'extract': {
+    case 'extract':
+    case 'group':
+    case 'ungroup': {
       const layout = doc.layouts.find((record) => record.id === intent.layout);
       if (!layout || layout.dim !== model.dim) {
         return problem(`No ${model.dim} layout "${intent.layout}".`);
       }
-      return extract(doc, model, layout, intent);
+      return intent.kind === 'extract'
+        ? extract(doc, model, layout, intent)
+        : intent.kind === 'group'
+          ? group(doc, model, layout, intent)
+          : ungroup(doc, model, layout, intent);
     }
   }
 };

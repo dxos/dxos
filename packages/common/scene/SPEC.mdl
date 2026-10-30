@@ -890,3 +890,11 @@ decision D-95: A canvas's style classes are its 2D model's named styles (`NamedS
   for: user:richburdon
   why: One home for named styles in both dimensions lets catalogs and the editor core resolve every look the same way.
 ```
+
+```mdl
+decision D-96: A group is a composite placed by an instance (COMMON-CORE decisions 17 and 18): its members live in an anonymous composite layout (`kind: composite`, `anonymous`) that a `group` object of the layout's model places with fit `none`, so the members stay where they are relative to the instance; a link to a member ends on the group's port named by that member. Arrangers belong to layouts: a composite's `arrange` places its unplaced, unpinned elements, and moving an element of an arranged layout pins it. Group and Ungroup are model intents. The `.dx` grammar is unchanged: the reader turns `element g group members=… arrange=…` into the composite (making a model for a layout that names none) and the printer writes it back as members followed by the `group` line, so every exemplar round-trips. `members` and element `arrange` are removed.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  why: One grouping mechanism in both dimensions, the canvas's composites, lets the editor core treat a group like any other instance; keeping the text grammar keeps every file valid.
+```

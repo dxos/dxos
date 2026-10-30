@@ -63,7 +63,6 @@ const liftElement = ({
   rotation,
   scale: _scale,
   overrides,
-  arrange: _arrange,
   ...element
 }: Scene.Element2D): Scene.Element3D => ({
   ...element,
@@ -135,14 +134,7 @@ const FLAT_KINDS: Readonly<Record<string, string>> = {
 /** A ground point as a canvas point: the inverse of lifting, never `-0`. */
 const toCanvas = ({ x, z }: Scene.Vec3): Scene.Vec2 => ({ x: x * PIXELS_PER_UNIT || 0, y: -z * PIXELS_PER_UNIT || 0 });
 
-const flattenElement = ({
-  center,
-  scale,
-  rotation,
-  overrides,
-  arrange: _arrange,
-  ...element
-}: Scene.Element3D): Scene.Element2D => {
+const flattenElement = ({ center, scale, rotation, overrides, ...element }: Scene.Element3D): Scene.Element2D => {
   const shape = element.type !== undefined && element.type !== 'link' && element.type !== 'group';
   return {
     ...element,

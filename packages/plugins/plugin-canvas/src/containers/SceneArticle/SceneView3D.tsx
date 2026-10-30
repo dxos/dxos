@@ -49,6 +49,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 import {
   type Layer,
   type LayoutIntent,
+  type ModelIntent,
   Scene,
   bounds3D,
   copyElements,
@@ -394,19 +395,36 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
       setSelection([]);
     }
   }, [editingLayout, handleIntent, selection]);
+  // A model edit (group, ungroup, make object) is one undo step: writing back the document from before undoes it.
+  const runModelIntent = useCallback(
+    (intent: ModelIntent, selection: string[]) => {
+      const before = canvasDocument(canvas);
+      const problems = writeModelIntent(canvas, intent);
+      if (problems.length > 0) {
+        setNotice(problems.map(({ message }) => message).join(' '));
+        return;
+      }
+      setNotice(undefined);
+      setSelection(selection);
+      history.current = {
+        done: [...history.current.done, { kind: 'document', before, after: canvasDocument(canvas) }],
+        undone: [],
+      };
+      setHistoryVersion((version) => version + 1);
+    },
+    [canvas, history],
+  );
   const group = useCallback(() => {
-    if (editingLayout) {
+    if (editingLayout && modelId !== undefined) {
       const id = `group-${Date.now().toString(36)}`;
-      handleIntent(editingLayout, { kind: 'group', id, members: selection });
-      setSelection([id]);
+      runModelIntent({ kind: 'group', model: modelId, layout: editingLayout, id, members: selection }, [id]);
     }
-  }, [editingLayout, handleIntent, selection]);
+  }, [editingLayout, modelId, runModelIntent, selection]);
   const ungroup = useCallback(() => {
-    if (editingLayout && selected) {
-      handleIntent(editingLayout, { kind: 'ungroup', id: selected.id });
-      setSelection([]);
+    if (editingLayout && modelId !== undefined && selected) {
+      runModelIntent({ kind: 'ungroup', model: modelId, layout: editingLayout, id: selected.id }, []);
     }
-  }, [editingLayout, handleIntent, selected]);
+  }, [editingLayout, modelId, runModelIntent, selected]);
   const makeObject = useCallback(() => {
     if (!editingLayout || modelId === undefined) {
       return;
@@ -417,27 +435,11 @@ export const SceneView3D = ({ canvas, role, attendableId }: SceneView3DProps) =>
       index++;
     }
     const id = `object-${index}`;
-    const before = canvasDocument(canvas);
-    const problems = writeModelIntent(canvas, {
-      kind: 'extract',
-      model: modelId,
-      layout: editingLayout,
-      ids: selection,
-      object: { id, type: 'sphere' },
-    });
-    if (problems.length > 0) {
-      setNotice(problems.map(({ message }) => message).join(' '));
-      return;
-    }
-    setNotice(undefined);
-    setSelection([]);
-    // One undo step: writing back the document from before the edit undoes it.
-    history.current = {
-      done: [...history.current.done, { kind: 'document', before, after: canvasDocument(canvas) }],
-      undone: [],
-    };
-    setHistoryVersion((version) => version + 1);
-  }, [editingLayout, modelId, document, canvas, selection, history]);
+    runModelIntent(
+      { kind: 'extract', model: modelId, layout: editingLayout, ids: selection, object: { id, type: 'sphere' } },
+      [],
+    );
+  }, [editingLayout, modelId, document, runModelIntent, selection]);
 
   // The one source of the scene's commands: the actions bar, the shortcuts, the app's edit commands and the menu.
   const commands = useMemo<SceneCommands>(() => {
