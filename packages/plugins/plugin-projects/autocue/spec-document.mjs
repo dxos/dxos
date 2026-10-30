@@ -148,6 +148,7 @@ export const steps = [
       await caption(demo, 7, 'Cmd+Z brings back the same feature, description and all');
       await demo.press({ key: 'ControlOrMeta+z' });
       await waitForNames(page, ['Search', 'Instant inbox']);
+      await demo.caption({ value: 'Each feature is an ECHO object, embedded in the text', subtitle: SUBTITLE });
       await demo.sleep({ ms: LOOK });
     },
   },
@@ -167,12 +168,8 @@ export const steps = [
       await page
         .locator(`${section} >> [data-testid="feature-section.dependencies"]:has-text("Search")`)
         .waitFor({ state: 'visible', timeout: 5_000 });
-      // Clear of the caption banner pinned to the bottom of the page.
-      await page
-        .locator(`${section} >> [data-testid="feature-section.dependencies"]`)
-        .evaluate((element) => element.scrollIntoView({ block: 'center', behavior: 'smooth' }));
-      await demo.sleep({ ms: LOOK });
-      await demo.caption({ value: 'Each feature is an ECHO object, embedded in the text', subtitle: SUBTITLE });
+      // The document ends here, so the row cannot scroll above the caption banner; clear it instead.
+      await demo.clearCaption();
       await demo.sleep({ ms: 6_000 });
     },
   },
