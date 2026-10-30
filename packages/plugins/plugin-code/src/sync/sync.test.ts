@@ -6,12 +6,14 @@ import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { findSourceKeys, formatSourceKey, parseGitHubRemote, parseSourceKey, reviewKeyOf } from '@dxos/deus/review';
-import { Obj } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { Doc } from '@dxos/echo-doc';
 import * as EffectEx from '@dxos/effect/EffectEx';
+import { invariant } from '@dxos/invariant';
 import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
-import type * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
+import * as Feature from '@dxos/plugin-projects/Feature';
+import * as Spec from '@dxos/plugin-projects/Spec';
+import * as SpecText from '@dxos/plugin-projects/SpecText';
 import { Text } from '@dxos/schema';
 import { SpecDocument } from '@dxos/types';
 
@@ -148,35 +150,50 @@ describe('syncSpec', () => {
     await builder.close();
   });
 
-  test('a codec writes the file and reads it back, in place of copying the text', async ({ expect }) => {
-    const { db } = await builder.createDatabase({ types: [SpecDocument.SpecDocument, Text.Text] });
-    const spec = db.add(SpecDocument.make({ content: 'a' }));
-    Obj.update(spec, (spec) => {
-      Obj.getMeta(spec).keys.push(toMetaKey({ owner: 'dxos', repo: 'dxos', path: 'a/SPEC.mdl' }));
+  test('a file of feat blocks makes its document a spec of features, written back as blocks', async ({ expect }) => {
+    const { db } = await builder.createDatabase({
+      types: [Spec.Spec, SpecDocument.SpecDocument, Feature.Feature, Text.Text],
     });
-    const content = await spec.content.load();
-    const codec: ProjectCapabilities.SpecDocumentCodec = {
-      write: async (document) => `file:${(await document.content.load()).content}`,
-      read: async (document, text) => {
-        Doc.updateText(await document.content.load(), 'content', text.replace(/^file:/, ''));
-        return true;
-      },
-    };
-    const files: Record<string, string> = { '/host/a/SPEC.mdl': 'file:a' };
+    const document = db.add(SpecDocument.make({ content: '' }));
+    Obj.update(document, (document) => {
+      Obj.getMeta(document).keys.push(toMetaKey({ owner: 'dxos', repo: 'dxos', path: 'a/SPEC.mdl' }));
+    });
+    const file = [
+      '# A',
+      '',
+      '```mdl',
+      'feat F-1: Sync',
+      '',
+      '  req F-1.1:',
+      '    when: mail arrives',
+      '    then: it shows',
+      '```',
+      '',
+    ].join('\n');
+    const files: Record<string, string> = { '/host/a/SPEC.mdl': file };
     const context = {
       fs: memoryFs(files),
       roots: [{ repo: 'dxos/dxos', path: '/host' }],
       bases: new SyncBases(),
-      codecs: [codec],
+      codecs: [SpecText.codec],
     };
-    const sync = () => EffectEx.runPromise(syncSpec(spec, context));
+    const sync = () => EffectEx.runPromise(syncSpec(document, context));
 
-    expect((await sync()).status).toBe('synced');
-    files['/host/a/SPEC.mdl'] = 'file:b';
     expect((await sync()).status).toBe('pulled');
-    expect(content.content).toBe('b');
-    Doc.updateText(content, 'content', 'c');
+    const spec = Obj.getParent(document);
+    invariant(Spec.instanceOf(spec), 'Missing spec.');
+    const [feature] = await Ref.loadAll(spec.features);
+    expect(feature.name).toBe('Sync');
+    expect((await document.content.load()).content).not.toContain('feat F-1');
+
+    Obj.update(feature, (feature) => {
+      feature.status = 'operational';
+    });
     expect((await sync()).status).toBe('pushed');
-    expect(files['/host/a/SPEC.mdl']).toBe('file:c');
+    expect(files['/host/a/SPEC.mdl']).toBe(file.replace('feat F-1: Sync\n', 'feat F-1: Sync\n  status: operational\n'));
+
+    files['/host/a/SPEC.mdl'] = files['/host/a/SPEC.mdl'].replace('feat F-1: Sync', 'feat F-1: Sync everywhere');
+    expect((await sync()).status).toBe('pulled');
+    expect(feature.name).toBe('Sync everywhere');
   });
 });

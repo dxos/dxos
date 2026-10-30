@@ -82,6 +82,9 @@ feat F-3: A spec as a file
              and a changed one has only its changed lines rewritten.
   req F-3.5: org.dxos.plugin.code#F-14 syncs a spec's document with its file through export and import, by
              `ProjectCapabilities.SpecDocumentCodec`, so the file holds `feat` blocks and the document holds embeds.
+             org.dxos.plugin.github.file-sync#F-6 syncs a file in a GitHub repository the same way.
+  req F-3.6: A document no object owns becomes the document of a new spec, named after it, when a file read into it
+             through the codec holds a `feat` block; a file of prose alone leaves it as it is.
 ```
 
 ## QA
@@ -584,4 +587,22 @@ decision D-25: A feature contributes a `section` surface holding its form, and e
   for: user:wittjosiah
   affects: [F-2.7, F-2.9]
   why: One form serves the spec's document, plugin-code's spec page and any Markdown document that embeds a feature; the companion's detail shares the same fields, so the two cannot drift.
+```
+
+```mdl
+decision D-26: A spec file synced from a GitHub repository is read into features embedded in its document, as a file synced from a local checkout is. Refines [D-17].
+  date: 2026-10-29
+  by: user:wittjosiah
+  affects: [F-3.5]
+```
+
+```mdl
+decision D-27: The codec makes a new spec of a document no object owns when a file read into it holds a `feat` block, and leaves a document of prose alone. The codec is `SpecText.codec`, which the capability contributes. Fills in [D-26].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-3.6]
+  why: Both syncs make a bare document for a file they find, with nothing that owns it; the codec only handles a spec's document, so without this a file's blocks would stay text. A file with no `feat` block has nothing to be a spec of.
+  rejected:
+    - Making plugin-code create the spec, which would put plugin-projects' notion of a spec into plugin-code.
 ```

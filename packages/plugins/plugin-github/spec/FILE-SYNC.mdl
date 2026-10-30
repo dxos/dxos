@@ -454,7 +454,7 @@ feat F-6: Deus specs
 
   req F-6.1: plugin-code contributes the mapping `org.dxos.plugin.code.spec` for `**/*.mdl`, typed `Spec`, with ImportSpecFile and ExportSpecFile.
 
-  req F-6.2: Spec.content is Text, so specs merge character by character; no `.mdl` parser runs during sync.
+  req F-6.2: Spec.content is Text, so specs merge character by character. A spec document a `ProjectCapabilities.SpecDocumentCodec` writes merges as the file text the codec renders, which the codec reads back; the engine runs no `.mdl` parser itself.
 ```
 
 ## Acceptance
@@ -656,4 +656,11 @@ decision D-16: EnableGitHubFileSync is a visible operation and a tool of the Git
   by: user:dmaretskyi
   affects: [EnableGitHubFileSync]
   why: With no button and no tool, nothing could turn file sync on; the Composer agent and the MCP server reach operations only through visible operations and skills.
+```
+
+```mdl
+decision D-17: A spec file synced from a GitHub repository is read into features embedded in its document, as a file synced from a local checkout is. Refines [D-12].
+  date: 2026-10-29
+  by: user:wittjosiah
+  affects: [F-6.2]
 ```

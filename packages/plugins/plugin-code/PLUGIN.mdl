@@ -762,8 +762,9 @@ feat F-14: Two-way spec sync with a local checkout
               already carries the key.
   req F-14.7: A document a plugin-projects spec holds syncs through
               `ProjectCapabilities.SpecDocumentCodec`: a push writes the codec's text for
-              it, made against the last synced text, and a pull hands the file to the
-              codec. Any other document's text is copied as it is.
+              it, made against the last synced text, and a pull offers the file to each
+              codec in turn, which can make a spec of a document no object owns. A file
+              no codec takes is copied as it is.
 ```
 
 ```mdl
@@ -1442,6 +1443,24 @@ decision D-37: The sync asks each `ProjectCapabilities.SpecDocumentCodec` in tur
 decision D-38: This page draws each feature the text embeds as the feature's editable section, the one plugin-projects draws, so the feature is edited in place here too. Refines [D-36].
   date: 2026-10-29
   by: user:wittjosiah
+```
+
+```mdl
+decision D-39: A spec file synced from a GitHub repository is read into features embedded in its document, as a file synced from a local checkout is. Refines [D-27] and [D-36].
+  date: 2026-10-29
+  by: user:wittjosiah
+  affects: [F-14.7]
+```
+
+```mdl
+decision D-40: A pull offers the file to every codec, not only to one that wrote the document, so a document read before it was a spec's becomes one. op:importSpecFile and op:exportSpecFile go through the codecs too, merging a remote change in the file's form and keeping the file text last synced, in memory and in local storage, as the base of the next push; with no base known, the export fails, so nothing is pushed until the next pull of the file. Fills in [D-39].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-14.7]
+  why: A document the codec writes holds embeds where its file holds blocks, so the change merges as file text and the codec reads the result back. A push without its base would write every block anew, flattening `when:`/`then:` requirements and adding `status:` lines to each file.
+  rejected:
+    - Pushing without a base, which rewrote 94 lines of plugin-chess's spec on a trial.
 ```
 
 ---

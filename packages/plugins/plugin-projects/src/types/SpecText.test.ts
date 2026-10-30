@@ -172,4 +172,19 @@ describe('SpecText', () => {
       file.replace('feat F-2: Compose\n', 'feat F-2: Compose\n  status: operational\n'),
     );
   });
+
+  test('the codec makes a spec of a document no object owns, once its file holds a feat block', async ({ expect }) => {
+    const document = db.add(SpecDocument.make({ name: 'a/PLUGIN.mdl', content: '' }));
+    const path = 'packages/a/PLUGIN.mdl';
+    expect(await SpecText.codec.read(document, 'Just prose.', { path })).toBe(false);
+    expect(Obj.getParent(document)).toBeUndefined();
+    expect(await SpecText.codec.write(document, {})).toBeUndefined();
+
+    const file = ['# A', '', '```mdl', 'feat F-1: Sync', '```', ''].join('\n');
+    expect(await SpecText.codec.read(document, file, { path })).toBe(true);
+    const spec = Obj.getParent(document);
+    expect(Spec.instanceOf(spec) && spec.name).toBe('a/PLUGIN.mdl');
+    expect(Spec.instanceOf(spec) && (await Ref.loadAll(spec.features)).map(({ name }) => name)).toEqual(['Sync']);
+    expect(await SpecText.codec.write(document, { base: file })).toBe(file);
+  });
 });

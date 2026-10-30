@@ -13,6 +13,7 @@ import { SpecDocument } from '@dxos/types';
 import * as Feature from './Feature.ts';
 import * as FeatureEmbed from './FeatureEmbed.ts';
 import * as FeatureSpec from './FeatureSpec.ts';
+import type * as ProjectCapabilities from './ProjectCapabilities.ts';
 import * as Spec from './Spec.ts';
 
 /**
@@ -300,6 +301,37 @@ export const take = async (spec: Spec.Spec, { path, text }: TakeOptions): Promis
   }
   await sync(spec, { removed });
   return result;
+};
+
+/**
+ * A spec's document written to its file with each feature as its `feat` block, and read back as embeds. A document no
+ * object owns becomes the document of a new spec once its file holds a `feat` block.
+ */
+export const codec: ProjectCapabilities.SpecDocumentCodec = {
+  write: async (document, { base }) => {
+    const spec = Obj.getParent(document);
+    return Spec.instanceOf(spec) ? expand(spec, { base }) : undefined;
+  },
+  read: async (document, text, { path }) => {
+    const spec = adopt(document, { path, text });
+    if (!spec) {
+      return false;
+    }
+    await take(spec, { path, text });
+    return true;
+  },
+};
+
+const adopt = (document: SpecDocument.SpecDocument, { path, text }: TakeOptions): Spec.Spec | undefined => {
+  const parent = Obj.getParent(document);
+  if (Spec.instanceOf(parent)) {
+    return parent;
+  }
+  const db = Obj.getDatabase(document);
+  if (parent || !db || FeatureSpec.parse(text).length === 0) {
+    return undefined;
+  }
+  return db.add(Spec.make({ name: document.name ?? path, document: Ref.make(document) }));
 };
 
 const loadContent = async (spec: Spec.Spec) => {

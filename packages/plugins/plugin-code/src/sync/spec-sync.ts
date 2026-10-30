@@ -84,6 +84,37 @@ export class SyncBases {
 
 const SYNC_BASE_PREFIX = 'org.dxos.plugin.code.sync-base:';
 
+/** The document's file text from the first codec that handles it, written against `base`. */
+export const writeThrough = (
+  codecs: readonly ProjectCapabilities.SpecDocumentCodec[],
+  document: SpecDocument.SpecDocument,
+  base: string | undefined,
+): Effect.Effect<string | undefined> =>
+  Effect.promise(async () => {
+    for (const codec of codecs) {
+      const text = await codec.write(document, { base });
+      if (text !== undefined) {
+        return text;
+      }
+    }
+  });
+
+/** Offers the file's text to each codec in turn; false when none takes it, so the text is copied as it is. */
+export const readThrough = (
+  codecs: readonly ProjectCapabilities.SpecDocumentCodec[],
+  document: SpecDocument.SpecDocument,
+  text: string,
+  path: string,
+): Effect.Effect<boolean> =>
+  Effect.promise(async () => {
+    for (const codec of codecs) {
+      if (await codec.read(document, text, { path })) {
+        return true;
+      }
+    }
+    return false;
+  });
+
 export type SyncResult = { status: SyncStatus; path?: string; error?: string };
 
 /** One sync pass for one spec. */
@@ -118,19 +149,10 @@ export const syncSpec = Effect.fnUntraced(
     }
 
     const base = yield* bases.get(spec.id);
-    const written = yield* Effect.promise(async () => {
-      for (const codec of codecs) {
-        const text = await codec.write(spec, { base });
-        if (text !== undefined) {
-          return { codec, text };
-        }
-      }
-    });
-    const local = written?.text ?? text.content;
+    const local = (yield* writeThrough(codecs, spec, base)) ?? text.content;
     const { action, status } = reconcile({ local, disk, base });
     if (action === 'pull') {
-      const read = written && (yield* Effect.promise(() => written.codec.read(spec, disk, { path: key.path })));
-      if (!read) {
+      if (!(yield* readThrough(codecs, spec, disk, key.path))) {
         Doc.updateText(text, ['content'], disk);
       }
     } else if (action === 'push') {

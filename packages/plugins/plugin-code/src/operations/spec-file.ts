@@ -8,6 +8,8 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { SpecDocument } from '@dxos/types';
 
+import { SyncBases } from '#sync';
+
 import { CodeOperationError } from '../errors.ts';
 
 /** The Spec a synced file is bound to, with its loaded content. */
@@ -25,3 +27,6 @@ export const loadSpecText = Effect.fn(function* (object: Ref.Ref<Obj.Unknown>) {
 
 /** A Spec's display name from its path: the directory and file, e.g. `plugin-code/PLUGIN.mdl`. */
 export const specName = (path: string): string => path.split('/').slice(-2).join('/');
+
+/** The file text each spec document last synced through a codec, shared by the import and the export. */
+export const specFileBases = new SyncBases();
