@@ -1251,6 +1251,11 @@ export class DataSpaceManager extends Resource {
     space: DataSpace,
     invitations: Array<[PublicKey, DelegateSpaceInvitation]>,
   ): Promise<void> {
+    // Hosting one admits guests, which only a member with management permission may do; for anyone else the
+    // invitations manager throws, and the throw aborts processing of the credential that announced it.
+    if (!space.inner.spaceState.hasMembershipManagementPermission(this.signingContext.identityKey)) {
+      return;
+    }
     const tasks = invitations.map(([credentialId, invitation]) => {
       const expiresOn = toDate(invitation.expiresOn);
       return this._invitationsManager.createInvitation(this._ctx, {

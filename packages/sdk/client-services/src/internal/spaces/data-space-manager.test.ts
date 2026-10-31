@@ -18,8 +18,13 @@ import { type EdgeHttpClient } from '@dxos/edge-client';
 import { writeMessages } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
-import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import { fromPublicKey, requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
+import {
+  Invitation_AuthMethod,
+  Invitation_Kind,
+  Invitation_Type,
+  SpaceState,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import {
   ProfileDocumentSchema,
   type SpaceMember as SpaceMemberAssertion,
@@ -637,6 +642,71 @@ describe('DataSpaceManager', () => {
     expect(space1.inner.protocol.sessions.get(peer2.identity.deviceKey)?.authStatus).to.equal(AuthStatus.SUCCESS);
     expect(space2.inner.protocol.sessions.get(peer1.identity.deviceKey)).to.exist;
     expect(space2.inner.protocol.sessions.get(peer1.identity.deviceKey)?.authStatus).to.equal(AuthStatus.SUCCESS);
+  });
+
+  test('a member without management permission keeps processing credentials after a delegated invitation', async () => {
+    const builder = new TestBuilder();
+
+    const peer1 = builder.createPeer();
+    await peer1.createIdentity();
+
+    const peer2 = builder.createPeer();
+    await peer2.createIdentity();
+
+    await openAndClose(peer1.echoHost, peer1.dataSpaceManager, peer2.echoHost, peer2.dataSpaceManager);
+    await connectReplicators([peer1, peer2]);
+
+    const space1 = await peer1.dataSpaceManager.createSpace(new Context());
+    await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
+
+    await writeMessages(
+      space1.inner.controlPipeline.writer,
+      await createAdmissionCredentials({
+        signer: peer1.identity.credentialSigner,
+        identityKey: peer2.identity.identityKey,
+        spaceKey: space1.key,
+        genesisFeedKey: space1.inner.genesisFeedKey,
+        role: SpaceMember_Role.EDITOR,
+      }),
+    );
+    const space2 = await peer2.dataSpaceManager.acceptSpace(new Context(), {
+      spaceKey: space1.key,
+      genesisFeedKey: space1.inner.genesisFeedKey,
+    });
+    await peer2.dataSpaceManager.waitUntilSpaceReady(space2.key);
+
+    // Only a member who can admit hosts a delegated invitation; the editor must skip it, not fail on it.
+    await peer1.invitationsManager.createInvitation(new Context(), {
+      type: Invitation_Type.DELEGATED,
+      kind: Invitation_Kind.SPACE,
+      authMethod: Invitation_AuthMethod.NONE,
+      spaceKey: fromPublicKey(space1.key),
+      multiUse: true,
+    });
+    await writeMessages(
+      space1.inner.controlPipeline.writer,
+      await createAdmissionCredentials({
+        signer: peer1.identity.credentialSigner,
+        identityKey: PublicKey.random(),
+        spaceKey: space1.key,
+        genesisFeedKey: space1.inner.genesisFeedKey,
+        role: SpaceMember_Role.EDITOR,
+      }),
+    );
+
+    await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
+    await asyncTimeout(
+      space2.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe),
+      10_000,
+    );
+    const delegations = (state: typeof space1.inner.spaceState) =>
+      state.credentials.filter(
+        (credential) =>
+          getCredentialAssertion(credential).$typeName === 'dxos.halo.invitations.DelegateSpaceInvitation',
+      ).length;
+    expect(delegations(space1.inner.spaceState)).to.equal(1);
+    expect(delegations(space2.inner.spaceState)).to.equal(1);
+    expect(space2.inner.spaceState.members.size).to.equal(3);
   });
 
   test('pub/sub API', async () => {
