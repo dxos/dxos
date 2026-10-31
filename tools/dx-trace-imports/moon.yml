@@ -2,3 +2,15 @@ layer: tool
 language: typescript
 tags:
   - ts-compile
+
+tasks:
+  # Own task rather than the `ts-test` tag: the tests run the built CLI and need none of that tag's deps.
+  test:
+    command: pnpm exec vitest run
+    deps:
+      - build
+    inputs:
+      - src/**/*
+      - vitest.config.ts
+    options:
+      cache: false

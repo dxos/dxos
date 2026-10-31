@@ -643,6 +643,7 @@ test QA-9: The guided tours
   automated:
     - composer-e2e:tour.spec.ts#Tour tests › the global tour runs from the Home help companion and advances
     - composer-e2e:tour.spec.ts#Tour tests › a document tour picks up contributed steps, however the toolbar collapses
+    - composer-e2e:tour.spec.ts#Tour tests › leaving a document ends its tour
   given:
     - an identity exists and the app is on Home
   steps:
@@ -677,6 +678,12 @@ test QA-9: The guided tours
       note: |
         Which control folds first is decided by a pixel budget the tour cannot see, so a tour that
         only works at one window size is passing by luck.
+    - name: Leave a document mid-tour
+      do: Start a document's tour, load the space's Home URL before finishing it, then reopen the document.
+      expect: |
+        the tour stays gone on Home and on the reopened document, and the global tour starts from Home;
+        a tour left running floats its card in the window's corner and its backdrop swallows every click
+      note: The backdrop blocks the sidebar, so a reader leaves mid-tour only by a load such as a boot onto Home.
 ```
 
 ```mdl
@@ -1102,7 +1109,15 @@ decision D-6: A plugin's definition is its dx.config.ts, so QA-16 edits the modu
 ```
 
 ```mdl
-decision D-7: plugin-spacetime is deleted, so the 3D step creates a 3D canvas (plugin-canvas) in place of a Spacetime scene.
+decision D-7: A document's tour ends when the reader leaves the document, and QA-9 checks it.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [QA-9]
+  why: The toolbar its steps point at unmounts with the document, so the card fell back to the window's top-left corner.
+```
+
+```mdl
+decision D-8: plugin-spacetime is deleted, so the 3D step creates a 3D canvas (plugin-canvas) in place of a Spacetime scene.
   date: 2026-10-29
   by: user:richburdon
 ```

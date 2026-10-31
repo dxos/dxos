@@ -73,7 +73,13 @@
       "path": "../../core/echo/echo-client"
     },
     {
+      "path": "../../core/echo/echo-doc"
+    },
+    {
       "path": "../../core/echo/echo-react"
+    },
+    {
+      "path": "../../reflect/deus"
     },
     {
       "path": "../../sdk/app-framework"
@@ -109,6 +115,9 @@
       "path": "../../ui/react-ui-dnd"
     },
     {
+      "path": "../../ui/react-ui-editor"
+    },
+    {
       "path": "../../ui/react-ui-form"
     },
     {
@@ -131,6 +140,9 @@
     },
     {
       "path": "../../ui/react-ui-trace"
+    },
+    {
+      "path": "../../ui/ui-editor"
     },
     {
       "path": "../plugin-assistant"

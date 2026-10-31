@@ -67,11 +67,6 @@
       "source": "./src/session/SessionLink.ts",
       "types": "./dist/types/src/session/SessionLink.d.ts",
       "import": "./dist/lib/session/SessionLink.mjs"
-    },
-    "./SkillHooks": {
-      "source": "./src/session/SkillHooks.ts",
-      "types": "./dist/types/src/session/SkillHooks.d.ts",
-      "import": "./dist/lib/session/SkillHooks.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

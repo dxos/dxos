@@ -4,8 +4,9 @@
 
 import React, { useCallback } from 'react';
 
+import type * as Project from '@dxos/compute/Project';
 import { Filter, Obj, Query } from '@dxos/echo';
-import { useQuery } from '@dxos/echo-react';
+import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { useSelection, useSelectionActions, useViewStateActions } from '@dxos/react-ui-attention';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -13,9 +14,9 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as Status from '@dxos/react-ui/Status';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { Feature, FeatureMapView, type Spec } from '#types';
+import { Feature, FeatureMapView, Spec } from '#types';
 
-import { useOpenObject } from '../../hooks/index.ts';
+import { useOpenObject, useOpenSpecLevel, useProjectSpec } from '../../hooks/index.ts';
 import { ProjectsNamespace } from '../../namespace.ts';
 import { FeatureDetail } from '../FeatureArticle/index.ts';
 
@@ -27,6 +28,8 @@ export type FeatureCompanionProps = {
   spec: Spec.Spec;
   /** The spec plank's id: the selection context the map writes and what the detail opens beside. */
   attendableId?: string;
+  /** Opens the level breaking the feature down; the map zooms within its plank without it. */
+  onZoom?: (feature: Feature.Feature) => void;
 };
 
 /**
@@ -34,7 +37,7 @@ export type FeatureCompanionProps = {
  * selection, so the companion follows the map without either holding state of its own. Picking a subfeature here
  * zooms the map into this feature and selects it there, so the map and the companion keep showing the same place.
  */
-export const FeatureCompanion = ({ role, spec, attendableId }: FeatureCompanionProps) => {
+export const FeatureCompanion = ({ role, spec, attendableId, onZoom }: FeatureCompanionProps) => {
   const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const db = Obj.getDatabase(spec);
   const selectedId = useSelection(attendableId, 'single');
@@ -45,16 +48,24 @@ export const FeatureCompanion = ({ role, spec, attendableId }: FeatureCompanionP
   const openObject = useOpenObject(db, attendableId);
 
   const handleZoom = useCallback(() => {
-    if (feature) {
+    if (!feature) {
+      return;
+    }
+    if (onZoom) {
+      onZoom(feature);
+    } else {
       updateView((prev) => ({ ...prev, focus: feature.id }));
     }
-  }, [feature, updateView]);
+  }, [feature, onZoom, updateView]);
+  // Within the plank, the subfeature is selected on the level zoomed to; a level of its own has its own selection.
   const handleSelectSubfeature = useCallback(
     (id: string) => {
       handleZoom();
-      select(id);
+      if (!onZoom) {
+        select(id);
+      }
     },
-    [handleZoom, select],
+    [handleZoom, onZoom, select],
   );
 
   if (!feature) {
@@ -103,4 +114,33 @@ export const FeatureCompanion = ({ role, spec, attendableId }: FeatureCompanionP
       </Panel.Body>
     </Panel.Root>
   );
+};
+
+export type ProjectFeatureCompanionProps = Omit<FeatureCompanionProps, 'spec' | 'onZoom'> & {
+  /** The project whose Spec tab shows the map. */
+  project: Project.Project;
+  /** The feature whose breakdown the plank shows; the project's own spec when absent. */
+  feature?: Feature.Feature;
+};
+
+/**
+ * The feature companion beside one level of a project's spec: the map its Spec tab shows. Zooming opens the level
+ * breaking the selected feature down.
+ */
+export const ProjectFeatureCompanion = ({ project, feature, ...props }: ProjectFeatureCompanionProps) => {
+  const projectSpec = useProjectSpec(project);
+  const breakdown = useResolveRef(useObject(feature, 'spec')[0]);
+  const spec = feature ? (Spec.instanceOf(breakdown) ? breakdown : undefined) : projectSpec;
+  const openLevel = useOpenSpecLevel(project, props.attendableId);
+  return spec ? <FeatureCompanion spec={spec} onZoom={(zoomed) => openLevel(zoomed)} {...props} /> : null;
+};
+
+export type FeatureLevelCompanionProps = Omit<ProjectFeatureCompanionProps, 'project' | 'feature'> & {
+  feature: Feature.Feature;
+};
+
+/** The feature companion beside a feature's level of the project tracking it. */
+export const FeatureLevelCompanion = ({ feature, ...props }: FeatureLevelCompanionProps) => {
+  const project = Spec.findProject(feature);
+  return project ? <ProjectFeatureCompanion {...props} project={project} feature={feature} /> : null;
 };

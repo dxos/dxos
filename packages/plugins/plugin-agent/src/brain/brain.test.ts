@@ -11,6 +11,7 @@ import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as AgentService from '@dxos/compute/AgentService';
+import * as Hook from '@dxos/compute/Hook';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
@@ -24,6 +25,7 @@ import { AgentOperationHandlerSet } from '#operations';
 import { BrainSkill, ConversationSkill, GoalsSkill, ModesSkill, RelaySkill } from '#skills';
 import { AgentOperation, ChatParticipant, Goal, Mode, Relay, type Trigger, TriggerOperation } from '#types';
 
+import { AgentNamespace } from '../namespace.ts';
 import { loadChats } from '../operations/agent-skills.ts';
 import { COMPOSE_PROMPT } from '../operations/compose-update.ts';
 import { BRAIN_SCENARIO as SCENARIO } from './scenario.ts';
@@ -126,6 +128,7 @@ const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
         Message.Message,
       ],
       skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make(), BrainSkill.make()],
+      agent: { hooks: () => Hook.forPlugin(AgentNamespace.key, BrainSkill.hooks) },
       aiService: ScriptedLanguageModel.scriptedAiService(makeScript(refs)),
     }),
   ),

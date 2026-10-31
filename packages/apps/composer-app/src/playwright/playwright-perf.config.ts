@@ -28,13 +28,18 @@ import { PERF_PORT } from './perf/server.ts';
  */
 const preset = e2ePreset(import.meta.dirname);
 
+/** Scenarios the perf nightly trends; they run with the flows. */
+const NIGHTLY_SCENARIOS = ['space-switch', 'object-open'];
+
 export default defineConfig({
   ...preset,
   projects: preset.projects?.filter((project) => project.name === 'chromium'),
   testMatch: '**/perf-*.spec.ts',
   // Reproductions of field reports run on request (`pnpm perf --scenario` sets the flag), so adding
-  // one never lengthens the nightly; registering one in the nightly is its own workflow change.
-  testIgnore: process.env.DX_PERF_SCENARIOS ? [] : ['**/scenarios/**'],
+  // one never lengthens the nightly; registering one in the nightly means adding it to `NIGHTLY_SCENARIOS`.
+  testIgnore: process.env.DX_PERF_SCENARIOS
+    ? []
+    : [new RegExp(`/scenarios/(?!perf-(${NIGHTLY_SCENARIOS.join('|')})\\.spec\\.ts$)`)],
   // TRACING OFF, unlike every other config here: `retain-on-failure` still RECORDS, and the
   // recorder's DOM snapshotter runs on the page's main thread — ~960 ms of the `reopen-project`
   // stage on the 94k-node task list, a third of that stage's measured TBT, spent by the instrument

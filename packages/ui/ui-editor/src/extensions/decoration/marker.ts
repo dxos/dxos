@@ -20,51 +20,7 @@ export type MarkerHue = ChromaticPalette;
  * Shared theme for hue-tinted markers and their inline button affordances. Include once per editor;
  * both `markerMark` (range marks) and `markerText` (widget spans) read from it.
  */
-export const markerTheme = (): Extension =>
-  EditorView.theme({
-    ...hueVars,
-    // The comment-style surface "padding" is a box-shadow of the same colour so adjacent lines join.
-    // No `border-radius`: with `box-decoration-break: clone` every wrapped fragment would round its
-    // own corners, pinching the left/right edges of a multi-line span into jagged notches. Square
-    // corners let the per-line boxes stack into one continuous block with straight vertical edges.
-    '.cm-marker > span, .cm-marker-text': {
-      boxDecorationBreak: 'clone',
-      backgroundColor: 'var(--cm-marker-surface)',
-      boxShadow: '0 0 0 3px var(--cm-marker-surface)',
-      color: 'var(--cm-marker-text) !important',
-    },
-    // `inline-block` (not flex) so the finalized + interim spans flow as one continuous block.
-    '.cm-marker-text': {
-      display: 'inline-block',
-    },
-    // Align a trailing icon (e.g. the recording spinner) inline with the text — the global reset
-    // sets `svg { display: block }`, which would otherwise push it onto its own line.
-    '.cm-marker-text svg': {
-      display: 'inline-block',
-      verticalAlign: '-0.15em',
-      marginInlineStart: '0.25rem',
-    },
-    '.cm-marker-buttons': {
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: '0.25rem',
-    },
-    '.cm-marker-button': {
-      display: 'inline-flex',
-      padding: '4px',
-      borderRadius: '4px',
-      cursor: 'pointer',
-    },
-    '.cm-marker-button:hover': {
-      backgroundColor: 'var(--color-hover-bg)',
-    },
-    '.cm-marker-button-success:hover': {
-      backgroundColor: 'var(--color-success-bg)',
-    },
-    '.cm-marker-button-error:hover': {
-      backgroundColor: 'var(--color-error-bg)',
-    },
-  });
+export const markerTheme = (): Extension => markerStyles;
 
 /** Range mark tinted by hue (used by comments to highlight a selection). */
 export const markerMark = (hue: MarkerHue, options: { class?: string; attributes?: Record<string, string> } = {}) =>
@@ -141,3 +97,49 @@ const hueVars = Object.fromEntries(
     ]),
   ),
 );
+
+// Built once: every `EditorView.theme` call mints a new stylesheet, which restyles the whole document.
+const markerStyles = EditorView.theme({
+  ...hueVars,
+  // The comment-style surface "padding" is a box-shadow of the same colour so adjacent lines join.
+  // No `border-radius`: with `box-decoration-break: clone` every wrapped fragment would round its
+  // own corners, pinching the left/right edges of a multi-line span into jagged notches. Square
+  // corners let the per-line boxes stack into one continuous block with straight vertical edges.
+  '.cm-marker > span, .cm-marker-text': {
+    boxDecorationBreak: 'clone',
+    backgroundColor: 'var(--cm-marker-surface)',
+    boxShadow: '0 0 0 3px var(--cm-marker-surface)',
+    color: 'var(--cm-marker-text) !important',
+  },
+  // `inline-block` (not flex) so the finalized + interim spans flow as one continuous block.
+  '.cm-marker-text': {
+    display: 'inline-block',
+  },
+  // Align a trailing icon (e.g. the recording spinner) inline with the text — the global reset
+  // sets `svg { display: block }`, which would otherwise push it onto its own line.
+  '.cm-marker-text svg': {
+    display: 'inline-block',
+    verticalAlign: '-0.15em',
+    marginInlineStart: '0.25rem',
+  },
+  '.cm-marker-buttons': {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+  },
+  '.cm-marker-button': {
+    display: 'inline-flex',
+    padding: '4px',
+    borderRadius: '4px',
+    cursor: 'pointer',
+  },
+  '.cm-marker-button:hover': {
+    backgroundColor: 'var(--color-hover-bg)',
+  },
+  '.cm-marker-button-success:hover': {
+    backgroundColor: 'var(--color-success-bg)',
+  },
+  '.cm-marker-button-error:hover': {
+    backgroundColor: 'var(--color-error-bg)',
+  },
+});

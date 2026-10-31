@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo } from 'react';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { debounce } from '@dxos/async';
-import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute-hyperformula';
+import { type CellAddress, inRange } from '@dxos/compute-hyperformula';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import * as CommentOperation from '@dxos/plugin-review/CommentOperation';
@@ -15,23 +15,21 @@ import { Attention } from '@dxos/react-ui-attention/types';
 import { AnchoredTo, Thread } from '@dxos/types';
 
 import { useSheetContext } from '#components';
+import { type Sheet, SheetUtil } from '#types';
 
-export const completeCellRangeToThreadCursor = (range: CompleteCellRange): string => {
-  return `${range.from.col},${range.from.row},${range.to.col},${range.to.row}`;
-};
+/** The first thread whose anchor on `sheet` spans `cell`. */
+export const findThreadAnchorAtCell = (
+  sheet: Sheet.Sheet,
+  anchors: readonly AnchoredTo.AnchoredTo[],
+  cell: CellAddress,
+): AnchoredTo.AnchoredTo | undefined =>
+  anchors.find((anchor) => {
+    if (!anchor.anchor || !Obj.instanceOf(Thread.Thread, Relation.getSource(anchor))) {
+      return false;
+    }
 
-export const parseThreadAnchorAsCellRange = (cursor: string): CompleteCellRange | null => {
-  const coords = cursor.split(',');
-  if (coords.length !== 4) {
-    return null;
-  } else {
-    const [fromCol, fromRow, toCol, toRow] = coords;
-    return {
-      from: { col: parseInt(fromCol), row: parseInt(fromRow) },
-      to: { col: parseInt(toCol), row: parseInt(toRow) },
-    };
-  }
-};
+    return inRange(SheetUtil.rangeFromAnchor(sheet, anchor.anchor), cell);
+  });
 
 export const useSelectThreadOnCellFocus = () => {
   const { model, cursor } = useSheetContext();
@@ -46,16 +44,7 @@ export const useSelectThreadOnCellFocus = () => {
         return;
       }
 
-      const closestThread = anchors.find((anchor) => {
-        const source = Relation.getSource(anchor);
-        if (anchor.anchor && Obj.instanceOf(Thread.Thread, source)) {
-          const range = parseThreadAnchorAsCellRange(anchor.anchor);
-          return range ? inRange(range, cellAddress) : false;
-        } else {
-          return false;
-        }
-      });
-
+      const closestThread = findThreadAnchorAtCell(model.sheet, anchors, cellAddress);
       if (closestThread) {
         void (async () => {
           await invokePromise(CommentOperation.Select, { current: Relation.getURI(closestThread) });
@@ -65,7 +54,7 @@ export const useSelectThreadOnCellFocus = () => {
         })();
       }
     },
-    [invokePromise, anchors],
+    [invokePromise, model.sheet, anchors],
   );
 
   const debounced = useMemo(() => {

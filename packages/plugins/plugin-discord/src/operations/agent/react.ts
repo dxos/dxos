@@ -15,8 +15,8 @@ const handler: Operation.WithHandler<typeof DiscordAgentOperation.React> = Disco
     Effect.fnUntraced(function* ({ agent, channel, message, emoji }) {
       const bot = yield* agentBot(agent);
       const service = yield* DiscordBot.DiscordBotService;
-      yield* service.act(bot, { kind: 'react', channelId: channel, messageId: message, emoji });
-      return {};
+      const reacted = yield* service.act(bot, { kind: 'react', channelId: channel, messageId: message, emoji });
+      return { channel: reacted.channelId };
     }, Effect.orDie),
   ),
 );

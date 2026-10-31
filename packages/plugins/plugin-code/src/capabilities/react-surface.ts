@@ -26,11 +26,9 @@ export default Capability.makeModule(() =>
         props: ({ role, data: { subject } }) => ({ role, content: subject.content, sourceKey: subject.sourceKey }),
       }),
       Surface.create({
+        // Article only: a spec document embedded as a section (a spec's Document view) is plugin-projects' plain editor.
         id: 'specArticle',
-        filter: AppSurface.oneOf(
-          AppSurface.object(AppSurface.Article, SpecDocument.SpecDocument),
-          AppSurface.object(AppSurface.Section, SpecDocument.SpecDocument),
-        ),
+        filter: AppSurface.object(AppSurface.Article, SpecDocument.SpecDocument),
         component: SpecArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),

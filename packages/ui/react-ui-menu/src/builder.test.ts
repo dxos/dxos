@@ -110,6 +110,34 @@ describe('MenuBuilder', () => {
     expect(separatorEdge).toEqual({ source: 'root', target: separatorNode!.id, relation: 'child' });
   });
 
+  test('separators added through a subgraph or group keep ids of their own', ({ expect }) => {
+    const graph = MenuBuilder.make()
+      .root({ label: 'toolbar' })
+      .separator()
+      .subgraph((sub) => sub.action('bold', { label: 'Bold' }, () => {}).separator())
+      .group('more', { label: 'More' }, (group) => group.separator())
+      .build();
+
+    const ids = graph.nodes.filter((node) => node.type === MenuSeparatorType).map((node) => node.id);
+    expect(new Set(ids).size).toBe(3);
+  });
+
+  test('separators in a separately built graph are renumbered when merged', ({ expect }) => {
+    const extension = MenuBuilder.extend('more', (group) =>
+      group.separator().action('save', { label: 'Save' }, () => {}),
+    );
+    const graph = MenuBuilder.make()
+      .root({ label: 'toolbar' })
+      .separator()
+      .group('more', { label: 'More' }, () => {})
+      .subgraph(extension)
+      .build();
+
+    const ids = graph.nodes.filter((node) => node.type === MenuSeparatorType).map((node) => node.id);
+    expect(new Set(ids).size).toBe(2);
+    expect(graph.edges).toContainEqual({ source: 'more', target: ids[1], relation: 'child' });
+  });
+
   test('subgraph callback adds children to current group', ({ expect }) => {
     const graph = MenuBuilder.make()
       .root({ label: 'toolbar' })

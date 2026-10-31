@@ -17,7 +17,6 @@ export default defineConfig({
     'session/Alarm': 'src/session/Alarm.ts',
     'session/Harness': 'src/session/Harness.ts',
     'session/SessionLink': 'src/session/SessionLink.ts',
-    'session/SkillHooks': 'src/session/SkillHooks.ts',
   },
   test: { node: true },
 });

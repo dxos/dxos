@@ -9,6 +9,7 @@ import * as Schema from 'effect/Schema';
 import * as Project from '@dxos/compute/Project';
 import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import { SpecDocument } from '@dxos/types';
+import { trim } from '@dxos/util';
 
 import * as Feature from './Feature.ts';
 
@@ -25,10 +26,10 @@ export type Layout = Schema.Schema.Type<typeof Layout>;
 
 /**
  * A feature map: the features a product area should reach, laid out on a canvas. A spec nests by a feature owning a
- * spec of its own, which breaks that feature down. It may name the project whose tasks deliver it, and hold the
- * normative `.mdl` document its features were extracted from.
+ * spec of its own, which breaks that feature down. A top-level spec may be owned by the project whose tasks deliver it
+ * (`Project.spec`). Every spec holds its normative `.mdl` document.
  */
-export class Spec extends Type.makeObject<Spec>(DXN.make('org.dxos.type.projects.spec', '0.1.0'))(
+export class Spec extends Type.makeObject<Spec>(DXN.make('org.dxos.type.projects.spec', '0.2.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Schema.annotate({ title: 'Name' })),
 
@@ -50,12 +51,10 @@ export class Spec extends Type.makeObject<Spec>(DXN.make('org.dxos.type.projects
 
     layout: Schema.optional(Layout.pipe(Annotation.FormInputAnnotation.set(false))),
 
-    /** The project whose tasks deliver the spec's features; not owned, so deleting the project keeps the spec. */
-    project: Schema.optional(Ref.Ref(Project.Project).pipe(Schema.annotate({ title: 'Project' }))),
-
-    /** The normative text the features were extracted from; owned, since a document lives only within its spec. */
-    document: Schema.optional(
-      Ref.Ref(SpecDocument.SpecDocument).pipe(Annotation.SetParent.set(), Annotation.FormInputAnnotation.set(false)),
+    /** The normative text the features are extracted from; owned, since a document lives only within its spec. */
+    document: Ref.Ref(SpecDocument.SpecDocument).pipe(
+      Annotation.SetParent.set(),
+      Annotation.FormInputAnnotation.set(false),
     ),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
@@ -64,13 +63,34 @@ export class Spec extends Type.makeObject<Spec>(DXN.make('org.dxos.type.projects
   ),
 ) {}
 
-export type MakeProps = Omit<Obj.MakeProps<typeof Spec>, 'features'> &
-  Partial<Pick<Obj.MakeProps<typeof Spec>, 'features'>>;
+export type MakeProps = Omit<Obj.MakeProps<typeof Spec>, 'features' | 'document'> &
+  Partial<Pick<Obj.MakeProps<typeof Spec>, 'features' | 'document'>>;
 
-/** `features` starts as an empty list so two peers lazily creating it cannot each write a fresh one. */
-export const make = (props: MakeProps): Spec => Obj.make(Spec, { features: [], ...props });
+/**
+ * `features` starts as an empty list so two peers lazily creating it cannot each write a fresh one. The document, unless
+ * given, is a new one headed with the spec's name.
+ */
+export const make = ({ document, ...props }: MakeProps): Spec =>
+  Obj.make(Spec, { features: [], ...props, document: document ?? Ref.make(makeDocument(props.name)) });
+
+/** A spec's starting document: front matter naming it, ready for its features. */
+export const makeDocument = (name: string): SpecDocument.SpecDocument =>
+  SpecDocument.make({
+    name,
+    content: trim`
+      ---
+      name: ${name}
+      ---
+    `,
+  });
 
 export const instanceOf = (value: unknown): value is Spec => Obj.instanceOf(Spec, value);
+
+/** The project that owns the spec: its ECHO parent; undefined for a breakdown or a spec no project owns. */
+export const getProject = (spec: Spec): Project.Project | undefined => {
+  const parent = Obj.getParent(spec);
+  return Obj.instanceOf(Project.Project, parent) ? parent : undefined;
+};
 
 /** The spec whose map lists the feature: its ECHO parent. */
 export const getContainer = (feature: Feature.Feature): Spec | undefined => {
@@ -100,10 +120,20 @@ export const getAncestry = (spec: Spec | undefined): Spec[] => {
   return chain;
 };
 
+/** The features from the top-level spec down to `feature`, each owning the spec the next one is on. */
+export const getLineage = (feature: Feature.Feature): Feature.Feature[] => [
+  ...getAncestry(getContainer(feature))
+    .flatMap((spec) => getOwner(spec) ?? [])
+    .reverse(),
+  feature,
+];
+
 /** Whether `spec` is the breakdown of `feature` or lies anywhere beneath it. */
 export const isWithin = (spec: Spec, feature: Feature.Feature): boolean =>
   getAncestry(spec).some((current) => getOwner(current)?.id === feature.id);
 
-/** The project that tracks the feature's work: its spec's, else the nearest one up the chain of specs. */
-export const findProject = (feature: Feature.Feature): Ref.Ref<Project.Project> | undefined =>
-  getAncestry(getContainer(feature)).find((spec) => spec.project)?.project;
+/** The project that tracks the feature's work: the one owning the top-level spec above it. */
+export const findProject = (feature: Feature.Feature): Project.Project | undefined => {
+  const top = getAncestry(getContainer(feature)).at(-1);
+  return top && getProject(top);
+};

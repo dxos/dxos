@@ -1,0 +1,82 @@
+# Packages a composer plugin's runtime builds must not reach, enforced by the `check-module-structure`
+# task every composer plugin inherits (.moon/tasks/tag-composer-plugin.yml) through
+# `dx-trace-imports --bans`. Each export that declares a condition is traced under it against that
+# condition's `ban` list: packages, subpaths or globs.
+#
+# Fix a violation at its source (an `environments` list without the runtime, a subpath instead of a
+# barrel, a per-runtime `#import`) rather than here.
+#
+# `allow` exempts a subpath of a banned package. The tracer then walks into the files it resolves to,
+# so the subpath still fails the check if it imports anything banned.
+
+# EDGE (operation-service) bundles every plugin's workerd build. It needs schema, operation handlers,
+# skills and connectors; everything banned here has no use there.
+#
+# TODO(operation-service memory plan, steps 4-6): still reached and not yet banned: `@dxos/echo-host`
+# (echo-client's query planner), `@dxos/sql-sqlite` (pipeline-rdf, keyring), `@dxos/vendor-hypercore`
+# (crypto) and `bip39` (credentials' seed phrases).
+workerd:
+  ban:
+    # Editor: CodeMirror state, views and grammars only run against a mounted EditorView.
+    - '@codemirror/*'
+    - '@lezer/*'
+    - '@replit/codemirror-vim'
+    - 'codemirror-lang-*'
+    - '@dxos/ui-editor'
+
+    # React, its component libraries and the design system.
+    - react
+    - react-dom
+    - '@radix-ui/*'
+    - '@dxos/react-*'
+    - '@dxos/ui'
+    - '@dxos/ui-icons'
+    - '@dxos/ui-theme'
+    - '@phosphor-icons/*'
+    - tailwind-merge
+
+    # The Lit and Solid component libraries.
+    - lit
+    - '@dxos/lit-*'
+    - '@dxos/solid-*'
+
+    # Browser storage (IndexedDB/WebSQL).
+    - localforage
+
+    # defuddle's DOM build; workerd parses HTML with `defuddle/node`.
+    - defuddle/full
+
+    # The local client stack and CLI: EDGE reads data through its data service, never a local host.
+    - '@dxos/cli-util'
+    - '@dxos/client-services'
+    - '@dxos/network-manager'
+
+  allow:
+    # UI-free subpaths of UI packages: the schema, annotations and translation strings that operations
+    # share with the components.
+    - '@dxos/react-ui*/translations'
+    - '@dxos/react-ui-*/types'
+    - '@dxos/react-ui-form/annotations'
+    - '@dxos/ui-editor/types'
+
+    # UI-free subpaths that headless modules share with their components: canvas's shape model, the
+    # focus store keyboard bindings read, the debug log buffer and list's tree helpers.
+    - '@dxos/react-focus/store'
+    - '@dxos/react-ui-canvas/headless'
+    - '@dxos/react-ui-debug/log-buffer'
+    - '@dxos/react-ui-list/util'
+
+    # The editor's word-level text diff, which accept/reject-change handlers apply on the server.
+    - '@dxos/ui-editor/hunks'
+
+    # Lezer's LR parser runtime, not an editor: `@dxos/diagram` parses its DSL with it when the
+    # illustrator `generate` operation compiles a drawing.
+    - '@lezer/common'
+    - '@lezer/lr'
+
+# A plugin's node build serves the CLI and agents, so UI-only modules list `['browser', 'tauri']`.
+node:
+  ban:
+    - react
+    - react-dom
+    - '@dxos/react-ui'

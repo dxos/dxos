@@ -67,7 +67,7 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
       AppCapability.skillDefinition(
         () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
         {
-          provides: [RoutineCapabilities.AgentDelegationStrategy],
+          provides: [AppCapabilities.HookDefinition, RoutineCapabilities.AgentDelegationStrategy],
         },
       ),
       AppCapability.mcpServer(() => import('./src/capabilities/mcp-server.ts', { with: { type: 'module-url' } })),
@@ -118,7 +118,11 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
       ),
       Capability.lazyModule(
         'MarkdownExtension',
-        { provides: [MarkdownCapabilities.ExtensionProvider], activatesOn: MarkdownEvents.Start },
+        {
+          environments: ['browser', 'tauri'],
+          provides: [MarkdownCapabilities.ExtensionProvider],
+          activatesOn: MarkdownEvents.Start,
+        },
         () => import('./src/capabilities/markdown-extension.ts', { with: { type: 'module-url' } }),
       ),
       // TODO(wittjosiah): Does not integrate with settings store.

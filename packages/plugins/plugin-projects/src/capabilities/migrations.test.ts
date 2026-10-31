@@ -10,9 +10,9 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
 import { SpecDocument } from '@dxos/types';
 
-import { Feature, LegacyFeature, LegacyShowcase, Showcase, Spec } from '#types';
+import { Feature, LegacyFeature, LegacyShowcase, LegacySpec, Showcase, Spec } from '#types';
 
-import { featureSubfeatures, makeFeatureSpecs } from './migrations.ts';
+import { featureSubfeatures, makeFeatureSpecs, makeSpecOwners } from './migrations.ts';
 
 describe('feature migrations', () => {
   let builder: EchoTestBuilder;
@@ -93,7 +93,8 @@ describe('feature migrations', () => {
     expect(specs.map(({ name }) => name).sort()).toEqual(['Features', 'Inbox', 'Sync']);
 
     const inbox = specs.find(({ name }) => name === 'Inbox');
-    expect(inbox?.project?.target?.id).toBe(project.id);
+    expect(inbox && Spec.getProject(inbox)?.id).toBe(project.id);
+    expect(project.spec?.peek()?.id).toBe(inbox?.id);
     const compose = byName('Compose');
     expect(inbox?.features.map((ref) => ref.target?.name).sort()).toEqual(['Compose', 'Sync']);
     expect(compose && inbox?.layout?.positions[compose.id]).toEqual({ x: 3, y: 4 });
@@ -123,6 +124,43 @@ describe('feature migrations', () => {
     const features = await db.query(Filter.type(Feature.Feature)).run();
     expect(features.find(({ name }) => name === 'Sync')?.spec?.target?.id).toBe(earlier.id);
     expect(earlier.features.map((ref) => ref.target?.name)).toEqual(['Gmail']);
+  });
+
+  test('a 0.1.0 spec naming a project becomes owned by it, unless a feature owns the spec', async ({ expect }) => {
+    const { db, graph } = await builder.createDatabase({ types: [Project.Project, Text.Text] });
+    graph.registry.add([LegacySpec.Spec, Spec.Spec, Feature.Feature, SpecDocument.SpecDocument]);
+    const inbox = db.add(Project.make({ name: 'Inbox' }));
+    const mail = db.add(Project.make({ name: 'Mail' }));
+    const top = db.add(Obj.make(LegacySpec.Spec, { name: 'Inbox', features: [], project: Ref.make(inbox) }));
+    const sync = db.add(Feature.make({ name: 'Sync', status: 'planned' }));
+    const breakdown = db.add(Obj.make(LegacySpec.Spec, { name: 'Sync', features: [], project: Ref.make(mail) }));
+    Obj.setParent(breakdown, sync);
+    await db.flush();
+    await db.runMigrations([makeSpecOwners()]);
+
+    const specs = await db.query(Filter.type(Spec.Spec)).run();
+    const migrated = specs.find(({ id }) => id === top.id);
+    expect(migrated && Spec.getProject(migrated)?.id).toBe(inbox.id);
+    expect(inbox.spec?.peek()?.id).toBe(migrated?.id);
+    expect(Obj.getParent(specs.find(({ id }) => id === breakdown.id)!)?.id).toBe(sync.id);
+    expect(mail.spec).toBeUndefined();
+  });
+
+  test('a 0.1.0 spec without a document is given one, and one with a document keeps it', async ({ expect }) => {
+    const { db, graph } = await builder.createDatabase({ types: [Text.Text] });
+    graph.registry.add([LegacySpec.Spec, Spec.Spec, Feature.Feature, SpecDocument.SpecDocument]);
+    const kept = db.add(SpecDocument.make({ name: 'Inbox' }));
+    const inbox = db.add(Obj.make(LegacySpec.Spec, { name: 'Inbox', features: [], document: Ref.make(kept) }));
+    const sync = db.add(Obj.make(LegacySpec.Spec, { name: 'Sync', features: [] }));
+    await db.flush();
+    await db.runMigrations([makeSpecOwners()]);
+
+    const specs = await db.query(Filter.type(Spec.Spec)).run();
+    const byId = (id: string) => specs.find((spec) => spec.id === id);
+    expect((await byId(inbox.id)?.document.load())?.id).toBe(kept.id);
+    const made = await byId(sync.id)?.document.load();
+    expect(made && Obj.getParent(made)?.id).toBe(sync.id);
+    expect(made && (await made.content.load()).content).toContain('name: Sync');
   });
 
   test('Demonstrates 0.1.0 edges become 0.2.0 with their endpoints, before the showcase itself migrates', async ({

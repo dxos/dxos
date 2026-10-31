@@ -49,6 +49,27 @@ export const insertTaskAtLine: Command = (view) => {
   return true;
 };
 
+// Built once: every `EditorView.theme` call mints a new stylesheet, which restyles the whole document.
+const ghostTheme = EditorView.theme({
+  // Pinned like the grip: `left`/`top` name the centre point and the transform centres the box.
+  '.cm-outliner-add': {
+    position: 'fixed',
+    zIndex: '5',
+    transform: 'translate(-50%, -50%)',
+    display: 'grid',
+    placeItems: 'center',
+    width: 'var(--dx-control)',
+    height: 'var(--dx-control)',
+  },
+  '.cm-outliner-add-icon': {
+    display: 'grid',
+    placeContent: 'center',
+    // `size-3`: the glyph is 1em.
+    fontSize: '0.75rem',
+    color: 'var(--color-fg-muted, currentColor)',
+  },
+});
+
 /**
  * Hints at what an empty row wants: an empty item shows a placeholder in its content, and a blank line
  * shows an add button where the item's grip would be. Both follow the caret and need focus.
@@ -169,24 +190,6 @@ export const ghost = (options: GhostOptions = {}): Extension => {
       },
     ),
 
-    EditorView.theme({
-      // Pinned like the grip: `left`/`top` name the centre point and the transform centres the box.
-      '.cm-outliner-add': {
-        position: 'fixed',
-        zIndex: '5',
-        transform: 'translate(-50%, -50%)',
-        display: 'grid',
-        placeItems: 'center',
-        width: 'var(--dx-control)',
-        height: 'var(--dx-control)',
-      },
-      '.cm-outliner-add-icon': {
-        display: 'grid',
-        placeContent: 'center',
-        // `size-3`: the glyph is 1em.
-        fontSize: '0.75rem',
-        color: 'var(--color-fg-muted, currentColor)',
-      },
-    }),
+    ghostTheme,
   ];
 };

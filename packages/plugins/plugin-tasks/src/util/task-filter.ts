@@ -93,3 +93,25 @@ const statusVisible = (
 
   return new Set(tasks.filter(resolve).map(({ id }) => id));
 };
+
+/**
+ * The tasks named in `scope` and everything filed under them, in the array's order: a sub-task is part of the work its
+ * parent stands for. A branch whose parent is left out is rooted at the kept task.
+ */
+export const withinScope = (tasks: readonly Task.Task[], scope: ReadonlySet<string>): readonly Task.Task[] => {
+  const byId = new Map(tasks.map((task) => [task.id, task]));
+  const kept = new Map<string, boolean>();
+  const isKept = (task: Task.Task, depth = 0): boolean => {
+    const known = kept.get(task.id);
+    if (known !== undefined) {
+      return known;
+    }
+    const parentId = Task.parentTaskId(task);
+    const parent = parentId ? byId.get(parentId) : undefined;
+    // Bounded, so a cycle written by a concurrent move cannot loop.
+    const result = scope.has(task.id) || (!!parent && depth < tasks.length && isKept(parent, depth + 1));
+    kept.set(task.id, result);
+    return result;
+  };
+  return tasks.filter((task) => isKept(task));
+};
