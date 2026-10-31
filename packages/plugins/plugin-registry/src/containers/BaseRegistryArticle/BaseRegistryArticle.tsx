@@ -4,6 +4,7 @@
 
 import { useAtom, useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { type ReactNode, useCallback, useMemo } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
@@ -55,6 +56,9 @@ export type BaseRegistryArticleProps = {
   | 'onUpdate'
 >;
 
+/** Stable fallback so the atom hook keeps a constant identity while settings sync is absent. */
+const notReady = Atom.make(false);
+
 export const BaseRegistryArticle = Util.composable<HTMLDivElement, BaseRegistryArticleProps>(
   (
     {
@@ -81,6 +85,7 @@ export const BaseRegistryArticle = Util.composable<HTMLDivElement, BaseRegistryA
     const allSettings = Hooks.useCapabilities(AppCapabilities.Settings);
     const enabled = useAtomValue(manager.enabled);
     const settingsSync = Hooks.useOptionalCapability(AppCapabilities.SettingsSync);
+    const settingsReady = useAtomValue(settingsSync?.ready ?? notReady);
     const [filter, setFilter] = useAtom(registryFilterAtom);
 
     const filtered = useMemo(() => {
@@ -159,7 +164,7 @@ export const BaseRegistryArticle = Util.composable<HTMLDivElement, BaseRegistryA
                     failuresById={failuresById}
                     deviceOnlyIds={deviceOnlyIds}
                     onClick={handleClick}
-                    readOnly={settingsSync === undefined}
+                    readOnly={!settingsReady}
                     onChange={handleChange}
                     onInstall={onInstall}
                     onUpdate={onUpdate}

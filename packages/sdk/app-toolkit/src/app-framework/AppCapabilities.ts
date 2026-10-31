@@ -207,9 +207,12 @@ export const Settings = Capability$.make<Settings>()('org.dxos.app-framework.cap
  * contribution (plus the plugin set) into the settings space so they follow the identity across
  * devices, with per-key device overrides.
  *
- * Absent without an identity. Until the settings space opens, `unsynced` is empty and the actions do nothing.
+ * Until {@link ready} turns true (an identity exists and the settings space is bound), `unsynced` is empty
+ * and the actions do nothing.
  */
 export type SettingsSync = {
+  /** Whether the store is bound to the settings space, so the actions take effect. */
+  readonly ready: Atom.Atom<boolean>;
   /** Settings prefixes this device writes locally rather than sharing. */
   readonly unsynced: Atom.Atom<readonly string[]>;
   /** Take a prefix off the account for this device. Lossless, and no other device is touched. */

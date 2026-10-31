@@ -154,8 +154,7 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
       {
         requires: [ClientCapabilities.Client, Capabilities.PluginManager, Capabilities.AtomRegistry],
         provides: [AppCapabilities.SettingsSync],
-        // The settings space arrives with the space list; on a first run that precedes the identity, so the module runs
-        // again when `CreateIdentity` resets `IdentityCreated`.
+        // The space list can be observable before the identity loads; the module waits for the identity before binding.
         activatesOn: ActivationEvent.oneOf(ClientEvents.SpacesAvailable, ClientEvents.IdentityCreated),
       },
       () => import('./src/capabilities/settings-sync/settings-sync.ts', { with: { type: 'module-url' } }),
