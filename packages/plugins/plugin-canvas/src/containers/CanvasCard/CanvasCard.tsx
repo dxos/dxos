@@ -25,33 +25,44 @@ const CARD_MARGIN = 0.25;
 export type CanvasCardProps = IllustratorCapabilities.DrawingVariantSurfaceProps<Obj.Unknown>;
 
 /** The card surface of the canvas variant: the drawing's open scene alone, fitted, on the card's own surface. */
-export const CanvasCard = ({ canvas }: CanvasCardProps) =>
-  CanvasFormat.isCanvas(canvas) ? <DimensionCard canvas={canvas} /> : null;
+export const CanvasCard = ({ canvas, extrinsic }: CanvasCardProps) =>
+  CanvasFormat.isCanvas(canvas) ? <DimensionCard canvas={canvas} extrinsic={extrinsic} /> : null;
 
 CanvasCard.displayName = 'CanvasCard';
 
+type DimensionCardProps = { canvas: CanvasFormat.Canvas; extrinsic?: boolean };
+
 /** A 3D canvas's card shows its open scene through the 3D renderer; every other one through the 2D engine. */
-const DimensionCard = ({ canvas }: { canvas: CanvasFormat.Canvas }) => {
+const DimensionCard = ({ canvas, extrinsic }: DimensionCardProps) => {
   useObject(canvas);
-  return canvasDimension(canvas) === '3d' ? <Canvas3DCard canvas={canvas} /> : <Canvas2DCard canvas={canvas} />;
+  return canvasDimension(canvas) === '3d' ? (
+    <Canvas3DCard canvas={canvas} extrinsic={extrinsic} />
+  ) : (
+    <Canvas2DCard canvas={canvas} extrinsic={extrinsic} />
+  );
 };
 
+/**
+ * A card sized by its host covers the host's positioned box (a canvas frame), since the card's own rows size to their
+ * content; it is then out of the card's grid, so neither it nor the view takes the card's column lines. One in a list
+ * or grid is a square spanning the card's rails as well as its content column.
+ */
+const cardClassNames = (extrinsic?: boolean) =>
+  extrinsic
+    ? { section: 'dx-cover col-auto', view: 'col-auto pointer-events-none' }
+    : { section: 'aspect-square', view: 'col-[full] pointer-events-none' };
+
 /** The open 3D scene from its authored camera: no grid, and inert, so a press or wheel reaches the card. */
-const Canvas3DCard = ({ canvas }: { canvas: CanvasFormat.Canvas }) => {
+const Canvas3DCard = ({ canvas, extrinsic }: DimensionCardProps) => {
+  const classNames = cardClassNames(extrinsic);
   const scene = openScene(canvas);
   const stored = Obj.instanceOf(Scene.Scene3D, scene) ? scene : undefined;
   const document = useSceneDocument(stored);
   return (
     <Card.Body>
-      <Card.Section classNames='aspect-square'>
+      <Card.Section classNames={classNames.section}>
         {stored && document && (
-          <Scene3DView
-            classNames='col-[full] pointer-events-none'
-            document={document}
-            scene={stored.key}
-            grid={false}
-            orbit={false}
-          />
+          <Scene3DView classNames={classNames.view} document={document} scene={stored.key} grid={false} orbit={false} />
         )}
       </Card.Section>
     </Card.Body>
@@ -59,7 +70,8 @@ const Canvas3DCard = ({ canvas }: { canvas: CanvasFormat.Canvas }) => {
 };
 
 /** The open 2D scene, fitted: the canvas's node types, each layout in its own mode, inert so a press reaches the card. */
-const Canvas2DCard = ({ canvas }: { canvas: CanvasFormat.Canvas }) => {
+const Canvas2DCard = ({ canvas, extrinsic }: DimensionCardProps) => {
+  const classNames = cardClassNames(extrinsic);
   const nodes = useCanvasNodes();
   const kinds = useCanvasKinds();
   const [snapshot] = useObject(canvas);
@@ -70,12 +82,11 @@ const Canvas2DCard = ({ canvas }: { canvas: CanvasFormat.Canvas }) => {
   const drawn = useMemo(() => document && toViewportDocument(document, kinds), [document, kinds]);
   return (
     <Card.Body>
-      <Card.Section classNames='aspect-square'>
+      <Card.Section classNames={classNames.section}>
         {stored && drawn && (
           <CanvasDatabaseContext.Provider value={Obj.getDatabase(canvas)}>
             <Scene2DView
-              // Spans the card's rails as well as its content column.
-              classNames='col-[full] pointer-events-none'
+              classNames={classNames.view}
               document={drawn}
               scene={stored.key}
               theme={snapshot.settings.theme}

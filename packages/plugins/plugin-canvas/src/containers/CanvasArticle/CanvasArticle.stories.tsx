@@ -232,6 +232,49 @@ export const ObjectView: Story = {
   },
 };
 
+/** A wide view node holding another drawing, as an architecture overview's drill box does: its card fits the frame. */
+export const DrawingView: Story = {
+  decorators: withDrawing((db, content, root) => {
+    const canvas = addTestCanvas(db, (childContent, childRoot) => seedBasic(db, childContent, childRoot));
+    const child = db.add(Drawing.make({ name: 'Detail', canvas }));
+    content['scene:detail'] = { kind: 'scene', id: 'detail' };
+    content[nodeKey('detail')] = {
+      kind: 'node',
+      scene: root,
+      node: {
+        id: 'detail',
+        type: 'view',
+        z: 'a1',
+        center: { x: 0, y: 0 },
+        size: { width: 8 * DEFAULT_CELL, height: 3 * DEFAULT_CELL },
+        scene: 'detail',
+        link: { object: Ref.make(child), role: 'card' },
+      },
+    };
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // The card draws the child drawing through a scene view of its own.
+    await expect(await canvas.findAllByTestId('scene-view', undefined, { timeout: 30_000 })).not.toHaveLength(0);
+    const { surface, view } = await waitFor(
+      () => {
+        const surface = canvasElement.querySelector('[data-node-id="detail"] [data-testid="frame-surface"]');
+        const view = surface?.querySelector('.dx-card-section > *');
+        if (!surface || !view) {
+          throw new Error('The frame has not resolved the drawing card.');
+        }
+        return { surface, view };
+      },
+      { timeout: 10_000 },
+    );
+    // The view is the frame's box, so the fit centres the drawing in it; a square card overflowed a wide frame.
+    const frame = surface.getBoundingClientRect();
+    const preview = view.getBoundingClientRect();
+    await expect(Math.abs(preview.width - frame.width)).toBeLessThan(2);
+    await expect(Math.abs(preview.height - frame.height)).toBeLessThan(2);
+  },
+};
+
 /**
  * Image shapes, linked by URL in their properties.
  *

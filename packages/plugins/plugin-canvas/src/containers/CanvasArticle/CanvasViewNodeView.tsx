@@ -87,9 +87,9 @@ const FrameSurface = ({ object, role, selected, active }: FrameSurfaceProps) => 
     return () => cancelAnimationFrame(frame);
   }, [selected, attention]);
 
-  // A card is sized by its content; a section or article by the frame (`extrinsic`).
+  // Every role is sized by the frame (`extrinsic`); a card that ignores it keeps its own height.
   const card = role === 'card';
-  const data = card ? { subject: object, attendableId } : { subject: object, attendableId, extrinsic: true };
+  const data = { subject: object, attendableId, extrinsic: true };
   return (
     <div
       ref={ref}

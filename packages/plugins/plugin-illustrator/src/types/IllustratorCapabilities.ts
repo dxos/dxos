@@ -107,7 +107,7 @@ export type DrawingVariantSurfaceProps<C extends Obj.Unknown = Drawing.Canvas> =
   attendableId?: string;
   /** Card surfaces: whether the card is editable. */
   editable?: boolean;
-  /** Section surfaces: whether the embed is extrinsically sized. */
+  /** Section and card surfaces: whether the embed is sized by its host (a resized embed, a frame on a canvas). */
   extrinsic?: boolean;
   /** Selected world-object ids, owned by the host so every renderer shares one selection model. */
   selection?: readonly string[];

@@ -14,7 +14,7 @@ import { Drawing, IllustratorCapabilities } from '#types';
 export type DrawingCardProps = AppSurface.ObjectCardProps<Drawing.Drawing>;
 
 /** Resolves the drawing's canvas and delegates rendering to the variant claiming its schema. */
-export const DrawingCard = ({ role, subject: drawing, editable }: DrawingCardProps) => {
+export const DrawingCard = ({ role, subject: drawing, editable, extrinsic }: DrawingCardProps) => {
   const variants = Hooks.useCapabilities(IllustratorCapabilities.VariantProvider);
   const ref = drawing.canvas;
   const [snapshot] = useObject(ref);
@@ -30,7 +30,15 @@ export const DrawingCard = ({ role, subject: drawing, editable }: DrawingCardPro
   }
 
   return (
-    <VariantSurface variant={match} slot='card' drawing={drawing} canvas={canvas} role={role} editable={editable} />
+    <VariantSurface
+      variant={match}
+      slot='card'
+      drawing={drawing}
+      canvas={canvas}
+      role={role}
+      editable={editable}
+      extrinsic={extrinsic}
+    />
   );
 };
 
