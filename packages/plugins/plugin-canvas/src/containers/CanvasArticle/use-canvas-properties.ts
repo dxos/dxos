@@ -13,7 +13,7 @@ import { type CanvasPropertiesProps } from '@dxos/react-ui-canvas-editor';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import { type Element, type ViewId, isLink, isViewNode } from '@dxos/scene';
 
-import { isCanvasDrawing, objectRef, objectUri, parseLinkedViewId } from '#model';
+import { objectUri, parseLinkedViewId } from '#model';
 
 import { canvasViewAspect } from './view-state.ts';
 
@@ -57,21 +57,14 @@ export const useCanvasProperties = (canvas: Obj.Unknown, readViews: () => Render
         const child = scenes[element.scene];
         return child !== undefined && Object.keys(child.nodes).length > 0;
       });
-      // A frame showing an object opens the object (or a canvas drawing's root), not a scene of this one.
+      // A frame showing an object opens it as its surface in the frame's role, not a scene of this one.
       const linked = elements.some((element) => !isLink(element) && objectUri(element));
-      // The role applies only to an object shown as a surface, not to a canvas drawing shown as a scene; an object
-      // still loading is offered one, so the field appears as soon as the object is picked.
-      const surfaced = elements.some(
-        (element) =>
-          !isLink(element) && objectUri(element) && isCanvasDrawing(objectRef(element, db)?.target) === false,
-      );
       return {
         ...(locked ? { 'link.object': { readonly: true } } : {}),
-        ...(linked ? { scene: { hidden: true } } : {}),
-        ...(surfaced ? {} : { 'link.role': { hidden: true } }),
+        ...(linked ? { scene: { hidden: true } } : { 'link.role': { hidden: true } }),
       };
     },
-    [readViews, db],
+    [readViews],
   );
 
   return useMemo(

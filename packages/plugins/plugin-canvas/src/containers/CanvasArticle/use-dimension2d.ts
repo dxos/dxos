@@ -15,17 +15,12 @@ import { type Camera, type CanvasServices, currentLookId } from '@dxos/react-ui-
 import { type EditorDisplay, createConfig2D } from '@dxos/react-ui-canvas-editor';
 import { type Node, isViewNode } from '@dxos/scene';
 
-import { generatorCompiler, isCanvasDrawing, objectRef, parseLinkedViewId } from '#model';
+import { generatorCompiler, objectRef, parseLinkedViewId } from '#model';
 import { CanvasCapabilities, Canvas as CanvasFormat } from '#types';
 
-import {
-  createGeneratorWorker,
-  useCanvasGenerators,
-  useCanvasKinds,
-  useCanvasNodes,
-} from '../CanvasArticle/use-canvas-scene.ts';
 import { type SceneDimension } from './dimension.ts';
 import { useCanvasProperties } from './use-canvas-properties.ts';
+import { createGeneratorWorker, useCanvasGenerators, useCanvasKinds, useCanvasNodes } from './use-canvas-scene.ts';
 import { canvasViewAspect } from './view-state.ts';
 
 /** The camera a 2D viewer's camera bar resets to: the scene's origin at 1:1. */
@@ -53,13 +48,13 @@ export const useDimension2D = (canvas: CanvasFormat.Canvas): SceneDimension<Came
     [canvas],
   );
 
-  // A frame showing an object (not a canvas drawing) opens it in the app.
+  // A frame showing an object opens it in the app.
   const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(canvas);
   const openObject = useCallback(
     (node: Node) => {
       const object = objectRef(node, db)?.target;
-      if (!object || !isViewNode(node) || parseLinkedViewId(node.scene) || isCanvasDrawing(object) !== false) {
+      if (!object || !isViewNode(node) || parseLinkedViewId(node.scene)) {
         return undefined;
       }
       return () => {

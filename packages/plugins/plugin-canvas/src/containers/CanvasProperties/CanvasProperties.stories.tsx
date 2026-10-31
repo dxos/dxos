@@ -18,7 +18,7 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { addCanvas, createCanvas } from '#model';
+import { addCanvas } from '#model';
 import { translations } from '#translations';
 
 import schemaTypes from '../../capabilities/schema.ts';
@@ -34,7 +34,7 @@ const DefaultStory = () => {
   return <CanvasProperties drawing={drawing} />;
 };
 
-/** A drawing over the canvas `make` gives: a legacy one, or a `Canvas` over a scene. */
+/** A drawing over the `Canvas` that `make` gives. */
 const withCanvas = (make: () => Effect.Effect<Obj.Unknown, never, Database.Service>) => [
   withTheme(),
   withLayout({ layout: 'column' }),
@@ -58,7 +58,7 @@ const withCanvas = (make: () => Effect.Effect<Obj.Unknown, never, Database.Servi
 const meta = {
   title: 'plugins/plugin-canvas/containers/CanvasProperties',
   render: DefaultStory,
-  decorators: withCanvas(() => Database.add(createCanvas())),
+  decorators: withCanvas(() => addCanvas()),
   parameters: {
     translations: [...translations, ...formTranslations],
   },
@@ -83,14 +83,13 @@ export const Default: Story = {
 };
 
 /**
- * A `Canvas` over a scene: the lattice is its layouts' own mode, so the toggle writes the layouts and reads them back.
+ * The lattice is the layouts' own mode, so the toggle writes the layouts and reads them back.
  *
  * Test:
  * 1. The lattice toggle starts off, as a new canvas's layout has no lattice.
  * 2. Turned on, it stays on: the form reads it back from the layout.
  */
-export const Scene: Story = {
-  decorators: withCanvas(() => addCanvas()),
+export const Lattice: Story = {
   play: async ({ canvasElement }) => {
     const [lattice] = await within(canvasElement).findAllByRole('switch', undefined, { timeout: 30_000 });
     await expect(lattice).not.toBeChecked();

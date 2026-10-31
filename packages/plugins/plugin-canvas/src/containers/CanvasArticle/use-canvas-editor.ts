@@ -14,7 +14,7 @@ import { type Layer, type LayoutIntent, type ModelIntent, Scene, reachedObjects 
 import { applyLayoutIntent, canvasDocument, layoutSource, openScene, writeDocument, writeModelIntent } from '#model';
 import { type Canvas } from '#types';
 
-import { useSceneDocument } from '../SceneStage/index.ts';
+import { useSceneDocument } from '../CanvasStage/index.ts';
 import { useInspectorDock } from './use-inspector-dock.ts';
 import { useRefitKey } from './use-refit-key.ts';
 import { useSceneChoice } from './use-scene-choice.ts';
@@ -42,7 +42,7 @@ const modelKeyOf = (canvas: Canvas.Canvas, dim: Scene.Dimension): string | undef
 };
 
 /** What the shared editor takes from a canvas, in either dimension, beside the dimension's own config and view. */
-export type SceneEditorHost = {
+export type CanvasEditorHost = {
   stored: StoredScene | undefined;
   document: Scene.SceneDocument | undefined;
   sceneChoice: SceneChoice | undefined;
@@ -65,7 +65,7 @@ export type SceneEditorHost = {
  * that owns the element (made, empty, when the 2D engine opens a View for a new one), recorded for undo over every
  * layout the scene reaches; model edits, layers, the lock, the dock and the shots are the same in both dimensions.
  */
-export const useSceneEditor = (canvas: Canvas.Canvas, dim: Scene.Dimension): SceneEditorHost => {
+export const useCanvasEditor = (canvas: Canvas.Canvas, dim: Scene.Dimension): CanvasEditorHost => {
   const [snapshot] = useObject(canvas);
   const { key: sceneKey, choice: sceneChoice } = useSceneChoice(canvas);
   const scene = openScene(canvas, sceneKey);

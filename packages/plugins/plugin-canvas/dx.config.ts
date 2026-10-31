@@ -10,6 +10,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AnimatorCapabilities from '@dxos/plugin-animator/AnimatorCapabilities';
 import * as AnimatorEvents from '@dxos/plugin-animator/AnimatorEvents';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import * as IllustratorEvents from '@dxos/plugin-illustrator/IllustratorEvents';
 import { trim } from '@dxos/util';
@@ -79,6 +80,17 @@ const config: Plugin.PluginConfig = Plugin.config({
       'CanvasMigrations',
       { provides: [ClientCapabilities.Migration] },
       () => import('./src/capabilities/migrations.ts', { with: { type: 'module-url' } }),
+    ),
+    // Legacy scene drawings move onto `Canvas`es as each space loads, so no surface reads the legacy records.
+    Capability.lazyModule(
+      'legacy-migration',
+      {
+        requires: [ClientCapabilities.Client],
+        provides: [],
+        activatesOn: ClientEvents.SpacesAvailable,
+        environments: ['browser', 'node', 'tauri'],
+      },
+      () => import('./src/capabilities/legacy-migration.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.appGraphBuilder(
       () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),

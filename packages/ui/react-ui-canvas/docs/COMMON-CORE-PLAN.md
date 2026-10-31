@@ -377,6 +377,56 @@ layout)` takes the layout record and `toRenderLists2D(doc, scene)` every 2D layo
   barrel, so `/headless` would grow React-free but large; the root carries neither the editor nor Babylon (R-82), which
   is what plugin-canvas D-13 required of react-ui-scene's `/canvas` entry. Parked: a light headless mode rule for
   operations. Cost if wrong: operation handlers load the engine's React modules, as before.
+- **R-88 (2026-10-30, user decision, G.2): one set of canvas surfaces.** Old drawings migrate when a space loads;
+  every legacy surface and the hidden legacy variant are deleted; `SceneArticle` and `SceneStage` become
+  `CanvasArticle` and `CanvasStage`, one set that picks 2D or 3D by config (plugin-canvas D-16, superseding D-14).
+- **R-89 (2026-10-30, agent, G.2): the migration is a plugin module, not an ECHO migration.** plugin-canvas's
+  `LegacyMigration` module activates on `ClientEvents.SpacesAvailable` and runs `migrateLegacyDrawings` once per space
+  per session after `waitUntilReady`: migrate each current-revision scene drawing, reconcile copies two peers made
+  (`CreatedFrom` with reason `migration`), restage animations, adopt a settings mode onto the layouts. Idempotent and
+  logged; a failing drawing is skipped until the next pass. Rejected: `Migration.define` (all objects of one type; it
+  cannot tell scene canvases from tldraw or excalidraw ones, nor create an object graph idempotently) and
+  `Migration.defineTransaction` (runs every pass, starts an epoch, rewrites documents as forks). Cost if wrong: a
+  space with many drawings pays one query per session (plugin-canvas D-17).
+- **R-90 (2026-10-30, agent, G.2): the migration is the only reader of the View records.** `model/legacy-migration.ts`
+  (was `migrate-scenes.ts`) reads them, through the registered content steps (`Migration.upgradeContent`) so a canvas
+  that synced in unmigrated reads as they would write it. `createCanvas` and `CanvasBuilder` leave the model as
+  `testing/legacy-drawing.ts`'s `makeLegacyCanvas` and `LegacyCanvasBuilder`, for the migration's tests and the
+  parity tests that compare the Canvas builder with the legacy one.
+- **R-91 (2026-10-30, agent, G.2): a newer plugin's canvas stays as it is, unopened.** A legacy canvas whose schema
+  names a later revision is not migrated (its records may hold fields this plugin would drop) and, with the hidden
+  variant gone, has no surface; the `newer-format` banner and its strings are removed. Cost if wrong: such a drawing
+  shows the illustrator's no-variant fallback until the newer plugin is installed.
+- **R-92 (2026-10-30, agent, G.2): operations take only a `Canvas`.** `canvasOf` loads what a `Canvas` reaches and
+  fails with `DrawingDialectError` for anything else; `Apply` and `AddGenerator` no longer migrate first,
+  `InspectGenerator` no longer reads legacy records, and `LegacyCanvasError` and `NewerCanvasError` are deleted.
+  **Parity:** 2D and 3D Canvases go through the same `canvasOf`.
+- **R-93 (2026-10-30, agent, G.2): the animator stages are `canvasStage2D` and `canvasStage3D`.** Both render
+  `CanvasStage`; the 2D stage takes the legacy stage's row and ring layouts (`CANVAS_LAYOUTS`) and its
+  centre/size/opacity script properties; the legacy stage and its targets are deleted. A shot staged on a legacy
+  canvas is restaged by the pass (R-89) on the migrated root scene, its tracks at element paths. react-ui-canvas's
+  `OPACITY_PATH`, `BASE_ANIMATABLE` and `nodeAnimatable`, kept for the legacy stage (R-68), are deleted. **Parity:**
+  the 3D stage keeps its own layouts.
+- **R-94 (2026-10-30, agent, G.2): the renames.** `containers/SceneArticle/*` → `CanvasArticle/` (`useSceneEditor` →
+  `useCanvasEditor`, `SceneEditorHost` → `CanvasEditorHost`, `SceneEditCommands` → `CanvasEditCommands`),
+  `SceneStage/*` → `CanvasStage/`, stories titled `plugins/plugin-canvas/containers/CanvasArticle` and `CanvasStage`.
+  `CanvasArticle` and `CanvasCard` pick the 2D or 3D config by the open scene's dimension (plugin-canvas D-18).
+- **R-95 (2026-10-30, agent, G.2): `constrain2D` is on `/headless` (supersedes R-87).** The modes' React references
+  were type-only in effect; making them `import type` frees the mode rule of React, so `/headless` exports
+  `constrain2D` and every plugin-canvas operation imports react-ui-canvas through `/headless` only. `entries.test.ts`
+  now fails if `/headless` reaches a `.tsx` module or a React package (plugin-canvas D-19).
+- **R-96 (2026-10-30, agent, G.2): the Architecture samples build `Canvas`es.** `addCanvasDrawing` makes a `Canvas`
+  (`makeCanvas`, `CanvasLayoutBuilder.apply`, `setLayoutLattice`, `readonly` in settings); tones and drill frames are
+  written through `editCanvasContent`. `/Architecture` exports `canvasDrawingSchemas`, `loadDrawingCanvas`,
+  `readDrawingContent` and `editDrawingContent`, which plugin-debug's Fieldstone docs and stories-agent's ECHO flow
+  and comment story use instead of writing legacy records.
+- **R-97 (2026-10-30, agent, G.2): stories seed `Canvas`es.** `testing/canvas.ts`'s `addTestCanvas` seeds a new
+  canvas through content records; the legacy article stories (Default, Test, Slide, ObjectView, Image) join
+  `CanvasArticle.stories.tsx` beside `Canvas2D` and `Canvas3D`; `NewerFormat` is dropped (R-91). The legacy article's
+  transparent panel on a slide is kept on `CanvasArticle`, so a slide still shows through a drawing.
+- **R-98 (2026-10-30, agent, G.2): a late duplicate waits a session.** A copy another peer's pass made that syncs in
+  after this session's pass is folded by the next session's pass, not live. Cost if wrong: two canvases for one
+  drawing until a reload; the drawing points at one of them throughout.
 
 ## Global Constraints
 
@@ -1085,8 +1135,15 @@ Move every file of react-ui-scene, and react-ui-canvas's editor, panels, inspect
       plugin-conductor, plugin-animator, plugin-illustrator, react-ui-canvas-compute) import from the two packages.
 - [x] Specs: react-ui-canvas SPEC.mdl D-37 to D-42; SPEC-2D.mdl and `docs/DESIGN.md` synced to the draw state (D-59,
       D-60); SPEC-3D.mdl D-20.
-- [ ] Parked: port the e2e suites and `DataFlowView` onto `SceneEditor` and delete `CanvasEditor` (R-83); a light
-      headless mode rule (R-87).
+- [x] A headless mode rule: `constrain2D` on `/headless` (R-95, superseding R-87).
+- [ ] Parked: port the e2e suites and `DataFlowView` onto `SceneEditor` and delete `CanvasEditor` (R-83).
+
+### Task G.2: plugin-canvas has one set of surfaces (R-88)
+
+- [x] Legacy drawings migrate when a space loads (R-89, R-98); the migration alone reads View records (R-90, R-91);
+      legacy surfaces, the hidden variant, the legacy stage and the operations' legacy branches deleted (R-92, R-93);
+      `CanvasArticle`/`CanvasStage` renames (R-94); samples and stories on `Canvas` (R-96, R-97); plugin-canvas
+      PLUGIN.mdl D-16 to D-19.
 
 ---
 

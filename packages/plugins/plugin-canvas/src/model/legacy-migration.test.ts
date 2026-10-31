@@ -31,11 +31,10 @@ import { CreatedFrom } from '@dxos/types';
 import { Canvas } from '#types';
 
 import types from '../capabilities/schema.ts';
-import { CanvasBuilder } from './builder.ts';
+import { LegacyCanvasBuilder, makeLegacyCanvas } from '../testing/legacy-drawing.ts';
 import { addScene, openScene } from './canvas-document.ts';
 import {
   clone,
-  createCanvas,
   migrateContent,
   migrateLayers,
   pruneOrphanedViews,
@@ -46,7 +45,7 @@ import {
   writeViews,
 } from './content.ts';
 import { makeLayoutWriter } from './layout-writer.ts';
-import { legacyDocument, migrateSceneDrawing, reconcileMigrations } from './migrate-scenes.ts';
+import { legacyDocument, migrateLegacyDrawings, migrateSceneDrawing, reconcileMigrations } from './legacy-migration.ts';
 
 /** A legacy canvas's Views as its records read once their content migrations ran. */
 const legacyViews = (canvas: Drawing.Canvas) => {
@@ -83,7 +82,7 @@ const sceneViews = (scene: Scene.Scene2D): { root: string; views: RenderLists2D 
 const LEGACY_VARIANT: IllustratorCapabilities.DrawingVariant = {
   id: Canvas.SCENE_SCHEMA,
   label: 'Canvas',
-  builder: CanvasBuilder,
+  builder: LegacyCanvasBuilder,
 };
 
 describe('migrateSceneDrawing', () => {
@@ -104,7 +103,7 @@ describe('migrateSceneDrawing', () => {
 
   /** A scene drawing stored the v2 way, holding `views` with `root` first. */
   const legacyDrawing = (views: readonly RenderList2D[], root: string, settings = {}) => {
-    const canvas = db.add(createCanvas(settings));
+    const canvas = db.add(makeLegacyCanvas(settings));
     Obj.update(canvas, (canvas) => {
       // The sample's root takes the place of the seeded one.
       Reflect.set(canvas.content, 'canvas', { kind: 'canvas', root, ...settings });
@@ -204,7 +203,7 @@ describe('migrateSceneDrawing', () => {
   });
 
   test('a portal to another drawing stays a portal, with its scene and link', async () => {
-    const other = db.add(Drawing.make({ name: 'Other', canvas: db.add(createCanvas()) }));
+    const other = db.add(Drawing.make({ name: 'Other', canvas: db.add(makeLegacyCanvas()) }));
     const tree = createSquareTree();
     const root = tree.views.find((view) => view.id === tree.root);
     if (!root) {
@@ -450,6 +449,88 @@ describe('migrateSceneDrawing', () => {
       });
       expect(await reconcile(drawing)).toBe(true);
       expect(rootLayout(winner).elements[id]).toMatchObject({ center: { x: 64, y: 64 }, label: 'From the other peer' });
+    });
+  });
+
+  describe('migrateLegacyDrawings, the pass a space runs when it loads', () => {
+    const pass = () => EffectEx.runPromise(migrateLegacyDrawings().pipe(Effect.provide(Database.layer(db))));
+
+    test('each legacy drawing becomes a Canvas with the same elements, links and camera; a second pass does nothing', async () => {
+      const tree = createLinkedPairTree();
+      const drawing = legacyDrawing(tree.views, tree.root);
+      const tldraw = db.add(
+        Drawing.make({ name: 'tldraw', canvas: db.add(Drawing.makeCanvas({ schema: Canvas.TLDRAW_SCHEMA })) }),
+      );
+      await db.flush();
+      const legacy = drawing.canvas.target;
+      if (!Drawing.isCanvas(legacy)) {
+        throw new Error('A legacy drawing has a base canvas.');
+      }
+      const { views: before, root: legacyRoot } = legacyViews(legacy);
+      const [{ camera }] = legacyDocument(legacy.content).scenes;
+
+      expect(await pass()).toMatchObject({ migrated: 1, reconciled: 0, restaged: 0 });
+      const scene = openScene(migratedCanvas(drawing));
+      if (!Obj.instanceOf(Scene.Scene2D, scene)) {
+        throw new Error('The migrated canvas opens a 2D scene.');
+      }
+      const { root, views: after } = sceneViews(scene);
+      expect(root).toBe(legacyRoot);
+      expect(after[root]).toEqual(before[root]);
+      expect(Object.keys(after[root].links)).not.toHaveLength(0);
+      expect(scene.camera).toEqual(camera);
+      expect(Drawing.isCanvas(tldraw.canvas.target) && tldraw.canvas.target.schema).toBe(Canvas.TLDRAW_SCHEMA);
+
+      expect(await pass()).toEqual({ migrated: 0, reconciled: 0, restaged: 0, adopted: 0 });
+      expect(await db.query(Filter.type(Canvas.Canvas)).run()).toEqual([migratedCanvas(drawing)]);
+    });
+
+    test('an animation that staged the legacy canvas is restaged on the migrated scene, its tracks at element paths', async () => {
+      const tree = createSquareTree();
+      const drawing = legacyDrawing(tree.views, tree.root);
+      const legacy = drawing.canvas.target;
+      if (!Drawing.isCanvas(legacy)) {
+        throw new Error('A legacy drawing has a base canvas.');
+      }
+      const [node] = Object.keys(tree.views[0].nodes);
+      const animation = db.add(Animation.make({ stages: [Ref.make(legacy)] }));
+      Obj.update(animation, (animation) => {
+        Obj.setValue(animation, ['shots', 0, 'timeline'], {
+          duration: 2,
+          tracks: {
+            [`${node}:style.opacity`]: { target: node, property: 'style.opacity', keys: [{ t: 0, value: 0 }] },
+          },
+        });
+      });
+      await db.flush();
+
+      expect(await pass()).toMatchObject({ migrated: 1, restaged: 1 });
+      const [shot] = animation.shots;
+      expect(shot.stage.target).toBe(openScene(migratedCanvas(drawing)));
+      expect(Object.keys(shot.timeline.tracks)).toEqual([`${node}:overrides.opacity`]);
+      expect(await pass()).toMatchObject({ restaged: 0 });
+    });
+
+    test('two peers that each migrated a drawing are folded into one canvas by the next pass', async () => {
+      const tree = createSquareTree();
+      const drawing = legacyDrawing(tree.views, tree.root);
+      const legacy = drawing.canvas.target;
+      if (!Drawing.isCanvas(legacy)) {
+        throw new Error('A legacy drawing has a base canvas.');
+      }
+      expect(await migrate(drawing)).toBe(true);
+      const winner = migratedCanvas(drawing);
+      // The other peer's copy, which synced in after it repointed the drawing too.
+      Obj.update(drawing, (drawing) => {
+        drawing.canvas = Ref.make(legacy);
+      });
+      expect(await migrate(drawing)).toBe(true);
+      Obj.update(drawing, (drawing) => {
+        drawing.canvas = Ref.make(winner);
+      });
+
+      expect(await pass()).toMatchObject({ migrated: 0, reconciled: 1 });
+      expect(await db.query(Filter.type(Canvas.Canvas)).run()).toEqual([winner]);
     });
   });
 });

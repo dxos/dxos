@@ -18,11 +18,10 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 
 import types from '../capabilities/schema.ts';
-import { CanvasBuilder } from './builder.ts';
+import { LegacyCanvasBuilder, makeLegacyCanvas } from '../testing/legacy-drawing.ts';
 import { CanvasLayoutBuilder } from './canvas-content.ts';
 import { addCanvas } from './canvas-document.ts';
 import { canvasSvg, canvasWorld } from './canvas-svg.ts';
-import { createCanvas } from './content.ts';
 
 const FLOW = 'flowchart LR\n  A[Client] --> B[Server]\n  B --> C[(Store)]';
 const DIAGRAMS = join(__dirname, '../../../plugin-illustrator/docs/diagrams');
@@ -81,9 +80,9 @@ describe('canvasSvg', () => {
     // exactly what the legacy canvas did, with the compiled diagram's nodes.
     test('renders from Layout2D with the legacy canvas metrics and the compiled node count', async () => {
       const { commands, canvas } = await drawn(source);
-      const legacy = db.add(createCanvas());
-      CanvasBuilder.apply(legacy, commands);
-      expect(metrics(canvasWorld(canvas))).toEqual(metrics(CanvasBuilder.read(legacy).scene.objects));
+      const legacy = db.add(makeLegacyCanvas());
+      LegacyCanvasBuilder.apply(legacy, commands);
+      expect(metrics(canvasWorld(canvas))).toEqual(metrics(LegacyCanvasBuilder.read(legacy).scene.objects));
       expect(metrics(canvasWorld(canvas)).nodes).toBe(metrics(objectsOf(commands)).nodes);
     }, 300_000);
   });

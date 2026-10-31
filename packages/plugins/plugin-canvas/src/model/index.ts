@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './builder.ts';
 export * from './canvas-content.ts';
 export * from './canvas-document.ts';
 export * from './canvas-svg.ts';
@@ -18,6 +17,5 @@ export * from './image-node.ts';
 export * from './layout-writer.ts';
 export * from './named-styles.ts';
 export * from './records.ts';
-export * from './migrate-scenes.ts';
 export * from './migrations.ts';
 export * from './stage.ts';

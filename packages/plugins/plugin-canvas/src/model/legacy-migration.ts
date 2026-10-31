@@ -3,17 +3,19 @@
 //
 
 //
-// Moves a scene drawing (a `Drawing.Canvas` of `dxos.org/scene/2` records) onto this plugin's `Canvas`: each View
-// becomes a Layout2D with a Scene2D over it, the objects its portals and instances place become one Model2D, and
-// the settings and style classes move onto the Canvas. ECHO's migrations map one type to one type and cannot make
-// objects, so this runs when a drawing is opened for writing, or across a space on request.
+// The legacy scene migration: the only reader of the View records a scene drawing stored before `Canvas` (a
+// `Drawing.Canvas` of `dxos.org/scene/<n>` records). Each View becomes a Layout2D with a Scene2D over it, the objects
+// its portals and instances place become one Model2D, and the settings and style classes move onto the Canvas. It runs
+// over every drawing of a space when the space loads (`migrateLegacyDrawings`), since ECHO's migrations map one stored
+// type to another in place and cannot make the objects a canvas is drawn from.
 //
 
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { SCRIPT_CAMERA_TARGET, Timeline, trackId } from '@dxos/animation';
-import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { Database, Filter, Migration, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { log } from '@dxos/log';
 import * as Animation from '@dxos/plugin-animator/Animation';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { fromRenderList2D, namedStyles } from '@dxos/react-ui-canvas/headless';
@@ -23,7 +25,7 @@ import { CreatedFrom } from '@dxos/types';
 
 import { Canvas } from '#types';
 
-import { canvasDocument, removeCanvas } from './canvas-document.ts';
+import { canvasDocument, loadCanvas, removeCanvas } from './canvas-document.ts';
 import {
   LEGACY_ROOT_VIEW_ID,
   ROOT_VIEW_ID,
@@ -39,7 +41,8 @@ import {
   rootOf,
   sceneKey,
 } from './content.ts';
-import { withoutMode, withSettingsMode } from './layout-mode.ts';
+import { adoptLayoutMode, withoutMode, withSettingsMode } from './layout-mode.ts';
+import { SceneMigrations } from './migrations.ts';
 import { plain } from './records.ts';
 
 /** The one model a migrated canvas's portals and instances place their objects from. */
@@ -173,18 +176,17 @@ const legacyShots = (
  */
 export const migrateSceneDrawing = Effect.fn(function* (drawing: Drawing.Drawing) {
   const legacy = yield* Database.load(drawing.canvas);
-  if (!Drawing.isCanvas(legacy) || Canvas.sceneRevision(legacy.schema) !== Canvas.SCENE_REVISION) {
+  // A newer plugin's records may hold fields this one would drop in moving them.
+  if (!Drawing.isCanvas(legacy) || !Canvas.isSceneSchema(legacy.schema) || Canvas.isNewerScene(legacy.schema)) {
     return false;
   }
-  const stored = toEcho(legacyDocument(legacy.content, readStyles(legacy.styles)));
+  // A canvas that synced in before its content steps ran is read through them, as they would write it.
+  const { content, styles } = upgradedContent(legacy);
+  const stored = toEcho(legacyDocument(content, readStyles(styles)));
   for (const object of [...stored.models.values(), ...stored.layouts.values(), ...stored.scenes.values()]) {
     yield* Database.add(object);
   }
-  const {
-    kind: _kind,
-    root: _root,
-    ...settings
-  } = clone(canvasRecordOf(legacy.content) ?? { kind: 'canvas', root: '' });
+  const { kind: _kind, root: _root, ...settings } = clone(canvasRecordOf(content) ?? { kind: 'canvas', root: '' });
   const model = stored.models.get(MODEL_ID);
   const canvas = yield* Database.add(
     Obj.make(Canvas.Canvas, {
@@ -205,7 +207,7 @@ export const migrateSceneDrawing = Effect.fn(function* (drawing: Drawing.Drawing
     }),
   );
   // Canvas animation is the animator's (decision 16): the timelines Views stored become one animation's shots.
-  const shots = legacyShots(legacy.content, stored.scenes);
+  const shots = legacyShots(content, stored.scenes);
   if (shots.length > 0) {
     yield* Database.add(Obj.make(Animation.Animation, { name: drawing.name, fps: Animation.DEFAULT_FPS, shots }));
   }
@@ -216,6 +218,23 @@ export const migrateSceneDrawing = Effect.fn(function* (drawing: Drawing.Drawing
 });
 
 const MIGRATION = 'migration';
+
+const isContentMap = (value: unknown): value is Drawing.Canvas['content'] =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/** A legacy canvas's records and style classes at the current scene revision, read without writing the canvas. */
+const upgradedContent = (
+  legacy: Drawing.Canvas,
+): { content: Drawing.Canvas['content']; styles: Record<string, unknown> } => {
+  const { content } = Migration.upgradeContent(SceneMigrations, Drawing.Canvas, legacy.schema, {
+    content: clone(legacy.content),
+    styles: clone(legacy.styles ?? {}),
+  });
+  return {
+    content: isContentMap(content.content) ? content.content : {},
+    styles: isContentMap(content.styles) ? content.styles : {},
+  };
+};
 
 type Fields = Record<string, unknown>;
 
@@ -369,6 +388,7 @@ export const reconcileMigrations = Effect.fn(function* (drawing: Drawing.Drawing
   if (!Canvas.isCanvas(winner)) {
     return false;
   }
+  yield* loadCanvas(winner);
   const [origin] = yield* Database.query(Query.select(Filter.id(winner.id)).sourceOf(CreatedFrom.CreatedFrom)).run;
   const legacy = origin && origin.reason === MIGRATION ? Relation.getTarget(origin) : undefined;
   if (!Drawing.isCanvas(legacy)) {
@@ -384,7 +404,11 @@ export const reconcileMigrations = Effect.fn(function* (drawing: Drawing.Drawing
   if (losers.length === 0) {
     return false;
   }
-  const base = legacyDocument(legacy.content);
+  for (const { canvas } of losers) {
+    yield* loadCanvas(canvas);
+  }
+  const legacyContent = upgradedContent(legacy).content;
+  const base = legacyDocument(legacyContent);
   const baseLayouts = new Map(base.layouts.flatMap((layout) => (layout.dim === '2d' ? [[layout.id, layout]] : [])));
   const baseScenes = new Map(base.scenes.map((scene) => [scene.id, scene]));
   const baseSettings = (() => {
@@ -392,7 +416,7 @@ export const reconcileMigrations = Effect.fn(function* (drawing: Drawing.Drawing
       kind: _kind,
       root: _root,
       ...settings
-    } = clone(canvasRecordOf(legacy.content) ?? { kind: 'canvas', root: '' });
+    } = clone(canvasRecordOf(legacyContent) ?? { kind: 'canvas', root: '' });
     return withoutMode(settings);
   })();
   const winnerLayouts = new Map(
@@ -430,4 +454,86 @@ export const reconcileMigrations = Effect.fn(function* (drawing: Drawing.Drawing
     removeCanvas(canvas);
   }
   return true;
+});
+
+/** The `Canvas` a legacy canvas was migrated onto and still survives as, after any reconciliation. */
+const migratedFrom = Effect.fn(function* (legacy: Drawing.Canvas) {
+  const relations = yield* Database.query(Query.select(Filter.id(legacy.id)).targetOf(CreatedFrom.CreatedFrom)).run;
+  const canvas = relations
+    .filter((relation) => relation.reason === MIGRATION)
+    .map((relation) => Relation.getSource(relation))
+    .find((source) => Canvas.isCanvas(source));
+  return Canvas.isCanvas(canvas) ? canvas : undefined;
+});
+
+/**
+ * Restages every animation shot a legacy canvas staged on the root scene of the canvas it migrated onto, its node
+ * tracks keying the same elements at their element paths, since no stage draws a legacy canvas. Returns how many it
+ * restaged.
+ */
+export const restageAnimations = Effect.fn(function* () {
+  const animations = yield* Database.query(Filter.type(Animation.Animation)).run;
+  let restaged = 0;
+  for (const animation of animations) {
+    for (const [index, shot] of animation.shots.entries()) {
+      const stage = yield* Database.load(shot.stage).pipe(
+        Effect.catchTag('EntityNotFoundError', () => Effect.succeed(undefined)),
+      );
+      if (!Drawing.isCanvas(stage) || !Canvas.isSceneSchema(stage.schema)) {
+        continue;
+      }
+      const canvas = yield* migratedFrom(stage);
+      const scene = canvas && (yield* Database.load(canvas.scenes[0]));
+      if (!Obj.instanceOf(Scene.Scene2D, scene)) {
+        continue;
+      }
+      const { timeline } = migrateTimeline(clone(shot.timeline), Ref.make(scene));
+      Obj.update(animation, (animation) => {
+        Obj.setValue(animation, ['shots', index, 'stage'], Ref.make(scene));
+        Obj.setValue(animation, ['shots', index, 'timeline'], timeline);
+      });
+      restaged++;
+    }
+  }
+  return restaged;
+});
+
+/** A step that fails for one drawing is logged and skipped, so the rest of the space still migrates. */
+const warnOnFailure =
+  (message: string, drawing: Drawing.Drawing) =>
+  <E, R>(effect: Effect.Effect<boolean, E, R>): Effect.Effect<boolean, never, R> =>
+    effect.pipe(
+      Effect.catch((error) =>
+        Effect.sync(() => {
+          log.warn(message, { drawing: drawing.id, error });
+          return false;
+        }),
+      ),
+    );
+
+/**
+ * Moves every legacy scene drawing of the space onto a `Canvas` (`migrateSceneDrawing`), folds into one the copies two
+ * peers made of the same drawing at once (`reconcileMigrations`), restages the animations that staged a legacy canvas
+ * (`restageAnimations`), and moves a mode a canvas's settings still name onto its layouts (`adoptLayoutMode`).
+ * Idempotent: a second pass finds nothing to do. A drawing that fails to migrate keeps its legacy canvas until the
+ * next pass.
+ */
+export const migrateLegacyDrawings = Effect.fn('migrateLegacyDrawings')(function* () {
+  const drawings = yield* Database.query(Filter.type(Drawing.Drawing)).run;
+  let migrated = 0;
+  let reconciled = 0;
+  for (const drawing of drawings) {
+    (yield* migrateSceneDrawing(drawing).pipe(warnOnFailure('legacy drawing not migrated', drawing))) && migrated++;
+  }
+  for (const drawing of drawings) {
+    (yield* reconcileMigrations(drawing).pipe(warnOnFailure('migrated drawing not reconciled', drawing))) &&
+      reconciled++;
+  }
+  const restaged = yield* restageAnimations();
+  let adopted = 0;
+  for (const canvas of yield* Database.query(Filter.type(Canvas.Canvas)).run) {
+    yield* loadCanvas(canvas);
+    adoptLayoutMode(canvas) && adopted++;
+  }
+  return { migrated, reconciled, restaged, adopted };
 });

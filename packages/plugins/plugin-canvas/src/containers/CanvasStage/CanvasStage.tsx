@@ -2,55 +2,65 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 
-import { Obj } from '@dxos/echo';
-import { useObject } from '@dxos/echo-react';
 import type * as AnimatorCapabilities from '@dxos/plugin-animator/AnimatorCapabilities';
-import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { Scene2DView } from '@dxos/react-ui-canvas';
+import { Scene3DView, project, renderList } from '@dxos/react-ui-canvas/3d';
 
-import { legacyStageDocument, legacyStageSample } from '#model';
-
-import { applySample, camera2DOf } from '../../model/scene-stage.ts';
-import { CanvasDatabaseContext } from '../CanvasArticle/CanvasViewNodeView.tsx';
-import { useCanvasNodes } from '../CanvasArticle/use-canvas-scene.ts';
+import { applySample, camera2DOf, camera3DOf } from '../../model/scene-stage.ts';
+import { useSceneDocument } from './use-scene-document.ts';
 
 /**
- * A legacy scene canvas drawn as an animator stage (plugin-animator F-4.2): the sample applied to the canvas as the
- * scene migration reads it, drawn read-only, as a migrated canvas's scene stage draws it.
+ * A canvas's scene (`@dxos/scene`) drawn as an animator stage: the sample's values are applied to a copy of the scene, which
+ * the 2D or 3D view draws read-only; the 3D stage also reports where its elements are for overlay effects.
  */
-export const CanvasStage = ({ stage, sample, onFrameDrawn }: AnimatorCapabilities.StageProps) => {
-  const canvas = Drawing.isCanvas(stage) ? stage : undefined;
-  return canvas ? <CanvasStageView canvas={canvas} sample={sample} onFrameDrawn={onFrameDrawn} /> : null;
-};
-
-CanvasStage.displayName = 'CanvasStage';
-
-type CanvasStageViewProps = Pick<AnimatorCapabilities.StageProps, 'sample' | 'onFrameDrawn'> & {
-  canvas: Drawing.Canvas;
-};
-
-const CanvasStageView = ({ canvas, sample, onFrameDrawn }: CanvasStageViewProps) => {
-  const nodes = useCanvasNodes();
-  const [snapshot] = useObject(canvas);
-  // Read again whenever the canvas's records change.
-  const document = useMemo(() => legacyStageDocument(canvas), [canvas, snapshot]);
-  const sampled = useMemo(
-    () => (document ? applySample(document, legacyStageSample(sample)) : undefined),
-    [document, sample],
-  );
-  useEffect(() => onFrameDrawn?.(sample.t), [sample.t, onFrameDrawn]);
-
+export const CanvasStage = ({
+  stage,
+  sample,
+  effects,
+  onFrameDrawn,
+  onProjection,
+}: AnimatorCapabilities.StageProps) => {
+  const document = useSceneDocument(stage);
+  const sampled = useMemo(() => (document ? applySample(document, sample) : undefined), [document, sample]);
   const root = sampled?.scenes[0];
-  if (!sampled || root?.dim !== '2d') {
+  const items3d = useMemo(() => effects.flatMap((frame) => (frame.renderer === '3d' ? frame.items : [])), [effects]);
+
+  useEffect(() => {
+    if (root?.dim === '2d') {
+      onFrameDrawn?.(sample.t);
+    }
+  }, [root?.dim, sample.t, onFrameDrawn]);
+
+  const camera3d = useMemo(
+    () => (root?.dim === '3d' ? camera3DOf(root.camera, sample.camera) : undefined),
+    [root, sample.camera],
+  );
+  const handleFrameDrawn = useCallback(
+    (viewport: { width: number; height: number }) => {
+      onFrameDrawn?.(sample.t);
+      if (onProjection && sampled && camera3d) {
+        const anchors = Object.fromEntries(
+          renderList(sampled).items.flatMap((item) => {
+            const anchor =
+              item.key === item.id &&
+              project(camera3d, viewport, item.center, Math.max(item.scale.x, item.scale.y, item.scale.z) / 2);
+            return anchor ? [[item.id, anchor] as const] : [];
+          }),
+        );
+        onProjection({ t: sample.t, anchors });
+      }
+    },
+    [onFrameDrawn, onProjection, sampled, camera3d, sample.t],
+  );
+
+  if (!sampled || !root) {
     return null;
   }
-  // A legacy shot with no camera keys frames the whole drawing, as the canvas did.
-  const keyed = sample.camera !== undefined && Object.keys(sample.camera).length > 0;
-  return (
-    <CanvasDatabaseContext.Provider value={Obj.getDatabase(canvas)}>
-      <Scene2DView document={sampled} camera={keyed ? camera2DOf(root.camera, sample.camera) : 'fit'} nodes={nodes} />
-    </CanvasDatabaseContext.Provider>
+  return root.dim === '2d' ? (
+    <Scene2DView document={sampled} camera={camera2DOf(root.camera, sample.camera)} />
+  ) : (
+    <Scene3DView document={sampled} camera={camera3d} effects={items3d} orbit={false} onFrameDrawn={handleFrameDrawn} />
   );
 };

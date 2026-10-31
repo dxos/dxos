@@ -10,14 +10,17 @@ import { invariant } from '@dxos/invariant';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import {
   DIAGRAM_COMMANDS,
+  canvasDrawingSchemas,
   diagramFiles,
   echoDiagrams,
+  editDrawingContent,
   loadDiagramDrawings,
+  loadDrawingCanvas,
   makeEchoBenchmarks,
   makeEchoDesign,
+  readDrawingContent,
 } from '@dxos/plugin-canvas/Architecture';
 import * as CanvasPlugin from '@dxos/plugin-canvas/CanvasPlugin';
-import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as Presentation from '@dxos/plugin-presenter/Presentation';
@@ -122,9 +125,8 @@ const seed: ActorFlow<EchoTarget>['seed'] = async ({ space }) => {
   for (const [id, name] of Object.entries(DIAGRAMS)) {
     const drawing = drawings.get(id);
     invariant(drawing, `no ${id} drawing`);
-    const canvas = await drawing.canvas.load();
-    invariant(Drawing.isCanvas(canvas), `the ${id} drawing has no base canvas`);
-    const entries = Object.entries(canvas.content).filter(([key, record]) => {
+    invariant(await loadDrawingCanvas(drawing), `the ${id} drawing has no canvas`);
+    const entries = Object.entries(readDrawingContent(drawing)).filter(([key, record]) => {
       // Group frames stay, so the empty diagram shows its sections from the start.
       return (key.startsWith('node:') && !isGroupFrame(record)) || key.startsWith('link:');
     });
@@ -132,9 +134,9 @@ const seed: ActorFlow<EchoTarget>['seed'] = async ({ space }) => {
       ...entries.filter(([key]) => key.startsWith('node:')),
       ...entries.filter(([key]) => key.startsWith('link:')),
     ];
-    Obj.update(canvas, (canvas) => {
+    editDrawingContent(drawing, (content) => {
       for (const [key] of entries) {
-        delete canvas.content[key];
+        delete content[key];
       }
     });
   }
@@ -343,8 +345,7 @@ export const echoFlow: ActorFlow<EchoTarget> = {
   document: { name: DOCUMENT },
   seed,
   types: [
-    Drawing.Drawing,
-    Drawing.Canvas,
+    ...canvasDrawingSchemas,
     Presentation.Presentation,
     Presentation.Slide,
     Sheet.Sheet,

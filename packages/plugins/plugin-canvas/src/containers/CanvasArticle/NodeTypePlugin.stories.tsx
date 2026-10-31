@@ -10,7 +10,8 @@ import { expect, within } from 'storybook/test';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import { DXN, Obj } from '@dxos/echo';
+import { type ContentMap } from '@dxos/diagram';
+import { DXN } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorEvents from '@dxos/plugin-illustrator/IllustratorEvents';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
@@ -21,9 +22,12 @@ import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-te
 import { mx } from '@dxos/ui-theme';
 
 import * as CanvasPlugin from '#meta';
-import { ROOT_VIEW_ID, createCanvas, nodeKey } from '#model';
+import { nodeKey } from '#model';
 import { translations } from '#translations';
 import { CanvasCapabilities } from '#types';
+
+import types from '../../capabilities/schema.ts';
+import { addTestCanvas } from '../../testing/canvas.ts';
 
 //
 // A mock plugin contributing a node type, the way a real one (plugin-uml) does: a schema, a view, and a
@@ -83,34 +87,31 @@ const TaskPlugin = Plugin.define(
 );
 
 /** The drawing both variants open: a rect and two tasks, one done. */
-const seed = (canvas: Drawing.Canvas) => {
+const seed = (content: ContentMap, root: string) => {
   const frame = (x: number) => ({ center: { x, y: 0 }, size: { width: 256, height: 128 } });
-  Obj.update(canvas, (canvas) => {
-    canvas.content[nodeKey('r')] = {
-      kind: 'node',
-      scene: ROOT_VIEW_ID,
-      node: { id: 'r', type: 'rect', z: 'a1', ...frame(-320), label: 'Rect' },
-    };
-    canvas.content[nodeKey('t1')] = {
-      kind: 'node',
-      scene: ROOT_VIEW_ID,
-      node: { id: 't1', type: 'task', z: 'a2', ...frame(0), label: 'Write the spec', done: true },
-    };
-    canvas.content[nodeKey('t2')] = {
-      kind: 'node',
-      scene: ROOT_VIEW_ID,
-      node: { id: 't2', type: 'task', z: 'a3', ...frame(320), label: 'Ship it' },
-    };
-  });
+  content[nodeKey('r')] = {
+    kind: 'node',
+    scene: root,
+    node: { id: 'r', type: 'rect', z: 'a1', ...frame(-320), label: 'Rect' },
+  };
+  content[nodeKey('t1')] = {
+    kind: 'node',
+    scene: root,
+    node: { id: 't1', type: 'task', z: 'a2', ...frame(0), label: 'Write the spec', done: true },
+  };
+  content[nodeKey('t2')] = {
+    kind: 'node',
+    scene: root,
+    node: { id: 't2', type: 'task', z: 'a3', ...frame(320), label: 'Ship it' },
+  };
 };
 
 const decorators = (plugins: Plugin.Plugin[]) =>
   createStoryDecorators({
-    types: [Drawing.Drawing, Drawing.Canvas],
+    types: [Drawing.Drawing, Drawing.Canvas, ...types],
     plugins: [IllustratorPlugin.make(), CanvasPlugin.make(), ...plugins],
     onInit: async ({ space }) => {
-      const canvas = space.db.add(createCanvas());
-      seed(canvas);
+      const canvas = addTestCanvas(space.db, seed);
       const drawing = space.db.add(Drawing.make({ name: 'Tasks', canvas }));
       await space.db.flush();
       return [[Cell.article(drawing)]];

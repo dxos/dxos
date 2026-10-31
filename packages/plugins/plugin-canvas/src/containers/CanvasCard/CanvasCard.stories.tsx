@@ -11,7 +11,6 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Dsl } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
 import { Obj, Ref } from '@dxos/echo';
-import { invariant } from '@dxos/invariant';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import { DEFAULT_CELL } from '@dxos/react-ui-canvas';
@@ -21,11 +20,12 @@ import { Cell, ModuleContainer, type ResolvedCellProps, createStoryDecorators } 
 import { trim } from '@dxos/util';
 
 import * as CanvasPlugin from '#meta';
-import { createCanvas, nodeKey, rootOf } from '#model';
+import { nodeKey } from '#model';
 import { translations } from '#translations';
 import { Canvas as CanvasFormat } from '#types';
 
 import types from '../../capabilities/schema.ts';
+import { addTestCanvas } from '../../testing/canvas.ts';
 
 // Dispatched through the illustrator's card surface, as a stack or popover shows it, so the story covers the variant
 // dispatch as well as the card.
@@ -48,18 +48,16 @@ const node = (scene: string, id: string, type: string, x: number, y: number, lab
   },
 });
 
-const legacyDrawing = () =>
+/** A 2D canvas of three shapes, as a card shows it. */
+const shapesDrawing = () =>
   createStoryDecorators({
-    types: [Drawing.Drawing, Drawing.Canvas],
+    types: [Drawing.Drawing, Drawing.Canvas, ...types],
     plugins: [IllustratorPlugin.make(), CanvasPlugin.make()],
     onInit: async ({ space }) => {
-      const canvas = space.db.add(createCanvas());
-      const root = rootOf(canvas.content);
-      invariant(root);
-      Obj.update(canvas, (canvas) => {
-        canvas.content[nodeKey('a')] = node(root, 'a', 'rect', -320, -160, 'DXOS');
-        canvas.content[nodeKey('b')] = node(root, 'b', 'ellipse', 320, -160, 'ECHO');
-        canvas.content[nodeKey('c')] = node(root, 'c', 'rect', 0, 192, 'EDGE');
+      const canvas = addTestCanvas(space.db, (content, root) => {
+        content[nodeKey('a')] = node(root, 'a', 'rect', -320, -160, 'DXOS');
+        content[nodeKey('b')] = node(root, 'b', 'ellipse', 320, -160, 'ECHO');
+        content[nodeKey('c')] = node(root, 'c', 'rect', 0, 192, 'EDGE');
       });
       const drawing = space.db.add(Drawing.make({ name: 'Canvas', canvas }));
       await space.db.flush();
@@ -107,11 +105,11 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** The drawing alone: no palette, panels, toolbars or grid. */
-export const Default: Story = { decorators: legacyDrawing() };
+export const Default: Story = { decorators: shapesDrawing() };
 
 /** The default story, driven: its steps run as a play test. */
 export const Test: Story = {
-  decorators: legacyDrawing(),
+  decorators: shapesDrawing(),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 })).toBeInTheDocument();

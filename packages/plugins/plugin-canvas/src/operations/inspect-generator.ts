@@ -10,14 +10,11 @@ import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { type RenderList2D, checkGenerator, toRenderList2D } from '@dxos/react-ui-canvas/headless';
 import { type GeneratorNode } from '@dxos/scene';
 
-import { Canvas, CanvasOperation, Generator } from '#types';
+import { CanvasOperation, Generator } from '#types';
 
 import { canvasDocument } from '../model/canvas-document.ts';
 import { generatorCompiler } from '../model/compiler.ts';
-import { readStyles } from '../model/content.ts';
-import { legacyDocument } from '../model/migrate-scenes.ts';
-import { isSceneCanvas } from '../model/view-node.ts';
-import { DrawingDialectError } from './canvas.ts';
+import { drawingCanvasOf } from './canvas.ts';
 
 const handler: Operation.WithHandler<typeof CanvasOperation.InspectGenerator> = CanvasOperation.InspectGenerator.pipe(
   Operation.withHandler(
@@ -55,21 +52,9 @@ export default handler;
 const DEFAULT_TIMES = [0, 0.5, 1, 1.5, 2, 2.5, 3];
 const STANDALONE_NODE = 'generator';
 
-/**
- * The View of the drawing that holds `node`: a scene canvas's 2D layout read as one; a legacy scene canvas is read as the
- * scene migration reads it, without writing it, since an inspection changes nothing.
- */
+/** The View of the drawing that holds `node`: the canvas's 2D layout that places it, read as one. */
 const sceneOf = Effect.fn(function* (drawingRef: Ref.Ref<Drawing.Drawing>, node: string) {
-  const drawing = yield* Database.load(drawingRef);
-  const canvas = yield* Database.load(drawing.canvas);
-  const document = Canvas.isCanvas(canvas)
-    ? canvasDocument(canvas)
-    : isSceneCanvas(canvas)
-      ? legacyDocument(canvas.content, readStyles(canvas.styles))
-      : undefined;
-  if (!document) {
-    return yield* Effect.fail(new DrawingDialectError({ message: 'The drawing is not a scene canvas.' }));
-  }
+  const document = canvasDocument(yield* drawingCanvasOf(yield* Database.load(drawingRef)));
   return document.layouts
     .flatMap((layout) => (layout.dim === '2d' ? [toRenderList2D(document, layout)] : []))
     .find((scene) => scene.nodes[node] !== undefined);

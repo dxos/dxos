@@ -14,7 +14,7 @@ import { CanvasOperation, Generator } from '#types';
 
 import { openScene } from '../model/canvas-document.ts';
 import { applyLayoutIntent, canvasLayouts } from '../model/layout-source.ts';
-import { CanvasElementNotFoundError, sceneCanvasOf } from './canvas.ts';
+import { CanvasElementNotFoundError, drawingCanvasOf } from './canvas.ts';
 
 const handler: Operation.WithHandler<typeof CanvasOperation.AddGenerator> = CanvasOperation.AddGenerator.pipe(
   Operation.withHandler(
@@ -32,8 +32,7 @@ const handler: Operation.WithHandler<typeof CanvasOperation.AddGenerator> = Canv
         ...(layer !== undefined ? { layer } : {}),
       });
 
-      // A legacy scene canvas is moved onto a scene canvas first, as opening it would.
-      const canvas = yield* sceneCanvasOf(yield* Database.load(drawingRef));
+      const canvas = yield* drawingCanvasOf(yield* Database.load(drawingRef));
       const layout = scene === undefined ? openScene(canvas)?.layout.target : canvasLayouts(canvas).get(scene);
       if (!Obj.instanceOf(Scene.Layout2D, layout)) {
         return yield* Effect.fail(

@@ -5,16 +5,15 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Obj } from '@dxos/echo';
-import { constrain2D } from '@dxos/react-ui-canvas';
-import { type VersionChange, recordChanges } from '@dxos/react-ui-canvas/headless';
+import { Obj } from '@dxos/echo';
+import { type VersionChange, constrain2D, recordChanges } from '@dxos/react-ui-canvas/headless';
 import { type LayoutIntent, Scene, isLayoutIntent } from '@dxos/scene';
 
 import { Canvas, CanvasOperation } from '#types';
 
 import { openScene } from '../model/canvas-document.ts';
 import { applyLayoutIntent, canvasLayouts, canvasSource, layoutRecord } from '../model/layout-source.ts';
-import { CanvasElementNotFoundError, InvalidIntentError, UnversionedCanvasError, sceneCanvasFor } from './canvas.ts';
+import { CanvasElementNotFoundError, InvalidIntentError, UnversionedCanvasError, canvasOf } from './canvas.ts';
 
 /**
  * Applies layout intents to a scene canvas's layout `view` (the open scene's by default), in that layout's dimension
@@ -71,9 +70,7 @@ const applied = (canvas: string, change: VersionChange | undefined) =>
 const handler: Operation.WithHandler<typeof CanvasOperation.Apply> = CanvasOperation.Apply.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ canvas: ref, view, intents }) {
-      // A legacy scene canvas is edited on the scene canvas it migrates onto, as opening it would.
-      const canvas = yield* sceneCanvasFor(yield* Database.load(ref));
-      return yield* applyToLayout(canvas, view, intents);
+      return yield* applyToLayout(yield* canvasOf(ref), view, intents);
     }),
   ),
 );

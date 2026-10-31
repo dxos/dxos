@@ -7,15 +7,19 @@ import type * as AnimatorCapabilities from '@dxos/plugin-animator/AnimatorCapabi
 import { ARRANGERS_3D, Scene } from '@dxos/scene';
 
 import { camera2DValues, camera3DValues, sceneBinding, sceneTargets } from '../../model/scene-stage.ts';
-import { SceneStage } from './SceneStage.tsx';
+import { CANVAS_LAYOUTS } from '../../model/stage.ts';
+import { CanvasStage } from './CanvasStage.tsx';
 import { sceneDocumentOf } from './use-scene-document.ts';
 
 const EMPTY_BINDING: AnimatorCapabilities.StageBinding = { objects: {}, links: [] };
 
-/** A 2D scene as an animator stage: scripts write `center` and `size`, and `2d` and overlay effects draw over it. */
-export const scene2dStage: AnimatorCapabilities.StageDef = {
+/**
+ * A 2D canvas scene as an animator stage: scripts write `center` and `size` and may place targets in a row or ring, and
+ * `2d` and overlay effects draw over it.
+ */
+export const canvasStage2D: AnimatorCapabilities.StageDef = {
   typename: Type.getTypename(Scene.Scene2D),
-  label: 'Scene (2D)',
+  label: 'Canvas',
   targets: (object) => {
     const document = sceneDocumentOf(object);
     return document ? sceneTargets(document) : [];
@@ -28,18 +32,19 @@ export const scene2dStage: AnimatorCapabilities.StageDef = {
     },
   },
   renderers: ['2d', 'overlay'],
+  layouts: { ...CANVAS_LAYOUTS },
   scriptProperties: { position: 'center', scale: 'size', opacity: 'overrides.opacity' },
   bind: (object, sample) => {
     const document = sceneDocumentOf(object);
     return document ? sceneBinding(document, sample) : EMPTY_BINDING;
   },
-  component: SceneStage,
+  component: CanvasStage,
 };
 
-/** A 3D scene as an animator stage: an orbit camera, the 3D layouts, and `3d` and overlay effects. */
-export const scene3dStage: AnimatorCapabilities.StageDef = {
+/** A 3D canvas scene as an animator stage: an orbit camera, the 3D layouts, and `3d` and overlay effects. */
+export const canvasStage3D: AnimatorCapabilities.StageDef = {
   typename: Type.getTypename(Scene.Scene3D),
-  label: 'Scene (3D)',
+  label: '3D Canvas',
   targets: (object) => {
     const document = sceneDocumentOf(object);
     return document ? sceneTargets(document) : [];
@@ -58,5 +63,5 @@ export const scene3dStage: AnimatorCapabilities.StageDef = {
     const document = sceneDocumentOf(object);
     return document ? sceneBinding(document, sample) : EMPTY_BINDING;
   },
-  component: SceneStage,
+  component: CanvasStage,
 };

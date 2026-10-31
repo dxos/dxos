@@ -119,6 +119,14 @@ export const writeCanvasContent = (canvas: Canvas.Canvas, content: ContentMap, p
   }
 };
 
+/** Edits the canvas through its content records, written back element by element. */
+export const editCanvasContent = (canvas: Canvas.Canvas, edit: (content: ContentMap) => void) => {
+  const before = readCanvasContent(canvas);
+  const content = clone(before);
+  edit(content);
+  writeCanvasContent(canvas, content, before);
+};
+
 /**
  * The illustrator's scene builder over a `Canvas`: the scene handler reads and applies the DSL against the open
  * scene's layouts, through their content records.

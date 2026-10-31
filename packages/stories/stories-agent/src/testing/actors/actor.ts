@@ -8,6 +8,7 @@ import { addressFromA1Notation } from '@dxos/compute-hyperformula';
 import { Obj } from '@dxos/echo';
 import { Doc, applyEdits } from '@dxos/echo-doc';
 import { invariant } from '@dxos/invariant';
+import { editDrawingContent, loadDrawingCanvas } from '@dxos/plugin-canvas/Architecture';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
@@ -220,10 +221,9 @@ export class Actor {
   async addRecord(drawing: string, key: string, record: unknown, pause = 900): Promise<void> {
     const object = this.binding.object(drawing);
     invariant(Obj.instanceOf(Drawing.Drawing, object), `${this.spec.name}: no drawing "${drawing}"`);
-    const canvas = await object.canvas.load();
-    invariant(Drawing.isCanvas(canvas), `${this.spec.name}: "${drawing}" has no base canvas`);
-    Obj.update(canvas, (canvas) => {
-      canvas.content[key] = record;
+    invariant(await loadDrawingCanvas(object), `${this.spec.name}: "${drawing}" has no canvas`);
+    editDrawingContent(object, (content) => {
+      content[key] = record;
     });
     await this.pause(pause);
   }

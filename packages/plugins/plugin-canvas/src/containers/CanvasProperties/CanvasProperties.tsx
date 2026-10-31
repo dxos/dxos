@@ -7,25 +7,12 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { useObject, useObjectValue } from '@dxos/echo-react';
-import * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { namedStyles, styleClasses } from '@dxos/react-ui-canvas/headless';
 import { Form, type FormFieldOverride } from '@dxos/react-ui-form';
 import { DEFAULT_GRID, type StyleClass } from '@dxos/scene';
 
-import {
-  canvasModel2D,
-  canvasRecordOf,
-  deleteNamedStyle,
-  deleteStyleClass,
-  layoutLattice,
-  namedStyleUses,
-  readStyles,
-  setLayoutLattice,
-  styleClassUses,
-  updateCanvasRecord,
-  withoutMode,
-  writeStyles,
-} from '#model';
+import { canvasModel2D, deleteNamedStyle, layoutLattice, namedStyleUses, setLayoutLattice, withoutMode } from '#model';
 import { Canvas, Settings } from '#types';
 
 import { StyleClassList } from './StyleClassList.tsx';
@@ -83,11 +70,7 @@ export type CanvasPropertiesProps = { drawing: Drawing.Drawing };
 export const CanvasProperties = ({ drawing }: CanvasPropertiesProps) => {
   const [snapshot] = useObject(drawing.canvas);
   const canvas = snapshot ? drawing.canvas.target : undefined;
-  return Canvas.isCanvas(canvas) ? (
-    <SceneCanvasProperties canvas={canvas} />
-  ) : Drawing.isCanvas(canvas) ? (
-    <LegacyCanvasProperties canvas={canvas} />
-  ) : null;
+  return Canvas.isCanvas(canvas) ? <SceneCanvasProperties canvas={canvas} /> : null;
 };
 
 const valuesOf = (record: Partial<Canvas.CanvasSettings> | undefined): CanvasPropertiesValues => ({
@@ -145,59 +128,6 @@ const SceneCanvasProperties = ({ canvas: subject }: { canvas: Canvas.Canvas }) =
   return (
     <PropertiesView
       values={{ ...valuesOf(canvas.settings), lattice: layoutLattice(subject) || undefined }}
-      onSave={handleSave}
-      classes={classes}
-      uses={uses}
-      onRename={handleRename}
-      onDelete={handleDelete}
-    />
-  );
-};
-
-/** A legacy scene canvas's settings record and style classes. */
-const LegacyCanvasProperties = ({ canvas: subject }: { canvas: Drawing.Canvas }) => {
-  const [canvas, updateCanvas] = useObject(subject);
-  const values = useMemo(() => valuesOf(canvasRecordOf(canvas.content)), [canvas]);
-  const handleSave = useCallback(
-    (next: CanvasPropertiesValues) =>
-      updateCanvas((canvas) => {
-        updateCanvasRecord(canvas.content, settingsOf(next));
-      }),
-    [updateCanvas],
-  );
-
-  // The drawing's style classes: renamed in place; deleting one leaves its look on the elements that took it.
-  const classes = useMemo(() => Object.values(readStyles(canvas?.styles)), [canvas]);
-  const uses = useMemo(() => (canvas ? styleClassUses(canvas.content) : {}), [canvas]);
-  const handleRename = useCallback(
-    (id: string, name: string) =>
-      updateCanvas((canvas) => {
-        const styles = readStyles(canvas.styles);
-        const styleClass = styles[id];
-        if (styleClass && styleClass.name !== name) {
-          canvas.styles ??= {};
-          writeStyles(canvas.styles, { ...styles, [id]: { ...styleClass, name } });
-        }
-      }),
-    [updateCanvas],
-  );
-  const handleDelete = useCallback(
-    (id: string) =>
-      updateCanvas((canvas) => {
-        canvas.styles ??= {};
-        deleteStyleClass(canvas.content, canvas.styles, id);
-      }),
-    [updateCanvas],
-  );
-
-  // A newer plugin's format is read-only here, and every control below writes the canvas.
-  if (!canvas || !Canvas.isSceneSchema(canvas.schema) || Canvas.isNewerScene(canvas.schema)) {
-    return null;
-  }
-
-  return (
-    <PropertiesView
-      values={values}
       onSave={handleSave}
       classes={classes}
       uses={uses}

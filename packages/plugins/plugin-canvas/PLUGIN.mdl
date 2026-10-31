@@ -9,9 +9,11 @@ plugin CanvasPlugin: An infinite, zoomable canvas of typed nodes and links at mu
   id: org.dxos.plugin.canvas
   dependsOn: [org.dxos.plugin.illustrator]
   modules:
+    - AnimatorStage: the Canvas and 3D Canvas stages an animation shot plays on
     - AppGraphBuilder: the lock and unlock actions on a canvas drawing
     - CanvasSettings: whether the toolbar and palette overlays show
     - DrawingVariant: the canvas drawing variant and its article, for the illustrator
+    - LegacyMigration: moves a space's legacy scene drawings onto `Canvas`es when the space loads
     - Migrations: the Scene type migrations
     - OperationHandler: the canvas operations
     - PluginAsset: this document, served as the plugin's own spec
@@ -27,8 +29,9 @@ plugin CanvasPlugin: An infinite, zoomable canvas of typed nodes and links at mu
 An infinite, zoomable canvas of typed nodes and links at multiple depths, contributed to the illustrator
 plugin as two drawing variants, Canvas and 3D Canvas (`dxos.org/scene/2`). A drawing is a `Canvas` over the scene
 model's ECHO objects (a model, layouts and scenes); its article and card render the shared scene editor with the
-dimension config its scene asks for. A drawing saved before `Canvas` keeps a hidden legacy variant: its article migrates
-it onto a `Canvas`, and every other surface draws it read-only as the migration reads it, without writing it.
+dimension config its scene asks for, as one set of surfaces (`CanvasArticle`, `CanvasCard`, `CanvasStage`). A drawing
+saved before `Canvas` is moved onto one when its space loads; no surface or operation reads the legacy format, and only
+the migration does.
 
 This plugin is the ECHO host between the illustrator plugin, a runtime dependency that provides the
 `Drawing` type, the variant contract and the converters this plugin registers with, and the scene editor
@@ -41,7 +44,7 @@ uses org.dxos.ui.react-ui-canvas: The shared scene editor the article renders �
 ```
 
 ```mdl
-uses org.dxos.ui.react-ui-canvas.2d: The 2D variant — the canvas engine's links, portals and modes — which a 2D drawing shows, and which draws a legacy canvas read-only.
+uses org.dxos.ui.react-ui-canvas.2d: The 2D variant — the canvas engine's links, portals and modes — which a 2D drawing shows.
 ```
 
 ```mdl
@@ -347,4 +350,45 @@ decision D-15: `CanvasOperation.Apply` takes `constrain2D` from react-ui-canvas'
   why: react-ui-scene, whose `canvas` entry held the rule, is removed; react-ui-canvas's root keeps the editor and Babylon out of the operation handlers, as that entry did, which its entries test checks.
   rejected:
     - Moving `constrain2D` into react-ui-canvas's `/headless` entry now, which needs the modes freed of the utilities barrel first.
+```
+
+```mdl
+decision D-16: Migrate old drawings when a space loads; delete every legacy surface and the hidden legacy variant; rename `SceneArticle` and `SceneStage` to `CanvasArticle` and `CanvasStage`, so the plugin has one set of surfaces that picks 2D or 3D by config.
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [CanvasPlugin]
+  supersedes: D-14
+```
+
+```mdl
+decision D-17: The migration is a `LegacyMigration` module that runs `migrateLegacyDrawings` once per space per session, after the space is ready: every current-revision legacy scene drawing moves onto a `Canvas` (`migrateSceneDrawing`), copies two peers made at once fold into one (`reconcileMigrations`), animation shots staged on a legacy canvas restage on its migrated scene, and a mode a canvas's settings still name moves onto its layouts. The pass is idempotent and logs what it changed; a drawing that fails keeps its legacy canvas until the next pass, and a canvas a newer plugin saved is left unmigrated, with no variant to open it. Operations refuse any canvas that is not a `Canvas`. Fills in [D-16].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: Only plugin-canvas can tell a scene drawing from a tldraw or excalidraw one sharing `Drawing.Canvas`, and a migration creates a graph of objects whose duplicates across peers must be reconciled, which ordinary writes and the `CreatedFrom` relation already do.
+  rejected:
+    - An ECHO object migration (`Migration.define`), which runs over every object of one type and cannot tell scene canvases from tldraw ones, nor create the model, layouts and scenes idempotently.
+    - An ECHO transaction migration (`Migration.defineTransaction`), which runs on every pass, starts a new space epoch and rewrites documents as forks, to move a handful of drawings.
+    - Migrating when the article opens, which leaves the section, slide, card and stage reading the legacy format.
+```
+
+```mdl
+decision D-18: The Canvas and 3D Canvas variants render `CanvasArticle` and `CanvasCard`, which choose the 2D or 3D editor config by the open scene's dimension, and contribute `canvasStage2D` and `canvasStage3D` over `CanvasStage`; the 2D stage keeps the row and ring layouts. The rename carries through folders, hooks (`useCanvasEditor`, `CanvasEditCommands`) and story titles. Fills in [D-16].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  supersedes: D-9
+  why: With the legacy set gone, the scene surfaces are the only canvas surfaces, so they take the plugin's names and the stage gains the layouts the legacy stage offered.
+```
+
+```mdl
+decision D-19: `CanvasOperation.Apply` takes `constrain2D` from react-ui-canvas's `/headless` entry, and every canvas operation imports react-ui-canvas only through it; the entries test checks that `/headless` reaches no React module. A 3D Canvas drawing still shows the 3D variant `org.dxos.ui.react-ui-canvas.3d`. Fills in [D-13].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  supersedes: D-15
+  why: The modes no longer reach React through the utilities barrel, so the headless entry can hold the rule, and the operation handlers then load nothing of the UI.
 ```

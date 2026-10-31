@@ -6,7 +6,7 @@ import { type DimensionConfig, type EditorCatalog, type EditorDisplay } from '@d
 
 /**
  * What one dimension gives the shared scene article: its editor config, the display and camera this viewer sees, and
- * the style catalogs its Styles section lists. Everything else is the same in both dimensions (`useSceneEditor`).
+ * the style catalogs its Styles section lists. Everything else is the same in both dimensions (`useCanvasEditor`).
  */
 export type SceneDimension<C> = {
   config: DimensionConfig<C>;

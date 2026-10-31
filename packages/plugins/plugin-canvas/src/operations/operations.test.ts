@@ -14,11 +14,13 @@ import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { DEFAULT_LATTICE } from '@dxos/react-ui-canvas';
 import { Scene } from '@dxos/scene';
 
-import { addCanvas, createCanvas, openScene, readViews, rootOf } from '#model';
+import { addCanvas, openScene, readViews, rootOf } from '#model';
 import { CanvasOperationHandlerSet } from '#operations';
 import { Canvas, CanvasOperation } from '#types';
 
 import schemaTypes from '../capabilities/schema.ts';
+import { migrateLegacyDrawings } from '../model/legacy-migration.ts';
+import { makeLegacyCanvas } from '../testing/legacy-drawing.ts';
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: CanvasOperationHandlerSet.handlers,
@@ -40,12 +42,13 @@ const SOURCE = `
 
 describe('canvas generator operations', () => {
   it.effect(
-    'create, place and check a generator; a legacy canvas is migrated before the generator is placed',
+    'create, place and check a generator on a canvas the space-load migration made from a legacy drawing',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const canvas = yield* Database.add(createCanvas());
-        const drawing = yield* Database.add(Drawing.make({ name: 'Test', canvas }));
+        const legacy = yield* Database.add(makeLegacyCanvas());
+        const drawing = yield* Database.add(Drawing.make({ name: 'Test', canvas: legacy }));
         yield* Database.flush();
+        expect(yield* migrateLegacyDrawings()).toMatchObject({ migrated: 1 });
 
         const created = yield* Operation.invoke(CanvasOperation.CreateGenerator, { name: 'Orbit', source: SOURCE });
         expect(created.errors).toBeUndefined();
@@ -63,7 +66,7 @@ describe('canvas generator operations', () => {
           throw new Error('The legacy drawing was migrated onto a scene canvas.');
         }
         expect(layout.elements[node]).toMatchObject({ type: 'generator' });
-        expect(readViews(canvas.content)[rootOf(canvas.content) ?? ''].nodes[node]).toBeUndefined();
+        expect(readViews(legacy.content)[rootOf(legacy.content) ?? ''].nodes[node]).toBeUndefined();
 
         const report = yield* Operation.invoke(CanvasOperation.InspectGenerator, {
           generator: created.generator,
@@ -130,22 +133,29 @@ describe('canvas generator operations', () => {
 
 describe('canvas edit operations', () => {
   it.effect(
-    'apply on a legacy canvas migrates its drawing and edits the scene canvas, whose patch undoes it',
+    'apply edits a migrated canvas, whose patch undoes it; the legacy canvas it replaced takes no edit',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const legacy = yield* Database.add(createCanvas());
+        const legacy = yield* Database.add(makeLegacyCanvas());
         const drawing = yield* Database.add(Drawing.make({ name: 'Test', canvas: legacy }));
         yield* Database.flush();
-        const element = { id: 'n', type: 'rect', z: 'a0', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } };
-
-        const created = yield* Operation.invoke(CanvasOperation.Apply, {
-          canvas: Ref.make(legacy),
-          intents: [{ kind: 'create', element }],
-        });
+        yield* migrateLegacyDrawings();
         const canvas = drawing.canvas.target;
         if (!Canvas.isCanvas(canvas)) {
           throw new Error('The legacy drawing was migrated onto a scene canvas.');
         }
+        const element = { id: 'n', type: 'rect', z: 'a0', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } };
+
+        const refused = yield* Operation.invoke(CanvasOperation.Apply, {
+          canvas: Ref.make(legacy),
+          intents: [{ kind: 'create', element }],
+        }).pipe(Effect.exit);
+        expect(refused._tag).toBe('Failure');
+
+        const created = yield* Operation.invoke(CanvasOperation.Apply, {
+          canvas: Ref.make(canvas),
+          intents: [{ kind: 'create', element }],
+        });
         expect(created.canvas).toBe(canvas.id);
         const layout = openScene(canvas)?.layout.target;
         if (!Obj.instanceOf(Scene.Layout2D, layout)) {
@@ -153,13 +163,12 @@ describe('canvas edit operations', () => {
         }
         expect(layout.elements.n?.center).toEqual({ x: 0, y: 0 });
 
-        // Undo names the scene canvas the edit was made on; the legacy one takes no patch.
-        const undo = { from: created.after, to: created.before, paths: created.paths };
-        const refused = yield* Operation.invoke(CanvasOperation.Patch, { canvas: Ref.make(legacy), ...undo }).pipe(
-          Effect.exit,
-        );
-        expect(refused._tag).toBe('Failure');
-        yield* Operation.invoke(CanvasOperation.Patch, { canvas: Ref.make(canvas), ...undo });
+        yield* Operation.invoke(CanvasOperation.Patch, {
+          canvas: Ref.make(canvas),
+          from: created.after,
+          to: created.before,
+          paths: created.paths,
+        });
         expect(layout.elements.n).toBeUndefined();
       },
       Effect.provide(TestLayer),
@@ -169,15 +178,18 @@ describe('canvas edit operations', () => {
   );
 
   it.effect(
-    'apply refuses a canvas a newer plugin wrote and writes nothing',
+    'a legacy canvas a newer plugin wrote is left unmigrated, and apply refuses it',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const canvas = yield* Database.add(createCanvas());
-        yield* Database.add(Drawing.make({ name: 'Test', canvas }));
+        const canvas = yield* Database.add(makeLegacyCanvas());
+        const drawing = yield* Database.add(Drawing.make({ name: 'Test', canvas }));
         Obj.update(canvas, (canvas) => {
           canvas.schema = `dxos.org/scene/${Canvas.SCENE_REVISION + 1}`;
         });
         yield* Database.flush();
+        expect(yield* migrateLegacyDrawings()).toMatchObject({ migrated: 0 });
+        expect(drawing.canvas.target).toBe(canvas);
+
         const root = rootOf(canvas.content) ?? '';
         const node = { id: 'n', type: 'rect', z: 'a0', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } };
         const exit = yield* Operation.invoke(CanvasOperation.Apply, {
@@ -185,7 +197,6 @@ describe('canvas edit operations', () => {
           intents: [{ kind: 'create', node }],
         }).pipe(Effect.exit);
         expect(exit._tag).toBe('Failure');
-        expect(String(exit)).toContain('update the Canvas plugin');
         expect(readViews(canvas.content)[root].nodes.n).toBeUndefined();
       },
       Effect.provide(TestLayer),

@@ -157,6 +157,26 @@ const layoutInUse = (canvas: Canvas.Canvas, layout: StoredLayout): boolean =>
     Object.values(model.objects).some((object) => object.parts?.target === layout),
   );
 
+/** Loads `ref`'s target, or nothing when it no longer resolves. */
+const loadTarget = <T>(ref: Ref.Ref<T> | undefined): Effect.Effect<T | undefined> =>
+  ref === undefined
+    ? Effect.succeed(undefined)
+    : Database.load(ref).pipe(Effect.catchTag('EntityNotFoundError', () => Effect.succeed(undefined)));
+
+/**
+ * Loads the scenes, layouts and models a canvas reaches, so code reading `ref.target` outside a view (which loads them
+ * as it draws) sees the whole canvas.
+ */
+export const loadCanvas = Effect.fn(function* (canvas: Canvas.Canvas) {
+  yield* loadTarget(canvas.model);
+  for (const ref of [...canvas.scenes, ...canvas.layouts]) {
+    const target = yield* loadTarget(ref);
+    if (isStoredLayout(target)) {
+      yield* loadTarget(target.model);
+    }
+  }
+});
+
 /** Removes a canvas from its database together with the scenes, layouts and models it lists. */
 export const removeCanvas = (canvas: Canvas.Canvas) => {
   const db = Obj.getDatabase(canvas);

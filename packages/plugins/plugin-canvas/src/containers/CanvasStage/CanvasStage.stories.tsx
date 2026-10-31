@@ -17,7 +17,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 
 import { makeExemplarAnimation } from '../../testing/scene-animations.ts';
-import { scene2dStage, scene3dStage } from './definition.ts';
+import { canvasStage2D, canvasStage3D } from './definition.ts';
 
 type StoryProps = { exemplar: ExemplarName };
 
@@ -27,15 +27,15 @@ const DefaultStory = ({ exemplar }: StoryProps) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-canvas/containers/SceneStage',
+  title: 'plugins/plugin-canvas/containers/CanvasStage',
   component: DefaultStory,
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       capabilities: [
-        Capability.contribute(AnimatorCapabilities.Stage, scene2dStage),
-        Capability.contribute(AnimatorCapabilities.Stage, scene3dStage),
+        Capability.contribute(AnimatorCapabilities.Stage, canvasStage2D),
+        Capability.contribute(AnimatorCapabilities.Stage, canvasStage3D),
       ],
     }),
     // Outermost, so the plugin manager's registry (which holds the stages) is the one components read.

@@ -3,15 +3,14 @@
 //
 
 //
-// The canvas content encoding: `Drawing.Canvas.content` holds one record per scene, node and link
-// (plus one `canvas` record naming the root), so ECHO merges concurrent edits element by element and
-// the illustrator DSL bridge (`handler.ts`) can stamp its identity on the records it manages.
+// The canvas content records: one per scene, node and link (plus one `canvas` record naming the root). The illustrator
+// DSL bridge (`handler.ts`, `canvas-content.ts`) reads and edits a `Canvas` through them, stamping its identity on the
+// records it manages, and the legacy migration reads them where a `Drawing.Canvas` stored them before `Canvas`.
 //
 
 import * as Schema from 'effect/Schema';
 
 import { type ContentMap } from '@dxos/diagram';
-import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import {
   DEFAULT_LAYER,
   type RenderList2D,
@@ -594,12 +593,4 @@ export const sceneRecordOf = (content: ContentMap, id: ViewId): SceneRecord | un
 /** Writes a node record into scene `scene`, in place; the node goes on the scene's bottom layer unless it names one. */
 export const putNodeRecord = (content: ContentMap, scene: ViewId, node: Node): void => {
   content[nodeKey(node.id)] = { kind: 'node', scene, node: clone(node) } satisfies NodeRecord;
-};
-
-/** A fresh legacy scene canvas: the root scene with the drawing's `settings`, as drawings were made before `Canvas`. */
-export const createCanvas = (settings: Partial<Omit<CanvasRecord, 'kind' | 'root'>> = {}): Drawing.Canvas => {
-  const content = {};
-  seedContent(content);
-  updateCanvasRecord(content, settings);
-  return Drawing.makeCanvas({ schema: Canvas.SCENE_SCHEMA, content });
 };

@@ -112,7 +112,7 @@ export type SceneEditorStoryProps = PropsWithChildren<{
 
 /**
  * The shared scene editor over an in-memory document, in the dimension of its first scene: what plugin-canvas's
- * `SceneArticle` does over ECHO (intents, model intents, undo, display and camera view state, shots), for
+ * `CanvasArticle` does over ECHO (intents, model intents, undo, display and camera view state, shots), for
  * stories of the editor and its parts. The children are the editor's parts.
  */
 export const SceneEditorStory = ({ document: initial, ...props }: SceneEditorStoryProps) => {

@@ -14,7 +14,6 @@ export const translations = [
         'variant.label': 'Canvas',
         'lock-drawing.label': 'Read only',
         'unlock-drawing.label': 'Edit drawing',
-        'newer-format.title': 'Read only',
         'tool.select.label': 'Select',
         'tool.orbit.label': 'Orbit',
         'face.label': 'Face',
@@ -45,8 +44,6 @@ export const translations = [
         'paste.refused.message': 'Cannot paste an object inside its own parts.',
         'undo.label': 'Undo',
         'redo.label': 'Redo',
-        'newer-format.message':
-          'A newer version of the Canvas plugin saved this drawing. Update the plugin to edit it.',
       },
     },
   },

@@ -24,11 +24,10 @@ import { Canvas } from '#types';
 import types from '../capabilities/schema.ts';
 import { tldrawConverter } from '../import/converter.ts';
 import { frameWithChildren, groupAndRotation } from '../import/testing.ts';
-import { CanvasBuilder } from './builder.ts';
+import { LegacyCanvasBuilder, makeLegacyCanvas } from '../testing/legacy-drawing.ts';
 import { CanvasLayoutBuilder, readCanvasContent } from './canvas-content.ts';
 import { addCanvas, openScene } from './canvas-document.ts';
 import { readViews } from './content.ts';
-import { createCanvas } from './content.ts';
 import { makeLayoutWriter } from './layout-writer.ts';
 
 const FLOW = 'flowchart LR\n  A[Client] --> B[Server]';
@@ -81,9 +80,9 @@ describe('CanvasLayoutBuilder', () => {
     const scene = await MermaidEngine.compile(FLOW);
     const canvas = await run(addCanvas());
     CanvasLayoutBuilder.apply(canvas, scene);
-    const legacy = db.add(createCanvas());
-    CanvasBuilder.apply(legacy, scene);
-    expect(CanvasLayoutBuilder.read(canvas).scene.objects).toEqual(CanvasBuilder.read(legacy).scene.objects);
+    const legacy = db.add(makeLegacyCanvas());
+    LegacyCanvasBuilder.apply(legacy, scene);
+    expect(CanvasLayoutBuilder.read(canvas).scene.objects).toEqual(LegacyCanvasBuilder.read(legacy).scene.objects);
     const layout = layoutOf(canvas);
     expect(
       Object.values(layout.elements).some(
