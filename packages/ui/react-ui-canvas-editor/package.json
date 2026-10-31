@@ -1,7 +1,6 @@
 {
   "name": "@dxos/react-ui-canvas-editor",
   "version": "0.16.0",
-  "private": true,
   "description": "The scene editor over react-ui-canvas: SceneEditor, its panels and inspectors, history, commands, timeline, and the 2D and 3D configs.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

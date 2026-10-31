@@ -1,7 +1,6 @@
 {
   "name": "@dxos/scene",
   "version": "0.16.0",
-  "private": true,
   "description": "Scene model for 2D and 3D drawings: scenes, elements, bindings, layout and ECHO types.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
