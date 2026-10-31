@@ -991,7 +991,7 @@ decision D-53: The editor's one context is split into one hook per aspect over s
   date: 2026-10-31
   by: agent:claude-code
   for: user:richburdon
-  supersedes: [D-34]
+  supersedes: D-34
   affects: [F-10.2, F-10.3]
   why: COMMON-CORE Expectation 0 asks for `Canvas.Root`'s shape; one context of 28 values re-rendered every part on each edit and kept `SceneEditor.Root` at 440 lines.
 ```
