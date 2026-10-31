@@ -3,13 +3,15 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { Profiler } from 'react';
+import { expect, waitFor } from 'storybook/test';
 
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 import { type Scene } from '@dxos/scene';
 
+import { SceneEditor } from '../editor/index.ts';
 import {
   CONSTRAINED_2D,
   DOCUMENT_2D,
@@ -127,3 +129,86 @@ export const NestedDeep2D: Story = { args: { dim: '2d', nested: 'deep', docked: 
  * 2. Escape or the root crumb goes back out.
  */
 export const Nested3D: Story = { args: { dim: '3d', nested: 'simple', docked: false } };
+
+/** Commits of the floating panels and the inspector, counted by the profilers round them. */
+const panelCommits = { count: 0 };
+
+const countCommit = () => {
+  panelCommits.count++;
+};
+
+/** The editor with its panels and inspector under profilers, which count every commit they make. */
+const PanStory = ({ dim }: Pick<StoryProps, 'dim'>) => (
+  <SceneEditorStory document={dim === '3d' ? DOCUMENT_3D : DOCUMENT_2D} docked={false}>
+    <SceneEditor.Viewport>
+      <Profiler id='panels' onRender={countCommit}>
+        <SceneEditor.Navigation />
+        <SceneEditor.Tools />
+        <SceneEditor.Actions />
+        <SceneEditor.Camera />
+        <SceneEditor.Display />
+      </Profiler>
+    </SceneEditor.Viewport>
+    <Profiler id='inspector' onRender={countCommit}>
+      <SceneEditor.Inspector />
+    </Profiler>
+  </SceneEditorStory>
+);
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** What the scene draws under, read before and after the pan to show it moved: 2D's transform, 3D's pixels. */
+const viewOf = (canvasElement: HTMLElement): string =>
+  canvasElement.querySelector<HTMLElement>('[data-testid=scene-view] [style*="scale("]')?.style.transform ??
+  canvasElement.querySelector('canvas')?.toDataURL() ??
+  '';
+
+/** Pans with twenty shift-scrolls over the scene, then waits past the camera's settle; no panel commits meanwhile. */
+const panRendersNoPanels = async (canvasElement: HTMLElement, selector: string) => {
+  const target = await waitFor(
+    () => {
+      const element = canvasElement.querySelector(selector);
+      if (!element) {
+        throw new Error(`No ${selector} yet.`);
+      }
+      return element;
+    },
+    { timeout: 10_000 },
+  );
+  // The panels' own mount and the viewport's first fit settle first.
+  await sleep(1_000);
+  const before = panelCommits.count;
+  const view = viewOf(canvasElement);
+  for (let step = 0; step < 20; step++) {
+    target.dispatchEvent(
+      new WheelEvent('wheel', { deltaX: 8, deltaY: 6, shiftKey: true, bubbles: true, cancelable: true }),
+    );
+    await sleep(16);
+  }
+  // Past the camera's settle, so the host stores the camera the pan left.
+  await sleep(800);
+  await expect(viewOf(canvasElement)).not.toBe(view);
+  await expect(panelCommits.count - before).toBe(0);
+};
+
+/**
+ * Test:
+ * 1. Shift-scroll over the scene: it pans.
+ * 2. No panel or inspector section re-renders while it pans, or when the host stores the camera after (§13.2 phase 3).
+ */
+export const PanRenders2D: StoryObj<typeof PanStory> = {
+  render: PanStory,
+  args: { dim: '2d' },
+  play: async ({ canvasElement }) => panRendersNoPanels(canvasElement, '[data-testid=scene-view]'),
+};
+
+/**
+ * Test:
+ * 1. Shift-scroll over the scene: the camera pans.
+ * 2. No panel or inspector section re-renders while it pans, or when the host stores the camera after.
+ */
+export const PanRenders3D: StoryObj<typeof PanStory> = {
+  render: PanStory,
+  args: { dim: '3d' },
+  play: async ({ canvasElement }) => panRendersNoPanels(canvasElement, 'canvas'),
+};

@@ -1171,10 +1171,13 @@ runner (CanvasArticle, CanvasCard) and a story check in the browser.
 
 ### Task H.2: Values never go in the context (§13.1 rules 1–2)
 
-- [ ] The services object is built once per editor: atoms, registries and command functions that read state when
+- [x] The services object is built once per editor: atoms, registries and command functions that read state when
       called. Per-edit values (the document, display, camera percent) become atoms parts subscribe to.
-- [ ] A test fails when a context value changes identity across an edit, and a story test counts panel renders across
+- [x] A test fails when a context value changes identity across an edit, and a story test counts panel renders across
       a scripted pan and asserts they do not grow (§13.2 phase 3).
+- Ruling (agent, 2026-10-31): `aspects.test.tsx` failed against the one context (two values across one edit) and
+  `PanRenders2D` against it too (a panel commit when the host stored the panned camera); both pass on the aspects.
+  `PanRenders3D` passes either way, as 3D's host camera reached no panel before; it stays as the parity guard.
 
 ### Task H.3: The config supplies each aspect
 
