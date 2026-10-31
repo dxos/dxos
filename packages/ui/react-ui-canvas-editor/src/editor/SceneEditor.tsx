@@ -37,6 +37,7 @@ import {
   CameraToolbar,
   DisplayPanel,
   InspectorPanel,
+  NavigationToolbar,
   ReadonlyToggle,
   type SceneChoice,
   ToolRail,
@@ -103,6 +104,12 @@ export type SceneEditorRootProps<C> = PropsWithChildren<{
   shots?: readonly EditorShot[];
   /** Writes a shot's timeline; an undefined shot id makes a new shot staging the scene. */
   onShotChange?: (shot: string | undefined, timeline: Timeline) => void;
+  /**
+   * Whether the Timeline panel shows; hidden by default. With `onTimelineChange` the host owns it, otherwise it is where
+   * the panel starts and the display panel's toggle changes it for this view alone.
+   */
+  timeline?: boolean;
+  onTimelineChange?: (timeline: boolean) => void;
 }>;
 
 /**
@@ -134,6 +141,8 @@ const SceneEditorRoot = <C,>({
   sceneChoice,
   shots,
   onShotChange,
+  timeline: timelineProp,
+  onTimelineChange,
   children,
 }: SceneEditorRootProps<C>) => {
   const registry = useContext(RegistryContext);
@@ -145,6 +154,8 @@ const SceneEditorRoot = <C,>({
       onDisplayChange ? onDisplayChange({ themeOverride: theme }) : setThemeChoice({ theme }),
     [onDisplayChange],
   );
+  const [timelineChoice, setTimelineChoice] = useState(timelineProp ?? false);
+  const timeline = onTimelineChange ? (timelineProp ?? false) : timelineChoice;
   const editing = editsInRole(role);
   const readonly = readonlyProp || !editing;
   // Inside a transaction, writes go straight to the host and the transaction records them as one step.
@@ -413,6 +424,7 @@ const SceneEditorRoot = <C,>({
         document={shown}
         scene={scene}
         editing={path.at(-1)}
+        path={path}
         selection={selection}
         tool={tool}
         readonly={readonly}
@@ -423,14 +435,15 @@ const SceneEditorRoot = <C,>({
         guides={editing && (display.guides ?? false)}
         theme={display.theme}
         face={face}
-        camera={viewerCamera}
+        // A picture is the authored view framed to fit; the viewer's camera is where they left the article.
+        camera={editing ? viewerCamera : undefined}
         onSelect={store.select}
         onToolChange={store.setTool}
         onIntent={onIntent}
         onModelIntent={writeModel ? onModelIntent : undefined}
         onTransaction={onTransaction}
         onPreview={store.preview}
-        onEdit={(next) => store.open(next === undefined || next === rootLayout ? [] : [rootLayout ?? '', next])}
+        onEdit={store.open}
         onContextMenu={(at, kind) => store.setMenu({ at, kind })}
         onFaceChange={store.setFace}
         onCameraChange={onCameraChange}
@@ -456,7 +469,6 @@ const SceneEditorRoot = <C,>({
       writeModel,
       onModelIntent,
       onTransaction,
-      rootLayout,
       onCameraChange,
     ],
   );
@@ -487,6 +499,8 @@ const SceneEditorRoot = <C,>({
       sceneChoice={sceneChoice}
       shots={shots}
       onShotChange={onShotChange}
+      timeline={timeline}
+      onTimelineChange={shots && onShotChange ? (onTimelineChange ?? setTimelineChoice) : undefined}
       renderViewport={renderViewport}
     >
       {editing ? (
@@ -570,10 +584,39 @@ const SceneEditorViewport = ({ children }: PropsWithChildren) => {
 
 SceneEditorViewport.displayName = 'SceneEditor.Viewport';
 
+/**
+ * Where the view is in the scene's frames: Up and the drill path as breadcrumbs, the scene's own layout first (as home).
+ * A crumb drills out to its level; drilling in is the viewport's (a double-click, or zooming until a frame fills it).
+ */
+const SceneEditorNavigation = ({ classNames = 'top-2 left-2' }: { classNames?: string }) => {
+  const { document, scene, rootLayout, store } = useSceneEditor('SceneEditor.Navigation');
+  const drilled = useAtomValue(store.atoms.editing);
+  const path = useMemo(() => (drilled.length > 0 ? drilled : rootLayout ? [rootLayout] : []), [drilled, rootLayout]);
+  const actions = useMemo(
+    () => ({
+      path: [...path],
+      // The root is the scene, so it reads as the scene's name; a frame's layout by its own.
+      nameOf: (id: string) =>
+        (id === rootLayout ? document.scenes.find((record) => record.id === scene)?.name : undefined) ??
+        findLayout(document, id)?.name ??
+        id,
+      onPath: (index: number) => store.open(path.slice(0, index + 1)),
+    }),
+    [path, rootLayout, document, scene, store],
+  );
+  return path.length === 0 ? null : (
+    <div className={mx('absolute w-max max-w-[50%]', classNames)}>
+      <NavigationToolbar actions={actions} />
+    </div>
+  );
+};
+
+SceneEditorNavigation.displayName = 'SceneEditor.Navigation';
+
 const sameTool = (left: ActiveTool, right: ActiveTool): boolean => left.id === right.id && left.object === right.object;
 
-/** The tool rail: the config's tools by category; locked, only the select-category tools stay. */
-const SceneEditorTools = ({ classNames = 'top-2 bottom-14 left-2' }: { classNames?: string }) => {
+/** The tool rail, below the breadcrumbs: the config's tools by category; locked, only the select-category tools stay. */
+const SceneEditorTools = ({ classNames = 'top-14 bottom-14 left-2' }: { classNames?: string }) => {
   const { config, store, readonly, onReadonlyChange } = useSceneEditor('SceneEditor.Tools');
   const tool = useAtomValue(store.atoms.tool);
   const groups = useMemo<ToolGroup<ActiveTool>[]>(() => {
@@ -685,15 +728,25 @@ const SceneEditorCamera = ({ classNames = 'bottom-2 left-2' }: { classNames?: st
 
 SceneEditorCamera.displayName = 'SceneEditor.Camera';
 
-/** The display panel: the look (a default style catalog), the grid, snapping (apart from the grid) and 2D's guides. */
+/**
+ * The display panel: the look (a default style catalog, as a swatch where the config has a theme registry), the grid,
+ * snapping (apart from the grid), 2D's guides and, where the host offers animation, the Timeline panel's toggle.
+ */
 const SceneEditorDisplay = ({ classNames = 'bottom-2 right-2' }: { classNames?: string }) => {
-  const { config, display, onDisplayChange, onThemeChange, readonly } = useSceneEditor('SceneEditor.Display');
-  const themes = useMemo(() => config.display.themes.map(({ id, label }) => ({ id, name: label })), [config.display]);
+  const { config, display, onDisplayChange, onThemeChange, readonly, timeline, onTimelineChange } =
+    useSceneEditor('SceneEditor.Display');
+  const { registry } = config.display;
+  const themes = useMemo(
+    () => config.display.themes.map(({ id, label, mode }) => ({ id, name: label, ...(mode ? { mode } : {}) })),
+    [config.display],
+  );
   return (
     <div className={mx('absolute w-max', classNames)}>
       <DisplayPanel
         readonly={readonly}
+        registry={registry}
         theme={
+          registry?.themes[display.theme] ??
           themes.find((option) => option.id === display.theme) ??
           themes[0] ?? { id: display.theme, name: display.theme }
         }
@@ -712,6 +765,8 @@ const SceneEditorDisplay = ({ classNames = 'bottom-2 right-2' }: { classNames?: 
         onGuidesToggle={
           config.display.guides && onDisplayChange ? () => onDisplayChange({ guides: !display.guides }) : undefined
         }
+        timeline={timeline}
+        onTimelineToggle={onTimelineChange && (() => onTimelineChange(!timeline))}
       />
     </div>
   );
@@ -753,12 +808,21 @@ const SceneEditorNotice = () => {
 SceneEditorNotice.displayName = 'SceneEditor.Notice';
 
 /**
- * The Timeline panel (decision 16), shared by both dimensions: the shots staging the open scene, played and scrubbed
+ * The Timeline panel (decision 16), shared by both dimensions and hidden until the display panel's toggle shows it: the shots staging the open scene, played and scrubbed
  * by sampling the shot into the viewport (never written), and keyed from the selection's animatable fields into the
  * shot's timeline; with no shot, the first key makes one.
  */
 const SceneEditorTimeline = ({ classNames = 'bottom-14 left-1/2 -translate-x-1/2' }: { classNames?: string }) => {
-  const { config, document, layout, store, readonly, shots, onShotChange } = useSceneEditor('SceneEditor.Timeline');
+  const {
+    config,
+    document,
+    layout,
+    store,
+    readonly,
+    shots,
+    onShotChange,
+    timeline: shown,
+  } = useSceneEditor('SceneEditor.Timeline');
   const selection = useAtomValue(store.atoms.selection);
   const shotId = useAtomValue(store.atoms.shot);
   const time = useAtomValue(store.atoms.time);
@@ -790,7 +854,7 @@ const SceneEditorTimeline = ({ classNames = 'bottom-14 left-1/2 -translate-x-1/2
     return () => cancelAnimationFrame(frame);
   }, [playing, duration, registry, store]);
 
-  if (!shots || !onShotChange) {
+  if (!shown || !shots || !onShotChange) {
     return null;
   }
   const key = () =>
@@ -839,6 +903,7 @@ export const SceneEditor = {
   Root: SceneEditorRoot,
   Inspector: SceneEditorInspector,
   Viewport: SceneEditorViewport,
+  Navigation: SceneEditorNavigation,
   Tools: SceneEditorTools,
   Actions: SceneEditorActions,
   Camera: SceneEditorCamera,

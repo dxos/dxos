@@ -117,7 +117,8 @@ type ViewportProps
     onModelIntent?: (intent: ModelIntent) => problems
     onTransaction?: (change) => void  # the intents `change` writes are one undo step
     onPreview: (layout?, intent?) => void         # an in-flight gesture, drawn and not written
-    onEdit: (layout?) => void         # drill into a composite's parts, or back out
+    path?: string[]                   # the drill path to the open layout from the scene's own; empty at the scene's own
+    onEdit: (path) => void            # open a level of the drill path: deeper to drill in, shorter to drill out
     onContextMenu: (at, kind: 'element' | 'canvas') => void
     onFaceChange?, onCameraChange?, onResize?
     children?: node                   # the floating panels, drawn over the scene
@@ -172,7 +173,7 @@ type EditorStore
   fields:
     selection: string[]               # element ids of the open layout, links included
     tool: ActiveTool                  # { id, object? }: `place` carries the model object it places
-    editing: string[]                 # the drill path into composites
+    editing: string[]                 # the drill path from the scene's own layout; empty at the scene's own
     face?: FaceSelection              # 3D only: an element and the normal of the side picked
     preview?: EditorPreview           # an in-flight gesture's intent, drawn and not written
     menu?: MenuAnchor                 # where the context menu opened, over an element or empty space
@@ -271,6 +272,8 @@ component SceneEditor.Root
     sceneChoice?: SceneChoice         # the open scene, and adding and deleting scenes
     shots?: EditorShot[]
     onShotChange?: (shot?, timeline) => void
+    timeline?: boolean                # the Timeline shown; the editor's own choice when `onTimelineChange` is unset
+    onTimelineChange?
 ```
 
 ```mdl
@@ -281,9 +284,16 @@ component SceneEditor.Viewport
 ```
 
 ```mdl
+component SceneEditor.Navigation
+  desc: >
+    The breadcrumbs (`NavigationToolbar`), top left: Up, then the drill path from the scene's own layout (named by the
+    scene) to the open layout. A crumb opens that level; Up opens the one above.
+```
+
+```mdl
 component SceneEditor.Tools
   desc: >
-    The tool rail (`ToolRail`), top left: the config's tools by group in the order they first appear — the select
+    The tool rail (`ToolRail`), left below the breadcrumbs: the config's tools by group in the order they first appear — the select
     tools, the transform tools, then the create group, which folds into a flyout when the rail is short — with the
     lock toggle at the end of the select group. Locked, only the select tools stay. A tool with drag data drags onto
     the viewport.
@@ -304,8 +314,9 @@ component SceneEditor.Camera
 ```mdl
 component SceneEditor.Display
   desc: >
-    The display panel (`DisplayPanel`), bottom right: the look, the grid, snapping, the axes toggle (its icon by
-    dimension: `vector-two` in 2D, `vector-three` in 3D) and, where the dimension has them, guides.
+    The display panel (`DisplayPanel`), bottom right: the look (each theme with its swatch and a sun or moon for its
+    mode), the grid, snapping, the axes toggle (its icon by dimension: `vector-two` in 2D, `vector-three` in 3D),
+    where the dimension has them guides, and, where the host has shots, the Timeline toggle.
 ```
 
 ```mdl
@@ -321,8 +332,9 @@ component SceneEditor.Notice
 ```mdl
 component SceneEditor.Timeline
   desc: >
-    The Timeline panel, above the actions bar: the shots staging the open scene (a picker when there are several), a
-    play button and a playhead, and a key button that keys the selection's animatable fields at the playhead.
+    The Timeline panel, above the actions bar, hidden until the display panel's Timeline toggle shows it: the shots
+    staging the open scene (a picker when there are several), a play button and a playhead, and a key button that keys
+    the selection's animatable fields at the playhead.
 ```
 
 ```mdl
@@ -386,7 +398,8 @@ feat F-12: Selection and tools
   req F-12.4: Holding Cmd turns a left drag into the hand in both dimensions, its cursor shown while the key is held
     ([org.dxos.scene#D-77]).
   req F-12.5: Drilling into a composite makes its parts the open layout, and Escape drills back out; each variant
-    says which gesture drills.
+    says which gesture drills. The breadcrumbs show the drill path in both dimensions, and a crumb drills out to its
+    level.
   req F-12.6: Placing a model object is the `place` tool carrying that object; an object is never placed inside its
     own parts ([org.dxos.scene#D-49]).
 ```
@@ -427,6 +440,8 @@ feat F-15: Display, snapping and axes
   req F-15.3: The axes toggle shows the axes through the origin whenever it is on, read-only included; a picture
     draws none.
   req F-15.4: A picture draws no grid, snapping, axes or guides ([org.dxos.scene#D-55]).
+  req F-15.5: A picture draws the authored view framed to fit, never the viewer's own camera.
+  req F-15.6: The Timeline is hidden until the viewer shows it from the display panel.
 ```
 
 ```mdl
@@ -449,8 +464,8 @@ feat F-17: Camera
 
 ```mdl
 feat F-18: Panels and inspectors
-  req F-18.1: The panels float over the viewport in the same places in both dimensions: the rail at the left, the
-    actions bar at the bottom centre with the Timeline above it, the camera bar bottom left, the display panel bottom
+  req F-18.1: The panels float over the viewport in the same places in both dimensions: the breadcrumbs top left,
+    the rail at the left below them, the actions bar at the bottom centre with the Timeline above it, the camera bar bottom left, the display panel bottom
     right.
   req F-18.2: One inspector panel serves both dimensions and docks in both; the dock choice is the canvas's view
     state, so it holds in either dimension ([org.dxos.scene#D-66]).
@@ -883,6 +898,90 @@ decision D-42: The viewport contract (`ViewportProps`, `ActiveTool`, `FaceSelect
   for: user:richburdon
   affects: [DimensionConfig]
   why: The surface implements the viewport contract, and operations sample a shot's document without loading the editor.
+```
+
+```mdl
+decision D-43: The canvas article shows the breadcrumbs top left, as the 2D engine's own chrome did.
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [F-18.1]
+```
+
+```mdl
+decision D-44: The look menu shows each theme's snapshot and its light or dark icon.
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [SceneEditor.Display]
+```
+
+```mdl
+decision D-45: A frame's content is sized to the frame.
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [F-15]
+```
+
+```mdl
+decision D-46: Zooming into frames drills into them. The 2D engine's own drill-in, breadcrumbs and frame rendering are the reference: the editor matches them exactly in 2D, with parity in 3D.
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [F-12.5]
+```
+
+```mdl
+decision D-47: The animation panel is hidden by default.
+  date: 2026-10-30
+  by: user:richburdon
+  affects: [SceneEditor.Timeline]
+```
+
+```mdl
+decision D-48: The breadcrumbs are a `SceneEditor.Navigation` part over the drill path, the root crumb named by the scene; the rail moves below them. Fills in [D-43].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [SceneEditor.Navigation, SceneEditor.Tools, F-18.1]
+  why: A part keeps the breadcrumbs shared by 2D and 3D and lets each host place them, as it places the other panels.
+  rejected:
+    - The 2D engine's own breadcrumbs: they cover 2D only and read the engine's path, not the editor's.
+```
+
+```mdl
+decision D-49: The editor's drill path is the full path from the scene's own layout, empty at the scene's own; the viewport receives it as `path` and reports a level with `onEdit(path)`, so a crumb opens any level and the 2D engine follows the editor. Fills in [D-46].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [ViewportProps, EditorStore, F-12.5]
+  why: Keeping only the root and the leaf lost every level between them, so the breadcrumbs could not drill out one step and the engine and the editor disagreed after a nested drill.
+  rejected:
+    - The engine owning the path, the editor mirroring it: 3D has no engine path.
+```
+
+```mdl
+decision D-50: A picture is given no viewer camera, so it frames the authored view to fit; the 2D viewport applies a host camera only when its values change. Fills in [D-45] and [D-46].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-15.5, SceneEditor.Root]
+  why: The article's own camera, pushed into a card or section after its fit, drew the content at the wrong scale, and re-pushing the same root camera pulled a drilled-in view back to the root.
+```
+
+```mdl
+decision D-51: The Timeline shows when the host passes `timeline` or the display panel's film-strip toggle is on; the choice is the editor's own unless the host controls it with `onTimelineChange`. Fills in [D-47].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [SceneEditor.Root, SceneEditor.Display, SceneEditor.Timeline, F-15.6]
+  why: A toggle beside the other display choices keeps the panel reachable without a host setting.
+```
+
+```mdl
+decision D-52: The look menu's swatches come from the dimension's theme registry, and each theme option carries its mode for the sun or moon icon. Fills in [D-44].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [SceneEditor.Display]
+  why: The registry already draws each theme's swatch; the editor had passed only the theme names.
 ```
 
 ---

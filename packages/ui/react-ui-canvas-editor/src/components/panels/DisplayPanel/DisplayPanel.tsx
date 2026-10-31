@@ -11,6 +11,7 @@ import {
   type LookTone,
   RADIUS_CLASSES,
   type Theme,
+  type ThemeMode,
   type ThemeRegistry,
   neuVars,
   resolveBackground,
@@ -99,8 +100,14 @@ const GRID_OPTIONS: readonly { grid: Exclude<BackgroundGrid, 'none'>; icon: stri
 
 const barClasses = mx('w-full', FLOATING_BAR);
 
-/** A theme a view without a theme registry offers (e.g. a 3D scene's looks), by id and name. */
-export type ThemeOption = { id: string; name: string };
+/** A theme a view without a theme registry offers (e.g. a 3D scene's looks), by id and name, and the mode it holds. */
+export type ThemeOption = { id: string; name: string; mode?: ThemeMode };
+
+/** The light or dark icon after a theme held in that mode whatever the app's. */
+const ModeIcon = ({ mode }: { mode?: ThemeMode }) =>
+  mode ? (
+    <Icon.Icon icon={mode === 'dark' ? 'ph--moon--regular' : 'ph--sun--regular'} size='sm' classNames='text-fg-muted' />
+  ) : null;
 
 export type DisplayPanelProps = PanelProps & {
   /** The 2D canvas's themes, drawn as swatches; without it the panel offers `themes` by name. */
@@ -134,6 +141,9 @@ export type DisplayPanelProps = PanelProps & {
   onSnapToggle?: () => void;
   /** A lattice scene: snap lands on the lattice's cells, and the lattice is the grid, so no grid choice is offered. */
   lattice?: boolean;
+  /** Whether the Timeline panel shows; with `onTimelineToggle`, a toggle before the theme selector. */
+  timeline?: boolean;
+  onTimelineToggle?: () => void;
 };
 
 /**
@@ -160,6 +170,8 @@ export const DisplayPanel = ({
   snap,
   onSnapToggle,
   lattice,
+  timeline,
+  onTimelineToggle,
 }: DisplayPanelProps) => (
   // Visible overflow, so the focused trigger's ring is not clipped by the bar's horizontal scroll.
   <Toolbar.Root classNames={mx(barClasses, 'overflow-visible', classNames)} data-testid='canvas-display'>
@@ -224,6 +236,21 @@ export const DisplayPanel = ({
         ))}
       </Button.Group>
     )}
+    {/* Playing a shot is viewing, as the axes are, so a read-only scene offers it too. */}
+    {onTimelineToggle && (
+      <>
+        <Toolbar.Separator variant='line' />
+        <Button.Toggle
+          variant='ghost'
+          iconOnly
+          icon='ph--film-strip--regular'
+          label='Timeline: show the shots staging the scene'
+          pressed={timeline === true}
+          data-testid='toolbar-timeline'
+          onPressedChange={onTimelineToggle}
+        />
+      </>
+    )}
     <Toolbar.Separator variant='line' />
     <Menu.Root positioning={{ placement: 'top-end', gutter: 4 }}>
       {/* A way of viewing, as the axes are: open in a read-only scene. */}
@@ -253,13 +280,7 @@ export const DisplayPanel = ({
               >
                 <ThemeSwatch theme={option} registry={registry} />
                 <Menu.ItemText />
-                {option.mode && (
-                  <Icon.Icon
-                    icon={option.mode === 'dark' ? 'ph--moon--regular' : 'ph--sun--regular'}
-                    size='sm'
-                    classNames='text-fg-muted'
-                  />
-                )}
+                <ModeIcon mode={option.mode} />
                 <Menu.ItemIndicator />
               </Menu.RadioItem>
             ))}
@@ -271,6 +292,7 @@ export const DisplayPanel = ({
                 data-testid={`theme-option-${option.id}`}
               >
                 <Menu.ItemText />
+                <ModeIcon mode={option.mode} />
                 <Menu.ItemIndicator />
               </Menu.RadioItem>
             ))}

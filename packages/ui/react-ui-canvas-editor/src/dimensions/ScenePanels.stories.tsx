@@ -14,9 +14,10 @@ import { SceneEditor } from '../editor/index.ts';
 import { DOCUMENT_2D, DOCUMENT_3D, SceneEditorStory, SHOTS_2D, SHOTS_3D } from '../testing/index.ts';
 import { CATALOGS_3D } from './config3d.tsx';
 
-type Panel = 'tools' | 'display' | 'camera' | 'actions' | 'timeline' | 'inspector';
+type Panel = 'navigation' | 'tools' | 'display' | 'camera' | 'actions' | 'timeline' | 'inspector';
 
 const PANELS: Record<Exclude<Panel, 'inspector'>, ReactNode> = {
+  navigation: <SceneEditor.Navigation />,
   tools: <SceneEditor.Tools />,
   display: <SceneEditor.Display />,
   camera: <SceneEditor.Camera />,
@@ -38,6 +39,7 @@ const DefaultStory = ({ dim, panel, docked = true }: StoryProps) => (
     docked={panel === 'inspector' && docked}
     select={dim === '3d' ? ['hub'] : ['a']}
     shots={panel === 'timeline' ? (dim === '3d' ? SHOTS_3D : SHOTS_2D) : undefined}
+    timeline={panel === 'timeline'}
   >
     <SceneEditor.Viewport>{panel !== 'inspector' && PANELS[panel]}</SceneEditor.Viewport>
     {panel === 'inspector' && <SceneEditor.Inspector catalogs={dim === '3d' ? CATALOGS_3D : undefined} />}
@@ -52,7 +54,10 @@ const meta = {
   parameters: { layout: 'fullscreen', translations: [...uiTranslations, ...formTranslations] },
   argTypes: {
     dim: { control: 'inline-radio', options: ['2d', '3d'] },
-    panel: { control: 'select', options: ['tools', 'display', 'camera', 'actions', 'timeline', 'inspector'] },
+    panel: {
+      control: 'select',
+      options: ['navigation', 'tools', 'display', 'camera', 'actions', 'timeline', 'inspector'],
+    },
   },
 } satisfies Meta<typeof DefaultStory>;
 

@@ -9,6 +9,8 @@ import {
   type BackgroundGrid,
   type ConstrainIntent,
   type FaceSelection,
+  type ThemeMode,
+  type ThemeRegistry,
   type ViewportProps,
 } from '@dxos/react-ui-canvas';
 import { type Fragment, type LayoutIntent, type ModelIntent, type Scene } from '@dxos/scene';
@@ -57,7 +59,10 @@ export type CameraOps<C> = {
 
 /** What the display panel offers: the looks (default style catalogs), grid kinds and the 2D-only guides. */
 export type DisplayOptions = {
-  themes: readonly { id: string; label: string }[];
+  /** Each look by id and name; with a `mode`, it holds that mode whatever the app's. */
+  themes: readonly { id: string; label: string; mode?: ThemeMode }[];
+  /** The looks as a theme registry, which the picker draws as swatches (2D's canvas themes). */
+  registry?: ThemeRegistry;
   grids: readonly Exclude<BackgroundGrid, 'none'>[];
   guides: boolean;
 };

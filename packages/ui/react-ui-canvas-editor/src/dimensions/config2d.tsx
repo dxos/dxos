@@ -132,7 +132,12 @@ export const createConfig2D = ({
       percent: (camera, authored) => Math.round((camera.zoom / authored.zoom) * 100),
     },
     display: {
-      themes: Object.values(defaultThemeRegistry.themes).map(({ id, name }) => ({ id, label: name })),
+      themes: Object.values(defaultThemeRegistry.themes).map(({ id, name, mode }) => ({
+        id,
+        label: name,
+        ...(mode ? { mode } : {}),
+      })),
+      registry: defaultThemeRegistry,
       grids: ['lines'],
       guides: true,
     },

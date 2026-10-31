@@ -4,6 +4,7 @@
 // @vitest-environment happy-dom
 
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import React, { useEffect } from 'react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
@@ -81,10 +82,13 @@ const Editor = ({
   shots,
   onIntent = () => {},
   onShotChange,
+  timeline = true,
 }: {
   shots: EditorShot[];
   onIntent?: () => void;
   onShotChange: (shot: string | undefined, timeline: Timeline) => void;
+  /** Whether the Timeline panel opens shown; hidden, the display panel's toggle shows it. */
+  timeline?: boolean;
 }) => (
   <SceneEditor.Root
     config={CONFIG}
@@ -94,9 +98,11 @@ const Editor = ({
     display={{ theme: 'cad', grid: true, snap: false }}
     shots={shots}
     onShotChange={onShotChange}
+    timeline={timeline ? true : undefined}
   >
     <Select ids={['a']} />
     <SceneEditor.Viewport>
+      <SceneEditor.Display />
       <SceneEditor.Timeline />
     </SceneEditor.Viewport>
   </SceneEditor.Root>
@@ -104,6 +110,34 @@ const Editor = ({
 
 describe('SceneEditor.Timeline', () => {
   afterEach(() => cleanup());
+
+  test("the panel is hidden until the display panel's toggle shows it, and the toggle hides it again", async () => {
+    render(<Editor shots={[{ id: 'one', timeline: moving() }]} onShotChange={() => {}} timeline={false} />);
+    expect(screen.queryByTestId('timeline-play')).toBeNull();
+    const toggle = screen.getByTestId('toolbar-timeline');
+    expect(toggle.getAttribute('aria-pressed')).toBe('false');
+    await userEvent.click(toggle);
+    expect(await screen.findByTestId('timeline-play')).toBeDefined();
+    await userEvent.click(toggle);
+    expect(screen.queryByTestId('timeline-play')).toBeNull();
+  });
+
+  test('a host that offers no animation shows no toggle', () => {
+    render(
+      <SceneEditor.Root
+        config={CONFIG}
+        document={document}
+        scene='s'
+        onIntent={() => {}}
+        display={{ theme: 'cad', grid: true, snap: false }}
+      >
+        <SceneEditor.Viewport>
+          <SceneEditor.Display />
+        </SceneEditor.Viewport>
+      </SceneEditor.Root>,
+    );
+    expect(screen.queryByTestId('toolbar-timeline')).toBeNull();
+  });
 
   test('the panel lists the shots staging the open scene', () => {
     render(

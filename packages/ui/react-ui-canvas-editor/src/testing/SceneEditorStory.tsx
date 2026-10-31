@@ -108,6 +108,8 @@ export type SceneEditorStoryProps = PropsWithChildren<{
   /** The shots staging the scene; the Timeline panel shows only when set (an empty list offers to make one). */
   shots?: readonly EditorShot[];
   display?: Partial<EditorDisplay>;
+  /** The Timeline panel shown from the start, rather than by the display panel's toggle. */
+  timeline?: boolean;
 }>;
 
 /**
@@ -151,6 +153,7 @@ const Host = <C,>({
   select,
   shots: initialShots,
   display: initialDisplay,
+  timeline,
   children,
 }: HostProps<C>) => {
   const { ref, update, source } = useMemoryDocument(initial);
@@ -239,6 +242,7 @@ const Host = <C,>({
       onDockedChange={setDocked}
       shots={shots}
       onShotChange={initialShots ? handleShotChange : undefined}
+      timeline={timeline}
     >
       {select && <Select ids={select} />}
       {children}
@@ -257,6 +261,7 @@ const Select = ({ ids }: { ids: readonly string[] }) => {
 export const FullEditor = ({ dim }: { dim: Scene.Dimension }) => (
   <>
     <SceneEditor.Viewport>
+      <SceneEditor.Navigation />
       <SceneEditor.Tools />
       <SceneEditor.Actions />
       <SceneEditor.Camera />

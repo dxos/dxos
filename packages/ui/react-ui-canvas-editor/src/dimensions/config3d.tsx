@@ -51,11 +51,13 @@ export const CATALOGS_3D: readonly EditorCatalog[] = [
   {
     id: 'neu-light',
     name: 'Neu Light',
+    mode: 'light',
     styles: NEU_STYLES,
   },
   {
     id: 'neu-dark',
     name: 'Neu Dark',
+    mode: 'dark',
     styles: NEU_STYLES,
   },
 ];
@@ -188,7 +190,7 @@ export const config3d: DimensionConfig<Scene.Camera3D> = {
     percent: zoomPercent,
   },
   display: {
-    themes: CATALOGS_3D.map(({ id, name }) => ({ id, label: name })),
+    themes: CATALOGS_3D.map(({ id, name, mode }) => ({ id, label: name, ...(mode ? { mode } : {}) })),
     grids: ['lines'],
     guides: false,
   },

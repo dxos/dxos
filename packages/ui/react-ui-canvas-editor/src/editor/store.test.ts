@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 
 import { type LayoutIntent } from '@dxos/scene';
 
-import { createEditorStore } from './store.ts';
+import { createEditorStore, drillPath } from './store.ts';
 
 describe('createEditorStore', () => {
   test('selection, tool and drill path are atoms the panels and viewport share', () => {
@@ -32,6 +32,14 @@ describe('createEditorStore', () => {
     store.select(['a']);
     store.open(['root', 'gear']);
     expect(registry.get(store.atoms.selection)).toEqual([]);
+  });
+
+  test("a path of the scene's own layout alone is no drill: the root is open", () => {
+    const registry = Registry.make();
+    const store = createEditorStore(registry);
+    store.open(['root', 'gear']);
+    store.open(['root']);
+    expect(registry.get(store.atoms.editing)).toEqual([]);
   });
 
   test('a face belongs to its element: selecting anything else lets it go', () => {
@@ -70,5 +78,18 @@ describe('createEditorStore', () => {
     store.preview(undefined);
     store.commit();
     expect(written).toEqual([]);
+  });
+});
+
+describe('drillPath', () => {
+  test('opening a layout below the open one drills one level further in', () => {
+    expect(drillPath([], 'root', 'b')).toEqual(['root', 'b']);
+    expect(drillPath(['root', 'b'], 'root', 'e')).toEqual(['root', 'b', 'e']);
+  });
+
+  test('opening a layout already on the path drills out to it; the root is no drill', () => {
+    expect(drillPath(['root', 'b', 'e'], 'root', 'b')).toEqual(['root', 'b']);
+    expect(drillPath(['root', 'b', 'e'], 'root', 'root')).toEqual([]);
+    expect(drillPath(['root', 'b'], 'root', undefined)).toEqual([]);
   });
 });

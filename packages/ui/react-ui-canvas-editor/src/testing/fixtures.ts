@@ -4,8 +4,10 @@
 
 import { createTimeline, setKey } from '@dxos/animation';
 import { Dsl } from '@dxos/diagram';
-import { CONSTRAINED_GRID, constrainedPlacement } from '@dxos/react-ui-canvas';
+import { EXEMPLARS } from '@dxos/diagram/testing';
+import { CONSTRAINED_GRID, constrainedPlacement, fromRenderLists2D } from '@dxos/react-ui-canvas';
 import { between } from '@dxos/react-ui-canvas/headless';
+import { createNestedDeepTree, createNestedSimpleTree } from '@dxos/react-ui-canvas/testing';
 import { type Layer, type Scene, applyIntent } from '@dxos/scene';
 
 import { type EditorShot } from '../editor/index.ts';
@@ -215,3 +217,16 @@ export const SHOTS_3D: readonly EditorShot[] = [
     ].reduce((timeline, key) => setKey(timeline, 'hub', 'center', key), createTimeline(4)),
   },
 ];
+
+/** A 2D document of the view tree `tree`, rooted at its root view. */
+const nested2D = (tree: ReturnType<typeof createNestedSimpleTree>): Scene.SceneDocument =>
+  fromRenderLists2D(tree.views, { root: tree.root, theme: 'flat' });
+
+/** A, B and the frame C (a view onto D → E), linked A → B → C: one level to drill into. */
+export const NESTED_2D: Scene.SceneDocument = nested2D(createNestedSimpleTree());
+
+/** A, the frame B and C; inside B, the frame E among its own shapes: two levels to drill into. */
+export const NESTED_DEEP_2D: Scene.SceneDocument = nested2D(createNestedDeepTree());
+
+/** A client beside a glass shell whose parts are a hub and four spokes: one composite to drill into. */
+export const NESTED_3D: Scene.SceneDocument = Dsl.readScenes(EXEMPLARS.encapsulated).document;

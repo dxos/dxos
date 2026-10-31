@@ -51,6 +51,7 @@ const DefaultStory = ({ dim, playing, time }: StoryProps) => (
     document={dim === '3d' ? DOCUMENT_3D : DOCUMENT_2D}
     select={dim === '3d' ? ['hub'] : ['a']}
     shots={dim === '3d' ? SHOTS_3D : SHOTS_2D}
+    timeline
   >
     <Playback playing={playing} time={time} />
     <SceneEditor.Viewport>

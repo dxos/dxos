@@ -21,6 +21,7 @@ import {
   fromViewportIntent,
   rootLayoutOf,
   toViewportDocument,
+  useCanvasNavigation,
 } from '@dxos/react-ui-canvas';
 import { type LayoutIntent, findLayout } from '@dxos/scene';
 
@@ -68,6 +69,26 @@ const sameCamera = (left: Camera | undefined, right: Camera | undefined): boolea
 
 const sameTool = (left: Tool, right: Tool): boolean => JSON.stringify(left) === JSON.stringify(right);
 
+const samePath = (left: readonly string[], right: readonly string[]): boolean =>
+  left.length === right.length && left.every((id, index) => id === right[index]);
+
+/**
+ * The editor's drill path into the engine: a crumb or a host moving it drills the engine out (or in) through each
+ * frame, so the camera maps across as a double-click's would; the engine's own drills reach the editor by `onEdit`.
+ */
+const DrillSync = ({ root, path }: { root: string; path: readonly string[] }) => {
+  const registry = useContext(RegistryContext);
+  const { atoms, commands } = useCanvasNavigation('Viewport2D.DrillSync');
+  // Only a change of the editor's path drives the engine: the engine's own drills reach the editor first, so reading
+  // the engine's path here as a dependency would race them and drill straight back out.
+  useEffect(() => {
+    const target = path.length > 0 ? path : [root];
+    // An isolated composite is the engine's own view, outside the drill path.
+    registry.get(atoms.isolation) || samePath(registry.get(atoms.path), target) || commands.openView(target);
+  }, [registry, atoms, commands, root, path]);
+  return null;
+};
+
 /**
  * The 2D viewport the shared editor draws: react-ui-canvas's engine over the open scene's layouts, with its gestures,
  * handles, links and portals. The engine sends each edit on release as one intent per changed layout, so the editor
@@ -78,7 +99,7 @@ export const createViewport2D = (options: Viewport2DOptions = {}) => {
   const Viewport2D = ({
     document,
     scene: sceneId,
-    editing,
+    path = [],
     selection,
     tool,
     readonly,
@@ -112,20 +133,21 @@ export const createViewport2D = (options: Viewport2DOptions = {}) => {
       const next = toTool2D(tool);
       sameTool(registry.get(atoms.tool), next) || registry.set(atoms.tool, next);
     }, [registry, atoms, tool]);
+    // The host's camera is applied when it arrives or changes, never again for the same values: it is the root's camera,
+    // so re-applying a fresh object for it would pull a drilled-in view back into the root's coordinates.
+    const hostCamera = useRef<Camera | undefined>(undefined);
     useEffect(() => {
-      const path = editing === undefined || editing === root ? [root] : [root, editing];
-      registry.get(atoms.path).at(-1) === path.at(-1) || registry.set(atoms.path, path);
-    }, [registry, atoms, editing, root]);
-    useEffect(() => {
-      camera && !sameCamera(registry.get(atoms.camera), camera) && registry.set(atoms.camera, camera);
+      const changed = !sameCamera(hostCamera.current, camera);
+      hostCamera.current = camera;
+      changed && camera && !sameCamera(registry.get(atoms.camera), camera) && registry.set(atoms.camera, camera);
     }, [registry, atoms, camera]);
     useEffect(() => registry.set(atoms.snap, snap && !picture), [registry, atoms, snap, picture]);
     useEffect(() => registry.set(atoms.axes, !!axes && !picture), [registry, atoms, axes, picture]);
     useEffect(() => registry.set(atoms.guides, !!guides && !picture), [registry, atoms, guides, picture]);
 
     // The engine's own changes back to the editor.
-    const handlers = useRef({ onSelect, onToolChange, onEdit, selection, tool, editing });
-    handlers.current = { onSelect, onToolChange, onEdit, selection, tool, editing };
+    const handlers = useRef({ onSelect, onToolChange, onEdit, selection, tool, path });
+    handlers.current = { onSelect, onToolChange, onEdit, selection, tool, path };
     useEffect(() => {
       const unsubscribe = [
         registry.subscribe(atoms.selection, (ids) => {
@@ -134,9 +156,10 @@ export const createViewport2D = (options: Viewport2DOptions = {}) => {
         registry.subscribe(atoms.tool, (next) => {
           sameTool(next, toTool2D(handlers.current.tool)) || handlers.current.onToolChange?.(fromTool2D(next));
         }),
-        registry.subscribe(atoms.path, (path) => {
-          const open = path.length > 1 ? path.at(-1) : undefined;
-          open !== handlers.current.editing && handlers.current.onEdit(open);
+        registry.subscribe(atoms.path, (next) => {
+          // An isolated composite is outside the drill path, which stays where it was.
+          const drilled = registry.get(atoms.isolation) ? handlers.current.path : next.length > 1 ? next : [];
+          samePath(drilled, handlers.current.path) || handlers.current.onEdit(drilled);
         }),
       ];
       return () => unsubscribe.forEach((dispose) => dispose());
@@ -172,6 +195,7 @@ export const createViewport2D = (options: Viewport2DOptions = {}) => {
         createGeneratorWorker={options.createGeneratorWorker}
       >
         <Canvas.Viewport liveDepth={options.liveDepth} />
+        {!picture && <DrillSync root={root} path={path} />}
         {options.bridge && <CanvasBridgeCapture bridge={options.bridge} />}
         {children}
       </Canvas.Root>

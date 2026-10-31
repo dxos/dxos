@@ -28,6 +28,8 @@ export type ViewportProps<C = unknown> = {
   scene: string;
   /** The open layout; the scene's own when undefined. */
   editing?: string;
+  /** The drill path to the open layout, the scene's own layout first; empty while the scene's own is open. */
+  path?: readonly string[];
   selection: readonly string[];
   tool: ActiveTool;
   readonly: boolean;
@@ -53,8 +55,11 @@ export type ViewportProps<C = unknown> = {
   /** Runs `change`, recording the intents it writes as one undo step (a new portal: its element, scene and object). */
   onTransaction?: (change: () => void) => void;
   onPreview: (layout: string | undefined, intent?: LayoutIntent) => void;
-  /** Opens a layout (a double-clicked composite); undefined goes back to the scene's own. */
-  onEdit: (layout: string | undefined) => void;
+  /**
+   * Opens a layout by its drill path, the scene's own layout first (a double-clicked frame, or one zoomed into until it
+   * fills the view); an empty path goes back to the scene's own.
+   */
+  onEdit: (path: readonly string[]) => void;
   onContextMenu: (at: Point, kind: 'element' | 'canvas') => void;
   onFaceChange?: (face: FaceSelection | undefined) => void;
   onCameraChange?: (camera: C) => void;

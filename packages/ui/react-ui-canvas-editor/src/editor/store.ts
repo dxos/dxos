@@ -44,7 +44,10 @@ export type EditorStore = {
   atoms: EditorAtoms;
   select: (ids: readonly string[]) => void;
   setTool: (tool: ActiveTool) => void;
-  /** Opens a layout by its drill path; the selection is cleared, since its elements are no longer drawn. */
+  /**
+   * Opens a layout by its drill path, the scene's own layout first; the selection is cleared, since its elements are no
+   * longer drawn.
+   */
   open: (path: readonly string[]) => void;
   setFace: (face: FaceSelection | undefined) => void;
   /** Shows a gesture's edit without writing it; undefined drops it. */
@@ -56,6 +59,18 @@ export type EditorStore = {
   setShot: (shot: string | undefined) => void;
   setTime: (time: number) => void;
   setPlaying: (playing: boolean) => void;
+};
+
+/**
+ * The drill path once `layout` is opened from `path`: out to it when it is on the path, otherwise one level further in;
+ * the scene's own layout (`root`, or undefined) is no drill, so the path is empty.
+ */
+export const drillPath = (path: readonly string[], root: string, layout: string | undefined): readonly string[] => {
+  if (layout === undefined || layout === root) {
+    return [];
+  }
+  const index = path.indexOf(layout);
+  return index >= 0 ? path.slice(0, index + 1) : [...(path.length > 0 ? path : [root]), layout];
 };
 
 /** Fresh editor state, kept alive for the editor's lifetime (strict-mode remounts reuse it). */
@@ -82,7 +97,8 @@ export const createEditorStore = (registry: Registry.AtomRegistry, options: Edit
     select,
     setTool: (tool) => registry.set(atoms.tool, tool),
     open: (path) => {
-      registry.set(atoms.editing, path);
+      // The scene's own layout alone is no drill.
+      registry.set(atoms.editing, path.length > 1 ? path : []);
       select([]);
     },
     setFace: (face) => registry.set(atoms.face, face),

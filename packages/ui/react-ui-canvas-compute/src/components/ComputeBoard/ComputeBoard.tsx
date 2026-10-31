@@ -95,6 +95,7 @@ export const ComputeBoard = ({ board, controller, role }: ComputeBoardProps) => 
     >
       <ComputeResize controller={controller}>
         <SceneEditor.Viewport>
+          <SceneEditor.Navigation />
           <SceneEditor.Tools />
           <SceneEditor.Actions />
           <SceneEditor.Camera />

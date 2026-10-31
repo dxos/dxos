@@ -17,6 +17,9 @@ import {
   DYNAMIC_2D,
   FullEditor,
   LATTICE_2D,
+  NESTED_2D,
+  NESTED_3D,
+  NESTED_DEEP_2D,
   SceneEditorStory,
 } from '../testing/index.ts';
 
@@ -27,15 +30,27 @@ type StoryProps = {
   docked?: boolean;
   /** A 2D layout in a mode of its own. */
   mode?: 'lattice' | 'dynamic' | 'constrained';
+  /** Frames to drill into: one level, or two (2D only). */
+  nested?: 'simple' | 'deep';
 };
 
 const MODE_DOCUMENTS = { lattice: LATTICE_2D, dynamic: DYNAMIC_2D, constrained: CONSTRAINED_2D };
 
-const documentOf = (dim: Scene.Dimension, mode: StoryProps['mode']) =>
-  dim === '3d' ? DOCUMENT_3D : mode ? MODE_DOCUMENTS[mode] : DOCUMENT_2D;
+const documentOf = (dim: Scene.Dimension, mode: StoryProps['mode'], nested: StoryProps['nested']) =>
+  nested
+    ? dim === '3d'
+      ? NESTED_3D
+      : nested === 'deep'
+        ? NESTED_DEEP_2D
+        : NESTED_2D
+    : dim === '3d'
+      ? DOCUMENT_3D
+      : mode
+        ? MODE_DOCUMENTS[mode]
+        : DOCUMENT_2D;
 
-const DefaultStory = ({ dim, role = 'article', docked = true, mode }: StoryProps) => (
-  <SceneEditorStory document={documentOf(dim, mode)} role={role} docked={docked}>
+const DefaultStory = ({ dim, role = 'article', docked = true, mode, nested }: StoryProps) => (
+  <SceneEditorStory document={documentOf(dim, mode, nested)} role={role} docked={docked}>
     <FullEditor dim={dim} />
   </SceneEditorStory>
 );
@@ -88,3 +103,27 @@ export const Dynamic2D: Story = { args: { dim: '2d', mode: 'dynamic' } };
  * 3. Delete A: its constraints go with it and the rest are re-placed.
  */
 export const Constrained2D: Story = { args: { dim: '2d', mode: 'constrained' } };
+
+/**
+ * Test:
+ * 1. Double-click the frame C: the view zooms into it and the breadcrumbs (top left) read `root › C`.
+ * 2. Escape, Up or the root crumb drills back out to the root.
+ * 3. Zoom in on C until it fills the view: it drills in on its own; zoom well out again and it drills back out.
+ * 4. C draws D → E scaled to fill the frame, not small in its top-left corner.
+ */
+export const Nested2D: Story = { args: { dim: '2d', nested: 'simple', docked: false } };
+
+/**
+ * Test:
+ * 1. Double-click B, then E inside it: the breadcrumbs read `root › B › E`.
+ * 2. The B crumb drills out one level; the root crumb drills out to the root.
+ */
+export const NestedDeep2D: Story = { args: { dim: '2d', nested: 'deep', docked: false } };
+
+/**
+ * Test:
+ * 1. Double-click the glass shell (Team): its parts open with the rest faded, and the breadcrumbs read
+ *    `Encapsulated › cluster`.
+ * 2. Escape or the root crumb goes back out.
+ */
+export const Nested3D: Story = { args: { dim: '3d', nested: 'simple', docked: false } };

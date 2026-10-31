@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useMemo, useState } from 'react';
 
-import { between } from '@dxos/react-ui-canvas';
+import { type ThemeMode, between } from '@dxos/react-ui-canvas';
 import {
   type Layer,
   type NamedStyle,
@@ -46,6 +46,8 @@ export const STYLES_INSPECTOR: InspectorSectionDef = {
 export type EditorCatalog = {
   id: string;
   name: string;
+  /** The mode the look holds whatever the app's. */
+  mode?: ThemeMode;
   styles: Readonly<Record<string, NamedStyle2D | NamedStyle3D>>;
 };
 

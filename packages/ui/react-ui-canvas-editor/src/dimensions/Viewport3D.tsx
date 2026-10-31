@@ -9,6 +9,7 @@ import { Scene3DView, toTheme3D } from '@dxos/react-ui-canvas/3d';
 import { type Scene } from '@dxos/scene';
 
 import { Scene3DEditor } from '../components/index.ts';
+import { drillPath } from '../editor/index.ts';
 import { toTool3D } from './tools3d.ts';
 
 /**
@@ -19,6 +20,7 @@ export const Viewport3D = ({
   document,
   scene,
   editing,
+  path = [],
   selection,
   tool,
   readonly,
@@ -58,7 +60,9 @@ export const Viewport3D = ({
       camera={camera}
       onSelect={onSelect}
       onIntent={onIntent}
-      onEdit={(layout) => onEdit(layout)}
+      onEdit={(layout) =>
+        onEdit(drillPath(path, document.scenes.find((record) => record.id === scene)?.layout ?? layout, layout))
+      }
       onContextMenu={onContextMenu}
       onFaceChange={onFaceChange}
       onCameraChange={onCameraChange}

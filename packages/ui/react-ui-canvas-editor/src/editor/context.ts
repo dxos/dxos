@@ -69,6 +69,10 @@ export type SceneEditorContextValue = {
   shots?: readonly EditorShot[];
   /** Writes a shot's timeline; an undefined shot id makes a new shot staging the scene. */
   onShotChange?: (shot: string | undefined, timeline: Timeline) => void;
+  /** Whether the Timeline panel shows. */
+  timeline: boolean;
+  /** Shows or hides the Timeline panel; undefined when the host offers no animation. */
+  onTimelineChange?: (timeline: boolean) => void;
   /** Draws the dimension's viewport with the floating panels over it. */
   renderViewport: (overlay: ReactNode) => ReactNode;
 };

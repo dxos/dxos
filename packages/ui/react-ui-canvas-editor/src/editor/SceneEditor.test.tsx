@@ -11,6 +11,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { type ViewportProps } from '@dxos/react-ui-canvas';
 import { type Scene } from '@dxos/scene';
 
+import { config3d, createConfig2D } from '../dimensions/index.ts';
 import { type DimensionConfig } from './config.ts';
 import { type EditorDisplay } from './context.ts';
 import { type History } from './history.ts';
@@ -46,6 +47,12 @@ const config = (dim: Scene.Dimension): DimensionConfig<{ zoom: number }> => ({
   },
   propertyForm: () => null,
 });
+
+/** A camera for a dimension's real config under the test viewport. */
+const CAMERA: Pick<DimensionConfig<{ zoom: number }>, 'viewport' | 'camera'> = {
+  viewport: TestViewport,
+  camera: config('2d').camera,
+};
 
 const DOCUMENT: Scene.SceneDocument = {
   scenes: [{ id: 's', dim: '2d', layout: 'root', camera: { center: { x: 0, y: 0 }, zoom: 1 } }],
@@ -86,6 +93,7 @@ const Editor = ({
     onReadonlyChange={() => {}}
   >
     <SceneEditor.Viewport>
+      <SceneEditor.Navigation />
       <SceneEditor.Tools />
       <SceneEditor.Actions />
       <SceneEditor.Camera />
@@ -100,7 +108,7 @@ describe('SceneEditor', () => {
 
   test('both configs render the same regions', () => {
     const regions = () =>
-      ['viewport', 'palette', 'scene-actions', 'canvas-debug', 'canvas-display'].map(
+      ['viewport', 'canvas-toolbar', 'palette', 'scene-actions', 'canvas-debug', 'canvas-display'].map(
         (id) => screen.queryByTestId(id) !== null,
       );
     render(<Editor dim='2d' />);
@@ -115,8 +123,34 @@ describe('SceneEditor', () => {
     render(<Editor dim='3d' role='card' />);
     expect(screen.getByTestId('viewport')).toBeDefined();
     expect(screen.getByTestId('viewport').dataset.grid).toBe('false');
-    for (const id of ['palette', 'scene-actions', 'canvas-debug', 'canvas-display']) {
+    for (const id of ['canvas-toolbar', 'palette', 'scene-actions', 'canvas-debug', 'canvas-display']) {
       expect(screen.queryByTestId(id)).toBeNull();
+    }
+  });
+
+  test("a card, section or slide draws the authored view, framed to fit, never the viewer's own camera", () => {
+    const seen: ({ zoom: number } | undefined)[] = [];
+    const CameraViewport = ({ camera }: ViewportProps<{ zoom: number }>) => {
+      seen.push(camera);
+      return <div data-testid='viewport' />;
+    };
+    for (const role of ['card', 'section', 'slide', 'article']) {
+      render(
+        <SceneEditor.Root
+          config={{ ...config('2d'), viewport: CameraViewport }}
+          document={DOCUMENT}
+          scene='s'
+          role={role}
+          onIntent={() => {}}
+          display={DISPLAY}
+          camera={{ zoom: 4 }}
+          authoredCamera={{ zoom: 1 }}
+        >
+          <SceneEditor.Viewport />
+        </SceneEditor.Root>,
+      );
+      expect(seen.at(-1)).toEqual(role === 'article' ? { zoom: 4 } : undefined);
+      cleanup();
     }
   });
 
@@ -161,6 +195,35 @@ describe('SceneEditor', () => {
       expect(screen.getByTestId('viewport').dataset.theme).toBe('other');
       cleanup();
     }
+  });
+
+  test('each theme in the picker shows its swatch where there is a registry, and its light or dark icon, in 2D and 3D', async () => {
+    const pick = async (dimension: DimensionConfig<{ zoom: number }>) => {
+      render(
+        <SceneEditor.Root
+          config={{ ...dimension, viewport: TestViewport }}
+          document={DOCUMENT}
+          scene='s'
+          onIntent={() => {}}
+          display={{ ...DISPLAY, theme: dimension.display.themes[0]?.id ?? '' }}
+        >
+          <SceneEditor.Viewport>
+            <SceneEditor.Display />
+          </SceneEditor.Viewport>
+        </SceneEditor.Root>,
+      );
+      await userEvent.click(screen.getByTestId('theme-trigger'));
+    };
+    const { viewport: _2d, camera: _c2, ...config2d } = createConfig2D();
+    await pick({ ...config2d, ...CAMERA });
+    expect(await screen.findByTestId('theme-swatch-paper')).toBeDefined();
+    expect(screen.getByTestId('theme-option-paper').innerHTML).toContain('ph--sun--regular');
+    expect(screen.getByTestId('theme-option-film').innerHTML).toContain('ph--moon--regular');
+    cleanup();
+    const { viewport: _3d, camera: _c3, ...rest3d } = config3d;
+    await pick({ ...rest3d, ...CAMERA });
+    expect((await screen.findByTestId('theme-option-neu-dark')).innerHTML).toContain('ph--moon--regular');
+    expect(screen.getByTestId('theme-option-neu-light').innerHTML).toContain('ph--sun--regular');
   });
 
   test('a host that stores the theme takes the pick', async () => {
@@ -311,5 +374,75 @@ describe('SceneEditor', () => {
     send('root', { kind: 'delete', ids: ['a'] });
     expect(write.mock.calls).toEqual([['root', { kind: 'move', ids: ['a'], delta: { x: 3, y: 0 } }]]);
     expect(seen).toEqual([true, true]);
+  });
+});
+
+/** Two levels of frames: the root holds `b`, whose layout holds `e`. */
+const NESTED: Scene.SceneDocument = {
+  scenes: [{ id: 's', dim: '2d', layout: 'root', name: 'Board', camera: { center: { x: 0, y: 0 }, zoom: 1 } }],
+  layouts: [
+    { id: 'root', dim: '2d', elements: {} },
+    { id: 'b', dim: '2d', name: 'B', elements: {} },
+    { id: 'e', dim: '2d', name: 'E', elements: {} },
+  ],
+  models: [],
+};
+
+/** A viewport that drills as a double-click or zoom would: into `layout`, by the editor's `onEdit`. */
+const DrillingViewport = ({ children, path, onEdit }: ViewportProps<{ zoom: number }>) => (
+  <div data-testid='viewport' data-path={(path ?? []).join(' ')}>
+    {['b', 'e'].map((layout) => (
+      <button
+        key={layout}
+        data-testid={`drill-${layout}`}
+        onClick={() => onEdit([...(path && path.length > 0 ? path : ['root']), layout])}
+      />
+    ))}
+    {children}
+  </div>
+);
+
+const NestedEditor = ({ dim }: { dim: Scene.Dimension }) => (
+  <SceneEditor.Root
+    config={{ ...config(dim), viewport: DrillingViewport }}
+    document={NESTED}
+    scene='s'
+    onIntent={() => {}}
+    display={DISPLAY}
+  >
+    <SceneEditor.Viewport>
+      <SceneEditor.Navigation />
+    </SceneEditor.Viewport>
+  </SceneEditor.Root>
+);
+
+describe('SceneEditor.Navigation', () => {
+  afterEach(() => cleanup());
+
+  test('the breadcrumbs follow every level drilled into, and the viewport is handed the whole path', async () => {
+    for (const dim of ['2d', '3d'] as const) {
+      render(<NestedEditor dim={dim} />);
+      const crumbs = () => screen.getByTestId('canvas-toolbar').textContent;
+      expect(screen.getByTestId('breadcrumb-root')).toBeDefined();
+      await userEvent.click(screen.getByTestId('drill-b'));
+      await userEvent.click(screen.getByTestId('drill-e'));
+      expect(screen.getByTestId('viewport').dataset.path).toBe('root b e');
+      expect(crumbs()).toContain('B');
+      expect(crumbs()).toContain('E');
+      cleanup();
+    }
+  });
+
+  test("a crumb drills out to its level, Up by one, and the root crumb to the scene's own layout", async () => {
+    render(<NestedEditor dim='2d' />);
+    await userEvent.click(screen.getByTestId('drill-b'));
+    await userEvent.click(screen.getByTestId('drill-e'));
+    await userEvent.click(screen.getByTestId('toolbar-up'));
+    expect(screen.getByTestId('viewport').dataset.path).toBe('root b');
+    await userEvent.click(screen.getByTestId('drill-e'));
+    await userEvent.click(screen.getByRole('button', { name: 'B' }));
+    expect(screen.getByTestId('viewport').dataset.path).toBe('root b');
+    await userEvent.click(screen.getByTestId('breadcrumb-root'));
+    expect(screen.getByTestId('viewport').dataset.path).toBe('');
   });
 });
