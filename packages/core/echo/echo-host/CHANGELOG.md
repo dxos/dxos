@@ -1,5 +1,72 @@
 # @dxos/echo-host
 
+## 0.17.0
+
+### Minor Changes
+
+- 2ed9310: A paged feed read (`orderBy(Order.natural(…)).skip(k).limit(n)` over a feed) now loads only the `n` documents it returns instead of loading `k + n` and dropping `k`: the planner folds the skip into the feed scan, and the index applies it as `OFFSET` before any document loads.
+
+  `QueryPlan.FeedScan` gains `skip`, and the plan no longer carries a `SkipStep` after such a scan, so a consumer that executes plans itself must pass `feedScan.skip` into its window (`NaturalQueueWindow` in `@dxos/index-core` gains `skip`) or it returns the first `n` rows instead of the page.
+
+### Patch Changes
+
+- 3058ee6: Update `@automerge/automerge-subduction` to 0.21.0 and `@automerge/automerge-repo` to 2.6.0-subduction.49.
+- 0590c11: New Demo space template: sixteen chess games at every stage, a world map of every Cloudflare data centre with a globe tour from Los Angeles to Sydney, a voxel creeper, a voxel town, and a spacetime scene of three race cars and a fire truck. `@dxos/plugin-spacetime` is now public, with a `SpacetimePresets` entry that builds a preset model (fire truck, race car, taxi) as a stored mesh. A game now has an optional `description`, which chess keeps set to the current FEN so tables and cards show each position; chess cards draw their board full width again, and the move list drops its focus ring. A map's `coordinates` are its globe tour route; the globe gets a light street-map palette, small dark-blue markers, a red tour route and a margin at rest, and flat-map pins shrink to 60%. The DXOS Architecture template's metrics sheet gains a pie of the busiest plugins' PR share. Refs to the same object from different clients in one page no longer share a cached atom, so each client resolves a ref through its own database (previously every client's editor bound to whichever client loaded the object first). Replicated comments now show up on every peer: the editor retries an anchor whose cursor cites edits not yet received, and comment sync re-reads anchors when a thread arrives after its anchor. Many clients editing one document replicate much faster: sync no longer rebuilds Automerge changes on every message to check a peer's initial heads (patched `@automerge/automerge-repo`), and a query from objects to typed relations on them (`select(...).targetOf(Type)`, as comment threads use) re-runs only when those objects, relations of that type, or the relations' endpoints change, rather than on every write in the space. A masonry grid now has the same gap on all four sides: inside a padded `Masonry.Content` it adds the gap above and below as well as at the sides, and a non-scrolling grid (`scroll={false}`) adds none, leaving the perimeter to its host. Padding of `p-3` is now the equivalent `p-trim-md` token. A toolbar now insets both ends by the same gap, whether the edge item is a labelled control or an icon-only button, plugin-theme registers the menu translations so the overflow button reads "More", and a project's pipeline toggle reads "Hide pipeline" while the chart is shown.
+- b601d34: Quarantine a document whose load runs out of memory only when its stored bytes hold at least 100K ops, counted without loading it, so a small document that fails because the heap is already full is left alone. Log the retirements a space directory re-applies on every open at debug level.
+- Updated dependencies [d65fd2a]
+- Updated dependencies [6f6547f]
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [1924a44]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [9bcc167]
+- Updated dependencies [a245692]
+- Updated dependencies [3aef671]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [ece15ab]
+- Updated dependencies [074e3e6]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [2cebedc]
+- Updated dependencies [f299590]
+- Updated dependencies [b159f41]
+- Updated dependencies [ad3d5e0]
+- Updated dependencies [768db81]
+- Updated dependencies [e50d1e5]
+- Updated dependencies [df65316]
+  - @dxos/edge-client@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/context@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/sql-sqlite@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/feed@0.17.0
+  - @dxos/index-core@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/tracing@0.17.0
+  - @dxos/teleport@0.17.0
+  - @dxos/crypto@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/echo-protocol@0.17.0
+  - @dxos/teleport-extension-automerge-replicator@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/debug@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/node-std@0.17.0
+  - @dxos/typings@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

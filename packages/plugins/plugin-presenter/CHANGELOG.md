@@ -1,5 +1,150 @@
 # @dxos/plugin-presenter
 
+## 0.17.0
+
+### Minor Changes
+
+- 17a9e75: `Listbox.Root` takes `tileWidth: { min, max }`: items lay out as tiles between those widths, as many columns as fit at `min`, measured before the first paint and reflowing as the container resizes instead of stretching to a debounced column count; the arrow keys move by the columns on screen. The presenter's slide grid uses it, with a small/large toggle and captions from each slide's title or first heading; presenting scales the slide in the frame its container changes and fades in fullscreen once its size settles, and the pager follows the light/dark theme. The assistant's agent picker shows each model's vendor logo.
+- af8ed26: In the presentation grid, double-clicking a slide or adding one opens it in the slide editor. The add button is a split button whose caret sets the layout of later slides, and a ghost tile after the last slide adds one. A slide with `hide: true` in its frontmatter is skipped when presenting and shown dimmed in the grid. The toolbar presents with the editor's present icon, replacing the fullscreen button. The slide editor splits evenly until resized and has no fold gutter. A canvas drawing on a slide is read-only and shows no toolbar, palette or panels. `Canvas.Root` takes `transparent`, which draws no surface under the scene; a canvas on a slide uses it. In fullscreen, the space around a letterboxed slide takes the slide's background. The canvas background's context menu has a Back item inside a frame or an isolated composite. The app has one context menu: right-clicking an element marked with `AppNode.contextMenuProps(id)` opens that graph node's actions, as its navtree menu lists them; navtree rows and presentation grid tiles are marked, and hiding a slide is a graph action. A presentation's properties lay out its theme, colors and fonts in pairs, show the theme's default fonts when unset, and render an example slide in the story; each color is a text box with a picker at its end. `@dxos/react-ui` adds `ColorPicker` (Ark's color picker: a wheel tab and a swatch grid of the theme's hues by tone, with a reset), and `@dxos/react-ui-form` adds `ColorField` and fixes `Form.Layout` dropping the title of an annotated optional field. Presenter is tagged beta and on by default in Composer. The DXOS Architecture space template includes an ECHO presentation. `decorateMarkdown` takes `nodes`, to decorate only some syntax (the slide editor decorates fenced code); the fullscreen pager ends with an exit button and drops the `[ESC]` hint. Breaking: a presentation's slides are `Slide` objects (`Presentation@0.2.0`; a migration converts 0.1.0 presentations in place): each refs its content and holds its title, hidden flag, notes and a generated image, and a presentation gains a description. Opening a slide opens its `Slide`, so the assistant beside it has the slide as context, and the presenter skill's `GenerateSlideImage` tool generates an image through plugin-studio, stores it as a file through plugin-file (`FileOperation.CreateFromSource`), and places it in the slide's layout; plugin-studio exports `StudioHooks`, and slide images accept `blob:` URLs. plugin-studio is now public.
+- 2d585c2: Add the `Presentation` type, an ordered deck of owned markdown slides and linked objects that the navtree shows as a reorderable folder; collection decks and the `./Settings` and `./PresenterCapabilities` exports of `@dxos/plugin-presenter` are removed. `@dxos/app-framework` exports `Surface.matchCandidates`, and `@dxos/app-toolkit` adds `AppAnnotation.ContainerAnnotation` (an object's node lists one of its ref arrays) and `ContainerModel.isRemovable`: members a container marked `deleteOwned` owns get no remove action and are deleted only with it.
+- 0166448: Presentations render slides written in a Slidev markdown subset (layouts, click steps, video backgrounds, embedded object surfaces) and print the whole deck, one slide per page; reveal.js is removed. A Presentation's article is a grid of slide thumbnails that can be dragged to reorder and double-clicked to present. A deck takes a theme (`default`, `light`, `dark`, `serif`) with color overrides and a named text and code font, whose web fonts load only when used. Slides open in an editor with a slide toolbar and a live preview, below it or in the companion, kept in step with the cursor both ways.
+
+  `Listbox` takes `tiles` (a column count) to lay items out as a grid of cards with two-dimensional arrow keys; a list's current row is now marked in a neutral color and its selection in the focus color, and draggable rows can be reordered in a grid (`useReorder` with `axis: 'horizontal'`). `SyntaxHighlighter` takes a `themeMode` prop and `react-ui-syntax-highlighter` exports `renderRows`.
+
+- 0ebb028: A presentation's `theme` sub-object names its base theme `base` (breaking: was `name`, with no migration), its fields sit in one nested, collapsible Theme group in the presentation's properties, and its description is multi-line text. `@dxos/react-ui-form` hides a field whose `optional` wrapper is annotated `FormInputAnnotation.set(false)`, so the theme no longer shows twice, and a nested group's legend is a block-tall row so its disclosure clears the border.
+
+  Sheets (`@dxos/plugin-sheet`) share one formatting toolbar between the sheet and each formatted range in its properties: alignment, wrap, and a highlight color from the theme's swatches (tones 100 to 900), with black text up to tone 500 and white beyond; the header style is no longer a toolbar toggle, and contributed actions such as comment sit at the toolbar's end. The properties' Formatting list shows each range with its toolbar; selecting a row selects its range in the sheet, and a row's formatting can move to the sheet's selection. A sheet on a slide (`role=slide`) shows only its used range, scaled down to fit and never past 1:1, with no status bar, and is inert. Sheets have a multi-line description, and the cell editor keeps a cell's text in place when editing starts. `@dxos/react-ui`'s `ColorPicker.Trigger` takes `views` to offer swatches or the wheel alone, and `@dxos/lit-grid` cells take a `background` and `foreground` color.
+
+- f86f10e: Presenter shows speaker notes while presenting (subtitles or a separate window, chosen in its settings), gives each slide an optional desired length, and adds extension points for other plugins: a toolbar slot, an overlay slot and a presentation event handler. Studio renders `audio/*` variants. Adds the private `plugin-recorder`, which records a presentation's voice-over. react-ui adds a `SystemButton.Check` toggle preset (green while checked).
+- 296c44c: Sheet charts gain a timeline type that plots a range with one event per row (date, category, title, description, image URL) along a vertical spine. Categories can nest by path (`Tech/AI`) and show as toggle tags grouped under their parent, in a chosen order and colors; the timeline offers a left, center or right spine, log, linear or compact spacing (animated when switched), optional dates in labels, labels sized to fit, a text filter, click and arrow-key selection, and a card with each event's description and image. `@dxos/react-ui-plot` exports the `Timeline` component, `TimelineOptions`, and helpers for reading and arranging events.
+
+  Charts are now their own ECHO objects (`org.dxos.type.chart`), owned by their sheet and pointing back to it, so a document can embed a chart as a section or slide; the sheet (`org.dxos.type.sheet` 0.2.0) holds refs to them, and a migration turns 0.1.0 sheets' inline charts into chart objects. `Sheet.addChart`, `Sheet.updateChart` and `Sheet.removeChart` manage them.
+
+  plugin-sheet contributes a "Sales" space template (a small sales sheet with a bar chart and a pie chart) and `SheetUtil.cellsFromRows`, which turns rows of values into A1 cells.
+
+  Presented markdown decks render embedded objects (`![label](echo:…)`) through their slide surface instead of as broken images, and a sheet's grid spans all its rows and columns rather than the first 50 rows.
+
+  The timeline reads deep time (`13.8 Gya`, `66 Mya`, `300 kya`) and labels negative years as BCE, ticking spans longer than ten thousand years in years ago; `@dxos/react-ui-plot/testing` now holds a history of the universe. Presented decks keep slides at the top rather than centering them.
+
+- e1d537b: `ActionToolbar` lays out start and end zones and multiple rows, and ends with an overflow menu (⋮) that takes collapsible groups as submenus while a row is too narrow. Items and groups say where they go with `placement` (`ToolbarPlacement` on `MenuItemChrome`). A plain named group renders inline in a toolbar and as a submenu in a menu; another component extends it with `MenuBuilder.extend(groupId, …)`, including the overflow menu (`TOOLBAR_OVERFLOW_ID`). `EditorToolbar` declares an insert group (`EDITOR_TOOLBAR_INSERT_GROUP`) and an overflow menu for consumers to extend. `Editor.ToolbarMenu` renders the same actions as a menu; in a menu the overflow group's items follow the others instead of nesting.
+
+  Breaking: `ActionToolbar` no longer takes `children` or `start`. Add hand-written controls as `custom` items (`MenuBuilder.custom`) and labels as `text` items (`MenuBuilder.text`); another component extends a toolbar through `customActions`, now a prop of `ActionToolbar` itself.
+
+  Presenter slides gain two layouts, `three-cols` (`::middle::`, `::right::`) and `two-by-two` (`::right::`, `::bottom-left::`, `::bottom-right::`); "Start next column" inserts the marker of the column after the cursor's.
+
+### Patch Changes
+
+- 99708bd: In the slide editor, slot markers such as `::right::` and click tags without attributes are atomic: the caret steps over them and a delete removes them whole. Two layouts are added: `three-cols` (`::middle::`, `::right::`) and `two-by-two` (`::right::`, `::bottom-left::`, `::bottom-right::`); "Start the next column" inserts the marker after the one at the caret. Typing a `layout:` value in the frontmatter offers the matching layouts with their names, in two columns. The slide toolbar's layout picker is an icon button, and every layout has a translated name in the picker. In fullscreen, the overlay pager stays visible while the pointer is on it. Text fonts include Space Grotesk, Mali, Geist, Orbitron, Unbounded, OpenDyslexic and LXGW WenKai (Chinese), loaded on demand and kept out of the web app's install-time cache. Frontmatter `bleed: left` or `bleed: right` takes a column slide's outer column to the slide's edges, so an embedded object can fill it. An assistant skill, `PresenterSkill` (enabled on Presentations), creates presentations from Slidev markdown slides, adds or links sections, lists the layouts and frontmatter keys, and presents a deck. Code blocks are padded, and a fence's `{lines:true}` option numbers their lines. The deck and slide components are now composites, `Deck.*` and `Slide.*`, with a headless `Root`.
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [9cb96c7]
+- Updated dependencies [caa28b3]
+- Updated dependencies [710da43]
+- Updated dependencies [df16fba]
+- Updated dependencies [e8029c3]
+- Updated dependencies [f142d06]
+- Updated dependencies [1924a44]
+- Updated dependencies [d105c19]
+- Updated dependencies [e343467]
+- Updated dependencies [9a3313a]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [9bcc167]
+- Updated dependencies [9f97660]
+- Updated dependencies [3aef671]
+- Updated dependencies [f10c1dc]
+- Updated dependencies [13bc40d]
+- Updated dependencies [870af94]
+- Updated dependencies [a1c19cc]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [49df146]
+- Updated dependencies [a18cb35]
+- Updated dependencies [074e3e6]
+- Updated dependencies [17a9e75]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [a843e27]
+- Updated dependencies [45e1c93]
+- Updated dependencies [0a4580c]
+- Updated dependencies [03ee407]
+- Updated dependencies [6fd1079]
+- Updated dependencies [2d585c2]
+- Updated dependencies [0166448]
+- Updated dependencies [f86f10e]
+- Updated dependencies [80c25fe]
+- Updated dependencies [5970ed3]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [1a06754]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [4fe25ee]
+- Updated dependencies [f175a2d]
+- Updated dependencies [a9793bf]
+- Updated dependencies [2cebedc]
+- Updated dependencies [7da5d17]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [4be51c3]
+- Updated dependencies [f299590]
+- Updated dependencies [ca2a4a8]
+- Updated dependencies [02254b0]
+- Updated dependencies [8bd7730]
+- Updated dependencies [b159f41]
+- Updated dependencies [97de470]
+- Updated dependencies [3b37cd1]
+- Updated dependencies [bdb73fb]
+- Updated dependencies [39f6b21]
+- Updated dependencies [13486b1]
+- Updated dependencies [2c9d3c1]
+- Updated dependencies [1545eff]
+- Updated dependencies [d00cc85]
+- Updated dependencies [0a14251]
+- Updated dependencies [768db81]
+- Updated dependencies [e7ca5d7]
+- Updated dependencies [e1d537b]
+- Updated dependencies [1a0fff1]
+- Updated dependencies [c1c6cf4]
+- Updated dependencies [6f27147]
+- Updated dependencies [e67aa80]
+- Updated dependencies [df65316]
+- Updated dependencies [6191e3f]
+  - @dxos/echo@0.17.0
+  - @dxos/app-toolkit@0.17.0
+  - @dxos/app-graph@0.17.0
+  - @dxos/app-framework@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/react-ui-editor@0.17.0
+  - @dxos/plugin-space@0.17.0
+  - @dxos/react-ui-form@0.17.0
+  - @dxos/plugin-markdown@0.17.0
+  - @dxos/plugin-projects@0.17.0
+  - @dxos/plugin-deck@0.17.0
+  - @dxos/ui-editor@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/react-ui-syntax-highlighter@0.17.0
+  - @dxos/react-ui-list@0.17.0
+  - @dxos/plugin-studio@0.17.0
+  - @dxos/plugin-client@0.17.0
+  - @dxos/react-ui-menu@0.17.0
+  - @dxos/echo-doc@0.17.0
+  - @dxos/echo-react@0.17.0
+  - @dxos/plugin-file@0.17.0
+  - @dxos/schema@0.17.0
+  - @dxos/react-ui-attention@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/react-hooks@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/errors@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

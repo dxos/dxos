@@ -1,5 +1,19 @@
 # @dxos/echo-protocol
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [3aef671]
+- Updated dependencies [ece15ab]
+- Updated dependencies [768db81]
+  - @dxos/keys@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/crypto@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

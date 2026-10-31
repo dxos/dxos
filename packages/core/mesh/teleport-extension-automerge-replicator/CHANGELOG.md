@@ -1,5 +1,22 @@
 # @dxos/teleport-extension-automerge-replicator
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [3aef671]
+- Updated dependencies [ece15ab]
+- Updated dependencies [768db81]
+- Updated dependencies [e50d1e5]
+  - @dxos/keys@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/rpc@0.17.0
+  - @dxos/teleport@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/node-std@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

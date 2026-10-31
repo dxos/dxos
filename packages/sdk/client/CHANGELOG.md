@@ -1,5 +1,87 @@
 # @dxos/client
 
+## 0.17.0
+
+### Minor Changes
+
+- 782ee41: Add `ClientOptions.bootCache`: the client opens from the identity, spaces and working set its last session persisted to IndexedDB instead of waiting for its services, which bring it current once reachable; edits made before then stay pending until the services take them. Databases gain `exportWorkingSet` / `seedWorkingSet`, and `Client.waitUntilServicesOpen` resolves once the services are open.
+- d7dc2fc: `Client` names its two readiness signals: `initialized` / `waitUntilInitialized()` mean the client is ready to use, which a boot-cached client reaches from its cache, while the new `servicesReady` / `waitUntilServicesReady()` mean its services are open and answering, and reject when cached services fail to open or the client is destroyed first. Each marks a milestone (`client.ready`, `client.services-ready`). Breaking: `waitUntilServicesOpen()` is removed in favour of `waitUntilServicesReady()`.
+- 97de470: A space can now be migrated off its hypercore control feed onto an Automerge space root that EDGE mints, with `space.internal.migrateSpaceRoot()` or the new "Credential storage → Migrate" button in Composer's space settings. Every other member adopts that same root the next time it opens the space, and `space.internal.data.spaceRootUrl` reports the root a device has adopted. `EdgeHttpClient` gains `migrateSpaceRoot` and `getSpaceRoot`.
+
+### Patch Changes
+
+- 04d5fb1: The agent debug port backs off to a 30s retry while no debug server is listening, so an idle port no longer floods the console with refused connections. The create-routine dialog keeps the dialog's surface and labels its Actions and Triggers groups like the other fields.
+- Updated dependencies [d65fd2a]
+- Updated dependencies [6f6547f]
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [1924a44]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [b2d8572]
+- Updated dependencies [68d1c38]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [9bcc167]
+- Updated dependencies [a245692]
+- Updated dependencies [3aef671]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [853af68]
+- Updated dependencies [ece15ab]
+- Updated dependencies [074e3e6]
+- Updated dependencies [3eefd80]
+- Updated dependencies [0d3e4cf]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [5ae589b]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [f175a2d]
+- Updated dependencies [de25be8]
+- Updated dependencies [2cebedc]
+- Updated dependencies [f299590]
+- Updated dependencies [b159f41]
+- Updated dependencies [ad3d5e0]
+- Updated dependencies [768db81]
+- Updated dependencies [e50d1e5]
+- Updated dependencies [df65316]
+- Updated dependencies [9caabb2]
+  - @dxos/edge-client@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/context@0.17.0
+  - @dxos/echo-client@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/compute-runtime@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/client-protocol@0.17.0
+  - @dxos/client-services@0.17.0
+  - @dxos/sql-sqlite@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/worker-framework@0.17.0
+  - @dxos/messaging@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/tracing@0.17.0
+  - @dxos/credentials@0.17.0
+  - @dxos/network-manager@0.17.0
+  - @dxos/rpc@0.17.0
+  - @dxos/timeframe@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/blob@0.17.0
+  - @dxos/echo-protocol@0.17.0
+  - @dxos/websocket-rpc@0.17.0
+  - @dxos/config@0.17.0
+  - @dxos/rpc-tunnel@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/debug@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/node-std@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

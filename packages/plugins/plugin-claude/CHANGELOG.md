@@ -1,5 +1,142 @@
 # @dxos/plugin-claude
 
+## 0.17.0
+
+### Minor Changes
+
+- f55e992: GitHub and Linear connections now give the assistant their MCP server's tools, acting as whoever the connection signs in as, and any other MCP server can be added as a Custom MCP Server connection. Each chat can turn a connection's MCP server off, and the agent can add one with the Skill Manager. The Browser and DXOS Introspect servers are built in: plugins contribute them (`AppCapabilities.McpServer`), they live in the registry rather than a space, and each chat turns them on as its skills need them. A chat in code mode calls its connections' MCP tools from its code, and Claude Code gets the chat's connections too, with each credential kept in Composer.
+
+  Breaking:
+
+  - `Connection.accessToken` is optional, so code reading it must handle a connection with no credential (`Connection.getAccessToken` asserts one).
+  - `Skill.mcpServers` is removed: a skill carries instructions and tools, and its servers come from connections.
+  - An MCP server's tools are offered to the agent as `mcp__<connection>__<tool>` (for example `mcp__weather__get_weather`), as other MCP hosts name them; instructions that name a tool by its bare name should name the prefixed one.
+  - The `McpServer` ECHO type (`@dxos/compute/McpServer`) is removed without a migration. Servers stored that way are no longer connected; add them again as Custom MCP Server connections.
+
+### Patch Changes
+
+- c229a28: Claude Code (cloud) now runs only with a Claude subscription OAuth token and is never lent an Anthropic API key; a space that holds only an API key lends no Claude credential.
+- Updated dependencies [d65fd2a]
+- Updated dependencies [5d280a1]
+- Updated dependencies [3f250b7]
+- Updated dependencies [fc5e071]
+- Updated dependencies [6f6547f]
+- Updated dependencies [f351e2b]
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [9cb96c7]
+- Updated dependencies [710da43]
+- Updated dependencies [df16fba]
+- Updated dependencies [e8029c3]
+- Updated dependencies [9d1d6f0]
+- Updated dependencies [f142d06]
+- Updated dependencies [1924a44]
+- Updated dependencies [782ee41]
+- Updated dependencies [d7dc2fc]
+- Updated dependencies [7b23f9f]
+- Updated dependencies [d105c19]
+- Updated dependencies [711e08a]
+- Updated dependencies [e343467]
+- Updated dependencies [04d5fb1]
+- Updated dependencies [9a3313a]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [9bcc167]
+- Updated dependencies [a245692]
+- Updated dependencies [9f97660]
+- Updated dependencies [3aef671]
+- Updated dependencies [f10c1dc]
+- Updated dependencies [13bc40d]
+- Updated dependencies [870af94]
+- Updated dependencies [a1c19cc]
+- Updated dependencies [59b9d5a]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [853af68]
+- Updated dependencies [2bba392]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [592fdad]
+- Updated dependencies [49df146]
+- Updated dependencies [a18cb35]
+- Updated dependencies [ece15ab]
+- Updated dependencies [c5d4212]
+- Updated dependencies [7d807f6]
+- Updated dependencies [074e3e6]
+- Updated dependencies [17a9e75]
+- Updated dependencies [2f4eb26]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [f55e992]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [85ec7e0]
+- Updated dependencies [a843e27]
+- Updated dependencies [45e1c93]
+- Updated dependencies [03ee407]
+- Updated dependencies [6fd1079]
+- Updated dependencies [2d585c2]
+- Updated dependencies [0166448]
+- Updated dependencies [f86f10e]
+- Updated dependencies [80c25fe]
+- Updated dependencies [5970ed3]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [4fe25ee]
+- Updated dependencies [f175a2d]
+- Updated dependencies [a9793bf]
+- Updated dependencies [ed0d367]
+- Updated dependencies [2cebedc]
+- Updated dependencies [7da5d17]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [f299590]
+- Updated dependencies [ca2a4a8]
+- Updated dependencies [02254b0]
+- Updated dependencies [8bd7730]
+- Updated dependencies [b159f41]
+- Updated dependencies [97de470]
+- Updated dependencies [3b37cd1]
+- Updated dependencies [13486b1]
+- Updated dependencies [2c9d3c1]
+- Updated dependencies [1545eff]
+- Updated dependencies [d00cc85]
+- Updated dependencies [0a14251]
+- Updated dependencies [768db81]
+- Updated dependencies [1a0fff1]
+- Updated dependencies [e67aa80]
+- Updated dependencies [df65316]
+- Updated dependencies [6191e3f]
+  - @dxos/edge-client@0.17.0
+  - @dxos/assistant@0.17.0
+  - @dxos/plugin-assistant@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/app-toolkit@0.17.0
+  - @dxos/app-framework@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/react-ui-form@0.17.0
+  - @dxos/client@0.17.0
+  - @dxos/plugin-projects@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/types@0.17.0
+  - @dxos/compute-runtime@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/link@0.17.0
+  - @dxos/plugin-client@0.17.0
+  - @dxos/edge-compute@0.17.0
+  - @dxos/plugin-connector@0.17.0
+  - @dxos/agent-runtime@0.17.0
+  - @dxos/mcp-server@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/mcp-client@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

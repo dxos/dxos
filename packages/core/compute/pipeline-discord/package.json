@@ -1,6 +1,6 @@
 {
   "name": "@dxos/pipeline-discord",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "Incremental chat-crawl pipeline: crawl → persist messages → extract facts → answer standing questions.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

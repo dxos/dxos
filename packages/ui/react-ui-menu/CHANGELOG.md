@@ -1,5 +1,47 @@
 # @dxos/react-ui-menu
 
+## 0.17.0
+
+### Minor Changes
+
+- e1d537b: `ActionToolbar` lays out start and end zones and multiple rows, and ends with an overflow menu (⋮) that takes collapsible groups as submenus while a row is too narrow. Items and groups say where they go with `placement` (`ToolbarPlacement` on `MenuItemChrome`). A plain named group renders inline in a toolbar and as a submenu in a menu; another component extends it with `MenuBuilder.extend(groupId, …)`, including the overflow menu (`TOOLBAR_OVERFLOW_ID`). `EditorToolbar` declares an insert group (`EDITOR_TOOLBAR_INSERT_GROUP`) and an overflow menu for consumers to extend. `Editor.ToolbarMenu` renders the same actions as a menu; in a menu the overflow group's items follow the others instead of nesting.
+
+  Breaking: `ActionToolbar` no longer takes `children` or `start`. Add hand-written controls as `custom` items (`MenuBuilder.custom`) and labels as `text` items (`MenuBuilder.text`); another component extends a toolbar through `customActions`, now a prop of `ActionToolbar` itself.
+
+  Presenter slides gain two layouts, `three-cols` (`::middle::`, `::right::`) and `two-by-two` (`::right::`, `::bottom-left::`, `::bottom-right::`); "Start next column" inserts the marker of the column after the cursor's.
+
+### Patch Changes
+
+- e7ca5d7: `ActionToolbar` measures overflow only when its items, collapse count or frame width change, and skips the read when nothing can collapse, so toolbars no longer force a layout on every render. `useWindow` reports the viewport from `Placement` instead of reading the DOM during render, and re-announces `onChange` when the viewport changes. `Placement` gains a read-only `viewport` getter.
+- 1a0fff1: Keep guided tours working on a narrow plank: a step pointing at a toolbar control now opens the overflow menu when the toolbar has folded that control away, and a step whose target never appears is stepped over rather than ending the tour.
+- Updated dependencies [caa28b3]
+- Updated dependencies [df16fba]
+- Updated dependencies [e343467]
+- Updated dependencies [9a3313a]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [17a9e75]
+- Updated dependencies [0166448]
+- Updated dependencies [f86f10e]
+- Updated dependencies [4fe25ee]
+- Updated dependencies [7da5d17]
+- Updated dependencies [ca2a4a8]
+- Updated dependencies [d00cc85]
+- Updated dependencies [1a0fff1]
+- Updated dependencies [e67aa80]
+  - @dxos/app-graph@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/ui-types@0.17.0
+  - @dxos/react-ui-attention@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/graph@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/react-focus@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

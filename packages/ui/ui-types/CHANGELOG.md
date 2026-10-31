@@ -1,5 +1,11 @@
 # @dxos/ui-types
 
+## 0.17.0
+
+### Patch Changes
+
+- 1a0fff1: Keep guided tours working on a narrow plank: a step pointing at a toolbar control now opens the overflow menu when the toolbar has folded that control away, and a step whose target never appears is stepped over rather than ending the tour.
+
 ## 0.16.0
 
 ## 0.15.0

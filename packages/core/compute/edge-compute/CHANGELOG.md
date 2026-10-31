@@ -1,5 +1,66 @@
 # @dxos/edge-compute
 
+## 0.17.0
+
+### Patch Changes
+
+- 768db81: A connection sync that starts on EDGE before the client's new connection or binding has replicated there now waits for it, instead of finishing with nothing synced until the next scheduled run. `Binding.loadReplicated` loads such an object with a short retry in the run, then runs the operation again; it gives up once the object is several minutes old. A force-run of a remote trigger now carries the fire event's `data` to EDGE, so the pressed binding is synced first there too.
+- Updated dependencies [d65fd2a]
+- Updated dependencies [6f6547f]
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [1924a44]
+- Updated dependencies [782ee41]
+- Updated dependencies [d7dc2fc]
+- Updated dependencies [04d5fb1]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [9bcc167]
+- Updated dependencies [a245692]
+- Updated dependencies [3aef671]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [853af68]
+- Updated dependencies [7ab1f89]
+- Updated dependencies [a18cb35]
+- Updated dependencies [ece15ab]
+- Updated dependencies [074e3e6]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [a843e27]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [f175a2d]
+- Updated dependencies [2cebedc]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [f299590]
+- Updated dependencies [b159f41]
+- Updated dependencies [97de470]
+- Updated dependencies [768db81]
+- Updated dependencies [df65316]
+  - @dxos/edge-client@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/client@0.17.0
+  - @dxos/context@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/compute-runtime@0.17.0
+  - @dxos/functions-runtime-cloudflare@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/crypto@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/node-std@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

@@ -1,5 +1,34 @@
 # @dxos/react-ui-rdf
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [df16fba]
+- Updated dependencies [e343467]
+- Updated dependencies [9a3313a]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [17a9e75]
+- Updated dependencies [0166448]
+- Updated dependencies [f86f10e]
+- Updated dependencies [4fe25ee]
+- Updated dependencies [c844016]
+- Updated dependencies [7da5d17]
+- Updated dependencies [ca2a4a8]
+- Updated dependencies [d00cc85]
+- Updated dependencies [1a0fff1]
+- Updated dependencies [c1c6cf4]
+- Updated dependencies [6f27147]
+- Updated dependencies [e67aa80]
+  - @dxos/react-ui@0.17.0
+  - @dxos/react-ui-list@0.17.0
+  - @dxos/react-ui-graph@0.17.0
+  - @dxos/ui-types@0.17.0
+  - @dxos/pipeline-rdf@0.17.0
+  - @dxos/ui-theme@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

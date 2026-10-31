@@ -1,5 +1,64 @@
 # @dxos/echo-client
 
+## 0.17.0
+
+### Patch Changes
+
+- b2d8572: Loading an object with a parent no longer reports it missing while the parent is still loading. A fresh client, such as each operation invocation on EDGE, could not load an object another invocation had just created until EDGE had indexed it: `Database.load` threw `EntityNotFoundError`.
+- 68d1c38: New documents now reach the host as Automerge bytes in `DataService.createDocument`'s new `initialDocument` field, so initial values holding `RawString` links or bytes are no longer rejected by the RPC transport. The JSON `initialValue` field is deprecated and logs a warning when a host receives it. A creation the transport refuses as invalid now fails once instead of retrying forever, and retried creations back off instead of re-sending every 250 ms.
+- 3eefd80: Index query hydration arms one timer per pass instead of one per 64-record chunk, so re-hydrating a large reactive result no longer repeatedly arms and clears timers on the main thread. Records that outrun the hydration budget are still reported as stalled.
+
+  Replying to a new comment while its thread is still being saved no longer deletes the thread. The reply now waits for the save to end and is then added to the thread.
+
+- 853663c: A malformed `echo:` reference no longer throws `Unsupported URI kind` when read: the resolver returns `undefined` and logs `malformed echo reference` once per URI. Decoding a reference envelope now rejects an `echo:` URI that does not parse, such as a full URI wrapped in `echo:///`, with `Invalid echo URI: <uri>`.
+- de25be8: `RepoClosedError` now says what stopped the repo proxy. Its `closeReason` context is the reason the closer gave, read from the `CLOSE_REASON_ATTRIBUTE` attribute of the `Context` passed to `close()` (`'closed'` when none is given), or `'error'` when an error put the proxy in its error state. Its `cause` is that error, or one whose stack is the `close()` call site. The proxy logs once when it stops: at info for a close that gave a reason or an error, at debug for a plain close. `EchoClient`, `DatabaseImpl` and `EntityManager` pass their close context down to the proxy.
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [3058ee6]
+- Updated dependencies [1924a44]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [9bcc167]
+- Updated dependencies [3aef671]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [2ed9310]
+- Updated dependencies [ece15ab]
+- Updated dependencies [074e3e6]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [b601d34]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [2cebedc]
+- Updated dependencies [f299590]
+- Updated dependencies [b159f41]
+- Updated dependencies [768db81]
+- Updated dependencies [e50d1e5]
+- Updated dependencies [df65316]
+  - @dxos/echo@0.17.0
+  - @dxos/echo-host@0.17.0
+  - @dxos/context@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/tracing@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/blob@0.17.0
+  - @dxos/echo-protocol@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/debug@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/node-std@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

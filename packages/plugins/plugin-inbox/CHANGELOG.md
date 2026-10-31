@@ -1,5 +1,161 @@
 # @dxos/plugin-inbox
 
+## 0.17.0
+
+### Minor Changes
+
+- 6ba7a88: Add `ExtractionModel` to `@dxos/ai`, a typed-field extraction service served by Cloudflare's Clairic (`Model.cloudflareClairic`), and use it with a decision model to triage an inbox in one action: each email gets labels and a priority band, and what it asks for becomes a task filed in a per-mailbox project and shown under the email. An agent assigned such a task replies through `InboxOperation.SendReply` only after the person allows it in the chat, where the request previews the reply (`Operation.ConsentPreviewAnnotation`); delegated agents now start from their tasks' and source objects' URIs, and code mode accepts an object where an operation expects a reference to it. `TagIndex.taggedIdsAtom` now updates on every write to a tag, not only the first.
+- c5d4212: Inbox triage moves into `@dxos/plugin-inbox` as `InboxOperation.TriageMailbox`, offered as **Triage inbox** in the mailbox menu, so labelling, priority and task extraction no longer need a separate plugin. Triage now extracts tasks from messages whose contacts or summaries were already extracted on sync; only a recorded task marks a message as done. `@dxos/plugin-assistant` serves Cloudflare's keyless models (Clef, Clef Flash and jev on Workers AI, the default decision model, and Clairic) through EDGE by default, so a signed-in user can triage without enabling the TypeSafe plugin, whose settings still take precedence when it is enabled.
+
+### Patch Changes
+
+- 7d807f6: **Triage inbox** and a message's magic-wand extractions (such as **Summary**) now show their progress in the mailbox's status bar under the email list, like sync and Analyze, and the bar clears when the run completes, fails or is cancelled.
+
+  Answering a permission request that nothing is waiting on any more now shows an error in the chat instead of doing nothing.
+
+  A reply the agent sends from a mailbox with no connected account now stays under the email as an unsent draft, and the error tells the agent it was saved but not sent.
+
+- 0910d74: Mail sync on EDGE no longer stalls at the 60s invocation deadline: a Gmail or JMAP sync run stops taking new messages after 40 seconds, saves its position, and continues in a follow-up run. Storybook dialogs and popovers now show translated text, and the assistant plugin's chat details surface loads on request.
+- de0606c: An opened message in a mailbox with no feed now shows expanded instead of staying collapsed while waiting for a thread that never resolves.
+- 8d7d5e1: A run that continues with `Operation.runAgain()` shows as one run instead of one per invocation. `Trace.Meta.runId` holds the pid of the run's first invocation, and the trigger dispatcher stamps it on every retry. The routine's run history lists the chain as one run whose status follows its latest invocation, and labels a yielded run "Continuing". The trace graph draws a continuing run as a branch with one commit per invocation, then one commit once it finishes, or once the span timeout passes without a continuation. The sync progress meter keeps one bar across every run: mail sync sizes the remaining backfill on each run (Gmail's `resultSizeEstimate`, JMAP's `calculateTotal`), the progress sink holds that total across the gap between runs, and the count is the messages each run keeps.
+- Updated dependencies [5d280a1]
+- Updated dependencies [3f250b7]
+- Updated dependencies [fc5e071]
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [9cb96c7]
+- Updated dependencies [caa28b3]
+- Updated dependencies [710da43]
+- Updated dependencies [df16fba]
+- Updated dependencies [e8029c3]
+- Updated dependencies [f142d06]
+- Updated dependencies [1924a44]
+- Updated dependencies [782ee41]
+- Updated dependencies [d7dc2fc]
+- Updated dependencies [d105c19]
+- Updated dependencies [e343467]
+- Updated dependencies [04d5fb1]
+- Updated dependencies [9a3313a]
+- Updated dependencies [034e231]
+- Updated dependencies [498840b]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [b2d8572]
+- Updated dependencies [68d1c38]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [9bcc167]
+- Updated dependencies [3aef671]
+- Updated dependencies [f10c1dc]
+- Updated dependencies [13bc40d]
+- Updated dependencies [59b9d5a]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [2bba392]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [592fdad]
+- Updated dependencies [49df146]
+- Updated dependencies [a18cb35]
+- Updated dependencies [6ba7a88]
+- Updated dependencies [074e3e6]
+- Updated dependencies [3eefd80]
+- Updated dependencies [17a9e75]
+- Updated dependencies [2f4eb26]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [a843e27]
+- Updated dependencies [45e1c93]
+- Updated dependencies [03ee407]
+- Updated dependencies [6fd1079]
+- Updated dependencies [2d585c2]
+- Updated dependencies [0166448]
+- Updated dependencies [f86f10e]
+- Updated dependencies [80c25fe]
+- Updated dependencies [5970ed3]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [1a06754]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [4fe25ee]
+- Updated dependencies [f175a2d]
+- Updated dependencies [a9793bf]
+- Updated dependencies [de25be8]
+- Updated dependencies [ed0d367]
+- Updated dependencies [2cebedc]
+- Updated dependencies [7da5d17]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [4be51c3]
+- Updated dependencies [f299590]
+- Updated dependencies [ca2a4a8]
+- Updated dependencies [02254b0]
+- Updated dependencies [b159f41]
+- Updated dependencies [97de470]
+- Updated dependencies [3b37cd1]
+- Updated dependencies [bdb73fb]
+- Updated dependencies [39f6b21]
+- Updated dependencies [d00cc85]
+- Updated dependencies [0a14251]
+- Updated dependencies [768db81]
+- Updated dependencies [e7ca5d7]
+- Updated dependencies [e1d537b]
+- Updated dependencies [1a0fff1]
+- Updated dependencies [e67aa80]
+- Updated dependencies [e50d1e5]
+- Updated dependencies [df65316]
+  - @dxos/assistant@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/app-toolkit@0.17.0
+  - @dxos/app-graph@0.17.0
+  - @dxos/app-framework@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/react-ui-editor@0.17.0
+  - @dxos/plugin-space@0.17.0
+  - @dxos/react-ui-form@0.17.0
+  - @dxos/plugin-markdown@0.17.0
+  - @dxos/client@0.17.0
+  - @dxos/plugin-routine@0.17.0
+  - @dxos/ai@0.17.0
+  - @dxos/ui-editor@0.17.0
+  - @dxos/echo-client@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/types@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/link@0.17.0
+  - @dxos/plugin-client@0.17.0
+  - @dxos/plugin-connector@0.17.0
+  - @dxos/react-ui-menu@0.17.0
+  - @dxos/ui-types@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/extractor@0.17.0
+  - @dxos/extractor-lib@0.17.0
+  - @dxos/pipeline-email@0.17.0
+  - @dxos/echo-doc@0.17.0
+  - @dxos/echo-query@0.17.0
+  - @dxos/echo-react@0.17.0
+  - @dxos/schema@0.17.0
+  - @dxos/react-ui-card@0.17.0
+  - @dxos/react-ui-mosaic@0.17.0
+  - @dxos/react-ui-query@0.17.0
+  - @dxos/react-ui-search@0.17.0
+  - @dxos/plugin-graph@0.17.0
+  - @dxos/plugin-settings@0.17.0
+  - @dxos/react-ui-attention@0.17.0
+  - @dxos/react-ui-calendar@0.17.0
+  - @dxos/react-ui-components@0.17.0
+  - @dxos/react-ui-html@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/graph@0.17.0
+  - @dxos/react-hooks@0.17.0
+  - @dxos/pipeline@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/markdown@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

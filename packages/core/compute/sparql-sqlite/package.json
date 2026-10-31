@@ -1,6 +1,6 @@
 {
   "name": "@dxos/sparql-sqlite",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "SPARQL 1.1 engine that compiles each query to a single SQLite statement over an interned quad store (Durable Object SQLite or node:sqlite).",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

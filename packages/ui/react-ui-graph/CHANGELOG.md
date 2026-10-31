@@ -1,5 +1,34 @@
 # @dxos/react-ui-graph
 
+## 0.17.0
+
+### Patch Changes
+
+- c844016: The SVG graph renderer stays near 60 fps up to about 1000 nodes (previously about 500): straight edges render as `<line>`/`<polyline>` elements with drawn-in arrowheads instead of markers, and per-tick updates skip unchanged elements. Subgraph hulls follow their nodes again, and tree layouts keep their default styling when given a partial `slots` object. The explorer gains a type panel that shows or hides each object type, and its swarm view no longer draws links or opens hover cards. Opening an older message in the inbox no longer expands it briefly and folds it again; only the conversation's latest message opens.
+- Updated dependencies [df16fba]
+- Updated dependencies [e343467]
+- Updated dependencies [9a3313a]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [17a9e75]
+- Updated dependencies [0166448]
+- Updated dependencies [f86f10e]
+- Updated dependencies [4fe25ee]
+- Updated dependencies [7da5d17]
+- Updated dependencies [ca2a4a8]
+- Updated dependencies [d00cc85]
+- Updated dependencies [e67aa80]
+- Updated dependencies [e50d1e5]
+  - @dxos/react-ui@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/graph@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/debug@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/node-std@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

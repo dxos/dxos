@@ -1,5 +1,57 @@
 # @dxos/plugin-map-solid
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [9cb96c7]
+- Updated dependencies [710da43]
+- Updated dependencies [e8029c3]
+- Updated dependencies [f142d06]
+- Updated dependencies [1924a44]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [9bcc167]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [49df146]
+- Updated dependencies [074e3e6]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [45e1c93]
+- Updated dependencies [03ee407]
+- Updated dependencies [6fd1079]
+- Updated dependencies [2d585c2]
+- Updated dependencies [80c25fe]
+- Updated dependencies [5970ed3]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [f175a2d]
+- Updated dependencies [2cebedc]
+- Updated dependencies [f299590]
+- Updated dependencies [02254b0]
+- Updated dependencies [b159f41]
+- Updated dependencies [3b37cd1]
+- Updated dependencies [0a14251]
+- Updated dependencies [1a0fff1]
+- Updated dependencies [df65316]
+  - @dxos/echo@0.17.0
+  - @dxos/app-toolkit@0.17.0
+  - @dxos/app-framework@0.17.0
+  - @dxos/plugin-map@0.17.0
+  - @dxos/echo-solid@0.17.0
+  - @dxos/schema@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/solid-ui-geo@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

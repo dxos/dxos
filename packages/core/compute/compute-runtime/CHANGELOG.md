@@ -1,5 +1,67 @@
 # @dxos/compute-runtime
 
+## 0.17.0
+
+### Patch Changes
+
+- 853af68: `wrapFunctionHandler` now flushes ECHO writes when an operation exits with `Operation.runAgain()`, as it does on success. Before, a run that wrote a checkpoint and then asked to run again could lose those writes.
+- f175a2d: An EDGE run's progress meter now takes over from the pending meter a sync button starts, instead of timing out with "sync reported no progress". The remote trace subscription ignores messages that are not trace broadcasts and skips a payload that does not decode, where either used to end it for the session. Progress broadcasts may arrive in any order: a run's count no longer moves back, and an update from the same run that lands within 10 s after its terminal no longer reopens its meter.
+- Updated dependencies [d65fd2a]
+- Updated dependencies [6f6547f]
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [1924a44]
+- Updated dependencies [034e231]
+- Updated dependencies [498840b]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [b2d8572]
+- Updated dependencies [68d1c38]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [9bcc167]
+- Updated dependencies [a245692]
+- Updated dependencies [3aef671]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [a18cb35]
+- Updated dependencies [ece15ab]
+- Updated dependencies [6ba7a88]
+- Updated dependencies [074e3e6]
+- Updated dependencies [3eefd80]
+- Updated dependencies [2f4eb26]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [a843e27]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [de25be8]
+- Updated dependencies [2cebedc]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [f299590]
+- Updated dependencies [b159f41]
+- Updated dependencies [768db81]
+- Updated dependencies [df65316]
+  - @dxos/edge-client@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/context@0.17.0
+  - @dxos/ai@0.17.0
+  - @dxos/echo-client@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/link@0.17.0
+  - @dxos/operation@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/blob@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

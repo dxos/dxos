@@ -1,5 +1,136 @@
 # @dxos/plugin-review
 
+## 0.17.0
+
+### Minor Changes
+
+- 7da5d17: Comment threads now keep their messages in a feed the thread owns (`Thread` 0.3.0: `feed` replaces `messages`; a migration moves existing threads), and the assistant answers them: plugin-assistant contributes `AppCapabilities.CommentAgentRunner`, which runs each turn in a hidden chat on the thread's feed with the commented object bound, so comments on a diagram, a sheet or a document get that type's skills. While a turn runs the thread shows a pending reply, an agent edit keeps the comment anchored to the edited text, and `@`-mentions complete and render as pills in the mentioned actor's colour. plugin-review's own LLM runner is removed, `Chat.feed` can run on a feed another object owns, and `CreateChat` accepts an existing `feed`. The "Comment agent mode" setting (`off` | `auto` | `mention`, default `mention`) moves from plugin-markdown to plugin-review, applies to every subject, and appears under Plugin Settings. The plugin registry's search filter also matches a plugin's description. `Typography.Timestamp` gains `variant='relative'` (relative within two days, then the date), with `formatRelative` and `useRelativeTime`; comment threads, assistant messages, notifications and pull requests now share it.
+
+### Patch Changes
+
+- 0590c11: New Demo space template: sixteen chess games at every stage, a world map of every Cloudflare data centre with a globe tour from Los Angeles to Sydney, a voxel creeper, a voxel town, and a spacetime scene of three race cars and a fire truck. `@dxos/plugin-spacetime` is now public, with a `SpacetimePresets` entry that builds a preset model (fire truck, race car, taxi) as a stored mesh. A game now has an optional `description`, which chess keeps set to the current FEN so tables and cards show each position; chess cards draw their board full width again, and the move list drops its focus ring. A map's `coordinates` are its globe tour route; the globe gets a light street-map palette, small dark-blue markers, a red tour route and a margin at rest, and flat-map pins shrink to 60%. The DXOS Architecture template's metrics sheet gains a pie of the busiest plugins' PR share. Refs to the same object from different clients in one page no longer share a cached atom, so each client resolves a ref through its own database (previously every client's editor bound to whichever client loaded the object first). Replicated comments now show up on every peer: the editor retries an anchor whose cursor cites edits not yet received, and comment sync re-reads anchors when a thread arrives after its anchor. Many clients editing one document replicate much faster: sync no longer rebuilds Automerge changes on every message to check a peer's initial heads (patched `@automerge/automerge-repo`), and a query from objects to typed relations on them (`select(...).targetOf(Type)`, as comment threads use) re-runs only when those objects, relations of that type, or the relations' endpoints change, rather than on every write in the space. A masonry grid now has the same gap on all four sides: inside a padded `Masonry.Content` it adds the gap above and below as well as at the sides, and a non-scrolling grid (`scroll={false}`) adds none, leaving the perimeter to its host. Padding of `p-3` is now the equivalent `p-trim-md` token. A toolbar now insets both ends by the same gap, whether the edge item is a labelled control or an icon-only button, plugin-theme registers the menu translations so the overflow button reads "More", and a project's pipeline toggle reads "Hide pipeline" while the chart is shown.
+- 3eefd80: Index query hydration arms one timer per pass instead of one per 64-record chunk, so re-hydrating a large reactive result no longer repeatedly arms and clears timers on the main thread. Records that outrun the hydration budget are still reported as stalled.
+
+  Replying to a new comment while its thread is still being saved no longer deletes the thread. The reply now waits for the save to end and is then added to the thread.
+
+- 1a0fff1: Keep guided tours working on a narrow plank: a step pointing at a toolbar control now opens the overflow menu when the toolbar has folded that control away, and a step whose target never appears is stepped over rather than ending the tour.
+- Updated dependencies [5d280a1]
+- Updated dependencies [3f250b7]
+- Updated dependencies [fc5e071]
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [9cb96c7]
+- Updated dependencies [caa28b3]
+- Updated dependencies [710da43]
+- Updated dependencies [df16fba]
+- Updated dependencies [e8029c3]
+- Updated dependencies [f142d06]
+- Updated dependencies [1924a44]
+- Updated dependencies [d105c19]
+- Updated dependencies [e343467]
+- Updated dependencies [9a3313a]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [b2d8572]
+- Updated dependencies [68d1c38]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [9bcc167]
+- Updated dependencies [3aef671]
+- Updated dependencies [f10c1dc]
+- Updated dependencies [13bc40d]
+- Updated dependencies [59b9d5a]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [2bba392]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [592fdad]
+- Updated dependencies [49df146]
+- Updated dependencies [a18cb35]
+- Updated dependencies [ece15ab]
+- Updated dependencies [074e3e6]
+- Updated dependencies [3eefd80]
+- Updated dependencies [17a9e75]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [a843e27]
+- Updated dependencies [45e1c93]
+- Updated dependencies [03ee407]
+- Updated dependencies [6fd1079]
+- Updated dependencies [2d585c2]
+- Updated dependencies [0166448]
+- Updated dependencies [f86f10e]
+- Updated dependencies [80c25fe]
+- Updated dependencies [5970ed3]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [1a06754]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [4fe25ee]
+- Updated dependencies [f175a2d]
+- Updated dependencies [a9793bf]
+- Updated dependencies [de25be8]
+- Updated dependencies [ed0d367]
+- Updated dependencies [2cebedc]
+- Updated dependencies [7da5d17]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [4be51c3]
+- Updated dependencies [f299590]
+- Updated dependencies [ca2a4a8]
+- Updated dependencies [02254b0]
+- Updated dependencies [b159f41]
+- Updated dependencies [97de470]
+- Updated dependencies [3b37cd1]
+- Updated dependencies [bdb73fb]
+- Updated dependencies [39f6b21]
+- Updated dependencies [d00cc85]
+- Updated dependencies [0a14251]
+- Updated dependencies [768db81]
+- Updated dependencies [1a0fff1]
+- Updated dependencies [e67aa80]
+- Updated dependencies [df65316]
+  - @dxos/assistant@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/app-toolkit@0.17.0
+  - @dxos/app-graph@0.17.0
+  - @dxos/app-framework@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/react-ui-editor@0.17.0
+  - @dxos/plugin-space@0.17.0
+  - @dxos/react-ui-form@0.17.0
+  - @dxos/plugin-markdown@0.17.0
+  - @dxos/ui-editor@0.17.0
+  - @dxos/echo-client@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/types@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/plugin-client@0.17.0
+  - @dxos/operation@0.17.0
+  - @dxos/echo-doc@0.17.0
+  - @dxos/echo-react@0.17.0
+  - @dxos/react-client@0.17.0
+  - @dxos/schema@0.17.0
+  - @dxos/versioning@0.17.0
+  - @dxos/react-ui-thread@0.17.0
+  - @dxos/react-ui-trace@0.17.0
+  - @dxos/plugin-attention@0.17.0
+  - @dxos/plugin-observability@0.17.0
+  - @dxos/react-ui-attention@0.17.0
+  - @dxos/halo-adapter-client@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/display-name@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/halo@0.17.0
+  - @dxos/halo-react@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

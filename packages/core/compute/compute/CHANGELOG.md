@@ -1,5 +1,58 @@
 # @dxos/compute
 
+## 0.17.0
+
+### Minor Changes
+
+- a18cb35: Lifecycle hooks are plugin capabilities (`AppCapabilities.HookDefinition`) instead of skill fields, and `Hook.SettingsAnnotation` on a space's properties or an agent's instructions turns each plugin's hooks on or off; space settings get an Assistant panel with one toggle per plugin. Breaking: `Skill.hooks`, `Skill.Hook`, `Skill.HookSpec`, `@dxos/assistant/SkillHooks` and the `begin-request` hook event are removed.
+- a843e27: Add opt-in operation permissions. `@dxos/permission` is the permission DSL and its pure evaluator, with the design document: principals (any URI), subjects, commands with prefix coverage, UCAN-style policies, permissions, requirements, content-addressed grants with attenuation, revocation, consent, and `Check.check` over a `GrantSource`; `Guard` turns a principal and its grants into a process guard. In `@dxos/compute`, an operation can declare requirements (`Operation.RequiresAnnotation`, set with `Guard.requires`), and a process can be spawned with a `Process.Guard` (`SpawnOptions.guard`) that its children, detached ones included, inherit and can only narrow. An operation that declares requirements is refused with `OperationDeniedError` unless the invoking process's guard admits it; operations that declare none are never checked. `AgentService.GetSessionOptions.guard` spawns an agent session under a guard, so the agent's tool calls are checked. Guards are not persisted and are not yet sent to EDGE.
+- 8d7d5e1: A run that continues with `Operation.runAgain()` shows as one run instead of one per invocation. `Trace.Meta.runId` holds the pid of the run's first invocation, and the trigger dispatcher stamps it on every retry. The routine's run history lists the chain as one run whose status follows its latest invocation, and labels a yielded run "Continuing". The trace graph draws a continuing run as a branch with one commit per invocation, then one commit once it finishes, or once the span timeout passes without a continuation. The sync progress meter keeps one bar across every run: mail sync sizes the remaining backfill on each run (Gmail's `resultSizeEstimate`, JMAP's `calculateTotal`), the progress sink holds that total across the gap between runs, and the count is the messages each run keeps.
+
+### Patch Changes
+
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [1924a44]
+- Updated dependencies [498840b]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [9bcc167]
+- Updated dependencies [3aef671]
+- Updated dependencies [59b9d5a]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [2bba392]
+- Updated dependencies [592fdad]
+- Updated dependencies [ece15ab]
+- Updated dependencies [6ba7a88]
+- Updated dependencies [074e3e6]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [ed0d367]
+- Updated dependencies [2cebedc]
+- Updated dependencies [f299590]
+- Updated dependencies [b159f41]
+- Updated dependencies [768db81]
+- Updated dependencies [df65316]
+  - @dxos/echo@0.17.0
+  - @dxos/ai@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/types@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/schema@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/vendor-kbn-handlebars@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

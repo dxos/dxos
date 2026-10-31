@@ -1,5 +1,36 @@
 # @dxos/edge-client
 
+## 0.17.0
+
+### Minor Changes
+
+- d65fd2a: An agent's admins keep their rights once EDGE checks them against the `IdentityAdmin` credentials the agent issues: an admin's Composer asks EDGE to make each member who can edit the agent's space one of its admins. Admins are only added; a member made a reader or removed stays an admin. `EdgeHttpClient` gains `getBrain` and `addBrainAdmin` for these calls.
+- 6f6547f: DevTools has an Agent › HALO page: pick one of the agents you administer to see its identity, its admins, the spaces it is in and every credential in its HALO, read from EDGE with the new `EdgeHttpClient.getAgentHalo`. EDGE answers the agent's admins only. `@dxos/devtools` exports the page as `AgentHaloArticle` and the credentials table it shares with HALO › Credentials as `CredentialsTable`, which now leads with the credential's type and shows its id and issuer as hex rather than `[object Object]`. `JsonView` renders buf public keys and bigint timestamps, so a selected credential's details no longer fail with "Do not know how to serialize a BigInt".
+- a245692: `EdgeHttpClient` gains named methods for the agent routes plugin-agent called by path: `provisionBrain`, `addBrainSpace`, `claimMailbox`, `releaseMailbox`, `getMailbox` and `sendMailboxEmail`. plugin-agent now calls those methods instead of building the paths and response schemas itself.
+
+### Patch Changes
+
+- 768db81: A connection sync that starts on EDGE before the client's new connection or binding has replicated there now waits for it, instead of finishing with nothing synced until the next scheduled run. `Binding.loadReplicated` loads such an object with a short retry in the run, then runs the operation again; it gives up once the object is several minutes old. A force-run of a remote trigger now carries the fire event's `data` to EDGE, so the pressed binding is synced first there too.
+- Updated dependencies [034e231]
+- Updated dependencies [3aef671]
+- Updated dependencies [ece15ab]
+- Updated dependencies [768db81]
+- Updated dependencies [e50d1e5]
+  - @dxos/context@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/tracing@0.17.0
+  - @dxos/credentials@0.17.0
+  - @dxos/crypto@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/keyring@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/node-std@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

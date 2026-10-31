@@ -1,5 +1,14 @@
 # @dxos/teleport-e2e
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [e50d1e5]
+  - @dxos/async@0.17.0
+  - @dxos/teleport@0.17.0
+  - @dxos/log@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

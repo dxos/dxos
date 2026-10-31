@@ -1,5 +1,52 @@
 # @dxos/ai
 
+## 0.17.0
+
+### Minor Changes
+
+- 498840b: `Model.defaultDecisionModel` now resolves to Cloudflare's Clef on Workers AI when no default is configured: `TypeSafeResolver.make` falls back to `Model.cloudflareClef` when it has a Workers AI route (jev on TypeSafe otherwise), and the TypeSafe plugin's **Default decision model** setting does the same when unset. Clef answers through EDGE on its own Cloudflare account, so every signed-in user gets a decision with no key connected.
+- 6ba7a88: Add `ExtractionModel` to `@dxos/ai`, a typed-field extraction service served by Cloudflare's Clairic (`Model.cloudflareClairic`), and use it with a decision model to triage an inbox in one action: each email gets labels and a priority band, and what it asks for becomes a task filed in a per-mailbox project and shown under the email. An agent assigned such a task replies through `InboxOperation.SendReply` only after the person allows it in the chat, where the request previews the reply (`Operation.ConsentPreviewAnnotation`); delegated agents now start from their tasks' and source objects' URIs, and code mode accepts an object where an operation expects a reference to it. `TagIndex.taggedIdsAtom` now updates on every write to a tag, not only the first.
+
+### Patch Changes
+
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [1924a44]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [9bcc167]
+- Updated dependencies [3aef671]
+- Updated dependencies [59b9d5a]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [2bba392]
+- Updated dependencies [592fdad]
+- Updated dependencies [074e3e6]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [ed0d367]
+- Updated dependencies [2cebedc]
+- Updated dependencies [f299590]
+- Updated dependencies [b159f41]
+- Updated dependencies [768db81]
+- Updated dependencies [df65316]
+  - @dxos/echo@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/types@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/node-std@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

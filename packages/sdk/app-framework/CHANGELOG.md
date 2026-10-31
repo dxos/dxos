@@ -1,5 +1,83 @@
 # @dxos/app-framework
 
+## 0.17.0
+
+### Minor Changes
+
+- e8029c3: Canvas undo and redo patch the store instead of restoring snapshots. Every edit is a commit of a `CanvasHistory` that records the store's heads before and after and the paths it wrote; undo writes a path back only while nobody has changed it since, and returns the view to the View path and selection the edit was made in. `Canvas.Root` takes `history` (from `useCanvasHistory`, or a `CreateHistory`); without one the canvas keeps a local history, so ⌘Z, ⇧⌘Z and the toolbar work standalone. Breaking: `Projection.snapshot`/`restore`, `withUndo`, `recordViews`, `recordStoreStep` and `CanvasAtoms.undo` are removed; a projection with a model of its own exposes it as `model` (a `VersionedSource`) and may implement `restored()`, and `useViewProjection` now takes `history`. `ViewStore.versions`, `VersionedSource`, `recordChanges` and `patchSource` are exported from `headless`.
+
+  In plugin-canvas, a canvas in Composer records its edits on the app's `HistoryTracker` as `CanvasOperation.Patch`, scoped to the canvas, and agents can edit a canvas with `CanvasOperation.Apply` (intents); both are undoable, and `Apply` refuses a malformed intent (`isIntent`, exported from `headless`) or a canvas with no version history before it writes. The ECHO-backed store reads its past through Automerge heads. In app-framework, `UndoMapping` gains `merge` (fold merged invocations into one forward and re-derive the inverse) and `toast` (false records an entry without the deck's undo toast).
+
+  Drawing conversion copies by default: `DrawingOperation.Convert` writes a new drawing beside the source (`replace: true` converts in place, as drawing.sh does) and names it in its output, and Composer's menu offers "Copy as …" for each variant, opening the copy. A plugin can register an `IllustratorCapabilities.Converter` for a pair of variants, which `Convert` uses over the generic scene replay (`IllustratorModel.convertByScene`). plugin-canvas registers one for tldraw to canvas that converts a DSL-managed drawing generically and maps a hand-drawn one shape by shape; breaking: `CanvasOperation.ImportTldraw` and its "Copy as canvas" action are removed in its favour.
+
+  The canvas's Snap and Lattice toggles move to the bottom-right bar beside the grid and guides, and the centre action bar hides on a canvas too narrow for it. A link's `style.fontSize` sets its caption's size (unset is `LINK_FONT_SIZE`, 14), and a caption on a straight sloped line is shortened only when it does not fit the line's run. A rounded regular polygon rounds its corners by the look's rounded radius; a `NodeDef.silhouette` is given that radius in px. A polygon's `params.fit` sets how it sits in its frame: `frame` (the default) fills the frame, `circle` puts its vertices on the circle that fits it; `polygonPath` takes an options bag. The bottom-right bar ends with the theme picker. A form field override can control a nested group's `open` state (`onOpenChange`); the canvas properties panel takes `groups`, and plugin-canvas keeps which groups are open in its view state. Breaking: `ThemePanel` is renamed `DisplayPanel`. Breaking: a polygon's `sides` and `fit` and a cloud's `bumps` move into the node's `params` (`PolygonParams`, `CloudParams`), shown as the type's own group in the properties panel; stored drawings read in the new shape through `withLegacyParams`.
+
+- 49df146: `HistoryTracker` adds redo, per-scope undo and redo (`undo(scope)`, `canRedo(scope)`), `transaction(label, effect)` to record several invocations as one entry, merging of consecutive edits within a configurable window, and an `applied` stream that carries each entry's caller context. `UndoMapping.make` takes optional `scope`, `mergeKey` and `context` functions. Unscoped `undo`, `canUndo` and `undoPromise` behave as before.
+- 45e1c93: Every plugin is now defined in its package-root `dx.config.ts` with `Plugin.config`, whose module bodies are marked `import('./x.ts', { with: { type: 'module-url' } })`; an app built with `pluginConfigPlugin` boots from each plugin's metadata and loads its module manifest when the plugin is enabled. Breaking: a plugin's `./<X>Plugin` export now carries `{ meta, make }` (call `XPlugin.make()`), the `#plugin`/`#capabilities` imports, the `dx-plugin` CLI and the generated capability barrels are removed, and module `props` mappers and inline modules are rejected by the build.
+- 6fd1079: Plugins are now hot-replaceable in the Vite dev server: add `hotModulesPlugin()` from `@dxos/app-framework/vite-plugin`. Editing a capability module (the file a `Capability.lazyModule` loader imports), or a file only it imports, re-runs that module in the running app instead of reloading the page; active modules that require a singleton capability it provides re-run too. Editing a plugin's definition (the file `Plugin.lazy` loads), or its module specs, re-creates that plugin in place. `PluginManager.reload(moduleIds)` and `PluginManager.reloadPlugin(id)` do the work and are usable on their own.
+- 2d585c2: Add the `Presentation` type, an ordered deck of owned markdown slides and linked objects that the navtree shows as a reorderable folder; collection decks and the `./Settings` and `./PresenterCapabilities` exports of `@dxos/plugin-presenter` are removed. `@dxos/app-framework` exports `Surface.matchCandidates`, and `@dxos/app-toolkit` adds `AppAnnotation.ContainerAnnotation` (an object's node lists one of its ref arrays) and `ContainerModel.isRemovable`: members a container marked `deleteOwned` owns get no remove action and are deleted only with it.
+
+### Patch Changes
+
+- 710da43: The boot-loader Vite plugin no longer fails every `index.html` request for the rest of a dev-server session after one esbuild spawn error (such as `spawn EBADF`); it retries on the next request, and compiles the loader when the server starts.
+- 03ee407: `dx-plugin gen` writes generated barrels and `package.json` through a rename and only when they change, so parallel `gen-modules` tasks no longer read a half-written manifest and fail with `Unexpected end of JSON input`.
+- Updated dependencies [d65fd2a]
+- Updated dependencies [6f6547f]
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [1924a44]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [9bcc167]
+- Updated dependencies [a245692]
+- Updated dependencies [3aef671]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [853af68]
+- Updated dependencies [a18cb35]
+- Updated dependencies [ece15ab]
+- Updated dependencies [074e3e6]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [a843e27]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [f175a2d]
+- Updated dependencies [2cebedc]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [f299590]
+- Updated dependencies [b159f41]
+- Updated dependencies [768db81]
+- Updated dependencies [e50d1e5]
+- Updated dependencies [df65316]
+  - @dxos/edge-client@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/context@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/compute-runtime@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/operation@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/graph@0.17.0
+  - @dxos/react-error-boundary@0.17.0
+  - @dxos/react-hooks@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/debug@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/web-context@0.17.0
+  - @dxos/web-context-react@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

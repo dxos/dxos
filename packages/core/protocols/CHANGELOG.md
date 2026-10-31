@@ -1,5 +1,26 @@
 # @dxos/protocols
 
+## 0.17.0
+
+### Minor Changes
+
+- ece15ab: Add the `IdentityAdmin` credential: an identity makes another identity its admin, one admin per credential, and keeps the grant in its HALO. `createIdentityAdminCredential` issues one, and `verifyIdentityAdmin` checks that the administered identity signed it.
+
+### Patch Changes
+
+- Updated dependencies [034e231]
+- Updated dependencies [3aef671]
+- Updated dependencies [768db81]
+- Updated dependencies [e50d1e5]
+  - @dxos/context@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/timeframe@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes
