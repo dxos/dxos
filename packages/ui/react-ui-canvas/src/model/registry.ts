@@ -14,9 +14,9 @@
 //
 
 import type * as Schema from 'effect/Schema';
-import { type ComponentType } from 'react';
+import type { ComponentType } from 'react';
 
-import { type FormFieldMap } from '@dxos/react-ui-form';
+import type { FormFieldMap } from '@dxos/react-ui-form';
 import { type LinkType, type Node, type NodeBase, type NodeType, type Point, type Port, type Size } from '@dxos/scene';
 
 import { type PartEditing, type PartField } from '../utils/index.ts';

@@ -14,6 +14,7 @@ export * from './model/sample.ts';
 export * from './model/style-set.ts';
 export * from './model/types.ts';
 export * from './model/versioned.ts';
+export { constrain2D } from './modes/constrain.ts';
 export * from './utils/compose.ts';
 export { boundsFromPoints } from './utils/hit.ts';
 export * from './utils/layers.ts';

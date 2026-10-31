@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 import { type LayoutIntent, type ModelIntent, type Scene } from '@dxos/scene';
 

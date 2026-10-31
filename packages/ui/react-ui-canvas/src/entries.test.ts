@@ -35,8 +35,8 @@ const sources = (dir: string): string[] =>
     return statSync(path).isDirectory() ? sources(path) : /\.tsx?$/.test(name) ? [path] : [];
   });
 
-/** Every package an entry loads at runtime, through its relative value imports, with the file that imports it. */
-const runtimePackages = (entry: string): Map<string, string> => {
+/** Every module and package an entry loads at runtime, through its relative value imports. */
+const runtimeGraph = (entry: string): { files: Set<string>; packages: Map<string, string> } => {
   const packages = new Map<string, string>();
   const seen = new Set<string>();
   const visit = (file: string) => {
@@ -57,14 +57,31 @@ const runtimePackages = (entry: string): Map<string, string> => {
     }
   };
   visit(join(SRC, entry));
-  return packages;
+  return { files: seen, packages };
 };
+
+/** Every package an entry loads at runtime, with the file that imports it. */
+const runtimePackages = (entry: string): Map<string, string> => runtimeGraph(entry).packages;
+
+/** React and the React UI packages, which an operation running in node or workerd must not load. */
+const REACT = /^(react|react-dom)(\/|$)|^@dxos\/react-/;
 
 describe('entries', () => {
   test.for(LIGHT_ENTRIES)('%s loads neither the 3D renderer nor the editor', (entry, { expect }) => {
     const loaded = [...runtimePackages(entry)]
       .filter(([specifier]) => RENDERER.test(specifier) || specifier.startsWith(EDITOR))
       .map(([specifier, file]) => `${file} -> ${specifier}`);
+    expect(loaded).toEqual([]);
+  });
+
+  test('/headless loads no React module, so operations can apply the mode rule', ({ expect }) => {
+    const { files, packages } = runtimeGraph('headless.ts');
+    const loaded = [
+      ...[...files].filter((file) => file.endsWith('.tsx')).map((file) => relative(SRC, file)),
+      ...[...packages]
+        .filter(([specifier]) => REACT.test(specifier))
+        .map(([specifier, file]) => `${file} -> ${specifier}`),
+    ];
     expect(loaded).toEqual([]);
   });
 
