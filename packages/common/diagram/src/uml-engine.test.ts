@@ -4,6 +4,8 @@
 
 import { describe, test } from 'vitest';
 
+import { Shape } from '@dxos/scene';
+
 import type * as Scene from './scene.ts';
 import { CLASS_DIAGRAM } from './testing.ts';
 import { type Engine, compile } from './uml-engine.ts';
@@ -27,7 +29,7 @@ describe.each(engines)('uml-engine (%s)', (engine) => {
 
     // Equal cells: no two node frames intersect (distinct origins alone would allow overlap).
     const frames = nodes.map((node) => {
-      const frame = node.elements[0] as Scene.Box;
+      const frame = node.elements[0] as Shape.Box;
       return { x: node.origin!.x, y: node.origin!.y, w: frame.w, h: frame.h };
     });
     for (let a = 0; a < frames.length; a++) {

@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type NodeDef, type NodeRegistry, defaultNodeRegistry } from '@dxos/react-ui-canvas/scene';
+import { type NodeDef, type NodeRegistry, defaultNodeRegistry } from '@dxos/react-ui-canvas';
+import { KindRegistry } from '@dxos/scene';
 
 import {
   andNodeDef,
@@ -70,3 +71,12 @@ export const computeNodeRegistry: NodeRegistry = {
   ...Object.fromEntries(computeNodeDefs.map((def) => [def.type, def])),
   note: { ...defaultNodeRegistry.note, group: 'Misc' },
 };
+
+/**
+ * The compute element kinds (COMMON-CORE.md decision 13): a board's element of a compute type is checked against its
+ * shape's schema, which reads the kind's own fields (its compute `node`, a value) at the top of the element.
+ */
+export const computeKinds: KindRegistry = Object.values(computeNodeRegistry).reduce(
+  (kinds, def) => kinds.register(def.type, def.schema),
+  new KindRegistry(),
+);

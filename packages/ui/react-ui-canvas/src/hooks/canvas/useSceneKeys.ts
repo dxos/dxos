@@ -4,51 +4,39 @@
 
 import { type KeyboardEvent, useCallback } from 'react';
 
+import { type ElementId } from '@dxos/scene';
+
 import {
   type CanvasAtoms,
   type CanvasHistory,
+  type DrawScene,
   type EditingCommands,
   type NavigationCommands,
-  type Projection,
   type SelectionCommands,
   type ToolsCommands,
 } from '../../engine/index.ts';
 import {
   type Capabilities,
-  type ElementId,
   type LinkRegistry,
   type NodeRegistry,
-  type View,
+  type RenderList2D,
   isToolKey,
   keyAction,
   nodeDef,
 } from '../../model/index.ts';
-import { toolForKey } from '../../utils/index.ts';
+import { moveNodes, toolForKey } from '../../utils/index.ts';
 import { type useRegistry } from '../useRegistry.ts';
 import { type EditMode } from './useEditMode.ts';
 import { type PointerMachine } from './usePointerMachine.ts';
 import { type SceneSnap } from './useSceneSnap.ts';
 
-/** What the timeline keys (space, `,` `.`, `[` `]`, `K`) do; inactive while the scene has no timeline. */
-export type TimelineKeys = {
-  active: boolean;
-  togglePlay: () => void;
-  /** Moves the playhead by whole frames. */
-  step: (frames: number) => void;
-  /** Moves the playhead to the selection's next or previous key. */
-  jumpKey: (direction: 1 | -1) => void;
-  addKey: () => void;
-  /** Removes the selection's keys at the playhead. */
-  removeKey: () => void;
-};
-
 export type UseSceneKeysOptions = {
   registry: ReturnType<typeof useRegistry>;
   atoms: CanvasAtoms;
-  scene: View;
+  scene: RenderList2D;
   nodeRegistry: NodeRegistry;
   linkRegistry: LinkRegistry;
-  projection: Projection;
+  draw: DrawScene;
   capabilities: Capabilities;
   navigation: NavigationCommands;
   /** Minor grid spacing in scene px; an arrow nudges by it. */
@@ -59,9 +47,10 @@ export type UseSceneKeysOptions = {
   toggleDebug: () => void;
   onUndo: () => void;
   onRedo: () => void;
+  /** Copies the selection one step aside, as one undo step, and selects the copy. */
+  duplicate: () => void;
   /** Runs an edit as an undo step; a run of nudges of one selection is one step. */
   commit: CanvasHistory['commit'];
-  timeline?: TimelineKeys;
 } & Pick<SceneSnap, 'major'> &
   Pick<EditingCommands, 'copy' | 'cut' | 'paste'> &
   Pick<SelectionCommands, 'delete' | 'group' | 'ungroup'> &
@@ -80,7 +69,7 @@ export const useSceneKeys = ({
   scene,
   nodeRegistry,
   linkRegistry,
-  projection,
+  draw,
   capabilities,
   navigation,
   grid,
@@ -90,6 +79,7 @@ export const useSceneKeys = ({
   toggleDebug,
   onUndo,
   onRedo,
+  duplicate,
   commit,
   major,
   copy,
@@ -104,7 +94,6 @@ export const useSceneKeys = ({
   removeVertex,
   deleteVertex,
   setTool,
-  timeline,
   editNode,
   exitEdit,
 }: UseSceneKeysOptions): ((event: KeyboardEvent) => void) => {
@@ -152,35 +141,6 @@ export const useSceneKeys = ({
           }
           event.preventDefault();
           return;
-        }
-      }
-      // The timeline's keys act only while the scene has one; otherwise `K` is still a tool's.
-      if (timeline?.active) {
-        switch (action) {
-          case 'play':
-            timeline.togglePlay();
-            event.preventDefault();
-            return;
-          case 'stepBack':
-            timeline.step(-1);
-            return;
-          case 'stepForward':
-            timeline.step(1);
-            return;
-          // ⌘← and ⌘→ also go back and forward in the browser's history, which a jump must not do.
-          case 'previousKey':
-            timeline.jumpKey(-1);
-            event.preventDefault();
-            return;
-          case 'nextKey':
-            timeline.jumpKey(1);
-            event.preventDefault();
-            return;
-          case 'addKey':
-            if (selected.length > 0) {
-              timeline.addKey();
-            }
-            return;
         }
       }
       switch (action) {
@@ -238,7 +198,7 @@ export const useSceneKeys = ({
             x: event.key === 'ArrowLeft' ? -step : event.key === 'ArrowRight' ? step : 0,
             y: event.key === 'ArrowUp' ? -step : event.key === 'ArrowDown' ? step : 0,
           };
-          commit(() => projection.apply({ kind: 'move', ids: selectedNodes, delta }), {
+          commit(() => draw.apply(moveNodes(selectedNodes, delta)), {
             mergeKey: `nudge:${[...selectedNodes].sort().join(',')}`,
           });
           event.preventDefault();
@@ -254,6 +214,10 @@ export const useSceneKeys = ({
           break;
         case 'paste':
           paste();
+          event.preventDefault();
+          break;
+        case 'duplicate':
+          duplicate();
           event.preventDefault();
           break;
         case 'undo':
@@ -286,12 +250,6 @@ export const useSceneKeys = ({
         case 'debug':
           toggleDebug();
           break;
-        case 'play':
-        case 'stepBack':
-        case 'stepForward':
-        case 'previousKey':
-        case 'nextKey':
-        case 'addKey':
         case undefined:
           if (isToolKey(event)) {
             const next = toolForKey(nodeRegistry, linkRegistry, capabilities, event.key);
@@ -318,7 +276,7 @@ export const useSceneKeys = ({
       select,
       navigation,
       capabilities,
-      projection,
+      draw,
       scene,
       nodeRegistry,
       linkRegistry,
@@ -330,6 +288,7 @@ export const useSceneKeys = ({
       toggleDebug,
       onUndo,
       onRedo,
+      duplicate,
       commit,
       copy,
       cut,
@@ -337,7 +296,6 @@ export const useSceneKeys = ({
       deleteSelection,
       group,
       ungroup,
-      timeline,
     ],
   );
 };

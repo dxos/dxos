@@ -8,7 +8,8 @@
 // on each axis and covers the gutters between them, so every channel between shapes is one gutter wide.
 //
 
-import { type Bounds, type ElementId, type Node } from '../model/index.ts';
+import { type Bounds, type ElementId, type Node } from '@dxos/scene';
+
 import { nodeBounds } from './shapes.ts';
 
 /** The size of a one-cell shape and the gutter between shapes, in scene units. */

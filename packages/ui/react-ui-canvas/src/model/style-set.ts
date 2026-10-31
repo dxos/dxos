@@ -12,13 +12,14 @@
 
 import * as Schema from 'effect/Schema';
 
-import { LINE_STYLES, StyleHue } from './types.ts';
+import { LINE_STYLES, StyleHue } from '@dxos/scene';
 
 /**
  * How a hue fills a node. `hue-clear`, `hue-strong`, `hue-role` and `hue-light` are the canvas's own tones (outline,
  * strong, medium, light); `muted-subtle`, `muted` and `muted-solid` are soft to firm solid fills, `muted-clear` the subtle edge with no fill; `outline` draws no
  * fill and a hue border; `glass-clear`, `glass-frost`, `glass-tint` and `glass-solid` run from an edge alone to an
- * opaque glass colour.
+ * opaque glass colour; `neu-flat`, `neu-inset` and `neu-raised` are the Neu ground flush with, cut into, or raised out of
+ * the background by dual shadows, the hue marking only the border and label.
  */
 export const NodeSurface = Schema.Literals([
   'hue-clear',
@@ -34,6 +35,9 @@ export const NodeSurface = Schema.Literals([
   'glass-frost',
   'glass-tint',
   'glass-solid',
+  'neu-flat',
+  'neu-inset',
+  'neu-raised',
 ]);
 export type NodeSurface = Schema.Schema.Type<typeof NodeSurface>;
 
@@ -46,9 +50,9 @@ export const RADIUS_PX: Record<Radius, number> = { 'none': 0, 'sm': 4, 'md': 6, 
 
 /**
  * How a link is drawn: `line`, a single stroke; `tube`, a shaded strip; `rails`, two edges over a faint strip;
- * `glass`, a translucent strip with fine edges.
+ * `glass`, a translucent strip with fine edges; `groove`, a channel pressed into the Neu ground.
  */
-export const LinkKind = Schema.Literals(['line', 'tube', 'rails', 'glass']);
+export const LinkKind = Schema.Literals(['line', 'tube', 'rails', 'glass', 'groove']);
 export type LinkKind = Schema.Schema.Type<typeof LinkKind>;
 
 /** Whether a surface hides what is behind it or lets it show through. */
@@ -114,8 +118,8 @@ export type BackgroundGrid = Schema.Schema.Type<typeof BackgroundGrid>;
 export const Background = Schema.Struct({
   id: Schema.String,
   name: Schema.String,
-  /** The canvas fill: the theme's base surface, warm paper, or the near-black of a film's frame. */
-  surface: Schema.Literals(['base', 'paper', 'film']),
+  /** The canvas fill: the theme's base surface, warm paper, the near-black of a film's frame, or the Neu ground. */
+  surface: Schema.Literals(['base', 'paper', 'film', 'neu']),
   grid: BackgroundGrid,
   washes: Schema.Array(Wash),
   /** The field fades out towards its edges rather than ending at the scene's padded bounds. */
@@ -231,6 +235,28 @@ export const GLASS_STYLE_SET: StyleSet = {
   view: { contents: 'translucent' },
 };
 
+const NEU_SHAPE = {
+  borderWidth: 1,
+  borderStyle: 'solid',
+  radius: 'xl',
+  roundedRadius: '2xl',
+  label: 'surface',
+} as const;
+
+/** Neumorphism: every shape is the ground, flush, cut in or (by default) raised; the hue is only an accent. */
+export const NEU_STYLE_SET: StyleSet = {
+  id: 'neu',
+  name: 'Neu',
+  variants: [
+    { id: 'inset', name: 'Inset', surface: 'neu-inset', ...NEU_SHAPE },
+    { id: 'flat', name: 'Flat', surface: 'neu-flat', ...NEU_SHAPE },
+    { id: 'raised', name: 'Raised', surface: 'neu-raised', ...NEU_SHAPE },
+  ],
+  defaultVariant: 2,
+  link: { kind: 'groove', width: 8, caption: 'opaque' },
+  view: { contents: 'opaque' },
+};
+
 export const PLAIN_BACKGROUND: Background = {
   id: 'plain',
   name: 'Plain',
@@ -274,6 +300,9 @@ export const PAPER_BACKGROUND: Background = {
 /** A film's ground: near-black, with nothing drawn on it, for a scene that is animated and exported. */
 export const FILM_BACKGROUND: Background = { ...PLAIN_BACKGROUND, id: 'film', name: 'Film', surface: 'film' };
 
+/** The Neu ground with no grid: the shapes' relief is the only texture. */
+export const NEU_BACKGROUND: Background = { ...PLAIN_BACKGROUND, id: 'neu', name: 'Neu', surface: 'neu' };
+
 export const GLASS_NIGHT_THEME: Theme = {
   id: 'glass-night',
   name: 'Glass',
@@ -301,10 +330,29 @@ export const OUTLINE_THEME: Theme = { id: 'outline', name: 'Outline', styleSet: 
 /** Flat shapes on the film ground, always dark: for titles and motion graphics. */
 export const FILM_THEME: Theme = { id: 'film', name: 'Film', styleSet: 'flat', background: 'film', mode: 'dark' };
 
+/** Neu shapes raised from a ground of the same tone, always light whatever the app's mode. */
+export const NEU_LIGHT_THEME: Theme = {
+  id: 'neu-light',
+  name: 'Neu Light',
+  styleSet: 'neu',
+  background: 'neu',
+  mode: 'light',
+};
+
+/** The Neu look always dark, whatever the app's mode. */
+export const NEU_DARK_THEME: Theme = {
+  id: 'neu-dark',
+  name: 'Neu Dark',
+  styleSet: 'neu',
+  background: 'neu',
+  mode: 'dark',
+};
+
 export const DEFAULT_STYLE_SETS: Readonly<Record<string, StyleSet>> = {
   flat: FLAT_STYLE_SET,
   outline: OUTLINE_STYLE_SET,
   glass: GLASS_STYLE_SET,
+  neu: NEU_STYLE_SET,
 };
 
 export const DEFAULT_BACKGROUNDS: Readonly<Record<string, Background>> = {
@@ -314,6 +362,7 @@ export const DEFAULT_BACKGROUNDS: Readonly<Record<string, Background>> = {
   glow: GLOW_BACKGROUND,
   paper: PAPER_BACKGROUND,
   film: FILM_BACKGROUND,
+  neu: NEU_BACKGROUND,
 };
 
 export const DEFAULT_THEMES: Readonly<Record<string, Theme>> = {
@@ -323,12 +372,14 @@ export const DEFAULT_THEMES: Readonly<Record<string, Theme>> = {
   'flat': FLAT_THEME,
   'outline': OUTLINE_THEME,
   'film': FILM_THEME,
+  'neu-light': NEU_LIGHT_THEME,
+  'neu-dark': NEU_DARK_THEME,
 };
 
 /** The ids of the built-ins, for pickers. */
-export const THEME_IDS = ['glass-night', 'night', 'paper', 'flat', 'outline', 'film'] as const;
-export const STYLE_SET_IDS = ['flat', 'outline', 'glass'] as const;
-export const BACKGROUND_IDS = ['plain', 'dots', 'lines', 'glow', 'paper', 'film'] as const;
+export const THEME_IDS = ['glass-night', 'night', 'paper', 'flat', 'outline', 'film', 'neu-light', 'neu-dark'] as const;
+export const STYLE_SET_IDS = ['flat', 'outline', 'glass', 'neu'] as const;
+export const BACKGROUND_IDS = ['plain', 'dots', 'lines', 'glow', 'paper', 'film', 'neu'] as const;
 
 //
 // Registry.
@@ -377,20 +428,39 @@ export const CLASSIC_LOOK: SceneLook = {
   tone: 'theme',
 };
 
-const lookup = <T>(record: Readonly<Record<string, T>>, id: string | undefined): T | undefined =>
-  id !== undefined && Object.hasOwn(record, id) ? record[id] : undefined;
+/** Built-in ids since renamed, by the registry record they index: a saved view or drawing may still name them. */
+export const RENAMED_LOOK_IDS: Readonly<Record<keyof ThemeRegistry, Readonly<Record<string, string>>>> = {
+  themes: { 'soft': 'neu-dark', 'soft-light': 'neu-light' },
+  styleSets: { soft: 'neu' },
+  backgrounds: { soft: 'neu' },
+};
+
+/** The id a stored `id` now goes by in `kind`: a renamed built-in's new id, else `id` itself. */
+export const currentLookId = (kind: keyof ThemeRegistry, id: string | undefined): string | undefined =>
+  id !== undefined && Object.hasOwn(RENAMED_LOOK_IDS[kind], id) ? RENAMED_LOOK_IDS[kind][id] : id;
+
+/** The entry `id` names in `kind`, or the one it was renamed to when the registry has none by that id. */
+const lookup = <T>(
+  record: Readonly<Record<string, T>>,
+  kind: keyof ThemeRegistry,
+  id: string | undefined,
+): T | undefined => {
+  const found = (key: string | undefined) =>
+    key !== undefined && Object.hasOwn(record, key) ? record[key] : undefined;
+  return found(id) ?? found(currentLookId(kind, id));
+};
 
 /** The theme `id` names, else flat: an unknown id (from a newer host, or a deleted theme) still draws. */
 export const resolveTheme = (registry: ThemeRegistry, id: string | undefined): Theme =>
-  lookup(registry.themes, id) ?? FLAT_THEME;
+  lookup(registry.themes, 'themes', id) ?? FLAT_THEME;
 
 /** The style set `id` names, else flat. */
 export const resolveStyleSet = (registry: ThemeRegistry, id: string | undefined): StyleSet =>
-  lookup(registry.styleSets, id) ?? FLAT_STYLE_SET;
+  lookup(registry.styleSets, 'styleSets', id) ?? FLAT_STYLE_SET;
 
 /** The background `id` names, else plain. */
 export const resolveBackground = (registry: ThemeRegistry, id: string | undefined): Background =>
-  lookup(registry.backgrounds, id) ?? PLAIN_BACKGROUND;
+  lookup(registry.backgrounds, 'backgrounds', id) ?? PLAIN_BACKGROUND;
 
 export type LookIds = {
   /** The theme; flat when unset or unknown. */
@@ -406,8 +476,9 @@ export const resolveLook = (registry: ThemeRegistry, { theme: themeId, styleSet,
   const theme = resolveTheme(registry, themeId);
   return {
     theme,
-    styleSet: lookup(registry.styleSets, styleSet) ?? resolveStyleSet(registry, theme.styleSet),
-    background: lookup(registry.backgrounds, background) ?? resolveBackground(registry, theme.background),
+    styleSet: lookup(registry.styleSets, 'styleSets', styleSet) ?? resolveStyleSet(registry, theme.styleSet),
+    background:
+      lookup(registry.backgrounds, 'backgrounds', background) ?? resolveBackground(registry, theme.background),
     tone: theme.mode ?? 'theme',
   };
 };

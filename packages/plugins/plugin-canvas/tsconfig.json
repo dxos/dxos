@@ -19,6 +19,9 @@
   ],
   "references": [
     {
+      "path": "../../common/animation"
+    },
+    {
       "path": "../../common/diagram"
     },
     {
@@ -31,7 +34,13 @@
       "path": "../../common/keys"
     },
     {
+      "path": "../../common/log"
+    },
+    {
       "path": "../../common/random"
+    },
+    {
+      "path": "../../common/scene"
     },
     {
       "path": "../../common/util"
@@ -64,6 +73,9 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../../stories/storybook-testing"
     },
     {
@@ -79,13 +91,25 @@
       "path": "../../ui/react-ui-canvas"
     },
     {
+      "path": "../../ui/react-ui-canvas-editor"
+    },
+    {
       "path": "../../ui/react-ui-form"
     },
     {
       "path": "../../ui/react-ui-list"
     },
     {
+      "path": "../../ui/react-ui-menu"
+    },
+    {
       "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../../ui/ui-types"
+    },
+    {
+      "path": "../plugin-animator"
     },
     {
       "path": "../plugin-attention"

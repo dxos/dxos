@@ -4,9 +4,20 @@
 
 import { describe, test } from 'vitest';
 
+import { type Node, type NodeTone, type StyleMap } from '@dxos/scene';
+
 import { ViewBuilder } from '../builder/index.ts';
-import { CLASSIC_LOOK, type Node, type StyleMap, defaultThemeRegistry, resolveLook } from '../model/index.ts';
-import { classedLink, classedNode, frameClasses, hueClasses, splitClassEdit, surfaceClasses } from './style.ts';
+import { CLASSIC_LOOK, defaultThemeRegistry, resolveLook } from '../model/index.ts';
+import {
+  canvasFillClass,
+  classedLink,
+  classedNode,
+  frameClasses,
+  hueClasses,
+  nodeRelief,
+  splitClassEdit,
+  surfaceClasses,
+} from './style.ts';
 
 describe('style classes', () => {
   const styles: StyleMap = {
@@ -118,5 +129,56 @@ describe('style sets', () => {
     expect(frameClasses(nodes.blue, false, false, false, outline)[3]).toBe('');
     // Selection still draws in the focus colour.
     expect(frameClasses(nodes.blue, true, false, false, glass)[2]).toBe('border-focus');
+  });
+
+  test('Neu shapes are the ground colour, hue only accents them, and selection leaves the surface alone', ({
+    expect,
+  }) => {
+    const neu = resolveLook(defaultThemeRegistry, { theme: 'neu-dark' });
+    const [surface, text, border] = frameClasses(nodes.blue, false, false, false, neu);
+    expect(surface).toBe('bg-(--dx-neu-ground) shadow-(--dx-neu-raised)');
+    expect(text).toBe('text-blue-300');
+    expect(border).toBe('border-blue-400/45');
+    // Neu Light takes the light accents over the same ground.
+    const light = frameClasses(
+      nodes.blue,
+      false,
+      false,
+      false,
+      resolveLook(defaultThemeRegistry, { theme: 'neu-light' }),
+    );
+    expect(light.slice(0, 3)).toEqual([surface, 'text-blue-700', 'border-blue-500/45']);
+    // A shape with no hue is pure relief: no edge of its own.
+    expect(frameClasses(nodes.plain, false, false, false, neu)[2]).toBe('border-transparent');
+    // Selected: still raised; only the outline shows it.
+    const selected = frameClasses(nodes.blue, true, false, false, neu);
+    expect(selected[0]).toBe(surface);
+    expect(selected[2]).toBe('border-focus');
+    // The tone carries indentation: tone 0 is cut in, 1 is level, 2 stands out.
+    const toned = (tone: NodeTone): Node => ({ ...nodes.blue, style: { ...nodes.blue.style, tone } });
+    expect(frameClasses(toned(0), false, false, false, neu)[0]).toBe('bg-(--dx-neu-ground) shadow-(--dx-neu-inset)');
+    expect(frameClasses(toned(1), false, false, false, neu)[0]).toBe('bg-(--dx-neu-ground)');
+    expect(frameClasses(toned(2), true, false, false, neu)[0]).toBe(surface);
+    const glass = resolveLook(defaultThemeRegistry, { theme: 'paper' });
+    expect(frameClasses(nodes.blue, true, false, false, glass)[0]).toBe('bg-white/55');
+  });
+
+  test('a silhouette takes its relief from the tone, never from selection', ({ expect }) => {
+    const neu = resolveLook(defaultThemeRegistry, { theme: 'neu-dark' });
+    const toned = (tone: NodeTone): Node => ({ ...nodes.blue, style: { ...nodes.blue.style, tone } });
+    expect(nodeRelief(nodes.blue, neu)).toBe('raised');
+    expect(nodeRelief(toned(0), neu)).toBe('inset');
+    expect(nodeRelief(toned(1), neu)).toBeUndefined();
+    // Unfilled shapes and other sets draw no relief.
+    expect(nodeRelief(nodes.bare, neu)).toBeUndefined();
+    expect(nodeRelief(nodes.guide, neu)).toBeUndefined();
+    expect(nodeRelief(nodes.blue, resolveLook(defaultThemeRegistry, { theme: 'paper' }))).toBeUndefined();
+  });
+
+  test('the canvas fill under captions and hollow markers is the Neu ground on a Neu background', ({ expect }) => {
+    const neu = resolveLook(defaultThemeRegistry, { theme: 'neu-dark' });
+    expect(canvasFillClass(neu, 'opaque')).toBe('fill-(--dx-neu-ground)');
+    const glass = resolveLook(defaultThemeRegistry, { theme: 'paper' });
+    expect(canvasFillClass(glass, 'opaque')).toBe('fill-white');
   });
 });

@@ -6,12 +6,12 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CanvasCapabilities from '@dxos/plugin-canvas/CanvasCapabilities';
-import { LinesField } from '@dxos/react-ui-canvas/scene';
+import { LinesField } from '@dxos/react-ui-canvas-editor';
 
 import { ClassNodeView } from '#components';
 import { ClassNode } from '#types';
 
-// The class shape on the canvas: the type's definition plus its view and its list fields' editors.
+// The class kind on the canvas: its definition plus its view and its list fields' editors.
 const contribution: CanvasCapabilities.NodeTypeContribution = {
   type: ClassNode.TYPE,
   spec: {

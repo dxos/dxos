@@ -2,17 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type View, type ViewId, type ViewMap, isViewNode } from '../model/index.ts';
+import { type ViewId, isViewNode } from '@dxos/scene';
+
+import { type RenderList2D, type RenderLists2D } from '../model/index.ts';
 
 /** A scene a scene shape may open, as the properties panel lists it. */
 export type ViewOption = { value: ViewId; label: string };
 
 /** The scenes the shapes of `scene` open. */
-const childScenes = (scene: View | undefined): ViewId[] =>
+const childScenes = (scene: RenderList2D | undefined): ViewId[] =>
   scene ? Object.values(scene.nodes).flatMap((node) => (isViewNode(node) ? [node.scene] : [])) : [];
 
 /** Whether `from`, or any scene it opens however deep, is one of `targets`. */
-const reaches = (scenes: ViewMap, from: ViewId, targets: ReadonlySet<ViewId>): boolean => {
+const reaches = (scenes: RenderLists2D, from: ViewId, targets: ReadonlySet<ViewId>): boolean => {
   const seen = new Set<ViewId>();
   const pending = [from];
   for (let id = pending.pop(); id !== undefined; id = pending.pop()) {
@@ -33,7 +35,7 @@ const reaches = (scenes: ViewMap, from: ViewId, targets: ReadonlySet<ViewId>): b
  * unnamed scene reads as the label of a shape that opens it.
  */
 export const viewOptions = (
-  scenes: ViewMap,
+  scenes: RenderLists2D,
   path: readonly ViewId[],
   filter: (id: ViewId) => boolean = () => true,
 ): ViewOption[] => {

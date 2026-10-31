@@ -10,6 +10,20 @@
 
 import React, { memo } from 'react';
 
+import {
+  type Bounds,
+  type ElementId,
+  type Endpoint,
+  type Link,
+  type LinkId,
+  type Node,
+  type Point,
+  type Port,
+  type SplineLink,
+  endpointNode,
+  isPointEndpoint,
+  isPolylineNode,
+} from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 import {
@@ -20,24 +34,7 @@ import {
   type LinkEnd,
   isMoving,
 } from '../../engine/index.ts';
-import {
-  type Bounds,
-  type Capabilities,
-  type ElementId,
-  type Endpoint,
-  type Link,
-  type LinkId,
-  type Node,
-  type NodeRegistry,
-  type Point,
-  type Port,
-  type SplineLink,
-  type View,
-  endpointNode,
-  isPointEndpoint,
-  isPolylineNode,
-  nodeDef,
-} from '../../model/index.ts';
+import { type Capabilities, type NodeRegistry, type RenderList2D, nodeDef } from '../../model/index.ts';
 import {
   type LatticeSpec,
   VERTEX_SNAP_PX,
@@ -62,7 +59,7 @@ const cursorFor = (handle: Handle) =>
   ({ n: 'ns', s: 'ns', e: 'ew', w: 'ew', ne: 'nesw', sw: 'nesw', nw: 'nwse', se: 'nwse' })[handle] + '-resize';
 
 export type ControlFrameProps = {
-  scene: View;
+  scene: RenderList2D;
   registry: NodeRegistry;
   /** What the view may do: no handle is drawn for a gesture that could not apply. */
   capabilities: Capabilities;

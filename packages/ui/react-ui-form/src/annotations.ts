@@ -5,7 +5,13 @@
 import type * as Effect from 'effect/Effect';
 
 import { createAnnotationHelper } from '@dxos/echo/internal';
-import { HueAnnotationId, StepAnnotationId } from '@dxos/ui-types';
+import {
+  HueAnnotationId,
+  type NumberLayout,
+  NumberLayoutAnnotationId,
+  StepAnnotationId,
+  VectorAnnotationId,
+} from '@dxos/ui-types';
 
 /** One selectable option produced by an {@link OptionsLookup}. */
 export type OptionsLookupEntry = { value: string; label?: string; secondaryLabel?: string; icon?: string };
@@ -76,3 +82,12 @@ export const HueAnnotation = createAnnotationHelper<boolean>(HueAnnotationId);
  * any other by 0.1 or 0.01, by the size of its current value.
  */
 export const StepAnnotation = createAnnotationHelper<number>(StepAnnotationId);
+
+/** Aligns a number field's figures and places its steppers (see {@link NumberLayout}). */
+export const NumberLayoutAnnotation = createAnnotationHelper<NumberLayout>(NumberLayoutAnnotationId);
+
+/**
+ * Marks a struct of numeric axes as a vector: the form stacks one labelled number input per axis instead of a nested
+ * group. A model schema sets `[VectorAnnotationId]: true` directly, without depending on this package.
+ */
+export const VectorAnnotation = createAnnotationHelper<boolean>(VectorAnnotationId);

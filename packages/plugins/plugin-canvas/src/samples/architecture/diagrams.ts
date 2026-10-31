@@ -2,11 +2,23 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Database, Obj, Ref } from '@dxos/echo';
+import { type ContentMap } from '@dxos/diagram';
+import { type Database, Ref, type Type } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 
-import { CanvasBuilder, createCanvas, elementId, isNodeRecord, nodeKey, updateCanvasRecord } from '#model';
+import {
+  CanvasLayoutBuilder,
+  editCanvasContent,
+  elementId,
+  isNodeRecord,
+  makeCanvas,
+  nodeKey,
+  readCanvasContent,
+  setLayoutLattice,
+} from '#model';
+import { Canvas } from '#types';
 
+import schemaTypes from '../../capabilities/schema.ts';
 import { type CompiledDiagrams } from './compiled.ts';
 
 export type DiagramSet = {
@@ -19,6 +31,9 @@ export type DiagramSet = {
   /** Per diagram, the boxes (by DSL node id) that open another diagram (by id) as a nested level. */
   drills: Readonly<Record<string, Readonly<Record<string, string>>>>;
 };
+
+/** The schemas a space of canvas drawings registers: the drawing, and its canvas with the scene objects it reaches. */
+export const canvasDrawingSchemas: readonly Type.AnyEntity[] = [Drawing.Drawing, ...schemaTypes];
 
 export type CanvasDrawingProps = {
   name: string;
@@ -41,12 +56,41 @@ export const addCanvasDrawing = (
   db: Database.Database,
   { name, commands, lattice, readonly }: CanvasDrawingProps,
 ): Drawing.Drawing => {
-  const canvas = db.add(createCanvas());
-  CanvasBuilder.apply(canvas, commands);
-  if (lattice || readonly) {
-    Obj.update(canvas, (canvas) => updateCanvasRecord(canvas.content, { lattice, readonly }));
+  const { canvas, model, layout, scene } = makeCanvas(readonly ? { readonly } : {});
+  for (const object of [model, layout, scene]) {
+    db.add(object);
+  }
+  db.add(canvas);
+  CanvasLayoutBuilder.apply(canvas, commands);
+  if (lattice) {
+    setLayoutLattice(canvas, true);
   }
   return db.add(Drawing.make({ name, canvas }));
+};
+
+/** Loads a drawing's `Canvas` with the scenes and layouts it reaches, so its content records read whole. */
+export const loadDrawingCanvas = async (drawing: Drawing.Drawing): Promise<Canvas.Canvas | undefined> => {
+  const canvas = await drawing.canvas.load();
+  if (!Canvas.isCanvas(canvas)) {
+    return undefined;
+  }
+  // Every layout a scene views is one of the canvas's own.
+  await Promise.all([...canvas.scenes, ...canvas.layouts].map((ref) => ref.load()));
+  return canvas;
+};
+
+/** A loaded drawing's canvas as content records (`node:<id>`, `link:<id>`, …), empty for a canvas of another kind. */
+export const readDrawingContent = (drawing: Drawing.Drawing): ContentMap => {
+  const canvas = drawing.canvas.target;
+  return Canvas.isCanvas(canvas) ? readCanvasContent(canvas) : {};
+};
+
+/** Edits a loaded drawing's canvas through its content records, written back element by element. */
+export const editDrawingContent = (drawing: Drawing.Drawing | undefined, edit: (content: ContentMap) => void) => {
+  const canvas = drawing?.canvas.target;
+  if (Canvas.isCanvas(canvas)) {
+    editCanvasContent(canvas, edit);
+  }
 };
 
 /**
@@ -77,12 +121,8 @@ export const loadDiagramDrawings = async (
   // Plain boxes draw in the style set's second tone rather than its heavier default grey, and the dashed group outlines
   // in its lightest, so the coloured boxes carry the emphasis; a box that sets a hue or a tone of its own keeps it.
   for (const drawing of drawings.values()) {
-    const canvas = drawing.canvas.target;
-    if (!canvas) {
-      continue;
-    }
-    Obj.update(canvas, (canvas) => {
-      for (const [key, record] of Object.entries(canvas.content)) {
+    editDrawingContent(drawing, (content) => {
+      for (const [key, record] of Object.entries(content)) {
         if (!isNodeRecord(record) || record.node.style?.tone !== undefined) {
           continue;
         }
@@ -92,29 +132,25 @@ export const loadDiagramDrawings = async (
             ? DIAGRAM_BOX_TONE
             : undefined;
         if (tone !== undefined) {
-          canvas.content[key] = { ...record, node: { ...record.node, style: { ...record.node.style, tone } } };
+          content[key] = { ...record, node: { ...record.node, style: { ...record.node.style, tone } } };
         }
       }
     });
   }
 
   for (const [id, drills] of Object.entries(set.drills)) {
-    const canvas = drawings.get(id)?.canvas.target;
-    if (!canvas) {
-      continue;
-    }
-    Obj.update(canvas, (canvas) => {
+    editDrawingContent(drawings.get(id), (content) => {
       for (const [box, target] of Object.entries(drills)) {
         // A semantic node compiles to the element `box` of the object it names.
         const nodeId = elementId(box, 'box');
-        const record = canvas.content[nodeKey(nodeId)];
+        const record = content[nodeKey(nodeId)];
         const child = drawings.get(target);
         if (!isNodeRecord(record) || !child) {
           continue;
         }
         // The box becomes a frame in place, so its links stay attached; the frame opens the child drawing.
-        canvas.content[`scene:${box}`] = { kind: 'scene', id: box };
-        canvas.content[nodeKey(nodeId)] = {
+        content[`scene:${box}`] = { kind: 'scene', id: box };
+        content[nodeKey(nodeId)] = {
           ...record,
           node: { ...record.node, type: 'view', scene: box, link: { object: Ref.make(child) } },
         };

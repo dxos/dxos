@@ -8,28 +8,44 @@
 //
 
 import {
-  DEFAULT_LOOK,
   type HorizontalAlign,
   type Link,
-  type LookTone,
   type Node,
   type NodeStyle,
-  type NodeSurface,
   type NodeTone,
-  type Radius,
-  type SceneLook,
   STYLE_HUES,
   type StyleHue,
   type StyleMap,
-  type StyleVariant,
   type VerticalAlign,
   isEllipseNode,
   isViewNode,
+  resolveStyle as resolveSceneStyle,
   showsContents,
+} from '@dxos/scene';
+
+import {
+  DEFAULT_LOOK,
+  type LookTone,
+  type NeuRelief,
+  type NodeSurface,
+  type Opacity,
+  type Radius,
+  type SceneLook,
+  type StyleVariant,
   styleVariant,
 } from '../model/index.ts';
-import { DEFAULT_TEXT, NEAREST_HUE, RADIUS_CLASSES, type SetSurface, SURFACES, VIEW_FILLS } from './surfaces.ts';
+import {
+  CANVAS_FILLS,
+  DEFAULT_TEXT,
+  NEAREST_HUE,
+  NEU_CANVAS_FILL,
+  RADIUS_CLASSES,
+  type SetSurface,
+  SURFACES,
+  VIEW_FILLS,
+} from './surfaces.ts';
 
+/** A hue's classes. */
 export type HueClasses = { surface: string; text: string; border: string };
 
 const HUES: Record<string, HueClasses> = {
@@ -129,34 +145,37 @@ export const hueClasses = (hue: string | undefined, tone: NodeTone = DEFAULT_TON
   return base;
 };
 
-/** `base` with every field `own` sets over it; an `undefined` field of `own` is unset, so it leaves the base's. */
-const overlay = <T extends object>(base: T | undefined, own: T | undefined): T | undefined => {
-  if (!base || !own) {
-    return own ?? base;
-  }
-  const merged = { ...base };
-  for (const [key, value] of Object.entries(own)) {
-    if (value !== undefined) {
-      Reflect.set(merged, key, value);
-    }
-  }
-  return merged;
-};
-
 /** A node as drawn: its class's style under its own (`StyleClass`). */
 export const classedNode = (node: Node, styles: StyleMap | undefined): Node => {
   const style = node.class ? styles?.[node.class]?.style : undefined;
-  return style ? { ...node, style: overlay(style, node.style) } : node;
+  return style && node.class
+    ? {
+        ...node,
+        style: resolveSceneStyle(
+          { style: node.class, overrides: node.style },
+          {},
+          { styles: { [node.class]: style } },
+          [],
+          {},
+        ),
+      }
+    : node;
 };
 
 /** A link as drawn: its class's colour, line style and caption size under its own. */
 export const classedLink = (link: Link, styles: StyleMap | undefined): Link => {
   const style = link.class ? styles?.[link.class]?.style : undefined;
   // A link draws only what `LineStyle` shares with its class's style; an edit of a classed link writes there.
-  return style
+  return style && link.class
     ? {
         ...link,
-        style: overlay({ hue: style.hue, lineStyle: style.lineStyle, fontSize: style.fontSize }, link.style),
+        style: resolveSceneStyle(
+          { style: link.class, overrides: link.style },
+          {},
+          { styles: { [link.class]: { hue: style.hue, lineStyle: style.lineStyle, fontSize: style.fontSize } } },
+          [],
+          {},
+        ),
       }
     : link;
 };
@@ -257,6 +276,30 @@ export const cornerRadius = (
   style: NodeStyle | undefined,
   tokens: Pick<StyleVariant, 'radius' | 'roundedRadius'>,
 ): Radius => (style?.rounded === false ? 'none' : style?.rounded ? tokens.roundedRadius : tokens.radius);
+
+/**
+ * The canvas colour in SVG, under a link's caption and inside a hollow end marker: the Neu ground on the Neu
+ * background, else the canvas's own surface.
+ */
+export const canvasFillClass = (look: SceneLook, opacity: Opacity): string =>
+  look.background.surface === 'neu' ? NEU_CANVAS_FILL : CANVAS_FILLS[opacity][look.tone];
+
+const SURFACE_RELIEF: Partial<Record<NodeSurface, NeuRelief>> = {
+  'neu-raised': 'raised',
+  'neu-inset': 'inset',
+};
+
+/**
+ * The Neu relief a filled node stands in by its tone, for a shape drawn as a silhouette (its box-shadow would be
+ * masked away with the box); none for a flat or unfilled shape or another style set. Selection never changes it.
+ */
+export const nodeRelief = (node: Node, look: SceneLook = DEFAULT_LOOK): NeuRelief | undefined => {
+  const style = resolveStyle(node.style);
+  if (!style.fill || style.guide) {
+    return undefined;
+  }
+  return SURFACE_RELIEF[styleVariant(look.styleSet, style.tone).surface];
+};
 
 export type LineClasses = { stroke: string; fill: string };
 

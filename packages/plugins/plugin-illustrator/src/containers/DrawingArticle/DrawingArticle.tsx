@@ -15,8 +15,8 @@ import { log } from '@dxos/log';
 import { useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
+import { VariantSurface, hasVariantSurface } from '#components';
 import { Drawing, IllustratorCapabilities } from '#types';
-import { findVariant } from '#util';
 
 import { IllustratorNamespace } from '../../namespace.ts';
 
@@ -38,7 +38,7 @@ export const DrawingArticle = ({ role, attendableId, subject: drawing, extrinsic
   // their store adapters need `Doc.createAccessor`, which rejects snapshots.
   const [snapshot] = useObject(ref);
   const canvas = snapshot ? ref.target : undefined;
-  const match = canvas ? findVariant(variants, canvas) : undefined;
+  const match = IllustratorCapabilities.variantFor(canvas, variants);
 
   const selection = useSelection(attendableId, 'multi');
   const { multi, clear } = useSelectionActions(attendableId);
@@ -77,7 +77,7 @@ export const DrawingArticle = ({ role, attendableId, subject: drawing, extrinsic
     return null;
   }
 
-  if (!match?.article) {
+  if (!match || !hasVariantSurface(match, 'article', canvas)) {
     return (
       <div className='p-4 text-sm'>
         {t('unsupported-variant.label', { defaultValue: 'Unsupported drawing variant' })}
@@ -85,9 +85,10 @@ export const DrawingArticle = ({ role, attendableId, subject: drawing, extrinsic
     );
   }
 
-  const Component = match.article;
   return (
-    <Component
+    <VariantSurface
+      variant={match}
+      slot='article'
       drawing={drawing}
       canvas={canvas}
       role={role}

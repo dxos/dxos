@@ -13,6 +13,8 @@
 // See `docs/DESIGN.md`.
 //
 
+import { Shape } from '@dxos/scene';
+
 import type * as Scene from './scene.ts';
 import { GRID, type CompileOptions as GridCompileOptions, type Rect, emit, measureCell, zRouter } from './uml-grid.ts';
 import {
@@ -31,7 +33,7 @@ const GAP = GRID * 3;
 
 const snap = (value: number) => Math.round(value / GRID) * GRID;
 
-type Point = Scene.Point;
+type Point = Shape.Point;
 type Segment = [Point, Point];
 
 const segmentsOf = (points: readonly Point[]): Segment[] =>
@@ -117,7 +119,7 @@ const overlaps = (a: Rect, b: Rect): boolean =>
  * the anchor (below and above preferred, then right/left, sliding off collisions) and keeping
  * the best-scoring one.
  */
-export const searchPlacement = (model: UmlModel, groups: Group[]): Map<string, Scene.Point> => {
+export const searchPlacement = (model: UmlModel, groups: Group[]): Map<string, Shape.Point> => {
   const groupOf = new Map<string, Group>();
   for (const group of groups) {
     for (const id of group.rects.keys()) {

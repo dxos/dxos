@@ -1,19 +1,8 @@
 layer: library
 language: typescript
 tags:
-  - e2e
   - ts-vite-build
   - ts-test
   - ts-test-storybook
   - pack
   - storybook
-tasks:
-  e2e:
-    # `storybook dev` resolves packages from source, but Vite's dep-scan aborts without vendor dist,
-    # taking the web server down with it.
-    deps:
-      - target: storybook-react:e2e-deps
-        cacheStrategy: hash
-    inputs:
-      - .storybook/*
-      - /tools/storybook-react/.storybook/main.ts

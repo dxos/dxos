@@ -17,7 +17,7 @@ import { useObject } from '@dxos/echo-react';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as DrawingOperation from '@dxos/plugin-illustrator/DrawingOperation';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import * as IllustratorEvents from '@dxos/plugin-illustrator/IllustratorEvents';
@@ -58,13 +58,13 @@ const EditActions = ({ space, drawing, onError }: Opened & { onError: (message: 
   const { t } = UiHooks.useTranslation();
   const { invokePromise } = Hooks.useOperationInvoker();
   const variants = Hooks.useCapabilities(IllustratorCapabilities.VariantProvider);
-  // Only the schema is read: an editor writes its canvas while it renders, which must not re-render this.
+  // Only the canvas ref is read: an editor writes its canvas while it renders, which must not re-render this.
   const [canvasRef] = useObject(drawing, 'canvas');
-  const [schema] = useObject(canvasRef, 'schema');
-  if (!schema) {
+  const from = IllustratorCapabilities.variantFor(canvasRef?.target, variants);
+  if (!from) {
     return null;
   }
-  return IllustratorCapabilities.editTargets(variants, schema).map((variant) => (
+  return IllustratorCapabilities.editTargets(variants, from.id).map((variant) => (
     <Button.Root
       key={variant.id}
       variant='ghost'
@@ -163,8 +163,8 @@ export const DrawingRoot = () => {
   const handleDownload = useCallback(() => {
     const drawing = opened?.drawing;
     const canvas = drawing?.canvas.target;
-    const variant = canvas && variants.find(({ id }) => id === canvas.schema);
-    if (!drawing || !canvas || !variant) {
+    const variant = IllustratorCapabilities.variantFor(canvas, variants);
+    if (!drawing || !Drawing.isCanvas(canvas) || !variant) {
       return;
     }
     const blob = new Blob([toDxSvg({ drawing, canvas, builder: variant.builder })], { type: 'image/svg+xml' });

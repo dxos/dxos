@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as Scene from './scene.ts';
+import { Shape } from '@dxos/scene';
+
 import { type Rect } from './uml-grid.ts';
 
-type Point = Scene.Point;
+type Point = Shape.Point;
 type Axis = 'h' | 'v';
 
 /** One axis-aligned segment of a line: `points[start] → points[start + 1]`. */

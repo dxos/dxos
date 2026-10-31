@@ -150,6 +150,7 @@
     "@dxos/plugin-illustrator": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/scene": "workspace:*",
     "@dxos/util": "workspace:*",
     "@tldraw/assets": "catalog:",
     "@tldraw/editor": "catalog:",

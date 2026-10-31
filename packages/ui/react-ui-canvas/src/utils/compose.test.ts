@@ -4,9 +4,10 @@
 
 import { describe, test } from 'vitest';
 
+import { type InstanceNode, type Node, isInstanceNode } from '@dxos/scene';
+
 import { ViewBuilder } from '../builder/index.ts';
-import { reduceIntent } from '../engine/index.ts';
-import { type InstanceNode, type Node, type View, createTimeline, isInstanceNode, setKey } from '../model/index.ts';
+import { type RenderList2D } from '../model/index.ts';
 import {
   composeSelection,
   compositeBounds,
@@ -41,7 +42,7 @@ const counter = () => {
   return (prefix: string) => `${prefix}-${next++}`;
 };
 
-const instanceOf = (parent: View, id: string): InstanceNode => {
+const instanceOf = (parent: RenderList2D, id: string): InstanceNode => {
   const node = parent.nodes[id];
   if (!node || !isInstanceNode(node)) {
     throw new Error(`no instance ${id}`);
@@ -55,14 +56,14 @@ describe('composeSelection', () => {
     if (!composition) {
       throw new Error('no composition');
     }
-    const { composite, intents } = composition;
+    const { composite, edit } = composition;
     expect(composite.kind).toBe('composite');
     expect(Object.keys(composite.nodes)).toEqual(['a', 'b']);
     expect(Object.keys(composite.links)).toEqual(['ab']);
     // Re-centred on the bounds of the selection, which ran from x 0 to 300.
     expect(compositeBounds(composite)).toEqual({ x: -150, y: -25, width: 300, height: 50 });
 
-    const parent = reduceIntent(scene, { kind: 'batch', intents });
+    const parent = edit(scene);
     expect(Object.keys(parent.nodes).sort()).toEqual(['c', 'i']);
     const instance = instanceOf(parent, 'i');
     expect(nodeBounds(instance)).toEqual({ x: 0, y: 0, width: 300, height: 50 });
@@ -70,12 +71,6 @@ describe('composeSelection', () => {
     expect(composite.nodes.b.exposed).toBe(true);
     expect(parent.links.bc.source).toEqual({ node: 'i', port: 'b' });
     expect(instance.ports).toEqual([{ id: 'b', side: 'e', offset: 0.5 }]);
-  });
-
-  test('keyed tracks of the grouped nodes move into the composite, in its coordinates', ({ expect }) => {
-    const timeline = setKey(createTimeline(), 'a', 'center', { t: 1, value: { x: 50, y: 25 } });
-    const composition = composeSelection({ ...scene, timeline }, ['a', 'b'], { compositeId: 'obj', instanceId: 'i' });
-    expect(composition?.composite.timeline?.tracks['a:center'].keys).toEqual([{ t: 1, value: { x: -100, y: 0 } }]);
   });
 
   test('a locked node is not grouped', ({ expect }) => {
@@ -94,7 +89,7 @@ describe('instances', () => {
   });
 
   test('overrides apply per field, style per key', ({ expect }) => {
-    const composite: View = {
+    const composite: RenderList2D = {
       id: 'obj',
       kind: 'composite',
       nodes: { a: { ...scene.nodes.a, style: { hue: 'red', rounded: true } } },
@@ -121,11 +116,8 @@ describe('compose and ungroup', () => {
     if (!composition) {
       throw new Error('no composition');
     }
-    const parent = reduceIntent(scene, { kind: 'batch', intents: composition.intents });
-    const restored = reduceIntent(parent, {
-      kind: 'batch',
-      intents: ungroupInstance(parent, instanceOf(parent, 'i'), composition.composite, counter()),
-    });
+    const parent = composition.edit(scene);
+    const restored = ungroupInstance(parent, instanceOf(parent, 'i'), composition.composite, counter()).edit(parent);
     const nodes = Object.values(restored.nodes).sort((left, right) => left.center.x - right.center.x);
     expect(nodes.map(nodeBounds)).toEqual([box(0), box(200), box(400)]);
     expect(restored.nodes.i).toBeUndefined();
@@ -143,37 +135,12 @@ describe('compose and ungroup', () => {
     ).toBe(true);
   });
 
-  test("ungrouping brings the Object's animation back out, on the new nodes and where the Instance drew them", ({
-    expect,
-  }) => {
-    // `a` slides from where it stands to 100 right of it; Group carries the track into the Object.
-    const centre = nodeCenter(scene.nodes.a);
-    const keyed = setKey(setKey(createTimeline(2), 'a', 'center', { t: 0, value: centre }), 'a', 'center', {
-      t: 1,
-      value: { x: centre.x + 100, y: centre.y },
-    });
-    const animated = { ...scene, timeline: keyed };
-    const composition = composeSelection(animated, ['a', 'b', 'ab'], { compositeId: 'obj', instanceId: 'i' });
-    if (!composition) {
-      throw new Error('no composition');
-    }
-    expect(Object.keys(composition.composite.timeline?.tracks ?? {})).toEqual(['a:center']);
-    const parent = reduceIntent(animated, { kind: 'batch', intents: composition.intents });
-    const restored = reduceIntent(parent, {
-      kind: 'batch',
-      intents: ungroupInstance(parent, instanceOf(parent, 'i'), composition.composite, counter()),
-    });
-    const first = Object.values(restored.nodes).sort((left, right) => left.center.x - right.center.x)[0];
-    const track = restored.timeline?.tracks[`${first.id}:center`];
-    expect(track?.keys.map((key) => key.value)).toEqual([centre, { x: centre.x + 100, y: centre.y }]);
-  });
-
   test('make unique copies the definition under fresh ids and renames the overrides and ports', ({ expect }) => {
     const composition = composeSelection(scene, ['a', 'b', 'ab'], { compositeId: 'obj', instanceId: 'i' });
     if (!composition) {
       throw new Error('no composition');
     }
-    const parent = reduceIntent(scene, { kind: 'batch', intents: composition.intents });
+    const parent = composition.edit(scene);
     const instance = { ...instanceOf(parent, 'i'), overrides: { a: { style: { opacity: 0.5 } } } };
     const { composite, rename } = copyComposite(composition.composite, 'obj2', counter());
     const unique = retargetInstance(instance, 'obj2', rename);
@@ -207,10 +174,7 @@ describe('anonymous Objects', () => {
     if (!group || !named) {
       return;
     }
-    const parent = reduceIntent(reduceIntent(scene, { kind: 'batch', intents: group.intents }), {
-      kind: 'batch',
-      intents: named.intents,
-    });
+    const parent = named.edit(group.edit(scene));
     const scenes = { s: parent, g: group.composite, n: named.composite };
     const placed = promotedBy(scenes, [instanceOf(parent, 'i'), instanceOf(parent, 'j'), parent.nodes.i]);
     expect(Object.keys(placed)).toEqual(['g']);
@@ -235,7 +199,12 @@ describe('removeComposite', () => {
     size: { width: 100, height: 50 },
     composite,
   });
-  const view = (id: string, nodes: View['nodes'], links: View['links'] = {}, extra: Partial<View> = {}): View => ({
+  const view = (
+    id: string,
+    nodes: RenderList2D['nodes'],
+    links: RenderList2D['links'] = {},
+    extra: Partial<RenderList2D> = {},
+  ): RenderList2D => ({
     id,
     nodes,
     links,

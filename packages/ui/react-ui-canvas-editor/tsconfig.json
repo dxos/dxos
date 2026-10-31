@@ -1,0 +1,60 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../common/animation"
+    },
+    {
+      "path": "../../common/diagram"
+    },
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../../common/scene"
+    },
+    {
+      "path": "../../common/test-utils"
+    },
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../react-primitives/react-hooks"
+    },
+    {
+      "path": "../react-ui"
+    },
+    {
+      "path": "../react-ui-animation"
+    },
+    {
+      "path": "../react-ui-canvas"
+    },
+    {
+      "path": "../react-ui-form"
+    },
+    {
+      "path": "../react-ui-list"
+    },
+    {
+      "path": "../react-ui-syntax-highlighter"
+    },
+    {
+      "path": "../ui-theme"
+    },
+    {
+      "path": "../ui-types"
+    }
+  ]
+}

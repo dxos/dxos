@@ -8,18 +8,20 @@
 // same tree as elements (the canvas's diagram nodes and links), and the two cannot drift apart.
 //
 
+import { Shape } from '@dxos/scene';
+
 import * as Diagnostics from './diagnostics.ts';
 import * as Scene from './scene.ts';
 
-const FONT_SIZE = (weight: Scene.Weight) => Diagnostics.LABEL_TYPE[weight].size;
-const LINE_H = (weight: Scene.Weight) => Diagnostics.LABEL_TYPE[weight].lineH;
+const FONT_SIZE = (weight: Shape.Weight) => Diagnostics.LABEL_TYPE[weight].size;
+const LINE_H = (weight: Shape.Weight) => Diagnostics.LABEL_TYPE[weight].lineH;
 
 const MARGIN = 40;
 const RADIUS = 8;
 const CHAR_EM = Diagnostics.CHAR_EM;
 
 export type Rect = { x: number; y: number; w: number; h: number };
-type Point = Scene.Point;
+type Point = Shape.Point;
 
 /** Attribute value; `undefined` and `false` drop the attribute, as React does. */
 export type Value = string | number | boolean | undefined;
@@ -64,7 +66,7 @@ export const serialize = (node: Markup | string): string =>
 const cx = (...classes: (string | undefined | false)[]): string | undefined =>
   classes.filter(Boolean).join(' ') || undefined;
 
-const rectOf = (object: Scene.WorldObject, element: Scene.Box | Scene.Portal): Rect => {
+const rectOf = (object: Scene.WorldObject, element: Shape.Box | Shape.Portal): Rect => {
   const { x = 0, y = 0 } = object.origin ?? {};
   const scale = object.scale ?? 1;
   return { x: x + element.x * scale, y: y + element.y * scale, w: element.w * scale, h: element.h * scale };
@@ -72,7 +74,7 @@ const rectOf = (object: Scene.WorldObject, element: Scene.Box | Scene.Portal): R
 
 const center = (rect: Rect): Point => ({ x: rect.x + rect.w / 2, y: rect.y + rect.h / 2 });
 
-const strokeDash: Partial<Record<Scene.Stroke, string>> = { dashed: '6 4', dotted: '2 4' };
+const strokeDash: Partial<Record<Shape.Stroke, string>> = { dashed: '6 4', dotted: '2 4' };
 
 /** Greedy word wrap per input line; SVG text has no native wrapping. */
 export const wrapLines = (text: string, maxChars: number): string[] =>
@@ -106,7 +108,7 @@ export const partiallyRoundedRect = ({ x, y, w, h }: Rect, cornerRadius: number,
 };
 
 /** Text (and so `currentColor`) per scene color; the group tints wash their fill from it. */
-export const COLOR_CLASS: Partial<Record<Scene.Color, string>> = {
+export const COLOR_CLASS: Partial<Record<Shape.Color, string>> = {
   'grey': 'text-neutral-400 dark:text-neutral-500',
   'light-blue': 'text-sky-500',
   'light-green': 'text-emerald-500',
@@ -116,7 +118,7 @@ export const COLOR_CLASS: Partial<Record<Scene.Color, string>> = {
   'light-red': 'text-rose-500',
 };
 
-const colorClass = (color?: Scene.Color) => (color ? COLOR_CLASS[color] : undefined);
+const colorClass = (color?: Shape.Color) => (color ? COLOR_CLASS[color] : undefined);
 
 const MUTED_TEXT = 'text-neutral-500 dark:text-neutral-400';
 
@@ -143,7 +145,7 @@ const TINT_PERCENT = 10;
 const TINT_STYLE = `fill:color-mix(in srgb, currentColor ${TINT_PERCENT}%, var(--surface-bg, transparent))`;
 
 /** `TINT_STYLE` precomputed for the file's light theme, as `color-mix(in srgb, …)` mixes it. */
-const tintFallback = (color?: Scene.Color): string => {
+const tintFallback = (color?: Shape.Color): string => {
   const hex = TEXT_HEX[colorClass(color)?.split(' ')[0] ?? ''] ?? INK_HEX;
   const channel = (offset: number, source: string) => parseInt(source.slice(offset, offset + 2), 16);
   return `#${[1, 3, 5]
@@ -186,7 +188,7 @@ const tspans = (lines: string[], x: number, lineH: number): Markup[] =>
   lines.map((line, index) => el('tspan', { x: x, dy: index === 0 ? 0 : lineH }, [line]));
 
 /** Free-standing centred text, one line per `\n`. */
-const multilineText = (cxValue: number, cy: number, text: string, weight: Scene.Weight, className?: string) => {
+const multilineText = (cxValue: number, cy: number, text: string, weight: Shape.Weight, className?: string) => {
   const lines = text.split('\n');
   return el(
     'text',
@@ -203,7 +205,7 @@ const multilineText = (cxValue: number, cy: number, text: string, weight: Scene.
 };
 
 /** A box's label, set by `Diagnostics.layoutLabel` so it stays inside the box and the label check agrees. */
-const boxLabel = (rect: Rect, text: string, weight: Scene.Weight) => {
+const boxLabel = (rect: Rect, text: string, weight: Shape.Weight) => {
   const { lines, size, lineH, overflow } = Diagnostics.layoutLabel(text, weight, rect);
   const mid = center(rect);
   return el(
@@ -221,7 +223,7 @@ const boxLabel = (rect: Rect, text: string, weight: Scene.Weight) => {
 };
 
 /** Per-document marker fragment ids. */
-export type MarkerIds = Record<Scene.Marker, string>;
+export type MarkerIds = Record<Shape.Marker, string>;
 
 /** The marker ids under `prefix`, which keeps several scenes in one document from sharing (and fighting over) ids. */
 export const markerIds = (prefix: string): MarkerIds => ({
@@ -244,7 +246,7 @@ export const ROOT_CLASS = 'text-neutral-800 dark:text-neutral-200';
  */
 export const elementMarkup = (
   object: Scene.WorldObject,
-  element: Scene.Element,
+  element: Shape.Element,
   registry: ReadonlyMap<string, Rect>,
   markers: MarkerIds,
 ): Markup | undefined => {
@@ -325,7 +327,7 @@ export const elementMarkup = (
       const arrow = element.id.endsWith('-path')
         ? object.elements.find((other) => other.kind === 'arrow' && other.id === element.id.slice(0, -'-path'.length))
         : undefined;
-      const derived = arrow?.kind === 'arrow' ? Scene.markersOf(arrow) : undefined;
+      const derived = arrow?.kind === 'arrow' ? Shape.markersOf(arrow) : undefined;
       const start = derived?.start;
       // The route takes its arrow's relation dash unless the polyline sets its own stroke.
       const stroke = element.stroke ?? (derived?.dashed ? 'dashed' : undefined);
@@ -381,7 +383,7 @@ export const elementMarkup = (
       }
       const [start, end] = [points[points.length - 2], points[points.length - 1]];
       const mid = { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 };
-      const { start: tail, end: head, dashed } = Scene.markersOf(element);
+      const { start: tail, end: head, dashed } = Shape.markersOf(element);
       // On a routed connector the source marker is drawn by its `-path` polyline instead.
       const routed = object.elements.some(
         (other) => (other.kind === 'line' || other.kind === 'curve') && other.id === `${element.id}-path`,
@@ -496,7 +498,7 @@ export type SceneMarkupOptions = {
 };
 
 /** What a connector draws with apart from its route: its relation (markers and dash), stroke and color. */
-export type ConnectorStyle = Pick<Scene.Arrow, 'relation' | 'head' | 'tail' | 'stroke' | 'color'>;
+export type ConnectorStyle = Pick<Shape.Arrow, 'relation' | 'head' | 'tail' | 'stroke' | 'color'>;
 
 /**
  * A connector along `points` as the layout emits one: the `<id>-path` polyline up to its last leg, then the `<id>`
@@ -507,13 +509,13 @@ export const connectorElements = (
   points: readonly Point[],
   style: ConnectorStyle,
   text?: string,
-): Scene.Element[] => {
+): Shape.Element[] => {
   if (points.length < 2) {
     return [];
   }
   const stroke = style.stroke
     ? { stroke: style.stroke }
-    : Scene.markersOf(style).dashed
+    : Shape.markersOf(style).dashed
       ? { stroke: 'dashed' as const }
       : {};
   const color = style.color ? { color: style.color } : {};

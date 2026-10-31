@@ -4,9 +4,10 @@
 
 import React, { useLayoutEffect, useRef, useState } from 'react';
 
+import { type Bounds } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
-import { type Background, type Bounds, type Camera } from '../../model/index.ts';
+import { type Background, type Camera } from '../../model/index.ts';
 import { BACKGROUND_FILLS, WASH_TEXT } from '../../utils/index.ts';
 
 /** The most washes the shader blends; the built-in backgrounds use two. */

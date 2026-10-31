@@ -39,6 +39,8 @@ type FieldsetRootProps = ThemedClassName<FieldsetPrimitive.RootProps> & {
    * host's surface, its fields still sharing the parent's columns.
    */
   inset?: boolean;
+  /** Stacks its content under the legend without the set's gap, as a single field stacks its control under its label. */
+  compact?: boolean;
 };
 
 /**
@@ -47,7 +49,7 @@ type FieldsetRootProps = ThemedClassName<FieldsetPrimitive.RootProps> & {
  * with `gutter='inherit'` it is a subgrid of its parent.
  */
 const FieldsetRoot = forwardRef<HTMLDivElement, FieldsetRootProps>(
-  ({ classNames, span, gutter, level, inset, style, disabled, children, ...props }, forwardedRef) => {
+  ({ classNames, span, gutter, level, inset, compact, style, disabled, children, ...props }, forwardedRef) => {
     const { style: spanStyle, ...spanAttrs } = spanAttributes(span);
     const { style: gridStyle, ...grid } = gutter ? containerAttributes({ gutter, level }) : { style: undefined };
     return (
@@ -56,6 +58,7 @@ const FieldsetRoot = forwardRef<HTMLDivElement, FieldsetRootProps>(
         {...spanAttrs}
         {...grid}
         data-inset={gutter && inset ? '' : undefined}
+        data-compact={compact ? '' : undefined}
         disabled={disabled}
         asChild
         style={{ ...spanStyle, ...gridStyle, ...style }}

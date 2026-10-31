@@ -41,7 +41,8 @@
     .dx-button,
     .dx-card,
     .dx-tree,
-    .dx-pin-input
+    .dx-pin-input,
+    .dx-number-input
   )[data-size='xs'] {
     --dx-block-size: 1.25rem;
     --dx-line-height: var(--text-xs--line-height);
@@ -75,7 +76,8 @@
     .dx-button,
     .dx-card,
     .dx-tree,
-    .dx-pin-input
+    .dx-pin-input,
+    .dx-number-input
   )[data-size='sm'] {
     --dx-block-size: 1.5rem;
     --dx-line-height: var(--text-sm--line-height);
@@ -109,7 +111,8 @@
     .dx-button,
     .dx-card,
     .dx-tree,
-    .dx-pin-input
+    .dx-pin-input,
+    .dx-number-input
   )[data-size='md'] {
     --dx-block-size: 2rem;
     --dx-line-height: var(--text-base--line-height);
@@ -143,7 +146,8 @@
     .dx-button,
     .dx-card,
     .dx-tree,
-    .dx-pin-input
+    .dx-pin-input,
+    .dx-number-input
   )[data-size='lg'] {
     --dx-block-size: 2.5rem;
     --dx-line-height: var(--text-lg--line-height);
@@ -177,7 +181,8 @@
     .dx-button,
     .dx-card,
     .dx-tree,
-    .dx-pin-input
+    .dx-pin-input,
+    .dx-number-input
   )[data-size='xl'] {
     --dx-block-size: 3rem;
     --dx-line-height: var(--text-xl--line-height);

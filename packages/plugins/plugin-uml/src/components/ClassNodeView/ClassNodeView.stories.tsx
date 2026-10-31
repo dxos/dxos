@@ -3,76 +3,136 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import {
-  Canvas,
-  LinesField,
-  ViewBuilder,
-  createMemoryStore,
+  type Camera,
   createNodeRegistry,
   defaultNodePrototypes,
   defaultNodeTypes,
-} from '@dxos/react-ui-canvas/scene';
+  kindNodeDef,
+} from '@dxos/react-ui-canvas';
+import { type EditorDisplay, LinesField, SceneEditor, createConfig2D } from '@dxos/react-ui-canvas-editor';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
+import { type LayoutIntent, type Scene, applyIntent } from '@dxos/scene';
 
 import { ClassNode } from '#types';
 
 import { ClassNodeView } from './ClassNodeView.tsx';
 
-// The canvas as plugin-canvas composes it once this plugin contributes the class type.
-const nodes = createNodeRegistry(
-  {
-    ...defaultNodeTypes,
-    [ClassNode.TYPE]: {
-      ...ClassNode.spec,
-      component: ClassNodeView,
-      fields: { attributes: LinesField, methods: LinesField },
+// The 2D editor as plugin-canvas composes it once this plugin contributes the class kind.
+const config = createConfig2D({
+  nodes: createNodeRegistry(
+    {
+      ...defaultNodeTypes,
+      [ClassNode.TYPE]: {
+        ...kindNodeDef(ClassNode.TYPE, ClassNode.spec),
+        component: ClassNodeView,
+        fields: { attributes: LinesField, methods: LinesField },
+      },
     },
-  },
-  defaultNodePrototypes,
-);
+    defaultNodePrototypes,
+  ),
+  kinds: ClassNode.kinds,
+});
 
-const box = (x: number, y: number) => ({ x, y, width: 256, height: 256 });
+const AUTHORED_CAMERA: Camera = { x: 0, y: 0, zoom: 1 };
+
+const classOf = (
+  id: string,
+  z: string,
+  [x, y]: [number, number],
+  label: string,
+  attributes: string[],
+  methods: string[],
+) => ({
+  ...ClassNode.make({ id, z, center: { x, y }, size: { width: 256, height: 256 } }),
+  label,
+  attributes,
+  methods,
+});
+
+const linkOf = (
+  id: string,
+  z: string,
+  source: string,
+  target: string,
+  ends: Record<string, string>,
+): Scene.Element2D => ({
+  id,
+  type: 'link',
+  z,
+  source: { node: source },
+  target: { node: target },
+  props: { canvas: { type: 'smart', ends } },
+});
 
 /** A small class model: an employee is a person (inheritance) who works for an organization. */
-const createClassTree = () =>
-  ViewBuilder.view('root', [
-    ViewBuilder.node('class', 'person', box(-384, -320)).properties({
-      label: 'Person',
-      attributes: ['name: string'],
-      methods: ['greet()'],
-    }),
-    ViewBuilder.node('class', 'employee', box(-384, 64)).properties({
-      label: 'Employee',
-      attributes: ['title: string'],
-      methods: ['work()'],
-    }),
-    ViewBuilder.node('class', 'org', box(128, 64)).properties({
-      label: 'Organization',
-      attributes: ['name: string'],
-      methods: ['hire(person)'],
-    }),
-    ViewBuilder.link('smart', 'employee', 'person').properties({ ends: { end: 'triangle' } }),
-    ViewBuilder.link('smart', 'employee', 'org').properties({ ends: { start: 'circle', end: 'arrow' } }),
-  ])
-    .name('Classes')
-    .build(nodes);
+const createClassDocument = (): Scene.SceneDocument => {
+  const elements: Scene.Element2D[] = [
+    classOf('person', 'a0', [-256, -192], 'Person', ['name: string'], ['greet()']),
+    classOf('employee', 'a1', [-256, 192], 'Employee', ['title: string'], ['work()']),
+    classOf('org', 'a2', [256, 192], 'Organization', ['name: string'], ['hire(person)']),
+    linkOf('extends', 'a3', 'employee', 'person', { end: 'triangle' }),
+    linkOf('works', 'a4', 'employee', 'org', { start: 'circle', end: 'arrow' }),
+  ];
+  return {
+    scenes: [{ id: 'root', dim: '2d', layout: 'classes', camera: { center: { x: 0, y: 0 }, zoom: 1 } }],
+    layouts: [
+      {
+        id: 'classes',
+        dim: '2d',
+        name: 'Classes',
+        elements: Object.fromEntries(elements.map((element) => [element.id, element])),
+      },
+    ],
+    models: [],
+  };
+};
 
 const DefaultStory = () => {
-  const { store, root } = useMemo(() => {
-    const tree = createClassTree();
-    return { store: createMemoryStore(tree.views), root: tree.root };
-  }, []);
+  const [document, setDocument] = useState(createClassDocument);
+  const handleIntent = useCallback(
+    (layout: string, intent: LayoutIntent) =>
+      setDocument((current) => ({
+        ...current,
+        layouts: current.layouts.map((record) => (record.id === layout ? applyIntent(record, intent) : record)),
+      })),
+    [],
+  );
+  const [display, setDisplay] = useState<EditorDisplay>({ theme: 'flat', grid: true, snap: true, guides: true });
+  const handleDisplayChange = useCallback(
+    (next: Partial<EditorDisplay>) => setDisplay((current) => ({ ...current, ...next })),
+    [],
+  );
+  const [camera, setCamera] = useState<Camera>();
+  const [docked, setDocked] = useState(false);
+  const scene = useMemo(() => document.scenes[0].id, [document]);
   return (
-    <Canvas.Root store={store} root={root} nodes={nodes}>
-      <Canvas.Viewport />
-      <Canvas.Actions />
-      <Canvas.Tools />
-      <Canvas.Properties />
-    </Canvas.Root>
+    <SceneEditor.Root
+      config={config}
+      document={document}
+      scene={scene}
+      onIntent={handleIntent}
+      display={display}
+      onDisplayChange={handleDisplayChange}
+      camera={camera}
+      authoredCamera={AUTHORED_CAMERA}
+      onCameraChange={setCamera}
+      docked={docked}
+      onDockedChange={setDocked}
+    >
+      <SceneEditor.Viewport>
+        <SceneEditor.Tools />
+        <SceneEditor.Actions />
+        <SceneEditor.Camera />
+        <SceneEditor.Display />
+        <SceneEditor.ContextMenu />
+      </SceneEditor.Viewport>
+      <SceneEditor.Inspector />
+    </SceneEditor.Root>
   );
 };
 

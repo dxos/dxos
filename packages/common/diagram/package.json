@@ -45,6 +45,7 @@
     "@dagrejs/dagre": "catalog:",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/scene": "workspace:*",
     "@dxos/util": "workspace:*",
     "@lezer/common": "catalog:",
     "@lezer/highlight": "catalog:",

@@ -11,6 +11,7 @@ import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import { type ClientServicesRpc, makeHandlersFromRpc } from '@dxos/client-protocol';
 import * as AgentPlugin from '@dxos/plugin-agent/AgentPlugin';
+import * as AnimatorPlugin from '@dxos/plugin-animator/AnimatorPlugin';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as BloggerPlugin from '@dxos/plugin-blogger/BloggerPlugin';
 import * as BlueskyPlugin from '@dxos/plugin-bluesky/BlueskyPlugin';
@@ -82,7 +83,6 @@ import * as SequencerPlugin from '@dxos/plugin-sequencer/SequencerPlugin';
 import * as SheetPlugin from '@dxos/plugin-sheet/SheetPlugin';
 import * as SidekickPlugin from '@dxos/plugin-sidekick/SidekickPlugin';
 import * as SlackPlugin from '@dxos/plugin-slack/SlackPlugin';
-import * as SpacetimePlugin from '@dxos/plugin-spacetime/SpacetimePlugin';
 import * as StackPlugin from '@dxos/plugin-stack/StackPlugin';
 import * as StePlugin from '@dxos/plugin-ste/StePlugin';
 import * as StreamDeckPlugin from '@dxos/plugin-stream-deck/StreamDeckPlugin';
@@ -343,6 +343,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
  */
 // TODO(wittjosiah): Consider factoring these out as standalone plugins published through the registry.
 const experimental: Plugin.Plugin[] = [
+  AnimatorPlugin.make(),
   BloggerPlugin.make(),
   BlueskyPlugin.make(),
   BrainPlugin.make(),
@@ -364,7 +365,6 @@ const experimental: Plugin.Plugin[] = [
   S3Plugin.make(),
   SequencerPlugin.make(),
   SlackPlugin.make(),
-  SpacetimePlugin.make(),
   StreamDeckPlugin.make(),
   StudioPlugin.make(),
   TerraPlugin.make(),

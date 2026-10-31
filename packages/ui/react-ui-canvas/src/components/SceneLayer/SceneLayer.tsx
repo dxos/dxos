@@ -21,31 +21,22 @@ import React, {
   useState,
 } from 'react';
 
+import { type EffectStatus } from '@dxos/animation';
+import { frameTimeAttribute } from '@dxos/animation';
 import { SvgFile } from '@dxos/diagram';
 import * as Button from '@dxos/react-ui/Button';
-import { mx } from '@dxos/ui-theme';
-
-import { type GeneratorFrames, type GeneratorStatus, type Shape } from '../../generator/index.ts';
-import { type ElementHandlers, useSceneLook } from '../../hooks/index.ts';
 import {
+  type Bounds,
   type ElementId,
   type LineStyle,
   LINK_FONT_SIZE,
+  type LinkEnds,
   type LinkId,
-  type LinkKind,
   MAJOR_GRID_RATIO,
   type Marker,
-  NO_STYLES,
   type Node,
-  type NodeDef,
   type NodeId,
-  type NodeRegistry,
-  type NodeViewProps,
-  RADIUS_PX,
   type StyleMap,
-  type View,
-  type ViewStore,
-  frameTimeAttribute,
   isDiagramNode,
   isGeneratorNode,
   isInstanceNode,
@@ -53,19 +44,42 @@ import {
   isPathNode,
   isViewNode,
   linkMarkers,
-  nodeDef,
+  nodeFrame,
   showsContents,
+} from '@dxos/scene';
+import { mx } from '@dxos/ui-theme';
+
+import { type GeneratorFrames, type Shape } from '../../generator/index.ts';
+import { type ElementHandlers, useSceneLook } from '../../hooks/index.ts';
+import {
+  type DrawnLists,
+  type LinkKind,
+  NEU_GROOVE_LIP,
+  NEU_RELIEF,
+  NEU_VARS,
+  type NeuRelief,
+  NO_STYLES,
+  type NodeDef,
+  type NodeRegistry,
+  type NodeViewProps,
+  RADIUS_PX,
+  type RenderList2D,
+  nodeDef,
   styleVariant,
 } from '../../model/index.ts';
 import {
   BORDER_CLASSES,
-  CANVAS_FILLS,
   CAPTION_TEXT,
   DEFAULT_CELL,
+  GROOVE_FILLS,
+  type GrooveHeads,
   type LatticeSpec,
+  type MarkerFrame,
+  NEU_CANVAS_FILL,
   type PartEditing,
   type PartKey,
   alignClasses,
+  canvasFillClass,
   classedLink,
   classedNode,
   compositeBounds,
@@ -75,16 +89,23 @@ import {
   diagramNodeMarkup,
   elementLayer,
   frameClasses,
+  grooveBounds,
+  grooveHeads,
+  grooveTrim,
   instanceTransform,
   instanceView,
   isMultiline,
   lineClasses,
+  markerFrame,
+  markerTrim,
   nodeBounds,
   nodeParts,
+  nodeRelief,
   portalFrame,
   portalScale,
   portalTransform,
   sortByZ,
+  trimPath,
   viewLayers,
   viewLinkGeometry,
   visibleView,
@@ -113,8 +134,9 @@ export const tierFor = (node: Node, zoom: number, depth: number, liveDepth: numb
 };
 
 export type SceneLayerProps = {
-  store: ViewStore;
-  scene: View;
+  lists: DrawnLists;
+  /** The layout to draw, as the engine's render list. */
+  scene: RenderList2D;
   registry: NodeRegistry;
   /** Effective screen zoom of this layer (camera zoom × portal scales). */
   zoom: number;
@@ -152,7 +174,7 @@ export type SceneLayerProps = {
 
 export const SceneLayer = memo(
   ({
-    store,
+    lists,
     scene: sceneProp,
     registry,
     zoom,
@@ -205,7 +227,7 @@ export const SceneLayer = memo(
       });
     }, [scene, links, selected]);
     // Each element is drawn with its class's look under its own; the handlers still get the element as stored.
-    const styles = useAtomValue(store.styles ?? NO_STYLES);
+    const styles = useAtomValue(lists.styles ?? NO_STYLES);
     const lines = useMemo(
       () => new Map(links.map(({ link }) => [link.id, classedLink(link, styles).style])),
       [links, styles],
@@ -216,7 +238,7 @@ export const SceneLayer = memo(
     const linkWidth = look.styleSet.link.width * weight;
     // End markers keep the line's own weight whatever the set draws the link as, so an arrowhead stays crisp.
     const markerWidth = LINK_WIDTH * weight;
-    const canvasFill = CANVAS_FILLS.opaque[look.tone];
+    const canvasFill = canvasFillClass(look, 'opaque');
     // Everything but the portal being zoomed into fades with the zoom (see `layerOpacity`).
     const fadeStyle: CSSProperties | undefined = focus && focus.opacity < 1 ? { opacity: focus.opacity } : undefined;
     // One set of end markers per line colour in use, sized in scene units so they scale with the nodes they join.
@@ -295,16 +317,20 @@ export const SceneLayer = memo(
                                   ? 'stroke-focus/50'
                                   : lineClasses(lines.get(link.id)?.hue).stroke
                           }
+                          emphasis={!plain && (selected?.has(link.id) || hoveredLink === link.id)}
                           width={linkWidth}
                           lineStyle={lines.get(link.id)?.lineStyle}
                           linkId={link.id}
+                          ends={linkMarkers(link)}
+                          endSize={END_BOX * cell}
+                          markerWidth={markerWidth}
                         />
                       )}
                       {link.text && !diagram && (
                         <LinkText
                           path={path}
                           text={link.text}
-                          backdrop={CANVAS_FILLS[look.styleSet.link.caption][look.tone]}
+                          backdrop={canvasFillClass(look, look.styleSet.link.caption)}
                           textClass={CAPTION_TEXT[look.tone]}
                           fontSize={lines.get(link.id)?.fontSize ?? LINK_FONT_SIZE}
                         />
@@ -315,7 +341,7 @@ export const SceneLayer = memo(
                 {/* Above the layer's links, below its nodes; marked with the time it drew, which export waits on. */}
                 {generated && group.nodes.some(isGeneratorNode) && (
                   <GeneratedShapes
-                    store={store}
+                    lists={lists}
                     registry={registry}
                     zoom={zoom}
                     depth={depth}
@@ -327,7 +353,7 @@ export const SceneLayer = memo(
                 {group.nodes.map((node) => (
                   <NodeFrame
                     key={node.id}
-                    store={store}
+                    lists={lists}
                     scene={scene}
                     registry={registry}
                     node={node}
@@ -351,7 +377,8 @@ export const SceneLayer = memo(
                 {/* The ends paint over the layer's nodes, so an end centred on a node's edge shows whole. */}
                 <svg className='absolute overflow-visible pointer-events-none' style={fadeStyle} width={1} height={1}>
                   {group.links.map(({ link, path, diagram }) =>
-                    diagram ? null : (
+                    // A groove draws its ends with its track.
+                    diagram || look.styleSet.link.kind === 'groove' ? null : (
                       <path
                         key={link.id}
                         d={path}
@@ -376,7 +403,7 @@ SceneLayer.displayName = 'SceneLayer';
 /** The generator frames of the root layer, for the generator nodes' own views (their status). */
 const GeneratedContext = createContext<GeneratorFrames | undefined>(undefined);
 
-type GeneratedShapesProps = Pick<SceneLayerProps, 'store' | 'registry' | 'zoom' | 'depth'> & {
+type GeneratedShapesProps = Pick<SceneLayerProps, 'lists' | 'registry' | 'zoom' | 'depth'> & {
   t: number;
   shapes: readonly Shape[];
   style?: CSSProperties;
@@ -391,60 +418,76 @@ const paint = (shape: { hue?: string; color?: string }, kind: 'fill' | 'stroke')
         [kind]: shape.hue ? undefined : 'currentColor',
       };
 
+export type ShapeLayerProps = {
+  /** The time the shapes were drawn for, which a frame renderer waits on. */
+  t: number;
+  shapes: readonly Shape[];
+  style?: CSSProperties;
+  testId?: string;
+};
+
+/**
+ * Shapes in scene coordinates, as one SVG under the camera: a generator's or an animator effect's `2d` items. Instances
+ * are left to the caller, since drawing a composite needs the scene lists.
+ */
+export const ShapeLayer = ({ t, shapes, style, testId = 'generator-layer' }: ShapeLayerProps) => (
+  <svg
+    className='absolute overflow-visible pointer-events-none'
+    style={style}
+    width={1}
+    height={1}
+    data-frame-time={frameTimeAttribute(t)}
+    data-testid={testId}
+  >
+    {shapes.map((shape, index) => {
+      switch (shape.kind) {
+        case 'circle':
+          return (
+            <circle
+              key={index}
+              cx={shape.center.x}
+              cy={shape.center.y}
+              r={shape.radius}
+              opacity={shape.opacity}
+              {...paint(shape, 'fill')}
+            />
+          );
+        case 'rect':
+          return (
+            <rect key={index} {...shape.bounds} rx={shape.radius} opacity={shape.opacity} {...paint(shape, 'fill')} />
+          );
+        case 'path':
+          return (
+            <path
+              key={index}
+              d={shape.d}
+              fill='none'
+              strokeWidth={shape.width ?? 2}
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              opacity={shape.opacity}
+              {...(shape.reveal !== undefined
+                ? { pathLength: 1, strokeDasharray: `${Math.max(0, shape.reveal)} 1` }
+                : {})}
+              {...paint({ hue: shape.hue, color: shape.color ?? shape.stroke }, 'stroke')}
+            />
+          );
+        case 'instance':
+          return null;
+      }
+    })}
+  </svg>
+);
+
 /** A generator layer: the shapes the layer's generators returned, in scene coordinates. */
-const GeneratedShapes = ({ store, registry, zoom, depth, t, shapes, style }: GeneratedShapesProps) => (
+const GeneratedShapes = ({ lists, registry, zoom, depth, t, shapes, style }: GeneratedShapesProps) => (
   <>
-    <svg
-      className='absolute overflow-visible pointer-events-none'
-      style={style}
-      width={1}
-      height={1}
-      data-frame-time={frameTimeAttribute(t)}
-      data-testid='generator-layer'
-    >
-      {shapes.map((shape, index) => {
-        switch (shape.kind) {
-          case 'circle':
-            return (
-              <circle
-                key={index}
-                cx={shape.center.x}
-                cy={shape.center.y}
-                r={shape.radius}
-                opacity={shape.opacity}
-                {...paint(shape, 'fill')}
-              />
-            );
-          case 'rect':
-            return (
-              <rect key={index} {...shape.bounds} rx={shape.radius} opacity={shape.opacity} {...paint(shape, 'fill')} />
-            );
-          case 'path':
-            return (
-              <path
-                key={index}
-                d={shape.d}
-                fill='none'
-                strokeWidth={shape.width ?? 2}
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                opacity={shape.opacity}
-                {...(shape.reveal !== undefined
-                  ? { pathLength: 1, strokeDasharray: `${Math.max(0, shape.reveal)} 1` }
-                  : {})}
-                {...paint({ hue: shape.hue, color: shape.color ?? shape.stroke }, 'stroke')}
-              />
-            );
-          case 'instance':
-            return null;
-        }
-      })}
-    </svg>
+    <ShapeLayer t={t} shapes={shapes} style={style} />
     {shapes.map((shape, index) =>
       shape.kind === 'instance' ? (
         <InstanceShape
           key={index}
-          store={store}
+          lists={lists}
           registry={registry}
           zoom={zoom}
           depth={depth}
@@ -458,7 +501,7 @@ const GeneratedShapes = ({ store, registry, zoom, depth, t, shapes, style }: Gen
   </>
 );
 
-type InstanceShapeProps = Pick<SceneLayerProps, 'store' | 'registry' | 'zoom' | 'depth'> & {
+type InstanceShapeProps = Pick<SceneLayerProps, 'lists' | 'registry' | 'zoom' | 'depth'> & {
   composite: string;
   center: { x: number; y: number };
   scale: number;
@@ -466,8 +509,8 @@ type InstanceShapeProps = Pick<SceneLayerProps, 'store' | 'registry' | 'zoom' | 
 };
 
 /** A composite a generator placed: drawn about `center`, scaled, read-only. */
-const InstanceShape = ({ store, registry, zoom, depth, composite, center, scale, opacity }: InstanceShapeProps) => {
-  const scene = useAtomValue(store.view(composite));
+const InstanceShape = ({ lists, registry, zoom, depth, composite, center, scale, opacity }: InstanceShapeProps) => {
+  const scene = useAtomValue(lists.view(composite));
   const content = useMemo(() => (scene ? compositeBounds(scene) : undefined), [scene]);
   if (!scene || !content) {
     return null;
@@ -479,13 +522,13 @@ const InstanceShape = ({ store, registry, zoom, depth, composite, center, scale,
       className='absolute pointer-events-none'
       style={{ transform: `translate(${x}px, ${y}px) scale(${scale})`, transformOrigin: '0 0', opacity }}
     >
-      <SceneLayer store={store} scene={scene} registry={registry} zoom={zoom * scale} depth={depth + 1} liveDepth={0} />
+      <SceneLayer lists={lists} scene={scene} registry={registry} zoom={zoom * scale} depth={depth + 1} liveDepth={0} />
     </div>
   );
 };
 
 /** A paused generator's reason, shown over its frame. */
-const GeneratorWarning = ({ status }: { status: Extract<GeneratorStatus, { state: 'paused' }> }) => (
+const GeneratorWarning = ({ status }: { status: Extract<EffectStatus, { state: 'paused' }> }) => (
   <div
     className='absolute top-1 left-1 right-1 flex items-start gap-1 p-1 rounded-sm text-xs bg-modal-surface text-error-text pointer-events-none'
     data-testid='generator-paused'
@@ -572,68 +615,53 @@ type MarkersProps = {
 
 const Markers = ({ id, cell, hue, width, canvasFill }: MarkersProps) => {
   const line = lineClasses(hue);
-  // Each end fills a box of `END_BOX` nominal units, so it scales with the grid and the shapes it joins: the
-  // arrow and the triangle 10 of their 12 view units, the circle 8 of its 10.
+  // Each end fills a box of `END_BOX` nominal units, so it scales with the grid and the shapes it joins.
   const box = END_BOX * cell;
-  const arrow = box;
-  const triangle = (box * 12) / 10;
-  const circle = (box * 10) / 8;
+  const arrow = markerFrame('arrow', box, width);
+  const triangle = markerFrame('triangle', box, width);
+  const circle = markerFrame('circle', box, width);
   // An outline matches the line's width, in its marker's view units.
-  const outline = (size: number, view: number) => (width * view) / size;
+  const outline = ({ size, view }: MarkerFrame) => (width * view) / size;
   const ends = ['start', 'end'] as const;
+  // The mitred tip and the circle's far side sit at the anchor, so a marker reaches past its view box.
+  const frame = ({ size, refX, refY }: MarkerFrame, end: 'start' | 'end') => ({
+    refX,
+    refY,
+    markerWidth: size,
+    markerHeight: size,
+    markerUnits: 'userSpaceOnUse',
+    overflow: 'visible',
+    orient: end === 'start' ? 'auto-start-reverse' : 'auto',
+  });
   return (
     <>
       {ends.map((end) => (
-        <marker
-          key={`arrow-${end}`}
-          id={`${id}-arrow-${end}`}
-          viewBox='-1 -1 12 12'
-          refX={10}
-          refY={5}
-          markerWidth={(arrow * 12) / 10}
-          markerHeight={(arrow * 12) / 10}
-          markerUnits='userSpaceOnUse'
-          orient={end === 'start' ? 'auto-start-reverse' : 'auto'}
-        >
-          {/* An open arrowhead: two strokes, not a filled head. */}
+        <marker key={`arrow-${end}`} id={`${id}-arrow-${end}`} viewBox='-1 -1 12 12' {...frame(arrow, end)}>
+          {/* An open arrowhead: two strokes meeting in a mitred point, not a filled head. */}
           <path
             d='M 0 0 L 10 5 L 0 10'
             className={mx('fill-none', line.stroke)}
-            strokeWidth={outline((arrow * 12) / 10, 12)}
+            strokeWidth={outline(arrow)}
             strokeLinecap='round'
-            strokeLinejoin='round'
+            strokeLinejoin='miter'
           />
         </marker>
       ))}
       {/* Inheritance (UML generalization): a triangle filled with the canvas, so the line stops at its base. */}
       {ends.map((end) => (
-        <marker
-          key={`triangle-${end}`}
-          id={`${id}-triangle-${end}`}
-          viewBox='-1 -1 12 12'
-          refX={10}
-          refY={5}
-          markerWidth={triangle}
-          markerHeight={triangle}
-          markerUnits='userSpaceOnUse'
-          orient={end === 'start' ? 'auto-start-reverse' : 'auto'}
-        >
-          <path d='M 0 0 L 10 5 L 0 10 z' className={mx(canvasFill, line.stroke)} strokeWidth={outline(triangle, 12)} />
+        <marker key={`triangle-${end}`} id={`${id}-triangle-${end}`} viewBox='-1 -1 12 12' {...frame(triangle, end)}>
+          <path
+            d='M 0 0 L 10 5 L 0 10 z'
+            className={mx(canvasFill, line.stroke)}
+            strokeWidth={outline(triangle)}
+            strokeLinejoin='miter'
+          />
         </marker>
       ))}
-      {/* A circle centred on the connection point, filled with the canvas so the line stops at its rim. */}
+      {/* A circle filled with the canvas, its far side on the connection point, so the line stops under it. */}
       {ends.map((end) => (
-        <marker
-          key={`circle-${end}`}
-          id={`${id}-circle-${end}`}
-          viewBox='0 0 10 10'
-          refX={5}
-          refY={5}
-          markerWidth={circle}
-          markerHeight={circle}
-          markerUnits='userSpaceOnUse'
-        >
-          <circle cx={5} cy={5} r={4} className={mx(canvasFill, line.stroke)} strokeWidth={outline(circle, 10)} />
+        <marker key={`circle-${end}`} id={`${id}-circle-${end}`} viewBox='0 0 10 10' {...frame(circle, end)}>
+          <circle cx={5} cy={5} r={4} className={mx(canvasFill, line.stroke)} strokeWidth={outline(circle)} />
         </marker>
       ))}
     </>
@@ -662,17 +690,73 @@ type LinkStrokeProps = {
   kind: LinkKind;
   path: string;
   stroke: string;
+  /** Selected or hovered: a groove, which draws no hue, then floors its channel in `stroke`. */
+  emphasis?: boolean;
   width: number;
   lineStyle: LineStyle['lineStyle'];
   linkId: string;
+  /** The link's end markers: the line stops under them, and a groove draws them as more channel. */
+  ends: LinkEnds;
+  /** An end's nominal size, in scene units. */
+  endSize: number;
+  /** The width of a marker's outline, in scene units. */
+  markerWidth: number;
 };
 
 /**
  * A link's visible stroke as its style set draws it: a line; a tube, its hue lit along the middle; rails, two edges over
- * a faint strip; or glass, a translucent strip with fine edges.
+ * a faint strip; glass, a translucent strip with fine edges; or a groove, a channel pressed into the Neu ground. The
+ * line stops under each end, so it never shows past or through an end's point.
  */
-const LinkStroke = ({ id, kind, path, stroke, width, lineStyle, linkId }: LinkStrokeProps) => {
+const LinkStroke = ({
+  id,
+  kind,
+  path: route,
+  stroke,
+  emphasis,
+  width,
+  lineStyle,
+  linkId,
+  ends,
+  endSize,
+  markerWidth,
+}: LinkStrokeProps) => {
   const dash = dashArray(lineStyle, width);
+  const groove = kind === 'groove';
+  const round = groove || (kind === 'line' && lineStyle === 'dotted');
+  const { start, end } = ends;
+  const path = useMemo(() => {
+    const trim = (marker: Marker | undefined) =>
+      marker === undefined
+        ? 0
+        : groove
+          ? grooveTrim(marker, width, endSize)
+          : markerTrim(marker, endSize, markerWidth, { width, round });
+    return trimPath(route, trim(start), trim(end));
+  }, [route, start, end, groove, round, width, endSize, markerWidth]);
+  const heads = useMemo(
+    () => (groove && (start || end) ? grooveHeads(route, { start, end }, width, endSize) : NO_HEADS),
+    [groove, route, start, end, width, endSize],
+  );
+  const bounds = useMemo(
+    () => (groove ? grooveBounds(route, width, endSize) : undefined),
+    [groove, route, width, endSize],
+  );
+  if (groove && bounds) {
+    return (
+      <GrooveStroke
+        id={id}
+        path={path}
+        heads={heads}
+        bounds={bounds}
+        stroke={stroke}
+        emphasis={emphasis}
+        width={width}
+        dash={dash}
+        linkId={linkId}
+      />
+    );
+  }
   if (kind === 'line') {
     return (
       <path
@@ -680,7 +764,7 @@ const LinkStroke = ({ id, kind, path, stroke, width, lineStyle, linkId }: LinkSt
         className={mx('fill-none', stroke)}
         strokeWidth={width}
         strokeDasharray={dash}
-        strokeLinecap={lineStyle === 'dotted' ? 'round' : undefined}
+        strokeLinecap={round ? 'round' : undefined}
         data-link-id={linkId}
       />
     );
@@ -710,6 +794,95 @@ const LinkStroke = ({ id, kind, path, stroke, width, lineStyle, linkId }: LinkSt
         mask={`url(#${maskId})`}
         opacity={kind === 'rails' ? 1 : 0.7}
       />
+    </g>
+  );
+};
+
+type GrooveStrokeProps = Pick<LinkStrokeProps, 'id' | 'path' | 'stroke' | 'emphasis' | 'width' | 'linkId'> & {
+  /** The ends as more channel. */
+  heads: GrooveHeads;
+  /** The region the channel and its masks lie in. */
+  bounds: Bounds;
+  dash: string | undefined;
+};
+
+/** No groove heads: a link without ends. */
+const NO_HEADS: GrooveHeads = { outline: '', hollow: '' };
+
+/**
+ * A channel pressed into the Neu ground, its ends heads of the same channel. The channel is one shape, the track and
+ * its heads less the inside of a hollow head, so the hollow shows the ground; its floor fills it and its walls are bands
+ * inside it, shade on the upper-left (the channel less itself nudged down-right) and light on the lower-right, so every
+ * overlap merges, every corner is cut the same way and nothing reaches past the head's point. Masks, not offset copies,
+ * as an SVG stroke cannot be inset; a filter per link would be far dearer to draw.
+ */
+const GrooveStroke = ({ id, path, heads, bounds, stroke, emphasis, width, dash, linkId }: GrooveStrokeProps) => {
+  const lip = Math.max(0.75, width * NEU_GROOVE_LIP);
+  const key = id.replace(/[^\w-]/g, '_');
+  const masks = {
+    channel: `${key}-channel`,
+    downRight: `${key}-down-right`,
+    upLeft: `${key}-up-left`,
+    shade: `${key}-shade`,
+    light: `${key}-light`,
+  };
+  const region = { maskUnits: 'userSpaceOnUse', ...bounds } as const;
+  // The channel in a mask's white, nudged by `offset` on both axes.
+  const shape = (offset = 0) => (
+    <g transform={offset ? `translate(${offset} ${offset})` : undefined}>
+      {path && (
+        <path d={path} fill='none' stroke='white' strokeWidth={width} strokeDasharray={dash} strokeLinecap='round' />
+      )}
+      {heads.hollow && <path d={heads.hollow} fill='black' />}
+      {heads.outline && (
+        <path d={heads.outline} fill='none' stroke='white' strokeWidth={width} strokeLinejoin='miter' />
+      )}
+    </g>
+  );
+  // The region filled in `className`, cut by `mask` to the part drawn: one fill, so a translucent lip never doubles.
+  const fill = (className: string, mask: string) => <rect {...bounds} className={className} mask={`url(#${mask})`} />;
+  return (
+    <g strokeLinejoin='round' data-link-id={linkId}>
+      <defs>
+        <mask id={masks.channel} {...region}>
+          {shape()}
+        </mask>
+        <mask id={masks.downRight} {...region}>
+          {shape(lip)}
+        </mask>
+        <mask id={masks.upLeft} {...region}>
+          {shape(-lip)}
+        </mask>
+        <mask id={masks.shade} {...region}>
+          {shape()}
+          <rect {...bounds} fill='black' mask={`url(#${masks.downRight})`} />
+        </mask>
+        <mask id={masks.light} {...region}>
+          {shape()}
+          <rect {...bounds} fill='black' mask={`url(#${masks.upLeft})`} />
+        </mask>
+      </defs>
+      {emphasis ? (
+        // The hue is a stroke class, so the emphasised floor is the channel stroked, merged under one opacity.
+        <g mask={`url(#${masks.channel})`} opacity={0.6}>
+          {path && (
+            <path
+              d={path}
+              className={mx('fill-none', stroke)}
+              strokeWidth={width}
+              strokeDasharray={dash}
+              strokeLinecap='round'
+            />
+          )}
+          {heads.outline && (
+            <path d={heads.outline} className={mx('fill-none', stroke)} strokeWidth={width} strokeLinejoin='miter' />
+          )}
+        </g>
+      ) : (
+        fill(GROOVE_FILLS.floor, masks.channel)
+      )}
+      {fill(GROOVE_FILLS.shade, masks.shade)}
+      {fill(GROOVE_FILLS.highlight, masks.light)}
     </g>
   );
 };
@@ -915,8 +1088,30 @@ const NodeFrame = memo(
     const frameLook = props.opening
       ? frameClasses(drawn, false, false, def?.ellipse, look).slice(1)
       : frameClasses(drawn, selected, hovered, def?.ellipse, look);
+    const silhouetteFilled = def?.filled?.(drawn) ?? true;
+    const silhouetteRadius = RADIUS_PX[cornerRadius(drawn.style, styleVariant(look.styleSet, drawn.style?.tone))];
+    const relief = silhouette && silhouetteFilled ? nodeRelief(drawn, look) : undefined;
     return (
       <>
+        {silhouette &&
+          relief && (
+            // Beside the frame, which clips: a raised shadow falls outside the shape.
+            <SilhouetteRelief
+              outline={silhouette}
+              node={drawn}
+              border={border}
+              radius={silhouetteRadius}
+              relief={relief}
+              className={mx(ghost && 'opacity-50')}
+              style={{
+                left: bounds.x,
+                top: bounds.y,
+                ...(drawn.rotation ? { transform: `rotate(${drawn.rotation}deg)` } : {}),
+                ...fade,
+                ...nodeOpacity(drawn, fade),
+              }}
+            />
+          )}
         <div
           className={mx(
             'absolute box-border',
@@ -961,10 +1156,12 @@ const NodeFrame = memo(
             <div className={mx('contents', ...frameLook)}>
               <Silhouette
                 outline={silhouette}
-                filled={def?.filled?.(drawn) ?? true}
+                filled={silhouetteFilled}
+                // An inset relief draws the fill itself, under its inner shadow.
+                fill={relief !== 'inset'}
                 node={drawn}
                 border={border}
-                radius={RADIUS_PX[cornerRadius(drawn.style, styleVariant(look.styleSet, drawn.style?.tone))]}
+                radius={silhouetteRadius}
                 // A guide is dashed whatever its line style, as a box's border is.
                 lineStyle={
                   drawn.style?.guide
@@ -1030,6 +1227,8 @@ type SilhouetteProps = {
   outline: NonNullable<NodeDef['silhouette']>;
   /** False for an open outline, which has no inside to fill. */
   filled: boolean;
+  /** False when another layer draws the fill. */
+  fill?: boolean;
   node: Node;
   border: number;
   radius: number;
@@ -1041,7 +1240,7 @@ type SilhouetteProps = {
  * A frame's fill and border cut to an outline: a layer inheriting the fill and one the border colour, each masked by
  * the path (filled, then stroked), so the shape draws with every look a box has.
  */
-const Silhouette = ({ outline, filled, node, border, radius, lineStyle }: SilhouetteProps) => {
+const Silhouette = ({ outline, filled, fill = true, node, border, radius, lineStyle }: SilhouetteProps) => {
   const { width, height } = node.size;
   const dash = dashArray(lineStyle, border);
   const masks = useMemo(() => {
@@ -1060,7 +1259,7 @@ const Silhouette = ({ outline, filled, node, border, radius, lineStyle }: Silhou
   const layer: CSSProperties = { maskSize: '100% 100%', maskRepeat: 'no-repeat' };
   return (
     <>
-      {filled && (
+      {filled && fill && (
         <div
           aria-hidden
           className='dx-cover pointer-events-none'
@@ -1079,6 +1278,94 @@ const Silhouette = ({ outline, filled, node, border, radius, lineStyle }: Silhou
         }}
       />
     </>
+  );
+};
+
+type SilhouetteReliefProps = {
+  outline: NonNullable<NodeDef['silhouette']>;
+  node: Node;
+  border: number;
+  radius: number;
+  relief: NeuRelief;
+  className?: string;
+  /** Position, rotation and fade, as the frame's. */
+  style: CSSProperties;
+};
+
+const SHADE_FLOOD: CSSProperties = { floodColor: `var(${NEU_VARS.shade})` };
+const HIGHLIGHT_FLOOD: CSSProperties = { floodColor: `var(${NEU_VARS.highlight})` };
+
+/**
+ * A silhouette's Neu relief, which its masked layers cannot cast: the outline in the ground colour under one filter of
+ * two blurred, offset copies of its alpha, as the box-shadow a box draws with. Raised, the copies fall outside the shape
+ * behind the frame; inset, they fall inside it over this layer's own fill.
+ */
+const SilhouetteRelief = ({ outline, node, border, radius, relief, className, style }: SilhouetteReliefProps) => {
+  const id = useId();
+  const { width, height } = node.size;
+  const path = useMemo(() => outline(node, border / 2, radius), [outline, node, border, radius]);
+  const { offset, blur } = NEU_RELIEF[relief];
+  // Box-shadow blur is twice the Gaussian deviation.
+  const deviation = blur / 2;
+  const pad = offset + blur * 2;
+  const inset = relief === 'inset';
+  const copy = (dx: number, flood: CSSProperties, name: string) => (
+    <>
+      <feOffset in='blur' dx={dx} dy={dx} result={`${name}-at`} />
+      <feFlood style={flood} />
+      <feComposite in2={`${name}-at`} operator='in' result={inset ? `${name}-all` : name} />
+      {inset && <feComposite in={`${name}-all`} in2='SourceAlpha' operator='in' result={name} />}
+    </>
+  );
+  return (
+    <svg
+      aria-hidden
+      className={mx('absolute overflow-visible pointer-events-none', className)}
+      width={width}
+      height={height}
+      style={style}
+    >
+      <defs>
+        <filter
+          id={id}
+          filterUnits='userSpaceOnUse'
+          x={-pad}
+          y={-pad}
+          width={width + pad * 2}
+          height={height + pad * 2}
+        >
+          {inset ? (
+            <>
+              {/* The outside of the shape, so its shadow falls on the inner walls. */}
+              <feComponentTransfer in='SourceAlpha' result='outside'>
+                <feFuncA type='table' tableValues='1 0' />
+              </feComponentTransfer>
+              <feGaussianBlur in='outside' stdDeviation={deviation} result='blur' />
+            </>
+          ) : (
+            <feGaussianBlur in='SourceAlpha' stdDeviation={deviation} result='blur' />
+          )}
+          {copy(-offset, HIGHLIGHT_FLOOD, 'highlight')}
+          {copy(offset, SHADE_FLOOD, 'shade')}
+          <feMerge>
+            {inset ? (
+              <>
+                <feMergeNode in='SourceGraphic' />
+                <feMergeNode in='shade' />
+                <feMergeNode in='highlight' />
+              </>
+            ) : (
+              <>
+                <feMergeNode in='highlight' />
+                <feMergeNode in='shade' />
+                <feMergeNode in='SourceGraphic' />
+              </>
+            )}
+          </feMerge>
+        </filter>
+      </defs>
+      <path d={path} className={NEU_CANVAS_FILL} filter={`url(#${id})`} />
+    </svg>
   );
 };
 
@@ -1175,8 +1462,8 @@ export const NoteNodeView = ({ node, editing }: NodeViewProps) => {
  * preview, then the live scene as it grows on screen), and a zoom-in control at the top-right.
  */
 export const ViewNodeView = (props: NodeViewProps) => {
-  const { node, store, registry, zoom, depth, liveDepth, opening, editing, onOpen } = props;
-  const child = useAtomValue(store.view(isViewNode(node) ? node.scene : ''));
+  const { node, lists, registry, zoom, depth, liveDepth, opening, editing, onOpen } = props;
+  const child = useAtomValue(lists.view(isViewNode(node) ? node.scene : ''));
   const contents = opening || (isViewNode(node) && showsContents(node));
   // Being entered, the portal is already the child scene on the canvas: live.
   const tier = !child ? 'dot' : opening ? 'live' : tierFor(node, zoom, depth, liveDepth);
@@ -1220,7 +1507,7 @@ export const ViewNodeView = (props: NodeViewProps) => {
             }}
           >
             <SceneLayer
-              store={store}
+              lists={lists}
               scene={child}
               registry={registry}
               zoom={zoom * portalScale(node, bounds)}
@@ -1242,15 +1529,18 @@ export const ViewNodeView = (props: NodeViewProps) => {
  * A composite object's instance: the composite scene, with the instance's overrides, scaled into the frame
  * (ANIMATION.md §4.1). The nested layer is read-only; the instance is selected and moved as one node.
  */
-export const InstanceNodeView = ({ node, store, registry, zoom, depth, liveDepth }: NodeViewProps) => {
-  const composite = useAtomValue(store.view(isInstanceNode(node) ? node.composite : ''));
+export const InstanceNodeView = ({ node, lists, registry, zoom, depth, liveDepth }: NodeViewProps) => {
+  const composite = useAtomValue(lists.view(isInstanceNode(node) ? node.composite : ''));
   const drawn = useMemo(
     () => (composite && isInstanceNode(node) ? instanceView(node, composite) : undefined),
     [node, composite],
   );
   const bounds = nodeBounds(node);
   const transform = useMemo(
-    () => (drawn && isInstanceNode(node) ? instanceTransform(bounds, compositeBounds(drawn), node.fit) : undefined),
+    () =>
+      drawn && isInstanceNode(node)
+        ? instanceTransform(bounds, nodeFrame(node) ?? compositeBounds(drawn), node.fit)
+        : undefined,
     // Keyed on the geometry rather than the bounds object, which is new on every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [drawn, node, bounds.x, bounds.y, bounds.width, bounds.height],
@@ -1271,7 +1561,7 @@ export const InstanceNodeView = ({ node, store, registry, zoom, depth, liveDepth
       data-instance={node.id}
     >
       <SceneLayer
-        store={store}
+        lists={lists}
         scene={drawn}
         registry={registry}
         zoom={zoom * transform.scale}

@@ -4,7 +4,7 @@
 
 import wasmURL from 'esbuild-wasm/esbuild.wasm?url';
 
-import { createEsbuildCompiler } from '@dxos/react-ui-canvas/headless';
+import { createEsbuildCompiler } from '@dxos/animation';
 
 /** Compiles generator sources once per page; in a browser esbuild loads its binary from the bundled URL. */
 export const generatorCompiler = createEsbuildCompiler({

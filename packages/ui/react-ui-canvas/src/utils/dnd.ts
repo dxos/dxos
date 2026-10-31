@@ -1,3 +1,4 @@
+import { type NodeType } from '@dxos/scene';
 //
 // Copyright 2026 DXOS.org
 //
@@ -6,8 +7,6 @@
 // The drag payload a node type travels as between the palette (or a host's own draggable) and the
 // canvas drop target (DESIGN.md §8 "external drag-in"); internal gestures stay pointer-driven.
 //
-
-import { type NodeType } from '../model/index.ts';
 
 const NODE_DRAG_TYPE = 'dx-canvas/node';
 

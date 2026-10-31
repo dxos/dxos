@@ -7,7 +7,8 @@
 // so this improves a seed arrangement against a score of the drawn result (crossings, bends, length).
 //
 
-import { type Point } from '../model/index.ts';
+import { type Point } from '@dxos/scene';
+
 import { type Slot } from './arrange.ts';
 
 /** Lower is better. */

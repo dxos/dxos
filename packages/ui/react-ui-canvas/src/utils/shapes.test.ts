@@ -4,10 +4,23 @@
 
 import { describe, test } from 'vitest';
 
-import { type SplineLink } from '../model/index.ts';
-import { cloneShape, createNode, flipLink } from './shapes.ts';
+import { type SplineLink } from '@dxos/scene';
+
+import { cloneShape, createLink, createNode, flipLink } from './shapes.ts';
 
 describe('shapes', () => {
+  test('a new spline has no control points until one is added', ({ expect }) => {
+    const link = createLink({ type: 'spline', id: 's', z: 'a0', source: { node: 'a' }, target: { node: 'b' } });
+    expect(link).toEqual({
+      type: 'spline',
+      id: 's',
+      z: 'a0',
+      source: { node: 'a' },
+      target: { node: 'b' },
+      points: [],
+    });
+  });
+
   test('a cloned shape keeps the look and size but not the text, identity or place', ({ expect }) => {
     const source = {
       ...createNode({ type: 'rect', id: 'a', z: 'a0', center: { x: 0, y: 0 }, size: { width: 192, height: 96 } }),

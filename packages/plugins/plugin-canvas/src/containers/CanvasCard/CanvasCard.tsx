@@ -2,63 +2,90 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { invariant } from '@dxos/invariant';
-import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import type * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
-import { Canvas, createLatticeProjection } from '@dxos/react-ui-canvas/scene';
+import { Scene2DView, toViewportDocument } from '@dxos/react-ui-canvas';
+import { Scene3DView } from '@dxos/react-ui-canvas/3d';
 import * as Card from '@dxos/react-ui/Card';
+import { Scene } from '@dxos/scene';
 
-import { canvasRecordOf } from '#model';
+import { canvasDimension, openScene } from '#model';
+import { Canvas as CanvasFormat } from '#types';
 
 import { CanvasDatabaseContext } from '../CanvasArticle/CanvasViewNodeView.tsx';
-import { useBoundCanvasStore, useCanvasNodes } from '../CanvasArticle/use-canvas-scene.ts';
-
-// A card is a preview: only the drawing, fitted, with no grid or guides.
-const CARD_DISPLAY = { snap: false, guides: false, fit: true };
+import { useCanvasKinds, useCanvasNodes } from '../CanvasArticle/use-canvas-scene.ts';
+import { useSceneDocument } from '../CanvasStage/index.ts';
 
 // The view's default fit margin (two major cells a side) would leave a card-sized view mostly empty.
 const CARD_MARGIN = 0.25;
 
-export type CanvasCardProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
+export type CanvasCardProps = IllustratorCapabilities.DrawingVariantSurfaceProps<Obj.Unknown>;
 
-/** The card surface of the canvas variant: the drawing's root scene alone, fitted, on the card's own surface. */
-export const CanvasCard = ({ canvas }: CanvasCardProps) => {
-  invariant(Obj.instanceOf(Drawing.Canvas, canvas));
-  const nodes = useCanvasNodes();
-  const bound = useBoundCanvasStore(canvas);
-  const [snapshot] = useObject(canvas);
-  const record = canvasRecordOf(snapshot.content);
+/** The card surface of the canvas variant: the drawing's open scene alone, fitted, on the card's own surface. */
+export const CanvasCard = ({ canvas }: CanvasCardProps) =>
+  CanvasFormat.isCanvas(canvas) ? <DimensionCard canvas={canvas} /> : null;
 
+CanvasCard.displayName = 'CanvasCard';
+
+/** A 3D canvas's card shows its open scene through the 3D renderer; every other one through the 2D engine. */
+const DimensionCard = ({ canvas }: { canvas: CanvasFormat.Canvas }) => {
+  useObject(canvas);
+  return canvasDimension(canvas) === '3d' ? <Canvas3DCard canvas={canvas} /> : <Canvas2DCard canvas={canvas} />;
+};
+
+/** The open 3D scene from its authored camera: no grid, and inert, so a press or wheel reaches the card. */
+const Canvas3DCard = ({ canvas }: { canvas: CanvasFormat.Canvas }) => {
+  const scene = openScene(canvas);
+  const stored = Obj.instanceOf(Scene.Scene3D, scene) ? scene : undefined;
+  const document = useSceneDocument(stored);
   return (
     <Card.Body>
       <Card.Section classNames='aspect-square'>
-        {bound && (
-          <CanvasDatabaseContext.Provider value={Obj.getDatabase(canvas)}>
-            <Canvas.Root
-              key={bound.root}
-              // Spans the card's rails as well as its content column; inert, so a press or wheel reaches the card rather
-              // than panning the drawing.
-              classNames='col-[full] bg-transparent pointer-events-none'
-              store={bound.store}
-              root={bound.root}
-              nodes={nodes}
-              createProjection={record?.lattice === true ? createLatticeProjection : undefined}
-              grid={record?.grid}
-              margin={CARD_MARGIN}
-              readonly
-              initialDisplay={CARD_DISPLAY}
-            >
-              <Canvas.Viewport liveDepth={0} />
-            </Canvas.Root>
-          </CanvasDatabaseContext.Provider>
+        {stored && document && (
+          <Scene3DView
+            classNames='col-[full] pointer-events-none'
+            document={document}
+            scene={stored.key}
+            grid={false}
+            orbit={false}
+          />
         )}
       </Card.Section>
     </Card.Body>
   );
 };
 
-CanvasCard.displayName = 'CanvasCard';
+/** The open 2D scene, fitted: the canvas's node types, each layout in its own mode, inert so a press reaches the card. */
+const Canvas2DCard = ({ canvas }: { canvas: CanvasFormat.Canvas }) => {
+  const nodes = useCanvasNodes();
+  const kinds = useCanvasKinds();
+  const [snapshot] = useObject(canvas);
+  const scene = openScene(canvas);
+  const stored = Obj.instanceOf(Scene.Scene2D, scene) ? scene : undefined;
+  const document = useSceneDocument(stored);
+  // The view draws a kind's element from its canvas fields, as the article's viewport does.
+  const drawn = useMemo(() => document && toViewportDocument(document, kinds), [document, kinds]);
+  return (
+    <Card.Body>
+      <Card.Section classNames='aspect-square'>
+        {stored && drawn && (
+          <CanvasDatabaseContext.Provider value={Obj.getDatabase(canvas)}>
+            <Scene2DView
+              // Spans the card's rails as well as its content column.
+              classNames='col-[full] pointer-events-none'
+              document={drawn}
+              scene={stored.key}
+              theme={snapshot.settings.theme}
+              nodes={nodes}
+              margin={CARD_MARGIN}
+              grid={false}
+            />
+          </CanvasDatabaseContext.Provider>
+        )}
+      </Card.Section>
+    </Card.Body>
+  );
+};

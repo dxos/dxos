@@ -3,7 +3,7 @@
 //
 
 import { NumberInput as NumberInputPrimitive } from '@ark-ui/react/number-input';
-import React, { type FocusEvent, type MouseEvent, forwardRef, useRef } from 'react';
+import React, { type FocusEvent, type KeyboardEventHandler, type MouseEvent, forwardRef, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { mx } from '@dxos/ui-theme';
@@ -12,9 +12,16 @@ import { type ThemedClassName } from '@dxos/ui-types';
 import { translationKey } from '#translations';
 
 import { recipes } from '../../recipes.ts';
+import { type Size } from '../../sizes.ts';
 import { Button } from '../Button/Button.tsx';
 import * as Popover from '../Popover/Popover.tsx';
 import { Slider } from '../Slider/Slider.tsx';
+
+/** Keys Ark steps the value by, rather than typing into it. */
+const STEP_KEYS = new Set(['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End']);
+
+/** What changed a number input's value: a stepper press or arrow key, or typing. */
+export type NumberInputChangeSource = 'step' | 'type';
 
 /**
  * Where the decrement and increment buttons go: `end` (or `true`) trails the input with the pair, `start` leads it
@@ -45,7 +52,11 @@ export type NumberInputProps = ThemedClassName<
   /** The formatted text; `valueAsNumber` in `onValueChange` is the number (NaN when empty). */
   'value'?: string;
   'defaultValue'?: string;
-  'onValueChange'?: (value: string, valueAsNumber: number) => void;
+  /** `source` tells a stepper press or arrow key (`step`) from typing (`type`). */
+  'onValueChange'?: (value: string, valueAsNumber: number, source: NumberInputChangeSource) => void;
+  /** The value is committed: the input blurred, or Enter was pressed. */
+  'onValueCommit'?: (value: string, valueAsNumber: number) => void;
+  'onKeyDown'?: KeyboardEventHandler<HTMLInputElement>;
   'placeholder'?: string;
   'autoFocus'?: boolean;
   'stepper'?: NumberInputStepper;
@@ -54,6 +65,10 @@ export type NumberInputProps = ThemedClassName<
    * `align='end'`, `end` otherwise) in place of `stepper`'s placement; it keeps its place, so the number never moves.
    */
   'stepperOnHover'?: boolean;
+  /** Sizes just this input (`data-size` scopes `theme/size.css`'s metrics to it), whatever its enclosing scope. */
+  'size'?: Size;
+  /** Text at the input's start, inside the row (e.g. a vector axis's letter). */
+  'prefix'?: string;
   /** Aligns the number to the row's end, as figures in a column do. */
   'align'?: 'start' | 'end';
   /** Adds an end button that opens a slider over `min`..`max` (0..100 when unset). */
@@ -83,11 +98,15 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       value,
       defaultValue,
       onValueChange,
+      onValueCommit,
+      onKeyDown,
       placeholder,
       autoFocus,
       stepper = true,
       stepperOnHover,
       align = 'start',
+      size,
+      prefix,
       slider,
       incrementLabel,
       decrementLabel,
@@ -99,6 +118,15 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
     forwardedRef,
   ) => {
     const { t } = useTranslation(translationKey);
+    // Ark reports no cause with a change, so a press on a stepper or a stepping key marks the changes it makes.
+    const stepping = useRef(false);
+    const startStep = () => {
+      stepping.current = true;
+    };
+    const endStep = () => {
+      stepping.current = false;
+    };
+    const stepperProps = { onPointerDown: startStep, onPointerUp: endStep, onPointerLeave: endStep };
     const caretAtEnd = useCaretAtEnd();
     const placement =
       stepper && stepperOnHover ? (align === 'end' ? 'start' : 'end') : stepper === true ? 'end' : stepper;
@@ -113,6 +141,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
           variant='ghost'
           showTooltip={false}
           data-reveal={reveal}
+          {...stepperProps}
         />
       </NumberInputPrimitive.DecrementTrigger>
     );
@@ -126,6 +155,7 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
           variant='ghost'
           showTooltip={false}
           data-reveal={reveal}
+          {...stepperProps}
         />
       </NumberInputPrimitive.IncrementTrigger>
     );
@@ -139,24 +169,33 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       />
     );
     const endPair = placement === 'end';
-
     return (
       <NumberInputPrimitive.Root
         {...props}
         value={value}
         defaultValue={defaultValue}
-        onValueChange={onValueChange && (({ value, valueAsNumber }) => onValueChange(value, valueAsNumber))}
+        onValueChange={
+          onValueChange &&
+          (({ value, valueAsNumber }) => onValueChange(value, valueAsNumber, stepping.current ? 'step' : 'type'))
+        }
+        onValueCommit={onValueCommit && (({ value, valueAsNumber }) => onValueCommit(value, valueAsNumber))}
         className={recipes.controlRoot()}
       >
         <NumberInputPrimitive.Control
           data-testid={testId}
           data-align={align}
+          data-size={size}
           data-stepper={placement || undefined}
           className={mx(recipes.numberInput(), classNames)}
         >
-          {(placement === 'start' || placement === 'split') && (
+          {(prefix || placement === 'start' || placement === 'split') && (
             <span data-scope='number-input' data-part='start' className={recipes.inputAdornment()}>
-              {decrement}
+              {prefix && (
+                <span aria-hidden className={recipes.inputPrefix()}>
+                  {prefix}
+                </span>
+              )}
+              {(placement === 'start' || placement === 'split') && decrement}
               {placement === 'start' && increment}
             </span>
           )}
@@ -166,6 +205,11 @@ export const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
             aria-label={ariaLabel}
             {...(align === 'end' ? caretAtEnd : {})}
             className={recipes.inputField()}
+            onKeyDown={(event) => {
+              stepping.current = STEP_KEYS.has(event.key);
+              onKeyDown?.(event);
+            }}
+            onKeyUp={endStep}
             ref={forwardedRef}
           />
           {(sliderButton || endPair || placement === 'split') && (

@@ -8,16 +8,14 @@ import { type ContentMap, Dsl, SvgFile, applyCommands } from '@dxos/diagram';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import {
   DEFAULT_LAYER,
-  type View,
+  type RenderList2D,
   defaultNodeRegistry,
   diagramLinkMarkup,
   diagramNodeMarkup,
-  isDiagramNode,
-  isEllipseNode,
-  isRectNode,
   linkGeometry,
   sortByZ,
-} from '@dxos/react-ui-canvas/scene';
+} from '@dxos/react-ui-canvas';
+import { isDiagramNode, isEllipseNode, isRectNode } from '@dxos/scene';
 
 import { ROOT_VIEW_ID, readViews, rootOf, seedContent, updateCanvasRecord, writeViews } from './content.ts';
 import { BACKDROP_LAYER, SceneHandler, elementId } from './handler.ts';
@@ -55,6 +53,7 @@ describe('SceneHandler', () => {
     const eye = root.nodes[elementId('face', 'eye')];
     expect(isEllipseNode(eye) && [eye.center, eye.size.width]).toEqual([{ x: 128, y: 96 }, 32]);
     expect(root.links['face/look'].source).toEqual({ node: 'face/head' });
+    expect(root.links['face/look'].type).toBe('smart');
 
     const { scene, unmanaged } = SceneHandler.read(content);
     expect(unmanaged).toBe(0);
@@ -214,7 +213,7 @@ edge Worker -> Db "writes"
 `;
 
 /** Every SVG element the canvas draws for a scene's diagram shapes and connectors, as text. */
-const drawn = (scene: View): string[] =>
+const drawn = (scene: RenderList2D): string[] =>
   [
     ...Object.values(scene.nodes).flatMap((node) => (isDiagramNode(node) ? diagramNodeMarkup(node) : [])),
     ...Object.values(scene.links).flatMap((link) => {
@@ -264,7 +263,7 @@ describe('SceneHandler on a canvas of diagram shapes', () => {
     const before = readViews(content);
     const root = before[ROOT_VIEW_ID];
     const cache = root.nodes[elementId('Cache', 'box')];
-    const moved: View = {
+    const moved: RenderList2D = {
       ...root,
       nodes: { ...root.nodes, [cache.id]: { ...cache, center: { x: cache.center.x + 200, y: cache.center.y + 160 } } },
     };

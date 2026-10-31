@@ -1,0 +1,68 @@
+{
+  "name": "@dxos/react-ui-canvas-editor",
+  "version": "0.16.0",
+  "description": "The scene editor over react-ui-canvas: SceneEditor, its panels and inspectors, history, commands, timeline, and the 2D and 3D configs.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/lib/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@atlaskit/pragmatic-drag-and-drop": "catalog:",
+    "@dxos/animation": "workspace:*",
+    "@dxos/diagram": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
+    "@dxos/react-ui-animation": "workspace:*",
+    "@dxos/react-ui-canvas": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
+    "@dxos/scene": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
+    "@effect/atom-react": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/log": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
+    "@dxos/test-utils": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "@playwright/test": "catalog:",
+    "@storybook/react-vite": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@testing-library/user-event": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:"
+  },
+  "peerDependencies": {
+    "@dxos/react-ui": "workspace:^",
+    "@dxos/ui-theme": "workspace:^",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

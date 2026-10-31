@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import { Dsl, type Scene, SemanticEngine } from '@dxos/diagram';
+import { Shape } from '@dxos/scene';
 
 import type * as Model from './Model.ts';
 
@@ -43,7 +44,7 @@ export type LayoutOptions = {
 const FRAME_INSET = 12;
 
 /** Group colours, light ones first so box text stays readable on the tint; dark ones only once those run out. */
-const GROUP_COLORS: readonly Scene.Color[] = [
+const GROUP_COLORS: readonly Shape.Color[] = [
   'light-blue',
   'light-green',
   'yellow',
@@ -57,7 +58,7 @@ const GROUP_COLORS: readonly Scene.Color[] = [
 ];
 
 /** A package's colour, from its directory, so it keeps its colour as the graph and the layout change. */
-export const groupColor = (group: string): Scene.Color => {
+export const groupColor = (group: string): Shape.Color => {
   let hash = 0;
   for (const char of group) {
     hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
@@ -132,9 +133,9 @@ export type Frame = {
   center: Point;
   size: Size;
   /** The frame's box. */
-  element: Scene.Box;
+  element: Shape.Box;
   /** The title's offset from the box's corner, and its look. */
-  heading?: { id: string; x: number; y: number; w?: number; color?: Scene.Color; weight?: Scene.Weight };
+  heading?: { id: string; x: number; y: number; w?: number; color?: Shape.Color; weight?: Shape.Weight };
 };
 
 export type Layout = {
@@ -174,7 +175,7 @@ export const layout = (graph: Model.Patch, options?: LayoutOptions): Layout => {
         positions[iri] = { x: origin.x + (box.x + box.w / 2) * scale, y: origin.y + (box.y + box.h / 2) * scale };
       }
     } else if (group) {
-      const cell = object.elements.find((element): element is Scene.Box => element.kind === 'rect');
+      const cell = object.elements.find((element): element is Shape.Box => element.kind === 'rect');
       const box = cell && {
         ...cell,
         x: cell.x + FRAME_INSET,
@@ -182,7 +183,7 @@ export const layout = (graph: Model.Patch, options?: LayoutOptions): Layout => {
         w: cell.w - 2 * FRAME_INSET,
         h: cell.h - 2 * FRAME_INSET,
       };
-      const title = object.elements.find((element): element is Scene.Text => element.kind === 'text');
+      const title = object.elements.find((element): element is Shape.Text => element.kind === 'text');
       if (box) {
         frames.push({
           group,

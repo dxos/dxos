@@ -2,31 +2,46 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
-import { type Drag, type Projection, reduceIntent } from '../../engine/index.ts';
-import { type Bounds, type Endpoint, type Intent, type Point, type View, isPointEndpoint } from '../../model/index.ts';
-import { createLink, duplicateSelection, hasVertices, nodeBounds, refitPolyline, topZ } from '../../utils/index.ts';
+import { type Bounds, type Endpoint, type Point, isPointEndpoint } from '@dxos/scene';
+
+import { type Drag, type DrawScene } from '../../engine/index.ts';
+import { type RenderList2D } from '../../model/index.ts';
+import {
+  type SceneEdit,
+  createLink,
+  duplicateSelection,
+  hasVertices,
+  insertLink,
+  insertNode,
+  moveNodes,
+  nodeBounds,
+  refitPolyline,
+  resizeTo,
+  topZ,
+  updateElement,
+} from '../../utils/index.ts';
 import { type PointerMachine, PREVIEW_NODE_ID, isLinkDrawn } from './usePointerMachine.ts';
-
-/** How long a move's pointer rests before the shapes snap to where they will land. */
-const SETTLE_MS = 200;
+import { detentOf } from './useSceneSnap.ts';
 
 /** The link drawn as a preview during a drag; it never reaches the model. */
 const PREVIEW_LINK_ID = 'preview-link';
 
 export type UseGesturePreviewOptions = {
-  scene: View;
+  scene: RenderList2D;
   drag: Drag | undefined;
-  projection: Projection;
+  draw: DrawScene;
   /** The finest grid level drawn: a link previews once it has gone this far. */
   minor: number;
+  /** How near, in scene units, a moved shape must come to where it lands to be held there. */
+  detent: number;
 } & Pick<PointerMachine, 'createdNode'>;
 
 export type GesturePreview = {
   /** The scene as drawn while the gesture is in flight. */
-  displayScene: View;
-  /** The gesture would be refused by the projection (e.g. an overlap on the lattice). */
+  displayScene: RenderList2D;
+  /** The gesture would be refused by the layout's mode (e.g. an overlap on the lattice). */
   blocked: boolean;
   /** Where a move in flight will land (snapped and constrained), while the nodes follow the pointer. */
   landing?: Bounds[];
@@ -34,12 +49,68 @@ export type GesturePreview = {
   createFrame: Bounds | undefined;
 };
 
+type Preview = {
+  displayScene: RenderList2D;
+  blocked: boolean;
+  /** Where a move in flight will land (snapped and constrained), while the nodes follow the pointer. */
+  landing?: Bounds[];
+};
+
+/**
+ * What a move in flight draws: the nodes at the offset the snap gave the drag, each held on the axis of where the
+ * layout's mode lands it (a lattice cell) while within `detent` of it, so a shape clicks into place and out again
+ * rather than jumping there.
+ */
+export const movePreview = (
+  scene: RenderList2D,
+  drag: Extract<Drag, { kind: 'move' }>,
+  draw: Pick<DrawScene, 'constrain'>,
+  detent: number,
+): Preview => {
+  // A copy previews beside the originals, which stay; the drop mints the copies' real ids.
+  const { ids, copy } = drag;
+  const moveBy = (delta: Point): SceneEdit => {
+    let next = 0;
+    const duplicate = copy
+      ? duplicateSelection(scene, ids, delta, (prefix) => `${PREVIEW_NODE_ID}-${prefix}-${next++}`)
+      : undefined;
+    return duplicate ? duplicate.edit : moveNodes(ids, delta);
+  };
+  const edit = moveBy(drag.delta);
+  const followed = edit(scene);
+  const constrained = draw.constrain ? draw.constrain(edit) : edit;
+  const landed = (constrained ?? edit)(scene);
+  const moved = copy ? Object.keys(followed.nodes).filter((id) => !scene.nodes[id]) : ids;
+  if (constrained === undefined) {
+    return {
+      displayScene: followed,
+      blocked: true,
+      // The landing is drawn only when the drop would be refused, the one thing following the pointer hides.
+      landing: moved.flatMap((id) => (landed.nodes[id] ? [nodeBounds(landed.nodes[id])] : [])),
+    };
+  }
+  const nodes = { ...followed.nodes };
+  for (const id of moved) {
+    const [follow, land] = [followed.nodes[id], landed.nodes[id]];
+    if (follow && land) {
+      const center = {
+        x: detentOf(follow.center.x, land.center.x, detent),
+        y: detentOf(follow.center.y, land.center.y, detent),
+      };
+      // Held on both axes it is the landing itself, size included (a lattice may round the span).
+      nodes[id] = center.x === land.center.x && center.y === land.center.y ? land : { ...follow, center };
+    }
+  }
+  return { displayScene: { ...followed, nodes }, blocked: false };
+};
+
 /** What the gesture in flight draws: the scene as it would be once the gesture lands. */
 export const useGesturePreview = ({
   scene,
   drag,
-  projection,
+  draw,
   minor,
+  detent,
   createdNode,
 }: UseGesturePreviewOptions): GesturePreview => {
   /** The node a create gesture would land while one is in flight; the ghost and the frame both read it. */
@@ -48,67 +119,29 @@ export const useGesturePreview = ({
     [drag, createdNode],
   );
 
-  // Transient drag state is rendered by projecting it onto a copy, so links re-route while dragging and
+  // Transient drag state is rendered by applying it to a copy, so links re-route while dragging and
   // a link being drawn or re-attached over a drop target looks exactly as it will once dropped. Geometry
-  // previews pass through the projection's `constrain`, so a drag shows where the drop will land, and
+  // previews pass through the layout's `constrain`, so a drag shows where the drop will land, and
   // `blocked` says when the drop would be refused (drawn as is, outlined in red).
-  // A move follows the pointer while it moves; once it rests for `SETTLE_MS`, the shapes snap to where they will land.
-  const moveRaw = drag?.kind === 'move' ? drag.raw : undefined;
-  const [settled, setSettled] = useState(false);
-  useEffect(() => {
-    setSettled(false);
-    if (!moveRaw) {
-      return;
-    }
-    const timer = setTimeout(() => setSettled(true), SETTLE_MS);
-    return () => clearTimeout(timer);
-  }, [moveRaw?.x, moveRaw?.y]);
-
-  const { displayScene, blocked, landing } = useMemo<{
-    displayScene: View;
-    blocked: boolean;
-    /** Where a move in flight will land (snapped and constrained), while the nodes follow the pointer. */
-    landing?: Bounds[];
-  }>(() => {
-    const preview = (intent: Intent) => {
-      const constrained = projection.constrain ? projection.constrain(intent) : intent;
-      return { displayScene: reduceIntent(scene, constrained ?? intent), blocked: constrained === undefined };
+  const { displayScene, blocked, landing } = useMemo<Preview>(() => {
+    const preview = (edit: SceneEdit) => {
+      const constrained = draw.constrain ? draw.constrain(edit) : edit;
+      return { displayScene: (constrained ?? edit)(scene), blocked: constrained === undefined };
     };
     if (drag?.kind === 'move') {
-      // A copy previews beside the originals, which stay; the drop mints the copies' real ids.
-      const { ids, copy } = drag;
-      const moveBy = (delta: Point): Intent => {
-        let next = 0;
-        const duplicate = copy
-          ? duplicateSelection(scene, ids, delta, (prefix) => `${PREVIEW_NODE_ID}-${prefix}-${next++}`)
-          : undefined;
-        return duplicate ? duplicate.intent : { kind: 'move', ids, delta };
-      };
-      // The nodes follow the pointer smoothly; the frames they will snap to on the drop are drawn under them.
-      const landed = preview(moveBy(drag.delta));
-      const moved = copy
-        ? Object.values(landed.displayScene.nodes).filter((node) => !scene.nodes[node.id])
-        : ids.flatMap((id) => landed.displayScene.nodes[id] ?? []);
-      return settled
-        ? { displayScene: landed.displayScene, blocked: landed.blocked }
-        : {
-            displayScene: reduceIntent(scene, moveBy(drag.raw ?? drag.delta)),
-            blocked: landed.blocked,
-            // The landing is drawn only when the drop would be refused, the one thing following the pointer hides.
-            landing: landed.blocked ? moved.map(nodeBounds) : undefined,
-          };
+      return movePreview(scene, drag, draw, detent);
     }
     if (drag?.kind === 'resize') {
-      return preview({ kind: 'resize', id: drag.id, bounds: drag.bounds });
+      return preview(resizeTo(drag.id, drag.bounds));
     }
     // A node being created previews as the type's own view inside its frame, whether drawn on the canvas
     // or dragged in from the palette (whose drag carries no image of its own).
     if (drag?.kind === 'create') {
-      return createPreview ? preview({ kind: 'create', node: createPreview }) : { displayScene: scene, blocked: false };
+      return createPreview ? preview(insertNode(createPreview)) : { displayScene: scene, blocked: false };
     }
     if (drag?.kind === 'point') {
       return {
-        displayScene: reduceIntent(scene, { kind: 'update', id: drag.id, values: { points: drag.points } }),
+        displayScene: updateElement(drag.id, { points: drag.points })(scene),
         blocked: false,
       };
     }
@@ -118,7 +151,7 @@ export const useGesturePreview = ({
       // A locked node previews as it is, since the release will not move it.
       const values = node && !node.locked && hasVertices(node) ? refitPolyline(node, drag.points, minor) : undefined;
       return {
-        displayScene: values ? reduceIntent(scene, { kind: 'update', id: drag.id, values }) : scene,
+        displayScene: values ? updateElement(drag.id, values)(scene) : scene,
         blocked: false,
       };
     }
@@ -131,20 +164,19 @@ export const useGesturePreview = ({
         z: topZ(Object.values(scene.links)),
         source: drag.source,
         target: drag.target ?? { point: drag.to },
-        midpoint: { x: (drag.from.x + drag.to.x) / 2, y: (drag.from.y + drag.to.y) / 2 },
       });
-      return { displayScene: reduceIntent(scene, { kind: 'link', link }), blocked: false };
+      return { displayScene: insertLink(link)(scene), blocked: false };
     }
     if (drag?.kind === 'end') {
       // The link is drawn as it will land: re-attached over a target, free-ended over empty canvas.
       const end: Endpoint = drag.target ?? { point: drag.to };
       return {
-        displayScene: reduceIntent(scene, { kind: 'update', id: drag.id, values: { [drag.end]: end } }),
+        displayScene: updateElement(drag.id, { [drag.end]: end })(scene),
         blocked: false,
       };
     }
     return { displayScene: scene, blocked: false };
-  }, [scene, drag, settled, createPreview, projection, minor]);
+  }, [scene, drag, detent, createPreview, draw, minor]);
 
   /** The bounds a create gesture would land, drawn as a frame whether or not the node itself previews. */
   const createFrame = useMemo(() => {

@@ -8,21 +8,21 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type Database, Entity, Obj } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
-import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { useAttentionAttributes, useAttentionContext } from '@dxos/react-ui-attention';
 import { Attention } from '@dxos/react-ui-attention/types';
-import { type NodeViewProps, SCENE_OVERLAY_ATTRIBUTE, ViewNodeView, isViewNode } from '@dxos/react-ui-canvas/scene';
+import { type NodeViewProps, SCENE_OVERLAY_ATTRIBUTE, ViewNodeView } from '@dxos/react-ui-canvas';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
+import { isViewNode } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
-import { type ViewRole, isSceneCanvas, objectRef, objectUri, parseLinkedViewId, viewRole } from '#model';
+import { type ViewRole, objectRef, objectUri, parseLinkedViewId, viewRole } from '#model';
 
 /** The canvas's database, which resolves a frame's `object` (node views get no host props of their own). */
 export const CanvasDatabaseContext = createContext<Database.Database | undefined>(undefined);
 
-/** The object a frame shows as a surface, or `undefined` when it shows a scene (its own or a canvas drawing's). */
+/** The object a frame shows as a surface, or `undefined` when it shows a scene of its own canvas. */
 const useSurfaceObject = (node: NodeViewProps['node']): Obj.Unknown | undefined => {
   const db = useContext(CanvasDatabaseContext);
   const uri = objectUri(node);
@@ -30,13 +30,10 @@ const useSurfaceObject = (node: NodeViewProps['node']): Obj.Unknown | undefined 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const ref = useMemo(() => objectRef(node, db), [db, uri]);
   const object = useResolveRef(ref);
-  const canvas = useResolveRef(Obj.instanceOf(Drawing.Drawing, object) ? object.canvas : undefined);
-  // A canvas drawing is a scene, and so is a drawing whose canvas has not loaded yet; the store links it.
-  const drawing = Obj.instanceOf(Drawing.Drawing, object) && (canvas === undefined || isSceneCanvas(canvas));
-  return !object || drawing || !isViewNode(node) || parseLinkedViewId(node.scene) ? undefined : object;
+  return !object || !isViewNode(node) || parseLinkedViewId(node.scene) ? undefined : object;
 };
 
-/** The canvas's frame: its scene (its own or a linked canvas drawing's), or any other object as a surface. */
+/** The canvas's frame: a scene of its own canvas, or an object (another drawing too) as that object's surface. */
 export const CanvasViewNodeView = (props: NodeViewProps) => {
   const { node } = props;
   const object = useSurfaceObject(node);

@@ -116,7 +116,7 @@ Three 20s tour shots and ~30 short shots recorded in Screen Studio, assembled in
       the Flow story in the `data-molecule-animation` worktree
       (`packages/plugins/plugin-canvas/src/samples/molecules/Flow.stories.tsx`, fixed-length chapters), rendered by
       `packages/ui/react-ui-canvas/scripts/render-story.mjs --story plugins-plugin-canvas-samples-flow--default
---seconds 60 --fps 60`. Slowing a section in the edit (`voice-mux.mjs`) duplicates frames; a re-render keeps
+  --seconds 60 --fps 60`. Slowing a section in the edit (`voice-mux.mjs`) duplicates frames; a re-render keeps
       every motion at full rate.
   1. Take the chapter lengths from the final take's `sections` (`temp/voice/echo-<time>.json`, `seconds` per
      section, plus `--extra-last`): for take `echo-20261026-021700` they are 13.9, 13.7, 18.4, 17.3 and 18.7s.

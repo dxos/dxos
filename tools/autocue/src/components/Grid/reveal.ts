@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Bounds, type Camera, type Size, easeInOut, fitBounds, interpolateCamera } from '@dxos/react-ui-canvas';
+import { type Camera, easeInOut, fitBounds, interpolateCamera } from '@dxos/react-ui-canvas';
+import { type Bounds, type Size } from '@dxos/scene';
 
 export const TILE = { width: 960, height: 540 };
 

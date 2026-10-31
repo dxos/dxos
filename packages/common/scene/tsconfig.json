@@ -1,0 +1,29 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": [
+      "ESNext"
+    ],
+    "types": [
+      "node"
+    ]
+  },
+  "exclude": [
+    "vite.config.ts"
+  ],
+  "include": [
+    "src/**/*.ts",
+    "src/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../ui/ui-types"
+    },
+    {
+      "path": "../animation"
+    }
+  ]
+}

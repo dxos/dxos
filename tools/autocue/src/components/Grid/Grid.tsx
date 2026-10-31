@@ -4,11 +4,12 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-import { type Bounds, type Camera, easeInOut, fitBounds, screenBounds, useViewport } from '@dxos/react-ui-canvas';
+import { type Camera, easeInOut, fitBounds, screenBounds, useViewport } from '@dxos/react-ui-canvas';
 import * as Button from '@dxos/react-ui/Button';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
+import { type Bounds } from '@dxos/scene';
 
 import { type Border, BORDER_GROUND, borderLayout } from './border.ts';
 import { spreadClips } from './clips.ts';

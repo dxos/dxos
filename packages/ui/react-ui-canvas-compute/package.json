@@ -51,9 +51,11 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-audio": "workspace:*",
     "@dxos/react-ui-canvas": "workspace:*",
+    "@dxos/react-ui-canvas-editor": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-experimental": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
+    "@dxos/scene": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*"

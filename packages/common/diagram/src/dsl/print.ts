@@ -8,6 +8,8 @@
 // `parse(print(x))` round-tripping is only worth anything if the text side is normalized too.
 //
 
+import { Shape } from '@dxos/scene';
+
 import type * as Scene from '../scene.ts';
 import { BARE_ID, BARE_REF, ELEMENT_ATTRS, OBJECT_ATTRS, RESERVED } from './vocabulary.ts';
 
@@ -32,7 +34,7 @@ export const formatString = (value: string): string =>
 /** Bare where the grammar allows it, quoted where a word would be read as a keyword or fail to lex. */
 export const formatId = (id: string): string => (BARE_ID.test(id) && !RESERVED.has(id) ? id : formatString(id));
 
-const formatPoint = ({ x, y }: Scene.Point): string => `${formatNumber(x)},${formatNumber(y)}`;
+const formatPoint = ({ x, y }: Shape.Point): string => `${formatNumber(x)},${formatNumber(y)}`;
 
 const formatSize = (w: number, h: number): string => `${formatNumber(w)}x${formatNumber(h)}`;
 
@@ -44,7 +46,7 @@ const formatSize = (w: number, h: number): string => `${formatNumber(w)}x${forma
 const formatRef = (ref: string): string => (BARE_REF.test(ref) && !RESERVED.has(ref) ? ref : formatString(ref));
 
 /** `_` is the end the schema leaves unset; a bound end prints as its ref, a free one as a point. */
-const formatEndpoint = (ref: string | undefined, point: Scene.Point | undefined): string =>
+const formatEndpoint = (ref: string | undefined, point: Shape.Point | undefined): string =>
   ref !== undefined ? formatRef(ref) : point !== undefined ? formatPoint(point) : '_';
 
 type AttrValue = string | number | boolean;
@@ -59,14 +61,14 @@ const formatAttrs = (kind: keyof typeof ELEMENT_ATTRS, values: Partial<Record<st
     return [`${name}=${type === 'string' && typeof value === 'string' ? formatString(value) : String(value)}`];
   });
 
-const style = ({ color, fill, stroke, weight }: Scene.Element): Partial<Record<string, AttrValue>> => ({
+const style = ({ color, fill, stroke, weight }: Shape.Element): Partial<Record<string, AttrValue>> => ({
   color,
   fill,
   stroke,
   weight,
 });
 
-export const formatElement = (element: Scene.Element): string => {
+export const formatElement = (element: Shape.Element): string => {
   switch (element.kind) {
     case 'rect':
     case 'ellipse':
@@ -154,7 +156,7 @@ export const formatElement = (element: Scene.Element): string => {
   }
 };
 
-const block = (header: string, elements: readonly Scene.Element[]): string =>
+const block = (header: string, elements: readonly Shape.Element[]): string =>
   [`${header} {`, ...elements.map((element) => `  ${formatElement(element)}`), '}'].join('\n');
 
 export const formatObject = (object: Scene.WorldObject): string =>

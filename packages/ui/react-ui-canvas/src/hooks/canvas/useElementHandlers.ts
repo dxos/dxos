@@ -4,17 +4,11 @@
 
 import { type MouseEvent, type PointerEvent, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { type CanvasAtoms, type NavigationCommands, type Projection } from '../../engine/index.ts';
-import {
-  type Capabilities,
-  type Link,
-  type LinkId,
-  type Node,
-  type NodeRegistry,
-  type View,
-  nodeDef,
-} from '../../model/index.ts';
-import { type PartKey, hitTest, partText, partValues } from '../../utils/index.ts';
+import { type Link, type LinkId, type Node } from '@dxos/scene';
+
+import { type CanvasAtoms, type DrawScene, type NavigationCommands } from '../../engine/index.ts';
+import { type Capabilities, type NodeRegistry, type RenderList2D, nodeDef } from '../../model/index.ts';
+import { type PartKey, hitTest, partText, partValues, updateElement } from '../../utils/index.ts';
 import { type useRegistry } from '../useRegistry.ts';
 import { SCENE_OVERLAY_ATTRIBUTE } from '../useWheel.ts';
 import { type EditMode } from './useEditMode.ts';
@@ -41,10 +35,10 @@ export type UseElementHandlersOptions = {
   registry: ReturnType<typeof useRegistry>;
   atoms: CanvasAtoms;
   nodeRegistry: NodeRegistry;
-  projection: Projection;
+  draw: DrawScene;
   capabilities: Capabilities;
   navigation: NavigationCommands;
-  scene: View;
+  scene: RenderList2D;
 } & Pick<
   PointerMachine,
   'toScene' | 'onNodePointerDown' | 'onLinkPointerDown' | 'onLinkDoubleClick' | 'onLinkContextMenu'
@@ -56,7 +50,7 @@ export const useElementHandlers = ({
   registry,
   atoms,
   nodeRegistry,
-  projection,
+  draw,
   capabilities,
   navigation,
   scene,
@@ -72,10 +66,10 @@ export const useElementHandlers = ({
       registry.set(atoms.editing, undefined);
       const values = partValues(nodeRegistry, node, part, text);
       if (values && capabilities.update && text !== partText(nodeRegistry, node, part)) {
-        projection.apply({ kind: 'update', id: node.id, values });
+        draw.apply(updateElement(node.id, values));
       }
     },
-    [registry, atoms.editing, capabilities.update, projection, nodeRegistry],
+    [registry, atoms.editing, capabilities.update, draw, nodeRegistry],
   );
   const onPartCancel = useCallback(() => registry.set(atoms.editing, undefined), [registry, atoms.editing]);
 

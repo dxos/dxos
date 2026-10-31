@@ -7,12 +7,14 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, type Ref } from '@dxos/echo';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { type GeneratorNode, type View, checkGenerator } from '@dxos/react-ui-canvas/headless';
+import { type RenderList2D, checkGenerator, toRenderList2D } from '@dxos/react-ui-canvas/headless';
+import { type GeneratorNode } from '@dxos/scene';
 
 import { CanvasOperation, Generator } from '#types';
 
+import { canvasDocument } from '../model/canvas-document.ts';
 import { generatorCompiler } from '../model/compiler.ts';
-import { loadScene } from './canvas.ts';
+import { drawingCanvasOf } from './canvas.ts';
 
 const handler: Operation.WithHandler<typeof CanvasOperation.InspectGenerator> = CanvasOperation.InspectGenerator.pipe(
   Operation.withHandler(
@@ -50,10 +52,12 @@ export default handler;
 const DEFAULT_TIMES = [0, 0.5, 1, 1.5, 2, 2.5, 3];
 const STANDALONE_NODE = 'generator';
 
-/** The scene of the drawing that holds `node`. */
-const sceneOf = Effect.fn(function* (drawing: Ref.Ref<Drawing.Drawing>, node: string) {
-  const { scenes } = yield* loadScene(drawing);
-  return Object.values(scenes).find((scene) => scene.nodes[node] !== undefined);
+/** The View of the drawing that holds `node`: the canvas's 2D layout that places it, read as one. */
+const sceneOf = Effect.fn(function* (drawingRef: Ref.Ref<Drawing.Drawing>, node: string) {
+  const document = canvasDocument(yield* drawingCanvasOf(yield* Database.load(drawingRef)));
+  return document.layouts
+    .flatMap((layout) => (layout.dim === '2d' ? [toRenderList2D(document, layout)] : []))
+    .find((scene) => scene.nodes[node] !== undefined);
 });
 
 /** A scene holding only the generator, for a check before it is placed. */
@@ -61,7 +65,7 @@ const standalone = (
   reference: string,
   params: Record<string, unknown> | undefined,
   bounds: { x: number; y: number; width: number; height: number } = { x: -256, y: -256, width: 512, height: 512 },
-): View => {
+): RenderList2D => {
   const node: GeneratorNode = {
     type: 'generator',
     id: STANDALONE_NODE,

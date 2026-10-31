@@ -7,6 +7,8 @@ import { describe, test } from 'vitest';
 import { DEFAULT_INPUT } from '@dxos/conductor';
 
 import { createComputeGraph } from '../hooks/index.ts';
+import { computeKinds } from '../registry.ts';
+import { boardLayout } from '../scene/index.ts';
 import {
   createArtifactCircuit,
   createAudioCircuit,
@@ -41,6 +43,21 @@ describe('createComputeGraph', () => {
     test(`builds the ${name} circuit without ECHO ownership errors`, ({ expect }) => {
       const model = createComputeGraph(build());
       expect(model.nodes.length).toBeGreaterThanOrEqual(0);
+    });
+  }
+
+  for (const [name, build] of circuits) {
+    test(`the ${name} circuit reads as registered compute kinds carrying the nodes it made`, ({ expect }) => {
+      const circuit = build();
+      const model = createComputeGraph(circuit);
+      const shapes = Object.values(boardLayout('circuit', circuit).elements).filter(({ type }) => type !== 'link');
+      for (const shape of shapes) {
+        expect(computeKinds.validate(shape), `${name} ${shape.type}`).toEqual({ ok: true });
+        expect(computeKinds.has(shape.type ?? ''), `${name} ${shape.type}`).toBe(true);
+      }
+      const nodes = shapes.flatMap(({ node }) => (typeof node === 'string' ? [node] : []));
+      expect(nodes.every((id) => model.findNode(id) !== undefined)).toBe(true);
+      expect(nodes.length).toBe(model.nodes.length);
     });
   }
 

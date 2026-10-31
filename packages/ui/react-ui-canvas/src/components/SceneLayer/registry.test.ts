@@ -5,20 +5,9 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import {
-  type CreateProps,
-  type NodeBase,
-  type NodeDef,
-  type NodeRegistry,
-  NoteNode,
-  RectNode,
-  View,
-  createNodeRegistry,
-  createViewSchema,
-  isBuiltinNode,
-  nodeBase,
-  nodeDef,
-} from '../../model/index.ts';
+import { type NodeBase, NoteNode, RectNode, isBuiltinNode, nodeBase } from '@dxos/scene';
+
+import { type CreateProps, type NodeDef, type NodeRegistry, createNodeRegistry, nodeDef } from '../../model/index.ts';
 import { createNode, nodeBounds, nodePorts, nominalSize } from '../../utils/index.ts';
 import { boxPrototype, defaultNodeRegistry } from './registry.ts';
 import { UnknownNodeView } from './SceneLayer.tsx';
@@ -45,18 +34,16 @@ const functionDef: NodeDef = {
 const registry: NodeRegistry = { ...defaultNodeRegistry, function: functionDef };
 
 describe('registry', () => {
-  test('a host composes the scene schema from its registry', ({ expect }) => {
-    const HostView = createViewSchema(Object.values(registry).map((def) => def.schema));
+  test("a host type's schema is its registry entry's; the engine handles the node as a `NodeBase`", ({ expect }) => {
     const fn = functionDef.create({
       id: 'f',
       z: 'a',
       center: { x: 64, y: 64 },
       size: nominalSize(functionDef.defaultSize),
     });
-    const scene = { id: 's', nodes: { f: fn }, links: {} };
-    expect(Schema.is(HostView)(scene)).toBe(true);
-    // The built-in schema rejects the host type; the engine still handles the node as a `NodeBase`.
-    expect(Schema.is(View)(scene)).toBe(false);
+    expect(Schema.is(functionDef.schema)(fn)).toBe(true);
+    // A built-in schema rejects the host type; the engine still handles the node as a `NodeBase`.
+    expect(Schema.is(RectNode)(fn)).toBe(false);
     expect(isBuiltinNode(fn)).toBe(false);
     expect(nodeBounds(fn)).toEqual({ x: 0, y: 32, width: 128, height: 64 });
   });

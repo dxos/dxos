@@ -4,10 +4,13 @@
 
 import { describe, test } from 'vitest';
 
-import { type GeneratorNode, type View, createTimeline, setKey } from '../model/index.ts';
+import { createEsbuildCompiler } from '@dxos/animation';
+import { type GeneratorNode } from '@dxos/scene';
+
+import { type RenderList2D } from '../model/index.ts';
 import { pathBounds } from '../utils/index.ts';
 import { checkGenerator } from './check.ts';
-import { createEsbuildCompiler, loadGenerator } from './compile.ts';
+import { loadGenerator } from './compile.ts';
 import { GeneratorHost } from './host.ts';
 import { along, andThen, jitter, orbit, seeded, settle } from './motion.ts';
 import { GeneratorRunner } from './runner.ts';
@@ -23,7 +26,7 @@ const generatorNode: GeneratorNode = {
   params: { count: 8, target: 'box' },
 };
 
-const scene: View = {
+const scene: RenderList2D = {
   id: 's',
   nodes: {
     g: generatorNode,
@@ -80,11 +83,11 @@ describe('GeneratorRunner', () => {
     expect(JSON.stringify(new GeneratorRunner(drift, { seed: 1 }).frame(40 / 120, input).shapes)).toBe(one);
   });
 
-  test('bindings are read from the scene sampled at each step', ({ expect }) => {
-    const timeline = setKey(createTimeline(), 'box', 'center', { t: 0, value: { x: 100, y: 0 } });
-    const moving = { ...scene, timeline: setKey(timeline, 'box', 'center', { t: 1, value: { x: -100, y: 0 } }) };
+  test('bindings are read from the scene as the host draws it', ({ expect }) => {
+    const box = scene.nodes.box;
+    const moved: RenderList2D = { ...scene, nodes: { ...scene.nodes, box: { ...box, center: { x: -100, y: 0 } } } };
     const still = new GeneratorRunner(drift, { seed: 3 }).frame(2, input).shapes;
-    const followed = new GeneratorRunner(drift, { seed: 3 }).frame(2, { ...input, scene: moving }).shapes;
+    const followed = new GeneratorRunner(drift, { seed: 3 }).frame(2, { ...input, scene: moved }).shapes;
     expect(JSON.stringify(followed)).not.toBe(JSON.stringify(still));
   });
 

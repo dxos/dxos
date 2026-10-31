@@ -7,10 +7,10 @@
 import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Ref } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { Bounds, Easing } from '@dxos/react-ui-canvas/headless';
+import { Bounds } from '@dxos/scene';
 
 import * as Generator from './Generator.ts';
 
@@ -127,38 +127,14 @@ export const AddGenerator = Operation.make({
   services: [Database.Service],
 });
 
-export const SetTimelineKey = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.operation.canvas.setTimelineKey'),
-    name: 'Set timeline key',
-    description:
-      'Sets a keyframe on a scene timeline: a node property (center, size, style.opacity, or params.<name> of a generator), or the camera (x, y: the scene point at the view centre; zoom). Creates the timeline, and extends its duration to the key, as needed.',
-    icon: 'ph--diamond--regular',
-  },
-  input: Schema.Struct({
-    drawing: Ref.Ref(Drawing.Drawing),
-    scene: Schema.optional(Schema.String.annotate({ description: 'Scene id; the root scene by default.' })),
-    target: Schema.String.annotate({ description: 'A node id, or "camera".' }),
-    property: Schema.String.annotate({ description: 'A dot path into the node, e.g. "center" or "params.rate".' }),
-    t: Schema.Number.annotate({ description: 'Seconds.' }),
-    value: Schema.Any,
-    easing: Schema.optional(Easing.annotate({ description: 'Shapes the span that ends at this key.' })),
-    duration: Schema.optional(Schema.Number.annotate({ description: 'Sets the timeline length, in seconds.' })),
-  }),
-  output: Schema.Struct({
-    keys: Schema.Number.annotate({ description: 'Keys now on the track.' }),
-  }),
-  services: [Database.Service],
-});
-
-/** Each bound drawing's Automerge heads, keyed by its URI (the drawing's own under `''`). */
+/** Automerge heads by key: a scene canvas's layouts by layout key. */
 const Heads = Schema.Record(Schema.String, Schema.Array(Schema.String)).annotate({
-  description: "Each drawing's Automerge heads, keyed by its URI; the canvas's own drawing under the empty key.",
+  description: "Automerge heads by key: each layout's by its key.",
 });
 
-/** Leaf paths into the canvas's Views, as `[viewId, 'nodes', nodeId, 'center', 'x']`. */
+/** Leaf paths: `[layoutKey, 'elements', id, …]`. */
 const Paths = Schema.Array(Schema.Array(Schema.String)).annotate({
-  description: "Leaf paths into the canvas's Views, e.g. [viewId, 'nodes', nodeId, 'center', 'x'].",
+  description: "Leaf paths written, e.g. [layoutKey, 'elements', elementId, 'center', 'x'].",
 });
 
 export const Apply = Operation.make({
@@ -166,13 +142,15 @@ export const Apply = Operation.make({
     key: DXN.make('org.dxos.operation.canvas.apply'),
     name: 'Apply canvas intents',
     description:
-      'Applies canvas intents (move, resize, link, create, delete, reorder, update, layout, layer, timeline, batch) to a View of a canvas, freehand; returns the heads before and after and the paths written, which undo patches back.',
+      "Applies intents to a canvas, freehand, and returns the heads before and after and the paths written, which undo patches back. It takes layout intents (create, delete, update, reorder, bind, move, rotate, scale, layout, batch; 3D also extrude, join, subtract) in its layout's dimension; a legacy scene canvas is first moved onto the scene canvas its drawing opens as.",
     icon: 'ph--pencil-simple--regular',
   },
   input: Schema.Struct({
-    canvas: Ref.Ref(Drawing.Canvas),
-    view: Schema.optional(Schema.String.annotate({ description: 'View id; the root View by default.' })),
-    intents: Schema.Array(Schema.Any).annotate({ description: "Intents of the canvas's `Intent` union." }),
+    canvas: Ref.Ref(Obj.Unknown).annotate({
+      description: "The drawing's canvas: a scene canvas, or a legacy one, which is migrated first.",
+    }),
+    view: Schema.optional(Schema.String.annotate({ description: "Layout key; the open scene's layout by default." })),
+    intents: Schema.Array(Schema.Any).annotate({ description: "`LayoutIntent`s in the layout's dimension." }),
   }),
   output: Schema.Struct({
     canvas: Schema.String.annotate({ description: "The canvas object's id: the undo scope." }),
@@ -191,12 +169,12 @@ export const Patch = Operation.make({
     icon: 'ph--arrow-u-up-left--regular',
   },
   input: Schema.Struct({
-    canvas: Ref.Ref(Drawing.Canvas),
+    canvas: Ref.Ref(Obj.Unknown).annotate({ description: "The drawing's scene canvas." }),
     from: Heads,
     to: Heads,
     paths: Paths,
     context: Schema.optional(
-      Schema.Any.annotate({ description: 'The View path and selection the canvas returns to on undo and redo.' }),
+      Schema.Any.annotate({ description: 'The layout path and selection the canvas returns to on undo and redo.' }),
     ),
     mergeKey: Schema.optional(
       Schema.String.annotate({ description: 'Consecutive patches with one key fold into one undo step.' }),

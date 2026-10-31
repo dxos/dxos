@@ -64,7 +64,8 @@ export const SKILL_KEY = 'org.dxos.skill.drawing';
 export class Drawing extends Type.makeObject<Drawing>(DXN.make('org.dxos.type.drawing', '0.1.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
-    canvas: Ref.Ref(Canvas)
+    /** A `Canvas` (tldraw, excalidraw, svg), or a renderer's own canvas type, which its variant names. */
+    canvas: Ref.Ref(Obj.Unknown)
       .annotate({ description: 'Reference to the canvas holding the renderer-specific content.' })
       .pipe(Annotation.FormInputAnnotation.set(false)),
   }).pipe(
@@ -80,9 +81,9 @@ export class Drawing extends Type.makeObject<Drawing>(DXN.make('org.dxos.type.dr
  * Build a `Drawing` referencing the given canvas.
  *
  * @param name Optional display name shown in the graph node and Properties form.
- * @param canvas Canvas holding the renderer's content.
+ * @param canvas Canvas holding the renderer's content: a {@link Canvas}, or a renderer's own canvas object.
  */
-export const make = ({ name, canvas }: { name?: string; canvas: Canvas }): Drawing =>
+export const make = ({ name, canvas }: { name?: string; canvas: Obj.Unknown }): Drawing =>
   Obj.make(Drawing, { name, canvas: Ref.make(canvas) });
 
 /** Type guard for {@link Drawing} objects. */

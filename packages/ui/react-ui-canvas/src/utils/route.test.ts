@@ -4,9 +4,11 @@
 
 import { describe, test } from 'vitest';
 
+import { type Endpoint, type Link } from '@dxos/scene';
+
 import { ViewBuilder } from '../builder/index.ts';
 import { defaultNodeRegistry } from '../components/index.ts';
-import { type Endpoint, type Link, type View } from '../model/index.ts';
+import { type RenderList2D } from '../model/index.ts';
 import { DEFAULT_LATTICE } from './lattice.ts';
 import { insertIndex, linkGeometry, linkPath, sideToward, smartPoints, splinePath, viewLinkGeometry } from './route.ts';
 
@@ -121,7 +123,7 @@ describe('route', () => {
       size: { width: 256, height: 128 },
     });
     const link: Link = { type: 'smart', id: 'link', z: 'a1', source: { node: 'mesh' }, target: { node: 'edge' } };
-    const scene: View = {
+    const scene: RenderList2D = {
       id: 'root',
       nodes: { mesh: box('mesh', 4, 1), edge: box('edge', 3, 4) },
       links: { link },
@@ -138,6 +140,33 @@ describe('route', () => {
     // The same choice for the link on its own, so hit-testing and handles agree with what is drawn.
     const single = linkGeometry(scene, defaultNodeRegistry, link, DEFAULT_LATTICE);
     expect([single?.source.side, single?.target.side]).toEqual(['s', 'e']);
+  });
+
+  test('a smart link to a shape off the lattice cells, as one in flight is, takes no gutter, so it does not flicker', ({
+    expect,
+  }) => {
+    const box = (id: string, x: number, y: number) => ({
+      type: 'rect',
+      id,
+      z: 'a0',
+      center: { x, y },
+      size: { width: 256, height: 128 },
+    });
+    const link: Link = { type: 'smart', id: 'ac', z: 'a1', source: { node: 'a' }, target: { node: 'c' } };
+    // C dragged along a diagonal between cells: gutter routing flipped its ports between two tied pairs every few px.
+    const sides = Array.from({ length: 60 }, (_, step) => {
+      const scene: RenderList2D = {
+        id: 'root',
+        nodes: { a: box('a', 0, 0), c: box('c', 6 + step * 6.4, 195 + step * 3.2) },
+        links: { link },
+      };
+      const [geometry] = viewLinkGeometry(scene, defaultNodeRegistry, [link], DEFAULT_LATTICE);
+      expect(geometry.path).toBe(linkGeometry(scene, defaultNodeRegistry, link)?.path);
+      return `${geometry.source.side}${geometry.target.side}`;
+    });
+    // The ports change only where the geometry turns a corner, never back and forth: no pair returns once left.
+    const runs = sides.filter((side, index) => index === 0 || side !== sides[index - 1]);
+    expect(new Set(runs).size).toBe(runs.length);
   });
 
   test('a plain line to a node with no port points at its centre and stops at its outline; a smart one takes ports', ({

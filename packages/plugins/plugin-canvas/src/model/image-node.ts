@@ -9,7 +9,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type NodeBase, nodeBase } from '@dxos/react-ui-canvas/scene';
+import { type NodeBase, nodeBase } from '@dxos/scene';
 
 /** How the picture fills the frame: whole inside it, covering it (cropped), or stretched to it. */
 export const IMAGE_FITS = ['contain', 'cover', 'fill'] as const;

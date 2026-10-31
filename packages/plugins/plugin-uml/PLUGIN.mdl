@@ -27,9 +27,9 @@ Each extension is defined in the Appendix or resolved via its URI.
 
 ```mdl
 type ClassNode
-  desc: A canvas node of type `class`; stored in a NodeRecord like any canvas node.
+  desc: An element kind of type `class` over the 2D element base (`Element2D`), its own fields at the element's top.
   fields:
-    name: string
+    label: string
     attributes: string[]
     methods: string[]
 ```
@@ -126,6 +126,20 @@ test QA-2: Showcase clip
     - name: Draw classes
       do: Pick the class shape and drag out two classes.
       expect: two class shapes appear
+```
+
+## Changelog
+
+```mdl
+decision D-1: A class is an element kind: `ClassNode` is the 2D element base plus `label`, `attributes` and `methods` at the element's top, registered in a kind registry that checks those fields, and contributed to the canvas as an `ElementKindSpec`, from which the canvas engine's node type is derived. A class a canvas stored before, with its members under the element's canvas fields, draws as before and moves to the new form on its next edit.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1.1, F-1.2, F-1.3, F-1.4]
+  why: The shared scene model stores a plugin's shapes as elements whose own fields a kind registry validates (COMMON-CORE.md decision 13), and the canvas node type the class was declared as is retired with the canvas's View model.
+  rejected:
+    - Members kept under the element's canvas fields: no kind registry could check them, and every class would need moving again when the View model goes.
+  source: packages/ui/react-ui-canvas/docs/COMMON-CORE-PLAN.md (Task E.4, R-40 to R-44)
 ```
 
 ## Appendix: Extension Definitions

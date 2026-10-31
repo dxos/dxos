@@ -87,6 +87,14 @@
   .dx-accordion-item-content {
     overflow: hidden;
   }
+  /* A square icon button at either end of a toolbar in the content takes the column of the trigger's icon or caret
+     Block, so the buttons line up under the header instead of starting one gap in. */
+  .dx-accordion-item-content .dx-toolbar:has(> .dx-button[data-square]:first-child) {
+    padding-inline-start: 0;
+  }
+  .dx-accordion-item-content .dx-toolbar:has(> .dx-button[data-square]:last-child) {
+    padding-inline-end: 0;
+  }
   .dx-accordion-item-content[data-state='open'] {
     animation: dx-accordion-open var(--dx-disclosure-duration) var(--dx-disclosure-ease-open);
   }

@@ -2,47 +2,58 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ReactNode } from 'react';
+import { type ComponentType, type PropsWithChildren, type ReactNode } from 'react';
 
+import { type ModuleCompiler, type Timeline } from '@dxos/animation';
 import type * as Util from '@dxos/react-ui/Util';
+import { type Bounds, type Point, type Scene } from '@dxos/scene';
 
-import {
-  type CanvasAtoms,
-  type CanvasHistory,
-  type CreateHistory,
-  type FreehandProjectionOptions,
-  type InspectorMode,
-  type Projection,
-} from '../../engine/index.ts';
-import { type GeneratorCompiler, type GeneratorSource } from '../../generator/index.ts';
+import { type CanvasAtoms } from '../../engine/index.ts';
+import { type GeneratorSource } from '../../generator/index.ts';
 import { type SceneDisplay } from '../../hooks/index.ts';
 import {
   type BackgroundGrid,
-  type Bounds,
   type Camera,
+  type Capabilities,
+  type ConstrainIntent,
+  type KeyAction,
   type LinkRegistry,
   type NodeRegistry,
-  type Point,
   type ThemeRegistry,
-  type ViewId,
-  type ViewStore,
+  type ViewportProps,
 } from '../../model/index.ts';
 
+/** What a {@link CanvasRootProps.shell} is given: the view to frame, and the root's own frame props. */
+export type CanvasShellProps = Util.ThemedClassName<
+  PropsWithChildren<{
+    /** Paints no surface of its own, so whatever is behind the view shows through (a slide). */
+    transparent?: boolean;
+  }>
+>;
+
+/** How long the view's clock plays, at what rate, and whether it wraps. */
+export type CanvasPlayback = Pick<Timeline, 'duration' | 'fps' | 'loop'>;
+
 export type CanvasRootProps = Util.ThemedClassName<{
-  store: ViewStore;
-  root: ViewId;
+  /** The drawing: the engine draws the scene's layouts and writes nothing to it but through the handlers below. */
+  document: Scene.SceneDocument;
+  /** The scene drawn, by id; the document's root scene when unset. */
+  scene?: string;
+  /** Takes an edit as an intent on the layout it changed; without it the view only draws, whatever it allows. */
+  onIntent?: ViewportProps['onIntent'];
+  /** Takes a model edit (an object a new composite places). */
+  onModelIntent?: ViewportProps['onModelIntent'];
+  /** Runs `change` as one undo step, for an edit that writes more than once (a new portal). */
+  onTransaction?: ViewportProps['onTransaction'];
+  /** The layout's mode, applied to every write; a refused or rewritten drag is redrawn as stored. */
+  constrain?: ConstrainIntent;
   nodes?: NodeRegistry;
   links?: LinkRegistry;
-  /** Projection per scene; freehand (identity) by default. */
-  createProjection?: (options: FreehandProjectionOptions) => Projection;
-  /** A host-owned projection instead, shared with the host's panels (see `useViewProjection`); its edits are not undone. */
-  projection?: Projection;
   /**
-   * The undo history (VIEWS.md §8): how to make one over the canvas's own atoms (a host with its own history, such as
-   * Composer's tracker), or one from `useCanvasHistory` that a host sharing `projection` with its panels shares too; by
-   * default the canvas keeps a local one, so undo and redo work standalone.
+   * What a person may do, within what the layout allows (all of it, but an arrangement on a lattice); everything it
+   * allows when unset.
    */
-  history?: CanvasHistory | CreateHistory;
+  capabilities?: Capabilities;
   /** Externally owned view state, e.g. to drive two views or persist the camera. */
   atoms?: CanvasAtoms;
   /** Where the camera starts on the root scene, e.g. as last left; the scene is fitted when unset. */
@@ -64,20 +75,25 @@ export type CanvasRootProps = Util.ThemedClassName<{
   fitZoom?: number;
   /**
    * Look, select and navigate only: no gesture or key reaches the model, and no handle or port is drawn,
-   * whatever the projection would allow.
+   * whatever the layout would allow.
    */
   readonly?: boolean;
   /** Draws no surface under the scene, so what is behind the canvas (e.g. a slide) shows through. */
   transparent?: boolean;
+  /**
+   * Shortcuts the host handles itself (e.g. a shared editor's undo and clipboard): the view leaves their keys to it
+   * rather than acting on its own store.
+   */
+  hostKeys?: ReadonlySet<KeyAction>;
+  /** Opens the host's context menu in place of the view's own, at a point in the view, over an element or the canvas. */
+  onContextMenu?: (at: Point, kind: 'element' | 'canvas') => void;
   /** Called when the palette's read-only toggle is pressed; the toggle shows only when given, as the host owns `readonly`. */
   onReadonlyChange?: (readonly: boolean) => void;
-  /** Where the inspectors (properties, layers, about) sit: floating over the canvas (the default), or docked in a column beside it. */
-  inspectors?: InspectorMode;
   /**
-   * Called when the dock is closed or an inspector's menu docks or floats them; the dock's close button and the menu
-   * item show only when given, as the host owns `inspectors`.
+   * What the view sits in, rendered inside the engine's providers so it can read the canvas (an editor's inspector
+   * panel beside or over it); a plain frame when unset.
    */
-  onInspectorsChange?: (mode: InspectorMode) => void;
+  shell?: ComponentType<CanvasShellProps>;
   /** The themes offered, and the style sets and backgrounds they name; the built-ins by default. */
   themes?: ThemeRegistry;
   /**
@@ -104,7 +120,10 @@ export type CanvasRootProps = Util.ThemedClassName<{
   background?: string;
   /** Overrides the background's grid; the theme bar picks it. */
   backgroundGrid?: BackgroundGrid;
-  /** Called when the theme bar picks a theme, or `undefined` to take the default; the picker shows only when given. */
+  /**
+   * Called when the theme bar picks a theme, or `undefined` to take the default. Unset, a pick holds for this view
+   * alone: the picker works whether or not the host stores the choice.
+   */
   onThemeChange?: (theme: string | undefined) => void;
   /** Called when the theme bar picks a grid, or `undefined` to take the background's own. */
   onBackgroundGridChange?: (grid: BackgroundGrid | undefined) => void;
@@ -115,10 +134,15 @@ export type CanvasRootProps = Util.ThemedClassName<{
    * on `data-frame-time` (ANIMATION.md §7.2).
    */
   exportable?: boolean;
+  /**
+   * The span the view's clock plays and a frame renderer exports (an animator shot's length and rate). The host draws
+   * the document as sampled at the clock's time; unset, the clock runs unbounded.
+   */
+  playback?: CanvasPlayback;
   /** The generators the scene's generator nodes reference, by reference (ANIMATION.md §6.6). */
   generators?: Readonly<Record<string, GeneratorSource>>;
   /** Compiles a generator's source (`createEsbuildCompiler`); without it generator nodes draw nothing. */
-  compileGenerator?: GeneratorCompiler;
+  compileGenerator?: ModuleCompiler;
   /** Starts the generator worker; without it generators run in the page. */
   createGeneratorWorker?: () => Worker;
   children?: ReactNode;

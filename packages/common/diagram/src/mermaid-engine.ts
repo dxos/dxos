@@ -13,6 +13,7 @@
 import ELK, { type ElkNode } from 'elkjs/lib/elk.bundled.js';
 
 import { invariant } from '@dxos/invariant';
+import { Shape } from '@dxos/scene';
 
 import * as Compact from './compact.ts';
 import * as Diagnostics from './diagnostics.ts';
@@ -82,7 +83,7 @@ const ACROSS: Record<Direction, string> = { TB: 'RIGHT', BT: 'RIGHT', LR: 'DOWN'
 
 export type CompileOptions = {
   /** Canvas position of the diagram's top-left, in canvas px. */
-  origin?: Scene.Point;
+  origin?: Shape.Point;
   /** Canvas px per scene unit. */
   scale?: number;
   /**
@@ -181,9 +182,9 @@ export type Placement = {
  * nodes claim the same point, the later one slides along the cross axis to the nearest free slot,
  * so quantization can never stack nodes.
  */
-const quantize = (positions: Map<string, Scene.Point>, pitch: Pitch, horizontal: boolean): Map<string, Scene.Point> => {
+const quantize = (positions: Map<string, Shape.Point>, pitch: Pitch, horizontal: boolean): Map<string, Shape.Point> => {
   const taken = new Set<string>();
-  const result = new Map<string, Scene.Point>();
+  const result = new Map<string, Shape.Point>();
   // Place in reading order so a slide pushes the later node, not an earlier one.
   const ordered = [...positions.entries()].sort(([, a], [, b]) =>
     horizontal ? a.x - b.x || a.y - b.y : a.y - b.y || a.x - b.x,
@@ -216,11 +217,11 @@ const quantize = (positions: Map<string, Scene.Point>, pitch: Pitch, horizontal:
  */
 const compactGroups = (
   graph: MermaidGraph,
-  positions: Map<string, Scene.Point>,
+  positions: Map<string, Shape.Point>,
   cell: Cell,
   pitch: Pitch,
   horizontal: boolean,
-): Map<string, Scene.Point> => {
+): Map<string, Shape.Point> => {
   const axis = horizontal ? 'y' : 'x';
   const step = horizontal ? pitch.y : pitch.x;
   const size = horizontal ? cell.h : cell.w;
@@ -332,7 +333,7 @@ const place = async (
   order: Order,
   arrangement: Arrangement,
   layering: Layering,
-): Promise<Map<string, Scene.Point>> => {
+): Promise<Map<string, Shape.Point>> => {
   const horizontal = graph.direction === 'LR' || graph.direction === 'RL';
   const grouped = new Set(graph.groups.flatMap((group) => group.children));
   const leaf = (id: string): ElkNode => ({ id, width: cell.w, height: cell.h });
@@ -387,8 +388,8 @@ const place = async (
     edges: layeringEdges(graph, arrangement, layering),
   });
 
-  const raw = new Map<string, Scene.Point>();
-  const visit = (node: ElkNode, offset: Scene.Point) => {
+  const raw = new Map<string, Shape.Point>();
+  const visit = (node: ElkNode, offset: Shape.Point) => {
     for (const child of node.children ?? []) {
       const x = offset.x + (child.x ?? 0);
       const y = offset.y + (child.y ?? 0);
@@ -412,10 +413,10 @@ const place = async (
  */
 const alignGroups = (
   graph: MermaidGraph,
-  positions: Map<string, Scene.Point>,
+  positions: Map<string, Shape.Point>,
   direction: Direction,
   alignment: Alignment,
-): Map<string, Scene.Point> => {
+): Map<string, Shape.Point> => {
   if (alignment === 'none') {
     return positions;
   }
@@ -473,10 +474,10 @@ const alignGroups = (
 /** Slides packages and boxes toward their partners on the lattice; see `compact.ts`. */
 const compactPlacement = (
   graph: MermaidGraph,
-  positions: Map<string, Scene.Point>,
+  positions: Map<string, Shape.Point>,
   cell: Cell,
   pitch: Pitch,
-): Map<string, Scene.Point> =>
+): Map<string, Shape.Point> =>
   Compact.compact({ nodes: graph.nodes.map((node) => node.id), groups: graph.groups, edges: graph.edges }, positions, {
     cell,
     pitch,
@@ -486,7 +487,7 @@ const compactPlacement = (
   });
 
 /** Node rects at the origin plus the frame around each group's members. */
-const frame = (graph: MermaidGraph, positions: Map<string, Scene.Point>, cell: Cell): Placement => {
+const frame = (graph: MermaidGraph, positions: Map<string, Shape.Point>, cell: Cell): Placement => {
   const minX = Math.min(0, ...[...positions.values()].map((point) => point.x));
   const minY = Math.min(0, ...[...positions.values()].map((point) => point.y));
   const nodes = new Map<string, Rect>(
@@ -587,8 +588,8 @@ const straighten = (
 const inheritanceBuses = (
   edges: readonly MermaidEdge[],
   nodes: Map<string, Rect>,
-): { elements: Scene.Element[]; consumed: Set<MermaidEdge> } => {
-  const elements: Scene.Element[] = [];
+): { elements: Shape.Element[]; consumed: Set<MermaidEdge> } => {
+  const elements: Shape.Element[] = [];
   const consumed = new Set<MermaidEdge>();
   const byBase = new Map<string, MermaidEdge[]>();
   for (const edge of edges) {
@@ -643,7 +644,7 @@ const inheritanceBuses = (
 };
 
 type EmitOptions = {
-  origin: Scene.Point;
+  origin: Shape.Point;
   scale: number;
   bus: boolean;
   arrangement: Arrangement;
@@ -662,7 +663,7 @@ export type EmitJob = Omit<EmitOptions, 'route'> & {
 const rectsOverlap = (a: Rect, b: Rect) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
 
 /** Whether an axis-aligned (or short diagonal) segment passes through a rect, by its bounding box. */
-const segmentHits = ([a, b]: [Scene.Point, Scene.Point], rect: Rect) =>
+const segmentHits = ([a, b]: [Shape.Point, Shape.Point], rect: Rect) =>
   rectsOverlap(
     { x: Math.min(a.x, b.x), y: Math.min(a.y, b.y), w: Math.abs(b.x - a.x) || 1, h: Math.abs(b.y - a.y) || 1 },
     rect,
@@ -674,17 +675,17 @@ const segmentHits = ([a, b]: [Scene.Point, Scene.Point], rect: Rect) =>
  * trying the middle segment first and working outward. Falls back to the middle when nothing is clear.
  */
 const placeLabels = (
-  labelled: readonly { id: string; text: string; points: Scene.Point[] }[],
-  paths: readonly Scene.Point[][],
+  labelled: readonly { id: string; text: string; points: Shape.Point[] }[],
+  paths: readonly Shape.Point[][],
   nodes: readonly Rect[],
-): Scene.Text[] => {
+): Shape.Text[] => {
   const segments = paths.map((points) =>
-    points.slice(0, -1).map((point, index): [Scene.Point, Scene.Point] => [point, points[index + 1]]),
+    points.slice(0, -1).map((point, index): [Shape.Point, Shape.Point] => [point, points[index + 1]]),
   );
   const placed: Rect[] = [];
   return labelled.map(({ id, text, points }) => {
     const size = { w: text.length * LABEL_FONT.charW, h: LABEL_FONT.lineH };
-    const own = points.slice(0, -1).map((point, index): [Scene.Point, Scene.Point] => [point, points[index + 1]]);
+    const own = points.slice(0, -1).map((point, index): [Shape.Point, Shape.Point] => [point, points[index + 1]]);
     const middle = Math.floor((own.length - 1) / 2);
     const order = own.map((_, index) => index).sort((a, b) => Math.abs(a - middle) - Math.abs(b - middle));
     const candidates = order.flatMap((index) => {
@@ -716,7 +717,7 @@ const placeLabels = (
 };
 
 /** Group tints in declaration order; a renderer fills a frame with a light wash of its color. */
-const GROUP_COLORS: readonly Scene.Color[] = [
+const GROUP_COLORS: readonly Shape.Color[] = [
   'light-blue',
   'light-green',
   'yellow',
@@ -736,7 +737,7 @@ const emit = (
   { origin, scale, bus, arrangement, route, search = false }: EmitOptions,
 ): Scene.Command[] => {
   const horizontal = graph.direction === 'LR' || graph.direction === 'RL';
-  const at = (rect: Rect): Scene.Point => ({ x: origin.x + rect.x * scale, y: origin.y + rect.y * scale });
+  const at = (rect: Rect): Shape.Point => ({ x: origin.x + rect.x * scale, y: origin.y + rect.y * scale });
   const commands: Scene.Command[] = [];
 
   for (const [index, group] of graph.groups.entries()) {
@@ -773,7 +774,7 @@ const emit = (
                   text: group.label,
                   weight: 's',
                   color: 'grey',
-                } satisfies Scene.Text,
+                } satisfies Shape.Text,
               ]
             : []),
         ],
@@ -800,7 +801,7 @@ const emit = (
 
   if (graph.edges.length > 0) {
     // Frames are containers, not obstacles: only node rects block routes.
-    const makeRouter = (): { router: Router; reserve?: (points: readonly Scene.Point[]) => void } => {
+    const makeRouter = (): { router: Router; reserve?: (points: readonly Shape.Point[]) => void } => {
       if (route) {
         return { router: route };
       }
@@ -832,11 +833,11 @@ const emit = (
     type Routed = {
       edge: MermaidEdge;
       index: number;
-      points: Scene.Point[];
+      points: Shape.Point[];
       source: Rect;
       target: Rect;
       /** Every path the router returned for this edge, each of which steered the edges after it. */
-      attempts: Scene.Point[][];
+      attempts: Shape.Point[][];
     };
     /**
      * Routes every edge with a fresh router, since the avoiding router steers each route off earlier
@@ -848,7 +849,7 @@ const emit = (
       previous?: { ports: Map<MermaidEdge, PortPair>; routes: readonly Routed[] },
     ): Routed[] => {
       const { router: search, reserve } = makeRouter();
-      let attempts: Scene.Point[][] = [];
+      let attempts: Shape.Point[][] = [];
       const router: Router = (relation) => {
         const points = search(relation);
         attempts.push(points);
@@ -861,15 +862,15 @@ const emit = (
       // merge) share a trunk, as a bus does. Such an edge is re-routed with the port nudged to a free
       // slot on that side, preferring the nudge that keeps the route straightest.
       type Role = 'exit' | 'entry';
-      const terminals = new Map<string, { point: Scene.Point; role: Role }[]>();
-      const taken = (nodeId: string, point: Scene.Point, role: Role) =>
+      const terminals = new Map<string, { point: Shape.Point; role: Role }[]>();
+      const taken = (nodeId: string, point: Shape.Point, role: Role) =>
         (terminals.get(nodeId) ?? []).some(
           (other) =>
             other.role !== role &&
             Math.abs(other.point.x - point.x) < GRID_FINE &&
             Math.abs(other.point.y - point.y) < GRID_FINE,
         );
-      const routeEdge = (edge: MermaidEdge, from: Rect, to: Rect): Scene.Point[] => {
+      const routeEdge = (edge: MermaidEdge, from: Rect, to: Rect): Shape.Point[] => {
         const horizontal = isHorizontal(edge);
         const sameLane = horizontal ? from.x === to.x : from.y === to.y;
         const alongY = horizontal ? sameLane : !sameLane;
@@ -891,13 +892,13 @@ const emit = (
               end: within(to, (base.end ?? center(to)) + endNudge * GRID_FINE),
             },
           });
-        const free = (points: Scene.Point[]) =>
+        const free = (points: Shape.Point[]) =>
           !taken(edge.from, points[0], 'exit') && !taken(edge.to, points[points.length - 1], 'entry');
         const direct = route(NUDGES[0]);
         if (free(direct)) {
           return direct;
         }
-        let best: Scene.Point[] | undefined;
+        let best: Shape.Point[] | undefined;
         for (const nudge of NUDGES.slice(1)) {
           const attempt = route(nudge);
           if (free(attempt) && (!best || attempt.length < best.length)) {
@@ -919,7 +920,7 @@ const emit = (
         }
         const earlier = replayed.get(edge);
         replaying = replaying && earlier !== undefined && samePorts(edge);
-        let points: Scene.Point[];
+        let points: Shape.Point[];
         if (replaying && earlier && reserve) {
           earlier.attempts.forEach(reserve);
           attempts = earlier.attempts;
@@ -949,9 +950,9 @@ const emit = (
               : [],
         ),
       });
-      const elements: Scene.Element[] = [...buses.elements];
-      const labelled: { id: string; text: string; points: Scene.Point[] }[] = [];
-      const paths: Scene.Point[][] = [];
+      const elements: Shape.Element[] = [...buses.elements];
+      const labelled: { id: string; text: string; points: Shape.Point[] }[] = [];
+      const paths: Shape.Point[][] = [];
       routes.forEach(({ edge, index }, position) => {
         const points = nudged[position];
         const id = `${edge.from}-${edge.to}-${index}`;

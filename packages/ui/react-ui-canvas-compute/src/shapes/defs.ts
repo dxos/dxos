@@ -8,7 +8,7 @@ import * as Struct from 'effect/Struct';
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
-import { Point, Size } from '@dxos/react-ui-canvas/scene';
+import { Point, Size } from '@dxos/scene';
 import { type MakeOptional } from '@dxos/util';
 
 import { CanvasBoard } from '../types/index.ts';
