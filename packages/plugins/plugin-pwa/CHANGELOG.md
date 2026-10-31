@@ -1,5 +1,53 @@
 # @dxos/plugin-pwa
 
+## 0.17.0
+
+### Minor Changes
+
+- 5970ed3: Add an "Update on startup" setting to the PWA and native plugins. While the app starts, it holds the boot loader, checks for a newer build, shows its download progress, and then reloads or relaunches onto it. Offline, or when the check fails or finds no update within 3 s, the app starts on the version it has. With the setting off, updates still download in the background and the app asks to refresh or restart. The `defaultAutoUpdate` option sets the setting's default. `AppUpdate.makeBootGate` is the shared driver. In the PWA plugin, `serviceWorker: false` checks a build that has no service worker by comparing its entry script with the server's.
+
+### Patch Changes
+
+- Updated dependencies [9cb96c7]
+- Updated dependencies [710da43]
+- Updated dependencies [df16fba]
+- Updated dependencies [e8029c3]
+- Updated dependencies [f142d06]
+- Updated dependencies [e343467]
+- Updated dependencies [9a3313a]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [13bc40d]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [49df146]
+- Updated dependencies [17a9e75]
+- Updated dependencies [45e1c93]
+- Updated dependencies [03ee407]
+- Updated dependencies [6fd1079]
+- Updated dependencies [2d585c2]
+- Updated dependencies [0166448]
+- Updated dependencies [f86f10e]
+- Updated dependencies [80c25fe]
+- Updated dependencies [5970ed3]
+- Updated dependencies [4fe25ee]
+- Updated dependencies [f175a2d]
+- Updated dependencies [7da5d17]
+- Updated dependencies [ca2a4a8]
+- Updated dependencies [02254b0]
+- Updated dependencies [3b37cd1]
+- Updated dependencies [d00cc85]
+- Updated dependencies [0a14251]
+- Updated dependencies [1a0fff1]
+- Updated dependencies [e67aa80]
+  - @dxos/app-toolkit@0.17.0
+  - @dxos/app-framework@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/react-ui-form@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/log@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

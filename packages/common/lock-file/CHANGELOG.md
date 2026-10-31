@@ -1,5 +1,13 @@
 # @dxos/lock-file
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [e50d1e5]
+  - @dxos/async@0.17.0
+  - @dxos/node-std@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

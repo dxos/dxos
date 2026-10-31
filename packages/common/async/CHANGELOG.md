@@ -1,5 +1,18 @@
 # @dxos/async
 
+## 0.17.0
+
+### Patch Changes
+
+- e50d1e5: `UpdateScheduler` no longer wedges when Cloudflare Workers refuse its throttle timer. Outside a request, such as in a FinalizationRegistry callback that releases an ECHO document, `setTimeout` throws; the pending run used to keep the scheduler marked as scheduled, so every later `flush` waited until the invocation deadline, and the error closed the `RepoProxy`. The run now gives up its slot and the next trigger does the work.
+- Updated dependencies [034e231]
+  - @dxos/context@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/debug@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/node-std@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

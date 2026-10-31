@@ -1,5 +1,69 @@
 # @dxos/react-ui-transcription
 
+## 0.17.0
+
+### Patch Changes
+
+- 85131cc: Calls can be filled with simulated participants played from video files, including a timed screenshare, transcript lines and an agent avatar driven by an audio-only participant's voice, through the `setSimulatedParticipants` operation; call tiles now autoplay where the browser blocks unmuted video, and the transcript view no longer repeats its last line as a feed grows.
+
+  `@dxos/react-ui-experimental` adds the `Avatar` namespace: voice-driven visualizations (orb, chaos, kube, spectrum and ink variants) picked by id with config overrides, with audio and scripted signal providers. `Chaos` and the newly exported `Kube` are rewritten on plain three.js and shared with the avatars: `shaderPresets` becomes `chaosPresets`, `ChaosOptions.color` is a hex string, and `Chaos` drops its `debug` prop.
+
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [df16fba]
+- Updated dependencies [1924a44]
+- Updated dependencies [e343467]
+- Updated dependencies [9a3313a]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [9bcc167]
+- Updated dependencies [59b9d5a]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [2bba392]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [592fdad]
+- Updated dependencies [074e3e6]
+- Updated dependencies [17a9e75]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [0166448]
+- Updated dependencies [f86f10e]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [4fe25ee]
+- Updated dependencies [ed0d367]
+- Updated dependencies [2cebedc]
+- Updated dependencies [7da5d17]
+- Updated dependencies [4be51c3]
+- Updated dependencies [f299590]
+- Updated dependencies [ca2a4a8]
+- Updated dependencies [b159f41]
+- Updated dependencies [bdb73fb]
+- Updated dependencies [39f6b21]
+- Updated dependencies [d00cc85]
+- Updated dependencies [e67aa80]
+- Updated dependencies [e50d1e5]
+- Updated dependencies [df65316]
+  - @dxos/echo@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/react-ui-editor@0.17.0
+  - @dxos/context@0.17.0
+  - @dxos/ui-editor@0.17.0
+  - @dxos/types@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/pipeline-transcription@0.17.0
+  - @dxos/av@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

@@ -1,5 +1,24 @@
 # @dxos/worker-framework
 
+## 0.17.0
+
+### Minor Changes
+
+- 9caabb2: A dedicated worker now tells its leader tab why it is shutting down (displaced by another worker, lost a lock, failed to start, or asked to by the runtime) before it closes, so the reason survives in the tab's logs and in the connection's error diagnostics. The `stop` displacement message names the worker that sent it. Breaking: `WorkerRuntime.makeWorkerRuntime`'s `requestShutdown` option is now a function of the shutdown reason (`(reason) => Effect`) instead of an `Effect`.
+
+### Patch Changes
+
+- Updated dependencies [034e231]
+- Updated dependencies [e50d1e5]
+  - @dxos/context@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/tracing@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

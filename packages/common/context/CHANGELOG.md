@@ -1,5 +1,15 @@
 # @dxos/context
 
+## 0.17.0
+
+### Patch Changes
+
+- 034e231: Kanban cards render in card views that request only `cardContent`: the kanban, map, assistant and devtools surface modules now declare every role their surfaces bind. `MediaPlayer` embeds drop the `allow-presentation` sandbox flag on engines that don't support it, so WebKit no longer logs an error per embed. The "large number of dispose callbacks" warning reports six stack frames, enough to reach the code past a helper such as `Event.on`.
+- @dxos/util@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/debug@0.17.0
+  - @dxos/node-std@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

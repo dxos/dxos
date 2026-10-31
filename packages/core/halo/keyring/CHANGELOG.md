@@ -1,5 +1,26 @@
 # @dxos/keyring
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [3aef671]
+- Updated dependencies [ece15ab]
+- Updated dependencies [ad3d5e0]
+- Updated dependencies [768db81]
+- Updated dependencies [e50d1e5]
+  - @dxos/keys@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/sql-sqlite@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/crypto@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/random-access-storage@0.17.0
+  - @dxos/debug@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/node-std@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

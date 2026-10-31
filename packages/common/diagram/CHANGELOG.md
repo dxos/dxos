@@ -1,5 +1,21 @@
 # @dxos/diagram
 
+## 0.17.0
+
+### Minor Changes
+
+- 82f2242: A laid-out diagram opened in the Canvas editor ("Edit in Canvas") now draws with the same renderer as its SVG file: `SvgFile` builds a `Markup` tree (`sceneTree`, `elementMarkup`, `markerDefs`, `connectorElements`) that `@dxos/react-ui-canvas`'s new `diagram` node type and diagram connectors render, keeping the layout's bends, group tints, colors, fonts and markers; a connector whose box moves re-routes with the layout's own router (`UmlGrid.rerouteConnector`).
+- 1302e04: `@dxos/diagram` adds `diagramPreview()`, a CodeMirror extension that renders every ` ```diagram ` fence in a markdown document as its laid-out diagram, showing the source again while the selection is inside the fence; `renderDiagram(source)` returns the standalone SVG and its size.
+- 7067fec: Edges that leave one node with the same label now share one port and one trunk, labelled once, as `edge A -> B, C bus` draws without writing `bus`. Every trunk is laid out with its source upstream and its targets side by side.
+- bc50a90: The `.dx` diagram DSL draws sequence diagrams (`diagram kind=sequence`: participants, `calls`/`sends`/`returns` messages with activations, notes and `alt`/`opt`/`loop`/`par`/`break`/`critical` fragments) and data-flow diagrams (`diagram kind=dataflow`: process, store and external roles, with warnings for flows that break the data-flow rules). Mermaid input is deprecated: the `generate` operation and `Mermaid.compile`, `Uml.compile` and `MermaidEngine.compile` still work but are marked deprecated in favour of `draw` and `Dsl.compile`.
+
+### Patch Changes
+
+- 39eb10b: Exported diagram SVGs now render correctly outside browsers: tinted group frames and hollow markers carry plain-color fallbacks, so librsvg, sharp and ImageMagick no longer paint them solid black or see-through.
+- @dxos/effect@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

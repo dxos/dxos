@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-lighthouse",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "private": true,
   "description": "Lighthouse web research plugin.",
   "homepage": "https://dxos.org",

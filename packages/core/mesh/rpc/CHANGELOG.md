@@ -1,5 +1,22 @@
 # @dxos/rpc
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [034e231]
+- Updated dependencies [ece15ab]
+- Updated dependencies [e50d1e5]
+  - @dxos/context@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/debug@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/node-std@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

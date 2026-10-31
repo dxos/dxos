@@ -1,5 +1,35 @@
 # @dxos/react-ui-experimental
 
+## 0.17.0
+
+### Minor Changes
+
+- 85131cc: Calls can be filled with simulated participants played from video files, including a timed screenshare, transcript lines and an agent avatar driven by an audio-only participant's voice, through the `setSimulatedParticipants` operation; call tiles now autoplay where the browser blocks unmuted video, and the transcript view no longer repeats its last line as a feed grows.
+
+  `@dxos/react-ui-experimental` adds the `Avatar` namespace: voice-driven visualizations (orb, chaos, kube, spectrum and ink variants) picked by id with config overrides, with audio and scripted signal providers. `Chaos` and the newly exported `Kube` are rewritten on plain three.js and shared with the avatars: `shaderPresets` becomes `chaosPresets`, `ChaosOptions.color` is a hex string, and `Chaos` drops its `debug` prop.
+
+### Patch Changes
+
+- Updated dependencies [df16fba]
+- Updated dependencies [e343467]
+- Updated dependencies [9a3313a]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [17a9e75]
+- Updated dependencies [0166448]
+- Updated dependencies [f86f10e]
+- Updated dependencies [4fe25ee]
+- Updated dependencies [7da5d17]
+- Updated dependencies [ca2a4a8]
+- Updated dependencies [d00cc85]
+- Updated dependencies [1a0fff1]
+- Updated dependencies [e67aa80]
+  - @dxos/react-ui@0.17.0
+  - @dxos/ui-types@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/node-std@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

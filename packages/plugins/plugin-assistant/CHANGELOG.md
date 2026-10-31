@@ -1,5 +1,213 @@
 # @dxos/plugin-assistant
 
+## 0.17.0
+
+### Minor Changes
+
+- f351e2b: The agent picker offers what an agent that chooses its own model lets a chat choose: its model, effort and permission mode, kept on the chat's session as `agentModel`, `agentEffort` and `agentMode`. An agent declares them as `choices` on its `AssistantCapabilities.Agent` registration. Claude Code, on this computer and on EDGE, offers Opus, Sonnet and Haiku, effort from Low to Max, and its four permission modes.
+- 7b23f9f: Code mode is now the default turn engine for Composer agents. The `codeMode` setting is replaced by `disableCodeMode`, an opt-out ("Disable code mode" in the assistant settings); a saved `codeMode` value is ignored.
+- a18cb35: Lifecycle hooks are plugin capabilities (`AppCapabilities.HookDefinition`) instead of skill fields, and `Hook.SettingsAnnotation` on a space's properties or an agent's instructions turns each plugin's hooks on or off; space settings get an Assistant panel with one toggle per plugin. Breaking: `Skill.hooks`, `Skill.Hook`, `Skill.HookSpec`, `@dxos/assistant/SkillHooks` and the `begin-request` hook event are removed.
+- c5d4212: Inbox triage moves into `@dxos/plugin-inbox` as `InboxOperation.TriageMailbox`, offered as **Triage inbox** in the mailbox menu, so labelling, priority and task extraction no longer need a separate plugin. Triage now extracts tasks from messages whose contacts or summaries were already extracted on sync; only a recorded task marks a message as done. `@dxos/plugin-assistant` serves Cloudflare's keyless models (Clef, Clef Flash and jev on Workers AI, the default decision model, and Clairic) through EDGE by default, so a signed-in user can triage without enabling the TypeSafe plugin, whose settings still take precedence when it is enabled.
+- f55e992: GitHub and Linear connections now give the assistant their MCP server's tools, acting as whoever the connection signs in as, and any other MCP server can be added as a Custom MCP Server connection. Each chat can turn a connection's MCP server off, and the agent can add one with the Skill Manager. The Browser and DXOS Introspect servers are built in: plugins contribute them (`AppCapabilities.McpServer`), they live in the registry rather than a space, and each chat turns them on as its skills need them. A chat in code mode calls its connections' MCP tools from its code, and Claude Code gets the chat's connections too, with each credential kept in Composer.
+
+  Breaking:
+
+  - `Connection.accessToken` is optional, so code reading it must handle a connection with no credential (`Connection.getAccessToken` asserts one).
+  - `Skill.mcpServers` is removed: a skill carries instructions and tools, and its servers come from connections.
+  - An MCP server's tools are offered to the agent as `mcp__<connection>__<tool>` (for example `mcp__weather__get_weather`), as other MCP hosts name them; instructions that name a tool by its bare name should name the prefixed one.
+  - The `McpServer` ECHO type (`@dxos/compute/McpServer`) is removed without a migration. Servers stored that way are no longer connected; add them again as Custom MCP Server connections.
+
+### Patch Changes
+
+- df16fba: Popups (menus, selects, comboboxes, popovers) no longer draw a focus ring; the highlighted item shows where focus is. In the chat prompt, the placeholder is shortened to "/ for skills, @ for content", "Add an object" is renamed "Add object", and switching between the tasks and context drawers closes the open drawer before the other opens. The search and add-to-collection dialogs keep their input's inner padding. The prompt's command completions render as a react-ui-list Listbox in a popover above the editor, at most 8 rows tall, whose arrow keys stop at the first and last command instead of wrapping; Escape closes it and leaves focus in the editor. An editor no longer moves focus to its host on an Escape CodeMirror already acted on.
+
+  A polyline locked while its vertices are being edited loses its vertex handles, Delete no longer removes a vertex from it, and a vertex drag the lock lands in the middle of neither previews nor commits a change.
+
+- 9d1d6f0: An assistant chat that anyone besides the reader has written in shows an avatar beside every prompt, and names the prompts the reader did not write. `ChatThread.Root` takes `userDid` and `getAuthor` for this, and a prompt's row keeps its author's DID while it is on its way to the agent.
+- f142d06: The chat prompt is redesigned. One picker chooses the agent, where it runs (this device or EDGE) and the model. Skills load as `/` commands, and `@` mentions an object, which joins the chat's context when the message is sent. A "+" menu adds files, objects, commands and MCP servers; "Add an object…" opens the search dialog as a picker (`SearchOperation.SelectObject`). The chat's tasks and its context are two drawers above the prompt, and other plugins can add sections to the context drawer (`ChatSurface.ChatDetails`).
+
+  The `@` menus in the chat and in the markdown editor now run a full-text search once typing pauses, through `ObjectCombobox.useSearch` in `@dxos/app-toolkit`; the markdown `@` menu now matches body text as well as names. `searchQuery`, `searchFilter`, `byRelevance` and `useListedTypeUris` moved to `ObjectCombobox` from plugin-search, which no longer exports `buildSearchQuery`, `buildSearchFilter` or `useSearchableTypeUris`.
+
+  Replies no longer stop rendering when the thread's view is switched while they stream.
+
+- 711e08a: A permission card shows its answer as soon as you click it, instead of keeping its buttons until the chat is reopened. A message changed in place now re-renders its row in the message list.
+- 034e231: Kanban cards render in card views that request only `cardContent`: the kanban, map, assistant and devtools surface modules now declare every role their surfaces bind. `MediaPlayer` embeds drop the `allow-presentation` sandbox flag on engines that don't support it, so WebKit no longer logs an error per embed. The "large number of dispose callbacks" warning reports six stack frames, enough to reach the code past a helper such as `Event.on`.
+- 7d807f6: **Triage inbox** and a message's magic-wand extractions (such as **Summary**) now show their progress in the mailbox's status bar under the email list, like sync and Analyze, and the bar clears when the run completes, fails or is cancelled.
+
+  Answering a permission request that nothing is waiting on any more now shows an error in the chat instead of doing nothing.
+
+  A reply the agent sends from a mailbox with no connected account now stays under the email as an unsent draft, and the error tells the agent it was saved but not sent.
+
+- 85ec7e0: Chats run on Claude Code (or any agent of its own) are now named automatically: a chat delegated several tasks is named from their titles, and a chat whose first prompt from Composer is queued behind a running turn is named from that prompt.
+- 80c25fe: The transcription microphone shows in every chat prompt again, just before Send: the Space Home prompt, the assistant companion before its first message, an agent's chat, and stored chats. Each prompt reads the buttons other plugins add to it from a hidden prompt node under the node that hosts it, which `AppNode.makePrompt`, `AppNode.getPromptId` and `AppNode.PROMPT_TYPE` describe; contributors file app-graph actions on it with the `prompt` disposition. Every surface that hosts a chat article now passes its graph node as `nodeId`, which is where the prompt finds its host. `ObjectAction` is deprecated in favour of app-graph actions on the subject's node.
+- Updated dependencies [d65fd2a]
+- Updated dependencies [5d280a1]
+- Updated dependencies [3f250b7]
+- Updated dependencies [fc5e071]
+- Updated dependencies [6f6547f]
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [9cb96c7]
+- Updated dependencies [caa28b3]
+- Updated dependencies [710da43]
+- Updated dependencies [df16fba]
+- Updated dependencies [e8029c3]
+- Updated dependencies [9d1d6f0]
+- Updated dependencies [f142d06]
+- Updated dependencies [1924a44]
+- Updated dependencies [782ee41]
+- Updated dependencies [d7dc2fc]
+- Updated dependencies [d105c19]
+- Updated dependencies [711e08a]
+- Updated dependencies [e343467]
+- Updated dependencies [04d5fb1]
+- Updated dependencies [9a3313a]
+- Updated dependencies [034e231]
+- Updated dependencies [498840b]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [cd6c578]
+- Updated dependencies [b2d8572]
+- Updated dependencies [68d1c38]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [9bcc167]
+- Updated dependencies [a245692]
+- Updated dependencies [3aef671]
+- Updated dependencies [f10c1dc]
+- Updated dependencies [13bc40d]
+- Updated dependencies [59b9d5a]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [853af68]
+- Updated dependencies [2bba392]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [592fdad]
+- Updated dependencies [49df146]
+- Updated dependencies [a18cb35]
+- Updated dependencies [6ba7a88]
+- Updated dependencies [074e3e6]
+- Updated dependencies [3eefd80]
+- Updated dependencies [17a9e75]
+- Updated dependencies [2f4eb26]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [a843e27]
+- Updated dependencies [45e1c93]
+- Updated dependencies [0a4580c]
+- Updated dependencies [03ee407]
+- Updated dependencies [6fd1079]
+- Updated dependencies [2d585c2]
+- Updated dependencies [0166448]
+- Updated dependencies [f86f10e]
+- Updated dependencies [80c25fe]
+- Updated dependencies [5970ed3]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [1a06754]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [4fe25ee]
+- Updated dependencies [f175a2d]
+- Updated dependencies [a9793bf]
+- Updated dependencies [de25be8]
+- Updated dependencies [ed0d367]
+- Updated dependencies [2cebedc]
+- Updated dependencies [7da5d17]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [4510d8c]
+- Updated dependencies [4be51c3]
+- Updated dependencies [f299590]
+- Updated dependencies [ca2a4a8]
+- Updated dependencies [02254b0]
+- Updated dependencies [85131cc]
+- Updated dependencies [b159f41]
+- Updated dependencies [97de470]
+- Updated dependencies [3b37cd1]
+- Updated dependencies [bdb73fb]
+- Updated dependencies [39f6b21]
+- Updated dependencies [d00cc85]
+- Updated dependencies [0a14251]
+- Updated dependencies [768db81]
+- Updated dependencies [7cb73a6]
+- Updated dependencies [e7ca5d7]
+- Updated dependencies [e1d537b]
+- Updated dependencies [1a0fff1]
+- Updated dependencies [c1c6cf4]
+- Updated dependencies [6f27147]
+- Updated dependencies [e67aa80]
+- Updated dependencies [e50d1e5]
+- Updated dependencies [df65316]
+- Updated dependencies [74e4c5f]
+  - @dxos/edge-client@0.17.0
+  - @dxos/assistant@0.17.0
+  - @dxos/devtools@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/app-toolkit@0.17.0
+  - @dxos/app-graph@0.17.0
+  - @dxos/app-framework@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/react-ui-chat@0.17.0
+  - @dxos/react-ui-editor@0.17.0
+  - @dxos/plugin-search@0.17.0
+  - @dxos/plugin-space@0.17.0
+  - @dxos/react-ui-form@0.17.0
+  - @dxos/react-ui-assistant@0.17.0
+  - @dxos/assistant-toolkit@0.17.0
+  - @dxos/plugin-markdown@0.17.0
+  - @dxos/react-ui-feed@0.17.0
+  - @dxos/client@0.17.0
+  - @dxos/plugin-routine@0.17.0
+  - @dxos/plugin-deck@0.17.0
+  - @dxos/ai@0.17.0
+  - @dxos/ui-editor@0.17.0
+  - @dxos/echo-client@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/types@0.17.0
+  - @dxos/compute-runtime@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/link@0.17.0
+  - @dxos/react-ui-list@0.17.0
+  - @dxos/plugin-transcription@0.17.0
+  - @dxos/plugin-client@0.17.0
+  - @dxos/react-ui-experimental@0.17.0
+  - @dxos/react-ui-transcription@0.17.0
+  - @dxos/plugin-connector@0.17.0
+  - @dxos/react-ui-task@0.17.0
+  - @dxos/react-ui-menu@0.17.0
+  - @dxos/ui-types@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/plugin-registry@0.17.0
+  - @dxos/agent-runtime@0.17.0
+  - @dxos/conductor@0.17.0
+  - @dxos/echo-react@0.17.0
+  - @dxos/plugin-file@0.17.0
+  - @dxos/plugin-tasks@0.17.0
+  - @dxos/observability@0.17.0
+  - @dxos/react-client@0.17.0
+  - @dxos/schema@0.17.0
+  - @dxos/react-ui-trace@0.17.0
+  - @dxos/plugin-attention@0.17.0
+  - @dxos/plugin-graph@0.17.0
+  - @dxos/plugin-observability@0.17.0
+  - @dxos/plugin-status-bar@0.17.0
+  - @dxos/react-ui-attention@0.17.0
+  - @dxos/react-ui-components@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/mcp-client@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/halo-react@0.17.0
+  - @dxos/config@0.17.0
+  - @dxos/ui@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/graph@0.17.0
+  - @dxos/react-hooks@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/react-list@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

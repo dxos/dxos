@@ -1,5 +1,19 @@
 # @dxos/operation
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [3aef671]
+- Updated dependencies [a18cb35]
+- Updated dependencies [a843e27]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [768db81]
+  - @dxos/keys@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/log@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

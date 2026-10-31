@@ -1,5 +1,28 @@
 # @dxos/messaging
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [d65fd2a]
+- Updated dependencies [6f6547f]
+- Updated dependencies [034e231]
+- Updated dependencies [a245692]
+- Updated dependencies [3aef671]
+- Updated dependencies [ece15ab]
+- Updated dependencies [768db81]
+- Updated dependencies [e50d1e5]
+  - @dxos/edge-client@0.17.0
+  - @dxos/context@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/tracing@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/node-std@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

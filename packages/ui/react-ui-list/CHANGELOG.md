@@ -1,5 +1,39 @@
 # @dxos/react-ui-list
 
+## 0.17.0
+
+### Minor Changes
+
+- 0166448: Presentations render slides written in a Slidev markdown subset (layouts, click steps, video backgrounds, embedded object surfaces) and print the whole deck, one slide per page; reveal.js is removed. A Presentation's article is a grid of slide thumbnails that can be dragged to reorder and double-clicked to present. A deck takes a theme (`default`, `light`, `dark`, `serif`) with color overrides and a named text and code font, whose web fonts load only when used. Slides open in an editor with a slide toolbar and a live preview, below it or in the companion, kept in step with the cursor both ways.
+
+  `Listbox` takes `tiles` (a column count) to lay items out as a grid of cards with two-dimensional arrow keys; a list's current row is now marked in a neutral color and its selection in the focus color, and draggable rows can be reordered in a grid (`useReorder` with `axis: 'horizontal'`). `SyntaxHighlighter` takes a `themeMode` prop and `react-ui-syntax-highlighter` exports `renderRows`.
+
+- c1c6cf4: `Tree` can filter, reveal and range-select. `filterTreeModel(model, predicate)` gives a view of a model holding only the matching rows and their ancestors, with those ancestors open. `Tree.Root` takes a `ref` whose `reveal(path)` opens the row's ancestors and scrolls to it, focusing it unless `{ focus: false }`. In `selectionMode='multiple'` a shift-click reports `range` on `TreeSelectEvent`: every selectable row from the last plain-clicked row to this one, in row order. ⌘↑ and ⌘↓ move focus to the parent row and to the parent's next sibling. A Tree in multiple-selection mode opens its branches from the disclosure again, and `Tree.Content` takes `scroll={false}` to leave scrolling to an outer container.
+
+### Patch Changes
+
+- 6f27147: `Picker` scrolls the highlighted item into view for every item registered through its item context, not only `Picker.Item`; the projects plugin's Showcase article shows its targets and artifacts as a masonry of object cards.
+- Updated dependencies [df16fba]
+- Updated dependencies [e343467]
+- Updated dependencies [9a3313a]
+- Updated dependencies [034e231]
+- Updated dependencies [0590c11]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [17a9e75]
+- Updated dependencies [0166448]
+- Updated dependencies [f86f10e]
+- Updated dependencies [4fe25ee]
+- Updated dependencies [7da5d17]
+- Updated dependencies [ca2a4a8]
+- Updated dependencies [d00cc85]
+- Updated dependencies [1a0fff1]
+- Updated dependencies [e67aa80]
+  - @dxos/react-ui@0.17.0
+  - @dxos/ui-types@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/react-focus@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

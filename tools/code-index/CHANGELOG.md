@@ -1,5 +1,84 @@
 # @dxos/code-index
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [fc5e071]
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [82f2242]
+- Updated dependencies [df16fba]
+- Updated dependencies [e8029c3]
+- Updated dependencies [9d1d6f0]
+- Updated dependencies [f142d06]
+- Updated dependencies [1924a44]
+- Updated dependencies [711e08a]
+- Updated dependencies [e343467]
+- Updated dependencies [9a3313a]
+- Updated dependencies [034e231]
+- Updated dependencies [498840b]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [1302e04]
+- Updated dependencies [7067fec]
+- Updated dependencies [bc50a90]
+- Updated dependencies [98db701]
+- Updated dependencies [6eb949e]
+- Updated dependencies [39eb10b]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [9bcc167]
+- Updated dependencies [59b9d5a]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [2bba392]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [592fdad]
+- Updated dependencies [6ba7a88]
+- Updated dependencies [074e3e6]
+- Updated dependencies [17a9e75]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [0166448]
+- Updated dependencies [f86f10e]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [4fe25ee]
+- Updated dependencies [ed0d367]
+- Updated dependencies [2cebedc]
+- Updated dependencies [7da5d17]
+- Updated dependencies [4be51c3]
+- Updated dependencies [f299590]
+- Updated dependencies [ca2a4a8]
+- Updated dependencies [b159f41]
+- Updated dependencies [bdb73fb]
+- Updated dependencies [39f6b21]
+- Updated dependencies [ad3d5e0]
+- Updated dependencies [d00cc85]
+- Updated dependencies [e67aa80]
+- Updated dependencies [df65316]
+  - @dxos/plugin-illustrator@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/diagram@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/react-ui-chat@0.17.0
+  - @dxos/react-ui-assistant@0.17.0
+  - @dxos/react-ui-feed@0.17.0
+  - @dxos/ai@0.17.0
+  - @dxos/ui-editor@0.17.0
+  - @dxos/types@0.17.0
+  - @dxos/sql-sqlite@0.17.0
+  - @dxos/react-ui-markdown@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/node-std@0.17.0
+  - @dxos/vite-plugin-icons@0.17.0
+  - @dxos/vite-plugin-import-source@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

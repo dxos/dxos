@@ -1,5 +1,53 @@
 # @dxos/types
 
+## 0.17.0
+
+### Minor Changes
+
+- 59b9d5a: Features now live on specs instead of projects. A spec (`Spec.Spec` in `@dxos/plugin-projects`) is a feature map that the sidebar lists. A feature nests by owning one spec of its own, and a spec may name the project that tracks its tasks and hold one `SpecDocument` as its normative text. Breaking: `Spec` in `@dxos/types` is renamed `SpecDocument` (typename `org.dxos.type.specDocument`). `Feature` drops `project`, `parent` and `position`, and `FeatureOperation` inputs take a `spec` in place of a `project`. Migrations move existing data.
+- 2bba392: GitHub sync now binds each repository as a `Repo` and polls it every 3 minutes on EDGE: one conditional request when nothing changed, and one GraphQL batch for changed pull requests, which are stored as `PullRequest` objects (with repository, head commit, checks, review decision and closed issues) instead of Tasks. `PullRequest` gains the optional `repository`, `headSha`, `checks`, `reviewDecision` and `closes` fields. `SyncGitHubRepositories` now reports `{ bindings, notModified, requests, pulled, pushed }`.
+- 592fdad: The Hello Worker space template now starts from a partial plan for the assistant to finish. It seeds a `Spec` object holding a partly written `.mdl` spec (Deus), four planned features on the project's feature map that cite it, and three planning tasks: complete the spec, draw its architecture, and plan the implementation as tasks. A feature's spec row opens the spec in the space. The `Spec` type moves from plugin-code to `@dxos/types` so any plugin can create one; its typename (`org.dxos.type.spec`) is unchanged, so existing specs keep working.
+- ed0d367: `Repo` now also models repositories hosted by EDGE, marked by an `edge.dxos.network` foreign key (`Repo.EDGE_SOURCE`, `Repo.edgeId`, `Repo.makeEdge`), and `AiContext.boundObjects` reads the objects a conversation currently binds.
+
+### Patch Changes
+
+- Updated dependencies [90a7f6e]
+- Updated dependencies [c1f845f]
+- Updated dependencies [1924a44]
+- Updated dependencies [0590c11]
+- Updated dependencies [9fe0e5c]
+- Updated dependencies [b2d8572]
+- Updated dependencies [68d1c38]
+- Updated dependencies [aec19dd]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [9bcc167]
+- Updated dependencies [7751052]
+- Updated dependencies [545ee73]
+- Updated dependencies [074e3e6]
+- Updated dependencies [3eefd80]
+- Updated dependencies [2f4eb26]
+- Updated dependencies [b46d89b]
+- Updated dependencies [853663c]
+- Updated dependencies [1f73ed2]
+- Updated dependencies [691fe84]
+- Updated dependencies [e99e717]
+- Updated dependencies [bc5cea7]
+- Updated dependencies [aa1cde1]
+- Updated dependencies [de25be8]
+- Updated dependencies [2cebedc]
+- Updated dependencies [f299590]
+- Updated dependencies [b159f41]
+- Updated dependencies [df65316]
+  - @dxos/echo@0.17.0
+  - @dxos/echo-client@0.17.0
+  - @dxos/link@0.17.0
+  - @dxos/schema@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/random@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes
