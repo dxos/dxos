@@ -67,7 +67,7 @@ const DefaultStory = ({ arrange }: StoryProps) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-canvas-editor/components/Graph2DView',
+  title: 'ui/react-ui-canvas-editor/views/Graph2DView',
   component: DefaultStory,
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: { layout: 'fullscreen', translations },
