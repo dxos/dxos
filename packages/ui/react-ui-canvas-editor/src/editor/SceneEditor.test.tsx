@@ -251,6 +251,37 @@ describe('SceneEditor', () => {
     expect(onCameraChange).toHaveBeenLastCalledWith({ zoom: 3 });
   });
 
+  test('the zoom buttons zoom from the camera on screen, one the viewport chose itself included, and show its zoom', async () => {
+    // A viewport that fits the view on open and reports that camera, which the host never stored.
+    const FittingViewport = ({ children, onViewCamera }: ViewportProps<{ zoom: number }>) => {
+      useEffect(() => onViewCamera?.({ zoom: 4 }), [onViewCamera]);
+      return <div data-testid='viewport'>{children}</div>;
+    };
+    const onCameraChange = vi.fn();
+    render(
+      <SceneEditor.Root
+        config={{
+          ...config('2d'),
+          viewport: FittingViewport,
+          camera: { ...config('2d').camera, percent: (camera, authored) => (camera.zoom / authored.zoom) * 100 },
+        }}
+        document={DOCUMENT}
+        scene='s'
+        onIntent={() => {}}
+        display={DISPLAY}
+        authoredCamera={{ zoom: 1 }}
+        onCameraChange={onCameraChange}
+      >
+        <SceneEditor.Viewport>
+          <SceneEditor.Camera />
+        </SceneEditor.Viewport>
+      </SceneEditor.Root>,
+    );
+    expect(await screen.findByText('400%')).toBeDefined();
+    await userEvent.click(screen.getByTestId('toolbar-zoom-in'));
+    expect(onCameraChange).toHaveBeenLastCalledWith({ zoom: 5 });
+  });
+
   test('a new refit key from the host frames the content, in either dimension; the first one does not', () => {
     for (const dim of ['2d', '3d'] as const) {
       const onCameraChange = vi.fn();

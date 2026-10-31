@@ -127,8 +127,8 @@ export const createConfig2D = ({
           y: size.height / (2 * zoom) - (bounds.y + bounds.height / 2),
         };
       },
-      // About the view's centre, as the camera bar's buttons zoom.
-      zoom: (camera, factor) => zoomAt(camera, { x: 0, y: 0 }, Math.min(MAX_ZOOM, camera.zoom / factor)),
+      zoom: (camera, factor, size) =>
+        zoomAt(camera, { x: size.width / 2, y: size.height / 2 }, Math.min(MAX_ZOOM, camera.zoom / factor)),
       percent: (camera, authored) => Math.round((camera.zoom / authored.zoom) * 100),
     },
     display: {

@@ -389,6 +389,17 @@ const SceneEditorRoot = <C,>({
     [],
   );
   const current = viewerCamera ?? authoredCamera;
+  // The camera on screen can be one the viewport chose itself (a fit on open) that the host never stored; the buttons
+  // zoom from it. Kept in a ref so a pan does not re-render the editor each frame; only its rounded percent is state.
+  const shownCamera = useRef<C | undefined>(undefined);
+  const [shownPercent, setShownPercent] = useState<number>();
+  const handleViewCamera = useCallback(
+    (next: C) => {
+      shownCamera.current = next;
+      authoredCamera !== undefined && setShownPercent(config.camera.percent(next, authoredCamera));
+    },
+    [authoredCamera, config.camera],
+  );
   const camera = useMemo(
     () =>
       current !== undefined && authoredCamera !== undefined && onCameraChange
@@ -398,13 +409,13 @@ const SceneEditorRoot = <C,>({
               fitting: false,
               zoomReset: () =>
                 onCameraChange(layout ? config.camera.reset(authoredCamera, document, layout, size) : authoredCamera),
-              zoomIn: () => onCameraChange(config.camera.zoom(current, 1 / ZOOM_STEP)),
-              zoomOut: () => onCameraChange(config.camera.zoom(current, ZOOM_STEP)),
+              zoomIn: () => onCameraChange(config.camera.zoom(shownCamera.current ?? current, 1 / ZOOM_STEP, size)),
+              zoomOut: () => onCameraChange(config.camera.zoom(shownCamera.current ?? current, ZOOM_STEP, size)),
             },
-            percent: config.camera.percent(current, authoredCamera),
+            percent: shownPercent ?? config.camera.percent(current, authoredCamera),
           }
         : undefined,
-    [current, authoredCamera, onCameraChange, config.camera, layout, document, size],
+    [current, authoredCamera, onCameraChange, config.camera, layout, document, size, shownPercent],
   );
 
   const refitRef = useRef(refitKey);
@@ -447,6 +458,7 @@ const SceneEditorRoot = <C,>({
         onContextMenu={(at, kind) => store.setMenu({ at, kind })}
         onFaceChange={store.setFace}
         onCameraChange={onCameraChange}
+        onViewCamera={editing ? handleViewCamera : undefined}
         onResize={handleResize}
       >
         {overlay}
@@ -470,6 +482,7 @@ const SceneEditorRoot = <C,>({
       onModelIntent,
       onTransaction,
       onCameraChange,
+      handleViewCamera,
     ],
   );
 

@@ -118,6 +118,7 @@ export const createViewport2D = (options: Viewport2DOptions = {}) => {
     onEdit,
     onContextMenu,
     onCameraChange,
+    onViewCamera,
     onResize,
     children,
   }: ViewportProps<Camera>) => {
@@ -185,8 +186,9 @@ export const createViewport2D = (options: Viewport2DOptions = {}) => {
         initialCamera={camera}
         onCameraChange={onCameraChange}
         onViewChange={(view) => {
-          const zoom = registry.get(atoms.camera).zoom;
-          onResize?.({ width: view.width * zoom, height: view.height * zoom });
+          const shown = registry.get(atoms.camera);
+          onViewCamera?.(shown);
+          onResize?.({ width: view.width * shown.zoom, height: view.height * shown.zoom });
         }}
         hostKeys={HOST_KEYS}
         onContextMenu={picture ? undefined : onContextMenu}

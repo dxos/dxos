@@ -17,6 +17,8 @@ const CAMERA: Scene.Camera3D = {
   projection: 'perspective',
 };
 
+const SIZE = { width: 800, height: 600 };
+
 const document: Scene.SceneDocument = {
   scenes: [{ id: 's', dim: '3d', layout: 'root', camera: CAMERA }],
   layouts: [
@@ -43,8 +45,8 @@ describe('config3d', () => {
     const fitted = config3d.camera.fit(CAMERA, document, 'root', { width: 800, height: 600 });
     expect(fitted.target.x).toBeCloseTo(11);
     expect(fitted.yaw).toBe(CAMERA.yaw);
-    expect(config3d.camera.zoom(CAMERA, 2).distance).toBeCloseTo(20);
-    expect(config3d.camera.percent(config3d.camera.zoom(CAMERA, 0.5), CAMERA)).toBe(200);
+    expect(config3d.camera.zoom(CAMERA, 2, SIZE).distance).toBeCloseTo(20);
+    expect(config3d.camera.percent(config3d.camera.zoom(CAMERA, 0.5, SIZE), CAMERA)).toBe(200);
   });
 
   test('a paste lands a grid unit further along each ground axis, and gizmos snap to unit, 15° and a tenth', () => {

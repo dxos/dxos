@@ -63,6 +63,8 @@ export type ViewportProps<C = unknown> = {
   onContextMenu: (at: Point, kind: 'element' | 'canvas') => void;
   onFaceChange?: (face: FaceSelection | undefined) => void;
   onCameraChange?: (camera: C) => void;
+  /** The camera on screen whenever it moves, including a fit the viewport made itself, which `onCameraChange` omits. */
+  onViewCamera?: (camera: C) => void;
   onResize?: (size: { width: number; height: number }) => void;
   /** The floating panels, drawn over the scene. */
   children?: ReactNode;

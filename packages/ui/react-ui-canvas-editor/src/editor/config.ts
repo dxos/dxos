@@ -51,8 +51,8 @@ export type CameraOps<C> = {
   fit: (camera: C, document: Scene.SceneDocument, layout: string, size: { width: number; height: number }) => C;
   /** Actual size: the authored camera's scale and view, moved so the open layout's elements sit in the middle. */
   reset: (authored: C, document: Scene.SceneDocument, layout: string, size: { width: number; height: number }) => C;
-  /** The camera `factor` closer (below 1) or further (above 1). */
-  zoom: (camera: C, factor: number) => C;
+  /** The camera `factor` closer (below 1) or further (above 1), about the centre of a viewport of `size`. */
+  zoom: (camera: C, factor: number, size: { width: number; height: number }) => C;
   /** The zoom as a percentage of the authored camera's. */
   percent: (camera: C, authored: C) => number;
 };
