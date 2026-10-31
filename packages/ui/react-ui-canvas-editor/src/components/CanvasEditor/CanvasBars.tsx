@@ -61,7 +61,8 @@ export const CanvasNavigation = ({ classNames = 'top-2 left-2' }: CanvasBarProps
       // In isolation the crumbs read `Objects › <name>`, and the first leads back out.
       path: isolation ? [OBJECTS_CRUMB, isolation.composite] : path,
       nameOf: (id) => (id === OBJECTS_CRUMB ? 'Objects' : (scenes[id]?.name ?? id)),
-      onPath: commands.openPath,
+      // Home at the scene's own view frames it, as the shared editor's does.
+      onPath: (index) => (!isolation && index === path.length - 1 ? commands.fit() : commands.openPath(index)),
     }),
     [isolation, path, scenes, commands],
   );

@@ -20,7 +20,7 @@ export const Breadcrumbs = ({ path, nameOf, onSelect }: BreadcrumbsProps) => (
     {path.map((id, index) => (
       <Fragment key={`${index}:${id}`}>
         {index > 0 && <span className='text-fg-subtle'>›</span>}
-        {/* The root is home whatever its scene is called. */}
+        {/* The root is home whatever its scene is called, and stays enabled at the root, where it frames the view. */}
         {index === 0 ? (
           <Button.Root
             variant='ghost'
@@ -28,7 +28,6 @@ export const Breadcrumbs = ({ path, nameOf, onSelect }: BreadcrumbsProps) => (
             iconOnly
             icon='ph--house--regular'
             label={nameOf(id)}
-            disabled={index === path.length - 1}
             data-testid='breadcrumb-root'
             onClick={() => onSelect(index)}
           />

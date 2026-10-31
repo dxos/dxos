@@ -8,7 +8,7 @@ import userEvent from '@testing-library/user-event';
 import React, { useEffect } from 'react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
-import { type ViewportProps } from '@dxos/react-ui-canvas';
+import { type CameraRequest, type ViewportProps } from '@dxos/react-ui-canvas';
 import { type Scene } from '@dxos/scene';
 
 import { config3d, createConfig2D } from '../dimensions/index.ts';
@@ -190,10 +190,49 @@ describe('SceneEditor', () => {
     expect(screen.queryByTestId('palette')).toBeNull();
     await userEvent.click(screen.getByTestId('toolbar-zoom-in'));
     expect(seen.at(-1)).toEqual({ zoom: 0.5 * 1.25 });
-    // Fit returns to the frame the viewport chose, not the editor's own fit.
     await userEvent.click(screen.getByTestId('toolbar-fit'));
-    expect(seen.at(-1)).toEqual({ zoom: 0.5 });
+    expect(seen.at(-1)).toEqual({ zoom: 7 });
     expect(onCameraChange).not.toHaveBeenCalled();
+  });
+
+  test('the camera bar asks a viewport that moves its own camera, in an article or a picture, and sets no camera', async () => {
+    for (const role of ['article', 'section']) {
+      const requests: (CameraRequest | undefined)[] = [];
+      const onCameraChange = vi.fn();
+      const AnimatedViewport = ({ cameraRequest, children }: ViewportProps<{ zoom: number }>) => {
+        requests.push(cameraRequest);
+        return <div data-testid='viewport'>{children}</div>;
+      };
+      render(
+        <SceneEditor.Root
+          config={{ ...config('2d'), viewport: AnimatedViewport, camera: { ...config('2d').camera, animated: true } }}
+          document={DOCUMENT}
+          scene='s'
+          role={role}
+          navigable
+          onIntent={() => {}}
+          display={DISPLAY}
+          camera={{ zoom: 4 }}
+          authoredCamera={{ zoom: 1 }}
+          onCameraChange={onCameraChange}
+        >
+          <SceneEditor.Viewport>
+            <SceneEditor.Camera />
+          </SceneEditor.Viewport>
+        </SceneEditor.Root>,
+      );
+      await userEvent.click(screen.getByTestId('toolbar-zoom-in'));
+      expect(requests.at(-1)).toEqual({ id: 1, kind: 'zoom', factor: 1.25 });
+      await userEvent.click(screen.getByTestId('toolbar-fit'));
+      expect(requests.at(-1)).toEqual({ id: 2, kind: 'fit' });
+      // The same move twice is two asks.
+      await userEvent.click(screen.getByTestId('toolbar-fit'));
+      expect(requests.at(-1)).toEqual({ id: 3, kind: 'fit' });
+      await userEvent.click(screen.getByTestId('toolbar-zoom-reset'));
+      expect(requests.at(-1)).toEqual({ id: 4, kind: 'actual' });
+      expect(onCameraChange).not.toHaveBeenCalled();
+      cleanup();
+    }
   });
 
   test('a viewport that reports its unchanged size after every render settles, editing or drawing a card', () => {
@@ -517,5 +556,12 @@ describe('SceneEditor.Navigation', () => {
     expect(screen.getByTestId('viewport').dataset.path).toBe('root b');
     await userEvent.click(screen.getByTestId('breadcrumb-root'));
     expect(screen.getByTestId('viewport').dataset.path).toBe('');
+  });
+
+  test("at the scene's own layout the home crumb frames the view", async () => {
+    const onCameraChange = vi.fn();
+    render(<Editor dim='2d' onCameraChange={onCameraChange} />);
+    await userEvent.click(screen.getByTestId('breadcrumb-root'));
+    expect(onCameraChange).toHaveBeenLastCalledWith({ zoom: 7 });
   });
 });

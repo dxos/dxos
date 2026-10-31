@@ -8,6 +8,7 @@ import React, { type ComponentType, useCallback, useContext, useEffect, useMemo,
 import { type ModuleCompiler } from '@dxos/animation';
 import {
   type Camera,
+  type CameraRequest,
   Canvas,
   type Capabilities,
   type ConstrainIntent,
@@ -93,6 +94,30 @@ const DrillSync = ({ root, path }: { root: string; path: readonly string[] }) =>
 };
 
 /**
+ * Makes each camera move the editor asks for with the engine's own animated commands, which also keep its fit mode: Fit
+ * holds the view framed, and a zoom ends that. Never the request the viewport opened with.
+ */
+const CameraSync = ({ request }: { request: CameraRequest | undefined }) => {
+  const { commands } = useCanvasNavigation('Viewport2D.CameraSync');
+  const made = useRef(request?.id);
+  useEffect(() => {
+    if (!request || made.current === request.id) {
+      return;
+    }
+    made.current = request.id;
+    switch (request.kind) {
+      case 'fit':
+        return commands.fit();
+      case 'actual':
+        return commands.resetZoom();
+      case 'zoom':
+        return commands.zoomBy(request.factor);
+    }
+  }, [commands, request]);
+  return null;
+};
+
+/**
  * The 2D viewport the shared editor draws: react-ui-canvas's engine over the open scene's layouts, with its gestures,
  * handles, links and portals. The engine sends each edit on release as one intent per changed layout, so the editor
  * records, undoes and shares 2D edits as it does 3D ones. Selection, tool, drill path, camera and display are the
@@ -113,6 +138,7 @@ export const createViewport2D = (options: Viewport2DOptions = {}) => {
     guides,
     theme,
     camera,
+    cameraRequest,
     onSelect,
     onToolChange,
     onIntent,
@@ -201,6 +227,7 @@ export const createViewport2D = (options: Viewport2DOptions = {}) => {
       >
         <Canvas.Viewport liveDepth={options.liveDepth} />
         <DrillSync root={root} path={path} />
+        <CameraSync request={cameraRequest} />
         {options.bridge && <CanvasBridgeCapture bridge={options.bridge} />}
         {children}
       </Canvas.Root>

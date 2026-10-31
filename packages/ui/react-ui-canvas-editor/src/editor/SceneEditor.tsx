@@ -19,6 +19,8 @@ import { type Timeline, keyTimes, timelineFps } from '@dxos/animation';
 import { TimelineBar } from '@dxos/react-ui-animation';
 import {
   type ActiveTool,
+  type CameraMove,
+  type CameraRequest,
   CREATE_GROUP,
   FLOATING_BAR,
   SceneContextMenu,
@@ -403,41 +405,44 @@ const SceneEditorRoot = <C,>({
   // zoom from it. Kept in a ref so a pan does not re-render the editor each frame; only its rounded percent is state.
   const shownCamera = useRef<C | undefined>(undefined);
   const [shownPercent, setShownPercent] = useState<number>();
-  // A picture's Fit returns to the frame the viewport chose for it (a 2D one reports it), with the picture's margin.
-  const pictureFit = useRef<C | undefined>(undefined);
-  const pictureMoved = pictureCamera !== undefined;
   const handleViewCamera = useCallback(
     (next: C) => {
       shownCamera.current = next;
-      if (!editing && !pictureMoved) {
-        pictureFit.current = next;
-      }
       authoredCamera !== undefined && setShownPercent(config.camera.percent(next, authoredCamera));
     },
-    [authoredCamera, config.camera, editing, pictureMoved],
+    [authoredCamera, config.camera],
+  );
+  const [cameraRequest, setCameraRequest] = useState<CameraRequest>();
+  const request = useCallback(
+    (move: CameraMove) => setCameraRequest((previous) => ({ ...move, id: (previous?.id ?? 0) + 1 })),
+    [],
   );
   const camera = useMemo(
     () =>
       current !== undefined && authoredCamera !== undefined && onCameraChange
         ? {
-            actions: {
-              fit: () =>
-                layout &&
-                onCameraChange(
-                  !editing && pictureFit.current
-                    ? pictureFit.current
-                    : config.camera.fit(current, document, layout, size),
-                ),
-              fitting: false,
-              zoomReset: () =>
-                onCameraChange(layout ? config.camera.reset(authoredCamera, document, layout, size) : authoredCamera),
-              zoomIn: () => onCameraChange(config.camera.zoom(shownCamera.current ?? current, 1 / ZOOM_STEP, size)),
-              zoomOut: () => onCameraChange(config.camera.zoom(shownCamera.current ?? current, ZOOM_STEP, size)),
-            },
+            actions: config.camera.animated
+              ? {
+                  fit: () => request({ kind: 'fit' }),
+                  fitting: false,
+                  zoomReset: () => request({ kind: 'actual' }),
+                  zoomIn: () => request({ kind: 'zoom', factor: ZOOM_STEP }),
+                  zoomOut: () => request({ kind: 'zoom', factor: 1 / ZOOM_STEP }),
+                }
+              : {
+                  fit: () => layout && onCameraChange(config.camera.fit(current, document, layout, size)),
+                  fitting: false,
+                  zoomReset: () =>
+                    onCameraChange(
+                      layout ? config.camera.reset(authoredCamera, document, layout, size) : authoredCamera,
+                    ),
+                  zoomIn: () => onCameraChange(config.camera.zoom(shownCamera.current ?? current, 1 / ZOOM_STEP, size)),
+                  zoomOut: () => onCameraChange(config.camera.zoom(shownCamera.current ?? current, ZOOM_STEP, size)),
+                },
             percent: shownPercent ?? config.camera.percent(current, authoredCamera),
           }
         : undefined,
-    [current, authoredCamera, onCameraChange, config.camera, layout, document, size, shownPercent, editing],
+    [current, authoredCamera, onCameraChange, config.camera, layout, document, size, shownPercent, request],
   );
 
   const refitRef = useRef(refitKey);
@@ -470,6 +475,7 @@ const SceneEditorRoot = <C,>({
         face={face}
         // A picture opens framed to fit, until its own zoom bar moves it.
         camera={viewerCamera}
+        cameraRequest={cameraRequest}
         onSelect={store.select}
         onToolChange={store.setTool}
         onIntent={onIntent}
@@ -498,6 +504,7 @@ const SceneEditorRoot = <C,>({
       display,
       face,
       viewerCamera,
+      cameraRequest,
       store,
       onIntent,
       writeModel,
@@ -628,10 +635,12 @@ SceneEditorViewport.displayName = 'SceneEditor.Viewport';
 
 /**
  * Where the view is in the scene's frames: Up and the drill path as breadcrumbs, the scene's own layout first (as home).
- * A crumb drills out to its level; drilling in is the viewport's (a double-click, or zooming until a frame fills it).
+ * A crumb drills out to its level, and home at the scene's own layout frames the view; drilling in is the viewport's (a
+ * double-click, or zooming until a frame fills it).
  */
 const SceneEditorNavigation = ({ classNames = 'top-2 left-2' }: { classNames?: string }) => {
-  const { document, scene, rootLayout, store } = useSceneEditor('SceneEditor.Navigation');
+  const { document, scene, rootLayout, store, camera } = useSceneEditor('SceneEditor.Navigation');
+  const fit = camera?.actions.fit;
   const drilled = useAtomValue(store.atoms.editing);
   const path = useMemo(() => (drilled.length > 0 ? drilled : rootLayout ? [rootLayout] : []), [drilled, rootLayout]);
   const actions = useMemo(
@@ -642,9 +651,9 @@ const SceneEditorNavigation = ({ classNames = 'top-2 left-2' }: { classNames?: s
         (id === rootLayout ? document.scenes.find((record) => record.id === scene)?.name : undefined) ??
         findLayout(document, id)?.name ??
         id,
-      onPath: (index: number) => store.open(path.slice(0, index + 1)),
+      onPath: (index: number) => (index === path.length - 1 ? fit?.() : store.open(path.slice(0, index + 1))),
     }),
-    [path, rootLayout, document, scene, store],
+    [path, rootLayout, document, scene, store, fit],
   );
   return path.length === 0 ? null : (
     <div className={mx('absolute w-max max-w-[50%]', classNames)}>

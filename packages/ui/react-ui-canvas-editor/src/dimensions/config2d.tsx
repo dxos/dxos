@@ -111,6 +111,8 @@ export const createConfig2D = ({
       snap: { move: DEFAULT_GRID, rotate: 15 },
     },
     camera: {
+      // The engine animates its own fit (with the margin a picture opened with) and zoom.
+      animated: true,
       fit: (camera, document, layout, size) => {
         const bounds = layoutBounds(document, layout);
         return bounds && size.width > 0 ? fitBounds(bounds, size, FIT_INSET, 1) : camera;

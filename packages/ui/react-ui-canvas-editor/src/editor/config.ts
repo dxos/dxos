@@ -49,6 +49,11 @@ export type GeometryOps = {
 export type CameraOps<C> = {
   /** The camera framing the open layout's elements in a viewport of `size`. */
   fit: (camera: C, document: Scene.SceneDocument, layout: string, size: { width: number; height: number }) => C;
+  /**
+   * The viewport moves its own camera, animated, on each `cameraRequest`: the camera bar asks it rather than setting a
+   * camera from `fit`, `reset` and `zoom`, which would jump the view and fight the viewport's own fit mode.
+   */
+  animated?: boolean;
   /** Actual size: the authored camera's scale and view, moved so the open layout's elements sit in the middle. */
   reset: (authored: C, document: Scene.SceneDocument, layout: string, size: { width: number; height: number }) => C;
   /** The camera `factor` closer (below 1) or further (above 1), about the centre of a viewport of `size`. */
