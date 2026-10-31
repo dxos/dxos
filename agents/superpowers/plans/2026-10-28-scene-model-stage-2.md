@@ -125,7 +125,7 @@ number}` — scale is `frame.radius * 0.8 / child.radius`, or 1 when the child r
     scene id is a problem (`cycle`) and is not descended.
 
 - [ ] **Step 1: Write failing tests:** `ring places n members on a circle of the radius`; `applyLayout keeps a pinned
-    member`; `bounds of an empty scene are zero`; `fitChild of an empty child has scale 1`;
+member`; `bounds of an empty scene are zero`; `fitChild of an empty child has scale 1`;
       `sceneTree reports a cycle and stops`.
 - [ ] **Step 2: Run** → FAIL. **Step 3: Implement.** **Step 4: Run** → PASS.
 - [ ] **Step 5: Commit** `scene: layout, bounds and scene hierarchy`.
@@ -175,7 +175,7 @@ problems: Problem[]}`. It parses, then runs `applyLayout` on 3D scenes, then app
   Statements outside a `scene` block are ignored by `readScenes` and handled by the existing `read`.
 
 - [ ] **Step 1: Write failing tests:** `parses a 2D scene with a camera and three elements`; `parses a 3D point and a
-    WxHxD scale`; `an id called scene still parses in an object statement` (existing syntax unaffected);
+WxHxD scale`; `an id called scene still parses in an object statement` (existing syntax unaffected);
       `reports a link to a missing element` (from `validateDocument`).
 - [ ] **Step 2: Run** `moon run diagram:prebuild-lezer` then the test → FAIL.
 - [ ] **Step 3: Implement** the grammar and `readScenes`.
@@ -209,7 +209,7 @@ distance=0.5` (extruding the +y face).
 
 - [ ] **Step 1: Write failing tests:** for each exemplar, `round-trips <name>` asserts
       `printScenes(readScenes(text).document) === text` and `problems` is empty; `an intent-only cluster prints with
-    positions` asserts the printed text of `cluster` without positions equals the canonical `cluster.dx`.
+positions` asserts the printed text of `cluster` without positions equals the canonical `cluster.dx`.
 - [ ] **Step 2: Run** → FAIL. **Step 3: Implement** `printScenes` and write the exemplar files in canonical form.
 - [ ] **Step 4: Run** → PASS.
 - [ ] **Step 5: Commit** `diagram: print scenes, and the eight exemplar scenes`.
@@ -234,7 +234,7 @@ distance=0.5` (extruding the +y face).
 'classic'`, `camera: 'fit'|'close'`.
 
 - [ ] **Step 1: Write failing tests:** `maps a link to a line link between the bound nodes`; `maps a scene element to a
-    view node over the child view`; `skips a link whose binding is missing` (Review Focus 1).
+view node over the child view`; `skips a link whose binding is missing` (Review Focus 1).
 - [ ] **Step 2: Run** → FAIL. **Step 3: Implement** the adapter, view and story.
 - [ ] **Step 4: Run** → PASS; open the story in storybook (9009), check all three exemplars in each theme, and no
       console errors.
@@ -269,7 +269,7 @@ overrides?: Record<string, Partial<Element3D>>): void; dispose(): void }` — re
 orthographic`).
 
 - [ ] **Step 1: Write failing tests:** `toOrbit maps yaw 0 pitch 0 to looking along -z`; `materialSpec makes glass a rim
-    in presentation`; `render list skips a link whose target is missing`; `render list stops at a scene cycle` (test the
+in presentation`; `render list skips a link whose target is missing`; `render list stops at a scene cycle` (test the
       pure `renderList(doc): Item[]` the renderer draws from, so no WebGL is needed).
 - [ ] **Step 2: Run** → FAIL. **Step 3: Implement** `renderList`, the renderer, the view and the story.
 - [ ] **Step 4: Run** → PASS; check the four exemplars in each theme and camera in storybook, no console errors.
@@ -292,7 +292,7 @@ string}` where `MeshData = {positions: Float32Array, indices: Uint32Array}`; ops
   are built at their `position`/`scale`/`rotation`. `getManifold()` loads `manifold-3d` lazily.
 
 - [ ] **Step 1: Write failing tests:** `difference has less volume than its first operand`; `extruding +y by 0.5 adds
-    width×depth×0.5 of volume`; `a missing operand returns an error` (Review Focus 4).
+width×depth×0.5 of volume`; `a missing operand returns an error` (Review Focus 4).
 - [ ] **Step 2: Run** → FAIL. **Step 3: Implement**; the renderer draws `{error}` solids as their operands, unhidden,
       and logs once.
 - [ ] **Step 4: Run** → PASS; check `solid` in storybook.
@@ -314,7 +314,7 @@ string}` where `MeshData = {positions: Float32Array, indices: Uint32Array}`; ops
   The 3D camera for a tilted view is passed in, never stored (D-17).
 
 - [ ] **Step 1: Write failing tests:** `an element right of the origin in 2D is at +x in 3D`; `the top-down camera frames
-    the same bounds as the 2D camera`.
+the same bounds as the 2D camera`.
 - [ ] **Step 2: Run** → FAIL. **Step 3: Implement.** **Step 4: Run** → PASS; check `links` and `subscene` with
       `renderer=3d` and `camera=tilted`.
 - [ ] **Step 5: Commit** `react-ui-scene: draw 2D scenes in 3D`.
