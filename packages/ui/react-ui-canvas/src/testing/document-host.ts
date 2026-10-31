@@ -13,7 +13,7 @@ import {
   findLayout,
 } from '@dxos/scene';
 
-import { type ConstrainIntent } from '../editor/index.ts';
+import { type ConstrainIntent } from '../model/index.ts';
 
 /** The model {@link fromRenderLists2D} places a drawing's objects in. */
 const MODEL = 'model';

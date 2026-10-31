@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import type { CreateProps } from '@dxos/react-ui-canvas';
-import { type ElementKindSpec, kindRegistry } from '@dxos/react-ui-scene/canvas';
+import { type ElementKindSpec, kindRegistry } from '@dxos/react-ui-canvas';
 import { type KindRegistry, Scene } from '@dxos/scene';
 
 /** The element type a UML class is stored as. */

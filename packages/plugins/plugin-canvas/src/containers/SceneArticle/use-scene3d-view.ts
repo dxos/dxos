@@ -6,7 +6,7 @@ import { useCallback } from 'react';
 
 import { Entity } from '@dxos/echo';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
-import { type Theme3D, toTheme3D } from '@dxos/react-ui-scene';
+import { type Theme3D, toTheme3D } from '@dxos/react-ui-canvas/3d';
 import { type Scene } from '@dxos/scene';
 
 import { type Canvas } from '#types';

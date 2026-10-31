@@ -4,8 +4,9 @@
 
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
+import { type BackgroundGrid, defaultThemeRegistry, resolveLook } from '@dxos/react-ui-canvas';
+import { CanvasEditor } from '@dxos/react-ui-canvas-editor';
 import { fromRenderLists2D } from '@dxos/react-ui-canvas/headless';
-import { type BackgroundGrid, Canvas, defaultThemeRegistry, resolveLook } from '@dxos/react-ui-canvas/scene';
 import { useThemeContext } from '@dxos/react-ui/Theme';
 import { type Bounds } from '@dxos/scene';
 
@@ -211,7 +212,7 @@ export const DataFlowView = ({
   // The containers are drawn by the overlay, in the theme's style set (glass for one the sample has no palette for).
   const overlayLook = LOOKS.find((candidate) => candidate === look.styleSet.id) ?? 'glass';
   return (
-    <Canvas.Root
+    <CanvasEditor.Root
       document={document}
       readonly
       theme={theme}
@@ -225,7 +226,7 @@ export const DataFlowView = ({
       onThemeChange={setTheme}
       onBackgroundGridChange={setGrid}
     >
-      <Canvas.Viewport
+      <CanvasEditor.Viewport
         backgroundBounds={field}
         overlay={
           <MoleculeOverlay
@@ -249,11 +250,11 @@ export const DataFlowView = ({
       />
       {chrome && (
         <>
-          <Canvas.Navigation />
-          <Canvas.Camera />
-          <Canvas.Display />
+          <CanvasEditor.Navigation />
+          <CanvasEditor.Camera />
+          <CanvasEditor.Display />
         </>
       )}
-    </Canvas.Root>
+    </CanvasEditor.Root>
   );
 };

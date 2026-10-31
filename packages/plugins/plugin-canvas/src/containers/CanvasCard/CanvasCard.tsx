@@ -9,7 +9,8 @@ import { useObject } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import type * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
-import { Scene2DView, Scene3DView, toViewportDocument } from '@dxos/react-ui-scene';
+import { Scene2DView, toViewportDocument } from '@dxos/react-ui-canvas';
+import { Scene3DView } from '@dxos/react-ui-canvas/3d';
 import * as Card from '@dxos/react-ui/Card';
 import { Scene } from '@dxos/scene';
 

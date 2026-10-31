@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CanvasCapabilities from '@dxos/plugin-canvas/CanvasCapabilities';
-import { LinesField } from '@dxos/react-ui-canvas/scene';
+import { LinesField } from '@dxos/react-ui-canvas-editor';
 
 import { ClassNodeView } from '#components';
 import { ClassNode } from '#types';

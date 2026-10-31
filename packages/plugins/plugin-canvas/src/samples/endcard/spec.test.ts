@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
+import { compositeBounds } from '@dxos/react-ui-canvas';
 import { sampleDocument, toRenderLists2D } from '@dxos/react-ui-canvas/headless';
-import { compositeBounds } from '@dxos/react-ui-canvas/scene';
 
 import {
   DURATION,

@@ -11,8 +11,7 @@ import { describe, test, vi } from 'vitest';
 
 import { type LayoutIntent, type Node, type Scene, applyIntent, findLayout } from '@dxos/scene';
 
-import { type ConstrainIntent } from '../../editor/index.ts';
-import { type RenderList2D } from '../../model/index.ts';
+import { type ConstrainIntent, type RenderList2D } from '../../model/index.ts';
 import { createNode, initialKeys } from '../../utils/index.ts';
 import { fromRenderLists2D } from '../../viewport2d/index.ts';
 import { useDocumentStore } from './useDocumentStore.ts';

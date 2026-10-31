@@ -4,8 +4,7 @@
 
 import { type LayoutIntent, type Scene, type ViewId, applyIntent, findLayout, layoutChanges } from '@dxos/scene';
 
-import { type ConstrainContext, type ConstrainIntent, type ViewportProps } from '../editor/index.ts';
-import { type RenderLists2D } from '../model/index.ts';
+import { type ConstrainContext, type ConstrainIntent, type RenderLists2D, type ViewportProps } from '../model/index.ts';
 import { type SceneEdit } from '../utils/index.ts';
 import { fromRenderList2D, toRenderList2D } from './render-list.ts';
 

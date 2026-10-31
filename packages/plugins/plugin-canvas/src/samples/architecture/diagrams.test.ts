@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { DEFAULT_LATTICE, nodeBounds, onLattice, quantize } from '@dxos/react-ui-canvas/scene';
+import { DEFAULT_LATTICE, nodeBounds, onLattice, quantize } from '@dxos/react-ui-canvas';
 import { isViewNode } from '@dxos/scene';
 
 import { elementId, isNodeRecord, nodeKey, objectUri, readViews, rootOf } from '#model';

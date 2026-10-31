@@ -8,7 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Type } from '@dxos/echo';
 import * as AnimatorCapabilities from '@dxos/plugin-animator/AnimatorCapabilities';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { defaultNodeRegistry, nodeAnimatable } from '@dxos/react-ui-canvas/scene';
+import { defaultNodeRegistry, nodeAnimatable } from '@dxos/react-ui-canvas';
 
 import { CanvasStage } from '#containers';
 import { CANVAS_LAYOUTS, CANVAS_SCRIPT_PROPERTIES, canvasStageBinding, canvasStageTargets } from '#model';

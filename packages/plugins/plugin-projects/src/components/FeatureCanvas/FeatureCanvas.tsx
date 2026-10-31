@@ -9,14 +9,15 @@ import {
   type Arrangement,
   type CreateProps,
   type ForceOptions,
+  type GraphLayoutOptions,
   type GraphModel,
   type LatticeSpec,
   type NodeViewProps,
   createNodeRegistry,
   defaultNodePrototypes,
   defaultNodeTypes,
-} from '@dxos/react-ui-canvas/scene';
-import { Graph2DView, type GraphLayoutOptions } from '@dxos/react-ui-scene';
+} from '@dxos/react-ui-canvas';
+import { Graph2DView } from '@dxos/react-ui-canvas-editor';
 import * as Layout from '@dxos/react-ui/Layout';
 import { type Node, type Point, nodeBase } from '@dxos/scene';
 

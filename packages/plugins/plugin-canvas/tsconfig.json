@@ -88,6 +88,9 @@
       "path": "../../ui/react-ui-canvas"
     },
     {
+      "path": "../../ui/react-ui-canvas-editor"
+    },
+    {
       "path": "../../ui/react-ui-form"
     },
     {
@@ -95,9 +98,6 @@
     },
     {
       "path": "../../ui/react-ui-menu"
-    },
-    {
-      "path": "../../ui/react-ui-scene"
     },
     {
       "path": "../../ui/ui-theme"

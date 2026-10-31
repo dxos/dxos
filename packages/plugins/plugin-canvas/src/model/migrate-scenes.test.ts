@@ -13,8 +13,7 @@ import * as Animation from '@dxos/plugin-animator/Animation';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import { DEFAULT_LATTICE } from '@dxos/react-ui-canvas';
-import { toRenderList2D } from '@dxos/react-ui-canvas/headless';
-import { type RenderList2D, type RenderLists2D, createNode } from '@dxos/react-ui-canvas/headless';
+import { type RenderList2D, type RenderLists2D, createNode, toRenderList2D } from '@dxos/react-ui-canvas/headless';
 import {
   createLatticeTree,
   createLinkedPairTree,

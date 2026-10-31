@@ -2,25 +2,34 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ReactNode } from 'react';
+import { type ComponentType, type PropsWithChildren, type ReactNode } from 'react';
 
 import { type ModuleCompiler, type Timeline } from '@dxos/animation';
 import type * as Util from '@dxos/react-ui/Util';
 import { type Bounds, type Point, type Scene } from '@dxos/scene';
 
-import { type ConstrainIntent, type ViewportProps } from '../../editor/index.ts';
-import { type CanvasAtoms, type InspectorMode } from '../../engine/index.ts';
+import { type CanvasAtoms } from '../../engine/index.ts';
 import { type GeneratorSource } from '../../generator/index.ts';
 import { type SceneDisplay } from '../../hooks/index.ts';
 import {
   type BackgroundGrid,
   type Camera,
   type Capabilities,
+  type ConstrainIntent,
   type KeyAction,
   type LinkRegistry,
   type NodeRegistry,
   type ThemeRegistry,
+  type ViewportProps,
 } from '../../model/index.ts';
+
+/** What a {@link CanvasRootProps.shell} is given: the view to frame, and the root's own frame props. */
+export type CanvasShellProps = Util.ThemedClassName<
+  PropsWithChildren<{
+    /** Paints no surface of its own, so whatever is behind the view shows through (a slide). */
+    transparent?: boolean;
+  }>
+>;
 
 /** How long the view's clock plays, at what rate, and whether it wraps. */
 export type CanvasPlayback = Pick<Timeline, 'duration' | 'fps' | 'loop'>;
@@ -80,13 +89,11 @@ export type CanvasRootProps = Util.ThemedClassName<{
   onContextMenu?: (at: Point, kind: 'element' | 'canvas') => void;
   /** Called when the palette's read-only toggle is pressed; the toggle shows only when given, as the host owns `readonly`. */
   onReadonlyChange?: (readonly: boolean) => void;
-  /** Where the inspectors (properties, layers, about) sit: floating over the canvas (the default), or docked in a column beside it. */
-  inspectors?: InspectorMode;
   /**
-   * Called when the dock is closed or an inspector's menu docks or floats them; the dock's close button and the menu
-   * item show only when given, as the host owns `inspectors`.
+   * What the view sits in, rendered inside the engine's providers so it can read the canvas (an editor's inspector
+   * panel beside or over it); a plain frame when unset.
    */
-  onInspectorsChange?: (mode: InspectorMode) => void;
+  shell?: ComponentType<CanvasShellProps>;
   /** The themes offered, and the style sets and backgrounds they name; the built-ins by default. */
   themes?: ThemeRegistry;
   /**

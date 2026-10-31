@@ -12,7 +12,7 @@ import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import { random } from '@dxos/random';
-import { DEFAULT_CELL } from '@dxos/react-ui-canvas/scene';
+import { DEFAULT_CELL } from '@dxos/react-ui-canvas';
 import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
 
 import * as CanvasPlugin from '#meta';

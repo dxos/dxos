@@ -7,7 +7,7 @@ import { useMemo } from 'react';
 import { Entity, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
-import { type SceneChoice } from '@dxos/react-ui-canvas/scene';
+import { type SceneChoice } from '@dxos/react-ui-canvas-editor';
 import { Scene } from '@dxos/scene';
 
 import { addScene, deleteScene, openScene } from '#model';

@@ -9,11 +9,13 @@ import {
   createNodeRegistry,
   defaultNodePrototypes,
   defaultNodeTypes,
+  fromViewportIntent,
+  kindNodeDef,
   nodeTitle,
   partValues,
+  toViewportLayout,
 } from '@dxos/react-ui-canvas';
 import { fromRenderList2D, toRenderList2D } from '@dxos/react-ui-canvas/headless';
-import { fromViewportIntent, kindNodeDef, toViewportLayout } from '@dxos/react-ui-scene/canvas';
 import { Scene } from '@dxos/scene';
 
 import * as ClassNode from './ClassNode.ts';

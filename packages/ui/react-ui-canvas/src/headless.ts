@@ -3,7 +3,6 @@
 //
 
 // React-free entry: plugin operations run in node and workerd, where the scene barrel's components cannot load.
-export * from './editor/timeline.ts';
 export * from './engine/draw.ts';
 export * from './generator/check.ts';
 export * from './generator/compile.ts';
@@ -11,6 +10,7 @@ export * from './generator/types.ts';
 export * from './model/keys.ts';
 export { BASE_ANIMATABLE, OPACITY_PATH } from './model/node-def.ts';
 export * from './model/orphans.ts';
+export * from './model/sample.ts';
 export * from './model/style-set.ts';
 export * from './model/types.ts';
 export * from './model/versioned.ts';

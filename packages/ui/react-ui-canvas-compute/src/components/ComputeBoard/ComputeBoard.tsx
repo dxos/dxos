@@ -6,14 +6,14 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useStat
 
 import { type GraphDiagnostic } from '@dxos/conductor';
 import { useObjectValue } from '@dxos/echo-react';
+import { type Camera } from '@dxos/react-ui-canvas';
 import {
-  type Camera,
   type EditorDisplay,
   SceneEditor,
   createHistory,
   sessionHistory,
   useSceneEditor,
-} from '@dxos/react-ui-canvas';
+} from '@dxos/react-ui-canvas-editor';
 import { type LayoutIntent, findLayout } from '@dxos/scene';
 
 import { type ComputeGraphController } from '../../graph/index.ts';

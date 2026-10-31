@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { nominalSize } from '@dxos/react-ui-canvas/scene';
+import { nominalSize } from '@dxos/react-ui-canvas';
 import { DEFAULT_GRID } from '@dxos/scene';
 
 import { computeNodeDefs } from '../registry.ts';

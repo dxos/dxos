@@ -5,7 +5,8 @@
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import type * as AnimatorCapabilities from '@dxos/plugin-animator/AnimatorCapabilities';
-import { Scene2DView, Scene3DView, project, renderList } from '@dxos/react-ui-scene';
+import { Scene2DView } from '@dxos/react-ui-canvas';
+import { Scene3DView, project, renderList } from '@dxos/react-ui-canvas/3d';
 
 import { applySample, camera2DOf, camera3DOf } from '../../model/scene-stage.ts';
 import { useSceneDocument } from './use-scene-document.ts';

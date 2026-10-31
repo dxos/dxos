@@ -7,8 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { Dsl } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
 import { Obj } from '@dxos/echo';
-import { toRenderList2D } from '@dxos/react-ui-canvas/headless';
-import { type RenderList2D, type RenderLists2D, createNode } from '@dxos/react-ui-canvas/headless';
+import { type RenderList2D, type RenderLists2D, createNode, toRenderList2D } from '@dxos/react-ui-canvas/headless';
 import { Scene, fromEcho, toEcho } from '@dxos/scene';
 
 import { type Canvas } from '#types';

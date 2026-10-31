@@ -5,7 +5,8 @@
 import { describe, test } from 'vitest';
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
-import { createHistory, nodePorts } from '@dxos/react-ui-canvas';
+import { nodePorts } from '@dxos/react-ui-canvas';
+import { createHistory } from '@dxos/react-ui-canvas-editor';
 
 import { isValidComputeNode } from '../graph/index.ts';
 import { createComputeGraph } from '../hooks/index.ts';

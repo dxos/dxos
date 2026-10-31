@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type DimensionConfig, type EditorCatalog, type EditorDisplay } from '@dxos/react-ui-canvas/scene';
+import { type DimensionConfig, type EditorCatalog, type EditorDisplay } from '@dxos/react-ui-canvas-editor';
 
 /**
  * What one dimension gives the shared scene article: its editor config, the display and camera this viewer sees, and

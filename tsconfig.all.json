@@ -811,6 +811,9 @@
       "path": "packages/ui/react-ui-canvas-compute/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-canvas-editor/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-card/tsconfig.json"
     },
     {
@@ -890,9 +893,6 @@
     },
     {
       "path": "packages/ui/react-ui-rdf/tsconfig.json"
-    },
-    {
-      "path": "packages/ui/react-ui-scene/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-search/tsconfig.json"

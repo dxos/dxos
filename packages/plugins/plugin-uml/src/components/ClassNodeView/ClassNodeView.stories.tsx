@@ -7,15 +7,13 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import {
   type Camera,
-  type EditorDisplay,
-  LinesField,
-  SceneEditor,
   createNodeRegistry,
   defaultNodePrototypes,
   defaultNodeTypes,
+  kindNodeDef,
 } from '@dxos/react-ui-canvas';
+import { type EditorDisplay, LinesField, SceneEditor, createConfig2D } from '@dxos/react-ui-canvas-editor';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
-import { createConfig2D, kindNodeDef } from '@dxos/react-ui-scene';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 import { type LayoutIntent, type Scene, applyIntent } from '@dxos/scene';

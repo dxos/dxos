@@ -17,7 +17,7 @@ import {
   type NodeViewProps,
   UnknownNodeView,
   nodeDef,
-} from '@dxos/react-ui-canvas/scene';
+} from '@dxos/react-ui-canvas';
 import * as Icon from '@dxos/react-ui/Icon';
 import { type Node, type Port, type Size } from '@dxos/scene';
 

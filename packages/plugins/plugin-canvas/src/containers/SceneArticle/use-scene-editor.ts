@@ -7,8 +7,8 @@ import { useCallback, useMemo } from 'react';
 import { Entity, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
+import { type History, type SceneChoice, createHistory, sessionHistory } from '@dxos/react-ui-canvas-editor';
 import { type VersionedSource, combinedSource } from '@dxos/react-ui-canvas/headless';
-import { type History, type SceneChoice, createHistory, sessionHistory } from '@dxos/react-ui-canvas/scene';
 import { type Layer, type LayoutIntent, type ModelIntent, Scene, reachedObjects } from '@dxos/scene';
 
 import { applyLayoutIntent, canvasDocument, layoutSource, openScene, writeDocument, writeModelIntent } from '#model';

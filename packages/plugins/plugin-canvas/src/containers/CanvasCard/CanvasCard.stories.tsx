@@ -14,7 +14,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
-import { DEFAULT_CELL } from '@dxos/react-ui-canvas/scene';
+import { DEFAULT_CELL } from '@dxos/react-ui-canvas';
 import * as Card from '@dxos/react-ui/Card';
 import { toEcho } from '@dxos/scene';
 import { Cell, ModuleContainer, type ResolvedCellProps, createStoryDecorators } from '@dxos/storybook-testing';

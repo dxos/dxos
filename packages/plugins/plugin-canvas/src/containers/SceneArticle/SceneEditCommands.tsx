@@ -5,7 +5,7 @@
 import { useEffect } from 'react';
 
 import * as AppNode from '@dxos/app-toolkit/AppNode';
-import { useEditorCommands } from '@dxos/react-ui-canvas/scene';
+import { useEditorCommands } from '@dxos/react-ui-canvas-editor';
 
 /** The app's edit commands (undo, redo, cut, copy, paste) on the article, from the editor's command table. */
 export const SceneEditCommands = ({ element }: { element: HTMLElement | null }) => {

@@ -5,7 +5,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { Obj } from '@dxos/echo';
-import { meshProps } from '@dxos/react-ui-scene/io';
+import { meshProps } from '@dxos/react-ui-canvas/3d';
 import { Scene } from '@dxos/scene';
 
 import * as MeshPresets from './MeshPresets.ts';

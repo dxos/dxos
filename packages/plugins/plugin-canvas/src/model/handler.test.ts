@@ -14,7 +14,7 @@ import {
   diagramNodeMarkup,
   linkGeometry,
   sortByZ,
-} from '@dxos/react-ui-canvas/scene';
+} from '@dxos/react-ui-canvas';
 import { isDiagramNode, isEllipseNode, isRectNode } from '@dxos/scene';
 
 import { ROOT_VIEW_ID, readViews, rootOf, seedContent, updateCanvasRecord, writeViews } from './content.ts';

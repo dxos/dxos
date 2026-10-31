@@ -11,7 +11,7 @@
 import React, { useEffect, useRef } from 'react';
 
 import { DEFAULT_OUTPUT } from '@dxos/conductor';
-import { useSceneEditor } from '@dxos/react-ui-canvas';
+import { useSceneEditor } from '@dxos/react-ui-canvas-editor';
 import { type Scene, findLayout } from '@dxos/scene';
 
 import { type ComputeGraphController } from '../graph/index.ts';

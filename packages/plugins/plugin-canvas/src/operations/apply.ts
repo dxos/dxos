@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
+import { constrain2D } from '@dxos/react-ui-canvas';
 import { type VersionChange, recordChanges } from '@dxos/react-ui-canvas/headless';
-import { constrain2D } from '@dxos/react-ui-scene/canvas';
 import { type LayoutIntent, Scene, isLayoutIntent } from '@dxos/scene';
 
 import { Canvas, CanvasOperation } from '#types';

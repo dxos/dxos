@@ -6,9 +6,8 @@ import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 
 import { type Scene, type ViewId, applyIntent, findLayout, rootScene, sceneLayout } from '@dxos/scene';
 
-import { type ConstrainIntent, type ViewportProps } from '../../editor/index.ts';
 import { type DrawState, createDrawState } from '../../engine/index.ts';
-import { type RenderLists2D } from '../../model/index.ts';
+import { type ConstrainIntent, type RenderLists2D, type ViewportProps } from '../../model/index.ts';
 import { type SceneEdit } from '../../utils/index.ts';
 import {
   type LayoutWrite,

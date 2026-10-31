@@ -4,8 +4,8 @@
 
 import { useCallback, useMemo } from 'react';
 
-import { type EditorDisplay } from '@dxos/react-ui-canvas/scene';
-import { CATALOGS_3D, config3d, toTheme3D } from '@dxos/react-ui-scene';
+import { CATALOGS_3D, type EditorDisplay, config3d } from '@dxos/react-ui-canvas-editor';
+import { toTheme3D } from '@dxos/react-ui-canvas/3d';
 import { type Scene } from '@dxos/scene';
 
 import { type Canvas } from '#types';

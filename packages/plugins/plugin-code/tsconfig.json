@@ -95,6 +95,9 @@
       "path": "../../ui/react-ui-canvas"
     },
     {
+      "path": "../../ui/react-ui-canvas-editor"
+    },
+    {
       "path": "../../ui/react-ui-editor"
     },
     {
@@ -105,9 +108,6 @@
     },
     {
       "path": "../../ui/react-ui-mosaic"
-    },
-    {
-      "path": "../../ui/react-ui-scene"
     },
     {
       "path": "../../ui/react-ui-task"

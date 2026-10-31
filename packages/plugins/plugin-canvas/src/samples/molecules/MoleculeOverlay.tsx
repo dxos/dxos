@@ -4,7 +4,7 @@
 
 import React, { createContext, useContext, useEffect, useId, useMemo, useState } from 'react';
 
-import { type BackgroundGrid, STYLE_SET_IDS, lineClasses } from '@dxos/react-ui-canvas/scene';
+import { type BackgroundGrid, STYLE_SET_IDS, lineClasses } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/ui-theme';
 
 import {

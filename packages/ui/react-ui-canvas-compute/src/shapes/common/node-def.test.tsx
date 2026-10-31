@@ -6,7 +6,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, test } from 'vitest';
 
-import { type NodeViewProps, type RenderList2D, staticLists } from '@dxos/react-ui-canvas/scene';
+import { type NodeViewProps, type RenderList2D, staticLists } from '@dxos/react-ui-canvas';
 import { type Node } from '@dxos/scene';
 
 import { ComputeGraphController } from '../../graph/index.ts';

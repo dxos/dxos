@@ -8,7 +8,7 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import type * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
-import { SceneEditor } from '@dxos/react-ui-canvas/scene';
+import { SceneEditor } from '@dxos/react-ui-canvas-editor';
 import * as Panel from '@dxos/react-ui/Panel';
 import { Scene } from '@dxos/scene';
 

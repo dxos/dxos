@@ -8,7 +8,7 @@ import { type Timeline } from '@dxos/animation';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import * as Animation from '@dxos/plugin-animator/Animation';
-import { type EditorShot } from '@dxos/react-ui-canvas/scene';
+import { type EditorShot } from '@dxos/react-ui-canvas-editor';
 
 /** A timeline as an ECHO draft stores it: the same keys in fresh, writable records. */
 const writable = (timeline: Timeline) => ({

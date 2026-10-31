@@ -8,7 +8,7 @@ import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import type * as AnimatorCapabilities from '@dxos/plugin-animator/AnimatorCapabilities';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { Scene2DView } from '@dxos/react-ui-scene';
+import { Scene2DView } from '@dxos/react-ui-canvas';
 
 import { legacyStageDocument, legacyStageSample } from '#model';
 

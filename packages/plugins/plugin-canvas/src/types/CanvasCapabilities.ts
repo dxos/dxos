@@ -6,7 +6,7 @@
 
 import type * as Atom from 'effect/reactivity/Atom';
 
-import type { ElementKindSpec } from '@dxos/react-ui-scene/canvas';
+import type { ElementKindSpec } from '@dxos/react-ui-canvas';
 import { type NodeType as SceneNodeType } from '@dxos/scene';
 
 import { CanvasNamespace } from '../namespace.ts';

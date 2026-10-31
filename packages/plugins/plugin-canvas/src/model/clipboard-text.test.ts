@@ -6,8 +6,8 @@ import { describe, expect, test } from 'vitest';
 
 import { Dsl } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
+import { nextPaste } from '@dxos/react-ui-canvas-editor';
 import { toRenderLists2D } from '@dxos/react-ui-canvas/headless';
-import { nextPaste } from '@dxos/react-ui-canvas/scene';
 import { type Scene, copyElements } from '@dxos/scene';
 
 import {

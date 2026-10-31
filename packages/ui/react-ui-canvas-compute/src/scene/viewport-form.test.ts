@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { fromViewportIntent, toViewportLayout } from '@dxos/react-ui-scene';
+import { fromViewportIntent, toViewportLayout } from '@dxos/react-ui-canvas';
 import { type LayoutIntent } from '@dxos/scene';
 
 import { createComputeGraph } from '../hooks/index.ts';

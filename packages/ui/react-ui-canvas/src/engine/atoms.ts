@@ -94,9 +94,6 @@ export type ControlPointRef = { link: LinkId; index: number };
  */
 export type Editing = { id: NodeId; kind: 'label'; part: PartKey } | { id: NodeId; kind: 'vertices'; vertex?: number };
 
-/** Where the inspectors (properties, layers, about) sit: floating over the canvas, or docked in a column beside it. */
-export type InspectorMode = 'floating' | 'docked';
-
 export type CanvasAtoms = {
   camera: Atom.Writable<Camera>;
   path: Atom.Writable<ViewId[]>;

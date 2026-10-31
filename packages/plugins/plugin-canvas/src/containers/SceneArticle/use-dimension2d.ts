@@ -11,8 +11,8 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Entity, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
-import { type Camera, type CanvasServices, type EditorDisplay, currentLookId } from '@dxos/react-ui-canvas/scene';
-import { createConfig2D } from '@dxos/react-ui-scene';
+import { type Camera, type CanvasServices, currentLookId } from '@dxos/react-ui-canvas';
+import { type EditorDisplay, createConfig2D } from '@dxos/react-ui-canvas-editor';
 import { type Node, isViewNode } from '@dxos/scene';
 
 import { generatorCompiler, isCanvasDrawing, objectRef, parseLinkedViewId } from '#model';

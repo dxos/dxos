@@ -10,8 +10,8 @@
 
 import { type Easing, type Timeline, createTimeline, setKey } from '@dxos/animation';
 import { DXOS_HORIZONTAL_LOCKUP, DXOS_LOCKUP_GLYPHS, type DXOSLockupGlyph } from '@dxos/brand/paths';
+import { type RenderList2D, compositeBounds, instancePorts, pathBounds } from '@dxos/react-ui-canvas';
 import { fromRenderLists2D } from '@dxos/react-ui-canvas/headless';
-import { type RenderList2D, compositeBounds, instancePorts, pathBounds } from '@dxos/react-ui-canvas/scene';
 import {
   type Bounds,
   type InstanceNode,

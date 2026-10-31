@@ -8,7 +8,8 @@ import * as ObjectCombobox from '@dxos/app-toolkit/ObjectCombobox';
 import { Entity, Obj } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
-import { type CanvasPropertiesProps, type RenderLists2D } from '@dxos/react-ui-canvas/scene';
+import { type RenderLists2D } from '@dxos/react-ui-canvas';
+import { type CanvasPropertiesProps } from '@dxos/react-ui-canvas-editor';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import { type Element, type ViewId, isLink, isViewNode } from '@dxos/scene';
 

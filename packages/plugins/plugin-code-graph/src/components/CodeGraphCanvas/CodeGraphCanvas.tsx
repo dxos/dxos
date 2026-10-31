@@ -8,13 +8,15 @@ import React, { type ReactNode, createContext, useCallback, useContext, useLayou
 import {
   type Arrangement,
   type CreateProps,
+  type GraphLayoutOptions,
   type GraphModel,
+  type GraphShape,
   type NodeViewProps,
   createNodeRegistry,
   defaultNodePrototypes,
   defaultNodeTypes,
-} from '@dxos/react-ui-canvas/scene';
-import { Graph2DView, type GraphLayoutOptions, type GraphShape } from '@dxos/react-ui-scene';
+} from '@dxos/react-ui-canvas';
+import { Graph2DView } from '@dxos/react-ui-canvas-editor';
 import * as HoverCard from '@dxos/react-ui/HoverCard';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';

@@ -9,21 +9,10 @@
 // reaches the host as layout intents; the view never writes the document itself (decision 11).
 //
 
-import { CanvasActions, CanvasCamera, CanvasDisplay, CanvasNavigation, CanvasTools } from './CanvasBars.tsx';
-import { CanvasLayers, CanvasObjects, CanvasProperties, CanvasViews } from './CanvasInspectors.tsx';
 import { CanvasRoot } from './CanvasRoot.tsx';
 import { CanvasViewport } from './CanvasViewport.tsx';
 
 export const Canvas = {
   Root: CanvasRoot,
   Viewport: CanvasViewport,
-  Navigation: CanvasNavigation,
-  Actions: CanvasActions,
-  Camera: CanvasCamera,
-  Display: CanvasDisplay,
-  Tools: CanvasTools,
-  Properties: CanvasProperties,
-  Views: CanvasViews,
-  Layers: CanvasLayers,
-  Objects: CanvasObjects,
 };

@@ -46,7 +46,6 @@ import {
 } from '../../hooks/index.ts';
 import { type ThemeChoice, chooseTheme, defaultThemeRegistry, keyAction, neuVars } from '../../model/index.ts';
 import { fitFrame, visibleView } from '../../utils/index.ts';
-import { InspectorPanel } from '../panels/index.ts';
 import { defaultLinkRegistry, defaultNodeRegistry } from '../SceneLayer/index.ts';
 import {
   CanvasEditingProvider,
@@ -55,12 +54,20 @@ import {
   CanvasServicesProvider,
   CanvasTimeProvider,
 } from './CanvasContext.ts';
-import { useSelectionActions } from './CanvasInspectors.tsx';
-import { type CanvasRootProps } from './CanvasRootProps.ts';
+import { type CanvasRootProps, type CanvasShellProps } from './CanvasRootProps.ts';
 import { DEFAULT_MARGIN, LIGHT_MODE } from './constants.ts';
 
 /** The Neu tokens, for whichever look draws with them: a few inherited variables cost nothing to a look that does not. */
 const NEU_STYLE = neuVars();
+
+/** The view's own frame when the host gives no shell. */
+const CanvasFrame = ({ classNames, transparent, children }: CanvasShellProps) => (
+  // Clipped rather than hidden: a hidden box still scrolls, so focusing content embedded in the view (an editor's caret)
+  // would scroll the whole frame to reveal it.
+  <div className={mx('relative flex dx-fill overflow-clip', !transparent && 'bg-base-surface', classNames)}>
+    {children}
+  </div>
+);
 
 /** No generators: what a view given none reads. */
 const NO_GENERATORS: Readonly<Record<string, GeneratorSource>> = {};
@@ -143,8 +150,7 @@ const CanvasEngine = ({
   readonly = false,
   onReadonlyChange,
   transparent = false,
-  inspectors = 'floating',
-  onInspectorsChange,
+  shell: Shell = CanvasFrame,
   themes = defaultThemeRegistry,
   theme,
   defaultTheme,
@@ -543,8 +549,6 @@ const CanvasEngine = ({
     [atoms],
   );
 
-  const inspectorActions = useSelectionActions({ scene, selection, store, capabilities, readonly, controller });
-
   return (
     <CanvasServicesProvider
       registry={registry}
@@ -600,48 +604,38 @@ const CanvasEngine = ({
               menuAnchorRef={menuAnchorRef}
             >
               <SceneLookContext.Provider value={look}>
-                <InspectorPanel.Root
-                  docked={!readonly && inspectors === 'docked'}
-                  readonly={readonly}
-                  actions={inspectorActions}
-                  onDockedChange={
-                    onInspectorsChange && ((docked) => onInspectorsChange(docked ? 'docked' : 'floating'))
-                  }
-                >
-                  {/* The canvas beside the dock, which docked inspectors move into; with none docked, it takes no space. */}
-                  <InspectorPanel.Frame classNames={classNames} transparent={transparent}>
-                    <div
-                      ref={rootRef}
-                      tabIndex={0}
-                      className={mx(
-                        '@container/canvas relative grow h-full overflow-clip outline-none touch-none select-none',
-                        !transparent && 'bg-base-surface',
-                        // A theme with a mode takes it over the app's, for everything over the canvas.
-                        look.tone === 'dark' && 'dark',
-                        (tool.kind === 'hand' || commandHeld) && 'cursor-grab',
-                        tool.kind === 'node' && !commandHeld && 'cursor-crosshair',
-                      )}
-                      style={
-                        look.tone === 'light'
-                          ? { ...LIGHT_MODE, ...NEU_STYLE, contain: 'strict' }
-                          : { ...NEU_STYLE, contain: 'strict' }
-                      }
-                      data-testid='scene-view'
-                      data-mode={look.tone === 'theme' ? undefined : look.tone}
-                      onPointerDown={onBackgroundPointerDown}
-                      onPointerMove={onPointerMove}
-                      onPointerUp={onPointerUp}
-                      // A cancelled pointer (a touch the browser took over) abandons the gesture rather than landing it.
-                      onPointerCancel={cancelDrag}
-                      onPointerLeave={() => updateHover(undefined)}
-                      onDoubleClick={onDoubleClick}
-                      onContextMenu={onContextMenu}
-                      onKeyDown={onKeyDown}
-                    >
-                      {children}
-                    </div>
-                  </InspectorPanel.Frame>
-                </InspectorPanel.Root>
+                <Shell classNames={classNames} transparent={transparent}>
+                  <div
+                    ref={rootRef}
+                    tabIndex={0}
+                    className={mx(
+                      '@container/canvas relative grow h-full overflow-clip outline-none touch-none select-none',
+                      !transparent && 'bg-base-surface',
+                      // A theme with a mode takes it over the app's, for everything over the canvas.
+                      look.tone === 'dark' && 'dark',
+                      (tool.kind === 'hand' || commandHeld) && 'cursor-grab',
+                      tool.kind === 'node' && !commandHeld && 'cursor-crosshair',
+                    )}
+                    style={
+                      look.tone === 'light'
+                        ? { ...LIGHT_MODE, ...NEU_STYLE, contain: 'strict' }
+                        : { ...NEU_STYLE, contain: 'strict' }
+                    }
+                    data-testid='scene-view'
+                    data-mode={look.tone === 'theme' ? undefined : look.tone}
+                    onPointerDown={onBackgroundPointerDown}
+                    onPointerMove={onPointerMove}
+                    onPointerUp={onPointerUp}
+                    // A cancelled pointer (a touch the browser took over) abandons the gesture rather than landing it.
+                    onPointerCancel={cancelDrag}
+                    onPointerLeave={() => updateHover(undefined)}
+                    onDoubleClick={onDoubleClick}
+                    onContextMenu={onContextMenu}
+                    onKeyDown={onKeyDown}
+                  >
+                    {children}
+                  </div>
+                </Shell>
               </SceneLookContext.Provider>
             </CanvasGestureProvider>
           </CanvasEditingProvider>

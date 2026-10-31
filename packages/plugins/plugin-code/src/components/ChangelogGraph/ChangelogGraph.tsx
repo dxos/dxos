@@ -8,13 +8,14 @@ import React, { createContext, useContext, useMemo } from 'react';
 import {
   type CreateProps,
   type GraphEdge,
+  type GraphLayoutOptions,
   type GraphModel,
   type NodeViewProps,
   createNodeRegistry,
   defaultNodePrototypes,
   defaultNodeTypes,
-} from '@dxos/react-ui-canvas/scene';
-import { Graph2DView, type GraphLayoutOptions } from '@dxos/react-ui-scene';
+} from '@dxos/react-ui-canvas';
+import { Graph2DView } from '@dxos/react-ui-canvas-editor';
 import * as Avatar from '@dxos/react-ui/Avatar';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';

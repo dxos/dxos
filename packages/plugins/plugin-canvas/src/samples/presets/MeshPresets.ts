@@ -5,7 +5,7 @@
 // @import-as-namespace
 
 import { Obj } from '@dxos/echo';
-import { meshObject, parseOBJ } from '@dxos/react-ui-scene/io';
+import { meshObject, parseOBJ } from '@dxos/react-ui-canvas/3d';
 import { Scene } from '@dxos/scene';
 
 import firetruckObj from '../../../assets/models/firetruck.obj?raw';

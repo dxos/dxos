@@ -93,13 +93,13 @@
       "path": "../react-ui-canvas"
     },
     {
+      "path": "../react-ui-canvas-editor"
+    },
+    {
       "path": "../react-ui-editor"
     },
     {
       "path": "../react-ui-experimental"
-    },
-    {
-      "path": "../react-ui-scene"
     },
     {
       "path": "../react-ui-syntax-highlighter"

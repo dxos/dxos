@@ -7,14 +7,13 @@ import React, { type ComponentType, useCallback, useEffect, useMemo, useReducer,
 
 import { DefaultInput, DefaultOutput } from '@dxos/conductor';
 import * as JsonSchema from '@dxos/echo/JsonSchema';
+import { type Camera, type ViewportProps, fromViewportIntent, toViewportLayout } from '@dxos/react-ui-canvas';
 import {
-  type Camera,
   type DimensionConfig,
   type InspectorSectionDef,
-  type ViewportProps,
+  createConfig2D,
   useSceneEditor,
-} from '@dxos/react-ui-canvas';
-import { createConfig2D, fromViewportIntent, toViewportLayout } from '@dxos/react-ui-scene';
+} from '@dxos/react-ui-canvas-editor';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { type LayoutIntent, type Port, type Scene, findLayout } from '@dxos/scene';
 

@@ -30,12 +30,6 @@
       "path": "../../common/scene"
     },
     {
-      "path": "../../common/test-utils"
-    },
-    {
-      "path": "../../core/echo/echo"
-    },
-    {
       "path": "../react-primitives/react-hooks"
     },
     {
@@ -49,12 +43,6 @@
     },
     {
       "path": "../react-ui-form"
-    },
-    {
-      "path": "../react-ui-list"
-    },
-    {
-      "path": "../react-ui-syntax-highlighter"
     },
     {
       "path": "../ui-editor"

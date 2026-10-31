@@ -3,9 +3,9 @@
 //
 
 import { Dsl } from '@dxos/diagram';
+import { flattenLayout, liftLayout } from '@dxos/react-ui-canvas';
+import { type ClipboardCodec } from '@dxos/react-ui-canvas-editor';
 import { fromRenderList2D, toRenderList2D } from '@dxos/react-ui-canvas/headless';
-import { type ClipboardCodec } from '@dxos/react-ui-canvas/scene';
-import { flattenLayout, liftLayout } from '@dxos/react-ui-scene/canvas';
 import { type Fragment, type Link, type Node, Scene, resolveLayout2D, resolveLayout3D } from '@dxos/scene';
 
 type SceneDocument = Scene.SceneDocument;

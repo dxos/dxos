@@ -12,17 +12,9 @@ import { type Database } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import {
-  Canvas,
-  type EditorDisplay,
-  type EditorShot,
-  SceneEditor,
-  createCanvasAtoms,
-  sampleDocument,
-  useRegistry,
-} from '@dxos/react-ui-canvas/scene';
+import { Canvas, createCanvasAtoms, sampleDocument, useRegistry } from '@dxos/react-ui-canvas';
+import { type EditorDisplay, type EditorShot, SceneEditor, createConfig2D } from '@dxos/react-ui-canvas-editor';
 import { useDocumentHost } from '@dxos/react-ui-canvas/testing';
-import { createConfig2D } from '@dxos/react-ui-scene';
 import { Loading } from '@dxos/react-ui/testing';
 import { createStoryDecorators } from '@dxos/storybook-testing';
 

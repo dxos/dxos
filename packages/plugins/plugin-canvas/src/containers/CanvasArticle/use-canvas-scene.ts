@@ -16,8 +16,9 @@ import {
   createNodeRegistry,
   defaultNodePrototypes,
   defaultNodeTypes,
-} from '@dxos/react-ui-canvas/scene';
-import { kindNodeDef, kindRegistry } from '@dxos/react-ui-scene/canvas';
+  kindNodeDef,
+  kindRegistry,
+} from '@dxos/react-ui-canvas';
 import { type KindRegistry, type Node } from '@dxos/scene';
 
 import { CanvasViewNode, ImageNode, adoptLayoutMode, migrateSceneDrawing, reconcileMigrations } from '#model';

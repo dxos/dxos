@@ -24,7 +24,7 @@ import {
   nodeTitle,
   sortByZ,
   topZ,
-} from '@dxos/react-ui-canvas/scene';
+} from '@dxos/react-ui-canvas';
 import {
   type DiagramConnector,
   type DiagramNode,

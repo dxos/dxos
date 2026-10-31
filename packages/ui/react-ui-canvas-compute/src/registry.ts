@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type NodeDef, type NodeRegistry, defaultNodeRegistry } from '@dxos/react-ui-canvas/scene';
+import { type NodeDef, type NodeRegistry, defaultNodeRegistry } from '@dxos/react-ui-canvas';
 import { KindRegistry } from '@dxos/scene';
 
 import {
