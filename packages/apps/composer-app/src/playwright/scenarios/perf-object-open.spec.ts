@@ -22,13 +22,25 @@ const ARCHIVE = process.env.DX_PERF_PROFILE_ARCHIVE;
  */
 let SPACE = process.env.DX_PERF_OBJECT_SPACE ?? '';
 
-/** How many of the collection's objects to open (`DX_PERF_OBJECTS`); each opens cold, then warm. */
+/** How many of the branch's objects to open (`DX_PERF_OBJECTS`); each opens once per pass. */
 const OBJECTS = Number.parseInt(process.env.DX_PERF_OBJECTS ?? '', 10) || 8;
+
+/**
+ * The navtree branch, under `root/<space>/`, whose children the stages open (`DX_PERF_OBJECT_BRANCH`): the root
+ * collection by default; `ai/org.dxos.type.project` for the Projects section.
+ */
+const BRANCH = process.env.DX_PERF_OBJECT_BRANCH ?? 'content/collections';
+
+/** Passes over the objects (`DX_PERF_OBJECT_PASSES`): `cold`, `warm`, then `warm3`, `warm4`… to show a trend. */
+const PASSES = ['cold', 'warm', ...Array.from({ length: 98 }, (_, index) => `warm${index + 3}`)].slice(
+  0,
+  Math.max(1, Number.parseInt(process.env.DX_PERF_OBJECT_PASSES ?? '', 10) || 2),
+);
 
 /** The counters that move while the worker indexes. */
 const INDEX_COUNTERS = ['echo.indexPasses', 'echo.indexedObjects'];
 
-const collections = () => `root/${SPACE}/content/collections`;
+const collections = () => `root/${SPACE}/${BRANCH}`;
 const row = (id: string) => `[data-tree-row][data-object-id="${id}"]`;
 
 const switchTo = async (page: Page, workspace: string, timeout: number) => {
@@ -46,7 +58,7 @@ const switchTo = async (page: Page, workspace: string, timeout: number) => {
   }
 };
 
-/** The first `OBJECTS` direct children of the space's root collection, expanded in the navtree: the objects the stages open. */
+/** The first `OBJECTS` direct children of the branch, expanded in the navtree: the objects the stages open. */
 const objectRows = async (page: Page, timeout: number): Promise<string[]> => {
   const branch = page.locator(row(collections()));
   await branch.waitFor({ timeout });
@@ -64,7 +76,7 @@ const objectRows = async (page: Page, timeout: number): Promise<string[]> => {
   let ids = await page.evaluate(children, collections());
   while (ids.length < OBJECTS) {
     if (Date.now() > deadline) {
-      throw new Error(`the root collection shows ${ids.length} objects, fewer than DX_PERF_OBJECTS=${OBJECTS}`);
+      throw new Error(`${collections()} shows ${ids.length} objects, fewer than DX_PERF_OBJECTS=${OBJECTS}`);
     }
     await page.waitForTimeout(250);
     ids = await page.evaluate(children, collections());
@@ -124,7 +136,7 @@ defineScenario({
   },
   stages: async ({ page, stage, budget }) => {
     const ids = await objectRows(page, budget);
-    for (const pass of ['cold', 'warm']) {
+    for (const pass of PASSES) {
       for (const [index, id] of ids.entries()) {
         await stage(`${pass}-${index + 1}`, async () => {
           await page.locator(row(id)).click();
