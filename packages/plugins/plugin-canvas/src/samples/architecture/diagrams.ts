@@ -3,7 +3,7 @@
 //
 
 import { type ContentMap } from '@dxos/diagram';
-import { type Database, Ref } from '@dxos/echo';
+import { type Database, Ref, type Type } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 
 import {
@@ -33,7 +33,7 @@ export type DiagramSet = {
 };
 
 /** The schemas a space of canvas drawings registers: the drawing, and its canvas with the scene objects it reaches. */
-export const canvasDrawingSchemas = [Drawing.Drawing, ...schemaTypes];
+export const canvasDrawingSchemas: readonly Type.AnyEntity[] = [Drawing.Drawing, ...schemaTypes];
 
 export type CanvasDrawingProps = {
   name: string;
