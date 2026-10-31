@@ -138,7 +138,7 @@ component CodeGraphArticle
 
 ```mdl
 component CodeGraphCanvas
-  desc: react-ui-scene's Graph2DView with one box per resource, as plugin-projects' FeatureCanvas uses it: the graph as a dynamic 2D layout in the shared scene editor. Arrangement and the placed positions (pinned shapes) place the boxes. A box shows a symbol's own name and a coloured tag of its kind from the index. Package frames are the canvas's own diagram shapes, on a backdrop layer under the boxes and arrows.
+  desc: react-ui-canvas-editor's Graph2DView with one box per resource, as plugin-projects' FeatureCanvas uses it: the graph as a dynamic 2D layout in the shared scene editor. Arrangement and the placed positions (pinned shapes) place the boxes. A box shows a symbol's own name and a coloured tag of its kind from the index. Package frames are the canvas's own diagram shapes, on a backdrop layer under the boxes and arrows.
 ```
 
 ```mdl
@@ -446,4 +446,13 @@ decision D-17: CodeGraphCanvas draws through react-ui-scene's Graph2DView, the g
   for: user:richburdon
   affects: [CodeGraphCanvas]
   why: The View model and ViewStore are being retired (react-ui-canvas COMMON-CORE-PLAN E.5/E.6); a dragged box is now a pinned shape, and its centre is the position the article stores, so nothing the article persists changes.
+```
+
+```mdl
+decision D-18: CodeGraphCanvas takes Graph2DView from react-ui-canvas-editor, where it moved when react-ui-scene was removed. Fills in [D-17].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CodeGraphCanvas]
+  why: Graph2DView draws a graph in the shared scene editor, so it is an editor view, not a surface part.
 ```

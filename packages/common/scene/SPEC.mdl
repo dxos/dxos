@@ -7,8 +7,8 @@ version: 0.1.0
 One data structure for 2D drawings and 3D scenes. The editor, the assistant and the animator all read and write it.
 It has three aspects: a Model of reusable objects, a Layout of positioned elements that place them, and a Scene that
 views a layout through a camera. `@dxos/scene` holds the schemas, validation, arrangement and the ECHO form;
-`@dxos/diagram` holds its text form (the `scene`, `layout` and `model` blocks of `.dx`); react-ui-canvas's `SceneEditor`
-edits it in both dimensions, through `LayoutIntent`s and `ModelIntent`s only; `@dxos/react-ui-scene` draws it; plugin-canvas
+`@dxos/diagram` holds its text form (the `scene`, `layout` and `model` blocks of `.dx`); react-ui-canvas-editor's `SceneEditor`
+edits it in both dimensions, through `LayoutIntent`s and `ModelIntent`s only; react-ui-canvas draws it; plugin-canvas
 makes it an animator stage. This spec states the data and its edits; how the editor behaves is the editor's spec. The design is `agents/superpowers/specs/2026-10-28-scene-model-design.md`.
 
 ## Extensions
@@ -1015,3 +1015,13 @@ decision D-101: The layout-field intent is `{ kind: 'layout', patch: LayoutPatch
   rejected:
     - A path-and-value update on the layout, which loses the field types.
     - One intent kind per field, which grows the vocabulary with every mode.
+```
+
+```mdl
+decision D-102: react-ui-canvas-editor's `SceneEditor` edits the scene model and react-ui-canvas draws it; react-ui-scene is removed, as the scene UI is now a surface package and an editor package.
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Scene]
+  why: The scene UI split into a surface and an editor application, and this spec names where each lives.
+```

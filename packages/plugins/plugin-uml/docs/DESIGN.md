@@ -16,7 +16,7 @@ carry only generic shapes. Both belong to one domain, so they move to a plugin o
 The class is an element kind (`src/types/ClassNode.ts`): its schema is the 2D element base (`Scene.Element2D`) plus
 `label`, `attributes` and `methods` at the element's top, and `ClassNode.kinds` (a `KindRegistry`) validates them. Its
 `ElementKindSpec` adds a `create` with placeholder members, its text parts (`label`, then `attributes` and `methods`
-one per line), and the properties panel's `LinesField` for the two lists; react-ui-scene's `kindNodeDef` derives the
+one per line), and the properties panel's `LinesField` for the two lists; react-ui-canvas's `kindNodeDef` derives the
 canvas engine's node type from it. The view (`ClassNodeView`) is added by the capability so the type module stays free
 of React.
 

@@ -45,7 +45,7 @@ uses org.dxos.ui.react-ui-canvas.2d: The 2D variant — the canvas engine's link
 ```
 
 ```mdl
-uses org.dxos.ui.react-ui-scene.3d: The 3D variant, which a 3D Canvas drawing shows.
+uses org.dxos.ui.react-ui-canvas.3d: The 3D variant, which a 3D Canvas drawing shows.
 ```
 
 ```mdl
@@ -336,4 +336,15 @@ decision D-14: A legacy scene canvas (a `Drawing.Canvas` in the `dxos.org/scene/
   rejected:
     - Keeping a writable legacy engine view, which would keep the View model and its store alive for one dialect.
     - Migrating on any surface, which would write a document a slide or card only looks at.
+```
+
+```mdl
+decision D-15: `CanvasOperation.Apply` takes `constrain2D` from react-ui-canvas's root, which loads neither the editor nor the 3D renderer, and a 3D Canvas drawing shows the 3D variant `org.dxos.ui.react-ui-canvas.3d`. Fills in [D-13] and [org.dxos.ui.react-ui-canvas#D-37].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: react-ui-scene, whose `canvas` entry held the rule, is removed; react-ui-canvas's root keeps the editor and Babylon out of the operation handlers, as that entry did, which its entries test checks.
+  rejected:
+    - Moving `constrain2D` into react-ui-canvas's `/headless` entry now, which needs the modes freed of the utilities barrel first.
 ```

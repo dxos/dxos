@@ -1,5 +1,5 @@
 ---
-id: org.dxos.ui.react-ui-scene.3d
+id: org.dxos.ui.react-ui-canvas.3d
 name: SceneEditor3D
 version: 0.1.0
 ---
@@ -11,8 +11,9 @@ materials and the coloured axes.
 
 The 3D viewport (`Viewport3D`) draws the open scene's 3D layouts with Babylon through `Scene3DEditor`, which picks
 with a ray against the scene and the ground plane, runs every gesture in memory and reports its end to the editor as
-one `LayoutIntent`. As a picture it is `Scene3DView`: the authored view alone, with no grid and no orbit. This package
-also holds the 2D config and viewport adapter; the 2D variant spec states them, beside the 2D engine.
+one `LayoutIntent`. As a picture it is `Scene3DView`: the authored view alone, with no grid and no orbit. The renderer,
+the solids, `Scene3DView` and mesh import and export are react-ui-canvas's `/3d` and `/io` entries; `Viewport3D`,
+`config3d`, `tools3d` and `Scene3DEditor` are react-ui-canvas-editor's.
 
 ## Dependencies
 
@@ -340,6 +341,15 @@ decision D-19: A stored `clay` resolves to `neu-dark` and `clay-light` to `neu-l
   why: A view state whose schema listed only the new ids would fail to decode an old one and drop the viewer's camera and grid with it; Clay followed the app, so its closest fixed-mode successor is Neu Dark, as 2D's Soft is.
   rejected:
     - Listing the old ids in the view-state schema, which would let them be written again.
+```
+
+```mdl
+decision D-20: The 3D renderer, the solids, `Scene3DView` and mesh import and export are react-ui-canvas's `/3d` and `/io` entries, and the 3D editor parts (`Viewport3D`, `config3d`, `tools3d`, `Scene3DEditor`) are react-ui-canvas-editor's; this variant's id is `org.dxos.ui.react-ui-canvas.3d`. Fills in [org.dxos.ui.react-ui-canvas#D-37] and [org.dxos.ui.react-ui-canvas#D-38].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Viewport3D, Scene3DEditor, SceneRenderer3D]
+  why: react-ui-scene is removed, and its 3D parts split along the surface and the application as the 2D ones do.
 ```
 
 ---

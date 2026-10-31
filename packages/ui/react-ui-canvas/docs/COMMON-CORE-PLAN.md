@@ -3,14 +3,16 @@
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or
 > superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** One data model (`@dxos/scene`) and one editor (`SceneEditor` in react-ui-canvas) for 2D and 3D scenes, each
+**Goal:** One data model (`@dxos/scene`) and one editor (`SceneEditor` in react-ui-canvas-editor) for 2D and 3D scenes, each
 dimension supplying only a `DimensionConfig`; react-ui-canvas's own `View`/`Node`/`Link` model, `Intent` and
 `ViewStore` are retired, and every consumer moves to the shared model.
 
 **Architecture:** `@dxos/scene` owns data (`Model<O, S>`, `Layout<E, S>`, `Scene<C>`), edits (`LayoutIntent`,
-`ModelIntent`), styles (`Style2D`/`Style3D`, `StyleCatalog`, `resolveStyle`). react-ui-canvas owns the editor core
-(store, command table, history, clipboard, panels) and the 2D viewport; react-ui-scene owns the 3D viewport. A viewport
-renders, picks and turns gestures into intents; it never writes ECHO and never owns a command.
+`ModelIntent`), styles (`Style2D`/`Style3D`, `StyleCatalog`, `resolveStyle`). react-ui-canvas is the surface:
+the 2D engine, the 3D renderer (`/3d`, `/io`), the read-only views, element kinds and headless rules.
+react-ui-canvas-editor is the application: the editor core (store, command table, history, clipboard, panels,
+timeline) and both dimension configs with their viewports (Task G.1; react-ui-scene is removed). A viewport renders,
+picks and turns gestures into intents; it never writes ECHO and never owns a command.
 
 **Tech Stack:** Effect Schema, ECHO (`@dxos/echo`), React, effect atoms (`@effect/atom-react`), Babylon.js (3D),
 Manifold (solids), vitest, storybook (localhost:9009).
@@ -339,6 +341,42 @@ layout)` takes the layout record and `toRenderLists2D(doc, scene)` every 2D layo
   utilities. plugin-canvas's `readViews`/`writeViews` keep their names (they read and write the canvas content records
   as render lists). **Parity:** 3D draws its document through `Viewport3D` with no View model and no draw state of this
   kind; nothing to retire there. Cost if wrong: a host that drew a bare store passes a document instead.
+- **R-80 (2026-10-30, user decision, G.1): two packages, split by role, not by dimension.** react-ui-canvas is the
+  surface, react-ui-canvas-editor (new, private) the editor application; react-ui-scene is removed; 2D and 3D share
+  both (react-ui-canvas SPEC.mdl D-37).
+- **R-81 (2026-10-30, agent, G.1): the 3D runtime is behind `/3d` and `/io`.** `/3d` is `src/three` (renderer,
+  manifold solids, labels, `Scene3DView`), `/io` is `src/three/io`; the `/scene` subpath is removed. Babylon and
+  manifold-3d are react-ui-canvas dependencies. `src/lift` (`liftScene`, `camera2DTo3D`) stays in the root and imports
+  the renderer's `Viewport` type only. Rejected: a root that exports the renderer. Cost if wrong: one more subpath to
+  merge back.
+- **R-82 (2026-10-30, agent, G.1): the direction is checked by lint and a test.** `.oxlintrc.json` gives
+  react-ui-canvas `no-restricted-imports` on `@dxos/react-ui-canvas-editor(/*)`; `src/entries.test.ts` walks the
+  value imports of the root, `/headless`, `/motion`, `/generator-worker` and `/testing` and fails on @babylonjs,
+  manifold-3d or the editor, and checks no source file or manifest names the editor. The editor package gets
+  `folder-barrel-imports`. Cost if wrong: none.
+- **R-83 (2026-10-30, agent, G.1): the old 2D shell moves, it does not die.** `Canvas.Root` (the engine root) stays in
+  react-ui-canvas with a new `shell` slot (default: a plain frame); its bars and inspectors become
+  react-ui-canvas-editor's `CanvasEditor` (`CanvasEditor.Root` = `Canvas.Root` + an inspector-dock shell; the bars as
+  `CanvasEditor.Tools` etc.). Kept because the e2e suites (scene, create, demo, lattice specs) and plugin-canvas's
+  `DataFlowView` sample still drive it. Parked: port those onto `SceneEditor` and delete `CanvasEditor`. Cost if
+  wrong: one shell to delete later.
+- **R-84 (2026-10-30, agent, G.1): `Scene2DView` is 2D only.** Its `renderer: '3d'` option is dropped (it imported the
+  renderer into the root); the story composes `liftScene` with `/3d`'s `Scene3DView`. No consumer used the option.
+- **R-85 (2026-10-30, agent, G.1): the viewport contract and `sampleDocument` are the surface's.** `ViewportProps`,
+  `ActiveTool`, `FaceSelection`, `ConstrainIntent`, `ConstrainContext` live in `model/viewport.ts`, `sampleDocument`
+  in `model/sample.ts` (also on `/headless`); the editor imports them. Rejected: leaving them in the editor, which the
+  engine would then import.
+- **R-86 (2026-10-30, agent, G.1): where react-ui-scene's files went.** Surface: `canvas/kinds.ts` → `src/kinds`,
+  `canvas/mode.ts` → `modes/constrain.ts`, `canvas/score.ts` → `modes/score.ts`, `canvas/graph.ts` →
+  `modes/graph-layout.ts`, `three/*` → `src/three`, `three/lift.ts` → `src/lift`, `Scene2DView` → `components`,
+  `Scene3DView` → `three`. Editor: `editor/*` → `src/dimensions`, `Graph2DView` → `src/views` (above `dimensions`, so
+  no import cycle), `Scene3DEditor` → `components`, `testing` → `testing`. react-ui-canvas's own `editor/*`, panels,
+  inspectors, Toolbar, StyleGrid, Breadcrumbs and playwright suites → react-ui-canvas-editor. SPEC-3D.mdl moves beside
+  SPEC-2D.mdl as `org.dxos.ui.react-ui-canvas.3d`.
+- **R-87 (2026-10-30, agent, G.1): `constrain2D` is in the root, not `/headless`.** The modes import the utilities
+  barrel, so `/headless` would grow React-free but large; the root carries neither the editor nor Babylon (R-82), which
+  is what plugin-canvas D-13 required of react-ui-scene's `/canvas` entry. Parked: a light headless mode rule for
+  operations. Cost if wrong: operation handlers load the engine's React modules, as before.
 
 ## Global Constraints
 
@@ -1029,6 +1067,26 @@ utilities.
 - [x] The engine timeline retires; the end card plays a shot (R-68).
 - [x] `Intent`, `reduceIntent` and the engine projections (R-69).
 - [x] The View model and `ViewStore` (R-70).
+
+## Phase G — Package split (R-80)
+
+### Task G.1: react-ui-canvas is the surface; react-ui-canvas-editor is the application
+
+Move every file of react-ui-scene, and react-ui-canvas's editor, panels, inspectors and playwright suites, with
+`git mv` to the side R-80 puts it on (R-86); update every importer, manifest, tsconfig reference, story title
+(`ui/react-ui-canvas-editor/...`) and the changeset group; no re-exports.
+
+- [x] react-ui-canvas: `/3d` and `/io` entries (R-81); `Canvas.Root` `shell` slot (R-83); `Scene2DView` 2D only
+      (R-84); viewport contract and `sampleDocument` in `model` (R-85).
+- [x] react-ui-canvas-editor: private package, `editor`, `dimensions`, `components` (incl. `CanvasEditor`), `views`,
+      `testing`, `playwright`.
+- [x] Dependency checks: lint rule and `src/entries.test.ts` (R-82).
+- [x] react-ui-scene deleted; consumers (plugin-canvas, plugin-uml, plugin-code, plugin-code-graph, plugin-projects,
+      plugin-conductor, plugin-animator, plugin-illustrator, react-ui-canvas-compute) import from the two packages.
+- [x] Specs: react-ui-canvas SPEC.mdl D-37 to D-42; SPEC-2D.mdl and `docs/DESIGN.md` synced to the draw state (D-59,
+      D-60); SPEC-3D.mdl D-20.
+- [ ] Parked: port the e2e suites and `DataFlowView` onto `SceneEditor` and delete `CanvasEditor` (R-83); a light
+      headless mode rule (R-87).
 
 ---
 

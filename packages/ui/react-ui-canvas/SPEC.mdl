@@ -11,7 +11,8 @@ snapping, the lock and roles — are written once here and configured per dimens
 viewport and the geometry that truly differs come from the dimension. Each dimension's variant spec refers to this
 one by id and states only what it adds.
 
-The editor lives in react-ui-canvas, under its current name: "canvas" is the surface in either dimension. It owns no
+The editor is react-ui-canvas-editor, the application; react-ui-canvas is the surface it draws on in either dimension:
+the 2D engine, the 3D renderer, the read-only views, the element kinds and the headless rules. The editor owns no
 model. The document changes only through `LayoutIntent`s and `ModelIntent`s ([org.dxos.scene#F-1.7]); a viewport
 draws the document, picks, and reports gestures as intents and selection changes, and never writes the document or
 owns a command.
@@ -503,13 +504,13 @@ agentic-review harness.
 ```mdl
 rule editor-writes-through-intents: The editor changes the document only through its intent writers
   Every change the editor or a viewport makes to the document leaves through `onIntent`, `onModelIntent` or
-  `onTransaction`. Code under `src/editor` must not write an ECHO object, a layout record or a document field
-  directly, and a viewport must not own a command: commands are the command table's. Flag a write to a document,
-  layout, model or ECHO object in that code that does not go through those writers.
-  scope: dir
+  `onTransaction`. Code under react-ui-canvas-editor's `src/editor` must not write an ECHO object, a layout record or
+  a document field directly, and a viewport must not own a command: commands are the command table's. Flag a write to
+  a document, layout, model or ECHO object in that code that does not go through those writers.
+  scope: repo
   files:
-    - src/editor/**/*.ts
-    - src/editor/**/*.tsx
+    - packages/ui/react-ui-canvas-editor/src/editor/**/*.ts
+    - packages/ui/react-ui-canvas-editor/src/editor/**/*.tsx
   severity: error
 ```
 
@@ -517,13 +518,15 @@ rule editor-writes-through-intents: The editor changes the document only through
 rule named-react-imports: Import React members by name, never through a `React.` namespace
   Use `import { useMemo, type Ref } from 'react'` and call `useMemo(...)`; do not write
   `React.useMemo`, `React.FC`, `React.ReactNode` or `import React from 'react'`. A forwarded ref is
-  named `forwardedRef`. Flag any `React.` member access and any default import of react in this
-  package's source. Do not flag `import type * as React from 'react'` used solely in a `.d.ts`
-  ambient declaration.
-  scope: dir
+  named `forwardedRef`. Flag any `React.` member access and any default import of react in the
+  source of react-ui-canvas or react-ui-canvas-editor. Do not flag `import type * as React from 'react'`
+  used solely in a `.d.ts` ambient declaration.
+  scope: repo
   files:
-    - src/**/*.tsx
-    - src/**/*.ts
+    - packages/ui/react-ui-canvas/src/**/*.tsx
+    - packages/ui/react-ui-canvas/src/**/*.ts
+    - packages/ui/react-ui-canvas-editor/src/**/*.tsx
+    - packages/ui/react-ui-canvas-editor/src/**/*.ts
   grep: React\.|import React
   severity: warn
 ```
@@ -821,6 +824,65 @@ decision D-36: Only an article edits: a card, section or slide draws the viewpor
   for: user:richburdon
   affects: [F-16, F-15.4]
   why: A namespaced role (`….article`) must edit as the plain one does, so the test is the role's last segment.
+```
+
+```mdl
+decision D-37: Scene UI is two packages: react-ui-canvas is the surface (2D engine, 3D renderer, read-only views, element kinds, headless rules) and react-ui-canvas-editor is the editor application (SceneEditor, panels, inspectors, history, commands, timeline, the 2D and 3D configs); react-ui-scene is removed, and 2D and 3D share both packages.
+  date: 2026-10-30
+  by: user:richburdon
+  supersedes: D-12
+  affects: [SceneEditor.Root, DimensionConfig]
+```
+
+```mdl
+decision D-38: react-ui-canvas's root, `/headless`, `/motion`, `/generator-worker` and `/testing` entries load neither the 3D renderer nor manifold; the Babylon renderer, manifold solids and `Scene3DView` are its `/3d` entry and mesh import and export its `/io` entry, and the `/scene` entry is removed. Babylon and manifold-3d are regular dependencies of react-ui-canvas. Fills in [D-37].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [SceneEditor.Root]
+  why: Operations and 2D-only hosts import the root, so keeping the 3D runtime behind its own entry keeps them free of a WASM module and a large renderer they never draw with.
+  rejected:
+    - Exporting the renderer from the root, which loads Babylon into every 2D card and operation handler.
+    - A separate 3D package, which would split the surface the decision keeps whole.
+```
+
+```mdl
+decision D-39: The dependency direction is checked twice: lint forbids react-ui-canvas from importing react-ui-canvas-editor, and a react-ui-canvas test fails when a light entry reaches @babylonjs, manifold-3d or the editor through its value imports, when any source file imports the editor, or when the manifest lists it. Fills in [D-37].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [SceneEditor.Root]
+  why: Lint catches a direct import at the line that adds it; the test also catches a light entry that reaches the renderer through a chain of relative imports, which no import rule sees.
+```
+
+```mdl
+decision D-40: The engine's own 2D chrome (its toolbar, breadcrumbs and inspector panels) is react-ui-canvas-editor's `CanvasEditor`, which frames react-ui-canvas's `Canvas.Root` through a `shell` slot; `Canvas.Root` stays in react-ui-canvas as the engine root that `Scene2DView` and the 2D viewport draw with. Fills in [D-37].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [SceneEditor.Root]
+  why: The engine's end-to-end suites and plugin-canvas's data-flow sample still drive that chrome, so it moves with the editor rather than being deleted.
+  rejected:
+    - Deleting the chrome and porting the end-to-end suites and the sample onto `SceneEditor` in the same change.
+    - Leaving the chrome in react-ui-canvas, which keeps editor panels in the surface.
+```
+
+```mdl
+decision D-41: `Scene2DView` draws in 2D only; a host that shows a 2D scene in 3D lifts it (`liftScene`, `camera2DTo3D`) and draws it with `Scene3DView` from the `/3d` entry. Fills in [D-38].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [SceneEditor.Root]
+  why: A 3D option on the 2D view would import the renderer into the root entry.
+```
+
+```mdl
+decision D-42: The viewport contract (`ViewportProps`, `ActiveTool`, `FaceSelection`, `ConstrainIntent`, `ConstrainContext`) and `sampleDocument` are react-ui-canvas's, which the editor imports. Fills in [D-37].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [DimensionConfig]
+  why: The surface implements the viewport contract, and operations sample a shot's document without loading the editor.
 ```
 
 ---

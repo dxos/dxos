@@ -9,24 +9,25 @@ The 2D variant of the scene editor: what `SceneEditor` does when its dimension c
 only what 2D adds or does differently — the viewport, its tools and geometry, the grid, lattice and guides, ports and
 links, portals, the 2D Properties form and 2D styles.
 
-The 2D viewport (`Viewport2D`) is react-ui-canvas's own engine, the `Canvas`: an infinite, multi-depth diagram
-surface where a View is typed nodes and typed links in one flat coordinate space and a node of type `view` opens onto
-another View, which is what depth means. The engine keeps its View model as an in-memory working form: the viewport
-reads the open scene's 2D layouts into Views (`toCanvasViews`), the engine keeps a gesture's in-flight state in
-memory and writes its store once on release, and that one write reaches the editor as one `LayoutIntent` per
-changed layout (`viewWrites`) — plus a `ModelIntent` defining the object a new portal or instance places — so the
-editor records, undoes and shares 2D edits as it does 3D ones. Nothing stores the View model; the document is the
-scene model alone. Selection, tool, drill path, camera and display are the editor's, mirrored into the engine's
-atoms both ways.
+The 2D viewport (`Viewport2D`, in react-ui-canvas-editor) draws through react-ui-canvas's own engine, `Canvas.Root`:
+an infinite, multi-depth diagram surface where a View is typed nodes and typed links in one flat coordinate space and
+a node of type `view` opens onto another View, which is what depth means. The engine takes the document itself: it
+reads the open scene's 2D layouts into render lists (`RenderList2D`, by `toRenderLists2D`) held in its private draw
+state (`DrawState`), a gesture edits that draw state in memory as `SceneEdit`s, and on release the change reaches the
+host as one `LayoutIntent` per changed layout (`layoutWrites`) — plus a `ModelIntent` defining the object a new
+portal or instance places — so the editor records, undoes and shares 2D edits as it does 3D ones. Nothing stores the
+render lists; the document is the scene model alone. Selection, tool, drill path, camera and display are the
+editor's, mirrored into the engine's atoms both ways.
 
-The engine also runs on its own, outside the editor: a legacy canvas article and plugin-conductor's compute board
-render `Canvas` with its own toolbar, history and clipboard. Requirements F-1 to F-9 are the engine's and hold in
-both settings; where the editor replaces an engine behaviour, [F-10] says so.
+The engine also runs with its own chrome, outside `SceneEditor`: react-ui-canvas-editor's `CanvasEditor` frames
+`Canvas.Root` with the engine's toolbar, breadcrumbs and inspector panels, for its stories, its end-to-end suites and
+plugin-canvas's data-flow sample. Requirements F-1 to F-9 are the engine's and hold in both settings; where the
+editor replaces an engine behaviour, [F-10] says so.
 
-The seam that lets one engine serve every host is the **projection** (decision 11): the surface reads a positioned
-`View` and emits `Intent`s, and never writes a coordinate itself. A projection may apply, rewrite or reject each
-intent and then re-emits the View. Freehand is the identity projection; constrained, dynamic and compute projections
-own a model of their own and position the View from it. `docs/DESIGN.md` carries the engine's reasoning and the
+The layout's mode is the engine's one seam for rules: the host's `constrain` (`ConstrainIntent`) sees every write and
+stores it, rewrites it or refuses it, and a gesture's preview reads the same rule (`DrawScene.constrain`), so a drag
+shows where the drop will land. Freehand has no rule; lattice, constrained, dynamic and scored modes are rules over
+the layout (`constrain2D`). `docs/DESIGN.md` carries the engine's reasoning and the
 numbered decisions it cites, `docs/VIEWS.md` the reasoning behind Views, Objects and Tags.
 
 Requirements marked **(planned)** are designed and not built.
@@ -97,7 +98,7 @@ Each engine concept is a part of the scene model, which is what is stored:
 ## Types
 
 The engine's node schemas (`nodeBase`, `NodeStyle`, ports, endpoints, layers and every node type not tied to the
-diagram vocabulary) are defined in `@dxos/scene` ([org.dxos.scene#D-90]); the View, registry and projection types
+diagram vocabulary) are defined in `@dxos/scene` ([org.dxos.scene#D-90]); the render list, registry and draw-state types
 are react-ui-canvas's. They are plain Effect schemas, so a host wraps them into an ECHO type without changing a field
 (decision 3).
 
@@ -107,9 +108,8 @@ type View
     One container's contents: nodes and links keyed by id in a single flat coordinate space (decision 4).
     The same record holds a View (`kind` absent or `view`) and an Object definition (`kind:
     'composite'`). Bounds are NEVER stored — they are derived from the content, padded and grown to the
-    major grid (decision 6), so a View has no edges to run out of. `createViewSchema(nodes)` composes the
-    schema from a registry's node schemas; `OpenView` is the same over `NodeBase`, which is what the
-    engine itself can validate for a host it does not know the types of.
+    major grid (decision 6), so a View has no edges to run out of. In code it is `RenderList2D`, and the
+    draw state holds them by id (`RenderLists2D`).
   fields:
     id: ViewId
     name?: string
@@ -229,7 +229,7 @@ type Link
 type Endpoint
   desc: >
     Either end of a link, and the reason a link can exist before both its ends do: `{node, port?}` with
-    no port pairs automatically (the closest appropriate pair, recomputed on every projection, so a
+    no port pairs automatically (the closest appropriate pair, recomputed on every draw, so a
     moved node re-routes), and `{point}` is a free end at a scene point (decision 3) — what a link tool
     dragged on empty canvas draws, and what dragging an end off a node leaves behind.
   literals: PortEndpoint | PointEndpoint
@@ -291,43 +291,38 @@ type NodeDef
 ```
 
 ```mdl
-type ViewStore
+type DrawState
   desc: >
-    Views and Object definitions by id behind atoms, so a canvas subscribes to exactly the View it
-    shows. The seam that lets persistence change without the surface noticing: `createMemoryStore` for
-    stories and tests, plugin-canvas's ECHO-backed store for a drawing. Undo reads the store's past
-    through `versions` (Automerge heads over ECHO; absent, the atom's own snapshots are the heads).
+    The engine's render lists, Views and Object definitions alike, by id behind atoms, so a canvas
+    subscribes to exactly the list it shows. Private to the engine: `Canvas.Root` builds it from the
+    document before paint (`createDrawState`) and a gesture edits it in memory; a host hands the engine a
+    document, never a store. Undo reads its past through `drawStateVersions`, whose heads are the atom's
+    own snapshots.
   fields:
-    views: Atom.Writable<Record<ViewId, View>>
-    view: (id: ViewId) => Atom<View | undefined>
-    styles?: Atom.Writable<StyleMap>  # the drawing's style classes
-    isRoot?: (id: ViewId) => boolean  # a root of its own (a linked drawing's), kept when no node opens it
-    versions?: VersionedSource        # heads(), read(path, heads), write(path, value)
+    views: Atom.Writable<Record<ViewId, RenderList2D>>
+    view: (id: ViewId) => Atom<RenderList2D | undefined>
+    styles: Atom.Writable<StyleMap>   # the drawing's style classes
 ```
 
 ```mdl
-type Projection
+type DrawScene
   desc: >
-    The only thing the surface knows about the model (decision 11). It reads a positioned View and
-    receives intents; what an intent MEANS is the projection's business — freehand writes the
-    coordinates, constrained rewrites them as cardinal constraints, dynamic keeps a graph and positions
-    rows from it, compute mirrors creates and links into a compute graph. A projection with a model of
-    its own exposes it as `model`, versioned like the store, so undo patches both together.
+    The open render list as the engine draws it, and how an edit reaches it. A gesture or a command
+    hands `apply` a `SceneEdit`, a pure function of the list; `constrain` is the layout's mode, which
+    previews read so a drag shows where it will land, and which the host applies again to what it stores.
   fields:
-    scene: Atom<View>
-    apply: (intent: Intent) => void
-    capabilities: Capabilities        # move, resize, link, create, delete, update, layout — each optional
-    model?: VersionedSource           # constraints, a graph: absent, the store is the whole model
-    restored?: () => void             # after undo or redo, so a mirror (a compute graph) catches up
-    constrain?: (intent: Intent) => Intent | undefined    # what apply would make of it, for previews
+    scene: Atom<RenderList2D>
+    apply: (edit: SceneEdit) => void
+    capabilities: Capabilities        # move, resize, link, create, delete, update, layout
+    constrain?: (edit: SceneEdit) => SceneEdit | undefined    # what the mode would store; undefined refuses it
     lattice?: LatticeSpec
 ```
 
 ```mdl
 type CanvasHistory
   desc: >
-    The canvas's undo log. Every committed edit is one entry of field-level patches between the store's
-    heads before and after it, so undo writes back only what the edit wrote and a concurrent edit to
+    The canvas's undo log. Every committed edit is one entry of field-level patches between the draw
+    state's heads before and after it, so undo writes back only what the edit wrote and a concurrent edit to
     another field survives. `createLocalHistory` keeps two stacks in memory; a host with Composer's
     `HistoryTracker` records each commit there instead, so gestures, agents and MCP share one log.
   fields:
@@ -349,28 +344,35 @@ type Tool
 One folder per component under `src/components`, stories beside it, all behind the `src/index.ts`
 barrel. Rendering is DOM with the camera as one CSS transform, SVG for the link and control layers
 (decision 7); no third-party canvas engine, and d3 only as pure functions (decision 8). The tool rail, display
-panel, inspector panel and inspectors are the core's, shared with 3D.
+panel, inspector panel and inspectors are the core's, shared with 3D. They live in react-ui-canvas-editor, with the
+engine's own chrome (`Toolbar`, `Breadcrumbs`, the panels `CanvasEditor` frames) and the 2D adapter (`Viewport2D`,
+`CanvasBridge`); react-ui-canvas keeps the surface.
 
 ```mdl
 component Canvas
   desc: >
-    The surface: one View under a camera, with the control frame over it and, when it runs on its own, its tool
-    rail, toolbar, breadcrumbs and inspector panels around it. Owns the pointer state machine, the key table and navigation between
-    depths; commands live in a React-free `CanvasController` organised by aspect (selection, editing,
-    tools, time, navigation, look). Owns NO model — every change leaves through `projection.apply`,
-    inside a `history.commit`.
+    The surface: one View of the document under a camera, with the control frame over it. `Canvas.Root`
+    takes the document and the scene to draw and builds the engine's draw state from it; react-ui-canvas-editor's
+    `CanvasEditor` sets the tool rail, toolbar, breadcrumbs and inspector panels around it through the `shell`
+    slot. Owns the pointer state machine, the key table and navigation between depths; commands live in a
+    React-free `CanvasController` organised by aspect (selection, editing, tools, time, navigation, look). Owns
+    NO model — every change leaves through `onIntent`, `onModelIntent` or `onTransaction`, after the layout's
+    mode (`constrain`).
   props:
-    store: ViewStore
-    root: ViewId                      # the root View
+    document: SceneDocument
+    scene?: string                    # the scene drawn; the document's root scene when unset
+    onIntent?: (layout, intent: LayoutIntent) => void    # without it the view only draws
+    onModelIntent?: (intent: ModelIntent) => void
+    onTransaction?: (change: () => void) => void        # one undo step for a write that lands twice
+    constrain?: ConstrainIntent       # the layout's mode, applied to every write
     nodes?: NodeRegistry              # defaults to the built-ins
     links?: LinkRegistry
-    createProjection?: (options) => Projection     # per View; freehand by default
-    projection?: Projection           # a host-owned one instead, shared with its panels
-    history?: CanvasHistory | CreateHistory        # local by default
+    capabilities?: Capabilities
     atoms?: CanvasAtoms               # externally owned canvas state (two canvases, a persisted camera)
     grid?: number                     # minor spacing in scene px (16)
     readonly?: boolean
-    inspectors?: InspectorMode
+    hostKeys?: Set<KeyAction>         # shortcuts the host handles itself
+    shell?: Component<CanvasShellProps>                 # what the view sits in; a plain frame when unset
   state:
     camera: Camera
     path: ViewId[]                    # root to the View being edited; its length is the depth
@@ -433,7 +435,7 @@ component Breadcrumbs
   desc: >
     The path from the root View to the View being edited; a click drills out to that level. An Object
     in isolation reads `Objects › <name>`.
-  props: { path: ViewId[], store }
+  props: { path: ViewId[], nameOf, onSelect }
 ```
 
 ```mdl
@@ -459,11 +461,11 @@ component PartEditor
 component Viewport2D
   desc: >
     The 2D viewport the editor draws (`createViewport2D`): `Canvas.Root` and `Canvas.Viewport` over the open scene's
-    2D layouts read as Views. It mirrors the editor's selection, tool, drill path, camera, snap, axes and guides into
-    the engine's atoms and the engine's changes back, and turns each store write into intents. As a picture it draws
+    2D layouts. It mirrors the editor's selection, tool, drill path, camera, snap, axes and guides into
+    the engine's atoms and the engine's changes back, and hands the engine the editor's intent writers. As a picture it draws
     transparent and read-only, with no grid, snap, axes, guides or context menu.
   props:
-    options: Viewport2DOptions        # the host's node types, mode (projection), generators and live depth
+    options: Viewport2DOptions        # the host's node types, mode (`constrain`), generators and live depth
 ```
 
 ```mdl
@@ -475,9 +477,11 @@ component CanvasBridge
 
 ## Operations
 
-The projection seam IS the operation surface: these are the only ways the model changes, and every one
-of them is a value the view hands to `projection.apply`. `reduceIntent` is freehand's semantics as a
-pure reducer, which is what makes them testable without a DOM.
+Each operation is a `SceneEdit`, a pure function of the open render list (`moveNodes`, `resizeTo`, `insertLink`,
+`insertNode`, `deleteElements`, `reorderElement`, `updateElement`, `arrangeScene`, chained by `chainEdits`), which is
+what makes them testable without a DOM. A gesture or a command hands one to `DrawScene.apply`; the layout's mode may
+rewrite or refuse it, and what it leaves in the draw state reaches the host as layout intents. These are the only
+ways the view changes the model.
 
 ```mdl
 op move
@@ -508,7 +512,7 @@ op link
     link: Link
   output: View
   errors:
-    unknownNode: an end names a node not in the View — the intent is dropped, not partially applied
+    unknownNode: an end names a node not in the View — the edit is dropped, not partially applied
     selfLink: both ends are the same node
 ```
 
@@ -524,7 +528,7 @@ op create
 op delete
   desc: >
     Remove nodes and links by id. A link loses its meaning with either end, so deleting a node deletes
-    its links too — the projection does this, never the view.
+    its links too — the edit does this, never the view.
   input:
     ids: ElementId[]
   output: View
@@ -571,9 +575,9 @@ op update
 
 ```mdl
 op batch
-  desc: Several intents as ONE model change, so a paste or a drill-in fix-up is one undo step.
+  desc: Several edits as ONE model change (`chainEdits`), so a paste or a drill-in fix-up is one undo step.
   input:
-    intents: Intent[]
+    edits: SceneEdit[]
   output: View
 ```
 
@@ -581,9 +585,9 @@ op batch
 op layout
   desc: >
     Arrange the View into ranked rows along its links, through `@dxos/diagram`'s ranking — the engine
-    the dynamic projection already lays its graph out with, rather than a second one. Unlike the old
+    the dynamic mode already lays its graph out with, rather than a second one. Unlike the old
     editor's `@antv` layout it keeps every node: type, size and content are untouched and only the
-    centre moves. An intent rather than a view action, so a projection that owns its own positions may
+    centre moves. An edit rather than a view action, so a mode that owns its own positions may
     rewrite or refuse it, and a read-only view cannot invoke it.
   input:
     ids?: ElementId[]                 # absent: the whole View
@@ -657,9 +661,9 @@ feat F-3: Selection and editing
   req F-3.9: Double-click edits a node's text part in place; Enter commits, Escape rejects.
   req F-3.10: The engine's properties form edits the selected element's own schema through `update` intents,
     `style.fontSize` among them: set, it overrides the view's own size class for every text part.
-  req F-3.11: A `view` node's View field picks any View of the store for it to open, so several nodes may
+  req F-3.11: A `view` node's View field picks any View of the drawing for it to open, so several nodes may
     share one View; a View that would open the current path again is not offered (`viewOptions`).
-  req F-3.12: Style classes are named looks kept beside the Views (`ViewStore.styles`), read from the root model's
+  req F-3.12: Style classes are named looks kept beside the Views (`DrawState.styles`), read from the root model's
     named styles: an element
     naming one in `class` derives its style or line from it. Taking a class drops the element's own
     look; editing a classed element's look edits the class, so every element of it changes together.
@@ -681,11 +685,11 @@ feat F-4: Undo and clipboard
   The engine's own history and clipboard, used where it runs on its own; inside the editor the core's replace them
   ([F-10.3]).
   req F-4.1: Every committed edit — a gesture at pointer-up, a panel edit, a key command, a controller
-    command — is one undo entry of field-level patches between the store's heads before and after it.
+    command — is one undo entry of field-level patches between the draw state's heads before and after it.
     Undo writes a field back only while it still holds the value the edit wrote; a field changed since by
     someone else, or an element deleted since, is skipped and the undo reports itself partial.
-  req F-4.2: Undo and redo patch a projection's own model (`Projection.model`) with the store, and call
-    `restored`, so the compute projection takes its nodes and edges along.
+  req F-4.2: Undo and redo patch the draw state alone; a layout field a mode writes (constraints, a lattice)
+    travels in the host's layout intents and is undone by the host's history with them ([D-22]).
   req F-4.3: Cut / copy / paste use a per-canvas clipboard: fresh ids, links rewired between the pasted
     nodes only, applied as one `batch`. A cut keeps a copy of the records its nodes open, so the paste
     after a cut restores them.
@@ -701,7 +705,7 @@ feat F-4: Undo and clipboard
 ```mdl
 feat F-5: Read-only
   req F-5.1: `readonly` lets the view select, pan, zoom and drill, and nothing else.
-  req F-5.2: No handle, port, tool or toolbar edit is drawn or reachable, whatever the projection's
+  req F-5.2: No handle, port, tool or toolbar edit is drawn or reachable, whatever the layout's
     capabilities would allow — the stricter of the two wins.
 ```
 
@@ -718,15 +722,13 @@ feat F-6: Open registry
 
 ```mdl
 feat F-7: Persistence (M4)
-  req F-7.1: `createEchoStore(board)` maps nodes to `CanvasBoard.layout.nodes` and links to
-    `layout.edges`, deriving `z` from array order on first read, so every board written by the old
-    editor opens unchanged.
-  req F-7.2: The store is the only seam that changes: `Canvas` takes the ECHO store exactly as it
-    takes the memory one.
-  req F-7.3: `plugin-conductor`'s `CanvasArticle` renders `Canvas` with the compute projection over
-    that store.
-  req F-7.4: (planned) react-ui-canvas-compute and plugin-conductor move onto the scene model and the shared
-    editor.
+  req F-7.1: `createBoardStore(board)` reads a `CanvasBoard` as a 2D layout, its `layout.nodes` the shapes and
+    `layout.edges` the links, deriving `z` from array order, so every board written by the old editor opens
+    unchanged.
+  req F-7.2: The document is the only seam: `Canvas.Root` takes a scene document and writes it only through its
+    intent handlers, whatever stores it.
+  req F-7.3: `plugin-conductor`'s compute board renders `SceneEditor` with the compute kinds over the board's
+    scene document.
 ```
 
 ```mdl
@@ -747,7 +749,7 @@ feat F-8: Links between shapes
 feat F-9: Views, Objects and Tags
   The containers of the Ontology, and the two panels that show them: Views for the hierarchy, Objects
   for the library.
-  req F-9.1: A stored `frame` node reads as `view`, on load, in every store; the next write stores it as
+  req F-9.1: A stored `frame` node reads as `view`, on load, in every document; the next write stores it as
     `view`.
   req F-9.2: Group (⌘G) moves the selected nodes, and the links between them, into an anonymous Object
     (`View.anonymous`) and places one Instance of it over their bounds; a link crossing out of the group
@@ -759,7 +761,7 @@ feat F-9: Views, Objects and Tags
     Instance, a duplicate), adds it to the library.
   req F-9.5: Deleting the last node that opens a View, or an anonymous Object's last Instance, deletes
     the record in the same undo step. A record is kept while it is reachable from the root, a
-    store-declared root, or a named Object; records already orphaned are dropped on load. There is no
+    declared root, or a named Object; records already orphaned are dropped on load. There is no
     "Unplaced" bin.
   req F-9.6: (planned) Tags replace layers: hidden or locked is the union over an element's tags, opacity
     the product; layers and `node.layer` migrate to tags on load, and the drawn result is the same
@@ -776,10 +778,10 @@ feat F-9: Views, Objects and Tags
 
 ```mdl
 feat F-10: The 2D viewport in the editor
-  req F-10.1: The viewport reads the open scene's 2D layouts as Views, the scene's layout first as the root, a
-    composite element as a `view` node over its parts layout's View; 3D layouts are left out, and nothing stores the
-    Views.
-  req F-10.2: The engine writes its store once per gesture, and the viewport turns that write into one
+  req F-10.1: The engine reads the open scene's 2D layouts as render lists, the scene's layout first as the root, a
+    composite element as a `view` node over its parts layout's list; 3D layouts are left out, and nothing stores the
+    lists.
+  req F-10.2: The engine writes its draw state once per gesture, and the viewport turns that write into one
     `LayoutIntent` per changed layout, a new layout for a View the document has none for (a new portal's), and a
     `ModelIntent` defining the object a new composite places in the root's model, all as one undo step.
   req F-10.3: Inside the editor the engine leaves copy, cut, paste, duplicate, undo, redo, group and ungroup to the
@@ -839,7 +841,7 @@ feat F-14: 2D styles and composites
 
 ```mdl
 feat F-15: Modes
-  req F-15.1: The host's mode is the engine's projection over the Views (freehand when unset; lattice, constrained,
+  req F-15.1: The host's mode is the engine's `constrain` rule over the layout (freehand when unset; lattice, constrained,
     dynamic and scored as the host passes them), with its generators.
   req F-15.2: A dynamic layout (`arrange` of kind `dynamic`) is its own graph: its shapes are the nodes and its links
     the edges. A shape a person moves is pinned where it lands, and an edit that adds or removes a shape or link
@@ -856,7 +858,7 @@ feat F-15: Modes
   req F-15.4: A layout's mode is a rule between an edit and its write, which the editor applies to every write (a
     drag, a command, a paste, the Properties form). A layout with a `lattice` snaps every frame onto whole cells
     while snapping is on and refuses an edit that would overlap another shape's cells; a drag the mode refuses or
-    moves is drawn as stored. A host's own projection owns the mode instead.
+    moves is drawn as stored. A host's own `constrain` owns the mode instead.
   req F-15.7: A move follows the pointer, and on each axis a moved shape is held where it would snap (the major grid,
     or its landing cell on a lattice) while within a detent of it, so it clicks into place and out again rather than
     jumping there. A freehand drop lands where the shape is drawn; a lattice drop lands on its cells. On a lattice a smart link
@@ -907,21 +909,20 @@ Conventions this engine's code must hold that a linter cannot express; each bloc
 agentic-review harness.
 
 ```mdl
-rule intents-not-coordinates: The surface emits intents; only a projection writes coordinates
-  Every model change leaves the view through `projection.apply(intent)`. A component under
-  `src/components` must not write `center`, `size`, `z`, `points` or an endpoint into a View, a
-  store or a node object — not through `updateView`, not by constructing a `View` and putting it
-  back, not by mutating a node it read from the projection. Transient gesture state (the `drag`
-  atom's `delta`, `bounds`, `points`, a preview node or link that is never applied) is exactly what
-  that state is for and is not a violation. Flag a component that reaches `store`/`updateView`/
-  `putView` to change geometry, or that calls `reduceIntent` itself instead of applying an intent.
-  Do not flag projections (`src/model/projections/**`, `src/model/projection.ts`), stores, or a host's
-  own projection outside this package.
+rule intents-not-coordinates: The surface applies edits; only an edit writes coordinates
+  Every change a component makes leaves through `DrawScene.apply(edit)` with a `SceneEdit`, and
+  reaches the host as layout intents. A component under `src/components` must not write `center`,
+  `size`, `z`, `points` or an endpoint into a render list, the draw state or a node object — not
+  through `updateView`, not by building a list and putting it back, not by mutating a node it read
+  from the scene. Transient gesture state (the `drag` atom's `delta`, `bounds`, `points`, a preview
+  node or link that is never applied) is exactly what that state is for and is not a violation. Flag
+  a component that calls `updateView` or sets `DrawState.views` to change geometry. Do not flag the
+  engine (`src/engine/**`) or the edits themselves.
   scope: dir
   files:
     - src/components/**/*.tsx
     - src/components/**/*.ts
-  grep: updateView|putView|reduceIntent
+  grep: updateView|\.views\b
   severity: error
 ```
 
@@ -991,15 +992,15 @@ scenario T-4: Read-only
 ```
 
 ```mdl
-scenario T-5: Undo across a projection
+scenario T-5: Undo across a constrained layout
   given: the Constrained story
-  when: moving a node (which the projection rewrites into constraints), then pressing ⌘Z
-  then: both the positioned View and the constraint list return to their previous state in one step
+  when: moving a node (which the mode re-relates by constraints), then pressing ⌘Z
+  then: both the positions and the constraint list return to their previous state in one step
 ```
 
 ```mdl
 scenario T-6: An existing board opens unchanged (M4)
-  given: a `CanvasBoard` written by `react-ui-canvas-editor`, with nodes and edges in `layout`
+  given: a `CanvasBoard` written by the legacy canvas editor, with nodes and edges in `layout`
   when: opening it in the plugin on the scene engine
   then: every node keeps its position and size, every edge its ends, and the z-order matches the array
     order it was stored in
@@ -1603,6 +1604,24 @@ decision D-58: A groove is one shape, the track and its heads less the inside of
   rejected:
     - Ordering the nudged copies by layer, which still stacks translucent lips and still draws the track's lip in the hollow.
     - A blur or lighting filter per link, which costs far more on a large drawing.
+```
+
+```mdl
+decision D-59: The engine reads the document into its own draw state (`DrawState`, render lists by id), edits it in memory as `SceneEdit`s through `DrawScene.apply`, and leaves every change as `LayoutIntent`s through the host's `constrain`; `Canvas.Root` takes the document, not a store, and the `ViewStore`, `Projection` and `Intent` this spec described are retired. Fills in [D-1].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [DrawState, DrawScene, Canvas, Viewport2D, F-4.1, F-4.2, F-5.2, F-7, F-10.1, F-10.2, F-15.1, F-15.4, intents-not-coordinates, T-5]
+  why: The code retired the View store, the projections and their intent in favour of the draw state (D-1 carried to completion); the spec follows the code.
+```
+
+```mdl
+decision D-60: The engine's own toolbar, breadcrumbs and inspector panels, and the 2D adapter (`Viewport2D`, `CanvasBridge`), are react-ui-canvas-editor's; `CanvasEditor` sets the chrome around `Canvas.Root` through its `shell` slot, and react-ui-canvas keeps the surface. Fills in [D-59] and [org.dxos.ui.react-ui-canvas#D-40].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Canvas, Toolbar, Breadcrumbs, Viewport2D, CanvasBridge]
+  why: The chrome and the adapter are editor application parts, which the package split puts beside the editor.
 ```
 
 ---
