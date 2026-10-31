@@ -891,6 +891,13 @@ feature code-index: CodeIndex
 ### New features
 
 ```mdl
+feature app-framework.edge-plugins: EDGE-side plugins
+  status: planned
+  specs: [packages/sdk/app-framework/docs/EDGE-PLUGINS.mdl]
+  note: The same plugins that run in Composer are deployed to EDGE, loaded into Dynamic Workers, and expose their types, skills and operations there, replacing operation-service.
+```
+
+```mdl
 feature plugin-zen.sleep-fade: Timed Dreams fade out instead of stopping
   status: operational
   specs: [packages/plugins/plugin-zen/PLUGIN.mdl#F-6]
@@ -946,4 +953,11 @@ decision D-5: plugin-labeler is merged into plugin-inbox; its spec moves to plug
   by: user:dmaretskyi
   affects: [plugin-inbox, plugin-labeler]
   why: Triage only ever acts on a mailbox, and as a separate opt-in plugin it was off wherever inbox was on.
+```
+
+```mdl
+decision D-6: Add app-framework.edge-plugins — the same plugins that run in Composer run on EDGE, specified by EDGE-PLUGINS.mdl.
+  date: 2026-10-29
+  by: user:dmaretskyi
+  affects: [app-framework.edge-plugins]
 ```
