@@ -271,6 +271,26 @@ export const Image: Story = {
 export const Canvas2D: Story = { decorators: withScenes(EXEMPLARS.links) };
 
 /**
+ * A 2D canvas whose B is a frame onto a nested layout (X → Y), as the legacy `NestedSimple` story draws one.
+ *
+ * Test:
+ * 1. B draws X → Y scaled to fill the frame.
+ * 2. Double-click B: the view zooms into it and the breadcrumbs (top left) read `⌂ › B detail`.
+ * 3. Escape, Up or the home crumb drills back out.
+ * 4. The animation panel is hidden until the display panel's Timeline toggle shows it.
+ */
+export const Nested2D: Story = { decorators: withScenes(EXEMPLARS.subscene) };
+
+/**
+ * A 3D canvas whose glass shell is a composite (a hub and four spokes).
+ *
+ * Test:
+ * 1. Double-click the shell: its parts open with the rest faded, and the breadcrumbs read `⌂ › cluster`.
+ * 2. Escape or the home crumb goes back out.
+ */
+export const Nested3D: Story = { decorators: withScenes(EXEMPLARS.encapsulated) };
+
+/**
  * A 3D canvas, a single plain cube written in `.dx`, under the same floating panels as 2D.
  * 1. Click selects; Move, Rotate or Scale puts a gizmo on it; Undo and Redo step back and forth.
  * 2. Orbit (or the middle button) orbits; shift or the right button pans; the wheel zooms.

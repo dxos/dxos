@@ -122,6 +122,7 @@ const EditorView = ({ db }: ViewProps) => {
       onDisplayChange={handleDisplayChange}
       shots={shots}
       onShotChange={handleShotChange}
+      timeline
     >
       <SceneEditor.Viewport>
         <SceneEditor.Tools />

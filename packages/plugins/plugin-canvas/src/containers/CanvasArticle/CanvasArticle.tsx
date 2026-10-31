@@ -101,6 +101,7 @@ const SceneEditorArticle = <C,>({ canvas, role, host, dimension }: SceneEditorAr
           >
             <CanvasEditCommands element={element} />
             <SceneEditor.Viewport>
+              <SceneEditor.Navigation />
               <SceneEditor.Tools />
               <SceneEditor.Actions />
               <SceneEditor.Camera />
