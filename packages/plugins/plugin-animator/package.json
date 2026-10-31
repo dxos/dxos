@@ -1,7 +1,6 @@
 {
   "name": "@dxos/plugin-animator",
   "version": "0.16.0",
-  "private": true,
   "description": "Animations over objects other plugins own: shots, timelines, declarative scripts and stages.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

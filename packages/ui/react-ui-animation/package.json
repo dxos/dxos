@@ -1,7 +1,6 @@
 {
   "name": "@dxos/react-ui-animation",
   "version": "0.16.0",
-  "private": true,
   "description": "Timeline controls and clock hooks for @dxos/animation.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
