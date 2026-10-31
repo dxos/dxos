@@ -60,6 +60,9 @@ const config: Plugin.PluginConfig = Plugin.config({
       requires: [AppCapabilities.AppGraph],
       activatesOn: MarkdownEvents.Start,
     }),
+    AppCapability.exporter(() => import('./src/capabilities/exporter.ts', { with: { type: 'module-url' } }), {
+      activatesOn: MarkdownEvents.Start,
+    }),
     AppCapability.commentConfig(
       () => import('./src/capabilities/comment-config.ts', { with: { type: 'module-url' } }),
       {

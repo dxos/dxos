@@ -48,6 +48,7 @@ export default defineConfig({
     'echo/TypeOptions': 'src/echo/TypeOptions.ts',
     'operations/CollaborationOperation': 'src/operations/CollaborationOperation.ts',
     'operations/CollectionOperation': 'src/operations/CollectionOperation.ts',
+    'operations/ExportOperation': 'src/operations/ExportOperation.ts',
     'operations/LayoutOperation': 'src/operations/LayoutOperation.ts',
     'operations/NavigationOperation': 'src/operations/NavigationOperation.ts',
     'operations/SettingsOperation': 'src/operations/SettingsOperation.ts',

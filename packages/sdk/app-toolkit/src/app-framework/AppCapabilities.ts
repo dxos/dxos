@@ -375,6 +375,31 @@ export type TextContent = Readonly<{
  */
 export const TextContent = Capability$.make<TextContent>()('org.dxos.app-framework.capability.textContent');
 
+/** A file an object is saved as. */
+export type ExportFile = Readonly<{
+  /** File extension without the dot (e.g. `md`); the file is named after the object's label. */
+  extension: string;
+  mimeType: string;
+  content: string | Blob;
+}>;
+
+/**
+ * Print and save contributed per typename by plugins whose objects can leave the app.
+ * Contributing one adds Print and/or Save to the object's article menu (`ExportOperation`).
+ */
+export type Exporter = Readonly<{
+  id: string;
+  /** The object as a file in its native format (e.g. `.md`, `.csv`). */
+  save?: (object: any) => Effect$.Effect<ExportFile, Error>;
+  /** The object as an HTML fragment, which the browser prints (or saves as PDF). */
+  print?: (object: any) => Effect$.Effect<string, Error>;
+}>;
+
+/**
+ * @category Capability
+ */
+export const Exporter = Capability$.make<Exporter>()('org.dxos.app-framework.capability.exporter');
+
 /** Comment configuration contributed per typename by plugins that support commenting. */
 export type CommentConfig = Readonly<{
   id: string;
