@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { Aggregate, Annotation, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Aggregate, Annotation, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { EchoTestBuilder, type EchoTestPeer } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
@@ -138,6 +138,32 @@ describe('Parent Hierarchy', () => {
     expect(Obj.isDeleted(child)).toEqual(true);
 
     expect(() => db.add(child)).toThrow();
+  });
+
+  test('a deletion verdict read before a dependency is deleted is not reused after', async () => {
+    await using peer = await builder.createPeer({
+      types: [TestSchema.Person, TestSchema.Organization, TestSchema.EmployedBy],
+    });
+    await using db = await peer.createDatabase();
+    const grandparent = db.add(Obj.make(TestSchema.Organization, { name: 'Grandparent' }));
+    const parent = db.add(Obj.make(TestSchema.Person, { [Obj.Parent]: grandparent, name: 'Parent' }));
+    const child = db.add(Obj.make(TestSchema.Person, { [Obj.Parent]: parent, name: 'Child' }));
+    const organization = db.add(Obj.make(TestSchema.Organization, { name: 'Employer' }));
+    const employment = db.add(
+      Relation.make(TestSchema.EmployedBy, {
+        [Relation.Source]: child,
+        [Relation.Target]: organization,
+        role: 'employee',
+      }),
+    );
+    expect(Obj.isDeleted(child)).to.be.false;
+    expect(Relation.isDeleted(employment)).to.be.false;
+
+    db.remove(organization);
+    expect(Relation.isDeleted(employment)).to.be.true;
+
+    db.remove(grandparent);
+    expect(Obj.isDeleted(child)).to.be.true;
   });
 
   test('deleted parent implies deleted child', { timeout: 30_000 }, async () => {
