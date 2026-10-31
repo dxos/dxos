@@ -3,7 +3,7 @@
 //
 
 import { QueryAST } from '@dxos/echo-protocol';
-import { SpaceId } from '@dxos/keys';
+import { EID, SpaceId } from '@dxos/keys';
 
 /**
  * Lists spaces this query will select from.
@@ -184,6 +184,67 @@ export const isSimpleSelectionQuery = (
     }
   }
 };
+
+/**
+ * The parents a query selects under, for a query whose membership is otherwise decided by each object's own
+ * document: a select with `child-of` conjuncts, or the children of a by-id selection. Undefined for any other shape.
+ */
+export type HierarchyScope = {
+  /** Ids of the parents members sit under. */
+  anchors: ReadonlySet<string>;
+  /** How many parent hops a member may sit below an anchor. */
+  depth: number;
+};
+
+/** Matches the executors' `child-of` walk. */
+const MAX_CHILD_OF_DEPTH = 10;
+
+export const getHierarchyScope = (query: QueryAST.Query): HierarchyScope | undefined => {
+  switch (query.type) {
+    case 'options':
+      return getHierarchyScope(query.query);
+    case 'from':
+      return query.from._tag === 'scope' ? getHierarchyScope(query.query) : undefined;
+    case 'filter':
+      return isOwnDocumentFilter(query.filter) ? getHierarchyScope(query.selection) : undefined;
+    case 'select':
+      return childOfScope(query.filter);
+    case 'hierarchy-traversal': {
+      const anchor = query.anchor;
+      if (query.direction !== 'to-children' || anchor.type !== 'select' || anchor.filter.type !== 'object') {
+        return undefined;
+      }
+      const ids = anchor.filter.id ?? [];
+      return ids.length > 0 ? { anchors: new Set(ids), depth: 1 } : undefined;
+    }
+    default:
+      return undefined;
+  }
+};
+
+const childOfScope = (filter: QueryAST.Filter): HierarchyScope | undefined => {
+  const conjuncts = filter.type === 'and' ? filter.filters : [filter];
+  const anchors = new Set<string>();
+  let depth = 0;
+  for (const conjunct of conjuncts) {
+    if (conjunct.type === 'child-of') {
+      for (const parent of conjunct.parents) {
+        const id = EID.getEntityId(parent);
+        if (id) {
+          anchors.add(id);
+        }
+      }
+      depth = Math.max(depth, conjunct.transitive ? MAX_CHILD_OF_DEPTH : 1);
+    } else if (!isOwnDocumentFilter(conjunct)) {
+      return undefined;
+    }
+  }
+  return depth > 0 ? { anchors, depth } : undefined;
+};
+
+/** Whether each object's own document decides the filter. */
+const isOwnDocumentFilter = (filter: QueryAST.Filter): boolean =>
+  !filterContainsTimestamp(filter) && !filterContainsChildOf(filter) && !filterContainsInQuery(filter);
 
 /**
  * Whether the query selects from spaces or feeds — the data that space-backed sources
