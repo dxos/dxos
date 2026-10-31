@@ -7,7 +7,7 @@ import { Context } from '@dxos/context';
 import { type Entity, Feed, type Obj } from '@dxos/echo';
 import { filterMatchDoc } from '@dxos/echo-host/filter';
 import { GroupBy, QueryPlanner, queryContainsChanges } from '@dxos/echo-host/query';
-import { type EntityStructure, QueryAST } from '@dxos/echo-protocol';
+import { EncodedReference, type EntityStructure, QueryAST } from '@dxos/echo-protocol';
 import { resolveMergeRedirect } from '@dxos/echo/internal';
 import { EID, EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -18,6 +18,8 @@ import { type DatabaseImpl } from '../proxy-db/index.ts';
 import { type MergePlan, createMergePlan, evaluateCore, matchesFeedSelection, ordersLocally } from './merge-plan.ts';
 import { type SourceEntry } from './query-context.ts';
 import {
+  type HierarchyScope,
+  getHierarchyScope,
   getTargetFeedBranchesForQuery,
   getTargetSpacesForQuery,
   isSimpleSelectionQuery,
@@ -48,6 +50,10 @@ export class WorkingSetView {
   readonly #windowEvaluation = new WeakMap<QueryAST.Query, boolean>();
   /** Present when a write can be applied to cached results as a delta instead of a full recompute. */
   #delta?: { filter: QueryAST.Filter; options: QueryAST.QueryOptions | undefined } = undefined;
+  /** Present when only writes under the query's parents can change it, so the rest skip a working-set scan. */
+  #hierarchy?: HierarchyScope = undefined;
+  /** Non-members whose writes can still change {@link _results}, keyed by the results they were derived from. */
+  #hierarchyReads?: { results: SourceEntry<Obj.Any>[]; ids: ReadonlySet<string> } = undefined;
   /** Present when the query selects from feeds: their unacknowledged writes, which no index has seen yet. */
   #feedTail?: FeedTail = undefined;
   /** Which of the feed tail's writes match, kept current one write at a time. */
@@ -217,6 +223,8 @@ export class WorkingSetView {
     }
     this._query = query;
     this.#delta = deltaFor(query);
+    this.#hierarchy = getHierarchyScope(query);
+    this.#hierarchyReads = undefined;
     this._database._updateEvent.on(this._ctx, this._onUpdate);
     this.changed.emit();
   }
@@ -331,9 +339,13 @@ export class WorkingSetView {
     // before the write returns, rather than at whatever later event first computes its results.
     const resultIds = new Set((this._results ?? []).map((result) => result.id));
     const query = this._query;
+    const hierarchyReads = this._results && this.#hierarchy && this.#readsUnder(this._results, this.#hierarchy);
     const changed = updateEvent.itemsUpdated.some(({ id: objectId }) => {
       if (resultIds.has(objectId)) {
         return true;
+      }
+      if (hierarchyReads && this.#hierarchy) {
+        return hierarchyReads.has(objectId) || this.#isUnder(objectId, this.#hierarchy);
       }
       // A simple selection decides a written object by its own document; anything else recomputes.
       const simple = isSimpleSelectionQuery(query);
@@ -349,6 +361,51 @@ export class WorkingSetView {
       this.changed.emit();
     }
   };
+
+  /**
+   * The non-members whose writes can re-parent or delete members: the anchors, their ancestors, and the objects
+   * between each member and its anchor. Any other write matters only if it lands under an anchor ({@link #isUnder}).
+   */
+  #readsUnder(results: SourceEntry<Obj.Any>[], { anchors, depth }: HierarchyScope): ReadonlySet<string> {
+    if (this.#hierarchyReads?.results === results) {
+      return this.#hierarchyReads.ids;
+    }
+    const ids = new Set<string>();
+    // Deletion reaches a member through any ancestor of its anchor.
+    for (const anchor of anchors) {
+      for (let id: string | undefined = anchor, hops = 0; id && hops <= MAX_DELETION_DEPTH; hops++) {
+        ids.add(id);
+        id = this.#parentId(id);
+      }
+    }
+    for (const { id: member } of results) {
+      let id = this.#parentId(member);
+      for (let hops = 1; id && !anchors.has(id) && hops < depth; hops++) {
+        ids.add(id);
+        id = this.#parentId(id);
+      }
+    }
+    this.#hierarchyReads = { results, ids };
+    return ids;
+  }
+
+  /** Whether the object sits within the scope's depth below one of its anchors, as the executors walk it. */
+  #isUnder(id: string, { anchors, depth }: HierarchyScope): boolean {
+    let parent = this.#parentId(id);
+    for (let hops = 1; parent && hops <= depth; hops++) {
+      if (anchors.has(parent)) {
+        return true;
+      }
+      parent = this.#parentId(parent);
+    }
+    return false;
+  }
+
+  #parentId(id: string): string | undefined {
+    const ref = this.coreById(id)?.getParent();
+    const eid = ref && EncodedReference.isEncodedReference(ref) ? EID.tryParse(EncodedReference.toURI(ref)) : undefined;
+    return eid && EID.getEntityId(eid);
+  }
 
   /**
    * Applies written objects to the cached results, in the natural (id) order a full recompute produces, so a
@@ -464,6 +521,9 @@ export class WorkingSetView {
     );
   }
 }
+
+/** Matches `ObjectCore.isDeleted`'s walk over strong dependencies. */
+const MAX_DELETION_DEPTH = 10;
 
 const evaluatesOrderOnly = (query: QueryAST.Query): boolean => {
   let local = true;
