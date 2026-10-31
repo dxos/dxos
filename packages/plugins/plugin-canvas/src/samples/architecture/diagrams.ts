@@ -3,17 +3,26 @@
 //
 
 import { type ContentMap } from '@dxos/diagram';
-import { type Database, Ref, type Type } from '@dxos/echo';
+import { type Database, type Type } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 
 import {
   CanvasLayoutBuilder,
+  type LinkRecord,
+  type SceneRecord,
+  clone,
   editCanvasContent,
   elementId,
+  isLinkRecord,
   isNodeRecord,
+  linkKey,
   makeCanvas,
   nodeKey,
+  putNodeRecord,
   readCanvasContent,
+  rootOf,
+  sceneKey,
+  sceneRecordOf,
   setLayoutLattice,
 } from '#model';
 import { Canvas } from '#types';
@@ -138,25 +147,80 @@ export const loadDiagramDrawings = async (
     });
   }
 
-  for (const [id, drills] of Object.entries(set.drills)) {
-    editDrawingContent(drawings.get(id), (content) => {
-      for (const [box, target] of Object.entries(drills)) {
-        // A semantic node compiles to the element `box` of the object it names.
-        const nodeId = elementId(box, 'box');
-        const record = content[nodeKey(nodeId)];
-        const child = drawings.get(target);
-        if (!isNodeRecord(record) || !child) {
-          continue;
-        }
-        // The box becomes a frame in place, so its links stay attached; the frame opens the child drawing.
-        content[`scene:${box}`] = { kind: 'scene', id: box };
-        content[nodeKey(nodeId)] = {
-          ...record,
-          node: { ...record.node, type: 'view', scene: box, link: { object: Ref.make(child) } },
-        };
-      }
-    });
+  // Each drawing's own diagram, read before any nesting, is what a box that drills into it shows.
+  const own = new Map([...drawings].map(([id, drawing]) => [id, readDrawingContent(drawing)]));
+  for (const [id, drawing] of drawings) {
+    if (!set.drills[id]) {
+      continue;
+    }
+    editDrawingContent(drawing, (content) => nestDrills(content, set, own, id, rootOf(content), new Set([id])));
+    // The nested scenes are new layouts, which take the lattice the drawing's own layout has.
+    const canvas = drawing.canvas.target;
+    Canvas.isCanvas(canvas) && setLayoutLattice(canvas, true);
   }
 
   return drawings;
+};
+
+/**
+ * Turns each drill-down box of `diagram` (in scene `scene` of `content`) into a frame onto a nested scene holding a copy
+ * of the diagram it names, recursively, so zooming into a box drills into that diagram in place and zooming out comes
+ * back. A copy rather than a link: a frame onto another drawing opens that drawing instead of drilling. The nested
+ * scene's id prefixes its records' ids, so a diagram reached on two paths does not collide with itself.
+ */
+const nestDrills = (
+  content: ContentMap,
+  set: DiagramSet,
+  own: ReadonlyMap<string, ContentMap>,
+  diagram: string,
+  scene: string | undefined,
+  visiting: ReadonlySet<string>,
+) => {
+  if (scene === undefined) {
+    return;
+  }
+  const prefix = scene === rootOf(content) ? '' : `${scene}.`;
+  for (const [box, target] of Object.entries(set.drills[diagram] ?? {})) {
+    // A semantic node compiles to the element `box` of the object it names.
+    const key = nodeKey(`${prefix}${elementId(box, 'box')}`);
+    const record = content[key];
+    const child = own.get(target);
+    const childRoot = child && rootOf(child);
+    if (!isNodeRecord(record) || !child || !childRoot || visiting.has(target)) {
+      continue;
+    }
+    const nested = `${prefix}${box}`;
+    const header = sceneRecordOf(child, childRoot);
+    content[sceneKey(nested)] = {
+      kind: 'scene',
+      id: nested,
+      name: set.names[target] ?? target,
+      ...(header?.layers ? { layers: clone(header.layers) } : {}),
+    } satisfies SceneRecord;
+    // The box becomes a frame in place, so its links stay attached.
+    content[key] = { ...record, node: { ...record.node, type: 'view', scene: nested } };
+    const rename = (id: string) => `${nested}.${id}`;
+    // An end attached to a node follows the node's new id; a free end (a point) stays where it is.
+    const renameEnd = (end: LinkRecord['link']['source']): LinkRecord['link']['source'] =>
+      'node' in end ? { ...end, node: rename(end.node) } : end;
+    for (const value of Object.values(child)) {
+      const copy: unknown = value;
+      if (isNodeRecord(copy) && copy.scene === childRoot) {
+        putNodeRecord(content, nested, { ...clone(copy.node), id: rename(copy.node.id) });
+      } else if (isLinkRecord(copy) && copy.scene === childRoot) {
+        const link = clone(copy.link);
+        content[linkKey(rename(link.id))] = {
+          kind: 'link',
+          scene: nested,
+          link: {
+            ...link,
+            id: rename(link.id),
+            source: renameEnd(link.source),
+            target: renameEnd(link.target),
+          },
+        } satisfies LinkRecord;
+      }
+    }
+    nestDrills(content, set, own, target, nested, new Set([...visiting, target]));
+  }
 };

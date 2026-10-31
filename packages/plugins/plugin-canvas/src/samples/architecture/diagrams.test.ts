@@ -5,10 +5,10 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { DEFAULT_LATTICE, nodeBounds, onLattice, quantize } from '@dxos/react-ui-canvas';
+import { DEFAULT_LATTICE, type RenderList2D, nodeBounds, onLattice, quantize } from '@dxos/react-ui-canvas';
 import { isViewNode } from '@dxos/scene';
 
-import { elementId, isNodeRecord, nodeKey, objectUri, readViews, rootOf } from '#model';
+import { elementId, isNodeRecord, objectUri, readViews, rootOf } from '#model';
 
 import { DIAGRAM_COMMANDS as files } from './compiled.ts';
 import {
@@ -46,13 +46,14 @@ describe('loadDiagramSet', () => {
       const content = readDrawingContent(root);
       return readViews(content)[rootOf(content) ?? '']?.nodes ?? {};
     };
+    // Each drill-down box is a frame onto a nested scene in the same canvas, so zooming into it drills in place.
     const drills = Object.keys(set.drills[set.root]).map((box) => elementId(box, 'box'));
-    const linked = () =>
+    const nested = () =>
       drills.filter((id) => {
         const node = rootNodes()[id];
-        return isViewNode(node) && objectUri(node) !== undefined;
+        return isViewNode(node) && objectUri(node) === undefined && node.scene !== undefined;
       });
-    await expect.poll(linked).toEqual(drills);
+    await expect.poll(nested).toEqual(drills);
 
     // The layout lands every box on a lattice cell, so links route along the gutters; group frames stay off it.
     const nodes = Object.values(rootNodes());
@@ -75,22 +76,39 @@ describe('loadDiagramSet', () => {
 
     // Composer's EDGE box opens the EDGE overview, and a detail diagram's box opens a third level.
     expect(set.drills.composer.Edge).toBe('edge');
-    for (const [parent, drills] of Object.entries(set.drills)) {
-      const drawing = drawings.get(parent);
-      const content = drawing ? readDrawingContent(drawing) : {};
-      for (const [box, target] of Object.entries(drills)) {
-        const record = content[nodeKey(elementId(box, 'box'))];
-        const node = isNodeRecord(record) ? record.node : undefined;
-        const uri = node && isViewNode(node) ? objectUri(node) : undefined;
-        const child = drawings.get(target);
-        // A stored reference is local to the space, so the object id is what names the drawing.
-        expect({ parent, box, target: uri?.split('/').at(-1) }).toEqual({
-          parent,
-          box,
-          target: child?.id,
-        });
+    const contentOf = (id: string) => {
+      const drawing = drawings.get(id);
+      if (!drawing) {
+        throw new Error(`The set has no ${id} drawing.`);
       }
-    }
+      return readDrawingContent(drawing);
+    };
+    const labelsOf = (scene: RenderList2D | undefined) =>
+      Object.values(scene?.nodes ?? {})
+        .flatMap((node) => ('label' in node && typeof node.label === 'string' ? [node.label] : []))
+        .sort();
+    const overview = contentOf('composer');
+    const root = rootOf(overview) ?? '';
+    const views = readViews(overview);
+
+    // Walks the drills from the overview, following each box into the scene it frames; a nested scene's ids carry
+    // its id as their prefix, so a diagram reached twice does not collide with itself.
+    const visit = (diagram: string, scene: string, depth: number): string[] =>
+      Object.entries(set.drills[diagram] ?? {}).flatMap(([box, target]) => {
+        const prefix = scene === root ? '' : `${scene}.`;
+        const node = views[scene]?.nodes[`${prefix}${elementId(box, 'box')}`];
+        const nested = node && isViewNode(node) ? node.scene : undefined;
+        expect({ box, name: nested && views[nested]?.name }).toEqual({ box, name: set.names[target] });
+        const content = contentOf(target);
+        expect(labelsOf(nested ? views[nested] : undefined)).toEqual(
+          labelsOf(readViews(content)[rootOf(content) ?? '']),
+        );
+        return [`${depth}:${set.names[target]}`, ...visit(target, nested ?? '', depth + 1)];
+      });
+    const reached = visit('composer', root, 0);
+    // The deepest path: Overview → CF Workers → db-service → Subduction.
+    expect(reached).toContain('2:Subduction');
+    expect(reached).toContain('1:echo-host');
   });
 
   test('every drawing styles plain boxes, group outlines and hues by the house rules', async () => {
