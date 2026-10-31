@@ -15,6 +15,7 @@ import { Scene } from '@dxos/scene';
 import { canvasDimension, sceneClipboardCodec } from '#model';
 import { Canvas } from '#types';
 
+import { useCanvasLoaded } from '../CanvasStage/index.ts';
 import { CanvasEditCommands } from './CanvasEditCommands.tsx';
 import { CanvasDatabaseContext } from './CanvasViewNodeView.tsx';
 import { type SceneDimension } from './dimension.ts';
@@ -39,6 +40,7 @@ type DimensionArticleProps = { canvas: Canvas.Canvas; role?: string };
 
 const DimensionArticle = ({ canvas, role }: DimensionArticleProps) => {
   useObject(canvas);
+  useCanvasLoaded(canvas);
   return canvasDimension(canvas) === '3d' ? (
     <CanvasArticle3D canvas={canvas} role={role} />
   ) : (

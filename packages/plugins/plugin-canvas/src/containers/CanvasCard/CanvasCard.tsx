@@ -17,7 +17,7 @@ import { Canvas as CanvasFormat } from '#types';
 
 import { CanvasDatabaseContext } from '../CanvasArticle/CanvasViewNodeView.tsx';
 import { useCanvasKinds, useCanvasNodes } from '../CanvasArticle/use-canvas-scene.ts';
-import { useSceneDocument } from '../CanvasStage/index.ts';
+import { useCanvasLoaded, useSceneDocument } from '../CanvasStage/index.ts';
 
 // The view's default fit margin (two major cells a side) would leave a card-sized view mostly empty.
 const CARD_MARGIN = 0.25;
@@ -35,6 +35,7 @@ type DimensionCardProps = { canvas: CanvasFormat.Canvas; extrinsic?: boolean };
 /** A 3D canvas's card shows its open scene through the 3D renderer; every other one through the 2D engine. */
 const DimensionCard = ({ canvas, extrinsic }: DimensionCardProps) => {
   useObject(canvas);
+  useCanvasLoaded(canvas);
   return canvasDimension(canvas) === '3d' ? (
     <Canvas3DCard canvas={canvas} extrinsic={extrinsic} />
   ) : (

@@ -14,8 +14,9 @@ import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import { random } from '@dxos/random';
-import { DEFAULT_CELL } from '@dxos/react-ui-canvas';
-import { toEcho } from '@dxos/scene';
+import { DEFAULT_CELL, fromRenderLists2D } from '@dxos/react-ui-canvas';
+import { createNestedDeepTree } from '@dxos/react-ui-canvas/testing';
+import { type Scene, toEcho } from '@dxos/scene';
 import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
 import { trim } from '@dxos/util';
 
@@ -49,13 +50,13 @@ const withDrawing = (
     },
   });
 
-/** A canvas over scenes written in `.dx`, opened through the illustrator's article as the app opens it. */
-const withScenes = (text: string) =>
+/** A canvas over a scene document, opened through the illustrator's article as the app opens it. */
+const withDocument = (document: Scene.SceneDocument) =>
   createStoryDecorators({
     types: [Drawing.Drawing, Drawing.Canvas, ...types],
     plugins: [IllustratorPlugin.make(), CanvasPlugin.make()],
     onInit: async ({ space }) => {
-      const stored = toEcho(Dsl.readScenes(text).document);
+      const stored = toEcho(document);
       [...stored.models.values(), ...stored.layouts.values(), ...stored.scenes.values()].forEach((object) =>
         space.db.add(object),
       );
@@ -76,6 +77,9 @@ const withScenes = (text: string) =>
       return [[Cell.article(drawing)]];
     },
   });
+
+/** A canvas over scenes written in `.dx`. */
+const withScenes = (text: string) => withDocument(Dsl.readScenes(text).document);
 
 const meta: Meta<typeof ModuleContainer> = {
   title: 'plugins/plugin-canvas/containers/CanvasArticle',
@@ -314,15 +318,32 @@ export const Image: Story = {
 export const Canvas2D: Story = { decorators: withScenes(EXEMPLARS.links) };
 
 /**
- * A 2D canvas whose B is a frame onto a nested layout (X → Y), as the legacy `NestedSimple` story draws one.
+ * A 2D canvas whose B is a labelled frame onto a nested layout (X → Y): a labelled frame shows its label, not its
+ * contents.
  *
  * Test:
- * 1. B draws X → Y scaled to fill the frame.
- * 2. Double-click B: the view zooms into it and the breadcrumbs (top left) read `⌂ › B detail`.
- * 3. Escape, Up or the home crumb drills back out.
- * 4. The animation panel is hidden until the display panel's Timeline toggle shows it.
+ * 1. Double-click B: the view zooms into it and the breadcrumbs (top left) read `⌂ › B detail`.
+ * 2. Escape, Up or the home crumb drills back out.
+ * 3. The animation panel is hidden until the display panel's Timeline toggle shows it.
  */
 export const Nested2D: Story = { decorators: withScenes(EXEMPLARS.subscene) };
+
+const nestedDeep = createNestedDeepTree();
+
+/**
+ * The legacy `NestedDeep` drawing, three levels deep: A, frame B and C; inside B, D, frame E, F and four boxes; inside
+ * E, X, Y, Z and their neighbours. B and E are unlabelled, so each frame draws its scene inside it.
+ *
+ * Test:
+ * 1. B draws D, E, F and the boxes inside its frame.
+ * 2. Pinch (or ctrl/cmd+wheel) in on B until it fills the view: the breadcrumbs read `⌂ › B`.
+ * 3. Keep pinching in on E: the breadcrumbs read `⌂ › B › E`.
+ * 4. Pinch out: E, then B, close, and the breadcrumbs return to `⌂`.
+ * 5. Double-click a frame drills in the same way; Escape, Up or a crumb drills out.
+ */
+export const NestedDeep2D: Story = {
+  decorators: withDocument(fromRenderLists2D(nestedDeep.views, { root: nestedDeep.root })),
+};
 
 /**
  * A 3D canvas whose glass shell is a composite (a hub and four spokes).
