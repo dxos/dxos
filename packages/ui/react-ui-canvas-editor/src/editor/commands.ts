@@ -36,6 +36,8 @@ export type CommandState = {
   canUngroup: boolean;
   /** The canvas has a model to extract an object into. */
   canMakeObject: boolean;
+  /** False when the host gives no codec, so the view keeps its own clipboard. */
+  clipboard?: boolean;
 };
 
 /** A command only one dimension offers, already bound to its editor. */
@@ -96,13 +98,14 @@ export const buildCommands = ({
 }): CommandTable => {
   const editable = !state.readonly;
   const some = editable && state.selection.length > 0;
+  const clipboard = state.clipboard !== false;
   const enabled: Record<SceneMenuCommand, boolean> = {
     'undo': editable && state.canUndo,
     'redo': editable && state.canRedo,
-    'cut': some,
-    'copy': state.selection.length > 0,
-    'paste': editable,
-    'duplicate': some,
+    'cut': clipboard && some,
+    'copy': clipboard && state.selection.length > 0,
+    'paste': clipboard && editable,
+    'duplicate': clipboard && some,
     'delete': some,
     'group': editable && state.selection.length > 1,
     'ungroup': editable && state.canUngroup,

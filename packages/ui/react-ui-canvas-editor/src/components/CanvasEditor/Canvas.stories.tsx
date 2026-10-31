@@ -30,7 +30,8 @@ import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 import { type Scene } from '@dxos/scene';
 
-import { CanvasEditor, type InspectorMode } from './CanvasEditor.tsx';
+import { CanvasEditor } from '../../dimensions/index.ts';
+import { type InspectorMode } from './CanvasInspectors.tsx';
 
 /**
  * Test:

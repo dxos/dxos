@@ -185,6 +185,7 @@ export const createCommandsAspect = <C>(
           canRedo: history?.canRedo ?? false,
           canUngroup: type === 'group',
           canMakeObject: model !== undefined && get(atoms.host).model,
+          clipboard: get(atoms.host).clipboard,
         },
         run,
         extras,

@@ -3,6 +3,5 @@
 //
 
 export * from './CanvasBars.tsx';
-export * from './CanvasEditor.tsx';
 export * from './CanvasInspectors.tsx';
 export * from './properties-section.ts';

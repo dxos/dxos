@@ -12,7 +12,7 @@ import { translations as formTranslations } from '@dxos/react-ui-form/translatio
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
-import { CanvasEditor } from './CanvasEditor.tsx';
+import { CanvasEditor } from '../../dimensions/index.ts';
 
 /** Commits per part, keyed by the Profiler id; read by the play function. */
 const commits = new Map<string, number>();

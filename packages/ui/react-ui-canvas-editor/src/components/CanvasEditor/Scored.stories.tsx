@@ -27,7 +27,7 @@ import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { type Scene, Shape, type ViewId, findLayout } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
-import { CanvasEditor } from './CanvasEditor.tsx';
+import { CanvasEditor } from '../../dimensions/index.ts';
 
 /**
  * Test:

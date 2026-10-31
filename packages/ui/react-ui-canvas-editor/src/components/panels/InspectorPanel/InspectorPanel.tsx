@@ -58,6 +58,7 @@ type InspectorPanelContextValue = {
   setSlot: (id: string, element: HTMLElement | null) => void;
   setClosed: (closed: ReadonlySet<string>) => void;
   actions?: ReactNode;
+  useActions?: () => ReactNode;
   onDockedChange?: (docked: boolean) => void;
 };
 
@@ -86,6 +87,11 @@ export type InspectorPanelRootProps = PropsWithChildren<{
   readonly?: boolean;
   /** Commands on the canvas as a whole (e.g. on the selection), drawn at the start of the panel's toolbar. */
   actions?: ReactNode;
+  /**
+   * The actions as a hook, called where the panel draws, so it can read the view's providers (the 2D engine's selection);
+   * the toolbar shows only while it gives some or `onDockedChange` is offered.
+   */
+  useActions?: () => ReactNode;
   /** Offered, the panel's toolbar docks a floating panel, or floats a docked one. */
   onDockedChange?: (docked: boolean) => void;
 }>;
@@ -95,6 +101,7 @@ const InspectorPanelRoot = ({
   docked = false,
   readonly = false,
   actions,
+  useActions,
   onDockedChange,
   children,
 }: InspectorPanelRootProps) => {
@@ -123,8 +130,21 @@ const InspectorPanelRoot = ({
     [],
   );
   const value = useMemo(
-    () => ({ docked, readonly, sections, slots, closed, shows, register, setSlot, setClosed, actions, onDockedChange }),
-    [docked, readonly, sections, slots, closed, shows, register, setSlot, actions, onDockedChange],
+    () => ({
+      docked,
+      readonly,
+      sections,
+      slots,
+      closed,
+      shows,
+      register,
+      setSlot,
+      setClosed,
+      actions,
+      useActions,
+      onDockedChange,
+    }),
+    [docked, readonly, sections, slots, closed, shows, register, setSlot, actions, useActions, onDockedChange],
   );
   // Read during render by the subscribers, which are then told of the change once it commits.
   const valueRef = useRef(value);
@@ -186,6 +206,7 @@ const InspectorPanelContent = () => {
   // the panel is measured, when it starts at its share of the height.
   const [size, setSize] = useState<number>();
   const splitterRef = useRef<HTMLDivElement>(null);
+  const hooked = context?.useActions?.();
   const measured = size !== undefined;
   useLayoutEffect(() => {
     const height = splitterRef.current?.getBoundingClientRect().height ?? 0;
@@ -197,7 +218,8 @@ const InspectorPanelContent = () => {
   if (!context || visible.length === 0) {
     return null;
   }
-  const { docked, closed, setSlot, setClosed, actions, onDockedChange } = context;
+  const { docked, closed, setSlot, setClosed, onDockedChange } = context;
+  const actions = hooked ?? context.actions;
   const upper = visible.filter((section) => section.pane === 'upper');
   const lower = visible.filter((section) => section.pane !== 'upper');
 

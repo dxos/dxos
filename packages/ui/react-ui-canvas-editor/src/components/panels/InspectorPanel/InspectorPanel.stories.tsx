@@ -13,7 +13,8 @@ import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 import { type Layer } from '@dxos/scene';
 
-import { CanvasEditor, type InspectorMode } from '../../CanvasEditor/index.ts';
+import { CanvasEditor } from '../../../dimensions/index.ts';
+import { type InspectorMode } from '../../CanvasEditor/index.ts';
 
 const box = (x: number, y = 0) => ({ x, y, width: 256, height: 128 });
 

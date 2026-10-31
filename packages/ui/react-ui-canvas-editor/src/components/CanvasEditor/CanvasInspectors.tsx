@@ -56,6 +56,9 @@ import { propertiesShown } from './properties-section.ts';
 // Properties
 //
 
+/** Where the inspectors (properties, layers, about) sit: floating over the canvas, or docked in a column beside it. */
+export type InspectorMode = 'floating' | 'docked';
+
 export type CanvasPropertiesProps = Pick<
   PropertiesInspectorProps,
   'fields' | 'db' | 'getOptions' | 'overrides' | 'groups' | 'onGroupsChange'

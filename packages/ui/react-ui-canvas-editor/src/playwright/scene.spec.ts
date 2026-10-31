@@ -61,7 +61,7 @@ test.describe('Canvas', () => {
 
   test('dragging a node type from the palette creates it where it drops', async () => {
     const view = await scene.box(scene.root);
-    const entry = await scene.box(page.getByTestId('palette-E'));
+    const entry = await scene.box(page.getByTestId('canvas.tool.node:ellipse'));
     await page.mouse.move(entry.x + entry.width / 2, entry.y + entry.height / 2);
     await page.mouse.down();
     await page.mouse.move(entry.x + 40, entry.y + 40, { steps: 4 });
@@ -230,8 +230,8 @@ test.describe('Canvas', () => {
     await page.mouse.up();
     expect(await scene.linkCount()).toBe(3);
     // A click on the background ends the link tool: the select tool is back.
-    await expect(page.getByTestId('palette-L')).toHaveAttribute('aria-pressed', 'false');
-    await expect(page.getByTestId('palette-V')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByTestId('canvas.tool.link:line')).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.getByTestId('canvas.tool.select')).toHaveAttribute('aria-pressed', 'true');
   });
 
   test('picking a creation tool clears the selection', async () => {

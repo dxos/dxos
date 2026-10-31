@@ -11,7 +11,7 @@ import { translations as formTranslations } from '@dxos/react-ui-form/translatio
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
-import { CanvasEditor } from './CanvasEditor.tsx';
+import { CanvasEditor } from '../../dimensions/index.ts';
 
 const cell = (x: number, y: number, width = 4, height = 2) => ({
   x: x * 64,

@@ -4,14 +4,16 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
-import React, { type PropsWithChildren, useEffect, useLayoutEffect, useMemo } from 'react';
+import React, { type PropsWithChildren, createContext, useContext, useEffect, useLayoutEffect, useMemo } from 'react';
 
 import { type ModuleCompiler } from '@dxos/animation';
 import {
   type ActiveTool,
   type Camera,
   Canvas,
+  type CanvasAtoms,
   type CanvasController,
+  type CanvasRootProps,
   type Capabilities,
   type ConstrainIntent,
   type FaceSelection,
@@ -42,10 +44,38 @@ const HOST_KEYS: ReadonlySet<KeyAction> = new Set<KeyAction>([
   'ungroup',
 ]);
 
+/**
+ * `Canvas.Root` props a host sets beyond the editor's, for a 2D canvas it drives itself (its own look, a drift across the
+ * scene, a view listener, a refit timed to its own reveal); they change as the host renders, so they ride a context.
+ */
+export type Canvas2DHostProps = Pick<
+  CanvasRootProps,
+  | 'theme'
+  | 'defaultTheme'
+  | 'backgroundGrid'
+  | 'onThemeChange'
+  | 'onBackgroundGridChange'
+  | 'drift'
+  | 'onViewChange'
+  | 'refitKey'
+  | 'refitDuration'
+>;
+
+const Canvas2DHostContext = createContext<Canvas2DHostProps>({});
+
+export const Canvas2DHost = Canvas2DHostContext.Provider;
+
 /** What the host gives the 2D dimension: its node types, mode and generators, and how its own kinds are drawn. */
 export type Dimension2DOptions = {
   /** The node types the canvas draws (a host's object frames among them); the default set when unset. */
   nodes?: NodeRegistry;
+  /** The engine's view state, when the host reads it too (a scorecard over the selection); the editor's own when unset. */
+  atoms?: CanvasAtoms;
+  /**
+   * The engine keeps its own shortcuts, undo, clipboard and context menu, for a host that gives the editor no history or
+   * codec (`CanvasEditor`).
+   */
+  standalone?: boolean;
   /** The plugin element kinds among `nodes`, whose elements keep their own fields at their top (decision 13). */
   kinds?: Kinds;
   /** The layout's mode, which the editor applies to every write; a refused or rewritten drag is redrawn as stored. */
@@ -89,7 +119,7 @@ export const createDimension2D =
   ({ registry, document, camera, setMenu }: DimensionContext<Camera>): Dimension => {
     const { atoms } = document;
     const root = rootLayoutOf(registry.get(atoms.document), registry.get(atoms.scene));
-    const canvas = createCanvasAtoms(root);
+    const canvas = options.atoms ?? createCanvasAtoms(root);
     const drawing = options.kinds ? kindsDrawing(options.kinds) : undefined;
     const useDrawnDocument = options.useDrawnDocument ?? drawing?.useDrawnDocument ?? useStoredDocument;
     const liftIntent = options.liftIntent ?? drawing?.liftIntent;
@@ -109,10 +139,11 @@ export const createDimension2D =
       ),
     );
     const face = keep<FaceSelection | undefined>(undefined);
-    // An isolated composite is the engine's own view, outside the drill path, which stays where it was.
+    // An isolated composite is opened on its own, past the place it was opened from, so a crumb leads back out.
     const path = Atom.keepAlive(
       Atom.make((get) => {
-        const drilled = get(canvas.isolation)?.back.path ?? get(canvas.path);
+        const isolation = get(canvas.isolation);
+        const drilled = isolation ? [...isolation.back.path, isolation.composite] : get(canvas.path);
         return drilled.length > 1 ? drilled : NO_PATH;
       }),
     );
@@ -165,6 +196,7 @@ export const createDimension2D =
       const readonly = useAtomValue(atoms.readonly);
       const picture = useAtomValue(atoms.picture);
       const offers = useAtomValue(atoms.host);
+      const host = useContext(Canvas2DHostContext);
       const editing = !picture;
       // The display panel's aids are the host's, kept by the engine as atoms of its own, so they go one way.
       useEffect(() => registry.set(canvas.snap, editing && display.snap), [editing, display.snap]);
@@ -188,12 +220,13 @@ export const createDimension2D =
           margin={picture ? PICTURE_MARGIN : undefined}
           initialCamera={initialCamera}
           onCameraChange={editing && offers.camera ? camera.report : undefined}
-          hostKeys={HOST_KEYS}
-          onContextMenu={picture ? undefined : onContextMenu}
+          hostKeys={options.standalone ? undefined : HOST_KEYS}
+          onContextMenu={picture || options.standalone ? undefined : onContextMenu}
           shell={Frame}
           generators={options.generators}
           compileGenerator={options.compileGenerator}
           createGeneratorWorker={options.createGeneratorWorker}
+          {...host}
         >
           <Bind />
           {children}
@@ -222,5 +255,6 @@ export const createDimension2D =
       tools: { atoms: { tool }, commands: { setTool: (next) => registry.set(tool, next) } },
       Root,
       Viewport,
+      shortcuts: !options.standalone,
     };
   };

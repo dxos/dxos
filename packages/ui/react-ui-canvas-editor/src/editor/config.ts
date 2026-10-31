@@ -136,6 +136,8 @@ export type Dimension = {
   Root: ComponentType<PropsWithChildren<{ Frame?: ComponentType<CanvasShellProps> }>>;
   /** The scene drawn, with the floating panels over it. */
   Viewport: ComponentType<PropsWithChildren>;
+  /** False when the dimension's engine takes the chorded shortcuts itself, with its own undo and clipboard. */
+  shortcuts?: boolean;
 };
 
 /**

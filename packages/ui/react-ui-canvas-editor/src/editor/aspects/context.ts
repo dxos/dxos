@@ -47,6 +47,8 @@ export type HostOffers = {
   animation: boolean;
   /** The host stores this viewer's camera. */
   camera: boolean;
+  /** Copy, cut and paste: the host gives a `.dx` codec. */
+  clipboard: boolean;
 };
 
 /** An aspect's slice of the editor: the atoms holding its state and the commands that change it (DESIGN.md §13.1). */
@@ -169,7 +171,7 @@ export type SceneEditorServices = {
   tools: EditorTools;
   commands: EditorCommands;
   time: EditorTime;
-} & Pick<Dimension, 'Root' | 'Viewport'>;
+} & Pick<Dimension, 'Root' | 'Viewport' | 'shortcuts'>;
 
 export const [SceneEditorServicesProvider, useSceneServices] = createContext<SceneEditorServices>('SceneEditor.Root');
 

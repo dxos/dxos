@@ -3,39 +3,25 @@
 //
 
 //
-// Root view of the scene engine (§6–§8): owns the camera, the scene path, selection and the pointer
-// state machine; renders the current scene through `SceneLayer` under one CSS transform and drills
-// in and out of portals with a camera transition then a root swap. Every change is an edit of the draw state, which
-// reaches the host as layout intents; the view never writes the document itself (decision 11).
+// The 2D engine's own action bar and display panel, which `CanvasEditor` shows where the shared editor's parts do not
+// model them yet (the create menu, layout and debug; grid kinds, the theme's own grid and the lattice).
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useMemo } from 'react';
 
 import {
-  NOMINAL_ZOOM,
-  OBJECTS_CRUMB,
-  ZOOM_STEP,
   useCanvasDocument,
   useCanvasEditing,
   useCanvasLook,
-  useCanvasNavigation,
   useCanvasSelection,
-  useCanvasServices,
   useCanvasTools,
 } from '@dxos/react-ui-canvas';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { DisplayPanel, ToolsPanel } from '../panels/index.ts';
-import {
-  ActionToolbar,
-  type CameraActions,
-  CameraToolbar,
-  type EditActions,
-  type NavigationActions,
-  NavigationToolbar,
-} from '../Toolbar/index.ts';
+import { DisplayPanel } from '../panels/index.ts';
+import { ActionToolbar, type EditActions } from '../Toolbar/index.ts';
 
 //
 // Toolbars
@@ -48,32 +34,6 @@ export type CanvasBarProps = Util.ThemedClassName<{}>;
  * The toolbar's own scroll frame is zero-height in flow, so `classNames` positions this frame, not the bar.
  */
 const barFrame = 'absolute w-max max-w-[50%]';
-
-/** Where the view is in the scene tree. */
-export const CanvasNavigation = ({ classNames = 'top-2 left-2' }: CanvasBarProps) => {
-  const { atoms, commands } = useCanvasNavigation('Canvas.Navigation');
-  const { store } = useCanvasDocument('Canvas.Navigation');
-  const path = useAtomValue(atoms.path);
-  const isolation = useAtomValue(atoms.isolation);
-  const scenes = useAtomValue(store.views);
-  const actions = useMemo<NavigationActions>(
-    () => ({
-      // In isolation the crumbs read `Objects › <name>`, and the first leads back out.
-      path: isolation ? [OBJECTS_CRUMB, isolation.composite] : path,
-      nameOf: (id) => (id === OBJECTS_CRUMB ? 'Objects' : (scenes[id]?.name ?? id)),
-      // Home at the scene's own view frames it, as the shared editor's does.
-      onPath: (index) => (!isolation && index === path.length - 1 ? commands.fit() : commands.openPath(index)),
-    }),
-    [isolation, path, scenes, commands],
-  );
-  return (
-    <div className={mx(barFrame, classNames)}>
-      <NavigationToolbar actions={actions} />
-    </div>
-  );
-};
-
-CanvasNavigation.displayName = 'Canvas.Navigation';
 
 /** Everything that changes the view or the scene. */
 export const CanvasActions = ({ classNames = 'bottom-2 left-1/2 -translate-x-1/2' }: CanvasBarProps) => {
@@ -132,30 +92,6 @@ export const CanvasActions = ({ classNames = 'bottom-2 left-1/2 -translate-x-1/2
 
 CanvasActions.displayName = 'Canvas.Actions';
 
-/** The camera's controls and numbers; nothing here changes the scene. */
-export const CanvasCamera = ({ classNames = 'bottom-2 left-2' }: CanvasBarProps) => {
-  const { atoms, commands } = useCanvasNavigation('Canvas.Camera');
-  const camera = useAtomValue(atoms.camera);
-  const fitting = useAtomValue(atoms.fitting);
-  const actions = useMemo<CameraActions>(
-    () => ({
-      fit: commands.fit,
-      fitting,
-      zoomReset: () => commands.zoomTo(NOMINAL_ZOOM),
-      zoomIn: () => commands.zoomBy(ZOOM_STEP),
-      zoomOut: () => commands.zoomBy(1 / ZOOM_STEP),
-    }),
-    [commands, fitting],
-  );
-  return (
-    <div className={mx(barFrame, classNames)}>
-      <CameraToolbar actions={actions}>{Math.round(camera.zoom * 100)}%</CameraToolbar>
-    </div>
-  );
-};
-
-CanvasCamera.displayName = 'Canvas.Camera';
-
 //
 // Display
 //
@@ -193,31 +129,3 @@ export const CanvasDisplay = ({ classNames = 'bottom-2 right-2' }: CanvasBarProp
 };
 
 CanvasDisplay.displayName = 'Canvas.Display';
-
-//
-// Tools
-//
-
-/** The tool rail: what the next gesture will draw. */
-export const CanvasTools = ({ classNames = 'absolute top-14 bottom-14 left-2' }: CanvasBarProps) => {
-  const { nodeRegistry, linkRegistry, capabilities, readonly } = useCanvasDocument('Canvas.Tools');
-  const { onReadonlyChange } = useCanvasServices('Canvas.Tools');
-  const { atoms, commands } = useCanvasTools('Canvas.Tools');
-  const tool = useAtomValue(atoms.tool);
-  return (
-    // Spans the room the rail may take, so it can fold its groups to fit; the canvas below the rail keeps the pointer.
-    <div className={mx('pointer-events-none', classNames)}>
-      <ToolsPanel
-        tool={tool}
-        nodes={nodeRegistry}
-        links={linkRegistry}
-        capabilities={capabilities}
-        readonly={readonly}
-        onReadonlyChange={onReadonlyChange}
-        onToolChange={commands.setTool}
-      />
-    </div>
-  );
-};
-
-CanvasTools.displayName = 'Canvas.Tools';

@@ -20,6 +20,7 @@ const offersOf = <C>(props: SceneEditorHostProps<C>): HostOffers => {
     lock: editing && props.onReadonlyChange !== undefined,
     animation: props.shots !== undefined && props.onShotChange !== undefined,
     camera: props.onCameraChange !== undefined,
+    clipboard: props.codec !== undefined,
   };
 };
 
@@ -28,7 +29,8 @@ const sameOffers = (left: HostOffers, right: HostOffers): boolean =>
   left.layers === right.layers &&
   left.lock === right.lock &&
   left.animation === right.animation &&
-  left.camera === right.camera;
+  left.camera === right.camera &&
+  left.clipboard === right.clipboard;
 
 /**
  * What the editor shows, and the one write path: each edit constrained by the layout's mode and recorded for undo, a

@@ -143,4 +143,14 @@ describe('buildCommands', () => {
     // A disabled command takes no key.
     expect(buildCommands({ state: { ...STATE, selection: [] }, run }).keyCommand(key('Delete'))).toBeUndefined();
   });
+
+  test('without a clipboard the clipboard commands are off, so their keys reach the view', ({ expect }) => {
+    const table = buildCommands({ state: { ...STATE, clipboard: false }, run: RUN });
+    const off = table.commands.filter((command) => !command.enabled).map((command) => command.id);
+    expect(off).toEqual(expect.arrayContaining(['cut', 'copy', 'paste', 'duplicate']));
+    expect(table.get('delete')?.enabled).toBe(true);
+    expect(
+      table.keyCommand({ key: 'c', metaKey: true, ctrlKey: false, shiftKey: false, altKey: false }),
+    ).toBeUndefined();
+  });
 });

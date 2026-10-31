@@ -1136,7 +1136,8 @@ Move every file of react-ui-scene, and react-ui-canvas's editor, panels, inspect
 - [x] Specs: react-ui-canvas SPEC.mdl D-37 to D-42; SPEC-2D.mdl and `docs/DESIGN.md` synced to the draw state (D-59,
       D-60); SPEC-3D.mdl D-20.
 - [x] A headless mode rule: `constrain2D` on `/headless` (R-95, superseding R-87).
-- [ ] Parked: port the e2e suites and `DataFlowView` onto `SceneEditor` and delete `CanvasEditor` (R-83).
+- [x] Parked: port the e2e suites and `DataFlowView` onto `SceneEditor` and delete `CanvasEditor` (R-83). Closed by
+      H.4: `CanvasEditor` is kept as `SceneEditor`'s 2D alias, so its suites and the sample run on `SceneEditor`.
 
 ### Task G.2: plugin-canvas has one set of surfaces (R-88)
 
@@ -1201,10 +1202,26 @@ runner (CanvasArticle, CanvasCard) and a story check in the browser.
 
 ### Task H.4: One wiring per bar; `CanvasEditor` is `SceneEditor` in 2D
 
-- [ ] The bars and inspectors read the aspect hooks, so `CanvasBars.tsx` and `CanvasInspectors.tsx` stop duplicating
+- [x] The bars and inspectors read the aspect hooks, so `CanvasBars.tsx` and `CanvasInspectors.tsx` stop duplicating
       `SceneEditor`'s parts.
-- [ ] `CanvasEditor` becomes `SceneEditor` with the 2D config (an alias over it, as decided by the user 2026-10-31);
+- [x] `CanvasEditor` becomes `SceneEditor` with the 2D config (an alias over it, as decided by the user 2026-10-31);
       its stories, e2e suites and the `DataFlowView` sample keep working through it (closes G.1's parked item).
+- Ruling (agent, 2026-10-31): `CanvasEditor.Root` is `SceneEditor.Root` over `createConfig2D({ standalone: true })`,
+  so its root, inspector dock and aspects are the shared editor's; `CanvasEditor.tsx` moved to `dimensions/` (it needs
+  the 2D config, and in `components/` it closed an import cycle with `editor/`). Its crumbs, camera bar and tool rail
+  are `SceneEditor`'s, so `CanvasNavigation`, `CanvasCamera` and `CanvasTools` are deleted; the 2D path ends at an
+  isolated composite, so a crumb leads back out of it. The plan's premise held for those three only: `CanvasActions`
+  (create menu, layout, debug), `CanvasDisplay` (grid kinds, the theme's own grid, the lattice) and the four
+  inspectors (restack, layer select/move/merge, object isolate/rename/duplicate and thumbnails) are the engine's
+  richer 2D editors, which the shared parts do not model, so they stay as the alias's parts reading the engine hooks
+  inside the shared root; porting them is follow-up work. `standalone` keeps the engine's shortcuts, undo, clipboard
+  and context menu (`Dimension.shortcuts = false`, no `hostKeys`), as `CanvasEditor`'s hosts give no history or
+  codec. The command table turns its clipboard commands off when the host gives no codec (`HostOffers.clipboard`),
+  so a host without one never asks for the system clipboard. Host-driven `Canvas.Root` props (look, drift, view
+  listener, refit) reach the 2D root through `Canvas2DHost`, and the engine's selection actions reach the inspector
+  toolbar through `SceneEditor.Root`'s `useInspectorActions`. The e2e suites changed only in `scene.spec.ts`'s three
+  tool ids (`palette-*` → `canvas.tool.*`); `lattice` snap-off, `scene` snap-on and the properties-labels tests fail
+  before and after this task.
 
 ---
 

@@ -6,6 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, {
   type PropsWithChildren,
+  type ReactNode,
   useContext,
   useEffect,
   useLayoutEffect,
@@ -82,6 +83,8 @@ export type SceneEditorRootProps<C> = PropsWithChildren<
     refitKey?: string | number;
     docked?: boolean;
     onDockedChange?: (docked: boolean) => void;
+    /** The inspector panel's actions, a hook called inside the dimension's root so it can read the dimension's engine. */
+    useInspectorActions?: () => ReactNode;
   }
 >;
 
@@ -96,6 +99,7 @@ const SceneEditorRoot = <C,>({
   refitKey,
   docked = false,
   onDockedChange,
+  useInspectorActions,
   children,
   ...props
 }: SceneEditorRootProps<C>) => {
@@ -120,13 +124,18 @@ const SceneEditorRoot = <C,>({
   }, [refitKey, services]);
 
   const readonly = (props.readonly ?? false) || !editsInRole(props.role);
-  const { Root, Viewport } = services;
+  const { Root, Viewport, shortcuts = true } = services;
   return (
     <SceneEditorServicesProvider {...services}>
       <SceneLookProvider {...look}>
         {editsInRole(props.role) ? (
-          <InspectorPanel.Root docked={!readonly && docked} readonly={readonly} onDockedChange={onDockedChange}>
-            <EditorShortcuts />
+          <InspectorPanel.Root
+            docked={!readonly && docked}
+            readonly={readonly}
+            useActions={useInspectorActions}
+            onDockedChange={onDockedChange}
+          >
+            {shortcuts && <EditorShortcuts />}
             <Root Frame={InspectorPanel.Frame}>{children}</Root>
           </InspectorPanel.Root>
         ) : (

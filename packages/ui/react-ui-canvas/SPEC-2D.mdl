@@ -19,10 +19,11 @@ portal or instance places — so the editor records, undoes and shares 2D edits 
 render lists; the document is the scene model alone. Selection, tool, drill path, camera and display are the
 editor's, mirrored into the engine's atoms both ways.
 
-The engine also runs with its own chrome, outside `SceneEditor`: react-ui-canvas-editor's `CanvasEditor` frames
-`Canvas.Root` with the engine's toolbar, breadcrumbs and inspector panels, for its stories, its end-to-end suites and
-plugin-canvas's data-flow sample. Requirements F-1 to F-9 are the engine's and hold in both settings; where the
-editor replaces an engine behaviour, [F-10] says so.
+`CanvasEditor`, react-ui-canvas-editor's standalone 2D editor for its stories, its end-to-end suites and
+plugin-canvas's data-flow sample, is `SceneEditor` with the 2D config for a host with no history or codec: the engine
+keeps its own shortcuts, undo, clipboard and context menu, the crumbs, camera bar and tool rail are the editor's, and the
+engine's action bar, display panel and inspectors stay where the editor's parts do not model them yet. Requirements F-1
+to F-9 are the engine's and hold in both settings; where the editor replaces an engine behaviour, [F-10] says so.
 
 The layout's mode is the engine's one seam for rules: the host's `constrain` (`ConstrainIntent`) sees every write and
 stores it, rewrites it or refuses it, and a gesture's preview reads the same rule (`DrawScene.constrain`), so a drag
@@ -353,7 +354,7 @@ component Canvas
   desc: >
     The surface: one View of the document under a camera, with the control frame over it. `Canvas.Root`
     takes the document and the scene to draw and builds the engine's draw state from it; react-ui-canvas-editor's
-    `CanvasEditor` sets the tool rail, toolbar, breadcrumbs and inspector panels around it through the `shell`
+    `SceneEditor` (and `CanvasEditor`, its 2D alias) sets the inspector panel around it through the `shell`
     slot. Owns the pointer state machine, the key table and navigation between depths; commands live in a
     React-free `CanvasController` organised by aspect (selection, editing, tools, time, navigation, look). Owns
     NO model — every change leaves through `onIntent`, `onModelIntent` or `onTransaction`, after the layout's
@@ -1625,6 +1626,15 @@ decision D-61: The 2D adapter is a dimension, not a viewport: `Canvas.Root` hold
   for: user:richburdon
   affects: [Dimension2D, F-10.4, F-10.5]
   why: Mirroring the editor's state into the engine's both ways raced (a drill, a Fit after a zoom), and the Properties form needed a bridge only because it sat outside the canvas.
+```
+
+```mdl
+decision D-62: `CanvasEditor` is `SceneEditor` with the 2D config (`standalone`: the engine keeps its shortcuts, undo, clipboard and context menu); its crumbs, camera bar and tool rail are the editor's, and an isolated composite is the last crumb. The engine's action bar (create menu, layout, debug), display panel (grid kinds, the theme's own grid, the lattice) and inspectors (restack, layer merge, object isolate and thumbnails) stay its own until the editor's parts model them. Supersedes the chrome half of [D-60].
+  date: 2026-10-31
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Canvas, Dimension2D, F-10.4]
+  why: One root and one set of aspects for both editors (COMMON-CORE Expectation 0), without dropping the 2D features the shared parts lack.
 ```
 
 ---
