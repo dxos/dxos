@@ -14,7 +14,7 @@ import { type ThemeMode } from './style-set.ts';
 export type NeuPalette = {
   /** The ground every Neu shape and the background share, as `#rrggbb`. */
   readonly ground: string;
-  /** The floor of a groove: a step darker than the ground, as `#rrggbb`. */
+  /** The floor of a groove, as `#rrggbb`: a step darker than a light ground, lighter than a dark one so it reads. */
   readonly well: string;
   /** The light shadow cast up and to the left. */
   readonly highlight: string;
@@ -22,7 +22,8 @@ export type NeuPalette = {
   readonly shade: string;
 };
 
-// Light is the classic cool grey; dark is a blue-grey well above black so the dark shadow still has room to read.
+// Light is the classic cool grey; dark is a blue-grey just above black, its shade deepened so the relief still reads
+// and its grooves lifted, since a floor darker than near-black would vanish.
 export const NEU_PALETTE: Readonly<Record<ThemeMode, NeuPalette>> = {
   light: {
     ground: '#e3e7ee',
@@ -31,10 +32,10 @@ export const NEU_PALETTE: Readonly<Record<ThemeMode, NeuPalette>> = {
     shade: 'rgb(150 162 184 / 0.65)',
   },
   dark: {
-    ground: '#2a2e35',
-    well: '#24272d',
-    highlight: 'rgb(255 255 255 / 0.09)',
-    shade: 'rgb(0 0 0 / 0.5)',
+    ground: '#15171b',
+    well: '#30353e',
+    highlight: 'rgb(255 255 255 / 0.12)',
+    shade: 'rgb(0 0 0 / 0.75)',
   },
 };
 

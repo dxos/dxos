@@ -364,7 +364,10 @@ export const PreviewComponent = ({
           <div
             className={mx(
               'grid grid-rows-[minmax(0,1fr)] overflow-hidden overscroll-contain border rounded-md',
-              hasAttention ? 'border-focus-ring-subtle' : 'border-separator-subtle',
+              // The border is kept transparent rather than removed so hovering does not shift the content.
+              hasAttention
+                ? 'border-focus-ring-subtle'
+                : 'border-transparent group-hover/embed:border-separator-subtle transition-colors',
             )}
             inert={hasAttention ? undefined : true}
           >
