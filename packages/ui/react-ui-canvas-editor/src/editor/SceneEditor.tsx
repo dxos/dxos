@@ -4,6 +4,7 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import * as Atom from 'effect/reactivity/Atom';
 import React, {
   Fragment,
   type PropsWithChildren,
@@ -47,6 +48,7 @@ import {
   SceneLookProvider,
   ZOOM_STEP,
   createSceneEditorServices,
+  drawnGrid,
   editsInRole,
   useEditorLook,
   useSceneCommands,
@@ -449,6 +451,9 @@ const SceneEditorCamera = ({ classNames = 'bottom-2 left-2' }: { classNames?: st
 
 SceneEditorCamera.displayName = 'SceneEditor.Camera';
 
+/** The aids' state for a dimension that draws none of its own. */
+const NO_AID = Atom.make(false);
+
 /**
  * The display panel: the look (a default style catalog, as a swatch where the config has a theme registry), the grid,
  * snapping (apart from the grid), 2D's guides and, where the host offers animation, the Timeline panel's toggle.
@@ -456,10 +461,26 @@ SceneEditorCamera.displayName = 'SceneEditor.Camera';
 const SceneEditorDisplay = ({ classNames = 'bottom-2 right-2' }: { classNames?: string }) => {
   const { display, options, setDisplay, setTheme } = useSceneLook('SceneEditor.Display');
   const { config, atoms } = useSceneDocument('SceneEditor.Display');
+  const { registry: atomRegistry, aids } = useSceneServices('SceneEditor.Display');
   const time = useSceneTime('SceneEditor.Display');
   const readonly = useAtomValue(atoms.readonly);
   const { animation } = useAtomValue(atoms.host);
   const timeline = useAtomValue(time.atoms.visible);
+  // What the engine draws, which its own keys toggle too; the host's display where the dimension has no engine aids.
+  const drawn = {
+    snap: useAtomValue(aids?.snap ?? NO_AID),
+    guides: useAtomValue(aids?.guides ?? NO_AID),
+    axes: useAtomValue(aids?.axes ?? NO_AID),
+  };
+  const lattice = useAtomValue(aids?.lattice ?? NO_AID);
+  const snap = aids ? drawn.snap : display.snap;
+  const guides = aids ? drawn.guides : display.guides;
+  const axes = aids ? drawn.axes : display.axes;
+  // The engine's aid is set too, as its own keys may have moved it from the host's value.
+  const toggle = (aid: 'snap' | 'guides' | 'axes', value: boolean | undefined) => () => {
+    aids && atomRegistry.set(aids[aid], !value);
+    setDisplay?.({ [aid]: !value });
+  };
   const { registry } = options;
   const themes = useMemo(
     () => options.themes.map(({ id, label, mode }) => ({ id, name: label, ...(mode ? { mode } : {}) })),
@@ -478,16 +499,22 @@ const SceneEditorDisplay = ({ classNames = 'bottom-2 right-2' }: { classNames?: 
         themes={themes}
         override={display.themeOverride}
         onThemeChange={setTheme}
-        grid={display.grid ? (options.grids[0] ?? 'lines') : 'none'}
+        grid={drawnGrid(options, display)}
         gridOptions={options.grids}
-        onGridChange={setDisplay && ((grid) => setDisplay({ grid: grid !== undefined && grid !== 'none' }))}
-        snap={display.snap}
-        onSnapToggle={setDisplay && (() => setDisplay({ snap: !display.snap }))}
+        onGridChange={
+          setDisplay &&
+          ((grid) =>
+            setDisplay(grid === undefined || grid === 'none' ? { grid: false } : { grid: true, gridKind: grid }))
+        }
+        snap={snap}
+        onSnapToggle={setDisplay && toggle('snap', snap)}
         dim={config.dim}
-        axes={display.axes}
-        onAxesToggle={setDisplay && (() => setDisplay({ axes: !display.axes }))}
-        guides={options.guides ? display.guides : undefined}
-        onGuidesToggle={options.guides && setDisplay ? () => setDisplay({ guides: !display.guides }) : undefined}
+        axes={axes}
+        onAxesToggle={setDisplay && toggle('axes', axes)}
+        // A lattice's cells are its guides, so only a lattice has any to show.
+        guides={options.guides ? guides : undefined}
+        onGuidesToggle={options.guides && setDisplay && (!aids || lattice) ? toggle('guides', guides) : undefined}
+        lattice={lattice}
         timeline={timeline}
         onTimelineToggle={animation ? () => time.commands.setVisible(!timeline) : undefined}
       />

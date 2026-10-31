@@ -133,6 +133,17 @@ export type DimensionCommand = {
   run: () => void;
 };
 
+/**
+ * The viewing aids as the dimension's engine draws them, which its own keys toggle too, so the display panel shows what is
+ * drawn; and whether the open layout is a lattice, whose cells are its grid and its guides.
+ */
+export type DimensionAids = {
+  snap: Atom.Writable<boolean>;
+  guides: Atom.Writable<boolean>;
+  axes: Atom.Writable<boolean>;
+  lattice: Atom.Atom<boolean>;
+};
+
 /** A shared command the dimension's engine runs itself, with its own enabled state. */
 export type EngineEdit = Pick<DimensionCommand, 'enabled' | 'run'>;
 
@@ -160,6 +171,8 @@ export type Dimension = {
    * clipboard and grouping), so every surface of the command table shows the engine's state.
    */
   edits?: Partial<Record<SceneMenuCommand, EngineEdit>>;
+  /** The aids as the engine draws them; without them the display panel shows the host's display. */
+  aids?: DimensionAids;
 };
 
 /**

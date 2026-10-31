@@ -4,10 +4,10 @@
 // @vitest-environment happy-dom
 
 import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
-import React, { useLayoutEffect } from 'react';
+import React, { useLayoutEffect, useState } from 'react';
 import { afterAll, afterEach, beforeAll, describe, expect, test } from 'vitest';
 
-import { type Camera } from '@dxos/react-ui-canvas';
+import { type Camera, DEFAULT_LATTICE } from '@dxos/react-ui-canvas';
 import { type Scene } from '@dxos/scene';
 
 import { type EditorDisplay, SceneEditor, useSceneSelection } from '../editor/index.ts';
@@ -93,5 +93,46 @@ describe('the 2D dimension under SceneEditor', () => {
     await act(async () => screen.getByTestId('toolbar-zoom-in').click());
     await act(async () => new Promise((resolve) => setTimeout(resolve, 600)));
     expect(screen.getByText('125%')).toBeDefined();
+  });
+
+  test('the display panel offers dots and lines, and the guides for a lattice alone, as the engine draws them', async () => {
+    const config = createConfig2D();
+    const display = { current: DISPLAY };
+    const Host = ({ document }: { document: Scene.SceneDocument }) => {
+      const [value, setValue] = useState(DISPLAY);
+      display.current = value;
+      return (
+        <SceneEditor.Root
+          config={config}
+          document={document}
+          scene='s'
+          onIntent={() => {}}
+          display={value}
+          onDisplayChange={(next) => setValue((current) => ({ ...current, ...next }))}
+          authoredCamera={AUTHORED}
+          onCameraChange={() => {}}
+        >
+          <SceneEditor.Viewport>
+            <SceneEditor.Display />
+          </SceneEditor.Viewport>
+        </SceneEditor.Root>
+      );
+    };
+    const { unmount } = render(<Host document={DOCUMENT} />);
+    await waitFor(() => expect(screen.getByTestId('theme-grid-dots')).toBeDefined());
+    expect(screen.getByTestId('theme-grid-lines')).toBeDefined();
+    expect(screen.queryByTestId('toolbar-guides')).toBeNull();
+    await act(async () => screen.getByTestId('theme-grid-dots').click());
+    await waitFor(() => expect(display.current).toMatchObject({ grid: true, gridKind: 'dots' }));
+    unmount();
+
+    // A lattice's cells are its grid and its guides.
+    const lattice: Scene.SceneDocument = {
+      ...DOCUMENT,
+      layouts: DOCUMENT.layouts.map((layout) => ({ ...layout, lattice: DEFAULT_LATTICE })),
+    };
+    render(<Host document={lattice} />);
+    await waitFor(() => expect(screen.getByTestId('toolbar-guides')).toBeDefined());
+    expect(screen.queryByTestId('theme-grid-dots')).toBeNull();
   });
 });

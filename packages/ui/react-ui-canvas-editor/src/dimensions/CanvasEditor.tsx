@@ -3,13 +3,12 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { type PropsWithChildren, useMemo, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useMemo, useRef, useState } from 'react';
 
 import { type Camera, Canvas, type CanvasRootProps, useCanvasServices } from '@dxos/react-ui-canvas';
 import { rootScene } from '@dxos/scene';
 
 import {
-  CanvasDisplay,
   CanvasLayers,
   CanvasObjects,
   CanvasProperties,
@@ -17,9 +16,15 @@ import {
   type InspectorMode,
   useSelectionActions,
 } from '../components/index.ts';
-import { type EditorDisplay, SceneEditor } from '../editor/index.ts';
+import { type EditorDisplay, SceneEditor, themeGridOf } from '../editor/index.ts';
 import { createConfig2D } from './config2d.tsx';
 import { Canvas2DHost, type Canvas2DHostProps } from './dimension2d.tsx';
+
+/** The host's look, which the editor's display holds when the host does not control it. */
+type LookProps = Pick<
+  CanvasRootProps,
+  'theme' | 'defaultTheme' | 'backgroundGrid' | 'onThemeChange' | 'onBackgroundGridChange'
+>;
 
 export type CanvasEditorRootProps = PropsWithChildren<
   Pick<
@@ -38,7 +43,8 @@ export type CanvasEditorRootProps = PropsWithChildren<
     | 'compileGenerator'
     | 'createGeneratorWorker'
   > &
-    Canvas2DHostProps & {
+    Canvas2DHostProps &
+    LookProps & {
       /** Where the inspectors sit: floating over the canvas (the default), or docked in a column beside it. */
       inspectors?: InspectorMode;
       /**
@@ -107,34 +113,34 @@ const CanvasEditorRoot = ({
       }),
     [nodes, constrain, capabilities, atoms, generators, compileGenerator, createGeneratorWorker],
   );
-  // The engine draws the host's look; the editor's display holds only what its own parts read.
-  const display = useMemo<EditorDisplay>(
-    () => ({ theme: theme ?? defaultTheme ?? 'flat', grid: backgroundGrid !== 'none', snap: true, guides: true }),
-    [theme, defaultTheme, backgroundGrid],
-  );
+  // The host's look where it controls it, this view's own choices otherwise, as the shared display panel sets them.
+  const [own, setOwn] = useState<Partial<EditorDisplay>>({});
+  const display = useMemo<EditorDisplay>(() => {
+    const override = theme ?? own.themeOverride;
+    const look = override ?? defaultTheme ?? 'flat';
+    // Unset, the grid is the look's own, as the engine draws it for a host that picks none.
+    const grid = backgroundGrid ?? (own.grid === false ? 'none' : (own.gridKind ?? themeGridOf(config.display, look)));
+    return {
+      theme: look,
+      themeOverride: override,
+      grid: grid !== 'none',
+      ...(grid !== undefined && grid !== 'none' ? { gridKind: grid } : {}),
+      snap: own.snap ?? true,
+      guides: own.guides ?? true,
+      axes: own.axes ?? false,
+    };
+  }, [config, theme, defaultTheme, backgroundGrid, own]);
+  const latest = useRef({ onThemeChange, onBackgroundGridChange });
+  latest.current = { onThemeChange, onBackgroundGridChange };
+  const onDisplayChange = useCallback((next: Partial<EditorDisplay>) => {
+    setOwn((current) => ({ ...current, ...next }));
+    'themeOverride' in next && latest.current.onThemeChange?.(next.themeOverride);
+    ('grid' in next || 'gridKind' in next) &&
+      latest.current.onBackgroundGridChange?.(next.grid === false ? 'none' : next.gridKind);
+  }, []);
   const host = useMemo<Canvas2DHostProps>(
-    () => ({
-      theme,
-      defaultTheme,
-      backgroundGrid,
-      onThemeChange,
-      onBackgroundGridChange,
-      drift,
-      onViewChange,
-      refitKey,
-      refitDuration,
-    }),
-    [
-      theme,
-      defaultTheme,
-      backgroundGrid,
-      onThemeChange,
-      onBackgroundGridChange,
-      drift,
-      onViewChange,
-      refitKey,
-      refitDuration,
-    ],
+    () => ({ drift, onViewChange, refitKey, refitDuration }),
+    [drift, onViewChange, refitKey, refitDuration],
   );
   // Kept for this view alone, so the camera bar's zoom has a camera to read and move.
   const [camera, setCamera] = useState<Camera>();
@@ -153,6 +159,7 @@ const CanvasEditorRoot = ({
         onIntent={onIntent}
         onModelIntent={onModelIntent}
         display={display}
+        onDisplayChange={onDisplayChange}
         camera={camera}
         authoredCamera={AUTHORED_CAMERA}
         onCameraChange={setCamera}
@@ -179,7 +186,7 @@ export const CanvasEditor = {
   Navigation: SceneEditor.Navigation,
   Actions: SceneEditor.Actions,
   Camera: SceneEditor.Camera,
-  Display: CanvasDisplay,
+  Display: SceneEditor.Display,
   Tools: SceneEditor.Tools,
   Properties: CanvasProperties,
   Views: CanvasViews,

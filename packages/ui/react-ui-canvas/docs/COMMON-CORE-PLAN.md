@@ -1250,9 +1250,16 @@ the user 2026-10-31: in this PR. One commit per task, each with its failing test
 
 ### Task I.2: The display panel
 
-- [ ] Grid kinds (`EditorDisplay.gridKind`), the theme's own grid, and the lattice read from the open layout, so the
+- [x] Grid kinds (`EditorDisplay.gridKind`), the theme's own grid, and the lattice read from the open layout, so the
       guides toggle shows for a lattice alone. `CanvasEditor` holds its display as a host does.
-- [ ] `CanvasDisplay` goes.
+- [x] `CanvasDisplay` goes.
+- Ruling (agent, 2026-10-31): 2D offers lines and dots, the config's first (lines) drawn while the viewer picks none, so
+  Composer's 2D look is unchanged; `CanvasEditor` starts from the look's own grid (`themeGridOf`), as the engine drew it
+  for a host that picked none, and the shared panel no longer models "the theme's grid again" as its own state. The
+  aids (snap, guides, axes) the panel shows are the engine's atoms (`Dimension.aids`), which its keys toggle too, and a
+  toggle sets both them and the host's display; 3D has no engine aids and shows the host's. The lattice is read from
+  the engine's open View, so its guides toggle shows for a lattice alone; a lattice is 2D's only. Test:
+  `dimension2d.test.tsx` "the display panel offers dots and lines…" (RED: the shared panel offered lines alone).
 
 ### Task I.3: The inspectors
 

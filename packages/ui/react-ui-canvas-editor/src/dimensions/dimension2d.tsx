@@ -37,6 +37,7 @@ import {
   type DimensionContext,
   type EditorNavigation,
   type EngineEdit,
+  drawnGrid,
   keep,
   useSceneLook,
 } from '../editor/index.ts';
@@ -55,21 +56,10 @@ const HOST_KEYS: ReadonlySet<KeyAction> = new Set<KeyAction>([
 ]);
 
 /**
- * `Canvas.Root` props a host sets beyond the editor's, for a 2D canvas it drives itself (its own look, a drift across the
- * scene, a view listener, a refit timed to its own reveal); they change as the host renders, so they ride a context.
+ * `Canvas.Root` props a host sets beyond the editor's, for a 2D canvas it drives itself (a drift across the scene, a view
+ * listener, a refit timed to its own reveal); they change as the host renders, so they ride a context.
  */
-export type Canvas2DHostProps = Pick<
-  CanvasRootProps,
-  | 'theme'
-  | 'defaultTheme'
-  | 'backgroundGrid'
-  | 'onThemeChange'
-  | 'onBackgroundGridChange'
-  | 'drift'
-  | 'onViewChange'
-  | 'refitKey'
-  | 'refitDuration'
->;
+export type Canvas2DHostProps = Pick<CanvasRootProps, 'drift' | 'onViewChange' | 'refitKey' | 'refitDuration'>;
 
 const Canvas2DHostContext = createContext<Canvas2DHostProps>({});
 
@@ -303,7 +293,7 @@ export const createDimension2D =
     };
 
     const Root: Dimension['Root'] = ({ Frame, children }) => {
-      const { display } = useSceneLook('SceneEditor.Root2D');
+      const { display, options: look } = useSceneLook('SceneEditor.Root2D');
       const drawn = useDrawnDocument(useAtomValue(atoms.shown));
       const scene = useAtomValue(atoms.scene);
       const readonly = useAtomValue(atoms.readonly);
@@ -327,7 +317,7 @@ export const createDimension2D =
           nodes={options.nodes}
           capabilities={options.capabilities}
           theme={display.theme}
-          backgroundGrid={editing && display.grid ? 'lines' : 'none'}
+          backgroundGrid={editing ? drawnGrid(look, display) : 'none'}
           readonly={readonly}
           transparent={picture}
           margin={picture ? PICTURE_MARGIN : undefined}
@@ -377,5 +367,11 @@ export const createDimension2D =
       shortcuts: !options.standalone,
       commands,
       edits,
+      aids: {
+        snap: canvas.snap,
+        guides: canvas.guides,
+        axes: canvas.axes,
+        lattice: Atom.keepAlive(Atom.make((get) => get(services)?.draw.lattice !== undefined)),
+      },
     };
   };

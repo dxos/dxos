@@ -58,7 +58,7 @@ export const createConfig2D = ({
         ...(mode ? { mode } : {}),
       })),
       registry: defaultThemeRegistry,
-      grids: ['lines'],
+      grids: ['lines', 'dots'],
       guides: true,
     },
     propertyForm: createPropertyForm2D(useProperties),

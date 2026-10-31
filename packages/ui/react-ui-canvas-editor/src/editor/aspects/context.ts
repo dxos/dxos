@@ -7,7 +7,7 @@ import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { type Timeline } from '@dxos/animation';
 import { createContext } from '@dxos/react-hooks';
-import { type ActiveTool, type FaceSelection } from '@dxos/react-ui-canvas';
+import { type ActiveTool, type BackgroundGrid, type FaceSelection } from '@dxos/react-ui-canvas';
 import { type Layer, type LayoutIntent, type ModelIntent, type Scene } from '@dxos/scene';
 
 import { type SceneChoice } from '../../components/index.ts';
@@ -23,6 +23,8 @@ export type EditorDisplay = {
   /** The viewer's pick, when they made one. */
   themeOverride?: string;
   grid: boolean;
+  /** The grid drawn while `grid` is on; the config's first grid kind when unset. */
+  gridKind?: Exclude<BackgroundGrid, 'none'>;
   snap: boolean;
   guides?: boolean;
   /** The axes through the origin drawn. */
@@ -178,7 +180,7 @@ export type SceneEditorServices = {
   tools: EditorTools;
   commands: EditorCommands;
   time: EditorTime;
-} & Pick<Dimension, 'Root' | 'Viewport' | 'shortcuts'>;
+} & Pick<Dimension, 'Root' | 'Viewport' | 'shortcuts' | 'aids'>;
 
 export const [SceneEditorServicesProvider, useSceneServices] = createContext<SceneEditorServices>('SceneEditor.Root');
 

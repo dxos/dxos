@@ -4,7 +4,7 @@
 
 import { useMemo, useRef, useState } from 'react';
 
-import { type ThemeChoice, withThemeChoice } from '@dxos/react-ui-canvas';
+import { type BackgroundGrid, type ThemeChoice, resolveBackground, withThemeChoice } from '@dxos/react-ui-canvas';
 
 import { type DisplayOptions } from '../config.ts';
 import { type EditorDisplay, type EditorLook } from './context.ts';
@@ -33,3 +33,11 @@ export const useEditorLook = (
     [display, options, offered],
   );
 };
+
+/** The grid the look's own background draws: none for a look outside the config's theme registry. */
+export const themeGridOf = (options: DisplayOptions, theme: string): BackgroundGrid =>
+  options.registry ? resolveBackground(options.registry, options.registry.themes[theme]?.background).grid : 'none';
+
+/** The grid drawn: the viewer's kind, else the config's first; none while the grid is off. */
+export const drawnGrid = (options: DisplayOptions, display: EditorDisplay): BackgroundGrid =>
+  display.grid ? (display.gridKind ?? options.grids[0] ?? 'lines') : 'none';
