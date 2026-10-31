@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { KEY_BINDINGS, type KeyAction, matchesBinding, shortcutLabel } from '../model/index.ts';
+import { KEY_BINDINGS, type KeyAction, shortcutLabel } from '../model/index.ts';
 
 /** The commands a scene's right-click menu offers, in both dimensions. */
 export type SceneMenuCommand =

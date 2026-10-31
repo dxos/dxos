@@ -148,8 +148,11 @@ describe('style sets', () => {
       resolveLook(defaultThemeRegistry, { theme: 'neu-light' }),
     );
     expect(light.slice(0, 3)).toEqual([surface, 'text-blue-700', 'border-blue-500/45']);
-    // A shape with no hue is pure relief: no edge of its own.
-    expect(frameClasses(nodes.plain, false, false, false, neu)[2]).toBe('border-transparent');
+    // A shape with no hue still takes an edge, as every 3D Neu body does: a flush one is otherwise invisible.
+    const plain = (tone: NodeTone): Node => ({ ...nodes.plain, style: { ...nodes.plain.style, tone } });
+    for (const tone of [0, 1, 2] as const) {
+      expect(frameClasses(plain(tone), false, false, false, neu)[2]).toBe('border-neutral-400/45');
+    }
     // Selected: still raised; only the outline shows it.
     const selected = frameClasses(nodes.blue, true, false, false, neu);
     expect(selected[0]).toBe(surface);
