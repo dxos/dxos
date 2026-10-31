@@ -32,17 +32,21 @@ export const createFileProcessor = ({
     if (levels.length > 0 && !levels.includes(entry.level)) {
       return;
     }
-    if (!shouldLog(entry, filters)) {
+    // `shouldLog` rejects every entry when given no filters, which would leave `levels` writing nothing.
+    if (filters !== undefined && !shouldLog(entry, filters)) {
       return;
     }
 
-    if (typeof pathOrFd === 'number') {
-      fd = pathOrFd;
-    } else {
-      try {
-        mkdirSync(dirname(pathOrFd));
-      } catch {}
-      fd = openSync(pathOrFd, 'a');
+    if (fd === undefined) {
+      if (typeof pathOrFd === 'number') {
+        fd = pathOrFd;
+      } else {
+        try {
+          mkdirSync(dirname(pathOrFd), { recursive: true });
+        } catch {}
+        // Opened once: a descriptor per entry is never closed, and a long run exhausts the limit.
+        fd = openSync(pathOrFd, 'a');
+      }
     }
 
     const record = {
@@ -81,16 +85,14 @@ export const createFileProcessor = ({
   };
 };
 
-let logFilePath: string | undefined;
-const getLogFilePath = () => {
-  logFilePath ??=
-    process.env.LOG_FILE ??
-    (process.env.HOME ? `${process.env.HOME}/.dxlog/${new Date().toISOString()}.log` : undefined);
+const logFilePath =
+  process.env.LOG_FILE ?? (process.env.HOME ? `${process.env.HOME}/.dxlog/${new Date().toISOString()}.log` : undefined);
 
-  return logFilePath!;
-};
-
-export const FILE_PROCESSOR: LogProcessor = createFileProcessor({
-  pathOrFd: getLogFilePath(),
-  levels: [LogLevel.ERROR, LogLevel.WARN, LogLevel.INFO, LogLevel.TRACE],
-});
+/** A no-op when neither `LOG_FILE` nor `HOME` names a place for the file, rather than throwing on the first entry. */
+export const FILE_PROCESSOR: LogProcessor =
+  logFilePath === undefined
+    ? () => {}
+    : createFileProcessor({
+        pathOrFd: logFilePath,
+        levels: [LogLevel.ERROR, LogLevel.WARN, LogLevel.INFO, LogLevel.TRACE],
+      });
