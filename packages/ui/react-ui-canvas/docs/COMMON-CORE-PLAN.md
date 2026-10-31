@@ -1147,6 +1147,47 @@ Move every file of react-ui-scene, and react-ui-canvas's editor, panels, inspect
 
 ---
 
+## Phase H — `SceneEditor` on aspects (Expectation 0, DESIGN.md §13.1)
+
+`SceneEditor.Root` grew to 440 lines, owning most of `SceneEditor.tsx`'s 44 React hooks, behind one 28-field context
+holding values that change per edit and per frame (`document`, `shown`, `display`, the camera percent). In 2D it keeps
+its own selection, tool, drill path and camera beside the engine's atoms and syncs them both ways (`Viewport2D`'s sync
+effects, `DrillSync`, `CameraSync`, `canvas-bridge.tsx`); the jumping camera bar was that duplication. Phase H gives it
+`Canvas.Root`'s shape. One commit per task, each followed by the editor's unit tests, the plugin-canvas storybook
+runner (CanvasArticle, CanvasCard) and a story check in the browser.
+
+### Task H.1: One hook per aspect
+
+- [ ] Split the root into aspect hooks — Document (document, shown layers, open layout, intents, layers), Navigation
+      (drill path, open, camera bar), Selection, Tools, Look (display, theme), History (undo, clipboard, command table)
+      and Time (shots, Timeline) — each in its own module under `editor/aspects/`, each returning atoms and commands.
+- [ ] `SceneEditor.Root` composes them and provides them, as `Canvas.Root` does; each part reads only its aspect's hook
+      (`useSceneDocument`, `useSceneNavigation`, …); `useSceneEditor` goes.
+
+### Task H.2: Values never go in the context (§13.1 rules 1–2)
+
+- [ ] The services object is built once per editor: atoms, registries and command functions that read state when
+      called. Per-edit values (the document, display, camera percent) become atoms parts subscribe to.
+- [ ] A test fails when a context value changes identity across an edit, and a story test counts panel renders across
+      a scripted pan and asserts they do not grow (§13.2 phase 3).
+
+### Task H.3: The config supplies each aspect
+
+- [ ] `DimensionConfig` supplies the Navigation, Selection and Tools aspects. 2D's are the engine's own `CanvasAtoms`
+      and `controller` commands, with no mirrored copy: the sync effects, `DrillSync`, `CameraSync` and
+      `canvas-bridge.tsx` go. 3D's hold its own atoms behind the same hooks. `CameraOps` becomes the viewport's camera
+      commands (`fit`, `actual`, `zoomBy`), so `cameraRequest` and `CameraOps.animated` go.
+- [ ] A unit test mounts the real `createConfig2D()` viewport under `SceneEditor` (none does today).
+
+### Task H.4: One wiring per bar; `CanvasEditor` is `SceneEditor` in 2D
+
+- [ ] The bars and inspectors read the aspect hooks, so `CanvasBars.tsx` and `CanvasInspectors.tsx` stop duplicating
+      `SceneEditor`'s parts.
+- [ ] `CanvasEditor` becomes `SceneEditor` with the 2D config (an alias over it, as decided by the user 2026-10-31);
+      its stories, e2e suites and the `DataFlowView` sample keep working through it (closes G.1's parked item).
+
+---
+
 ## Phase F — Tests and storybooks for review (decision 9)
 
 ### Task F.1: Storybooks per aspect, 2D and 3D side by side
