@@ -62,9 +62,6 @@ export type Viewport2DOptions = {
 /** Major cells between a picture's content and its edge: enough that no edge or shadow is cut, and no more. */
 const PICTURE_MARGIN = 0.25;
 
-/** Highest zoom a picture's fit reaches: a small drawing fills its picture, but its text is not blown up past twice. */
-const PICTURE_FIT_ZOOM = 2;
-
 const sameIds = (left: Iterable<string>, right: readonly string[]): boolean => {
   const ids = [...left];
   return ids.length === right.length && ids.every((id) => right.includes(id));
@@ -189,7 +186,6 @@ export const createViewport2D = (options: Viewport2DOptions = {}) => {
         readonly={readonly || !!picture}
         transparent={!!picture}
         margin={picture ? PICTURE_MARGIN : undefined}
-        fitZoom={picture ? PICTURE_FIT_ZOOM : undefined}
         initialCamera={camera}
         onCameraChange={onCameraChange}
         onViewChange={(view) => {

@@ -324,7 +324,8 @@ export const Image: Story = {
  * → B → C, where B is a frame onto a nested layout (X → Y).
  *
  * Test:
- * 1. The embed shows the drawing at a non-zero height, fitted to the embed with a small margin.
+ * 1. The embed shows the drawing at a non-zero height, fitted to the embed with a small margin but never past actual
+ *    size (100%).
  * 2. Clicking the embed shows its breadcrumbs (top left) and zoom bar (bottom left); clicking the document text hides them.
  * 3. Zooming into B until it fills the embed drills in; the breadcrumbs then lead back out.
  */
@@ -357,6 +358,12 @@ export const MarkdownEmbed: Story = {
     embed && (await userEvent.click(embed));
     await waitFor(() => expect(embed?.querySelector('[data-testid="canvas-debug"]')).not.toBeNull());
     await expect(embed?.querySelector('[data-testid="canvas-toolbar"]')).not.toBeNull();
+    // 1. The fit stops at actual size, however wide the embed: the readout never reads more than 100%.
+    const zoom = parseInt(
+      embed?.querySelector('[data-testid="canvas-debug"]')?.textContent?.match(/(\d+)%/)?.[1] ?? '',
+      10,
+    );
+    await expect(zoom).toBeLessThanOrEqual(100);
   },
 };
 
