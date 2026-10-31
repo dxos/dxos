@@ -63,11 +63,10 @@ type DimensionConfig
     Everything one dimension gives the editor; the rest is the editor's own. `C` is the dimension's camera.
   fields:
     dim: '2d' | '3d'
-    viewport: Component<ViewportProps<C>>
+    create: (context: DimensionContext<C>) => Dimension   # the Navigation, Selection and Tools aspects, its Root and Viewport
     tools: ToolDef[]                  # the rail, grouped by category and group
     toolDragData?: (tool) => data     # what dragging a rail tool onto the viewport drops (2D: a node of its type)
     geometry: GeometryOps
-    camera: CameraOps<C>
     display: DisplayOptions
     propertyForm: Component<PropertyFormProps>    # `createPropertyForm` builds one from a schema
     propertyFormSelection?: boolean   # the form edits a whole selection, not one element
@@ -134,7 +133,9 @@ type GeometryOps
 
 ```mdl
 type CameraOps
-  desc: The camera bar's maths over the dimension's camera.
+  desc: >
+    The camera bar's maths over the camera of a dimension whose viewport moves none of its own (3D), given to
+    `createViewDimension`; 2D's camera bar is the engine's own commands.
   fields:
     fit: (camera, document, layout, size) => C        # frame the open layout's elements
     reset: (authored, document, layout, size) => C    # actual size: the authored camera's scale, centred on the content
@@ -364,13 +365,14 @@ component GeometryField
 ```mdl
 feat F-10: One editor, configured per dimension
   req F-10.1: Both dimensions render `SceneEditor` over the same document types; the dimension's `DimensionConfig`
-    supplies the viewport, tools, geometry, camera maths, display options, property form, sections, animatable fields
-    and extra commands, and nothing else differs.
+    supplies the dimension's aspects and viewport, tools, geometry, display options, property form, sections,
+    animatable fields and extra commands, and nothing else differs.
   req F-10.2: A part reads the editor through one hook per aspect (`useSceneDocument`, `useSceneNavigation`,
     `useSceneSelection`, `useSceneTools`, `useSceneCommands`, `useSceneTime`, `useSceneLook`), each returning the atoms
     it subscribes to and commands that read state when called, so an edit changes no context value.
-  req F-10.3: (planned) Each config supplies its implementations of the Navigation, Selection and Tools aspects behind
-    those hooks, as the 2D engine's `Canvas` has them.
+  req F-10.3: Each config supplies its implementations of the Navigation, Selection and Tools aspects behind those
+    hooks (`DimensionConfig.create`): 2D's are the engine's own atoms and controller, held once; 3D's are atoms of its
+    own with the camera bar's maths (`createViewDimension`).
   req F-10.4: Each viewer opens one of the canvas's scenes, kept by key in the canvas's view state; the Views section
     picks, adds and deletes scenes the same way in both dimensions, keeping the last ([org.dxos.scene#D-84]).
 ```
@@ -992,6 +994,15 @@ decision D-53: The editor's one context is split into one hook per aspect over s
   supersedes: [D-34]
   affects: [F-10.2, F-10.3]
   why: COMMON-CORE Expectation 0 asks for `Canvas.Root`'s shape; one context of 28 values re-rendered every part on each edit and kept `SceneEditor.Root` at 440 lines.
+```
+
+```mdl
+decision D-54: Each dimension builds its own Navigation, Selection and Tools aspects (`DimensionConfig.create`); `DimensionConfig.viewport`, `DimensionConfig.camera`, `CameraOps.animated` and `ViewportProps.cameraRequest` are gone. Fills in [D-53].
+  date: 2026-10-31
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [DimensionConfig, CameraOps, ViewportProps, F-10.1, F-10.3]
+  why: 2D kept its selection, tool, drill path and camera in the editor and in the engine and synced them both ways; the jumping camera bar was that duplication.
 ```
 
 ---

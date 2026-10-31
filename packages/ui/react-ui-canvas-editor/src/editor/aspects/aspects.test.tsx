@@ -23,20 +23,18 @@ import {
   useSceneTime,
   useSceneTools,
 } from './context.ts';
+import { createViewDimension } from './view.tsx';
 
 const TestViewport = ({ children }: ViewportProps<{ zoom: number }>) => <div>{children}</div>;
 
 const CONFIG: DimensionConfig<{ zoom: number }> = {
   dim: '2d',
-  viewport: TestViewport,
+  create: createViewDimension({
+    Viewport: TestViewport,
+    camera: { fit: () => ({ zoom: 1 }), reset: (authored) => authored, zoom: (camera) => camera, percent: () => 100 },
+  }),
   tools: [{ id: 'select', icon: 'ph--cursor--regular', label: 'Select', category: 'select' }],
   geometry: { pasteOffset: (pasted) => ({ x: pasted, y: pasted }), snap: { move: 1 } },
-  camera: {
-    fit: () => ({ zoom: 1 }),
-    reset: (authored) => authored,
-    zoom: (camera) => camera,
-    percent: () => 100,
-  },
   display: { themes: [{ id: 'default', label: 'Default' }], grids: ['lines'], guides: false },
   propertyForm: () => null,
 };

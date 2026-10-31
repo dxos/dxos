@@ -7,12 +7,12 @@ import { describe, expect, test } from 'vitest';
 
 import { type LayoutIntent } from '@dxos/scene';
 
-import { createEditorStore, drillPath } from './store.ts';
+import { createEditorStore, createViewState, drillPath } from './store.ts';
 
-describe('createEditorStore', () => {
+describe('createViewState', () => {
   test('selection, tool and drill path are atoms the panels and viewport share', () => {
     const registry = Registry.make();
-    const store = createEditorStore(registry);
+    const store = createViewState(registry);
     expect(registry.get(store.atoms.selection)).toEqual([]);
     expect(registry.get(store.atoms.tool)).toEqual({ id: 'select' });
     expect(registry.get(store.atoms.editing)).toEqual([]);
@@ -28,7 +28,7 @@ describe('createEditorStore', () => {
 
   test('opening another layout clears the selection, as its elements are no longer drawn', () => {
     const registry = Registry.make();
-    const store = createEditorStore(registry);
+    const store = createViewState(registry);
     store.select(['a']);
     store.open(['root', 'gear']);
     expect(registry.get(store.atoms.selection)).toEqual([]);
@@ -36,7 +36,7 @@ describe('createEditorStore', () => {
 
   test("a path of the scene's own layout alone is no drill: the root is open", () => {
     const registry = Registry.make();
-    const store = createEditorStore(registry);
+    const store = createViewState(registry);
     store.open(['root', 'gear']);
     store.open(['root']);
     expect(registry.get(store.atoms.editing)).toEqual([]);
@@ -44,7 +44,7 @@ describe('createEditorStore', () => {
 
   test('a face belongs to its element: selecting anything else lets it go', () => {
     const registry = Registry.make();
-    const store = createEditorStore(registry);
+    const store = createViewState(registry);
     store.select(['a']);
     store.setFace({ element: 'a', normal: { x: 0, y: 1, z: 0 } });
     store.select(['a', 'b']);
@@ -52,7 +52,9 @@ describe('createEditorStore', () => {
     store.select(['b']);
     expect(registry.get(store.atoms.face)).toBeUndefined();
   });
+});
 
+describe('createEditorStore', () => {
   test('a preview never writes the document; committing writes it once', () => {
     const registry = Registry.make();
     const written: { layout: string; intent: LayoutIntent }[] = [];

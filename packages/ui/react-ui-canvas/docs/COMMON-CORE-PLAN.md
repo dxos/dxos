@@ -1181,11 +1181,23 @@ runner (CanvasArticle, CanvasCard) and a story check in the browser.
 
 ### Task H.3: The config supplies each aspect
 
-- [ ] `DimensionConfig` supplies the Navigation, Selection and Tools aspects. 2D's are the engine's own `CanvasAtoms`
+- [x] `DimensionConfig` supplies the Navigation, Selection and Tools aspects. 2D's are the engine's own `CanvasAtoms`
       and `controller` commands, with no mirrored copy: the sync effects, `DrillSync`, `CameraSync` and
       `canvas-bridge.tsx` go. 3D's hold its own atoms behind the same hooks. `CameraOps` becomes the viewport's camera
       commands (`fit`, `actual`, `zoomBy`), so `cameraRequest` and `CameraOps.animated` go.
-- [ ] A unit test mounts the real `createConfig2D()` viewport under `SceneEditor` (none does today).
+- [x] A unit test mounts the real `createConfig2D()` viewport under `SceneEditor` (none does today).
+- Ruling (agent, 2026-10-31): `DimensionConfig.create(context)` builds a `Dimension` — the three aspects plus `Root`
+  and `Viewport` — once per editor and per scene layout. 2D's `Root` is `Canvas.Root` round all the editor's parts,
+  with the inspector frame as its `shell`, so the Properties form reads the canvas directly; its aspects are writable
+  atoms over `CanvasAtoms`, and the camera bar and crumbs call the controller through a handle bound while the root is
+  mounted (commands only, no state). Display aids (snap, axes, guides) still go one way from the host's display into
+  the engine's atoms, as the look is the host's; the engine restores only the camera it opened with, so a host camera
+  arriving later is not pushed. 3D and test viewports share `createViewDimension({ Viewport, camera })`, whose
+  `CameraOps` are the old maths without `animated`. Selection, tool, drill path and face left `createEditorStore` for
+  `createViewState`. `dimension2d.test.tsx` passed against the old wiring too: it is the guard for the rewire, not a
+  RED test. The React compiler hoists a component's callback that captures only a factory's closure values to module
+  scope, where they are undefined (`registry is not defined` in the browser, never in node tests); such callbacks
+  live in the factory, which also fixes the context-menu handler H.1 had inline.
 
 ### Task H.4: One wiring per bar; `CanvasEditor` is `SceneEditor` in 2D
 

@@ -8,7 +8,7 @@ import { type Scene, findLayout, resolveLayout } from '@dxos/scene';
 
 import { copyFragment, getSessionClipboard, pasteInto, setSessionClipboard } from '../clipboard.ts';
 import { buildCommands } from '../commands.ts';
-import { type EditorCommands, type EditorDocument } from './context.ts';
+import { type EditorCommands, type EditorDocument, type EditorSelection, type EditorTools } from './context.ts';
 import { type AspectOptions, keep } from './host.ts';
 
 /** The open layout's model, and the one selected element with its resolved type. */
@@ -28,7 +28,11 @@ const selected = (document: Scene.SceneDocument, open: string | undefined, selec
  */
 export const createCommandsAspect = <C>(
   { registry, config, latest, store }: AspectOptions<C>,
-  document: EditorDocument,
+  {
+    document,
+    selection: editorSelection,
+    tools,
+  }: { document: EditorDocument; selection: EditorSelection; tools: EditorTools },
 ) => {
   const { atoms } = document;
   const { intent, modelIntent } = document.commands;
@@ -40,7 +44,9 @@ export const createCommandsAspect = <C>(
     const { codec } = latest.current.props;
     const open = registry.get(atoms.layout);
     const copied =
-      codec && open && copyFragment(codec, registry.get(atoms.document), open, registry.get(store.atoms.selection));
+      codec &&
+      open &&
+      copyFragment(codec, registry.get(atoms.document), open, registry.get(editorSelection.atoms.selection));
     if (!copied) {
       return false;
     }
@@ -67,14 +73,14 @@ export const createCommandsAspect = <C>(
     } else if (result.kind === 'paste') {
       setSessionClipboard(result.clipboard);
       intent(open, result.intent);
-      store.select(result.ids);
+      editorSelection.commands.select(result.ids);
     }
   };
   const deleteSelection = () => {
     const open = registry.get(atoms.layout);
     if (open) {
-      intent(open, { kind: 'delete', ids: registry.get(store.atoms.selection) });
-      store.select([]);
+      intent(open, { kind: 'delete', ids: registry.get(editorSelection.atoms.selection) });
+      editorSelection.commands.select([]);
     }
   };
   const run = {
@@ -100,18 +106,24 @@ export const createCommandsAspect = <C>(
     'delete': deleteSelection,
     'group': () => {
       const open = registry.get(atoms.layout);
-      const selection = registry.get(store.atoms.selection);
+      const selection = registry.get(editorSelection.atoms.selection);
       const { model } = selected(registry.get(atoms.document), open, selection);
       if (open && model !== undefined) {
         const id = `group-${Date.now().toString(36)}`;
-        modelIntent({ kind: 'group', model, layout: open, id, members: selection }).length === 0 && store.select([id]);
+        modelIntent({ kind: 'group', model, layout: open, id, members: selection }).length === 0 &&
+          editorSelection.commands.select([id]);
       }
     },
     'ungroup': () => {
       const open = registry.get(atoms.layout);
-      const { model, element } = selected(registry.get(atoms.document), open, registry.get(store.atoms.selection));
+      const { model, element } = selected(
+        registry.get(atoms.document),
+        open,
+        registry.get(editorSelection.atoms.selection),
+      );
       if (open && model !== undefined && element) {
-        modelIntent({ kind: 'ungroup', model, layout: open, id: element.id }).length === 0 && store.select([]);
+        modelIntent({ kind: 'ungroup', model, layout: open, id: element.id }).length === 0 &&
+          editorSelection.commands.select([]);
       }
     },
     'make-object': () => {
@@ -128,9 +140,9 @@ export const createCommandsAspect = <C>(
           kind: 'extract',
           model,
           layout: open,
-          ids: registry.get(store.atoms.selection),
+          ids: registry.get(editorSelection.atoms.selection),
           object: { id: `object-${index}`, type: config.dim === '3d' ? 'sphere' : 'rect' },
-        }).length === 0 && store.select([]);
+        }).length === 0 && editorSelection.commands.select([]);
       }
     },
   };
@@ -148,11 +160,11 @@ export const createCommandsAspect = <C>(
         extra.run({
           document: registry.get(atoms.document),
           layout: open,
-          selection: registry.get(store.atoms.selection),
+          selection: registry.get(editorSelection.atoms.selection),
           onIntent: intent,
           onModelIntent: modelIntent,
-          select: store.select,
-          setTool: store.setTool,
+          select: editorSelection.commands.select,
+          setTool: tools.commands.setTool,
           notify: store.setNotice,
         }),
       ).catch((error) => store.setNotice(String(error)));
@@ -162,7 +174,7 @@ export const createCommandsAspect = <C>(
     Atom.make((get) => {
       get(historyVersion);
       const document = get(atoms.document);
-      const selection = get(store.atoms.selection);
+      const selection = get(editorSelection.atoms.selection);
       const { model, type } = selected(document, get(atoms.layout), selection);
       const { history } = latest.current.props;
       return buildCommands({

@@ -10,7 +10,14 @@ import { exportSTL, fitCamera, importMesh, loadManifold, zoomBy, zoomPercent } f
 import { type NamedStyle3D, Scene, bounds3D, findLayout, resolveLayout3D } from '@dxos/scene';
 
 import { faceName } from '../components/index.ts';
-import { type DimensionConfig, type EditorCatalog, type ExtraCommandDef, createPropertyForm } from '../editor/index.ts';
+import {
+  type CameraOps,
+  type DimensionConfig,
+  type EditorCatalog,
+  type ExtraCommandDef,
+  createPropertyForm,
+  createViewDimension,
+} from '../editor/index.ts';
 import {
   ELEMENT_FORM_FIELDS,
   ELEMENT_FORM_OVERRIDES,
@@ -168,27 +175,29 @@ const COMMANDS_3D: readonly ExtraCommandDef[] = [
   },
 ];
 
+/** The camera bar's maths over the orbit camera: fit the open layout, look at its middle, zoom along the view. */
+export const camera3D: CameraOps<Scene.Camera3D> = {
+  fit: (camera, document, layout, size) => {
+    const record = findLayout(document, layout);
+    const elements = record?.dim === '3d' ? resolveLayout3D(document, record) : {};
+    return fitCamera(camera, bounds3D(elements), size);
+  },
+  reset: (authored, document, layout) => {
+    const record = findLayout(document, layout);
+    const bounds = bounds3D(record?.dim === '3d' ? resolveLayout3D(document, record) : {});
+    return bounds.radius > 0 ? { ...authored, target: { ...bounds.center } } : authored;
+  },
+  zoom: zoomBy,
+  percent: zoomPercent,
+};
+
 /** The 3D editor's dimension: Babylon's viewport, the 3D tools and maths, and the 3D property form. */
 export const config3d: DimensionConfig<Scene.Camera3D> = {
   dim: '3d',
-  viewport: Viewport3D,
+  create: createViewDimension({ Viewport: Viewport3D, camera: camera3D }),
   tools: TOOLS_3D,
   // A paste lands a grid unit further along each ground axis; a gizmo snaps to the unit, 15 degrees and a tenth.
   geometry: { pasteOffset: (pasted) => ({ x: pasted, y: 0, z: pasted }), snap: { move: 1, rotate: 15, scale: 0.1 } },
-  camera: {
-    fit: (camera, document, layout, size) => {
-      const record = findLayout(document, layout);
-      const elements = record?.dim === '3d' ? resolveLayout3D(document, record) : {};
-      return fitCamera(camera, bounds3D(elements), size);
-    },
-    reset: (authored, document, layout) => {
-      const record = findLayout(document, layout);
-      const bounds = bounds3D(record?.dim === '3d' ? resolveLayout3D(document, record) : {});
-      return bounds.radius > 0 ? { ...authored, target: { ...bounds.center } } : authored;
-    },
-    zoom: zoomBy,
-    percent: zoomPercent,
-  },
   display: {
     themes: CATALOGS_3D.map(({ id, name, mode }) => ({ id, label: name, ...(mode ? { mode } : {}) })),
     grids: ['lines'],

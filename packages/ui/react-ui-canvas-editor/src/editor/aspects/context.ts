@@ -4,7 +4,6 @@
 
 import type * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
-import { type ComponentType, type PropsWithChildren } from 'react';
 
 import { type Timeline } from '@dxos/animation';
 import { createContext } from '@dxos/react-hooks';
@@ -13,7 +12,7 @@ import { type Layer, type LayoutIntent, type ModelIntent, type Scene } from '@dx
 
 import { type SceneChoice } from '../../components/index.ts';
 import { type CommandTable } from '../commands.ts';
-import { type DimensionConfig, type DisplayOptions } from '../config.ts';
+import { type Dimension, type DimensionConfig, type DisplayOptions } from '../config.ts';
 import { type MenuAnchor } from '../store.ts';
 import { type EditorShot } from '../timeline.ts';
 
@@ -30,8 +29,11 @@ export type EditorDisplay = {
   axes?: boolean;
 };
 
-/** The config's parts that do not depend on its camera type, which the parts read through the services. */
-export type EditorConfig = Omit<DimensionConfig, 'viewport' | 'camera'>;
+/** The config's parts beside its dimension's aspects, which the parts read through the services. */
+export type EditorConfig = Omit<DimensionConfig, 'create'>;
+
+/** How far one camera-bar zoom step moves the camera, in both dimensions. */
+export const ZOOM_STEP = 1.25;
 
 /** Which of the host's writes it offers; a part offering one the host does not take hides or locks it. */
 export type HostOffers = {
@@ -167,9 +169,7 @@ export type SceneEditorServices = {
   tools: EditorTools;
   commands: EditorCommands;
   time: EditorTime;
-  /** The dimension's viewport, bound to the editor; its children are the floating panels drawn over it. */
-  Viewport: ComponentType<PropsWithChildren>;
-};
+} & Pick<Dimension, 'Root' | 'Viewport'>;
 
 export const [SceneEditorServicesProvider, useSceneServices] = createContext<SceneEditorServices>('SceneEditor.Root');
 

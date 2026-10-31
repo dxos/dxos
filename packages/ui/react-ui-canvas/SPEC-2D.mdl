@@ -9,7 +9,7 @@ The 2D variant of the scene editor: what `SceneEditor` does when its dimension c
 only what 2D adds or does differently — the viewport, its tools and geometry, the grid, lattice and guides, ports and
 links, portals, the 2D Properties form and 2D styles.
 
-The 2D viewport (`Viewport2D`, in react-ui-canvas-editor) draws through react-ui-canvas's own engine, `Canvas.Root`:
+The 2D dimension (`Dimension2D`, in react-ui-canvas-editor) draws through react-ui-canvas's own engine, `Canvas.Root`:
 an infinite, multi-depth diagram surface where a View is typed nodes and typed links in one flat coordinate space and
 a node of type `view` opens onto another View, which is what depth means. The engine takes the document itself: it
 reads the open scene's 2D layouts into render lists (`RenderList2D`, by `toRenderLists2D`) held in its private draw
@@ -345,8 +345,8 @@ One folder per component under `src/components`, stories beside it, all behind t
 barrel. Rendering is DOM with the camera as one CSS transform, SVG for the link and control layers
 (decision 7); no third-party canvas engine, and d3 only as pure functions (decision 8). The tool rail, display
 panel, inspector panel and inspectors are the core's, shared with 3D. They live in react-ui-canvas-editor, with the
-engine's own chrome (`Toolbar`, `Breadcrumbs`, the panels `CanvasEditor` frames) and the 2D adapter (`Viewport2D`,
-`CanvasBridge`); react-ui-canvas keeps the surface.
+engine's own chrome (`Toolbar`, `Breadcrumbs`, the panels `CanvasEditor` frames) and the 2D adapter (`Dimension2D`);
+react-ui-canvas keeps the surface.
 
 ```mdl
 component Canvas
@@ -458,21 +458,15 @@ component PartEditor
 ```
 
 ```mdl
-component Viewport2D
+component Dimension2D
   desc: >
-    The 2D viewport the editor draws (`createViewport2D`): `Canvas.Root` and `Canvas.Viewport` over the open scene's
-    2D layouts. It mirrors the editor's selection, tool, drill path, camera, snap, axes and guides into
-    the engine's atoms and the engine's changes back, and hands the engine the editor's intent writers. As a picture it draws
-    transparent and read-only, with no grid, snap, axes, guides or context menu.
+    The 2D dimension the editor builds (`createDimension2D`): `Canvas.Root` round all the editor's parts, with the
+    inspector panel's frame as its `shell`, and `Canvas.Viewport` as the viewport. Its atoms are the editor's
+    selection, tool, drill path and camera, and its controller the camera bar's and crumbs' commands, so nothing is
+    held twice; snap, axes and guides go one way, from the host's display. As a picture it draws transparent and
+    read-only, with no grid, snap, axes, guides or context menu.
   props:
-    options: Viewport2DOptions        # the host's node types, mode (`constrain`), generators and live depth
-```
-
-```mdl
-component CanvasBridge
-  desc: >
-    The 2D viewport's canvas services for the editor's parts drawn outside it: the Properties section sits beside
-    the viewport, not inside its `Canvas.Root`. One per 2D config, so each editor reads its own canvas.
+    options: Dimension2DOptions       # the host's node types, mode (`constrain`), generators, live depth and drawing
 ```
 
 ## Operations
@@ -786,11 +780,11 @@ feat F-10: The 2D viewport in the editor
     `ModelIntent` defining the object a new composite places in the root's model, all as one undo step.
   req F-10.3: Inside the editor the engine leaves copy, cut, paste, duplicate, undo, redo, group and ungroup to the
     editor's command table (`HOST_KEYS`); its own history, clipboard and toolbar are not used.
-  req F-10.4: Selection, tool, drill path, camera, snapping, axes and guides are the editor's, mirrored into the
-    engine's atoms and back; a tool the engine changes itself (a create tool giving way to select) reaches the editor.
+  req F-10.4: Selection, tool, drill path and camera are the engine's atoms, which the editor's aspects read and
+    write; snapping, axes and guides go from the host's display into the engine's; a tool the engine changes itself (a
+    create tool giving way to select) is the editor's at once.
   req F-10.5: The 2D Properties form is the engine's own form over the selection's types (ports, link ends, line
-    type, a frame's object and role), reached through `CanvasBridge` while the viewport is mounted, and the centre,
-    size, rotation, label, layer and style form until it is; it edits a whole selection.
+    type, a frame's object and role), inside `Canvas.Root` with every other part; it edits a whole selection.
   req F-10.6: Double-clicking a portal drills into it, as the open layout; an Object opens in isolation from the
     Objects section and is never drilled into ([F-1.8]).
 ```
@@ -1622,6 +1616,15 @@ decision D-60: The engine's own toolbar, breadcrumbs and inspector panels, and t
   for: user:richburdon
   affects: [Canvas, Toolbar, Breadcrumbs, Viewport2D, CanvasBridge]
   why: The chrome and the adapter are editor application parts, which the package split puts beside the editor.
+```
+
+```mdl
+decision D-61: The 2D adapter is a dimension, not a viewport: `Canvas.Root` holds the whole editor and its atoms are the editor's selection, tool, drill path and camera; `Viewport2D` with its sync effects, `DrillSync`, `CameraSync` and `CanvasBridge` are gone. Fills in [D-60].
+  date: 2026-10-31
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Dimension2D, F-10.4, F-10.5]
+  why: Mirroring the editor's state into the engine's both ways raced (a drill, a Fit after a zoom), and the Properties form needed a bridge only because it sat outside the canvas.
 ```
 
 ---

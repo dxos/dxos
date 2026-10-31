@@ -3,11 +3,11 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { type ComponentType, useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
+import React, { useEffect, useMemo, useReducer } from 'react';
 
 import { DefaultInput, DefaultOutput } from '@dxos/conductor';
 import * as JsonSchema from '@dxos/echo/JsonSchema';
-import { type Camera, type ViewportProps, fromViewportIntent, toViewportLayout } from '@dxos/react-ui-canvas';
+import { type Camera, fromViewportIntent, toViewportLayout } from '@dxos/react-ui-canvas';
 import {
   type DimensionConfig,
   type InspectorSectionDef,
@@ -49,17 +49,13 @@ const runtimePorts = (controller: ComputeGraphController, element: BoardElement)
 const RUNTIME = ['ports'];
 
 /**
- * The 2D viewport over the board's compute kinds: each compute element drawn with its kind's fields and runtime ports
- * where the engine reads them, and every intent the viewport writes lifted back before the editor records it.
+ * How the engine draws the board's compute kinds: each compute element with its kind's fields and runtime ports where
+ * the engine reads them, and every intent it writes lifted back before the editor records it.
  */
-const createComputeViewport = (
-  Base: ComponentType<ViewportProps<Camera>>,
-  controller: ComputeGraphController,
-): ComponentType<ViewportProps<Camera>> => {
-  const ComputeViewport = (props: ViewportProps<Camera>) => {
+const computeDrawing = (controller: ComputeGraphController) => ({
+  useDrawnDocument: (document: Scene.SceneDocument): Scene.SceneDocument => {
     // The compiler would key the ports on the document alone, missing the controller's runtime schemas.
     'use no memo';
-    const { document, onIntent } = props;
     const version = useControllerVersion(controller);
     const ports = useMemo(() => {
       const map = new Map<string, readonly Port[]>();
@@ -73,7 +69,7 @@ const createComputeViewport = (
     }, [document, version]);
     // Keyed by value, so a controller update that changes no ports leaves the drawn document as it is.
     const portsKey = JSON.stringify([...ports]);
-    const drawn = useMemo<Scene.SceneDocument>(
+    return useMemo<Scene.SceneDocument>(
       () => ({
         ...document,
         layouts: document.layouts.map((layout) =>
@@ -82,20 +78,10 @@ const createComputeViewport = (
       }),
       [document, portsKey],
     );
-    const latest = useRef(document);
-    latest.current = document;
-    const handleIntent = useCallback(
-      (layout: string, intent: LayoutIntent) => {
-        const record = findLayout(latest.current, layout);
-        onIntent(layout, record?.dim === '2d' ? fromViewportIntent(intent, record, computeKinds, RUNTIME) : intent);
-      },
-      [onIntent],
-    );
-    return <Base {...props} document={drawn} onIntent={handleIntent} />;
-  };
-  ComputeViewport.displayName = 'ComputeViewport';
-  return ComputeViewport;
-};
+  },
+  liftIntent: (intent: LayoutIntent, layout: Scene.LayoutRecord2D) =>
+    fromViewportIntent(intent, layout, computeKinds, RUNTIME),
+});
 
 export const COMPUTE_INSPECTOR: InspectorSectionDef = {
   id: 'compute',
@@ -136,14 +122,12 @@ export type ComputeConfigOptions = {
 };
 
 /**
- * The compute board's editor config: the shared 2D config over the compute node types (its rail is their palette), a
- * viewport that draws the board's compute kinds, and a Compute inspector section.
+ * The compute board's editor config: the shared 2D config over the compute node types (its rail is their palette),
+ * drawing the board's compute kinds, and a Compute inspector section.
  */
 export const createComputeConfig = ({ controller }: ComputeConfigOptions): DimensionConfig<Camera> => {
-  const base = createConfig2D({ nodes: computeNodeRegistry });
   return {
-    ...base,
-    viewport: createComputeViewport(base.viewport, controller),
+    ...createConfig2D({ nodes: computeNodeRegistry, ...computeDrawing(controller) }),
     sections: [{ section: COMPUTE_INSPECTOR, render: () => <ComputeSection controller={controller} /> }],
   };
 };

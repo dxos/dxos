@@ -8,12 +8,12 @@ import userEvent from '@testing-library/user-event';
 import React, { useEffect } from 'react';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
-import { type CameraRequest, type ViewportProps } from '@dxos/react-ui-canvas';
+import { type ViewportProps } from '@dxos/react-ui-canvas';
 import { type Scene } from '@dxos/scene';
 
 import { config3d, createConfig2D } from '../dimensions/index.ts';
-import { type EditorDisplay } from './aspects/index.ts';
-import { type DimensionConfig } from './config.ts';
+import { type EditorDisplay, createViewDimension } from './aspects/index.ts';
+import { type CameraOps, type DimensionConfig } from './config.ts';
 import { type History } from './history.ts';
 import { SceneEditor } from './SceneEditor.tsx';
 
@@ -23,20 +23,28 @@ const TestViewport = ({ children, grid, snap, theme }: ViewportProps<{ zoom: num
   </div>
 );
 
-const config = (dim: Scene.Dimension): DimensionConfig<{ zoom: number }> => ({
+type TestCamera = { zoom: number };
+
+const CAMERA: CameraOps<TestCamera> = {
+  fit: () => ({ zoom: 7 }),
+  reset: (authored) => ({ zoom: authored.zoom * 3 }),
+  zoom: (camera, factor) => ({ zoom: camera.zoom / factor }),
+  percent: () => 100,
+};
+
+/** The test config for `dim`, drawn by `Viewport` and moved by `camera`'s maths. */
+const config = (
+  dim: Scene.Dimension,
+  Viewport: React.ComponentType<ViewportProps<TestCamera>> = TestViewport,
+  camera: CameraOps<TestCamera> = CAMERA,
+): DimensionConfig<TestCamera> => ({
   dim,
-  viewport: TestViewport,
+  create: createViewDimension({ Viewport, camera }),
   tools: [
     { id: 'select', icon: 'ph--cursor--regular', label: 'Select', category: 'select' },
     { id: dim === '3d' ? 'cube' : 'rect', icon: 'ph--square--regular', label: 'Shape', category: 'create' },
   ],
   geometry: { pasteOffset: (pasted) => ({ x: pasted, y: pasted }), snap: { move: 1 } },
-  camera: {
-    fit: () => ({ zoom: 7 }),
-    reset: (authored) => ({ zoom: authored.zoom * 3 }),
-    zoom: (camera, factor) => ({ zoom: camera.zoom / factor }),
-    percent: () => 100,
-  },
   display: {
     themes: [
       { id: 'default', label: 'Default' },
@@ -47,12 +55,6 @@ const config = (dim: Scene.Dimension): DimensionConfig<{ zoom: number }> => ({
   },
   propertyForm: () => null,
 });
-
-/** A camera for a dimension's real config under the test viewport. */
-const CAMERA: Pick<DimensionConfig<{ zoom: number }>, 'viewport' | 'camera'> = {
-  viewport: TestViewport,
-  camera: config('2d').camera,
-};
 
 const DOCUMENT: Scene.SceneDocument = {
   scenes: [{ id: 's', dim: '2d', layout: 'root', camera: { center: { x: 0, y: 0 }, zoom: 1 } }],
@@ -137,7 +139,7 @@ describe('SceneEditor', () => {
     for (const role of ['card', 'section', 'slide', 'article']) {
       render(
         <SceneEditor.Root
-          config={{ ...config('2d'), viewport: CameraViewport }}
+          config={config('2d', CameraViewport)}
           document={DOCUMENT}
           scene='s'
           role={role}
@@ -165,7 +167,7 @@ describe('SceneEditor', () => {
     };
     const picture = (navigable: boolean) => (
       <SceneEditor.Root
-        config={{ ...config('2d'), viewport: CameraViewport }}
+        config={config('2d', CameraViewport)}
         document={DOCUMENT}
         scene='s'
         role='section'
@@ -195,46 +197,6 @@ describe('SceneEditor', () => {
     expect(onCameraChange).not.toHaveBeenCalled();
   });
 
-  test('the camera bar asks a viewport that moves its own camera, in an article or a picture, and sets no camera', async () => {
-    for (const role of ['article', 'section']) {
-      const requests: (CameraRequest | undefined)[] = [];
-      const onCameraChange = vi.fn();
-      const AnimatedViewport = ({ cameraRequest, children }: ViewportProps<{ zoom: number }>) => {
-        requests.push(cameraRequest);
-        return <div data-testid='viewport'>{children}</div>;
-      };
-      render(
-        <SceneEditor.Root
-          config={{ ...config('2d'), viewport: AnimatedViewport, camera: { ...config('2d').camera, animated: true } }}
-          document={DOCUMENT}
-          scene='s'
-          role={role}
-          navigable
-          onIntent={() => {}}
-          display={DISPLAY}
-          camera={{ zoom: 4 }}
-          authoredCamera={{ zoom: 1 }}
-          onCameraChange={onCameraChange}
-        >
-          <SceneEditor.Viewport>
-            <SceneEditor.Camera />
-          </SceneEditor.Viewport>
-        </SceneEditor.Root>,
-      );
-      await userEvent.click(screen.getByTestId('toolbar-zoom-in'));
-      expect(requests.at(-1)).toEqual({ id: 1, kind: 'zoom', factor: 1.25 });
-      await userEvent.click(screen.getByTestId('toolbar-fit'));
-      expect(requests.at(-1)).toEqual({ id: 2, kind: 'fit' });
-      // The same move twice is two asks.
-      await userEvent.click(screen.getByTestId('toolbar-fit'));
-      expect(requests.at(-1)).toEqual({ id: 3, kind: 'fit' });
-      await userEvent.click(screen.getByTestId('toolbar-zoom-reset'));
-      expect(requests.at(-1)).toEqual({ id: 4, kind: 'actual' });
-      expect(onCameraChange).not.toHaveBeenCalled();
-      cleanup();
-    }
-  });
-
   test('a viewport that reports its unchanged size after every render settles, editing or drawing a card', () => {
     for (const role of ['article', 'card']) {
       let renders = 0;
@@ -249,7 +211,7 @@ describe('SceneEditor', () => {
       };
       render(
         <SceneEditor.Root
-          config={{ ...config('2d'), viewport: ResizingViewport }}
+          config={config('2d', ResizingViewport)}
           document={DOCUMENT}
           scene='s'
           role={role}
@@ -279,10 +241,10 @@ describe('SceneEditor', () => {
   });
 
   test('each theme in the picker shows its swatch where there is a registry, and its light or dark icon, in 2D and 3D', async () => {
-    const pick = async (dimension: DimensionConfig<{ zoom: number }>) => {
+    const pick = async (dimension: DimensionConfig<TestCamera>) => {
       render(
         <SceneEditor.Root
-          config={{ ...dimension, viewport: TestViewport }}
+          config={dimension}
           document={DOCUMENT}
           scene='s'
           onIntent={() => {}}
@@ -295,14 +257,13 @@ describe('SceneEditor', () => {
       );
       await userEvent.click(screen.getByTestId('theme-trigger'));
     };
-    const { viewport: _2d, camera: _c2, ...config2d } = createConfig2D();
-    await pick({ ...config2d, ...CAMERA });
+    const testDimension = createViewDimension({ Viewport: TestViewport, camera: CAMERA });
+    await pick({ ...createConfig2D(), create: testDimension });
     expect(await screen.findByTestId('theme-swatch-paper')).toBeDefined();
     expect(screen.getByTestId('theme-option-paper').innerHTML).toContain('ph--sun--regular');
     expect(screen.getByTestId('theme-option-film').innerHTML).toContain('ph--moon--regular');
     cleanup();
-    const { viewport: _3d, camera: _c3, ...rest3d } = config3d;
-    await pick({ ...rest3d, ...CAMERA });
+    await pick({ ...config3d, create: testDimension });
     expect((await screen.findByTestId('theme-option-neu-dark')).innerHTML).toContain('ph--moon--regular');
     expect(screen.getByTestId('theme-option-neu-light').innerHTML).toContain('ph--sun--regular');
   });
@@ -341,11 +302,10 @@ describe('SceneEditor', () => {
     const onCameraChange = vi.fn();
     render(
       <SceneEditor.Root
-        config={{
-          ...config('2d'),
-          viewport: FittingViewport,
-          camera: { ...config('2d').camera, percent: (camera, authored) => (camera.zoom / authored.zoom) * 100 },
-        }}
+        config={config('2d', FittingViewport, {
+          ...CAMERA,
+          percent: (camera, authored) => (camera.zoom / authored.zoom) * 100,
+        })}
         document={DOCUMENT}
         scene='s'
         onIntent={() => {}}
@@ -394,7 +354,7 @@ describe('SceneEditor', () => {
     );
     render(
       <SceneEditor.Root
-        config={{ ...config('2d'), viewport: PortalViewport }}
+        config={config('2d', PortalViewport)}
         document={DOCUMENT}
         scene='s'
         onIntent={write}
@@ -462,8 +422,7 @@ describe('SceneEditor', () => {
     render(
       <SceneEditor.Root
         config={{
-          ...config('2d'),
-          viewport: CapturingViewport,
+          ...config('2d', CapturingViewport),
           // Refuses a delete and turns a move into one along x only.
           constrain: (layout, intent, { snap }) => {
             seen.push(snap);
@@ -516,7 +475,7 @@ const DrillingViewport = ({ children, path, onEdit }: ViewportProps<{ zoom: numb
 
 const NestedEditor = ({ dim }: { dim: Scene.Dimension }) => (
   <SceneEditor.Root
-    config={{ ...config(dim), viewport: DrillingViewport }}
+    config={config(dim, DrillingViewport)}
     document={NESTED}
     scene='s'
     onIntent={() => {}}

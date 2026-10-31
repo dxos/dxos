@@ -28,26 +28,6 @@ const document: Scene.SceneDocument = {
 };
 
 describe('config2d', () => {
-  test('reset is actual size with the content centred in the view, not the origin', () => {
-    const config = createConfig2D();
-    const size = { width: 800, height: 600 };
-    const camera = config.camera.reset({ x: 0, y: 0, zoom: 1 }, document, 'root', size);
-    expect(camera.zoom).toBe(1);
-    // The content's centre (300, 100) lands on the view's centre (400, 300).
-    expect((300 + camera.x) * camera.zoom).toBe(400);
-    expect((100 + camera.y) * camera.zoom).toBe(300);
-  });
-
-  test('the zoom buttons keep the scene point at the view centre in place', () => {
-    const config = createConfig2D();
-    const size = { width: 800, height: 600 };
-    const camera = { x: 100, y: 200, zoom: 1 };
-    const zoomed = config.camera.zoom(camera, 1 / 1.25, size);
-    expect(zoomed.zoom).toBeCloseTo(1.25);
-    // The scene point under the view's centre, (300, 100), stays there.
-    expect((300 + zoomed.x) * zoomed.zoom).toBeCloseTo(400);
-    expect((100 + zoomed.y) * zoomed.zoom).toBeCloseTo(300);
-  });
   test('a layout with a lattice snaps a move onto its cells while snapping is on', () => {
     const lattice: Scene.LayoutRecord2D = {
       id: 'grid',

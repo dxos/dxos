@@ -36,7 +36,16 @@ const sameOffers = (left: HostOffers, right: HostOffers): boolean =>
  */
 export const createDocumentAspect = <C>(
   { registry, config, latest, store }: AspectOptions<C>,
-  { editorConfig, time }: { editorConfig: EditorConfig; time: EditorTime },
+  {
+    editorConfig,
+    time,
+    path,
+  }: {
+    editorConfig: EditorConfig;
+    time: EditorTime;
+    /** The dimension's drill path, read lazily: the dimension is built over this aspect. */
+    path: () => Atom.Atom<readonly string[]>;
+  },
 ) => {
   const initial = latest.current.props;
   const picture = !editsInRole(initial.role);
@@ -51,7 +60,7 @@ export const createDocumentAspect = <C>(
   const rootLayout = Atom.keepAlive(
     Atom.make((get) => get(atoms.document).scenes.find((record) => record.id === get(atoms.scene))?.layout),
   );
-  const layout = Atom.keepAlive(Atom.make((get) => get(store.atoms.editing).at(-1) ?? get(rootLayout)));
+  const layout = Atom.keepAlive(Atom.make((get) => get(path()).at(-1) ?? get(rootLayout)));
   const visible = Atom.keepAlive(Atom.make((get) => withoutHidden(get(atoms.document))));
   // While the Timeline panel's playhead is off the start (or it plays), the viewport draws the shot sampled there.
   const shown = Atom.keepAlive(

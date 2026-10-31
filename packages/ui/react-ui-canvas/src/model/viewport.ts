@@ -19,12 +19,6 @@ export type ActiveTool = { id: string; object?: string };
 /** A selected face: the element and the outward normal of the side picked (3D; 2D never sets one). */
 export type FaceSelection = { element: string; normal: { x: number; y: number; z: number } };
 
-/** A camera-bar move a viewport that moves its own camera makes, animated: frame the layout, 1:1, or zoom by `factor`. */
-export type CameraMove = { kind: 'fit' } | { kind: 'actual' } | { kind: 'zoom'; factor: number };
-
-/** A camera move as the editor asks for it: a new `id` is a new ask, so the same move can be asked twice. */
-export type CameraRequest = CameraMove & { id: number };
-
 /**
  * What the dimension's viewport draws and how it reports gestures: every edit is an intent (a drag's in-flight state a
  * preview, written once on release), so the editor core records, undoes and shares them the same way in 2D and 3D.
@@ -52,8 +46,6 @@ export type ViewportProps<C = unknown> = {
   theme: string;
   face?: FaceSelection;
   camera?: C;
-  /** Each new request (by `id`) asks a viewport that moves its own camera (`CameraOps.animated`) to make that move. */
-  cameraRequest?: CameraRequest;
   onSelect: (ids: string[]) => void;
   /** The viewport changed the tool itself (a create tool giving way to select once it has made its element). */
   onToolChange?: (tool: ActiveTool) => void;

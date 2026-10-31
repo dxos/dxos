@@ -67,11 +67,11 @@ export const useDimension2D = (canvas: CanvasFormat.Canvas): SceneDimension<Came
   const kinds = useCanvasKinds();
   const generators = useCanvasGenerators(db);
   const appSettings = useAtomValue(Hooks.useCapability(CanvasCapabilities.Settings));
-  // The Properties form's host additions, over the views the 2D viewport's canvas holds.
+  // The Properties form's host additions, over the views the 2D canvas holds.
   const useProperties = useCallback(
-    (services: CanvasServices | undefined) =>
+    (services: CanvasServices) =>
       // eslint-disable-next-line react-hooks/rules-of-hooks
-      useCanvasProperties(canvas, () => (services ? services.registry.get(services.store.views) : {})),
+      useCanvasProperties(canvas, () => services.registry.get(services.store.views)),
     [canvas],
   );
   const config = useMemo(

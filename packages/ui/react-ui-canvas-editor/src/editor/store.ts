@@ -15,16 +15,58 @@ export type EditorPreview = { layout: string; intent: LayoutIntent };
 export type MenuAnchor = { at: { x: number; y: number }; kind: 'element' | 'canvas' };
 
 /**
- * The editor's state every part reads: the viewport, the panels and the inspectors. It is view state, never the
- * document; the document changes only through `onIntent`.
+ * A dimension's own view state, for one that keeps it outside an engine (3D, a test viewport): what is selected, the
+ * tool in hand and the drill path. 2D's are the engine's own atoms.
  */
-export type EditorAtoms = {
+export type ViewAtoms = {
   selection: Atom.Writable<readonly string[]>;
   tool: Atom.Writable<ActiveTool>;
   /** The drill path into the scene's layouts: the root layout first; empty when the scene's own layout is open. */
   editing: Atom.Writable<readonly string[]>;
   /** Dimension-specific: only 3D selects a face. */
   face: Atom.Writable<FaceSelection | undefined>;
+};
+
+export type ViewState = {
+  atoms: ViewAtoms;
+  select: (ids: readonly string[]) => void;
+  setTool: (tool: ActiveTool) => void;
+  /**
+   * Opens a layout by its drill path, the scene's own layout first; the selection is cleared, since its elements are no
+   * longer drawn.
+   */
+  open: (path: readonly string[]) => void;
+  setFace: (face: FaceSelection | undefined) => void;
+};
+
+/** Fresh view state, kept alive for the editor's lifetime (strict-mode remounts reuse it). */
+export const createViewState = (registry: Registry.AtomRegistry): ViewState => {
+  const atoms: ViewAtoms = {
+    selection: Atom.keepAlive(Atom.make<readonly string[]>([])),
+    tool: Atom.keepAlive(Atom.make<ActiveTool>({ id: 'select' })),
+    editing: Atom.keepAlive(Atom.make<readonly string[]>([])),
+    face: Atom.keepAlive(Atom.make<FaceSelection | undefined>(undefined)),
+  };
+  const select = (ids: readonly string[]) => {
+    registry.set(atoms.selection, ids);
+    const face = registry.get(atoms.face);
+    face && !ids.includes(face.element) && registry.set(atoms.face, undefined);
+  };
+  return {
+    atoms,
+    select,
+    setTool: (tool) => registry.set(atoms.tool, tool),
+    open: (path) => {
+      // The scene's own layout alone is no drill.
+      registry.set(atoms.editing, path.length > 1 ? path : []);
+      select([]);
+    },
+    setFace: (face) => registry.set(atoms.face, face),
+  };
+};
+
+/** The editor's own state beside the dimension's: gesture previews, the context menu, notices and the playhead. */
+export type EditorAtoms = {
   preview: Atom.Writable<EditorPreview | undefined>;
   menu: Atom.Writable<MenuAnchor | undefined>;
   /** A message about the last command (a refused paste, a failed import). */
@@ -42,14 +84,6 @@ export type EditorStoreOptions = {
 
 export type EditorStore = {
   atoms: EditorAtoms;
-  select: (ids: readonly string[]) => void;
-  setTool: (tool: ActiveTool) => void;
-  /**
-   * Opens a layout by its drill path, the scene's own layout first; the selection is cleared, since its elements are no
-   * longer drawn.
-   */
-  open: (path: readonly string[]) => void;
-  setFace: (face: FaceSelection | undefined) => void;
   /** Shows a gesture's edit without writing it; undefined drops it. */
   preview: (layout: string | undefined, intent?: LayoutIntent) => void;
   /** Writes the previewed edit, once, and drops the preview. */
@@ -76,10 +110,6 @@ export const drillPath = (path: readonly string[], root: string, layout: string 
 /** Fresh editor state, kept alive for the editor's lifetime (strict-mode remounts reuse it). */
 export const createEditorStore = (registry: Registry.AtomRegistry, options: EditorStoreOptions = {}): EditorStore => {
   const atoms: EditorAtoms = {
-    selection: Atom.keepAlive(Atom.make<readonly string[]>([])),
-    tool: Atom.keepAlive(Atom.make<ActiveTool>({ id: 'select' })),
-    editing: Atom.keepAlive(Atom.make<readonly string[]>([])),
-    face: Atom.keepAlive(Atom.make<FaceSelection | undefined>(undefined)),
     preview: Atom.keepAlive(Atom.make<EditorPreview | undefined>(undefined)),
     menu: Atom.keepAlive(Atom.make<MenuAnchor | undefined>(undefined)),
     notice: Atom.keepAlive(Atom.make<string | undefined>(undefined)),
@@ -87,21 +117,8 @@ export const createEditorStore = (registry: Registry.AtomRegistry, options: Edit
     time: Atom.keepAlive(Atom.make(0)),
     playing: Atom.keepAlive(Atom.make(false)),
   };
-  const select = (ids: readonly string[]) => {
-    registry.set(atoms.selection, ids);
-    const face = registry.get(atoms.face);
-    face && !ids.includes(face.element) && registry.set(atoms.face, undefined);
-  };
   return {
     atoms,
-    select,
-    setTool: (tool) => registry.set(atoms.tool, tool),
-    open: (path) => {
-      // The scene's own layout alone is no drill.
-      registry.set(atoms.editing, path.length > 1 ? path : []);
-      select([]);
-    },
-    setFace: (face) => registry.set(atoms.face, face),
     preview: (layout, intent) => registry.set(atoms.preview, layout && intent ? { layout, intent } : undefined),
     commit: () => {
       const preview = registry.get(atoms.preview);

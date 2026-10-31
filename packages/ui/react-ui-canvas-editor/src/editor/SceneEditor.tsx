@@ -103,7 +103,12 @@ const SceneEditorRoot = <C,>({
   const look = useEditorLook(config.display, props.display, props.onDisplayChange);
   const latest = useRef<SceneEditorLatest<C>>({ props, display: look.display });
   latest.current = { props, display: look.display };
-  const { services, sync } = useMemo(() => createSceneEditorServices(registry, config, latest), [registry, config]);
+  // A scene of another layout is another engine's view in 2D, so its aspects are built afresh.
+  const root = props.document.scenes.find((record) => record.id === props.scene)?.layout;
+  const { services, sync } = useMemo(
+    () => createSceneEditorServices(registry, config, latest),
+    [registry, config, root],
+  );
   useLayoutEffect(sync);
 
   const refit = useRef(refitKey);
@@ -115,24 +120,26 @@ const SceneEditorRoot = <C,>({
   }, [refitKey, services]);
 
   const readonly = (props.readonly ?? false) || !editsInRole(props.role);
-  const { Viewport } = services;
+  const { Root, Viewport } = services;
   return (
     <SceneEditorServicesProvider {...services}>
       <SceneLookProvider {...look}>
         {editsInRole(props.role) ? (
           <InspectorPanel.Root docked={!readonly && docked} readonly={readonly} onDockedChange={onDockedChange}>
             <EditorShortcuts />
-            {children}
+            <Root Frame={InspectorPanel.Frame}>{children}</Root>
           </InspectorPanel.Root>
         ) : (
-          <Viewport>
-            {navigable ? (
-              <>
-                <SceneEditorNavigation />
-                <SceneEditorCamera />
-              </>
-            ) : null}
-          </Viewport>
+          <Root>
+            <Viewport>
+              {navigable ? (
+                <>
+                  <SceneEditorNavigation />
+                  <SceneEditorCamera />
+                </>
+              ) : null}
+            </Viewport>
+          </Root>
         )}
       </SceneLookProvider>
     </SceneEditorServicesProvider>
@@ -201,11 +208,7 @@ const EditorShortcuts = () => {
 /** The dimension's viewport, framed with the inspector panel; its children are the floating panels drawn over it. */
 const SceneEditorViewport = ({ children }: PropsWithChildren) => {
   const { Viewport } = useSceneServices('SceneEditor.Viewport');
-  return (
-    <InspectorPanel.Frame>
-      <Viewport>{children}</Viewport>
-    </InspectorPanel.Frame>
-  );
+  return <Viewport>{children}</Viewport>;
 };
 
 SceneEditorViewport.displayName = 'SceneEditor.Viewport';

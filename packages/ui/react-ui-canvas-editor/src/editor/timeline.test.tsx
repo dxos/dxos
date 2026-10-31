@@ -12,7 +12,7 @@ import { type Timeline, setKey } from '@dxos/animation';
 import { type ViewportProps, sampleDocument } from '@dxos/react-ui-canvas';
 import { type Scene } from '@dxos/scene';
 
-import { useSceneSelection } from './aspects/index.ts';
+import { createViewDimension, useSceneSelection } from './aspects/index.ts';
 import { type DimensionConfig } from './config.ts';
 import { SceneEditor } from './SceneEditor.tsx';
 import { type EditorShot, keySelection, placementFields } from './timeline.ts';
@@ -64,10 +64,12 @@ const TestViewport = ({ document, children }: ViewportProps) => (
 
 const CONFIG: DimensionConfig = {
   dim: '3d',
-  viewport: TestViewport,
+  create: createViewDimension({
+    Viewport: TestViewport,
+    camera: { fit: (camera) => camera, reset: (camera) => camera, zoom: (camera) => camera, percent: () => 100 },
+  }),
   tools: [],
   geometry: { pasteOffset: (pasted) => ({ x: pasted, y: 0, z: pasted }), snap: { move: 1 } },
-  camera: { fit: (camera) => camera, reset: (camera) => camera, zoom: (camera) => camera, percent: () => 100 },
   display: { themes: [], grids: ['lines'], guides: false },
   propertyForm: () => null,
 };

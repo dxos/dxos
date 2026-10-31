@@ -2,20 +2,24 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ComponentType, type ReactNode } from 'react';
+import type * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
+import { type ComponentType, type PropsWithChildren, type ReactNode } from 'react';
 
 import {
   type ActiveTool,
   type BackgroundGrid,
+  type CanvasShellProps,
   type ConstrainIntent,
   type FaceSelection,
   type ThemeMode,
   type ThemeRegistry,
-  type ViewportProps,
 } from '@dxos/react-ui-canvas';
 import { type Fragment, type LayoutIntent, type ModelIntent, type Scene } from '@dxos/scene';
 
 import { type InspectorSectionDef } from '../components/index.ts';
+import { type EditorDocument, type EditorNavigation, type EditorSelection, type EditorTools } from './aspects/index.ts';
+import { type MenuAnchor } from './store.ts';
 import { type AnimatableFields } from './timeline.ts';
 
 /** What a tool does, which decides its rail group and whether a locked editor keeps it. */
@@ -45,15 +49,10 @@ export type GeometryOps = {
   snap: { move: number; rotate?: number; scale?: number };
 };
 
-/** The camera bar's maths over the dimension's camera. */
+/** The camera bar's maths over the camera of a dimension whose viewport does not move its own (3D). */
 export type CameraOps<C> = {
   /** The camera framing the open layout's elements in a viewport of `size`. */
   fit: (camera: C, document: Scene.SceneDocument, layout: string, size: { width: number; height: number }) => C;
-  /**
-   * The viewport moves its own camera, animated, on each `cameraRequest`: the camera bar asks it rather than setting a
-   * camera from `fit`, `reset` and `zoom`, which would jump the view and fight the viewport's own fit mode.
-   */
-  animated?: boolean;
   /** Actual size: the authored camera's scale and view, moved so the open layout's elements sit in the middle. */
   reset: (authored: C, document: Scene.SceneDocument, layout: string, size: { width: number; height: number }) => C;
   /** The camera `factor` closer (below 1) or further (above 1), about the centre of a viewport of `size`. */
@@ -111,18 +110,46 @@ export type ClipboardCodec = {
   read: (text: string, dim: Scene.Dimension) => Fragment | undefined;
 };
 
+/** What the editor gives a dimension to build its aspects over: the document and the host's camera. */
+export type DimensionContext<C> = {
+  registry: Registry.AtomRegistry;
+  document: EditorDocument;
+  /** This viewer's camera as the host stores it, the scene's authored one, and where a settled camera is reported. */
+  camera: { host: Atom.Atom<C | undefined>; authored: Atom.Atom<C | undefined>; report: (camera: C) => void };
+  /** Shows a gesture's edit without writing it; undefined drops it. */
+  preview: (layout: string | undefined, intent?: LayoutIntent) => void;
+  setMenu: (menu: MenuAnchor | undefined) => void;
+};
+
+/**
+ * A dimension's aspects for one editor (COMMON-CORE Expectation 0): the shared hooks read them, so each dimension
+ * supplies its own navigation, selection and tools behind the same parts.
+ */
+export type Dimension = {
+  navigation: EditorNavigation;
+  selection: EditorSelection;
+  tools: EditorTools;
+  /**
+   * Holds the dimension's engine round all the editor's parts, so each can read it; inside `Frame` (the inspector
+   * panel's) while it edits.
+   */
+  Root: ComponentType<PropsWithChildren<{ Frame?: ComponentType<CanvasShellProps> }>>;
+  /** The scene drawn, with the floating panels over it. */
+  Viewport: ComponentType<PropsWithChildren>;
+};
+
 /**
  * Everything that differs between the 2D and 3D editors; the rest of `SceneEditor` (panels, inspectors, commands,
  * history, clipboard, lock, roles) is shared.
  */
 export type DimensionConfig<C = unknown> = {
   dim: Scene.Dimension;
-  viewport: ComponentType<ViewportProps<C>>;
+  /** Builds the dimension's aspects for one editor, once. */
+  create: (context: DimensionContext<C>) => Dimension;
   tools: readonly ToolDef[];
   /** What dragging a rail tool onto the viewport drops (2D: a node of the tool's type); undefined, the tool does not drag. */
   toolDragData?: (tool: ToolDef) => Record<string, unknown> | undefined;
   geometry: GeometryOps;
-  camera: CameraOps<C>;
   display: DisplayOptions;
   /** The form over one selected element; `createPropertyForm` builds it from a schema. */
   propertyForm: ComponentType<PropertyFormProps>;

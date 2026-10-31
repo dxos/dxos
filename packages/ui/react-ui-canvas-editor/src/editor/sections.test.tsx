@@ -11,7 +11,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { type ViewportProps } from '@dxos/react-ui-canvas';
 import { type Layer, type LayoutIntent, type ModelIntent, type Scene } from '@dxos/scene';
 
-import { useSceneSelection } from './aspects/index.ts';
+import { createViewDimension, useSceneSelection } from './aspects/index.ts';
 import { type DimensionConfig } from './config.ts';
 import { SceneEditor } from './SceneEditor.tsx';
 
@@ -31,10 +31,12 @@ const TestViewport = ({ document, editing, tool, children }: ViewportProps) => {
 
 const CONFIG: DimensionConfig = {
   dim: '3d',
-  viewport: TestViewport,
+  create: createViewDimension({
+    Viewport: TestViewport,
+    camera: { fit: (camera) => camera, reset: (camera) => camera, zoom: (camera) => camera, percent: () => 100 },
+  }),
   tools: [{ id: 'select', icon: 'ph--cursor--regular', label: 'Select', category: 'select' }],
   geometry: { pasteOffset: (pasted) => ({ x: pasted, y: 0, z: pasted }), snap: { move: 1 } },
-  camera: { fit: (camera) => camera, reset: (camera) => camera, zoom: (camera) => camera, percent: () => 100 },
   display: { themes: [{ id: 'cad', label: 'CAD' }], grids: ['lines'], guides: false },
   propertyForm: ({ element }) => (
     <p data-testid='property-form' data-type={element.type ?? ''}>

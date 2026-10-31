@@ -278,6 +278,7 @@ export const ControlFrame = memo(
               className={mx('fill-none', blocked ? 'stroke-error-border' : 'stroke-focus')}
               strokeWidth={unit}
               data-blocked={blocked || undefined}
+              data-selected-id={node.id}
             />
           );
         })}

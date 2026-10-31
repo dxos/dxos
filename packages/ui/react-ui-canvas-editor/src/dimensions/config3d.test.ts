@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { type LayoutIntent, type ModelIntent, type Scene } from '@dxos/scene';
 
-import { CATALOGS_3D, config3d } from './config3d.tsx';
+import { CATALOGS_3D, camera3D, config3d } from './config3d.tsx';
 
 const CAMERA: Scene.Camera3D = {
   target: { x: 0, y: 0, z: 0 },
@@ -42,11 +42,11 @@ describe('config3d', () => {
   });
 
   test('fit frames the open layout and zoom keeps the angle', () => {
-    const fitted = config3d.camera.fit(CAMERA, document, 'root', { width: 800, height: 600 });
+    const fitted = camera3D.fit(CAMERA, document, 'root', { width: 800, height: 600 });
     expect(fitted.target.x).toBeCloseTo(11);
     expect(fitted.yaw).toBe(CAMERA.yaw);
-    expect(config3d.camera.zoom(CAMERA, 2, SIZE).distance).toBeCloseTo(20);
-    expect(config3d.camera.percent(config3d.camera.zoom(CAMERA, 0.5, SIZE), CAMERA)).toBe(200);
+    expect(camera3D.zoom(CAMERA, 2, SIZE).distance).toBeCloseTo(20);
+    expect(camera3D.percent(camera3D.zoom(CAMERA, 0.5, SIZE), CAMERA)).toBe(200);
   });
 
   test('a paste lands a grid unit further along each ground axis, and gizmos snap to unit, 15° and a tenth', () => {
@@ -76,7 +76,7 @@ describe('config3d', () => {
   });
 
   test('reset keeps the authored view and its distance, looking at the middle of the content', () => {
-    const reset = config3d.camera.reset(CAMERA, document, 'root', { width: 800, height: 600 });
+    const reset = camera3D.reset(CAMERA, document, 'root', { width: 800, height: 600 });
     expect(reset).toEqual({ ...CAMERA, target: { x: 11, y: 0, z: 0 } });
   });
 });
