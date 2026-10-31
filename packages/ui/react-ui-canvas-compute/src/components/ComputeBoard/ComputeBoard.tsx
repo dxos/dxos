@@ -12,7 +12,8 @@ import {
   SceneEditor,
   createHistory,
   sessionHistory,
-  useSceneEditor,
+  useSceneDocument,
+  useSceneServices,
 } from '@dxos/react-ui-canvas-editor';
 import { type LayoutIntent, findLayout } from '@dxos/scene';
 
@@ -113,16 +114,24 @@ export const ComputeBoard = ({ board, controller, role }: ComputeBoardProps) => 
 
 /** The compute context for the shapes, whose function body grows its node through the editor so the step undoes. */
 const ComputeResize = ({ controller, children }: PropsWithChildren<{ controller: ComputeGraphController }>) => {
-  const { document, layout, onIntent } = useSceneEditor('ComputeResize');
+  const { registry } = useSceneServices('ComputeResize');
+  const { atoms, commands } = useSceneDocument('ComputeResize');
+  // Reads the document as it resizes, so the context holds still while the shapes are edited.
   const resize = useCallback(
     (id: string, delta: number) => {
-      const record = layout === undefined ? undefined : findLayout(document, layout);
+      const layout = registry.get(atoms.layout);
+      const record = layout === undefined ? undefined : findLayout(registry.get(atoms.document), layout);
       const size = record?.dim === '2d' ? record.elements[id]?.size : undefined;
       if (layout !== undefined && size) {
-        onIntent(layout, { kind: 'update', id, path: ['size'], value: { ...size, height: size.height + delta } });
+        commands.intent(layout, {
+          kind: 'update',
+          id,
+          path: ['size'],
+          value: { ...size, height: size.height + delta },
+        });
       }
     },
-    [document, layout, onIntent],
+    [registry, atoms, commands],
   );
   const context = useMemo(() => ({ controller, resize }), [controller, resize]);
   return <ComputeContext.Provider value={context}>{children}</ComputeContext.Provider>;

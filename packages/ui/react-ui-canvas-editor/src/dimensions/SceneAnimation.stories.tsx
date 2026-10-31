@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useLayoutEffect } from 'react';
 
@@ -10,7 +11,7 @@ import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 import { type Scene } from '@dxos/scene';
 
-import { SceneEditor, useSceneEditor } from '../editor/index.ts';
+import { SceneEditor, useSceneTime } from '../editor/index.ts';
 import { DOCUMENT_2D, DOCUMENT_3D, SceneEditorStory, SHOTS_2D, SHOTS_3D } from '../testing/index.ts';
 
 type StoryProps = {
@@ -23,25 +24,26 @@ type StoryProps = {
 
 /** Starts the shot playing (again each time it ends) or parks the playhead at `time`. */
 const Playback = ({ playing, time = 0 }: Pick<StoryProps, 'playing' | 'time'>) => {
-  const { store, shots } = useSceneEditor('SceneAnimation.Playback');
+  const { atoms, commands } = useSceneTime('SceneAnimation.Playback');
+  const shots = useAtomValue(atoms.shots);
   const duration = shots?.[0]?.timeline.duration ?? 0;
   useLayoutEffect(() => {
-    store.setTime(playing ? 0 : time);
-    store.setPlaying(Boolean(playing));
-  }, [store, playing, time]);
+    commands.setTime(playing ? 0 : time);
+    commands.setPlaying(Boolean(playing));
+  }, [commands, playing, time]);
   useEffect(() => {
     if (!playing || duration <= 0) {
       return;
     }
     const interval = setInterval(
       () => {
-        store.setTime(0);
-        store.setPlaying(true);
+        commands.setTime(0);
+        commands.setPlaying(true);
       },
       duration * 1000 + 500,
     );
     return () => clearInterval(interval);
-  }, [store, playing, duration]);
+  }, [commands, playing, duration]);
   return null;
 };
 

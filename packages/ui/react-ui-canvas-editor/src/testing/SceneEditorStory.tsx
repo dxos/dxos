@@ -27,7 +27,7 @@ import {
   type EditorShot,
   SceneEditor,
   createHistory,
-  useSceneEditor,
+  useSceneSelection,
 } from '../editor/index.ts';
 
 /** The `.dx` text a copy writes and a paste reads, as the canvas plugin's codec (without its model folding). */
@@ -252,8 +252,8 @@ const Host = <C,>({
 
 /** Selects `ids` once the editor mounts. */
 const Select = ({ ids }: { ids: readonly string[] }) => {
-  const { store } = useSceneEditor('SceneEditorStory.Select');
-  useLayoutEffect(() => store.select(ids), []);
+  const { commands } = useSceneSelection('SceneEditorStory.Select');
+  useLayoutEffect(() => commands.select(ids), []);
   return null;
 };
 

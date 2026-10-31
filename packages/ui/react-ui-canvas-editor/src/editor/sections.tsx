@@ -17,6 +17,7 @@ import {
 } from '@dxos/scene';
 
 import {
+  InspectorPanel,
   InspectorSection,
   type InspectorSectionDef,
   LAYERS_INSPECTOR,
@@ -32,7 +33,13 @@ import {
   ViewsInspector,
   propertiesShown,
 } from '../components/index.ts';
-import { useSceneEditor } from './context.ts';
+import {
+  useSceneCommands,
+  useSceneDocument,
+  useSceneNavigation,
+  useSceneSelection,
+  useSceneTools,
+} from './aspects/index.ts';
 import { layersOf, layoutTree, objectEntries } from './scene-rows.ts';
 
 export const STYLES_INSPECTOR: InspectorSectionDef = {
@@ -53,7 +60,9 @@ export type EditorCatalog = {
 
 /** The open layout's record. */
 const useOpenLayout = (consumer: string): Scene.LayoutRecord | undefined => {
-  const { document, layout } = useSceneEditor(consumer);
+  const { atoms } = useSceneDocument(consumer);
+  const document = useAtomValue(atoms.document);
+  const layout = useAtomValue(atoms.layout);
   return layout === undefined ? undefined : findLayout(document, layout);
 };
 
@@ -62,9 +71,14 @@ const useOpenLayout = (consumer: string): Scene.LayoutRecord | undefined => {
  * form shows the element as drawn, its object's size, type and look applied, so a field it inherits is not blank.
  */
 export const PropertiesSection = () => {
-  const { config, document, store, readonly, docked, layout, onIntent } = useSceneEditor('SceneEditor.Properties');
-  const selection = useAtomValue(store.atoms.selection);
-  const face = useAtomValue(store.atoms.face);
+  const { config, atoms, commands } = useSceneDocument('SceneEditor.Properties');
+  const document = useAtomValue(atoms.document);
+  const layout = useAtomValue(atoms.layout);
+  const readonly = useAtomValue(atoms.readonly);
+  const docked = InspectorPanel.useDocked();
+  const { atoms: selectionAtoms } = useSceneSelection('SceneEditor.Properties');
+  const selection = useAtomValue(selectionAtoms.selection);
+  const face = useAtomValue(selectionAtoms.face);
   const record = useOpenLayout('SceneEditor.Properties');
   // A form over a whole selection is given the first element; any other shows only for one.
   const id =
@@ -86,7 +100,7 @@ export const PropertiesSection = () => {
           key={element.id}
           element={element}
           readonly={readonly}
-          onIntents={(intents) => intents.length > 0 && onIntent(layout, { kind: 'batch', intents })}
+          onIntents={(intents) => intents.length > 0 && commands.intent(layout, { kind: 'batch', intents })}
         />
       </LayersContext.Provider>
     </InspectorSection>
@@ -95,24 +109,31 @@ export const PropertiesSection = () => {
 
 /** Views: the scene's layout tree, with a composite's parts under it; a row selects, a composite row drills in. */
 export const ViewsSection = () => {
-  const { document, scene, store, readonly, rootLayout, sceneChoice } = useSceneEditor('SceneEditor.Views');
-  const selection = useAtomValue(store.atoms.selection);
-  const path = useAtomValue(store.atoms.editing);
+  const { atoms } = useSceneDocument('SceneEditor.Views');
+  const navigation = useSceneNavigation('SceneEditor.Views');
+  const selection = useSceneSelection('SceneEditor.Views');
+  const document = useAtomValue(atoms.document);
+  const scene = useAtomValue(atoms.scene);
+  const readonly = useAtomValue(atoms.readonly);
+  const rootLayout = useAtomValue(atoms.rootLayout);
+  const sceneChoice = useAtomValue(atoms.sceneChoice);
+  const selected = useAtomValue(selection.atoms.selection);
+  const path = useAtomValue(navigation.atoms.path);
   const record = document.scenes.find((entry) => entry.id === scene);
   const tree = useMemo(() => layoutTree(document, record), [document, record]);
   const open = (layout: string | undefined) =>
-    store.open(layout === undefined || layout === rootLayout ? [] : [rootLayout ?? '', layout]);
+    navigation.commands.open(layout === undefined || layout === rootLayout ? [] : [rootLayout ?? '', layout]);
   return (
     <InspectorSection section={VIEWS_INSPECTOR}>
       <ViewsInspector
         sceneChoice={sceneChoice}
         readonly={readonly}
         tree={tree}
-        selected={new Set(selection)}
+        selected={new Set(selected)}
         place={{ path: rootLayout === undefined ? [] : path.length > 0 ? [...path] : [rootLayout] }}
         onSelect={(next) => {
           open(next.path.at(-1));
-          store.select(next.ids);
+          selection.commands.select(next.ids);
         }}
         onOpen={(next) => open(next.at(-1))}
       />
@@ -122,12 +143,18 @@ export const ViewsSection = () => {
 
 /** Objects: the model's objects; place one with the place tool, open a composite's parts, or make one of the selection. */
 export const ObjectsSection = () => {
-  const { document, store, readonly, rootLayout, commands, onIntent, onModelIntent } =
-    useSceneEditor('SceneEditor.Objects');
+  const { atoms, commands } = useSceneDocument('SceneEditor.Objects');
+  const navigation = useSceneNavigation('SceneEditor.Objects');
+  const tools = useSceneTools('SceneEditor.Objects');
+  const document = useAtomValue(atoms.document);
+  const readonly = useAtomValue(atoms.readonly);
+  const rootLayout = useAtomValue(atoms.rootLayout);
+  const offers = useAtomValue(atoms.host);
+  const table = useAtomValue(useSceneCommands('SceneEditor.Objects').atoms.table);
   const entries = useMemo(() => objectEntries(document), [document]);
   const model = document.models[0]?.id;
   const objects = document.models[0]?.objects ?? {};
-  const importCommand = commands.get('import');
+  const importCommand = table.get('import');
   const [current, setCurrent] = useState<string>();
   return (
     <InspectorSection section={OBJECTS_INSPECTOR}>
@@ -135,18 +162,20 @@ export const ObjectsSection = () => {
         objects={entries}
         selected={current}
         readonly={readonly}
-        onPlace={(id) => store.setTool({ id: 'place', object: id })}
-        onMakeObject={() => commands.get('make-object')?.run()}
-        canMakeObject={commands.get('make-object')?.enabled ?? false}
+        onPlace={(id) => tools.commands.setTool({ id: 'place', object: id })}
+        onMakeObject={() => table.get('make-object')?.run()}
+        canMakeObject={table.get('make-object')?.enabled ?? false}
         onImport={importCommand?.enabled ? importCommand.run : undefined}
         onSelect={(id) => {
           // A click picks the object; a click on the picked one opens a composite's parts.
           const parts = objects[id]?.parts;
-          current === id && parts !== undefined && store.open(parts === rootLayout ? [] : [rootLayout ?? '', parts]);
+          current === id &&
+            parts !== undefined &&
+            navigation.commands.open(parts === rootLayout ? [] : [rootLayout ?? '', parts]);
           setCurrent(id);
         }}
         onDelete={
-          model === undefined || !onModelIntent
+          model === undefined || !offers.model
             ? undefined
             : (id, instances) => {
                 if (instances) {
@@ -154,10 +183,10 @@ export const ObjectsSection = () => {
                     const ids = Object.values(layout.elements)
                       .filter((element) => element.object === id)
                       .map((element) => element.id);
-                    ids.length > 0 && onIntent(layout.id, { kind: 'delete', ids });
+                    ids.length > 0 && commands.intent(layout.id, { kind: 'delete', ids });
                   }
                 }
-                onModelIntent({ kind: 'remove', model, id });
+                commands.modelIntent({ kind: 'remove', model, id });
               }
         }
       />
@@ -167,15 +196,18 @@ export const ObjectsSection = () => {
 
 /** Layers: the open layout's layers; a hidden one's elements are neither drawn nor picked. */
 export const LayersSection = () => {
-  const { readonly, layout, onLayersChange } = useSceneEditor('SceneEditor.Layers');
+  const { atoms, commands } = useSceneDocument('SceneEditor.Layers');
+  const readonly = useAtomValue(atoms.readonly);
+  const layout = useAtomValue(atoms.layout);
+  const offers = useAtomValue(atoms.host);
   const record = useOpenLayout('SceneEditor.Layers');
   const layers = useMemo(() => (record ? layersOf(record) : []), [record]);
-  const write = (next: readonly Layer[]) => layout !== undefined && onLayersChange?.(layout, next);
+  const write = (next: readonly Layer[]) => layout !== undefined && commands.setLayers(layout, next);
   return (
     <InspectorSection section={LAYERS_INSPECTOR}>
       <LayersInspector
         layers={layers}
-        readonly={readonly || !onLayersChange}
+        readonly={readonly || !offers.layers}
         onToggle={(id) => write(layers.map((layer) => (layer.id === id ? { ...layer, hidden: !layer.hidden } : layer)))}
         onRename={(id, name) => write(layers.map((layer) => (layer.id === id ? { ...layer, name } : layer)))}
         onCreate={() => {
@@ -203,8 +235,12 @@ const freeStyleKey = (styles: Readonly<Record<string, unknown>>): string => {
  * the selected element's own look (its overrides) into the model and points the element at it.
  */
 export const StylesSection = ({ catalogs = [] }: { catalogs?: readonly EditorCatalog[] }) => {
-  const { document, store, readonly, layout, onIntent, onModelIntent } = useSceneEditor('SceneEditor.Styles');
-  const selection = useAtomValue(store.atoms.selection);
+  const { atoms, commands } = useSceneDocument('SceneEditor.Styles');
+  const document = useAtomValue(atoms.document);
+  const readonly = useAtomValue(atoms.readonly);
+  const layout = useAtomValue(atoms.layout);
+  const offers = useAtomValue(atoms.host);
+  const selection = useAtomValue(useSceneSelection('SceneEditor.Styles').atoms.selection);
   const record = useOpenLayout('SceneEditor.Styles');
   const model = document.models[0];
   const modelStyles: Readonly<Record<string, NamedStyle<{ hue?: string }>>> = model?.styles ?? {};
@@ -238,11 +274,11 @@ export const StylesSection = ({ catalogs = [] }: { catalogs?: readonly EditorCat
     const [catalogId, key] = id?.includes(':') ? id.split(':') : [];
     const adopted = catalogs.find((catalog) => catalog.id === catalogId)?.styles[key ?? ''];
     if (id !== undefined && adopted && model && modelStyles[id] === undefined) {
-      if (!onModelIntent || onModelIntent({ kind: 'style', model: model.id, id, style: adopted }).length > 0) {
+      if (!offers.model || commands.modelIntent({ kind: 'style', model: model.id, id, style: adopted }).length > 0) {
         return;
       }
     }
-    onIntent(layout, {
+    commands.intent(layout, {
       kind: 'batch',
       intents: selected.map((element) => ({ kind: 'update' as const, id: element.id, path: ['style'], value: id })),
     });
@@ -256,7 +292,7 @@ export const StylesSection = ({ catalogs = [] }: { catalogs?: readonly EditorCat
         readonly={readonly}
         onApply={apply}
         onCreateFromSelection={
-          model === undefined || !onModelIntent || layout === undefined
+          model === undefined || !offers.model || layout === undefined
             ? undefined
             : () => {
                 const [first] = selected;
@@ -265,8 +301,8 @@ export const StylesSection = ({ catalogs = [] }: { catalogs?: readonly EditorCat
                 }
                 const id = freeStyleKey(modelStyles);
                 const style = { name: `Style ${Object.keys(modelStyles).length + 1}`, ...first.overrides };
-                onModelIntent({ kind: 'style', model: model.id, id, style }).length === 0 &&
-                  onIntent(layout, {
+                commands.modelIntent({ kind: 'style', model: model.id, id, style }).length === 0 &&
+                  commands.intent(layout, {
                     kind: 'batch',
                     intents: selected.flatMap((element) => [
                       { kind: 'update' as const, id: element.id, path: ['style'], value: id },
@@ -276,9 +312,9 @@ export const StylesSection = ({ catalogs = [] }: { catalogs?: readonly EditorCat
               }
         }
         onDelete={
-          model === undefined || !onModelIntent
+          model === undefined || !offers.model
             ? undefined
-            : (id) => onModelIntent({ kind: 'style', model: model.id, id })
+            : (id) => commands.modelIntent({ kind: 'style', model: model.id, id })
         }
       />
     </InspectorSection>
@@ -287,7 +323,7 @@ export const StylesSection = ({ catalogs = [] }: { catalogs?: readonly EditorCat
 
 /** The shared inspector sections, then the dimension's own. */
 export const SceneEditorInspector = ({ catalogs }: { catalogs?: readonly EditorCatalog[] }) => {
-  const { config } = useSceneEditor('SceneEditor.Inspector');
+  const { config } = useSceneDocument('SceneEditor.Inspector');
   return (
     <>
       <PropertiesSection />

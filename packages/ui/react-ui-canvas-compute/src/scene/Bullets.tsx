@@ -11,7 +11,7 @@
 import React, { useEffect, useRef } from 'react';
 
 import { DEFAULT_OUTPUT } from '@dxos/conductor';
-import { useSceneEditor } from '@dxos/react-ui-canvas-editor';
+import { useSceneDocument, useSceneServices } from '@dxos/react-ui-canvas-editor';
 import { type Scene, findLayout } from '@dxos/scene';
 
 import { type ComputeGraphController } from '../graph/index.ts';
@@ -40,9 +40,8 @@ const outgoing = (layout: Scene.LayoutRecord | undefined, nodeId: string, proper
 
 /** Renders nothing itself: it marks where in the page the editor's viewport is. */
 export const Bullets = ({ controller }: BulletsProps) => {
-  const { document, layout } = useSceneEditor('Bullets');
-  const latest = useRef({ document, layout });
-  latest.current = { document, layout };
+  const { registry } = useSceneServices('Bullets');
+  const { atoms } = useSceneDocument('Bullets');
   const markerRef = useRef<HTMLSpanElement>(null);
 
   useEffect(
@@ -52,8 +51,8 @@ export const Bullets = ({ controller }: BulletsProps) => {
         if (!root || value.type === 'not-executed') {
           return;
         }
-        const { document, layout } = latest.current;
-        const record = layout === undefined ? undefined : findLayout(document, layout);
+        const layout = registry.get(atoms.layout);
+        const record = layout === undefined ? undefined : findLayout(registry.get(atoms.document), layout);
         for (const id of outgoing(record, nodeId, property)) {
           const path = root.querySelector(`path[data-link-id="${id}"]`);
           if (path instanceof SVGPathElement && root.querySelectorAll(`circle.${BULLET_CLASS}`).length < MAX_BULLETS) {
@@ -61,7 +60,7 @@ export const Bullets = ({ controller }: BulletsProps) => {
           }
         }
       }),
-    [controller],
+    [controller, registry, atoms],
   );
 
   return <span ref={markerRef} hidden />;

@@ -19,7 +19,7 @@ import {
 import { type LayoutIntent, type Point, type Scene, applyIntent } from '@dxos/scene';
 
 import { createConfig2D } from '../../dimensions/index.ts';
-import { type EditorDisplay, SceneEditor, useSceneEditor } from '../../editor/index.ts';
+import { type EditorDisplay, SceneEditor, useSceneSelection } from '../../editor/index.ts';
 
 /** The camera the camera bar resets to: the origin, where an arranged graph is centred, at 1:1. */
 const AUTHORED_CAMERA: Camera = { x: 0, y: 0, zoom: 1 };
@@ -140,11 +140,11 @@ type SelectionSyncProps = Pick<Graph2DViewProps, 'selection' | 'onSelectionChang
 
 /** The editor's selection kept in step with the host's: set from outside, and reported when a person changes it. */
 const SelectionSync = ({ selection, onSelectionChange }: SelectionSyncProps) => {
-  const { store } = useSceneEditor('Graph2DView');
-  const current = useAtomValue(store.atoms.selection);
+  const { atoms, commands } = useSceneSelection('Graph2DView');
+  const current = useAtomValue(atoms.selection);
   useEffect(() => {
-    selection && !sameIds(selection, current) && store.select(selection);
-  }, [store, selection]);
+    selection && !sameIds(selection, current) && commands.select(selection);
+  }, [commands, selection]);
   // Reported on change only, so mounting reports nothing.
   const reported = useRef(current);
   useEffect(() => {

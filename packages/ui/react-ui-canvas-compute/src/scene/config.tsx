@@ -12,7 +12,8 @@ import {
   type DimensionConfig,
   type InspectorSectionDef,
   createConfig2D,
-  useSceneEditor,
+  useSceneDocument,
+  useSceneSelection,
 } from '@dxos/react-ui-canvas-editor';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { type LayoutIntent, type Port, type Scene, findLayout } from '@dxos/scene';
@@ -107,8 +108,10 @@ export const COMPUTE_INSPECTOR: InspectorSectionDef = {
 const ComputeSection = ({ controller }: { controller: ComputeGraphController }) => {
   // The compiler would cache the runtime values on the unchanged selection, so they would never refresh.
   'use no memo';
-  const { document, layout, store } = useSceneEditor('ComputeSection');
-  const selection = useAtomValue(store.atoms.selection);
+  const { atoms } = useSceneDocument('ComputeSection');
+  const document = useAtomValue(atoms.document);
+  const layout = useAtomValue(atoms.layout);
+  const selection = useAtomValue(useSceneSelection('ComputeSection').atoms.selection);
   useControllerVersion(controller);
   const record = layout === undefined ? undefined : findLayout(document, layout);
   const element = selection.length === 1 && record?.dim === '2d' ? record.elements[selection[0]] : undefined;

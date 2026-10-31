@@ -12,8 +12,8 @@ import { type Timeline, setKey } from '@dxos/animation';
 import { type ViewportProps, sampleDocument } from '@dxos/react-ui-canvas';
 import { type Scene } from '@dxos/scene';
 
+import { useSceneSelection } from './aspects/index.ts';
 import { type DimensionConfig } from './config.ts';
-import { useSceneEditor } from './context.ts';
 import { SceneEditor } from './SceneEditor.tsx';
 import { type EditorShot, keySelection, placementFields } from './timeline.ts';
 
@@ -73,8 +73,8 @@ const CONFIG: DimensionConfig = {
 };
 
 const Select = ({ ids }: { ids: string[] }) => {
-  const { store } = useSceneEditor('Select');
-  useEffect(() => store.select(ids), []);
+  const { commands } = useSceneSelection('Select');
+  useEffect(() => commands.select(ids), []);
   return null;
 };
 

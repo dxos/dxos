@@ -238,9 +238,9 @@ type EditorShot
 
 ## Components
 
-The editor is one composite, `SceneEditor`. `Root` holds the store, the command table, the history, the clipboard,
-the lock and the role; every other part reads them through `useSceneEditor` and is placed by the host, so a host
-may leave a part out or move it.
+The editor is one composite, `SceneEditor`. `Root` builds the editor's services once, one module per aspect, and
+provides them; every other part reads its aspect's hook and is placed by the host, so a host may leave a part out or
+move it.
 
 ```mdl
 component SceneEditor.Root
@@ -366,11 +366,11 @@ feat F-10: One editor, configured per dimension
   req F-10.1: Both dimensions render `SceneEditor` over the same document types; the dimension's `DimensionConfig`
     supplies the viewport, tools, geometry, camera maths, display options, property form, sections, animatable fields
     and extra commands, and nothing else differs.
-  req F-10.2: A part reads the editor's state through `useSceneEditor`, with `useEditorSelection` and
-    `useEditorCommands` for the selection and the command table.
-  req F-10.3: (planned) The editor's context is split by aspect with one hook per aspect, as the 2D engine's `Canvas`
-    has (document, tools, look, navigation, editing); panels and inspectors read those hooks, and each config supplies
-    its implementations behind them.
+  req F-10.2: A part reads the editor through one hook per aspect (`useSceneDocument`, `useSceneNavigation`,
+    `useSceneSelection`, `useSceneTools`, `useSceneCommands`, `useSceneTime`, `useSceneLook`), each returning the atoms
+    it subscribes to and commands that read state when called, so an edit changes no context value.
+  req F-10.3: (planned) Each config supplies its implementations of the Navigation, Selection and Tools aspects behind
+    those hooks, as the 2D engine's `Canvas` has them.
   req F-10.4: Each viewer opens one of the canvas's scenes, kept by key in the canvas's view state; the Views section
     picks, adds and deletes scenes the same way in both dimensions, keeping the last ([org.dxos.scene#D-84]).
 ```
@@ -982,6 +982,16 @@ decision D-52: The look menu's swatches come from the dimension's theme registry
   for: user:richburdon
   affects: [SceneEditor.Display]
   why: The registry already draws each theme's swatch; the editor had passed only the theme names.
+```
+
+```mdl
+decision D-53: The editor's one context is split into one hook per aspect over services built once, the per-edit values as atoms; `useSceneEditor`, `useEditorSelection` and `useEditorCommands` are gone. Fills in [D-23].
+  date: 2026-10-31
+  by: agent:claude-code
+  for: user:richburdon
+  supersedes: [D-34]
+  affects: [F-10.2, F-10.3]
+  why: COMMON-CORE Expectation 0 asks for `Canvas.Root`'s shape; one context of 28 values re-rendered every part on each edit and kept `SceneEditor.Root` at 440 lines.
 ```
 
 ---

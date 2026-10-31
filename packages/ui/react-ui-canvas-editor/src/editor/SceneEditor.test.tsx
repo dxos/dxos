@@ -12,8 +12,8 @@ import { type CameraRequest, type ViewportProps } from '@dxos/react-ui-canvas';
 import { type Scene } from '@dxos/scene';
 
 import { config3d, createConfig2D } from '../dimensions/index.ts';
+import { type EditorDisplay } from './aspects/index.ts';
 import { type DimensionConfig } from './config.ts';
-import { type EditorDisplay } from './context.ts';
 import { type History } from './history.ts';
 import { SceneEditor } from './SceneEditor.tsx';
 

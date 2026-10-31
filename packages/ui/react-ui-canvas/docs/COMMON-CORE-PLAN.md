@@ -1158,11 +1158,16 @@ runner (CanvasArticle, CanvasCard) and a story check in the browser.
 
 ### Task H.1: One hook per aspect
 
-- [ ] Split the root into aspect hooks — Document (document, shown layers, open layout, intents, layers), Navigation
+- [x] Split the root into aspect hooks — Document (document, shown layers, open layout, intents, layers), Navigation
       (drill path, open, camera bar), Selection, Tools, Look (display, theme), History (undo, clipboard, command table)
       and Time (shots, Timeline) — each in its own module under `editor/aspects/`, each returning atoms and commands.
-- [ ] `SceneEditor.Root` composes them and provides them, as `Canvas.Root` does; each part reads only its aspect's hook
+- [x] `SceneEditor.Root` composes them and provides them, as `Canvas.Root` does; each part reads only its aspect's hook
       (`useSceneDocument`, `useSceneNavigation`, …); `useSceneEditor` goes.
+- Ruling (agent, 2026-10-31): the hooks return `{ atoms, commands }` from the start, over services built once, since a
+  hook returning values would be rewritten in H.2; H.2 adds its tests. History is `useSceneCommands` (`commands.ts`):
+  the command table holds undo with the clipboard and the edits, as every surface reads them as one table. Selection
+  and Tools wrap the editor store's atoms until H.3 has the config supply them. `useEditorSelection` and
+  `useEditorCommands` went with `useSceneEditor`. Root: 440 → 50 lines.
 
 ### Task H.2: Values never go in the context (§13.1 rules 1–2)
 

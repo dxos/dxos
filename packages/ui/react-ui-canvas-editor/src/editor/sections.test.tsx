@@ -11,8 +11,8 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 import { type ViewportProps } from '@dxos/react-ui-canvas';
 import { type Layer, type LayoutIntent, type ModelIntent, type Scene } from '@dxos/scene';
 
+import { useSceneSelection } from './aspects/index.ts';
 import { type DimensionConfig } from './config.ts';
-import { useSceneEditor } from './context.ts';
 import { SceneEditor } from './SceneEditor.tsx';
 
 const TestViewport = ({ document, editing, tool, children }: ViewportProps) => {
@@ -71,8 +71,8 @@ const document = (hidden = false): Scene.SceneDocument => ({
 
 /** Selects `ids` once mounted, as a click in the viewport would. */
 const Select = ({ ids }: { ids: string[] }) => {
-  const { store } = useSceneEditor('Select');
-  useEffect(() => store.select(ids), []);
+  const { commands } = useSceneSelection('Select');
+  useEffect(() => commands.select(ids), []);
   return null;
 };
 
