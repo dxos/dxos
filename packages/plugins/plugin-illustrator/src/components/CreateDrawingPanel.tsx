@@ -3,15 +3,17 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { Form } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
-import { IllustratorCapabilities } from '#types';
+import { IllustratorCapabilities, IllustratorEvents } from '#types';
 
 import { IllustratorNamespace } from '../namespace.ts';
 
@@ -37,6 +39,11 @@ export const CreateDrawingPanel = ({
   variants: variantsProp,
 }: CreateDrawingPanelProps) => {
   const { t } = UiHooks.useTranslation(IllustratorNamespace.key);
+  const manager = PluginManagerProvider.usePluginManager();
+  // Renderer plugins load their variants on the illustrator's start, which otherwise fires only once a drawing renders.
+  useEffect(() => {
+    EffectEx.runDetached(manager.activate(IllustratorEvents.Start));
+  }, [manager]);
   const capabilityVariants = Hooks.useCapabilities(IllustratorCapabilities.VariantProvider);
   const variants = (variantsProp ?? capabilityVariants).filter((variant) => !variant.hidden);
   const sorted = useMemo(() => [...variants].sort((a, b) => a.label.localeCompare(b.label)), [variants]);
