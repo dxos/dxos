@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useLayoutEffect, useMemo, useRef } from 'react';
+import React, { type PropsWithChildren, useLayoutEffect, useMemo, useRef } from 'react';
 
 import { type Instance3D } from '@dxos/animation';
 import type * as Util from '@dxos/react-ui/Util';
@@ -15,30 +15,32 @@ import { type GeometrySource } from '../renderer.ts';
 import { type Theme3D, toTheme3D } from '../style.ts';
 import { DEFAULT_CAMERA, useManifoldGeometry, useOrbit, useSceneRenderer } from './hooks.ts';
 
-export type Scene3DViewProps = Util.ThemedClassName<{
-  document: Scene.SceneDocument;
-  /** The scene to draw, by id; the document's root scene when unset. */
-  scene?: string;
-  /** `cad`, `presentation`, `neu-light` or `neu-dark`; the scene's own when unset. */
-  theme?: Theme3D;
-  /** Draws the ground grid. */
-  grid?: boolean;
-  /** Draws the x, y and z axes, in red, green and blue. */
-  axes?: boolean;
-  /** Where to look; the root scene's camera when unset. */
-  camera?: Scene.Camera3D;
-  /** Element values that replace those of the scene's layout, as an animation sample does. */
-  overrides?: Readonly<Record<string, Partial<Scene.Element3D>>>;
-  /** Geometry for items Babylon has no builder for; Manifold's, loaded when the scene has solids, by default. */
-  geometry?: GeometrySource;
-  effects?: readonly Instance3D[];
-  /** Drag orbits, shift-drag pans, the wheel zooms; off where something else drives the camera. */
-  orbit?: boolean;
-  /** Called after each frame is drawn, with the size it was drawn at. */
-  onFrameDrawn?: (viewport: { width: number; height: number }) => void;
-}>;
+export type Scene3DViewProps = Util.ThemedClassName<
+  PropsWithChildren<{
+    document: Scene.SceneDocument;
+    /** The scene to draw, by id; the document's root scene when unset. */
+    scene?: string;
+    /** `cad`, `presentation`, `neu-light` or `neu-dark`; the scene's own when unset. */
+    theme?: Theme3D;
+    /** Draws the ground grid. */
+    grid?: boolean;
+    /** Draws the x, y and z axes, in red, green and blue. */
+    axes?: boolean;
+    /** Where to look; the root scene's camera when unset. */
+    camera?: Scene.Camera3D;
+    /** Element values that replace those of the scene's layout, as an animation sample does. */
+    overrides?: Readonly<Record<string, Partial<Scene.Element3D>>>;
+    /** Geometry for items Babylon has no builder for; Manifold's, loaded when the scene has solids, by default. */
+    geometry?: GeometrySource;
+    effects?: readonly Instance3D[];
+    /** Drag orbits, shift-drag pans, the wheel zooms; off where something else drives the camera. */
+    orbit?: boolean;
+    /** Called after each frame is drawn, with the size it was drawn at. */
+    onFrameDrawn?: (viewport: { width: number; height: number }) => void;
+  }>
+>;
 
-/** Draws a document's 3D scene with Babylon, once per change of its inputs, with HTML labels on top. */
+/** Draws a document's 3D scene with Babylon, once per change of its inputs, with HTML labels and its children on top. */
 export const Scene3DView = ({
   classNames,
   document: doc,
@@ -52,6 +54,7 @@ export const Scene3DView = ({
   effects,
   orbit = true,
   onFrameDrawn,
+  children,
 }: Scene3DViewProps) => {
   const geometry = useManifoldGeometry(doc, givenGeometry);
   const root = sceneId === undefined ? rootScene(doc) : findScene(doc, sceneId);
@@ -85,6 +88,7 @@ export const Scene3DView = ({
     >
       <canvas ref={canvasRef} className='dx-cover dx-fill block outline-none' />
       {size.width > 0 && <SceneLabels items={list.items} camera={view} viewport={size} theme={look} mode={mode} />}
+      {children}
     </div>
   );
 };

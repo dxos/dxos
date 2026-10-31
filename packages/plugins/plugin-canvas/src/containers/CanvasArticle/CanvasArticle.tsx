@@ -8,6 +8,7 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import type * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
+import { useAttention } from '@dxos/react-ui-attention';
 import { SceneEditor } from '@dxos/react-ui-canvas-editor';
 import * as Panel from '@dxos/react-ui/Panel';
 import { Scene } from '@dxos/scene';
@@ -29,51 +30,65 @@ export type CanvasArticleProps = IllustratorCapabilities.DrawingVariantSurfacePr
  * The canvas variant's article, for either kind of scene: the shared scene editor over the open scene, with the
  * floating chrome (tools, actions, inspectors, display) around the viewport of the scene's dimension. Only the
  * dimension's config, display and camera differ; edits, undo, model edits, layers, the lock, the dock and the shots are
- * one path. A section or slide shows either as a picture.
+ * one path. A section or slide shows either as a picture; a section shows its breadcrumbs and zoom bar while attended.
  */
-export const CanvasArticle = ({ canvas, role }: CanvasArticleProps) =>
-  Canvas.isCanvas(canvas) ? <DimensionArticle canvas={canvas} role={role} /> : null;
+export const CanvasArticle = ({ canvas, ...props }: CanvasArticleProps) =>
+  Canvas.isCanvas(canvas) ? <DimensionArticle canvas={canvas} {...props} /> : null;
 
 CanvasArticle.displayName = 'CanvasArticle';
 
-type DimensionArticleProps = { canvas: Canvas.Canvas; role?: string };
-
-const DimensionArticle = ({ canvas, role }: DimensionArticleProps) => {
-  useObject(canvas);
-  useCanvasLoaded(canvas);
-  return canvasDimension(canvas) === '3d' ? (
-    <CanvasArticle3D canvas={canvas} role={role} />
-  ) : (
-    <CanvasArticle2D canvas={canvas} role={role} />
-  );
+type DimensionArticleProps = Pick<CanvasArticleProps, 'role' | 'attendableId' | 'extrinsic'> & {
+  canvas: Canvas.Canvas;
 };
 
-const CanvasArticle2D = ({ canvas, role }: DimensionArticleProps) => {
-  const host = useCanvasEditor(canvas, '2d');
-  const dimension = useDimension2D(canvas);
-  return <SceneEditorArticle canvas={canvas} role={role} host={host} dimension={dimension} />;
+const DimensionArticle = (props: DimensionArticleProps) => {
+  useObject(props.canvas);
+  useCanvasLoaded(props.canvas);
+  return canvasDimension(props.canvas) === '3d' ? <CanvasArticle3D {...props} /> : <CanvasArticle2D {...props} />;
 };
 
-const CanvasArticle3D = ({ canvas, role }: DimensionArticleProps) => {
-  const host = useCanvasEditor(canvas, '3d');
+const CanvasArticle2D = (props: DimensionArticleProps) => {
+  const host = useCanvasEditor(props.canvas, '2d');
+  const dimension = useDimension2D(props.canvas);
+  return <SceneEditorArticle {...props} host={host} dimension={dimension} />;
+};
+
+const CanvasArticle3D = (props: DimensionArticleProps) => {
+  const host = useCanvasEditor(props.canvas, '3d');
   const scene = Obj.instanceOf(Scene.Scene3D, host.stored) ? host.stored : undefined;
-  const dimension = useDimension3D(canvas, scene, host.document?.scenes[0]?.theme);
-  return <SceneEditorArticle canvas={canvas} role={role} host={host} dimension={dimension} />;
+  const dimension = useDimension3D(props.canvas, scene, host.document?.scenes[0]?.theme);
+  return <SceneEditorArticle {...props} host={host} dimension={dimension} />;
 };
 
 type SceneEditorArticleProps<C> = DimensionArticleProps & { host: CanvasEditorHost; dimension: SceneDimension<C> };
 
 /** The shared editor over the host's scene, in the dimension's config. */
-const SceneEditorArticle = <C,>({ canvas, role, host, dimension }: SceneEditorArticleProps<C>) => {
+const SceneEditorArticle = <C,>({
+  canvas,
+  role,
+  attendableId,
+  extrinsic,
+  host,
+  dimension,
+}: SceneEditorArticleProps<C>) => {
   const [element, setElement] = useState<HTMLElement | null>(null);
+  const { hasAttention } = useAttention(attendableId);
   const { stored, document } = host;
   if (!stored || !document) {
     return null;
   }
 
+  const section = role === AppSurface.Section.role;
   return (
-    // A slide shows through the drawing, as a picture placed on it.
-    <Panel.Root role={role} classNames={role === AppSurface.Slide.role ? 'bg-transparent' : undefined} ref={setElement}>
+    <Panel.Root
+      role={role}
+      classNames={
+        // A slide shows through the drawing, as a picture placed on it. A section its host does not size (an embed with
+        // no height of its own) takes its height from its width, since the panel's own would fill a parent of none.
+        role === AppSurface.Slide.role ? 'bg-transparent' : section && !extrinsic ? 'aspect-video' : undefined
+      }
+      ref={setElement}
+    >
       <Panel.Body>
         <CanvasDatabaseContext.Provider value={Obj.getDatabase(canvas)}>
           <SceneEditor.Root
@@ -81,6 +96,7 @@ const SceneEditorArticle = <C,>({ canvas, role, host, dimension }: SceneEditorAr
             document={document}
             scene={stored.key}
             role={role}
+            navigable={section && hasAttention}
             readonly={host.readonly}
             onReadonlyChange={host.onReadonlyChange}
             onIntent={host.onIntent}

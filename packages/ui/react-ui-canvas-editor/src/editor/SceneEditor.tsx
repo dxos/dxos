@@ -77,6 +77,11 @@ export type SceneEditorRootProps<C> = PropsWithChildren<{
   document: Scene.SceneDocument;
   scene: string;
   role?: string;
+  /**
+   * A picture (a card, section or slide) shows its breadcrumbs and zoom bar, which move its view alone (an embed the
+   * user attends).
+   */
+  navigable?: boolean;
   readonly?: boolean;
   onReadonlyChange?: (readonly: boolean) => void;
   /** Writes an edit to the document; the root records it in `history`. */
@@ -115,13 +120,14 @@ export type SceneEditorRootProps<C> = PropsWithChildren<{
 /**
  * The shared scene editor (decision 2): one store, command table, history, clipboard, lock and role handling for both
  * dimensions, with the dimension's viewport, tools, geometry, camera, display and property form from `config`. In a
- * card, section or slide it draws the viewport alone, as a picture.
+ * card, section or slide it draws the viewport alone, as a picture, under its breadcrumbs and zoom bar when `navigable`.
  */
 const SceneEditorRoot = <C,>({
   config,
   document,
   scene,
   role,
+  navigable = false,
   readonly: readonlyProp = false,
   onReadonlyChange,
   onIntent: write,
@@ -132,9 +138,9 @@ const SceneEditorRoot = <C,>({
   codec,
   display: hostDisplay,
   onDisplayChange,
-  camera: viewerCamera,
+  camera: hostCamera,
   authoredCamera,
-  onCameraChange,
+  onCameraChange: onHostCameraChange,
   refitKey,
   docked = false,
   onDockedChange,
@@ -158,6 +164,10 @@ const SceneEditorRoot = <C,>({
   const timeline = onTimelineChange ? (timelineProp ?? false) : timelineChoice;
   const editing = editsInRole(role);
   const readonly = readonlyProp || !editing;
+  // A picture's zoom is its own: the host's camera is where the viewer left the article, which a picture must not move.
+  const [pictureCamera, setPictureCamera] = useState<C>();
+  const viewerCamera = editing ? hostCamera : pictureCamera;
+  const onCameraChange = editing ? onHostCameraChange : setPictureCamera;
   // Inside a transaction, writes go straight to the host and the transaction records them as one step.
   const transacting = useRef(false);
   // Read when an edit is written, which may be after the render that made the callback.
@@ -393,19 +403,31 @@ const SceneEditorRoot = <C,>({
   // zoom from it. Kept in a ref so a pan does not re-render the editor each frame; only its rounded percent is state.
   const shownCamera = useRef<C | undefined>(undefined);
   const [shownPercent, setShownPercent] = useState<number>();
+  // A picture's Fit returns to the frame the viewport chose for it (a 2D one reports it), with the picture's margin.
+  const pictureFit = useRef<C | undefined>(undefined);
+  const pictureMoved = pictureCamera !== undefined;
   const handleViewCamera = useCallback(
     (next: C) => {
       shownCamera.current = next;
+      if (!editing && !pictureMoved) {
+        pictureFit.current = next;
+      }
       authoredCamera !== undefined && setShownPercent(config.camera.percent(next, authoredCamera));
     },
-    [authoredCamera, config.camera],
+    [authoredCamera, config.camera, editing, pictureMoved],
   );
   const camera = useMemo(
     () =>
       current !== undefined && authoredCamera !== undefined && onCameraChange
         ? {
             actions: {
-              fit: () => layout && onCameraChange(config.camera.fit(current, document, layout, size)),
+              fit: () =>
+                layout &&
+                onCameraChange(
+                  !editing && pictureFit.current
+                    ? pictureFit.current
+                    : config.camera.fit(current, document, layout, size),
+                ),
               fitting: false,
               zoomReset: () =>
                 onCameraChange(layout ? config.camera.reset(authoredCamera, document, layout, size) : authoredCamera),
@@ -415,7 +437,7 @@ const SceneEditorRoot = <C,>({
             percent: shownPercent ?? config.camera.percent(current, authoredCamera),
           }
         : undefined,
-    [current, authoredCamera, onCameraChange, config.camera, layout, document, size, shownPercent],
+    [current, authoredCamera, onCameraChange, config.camera, layout, document, size, shownPercent, editing],
   );
 
   const refitRef = useRef(refitKey);
@@ -446,8 +468,8 @@ const SceneEditorRoot = <C,>({
         guides={editing && (display.guides ?? false)}
         theme={display.theme}
         face={face}
-        // A picture is the authored view framed to fit; the viewer's camera is where they left the article.
-        camera={editing ? viewerCamera : undefined}
+        // A picture opens framed to fit, until its own zoom bar moves it.
+        camera={viewerCamera}
         onSelect={store.select}
         onToolChange={store.setTool}
         onIntent={onIntent}
@@ -457,8 +479,8 @@ const SceneEditorRoot = <C,>({
         onEdit={store.open}
         onContextMenu={(at, kind) => store.setMenu({ at, kind })}
         onFaceChange={store.setFace}
-        onCameraChange={onCameraChange}
-        onViewCamera={editing ? handleViewCamera : undefined}
+        onCameraChange={editing ? onCameraChange : undefined}
+        onViewCamera={handleViewCamera}
         onResize={handleResize}
       >
         {overlay}
@@ -522,7 +544,14 @@ const SceneEditorRoot = <C,>({
           {children}
         </InspectorPanel.Root>
       ) : (
-        renderViewport(null)
+        renderViewport(
+          navigable ? (
+            <>
+              <SceneEditorNavigation />
+              <SceneEditorCamera />
+            </>
+          ) : null,
+        )
       )}
     </SceneEditorProvider>
   );

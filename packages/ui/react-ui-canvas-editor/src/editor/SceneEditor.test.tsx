@@ -154,6 +154,48 @@ describe('SceneEditor', () => {
     }
   });
 
+  test("a navigable picture shows only its breadcrumbs and zoom bar, which move its own view and never the host's camera", async () => {
+    const seen: ({ zoom: number } | undefined)[] = [];
+    const onCameraChange = vi.fn();
+    const CameraViewport = ({ camera, children, onViewCamera }: ViewportProps<{ zoom: number }>) => {
+      seen.push(camera);
+      // The viewport's own fit on open, as the 2D canvas reports it.
+      useEffect(() => onViewCamera?.({ zoom: 0.5 }), []);
+      return <div data-testid='viewport'>{children}</div>;
+    };
+    const picture = (navigable: boolean) => (
+      <SceneEditor.Root
+        config={{ ...config('2d'), viewport: CameraViewport }}
+        document={DOCUMENT}
+        scene='s'
+        role='section'
+        navigable={navigable}
+        onIntent={() => {}}
+        display={DISPLAY}
+        camera={{ zoom: 4 }}
+        authoredCamera={{ zoom: 1 }}
+        onCameraChange={onCameraChange}
+      >
+        <SceneEditor.Viewport>
+          <SceneEditor.Tools />
+        </SceneEditor.Viewport>
+      </SceneEditor.Root>
+    );
+    const { rerender } = render(picture(false));
+    expect(screen.queryByTestId('canvas-debug')).toBeNull();
+    expect(screen.queryByTestId('canvas-toolbar')).toBeNull();
+    rerender(picture(true));
+    expect(screen.getByTestId('canvas-debug')).toBeDefined();
+    expect(screen.getByTestId('canvas-toolbar')).toBeDefined();
+    expect(screen.queryByTestId('palette')).toBeNull();
+    await userEvent.click(screen.getByTestId('toolbar-zoom-in'));
+    expect(seen.at(-1)).toEqual({ zoom: 0.5 * 1.25 });
+    // Fit returns to the frame the viewport chose, not the editor's own fit.
+    await userEvent.click(screen.getByTestId('toolbar-fit'));
+    expect(seen.at(-1)).toEqual({ zoom: 0.5 });
+    expect(onCameraChange).not.toHaveBeenCalled();
+  });
+
   test('a viewport that reports its unchanged size after every render settles, editing or drawing a card', () => {
     for (const role of ['article', 'card']) {
       let renders = 0;

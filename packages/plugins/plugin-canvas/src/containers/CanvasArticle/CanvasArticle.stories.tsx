@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type ContentMap, Dsl } from '@dxos/diagram';
@@ -50,29 +50,34 @@ const withDrawing = (
     },
   });
 
+/** Adds a drawing whose canvas holds a scene document. */
+const addDocumentDrawing = (db: Database.Database, document: Scene.SceneDocument) => {
+  const stored = toEcho(document);
+  [...stored.models.values(), ...stored.layouts.values(), ...stored.scenes.values()].forEach((object) =>
+    db.add(object),
+  );
+  const model = stored.models.values().next().value;
+  const canvas = db.add(
+    Obj.make(Canvas.Canvas, {
+      settings: {},
+      ...(model ? { model: Ref.make(model) } : {}),
+      layouts: [...stored.layouts.values()].map((layout) => Ref.make(layout)),
+      scenes: [
+        Ref.make(stored.root),
+        ...[...stored.scenes.values()].filter((scene) => scene !== stored.root).map((scene) => Ref.make(scene)),
+      ],
+    }),
+  );
+  return db.add(Drawing.make({ name: 'Canvas', canvas }));
+};
+
 /** A canvas over a scene document, opened through the illustrator's article as the app opens it. */
 const withDocument = (document: Scene.SceneDocument) =>
   createStoryDecorators({
     types: [Drawing.Drawing, Drawing.Canvas, ...types],
     plugins: [IllustratorPlugin.make(), CanvasPlugin.make()],
     onInit: async ({ space }) => {
-      const stored = toEcho(document);
-      [...stored.models.values(), ...stored.layouts.values(), ...stored.scenes.values()].forEach((object) =>
-        space.db.add(object),
-      );
-      const model = stored.models.values().next().value;
-      const canvas = space.db.add(
-        Obj.make(Canvas.Canvas, {
-          settings: {},
-          ...(model ? { model: Ref.make(model) } : {}),
-          layouts: [...stored.layouts.values()].map((layout) => Ref.make(layout)),
-          scenes: [
-            Ref.make(stored.root),
-            ...[...stored.scenes.values()].filter((scene) => scene !== stored.root).map((scene) => Ref.make(scene)),
-          ],
-        }),
-      );
-      const drawing = space.db.add(Drawing.make({ name: 'Canvas', canvas }));
+      const drawing = addDocumentDrawing(space.db, document);
       await space.db.flush();
       return [[Cell.article(drawing)]];
     },
@@ -311,6 +316,47 @@ export const Image: Story = {
     // 2. Placeholders, no image element.
     await waitFor(() => expect(canvasElement.querySelectorAll('[data-testid="image-placeholder"]')).toHaveLength(2));
     await expect(canvasElement.querySelector('[data-testid="image-node"]')).toBeNull();
+  },
+};
+
+/**
+ * A markdown document embedding a canvas drawing with no height of its own, as a link dropped into a document does: A
+ * → B → C, where B is a frame onto a nested layout (X → Y).
+ *
+ * Test:
+ * 1. The embed shows the drawing at a non-zero height, fitted to the embed with a small margin.
+ * 2. Clicking the embed shows its breadcrumbs (top left) and zoom bar (bottom left); clicking the document text hides them.
+ * 3. Zooming into B until it fills the embed drills in; the breadcrumbs then lead back out.
+ */
+export const MarkdownEmbed: Story = {
+  decorators: createStoryDecorators({
+    types: [Drawing.Drawing, Drawing.Canvas, Markdown.Document, ...types],
+    plugins: [IllustratorPlugin.make(), CanvasPlugin.make(), MarkdownPlugin.make()],
+    onInit: async ({ space }) => {
+      const drawing = addDocumentDrawing(space.db, Dsl.readScenes(EXEMPLARS.subscene).document);
+      const document = space.db.add(
+        Markdown.make({
+          name: 'Notes',
+          content: ['# Notes', 'Before the drawing.', `![Canvas](${Obj.getURI(drawing)})`, 'After the drawing.'].join(
+            '\n\n',
+          ),
+        }),
+      );
+      await space.db.flush({ indexes: true });
+      return [[Cell.article(document)]];
+    },
+  }),
+  play: async ({ canvasElement }) => {
+    const view = await within(canvasElement).findByTestId('scene-view', undefined, { timeout: 30_000 });
+    const embed = view.closest<HTMLElement>('[data-testid="markdown.embed"]');
+    await waitFor(() => expect(embed?.getBoundingClientRect().height ?? 0).toBeGreaterThan(100));
+    // 2. The breadcrumbs and zoom bar show only while the embed is attended. The load-time rebuilds land first: a block redrawn under
+    // the click would be a fresh element, and the click's focus would go with the old one.
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
+    await expect(embed?.querySelector('[data-testid="canvas-debug"]')).toBeNull();
+    embed && (await userEvent.click(embed));
+    await waitFor(() => expect(embed?.querySelector('[data-testid="canvas-debug"]')).not.toBeNull());
+    await expect(embed?.querySelector('[data-testid="canvas-toolbar"]')).not.toBeNull();
   },
 };
 

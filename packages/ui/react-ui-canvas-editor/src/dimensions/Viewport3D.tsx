@@ -14,7 +14,8 @@ import { toTool3D } from './tools3d.ts';
 
 /**
  * The 3D viewport the shared editor draws: Babylon renders and picks, gizmos move the mesh in memory during a drag and
- * write once on release, and every edit reaches the editor as an intent. As a picture it shows the authored view alone.
+ * write once on release, and every edit reaches the editor as an intent. As a picture it shows the authored view, or
+ * where the picture's own zoom bar moved it, under that bar alone.
  */
 export const Viewport3D = ({
   document,
@@ -42,7 +43,19 @@ export const Viewport3D = ({
 }: ViewportProps<Scene.Camera3D>) => {
   const look = toTheme3D(theme) ?? 'cad';
   if (picture) {
-    return <Scene3DView document={document} scene={scene} theme={look} grid={false} orbit={false} />;
+    return (
+      <Scene3DView
+        document={document}
+        scene={scene}
+        theme={look}
+        grid={false}
+        orbit={false}
+        camera={camera}
+        onFrameDrawn={onResize}
+      >
+        {children}
+      </Scene3DView>
+    );
   }
   return (
     <Scene3DEditor

@@ -33,7 +33,7 @@ export type ViewportProps<C = unknown> = {
   selection: readonly string[];
   tool: ActiveTool;
   readonly: boolean;
-  /** Drawn as a picture (a card, section or slide): the authored view, no gestures, grid or chrome. */
+  /** Drawn as a picture (a card, section or slide): framed to fit, no gestures or grid, and only the chrome given. */
   picture?: boolean;
   /** The grid drawn, and snapping (both follow the display panel). */
   grid: boolean;
