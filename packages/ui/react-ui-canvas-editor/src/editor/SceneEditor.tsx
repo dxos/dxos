@@ -5,6 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, {
+  Fragment,
   type PropsWithChildren,
   type ReactNode,
   useContext,
@@ -26,6 +27,7 @@ import {
   TOOLS_GROUP,
 } from '@dxos/react-ui-canvas';
 import * as Button from '@dxos/react-ui/Button';
+import * as Menu from '@dxos/react-ui/Menu';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { findLayout } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
@@ -56,7 +58,7 @@ import {
   useSceneTime,
   useSceneTools,
 } from './aspects/index.ts';
-import { SHARED_COMMANDS } from './commands.ts';
+import { type Command, SHARED_COMMANDS } from './commands.ts';
 import { type DimensionConfig, type ToolCategory, type ToolDef } from './config.ts';
 import { SceneEditorInspector } from './sections.tsx';
 import { keySelection, placementFields } from './timeline.ts';
@@ -319,41 +321,102 @@ const SceneEditorTools = ({ classNames = 'top-14 bottom-14 left-2' }: { classNam
 
 SceneEditorTools.displayName = 'SceneEditor.Tools';
 
-/** The actions bar: the command table's commands; locked, it hides, as every one edits the scene but Copy. */
+/**
+ * The actions bar: the command table's commands, with the create menu and the dimension's own commands before undo;
+ * locked, it hides, as every one edits the scene but Copy.
+ */
 const SceneEditorActions = ({ classNames = 'bottom-2 left-1/2 -translate-x-1/2' }: { classNames?: string }) => {
-  const readonly = useAtomValue(useSceneDocument('SceneEditor.Actions').atoms.readonly);
+  const { config, atoms } = useSceneDocument('SceneEditor.Actions');
+  const readonly = useAtomValue(atoms.readonly);
   const table = useAtomValue(useSceneCommands('SceneEditor.Actions').atoms.table);
   if (readonly) {
     return null;
   }
   const shared = new Set<string>(SHARED_COMMANDS);
+  const history = (command: Command) => command.id === 'undo' || command.id === 'redo';
+  const creates = config.tools.flatMap((tool) =>
+    tool.category === 'create' && tool.kind !== undefined ? [{ id: tool.id, kind: tool.kind, label: tool.label }] : [],
+  );
+  const own = table.commands.filter((command) => !shared.has(command.id) && command.id !== 'import');
   const groups = [
-    table.commands.filter((command) => shared.has(command.id) && command.id !== 'undo' && command.id !== 'redo'),
-    table.commands.filter((command) => !shared.has(command.id) && command.id !== 'import'),
-    table.commands.filter((command) => command.id === 'undo' || command.id === 'redo'),
-  ].filter((group) => group.length > 0);
+    <Fragment key='shared'>
+      {table.commands
+        .filter((command) => shared.has(command.id) && !history(command))
+        .map((command) => (
+          <CommandButton key={command.id} command={command} />
+        ))}
+    </Fragment>,
+    creates.length > 0 || own.length > 0 ? (
+      <Fragment key='own'>
+        {creates.length > 0 && <CreateMenu kinds={creates} />}
+        {own.map((command) => (
+          <CommandButton key={command.id} command={command} />
+        ))}
+      </Fragment>
+    ) : null,
+    <Fragment key='history'>
+      {table.commands.filter(history).map((command) => (
+        <CommandButton key={command.id} command={command} />
+      ))}
+    </Fragment>,
+  ].filter((group) => group !== null);
   return (
     <div className={mx('absolute w-max', classNames)}>
       <Toolbar.Root classNames={mx('w-full', FLOATING_BAR)} data-testid='scene-actions'>
         {groups.map((group, index) => (
-          <React.Fragment key={index}>
+          <Fragment key={index}>
             {index > 0 && <Toolbar.Separator variant='line' />}
-            {group.map((command) => (
-              <Button.Root
-                key={command.id}
-                variant='ghost'
-                iconOnly
-                icon={command.icon}
-                label={command.shortcut ? `${command.label} (${command.shortcut})` : command.label}
-                disabled={!command.enabled}
-                data-testid={`scene-action-${command.id}`}
-                onClick={command.run}
-              />
-            ))}
-          </React.Fragment>
+            {group}
+          </Fragment>
         ))}
       </Toolbar.Root>
     </div>
+  );
+};
+
+/** A command as a button, or a toggle when it has a pressed state. */
+const CommandButton = ({ command }: { command: Command }) => {
+  const props = {
+    'variant': 'ghost' as const,
+    'iconOnly': true,
+    'icon': command.icon,
+    'label': command.shortcut ? `${command.label} (${command.shortcut})` : command.label,
+    'disabled': !command.enabled,
+    'data-testid': `scene-action-${command.id}`,
+  };
+  return command.pressed === undefined ? (
+    <Button.Root {...props} onClick={command.run} />
+  ) : (
+    <Button.Toggle {...props} pressed={command.pressed} onPressedChange={command.run} />
+  );
+};
+
+/** The config's create tools: one makes its element in the middle of the view, or picks its tool where it cannot. */
+const CreateMenu = ({ kinds }: { kinds: readonly { id: string; kind: string; label: string }[] }) => {
+  const { commands } = useSceneTools('SceneEditor.CreateMenu');
+  return (
+    <Menu.Root positioning={{ placement: 'top', gutter: 4 }}>
+      <Menu.Trigger asChild>
+        <Button.Root
+          variant='ghost'
+          iconOnly
+          icon='ph--plus--regular'
+          label={commands.create ? 'Create in the middle of the view' : 'Create'}
+          data-testid='toolbar-create'
+        />
+      </Menu.Trigger>
+      {/* Portalled: inside the bar's flex flow the items would sit under the canvas. */}
+      <Menu.Content>
+        {kinds.map((tool) => (
+          <Menu.Item
+            key={tool.id}
+            data-testid={`create-${tool.kind}`}
+            item={{ value: tool.id, label: tool.label }}
+            onSelect={() => (commands.create ? commands.create(tool.kind) : commands.setTool({ id: tool.id }))}
+          />
+        ))}
+      </Menu.Content>
+    </Menu.Root>
   );
 };
 

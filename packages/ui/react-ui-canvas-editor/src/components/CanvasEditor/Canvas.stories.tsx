@@ -193,16 +193,16 @@ export const Readonly: Story = {
     // 1. Read-only, the palette offers only select and pan, and there is no action bar.
     const toggle = await canvas.findByTestId('palette-readonly');
     await expect(toggle).toHaveAttribute('aria-pressed', 'true');
-    await expect(canvas.queryByTestId('canvas-actions')).toBeNull();
+    await expect(canvas.queryByTestId('scene-actions')).toBeNull();
 
     // 2. The toggle turns editing on: the action bar appears.
     await userEvent.click(toggle);
     await expect(toggle).toHaveAttribute('aria-pressed', 'false');
-    await expect(await canvas.findByTestId('canvas-actions')).toBeVisible();
+    await expect(await canvas.findByTestId('scene-actions')).toBeVisible();
 
     // 3. And back to read-only.
     await userEvent.click(toggle);
-    await waitFor(() => expect(canvas.queryByTestId('canvas-actions')).toBeNull());
+    await waitFor(() => expect(canvas.queryByTestId('scene-actions')).toBeNull());
   },
 };
 

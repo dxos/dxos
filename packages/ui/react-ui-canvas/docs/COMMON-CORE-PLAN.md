@@ -1225,6 +1225,45 @@ runner (CanvasArticle, CanvasCard) and a story check in the browser.
 
 ---
 
+## Phase I — The 2D editor's own parts on the shared ones
+
+H.4 left `CanvasActions`, `CanvasDisplay` and the four Canvas inspectors as `CanvasEditor`'s own parts, as the shared
+parts did not model them. Phase I moves what they do into `SceneEditor`'s parts, so `CanvasEditor` has no part of its
+own and `CanvasBars.tsx` and `CanvasInspectors.tsx` go (but `CanvasPropertiesForm`, 2D's Properties form). Whatever is
+not 2D's engine alone is done on the document, so 3D gets it too; each task records what stays 2D's and why. Decided by
+the user 2026-10-31: in this PR. One commit per task, each with its failing test first.
+
+### Task I.1: The actions bar
+
+- [x] The shared bar has the create menu (the config's create tools; a dimension that creates at the view's centre
+      supplies `create`, else the menu picks the tool), and the dimension's own commands after the shared ones (2D:
+      auto layout, debug), each with its enabled and pressed state as atoms.
+- [x] A standalone 2D editor's engine runs the shared commands its host gives no history or codec for (undo, the
+      clipboard, delete, group), through `Dimension.edits`, so the one bar, menu and inspector toolbar show its state.
+- [x] `CanvasActions` goes.
+- Ruling (agent, 2026-10-31): the create menu, auto layout and debug are the shared bar's in both dimensions. 2D's
+  engine creates at the view's centre (`EditorTools.commands.create`); 3D has no create command, so its menu picks the
+  kind's tool and the next click places it. Auto layout is 2D's alone (`Capabilities.layout`, a 2D engine solver), and
+  debug is the standalone 2D editor's alone, as its overlay is a sample and e2e aid, not something Composer shows. The
+  e2e ids change to the shared bar's (`scene-action-delete`, `scene-action-layout`, `scene-actions`); `ActionToolbar`
+  went with `CanvasActions`. Test: `CanvasEditor.test.tsx` (RED: no shared bar in `CanvasEditor`).
+
+### Task I.2: The display panel
+
+- [ ] Grid kinds (`EditorDisplay.gridKind`), the theme's own grid, and the lattice read from the open layout, so the
+      guides toggle shows for a lattice alone. `CanvasEditor` holds its display as a host does.
+- [ ] `CanvasDisplay` goes.
+
+### Task I.3: The inspectors
+
+- [ ] Layers: pick several, move, merge, on the document (both dimensions); the top pick is 2D's active layer.
+- [ ] Objects: rename and duplicate on the model (both dimensions); a thumbnail from the dimension (2D draws the parts).
+- [ ] Views: a drag restacks a row among its siblings as one `reorder` intent (both dimensions).
+- [ ] Properties is the shared section; the inspector toolbar's group, ungroup and new class are the command table's.
+- [ ] `CanvasInspectors.tsx` goes but for `CanvasPropertiesForm`.
+
+---
+
 ## Phase F — Tests and storybooks for review (decision 9)
 
 ### Task F.1: Storybooks per aspect, 2D and 3D side by side

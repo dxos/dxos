@@ -14,6 +14,7 @@ import {
   type CanvasAtoms,
   type CanvasController,
   type CanvasRootProps,
+  type CanvasServices,
   type Capabilities,
   type ConstrainIntent,
   type FaceSelection,
@@ -23,13 +24,22 @@ import {
   type NodeRegistry,
   createCanvasAtoms,
   fromViewportIntent,
+  getElement,
   rootLayoutOf,
   toViewportDocument,
   useCanvasServices,
 } from '@dxos/react-ui-canvas';
-import { type LayoutIntent, type Scene, findLayout } from '@dxos/scene';
+import { type LayoutIntent, MAJOR_GRID, type Scene, findLayout, isInstanceNode, isLink } from '@dxos/scene';
 
-import { type Dimension, type DimensionContext, type EditorNavigation, keep, useSceneLook } from '../editor/index.ts';
+import {
+  type Dimension,
+  type DimensionCommand,
+  type DimensionContext,
+  type EditorNavigation,
+  type EngineEdit,
+  keep,
+  useSceneLook,
+} from '../editor/index.ts';
 import { fromTool2D, toTool2D } from './tools2d.ts';
 
 /** The shortcuts the shared editor's command table handles, which the 2D engine leaves to it. */
@@ -125,6 +135,8 @@ export const createDimension2D =
     const liftIntent = options.liftIntent ?? drawing?.liftIntent;
     // The engine's commands while its root is mounted: a handle on them, never a copy of its state.
     const engine: { controller?: CanvasController } = {};
+    // The engine's services while mounted, for the commands that read the engine's own state (its undo history).
+    const services = keep<CanvasServices | undefined>(undefined);
 
     const selection = Atom.keepAlive(
       Atom.writable<readonly string[], readonly string[]>(
@@ -168,6 +180,100 @@ export const createDimension2D =
       },
     };
 
+    const capable = (key: 'create' | 'delete' | 'layout') =>
+      Atom.keepAlive(
+        Atom.make((get) => {
+          const canvas = get(services);
+          return canvas !== undefined && !canvas.readonly && canvas.capabilities[key] === true;
+        }),
+      );
+    const run = (command: (canvas: CanvasServices) => void) => () => {
+      const canvas = registry.get(services);
+      canvas && command(canvas);
+    };
+    const canCreate = capable('create');
+    const commands: DimensionCommand[] = [
+      {
+        id: 'layout',
+        label: 'Auto layout',
+        icon: 'ph--tree-structure--regular',
+        enabled: capable('layout'),
+        run: run((canvas) => canvas.document.layout()),
+      },
+      // The engine's debug overlay, for the hosts that draw a canvas on its own (samples, e2e suites).
+      ...(options.standalone
+        ? [
+            {
+              id: 'debug',
+              label: 'Debug: label every frame with its id, type and geometry',
+              icon: 'ph--bug--regular',
+              enabled: Atom.make(true),
+              pressed: canvas.debug,
+              run: run((engine) => engine.controller.tools.toggleDebug()),
+            },
+          ]
+        : []),
+    ];
+
+    // A host with no history or codec has the engine's own undo and clipboard behind the shared commands.
+    const selected = (needs: (elements: ReturnType<typeof getElement>[], engine: CanvasServices) => boolean) =>
+      Atom.keepAlive(
+        Atom.make((get) => {
+          const engine = get(services);
+          const ids = [...get(canvas.selection)];
+          if (!engine || engine.readonly || ids.length === 0) {
+            return false;
+          }
+          const scene = get(engine.draw.scene);
+          return needs(
+            ids.map((id) => getElement(scene, id)),
+            engine,
+          );
+        }),
+      );
+    const history = (key: 'canUndo' | 'canRedo') =>
+      Atom.keepAlive(
+        Atom.make((get) => {
+          const engine = get(services);
+          return engine !== undefined && !engine.readonly && get(engine.document.history)[key];
+        }),
+      );
+    const nodes = (elements: ReturnType<typeof getElement>[]) =>
+      elements.flatMap((element) => (element === undefined || isLink(element) ? [] : [element]));
+    const editable = (engine: CanvasServices) =>
+      engine.capabilities.create === true && engine.capabilities.delete === true;
+    const edits: Dimension['edits'] = options.standalone
+      ? ({
+          undo: { enabled: history('canUndo'), run: run((engine) => engine.document.undo()) },
+          redo: { enabled: history('canRedo'), run: run((engine) => engine.document.redo()) },
+          cut: { enabled: selected(() => true), run: run((engine) => engine.controller.editing.cut()) },
+          copy: { enabled: selected(() => true), run: run((engine) => void engine.controller.editing.copy()) },
+          paste: {
+            enabled: Atom.keepAlive(Atom.make((get) => get(canvas.clipboard) !== undefined && get(canCreate))),
+            run: run((engine) => engine.controller.editing.paste()),
+          },
+          duplicate: {
+            enabled: selected(() => true),
+            run: run((engine) =>
+              engine.controller.document.duplicate(registry.get(canvas.selection), { x: MAJOR_GRID, y: MAJOR_GRID }),
+            ),
+          },
+          delete: { enabled: selected(() => true), run: run((engine) => void engine.controller.selection.delete()) },
+          // A locked node may not leave its View, so a selection holding one is not grouped.
+          group: {
+            enabled: selected((elements, engine) => {
+              const shapes = nodes(elements);
+              return editable(engine) && shapes.length > 0 && shapes.every((node) => !node.locked);
+            }),
+            run: run((engine) => void engine.controller.selection.group()),
+          },
+          ungroup: {
+            enabled: selected((elements, engine) => editable(engine) && nodes(elements).some(isInstanceNode)),
+            run: run((engine) => void engine.controller.selection.ungroup()),
+          },
+        } satisfies Partial<Record<string, EngineEdit>>)
+      : undefined;
+
     const onIntent = (layout: string, intent: LayoutIntent) => {
       // A layout the write creates (a new portal's scene) has no stored elements to keep values from.
       const record = findLayout(registry.get(atoms.document), layout) ?? { id: layout, dim: '2d', elements: {} };
@@ -179,13 +285,20 @@ export const createDimension2D =
 
     /** Binds the engine's controller to the editor's commands while the root is mounted. */
     const Bind = () => {
-      const { controller } = useCanvasServices('SceneEditor.Root2D');
+      const canvasServices = useCanvasServices('SceneEditor.Root2D');
+      const { controller } = canvasServices;
       useLayoutEffect(() => {
         engine.controller = controller;
         return () => {
           engine.controller === controller && (engine.controller = undefined);
         };
       }, [controller]);
+      useLayoutEffect(() => {
+        registry.set(services, canvasServices);
+        return () => {
+          registry.get(services) === canvasServices && registry.set(services, undefined);
+        };
+      }, [canvasServices]);
       return null;
     };
 
@@ -252,9 +365,17 @@ export const createDimension2D =
           setFace: (next) => registry.set(face, next),
         },
       },
-      tools: { atoms: { tool }, commands: { setTool: (next) => registry.set(tool, next) } },
+      tools: {
+        atoms: { tool },
+        commands: {
+          setTool: (next) => registry.set(tool, next),
+          create: (kind) => registry.get(services)?.document.create(kind),
+        },
+      },
       Root,
       Viewport,
       shortcuts: !options.standalone,
+      commands,
+      edits,
     };
   };

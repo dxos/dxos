@@ -45,6 +45,7 @@ export const createSceneEditorServices = <C,>(
     document,
     selection: dimension.selection,
     tools: dimension.tools,
+    dimension,
   });
 
   const services: SceneEditorServices = {

@@ -7,7 +7,8 @@ import * as Atom from 'effect/reactivity/Atom';
 import { type Scene, findLayout, resolveLayout } from '@dxos/scene';
 
 import { copyFragment, getSessionClipboard, pasteInto, setSessionClipboard } from '../clipboard.ts';
-import { buildCommands } from '../commands.ts';
+import { type Command, type EngineCommand, buildCommands } from '../commands.ts';
+import { type Dimension } from '../config.ts';
 import { type EditorCommands, type EditorDocument, type EditorSelection, type EditorTools } from './context.ts';
 import { type AspectOptions, keep } from './host.ts';
 
@@ -32,7 +33,13 @@ export const createCommandsAspect = <C>(
     document,
     selection: editorSelection,
     tools,
-  }: { document: EditorDocument; selection: EditorSelection; tools: EditorTools },
+    dimension,
+  }: {
+    document: EditorDocument;
+    selection: EditorSelection;
+    tools: EditorTools;
+    dimension: Pick<Dimension, 'commands' | 'edits'>;
+  },
 ) => {
   const { atoms } = document;
   const { intent, modelIntent } = document.commands;
@@ -177,6 +184,16 @@ export const createCommandsAspect = <C>(
       const selection = get(editorSelection.atoms.selection);
       const { model, type } = selected(document, get(atoms.layout), selection);
       const { history } = latest.current.props;
+      const edits: Partial<Record<string, EngineCommand>> = Object.fromEntries(
+        Object.entries(dimension.edits ?? {}).flatMap(([id, edit]) =>
+          edit ? [[id, { enabled: get(edit.enabled), run: edit.run }]] : [],
+        ),
+      );
+      const own = (dimension.commands ?? []).map(({ enabled, pressed, ...command }): Command => ({
+        ...command,
+        enabled: get(enabled),
+        ...(pressed ? { pressed: get(pressed) } : {}),
+      }));
       return buildCommands({
         state: {
           readonly: get(atoms.readonly),
@@ -188,6 +205,8 @@ export const createCommandsAspect = <C>(
           clipboard: get(atoms.host).clipboard,
         },
         run,
+        edits,
+        dimension: own,
         extras,
       });
     }),

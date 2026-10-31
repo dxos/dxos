@@ -23,8 +23,13 @@ export type Command = {
   /** The chord the keyboard takes for it, as labels print it. */
   shortcut?: string;
   enabled: boolean;
+  /** A toggle's state; unset, the command is a plain action. */
+  pressed?: boolean;
   run: () => void;
 };
+
+/** A shared command as the dimension's engine runs it, its state already read. */
+export type EngineCommand = Pick<Command, 'enabled' | 'run'>;
 
 /** What the shared commands' states are read from. */
 export type CommandState = {
@@ -84,16 +89,21 @@ export const SHARED_COMMANDS: readonly SceneMenuCommand[] = [
 ];
 
 /**
- * The editor's command table, the same shared commands in 2D and 3D with the dimension's extras after them. Locked,
- * only Copy stays enabled.
+ * The editor's command table, the same shared commands in 2D and 3D with the dimension's own and the config's extras
+ * after them; a shared command the dimension's engine runs (`edits`) takes the engine's state. Locked, only Copy stays
+ * enabled.
  */
 export const buildCommands = ({
   state,
   run,
+  edits = {},
+  dimension = [],
   extras = [],
 }: {
   state: CommandState;
   run: Readonly<Record<SceneMenuCommand, () => void>>;
+  edits?: Partial<Record<SceneMenuCommand, EngineCommand>>;
+  dimension?: readonly Command[];
   extras?: readonly ExtraCommand[];
 }): CommandTable => {
   const editable = !state.readonly;
@@ -115,15 +125,17 @@ export const buildCommands = ({
     ...SHARED_COMMANDS.map((id): Command => {
       const key = SCENE_MENU_KEYS[id];
       const binding = key === undefined ? undefined : KEY_BINDINGS[key][0];
+      const edit = edits[id];
       return {
         id,
         label: SCENE_MENU_LABELS[id],
         icon: ICONS[id],
         ...(binding ? { shortcut: shortcutLabel(binding) } : {}),
-        enabled: enabled[id],
-        run: run[id],
+        enabled: edit ? (editable || id === 'copy') && edit.enabled : enabled[id],
+        run: edit?.run ?? run[id],
       };
     }),
+    ...dimension.map((command): Command => ({ ...command, enabled: editable && command.enabled })),
     ...extras.map(({ enabled, ...extra }): Command => ({ ...extra, enabled: editable && enabled(state) })),
   ];
   const byId = new Map(commands.map((command) => [command.id, command]));

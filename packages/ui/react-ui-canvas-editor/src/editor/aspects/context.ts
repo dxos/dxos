@@ -119,7 +119,14 @@ export type SelectionCommands = {
 
 export type EditorSelection = SceneAspect<SelectionAtoms, SelectionCommands>;
 
-export type EditorTools = SceneAspect<{ tool: Atom.Atom<ActiveTool> }, { setTool: (tool: ActiveTool) => void }>;
+export type EditorTools = SceneAspect<
+  { tool: Atom.Atom<ActiveTool> },
+  {
+    setTool: (tool: ActiveTool) => void;
+    /** Makes an element of `kind` in the middle of the view; without it, the create menu picks the kind's tool. */
+    create?: (kind: string) => void;
+  }
+>;
 
 export type CommandsAtoms = {
   /** The command table every surface reads: the actions bar, the context menu, the shortcuts and the app. */

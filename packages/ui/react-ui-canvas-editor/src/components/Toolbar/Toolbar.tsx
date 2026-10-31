@@ -11,12 +11,11 @@
 
 import React, { type ReactNode } from 'react';
 
-import { type Capabilities, FLOATING_BAR, type NodeRegistry, shortcutFor } from '@dxos/react-ui-canvas';
+import { FLOATING_BAR, shortcutFor } from '@dxos/react-ui-canvas';
 import * as Button from '@dxos/react-ui/Button';
-import * as Menu from '@dxos/react-ui/Menu';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
-import { type NodeType, type ViewId } from '@dxos/scene';
+import { type ViewId } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
 import { Breadcrumbs } from '../Breadcrumbs/index.ts';
@@ -35,28 +34,11 @@ export type ToolbarActions = {
   zoomReset: () => void;
   zoomIn: () => void;
   zoomOut: () => void;
-  debug: boolean;
-  toggleDebug: () => void;
-  canUndo: boolean;
-  canRedo: boolean;
-  undo: () => void;
-  redo: () => void;
-  hasSelection: boolean;
-  hasClipboard: boolean;
-  cut: () => void;
-  copy: () => void;
-  paste: () => void;
-  delete: () => void;
-  /** A new node of `type` at the centre of the view. */
-  create: (type: NodeType) => void;
-  /** Auto layout; absent when the layout does not offer it (`Capabilities.layout`). */
-  layout?: () => void;
 };
 
 /** What each bar reads, so a host builds only its bar's slice and the bar re-renders for that alone. */
 export type NavigationActions = Pick<ToolbarActions, 'path' | 'nameOf' | 'onPath'>;
 export type CameraActions = Pick<ToolbarActions, 'fit' | 'fitting' | 'zoomReset' | 'zoomIn' | 'zoomOut'>;
-export type EditActions = Omit<ToolbarActions, keyof NavigationActions | keyof CameraActions>;
 
 // A bar fills the frame its host floats it in and scrolls what does not fit; the toolbar's own layout
 // supplies `overflow-x-auto scrollbar-none`, leaving no bar over the diagram.
@@ -136,119 +118,6 @@ export const CameraToolbar = ({ classNames, actions, children }: CameraToolbarPr
       />
       <Toolbar.Separator variant='line' />
       <Toolbar.Text classNames={readoutClasses}>{children}</Toolbar.Text>
-    </Toolbar.Root>
-  );
-};
-
-export type ActionToolbarProps = Util.ThemedClassName<{
-  actions: EditActions;
-  nodes: NodeRegistry;
-  capabilities: Capabilities;
-}>;
-
-/** Everything that changes the scene, plus history, clipboard, creation and debug. */
-export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: ActionToolbarProps) => {
-  return (
-    <Toolbar.Root classNames={mx(barClasses, classNames)} data-testid='canvas-actions'>
-      <Button.Root
-        variant='ghost'
-        iconOnly
-        icon='ph--arrow-u-up-left--regular'
-        label={`Undo (${shortcutFor('undo')})`}
-        disabled={!actions.canUndo}
-        data-testid='undo'
-        onClick={actions.undo}
-      />
-      <Button.Root
-        variant='ghost'
-        iconOnly
-        icon='ph--arrow-u-up-right--regular'
-        label={`Redo (${shortcutFor('redo')})`}
-        disabled={!actions.canRedo}
-        data-testid='redo'
-        onClick={actions.redo}
-      />
-      <Toolbar.Separator variant='line' />
-      <Button.Root
-        variant='ghost'
-        iconOnly
-        icon='ph--scissors--regular'
-        label={`Cut (${shortcutFor('cut')})`}
-        disabled={!actions.hasSelection || !capabilities.delete}
-        data-testid='cut'
-        onClick={actions.cut}
-      />
-      <Button.Root
-        variant='ghost'
-        iconOnly
-        icon='ph--copy--regular'
-        label={`Copy (${shortcutFor('copy')})`}
-        disabled={!actions.hasSelection}
-        data-testid='copy'
-        onClick={actions.copy}
-      />
-      <Button.Root
-        variant='ghost'
-        iconOnly
-        icon='ph--clipboard-text--regular'
-        label={`Paste (${shortcutFor('paste')})`}
-        disabled={!actions.hasClipboard || !capabilities.create}
-        data-testid='paste'
-        onClick={actions.paste}
-      />
-      <Button.Root
-        variant='ghost'
-        iconOnly
-        icon='ph--trash--regular'
-        label={`Delete (${shortcutFor('delete')})`}
-        disabled={!actions.hasSelection || !capabilities.delete}
-        data-testid='toolbar-delete'
-        onClick={actions.delete}
-      />
-      <Toolbar.Separator variant='line' />
-      <Menu.Root positioning={{ placement: 'bottom-end', gutter: 4 }}>
-        <Menu.Trigger asChild>
-          <Button.Root
-            variant='ghost'
-            iconOnly
-            icon='ph--plus--regular'
-            label='Create a node at the centre of the view'
-            disabled={!capabilities.create}
-            data-testid='toolbar-create'
-          />
-        </Menu.Trigger>
-        {/* Portalled: inside the bar's flex flow the items would sit under the readout and the canvas. */}
-        <Menu.Content>
-          {Object.values(nodes)
-            .filter((def) => def.palette !== false)
-            .map((def) => (
-              <Menu.Item
-                key={def.type}
-                data-testid={`create-${def.type}`}
-                onSelect={() => actions.create(def.type)}
-                item={{ value: def.type, label: def.name }}
-              />
-            ))}
-        </Menu.Content>
-      </Menu.Root>
-      <Button.Root
-        variant='ghost'
-        iconOnly
-        icon='ph--tree-structure--regular'
-        label={actions.layout ? 'Auto layout' : 'Auto layout (not offered by this layout)'}
-        disabled={!actions.layout}
-        data-testid='toolbar-layout'
-        onClick={actions.layout}
-      />
-      <Button.Toggle
-        variant='ghost'
-        iconOnly
-        icon='ph--bug--regular'
-        label={`Debug (${shortcutFor('debug')}): label every frame with its id, type and geometry`}
-        pressed={actions.debug}
-        data-testid='toolbar-debug'
-        onPressedChange={actions.toggleDebug}
-      />
     </Toolbar.Root>
   );
 };

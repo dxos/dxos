@@ -12,6 +12,7 @@ import {
   type CanvasShellProps,
   type ConstrainIntent,
   type FaceSelection,
+  type SceneMenuCommand,
   type ThemeMode,
   type ThemeRegistry,
 } from '@dxos/react-ui-canvas';
@@ -121,6 +122,20 @@ export type DimensionContext<C> = {
   setMenu: (menu: MenuAnchor | undefined) => void;
 };
 
+/** A command a dimension's engine offers beside the shared ones (2D: auto layout, debug), its state as atoms. */
+export type DimensionCommand = {
+  id: string;
+  label: string;
+  icon: string;
+  enabled: Atom.Atom<boolean>;
+  /** A toggle's state; unset, the command is a plain action. */
+  pressed?: Atom.Atom<boolean>;
+  run: () => void;
+};
+
+/** A shared command the dimension's engine runs itself, with its own enabled state. */
+export type EngineEdit = Pick<DimensionCommand, 'enabled' | 'run'>;
+
 /**
  * A dimension's aspects for one editor (COMMON-CORE Expectation 0): the shared hooks read them, so each dimension
  * supplies its own navigation, selection and tools behind the same parts.
@@ -138,6 +153,13 @@ export type Dimension = {
   Viewport: ComponentType<PropsWithChildren>;
   /** False when the dimension's engine takes the chorded shortcuts itself, with its own undo and clipboard. */
   shortcuts?: boolean;
+  /** The dimension's own commands, after the shared ones in the actions bar. */
+  commands?: readonly DimensionCommand[];
+  /**
+   * The shared commands the engine runs for a host that gives no history or codec (a standalone 2D editor's undo,
+   * clipboard and grouping), so every surface of the command table shows the engine's state.
+   */
+  edits?: Partial<Record<SceneMenuCommand, EngineEdit>>;
 };
 
 /**

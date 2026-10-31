@@ -6,15 +6,12 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { log } from '@dxos/log';
-import { defaultNodeRegistry, freehandCapabilities } from '@dxos/react-ui-canvas';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { type NodeType } from '@dxos/scene';
 
-import { ActionToolbar, CameraToolbar, NavigationToolbar, type ToolbarActions } from './Toolbar.tsx';
+import { CameraToolbar, NavigationToolbar, type ToolbarActions } from './Toolbar.tsx';
 
 /** The bar over a fake view: every action appends to a log so each button is seen to fire. */
 const DefaultStory = () => {
-  const [debug, setDebug] = useState(false);
   const [zoom, setZoom] = useState(1);
   const actions: ToolbarActions = {
     path: ['scene:root', 'scene:root/L'],
@@ -24,28 +21,12 @@ const DefaultStory = () => {
     zoomReset: () => setZoom(1),
     zoomIn: () => setZoom((value) => value * 1.25),
     zoomOut: () => setZoom((value) => value / 1.25),
-    debug,
-    toggleDebug: () => setDebug((value) => !value),
-    canUndo: true,
-    canRedo: false,
-    undo: () => log('undo'),
-    redo: () => log('redo'),
-    hasSelection: true,
-    hasClipboard: true,
-    cut: () => log('cut'),
-    copy: () => log('copy'),
-    paste: () => log('paste'),
-    delete: () => log('delete'),
-    create: (type: NodeType) => log(`create ${type}`),
   };
   return (
     // `items-start`: each bar fills its box, as Canvas floats it, so the column must not stretch them.
     <div className='flex flex-col items-start gap-2 p-2'>
       <NavigationToolbar actions={actions} />
-      <ActionToolbar actions={actions} nodes={defaultNodeRegistry} capabilities={freehandCapabilities} />
-      <CameraToolbar actions={actions}>
-        {Math.round(zoom * 100)}% · debug {debug ? 'on' : 'off'}
-      </CameraToolbar>
+      <CameraToolbar actions={actions}>{Math.round(zoom * 100)}%</CameraToolbar>
     </div>
   );
 };

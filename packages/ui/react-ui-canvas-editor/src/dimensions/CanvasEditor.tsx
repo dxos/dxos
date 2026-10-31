@@ -9,7 +9,6 @@ import { type Camera, Canvas, type CanvasRootProps, useCanvasServices } from '@d
 import { rootScene } from '@dxos/scene';
 
 import {
-  CanvasActions,
   CanvasDisplay,
   CanvasLayers,
   CanvasObjects,
@@ -178,7 +177,7 @@ export const CanvasEditor = {
   Root: CanvasEditorRoot,
   Viewport: Canvas.Viewport,
   Navigation: SceneEditor.Navigation,
-  Actions: CanvasActions,
+  Actions: SceneEditor.Actions,
   Camera: SceneEditor.Camera,
   Display: CanvasDisplay,
   Tools: SceneEditor.Tools,

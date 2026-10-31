@@ -287,11 +287,11 @@ test.describe('Canvas', () => {
     await page.getByTestId('toolbar-create').click();
     await page.getByTestId('create-note').click();
     await expect(page.locator('[data-node-id]')).toHaveCount(5);
-    await page.getByTestId('toolbar-delete').click();
+    await page.getByTestId('scene-action-delete').click();
     await expect(page.locator('[data-node-id]')).toHaveCount(4);
     // Freehand offers auto layout; a → b → c ranks into three rows, whatever the fixture's own layout.
-    await expect(page.getByTestId('toolbar-layout')).toBeEnabled();
-    await page.getByTestId('toolbar-layout').click();
+    await expect(page.getByTestId('scene-action-layout')).toBeEnabled();
+    await page.getByTestId('scene-action-layout').click();
     await expect
       .poll(async () => {
         const rows = await Promise.all(
@@ -379,7 +379,7 @@ test.describe('Canvas', () => {
     // Only the select and pan tools remain, beside the story's lock toggle, and the actions bar, which only edits, is gone.
     await expect(page.locator('[data-testid="palette"] button')).toHaveCount(3);
     await expect(page.getByTestId('palette-readonly')).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.getByTestId('canvas-actions')).toHaveCount(0);
+    await expect(page.getByTestId('scene-actions')).toHaveCount(0);
     // No panel floats over a read-only canvas.
     await expect(page.locator('[data-testid="properties"]')).toHaveCount(0);
     await expect(page.locator('[data-testid="layers"]')).toHaveCount(0);
