@@ -26,7 +26,6 @@
   },
   "dependencies": {
     "@dxos/brand": "workspace:*",
-    "@dxos/scene": "workspace:*",
     "@fontsource/poiret-one": "catalog:",
     "@remotion/cli": "catalog:",
     "@remotion/fonts": "catalog:",
@@ -43,6 +42,7 @@
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-canvas": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
+    "@dxos/scene": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/vite-plugin-import-source": "workspace:*",
     "@phosphor-icons/core": "catalog:",

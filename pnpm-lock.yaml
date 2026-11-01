@@ -9630,6 +9630,9 @@ importers:
       '@dxos/plugin-sheet':
         specifier: workspace:*
         version: link:../plugin-sheet
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
@@ -9688,9 +9691,6 @@ importers:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../sdk/react-client
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -26701,9 +26701,6 @@ importers:
       '@dxos/brand':
         specifier: workspace:*
         version: link:../../packages/ui/brand
-      '@dxos/scene':
-        specifier: workspace:*
-        version: link:../../packages/common/scene
       '@fontsource/poiret-one':
         specifier: 'catalog:'
         version: 5.2.8
@@ -26747,6 +26744,9 @@ importers:
       '@dxos/react-ui-dnd':
         specifier: workspace:*
         version: link:../../packages/ui/react-ui-dnd
+      '@dxos/scene':
+        specifier: workspace:*
+        version: link:../../packages/common/scene
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../packages/ui/ui-theme
