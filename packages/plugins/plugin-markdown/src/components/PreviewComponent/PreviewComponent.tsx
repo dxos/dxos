@@ -13,6 +13,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import { URI } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { Attention, useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 import * as Button from '@dxos/react-ui/Button';
@@ -173,6 +174,21 @@ export const PreviewComponent = ({
       : isSurfaceAvailable({ type: AppSurface.CardContent, data })
         ? 'card'
         : undefined;
+
+  // #region DEBUG
+  useEffect(() => {
+    log.warn('DEBUG embed state', {
+      eid,
+      hasDb: !!db,
+      object: object ? Obj.getTypename(object) : undefined,
+      available,
+      missing,
+      attendableId,
+      mode,
+      unresolved,
+    });
+  }, [eid, db, object, available, missing, attendableId, mode, unresolved]);
+  // #endregion DEBUG
 
   // Report the target's state to the editor, which rebuilds this link's decoration: an unresolved
   // target puts the source back (editable) with the error inline, and a card drops the reserved
