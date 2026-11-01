@@ -17,6 +17,7 @@ import {
   interpolateCamera,
   portalFrame,
   portalScale,
+  retargetCamera,
   sceneToScreen,
   screenToScene,
   zoomAt,
@@ -151,5 +152,31 @@ describe('camera', () => {
     const zooms = [0, 0.25, 0.5, 0.75, 1].map((t) => interpolate(t).zoom);
     zooms.slice(1).forEach((zoom, index) => expect(zoom).toBeLessThan(zooms[index]));
     expect(interpolate.duration).toBeGreaterThan(0);
+  });
+  test('retargetCamera leaves at the given speed and comes to rest on the new target without overshooting', ({
+    expect,
+  }) => {
+    const from = { x: 0, y: 0, zoom: 1.2 };
+    const to = zoomAt(from, { x: 400, y: 300 }, 1.5625);
+    // Zooming in at 0.001 ln-width per ms (the visible width shrinking), as a zoom step under way does.
+    const velocity = [0, 0, -0.001] as const;
+    const curve = retargetCamera(from, velocity, to, viewport, 250);
+    expectCamera(expect, curve(0), from);
+    expectCamera(expect, curve(1), to);
+    const step = 0.001;
+    const leaving = (Math.log(viewport.width / curve(step).zoom) - Math.log(viewport.width / from.zoom)) / (step * 250);
+    expect(leaving).toBeCloseTo(-0.001, 4);
+    const zooms = [0, 0.25, 0.5, 0.75, 0.9, 1].map((t) => curve(t).zoom);
+    zooms.slice(1).forEach((zoom, index) => expect(zoom).toBeGreaterThanOrEqual(zooms[index]));
+    expect(Math.max(...zooms)).toBeLessThanOrEqual(to.zoom + 1e-9);
+  });
+
+  test('retargetCamera holds its speed back rather than overshoot a near target', ({ expect }) => {
+    const from = { x: 0, y: 0, zoom: 1 };
+    const to = zoomAt(from, { x: 400, y: 300 }, 1.01);
+    const curve = retargetCamera(from, [0, 0, -0.01], to, viewport, 250);
+    const zooms = [0, 0.1, 0.25, 0.5, 0.75, 0.9, 1].map((t) => curve(t).zoom);
+    expect(Math.max(...zooms)).toBeLessThanOrEqual(to.zoom + 1e-9);
+    expectCamera(expect, curve(1), to);
   });
 });
