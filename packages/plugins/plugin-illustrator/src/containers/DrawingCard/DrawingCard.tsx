@@ -8,13 +8,13 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useObject } from '@dxos/echo-react';
 
+import { VariantSurface } from '#components';
 import { Drawing, IllustratorCapabilities } from '#types';
-import { findVariant } from '#util';
 
 export type DrawingCardProps = AppSurface.ObjectCardProps<Drawing.Drawing>;
 
 /** Resolves the drawing's canvas and delegates rendering to the variant claiming its schema. */
-export const DrawingCard = ({ role, subject: drawing, editable }: DrawingCardProps) => {
+export const DrawingCard = ({ role, subject: drawing, editable, extrinsic }: DrawingCardProps) => {
   const variants = Hooks.useCapabilities(IllustratorCapabilities.VariantProvider);
   const ref = drawing.canvas;
   const [snapshot] = useObject(ref);
@@ -24,13 +24,22 @@ export const DrawingCard = ({ role, subject: drawing, editable }: DrawingCardPro
     return null;
   }
 
-  const match = findVariant(variants, canvas);
+  const match = IllustratorCapabilities.variantFor(canvas, variants);
   if (!match?.card) {
     return null;
   }
 
-  const Component = match.card;
-  return <Component drawing={drawing} canvas={canvas} role={role} editable={editable} />;
+  return (
+    <VariantSurface
+      variant={match}
+      slot='card'
+      drawing={drawing}
+      canvas={canvas}
+      role={role}
+      editable={editable}
+      extrinsic={extrinsic}
+    />
+  );
 };
 
 DrawingCard.displayName = 'DrawingCard';

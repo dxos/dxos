@@ -165,18 +165,53 @@ export const Echo: Story = {
   },
 };
 
-/** Opens once the overview's drill-down boxes are frames onto their diagrams. */
+/**
+ * Opens once the overview's drill-down boxes are frames onto their diagrams; pinching into the first box drills into
+ * its diagram (the breadcrumbs name it), and pinching out comes back to the overview.
+ */
 const play =
   (set: DiagramSet): Story['play'] =>
   async ({ canvasElement }) => {
-    await expect(
-      await within(canvasElement).findByTestId('scene-view', undefined, { timeout: 60_000 }),
-    ).toBeInTheDocument();
+    const view = await within(canvasElement).findByTestId('scene-view', undefined, { timeout: 60_000 });
+    await expect(view).toBeInTheDocument();
     for (const box of Object.keys(set.drills[set.root])) {
       await waitFor(() => expect(canvasElement.querySelector(`[data-node-id="${box}/box"]`)).not.toBeNull(), {
         timeout: 10_000,
       });
     }
+
+    const [[box, target]] = Object.entries(set.drills[set.root]);
+    const frame = canvasElement.querySelector(`[data-node-id="${box}/box"]`);
+    const crumb = () =>
+      [...canvasElement.querySelectorAll('nav button')].find((button) => button.textContent === set.names[target]);
+    // A pinch is a ctrl+wheel; a plain synthetic wheel reads as a trackpad pan. The view drills once the camera has
+    // settled, so each burst of pinches is followed by a pause.
+    const pinchUntil = async (deltaY: number, at: { clientX: number; clientY: number }, done: () => boolean) => {
+      for (let burst = 0; burst < 30 && !done(); burst++) {
+        for (let tick = 0; tick < 3; tick++) {
+          view.dispatchEvent(
+            new WheelEvent('wheel', { deltaY, ctrlKey: true, bubbles: true, cancelable: true, ...at }),
+          );
+        }
+        await new Promise((resolve) => setTimeout(resolve, 400));
+      }
+    };
+    const rect = frame?.getBoundingClientRect();
+    await expect(rect).toBeDefined();
+    if (rect) {
+      await pinchUntil(-40, { clientX: rect.left + rect.width / 2, clientY: rect.top + rect.height / 2 }, () =>
+        Boolean(crumb()),
+      );
+    }
+    await expect(crumb()).toBeDefined();
+
+    const viewRect = view.getBoundingClientRect();
+    await pinchUntil(
+      40,
+      { clientX: viewRect.left + viewRect.width / 2, clientY: viewRect.top + viewRect.height / 2 },
+      () => !crumb(),
+    );
+    await expect(crumb()).toBeUndefined();
   };
 
 const composer = architectureDiagrams(files);

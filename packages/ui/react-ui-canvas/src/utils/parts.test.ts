@@ -5,9 +5,11 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
+import { nodeBase } from '@dxos/scene';
+
 import { ViewBuilder } from '../builder/index.ts';
 import { defaultNodeRegistry } from '../components/index.ts';
-import { CLASSIC_LOOK, type NodeRegistry, nodeBase } from '../model/index.ts';
+import { CLASSIC_LOOK, type NodeRegistry } from '../model/index.ts';
 import { isMultiline, nodeParts, nodeTitle, partText, partValues } from './parts.ts';
 import { cornerRadius, frameClasses, hueClasses, resolveStyle } from './style.ts';
 

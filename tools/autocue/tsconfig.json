@@ -8,6 +8,9 @@
       "path": "../../packages/common/node-std"
     },
     {
+      "path": "../../packages/common/scene"
+    },
+    {
       "path": "../../packages/plugins/plugin-deck"
     },
     {

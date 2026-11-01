@@ -4,7 +4,9 @@
 
 import { type ExpectStatic, describe, test } from 'vitest';
 
-import { type Bounds, type Camera, type ViewNode } from '../model/index.ts';
+import { type Bounds, type ViewNode } from '@dxos/scene';
+
+import { type Camera } from '../model/index.ts';
 import {
   MAX_ZOOM,
   MIN_ZOOM,
@@ -14,6 +16,7 @@ import {
   fitBounds,
   interpolateCamera,
   portalFrame,
+  portalScale,
   sceneToScreen,
   screenToScene,
   zoomAt,
@@ -114,6 +117,17 @@ describe('camera', () => {
     expect(frame.y + frame.height / 2).toBeCloseTo(child.y + child.height / 2);
     // A frame is its own frame, so drilling in and out is stable.
     expect(portalFrame(portal, frame)).toEqual(frame);
+  });
+
+  test("a portal with a frame shows exactly that region, whatever the child holds: a placed composite's scale", ({
+    expect,
+  }) => {
+    const region = { x: -60, y: -37.5, width: 240, height: 150 };
+    const placed: ViewNode = { ...portal, frame: region };
+    expect(portalFrame(placed, child)).toEqual(region);
+    expect(portalFrame(placed, undefined)).toEqual(region);
+    // 480 px of portal over 240 of region: the composite draws at twice its own size.
+    expect(portalScale(placed, portalFrame(placed, child))).toBe(2);
   });
 
   test("a small or empty child is never magnified: the frame is at least the portal's own box", ({ expect }) => {

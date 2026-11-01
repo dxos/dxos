@@ -9,7 +9,9 @@
 
 import { interpolateZoom } from 'd3';
 
-import { type Bounds, type Camera, type Node, type Point, type Size } from '../model/index.ts';
+import { type Bounds, type Node, type Point, type Size, nodeFrame } from '@dxos/scene';
+
+import { type Camera } from '../model/index.ts';
 import { nodeBounds } from './shapes.ts';
 
 export const MIN_ZOOM = 1 / 32;
@@ -82,9 +84,14 @@ export const portalScale = (portal: Node, region: Bounds) => {
  * and never smaller than the box itself, so the preview shrinks a large scene to fit but never magnifies a
  * small one. Every scene keeps its own scale: the frame only says where the child sits under the portal,
  * and entering it maps the camera through the frame, so a shape is the same size at the same zoom on any
- * level. An empty child is the box itself, centred on its origin.
+ * level. An empty child is the box itself, centred on its origin. A portal with a `frame` (a placed composite at its
+ * scale) shows that region instead.
  */
 export const portalFrame = (portal: Node, child: Bounds | undefined): Bounds => {
+  const fixed = nodeFrame(portal);
+  if (fixed) {
+    return fixed;
+  }
   const { width, height } = nodeBounds(portal);
   const content = child ?? { x: 0, y: 0, width: 0, height: 0 };
   const factor = Math.max(1, content.width / width, content.height / height);

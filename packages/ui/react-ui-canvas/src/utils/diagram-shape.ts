@@ -9,7 +9,6 @@
 //
 
 import { Diagnostics, Scene as Dsl, SvgFile, UmlGrid } from '@dxos/diagram';
-
 import {
   type Bounds,
   type DiagramConnector,
@@ -17,8 +16,10 @@ import {
   type Link,
   type Node,
   type Point,
+  Shape,
   isDiagramNode,
-} from '../model/index.ts';
+} from '@dxos/scene';
+
 import { nodeBounds } from './shapes.ts';
 
 /** How far (scene px) a route's end may sit from its node's outline and still be the route the layout gave it. */
@@ -45,12 +46,12 @@ const shownText = (node: DiagramNode, hideLabel: boolean): string | undefined =>
  * The node's DSL elements in scene coordinates: its element over the node's frame, carrying the node's label unless
  * the node has a heading, which then carries it from the frame's top-left corner.
  */
-export const diagramNodeElements = (node: DiagramNode, { hideLabel = false } = {}): Dsl.Element[] => {
+export const diagramNodeElements = (node: DiagramNode, { hideLabel = false } = {}): Shape.Element[] => {
   const bounds = nodeBounds(node);
   const text = shownText(node, hideLabel);
   const own = node.heading ? undefined : text;
   const { element, heading } = node;
-  const shape: Dsl.Element | undefined =
+  const shape: Shape.Element | undefined =
     element.kind === 'circle'
       ? {
           ...element,
@@ -64,7 +65,7 @@ export const diagramNodeElements = (node: DiagramNode, { hideLabel = false } = {
           ? undefined
           : { ...element, x: bounds.x, y: bounds.y, w: element.w === undefined ? undefined : bounds.width, text: own }
         : { ...element, x: bounds.x, y: bounds.y, w: bounds.width, h: bounds.height, text: own };
-  const title: Dsl.Element | undefined =
+  const title: Shape.Element | undefined =
     heading && text !== undefined
       ? {
           kind: 'text',
@@ -125,7 +126,7 @@ export const diagramRoute = (
 };
 
 /** Where a caption goes on a route the canvas made: beside the longest run, centred on it. */
-const placeCaption = (points: readonly Point[], text: string, weight: Dsl.Weight): Point => {
+const placeCaption = (points: readonly Point[], text: string, weight: Shape.Weight): Point => {
   const runs = points.slice(1).map((end, index) => ({ start: points[index], end }));
   const longest = runs.reduce((best, run) =>
     Math.hypot(run.end.x - run.start.x, run.end.y - run.start.y) >
@@ -145,7 +146,7 @@ const placeCaption = (points: readonly Point[], text: string, weight: Dsl.Weight
  * The connector's DSL elements along `route`: the `-path` polyline and arrow `SvgFile.connectorElements` splits a route
  * into, and the caption where the layout placed it (or beside the longest run of a route the canvas made).
  */
-export const diagramLinkElements = (link: Link, connector: DiagramConnector, route: DiagramRoute): Dsl.Element[] => {
+export const diagramLinkElements = (link: Link, connector: DiagramConnector, route: DiagramRoute): Shape.Element[] => {
   const caption = connector.caption;
   const weight = caption?.weight ?? 's';
   const text = link.text || undefined;

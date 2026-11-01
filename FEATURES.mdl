@@ -654,20 +654,6 @@ feature plugin-space: SpacePlugin
 ```
 
 ```mdl
-feature plugin-spacetime: SpacetimePlugin
-  status: in-progress
-  specs: [packages/plugins/plugin-spacetime/PLUGIN.mdl]
-  note: Seeded from its review of 2026-10-27: 13 done, 39 untested, 8 partial, 5 missing.
-```
-
-```mdl
-feature plugin-spacetime.design: SpacetimePlugin
-  status: in-progress
-  specs: [packages/plugins/plugin-spacetime/docs/PLUGIN.mdl]
-  note: Seeded from its review of 2026-10-27: 8 done, 37 untested, 7 partial, 2 diverged, 4 missing.
-```
-
-```mdl
 feature plugin-spotlight: SpotlightPlugin
   status: in-progress
   specs: [packages/plugins/plugin-spotlight/PLUGIN.mdl]
@@ -946,4 +932,10 @@ decision D-5: plugin-labeler is merged into plugin-inbox; its spec moves to plug
   by: user:dmaretskyi
   affects: [plugin-inbox, plugin-labeler]
   why: Triage only ever acts on a mailbox, and as a separate opt-in plugin it was off wherever inbox was on.
+```
+
+```mdl
+decision D-6: plugin-spacetime is deleted, its 3D editing replaced by plugin-canvas's 3D canvas; the plugin-spacetime and plugin-spacetime.design features are removed.
+  date: 2026-10-29
+  by: user:richburdon
 ```

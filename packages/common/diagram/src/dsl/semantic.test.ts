@@ -4,7 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import * as Scene from '../scene.ts';
+import { Shape } from '@dxos/scene';
+
 import { parse, read } from './parse.ts';
 import { formatId } from './print.ts';
 
@@ -105,7 +106,7 @@ describe('semantic statements', () => {
     expect(problems).toEqual([]);
     expect(diagram?.edges).toHaveLength(1);
     expect(diagram?.edges[0]).toMatchObject({ label: 'syncs', tail: 'arrow' });
-    expect(Scene.markersOf({ tail: 'arrow' })).toEqual({
+    expect(Shape.markersOf({ tail: 'arrow' })).toEqual({
       start: 'arrow',
       end: 'arrow',
       dashed: false,

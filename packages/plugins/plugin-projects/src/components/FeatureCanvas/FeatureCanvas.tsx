@@ -2,34 +2,24 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useRef } from 'react';
 
 import {
   type Arrangement,
-  Canvas,
   type CreateProps,
-  DYNAMIC_VIEW_ID,
-  type DynamicOptions,
   type ForceOptions,
-  type FreehandProjectionOptions,
+  type GraphLayoutOptions,
   type GraphModel,
   type LatticeSpec,
-  type Node,
   type NodeViewProps,
-  type Overlay,
-  type Point,
-  createCanvasAtoms,
-  createDynamicProjection,
-  createMemoryStore,
   createNodeRegistry,
   defaultNodePrototypes,
   defaultNodeTypes,
-  nodeBase,
-} from '@dxos/react-ui-canvas/scene';
+} from '@dxos/react-ui-canvas';
+import { Graph2DView } from '@dxos/react-ui-canvas-editor';
 import * as Layout from '@dxos/react-ui/Layout';
+import { type Node, type Point, nodeBase } from '@dxos/scene';
 
 import { FeatureCard, type FeatureLookup, type FeatureModel, makeFeatureLookup } from '../FeatureCard/index.ts';
 
@@ -104,8 +94,8 @@ const createRegistry = (open: (id: string) => void) =>
  */
 const LATTICE: LatticeSpec = { width: 256, height: 256, gutterX: 64, gutterY: 64 };
 
-const LAYOUT: Omit<DynamicOptions, 'nodes'> = {
-  createNode: (_node, props) => createFeatureNode(props),
+const LAYOUT: GraphLayoutOptions = {
+  shape: () => ({ type: FEATURE_NODE_TYPE }),
   // Smart links route through the lattice's gutters (or round the boxes without one), so arrows never cross a card.
   link: { type: 'smart', ends: { end: 'arrow' } },
 };
@@ -127,9 +117,6 @@ const toGraph = (features: readonly FeatureModel[]): GraphModel => {
     ),
   };
 };
-
-const samePositions = (left: Record<string, Point>, right: Record<string, Point>) =>
-  JSON.stringify(left) === JSON.stringify(right);
 
 export type FeatureCanvasProps = {
   features: readonly FeatureModel[];
@@ -176,123 +163,63 @@ export const FeatureCanvas = ({
   force,
   lattice = true,
 }: FeatureCanvasProps) => {
-  const atomRegistry = useContext(RegistryContext);
   const lookup = useMemo(() => makeFeatureLookup(features), [features]);
   const nodeContext = useMemo(() => ({ lookup }), [lookup]);
-  // Owned by this component: the projection's scene atom reads both, so they live while the canvas is mounted.
-  const graph = useMemo(() => Atom.make<GraphModel>(toGraph(features)), []);
-  const overlay = useMemo(() => Atom.make<Overlay>({ positions }), []);
-  const store = useMemo(() => createMemoryStore([]), []);
-  const atoms = useMemo(() => createCanvasAtoms(DYNAMIC_VIEW_ID), []);
+  const graph = useMemo(() => toGraph(features), [features]);
 
-  // Read through a ref so the registry and projection, which the canvas does not expect to change, stay stable.
+  // Read through a ref so the registry, which the viewport does not expect to change, stays stable.
   const callbacks = useRef({ onSelect, onZoom, onLink, onUnlink, onRemove });
   callbacks.current = { onSelect, onZoom, onLink, onUnlink, onRemove };
   const nodes = useMemo(() => createRegistry((id) => callbacks.current.onZoom?.(id)), []);
-  const editable = { link: !!onLink, delete: !!(onUnlink || onRemove) };
 
-  useEffect(() => {
-    atomRegistry.set(graph, toGraph(features));
-  }, [atomRegistry, graph, features]);
+  const layout = useMemo<GraphLayoutOptions>(
+    () => ({
+      ...LAYOUT,
+      // Without a lattice the same slot sizes apply, so a free layout compares cell for cell with a snapped one.
+      ...(lattice
+        ? { lattice: LATTICE }
+        : {
+            size: { width: LATTICE.width, height: LATTICE.height },
+            pitch: { width: LATTICE.width + LATTICE.gutterX, height: LATTICE.height + LATTICE.gutterY },
+          }),
+      arrange,
+      force: { attraction: force?.attraction, repulsion: force?.repulsion, range: force?.range },
+    }),
+    [lattice, arrange, force?.attraction, force?.repulsion, force?.range],
+  );
 
   // A single selected box is the selected feature; an arrow, several boxes or none select nothing.
-  useEffect(
-    () =>
-      atomRegistry.subscribe(atoms.selection, (selection) => {
-        const [id] = selection;
-        const feature = selection.size === 1 && !id.includes(EDGE_SEPARATOR) ? id : undefined;
-        callbacks.current.onSelect?.(feature);
-      }),
-    [atomRegistry, atoms],
-  );
+  const handleSelectionChange = useCallback((ids: readonly string[]) => {
+    const [id] = ids;
+    callbacks.current.onSelect?.(ids.length === 1 && !id.includes(EDGE_SEPARATOR) ? id : undefined);
+  }, []);
+  const selection = useMemo(() => (selectedId && lookup(selectedId) ? [selectedId] : undefined), [selectedId, lookup]);
 
-  useEffect(() => {
-    if (selectedId && lookup(selectedId)) {
-      const current = atomRegistry.get(atoms.selection);
-      if (current.size !== 1 || !current.has(selectedId)) {
-        atomRegistry.set(atoms.selection, new Set([selectedId]));
+  const handleLink = useCallback((from: string, to: string) => callbacks.current.onLink?.(from, to), []);
+  const handleDelete = useCallback((ids: string[]) => {
+    for (const id of ids) {
+      const [from, to] = id.split(EDGE_SEPARATOR);
+      if (to !== undefined) {
+        callbacks.current.onUnlink?.(from, to);
+      } else {
+        callbacks.current.onRemove?.(id);
       }
     }
-  }, [atomRegistry, atoms, selectedId, lookup]);
-
-  // Positions come back from the database after every drag and from other peers; only a real change re-lays out.
-  useEffect(() => {
-    if (!samePositions(atomRegistry.get(overlay).positions, positions)) {
-      atomRegistry.set(overlay, { positions });
-    }
-  }, [atomRegistry, overlay, positions]);
-
-  useEffect(
-    () =>
-      atomRegistry.subscribe(overlay, ({ positions: next }) => {
-        if (!samePositions(next, positions)) {
-          onPositionsChange?.(next);
-        }
-      }),
-    [atomRegistry, overlay, positions, onPositionsChange],
-  );
-
-  const createProjection = useCallback(
-    ({ registry, constrained }: FreehandProjectionOptions) =>
-      createDynamicProjection({
-        registry,
-        constrained,
-        graph,
-        overlay,
-        options: {
-          ...LAYOUT,
-          // Without a lattice the same slot sizes apply, so a free layout compares cell for cell with a snapped one.
-          ...(lattice
-            ? { lattice: LATTICE }
-            : {
-                size: { width: LATTICE.width, height: LATTICE.height },
-                pitch: { width: LATTICE.width + LATTICE.gutterX, height: LATTICE.height + LATTICE.gutterY },
-              }),
-          nodes,
-          arrange,
-          force: { attraction: force?.attraction, repulsion: force?.repulsion, range: force?.range },
-        },
-        capabilities: { move: true, ...editable },
-        onLink: ({ from, to }) => callbacks.current.onLink?.(from, to),
-        onDelete: (ids) => {
-          for (const id of ids) {
-            const [from, to] = id.split(EDGE_SEPARATOR);
-            if (to !== undefined) {
-              callbacks.current.onUnlink?.(from, to);
-            } else {
-              callbacks.current.onRemove?.(id);
-            }
-          }
-        },
-      }),
-    [
-      graph,
-      overlay,
-      nodes,
-      arrange,
-      force?.attraction,
-      force?.repulsion,
-      force?.range,
-      lattice,
-      editable.link,
-      editable.delete,
-    ],
-  );
+  }, []);
 
   return (
     <FeatureNodeContext.Provider value={nodeContext}>
-      <Canvas.Root
-        store={store}
-        root={DYNAMIC_VIEW_ID}
-        atoms={atoms}
+      <Graph2DView
+        graph={graph}
+        layout={layout}
         nodes={nodes}
-        createProjection={createProjection}
-        // The lattice guides are the board's structure; dots between them would only add noise.
-        backgroundGrid='none'
-      >
-        <Canvas.Viewport />
-        <Canvas.Navigation />
-      </Canvas.Root>
+        positions={positions}
+        onPositionsChange={onPositionsChange}
+        onLink={onLink ? handleLink : undefined}
+        onDelete={onUnlink || onRemove ? handleDelete : undefined}
+        selection={selection}
+        onSelectionChange={handleSelectionChange}
+      />
     </FeatureNodeContext.Provider>
   );
 };

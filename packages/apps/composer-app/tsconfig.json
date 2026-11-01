@@ -124,6 +124,9 @@
       "path": "../../plugins/plugin-agent"
     },
     {
+      "path": "../../plugins/plugin-animator"
+    },
+    {
       "path": "../../plugins/plugin-assistant"
     },
     {
@@ -395,9 +398,6 @@
     },
     {
       "path": "../../plugins/plugin-space"
-    },
-    {
-      "path": "../../plugins/plugin-spacetime"
     },
     {
       "path": "../../plugins/plugin-spotlight"

@@ -4,8 +4,10 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { type ElementId, type Size } from '@dxos/scene';
+
 import { type CanvasAtoms } from '../../engine/index.ts';
-import { type Camera, type ElementId, type Size } from '../../model/index.ts';
+import { type Camera } from '../../model/index.ts';
 import { animateCamera } from '../../utils/index.ts';
 import { type useRegistry } from '../useRegistry.ts';
 

@@ -11,8 +11,9 @@
 //
 
 import { Layout } from '@dxos/diagram';
+import { type ElementId, MAJOR_GRID, type Point, type Size, endpointNode } from '@dxos/scene';
 
-import { type ElementId, MAJOR_GRID, type Point, type Size, type View, endpointNode } from '../model/index.ts';
+import { type RenderList2D } from '../model/index.ts';
 
 export type LayoutOptions = {
   /** Gap between rows and between the columns within a row, in scene px. */
@@ -35,7 +36,11 @@ const DEFAULTS: Required<LayoutOptions> = {
  * `ids`, when given, narrows what moves: the rest of the scene stays exactly where it is, which is how
  * "lay out the selection" differs from "lay out the board".
  */
-export const layoutView = (scene: View, ids?: readonly ElementId[], options: LayoutOptions = {}): View => {
+export const layoutView = (
+  scene: RenderList2D,
+  ids?: readonly ElementId[],
+  options: LayoutOptions = {},
+): RenderList2D => {
   const { gap, origin } = { ...DEFAULTS, ...options };
   const subject = new Set(ids ?? Object.keys(scene.nodes));
   const moving = Object.values(scene.nodes).filter((node) => subject.has(node.id) && !node.locked);

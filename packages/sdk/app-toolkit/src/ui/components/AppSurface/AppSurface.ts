@@ -489,6 +489,11 @@ export type CardData<Subject = unknown, Props extends {} = {}> = {
   ignorePaths?: ReadonlyArray<string>;
   /** When true, card surfaces should render an editable variant of the subject (full-bleed editor) rather than a read-only preview. Hosts opt in per-cell — e.g. plugin-board passes editable for in-place editing in grid cells. */
   editable?: boolean;
+  /**
+   * Set when the card is sized by its container (e.g. a frame on a canvas) rather than its intrinsic content, so the
+   * surface can fit its content to the box instead of sizing to it.
+   */
+  extrinsic?: boolean;
 } & Props;
 
 /** Component props for card role. */
