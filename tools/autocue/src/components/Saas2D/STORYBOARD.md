@@ -1,0 +1,83 @@
+# Saas2D storyboard
+
+The neu-dark 2D version of the echo3d SaaS story (`saas-short` scenario), timed by
+`showcase/echo3d/voice/holds-fry-short.json`. Every scene is a layout of one model; a cut between scenes moves the
+elements of that model, it never swaps one picture for another.
+
+## The model
+
+One hierarchy for the whole story. An element keeps its id from the first scene it appears in to the last, so the engine
+blends it (`kind:id`). Its `parent` says where it lives: an element that enters grows out of its parent's previous place,
+and one that leaves folds into its parent's next place. `from` names what an element becomes across a cut (the one SaaS
+vendor becoming many apps).
+
+```
+world
+├── companies ring          tenant-0 … tenant-59 (one of them is yours)
+│   └── org                 Your company
+│       ├── team-Eng, team-Sales, team-Ops      (your-teams: the three as one marker, when the company is small)
+│       └── hub             Your data, held by your company (from echo-hub on)
+│           └── space-Personal, space-Company, space-Partners, space-Customers
+│               └── object-0 … object-149       (cards are screen-space views of picked objects)
+├── vendor                  SaaS: one vendor …
+│   ├── metadata            its core
+│   └── data-org, data-1 …  every company's data, held by the vendor (data-org is yours)
+├── app-Slack … app-Jira    … and many vendors: from body:vendor
+│   └── data-org-<app>      your data, a share in each app: from node:data-org
+└── lab, rival-1, rival-2   Frontier Labs: many labs, merging into one
+    └── lab-core            “Metadata”: absorbs the apps and the data they hold
+```
+
+Rules for every layout:
+
+- Containment is drawn as nesting (a body's inset well holds its children); a relationship is a link; data moving
+  along a relationship is a flow on that link.
+- A body is one raised band around one inset well, both shades of the field. Role color belongs to what a body
+  holds (nodes, data), never to the body.
+- A cut is a morph unless it is marked **curtain**. Long morphs (≥ 2 s) ease at both ends; short ones use the design
+  system's ease-out.
+
+## Scenes
+
+Times are the start of each scene in the short cut. **Enters** and **leaves** name where an element comes from or goes
+to across the cut into the scene. ✅ marks scenes already laid out this way; the others still need reworking to follow
+the model.
+
+| #   | Scene (start, hold)              | Layout                                                                                                                                     | Keyframes in the scene                                                                                              | Enters ← from                                                              | Leaves → into                                                                         |
+| --- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| 1   | blank (0:00, 1.5)                | empty field                                                                                                                                | —                                                                                                                   | —                                                                          | —                                                                                     |
+| 2   | beginning (0:01.5, 4.0)          | title centred                                                                                                                              | title fades in at 0.3 s                                                                                             | title                                                                      | —                                                                                     |
+| 3   | silo (0:05.5, 4.5)               | org (−300, 20) r150 holding your-teams; vendor (300, 20) r150 holding data-org; one link                                                   | —                                                                                                                   | org, vendor, your-teams, data-org (fade in place)                          | title                                                                                 |
+| 4   | silo-comms (0:10, 8.0)           | as silo                                                                                                                                    | flows both ways on the link                                                                                         | flows ← the link                                                           | —                                                                                     |
+| 5   | ✅ scale (0:18, 9.0)             | vendor at the centre r300: metadata core, ring of 48 data dots r210 (data-org on the left); 60 companies at r400, org at angle π (−400, 0) | —                                                                                                                   | data dots ← vendor; companies fade in place; org shrinks to its ring place | flows → their link                                                                    |
+| 6   | competitors (0:27, 12.0)         | as scale                                                                                                                                   | flows on every company's link; 3 “Your competitor” labels at 0.6 s                                                  | flows ← their company                                                      | —                                                                                     |
+| 7   | ✅ spread (0:39, 5.5)            | camera on org (−400, 0); org r170 holding the teams; 7 apps at r390 around it, each with a share of your data; team → app links            | —                                                                                                                   | teams ← org; apps ← vendor; data-org-* ← data-org                          | vendor → first app; metadata, data dots → vendor's successor; companies fade in place |
+| 8   | spread-comms (0:44.5, 6.0)       | as spread                                                                                                                                  | team-colored flows on team → app links                                                                              | flows ← their link                                                         | —                                                                                     |
+| 9   | frontier (0:50.5, 6.0)           | org (−470, 20) at 0.62 with its apps; lab (420, 20) r210 with lab-core; team → lab links                                                   | —                                                                                                                   | lab fades in place; team → lab links ← their team                          | —                                                                                     |
+| 10  | frontier-comms (0:56.5, 12.0)    | as frontier                                                                                                                                | flows team → lab                                                                                                    | flows ← their link                                                         | —                                                                                     |
+| 11  | orbit (1:08.5, 10.0)             | lab at the centre r250, core r150; apps orbit at r310; companies at r420 with org back at angle π                                          | apps turn 0.05 rad/s                                                                                                | companies fade in place                                                    | teams → org; org shrinks to its ring place                                            |
+| 12  | absorb (1:18.5, 8.0)             | as orbit                                                                                                                                   | apps fold into lab-core one by one (1 s + 0.6 s each); core grows                                                   | —                                                                          | apps, data-org-* → lab-core                                                           |
+| 13  | rivals (1:26.5, 6.0)             | three labs at (0, −190), (−330, 200), (330, 200), r105, each with a third of the companies                                                 | —                                                                                                                   | rival-1, rival-2 ← lab; companies split to their lab                       | lab-core → lab                                                                        |
+| 14  | merge-1 (1:32.5, 10.0)           | as rivals                                                                                                                                  | left merges into right (1.5 s, 2.5 s); right merges into top at the centre (4.8 s, 3 s); companies follow their lab | —                                                                          | rival-1 → rival-2 → lab                                                               |
+| 15  | final-frontier (1:42.5, 6.0)     | one lab r175, all companies at r250                                                                                                        | title at 0.4 s                                                                                                      | title                                                                      | —                                                                                     |
+| 16  | engulf (1:48.5, 12.0)            | as final-frontier                                                                                                                          | lab grows to fill the frame (0.6 s, 6.4 s); companies vanish as its edge reaches them; title at 8.5 s               | —                                                                          | companies → lab                                                                       |
+| 17  | dont-panic (2:00.5, 5.5)         | **curtain**: black field                                                                                                                   | title at 3.5 s                                                                                                      | —                                                                          | everything                                                                            |
+| 18  | spread-again (2:06, 5.5)         | org at the centre with its apps (no teams)                                                                                                 | —                                                                                                                   | org, apps (fade in place)                                                  | curtain                                                                               |
+| 19  | echo-hub (2:11.5, 9.5)           | as spread-again, with hub r120 inside org                                                                                                  | —                                                                                                                   | hub ← org; data-org-* → hub                                                | —                                                                                     |
+| 20  | echo-spaces (2:21, 11.0)         | camera into the hub (zoom 3.4); 4 spaces in the hub; ECHO title in screen space                                                            | —                                                                                                                   | spaces ← hub                                                               | apps leave the frame with the camera                                                  |
+| 21  | objects (2:32, 7.5)              | camera into space-Company (zoom 15); 150 objects in a disc, a few links                                                                    | disc turns 0.08 rad/s                                                                                               | objects ← space-Company                                                    | —                                                                                     |
+| 22  | object-created (2:39.5, 14.0)    | as objects, dimmed; picked objects lit, each linked to its card                                                                            | cards appear in turn (0.8 s … 11 s); thread messages at their times                                                 | cards ← their object                                                       | —                                                                                     |
+| 23  | echo-spaces-again (2:53.5, 12.5) | as echo-spaces                                                                                                                             | chatter chips by the spaces                                                                                         | —                                                                          | objects, cards → space-Company                                                        |
+| 24  | echo-hub-again (3:06, 5.5)       | as echo-hub                                                                                                                                | —                                                                                                                   | —                                                                          | spaces → hub                                                                          |
+| 25  | saas-merge (3:11.5, 9.0)         | as echo-hub                                                                                                                                | apps fold into the hub one by one (1.4 s + 0.55 s each); hub grows                                                  | —                                                                          | apps → hub                                                                            |
+| 26  | company-fills (3:20.5, 10.0)     | org and hub grow to fill the frame; gold field; logo; three tags                                                                           | grow (0.4 s, 3 s); field (2.9 s); logo (3.4 s); tags (4.2 s + 0.4 s each)                                           | —                                                                          | —                                                                                     |
+
+## Testing a cut
+
+`saas2d-morph` plays scale → spread alone (2 s, a 3 s morph, 5 s). Point `MORPH_TEST` in `Saas2D.tsx` at any two
+adjacent scenes to check another cut without rendering the story:
+
+```bash
+node scripts/render-saas2d.mjs --composition saas2d-morph --stills 60,150,210,270,360
+node scripts/render-saas2d.mjs --composition saas2d-morph --out ../../temp/voice/saas2d-morph.mp4
+```

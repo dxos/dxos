@@ -9,7 +9,7 @@ import holds from '../../../showcase/echo3d/voice/holds-fry-short.json';
 import { type CardPrim, LAYERS, type Prim, frameAt, place } from './engine.ts';
 import { loadNeuFonts } from './fonts.ts';
 import { slides } from './slides.ts';
-import { Background, Card, Defs, HEIGHT, SvgPrim, WIDTH } from './theme.tsx';
+import { Background, Card, Defs, Grain, HEIGHT, SvgPrim, WIDTH } from './theme.tsx';
 
 loadNeuFonts();
 
@@ -18,11 +18,25 @@ export const SAAS2D_SECONDS = Object.values(holds).reduce((sum, hold) => sum + h
 
 const isCard = (prim: Prim): prim is CardPrim => prim.kind === 'card';
 
+export type Saas2DProps = {
+  /** Plays only these slides, with these holds (seconds), instead of the whole story: a test of one transition. */
+  test?: Record<string, number>;
+};
+
+/** Holds for the scale → spread morph test: a beat on each layout around the three-second transition. */
+export const MORPH_TEST: Record<string, number> = { scale: 2, spread: 5 };
+
 /** The SaaS story in neu-dark 2D, timed to the short Fry cut of the echo3d presentation. */
-export const Saas2D = () => {
+export const Saas2D = ({ test }: Saas2DProps) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const timeline = useMemo(() => place(slides(holds), holds), []);
+  const timeline = useMemo(() => {
+    const timing = test ?? holds;
+    return place(
+      slides(holds).filter((slide) => slide.id in timing),
+      timing,
+    );
+  }, [test]);
   const { camera, prims } = frameAt(timeline, frame / fps);
   const visible = prims.filter((prim) => (prim.opacity ?? 1) > 0.002);
   const ordered = LAYERS.flatMap((kind) => visible.filter((prim) => prim.kind === kind));
@@ -38,6 +52,7 @@ export const Saas2D = () => {
       {visible.filter(isCard).map((prim) => (
         <Card key={prim.id} prim={prim} />
       ))}
+      <Grain />
     </AbsoluteFill>
   );
 };

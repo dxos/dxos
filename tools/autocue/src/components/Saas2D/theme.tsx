@@ -31,9 +31,8 @@ const px = Math.round;
 /** The camera for screen-space primitives: world units are screen pixels from the top-left. */
 const SCREEN: Camera = { x: WIDTH / 2, y: HEIGHT / 2, zoom: 1 };
 
-/** A surface tinted toward a color. */
-const tint = (color: string | undefined, amount: number, base: string = neu.lighter) =>
-  color ? `color-mix(in oklab, ${base} ${100 - amount}%, ${color})` : base;
+/** The inset well's radius, as a share of its body's. */
+const WELL = 0.84;
 
 /** World to screen pixels, with the origin at the frame's top-left. */
 export const project = (camera: Camera, x: number, y: number): [number, number] => [
@@ -182,10 +181,6 @@ export const Defs = () => (
           <stop offset='0.55' style={{ stopColor: ROLES[role] }} />
           <stop offset='1' style={{ stopColor: `color-mix(in oklab, ${ROLES[role]} 80%, black)` }} />
         </radialGradient>
-        <radialGradient id={`nd-halo-${role}`}>
-          <stop offset='0.6' stopColor={ROLES[role]} stopOpacity={0.14} />
-          <stop offset='1' stopColor={ROLES[role]} stopOpacity={0} />
-        </radialGradient>
       </g>
     ))}
     <radialGradient id='nd-glow-accent'>
@@ -195,24 +190,27 @@ export const Defs = () => (
   </defs>
 );
 
-/**
- * A fixed, faint noise field over the background: it dithers the dark gradient and the translucent glows drawn over
- * it, so they do not band. Seeded and static, so it never crawls.
- */
+/** The field: a soft vignette, lighter where the story sits. */
 export const Background = () => (
   <AbsoluteFill
     style={{
-      background: `radial-gradient(ellipse at 50% 38%, hsl(220 10% 19%) 0%, ${neu.bg} 50%, hsl(220 12% 8%) 125%)`,
+      background: `radial-gradient(ellipse at 50% 42%, hsl(220 10% 17.5%) 0%, ${neu.bg} 55%, hsl(220 11% 11%) 130%)`,
     }}
-  >
-    <svg width='100%' height='100%' style={{ position: 'absolute', inset: 0, opacity: 0.07, mixBlendMode: 'overlay' }}>
-      <filter id='nd-grain'>
-        <feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='7' stitchTiles='stitch' />
-        <feColorMatrix type='saturate' values='0' />
-      </filter>
-      <rect width='100%' height='100%' filter='url(#nd-grain)' />
-    </svg>
-  </AbsoluteFill>
+  />
+);
+
+/**
+ * A fixed noise field over the whole frame, drawn last so it dithers every gradient, shadow and glow beneath it (the
+ * video adds a fine dither again at its final size). Seeded and static, so it never crawls.
+ */
+export const Grain = () => (
+  <svg width={WIDTH} height={HEIGHT} style={{ position: 'absolute', inset: 0, opacity: 0.05, pointerEvents: 'none' }}>
+    <filter id='nd-grain' x='0' y='0' width='100%' height='100%'>
+      <feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='7' stitchTiles='stitch' />
+      <feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0  0.33 0.33 0.33 0 0  0.33 0.33 0.33 0 0  0 0 0 0 1' />
+    </filter>
+    <rect width='100%' height='100%' filter='url(#nd-grain)' />
+  </svg>
 );
 
 /** A disc's fill: a role's gradient, or a flat color lit from the top-left. */
@@ -235,13 +233,12 @@ export const SvgPrim = ({ prim, camera }: { prim: Prim; camera: Camera }) => {
       if (r < 0.5) {
         return null;
       }
-      const color = prim.tint ?? (prim.role ? ROLES[prim.role] : undefined);
+      // One raised band and one inset well, both shades of the field: role color belongs to what a body holds, not to it.
+      const lit = r < 2000;
       return (
         <At x={x} y={y} opacity={opacity}>
-          {prim.role && r < 2000 && <circle r={r * 1.35} fill={`url(#nd-halo-${prim.role})`} />}
-          <circle r={r} fill={tint(color, 8)} fillOpacity={0.94} filter={r < 2000 ? 'url(#nd-raised)' : undefined} />
-          <circle r={r * 0.84} fill={tint(color, 5, neu.bg)} filter={r < 2000 ? 'url(#nd-inset)' : undefined} />
-          {color && <circle r={r * 0.84} fill='none' stroke={color} strokeOpacity={0.22} strokeWidth={1.5} />}
+          <circle r={r} fill={neu.lighter} filter={lit ? 'url(#nd-raised)' : undefined} />
+          <circle r={r * WELL} fill={neu.bg} filter={lit ? 'url(#nd-inset)' : undefined} />
         </At>
       );
     }
@@ -251,15 +248,16 @@ export const SvgPrim = ({ prim, camera }: { prim: Prim; camera: Camera }) => {
       if (r < 0.3) {
         return null;
       }
+      // Small nodes are lit by a tight glow; large ones read by their raised shadow alone, since a wide faint glow bands.
       const glow = 0.35 + (prim.glow ?? 0);
       const glowColor = prim.color ?? (prim.role ? ROLES[prim.role] : neu.muted);
       return (
         <At x={x} y={y} opacity={opacity}>
-          {r < 1500 && (
+          {r < 24 && glow > 0 && (
             <circle
-              r={r * (1 + 1.4 * glow)}
+              r={r * (1 + 0.6 * glow)}
               fill={glowColor}
-              opacity={0.1 * Math.min(1, 0.5 + glow)}
+              opacity={0.22 * Math.min(1, glow)}
               filter='url(#nd-glow)'
             />
           )}

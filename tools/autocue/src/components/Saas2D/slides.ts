@@ -109,14 +109,24 @@ const tenantRing = (
     if (index === YOURS) {
       prims.push({ kind: 'body', id: 'org', x, y, r: 16 });
       // A small dark body vanishes on the field; your teams' blue marks which company is yours.
-      prims.push({ kind: 'node', id: 'your-teams', x, y, r: 9, role: 'team' });
+      prims.push({ kind: 'node', id: 'your-teams', x, y, r: 9, role: 'team', parent: 'body:org' });
       if (labels) {
         prims.push(label('org-label', x - 34, y, 'Your company', { anchor: 'end', size: 24 }));
       }
     } else {
       prims.push({ kind: 'node', id: `tenant-${index}`, x, y, r: 9, color: TENANT_COLOR, glow: -0.2 });
     }
-    prims.push({ kind: 'link', id: `tenant-link-${index}`, x1: x, y1: y, x2: ix, y2: iy, opacity: 0.6 });
+    const tenant = index === YOURS ? 'body:org' : `node:tenant-${index}`;
+    prims.push({
+      kind: 'link',
+      id: `tenant-link-${index}`,
+      x1: x,
+      y1: y,
+      x2: ix,
+      y2: iy,
+      opacity: 0.6,
+      parent: tenant,
+    });
     if (flows) {
       prims.push({
         kind: 'flow',
@@ -130,6 +140,7 @@ const tenantRing = (
         count: 1,
         size: 3.5,
         opacity: 0.8,
+        parent: tenant,
       });
     }
   }
@@ -142,8 +153,20 @@ const company = (cx: number, cy: number, scale: number, { teams = true, title = 
   ...(title ? [label('org-label', cx, cy - 170 * scale - 32, 'Your company', { size: 30 })] : []),
   ...(teams
     ? TEAMS.flatMap(({ id, color, r, at }): Prim[] => [
-        { kind: 'node', id: `team-${id}`, x: cx + at[0] * scale, y: cy + at[1] * scale, r: r * scale, color },
-        label(`team-label-${id}`, cx + at[0] * scale, cy + (at[1] - r) * scale - 14, id, { size: 17, weight: 500 }),
+        {
+          kind: 'node',
+          id: `team-${id}`,
+          x: cx + at[0] * scale,
+          y: cy + at[1] * scale,
+          r: r * scale,
+          color,
+          parent: 'body:org',
+        },
+        label(`team-label-${id}`, cx + at[0] * scale, cy + (at[1] - r) * scale - 14, id, {
+          size: 17,
+          weight: 500,
+          parent: `node:team-${id}`,
+        }),
       ])
     : []),
 ];
@@ -157,7 +180,24 @@ const teamAt = (id: string, cx: number, cy: number, scale: number): [number, num
 const appRing = (cx: number, cy: number, radius: number, { scale = 1, spin = 0 } = {}): Prim[] =>
   APPS.map((app, index) => {
     const [x, y] = polar(cx, cy, radius, -Math.PI / 2 + (index / APPS.length) * TAU + spin);
-    return { kind: 'chip', id: `app-${app}`, x, y, text: app, scale };
+    // Every app is another SaaS vendor: the many grow out of the one.
+    return { kind: 'chip', id: `app-${app}`, x, y, text: app, scale, from: 'body:vendor' };
+  });
+
+/** Your data, a share of it held by each app; it all comes from the one dot the first vendor held. */
+const appData = (cx: number, cy: number, radius: number): Prim[] =>
+  APPS.map((app): Prim => {
+    const [x, y] = appAt(app, cx, cy, radius - 52);
+    return {
+      kind: 'node',
+      id: `data-org-${app}`,
+      x,
+      y,
+      r: 7,
+      role: 'data',
+      parent: `chip:app-${app}`,
+      from: 'node:data-org',
+    };
   });
 
 const appAt = (app: string, cx: number, cy: number, radius: number, spin = 0): [number, number] =>
@@ -169,7 +209,7 @@ const teamLinks = (cx: number, cy: number, scale: number, radius: number, t?: nu
     apps.flatMap((app): Prim[] => {
       const [x1, y1] = teamAt(team, cx, cy, scale);
       const [x2, y2] = appAt(app, cx, cy, radius);
-      const link: LinkPrim = { kind: 'link', id: `link-${team}-${app}`, x1, y1, x2, y2 };
+      const link: LinkPrim = { kind: 'link', id: `link-${team}-${app}`, x1, y1, x2, y2, parent: `node:team-${team}` };
       if (t === undefined) {
         return [link];
       }
@@ -515,11 +555,9 @@ export const slides = (holds: Record<string, number>): Slide[] => {
     },
 
     // Your company, its data spread across many apps.
-    { id: 'spread', draw: () => still([...company(0, 0, 1), ...appRing(0, 0, 390), ...teamLinks(0, 0, 1, 390)]) },
-    {
-      id: 'spread-comms',
-      draw: (t) => still([...company(0, 0, 1), ...appRing(0, 0, 390), ...teamLinks(0, 0, 1, 390, t)]),
-    },
+    // Your company keeps its place in the ring of companies; the camera comes to it.
+    { id: 'spread', transition: 3.0, draw: () => still(spread(), SPREAD_VIEW) },
+    { id: 'spread-comms', draw: (t) => still(spread(t), SPREAD_VIEW) },
 
     // A frontier lab arrives, far bigger than every other vendor.
     { id: 'frontier', draw: () => still(frontier()) },
@@ -793,9 +831,9 @@ const silo = (): Prim[] => [
 const scale = (t: number, flows: boolean): Prim[] => {
   const prims: Prim[] = [
     { kind: 'body', id: 'vendor', x: 0, y: 0, r: 300, role: 'lab' },
-    { kind: 'node', id: 'metadata', x: 0, y: 0, r: 100, role: 'lab', glow: 0.3 },
-    label('metadata-label', 0, 0, '“Metadata”', { size: 28 }),
-    label('vendor-label', 0, -258, 'SaaS', { size: 30 }),
+    { kind: 'node', id: 'metadata', x: 0, y: 0, r: 100, role: 'lab', glow: 0.3, parent: 'body:vendor' },
+    label('metadata-label', 0, 0, '“Metadata”', { size: 28, parent: 'node:metadata' }),
+    label('vendor-label', 0, -258, 'SaaS', { size: 30, parent: 'body:vendor' }),
     ...tenantRing(0, 0, 400, { inner: 300, flows, t }),
   ];
   // Every company's data, held in a ring inside the vendor; yours is on the left, nearest your company.
@@ -810,10 +848,22 @@ const scale = (t: number, flows: boolean): Prim[] => {
       r: index === 0 ? 10 : 7,
       role: 'data',
       glow: -0.1,
+      parent: 'body:vendor',
     });
   }
   return prims;
 };
+
+/** Your company's place in the ring of companies around the vendor. */
+const YOURS_AT: [number, number] = [-400, 0];
+const SPREAD_VIEW = camera(1, ...YOURS_AT);
+
+const spread = (t?: number): Prim[] => [
+  ...company(...YOURS_AT, 1),
+  ...appRing(...YOURS_AT, 390),
+  ...appData(...YOURS_AT, 390),
+  ...teamLinks(...YOURS_AT, 1, 390, t),
+];
 
 const FRONTIER_AT = -470;
 const FRONTIER_SCALE = 0.62;

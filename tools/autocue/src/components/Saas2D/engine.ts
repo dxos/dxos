@@ -14,10 +14,18 @@ type Base = {
   /** Seconds after the slide starts before an entering primitive begins to fade in. */
   delay?: number;
   screen?: boolean;
+  /**
+   * Key (`kind:id`) of the element this one belongs to in the story's hierarchy (a team to its company, a company's data
+   * to the vendor holding it). An element that enters grows out of its parent's previous place; one that leaves folds
+   * into its parent's next place.
+   */
+  parent?: string;
+  /** Key of the element this one becomes or grows out of across a cut (the SaaS vendor becoming the apps). */
+  from?: string;
 };
 
-/** A soft container (company, vendor, lab, space): raised disc with an inset well. */
-export type BodyPrim = Base & { kind: 'body'; x: number; y: number; r: number; role?: Role; tint?: string };
+/** A soft container (company, vendor, lab, space): raised disc with an inset well; `role` names what it is, not its color. */
+export type BodyPrim = Base & { kind: 'body'; x: number; y: number; r: number; role?: Role };
 /** A lit disc in a role color (or `color`), glowing. */
 export type NodePrim = Base & {
   kind: 'node';
@@ -154,6 +162,9 @@ export const ease = (x: number) => {
 /** A symmetric ease for moves that should start as gently as they land (scene-long motion). */
 export const easeInOut = (x: number) => (x <= 0 ? 0 : x >= 1 ? 1 : x < 0.5 ? 4 * x ** 3 : 1 - (-2 * x + 2) ** 3 / 2);
 
+/** A gentle symmetric ease for scene morphs: the change is spread across the whole transition. */
+export const easeMorph = (x: number) => (x <= 0 ? 0 : x >= 1 ? 1 : 0.5 - Math.cos(Math.PI * x) / 2);
+
 export const clamp = (x: number, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, x));
 
 /** 0 before `start`, eased to 1 over `seconds`. */
@@ -194,19 +205,122 @@ const blendCamera = (a: Camera, b: Camera, k: number): Camera => {
   return { x: lerp(a.x, b.x, z), y: lerp(a.y, b.y, z), zoom };
 };
 
+/** A primitive's place in world (or screen) units, or nothing for full-frame primitives. */
+const anchor = (prim: Prim): [number, number] | undefined => {
+  switch (prim.kind) {
+    case 'link':
+    case 'flow':
+      return [(prim.x1 + prim.x2) / 2, (prim.y1 + prim.y2) / 2];
+    case 'fill':
+      return undefined;
+    default:
+      return [prim.x, prim.y];
+  }
+};
+
+/** `prim` moved so that it starts at `[x, y]` and reaches its own place as `k` goes from 0 to 1. */
+const travel = (prim: Prim, [x, y]: [number, number], k: number): Prim => {
+  switch (prim.kind) {
+    case 'link':
+    case 'flow':
+      return {
+        ...prim,
+        x1: lerp(x, prim.x1, k),
+        y1: lerp(y, prim.y1, k),
+        x2: lerp(x, prim.x2, k),
+        y2: lerp(y, prim.y2, k),
+      };
+    case 'fill':
+      return prim;
+    default:
+      return { ...prim, x: lerp(x, prim.x, k), y: lerp(y, prim.y, k) };
+  }
+};
+
+/** Shrinks a disc or chip toward nothing as `k` goes to 0, so what folds into a parent does not cover it. */
+const grow = (prim: Prim, k: number): Prim => {
+  const size = 0.15 + 0.85 * k;
+  switch (prim.kind) {
+    case 'body':
+    case 'node':
+    case 'ring':
+      return { ...prim, r: prim.r * size };
+    case 'chip':
+      return { ...prim, scale: (prim.scale ?? 1) * size };
+    default:
+      return prim;
+  }
+};
+
 /** The frame `t` seconds into a blend of `seconds` from `from` to `to`. */
 export const mix = (from: Frame, to: Frame, t: number, seconds: number): Frame => {
-  const k = ease(t / seconds);
-  const previous = new Map(from.prims.map((prim) => [key(prim), prim]));
+  // The design system's ease-out suits short cuts; a long morph would land in its first third, so it eases both ends.
+  const curve = seconds >= 2 ? easeMorph : ease;
+  const k = curve(t / seconds);
+  const before = new Map(from.prims.map((prim) => [key(prim), prim]));
+  const after = new Map(to.prims.map((prim) => [key(prim), prim]));
+  // Elements of `from` that become another element of `to`: the first element naming each as its source.
+  const becomes = new Map<string, Prim>();
+  for (const prim of to.prims) {
+    if (prim.from && !becomes.has(prim.from)) {
+      becomes.set(prim.from, prim);
+    }
+  }
+  /** Where a leaving element's lineage lands in `to`: its own successor, else its parent's (followed up the tree). */
+  const destination = (prim: Prim, depth = 0): [number, number] | undefined => {
+    const next = becomes.get(key(prim));
+    if (next) {
+      return anchor(next);
+    }
+    if (!prim.parent || depth > 8) {
+      return undefined;
+    }
+    const parent = after.get(prim.parent);
+    if (parent) {
+      return anchor(parent);
+    }
+    const old = before.get(prim.parent);
+    return old ? destination(old, depth + 1) : undefined;
+  };
+  /** Where an entering element's lineage was in `from`: its source, else its parent (or the parent's source). */
+  const origin = (prim: Prim, depth = 0): [number, number] | undefined => {
+    const source = prim.from ? before.get(prim.from) : undefined;
+    if (source) {
+      return anchor(source);
+    }
+    if (!prim.parent || depth > 8) {
+      return undefined;
+    }
+    const parent = before.get(prim.parent);
+    if (parent) {
+      return anchor(parent);
+    }
+    const next = after.get(prim.parent);
+    return next ? origin(next, depth + 1) : undefined;
+  };
+
   const prims: Prim[] = [];
   for (const prim of to.prims) {
-    const before = previous.get(key(prim));
-    previous.delete(key(prim));
-    const own = ease((t - (prim.delay ?? 0)) / seconds);
-    prims.push(before ? blend(before, prim, own) : fade(prim, own));
+    const previous = before.get(key(prim));
+    const own = curve((t - (prim.delay ?? 0)) / seconds);
+    if (previous) {
+      prims.push(blend(previous, prim, own));
+      continue;
+    }
+    const start = prim.screen ? undefined : origin(prim);
+    prims.push(
+      start ? travel(grow({ ...prim, opacity: (prim.opacity ?? 1) * own }, own), start, own) : fade(prim, own),
+    );
   }
-  for (const prim of previous.values()) {
-    prims.push(fade(prim, 1 - k));
+  for (const prim of from.prims) {
+    if (after.has(key(prim))) {
+      continue;
+    }
+    const end = prim.screen ? undefined : destination(prim);
+    // A leaving element moves from its own place (1 - k = 1) to its destination (1 - k = 0).
+    prims.push(
+      end ? travel(grow({ ...prim, opacity: (prim.opacity ?? 1) * (1 - k) }, 1 - k), end, 1 - k) : fade(prim, 1 - k),
+    );
   }
   return { camera: blendCamera(from.camera, to.camera, k), prims };
 };

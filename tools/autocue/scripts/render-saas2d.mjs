@@ -20,6 +20,7 @@ const root = path.resolve(import.meta.dirname, '..');
 const { values } = parseArgs({
   options: {
     stills: { type: 'string' },
+    composition: { type: 'string', default: 'saas2d' },
     out: { type: 'string', default: path.join(root, '../../temp/voice/saas2d-neu-dark.mp4') },
     scale: { type: 'string', default: '2' },
     concurrency: { type: 'string', default: '6' },
@@ -29,7 +30,7 @@ const { values } = parseArgs({
 const browserExecutable = process.env.REMOTION_BROWSER || null;
 const chromiumOptions = { gl: 'angle' };
 const serveUrl = await bundle({ entryPoint: path.join(root, 'src/components/Ident/remotion.ts') });
-const composition = await selectComposition({ serveUrl, id: 'saas2d', browserExecutable, chromiumOptions });
+const composition = await selectComposition({ serveUrl, id: values.composition, browserExecutable, chromiumOptions });
 const outDir = path.dirname(path.resolve(values.out));
 fs.mkdirSync(outDir, { recursive: true });
 
@@ -37,12 +38,12 @@ if (values.stills) {
   const frames = values.stills.split(',').map(Number);
   const files = [];
   for (const frame of frames) {
-    const output = path.join(outDir, `saas2d-${String(frame).padStart(5, '0')}.png`);
+    const output = path.join(outDir, `${values.composition}-${String(frame).padStart(5, '0')}.png`);
     await renderStill({ serveUrl, composition, frame, output, browserExecutable, chromiumOptions });
     files.push(output);
     console.log(`wrote ${output}`);
   }
-  const sheet = path.join(outDir, 'saas2d-neu-dark.contact.png');
+  const sheet = path.join(outDir, `${values.composition}.contact.png`);
   const columns = Math.min(4, files.length);
   execFileSync('ffmpeg', [
     '-y',
@@ -82,7 +83,8 @@ if (values.stills) {
     '-i',
     big,
     '-vf',
-    `scale=${composition.width}:${composition.height}:flags=lanczos,format=yuv420p`,
+    // A fine temporal dither at the final size breaks up the 8-bit steps in the dark field's gradients.
+    `scale=${composition.width}:${composition.height}:flags=lanczos,noise=alls=3:allf=t+u,format=yuv420p`,
     '-c:v',
     'libx264',
     '-crf',
