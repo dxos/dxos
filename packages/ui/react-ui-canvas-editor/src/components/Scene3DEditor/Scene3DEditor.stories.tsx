@@ -82,6 +82,10 @@ type StoryProps = {
   commitDelay?: number;
   /** The tool picked when the story opens. */
   initialTool?: Tool3D;
+  /** Draws the ground grid. */
+  grid?: boolean;
+  /** Gestures snap to the grid unit; holding Alt frees one. */
+  snap?: boolean;
 };
 
 const TOOLS: { tool: Tool3D; icon: string; label: string }[] = [
@@ -109,7 +113,7 @@ const defines = (document: Scene.SceneDocument, object: string) =>
  *    plain element to select the face under the pointer, which Extrude then drags; Escape clears it.
  * 4. Delete removes the selection; Orbit (or the middle button) orbits, shift or the right button pans, the wheel zooms.
  */
-const DefaultStory = ({ exemplar, commitDelay, initialTool = 'select' }: StoryProps) => {
+const DefaultStory = ({ exemplar, commitDelay, initialTool = 'select', grid, snap }: StoryProps) => {
   const initial = useMemo(
     () => (exemplar === 'overlap' ? OVERLAP : exemplar === 'kit' ? KIT : Dsl.readScenes(EXEMPLARS[exemplar]).document),
     [exemplar],
@@ -163,6 +167,8 @@ const DefaultStory = ({ exemplar, commitDelay, initialTool = 'select' }: StoryPr
         onEdit={setEditing}
         face={face}
         onFaceChange={setFace}
+        grid={grid}
+        snap={snap}
       />
     </div>
   );
@@ -194,10 +200,11 @@ export const Overlapping: Story = { args: { exemplar: 'overlap' } };
  * 2. Drag from a face: the solid grows out of that face as the pointer moves, and the release makes it, selected.
  * 3. Double-click a face: it is highlighted, and the cursor now changes only over that face; a drag anywhere extrudes it.
  * 4. Escape clears the selected face.
+ * 5. The ground grid shows, and an extrusion grows in whole grid units; holding Alt frees it.
  */
 export const Extrude: Story = {
   // Plain cubes: no solid or rounded cube loads Manifold before the first extrusion.
-  args: { exemplar: 'overlap', initialTool: 'extrude' },
+  args: { exemplar: 'overlap', initialTool: 'extrude', grid: true, snap: true },
 };
 
 /**
@@ -297,6 +304,90 @@ export const ExtrudeTest: Story = {
     await waitFor(() => expect(editor.dataset.selection).toBe('extrude-1'));
     await new Promise((resolve) => setTimeout(resolve, 1_000));
     await expect(new Set(released)).toEqual(new Set([preview]));
+  },
+};
+
+/**
+ * Move, driven: a drag on the move gizmo moves the selected cube.
+ *
+ * Test:
+ * 1. With Move, a click on a cube selects it and puts the gizmo on it.
+ * 2. A drag from one of the gizmo's arrows moves the cube, which stays selected.
+ */
+export const MoveTest: Story = {
+  args: { exemplar: 'overlap', initialTool: 'move' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const editor = await canvas.findByTestId('scene.3d.editor');
+    const view = editor.querySelector('canvas');
+    if (!view) {
+      throw new Error('The editor has no canvas.');
+    }
+    const engine = () =>
+      EngineStore.Instances.filter((engine) => engine.getRenderingCanvas() === view && !engine.isDisposed).at(-1);
+    const scene = () => engine()?.scenes[0];
+    /** A drawn item's world bounds, rounded, as `minX,minY,minZ,maxX,maxY,maxZ`. */
+    const bounds = (name: string) => {
+      const box = scene()?.getMeshByName(name)?.getBoundingInfo().boundingBox;
+      return (
+        box && [...box.minimumWorld.asArray(), ...box.maximumWorld.asArray()].map((value) => value.toFixed(2)).join()
+      );
+    };
+    /** The first pixel, on an 8px lattice, that `hits` accepts. */
+    const find = (hits: (x: number, y: number) => boolean) => {
+      const { width, height } = view.getBoundingClientRect();
+      for (let y = 0; y < height; y += 8) {
+        for (let x = 0; x < width; x += 8) {
+          if (hits(x, y)) {
+            return { x, y };
+          }
+        }
+      }
+      return undefined;
+    };
+    await waitFor(() => expect(bounds('item-c')).toBeDefined(), { timeout: 10_000 });
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const rect = view.getBoundingClientRect();
+    const at = ({ x, y }: { x: number; y: number }) => ({
+      clientX: rect.left + x,
+      clientY: rect.top + y,
+      pointerId: 1,
+      button: 0,
+    });
+
+    // 1.
+    const cube = find((x, y) => scene()?.pick(x, y)?.pickedMesh?.name === 'item-c');
+    if (!cube) {
+      throw new Error('No pixel shows the cube.');
+    }
+    await fireEvent.pointerDown(view, { ...at(cube), buttons: 1 });
+    await fireEvent.pointerUp(view, { ...at(cube), buttons: 0 });
+    await waitFor(() => expect(editor.dataset.selection).toBe('c'));
+    // The gizmo draws in a utility layer, a scene of its own beside the one the items are in.
+    const gizmoAt = (x: number, y: number) =>
+      engine()?._virtualScenes.some((layer) => layer.pick(x, y)?.pickedMesh !== null) === true;
+    await waitFor(() => expect(find(gizmoAt)).toBeDefined());
+    const arrow = find(gizmoAt);
+    if (!arrow) {
+      throw new Error('No pixel shows the gizmo.');
+    }
+    const before = bounds('item-c');
+
+    // 2. Babylon focuses its canvas on the press, and a drag lasts only while the canvas keeps the focus.
+    const from = at(arrow);
+    await fireEvent.pointerMove(view, { ...from, buttons: 0 });
+    await fireEvent.pointerDown(view, { ...from, buttons: 1 });
+    for (let step = 1; step <= 6; step++) {
+      await fireEvent.pointerMove(view, {
+        ...from,
+        clientX: from.clientX + step * 10,
+        clientY: from.clientY + step * 10,
+        buttons: 1,
+      });
+    }
+    await fireEvent.pointerUp(view, { ...from, clientX: from.clientX + 60, clientY: from.clientY + 60, buttons: 0 });
+    await waitFor(() => expect(bounds('item-c')).not.toBe(before));
+    await expect(editor.dataset.selection).toBe('c');
   },
 };
 

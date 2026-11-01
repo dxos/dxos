@@ -99,6 +99,15 @@ describe('extrudeIntent', () => {
     expect(intent?.kind === 'extrude' && intent.distance).toBeLessThan(0);
   });
 
+  test('with a step, the distance lands on whole steps; under half a step makes no intent', () => {
+    const drag = (pixels: number) =>
+      extrudeIntent({ id: 'e', target: 'box', normal: up, dragPixels: pixels, camera, viewport, point, step: 0.5 });
+    const intent = drag(1.3 * screenStep);
+    expect(intent?.kind === 'extrude' && intent.distance).toBe(1.5);
+    expect(drag(-0.8 * screenStep)).toMatchObject({ distance: -1 });
+    expect(drag(0.2 * screenStep)).toBeUndefined();
+  });
+
   test('a drag too short to be one makes no intent', () => {
     expect(
       extrudeIntent({ id: 'e', target: 'box', normal: up, dragPixels: 2, camera, viewport, point }),

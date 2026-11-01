@@ -458,6 +458,8 @@ export const Scene3DEditor = ({
     normal: Scene.Vec3;
     point: Scene.Vec3;
   }>(undefined);
+  // What a placed shape's base, its height and an extrusion snap to: the grid unit, unless snapping is off or Alt held.
+  const step = snap && !alt ? SNAP.move : 0;
   /** The extrusion the face drag would make with the pointer at `end`; undefined for one too short to extrude. */
   const extrusionAt = useCallback(
     (end: { x: number; y: number }): LayoutIntent | undefined => {
@@ -487,13 +489,14 @@ export const Scene3DEditor = ({
         camera: view,
         viewport: size,
         point: start.point,
+        step,
       });
       // The distance was measured in the world; the layout may be a composite's parts drawn at another scale.
       return intent?.kind === 'extrude'
         ? { ...intent, distance: Math.round((intent.distance / transform.scale) * 1000) / 1000 }
         : undefined;
     },
-    [view, size, layout, transform],
+    [view, size, layout, transform, step],
   );
   const onExtrudeEnd = useCallback(
     (end: { x: number; y: number }) => {
@@ -528,7 +531,6 @@ export const Scene3DEditor = ({
       ? sizesInOneStep(shape.type)
       : sizesInOneStep(shape.definition?.type ?? '', shape.definition);
   const committed = useRef(false);
-  const step = snap && !alt ? SNAP.move : 0;
   const cancelSizing = () => {
     sizing.current = undefined;
     setDraft(undefined);
@@ -562,8 +564,11 @@ export const Scene3DEditor = ({
         if (!onScene(event.nativeEvent)) {
           return;
         }
-        // The canvas takes no focus of its own, so a press focuses the editor and Delete and the shortcuts reach it, as in 2D.
-        event.currentTarget.focus({ preventScroll: true });
+        // A press focuses the editor so Delete and the shortcuts reach it, as in 2D, unless Babylon has focused its canvas:
+        // taking focus from the canvas blurs it, which Babylon reads as the button's release and so ends a gizmo drag.
+        if (!event.currentTarget.contains(document.activeElement)) {
+          event.currentTarget.focus({ preventScroll: true });
+        }
         renderer?.takeDrag();
         press.current = event.button === 0 ? { x: event.clientX, y: event.clientY } : undefined;
         // The click that fixes a dragged shape's height commits it, and is no other click.

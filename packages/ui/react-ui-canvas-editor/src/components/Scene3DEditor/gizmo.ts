@@ -93,11 +93,14 @@ export type ExtrudeDrag = {
   viewport: Viewport;
   /** Where the face was picked, in world coordinates. */
   point: Scene.Vec3;
+  /** The world length the distance snaps to whole multiples of; zero or none leaves it free. */
+  step?: number;
 };
 
 /**
  * The `extrude` a face drag makes: its distance is the world length the drag spans along the face's normal at the
- * picked point. Undefined for a drag shorter than a click's slop, or a normal seen end-on.
+ * picked point, in whole `step`s when one is given. Undefined for a drag shorter than a click's slop or half a step, or a
+ * normal seen end-on.
  */
 export const extrudeIntent = ({
   id,
@@ -107,6 +110,7 @@ export const extrudeIntent = ({
   camera,
   viewport,
   point,
+  step = 0,
 }: ExtrudeDrag): LayoutIntent | undefined => {
   if (Math.abs(dragPixels) < EXTRUDE_SLOP) {
     return undefined;
@@ -116,5 +120,7 @@ export const extrudeIntent = ({
   if (pixels === undefined || pixels < 1e-3) {
     return undefined;
   }
-  return { kind: 'extrude', id, target, face, distance: round(dragPixels / pixels) };
+  const free = dragPixels / pixels;
+  const distance = round(step > 0 ? Math.round(free / step) * step : free);
+  return distance === 0 ? undefined : { kind: 'extrude', id, target, face, distance };
 };
