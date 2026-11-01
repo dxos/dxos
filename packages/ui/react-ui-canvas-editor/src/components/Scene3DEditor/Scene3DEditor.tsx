@@ -580,11 +580,13 @@ export const Scene3DEditor = ({
           // Too short to sweep a base: a click, which places the default size.
           cancelSizing();
         }
-        if (!onScene(event.nativeEvent)) {
+        // A face drag captured the pointer, so its release targets the editor, not the canvas: it began on the scene.
+        const faceDrag = extruding.current !== undefined;
+        if (!faceDrag && !onScene(event.nativeEvent)) {
           return;
         }
         // A face drag that extruded is not a click; one too short to extrude selects, as a click does.
-        if (extruding.current && onExtrudeEnd(local(event))) {
+        if (faceDrag && onExtrudeEnd(local(event))) {
           press.current = undefined;
           return;
         }

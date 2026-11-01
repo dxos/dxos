@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
+import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 
 import { Dsl } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
@@ -59,6 +60,7 @@ const TOOLS: { tool: Tool3D; icon: string; label: string }[] = [
   { tool: 'rotate', icon: 'ph--arrow-clockwise--regular', label: 'Rotate' },
   { tool: 'scale', icon: 'ph--arrows-out--regular', label: 'Scale' },
   { tool: 'link', icon: 'ph--line-segment--regular', label: 'Link' },
+  { tool: 'extrude', icon: 'ph--arrow-fat-line-up--regular', label: 'Extrude' },
   { tool: { create: 'cube' }, icon: 'ph--cube--regular', label: 'Cube' },
   { tool: { create: 'sphere' }, icon: 'ph--circle--regular', label: 'Sphere' },
 ];
@@ -136,3 +138,39 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const Overlapping: Story = { args: { exemplar: 'overlap' } };
+
+/**
+ * Extrude: a drag from a face of the cube makes a solid extruding it, and selects it.
+ *
+ * Test:
+ * 1. With Extrude, a press on the cube and a release away from it make an `extrude` element, selected.
+ */
+export const Extrude: Story = {
+  args: { exemplar: 'cube' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const editor = await canvas.findByTestId('scene.3d.editor');
+    await userEvent.click(canvas.getByTestId('tool-extrude'));
+    // The press is retried: until the renderer has drawn a frame, nothing under the pointer is picked.
+    await waitFor(
+      async () => {
+        const view = editor.querySelector('canvas');
+        if (view && !editor.dataset.selection) {
+          const rect = view.getBoundingClientRect();
+          const from = {
+            clientX: rect.left + rect.width / 2,
+            clientY: rect.top + rect.height / 2,
+            button: 0,
+            pointerId: 1,
+          };
+          const to = { ...from, clientX: from.clientX - 60, clientY: from.clientY - 60, buttons: 0 };
+          await fireEvent.pointerDown(view, { ...from, buttons: 1 });
+          // The press captures the pointer, so its release targets the editor rather than the canvas under it.
+          await fireEvent.pointerUp(editor, to);
+        }
+        await expect(editor.dataset.selection).toMatch(/^extrude/);
+      },
+      { timeout: 10_000, interval: 500 },
+    );
+  },
+};
