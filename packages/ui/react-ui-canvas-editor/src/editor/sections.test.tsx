@@ -193,6 +193,75 @@ describe('SceneEditor sections', () => {
     expect(screen.getByTestId('canvas3d.tool.select').getAttribute('draggable')).not.toBe('true');
   });
 
+  test('the library tool defines a picked object in the model once and arms the place tool for it', async () => {
+    const onModelIntent = vi.fn((_intent: ModelIntent): readonly string[] => []);
+    const make = vi.fn(() => ({ id: 'mesh', type: 'mesh', props: { url: 'taxi.glb' } }));
+    const Library = ({ doc }: { doc: Scene.SceneDocument }) => (
+      <SceneEditor.Root
+        config={{
+          ...CONFIG,
+          tools: [
+            ...CONFIG.tools,
+            { id: 'node:cube', icon: 'ph--cube--regular', label: 'Cube', category: 'create', kind: 'cube' },
+          ],
+          library: [{ id: 'taxi', label: 'Taxi', icon: 'ph--car--regular', make }],
+        }}
+        document={doc}
+        scene='s'
+        onIntent={() => {}}
+        onModelIntent={onModelIntent}
+        display={{ theme: 'cad', grid: true, snap: false }}
+      >
+        <SceneEditor.Viewport>
+          <SceneEditor.Tools />
+        </SceneEditor.Viewport>
+      </SceneEditor.Root>
+    );
+    const { rerender } = render(<Library doc={document()} />);
+    await userEvent.click(await screen.findByTestId('canvas3d.tool.library'));
+    await userEvent.click(await screen.findByTestId('canvas3d.library.taxi'));
+    expect(onModelIntent).toHaveBeenCalledWith({
+      kind: 'define',
+      model: 'm',
+      object: { id: 'taxi', type: 'mesh', props: { url: 'taxi.glb' } },
+    });
+    expect(screen.getByTestId('viewport').dataset.tool).toBe('place:taxi');
+
+    // Defined once, placed many: a second pick of an object the model holds only arms the tool.
+    const defined = document();
+    const withTaxi: Scene.SceneDocument = {
+      ...defined,
+      models: defined.models.map((model) =>
+        model.dim === '3d' ? { ...model, objects: { ...model.objects, taxi: { id: 'taxi', type: 'mesh' } } } : model,
+      ),
+    };
+    rerender(<Library doc={withTaxi} />);
+    await userEvent.click(screen.getByTestId('canvas3d.tool.select'));
+    await userEvent.click(screen.getByTestId('canvas3d.tool.library'));
+    await userEvent.click(await screen.findByTestId('canvas3d.library.taxi'));
+    expect(onModelIntent).toHaveBeenCalledTimes(1);
+    expect(make).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('viewport').dataset.tool).toBe('place:taxi');
+  });
+
+  test('the library tool hides while the library is empty', async () => {
+    render(
+      <SceneEditor.Root
+        config={{ ...CONFIG, library: [] }}
+        document={document()}
+        scene='s'
+        onIntent={() => {}}
+        display={{ theme: 'cad', grid: true, snap: false }}
+      >
+        <SceneEditor.Viewport>
+          <SceneEditor.Tools />
+        </SceneEditor.Viewport>
+      </SceneEditor.Root>,
+    );
+    await screen.findByTestId('canvas3d.tool.select');
+    expect(screen.queryByTestId('canvas3d.tool.library')).toBeNull();
+  });
+
   test('Properties shows the element as drawn: the fields its object gives it apply', async () => {
     // `c` stores no type of its own; it places the `gear` object, whose type it draws as.
     render(<Editor select={['c']} />);

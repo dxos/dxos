@@ -19,6 +19,7 @@ import { generatorCompiler, objectRef, parseLinkedViewId } from '#model';
 import { CanvasCapabilities, Canvas as CanvasFormat } from '#types';
 
 import { type SceneDimension } from './dimension.ts';
+import { useCanvasLibrary } from './use-canvas-library.ts';
 import { useCanvasProperties } from './use-canvas-properties.ts';
 import { createGeneratorWorker, useCanvasGenerators, useCanvasKinds, useCanvasNodes } from './use-canvas-scene.ts';
 import { canvasViewAspect } from './view-state.ts';
@@ -66,6 +67,7 @@ export const useDimension2D = (canvas: CanvasFormat.Canvas): SceneDimension<Came
   const nodes = useCanvasNodes(openObject);
   const kinds = useCanvasKinds();
   const generators = useCanvasGenerators(db);
+  const library = useCanvasLibrary('2d');
   const appSettings = useAtomValue(Hooks.useCapability(CanvasCapabilities.Settings));
   // The Properties form's host additions, over the views the 2D canvas holds.
   const useProperties = useCallback(
@@ -84,8 +86,9 @@ export const useDimension2D = (canvas: CanvasFormat.Canvas): SceneDimension<Came
         compileGenerator: generatorCompiler,
         createGeneratorWorker,
         liveDepth: appSettings.liveDepth,
+        library,
       }),
-    [useProperties, nodes, kinds, generators, appSettings.liveDepth],
+    [useProperties, nodes, kinds, generators, appSettings.liveDepth, library],
   );
 
   const contextId = Entity.getURI(canvas);

@@ -1290,6 +1290,17 @@ the user 2026-10-31: in this PR. One commit per task, each with its failing test
   Tests: `style.test.ts` and `three/style.test.ts` "Neu without a hue", `StyleGrid.test.ts` "the swatch an unset hue
   selects" (RED: 2D's unset label differed; no `shownHue`).
 
+### Task I.5: The 3D Library tool
+
+- [x] `DimensionConfig.library` (`LibraryItem`: `id`, `label`, `icon`, `make`); the editor holds no assets.
+- [x] The Library tool ends the rail's create group, also when the group folds; hidden when the list is empty or
+      locked. A pick defines the object once (one undo step), then arms `place`.
+- [x] plugin-canvas: `CanvasCapabilities.LibraryItem`, contributed with the three `MeshPresets` (Race car, Fire
+      engine, Taxi) for 3D; `CanvasArticle` passes each dimension's items. 2D takes the option and has no items yet.
+- Ruling (agent, 2026-10-31, for the user's request): the rulings above, recorded as SPEC D-56/D-57 and plugin-canvas
+  D-20. Tests: `sections.test.tsx` library tests (RED: no tool), plugin-canvas `plugin.test.ts` "the library offers
+  the three vehicle presets…" (RED: no capability), and the `CanvasArticle` Canvas3D story's play (pick Taxi, place it).
+
 ---
 
 ## Phase F — Tests and storybooks for review (decision 9)

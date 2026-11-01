@@ -134,8 +134,9 @@ export const ToolRail = <T,>({
     >
       {groups.map((group) =>
         group.folded || (collapsed && group.collapsible) ? (
-          <Layout.Flex key={group.name} column classNames='p-1'>
+          <Layout.Flex key={group.name} column classNames='gap-1 p-1'>
             <ToolsFlyout group={group} tool={tool} layout={flyout} {...button} />
+            {groupEnd?.[group.name]}
           </Layout.Flex>
         ) : (
           <div key={group.name} className='flex flex-col gap-1 p-1'>

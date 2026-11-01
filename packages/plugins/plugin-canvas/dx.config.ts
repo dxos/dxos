@@ -65,6 +65,16 @@ const config: Plugin.PluginConfig = Plugin.config({
       },
       () => import('./src/capabilities/drawing-variant.ts', { with: { type: 'module-url' } }),
     ),
+    // The library's objects, where the canvas variant is: the editor's library tool offers them.
+    Capability.lazyModule(
+      'library',
+      {
+        provides: [CanvasCapabilities.LibraryItem],
+        activatesOn: IllustratorEvents.Start,
+        environments: ['browser', 'node', 'tauri'],
+      },
+      () => import('./src/capabilities/library.ts', { with: { type: 'module-url' } }),
+    ),
     // Where the canvas variant is: a conversion to it needs the variant too.
     Capability.lazyModule(
       'tldraw-converter',

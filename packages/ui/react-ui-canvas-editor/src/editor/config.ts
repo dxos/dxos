@@ -211,11 +211,27 @@ export type Dimension = {
  * Everything that differs between the 2D and 3D editors; the rest of `SceneEditor` (panels, inspectors, commands,
  * history, clipboard, lock, roles) is shared.
  */
+type LibraryObject = Scene.Object2D | Scene.Object3D;
+
+/** An object a host offers from its library: picked, it joins the model (once) and the place tool arms for it. */
+export type LibraryItem = {
+  id: string;
+  label: string;
+  icon?: string;
+  /**
+   * The object to define, made on the first pick (a promise where its asset loads then); undefined when it cannot be
+   * made, e.g. its asset is missing.
+   */
+  make: () => LibraryObject | undefined | Promise<LibraryObject | undefined>;
+};
+
 export type DimensionConfig<C = unknown> = {
   dim: Scene.Dimension;
   /** Builds the dimension's aspects for one editor, once. */
   create: (context: DimensionContext<C>) => Dimension;
   tools: readonly ToolDef[];
+  /** The host's library, offered as a tool at the end of the rail's create group while it holds any. */
+  library?: readonly LibraryItem[];
   /** What dragging a rail tool onto the viewport drops (2D: a node of the tool's type); undefined, the tool does not drag. */
   toolDragData?: (tool: ToolDef) => Record<string, unknown> | undefined;
   geometry: GeometryOps;

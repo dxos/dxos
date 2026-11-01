@@ -11,6 +11,7 @@ import { type Scene } from '@dxos/scene';
 import { type Canvas } from '#types';
 
 import { type SceneDimension } from './dimension.ts';
+import { useCanvasLibrary } from './use-canvas-library.ts';
 import { useScene3DView } from './use-scene3d-view.ts';
 
 /**
@@ -23,6 +24,8 @@ export const useDimension3D = (
   authoredTheme: string | undefined,
 ): SceneDimension<Scene.Camera3D> => {
   const view = useScene3DView(canvas);
+  const library = useCanvasLibrary('3d');
+  const config = useMemo(() => ({ ...config3d, library }), [library]);
   const display = useMemo<EditorDisplay>(
     () => ({
       theme: view.theme ?? toTheme3D(authoredTheme) ?? 'cad',
@@ -43,7 +46,7 @@ export const useDimension3D = (
     [view],
   );
   return {
-    config: config3d,
+    config,
     display,
     onDisplayChange,
     camera: view.camera,

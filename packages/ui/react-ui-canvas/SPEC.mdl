@@ -404,6 +404,9 @@ feat F-12: Selection and tools
     level.
   req F-12.6: Placing a model object is the `place` tool carrying that object; an object is never placed inside its
     own parts ([org.dxos.scene#D-49]).
+  req F-12.7: The rail's create group ends with a Library tool when the host supplies library objects
+    (`DimensionConfig.library`); a pick defines the object in the model once, as one undo step, then arms `place`
+    ([org.dxos.scene#D-57]).
 ```
 
 ```mdl
@@ -1012,6 +1015,22 @@ decision D-55: `CanvasEditor` has no part of its own: the actions bar, display p
   for: user:richburdon
   affects: [CanvasEditor, Dimension, F-10.1]
   why: The 2D editor's own bars and inspectors duplicated the shared ones; edits the document can carry (layer order and merge, restack, object copy) are made on it, so 3D gains them.
+```
+
+```mdl
+decision D-56: A 3D canvas has a tool that inserts library objects; at first it holds the race car, fire engine and taxi that plugin-spacetime bundled.
+  date: 2026-10-31
+  by: user:richburdon
+  affects: [F-12]
+```
+
+```mdl
+decision D-57: The library is the host's: `DimensionConfig.library` lists items (`id`, `label`, `icon`, `make`), and the editor knows no assets. The Library tool ends the rail's create group (`ph--package--regular`, testid `<prefix>.tool.library`), shown only when the list is non-empty, folded group or not; a pick defines the object under the item's id unless the model holds one, then arms `place`. 2D takes the same option and has no items yet, so its tool stays hidden. Fills in [D-56].
+  date: 2026-10-31
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [DimensionConfig, F-12.7]
+  why: Defining once and placing many matches an import; keeping `make` with the host keeps the editor free of asset bundles, which the host can load on first pick.
 ```
 
 ---

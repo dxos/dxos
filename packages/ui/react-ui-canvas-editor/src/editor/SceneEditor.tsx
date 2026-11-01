@@ -29,6 +29,7 @@ import {
 } from '@dxos/react-ui-canvas';
 import * as Button from '@dxos/react-ui/Button';
 import * as Menu from '@dxos/react-ui/Menu';
+import * as Popover from '@dxos/react-ui/Popover';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { findLayout } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
@@ -61,7 +62,7 @@ import {
   useSceneTools,
 } from './aspects/index.ts';
 import { type Command, SHARED_COMMANDS } from './commands.ts';
-import { type DimensionConfig, type ToolCategory, type ToolDef } from './config.ts';
+import { type DimensionConfig, type LibraryItem, type ToolCategory, type ToolDef } from './config.ts';
 import { SceneEditorInspector } from './sections.tsx';
 import { keySelection, placementFields } from './timeline.ts';
 
@@ -292,6 +293,14 @@ const SceneEditorTools = ({ classNames = 'top-14 bottom-14 left-2' }: { classNam
       })),
     }));
   }, [config.tools, readonly]);
+  // The library ends the create group, or the fixed tools where the dimension offers no create tool.
+  const createTool = config.tools.find((def) => def.category === 'create');
+  const libraryGroup = createTool ? (createTool.group ?? CATEGORY_GROUPS.create) : TOOLS_GROUP;
+  const prefix = config.dim === '3d' ? 'canvas3d' : 'canvas';
+  const library =
+    !readonly && config.library && config.library.length > 0 ? (
+      <LibraryTool items={config.library} prefix={prefix} />
+    ) : undefined;
   const dragData = useMemo(() => {
     const { toolDragData } = config;
     if (!toolDragData) {
@@ -309,12 +318,13 @@ const SceneEditorTools = ({ classNames = 'top-14 bottom-14 left-2' }: { classNam
         dragData={dragData}
         tool={tool}
         same={sameTool}
-        testId={(entry) => `${config.dim === '3d' ? 'canvas3d' : 'canvas'}.tool.${entry.tool.id}`}
-        groupEnd={
-          lock
+        testId={(entry) => `${prefix}.tool.${entry.tool.id}`}
+        groupEnd={{
+          ...(lock
             ? { [TOOLS_GROUP]: <ReadonlyToggle readonly={readonly} onReadonlyChange={commands.setReadonly} /> }
-            : undefined
-        }
+            : {}),
+          ...(library ? { [libraryGroup]: library } : {}),
+        }}
         onToolChange={tools.commands.setTool}
       />
     </div>
@@ -322,6 +332,64 @@ const SceneEditorTools = ({ classNames = 'top-14 bottom-14 left-2' }: { classNam
 };
 
 SceneEditorTools.displayName = 'SceneEditor.Tools';
+
+/**
+ * The host's library beside the rail: a pick defines the object in the model unless it holds one by that id (defined
+ * once, placed many, as an import is), then arms the place tool, so the next click in the view places it.
+ */
+const LibraryTool = ({ items, prefix }: { items: readonly LibraryItem[]; prefix: string }) => {
+  const { atoms, commands } = useSceneDocument('SceneEditor.Library');
+  const tools = useSceneTools('SceneEditor.Library');
+  const document = useAtomValue(atoms.document);
+  const tool = useAtomValue(tools.atoms.tool);
+  const [open, setOpen] = useState(false);
+  const model = document.models[0];
+  const pick = async (item: LibraryItem) => {
+    setOpen(false);
+    if (!model) {
+      return;
+    }
+    if (model.objects[item.id] === undefined) {
+      const object = await item.make();
+      const defined =
+        object && commands.modelIntent({ kind: 'define', model: model.id, object: { ...object, id: item.id } });
+      if (!defined || defined.length > 0) {
+        return;
+      }
+    }
+    tools.commands.setTool({ id: 'place', object: item.id });
+  };
+  const placing = tool.id === 'place' && items.some((item) => item.id === tool.object);
+  return (
+    <Popover.Root open={open} onOpenChange={({ open }) => setOpen(open)} positioning={{ placement: 'right-start' }}>
+      <Popover.Trigger asChild>
+        <Button.Toggle
+          variant='ghost'
+          iconOnly
+          icon='ph--package--regular'
+          label='Library'
+          pressed={placing}
+          data-testid={`${prefix}.tool.library`}
+        />
+      </Popover.Trigger>
+      <Popover.Content>
+        <div className='flex flex-col items-stretch gap-1 p-1' data-testid={`${prefix}.library`}>
+          {items.map((item) => (
+            <Button.Root
+              key={item.id}
+              variant='ghost'
+              icon={item.icon ?? 'ph--cube--regular'}
+              label={item.label}
+              classNames='w-full justify-start'
+              data-testid={`${prefix}.library.${item.id}`}
+              onClick={() => void pick(item)}
+            />
+          ))}
+        </div>
+      </Popover.Content>
+    </Popover.Root>
+  );
+};
 
 /**
  * The actions bar: the command table's commands, with the create menu and the dimension's own commands before undo;

@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type ContentMap, Dsl } from '@dxos/diagram';
@@ -413,6 +413,11 @@ export const Nested3D: Story = { decorators: withScenes(EXEMPLARS.encapsulated) 
  * 2. Orbit (or the middle button) orbits; shift or the right button pans; the wheel zooms.
  * 3. Cube or Sphere places one where the pointer meets the ground.
  * 4. The display panel toggles the ground grid and picks the look; both are this viewer's own, like the orbit.
+ * 5. Library offers the contributed vehicles: Taxi defines the taxi in the model, and a click places it.
+ *
+ * Test:
+ * 1. The rail's Library tool shows, and its menu offers Taxi.
+ * 2. Picking Taxi, then clicking the ground, places a taxi element and selects it.
  */
 export const Canvas3D: Story = {
   decorators: withScenes(trim`
@@ -427,4 +432,32 @@ export const Canvas3D: Story = {
     model library dim=3d {
     }
   `),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const editor = await canvas.findByTestId('scene.3d.editor', undefined, { timeout: 30_000 });
+    // 1. The tool, and the contributed entry.
+    await userEvent.click(await canvas.findByTestId('canvas3d.tool.library'));
+    await userEvent.click(await within(document.body).findByTestId('canvas3d.library.taxi'));
+    // 2. The pick arms placement; a click on open ground (left of and below the cube) places the taxi and selects it.
+    await waitFor(() => expect(canvas.getByTestId('canvas3d.tool.library')).toHaveAttribute('aria-pressed', 'true'));
+    // The click is retried: until the renderer has drawn a frame, nothing under the pointer is picked and it places nothing.
+    await waitFor(
+      () => {
+        const view = editor.querySelector('canvas');
+        if (view && !editor.dataset.selection) {
+          const rect = view.getBoundingClientRect();
+          const at = {
+            clientX: rect.left + rect.width / 4,
+            clientY: rect.top + (rect.height * 3) / 4,
+            button: 0,
+            pointerId: 1,
+          };
+          fireEvent.pointerDown(view, at);
+          fireEvent.pointerUp(view, at);
+        }
+        expect(editor.dataset.selection).toMatch(/^taxi/);
+      },
+      { timeout: 10_000, interval: 500 },
+    );
+  },
 };

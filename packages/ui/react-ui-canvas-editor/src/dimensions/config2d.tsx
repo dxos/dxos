@@ -14,7 +14,7 @@ import {
 import { DEFAULT_GRID, MAJOR_GRID } from '@dxos/scene';
 
 import { CanvasPropertiesForm, type CanvasPropertiesProps } from '../components/index.ts';
-import { type DimensionConfig, type PropertyFormProps } from '../editor/index.ts';
+import { type DimensionConfig, type LibraryItem, type PropertyFormProps } from '../editor/index.ts';
 import { type Dimension2DOptions, createDimension2D } from './dimension2d.tsx';
 import { toolDragData2D, tools2D } from './tools2d.ts';
 
@@ -38,13 +38,19 @@ const createPropertyForm2D = (useProperties?: UseProperties2D): ComponentType<Pr
  */
 export const createConfig2D = ({
   useProperties,
+  library,
   ...options
-}: Dimension2DOptions & { useProperties?: UseProperties2D } = {}): DimensionConfig<Camera> => {
+}: Dimension2DOptions & {
+  useProperties?: UseProperties2D;
+  /** The host's library objects, as the rail's library tool offers them; none yet in 2D. */
+  library?: readonly LibraryItem[];
+} = {}): DimensionConfig<Camera> => {
   const constrain = options.constrain ?? constrain2D;
   return {
     dim: '2d',
     create: createDimension2D({ ...options, constrain }),
     tools: tools2D(options.nodes),
+    library,
     toolDragData: toolDragData2D,
     geometry: {
       // One major cell aside per paste, as the canvas has always offset a duplicate.
