@@ -71,11 +71,15 @@ export const createdElement = (
   };
 };
 
-/** An object's height before its scale: a mesh's own vertical extent, else the unit every primitive is. */
-const unitHeight = (object: Scene.Object3D): number => {
+/** An object's extents before its scale: a mesh's own, else the unit every primitive is. */
+const unitExtents = (object: Scene.Object3D): Scene.Vec3 => {
   const mesh = object.type === 'mesh' ? meshProps(object.props) : undefined;
-  const heights = mesh?.positions.filter((_, index) => index % 3 === 1) ?? [];
-  return heights.length > 0 ? Math.max(...heights) - Math.min(...heights) : 1;
+  const extent = (axis: number) => {
+    const values = mesh?.positions.filter((_, index) => index % 3 === axis) ?? [];
+    const size = values.length > 0 ? Math.max(...values) - Math.min(...values) : 1;
+    return size > 0 ? size : 1;
+  };
+  return { x: extent(0), y: extent(1), z: extent(2) };
 };
 
 /**
@@ -89,9 +93,39 @@ export const placedElement = (
   point: Scene.Vec3,
 ): Scene.Element3D => {
   const scale = definition?.scale;
-  const lift = ((definition ? unitHeight(definition) : 1) * (scale?.y ?? 1)) / 2;
+  const lift = ((definition ? unitExtents(definition).y : 1) * (scale?.y ?? 1)) / 2;
   return { id, object, center: { ...point, y: point.y + lift }, ...(scale ? { scale } : {}) };
 };
 
-/** Whether a create tool sizes in one step (the base alone) rather than base then height. */
-export const sizesInOneStep = (kind: string): boolean => kind === 'sphere';
+/**
+ * An element placing `object` dragged out over `base`: with its aspect locked, scaled evenly to cover the base;
+ * otherwise stretched to the base and `height`. It stands on the ground, as a created shape does.
+ */
+export const placedOnBase = (
+  id: string,
+  object: string,
+  definition: Scene.Object3D | undefined,
+  base: GroundBase,
+  height: number | undefined,
+): Scene.Element3D => {
+  const unit = definition ? unitExtents(definition) : { x: 1, y: 1, z: 1 };
+  if (definition?.lockAspect || height === undefined) {
+    const factor = Math.max(base.width / unit.x, base.depth / unit.z);
+    return {
+      id,
+      object,
+      center: { ...base.center, y: (unit.y * factor) / 2 },
+      scale: { x: factor, y: factor, z: factor },
+    };
+  }
+  return {
+    id,
+    object,
+    center: { ...base.center, y: height / 2 },
+    scale: { x: base.width / unit.x, y: height / unit.y, z: base.depth / unit.z },
+  };
+};
+
+/** Whether a drag sizes in one step (the base alone) rather than base then height: a sphere, or a locked aspect. */
+export const sizesInOneStep = (kind: string, definition?: Scene.Object3D): boolean =>
+  kind === 'sphere' || definition?.lockAspect === true;

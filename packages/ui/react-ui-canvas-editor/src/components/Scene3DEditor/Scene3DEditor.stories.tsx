@@ -52,8 +52,32 @@ const OVERLAP: Scene.SceneDocument = {
   models: [],
 };
 
+/** A box two units long, one high and one deep, as a mesh: proportions a locked drag must keep. */
+const CRATE_MESH = {
+  key: 'crate',
+  positions: [
+    -1, -0.5, -0.5, 1, -0.5, -0.5, 1, 0.5, -0.5, -1, 0.5, -0.5, -1, -0.5, 0.5, 1, -0.5, 0.5, 1, 0.5, 0.5, -1, 0.5, 0.5,
+  ],
+  indices: [0, 2, 1, 0, 3, 2, 4, 5, 6, 4, 6, 7, 0, 1, 5, 0, 5, 4, 3, 7, 6, 3, 6, 2, 0, 4, 7, 0, 7, 3, 1, 2, 6, 1, 6, 5],
+};
+
+/** One cube to the side, and a model whose crate keeps its proportions when placed. */
+const KIT: Scene.SceneDocument = {
+  scenes: [{ ...OVERLAP.scenes[0], id: 'kit', layout: 'kit' }],
+  layouts: [
+    { id: 'kit', dim: '3d', model: 'kit', elements: { c: { id: 'c', type: 'cube', center: { x: 3, y: 0.5, z: 0 } } } },
+  ],
+  models: [
+    {
+      id: 'kit',
+      dim: '3d',
+      objects: { crate: { id: 'crate', type: 'mesh', lockAspect: true, props: { mesh: CRATE_MESH } } },
+    },
+  ],
+};
+
 type StoryProps = {
-  exemplar: (typeof EXEMPLARS_3D)[number] | 'overlap';
+  exemplar: (typeof EXEMPLARS_3D)[number] | 'overlap' | 'kit';
   /** Milliseconds before an intent reaches the document, as a host that stores it (ECHO) takes. */
   commitDelay?: number;
 };
@@ -68,7 +92,12 @@ const TOOLS: { tool: Tool3D; icon: string; label: string }[] = [
   { tool: 'extrude', icon: 'ph--arrow-fat-line-up--regular', label: 'Extrude' },
   { tool: { create: 'cube' }, icon: 'ph--cube--regular', label: 'Cube' },
   { tool: { create: 'sphere' }, icon: 'ph--circle--regular', label: 'Sphere' },
+  { tool: { place: 'crate' }, icon: 'ph--package--regular', label: 'Crate' },
 ];
+
+/** Whether the document's model defines `object`, so a tool placing it has something to place. */
+const defines = (document: Scene.SceneDocument, object: string) =>
+  document.models.some((model) => model.objects[object] !== undefined);
 
 /**
  * Arranging a 3D exemplar in memory.
@@ -79,7 +108,7 @@ const TOOLS: { tool: Tool3D; icon: string; label: string }[] = [
  */
 const DefaultStory = ({ exemplar, commitDelay }: StoryProps) => {
   const initial = useMemo(
-    () => (exemplar === 'overlap' ? OVERLAP : Dsl.readScenes(EXEMPLARS[exemplar]).document),
+    () => (exemplar === 'overlap' ? OVERLAP : exemplar === 'kit' ? KIT : Dsl.readScenes(EXEMPLARS[exemplar]).document),
     [exemplar],
   );
   const [document, setDocument] = useState<Scene.SceneDocument>(initial);
@@ -104,7 +133,9 @@ const DefaultStory = ({ exemplar, commitDelay }: StoryProps) => {
   return (
     <div className='flex flex-col dx-fill'>
       <Toolbar.Root>
-        {TOOLS.map((entry) => (
+        {TOOLS.filter(
+          ({ tool }) => typeof tool !== 'object' || !('place' in tool) || defines(document, tool.place),
+        ).map((entry) => (
           <Button.Root
             key={entry.label}
             variant={JSON.stringify(entry.tool) === JSON.stringify(tool) ? 'primary' : 'ghost'}
@@ -167,7 +198,9 @@ export const Extrude: Story = {
     if (!view) {
       throw new Error('The editor has no canvas.');
     }
-    const scene = () => EngineStore.Instances.find((engine) => engine.getRenderingCanvas() === view)?.scenes[0];
+    const scene = () =>
+      EngineStore.Instances.filter((engine) => engine.getRenderingCanvas() === view && !engine.isDisposed).at(-1)
+        ?.scenes[0];
     /** A drawn item's world bounds, rounded, as `minX,minY,minZ,maxX,maxY,maxZ`. */
     const bounds = (name: string) => {
       const box = scene()?.getMeshByName(name)?.getBoundingInfo().boundingBox;
@@ -216,5 +249,77 @@ export const Extrude: Story = {
     await waitFor(() => expect(editor.dataset.selection).toBe('extrude-1'));
     await new Promise((resolve) => setTimeout(resolve, 1_000));
     await expect(new Set(released)).toEqual(new Set([preview]));
+  },
+};
+
+/**
+ * Drag to size: a create tool and a library object show the selection's box round the shape while it is dragged out,
+ * and an object whose aspect is locked keeps its proportions.
+ *
+ * Test:
+ * 1. With Cube, a drag on open ground draws the cube with its box before anything is in the document.
+ * 2. With Crate, a drag draws the crate boxed, two long by one high and one deep however the drag runs.
+ * 3. The release places the crate scaled evenly, and selects it.
+ */
+export const DragToSize: Story = {
+  args: { exemplar: 'kit' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const editor = await canvas.findByTestId('scene.3d.editor');
+    const view = editor.querySelector('canvas');
+    if (!view) {
+      throw new Error('The editor has no canvas.');
+    }
+    const scene = () =>
+      EngineStore.Instances.filter((engine) => engine.getRenderingCanvas() === view && !engine.isDisposed).at(-1)
+        ?.scenes[0];
+    /** A drawn mesh's world extents along x, y and z, rounded. */
+    const extents = (name: string) => {
+      const box = scene()?.getMeshByName(name)?.getBoundingInfo().boundingBox;
+      return (
+        box &&
+        box.maximumWorld
+          .subtract(box.minimumWorld)
+          .asArray()
+          .map((value) => Number(value.toFixed(2)))
+      );
+    };
+    await waitFor(() => expect(extents('item-c')).toBeDefined(), { timeout: 10_000 });
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    // Open ground: left of the cube and nearer the camera, where nothing is under the pointer.
+    const rect = view.getBoundingClientRect();
+    const at = (x: number, y: number) => ({ clientX: rect.left + x, clientY: rect.top + y, pointerId: 1, button: 0 });
+    const from = at(rect.width * 0.25, rect.height * 0.6);
+    // Down the screen as well as across, since the ground recedes: a shallow drag sweeps almost no depth.
+    const to = { ...from, clientX: from.clientX + 120, clientY: from.clientY + 90 };
+    await expect(scene()?.pick(from.clientX - rect.left, from.clientY - rect.top)?.pickedMesh?.name ?? '').not.toMatch(
+      /^item-/,
+    );
+
+    // 1.
+    await userEvent.click(canvas.getByTestId('tool-cube'));
+    await fireEvent.pointerDown(view, { ...from, buttons: 1 });
+    await fireEvent.pointerMove(editor, { ...to, buttons: 1 });
+    await waitFor(() => expect(extents('item-cube-1')).toBeDefined());
+    await waitFor(() => expect(scene()?.getMeshByName('box-cube-1')).toBeTruthy());
+    await expect(editor.dataset.selection).toBe('');
+    await fireEvent.keyDown(editor, { key: 'Escape' });
+    await waitFor(() => expect(extents('item-cube-1')).toBeUndefined());
+
+    // 2.
+    await userEvent.click(canvas.getByTestId('tool-crate'));
+    await fireEvent.pointerDown(view, { ...from, buttons: 1 });
+    await fireEvent.pointerMove(editor, { ...to, buttons: 1 });
+    await waitFor(() => expect(extents('item-crate-1')).toBeDefined());
+    await waitFor(() => expect(scene()?.getMeshByName('box-crate-1')).toBeTruthy());
+    const [width = 0, height = 0, depth = 0] = extents('item-crate-1') ?? [];
+    await expect(width / height).toBeCloseTo(2, 1);
+    await expect(depth / height).toBeCloseTo(1, 1);
+
+    // 3.
+    await fireEvent.pointerUp(editor, { ...to, buttons: 0 });
+    await waitFor(() => expect(editor.dataset.selection).toBe('crate-1'));
+    const [x = 0, y = 0, z = 0] = extents('item-crate-1') ?? [];
+    await expect([x / y, z / y].map((ratio) => Number(ratio.toFixed(1)))).toEqual([2, 1]);
   },
 };

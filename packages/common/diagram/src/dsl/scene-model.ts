@@ -427,6 +427,7 @@ export const readScenes = (text: string): { document: Model.SceneDocument; probl
         id,
         type: slice(object.getChild('Word') ?? object),
         ...optionalString('parts', attrs.get('parts')),
+        ...optionalBoolean('lockAspect', attrs.get('lockAspect')),
         ...(style ? { tokens: style } : {}),
         ...(props ? { props } : {}),
       };
@@ -598,7 +599,7 @@ const ELEMENT_KEYS: ReadonlySet<string> = new Set([
 ]);
 
 /** Attributes the object reader maps to fields; any other attribute goes into `props`. */
-const OBJECT_KEYS: ReadonlySet<string> = new Set(['size', 'scale', 'parts', ...STYLE_KEYS]);
+const OBJECT_KEYS: ReadonlySet<string> = new Set(['size', 'scale', 'parts', 'lockAspect', ...STYLE_KEYS]);
 
 const optionalString = <K extends string>(key: K, value: AttrValue | undefined) => optional(key, asString(value));
 const optionalBoolean = <K extends string>(key: K, value: AttrValue | undefined) => optional(key, asBoolean(value));
@@ -738,6 +739,7 @@ const formatObject = (object: Model.Object2D | Model.Object3D, tokens: StyleToke
     ...('size' in object ? attr('size', object.size) : []),
     ...('scale' in object && object.scale ? [`scale=${formatScale(object.scale)}`] : []),
     ...attr('parts', object.parts),
+    ...attr('lockAspect', object.lockAspect),
     ...formatStyleAndProps(tokens, object),
   ].join(' ');
 

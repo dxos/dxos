@@ -115,6 +115,22 @@ model m dim=3d {
     });
   });
 
+  test('an object whose aspect is locked says so, and keeps it through a write and a read', () => {
+    const text = `model m dim=3d {
+  object taxi cube scale=5 lockAspect=true
+}
+`;
+    const { document, problems } = readScenes(text);
+    expect(problems).toEqual([]);
+    expect(document.models[0].objects.taxi).toEqual({
+      id: 'taxi',
+      type: 'cube',
+      scale: { x: 5, y: 5, z: 5 },
+      lockAspect: true,
+    });
+    expect(readScenes(printScenes(document)).document.models[0].objects.taxi).toEqual(document.models[0].objects.taxi);
+  });
+
   test('an id called scene, layout or model still parses in an object statement', () => {
     const { problems } = parse('object scene {\n  rect layout 0,0 10x10\n  rect model 0,0 10x10\n}\n');
     expect(problems).toEqual([]);

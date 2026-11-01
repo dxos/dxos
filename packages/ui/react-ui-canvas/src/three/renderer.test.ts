@@ -200,6 +200,15 @@ describe('SceneRenderer3D.pick', () => {
     view.dispose();
   });
 
+  test('a scale gizmo on an item whose aspect is locked offers only its even handle; otherwise every axis', () => {
+    const view = renderer(doc([{ id: 'a', type: 'cube', center: { x: 0, y: 0, z: 0 } }]));
+    view.attachGizmo('a', 'scale', () => {}, { uniform: true });
+    expect(view.scaleAxes).toBe(false);
+    view.attachGizmo('a', 'scale', () => {});
+    expect(view.scaleAxes).toBe(true);
+    view.dispose();
+  });
+
   test('the ground grid is hidden until shown, and hides again', () => {
     const view = renderer(doc([{ id: 'a', type: 'cube', center: { x: 0, y: 0, z: 0 } }]));
     expect(view.grid).toBe(false);

@@ -64,6 +64,8 @@ const objectFields = {
   style: Schema.optional(Schema.String),
   /** Kind-specific fields, validated by the kind's registration. */
   props: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
+  /** Sized only evenly, as a modelled thing (a vehicle) is: a drag or a scale keeps its proportions. */
+  lockAspect: Schema.optional(Schema.Boolean),
 };
 
 /** In record form a composite object's parts name a layout by id; in ECHO they are a Ref to the Layout object. */

@@ -463,9 +463,15 @@ export class SceneRenderer3D {
 
   /**
    * Puts Babylon's gizmo of `mode` on the item `key` (none when either is undefined), drawing every frame while it is
-   * on so a drag shows; `onEnd` gets the item's world transform when a drag ends.
+   * on so a drag shows; `onEnd` gets the item's world transform when a drag ends. A `uniform` scale gizmo keeps only
+   * its even handle, for an item whose aspect is locked.
    */
-  attachGizmo(key: string | undefined, mode: GizmoMode | undefined, onEnd: (after: WorldTransform) => void): void {
+  attachGizmo(
+    key: string | undefined,
+    mode: GizmoMode | undefined,
+    onEnd: (after: WorldTransform) => void,
+    { uniform = false }: { uniform?: boolean } = {},
+  ): void {
     const mesh = key === undefined ? undefined : this.#items.get(key)?.surface;
     if (!mesh || !mode) {
       this.#gizmos?.attachToMesh(null);
@@ -488,6 +494,12 @@ export class SceneRenderer3D {
     gizmos.rotationGizmoEnabled = mode === 'rotate';
     gizmos.scaleGizmoEnabled = mode === 'scale';
     gizmos.attachToMesh(mesh);
+    const scale = gizmos.gizmos.scaleGizmo;
+    if (scale) {
+      for (const axis of [scale.xGizmo, scale.yGizmo, scale.zGizmo]) {
+        axis.isEnabled = !uniform;
+      }
+    }
     this.#applySnap();
     this.#gizmoEnd = onEnd;
     for (const gizmo of [gizmos.gizmos.positionGizmo, gizmos.gizmos.rotationGizmo, gizmos.gizmos.scaleGizmo]) {
@@ -506,6 +518,12 @@ export class SceneRenderer3D {
       this.#looping = true;
       this.#engine.runRenderLoop(() => this.#scene.render());
     }
+  }
+
+  /** Whether the scale gizmo offers its per-axis handles, as well as the even one. */
+  get scaleAxes(): boolean | undefined {
+    const scale = this.#gizmos?.gizmos.scaleGizmo;
+    return scale ? [scale.xGizmo, scale.yGizmo, scale.zGizmo].every((axis) => axis.isEnabled) : undefined;
   }
 
   /** Whether a gizmo is being dragged, so the pointer's release is the drag's rather than a click. */

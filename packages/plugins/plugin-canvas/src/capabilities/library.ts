@@ -21,7 +21,8 @@ const preset = (id: MeshPresets.Preset, label: string, icon: string): CanvasCapa
   dim: '3d',
   make: async () => {
     const object = (await import('../samples/presets/MeshPresets.ts')).make(id);
-    return object && { ...object, scale: VEHICLE_SCALE };
+    // A vehicle stretched along one axis is no longer the vehicle, so it is only ever sized evenly.
+    return object && { ...object, scale: VEHICLE_SCALE, lockAspect: true };
   },
 });
 

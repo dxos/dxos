@@ -36,7 +36,15 @@ import {
 } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
-import { type GroundBase, createdElement, dragBase, dragHeight, placedElement, sizesInOneStep } from './create.ts';
+import {
+  type GroundBase,
+  createdElement,
+  dragBase,
+  dragHeight,
+  placedElement,
+  placedOnBase,
+  sizesInOneStep,
+} from './create.ts';
 import { frameTransform, scaleToLocal, toLocal } from './frame.ts';
 import { axisOf, extrudeIntent, gizmoIntent } from './gizmo.ts';
 import { targetOf } from './target.ts';
@@ -98,6 +106,11 @@ export type Scene3DEditorProps = Util.ThemedClassName<{
 
 /** A swept base's height before the pointer raises it, when snapping is off. */
 const FLAT = 0.1;
+
+/** What a drag sizes: a new shape of a kind, or a placement of a model object (by its definition's proportions). */
+type Shape =
+  | { kind: 'create'; type: string }
+  | { kind: 'place'; object: string; definition: Scene.Object3D | undefined };
 
 /** How far a press may travel and still be a click rather than a drag. */
 const CLICK_SLOP = 4;
@@ -213,8 +226,9 @@ export const Scene3DEditor = ({
   const list = useMemo(() => renderList(drawnDoc, scene), [drawnDoc, scene]);
   const frames = useMemo(() => {
     const byFrame = new Map<string, Map<string, RenderItem>>();
+    // Resolved in the drawn document, so a shape being dragged out has an item to box.
     for (const item of list.items) {
-      const target = targetOf(doc, sceneId, item.key);
+      const target = targetOf(drawnDoc, sceneId, item.key);
       if (target?.layout !== editing) {
         continue;
       }
@@ -224,7 +238,7 @@ export const Scene3DEditor = ({
       byFrame.set(frame, items);
     }
     return byFrame;
-  }, [doc, sceneId, list, editing]);
+  }, [drawnDoc, sceneId, list, editing]);
   const [frameHint, setFrameHint] = useState<string>();
   const commandHeld = useCommandHeld();
   const drilled = editing !== scene?.layout;
@@ -271,9 +285,14 @@ export const Scene3DEditor = ({
   }, []);
   useLayoutEffect(() => renderer?.setSnap(snap && !alt), [renderer, snap, alt]);
 
+  // A shape being dragged out is boxed as the selection is, so its extent reads while it is sized.
+  const drawnSelection = useMemo(
+    () => (draft && !selection.includes(draft.id) ? [...selection, draft.id] : selection),
+    [selection, draft],
+  );
   useLayoutEffect(() => {
-    renderer?.select(selection.flatMap((id) => keys.get(id)?.key ?? []));
-  }, [renderer, selection, keys, shown]);
+    renderer?.select(drawnSelection.flatMap((id) => keys.get(id)?.key ?? []));
+  }, [renderer, drawnSelection, keys, shown]);
 
   useLayoutEffect(() => {
     const key = face === undefined ? undefined : keys.get(face.element)?.key;
@@ -289,6 +308,8 @@ export const Scene3DEditor = ({
     }
     const before = single === undefined ? undefined : resolved[single];
     const item = single === undefined ? undefined : keys.get(single);
+    const placed = single === undefined ? undefined : layout?.elements[single]?.object;
+    const uniform = placed !== undefined && modelObject(doc, layout, placed)?.lockAspect === true;
     renderer.attachGizmo(
       before && item && isGizmoMode(tool) ? singleKey : undefined,
       isGizmoMode(tool) ? tool : undefined,
@@ -304,8 +325,9 @@ export const Scene3DEditor = ({
         const intent = gizmoIntent(tool, single, before, local);
         intent && onIntent(editing, intent);
       },
+      { uniform },
     );
-  }, [renderer, tool, single, singleKey, resolved, keys, transform, editing, onIntent, shown]);
+  }, [renderer, tool, single, singleKey, resolved, keys, transform, editing, onIntent, shown, doc, layout]);
 
   const [linkFrom, setLinkFrom] = useState<string>();
   useEffect(() => setLinkFrom(undefined), [tool, editing]);
@@ -479,12 +501,21 @@ export const Scene3DEditor = ({
   );
 
   const press = useRef<{ x: number; y: number }>(undefined);
-  // Drag to create: the base is swept on the ground, then (but for a sphere) the pointer sets the height until a
-  // click fixes it; a plain click places the default size instead.
+  // Drag to create or place: the base is swept on the ground, then (but for a sphere or a locked aspect) the pointer
+  // sets the height until a click fixes it; a plain click places the default size instead.
   const sizing = useRef<
-    | { phase: 'base'; kind: string; id: string; from: Scene.Vec3; base?: GroundBase }
-    | { phase: 'height'; kind: string; id: string; base: GroundBase; startY: number }
+    | { phase: 'base'; shape: Shape; id: string; from: Scene.Vec3; base?: GroundBase }
+    | { phase: 'height'; shape: Shape; id: string; base: GroundBase; startY: number }
   >(undefined);
+  /** The element a drag makes over `base`: a created shape, or a placed object at its own proportions if locked. */
+  const sized = (shape: Shape, id: string, base: GroundBase, height: number | undefined): Scene.Element3D =>
+    shape.kind === 'create'
+      ? createdElement(id, shape.type, base, height)
+      : placedOnBase(id, shape.object, shape.definition, base, height);
+  const oneStep = (shape: Shape) =>
+    shape.kind === 'create'
+      ? sizesInOneStep(shape.type)
+      : sizesInOneStep(shape.definition?.type ?? '', shape.definition);
   const committed = useRef(false);
   const step = snap && !alt ? SNAP.move : 0;
   const cancelSizing = () => {
@@ -529,14 +560,22 @@ export const Scene3DEditor = ({
           committed.current = true;
           return;
         }
-        if (typeof tool === 'object' && 'create' in tool && event.button === 0 && !isHandDrag(event) && !unplaced) {
+        const shape: Shape | undefined =
+          typeof tool !== 'object'
+            ? undefined
+            : 'create' in tool
+              ? { kind: 'create', type: tool.create }
+              : placesCycle(doc, editing, tool.place)
+                ? undefined
+                : { kind: 'place', object: tool.place, definition: modelObject(doc, layout, tool.place) };
+        if (shape && event.button === 0 && !isHandDrag(event) && !unplaced) {
           const screen = local(event);
           const ground = clickCreates(tool, elementAt(screen).element) ? groundPoint(view, size, screen) : undefined;
           if (ground) {
             sizing.current = {
               phase: 'base',
-              kind: tool.create,
-              id: freeId(layout, tool.create),
+              shape,
+              id: freeId(layout, shape.kind === 'create' ? shape.type : shape.object),
               from: toLocal(transform, ground),
             };
             event.currentTarget.setPointerCapture(event.pointerId);
@@ -576,13 +615,13 @@ export const Scene3DEditor = ({
           sizing.current = { ...current, base: base ?? undefined };
           setDraft(
             base
-              ? createdElement(current.id, current.kind, base, sizesInOneStep(current.kind) ? undefined : step || FLAT)
+              ? sized(current.shape, current.id, base, oneStep(current.shape) ? undefined : step || FLAT)
               : undefined,
           );
         } else if (current.phase === 'height') {
           // The height is measured in the world, and the edited layout may be a composite's parts at another scale.
           const height = dragHeight(current.base, (current.startY - event.clientY) / transform.scale, view, size, step);
-          setDraft(createdElement(current.id, current.kind, current.base, height));
+          setDraft(sized(current.shape, current.id, current.base, height));
         }
       }}
       onPointerUp={(event) => {
@@ -595,12 +634,12 @@ export const Scene3DEditor = ({
         if (current?.phase === 'base') {
           if (current.base && draft) {
             press.current = undefined;
-            if (sizesInOneStep(current.kind)) {
+            if (oneStep(current.shape)) {
               commitDraft(draft);
             } else {
               sizing.current = {
                 phase: 'height',
-                kind: current.kind,
+                shape: current.shape,
                 id: current.id,
                 base: current.base,
                 startY: event.clientY,

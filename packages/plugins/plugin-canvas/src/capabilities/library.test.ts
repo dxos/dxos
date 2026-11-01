@@ -14,4 +14,11 @@ describe('library', () => {
       expect(object).toMatchObject({ type: 'mesh', scale: { x: 5, y: 5, z: 5 } });
     },
   );
+
+  test.each(LIBRARY_ITEMS.map((item) => [item.id, item] as const))(
+    'the %s keeps its proportions, so a drag or a scale sizes it evenly',
+    async (_, item) => {
+      await expect(item.make()).resolves.toMatchObject({ lockAspect: true });
+    },
+  );
 });

@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { type Scene } from '@dxos/scene';
 
-import { createdElement, dragBase, dragHeight, placedElement } from './create.ts';
+import { createdElement, dragBase, dragHeight, placedElement, placedOnBase, sizesInOneStep } from './create.ts';
 
 const CAMERA: Scene.Camera3D = {
   target: { x: 0, y: 0, z: 0 },
@@ -63,5 +63,35 @@ describe('drag to create', () => {
       object: 'lamp',
       center: { x: 1, y: 0.5, z: 2 },
     });
+  });
+
+  test('a library object dragged out with its aspect locked scales evenly to cover the base, and stands on it', () => {
+    // One unit wide, half a unit high and two deep.
+    const mesh = { key: 'k', positions: [-0.5, -0.25, -1, 0.5, 0.25, 1, 0, 0, 0], indices: [0, 1, 2] };
+    const taxi = { id: 'taxi', type: 'mesh', lockAspect: true, scale: { x: 5, y: 5, z: 5 }, props: { mesh } };
+    const base = { center: { x: 1, y: 0, z: 1 }, width: 3, depth: 4 };
+    expect(placedOnBase('taxi-1', 'taxi', taxi, base, undefined)).toEqual({
+      id: 'taxi-1',
+      object: 'taxi',
+      center: { x: 1, y: 0.75, z: 1 },
+      scale: { x: 3, y: 3, z: 3 },
+    });
+  });
+
+  test('an object whose aspect is free stretches to the base and the dragged height', () => {
+    const base = { center: { x: 1, y: 0, z: 1 }, width: 3, depth: 4 };
+    expect(placedOnBase('lamp-1', 'lamp', { id: 'lamp', type: 'cylinder' }, base, 2)).toEqual({
+      id: 'lamp-1',
+      object: 'lamp',
+      center: { x: 1, y: 1, z: 1 },
+      scale: { x: 3, y: 2, z: 4 },
+    });
+  });
+
+  test('a sphere and an aspect-locked object size from the base alone; other shapes take a height too', () => {
+    expect(sizesInOneStep('sphere')).toBe(true);
+    expect(sizesInOneStep('cube')).toBe(false);
+    expect(sizesInOneStep('mesh', { id: 'taxi', type: 'mesh', lockAspect: true })).toBe(true);
+    expect(sizesInOneStep('mesh', { id: 'rock', type: 'mesh' })).toBe(false);
   });
 });
