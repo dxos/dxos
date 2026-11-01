@@ -55,6 +55,7 @@ import {
   clickSelects,
   doubleClickTarget,
   editableTool,
+  extrudesFace,
   groundSnap,
   menuSelection,
   orbitButtons,
@@ -331,6 +332,9 @@ export const Scene3DEditor = ({
 
   const [linkFrom, setLinkFrom] = useState<string>();
   useEffect(() => setLinkFrom(undefined), [tool, editing]);
+  // The extrude tool's cursor marks the face a drag would pull; a drag keeps the one it started with.
+  const [overFace, setOverFace] = useState(false);
+  useEffect(() => setOverFace(false), [tool, editing]);
 
   const elementAt = useCallback(
     (point: { x: number; y: number }) => {
@@ -541,6 +545,7 @@ export const Scene3DEditor = ({
       className={mx(
         'relative dx-fill overflow-hidden bg-(--surface-bg) touch-none outline-none',
         (tool === 'orbit' || commandHeld) && 'cursor-grab',
+        !commandHeld && overFace && 'cursor-move',
         classNames,
       )}
       data-testid='scene.3d.editor'
@@ -601,6 +606,10 @@ export const Scene3DEditor = ({
         }
       }}
       onPointerMove={(event) => {
+        if (tool === 'extrude' && event.buttons === 0) {
+          const { hit, element } = elementAt(local(event));
+          setOverFace(extrudesFace(tool, element, hit?.normal, face));
+        }
         if (extruding.current) {
           setExtrusion(extrusionAt(local(event)));
           return;
@@ -669,7 +678,11 @@ export const Scene3DEditor = ({
           onClick(local(event), event.shiftKey, event.altKey);
         }
       }}
-      onDoubleClick={(event) => onScene(event.nativeEvent) && onDoubleClick(local(event))}
+      // An Extrude press captures the pointer, so its double-click targets the editor itself rather than the canvas.
+      onDoubleClick={(event) =>
+        (onScene(event.nativeEvent) || event.target === event.currentTarget) && onDoubleClick(local(event))
+      }
+      onPointerLeave={() => setOverFace(false)}
       onContextMenu={(event) => {
         if (!onScene(event.nativeEvent) || !onContextMenu) {
           return;

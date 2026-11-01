@@ -9,6 +9,7 @@ import {
   clickSelects,
   doubleClickTarget,
   editableTool,
+  extrudesFace,
   faceName,
   groundSnap,
   menuSelection,
@@ -68,6 +69,18 @@ describe('tools', () => {
     });
     expect(doubleClickTarget('box', undefined, undefined)).toBeUndefined();
     expect(doubleClickTarget(undefined, undefined, { x: 0, y: 1, z: 0 })).toBeUndefined();
+  });
+
+  test('the extrude tool offers the face under the pointer: the selected face once there is one, else any face', () => {
+    const top = { x: 0.1, y: 0.95, z: 0 };
+    expect(extrudesFace('extrude', 'box', top, undefined)).toBe(true);
+    expect(extrudesFace('extrude', undefined, top, undefined)).toBe(false);
+    expect(extrudesFace('extrude', 'box', undefined, undefined)).toBe(false);
+    expect(extrudesFace('select', 'box', top, undefined)).toBe(false);
+    const selected = { element: 'box', normal: { x: 0, y: 1, z: 0 } };
+    expect(extrudesFace('extrude', 'box', top, selected)).toBe(true);
+    expect(extrudesFace('extrude', 'box', { x: 1, y: 0, z: 0 }, selected)).toBe(false);
+    expect(extrudesFace('extrude', 'other', top, selected)).toBe(false);
   });
 
   test('a face is named by the axis it points out along', () => {

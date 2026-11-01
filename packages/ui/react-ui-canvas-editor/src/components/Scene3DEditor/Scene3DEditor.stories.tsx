@@ -16,7 +16,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { type LayoutIntent, type Scene, applyIntent } from '@dxos/scene';
 
 import { Scene3DEditor } from './Scene3DEditor.tsx';
-import { type Tool3D } from './tools.ts';
+import { type FaceSelection, type Tool3D } from './tools.ts';
 
 const EXEMPLARS_3D = ['cube', 'cluster', 'encapsulated', 'hierarchy', 'solid'] as const;
 
@@ -80,6 +80,8 @@ type StoryProps = {
   exemplar: (typeof EXEMPLARS_3D)[number] | 'overlap' | 'kit';
   /** Milliseconds before an intent reaches the document, as a host that stores it (ECHO) takes. */
   commitDelay?: number;
+  /** The tool picked when the story opens. */
+  initialTool?: Tool3D;
 };
 
 const TOOLS: { tool: Tool3D; icon: string; label: string }[] = [
@@ -103,18 +105,20 @@ const defines = (document: Scene.SceneDocument, object: string) =>
  * Arranging a 3D exemplar in memory.
  * 1. Click selects (shift toggles); Move, Rotate or Scale puts a gizmo on the one selected element.
  * 2. Cube or Sphere places one where the pointer meets the ground; Link binds the next two clicked elements.
- * 3. Double-click a composite (the encapsulated cluster's shell) to edit its parts; Escape goes back out.
+ * 3. Double-click a composite (the encapsulated cluster's shell) to edit its parts; Escape goes back out. Double-click a
+ *    plain element to select the face under the pointer, which Extrude then drags; Escape clears it.
  * 4. Delete removes the selection; Orbit (or the middle button) orbits, shift or the right button pans, the wheel zooms.
  */
-const DefaultStory = ({ exemplar, commitDelay }: StoryProps) => {
+const DefaultStory = ({ exemplar, commitDelay, initialTool = 'select' }: StoryProps) => {
   const initial = useMemo(
     () => (exemplar === 'overlap' ? OVERLAP : exemplar === 'kit' ? KIT : Dsl.readScenes(EXEMPLARS[exemplar]).document),
     [exemplar],
   );
   const [document, setDocument] = useState<Scene.SceneDocument>(initial);
   const [selection, setSelection] = useState<string[]>([]);
-  const [tool, setTool] = useState<Tool3D>('select');
+  const [tool, setTool] = useState<Tool3D>(initialTool);
   const [editing, setEditing] = useState<string>();
+  const [face, setFace] = useState<FaceSelection>();
   const scene = document.scenes[0];
   const onIntent = useCallback(
     (layout: string, intent: LayoutIntent) => {
@@ -157,6 +161,8 @@ const DefaultStory = ({ exemplar, commitDelay }: StoryProps) => {
         onSelect={setSelection}
         onIntent={onIntent}
         onEdit={setEditing}
+        face={face}
+        onFaceChange={setFace}
       />
     </div>
   );
@@ -181,14 +187,29 @@ export const Default: Story = {};
 export const Overlapping: Story = { args: { exemplar: 'overlap' } };
 
 /**
- * Extrude: a drag from a face of a cube extrudes it, drawn as the pointer moves, and the release makes the solid.
+ * Extrude: Extrude picked, over plain cubes.
  *
  * Test:
- * 1. With Extrude, a press on a cube and a move away from it draw the extruded solid, not yet in the document.
- * 2. The release makes the `extrude` element, selected.
+ * 1. Hover a cube: the cursor turns to the move arrows over any of its faces, and back to the arrow off it.
+ * 2. Drag from a face: the solid grows out of that face as the pointer moves, and the release makes it, selected.
+ * 3. Double-click a face: it is highlighted, and the cursor now changes only over that face; a drag anywhere extrudes it.
+ * 4. Escape clears the selected face.
  */
 export const Extrude: Story = {
   // Plain cubes: no solid or rounded cube loads Manifold before the first extrusion.
+  args: { exemplar: 'overlap', initialTool: 'extrude' },
+};
+
+/**
+ * Extrude, driven: a drag from a face of a cube extrudes it, drawn as the pointer moves, and the release makes the solid.
+ *
+ * Test:
+ * 1. With Extrude, the cursor marks a cube's face under the pointer, and not open ground.
+ * 2. A double-click on the face selects it, highlighted; Escape clears it.
+ * 3. A press on a cube and a move away from it draw the extruded solid, not yet in the document.
+ * 4. The release makes the `extrude` element, selected.
+ */
+export const ExtrudeTest: Story = {
   args: { exemplar: 'overlap', commitDelay: 100 },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -224,6 +245,29 @@ export const Extrude: Story = {
     const from = { clientX: rect.left + target.x, clientY: rect.top + target.y, button: 0, pointerId: 1 };
     const to = { ...from, clientX: from.clientX - 60, clientY: from.clientY - 60 };
 
+    // 1.
+    await fireEvent.pointerMove(view, { ...from, buttons: 0 });
+    await waitFor(() => expect(editor).toHaveClass('cursor-move'));
+    const ground = { ...from, clientX: rect.left + 2, clientY: rect.top + 2 };
+    await fireEvent.pointerMove(view, { ...ground, buttons: 0 });
+    await waitFor(() => expect(editor).not.toHaveClass('cursor-move'));
+
+    // 2. Each press of the double-click starts a face drag, which captures the pointer, so the release and the
+    // double-click land on the editor rather than the canvas.
+    for (let click = 0; click < 2; click++) {
+      await fireEvent.pointerDown(view, { ...from, buttons: 1 });
+      await fireEvent.pointerUp(editor, { ...from, buttons: 0 });
+    }
+    await fireEvent.dblClick(editor, from);
+    await waitFor(() => expect(scene()?.getMeshByName('face-c')).toBeTruthy());
+    await expect(editor.dataset.selection).toBe('c');
+    await fireEvent.keyDown(editor, { key: 'Escape' });
+    await waitFor(() => expect(scene()?.getMeshByName('face-c')).toBeFalsy());
+    // A click on open ground clears the selection the double-click made.
+    await fireEvent.pointerDown(view, { ...ground, buttons: 1 });
+    await fireEvent.pointerUp(view, { ...ground, buttons: 0 });
+    await waitFor(() => expect(editor.dataset.selection).toBe(''));
+
     // Every frame the preview is drawn in, so a stand-in drawn before the solid is built shows.
     const frames: string[] = [];
     scene()?.onAfterRenderObservable.add(() => {
@@ -231,7 +275,7 @@ export const Extrude: Story = {
       drawn && frames.push(drawn);
     });
 
-    // 1. The press captures the pointer, so its moves and release target the editor rather than the canvas under it.
+    // 3. The press captures the pointer, so its moves and release target the editor rather than the canvas under it.
     await fireEvent.pointerDown(view, { ...from, buttons: 1 });
     await fireEvent.pointerMove(editor, { ...to, buttons: 1 });
     await waitFor(() => expect(bounds('item-extrude-1')).toBeDefined());
@@ -241,7 +285,7 @@ export const Extrude: Story = {
     await expect(editor.dataset.selection).toBe('');
     await expect(new Set(frames)).toEqual(new Set([preview]));
 
-    // 2.
+    // 4.
     // Every frame from the release on draws the solid as previewed, while the document takes the commit and after.
     const released: (string | undefined)[] = [];
     scene()?.onAfterRenderObservable.add(() => released.push(bounds('item-extrude-1')));

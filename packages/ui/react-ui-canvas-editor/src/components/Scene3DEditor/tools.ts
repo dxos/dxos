@@ -64,6 +64,26 @@ export const doubleClickTarget = (
         ? { face: { element, normal: axisOf(normal) } }
         : undefined;
 
+/**
+ * Whether the pointer is over a face the extrude tool would drag: the selected face once one is selected (a double-click
+ * picks it), else any face of an element.
+ */
+export const extrudesFace = (
+  tool: Tool3D,
+  element: string | undefined,
+  normal: Scene.Vec3 | undefined,
+  face: FaceSelection | undefined,
+): boolean => {
+  if (tool !== 'extrude' || element === undefined || !normal) {
+    return false;
+  }
+  if (!face) {
+    return true;
+  }
+  const axis = axisOf(normal);
+  return element === face.element && axis.x === face.normal.x && axis.y === face.normal.y && axis.z === face.normal.z;
+};
+
 /** A face's name: the sign and axis its normal points along, e.g. `+Y` for the top. */
 export const faceName = (normal: Scene.Vec3): string => {
   const { x, y, z } = axisOf(normal);
