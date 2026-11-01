@@ -2,14 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Engine, Texture } from '@babylonjs/core';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
+import { expect, within } from 'storybook/test';
 
 import { Dsl } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type Scene } from '@dxos/scene';
 
+import { renderList } from '../render-list.ts';
+import { SceneRenderer3D } from '../renderer.ts';
+import { DEFAULT_CAMERA } from './hooks.ts';
 import { Scene3DView } from './Scene3DView.tsx';
 
 const EXEMPLARS_3D = ['cube', 'cluster', 'encapsulated', 'hierarchy', 'solid'] as const;
@@ -67,3 +72,29 @@ export const NeuLight: Story = { args: { theme: 'neu-light' } };
 
 /** The Neu look always dark, whatever the app's mode, as 2D's Neu Dark is. */
 export const NeuDark: Story = { args: { theme: 'neu-dark' } };
+
+/**
+ * A renderer disposed while Babylon still decodes its PBR lookup texture, as a view unmounted on its first frame is: the
+ * decode must not reach the disposed scene (an unhandled rejection fails the run).
+ */
+export const DisposedWhileDecoding: Story = {
+  render: () => <canvas data-testid='canvas' width={320} height={240} />,
+  play: async ({ canvasElement }) => {
+    const canvas = await within(canvasElement).findByTestId<HTMLCanvasElement>('canvas');
+    const engine = new Engine(canvas, true);
+    const view = new SceneRenderer3D({ engine, theme: 'presentation', background: '#000000' });
+    const document = Dsl.readScenes(EXEMPLARS.encapsulated).document;
+    const root = document.scenes[0];
+    view.render(renderList(document), root?.dim === '3d' ? root.camera : DEFAULT_CAMERA);
+    const lookup = engine.scenes[0]?.environmentBRDFTexture;
+    if (!(lookup instanceof Texture)) {
+      throw new Error('The presentation look made no PBR lookup texture.');
+    }
+    await expect(lookup.isReady()).toBe(false);
+    const loaded = new Promise<void>((resolve) => lookup.onLoadObservable.addOnce(() => resolve()));
+    lookup.onLoadObservable.addOnce(() => view.dispose());
+    await loaded;
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
+    await expect(engine.isDisposed).toBe(true);
+  },
+};

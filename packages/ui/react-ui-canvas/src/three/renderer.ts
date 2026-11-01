@@ -72,6 +72,10 @@ const DEFAULT_SELECTION = '#3b82f6';
 export const castsNeuShadow = (spec: MaterialSpec, item: Pick<RenderItem, 'frame'>): boolean =>
   spec.kind === 'neu' && spec.alpha >= 0.999 && item.frame !== true;
 
+/** How often, and for how long, a disposed renderer waits for Babylon to finish decoding its PBR lookup texture. */
+const DECODE_POLL = 16;
+const DECODE_WAIT = 2_000;
+
 /** The half-width of a Neu theme's ground plane: past the camera's reach, so its edge never shows. */
 const NEU_GROUND_EXTENT = 1000;
 
@@ -526,6 +530,16 @@ export class SceneRenderer3D {
     this.#layers?.normal.dispose();
     this.#layers?.depth.dispose();
     this.#looping && this.#engine.stopRenderLoop();
+    this.#release(Date.now() + DECODE_WAIT);
+  }
+
+  /** Babylon draws the decoded PBR lookup texture with its scene once a shader compiles, so the scene outlives the decode. */
+  #release(deadline: number): void {
+    const lookup = this.#scene.environmentBRDFTexture;
+    if (lookup && !lookup.isReady() && Date.now() < deadline) {
+      setTimeout(() => this.#release(deadline), DECODE_POLL);
+      return;
+    }
     this.#scene.dispose();
     this.#engine.dispose();
   }
