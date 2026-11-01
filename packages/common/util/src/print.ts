@@ -4,7 +4,11 @@
 
 /** Neutral document styling, since the app's stylesheet is not loaded into the print frame. */
 const PRINT_STYLE = `
-  body { font-family: system-ui, sans-serif; font-size: 11pt; line-height: 1.5; color: #000; margin: 0; }
+  body {
+    font-family: system-ui, sans-serif; font-size: 11pt; line-height: 1.5; color: #000;
+    margin: 0; padding: 16mm;
+    -webkit-box-decoration-break: clone; box-decoration-break: clone;
+  }
   h1, h2, h3, h4, h5, h6 { line-height: 1.25; break-after: avoid; }
   pre, code { font-family: ui-monospace, monospace; font-size: 10pt; }
   pre { white-space: pre-wrap; padding: 8px; background: #f4f4f4; }
@@ -13,7 +17,8 @@ const PRINT_STYLE = `
   th, td { border: 1px solid #999; padding: 4px 6px; text-align: left; vertical-align: top; }
   th { background: #eee; }
   tr { break-inside: avoid; }
-  @page { margin: 16mm; }
+  /* Browsers print the URL, title and page number in the page margin, so the margin moves to the body. */
+  @page { margin: 0; }
 `;
 
 /** Escape text for an HTML element body or quoted attribute. */
