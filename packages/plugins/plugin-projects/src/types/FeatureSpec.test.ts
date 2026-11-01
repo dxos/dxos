@@ -134,7 +134,9 @@ describe('FeatureSpec', () => {
     expect(FeatureSpec.split(split)).toBe(split);
   });
 
-  test('print writes a block that parse reads back, numbering requirements without an id', ({ expect }) => {
+  test('print writes a block that parse reads back, numbering requirements without an id after the highest', ({
+    expect,
+  }) => {
     const printed = FeatureSpec.print('F-4', {
       name: 'Search',
       status: 'planned',
@@ -148,7 +150,7 @@ describe('FeatureSpec', () => {
       status: 'planned',
       description: 'Finds mail by any word.\n\nIncludes attachments.',
       requirements: [
-        { id: 'F-4.1', text: 'Results arrive within a second.' },
+        { id: 'F-4.10', text: 'Results arrive within a second.' },
         { id: 'F-4.9', text: 'Typos still match.' },
       ],
     });

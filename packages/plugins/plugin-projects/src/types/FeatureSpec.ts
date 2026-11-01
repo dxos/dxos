@@ -154,8 +154,8 @@ const printLines = (text: string, first: string): string[] =>
   ]);
 const printDescription = (description = '') => (description.trim() ? printLines(description, '  desc: ') : []);
 /** A requirement that opens with a field (`when:`) starts on the line below its header, as the dialect writes it. */
-const printRequirement = (id: string, requirement: Feature.Requirement, index: number) => {
-  const header = `  req ${requirement.id ?? `${id}.${index + 1}`}:`;
+const printRequirement = (requirement: Feature.Requirement) => {
+  const header = `  req ${requirement.id}:`;
   if (FIELD_LINE.test(requirement.text.trim())) {
     return [header, ...printLines(requirement.text, '    ')];
   }
@@ -163,14 +163,17 @@ const printRequirement = (id: string, requirement: Feature.Requirement, index: n
   return lines.length > 0 ? lines : [header];
 };
 
-/** The `feat` block for a feature, as {@link parse} reads it back; requirements without an id are numbered under it. */
+/**
+ * The `feat` block for a feature, as {@link parse} reads it back; requirements without an id are numbered after the
+ * highest one under it.
+ */
 export const print = (id: string, { name, description, status, requirements = [] }: Fields): string =>
   [
     '```mdl',
     printHeader(id, name),
     ...(status ? [printStatus(status)] : []),
     ...printDescription(description),
-    ...requirements.flatMap((requirement, index) => printRequirement(id, requirement, index)),
+    ...Feature.numberRequirements(id, requirements).flatMap(printRequirement),
     '```',
   ].join('\n');
 
@@ -220,12 +223,12 @@ export const update = (block: string, fields: Fields): string => {
   }
 
   const texts = new Map(before.requirements.map((requirement) => [requirement.id, requirement.text]));
-  const body = (fields.requirements ?? []).flatMap((requirement, index) => {
+  const body = Feature.numberRequirements(id, fields.requirements ?? []).flatMap((requirement) => {
     const kept =
       requirement.id !== undefined && texts.get(requirement.id) === requirement.text
         ? requirements.get(requirement.id)
         : undefined;
-    return kept ?? printRequirement(id, requirement, index);
+    return kept ?? printRequirement(requirement);
   });
 
   return [
