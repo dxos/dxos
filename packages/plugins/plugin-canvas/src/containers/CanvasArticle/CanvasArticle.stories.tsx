@@ -442,7 +442,7 @@ export const Canvas3D: Story = {
     await waitFor(() => expect(canvas.getByTestId('canvas3d.tool.library')).toHaveAttribute('aria-pressed', 'true'));
     // The click is retried: until the renderer has drawn a frame, nothing under the pointer is picked and it places nothing.
     await waitFor(
-      () => {
+      async () => {
         const view = editor.querySelector('canvas');
         if (view && !editor.dataset.selection) {
           const rect = view.getBoundingClientRect();
@@ -452,10 +452,10 @@ export const Canvas3D: Story = {
             button: 0,
             pointerId: 1,
           };
-          fireEvent.pointerDown(view, at);
-          fireEvent.pointerUp(view, at);
+          await fireEvent.pointerDown(view, at);
+          await fireEvent.pointerUp(view, at);
         }
-        expect(editor.dataset.selection).toMatch(/^taxi/);
+        await expect(editor.dataset.selection).toMatch(/^taxi/);
       },
       { timeout: 10_000, interval: 500 },
     );
