@@ -335,12 +335,19 @@ export const Image: Story = {
  * 2. Clicking the embed shows its breadcrumbs (top left) and zoom bar (bottom left); clicking the document text hides them.
  * 3. Zooming into B until it fills the embed drills in; the breadcrumbs then lead back out.
  */
+/** What the Markdown Embed story's space holds for the embed, reported when the embed never appears. */
+let describeEmbedTarget: (() => Promise<string>) | undefined;
+
 export const MarkdownEmbed: Story = {
   decorators: createStoryDecorators({
     types: [Drawing.Drawing, Drawing.Canvas, Markdown.Document, ...types],
     plugins: [IllustratorPlugin.make(), CanvasPlugin.make(), MarkdownPlugin.make()],
     onInit: async ({ space }) => {
       const drawing = addDocumentDrawing(space.db, Dsl.readScenes(EXEMPLARS.subscene).document);
+      describeEmbedTarget = async () => {
+        const target = await space.db.makeRef(Obj.getURI(drawing)).tryLoad();
+        return `the drawing ${target ? 'loads' : 'does not load'} by its URI; the page is ${globalThis.document.visibilityState} at ${innerWidth}x${innerHeight}`;
+      };
       const document = space.db.add(
         Markdown.make({
           name: 'Notes',
@@ -364,7 +371,9 @@ export const MarkdownEmbed: Story = {
         return found;
       },
       { timeout: 30_000 },
-    );
+    ).catch(async (error: Error) => {
+      throw new Error(`${error.message}; ${(await describeEmbedTarget?.()) ?? 'no space'}`);
+    });
     await within(embed).findByTestId('scene-view', undefined, { timeout: 30_000 });
     await waitFor(() => expect(embed.getBoundingClientRect().height).toBeGreaterThan(100));
     // 2. The breadcrumbs and zoom bar show only while the embed is attended. The load-time rebuilds land first: a block redrawn under
