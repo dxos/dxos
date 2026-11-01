@@ -5,6 +5,7 @@
 import React from 'react';
 import { Composition, Folder } from 'remotion';
 
+import { Saas2D, SAAS2D_SECONDS } from '../Saas2D/Saas2D.tsx';
 import { FormatId, FORMATS, FPS, SPOT_SECONDS, TIMING } from './brand.ts';
 import { ComposerIntro } from './ComposerIntro.tsx';
 import { PROVOCATIONS } from './provocations.ts';
@@ -82,6 +83,14 @@ export const RemotionRoot: React.FC = () => (
         />
       ))}
     </Folder>
+    <Composition
+      id='saas2d'
+      component={Saas2D}
+      durationInFrames={Math.round(SAAS2D_SECONDS * 60)}
+      fps={60}
+      width={1920}
+      height={1080}
+    />
     <Folder name='CLOSE'>
       {(Object.keys(FORMATS) as FormatId[]).map((f) => (
         <Composition

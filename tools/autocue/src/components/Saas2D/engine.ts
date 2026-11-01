@@ -1,0 +1,244 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+// The 2D scene engine: each slide returns the primitives on screen at a time within it, in world coordinates under a
+// camera, and the engine blends one slide into the next by primitive id, so the story's elements move as wholes.
+
+import { type Role } from './tokens.ts';
+
+/** Fields shared by every primitive; `screen` primitives are placed in screen pixels, ignoring the camera. */
+type Base = {
+  id: string;
+  opacity?: number;
+  /** Seconds after the slide starts before an entering primitive begins to fade in. */
+  delay?: number;
+  screen?: boolean;
+};
+
+/** A soft container (company, vendor, lab, space): raised disc with an inset well. */
+export type BodyPrim = Base & { kind: 'body'; x: number; y: number; r: number; role?: Role; tint?: string };
+/** A lit disc in a role color (or `color`), glowing. */
+export type NodePrim = Base & {
+  kind: 'node';
+  x: number;
+  y: number;
+  r: number;
+  role?: Role;
+  color?: string;
+  glow?: number;
+};
+/** A raised chip with an accent dot: an app. */
+export type ChipPrim = Base & { kind: 'chip'; x: number; y: number; text: string; scale?: number };
+/** A dotted orbit, drawn face-on. */
+export type RingPrim = Base & { kind: 'ring'; x: number; y: number; r: number };
+/** A thin link; `hot` turns it accent. `progress` draws it from its first end. */
+export type LinkPrim = Base & {
+  kind: 'link';
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  hot?: boolean;
+  color?: string;
+  progress?: number;
+  /** The second end is in screen pixels (a link from a world object to a card). */
+  screen2?: boolean;
+};
+/** Dots travelling from the first end to the second; `phase` advances one unit per trip. */
+export type FlowPrim = Base & {
+  kind: 'flow';
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  phase: number;
+  color: string;
+  count?: number;
+  size?: number;
+};
+/** A single-line label; `size` is in screen pixels whatever the zoom. */
+export type LabelPrim = Base & {
+  kind: 'label';
+  x: number;
+  y: number;
+  text: string;
+  size?: number;
+  weight?: number;
+  color?: string;
+  mono?: boolean;
+  anchor?: 'start' | 'middle' | 'end';
+  /** No dark halo: for labels on a light field. */
+  plain?: boolean;
+};
+/** A large heading, screen-centred by default. */
+export type TitlePrim = Base & { kind: 'title'; x: number; y: number; text: string; size?: number; color?: string };
+/** A full-frame fill (curtain or field). */
+export type FillPrim = Base & { kind: 'fill'; color: string };
+/** The DXOS logotype. */
+export type LogoPrim = Base & { kind: 'logo'; x: number; y: number; width: number; dark?: boolean };
+
+/** A row of a card thread. */
+export type Message = { who: string; color: string; text: string; bot?: boolean; at: number };
+
+/** A Composer-style object card, in screen pixels; messages appear at their `at` (slide seconds). */
+export type CardPrim = Base & {
+  kind: 'card';
+  x: number;
+  y: number;
+  width: number;
+  type: string;
+  title: string;
+  rows: [string, string][];
+  thread?: Message[];
+  accent?: boolean;
+  /** Slide seconds, for the thread's appearance. */
+  now: number;
+};
+
+export type Prim =
+  | BodyPrim
+  | NodePrim
+  | ChipPrim
+  | RingPrim
+  | LinkPrim
+  | FlowPrim
+  | LabelPrim
+  | TitlePrim
+  | FillPrim
+  | LogoPrim
+  | CardPrim;
+
+export type PrimKind = Prim['kind'];
+
+/** Back to front; a fill covers the scene but not the text set on it. */
+export const LAYERS: PrimKind[] = ['body', 'ring', 'link', 'flow', 'node', 'chip', 'fill', 'label', 'title', 'logo'];
+
+/** World point at the screen centre, and screen pixels per world unit. */
+export type Camera = { x: number; y: number; zoom: number };
+
+export type Frame = { camera: Camera; prims: Prim[] };
+
+export type Slide = {
+  id: string;
+  /** Seconds the blend from the previous slide takes. */
+  transition?: number;
+  draw: (t: number) => Frame;
+};
+
+export const TRANSITION = 1.25;
+
+/** The design system's ease, cubic-bezier(0.22, 1, 0.36, 1), solved for x. */
+export const ease = (x: number) => {
+  if (x <= 0) {
+    return 0;
+  }
+  if (x >= 1) {
+    return 1;
+  }
+  const [x1, y1, x2, y2] = [0.22, 1, 0.36, 1];
+  const bezier = (t: number, p1: number, p2: number) => 3 * (1 - t) ** 2 * t * p1 + 3 * (1 - t) * t ** 2 * p2 + t ** 3;
+  let lo = 0;
+  let hi = 1;
+  for (let i = 0; i < 30; i++) {
+    const mid = (lo + hi) / 2;
+    if (bezier(mid, x1, x2) < x) {
+      lo = mid;
+    } else {
+      hi = mid;
+    }
+  }
+  return bezier((lo + hi) / 2, y1, y2);
+};
+
+/** A symmetric ease for moves that should start as gently as they land (scene-long motion). */
+export const easeInOut = (x: number) => (x <= 0 ? 0 : x >= 1 ? 1 : x < 0.5 ? 4 * x ** 3 : 1 - (-2 * x + 2) ** 3 / 2);
+
+export const clamp = (x: number, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, x));
+
+/** 0 before `start`, eased to 1 over `seconds`. */
+export const ramp = (t: number, start: number, seconds: number, curve = ease) => curve(clamp((t - start) / seconds));
+
+export const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
+
+const key = (prim: Prim) => `${prim.kind}:${prim.id}`;
+
+/** Numeric fields interpolate; everything else is taken from the slide being entered. */
+const blend = <P extends Prim>(from: P, to: P, k: number): P => {
+  const source: Record<string, unknown> = from;
+  const numbers: Record<string, number> = {};
+  for (const [name, value] of Object.entries(to)) {
+    const previous = source[name];
+    // A flow's phase and a card's clock run on their own time, so they are never blended.
+    if (typeof value === 'number' && typeof previous === 'number' && name !== 'now' && name !== 'phase') {
+      numbers[name] = lerp(previous, value, k);
+    }
+  }
+  numbers.opacity = lerp(from.opacity ?? 1, to.opacity ?? 1, k);
+  return Object.assign({}, to, numbers);
+};
+
+/** Fades a primitive by `k` (1 = fully shown); discs also grow from 60% as they appear. */
+const fade = (prim: Prim, k: number): Prim => {
+  const opacity = (prim.opacity ?? 1) * k;
+  if (prim.kind === 'body' || prim.kind === 'node' || prim.kind === 'ring') {
+    return { ...prim, opacity, r: prim.r * (0.6 + 0.4 * k) };
+  }
+  return { ...prim, opacity };
+};
+
+const blendCamera = (a: Camera, b: Camera, k: number): Camera => {
+  const zoom = Math.exp(lerp(Math.log(a.zoom), Math.log(b.zoom), k));
+  // The centre moves in step with the zoom's progress in log space, so a dive heads straight for its target.
+  const z = a.zoom === b.zoom ? k : (1 / a.zoom - 1 / zoom) / (1 / a.zoom - 1 / b.zoom);
+  return { x: lerp(a.x, b.x, z), y: lerp(a.y, b.y, z), zoom };
+};
+
+/** The frame `t` seconds into a blend of `seconds` from `from` to `to`. */
+export const mix = (from: Frame, to: Frame, t: number, seconds: number): Frame => {
+  const k = ease(t / seconds);
+  const previous = new Map(from.prims.map((prim) => [key(prim), prim]));
+  const prims: Prim[] = [];
+  for (const prim of to.prims) {
+    const before = previous.get(key(prim));
+    previous.delete(key(prim));
+    const own = ease((t - (prim.delay ?? 0)) / seconds);
+    prims.push(before ? blend(before, prim, own) : fade(prim, own));
+  }
+  for (const prim of previous.values()) {
+    prims.push(fade(prim, 1 - k));
+  }
+  return { camera: blendCamera(from.camera, to.camera, k), prims };
+};
+
+/** A slide placed on the timeline. */
+export type Placed = { slide: Slide; start: number; hold: number };
+
+export const place = (slides: Slide[], holds: Record<string, number>): Placed[] => {
+  let start = 0;
+  return slides.map((slide) => {
+    const hold = holds[slide.id];
+    if (hold === undefined) {
+      throw new Error(`no hold for slide ${slide.id}`);
+    }
+    const placed = { slide, start, hold };
+    start += hold;
+    return placed;
+  });
+};
+
+/** The frame at `seconds` into the timeline. */
+export const frameAt = (timeline: Placed[], seconds: number): Frame => {
+  let index = 0;
+  while (index + 1 < timeline.length && timeline[index + 1].start <= seconds) {
+    index++;
+  }
+  const { slide, start } = timeline[index];
+  const t = seconds - start;
+  const transition = slide.transition ?? TRANSITION;
+  if (index === 0 || t >= transition) {
+    return slide.draw(t);
+  }
+  const previous = timeline[index - 1];
+  return mix(previous.slide.draw(previous.hold + t), slide.draw(t), t, transition);
+};
