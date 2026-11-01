@@ -4,7 +4,7 @@
 
 import React, { type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { isHandDrag, useCommandHeld } from '@dxos/react-ui-canvas';
+import { DETENT_PX, isHandDrag, useCommandHeld } from '@dxos/react-ui-canvas';
 import {
   DEFAULT_CAMERA,
   type GeometrySource,
@@ -46,7 +46,7 @@ import {
   sizesInOneStep,
 } from './create.ts';
 import { frameTransform, scaleToLocal, toLocal } from './frame.ts';
-import { axisOf, extrudeIntent, gizmoIntent } from './gizmo.ts';
+import { axisOf, extrudeIntent, gizmoIntent, screenLength } from './gizmo.ts';
 import { targetOf } from './target.ts';
 import {
   type FaceSelection,
@@ -458,11 +458,14 @@ export const Scene3DEditor = ({
     normal: Scene.Vec3;
     point: Scene.Vec3;
   }>(undefined);
-  // What a placed shape's base, its height and an extrusion snap to: the grid unit, unless snapping is off or Alt held.
+  // What a swept base, its height and an extrusion snap to: the grid unit, unless snapping is off or Alt held.
   const step = snap && !alt ? SNAP.move : 0;
-  /** The extrusion the face drag would make with the pointer at `end`; undefined for one too short to extrude. */
+  /**
+   * The extrusion the face drag would make with the pointer at `end`, or on its release there when `landing`; undefined
+   * for one too short to extrude.
+   */
   const extrusionAt = useCallback(
-    (end: { x: number; y: number }): LayoutIntent | undefined => {
+    (end: { x: number; y: number }, landing = false): LayoutIntent | undefined => {
       const start = extruding.current;
       if (!start) {
         return undefined;
@@ -490,6 +493,7 @@ export const Scene3DEditor = ({
         viewport: size,
         point: start.point,
         step,
+        landing,
       });
       // The distance was measured in the world; the layout may be a composite's parts drawn at another scale.
       return intent?.kind === 'extrude'
@@ -500,7 +504,7 @@ export const Scene3DEditor = ({
   );
   const onExtrudeEnd = useCallback(
     (end: { x: number; y: number }) => {
-      const intent = extrusionAt(end);
+      const intent = extrusionAt(end, true);
       extruding.current = undefined;
       setExtrusion(intent);
       if (intent?.kind !== 'extrude') {
@@ -526,6 +530,27 @@ export const Scene3DEditor = ({
     shape.kind === 'create'
       ? createdElement(id, shape.type, base, height)
       : placedOnBase(id, shape.object, shape.definition, base, height);
+  /** The layout units along x and z that `DETENT_PX` spans at `ground`, within which a swept corner holds on a line. */
+  const sweepHold = (ground: Scene.Vec3) => {
+    const along = (direction: Scene.Vec3) => {
+      const pixels = (screenLength(view, size, ground, direction) ?? 0) * transform.scale;
+      return pixels > 0 ? DETENT_PX / pixels : 0;
+    };
+    return { x: along({ x: 1, y: 0, z: 0 }), z: along({ x: 0, y: 0, z: 1 }) };
+  };
+  /** The element a height drag makes with the pointer at `clientY`: held near a step while moving, on one when `landing`. */
+  const sizedHeight = (
+    current: { shape: Shape; id: string; base: GroundBase; startY: number },
+    clientY: number,
+    landing = false,
+  ) =>
+    // The height is measured in the world, and the edited layout may be a composite's parts at another scale.
+    sized(
+      current.shape,
+      current.id,
+      current.base,
+      dragHeight(current.base, (current.startY - clientY) / transform.scale, view, size, step, landing),
+    );
   const oneStep = (shape: Shape) =>
     shape.kind === 'create'
       ? sizesInOneStep(shape.type)
@@ -573,7 +598,8 @@ export const Scene3DEditor = ({
         press.current = event.button === 0 ? { x: event.clientX, y: event.clientY } : undefined;
         // The click that fixes a dragged shape's height commits it, and is no other click.
         if (sizing.current?.phase === 'height' && event.button === 0) {
-          draft && commitDraft(draft);
+          // The height lands on the grid, as a 2D resize does on release.
+          commitDraft(sizedHeight(sizing.current, event.clientY, true));
           committed.current = true;
           return;
         }
@@ -636,7 +662,7 @@ export const Scene3DEditor = ({
         }
         if (current.phase === 'base' && event.buttons & 1) {
           const ground = groundPoint(view, size, local(event));
-          const base = ground && dragBase(current.from, toLocal(transform, ground), step);
+          const base = ground && dragBase(current.from, toLocal(transform, ground), step, sweepHold(ground));
           sizing.current = { ...current, base: base ?? undefined };
           setDraft(
             base
@@ -645,8 +671,7 @@ export const Scene3DEditor = ({
           );
         } else if (current.phase === 'height') {
           // The height is measured in the world, and the edited layout may be a composite's parts at another scale.
-          const height = dragHeight(current.base, (current.startY - event.clientY) / transform.scale, view, size, step);
-          setDraft(sized(current.shape, current.id, current.base, height));
+          setDraft(sizedHeight(current, event.clientY));
         }
       }}
       onPointerUp={(event) => {
@@ -657,18 +682,16 @@ export const Scene3DEditor = ({
         }
         const current = sizing.current;
         if (current?.phase === 'base') {
-          if (current.base && draft) {
+          // The swept corner lands on the grid on release, as a 2D sweep does.
+          const ground = groundPoint(view, size, local(event));
+          const base = ground ? dragBase(current.from, toLocal(transform, ground), step) : current.base;
+          if (base) {
             press.current = undefined;
             if (oneStep(current.shape)) {
-              commitDraft(draft);
+              commitDraft(sized(current.shape, current.id, base, undefined));
             } else {
-              sizing.current = {
-                phase: 'height',
-                shape: current.shape,
-                id: current.id,
-                base: current.base,
-                startY: event.clientY,
-              };
+              sizing.current = { phase: 'height', shape: current.shape, id: current.id, base, startY: event.clientY };
+              setDraft(sized(current.shape, current.id, base, step || FLAT));
             }
             return;
           }

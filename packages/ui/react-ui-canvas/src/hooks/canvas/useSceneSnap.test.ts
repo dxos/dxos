@@ -6,8 +6,8 @@ import { describe, test } from 'vitest';
 
 import { DEFAULT_GRID } from '@dxos/scene';
 
-import { resizeBounds } from '../../utils/index.ts';
-import { DETENT_PX, sceneSnap } from './useSceneSnap.ts';
+import { DETENT_PX, resizeBounds } from '../../utils/index.ts';
+import { sceneSnap } from './useSceneSnap.ts';
 
 // At 79% the 4px level is under the legible spacing, so the drawn levels are 16 (minor) and 64 (major).
 const ZOOM = 0.79;

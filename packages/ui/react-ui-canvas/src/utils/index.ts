@@ -8,6 +8,7 @@ export * from './camera.ts';
 export * from './chrome.ts';
 export * from './clipboard.ts';
 export * from './silhouette.ts';
+export * from './snap.ts';
 export * from './compose.ts';
 export * from './diagram.ts';
 export * from './diagram-shape.ts';

@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { DETENT_PX, magnetTo, snapTo } from '@dxos/react-ui-canvas';
 import { type GizmoMode, type Viewport, project } from '@dxos/react-ui-canvas/3d';
 import { type LayoutIntent, type Resolved3D, type Scene } from '@dxos/scene';
 
@@ -95,12 +96,14 @@ export type ExtrudeDrag = {
   point: Scene.Vec3;
   /** The world length the distance snaps to whole multiples of; zero or none leaves it free. */
   step?: number;
+  /** The drag is ending: the distance lands on a whole step rather than following the pointer to one. */
+  landing?: boolean;
 };
 
 /**
  * The `extrude` a face drag makes: its distance is the world length the drag spans along the face's normal at the
- * picked point, in whole `step`s when one is given. Undefined for a drag shorter than a click's slop or half a step, or a
- * normal seen end-on.
+ * picked point. With a `step` it is held on a step it passes within the detent, as a 2D move is, and lands on one; a
+ * landing short of half a step, a drag shorter than a click's slop, or a normal seen end-on makes none.
  */
 export const extrudeIntent = ({
   id,
@@ -111,6 +114,7 @@ export const extrudeIntent = ({
   viewport,
   point,
   step = 0,
+  landing = false,
 }: ExtrudeDrag): LayoutIntent | undefined => {
   if (Math.abs(dragPixels) < EXTRUDE_SLOP) {
     return undefined;
@@ -121,6 +125,6 @@ export const extrudeIntent = ({
     return undefined;
   }
   const free = dragPixels / pixels;
-  const distance = round(step > 0 ? Math.round(free / step) * step : free);
+  const distance = round(landing ? snapTo(free, step) : magnetTo(free, step, DETENT_PX / pixels));
   return distance === 0 ? undefined : { kind: 'extrude', id, target, face, distance };
 };

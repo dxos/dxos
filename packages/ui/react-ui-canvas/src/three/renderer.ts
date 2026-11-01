@@ -46,6 +46,7 @@ import { type Instance3D } from '@dxos/animation';
 import { type Scene as Model } from '@dxos/scene';
 
 import { NEU_PALETTE, type NeuPalette, type ThemeMode } from '../model/index.ts';
+import { DETENT_PX, magnetTo, snapTo } from '../utils/index.ts';
 import { groundPoint, orthoHalfHeight, toOrbit } from './camera.ts';
 import { GRID_MAJOR_EVERY, groundAxes, groundGrid } from './grid.ts';
 import { meshData } from './io/index.ts';
@@ -199,6 +200,8 @@ export class SceneRenderer3D {
   // Babylon's default utility layer is one per process, on whichever scene was made last; a renderer keeps its own.
   #layers?: { normal: UtilityLayerRenderer; depth: UtilityLayerRenderer };
   #dragged = false;
+  // A gizmo drag under way: where the item started, where the pointer alone would have put it, and its box's low corner.
+  #drag?: { position: Vector3; rotation: Vector3; scaling: Vector3; free: Vector3; last: Vector3; corner: Vector3 };
   readonly #observed = new WeakSet<object>();
   #looping = false;
   #settling = false;
@@ -538,9 +541,31 @@ export class SceneRenderer3D {
         this.#observed.add(gizmo);
         gizmo.onDragStartObservable.add(() => {
           this.#dragged = true;
+          const attached = gizmo.attachedMesh;
+          if (attached) {
+            attached.computeWorldMatrix(true);
+            const position = attached.position.clone();
+            this.#drag = {
+              position,
+              rotation: (attached.rotationQuaternion?.toEulerAngles() ?? attached.rotation).clone(),
+              scaling: attached.scaling.clone(),
+              free: position.clone(),
+              last: position.clone(),
+              corner: attached.getBoundingInfo().boundingBox.minimumWorld.subtract(position),
+            };
+          }
         });
+        gizmo === gizmos.gizmos.positionGizmo &&
+          gizmo.onDragObservable.add(() => {
+            const attached = gizmo.attachedMesh;
+            attached && this.#drag && this.#moveTo(attached, false);
+          });
         gizmo.onDragEndObservable.add(() => {
           const attached = gizmo.attachedMesh;
+          if (attached && this.#drag) {
+            gizmo === gizmos.gizmos.positionGizmo ? this.#moveTo(attached, true) : this.#land(attached);
+          }
+          this.#drag = undefined;
           attached && this.#gizmoEnd?.(worldTransform(attached));
         });
       }
@@ -601,12 +626,76 @@ export class SceneRenderer3D {
     this.#engine.dispose();
   }
 
+  // The gizmos move freely, as a 2D drag does: `#moveTo` holds a move near the grid and lands it, `#land` a turn or scale.
   #applySnap(): void {
-    const { move, rotate, scale } = this.gizmoSnap;
     const gizmos = this.#gizmos?.gizmos;
-    gizmos?.positionGizmo && (gizmos.positionGizmo.snapDistance = move);
-    gizmos?.rotationGizmo && (gizmos.rotationGizmo.snapDistance = (rotate * Math.PI) / 180);
-    gizmos?.scaleGizmo && (gizmos.scaleGizmo.snapDistance = scale);
+    gizmos?.positionGizmo && (gizmos.positionGizmo.snapDistance = 0);
+    gizmos?.rotationGizmo && (gizmos.rotationGizmo.snapDistance = 0);
+    gizmos?.scaleGizmo && (gizmos.scaleGizmo.snapDistance = 0);
+  }
+
+  /**
+   * Puts a mesh the move gizmo is dragging where the pointer has taken it, its box's low corner held on a grid line it
+   * passes within `DETENT_PX` of, or on the nearest line when `landing`; only the axes the drag moved along are held.
+   */
+  #moveTo(mesh: AbstractMesh, landing: boolean): void {
+    const drag = this.#drag;
+    if (!drag) {
+      return;
+    }
+    // The gizmo moved the mesh on from where it was last put; the pointer alone would have moved it as far.
+    drag.free.addInPlace(mesh.position.subtract(drag.last));
+    const step = this.gizmoSnap.move;
+    const target = drag.free.clone();
+    for (const axis of ['x', 'y', 'z'] as const) {
+      if (step > 0 && Math.abs(drag.free[axis] - drag.position[axis]) > 1e-6) {
+        const corner = drag.free[axis] + drag.corner[axis];
+        const direction = new Vector3(axis === 'x' ? 1 : 0, axis === 'y' ? 1 : 0, axis === 'z' ? 1 : 0);
+        const pixels = this.#pixelsPerUnit(mesh.getAbsolutePosition(), direction);
+        const held = landing ? snapTo(corner, step) : magnetTo(corner, step, pixels > 0 ? DETENT_PX / pixels : 0);
+        target[axis] += held - corner;
+      }
+    }
+    mesh.position.copyFrom(target);
+    // The gizmo adds its next step to the world matrix, which would otherwise still hold the unheld position.
+    mesh.computeWorldMatrix(true);
+    drag.last = target;
+  }
+
+  /** Lands a turn or a scale the gizmo has ended on the step nearest it, for each component the drag changed. */
+  #land(mesh: AbstractMesh): void {
+    const drag = this.#drag;
+    const { rotate, scale } = this.gizmoSnap;
+    if (!drag) {
+      return;
+    }
+    const changed = (from: Vector3, to: Vector3, step: number) =>
+      new Vector3(
+        Math.abs(to.x - from.x) > 1e-6 ? snapTo(to.x, step) : to.x,
+        Math.abs(to.y - from.y) > 1e-6 ? snapTo(to.y, step) : to.y,
+        Math.abs(to.z - from.z) > 1e-6 ? snapTo(to.z, step) : to.z,
+      );
+    if (rotate > 0 && mesh.rotationQuaternion) {
+      const rotation = changed(drag.rotation, mesh.rotationQuaternion.toEulerAngles(), radians(rotate));
+      mesh.rotationQuaternion = Quaternion.FromEulerVector(rotation);
+    }
+    if (scale > 0) {
+      const scaling = changed(drag.scaling, mesh.scaling, scale);
+      // A size never lands on nothing.
+      mesh.scaling.set(Math.max(scaling.x, scale), Math.max(scaling.y, scale), Math.max(scaling.z, scale));
+    }
+    mesh.computeWorldMatrix(true);
+  }
+
+  /** The CSS pixels one unit along `direction` spans on screen at `point`. */
+  #pixelsPerUnit(point: Vector3, direction: Vector3): number {
+    const width = this.#engine.getRenderWidth();
+    const height = this.#engine.getRenderHeight();
+    const transform = this.#scene.getTransformMatrix();
+    const viewport = this.#camera.viewport.toGlobal(width, height);
+    const from = Vector3.Project(point, Matrix.IdentityReadOnly, transform, viewport);
+    const to = Vector3.Project(point.add(direction), Matrix.IdentityReadOnly, transform, viewport);
+    return Math.hypot(to.x - from.x, to.y - from.y) * this.#engine.getHardwareScalingLevel();
   }
 
   /**
