@@ -17,6 +17,8 @@ const PRINT_STYLE = `
   th, td { border: 1px solid #999; padding: 4px 6px; text-align: left; vertical-align: top; }
   th { background: #eee; }
   tr { break-inside: avoid; }
+  figure { margin: 1em 0; }
+  figcaption { font-weight: 600; margin-bottom: 0.5em; }
   /* Browsers print the URL, title and page number in the page margin, so the margin moves to the body. */
   @page { margin: 0; }
 `;
