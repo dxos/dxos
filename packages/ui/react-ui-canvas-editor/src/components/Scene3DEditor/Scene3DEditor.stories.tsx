@@ -118,7 +118,31 @@ const DefaultStory = ({ exemplar, commitDelay, initialTool = 'select', grid, sna
     () => (exemplar === 'overlap' ? OVERLAP : exemplar === 'kit' ? KIT : Dsl.readScenes(EXEMPLARS[exemplar]).document),
     [exemplar],
   );
-  const [document, setDocument] = useState<Scene.SceneDocument>(initial);
+  // The document with what undo and redo step back and forward to, as the full editor's history does.
+  const [history, setHistory] = useState<{
+    document: Scene.SceneDocument;
+    past: Scene.SceneDocument[];
+    future: Scene.SceneDocument[];
+  }>({ document: initial, past: [], future: [] });
+  const { document } = history;
+  const undo = useCallback(
+    () =>
+      setHistory(({ document, past, future }) =>
+        past.length === 0
+          ? { document, past, future }
+          : { document: past[past.length - 1], past: past.slice(0, -1), future: [document, ...future] },
+      ),
+    [],
+  );
+  const redo = useCallback(
+    () =>
+      setHistory(({ document, past, future }) =>
+        future.length === 0
+          ? { document, past, future }
+          : { document: future[0], past: [...past, document], future: future.slice(1) },
+      ),
+    [],
+  );
   const [selection, setSelection] = useState<string[]>([]);
   const [tool, setTool] = useState<Tool3D>(initialTool);
   const [editing, setEditing] = useState<string>();
@@ -127,9 +151,13 @@ const DefaultStory = ({ exemplar, commitDelay, initialTool = 'select', grid, sna
   const onIntent = useCallback(
     (layout: string, intent: LayoutIntent) => {
       const apply = () =>
-        setDocument((current) => ({
-          ...current,
-          layouts: current.layouts.map((record) => (record.id === layout ? applyIntent(record, intent) : record)),
+        setHistory(({ document: current, past }) => ({
+          document: {
+            ...current,
+            layouts: current.layouts.map((record) => (record.id === layout ? applyIntent(record, intent) : record)),
+          },
+          past: [...past, current],
+          future: [],
         }));
       commitDelay === undefined ? apply() : setTimeout(apply, commitDelay);
     },
@@ -139,7 +167,15 @@ const DefaultStory = ({ exemplar, commitDelay, initialTool = 'select', grid, sna
     return null;
   }
   return (
-    <div className='flex flex-col dx-fill'>
+    <div
+      className='flex flex-col dx-fill'
+      onKeyDown={(event) => {
+        if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'z') {
+          event.preventDefault();
+          event.shiftKey ? redo() : undo();
+        }
+      }}
+    >
       <Toolbar.Root>
         {TOOLS.filter(
           ({ tool }) => typeof tool !== 'object' || !('place' in tool) || defines(document, tool.place),
@@ -154,6 +190,24 @@ const DefaultStory = ({ exemplar, commitDelay, initialTool = 'select', grid, sna
             onClick={() => setTool(entry.tool)}
           />
         ))}
+        <Button.Root
+          variant='ghost'
+          iconOnly
+          icon='ph--arrow-counter-clockwise--regular'
+          label='Undo'
+          data-testid='action-undo'
+          disabled={history.past.length === 0}
+          onClick={undo}
+        />
+        <Button.Root
+          variant='ghost'
+          iconOnly
+          icon='ph--arrow-clockwise--regular'
+          label='Redo'
+          data-testid='action-redo'
+          disabled={history.future.length === 0}
+          onClick={redo}
+        />
       </Toolbar.Root>
       <Scene3DEditor
         classNames='grow'
@@ -215,6 +269,7 @@ export const Extrude: Story = {
  * 2. A double-click on the face selects it, highlighted; Escape clears it.
  * 3. A press on a cube and a move away from it draw the extruded solid, not yet in the document.
  * 4. The release makes the `extrude` element, selected.
+ * 5. Undo (⌘Z) takes the extrusion away, and redo (⇧⌘Z) brings it back.
  */
 export const ExtrudeTest: Story = {
   args: { exemplar: 'overlap', commitDelay: 100 },
@@ -304,6 +359,12 @@ export const ExtrudeTest: Story = {
     await waitFor(() => expect(editor.dataset.selection).toBe('extrude-1'));
     await new Promise((resolve) => setTimeout(resolve, 1_000));
     await expect(new Set(released)).toEqual(new Set([preview]));
+
+    // 5.
+    await fireEvent.keyDown(editor, { key: 'z', metaKey: true });
+    await waitFor(() => expect(bounds('item-extrude-1')).toBeUndefined());
+    await fireEvent.keyDown(editor, { key: 'z', metaKey: true, shiftKey: true });
+    await waitFor(() => expect(bounds('item-extrude-1')).toBe(preview));
   },
 };
 
@@ -315,11 +376,19 @@ export const ExtrudeTest: Story = {
  * 2. A drag from one of the gizmo's arrows moves the cube, which stays selected.
  */
 /**
- * Selects cube c with the Move tool and drags its gizmo by `steps` of 10px each way, checking the drag lasts; `landed`
- * checks the cube's bounds after it.
+ * Selects `select` (cube c, the first, carries the gizmo) with the Move tool and drags the gizmo by `steps` of 10px each
+ * way, checking the drag lasts; `landed` checks each selected cube's bounds before and after it.
  */
 const dragGizmo =
-  (steps: number, landed?: (before: string, after: string) => Promise<void>) =>
+  ({
+    steps,
+    select = ['c'],
+    landed,
+  }: {
+    steps: number;
+    select?: string[];
+    landed?: (before: Record<string, string>, after: Record<string, string>) => Promise<void>;
+  }) =>
   async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const canvas = within(canvasElement);
     const editor = await canvas.findByTestId('scene.3d.editor');
@@ -360,13 +429,17 @@ const dragGizmo =
     });
 
     // 1.
-    const cube = find((x, y) => scene()?.pick(x, y)?.pickedMesh?.name === 'item-c');
-    if (!cube) {
-      throw new Error('No pixel shows the cube.');
+    for (const [index, id] of select.entries()) {
+      const cube = find((x, y) => scene()?.pick(x, y)?.pickedMesh?.name === `item-${id}`);
+      if (!cube) {
+        throw new Error(`No pixel shows cube ${id}.`);
+      }
+      const shiftKey = index > 0;
+      await fireEvent.pointerDown(view, { ...at(cube), buttons: 1, shiftKey });
+      await fireEvent.pointerUp(view, { ...at(cube), buttons: 0, shiftKey });
     }
-    await fireEvent.pointerDown(view, { ...at(cube), buttons: 1 });
-    await fireEvent.pointerUp(view, { ...at(cube), buttons: 0 });
-    await waitFor(() => expect(editor.dataset.selection).toBe('c'));
+    await waitFor(() => expect(editor.dataset.selection).toBe(select.join(' ')));
+    const boundsOf = () => Object.fromEntries(select.map((id) => [id, bounds(`item-${id}`) ?? '']));
     // The gizmo draws in a utility layer, a scene of its own beside the one the items are in; each handle is a group.
     const handleAt = (x: number, y: number) =>
       engine()
@@ -378,7 +451,7 @@ const dragGizmo =
       const id = handleAt(pixel.x, pixel.y) ?? -1;
       handles.set(id, [...(handles.get(id) ?? []), pixel]);
     }
-    const before = bounds('item-c');
+    const before = boundsOf();
 
     // 2. Babylon focuses its canvas on the press, and a drag lasts only while the canvas keeps the focus.
     // A handle at right angles to the drag on screen moves nothing, so each is tried, from its middle, until one does.
@@ -402,19 +475,18 @@ const dragGizmo =
         buttons: 0,
       });
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-      if (bounds('item-c') !== before) {
+      if (bounds('item-c') !== before.c) {
         break;
       }
     }
-    await waitFor(() => expect(bounds('item-c')).not.toBe(before));
-    await expect(editor.dataset.selection).toBe('c');
-    const after = bounds('item-c');
-    after && (await landed?.(before ?? '', after));
+    await waitFor(() => expect(bounds('item-c')).not.toBe(before.c));
+    await expect(editor.dataset.selection).toBe(select.join(' '));
+    await landed?.(before, boundsOf());
   };
 
 export const MoveTest: Story = {
   args: { exemplar: 'overlap', initialTool: 'move' },
-  play: dragGizmo(6),
+  play: dragGizmo({ steps: 6 }),
 };
 
 /**
@@ -424,13 +496,30 @@ export const MoveTest: Story = {
 export const MoveSnapTest: Story = {
   args: { exemplar: 'overlap', initialTool: 'move', grid: true, snap: true },
   // Far enough to pass half a unit, so the cube lands on another line than the one it left.
-  play: dragGizmo(20, async (before, after) => {
-    const [from, to] = [before, after].map((value) => value.split(',').slice(0, 3).map(Number));
-    const moved = to.filter((value, axis) => Math.abs(value - from[axis]) > 0.005);
-    await expect(moved.length).toBeGreaterThan(0);
-    for (const value of moved) {
-      await expect(Math.abs(value - Math.round(value))).toBeLessThan(0.01);
-    }
+  play: dragGizmo({
+    steps: 20,
+    landed: async (before, after) => {
+      const [from, to] = [before.c, after.c].map((value) => value.split(',').slice(0, 3).map(Number));
+      const moved = to.filter((value, axis) => Math.abs(value - from[axis]) > 0.005);
+      await expect(moved.length).toBeGreaterThan(0);
+      for (const value of moved) {
+        await expect(Math.abs(value - Math.round(value))).toBeLessThan(0.01);
+      }
+    },
+  }),
+};
+
+/** With two cubes selected the gizmo sits on the first, and a drag moves both by the same offset, both staying selected. */
+export const MoveGroupTest: Story = {
+  args: { exemplar: 'overlap', initialTool: 'move' },
+  play: dragGizmo({
+    steps: 6,
+    select: ['c', 'd'],
+    landed: async (before, after) => {
+      const offset = (id: string) =>
+        after[id].split(',').map((value, index) => (Number(value) - Number(before[id].split(',')[index])).toFixed(2));
+      await expect(offset('d')).toEqual(offset('c'));
+    },
   }),
 };
 

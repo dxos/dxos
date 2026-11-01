@@ -301,35 +301,53 @@ export const Scene3DEditor = ({
     renderer?.selectFace(key, face?.normal);
   }, [renderer, face, keys, shown]);
 
-  // The gizmo sits on the one selected element; a drag's end becomes an intent in the edited layout's coordinates.
-  const single = selection.length === 1 ? selection[0] : undefined;
-  const singleKey = single === undefined ? undefined : keys.get(single)?.key;
+  // The gizmo sits on the first selected element and a drag carries the rest along; its end becomes one intent per
+  // element, in the edited layout's coordinates.
+  const lead = selection[0];
+  const leadKey = lead === undefined ? undefined : keys.get(lead)?.key;
   useLayoutEffect(() => {
     if (!renderer) {
       return;
     }
-    const before = single === undefined ? undefined : resolved[single];
-    const item = single === undefined ? undefined : keys.get(single);
-    const placed = single === undefined ? undefined : layout?.elements[single]?.object;
-    const uniform = placed !== undefined && modelObject(doc, layout, placed)?.lockAspect === true;
+    const members = selection.filter((id) => resolved[id] !== undefined && keys.get(id) !== undefined);
+    const before = lead === undefined ? undefined : resolved[lead];
+    const item = lead === undefined ? undefined : keys.get(lead);
+    // One element whose aspect is locked keeps the whole group to even scaling.
+    const uniform = members.some((id) => {
+      const placed = layout?.elements[id]?.object;
+      return placed !== undefined && modelObject(doc, layout, placed)?.lockAspect === true;
+    });
+    const intentOf = (id: string, after: WorldTransform) => {
+      const from = resolved[id];
+      return from && isGizmoMode(tool)
+        ? gizmoIntent(tool, id, from, {
+            center: toLocal(transform, after.center),
+            rotation: after.rotation,
+            scale: scaleToLocal(transform, after.scale),
+          })
+        : undefined;
+    };
     renderer.attachGizmo(
-      before && item && isGizmoMode(tool) ? singleKey : undefined,
+      before && item && isGizmoMode(tool) ? leadKey : undefined,
       isGizmoMode(tool) ? tool : undefined,
-      (after: WorldTransform) => {
-        if (!before || !item || single === undefined || !isGizmoMode(tool)) {
+      (after: WorldTransform, group: Record<string, WorldTransform>) => {
+        if (lead === undefined) {
           return;
         }
-        const local = {
-          center: toLocal(transform, after.center),
-          rotation: after.rotation,
-          scale: scaleToLocal(transform, after.scale),
-        };
-        const intent = gizmoIntent(tool, single, before, local);
-        intent && onIntent(editing, intent);
+        const intents = [
+          intentOf(lead, after),
+          ...members.flatMap((id) => {
+            const key = keys.get(id)?.key;
+            const moved = id === lead || key === undefined ? undefined : group[key];
+            return moved ? [intentOf(id, moved)] : [];
+          }),
+        ].filter((intent) => intent !== undefined);
+        // One intent, so one undo puts every element back.
+        intents.length > 0 && onIntent(editing, intents.length === 1 ? intents[0] : { kind: 'batch', intents });
       },
-      { uniform },
+      { uniform, group: members.flatMap((id) => (id === lead ? [] : (keys.get(id)?.key ?? []))) },
     );
-  }, [renderer, tool, single, singleKey, resolved, keys, transform, editing, onIntent, shown, doc, layout]);
+  }, [renderer, tool, lead, leadKey, selection, resolved, keys, transform, editing, onIntent, shown, doc, layout]);
 
   const [linkFrom, setLinkFrom] = useState<string>();
   useEffect(() => setLinkFrom(undefined), [tool, editing]);

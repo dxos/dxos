@@ -62,6 +62,7 @@ import {
   setRim,
   setSurface,
 } from './materials.ts';
+import { creasedNormals } from './normals.ts';
 import { type RenderItem, type RenderList } from './render-list.ts';
 import { type MaterialSpec, type Theme3D, isNeuTheme, materialSpec, themeMode3D } from './style.ts';
 
@@ -163,6 +164,10 @@ const worldTransform = (mesh: AbstractMesh): WorldTransform => {
 
 const radians = (degrees: number) => (degrees * Math.PI) / 180;
 
+/** A mesh's orientation as a quaternion, whichever of the two Babylon holds it in. */
+const turnOf = (mesh: AbstractMesh): Quaternion =>
+  mesh.rotationQuaternion?.clone() ?? Quaternion.FromEulerVector(mesh.rotation);
+
 const geometryIds = new WeakMap<MeshData, number>();
 let nextGeometryId = 1;
 
@@ -196,12 +201,23 @@ export class SceneRenderer3D {
   readonly #engine: AbstractEngine;
   #view?: Model.Camera3D;
   #gizmos?: GizmoManager;
-  #gizmoEnd?: (after: WorldTransform) => void;
+  #gizmoEnd?: (after: WorldTransform, group: Record<string, WorldTransform>) => void;
+  // The other selected items, which a gizmo drag carries along with the one it is on.
+  #group: string[] = [];
   // Babylon's default utility layer is one per process, on whichever scene was made last; a renderer keeps its own.
   #layers?: { normal: UtilityLayerRenderer; depth: UtilityLayerRenderer };
   #dragged = false;
   // A gizmo drag under way: where the item started, where the pointer alone would have put it, and its box's low corner.
-  #drag?: { position: Vector3; rotation: Vector3; scaling: Vector3; free: Vector3; last: Vector3; corner: Vector3 };
+  #drag?: {
+    position: Vector3;
+    rotation: Vector3;
+    turn: Quaternion;
+    scaling: Vector3;
+    free: Vector3;
+    last: Vector3;
+    corner: Vector3;
+    group: { mesh: AbstractMesh; position: Vector3; turn: Quaternion; scaling: Vector3 }[];
+  };
   readonly #observed = new WeakSet<object>();
   #looping = false;
   #settling = false;
@@ -497,14 +513,15 @@ export class SceneRenderer3D {
 
   /**
    * Puts Babylon's gizmo of `mode` on the item `key` (none when either is undefined), drawing every frame while it is
-   * on so a drag shows; `onEnd` gets the item's world transform when a drag ends. A `uniform` scale gizmo keeps only
-   * its even handle, for an item whose aspect is locked.
+   * on so a drag shows; a drag carries the `group` items along, each by the same move, turn or scale about its own
+   * centre, and `onEnd` gets the world transforms of the item and of the group when it ends. A `uniform` scale gizmo
+   * keeps only its even handle, for an item whose aspect is locked.
    */
   attachGizmo(
     key: string | undefined,
     mode: GizmoMode | undefined,
-    onEnd: (after: WorldTransform) => void,
-    { uniform = false }: { uniform?: boolean } = {},
+    onEnd: (after: WorldTransform, group: Record<string, WorldTransform>) => void,
+    { uniform = false, group = [] }: { uniform?: boolean; group?: string[] } = {},
   ): void {
     const mesh = key === undefined ? undefined : this.#items.get(key)?.surface;
     if (!mesh || !mode) {
@@ -536,6 +553,7 @@ export class SceneRenderer3D {
     }
     this.#applySnap();
     this.#gizmoEnd = onEnd;
+    this.#group = group.filter((other) => other !== key);
     for (const gizmo of [gizmos.gizmos.positionGizmo, gizmos.gizmos.rotationGizmo, gizmos.gizmos.scaleGizmo]) {
       if (gizmo && !this.#observed.has(gizmo)) {
         this.#observed.add(gizmo);
@@ -548,25 +566,40 @@ export class SceneRenderer3D {
             this.#drag = {
               position,
               rotation: (attached.rotationQuaternion?.toEulerAngles() ?? attached.rotation).clone(),
+              turn: turnOf(attached),
               scaling: attached.scaling.clone(),
               free: position.clone(),
               last: position.clone(),
               corner: attached.getBoundingInfo().boundingBox.minimumWorld.subtract(position),
+              group: this.#group.flatMap((other) => {
+                const mesh = this.#items.get(other)?.surface;
+                return mesh
+                  ? [{ mesh, position: mesh.position.clone(), turn: turnOf(mesh), scaling: mesh.scaling.clone() }]
+                  : [];
+              }),
             };
           }
         });
-        gizmo === gizmos.gizmos.positionGizmo &&
-          gizmo.onDragObservable.add(() => {
-            const attached = gizmo.attachedMesh;
-            attached && this.#drag && this.#moveTo(attached, false);
-          });
-        gizmo.onDragEndObservable.add(() => {
+        gizmo.onDragObservable.add(() => {
           const attached = gizmo.attachedMesh;
           if (attached && this.#drag) {
+            gizmo === gizmos.gizmos.positionGizmo && this.#moveTo(attached, false);
+            this.#follow(attached);
+          }
+        });
+        gizmo.onDragEndObservable.add(() => {
+          const attached = gizmo.attachedMesh;
+          const group: Record<string, WorldTransform> = {};
+          if (attached && this.#drag) {
             gizmo === gizmos.gizmos.positionGizmo ? this.#moveTo(attached, true) : this.#land(attached);
+            this.#follow(attached);
+            for (const other of this.#group) {
+              const mesh = this.#items.get(other)?.surface;
+              mesh && (group[other] = worldTransform(mesh));
+            }
           }
           this.#drag = undefined;
-          attached && this.#gizmoEnd?.(worldTransform(attached));
+          attached && this.#gizmoEnd?.(worldTransform(attached), group);
         });
       }
     }
@@ -660,6 +693,27 @@ export class SceneRenderer3D {
     // The gizmo adds its next step to the world matrix, which would otherwise still hold the unheld position.
     mesh.computeWorldMatrix(true);
     drag.last = target;
+  }
+
+  /** Carries the group along by the move, turn and scale the gizmo has given `lead` since the drag began. */
+  #follow(lead: AbstractMesh): void {
+    const drag = this.#drag;
+    if (!drag || drag.group.length === 0) {
+      return;
+    }
+    const moved = lead.position.subtract(drag.position);
+    const turned = turnOf(lead).multiply(Quaternion.Inverse(drag.turn));
+    const scaled = new Vector3(
+      lead.scaling.x / drag.scaling.x,
+      lead.scaling.y / drag.scaling.y,
+      lead.scaling.z / drag.scaling.z,
+    );
+    for (const { mesh, position, turn, scaling } of drag.group) {
+      mesh.position.copyFrom(position.add(moved));
+      mesh.rotationQuaternion = turned.multiply(turn);
+      mesh.scaling.copyFrom(scaling.multiply(scaled));
+      mesh.computeWorldMatrix(true);
+    }
   }
 
   /** Lands a turn or a scale the gizmo has ended on the step nearest it, for each component the drag changed. */
@@ -1043,11 +1097,10 @@ export class SceneRenderer3D {
     const name = `item-${item.key}`;
     if (data) {
       const mesh = new Mesh(name, this.#scene);
+      const { positions, indices, normals } = creasedNormals(data);
       const vertices = new VertexData();
-      vertices.positions = data.positions;
-      vertices.indices = data.indices;
-      const normals: number[] = [];
-      VertexData.ComputeNormals(data.positions, data.indices, normals);
+      vertices.positions = positions;
+      vertices.indices = indices;
       vertices.normals = normals;
       vertices.applyToMesh(mesh);
       return mesh;
