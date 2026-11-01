@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { bundleRoot, rebaseManifest } from './bundle.ts';
+import { bundleRoot, manifestOf, rebaseManifest } from './bundle.ts';
 import { type Manifest } from './types.ts';
 
 const manifest: Manifest = {
@@ -33,6 +33,16 @@ describe('bundleRoot', () => {
     expect(bundleRoot(root).href).toBe(root);
     expect(bundleRoot(`${root}index.html#opening`).href).toBe(root);
     expect(bundleRoot(`${root}autocue.json?v=2`).href).toBe(root);
+  });
+});
+
+describe('manifestOf', () => {
+  test('a folder or page reads autocue.json; a JSON URL is read as given', () => {
+    expect(manifestOf('https://dx.pub/demo/chess/')).toBe('https://dx.pub/demo/chess/autocue.json');
+    expect(manifestOf('https://dx.pub/demo/chess/index.html')).toBe('https://dx.pub/demo/chess/autocue.json');
+    expect(manifestOf('http://localhost/assets/autocue.CFtW7ibn.json')).toBe(
+      'http://localhost/assets/autocue.CFtW7ibn.json',
+    );
   });
 });
 

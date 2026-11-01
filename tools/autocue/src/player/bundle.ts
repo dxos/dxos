@@ -21,6 +21,10 @@ export const bundleRoot = (url: string | URL): URL => {
   return root;
 };
 
+/** The manifest for `url`: a `.json` URL as given (whatever its name), else `autocue.json` at the bundle root. */
+export const manifestOf = (url: string | URL): string =>
+  /\.json$/i.test(new URL(url).pathname) ? new URL(url).href : new URL(MANIFEST_FILE, bundleRoot(url)).href;
+
 /**
  * Rewrites the bundle-relative paths of `manifest` against `root`, so the player can run on a page that is not the
  * bundle's own `index.html`.
@@ -55,13 +59,13 @@ const isManifest = (value: unknown): value is Manifest =>
   Array.isArray(value.demos);
 
 /**
- * Fetches the manifest of the autocue bundle at `url` (its folder, `index.html` or `autocue.json`) and rebases its
+ * Fetches the manifest of the autocue bundle at `url` (its folder, `index.html` or manifest) and rebases its
  * paths so the player can play it from any page. The host must allow the page's origin (dx.pub does).
  */
 export const loadBundle = (url: string): Effect.Effect<Manifest, BundleError> =>
   Effect.gen(function* () {
     const root = bundleRoot(url);
-    const manifestUrl = new URL(MANIFEST_FILE, root).href;
+    const manifestUrl = manifestOf(url);
     const fail = (reason: string) => new BundleError({ url: manifestUrl, reason });
     const response = yield* Effect.tryPromise({
       try: (signal) => fetch(manifestUrl, { signal }),
