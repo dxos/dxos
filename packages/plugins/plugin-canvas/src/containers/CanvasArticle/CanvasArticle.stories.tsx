@@ -311,8 +311,14 @@ export const Image: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 })).toBeInTheDocument();
-    // 1. The tool.
-    await expect(await canvas.findByTestId('canvas.tool.node:image')).toBeInTheDocument();
+    // 1. The tool: on the rail, or in its Create flyout when a short view folds the rail.
+    const palette = await canvas.findByTestId('palette');
+    if (palette.hasAttribute('data-collapsed')) {
+      await userEvent.click(canvas.getByTestId('palette-group-Create-open'));
+    }
+    await expect(
+      await within(canvasElement.ownerDocument.body).findByTestId('canvas.tool.node:image'),
+    ).toBeInTheDocument();
     // 2. Placeholders, no image element.
     await waitFor(() => expect(canvasElement.querySelectorAll('[data-testid="image-placeholder"]')).toHaveLength(2));
     await expect(canvasElement.querySelector('[data-testid="image-node"]')).toBeNull();
