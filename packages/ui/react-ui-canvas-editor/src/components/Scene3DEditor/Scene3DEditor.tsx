@@ -24,10 +24,18 @@ import {
   useSceneRenderer,
 } from '@dxos/react-ui-canvas/3d';
 import type * as Util from '@dxos/react-ui/Util';
-import { type LayoutIntent, type Scene, findLayout, findScene, placesCycle, resolveLayout3D } from '@dxos/scene';
+import {
+  type LayoutIntent,
+  type Scene,
+  findLayout,
+  findModel,
+  findScene,
+  placesCycle,
+  resolveLayout3D,
+} from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
-import { type GroundBase, createdElement, dragBase, dragHeight, sizesInOneStep } from './create.ts';
+import { type GroundBase, createdElement, dragBase, dragHeight, placedElement, sizesInOneStep } from './create.ts';
 import { frameTransform, scaleToLocal, toLocal } from './frame.ts';
 import { axisOf, extrudeIntent, gizmoIntent } from './gizmo.ts';
 import { targetOf } from './target.ts';
@@ -103,6 +111,16 @@ const freeId = (layout: Scene.LayoutRecord | undefined, base: string): string =>
     index++;
   }
   return `${base}-${index}`;
+};
+
+/** The object `id` of the layout's 3D model, which a placement is sized and rested by. */
+const modelObject = (
+  doc: Scene.SceneDocument,
+  layout: Scene.LayoutRecord | undefined,
+  id: string,
+): Scene.Object3D | undefined => {
+  const model = layout?.model === undefined ? undefined : findModel(doc, layout.model);
+  return model?.dim === '3d' ? model.objects[id] : undefined;
 };
 
 const isGizmoMode = (tool: Tool3D): tool is GizmoMode => tool === 'move' || tool === 'rotate' || tool === 'scale';
@@ -308,7 +326,15 @@ export const Scene3DEditor = ({
                 kind: 'create',
                 element: { id: freeId(layout, tool.create), type: tool.create, center: restingCenter(center) },
               }
-            : { kind: 'create', element: { id: freeId(layout, tool.place), object: tool.place, center } };
+            : {
+                kind: 'create',
+                element: placedElement(
+                  freeId(layout, tool.place),
+                  tool.place,
+                  modelObject(doc, layout, tool.place),
+                  center,
+                ),
+              };
         onIntent(editing, intent);
         onSelect([intent.element.id]);
         return;

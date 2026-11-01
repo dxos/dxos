@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Viewport } from '@dxos/react-ui-canvas/3d';
+import { type Viewport, meshProps } from '@dxos/react-ui-canvas/3d';
 import { boundsFromPoints } from '@dxos/react-ui-canvas/headless';
 import { type Scene } from '@dxos/scene';
 
@@ -69,6 +69,28 @@ export const createdElement = (
     center: { ...base.center, y: height / 2 },
     scale: { x: base.width, y: height, z: base.depth },
   };
+};
+
+/** An object's height before its scale: a mesh's own vertical extent, else the unit every primitive is. */
+const unitHeight = (object: Scene.Object3D): number => {
+  const mesh = object.type === 'mesh' ? meshProps(object.props) : undefined;
+  const heights = mesh?.positions.filter((_, index) => index % 3 === 1) ?? [];
+  return heights.length > 0 ? Math.max(...heights) - Math.min(...heights) : 1;
+};
+
+/**
+ * An element placing `object` on the ground at `point`, at the scale its model `definition` gives it: stored on the
+ * element, since a scale drag multiplies the element's own scale; raised by half its height, as a created shape is.
+ */
+export const placedElement = (
+  id: string,
+  object: string,
+  definition: Scene.Object3D | undefined,
+  point: Scene.Vec3,
+): Scene.Element3D => {
+  const scale = definition?.scale;
+  const lift = ((definition ? unitHeight(definition) : 1) * (scale?.y ?? 1)) / 2;
+  return { id, object, center: { ...point, y: point.y + lift }, ...(scale ? { scale } : {}) };
 };
 
 /** Whether a create tool sizes in one step (the base alone) rather than base then height. */

@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { type Scene } from '@dxos/scene';
 
-import { createdElement, dragBase, dragHeight } from './create.ts';
+import { createdElement, dragBase, dragHeight, placedElement } from './create.ts';
 
 const CAMERA: Scene.Camera3D = {
   target: { x: 0, y: 0, z: 0 },
@@ -45,6 +45,23 @@ describe('drag to create', () => {
       type: 'sphere',
       center: { x: 1, y: 2, z: 1 },
       scale: { x: 4, y: 4, z: 4 },
+    });
+  });
+
+  test('a placed object takes its model scale and rests on the ground, as a created shape does', () => {
+    const point = { x: 1, y: 0, z: 2 };
+    const mesh = { key: 'k', positions: [0, -0.25, 0, 1, 0.25, 0, 0, 0, 1], indices: [0, 1, 2] };
+    const race = { id: 'race', type: 'mesh', scale: { x: 5, y: 5, z: 5 }, props: { mesh } };
+    expect(placedElement('race-1', 'race', race, point)).toEqual({
+      id: 'race-1',
+      object: 'race',
+      center: { x: 1, y: 1.25, z: 2 },
+      scale: { x: 5, y: 5, z: 5 },
+    });
+    expect(placedElement('lamp-1', 'lamp', { id: 'lamp', type: 'cylinder' }, point)).toEqual({
+      id: 'lamp-1',
+      object: 'lamp',
+      center: { x: 1, y: 0.5, z: 2 },
     });
   });
 });
