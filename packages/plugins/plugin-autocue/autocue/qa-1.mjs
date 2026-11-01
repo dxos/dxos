@@ -109,7 +109,8 @@ export const steps = [
         undefined,
         { timeout: 15_000 },
       );
-      await page.waitForTimeout(BEAT * 2);
+      // Short, so the keys in the next step land well inside the first chapter.
+      await page.waitForTimeout(BEAT / 2);
     },
   },
   {
@@ -118,9 +119,9 @@ export const steps = [
     run: async ({ demo, page }) => {
       await demo.click({ selector: 'text="Chess (fixture)" >> nth=0', label: 'Focus the player' });
       const start = chapterAt(await playhead(page));
-      await demo.press({ key: 'ArrowRight', label: '→' });
-      await page.waitForTimeout(600);
-      await demo.press({ key: 'ArrowRight', label: '→' });
+      await demo.press({ key: 'ArrowRight', label: '→', cadence: 0 });
+      await page.waitForTimeout(300);
+      await demo.press({ key: 'ArrowRight', label: '→', cadence: 0 });
       await page.waitForTimeout(300);
       const reached = chapterAt(await playhead(page));
       const expected = Math.min(start + 2, CHAPTERS.length - 1);
@@ -134,7 +135,10 @@ export const steps = [
     name: 'Keys stay in the article',
     narration: 'Outside the article the arrow keys belong to Composer again.',
     run: async ({ demo, page }) => {
-      await demo.click({ selector: '[data-testid="treeItem.heading"]:text-is("QA Demo") >> nth=0', label: 'Navtree' });
+      await demo.click({
+        selector: '[data-testid="treeItem.heading"]:text-is("Collections") >> nth=0',
+        label: 'Navtree',
+      });
       const before = await playhead(page);
       await demo.press({ key: 'ArrowRight', label: '→' });
       await page.waitForTimeout(300);
