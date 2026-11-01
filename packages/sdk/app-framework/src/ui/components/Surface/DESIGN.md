@@ -62,6 +62,9 @@ This decouples the shell/layout from the plugins that fill it.
   function — safe to store and call later (e.g. inside another callback such as
   a render-prop or event handler) since the returned function calls no hooks
   itself — used to probe whether a region would render without mounting it.
+- **`useSurfaceContributions`.** Exposed as `Surface.useContributions`: the role's contributed
+  surfaces, subscribed, so a caller probing with `useIsSurfaceAvailable` re-renders (and re-checks)
+  once a module that loads on demand contributes to the role.
 
 ## Boundaries
 

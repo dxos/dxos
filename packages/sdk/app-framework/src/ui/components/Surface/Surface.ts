@@ -8,6 +8,7 @@ import {
   SurfaceComponent,
   matchCandidates as matchSurfaceCandidates,
   useIsSurfaceAvailable,
+  useSurfaceContributions,
 } from './SurfaceComponent.tsx';
 import {
   type MountedSurface,
@@ -50,6 +51,7 @@ export const Context = SurfaceContext;
 
 export const Surface = SurfaceComponent;
 export const useIsAvailable = useIsSurfaceAvailable;
+export const useContributions = useSurfaceContributions;
 /** Filters a role's candidate definitions to those whose guard accepts the data. */
 export const matchCandidates = matchSurfaceCandidates;
 
