@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { type Node, type NodeTone, type StyleMap } from '@dxos/scene';
 
 import { ViewBuilder } from '../builder/index.ts';
-import { CLASSIC_LOOK, defaultThemeRegistry, resolveLook } from '../model/index.ts';
+import { CLASSIC_LOOK, NEU_STYLE_SET, defaultThemeRegistry, resolveLook } from '../model/index.ts';
 import {
   canvasFillClass,
   classedLink,
@@ -17,6 +17,7 @@ import {
   nodeRelief,
   splitClassEdit,
   surfaceClasses,
+  variantClasses,
 } from './style.ts';
 
 describe('style classes', () => {
@@ -183,5 +184,15 @@ describe('style sets', () => {
     expect(canvasFillClass(neu, 'opaque')).toBe('fill-(--dx-neu-ground)');
     const glass = resolveLook(defaultThemeRegistry, { theme: 'paper' });
     expect(canvasFillClass(glass, 'opaque')).toBe('fill-white');
+  });
+});
+
+describe('Neu without a hue', () => {
+  test('a Neu shape with no hue draws exactly as Neutral, in every variant and tone', ({ expect }) => {
+    for (const variant of NEU_STYLE_SET.variants) {
+      for (const tone of ['theme', 'light', 'dark'] as const) {
+        expect(variantClasses(undefined, variant, tone)).toEqual(variantClasses('neutral', variant, tone));
+      }
+    }
   });
 });

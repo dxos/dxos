@@ -47,3 +47,12 @@ describe('materialSpec', () => {
     expect(materialSpec({ border: true, opacity: 0.5 }, 'cad')).toMatchObject({ edges: true, alpha: 0.5 });
   });
 });
+
+describe('Neu without a hue', () => {
+  test('a Neu body with no hue draws exactly as Neutral', () => {
+    for (const theme of ['neu-light', 'neu-dark'] as const) {
+      expect(materialSpec({}, theme)).toEqual(materialSpec({ hue: 'neutral' }, theme));
+      expect(materialSpec(undefined, theme)).toEqual(materialSpec({ hue: 'neutral' }, theme));
+    }
+  });
+});

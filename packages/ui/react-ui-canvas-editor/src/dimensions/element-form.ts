@@ -8,7 +8,7 @@ import { type FormFieldMap, type FormFieldOverride, NumberLayoutAnnotation, Step
 import { type LayoutIntent, Scene, Style3D, styleFields } from '@dxos/scene';
 import { VECTOR_AXIS_LAYOUT, VectorAnnotationId } from '@dxos/ui-types';
 
-import { LayerField, STYLE_FIELD_OVERRIDES, STYLE_FIELDS, makeGeometryField } from '../components/index.ts';
+import { LayerField, STYLE_FIELD_OVERRIDES, StyleGridField3D, makeGeometryField } from '../components/index.ts';
 
 /** An axis as the form edits it: clearable while typing, and stepped by `step` with the stepper. */
 const axis = (step: number) =>
@@ -37,14 +37,17 @@ export const ElementForm = Schema.Struct({
 });
 export type ElementForm = Schema.Schema.Type<typeof ElementForm>;
 
-/** The 2D canvas's style fields (its colour grid at `style.hue`, which sets the tone too) and its layer field. */
+/**
+ * The 2D canvas's style fields (its colour grid at `style.hue`, which sets the tone too, an unset hue showing as the
+ * Neutral it draws as) and its layer field.
+ */
 export const ELEMENT_FORM_FIELDS: FormFieldMap = {
-  ...STYLE_FIELDS,
-  layer: LayerField,
+  'style.hue': StyleGridField3D,
+  'layer': LayerField,
   // Centre and scale side by side, as 2D draws centre and size.
-  center: makeGeometryField({ name: 'scale', label: 'Scale', type: FormScale.ast }),
+  'center': makeGeometryField({ name: 'scale', label: 'Scale', type: FormScale.ast }),
   // Rotation alone in the first column, so it lines up under the centre.
-  rotation: makeGeometryField(),
+  'rotation': makeGeometryField(),
 };
 
 /** How those fields present, as in 2D. */

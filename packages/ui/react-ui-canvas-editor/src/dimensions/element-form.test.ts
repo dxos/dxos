@@ -10,7 +10,7 @@ import { NumberLayoutAnnotation, StepAnnotation } from '@dxos/react-ui-form';
 import { type Scene } from '@dxos/scene';
 import { VECTOR_AXIS_LAYOUT } from '@dxos/ui-types';
 
-import { LayerField, StyleGridField, applyStyleChoice } from '../components/index.ts';
+import { LayerField, StyleGridField3D, applyStyleChoice } from '../components/index.ts';
 import {
   ELEMENT_FORM_FIELDS,
   ELEMENT_FORM_OVERRIDES,
@@ -97,7 +97,7 @@ describe('element form', () => {
   });
 
   test("the style fields are the 2D canvas's: its colour grid at style.hue, the tone without a field of its own", () => {
-    expect(ELEMENT_FORM_FIELDS['style.hue']).toBe(StyleGridField);
+    expect(ELEMENT_FORM_FIELDS['style.hue']).toBe(StyleGridField3D);
     expect(ELEMENT_FORM_OVERRIDES['style.tone']).toMatchObject({ hidden: true });
   });
 

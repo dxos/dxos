@@ -1279,6 +1279,17 @@ the user 2026-10-31: in this PR. One commit per task, each with its failing test
   `CanvasEditor.test.tsx` "the shared Layers section writes the layers its engine keeps…" (RED: no helpers, no
   toolbar). The Objects menu's duplicate is not covered in happy-dom (the menu's item does not select there).
 
+### Task I.4: A Neu shape with no hue is Neutral
+
+- [x] 2D: a Neu shape with no hue takes Neutral's border and label in every variant and tone (it took a lighter label).
+- [x] 3D: a Neu body with no hue was already Neutral's colour (`resolveHex`), now under test.
+- [x] The style picker selects the swatch an unset hue draws as: Neutral in Neu, and Neutral for every 3D body.
+- Ruling (user, 2026-10-31): a Neu box with no hue draws as Neutral everywhere, and the picker highlights Neutral. The
+  picker's choice is derived (`shownHue`: the hue whose classes equal the unset ones), so a look whose unset hue draws as
+  none of its hues still selects nothing; 3D says so outright (`StyleGridField3D`), as its swatches are 2D's classes.
+  Tests: `style.test.ts` and `three/style.test.ts` "Neu without a hue", `StyleGrid.test.ts` "the swatch an unset hue
+  selects" (RED: 2D's unset label differed; no `shownHue`).
+
 ---
 
 ## Phase F — Tests and storybooks for review (decision 9)

@@ -139,14 +139,9 @@ const withoutFill = (
 
 /**
  * A Neu shape's accent: its hue marks only the border and the label, since the shape itself is the ground. A shape with
- * no hue takes the neutral edge, as every 3D Neu body is edged: a flush one would otherwise not show at all.
+ * no hue is Neutral, as a 3D Neu body is: every one is edged, since a flush one would otherwise not show at all.
  */
-const NEU_ACCENTS: Record<StyleHue | 'default', ByTone<{ text: string; border: string }>> = {
-  default: {
-    theme: { text: '', border: 'border-neutral-500/45 dark:border-neutral-400/45' },
-    light: { text: 'text-neutral-700', border: 'border-neutral-500/45' },
-    dark: { text: 'text-neutral-200', border: 'border-neutral-400/45' },
-  },
+const NEU_ACCENTS: Record<StyleHue, ByTone<{ text: string; border: string }>> = {
   neutral: {
     theme: {
       text: 'text-neutral-700 dark:text-neutral-300',
@@ -205,7 +200,7 @@ const neu = (surface: string): Record<StyleHue | 'default', ByTone<SurfaceClasse
     dark: { ...accent.dark, surface },
   });
   return {
-    default: relief(NEU_ACCENTS.default),
+    default: relief(NEU_ACCENTS.neutral),
     neutral: relief(NEU_ACCENTS.neutral),
     red: relief(NEU_ACCENTS.red),
     orange: relief(NEU_ACCENTS.orange),

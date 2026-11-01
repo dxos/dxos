@@ -46,10 +46,28 @@ const ITEM_CLASSES = 'min-w-0 px-0 bg-transparent hover:bg-transparent aria-chec
 /** The Neu tokens at a swatch's size, since the grid may sit outside the canvas that sets them. */
 const SWATCH_NEU = neuVars(0.25);
 
+/**
+ * The hue a swatch shows selected for: the style's own, else the hue that draws exactly as no hue in the look's variant
+ * for `tone` (Neutral in Neu), else none.
+ */
+export const shownHue = (hue: string | undefined, look: SceneLook, tone: NodeTone | undefined): string | undefined => {
+  if (hue !== undefined) {
+    return hue;
+  }
+  const variant = styleVariant(look.styleSet, tone);
+  const unset = variantClasses(undefined, variant, look.tone);
+  return STYLE_HUES.find((candidate) => {
+    const classes = variantClasses(candidate, variant, look.tone);
+    return classes.surface === unset.surface && classes.text === unset.text && classes.border === unset.border;
+  });
+};
+
 export type StyleGridProps = {
   /** The look whose style set's variants the rows show; the enclosing view's by default. */
   look?: SceneLook;
   hue?: string;
+  /** The hue an unset one draws as, where the look does not say (a 3D body: Neutral in every theme). */
+  unsetHue?: StyleHue;
   /** Unset is the style set's default variant, as the frame draws it. */
   tone?: NodeTone;
   /** Several nodes disagree: no swatch is selected until one is picked. */
@@ -68,6 +86,7 @@ export type StyleGridProps = {
 export const StyleGrid = ({
   look: lookProp,
   hue,
+  unsetHue,
   tone: toneProp,
   indeterminate,
   readonly,
@@ -80,7 +99,8 @@ export const StyleGrid = ({
   const tones = tonesProp ?? TONES.slice(0, styleSet.variants.length);
   // A tone past the set's last variant draws as the last, so it selects that row.
   const tone = Math.min(toneProp ?? styleSet.defaultVariant, styleSet.variants.length - 1);
-  const selected = indeterminate || !hue ? '' : `${hue}${SEPARATOR}${tone}`;
+  const shown = hue ?? unsetHue ?? shownHue(undefined, look, toneProp);
+  const selected = indeterminate || !shown ? '' : `${shown}${SEPARATOR}${tone}`;
   return (
     <ToggleGroup.Root
       type='single'
@@ -137,6 +157,8 @@ const OUTLINE_TONES: readonly NodeTone[] = [0];
 export type StyleFieldOptions = {
   /** Offer the fill rows (tones 1–3) as well as the outline; a link, or a selection with one, has no fill. */
   fills: boolean;
+  /** The hue an unset one draws as, where the look does not say. */
+  unsetHue?: StyleHue;
 };
 
 /** A style with a pick applied: with fills, the hue and its tone together; without, the hue alone. */
@@ -151,7 +173,7 @@ export const applyStyleChoice = <S extends object>(
  * sets the hue and its tone together (a node); without, the outline row sets the hue alone (a link, or a
  * selection mixing kinds, which edits only the style they share).
  */
-export const createStyleField = ({ fills }: StyleFieldOptions): FormFieldRenderer => {
+export const createStyleField = ({ fills, unsetHue }: StyleFieldOptions): FormFieldRenderer => {
   const StyleField: FormFieldRenderer = ({ label, jsonPath, readonly, indeterminate, getValue, onBlur }) => {
     // Hue and tone change together, so the pick writes their parent once; two field writes would race.
     const stylePath = (jsonPath ?? 'style.hue').split('.').slice(0, -1);
@@ -163,6 +185,7 @@ export const createStyleField = ({ fills }: StyleFieldOptions): FormFieldRendere
           // A link's colour is its hue's border whatever the set, so its row is the canvas's own outline.
           look={fills ? undefined : CLASSIC_LOOK}
           hue={getValue()}
+          unsetHue={unsetHue}
           tone={fills ? style.tone : 0}
           tones={fills ? undefined : OUTLINE_TONES}
           indeterminate={indeterminate}
@@ -181,6 +204,9 @@ export const createStyleField = ({ fills }: StyleFieldOptions): FormFieldRendere
 
 /** The style picker with its fill rows: a node's, or a selection of nodes. */
 export const StyleGridField = createStyleField({ fills: true });
+
+/** The style picker with its fill rows for a 3D body, whose unset hue draws as Neutral in every theme. */
+export const StyleGridField3D = createStyleField({ fills: true, unsetHue: 'neutral' });
 
 /** The style picker's outline row alone: a link's, or a selection with a link in it. */
 export const OutlineStyleField = createStyleField({ fills: false });
