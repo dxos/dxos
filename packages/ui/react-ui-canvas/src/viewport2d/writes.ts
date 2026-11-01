@@ -101,7 +101,16 @@ export const layoutWrites = (
     }
     const intent = layoutChanges(current, after);
     if (!layout) {
-      created.push({ kind: 'layout', layout: view.id, intent, created: true });
+      // The host creates the layout bare, so what it is (a composite, its name) is written with its elements.
+      const { kind, name, anonymous } = record;
+      const patch = { ...(kind && { kind }), ...(name !== undefined && { name }), ...(anonymous && { anonymous }) };
+      created.push({
+        kind: 'layout',
+        layout: view.id,
+        intent:
+          Object.keys(patch).length > 0 ? { kind: 'batch', intents: [intent, { kind: 'layout', patch }] } : intent,
+        created: true,
+      });
     } else if (!isEmpty(intent)) {
       updated.push({ kind: 'layout', layout: view.id, intent, created: false });
     }

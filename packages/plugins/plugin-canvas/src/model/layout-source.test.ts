@@ -117,6 +117,29 @@ describe('layoutSource', () => {
     expect(root.elements.b.center).toEqual({ x: 0, y: 128 });
   });
 
+  test('a layout intent writes what a new layout is (a composite, its anonymity) with its elements, and undo unsets it', () => {
+    const group = db.add(Obj.make(Scene.Layout2D, { key: 'group', elements: {} }));
+    const source = layoutSource(group);
+    const [change] = recordChanges([source], () =>
+      applyLayoutIntent(group, {
+        kind: 'batch',
+        intents: [
+          { kind: 'create', element: { id: 'a', type: 'rect', center: { x: 0, y: 0 } } },
+          { kind: 'layout', patch: { kind: 'composite', anonymous: true } },
+        ],
+      }),
+    );
+    expect(group.kind).toBe('composite');
+    expect(group.anonymous).toBe(true);
+    if (!change) {
+      throw new Error('The change was recorded.');
+    }
+    patchSource(source, { from: change.after, to: change.before, paths: change.paths });
+    expect(group.kind).toBeUndefined();
+    expect(group.anonymous).toBeUndefined();
+    expect(group.elements.a).toBeUndefined();
+  });
+
   test('undo skips an element someone else changed since', () => {
     const root = layout('root', ['a']);
     const source = layoutSource(root);

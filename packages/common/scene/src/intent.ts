@@ -11,6 +11,7 @@ import {
   Element2D,
   Element3D,
   Lattice,
+  LayoutKind,
   type LayoutRecord,
   type LayoutRecord2D,
   type LayoutRecord3D,
@@ -22,18 +23,34 @@ import {
 type Element = Element2D | Element3D;
 
 /**
- * The 2D layout fields a `layout` intent writes (the modes that place its elements): a key set to a value sets the
- * field, a key set to `undefined` unsets it, and an absent key leaves it.
+ * The 2D layout fields a `layout` intent writes (the modes that place its elements, and what the layout is, so one the
+ * canvas creates keeps it): a key set to a value sets the field, a key set to `undefined` unsets it, and an absent key
+ * leaves it.
  */
 export type LayoutPatch = {
   readonly lattice?: Lattice;
   readonly constraints?: readonly Constraint[];
+  readonly kind?: LayoutKind;
+  readonly name?: string;
+  readonly anonymous?: boolean;
 };
 
 export const LayoutPatch: Schema.Codec<LayoutPatch> = Schema.Struct({
   lattice: Schema.optional(Lattice),
   constraints: Schema.optional(Schema.Array(Constraint)),
+  kind: Schema.optional(LayoutKind),
+  name: Schema.optional(Schema.String),
+  anonymous: Schema.optional(Schema.Boolean),
 });
+
+/** The layout fields a `layout` intent writes, so a store writes every one of them. */
+export const LAYOUT_PATCH_FIELDS = [
+  'lattice',
+  'constraints',
+  'kind',
+  'name',
+  'anonymous',
+] as const satisfies readonly (keyof LayoutPatch & keyof LayoutRecord2D)[];
 
 /**
  * One edit to a layout: to its elements (geometric intents carry the values of the layout's dimension) or, with
@@ -356,13 +373,11 @@ const patchOf = (intent: LayoutIntent): LayoutPatch | undefined => {
 /** `layout` with `patch`'s fields written; the same layout when every value is already there. */
 const patchLayout = (layout: LayoutRecord2D, patch: LayoutPatch | undefined): LayoutRecord2D => {
   let next = layout;
-  if (patch && 'lattice' in patch && !sameElement(next.lattice, patch.lattice)) {
-    const { lattice: _lattice, ...rest } = next;
-    next = patch.lattice === undefined ? rest : { ...rest, lattice: patch.lattice };
-  }
-  if (patch && 'constraints' in patch && !sameElement(next.constraints, patch.constraints)) {
-    const { constraints: _constraints, ...rest } = next;
-    next = patch.constraints === undefined ? rest : { ...rest, constraints: patch.constraints };
+  for (const key of LAYOUT_PATCH_FIELDS) {
+    if (patch && key in patch && !sameElement(next[key], patch[key])) {
+      const { [key]: _value, ...rest } = next;
+      next = patch[key] === undefined ? rest : { ...rest, [key]: patch[key] };
+    }
   }
   return next;
 };

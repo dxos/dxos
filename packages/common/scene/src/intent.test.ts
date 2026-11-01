@@ -221,6 +221,16 @@ describe('solid intents', () => {
     expect(applyIntent(after, { kind: 'layout', patch: { constraints: [...constraints] } })).toBe(after);
   });
 
+  test("a layout intent writes the layout's kind, name and anonymity, so a layout the canvas creates keeps what it is", () => {
+    const layout = layout2D('g', []);
+    const composite = applyIntent(layout, {
+      kind: 'layout',
+      patch: { kind: 'composite', anonymous: true, name: 'Group' },
+    });
+    expect(composite).toMatchObject({ kind: 'composite', anonymous: true, name: 'Group' });
+    expect('anonymous' in applyIntent(composite, { kind: 'layout', patch: { anonymous: undefined } })).toBe(false);
+  });
+
   test('layout intents carry 2D fields only', () => {
     const patch = { kind: 'layout', patch: { constraints: [] } };
     expect(isLayoutIntent(patch, '2d')).toBe(true);

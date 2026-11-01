@@ -112,6 +112,24 @@ describe('layoutWrites', () => {
     expect(writes[1]).toMatchObject({ kind: 'define', object: { id: 'view:inner', parts: 'inner' } });
     expect(writes[2]).toMatchObject({ kind: 'layout', layout: 'main', created: false });
   });
+
+  test('a new composite is written as one: the layout the host creates bare takes its kind and anonymity', () => {
+    const doc = document({});
+    const view = toRenderList2D(doc, layoutOf(doc));
+    const node = {
+      ...createNode({ type: 'rect', id: 'n', z: 'a0', center: { x: 0, y: 0 }, size: { width: 16, height: 16 } }),
+      layer: 'default',
+    };
+    const group = { id: 'g', kind: 'composite' as const, anonymous: true, nodes: { n: node }, links: {} };
+    const [write] = layoutWrites(doc, { main: view }, { main: view, g: group });
+    expect(write).toMatchObject({ kind: 'layout', layout: 'g', created: true });
+    const bare: Scene.LayoutRecord2D = { id: 'g', dim: '2d', model: 'm', elements: {} };
+    expect(write.kind === 'layout' && applyIntent(bare, write.intent)).toMatchObject({
+      kind: 'composite',
+      anonymous: true,
+      elements: { n: { type: 'rect' } },
+    });
+  });
 });
 
 describe('applyLayoutWrites', () => {

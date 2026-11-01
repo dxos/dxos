@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Obj } from '@dxos/echo';
 import { type VersionedSource, combinedSource, readPath, sameValue, writePath } from '@dxos/react-ui-canvas/headless';
-import { type LayoutIntent, type LayoutPatch, Scene, applyIntent } from '@dxos/scene';
+import { LAYOUT_PATCH_FIELDS, type LayoutIntent, type LayoutPatch, Scene, applyIntent } from '@dxos/scene';
 
 import { type Canvas } from '#types';
 
@@ -14,10 +14,10 @@ import { plain } from './records.ts';
 import { writeFields } from './write-fields.ts';
 
 /** A 2D layout's own fields that a `layout` intent writes, as plain data. */
-const layoutFields = (layout: Scene.Layout2D): LayoutPatch => ({
-  ...(layout.lattice !== undefined ? { lattice: plain(layout.lattice) } : {}),
-  ...(layout.constraints !== undefined ? { constraints: plain(layout.constraints) } : {}),
-});
+const layoutFields = (layout: Scene.Layout2D): LayoutPatch =>
+  Object.fromEntries(
+    LAYOUT_PATCH_FIELDS.flatMap((field) => (layout[field] === undefined ? [] : [[field, plain(layout[field])]])),
+  );
 
 /** A layout's elements (and a 2D layout's own fields) as plain data, at its Automerge `heads` or now. */
 const snapshot = (layout: Scene.Layout2D | Scene.Layout3D, heads?: readonly string[]) => {
@@ -32,24 +32,27 @@ const isElement3D = Schema.is(Scene.Element3D);
 const isElement2D = Schema.is(Scene.Element2D);
 const isLattice = Schema.is(Scene.Lattice);
 const isConstraints = Schema.is(Schema.Array(Scene.Constraint));
+const isLayoutKind = Schema.is(Scene.LayoutKind);
 
 /** Writes `next` (undefined unsets it) to the 2D layout field `field`, inside an `Obj.update`. */
 const writeLayoutField = (layout: Obj.Mutable<Scene.Layout2D>, field: keyof LayoutPatch, next: unknown): void => {
-  if (field === 'lattice') {
-    if (next === undefined) {
-      delete layout.lattice;
-    } else if (isLattice(next)) {
-      layout.lattice = plain(next);
-    }
-  } else if (next === undefined) {
-    delete layout.constraints;
-  } else if (isConstraints(next)) {
-    layout.constraints = plain(next);
+  if (next === undefined) {
+    delete layout[field];
+  } else if (field === 'lattice') {
+    isLattice(next) && (layout.lattice = plain(next));
+  } else if (field === 'constraints') {
+    isConstraints(next) && (layout.constraints = plain(next));
+  } else if (field === 'kind') {
+    isLayoutKind(next) && (layout.kind = next);
+  } else if (field === 'name') {
+    typeof next === 'string' && (layout.name = next);
+  } else {
+    typeof next === 'boolean' && (layout.anonymous = next);
   }
 };
 
 const isLayoutField = (field: string | undefined): field is keyof LayoutPatch =>
-  field === 'lattice' || field === 'constraints';
+  LAYOUT_PATCH_FIELDS.some((known) => known === field);
 
 /**
  * A layout of either dimension as a versioned source over `{ elements }` (paths `['elements', id, …]`) and a 2D
@@ -136,7 +139,7 @@ export const applyLayoutIntent = (layout: Scene.Layout2D | Scene.Layout3D, inten
   const changed = [...ids].filter((id) => !sameValue(beforeElements[id], afterElements[id]));
   const fields =
     before.dim === '2d' && after.dim === '2d'
-      ? (['lattice', 'constraints'] as const).filter((field) => !sameValue(before[field], after[field]))
+      ? LAYOUT_PATCH_FIELDS.filter((field) => !sameValue(before[field], after[field]))
       : [];
   if (changed.length === 0 && fields.length === 0) {
     return;
