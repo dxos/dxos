@@ -293,9 +293,14 @@ export const View: Story = {
     const { left, top } = viewport.getBoundingClientRect();
     await fireEvent.contextMenu(viewport, { clientX: left + 8, clientY: top + 8 });
     const back = await screen.findByTestId('menu-back');
-    const items = [...(back.closest('[role="menu"]')?.querySelectorAll('[role="menuitem"]') ?? [])];
-    // Keyboard, since zag ignores the synthetic pointer events a test can send.
-    await userEvent.keyboard('{ArrowDown}'.repeat(items.indexOf(back) + 1) + '{Enter}');
+    const menu = back.closest<HTMLElement>('[role="menu"]');
+    const items = [...(menu?.querySelectorAll('[role="menuitem"]') ?? [])];
+    // Keyboard, since zag ignores the synthetic pointer events a test can send. Keys reach the menu only once it has
+    // focus, and Enter picks only a highlighted item, so each is awaited.
+    await waitFor(() => expect(menu).toHaveFocus());
+    await userEvent.keyboard('{ArrowDown}'.repeat(items.indexOf(back) + 1));
+    await waitFor(() => expect(back).toHaveAttribute('data-highlighted'));
+    await userEvent.keyboard('{Enter}');
     await waitFor(() => expect(canvas.getByTestId('toolbar-up')).toBeDisabled(), { timeout: 5_000 });
   },
 };

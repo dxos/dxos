@@ -117,9 +117,14 @@ export const Test: Story = {
     // merging keeps the top-most. Shift rather than Cmd/Ctrl, whose key the listbox picks by platform. The menu is
     // portalled, so its items are found in the document body.
     const body = within(canvasElement.ownerDocument.body);
+    // Escape reaches the menu only once it has focus, and a closing menu stays in the document until its exit ends, so
+    // the next open is awaited from an empty body: each open mounts a new menu.
     await userEvent.click(canvas.getByTestId('layers-menu'));
-    await expect(await body.findByTestId('layers-merge')).toHaveAttribute('data-disabled');
+    const closing = await body.findByRole('menu');
+    await expect(within(closing).getByTestId('layers-merge')).toHaveAttribute('data-disabled');
+    await waitFor(() => expect(closing).toHaveFocus());
     await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(body.queryByRole('menu')).toBeNull());
     await userEvent.click(canvas.getByTestId('layer-name-diagram'));
     // One session, so the held key is still down for the click.
     const user = userEvent.setup();
@@ -127,10 +132,15 @@ export const Test: Story = {
     await user.click(canvas.getByTestId('layer-name-notes'));
     await user.keyboard('{/Shift}');
     await userEvent.click(canvas.getByTestId('layers-menu'));
-    const merge = await body.findByTestId('layers-merge');
+    const menu = await body.findByRole('menu');
+    const merge = within(menu).getByTestId('layers-merge');
     await waitFor(() => expect(merge).not.toHaveAttribute('data-disabled'));
-    // Picked from the keyboard, as the react-ui Menu stories do: a synthetic click does not select a menu item.
-    await userEvent.keyboard('{Home}{Enter}');
+    // Picked from the keyboard, as the react-ui Menu stories do: a synthetic click does not select a menu item. Enter
+    // picks only a highlighted item, so focus and highlight are each awaited.
+    await waitFor(() => expect(menu).toHaveFocus());
+    await userEvent.keyboard('{Home}');
+    await waitFor(() => expect(merge).toHaveAttribute('data-highlighted'));
+    await userEvent.keyboard('{Enter}');
     await waitFor(() => expect(names()).toEqual(['Diagram', 'Background', 'Sketch']));
 
     // 6. The arrows move along the list, and Enter opens the current row's name.
