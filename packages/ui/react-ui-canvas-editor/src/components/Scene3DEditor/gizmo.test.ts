@@ -85,6 +85,23 @@ describe('extrudeIntent', () => {
     expect(intent?.kind === 'extrude' && intent.distance).toBeCloseTo(50 / screenStep, 2);
   });
 
+  test('pushing a face in never thins the solid to nothing: at least a step, or a tenth when free, stays', () => {
+    const push = (units: number, step: number, landing = false) => {
+      const intent = extrudeIntent({
+        ...{ id: 'e', target: 'box', normal: up, camera, viewport, point, step, landing },
+        dragPixels: units * screenStep,
+        thickness: 1,
+      });
+      return intent?.kind === 'extrude' ? intent.distance : undefined;
+    };
+    expect(push(-0.5, 0)).toBeCloseTo(-0.5, 2);
+    expect(push(-0.95, 0)).toBeCloseTo(-0.9, 2);
+    expect(push(-3, 0)).toBeCloseTo(-0.9, 2);
+    // With a step of one, a one-unit solid has no step to give, so a push in makes nothing.
+    expect(push(-0.8, 1, true)).toBeUndefined();
+    expect(push(-3, 1, true)).toBeUndefined();
+  });
+
   test('dragging against the normal gives a negative distance; a tilted normal snaps to its axis', () => {
     const intent = extrudeIntent({
       id: 'e',

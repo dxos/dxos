@@ -340,6 +340,19 @@ export class SceneRenderer3D {
     );
   }
 
+  /** The world size of the item `key` along the axis `direction` is nearest, from its world-aligned bounds. */
+  extent(key: string, direction: Model.Vec3): number | undefined {
+    const mesh = this.#items.get(key)?.surface;
+    if (!mesh) {
+      return undefined;
+    }
+    mesh.computeWorldMatrix(true);
+    const { minimumWorld, maximumWorld } = mesh.getBoundingInfo().boundingBox;
+    const size = maximumWorld.subtract(minimumWorld);
+    const [x, y, z] = [Math.abs(direction.x), Math.abs(direction.y), Math.abs(direction.z)];
+    return x >= y && x >= z ? size.x : y >= z ? size.y : size.z;
+  }
+
   /** The meshes that would cut into the selection outline's mask: none, whatever overlaps the selection. */
   get outlineOccluders(): string[] {
     return this.#scene.meshes

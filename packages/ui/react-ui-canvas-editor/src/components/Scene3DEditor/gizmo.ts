@@ -53,6 +53,9 @@ export const gizmoIntent = (
   }
 };
 
+/** The thinnest a push into a solid leaves it with snapping off, in world units. */
+const FREE_THICKNESS = 0.1;
+
 /** How far a face drag must travel, in pixels, to extrude. */
 const EXTRUDE_SLOP = 4;
 
@@ -98,11 +101,14 @@ export type ExtrudeDrag = {
   step?: number;
   /** The drag is ending: the distance lands on a whole step rather than following the pointer to one. */
   landing?: boolean;
+  /** The solid's world extent along the normal, of which a push into it leaves at least a step; none leaves it free. */
+  thickness?: number;
 };
 
 /**
  * The `extrude` a face drag makes: its distance is the world length the drag spans along the face's normal at the
  * picked point. With a `step` it is held on a step it passes within the detent, as a 2D move is, and lands on one; a
+ * push into the solid stops a step (or `FREE_THICKNESS`) short of its far side, so it never turns inside out; a
  * landing short of half a step, a drag shorter than a click's slop, or a normal seen end-on makes none.
  */
 export const extrudeIntent = ({
@@ -115,6 +121,7 @@ export const extrudeIntent = ({
   point,
   step = 0,
   landing = false,
+  thickness,
 }: ExtrudeDrag): LayoutIntent | undefined => {
   if (Math.abs(dragPixels) < EXTRUDE_SLOP) {
     return undefined;
@@ -125,6 +132,8 @@ export const extrudeIntent = ({
     return undefined;
   }
   const free = dragPixels / pixels;
-  const distance = round(landing ? snapTo(free, step) : magnetTo(free, step, DETENT_PX / pixels));
+  const held = landing ? snapTo(free, step) : magnetTo(free, step, DETENT_PX / pixels);
+  const deepest = thickness === undefined ? -Infinity : Math.min(0, (step > 0 ? step : FREE_THICKNESS) - thickness);
+  const distance = round(Math.max(deepest, held));
   return distance === 0 ? undefined : { kind: 'extrude', id, target, face, distance };
 };

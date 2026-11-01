@@ -475,6 +475,8 @@ export const Scene3DEditor = ({
     element: string;
     normal: Scene.Vec3;
     point: Scene.Vec3;
+    // Read on the press: the preview that follows replaces the solid's mesh.
+    thickness?: number;
   }>(undefined);
   // What a swept base, its height and an extrusion snap to: the grid unit, unless snapping is off or Alt held.
   const step = snap && !alt ? SNAP.move : 0;
@@ -512,6 +514,7 @@ export const Scene3DEditor = ({
         point: start.point,
         step,
         landing,
+        thickness: start.thickness,
       });
       // The distance was measured in the world; the layout may be a composite's parts drawn at another scale.
       return intent?.kind === 'extrude'
@@ -648,15 +651,20 @@ export const Scene3DEditor = ({
           const { hit, element } = elementAt(screen);
           // A selected face is the one extruded, wherever the drag starts; otherwise the face pressed on.
           const selectedFace = face && renderer?.face;
+          const thicknessOf = (id: string, normal: Scene.Vec3) => {
+            const key = keys.get(id)?.key;
+            return key === undefined ? undefined : renderer?.extent(key, normal);
+          };
           extruding.current = selectedFace
             ? {
                 screen,
                 element: face.element,
                 normal: face.normal,
                 point: { x: selectedFace.center.x, y: selectedFace.center.y, z: selectedFace.center.z },
+                thickness: thicknessOf(face.element, face.normal),
               }
             : element !== undefined && hit?.normal && hit.point
-              ? { screen, element, normal: hit.normal, point: hit.point }
+              ? { screen, element, normal: hit.normal, point: hit.point, thickness: thicknessOf(element, hit.normal) }
               : undefined;
           extruding.current && event.currentTarget.setPointerCapture(event.pointerId);
         }

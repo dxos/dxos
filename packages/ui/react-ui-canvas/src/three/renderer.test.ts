@@ -218,6 +218,14 @@ describe('SceneRenderer3D.pick', () => {
     view.dispose();
   });
 
+  test("an item's extent along an axis is its world size that way; an item not drawn has none", () => {
+    const view = renderer(doc([{ id: 'a', type: 'cube', center: { x: 0, y: 0, z: 0 }, scale: { x: 2, y: 4, z: 6 } }]));
+    expect(view.extent('a', { x: 0, y: 1, z: 0 })).toBeCloseTo(4);
+    expect(view.extent('a', { x: 0, y: 0, z: -1 })).toBeCloseTo(6);
+    expect(view.extent('missing', { x: 1, y: 0, z: 0 })).toBeUndefined();
+    view.dispose();
+  });
+
   test('a scale gizmo on an item whose aspect is locked offers only its even handle; otherwise every axis', () => {
     const view = renderer(doc([{ id: 'a', type: 'cube', center: { x: 0, y: 0, z: 0 } }]));
     view.attachGizmo('a', 'scale', () => {}, { uniform: true });
