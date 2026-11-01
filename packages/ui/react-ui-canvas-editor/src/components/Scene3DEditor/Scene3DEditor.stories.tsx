@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { EngineStore } from '@babylonjs/core';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
@@ -140,37 +141,60 @@ export const Default: Story = {};
 export const Overlapping: Story = { args: { exemplar: 'overlap' } };
 
 /**
- * Extrude: a drag from a face of the cube makes a solid extruding it, and selects it.
+ * Extrude: a drag from a face of a cube extrudes it, drawn as the pointer moves, and the release makes the solid.
  *
  * Test:
- * 1. With Extrude, a press on the cube and a release away from it make an `extrude` element, selected.
+ * 1. With Extrude, a press on a cube and a move away from it draw the extruded solid, not yet in the document.
+ * 2. The release makes the `extrude` element, selected.
  */
 export const Extrude: Story = {
-  args: { exemplar: 'cube' },
+  // Plain cubes: no solid or rounded cube loads Manifold before the first extrusion.
+  args: { exemplar: 'overlap' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const editor = await canvas.findByTestId('scene.3d.editor');
     await userEvent.click(canvas.getByTestId('tool-extrude'));
-    // The press is retried: until the renderer has drawn a frame, nothing under the pointer is picked.
-    await waitFor(
-      async () => {
-        const view = editor.querySelector('canvas');
-        if (view && !editor.dataset.selection) {
-          const rect = view.getBoundingClientRect();
-          const from = {
-            clientX: rect.left + rect.width / 2,
-            clientY: rect.top + rect.height / 2,
-            button: 0,
-            pointerId: 1,
-          };
-          const to = { ...from, clientX: from.clientX - 60, clientY: from.clientY - 60, buttons: 0 };
-          await fireEvent.pointerDown(view, { ...from, buttons: 1 });
-          // The press captures the pointer, so its release targets the editor rather than the canvas under it.
-          await fireEvent.pointerUp(editor, to);
+    const view = editor.querySelector('canvas');
+    if (!view) {
+      throw new Error('The editor has no canvas.');
+    }
+    const scene = () => EngineStore.Instances.find((engine) => engine.getRenderingCanvas() === view)?.scenes[0];
+    /** A drawn item's world bounds, rounded, as `minX,minY,minZ,maxX,maxY,maxZ`. */
+    const bounds = (name: string) => {
+      const box = scene()?.getMeshByName(name)?.getBoundingInfo().boundingBox;
+      return (
+        box && [...box.minimumWorld.asArray(), ...box.maximumWorld.asArray()].map((value) => value.toFixed(2)).join()
+      );
+    };
+    // Nothing under the pointer is picked until the renderer has drawn the cubes.
+    await waitFor(() => expect(bounds('item-c')).toBeDefined(), { timeout: 10_000 });
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const { width, height } = view.getBoundingClientRect();
+    const target = { x: 0, y: 0 };
+    for (let y = 0; y < height && !target.x; y += 8) {
+      for (let x = 0; x < width && !target.x; x += 8) {
+        if (scene()?.pick(x, y)?.pickedMesh?.name === 'item-c') {
+          Object.assign(target, { x, y });
         }
-        await expect(editor.dataset.selection).toMatch(/^extrude/);
-      },
-      { timeout: 10_000, interval: 500 },
-    );
+      }
+    }
+    const rect = view.getBoundingClientRect();
+    const from = { clientX: rect.left + target.x, clientY: rect.top + target.y, button: 0, pointerId: 1 };
+    const to = { ...from, clientX: from.clientX - 60, clientY: from.clientY - 60 };
+
+    // 1. The press captures the pointer, so its moves and release target the editor rather than the canvas under it.
+    await fireEvent.pointerDown(view, { ...from, buttons: 1 });
+    await fireEvent.pointerMove(editor, { ...to, buttons: 1 });
+    await waitFor(() => expect(bounds('item-extrude-1')).toBeDefined());
+    // Given time to build the solid, the preview is the solid the release makes, not a stand-in.
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
+    const preview = bounds('item-extrude-1');
+    await expect(editor.dataset.selection).toBe('');
+
+    // 2.
+    await fireEvent.pointerUp(editor, { ...to, buttons: 0 });
+    await waitFor(() => expect(editor.dataset.selection).toBe('extrude-1'));
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
+    await expect(bounds('item-extrude-1')).toBe(preview);
   },
 };

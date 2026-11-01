@@ -39,6 +39,7 @@
     "@effect/atom-react": "catalog:"
   },
   "devDependencies": {
+    "@babylonjs/core": "catalog:",
     "@dxos/log": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",

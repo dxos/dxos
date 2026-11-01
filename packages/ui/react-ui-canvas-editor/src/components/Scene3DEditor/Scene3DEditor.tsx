@@ -27,6 +27,7 @@ import type * as Util from '@dxos/react-ui/Util';
 import {
   type LayoutIntent,
   type Scene,
+  applyIntent,
   findLayout,
   findModel,
   findScene,
@@ -164,7 +165,6 @@ export const Scene3DEditor = ({
   const scene = findScene(doc, sceneId);
   const editing = editingProp ?? scene?.layout ?? '';
   const layout = findLayout(doc, editing);
-  const geometry = useManifoldGeometry(doc, givenGeometry);
   const look: Theme3D = theme ?? toTheme3D(scene?.theme) ?? 'cad';
   const given = camera ?? (scene?.dim === '3d' ? scene.camera : DEFAULT_CAMERA);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -181,20 +181,21 @@ export const Scene3DEditor = ({
   // composite placed several times is edited through the frame last clicked, or else the first.
   // A shape being sized by a drag, drawn as it will land but not yet in the layout.
   const [draft, setDraft] = useState<Scene.Element3D>();
-  const drawnDoc = useMemo(
-    () =>
-      draft === undefined
-        ? doc
-        : {
-            ...doc,
-            layouts: doc.layouts.map((record) =>
-              record.id === (editingProp ?? scene?.layout) && record.dim === '3d'
-                ? { ...record, elements: { ...record.elements, [draft.id]: draft } }
-                : record,
-            ),
-          },
-    [doc, draft, editingProp, scene],
-  );
+  // The extrusion a face drag would make, drawn as the pointer moves but not yet in the layout.
+  const [extrusion, setExtrusion] = useState<LayoutIntent>();
+  const drawnDoc = useMemo(() => {
+    const preview: LayoutIntent | undefined = draft ? { kind: 'create', element: draft } : extrusion;
+    return preview === undefined
+      ? doc
+      : {
+          ...doc,
+          layouts: doc.layouts.map((record) =>
+            record.id === (editingProp ?? scene?.layout) && record.dim === '3d' ? applyIntent(record, preview) : record,
+          ),
+        };
+  }, [doc, draft, extrusion, editingProp, scene]);
+  // From what is drawn, so a previewed solid is built before it is committed.
+  const geometry = useManifoldGeometry(drawnDoc, givenGeometry);
   const list = useMemo(() => renderList(drawnDoc, scene), [drawnDoc, scene]);
   const frames = useMemo(() => {
     const byFrame = new Map<string, Map<string, RenderItem>>();
@@ -410,12 +411,12 @@ export const Scene3DEditor = ({
     normal: Scene.Vec3;
     point: Scene.Vec3;
   }>(undefined);
-  const onExtrudeEnd = useCallback(
-    (end: { x: number; y: number }) => {
+  /** The extrusion the face drag would make with the pointer at `end`; undefined for one too short to extrude. */
+  const extrusionAt = useCallback(
+    (end: { x: number; y: number }): LayoutIntent | undefined => {
       const start = extruding.current;
-      extruding.current = undefined;
       if (!start) {
-        return false;
+        return undefined;
       }
       const face = axisOf(start.normal);
       const from = project(view, size, start.point);
@@ -426,14 +427,13 @@ export const Scene3DEditor = ({
       });
       const length = from && to ? Math.hypot(to.x - from.x, to.y - from.y) : 0;
       if (!from || !to || length < 1e-3) {
-        return false;
+        return undefined;
       }
       // The drag's length along the face's normal as the screen shows it.
       const dragPixels =
         ((end.x - start.screen.x) * (to.x - from.x) + (end.y - start.screen.y) * (to.y - from.y)) / length;
-      const id = freeId(layout, 'extrude');
       const intent = extrudeIntent({
-        id,
+        id: freeId(layout, 'extrude'),
         target: start.element,
         normal: face,
         dragPixels,
@@ -441,16 +441,27 @@ export const Scene3DEditor = ({
         viewport: size,
         point: start.point,
       });
-      if (intent?.kind === 'extrude') {
-        // The distance was measured in the world; the layout may be a composite's parts drawn at another scale.
-        onIntent(editing, { ...intent, distance: Math.round((intent.distance / transform.scale) * 1000) / 1000 });
-        onFaceChange?.(undefined);
-        onSelect([id]);
-        return true;
-      }
-      return false;
+      // The distance was measured in the world; the layout may be a composite's parts drawn at another scale.
+      return intent?.kind === 'extrude'
+        ? { ...intent, distance: Math.round((intent.distance / transform.scale) * 1000) / 1000 }
+        : undefined;
     },
-    [view, size, layout, editing, transform, onIntent, onSelect, onFaceChange],
+    [view, size, layout, transform],
+  );
+  const onExtrudeEnd = useCallback(
+    (end: { x: number; y: number }) => {
+      const intent = extrusionAt(end);
+      extruding.current = undefined;
+      setExtrusion(undefined);
+      if (intent?.kind !== 'extrude') {
+        return false;
+      }
+      onIntent(editing, intent);
+      onFaceChange?.(undefined);
+      onSelect([intent.id]);
+      return true;
+    },
+    [extrusionAt, editing, onIntent, onSelect, onFaceChange],
   );
 
   const press = useRef<{ x: number; y: number }>(undefined);
@@ -535,6 +546,10 @@ export const Scene3DEditor = ({
         }
       }}
       onPointerMove={(event) => {
+        if (extruding.current) {
+          setExtrusion(extrusionAt(local(event)));
+          return;
+        }
         const current = sizing.current;
         if (!current) {
           return;
