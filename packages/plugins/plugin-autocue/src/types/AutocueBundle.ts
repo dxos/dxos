@@ -26,6 +26,17 @@ export class AutocueBundle extends Type.makeObject<AutocueBundle>(DXN.make('org.
   ),
 ) {}
 
+/** Drives the create form; without it the navtree factory creates an empty bundle with no dialog. */
+export const CreateSchema = Schema.Struct({
+  name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
+  url: Schema.optional(
+    Schema.String.pipe(
+      Schema.annotate({ title: 'URL', description: 'The bundle folder, its index.html, or its autocue.json.' }),
+      FormatAnnotation.set(TypeFormat.URL),
+    ),
+  ),
+});
+
 export type MakeProps = Partial<{ name: string; url: string }>;
 
 export const make = ({ name, url }: MakeProps = {}): AutocueBundle => Obj.make(AutocueBundle, { name, url });

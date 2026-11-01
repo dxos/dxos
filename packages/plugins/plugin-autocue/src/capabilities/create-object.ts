@@ -16,6 +16,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(AutocueBundle.AutocueBundle),
+      inputSchema: AutocueBundle.CreateSchema,
       createObject: (props, options) =>
         Effect.gen(function* () {
           const object = AutocueBundle.make(props);

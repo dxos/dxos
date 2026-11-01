@@ -104,6 +104,8 @@ test QA-1: Link a demo bundle and play it
       capture: created
       expect: a Demo named "QA Demo" appears under the collection and its article opens
       note: NO `invoke` — there is no create operation, only the navtree factory (`capabilities/create-object.ts`).
+        On main at caa28b313a7 (app-graph #14348) a newly created object of any type opens as a "Loading…" plank
+        that never resolves; reverting that commit's AppGraph.ts and util.ts changes fixes it.
     - name: Play it
       do: Click the play button over the video.
       expect: the video plays and the first chapter is highlighted in the Chapters panel
