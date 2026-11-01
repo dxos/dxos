@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { type ComponentType, type PropsWithChildren } from 'react';
 
-import { type ViewportProps } from '@dxos/react-ui-canvas';
+import { type ViewPlace, type ViewportProps } from '@dxos/react-ui-canvas';
 
 import { type CameraOps, type Dimension, type DimensionContext } from '../config.ts';
 import { createViewState } from '../store.ts';
@@ -54,10 +54,27 @@ export const createViewDimension =
     );
     const setCamera = (camera: C) =>
       registry.get(atoms.picture) ? registry.set(pictureCamera, camera) : host.report(camera);
+    // A drill into a composite's parts is the composite opened on its own, as 2D isolates it.
+    const place = Atom.keepAlive(
+      Atom.make((get): ViewPlace => {
+        const editing = get(view.atoms.editing);
+        const { layouts } = get(atoms.document);
+        const at = editing.findIndex((id) => layouts.find((layout) => layout.id === id)?.kind === 'composite');
+        const root = get(atoms.rootLayout);
+        return at >= 0
+          ? { path: editing.slice(at), isolate: editing[at] }
+          : { path: editing.length > 0 ? [...editing] : root === undefined ? [] : [root] };
+      }),
+    );
     const navigation: EditorNavigation = {
-      atoms: { path: view.atoms.editing, zoomable, percent },
+      atoms: { path: view.atoms.editing, place, zoomable, percent },
       commands: {
         open: view.open,
+        openPlace: ({ path, isolate }, select = []) => {
+          const root = registry.get(atoms.rootLayout);
+          view.open(isolate === undefined || root === undefined ? path : [root, ...path]);
+          view.select(select);
+        },
         fit: () => {
           const current = registry.get(viewer) ?? registry.get(host.authored);
           const open = registry.get(atoms.layout);

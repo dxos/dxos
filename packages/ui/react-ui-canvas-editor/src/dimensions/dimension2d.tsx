@@ -31,6 +31,7 @@ import {
   type Kinds,
   type NodeRegistry,
   SceneLayer,
+  type ViewPlace,
   chainEdits,
   compositeBounds,
   compositeViews,
@@ -229,10 +230,17 @@ export const createDimension2D =
     );
     const move = (command: (controller: CanvasController) => void) =>
       registry.get(zoomable) && engine.controller && command(engine.controller);
+    const place = Atom.keepAlive(
+      Atom.make((get): ViewPlace => {
+        const isolation = get(canvas.isolation);
+        return isolation ? { path: get(canvas.path), isolate: isolation.composite } : { path: get(canvas.path) };
+      }),
+    );
     const navigation: EditorNavigation = {
-      atoms: { path, zoomable, percent },
+      atoms: { path, place, zoomable, percent },
       commands: {
         open: (next) => engine.controller?.navigation.openView(next.length > 0 ? next : [root], { select: [] }),
+        openPlace: (next, select = []) => engine.controller?.navigation.openPlace(next, { animate: false, select }),
         fit: () => move((controller) => controller.navigation.fit()),
         actual: () => move((controller) => controller.navigation.resetZoom()),
         zoomBy: (factor) => move((controller) => controller.navigation.zoomBy(factor)),

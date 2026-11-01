@@ -7,7 +7,7 @@ import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { type Timeline } from '@dxos/animation';
 import { createContext } from '@dxos/react-hooks';
-import { type ActiveTool, type BackgroundGrid, type FaceSelection } from '@dxos/react-ui-canvas';
+import { type ActiveTool, type BackgroundGrid, type FaceSelection, type ViewPlace } from '@dxos/react-ui-canvas';
 import { type Layer, type LayoutIntent, type ModelIntent, type Scene } from '@dxos/scene';
 
 import { type SceneChoice } from '../../components/index.ts';
@@ -88,6 +88,8 @@ export type EditorDocument = SceneAspect<DocumentAtoms, DocumentCommands> & { co
 export type NavigationAtoms = {
   /** The drill path into the scene's layouts: the root layout first; empty when the scene's own layout is open. */
   path: Atom.Atom<readonly string[]>;
+  /** Where the canvas is open: a View's path from the scene's layout, or a composite opened on its own and the path in it. */
+  place: Atom.Atom<ViewPlace>;
   /** The camera bar shows: there is a camera the viewer may move. */
   zoomable: Atom.Atom<boolean>;
   /** The zoom as a percentage of the authored camera's. */
@@ -98,6 +100,8 @@ export type NavigationAtoms = {
 export type NavigationCommands = {
   /** Opens a layout by its drill path, the scene's own layout first. */
   open: (path: readonly string[]) => void;
+  /** Opens a place (a View's path, or a composite on its own), then selects `select` there. */
+  openPlace: (place: ViewPlace, select?: readonly string[]) => void;
   /** Frames the open layout's content. */
   fit: () => void;
   /** Actual size: the authored camera's scale, about the open layout's content. */

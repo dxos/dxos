@@ -123,7 +123,7 @@ export const PropertiesSection = () => {
   );
 };
 
-/** Views: the scene's layout tree, with a composite's parts under it; a row selects, a composite row drills in. */
+/** Views: the scene's layout tree; a row selects at its place (a composite's part inside the composite on its own), a View row opens. */
 export const ViewsSection = () => {
   const { atoms, commands } = useSceneDocument('SceneEditor.Views');
   const navigation = useSceneNavigation('SceneEditor.Views');
@@ -131,14 +131,11 @@ export const ViewsSection = () => {
   const document = useAtomValue(atoms.document);
   const scene = useAtomValue(atoms.scene);
   const readonly = useAtomValue(atoms.readonly);
-  const rootLayout = useAtomValue(atoms.rootLayout);
   const sceneChoice = useAtomValue(atoms.sceneChoice);
   const selected = useAtomValue(selection.atoms.selection);
-  const path = useAtomValue(navigation.atoms.path);
+  const place = useAtomValue(navigation.atoms.place);
   const record = document.scenes.find((entry) => entry.id === scene);
   const tree = useMemo(() => layoutTree(document, record), [document, record]);
-  const open = (layout: string | undefined) =>
-    navigation.commands.open(layout === undefined || layout === rootLayout ? [] : [rootLayout ?? '', layout]);
   return (
     <InspectorSection section={VIEWS_INSPECTOR}>
       <ViewsInspector
@@ -146,12 +143,9 @@ export const ViewsSection = () => {
         readonly={readonly}
         tree={tree}
         selected={new Set(selected)}
-        place={{ path: rootLayout === undefined ? [] : path.length > 0 ? [...path] : [rootLayout] }}
-        onSelect={(next) => {
-          open(next.path.at(-1));
-          selection.commands.select(next.ids);
-        }}
-        onOpen={(next) => open(next.at(-1))}
+        place={place}
+        onSelect={({ ids, ...next }) => navigation.commands.openPlace(next, ids)}
+        onOpen={(path) => navigation.commands.open(path.length > 1 ? path : [])}
         onReorder={
           readonly
             ? undefined

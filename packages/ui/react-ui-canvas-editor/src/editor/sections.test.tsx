@@ -64,11 +64,22 @@ const document = (hidden = false): Scene.SceneDocument => ({
         a: { id: 'a', type: 'cube', center: { x: 0, y: 0, z: 0 }, overrides: { hue: 'red' } },
         b: { id: 'b', type: 'cube', center: { x: 2, y: 0, z: 0 }, layer: 'back' },
         c: { id: 'c', object: 'gear', center: { x: 4, y: 0, z: 0 } },
+        p: { id: 'p', object: 'room', center: { x: 6, y: 0, z: 0 } },
       },
     },
-    { id: 'gear-parts', dim: '3d', model: 'm', elements: { g: { id: 'g', type: 'sphere' } } },
+    { id: 'gear-parts', dim: '3d', model: 'm', kind: 'composite', elements: { g: { id: 'g', type: 'sphere' } } },
+    { id: 'room-view', dim: '3d', model: 'm', elements: { r: { id: 'r', type: 'cube' } } },
   ],
-  models: [{ id: 'm', dim: '3d', objects: { gear: { id: 'gear', type: 'composite', parts: 'gear-parts' } } }],
+  models: [
+    {
+      id: 'm',
+      dim: '3d',
+      objects: {
+        gear: { id: 'gear', type: 'composite', parts: 'gear-parts' },
+        room: { id: 'room', type: 'portal', parts: 'room-view' },
+      },
+    },
+  ],
 });
 
 /** Selects `ids` once mounted, as a click in the viewport would. */
@@ -112,9 +123,28 @@ describe('SceneEditor sections', () => {
 
   test('Views lists the scene layout and drills into a composite', async () => {
     render(<Editor />);
-    await waitFor(() => expect(screen.getByTestId('viewport').dataset.elements).toBe('a,b,c'));
+    await waitFor(() => expect(screen.getByTestId('viewport').dataset.elements).toBe('a,b,c,p'));
     // The composite's row carries its parts under it; selecting a part opens the parts layout.
     expect(screen.getAllByText('gear').length).toBeGreaterThan(0);
+  });
+
+  test("Views opens a portal's View on a double-click, below the scene layout", async () => {
+    render(<Editor />);
+    await userEvent.dblClick(await screen.findByTestId('views-row-p'));
+    await waitFor(() => expect(screen.getByTestId('viewport').dataset.editing).toBe('room-view'));
+  });
+
+  test('Views opens a composite on its own to select one of its parts', async () => {
+    render(<Editor />);
+    const gear = await screen.findByTestId('views-row-c');
+    await userEvent.click(gear.querySelector<HTMLElement>('[data-part="branch-trigger"]') ?? gear);
+    await userEvent.click(await screen.findByTestId('views-row-c/g'));
+    await waitFor(() => expect(screen.getByTestId('viewport').dataset.editing).toBe('gear-parts'));
+    await waitFor(() =>
+      expect(screen.getByTestId('views-row-c/g').closest('[role="treeitem"]')?.getAttribute('aria-selected')).toBe(
+        'true',
+      ),
+    );
   });
 
   test('Objects place picks the place tool for that object', async () => {
@@ -133,7 +163,7 @@ describe('SceneEditor sections', () => {
     await userEvent.click(await screen.findByTestId('layer-toggle-back'));
     expect(onLayersChange).toHaveBeenCalledWith('root', [{ id: 'back', name: 'Back', z: 'a0', hidden: true }]);
     rerender(<Editor doc={document(true)} onLayersChange={onLayersChange} />);
-    expect(screen.getByTestId('viewport').dataset.elements).toBe('a,c');
+    expect(screen.getByTestId('viewport').dataset.elements).toBe('a,c,p');
   });
 
   test('the inspector toolbar groups the selection through the command table', async () => {

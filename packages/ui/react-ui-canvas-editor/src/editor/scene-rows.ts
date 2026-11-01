@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ViewTreeItem, between } from '@dxos/react-ui-canvas';
+import { type ViewPlace, type ViewTreeItem, between } from '@dxos/react-ui-canvas';
 import {
   type ElementEndpoint,
   type Layer,
@@ -63,13 +63,21 @@ export const objectEntries = (doc: Scene.SceneDocument): ObjectEntry[] => {
 };
 
 /**
- * The views tree over a document's scene: its layout as the root row, each element under it, and under an element
- * placing a composite object, that object's parts, read-only, as the 2D tree shows an instance's contents.
+ * The views tree over a document's scene, as the 2D tree has always read (VIEWS.md §4): its layout as the root row; an
+ * element whose parts are a View is that View's row, with the View's path and its contents as children; an element
+ * placing a composite shows the composite's parts read-only, each selected inside the composite opened on its own.
  */
 export const layoutTree = (doc: Scene.SceneDocument, scene = rootScene(doc)): ViewTreeItem => {
   const root = sceneLayout(doc, scene);
-  const rowsOf = (layout: Scene.LayoutRecord, path: string[], prefix: string, readonly: boolean, seen: Set<string>) => {
+  const rowsOf = (
+    layout: Scene.LayoutRecord,
+    path: string[],
+    prefix: string,
+    object: ViewPlace | undefined,
+    seen: Set<string>,
+  ): ViewTreeItem[] => {
     const resolved = resolveLayout(doc, layout);
+    const inObject = object ? { readonly: true, object } : {};
     // Rows list in drawing order, so a drag among them restacks as it looks.
     return Object.values(layout.elements)
       .sort(byZ)
@@ -77,16 +85,30 @@ export const layoutTree = (doc: Scene.SceneDocument, scene = rootScene(doc)): Vi
         const item = resolved[element.id];
         const parts = item?.parts === undefined || seen.has(item.parts) ? undefined : findLayout(doc, item.parts);
         const id = `${prefix}${element.id}`;
-        return {
+        const row = {
           id,
-          kind: element.type === 'link' ? 'link' : parts ? 'instance' : 'node',
           element: element.id,
-          path,
           container: layout.id,
           label: element.label ?? element.id,
           type: item?.type,
-          ...(readonly ? { readonly: true, object: { path } } : {}),
-          children: parts ? rowsOf(parts, [...path, parts.id], `${id}/`, true, new Set([...seen, parts.id])) : [],
+          ...inObject,
+        };
+        const inside = parts && new Set([...seen, parts.id]);
+        if (parts && inside && parts.kind !== 'composite') {
+          const view = [...path, parts.id];
+          return {
+            ...row,
+            kind: 'view',
+            path: view,
+            children: rowsOf(parts, view, `${id}/`, object && { ...object, path: [...object.path, parts.id] }, inside),
+          };
+        }
+        return {
+          ...row,
+          kind: element.type === 'link' ? 'link' : parts ? 'instance' : 'node',
+          path,
+          children:
+            parts && inside ? rowsOf(parts, path, `${id}/`, { path: [parts.id], isolate: parts.id }, inside) : [],
         };
       });
   };
@@ -96,7 +118,7 @@ export const layoutTree = (doc: Scene.SceneDocument, scene = rootScene(doc)): Vi
         kind: 'view',
         path: [root.id],
         label: root.name ?? scene?.name ?? root.id,
-        children: rowsOf(root, [root.id], '', false, new Set([root.id])),
+        children: rowsOf(root, [root.id], '', undefined, new Set([root.id])),
       }
     : { id: 'empty', kind: 'view', path: [], label: '', children: [] };
 };

@@ -23,15 +23,21 @@ import {
 const encapsulated = () => Dsl.readScenes(EXEMPLARS.encapsulated).document;
 
 describe('scene rows', () => {
-  test('the views tree is the scene layout, with a composite placing its parts read-only under it', () => {
-    const doc = encapsulated();
-    const tree = layoutTree(doc);
-    expect(tree.kind).toBe('view');
-    const shell = tree.children.find((row) => row.kind === 'instance');
-    expect(shell).toBeDefined();
-    expect(shell?.children.length).toBeGreaterThan(0);
-    expect(shell?.children.every((row) => row.readonly)).toBe(true);
+  test('the views tree is the scene layout: a portal is a View row with its full path, and a composite opens on its own', () => {
+    const tree = layoutTree(encapsulated());
+    expect(tree).toMatchObject({ kind: 'view', path: ['system'] });
     expect(tree.children.some((row) => row.kind === 'link')).toBe(true);
+    // `shell` places `team`, whose parts are a plain View: the row opens that View, below the root.
+    const shell = tree.children.find((row) => row.element === 'shell');
+    expect(shell).toMatchObject({ kind: 'view', path: ['system', 'cluster'], container: 'system' });
+    expect(shell?.children.every((row) => !row.readonly && row.path.join() === 'system,cluster')).toBe(true);
+    // The ring group is a composite: its parts are read-only where it is placed and edited in it, opened on its own.
+    const team = shell?.children.find((row) => row.element === 'team');
+    expect(team).toMatchObject({ kind: 'instance', path: ['system', 'cluster'], container: 'cluster' });
+    expect(team?.children.length).toBeGreaterThan(0);
+    for (const part of team?.children ?? []) {
+      expect(part).toMatchObject({ readonly: true, object: { path: ['cluster/team'], isolate: 'cluster/team' } });
+    }
   });
 
   test('objects list the model with how many elements place each', () => {
