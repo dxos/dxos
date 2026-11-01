@@ -4,6 +4,8 @@
 
 import { type Scene } from '@dxos/scene';
 
+import { type WorkPlane } from './plane.ts';
+
 type Vec3 = Scene.Vec3;
 
 /** Babylon's `ArcRotateCamera` pose. */
@@ -108,24 +110,29 @@ const screenRay = (camera: Scene.Camera3D, viewport: Viewport, screen: { x: numb
 };
 
 /**
- * Where the ray through a pixel meets the horizontal plane at `height` (the ground by default); undefined when the ray
- * runs parallel to the plane or points away from it. The inverse of `project` for points on that plane.
+ * Where the ray through a pixel meets `plane`; undefined when the ray runs parallel to the plane or points away from it.
+ * The inverse of `project` for points on that plane.
  */
-export const groundPoint = (
+export const planePoint = (
   camera: Scene.Camera3D,
   viewport: Viewport,
   screen: { x: number; y: number },
-  height = 0,
+  plane: WorkPlane,
 ): Vec3 | undefined => {
   const { origin, direction } = screenRay(camera, viewport, screen);
-  if (Math.abs(direction.y) < 1e-9) {
+  const facing = dot(direction, plane.normal);
+  if (Math.abs(facing) < 1e-9) {
     return undefined;
   }
-  const distance = (height - origin.y) / direction.y;
+  const distance = dot(subtract(plane.origin, origin), plane.normal) / facing;
   if (distance <= 0) {
     return undefined;
   }
-  return { x: origin.x + direction.x * distance, y: height, z: origin.z + direction.z * distance };
+  return {
+    x: origin.x + direction.x * distance,
+    y: origin.y + direction.y * distance,
+    z: origin.z + direction.z * distance,
+  };
 };
 
 /** Degrees the orbit turns per pixel dragged. */

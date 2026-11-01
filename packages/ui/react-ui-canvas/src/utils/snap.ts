@@ -19,3 +19,14 @@ export const snapTo = (value: number, step: number): number => (step > 0 ? Math.
  */
 export const magnetTo = (value: number, step: number, detent: number): number =>
   detentOf(value, snapTo(value, step), Math.min(detent, step / 4));
+
+/** The stop whose `delta` is nearest `value`, if within `detent`: object snapping picks the closest face it can reach. */
+export const nearestStop = <T extends { delta: number }>(
+  value: number,
+  stops: readonly T[],
+  detent: number,
+): T | undefined =>
+  stops.reduce<T | undefined>((best, stop) => {
+    const gap = Math.abs(stop.delta - value);
+    return gap <= detent && (!best || gap < Math.abs(best.delta - value)) ? stop : best;
+  }, undefined);

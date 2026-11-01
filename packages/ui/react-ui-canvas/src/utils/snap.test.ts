@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { detentOf, magnetTo, snapTo } from './snap.ts';
+import { detentOf, magnetTo, nearestStop, snapTo } from './snap.ts';
 
 describe('snap', () => {
   test('detentOf holds a value on its snapped place within the detent and leaves it otherwise', ({ expect }) => {
@@ -28,5 +28,18 @@ describe('snap', () => {
     expect(magnetTo(0.375, 0.25, 0.2)).toBe(0.375);
     expect(magnetTo(0.32, 0.25, 0.2)).toBe(0.32);
     expect(magnetTo(0.3, 0.25, 0.2)).toBe(0.25);
+  });
+
+  test('nearestStop is the stop closest to a value within the detent; none when every stop is farther', ({
+    expect,
+  }) => {
+    const stops = [
+      { delta: 1, id: 'a' },
+      { delta: 1.3, id: 'b' },
+      { delta: -2, id: 'c' },
+    ];
+    expect(nearestStop(1.2, stops, 0.15)?.id).toBe('b');
+    expect(nearestStop(-1.9, stops, 0.15)?.id).toBe('c');
+    expect(nearestStop(0.5, stops, 0.15)).toBeUndefined();
   });
 });

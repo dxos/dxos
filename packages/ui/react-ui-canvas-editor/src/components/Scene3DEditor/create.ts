@@ -9,7 +9,7 @@ import { type Scene } from '@dxos/scene';
 
 import { screenLength } from './gizmo.ts';
 
-/** A base swept on the ground: its centre (on the ground) and its extents along x and z. */
+/** A base swept on the work plane: its centre (on the plane) and its extents along x and z. */
 export type GroundBase = { center: Scene.Vec3; width: number; depth: number };
 
 /** The least size a dragged shape takes when snapping is off. */
@@ -40,7 +40,12 @@ export const dragBase = (
   if (box.width === 0 || box.height === 0) {
     return undefined;
   }
-  return { center: { x: box.x + box.width / 2, y: 0, z: box.y + box.height / 2 }, width: box.width, depth: box.height };
+  // The base lies on the plane the press was on: the ground, or a raised work plane.
+  return {
+    center: { x: box.x + box.width / 2, y: from.y, z: box.y + box.height / 2 },
+    width: box.width,
+    depth: box.height,
+  };
 };
 
 /**
@@ -76,14 +81,14 @@ export const createdElement = (
     return {
       id,
       type: kind,
-      center: { ...base.center, y: diameter / 2 },
+      center: { ...base.center, y: base.center.y + diameter / 2 },
       scale: { x: diameter, y: diameter, z: diameter },
     };
   }
   return {
     id,
     type: kind,
-    center: { ...base.center, y: height / 2 },
+    center: { ...base.center, y: base.center.y + height / 2 },
     scale: { x: base.width, y: height, z: base.depth },
   };
 };
@@ -116,7 +121,7 @@ export const placedElement = (
 
 /**
  * An element placing `object` dragged out over `base`: with its aspect locked, scaled evenly to cover the base;
- * otherwise stretched to the base and `height`. It stands on the ground, as a created shape does.
+ * otherwise stretched to the base and `height`. It stands on the base, as a created shape does.
  */
 export const placedOnBase = (
   id: string,
@@ -131,14 +136,14 @@ export const placedOnBase = (
     return {
       id,
       object,
-      center: { ...base.center, y: (unit.y * factor) / 2 },
+      center: { ...base.center, y: base.center.y + (unit.y * factor) / 2 },
       scale: { x: factor, y: factor, z: factor },
     };
   }
   return {
     id,
     object,
-    center: { ...base.center, y: height / 2 },
+    center: { ...base.center, y: base.center.y + height / 2 },
     scale: { x: base.width / unit.x, y: height / unit.y, z: base.depth / unit.z },
   };
 };

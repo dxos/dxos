@@ -142,6 +142,21 @@ describe('extrudeIntent', () => {
     expect(drag(2 * screenStep - 4)).toMatchObject({ distance: 2 });
   });
 
+  test("a face pulled near another body's side is held flush on it, ahead of the grid; a landing within the detent too", () => {
+    // The face is at y 0.5; a body above starts at y 1.6, which the face meets after 1.1.
+    const boxes = { above: { min: { x: -1, y: 1.6, z: -1 }, max: { x: 1, y: 2, z: 1 } } };
+    const pull = (units: number, landing = false) => {
+      const intent = extrudeIntent({
+        ...{ id: 'e', target: 'box', normal: up, camera, viewport, point, step: 0.25, landing, boxes, side: 0.5 },
+        dragPixels: units * screenStep,
+      });
+      return intent?.kind === 'extrude' ? intent.distance : undefined;
+    };
+    expect(pull(1.08)).toBeCloseTo(1.1, 3);
+    expect(pull(1.08, true)).toBeCloseTo(1.1, 3);
+    expect(pull(0.6, true)).toBe(0.5);
+  });
+
   test('a drag too short to be one makes no intent', () => {
     expect(
       extrudeIntent({ id: 'e', target: 'box', normal: up, dragPixels: 2, camera, viewport, point }),

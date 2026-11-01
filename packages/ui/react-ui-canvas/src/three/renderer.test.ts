@@ -8,6 +8,7 @@ import { describe, expect, test } from 'vitest';
 import { type Scene } from '@dxos/scene';
 
 import { NEU_PALETTE } from '../model/index.ts';
+import { GROUND_PLANE, planeThrough } from './plane.ts';
 import { renderList } from './render-list.ts';
 import { SceneRenderer3D, castsNeuShadow, itemSignature } from './renderer.ts';
 
@@ -265,6 +266,93 @@ describe('SceneRenderer3D.pick', () => {
   test('the screen centre over a cube at the origin picks its key', () => {
     const view = renderer(doc([{ id: 'a', type: 'cube', center: { x: 0, y: 0, z: 0 } }]));
     expect(view.pick({ x: 400, y: 300 })).toMatchObject({ item: 'a' });
+    view.dispose();
+  });
+
+  test('empty space picks a point on the work plane, which is the ground until it moves', () => {
+    const view = renderer(doc([{ id: 'a', type: 'cube', center: { x: 20, y: 0, z: 0 } }]));
+    expect(view.plane).toEqual(GROUND_PLANE);
+    view.setPlane(planeThrough(GROUND_PLANE, { x: 0, y: -2, z: 0 }));
+    expect(view.pick({ x: 400, y: 300 }).point?.y).toBeCloseTo(-2);
+    view.dispose();
+  });
+
+  test("an item's bounds and the middle of one of its faces, in the world; an item not drawn has none", () => {
+    const view = renderer(doc([{ id: 'a', type: 'cube', center: { x: 1, y: 2, z: 3 }, scale: { x: 2, y: 4, z: 6 } }]));
+    const round = (point?: Scene.Vec3) => point && [point.x, point.y, point.z].map((value) => Number(value.toFixed(2)));
+    expect(round(view.bounds('a')?.min)).toEqual([0, 0, 0]);
+    expect(round(view.bounds('a')?.max)).toEqual([2, 4, 6]);
+    expect(round(view.faceCenter('a', { x: 0, y: 1, z: 0 }))).toEqual([1, 4, 3]);
+    expect(round(view.faceCenter('a', { x: -1, y: 0, z: 0 }))).toEqual([0, 2, 3]);
+    expect(view.bounds('missing')).toBeUndefined();
+    view.dispose();
+  });
+
+  test("every other item's world bounds, for snapping a moving one against", () => {
+    const view = renderer(
+      doc([
+        { id: 'a', type: 'cube', center: { x: 0, y: 0.5, z: 0 } },
+        { id: 'b', type: 'cube', center: { x: 3, y: 0.5, z: 0 } },
+      ]),
+    );
+    const boxes = view.itemBounds(['a']);
+    expect(Object.keys(boxes)).toEqual(['b']);
+    expect(boxes.b.min.x).toBeCloseTo(2.5);
+    expect(boxes.b.max.y).toBeCloseTo(1);
+    view.dispose();
+  });
+
+  test("a moving composite's parts and the frame round a moving part are not bounds to snap against", () => {
+    const document = doc(
+      [
+        { id: 'a', object: 'box', center: { x: 0, y: 0, z: 0 }, scale: { x: 3, y: 3, z: 3 } },
+        { id: 'c', type: 'cube', center: { x: 5, y: 0, z: 0 } },
+      ],
+      {
+        layouts: [
+          { id: 'inside', dim: '3d', elements: { b: { id: 'b', type: 'cube', center: { x: 0, y: 0, z: 0 } } } },
+        ],
+        models: [{ id: 'm', dim: '3d', objects: { box: { id: 'box', type: 'sphere', parts: 'inside' } } }],
+      },
+    );
+    const view = renderer({
+      ...document,
+      layouts: document.layouts.map((layout) => (layout.id === 'root' ? { ...layout, model: 'm' } : layout)),
+    });
+    expect(Object.keys(view.itemBounds(['a'])).sort()).toEqual(['c']);
+    expect(Object.keys(view.itemBounds(['a/b'])).sort()).toEqual(['c']);
+    view.dispose();
+  });
+
+  test('faces a move is flush with are drawn in the snap colour, apart from the selected face, and cleared', () => {
+    const engine = new NullEngine({
+      renderWidth: 800,
+      renderHeight: 600,
+      textureSize: 256,
+      deterministicLockstep: false,
+      lockstepMaxSteps: 1,
+    });
+    const view = new SceneRenderer3D({ engine, theme: 'cad', background: '#ffffff', snap: '#f59e0b' });
+    view.render(renderList(doc([{ id: 'b', type: 'cube', center: { x: 3, y: 0.5, z: 0 } }])), CAMERA);
+    expect(view.snapped).toEqual([]);
+    view.snapFaces([{ key: 'b', normal: { x: -1, y: 0, z: 0 } }]);
+    expect(view.snapped).toEqual([{ key: 'b', normal: { x: -1, y: 0, z: 0 }, color: '#f59e0b' }]);
+    view.setSnapColor('#00ff00');
+    expect(view.snapped[0]?.color).toBe('#00ff00');
+    view.snapFaces([]);
+    expect(view.snapped).toEqual([]);
+    view.dispose();
+  });
+
+  test('the face arrow stands where it is put, along its face, and hides', () => {
+    const view = renderer(doc([{ id: 'a', type: 'cube', center: { x: 0, y: 0, z: 0 } }]));
+    expect(view.faceArrow).toBeUndefined();
+    view.showFaceArrow({ point: { x: 0, y: 0.5, z: 0 }, normal: { x: 0, y: 1, z: 0 } });
+    expect(view.faceArrow).toEqual({ point: { x: 0, y: 0.5, z: 0 }, normal: { x: 0, y: 1, z: 0 } });
+    view.showFaceArrow({ point: { x: -0.5, y: 0, z: 0 }, normal: { x: -1, y: 0, z: 0 } });
+    expect(view.faceArrow).toEqual({ point: { x: -0.5, y: 0, z: 0 }, normal: { x: -1, y: 0, z: 0 } });
+    view.showFaceArrow(undefined);
+    expect(view.faceArrow).toBeUndefined();
     view.dispose();
   });
 

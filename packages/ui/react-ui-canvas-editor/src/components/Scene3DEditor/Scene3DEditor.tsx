@@ -6,16 +6,22 @@ import React, { type ReactNode, useCallback, useEffect, useLayoutEffect, useMemo
 
 import { DETENT_PX, isHandDrag, useCommandHeld } from '@dxos/react-ui-canvas';
 import {
+  type Box,
   DEFAULT_CAMERA,
   type GeometrySource,
   type GizmoMode,
+  GROUND_PLANE,
   type RenderItem,
   SceneLabels,
   SNAP,
   type Theme3D,
+  type WorkPlane,
   type WorldTransform,
-  groundPoint,
+  flushWith,
   onScene,
+  planeAxes,
+  planePoint,
+  planeThrough,
   project,
   renderList,
   toTheme3D,
@@ -47,6 +53,7 @@ import {
 } from './create.ts';
 import { frameTransform, scaleToLocal, toLocal } from './frame.ts';
 import { axisOf, extrudeIntent, gizmoIntent, screenLength } from './gizmo.ts';
+import { planeMove } from './move.ts';
 import { targetOf } from './target.ts';
 import {
   type FaceSelection,
@@ -86,6 +93,11 @@ export type Scene3DEditorProps = Util.ThemedClassName<{
   axes?: boolean;
   /** Gizmos and placing snap to the grid; holding Alt frees one gesture. */
   snap?: boolean;
+  /**
+   * The work plane: the grid is drawn on it, a shape is made on it, and a body dragged with Move slides parallel to it.
+   * The ground (y = 0) when unset.
+   */
+  plane?: WorkPlane;
   /** Overlays drawn over the scene (floating panels); their pointer events never reach the scene. */
   children?: ReactNode;
   /** Called with the view's size as it is laid out and resized, e.g. to fit the camera to it. */
@@ -159,6 +171,7 @@ export const Scene3DEditor = ({
   grid = false,
   axes = false,
   snap = false,
+  plane = GROUND_PLANE,
   children,
   onResize,
   camera,
@@ -198,6 +211,10 @@ export const Scene3DEditor = ({
   const [draft, setDraft] = useState<Scene.Element3D>();
   // The extrusion a face drag would make, drawn as the pointer moves but not yet in the layout.
   const [extrusion, setExtrusion] = useState<LayoutIntent>();
+  // A body being dragged on the work plane, drawn where it goes until the document it was committed to moves on.
+  const [moved, setMoved] = useState<{ intent: LayoutIntent; doc: Scene.SceneDocument }>();
+  // Dropped once the document moves on, or an undo back to the document it was drawn over would draw it again.
+  useEffect(() => setMoved(undefined), [doc]);
   // Loaded once Extrude is picked, so the first drag draws its solid rather than a stand-in.
   const geometry = useManifoldGeometry(doc, givenGeometry, { preload: tool === 'extrude' });
   // A released preview is held until the document has what it committed, which a stored document takes a moment to.
@@ -211,11 +228,14 @@ export const Scene3DEditor = ({
   }, [landed]);
   const drawnDoc = useMemo(() => {
     // Until the solid can be built, the face keeps its place rather than a stand-in's.
-    const preview: LayoutIntent | undefined = landed
-      ? undefined
-      : draft
-        ? { kind: 'create', element: draft }
-        : geometry && extrusion;
+    const preview: LayoutIntent | undefined =
+      moved?.doc === doc
+        ? moved.intent
+        : landed
+          ? undefined
+          : draft
+            ? { kind: 'create', element: draft }
+            : geometry && extrusion;
     return preview === undefined
       ? doc
       : {
@@ -224,7 +244,7 @@ export const Scene3DEditor = ({
             record.id === (editingProp ?? scene?.layout) && record.dim === '3d' ? applyIntent(record, preview) : record,
           ),
         };
-  }, [doc, draft, extrusion, geometry, landed, editingProp, scene]);
+  }, [doc, draft, extrusion, moved, geometry, landed, editingProp, scene]);
   const list = useMemo(() => renderList(drawnDoc, scene), [drawnDoc, scene]);
   const frames = useMemo(() => {
     const byFrame = new Map<string, Map<string, RenderItem>>();
@@ -274,6 +294,7 @@ export const Scene3DEditor = ({
   }, [renderer, shown, view, geometry, size]);
   useLayoutEffect(() => renderer?.setGrid(grid), [renderer, grid]);
   useLayoutEffect(() => renderer?.setAxes(axes), [renderer, axes]);
+  useLayoutEffect(() => renderer?.setPlane(plane), [renderer, plane]);
   // Holding Alt frees the gesture under way from the grid.
   const [alt, setAlt] = useState(false);
   useEffect(() => {
@@ -360,6 +381,33 @@ export const Scene3DEditor = ({
     // The face moves as the drag extrudes it, so its outline is not drawn meanwhile.
     renderer?.hoverFace(extrusion === undefined ? hoveredKey : undefined, hoveredFace?.normal);
   }, [renderer, hoveredKey, hoveredFace, extrusion, shown]);
+  // The face an extrusion is pulling, from the middle of where it began; its arrow goes out with it.
+  const [pulling, setPulling] = useState<{ center: Scene.Vec3; normal: Scene.Vec3 }>();
+  // Extrude shows a single-axis arrow on the face it would pull: the selected face, else the one under the pointer.
+  useLayoutEffect(() => {
+    if (!renderer) {
+      return;
+    }
+    if (tool !== 'extrude') {
+      renderer.showFaceArrow(undefined);
+      return;
+    }
+    if (pulling) {
+      // The distance is in the edited layout's units; the arrow stands in the world.
+      const out = extrusion?.kind === 'extrude' ? extrusion.distance * transform.scale : 0;
+      const { center, normal } = pulling;
+      renderer.showFaceArrow({
+        point: { x: center.x + normal.x * out, y: center.y + normal.y * out, z: center.z + normal.z * out },
+        normal,
+      });
+      return;
+    }
+    const target = face ?? hoveredFace;
+    const key = target === undefined ? undefined : keys.get(target.element)?.key;
+    const normal = target && axisOf(target.normal);
+    const center = key === undefined || !normal ? undefined : renderer.faceCenter(key, normal);
+    renderer.showFaceArrow(center && normal ? { point: center, normal } : undefined);
+  }, [renderer, tool, pulling, extrusion, transform, face, hoveredFace, keys, shown]);
 
   const elementAt = useCallback(
     (point: { x: number; y: number }) => {
@@ -477,6 +525,9 @@ export const Scene3DEditor = ({
     point: Scene.Vec3;
     // Read on the press: the preview that follows replaces the solid's mesh.
     thickness?: number;
+    // Where the face is along its axis, and the other bodies' bounds it is held flush against.
+    side?: number;
+    boxes: Record<string, Box>;
   }>(undefined);
   // What a swept base, its height and an extrusion snap to: the minor grid, unless snapping is off or Alt held.
   const step = snap && !alt ? SNAP.move : 0;
@@ -515,6 +566,8 @@ export const Scene3DEditor = ({
         step,
         landing,
         thickness: start.thickness,
+        boxes: start.boxes,
+        side: start.side,
       });
       // The distance was measured in the world; the layout may be a composite's parts drawn at another scale.
       return intent?.kind === 'extrude'
@@ -523,10 +576,26 @@ export const Scene3DEditor = ({
     },
     [view, size, layout, transform, step],
   );
+  /** Shows which other bodies' sides an extrusion's face has come to lie on. */
+  const showFlush = useCallback(
+    (intent: LayoutIntent | undefined) => {
+      const start = extruding.current;
+      if (!start || start.side === undefined || intent?.kind !== 'extrude') {
+        renderer?.snapFaces([]);
+        return;
+      }
+      const axis = intent.face.x !== 0 ? 'x' : intent.face.y !== 0 ? 'y' : 'z';
+      const at = start.side + intent.face[axis] * intent.distance * transform.scale;
+      renderer?.snapFaces(step > 0 ? flushWith([at], start.boxes, axis) : []);
+    },
+    [renderer, transform, step],
+  );
   const onExtrudeEnd = useCallback(
     (end: { x: number; y: number }) => {
       const intent = extrusionAt(end, true);
       extruding.current = undefined;
+      setPulling(undefined);
+      renderer?.snapFaces([]);
       setExtrusion(intent);
       if (intent?.kind !== 'extrude') {
         return false;
@@ -536,7 +605,7 @@ export const Scene3DEditor = ({
       onSelect([intent.id]);
       return true;
     },
-    [extrusionAt, editing, onIntent, onSelect, onFaceChange],
+    [extrusionAt, renderer, editing, onIntent, onSelect, onFaceChange],
   );
 
   const press = useRef<{ x: number; y: number }>(undefined);
@@ -598,6 +667,43 @@ export const Scene3DEditor = ({
     return { x: event.clientX - (rect?.left ?? 0), y: event.clientY - (rect?.top ?? 0) };
   };
 
+  // A press on a body with Move: what slides, on the plane through where it was grabbed, parallel to the work plane.
+  const moving = useRef<{
+    ids: string[];
+    grab: Scene.Vec3;
+    plane: WorkPlane;
+    // The moving bodies' world bounds together, and the other bodies' they are held flush against.
+    box: Box;
+    boxes: Record<string, Box>;
+    selected: boolean;
+  }>(undefined);
+  /** The move a body drag makes with the pointer at `screen`, held as it goes or landed; and the sides it is flush with. */
+  const moveAt = (current: NonNullable<typeof moving.current>, screen: { x: number; y: number }, landing = false) => {
+    const point = planePoint(view, size, screen, current.plane);
+    if (!point) {
+      return undefined;
+    }
+    const along = (direction: Scene.Vec3) => {
+      const pixels = screenLength(view, size, current.grab, direction) ?? 0;
+      return pixels > 0 ? DETENT_PX / pixels : 0;
+    };
+    const { delta, faces } = planeMove({
+      delta: { x: point.x - current.grab.x, y: point.y - current.grab.y, z: point.z - current.grab.z },
+      box: current.box,
+      axes: planeAxes(current.plane),
+      step,
+      detent: { x: along({ x: 1, y: 0, z: 0 }), y: along({ x: 0, y: 1, z: 0 }), z: along({ x: 0, y: 0, z: 1 }) },
+      // Snapping off (or Alt held) frees the body from the other bodies' sides as well as the grid.
+      boxes: step > 0 ? current.boxes : undefined,
+      landing,
+    });
+    // The move was measured in the world; the layout may be a composite's parts drawn at another scale.
+    const toLayout = (value: number) => Math.round((value / transform.scale) * 1000) / 1000 + 0;
+    const offset = { x: toLayout(delta.x), y: toLayout(delta.y), z: toLayout(delta.z) };
+    const intent: LayoutIntent = { kind: 'move', ids: current.ids, delta: offset };
+    return { intent, faces, still: offset.x === 0 && offset.y === 0 && offset.z === 0 };
+  };
+
   return (
     <div
       ref={containerRef}
@@ -639,7 +745,9 @@ export const Scene3DEditor = ({
                 : { kind: 'place', object: tool.place, definition: modelObject(doc, layout, tool.place) };
         if (shape && event.button === 0 && !isHandDrag(event) && !unplaced) {
           const screen = local(event);
-          const ground = clickCreates(tool, elementAt(screen).element) ? groundPoint(view, size, screen) : undefined;
+          const ground = clickCreates(tool, elementAt(screen).element)
+            ? planePoint(view, size, screen, plane)
+            : undefined;
           if (ground) {
             sizing.current = {
               phase: 'base',
@@ -650,32 +758,75 @@ export const Scene3DEditor = ({
             event.currentTarget.setPointerCapture(event.pointerId);
           }
         }
+        // With Move, a press on a body (not on the gizmo, which takes its own press) slides it on its plane; within a
+        // click's slop it is still a click, which selects.
+        if (tool === 'move' && event.button === 0 && !isHandDrag(event)) {
+          const screen = local(event);
+          const { hit, element } = renderer?.overGizmo(screen)
+            ? { hit: undefined, element: undefined }
+            : elementAt(screen);
+          const ids =
+            element === undefined
+              ? []
+              : selection.includes(element)
+                ? selection.filter((id) => keys.has(id))
+                : [element];
+          const moveKeys = ids.flatMap((id) => keys.get(id)?.key ?? []);
+          const bounds = moveKeys.flatMap((key) => renderer?.bounds(key) ?? []);
+          if (hit?.point && bounds.length > 0) {
+            const lowest = (axis: 'x' | 'y' | 'z') => Math.min(...bounds.map(({ min }) => min[axis]));
+            const highest = (axis: 'x' | 'y' | 'z') => Math.max(...bounds.map(({ max }) => max[axis]));
+            moving.current = {
+              ids,
+              grab: hit.point,
+              plane: planeThrough(plane, hit.point),
+              box: {
+                min: { x: lowest('x'), y: lowest('y'), z: lowest('z') },
+                max: { x: highest('x'), y: highest('y'), z: highest('z') },
+              },
+              boxes: renderer?.itemBounds(moveKeys) ?? {},
+              selected: false,
+            };
+            setMoved(undefined);
+            event.currentTarget.setPointerCapture(event.pointerId);
+          }
+        }
         // With the command key held a left drag moves the camera, whatever the tool, so it starts no tool gesture.
         if (tool === 'extrude' && event.button === 0 && !isHandDrag(event)) {
           const screen = local(event);
           const { hit, element } = elementAt(screen);
-          // A selected face is the one extruded, wherever the drag starts; otherwise the face pressed on.
-          const selectedFace = face && renderer?.face;
-          const thicknessOf = (id: string, normal: Scene.Vec3) => {
-            const key = keys.get(id)?.key;
-            return key === undefined ? undefined : renderer?.extent(key, normal);
-          };
-          extruding.current = selectedFace
-            ? {
-                screen,
-                element: face.element,
-                normal: face.normal,
-                point: { x: selectedFace.center.x, y: selectedFace.center.y, z: selectedFace.center.z },
-                thickness: thicknessOf(face.element, face.normal),
-              }
-            : element !== undefined && hit?.normal && hit.point
-              ? { screen, element, normal: hit.normal, point: hit.point, thickness: thicknessOf(element, hit.normal) }
-              : undefined;
+          // A selected face is the one extruded, wherever the drag starts; then the face whose arrow is pressed; otherwise
+          // the face pressed on.
+          const onArrow = !face && hoveredFace !== undefined && renderer?.overGizmo(screen) === true;
+          const pressed =
+            element !== undefined && hit?.normal && hit.point ? { element, normal: hit.normal } : undefined;
+          const pulled = face ?? (onArrow ? hoveredFace : pressed);
+          const key = pulled === undefined ? undefined : keys.get(pulled.element)?.key;
+          const normal = pulled && axisOf(pulled.normal);
+          const center = key === undefined || !normal ? undefined : renderer?.faceCenter(key, normal);
+          if (pulled && key !== undefined && normal && center) {
+            const axis = normal.x !== 0 ? 'x' : normal.y !== 0 ? 'y' : 'z';
+            // A face pressed on is pulled from where it was pressed, so the drag reads at that depth; else from its middle.
+            const point = pulled === pressed && hit?.point ? hit.point : center;
+            extruding.current = {
+              screen,
+              element: pulled.element,
+              normal: pulled.normal,
+              point,
+              thickness: renderer?.extent(key, pulled.normal),
+              side: center[axis],
+              boxes: renderer?.itemBounds([key]) ?? {},
+            };
+            setPulling({ center, normal });
+          } else {
+            extruding.current = undefined;
+          }
           extruding.current && event.currentTarget.setPointerCapture(event.pointerId);
         }
       }}
       onPointerMove={(event) => {
-        if (tool === 'extrude' && event.buttons === 0) {
+        // The arrow stands off its face, so the pointer on it keeps that face.
+        if (tool === 'extrude' && event.buttons === 0 && !renderer?.overGizmo(local(event))) {
           const { hit, element } = elementAt(local(event));
           const next =
             element !== undefined && hit?.normal && extrudesFace(tool, element, hit.normal, face)
@@ -684,7 +835,27 @@ export const Scene3DEditor = ({
           setHoveredFace((current) => (sameFace(current, next) ? current : next));
         }
         if (extruding.current) {
-          setExtrusion(extrusionAt(local(event)));
+          const intent = extrusionAt(local(event));
+          setExtrusion(intent);
+          showFlush(intent);
+          return;
+        }
+        const body = moving.current;
+        if (body && event.buttons & 1) {
+          if (!pastSlop(event)) {
+            return;
+          }
+          // A body dragged unselected is selected as it goes, so its gizmo and bounds follow it.
+          if (!body.selected) {
+            body.selected = true;
+            const same = body.ids.length === selection.length && body.ids.every((id) => selection.includes(id));
+            same || onSelect(body.ids);
+          }
+          const next = moveAt(body, local(event));
+          if (next) {
+            setMoved({ intent: next.intent, doc });
+            renderer?.snapFaces(next.faces);
+          }
           return;
         }
         const current = sizing.current;
@@ -696,7 +867,7 @@ export const Scene3DEditor = ({
           if (!pastSlop(event)) {
             return;
           }
-          const ground = groundPoint(view, size, local(event));
+          const ground = planePoint(view, size, local(event), plane);
           const base = ground && dragBase(current.from, toLocal(transform, ground), step, sweepHold(ground));
           sizing.current = { ...current, base: base ?? undefined };
           setDraft(
@@ -715,10 +886,28 @@ export const Scene3DEditor = ({
           press.current = undefined;
           return;
         }
+        const body = moving.current;
+        if (body) {
+          moving.current = undefined;
+          renderer?.snapFaces([]);
+          if (pastSlop(event)) {
+            press.current = undefined;
+            // The body lands on the grid or flush, and stays drawn there until the document has the move: one undo.
+            const next = moveAt(body, local(event), true);
+            if (next && !next.still) {
+              setMoved({ intent: next.intent, doc });
+              onIntent(editing, next.intent);
+            } else {
+              setMoved(undefined);
+            }
+            return;
+          }
+          setMoved(undefined);
+        }
         const current = sizing.current;
         if (current?.phase === 'base') {
           // The swept corner lands on the grid on release, as a 2D sweep does.
-          const ground = groundPoint(view, size, local(event));
+          const ground = planePoint(view, size, local(event), plane);
           const base = !pastSlop(event)
             ? undefined
             : ground
@@ -737,10 +926,10 @@ export const Scene3DEditor = ({
           // Too short to sweep a base: a click, which places the default size.
           cancelSizing();
         }
-        // A face drag or a sweep captured the pointer, so its release targets the editor, not the canvas: it began on the
-        // scene.
+        // A face drag, a sweep or a press on a body captured the pointer, so its release targets the editor, not the
+        // canvas: it began on the scene.
         const faceDrag = extruding.current !== undefined;
-        if (!faceDrag && current?.phase !== 'base' && !onScene(event.nativeEvent)) {
+        if (!faceDrag && !body && current?.phase !== 'base' && !onScene(event.nativeEvent)) {
           return;
         }
         // A face drag that extruded is not a click; one too short to extrude selects, as a click does.

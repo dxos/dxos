@@ -15,6 +15,7 @@ export * from './diagram-shape.ts';
 export * from './dnd.ts';
 export * from './edits.ts';
 export * from './frames.ts';
+export * from './highlight.ts';
 export * from './hit.ts';
 export * from './lattice.ts';
 export * from './link-ends.ts';

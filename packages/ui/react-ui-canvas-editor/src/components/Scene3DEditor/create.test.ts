@@ -108,6 +108,20 @@ describe('drag to create', () => {
     });
   });
 
+  test('a base swept on a raised work plane lies on it, and what is made on it stands on it', () => {
+    const base = dragBase({ x: 0, y: 1, z: 0 }, { x: 2, y: 1, z: 1 }, 1);
+    expect(base?.center.y).toBe(1);
+    if (!base) {
+      return;
+    }
+    expect(createdElement('a', 'cube', base, 2).center?.y).toBe(2);
+    expect(createdElement('b', 'sphere', base, undefined).center?.y).toBe(2);
+    expect(placedOnBase('c', 'crate', undefined, base, 3).center?.y).toBe(2.5);
+    expect(placedOnBase('d', 'crate', { id: 'crate', type: 'cube', lockAspect: true }, base, undefined).center?.y).toBe(
+      2,
+    );
+  });
+
   test('a sphere and an aspect-locked object size from the base alone; other shapes take a height too', () => {
     expect(sizesInOneStep('sphere')).toBe(true);
     expect(sizesInOneStep('cube')).toBe(false);

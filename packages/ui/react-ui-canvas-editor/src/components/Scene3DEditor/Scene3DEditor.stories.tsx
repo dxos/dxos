@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { EngineStore } from '@babylonjs/core';
+import { EngineStore, Matrix, Vector3 } from '@babylonjs/core';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
@@ -10,6 +10,7 @@ import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 import { Dsl } from '@dxos/diagram';
 import { EXEMPLARS } from '@dxos/diagram/testing';
 import { HAND_ICON, SELECT_ICON } from '@dxos/react-ui-canvas';
+import { type WorkPlane } from '@dxos/react-ui-canvas/3d';
 import * as Button from '@dxos/react-ui/Button';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
@@ -76,8 +77,25 @@ const KIT: Scene.SceneDocument = {
   ],
 };
 
+/** A cube with one to its side and one above, each a little off the grid: what a move or a pull snaps flush against. */
+const FLUSH: Scene.SceneDocument = {
+  scenes: [{ ...OVERLAP.scenes[0], id: 'flush', layout: 'flush' }],
+  layouts: [
+    {
+      id: 'flush',
+      dim: '3d',
+      elements: {
+        p: { id: 'p', type: 'cube', center: { x: 0, y: 0.5, z: 0 } },
+        q: { id: 'q', type: 'cube', center: { x: 2.6, y: 0.5, z: 0 } },
+        r: { id: 'r', type: 'cube', center: { x: 0, y: 2.6, z: 0 } },
+      },
+    },
+  ],
+  models: [],
+};
+
 type StoryProps = {
-  exemplar: (typeof EXEMPLARS_3D)[number] | 'overlap' | 'kit';
+  exemplar: (typeof EXEMPLARS_3D)[number] | 'overlap' | 'kit' | 'flush';
   /** Milliseconds before an intent reaches the document, as a host that stores it (ECHO) takes. */
   commitDelay?: number;
   /** The tool picked when the story opens. */
@@ -86,6 +104,8 @@ type StoryProps = {
   grid?: boolean;
   /** Gestures snap to the minor grid; holding Alt frees one. */
   snap?: boolean;
+  /** The work plane, the ground when unset. */
+  plane?: WorkPlane;
 };
 
 const TOOLS: { tool: Tool3D; icon: string; label: string }[] = [
@@ -113,9 +133,16 @@ const defines = (document: Scene.SceneDocument, object: string) =>
  *    plain element to select the face under the pointer, which Extrude then drags; Escape clears it.
  * 4. Delete removes the selection; Orbit (or the middle button) orbits, shift or the right button pans, the wheel zooms.
  */
-const DefaultStory = ({ exemplar, commitDelay, initialTool = 'select', grid, snap }: StoryProps) => {
+const DefaultStory = ({ exemplar, commitDelay, initialTool = 'select', grid, snap, plane }: StoryProps) => {
   const initial = useMemo(
-    () => (exemplar === 'overlap' ? OVERLAP : exemplar === 'kit' ? KIT : Dsl.readScenes(EXEMPLARS[exemplar]).document),
+    () =>
+      exemplar === 'overlap'
+        ? OVERLAP
+        : exemplar === 'kit'
+          ? KIT
+          : exemplar === 'flush'
+            ? FLUSH
+            : Dsl.readScenes(EXEMPLARS[exemplar]).document,
     [exemplar],
   );
   // The document with what undo and redo step back and forward to, as the full editor's history does.
@@ -223,6 +250,7 @@ const DefaultStory = ({ exemplar, commitDelay, initialTool = 'select', grid, sna
         onFaceChange={setFace}
         grid={grid}
         snap={snap}
+        plane={plane}
       />
     </div>
   );
@@ -730,5 +758,341 @@ export const ClickCreateTest: Story = {
     await click(at(rect.width * 0.25, rect.height * 0.8));
     await waitFor(() => expect(editor.dataset.selection).toBe('sphere-1'));
     await waitFor(() => expect(measure('item-sphere-1')).toEqual([1, 1, 1, 0]));
+  },
+};
+
+/** The editor, its canvas and Babylon scene, and probes on them, once the scene has drawn `ready`. */
+const harness = async (canvasElement: HTMLElement, ready: string) => {
+  const canvas = within(canvasElement);
+  const editor = await canvas.findByTestId('scene.3d.editor');
+  const view = editor.querySelector('canvas');
+  if (!view) {
+    throw new Error('The editor has no canvas.');
+  }
+  const engine = () =>
+    EngineStore.Instances.filter((engine) => engine.getRenderingCanvas() === view && !engine.isDisposed).at(-1);
+  const scene = () => engine()?.scenes[0];
+  /** A drawn mesh's world bounds, rounded, as `[minX, minY, minZ, maxX, maxY, maxZ]`. */
+  const bounds = (name: string) => {
+    const box = scene()?.getMeshByName(name)?.getBoundingInfo().boundingBox;
+    return (
+      box && [...box.minimumWorld.asArray(), ...box.maximumWorld.asArray()].map((value) => Number(value.toFixed(2)))
+    );
+  };
+  await waitFor(() => expect(bounds(ready)).toBeDefined(), { timeout: 10_000 });
+  const frame = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  await frame();
+  const rect = view.getBoundingClientRect();
+  /** The first pixel, on a 4px lattice, that `hits` accepts. */
+  const find = (hits: (x: number, y: number) => boolean) => {
+    for (let y = 0; y < rect.height; y += 4) {
+      for (let x = 0; x < rect.width; x += 4) {
+        if (hits(x, y)) {
+          return { x, y };
+        }
+      }
+    }
+    throw new Error('No pixel matches.');
+  };
+  /** The item a pixel shows, and the outward normal there. */
+  const pickAt = (x: number, y: number) => {
+    const hit = scene()?.pick(x, y);
+    return { name: hit?.pickedMesh?.name, normal: hit?.getNormal(true), point: hit?.pickedPoint };
+  };
+  /** Whether a pixel is on a gizmo or the face arrow, which draw in utility layers: scenes of their own. */
+  const onGizmo = (x: number, y: number) =>
+    engine()?._virtualScenes.some((layer) => layer.pick(x, y)?.hit === true) === true;
+  /** Where a world point shows, in CSS pixels from the canvas's top left. */
+  const toScreen = (point: Vector3) => {
+    const current = scene();
+    const camera = current?.activeCamera;
+    const babylon = engine();
+    if (!current || !camera || !babylon) {
+      throw new Error('The scene is not drawn.');
+    }
+    const viewport = camera.viewport.toGlobal(babylon.getRenderWidth(), babylon.getRenderHeight());
+    const projected = Vector3.Project(point, Matrix.IdentityReadOnly, current.getTransformMatrix(), viewport);
+    return { x: projected.x * babylon.getHardwareScalingLevel(), y: projected.y * babylon.getHardwareScalingLevel() };
+  };
+  const at = ({ x, y }: { x: number; y: number }) => ({
+    clientX: rect.left + x,
+    clientY: rect.top + y,
+    pointerId: 1,
+    button: 0,
+  });
+  /** Pointer coordinates `world` units on from a pixel showing `from`, as the screen draws that step. */
+  const along = (pixel: { x: number; y: number }, from: Vector3, world: Vector3) => {
+    const start = toScreen(from);
+    const end = toScreen(from.add(world));
+    return at({ x: pixel.x + end.x - start.x, y: pixel.y + end.y - start.y });
+  };
+  return { canvas, editor, view, scene, bounds, frame, find, pickAt, onGizmo, at, along };
+};
+
+const onGrid = (value: number) => Math.abs(value * 4 - Math.round(value * 4)) < 0.02;
+
+/**
+ * Extrude's arrow: a single-axis arrow stands on the face Extrude would pull, and pulling it extrudes that face.
+ *
+ * Test:
+ * 1. With Extrude, hovering the top of a cube stands the arrow on the middle of that face.
+ * 2. Moving the pointer onto the arrow keeps it there.
+ * 3. A drag from the arrow pulls the face up, the arrow going with it, and the release makes the solid, selected.
+ * 4. Another tool takes the arrow away.
+ */
+export const FaceArrowTest: Story = {
+  args: { exemplar: 'flush', initialTool: 'extrude', grid: true, snap: true },
+  play: async ({ canvasElement }) => {
+    const probe = await harness(canvasElement, 'item-p');
+    const { editor, view, scene, bounds, find, pickAt, onGizmo, at, along } = probe;
+    const arrow = () => {
+      const node = scene()?.getTransformNodeByName('face-arrow');
+      return node ? node.position.asArray().map((value) => Number(value.toFixed(2))) : undefined;
+    };
+    const top = find((x, y) => {
+      const { name, normal } = pickAt(x, y);
+      return name === 'item-p' && (normal?.y ?? 0) > 0.9;
+    });
+
+    // 1.
+    await fireEvent.pointerMove(view, { ...at(top), buttons: 0 });
+    await waitFor(() => expect(arrow()).toEqual([0, 1, 0]));
+
+    // 2.
+    const handle = find(onGizmo);
+    await fireEvent.pointerMove(view, { ...at(handle), buttons: 0 });
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    await expect(arrow()).toEqual([0, 1, 0]);
+
+    // 3. The press captures the pointer, so its moves and release target the editor.
+    const to = along(handle, new Vector3(0, 1, 0), new Vector3(0, 0.5, 0));
+    await fireEvent.pointerDown(view, { ...at(handle), buttons: 1 });
+    await fireEvent.pointerMove(editor, { ...to, buttons: 1 });
+    await waitFor(() => expect(arrow()?.[1]).toBeGreaterThan(1.3));
+    await fireEvent.pointerUp(editor, { ...to, buttons: 0 });
+    await waitFor(() => expect(editor.dataset.selection).toBe('extrude-1'));
+    await expect(bounds('item-extrude-1')?.[4]).toBe(1.5);
+
+    // 4.
+    await userEvent.click(probe.canvas.getByTestId('tool-select'));
+    await waitFor(() => expect(arrow()).toBeUndefined());
+  },
+};
+
+/**
+ * Move by dragging a body: with Move, a drag on a cube (not on the gizmo) slides it on the ground's plane through where it
+ * was grabbed, selecting it, and lands it on the minor grid as one undo step.
+ *
+ * Test:
+ * 1. A click on a cube selects it and moves nothing.
+ * 2. A drag on another cube selects that one as it goes and slides it across the ground, never up or down.
+ * 3. The release lands its low corner on the minor grid.
+ * 4. One undo puts it back.
+ */
+export const MoveBodyTest: Story = {
+  args: { exemplar: 'flush', initialTool: 'move', grid: true, snap: true },
+  play: async ({ canvasElement }) => {
+    const { editor, view, bounds, frame, find, pickAt, onGizmo, at, along } = await harness(canvasElement, 'item-p');
+    const start = { p: bounds('item-p'), q: bounds('item-q') };
+
+    // 1.
+    const onQ = find((x, y) => pickAt(x, y).name === 'item-q');
+    await fireEvent.pointerDown(view, { ...at(onQ), buttons: 1 });
+    await fireEvent.pointerUp(editor, { ...at(onQ), buttons: 0 });
+    await waitFor(() => expect(editor.dataset.selection).toBe('q'));
+    await frame();
+    await expect(bounds('item-q')).toEqual(start.q);
+
+    // 2.
+    const grab = find((x, y) => pickAt(x, y).name === 'item-p' && !onGizmo(x, y));
+    const point = pickAt(grab.x, grab.y).point;
+    if (!point) {
+      throw new Error('No point under the grab.');
+    }
+    const to = along(grab, point, new Vector3(0.9, 0, 0.3));
+    await fireEvent.pointerDown(view, { ...at(grab), buttons: 1 });
+    await fireEvent.pointerMove(editor, { ...to, buttons: 1 });
+    await waitFor(() => expect(editor.dataset.selection).toBe('p'));
+    await waitFor(() => expect(bounds('item-p')?.[0]).toBeGreaterThan(0.2));
+    await expect(bounds('item-p')?.[1]).toBe(0);
+
+    // 3.
+    await fireEvent.pointerUp(editor, { ...to, buttons: 0 });
+    await frame();
+    const [minX = 0, minY, minZ = 0] = bounds('item-p') ?? [];
+    await expect([onGrid(minX), minY, onGrid(minZ)]).toEqual([true, 0, true]);
+    await expect(minX).toBeCloseTo(0.5, 1);
+    await expect(editor.dataset.selection).toBe('p');
+
+    // 4.
+    await fireEvent.keyDown(editor, { key: 'z', metaKey: true });
+    await waitFor(() => expect(bounds('item-p')).toEqual(start.p));
+  },
+};
+
+/**
+ * Snapping against other bodies: Move picked, over a cube with one to its side and one above, each a little off the grid.
+ *
+ * Test:
+ * 1. Drag cube p (on its body, not the gizmo) towards q: it is held flush against q, q's side amber, and lands there.
+ * 2. Drag p's gizmo x arrow towards q: the same.
+ * 3. With Extrude, an arrow stands on the face under the pointer; pull p's top up towards r: held against r's underside.
+ * 4. Holding Alt frees each gesture from the grid and the sides.
+ */
+export const Flush: Story = { args: { exemplar: 'flush', initialTool: 'move', grid: true, snap: true } };
+
+/**
+ * Flush snapping: a body dragged with Move, a gizmo arrow or a pulled face is held flush on a side of another body it
+ * passes near, ahead of the grid, and that side is drawn in the snap colour while it holds.
+ *
+ * Test:
+ * 1. Dragging cube p towards cube q (whose sides are off the grid) holds p against q, q's side shown; the release lands
+ *    it there and clears the side.
+ * 2. Pulling p's top face up towards cube r above holds it against r's underside, shown; the release makes it so.
+ */
+export const FlushTest: Story = {
+  args: { exemplar: 'flush', initialTool: 'move', grid: true, snap: true },
+  play: async ({ canvasElement }) => {
+    const probe = await harness(canvasElement, 'item-q');
+    const { editor, view, scene, bounds, frame, find, pickAt, onGizmo, at, along } = probe;
+    const shown = (name: string) => scene()?.getMeshByName(name) !== null;
+
+    // 1. Short of the touch by under the detent.
+    const grab = find((x, y) => pickAt(x, y).name === 'item-p' && !onGizmo(x, y));
+    const point = pickAt(grab.x, grab.y).point;
+    if (!point) {
+      throw new Error('No point under the grab.');
+    }
+    const to = along(grab, point, new Vector3(1.57, 0, 0));
+    await fireEvent.pointerDown(view, { ...at(grab), buttons: 1 });
+    await fireEvent.pointerMove(editor, { ...to, buttons: 1 });
+    await waitFor(() => expect(shown('snap-q')).toBe(true));
+    await expect(bounds('item-p')?.[3]).toBe(2.1);
+    await fireEvent.pointerUp(editor, { ...to, buttons: 0 });
+    await frame();
+    await expect(bounds('item-p')?.[3]).toBe(2.1);
+    await expect(shown('snap-q')).toBe(false);
+    await fireEvent.keyDown(editor, { key: 'z', metaKey: true });
+    await waitFor(() => expect(bounds('item-p')?.[3]).toBe(0.5));
+
+    // 2.
+    await userEvent.click(probe.canvas.getByTestId('tool-extrude'));
+    const top = find((x, y) => {
+      const { name, normal } = pickAt(x, y);
+      return name === 'item-p' && (normal?.y ?? 0) > 0.9;
+    });
+    const face = pickAt(top.x, top.y).point;
+    if (!face) {
+      throw new Error('No point on the top face.');
+    }
+    const up = along(top, face, new Vector3(0, 1.07, 0));
+    await fireEvent.pointerDown(view, { ...at(top), buttons: 1 });
+    await fireEvent.pointerMove(editor, { ...up, buttons: 1 });
+    await waitFor(() => expect(shown('snap-r')).toBe(true));
+    await fireEvent.pointerUp(editor, { ...up, buttons: 0 });
+    await waitFor(() => expect(editor.dataset.selection).toBe('extrude-1'));
+    await expect(bounds('item-extrude-1')?.[4]).toBe(2.1);
+    await expect(shown('snap-r')).toBe(false);
+  },
+};
+
+/**
+ * Flush snapping on a gizmo: a drag on the move gizmo's x arrow holds the cube against a side of another body it passes
+ * near, ahead of the grid, and lands it there.
+ *
+ * Test:
+ * 1. With Move, a click on cube p selects it and puts the gizmo on it.
+ * 2. Dragging the gizmo's x arrow towards cube q lands p against q.
+ */
+export const GizmoFlushTest: Story = {
+  args: { exemplar: 'flush', initialTool: 'move', grid: true, snap: true },
+  play: async ({ canvasElement }) => {
+    const { editor, view, scene, bounds, frame, find, pickAt, at, along } = await harness(canvasElement, 'item-q');
+    const engine = () => scene()?.getEngine();
+
+    // 1.
+    const onP = find((x, y) => pickAt(x, y).name === 'item-p');
+    await fireEvent.pointerDown(view, { ...at(onP), buttons: 1 });
+    await fireEvent.pointerUp(view, { ...at(onP), buttons: 0 });
+    await waitFor(() => expect(editor.dataset.selection).toBe('p'));
+    await frame();
+
+    // 2. Each handle is tried, from where it is pressed, until the one along x carries p.
+    const handleAt = (x: number, y: number) =>
+      engine()
+        ?._virtualScenes.map((layer) => layer.pick(x, y))
+        .find((hit) => hit?.hit && hit.pickedMesh?.parent?.parent);
+    const handles = new Map<number, { x: number; y: number; point: Vector3 }>();
+    const { width, height } = view.getBoundingClientRect();
+    for (let y = 0; y < height; y += 4) {
+      for (let x = 0; x < width; x += 4) {
+        const hit = handleAt(x, y);
+        const id = hit?.pickedMesh?.parent?.parent?.uniqueId;
+        id !== undefined && hit?.pickedPoint && !handles.has(id) && handles.set(id, { x, y, point: hit.pickedPoint });
+      }
+    }
+    await expect(handles.size).toBeGreaterThan(0);
+    const start = bounds('item-p');
+    for (const { x, y, point } of handles.values()) {
+      const to = along({ x, y }, point, new Vector3(1.57, 0, 0));
+      await fireEvent.pointerMove(view, { ...at({ x, y }), buttons: 0 });
+      await fireEvent.pointerDown(view, { ...at({ x, y }), buttons: 1 });
+      await fireEvent.pointerMove(view, { ...to, buttons: 1 });
+      await fireEvent.pointerUp(view, { ...to, buttons: 0 });
+      await frame();
+      const moved = bounds('item-p');
+      if (moved?.[3] === 2.1 && moved[1] === start?.[1] && moved[2] === start?.[2]) {
+        break;
+      }
+      if (JSON.stringify(moved) !== JSON.stringify(start)) {
+        await fireEvent.keyDown(editor, { key: 'z', metaKey: true });
+        await waitFor(() => expect(bounds('item-p')).toEqual(start));
+      }
+    }
+    await expect(bounds('item-p')?.[3]).toBe(2.1);
+  },
+};
+
+/**
+ * A raised work plane: the grid is drawn a unit up, and what a click or a drag makes stands on it.
+ *
+ * Test:
+ * 1. The grid lies one unit above the ground.
+ * 2. With Cube, a click on open space makes a one-unit cube standing on the raised plane.
+ * 3. A drag sweeps a base on the raised plane, and the shape made over it stands on it.
+ */
+export const WorkPlaneTest: Story = {
+  args: {
+    exemplar: 'kit',
+    grid: true,
+    snap: true,
+    plane: { origin: { x: 0, y: 1, z: 0 }, normal: { x: 0, y: 1, z: 0 } },
+  },
+  play: async ({ canvasElement }) => {
+    const probe = await harness(canvasElement, 'item-c');
+    const { editor, view, scene, bounds, frame, at } = probe;
+    const rect = view.getBoundingClientRect();
+
+    // 1.
+    await waitFor(() => expect(scene()?.getMeshByName('grid')?.position.y).toBe(1));
+
+    // 2.
+    await userEvent.click(probe.canvas.getByTestId('tool-cube'));
+    const open = at({ x: rect.width * 0.25, y: rect.height * 0.6 });
+    await fireEvent.pointerDown(view, { ...open, buttons: 1 });
+    await fireEvent.pointerUp(editor, { ...open, buttons: 0 });
+    await waitFor(() => expect(editor.dataset.selection).toBe('cube-1'));
+    await waitFor(() => expect(bounds('item-cube-1')?.[1]).toBe(1));
+
+    // 3. A sphere sizes from its base alone, so one drag makes it.
+    await userEvent.click(probe.canvas.getByTestId('tool-sphere'));
+    const from = at({ x: rect.width * 0.2, y: rect.height * 0.85 });
+    const to = { ...from, clientX: from.clientX + 60, clientY: from.clientY + 30 };
+    await fireEvent.pointerDown(view, { ...from, buttons: 1 });
+    await fireEvent.pointerMove(editor, { ...to, buttons: 1 });
+    await fireEvent.pointerUp(editor, { ...to, buttons: 0 });
+    await frame();
+    await waitFor(() => expect(editor.dataset.selection).toBe('sphere-1'));
+    await expect(bounds('item-sphere-1')?.[1]).toBe(1);
   },
 };
