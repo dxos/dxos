@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Engine, Texture } from '@babylonjs/core';
+import { type AbstractMesh, Engine, LinesMesh, Texture } from '@babylonjs/core';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 import { expect, within } from 'storybook/test';
@@ -96,5 +96,51 @@ export const DisposedWhileDecoding: Story = {
     await loaded;
     await new Promise((resolve) => setTimeout(resolve, 1_000));
     await expect(engine.isDisposed).toBe(true);
+  },
+};
+
+/**
+ * A selected item orbited: its selection box draws on every frame of the orbit, as the item does, rather than only
+ * now and then (a box rebuilt each frame is skipped until its material is ready, so it flickers).
+ */
+export const SelectionBoxWhileOrbiting: Story = {
+  render: () => <canvas data-testid='canvas' width={320} height={240} />,
+  play: async ({ canvasElement }) => {
+    const canvas = await within(canvasElement).findByTestId<HTMLCanvasElement>('canvas');
+    const engine = new Engine(canvas, true);
+    const view = new SceneRenderer3D({ engine, theme: 'cad', background: '#000000' });
+    const document = Dsl.readScenes(EXEMPLARS.cube).document;
+    const root = document.scenes[0];
+    const camera = root?.dim === '3d' ? root.camera : DEFAULT_CAMERA;
+    const list = renderList(document);
+    const key = list.items[0]?.key;
+    if (key === undefined) {
+      throw new Error('The cube exemplar places nothing.');
+    }
+    view.render(list, camera);
+    view.select([key]);
+    const scene = engine.scenes[0];
+    let drawn = false;
+    const watch = (mesh: AbstractMesh) =>
+      mesh instanceof LinesMesh &&
+      mesh.name.startsWith('box-') &&
+      mesh.onAfterRenderObservable.add(() => (drawn = true));
+    scene?.meshes.forEach(watch);
+    scene?.onNewMeshAddedObservable.add(watch);
+    const frame = () => new Promise((resolve) => requestAnimationFrame(resolve));
+    // Settled first, so the frames counted are the orbit's own.
+    for (let index = 0; index < 10; index++) {
+      view.render(list, camera);
+      await frame();
+    }
+    const skipped: number[] = [];
+    for (let index = 0; index < 30; index++) {
+      drawn = false;
+      view.render(list, { ...camera, yaw: camera.yaw + index * 3 });
+      await frame();
+      drawn || skipped.push(index);
+    }
+    view.dispose();
+    await expect(skipped).toEqual([]);
   },
 };

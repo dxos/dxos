@@ -142,6 +142,13 @@ export type GizmoMode = 'move' | 'rotate' | 'scale';
 /** An item's transform in world space (rotation in Euler degrees), as a gizmo drag leaves it. */
 export type WorldTransform = { center: Model.Vec3; rotation: Model.Vec3; scale: Model.Vec3 };
 
+/** Whether the mesh's world-aligned bounds are still `min` to `max`. */
+const sameBounds = (surface: AbstractMesh, { min, max }: { min: Vector3; max: Vector3 }): boolean => {
+  surface.computeWorldMatrix(true);
+  const { minimumWorld, maximumWorld } = surface.getBoundingInfo().boundingBox;
+  return minimumWorld.equalsWithEpsilon(min) && maximumWorld.equalsWithEpsilon(max);
+};
+
 const degrees = (radians: number) => Math.round(((radians * 180) / Math.PI) * 1000) / 1000 + 0;
 
 const worldTransform = (mesh: AbstractMesh): WorldTransform => {
@@ -306,7 +313,7 @@ export class SceneRenderer3D {
     return Object.fromEntries(
       [...this.#boxes].map(([key, { mesh, min, max }]) => [
         key,
-        { min, max, color: this.#selection, onTop: mesh.renderingGroupId === OVERLAY_GROUP },
+        { min, max, color: mesh.color.toHexString().toLowerCase(), onTop: mesh.renderingGroupId === OVERLAY_GROUP },
       ]),
     );
   }
@@ -604,10 +611,17 @@ export class SceneRenderer3D {
         this.#exclude(surface);
       }
     }
-    // The boxes follow the items' current bounds, so a moved or resized item's box is drawn afresh.
-    this.#clearBoxes();
+    // A box is rebuilt only when its item's bounds or the colour change: a new box is not drawn until its material is
+    // ready, so one rebuilt on every frame of an orbit flickers.
+    for (const [key, box] of this.#boxes) {
+      const surface = this.#items.get(key)?.surface;
+      if (!surface || !this.#selected.has(key) || !box.mesh.color.equals(color) || !sameBounds(surface, box)) {
+        box.mesh.dispose();
+        this.#boxes.delete(key);
+      }
+    }
     for (const [key, { surface }] of this.#items) {
-      if (this.#selected.has(key)) {
+      if (this.#selected.has(key) && !this.#boxes.has(key)) {
         this.#boxes.set(key, this.#createBox(key, surface, color));
       }
     }

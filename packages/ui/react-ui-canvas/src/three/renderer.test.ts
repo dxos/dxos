@@ -135,6 +135,18 @@ describe('SceneRenderer3D.pick', () => {
     expect(view.boxes).toEqual({});
   });
 
+  test("a selected item's box follows it when it moves, and keeps to the new selection colour", () => {
+    const cube = (x: number): Scene.Element3D => ({ id: 'a', type: 'cube', center: { x, y: 0, z: 0 } });
+    const view = renderer(doc([cube(0)]));
+    view.select(['a']);
+    expect(view.boxes.a?.min.x).toBeCloseTo(-0.5);
+    view.render(renderList(doc([cube(3)])), CAMERA);
+    expect(view.boxes.a?.min.x).toBeCloseTo(2.5);
+    view.setSelectionColor('#00ff00');
+    expect(view.boxes.a?.color).toBe('#00ff00');
+    view.dispose();
+  });
+
   test('intersecting or coplanar items never cut into the outline: only selected items reach its mask', () => {
     const view = renderer(
       doc([
