@@ -40,31 +40,36 @@ export type NodePrim = Base & {
 export type ChipPrim = Base & { kind: 'chip'; x: number; y: number; text: string; scale?: number };
 /** A dotted orbit, drawn face-on. */
 export type RingPrim = Base & { kind: 'ring'; x: number; y: number; r: number };
+/** The elements a link or flow joins (`kind:id` keys): its ends follow them every frame, clipped to their rims. */
+type Ends = { a?: string; b?: string };
+
 /** A thin link; `hot` turns it accent. `progress` draws it from its first end. */
-export type LinkPrim = Base & {
-  kind: 'link';
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-  hot?: boolean;
-  color?: string;
-  progress?: number;
-  /** The second end is in screen pixels (a link from a world object to a card). */
-  screen2?: boolean;
-};
+export type LinkPrim = Base &
+  Ends & {
+    kind: 'link';
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number;
+    hot?: boolean;
+    color?: string;
+    progress?: number;
+    /** The second end is in screen pixels (a link from a world object to a card). */
+    screen2?: boolean;
+  };
 /** Dots travelling from the first end to the second; `phase` advances one unit per trip. */
-export type FlowPrim = Base & {
-  kind: 'flow';
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-  phase: number;
-  color: string;
-  count?: number;
-  size?: number;
-};
+export type FlowPrim = Base &
+  Ends & {
+    kind: 'flow';
+    x1: number;
+    y1: number;
+    x2: number;
+    y2: number;
+    phase: number;
+    color: string;
+    count?: number;
+    size?: number;
+  };
 /** A single-line label; `size` is in screen pixels whatever the zoom. */
 export type LabelPrim = Base & {
   kind: 'label';
@@ -325,6 +330,38 @@ export const mix = (from: Frame, to: Frame, t: number, seconds: number): Frame =
   return { camera: blendCamera(from.camera, to.camera, k), prims };
 };
 
+const rim = (prim: Prim | undefined) => (prim && (prim.kind === 'body' || prim.kind === 'node') ? prim.r : 0);
+
+/**
+ * Puts the ends of every bound link and flow on the elements it joins, as they are in this frame (mid-morph too), and
+ * fades it with them; a link whose ends overlap is hidden, since one element then holds the other.
+ */
+export const bind = (frame: Frame): Frame => {
+  const byKey = new Map(frame.prims.map((prim) => [key(prim), prim]));
+  const prims = frame.prims.map((prim): Prim => {
+    if ((prim.kind !== 'link' && prim.kind !== 'flow') || (!prim.a && !prim.b)) {
+      return prim;
+    }
+    const a = prim.a ? byKey.get(prim.a) : undefined;
+    const b = prim.b ? byKey.get(prim.b) : undefined;
+    const [ax, ay] = (a && anchor(a)) ?? [prim.x1, prim.y1];
+    const [bx, by] = (b && anchor(b)) ?? [prim.x2, prim.y2];
+    const opacity = (prim.opacity ?? 1) * Math.min(a?.opacity ?? 1, b?.opacity ?? 1);
+    // A link to a card has one end in screen pixels; its world end is not clipped.
+    if (prim.kind === 'link' && prim.screen2) {
+      return { ...prim, x1: ax, y1: ay, opacity };
+    }
+    const length = Math.hypot(bx - ax, by - ay);
+    const [ra, rb] = [rim(a), rim(b)];
+    if (length <= ra + rb + 1) {
+      return { ...prim, opacity: 0 };
+    }
+    const [ux, uy] = [(bx - ax) / length, (by - ay) / length];
+    return { ...prim, x1: ax + ux * ra, y1: ay + uy * ra, x2: bx - ux * rb, y2: by - uy * rb, opacity };
+  });
+  return { ...frame, prims };
+};
+
 /** A slide placed on the timeline. */
 export type Placed = { slide: Slide; start: number; hold: number };
 
@@ -351,8 +388,8 @@ export const frameAt = (timeline: Placed[], seconds: number): Frame => {
   const t = seconds - start;
   const transition = slide.transition ?? TRANSITION;
   if (index === 0 || t >= transition) {
-    return slide.draw(t);
+    return bind(slide.draw(t));
   }
   const previous = timeline[index - 1];
-  return mix(previous.slide.draw(previous.hold + t), slide.draw(t), t, transition);
+  return bind(mix(previous.slide.draw(previous.hold + t), slide.draw(t), t, transition));
 };

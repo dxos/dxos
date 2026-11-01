@@ -23,8 +23,15 @@ export type Saas2DProps = {
   test?: Record<string, number>;
 };
 
-/** Holds for the scale → spread morph test: a beat on each layout around the three-second transition. */
-export const MORPH_TEST: Record<string, number> = { scale: 2, spread: 5 };
+/** The opening of the story up to the spread, short holds around its cuts: a test of those transitions. */
+export const MORPH_TEST: Record<string, number> = {
+  'beginning': 2.5,
+  'silo': 3.5,
+  'silo-comms': 3,
+  'scale': 4,
+  'competitors': 3,
+  'spread': 5,
+};
 
 /** The SaaS story in neu-dark 2D, timed to the short Fry cut of the echo3d presentation. */
 export const Saas2D = ({ test }: Saas2DProps) => {
