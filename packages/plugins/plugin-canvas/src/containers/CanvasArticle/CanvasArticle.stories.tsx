@@ -354,19 +354,20 @@ export const MarkdownEmbed: Story = {
     },
   }),
   play: async ({ canvasElement }) => {
-    const view = await within(canvasElement).findByTestId('scene-view', undefined, { timeout: 30_000 });
-    const embed = view.closest<HTMLElement>('[data-testid="markdown.embed"]');
-    await waitFor(() => expect(embed?.getBoundingClientRect().height ?? 0).toBeGreaterThan(100));
+    // The embed first, then the canvas within it, so a canvas that never mounts reports the embed's own content.
+    const embed = await within(canvasElement).findByTestId('markdown.embed', undefined, { timeout: 30_000 });
+    await within(embed).findByTestId('scene-view', undefined, { timeout: 30_000 });
+    await waitFor(() => expect(embed.getBoundingClientRect().height).toBeGreaterThan(100));
     // 2. The breadcrumbs and zoom bar show only while the embed is attended. The load-time rebuilds land first: a block redrawn under
     // the click would be a fresh element, and the click's focus would go with the old one.
     await new Promise((resolve) => setTimeout(resolve, 1_000));
-    await expect(embed?.querySelector('[data-testid="canvas-debug"]')).toBeNull();
-    embed && (await userEvent.click(embed));
-    await waitFor(() => expect(embed?.querySelector('[data-testid="canvas-debug"]')).not.toBeNull());
-    await expect(embed?.querySelector('[data-testid="canvas-toolbar"]')).not.toBeNull();
+    await expect(embed.querySelector('[data-testid="canvas-debug"]')).toBeNull();
+    await userEvent.click(embed);
+    await waitFor(() => expect(embed.querySelector('[data-testid="canvas-debug"]')).not.toBeNull());
+    await expect(embed.querySelector('[data-testid="canvas-toolbar"]')).not.toBeNull();
     // 1. The fit stops at actual size, however wide the embed: the readout never reads more than 100%.
     const zoom = parseInt(
-      embed?.querySelector('[data-testid="canvas-debug"]')?.textContent?.match(/(\d+)%/)?.[1] ?? '',
+      embed.querySelector('[data-testid="canvas-debug"]')?.textContent?.match(/(\d+)%/)?.[1] ?? '',
       10,
     );
     await expect(zoom).toBeLessThanOrEqual(100);
