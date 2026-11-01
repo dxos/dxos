@@ -43,7 +43,7 @@ const OVERLAP: Scene.SceneDocument = {
       dim: '3d',
       elements: {
         a: { id: 'a', type: 'cube', center: { x: -1, y: 0.5, z: 0 } },
-        b: { id: 'b', type: 'cube', center: { x: -0.4, y: 0.8, z: 0.4 } },
+        b: { id: 'b', type: 'cube', center: { x: -0.5, y: 0.75, z: 0.5 } },
         c: { id: 'c', type: 'cube', center: { x: 2, y: 0.5, z: 0 } },
         d: { id: 'd', type: 'cube', center: { x: 3, y: 0.5, z: 0 } },
       },
@@ -84,7 +84,7 @@ type StoryProps = {
   initialTool?: Tool3D;
   /** Draws the ground grid. */
   grid?: boolean;
-  /** Gestures snap to the grid unit; holding Alt frees one. */
+  /** Gestures snap to the minor grid; holding Alt frees one. */
   snap?: boolean;
 };
 
@@ -254,7 +254,7 @@ export const Overlapping: Story = { args: { exemplar: 'overlap' } };
  * 2. Drag from a face: the solid grows out of that face as the pointer moves, and the release makes it, selected.
  * 3. Double-click a face: it is highlighted, and the cursor now changes only over that face; a drag anywhere extrudes it.
  * 4. Escape clears the selected face.
- * 5. The ground grid shows, and an extrusion grows in whole grid units; holding Alt frees it.
+ * 5. The ground grid shows, and an extrusion grows in minor grid steps; holding Alt frees it.
  */
 export const Extrude: Story = {
   // Plain cubes: no solid or rounded cube loads Manifold before the first extrusion.
@@ -376,16 +376,18 @@ export const ExtrudeTest: Story = {
  * 2. A drag from one of the gizmo's arrows moves the cube, which stays selected.
  */
 /**
- * Selects `select` (cube c, the first, carries the gizmo) with the Move tool and drags the gizmo by `steps` of 10px each
- * way, checking the drag lasts; `landed` checks each selected cube's bounds before and after it.
+ * Selects `select` (cube c, the first, carries the gizmo) with the Move tool and drags the gizmo by `steps` of `stride` px
+ * each way, checking the drag lasts; `landed` checks each selected cube's bounds before and after it.
  */
 const dragGizmo =
   ({
     steps,
+    stride = 10,
     select = ['c'],
     landed,
   }: {
     steps: number;
+    stride?: number;
     select?: string[];
     landed?: (before: Record<string, string>, after: Record<string, string>) => Promise<void>;
   }) =>
@@ -462,12 +464,12 @@ const dragGizmo =
       for (let step = 1; step <= steps; step++) {
         await fireEvent.pointerMove(view, {
           ...from,
-          clientX: from.clientX + step * 10,
-          clientY: from.clientY + step * 10,
+          clientX: from.clientX + step * stride,
+          clientY: from.clientY + step * stride,
           buttons: 1,
         });
       }
-      const end = steps * 10;
+      const end = steps * stride;
       await fireEvent.pointerUp(view, {
         ...from,
         clientX: from.clientX + end,
@@ -490,20 +492,21 @@ export const MoveTest: Story = {
 };
 
 /**
- * With snapping on, a gizmo drag follows the pointer, held near a grid line, and lands the cube's low corner on the
- * grid along the axes it moved: cube c starts with that corner half a unit off it, so a drag by whole units misses.
+ * With snapping on, a gizmo drag follows the pointer, held near a minor grid line, and lands the cube's low corner on the
+ * minor grid along the axes it moved.
  */
 export const MoveSnapTest: Story = {
   args: { exemplar: 'overlap', initialTool: 'move', grid: true, snap: true },
-  // Far enough to pass half a unit, so the cube lands on another line than the one it left.
+  // One long move: Babylon takes only the first move of a synthetic drag, which must carry the cube past several lines.
   play: dragGizmo({
-    steps: 20,
+    steps: 1,
+    stride: 150,
     landed: async (before, after) => {
       const [from, to] = [before.c, after.c].map((value) => value.split(',').slice(0, 3).map(Number));
       const moved = to.filter((value, axis) => Math.abs(value - from[axis]) > 0.005);
       await expect(moved.length).toBeGreaterThan(0);
       for (const value of moved) {
-        await expect(Math.abs(value - Math.round(value))).toBeLessThan(0.01);
+        await expect(Math.abs(value * 4 - Math.round(value * 4))).toBeLessThan(0.04);
       }
     },
   }),
@@ -596,8 +599,8 @@ export const DragToSize: Story = {
 };
 
 /**
- * With snapping on, a swept base and a dragged height follow the pointer between grid lines, held only near one, and
- * the shape lands on whole units when the release fixes the base and the click fixes the height.
+ * With snapping on, a swept base and a dragged height follow the pointer between minor grid lines, held only near one,
+ * and the shape lands on the minor grid when the release fixes the base and the click fixes the height.
  */
 export const DragToSizeSnapTest: Story = {
   args: { exemplar: 'kit', grid: true, snap: true },
@@ -616,7 +619,7 @@ export const DragToSizeSnapTest: Story = {
       const box = scene()?.getMeshByName('item-cube-1')?.getBoundingInfo().boundingBox;
       return box?.maximumWorld.subtract(box.minimumWorld).asArray();
     };
-    const whole = (value: number) => Math.abs(value - Math.round(value)) < 0.01;
+    const onGrid = (value: number) => Math.abs(value * 4 - Math.round(value * 4)) < 0.04;
     await waitFor(() => expect(scene()?.getMeshByName('item-c')).toBeTruthy(), { timeout: 10_000 });
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     const rect = view.getBoundingClientRect();
@@ -639,16 +642,16 @@ export const DragToSizeSnapTest: Story = {
       const [width] = extents() ?? [];
       width !== undefined && widths.push(width);
     }
-    await expect(widths.some((width) => !whole(width))).toBe(true);
+    await expect(widths.some((width) => !onGrid(width))).toBe(true);
 
-    // 2. The release lands the base on whole units.
+    // 2. The release lands the base on the minor grid.
     const release = { ...from, clientX: from.clientX + 60 + 12 * 7, clientY: from.clientY + 50 };
     await fireEvent.pointerUp(editor, { ...release, buttons: 0 });
     await frame();
     const [width = 0, , depth = 0] = extents() ?? [];
-    await expect([whole(width), whole(depth)]).toEqual([true, true]);
+    await expect([onGrid(width), onGrid(depth)]).toEqual([true, true]);
 
-    // 3. The height follows the pointer, and the click that fixes it lands it on a whole unit.
+    // 3. The height follows the pointer, and the click that fixes it lands it on the minor grid.
     const heights: number[] = [];
     for (let step = 1; step <= 12; step++) {
       await fireEvent.pointerMove(editor, { ...release, clientY: release.clientY - step * 20, buttons: 0 });
@@ -656,11 +659,76 @@ export const DragToSizeSnapTest: Story = {
       const [, height] = extents() ?? [];
       height !== undefined && heights.push(height);
     }
-    await expect(heights.some((height) => !whole(height))).toBe(true);
+    await expect(heights.some((height) => !onGrid(height))).toBe(true);
     const top = { ...release, clientY: release.clientY - 12 * 20 };
     await fireEvent.pointerDown(view, { ...top, buttons: 1 });
     await fireEvent.pointerUp(editor, { ...top, buttons: 0 });
     await waitFor(() => expect(editor.dataset.selection).toBe('cube-1'));
-    await waitFor(() => expect((extents() ?? []).every(whole)).toBe(true));
+    await waitFor(() => expect((extents() ?? []).every(onGrid)).toBe(true));
+  },
+};
+
+/**
+ * Click to create: with a create tool, a click on open ground (a little jitter included) makes the whole shape at its
+ * default size, one major grid unit, resting on the ground and selected; only a drag sizes it.
+ *
+ * Test:
+ * 1. With Cube, a press and a release 2px away create a one-unit cube on the ground, selected.
+ * 2. Moving the pointer afterwards sizes nothing: the click left no height to set.
+ * 3. With Sphere, a click creates a one-unit sphere.
+ */
+export const ClickCreateTest: Story = {
+  args: { exemplar: 'kit', grid: true, snap: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const editor = await canvas.findByTestId('scene.3d.editor');
+    const view = editor.querySelector('canvas');
+    if (!view) {
+      throw new Error('The editor has no canvas.');
+    }
+    const scene = () =>
+      EngineStore.Instances.filter((engine) => engine.getRenderingCanvas() === view && !engine.isDisposed).at(-1)
+        ?.scenes[0];
+    /** A drawn mesh's world extents along x, y and z, and its lowest y, rounded. */
+    const measure = (name: string) => {
+      const box = scene()?.getMeshByName(name)?.getBoundingInfo().boundingBox;
+      return (
+        box && [
+          ...box.maximumWorld
+            .subtract(box.minimumWorld)
+            .asArray()
+            .map((value) => Number(value.toFixed(2))),
+          Number(box.minimumWorld.y.toFixed(2)),
+        ]
+      );
+    };
+    await waitFor(() => expect(measure('item-c')).toBeDefined(), { timeout: 10_000 });
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const rect = view.getBoundingClientRect();
+    const at = (x: number, y: number) => ({ clientX: rect.left + x, clientY: rect.top + y, pointerId: 1, button: 0 });
+    const click = async (point: ReturnType<typeof at>) => {
+      const jitter = { ...point, clientX: point.clientX + 2, clientY: point.clientY + 1 };
+      await fireEvent.pointerDown(view, { ...point, buttons: 1 });
+      await fireEvent.pointerMove(editor, { ...jitter, buttons: 1 });
+      await fireEvent.pointerUp(editor, { ...jitter, buttons: 0 });
+    };
+    const from = at(rect.width * 0.25, rect.height * 0.6);
+
+    // 1.
+    await userEvent.click(canvas.getByTestId('tool-cube'));
+    await click(from);
+    await waitFor(() => expect(editor.dataset.selection).toBe('cube-1'));
+    await waitFor(() => expect(measure('item-cube-1')).toEqual([1, 1, 1, 0]));
+
+    // 2.
+    await fireEvent.pointerMove(editor, { ...from, clientY: from.clientY - 120, buttons: 0 });
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    await expect(measure('item-cube-1')).toEqual([1, 1, 1, 0]);
+
+    // 3.
+    await userEvent.click(canvas.getByTestId('tool-sphere'));
+    await click(at(rect.width * 0.25, rect.height * 0.8));
+    await waitFor(() => expect(editor.dataset.selection).toBe('sphere-1'));
+    await waitFor(() => expect(measure('item-sphere-1')).toEqual([1, 1, 1, 0]));
   },
 };

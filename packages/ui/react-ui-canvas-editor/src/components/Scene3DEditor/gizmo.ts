@@ -98,7 +98,7 @@ export type ExtrudeDrag = {
   step?: number;
   /** The drag is ending: the distance lands on a whole step rather than following the pointer to one. */
   landing?: boolean;
-  /** The solid's world extent along the normal, of which a push into it leaves a grid unit; none leaves it free. */
+  /** The solid's world extent along the normal, of which a push into it leaves a minor grid unit; none leaves it free. */
   thickness?: number;
 };
 

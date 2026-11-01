@@ -9,10 +9,10 @@ layout org dim=3d model=teams {
 }
 
 layout team-a dim=3d model=teams name="Engineering" {
-  element hub sphere "Hub" @ 0,0,0 scale=1.2 hue=blue surface=solid
-  element s1 sphere @ 3,0,0 scale=0.6 hue=blue surface=solid
-  element s2 sphere @ -1.5,0,2.598 scale=0.6 hue=blue surface=solid
-  element sub platform "Platform" @ -1.5,0,-2.598 scale=2.4
+  element hub sphere "Hub" @ 0,0,0 scale=1 hue=blue surface=solid
+  element s1 sphere @ 3,0,0 scale=0.5 hue=blue surface=solid
+  element s2 sphere @ -1.5,0,2.598 scale=0.5 hue=blue surface=solid
+  element sub platform "Platform" @ -1.5,0,-2.598 scale=2.5
   element team group members="s1 s2 sub" arrange=ring arrange-radius=3
   element l1 link from=hub to=s1
   element l2 link from=hub to=s2
@@ -20,10 +20,10 @@ layout team-a dim=3d model=teams name="Engineering" {
 }
 
 layout team-c dim=3d name="Platform" {
-  element hub sphere "Hub" @ 0,0,0 scale=1.2 hue=indigo surface=solid
-  element s1 sphere @ 3,0,0 scale=0.6 hue=indigo surface=solid
-  element s2 sphere @ -1.5,0,2.598 scale=0.6 hue=indigo surface=solid
-  element s3 sphere @ -1.5,0,-2.598 scale=0.6 hue=indigo surface=solid
+  element hub sphere "Hub" @ 0,0,0 scale=1 hue=indigo surface=solid
+  element s1 sphere @ 3,0,0 scale=0.5 hue=indigo surface=solid
+  element s2 sphere @ -1.5,0,2.598 scale=0.5 hue=indigo surface=solid
+  element s3 sphere @ -1.5,0,-2.598 scale=0.5 hue=indigo surface=solid
   element team group members="s1 s2 s3" arrange=ring arrange-radius=3
   element l1 link from=hub to=s1
   element l2 link from=hub to=s2
@@ -31,10 +31,10 @@ layout team-c dim=3d name="Platform" {
 }
 
 layout team-b dim=3d name="Operations" {
-  element hub sphere "Hub" @ 0,0,0 scale=1.2 hue=teal surface=solid
-  element s1 sphere @ 3,0,0 scale=0.6 hue=teal surface=solid
-  element s2 sphere @ -1.5,0,2.598 scale=0.6 hue=teal surface=solid
-  element s3 sphere @ -1.5,0,-2.598 scale=0.6 hue=teal surface=solid
+  element hub sphere "Hub" @ 0,0,0 scale=1 hue=teal surface=solid
+  element s1 sphere @ 3,0,0 scale=0.5 hue=teal surface=solid
+  element s2 sphere @ -1.5,0,2.598 scale=0.5 hue=teal surface=solid
+  element s3 sphere @ -1.5,0,-2.598 scale=0.5 hue=teal surface=solid
   element team group members="s1 s2 s3" arrange=ring arrange-radius=3
   element l1 link from=hub to=s1
   element l2 link from=hub to=s2

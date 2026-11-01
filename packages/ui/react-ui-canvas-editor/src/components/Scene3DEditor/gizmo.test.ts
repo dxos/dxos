@@ -94,12 +94,12 @@ describe('extrudeIntent', () => {
       return intent?.kind === 'extrude' ? intent.distance : undefined;
     };
     expect(push(-0.5, 0, 3)).toBeCloseTo(-0.5, 2);
-    expect(push(-2.5, 0, 3)).toBeCloseTo(-2, 2);
-    expect(push(-5, 0, 3)).toBeCloseTo(-2, 2);
-    expect(push(-5, 1, 3, true)).toBe(-2);
-    // A solid one unit thick has nothing to give, so a push in makes nothing.
-    expect(push(-0.5, 0, 1)).toBeUndefined();
-    expect(push(-3, 1, 1, true)).toBeUndefined();
+    expect(push(-2.8, 0, 3)).toBeCloseTo(-2.75, 2);
+    expect(push(-5, 0, 3)).toBeCloseTo(-2.75, 2);
+    expect(push(-5, 0.25, 3, true)).toBe(-2.75);
+    // A solid a minor unit thick has nothing to give, so a push in makes nothing.
+    expect(push(-0.5, 0, 0.25)).toBeUndefined();
+    expect(push(-3, 0.25, 0.25, true)).toBeUndefined();
   });
 
   test('dragging against the normal gives a negative distance; a tilted normal snaps to its axis', () => {

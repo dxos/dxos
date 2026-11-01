@@ -23,4 +23,10 @@ describe('snap', () => {
     expect(magnetTo(1.6, 1, 0.1)).toBe(1.6);
     expect(magnetTo(1.6, 0, 0.1)).toBe(1.6);
   });
+
+  test('magnetTo holds within a quarter of a step at most, so a fine grid is not all detent', ({ expect }) => {
+    expect(magnetTo(0.375, 0.25, 0.2)).toBe(0.375);
+    expect(magnetTo(0.32, 0.25, 0.2)).toBe(0.32);
+    expect(magnetTo(0.3, 0.25, 0.2)).toBe(0.25);
+  });
 });

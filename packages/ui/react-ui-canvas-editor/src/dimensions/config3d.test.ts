@@ -49,9 +49,9 @@ describe('config3d', () => {
     expect(camera3D.percent(camera3D.zoom(CAMERA, 0.5, SIZE), CAMERA)).toBe(200);
   });
 
-  test('a paste lands a grid unit further along each ground axis, and gizmos snap to unit, 15° and a tenth', () => {
+  test('a paste lands a major grid unit further along each ground axis, and gizmos snap to a minor unit, 15° and a tenth', () => {
     expect(config3d.geometry.pasteOffset(2)).toEqual({ x: 2, y: 0, z: 2 });
-    expect(config3d.geometry.snap).toEqual({ move: 1, rotate: 15, scale: 0.1 });
+    expect(config3d.geometry.snap).toEqual({ move: 0.25, rotate: 15, scale: 0.1 });
   });
 
   test('Join makes one element of the selection and selects it; Subtract needs exactly two', () => {

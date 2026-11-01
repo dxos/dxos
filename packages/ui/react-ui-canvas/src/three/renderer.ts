@@ -48,7 +48,7 @@ import { type Scene as Model } from '@dxos/scene';
 import { NEU_PALETTE, type NeuPalette, type ThemeMode } from '../model/index.ts';
 import { DETENT_PX, magnetTo, snapTo } from '../utils/index.ts';
 import { groundPoint, orthoHalfHeight, toOrbit } from './camera.ts';
-import { GRID_MAJOR_EVERY, groundAxes, groundGrid } from './grid.ts';
+import { GRID_MAJOR_EVERY, GRID_MINOR, groundAxes, groundGrid } from './grid.ts';
 import { meshData } from './io/index.ts';
 import {
   LATTICE_OPACITY,
@@ -190,8 +190,8 @@ const OUTLINE_FRAMES = 3;
 /** The rendering group selection boxes draw in, after the scene with its depth cleared. */
 const OVERLAY_GROUP = 1;
 
-/** What the gizmos snap to with snapping on: the ground grid's minor unit, 15 degrees and a tenth of the size. */
-export const SNAP = { move: 1, rotate: 15, scale: 0.1 } as const;
+/** What the gizmos snap to with snapping on: the ground grid's minor spacing, 15 degrees and a tenth of the size. */
+export const SNAP = { move: GRID_MINOR, rotate: 15, scale: 0.1 } as const;
 
 /** The ground grid's half-width, in scene units. */
 const GRID_EXTENT = 20;
@@ -360,7 +360,7 @@ export class SceneRenderer3D {
       .map((mesh) => mesh.name);
   }
 
-  /** Turns gizmo snapping on (to the grid unit, 15 degrees and a tenth) or off. */
+  /** Turns gizmo snapping on (to the minor grid, 15 degrees and a tenth) or off. */
   setSnap(snap: boolean): void {
     this.#snap = snap;
     this.#applySnap();

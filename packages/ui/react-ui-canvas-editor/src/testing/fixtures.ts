@@ -79,17 +79,17 @@ model shapes dim=2d {
   },
 );
 
-/** A 3D cluster: a hub and four spokes placed from the model, linked, with two named materials. */
+/** A 3D cluster: a hub and three spokes placed from the model on a base, linked, with two named materials. */
 export const DOCUMENT_3D: Scene.SceneDocument = withExtras(
   Dsl.readScenes(`scene cluster dim=3d layout=cluster name="Cluster" theme=cad {
   camera target=0,0,0 yaw=-45 pitch=30 distance=12 fov=0.8 projection=perspective
 }
 
 layout cluster dim=3d model=nodes {
-  element hub hub "Hub" @ 0,0.6,0 layer=diagram
-  element s1 spoke "S1" @ 3,0.3,0 layer=diagram
-  element s2 spoke "S2" @ 0,0.3,3 layer=diagram
-  element s3 spoke "S3" @ -3,0.3,0 layer=diagram
+  element hub hub "Hub" @ 0,0.5,0 layer=diagram
+  element s1 spoke "S1" @ 3,0.25,0 layer=diagram
+  element s2 spoke "S2" @ 0,0.25,3 layer=diagram
+  element s3 spoke "S3" @ -3,0.25,0 layer=diagram
   element base cube "Base" @ 0,-0.25,0 scale=8x0.5x8 layer=background
   element l1 link from=hub to=s1
   element l2 link from=hub to=s2
@@ -97,8 +97,8 @@ layout cluster dim=3d model=nodes {
 }
 
 model nodes dim=3d {
-  object hub sphere scale=1.2 surface=solid
-  object spoke sphere scale=0.6 surface=solid
+  object hub sphere scale=1 surface=solid
+  object spoke sphere scale=0.5 surface=solid
 }
 `).document,
   {
@@ -211,9 +211,9 @@ export const SHOTS_3D: readonly EditorShot[] = [
     id: 'shot-1',
     name: 'Lift',
     timeline: [
-      { t: 0, value: { x: 0, y: 0.6, z: 0 } },
+      { t: 0, value: { x: 0, y: 0.5, z: 0 } },
       { t: 2, value: { x: 0, y: 3, z: 0 } },
-      { t: 4, value: { x: 0, y: 0.6, z: 0 } },
+      { t: 4, value: { x: 0, y: 0.5, z: 0 } },
     ].reduce((timeline, key) => setKey(timeline, 'hub', 'center', key), createTimeline(4)),
   },
 ];

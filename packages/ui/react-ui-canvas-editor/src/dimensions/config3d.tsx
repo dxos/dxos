@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
-import { exportSTL, fitCamera, importMesh, loadManifold, zoomBy, zoomPercent } from '@dxos/react-ui-canvas/3d';
+import { SNAP, exportSTL, fitCamera, importMesh, loadManifold, zoomBy, zoomPercent } from '@dxos/react-ui-canvas/3d';
 import { type NamedStyle3D, Scene, bounds3D, findLayout, resolveLayout3D } from '@dxos/scene';
 
 import { faceName } from '../components/index.ts';
@@ -196,8 +196,8 @@ export const config3d: DimensionConfig<Scene.Camera3D> = {
   dim: '3d',
   create: createViewDimension({ Viewport: Viewport3D, camera: camera3D }),
   tools: TOOLS_3D,
-  // A paste lands a grid unit further along each ground axis; a gizmo snaps to the unit, 15 degrees and a tenth.
-  geometry: { pasteOffset: (pasted) => ({ x: pasted, y: 0, z: pasted }), snap: { move: 1, rotate: 15, scale: 0.1 } },
+  // A paste lands a major grid unit further along each ground axis; a gizmo snaps as the renderer's grid does.
+  geometry: { pasteOffset: (pasted) => ({ x: pasted, y: 0, z: pasted }), snap: SNAP },
   display: {
     themes: CATALOGS_3D.map(({ id, name, mode }) => ({ id, label: name, ...(mode ? { mode } : {}) })),
     grids: ['lines'],

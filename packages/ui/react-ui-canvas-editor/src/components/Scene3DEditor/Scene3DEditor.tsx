@@ -478,7 +478,7 @@ export const Scene3DEditor = ({
     // Read on the press: the preview that follows replaces the solid's mesh.
     thickness?: number;
   }>(undefined);
-  // What a swept base, its height and an extrusion snap to: the grid unit, unless snapping is off or Alt held.
+  // What a swept base, its height and an extrusion snap to: the minor grid, unless snapping is off or Alt held.
   const step = snap && !alt ? SNAP.move : 0;
   /**
    * The extrusion the face drag would make with the pointer at `end`, or on its release there when `landing`; undefined
@@ -588,6 +588,11 @@ export const Scene3DEditor = ({
     onIntent(editing, { kind: 'create', element });
     onSelect([element.id]);
   };
+  /** Whether the pointer has left the press by more than a click's jitter. */
+  const pastSlop = (event: { clientX: number; clientY: number }) => {
+    const start = press.current;
+    return start !== undefined && Math.hypot(event.clientX - start.x, event.clientY - start.y) > CLICK_SLOP;
+  };
   const local = (event: { clientX: number; clientY: number }) => {
     const rect = containerRef.current?.getBoundingClientRect();
     return { x: event.clientX - (rect?.left ?? 0), y: event.clientY - (rect?.top ?? 0) };
@@ -687,6 +692,10 @@ export const Scene3DEditor = ({
           return;
         }
         if (current.phase === 'base' && event.buttons & 1) {
+          // Within the click slop the press is still a click, which makes the default size, not a base to sweep.
+          if (!pastSlop(event)) {
+            return;
+          }
           const ground = groundPoint(view, size, local(event));
           const base = ground && dragBase(current.from, toLocal(transform, ground), step, sweepHold(ground));
           sizing.current = { ...current, base: base ?? undefined };
@@ -710,7 +719,11 @@ export const Scene3DEditor = ({
         if (current?.phase === 'base') {
           // The swept corner lands on the grid on release, as a 2D sweep does.
           const ground = groundPoint(view, size, local(event));
-          const base = ground ? dragBase(current.from, toLocal(transform, ground), step) : current.base;
+          const base = !pastSlop(event)
+            ? undefined
+            : ground
+              ? dragBase(current.from, toLocal(transform, ground), step)
+              : current.base;
           if (base) {
             press.current = undefined;
             if (oneStep(current.shape)) {
@@ -724,9 +737,10 @@ export const Scene3DEditor = ({
           // Too short to sweep a base: a click, which places the default size.
           cancelSizing();
         }
-        // A face drag captured the pointer, so its release targets the editor, not the canvas: it began on the scene.
+        // A face drag or a sweep captured the pointer, so its release targets the editor, not the canvas: it began on the
+        // scene.
         const faceDrag = extruding.current !== undefined;
-        if (!faceDrag && !onScene(event.nativeEvent)) {
+        if (!faceDrag && current?.phase !== 'base' && !onScene(event.nativeEvent)) {
           return;
         }
         // A face drag that extruded is not a click; one too short to extrude selects, as a click does.
@@ -735,8 +749,8 @@ export const Scene3DEditor = ({
           return;
         }
         const start = press.current;
+        const moved = pastSlop(event);
         press.current = undefined;
-        const moved = start && Math.hypot(event.clientX - start.x, event.clientY - start.y) > CLICK_SLOP;
         // A gizmo drag, however short, is not a click.
         const dragged = renderer?.takeDrag() || renderer?.dragging;
         if (start && !moved && !dragged && clickSelects(tool)) {

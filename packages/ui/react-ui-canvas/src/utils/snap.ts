@@ -14,7 +14,8 @@ export const snapTo = (value: number, step: number): number => (step > 0 ? Math.
 
 /**
  * Where a dragged value shows while snapping is on: it follows the pointer, held on a whole `step` while within `detent`
- * of one; the release lands it with {@link snapTo}.
+ * of one, but never more than a quarter step, so on a fine grid the pointer still moves between lines; the release lands
+ * it with {@link snapTo}.
  */
 export const magnetTo = (value: number, step: number, detent: number): number =>
-  detentOf(value, snapTo(value, step), detent);
+  detentOf(value, snapTo(value, step), Math.min(detent, step / 4));
