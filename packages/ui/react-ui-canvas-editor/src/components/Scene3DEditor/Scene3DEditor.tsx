@@ -183,8 +183,24 @@ export const Scene3DEditor = ({
   const [draft, setDraft] = useState<Scene.Element3D>();
   // The extrusion a face drag would make, drawn as the pointer moves but not yet in the layout.
   const [extrusion, setExtrusion] = useState<LayoutIntent>();
+  // Loaded once Extrude is picked, so the first drag draws its solid rather than a stand-in.
+  const geometry = useManifoldGeometry(doc, givenGeometry, { preload: tool === 'extrude' });
+  // A released preview is held until the document has what it committed, which a stored document takes a moment to.
+  const previewId = draft?.id ?? (extrusion?.kind === 'extrude' ? extrusion.id : undefined);
+  const landed = previewId !== undefined && layout?.elements[previewId] !== undefined;
+  useEffect(() => {
+    if (landed) {
+      setDraft(undefined);
+      setExtrusion(undefined);
+    }
+  }, [landed]);
   const drawnDoc = useMemo(() => {
-    const preview: LayoutIntent | undefined = draft ? { kind: 'create', element: draft } : extrusion;
+    // Until the solid can be built, the face keeps its place rather than a stand-in's.
+    const preview: LayoutIntent | undefined = landed
+      ? undefined
+      : draft
+        ? { kind: 'create', element: draft }
+        : geometry && extrusion;
     return preview === undefined
       ? doc
       : {
@@ -193,9 +209,7 @@ export const Scene3DEditor = ({
             record.id === (editingProp ?? scene?.layout) && record.dim === '3d' ? applyIntent(record, preview) : record,
           ),
         };
-  }, [doc, draft, extrusion, editingProp, scene]);
-  // From what is drawn, so a previewed solid is built before it is committed.
-  const geometry = useManifoldGeometry(drawnDoc, givenGeometry);
+  }, [doc, draft, extrusion, geometry, landed, editingProp, scene]);
   const list = useMemo(() => renderList(drawnDoc, scene), [drawnDoc, scene]);
   const frames = useMemo(() => {
     const byFrame = new Map<string, Map<string, RenderItem>>();
@@ -452,7 +466,7 @@ export const Scene3DEditor = ({
     (end: { x: number; y: number }) => {
       const intent = extrusionAt(end);
       extruding.current = undefined;
-      setExtrusion(undefined);
+      setExtrusion(intent);
       if (intent?.kind !== 'extrude') {
         return false;
       }
@@ -478,7 +492,9 @@ export const Scene3DEditor = ({
     setDraft(undefined);
   };
   const commitDraft = (element: Scene.Element3D) => {
-    cancelSizing();
+    // The draft stays drawn until the layout has the element.
+    sizing.current = undefined;
+    setDraft(element);
     onIntent(editing, { kind: 'create', element });
     onSelect([element.id]);
   };

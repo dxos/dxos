@@ -45,13 +45,17 @@ const needsManifold = (doc: Scene.SceneDocument): boolean =>
       ),
   );
 
-/** Manifold's geometry once loaded, for a document that needs it. */
+/**
+ * Manifold's geometry once loaded, for a document that needs it, or (`preload`) ahead of a solid an edit is about to
+ * draw, which would otherwise show as a stand-in until the module loads.
+ */
 export const useManifoldGeometry = (
   doc: Scene.SceneDocument,
   given: GeometrySource | undefined,
+  { preload = false }: { preload?: boolean } = {},
 ): GeometrySource | undefined => {
   const [geometry, setGeometry] = useState<GeometrySource>();
-  const needed = !given && needsManifold(doc);
+  const needed = !given && (preload || needsManifold(doc));
   useEffect(() => {
     if (!needed || geometry) {
       return;

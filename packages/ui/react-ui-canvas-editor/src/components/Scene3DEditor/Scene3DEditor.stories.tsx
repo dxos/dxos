@@ -52,7 +52,11 @@ const OVERLAP: Scene.SceneDocument = {
   models: [],
 };
 
-type StoryProps = { exemplar: (typeof EXEMPLARS_3D)[number] | 'overlap' };
+type StoryProps = {
+  exemplar: (typeof EXEMPLARS_3D)[number] | 'overlap';
+  /** Milliseconds before an intent reaches the document, as a host that stores it (ECHO) takes. */
+  commitDelay?: number;
+};
 
 const TOOLS: { tool: Tool3D; icon: string; label: string }[] = [
   { tool: 'select', icon: SELECT_ICON, label: 'Select' },
@@ -73,7 +77,7 @@ const TOOLS: { tool: Tool3D; icon: string; label: string }[] = [
  * 3. Double-click a composite (the encapsulated cluster's shell) to edit its parts; Escape goes back out.
  * 4. Delete removes the selection; Orbit (or the middle button) orbits, shift or the right button pans, the wheel zooms.
  */
-const DefaultStory = ({ exemplar }: StoryProps) => {
+const DefaultStory = ({ exemplar, commitDelay }: StoryProps) => {
   const initial = useMemo(
     () => (exemplar === 'overlap' ? OVERLAP : Dsl.readScenes(EXEMPLARS[exemplar]).document),
     [exemplar],
@@ -83,12 +87,17 @@ const DefaultStory = ({ exemplar }: StoryProps) => {
   const [tool, setTool] = useState<Tool3D>('select');
   const [editing, setEditing] = useState<string>();
   const scene = document.scenes[0];
-  const onIntent = useCallback((layout: string, intent: LayoutIntent) => {
-    setDocument((current) => ({
-      ...current,
-      layouts: current.layouts.map((record) => (record.id === layout ? applyIntent(record, intent) : record)),
-    }));
-  }, []);
+  const onIntent = useCallback(
+    (layout: string, intent: LayoutIntent) => {
+      const apply = () =>
+        setDocument((current) => ({
+          ...current,
+          layouts: current.layouts.map((record) => (record.id === layout ? applyIntent(record, intent) : record)),
+        }));
+      commitDelay === undefined ? apply() : setTimeout(apply, commitDelay);
+    },
+    [commitDelay],
+  );
   if (!scene) {
     return null;
   }
@@ -149,7 +158,7 @@ export const Overlapping: Story = { args: { exemplar: 'overlap' } };
  */
 export const Extrude: Story = {
   // Plain cubes: no solid or rounded cube loads Manifold before the first extrusion.
-  args: { exemplar: 'overlap' },
+  args: { exemplar: 'overlap', commitDelay: 100 },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const editor = await canvas.findByTestId('scene.3d.editor');
@@ -182,6 +191,13 @@ export const Extrude: Story = {
     const from = { clientX: rect.left + target.x, clientY: rect.top + target.y, button: 0, pointerId: 1 };
     const to = { ...from, clientX: from.clientX - 60, clientY: from.clientY - 60 };
 
+    // Every frame the preview is drawn in, so a stand-in drawn before the solid is built shows.
+    const frames: string[] = [];
+    scene()?.onAfterRenderObservable.add(() => {
+      const drawn = bounds('item-extrude-1');
+      drawn && frames.push(drawn);
+    });
+
     // 1. The press captures the pointer, so its moves and release target the editor rather than the canvas under it.
     await fireEvent.pointerDown(view, { ...from, buttons: 1 });
     await fireEvent.pointerMove(editor, { ...to, buttons: 1 });
@@ -190,11 +206,15 @@ export const Extrude: Story = {
     await new Promise((resolve) => setTimeout(resolve, 1_000));
     const preview = bounds('item-extrude-1');
     await expect(editor.dataset.selection).toBe('');
+    await expect(new Set(frames)).toEqual(new Set([preview]));
 
     // 2.
+    // Every frame from the release on draws the solid as previewed, while the document takes the commit and after.
+    const released: (string | undefined)[] = [];
+    scene()?.onAfterRenderObservable.add(() => released.push(bounds('item-extrude-1')));
     await fireEvent.pointerUp(editor, { ...to, buttons: 0 });
     await waitFor(() => expect(editor.dataset.selection).toBe('extrude-1'));
     await new Promise((resolve) => setTimeout(resolve, 1_000));
-    await expect(bounds('item-extrude-1')).toBe(preview);
+    await expect(new Set(released)).toEqual(new Set([preview]));
   },
 };
