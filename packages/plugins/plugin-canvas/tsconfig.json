@@ -100,13 +100,7 @@
       "path": "../../ui/react-ui-list"
     },
     {
-      "path": "../../ui/react-ui-menu"
-    },
-    {
       "path": "../../ui/ui-theme"
-    },
-    {
-      "path": "../../ui/ui-types"
     },
     {
       "path": "../plugin-animator"

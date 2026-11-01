@@ -3,7 +3,7 @@
 //
 
 //
-// What the effect worker does, as a plain class, so the worker (`worker.ts`), a headless check and node tests share it:
+// What the effect worker does, as a plain class, so the worker (`effect-worker.ts`), a headless check and node tests share it:
 // it holds the compiled modules, the shot's bindings and jobs, and one runner per effect instance, and answers frame
 // requests with each instance's output at a time in the shot (F-5.1, F-5.2).
 //

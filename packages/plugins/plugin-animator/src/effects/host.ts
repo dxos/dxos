@@ -20,7 +20,7 @@ export type EffectFrames = { t: number; frames: AnimatorCapabilities.EffectFrame
 
 export type EffectHostOptions = {
   compile: ModuleCompiler;
-  /** A worker running `effects/worker.ts`; without one, effects run in-process. */
+  /** A worker running `effects/effect-worker.ts`; without one, effects run in-process. */
   createWorker?: () => Worker;
   onFrames: (frames: EffectFrames) => void;
 };

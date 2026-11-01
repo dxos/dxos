@@ -12,4 +12,5 @@ export const effectCompiler = createEsbuildCompiler({
 });
 
 /** The effect worker: agent-written code runs there, away from the page; the bundler emits it as its own chunk. */
-export const createEffectWorker = (): Worker => new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' });
+export const createEffectWorker = (): Worker =>
+  new Worker(new URL('./effect-worker.ts', import.meta.url), { type: 'module' });
