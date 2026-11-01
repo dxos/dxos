@@ -1303,9 +1303,10 @@ the user 2026-10-31: in this PR. One commit per task, each with its failing test
 
 ### Task I.6: Trusted publishers for the new public packages
 
-- [ ] Set up an npm trusted publisher for each package this PR makes public: `@dxos/scene`,
+- [x] Set up an npm trusted publisher for each package this PR makes public: `@dxos/scene`,
       `@dxos/react-ui-canvas-editor`, `@dxos/animation`, `@dxos/react-ui-animation` and `@dxos/plugin-animator`
-      (`scripts/publish-package.mjs`, `npm-publishing` skill). Until then the release cannot publish them.
+      (`scripts/publish-package.mjs`, `npm-publishing` skill). Done 2026-11-01: the four new packages bootstrap-published
+      at `0.0.0`, each trusted to `dxos/dxos` → `publish-all.yml`; `@dxos/react-ui-canvas-editor` already had it.
 
 ---
 
