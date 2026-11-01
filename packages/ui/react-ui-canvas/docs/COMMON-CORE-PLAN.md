@@ -1301,6 +1301,12 @@ the user 2026-10-31: in this PR. One commit per task, each with its failing test
   D-20. Tests: `sections.test.tsx` library tests (RED: no tool), plugin-canvas `plugin.test.ts` "the library offers
   the three vehicle presets…" (RED: no capability), and the `CanvasArticle` Canvas3D story's play (pick Taxi, place it).
 
+### Task I.6: Trusted publishers for the new public packages
+
+- [ ] Set up an npm trusted publisher for each package this PR makes public: `@dxos/scene`,
+      `@dxos/react-ui-canvas-editor`, `@dxos/animation`, `@dxos/react-ui-animation` and `@dxos/plugin-animator`
+      (`scripts/publish-package.mjs`, `npm-publishing` skill). Until then the release cannot publish them.
+
 ---
 
 ## Phase F — Tests and storybooks for review (decision 9)
