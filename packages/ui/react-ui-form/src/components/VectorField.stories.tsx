@@ -117,7 +117,7 @@ export const Test: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    // 2. The axes stack under the vector's label, labelled x, y, z (and w, h for a size).
+    // 2. The axes stack under the vector's label, lettered x, y, z by position (a size's width and height read x, y).
     const position = canvas.getByRole('group', { name: 'Position' });
     const axes = within(position).getAllByRole('spinbutton');
     await expect(axes.map((axis) => axis.getAttribute('aria-label'))).toEqual(['x', 'y', 'z']);
@@ -126,7 +126,7 @@ export const Test: Story = {
       within(size)
         .getAllByRole('spinbutton')
         .map((axis) => axis.getAttribute('aria-label')),
-    ).toEqual(['w', 'h']);
+    ).toEqual(['x', 'y']);
 
     // 3. A typed value waits for the blur, then writes only its own axis.
     const y = within(position).getByRole('spinbutton', { name: 'y' });

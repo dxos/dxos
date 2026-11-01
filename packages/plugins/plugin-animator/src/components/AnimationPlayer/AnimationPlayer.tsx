@@ -158,10 +158,7 @@ export const AnimationPlayer = ({
         )}
         <OverlayLayer frames={effects} projection={projection} />
         {/* Transitions fade through black, as film does, rather than to the surface behind the player. */}
-        <div
-          className='absolute inset-0 bg-black pointer-events-none'
-          style={{ opacity: 1 - (located?.opacity ?? 1) }}
-        />
+        <div className='dx-cover bg-black pointer-events-none' style={{ opacity: 1 - (located?.opacity ?? 1) }} />
         <ScreenLayer frame={screenFrame} />
       </div>
       {spans.length > 1 && (

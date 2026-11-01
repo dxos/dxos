@@ -64,7 +64,8 @@ afterEach(async () => {
   await builder.close();
 });
 
-describe('ArchitectureSpace', () => {
+// Seeding lays out every diagram, which takes a few seconds alone and several times that on a loaded CI shard.
+describe('ArchitectureSpace', { timeout: 60_000 }, () => {
   test('seeds every diagram, and Composer, DXOS and EDGE documents that link and embed them', async ({ expect }) => {
     const definition = ArchitectureSpace.make();
     const { db } = await builder.createDatabase({ types: [...definition.schemas] });
