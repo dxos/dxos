@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { Fragment, useEffect } from 'react';
+import React, { Fragment, type RefObject, useEffect } from 'react';
 
 import * as Dialog from '@dxos/react-ui/Dialog';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -67,8 +67,11 @@ export type KeyboardActions = {
   disabled: boolean;
 };
 
-/** The player's keys, on the document so they work wherever focus is, except in a text field. */
-export const useKeyboard = (actions: KeyboardActions) => {
+/**
+ * The player's keys, on the document so they work wherever focus is, except in a text field; or, given `scope`, only
+ * while focus is inside that element, so a host page keeps its own keys.
+ */
+export const useKeyboard = (actions: KeyboardActions, scope?: RefObject<HTMLElement | null>) => {
   useEffect(() => {
     if (actions.disabled) {
       return;
@@ -127,7 +130,12 @@ export const useKeyboard = (actions: KeyboardActions) => {
         action();
       }
     };
+    const element = scope?.current;
+    if (scope) {
+      element?.addEventListener('keydown', handler);
+      return () => element?.removeEventListener('keydown', handler);
+    }
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
-  }, [actions]);
+  }, [actions, scope]);
 };

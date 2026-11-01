@@ -1,0 +1,55 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { describe, expect, test } from 'vitest';
+
+import { bundleRoot, rebaseManifest } from './bundle.ts';
+import { type Manifest } from './types.ts';
+
+const manifest: Manifest = {
+  format: 'autocue@1',
+  title: 'Chess',
+  archive: 'bundle.zip',
+  demos: [
+    {
+      id: 'opening',
+      title: 'Play the opening',
+      poster: 'opening/poster.jpg',
+      videos: [
+        { src: 'opening/demo.mp4', type: 'video/mp4' },
+        { src: 'https://cdn.example.com/demo.webm', type: 'video/webm' },
+      ],
+      chapters: [],
+      recording: {},
+    },
+  ],
+};
+
+describe('bundleRoot', () => {
+  test('a folder, its page, and its manifest share one root', () => {
+    const root = 'https://dx.pub/demo/2026-10-29-chess/';
+    expect(bundleRoot('https://dx.pub/demo/2026-10-29-chess').href).toBe(root);
+    expect(bundleRoot(root).href).toBe(root);
+    expect(bundleRoot(`${root}index.html#opening`).href).toBe(root);
+    expect(bundleRoot(`${root}autocue.json?v=2`).href).toBe(root);
+  });
+});
+
+describe('rebaseManifest', () => {
+  test('bundle paths become absolute and absolute URLs are kept', () => {
+    const rebased = rebaseManifest(manifest, 'https://dx.pub/demo/chess/');
+    expect(rebased.hosted).toBe('https://dx.pub/demo/chess/');
+    expect(rebased.archive).toBe('https://dx.pub/demo/chess/bundle.zip');
+    expect(rebased.demos[0].poster).toBe('https://dx.pub/demo/chess/opening/poster.jpg');
+    expect(rebased.demos[0].videos.map((video) => video.src)).toEqual([
+      'https://dx.pub/demo/chess/opening/demo.mp4',
+      'https://cdn.example.com/demo.webm',
+    ]);
+  });
+
+  test('a hosted address the manifest names wins', () => {
+    const rebased = rebaseManifest({ ...manifest, hosted: 'https://dx.pub/demo/chess/' }, 'http://localhost/chess/');
+    expect(rebased.hosted).toBe('https://dx.pub/demo/chess/');
+  });
+});

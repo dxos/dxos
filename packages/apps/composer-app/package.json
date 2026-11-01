@@ -67,6 +67,7 @@
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-atproto": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
+    "@dxos/plugin-autocue": "workspace:*",
     "@dxos/plugin-blogger": "workspace:*",
     "@dxos/plugin-bluesky": "workspace:*",
     "@dxos/plugin-board": "workspace:*",

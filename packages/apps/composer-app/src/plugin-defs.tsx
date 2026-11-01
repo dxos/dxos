@@ -12,6 +12,7 @@ import type * as Plugin from '@dxos/app-framework/Plugin';
 import { type ClientServicesRpc, makeHandlersFromRpc } from '@dxos/client-protocol';
 import * as AgentPlugin from '@dxos/plugin-agent/AgentPlugin';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
+import * as AutocuePlugin from '@dxos/plugin-autocue/AutocuePlugin';
 import * as BloggerPlugin from '@dxos/plugin-blogger/BloggerPlugin';
 import * as BlueskyPlugin from '@dxos/plugin-bluesky/BlueskyPlugin';
 import * as BoardPlugin from '@dxos/plugin-board/BoardPlugin';
@@ -151,6 +152,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
     // Dev-only defaults (`isDev`: the `dev` environment or local `DX_DEV=true` — not preview, not a
     // plain `serve`). Sidekick is also gated on `isDev` for availability, not just defaults (below).
     isDev && [
+      AutocuePlugin.meta.profile.key,
       BloggerPlugin.meta.profile.key,
       BookmarksPlugin.meta.profile.key,
       CallsPlugin.meta.profile.key,
@@ -266,6 +268,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
       // Code mode offers the model only its `eval` tool, which the script does not call.
       config.scriptedModel ? { aiServiceMiddleware: scriptedAiServiceMiddleware } : { codeModeTurnProducer },
     ),
+    AutocuePlugin.make(),
     BoardPlugin.make(),
     BookmarksPlugin.make(),
     CallsPlugin.make(),

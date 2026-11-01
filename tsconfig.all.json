@@ -397,6 +397,9 @@
       "path": "packages/plugins/plugin-attention/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-autocue/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-blogger/tsconfig.json"
     },
     {

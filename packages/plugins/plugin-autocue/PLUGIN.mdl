@@ -1,0 +1,139 @@
+---
+id: org.dxos.plugin.autocue
+name: AutocuePlugin
+version: 0.1.0
+---
+
+A plugin for `DXOS` Composer that plays autocue demo bundles: recorded walkthroughs of the app with their steps as
+chapters, the `.mdl` test they were recorded from, where they were recorded, and a prompt to record them again. A
+bundle is made by the `autocue` skill (`pack.mjs --upload`) and hosted on dx.pub; this plugin links one into a space
+and plays it with the `@dxos/autocue/player` Player. Recording stays in the skill (phase 2 of
+`tools/autocue/DESIGN.md` moves it behind a loopback service the plugin can call).
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`    |
+| `component` | `org.dxos.mdl.component@1.0`   |
+| `test`      | `org.dxos.mdl.test@1.0`        |
+| `decision`  | `org.dxos.mdl.decision@1.0`    |
+
+## Types
+
+```mdl
+type AutocueBundle
+  desc: A link to an autocue bundle (`org.dxos.type.autocueBundle@0.1.0`).
+  fields:
+    name?: string
+    url?: string    # the bundle folder, its index.html, or its autocue.json
+
+type Manifest
+  desc: The bundle's `autocue.json` (`autocue@1`), from `@dxos/autocue/player`; specified in
+    `.agents/skills/autocue/FORMAT.md`.
+```
+
+## Components
+
+```mdl
+component BundlePlayer
+  desc: Fetches the bundle's manifest with `loadBundle`, rebases its paths onto the bundle's URL, and plays it with
+    the Player in `embedded` layout (fills its container; keys only while focus is inside).
+  props:
+    url?: string
+  state:
+    status: loading | ready | error
+
+component AutocueArticle
+  desc: The article surface for an AutocueBundle; a Panel around BundlePlayer.
+  props:
+    subject: AutocueBundle
+```
+
+## Features
+
+```mdl
+feat F-1: Link a bundle
+  req F-1.1: The create-object menu offers a Demo (AutocueBundle) with a name and URL.
+
+feat F-2: Play a bundle
+  req F-2.1: The article fetches `<url>/autocue.json` and plays the bundle's demos, chapters, spec, recording and prompt.
+  req F-2.2: Bundle-relative video, poster and archive paths resolve against the bundle's URL, not the app's.
+  req F-2.3: The player's keys act only while focus is inside the article.
+  req F-2.4: A missing URL, an unreachable host or a non-autocue response shows a message instead of the player.
+```
+
+## Acceptance
+
+```mdl
+scenario T-1: Play a hosted bundle
+  given: an AutocueBundle whose url is a dx.pub bundle
+  then: the article shows the first demo's video with its chapters in the side panel
+
+scenario T-2: Bad URL
+  given: an AutocueBundle whose url answers 404
+  then: the article says the bundle could not be loaded and names the URL
+```
+
+## QA
+
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
+
+```mdl
+test QA-1: Link a demo bundle and play it
+  desc: The core round-trip — create a Demo pointing at a hosted bundle, play it, and step through its chapters.
+  actors: human
+  covers: [F-1.1, F-2.1, F-2.2, F-2.3]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - plugin-autocue is enabled — it is a labs plugin, default-on only under `isDev`
+    - url: a hosted autocue bundle whose host allows the app's origin (dx.pub does)
+    - no Demo named "QA Demo" exists — ABORT rather than deleting one this test did not create
+  steps:
+    - name: Create the demo
+      do: In the navtree, click + on a collection and choose Demo. Name it "QA Demo" and set its URL to `$given.url`.
+      capture: created
+      expect: a Demo named "QA Demo" appears under the collection and its article opens
+      note: NO `invoke` — there is no create operation, only the navtree factory (`capabilities/create-object.ts`).
+    - name: Play it
+      do: Click the play button over the video.
+      expect: the video plays and the first chapter is highlighted in the Chapters panel
+    - name: Step through the chapters
+      do: Click inside the article, then press → twice.
+      expect: the playhead jumps to the third chapter and the Chapters panel highlights it
+    - name: Keys stay in the article
+      do: Click the navtree, then press →.
+      expect: the playhead does not move
+  after:
+    - name: Delete the demo
+      do: Right-click "QA Demo" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
+      expect: the row leaves the navtree and its plank closes
+```
+
+## Changelog
+
+Every change to this spec adds a decision, newest last. See `lang/changelog.mdl` for the attribution rules.
+
+```mdl
+decision D-1: A new private plugin-autocue hosts the Player, not plugin-video
+  date: 2026-11-01
+  by: user:burdon
+  why: a bundle (several demos, chapters, spec, prompt) is a different object from plugin-video's Video, and a
+    separate plugin keeps both small.
+
+decision D-2: The Player keeps @dxos/plugin-deck's Pane for its chrome
+  date: 2026-11-01
+  by: user:burdon
+  why: rebuilding the plank chrome from react-ui primitives would change the player's look; the dependency is noted
+    in tools/autocue/DESIGN.md for a later pass.
+```
