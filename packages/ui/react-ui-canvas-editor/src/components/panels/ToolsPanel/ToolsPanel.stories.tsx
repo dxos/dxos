@@ -53,14 +53,17 @@ type StoryArgs = Pick<ToolsPanelProps, 'collapse' | 'flyout'> & {
   many: boolean;
   /** The height of the view the rail floats in. */
   height: number;
+  /** The tools group ends with the read-only lock, a button the groups do not list. */
+  lockable?: boolean;
 };
 
 /** The rail floating in a view of `height`, as `Canvas.Tools` places it. */
-const DefaultStory = ({ collapse, flyout, many, height }: StoryArgs) => {
+const DefaultStory = ({ collapse, flyout, many, height, lockable }: StoryArgs) => {
   const [tool, setTool] = useState<Tool>({ kind: 'select' });
+  const [readonly, setReadonly] = useState(false);
   return (
     <div className='relative w-64 border border-separator rounded-sm' style={{ height }}>
-      <div className='absolute top-2 bottom-2 left-2 pointer-events-none'>
+      <div className='absolute top-2 bottom-2 left-2 pointer-events-none' data-testid='palette-frame'>
         <ToolsPanel
           tool={tool}
           nodes={many ? MANY : defaultNodeRegistry}
@@ -68,6 +71,8 @@ const DefaultStory = ({ collapse, flyout, many, height }: StoryArgs) => {
           capabilities={freehandCapabilities}
           collapse={collapse}
           flyout={flyout}
+          readonly={readonly}
+          onReadonlyChange={lockable ? setReadonly : undefined}
           onToolChange={setTool}
         />
       </div>
@@ -104,6 +109,28 @@ export const ManyGrid: Story = { args: { many: true, flyout: 'grid' } };
 
 /** Many types with room to spare: still flat, every tool one click away. */
 export const ManyTall: Story = { args: { many: true, height: 1400 } };
+
+/**
+ * A view too short for even the folded rail: the rail stays inside the room its host gives it, scrolling rather than
+ * running under what sits below it, and counts the buttons a group ends with when deciding to fold.
+ */
+export const Short: Story = {
+  args: { many: true, lockable: true, height: 200 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const frame = canvas.getByTestId('palette-frame').getBoundingClientRect();
+    // 1. The rail ends within its frame.
+    await waitFor(() =>
+      expect(canvas.getByTestId('palette').getBoundingClientRect().bottom).toBeLessThanOrEqual(frame.bottom),
+    );
+    // 2. The last button, once scrolled to, is the one a click at its middle reaches.
+    const lock = canvas.getByTestId('palette-readonly');
+    lock.scrollIntoView({ block: 'nearest' });
+    const rect = lock.getBoundingClientRect();
+    const hit = canvasElement.ownerDocument.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+    await expect(hit !== null && lock.contains(hit)).toBe(true);
+  },
+};
 
 /** A folded group picks its face, opens its grid, and shows the tool picked from it. */
 export const Test: Story = {

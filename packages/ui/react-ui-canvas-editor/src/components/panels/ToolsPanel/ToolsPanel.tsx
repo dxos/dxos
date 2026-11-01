@@ -70,10 +70,21 @@ export type ToolsPanelProps = PanelProps & {
   onToolChange: (tool: Tool) => void;
 };
 
-/** The height the rail would take flat: each button, the gaps between them, and each group's padding and divider. */
-const flatHeight = <T,>(groups: readonly ToolGroup<T>[], button: number): number =>
+/**
+ * The height the rail would take flat: each button (a group's end among them), the gaps between them, and each group's
+ * padding and divider.
+ */
+const flatHeight = <T,>(
+  groups: readonly ToolGroup<T>[],
+  button: number,
+  groupEnd: Readonly<Record<string, ReactNode>> = {},
+): number =>
   groups.reduce(
-    (height, group) => height + (group.folded ? 1 : foldRuns(group.entries).length) * (button + 4) - 4 + 9,
+    (height, group) =>
+      height +
+      ((group.folded ? 1 : foldRuns(group.entries).length) + (groupEnd[group.name] ? 1 : 0)) * (button + 4) -
+      4 +
+      9,
     0,
   );
 
@@ -85,6 +96,7 @@ const useCollapsed = <T,>(
   ref: RefObject<HTMLDivElement | null>,
   groups: readonly ToolGroup<T>[],
   collapse: ToolRailProps<T>['collapse'],
+  groupEnd: ToolRailProps<T>['groupEnd'],
 ) => {
   const [overflows, setOverflows] = useState(false);
   useLayoutEffect(() => {
@@ -95,13 +107,13 @@ const useCollapsed = <T,>(
     }
     const measure = () => {
       const button = element.querySelector('button')?.getBoundingClientRect().height ?? 32;
-      setOverflows(flatHeight(groups, button) > host.clientHeight);
+      setOverflows(flatHeight(groups, button, groupEnd) > host.clientHeight);
     };
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(host);
     return () => observer.disconnect();
-  }, [ref, groups, collapse]);
+  }, [ref, groups, collapse, groupEnd]);
   return collapse === 'auto' ? overflows : collapse;
 };
 
@@ -122,13 +134,18 @@ export const ToolRail = <T,>({
   onToolChange,
 }: ToolRailProps<T>) => {
   const ref = useRef<HTMLDivElement>(null);
-  const collapsed = useCollapsed(ref, groups, collapse);
+  const collapsed = useCollapsed(ref, groups, collapse, groupEnd);
   const button = { same, dragData, testId, onToolChange };
   return (
     <div
       ref={ref}
-      // The host's frame spans the room the rail may take and lets the view below it take the pointer.
-      className={mx('flex flex-col w-fit divide-y divide-separator pointer-events-auto', FLOATING_PANEL, classNames)}
+      // The host's frame spans the room the rail may take and lets the view below it take the pointer; a rail too tall
+      // even folded scrolls within it rather than running under the bars below.
+      className={mx(
+        'flex flex-col w-fit max-h-full overflow-y-auto divide-y divide-separator pointer-events-auto',
+        FLOATING_PANEL,
+        classNames,
+      )}
       data-testid='palette'
       data-collapsed={collapsed || undefined}
     >
