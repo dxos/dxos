@@ -15,6 +15,7 @@ import {
   menuSelection,
   orbitButtons,
   restingCenter,
+  sameFace,
 } from './tools.ts';
 
 describe('tools', () => {
@@ -81,6 +82,15 @@ describe('tools', () => {
     expect(extrudesFace('extrude', 'box', top, selected)).toBe(true);
     expect(extrudesFace('extrude', 'box', { x: 1, y: 0, z: 0 }, selected)).toBe(false);
     expect(extrudesFace('extrude', 'other', top, selected)).toBe(false);
+  });
+
+  test('two faces are the same only on one element along one axis; none matches only none', () => {
+    const top = { element: 'box', normal: { x: 0, y: 1, z: 0 } };
+    expect(sameFace(top, { element: 'box', normal: { x: 0, y: 1, z: 0 } })).toBe(true);
+    expect(sameFace(top, { element: 'box', normal: { x: 0, y: -1, z: 0 } })).toBe(false);
+    expect(sameFace(top, { element: 'lid', normal: { x: 0, y: 1, z: 0 } })).toBe(false);
+    expect(sameFace(top, undefined)).toBe(false);
+    expect(sameFace(undefined, undefined)).toBe(true);
   });
 
   test('a face is named by the axis it points out along', () => {

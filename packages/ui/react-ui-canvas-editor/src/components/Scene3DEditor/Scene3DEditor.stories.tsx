@@ -190,7 +190,7 @@ export const Overlapping: Story = { args: { exemplar: 'overlap' } };
  * Extrude: Extrude picked, over plain cubes.
  *
  * Test:
- * 1. Hover a cube: the cursor turns to the move arrows over any of its faces, and back to the arrow off it.
+ * 1. Hover a cube: the face under the pointer is outlined and the cursor turns to the move arrows; off it, neither.
  * 2. Drag from a face: the solid grows out of that face as the pointer moves, and the release makes it, selected.
  * 3. Double-click a face: it is highlighted, and the cursor now changes only over that face; a drag anywhere extrudes it.
  * 4. Escape clears the selected face.
@@ -204,7 +204,7 @@ export const Extrude: Story = {
  * Extrude, driven: a drag from a face of a cube extrudes it, drawn as the pointer moves, and the release makes the solid.
  *
  * Test:
- * 1. With Extrude, the cursor marks a cube's face under the pointer, and not open ground.
+ * 1. With Extrude, the face under the pointer is outlined and the cursor marks it; on open ground, neither.
  * 2. A double-click on the face selects it, highlighted; Escape clears it.
  * 3. A press on a cube and a move away from it draw the extruded solid, not yet in the document.
  * 4. The release makes the `extrude` element, selected.
@@ -248,9 +248,13 @@ export const ExtrudeTest: Story = {
     // 1.
     await fireEvent.pointerMove(view, { ...from, buttons: 0 });
     await waitFor(() => expect(editor).toHaveClass('cursor-move'));
+    await waitFor(() => expect(scene()?.getMeshByName('face-hover-c')).toBeTruthy());
+    await expect(scene()?.getMeshByName('face-hover-fill-c')).toBeTruthy();
     const ground = { ...from, clientX: rect.left + 2, clientY: rect.top + 2 };
     await fireEvent.pointerMove(view, { ...ground, buttons: 0 });
     await waitFor(() => expect(editor).not.toHaveClass('cursor-move'));
+    await waitFor(() => expect(scene()?.getMeshByName('face-hover-c')).toBeFalsy());
+    await expect(scene()?.getMeshByName('face-hover-fill-c')).toBeFalsy();
 
     // 2. Each press of the double-click starts a face drag, which captures the pointer, so the release and the
     // double-click land on the editor rather than the canvas.

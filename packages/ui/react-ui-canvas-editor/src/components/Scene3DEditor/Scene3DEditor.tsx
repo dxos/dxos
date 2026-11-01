@@ -60,6 +60,7 @@ import {
   menuSelection,
   orbitButtons,
   restingCenter,
+  sameFace,
 } from './tools.ts';
 
 /**
@@ -332,9 +333,15 @@ export const Scene3DEditor = ({
 
   const [linkFrom, setLinkFrom] = useState<string>();
   useEffect(() => setLinkFrom(undefined), [tool, editing]);
-  // The extrude tool's cursor marks the face a drag would pull; a drag keeps the one it started with.
-  const [overFace, setOverFace] = useState(false);
-  useEffect(() => setOverFace(false), [tool, editing]);
+  // The face a drag with the extrude tool would pull, outlined, with the cursor marking it; a drag keeps the one it
+  // started with.
+  const [hoveredFace, setHoveredFace] = useState<FaceSelection>();
+  useEffect(() => setHoveredFace(undefined), [tool, editing]);
+  const hoveredKey = hoveredFace === undefined ? undefined : keys.get(hoveredFace.element)?.key;
+  useEffect(() => {
+    // The face moves as the drag extrudes it, so its outline is not drawn meanwhile.
+    renderer?.hoverFace(extrusion === undefined ? hoveredKey : undefined, hoveredFace?.normal);
+  }, [renderer, hoveredKey, hoveredFace, extrusion, shown]);
 
   const elementAt = useCallback(
     (point: { x: number; y: number }) => {
@@ -545,7 +552,7 @@ export const Scene3DEditor = ({
       className={mx(
         'relative dx-fill overflow-hidden bg-(--surface-bg) touch-none outline-none',
         (tool === 'orbit' || commandHeld) && 'cursor-grab',
-        !commandHeld && overFace && 'cursor-move',
+        !commandHeld && hoveredFace !== undefined && 'cursor-move',
         classNames,
       )}
       data-testid='scene.3d.editor'
@@ -608,7 +615,11 @@ export const Scene3DEditor = ({
       onPointerMove={(event) => {
         if (tool === 'extrude' && event.buttons === 0) {
           const { hit, element } = elementAt(local(event));
-          setOverFace(extrudesFace(tool, element, hit?.normal, face));
+          const next =
+            element !== undefined && hit?.normal && extrudesFace(tool, element, hit.normal, face)
+              ? { element, normal: axisOf(hit.normal) }
+              : undefined;
+          setHoveredFace((current) => (sameFace(current, next) ? current : next));
         }
         if (extruding.current) {
           setExtrusion(extrusionAt(local(event)));
@@ -682,7 +693,7 @@ export const Scene3DEditor = ({
       onDoubleClick={(event) =>
         (onScene(event.nativeEvent) || event.target === event.currentTarget) && onDoubleClick(local(event))
       }
-      onPointerLeave={() => setOverFace(false)}
+      onPointerLeave={() => setHoveredFace(undefined)}
       onContextMenu={(event) => {
         if (!onScene(event.nativeEvent) || !onContextMenu) {
           return;

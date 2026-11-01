@@ -221,6 +221,9 @@ export class SceneRenderer3D {
   /** The selected face: the item's key and the face's axis-aligned outward normal, drawn as a pane over that side. */
   #faceSelection?: { key: string; normal: Model.Vec3 };
   #faceMesh?: { mesh: Mesh; center: Vector3 };
+  /** The face under the pointer, tinted faintly and outlined round that side of its item's bounds. */
+  #faceHover?: { key: string; normal: Model.Vec3 };
+  #faceHoverMesh?: { fill: Mesh; line: LinesMesh; outline: Vector3[] };
   /** A Neu theme's tones: the 2D Neu themes', so the two dimensions share a ground in each mode. */
   readonly #palette?: NeuPalette;
   /** A Neu theme's ground plane and the shadows the items cast on it. */
@@ -348,6 +351,34 @@ export class SceneRenderer3D {
     this.#faceSelection = key === undefined || !normal ? undefined : { key, normal };
     this.#drawFace();
     this.#view && this.#scene.render();
+  }
+
+  /** The hovered face as drawn: the item, its normal and the closed loop round it. */
+  get hoveredFace(): { key: string; normal: Model.Vec3; outline: Vector3[] } | undefined {
+    return this.#faceHover && this.#faceHoverMesh
+      ? { ...this.#faceHover, outline: this.#faceHoverMesh.outline }
+      : undefined;
+  }
+
+  /** Outlines the face of item `key` that `normal` (an axis) points out of; none when `key` is undefined. */
+  hoverFace(key: string | undefined, normal?: Model.Vec3): void {
+    const next = key === undefined || !normal ? undefined : { key, normal };
+    const current = this.#faceHover;
+    if (
+      current?.key === next?.key &&
+      current?.normal.x === next?.normal.x &&
+      current?.normal.y === next?.normal.y &&
+      current?.normal.z === next?.normal.z
+    ) {
+      return;
+    }
+    this.#faceHover = next;
+    this.#drawFace();
+    if (this.#view) {
+      this.#scene.render();
+      // A new outline's shader compiles after this frame, which then draws nothing of it.
+      this.#scene.executeWhenReady(() => this.#scene.render());
+    }
   }
 
   /** Changes the selection colour, e.g. when the theme does. */
@@ -549,6 +580,7 @@ export class SceneRenderer3D {
   dispose(): void {
     this.#clearBoxes();
     this.#faceSelection = undefined;
+    this.#faceHover = undefined;
     this.#drawFace();
     this.#highlight.dispose();
     this.#gizmos?.dispose();
@@ -677,18 +709,21 @@ export class SceneRenderer3D {
     return { mesh, min: min.clone(), max: max.clone() };
   }
 
-  /** A translucent pane over the selected face of its item's world-aligned bounds, a little proud of it. */
-  #drawFace(): void {
-    this.#faceMesh?.mesh.dispose();
-    this.#faceMesh = undefined;
-    const selection = this.#faceSelection;
-    const surface = selection ? this.#items.get(selection.key)?.surface : undefined;
-    if (!selection || !surface) {
-      return;
+  /**
+   * The side of item `key`'s world-aligned bounds that `normal` (an axis) points out of, a little proud of it: its
+   * centre, its two other extents and its corners in order round it.
+   */
+  #faceBounds(
+    key: string,
+    normal: Model.Vec3,
+  ): { center: Vector3; width: number; height: number; corners: Vector3[] } | undefined {
+    const surface = this.#items.get(key)?.surface;
+    if (!surface) {
+      return undefined;
     }
     surface.computeWorldMatrix(true);
     const { minimumWorld: min, maximumWorld: max } = surface.getBoundingInfo().boundingBox;
-    const { x: nx, y: ny, z: nz } = selection.normal;
+    const { x: nx, y: ny, z: nz } = normal;
     const size = max.subtract(min);
     const middle = min.add(max).scale(0.5);
     const lift = 0.002;
@@ -699,17 +734,75 @@ export class SceneRenderer3D {
     );
     // A plane lies in x/y facing -z; its width and height are the face's two other extents.
     const [width, height] = nx !== 0 ? [size.z, size.y] : ny !== 0 ? [size.x, size.z] : [size.x, size.y];
-    const mesh = CreatePlane(`face-${selection.key}`, { width, height, sideOrientation: Mesh.DOUBLESIDE }, this.#scene);
-    mesh.position = center;
+    // Half the face's extent along each of the two axes it spans, so its corners go round it.
+    const [across, up] =
+      nx !== 0
+        ? [new Vector3(0, 0, size.z / 2), new Vector3(0, size.y / 2, 0)]
+        : ny !== 0
+          ? [new Vector3(size.x / 2, 0, 0), new Vector3(0, 0, size.z / 2)]
+          : [new Vector3(size.x / 2, 0, 0), new Vector3(0, size.y / 2, 0)];
+    const corners = [
+      [-1, -1],
+      [1, -1],
+      [1, 1],
+      [-1, 1],
+    ].map(([a, b]) => center.add(across.scale(a)).add(up.scale(b)));
+    return { center, width, height, corners };
+  }
+
+  /** A pane over a face's bounds in the selection colour, at `alpha`. */
+  #facePane(
+    name: string,
+    bounds: { center: Vector3; width: number; height: number },
+    normal: Model.Vec3,
+    alpha: number,
+  ): Mesh {
+    const mesh = CreatePlane(
+      name,
+      { width: bounds.width, height: bounds.height, sideOrientation: Mesh.DOUBLESIDE },
+      this.#scene,
+    );
+    mesh.position = bounds.center;
     mesh.rotation =
-      nx !== 0 ? new Vector3(0, Math.PI / 2, 0) : ny !== 0 ? new Vector3(Math.PI / 2, 0, 0) : Vector3.Zero();
-    const material = new StandardMaterial(`face-${selection.key}`, this.#scene);
+      normal.x !== 0
+        ? new Vector3(0, Math.PI / 2, 0)
+        : normal.y !== 0
+          ? new Vector3(Math.PI / 2, 0, 0)
+          : Vector3.Zero();
+    const material = new StandardMaterial(name, this.#scene);
     material.emissiveColor = Color3.FromHexString(this.#selection);
     material.disableLighting = true;
-    material.alpha = 0.35;
+    material.alpha = alpha;
     mesh.material = material;
     mesh.isPickable = false;
-    this.#faceMesh = { mesh, center: center.clone() };
+    return mesh;
+  }
+
+  /** The selected face as a translucent pane; the hovered one tinted faintly and outlined; both in the selection colour. */
+  #drawFace(): void {
+    this.#faceMesh?.mesh.dispose();
+    this.#faceMesh = undefined;
+    this.#faceHoverMesh?.fill.dispose();
+    this.#faceHoverMesh?.line.dispose();
+    this.#faceHoverMesh = undefined;
+    const selection = this.#faceSelection;
+    const bounds = selection && this.#faceBounds(selection.key, selection.normal);
+    if (selection && bounds) {
+      const mesh = this.#facePane(`face-${selection.key}`, bounds, selection.normal, 0.35);
+      this.#faceMesh = { mesh, center: bounds.center.clone() };
+    }
+    const hover = this.#faceHover;
+    const outlined = hover && this.#faceBounds(hover.key, hover.normal);
+    if (hover && outlined) {
+      const fill = this.#facePane(`face-hover-fill-${hover.key}`, outlined, hover.normal, 0.15);
+      const outline = [...outlined.corners, outlined.corners[0]];
+      const line = CreateLines(`face-hover-${hover.key}`, { points: outline }, this.#scene);
+      line.color = Color3.FromHexString(this.#selection);
+      line.isPickable = false;
+      // Drawn over the item, as the selection's box is, so no edge of it hides the outline.
+      line.renderingGroupId = OVERLAY_GROUP;
+      this.#faceHoverMesh = { fill, line, outline };
+    }
   }
 
   #exclude(mesh: Mesh): void {

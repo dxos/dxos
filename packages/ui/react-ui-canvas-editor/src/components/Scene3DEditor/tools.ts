@@ -77,12 +77,15 @@ export const extrudesFace = (
   if (tool !== 'extrude' || element === undefined || !normal) {
     return false;
   }
-  if (!face) {
-    return true;
-  }
-  const axis = axisOf(normal);
-  return element === face.element && axis.x === face.normal.x && axis.y === face.normal.y && axis.z === face.normal.z;
+  return !face || sameFace({ element, normal: axisOf(normal) }, face);
 };
+
+/** Whether two faces (or none) are the same: one element's side along one axis. */
+export const sameFace = (first: FaceSelection | undefined, second: FaceSelection | undefined): boolean =>
+  first?.element === second?.element &&
+  first?.normal.x === second?.normal.x &&
+  first?.normal.y === second?.normal.y &&
+  first?.normal.z === second?.normal.z;
 
 /** A face's name: the sign and axis its normal points along, e.g. `+Y` for the top. */
 export const faceName = (normal: Scene.Vec3): string => {

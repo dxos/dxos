@@ -190,6 +190,24 @@ describe('SceneRenderer3D.pick', () => {
     expect(view.face).toBeUndefined();
   });
 
+  test("a hovered face is outlined round that side of the item's bounds, a closed loop, and cleared", () => {
+    const view = renderer(doc([{ id: 'a', type: 'cube', center: { x: 1, y: 2, z: 3 }, scale: { x: 2, y: 4, z: 6 } }]));
+    view.hoverFace('a', { x: 1, y: 0, z: 0 });
+    const outline = view.hoveredFace?.outline.map(({ x, y, z }) =>
+      [x, y, z].map((value) => Math.round(value * 100) / 100),
+    );
+    expect(view.hoveredFace?.key).toBe('a');
+    expect(outline).toHaveLength(5);
+    expect(outline?.[0]).toEqual(outline?.[4]);
+    expect(new Set(outline?.map(([x]) => x))).toEqual(new Set([2]));
+    expect(new Set(outline?.map(([, y, z]) => `${y},${z}`))).toEqual(new Set(['0,0', '4,0', '4,6', '0,6']));
+    view.hoverFace(undefined);
+    expect(view.hoveredFace).toBeUndefined();
+    view.hoverFace('a', { x: 0, y: 1, z: 0 });
+    view.dispose();
+    expect(view.hoveredFace).toBeUndefined();
+  });
+
   test('with snapping on, a gizmo moves by the grid unit, turns by 15 degrees and scales by a tenth; off, freely', () => {
     const view = renderer(doc([{ id: 'a', type: 'cube', center: { x: 0, y: 0, z: 0 } }]));
     view.setSnap(true);
