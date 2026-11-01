@@ -16,6 +16,7 @@ export * from './model/versioned.ts';
 export { constrain2D } from './modes/constrain.ts';
 export * from './utils/compose.ts';
 export { boundsFromPoints } from './utils/hit.ts';
+export * from './utils/lattice.ts';
 export * from './utils/layers.ts';
 export * from './utils/order.ts';
 export * from './utils/shapes.ts';

@@ -11,7 +11,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj } from '@dxos/echo';
-import { DEFAULT_LATTICE } from '@dxos/react-ui-canvas';
+import { DEFAULT_LATTICE } from '@dxos/react-ui-canvas/headless';
 import { Scene } from '@dxos/scene';
 
 import { Canvas } from '#types';

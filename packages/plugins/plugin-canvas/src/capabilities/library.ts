@@ -8,7 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 
 import { CanvasCapabilities } from '#types';
 
-import { type MeshPresets } from '../samples/index.ts';
+import type * as MeshPresets from '../samples/presets/MeshPresets.ts';
 
 // The presets' OBJ sources are ~400KB, so they load on the first pick rather than with the module.
 const preset = (id: MeshPresets.Preset, label: string, icon: string): CanvasCapabilities.LibraryItemContribution => ({
