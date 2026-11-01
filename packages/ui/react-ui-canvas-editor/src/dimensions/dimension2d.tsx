@@ -4,7 +4,15 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
-import React, { type PropsWithChildren, createContext, useContext, useEffect, useLayoutEffect, useMemo } from 'react';
+import React, {
+  type PropsWithChildren,
+  createContext,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+} from 'react';
 
 import { type ModuleCompiler } from '@dxos/animation';
 import {
@@ -76,6 +84,21 @@ const HOST_KEYS: ReadonlySet<KeyAction> = new Set<KeyAction>([
   'group',
   'ungroup',
 ]);
+
+/**
+ * Reports an aid the engine's own key toggled to the host's display, since the editor's constrain and the host's saved
+ * view read the display; a change the display itself made reports nothing back.
+ */
+const useAidReport = (aid: Atom.Atom<boolean>, key: 'snap' | 'axes' | 'guides', editing: boolean) => {
+  const { display, setDisplay } = useSceneLook('SceneEditor.AidReport');
+  const value = useAtomValue(aid);
+  const previous = useRef(value);
+  useEffect(() => {
+    const changed = previous.current !== value;
+    previous.current = value;
+    changed && editing && value !== (display[key] ?? false) && setDisplay?.({ [key]: value });
+  }, [value]);
+};
 
 /** Thumbnail box of an object row, in px. */
 const THUMBNAIL = { width: 40, height: 24 };
@@ -433,10 +456,13 @@ export const createDimension2D =
       const offers = useAtomValue(atoms.host);
       const host = useContext(Canvas2DHostContext);
       const editing = !picture;
-      // The display panel's aids are the host's, kept by the engine as atoms of its own, so they go one way.
+      // The aids are the host's display, which the engine keeps as atoms its own keys toggle too.
       useEffect(() => registry.set(canvas.snap, editing && display.snap), [editing, display.snap]);
       useEffect(() => registry.set(canvas.axes, editing && (display.axes ?? false)), [editing, display.axes]);
       useEffect(() => registry.set(canvas.guides, editing && (display.guides ?? false)), [editing, display.guides]);
+      useAidReport(canvas.snap, 'snap', editing);
+      useAidReport(canvas.axes, 'axes', editing);
+      useAidReport(canvas.guides, 'guides', editing);
       return (
         <Canvas.Root
           document={drawn}

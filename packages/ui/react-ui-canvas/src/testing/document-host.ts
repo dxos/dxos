@@ -4,16 +4,7 @@
 
 import { useCallback, useState } from 'react';
 
-import {
-  type LayoutIntent,
-  type ModelIntent,
-  type Scene,
-  applyIntent,
-  applyModelIntent,
-  findLayout,
-} from '@dxos/scene';
-
-import { type ConstrainIntent } from '../model/index.ts';
+import { type LayoutIntent, type ModelIntent, type Scene, applyIntent, applyModelIntent } from '@dxos/scene';
 
 /** The model {@link fromRenderLists2D} places a drawing's objects in. */
 const MODEL = 'model';
@@ -32,25 +23,15 @@ const applyLayout = (document: Scene.SceneDocument, key: string, intent: LayoutI
       };
 };
 
-export type DocumentHostOptions = {
-  /** The layouts' mode, applied to every write with snapping on, as an editor would. */
-  constrain?: ConstrainIntent;
-};
-
-/** A document held in React state, which takes the engine's intents as a host would: what a story's canvas edits. */
-export const useDocumentHost = (
-  initial: Scene.SceneDocument | (() => Scene.SceneDocument),
-  { constrain }: DocumentHostOptions = {},
-) => {
+/**
+ * A document held in React state, which takes the editor's intents as a host would: what a story's canvas edits. The
+ * editor has applied the layout's mode with its own snap, so the host applies each intent as it comes.
+ */
+export const useDocumentHost = (initial: Scene.SceneDocument | (() => Scene.SceneDocument)) => {
   const [document, setDocument] = useState(initial);
   const onIntent = useCallback(
-    (layout: string, intent: LayoutIntent) =>
-      setDocument((current) => {
-        const record = constrain && findLayout(current, layout);
-        const constrained = record && constrain ? constrain(record, intent, { snap: true }) : intent;
-        return constrained ? applyLayout(current, layout, constrained) : current;
-      }),
-    [constrain],
+    (layout: string, intent: LayoutIntent) => setDocument((current) => applyLayout(current, layout, intent)),
+    [],
   );
   const onModelIntent = useCallback((intent: ModelIntent): readonly string[] => {
     setDocument((current) => applyModelIntent(current, intent).doc);

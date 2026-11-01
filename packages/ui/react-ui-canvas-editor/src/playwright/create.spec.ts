@@ -4,7 +4,8 @@
 
 import { type Page, expect, test } from '@playwright/test';
 
-import { NOMINAL_SIZES, nominalSize } from '@dxos/react-ui-canvas';
+// The React-free entry, as the spec runs in node, where the scene barrel's components cannot load.
+import { NOMINAL_SIZES, nominalSize } from '@dxos/react-ui-canvas/headless';
 import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 
 import { SceneManager } from './SceneManager.ts';

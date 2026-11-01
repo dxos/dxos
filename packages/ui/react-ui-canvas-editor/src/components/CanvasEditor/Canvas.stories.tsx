@@ -6,14 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 import { expect, fireEvent, screen, userEvent, waitFor, within } from 'storybook/test';
 
-import {
-  type BackgroundGrid,
-  type ConstrainIntent,
-  DEFAULT_LATTICE,
-  type ViewTree,
-  fromRenderLists2D,
-  latticeConstrain,
-} from '@dxos/react-ui-canvas';
+import { type BackgroundGrid, DEFAULT_LATTICE, type ViewTree, fromRenderLists2D } from '@dxos/react-ui-canvas';
 import {
   createLatticeTree,
   createLinkedPairTree,
@@ -64,10 +57,6 @@ const FIXTURES = {
 
 type Fixture = keyof typeof FIXTURES;
 
-/** The lattice mode a lattice layout keeps, which the host applies to every write and the engine previews. */
-const LATTICE_MODE: ConstrainIntent = (layout, intent) =>
-  layout.dim === '2d' ? latticeConstrain(layout, intent) : intent;
-
 /** The drawing with every 2D layout on the default lattice. */
 const onLattice = (document: Scene.SceneDocument): Scene.SceneDocument => ({
   ...document,
@@ -102,9 +91,7 @@ const Editor = ({
   const [inspectors, setInspectors] = useState(initialInspectors);
   const [theme, setTheme] = useState<string>();
   const [backgroundGrid, setBackgroundGrid] = useState<BackgroundGrid>();
-  const { document, onIntent, onModelIntent } = useDocumentHost(lattice ? () => onLattice(initial) : initial, {
-    constrain: lattice ? LATTICE_MODE : undefined,
-  });
+  const { document, onIntent, onModelIntent } = useDocumentHost(lattice ? () => onLattice(initial) : initial);
   return (
     <CanvasEditor.Root
       document={document}
@@ -118,7 +105,6 @@ const Editor = ({
       onThemeChange={setTheme}
       backgroundGrid={backgroundGrid}
       onBackgroundGridChange={setBackgroundGrid}
-      constrain={lattice ? LATTICE_MODE : undefined}
     >
       <CanvasEditor.Viewport liveDepth={liveDepth} />
       <CanvasEditor.Navigation />

@@ -136,10 +136,11 @@ test.describe('Canvas', () => {
     const onMajor = (values: number[]) => values.every((value) => Math.abs(value % 64) === 0);
     const before = await edges();
 
-    // Well under a major cell on screen: on the minor grid this lands a 16px step away, on the major one a whole cell.
+    // A move is held on a major line within the detent (8px on screen): a cell and a few px over lands on the line.
+    const major = (64 * (await scene.zoom())) / 100;
     const box = await scene.box(scene.node(id));
     const center = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
-    await scene.drag(center, { x: center.x + 37, y: center.y + 23 });
+    await scene.drag(center, { x: center.x + major + 4, y: center.y + major + 3 });
     await expect.poll(edges).not.toEqual(before);
     expect(onMajor(await edges())).toBe(true);
 
@@ -321,8 +322,13 @@ test.describe('Canvas', () => {
     expect(labels).toEqual(expect.arrayContaining(['Label']));
     // The style swatches sit under the Style section's heading rather than a field label of their own.
     await expect(page.locator('[data-testid="properties"] [data-testid="style-grid"]')).toBeVisible();
-    // Geometry is two labelled number fields per row.
-    expect(labels).toEqual(expect.arrayContaining(['X', 'Y', 'Width', 'Height', 'Ports per side']));
+    // Geometry is the centre and the size, each a group of two number fields.
+    expect(labels).toEqual(expect.arrayContaining(['Ports per side']));
+    for (const name of ['Center', 'Size']) {
+      await expect(
+        page.locator('[data-testid="properties"]').getByRole('group', { name, exact: true }).getByRole('spinbutton'),
+      ).toHaveCount(2);
+    }
   });
 
   test('the style grid sets hue and tone together', async () => {

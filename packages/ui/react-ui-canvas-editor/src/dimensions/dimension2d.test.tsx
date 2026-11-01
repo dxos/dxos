@@ -3,11 +3,13 @@
 //
 // @vitest-environment happy-dom
 
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
-import React, { useLayoutEffect, useState } from 'react';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
+import React, { useContext, useLayoutEffect, useState } from 'react';
 import { afterAll, afterEach, beforeAll, describe, expect, test } from 'vitest';
 
-import { type Camera, DEFAULT_LATTICE } from '@dxos/react-ui-canvas';
+import { type Camera, DEFAULT_LATTICE, createCanvasAtoms } from '@dxos/react-ui-canvas';
 import { type Scene } from '@dxos/scene';
 
 import { type EditorDisplay, SceneEditor, useSceneSelection } from '../editor/index.ts';
@@ -134,5 +136,40 @@ describe('the 2D dimension under SceneEditor', () => {
     render(<Host document={lattice} />);
     await waitFor(() => expect(screen.getByTestId('toolbar-guides')).toBeDefined());
     expect(screen.queryByTestId('theme-grid-dots')).toBeNull();
+  });
+
+  test('an aid the engine’s own key toggles reaches the host’s display, so the editor’s constrain reads it too', async () => {
+    const atoms = createCanvasAtoms('root');
+    const config = createConfig2D({ atoms });
+    const display = { current: DISPLAY };
+    const registry: { current?: Registry.AtomRegistry } = {};
+    const Probe = () => {
+      registry.current = useContext(RegistryContext);
+      return null;
+    };
+    const Host = () => {
+      const [value, setValue] = useState(DISPLAY);
+      display.current = value;
+      return (
+        <SceneEditor.Root
+          config={config}
+          document={DOCUMENT}
+          scene='s'
+          onIntent={() => {}}
+          display={value}
+          onDisplayChange={(next) => setValue((current) => ({ ...current, ...next }))}
+          authoredCamera={AUTHORED}
+          onCameraChange={() => {}}
+        >
+          <Probe />
+          <SceneEditor.Viewport />
+        </SceneEditor.Root>
+      );
+    };
+    render(<Host />);
+    await waitFor(() => expect(registry.current?.get(atoms.snap)).toBe(true));
+    // As the engine's G key does.
+    await act(async () => registry.current?.set(atoms.snap, false));
+    await waitFor(() => expect(display.current.snap).toBe(false));
   });
 });
