@@ -7,6 +7,7 @@ import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import React, { useLayoutEffect, useState } from 'react';
 import { afterAll, afterEach, beforeAll, describe, expect, test } from 'vitest';
 
+import { createNodeRegistry, defaultNodePrototypes, defaultNodeTypes } from '@dxos/react-ui-canvas';
 import { type LayoutIntent, type Scene, applyIntent } from '@dxos/scene';
 
 import { useSceneSelection } from '../editor/index.ts';
@@ -35,7 +36,7 @@ const Select = ({ ids }: { ids: readonly string[] }) => {
 };
 
 /** A host with no history or codec of its own, as `CanvasEditor`'s are: it applies each intent to its document. */
-const Host = ({ children }: { children: React.ReactNode }) => {
+const Host = ({ children, nodes }: { children: React.ReactNode; nodes?: ReturnType<typeof createNodeRegistry> }) => {
   const [document, setDocument] = useState(DOCUMENT);
   const onIntent = (layout: string, intent: LayoutIntent) =>
     setDocument((current) => ({
@@ -43,7 +44,7 @@ const Host = ({ children }: { children: React.ReactNode }) => {
       layouts: current.layouts.map((record) => (record.id === layout ? applyIntent(record, intent) : record)),
     }));
   return (
-    <CanvasEditor.Root document={document} onIntent={onIntent}>
+    <CanvasEditor.Root document={document} nodes={nodes} onIntent={onIntent}>
       {children}
     </CanvasEditor.Root>
   );
@@ -107,5 +108,24 @@ describe('CanvasEditor on the shared parts', () => {
     await act(async () => (await screen.findByTestId('layers-create')).click());
     await waitFor(() => expect(screen.getByTestId('layer-layer-2')).not.toBeNull());
     expect(screen.getByTestId('layer-layer').getAttribute('aria-selected')).not.toBe('true');
+  });
+
+  test('the tool rail offers every node type of the host’s registry: an image, a contributed kind', async () => {
+    const nodes = createNodeRegistry(
+      {
+        ...defaultNodeTypes,
+        image: { ...defaultNodeTypes.rect, name: 'Image', icon: 'ph--image--regular', key: 'I' },
+        widget: { ...defaultNodeTypes.rect, name: 'Widget', icon: 'ph--puzzle-piece--regular', group: 'Plugins' },
+      },
+      defaultNodePrototypes,
+    );
+    render(
+      <Host nodes={nodes}>
+        <CanvasEditor.Viewport />
+        <CanvasEditor.Tools />
+      </Host>,
+    );
+    expect(await screen.findByTestId('canvas.tool.node:image')).not.toBeNull();
+    expect(screen.getByTestId('canvas.tool.node:widget')).not.toBeNull();
   });
 });
