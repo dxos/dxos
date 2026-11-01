@@ -354,8 +354,17 @@ export const MarkdownEmbed: Story = {
     },
   }),
   play: async ({ canvasElement }) => {
-    // The embed first, then the canvas within it, so a canvas that never mounts reports the embed's own content.
-    const embed = await within(canvasElement).findByTestId('markdown.embed', undefined, { timeout: 30_000 });
+    // The embed first, then the canvas within it; a link never embedded reports what the editor shows instead.
+    const embed = await waitFor(
+      () => {
+        const found = canvasElement.querySelector<HTMLElement>('[data-testid="markdown.embed"]');
+        if (!found) {
+          throw new Error(`No embed in: ${canvasElement.querySelector('.cm-content')?.innerHTML ?? 'no editor'}`);
+        }
+        return found;
+      },
+      { timeout: 30_000 },
+    );
     await within(embed).findByTestId('scene-view', undefined, { timeout: 30_000 });
     await waitFor(() => expect(embed.getBoundingClientRect().height).toBeGreaterThan(100));
     // 2. The breadcrumbs and zoom bar show only while the embed is attended. The load-time rebuilds land first: a block redrawn under
