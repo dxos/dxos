@@ -61,6 +61,7 @@ export const createSceneEditorServices = <C,>(
     Viewport: dimension.Viewport,
     shortcuts: dimension.shortcuts,
     aids: dimension.aids,
+    inspector: dimension.inspector,
   };
   const sync = () => {
     syncDocument();

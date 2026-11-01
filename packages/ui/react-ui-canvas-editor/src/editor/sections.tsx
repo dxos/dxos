@@ -3,7 +3,9 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { useMemo, useState } from 'react';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import * as Atom from 'effect/reactivity/Atom';
+import React, { useContext, useMemo, useState } from 'react';
 
 import { type ThemeMode, between } from '@dxos/react-ui-canvas';
 import {
@@ -33,14 +35,28 @@ import {
   ViewsInspector,
   propertiesShown,
 } from '../components/index.ts';
+import { type ObjectEntry } from '../components/index.ts';
 import {
   useSceneCommands,
   useSceneDocument,
   useSceneNavigation,
   useSceneSelection,
+  useSceneServices,
   useSceneTools,
 } from './aspects/index.ts';
-import { layersOf, layoutTree, objectEntries } from './scene-rows.ts';
+import {
+  duplicateObject,
+  layersOf,
+  layoutTree,
+  mergedLayers,
+  movedLayers,
+  objectEntries,
+  restackIntent,
+} from './scene-rows.ts';
+
+const NO_LAYERS = Atom.make<readonly Layer[]>([]);
+const NO_OBJECTS = Atom.make<readonly ObjectEntry[]>([]);
+const NO_PICK = Atom.make<string | undefined>(undefined);
 
 export const STYLES_INSPECTOR: InspectorSectionDef = {
   id: 'styles',
@@ -109,7 +125,7 @@ export const PropertiesSection = () => {
 
 /** Views: the scene's layout tree, with a composite's parts under it; a row selects, a composite row drills in. */
 export const ViewsSection = () => {
-  const { atoms } = useSceneDocument('SceneEditor.Views');
+  const { atoms, commands } = useSceneDocument('SceneEditor.Views');
   const navigation = useSceneNavigation('SceneEditor.Views');
   const selection = useSceneSelection('SceneEditor.Views');
   const document = useAtomValue(atoms.document);
@@ -136,57 +152,12 @@ export const ViewsSection = () => {
           selection.commands.select(next.ids);
         }}
         onOpen={(next) => open(next.at(-1))}
-      />
-    </InspectorSection>
-  );
-};
-
-/** Objects: the model's objects; place one with the place tool, open a composite's parts, or make one of the selection. */
-export const ObjectsSection = () => {
-  const { atoms, commands } = useSceneDocument('SceneEditor.Objects');
-  const navigation = useSceneNavigation('SceneEditor.Objects');
-  const tools = useSceneTools('SceneEditor.Objects');
-  const document = useAtomValue(atoms.document);
-  const readonly = useAtomValue(atoms.readonly);
-  const rootLayout = useAtomValue(atoms.rootLayout);
-  const offers = useAtomValue(atoms.host);
-  const table = useAtomValue(useSceneCommands('SceneEditor.Objects').atoms.table);
-  const entries = useMemo(() => objectEntries(document), [document]);
-  const model = document.models[0]?.id;
-  const objects = document.models[0]?.objects ?? {};
-  const importCommand = table.get('import');
-  const [current, setCurrent] = useState<string>();
-  return (
-    <InspectorSection section={OBJECTS_INSPECTOR}>
-      <ObjectsInspector
-        objects={entries}
-        selected={current}
-        readonly={readonly}
-        onPlace={(id) => tools.commands.setTool({ id: 'place', object: id })}
-        onMakeObject={() => table.get('make-object')?.run()}
-        canMakeObject={table.get('make-object')?.enabled ?? false}
-        onImport={importCommand?.enabled ? importCommand.run : undefined}
-        onSelect={(id) => {
-          // A click picks the object; a click on the picked one opens a composite's parts.
-          const parts = objects[id]?.parts;
-          current === id &&
-            parts !== undefined &&
-            navigation.commands.open(parts === rootLayout ? [] : [rootLayout ?? '', parts]);
-          setCurrent(id);
-        }}
-        onDelete={
-          model === undefined || !offers.model
+        onReorder={
+          readonly
             ? undefined
-            : (id, instances) => {
-                if (instances) {
-                  for (const layout of document.layouts) {
-                    const ids = Object.values(layout.elements)
-                      .filter((element) => element.object === id)
-                      .map((element) => element.id);
-                    ids.length > 0 && commands.intent(layout.id, { kind: 'delete', ids });
-                  }
-                }
-                commands.modelIntent({ kind: 'remove', model, id });
+            : ({ container, element, target, position }) => {
+                const layout = findLayout(document, container);
+                layout && commands.intent(container, restackIntent(layout, element, target, position));
               }
         }
       />
@@ -194,28 +165,153 @@ export const ObjectsSection = () => {
   );
 };
 
-/** Layers: the open layout's layers; a hidden one's elements are neither drawn nor picked. */
+/**
+ * Objects: the model's objects (or those the dimension's engine keeps); place one with the place tool, open a
+ * composite's parts, duplicate one, or make one of the selection.
+ */
+export const ObjectsSection = () => {
+  const { atoms, commands } = useSceneDocument('SceneEditor.Objects');
+  const navigation = useSceneNavigation('SceneEditor.Objects');
+  const tools = useSceneTools('SceneEditor.Objects');
+  const { inspector } = useSceneServices('SceneEditor.Objects');
+  const engine = inspector?.objects;
+  const document = useAtomValue(atoms.document);
+  const readonly = useAtomValue(atoms.readonly);
+  const rootLayout = useAtomValue(atoms.rootLayout);
+  const offers = useAtomValue(atoms.host);
+  const table = useAtomValue(useSceneCommands('SceneEditor.Objects').atoms.table);
+  const engineObjects = useAtomValue(engine?.objects ?? NO_OBJECTS);
+  const enginePick = useAtomValue(engine?.selected ?? NO_PICK);
+  const entries = useMemo(() => (engine ? engineObjects : objectEntries(document)), [engine, engineObjects, document]);
+  const model = document.models[0]?.id;
+  const objects = document.models[0]?.objects ?? {};
+  const importCommand = table.get('import');
+  const [current, setCurrent] = useState<string>();
+  const onModel = !engine && model !== undefined && offers.model;
+  return (
+    <InspectorSection section={OBJECTS_INSPECTOR}>
+      <ObjectsInspector
+        objects={entries}
+        selected={engine ? enginePick : current}
+        readonly={readonly}
+        thumbnail={inspector?.thumbnail}
+        onPlace={engine ? engine.place : (id) => tools.commands.setTool({ id: 'place', object: id })}
+        onMakeObject={() => table.get('make-object')?.run()}
+        canMakeObject={table.get('make-object')?.enabled ?? false}
+        onImport={importCommand?.enabled ? importCommand.run : undefined}
+        onRename={engine?.rename}
+        onSelect={
+          engine
+            ? engine.select
+            : (id) => {
+                // A click picks the object; a click on the picked one opens a composite's parts.
+                const parts = objects[id]?.parts;
+                current === id &&
+                  parts !== undefined &&
+                  navigation.commands.open(parts === rootLayout ? [] : [rootLayout ?? '', parts]);
+                setCurrent(id);
+              }
+        }
+        onDuplicate={
+          engine
+            ? engine.duplicate
+            : onModel
+              ? (id) => {
+                  const intent = duplicateObject(document, id);
+                  intent && commands.modelIntent(intent);
+                }
+              : undefined
+        }
+        onDelete={
+          engine
+            ? engine.remove
+            : model === undefined || !offers.model
+              ? undefined
+              : (id, instances) => {
+                  if (instances) {
+                    for (const layout of document.layouts) {
+                      const ids = Object.values(layout.elements)
+                        .filter((element) => element.object === id)
+                        .map((element) => element.id);
+                      ids.length > 0 && commands.intent(layout.id, { kind: 'delete', ids });
+                    }
+                  }
+                  commands.modelIntent({ kind: 'remove', model, id });
+                }
+        }
+      />
+    </InspectorSection>
+  );
+};
+
+/**
+ * Layers: the open layout's layers (or those the dimension's engine keeps); a hidden one's elements are neither drawn
+ * nor picked. Several may be picked to merge; the top-most picked is where new shapes go.
+ */
 export const LayersSection = () => {
+  const registry = useContext(RegistryContext);
   const { atoms, commands } = useSceneDocument('SceneEditor.Layers');
+  const { inspector } = useSceneServices('SceneEditor.Layers');
+  const engine = inspector?.layers;
   const readonly = useAtomValue(atoms.readonly);
   const layout = useAtomValue(atoms.layout);
   const offers = useAtomValue(atoms.host);
   const record = useOpenLayout('SceneEditor.Layers');
-  const layers = useMemo(() => (record ? layersOf(record) : []), [record]);
-  const write = (next: readonly Layer[]) => layout !== undefined && commands.setLayers(layout, next);
+  const engineLayers = useAtomValue(engine?.layers ?? NO_LAYERS);
+  const active = useAtomValue(inspector?.activeLayer ?? NO_PICK);
+  const layers = useMemo(
+    () => (engine ? [...engineLayers] : record ? layersOf(record) : []),
+    [engine, engineLayers, record],
+  );
+  const [picked, setPicked] = useState<string[]>([]);
+  const selected = useMemo(() => {
+    const ids = picked.filter((id) => layers.some((layer) => layer.id === id));
+    // The active layer when the layout has it, else the top one, as new shapes go there.
+    const top = layers.find((layer) => layer.id === active)?.id ?? layers.at(-1)?.id;
+    return ids.length > 0 ? ids : top !== undefined ? [top] : [];
+  }, [picked, layers, active]);
+  const write = (next: readonly Layer[]) =>
+    engine ? engine.write(next) : layout !== undefined && commands.setLayers(layout, next);
+  const select = (ids: string[]) => {
+    setPicked(ids);
+    const top = [...layers].reverse().find((layer) => ids.includes(layer.id));
+    top && inspector?.activeLayer && registry.set(inspector.activeLayer, top.id);
+  };
+  const byId = (id: string) => layers.find((layer) => layer.id === id);
   return (
     <InspectorSection section={LAYERS_INSPECTOR}>
       <LayersInspector
         layers={layers}
-        readonly={readonly || !offers.layers}
+        selected={selected}
+        readonly={readonly || (!engine && !offers.layers)}
+        onSelectedChange={select}
         onToggle={(id) => write(layers.map((layer) => (layer.id === id ? { ...layer, hidden: !layer.hidden } : layer)))}
         onRename={(id, name) => write(layers.map((layer) => (layer.id === id ? { ...layer, name } : layer)))}
+        onMove={(id, index) => write(movedLayers(layers, id, index))}
         onCreate={() => {
-          const id = `layer-${layers.length + 1}`;
-          write([...layers, { id, name: `Layer ${layers.length + 1}`, z: between(layers.at(-1)?.z) }]);
+          let index = layers.length + 1;
+          while (byId(`layer-${index}`)) {
+            index++;
+          }
+          const id = `layer-${index}`;
+          write([...layers, { id, name: `Layer ${index}`, z: between(layers.at(-1)?.z) }]);
+          select([id]);
           return id;
         }}
-        onDelete={(ids) => write(layers.filter((layer) => !ids.includes(layer.id)))}
+        onDelete={(ids) => {
+          write(layers.filter((layer) => !ids.includes(layer.id)));
+          setPicked([]);
+        }}
+        onMerge={(ids, into) => {
+          if (engine) {
+            engine.merge(ids, into);
+          } else if (record && layout !== undefined) {
+            const merge = mergedLayers(record, ids, into);
+            commands.intent(layout, merge.intent);
+            commands.setLayers(layout, merge.layers);
+          }
+          select([into]);
+        }}
       />
     </InspectorSection>
   );

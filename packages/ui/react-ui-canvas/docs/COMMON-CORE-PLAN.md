@@ -1263,11 +1263,21 @@ the user 2026-10-31: in this PR. One commit per task, each with its failing test
 
 ### Task I.3: The inspectors
 
-- [ ] Layers: pick several, move, merge, on the document (both dimensions); the top pick is 2D's active layer.
-- [ ] Objects: rename and duplicate on the model (both dimensions); a thumbnail from the dimension (2D draws the parts).
-- [ ] Views: a drag restacks a row among its siblings as one `reorder` intent (both dimensions).
-- [ ] Properties is the shared section; the inspector toolbar's group, ungroup and new class are the command table's.
-- [ ] `CanvasInspectors.tsx` goes but for `CanvasPropertiesForm`.
+- [x] Layers: pick several, move, merge, on the document (both dimensions); the top pick is 2D's active layer.
+- [x] Objects: duplicate on the model (both dimensions); a thumbnail from the dimension (2D draws the parts).
+- [x] Views: a drag restacks a row among its siblings as one `reorder` intent (both dimensions).
+- [x] Properties is the shared section; the inspector toolbar's group, ungroup and new class are the command table's.
+- [x] `CanvasInspectors.tsx` goes but for `CanvasPropertiesForm`.
+- Ruling (agent, 2026-10-31): the document carries every inspector edit it can (`movedLayers`, `mergedLayers`,
+  `restackIntent`, `duplicateObject` in `scene-rows.ts`), so 3D has them too. A standalone 2D engine keeps its layers
+  and composites itself, as no edit of either reaches its host as an intent; `Dimension.inspector` gives the shared
+  Layers and Objects sections that engine state instead of the document's, the way `Dimension.edits` gives the
+  commands. Object rename stays the engine's: a model object has no name of its own. The inspector toolbar is the
+  shared editor's in every host (group and ungroup from the command table, then `inspector.selectionCommands`; 2D:
+  New class), so Composer gains it too. The Views rows list in drawing order, so a drag restacks as it looks. Tests:
+  `scene-rows.test.ts` "inspector edits on the document", `sections.test.tsx` "the inspector toolbar groups…",
+  `CanvasEditor.test.tsx` "the shared Layers section writes the layers its engine keeps…" (RED: no helpers, no
+  toolbar). The Objects menu's duplicate is not covered in happy-dom (the menu's item does not select there).
 
 ---
 

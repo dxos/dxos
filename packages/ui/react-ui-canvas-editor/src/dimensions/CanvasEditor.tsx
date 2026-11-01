@@ -2,21 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type PropsWithChildren, useCallback, useMemo, useRef, useState } from 'react';
 
-import { type Camera, Canvas, type CanvasRootProps, useCanvasServices } from '@dxos/react-ui-canvas';
+import { type Camera, Canvas, type CanvasRootProps } from '@dxos/react-ui-canvas';
 import { rootScene } from '@dxos/scene';
 
+import { type InspectorMode } from '../components/index.ts';
 import {
-  CanvasLayers,
-  CanvasObjects,
-  CanvasProperties,
-  CanvasViews,
-  type InspectorMode,
-  useSelectionActions,
-} from '../components/index.ts';
-import { type EditorDisplay, SceneEditor, themeGridOf } from '../editor/index.ts';
+  type EditorDisplay,
+  LayersSection,
+  ObjectsSection,
+  PropertiesSection,
+  SceneEditor,
+  ViewsSection,
+  themeGridOf,
+} from '../editor/index.ts';
 import { createConfig2D } from './config2d.tsx';
 import { Canvas2DHost, type Canvas2DHostProps } from './dimension2d.tsx';
 
@@ -59,14 +59,6 @@ export type CanvasEditorRootProps = PropsWithChildren<
 const AUTHORED_CAMERA: Camera = { x: 0, y: 0, zoom: 1 };
 
 const ignoreIntent = () => {};
-
-/** Commands on the engine's selection (group, ungroup, its class) at the start of the inspector panel's toolbar. */
-const useEngineSelectionActions = () => {
-  const { draw, atoms, store, capabilities, readonly, controller } = useCanvasServices('CanvasEditor.Inspector');
-  const scene = useAtomValue(draw.scene);
-  const selection = useAtomValue(atoms.selection);
-  return useSelectionActions({ scene, selection, store, capabilities, readonly, controller });
-};
 
 /**
  * The shared scene editor with the 2D config, for a host with no history or codec of its own: the engine keeps its undo,
@@ -165,7 +157,6 @@ const CanvasEditorRoot = ({
         onCameraChange={setCamera}
         docked={inspectors === 'docked'}
         onDockedChange={onDockedChange}
-        useInspectorActions={useEngineSelectionActions}
       >
         {children}
       </SceneEditor.Root>
@@ -177,8 +168,8 @@ CanvasEditorRoot.displayName = 'CanvasEditor.Root';
 
 /**
  * The standalone 2D canvas editor: `SceneEditor` with the 2D config (COMMON-CORE H.4), for hosts that draw a canvas with
- * no history or codec (its e2e suites, samples). Its crumbs, camera bar and tool rail are the shared editor's; its
- * actions, display panel and inspectors are the engine's own 2D editors, which the shared parts do not model yet.
+ * no history or codec (its e2e suites, samples). Every part is the shared editor's; the engine keeps what
+ * its host gives no history or codec for (undo, the clipboard, layers and composites) behind them.
  */
 export const CanvasEditor = {
   Root: CanvasEditorRoot,
@@ -188,8 +179,8 @@ export const CanvasEditor = {
   Camera: SceneEditor.Camera,
   Display: SceneEditor.Display,
   Tools: SceneEditor.Tools,
-  Properties: CanvasProperties,
-  Views: CanvasViews,
-  Layers: CanvasLayers,
-  Objects: CanvasObjects,
+  Properties: PropertiesSection,
+  Views: ViewsSection,
+  Layers: LayersSection,
+  Objects: ObjectsSection,
 };

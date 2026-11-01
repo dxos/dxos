@@ -95,4 +95,17 @@ describe('CanvasEditor on the shared parts', () => {
     await act(async () => debug.click());
     await waitFor(() => expect(screen.getByTestId('scene-action-debug').getAttribute('aria-pressed')).toBe('true'));
   });
+
+  test('the shared Layers section writes the layers its engine keeps for a host that hears none', async () => {
+    render(
+      <Host>
+        <CanvasEditor.Viewport />
+        <CanvasEditor.Layers />
+      </Host>,
+    );
+    await waitFor(() => expect(document.querySelector('[data-node-id="b"]')).not.toBeNull());
+    await act(async () => (await screen.findByTestId('layers-create')).click());
+    await waitFor(() => expect(screen.getByTestId('layer-layer-2')).not.toBeNull());
+    expect(screen.getByTestId('layer-layer').getAttribute('aria-selected')).not.toBe('true');
+  });
 });

@@ -136,6 +136,13 @@ describe('SceneEditor sections', () => {
     expect(screen.getByTestId('viewport').dataset.elements).toBe('a,c');
   });
 
+  test('the inspector toolbar groups the selection through the command table', async () => {
+    const onModelIntent = vi.fn((_intent: ModelIntent): readonly string[] => []);
+    render(<Editor select={['a', 'b']} onModelIntent={onModelIntent} />);
+    await userEvent.click(await screen.findByTestId('inspector-group'));
+    expect(onModelIntent).toHaveBeenCalledWith(expect.objectContaining({ kind: 'group', members: ['a', 'b'] }));
+  });
+
   test('Styles "new style from selection" defines a style in the model and points the element at it', async () => {
     const onIntent = vi.fn();
     const onModelIntent = vi.fn((_intent: ModelIntent): readonly string[] => []);

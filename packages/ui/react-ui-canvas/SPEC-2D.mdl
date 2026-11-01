@@ -1637,6 +1637,16 @@ decision D-62: `CanvasEditor` is `SceneEditor` with the 2D config (`standalone`:
   why: One root and one set of aspects for both editors (COMMON-CORE Expectation 0), without dropping the 2D features the shared parts lack.
 ```
 
+```mdl
+decision D-63: The standalone 2D engine's action bar, display panel and inspectors are the shared editor's: its create menu, auto layout and debug are `Dimension.commands`, its snap, guides and axes `Dimension.aids`, and its own layers, composites, thumbnails and New class `Dimension.inspector`.
+  date: 2026-10-31
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Canvas, Dimension2D, F-10.4]
+  supersedes: D-62
+  why: The user asked for the port in this PR (2026-10-31); D-62 kept them only until the shared parts modelled them.
+```
+
 ---
 
 ## Appendix: Extension Definitions

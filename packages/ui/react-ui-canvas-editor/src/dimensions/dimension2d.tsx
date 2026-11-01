@@ -22,19 +22,41 @@ import {
   type KeyAction,
   type Kinds,
   type NodeRegistry,
+  SceneLayer,
+  chainEdits,
+  compositeBounds,
+  compositeViews,
   createCanvasAtoms,
   fromViewportIntent,
   getElement,
+  instanceCounts,
+  isAnonymous,
+  mergeLayers,
+  putLayer,
+  removeLayer,
   rootLayoutOf,
   toViewportDocument,
+  useCanvasDocument,
   useCanvasServices,
+  viewLayers,
 } from '@dxos/react-ui-canvas';
-import { type LayoutIntent, MAJOR_GRID, type Scene, findLayout, isInstanceNode, isLink } from '@dxos/scene';
+import {
+  type Layer,
+  type LayoutIntent,
+  MAJOR_GRID,
+  type Scene,
+  type ViewId,
+  findLayout,
+  isInstanceNode,
+  isLink,
+} from '@dxos/scene';
 
+import { type ObjectEntry } from '../components/index.ts';
 import {
   type Dimension,
   type DimensionCommand,
   type DimensionContext,
+  type DimensionInspector,
   type EditorNavigation,
   type EngineEdit,
   drawnGrid,
@@ -54,6 +76,30 @@ const HOST_KEYS: ReadonlySet<KeyAction> = new Set<KeyAction>([
   'group',
   'ungroup',
 ]);
+
+/** Thumbnail box of an object row, in px. */
+const THUMBNAIL = { width: 40, height: 24 };
+
+/** A composite drawn small, read-only, fitted into an object row's thumbnail. */
+const ObjectThumbnail = ({ id }: { id: ViewId }) => {
+  const { store, nodeRegistry } = useCanvasDocument('SceneEditor.ObjectThumbnail2D');
+  const composite = useAtomValue(store.view(id));
+  const content = composite && compositeBounds(composite);
+  if (!composite || !content) {
+    return null;
+  }
+  const scale = Math.min(THUMBNAIL.width / content.width, THUMBNAIL.height / content.height) * 0.85;
+  const x = THUMBNAIL.width / 2 - (content.x + content.width / 2) * scale;
+  const y = THUMBNAIL.height / 2 - (content.y + content.height / 2) * scale;
+  return (
+    <div
+      className='absolute pointer-events-none'
+      style={{ transform: `translate(${x}px, ${y}px) scale(${scale})`, transformOrigin: '0 0' }}
+    >
+      <SceneLayer lists={store} scene={composite} registry={nodeRegistry} zoom={scale} depth={1} liveDepth={1} />
+    </div>
+  );
+};
 
 /**
  * `Canvas.Root` props a host sets beyond the editor's, for a 2D canvas it drives itself (a drift across the scene, a view
@@ -264,6 +310,92 @@ export const createDimension2D =
         } satisfies Partial<Record<string, EngineEdit>>)
       : undefined;
 
+    // The standalone engine keeps its layers and composites itself: no edit of either reaches its host as an intent.
+    const engineLayers = Atom.keepAlive(
+      Atom.make((get): readonly Layer[] => {
+        const engine = get(services);
+        return engine ? viewLayers(get(engine.draw.scene)) : [];
+      }),
+    );
+    const engineObjects = Atom.keepAlive(
+      Atom.make((get): readonly ObjectEntry[] => {
+        const engine = get(services);
+        if (!engine) {
+          return [];
+        }
+        const scenes = get(engine.store.views);
+        const selected = get(pickedObject);
+        const counts = instanceCounts(scenes);
+        // The library, and the selected anonymous Object too, so it can be named there and so join the library.
+        return compositeViews(scenes)
+          .filter((scene) => !isAnonymous(scene) || scene.id === selected)
+          .map((scene) => ({
+            id: scene.id,
+            name: scene.name ?? scene.id,
+            instances: counts[scene.id] ?? 0,
+            ...(isAnonymous(scene) ? { anonymous: true } : {}),
+          }));
+      }),
+    );
+    // The open composite, else the one an instance on the canvas draws.
+    const pickedObject: Atom.Atom<string | undefined> = Atom.keepAlive(
+      Atom.make((get) => {
+        const engine = get(services);
+        const isolation = get(canvas.isolation);
+        if (!engine || isolation) {
+          return isolation?.composite;
+        }
+        const ids = [...get(canvas.selection)];
+        const node = ids.length === 1 ? get(engine.draw.scene).nodes[ids[0] ?? ''] : undefined;
+        return node && isInstanceNode(node) ? node.composite : undefined;
+      }),
+    );
+    const inspector: DimensionInspector = {
+      activeLayer: canvas.layer,
+      thumbnail: (id) => <ObjectThumbnail id={id} />,
+      selectionCommands: [
+        {
+          id: 'new-class',
+          label: 'New class from selection',
+          icon: 'ph--swatches--regular',
+          enabled: selected(
+            (elements, engine) =>
+              engine.store.styles !== undefined && engine.capabilities.update === true && elements.length === 1,
+          ),
+          run: run((engine) => void engine.controller.selection.classFrom()),
+        },
+      ],
+      ...(options.standalone
+        ? {
+            layers: {
+              layers: engineLayers,
+              write: (next) =>
+                run((engine) => {
+                  const kept = new Set(next.map((layer) => layer.id));
+                  const removed = viewLayers(registry.get(engine.draw.scene)).filter((layer) => !kept.has(layer.id));
+                  engine.draw.apply(
+                    chainEdits([...next.map(putLayer), ...removed.map((layer) => removeLayer(layer.id))]),
+                  );
+                })(),
+              merge: (ids, into) =>
+                run((engine) => {
+                  const merge = mergeLayers(registry.get(engine.draw.scene), ids, into);
+                  merge && engine.draw.apply(merge);
+                })(),
+            },
+            objects: {
+              objects: engineObjects,
+              selected: pickedObject,
+              select: (id) => run((engine) => engine.controller.navigation.isolate(id))(),
+              rename: (id, name) => run((engine) => engine.objectActions.rename(id, name))(),
+              duplicate: (id) => run((engine) => engine.objectActions.duplicate(id))(),
+              place: (id) => run((engine) => engine.objectActions.place(id))(),
+              remove: (id, instances) => run((engine) => engine.objectActions.remove(id, instances))(),
+            },
+          }
+        : {}),
+    };
+
     const onIntent = (layout: string, intent: LayoutIntent) => {
       // A layout the write creates (a new portal's scene) has no stored elements to keep values from.
       const record = findLayout(registry.get(atoms.document), layout) ?? { id: layout, dim: '2d', elements: {} };
@@ -367,6 +499,7 @@ export const createDimension2D =
       shortcuts: !options.standalone,
       commands,
       edits,
+      inspector,
       aids: {
         snap: canvas.snap,
         guides: canvas.guides,

@@ -1005,6 +1005,15 @@ decision D-54: Each dimension builds its own Navigation, Selection and Tools asp
   why: 2D kept its selection, tool, drill path and camera in the editor and in the engine and synced them both ways; the jumping camera bar was that duplication.
 ```
 
+```mdl
+decision D-55: `CanvasEditor` has no part of its own: the actions bar, display panel and inspectors are `SceneEditor`'s, and a standalone 2D engine supplies what its host gives no history or codec for through `Dimension.edits`, `Dimension.aids` and `Dimension.inspector`. Fills in [D-54].
+  date: 2026-10-31
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasEditor, Dimension, F-10.1]
+  why: The 2D editor's own bars and inspectors duplicated the shared ones; edits the document can carry (layer order and merge, restack, object copy) are made on it, so 3D gains them.
+```
+
 ---
 
 ## Appendix: Extension Definitions

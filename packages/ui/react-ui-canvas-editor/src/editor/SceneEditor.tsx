@@ -136,7 +136,7 @@ const SceneEditorRoot = <C,>({
           <InspectorPanel.Root
             docked={!readonly && docked}
             readonly={readonly}
-            useActions={useInspectorActions}
+            useActions={useInspectorActions ?? useSelectionActions}
             onDockedChange={onDockedChange}
           >
             {shortcuts && <EditorShortcuts />}
@@ -391,6 +391,50 @@ const CommandButton = ({ command }: { command: Command }) => {
   ) : (
     <Button.Toggle {...props} pressed={command.pressed} onPressedChange={command.run} />
   );
+};
+
+type SelectionAction = Pick<Command, 'id' | 'label' | 'icon' | 'run'>;
+
+const NO_ACTIONS = Atom.make<readonly SelectionAction[]>([]);
+
+/**
+ * The selection's commands at the start of the inspector panel's toolbar: the command table's group and ungroup, then
+ * the dimension's own (2D: a class from the selection); none when none applies.
+ */
+const useSelectionActions = (): ReactNode => {
+  const table = useAtomValue(useSceneCommands('SceneEditor.SelectionActions').atoms.table);
+  const { inspector } = useSceneServices('SceneEditor.SelectionActions');
+  const own = useAtomValue(
+    useMemo(
+      () =>
+        inspector?.selectionCommands
+          ? Atom.make((get): readonly SelectionAction[] =>
+              (inspector.selectionCommands ?? []).filter((command) => get(command.enabled)),
+            )
+          : NO_ACTIONS,
+      [inspector],
+    ),
+  );
+  const commands: SelectionAction[] = [
+    ...(['group', 'ungroup'] as const).flatMap((id) => {
+      const command = table.get(id);
+      return command?.enabled ? [command] : [];
+    }),
+    ...own,
+  ];
+  return commands.length === 0
+    ? undefined
+    : commands.map((command) => (
+        <Button.Root
+          key={command.id}
+          variant='ghost'
+          iconOnly
+          icon={command.icon}
+          label={command.label}
+          data-testid={`inspector-${command.id}`}
+          onClick={command.run}
+        />
+      ));
 };
 
 /** The config's create tools: one makes its element in the middle of the view, or picks its tool where it cannot. */
