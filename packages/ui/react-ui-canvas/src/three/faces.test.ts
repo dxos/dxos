@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { faceStops, flushWith, snapSides } from './faces.ts';
+import { facePoints, faceStops, flushWith, snapSides } from './faces.ts';
 
 describe('faceStops', () => {
   test("the moves along an axis that bring a moving side onto each of another box's two sides", () => {
@@ -41,5 +41,17 @@ describe('faceStops', () => {
       { key: 'c', normal: { x: 1, y: 0, z: 0 } },
     ]);
     expect(flushWith([2.5], boxes, 'x')).toEqual([]);
+  });
+
+  test("a face's points to snap to: its corners, the middles of its edges, and its centre, all on that side", () => {
+    const box = { min: { x: 0, y: 0, z: 0 }, max: { x: 2, y: 4, z: 6 } };
+    const points = facePoints(box, { x: 0, y: 1, z: 0 });
+    expect(points).toHaveLength(9);
+    expect(new Set(points.map(({ y }) => y))).toEqual(new Set([4]));
+    expect(points).toContainEqual({ x: 0, y: 4, z: 0 });
+    expect(points).toContainEqual({ x: 2, y: 4, z: 6 });
+    expect(points).toContainEqual({ x: 1, y: 4, z: 0 });
+    expect(points).toContainEqual({ x: 1, y: 4, z: 3 });
+    expect(facePoints(box, { x: -1, y: 0, z: 0 })).toContainEqual({ x: 0, y: 2, z: 6 });
   });
 });

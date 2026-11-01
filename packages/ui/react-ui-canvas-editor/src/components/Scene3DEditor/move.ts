@@ -2,54 +2,78 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Box, type FaceRef, snapSides } from '@dxos/react-ui-canvas/3d';
+import { magnetTo, nearestStop, snapTo } from '@dxos/react-ui-canvas';
+import { type Box } from '@dxos/react-ui-canvas/3d';
 import { type Scene } from '@dxos/scene';
 
 type Axis = 'x' | 'y' | 'z';
 
 export type PlaneMove = {
-  /** How far the pointer has carried the grab point on the drag's plane, in world units. */
+  /** How far the pointer has carried the grab point, in world units. */
   delta: Scene.Vec3;
   /** The world bounds of what is moving, where the drag began. */
   box: Box;
-  /** The world axes the plane spans; the body stays put along any other. */
+  /** Where the body was grabbed, in the world. */
+  grab: Scene.Vec3;
+  /** The world axes the body may move along: the plane's two, or the one axis a held key picks. */
   axes: readonly Axis[];
   /** The grid's world step; zero leaves the body free of the grid. */
   step: number;
   /** The world length `DETENT_PX` spans along each axis, within which a side or the grid holds the body. */
   detent: Scene.Vec3;
-  /** Other bodies, whose sides the moving one is held flush against. */
-  boxes?: Readonly<Record<string, Box>>;
+  /** A point of another body the pointer is over: the grab point is held on it. */
+  point?: Scene.Vec3;
+  /** A side of another body the pointer is over, by its axis and where it lies: the body's nearer side is held flush. */
+  face?: { axis: Axis; at: number };
   /** The drag is ending: the body lands on the grid rather than being held near it. */
   landing?: boolean;
 };
 
 /**
- * Where a body dragged on a plane moves: along each of the plane's axes, flush on a side of another body it passes near,
- * else its low corner held on (or, `landing`, put on) the grid; `faces` names the sides it is flush with.
+ * Where a dragged body moves along each of its `axes`: its grab point on the `point` the pointer is over, else its side
+ * flush on the `face` the pointer is over within the detent, else its low corner held on (or, `landing`, put on) the grid.
  */
 export const planeMove = ({
   delta,
   box,
+  grab,
   axes,
   step,
   detent,
-  boxes = {},
+  point,
+  face,
   landing = false,
-}: PlaneMove): { delta: Scene.Vec3; faces: FaceRef[] } => {
+}: PlaneMove): Scene.Vec3 => {
   const moved = { x: 0, y: 0, z: 0 };
-  const faces: FaceRef[] = [];
   for (const axis of axes) {
-    const held = snapSides({
-      sides: [box.min[axis] + delta[axis], box.max[axis] + delta[axis]],
-      axis,
-      boxes,
-      step,
-      detent: detent[axis],
-      landing,
-    });
-    moved[axis] = delta[axis] + held.delta;
-    held.face && faces.push(held.face);
+    if (point) {
+      // The pointer chose the point within the detent on screen, so it holds however far the grab is in depth.
+      moved[axis] = point[axis] - grab[axis];
+      continue;
+    }
+    const [low, high] = [box.min[axis] + delta[axis], box.max[axis] + delta[axis]];
+    const flush =
+      face?.axis === axis
+        ? nearestStop(0, [{ delta: face.at - low }, { delta: face.at - high }], detent[axis])
+        : undefined;
+    const grid = step > 0 ? (landing ? snapTo(low, step) : magnetTo(low, step, detent[axis])) - low : 0;
+    moved[axis] = delta[axis] + (flush ? flush.delta : grid);
   }
-  return { delta: moved, faces };
+  return moved;
 };
+
+/** The point drawn nearest the pointer, if within `detent` pixels of it: what a drag over another body snaps to. */
+export const nearestOnScreen = (
+  points: readonly Scene.Vec3[],
+  pointer: { x: number; y: number },
+  toScreen: (point: Scene.Vec3) => { x: number; y: number } | undefined,
+  detent: number,
+): Scene.Vec3 | undefined =>
+  points.reduce<{ point?: Scene.Vec3; gap: number }>(
+    (best, point) => {
+      const at = toScreen(point);
+      const gap = at ? Math.hypot(at.x - pointer.x, at.y - pointer.y) : Infinity;
+      return gap <= detent && gap < best.gap ? { point, gap } : best;
+    },
+    { gap: Infinity },
+  ).point;

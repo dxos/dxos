@@ -35,6 +35,25 @@ export const faceStops = (sides: readonly number[], boxes: Readonly<Record<strin
     ]),
   );
 
+/**
+ * The points of a box's side (named by its axis-aligned outward `normal`) that a drag snaps to: its corners, the middles
+ * of its edges and its centre.
+ */
+export const facePoints = (box: Box, normal: Scene.Vec3): Scene.Vec3[] => {
+  const axes = ['x', 'y', 'z'] as const;
+  const across = axes.filter((axis) => normal[axis] === 0);
+  const out = axes.find((axis) => normal[axis] !== 0);
+  const [first, second] = across;
+  if (!out || !first || !second) {
+    return [];
+  }
+  const at = normal[out] > 0 ? box.max[out] : box.min[out];
+  const stops = (axis: Axis) => [box.min[axis], (box.min[axis] + box.max[axis]) / 2, box.max[axis]];
+  return stops(first).flatMap((one) =>
+    stops(second).map((two) => ({ x: 0, y: 0, z: 0, [out]: at, [first]: one, [second]: two })),
+  );
+};
+
 /** The sides of other boxes that faces at `sides` along `axis` lie on, so what a drag has snapped to can be shown. */
 export const flushWith = (sides: readonly number[], boxes: Readonly<Record<string, Box>>, axis: Axis): FaceRef[] =>
   faceStops(sides, boxes, axis).flatMap(({ delta, face }) => (Math.abs(delta) < 1e-6 ? [face] : []));

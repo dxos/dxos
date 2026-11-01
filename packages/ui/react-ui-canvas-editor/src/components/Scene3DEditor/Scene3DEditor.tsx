@@ -17,6 +17,8 @@ import {
   type Theme3D,
   type WorkPlane,
   type WorldTransform,
+  axisPoint,
+  facePoints,
   flushWith,
   onScene,
   planeAxes,
@@ -53,7 +55,7 @@ import {
 } from './create.ts';
 import { frameTransform, scaleToLocal, toLocal } from './frame.ts';
 import { axisOf, extrudeIntent, gizmoIntent, screenLength } from './gizmo.ts';
-import { planeMove } from './move.ts';
+import { nearestOnScreen, planeMove } from './move.ts';
 import { targetOf } from './target.ts';
 import {
   type FaceSelection,
@@ -307,6 +309,35 @@ export const Scene3DEditor = ({
     };
   }, []);
   useLayoutEffect(() => renderer?.setSnap(snap && !alt), [renderer, snap, alt]);
+  // Holding X, Y or Z holds a body drag to that world axis.
+  const heldAxis = useRef<'x' | 'y' | 'z'>(undefined);
+  const redrag = useRef<() => void>(undefined);
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      const key = event.key.toLowerCase();
+      if (key !== 'x' && key !== 'y' && key !== 'z') {
+        return;
+      }
+      const next = event.type === 'keydown' ? key : heldAxis.current === key ? undefined : heldAxis.current;
+      if (next !== heldAxis.current) {
+        heldAxis.current = next;
+        redrag.current?.();
+      }
+    };
+    // A key let go while the window had lost focus never reports its release.
+    const onBlur = () => {
+      heldAxis.current = undefined;
+      redrag.current?.();
+    };
+    window.addEventListener('keydown', onKey);
+    window.addEventListener('keyup', onKey);
+    window.addEventListener('blur', onBlur);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('keyup', onKey);
+      window.removeEventListener('blur', onBlur);
+    };
+  }, []);
 
   // A shape being dragged out is boxed as the selection is, so its extent reads while it is sized.
   const drawnSelection = useMemo(
@@ -670,16 +701,26 @@ export const Scene3DEditor = ({
   // A press on a body with Move: what slides, on the plane through where it was grabbed, parallel to the work plane.
   const moving = useRef<{
     ids: string[];
+    // Their drawn items, which a pick looks past to see what the pointer is over.
+    keys: string[];
     grab: Scene.Vec3;
     plane: WorkPlane;
-    // The moving bodies' world bounds together, and the other bodies' they are held flush against.
+    // The moving bodies' world bounds together.
     box: Box;
-    boxes: Record<string, Box>;
     selected: boolean;
+    // Where the pointer last was, so holding an axis key takes effect without a move.
+    screen?: { x: number; y: number };
   }>(undefined);
-  /** The move a body drag makes with the pointer at `screen`, held as it goes or landed; and the sides it is flush with. */
+  /**
+   * The move a body drag makes with the pointer at `screen`, held as it goes or landed: on the drag's plane, or along the
+   * one axis a held X, Y or Z key picks; magnetised to the face or point of another body the pointer is over.
+   */
   const moveAt = (current: NonNullable<typeof moving.current>, screen: { x: number; y: number }, landing = false) => {
-    const point = planePoint(view, size, screen, current.plane);
+    const axis = heldAxis.current;
+    const unit = axis && { x: axis === 'x' ? 1 : 0, y: axis === 'y' ? 1 : 0, z: axis === 'z' ? 1 : 0 };
+    const point = unit
+      ? axisPoint(view, size, screen, current.grab, unit)
+      : planePoint(view, size, screen, current.plane);
     if (!point) {
       return undefined;
     }
@@ -687,21 +728,62 @@ export const Scene3DEditor = ({
       const pixels = screenLength(view, size, current.grab, direction) ?? 0;
       return pixels > 0 ? DETENT_PX / pixels : 0;
     };
-    const { delta, faces } = planeMove({
+    // Snapping off (or Alt held) frees the body from what the pointer is over as well as the grid.
+    const hit = step > 0 ? renderer?.pick(screen, { through: drilled, skip: current.keys }) : undefined;
+    const over = hit?.item === undefined || !hit.normal ? undefined : { key: hit.item, normal: axisOf(hit.normal) };
+    const overBox = over && renderer?.bounds(over.key);
+    const overAxis = over && (over.normal.x !== 0 ? 'x' : over.normal.y !== 0 ? 'y' : 'z');
+    const near =
+      over && overBox
+        ? nearestOnScreen(facePoints(overBox, over.normal), screen, (at) => project(view, size, at), DETENT_PX)
+        : undefined;
+    const delta = planeMove({
       delta: { x: point.x - current.grab.x, y: point.y - current.grab.y, z: point.z - current.grab.z },
       box: current.box,
-      axes: planeAxes(current.plane),
+      grab: current.grab,
+      axes: axis ? [axis] : planeAxes(current.plane),
       step,
       detent: { x: along({ x: 1, y: 0, z: 0 }), y: along({ x: 0, y: 1, z: 0 }), z: along({ x: 0, y: 0, z: 1 }) },
-      // Snapping off (or Alt held) frees the body from the other bodies' sides as well as the grid.
-      boxes: step > 0 ? current.boxes : undefined,
+      point: near,
+      face:
+        overBox && over && overAxis
+          ? { axis: overAxis, at: over.normal[overAxis] > 0 ? overBox.max[overAxis] : overBox.min[overAxis] }
+          : undefined,
       landing,
     });
     // The move was measured in the world; the layout may be a composite's parts drawn at another scale.
     const toLayout = (value: number) => Math.round((value / transform.scale) * 1000) / 1000 + 0;
     const offset = { x: toLayout(delta.x), y: toLayout(delta.y), z: toLayout(delta.z) };
     const intent: LayoutIntent = { kind: 'move', ids: current.ids, delta: offset };
-    return { intent, faces, still: offset.x === 0 && offset.y === 0 && offset.z === 0 };
+    return {
+      intent,
+      still: offset.x === 0 && offset.y === 0 && offset.z === 0,
+      // What the pointer is over is shown, so what the body is held to reads before the release.
+      show: () => {
+        renderer?.snapFaces(over ? [over] : []);
+        renderer?.snapPoint(near);
+        renderer?.showAxisGuide(axis ? { origin: current.grab, axis } : undefined);
+      },
+    };
+  };
+  const endMoveGuides = () => {
+    renderer?.snapFaces([]);
+    renderer?.snapPoint(undefined);
+    renderer?.showAxisGuide(undefined);
+  };
+  /** Draws a body drag with the pointer at `screen`. */
+  const dragBody = (body: NonNullable<typeof moving.current>, screen: { x: number; y: number }) => {
+    body.screen = screen;
+    const next = moveAt(body, screen);
+    if (next) {
+      setMoved({ intent: next.intent, doc });
+      next.show();
+    }
+  };
+  // A key held or let go part way through a drag takes effect at once.
+  redrag.current = () => {
+    const body = moving.current;
+    body?.selected && body.screen && dragBody(body, body.screen);
   };
 
   return (
@@ -784,7 +866,7 @@ export const Scene3DEditor = ({
                 min: { x: lowest('x'), y: lowest('y'), z: lowest('z') },
                 max: { x: highest('x'), y: highest('y'), z: highest('z') },
               },
-              boxes: renderer?.itemBounds(moveKeys) ?? {},
+              keys: moveKeys,
               selected: false,
             };
             setMoved(undefined);
@@ -851,11 +933,7 @@ export const Scene3DEditor = ({
             const same = body.ids.length === selection.length && body.ids.every((id) => selection.includes(id));
             same || onSelect(body.ids);
           }
-          const next = moveAt(body, local(event));
-          if (next) {
-            setMoved({ intent: next.intent, doc });
-            renderer?.snapFaces(next.faces);
-          }
+          dragBody(body, local(event));
           return;
         }
         const current = sizing.current;
@@ -889,7 +967,7 @@ export const Scene3DEditor = ({
         const body = moving.current;
         if (body) {
           moving.current = undefined;
-          renderer?.snapFaces([]);
+          endMoveGuides();
           if (pastSlop(event)) {
             press.current = undefined;
             // The body lands on the grid or flush, and stays drawn there until the document has the move: one undo.

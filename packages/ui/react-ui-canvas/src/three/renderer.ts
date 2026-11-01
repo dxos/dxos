@@ -77,6 +77,12 @@ const DEFAULT_SELECTION = '#3b82f6';
 /** The colour of faces a move is flush with when the host gives none: the amber of `SNAP_HIGHLIGHT_CLASS`. */
 const DEFAULT_SNAP = '#f59e0b';
 
+/** The screen size of the marker on a point a drag is held on, in CSS pixels. */
+const SNAP_POINT_PX = 10;
+
+/** How far an axis guide runs each way: past anything in view. */
+const GUIDE_REACH = 1000;
+
 /** Whether a Neu item casts a contact shadow: a solid body, not a see-through shell or a composite's frame. */
 export const castsNeuShadow = (spec: MaterialSpec, item: Pick<RenderItem, 'frame'>): boolean =>
   spec.kind === 'neu' && spec.alpha >= 0.999 && item.frame !== true;
@@ -147,6 +153,10 @@ const pickTag = (mesh: AbstractMesh): { key: string; frame: boolean } | undefine
 };
 
 const vec3 = ({ x, y, z }: Vector3): Model.Vec3 => ({ x, y, z });
+
+/** Whether `key` is one of `keys`, a part nested in one, or a frame round one: what moves with them or wraps them. */
+const related = (key: string, keys: readonly string[]): boolean =>
+  keys.some((other) => other === key || key.startsWith(`${other}/`) || other.startsWith(`${key}/`));
 
 const sameVec = (left: Model.Vec3, right: Model.Vec3): boolean =>
   left.x === right.x && left.y === right.y && left.z === right.z;
@@ -267,6 +277,10 @@ export class SceneRenderer3D {
   #snapColor: string;
   /** The faces of other items a move or extrusion is flush with, drawn in the snap colour. */
   #snapFaces: { face: FaceRef; fill: Mesh; line: LinesMesh }[] = [];
+  /** The point a drag is held on, marked in the snap colour. */
+  #snapPoint?: { point: Model.Vec3; mesh: Mesh };
+  /** The world axis a drag is held to, drawn through where it was grabbed in that axis's colour. */
+  #axisGuide?: { origin: Model.Vec3; axis: 'x' | 'y' | 'z'; mesh: LinesMesh };
   /** A Neu theme's tones: the 2D Neu themes', so the two dimensions share a ground in each mode. */
   readonly #palette?: NeuPalette;
   /** A Neu theme's ground plane and the shadows the items cast on it. */
@@ -522,10 +536,13 @@ export class SceneRenderer3D {
    * The item under a pixel (CSS pixels from the canvas's top left) and where the ray met it, else where it meets the
    * work plane. `through` looks past composites' frames to the parts inside them, as an editor drilled into one does.
    */
-  pick(screen: { x: number; y: number }, { through = false }: { through?: boolean } = {}): PickResult {
+  pick(
+    screen: { x: number; y: number },
+    { through = false, skip = [] }: { through?: boolean; skip?: readonly string[] } = {},
+  ): PickResult {
     const hit = this.#scene.pick(screen.x, screen.y, (mesh) => {
       const tag = pickTag(mesh);
-      return tag !== undefined && mesh.isEnabled() && !(through && tag.frame);
+      return tag !== undefined && mesh.isEnabled() && !(through && tag.frame) && !related(tag.key, skip);
     });
     const tag = hit?.hit && hit.pickedMesh ? pickTag(hit.pickedMesh) : undefined;
     if (tag && hit?.pickedPoint) {
@@ -723,11 +740,9 @@ export class SceneRenderer3D {
    * with them or wrap them: what a moving item's sides are held flush against.
    */
   itemBounds(exclude: readonly string[] = []): Record<string, Box> {
-    const nested = (key: string) =>
-      exclude.some((other) => other === key || key.startsWith(`${other}/`) || other.startsWith(`${key}/`));
     return Object.fromEntries(
       [...this.#items.keys()].flatMap((key) => {
-        const box = nested(key) ? undefined : this.bounds(key);
+        const box = related(key, exclude) ? undefined : this.bounds(key);
         return box ? [[key, box]] : [];
       }),
     );
@@ -764,6 +779,67 @@ export class SceneRenderer3D {
     this.#view && this.#scene.render();
   }
 
+  /** Marks the point a drag is held on in the snap colour; none clears it. */
+  snapPoint(point: Model.Vec3 | undefined): void {
+    if (point && this.#snapPoint && sameVec(point, this.#snapPoint.point)) {
+      return;
+    }
+    this.#snapPoint?.mesh.dispose();
+    this.#snapPoint = undefined;
+    if (point) {
+      // A fixed size on screen, however far the point is.
+      const pixels = this.#view ? this.#pixelsPerUnit(new Vector3(point.x, point.y, point.z), Vector3.Right()) : 0;
+      const diameter = pixels > 0 ? SNAP_POINT_PX / pixels : 0.1;
+      const mesh = CreateSphere('snap-point', { diameter, segments: 8 }, this.#scene);
+      mesh.position.set(point.x, point.y, point.z);
+      const material = new StandardMaterial('snap-point', this.#scene);
+      material.emissiveColor = Color3.FromHexString(this.#snapColor);
+      material.disableLighting = true;
+      mesh.material = material;
+      mesh.isPickable = false;
+      // Drawn over the bodies, so a point on a hidden corner still shows.
+      mesh.renderingGroupId = OVERLAY_GROUP;
+      this.#snapPoint = { point: { ...point }, mesh };
+    }
+    this.#view && this.#scene.render();
+  }
+
+  /** The point marked as held, if any. */
+  get snappedPoint(): Model.Vec3 | undefined {
+    return this.#snapPoint && { ...this.#snapPoint.point };
+  }
+
+  /** Draws the world `axis` through `origin` that a drag is held to, in that axis's colour; none clears it. */
+  showAxisGuide(guide: { origin: Model.Vec3; axis: 'x' | 'y' | 'z' } | undefined): void {
+    const shown = this.#axisGuide;
+    if (guide && shown && shown.axis === guide.axis && sameVec(shown.origin, guide.origin)) {
+      return;
+    }
+    shown?.mesh.dispose();
+    this.#axisGuide = undefined;
+    if (guide) {
+      const { origin, axis } = guide;
+      const reach = (sign: number) =>
+        new Vector3(
+          origin.x + (axis === 'x' ? sign * GUIDE_REACH : 0),
+          origin.y + (axis === 'y' ? sign * GUIDE_REACH : 0),
+          origin.z + (axis === 'z' ? sign * GUIDE_REACH : 0),
+        );
+      const mesh = CreateLines('axis-guide', { points: [reach(-1), reach(1)] }, this.#scene);
+      mesh.color = Color3.FromHexString(AXIS_COLORS[axis]);
+      mesh.isPickable = false;
+      mesh.renderingGroupId = OVERLAY_GROUP;
+      this.#axisGuide = { origin: { ...origin }, axis, mesh };
+    }
+    this.#view && this.#scene.render();
+  }
+
+  /** The axis a drag is held to, where it is drawn through and its colour; undefined when none is. */
+  get axisGuide(): { origin: Model.Vec3; axis: 'x' | 'y' | 'z'; color: string } | undefined {
+    const guide = this.#axisGuide;
+    return guide && { origin: { ...guide.origin }, axis: guide.axis, color: AXIS_COLORS[guide.axis] };
+  }
+
   /** The faces shown as flush with a move, in the colour they are drawn in. */
   get snapped(): (FaceRef & { color: string })[] {
     return this.#snapFaces.map(({ face }) => ({ ...face, color: this.#snapColor }));
@@ -778,6 +854,10 @@ export class SceneRenderer3D {
     const faces = this.#snapFaces.map(({ face }) => face);
     this.#clearSnapFaces();
     this.snapFaces(faces);
+    const point = this.#snapPoint?.point;
+    this.#snapPoint?.mesh.dispose();
+    this.#snapPoint = undefined;
+    point && this.snapPoint(point);
   }
 
   /** The plane the grid is drawn on and a pick off every item lands on. */
@@ -861,6 +941,10 @@ export class SceneRenderer3D {
   dispose(): void {
     this.#clearBoxes();
     this.#clearSnapFaces();
+    this.#snapPoint?.mesh.dispose();
+    this.#snapPoint = undefined;
+    this.#axisGuide?.mesh.dispose();
+    this.#axisGuide = undefined;
     this.#faceSelection = undefined;
     this.#faceHover = undefined;
     this.#drawFace();

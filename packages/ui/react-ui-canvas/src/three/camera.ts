@@ -135,6 +135,32 @@ export const planePoint = (
   };
 };
 
+/**
+ * The point of the line through `origin` along `direction` nearest the ray through a pixel: where a drag held to one axis
+ * puts the pointer; undefined when the line is seen end-on, so every pixel along it is the same point.
+ */
+export const axisPoint = (
+  camera: Scene.Camera3D,
+  viewport: Viewport,
+  screen: { x: number; y: number },
+  origin: Vec3,
+  direction: Vec3,
+): Vec3 | undefined => {
+  const ray = screenRay(camera, viewport, screen);
+  const across = subtract(ray.origin, origin);
+  const [rays, both, lines] = [
+    dot(ray.direction, ray.direction),
+    dot(ray.direction, direction),
+    dot(direction, direction),
+  ];
+  const skew = rays * lines - both * both;
+  if (skew < 1e-9 * rays * lines) {
+    return undefined;
+  }
+  const along = (rays * dot(direction, across) - both * dot(ray.direction, across)) / skew;
+  return { x: origin.x + direction.x * along, y: origin.y + direction.y * along, z: origin.z + direction.z * along };
+};
+
 /** Degrees the orbit turns per pixel dragged. */
 const DEGREES_PER_PIXEL = 0.4;
 

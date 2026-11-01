@@ -324,6 +324,36 @@ describe('SceneRenderer3D.pick', () => {
     view.dispose();
   });
 
+  test('a pick can skip items, so a drag sees what lies behind the bodies it moves', () => {
+    const view = renderer(
+      doc([
+        { id: 'front', type: 'cube', center: { x: 0, y: 0, z: 0 } },
+        { id: 'back', type: 'cube', center: { x: 0, y: -2, z: 0 }, scale: { x: 6, y: 1, z: 6 } },
+      ]),
+    );
+    // The camera looks down at the front cube, and past it onto the broad back one below.
+    const through = view.pick({ x: 400, y: 300 }, { skip: ['front'] });
+    expect(view.pick({ x: 400, y: 300 }).item).toBe('front');
+    expect(through.item).toBe('back');
+    expect(view.pick({ x: 400, y: 300 }, { skip: ['front', 'back'] }).item).toBeUndefined();
+    view.dispose();
+  });
+
+  test('a snapped point is marked in the snap colour, and an axis a drag is held to is drawn in its colour; both clear', () => {
+    const view = renderer(doc([{ id: 'a', type: 'cube', center: { x: 0, y: 0, z: 0 } }]));
+    view.snapPoint({ x: 1, y: 2, z: 3 });
+    expect(view.snappedPoint).toEqual({ x: 1, y: 2, z: 3 });
+    view.snapPoint(undefined);
+    expect(view.snappedPoint).toBeUndefined();
+    view.showAxisGuide({ origin: { x: 1, y: 0.5, z: 0 }, axis: 'z' });
+    expect(view.axisGuide).toEqual({ origin: { x: 1, y: 0.5, z: 0 }, axis: 'z', color: '#3e63dd' });
+    view.showAxisGuide(undefined);
+    expect(view.axisGuide).toBeUndefined();
+    view.snapPoint({ x: 0, y: 0, z: 0 });
+    view.dispose();
+    expect(view.snappedPoint).toBeUndefined();
+  });
+
   test('faces a move is flush with are drawn in the snap colour, apart from the selected face, and cleared', () => {
     const engine = new NullEngine({
       renderWidth: 800,

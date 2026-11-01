@@ -7,6 +7,7 @@ import { describe, expect, test } from 'vitest';
 import { type Scene } from '@dxos/scene';
 
 import {
+  axisPoint,
   cameraPosition,
   fitCamera,
   orbitBy,
@@ -85,6 +86,51 @@ describe('camera', () => {
     test('zooming scales the distance and keeps it positive', () => {
       expect(zoomBy(camera({ distance: 10 }), 0.5).distance).toBeCloseTo(5);
       expect(zoomBy(camera({ distance: 10 }), 0).distance).toBeGreaterThan(0);
+    });
+  });
+
+  describe('axisPoint', () => {
+    const viewport = { width: 800, height: 600 };
+
+    test('is the inverse of project for points on the line, upright included', () => {
+      for (const projection of ['perspective', 'orthographic'] as const) {
+        const view = camera({ yaw: 25, pitch: 35, projection });
+        const origin = { x: 1, y: 0.5, z: -1 };
+        for (const [direction, point] of [
+          [
+            { x: 1, y: 0, z: 0 },
+            { x: 3, y: 0.5, z: -1 },
+          ],
+          [
+            { x: 0, y: 1, z: 0 },
+            { x: 1, y: 2.25, z: -1 },
+          ],
+          [
+            { x: 0, y: 0, z: 1 },
+            { x: 1, y: 0.5, z: -3.5 },
+          ],
+        ] as const) {
+          const screen = project(view, viewport, point);
+          const back = screen && axisPoint(view, viewport, screen, origin, direction);
+          expect(back?.x).toBeCloseTo(point.x);
+          expect(back?.y).toBeCloseTo(point.y);
+          expect(back?.z).toBeCloseTo(point.z);
+        }
+      }
+    });
+
+    test('a pixel off the line gives the nearest point of the line to its ray; a line seen end-on gives none', () => {
+      // Orthographic, so the ray through a point straight above the line meets it right below.
+      const view = camera({ yaw: 0, pitch: 0, projection: 'orthographic' });
+      const screen = project(view, viewport, { x: 2, y: 1, z: 0 });
+      const near = screen && axisPoint(view, viewport, screen, { x: 0, y: 0, z: 0 }, { x: 1, y: 0, z: 0 });
+      expect(near?.x).toBeCloseTo(2);
+      expect(near?.y).toBeCloseTo(0);
+      const towards = cameraPosition(toOrbit(view));
+      const along = { x: towards.x, y: towards.y, z: towards.z };
+      const length = Math.hypot(along.x, along.y, along.z);
+      const endOn = { x: along.x / length, y: along.y / length, z: along.z / length };
+      expect(axisPoint(view, viewport, { x: 400, y: 300 }, { x: 0, y: 0, z: 0 }, endOn)).toBeUndefined();
     });
   });
 

@@ -826,7 +826,7 @@ const harness = async (canvasElement: HTMLElement, ready: string) => {
     const end = toScreen(from.add(world));
     return at({ x: pixel.x + end.x - start.x, y: pixel.y + end.y - start.y });
   };
-  return { canvas, editor, view, scene, bounds, frame, find, pickAt, onGizmo, at, along };
+  return { canvas, editor, view, scene, bounds, frame, find, pickAt, onGizmo, toScreen, at, along };
 };
 
 const onGrid = (value: number) => Math.abs(value * 4 - Math.round(value * 4)) < 0.02;
@@ -934,49 +934,29 @@ export const MoveBodyTest: Story = {
  * Snapping against other bodies: Move picked, over a cube with one to its side and one above, each a little off the grid.
  *
  * Test:
- * 1. Drag cube p (on its body, not the gizmo) towards q: it is held flush against q, q's side amber, and lands there.
- * 2. Drag p's gizmo x arrow towards q: the same.
- * 3. With Extrude, an arrow stands on the face under the pointer; pull p's top up towards r: held against r's underside.
- * 4. Holding Alt frees each gesture from the grid and the sides.
+ * 1. Drag cube p by its body: nothing lights up until the pointer is over another body; then that face is amber, and
+ *    near one of its corners, edge middles or centre that point is marked and p's grab point is held on it.
+ * 2. While dragging, hold X, Y or Z: p moves along that axis alone, drawn in its colour; let go to slide on the plane again.
+ * 3. Drag p's gizmo x arrow towards q: it is held against q, q's side amber.
+ * 4. With Extrude, an arrow stands on the face under the pointer; pull p's top up towards r: held against r's underside.
+ * 5. Holding Alt frees each gesture from the grid and other bodies.
  */
 export const Flush: Story = { args: { exemplar: 'flush', initialTool: 'move', grid: true, snap: true } };
 
 /**
- * Flush snapping: a body dragged with Move, a gizmo arrow or a pulled face is held flush on a side of another body it
- * passes near, ahead of the grid, and that side is drawn in the snap colour while it holds.
+ * Flush snapping on a pull: a face pulled near a side of another body is held flush on it, ahead of the grid, and that
+ * side is drawn in the snap colour while it holds.
  *
  * Test:
- * 1. Dragging cube p towards cube q (whose sides are off the grid) holds p against q, q's side shown; the release lands
- *    it there and clears the side.
- * 2. Pulling p's top face up towards cube r above holds it against r's underside, shown; the release makes it so.
+ * 1. Pulling p's top face up towards cube r above holds it against r's underside, shown; the release makes it so.
  */
 export const FlushTest: Story = {
-  args: { exemplar: 'flush', initialTool: 'move', grid: true, snap: true },
+  args: { exemplar: 'flush', initialTool: 'extrude', grid: true, snap: true },
   play: async ({ canvasElement }) => {
-    const probe = await harness(canvasElement, 'item-q');
-    const { editor, view, scene, bounds, frame, find, pickAt, onGizmo, at, along } = probe;
+    const { editor, view, scene, bounds, find, pickAt, at, along } = await harness(canvasElement, 'item-q');
     const shown = (name: string) => scene()?.getMeshByName(name) !== null;
 
-    // 1. Short of the touch by under the detent.
-    const grab = find((x, y) => pickAt(x, y).name === 'item-p' && !onGizmo(x, y));
-    const point = pickAt(grab.x, grab.y).point;
-    if (!point) {
-      throw new Error('No point under the grab.');
-    }
-    const to = along(grab, point, new Vector3(1.57, 0, 0));
-    await fireEvent.pointerDown(view, { ...at(grab), buttons: 1 });
-    await fireEvent.pointerMove(editor, { ...to, buttons: 1 });
-    await waitFor(() => expect(shown('snap-q')).toBe(true));
-    await expect(bounds('item-p')?.[3]).toBe(2.1);
-    await fireEvent.pointerUp(editor, { ...to, buttons: 0 });
-    await frame();
-    await expect(bounds('item-p')?.[3]).toBe(2.1);
-    await expect(shown('snap-q')).toBe(false);
-    await fireEvent.keyDown(editor, { key: 'z', metaKey: true });
-    await waitFor(() => expect(bounds('item-p')?.[3]).toBe(0.5));
-
-    // 2.
-    await userEvent.click(probe.canvas.getByTestId('tool-extrude'));
+    // 1.
     const top = find((x, y) => {
       const { name, normal } = pickAt(x, y);
       return name === 'item-p' && (normal?.y ?? 0) > 0.9;
@@ -993,6 +973,115 @@ export const FlushTest: Story = {
     await waitFor(() => expect(editor.dataset.selection).toBe('extrude-1'));
     await expect(bounds('item-extrude-1')?.[4]).toBe(2.1);
     await expect(shown('snap-r')).toBe(false);
+  },
+};
+
+/**
+ * Hover snapping on a body drag: only what the pointer is over magnetises, and is drawn in the snap colour; a body that
+ * merely lines up with the dragged one is not.
+ *
+ * Test:
+ * 1. Dragging p by the middle of its top over open ground shows nothing, though p lines up with q and r.
+ * 2. With the pointer near a corner of q's top, q's top and that corner are shown, and p's grab point is held on it.
+ * 3. The release leaves p there and clears what was shown.
+ */
+export const HoverSnapTest: Story = {
+  args: { exemplar: 'flush', initialTool: 'move', grid: true, snap: true },
+  play: async ({ canvasElement }) => {
+    const { editor, view, scene, bounds, frame, pickAt, toScreen, at, along } = await harness(canvasElement, 'item-q');
+    const shown = (name: string) => scene()?.getMeshByName(name) !== null;
+    // p is grabbed by the middle of its top.
+    const middle = new Vector3(0, 1, 0);
+    const { x, y } = toScreen(middle);
+    const pixel = { x: Math.round(x), y: Math.round(y) };
+    await expect(pickAt(pixel.x, pixel.y).name).toBe('item-p');
+
+    // 1.
+    const aside = along(pixel, middle, new Vector3(-0.6, 0, 0.9));
+    await fireEvent.pointerDown(view, { ...at(pixel), buttons: 1 });
+    await fireEvent.pointerMove(editor, { ...aside, buttons: 1 });
+    await waitFor(() => expect(bounds('item-p')?.[0]).toBeLessThan(-0.8));
+    await frame();
+    await expect([shown('snap-q'), shown('snap-r'), shown('snap-point')]).toEqual([false, false, false]);
+
+    // 2. A little inside the corner, so the pick lands on q's top.
+    const corner = along(pixel, middle, new Vector3(2.15, 0, 0.45));
+    await fireEvent.pointerMove(editor, { ...corner, buttons: 1 });
+    await waitFor(() => expect(shown('snap-point')).toBe(true));
+    await expect(shown('snap-q')).toBe(true);
+    // The grab is a pixel's width from the middle, so p sits that far from corner to middle: off the grid all the same.
+    const onCorner = () => {
+      const [minX = 0, minY, minZ = 0] = bounds('item-p') ?? [];
+      return [Math.abs(minX - 1.6) < 0.03, minY, Math.abs(minZ) < 0.03];
+    };
+    await expect(onCorner()).toEqual([true, 0, true]);
+
+    // 3.
+    await fireEvent.pointerUp(editor, { ...corner, buttons: 0 });
+    await frame();
+    await expect(onCorner()).toEqual([true, 0, true]);
+    await expect([shown('snap-q'), shown('snap-point')]).toEqual([false, false]);
+  },
+};
+
+/**
+ * Holding an axis key on a body drag: X, Y or Z holds the body to that world axis through where it was grabbed, drawn
+ * in the axis's colour.
+ *
+ * Test:
+ * 1. With Y held, a drag up and across raises p straight up, the y axis drawn through the grab.
+ * 2. The release lands its bottom on the minor grid, x and z unchanged, and the axis goes.
+ * 3. With X held, a drag across and back moves p along x alone.
+ */
+export const AxisHoldTest: Story = {
+  args: { exemplar: 'flush', initialTool: 'move', grid: true, snap: true },
+  play: async ({ canvasElement }) => {
+    const { editor, view, scene, bounds, frame, find, pickAt, onGizmo, at, along } = await harness(
+      canvasElement,
+      'item-q',
+    );
+    const shown = (name: string) => scene()?.getMeshByName(name) !== null;
+    const press = find((x, y) => pickAt(x, y).name === 'item-p' && !onGizmo(x, y));
+    const grab = pickAt(press.x, press.y).point;
+    if (!grab) {
+      throw new Error('No point under the grab.');
+    }
+
+    // 1.
+    await fireEvent.pointerDown(view, { ...at(press), buttons: 1 });
+    await fireEvent.keyDown(window, { key: 'y' });
+    const raised = along(press, grab, new Vector3(0.5, 0.8, 0));
+    await fireEvent.pointerMove(editor, { ...raised, buttons: 1 });
+    await waitFor(() => expect(bounds('item-p')?.[1]).toBeGreaterThan(0.4));
+    await expect(shown('axis-guide')).toBe(true);
+    await expect([bounds('item-p')?.[0], bounds('item-p')?.[2]]).toEqual([-0.5, -0.5]);
+
+    // 2.
+    await fireEvent.pointerUp(editor, { ...raised, buttons: 0 });
+    await fireEvent.keyUp(window, { key: 'y' });
+    await frame();
+    const [minX, minY = 0, minZ] = bounds('item-p') ?? [];
+    await expect([minX, onGrid(minY), minY > 0.4, minZ]).toEqual([-0.5, true, true, -0.5]);
+    await expect(shown('axis-guide')).toBe(false);
+
+    // 3.
+    const again = find((x, y) => pickAt(x, y).name === 'item-p' && !onGizmo(x, y));
+    const point = pickAt(again.x, again.y).point;
+    if (!point) {
+      throw new Error('No point under the grab.');
+    }
+    const before = bounds('item-p') ?? [];
+    await fireEvent.pointerDown(view, { ...at(again), buttons: 1 });
+    await fireEvent.keyDown(window, { key: 'x' });
+    const across = along(again, point, new Vector3(-1, 0.6, 0.7));
+    await fireEvent.pointerMove(editor, { ...across, buttons: 1 });
+    await fireEvent.pointerUp(editor, { ...across, buttons: 0 });
+    await fireEvent.keyUp(window, { key: 'x' });
+    await frame();
+    const after = bounds('item-p') ?? [];
+    // A pointer off the x axis moves p to the nearest point of the axis to it, short of its whole offset.
+    await expect(after[0]).toBeLessThan((before[0] ?? 0) - 0.2);
+    await expect([after[1], after[2]]).toEqual([before[1], before[2]]);
   },
 };
 
