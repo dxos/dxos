@@ -61,6 +61,8 @@ export type FormFieldDispatchProps = {
    * `FormInlineAnnotation` but driven by the parent array rather than the element's own AST.
    */
   refInline?: boolean;
+  /** Whether a collapsible group the field renders starts open; owned-ref rows start folded unless just created. */
+  defaultOpen?: boolean;
 } & FieldContext;
 
 /**

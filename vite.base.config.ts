@@ -1244,7 +1244,8 @@ const conditionalSubpathEntries = (cwd: string): Record<string, string> => {
 /**
  * Build entries for every `package.json` export or import whose source is `dx.config.ts`, named after
  * the built target: a `Plugin.config` plugin declares its modules there, so the build adds that one
- * entry and {@link dxConfigPlugin} emits each module body from it.
+ * entry and {@link dxConfigPlugin} emits each module body from it. Its runtime conditions get entries holding only
+ * that runtime's modules, for consumers that bundle the config statically (edge's operation-service, the CLI).
  */
 const DX_CONFIG_ENVIRONMENTS = ['workerd', 'node', 'tauri', 'browser'] as const;
 

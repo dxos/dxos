@@ -398,6 +398,7 @@ catalog:
   date-fns: ^3.6.0
   debounce: ^2.2.0
   debug: ^4.3.4
+  decode-named-character-reference: ^1.0.2
   deep-equal: ^2.2.3
   defuddle: ^0.18.1
   del: ^5.1.0

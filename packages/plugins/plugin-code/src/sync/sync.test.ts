@@ -3,15 +3,22 @@
 //
 
 import * as Effect from 'effect/Effect';
-import { describe, test } from 'vitest';
+import { afterEach, beforeEach, describe, test } from 'vitest';
 
+import * as Spec from '@dxos/compute/Spec';
 import { findSourceKeys, formatSourceKey, parseGitHubRemote, parseSourceKey, reviewKeyOf } from '@dxos/deus/review';
+import { Obj, Ref } from '@dxos/echo';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
+import { Text } from '@dxos/schema';
 
+import { Feature, FeatureMap, SpecText } from '#types';
+
+import * as FrontMatter from './front-matter.ts';
 import { detectRepo, parseGitConfigRemote, parseRepoEntry, resolvePath, resolveRoots } from './repo-roots.ts';
 import { fromMetaKey, keyFromTreeUrl, toMetaKey } from './spec-key.ts';
-import { reconcile } from './spec-sync.ts';
+import { SyncBases, reconcile, syncSpec } from './spec-sync.ts';
 
 /** An in-memory file service; `roots` stands in for the dev server's own checkout. */
 const memoryFs = (
@@ -67,6 +74,24 @@ describe('source keys', () => {
         path: 'packages/plugins/plugin-code/PLUGIN.mdl',
       },
     );
+  });
+});
+
+describe('front matter', () => {
+  test("a file's front matter becomes the spec's name and meta, and its text what follows", ({ expect }) => {
+    const spec = Spec.make({ name: 'PLUGIN.mdl' });
+    const text = FrontMatter.read(spec, '---\nid: org.example\nname: Example\nversion: 0.1.0\n---\n\nBody\n');
+    expect(text).toBe('Body\n');
+    expect(spec.name).toBe('Example');
+    expect(Obj.getMeta(spec)).toMatchObject({ key: 'org.example', version: '0.1.0' });
+  });
+
+  test('writing rewrites only the keys the file has, keeping its other lines', ({ expect }) => {
+    const spec = Spec.make({ name: 'Renamed' });
+    const base = '---\nname: Example\nstatus: draft\n---\nOld\n';
+    expect(FrontMatter.write(spec, 'New\n', base)).toBe('---\nname: Renamed\nstatus: draft\n---\nNew\n');
+    expect(FrontMatter.write(spec, 'New\n', 'Old\n')).toBe('New\n');
+    expect(FrontMatter.write(spec, 'New\n')).toBe('---\nname: Renamed\n---\n\nNew\n');
   });
 });
 
@@ -128,5 +153,62 @@ describe('repo roots', () => {
     expect(resolvePath(roots, { owner: 'dxos', repo: 'dxos', path: '../etc/passwd' })).toBeUndefined();
     expect(resolvePath(roots, { owner: 'dxos', repo: 'dxos', path: 'a/../../b.mdl' })).toBeUndefined();
     expect(resolvePath(roots, { owner: 'dxos', repo: 'dxos', path: '/etc/passwd' })).toBeUndefined();
+  });
+});
+
+describe('syncSpec', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  test("a file of feat blocks becomes the spec's features, written back as blocks", async ({ expect }) => {
+    const { db } = await builder.createDatabase({
+      types: [Spec.Spec, Feature.Feature, Text.Text],
+    });
+    const spec = db.add(Spec.make({ name: 'a/SPEC.mdl', content: '' }));
+    Obj.update(spec, (spec) => {
+      Obj.getMeta(spec).keys.push(toMetaKey({ owner: 'dxos', repo: 'dxos', path: 'a/SPEC.mdl' }));
+    });
+    const file = [
+      '# A',
+      '',
+      '```mdl',
+      'feat F-1: Sync',
+      '',
+      '  req F-1.1:',
+      '    when: mail arrives',
+      '    then: it shows',
+      '```',
+      '',
+    ].join('\n');
+    const files: Record<string, string> = { '/host/a/SPEC.mdl': file };
+    const context = {
+      fs: memoryFs(files),
+      roots: [{ repo: 'dxos/dxos', path: '/host' }],
+      bases: new SyncBases(),
+      codecs: [SpecText.codec],
+    };
+    const sync = () => EffectEx.runPromise(syncSpec(spec, context));
+
+    expect((await sync()).status).toBe('pulled');
+    const [feature] = await Ref.loadAll(FeatureMap.getFeatures(spec));
+    expect(feature.name).toBe('Sync');
+    expect((await spec.content.load()).content).not.toContain('feat F-1');
+
+    Obj.update(feature, (feature) => {
+      feature.status = 'operational';
+    });
+    expect((await sync()).status).toBe('pushed');
+    expect(files['/host/a/SPEC.mdl']).toBe(file.replace('feat F-1: Sync\n', 'feat F-1: Sync\n  status: operational\n'));
+
+    files['/host/a/SPEC.mdl'] = files['/host/a/SPEC.mdl'].replace('feat F-1: Sync', 'feat F-1: Sync everywhere');
+    expect((await sync()).status).toBe('pulled');
+    expect(feature.name).toBe('Sync everywhere');
   });
 });
