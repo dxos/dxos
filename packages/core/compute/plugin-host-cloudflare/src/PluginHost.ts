@@ -51,8 +51,7 @@ const DEFAULT_ACTIVATION_TIMEOUT = 20_000;
 /**
  * Hosts plugins as the main module of an EDGE plugin release.
  *
- * `makePlugins` is called inside the first request, so plugin options may read request-scoped state. The release
- * serves its primary plugin; the dependencies given are the pool its `dependsOn` closure is drawn from.
+ * `makePlugins` is called inside the first request, so plugin options may read request-scoped state.
  */
 /** EDGE invokes operations by their bare key (`org.example.op`); an operation's own key is a DXN (`dxn:org.example.op`). */
 const operationKeyName = (key: string): string => (DXN.isDXN(key) ? DXN.getName(key) : key);
@@ -62,7 +61,10 @@ const operationKeyName = (key: string): string => (DXN.isDXN(key) ? DXN.getName(
  * keyed by the URL the manifest gives it, when the module activates.
  */
 export const fromManifest = (manifest: unknown, loaders: Plugin.ManifestLoaders): Plugin.Plugin => {
-  const definition = PluginManifest.toDefinition(Schema.decodeUnknownSync(PluginManifest.Manifest)(manifest));
+  // A plugin runs alone on EDGE: what it imports from another plugin's package is vendored, and no other plugin is
+  // activated beside it, so its `dependsOn` is not resolved.
+  const { dependsOn: _dependsOn, ...standalone } = Schema.decodeUnknownSync(PluginManifest.Manifest)(manifest);
+  const definition = PluginManifest.toDefinition(standalone);
   if (definition === undefined) {
     throw new InvalidRequestError({ message: 'The plugin manifest lists no modules.' });
   }

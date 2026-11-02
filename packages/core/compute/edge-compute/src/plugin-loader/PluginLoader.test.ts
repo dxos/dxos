@@ -49,29 +49,17 @@ describe('PluginLoader', () => {
     );
   });
 
-  test('joins dependency bundles into one import map, the primary first, and drops what nothing reaches', async ({
-    expect,
-  }) => {
-    const dependency = bundle({
-      'operations.mjs': "import { z } from 'zod'; import { name } from 'effect'; export default () => z + name;",
-      'vendor/manifest.json': JSON.stringify({ specifiers: { effect: 'effect.mjs', zod: 'zod.mjs' } }),
-      'vendor/zod.mjs': "import { name } from 'effect'; export const z = name;",
-    });
-    const { files: code, main } = await PluginLoader.workerCode(bundle(), [dependency]);
-    const decoded = (path: string) => decoder.decode(code[path]);
-    expect(decoded('deps/0/operations.mjs')).toContain("from '../../vendor/effect.mjs'");
-    expect(decoded('deps/0/operations.mjs')).toContain("from './vendor/zod.mjs'");
-    expect(decoded('deps/0/vendor/zod.mjs')).toContain("from '../../../vendor/effect.mjs'");
-    expect(code['deps/0/vendor/effect.mjs']).toBeUndefined();
+  test('drops vendored files nothing reaches and builds the plugin from its manifest alone', async ({ expect }) => {
+    const { files: code, main } = await PluginLoader.workerCode(bundle());
     expect(code['vendor/unused.mjs']).toBeUndefined();
     expect(code['vendor/effect.mjs']).toBeDefined();
-    // The main module builds each plugin from its manifest, with literal imports of bodies and adapters.
+    // The main module builds the plugin from its manifest, with literal imports of bodies and adapters.
     expect(main).toContain(`import('./vendor/@dxos/plugin-host-cloudflare.mjs')`);
     expect(main).toContain(`"./operations.mjs": () => import("./operations.mjs")`);
     expect(main).toContain(
       `"@dxos/app-toolkit/SchemaAdapter": () => import("./vendor/@dxos/app-toolkit/SchemaAdapter.mjs")`,
     );
-    expect(main).toContain(`"./operations.mjs": () => import("./deps/0/operations.mjs")`);
+    expect(main).not.toContain('deps/');
   });
 
   test('Worker Loader modules hold the main module, code and wasm, and no source maps', async ({ expect }) => {

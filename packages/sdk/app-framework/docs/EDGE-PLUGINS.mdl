@@ -140,10 +140,11 @@ export conditions `vendor/` was built with.
    outside itself but `node:*` and `cloudflare:*`.
 5. **Environments hold statically.** A module that runs on `workerd` never imports a browser-only
    body or a stylesheet statically.
-6. **Built once.** No per-runtime build: no `dx-env` entry and no `workerd`, `node`, `tauri` or
-   `browser` condition on a plugin's `dx.config.ts` export or on an import that picks a `workerd`
-   variant (pkg-lint `plugin-runtime-condition`). A runtime-specific body is its own module with
-   its `environments`.
+6. **Built once.** The bundle is one build: a runtime-specific body is its own module with its
+   `environments`, never an import that picks a `workerd` variant by condition (pkg-lint
+   `plugin-runtime-condition` warns). The package keeps its per-runtime `dx.config.ts` entries
+   (`dx-env`, with `workerd` and `node` conditions) for consumers that bundle the config statically;
+   they are not part of the bundle ([D-42]).
 
 ### Loading
 
@@ -152,13 +153,12 @@ export conditions `vendor/` was built with.
   bare specifier at the version Composer was built with; `vendor/` is never read.
 - **CLI.** `dx` reads the installed bundle's `manifest.json` the same way and imports each body from
   the install directory when its module activates.
-- **EDGE.** PluginLoader puts the bundle and the bundles of its `dependsOn` closure (under
-  `deps/<n>/`) in one Worker Loader module map, joins their `vendor/manifest.json` maps into one
-  import map (the primary's entry wins), rewrites every bare import in every file to a relative path
-  by it, drops vendored files nothing reaches, and adds a main module that starts `PluginHost` from
-  `vendor/`. The main module embeds each bundle's `manifest.json` with one literal `import()` per module
-  body and adapter (Worker Loader cannot resolve a computed specifier), and `PluginHost.fromManifest`
-  builds each plugin from them. Worker Loader resolves a bare specifier against the importing file's directory, never a
+- **EDGE.** PluginLoader puts the bundle alone in a Worker Loader module map, rewrites every bare
+  import in every file to a relative path by its `vendor/manifest.json`, drops vendored files nothing
+  reaches, and adds a main module that starts `PluginHost` from `vendor/`. The main module embeds the
+  bundle's `manifest.json` with one literal `import()` per module body and adapter (Worker Loader
+  cannot resolve a computed specifier), and `PluginHost.fromManifest` builds the plugin from them,
+  without its `dependsOn`: a plugin runs alone on EDGE ([D-41]). Worker Loader resolves a bare specifier against the importing file's directory, never a
   package registry, which is why the rewrite is needed. The rewrite changes only specifiers; no
   code is recompiled.
 
@@ -378,9 +378,14 @@ service PluginBuilder
 service PluginStore
   desc: |
     registry-service's existing plugin store (`/upload`, `/private/upload`, `GET /modules/...`). On
-    upload it loads the bundle once through Worker Loader and calls `describe()`, which is how publish
-    produces the bundle's catalog until the build writes it (TODO); it stores the catalog and adds
-    the bundle's operation keys to the operation index. A bundle whose `describe()` fails is refused.
+    upload it loads a bundle whose `vendor/` carries the host once through Worker Loader and calls
+    `describe()`, which is how publish produces the bundle's catalog until the build writes it (TODO);
+    it stores the catalog as returned (`PluginProtocol.Catalog`) and adds the bundle's operation keys
+    to the operation index, in D1 (`PluginBundle`, `PluginChannel`, `PluginOperation`). A bundle whose
+    `describe()` fails, or lists any activation failure, is refused before its files are written; one
+    without the host is stored for browsers and never indexed. Private uploads are not indexed, so
+    no private plugin is routed to ([D-43]). Revoking a version leaves the channels that point at it
+    in place; resolution skips a revoked version and falls back to `latest`.
   ops:
     upload(bundle: PluginBundle) → PluginBundle
     getManifest(pluginKey: NSID, version?: SemVer) → Plugin.Manifest
@@ -400,10 +405,9 @@ service PluginLoader
   desc: |
     compute-service's Worker Loader client for plugin bundles. Uses `LOADER.get` with the bundle hash
     as the id, so one warm isolate serves every space and every caller of that version, and the
-    callback reads R2 only on a cold start. The callback adds the bundles of the plugin's `dependsOn`
-    closure beside it, joins their VendorMaps into one import map (the primary's entry wins, so the
-    isolate holds one copy of each package), rewrites every bare import by it, drops vendored files
-    nothing reaches, and adds a main module that starts `PluginHost` from `vendor/`. `env` holds only space-agnostic
+    callback reads R2 only on a cold start. The callback loads the bundle alone ([D-41]), rewrites
+    every bare import by its VendorMap, drops vendored files nothing reaches, and adds a main module
+    that starts `PluginHost` from `vendor/`. `env` holds only space-agnostic
     bindings: DATA_SERVICE, QUEUE_SERVICE, an AI service and loopback entrypoints from `ctx.exports`
     whose props name the plugin, never a space. `tails` routes logs to FunctionsLoggerEntrypoint.
   loading: lazy
@@ -417,12 +421,12 @@ service PluginLoader
 service PluginEntrypoint
   desc: |
     The RPC surface `PluginHost` exports from inside the Dynamic Worker, as a WorkerEntrypoint
-    implementing `PluginProtocol.Entrypoint` (see the Plugin interface section). It serves only the
-    primary plugin: its `dependsOn` closure is activated for the capabilities the primary uses, and
-    those plugins' own operations, skills and types belong to their own bundles. Failures are returned
-    as data in `InvokeResult`, since Workers RPC drops an error's class and stack.
+    implementing `PluginProtocol.Entrypoint` (see the Plugin interface section). It activates and
+    serves its one plugin alone ([D-41]). `describe()` returns `PluginProtocol.Catalog`, which
+    PluginStore stores as the bundle's PluginCatalog. Failures are returned as data in
+    `InvokeResult`, since Workers RPC drops an error's class and stack.
   ops:
-    describe() → PluginCatalog
+    describe() → PluginProtocol.Catalog
     invoke(request: { operationKey, input, spaceId? }, scope: InvocationScope) → InvokeResult
   errors:
     OperationNotFound: the primary plugin has no handler for the key (code `operation-not-found`)
@@ -521,14 +525,15 @@ feat F-1: Publish a plugin from the CLI
     then: the plugin's vite build emits one bundle with one manifest, and the bundle is uploaded to
           PluginStore as one R2 prefix
 
-  req F-1.2: A plugin package builds no separate bundle per runtime: no `dx-env` build of
-    `dx.config.ts`, and no `workerd`, `node`, `tauri` or `browser` condition on its `dx.config.ts`
-    export. A module's `environments` decide at load whether it runs.
+  req F-1.2: A plugin package publishes one bundle for every runtime; a module's `environments`
+    decide at load whether it runs. Its per-runtime `dx.config.ts` entries serve only static
+    consumers and are not part of the bundle ([D-42]).
 
   req F-1.3:
     when: a bundle is uploaded
     then: registry-service loads it in a fresh isolate and stores what `describe()` returns as its
-          catalog; a bundle that fails to load or activate is refused
+          catalog; a bundle that fails to load, or whose catalog lists an activation failure, is
+          refused
 
   req F-1.4: The bundle carries `vendor/`, so a Dynamic Worker loads it from its `modules` map alone:
     after PluginLoader's rewrite, its files import nothing but each other, `vendor/`, `node:*` and
@@ -555,8 +560,8 @@ feat F-2: Versioning
 
   req F-2.3: An invocation may name a version (`dxn:<key>@<version>`); it then runs that version.
 
-  req F-2.4: Revoking a version removes its operation index rows and stops new invocations; the next
-    newest version takes its place.
+  req F-2.4: Revoking a version stops new invocations of it; channels that point at it stay, and
+    resolution skips it and falls back to the plugin's `latest`.
 
   req F-2.5: The isolate id is the bundle hash, so a changed bundle never reuses an isolate of the
     old one and an unchanged bundle always can.
@@ -676,7 +681,7 @@ feat F-10: Readable manifests and registry query
     skill key.
 
   req F-10.3: Private plugins are returned only to their owner and to members of spaces they are
-    shared with.
+    shared with. They are not indexed for EDGE, so no invocation routes to one ([D-43]).
 ```
 
 ```mdl
@@ -1145,4 +1150,25 @@ decision D-40: [F-1.4] allows bundle files to import `node:*`, as Bundle format 
   for: user:dmaretskyi
   affects: [F-1.4, InvocationScope, PluginEntrypoint]
   why: Review found [F-1.4] stricter than rule 4 although the loader sets `nodejs_compat`, and the entrypoint snippet and the `InvocationScope` type giving two shapes with no statement of which holds.
+
+decision D-41: A plugin runs alone on EDGE. Its bundle is loaded without the bundles of its `dependsOn` plugins, and `PluginHost` activates it without resolving `dependsOn`. A plugin can import another plugin's package for its types, schemas and operation definitions; those imports are vendored like any other package. Plugins on EDGE share no runtime state or capabilities, and contribute only operations, skills and types.
+  date: 2026-11-02
+  by: user:dmaretskyi
+  supersedes: D-21
+  affects: [PluginLoader, PluginEntrypoint, PluginStore, Catalog]
+  why: Plugins on EDGE are independent; bundling and activating dependencies coupled their versions and loaded code a plugin only needed types from.
+
+decision D-42: A plugin package keeps its per-runtime `dx.config.ts` entries (`dx-env`, with `workerd` and `node` conditions on its config export) for consumers that bundle the config statically. The published bundle is still one build from the full entry, and a body is still never picked by condition.
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.2, Rules]
+  why: edge's operation-service bundles plugin configs with the `workerd` condition and the `dx` CLI imports them with `node`; without those entries both reach browser-only bodies, which broke the CLI's module-structure check and edge's worker build. Narrows [D-23].
+
+decision D-43: PluginStore refuses a bundle whose catalog lists any activation failure, stores `describe()`'s `PluginProtocol.Catalog` as the bundle's catalog, leaves channels in place when their version is revoked (resolution falls back to `latest`), and indexes only `/upload`, never private uploads.
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.3, F-2.4, F-10.3, PluginStore, PluginEntrypoint]
+  why: Review asked for the refusal rule, the catalog projection, the revoke outcome for channels and the invocation boundary of private plugins; this is what the store implements.
 ```

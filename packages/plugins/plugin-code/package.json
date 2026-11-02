@@ -30,6 +30,15 @@
       "node": "./dist/lib/CodePlugin.node.mjs",
       "default": "./dist/lib/CodePlugin.mjs"
     },
+    "#operations": {
+      "source": {
+        "workerd": "./src/operations/index.workerd.ts",
+        "default": "./src/operations/index.ts"
+      },
+      "types": "./dist/types/src/operations/index.d.ts",
+      "workerd": "./dist/lib/operations.workerd.mjs",
+      "default": "./dist/lib/operations.mjs"
+    },
     "#skills": {
       "source": "./src/skills/index.ts",
       "types": "./dist/types/src/skills/index.d.ts",

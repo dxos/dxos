@@ -79,23 +79,18 @@ export default {
 };
 `;
 
-export type LoadBundleOptions = {
-  /** The bundles of plugins the primary depends on, which share its `vendor/`. */
-  dependencies?: readonly PluginBundle.Files[];
-};
-
 /**
  * Loads a plugin bundle through Worker Loader in a local workerd, exactly as EDGE's loader does: bare imports rewritten
- * to `vendor/`, `dependsOn` bundles beside it, and a main module that starts the vendored host.
+ * to `vendor/` and a main module that starts the vendored host. The plugin runs alone, as on EDGE.
  */
-export const loadBundle = async (files: PluginBundle.Files, options: LoadBundleOptions = {}): Promise<LoadedBundle> => {
+export const loadBundle = async (files: PluginBundle.Files): Promise<LoadedBundle> => {
   const { problems, vendor } = PluginBundle.check(files);
   if (!vendor) {
     throw new Error(
       `The bundle has no ${PluginBundle.VENDOR_MANIFEST_FILE}: ${problems.map(({ message }) => message).join('; ')}`,
     );
   }
-  const { files: modules, mainModule, main } = await PluginLoader.workerCode(files, options.dependencies ?? []);
+  const { files: modules, mainModule, main } = await PluginLoader.workerCode(files);
   const miniflare = new Miniflare({
     modules: true,
     script: LOADER_HOST,

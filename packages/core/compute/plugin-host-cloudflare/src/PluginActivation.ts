@@ -22,22 +22,18 @@ import { Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 
-/** The plugins of a release: the one it publishes, and the plugins its `dependsOn` closure may draw on. */
+/** The plugin a bundle publishes. It runs alone on EDGE: plugins share types and definitions, never capabilities. */
 export type Plugins = {
   readonly primary: Plugin.Plugin;
-  readonly dependencies?: readonly Plugin.Plugin[];
 };
 
 /**
  * What a host reads from its activated plugins.
  *
- * A release publishes only what its primary plugin contributes: its dependencies are activated so the primary can use
- * their capabilities, and publish their own operations, skills and types in their own releases.
+ * A bundle publishes what its plugin contributes, activated alone.
  */
 export type Activation = {
   readonly primary: Plugin.Plugin;
-  /** Every activated plugin: the primary and its `dependsOn` closure. */
-  readonly plugins: readonly Plugin.Plugin[];
   readonly capabilities: CapabilityManager.CapabilityManager;
   /** ECHO types the primary contributes. */
   readonly types: readonly Type.AnyEntity[];
@@ -52,36 +48,13 @@ export type Activation = {
 };
 
 /**
- * The primary and the plugins its `dependsOn` names, transitively. A dependency the pool lacks is left out, so the
- * plugin manager reports it as missing.
- */
-export const resolve = ({ primary, dependencies = [] }: Plugins): Plugin.Plugin[] => {
-  const byKey = new Map(dependencies.map((plugin) => [plugin.meta.profile.key, plugin]));
-  const resolved = new Map<string, Plugin.Plugin>();
-  const visit = (plugin: Plugin.Plugin) => {
-    if (resolved.has(plugin.meta.profile.key)) {
-      return;
-    }
-    resolved.set(plugin.meta.profile.key, plugin);
-    for (const key of plugin.meta.profile.dependsOn ?? []) {
-      const dependency = byKey.get(key);
-      if (dependency) {
-        visit(dependency);
-      }
-    }
-  };
-  visit(primary);
-  return [...resolved.values()];
-};
-
-/**
  * Activates a release's plugins the way a headless host does: Startup, Idle and AssistantStart, with no React tree.
  *
  * Must run inside a request: the plugin manager schedules Effect fibers that use timers, which workerd disallows in
  * global scope.
  */
 export const activate = async (release: Plugins): Promise<Activation> => {
-  const plugins = resolve(release);
+  const plugins = [release.primary];
   const manager = PluginManager.make({
     pluginLoader: (id: string) =>
       Effect.sync(() => {
@@ -113,7 +86,6 @@ export const activate = async (release: Plugins): Promise<Activation> => {
 
   return {
     primary: release.primary,
-    plugins,
     capabilities: manager.capabilities,
     types: dedupeBy(ofPrimary(AppCapabilities.Schema).flat(), (type) => Type.getTypename(type)),
     registeredTypes: dedupeBy(manager.capabilities.getAll(AppCapabilities.Schema).flat(), (type) =>

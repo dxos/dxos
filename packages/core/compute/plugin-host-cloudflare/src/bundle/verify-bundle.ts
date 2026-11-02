@@ -16,17 +16,13 @@ export type Verification = {
 
 /**
  * Checks a built plugin bundle as EDGE would take it: the static checks of {@link PluginBundle.check}, then, unless
- * `load` is false, loads it in workerd beside its dependency bundles, imports each workerd module and, when `vendor/`
+ * `load` is false, loads it alone in workerd, imports each workerd module and, when `vendor/`
  * carries the host, calls `describe()` and reports an activation failure or a plugin that contributes nothing.
  * `requireHost` makes a bundle without the host a problem rather than a reason to skip `describe()`.
  */
 export const verifyBundle = async (
   dir: string,
-  {
-    dependencies = [],
-    load = true,
-    requireHost = false,
-  }: { dependencies?: readonly string[]; load?: boolean; requireHost?: boolean } = {},
+  { load = true, requireHost = false }: { load?: boolean; requireHost?: boolean } = {},
 ): Promise<Verification> => {
   const files = await PluginBundle.readBundle(dir);
   const { problems, roots, vendor } = PluginBundle.check(files);
@@ -34,8 +30,7 @@ export const verifyBundle = async (
     return { problems, summary: `${Object.keys(files).length} files` };
   }
 
-  const dependencyFiles = await Promise.all(dependencies.map((dependency) => PluginBundle.readBundle(dependency)));
-  await using bundle = await loadBundle(files, { dependencies: dependencyFiles });
+  await using bundle = await loadBundle(files);
   const failures = await bundle.importModules(roots);
   if (failures.length > 0) {
     return {

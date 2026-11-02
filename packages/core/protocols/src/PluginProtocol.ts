@@ -92,8 +92,6 @@ export type FailureRecord = {
 export type Catalog = {
   /** The plugin the bundle publishes; everything else in the catalog is its own. */
   readonly plugin: PluginRecord;
-  /** Plugins of its `dependsOn` closure, activated beside it. */
-  readonly dependencies: readonly PluginRecord[];
   readonly operations: readonly object[];
   readonly skills: readonly SkillRecord[];
   readonly types: readonly TypeRecord[];

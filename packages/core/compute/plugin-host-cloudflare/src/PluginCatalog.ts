@@ -21,7 +21,6 @@ import type * as PluginActivation from './PluginActivation.ts';
  */
 export const make = (activation: PluginActivation.Activation): PluginProtocol.Catalog => ({
   plugin: toPluginRecord(activation.primary),
-  dependencies: activation.plugins.filter((plugin) => plugin !== activation.primary).map(toPluginRecord),
   operations: serializeOperations(activation.operationHandlers).map((record) => Obj.toJSON(record)),
   skills: activation.skills.map((definition) => toSkillRecord(String(definition.key), definition.make())),
   types: activation.types.map((type) => ({

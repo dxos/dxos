@@ -19,9 +19,6 @@ export const VENDOR_MANIFEST_FILE = `${VENDOR_DIR}manifest.json`;
 /** The vendored package whose `PluginHost` the main module starts. */
 export const HOST_SPECIFIER = '@dxos/plugin-host-cloudflare';
 
-/** Where a `dependsOn` plugin's bundle sits beside the primary's, one directory per dependency. */
-export const DEPENDENCY_DIR = 'deps/';
-
 export const MAIN_MODULE = '__plugin_main__.js';
 
 /** The runtime a plugin bundle is loaded with; matches what compute-service loads Worker Loader functions with. */
@@ -38,7 +35,7 @@ export const COMPATIBILITY_FLAGS: readonly string[] = [
 ];
 
 const JS_FILE = /\.(mjs|js)$/;
-const VENDOR_FILE = new RegExp(`^(${DEPENDENCY_DIR}\\d+/)?${VENDOR_DIR}`);
+const VENDOR_FILE = new RegExp(`^${VENDOR_DIR}`);
 
 const decoder = new TextDecoder();
 const encoder = new TextEncoder();
@@ -138,8 +135,8 @@ export const rewriteImports = async (files: Files, imports: ImportMap): Promise<
 };
 
 /**
- * Keeps every file outside the `vendor/` directories, the vendored `roots`, and the vendored files reachable from those
- * by literal imports: the import map joins several bundles' `vendor/`, and each package is loaded from one of them.
+ * Keeps every file outside `vendor/`, the vendored `roots`, and the vendored files reachable from those by literal
+ * imports: `vendor/` is built for the plugin's shared packages, and a module body reaches only some of them.
  */
 const pruneVendor = async (
   files: Record<string, Uint8Array>,
@@ -190,27 +187,15 @@ export type WorkerCode = {
 };
 
 /**
- * The modules a Dynamic Worker loads for a plugin bundle: its files and the bundles of its `dependsOn` plugins (under
- * `deps/<n>/`), with every bare import rewritten through one import map joining their `vendor/` directories (the
- * primary's first, so the isolate holds one copy of each package), and a main module that builds each plugin from its
- * manifest, starts the vendored `PluginHost` and exports its `describe` and `invoke` as a `PluginProtocol.Entrypoint`.
+ * The modules a Dynamic Worker loads for a plugin bundle: its files with every bare import rewritten through its
+ * `vendor/` import map, and a main module that builds the plugin from its manifest, starts the vendored `PluginHost`
+ * and exports its `describe` and `invoke` as a `PluginProtocol.Entrypoint`. A plugin runs alone on EDGE: another
+ * plugin's package it imports is vendored like any other.
  */
-export const workerCode = async (files: Files, dependencies: readonly Files[] = []): Promise<WorkerCode> => {
+export const workerCode = async (files: Files): Promise<WorkerCode> => {
   const imports: Record<string, string> = { ...readVendor(files) };
-  const combined: Record<string, Uint8Array> = { ...files };
-  dependencies.forEach((dependency, index) => {
-    const prefix = `${DEPENDENCY_DIR}${index}/`;
-    for (const [specifier, path] of Object.entries(readVendor(dependency) ?? {})) {
-      imports[specifier] ??= `${prefix}${path}`;
-    }
-    for (const [path, content] of Object.entries(dependency)) {
-      combined[`${prefix}${path}`] = content;
-    }
-  });
   const host = imports[HOST_SPECIFIER];
-  const plugins = [files, ...dependencies].map((bundle, index) =>
-    pluginSource(bundle, index === 0 ? '' : `${DEPENDENCY_DIR}${index - 1}/`, imports),
-  );
+  const plugin = pluginSource(files, '', imports);
   const main = [
     "import { WorkerEntrypoint } from 'cloudflare:workers';",
     'let host;',
@@ -221,11 +206,8 @@ export const workerCode = async (files: Files, dependencies: readonly Files[] = 
     host === undefined
       ? `    throw new Error(${JSON.stringify(`vendor/ does not provide ${HOST_SPECIFIER}, which EDGE starts the plugin with.`)});`
       : `    const { PluginHost } = await import('./${host}');`,
-    `    const [primary, ...dependencies] = [${plugins.join(', ')}];`,
-    '    host ??= PluginHost.make(() => ({',
-    '      primary: PluginHost.fromManifest(primary.manifest, primary.loaders),',
-    '      dependencies: dependencies.map(({ manifest, loaders }) => PluginHost.fromManifest(manifest, loaders)),',
-    '    }));',
+    `    const plugin = ${plugin};`,
+    '    host ??= PluginHost.make(() => ({ primary: PluginHost.fromManifest(plugin.manifest, plugin.loaders) }));',
     '  }',
     '  return host;',
     '};',
@@ -242,7 +224,7 @@ export const workerCode = async (files: Files, dependencies: readonly Files[] = 
     '}',
   ].join('\n');
   return {
-    files: await pruneVendor(await rewriteImports(combined, imports), host === undefined ? [] : [host]),
+    files: await pruneVendor(await rewriteImports(files, imports), host === undefined ? [] : [host]),
     mainModule: MAIN_MODULE,
     main,
   };

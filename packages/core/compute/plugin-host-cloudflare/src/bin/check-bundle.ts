@@ -15,20 +15,19 @@ import { verifyBundle } from '../bundle/verify-bundle.ts';
  * browser-only body. Then it loads the bundle in workerd as EDGE does, imports each workerd module, and, when `vendor/`
  * carries the host, calls `describe()` and fails on an activation failure or a plugin that contributes nothing.
  *
- * Usage: `check-bundle <dir> [--dependency <dir>]... [--no-load]`.
+ * Usage: `check-bundle <dir> [--no-load]`.
  */
 const main = async () => {
   const { values, positionals } = parseArgs({
     allowPositionals: true,
-    options: { 'dependency': { type: 'string', multiple: true }, 'no-load': { type: 'boolean' } },
+    options: { 'no-load': { type: 'boolean' } },
   });
   if (positionals.length !== 1) {
-    console.error('Usage: check-bundle <dir> [--dependency <dir>]... [--no-load]');
+    console.error('Usage: check-bundle <dir> [--no-load]');
     process.exit(2);
   }
   const dir = resolve(positionals[0]);
   const { problems, summary } = await verifyBundle(dir, {
-    dependencies: (values.dependency ?? []).map((dependency) => resolve(dependency)),
     load: !values['no-load'],
   });
   if (problems.length > 0) {

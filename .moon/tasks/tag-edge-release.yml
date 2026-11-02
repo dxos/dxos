@@ -1,10 +1,11 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
   check-edge-release:
-    # Builds the package's one plugin bundle (as `dx registry publish` does) and the bundles of its
-    # `dependsOn` plugins, loads it in workerd as EDGE does, and fails when the bundle check fails, a
-    # module does not import or activate, or it contributes no operations, skills or types.
+    # Builds the package's one plugin bundle (as `dx registry publish` does), loads it alone in workerd as
+    # EDGE does (a plugin's `dependsOn` is not activated on EDGE), and fails when the bundle check fails,
+    # a module does not import or activate, or it contributes no operations, skills or types.
     # See `@dxos/plugin-host-cloudflare/bundle`.
+    # TODO(dmaretskyi): Reorganize all plugin-related tasks under a single `dx-plugin` tag.
     command: node $workspaceRoot/packages/core/compute/plugin-host-cloudflare/dist/lib/bin/check-release.mjs --package .
     deps:
       # The bundle is built from source; dependencies' `dist` provide their types and the shared packages.
