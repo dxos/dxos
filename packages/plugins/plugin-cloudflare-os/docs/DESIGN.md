@@ -39,6 +39,15 @@ from any origin and authenticates in-band:
 A Composer chat records the workspace chat it continues as a foreign key (`cloudflare-os-chat`), so
 each turn after the first calls `sendChatMessage` on the same workspace chat.
 
+## Following a turn
+
+A turn sends the prompt, then polls the workspace chat every 1.5 s: each poll is one HTTP batch request
+(`getChatHistory` and `listChats`, pipelined after `authenticate` and `openWorkspace`). Messages past
+the chat's last sequence before the prompt are added to the Composer chat; the turn ends when the
+chat's `activeAgent` clears after it was seen running or answered. A WebSocket subscription was the
+first design; a dropped socket ended it silently and left the turn waiting after the agent had
+finished.
+
 ## Gadget sandbox
 
 `GadgetFrame` reproduces the Workshop's `GadgetUI`: the gadget's UI bundle is loaded with `srcdoc`

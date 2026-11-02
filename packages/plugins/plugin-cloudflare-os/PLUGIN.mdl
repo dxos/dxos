@@ -250,3 +250,13 @@ decision D-9: Gadgets run in a frame that reproduces the Workshop's sandbox. Fil
   affects: [F-3.2, F-3.3]
   why: A gadget's security rests on its frame having no network and only the port to its server; a looser frame in Composer would undo it.
 ```
+
+```mdl
+decision D-10: A turn follows the workspace chat by polling with one-request HTTP batches, and the workspace article reopens its live session when it drops. Fills in [D-3].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4.3, F-3.1]
+  why: A live WebSocket subscription that drops ends silently, which left a turn waiting after the agent had finished; a request has no connection to lose.
+  rejected: Reconnecting the turn's subscription and replaying from the last sequence, which needs the same end-of-turn detection polling gives directly.
+```

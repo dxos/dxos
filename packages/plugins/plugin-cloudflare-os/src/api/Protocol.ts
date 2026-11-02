@@ -97,6 +97,8 @@ export type ActionLogEntry = {
   state: ActionState;
 } & ({ type: 'action'; description: { title: string; description: string } } | { type: string });
 
+export type ChatHistoryPage = { messages: ChatMessage[] };
+
 export type MergeChangesResult = { outcome: 'merged' | 'stale' };
 
 export type UiBundle = { jsCode: string };
@@ -121,6 +123,8 @@ export interface Overseer extends RpcTarget {
   getGadget(id: WorkpieceId): Promise<RpcStub<GadgetClient>>;
   listModels(): Promise<AuthorInfo[]>;
   listChats(): Promise<ChatMetadata[]>;
+  /** The tail page of a chat's history, or the page before `beforeSequence`. */
+  getChatHistory(chatId: number, beforeSequence?: number): Promise<ChatHistoryPage>;
   subscribeToChat(subscriber: ChatSubscriber, startAfter?: Date): Promise<Disposable>;
   newChat(initialMessage: string, modelId: string | null): Promise<number>;
   sendChatMessage(chatId: number, message: string, modelId: string | null): Promise<void>;

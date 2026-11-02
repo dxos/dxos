@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { type RpcStub, RpcTarget } from 'capnweb';
+import { type RpcStub } from 'capnweb';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
@@ -27,8 +27,8 @@ import * as Projection from './Projection.ts';
 /** How long a turn may run before Composer stops waiting for it. */
 const TURN_TIMEOUT_MS = 10 * 60_000;
 
-/** How often messages that arrived during a turn are added to the chat. */
-const DRAIN_INTERVAL_MS = 500;
+/** How often a running turn is read; each read is one HTTP request. */
+const POLL_INTERVAL_MS = 1_500;
 
 /** The workspace chat a Composer chat continues, recorded on the chat after its first turn. */
 export const chatIdOf = (chat: Chat.Chat): number | undefined => {
@@ -69,82 +69,27 @@ const promptBlocks = (prompt: TurnRequest['prompt']): ContentBlock.Any[] =>
   typeof prompt === 'string' ? [{ _tag: 'text', text: prompt }] : [...prompt];
 
 /**
- * The callback object a chat subscription calls. Only the subscriber's methods are public: capnweb
- * types everything public on a target it is handed, and the state lives in the follower instead.
+ * The bound workspace's overseer in a fresh one-request session: every call made on it before the first
+ * await goes in one HTTP request. A turn polls with these, since a request has no connection to lose.
  */
-class ChatTarget extends RpcTarget implements Protocol.ChatSubscriber {
-  readonly #follower: TurnFollower;
+const batchOverseer = (account: Account.Account, workspaceId: string): RpcStub<Protocol.Overseer> =>
+  Client.newBatch(account.url).authenticate(account.token).openWorkspace(workspaceId);
 
-  constructor(follower: TurnFollower) {
-    super();
-    this.#follower = follower;
-  }
+/** The last sequence among the messages, or -1 for none. */
+const lastSequence = (messages: readonly Protocol.ChatMessage[]): number =>
+  messages.reduce((last, message) => Math.max(last, message.sequence), -1);
 
-  streamGeneration(): void {}
-  deleted(): void {}
-  changeApplied(): void {}
-  stream(): void {}
-
-  metadata(chat: Protocol.ChatMetadata): void {
-    this.#follower.metadata(chat);
-  }
-
-  message(message: Protocol.ChatMessage): void {
-    this.#follower.message(message);
-  }
-}
-
-/**
- * Follows one workspace chat: hands each new agent message on as it lands, and settles once the
- * agent that a prompt started stops running.
- */
-class TurnFollower {
-  #chatId: number | undefined;
-  #started = false;
-  #lastSequence = -1;
-  #metadata: Protocol.ChatMetadata | undefined;
-  readonly #resolve: (metadata: Protocol.ChatMetadata | undefined) => void;
-  readonly done: Promise<Protocol.ChatMetadata | undefined>;
-
-  constructor(
-    chatId: number | undefined,
-    private readonly _onMessage: (message: Protocol.ChatMessage) => void,
-  ) {
-    this.#chatId = chatId;
-    const { promise, resolve } = Promise.withResolvers<Protocol.ChatMetadata | undefined>();
-    this.done = promise;
-    this.#resolve = resolve;
-  }
-
-  /** Starts following a chat created by this turn, at its first message. */
-  follow(chatId: number): void {
-    this.#chatId = chatId;
-  }
-
-  metadata(chat: Protocol.ChatMetadata): void {
-    if (chat.id !== this.#chatId) {
-      return;
-    }
-    this.#metadata = chat;
-    if (chat.activeAgent) {
-      this.#started = true;
-    } else if (this.#started) {
-      this.#resolve(chat);
-    }
-  }
-
-  message(message: Protocol.ChatMessage): void {
-    if (message.chatId !== this.#chatId || message.sequence <= this.#lastSequence) {
-      return;
-    }
-    this.#lastSequence = message.sequence;
-    this._onMessage(message);
-  }
-
-  get lastMetadata(): Protocol.ChatMetadata | undefined {
-    return this.#metadata;
-  }
-}
+/** One look at a turn: the chat's latest messages and its metadata. */
+const poll = (account: Account.Account, workspaceId: string, chatId: number) =>
+  Client.call('Could not read the workspace chat.', () => {
+    const overseer = batchOverseer(account, workspaceId);
+    return Promise.all([overseer.getChatHistory(chatId), overseer.listChats()]);
+  }).pipe(
+    Effect.map(([page, chats]) => ({
+      messages: page.messages,
+      metadata: chats.find(({ id }) => id === chatId),
+    })),
+  );
 
 /** Runs one turn of the workspace agent for a Composer chat. */
 const runTurn = (
@@ -153,7 +98,7 @@ const runTurn = (
 ): Effect.Effect<Message.Message[], CloudflareOsError, Database.Service> =>
   Effect.gen(function* () {
     const workspace = yield* boundWorkspace;
-    const overseer = yield* Account.openWorkspace(workspace);
+    const account = yield* Account.fromConnectionRef(workspace.connection);
     const produced: Message.Message[] = [];
     const append = (messages: Message.Message[]) =>
       Effect.gen(function* () {
@@ -165,56 +110,84 @@ const runTurn = (
 
     yield* append([Message.make({ sender: 'user', blocks: promptBlocks(request.prompt) })]);
 
-    // Messages arrive on the RPC session's callbacks; they are queued and folded into the feed here.
-    const pending: Protocol.ChatMessage[] = [];
     const existing = chatIdOf(chat);
-    const follower = new TurnFollower(existing, (message) => pending.push(message));
-    const subscription = overseer.subscribeToChat(new ChatTarget(follower));
-    yield* Effect.addFinalizer(() =>
-      Effect.sync(() => {
-        void subscription.then(Client.dispose, () => {});
-      }),
-    );
-    yield* Client.call('Could not follow the workspace chat.', () => subscription);
-
-    const text = promptText(request.prompt);
-    const models = yield* Client.call('Could not list the workspace models.', () => overseer.listModels());
+    const [models, before] = yield* Client.call('Could not reach the workspace.', () => {
+      const overseer = batchOverseer(account, workspace.workspaceId);
+      return Promise.all([
+        overseer.listModels(),
+        existing === undefined ? undefined : overseer.getChatHistory(existing),
+      ]);
+    });
     const model = chat.session?.agentModel ?? models[0]?.id ?? null;
+    const text = promptText(request.prompt);
+
+    // Only messages past the chat's current end belong to this turn.
+    let seen = before ? lastSequence(before.messages) : -1;
+    let chatId: number;
     if (existing === undefined) {
-      const chatId = yield* Client.call('Could not start a workspace chat.', () => overseer.newChat(text, model));
-      follower.follow(chatId);
+      chatId = yield* Client.call('Could not start a workspace chat.', () =>
+        batchOverseer(account, workspace.workspaceId).newChat(text, model),
+      );
       recordChatId(chat, chatId);
     } else {
-      yield* Client.call('Could not send the message.', () => overseer.sendChatMessage(existing, text, model));
+      chatId = existing;
+      yield* Client.call('Could not send the message.', () =>
+        batchOverseer(account, workspace.workspaceId).sendChatMessage(chatId, text, model),
+      );
     }
 
-    const drain = Effect.suspend(() => {
-      const blocks = pending.splice(0).flatMap(Projection.messageBlocks);
-      return append(blocks.length > 0 ? [Message.make({ sender: 'assistant', blocks })] : []);
-    });
-
-    // Fold messages into the feed while the turn runs, so the chat shows progress as it happens.
+    // The turn has ended once its agent stops running, after it was seen running or answered.
     const deadline = Date.now() + TURN_TIMEOUT_MS;
+    let started = false;
+    let answered = false;
     let finished: Protocol.ChatMetadata | undefined;
     while (finished === undefined && Date.now() < deadline) {
-      finished = yield* Effect.raceFirst(
-        Effect.promise(() => follower.done),
-        Effect.sleep(DRAIN_INTERVAL_MS).pipe(Effect.as(undefined)),
+      yield* Effect.sleep(POLL_INTERVAL_MS);
+      const result = yield* poll(account, workspace.workspaceId, chatId).pipe(
+        Effect.map(Option.some),
+        Effect.catch((error) =>
+          Effect.sync(() => {
+            log.warn('poll failed; retrying', { error });
+            return Option.none();
+          }),
+        ),
       );
-      yield* drain;
+      if (Option.isNone(result)) {
+        continue;
+      }
+      const { messages, metadata } = result.value;
+      const fresh = messages.filter(({ sequence }) => sequence > seen).sort((a, b) => a.sequence - b.sequence);
+      seen = Math.max(seen, lastSequence(fresh));
+      answered ||= fresh.some(({ author }) => author.type === 'agent');
+      const blocks = fresh.flatMap(Projection.messageBlocks);
+      yield* append(blocks.length > 0 ? [Message.make({ sender: 'assistant', blocks })] : []);
+      if (metadata?.activeAgent) {
+        started = true;
+      } else if (metadata && (started || answered)) {
+        finished = metadata;
+      }
+    }
+    if (finished === undefined) {
+      return yield* Effect.fail(new CloudflareOsError({ message: 'The Cloudflare OS agent did not finish in time.' }));
     }
 
-    const chatId = chatIdOf(chat);
-    const metadata = finished ?? follower.lastMetadata;
+    const gadgets = yield* refreshWorkspace(workspace).pipe(
+      Effect.catch((error) =>
+        Effect.sync(() => {
+          log.warn('refresh failed', { error });
+          return [...(workspace.gadgets ?? [])];
+        }),
+      ),
+    );
     const requests: ContentBlock.Request[] = [];
-    if (chatId !== undefined && metadata?.proposedChangeWorkpieces && metadata.proposedChangeWorkpieces.length > 0) {
-      const gadgets = yield* Account.listGadgets(overseer);
-      const titles = metadata.proposedChangeWorkpieces.flatMap(
-        (id) => gadgets.find((gadget) => gadget.id === id)?.title ?? [],
-      );
+    const proposed = finished.proposedChangeWorkpieces ?? [];
+    if (proposed.length > 0) {
+      const titles = proposed.flatMap((id) => gadgets.find((gadget) => gadget.id === id)?.title ?? []);
       requests.push(Projection.mergeRequest(chatId, titles));
     }
-    const actions = yield* Client.call('Could not read pending actions.', () => overseer.listActions());
+    const actions = yield* Client.call('Could not read pending actions.', () =>
+      batchOverseer(account, workspace.workspaceId).listActions(),
+    );
     requests.push(
       ...actions.entries
         .filter((entry) => entry.type === 'action' && entry.state === 'pending')
@@ -223,11 +196,8 @@ const runTurn = (
     if (requests.length > 0) {
       yield* append([Message.make({ sender: 'assistant', blocks: requests })]);
     }
-    yield* refreshWorkspace(workspace).pipe(
-      Effect.catch((error) => Effect.sync(() => log.warn('refresh failed', { error }))),
-    );
     return produced;
-  }).pipe(Effect.scoped);
+  });
 
 /** Answers a request this agent added: keeps or reverts a turn's changes, or approves or rejects an action. */
 const respond = ({
@@ -242,8 +212,8 @@ const respond = ({
       return false;
     }
     const workspace = yield* boundWorkspace;
-    const overseer = yield* Account.openWorkspace(workspace);
-    yield* runAnswer(overseer, target, optionId);
+    const account = yield* Account.fromConnectionRef(workspace.connection);
+    yield* runAnswer(batchOverseer(account, workspace.workspaceId), target, optionId);
     Obj.update(message, (message) => {
       for (const block of message.blocks) {
         if (block._tag === 'request' && block.requestId === requestId && block.resolution === undefined) {
@@ -259,7 +229,7 @@ const respond = ({
       Effect.catch((error) => Effect.sync(() => log.warn('refresh failed', { error }))),
     );
     return true;
-  }).pipe(Effect.scoped);
+  });
 
 const runAnswer = (
   overseer: RpcStub<Protocol.Overseer>,

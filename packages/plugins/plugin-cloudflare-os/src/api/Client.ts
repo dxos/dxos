@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { type RpcStub, newWebSocketRpcSession } from 'capnweb';
+import { type RpcStub, newHttpBatchRpcSession, newWebSocketRpcSession } from 'capnweb';
 import * as Effect from 'effect/Effect';
 import type * as Scope from 'effect/Scope';
 
@@ -64,6 +64,16 @@ export const dispose = (stub: { [Symbol.dispose](): void }): void => {
     // The session is gone, so the server side is released already.
   }
 };
+
+/** The HTTP endpoint that serves the same API as one-request batches. */
+export const batchEndpoint = (url: string): string => new URL('/api', url).toString();
+
+/**
+ * A one-request session to the deployment's public API: every call made before the first await goes
+ * in one HTTP request, pipelined. A request has no connection to lose, so a long wait polls with these.
+ */
+export const newBatch = (url: string): RpcStub<Protocol.PublicApi> =>
+  newHttpBatchRpcSession<Protocol.PublicApi>(batchEndpoint(url));
 
 /** Opens a WebSocket session to the deployment's public API; the caller disposes it. */
 export const newSession = (url: string): RpcStub<Protocol.PublicApi> =>

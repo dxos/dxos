@@ -13,6 +13,9 @@ import { type CloudflareOs } from '#types';
 
 import * as Account from '../../Account.ts';
 
+/** How long to wait before reopening a dropped session. */
+const RECONNECT_DELAY_MS = 2_000;
+
 export type WorkspaceSession = {
   gadgets: CloudflareOs.Gadget[];
   error?: string;
@@ -33,6 +36,8 @@ export const useWorkspace = (workspace: CloudflareOs.Workspace, gadgetId: number
   const [gadgets, setGadgets] = useState<CloudflareOs.Gadget[]>(() => [...(workspace.gadgets ?? [])]);
   const [error, setError] = useState<string>();
   const [jsCode, setJsCode] = useState<string | null>();
+  // Bumped when the session drops, which reopens it.
+  const [generation, setGeneration] = useState(0);
   // A gadget that only exists in a chat's proposed changes is shown as that chat proposes it.
   const chatId = gadgets.find(({ id }) => id === gadgetId)?.chatId;
 
@@ -48,6 +53,13 @@ export const useWorkspace = (workspace: CloudflareOs.Workspace, gadgetId: number
     setOverseer({ stub });
     setError(undefined);
     const subscription = stub.subscribeToWorkpieces(Account.gadgetSubscriber(setGadgets));
+    // A dropped WebSocket ends the subscription silently, so reopen the session after a pause.
+    let reconnect: ReturnType<typeof setTimeout> | undefined;
+    api.onRpcBroken(() => {
+      if (!closed) {
+        reconnect = setTimeout(() => setGeneration((value) => value + 1), RECONNECT_DELAY_MS);
+      }
+    });
     subscription.catch((err: unknown) => {
       // Closing the session below rejects its calls; only a session still in use has failed.
       if (!closed) {
@@ -57,11 +69,12 @@ export const useWorkspace = (workspace: CloudflareOs.Workspace, gadgetId: number
     });
     return () => {
       closed = true;
+      clearTimeout(reconnect);
       void subscription.then(Client.dispose, () => {});
       Client.dispose(stub);
       Client.dispose(api);
     };
-  }, [accessToken?.source, accessToken?.token, workspace.workspaceId]);
+  }, [accessToken?.source, accessToken?.token, workspace.workspaceId, generation]);
 
   useEffect(() => {
     setJsCode(undefined);
