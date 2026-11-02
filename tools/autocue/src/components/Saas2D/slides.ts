@@ -57,12 +57,13 @@ const TEAM_APPS: Record<string, string[]> = {
   Ops: ['Workday', 'Google Workspace', 'Slack'],
 };
 
-const TENANTS = 60;
+const TENANTS = 48;
 const TENANT_COLOR = '#8fa3d9';
 /** Your company takes this place in every ring of companies, on the left. */
 const YOURS = TENANTS / 2;
-const COMPETITORS = [11, 20, 49];
-const VENDOR_DATA = 48;
+const COMPETITORS = [9, 16, 39];
+/** One data dot per company, so each company's link ends on its own data. */
+const VENDOR_DATA = TENANTS;
 
 const OBJECT_PALETTE = ['#4f8dff', '#3ccf6e', '#ff8a3d', '#a66bff', '#22c7c7', '#f2c230', '#ff5fa2', '#7fa3ff'];
 const OBJECTS = 150;
@@ -139,7 +140,7 @@ const tenantAngle = (index: number) => Math.PI + ((index - YOURS) / TENANTS) * T
 
 /** The vendor's data dot at a company's angle: the company's own data, held by the vendor. */
 const tenantData = (index: number) => {
-  const dot = Math.round((((index - YOURS + TENANTS) % TENANTS) / TENANTS) * VENDOR_DATA) % VENDOR_DATA;
+  const dot = (index - YOURS + TENANTS) % TENANTS;
   return dot === 0 ? 'node:data-org' : `node:data-${dot}`;
 };
 
