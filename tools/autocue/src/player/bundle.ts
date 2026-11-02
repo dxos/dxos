@@ -14,7 +14,8 @@ export const MANIFEST_FILE = 'autocue.json';
 export const bundleRoot = (url: string | URL): URL => {
   const root = new URL(url);
   if (!root.pathname.endsWith('/')) {
-    root.pathname = /\.[a-z0-9]+$/i.test(root.pathname) ? root.pathname.replace(/[^/]*$/, '') : `${root.pathname}/`;
+    // Only a page or a manifest is a file; any other last segment (even a dotted one, `chess.v2`) is the folder.
+    root.pathname = /\.(html?|json)$/i.test(root.pathname) ? root.pathname.replace(/[^/]*$/, '') : `${root.pathname}/`;
   }
   root.search = '';
   root.hash = '';
@@ -67,7 +68,9 @@ const isDemo = (value: unknown) =>
   Array.isArray(value.videos) &&
   value.videos.every((video) => isObject(video) && 'src' in video && typeof video.src === 'string') &&
   'chapters' in value &&
-  Array.isArray(value.chapters);
+  Array.isArray(value.chapters) &&
+  'recording' in value &&
+  isObject(value.recording);
 
 const isManifest = (value: unknown): value is Manifest =>
   isObject(value) &&

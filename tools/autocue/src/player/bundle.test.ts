@@ -35,6 +35,7 @@ describe('bundleRoot', () => {
     expect(bundleRoot(root).href).toBe(root);
     expect(bundleRoot(`${root}index.html#opening`).href).toBe(root);
     expect(bundleRoot(`${root}autocue.json?v=2`).href).toBe(root);
+    expect(bundleRoot('https://dx.pub/demo/chess.v2').href).toBe('https://dx.pub/demo/chess.v2/');
   });
 });
 
@@ -92,6 +93,12 @@ describe('loadBundle', () => {
 
   test('a demo without videos fails with a BundleError', async () => {
     const error = await load('https://dx.pub/demo/chess/', { ...manifest, demos: [{ id: 'x', title: 'X' }] });
+    expect(error.reason).toBe('not an autocue@1 manifest');
+  });
+
+  test('a demo without a recording fails with a BundleError', async () => {
+    const { recording: _, ...demo } = manifest.demos[0];
+    const error = await load('https://dx.pub/demo/chess/', { ...manifest, demos: [demo] });
     expect(error.reason).toBe('not an autocue@1 manifest');
   });
 
