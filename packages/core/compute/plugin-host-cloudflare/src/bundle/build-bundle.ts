@@ -4,7 +4,7 @@
 
 import { existsSync } from 'node:fs';
 import { readFile, realpath } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { PluginLoader } from '@dxos/edge-compute/plugin-loader';
@@ -23,11 +23,15 @@ const hostEntry = (): string => {
     : join(dirname(modulePath), 'index.mjs');
 };
 
+/** Where a plugin package's check builds the bundles of its `dependsOn` closure, one directory per package. */
+export const DEPENDENCY_BUNDLE_DIR = 'dist/plugin-deps';
+
 /**
  * Builds a plugin package's one bundle with `composerPlugin`, the same build `dx registry publish` runs, into
- * `<package>/dist/plugin`, with the EDGE plugin host added to `vendor/`. Returns the bundle directory.
+ * `outDir` (default `<package>/dist/plugin`), with the EDGE plugin host added to `vendor/`. Returns the bundle
+ * directory.
  */
-export const buildBundle = async (packageDir: string): Promise<string> => {
+export const buildBundle = async (packageDir: string, outDir = join(packageDir, BUNDLE_DIR)): Promise<string> => {
   const [{ build }, { composerPlugin }] = await Promise.all([
     import('vite'),
     import('@dxos/app-framework/vite-plugin'),
@@ -43,12 +47,12 @@ export const buildBundle = async (packageDir: string): Promise<string> => {
       plugins: composerPlugin({
         vendor: { extra: [{ specifier: PluginLoader.HOST_SPECIFIER, importers: [], path: hostEntry() }] },
       }),
-      build: { outDir: BUNDLE_DIR, emptyOutDir: true },
+      build: { outDir, emptyOutDir: true },
     });
   } finally {
     process.chdir(cwd);
   }
-  return join(packageDir, BUNDLE_DIR);
+  return outDir;
 };
 
 const readPackage = async (dir: string): Promise<{ dependencies?: Record<string, string> }> =>
@@ -112,7 +116,8 @@ export const buildDependencyBundles = async (packageDir: string, primaryBundle: 
     if (dir === undefined) {
       throw new Error(`No @dxos/plugin-* dependency of ${packageDir} provides ${key}.`);
     }
-    const bundle = await buildBundle(dir);
+    // Under the dependent package: the dependency's own `dist/plugin` belongs to its own check, which may run at once.
+    const bundle = await buildBundle(dir, join(packageDir, DEPENDENCY_BUNDLE_DIR, basename(dir)));
     built.set(key, bundle);
     pending.push(...((await manifestOf(bundle)).dependsOn ?? []));
   }

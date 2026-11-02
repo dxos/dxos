@@ -117,10 +117,10 @@ export const publish = Command.make(
         const path = yield* Path.Path;
         const dir = path.resolve(options.dir);
 
-        // Load + validate the build/publish orchestration from dx.config.ts. Imported here because the
-        // vite-plugin entry pulls in Babel, which every `dx` start would otherwise load.
+        // Load + validate the build/publish orchestration from dx.config.ts, through the subpath that carries no
+        // Vite or Babel, which the compiled `dx` cannot bundle.
         const { findDxConfigFile, loadDxConfig } = yield* Effect.promise(
-          () => import('@dxos/app-framework/vite-plugin'),
+          () => import('@dxos/app-framework/vite-plugin/config'),
         );
         const configFile = findDxConfigFile(dir);
         if (!configFile) {
