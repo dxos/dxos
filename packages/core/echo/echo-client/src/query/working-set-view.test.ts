@@ -5,10 +5,11 @@
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
+import { BACKED_OBJECT_LIMIT } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 
 import { type DatabaseImpl } from '../proxy-db/index.ts';
-import { EchoTestBuilder } from '../testing/index.ts';
+import { EchoTestBuilder, createTmpPath } from '../testing/index.ts';
 import { WorkingSetView } from './working-set-view.ts';
 
 describe('WorkingSetView', () => {
@@ -71,6 +72,26 @@ describe('WorkingSetView', () => {
     expect(query.ids()).toEqual([own.id, added.id].sort());
   });
 
+  test('a child-of query with nothing cached hears every write', ({ expect }) => {
+    const alice = person('alice');
+    const bob = person('bob');
+    childTask(alice, 'own');
+    const other = childTask(bob, 'other');
+    const query = watch(Query.select(Filter.and(Filter.type(TestSchema.Task), Filter.childOf(alice))));
+
+    Obj.update(other, (other) => {
+      other.title = 'unread';
+    });
+    const unread = query.changes();
+    expect(unread).toBeGreaterThan(0);
+
+    query.ids();
+    Obj.update(other, (other) => {
+      other.title = 'read';
+    });
+    expect(query.changes()).toBe(unread);
+  });
+
   test('re-parenting moves an object into and out of a child-of query', ({ expect }) => {
     const alice = person('alice');
     const bob = person('bob');
@@ -130,5 +151,24 @@ describe('WorkingSetView', () => {
 
     db.remove(alice);
     expect(query.ids()).toEqual([]);
+  });
+
+  test('a type query hears an object that loads after it computed', async ({ expect }) => {
+    const peer = await builder.createPeer({ storagePath: createTmpPath(), types: [TestSchema.Person] });
+    const before = await peer.createDatabase();
+    // Over the inline limit, so the object has its own document and loads on demand.
+    const { id } = before.add(Obj.make(TestSchema.Person, { name: 'x'.repeat(BACKED_OBJECT_LIMIT + 1), tasks: [] }));
+    await before.flush();
+    await peer.reload();
+    const after = await peer.openLastDatabase();
+
+    const view = new WorkingSetView(after);
+    view.update(Query.select(Filter.type(TestSchema.Person)).from(after).ast);
+    const ids = () => view.getResults().map((entry) => entry.id);
+    expect(ids()).not.toContain(id);
+
+    await after.query(Filter.id(id)).run();
+    await expect.poll(ids).toContain(id);
+    view.close();
   });
 });

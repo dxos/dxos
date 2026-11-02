@@ -7,7 +7,7 @@ import { Context } from '@dxos/context';
 import { type Entity, Feed, type Obj } from '@dxos/echo';
 import { filterMatchDoc } from '@dxos/echo-host/filter';
 import { GroupBy, QueryPlanner, queryContainsChanges } from '@dxos/echo-host/query';
-import { EncodedReference, type EntityStructure, QueryAST } from '@dxos/echo-protocol';
+import { type EntityStructure, QueryAST } from '@dxos/echo-protocol';
 import { resolveMergeRedirect } from '@dxos/echo/internal';
 import { EID, EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -17,9 +17,11 @@ import { type FeedHandle } from '../feed/feed-handle.ts';
 import { type DatabaseImpl } from '../proxy-db/index.ts';
 import { type MergePlan, createMergePlan, evaluateCore, matchesFeedSelection, ordersLocally } from './merge-plan.ts';
 import { type SourceEntry } from './query-context.ts';
+import { type DispatchKeys, UpdateDispatch, parentId } from './update-dispatch.ts';
 import {
   type HierarchyScope,
   getHierarchyScope,
+  getSelectionKeys,
   getTargetFeedBranchesForQuery,
   getTargetSpacesForQuery,
   isSimpleSelectionQuery,
@@ -50,10 +52,12 @@ export class WorkingSetView {
   readonly #windowEvaluation = new WeakMap<QueryAST.Query, boolean>();
   /** Present when a write can be applied to cached results as a delta instead of a full recompute. */
   #delta?: { filter: QueryAST.Filter; options: QueryAST.QueryOptions | undefined } = undefined;
-  /** Present when only writes under the query's parents can change it, so the rest skip a working-set scan. */
+  /** Present when only writes under the query's parents can change it. */
   #hierarchy?: HierarchyScope = undefined;
-  /** Non-members whose writes can still change {@link _results}, keyed by the results they were derived from. */
-  #hierarchyReads?: { results: SourceEntry<Obj.Any>[]; ids: ReadonlySet<string> } = undefined;
+  /** Present when a simple selection only matches objects with one of these ids or typenames. */
+  #selection?: { ids: string[]; typenames: string[] } = undefined;
+  /** Delivers only the writes {@link #route} says can change the results. */
+  readonly #dispatch: UpdateDispatch;
   /** Present when the query selects from feeds: their unacknowledged writes, which no index has seen yet. */
   #feedTail?: FeedTail = undefined;
   /** Which of the feed tail's writes match, kept current one write at a time. */
@@ -72,6 +76,7 @@ export class WorkingSetView {
       areStrongDepsResolved: (core) => _database.areStrongDepsResolved(core),
     };
     this._executor = new WorkingSetQueryExecutor(provider);
+    this.#dispatch = UpdateDispatch.for(_database);
     this._planner = new QueryPlanner({ defaultTextSearchKind: 'full-text', noIndexes: true });
   }
 
@@ -192,6 +197,9 @@ export class WorkingSetView {
     this.#feedTail = undefined;
     this.#tailMatches = undefined;
     this._results = undefined;
+    this.#hierarchy = undefined;
+    this.#selection = undefined;
+    this.#dispatch.delete(this._onUpdate);
     void this._ctx.dispose().catch((err) => log.catch(err));
   }
 
@@ -199,6 +207,9 @@ export class WorkingSetView {
     void this._ctx.dispose().catch((err) => log.catch(err));
     this._ctx = new Context();
     this._results = undefined;
+    this.#hierarchy = undefined;
+    this.#selection = undefined;
+    this.#dispatch.delete(this._onUpdate);
     // The handles were watched through the context just disposed, so each one is subscribed again.
     this.#feedTail = undefined;
     this.#tailMatches = undefined;
@@ -224,13 +235,14 @@ export class WorkingSetView {
     this._query = query;
     this.#delta = deltaFor(query);
     this.#hierarchy = getHierarchyScope(query);
-    this.#hierarchyReads = undefined;
-    this._database._updateEvent.on(this._ctx, this._onUpdate);
+    const simple = this.#hierarchy ? null : isSimpleSelectionQuery(query);
+    this.#selection = simple && !simple.hasQueues ? getSelectionKeys(simple.filter) : undefined;
+    this.#route();
     this.changed.emit();
   }
 
   getResults(): SourceEntry[] {
-    const space = this._query ? (this._results ??= this._compute(this._query)) : [];
+    const space = this._query ? (this._results ??= this.#computeResults(this._query)) : [];
     return this.#tailMatches ? [...space, ...this.#tailMatches.entries()] : space;
   }
 
@@ -323,8 +335,7 @@ export class WorkingSetView {
     }
 
     if (!updateEvent) {
-      this._results = undefined;
-      this.changed.emit();
+      this.#invalidate();
       return;
     }
 
@@ -339,13 +350,9 @@ export class WorkingSetView {
     // before the write returns, rather than at whatever later event first computes its results.
     const resultIds = new Set((this._results ?? []).map((result) => result.id));
     const query = this._query;
-    const hierarchyReads = this._results && this.#hierarchy && this.#readsUnder(this._results, this.#hierarchy);
     const changed = updateEvent.itemsUpdated.some(({ id: objectId }) => {
       if (resultIds.has(objectId)) {
         return true;
-      }
-      if (hierarchyReads && this.#hierarchy) {
-        return hierarchyReads.has(objectId) || this.#isUnder(objectId, this.#hierarchy);
       }
       // A simple selection decides a written object by its own document; anything else recomputes.
       const simple = isSimpleSelectionQuery(query);
@@ -357,54 +364,56 @@ export class WorkingSetView {
     });
 
     if (changed) {
-      this._results = undefined;
-      this.changed.emit();
+      this.#invalidate();
     }
   };
 
-  /**
-   * The non-members whose writes can re-parent or delete members: the anchors, their ancestors, and the objects
-   * between each member and its anchor. Any other write matters only if it lands under an anchor ({@link #isUnder}).
-   */
-  #readsUnder(results: SourceEntry<Obj.Any>[], { anchors, depth }: HierarchyScope): ReadonlySet<string> {
-    if (this.#hierarchyReads?.results === results) {
-      return this.#hierarchyReads.ids;
+  #invalidate(): void {
+    this._results = undefined;
+    this.#route();
+    this.changed.emit();
+  }
+
+  #computeResults(query: QueryAST.Query): SourceEntry<Obj.Any>[] {
+    const results = this._compute(query);
+    this.#route(results);
+    return results;
+  }
+
+  /** Registers with the dispatch the writes that can change `results`, or the query alone when nothing is cached. */
+  #route(results?: SourceEntry<Obj.Any>[]): void {
+    if (this.#hierarchy) {
+      // Uncached, any write may be one under the parents: membership is only known once computed.
+      this.#dispatch.set(this._onUpdate, results && this.#keysFor(results, this.#hierarchy));
+    } else if (this.#selection) {
+      // A member is keyed by its id as well, in case a write changes its type.
+      const ids = [...this.#selection.ids, ...(results ?? []).map((result) => result.id)];
+      this.#dispatch.set(this._onUpdate, { ids, typenames: this.#selection.typenames });
+    } else {
+      this.#dispatch.set(this._onUpdate);
     }
-    const ids = new Set<string>();
-    // Deletion reaches a member through any ancestor of its anchor.
+  }
+
+  /**
+   * The writes that can change `results`: the members; the anchors and their ancestors, since deletion cascades down
+   * through parents; the objects between each member and its anchor; and anything that lands under an anchor.
+   */
+  #keysFor(results: SourceEntry<Obj.Any>[], { anchors, depth }: HierarchyScope): DispatchKeys {
+    const ids = new Set(results.map((result) => result.id));
     for (const anchor of anchors) {
       for (let id: string | undefined = anchor, hops = 0; id && hops <= MAX_DELETION_DEPTH; hops++) {
         ids.add(id);
-        id = this.#parentId(id);
+        id = parentId(this._database, id);
       }
     }
     for (const { id: member } of results) {
-      let id = this.#parentId(member);
+      let id = parentId(this._database, member);
       for (let hops = 1; id && !anchors.has(id) && hops < depth; hops++) {
         ids.add(id);
-        id = this.#parentId(id);
+        id = parentId(this._database, id);
       }
     }
-    this.#hierarchyReads = { results, ids };
-    return ids;
-  }
-
-  /** Whether the object sits within the scope's depth below one of its anchors, as the executors walk it. */
-  #isUnder(id: string, { anchors, depth }: HierarchyScope): boolean {
-    let parent = this.#parentId(id);
-    for (let hops = 1; parent && hops <= depth; hops++) {
-      if (anchors.has(parent)) {
-        return true;
-      }
-      parent = this.#parentId(parent);
-    }
-    return false;
-  }
-
-  #parentId(id: string): string | undefined {
-    const ref = this.coreById(id)?.getParent();
-    const eid = ref && EncodedReference.isEncodedReference(ref) ? EID.tryParse(EncodedReference.toURI(ref)) : undefined;
-    return eid && EID.getEntityId(eid);
+    return { ids, anchors: { ids: anchors, depth } };
   }
 
   /**
@@ -434,6 +443,7 @@ export class WorkingSetView {
           match: { rank: 1 },
           resolution: { source: 'local', time: 0 },
         });
+        this.#dispatch.addIds(this._onUpdate, [id]);
       }
     }
     if (next === results) {

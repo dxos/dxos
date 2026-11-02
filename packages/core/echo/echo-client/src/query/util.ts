@@ -186,6 +186,44 @@ export const isSimpleSelectionQuery = (
 };
 
 /**
+ * Ids or typenames of which a simple selection's filter requires a match to have one; undefined when it requires
+ * neither, so any written object might match.
+ */
+export const getSelectionKeys = (filter: QueryAST.Filter): { ids: string[]; typenames: string[] } | undefined => {
+  switch (filter.type) {
+    case 'object':
+      if (filter.id && filter.id.length > 0) {
+        return { ids: [...filter.id], typenames: [] };
+      }
+      return filter.typename !== null ? { ids: [], typenames: [filter.typename] } : undefined;
+    case 'and':
+      // Any one conjunct's requirement holds for the whole conjunction.
+      for (const conjunct of filter.filters) {
+        const keys = getSelectionKeys(conjunct);
+        if (keys) {
+          return keys;
+        }
+      }
+      return undefined;
+    case 'or': {
+      const ids: string[] = [];
+      const typenames: string[] = [];
+      for (const branch of filter.filters) {
+        const keys = getSelectionKeys(branch);
+        if (!keys) {
+          return undefined;
+        }
+        ids.push(...keys.ids);
+        typenames.push(...keys.typenames);
+      }
+      return filter.filters.length > 0 ? { ids, typenames } : undefined;
+    }
+    default:
+      return undefined;
+  }
+};
+
+/**
  * The parents a query selects under, for a query whose membership is otherwise decided by each object's own
  * document: a select with `child-of` conjuncts, or the children of a by-id selection. Undefined for any other shape.
  */
