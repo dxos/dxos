@@ -9,7 +9,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as TextMerge from '@dxos/plugin-github/TextMerge';
 import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 
-import { writeThrough } from '#sync';
+import { FrontMatter, writeThrough } from '#sync';
 import { CodeOperation } from '#types';
 
 import { CodeOperationError } from '../errors.ts';
@@ -19,17 +19,19 @@ const handler: Operation.WithHandler<typeof CodeOperation.ExportSpecFile> = Code
   Operation.withHandler(
     Effect.fn(function* ({ object, base }) {
       const { spec, text } = yield* loadSpecText(object);
-      const codecs = yield* Capability.getAll(ProjectCapabilities.SpecDocumentCodec);
+      const codecs = yield* Capability.getAll(ProjectCapabilities.SpecCodec);
+      // The spec's fields are the file's front matter, written around its text.
+      const form = FrontMatter.fileForm(text.content);
       // Written against the file as GitHub holds it, so what did not change keeps its form.
-      const written = yield* writeThrough(codecs, spec, base);
+      const written = yield* writeThrough(codecs, spec, base === undefined ? undefined : form.body(base));
       if (written !== undefined) {
         if (base === undefined) {
           // Without it each block would be written anew, rewriting the file's own forms.
           return yield* Effect.fail(new CodeOperationError({ message: `No synced file text for ${spec.id}` }));
         }
-        return { content: written, heads: TextMerge.currentHeads(text) };
+        return { content: form.write(spec, written, base), heads: TextMerge.currentHeads(text) };
       }
-      return { content: text.content, heads: TextMerge.currentHeads(text) };
+      return { content: form.write(spec, text.content, base), heads: TextMerge.currentHeads(text) };
     }),
   ),
 );

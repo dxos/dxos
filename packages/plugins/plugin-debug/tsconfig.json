@@ -170,6 +170,9 @@
       "path": "../plugin-client"
     },
     {
+      "path": "../plugin-code"
+    },
+    {
       "path": "../plugin-connector"
     },
     {

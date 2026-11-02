@@ -9,6 +9,8 @@ export * from './CodeToolbar/index.ts';
 export * from './DataModelGraph/index.ts';
 export * from './DecisionLog/index.ts';
 export * from './DefinitionGraph/index.ts';
+export * from './FeatureCard/index.ts';
+export * from './FeatureKanban/index.ts';
 export * from './FileTree/index.ts';
 export * from './LatticeGraph/index.ts';
 export * from './CodeView/index.ts';

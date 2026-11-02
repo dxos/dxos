@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useMemo } from 'react';
 
 import { type Database, Obj, Ref, Type } from '@dxos/echo';
-import { useType as defaultUseType } from '@dxos/echo-react';
+import { useType as defaultUseType, useLabel } from '@dxos/echo-react';
 import * as Annotation from '@dxos/echo/Annotation';
 import { type AnyProperties } from '@dxos/echo/internal';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
@@ -27,11 +27,14 @@ type UseType = (db?: Database.Database, typeUri?: URI.URI) => Type.AnyEntity | u
 export type InlineRefFieldProps = FormFieldRendererProps &
   Pick<RefFieldDataProps, 'onCreate'> & {
     useType?: UseType;
+    /** Whether the group starts open. */
+    defaultOpen?: boolean;
   };
 
 /**
  * A referenced object's own fields inline (`FormInlineAnnotation`), as a nested group bound to the target: each
- * changed path is written back to it with `Obj.setValue` in one `Obj.update`. An empty ref offers to create the target.
+ * changed path is written back to it with `Obj.setValue` in one `Obj.update`. The group is named by the field's label,
+ * or by the target's own when it has none (an owned array's row). An empty ref offers to create the target.
  */
 export const InlineRefField = ({
   type,
@@ -42,6 +45,7 @@ export const InlineRefField = ({
   onValueChange,
   onCreate,
   useType = defaultUseType,
+  defaultOpen,
 }: InlineRefFieldProps) => {
   const { t } = Hooks.useTranslation(translationKey);
   const reference = getValue();
@@ -65,37 +69,66 @@ export const InlineRefField = ({
     return null;
   }
 
+  if (Ref.isRef(reference)) {
+    return (
+      <InlineTarget
+        reference={reference}
+        label={label}
+        defaultOpen={defaultOpen}
+        db={db}
+        readonly={readonly}
+        useType={useType}
+      />
+    );
+  }
+
   return (
-    <FormFieldSet label={label} collapsible nested>
-      {Ref.isRef(reference) ? (
-        <InlineForm reference={reference} db={db} readonly={readonly} useType={useType} />
-      ) : (
-        !readonly &&
-        onCreate && (
-          <Button.Group fill>
-            <Button.Root
-              icon='ph--plus--regular'
-              label={label || t('ref-field.placeholder')}
-              disabled={!createType}
-              onClick={() => void handleCreate()}
-            />
-          </Button.Group>
-        )
+    <FormFieldSet label={label} collapsible nested defaultOpen={defaultOpen}>
+      {!readonly && onCreate && (
+        <Button.Group fill>
+          <Button.Root
+            icon='ph--plus--regular'
+            label={label || t('ref-field.placeholder')}
+            disabled={!createType}
+            onClick={() => void handleCreate()}
+          />
+        </Button.Group>
       )}
     </FormFieldSet>
   );
 };
 
-type InlineFormProps = {
+type InlineTargetProps = {
   reference: Ref.Ref<any>;
+  label: string;
+  defaultOpen?: boolean;
   db?: Database.Database;
   readonly?: boolean;
   useType?: UseType;
 };
 
-/** The target's form: its fields render straight into the enclosing group, sharing its tracks. */
-const InlineForm = ({ reference, db, readonly, useType = defaultUseType }: InlineFormProps) => {
+/** The target's group: its fields render straight into it, sharing its tracks. */
+const InlineTarget = ({ reference, label, defaultOpen, db, readonly, useType = defaultUseType }: InlineTargetProps) => {
+  const { t } = Hooks.useTranslation(translationKey);
   const target = useAtomValue(useMemo(() => reference.atom, [reference]));
+  // Never empty: a legend that appears with the first letter typed would remount the field being typed in.
+  const legend = useLabel(target) || t('untitled.label');
+  return (
+    <FormFieldSet label={label || legend} collapsible nested defaultOpen={defaultOpen}>
+      <InlineForm target={target} db={db} readonly={readonly} useType={useType} />
+    </FormFieldSet>
+  );
+};
+
+type InlineFormProps = {
+  target?: Obj.Unknown;
+  db?: Database.Database;
+  readonly?: boolean;
+  useType?: UseType;
+};
+
+/** The target's form, writing each changed path back to it. */
+const InlineForm = ({ target, db, readonly, useType = defaultUseType }: InlineFormProps) => {
   const typeFromRegistry = useType(db, target ? Obj.getTypeURI(target) : undefined);
   const targetType = (target && Obj.getType(target)) || typeFromRegistry;
   const schema = useMemo(() => (targetType ? omitId(Type.getSchema(targetType)) : undefined), [targetType]);
