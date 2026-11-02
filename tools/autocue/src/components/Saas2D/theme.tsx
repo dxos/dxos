@@ -73,6 +73,7 @@ const Text = ({
   fill = neu.fg,
   anchor = 'middle',
   mono,
+  logotype,
   halo,
   width,
   children,
@@ -84,6 +85,7 @@ const Text = ({
   fill?: string;
   anchor?: 'start' | 'middle' | 'end';
   mono?: boolean;
+  logotype?: boolean;
   halo?: boolean;
   width?: number;
   children: string;
@@ -93,7 +95,7 @@ const Text = ({
     y={y}
     textAnchor={anchor}
     dominantBaseline='central'
-    fontFamily={mono ? FONTS.mono : FONTS.sans}
+    fontFamily={mono ? FONTS.mono : logotype ? FONTS.logotype : FONTS.sans}
     fontSize={size}
     fontWeight={weight}
     fill={fill}
@@ -397,6 +399,7 @@ export const SvgPrim = ({ prim, camera }: { prim: Prim; camera: Camera }) => {
             fill={prim.color}
             anchor={prim.anchor}
             mono={prim.mono}
+            logotype={prim.logotype}
             halo={!prim.mono && !prim.plain}
             width={prim.width}
           >

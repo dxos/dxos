@@ -91,6 +91,8 @@ export type LabelPrim = Base & {
   weight?: number;
   color?: string;
   mono?: boolean;
+  /** Set in the DXOS logotype face (Sharp Sans), to sit with the wordmark. */
+  logotype?: boolean;
   anchor?: 'start' | 'middle' | 'end';
   /** No dark halo: for labels on a light field. */
   plain?: boolean;

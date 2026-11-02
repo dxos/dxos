@@ -330,10 +330,9 @@ const lab = (x: number, y: number, r: number, { core = 0, title = true, coreTitl
           : []),
       ]
     : []),
-  // With a core, the title sits in the body's rim, clear of the apps and companies orbiting outside.
   ...(title
     ? [
-        label('lab-label', x, core > 0 ? y - (r + core) / 2 : y - r - 34, 'Frontier Labs', {
+        label('lab-label', x, y - r - 34, 'Frontier Labs', {
           size: 30,
           parent: 'body:lab',
         }),
@@ -910,8 +909,10 @@ export const slides = (holds: Record<string, number>): Slide[] => {
           },
           label('org-label', 0, -170 - 32, 'Your company', { size: 30, opacity: 1 - ramp(t, 0.2, 0.5) }),
           label('hub-label', 0, 0, 'Your data', { size: 30, opacity: 1 - ramp(t, 0.2, 0.5), parent: 'node:hub' }),
-          // The field takes the light yellow of your data's lit centre, so filling the frame never darkens it.
+          // The field takes the light yellow of your data's lit centre, so filling the frame never darkens it, then
+          // clears to white for the logo.
           { kind: 'fill', id: 'field', color: DATA_LIGHT, screen: true, opacity: field },
+          { kind: 'fill', id: 'field-white', color: '#ffffff', screen: true, opacity: ramp(t, 2.0, 0.8, easeInOut) },
           {
             kind: 'logo',
             id: 'logo',
@@ -920,7 +921,7 @@ export const slides = (holds: Record<string, number>): Slide[] => {
             width: 560,
             dark: true,
             screen: true,
-            opacity: ramp(t, 1.8, 0.6),
+            opacity: ramp(t, 2.8, 0.6),
           },
           ...['Your team', 'Your apps', 'Your data'].map((text, index): Prim =>
             label(`tag-${index}`, WIDTH / 2 + (index - 1) * 220, HEIGHT / 2 + 130, text, {
@@ -929,6 +930,7 @@ export const slides = (holds: Record<string, number>): Slide[] => {
               weight: 500,
               color: PALETTE.graphite,
               plain: true,
+              logotype: true,
               // Two seconds after the expansion, one beat (a second) per tag.
               opacity: ramp(t, 3.7 + index, 0.5),
             }),
