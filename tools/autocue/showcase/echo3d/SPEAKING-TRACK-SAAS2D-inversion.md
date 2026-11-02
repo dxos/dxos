@@ -14,23 +14,23 @@ Cut 3 of NARRATIVE-SAAS2D.md: a lecture on the dynamics, nobody acts badly, ever
 
 ## 3. Your data lives inside SaaS (`#silo`)
 
-- The company's data lives inside the vendor's application.
+- Your company's data lives safely inside the platform.
 
 ## 4. Data in both directions (`#silo-comms`)
 
-- Every read and write passes through the vendor.
+- Every read and write passes through the cloud.
 
 ## 5. The vendor grows (`#scale`)
 
-- Vendors specialized, each serving millions.
+- Providers specialized, each serving millions.
 
 ## 6. Your competitors (`#competitors`)
 
-- The cost of leaving grows with every day of use.
+- But the cost of leaving grows with every day of use.
 
 ## 7. Many silos (`#spread`)
 
-- A company's data is partitioned across dozens of vendors.
+- Your company's data is partitioned across dozens of vendors.
 
 ## 8. Teams and their apps (`#spread-comms`)
 
@@ -42,23 +42,23 @@ Cut 3 of NARRATIVE-SAAS2D.md: a lecture on the dynamics, nobody acts badly, ever
 
 ## 10. Everyone talks to the lab (`#frontier-comms`)
 
-- An agent works across products, and its value is in the joins no vendor holds.
+- An agent works across your company; the value is in the joins no single application contains.
 
 ## 11. The lab at the centre (`#orbit`)
 
-- Agents need access to everything, across the silos.
+- Agents need access to everything to be effective.
 
 ## 12. The apps are absorbed (`#absorb`)
 
-- SaaS vendors bolt on AI; the labs build the apps into their platforms.
+- While SaaS providers attempt to integrate chatbots, the labs are building apps directly into their platforms.
 
 ## 13. Three labs (`#rivals`)
 
-- Greater dependence on fewer providers, who set the price.
+- Over time, fewer providers, greater centralization.
 
 ## 14. The labs merge (`#merge-1`)
 
-- Consolidation among the labs themselves is likely.
+- And the labs may themselves consolidate.
 
 ## 15. The Final Frontier (`#final-frontier`)
 
@@ -66,15 +66,15 @@ Cut 3 of NARRATIVE-SAAS2D.md: a lecture on the dynamics, nobody acts badly, ever
 
 ## 16. The Singularity (`#engulf`)
 
-- Data, models and applications, concentrated in a few hands.
+- Leaving data, models, apps, and infrastructure in a few hands.
 
 ## 17. The Alternative (`#dont-panic`)
 
-- There is an alternative: an inversion of control.
+- There is an alternative. An inversion of control.
 
 ## 18. Back to your company (`#spread-again`)
 
-- What if the company kept its data, with interoperable apps on a new architecture?
+- What if your company kept control of your data, building interoperable apps and agents?
 
 ## 19. Your data, in ECHO (`#echo-hub`)
 
@@ -82,11 +82,11 @@ Cut 3 of NARRATIVE-SAAS2D.md: a lecture on the dynamics, nobody acts badly, ever
 
 ## 20. The ECHO hypergraph (`#echo-spaces`)
 
-- Distributed, on every device and at the edge.
+- Distributed, at the edge and on every device.
 
 ## 21. A graph of objects (`#objects`)
 
-- Realtime and typed, with fine-grained access for people and agents.
+- Realtime queries and workflows, with fine-grained access for people and agents.
 
 ## 24. Work that builds on itself (`#object-created`)
 
@@ -102,7 +102,7 @@ Cut 3 of NARRATIVE-SAAS2D.md: a lecture on the dynamics, nobody acts badly, ever
 
 ## 27. The silos fold in (`#saas-merge`)
 
-- The silos collapse into one graph.
+- The silos dissolve into a single unified semantic graph.
 
 ## 28. DXOS (`#company-fills`)
 
