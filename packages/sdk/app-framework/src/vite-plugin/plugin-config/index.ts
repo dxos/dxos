@@ -128,6 +128,9 @@ export const moduleBodyAttributePlugin = (): VitePlugin => ({
   },
 });
 
+/** Query parameter on a library entry for `dx.config.ts` that limits it to one runtime's modules. */
+export const LIBRARY_ENV_PARAM = 'dx-env';
+
 /** Query parameter for an app's lazily loaded half of a config: the module list a plugin needs once enabled. */
 const MODULES_PARAM = 'dx-modules';
 
@@ -247,9 +250,12 @@ export const pluginConfigPlugin = ({ apply, onLibraryManifest }: PluginConfigPlu
             ? 'workerd'
             : 'node';
 
-      // A library serves every runtime from one build: it keeps every module with its environments, and
-      // each runtime activates only its own (`Plugin.fromModules`); an app build keeps its target's modules.
-      const keep = (environments?: readonly string[]) => library || !environments || environments.includes(target);
+      // A library's default entry keeps every module with its environments: the plugin bundle, whose manifest each
+      // runtime activates its own modules from. A `?dx-env=` entry keeps one runtime's modules for consumers that
+      // bundle the config statically, so a headless bundle never reaches a browser-only body.
+      const libraryEnv = library ? query.get(LIBRARY_ENV_PARAM) : null;
+      const keep = (environments?: readonly string[]) =>
+        !environments || (library ? !libraryEnv || environments.includes(libraryEnv) : environments.includes(target));
       const libraryModules: LibraryModule[] = [];
       const loaders: string[] = [];
       const chunkRefs: string[] = [];
@@ -319,7 +325,7 @@ export const pluginConfigPlugin = ({ apply, onLibraryManifest }: PluginConfigPlu
           libraryModules.push({ ...modules[modules.length - 1], bodyFile, adapterFile });
         }
       }
-      if (library) {
+      if (library && !libraryEnv) {
         onLibraryManifest?.({ configFile: file, modules: libraryModules });
       }
 

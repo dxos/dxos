@@ -26,6 +26,8 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/IllustratorPlugin.workerd.mjs",
+      "node": "./dist/lib/IllustratorPlugin.node.mjs",
       "default": "./dist/lib/IllustratorPlugin.mjs"
     },
     "#model": {
@@ -109,6 +111,8 @@
     "./IllustratorPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/IllustratorPlugin.workerd.mjs",
+      "node": "./dist/lib/IllustratorPlugin.node.mjs",
       "import": "./dist/lib/IllustratorPlugin.mjs"
     },
     "./SceneSvg": {

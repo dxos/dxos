@@ -31,6 +31,8 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/SearchPlugin.workerd.mjs",
+      "node": "./dist/lib/SearchPlugin.node.mjs",
       "default": "./dist/lib/SearchPlugin.mjs"
     },
     "#operations": {
@@ -80,6 +82,8 @@
     "./SearchPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/SearchPlugin.workerd.mjs",
+      "node": "./dist/lib/SearchPlugin.node.mjs",
       "import": "./dist/lib/SearchPlugin.mjs"
     },
     "./testing": {

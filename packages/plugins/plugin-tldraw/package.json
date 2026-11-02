@@ -33,6 +33,8 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/TldrawPlugin.workerd.mjs",
+      "node": "./dist/lib/TldrawPlugin.node.mjs",
       "default": "./dist/lib/TldrawPlugin.mjs"
     },
     "#model": {
@@ -102,6 +104,8 @@
     "./TldrawPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/TldrawPlugin.workerd.mjs",
+      "node": "./dist/lib/TldrawPlugin.node.mjs",
       "import": "./dist/lib/TldrawPlugin.mjs"
     }
   },
