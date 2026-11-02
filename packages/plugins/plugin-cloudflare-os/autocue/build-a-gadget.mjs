@@ -135,6 +135,9 @@ export const steps = [
     narration: "The workspace's agent joins Composer's agent picker.",
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'Pick the Cloudflare OS agent', subtitle: SOURCE });
+      if (!(await visible(page.locator('[data-testid="deck.companion.tab.assistant-chat"]')))) {
+        await demo.click({ selector: '[data-testid="plankHeading.companion"]', label: 'Companion' });
+      }
       await demo.click({ selector: '[data-testid="deck.companion.tab.assistant-chat"]', label: 'Assistant' });
       await demo.click({ selector: '[data-testid="assistant.agent-picker"]', label: 'Agent' });
       await page.waitForTimeout(BEAT);
