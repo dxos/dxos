@@ -118,7 +118,22 @@ for (const { name, path: pkgPath } of packages) {
   // so a fresh checkout legitimately lacks them — the moon task graph, not the checkout,
   // guarantees their existence.
   const isGeneratedSource = (value) => /\/gen\//.test(value);
+  const isPlugin = Object.values(pkgJson.exports ?? {}).some((value) => value?.source === './dx.config.ts');
+  const hasCondition = (value, condition) =>
+    typeof value === 'object' &&
+    value !== null &&
+    (condition in value || Object.values(value).some((nested) => hasCondition(nested, condition)));
   for (const [importPath, importValue] of Object.entries(pkgImports)) {
+    // One bundle serves EDGE too, built for the browser, so a body's `workerd` condition is never resolved there; a
+    // warning while plugins that still pick a variant this way move to one module per environment. The config's own
+    // per-runtime entries (`#meta`) stay: edge's operation-service and the CLI bundle them statically.
+    if (isPlugin && importValue?.source !== './dx.config.ts' && hasCondition(importValue, 'workerd')) {
+      addDiagnostic(
+        'warning',
+        'plugin-runtime-condition',
+        `import "${importPath}" picks a workerd variant by condition; a plugin has one bundle, so declare one module per environment instead`,
+      );
+    }
     if (typeof importValue === 'string') {
       // A single target answers every condition, so the emitted `.d.ts` and `.mjs` resolve the
       // alias out of `src/`. Expand it with `pnpm toolbox --lint-package-exports`.

@@ -7,8 +7,12 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
-import { CoderSkill } from '#skills';
+import { CoderSkill, FeatureMapSkill } from '#skills';
 
-const skillDefinition = () => Effect.succeed([Capability.contribute(AppCapabilities.SkillDefinition, CoderSkill)]);
+const skillDefinition = () =>
+  Effect.succeed([
+    Capability.contribute(AppCapabilities.SkillDefinition, CoderSkill),
+    Capability.contribute(AppCapabilities.SkillDefinition, FeatureMapSkill),
+  ]);
 
 export default skillDefinition;

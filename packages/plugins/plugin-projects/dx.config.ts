@@ -20,6 +20,7 @@ import { trim } from '@dxos/util';
 import { ProjectsNamespace } from './src/namespace.ts';
 import * as ProjectCapabilities from './src/types/ProjectCapabilities.ts';
 import * as ProjectsEvents from './src/types/ProjectsEvents.ts';
+import * as ProjectSurface from './src/types/ProjectSurface.ts';
 
 // Annotated: the capability modules import `meta` from here, so inferring it would be circular.
 const config: Plugin.PluginConfig = Plugin.config({
@@ -80,7 +81,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       mimeType: 'application/x-mdl',
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: [AppSurface.Article, AppSurface.CardContent, AppSurface.Dialog, AppSurface.Section],
+      roles: [AppSurface.Article, AppSurface.Dialog, AppSurface.Section, ProjectSurface.Level],
     }),
     AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {

@@ -61,9 +61,7 @@ describe.skipIf(!REAL)('plugins (real monorepo)', () => {
 
     const schemas = intro.listSchemas(PLUGIN_ID);
     const names = schemas.map((schema) => schema.name);
-    expect(names).toEqual(
-      expect.arrayContaining(['SpecDocument.SpecDocument', 'CodeProject.CodeProject', 'SourceFile.SourceFile']),
-    );
+    expect(names).toEqual(expect.arrayContaining(['Spec.Spec', 'CodeProject.CodeProject', 'SourceFile.SourceFile']));
 
     // Without an id, returns aggregate across all plugins.
     expect(intro.listSurfaces().length).toBeGreaterThan(surfaces.length);

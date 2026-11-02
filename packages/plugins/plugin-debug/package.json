@@ -219,6 +219,7 @@
     "@dxos/plugin-canvas": "workspace:*",
     "@dxos/plugin-chess": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-code": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
     "@dxos/plugin-game": "workspace:*",
     "@dxos/plugin-google": "workspace:*",

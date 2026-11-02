@@ -9,6 +9,7 @@ import { existsSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import type * as Vite from 'vite';
 
 import { Config2 } from '@dxos/protocols';
 
@@ -23,6 +24,10 @@ const LOADER_SCRIPT =
   'const module = await import(process.argv[1]); const { writeFileSync } = await import("node:fs"); writeFileSync(process.argv[2], JSON.stringify(module.default));';
 
 const LOADER_TIMEOUT = 30_000;
+
+// A specifier Bun cannot follow: the CLI bundles this module for `dx registry publish`, and Vite's own
+// optional imports do not resolve there.
+const VITE_MODULE = 'vite';
 
 /**
  * Resolves the first `dx.config.{ts,mjs,js}` found under `dir`, or `undefined` if none exist.
@@ -67,4 +72,15 @@ export const loadDxConfig = async (filePath: string): Promise<Config2.Config> =>
   } finally {
     rmSync(resultPath, { force: true });
   }
+};
+
+/**
+ * Loads a `dx.config.ts` through Vite's module runner, for code already running inside a Vite build: unlike
+ * {@link loadDxConfig} it compiles any TypeScript and loads the stylesheets the config's imports reach.
+ */
+export const loadDxConfigWithVite = async (filePath: string, root: string): Promise<Config2.Config> => {
+  const { runnerImport }: typeof Vite = await import(VITE_MODULE);
+  const { module } = await runnerImport<{ default: unknown }>(filePath, { configFile: false, root, logLevel: 'error' });
+  // `Config2` is the config's data; the round trip drops its functions as the subprocess loader does.
+  return decodeConfig2(JSON.parse(JSON.stringify(module.default)));
 };
