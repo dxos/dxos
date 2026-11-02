@@ -137,7 +137,34 @@ const MODULES_PARAM = 'dx-modules';
 export type PluginConfigPluginOptions = {
   /** Restricts the plugin to one command, e.g. `'build'` for a library whose tests import the config. */
   apply?: 'build' | 'serve';
+  /**
+   * Spike: describes the plugin's registry items in its built manifest. `describer` names a module,
+   * resolved from the config, exporting {@link RegistryDescriber}; it runs in the build-time evaluator.
+   */
+  registry?: { describer: string };
 };
+
+/** A module the describer is handed: what it provides and the raw default export of its body. */
+type LoadedModule = { id: string; provides: readonly string[]; body: unknown };
+
+type RegistryResult = {
+  index: readonly { uri: string; kind: string; name?: string; hash: string; path: string }[];
+  files: Readonly<Record<string, string>>;
+  skipped: readonly { id: string; reason: string }[];
+};
+
+/** What a registry describer module exports. */
+export type RegistryDescriber = {
+  /** Capability identifiers whose modules hold registry items; only those bodies are loaded. */
+  identifiers: readonly string[];
+  fromModules: (modules: readonly LoadedModule[]) => Promise<RegistryResult>;
+};
+
+const isRegistryDescriber = (value: unknown): value is RegistryDescriber =>
+  isRecord(value) && Array.isArray(value.identifiers) && typeof value.fromModules === 'function';
+
+const isRegistryResult = (value: unknown): value is RegistryResult =>
+  isRecord(value) && Array.isArray(value.index) && isRecord(value.files) && Array.isArray(value.skipped);
 
 /**
  * Evaluates every `dx.config.ts` defined with `Plugin.config` at build time and replaces it, for the
@@ -145,7 +172,7 @@ export type PluginConfigPluginOptions = {
  * and the URL of each body. Module bodies become their own chunks; bodies for other environments are
  * never emitted. In dev the config is re-evaluated on every load, so edits hot-reload.
  */
-export const pluginConfigPlugin = ({ apply }: PluginConfigPluginOptions = {}): VitePlugin => {
+export const pluginConfigPlugin = ({ apply, registry }: PluginConfigPluginOptions = {}): VitePlugin => {
   let evaluator: Promise<RunnableDevEnvironment> | undefined;
   const getEvaluator = (root: string) =>
     (evaluator ??= (async () => {
@@ -200,12 +227,66 @@ export const pluginConfigPlugin = ({ apply }: PluginConfigPluginOptions = {}): V
     return run;
   };
 
+  // Loads the bodies of the modules holding registry items and hands them to the describer, in the
+  // same evaluator and queue as the config, so bodies and describer share one copy of each package.
+  const describeRegistry = (
+    root: string,
+    file: string,
+    describer: string,
+    // A lazy module names its body file; an inline module (e.g. a handler map written in the config) is its own body.
+    candidates: readonly { id: string; provides: readonly string[]; specifier?: string; body?: unknown }[],
+  ): Promise<RegistryResult> => {
+    const run = queue.then(async () => {
+      const environment = await getEvaluator(root);
+      const resolve = async (specifier: string) => {
+        const resolved = await environment.pluginContainer.resolveId(specifier, file);
+        if (!resolved) {
+          throw new Error(`Cannot resolve '${specifier}' from ${file}.`);
+        }
+        return resolved.id;
+      };
+      const describerModule: unknown = await environment.runner.import(await resolve(describer));
+      if (!isRegistryDescriber(describerModule)) {
+        throw new Error(`Registry describer '${describer}' exports no \`identifiers\` and \`fromModules\`.`);
+      }
+      const wanted = candidates.filter(({ provides }) =>
+        provides.some((identifier) => describerModule.identifiers.includes(identifier)),
+      );
+      const loaded: LoadedModule[] = [];
+      const failed: { id: string; reason: string }[] = [];
+      for (const { id, provides, specifier, body } of wanted) {
+        try {
+          loaded.push({
+            id,
+            provides,
+            body: specifier ? (await environment.runner.import(await resolve(specifier))).default : body,
+          });
+        } catch (error) {
+          failed.push({ id, reason: String(error) });
+        }
+      }
+      const result: unknown = await describerModule.fromModules(loaded);
+      if (!isRegistryResult(result)) {
+        throw new Error(`Registry describer '${describer}' returned no index.`);
+      }
+      return { ...result, skipped: [...failed, ...result.skipped] };
+    });
+    queue = run.catch(() => undefined);
+    return run;
+  };
+
+  // Descriptors are content-addressed, so every entry of one build emits each file once.
+  const emittedAssets = new Map<string, string>();
+
   return {
     name: 'dx-plugin-config',
     enforce: 'pre',
     apply,
     watchChange(id) {
       changed.add(id);
+    },
+    buildStart() {
+      emittedAssets.clear();
     },
     async load(id) {
       const file = id.split('?')[0];
@@ -253,6 +334,7 @@ export const pluginConfigPlugin = ({ apply }: PluginConfigPluginOptions = {}): V
         !environments || (library ? !libraryEnv || environments.includes(libraryEnv) : environments.includes(target));
       const loaders: string[] = [];
       const chunkRefs: string[] = [];
+      const assetRefs: string[] = [];
       // Dev serves the source file directly; a build emits it as a chunk whose URL replaces the token.
       const toUrl = (moduleFile: string, specifier = `./${relative(dirname(file), moduleFile)}`) => {
         if (moduleFile.startsWith('/')) {
@@ -317,11 +399,57 @@ export const pluginConfigPlugin = ({ apply }: PluginConfigPluginOptions = {}): V
         });
       }
 
-      const manifest: Plugin.Manifest = { plugin: config.plugin, publish: config.publish, modules };
-      const json = JSON.stringify(manifest, null, 2).replace(
-        /"__DX_CHUNK_(\d+)__"/g,
-        (_match, index) => `import.meta.ROLLUP_FILE_URL_${chunkRefs[Number(index)]}`,
-      );
+      // The registry is environment-independent, so every entry describes all of the config's modules.
+      const registryEntries: Plugin.ManifestRegistryEntry[] = [];
+      if (registry && this.environment.mode === 'build') {
+        const candidates = (
+          await Promise.all(
+            config.modules.map(async (module) => {
+              const loader = module?.[Capability.LoaderTag];
+              const specifier = loader ? readModuleRef(await loader()) : undefined;
+              const id = module ? Capability.getModuleTag(module) : undefined;
+              if (!module || !id) {
+                return [];
+              }
+              const provides = toManifestTags(module.provides).map(({ identifier }) => identifier);
+              return [specifier ? { id, provides, specifier } : { id, provides, body: module }];
+            }),
+          )
+        ).flat();
+        const { index, files, skipped } = await describeRegistry(
+          this.environment.config.root,
+          file,
+          registry.describer,
+          candidates,
+        );
+        for (const { id, reason } of skipped) {
+          this.warn(`Registry items of module '${id}' in ${file} were not described: ${reason}`);
+        }
+        for (const { path, ...entry } of index) {
+          let ref = emittedAssets.get(path);
+          if (!ref) {
+            ref = this.emitFile({ type: 'asset', fileName: path, source: files[path] });
+            emittedAssets.set(path, ref);
+          }
+          // A library is rebundled downstream, so it records the file beside the entry, as it does module bodies.
+          if (library) {
+            registryEntries.push({ ...entry, url: `./${path}` });
+          } else {
+            assetRefs.push(ref);
+            registryEntries.push({ ...entry, url: `__DX_ASSET_${assetRefs.length - 1}__` });
+          }
+        }
+      }
+
+      const manifest: Plugin.Manifest = {
+        plugin: config.plugin,
+        publish: config.publish,
+        modules,
+        ...(registryEntries.length > 0 ? { registry: registryEntries } : {}),
+      };
+      const json = JSON.stringify(manifest, null, 2)
+        .replace(/"__DX_CHUNK_(\d+)__"/g, (_match, index) => `import.meta.ROLLUP_FILE_URL_${chunkRefs[Number(index)]}`)
+        .replace(/"__DX_ASSET_(\d+)__"/g, (_match, index) => `import.meta.ROLLUP_FILE_URL_${assetRefs[Number(index)]}`);
       return [
         "import * as Plugin from '@dxos/app-framework/Plugin';",
         `const plugin = Plugin.fromManifest(${json}, {${loaders.join(', ')}});`,

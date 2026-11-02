@@ -5,6 +5,7 @@
 import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
+  registry: true,
   entry: {
     index: 'src/index.ts',
     skills: 'src/skills/index.ts',

@@ -1112,6 +1112,11 @@ export interface DxConfigOptions {
   importGlobals?: boolean;
   /** Vitest configuration; omit for build-only packages. */
   test?: TestOptions;
+  /**
+   * Spike: emit JSON descriptors for the plugin's types, operations and skills and list them in its
+   * manifest (`agents/superpowers/specs/2026-10-29-registry-items-in-manifest.md`).
+   */
+  registry?: boolean;
 }
 
 const buildTestConfig = (
@@ -1264,12 +1269,18 @@ const dxModuleAttributePlugin = (): Plugin => {
  * `pluginConfigPlugin` (build only, so tests keep importing the authored config) and
  * {@link dxModuleAttributePlugin}.
  */
-const dxConfigPlugin = async (cwd: string): Promise<Plugin[]> => {
+const dxConfigPlugin = async (cwd: string, registry: boolean): Promise<Plugin[]> => {
   const vitePlugin = await loadAppFrameworkVitePlugin();
   if (!vitePlugin) {
     throw new Error(`A Plugin.config package needs @dxos/app-framework built to build ${cwd}.`);
   }
-  return [vitePlugin.pluginConfigPlugin({ apply: 'build' }), vitePlugin.moduleBodyAttributePlugin()];
+  return [
+    vitePlugin.pluginConfigPlugin({
+      apply: 'build',
+      ...(registry ? { registry: { describer: '@dxos/app-toolkit/RegistryDescriptor' } } : {}),
+    }),
+    vitePlugin.moduleBodyAttributePlugin(),
+  ];
 };
 
 /**
@@ -1294,6 +1305,7 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
     injectGlobals = false,
     importGlobals = false,
     test,
+    registry = false,
   } = options;
   // `id === name` catches the package root, `id.startsWith(name + '/')` its subpaths — a bare
   // prefix test would also swallow unrelated neighbours (`buffer` matching `buffer-alloc`).
@@ -1399,7 +1411,7 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
       // After the log transform so it sees the final emitted chunk.
       ...(bundle.length > 0 ? [DxHoistRequirePlugin()] : []),
       ...(declarations ? [DxDeclarationsPlugin()] : []),
-      ...(hasDxConfigEntry ? [dxConfigPlugin(process.cwd())] : []),
+      ...(hasDxConfigEntry ? [dxConfigPlugin(process.cwd(), registry)] : []),
     ],
     ...(test ? { test: buildTestConfig(process.cwd(), test, jsx) } : {}),
   });

@@ -738,10 +738,20 @@ export type ManifestModule = {
 export type ManifestLoaders = Readonly<Record<string, () => Promise<unknown>>>;
 
 /**
+ * One registry item (type, operation, skill) a plugin contributes: enough to list and route it, plus
+ * the URL of its JSON descriptor, which a reader fetches without running plugin code.
+ */
+export type ManifestRegistryEntry = { uri: string; kind: string; name?: string; hash: string; url: string };
+
+/**
  * Static description of a plugin, emitted at build time from its `dx.config.ts` for one target
  * environment, so the app loads only data plus the module bodies it activates.
  */
-export type Manifest = Config2.Config & { modules: readonly ManifestModule[] };
+export type Manifest = Config2.Config & {
+  modules: readonly ManifestModule[];
+  /** Present only when the build was asked to describe registry items (spike). */
+  registry?: readonly ManifestRegistryEntry[];
+};
 
 type ModuleBody = { default: (props: unknown) => Effect.Effect<any, Error, any> };
 type ModuleAdapter = { default: (loaded: unknown, args: unknown) => unknown };
