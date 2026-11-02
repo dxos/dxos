@@ -1381,7 +1381,7 @@ export class QueryExecutor extends Resource {
   async #walkAll(
     scope: QueryAST.FeedScope,
     range: QueryPlan.SelectStep['feedCursorRange'],
-    select: (items: QueryItem[]) => QueryItem[],
+    select: (items: QueryItem[]) => Promise<QueryItem[]>,
     limit: number | undefined,
   ): Promise<{ selected: QueryItem[]; read: number }> {
     const feedStore = this.#feedStore;
@@ -1453,12 +1453,12 @@ export class QueryExecutor extends Resource {
 
     if (direction === 'asc' || limit === undefined) {
       const blocks = await read(undefined);
-      return { selected: select(toItems(blocks)), read: blocks.length };
+      return { selected: await select(toItems(blocks)), read: blocks.length };
     }
     // Pages grow, so a selector that keeps few of the blocks still ends in a handful of reads.
     for (let pageLimit = Math.max(limit * 4, 64); ; pageLimit *= 4) {
       const blocks = await read(pageLimit);
-      const selected = select(toItems(blocks));
+      const selected = await select(toItems(blocks));
       if (selected.length >= limit || blocks.length < pageLimit) {
         return { selected, read: blocks.length };
       }
@@ -1643,9 +1643,30 @@ export class QueryExecutor extends Resource {
       // The walk itself is the window, so the selector applies without the cursor range the walk consumed.
       const select = (items: QueryItem[]) =>
         selectStoreItems({ ...step, feedCursorRange: undefined, feedScan: undefined }, items);
+      // A page of a walk counts what the plan keeps of it; the filter steps run again on the result, unchanged.
+      const narrowing = this.#uncompiledPlan.steps.filter(
+        (planStep): planStep is QueryPlan.FilterStep | QueryPlan.FilterDeletedStep =>
+          planStep._tag === 'FilterStep' || planStep._tag === 'FilterDeletedStep',
+      );
+      const keep = async (items: QueryItem[]) => {
+        let kept = select(items);
+        for (const planStep of narrowing) {
+          kept = (
+            planStep._tag === 'FilterStep'
+              ? await this._execFilterStep(planStep, kept)
+              : await this._execFilterDeletedStep(planStep, kept)
+          ).workingSet;
+        }
+        return kept;
+      };
       const { selected, read } =
         walkScopes[0].walk?.branch === 'all'
-          ? await this.#walkAll(walkScopes[0], step.feedCursorRange, select, step.limit)
+          ? await this.#walkAll(
+              walkScopes[0],
+              step.feedCursorRange,
+              keep,
+              step.limit ?? walkLimit(this.#uncompiledPlan),
+            )
           : await this.#walkFeed(walkScopes[0], step.feedCursorRange).then((walked) => ({
               selected: select(walked),
               read: walked.length,
@@ -3449,6 +3470,32 @@ const walkDirection = (plan: QueryPlan.Plan): 'asc' | 'desc' => {
     });
   }
   return orders[0]?.kind === 'natural' ? orders[0].direction : 'asc';
+};
+
+/**
+ * The page a walk is cut to: the plan's limit, when it only selects, filters and orders before it. A walk counts what
+ * the filters keep of each page, so reading pages until that many remain is enough.
+ */
+const walkLimit = (plan: QueryPlan.Plan): number | undefined => {
+  // The planner moves a trailing limit onto the order step, removing the limit step.
+  const ordered = plan.steps.find((step) => step._tag === 'OrderStep');
+  const limit = plan.steps.find((step) => step._tag === 'LimitStep');
+  const passing = new Set([
+    'SelectStep',
+    'OrderStep',
+    'ClearWorkingSetStep',
+    'FilterDeletedStep',
+    'FilterStep',
+    'LimitStep',
+  ]);
+  const narrowing = plan.steps.some((step) => !passing.has(step._tag));
+  return narrowing
+    ? undefined
+    : limit?._tag === 'LimitStep'
+      ? limit.limit
+      : ordered?._tag === 'OrderStep'
+        ? ordered.limit
+        : undefined;
 };
 
 /** A cursor's position, or `unsatisfiable` when it does not name one. */
