@@ -41,7 +41,8 @@ export type NodePrim = Base & {
 /** A raised chip with an accent dot: an app. */
 export type ChipPrim = Base & { kind: 'chip'; x: number; y: number; text: string; scale?: number };
 /** A dotted orbit, drawn face-on. */
-export type RingPrim = Base & { kind: 'ring'; x: number; y: number; r: number };
+/** A dotted orbit, or with `color` a solid colored ring (an app). */
+export type RingPrim = Base & { kind: 'ring'; x: number; y: number; r: number; color?: string };
 /** The elements a link or flow joins (`kind:id` keys): its ends follow them every frame, clipped to their rims. */
 type Ends = { a?: string; b?: string };
 
@@ -85,6 +86,8 @@ export type LabelPrim = Base & {
   anchor?: 'start' | 'middle' | 'end';
   /** No dark halo: for labels on a light field. */
   plain?: boolean;
+  /** Stretches the letter spacing to this width (pixels), to match a heading above. */
+  width?: number;
 };
 /** A large heading, screen-centred by default. */
 export type TitlePrim = Base & { kind: 'title'; x: number; y: number; text: string; size?: number; color?: string };
@@ -138,7 +141,11 @@ export type Slide = {
   id: string;
   /** Seconds the blend from the previous slide takes. */
   transition?: number;
-  draw: (t: number) => Frame;
+  /**
+   * The frame `t` seconds into the slide's keyframes; `real` is the seconds actually played, which differ when the
+   * slide is sped up to fit the story, so steady motion (data flowing) keeps its pace.
+   */
+  draw: (t: number, real?: number) => Frame;
 };
 
 export const TRANSITION = 1.25;
@@ -341,7 +348,8 @@ export const mix = (from: Frame, to: Frame, t: number, seconds: number): Frame =
   return { camera: blendCamera(from.camera, to.camera, k), prims };
 };
 
-const rim = (prim: Prim | undefined) => (prim && (prim.kind === 'body' || prim.kind === 'node') ? prim.r : 0);
+const rim = (prim: Prim | undefined) =>
+  prim && (prim.kind === 'body' || prim.kind === 'node' || prim.kind === 'ring') ? prim.r : 0;
 
 /**
  * Puts the ends of every bound link and flow on the elements it joins, as they are in this frame (mid-morph too), and

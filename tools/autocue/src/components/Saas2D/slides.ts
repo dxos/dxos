@@ -43,10 +43,11 @@ const polar = (cx: number, cy: number, radius: number, angle: number): [number, 
   cy + Math.sin(angle) * radius,
 ];
 
+/** Your teams, packed with an even gap (16) between each pair. */
 const TEAMS = [
-  { id: 'Eng', color: ROLES.team, r: 52, at: [-22, -42] },
-  { id: 'Sales', color: PALETTE.green, r: 40, at: [-48, 52] },
-  { id: 'Ops', color: PALETTE.pink, r: 30, at: [58, 30] },
+  { id: 'Eng', color: ROLES.team, r: 52, at: [7, -52] },
+  { id: 'Sales', color: PALETTE.green, r: 40, at: [-47, 41] },
+  { id: 'Ops', color: PALETTE.pink, r: 30, at: [39, 41] },
 ] as const;
 
 const APPS = ['HubSpot', 'Workday', 'Google Workspace', 'Slack', 'Notion', 'Salesforce', 'Jira'];
@@ -61,6 +62,9 @@ const TENANTS = 48;
 /** An app is a vendor as small as your smallest team. */
 const APP_R = 30;
 const METADATA_COLOR = '#ff8a3d';
+const APP_COLOR = PALETTE.turquoise;
+/** Data flows this many times along a link per second of the story actually played. */
+const FLOW_RATE = 0.22;
 const TENANT_COLOR = '#8fa3d9';
 /** Your company takes this place in every ring of companies, on the left. */
 const YOURS = TENANTS / 2;
@@ -197,7 +201,7 @@ const tenantRing = (
     prims.push(edge(`tenant-link-${index}`, tenant, target, { opacity: 0.6, parent: tenant }));
     if (flows) {
       prims.push(
-        flow(`tenant-flow-${index}`, tenant, target, t * 0.35 + hash(`flow-${index}`), ROLES.data, {
+        flow(`tenant-flow-${index}`, tenant, target, t * FLOW_RATE + hash(`flow-${index}`), ROLES.data, {
           count: 1,
           size: 3.5,
           opacity: 0.8,
@@ -255,21 +259,21 @@ const appAt = (app: string, cx: number, cy: number, radius: number, spin = 0): [
   polar(cx, cy, radius, -Math.PI / 2 + (APPS.indexOf(app) / APPS.length) * TAU + spin);
 
 /**
- * One app: a small vendor holding a share of your data at its centre, named on its outer side (`angle` points away
+ * One app: a small vendor, a colored ring holding a share of your data at its centre, named on its outer side (`angle` points away
  * from what it orbits).
  */
 const app = (name: string, x: number, y: number, r: number, angle: number, { title = 1 } = {}): Prim[] => {
   const cos = Math.cos(angle);
   const [lx, ly] = polar(x, y, r + 14, angle);
   return [
-    { kind: 'body', id: `app-${name}`, x, y, r },
-    { kind: 'node', id: `data-org-${name}`, x, y, r: r * 0.28, role: 'data', parent: `body:app-${name}` },
+    { kind: 'ring', id: `app-${name}`, x, y, r, color: APP_COLOR },
+    { kind: 'node', id: `data-org-${name}`, x, y, r: r * 0.28, role: 'data', parent: `ring:app-${name}` },
     label(`app-label-${name}`, lx, ly, name, {
       size: Math.max(14, r * 0.6),
       weight: 500,
       anchor: cos < -0.3 ? 'end' : cos > 0.3 ? 'start' : 'middle',
       opacity: title,
-      parent: `body:app-${name}`,
+      parent: `ring:app-${name}`,
     }),
   ];
 };
@@ -287,7 +291,7 @@ const appRing = (cx: number, cy: number, radius: number, { scale = 1, spin = 0 }
 const teamLinks = (t?: number): Prim[] =>
   Object.entries(TEAM_APPS).flatMap(([team, apps]) =>
     apps.flatMap((app): Prim[] => {
-      const [a, b] = [`node:team-${team}`, `body:app-${app}`];
+      const [a, b] = [`node:team-${team}`, `ring:app-${app}`];
       const link = edge(`link-${team}-${app}`, a, b, { parent: a });
       if (t === undefined) {
         return [link];
@@ -295,7 +299,11 @@ const teamLinks = (t?: number): Prim[] =>
       const color = TEAMS.find((candidate) => candidate.id === team)?.color ?? neu.accent;
       return [
         link,
-        flow(`flow-${team}-${app}`, a, b, t * 0.4 + hash(`${team}${app}`), color, { count: 2, size: 5, parent: a }),
+        flow(`flow-${team}-${app}`, a, b, t * FLOW_RATE + hash(`${team}${app}`), color, {
+          count: 2,
+          size: 5,
+          parent: a,
+        }),
       ];
     }),
   );
@@ -395,6 +403,7 @@ const echoTitle = (): Prim[] => [
   label('echo-subtitle', 124, 560, 'HYPERGRAPH', {
     screen: true,
     size: 22,
+    width: 192,
     mono: true,
     anchor: 'start',
     color: neu.muted,
@@ -582,11 +591,11 @@ export const slides = (holds: Record<string, number>): Slide[] => {
     { id: 'silo', draw: () => still(silo()) },
     {
       id: 'silo-comms',
-      draw: (t) =>
+      draw: (_t, real = _t) =>
         still([
           ...silo(),
-          flow('flow-up', 'node:your-teams', 'node:data-org', t * 0.45, ROLES.team, { count: 4 }),
-          flow('flow-down', 'node:data-org', 'node:your-teams', t * 0.45 + 0.125, ROLES.data, { count: 4 }),
+          flow('flow-up', 'node:your-teams', 'node:data-org', real * FLOW_RATE, ROLES.team, { count: 3 }),
+          flow('flow-down', 'node:data-org', 'node:your-teams', real * FLOW_RATE + 0.17, ROLES.data, { count: 3 }),
         ]),
     },
 
@@ -594,9 +603,9 @@ export const slides = (holds: Record<string, number>): Slide[] => {
     { id: 'scale', transition: 3.0, draw: () => still(scale(0, false)) },
     {
       id: 'competitors',
-      draw: (t) =>
+      draw: (t, real = t) =>
         still([
-          ...scale(t, true),
+          ...scale(real, true),
           ...COMPETITORS.map((index): Prim => {
             const angle = tenantAngle(index);
             const [x, y] = polar(0, 0, 428, angle);
@@ -613,19 +622,21 @@ export const slides = (holds: Record<string, number>): Slide[] => {
 
     // The camera comes to your company; the one vendor becomes many apps, each holding a share of your data.
     { id: 'spread', transition: 3.0, draw: () => still(spread(), camera(1, ...YOURS_AT)) },
-    { id: 'spread-comms', draw: (t) => still(spread(t), camera(1, ...YOURS_AT)) },
+    { id: 'spread-comms', draw: (t, real = t) => still(spread(real), camera(1, ...YOURS_AT)) },
 
     // A frontier lab arrives, far bigger than every other vendor.
     { id: 'frontier', transition: 2.5, draw: () => still(frontier()) },
     {
       id: 'frontier-comms',
-      draw: (t) =>
+      // Everything your teams do flows to the lab along your company's one link to it, and the lab's data grows.
+      draw: (t, real = t) =>
         still([
-          ...frontier(t),
-          ...TEAMS.map(({ id, color }) =>
-            flow(`flow-${id}-lab`, `node:team-${id}`, 'node:lab-core', t * 0.5 + hash(id), color, {
-              count: 5,
+          ...frontier(real, ramp(t, 0.5, 11, easeInOut)),
+          ...TEAMS.map(({ id, color }, index) =>
+            flow(`flow-${id}-lab`, 'body:org', 'node:lab-core', real * FLOW_RATE + index / 3, color, {
+              count: 2,
               size: 5,
+              parent: 'body:org',
             }),
           ),
         ]),
@@ -637,7 +648,7 @@ export const slides = (holds: Record<string, number>): Slide[] => {
       id: 'absorb',
       draw: (t) => {
         const spin = since('orbit', t) * 0.05;
-        const taken = APPS.map((_, index) => ramp(t, 0.8 + index * 0.6, 1.6, easeInOut));
+        const taken = APPS.map((_, index) => ramp(t, 0.5 + index * 0.85, 2.0, easeInOut));
         return still(orbit(spin, taken));
       },
     },
@@ -647,7 +658,7 @@ export const slides = (holds: Record<string, number>): Slide[] => {
     { id: 'rivals', transition: 0, draw: (t) => still(rivals(t * 0.02, 0, 0)) },
     {
       id: 'merge-1',
-      draw: (t) => still(rivals(since('rivals', t) * 0.02, ramp(t, 1.5, 2.5, easeInOut), ramp(t, 4.8, 3.0, easeInOut))),
+      draw: (t) => still(rivals(since('rivals', t) * 0.02, ramp(t, 0.5, 4.0, easeInOut), ramp(t, 5.0, 4.5, easeInOut))),
     },
     {
       id: 'final-frontier',
@@ -663,7 +674,7 @@ export const slides = (holds: Record<string, number>): Slide[] => {
     {
       id: 'engulf',
       draw: (t) => {
-        const r = lerp(175, 1250, ramp(t, 0.6, 6.4, easeInOut));
+        const r = lerp(175, 1800, ramp(t, 0.6, 6.4, easeInOut));
         return still([
           ...merged(since('rivals', t, 'merge-1', 'final-frontier') * 0.02, r),
           {
@@ -750,7 +761,7 @@ export const slides = (holds: Record<string, number>): Slide[] => {
     {
       id: 'saas-merge',
       draw: (t) => {
-        const taken = APPS.map((_, index) => ramp(t, 1.4 + index * 0.55, 1.0, easeInOut));
+        const taken = APPS.map((_, index) => ramp(t, 0.6 + index * 0.95, 2.0, easeInOut));
         return still(hub(taken));
       },
     },
@@ -851,16 +862,55 @@ const spread = (t?: number): Prim[] => [
   ...teamLinks(t),
 ];
 
-const frontier = (t?: number): Prim[] => [
+/** Your company and its apps beside a frontier lab, joined by one link; `grow` (0 … 1) grows the lab's data. */
+const frontier = (t?: number, grow = 0): Prim[] => [
   ...company(...FRONTIER_AT, FRONTIER_SCALE),
   ...appRing(...FRONTIER_AT, 255, { scale: FRONTIER_SCALE }),
   ...teamLinks(t),
-  ...lab(...LAB_AT, 210, { core: 66 }),
-  ...TEAMS.map(({ id }) => edge(`link-${id}-lab`, `node:team-${id}`, 'node:lab-core', { parent: `node:team-${id}` })),
+  ...lab(...LAB_AT, 210, { core: lerp(66, 130, grow) }),
+  edge('link-org-lab', 'body:org', 'node:lab-core', { parent: 'body:org' }),
 ];
 
 /** The first part of a merge (0 … 0.4 of `k`) brings two circles together; the rest shrinks one into the other. */
 const phases = (k: number): [number, number] => [clamp(k / 0.4), clamp((k - 0.4) / 0.6)];
+
+/**
+ * `angle` on a ring around `centre`, pushed off the arc that faces `partner` (whose ring has radius `reach`) by as much
+ * as `k` (0 … 1) of the arc it covers, so companies make way where two labs meet.
+ */
+const away = (
+  angle: number,
+  centre: readonly [number, number],
+  partner: readonly [number, number],
+  reach: number,
+  k: number,
+) => {
+  const distance = Math.hypot(partner[0] - centre[0], partner[1] - centre[1]);
+  const gap = k * (Math.asin(clamp(reach / Math.max(distance, reach))) + 0.2);
+  if (gap <= 0) {
+    return angle;
+  }
+  const facing = Math.atan2(partner[1] - centre[1], partner[0] - centre[0]);
+  const rel = Math.atan2(Math.sin(angle - facing), Math.cos(angle - facing));
+  return facing + Math.sign(rel || 1) * (gap + ((Math.PI - gap) * Math.abs(rel)) / Math.PI);
+};
+
+/**
+ * `from` moved (as `k` goes to 1) to `angle` on the ring of `radius` around `centre`, sweeping round outside the ring,
+ * so a company passing to another lab never cuts across it.
+ */
+const sweepTo = (
+  from: readonly [number, number],
+  centre: readonly [number, number],
+  angle: number,
+  radius: number,
+  k: number,
+): [number, number] => {
+  const start = Math.atan2(from[1] - centre[1], from[0] - centre[0]);
+  const distance = Math.max(Math.hypot(from[0] - centre[0], from[1] - centre[1]), radius);
+  const turn = Math.atan2(Math.sin(angle - start), Math.cos(angle - start));
+  return k <= 0 ? [from[0], from[1]] : polar(...centre, lerp(distance, radius, k), start + turn * k);
+};
 
 /** `[x, y]` at `distance` from `centre`, toward `toward`. */
 const touching = (centre: readonly [number, number], toward: readonly [number, number], distance: number) => {
@@ -874,21 +924,22 @@ const lerpAt = (a: readonly [number, number], b: readonly [number, number], k: n
 ];
 
 /**
- * The lab at the centre with its core; the apps orbit it, and `taken` (per app, 0 … 1) brings each app in until their
- * rims touch, then shrinks it into the lab, which grows, the rims touching all the while.
+ * The lab at the centre; the apps orbit inside it, around its core of data. `taken` (per app, 0 … 1) brings each app
+ * in until its rim touches the core, then shrinks it into the core, which grows, the rims touching all the while.
  */
 const orbit = (spin: number, taken: number[] = APPS.map(() => 0)): Prim[] => {
   const shrink = taken.map((k) => phases(k)[1]);
   const growth = shrink.reduce((sum, k) => sum + k, 0) / APPS.length;
-  const r = 250 + 45 * growth;
+  const core = 110 + 60 * growth;
   return [
-    ...lab(0, 0, r, { core: 150 + 40 * growth, coreTitle: false }),
+    ...lab(0, 0, 290, { core, coreTitle: false, title: false }),
+    label('lab-label', 0, -290 - 34, 'Frontier Labs', { size: 30, parent: 'body:lab' }),
     ...tenantRing(0, 0, 420, { holder: 'body:lab', labels: false, spin: spin * 0.4 }),
     ...APPS.flatMap((name, index): Prim[] => {
       const [move, take] = phases(taken[index]);
       const size = APP_R * (1 - take);
       const angle = appAngle(name, spin);
-      const [x, y] = polar(0, 0, lerp(335, r + size, move), angle);
+      const [x, y] = polar(0, 0, lerp(205, core + size, move), angle);
       return app(name, x, y, size, angle, { title: 1 - move });
     }),
   ];
@@ -937,15 +988,24 @@ const rivals = (spin: number, first: number, second: number): Prim[] => {
     const angle = (slot / (TENANTS / 3)) * TAU + spin + group * 2.1;
     // Each lab's companies sit on a ring just outside it and pass to the lab it merges into; once one lab is left they
     // take their places in its ring.
-    const aroundRight = polar(...right, ring(rightR), angle);
+    const rightAngle =
+      second > 0
+        ? away(angle, right, top, ring(topR), secondMove)
+        : away(angle, right, left, ring(leftR), firstMove * (1 - firstTake));
+    const aroundRight = polar(...right, ring(rightR), rightAngle);
     const own =
       group === 0
-        ? polar(...top, ring(topR), angle)
+        ? polar(...top, ring(topR), away(angle, top, right, ring(rightR), secondMove * (1 - secondTake)))
         : group === 2
           ? aroundRight
-          : lerpAt(polar(...left, ring(leftR), angle), aroundRight, firstTake);
-    const all = polar(...top, ring(topR), tenantAngle(index) + spin);
-    const [x, y] = lerpAt(own, all, secondTake);
+          : sweepTo(
+              polar(...left, ring(leftR), away(angle, left, right, ring(rightR), firstMove)),
+              right,
+              rightAngle,
+              ring(rightR),
+              firstTake,
+            );
+    const [x, y] = sweepTo(own, top, tenantAngle(index) + spin, ring(topR), secondTake);
     // A company passing to another lab's ring hands its link over halfway, and the link fades out and back in around
     // the handover, so it never cuts across a lab.
     const passing = group === 0 ? 0 : group === 2 || firstTake >= 1 ? secondTake : firstTake;
@@ -997,7 +1057,7 @@ const appsAround = (): Prim[] => [
   ...company(0, 0, 1, { teams: false }),
   ...appRing(0, 0, 390),
   ...APPS.map((app) =>
-    edge(`link-org-${app}`, 'body:org', `body:app-${app}`, { opacity: 0.7, parent: `body:app-${app}` }),
+    edge(`link-org-${app}`, 'body:org', `ring:app-${app}`, { opacity: 0.7, parent: `ring:app-${app}` }),
   ),
 ];
 
@@ -1024,13 +1084,21 @@ const hub = (taken: number[] = APPS.map(() => 0), size = 1): Prim[] => {
       const k = taken[index];
       const [x, y] = appAt(app, 0, 0, 390);
       return [
-        { kind: 'body', id: `app-${app}`, x: lerp(x, 0, k), y: lerp(y, 0, k), r: APP_R * (1 - k), opacity: 1 - k },
+        {
+          kind: 'ring',
+          id: `app-${app}`,
+          x: lerp(x, 0, k),
+          y: lerp(y, 0, k),
+          r: APP_R * (1 - k),
+          color: APP_COLOR,
+          opacity: 1 - k,
+        },
         label(`app-label-${app}`, ...polar(lerp(x, 0, k), lerp(y, 0, k), APP_R + 14, appAngle(app)), app, {
           size: 18,
           weight: 500,
           anchor: Math.cos(appAngle(app)) < -0.3 ? 'end' : Math.cos(appAngle(app)) > 0.3 ? 'start' : 'middle',
           opacity: 1 - k,
-          parent: `body:app-${app}`,
+          parent: `ring:app-${app}`,
         }),
         {
           kind: 'node',
@@ -1040,9 +1108,9 @@ const hub = (taken: number[] = APPS.map(() => 0), size = 1): Prim[] => {
           r: APP_R * 0.28 * (1 - k),
           role: 'data',
           opacity: 1 - k,
-          parent: `body:app-${app}`,
+          parent: `ring:app-${app}`,
         },
-        edge(`link-org-${app}`, 'body:org', `body:app-${app}`, { opacity: 0.7, parent: `body:app-${app}` }),
+        edge(`link-org-${app}`, 'body:org', `ring:app-${app}`, { opacity: 0.7, parent: `ring:app-${app}` }),
       ];
     }),
   ];

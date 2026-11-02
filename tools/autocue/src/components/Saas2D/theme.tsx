@@ -74,6 +74,7 @@ const Text = ({
   anchor = 'middle',
   mono,
   halo,
+  width,
   children,
 }: {
   x?: number;
@@ -84,6 +85,7 @@ const Text = ({
   anchor?: 'start' | 'middle' | 'end';
   mono?: boolean;
   halo?: boolean;
+  width?: number;
   children: string;
 }) => (
   <text
@@ -96,6 +98,7 @@ const Text = ({
     fontWeight={weight}
     fill={fill}
     letterSpacing={mono ? '0.02em' : '-0.01em'}
+    {...(width ? { textLength: width, lengthAdjust: 'spacing' } : {})}
     style={{ whiteSpace: 'pre' }}
     {...(halo
       ? {
@@ -140,6 +143,38 @@ export const Defs = () => (
       <feComposite in2='lo-edge' operator='in' result='lo' />
       <feGaussianBlur in='SourceAlpha' stdDeviation='0.02' />
       <feOffset dx='-0.013' dy='-0.013' result='hi-blur' />
+      <feComposite in='SourceAlpha' in2='hi-blur' operator='out' result='hi-edge' />
+      <feFlood floodColor={HI} />
+      <feComposite in2='hi-edge' operator='in' result='hi' />
+      <feMerge>
+        <feMergeNode in='SourceGraphic' />
+        <feMergeNode in='lo' />
+        <feMergeNode in='hi' />
+      </feMerge>
+    </filter>
+    <filter id='nd-raised-px' x='-0.2' y='-0.2' width='1.4' height='1.4'>
+      <feGaussianBlur in='SourceAlpha' stdDeviation='16' />
+      <feOffset dx='9' dy='9' result='lo-blur' />
+      <feFlood floodColor={LO} />
+      <feComposite in2='lo-blur' operator='in' result='lo' />
+      <feGaussianBlur in='SourceAlpha' stdDeviation='9' />
+      <feOffset dx='-5.5' dy='-5.5' result='hi-blur' />
+      <feFlood floodColor={HI} />
+      <feComposite in2='hi-blur' operator='in' result='hi' />
+      <feMerge>
+        <feMergeNode in='hi' />
+        <feMergeNode in='lo' />
+        <feMergeNode in='SourceGraphic' />
+      </feMerge>
+    </filter>
+    <filter id='nd-inset-px' x='0' y='0' width='1' height='1'>
+      <feGaussianBlur in='SourceAlpha' stdDeviation='10' />
+      <feOffset dx='7' dy='7' result='lo-blur' />
+      <feComposite in='SourceAlpha' in2='lo-blur' operator='out' result='lo-edge' />
+      <feFlood floodColor={LO} />
+      <feComposite in2='lo-edge' operator='in' result='lo' />
+      <feGaussianBlur in='SourceAlpha' stdDeviation='6' />
+      <feOffset dx='-4' dy='-4' result='hi-blur' />
       <feComposite in='SourceAlpha' in2='hi-blur' operator='out' result='hi-edge' />
       <feFlood floodColor={HI} />
       <feComposite in2='hi-edge' operator='in' result='hi' />
@@ -235,10 +270,13 @@ export const SvgPrim = ({ prim, camera }: { prim: Prim; camera: Camera }) => {
       }
       // One raised band and one inset well, both shades of the field: role color belongs to what a body holds, not to it.
       const lit = r < 2000;
+      // Shadows scale with a body up to a point; past it they stay a fixed depth, or a close-up body's shadows drift
+      // apart from it and read as a second, offset ring.
+      const deep = r > 160 ? '-px' : '';
       return (
         <At x={x} y={y} opacity={opacity}>
-          <circle className='nd-body' r={r} fill={neu.lighter} filter={lit ? 'url(#nd-raised)' : undefined} />
-          <circle r={r * WELL} fill={neu.bg} filter={lit ? 'url(#nd-inset)' : undefined} />
+          <circle className='nd-body' r={r} fill={neu.lighter} filter={lit ? `url(#nd-raised${deep})` : undefined} />
+          <circle r={r * WELL} fill={neu.bg} filter={lit ? `url(#nd-inset${deep})` : undefined} />
         </At>
       );
     }
@@ -299,6 +337,14 @@ export const SvgPrim = ({ prim, camera }: { prim: Prim; camera: Camera }) => {
     }
     case 'ring': {
       const [x, y] = project(view, prim.x, prim.y);
+      if (prim.color) {
+        const r = prim.r * view.zoom;
+        return r < 0.5 ? null : (
+          <At x={x} y={y} opacity={opacity}>
+            <circle r={r} fill={neu.bg} stroke={prim.color} strokeWidth={Math.max(1.5, r * 0.09)} />
+          </At>
+        );
+      }
       return (
         <At x={x} y={y} opacity={opacity}>
           <circle
@@ -371,6 +417,7 @@ export const SvgPrim = ({ prim, camera }: { prim: Prim; camera: Camera }) => {
             anchor={prim.anchor}
             mono={prim.mono}
             halo={!prim.mono && !prim.plain}
+            width={prim.width}
           >
             {prim.text}
           </Text>
