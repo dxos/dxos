@@ -13,6 +13,8 @@ type Base = {
   opacity?: number;
   /** Seconds after the slide starts before an entering primitive begins to fade in; it still arrives as the cut ends. */
   delay?: number;
+  /** How an element leaving with nowhere to go goes: it shrinks where it is (the default) or only fades. */
+  exit?: 'fade';
   screen?: boolean;
   /**
    * Key (`kind:id`) of the element this one belongs to in the story's hierarchy (a team to its company, a company's data
@@ -331,7 +333,9 @@ export const mix = (from: Frame, to: Frame, t: number, seconds: number): Frame =
     prims.push(
       end
         ? travel(grow({ ...prim, opacity: (prim.opacity ?? 1) * (1 - k) }, 1 - k), end, 1 - k)
-        : grow({ ...prim, opacity: (prim.opacity ?? 1) * (1 - k) }, 1 - k),
+        : prim.exit === 'fade'
+          ? { ...prim, opacity: (prim.opacity ?? 1) * (1 - k) }
+          : grow({ ...prim, opacity: (prim.opacity ?? 1) * (1 - k) }, 1 - k),
     );
   }
   return { camera: blendCamera(from.camera, to.camera, k), prims };

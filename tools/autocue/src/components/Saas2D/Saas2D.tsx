@@ -13,16 +13,22 @@ import { Background, Card, Defs, Grain, HEIGHT, SvgPrim, WIDTH } from './theme.t
 
 loadNeuFonts();
 
+/** Scenes whose keyframes are timed in real seconds, with the length they need; they are not sped up. */
+const FIXED: Record<string, number> = { 'company-fills': 7 };
+
 /** Each scene's length in the voiced cut, which its keyframes are timed for. */
-const AUTHORED: Record<string, number> = holds;
+const AUTHORED: Record<string, number> = { ...holds, ...FIXED };
 
 /** The story's length; every scene gets an equal share of it. */
 export const SAAS2D_SECONDS = 90;
 
-/** Equal holds for every scene; each plays its choreography, timed by the voice-over's holds, sped up to fit. */
-const UNIFORM: Record<string, number> = Object.fromEntries(
-  Object.keys(AUTHORED).map((id) => [id, SAAS2D_SECONDS / Object.keys(AUTHORED).length]),
-);
+/** Equal holds for every other scene; each plays its choreography, timed by the voice-over's holds, sped up to fit. */
+const UNIFORM: Record<string, number> = (() => {
+  const ids = Object.keys(AUTHORED);
+  const fixed = Object.values(FIXED).reduce((sum, hold) => sum + hold, 0);
+  const share = (SAAS2D_SECONDS - fixed) / (ids.length - Object.keys(FIXED).length);
+  return Object.fromEntries(ids.map((id) => [id, FIXED[id] ?? share]));
+})();
 
 /** A morph takes at most this share of its scene, so every scene also rests on its own layout. */
 const MORPH_SHARE = 0.6;

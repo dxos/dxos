@@ -699,7 +699,7 @@ export const slides = (holds: Record<string, number>): Slide[] => {
 
     // After the curtain: your company and its apps again; then ECHO puts your data at its centre.
     { id: 'spread-again', transition: 1.6, draw: () => still(appsAround()) },
-    { id: 'echo-hub', transition: 2.0, draw: () => still(hub()) },
+    { id: 'echo-hub', transition: 2.0, draw: (t) => still(hub(undefined, ramp(t, 0.5, 4.0, easeInOut))) },
     { id: 'echo-spaces', transition: 2.5, draw: () => still(echoSpaces(), camera(ECHO_ZOOM)) },
 
     // Inside a space: a graph of objects, and the work people and agents do on them.
@@ -759,8 +759,8 @@ export const slides = (holds: Record<string, number>): Slide[] => {
     {
       id: 'company-fills',
       draw: (t) => {
-        const grow = ramp(t, 0.4, 3.0, easeInOut);
-        const field = ramp(t, 2.9, 0.6);
+        const grow = ramp(t, 0.2, 1.5, easeInOut);
+        const field = ramp(t, 1.4, 0.5);
         return still([
           { kind: 'body', id: 'org', x: 0, y: 0, r: lerp(170, 1300, grow), opacity: 1 - field },
           {
@@ -784,7 +784,7 @@ export const slides = (holds: Record<string, number>): Slide[] => {
             width: 560,
             dark: true,
             screen: true,
-            opacity: ramp(t, 3.4, 0.8),
+            opacity: ramp(t, 1.8, 0.6),
           },
           ...['Your team', 'Your apps', 'Your data'].map((text, index): Prim =>
             label(`tag-${index}`, WIDTH / 2 + (index - 1) * 220, HEIGHT / 2 + 130, text, {
@@ -793,7 +793,8 @@ export const slides = (holds: Record<string, number>): Slide[] => {
               weight: 500,
               color: PALETTE.graphite,
               plain: true,
-              opacity: ramp(t, 4.2 + index * 0.4, 0.6),
+              // Two seconds after the expansion, one beat (a second) per tag.
+              opacity: ramp(t, 3.7 + index, 0.5),
             }),
           ),
         ]);
@@ -990,10 +991,10 @@ const merged = (spin: number, r = 175): Prim[] => {
 const appsAround = (): Prim[] => [...company(0, 0, 1, { teams: false }), ...appRing(0, 0, 390)];
 
 /**
- * ECHO in your company: your data at its centre, linked to every app; the data the apps held moves into it. `taken`
- * (per app, 0 … 1) folds the apps themselves into it.
+ * ECHO in your company: your data grows at its centre (`size`, 0 … 1) while every app, linked to your company, still
+ * holds its share. `taken` (per app, 0 … 1) folds each app, with its share, into your data.
  */
-const hub = (taken: number[] = APPS.map(() => 0)): Prim[] => {
+const hub = (taken: number[] = APPS.map(() => 0), size = 1): Prim[] => {
   const growth = taken.reduce((sum, k) => sum + k, 0) / APPS.length;
   return [
     ...company(0, 0, 1, { teams: false }),
@@ -1002,12 +1003,12 @@ const hub = (taken: number[] = APPS.map(() => 0)): Prim[] => {
       id: 'hub',
       x: 0,
       y: 0,
-      r: 120 + 30 * growth,
+      r: lerp(24, 120, size) + 30 * growth,
       role: 'data',
       glow: 0.2 + 0.3 * growth,
       parent: 'body:org',
     },
-    label('hub-label', 0, 0, 'Your data', { size: 30, parent: 'node:hub' }),
+    label('hub-label', 0, 0, 'Your data', { size: 30, opacity: ramp(size, 0.6, 0.4), parent: 'node:hub' }),
     ...APPS.flatMap((app, index): Prim[] => {
       const k = taken[index];
       const [x, y] = appAt(app, 0, 0, 390);
@@ -1020,20 +1021,40 @@ const hub = (taken: number[] = APPS.map(() => 0)): Prim[] => {
           opacity: 1 - k,
           parent: `body:app-${app}`,
         }),
-        // The share of your data each app held is now in the hub.
-        { kind: 'node', id: `data-org-${app}`, x: 0, y: 0, r: 7, role: 'data', opacity: 0, parent: 'node:hub' },
-        edge(`link-hub-${app}`, 'node:hub', `body:app-${app}`, { opacity: 0.7, parent: `body:app-${app}` }),
+        {
+          kind: 'node',
+          id: `data-org-${app}`,
+          x: lerp(x, 0, k),
+          y: lerp(y, 0, k),
+          r: APP_R * 0.28 * (1 - k),
+          role: 'data',
+          opacity: 1 - k,
+          parent: `body:app-${app}`,
+        },
+        edge(`link-org-${app}`, 'body:org', `body:app-${app}`, { opacity: 0.7, parent: `body:app-${app}` }),
       ];
     }),
   ];
 };
 
-const echoSpaces = ({ subs = 1, titles = true }: { subs?: number; titles?: boolean } = {}): Prim[] => [
-  { kind: 'body', id: 'org', x: 0, y: 0, r: 170 },
-  { kind: 'node', id: 'hub', x: 0, y: 0, r: 110, role: 'data', glow: -0.3, opacity: 0.12, parent: 'body:org' },
-  ...spaces({ subs }),
-  ...(titles ? echoTitle() : []),
-];
+/** The hypergraph in your company; as the camera dives into one space the rest fades where it is (`exit: 'fade'`). */
+const echoSpaces = ({ subs = 1, titles = true }: { subs?: number; titles?: boolean } = {}): Prim[] =>
+  [
+    { kind: 'body', id: 'org', x: 0, y: 0, r: 170 } satisfies Prim,
+    {
+      kind: 'node',
+      id: 'hub',
+      x: 0,
+      y: 0,
+      r: 110,
+      role: 'data',
+      glow: -0.3,
+      opacity: 0.12,
+      parent: 'body:org',
+    } satisfies Prim,
+    ...spaces({ subs }),
+    ...(titles ? echoTitle() : []),
+  ].map((prim): Prim => ({ ...prim, exit: 'fade' }));
 
 /** The one space the camera enters, without the hypergraph around it. */
 const companySpace = (): Prim[] => [
