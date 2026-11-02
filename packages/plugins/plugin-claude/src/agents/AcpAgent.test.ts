@@ -84,27 +84,15 @@ const summarize = (block: ContentBlock.Any): string => {
   }
 };
 
-/** The first message in the feed that matches, as soon as it lands: a live query, so nothing polls. */
-const awaitMessage = (feed: Feed.Feed, matches: (message: Message.Message) => boolean) =>
+/** The first time the feed's events (on every branch) satisfy `find`, as soon as they do: a live walk, so nothing polls. */
+const awaitEvents = <A>(feed: Feed.Feed, find: (events: readonly Trajectory.Event[]) => A | undefined) =>
   Effect.gen(function* () {
-    const query = yield* Feed.query(feed, Filter.type(Trajectory.Event));
-    return yield* Effect.callback<Message.Message>((resume) => {
+    const query = yield* Feed.walk(feed, Filter.type(Trajectory.Event), { branch: 'all' });
+    return yield* Effect.callback<A>((resume) => {
       const unsubscribe = query.subscribe(
         (result) => {
-          const found = result.results
-            .flatMap((event) =>
-              event.payload._tag === 'message'
-                ? [
-                    Message.make({
-                      id: event.id,
-                      sender: TrajectoryStore.toActor(event.sender),
-                      blocks: [...event.payload.blocks],
-                    }),
-                  ]
-                : [],
-            )
-            .find(matches);
-          if (found) {
+          const found = find(result.results);
+          if (found !== undefined) {
             resume(Effect.succeed(found));
           }
         },
@@ -114,9 +102,38 @@ const awaitMessage = (feed: Feed.Feed, matches: (message: Message.Message) => bo
     });
   });
 
-/** A turn records its prompt once the agent's session is open. */
+/** The first message in the feed that matches, as soon as it lands. */
+const awaitMessage = (feed: Feed.Feed, matches: (message: Message.Message) => boolean) =>
+  awaitEvents(feed, (events) =>
+    events
+      .flatMap((event) =>
+        event.payload._tag === 'message'
+          ? [
+              Message.make({
+                id: event.id,
+                sender: TrajectoryStore.toActor(event.sender),
+                blocks: [...event.payload.blocks],
+              }),
+            ]
+          : [],
+      )
+      .find(matches),
+  );
+
+/** A turn takes its prompt in once the agent's session is open: the prompt's consume is in the feed. */
 const promptRecorded = (feed: Feed.Feed, text: string) =>
-  awaitMessage(feed, (message) => message.sender.role === 'user' && Message.extractText(message) === text);
+  awaitEvents(feed, (events) => {
+    const prompt = events.find(
+      (event) =>
+        event.payload._tag === 'message' &&
+        event.sender.role === 'user' &&
+        event.payload.blocks.some((block) => block._tag === 'text' && block.text === text),
+    );
+    return prompt !== undefined &&
+      events.some((event) => event.payload._tag === 'promptConsume' && event.payload.message === prompt.id)
+      ? prompt
+      : undefined;
+  });
 
 const findRequest = (feed: Feed.Feed) =>
   awaitMessage(feed, (message) => message.blocks.some((block) => block._tag === 'request'));
