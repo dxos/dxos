@@ -133,7 +133,7 @@ if (values.stills) {
     '-vf',
     // A fine static dither at the final size breaks up the 8-bit steps in the dark field's gradients; a temporal one
     // would multiply the file size, since changing noise does not compress.
-    `scale=${composition.width}:${composition.height}:flags=lanczos,noise=alls=3:allf=u,format=yuv420p`,
+    `scale=${composition.width}:${composition.height}:flags=lanczos,noise=alls=4:allf=u,format=yuv420p`,
     '-c:v',
     'libx264',
     '-crf',

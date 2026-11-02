@@ -84,13 +84,21 @@ const OBJECTS = 150;
 const OBJECT_SPIN = 0.08;
 
 const SPACES = [
-  { id: 'Personal', at: [-48, -48], children: ['Notes', 'Inbox'] },
-  { id: 'Company', at: [48, -48], children: ['Engineering', 'Sales', 'Ops'] },
-  { id: 'Partners', at: [-48, 48], children: ['Cloudflare', 'Agency'] },
-  { id: 'Customers', at: [48, 48], children: ['Acme', 'Globex', 'Initech'] },
+  { id: 'Company', at: [0, -56] },
+  { id: 'Personal', at: [-48.5, 28] },
+  { id: 'Customers', at: [48.5, 28] },
 ] as const;
+/** The objects in each space on the hypergraph, as offsets from its centre; every one links to every other. */
+const SPACE_OBJECTS: [number, number][] = [
+  [0, -17],
+  [16, -6],
+  [10, 14],
+  [-10, 14],
+  [-16, -6],
+  [0, 0],
+];
 const SPACE_R = 40;
-const COMPANY_SPACE = SPACES[1];
+const COMPANY_SPACE = SPACES[0];
 
 const ECHO_ZOOM = 3.4;
 const OBJECTS_ZOOM = 11.25;
@@ -383,25 +391,32 @@ const objects = (spin: number, { dim = 1, picked = {} }: { dim?: number; picked?
   return prims;
 };
 
-/** The ECHO hypergraph in your data: four spaces, each holding its own nested spaces. */
+/** The ECHO hypergraph in your data: three spaces, each a small graph of linked objects. */
 const spaces = ({ subs = 1 } = {}): Prim[] =>
-  SPACES.flatMap(({ id, at, children }): Prim[] => [
+  SPACES.flatMap(({ id, at }): Prim[] => [
     { kind: 'body', id: `space-${id}`, x: at[0], y: at[1], r: SPACE_R, parent: 'node:hub' },
     label(`space-label-${id}`, at[0], at[1] - SPACE_R - 3.4, id, { size: 20, weight: 600, parent: `body:space-${id}` }),
-    ...children.map((child, index): Prim => {
-      const [x, y] = polar(at[0], at[1], SPACE_R * 0.45, (index / children.length) * TAU - Math.PI / 2);
-      return {
-        kind: 'node',
-        id: `sub-${child}`,
-        x,
-        y,
-        r: 9,
-        color: '#9aa6d6',
-        glow: -0.2,
-        opacity: subs,
-        parent: `body:space-${id}`,
-      };
-    }),
+    ...SPACE_OBJECTS.map(([dx, dy], index): Prim => ({
+      kind: 'node',
+      id: `sub-${id}-${index}`,
+      x: at[0] + dx,
+      y: at[1] + dy,
+      r: 2.6,
+      color: '#c9ced6',
+      glow: -0.35,
+      opacity: subs,
+      parent: `body:space-${id}`,
+    })),
+    ...SPACE_OBJECTS.flatMap((_, index) =>
+      SPACE_OBJECTS.slice(index + 1).map((__, offset) => {
+        const other = index + 1 + offset;
+        return edge(`sub-link-${id}-${index}-${other}`, `node:sub-${id}-${index}`, `node:sub-${id}-${other}`, {
+          color: '#c9ced6',
+          opacity: subs,
+          parent: `body:space-${id}`,
+        });
+      }),
+    ),
   ]);
 
 const echoTitle = (): Prim[] => [
@@ -548,7 +563,6 @@ const NOTES = [
   { space: 'Company', lines: ['Who owns this?', 'Ops, since Monday.'], at: 1.4, side: 1 },
   { space: 'Customers', lines: ['Tag the customer.', 'Tagged: Acme.'], at: 3.6, side: 1 },
   { space: 'Personal', lines: ['Draft is ready.', 'Reviewing now.'], at: 5.8, side: -1 },
-  { space: 'Partners', lines: ['Any blockers?', 'Waiting on Auth.'], at: 8.0, side: -1 },
 ];
 
 /** Short conversations beside the spaces: people and agents at work all over the graph. */

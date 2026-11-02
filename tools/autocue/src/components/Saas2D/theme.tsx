@@ -33,6 +33,10 @@ const SCREEN: Camera = { x: WIDTH / 2, y: HEIGHT / 2, zoom: 1 };
 
 /** The inset well's radius, as a share of its body's. */
 const WELL = 0.84;
+/** How far a body's soft shadow reaches past its edge, as a multiple of its radius. */
+const HALO = 1.16;
+const SHADE = 'hsl(220 30% 2%)';
+const SHINE = 'hsl(220 20% 80%)';
 
 /** World to screen pixels, with the origin at the frame's top-left. */
 export const project = (camera: Camera, x: number, y: number): [number, number] => [
@@ -115,8 +119,8 @@ const Text = ({
 );
 
 /**
- * Raised and inset shadows; shape filters are in bounding-box units so they scale with the shape (deeper for larger
- * bodies), the chip filter in pixels, since chips are wide and short.
+ * Raised shadows for nodes, in bounding-box units so they scale with the node, and for chips in pixels, since chips are
+ * wide and short; bodies shade themselves with concentric gradients.
  */
 export const Defs = () => (
   <defs>
@@ -133,55 +137,6 @@ export const Defs = () => (
         <feMergeNode in='hi' />
         <feMergeNode in='lo' />
         <feMergeNode in='SourceGraphic' />
-      </feMerge>
-    </filter>
-    <filter id='nd-inset' x='0' y='0' width='1' height='1' primitiveUnits='objectBoundingBox'>
-      <feGaussianBlur in='SourceAlpha' stdDeviation='0.03' />
-      <feOffset dx='0.022' dy='0.022' result='lo-blur' />
-      <feComposite in='SourceAlpha' in2='lo-blur' operator='out' result='lo-edge' />
-      <feFlood floodColor={LO} />
-      <feComposite in2='lo-edge' operator='in' result='lo' />
-      <feGaussianBlur in='SourceAlpha' stdDeviation='0.02' />
-      <feOffset dx='-0.013' dy='-0.013' result='hi-blur' />
-      <feComposite in='SourceAlpha' in2='hi-blur' operator='out' result='hi-edge' />
-      <feFlood floodColor={HI} />
-      <feComposite in2='hi-edge' operator='in' result='hi' />
-      <feMerge>
-        <feMergeNode in='SourceGraphic' />
-        <feMergeNode in='lo' />
-        <feMergeNode in='hi' />
-      </feMerge>
-    </filter>
-    <filter id='nd-raised-px' x='-0.2' y='-0.2' width='1.4' height='1.4'>
-      <feGaussianBlur in='SourceAlpha' stdDeviation='16' />
-      <feOffset dx='9' dy='9' result='lo-blur' />
-      <feFlood floodColor={LO} />
-      <feComposite in2='lo-blur' operator='in' result='lo' />
-      <feGaussianBlur in='SourceAlpha' stdDeviation='9' />
-      <feOffset dx='-5.5' dy='-5.5' result='hi-blur' />
-      <feFlood floodColor={HI} />
-      <feComposite in2='hi-blur' operator='in' result='hi' />
-      <feMerge>
-        <feMergeNode in='hi' />
-        <feMergeNode in='lo' />
-        <feMergeNode in='SourceGraphic' />
-      </feMerge>
-    </filter>
-    <filter id='nd-inset-px' x='0' y='0' width='1' height='1'>
-      <feGaussianBlur in='SourceAlpha' stdDeviation='10' />
-      <feOffset dx='7' dy='7' result='lo-blur' />
-      <feComposite in='SourceAlpha' in2='lo-blur' operator='out' result='lo-edge' />
-      <feFlood floodColor={LO} />
-      <feComposite in2='lo-edge' operator='in' result='lo' />
-      <feGaussianBlur in='SourceAlpha' stdDeviation='6' />
-      <feOffset dx='-4' dy='-4' result='hi-blur' />
-      <feComposite in='SourceAlpha' in2='hi-blur' operator='out' result='hi-edge' />
-      <feFlood floodColor={HI} />
-      <feComposite in2='hi-edge' operator='in' result='hi' />
-      <feMerge>
-        <feMergeNode in='SourceGraphic' />
-        <feMergeNode in='lo' />
-        <feMergeNode in='hi' />
       </feMerge>
     </filter>
     <filter id='nd-chip' x='-30%' y='-80%' width='160%' height='260%'>
@@ -268,15 +223,37 @@ export const SvgPrim = ({ prim, camera }: { prim: Prim; camera: Camera }) => {
       if (r < 0.5) {
         return null;
       }
-      // One raised band and one inset well, both shades of the field: role color belongs to what a body holds, not to it.
+      // One raised band and one inset well, both shades of the field: role color belongs to what a body holds, not to
+      // it. Their shading is concentric, since an offset light draws each edge twice and reads as extra uneven rings.
       const lit = r < 2000;
-      // Shadows scale with a body up to a point; past it they stay a fixed depth, or a close-up body's shadows drift
-      // apart from it and read as a second, offset ring.
-      const deep = r > 160 ? '-px' : '';
+      const well = prim.well ?? WELL;
+      const id = `nd-body-${prim.id.replace(/[^\w-]/g, '_')}`;
       return (
         <At x={x} y={y} opacity={opacity}>
-          <circle className='nd-body' r={r} fill={neu.lighter} filter={lit ? `url(#nd-raised${deep})` : undefined} />
-          <circle r={r * (prim.well ?? WELL)} fill={neu.bg} filter={lit ? `url(#nd-inset${deep})` : undefined} />
+          {lit && (
+            <defs>
+              <radialGradient id={`${id}-halo`}>
+                <stop offset={1 / HALO} stopColor={SHADE} stopOpacity={0.55} />
+                <stop offset={1 / HALO + (1 - 1 / HALO) * 0.35} stopColor={SHADE} stopOpacity={0.2} />
+                <stop offset={1} stopColor={SHADE} stopOpacity={0} />
+              </radialGradient>
+              <radialGradient id={`${id}-band`}>
+                <stop offset={well} stopColor={SHINE} stopOpacity={0} />
+                <stop offset={well + (1 - well) * 0.45} stopColor={SHINE} stopOpacity={0.045} />
+                <stop offset={1} stopColor={SHINE} stopOpacity={0} />
+              </radialGradient>
+              <radialGradient id={`${id}-well`}>
+                <stop offset={0.8} stopColor={SHADE} stopOpacity={0} />
+                <stop offset={0.95} stopColor={SHADE} stopOpacity={0.3} />
+                <stop offset={1} stopColor={SHADE} stopOpacity={0.55} />
+              </radialGradient>
+            </defs>
+          )}
+          {lit && <circle r={r * HALO} fill={`url(#${id}-halo)`} />}
+          <circle className='nd-body' r={r} fill={neu.lighter} />
+          {lit && <circle r={r} fill={`url(#${id}-band)`} />}
+          <circle r={r * well} fill={neu.bg} />
+          {lit && <circle r={r * well} fill={`url(#${id}-well)`} />}
         </At>
       );
     }
