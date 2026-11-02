@@ -51,6 +51,7 @@ import {
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId, SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { type FeedProtocol } from '@dxos/protocols';
 import { type QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { type QueryService } from '@dxos/protocols/rpc';
 import { chunkArray, compositeKey, countWork, getDeep, isNonNullable } from '@dxos/util';
@@ -1370,6 +1371,94 @@ export class QueryExecutor extends Resource {
    * first block on the walk and with the content of its latest one [D-69]. The direction is the natural order
    * the query asks for.
    */
+  /**
+   * A walk of every branch: the store's blocks after the cursor (before it, walking backward), in local order, so a
+   * page costs the blocks it reads rather than the feed. Each item comes once, at the first of its blocks the page
+   * holds, with the content of its latest; an item changed after the cursor comes again, since whether it started
+   * before the cursor is only known by reading the blocks there [D-75]. A backward walk with a limit reads pages from
+   * the end until the selector keeps enough.
+   */
+  async #walkAll(
+    scope: QueryAST.FeedScope,
+    range: QueryPlan.SelectStep['feedCursorRange'],
+    select: (items: QueryItem[]) => QueryItem[],
+    limit: number | undefined,
+  ): Promise<{ selected: QueryItem[]; read: number }> {
+    const feedStore = this.#feedStore;
+    const ref = extractQueueRefs([scope])?.[0];
+    const feed = ref === undefined ? undefined : this.#storeFeeds.get(ref.queueId);
+    if (!feedStore || ref === undefined || feed === undefined) {
+      return { selected: [], read: 0 };
+    }
+    if (range?.end !== undefined || range?.positions === 'edge') {
+      throw new QueryError({
+        message: 'A walk starts after a local cursor and has no end cursor.',
+        context: { query: null },
+      });
+    }
+    const direction = walkDirection(this.#uncompiledPlan);
+    const after = range?.begin ? parseLocalCursor(range.begin)?.block : undefined;
+    const read = (pageLimit: number | undefined) =>
+      this._runInRuntime(
+        feedStore.walk({
+          spaceId: feed.spaceId,
+          feedNamespace: feed.feedNamespace,
+          feedId: ref.queueId,
+          branch: 'all',
+          direction,
+          ...(after !== undefined ? { after } : {}),
+          ...(pageLimit !== undefined ? { limit: pageLimit } : {}),
+        }),
+      );
+    const toItems = (blocks: readonly FeedProtocol.Block[]): QueryItem[] => {
+      const items = new Map<string, { first: FeedProtocol.Block; last: FeedProtocol.Block; data: Obj.JSON | null }>();
+      for (const block of direction === 'desc' ? [...blocks].reverse() : blocks) {
+        const data = EchoFeedCodec.decodeBlock(block);
+        const id = typeof data.id === 'string' ? data.id : undefined;
+        if (id === undefined) {
+          continue;
+        }
+        const previous = items.get(id);
+        // A partial block (a removal tombstone) keeps the body of the block before it, as the index does.
+        const merged = data[ATTR_TYPE] === undefined && previous?.data ? { ...previous.data, ...data } : data;
+        items.set(id, { first: previous?.first ?? block, last: block, data: isObjectJSON(merged) ? merged : null });
+      }
+      return [...items.entries()].flatMap(([objectId, { first, last, data }]): QueryItem[] =>
+        data === null || !EntityId.isValid(objectId)
+          ? []
+          : [
+              {
+                objectId: EntityId.make(objectId),
+                spaceId: feed.spaceId,
+                queueId: ref.queueId,
+                queueNamespace: feed.feedNamespace,
+                documentId: null,
+                doc: null,
+                data,
+                rank: 1,
+                createdAt: first.timestamp,
+                updatedAt: last.timestamp,
+                position: last.position,
+                walkIndex: first.insertionId ?? 0,
+              },
+            ],
+      );
+    };
+
+    if (direction === 'asc' || limit === undefined) {
+      const blocks = await read(undefined);
+      return { selected: select(toItems(blocks)), read: blocks.length };
+    }
+    // Pages grow, so a selector that keeps few of the blocks still ends in a handful of reads.
+    for (let pageLimit = Math.max(limit * 4, 64); ; pageLimit *= 4) {
+      const blocks = await read(pageLimit);
+      const selected = select(toItems(blocks));
+      if (selected.length >= limit || blocks.length < pageLimit) {
+        return { selected, read: blocks.length };
+      }
+    }
+  }
+
   async #walkFeed(scope: QueryAST.FeedScope, range: QueryPlan.SelectStep['feedCursorRange']): Promise<QueryItem[]> {
     const feedStore = this.#feedStore;
     const ref = extractQueueRefs([scope])?.[0];
@@ -1545,11 +1634,18 @@ export class QueryExecutor extends Resource {
       if (scopedQueues.length > 1 || execSpaceScopes.length > 0) {
         throw new QueryError({ message: 'A walk reads one feed scope alone.', context: { query: null } });
       }
-      const walked = await this.#walkFeed(walkScopes[0], step.feedCursorRange);
       // The walk itself is the window, so the selector applies without the cursor range the walk consumed.
-      const selected = selectStoreItems({ ...step, feedCursorRange: undefined, feedScan: undefined }, walked);
+      const select = (items: QueryItem[]) =>
+        selectStoreItems({ ...step, feedCursorRange: undefined, feedScan: undefined }, items);
+      const { selected, read } =
+        walkScopes[0].walk?.branch === 'all'
+          ? await this.#walkAll(walkScopes[0], step.feedCursorRange, select, step.limit)
+          : await this.#walkFeed(walkScopes[0], step.feedCursorRange).then((walked) => ({
+              selected: select(walked),
+              read: walked.length,
+            }));
       workingSet.push(...(step.limit === undefined ? selected : selected.slice(0, step.limit)));
-      trace.documentsLoaded += walked.length;
+      trace.documentsLoaded += read;
       trace.objectCount = workingSet.length;
       return { workingSet, trace };
     }

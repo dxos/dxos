@@ -1321,6 +1321,17 @@ decision D-74: `Feed.setBranch` puts an item on a branch before an append, so on
   why: The host already reads the branch key of each block, and a writer that records one step across branches (a message on one branch and its consume on another) then writes it in one append.
 ```
 
+```mdl
+decision D-75: A walk of all branches reads only the blocks after its cursor (before it, walking backward), so a page costs the blocks that it reads. Each item comes once, at the first of its blocks in what was read. An item that changes after the cursor comes again at its new block. Fills in [D-73].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.6]
+  why: The store keeps no item id beside a block, so to know whether an item started before the cursor a walk must read every block before it, and a reader that resumes after each change then pays for the whole feed on each read. A log of immutable items, such as a trajectory, never changes an item.
+  rejected:
+    - Read the whole feed on each page and drop the items that started before the cursor ([D-70] for a path walk) — one resumed read of a 1,000-turn chat took 1.9 s instead of tens of milliseconds.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl

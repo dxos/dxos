@@ -1229,20 +1229,32 @@ export class FeedStore {
     // Blocks past the feed's maxAge are hidden from every read until the next trim deletes them.
     const notExpired = yield* this.#notExpired(request.spaceId, request.feedNamespace);
     if (request.branch === 'all') {
-      // Every branch at once is the store's own local order, so no path is needed and forks are already in it.
-      const blocks = yield* sql<Block>`
-          SELECT blocks.*, feeds.feedId, feeds.feedNamespace
-          FROM blocks JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
-          WHERE blocks.feedPrivateId = ${feedPrivateId}
-          ${notExpired}
-          ORDER BY blocks.insertionId ASC
-        `;
-      const ordered = request.direction === 'desc' ? [...blocks].reverse() : blocks;
-      const start = after === undefined ? 0 : ordered.findIndex((block) => block.insertionId === after.insertionId) + 1;
-      if (start === 0 && after !== undefined) {
-        return [];
-      }
-      return yield* this.#openRows(ordered.slice(start), request.spaceId, request.feedNamespace);
+      // Every branch at once is the store's own local order, so no path is needed and the fork points are already in
+      // it; a cursor bounds the read, so a page costs the blocks after it rather than the feed.
+      const desc = request.direction === 'desc';
+      const bound =
+        after === undefined
+          ? sql``
+          : desc
+            ? sql`AND blocks.insertionId < ${after.insertionId}`
+            : sql`AND blocks.insertionId > ${after.insertionId}`;
+      const limit = request.limit === undefined ? sql`` : sql`LIMIT ${request.limit}`;
+      const blocks = desc
+        ? yield* sql<Block>`
+            SELECT blocks.*, feeds.feedId, feeds.feedNamespace
+            FROM blocks JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
+            WHERE blocks.feedPrivateId = ${feedPrivateId} ${bound}
+            ${notExpired}
+            ORDER BY blocks.insertionId DESC ${limit}
+          `
+        : yield* sql<Block>`
+            SELECT blocks.*, feeds.feedId, feeds.feedNamespace
+            FROM blocks JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
+            WHERE blocks.feedPrivateId = ${feedPrivateId} ${bound}
+            ${notExpired}
+            ORDER BY blocks.insertionId ASC ${limit}
+          `;
+      return yield* this.#openRows(blocks, request.spaceId, request.feedNamespace);
     }
 
     const target =
@@ -2008,6 +2020,8 @@ export type WalkRequest = {
   direction: 'asc' | 'desc';
   /** Also gives the base block of each branch that forks at a walked block, right after that block. */
   forks?: boolean;
+  /** The most blocks to read; only a walk of every branch (`'all'`) takes it. */
+  limit?: number;
 };
 
 /** What a walk reads of a row of `branches`. */
