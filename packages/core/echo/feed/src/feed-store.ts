@@ -1226,6 +1226,25 @@ export class FeedStore {
       after = row;
     }
 
+    // Blocks past the feed's maxAge are hidden from every read until the next trim deletes them.
+    const notExpired = yield* this.#notExpired(request.spaceId, request.feedNamespace);
+    if (request.branch === 'all') {
+      // Every branch at once is the store's own local order, so no path is needed and forks are already in it.
+      const blocks = yield* sql<Block>`
+          SELECT blocks.*, feeds.feedId, feeds.feedNamespace
+          FROM blocks JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
+          WHERE blocks.feedPrivateId = ${feedPrivateId}
+          ${notExpired}
+          ORDER BY blocks.insertionId ASC
+        `;
+      const ordered = request.direction === 'desc' ? [...blocks].reverse() : blocks;
+      const start = after === undefined ? 0 : ordered.findIndex((block) => block.insertionId === after.insertionId) + 1;
+      if (start === 0 && after !== undefined) {
+        return [];
+      }
+      return yield* this.#openRows(ordered.slice(start), request.spaceId, request.feedNamespace);
+    }
+
     const target =
       request.branch !== undefined ? request.branch : request.direction === 'desc' ? (after?.branch ?? null) : null;
     const path = yield* sql<BranchRow>`
@@ -1240,8 +1259,6 @@ export class FeedStore {
         SELECT branchId, baseBranchId, baseInsertionId, forkInsertionId FROM path ORDER BY depth DESC
       `;
 
-    // Blocks past the feed's maxAge are hidden from every read until the next trim deletes them.
-    const notExpired = yield* this.#notExpired(request.spaceId, request.feedNamespace);
     const sequence: Block[] = [];
     const onPath = new Set(path.map((row) => row.branchId));
     const forksAt = new Map<number, Block[]>();
@@ -1983,9 +2000,9 @@ export type WalkRequest = {
   feedId: string;
   /**
    * The branch the walk ends on: its id, or `null` for the root branch. Absent is the root branch, or on
-   * a backward walk the branch of `after`.
+   * a backward walk the branch of `after`. `'all'` walks every branch in local order.
    */
-  branch?: string | null;
+  branch?: string | null | 'all';
   /** The block id the walk starts after, excluded. */
   after?: string;
   direction: 'asc' | 'desc';

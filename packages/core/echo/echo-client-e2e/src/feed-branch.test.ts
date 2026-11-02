@@ -334,6 +334,58 @@ describe('feed branches', () => {
       }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
     });
 
+    test('a walk of every branch gives all items in local order and resumes after a local cursor', async ({
+      expect,
+    }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+
+      await Effect.gen(function* () {
+        const { feed, feedUri } = yield* setup;
+        const all = yield* Feed.walk(feed, Filter.type(TestSchema.Person), { branch: 'all' }).run;
+        expect(names(all)).toEqual(['A1', 'A2', 'B1', 'A3', 'B2']);
+        expect(all.map((item) => Feed.getBranch(item) !== undefined)).toEqual([false, false, true, false, true]);
+
+        const cursor = Feed.getLocalCursor(all[2]);
+        expect(cursor).toBeDefined();
+        const rest = yield* Database.query(
+          Query.select(Filter.and(Filter.type(TestSchema.Person), Filter.feedCursor({ begin: cursor })))
+            .from(Scope.feed(feedUri, { walk: { branch: 'all' } }))
+            .orderBy(Order.natural('asc')),
+        ).run;
+        expect(names(rest)).toEqual(['A3', 'B2']);
+
+        const backward = yield* Feed.walk(feed, Filter.type(TestSchema.Person), {
+          branch: 'all',
+          order: 'desc',
+          limit: 2,
+        }).run;
+        expect(names(backward)).toEqual(['B2', 'A3']);
+      }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
+    });
+
+    test('a live walk of every branch sees an append to any branch', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+
+      await Effect.gen(function* () {
+        const { feed, feedUri, branch } = yield* setup;
+        const result = db.query(
+          Query.select(Filter.type(TestSchema.Person))
+            .from(Scope.feed(feedUri, { walk: { branch: 'all' } }))
+            .orderBy(Order.natural('asc')),
+        );
+        const seen: string[][] = [];
+        const unsubscribe = result.subscribe(() => seen.push(names(result.results)), { fire: true });
+        yield* Feed.append(feed, [Obj.make(TestSchema.Person, { name: 'B3' })], { branch });
+        yield* Database.flush();
+        yield* Effect.promise(() =>
+          expect.poll(() => seen.at(-1), { timeout: 5_000 }).toEqual(['A1', 'A2', 'B1', 'A3', 'B2', 'B3']),
+        );
+        unsubscribe();
+      }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
+    });
+
     test('a walk gives the fork points it meets, and walks backward to the root base', async ({ expect }) => {
       await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
       const db = await peer.createDatabase();

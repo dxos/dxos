@@ -202,8 +202,11 @@ export interface ForkOptions {
  * Options for {@link walk}.
  */
 export interface WalkOptions {
-  /** The branch the walk ends on; omit for the root branch, or for the branch of `begin` on a backward walk. */
-  branch?: BranchId | null;
+  /**
+   * The branch the walk ends on; omit for the root branch, or for the branch of `begin` on a backward walk.
+   * `'all'` walks every branch of the feed in local order, each item once at its first block.
+   */
+  branch?: BranchId | null | 'all';
   /** Starts after this item; read it off the last item of a page with {@link getLocalCursor}. */
   begin?: LocalCursor;
   /** Also gives the base item of each branch that forks at a block the walk gives. */
@@ -589,6 +592,15 @@ const setBranchKey = (mutable: Entity.Mutable<Entity.Unknown>, branch: BranchId)
   internal.deleteKeys(mutable, KEY_FEED_BRANCH);
   internal.getMetaChecked(mutable).keys.push(internal.foreignKey(KEY_FEED_BRANCH, branch));
 };
+
+/**
+ * Puts an item on a branch: a later {@link append} of it continues `branch`, so items for several
+ * branches can be built before they are written. Must be called within an `Obj.update` callback.
+ *
+ * @performance O(k) in the item foreign-key count.
+ */
+export const setBranch = (mutable: Entity.Mutable<Entity.Unknown>, branch: BranchId): void =>
+  setBranchKey(mutable, branch);
 
 /**
  * The branch of an item, as the store inferred it from the block the item was read from; `undefined`
