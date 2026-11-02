@@ -6,6 +6,7 @@ export * from './Accordion/index.ts';
 export * from './AlertDialog/index.ts';
 export * from './Banner/index.ts';
 export * from './Avatar/index.ts';
+export * from './Badge/index.ts';
 export * from './Breadcrumb/index.ts';
 export * from './Card/index.ts';
 export * from './Carousel/index.ts';
