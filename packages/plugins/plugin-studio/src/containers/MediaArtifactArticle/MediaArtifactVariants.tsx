@@ -18,7 +18,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 import type * as Util from '@dxos/react-ui/Util';
 
 import { VariantGallery } from '#components';
-import { VariantRenderer } from '#surfaces';
+import { StudioSurface } from '#types';
 import { type MediaArtifact } from '#types';
 
 import { StudioNamespace } from '../../namespace.ts';
@@ -205,7 +205,7 @@ export const MediaArtifactVariants = ({
             </Layout.Flex>
           ) : (
             <Surface.Surface
-              type={VariantRenderer}
+              type={StudioSurface.VariantRenderer}
               data={{
                 variant: {
                   contentType: selectedVariant.contentType,

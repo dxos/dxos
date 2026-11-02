@@ -120,10 +120,10 @@
       "types": "./dist/types/src/Chat.d.ts",
       "import": "./dist/lib/ns/Chat.mjs"
     },
-    "./ChatSurface": {
-      "source": "./src/types/ChatSurface.ts",
-      "types": "./dist/types/src/types/ChatSurface.d.ts",
-      "import": "./dist/lib/ChatSurface.mjs"
+    "./AssistantSurface": {
+      "source": "./src/types/AssistantSurface.ts",
+      "types": "./dist/types/src/types/AssistantSurface.d.ts",
+      "import": "./dist/lib/AssistantSurface.mjs"
     },
     "./Extensions": {
       "source": "./src/Extensions.ts",
@@ -196,8 +196,8 @@
       "AssistantService": [
         "dist/types/src/types/AssistantService.d.ts"
       ],
-      "ChatSurface": [
-        "dist/types/src/types/ChatSurface.d.ts"
+      "AssistantSurface": [
+        "dist/types/src/types/AssistantSurface.d.ts"
       ],
       "Ollama": [
         "dist/types/src/types/Ollama.d.ts"

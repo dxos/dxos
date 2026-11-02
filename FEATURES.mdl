@@ -877,6 +877,13 @@ feature code-index: CodeIndex
 ### New features
 
 ```mdl
+feature app-framework.edge-plugins: EDGE-side plugins
+  status: planned
+  specs: [packages/sdk/app-framework/docs/EDGE-PLUGINS.mdl]
+  note: The same plugins that run in Composer are deployed to EDGE, loaded into Dynamic Workers, and expose their types, skills and operations there, replacing operation-service.
+```
+
+```mdl
 feature plugin-zen.sleep-fade: Timed Dreams fade out instead of stopping
   status: operational
   specs: [packages/plugins/plugin-zen/PLUGIN.mdl#F-6]
@@ -935,7 +942,14 @@ decision D-5: plugin-labeler is merged into plugin-inbox; its spec moves to plug
 ```
 
 ```mdl
-decision D-6: plugin-spacetime is deleted, its 3D editing replaced by plugin-canvas's 3D canvas; the plugin-spacetime and plugin-spacetime.design features are removed.
+decision D-6: Add app-framework.edge-plugins — the same plugins that run in Composer run on EDGE, specified by EDGE-PLUGINS.mdl.
+  date: 2026-10-29
+  by: user:dmaretskyi
+  affects: [app-framework.edge-plugins]
+```
+
+```mdl
+decision D-7: plugin-spacetime is deleted, its 3D editing replaced by plugin-canvas's 3D canvas; the plugin-spacetime and plugin-spacetime.design features are removed.
   date: 2026-10-29
   by: user:richburdon
 ```

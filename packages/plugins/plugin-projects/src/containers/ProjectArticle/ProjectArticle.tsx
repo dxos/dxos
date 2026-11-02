@@ -47,7 +47,15 @@ import * as Tabs from '@dxos/react-ui/Tabs';
 import { type Milestone, Task, type TaskSet } from '@dxos/types';
 
 import { ObjectGallery, ProjectPipeline } from '#components';
-import { Feature, FeatureOperation, ProjectCapabilities, ProjectOperation, ProjectView, Spec } from '#types';
+import {
+  Feature,
+  FeatureOperation,
+  ProjectCapabilities,
+  ProjectOperation,
+  ProjectSurface,
+  ProjectView,
+  Spec,
+} from '#types';
 
 import { useFeatureGraph, useOpenSpecLevel, useProjectSpec, useRefTargets, useSpecTreeIds } from '../../hooks/index.ts';
 import { ProjectsNamespace } from '../../namespace.ts';
@@ -401,7 +409,7 @@ export const ProjectArticle = ({ role, subject, attendableId, feature }: Project
                   </Form.FieldSet>
 
                   {/* Settings other plugins keep for this project, such as its folder on this device. */}
-                  <Surface.Surface type={ProjectView.Settings} data={{ project: subject }} />
+                  <Surface.Surface type={ProjectSurface.Settings} data={{ project: subject }} />
                 </Form.Content>
               </Form.Viewport>
             </Form.Root>
