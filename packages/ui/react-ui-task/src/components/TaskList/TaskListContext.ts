@@ -59,6 +59,7 @@ export type TaskListContextValue = {
   onTaskCreate?: TaskCreateHandler;
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
   getTaskActions?: (task: Task.Task) => MenuItem[];
+  getDelegateActions?: (task: Task.Task) => MenuItem[];
   /** Selects a task, or clears the selection with `undefined`; defined only when the list is selectable. */
   onTaskSelect?: (task: Task.Task | undefined, modifiers?: TaskSelectModifiers) => void;
   /** Toggles a row's membership of the checked set; defined only when the host wired checkboxes. */

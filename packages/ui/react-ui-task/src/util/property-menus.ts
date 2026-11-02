@@ -3,7 +3,7 @@
 //
 
 import { Obj, Ref } from '@dxos/echo';
-import { type MenuAction, createMenuAction } from '@dxos/react-ui-menu';
+import { type MenuAction, type MenuItem, createLineSeparator, createMenuAction } from '@dxos/react-ui-menu';
 import { type Actor, type Person, Task } from '@dxos/types';
 
 import { PERSON_ICON, shortDid } from './assignee.ts';
@@ -73,21 +73,31 @@ export type AssigneeMenuOptions = {
   assignee?: Actor.Actor;
   /** How the current assignee is shown, so one the people list cannot name is still listed. */
   current?: { label?: string; icon: string };
+  /** The agent working the task, listed checked above the agents it could go to instead. */
+  delegate?: { label?: string; icon: string };
   members: readonly TaskMember[];
   people: readonly Person.Person[];
+  /** The agents the host can hand the task to, after the people; each item runs its own delegation. */
+  agents?: readonly MenuItem[];
   onChange: (assignee: Actor.Actor | null) => void;
   t: Translate;
 };
 
-/** Unassigned, the current assignee when no other option names it, the space's members, then contacts. */
+/**
+ * One picker for who holds the task: unassigned, the current assignee when no other option names it, the space's
+ * members and contacts, then a separator and the agents. Picking an agent delegates to it and keeps (or makes) the
+ * reader the assignee; picking a person is the caller's cue to take the task back from any agent.
+ */
 export const assigneeMenuActions = ({
   assignee,
   current,
+  delegate,
   members,
   people,
+  agents = [],
   onChange,
   t,
-}: AssigneeMenuOptions): MenuAction[] => [
+}: AssigneeMenuOptions): MenuItem[] => [
   createMenuAction('assignee-none', () => onChange(null), {
     label: t('assignee-none.label'),
     // The unset glyph, as the priority picker's `None` takes, so every option's label aligns.
@@ -121,4 +131,16 @@ export const assigneeMenuActions = ({
       checked: Task.refEntityId(assignee?.contact) === person.id,
     }),
   ),
+  ...(delegate || agents.length > 0 ? createLineSeparator('assignee-agents-separator').nodes : []),
+  ...(delegate
+    ? [
+        createMenuAction('assignee-delegate', () => {}, {
+          label: delegate.label ?? t('assignee-agent.label'),
+          icon: delegate.icon,
+          checked: true,
+          testId: 'taskList.assignee.delegate',
+        }),
+      ]
+    : []),
+  ...agents,
 ];

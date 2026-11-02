@@ -6,7 +6,7 @@ import React, { type ReactNode } from 'react';
 
 import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { ActionMenu, type MenuAction, createMenuAction } from '@dxos/react-ui-menu';
+import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -19,6 +19,7 @@ import { mx } from '@dxos/ui-theme';
 import { translationKey } from '#translations';
 
 import { useAssigneeDisplay } from '../../hooks/index.ts';
+import { UNASSIGNED_ICON } from '../../util/assignee.ts';
 import {
   type TaskMember,
   assigneeMenuActions,
@@ -28,7 +29,6 @@ import {
 } from '../../util/property-menus.ts';
 import {
   ESTIMATE_ICON,
-  UNSET_ICON,
   estimateTextStyle,
   priorityIcon,
   priorityTextStyle,
@@ -47,6 +47,8 @@ export type TaskPropertiesProps = Util.ThemedClassName<{
    * HALO, which this package does not depend on.
    */
   members?: readonly TaskMember[];
+  /** The agents the assignee picker can hand the task to, listed after the people. */
+  delegateActions?: MenuItem[];
   /** Absent renders the properties read-only, as the list's readonly cells do. */
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
 }>;
@@ -60,7 +62,13 @@ export type TaskPropertiesProps = Util.ThemedClassName<{
  * task and the room to say what the glyph means — and an unset field can then invite the value
  * ("Set estimate") instead of showing a dot that reads as a value of its own.
  */
-export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }: TaskPropertiesProps) => {
+export const TaskProperties = ({
+  task,
+  members = [],
+  delegateActions,
+  onTaskUpdate,
+  classNames,
+}: TaskPropertiesProps) => {
   const { t } = Hooks.useTranslation(translationKey);
   const [storedStatus] = useObject(task, 'status');
   const [storedPriority] = useObject(task, 'priority');
@@ -122,10 +130,15 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
           }
         />
 
+        {/* One row for who holds the task: the person who answers for it, badged by name with any agent at work. */}
         <TaskProperty
-          icon={assignee ? assigneeIcon : UNSET_ICON}
-          label={assigneeLabel ?? t('set-assignee.label')}
-          unset={!assignee}
+          icon={assignee ? assigneeIcon : delegate ? delegateIcon : UNASSIGNED_ICON}
+          label={
+            assignee && delegate
+              ? t('delegated.label', { assignee: assigneeLabel ?? '', delegate: delegateLabel ?? '' })
+              : ((assignee ? assigneeLabel : delegateLabel) ?? t('set-assignee.label'))
+          }
+          unset={!assignee && !delegate}
           testId='taskList.property.assignee'
           actions={
             onTaskUpdate &&
@@ -133,31 +146,16 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
               assigneeMenuActions({
                 assignee,
                 current: { label: assigneeLabel, icon: assigneeIcon },
+                delegate: delegate && { label: delegateLabel, icon: delegateIcon },
                 members,
                 people,
-                onChange: (assignee) => onTaskUpdate(task, { assignee }),
+                agents: delegateActions,
+                // A person picked takes the task back from any agent: the picker holds one answer to who has it.
+                onChange: (assignee) => onTaskUpdate(task, { assignee, ...(delegate && { delegate: null }) }),
                 t,
               }))
           }
         />
-
-        {/* Only while the work is handed over: an agent is delegated to from the task's actions, which start its run. */}
-        {delegate && (
-          <TaskProperty
-            icon={delegateIcon}
-            label={delegateLabel ?? t('assignee-agent.label')}
-            testId='taskList.property.delegate'
-            actions={
-              onTaskUpdate &&
-              (() => [
-                createMenuAction('delegate-none', () => onTaskUpdate(task, { delegate: null }), {
-                  label: t('delegate-none.label'),
-                  icon: UNSET_ICON,
-                }),
-              ])
-            }
-          />
-        )}
 
         <TaskProperty
           icon={priorityIcon(priority)}
@@ -172,7 +170,7 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
         />
 
         <TaskProperty
-          icon={estimate ? ESTIMATE_ICON : UNSET_ICON}
+          icon={ESTIMATE_ICON}
           iconClassNames={estimateTextStyle(estimate)}
           label={estimate ? estimate.toUpperCase() : t('set-estimate.label')}
           unset={!estimate}
@@ -197,7 +195,7 @@ type TaskPropertyProps = {
   unset?: boolean;
   testId: string;
   /** Absent renders the row as text — the readonly case, and the row is then not a button. */
-  actions?: () => MenuAction[];
+  actions?: () => MenuItem[];
 };
 
 const TaskProperty = ({ icon, iconClassNames, label, unset, testId, actions }: TaskPropertyProps) => {

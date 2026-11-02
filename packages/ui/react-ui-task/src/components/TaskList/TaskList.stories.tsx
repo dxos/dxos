@@ -551,6 +551,7 @@ const DefaultStory = ({
   showDescription = true,
   acceptFiles = false,
   members,
+  agents = false,
 }: {
   /**
    * The tasks to start from. A factory rather than a named fixture, so a story can compose its own
@@ -573,6 +574,8 @@ const DefaultStory = ({
   acceptFiles?: boolean;
   /** The space's members, offered by each row's assignee picker. */
   members?: readonly TaskMember[];
+  /** Offer an agent after the people in the assignee picker, as a host's delegation would. */
+  agents?: boolean;
 }) => {
   const [tasks, setTasks] = useState<Task.Task[]>(seed);
   // Stands in for the host's attach: the names of the files each create was handed.
@@ -621,11 +624,26 @@ const DefaultStory = ({
   }, []);
 
   const handleUpdate = useCallback((task: Task.Task, patch: Task.Edit) => {
-    Obj.update(task, (task) => {
-      Object.assign(task, patch);
-    });
+    // The host's write path, so a null clears the field as `Task.Edit` reads it.
+    Task.update(task, patch);
     setTasks((tasks) => [...tasks]);
   }, []);
+
+  // Stands in for a host's delegation: the agent takes the work and the reader answers for it, unless someone does.
+  const getDelegateActions = useCallback(
+    (task: Task.Task) => [
+      createMenuAction(
+        `delegate-${task.id}`,
+        () =>
+          handleUpdate(task, {
+            delegate: { role: 'assistant', name: 'Scout' },
+            ...(task.assignee === undefined && { assignee: { role: 'user', name: 'Riley' } }),
+          }),
+        { label: 'Scout', icon: 'ph--robot--regular', testId: 'story.delegate' },
+      ),
+    ],
+    [handleUpdate],
+  );
 
   const handleDelete = useCallback((task: Task.Task) => {
     setTasks((tasks) => tasks.filter(({ id }) => id !== task.id));
@@ -666,6 +684,7 @@ const DefaultStory = ({
       showDescription={showDescription}
       members={members}
       getTaskActions={readonly ? undefined : getTaskActions}
+      getDelegateActions={readonly || !agents ? undefined : getDelegateActions}
       onTaskCreate={readonly ? undefined : handleCreate}
       onTaskUpdate={readonly ? undefined : handleUpdate}
       checked={checked}
@@ -1226,6 +1245,32 @@ export const TestAssigneeControl: Story = {
 
     await waitFor(async () => expect(row.querySelector('[data-testid="taskList.item.assignee"]')).toBeTruthy());
     await expect(row.querySelector('[data-testid="taskList.item.assignee.unset"]')).toBeNull();
+  },
+};
+
+/** One picker holds who has the task: an agent below the people delegates, and a person picked takes it back. */
+export const TestDelegateFromAssignee: Story = {
+  args: {
+    showGroupLabels: false,
+    members: [{ did: 'did:key:riley', name: 'Riley' }],
+    agents: true,
+  },
+  play: async ({ canvasElement }) => {
+    const body = within(document.body);
+    const placeholders = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item.assignee.unset"]'));
+    await waitFor(async () => expect(placeholders().length).toBeGreaterThan(0));
+    const row = placeholders()[0].closest<HTMLElement>('[data-testid="taskList.item"]')!;
+
+    await userEvent.click(placeholders()[0]);
+    await userEvent.click(await body.findByTestId('story.delegate'));
+    await waitFor(async () => expect(row.querySelector('[data-testid="taskList.item.delegate"]')).toBeTruthy());
+
+    await userEvent.click(row.querySelector<HTMLElement>('[data-testid="taskList.item.assignee"]')!);
+    await expect(await body.findByTestId('taskList.assignee.delegate')).toBeTruthy();
+    await userEvent.click(await body.findByTestId('taskList.assignee.member'));
+    await waitFor(async () => expect(row.querySelector('[data-testid="taskList.item.delegate"]')).toBeNull());
+    await expect(row.querySelector('[data-testid="taskList.item.assignee"]')).toBeTruthy();
   },
 };
 

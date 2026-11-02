@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { ActionMenu, type MenuAction } from '@dxos/react-ui-menu';
+import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -107,7 +107,7 @@ type TaskPropertyChipProps = {
   /** No value yet: the chip names its field, muted, as an invitation rather than a value. */
   unset?: boolean;
   testId: string;
-  actions: () => MenuAction[];
+  actions: () => MenuItem[];
 };
 
 const TaskPropertyChip = ({ icon, iconClassNames, label, unset, testId, actions }: TaskPropertyChipProps) => (

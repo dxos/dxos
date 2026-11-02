@@ -146,6 +146,8 @@ type TaskListRootProps = PropsWithChildren<{
    * nothing — so delete is an ordinary contributed action rather than a special case of its own.
    */
   getTaskActions?: (task: Task.Task) => MenuItem[];
+  /** The agents a row's assignee picker can hand the task to, listed after the people. */
+  getDelegateActions?: (task: Task.Task) => MenuItem[];
   /**
    * Enables `Create`; called with a draft carrying at least the trimmed title, and the files dropped
    * on the create pane (`Editor`'s `acceptFiles`) for the host to store and attach once it exists.
@@ -209,6 +211,7 @@ const TaskListRoot = ({
   selectable: selectableProp,
   checked = EMPTY_IDS,
   getTaskActions,
+  getDelegateActions,
   onTaskCreate,
   onTaskUpdate,
   onTaskSelect,
@@ -299,6 +302,7 @@ const TaskListRoot = ({
       selected={selected}
       checked={checked}
       getTaskActions={getTaskActions}
+      getDelegateActions={getDelegateActions}
       onCollapseToggle={onCollapseToggle}
       onTaskCreate={onTaskCreate}
       onTaskUpdate={onTaskUpdate}
@@ -935,8 +939,9 @@ const TaskListAssigneeControl = ({
   delegate?: Actor.Actor;
 }) => {
   const { t } = Hooks.useTranslation(translationKey);
-  const { members, onTaskUpdate } = useTaskListContext('TaskList.AssigneeControl');
+  const { members, onTaskUpdate, getDelegateActions } = useTaskListContext('TaskList.AssigneeControl');
   const current = useAssigneeDisplay(assignee);
+  const worker = useAssigneeDisplay(delegate);
   if (!onTaskUpdate) {
     return assignee || delegate ? <TaskListAssignee assignee={assignee} delegate={delegate} iconOnly /> : null;
   }
@@ -949,9 +954,12 @@ const TaskListAssigneeControl = ({
         assigneeMenuActions({
           assignee,
           current,
+          delegate: delegate && worker,
           members,
           people: Obj.getDatabase(task)?.query(Filter.type(Person.Person)).runSync() ?? [],
-          onChange: (assignee) => onTaskUpdate(task, { assignee }),
+          agents: getDelegateActions?.(task),
+          // A person picked takes the task back from any agent: the picker holds one answer to who has it.
+          onChange: (assignee) => onTaskUpdate(task, { assignee, ...(delegate && { delegate: null }) }),
           t,
         })
       }

@@ -14,16 +14,28 @@ import { type Task } from '@dxos/types';
 
 import { TasksCapabilities } from '#types';
 
+const isDelegate = (action: TasksCapabilities.TaskAction) => action.group === TasksCapabilities.DELEGATE_GROUP;
+const isRowAction = (action: TasksCapabilities.TaskAction) => !isDelegate(action);
+
 /**
- * Builds a task row's menu items from every plugin that contributed a {@link TasksCapabilities.TaskAction}.
+ * Builds a task row's menu items from every plugin that contributed a {@link TasksCapabilities.TaskAction}, less the
+ * delegations, which the assignee picker lists instead (see {@link useDelegateActions}).
  *
  * Resolved here in a hook a container calls, never in the list itself: `react-ui-task` renders rows
  * and must not reach for capabilities or an invoker (a component that does throws outside a
  * `PluginManager`, so the list would stop working in a story).
  */
-export const useTaskActions = (): ((task: Task.Task) => MenuItem[]) => {
+export const useTaskActions = (): ((task: Task.Task) => MenuItem[]) => useActionItems(isRowAction);
+
+/** The agents a task can be handed to, as the assignee picker's items after the people. */
+export const useDelegateActions = (): ((task: Task.Task) => MenuItem[]) => useActionItems(isDelegate);
+
+const useActionItems = (
+  include: (action: TasksCapabilities.TaskAction) => boolean,
+): ((task: Task.Task) => MenuItem[]) => {
   const invoker = Hooks.useOperationInvoker();
-  const actions = Hooks.useCapabilities(TasksCapabilities.TaskAction);
+  const contributed = Hooks.useCapabilities(TasksCapabilities.TaskAction);
+  const actions = useMemo(() => contributed.filter(include), [contributed, include]);
   const unavailable = useAtomValue(
     useMemo(
       () => Atom.make((get) => actions.map((action) => action.unavailable && get(action.unavailable))),

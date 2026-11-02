@@ -45,6 +45,7 @@ import { meta } from '#meta';
 import { TaskOperation, TasksCapabilities, TaskSetView } from '#types';
 
 import {
+  useDelegateActions,
   useDescriptionComponents,
   useMarkdownExtensions,
   useTaskActions,
@@ -236,6 +237,7 @@ export const TaskSetArticle = ({
   // Delete is one item among the contributed ones, so a row has a single trailing affordance
   // whatever any plugin adds to it.
   const contributed = useTaskActions();
+  const getDelegateActions = useDelegateActions();
   const getTaskActions = useCallback(
     (task: Task.Task) => [
       createMenuAction(`add-sub-task-${task.id}`, () => handleAddSubTask(task), {
@@ -324,6 +326,7 @@ export const TaskSetArticle = ({
       collapsed={collapsed}
       selected={currentId}
       getTaskActions={getTaskActions}
+      getDelegateActions={getDelegateActions}
       onTaskCheck={onTaskCheck}
       onCollapsedChange={setCollapsed}
       onTaskCreate={handleCreate}

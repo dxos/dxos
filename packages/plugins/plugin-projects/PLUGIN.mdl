@@ -254,7 +254,9 @@ test QA-4: Plan a project and hand its tasks to an agent
         changes
     - name: Assign a task from its row
       do: Point at "Order green beans", click the assignee placeholder at the end of its row, and pick yourself.
-      expect: the row shows your avatar in place of the placeholder, and the task does not open
+      expect: |
+        the picker lists the people, then a separator and the agents. The row shows your avatar in place of the
+        placeholder, and the task does not open
     - name: A coding session takes a task
       do: |
         From a coding session connected over MCP, claim "Hire a roastery assistant" with `tasks-update`, passing
@@ -267,7 +269,7 @@ test QA-4: Plan a project and hand its tasks to an agent
         }
       expect: |
         the row shows you as its assignee with the agent badge on your avatar, and its status is Started. Opening the
-        task shows you as Assignee and the session as Delegate
+        task shows one Assignee row naming you, delegated to the session
       note: Without `assignee` the claim is refused, since no person would answer for the task.
     - name: Select tasks for the agent
       do: |
@@ -1266,4 +1268,22 @@ decision D-109: QA-4 assigns a task from its row's placeholder, has a coding ses
   for: user:wittjosiah
   affects: [F-4.7, QA-1, QA-2, QA-4]
   why: QA-4 walks a project's task list without a model, and both the row's assignee control and a session's claim work without one.
+```
+
+```mdl
+decision D-110: A task's assignee and its delegate are one picker, in the task row and in the task's properties: the people, then a separator and the agents. Picking an agent delegates the task to it and makes you the assignee.
+  date: 2026-11-02
+  by: user:wittjosiah
+  affects: [QA-4]
+```
+
+```mdl
+decision D-111: Picking a person in the assignee picker takes the task back from any agent, and No assignee clears both. An agent is listed by its name, with Default agent for the reader's default, and the task row's menu no longer offers delegation. Fills in [D-110].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-4]
+  why: The picker holds one answer to who has the task, so a person picked over an agent replaces it rather than sharing the task with it.
+  rejected:
+    - Keeping the delegate when a person is picked, which leaves an agent at work for someone who did not hand it the task.
 ```

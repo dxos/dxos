@@ -232,7 +232,7 @@ export const steps = [
         label: TASKS[2],
       });
       await page
-        .locator(`${COMPANION} [data-testid="taskList.property.delegate"]`)
+        .locator(`${COMPANION} [data-testid="taskList.property.assignee"]`, { hasText: 'delegated to' })
         .first()
         .waitFor({ state: 'visible', timeout: 10_000 });
       await page.waitForTimeout(BEAT * 2);

@@ -36,7 +36,6 @@ export const translations = [
         'assignee-none.label': 'Unassigned',
         'assignee-agent.label': 'Agent',
         'delegated.label': '{{assignee}}, delegated to {{delegate}}',
-        'delegate-none.label': 'Take back from agent',
         'estimate-none.label': 'None',
         'priority-low.label': 'Low',
         'priority-medium.label': 'Medium',

@@ -8,7 +8,7 @@ import { Obj } from '@dxos/echo';
 import { TaskList } from '@dxos/react-ui-task';
 import { type Task } from '@dxos/types';
 
-import { useTaskActions, useTaskUpdate } from '../../hooks/index.ts';
+import { useDelegateActions, useTaskActions, useTaskUpdate } from '../../hooks/index.ts';
 
 export type TaskRowProps = {
   subject: Task.Task;
@@ -21,6 +21,7 @@ export type TaskRowProps = {
 export const TaskRow = ({ subject: task }: TaskRowProps) => {
   const spaceId = Obj.getDatabase(task)?.spaceId;
   const getTaskActions = useTaskActions();
+  const getDelegateActions = useDelegateActions();
   const handleUpdate = useTaskUpdate(spaceId);
   const tasks = useMemo(() => [task], [task]);
 
@@ -32,6 +33,7 @@ export const TaskRow = ({ subject: task }: TaskRowProps) => {
       groupByStatus={false}
       showAssignees
       getTaskActions={getTaskActions}
+      getDelegateActions={getDelegateActions}
       onTaskUpdate={handleUpdate}
     >
       <TaskList.Content />

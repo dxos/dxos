@@ -22,7 +22,13 @@ import { Task } from '@dxos/types';
 
 import { TaskOperation } from '#types';
 
-import { useMarkdownExtensions, useTaskActions, useTaskMembers, useTaskUpdate } from '../../hooks/index.ts';
+import {
+  useDelegateActions,
+  useMarkdownExtensions,
+  useTaskActions,
+  useTaskMembers,
+  useTaskUpdate,
+} from '../../hooks/index.ts';
 import { TasksNamespace } from '../../namespace.ts';
 import { TaskArtifacts } from './TaskArtifacts.tsx';
 import { TaskAttachmentDropZone, TaskAttachments, useAttachFiles } from './TaskAttachments.tsx';
@@ -83,6 +89,8 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
   // snapshot in place of the live task.
   const [history] = useObject(task, 'history');
   const members = useTaskMembers(spaceId);
+  const getDelegateActions = useDelegateActions();
+  const delegateActions = useMemo(() => getDelegateActions(task), [getDelegateActions, task]);
 
   // Open questions only: an answered one is a line in the activity below.
   const openQuestions = useMemo(() => Task.getQuestions(history ?? []).filter(({ answer }) => !answer), [history]);
@@ -131,7 +139,12 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
                 {/* The task's own fields, under what it says: they are properties of the task, so
                   they read after the description rather than as chrome above it — and with the
                   room a pane has, each says what its glyph means. */}
-                <TaskProperties task={task} members={members} onTaskUpdate={handleUpdate} />
+                <TaskProperties
+                  task={task}
+                  members={members}
+                  delegateActions={delegateActions}
+                  onTaskUpdate={handleUpdate}
+                />
 
                 {/* Headed like the sections around it, and only when something is waiting: a
                   standing "Questions" label over nothing says the pane expects them, when what a
