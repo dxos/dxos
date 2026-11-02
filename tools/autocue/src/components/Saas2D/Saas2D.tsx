@@ -20,14 +20,17 @@ const FIXED: Record<string, number> = {
   'absorb': 9,
   'merge-1': 10,
   'saas-merge': 8,
-  'company-fills': 9,
+  'company-fills': 12,
 };
 
-/** Each scene's length in the voiced cut, which its keyframes are timed for; company-fills is timed in real seconds. */
-const AUTHORED: Record<string, number> = { ...holds, 'company-fills': 7 };
+/**
+ * Each scene's length in the voiced cut, which its keyframes are timed for; company-fills plays at the pace it had in
+ * 9 s and holds its last frame for the 3 s after.
+ */
+const AUTHORED: Record<string, number> = { ...holds, 'company-fills': (7 * 12) / 9 };
 
 /** The story's length; every scene gets an equal share of it. */
-export const SAAS2D_SECONDS = 90;
+export const SAAS2D_SECONDS = 93;
 
 /** Equal holds for every other scene; each plays its choreography, timed by the voice-over's holds, sped up to fit. */
 const UNIFORM: Record<string, number> = (() => {
