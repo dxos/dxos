@@ -13,6 +13,7 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
+import * as Layout from '@dxos/react-ui/Layout';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -168,10 +169,10 @@ export const AnySpec: Story = {
 /** The panel apart from the text, as the spec's companion shows it: a decision chip in the margin shows the decision. */
 export const Companion: Story = {
   render: () => (
-    <div className='grid grid-cols-2 h-full'>
+    <Layout.Grid classNames='grid-cols-2 h-full'>
       <SpecArticle role='article' attendableId='story' content={PLUGIN_CODE_MDL} panel={false} />
       <SpecPanel content={PLUGIN_CODE_MDL} />
-    </div>
+    </Layout.Grid>
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

@@ -150,12 +150,15 @@ describe('feature migrations', () => {
     const inbox = db.add(Spec.make({ name: 'Inbox' }));
     const text = 'Mail.\n\n```mdl\nfeat F-1: Sync\n  req F-1.1: Mail arrives within a minute.\n```\n\nMore prose.\n';
     Doc.updateText(await inbox.content.load(), 'content', text);
-    const sync = db.add(
-      Obj.make(LegacyFeature.FeatureV3, { name: 'Sync', status: 'planned', specs: ['packages/a/PLUGIN.mdl#F-1'] }),
+    db.add(
+      Obj.make(LegacyFeature.FeatureV3, {
+        [Obj.Parent]: inbox,
+        name: 'Sync',
+        status: 'planned',
+        specs: ['packages/a/PLUGIN.mdl#F-1'],
+      }),
     );
-    const archive = db.add(Obj.make(LegacyFeature.FeatureV3, { name: 'Archive', status: 'planned' }));
-    Obj.setParent(sync, inbox);
-    Obj.setParent(archive, inbox);
+    db.add(Obj.make(LegacyFeature.FeatureV3, { [Obj.Parent]: inbox, name: 'Archive', status: 'planned' }));
     await db.flush();
     await db.runMigrations([featureSources]);
 
@@ -193,8 +196,9 @@ describe('feature migrations', () => {
     const mail = db.add(Project.make({ name: 'Mail' }));
     const top = db.add(Obj.make(LegacySpec.Spec, { name: 'Inbox', features: [], project: Ref.make(inbox) }));
     const sync = db.add(Feature.make({ name: 'Sync', status: 'planned' }));
-    const breakdown = db.add(Obj.make(LegacySpec.Spec, { name: 'Sync', features: [], project: Ref.make(mail) }));
-    Obj.setParent(breakdown, sync);
+    const breakdown = db.add(
+      Obj.make(LegacySpec.Spec, { [Obj.Parent]: sync, name: 'Sync', features: [], project: Ref.make(mail) }),
+    );
     await db.flush();
     await db.runMigrations([makeSpecOwners()]);
 

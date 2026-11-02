@@ -36,27 +36,13 @@ const ADD_TEST_ID = 'feature-canvas.add';
 
 const sameCell = (left?: LatticeCell, right?: LatticeCell) => left?.col === right?.col && left?.row === right?.row;
 
-/**
- * A `+` in the empty cell under the pointer, which adds a feature there: a new one or an existing one. Drawn in scene
- * coordinates as the viewport's overlay; only the button takes the pointer, so empty cells still pan and select.
- */
-export const FeatureCanvasCells = ({ onCreate, onAdd, onPin }: FeatureCanvasCellsProps) => {
-  const { t } = UiHooks.useTranslation(CodeNamespace.key);
+/** The cell under the pointer, mapped from the pointer's position to the scene through a mark drawn at its origin. */
+const useHoveredCell = (consumerName: string) => {
   const registry = useContext(RegistryContext);
-  const { atoms, projection, readonly } = useCanvasServices(FeatureCanvasCells.displayName);
-  const { displayScene } = useCanvasGesture(FeatureCanvasCells.displayName);
-  const drag = useAtomValue(atoms.drag);
+  const { atoms, projection } = useCanvasServices(consumerName);
   const lattice = projection.lattice;
-  const occupied = useMemo(
-    () => (lattice ? occupancy(Object.values(displayScene.nodes), lattice) : new Map()),
-    [displayScene, lattice],
-  );
-
-  // The scene's origin on screen, from a mark drawn at it, so a pointer position maps to a cell.
   const origin = useRef<HTMLDivElement>(null);
   const [hovered, setHovered] = useState<LatticeCell>();
-  // The cell whose menu is open stays drawn after the pointer leaves for the menu, until the menu has closed.
-  const [open, setOpen] = useState<LatticeCell>();
   useEffect(() => {
     const view = origin.current?.closest<HTMLElement>('[data-testid="scene-view"]');
     if (!view || !lattice) {
@@ -64,7 +50,10 @@ export const FeatureCanvasCells = ({ onCreate, onAdd, onPin }: FeatureCanvasCell
     }
     const handleMove = (event: PointerEvent) => {
       // Over the button the pointer stays in its cell, whatever coordinates a synthetic event carries.
-      if (!origin.current || (event.target as Element | null)?.closest?.(`[data-testid="${ADD_TEST_ID}"]`)) {
+      if (
+        !origin.current ||
+        (event.target instanceof Element && event.target.closest(`[data-testid="${ADD_TEST_ID}"]`))
+      ) {
         return;
       }
       const { left, top } = origin.current.getBoundingClientRect();
@@ -86,6 +75,28 @@ export const FeatureCanvasCells = ({ onCreate, onAdd, onPin }: FeatureCanvasCell
       view.removeEventListener('pointerleave', handleLeave);
     };
   }, [registry, atoms, lattice]);
+
+  return { origin, hovered };
+};
+
+/**
+ * A `+` in the empty cell under the pointer, which adds a feature there: a new one or an existing one. Drawn in scene
+ * coordinates as the viewport's overlay; only the button takes the pointer, so empty cells still pan and select.
+ */
+export const FeatureCanvasCells = ({ onCreate, onAdd, onPin }: FeatureCanvasCellsProps) => {
+  const { t } = UiHooks.useTranslation(CodeNamespace.key);
+  const { atoms, projection, readonly } = useCanvasServices(FeatureCanvasCells.displayName);
+  const { displayScene } = useCanvasGesture(FeatureCanvasCells.displayName);
+  const drag = useAtomValue(atoms.drag);
+  const lattice = projection.lattice;
+  const occupied = useMemo(
+    () => (lattice ? occupancy(Object.values(displayScene.nodes), lattice) : new Map()),
+    [displayScene, lattice],
+  );
+
+  const { origin, hovered } = useHoveredCell(FeatureCanvasCells.displayName);
+  // The cell whose menu is open stays drawn after the pointer leaves for the menu, until the menu has closed.
+  const [open, setOpen] = useState<LatticeCell>();
 
   // Run once the menu has closed: Ark's menu returns focus to its trigger on close, which would take it from the
   // companion a new feature opens in, or from the dialog.
