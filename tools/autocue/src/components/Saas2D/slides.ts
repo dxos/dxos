@@ -524,7 +524,11 @@ type Conversation = {
   rows: [string, string][];
   appear: number;
   after: number;
-  thread: { who: string; bot?: boolean; color: string; text: string; target: string }[];
+  /** The object the conversation is about: `<space>-<index>`, where its link stays anchored. */
+  about: string;
+  thread: { who: string; bot?: boolean; color: string; text: string }[];
+  /** A document an agent creates as the thread ends: a new object beside the one the chat is about, linked to it. */
+  creates?: string;
 };
 
 const CONVERSATIONS: Conversation[] = [
@@ -540,23 +544,12 @@ const CONVERSATIONS: Conversation[] = [
     ],
     appear: 1.0,
     after: 1.1,
+    about: 'Company-2',
     thread: [
-      { who: 'Bob', color: PALETTE.pink, text: 'Looks good. Can it note the Auth dependency?', target: 'Company-2' },
-      {
-        who: 'Writer',
-        bot: true,
-        color: PALETTE.gold,
-        text: 'Added Auth as a linked task, due Thursday.',
-        target: 'Customers-4',
-      },
-      { who: 'Alice', color: '#5b8def', text: 'Share it with Sales before Friday.', target: 'Personal-1' },
-      {
-        who: 'Planner',
-        bot: true,
-        color: '#a07cf0',
-        text: 'Shared with Sales; review set for Friday.',
-        target: 'Company-5',
-      },
+      { who: 'Bob', color: PALETTE.pink, text: 'Looks good. Can it note the Auth dependency?' },
+      { who: 'Writer', bot: true, color: PALETTE.gold, text: 'Added Auth as a linked task, due Thursday.' },
+      { who: 'Alice', color: '#5b8def', text: 'Share it with Sales before Friday.' },
+      { who: 'Planner', bot: true, color: '#a07cf0', text: 'Shared with Sales; review set for Friday.' },
     ],
   },
   {
@@ -570,16 +563,25 @@ const CONVERSATIONS: Conversation[] = [
     ],
     appear: 2.6,
     after: 1.1,
+    about: 'Customers-1',
     thread: [
-      { who: 'Dana', color: '#4fc38a', text: 'Which launch items are blocked?', target: 'Customers-1' },
-      { who: 'Triage', bot: true, color: PALETTE.gold, text: 'Three, all waiting on Auth.', target: 'Company-7' },
-      { who: 'Dana', color: '#4fc38a', text: 'Can Auth move up a week?', target: 'Personal-3' },
+      { who: 'Dana', color: '#4fc38a', text: 'Which launch items are blocked?' },
+      { who: 'Triage', bot: true, color: PALETTE.gold, text: 'Three, all waiting on Auth.' },
+      { who: 'Dana', color: '#4fc38a', text: 'Draft an Auth plan and link it here.' },
+      { who: 'Triage', bot: true, color: PALETTE.gold, text: 'Done: Auth plan, linked to the checklist.' },
     ],
+    creates: 'Auth plan',
   },
 ];
 
-/** A conversation's card, and the link from the object its latest message is about to the card's edge. */
-const conversation = ({ id, y, type, title, rows, appear, after, thread }: Conversation, t: number): Prim[] => {
+/**
+ * A conversation's card, the link from the object it is about to the card's edge, and, where the thread creates a
+ * document, that object appearing beside the first and linked to it as the last message lands.
+ */
+const conversation = (
+  { id, y, type, title, rows, appear, after, about, thread, creates }: Conversation,
+  t: number,
+): Prim[] => {
   const prim = card(
     {
       id,
@@ -589,15 +591,11 @@ const conversation = ({ id, y, type, title, rows, appear, after, thread }: Conve
       title,
       accent: true,
       rows,
-      thread: thread.map(({ target: _target, ...message }, index) => ({
-        ...message,
-        at: appear + after * (index + 1),
-      })),
+      thread: thread.map((message, index) => ({ ...message, at: appear + after * (index + 1) })),
     },
     t,
     appear,
   );
-  const landed = thread.filter((_, index) => t >= appear + after * (index + 1)).length;
   const link: Prim = {
     kind: 'link',
     id: `card-link-${id}`,
@@ -605,12 +603,39 @@ const conversation = ({ id, y, type, title, rows, appear, after, thread }: Conve
     y1: 0,
     x2: 1460,
     y2: y + 70,
-    a: `node:sub-${thread[Math.max(0, landed - 1)].target}`,
+    a: `node:sub-${about}`,
     screen2: true,
     hot: true,
     opacity: prim.opacity,
   };
-  return [link, prim];
+  if (!creates) {
+    return [link, prim];
+  }
+  const [space, index] = about.split('-');
+  const { at: centre } = SPACES.find((candidate) => candidate.id === space) ?? COMPANY_SPACE;
+  const [x, y0] = SPACE_OBJECTS[space][Number(index)];
+  // Out from the space's centre and a turn to the side, so the new document sits beside the object, off the card's link.
+  const [nx, ny] = polar(x, y0, 7, Math.atan2(y0 - centre[1], x - centre[0]) + 1.1);
+  const born = ramp(t, appear + after * thread.length, 0.6);
+  const created: Prim[] = [
+    {
+      kind: 'node',
+      id: `created-${id}`,
+      x: nx,
+      y: ny,
+      r: 2.2 * born,
+      role: 'data',
+      glow: 0.6,
+      opacity: born,
+      parent: `body:space-${space}`,
+    },
+    edge(`created-link-${id}`, `node:sub-${about}`, `node:created-${id}`, {
+      hot: true,
+      opacity: born,
+      parent: `body:space-${space}`,
+    }),
+  ];
+  return [link, prim, ...created];
 };
 
 const objectCards = (t: number): CardPrim[] => [
