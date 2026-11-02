@@ -11,8 +11,8 @@ import { FONTS } from './tokens.ts';
 /** The story's chapters, each a run of scenes; the chip in the corner names the one playing. */
 const CHAPTERS: { title: string; scenes: string[] }[] = [
   { title: 'SaaS', scenes: ['beginning', 'silo', 'silo-comms'] },
-  { title: 'Scale', scenes: ['scale', 'competitors', 'spread', 'spread-comms'] },
-  { title: 'AI', scenes: ['frontier', 'frontier-comms', 'orbit', 'absorb'] },
+  { title: 'Silos', scenes: ['scale', 'competitors', 'spread', 'spread-comms'] },
+  { title: 'Agents', scenes: ['frontier', 'frontier-comms', 'orbit', 'absorb'] },
   { title: 'Consolidation', scenes: ['rivals', 'merge-1', 'final-frontier', 'engulf'] },
   { title: 'The Alternative', scenes: ['dont-panic', 'spread-again'] },
   { title: 'ECHO', scenes: ['echo-hub', 'echo-spaces'] },

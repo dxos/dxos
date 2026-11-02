@@ -78,7 +78,7 @@ Cut 3 of NARRATIVE-SAAS2D.md: a lecture on the dynamics, nobody acts badly, ever
 
 ## 19. Your data, in ECHO (`#echo-hub`)
 
-- That takes a new kind of database.
+- That requires a new kind of database.
 
 ## 20. The ECHO hypergraph (`#echo-spaces`)
 
@@ -86,7 +86,7 @@ Cut 3 of NARRATIVE-SAAS2D.md: a lecture on the dynamics, nobody acts badly, ever
 
 ## 21. A graph of objects (`#objects`)
 
-- ECHO is that database.
+- ECHO is that agent-native database.
 
 ## 24. Work that builds on itself (`#object-created`)
 

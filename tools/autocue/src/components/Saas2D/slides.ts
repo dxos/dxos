@@ -895,7 +895,8 @@ export const slides = (holds: Record<string, number>): Slide[] => {
               y: 0,
               text: 'Welcome to the Singularity',
               size: 80,
-              opacity: ramp(t, 8.5, 1.0),
+              // Authored over 12 s and played in 3, so 2 s here is half a second on screen.
+              opacity: ramp(t, 6.5, 1.0),
             } satisfies Prim,
           ].map((prim): Prim => ({ ...prim, exit: 'fade' })),
         );
