@@ -125,7 +125,7 @@ export const steps = [
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'Open the workspace', subtitle: SOURCE });
       await expand(page, '/content/org.dxos.type.cloudflareOs.workspace');
-      await demo.click({ selector: `${treeRow('')}[data-object-id*="cloudflareOs.workspace/"]`, label: 'Composer' });
+      await demo.click({ selector: '[data-tree-row][data-object-id*="cloudflareOs.workspace/"]', label: 'Composer' });
       await page.getByText('This workspace has no gadgets yet').first().waitFor({ state: 'visible', timeout: 30_000 });
       await page.waitForTimeout(BEAT);
     },
