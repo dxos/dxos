@@ -137,9 +137,16 @@ const flow = (
 
 const tenantAngle = (index: number) => Math.PI + ((index - YOURS) / TENANTS) * TAU;
 
+/** The vendor's data dot at a company's angle: the company's own data, held by the vendor. */
+const tenantData = (index: number) => {
+  const dot = Math.round((((index - YOURS + TENANTS) % TENANTS) / TENANTS) * VENDOR_DATA) % VENDOR_DATA;
+  return dot === 0 ? 'node:data-org' : `node:data-${dot}`;
+};
+
 /**
  * Every company as a ring around a holder (a vendor or a lab), linked to it; your company sits on the left. Companies
- * that appear grow out of yours: they are companies like yours.
+ * that appear grow out of yours (companies like yours), or, with `fromData`, out of their data in the vendor's ring once
+ * it has formed (`delay`).
  */
 const tenantRing = (
   cx: number,
@@ -152,7 +159,16 @@ const tenantRing = (
     labels = true,
     spin = 0,
     fade = 1,
-  }: { holder: string; flows?: boolean; t?: number; labels?: boolean; spin?: number; fade?: number },
+    fromData,
+  }: {
+    holder: string;
+    flows?: boolean;
+    t?: number;
+    labels?: boolean;
+    spin?: number;
+    fade?: number;
+    fromData?: { delay: number };
+  },
 ): Prim[] => {
   const prims: Prim[] = [];
   for (let index = 0; index < TENANTS; index++) {
@@ -170,7 +186,7 @@ const tenantRing = (
         color: TENANT_COLOR,
         glow: -0.2,
         opacity: fade,
-        from: 'body:org',
+        ...(fromData ? { from: tenantData(index), delay: fromData.delay } : { from: 'body:org' }),
       });
     }
     prims.push(edge(`tenant-link-${index}`, tenant, holder, { opacity: 0.6, parent: tenant }));
@@ -816,7 +832,7 @@ const scale = (t: number, flows: boolean): Prim[] => {
     { kind: 'node', id: 'metadata', x: 0, y: 0, r: 100, role: 'lab', glow: 0.3, parent: 'body:vendor' },
     label('metadata-label', 0, 0, '“Metadata”', { size: 28, parent: 'node:metadata' }),
     label('vendor-label', 0, -258, 'SaaS', { size: 30, parent: 'body:vendor' }),
-    ...tenantRing(0, 0, 400, { holder: 'body:vendor', flows, t }),
+    ...tenantRing(0, 0, 400, { holder: 'body:vendor', flows, t, fromData: { delay: 1.2 } }),
   ];
   // Every company's data, held in a ring inside the vendor; yours is on the left, nearest your company.
   for (let index = 0; index < VENDOR_DATA; index++) {

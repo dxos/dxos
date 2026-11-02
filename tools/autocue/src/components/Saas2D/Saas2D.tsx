@@ -3,10 +3,10 @@
 //
 
 import React, { useMemo } from 'react';
-import { AbsoluteFill, useCurrentFrame, useVideoConfig } from 'remotion';
+import { AbsoluteFill, type CalculateMetadataFunction, useCurrentFrame, useVideoConfig } from 'remotion';
 
 import holds from '../../../showcase/echo3d/voice/holds-fry-short.json';
-import { type CardPrim, LAYERS, type Prim, frameAt, place } from './engine.ts';
+import { type CardPrim, LAYERS, type Placed, type Prim, frameAt, place } from './engine.ts';
 import { loadNeuFonts } from './fonts.ts';
 import { slides } from './slides.ts';
 import { Background, Card, Defs, Grain, HEIGHT, SvgPrim, WIDTH } from './theme.tsx';
@@ -21,6 +21,8 @@ const isCard = (prim: Prim): prim is CardPrim => prim.kind === 'card';
 export type Saas2DProps = {
   /** Plays only these slides, with these holds (seconds), instead of the whole story: a test of one transition. */
   test?: Record<string, number>;
+  /** Flat shapes with the current scene and time over them: no filters or grain, so a render to review motion is fast. */
+  draft?: boolean;
 };
 
 /** The opening of the story up to the spread, short holds around its cuts: a test of those transitions. */
@@ -33,8 +35,25 @@ export const MORPH_TEST: Record<string, number> = {
   'spread': 5,
 };
 
+/** Sizes a composition to the slides it plays; a draft runs at 30 fps, which is enough to judge motion. */
+export const saas2dMetadata: CalculateMetadataFunction<Saas2DProps> = ({ props }) => {
+  const fps = props.draft ? 30 : 60;
+  const seconds = Object.values(props.test ?? holds).reduce((sum, hold) => sum + hold, 0);
+  return { fps, durationInFrames: Math.round(seconds * fps) };
+};
+
+/** The scene playing and the time, in the story and in the scene. */
+const DraftClock = ({ timeline, seconds }: { timeline: Placed[]; seconds: number }) => {
+  const current = timeline.findLast((placed) => placed.start <= seconds) ?? timeline[0];
+  return (
+    <div style={{ position: 'absolute', left: 24, top: 16, font: '500 28px monospace', color: '#fff', opacity: 0.8 }}>
+      {seconds.toFixed(2)}s · {current.slide.id} +{(seconds - current.start).toFixed(2)}s
+    </div>
+  );
+};
+
 /** The SaaS story in neu-dark 2D, timed to the short Fry cut of the echo3d presentation. */
-export const Saas2D = ({ test }: Saas2DProps) => {
+export const Saas2D = ({ test, draft }: Saas2DProps) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const timeline = useMemo(() => {
@@ -44,7 +63,8 @@ export const Saas2D = ({ test }: Saas2DProps) => {
       timing,
     );
   }, [test]);
-  const { camera, prims } = frameAt(timeline, frame / fps);
+  const seconds = frame / fps;
+  const { camera, prims } = frameAt(timeline, seconds);
   const visible = prims.filter((prim) => (prim.opacity ?? 1) > 0.002);
   const ordered = LAYERS.flatMap((kind) => visible.filter((prim) => prim.kind === kind));
   return (
@@ -52,6 +72,8 @@ export const Saas2D = ({ test }: Saas2DProps) => {
       <Background />
       <svg width={WIDTH} height={HEIGHT} viewBox={`0 0 ${WIDTH} ${HEIGHT}`} style={{ position: 'absolute', inset: 0 }}>
         <Defs />
+        {/* The CSS property overrides every `filter` attribute, which is where nearly all of a frame's render time goes. */}
+        {draft && <style>{'* { filter: none !important; }'}</style>}
         {ordered.map((prim) => (
           <SvgPrim key={`${prim.kind}:${prim.id}`} prim={prim} camera={camera} />
         ))}
@@ -59,7 +81,7 @@ export const Saas2D = ({ test }: Saas2DProps) => {
       {visible.filter(isCard).map((prim) => (
         <Card key={prim.id} prim={prim} />
       ))}
-      <Grain />
+      {draft ? <DraftClock timeline={timeline} seconds={seconds} /> : <Grain />}
     </AbsoluteFill>
   );
 };

@@ -11,7 +11,7 @@ import { type Role } from './tokens.ts';
 type Base = {
   id: string;
   opacity?: number;
-  /** Seconds after the slide starts before an entering primitive begins to fade in. */
+  /** Seconds after the slide starts before an entering primitive begins to fade in; it still arrives as the cut ends. */
   delay?: number;
   screen?: boolean;
   /**
@@ -293,6 +293,11 @@ export const mix = (from: Frame, to: Frame, t: number, seconds: number): Frame =
     if (source) {
       return anchor(source);
     }
+    // A source that enters with this element is where it emerges once that source is in place (with a `delay`).
+    const sibling = prim.from ? after.get(prim.from) : undefined;
+    if (sibling) {
+      return anchor(sibling);
+    }
     if (!prim.parent || depth > 8) {
       return undefined;
     }
@@ -307,7 +312,7 @@ export const mix = (from: Frame, to: Frame, t: number, seconds: number): Frame =
   const prims: Prim[] = [];
   for (const prim of to.prims) {
     const previous = before.get(key(prim));
-    const own = curve((t - (prim.delay ?? 0)) / seconds);
+    const own = curve((t - (prim.delay ?? 0)) / (seconds - (prim.delay ?? 0)));
     if (previous) {
       prims.push(blend(previous, prim, own));
       continue;
