@@ -15,7 +15,7 @@ export default defineConfig({
     operations: 'src/operations/index.ts',
     testing: 'src/testing.ts',
     translations: 'src/translations.ts',
-    MapRole: 'src/types/MapRole.ts',
+    MapSurface: 'src/types/MapSurface.ts',
     Map: 'src/types/Map.ts',
     MapAction: 'src/types/MapAction.ts',
     MapCapabilities: 'src/types/MapCapabilities.ts',

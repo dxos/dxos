@@ -5,14 +5,16 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useEffect, useState } from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
+import * as Spec from '@dxos/compute/Spec';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
+import * as Layout from '@dxos/react-ui/Layout';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
-import { SpecDocument } from '@dxos/types';
 
 import { translations } from '#translations';
 
@@ -24,15 +26,16 @@ import PLUGIN_CODE_MDL from '../../../PLUGIN.mdl?raw';
 import { useSpecTexts } from '../../testing/index.ts';
 import PLUGIN_CODE_BASE_MDL from './__fixtures__/plugin-code.base.mdl?raw';
 import { SpecArticle } from './SpecArticle.tsx';
+import { SpecPanel } from './SpecPanel.tsx';
 
 const DefaultStory = ({ content }: { content?: string }) => {
   const spaces = useSpaces();
   const space = spaces[0];
-  const [spec, setSpec] = useState<SpecDocument.SpecDocument | undefined>();
+  const [spec, setSpec] = useState<Spec.Spec | undefined>();
 
   useEffect(() => {
     if (space && !spec) {
-      setSpec(space.db.add(SpecDocument.make({ content })));
+      setSpec(space.db.add(Spec.make({ name: 'Example spec', content })));
     }
   }, [space, content, spec]);
 
@@ -40,7 +43,8 @@ const DefaultStory = ({ content }: { content?: string }) => {
     return <Loading />;
   }
 
-  return <SpecArticle role='article' subject={spec} attendableId='story' />;
+  // Storybook has no companion, so the panel shows beside the text.
+  return <SpecArticle role='article' subject={spec} attendableId='story' panel />;
 };
 
 const meta = {
@@ -56,7 +60,7 @@ const meta = {
       plugins: [
         ...CorePlugins.make(),
         ClientPlugin.make({
-          types: [SpecDocument.SpecDocument],
+          types: [Spec.Spec],
           onClientInitialized: ({ client }) => initializeIdentity(client).pipe(Effect.asVoid),
         }),
       ],
@@ -158,6 +162,26 @@ export const AnySpec: Story = {
       <SpecTabStory tab={tab} />
     ) : (
       <SpecArticle role='article' attendableId='story' content={PLUGIN_CODE_MDL} />
+    );
+  },
+};
+
+/** The panel apart from the text, as the spec's companion shows it: a decision chip in the margin shows the decision. */
+export const Companion: Story = {
+  render: () => (
+    <Layout.Grid classNames='grid-cols-2 h-full'>
+      <SpecArticle role='article' attendableId='story' content={PLUGIN_CODE_MDL} panel={false} />
+      <SpecPanel content={PLUGIN_CODE_MDL} />
+    </Layout.Grid>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const chips = await waitFor(() => canvas.getAllByTestId('spec-changelog.gutter-chip'), { timeout: 10_000 });
+    await userEvent.click(chips[0]);
+    await waitFor(() =>
+      expect(canvasElement.querySelector('[data-testid="spec-article.panel"]')?.getAttribute('data-view')).toMatch(
+        /^(decisions|log)$/,
+      ),
     );
   },
 };

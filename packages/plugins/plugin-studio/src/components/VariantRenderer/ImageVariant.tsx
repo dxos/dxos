@@ -6,15 +6,15 @@ import React from 'react';
 
 import * as Media from '@dxos/react-ui/Media';
 
-import { type VariantContent } from '#surfaces';
+import { type StudioSurface } from '#types';
 
 import { useVariantSource } from '../../hooks/useVariantSource.ts';
 
 export type ImageVariantProps = {
-  variant: VariantContent;
+  variant: StudioSurface.VariantContent;
 };
 
-/** Default `VariantRenderer` for `image/*`: the react-ui {@link MediaPlayer} (an `<img>` for image
+/** Default `StudioSurface.VariantRenderer` for `image/*`: the react-ui {@link MediaPlayer} (an `<img>` for image
  * URLs) resolved from the variant's url/content, contained within the pane. */
 export const ImageVariant = ({ variant }: ImageVariantProps) => {
   const src = useVariantSource(variant);

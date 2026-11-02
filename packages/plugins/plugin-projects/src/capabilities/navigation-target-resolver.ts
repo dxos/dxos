@@ -13,8 +13,8 @@ import { Database, Entity, Obj } from '@dxos/echo';
 import { DXN, EID } from '@dxos/keys';
 import * as Position from '@dxos/util/Position';
 
+import { artifacts } from '../artifacts.ts';
 import { getProjectArtifactPath, getProjectChatPath } from '../paths.ts';
-import { artifacts } from './app-graph-builder.ts';
 
 /**
  * Places a project's chats on its Chats branch and the artifacts it is parent of on its Artifacts
