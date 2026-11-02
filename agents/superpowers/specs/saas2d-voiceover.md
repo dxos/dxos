@@ -9,75 +9,95 @@ is [`saas2d-script-review.md`](saas2d-script-review.md).
 
 ## Narrative
 
-The story told in full, with no time limit, in the register of one senior engineer explaining it to another. Every
-timed track is a cut of this; the six tracks above it in the table were written before it and read as pitches, which
-is why it exists. Claims are held to the fact sheet below; the ECHO description uses the safe wording pending the
-user's ruling on "semantic graph database; the first agent-native database".
+The story told in full, with no time limit, as a lecture on the business dynamics: what SaaS did, what that led to and
+why, why AI breaks it, and what the alternative is. Nobody in it acts badly; every consequence follows from the
+architecture. Every timed track is a cut of this. Two claims below come from the user and are outside the fact sheet's
+verified set: that a company can run EDGE in its own Cloudflare account, and that Composer is the first enterprise
+superapp.
 
-Software as a service changed how companies buy software. Before it, a company installed what it bought and ran it on
-its own machines, and the data lived wherever the company put it. Now the vendor runs the software and the company
-rents access to it. The gains were real: nothing to install, nothing to upgrade, a product that improves while it is in
-use, and one vendor able to serve millions of customers from a single codebase. That is why it won.
+### The first revolution
 
-But each vendor runs one product, and each product keeps its own copy of the part of the company it touches. Customer
-records sit in the CRM. Conversations sit in the chat tool. Documents sit in the document tool, tickets in the
-ticketing tool, code in the code host, plans in the planning tool. A mid-sized company uses dozens of these and a large
-one uses hundreds, and none of them was built to share. Each stores the company's data in its own shape, behind its
-own API, on its own terms. The data a company produces about itself ends up spread across vendors it does not control,
-in formats it did not choose, exportable only as far as each vendor allows. The usual words for this are silos and
-fragmentation, and underneath them is lock-in: leaving a product means leaving behind the history held inside it.
+Software as a service revolutionized the software industry. The important thing it changed was the economics. One
+vendor runs one codebase for millions of customers, so the cost of every feature, every fix and every server is spread
+across all of them, and a company can adopt a product in an afternoon instead of a procurement cycle. Buyers gained
+speed and vendors gained scale, and nothing visible was lost. That is why it won everywhere.
 
-For a long time this was a cost companies simply absorbed. People were the integration layer. Someone copied the figure
-from one tool into another, or knew which system held the answer, or kept the spreadsheet that joined what the tools
-would not.
+Two consequences followed from that economics, and both were structural rather than anyone's intent.
 
-Agents change the arithmetic. An agent is useful in proportion to what it can see and act on. An agent that can read
-the ticket but not the customer record, or the document but not the conversation that produced it, does part of a job.
-To do the whole job it needs access to everything the person doing that job would have had, and the company's
-everything is scattered across those dozens of vendors. Each integration an agent needs is a separate negotiation with
-a separate silo: another API, another permission model, another export format, another place where the agent's own
-output is written and held. The fragmentation that was a nuisance for people is a wall for agents.
+The first is specialization. A vendor serving millions wins by being the best at one job, so the market organized
+itself around best-of-breed products, each excellent at its slice: one for customer records, one for conversations, one
+for documents, one for tickets, one for code, one for plans. A company assembles its operation from dozens of them, a
+large company from hundreds. Each product must hold the data for its job in order to do that job, so the company's data
+is partitioned by vendor, in each vendor's shape, behind each vendor's API. Integration is left to the buyer. It is
+never any vendor's core product, so it is always a step behind, and in practice people are the integration layer: the
+person who copies the figure across, who knows which system holds the answer, who keeps the spreadsheet that joins what
+the tools do not. The words for this condition are silos and fragmentation.
 
-At the same time, the other end of the stack is consolidating. Training a frontier model costs billions, and only a
-few organizations can carry that. The field is winnowing. The labs that remain are not content to sell tokens; each is
-building a platform, with the model, the agents, the tools the agents use, the memory they keep and the surfaces people
-reach them through, and each would like a company's work to happen inside it. A company that moves its work into one
-of those platforms solves its fragmentation problem by handing everything to a single vendor whose model it does not
-control, whose prices it does not set and whose roadmap it does not vote on. That is a different kind of dependence,
-and a deeper one, because this time the vendor also holds the reasoning.
+The second is lock-in, and it is a consequence of the architecture rather than a strategy. The data accumulates inside
+the product in the product's own shape, and the cost of leaving grows with every day of use, because leaving means
+leaving the history behind. A vendor's position is defended not by its features, which competitors can copy, but by
+the data it holds, which they cannot. The data is held captive by the design, and the design was chosen for good
+reasons.
 
-So a company faces two poor outcomes: stay fragmented across dozens of products and watch its agents work half-blind,
-or consolidate into one frontier platform and become a tenant of it.
+That is the equilibrium the industry reached: dozens of silos, each individually excellent, collectively fragmented,
+with a company's complete picture of itself existing nowhere. For as long as the user of software was a person, this
+was a cost worth paying.
 
-There is a third path, and it starts from an observation: the models are becoming interchangeable. What differs between
-them is shrinking, and what a company asks of them, read this, decide that, write it back, is the same request to any
-of them. The scarce thing is not the model. The scarce thing is the company's own data, in one place, in a shape an
-agent can work with, under the company's own control. A company that holds that can use any model and switch when a
-better or cheaper one appears. A company that does not hold it belongs to whoever does.
+### The second revolution
 
-That is what DXOS is for.
+The driver of change is AI, and specifically agents, and the architecture above is the wrong one for them.
 
-ECHO is a database for exactly this data: a graph of typed objects and the relations between them. A person, a
-document, the conversation about it and the task it produced are each a real object with a schema, each linked to the
-others. It is not a copy of the company's data pulled out of its SaaS products into a warehouse to be queried later;
-it is the live working copy, the thing the apps read and write. It is local-first, so a device holds its own copy,
-works offline, and reconciles when it reconnects. Access is organized in spaces: a space is the unit of membership, so
-who can see and change what is a property of the data rather than a setting in each app. Spaces replicate peer to peer
-and through EDGE, which runs on Cloudflare Workers and Durable Objects, with R2 for storage and Workers AI for
-inference available to the same code. Identity is HALO; an agent holds an identity of its own and is admitted to a
-space like any other member.
+A SaaS product is built around a person in a session: a user interface, a login, a permission model about who may
+click what. The API is a secondary surface added so that other products can be bolted on. An agent is not a user of a
+product. It is a worker on a job, and a job cuts across products. To decide whether to escalate a ticket, an agent
+needs the ticket, the customer's record, the contract, the conversation last week and the engineer's plan for the fix,
+in a single step of reasoning. The value an agent produces is in those joins, and the joins are exactly what no vendor
+holds, because each holds only its own slice. Agents need access to everything to realize their full potential, and
+under this architecture, everything is in dozens of places, each with its own API, its own permission model and its
+own rate limit, and whatever the agent produces lands back in one of the silos. Each vendor's answer, an assistant of
+its own inside its own product, reproduces the fragmentation one level up: a dozen agents, each seeing a twelfth.
 
-Composer is the framework on top: apps and agents built as plugins over the same objects. A document, a mailbox, a task
-board and a meeting transcript are all objects in a space, and an agent in that space sees the same graph the people
-see and writes its results back into it, where the next person or agent picks them up. Models plug in underneath. The
-agent's identity, memory and permissions live in the space, not in a model vendor's account, so changing the model
-moves nothing else.
+It will get worse before it gets better, because AI is the second revolution, and it is as complete as the first. SaaS
+displaced installed software by changing who ran it. Agents displace the application itself by changing who uses it.
+When the work is done by an agent, the interface a vendor spent a decade refining is no longer the point; the data and
+the model are. Every SaaS vendor is exposed, and the organizations positioned to replace them are the few that can
+train frontier models, because that is a game very few can afford to play. Each of them is building a platform rather
+than a model: the model, the agents, their tools, their memory and the surfaces people reach them through, so that a
+company's work can move inside. For a company this looks like the cure for fragmentation, and it is, by consolidation:
+all of the data, all of the agents and all of the reasoning with one vendor whose model, prices and roadmap the company
+does not control. That is a deeper lock-in than SaaS ever produced, and companies are walking into it for the same
+reason they walked into the last one.
 
-The outcome for a company is not that it buys less software. It is that its data stops being a side-effect of the
-software it rents and becomes the thing its software is built around. The silos collapse into one graph. Agents get
-access to everything, because everything is in one place and the permissions travel with it. The frontier labs become
-suppliers of a component rather than landlords of the business. Control comes back to the company, and with it the
-freedom to build whatever it wants on top of its own data.
+### The alternative
+
+There is an alternative, and it rests on an inversion of control. Under SaaS the application owns the data and the
+company reaches in. Invert it: the company owns the data, and applications and agents reach in. That is a simple
+sentence and a hard architecture, because the thing at the centre has to be a database of an unusual kind.
+
+It has to be distributed, with copies on every device and at the edge, so nothing depends on a single vendor's
+servers. It has to be a graph, with relations as first-class data, so that the joins an agent needs live in the data
+rather than in integration code. It has to be typed, so that people, apps and agents agree on what an object means. It
+has to carry permissions in the data itself, so that access is a property of the object and not a setting in each app.
+And it has to treat an agent as a member, with an identity of its own, reading and writing the same objects as the
+people and reacting when they change, rather than as an external caller of an API.
+
+ECHO is that database: a distributed graph database, and the first built for agents from the start rather than opened
+to them afterwards. Its objects are typed and related; its unit of access is the space, which is also its unit of
+replication, so who can see what travels with the data; it is local-first, so every copy works offline and reconciles
+on reconnection; and an agent holds a HALO identity and joins a space like any other member. It replicates peer to
+peer and through EDGE, which runs on Cloudflare Workers and Durable Objects with R2 for storage and Workers AI for
+inference, in the company's own Cloudflare account, so the stack that holds the company's data is the company's.
+
+Composer is what runs on it: the first enterprise superapp, an extensible framework for building agent-assisted
+applications. Documents, mail, tasks, meetings and the agents that work on them are plugins over one graph. An agent
+in a space sees the same objects the people see and writes its results back where the next person or agent picks them
+up. Models plug in underneath and are interchangeable; the agent's identity, memory and permissions live in the space,
+so changing the model moves nothing else.
+
+The result is the inversion made concrete. The silos collapse into one graph. Agents get access to everything, because
+everything is in one place and the permissions travel with it. The frontier labs become suppliers of a component rather
+than landlords of the business. Control returns to the company, and with it the freedom to build whatever it wants on
+its own data.
 
 This is DXOS. Your team. Your apps. Your data.
 
