@@ -31,7 +31,7 @@ describe('IllustratorPlugin in workerd', () => {
   });
 
   test('loads the SVG variant without its surfaces', async ({ expect }) => {
-    const module = await import('#svg-variant');
+    const module = await import('./capabilities/svg-variant.node.ts');
     expect(module.default).toBeDefined();
   });
 
