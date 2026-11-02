@@ -3,6 +3,7 @@
 //
 
 import { type Page } from '@playwright/test';
+import { createHash } from 'node:crypto';
 import { statSync } from 'node:fs';
 
 import { BASE_URL, defineScenario, invokeInPage, waitForReady } from '../perf/scenario.ts';
@@ -44,6 +45,12 @@ const DEFAULT_BRANCH = 'content/collections';
  * collection by default; `ai/org.dxos.type.project` for the Projects section.
  */
 const BRANCH = process.env.DX_PERF_OBJECT_BRANCH ?? DEFAULT_BRANCH;
+
+/** The branch as a series label: one holding an object or space id is named by a hash, so the id is never published. */
+const branchLabel = (branch: string): string =>
+  branch.split('/').some((segment) => /^[0-9A-Z]{26,}$/.test(segment))
+    ? createHash('sha256').update(branch).digest('hex').slice(0, 12)
+    : branch;
 
 /** Passes over the objects (`DX_PERF_OBJECT_PASSES`): `cold`, `warm`, then `warm3`, `warm4`… to show a trend. */
 const PASSES = Array.from({ length: positiveInt('DX_PERF_OBJECT_PASSES', 2) }, (_, index) =>
@@ -126,7 +133,7 @@ defineScenario({
   scale: [
     ARCHIVE ? `archive=${Math.round(statSync(ARCHIVE).size / 1e6)}MB` : seedLabel(SEEDED_DOCUMENTS),
     `objects=${OBJECTS}`,
-    ...(BRANCH === DEFAULT_BRANCH ? [] : [`branch=${BRANCH}`]),
+    ...(BRANCH === DEFAULT_BRANCH ? [] : [`branch=${branchLabel(BRANCH)}`]),
   ].join(','),
   timeoutMs: 30 * 60_000 + PASSES.length * OBJECTS * STAGE_MS,
   privateData: ARCHIVE !== undefined,
