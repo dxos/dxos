@@ -9,7 +9,6 @@ import type { ComponentType, ReactNode } from 'react';
 
 import * as Role from '@dxos/app-framework/Role';
 import type * as Surface from '@dxos/app-framework/Surface';
-import * as SurfaceFilter from '@dxos/app-framework/SurfaceFilter';
 import { Entity, Obj, type Ref, Type } from '@dxos/echo';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { log } from '@dxos/log';
@@ -129,7 +128,7 @@ export const object: {
     }
     return predicate ? predicate(data) : true;
   };
-  return SurfaceFilter.makeFilter(token, guard);
+  return { bindings: [{ role: token.role, guard }] };
 };
 
 /**
@@ -659,17 +658,21 @@ export type FormInputData = {
 /** Role token for the `formInput` role (was `form-input`). */
 export const FormInput: Role.Role<FormInputData> = Role.make('org.dxos.role.formInput');
 
+const isFormInputData = (data: unknown): data is FormInputData =>
+  typeof data === 'object' && data !== null && 'prop' in data && typeof data.prop === 'string' && 'schema' in data;
+
 /** Filter FormInput surfaces by a typed data predicate. */
-export const formInput = (predicate: (data: FormInputData) => boolean): Surface.Filter<FormInputData> =>
-  SurfaceFilter.makeFilter(FormInput, predicate);
+export const formInput = (predicate: (data: FormInputData) => boolean): Surface.Filter<FormInputData> => ({
+  bindings: [{ role: FormInput.role, guard: (data) => isFormInputData(data) && predicate(data) }],
+});
 
 /** Filter FormInput surfaces by a predicate on the field's AST (`fieldPropertyAst`). */
 export const formInputByField = (predicate: (ast: SchemaAST.AST) => boolean): Surface.Filter<FormInputData> =>
-  SurfaceFilter.makeFilter(FormInput, (data) => data.fieldPropertyAst != null && predicate(data.fieldPropertyAst));
+  formInput((data) => data.fieldPropertyAst != null && predicate(data.fieldPropertyAst));
 
 /** Filter FormInput surfaces by a predicate on the schema's root AST. */
 export const formInputBySchema = (predicate: (ast: SchemaAST.AST) => boolean): Surface.Filter<FormInputData> =>
-  SurfaceFilter.makeFilter(FormInput, (data) => predicate(data.schema.ast));
+  formInput((data) => predicate(data.schema.ast));
 
 /** Surface data for navtree-item-end role. */
 export type NavtreeItemEndData<Subject = unknown> = {

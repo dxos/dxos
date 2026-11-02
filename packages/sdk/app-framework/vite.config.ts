@@ -7,7 +7,6 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     'ns/Surface': 'src/Surface.ts',
-    'ns/SurfaceFilter': 'src/SurfaceFilter.ts',
     'ns/SharedPackages': 'src/SharedPackages.ts',
     'ns/PluginManagerProvider': 'src/PluginManagerProvider.ts',
     'ns/Hooks': 'src/Hooks.ts',

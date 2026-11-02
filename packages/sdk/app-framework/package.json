@@ -139,11 +139,6 @@
       "types": "./dist/types/src/Surface.d.ts",
       "import": "./dist/lib/ns/Surface.mjs"
     },
-    "./SurfaceFilter": {
-      "source": "./src/SurfaceFilter.ts",
-      "types": "./dist/types/src/SurfaceFilter.d.ts",
-      "import": "./dist/lib/ns/SurfaceFilter.mjs"
-    },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
