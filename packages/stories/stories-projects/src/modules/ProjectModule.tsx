@@ -36,8 +36,13 @@ export const ProjectModule = ({ data }: { data: ProjectModuleProps }) => {
   const [space] = useSpaces();
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
   const [project] = useQuery(space?.db, Filter.type(Project.Project));
-  // Another plugin's template is contributed only once plugin-projects starts, which may come after the space.
-  const template = Hooks.useCapabilities(ProjectCapabilities.Template).find(({ id }) => id === data.templateId);
+  // Template modules activate lazily on the projects plugin's start event, which can land after the
+  // space and mailbox are ready; creating before then fails with an unknown template. The default
+  // template needs no wait because `ProjectOperation.Create` falls back to a built-in copy.
+  const templates = Hooks.useCapabilities(ProjectCapabilities.Template);
+  const templateReady =
+    data.templateId === ProjectCapabilities.DefaultTemplateId ||
+    templates.some((entry) => entry.id === data.templateId);
   const { invokePromise } = Hooks.useOperationInvoker();
   const [error, setError] = useState<string>();
 
@@ -53,8 +58,8 @@ export const ProjectModule = ({ data }: { data: ProjectModuleProps }) => {
     [space, data.templateId, invokePromise],
   );
 
-  if (!space?.db || !mailbox || !template) {
-    return <Loading data={{ db: !!space?.db, mailbox: !!mailbox, template: !!template }} />;
+  if (!space?.db || !mailbox || !templateReady) {
+    return <Loading data={{ db: !!space?.db, mailbox: !!mailbox, template: templateReady }} />;
   }
 
   if (error) {
