@@ -154,12 +154,14 @@ const specText = (page) =>
   page
     .evaluate(async (key) => {
       const space = dxos.spaces().find((candidate) => candidate.id === globalThis[key]);
-      const [spec] = space
+      // The template's own spec, not the one breaking a feature down.
+      const specs = space
         ? await space.db
-            .query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.specDocument')))
+            .query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.projects.spec')))
             .run()
             .catch(() => [])
         : [];
+      const spec = specs.find((candidate) => candidate.name === 'Hello Worker');
       const text = await spec?.content?.load?.();
       return text?.content ?? '';
     }, TAKE_SPACE)

@@ -9,6 +9,6 @@ export * as AssistantOperation from './AssistantOperation.ts';
 export * as AssistantOptions from './AssistantOptions.ts';
 export * as AssistantPreset from './AssistantPreset.ts';
 export * as AssistantService from './AssistantService.ts';
-export * as ChatSurface from './ChatSurface.ts';
+export * as AssistantSurface from './AssistantSurface.ts';
 export * as Ollama from './Ollama.ts';
 export * as Settings from './Settings.ts';

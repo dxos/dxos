@@ -339,6 +339,22 @@ const parseQuestion = ({ id, body }: BlockHeader): ChangelogQuestion => ({
     .map((line) => parseOption(line.replace(/^-\s*/, ''))),
 });
 
+const ENTRY_LINE = /^(decision|question)[ \t]+([^\s:]+)/;
+
+/** A fence holding several entries is read as one per column-0 `decision` or `question` line; an entry's own lines are indented. */
+const splitEntries = (block: BlockHeader): BlockHeader[] => {
+  const lines = block.body.split('\n');
+  const starts = lines.flatMap((line, index) => (index > 0 && ENTRY_LINE.test(line) ? [index] : []));
+  if (starts.length === 0) {
+    return [block];
+  }
+  return [0, ...starts].map((start, index, all) => {
+    const body = lines.slice(start, all[index + 1]).join('\n');
+    const [, type = block.type, id = block.id] = index === 0 ? [] : (body.match(ENTRY_LINE) ?? []);
+    return { ...block, type, id, body };
+  });
+};
+
 /**
  * Splits a spec into its `## Changelog` decisions, its questions, and everything else.
  * The section runs from its heading to the next level-1 or level-2 heading.
@@ -355,7 +371,7 @@ export const parseChangelog = (
   const next = /^#{1,2} /m.exec(text.slice(afterHeading));
   const sectionEnd = next ? afterHeading + next.index : text.length;
   const section = text.slice(sectionStart, sectionEnd);
-  const blocks = parseBlockHeaders(section);
+  const blocks = parseBlockHeaders(section).flatMap(splitEntries);
   const entries = blocks.filter(({ type }) => type === 'decision').map(parseDecision);
   const questions = blocks.filter(({ type }) => type === 'question').map(parseQuestion);
   return { entries, questions, rest: text.slice(0, sectionStart) + text.slice(sectionEnd) };

@@ -12,7 +12,7 @@ export default defineConfig({
     'containers': 'src/containers/index.ts',
     'StudioHooks': 'src/hooks/StudioHooks.ts',
     'operations': 'src/operations/index.ts',
-    'surfaces': 'src/surfaces.ts',
+    'StudioSurface': 'src/types/StudioSurface.ts',
     'translations': 'src/translations.ts',
     'Frame': 'src/types/Frame.ts',
     'MediaArtifact': 'src/types/MediaArtifact.ts',

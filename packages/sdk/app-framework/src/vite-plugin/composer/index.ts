@@ -3,7 +3,7 @@
 //
 
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { type Rollup, type Plugin as VitePlugin } from 'vite';
 
 import { Plugin, PluginManifest } from '../../core/index.ts';
@@ -514,7 +514,7 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
         await buildVendor({
           root,
           isShared: isExternal,
-          outDir: join(root, outDir, 'vendor'),
+          outDir: resolve(root, outDir, 'vendor'),
           specifiers: [
             ...[...externals]
               .filter(([specifier]) => !extra.some((entry) => entry.specifier === specifier))
