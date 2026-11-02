@@ -13,8 +13,8 @@ The full story and its three two-minute cuts live in
 [`tools/autocue/showcase/echo3d/NARRATIVE-SAAS2D.md`](../../../tools/autocue/showcase/echo3d/NARRATIVE-SAAS2D.md): a
 lecture on the business dynamics in three acts (the SaaS economics and what followed from it; why agents break that
 architecture and the deeper lock-in the frontier platforms offer; inversion of control on ECHO, Composer and
-Cloudflare). Two of its claims come from the user and sit outside the fact sheet's verified set: that a company can run
-EDGE in its own Cloudflare account, and that Composer is the first enterprise superapp.
+Cloudflare). Per the user's ruling, EDGE is described as running on Cloudflare (not in the company's own account), and
+"agent-native" and "the first enterprise superapp" stand as written.
 
 ## Brief
 

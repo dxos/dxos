@@ -78,7 +78,7 @@ to them afterwards. Its objects are typed and related; its unit of access is the
 replication, so who can see what travels with the data; it is local-first, so every copy works offline and reconciles
 on reconnection; and an agent holds a HALO identity and joins a space like any other member. It replicates peer to
 peer and through EDGE, which runs on Cloudflare Workers and Durable Objects with R2 for storage and Workers AI for
-inference, in the company's own Cloudflare account, so the stack that holds the company's data is the company's.
+inference.
 
 Composer is what runs on it: the first enterprise superapp, an extensible framework for building agent-assisted
 applications. Documents, mail, tasks, meetings and the agents that work on them are plugins over one graph. An agent
@@ -114,8 +114,7 @@ It gets worse. Agents displace the application itself, and the few labs that can
 platforms to take the work in whole. Consolidation cures fragmentation with a deeper lock-in.
 
 The alternative is an inversion of control: the company owns the data; apps and agents reach in. ECHO makes it
-possible: a distributed graph database, typed, permissioned in the data, agent-native, on the company's own Cloudflare
-stack. Composer is the enterprise superapp built on it.
+possible: a distributed graph database, typed, permissioned in the data, agent-native, on Cloudflare. Composer is the enterprise superapp built on it.
 
 This is DXOS. Your team. Your apps. Your data.
 
@@ -133,8 +132,8 @@ And agents displace the application itself. The few labs that can train frontier
 the work in whole: a single, deeper dependence.
 
 The alternative inverts control. The company owns the data; applications and agents reach in. ECHO is the agent-native
-graph database at the centre, distributed across every device and the company's own Cloudflare stack, permissions and
-agent identity carried in the data. Composer is the enterprise superapp on top: documents, mail, tasks and agents over
+graph database at the centre, distributed across every device and Cloudflare, permissions and agent identity carried in
+the data. Composer is the enterprise superapp on top: documents, mail, tasks and agents over
 one graph.
 
 This is DXOS. Your team. Your apps. Your data.
@@ -153,7 +152,7 @@ everything, which cures fragmentation with a deeper dependence.
 Invert the architecture. The company owns the data; applications and agents reach in. That takes a new kind of
 database: distributed, on every device and at the edge; a graph, so the joins live in the data; typed; permissioned in
 the object itself; agent-native, with agents as members with identities of their own. ECHO is
-that database, and it runs on the company's own Cloudflare stack: Workers, Durable Objects, R2, Workers AI. Composer is
+that database, and it runs on Cloudflare: Workers, Durable Objects, R2, Workers AI. Composer is
 the enterprise superapp built on it, an extensible framework for agent-assisted applications.
 
 This is DXOS. Your team. Your apps. Your data.
