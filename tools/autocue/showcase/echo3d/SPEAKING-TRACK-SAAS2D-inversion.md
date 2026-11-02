@@ -22,7 +22,7 @@ Cut 3 of NARRATIVE-SAAS2D.md: a lecture on the dynamics, nobody acts badly, ever
 
 ## 5. The vendor grows (`#scale`)
 
-- Providers specialized, each serving millions of users.
+- Specialized applications, each serving millions of users.
 
 ## 6. Your competitors (`#competitors`)
 
@@ -38,7 +38,7 @@ Cut 3 of NARRATIVE-SAAS2D.md: a lecture on the dynamics, nobody acts badly, ever
 
 ## 9. A frontier lab arrives (`#frontier`)
 
-- For agents, this architecture simply doesn't work.
+- For agents, this architecture simply doesn't scale.
 
 ## 10. Everyone talks to the lab (`#frontier-comms`)
 
@@ -58,7 +58,7 @@ Cut 3 of NARRATIVE-SAAS2D.md: a lecture on the dynamics, nobody acts badly, ever
 
 ## 14. The labs merge (`#merge-1`)
 
-- As the labs lead consolidation.
+- As the labs drive further consolidation.
 
 ## 15. The Final Frontier (`#final-frontier`)
 
@@ -74,7 +74,7 @@ Cut 3 of NARRATIVE-SAAS2D.md: a lecture on the dynamics, nobody acts badly, ever
 
 ## 18. Back to your company (`#spread-again`)
 
-- What if your company kept control of your data? Building interoperable apps and agents on top. [PAUSE]
+- What if your company kept control of your data? Building interoperable apps and agents on top.
 
 ## 19. Your data, in ECHO (`#echo-hub`)
 
@@ -86,23 +86,23 @@ Cut 3 of NARRATIVE-SAAS2D.md: a lecture on the dynamics, nobody acts badly, ever
 
 ## 21. A graph of objects (`#objects`)
 
-- Realtime queries and workflows, with fine-grained access-control for people and agents. ECHO is that database, running on Cloudflare.
+- Realtime queries and workflows, with fine-grained access-control for people and agents.
 
 ## 24. Work that builds on itself (`#object-created`)
 
-- And Composer is the enterprise-superapp built on top.
+- ECHO is that database.
 
 ## 25. Everyone at work (`#echo-spaces-again`)
 
-- Open and extensible, by your team and your agents.
+- And Composer is the enterprise-superapp built on top.
 
 ## 26. Your company again (`#echo-hub-again`)
 
--
+- Open and extensible, by your team and your agents.
 
 ## 27. The silos fold in (`#saas-merge`)
 
-- The silos DISSOLVE into a single unified semantic graph.
+- The silos merge into a single unified semantic graph.
 
 ## 28. DXOS (`#company-fills`)
 

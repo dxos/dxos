@@ -24,8 +24,9 @@ SHORTEST = {'blank': 0.5, 'final-frontier': 1.2, 'frontier-comms': 6.5, 'absorb'
             'saas-merge': 5.0, 'company-fills': 10.0}
 # Where each take starts in its scene, and the silence after it before the next scene.
 LEAD, BREATH = 0.2, 0.3
-# The closing take starts as the logo lands, and the frame holds after the last word.
-ANCHORS = {'company-fills': 3.4}
+# The closing take starts as the logo lands, and the frame holds after the last word; the alternative's database line
+# waits a beat after the caption.
+ANCHORS = {'company-fills': 3.4, 'echo-hub': 1.0}
 CLOSE = 2.0
 
 clips = {os.path.basename(path)[3:-4]: path for path in glob.glob(f'{takes}/*.mp3')}

@@ -38,7 +38,7 @@ for number, slide, body in re.findall(r'\n## (\d+)\. [^\n]*?\(`#([\w-]+)`\)\n(.*
     lines = [re.sub(r'\s+', ' ', re.sub(r'_\(.*?\)_', '', line[2:])).strip()
              for line in body.split('\n') if line.startswith('- ')]
     # Spelled as the voice would otherwise read the letters; a PAUSE direction becomes a break the voice holds.
-    spoken = ' '.join(line for line in lines if line).replace('DXOS', 'D-X-O-S').replace('SaaS', 'Sasss')
+    spoken = ' '.join(line for line in lines if line).replace('DXOS', 'D-X-O-S').replace('SaaS', 'sass')
     spoken = re.sub(r'\s*\[?PAUSE\]?\.?\s*', ' <break time="0.8s" /> ', spoken).strip()
     if spoken:
         slides.append((int(number), slide, spoken))
