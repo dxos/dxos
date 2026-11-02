@@ -4,3 +4,4 @@
 
 export * as CodePlugin from '#meta';
 export * from '#types';
+export * as FeatureOperationHandlerSet from './FeatureOperationHandlerSet.ts';

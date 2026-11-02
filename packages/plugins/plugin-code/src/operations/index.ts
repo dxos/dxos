@@ -7,8 +7,6 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import { CodeOperation } from '#types';
 
-export * as FeatureOperationHandlerSet from './FeatureOperationHandlerSet.ts';
-
 export const CodeOperationHandlerSet = OperationHandlerSet.lazy([
   CodeOperation.VerifySpec.pipe(Operation.lazyHandler(() => import('./verify-spec.ts'))),
   CodeOperation.RunBuildAgent.pipe(Operation.lazyHandler(() => import('./run-build-agent.ts'))),

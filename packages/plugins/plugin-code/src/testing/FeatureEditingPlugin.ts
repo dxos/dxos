@@ -12,10 +12,9 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import { DXN } from '@dxos/keys';
 import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 
-import { FeatureOperationHandlerSet } from '#operations';
-
 import FeatureSurface from '../capabilities/feature-surface.ts';
 import SpecExtensions from '../capabilities/spec-extensions.ts';
+import * as FeatureOperationHandlerSet from '../FeatureOperationHandlerSet.ts';
 
 const OperationHandler = Capability.inlineModule(
   'FeatureEditingOperationHandler',

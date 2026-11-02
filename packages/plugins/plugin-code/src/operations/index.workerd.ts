@@ -7,8 +7,6 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import { CodeOperation } from '#types';
 
-export * as FeatureOperationHandlerSet from './FeatureOperationHandlerSet.ts';
-
 // BuildProject and RunBuild compile with the TypeScript compiler, which crashes workerd on load (it
 // probes `__filename`), and EDGE's registry resolves every handler it lists.
 export const CodeOperationHandlerSet = OperationHandlerSet.lazy([

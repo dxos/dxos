@@ -14,7 +14,7 @@ export default defineConfig({
     sync: 'src/sync/index.ts',
     testing: 'src/testing/index.ts',
     translations: 'src/translations.ts',
-    FeatureOperationHandlerSet: 'src/operations/FeatureOperationHandlerSet.ts',
+    FeatureOperationHandlerSet: 'src/FeatureOperationHandlerSet.ts',
     CodeCapabilities: 'src/types/CodeCapabilities.ts',
     CodeEvents: 'src/types/CodeEvents.ts',
     CodeOperation: 'src/types/CodeOperation.ts',
