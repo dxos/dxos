@@ -10119,9 +10119,6 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
       '@dxos/link':
         specifier: workspace:*
         version: link:../../core/compute/link
