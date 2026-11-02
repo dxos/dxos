@@ -1162,21 +1162,7 @@ export class AutomergeHost extends Resource {
   async removeDocument(id: AnyDocumentId): Promise<void> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     const documentId = interpretAsDocumentId(id);
-    // Flushed, then evicted, so the handle cannot re-persist what is deleted below — collection loads
-    // the document to check ownership, so one is usually live here. Eviction only detaches the save
-    // listener; a throttled save already scheduled still runs, and the flush is what makes it a
-    // no-op, since its heads then match the last save.
-    if (this._repo.handles[documentId]) {
-      // A quarantined document's handle holds at most a partial load, which must not be saved over its bytes.
-      if (!this.#quarantined.has(documentId)) {
-        await this._repo.flush([documentId]);
-      }
-      await this._repo.removeFromCache(documentId);
-    }
-    // Dropped from the registry too: the document is about to stop existing, so a later eviction of
-    // it would re-create — and re-announce — the query this call deletes.
-    this._leases.forget(documentId);
-    this._confirmedChanges.delete(documentId);
+    await this.#unloadForRemoval(documentId);
 
     // One write: the orphan scan enumerates the heads table, so chunks outliving their heads row could
     // never be found again. Through the chunk write queue, so a save queued before it cannot land after.
@@ -1191,6 +1177,54 @@ export class AutomergeHost extends Resource {
       }),
     );
 
+    this.#forgetRemoved(documentId);
+  }
+
+  /**
+   * Unloads every resident document, for a caller about to delete the stored bytes behind all of them. A handle left
+   * resident would keep reporting heads that storage no longer backs, so collection sync would never fetch the
+   * document again and the indexer, which reads stored heads, would never see it.
+   */
+  async unloadAllDocuments(): Promise<void> {
+    invariant(this.isOpen, 'AutomergeHost is not open');
+    for (const documentId of this.loadedDocumentIds) {
+      await this.#unloadForRemoval(documentId);
+      this.#forgetRemoved(documentId);
+    }
+    // A document that comes back with the heads it was last saved at would otherwise count as saved, so it would
+    // never be written, nor its heads recorded for the indexer.
+    this._repo.storageSubsystem?.forgetSavedDocuments();
+    // The engine keeps every sedimentree in memory and syncs from that, so one it still held would be reported as in
+    // sync and never fetched again.
+    if (this._useSubduction) {
+      const subduction = await this._repo.subduction;
+      for (const sedimentreeId of await subduction.sedimentreeIds()) {
+        await subduction.removeSedimentree(sedimentreeId);
+      }
+    }
+  }
+
+  /**
+   * Flushed, then evicted, so the handle cannot re-persist bytes about to be deleted — collection loads the document
+   * to check ownership, so one is usually live here. Eviction only detaches the save listener; a throttled save already
+   * scheduled still runs, and the flush is what makes it a no-op, since its heads then match the last save.
+   */
+  async #unloadForRemoval(documentId: DocumentId): Promise<void> {
+    if (this._repo.handles[documentId]) {
+      // A quarantined document's handle holds at most a partial load, which must not be saved over its bytes.
+      if (!this.#quarantined.has(documentId)) {
+        await this._repo.flush([documentId]);
+      }
+      await this._repo.removeFromCache(documentId);
+    }
+    // Dropped from the registry too: the document is about to stop existing, so a later eviction of
+    // it would re-create — and re-announce — the query the removal deletes.
+    this._leases.forget(documentId);
+    this._confirmedChanges.delete(documentId);
+  }
+
+  /** Drops the in-memory bookkeeping of a document whose stored bytes are gone. */
+  #forgetRemoved(documentId: DocumentId): void {
     // The classical share policy answers from these, so an id left behind keeps being announced.
     this._createdDocuments.delete(documentId);
     this._documentsToSync.delete(documentId);
