@@ -19,7 +19,7 @@ const FIXED: Record<string, number> = {
   'absorb': 9,
   'merge-1': 10,
   'saas-merge': 8,
-  'company-fills': 7,
+  'company-fills': 9,
 };
 
 /** Each scene's length in the voiced cut, which its keyframes are timed for; company-fills is timed in real seconds. */

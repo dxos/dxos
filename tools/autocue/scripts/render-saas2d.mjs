@@ -69,6 +69,10 @@ if (values.stills) {
     files.push(output);
     console.log(`wrote ${output}`);
   }
+  // xstack needs at least two inputs; a single still is its own sheet.
+  if (files.length === 1) {
+    process.exit(0);
+  }
   const sheet = path.join(outDir, `${values.composition}.contact.png`);
   const columns = Math.min(4, files.length);
   execFileSync('ffmpeg', [

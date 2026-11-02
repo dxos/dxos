@@ -42,7 +42,7 @@ Rules for every layout:
 
 ## Scenes
 
-The story runs 1:30: frontier-comms takes 7 s, absorb 9 s, merge-1 10 s, saas-merge 8 s, company-fills 7 s, and every other scene an equal share of the rest (2.33 s). Data flows at one pace in real seconds wherever it appears, however much its scene is sped up, and plays the keyframes below, timed for the voiced
+The story runs 1:30: frontier-comms takes 7 s, absorb 9 s, merge-1 10 s, saas-merge 8 s, company-fills 9 s, and every other scene an equal share of the rest (2.24 s). Data flows at one pace in real seconds wherever it appears, however much its scene is sped up, and plays the keyframes below, timed for the voiced
 cut's holds, sped up to fit. A morph takes at most 60 % of its scene. Times in the table are the start of each scene in
 the voiced cut. **Enters** and **leaves** name where an element comes from or goes
 to across the cut into the scene.

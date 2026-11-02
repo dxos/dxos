@@ -829,6 +829,26 @@ export const slides = (holds: Record<string, number>): Slide[] => {
               opacity: ramp(t, 3.7 + index, 0.5),
             }),
           ),
+          // A second after the last tag: what it runs on.
+          label('powered-by', WIDTH / 2, HEIGHT - 150, 'Powered by', {
+            screen: true,
+            size: 22,
+            weight: 500,
+            color: PALETTE.graphite,
+            plain: true,
+            opacity: ramp(t, 6.7, 0.6),
+          }),
+          {
+            kind: 'logo',
+            id: 'cloudflare',
+            x: WIDTH / 2,
+            y: HEIGHT - 92,
+            width: 190,
+            src: 'brand/cloudflare.png',
+            aspect: 512 / 173,
+            screen: true,
+            opacity: ramp(t, 6.7, 0.6),
+          },
         ]);
       },
     },

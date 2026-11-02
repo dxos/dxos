@@ -102,7 +102,16 @@ export type TitlePrim = Base & { kind: 'title'; x: number; y: number; text: stri
 /** A full-frame fill (curtain or field). */
 export type FillPrim = Base & { kind: 'fill'; color: string };
 /** The DXOS logotype. */
-export type LogoPrim = Base & { kind: 'logo'; x: number; y: number; width: number; dark?: boolean };
+/** The DXOS lockup, or with `src` another logo (a file in public/, `aspect` its width over its height). */
+export type LogoPrim = Base & {
+  kind: 'logo';
+  x: number;
+  y: number;
+  width: number;
+  dark?: boolean;
+  src?: string;
+  aspect?: number;
+};
 
 /** A row of a card thread. */
 export type Message = { who: string; color: string; text: string; bot?: boolean; at: number };

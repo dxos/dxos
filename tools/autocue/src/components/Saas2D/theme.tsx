@@ -446,11 +446,13 @@ export const SvgPrim = ({ prim, camera }: { prim: Prim; camera: Camera }) => {
       const [x, y] = project(view, prim.x, prim.y);
       const width = prim.width;
       // The lockup's viewBox is 2:1 (see public/brand).
-      const height = width / 2;
+      const height = width / (prim.aspect ?? 2);
       return (
         <At x={x} y={y} opacity={opacity}>
           <image
-            href={staticFile(prim.dark ? 'brand/dxos-horizontal-dark.svg' : 'brand/dxos-horizontal-white.svg')}
+            href={staticFile(
+              prim.src ?? (prim.dark ? 'brand/dxos-horizontal-dark.svg' : 'brand/dxos-horizontal-white.svg'),
+            )}
             x={-px(width / 2)}
             y={-px(height / 2)}
             width={px(width)}
