@@ -11,7 +11,7 @@ import { TestSchema } from '@dxos/echo/testing';
 import { type ItemsUpdatedEvent } from '../core-db/index.ts';
 import { type DatabaseImpl } from '../proxy-db/index.ts';
 import { EchoTestBuilder } from '../testing/index.ts';
-import { UpdateDispatch, filterTypenameKey, objectTypenameKeys } from './update-dispatch.ts';
+import { filterTypenameKey, objectTypenameKeys } from './update-dispatch.ts';
 
 describe('UpdateDispatch', () => {
   let builder: EchoTestBuilder;
@@ -35,7 +35,7 @@ describe('UpdateDispatch', () => {
   };
 
   test('delivers a write only to keys it matches, holding only the matched objects', ({ expect }) => {
-    const dispatch = UpdateDispatch.for(db);
+    const dispatch = db._updateDispatch;
     const people = record();
     const tasks = record();
     const all = record();
@@ -55,7 +55,7 @@ describe('UpdateDispatch', () => {
   });
 
   test('a listener that re-keys itself during delivery receives the event once', ({ expect }) => {
-    const dispatch = UpdateDispatch.for(db);
+    const dispatch = db._updateDispatch;
     let deliveries = 0;
     const listener = () => {
       deliveries++;

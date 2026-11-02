@@ -17,7 +17,7 @@ import { type FeedHandle } from '../feed/feed-handle.ts';
 import { type DatabaseImpl } from '../proxy-db/index.ts';
 import { type MergePlan, createMergePlan, evaluateCore, matchesFeedSelection, ordersLocally } from './merge-plan.ts';
 import { type SourceEntry } from './query-context.ts';
-import { type DispatchKeys, UpdateDispatch, parentId } from './update-dispatch.ts';
+import { type DispatchKeys, type UpdateDispatch, parentId } from './update-dispatch.ts';
 import {
   type HierarchyScope,
   getHierarchyScope,
@@ -76,7 +76,7 @@ export class WorkingSetView {
       areStrongDepsResolved: (core) => _database.areStrongDepsResolved(core),
     };
     this._executor = new WorkingSetQueryExecutor(provider);
-    this.#dispatch = UpdateDispatch.for(_database);
+    this.#dispatch = _database._updateDispatch;
     this._planner = new QueryPlanner({ defaultTextSearchKind: 'full-text', noIndexes: true });
   }
 

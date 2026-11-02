@@ -34,12 +34,6 @@ type Registration = { ids: Set<string>; typenames: Set<string>; anchors: Set<str
  * receives only the objects that matched its keys. A listener registered without keys receives every event whole.
  */
 export class UpdateDispatch {
-  static readonly #byDatabase = new WeakMap<DatabaseImpl, UpdateDispatch>();
-
-  static for(database: DatabaseImpl): UpdateDispatch {
-    return defaultMap(UpdateDispatch.#byDatabase, database, () => new UpdateDispatch(database));
-  }
-
   readonly #listeners = new Map<DispatchListener, Registration | undefined>();
   /** Listeners without keys, which receive every event. */
   readonly #wide = new Set<DispatchListener>();
@@ -48,7 +42,7 @@ export class UpdateDispatch {
   readonly #byAnchor = new Map<string, Map<DispatchListener, number>>();
   #unsubscribe?: CleanupFn = undefined;
 
-  private constructor(private readonly _database: DatabaseImpl) {}
+  constructor(private readonly _database: DatabaseImpl) {}
 
   /** Routes events to `listener` by `keys`, or delivers every event whole when there are none. */
   set(listener: DispatchListener, keys?: DispatchKeys): void {
@@ -93,9 +87,17 @@ export class UpdateDispatch {
   delete(listener: DispatchListener): void {
     this.#remove(listener);
     if (this.#listeners.size === 0) {
-      this.#unsubscribe?.();
-      this.#unsubscribe = undefined;
+      this.close();
     }
+  }
+
+  /** Drops every listener and the subscription; a later {@link set} subscribes again. */
+  close(): void {
+    for (const listener of [...this.#listeners.keys()]) {
+      this.#remove(listener);
+    }
+    this.#unsubscribe?.();
+    this.#unsubscribe = undefined;
   }
 
   #remove(listener: DispatchListener): void {
