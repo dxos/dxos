@@ -86,6 +86,18 @@ export const allOf = <TFilters extends ReadonlyArray<Surface.Filter<any>>>(
 // Generic filter builders (role-agnostic — take a role token as first argument)
 //
 
+/** Wraps a contributed predicate so that one which throws excludes its candidate instead of breaking matching for the role. */
+const catching =
+  (guard: (data: unknown) => boolean) =>
+  (data: unknown): boolean => {
+    try {
+      return guard(data);
+    } catch (err) {
+      log.catch(err);
+      return false;
+    }
+  };
+
 /**
  * Filter: matches an ECHO object at the given role token's subject position.
  *
@@ -128,7 +140,7 @@ export const object: {
     }
     return predicate ? predicate(data) : true;
   };
-  return { bindings: [{ role: token.role, guard }] };
+  return { bindings: [{ role: token.role, guard: catching(guard) }] };
 };
 
 /**
@@ -663,7 +675,7 @@ const isFormInputData = (data: unknown): data is FormInputData =>
 
 /** Filter FormInput surfaces by a typed data predicate. */
 export const formInput = (predicate: (data: FormInputData) => boolean): Surface.Filter<FormInputData> => ({
-  bindings: [{ role: FormInput.role, guard: (data) => isFormInputData(data) && predicate(data) }],
+  bindings: [{ role: FormInput.role, guard: catching((data) => isFormInputData(data) && predicate(data)) }],
 });
 
 /** Filter FormInput surfaces by a predicate on the field's AST (`fieldPropertyAst`). */
