@@ -130,6 +130,7 @@ export const translations = [
         'feature-board.status-count.label': '{{count}} {{status}}',
         'feature-card.remove-dependency.label': 'Remove dependency on {{name}}',
         'feature-edit-error.title': 'Edit not applied',
+        'feature-embed.missing.message': '{{label}} (not found)',
         'link-task-error.title': 'Task added, but not linked to this feature',
         'feature-article.add-dependency.label': 'Add dependency',
         'feature-article.link-task.label': 'Link task',

@@ -53,6 +53,8 @@ export interface FileImportOutput extends Schema.Schema.Type<typeof FileImportOu
 export const FileExportInput = Schema.Struct({
   object: Ref.Ref(Obj.Unknown),
   path: Schema.String,
+  /** The file as GitHub holds it for this space: the blob last synced, or last pushed while that is unmerged. */
+  base: Schema.optional(Schema.String),
 });
 export interface FileExportInput extends Schema.Schema.Type<typeof FileExportInput> {}
 

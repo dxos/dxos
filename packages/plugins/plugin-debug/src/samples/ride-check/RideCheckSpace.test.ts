@@ -8,6 +8,7 @@ import { buildArchive, histogram } from '@dxos/app-toolkit/testing';
 import { Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Feature from '@dxos/plugin-projects/Feature';
+import * as FeatureEmbed from '@dxos/plugin-projects/FeatureEmbed';
 
 import * as RideCheckSpace from './RideCheckSpace.ts';
 import { SPEC_PATH } from './spec.ts';
@@ -29,14 +30,18 @@ type Archived = {
   'name'?: string;
   'title'?: string;
   'status'?: string;
-  'specs'?: string[];
   'document'?: { '/': string };
+  'content'?: string | { '/': string };
   'spec'?: { '/': string };
   'features'?: Array<{ '/': string }>;
   '@relationSource'?: string;
   '@relationTarget'?: string;
   '@meta'?: { keys?: Array<{ source: string; id: string }> };
 };
+
+/** The spec blocks an archived feature was read in from, as its foreign keys. */
+const sourcesOf = (entity: Archived): string[] =>
+  (entity['@meta']?.keys ?? []).filter(({ source }) => source === Feature.SPEC_KEY_SOURCE).map(({ id }) => id);
 
 /** The archive's tasks, in the order they were written. */
 const taskArchive = async (definition: ReturnType<typeof RideCheckSpace.make>): Promise<ArchivedTask[]> => {
@@ -105,9 +110,7 @@ describe('Ride Check template', () => {
       expect(subfeatures.map((feature) => feature.name)).toEqual(['Rain rule', 'Wind rule']);
       expect(all).toHaveLength(features.length + subfeatures.length);
       expect(map?.['@type']).toContain('type.projects.spec:');
-      expect(features.map((feature) => feature.specs)).toEqual(
-        ['F-1', 'F-2', 'F-3', 'F-4'].map((feat) => [`${SPEC_PATH}#${feat}`]),
-      );
+      expect(features.map(sourcesOf)).toEqual(['F-1', 'F-2', 'F-3', 'F-4'].map((feat) => [`${SPEC_PATH}#${feat}`]));
 
       // Every other card reads the verdict's forecast.
       const dependsOn = ofType('relation.dependsOn');
@@ -127,8 +130,14 @@ describe('Ride Check template', () => {
       const document = ofType('type.specDocument:').find(({ id }) => map?.document?.['/'] === `echo:///${id}`);
       expect(document).toBeDefined();
       expect(document?.['@meta']?.keys).toEqual([{ source: Feature.SPEC_KEY_SOURCE, id: SPEC_PATH }]);
+      // Each feature is embedded where its `feat` block stood in the file; no block is left as text.
+      const content = document?.content;
+      const text = typeof content === 'object' ? byRef(content)?.content : undefined;
+      expect(typeof text).toBe('string');
+      expect(FeatureEmbed.parse(String(text)).map(({ id }) => id)).toEqual(features.map(({ id }) => id));
+      expect(text).not.toMatch(/^feat F-/m);
       for (const feature of features) {
-        expect(Feature.getSpecPath(feature.specs?.[0] ?? '')).toBe(SPEC_PATH);
+        expect(Feature.getSpecPath(sourcesOf(feature)[0] ?? '')).toBe(SPEC_PATH);
       }
     },
   );

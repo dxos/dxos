@@ -315,7 +315,7 @@ export const ImportSpecFile = Operation.make({
   },
   input: GitHubCapabilities.FileImportInput,
   output: GitHubCapabilities.FileImportOutput,
-  services: [Database.Service],
+  services: [Capability.Service, Database.Service],
 });
 
 /** `GitHubCapabilities.FileMapping.export` for `.mdl` files: the Spec's content as it stands. */
@@ -328,5 +328,5 @@ export const ExportSpecFile = Operation.make({
   },
   input: GitHubCapabilities.FileExportInput,
   output: GitHubCapabilities.FileExportOutput,
-  services: [Database.Service],
+  services: [Capability.Service, Database.Service],
 });

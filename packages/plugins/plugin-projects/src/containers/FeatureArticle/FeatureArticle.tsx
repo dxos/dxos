@@ -35,9 +35,10 @@ import { ProjectsNamespace } from '../../namespace.ts';
 
 // The editable fields, picked from the schema on the AST as ProjectArticle does: `Type.getSchema` erases to
 // `Codec`, so the field types are re-attached here.
-type Values = Pick<Feature.Feature, 'name' | 'description' | 'status' | 'requirements'>;
+/** What a feature says, as against how it relates to the rest: the fields its form edits. */
+export type FeatureValues = Pick<Feature.Feature, 'name' | 'description' | 'status' | 'requirements'>;
 
-const Values = Schema.make<Schema.Codec<Values, any>>(
+export const FeatureValues = Schema.make<Schema.Codec<FeatureValues, any>>(
   SchemaAST.pick(Type.getSchema(Feature.Feature).ast, ['name', 'description', 'status', 'requirements']),
 );
 
@@ -48,7 +49,41 @@ const RequirementsField: FormFieldRenderer = ({ type, label, getValue, onValueCh
   </Form.Field>
 );
 
-const FIELD_MAP: FormFieldMap = { requirements: RequirementsField };
+export const FEATURE_FIELD_MAP: FormFieldMap = { requirements: RequirementsField };
+
+/** The form values of a feature, bound to the live object so an edit elsewhere reaches an open form. */
+export const useFeatureValues = (subject: Feature.Feature) => {
+  const [snapshot, updateFeature] = useObject(subject);
+  const values = useMemo<Partial<FeatureValues>>(
+    () => ({
+      name: snapshot?.name,
+      description: snapshot?.description,
+      status: snapshot?.status,
+      requirements: snapshot?.requirements,
+    }),
+    [snapshot],
+  );
+
+  const onValuesChanged = useCallback(
+    (values: Partial<FeatureValues>) =>
+      updateFeature((feature) => {
+        if (values.name !== undefined) {
+          feature.name = values.name;
+        }
+        feature.description = values.description;
+        if (values.status !== undefined) {
+          feature.status = values.status;
+        }
+        const requirements = values.requirements?.map((requirement) => ({ ...requirement }));
+        const blockId = Feature.getBlockId(subject);
+        feature.requirements =
+          requirements && blockId ? Feature.numberRequirements(blockId, requirements) : requirements;
+      }),
+    [subject, updateFeature],
+  );
+
+  return { values, onValuesChanged, updateFeature };
+};
 
 export type FeatureDetailProps = {
   feature: Feature.Feature;
@@ -64,7 +99,7 @@ export type FeatureDetailProps = {
  */
 export const FeatureDetail = ({ feature: subject, attendableId, onSelectSubfeature }: FeatureDetailProps) => {
   const { t } = Hooks.useTranslation(ProjectsNamespace.key);
-  const [snapshot, updateFeature] = useObject(subject);
+  const { values, onValuesChanged, updateFeature } = useFeatureValues(subject);
   const db = Obj.getDatabase(subject);
   const graph = useFeatureGraph(db, [subject.id], { neighbours: true });
   const feature = graph.lookup(subject.id);
@@ -121,34 +156,14 @@ export const FeatureDetail = ({ feature: subject, attendableId, onSelectSubfeatu
     [updateFeature],
   );
 
-  // Bound to the live feature, so a status set by an agent (or a Kanban drop) reaches the open form.
-  const values = useMemo<Partial<Values>>(
-    () => ({
-      name: snapshot?.name,
-      description: snapshot?.description,
-      status: snapshot?.status,
-      requirements: snapshot?.requirements,
-    }),
-    [snapshot],
-  );
-
-  const handleValuesChanged = useCallback(
-    (values: Partial<Values>) =>
-      updateFeature((feature) => {
-        if (values.name !== undefined) {
-          feature.name = values.name;
-        }
-        feature.description = values.description;
-        if (values.status !== undefined) {
-          feature.status = values.status;
-        }
-        feature.requirements = values.requirements?.map((requirement) => ({ ...requirement }));
-      }),
-    [updateFeature],
-  );
-
   return (
-    <Form.Root db={db} schema={Values} values={values} fieldMap={FIELD_MAP} onValuesChanged={handleValuesChanged}>
+    <Form.Root
+      db={db}
+      schema={FeatureValues}
+      values={values}
+      fieldMap={FEATURE_FIELD_MAP}
+      onValuesChanged={onValuesChanged}
+    >
       <Form.Viewport scroll>
         <Form.Content>
           <Form.Fields />

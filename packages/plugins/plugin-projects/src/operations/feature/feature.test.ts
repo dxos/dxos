@@ -14,12 +14,13 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { File, Milestone, PullRequest, SpecDocument, Task } from '@dxos/types';
 
-import { Feature, FeatureOperation, Showcase, Spec } from '#types';
+import { Feature, FeatureEmbed, FeatureOperation, Showcase, Spec, SpecText } from '#types';
 
 import addDependency from './add-dependency.ts';
 import createSpec from './create-spec.ts';
 import create from './create.ts';
 import deleteFeature from './delete.ts';
+import exportSpec from './export-spec.ts';
 import getFeatures from './get-features.ts';
 import importLinks from './import-links.ts';
 import importSpec from './import-spec.ts';
@@ -54,6 +55,10 @@ const addSpec = (name = 'Inbox') => Database.add(Spec.make({ name }));
 
 const featureIds = (spec: Spec.Spec) => spec.features.map((feature) => feature.target?.id);
 
+/** The ids the spec's document embeds, in order. */
+const embedIds = (spec: Spec.Spec) =>
+  Effect.promise(() => SpecText.read(spec)).pipe(Effect.map((text) => FeatureEmbed.parse(text).map(({ id }) => id)));
+
 describe('FeatureOperation.Create', () => {
   it.effect('defaults to planned and lists the feature on the spec given, which becomes its parent', () =>
     Effect.gen(function* () {
@@ -61,6 +66,7 @@ describe('FeatureOperation.Create', () => {
       const { feature } = yield* create.handler({ name: 'Provider sync', spec: ref(spec) });
       expect(feature.status).toBe('planned');
       expect(featureIds(spec)).toEqual([feature.id]);
+      expect(yield* embedIds(spec)).toEqual([feature.id]);
       expect(Spec.getContainer(feature)?.id).toBe(spec.id);
     }).pipe(Effect.provide(testLayer())),
   );
@@ -100,9 +106,9 @@ describe('FeatureOperation.Update', () => {
         name: 'Sync',
         description: 'Kept.',
         status: 'operational',
-        specs: ['a.mdl#F-1'],
         requirements: [{ id: 'F-1.1', text: 'Mail arrives within a minute.' }],
       });
+      expect(Feature.getSources(sync)).toEqual(['a.mdl#F-1']);
     }).pipe(Effect.provide(testLayer())),
   );
 
@@ -118,6 +124,9 @@ describe('FeatureOperation.Update', () => {
       yield* update.handler({ feature: ref(gmail), spec: ref(breakdown) });
       expect(featureIds(inbox)).toEqual([sync.id]);
       expect(featureIds(breakdown)).toEqual([gmail.id]);
+      // The embed moves with the feature.
+      expect(yield* embedIds(inbox)).toEqual([sync.id]);
+      expect(yield* embedIds(breakdown)).toEqual([gmail.id]);
       expect(Spec.getContainer(gmail)?.id).toBe(breakdown.id);
       // A position belongs to the canvas it was dragged on, so it does not follow the feature.
       expect(inbox.layout?.positions[gmail.id]).toBeUndefined();
@@ -202,10 +211,13 @@ feat F-1: Sync
         name: 'Sync',
         description: 'Mail arrives without a refresh.',
         status: 'planned',
-        specs: ['packages/a/PLUGIN.mdl#F-1'],
         requirements: [{ id: 'F-1.1', text: 'New mail shows within a minute.' }],
       });
+      expect(Feature.getSources(feature)).toEqual(['packages/a/PLUGIN.mdl#F-1']);
       expect(featureIds(target)).toEqual([feature.id]);
+      // The document holds an embed of the feature in place of its block.
+      const content = yield* Database.load(document.content);
+      expect(content.content).toBe(`\n${SpecText.makeEmbed(feature)}\n`);
 
       // Without a target, the second import finds the spec by its document and rewrites the text in place.
       const second = yield* importSpec.handler({
@@ -215,8 +227,20 @@ feat F-1: Sync
       expect(second).toEqual({ spec: target.id, created: [], updated: [feature.id] });
       expect(feature.requirements).toEqual([{ id: 'F-1.1', text: 'New mail shows within ten seconds.' }]);
       expect(yield* Database.query(Filter.type(Spec.Spec)).run).toHaveLength(1);
-      const content = yield* Database.load(document.content);
-      expect(content.content).toContain('ten seconds');
+      expect(content.content).toBe(`\n${SpecText.makeEmbed(feature)}\n`);
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('keeps a feature added in the app, and deletes one whose block the file dropped', () =>
+    Effect.gen(function* () {
+      const both = `${spec('New mail shows within a minute.')}\n\`\`\`mdl\nfeat F-2: Compose\n\`\`\`\n`;
+      const { spec: id } = yield* importSpec.handler({ path: 'packages/a/PLUGIN.mdl', text: both, name: 'Inbox' });
+      const [target] = (yield* Database.query(Filter.type(Spec.Spec)).run).filter((spec) => spec.id === id);
+      const { feature: archive } = yield* create.handler({ name: 'Archive', spec: ref(target) });
+      yield* importSpec.handler({ path: 'packages/a/PLUGIN.mdl', text: spec('New mail shows within a minute.') });
+      const names = (yield* Database.query(Filter.type(Feature.Feature)).run).map(({ name }) => name).sort();
+      expect(names).toEqual(['Archive', 'Sync']);
+      expect((yield* embedIds(target)).at(-1)).toBe(archive.id);
     }).pipe(Effect.provide(testLayer())),
   );
 });
@@ -267,7 +291,20 @@ feat F-1: Sync
       const document = yield* Database.load(source.document);
       expect(Obj.getParent(document)?.id).toBe(first.spec);
       const content = yield* Database.load(document.content);
-      expect(content.content).toBe(changed);
+      expect(content.content).toBe(`\n${SpecText.makeEmbed(feature)}\n`);
+      expect(feature.requirements).toEqual([{ id: 'F-1.1', text: 'Mail arrives within ten seconds.' }]);
+    }).pipe(Effect.provide(testLayer())),
+  );
+});
+
+describe('FeatureOperation.ExportSpec', () => {
+  it.effect('writes the imported text back out, with each feature as its block', () =>
+    Effect.gen(function* () {
+      const text =
+        'Mail.\n\n```mdl\nfeat F-1: Sync\n  status: prototype\n  req F-1.1: Mail arrives within a minute.\n```\n';
+      const { spec: id } = yield* importSpec.handler({ path: 'packages/a/PLUGIN.mdl', text, name: 'Inbox' });
+      const [spec] = (yield* Database.query(Filter.type(Spec.Spec)).run).filter((spec) => spec.id === id);
+      expect((yield* exportSpec.handler({ spec: ref(spec) })).text).toBe(text);
     }).pipe(Effect.provide(testLayer())),
   );
 });
@@ -330,6 +367,7 @@ describe('FeatureOperation.Delete', () => {
       yield* create.handler({ name: 'Gmail', parent: ref(sync) });
       yield* deleteFeature.handler({ feature: ref(sync) });
       expect(featureIds(inbox)).toEqual([compose.id]);
+      expect(yield* embedIds(inbox)).toEqual([compose.id]);
       const remaining = yield* Database.query(Filter.type(Feature.Feature)).run;
       expect(remaining.map(({ name }) => name)).toEqual(['Compose']);
       expect((yield* Database.query(Filter.type(Spec.Spec)).run).map(({ id }) => id)).toEqual([inbox.id]);

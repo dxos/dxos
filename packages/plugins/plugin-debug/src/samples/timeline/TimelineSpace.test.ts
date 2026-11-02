@@ -6,6 +6,7 @@ import { describe, test } from 'vitest';
 
 import { buildArchive } from '@dxos/app-toolkit/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
+import * as Feature from '@dxos/plugin-projects/Feature';
 
 import * as TimelineSpace from './TimelineSpace.ts';
 
@@ -41,7 +42,7 @@ describe('Timeline project template', () => {
 
     // The spec document lives in the map, and every feature cites one of its blocks.
     expect(map.document?.uri.endsWith(spec.id)).toBe(true);
-    expect(features.map((feature) => feature.specs)).toEqual(
+    expect(features.map((feature) => Feature.getSources(feature))).toEqual(
       [1, 2, 3, 4, 5].map((index) => [`timeline/SPEC.mdl#F-${index}`]),
     );
     expect(planned.every((task) => task.status === 'todo')).toBe(true);

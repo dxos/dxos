@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type Extension } from '@codemirror/state';
 import { useAtomValue } from '@effect/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
@@ -13,11 +14,26 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import { type SourceKey, formatSourceKey, parseSourceKey } from '@dxos/deus/review';
 import { log } from '@dxos/log';
 import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
+import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
+import { type SpecDocument } from '@dxos/types';
 
 import { resolvePath } from '#sync';
 import { CodeCapabilities } from '#types';
 
 const UNAVAILABLE = Atom.make<CodeCapabilities.SpecSyncState>({ available: false, roots: [], specs: {} });
+
+/** The editor extensions contributed for a spec's document. */
+export const useContributedExtensions = (
+  document: SpecDocument.SpecDocument | undefined,
+  options: ProjectCapabilities.SpecDocumentExtensionOptions,
+): Extension[] => {
+  const factories = Hooks.useCapabilities(ProjectCapabilities.SpecDocumentExtensions);
+  const { attendableId, t } = options;
+  return useMemo(
+    () => (document ? factories.flatMap((factory) => factory(document, { attendableId, t })) : []),
+    [factories, document, attendableId, t],
+  );
+};
 
 /** The spec sync's state: whether local files are reachable, the known checkouts, and each spec's last result. */
 export const useSpecSyncState = (): CodeCapabilities.SpecSyncState & { syncNow?: () => void } => {

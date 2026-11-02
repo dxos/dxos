@@ -19,6 +19,7 @@ import {
   FeatureCompanion,
   FeatureLevelArticle,
   FeatureLevelCompanion,
+  FeatureSection,
   MoveTaskDialog,
   ProjectArticle,
   ProjectArtifactsArticle,
@@ -92,6 +93,12 @@ export default Capability.makeModule(() =>
         ),
         component: FeatureLevelCompanion,
         props: ({ role, data: { companionTo, attendableId } }) => ({ role, feature: companionTo, attendableId }),
+      }),
+      Surface.create({
+        id: 'feature.section',
+        filter: AppSurface.object(AppSurface.Section, Feature.Feature),
+        component: FeatureSection,
+        props: ({ data: { subject } }) => ({ subject }),
       }),
       Surface.create({
         id: 'feature.card',

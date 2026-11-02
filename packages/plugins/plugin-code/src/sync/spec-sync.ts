@@ -9,6 +9,7 @@ import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { log } from '@dxos/log';
 import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
+import type * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 import { type SpecDocument } from '@dxos/types';
 
 import { resolvePath } from './repo-roots.ts';
@@ -83,13 +84,55 @@ export class SyncBases {
 
 const SYNC_BASE_PREFIX = 'org.dxos.plugin.code.sync-base:';
 
+/** The document's file text from the first codec that handles it, written against `base`. */
+export const writeThrough = (
+  codecs: readonly ProjectCapabilities.SpecDocumentCodec[],
+  document: SpecDocument.SpecDocument,
+  base: string | undefined,
+): Effect.Effect<string | undefined> =>
+  Effect.promise(async () => {
+    for (const codec of codecs) {
+      const text = await codec.write(document, { base });
+      if (text !== undefined) {
+        return text;
+      }
+    }
+  });
+
+/** Offers the file's text to each codec in turn; false when none takes it, so the text is copied as it is. */
+export const readThrough = (
+  codecs: readonly ProjectCapabilities.SpecDocumentCodec[],
+  document: SpecDocument.SpecDocument,
+  text: string,
+  path: string,
+): Effect.Effect<boolean> =>
+  Effect.promise(async () => {
+    for (const codec of codecs) {
+      if (await codec.read(document, text, { path })) {
+        return true;
+      }
+    }
+    return false;
+  });
+
 export type SyncResult = { status: SyncStatus; path?: string; error?: string };
 
 /** One sync pass for one spec. */
 export const syncSpec = Effect.fnUntraced(
   function* (
     spec: SpecDocument.SpecDocument,
-    { fs, roots, bases }: { fs: FileSystem.FileSystem; roots: readonly FileSystem.RepoRoot[]; bases: SyncBases },
+    {
+      fs,
+      roots,
+      bases,
+      codecs = [],
+    }: {
+      fs: FileSystem.FileSystem;
+      roots: readonly FileSystem.RepoRoot[];
+      bases: SyncBases;
+      /** Tried in order for a document whose file text is not its own text as it is. */
+      codecs?: readonly ProjectCapabilities.SpecDocumentCodec[];
+    },
   ) {
     const key = getSpecKey(spec);
     const path = key && resolvePath(roots, key);
@@ -105,10 +148,13 @@ export const syncSpec = Effect.fnUntraced(
       return { status: 'missing', path } satisfies SyncResult;
     }
 
-    const local = text.content;
-    const { action, status } = reconcile({ local, disk, base: yield* bases.get(spec.id) });
+    const base = yield* bases.get(spec.id);
+    const local = (yield* writeThrough(codecs, spec, base)) ?? text.content;
+    const { action, status } = reconcile({ local, disk, base });
     if (action === 'pull') {
-      Doc.updateText(text, ['content'], disk);
+      if (!(yield* readThrough(codecs, spec, disk, key.path))) {
+        Doc.updateText(text, ['content'], disk);
+      }
     } else if (action === 'push') {
       yield* fs.write(path, local);
     }

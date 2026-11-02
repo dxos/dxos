@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
-import { Feature, FeatureOperation } from '#types';
+import { Feature, FeatureOperation, SpecText } from '#types';
 
 import { attach, ensureBreakdown } from './util.ts';
 
@@ -24,15 +24,24 @@ const handler: Operation.WithHandler<typeof FeatureOperation.Create> = FeatureOp
         description,
         status,
         requirements: requirements?.map((requirement) => ({ ...requirement })) ?? [],
-        specs: specs ? [...specs] : undefined,
       });
-      if (key) {
+      if (key || specs) {
         Obj.update(draft, (draft) => {
-          Obj.getMeta(draft).key = key;
+          if (key) {
+            Obj.getMeta(draft).key = key;
+          }
+          if (specs) {
+            Feature.setSources(draft, specs);
+          }
         });
       }
       const feature = yield* Database.add(draft);
       attach(spec, feature);
+      // The document is canonical for what the spec holds, so the feature is embedded there too.
+      yield* Effect.promise(async () => {
+        await SpecText.embed(spec, feature);
+        await SpecText.number(spec);
+      });
       yield* Database.flush();
       return { feature };
     }),

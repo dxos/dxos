@@ -305,9 +305,14 @@ describe('plugin-github file sync (spec/FILE-SYNC.mdl)', () => {
     const run = <A, E>(effect: Effect.Effect<A, E, Database.Service>) =>
       effect.pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
 
+    /** The base each export was given, in order. */
+    const exportBases: (string | undefined)[] = [];
     const operations: Operation.OperationService = {
       invoke: (operation, ...args) => {
         const input = args[0];
+        if (Schema.is(GitHubCapabilities.FileExportInput)(input)) {
+          exportBases.push(input.base);
+        }
         const handle: Effect.Effect<unknown, unknown, Database.Service> =
           operation.meta.key === ImportText.meta.key && Schema.is(GitHubCapabilities.FileImportInput)(input)
             ? importText(input)
@@ -371,7 +376,7 @@ describe('plugin-github file sync (spec/FILE-SYNC.mdl)', () => {
       return sha ? git.blobs.get(sha) : undefined;
     };
 
-    return { db, repo, binding, git, sync, marker, textAt, edit, fileOn, run };
+    return { db, repo, binding, git, sync, marker, textAt, edit, fileOn, run, exportBases };
   };
 
   test('the first pass imports every file a mapping claims, from the head tree', async ({ expect }) => {
@@ -407,6 +412,21 @@ describe('plugin-github file sync (spec/FILE-SYNC.mdl)', () => {
     expect(requests).toEqual(['GET /git/ref/heads/main']);
     expect(result).toMatchObject({ requests: 1, pulled: 0, pushed: 0 });
     expect({ token: binding.spec.token, snapshots: JSON.stringify(binding.spec.snapshots) }).toEqual(before);
+  });
+
+  test('export renders against the file as GitHub holds it for this space, read without a request', async ({
+    expect,
+  }) => {
+    const { exportBases, edit, fileOn, sync } = await setup();
+    await sync();
+    await edit('spec/PLUGIN.mdl', (content) => content.replace('F-1: one', 'F-1: first'));
+    await sync();
+    const pushed = fileOn('composer/edits', 'spec/PLUGIN.mdl');
+
+    const { requests } = await sync();
+
+    expect(exportBases).toEqual([SPEC_V1, SPEC_V1, pushed]);
+    expect(requests).toEqual(['GET /git/ref/heads/main', 'GET /git/ref/heads/composer/edits']);
   });
 
   test('T-2: a remote edit lands in the object and advances the marker', async ({ expect }) => {

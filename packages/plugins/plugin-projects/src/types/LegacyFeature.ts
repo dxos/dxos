@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Project from '@dxos/compute/Project';
-import { DXN, Ref, Type } from '@dxos/echo';
+import { DXN, Obj, Ref, Type } from '@dxos/echo';
 
 /** The 0.1.0 status, which also said whether work had started. */
 export const Status = Schema.Literals(['planned', 'in-progress', 'prototype', 'operational', 'failing']);
@@ -65,5 +65,23 @@ export class FeatureV2 extends Type.makeObject<FeatureV2>(DXN.make('org.dxos.typ
     project: Schema.optional(Ref.Ref(Project.Project)),
     code: Schema.optional(Schema.Array(CodeLink)),
     position: Schema.optional(Position),
+  }),
+) {}
+
+/**
+ * The 0.3.0 `Feature`, which held its provenance in `specs` where 0.4.0 holds it as foreign keys. Kept solely so
+ * `Migration.define` can read existing data.
+ */
+export class FeatureV3 extends Type.makeObject<FeatureV3>(DXN.make('org.dxos.type.feature', '0.3.0'))(
+  Schema.Struct({
+    name: Schema.String,
+    description: Schema.optional(Schema.String),
+    requirements: Schema.optional(
+      Schema.Array(Schema.Struct({ id: Schema.optional(Schema.String), text: Schema.String })),
+    ),
+    status: Schema.Literals(['planned', 'prototype', 'operational', 'failing']),
+    specs: Schema.optional(Schema.Array(Schema.String)),
+    spec: Schema.optional(Ref.Ref(Obj.Unknown)),
+    code: Schema.optional(Schema.Array(CodeLink)),
   }),
 ) {}

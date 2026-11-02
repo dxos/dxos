@@ -12,6 +12,7 @@ import { SpecDocument } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import * as Feature from './Feature.ts';
+import * as FeatureEmbed from './FeatureEmbed.ts';
 
 /** Where a feature's card sits on its spec's canvas. */
 export const Position = Schema.Struct({ x: Schema.Number, y: Schema.Number });
@@ -68,21 +69,34 @@ export type MakeProps = Omit<Obj.MakeProps<typeof Spec>, 'features' | 'document'
 
 /**
  * `features` starts as an empty list so two peers lazily creating it cannot each write a fresh one. The document, unless
- * given, is a new one headed with the spec's name.
+ * given, is a new one headed with the spec's name and embedding the features given.
  */
 export const make = ({ document, ...props }: MakeProps): Spec =>
-  Obj.make(Spec, { features: [], ...props, document: document ?? Ref.make(makeDocument(props.name)) });
-
-/** A spec's starting document: front matter naming it, ready for its features. */
-export const makeDocument = (name: string): SpecDocument.SpecDocument =>
-  SpecDocument.make({
-    name,
-    content: trim`
-      ---
-      name: ${name}
-      ---
-    `,
+  Obj.make(Spec, {
+    features: [],
+    ...props,
+    document: document ?? Ref.make(makeDocument(props.name, props.features)),
   });
+
+/** A spec's starting document: front matter naming it, then an embed of each feature, under `## Features`. */
+export const makeDocument = (
+  name: string,
+  features: readonly Ref.Ref<Feature.Feature>[] = [],
+): SpecDocument.SpecDocument => {
+  const embeds = features.map((ref) => {
+    const feature = ref.peek();
+    return FeatureEmbed.make({ label: Feature.instanceOf(feature) ? feature.name : '', uri: ref.uri });
+  });
+  const header = trim`
+    ---
+    name: ${name}
+    ---
+  `;
+  return SpecDocument.make({
+    name,
+    content: embeds.length > 0 ? `${header}\n\n## Features\n\n${embeds.join('\n\n')}\n` : header,
+  });
+};
 
 export const instanceOf = (value: unknown): value is Spec => Obj.instanceOf(Spec, value);
 

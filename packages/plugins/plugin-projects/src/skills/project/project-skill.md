@@ -312,9 +312,14 @@ become features and requirements: extract them rather than linking to the spec.
   `projects-import-spec-features { path, text, spec? | feature? | name?, project? }`: pass the repo path and the
   text. The text becomes the spec's document, and each `feat` block becomes a feature (its prose the description,
   its `req` lines the requirements) on the spec given, on the spec breaking `feature` down, or on a new spec.
-  Importing the same path again updates that spec and the requirements of the features it made before. Afterwards,
+  Importing the same path again updates that spec and the features it made before from the file. Afterwards,
   rewrite any description that states the current state rather than the ideal, and move features onto a parent's
   spec where one is a part of another.
+- A spec's document embeds its features rather than spelling them out: the embeds say which features the spec holds
+  and in what order, and each feature holds its own text. Read a spec as text with
+  `projects-export-spec-features { spec }`, which writes each embed out as its `feat` block. Moving an embed reorders
+  the spec and deleting one deletes its feature, but its id must be kept as it is; change what a feature says through
+  the feature operations.
 - Create a feature with `projects-create-feature { name, description, requirements, spec? | parent? }`.
   Change one with `projects-update-feature`; `requirements` replaces the whole list, and `spec` moves it onto that
   spec's map. `projects-delete-feature` deletes a feature with its breakdown. Record that one feature needs another with

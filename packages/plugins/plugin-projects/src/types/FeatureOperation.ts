@@ -317,7 +317,9 @@ export const ImportSpec = Operation.make({
     icon: 'ph--file-arrow-down--regular',
     description: trim`
       Imports the text of an .mdl spec into a spec: the text becomes the spec's document, and each feat block becomes a
-      feature named by its title, with the block's prose as its description and its req lines as its requirements.
+      feature named by its title, with the block's prose as its description, its status line as its status and its req
+      lines as its requirements. In the document each block is replaced by an embed of its feature, which holds the
+      content from then on; export-spec-features writes the blocks back out.
       Pass the repo path of the spec, which is recorded on each feature so importing again updates them rather than
       adding more. Pass a spec to import into it, a feature to import into the spec that breaks it down, or neither to
       make a new spec (named by name, else the path); a project then owns the new spec, and is refused when it already
@@ -343,6 +345,24 @@ export const ImportSpec = Operation.make({
     updated: Schema.Array(Schema.String).annotate({ description: 'Ids of the features whose requirements changed.' }),
   }),
 }).pipe(Operation.mutation('write'));
+
+export const ExportSpec = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.projects.exportSpecFeatures'),
+    name: 'Export a spec as text',
+    icon: 'ph--file-arrow-up--regular',
+    description: trim`
+      Reads a spec's document as an .mdl file: its prose as written, with each feature it holds written out as a feat
+      block (the feature's name, status, description and req lines). Read a spec through this operation rather than its
+      raw document, which holds embeds of the features rather than their text. A feature read in from a file keeps its
+      block id; others are numbered after the highest F-n in the text.
+    `,
+  },
+  services: [Database.Service],
+  types: [Spec.Spec, SpecDocument.SpecDocument, Feature.Feature, Text.Text],
+  input: Schema.Struct({ spec: Ref.Ref(Spec.Spec) }),
+  output: Schema.Struct({ text: Schema.String }),
+}).pipe(Operation.mutation('none'));
 
 export const ImportLinks = Operation.make({
   meta: {
