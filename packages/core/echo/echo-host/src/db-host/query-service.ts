@@ -439,11 +439,14 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
     // slowest and each run's measured time would include the others' statements.
     ready.sort((left, right) => left.cost - right.cost);
     let sliceStart = performance.now();
+    let executing = 0;
     for (const query of ready) {
       if (!query.open) {
         continue;
       }
+      const queryStart = performance.now();
       await this.#runQuery(query);
+      executing += performance.now() - queryStart;
       // Without a turn the whole batch is one task, and its answers and the requests queued behind it wait for the last query.
       if (performance.now() - sliceStart >= QUERY_SLICE_MS) {
         await yieldBehindQueuedTasks();
@@ -461,8 +464,10 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       (this.#stats.averageQueriesActive * (this.#stats.totalExecutionBatches - 1) + activeCount) /
       this.#stats.totalExecutionBatches;
 
+    // Judged on time spent in queries: the wall-clock `duration` also counts the slice yields, which wait behind
+    // whatever else the worker is doing (indexing at boot) and make a batch of fast queries look slow.
     const duration = performance.now() - begin;
-    if (duration >= SLOW_WORK_MS) {
+    if (executing >= SLOW_WORK_MS) {
       const slowest = ready.reduce<ActiveQuery | undefined>(
         (max, query) => (max && max.cost >= query.cost ? max : query),
         undefined,
@@ -470,12 +475,13 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       log.warn('slow query batch', {
         dirty: dirtyCount,
         active: activeCount,
+        executing,
         duration,
         slowest: slowest && Query.pretty(Query.fromAst(slowest.executor.query)),
         slowestCost: slowest?.cost,
       });
     } else {
-      log.verbose('executed queries', { dirty: dirtyCount, active: activeCount, duration });
+      log.verbose('executed queries', { dirty: dirtyCount, active: activeCount, executing, duration });
     }
   }
 

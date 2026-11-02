@@ -25,9 +25,9 @@ import * as Util from '@dxos/react-ui/Util';
 
 import { type SlideSource } from '#deck';
 import { useDeckTheme, useSlideClicks } from '#hooks';
-import { meta } from '#meta';
 import { type SlideTheme, SlideViewState } from '#types';
 
+import { PresenterNamespace } from '../../namespace.ts';
 import { ExitButton, PageNumber as PageNumberComponent, Pager as PagerComponent } from '../Pager/index.ts';
 import { PresentationShell } from '../PresentationShell/index.ts';
 import { Slide } from '../Slide/index.ts';
@@ -520,7 +520,7 @@ DeckPageNumber.displayName = 'Deck.PageNumber';
 
 /** Presents the deck from the current slide. */
 const DeckPlayButton = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(PresenterNamespace.key);
   const { setFullscreen } = useDeckContext('Deck.PlayButton');
   return (
     <Button.Root

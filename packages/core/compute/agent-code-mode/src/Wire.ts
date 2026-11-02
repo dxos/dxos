@@ -150,16 +150,21 @@ const detached = (object: Obj.Unknown, db: Database.Database): unknown => {
   return { [DETACHED_KEY]: { typename, properties: encode(properties, db) } };
 };
 
-/** Found by id in its own space, since the query service there has already indexed the sender's flush. */
+/**
+ * Found by id in its own space, since the query service there has already indexed the sender's flush;
+ * else by its URI, which also reaches an object that lives in a feed (an email in a mailbox), not the
+ * space's index.
+ */
 const load = (
   { id, spaceId, uri, heads }: typeof Stored.Type,
   db: Database.Database,
 ): Effect.Effect<Obj.Unknown, WireError> =>
   Effect.tryPromise({
-    try: async () =>
-      spaceId === String(db.spaceId) && EntityId.isValid(id)
-        ? (await db.query(Filter.id(id)).run())[0]
-        : await db.makeRef(URI.make(uri)).load(),
+    try: async () => {
+      const [indexed] =
+        spaceId === String(db.spaceId) && EntityId.isValid(id) ? await db.query(Filter.id(id)).run() : [];
+      return indexed ?? (await db.makeRef(URI.make(uri)).load());
+    },
     catch: (cause) => new WireError({ message: `Object not found: ${uri}`, cause }),
   }).pipe(
     Effect.flatMap((object) =>

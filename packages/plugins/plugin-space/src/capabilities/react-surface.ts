@@ -35,7 +35,7 @@ import {
   SpaceHomeArticle,
   SyncStatus,
 } from '#containers';
-import { meta } from '#meta';
+import { type SpaceSchema } from '#types';
 
 import {
   ADD_TO_COLLECTION_DIALOG,
@@ -45,9 +45,11 @@ import {
   OBJECT_FORM_DIALOG,
   RENAME_POPOVER,
 } from '../constants.ts';
+import { SpaceNamespace } from '../namespace.ts';
 import { getTypeInputOptions } from '../types/SpaceForm.ts';
 import { HueAnnotationId, IconAnnotationId, SPACE_HOME_NODE_TYPE } from '../types/SpaceSchema.ts';
 import { SpaceHomeContent } from '../types/SpaceSurface.ts';
+import { makeCreateInvitationUrl } from './helpers.ts';
 import { HueField, IconField, TypenameField } from './SpaceFormFields.tsx';
 import {
   NavbarPresenceSurface,
@@ -64,12 +66,9 @@ import {
 } from './SpaceSurfaces.tsx';
 import { tryGetViewForObject } from './try-get-view.ts';
 
-type ReactSurfaceOptions = {
-  createInvitationUrl: (invitationCode: string) => string;
-};
-
 export default Capability.makeModule(
-  Effect.fnUntraced(function* ({ createInvitationUrl }: ReactSurfaceOptions) {
+  Effect.fnUntraced(function* (options: SpaceSchema.SpacePluginOptions) {
+    const createInvitationUrl = makeCreateInvitationUrl(options);
     return Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'spaceHome',
@@ -122,7 +121,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'pluginSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
+        filter: AppSurface.settings(AppSurface.Article, SpaceNamespace.key),
         component: SpaceSettingsSurface,
         props: ({ data: { subject } }) => ({ subject }),
       }),
@@ -146,19 +145,19 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'spaceSettingsProperties',
-        filter: AppSurface.literal(AppSurface.Article, `${meta.profile.key}.general`),
+        filter: AppSurface.literal(AppSurface.Article, `${SpaceNamespace.key}.general`),
         component: SpaceSettingsPropertiesSurface,
       }),
       Surface.create({
         id: 'spaceSettingsMembers',
         position: Position.first,
-        filter: AppSurface.literal(AppSurface.Article, `${meta.profile.key}.members`),
+        filter: AppSurface.literal(AppSurface.Article, `${SpaceNamespace.key}.members`),
         component: SpaceMembersSurface,
         props: () => ({ createInvitationUrl }),
       }),
       Surface.create({
         id: 'spaceSettingsSchema',
-        filter: AppSurface.literal(AppSurface.Article, `${meta.profile.key}.schema`),
+        filter: AppSurface.literal(AppSurface.Article, `${SpaceNamespace.key}.schema`),
         component: SpaceSchemaSurface,
       }),
       Surface.create({

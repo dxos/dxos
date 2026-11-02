@@ -15,19 +15,6 @@
   ],
   "type": "module",
   "imports": {
-    "#capabilities": {
-      "source": {
-        "workerd": "./src/capabilities/gen/workerd.ts",
-        "node": "./src/capabilities/gen/node.ts",
-        "tauri": "./src/capabilities/gen/tauri.ts",
-        "browser": "./src/capabilities/gen/browser.ts"
-      },
-      "types": "./dist/types/src/capabilities/index.d.ts",
-      "workerd": "./dist/lib/capabilities.workerd.mjs",
-      "node": "./dist/lib/capabilities.node.mjs",
-      "tauri": "./dist/lib/capabilities.tauri.mjs",
-      "browser": "./dist/lib/capabilities.browser.mjs"
-    },
     "#components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
@@ -54,19 +41,16 @@
       "default": "./dist/lib/markdown.mjs"
     },
     "#meta": {
-      "source": "./src/meta.ts",
-      "types": "./dist/types/src/meta.d.ts",
-      "default": "./dist/lib/meta.mjs"
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/PresenterPlugin.workerd.mjs",
+      "node": "./dist/lib/PresenterPlugin.node.mjs",
+      "default": "./dist/lib/PresenterPlugin.mjs"
     },
     "#operations": {
       "source": "./src/operations/index.ts",
       "types": "./dist/types/src/operations/index.d.ts",
       "default": "./dist/lib/operations.mjs"
-    },
-    "#plugin": {
-      "source": "./src/plugin.tsx",
-      "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/plugin.mjs"
     },
     "#skills": {
       "source": "./src/skills/index.ts",
@@ -123,8 +107,10 @@
       "import": "./dist/lib/PresenterOperation.mjs"
     },
     "./PresenterPlugin": {
-      "source": "./src/PresenterPlugin.ts",
-      "types": "./dist/types/src/PresenterPlugin.d.ts",
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/PresenterPlugin.workerd.mjs",
+      "node": "./dist/lib/PresenterPlugin.node.mjs",
       "import": "./dist/lib/PresenterPlugin.mjs"
     },
     "./PresenterSettings": {
@@ -204,6 +190,7 @@
     "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-file": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/plugin-projects": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-studio": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
@@ -247,7 +234,6 @@
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-illustrator": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
-    "@dxos/plugin-projects": "workspace:*",
     "@dxos/plugin-routine": "workspace:*",
     "@dxos/plugin-tasks": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",

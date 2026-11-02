@@ -2,12 +2,25 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Config2 } from '@dxos/app-framework/config';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { trim } from '@dxos/util';
 
-export default Config2.make({
+import { SupportNamespace } from './src/namespace.ts';
+import * as HelpCapabilities from './src/types/HelpCapabilities.ts';
+import * as SupportCapabilities from './src/types/SupportCapabilities.ts';
+import { type SupportPluginOptions } from './src/types/SupportPluginOptions.ts';
+
+// Annotated: the capability modules import `meta` from here, so inferring it would be circular.
+const config: Plugin.PluginConfig<SupportPluginOptions> = Plugin.config<SupportPluginOptions>({
   plugin: {
-    key: 'org.dxos.plugin.support',
+    key: SupportNamespace.key,
     name: 'Support',
     author: 'DXOS',
     description: trim`
@@ -52,4 +65,82 @@ export default Config2.make({
     ],
     tags: ['system'],
   },
+  modules: [
+    AppCapability.appGraphBuilder(
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
+      {
+        requires: [SupportCapabilities.Settings],
+      },
+    ),
+    SpaceCapability.createObject(() => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } })),
+    Capability.lazyModule(
+      'HelpState',
+      {
+        requires: [Capabilities.AtomRegistry],
+        provides: [AppCapabilities.Settings, HelpCapabilities.SeenTours, HelpCapabilities.State],
+      },
+      () => import('./src/capabilities/help-state.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.operationHandler(
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.pluginAsset({
+      pluginId: SupportNamespace.key,
+      path: 'PLUGIN.mdl',
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
+      mimeType: 'application/x-mdl',
+    }),
+    AppCapability.reactRoot(() => import('./src/capabilities/react-root.tsx', { with: { type: 'module-url' } })),
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
+      roles: [
+        'org.dxos.plugin.space.role.homeContent',
+        'org.dxos.plugin.support.role.hints',
+        'org.dxos.plugin.support.role.keyshortcuts',
+        'org.dxos.role.article',
+        'org.dxos.role.deckCompanion.discord',
+        'org.dxos.role.deckCompanion.help',
+        'org.dxos.role.dialog',
+        'org.dxos.role.section',
+        'org.dxos.role.statusIndicator',
+      ],
+    }),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
+    AppCapability.skillDefinition(
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
+      provides: [SupportCapabilities.Settings],
+    }),
+    Capability.lazyModule(
+      'Tour',
+      {
+        provides: [AppCapabilities.Tour],
+        environments: ['browser', 'tauri'],
+      },
+      () => import('./src/capabilities/tour.ts', { with: { type: 'module-url' } }),
+    ),
+    Capability.lazyModule(
+      'TourAutoStart',
+      {
+        requires: [
+          AppCapabilities.AppGraph,
+          AttentionCapabilities.Attention,
+          Capabilities.AtomRegistry,
+          Capabilities.OperationInvoker,
+          ClientCapabilities.Client,
+          HelpCapabilities.SeenTours,
+          HelpCapabilities.State,
+        ],
+        provides: [],
+      },
+      () => import('./src/capabilities/tour-auto-start.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
+  ],
 });
+
+export type { SupportPluginOptions } from './src/types/SupportPluginOptions.ts';
+
+export const { meta, make } = config;
+
+export default config;

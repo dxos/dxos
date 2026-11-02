@@ -6,7 +6,7 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Filter, Obj, Order, Query, Ref, Relation, Type, type URI } from '@dxos/echo';
+import { Database, Filter, Obj, Order, Query, Ref, Relation, Type, URI } from '@dxos/echo';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
@@ -197,6 +197,19 @@ const operationKey = (definition: Operation.Definition.Any): string => String(de
  * with its handler rather than an entity the registry holds, so the registry cannot resolve one.
  * Every other DXN — a type, an object — goes to the real resolver.
  */
+/** An object's legacy ECHO DXN (`dxn:echo:<space>:<id>`, `@` for this space), which models still write. */
+const LEGACY_ECHO_DXN = /^dxn:echo:([A-Z0-9]+|@):([0-9A-Z]{26})$/;
+
+/** The object URI a legacy ECHO DXN names, since no resolver reads that form any more; any other string as is. */
+export const fromLegacyEchoDXN = (ref: string): URI.URI => {
+  const match = LEGACY_ECHO_DXN.exec(ref);
+  if (!match) {
+    return URI.make(ref);
+  }
+  const [, space, id] = match;
+  return URI.make(space === '@' ? `echo:///${id}` : `echo://${space}/${id}`);
+};
+
 const resolveWith = (operations: readonly SandboxOperation[]) => {
   const definitions = new Map(
     operations.flatMap(({ definition }) => (definition ? [[operationKey(definition), definition] as const] : [])),
@@ -206,7 +219,8 @@ const resolveWith = (operations: readonly SandboxOperation[]) => {
     if (definition !== undefined) {
       return Effect.succeed(definition);
     }
-    return schema === undefined ? Database.resolve(ref) : Database.resolve(ref, schema);
+    const target = typeof ref === 'string' ? fromLegacyEchoDXN(ref) : ref;
+    return schema === undefined ? Database.resolve(target) : Database.resolve(target, schema);
   };
 };
 

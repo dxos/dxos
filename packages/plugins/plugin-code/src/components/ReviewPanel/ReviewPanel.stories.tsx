@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { parseReview } from '@dxos/deus/review';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
@@ -13,7 +14,6 @@ import { translations as reactUiTranslations } from '@dxos/react-ui/translations
 import { translations } from '#translations';
 
 import FILE_SYSTEM_REVIEW from '../../../../plugin-file-system/PLUGIN.review.mdl?raw';
-import { parseReview } from '../SpecModel/index.ts';
 import { ReviewPanel, type ReviewPanelProps } from './ReviewPanel.tsx';
 
 /** The plugin-file-system review the spec-review skill wrote, with verdicts across every status. */

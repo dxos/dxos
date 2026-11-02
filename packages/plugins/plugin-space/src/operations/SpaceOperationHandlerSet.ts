@@ -32,6 +32,7 @@ export const handlers = OperationHandlerSet.lazy([
   SpaceOperation.DuplicateObject.pipe(Operation.lazyHandler(() => import('./duplicate-object.ts'))),
   SpaceOperation.ExportSpace.pipe(Operation.lazyHandler(() => import('./export-space.ts'))),
   SpaceOperation.FindDuplicates.pipe(Operation.lazyHandler(() => import('./find-duplicates.ts'))),
+  SpaceOperation.GetObjectLink.pipe(Operation.lazyHandler(() => import('./get-object-link.ts'))),
   SpaceOperation.GetShareLink.pipe(Operation.lazyHandler(() => import('./get-share-link.ts'))),
   SpaceOperation.ImportSpace.pipe(Operation.lazyHandler(() => import('./import-space.ts'))),
   SpaceOperation.Join.pipe(Operation.lazyHandler(() => import('./join.ts'))),

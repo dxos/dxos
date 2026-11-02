@@ -16,7 +16,7 @@ import { toServiceError } from '@dxos/protocols';
 import { type DataService } from '@dxos/protocols/rpc';
 
 import { type AutomergeHost, type DocumentLease, deriveCollectionIdFromSpaceId } from '../automerge/index.ts';
-import { DocumentsSynchronizer } from './documents-synchronizer.ts';
+import { DocumentsSynchronizer, type DocumentsSynchronizerProps } from './documents-synchronizer.ts';
 import { type IndexStatusTracker } from './index-status.ts';
 import { type SpaceStateManager } from './space-state-manager.ts';
 
@@ -33,6 +33,8 @@ export type DataServiceProps = {
     options: DataService.RunGarbageCollectionRequest,
   ) => Promise<DataService.GarbageCollectionReport>;
   indexStatus: IndexStatusTracker;
+  /** See {@link DocumentsSynchronizerProps.readDirectorySnapshot}. */
+  readDirectorySnapshot?: DocumentsSynchronizerProps['readDirectorySnapshot'];
 };
 
 /**
@@ -56,6 +58,7 @@ export class DataServiceImpl implements DataService.Handlers {
   private readonly '_automergeHost': AutomergeHost;
   private readonly '_spaceStateManager': SpaceStateManager;
   private readonly '_indexStatus': IndexStatusTracker;
+  readonly #readDirectorySnapshot: DataServiceProps['readDirectorySnapshot'];
   private readonly '_updateIndexes': (request: DataService.UpdateIndexesRequest) => Promise<void>;
   private readonly '_getSpaceStats': (spaceId: SpaceId) => Promise<DataService.DatabaseStats>;
   private readonly '_runGarbageCollection': (
@@ -70,6 +73,7 @@ export class DataServiceImpl implements DataService.Handlers {
     this._getSpaceStats = params.getSpaceStats;
     this._runGarbageCollection = params.runGarbageCollection;
     this._indexStatus = params.indexStatus;
+    this.#readDirectorySnapshot = params.readDirectorySnapshot;
   }
 
   ['DataService.subscribe'](
@@ -79,6 +83,7 @@ export class DataServiceImpl implements DataService.Handlers {
       const synchronizer = new DocumentsSynchronizer({
         automergeHost: this._automergeHost,
         sendUpdates: (updates) => void emit.single(updates),
+        readDirectorySnapshot: this.#readDirectorySnapshot,
       });
       synchronizer
         .open()

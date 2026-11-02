@@ -20,8 +20,9 @@ import { type Channel } from '@dxos/types';
 
 import { MessageThread } from '#components';
 import { useMessages, useStatus } from '#hooks';
-import { meta } from '#meta';
 import { ChannelBackend, ThreadCapabilities, ThreadOperation } from '#types';
+
+import { ThreadNamespace } from '../../namespace.ts';
 
 // Stable fallbacks so `useAtomValue` always receives an atom when plugin-calls isn't present.
 const NOT_JOINED = Atom.make(false);
@@ -81,11 +82,11 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
   }, [callProvider, id]);
 
   const menuActions = useMenuBuilder(() => {
-    const builder = MenuBuilder.make().root({ label: ['channel-toolbar.title', { ns: meta.profile.key }] });
+    const builder = MenuBuilder.make().root({ label: ['channel-toolbar.title', { ns: ThreadNamespace.key }] });
     if (canStartCall) {
       builder.action(
         'start-video-call',
-        { label: ['start-video-call.menu', { ns: meta.profile.key }], icon: 'ph--video-camera--regular' },
+        { label: ['start-video-call.menu', { ns: ThreadNamespace.key }], icon: 'ph--video-camera--regular' },
         () => {
           void handleStartCall();
         },

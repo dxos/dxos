@@ -17,10 +17,10 @@ import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { DXN } from '@dxos/keys';
 import * as Position from '@dxos/util/Position';
 
-import { meta } from '#meta';
 import { LOAD_PLUGIN_DIALOG, type RegistryPluginOptions } from '#types';
 
 import { getCategoryPredicate, getPopulatedCategories, getRemotePluginIds } from '../categories.ts';
+import { RegistryNamespace } from '../namespace.ts';
 import { PLUGINS_SEGMENT, REGISTRY_ID } from '../paths.ts';
 
 /**
@@ -62,7 +62,7 @@ export default Capability.makeModule(
               id: 'openRegistry',
               data: () => Operation.invoke(SettingsOperation.OpenPluginRegistry, {}),
               properties: {
-                label: ['open-plugin-registry.label', { ns: meta.profile.key }],
+                label: ['open-plugin-registry.label', { ns: RegistryNamespace.key }],
                 icon: 'ph--squares-four--regular',
                 disposition: 'menu',
               },
@@ -80,9 +80,9 @@ export default Capability.makeModule(
           Effect.succeed([
             AppGraphNode.make({
               id: REGISTRY_ID,
-              type: meta.profile.key,
+              type: RegistryNamespace.key,
               properties: {
-                label: ['plugin-registry.label', { ns: meta.profile.key }],
+                label: ['plugin-registry.label', { ns: RegistryNamespace.key }],
                 icon: 'ph--squares-four--regular',
                 disposition: 'pin-end',
                 position: Position.first,
@@ -120,7 +120,7 @@ export default Capability.makeModule(
                 type: 'category',
                 data: id,
                 properties: {
-                  label: [labelKey, { ns: meta.profile.key }],
+                  label: [labelKey, { ns: RegistryNamespace.key }],
                   icon,
                   testId,
                   count,
@@ -146,7 +146,7 @@ export default Capability.makeModule(
                       });
                     }),
                     properties: {
-                      label: ['load-by-url.label', { ns: meta.profile.key }],
+                      label: ['load-by-url.label', { ns: RegistryNamespace.key }],
                       icon: 'ph--cloud-arrow-down--regular',
                       disposition: 'list-item-primary',
                     },
@@ -205,7 +205,7 @@ export default Capability.makeModule(
           return Effect.succeed([
             AppGraphNode.make({
               id: PLUGINS_SEGMENT,
-              type: `${meta.profile.key}.plugins`,
+              type: `${RegistryNamespace.key}.plugins`,
               properties: { disposition: 'hidden' },
               nodes: [...installedNodes, ...registryNodes],
             }),

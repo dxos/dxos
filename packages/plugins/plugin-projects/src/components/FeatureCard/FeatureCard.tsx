@@ -13,9 +13,9 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Util from '@dxos/react-ui/Util';
 
-import { meta } from '#meta';
 import { Feature } from '#types';
 
+import { ProjectsNamespace } from '../../namespace.ts';
 import {
   type FeatureLookup,
   type FeatureModel,
@@ -175,7 +175,7 @@ type FeatureCardMarksProps = {};
  * for the tooltip, so the header stays one line; the article spells them out.
  */
 const FeatureCardMarks = (_: FeatureCardMarksProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const { feature, lookup } = useFeatureCardContext('FeatureCard.Marks');
   const [signal] = getFeatureSignals(feature, lookup);
   if (!feature.active && !signal) {
@@ -248,7 +248,7 @@ type FeatureCardTagsProps = {
 
 /** The status, whether anyone is working on it, the relation to the host's selected feature, and the derived signals. */
 const FeatureCardTags = ({ all }: FeatureCardTagsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const { feature, lookup, relation } = useFeatureCardContext('FeatureCard.Tags');
   const signals = getFeatureSignals(feature, lookup);
   const shown = all ? signals : signals.slice(0, 1);
@@ -297,7 +297,7 @@ type FeatureCardSummaryProps = {};
  * it, so a card says how far down the map goes without listing it.
  */
 const FeatureCardSummary = (_: FeatureCardSummaryProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const { feature } = useFeatureCardContext('FeatureCard.Summary');
   const { subfeatures, requirements } = feature;
   const operational = subfeatures.filter((subfeature) => subfeature.status === 'operational').length;
@@ -332,6 +332,34 @@ const FeatureCardSummary = (_: FeatureCardSummaryProps) => {
 };
 
 FeatureCardSummary.displayName = 'FeatureCard.Summary';
+
+//
+// External
+//
+
+type FeatureCardExternalProps = {};
+
+/**
+ * The features it needs that sit on other specs' maps, which a canvas of one map cannot draw an arrow to: a count, with
+ * their names in the tooltip.
+ */
+const FeatureCardExternal = (_: FeatureCardExternalProps) => {
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
+  const { feature } = useFeatureCardContext('FeatureCard.External');
+  const external = feature.external ?? [];
+  if (external.length === 0) {
+    return null;
+  }
+  return (
+    <Card.Row leading={<RowIcon icon='ph--arrow-square-out--regular' />} data-testid='feature-card.external'>
+      <span title={external.map(({ name }) => name).join(', ')}>
+        <Card.Text truncate>{t('feature-card.external.label', { count: external.length })}</Card.Text>
+      </span>
+    </Card.Row>
+  );
+};
+
+FeatureCardExternal.displayName = 'FeatureCard.External';
 
 //
 // ListSection
@@ -369,7 +397,7 @@ type FeatureCardDependenciesProps = {
 
 /** The features this one needs. */
 const FeatureCardDependencies = ({ onRemove }: FeatureCardDependenciesProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const { feature, lookup } = useFeatureCardContext('FeatureCard.Dependencies');
   const open = useOpenRow('FeatureCard.Dependencies');
   const dependencies = feature.dependsOn.flatMap((id) => lookup(id) ?? []);
@@ -411,7 +439,7 @@ type FeatureCardDependentsProps = {
 
 /** The features that need this one. */
 const FeatureCardDependents = ({ dependents }: FeatureCardDependentsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const open = useOpenRow('FeatureCard.Dependents');
   return dependents.length > 0 ? (
     <ListSection title={t('feature-card.dependents.title')} count={dependents.length}>
@@ -438,7 +466,7 @@ type FeatureCardSubfeaturesProps = {};
 
 /** The features this one breaks down into, each with its status; a row opens it. */
 const FeatureCardSubfeatures = (_: FeatureCardSubfeaturesProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const { feature } = useFeatureCardContext('FeatureCard.Subfeatures');
   const open = useOpenRow('FeatureCard.Subfeatures');
   return feature.subfeatures.length > 0 ? (
@@ -466,7 +494,7 @@ type FeatureCardRequirementsProps = {};
 
 /** What the feature must do, each with the spec id it came from. Unclamped: these are what the reader came for. */
 const FeatureCardRequirements = (_: FeatureCardRequirementsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const { feature } = useFeatureCardContext('FeatureCard.Requirements');
   return feature.requirements.length > 0 ? (
     <Card.Section title={t('feature-card.requirements.title')}>
@@ -498,7 +526,7 @@ type FeatureCardTasksProps = {};
 
 /** The tasks that implement the feature, done or not. */
 const FeatureCardTasks = (_: FeatureCardTasksProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const { feature } = useFeatureCardContext('FeatureCard.Tasks');
   const open = useOpenRow('FeatureCard.Tasks');
   return feature.tasks.length > 0 ? (
@@ -531,7 +559,7 @@ type FeatureCardShowcasesProps = {};
 
 /** The showcases that demonstrate the feature. */
 const FeatureCardShowcases = (_: FeatureCardShowcasesProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const { feature } = useFeatureCardContext('FeatureCard.Showcases');
   const open = useOpenRow('FeatureCard.Showcases');
   return feature.showcases.length > 0 ? (
@@ -539,7 +567,7 @@ const FeatureCardShowcases = (_: FeatureCardShowcasesProps) => {
       {feature.showcases.map((showcase) => (
         <Card.Row
           key={showcase.id}
-          leading={<RowIcon icon='ph--presentation-chart--regular' />}
+          leading={<RowIcon icon='ph--presentation--regular' />}
           onClick={open({ type: 'object', id: showcase.id })}
         >
           <Card.Text truncate>{showcase.name}</Card.Text>
@@ -559,7 +587,7 @@ type FeatureCardSpecsProps = {};
 
 /** The spec blocks the requirements came from: rows that open them, or links to GitHub on a card that opens nothing. */
 const FeatureCardSpecs = (_: FeatureCardSpecsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const { feature, onOpen } = useFeatureCardContext('FeatureCard.Specs');
   const open = useOpenRow('FeatureCard.Specs');
   return feature.specs.length > 0 ? (
@@ -592,7 +620,7 @@ type FeatureCardLinkProps = {};
 
 /** The DXN that code cites the feature by, with a button that copies it. */
 const FeatureCardLink = (_: FeatureCardLinkProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const { feature } = useFeatureCardContext('FeatureCard.Link');
   const { link } = feature;
   return link ? (
@@ -626,7 +654,7 @@ type FeatureCardCodeProps = {};
 
 /** The tests and code that cite the feature, each a link to its line on GitHub. */
 const FeatureCardCode = (_: FeatureCardCodeProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const { feature } = useFeatureCardContext('FeatureCard.Code');
   return feature.code.length > 0 ? (
     <ListSection title={t('feature-card.code.title')} count={feature.code.length}>
@@ -654,6 +682,7 @@ export {
   FeatureCardDependencies as Dependencies,
   FeatureCardDependents as Dependents,
   FeatureCardDescription as Description,
+  FeatureCardExternal as External,
   FeatureCardHeader as Header,
   FeatureCardLink as Link,
   FeatureCardMarks as Marks,
@@ -676,6 +705,7 @@ export type {
   FeatureCardDependenciesProps as DependenciesProps,
   FeatureCardDependentsProps as DependentsProps,
   FeatureCardDescriptionProps as DescriptionProps,
+  FeatureCardExternalProps as ExternalProps,
   FeatureCardHeaderProps as HeaderProps,
   FeatureCardLinkProps as LinkProps,
   FeatureCardMarksProps as MarksProps,

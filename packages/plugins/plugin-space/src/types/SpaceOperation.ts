@@ -765,6 +765,24 @@ export const ResolveUrl = Operation.make({
   }),
 }).pipe(Operation.mutation('none'));
 
+export const GetObjectLink = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.space.getObjectLink'),
+    name: 'Get Object Link',
+    description:
+      'A Composer URL that opens an object, for sending it where an echo:// reference cannot be followed ' +
+      '(a chat, an email). The inverse of resolveUrl.',
+    icon: 'ph--link--regular',
+  },
+  services: [Database.Service, Capability.Service],
+  input: Schema.Struct({
+    object: Ref.Ref(Obj.Unknown).annotate({ description: 'The object to link to.' }),
+  }),
+  output: Schema.Struct({
+    url: Schema.String.annotate({ description: 'The URL, titled with the object for link previews.' }),
+  }),
+}).pipe(Operation.mutation('none'));
+
 export const UpdateObject = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.space.updateObject'),

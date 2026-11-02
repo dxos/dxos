@@ -92,7 +92,7 @@ verdict F-1.1: The element registers when the lazy surface module loads.
 ```mdl
 verdict F-1.2: Article and section roles route Map objects to dx-map-surface at position first.
   status: untested
-  evidence: [github:dxos/dxos/packages/plugins/plugin-map-solid/src/capabilities/surface.tsx, github:dxos/dxos/packages/plugins/plugin-map-solid/src/capabilities/index.ts#Surface]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map-solid/src/capabilities/surface.tsx, github:dxos/dxos/packages/plugins/plugin-map-solid/dx.config.ts]
   note: `Surface.createWeb` with `tagName: 'dx-map-surface'` and `Position.first` for `AppSurface.Article` and `AppSurface.Section`; no test.
 ```
 

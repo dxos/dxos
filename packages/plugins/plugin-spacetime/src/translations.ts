@@ -5,8 +5,9 @@
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Model, Scene } from '#types';
+
+import { SpacetimeNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -28,7 +29,7 @@ export const translations = [
         'typename.label_one': 'Object',
         'typename.label_other': 'Objects',
       },
-      [meta.profile.key]: {
+      [SpacetimeNamespace.key]: {
         'plugin.name': 'Spacetime',
 
         'selection-mode.label': 'Selection mode',

@@ -237,7 +237,7 @@ verdict F-4.5: Only the driver opens a bridge; surfaces read BridgeStatus.
 ```mdl
 verdict F-4.6: The driver is a headless module that activates on SpacesAvailable.
   status: untested
-  evidence: [github:dxos/dxos/packages/plugins/plugin-stream-deck/src/capabilities/index.ts#BridgeDriver]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-stream-deck/dx.config.ts]
   note: There is no `plugin.test.ts` to check activation.
 ```
 

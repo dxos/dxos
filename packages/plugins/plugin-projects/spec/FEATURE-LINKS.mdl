@@ -4,7 +4,7 @@ name: Feature links
 version: 0.1.0
 ---
 
-Tests and analytics in the code link to the features on a project's feature map. A feature is named by a DXN:
+Tests and analytics in the code link to the features on a spec's feature map. A feature is named by a DXN:
 its `meta.key`, then `#` and its mnemonic, for example `dxn:network.dxos.team.features.mcp.codeMode#ABC123`.
 Code cites that DXN in a `@feature` JSDoc tag; analytics events carry it in a `feature` property. A scanner
 collects the tags, and the feature map shows each feature's DXN and the code that cites it.
@@ -172,7 +172,7 @@ test QA-1: Cite a feature from code
   desc: |
     A feature on the map shows the DXN that code cites it by and the tests and code that cite it; a feature with
     no key offers to set one. Walked by the autocue flow `plugin-projects/feature-links`
-    against the ProjectFeatures and FeatureArticle stories, whose seed gives "Provider sync" a key and three code
+    against the SpecFeatures and FeatureArticle stories, whose seed gives "Provider sync" a key and three code
     links.
   actors: human
   status: passing            # 2026-10-25, recorded by the plugin-projects/feature-links flow
@@ -181,7 +181,7 @@ test QA-1: Cite a feature from code
     - the seeded "Provider sync" feature has the key `org.dxos.plugin.inbox.feature.providerSync` and three code links
   steps:
     - name: See which features are tested
-      do: Open the project's Features tab as cards.
+      do: Open the spec's feature map as cards.
       expect: the "Provider sync" card shows "2 tests"; a feature that no test cites shows no count
     - name: Open a feature with a key
       do: Open the "Provider sync" feature.
@@ -281,4 +281,13 @@ decision D-9: The scan is imported into the space and stored on each feature as 
   why: Composer cannot read the repository, and storing the links on the feature lets the feature map show them offline, the way `specs` already holds repo paths.
   rejected:
     - Relations to a code object per link — many objects for data that is replaced on every scan.
+```
+
+```mdl
+decision D-10: Features live on specs rather than projects, so the feature map is a spec's, opened from the sidebar; the links to code are unchanged.
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-1]
+  why: A spec is now the container of features and the sidebar lists specs; a project only tracks a spec's tasks.
 ```

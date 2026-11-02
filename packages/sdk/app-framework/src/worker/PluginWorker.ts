@@ -100,7 +100,7 @@ export const run = ({ storageLockKey, plugins: builtIn = [], onBeforeStart, onSt
             config,
             hooks,
             router,
-            requestShutdown: Effect.sync(requestShutdown),
+            requestShutdown: (reason) => Effect.sync(() => requestShutdown(reason)),
             closeStack: Scope.close(stackScope, Exit.void),
             reportStatus,
           },
@@ -162,7 +162,7 @@ export const run = ({ storageLockKey, plugins: builtIn = [], onBeforeStart, onSt
                   Effect.catchCause((cause) => Effect.sync(() => log.catch(cause))),
                 );
                 if (sessions === 0) {
-                  requestShutdown();
+                  requestShutdown('last-session-closed');
                 }
               }),
             );

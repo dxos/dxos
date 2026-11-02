@@ -2,22 +2,23 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Space, SpaceState } from '@dxos/client/echo';
-import { invariant } from '@dxos/invariant';
+import * as Effect from 'effect/Effect';
 
-import { MigrationBuilder } from './migration-builder.ts';
+import { type Space, SpaceState } from '@dxos/client/echo';
+import { Migration } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 
 export type CompactDocumentsOptions = {
   /**
    * Entity ids whose linked Automerge documents should be compacted.
    * Defaults to all ids in the space root `links` map.
    */
-  objectIds?: string[];
+  objectIds?: readonly string[];
 };
 
 export type CompactDocumentsResult = {
-  compacted: string[];
-  skipped: string[];
+  compacted: readonly string[];
+  skipped: readonly string[];
   epochNumber: number;
 };
 
@@ -31,9 +32,15 @@ export const compactDocumentsEpochMigration = async (
 ): Promise<CompactDocumentsResult> => {
   invariant(space.state.get() === SpaceState.SPACE_READY, 'Space must be open and ready before compaction.');
 
-  const builder = new MigrationBuilder(space);
-  const { compacted, skipped } = await builder.compactLinkedDocuments(options.objectIds);
-  await builder._commit();
+  let result: Migration.CompactResult = { compacted: [], skipped: [] };
+  await space.db.runMigrations([
+    Migration.defineTransaction((transaction) =>
+      Effect.sync(() => {
+        result = transaction.compact(options.objectIds);
+      }),
+    ),
+  ]);
+  const { compacted, skipped } = result;
 
   const epochs = await space.internal.getEpochs();
   const lastEpoch = epochs[epochs.length - 1];

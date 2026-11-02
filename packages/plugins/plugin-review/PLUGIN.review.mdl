@@ -155,7 +155,7 @@ verdict HistoryProvider: A per-type provider capability; the plugin contributes 
 ```mdl
 verdict CommentAgentRunner: Consumed by AddMessage/RespondToThread; plugin-assistant contributes it and tests may pass a stub.
   status: untested
-  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/operations/respond-to-thread.ts, github:dxos/dxos/packages/plugins/plugin-review/src/plugin.tsx#ReviewPluginOptions, github:dxos/dxos/packages/plugins/plugin-assistant/src/capabilities/comment-agent-runner.ts]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-review/src/operations/respond-to-thread.ts, github:dxos/dxos/packages/plugins/plugin-review/src/types/ReviewPluginOptions.ts#ReviewPluginOptions, github:dxos/dxos/packages/plugins/plugin-assistant/src/capabilities/comment-agent-runner.ts]
   note: Only the CommentsArticle story wires a stub runner; no test runs a turn or the 3-minute timeout.
 ```
 

@@ -8,6 +8,7 @@ import * as Layer from 'effect/Layer';
 import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as Process from '@dxos/compute/Process';
@@ -44,6 +45,7 @@ const makeAgentServiceSpec = (codeModeTurnProducer: AssistantOptions.AssistantPl
             delegationStrategy: strategies[0],
             makeTurnProducer: (options) => resolveTurnProducer(manager, codeMode)(options),
             processes: () => manager.getAll(AssistantCapabilities.AgentProcess),
+            hooks: () => manager.getAll(AppCapabilities.HookDefinition),
             mcpEndpoint: (connection) =>
               ConnectorSpec.mcpEndpoint(manager.getAll(ConnectorSpec.Connector).flat(), connection),
           });

@@ -30,8 +30,8 @@ import {
   useEditorMenuOptions,
   useExtensions,
 } from '#hooks';
-import { meta } from '#meta';
 
+import { MarkdownNamespace } from '../../namespace.ts';
 import {
   MarkdownEditorContent as NaturalMarkdownEditorContent,
   type MarkdownEditorContentProps as NaturalMarkdownEditorContentProps,
@@ -188,7 +188,7 @@ const unavailableMessages = {
 } as const;
 
 const MarkdownEditorContent = ({ compact: compactProp, ...props }: MarkdownEditorContentProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(MarkdownNamespace.key);
   const {
     id,
     attendableId,

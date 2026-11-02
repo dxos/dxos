@@ -12,15 +12,18 @@ import { createInitializedClientsWithContext } from '@dxos/client/testing';
 import { Context } from '@dxos/context';
 import { Filter, Query, Scope } from '@dxos/echo';
 import { queryMetrics } from '@dxos/echo-client';
+import { fixturePath } from '@dxos/fixtures';
 import { DXN } from '@dxos/keys';
 
 //
 // The queries Composer runs, against a real space archive, which is never committed: `DX_SPACE_ARCHIVE` names a
-// `.tar` exported from Composer (anonymize one with `client-services/scripts/anonymize-space-archive.ts`), and the
-// suite is skipped without it. `DX_SPACE_ARCHIVE_FEED` and `DX_SPACE_ARCHIVE_CHAT_FEED` name the feed ids the feed
-// queries are scoped to.
+// `.tar` exported from Composer (anonymize one with `client-services/scripts/anonymize-space-archive.ts`), and
+// without it the suite reads the private `space-archive-composer` fixture, an anonymized Composer space (see the
+// `private-fixtures` skill), or is skipped when that has not been pulled. `DX_SPACE_ARCHIVE_FEED` and
+// `DX_SPACE_ARCHIVE_CHAT_FEED` name the feed ids the feed queries are scoped to; the defaults are that fixture's.
 //
-//   DX_SPACE_ARCHIVE=/path/space.tar pnpm exec vitest bench --run src/space-archive-queries.bench.ts
+//   moon run fixtures:pull -- space-archive-composer --scope agents
+//   pnpm exec vitest bench --run src/space-archive-queries.bench.ts
 //
 // The `run:` rows time one query alone. The `burst:` rows subscribe every query at once, as a view opening does:
 // `burst: cheapest answer` ends when the cheapest query has answered, which is the time a cheap query waits behind
@@ -34,7 +37,7 @@ vi.mock('@dxos/client-protocol', async (importOriginal) => ({
   IMPORT_SPACE_TIMEOUT: 30 * 60_000,
 }));
 
-const ARCHIVE_PATH = process.env.DX_SPACE_ARCHIVE;
+const ARCHIVE_PATH = process.env.DX_SPACE_ARCHIVE ?? fixturePath('space-archive-composer', { extension: 'tar' });
 const FEED_ID = process.env.DX_SPACE_ARCHIVE_FEED ?? '01M5V6F7A7K6N3RY0QZR891BMG';
 const CHAT_FEED_ID = process.env.DX_SPACE_ARCHIVE_CHAT_FEED ?? '01M5V4JZH2T2MZ3K7G88MGVTA5';
 const ANSWER_TIMEOUT_MS = 60_000;

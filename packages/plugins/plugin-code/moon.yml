@@ -9,20 +9,25 @@ tags:
   - storybook
 
 tasks:
-  check-module-structure:
-    command: >-
-      bun $workspaceRoot/tools/dx-trace-imports/cli.js
-      --export ./CodePlugin
-      --to "{react,react-dom}"
-      --conditions workerd,worker
-      --conditions node
-      --fail-on present
+  build:
     deps:
-      - dx-trace-imports:build
-      - build
+      - ~:prebuild-spec-index
+  test:
+    deps:
+      - ~:prebuild-spec-index
+  test-storybook:
+    deps:
+      - ~:prebuild-spec-index
+  # The spec index the viewer resolves `<spec id>#<item>` references through; named directly in the deps above since
+  # a same-project `~:#prebuild` tag dep resolves to nothing for a tag-inherited task.
+  prebuild-spec-index:
+    script: mkdir -p src/components/SpecEditor/gen && pnpm --filter @dxos/deus exec node --conditions=source bin/deus.ts index --out $projectRoot/src/components/SpecEditor/gen/spec-index.json
     inputs:
-      - tsconfig.json
-      - '@group(production)'
-      - /pnpm-lock.yaml
-    options:
-      timeout: 60
+      - /**/*.mdl
+      # The indexer itself, so a change to it regenerates rather than restoring a stale index from cache.
+      - /packages/reflect/deus/src/**/*
+      - /packages/reflect/deus/bin/*
+    outputs:
+      - src/components/SpecEditor/gen/spec-index.json
+    tags:
+      - prebuild

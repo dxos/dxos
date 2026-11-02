@@ -20,8 +20,8 @@ export interface HostService {
   readonly hooks: Hook.ControllerService;
   /** Serves RPC groups to every tab session, current and future. */
   readonly router: RpcRouter.Service;
-  /** Asks the worker to terminate, as when a reset has finished. */
-  readonly requestShutdown: Effect.Effect<void>;
+  /** Asks the worker to terminate, as when a reset has finished; `reason` is reported to the leader tab. */
+  readonly requestShutdown: (reason: string) => Effect.Effect<void>;
   /** Tears down the layer stack ahead of the worker, as a reset does before wiping storage. */
   readonly closeStack: Effect.Effect<void>;
   /** Sends a progress status to every connected tab, which extends the tab's connection timeout while startup runs. */

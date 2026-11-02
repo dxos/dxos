@@ -1,0 +1,302 @@
+---
+spec: github:dxos/dxos/packages/core/echo/echo/docs/FEEDS.mdl
+commit: 26786dec267cb0b3c28026585eb943d6438173a3
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: Feeds
+
+The code implements forks, the first phase of the design [D-2]. A fork writes the fork flag on its base
+block, in clear, with the fork point as the predecessor. Every store infers the branch of a block on
+insert and keeps one row for each branch. The decoder stamps the block, the branch, the fork flag and
+the predecessor on each item. The index has a branch column, and a read with no branch filter covers
+only the root branch. A walk reads the path from the root branch to a branch, forward or backward, from
+a local cursor.
+
+These parts are missing:
+
+- branch removal, and rewind as a branch
+- `Feed.heads`, and retention and permissions for each branch, and branch owners
+- partial sync.
+
+Merge and close are out of scope [D-50].
+
+Of 34 items: 16 done, 0 untested, 6 partial, 1 diverged, 11 missing. These findings are the most
+important:
+
+- **The host does not check the branch of an update.** The client refuses an update that moves an item
+  to a different branch [F-1.3]. A block from another client or from sync is not checked.
+
+- **A walk reads its whole path.** A page costs the path, not the page. The walk gives each item at
+  its first block, with its latest content [D-69].
+
+- **Rewind is still a separate mechanism.** [F-1.5] tells that a rewind is a branch and a removal. The
+  code still uses `Feed.rewindFrom` and `PARENT_KEY`.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict F-1.1: A Feed is an append log of ECHO objects.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#Feed, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#append]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed.test.ts]
+```
+
+```mdl
+verdict F-1.2: Branches use the fork flag on the block, the block id of the base as the branch id, and the predecessor as the fork point.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#fork, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#readBranch, github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.appendLocal, github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#inferBranch]
+  tests: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.test.ts, github:dxos/dxos/packages/core/echo/echo/src/Feed.test.ts, github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed-branch.test.ts]
+  walkthrough:
+    - The fork call appends the base with a fork request, and the host writes the fork flag and the fork point as the predecessor. github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#fork
+    - A continuation takes the head of its branch as its predecessor. github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.appendLocal
+    - Every store infers the branch on insert, so a replica infers the same branches. github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#inferBranch
+```
+
+```mdl
+verdict F-1.3: The client refuses an update that moves an item to a different branch; the host does not check it.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Obj.ts#update, github:dxos/dxos/packages/core/echo/echo-client/src/feed/feed-object-core.ts#FeedObjectCore.checkBranch, github:dxos/dxos/packages/core/echo/echo-client/src/errors.ts#FeedBranchMismatchError]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client/src/feed/feed-object-core.test.ts, github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed-branch.test.ts]
+  note: |
+    The upsert and the branch limit work in the client. A different client, or a block from sync, is not
+    checked by the host or by the index.
+```
+
+```mdl
+verdict F-1.4: You cannot remove a branch. Feed.remove puts a tombstone on one item.
+  status: missing
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#remove]
+  note: We searched `Feed.ts`, the feed store and the indexer for a removed or hidden branch state. We found no such state.
+```
+
+```mdl
+verdict F-1.5: Rewind is a separate mechanism, not a branch plus removal.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#Feed, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#history]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/Feed.test.ts]
+  note: |
+    `Feed.rewindFrom` on the Feed object holds a pending rewind. When `Feed.history` reads, it follows
+    `PARENT_KEY` and removes the abandoned items. No code creates a branch or sets the old branch to
+    removed.
+```
+
+```mdl
+verdict F-1.6: Branches have no owner.
+  status: missing
+  note: '`Feed.fork` creates branches, but neither the block, the branches table nor the Feed object records who owns a branch.'
+```
+
+```mdl
+verdict F-1.7: No agent creates a branch.
+  status: missing
+  note: '`Feed.fork` exists, but no agent calls it, and no code checks which device owns the base branch.'
+```
+
+```mdl
+verdict F-2.1: The index holds the main branch or all branches, and a branch scope filters before the limit. The time range is missing.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#IndexingOptions, github:dxos/dxos/packages/core/echo/echo-host/src/db-host/feed-data-source.ts#indexesAllBranches, github:dxos/dxos/packages/core/echo/index-core/src/indexes/entity-meta-index.ts#buildQueueBranchCondition, github:dxos/dxos/packages/core/echo/echo/src/Scope.ts#feed]
+  tests: [github:dxos/dxos/packages/core/echo/index-core/src/indexes/entity-meta-index.test.ts, github:dxos/dxos/packages/core/echo/echo-host/src/query/query-executor.test.ts, github:dxos/dxos/packages/core/echo/echo-host/src/db-host/feed-data-source.test.ts]
+  walkthrough:
+    - IndexingOptions has a mode of all or main, and main is the default. github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#IndexingOptions
+    - The indexer skips the blocks of a branch unless the mode is all. github:dxos/dxos/packages/core/echo/echo-host/src/db-host/feed-data-source.ts#indexesAllBranches
+    - Scope.feed takes branches, and the query puts the branch filter before the order and the limit. github:dxos/dxos/packages/core/echo/index-core/src/indexes/entity-meta-index.ts#buildQueueBranchCondition
+  note: |
+    A query can have a scope of a set of branches. The scope has no time range (`after`, `before`)
+    yet.
+```
+
+```mdl
+verdict F-2.2: The branches table keeps a head for each branch, but no call reads the heads that changed.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/echo/feed/src/migrations/0006_feed_branches.sql, github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore]
+  tests: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.test.ts]
+  note: Each insert moves the head of its branch in `branches`, with an index on the head. `Feed.heads` does not exist.
+```
+
+```mdl
+verdict F-2.3: Sync is for a full feed. A client cannot sync one branch.
+  status: missing
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#sync, github:dxos/dxos/packages/core/protocols/src/FeedProtocol.ts#Block]
+  note: '`Feed.sync` pulls the full feed. The fork flag is now in clear on the block, so EDGE can infer branches, but no request selects them.'
+```
+
+```mdl
+verdict F-2.4: The EDGE position and the local order are both readable: the local order through a walk and its local cursor.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/protocols/src/FeedProtocol.ts#Block, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#getLocalCursor, github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.walk]
+  tests: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.test.ts, github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed-branch.test.ts]
+```
+
+```mdl
+verdict F-3.1: AI chat, comments and messaging do not use one model.
+  status: missing
+  note: '`Chat`, `Thread` and `Channel` are separate ECHO types. Each type has its own feed and shape.'
+```
+
+```mdl
+verdict F-3.2: No rule keeps feed kinds apart.
+  status: missing
+  note: |
+    No code marks a feed as a mutation feed, a message feed or a trajectory feed. The comment feeds of
+    #14206 put messages and a hidden agent chat in one feed, and #14206 is not on main.
+```
+
+```mdl
+verdict F-3.3: A chat has a ref to a feed; documents, spreadsheets and canvases do not.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/compute/assistant/src/types/Chat.ts#Chat]
+  note: |
+    `Chat.feed` is a ref to the feed of the chat. No document, spreadsheet or canvas type has a feed
+    ref, and the comments plugin does not use a feed of the object.
+```
+
+```mdl
+verdict F-3.4: An object can have many sessions, each with its own feed.
+  status: missing
+  note: Each `Chat` owns its own feed, thus each new session for an object is a new feed with no branches.
+```
+
+```mdl
+verdict F-4.1: A read with no branch filter covers only the main branch.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/index-core/src/indexes/entity-meta-index.ts#queueBranchesOf, github:dxos/dxos/packages/core/echo/echo/src/Scope.ts#feed]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed-branch.test.ts, github:dxos/dxos/packages/core/echo/echo-host/src/query/query-executor.test.ts]
+```
+
+```mdl
+verdict F-4.2: Each block names its writer. We did not find a fixed turn view or a detection of late items.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/protocols/src/FeedProtocol.ts#Block, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#history]
+  tests: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.test.ts]
+  note: |
+    Each block names its `actorId` and `sequence`. The soft-fork lineage is on each item, thus a fork
+    does not misattribute a writer that did not see the fork. For concurrent `Obj.update` calls, the
+    last flush wins. No code fixes the view of a turn when it starts. No code marks a late item
+    (`PromptState.stale` is in #13782).
+```
+
+```mdl
+verdict F-4.3: A new branch costs one block with the fork flag and one row of the branches table.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#fork, github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore]
+  tests: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.test.ts]
+```
+
+```mdl
+verdict F-4.4: Retention applies only to a full feed.
+  status: missing
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#RetentionOptions]
+  note: '`Feed.RetentionOptions` (`maxLength`, `maxAge`) applies to a full feed. There is no policy for each branch.'
+```
+
+```mdl
+verdict F-4.5: Permissions apply to a full feed. A branch cannot have a smaller audience.
+  status: missing
+  note: We searched the Feed module and the feed store for an audience for each branch. We found none.
+```
+
+```mdl
+verdict Block: FeedProtocol.Block has all the fields that the spec names, and the fork flag.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/protocols/src/FeedProtocol.ts#Block]
+  tests: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.test.ts, github:dxos/dxos/packages/core/echo/feed/src/feed-store.test.ts]
+  note: '`fork` replicates in clear; `branch` and `insertionId` are local.'
+```
+
+```mdl
+verdict Trajectory.Event: Not on main. #13782 is not merged.
+  status: missing
+  note: There is no `@dxos/trajectory` package in this checkout (we searched `packages/core/compute`).
+```
+
+```mdl
+verdict threadOpen: Not on main. #13782 is not merged.
+  status: missing
+  note: This checkout has no `threadOpen`, `threadMerge`, `threadClose` or `threadWait` event.
+```
+
+```mdl
+verdict F-5.1: A forward walk gives the path from the root base to the target branch.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.walk]
+  tests: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.test.ts, github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed-branch.test.ts]
+```
+
+```mdl
+verdict F-5.2: A backward walk goes from a cursor, or the head of the branch, back to the root base.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.walk]
+  tests: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.test.ts, github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed-branch.test.ts]
+```
+
+```mdl
+verdict F-5.3: The local cursor holds the branch and the block of the last item.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#getLocalCursor]
+  tests: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.test.ts, github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed-branch.test.ts]
+```
+
+```mdl
+verdict F-5.4: With `forks`, a walk gives the base item of each branch that forks at a walked block.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.walk]
+  tests: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.test.ts, github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed-branch.test.ts]
+```
+
+```mdl
+verdict F-5.5: The walk is a feed query by local cursor, with `Feed.walk` as a wrapper.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Filter.ts#feedCursor, github:dxos/dxos/packages/core/echo/echo/src/Scope.ts#feed, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#walk, github:dxos/dxos/packages/core/echo/echo-host/src/query/query-executor.ts]
+  tests: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.test.ts, github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed-branch.test.ts]
+```
+
+```mdl
+verdict LocalCursor: The local cursor is a branded string of the branch and the block.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#LocalCursor, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#getLocalCursor]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/Feed.test.ts]
+```
+
+```mdl
+verdict BranchId: BranchId is a branded string whose value is the block id of the base block.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#BranchId]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed-branch.test.ts]
+```
+
+```mdl
+verdict FeedItemMeta: The decoder stamps the block, the branch, the fork flag and the predecessor as foreign keys.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-protocol/src/echo-feed-codec.ts#EchoFeedCodec.decodeBlock]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed-branch.test.ts]
+```
+
+```mdl
+verdict Feed: The Feed module has the branch and walk members, but not `branches` or `heads`.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#Feed]
+  note: '`Feed.branches` and `Feed.heads` do not exist.'
+```
+
+```mdl
+verdict Scope: Scope.feed takes branches and a walk.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Scope.ts#feed]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed-branch.test.ts, github:dxos/dxos/packages/core/echo/echo-host/src/query/query-executor.test.ts]
+```
+
+```mdl
+verdict Filter: Filter.feedCursor takes EDGE positions or a local cursor.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Filter.ts#feedCursor]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed-branch.test.ts]
+```

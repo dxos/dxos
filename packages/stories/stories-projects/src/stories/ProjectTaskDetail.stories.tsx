@@ -108,7 +108,7 @@ const meta: Meta<typeof ModuleContainer> = {
     // the first render.
     setupEvents: [MarkdownEvents.Start, PreviewEvents.Start],
     plugins: [
-      SpacePlugin({}),
+      SpacePlugin.make({}),
       TasksPlugin.make(),
       ProjectsPlugin.make(),
       AssistantPlugin.make(),

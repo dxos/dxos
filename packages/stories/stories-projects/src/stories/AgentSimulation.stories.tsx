@@ -130,7 +130,7 @@ const createDecorators = (options: Omit<AgentSimulator.AgentSimulatorOptions, 'r
     types: [Project.Project, Instructions.Instructions, Text.Text, TaskSet.TaskSet, Task.Task],
     onInit: seedProject,
     plugins: [
-      SpacePlugin({}),
+      SpacePlugin.make({}),
       TasksPlugin.make(),
       ProjectsPlugin.make(),
       AssistantPlugin.make({

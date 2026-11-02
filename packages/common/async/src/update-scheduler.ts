@@ -3,6 +3,7 @@
 //
 
 import { type Context } from '@dxos/context';
+import { log } from '@dxos/log';
 
 import { scheduleMicroTask } from './task-scheduling.ts';
 import { Trigger, TriggerState } from './trigger.ts';
@@ -96,24 +97,24 @@ export class UpdateScheduler {
         // microtask hops, and a forced run must claim exactly when an unthrottled one would.
         if (delay > 0 && this._skipDelay.state !== TriggerState.RESOLVED) {
           const skipDelay = this._skipDelay;
-          await new Promise<void>((resolve) => {
-            const timeoutId = setTimeout(() => {
-              clearContext();
-              resolve();
-            }, delay);
-
-            const clearContext = this._ctx.onDispose(() => {
-              clearTimeout(timeoutId);
-              resolve();
-            });
-
-            // `runBlocking`/`forceTrigger` cut the delay short.
-            void skipDelay.wait().then(() => {
-              clearTimeout(timeoutId);
-              clearContext();
-              resolve();
-            });
-          });
+          const { promise: delayed, resolve } = Promise.withResolvers<void>();
+          let timeoutId: ReturnType<typeof setTimeout>;
+          try {
+            timeoutId = setTimeout(resolve, delay);
+          } catch (err) {
+            // Cloudflare Workers refuse timers outside a request (a FinalizationRegistry callback); no
+            // `runBlocking` waits on this run, as one would have skipped the delay, so freeing the slot
+            // hands the work to the next trigger.
+            log.verbose('update left for the next trigger: throttle timer refused', { err });
+            this._scheduled = false;
+            return;
+          }
+          const clearContext = this._ctx.onDispose(resolve);
+          // `runBlocking`/`forceTrigger` cut the delay short.
+          void skipDelay.wait().then(resolve);
+          await delayed;
+          clearTimeout(timeoutId);
+          clearContext();
         }
       }
 

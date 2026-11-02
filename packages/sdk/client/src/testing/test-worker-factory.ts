@@ -59,7 +59,7 @@ export class TestWorkerFactory extends Resource {
           const dataRoot = config.get('runtime.client.storage.dataRoot');
           const runtime = yield* WorkerRuntime.makeWorkerRuntime({
             configProvider: Effect.succeed(config),
-            requestShutdown: Effect.sync(requestShutdown),
+            requestShutdown: (reason) => Effect.sync(() => requestShutdown(reason)),
             automaticallyConnectWebrtc: false,
             sqliteLayer: dataRoot ? sqliteLayerFile(`${dataRoot}/storage.db`) : sqliteLayerMemory,
           });

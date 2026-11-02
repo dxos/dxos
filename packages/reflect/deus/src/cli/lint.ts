@@ -12,6 +12,10 @@ import * as Option from 'effect/Option';
 
 import { lintMdl } from '../extension/check.ts';
 import { LintError } from './errors.ts';
+import { git } from './git.ts';
+import { buildSpecIndex } from './spec-index.ts';
+
+const INDEXED_CHECKS = ['mdl/ref', 'mdl/uses'];
 
 export type LintOptions = {
   files: readonly string[];
@@ -22,10 +26,27 @@ export type LintOptions = {
 /** Lints .mdl files with the checks the editor runs; fails when any diagnostic is an error. */
 export const lintFiles = Effect.fnUntraced(function* ({ files, only }: LintOptions) {
   const fs = yield* FileSystem.FileSystem;
+  const needsIndex = Option.isNone(only) || INDEXED_CHECKS.includes(only.value);
+  const root = needsIndex
+    ? yield* git(process.cwd(), 'rev-parse', '--show-toplevel').pipe(
+        // Outside a checkout there is nothing to resolve references against; any other git failure must fail the run.
+        Effect.catch((error) =>
+          String(error.context?.stderr).includes('not a git repository')
+            ? Effect.succeed(undefined)
+            : Effect.fail(error),
+        ),
+      )
+    : undefined;
+  if (needsIndex && root === undefined) {
+    yield* Console.log('warning: not inside a git checkout; the mdl/ref and mdl/uses checks were skipped.');
+  }
+  const index = root === undefined ? undefined : yield* buildSpecIndex(root);
   let errors = 0;
   for (const file of files) {
     const text = yield* fs.readFileString(file);
-    for (const { from, severity, source, message } of lintMdl(text)) {
+    for (const { from, severity, source, message } of lintMdl(text, {
+      index: file.endsWith('.review.mdl') ? undefined : index,
+    })) {
       if (Option.isSome(only) && source !== only.value) {
         continue;
       }

@@ -16,10 +16,10 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import type * as Util from '@dxos/react-ui/Util';
 
 import { useCountdown } from '#hooks';
-import { meta } from '#meta';
 import { Dream, Sequence } from '#types';
 
 import { MixerEngine, timedPlaybackStep } from '../../generator/index.ts';
+import { ZenNamespace } from '../../namespace.ts';
 import { Sound } from '../Sound/index.ts';
 
 //
@@ -213,7 +213,7 @@ type LayerListItemProps = {
 
 /** Single layer row in the mixer list. */
 const LayerListItem = ({ item, selected, onLayerSelect, onLayerUpdate, onLayerDelete }: LayerListItemProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ZenNamespace.key);
   return (
     <OrderedList.Item id={item.id} highlightOnHover current={selected} onClick={() => onLayerSelect(item.id)}>
       <OrderedList.DragHandle />

@@ -88,8 +88,34 @@ export const SystemTag = {
     label: 'Spam',
     hue: 'red',
   },
+  // Priority bands, applied locally by triage (`TriageMailbox`); a message carries at most one. The
+  // mailbox list groups by them, so the vocabulary lives with the other system tags.
+  priorityUrgent: {
+    id: 'priority-urgent',
+    label: 'Urgent',
+    hue: 'red',
+  },
+  priorityHigh: {
+    id: 'priority-high',
+    label: 'High priority',
+    hue: 'orange',
+  },
+  priorityNormal: {
+    id: 'priority-normal',
+    label: 'Normal',
+    hue: 'blue',
+  },
+  priorityLow: {
+    id: 'priority-low',
+    label: 'Low priority',
+    hue: 'neutral',
+  },
 } as const;
 export type SystemTagId = keyof typeof SystemTag;
+
+/** Priority bands, most pressing first; the order the mailbox list groups messages in. */
+export const PRIORITY_TAGS = ['priorityUrgent', 'priorityHigh', 'priorityNormal', 'priorityLow'] as const;
+export type PriorityTagId = (typeof PRIORITY_TAGS)[number];
 
 /** The stable foreign key identifying a canonical system {@link Tag}. */
 export const systemTagKey = (id: SystemTagId) => ({ source: SYSTEM_TAG_SOURCE, id });

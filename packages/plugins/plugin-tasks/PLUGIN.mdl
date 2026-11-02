@@ -364,7 +364,9 @@ test QA-2: Quick-add a journal bullet from anywhere
       note: |
         NO `invoke` — there is no operation that edits JournalEntry content by line; only the
         outliner's own CRDT text editing can remove it, so this is a human-only cleanup step.
+```
 
+```mdl
 test QA-3: Showcase clip
   desc: |
     The 10s showcase clip: Write an outline of a launch plan. Recorded light at 60 fps with no ident, captions or

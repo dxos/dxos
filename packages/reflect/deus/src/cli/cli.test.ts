@@ -21,6 +21,7 @@ import {
   QaLintError,
   ReviewCheckError,
   checkChangelog,
+  configDependsOn,
   deriveStatus,
   deus,
 } from './index.ts';
@@ -87,6 +88,22 @@ describe('deus lint', () => {
     for (const line of output) {
       expect(line).toMatch(new RegExp(`^${file}:\\d+: error \\[mdl/decision\\]: `));
     }
+  });
+});
+
+describe('deus lint references', () => {
+  const dir = `${FIXTURES}lint-refs`;
+
+  test('lint reports mdl/ref in a spec', async ({ expect }) => {
+    const { exit, output } = await run(['lint', '--only', 'mdl/ref', `${dir}/SPEC.mdl`]);
+    expect(LintError.is(failure(exit))).toBe(true);
+    expect(output).toEqual([`${dir}/SPEC.mdl:7: error [mdl/ref]: Unknown spec \`org.dxos.fixture.nope\`.`]);
+  });
+
+  test('lint skips mdl/ref in review files', async ({ expect }) => {
+    const { exit, output } = await run(['lint', `${dir}/SPEC.review.mdl`]);
+    expect(Exit.isSuccess(exit)).toBe(true);
+    expect(output).toEqual([]);
   });
 });
 
@@ -176,6 +193,52 @@ describe('deus review', () => {
       'QA-1 has no verdict',
     ]);
     expect(output.at(-1)).toBe('3 verdicts for 4 items; 5 errors, 1 warnings.');
+  });
+});
+
+describe('review dependsOn', () => {
+  const dir = `${FIXTURES}review`;
+
+  test('configDependsOn parses the array', ({ expect }) => {
+    expect(configDependsOn('plugin: {\n  dependsOn: [\'a.b\', "c.d"],\n}')).toEqual(['a.b', 'c.d']);
+    expect(configDependsOn('plugin: { dependsOn: [] }')).toEqual([]);
+    expect(configDependsOn('plugin: {}')).toEqual([]);
+    expect(configDependsOn("plugin: { key: 'x' }")).toEqual([]);
+    expect(configDependsOn("export default { name: 'x' }")).toBeUndefined();
+    expect(configDependsOn('plugin: { dependsOn: DEPS }')).toBeUndefined();
+    expect(configDependsOn("plugin: { dependsOn: [...BASE, 'x'] }")).toBeUndefined();
+    expect(configDependsOn("plugin: { dependsOn: ['a', B] }")).toBeUndefined();
+    expect(
+      configDependsOn(
+        "plugin: {\n  // dependsOn: ['old'],\n  dependsOn: [\n    'a',\n    // 'x',\n    'b', /* 'y' */\n  ],\n}",
+      ),
+    ).toEqual(['a', 'b']);
+  });
+
+  test('review check fails on a dependsOn mismatch judged done', async ({ expect }) => {
+    const { exit, output } = await run(['review', 'check', `${dir}/plugin-deps-mismatch/PLUGIN.review.mdl`]);
+    expect(ReviewCheckError.is(failure(exit))).toBe(true);
+    expect(
+      output.filter((line) => line.startsWith('error: ')).map((line) => line.replace(/^error: .*?:\d+: /, '')),
+    ).toEqual([
+      'SamplePlugin dependsOn [org.example.plugin.a] differs from dx.config.ts [org.example.plugin.a, org.example.plugin.b]; judge it diverged',
+    ]);
+  });
+
+  test('review check treats a config plugin without dependsOn as empty', async ({ expect }) => {
+    const { exit, output } = await run(['review', 'check', `${dir}/plugin-deps-empty/PLUGIN.review.mdl`]);
+    expect(ReviewCheckError.is(failure(exit))).toBe(true);
+    expect(
+      output.filter((line) => line.startsWith('error: ')).map((line) => line.replace(/^error: .*?:\d+: /, '')),
+    ).toEqual(['SamplePlugin dependsOn [org.example.plugin.a] differs from dx.config.ts []; judge it diverged']);
+  });
+
+  test('review check passes when the mismatch is judged diverged, or the sets match', async ({ expect }) => {
+    for (const name of ['plugin-deps-diverged', 'plugin-deps', 'plugin-deps-noplugin']) {
+      const { exit, output } = await run(['review', 'check', `${dir}/${name}/PLUGIN.review.mdl`]);
+      expect(Exit.isSuccess(exit)).toBe(true);
+      expect(output.at(-1)).toMatch(/^1 verdicts for 1 items; 0 errors, /);
+    }
   });
 });
 

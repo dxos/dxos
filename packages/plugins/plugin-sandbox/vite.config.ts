@@ -8,12 +8,9 @@ export default defineConfig({
   entry: {
     'ns/SandboxSkill': 'src/skills/SandboxSkill.ts',
     'index': 'src/index.ts',
-    'SandboxPlugin': 'src/SandboxPlugin.ts',
     'skills': 'src/skills/index.ts',
     'components': 'src/components/index.ts',
     'containers': 'src/containers/index.ts',
-    'meta': 'src/meta.ts',
-    'plugin': 'src/plugin.ts',
     'LegacyRepository': 'src/types/LegacyRepository.ts',
     'RepositoryOperation': 'src/types/RepositoryOperation.ts',
     'RepositoryService': 'src/types/RepositoryService.ts',

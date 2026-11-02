@@ -3,9 +3,10 @@ description: >
   Mount a squashfs snapshot of the workspace (source, .git, every node_modules, moon's local cache) plus
   ~/.proto and ~/.moon, each under its own overlayfs, so the job's checkout fetches only the commits since
   the snapshot and `pnpm install` links only the lockfile delta. Runs before the job's checkout: fetch
-  this directory first with a sparse `actions/checkout` (`sparse-checkout: .github/actions/workspace-snapshot`),
-  and the mount covers it. Any failure leaves an empty workspace and `mounted` false, and the job carries on
-  with a normal checkout and setup. Pass its `mounted` output to the setup action as `prebuilt`.
+  this directory first with a sparse `actions/checkout` (`sparse-checkout: .github/actions/workspace-
+  snapshot`), and the mount covers it. Any failure leaves an empty workspace and `mounted` false, and the
+  job carries on with a normal checkout and setup. Pass its `mounted` output to the setup action as
+  `prebuilt`.
 
 inputs:
   tag:
@@ -32,27 +33,9 @@ runs:
       run: |
         mount_snapshot() (
           set -euo pipefail
-          repo=${REPOSITORY#ghcr.io/}
-          token=$(curl -fsS "https://ghcr.io/token?scope=repository:$repo:pull" | jq -r .token)
-          blob=$(curl -fsS -H "Authorization: Bearer $token" -H 'Accept: application/vnd.oci.image.manifest.v1+json' \
-            "https://ghcr.io/v2/$repo/manifests/$TAG" | jq -r '.layers[0] | "\(.digest) \(.size)"')
-          digest=${blob% *}; size=${blob#* }
           sudo mkdir -p /mnt/ws && sudo chown "$(id -u):$(id -g)" /mnt/ws
           image=/mnt/ws/workspace.sqfs
-          fallocate -l "$size" "$image"
-
-          # 8 parallel ranges, each written at its own offset: one stream from GHCR is several times slower.
-          # A broken transfer fails curl (`-f`, or exit 18 on a short read); a corrupt image fails the mount.
-          start=$(date +%s.%N)
-          parts=8; chunk=$(( (size + parts - 1) / parts )); pids=()
-          for i in $(seq 0 $((parts - 1))); do
-            from=$((i * chunk)); to=$(( from + chunk - 1 < size - 1 ? from + chunk - 1 : size - 1 ))
-            ( curl -fsSL -H "Authorization: Bearer $token" -r "$from-$to" "https://ghcr.io/v2/$repo/blobs/$digest" |
-                dd of="$image" bs=4M iflag=fullblock oflag=seek_bytes seek="$from" conv=notrunc status=none ) &
-            pids+=($!)
-          done
-          for pid in "${pids[@]}"; do wait "$pid"; done
-          printf 'download: %.1fs, %d MB\n' "$(echo "$(date +%s.%N) - $start" | bc)" $((size / 1000000))
+          bash "$GITHUB_ACTION_PATH/../fetch.sh" "$REPOSITORY" "$TAG" workspace.sqfs "$image"
 
           SECONDS=0
           mkdir -p /mnt/ws/lower
@@ -74,6 +57,8 @@ runs:
         set -e
         if [ "$status" -eq 0 ]; then
           echo "mounted=true" >> "$GITHUB_OUTPUT"
+          # `.github/actions/playwright` fetches the same snapshot's Playwright file, which only browser jobs need.
+          echo "WORKSPACE_SNAPSHOT_REF=$REPOSITORY:$TAG" >> "$GITHUB_ENV"
         else
           echo "::warning::Workspace snapshot $TAG unavailable; using the normal checkout and setup."
           for target in "$GITHUB_WORKSPACE" "$HOME/.proto" "$HOME/.moon" /mnt/ws/lower; do

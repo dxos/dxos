@@ -2,12 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Config2 } from '@dxos/app-framework/config';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { trim } from '@dxos/util';
 
-export default Config2.make({
+import { ChessComNamespace } from './src/namespace.ts';
+
+// Annotated: the capability modules import `meta` from here, so inferring it would be circular.
+const config: Plugin.PluginConfig = Plugin.config({
   plugin: {
-    key: 'org.dxos.plugin.chessCom',
+    key: ChessComNamespace.key,
     name: 'Chess.com',
     author: 'DXOS',
     description: trim`
@@ -20,4 +26,36 @@ export default Config2.make({
     tags: ['labs', 'game', 'connector'],
     dependsOn: ['org.dxos.plugin.chess', 'org.dxos.plugin.game'],
   },
+  modules: [
+    AppCapability.appGraphBuilder(
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
+    ),
+    SpaceCapability.createObject(
+      () => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } }),
+      {
+        environments: ['browser', 'node', 'tauri'],
+      },
+    ),
+    AppCapability.operationHandler(
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
+      {
+        activatesOn: ActivationEvents.Idle,
+      },
+    ),
+    AppCapability.pluginAsset({
+      pluginId: ChessComNamespace.key,
+      path: 'PLUGIN.mdl',
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
+      mimeType: 'application/x-mdl',
+    }),
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
+      roles: ['org.dxos.role.article', 'org.dxos.role.section'],
+    }),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
+  ],
 });
+
+export const { meta, make } = config;
+
+export default config;

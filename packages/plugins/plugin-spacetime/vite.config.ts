@@ -7,13 +7,9 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    SpacetimePlugin: 'src/SpacetimePlugin.ts',
     SpacetimePresets: 'src/SpacetimePresets.ts',
-    plugin: 'src/plugin.tsx',
-    capabilities: 'src/capabilities/index.ts',
     components: 'src/components/index.ts',
     containers: 'src/containers/index.ts',
-    meta: 'src/meta.ts',
     translations: 'src/translations.ts',
     Model: 'src/types/Model.ts',
     Scene: 'src/types/Scene.ts',

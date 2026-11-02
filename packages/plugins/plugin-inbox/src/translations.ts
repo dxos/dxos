@@ -9,8 +9,9 @@ import { translations as queryTranslations } from '@dxos/react-ui-query/translat
 import type * as Theme from '@dxos/react-ui/Theme';
 import { Message } from '@dxos/types';
 
-import { meta } from '#meta';
 import { Calendar, Mailbox } from '#types';
+
+import { InboxNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -48,7 +49,7 @@ export const translations = [
         'delete-object.label': 'Delete calendar',
         'object-deleted.label': 'Calendar deleted',
       },
-      [meta.profile.key]: {
+      [InboxNamespace.key]: {
         'plugin.name': 'Inbox',
 
         'no-message.message': 'Select a message to view it',

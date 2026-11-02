@@ -16,8 +16,9 @@ import * as Layout from '@dxos/react-ui/Layout';
 import { getStyles } from '@dxos/ui-theme';
 import { trim } from '@dxos/util';
 
-import { meta } from '#meta';
 import { Segment } from '#types';
+
+import { TripNamespace } from '../../namespace.ts';
 
 /**
  * Read-only layout for a flight `Segment.FlightDetails`. Rendered inside the tile
@@ -65,7 +66,7 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(
   ({ data, location, current, binding }, forwardedRef) => {
     const { segment, onAction } = data;
     const { setCurrentId } = useMosaicContainer('SegmentTile');
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(TripNamespace.key);
 
     const handleCurrentChange = useCallback(() => {
       setCurrentId(segment.id);

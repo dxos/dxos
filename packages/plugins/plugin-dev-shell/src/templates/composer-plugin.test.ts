@@ -26,6 +26,11 @@ describe('Composer Plugin project template', () => {
     await builder.close();
   });
 
+  test("does not share the id of plugin-projects' template, which a browser may offer beside it", ({ expect }) => {
+    expect(composerPlugin?.id).toBe('org.dxos.project.composerPluginDevServer');
+    expect(composerPlugin?.label).toBe('Composer Plugin (Dev Server)');
+  });
+
   test('one add persists a parent task over four chained subtasks', async ({ expect }) => {
     const { db } = await builder.createDatabase({
       types: [Project.Project, Instructions.Instructions, Text.Text, TaskSet.TaskSet, Task.Task],

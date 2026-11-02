@@ -71,7 +71,7 @@ import { seedTestData } from '@dxos/types/testing';
 import { appendPendingText, cancelPendingText, setPendingAnchor, setPendingInterim } from '@dxos/ui-editor';
 import { isNonNullable, trim } from '@dxos/util';
 
-import { TranscriptionPlugin } from '#plugin';
+import * as TranscriptionPlugin from '#meta';
 import { enableQueryIndexes } from '#testing';
 import { translations } from '#translations';
 import { TranscriptionCapabilities } from '#types';
@@ -335,10 +335,10 @@ const meta = {
               yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true, secondaryIndexes: true }));
             }),
         }),
-        SpacePlugin({}),
+        SpacePlugin.make({}),
         MarkdownPlugin.make(),
         StoryGraphPlugin(),
-        TranscriptionPlugin(),
+        TranscriptionPlugin.make(),
       ],
     }),
   ],

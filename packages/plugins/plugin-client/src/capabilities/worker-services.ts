@@ -70,9 +70,9 @@ export default Capability.makeModule(
       Hook.on(Events.Closing, () => host.closeStack),
       // Over a SQLite layer of its own, since the stack's is gone by the time a reset gets here.
       Hook.on(Events.WipingStorage, () => SqliteStorage.wipeSqliteStorage.pipe(Effect.provide(sqlite), Effect.orDie)),
-      Hook.on(Events.Reset, () => host.requestShutdown),
+      Hook.on(Events.Reset, () => host.requestShutdown('reset')),
       // The tabs hold every change this process has not saved, and reconnect to a replacement with them.
-      Hook.on(Events.StorageStuck, () => host.requestShutdown),
+      Hook.on(Events.StorageStuck, () => host.requestShutdown('storage-stuck')),
     ]).pipe(Effect.provideService(Hook.Controller, host.hooks));
 
     return Capability.contributeAll(Capabilities.LayerSpec, [

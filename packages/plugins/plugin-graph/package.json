@@ -19,14 +19,11 @@
       "default": "./dist/lib/hooks.mjs"
     },
     "#meta": {
-      "source": "./src/meta.ts",
-      "types": "./dist/types/src/meta.d.ts",
-      "default": "./dist/lib/meta.mjs"
-    },
-    "#plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/plugin.mjs"
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/GraphPlugin.workerd.mjs",
+      "node": "./dist/lib/GraphPlugin.node.mjs",
+      "default": "./dist/lib/GraphPlugin.mjs"
     }
   },
   "exports": {
@@ -41,8 +38,10 @@
       "import": "./dist/lib/ns/GraphAction.mjs"
     },
     "./GraphPlugin": {
-      "source": "./src/GraphPlugin.ts",
-      "types": "./dist/types/src/GraphPlugin.d.ts",
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/GraphPlugin.workerd.mjs",
+      "node": "./dist/lib/GraphPlugin.node.mjs",
       "import": "./dist/lib/GraphPlugin.mjs"
     },
     "./Hooks": {

@@ -10,12 +10,11 @@ import { Form } from '@dxos/react-ui-form';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
-
+import { SpaceNamespace } from '../../namespace.ts';
 import { useQuerySpaceTypes } from './use-query-space-types.ts';
 
 export const SchemaContainer = ({ space }: AppSurface.SpaceArticleProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SpaceNamespace.key);
   const types = useQuerySpaceTypes(space);
 
   return (

@@ -8,10 +8,6 @@ export default defineConfig({
   entry: {
     'ns/IdeogramEvents': 'src/IdeogramEvents.ts',
     'index': 'src/index.ts',
-    'IdeogramPlugin': 'src/IdeogramPlugin.ts',
-    'plugin': 'src/plugin.tsx',
-    'capabilities': 'src/capabilities/index.ts',
-    'meta': 'src/meta.ts',
     'services': 'src/services/index.ts',
   },
   test: { node: true },

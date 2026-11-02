@@ -55,14 +55,16 @@ const defaultLog = {
 };
 
 /**
- * Normalize a rolldown module id: query stripped. Returns `null` for ids that must never be
- * grouped — virtual modules, and app-own source (see `appSourcePattern`).
+ * Normalize a rolldown module id: query stripped, except a `dx-` query, which names a different module
+ * of the same file (a plugin config's lazily loaded module list). Returns `null` for ids that must
+ * never be grouped — virtual modules, and app-own source (see `appSourcePattern`).
  */
 export const toBootModuleId = (moduleId: string, appSourcePattern = DEFAULT_APP_SOURCE_PATTERN): string | null => {
   if (moduleId.includes('\0') || appSourcePattern.test(moduleId)) {
     return null;
   }
-  return moduleId.split('?')[0];
+  const [file, query] = moduleId.split('?');
+  return query?.startsWith('dx-') ? moduleId : file;
 };
 
 /**

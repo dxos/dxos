@@ -20,7 +20,7 @@ A `.mdl` file is the authoritative description of a component: Markdown prose pl
 | `docs/DESIGN.md` §Standard Dialect | `type`, `op`, `feat`/`req`, `scenario`, `component`, `service`, `db` |
 | `lang/app.mdl`                     | `node`, `deck`, `plank`, `companion`, `surface`, `menu`              |
 | `lang/qa.mdl`                      | `test`, `step`, `suite` — executable QA                              |
-| `lang/changelog.mdl`               | `decision` — the attributed changelog                                |
+| `lang/changelog.mdl`               | `decision`, `question` — the attributed changelog                    |
 | `lang/sql.mdl`                     | `table` — a SQL table a component owns                               |
 | `lang/PLUGIN-.template.mdl`        | Starting point for a new `PLUGIN.mdl`                                |
 
@@ -39,6 +39,12 @@ invent fields.
 4. **Cross-reference by id** — `[F-2.1]`, `type:Scene`, `op:Name` — never by prose paraphrase.
 5. **Name code, never its path.** Refer to code by component or symbol (`FeedStore`, `IndexEngine`) and
    to another spec by its frontmatter `id` (`org.dxos.feed`), not by file path: files move, names stay.
+   Point into another spec with `<spec id>#<item>` (`org.dxos.ui.react-ui-canvas#F-9.2`), never a
+   `github:` key into a `.mdl` file. Every spec you refer to must be a dependency: a `uses <id>: why`
+   block under `## Dependencies` (after the opening prose, before `## Extensions`; `lang/core.mdl`), or,
+   for a plugin's runtime dependency, an entry in the `plugin` block's `dependsOn` (`lang/plugin.mdl`),
+   which must equal `dx.config.ts`'s. Never list one id in both. Check with
+   `pnpm deus lint --only mdl/ref <file.mdl>` and `--only mdl/uses`.
 
 ## The changelog
 
@@ -161,6 +167,36 @@ decision D-3: Approve [D-2].
   `D-1`, `D-2`, … in order, newest last.
 - **Do not log a decision nobody made.** If you cannot tell whether the person chose something or
   only described it, ask them (as a numbered question), then record their answer.
+
+### Questions
+
+When a spec needs a choice that you should not make alone, ask it in the spec rather than guessing.
+Append a `question Q-n` to `## Changelog` (and `question` to the Extensions table), attributed like a
+decision, with suggested answers under `options:` as `- <title>: <description>`:
+
+```mdl
+question Q-1: Does the canvas shrink when nodes are removed?
+  date: 2026-10-06
+  by: agent:claude-code
+  for: user:alice
+  affects: [Scene]
+  options:
+    - Never: bounds only grow, so the view never jumps.
+    - On drop: bounds fit the content again after each edit.
+```
+
+The answer is a decision by whoever answered, with `answers: Q-n`. Never edit the question. Composer's
+spec article lists questions at the top of the decisions-by-person view and appends that decision
+when a person answers one there. When the person answers in chat instead, record it the same way:
+
+```mdl
+decision D-6: Never.
+  date: 2026-10-07
+  by: user:alice
+  answers: Q-1
+```
+
+Asking a question changes nothing outside the changelog, so it needs no decision of its own.
 
 ## Answering "who decided this?"
 

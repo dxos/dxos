@@ -108,7 +108,7 @@ verdict ManifoldService: Manifold loads lazily and warp/union/difference are use
 ```mdl
 verdict ComposerPlugin: The plugin registers Scene and Object schemas, article/section/card surfaces and settings.
   status: partial
-  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/src/plugin.tsx#SpacetimePlugin, github:dxos/dxos/packages/plugins/plugin-spacetime/src/capabilities/schema.ts, github:dxos/dxos/packages/plugins/plugin-spacetime/src/capabilities/react-surface.ts, github:dxos/dxos/packages/plugins/plugin-spacetime/src/capabilities/settings.ts]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spacetime/dx.config.ts, github:dxos/dxos/packages/plugins/plugin-spacetime/src/capabilities/schema.ts, github:dxos/dxos/packages/plugins/plugin-spacetime/src/capabilities/react-surface.ts, github:dxos/dxos/packages/plugins/plugin-spacetime/src/capabilities/settings.ts]
   note: |
     `Settings.Settings` is an empty KVS-backed schema, not an ECHO type, and the schema capability registers only
     `Scene` and `Object`. Surfaces also include section and card content.

@@ -13,9 +13,9 @@ import { Text } from '@dxos/schema';
 import * as Position from '@dxos/util/Position';
 
 import { EditableMarkdownCard, MarkdownCard, MarkdownSettings } from '#containers';
-import { meta } from '#meta';
 import { Markdown } from '#types';
 
+import { MarkdownNamespace } from '../namespace.ts';
 import { MarkdownContainer } from './MarkdownContainer.tsx';
 
 export default Capability.makeModule(() =>
@@ -58,7 +58,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'surface.pluginSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
+        filter: AppSurface.settings(AppSurface.Article, MarkdownNamespace.key),
         component: MarkdownSettings,
         props: ({ data: { subject } }) => ({ subject }),
       }),

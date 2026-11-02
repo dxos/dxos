@@ -17,8 +17,7 @@ import {
 import { HuePicker } from '@dxos/react-ui-pickers';
 import * as Util from '@dxos/react-ui/Util';
 
-import { meta } from '#meta';
-
+import { SpacetimeNamespace } from '../../namespace.ts';
 import { type EditorState, getSelectedObjectIds } from '../../tools/index.ts';
 import { type EditorActions, createEditorActions, createTemplateSelector } from './actions.ts';
 import { type SelectionMode, createSelectionModeActions } from './selection.ts';
@@ -82,7 +81,7 @@ const createToolbarActions = (
       .subgraph(createEditorActions(editorActions, selectionCount))
       .separator()
       .subgraph(createViewActions(editorState, update))
-      .custom('hue', { label: ['hue.label', { ns: meta.profile.key }] }, () => (
+      .custom('hue', { label: ['hue.label', { ns: SpacetimeNamespace.key }] }, () => (
         <HuePicker value={editorState.hue} onChange={(hue) => update({ hue })} />
       ))
       .build(),

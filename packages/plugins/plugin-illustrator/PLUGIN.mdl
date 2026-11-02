@@ -61,32 +61,44 @@ component VariantProvider
 op create
   key: org.dxos.operation.illustrator.create
   desc: Creates a Drawing with an empty canvas for the requested (or default) variant.
+```
 
+```mdl
 op convert
   key: org.dxos.operation.illustrator.convert
   desc: Moves a sketch onto another variant by replaying its scene onto a fresh canvas of that variant
         (e.g. a read-only SVG import into Excalidraw); the old canvas is removed. Fails on an unknown
         or identical variant.
+```
 
+```mdl
 op read
   key: org.dxos.operation.illustrator.read
   desc: Returns the current scene of a drawing as world objects with object-local coordinates.
+```
 
+```mdl
 op edit
   key: org.dxos.operation.illustrator.edit
   desc: Applies scene commands to a drawing via the variant's builder; returns the resulting scene.
+```
 
+```mdl
 op draw
   key: org.dxos.operation.illustrator.draw
   desc: Applies a `.dx` document: semantic statements of any diagram kind (structure, sequence,
         data flow) are laid out by `@dxos/diagram`, scene statements pass through. Nothing is applied
         while the document has an error; the result carries the problems and the layout report.
+```
 
+```mdl
 op score
   key: org.dxos.operation.illustrator.analyze
   desc: Grades the drawing as laid out on one 0–1 scale, per layout constraint and cost term, with
         the diagnostics behind them.
+```
 
+```mdl
 op generate
   key: org.dxos.operation.illustrator.generate
   desc: DEPRECATED, superseded by `draw`. Replaces a drawing with a diagram compiled from mermaid
@@ -114,16 +126,22 @@ dialect owns its layout, so its output lands as ordinary world objects that stay
 ```mdl
 component MermaidFlowchart
   desc: DEPRECATED. Mermaid flowchart subset (nodes, subgraphs, directed edges) with a layered layout.
+```
 
+```mdl
 component UmlClass
   desc: DEPRECATED. Mermaid classDiagram subset (class blocks with members, stereotypes, generics, and the
         standard relation arrows) with a layered layout — supertypes above subtypes. Each class
         compiles to a world object with title/attributes/methods compartments.
+```
 
+```mdl
 component UmlGrid
   desc: Grid variant — equal-size cells on the document grid (GRID=32), barycenter column
         alignment, orthogonal Z-routed connectors.
+```
 
+```mdl
 component UmlEngine
   desc: Engine-backed placement (dagre | ELK layered) over the grid cells and routing — proper
         crossing minimization and straightness; see docs/DESIGN.md.
@@ -265,7 +283,9 @@ test QA-3: Render a diagram from the terminal and import it into a space
     - name: List the drawings
       do: Run `dx drawing list`.
       expect: '"pipeline" is listed with the id the import printed'
+```
 
+```mdl
 test QA-4: Showcase clip
   desc: |
     The 10s showcase clip: Draw shapes on an SVG drawing. Recorded light at 60 fps with no ident, captions or

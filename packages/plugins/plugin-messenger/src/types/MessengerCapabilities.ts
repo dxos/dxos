@@ -10,8 +10,7 @@ import type * as Atom from 'effect/reactivity/Atom';
 import * as Capability from '@dxos/app-framework/Capability';
 import { type Message } from '@dxos/types';
 
-import { meta } from '#meta';
-
+import { MessengerNamespace } from '../namespace.ts';
 import { type InboxSendError } from './errors.ts';
 import * as Notifications from './Notifications.ts';
 
@@ -24,12 +23,12 @@ export interface Sender {
 }
 
 /** Sends messages to other identities' notification panels; consumed by plugins, bots and `MessengerOperation.Send`. */
-export const Sender = Capability.makeSingleton<Sender>()(`${meta.profile.key}.capability.sender`);
+export const Sender = Capability.makeSingleton<Sender>()(`${MessengerNamespace.key}.capability.sender`);
 
 /**
  * The default space's notifications containers, the one every device writes to first; more than one
  * only until the materializer converges them, so readers union all of them.
  */
 export const NotificationsContainers = Capability.makeSingleton<Atom.Atom<readonly Notifications.Notifications[]>>()(
-  `${meta.profile.key}.capability.notificationsContainers`,
+  `${MessengerNamespace.key}.capability.notificationsContainers`,
 );

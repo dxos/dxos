@@ -1,0 +1,7 @@
+# The body of a ```mdl fence; only reached through the injection in `languages/mdl`.
+name = "MDL Block"
+grammar = "mdl"
+path_suffixes = []
+line_comments = ["# "]
+hidden = true
+tab_size = 2

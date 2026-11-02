@@ -17,9 +17,8 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { DebugSpaceObjectsPanel, SpaceGenerator } from '#containers';
+import * as DebugPlugin from '#meta';
 import { translations } from '#translations';
-
-import * as DebugPlugin from '../DebugPlugin.ts';
 
 /**
  * Picking a space template and watching it land.
@@ -70,7 +69,7 @@ const meta = {
             }),
         }),
         // Contributes the operation handlers the generators invoke (e.g. `SpaceOperation.AddType`).
-        SpacePlugin({}),
+        SpacePlugin.make({}),
         // This plugin contributes the space templates, and the panel below is rendered directly
         // rather than through a surface — so without the plugin in the list nothing ever activates
         // the module that registers them and the picker stays empty.

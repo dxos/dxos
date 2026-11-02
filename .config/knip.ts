@@ -88,7 +88,7 @@ const AUXILIARY_ENTRY = [
   // Alias targets wired up in the storybook config, never imported by name.
   '.storybook/mocks/**',
   // Stand-in package trees the introspection tests read from disk.
-  'src/__fixtures__/**',
+  'src/**/__fixtures__/**',
   'scripts/**/*.{ts,mts,js,mjs}',
 ];
 
@@ -537,6 +537,9 @@ for (const manifest of globSync(
       ),
       ...supplemental.map((p) => `${p}!`),
       ...AUXILIARY_ENTRY,
+      // Run by path with `vitest bench`, imported by nothing. Only where entries are declared: without
+      // them the whole-source glob above already reaches benches as production code.
+      ...(entry.length && !isApp ? ['src/**/*.bench.{ts,tsx}'] : []),
     ],
     project: PROJECT.map((path) => `${path}!`),
     paths: { ...WORKSPACE_PATHS, ...paths },

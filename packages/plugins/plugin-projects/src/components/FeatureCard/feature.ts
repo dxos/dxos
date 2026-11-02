@@ -43,10 +43,14 @@ export type FeatureModel = {
   specs: readonly string[];
   /** Ids of the specs imported into the space, by repo path without anchor; such a spec opens in place of GitHub. */
   specObjects?: Readonly<Record<string, string>>;
-  /** Id of the feature this one is a part of. */
+  /** Id of the spec whose map lists the feature. */
+  spec?: string;
+  /** Id of the feature this one breaks down: the owner of its spec. */
   parent?: string;
-  /** The features this one breaks down into, by name. */
+  /** The features of the spec that breaks this one down, by name. */
   subfeatures: readonly FeatureChild[];
+  /** The features it needs that sit on another spec's map; set by a view of one map, which draws no arrow to them. */
+  external?: readonly FeatureRef[];
   /** The DXN code cites the feature by (`Feature.getLink`); absent without a `meta.key`. */
   link?: string;
   /** The code that cites the feature with a `@feature` tag. */
@@ -134,11 +138,12 @@ export type FeatureGraphInput = {
     status: FeatureStatus;
     requirements?: readonly Feature.Requirement[];
     specs?: readonly string[];
+    spec?: string;
     parent?: string;
     link?: string;
     code?: readonly Feature.CodeLink[];
   }[];
-  /** Every subfeature of the features above, by parent id; the scope's own members need not be among them. */
+  /** The subfeatures of the features above, by parent id; the scope's own members need not be among them. */
   children?: readonly (readonly [FeatureChild, string])[];
   /** `DependsOn` edges as `[source, target]` feature ids. */
   dependsOn: readonly (readonly [string, string])[];

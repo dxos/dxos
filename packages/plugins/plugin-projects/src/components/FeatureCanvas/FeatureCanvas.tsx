@@ -65,6 +65,7 @@ const FeatureNodeView = ({ node }: NodeViewProps) => {
           <FeatureCard.Body>
             <FeatureCard.Description lines={3} />
             <FeatureCard.Summary />
+            <FeatureCard.External />
           </FeatureCard.Body>
         </FeatureCard.Root>
       )}
@@ -111,7 +112,10 @@ const LAYOUT: Omit<DynamicOptions, 'nodes'> = {
 
 const EDGE_SEPARATOR = '->';
 
-/** Edges point from a feature to what it depends on, so rows read from dependents down to foundations. */
+/**
+ * Edges point from a feature to what it depends on, so rows read from dependents down to foundations; a dependency on
+ * another spec's feature has no box here, and its card marks it instead.
+ */
 const toGraph = (features: readonly FeatureModel[]): GraphModel => {
   const ids = new Set(features.map((feature) => feature.id));
   return {
@@ -140,7 +144,7 @@ export type FeatureCanvasProps = {
   onLink?: (featureId: string, dependsOnId: string) => void;
   /** A selected arrow deleted; without it, arrows cannot be deleted. */
   onUnlink?: (featureId: string, dependsOnId: string) => void;
-  /** A selected box deleted: the feature leaves its project and is kept. Without it, boxes cannot be deleted. */
+  /** A selected box deleted: the feature is deleted, with its breakdown. Without it, boxes cannot be deleted. */
   onRemove?: (id: string) => void;
   /** A box to select from outside, as for a feature just created. */
   selectedId?: string;
@@ -153,7 +157,7 @@ export type FeatureCanvasProps = {
 };
 
 /**
- * The canvas view of one level of a project's features: each feature's card in a box, laid out by dependency rank with
+ * The canvas view of one level of a spec's features: each feature's card in a box, laid out by dependency rank with
  * a gutter-routed arrow per dependency. A click selects a box and a double-click zooms into it. Boxes always move;
  * drawing and deleting arrows and boxes are offered for each callback given, and change the model rather than the
  * picture, so a refused edit never appears.

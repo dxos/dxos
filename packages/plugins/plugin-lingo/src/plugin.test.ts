@@ -8,18 +8,19 @@ import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
-import { LingoPlugin } from '#plugin';
+import * as LingoPlugin from '#meta';
 
-await Harness.preload({ plugins: [ClientPlugin.make({}), MarkdownPlugin.make(), LingoPlugin()] });
+import { LingoNamespace } from './namespace.ts';
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+await Harness.preload({ plugins: [ClientPlugin.make({}), MarkdownPlugin.make(), LingoPlugin.make()] });
+
+const moduleId = (name: string) => `${LingoNamespace.key}.module.${name}`;
 
 describe('LingoPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
       // Markdown is declared in `dependsOn`, so the manager refuses to resolve Lingo without it.
-      plugins: [ClientPlugin.make({}), MarkdownPlugin.make(), LingoPlugin()],
+      plugins: [ClientPlugin.make({}), MarkdownPlugin.make(), LingoPlugin.make()],
     });
 
     expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('schema')]));

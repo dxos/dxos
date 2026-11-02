@@ -5,8 +5,9 @@
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Meeting } from '#types';
+
+import { MeetingNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -22,7 +23,7 @@ export const translations = [
         'delete-object.label': 'Delete meeting',
         'object-deleted.label': 'Meeting deleted',
       },
-      [meta.profile.key]: {
+      [MeetingNamespace.key]: {
         'plugin.name': 'Meeting',
         'meetings.label': 'All Meetings',
         'meeting.label': 'Meeting',

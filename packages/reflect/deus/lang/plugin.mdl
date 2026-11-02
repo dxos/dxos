@@ -1,7 +1,7 @@
 ---
 id: org.dxos.spec.plugin
 name: DSL.Plugin
-version: 1.0
+version: 1.1
 extends:
   - org.dxos.spec.core
 ---
@@ -19,7 +19,7 @@ dialect. Use the app dialect (`app.mdl`) for the plugin's UI: graph nodes, surfa
 
 | Term     | URI                        |
 | -------- | -------------------------- |
-| `plugin` | `org.dxos.mdl.plugin@1.0` |
+| `plugin` | `org.dxos.mdl.plugin@1.1` |
 
 ## Model
 
@@ -27,6 +27,10 @@ dialect. Use the app dialect (`app.mdl`) for the plugin's UI: graph nodes, surfa
   prose, so the first thing a reader sees is what the plugin is and what it adds. A document
   declares at most one, and its identifier is the plugin's class name (`CodePlugin`). `id:`
   repeats the frontmatter `id`, so the block can be quoted on its own.
+- `dependsOn:` is optional and lists the plugin ids this plugin needs at runtime, exactly as
+  `dx.config.ts` declares them. Each is also the `id` in that plugin's `PLUGIN.mdl` frontmatter.
+  It is written inline (`dependsOn: [a, b]`) or as a block list (`dependsOn:` then indented
+  `- id` lines, as `modules:`). Specs it only builds on or refers to go under `uses` instead.
 - `modules:` lists every module the plugin adds (`Plugin.addModule` in its `plugin.ts`). Each
   item is the module's export name, a colon, and one line on what it contributes.
 - A module named here is a spec item: a review can judge it (`verdict ReactSurface`), and a
@@ -36,17 +40,19 @@ dialect. Use the app dialect (`app.mdl`) for the plugin's UI: graph nodes, surfa
 
 ```mdl
 ext plugin
-  uri: org.dxos.mdl.plugin@1.0
+  uri: org.dxos.mdl.plugin@1.1
   desc: |
     A Composer plugin: what it is for and the modules it adds. The identifier is the plugin's
     class name; the inline prose is its purpose in one line.
   fields:
     id: URI                     # the plugin id, as in the document's frontmatter
     desc?: Prose                # what the plugin is for, and what it leaves to other plugins
+    dependsOn?: URI[]           # runtime plugin dependencies, as in dx.config.ts
     modules: ProseList          # `- Name: what it contributes`, one per Plugin.addModule
   syntax: |
     plugin CodePlugin: Authors and reviews DEUS specs.
       id: org.dxos.plugin.code
+      dependsOn: [org.dxos.plugin.illustrator]
       modules:
         - ReactSurface: the spec article and section surfaces
         - SpecSync: two-way sync of specs with files on disk

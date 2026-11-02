@@ -19,6 +19,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import type { BindingsContext } from './Dialect.ts';
+import { toRefs } from './refs.ts';
 import * as Sandbox from './Sandbox.ts';
 import * as Wire from './Wire.ts';
 import { SandboxHostRpcs, type SandboxInit, SandboxRpcs } from './WorkerSandboxProtocol.ts';
@@ -244,7 +245,7 @@ const invokeDefinition = (context: BindingsContext, key: string, input: unknown,
   const { db } = Context.get(context.runtime, Database.Service);
   return Wire.catchUp(db, heads).pipe(
     Effect.andThen(Wire.decode(input, db)),
-    Effect.flatMap((decoded) => Operation.invoke(definition, decoded)),
+    Effect.flatMap((decoded) => Operation.invoke(definition, toRefs(definition.input.ast, decoded))),
     Effect.flatMap((value) => Wire.settle(db).pipe(Effect.map((heads) => ({ value: Wire.encode(value, db), heads })))),
     Effect.provide(context.runtime),
     Effect.match({

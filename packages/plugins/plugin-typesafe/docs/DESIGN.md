@@ -52,9 +52,11 @@ body (`clef`, `clef-flash`, `jev-*`). No new route, transport or setting per mod
 **The default is a setting; pinning stays in code.** `Model.defaultDecisionModel` is an alias, not a
 model: the resolver swaps it for the model the plugin settings select, read per resolution so a change
 applies to the next decision. A consumer that needs a specific model still names it; one that just
-needs "a decision model" (plugin-labeler) asks for the alias and follows the user's choice. Unset, the
+needs "a decision model" (inbox triage) asks for the alias and follows the user's choice. Unset, the
 alias is Clef on Workers AI: it runs on EDGE's Cloudflare account, so it answers for every signed-in
-user with no key connected, where jev on TypeSafe's API depends on the platform key or a BYOK key.
+user with no key connected, where jev on TypeSafe's API depends on the platform key or a BYOK key. The
+assistant serves the same keyless models as its terminal fallback, so they resolve with this plugin
+off; enabled, this plugin's resolver sits above that fallback and its settings win.
 
 **A direct endpoint needs a key, over HTTPS.** The `endpoint` setting bypasses EDGE, so there is no
 platform key behind it; a space with none connected fails with an `AuthenticationError`
@@ -81,4 +83,4 @@ from a browser.
 
 No UI. The connector dialog is plugin-connector's, and there is nothing else to show — a decision
 model has no view of its own. Anything user-facing belongs to the plugin asking the questions
-(see plugin-labeler).
+(see inbox triage, `plugin-inbox/docs/TRIAGE.mdl`).

@@ -11,7 +11,7 @@ Related documents:
 
 - `echo-host/docs/SQL_QUERY_EXECUTION.md`: the index side. This proposal needs two things that
   doc's goals exclude (§3.8), so the two have to be reconciled before phase 1.
-- `.agents/projects/feed-live-objects/DESIGN.md` stages 2 and 3: the feed seam and the feed version
+- `packages/core/echo/echo/docs/feeds/live-objects.md` stages 2 and 3: the feed seam and the feed version
   comparator, which this proposal reuses rather than redefines.
 
 ## Summary
@@ -877,7 +877,7 @@ feed selection as `local-partial`; a feed window stays remote-only.
 
 `markMilestone` (`@dxos/util`) writes `performance.mark('dxos:<name>')` with DevTools' `marker` data type,
 which draws a vertical line on the Performance timeline. Marks: `worker.spawned`, `worker.started`,
-`worker.services-ready`, `worker.session-ready`, `worker.connected`, `client.initializing`, `client.ready`,
+`worker.services-ready`, `worker.session-ready`, `worker.connected`, `client.initializing`, `client.ready`, `client.services-ready`,
 `identity.ready`, `network.started`, `network.connected`, `spaces.opening`, `spaces.loaded`, `spaces.ready`,
 `replication.connected` (per space), `indexing.started` and `indexing.caught-up`.
 

@@ -9,17 +9,20 @@ import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
 
-import { meta } from '#meta';
-import { SlackPlugin } from '#plugin';
+import * as SlackPlugin from '#meta';
 
-await Harness.preload({ plugins: [ClientPlugin.make({}), ConnectorPlugin.make(), ThreadPlugin.make(), SlackPlugin()] });
+import { SlackNamespace } from './namespace.ts';
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+await Harness.preload({
+  plugins: [ClientPlugin.make({}), ConnectorPlugin.make(), ThreadPlugin.make(), SlackPlugin.make()],
+});
+
+const moduleId = (name: string) => `${SlackNamespace.key}.module.${name}`;
 
 describe('SlackPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), ConnectorPlugin.make(), ThreadPlugin.make(), SlackPlugin()],
+      plugins: [ClientPlugin.make({}), ConnectorPlugin.make(), ThreadPlugin.make(), SlackPlugin.make()],
     });
 
     // The modules are dependency-mode with no requires, so they activate in the

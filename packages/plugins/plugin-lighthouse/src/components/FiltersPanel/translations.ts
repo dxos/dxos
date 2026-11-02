@@ -1,0 +1,45 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+/** The filters panel's and the active-filter chips' strings, under the plugin's namespace. */
+export const filtersTranslations: Record<string, string> = {
+  'filters.label': 'Filters',
+  'filters-panel.label': 'Filters and sort',
+  'filters-count.label': '{{shown}} of {{total}}',
+  'filters-sort.label': 'Sort',
+  'filters-clear.label': 'Clear all',
+  'filters-close.label': 'Close',
+  'filters-empty.message': 'No properties to filter by yet.',
+  'filters-more.label': 'More filters ({{count}})',
+  'filters-fewer.label': 'Fewer filters',
+  'filters-foot.message':
+    'Filters hide results; the rating model still scores every one. A result of a kind that has a property but whose value was not found is kept unless you untick “Include … without this”.',
+  'filters-model.label': 'model',
+  'filters-model.description': 'The rating model reads this',
+  'filters-clear-one.label': 'Clear {{label}}',
+  'filters-unknown.label': 'Include {{count}} without this',
+  'filters-lowest.label': '{{label}}: lowest',
+  'filters-highest.label': '{{label}}: highest',
+  'filters-at-least.label': '{{label}}: at least',
+  'filters-at-most.label': '{{label}}: at most',
+  'filters-search.placeholder': 'Search {{count}} values',
+  'filters-search.label': 'Search {{label}}',
+  'filters-show-all.label': 'Show all {{count}}',
+  'filters-show-fewer.label': 'Show fewer',
+  'filters-match.label': 'Match',
+  'filters-any.label': 'Any of these',
+  'filters-all.label': 'All of these',
+  'filters-only.label': 'Only these',
+  'filters-days.label': '{{label}}: how recent',
+  'filters-any-time.label': 'Any time',
+  'filters-last-day.label': 'In the last day',
+  'filters-last-days.label': 'In the last {{count}} days',
+  'filters-chips.label': 'Active filters',
+  'filters-chip-known.label': ' · known only',
+  'filters-chip-unknown.label': ' · incl. {{count}} unknown',
+  'filters-chip-hidden.description': '{{filter}} — results without a value are hidden',
+  'filters-chip-kept.description': '{{filter}} — {{count}} without a value kept',
+  'filters-chip-remove.label': 'Remove {{filter}}',
+  'filters-sort-reset.label': 'Sort by score again',
+};

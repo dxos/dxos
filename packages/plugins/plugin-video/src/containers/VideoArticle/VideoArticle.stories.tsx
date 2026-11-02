@@ -18,7 +18,7 @@ import { Text } from '@dxos/schema';
 import { Video } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { VideoPlugin } from '#plugin';
+import * as VideoPlugin from '#meta';
 import { translations } from '#translations';
 
 import { VideoArticle } from './VideoArticle.tsx';
@@ -75,7 +75,7 @@ const meta = {
             }),
         }),
         MarkdownPlugin.make(),
-        VideoPlugin(),
+        VideoPlugin.make(),
       ],
     }),
   ],

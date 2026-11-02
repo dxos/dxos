@@ -29,10 +29,10 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { File, Milestone, Person, Task, TaskSet } from '@dxos/types';
 
+import * as TasksPlugin from '#meta';
 import { translations } from '#translations';
 import { TasksCapabilities } from '#types';
 
-import * as TasksPlugin from '../../TasksPlugin.ts';
 import { TaskSetArticle } from './TaskSetArticle.tsx';
 
 /**

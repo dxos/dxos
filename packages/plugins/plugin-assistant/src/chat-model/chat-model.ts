@@ -44,6 +44,7 @@ import { markWork } from '@dxos/util';
 import { TurnReviewSkill } from '#skills';
 import { AssistantOperation } from '#types';
 
+import { consentGuard } from '../util/consent-guard.ts';
 import { findInCause } from '../util/error-cause.ts';
 import { Outbox, type OutboxEntry, PromptCancelledError } from './outbox.ts';
 import { providerForModel } from './presets.ts';
@@ -671,9 +672,12 @@ export class ChatModel {
       // The model is the chat's, so the provider has to be the one that serves THAT model: the
       // configured provider can have moved on since the chat made its selection.
       const model = chat.session?.model ?? selected;
+      const location = Agent.chatLocation(chat);
       return yield* AgentService.getSession(chat, {
         provider: model ? providerForModel(model, this._options.provider) : this._options.provider,
-        location: Agent.chatLocation(chat),
+        location,
+        // A guard is a closure, so only a local agent can ask the person for consent.
+        ...(location === 'local' ? { guard: yield* consentGuard(chat) } : {}),
       });
     });
   }

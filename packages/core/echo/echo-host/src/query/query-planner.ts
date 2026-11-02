@@ -1430,8 +1430,11 @@ const feedScanForLimit = (
   if (selectStep.scope.length === 0 || !selectStep.scope.every((scope) => scope._tag === 'feed')) {
     return undefined;
   }
-  // A cursor read is already windowed by position, which is a different ordering.
-  if (selectStep.feedCursorRange !== undefined) {
+  // A cursor read is already windowed by position, and a walk by its path: both are different orderings.
+  if (
+    selectStep.feedCursorRange !== undefined ||
+    selectStep.scope.some((scope) => scope._tag === 'feed' && scope.walk)
+  ) {
     return undefined;
   }
   // The index seeks by id or type; every other selector reaches rows the window cannot order.
@@ -1689,9 +1692,12 @@ const _splitFeedCursor = (
   };
 };
 
-const _feedCursorRange = (filter: QueryAST.FilterFeedCursor): { begin?: string; end?: string } => ({
+const _feedCursorRange = (
+  filter: QueryAST.FilterFeedCursor,
+): { begin?: string; end?: string; positions?: 'local' | 'edge' } => ({
   ...(filter.begin !== undefined ? { begin: filter.begin } : {}),
   ...(filter.end !== undefined ? { end: filter.end } : {}),
+  ...(filter.positions !== undefined ? { positions: filter.positions } : {}),
 });
 
 const _containsFeedCursor = (filter: QueryAST.Filter): boolean => {

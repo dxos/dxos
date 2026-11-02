@@ -18,7 +18,8 @@ import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { Task } from '@dxos/types';
 
 import { MoveTaskPanel } from '#components';
-import { meta } from '#meta';
+
+import { ProjectsNamespace } from '../../namespace.ts';
 
 export type MoveTaskDialogProps = {
   task: Task.Task;
@@ -26,7 +27,7 @@ export type MoveTaskDialogProps = {
 
 /** Picks the project a task (with its sub-tasks) moves into, then runs `MoveTaskToSet`. */
 export const MoveTaskDialog = ({ task }: MoveTaskDialogProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(task);
   const [error, setError] = useState<string>();

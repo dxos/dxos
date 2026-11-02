@@ -12,7 +12,7 @@ import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
-import { Spec } from '@dxos/types';
+import { SpecDocument } from '@dxos/types';
 
 import { translations } from '#translations';
 
@@ -28,11 +28,11 @@ import { SpecArticle } from './SpecArticle.tsx';
 const DefaultStory = ({ content }: { content?: string }) => {
   const spaces = useSpaces();
   const space = spaces[0];
-  const [spec, setSpec] = useState<Spec.Spec | undefined>();
+  const [spec, setSpec] = useState<SpecDocument.SpecDocument | undefined>();
 
   useEffect(() => {
     if (space && !spec) {
-      setSpec(space.db.add(Spec.make({ content })));
+      setSpec(space.db.add(SpecDocument.make({ content })));
     }
   }, [space, content, spec]);
 
@@ -56,7 +56,7 @@ const meta = {
       plugins: [
         ...CorePlugins.make(),
         ClientPlugin.make({
-          types: [Spec.Spec],
+          types: [SpecDocument.SpecDocument],
           onClientInitialized: ({ client }) => initializeIdentity(client).pipe(Effect.asVoid),
         }),
       ],

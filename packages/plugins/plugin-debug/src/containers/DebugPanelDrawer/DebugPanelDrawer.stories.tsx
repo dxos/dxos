@@ -11,9 +11,9 @@ import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as Main from '@dxos/react-ui/Main';
 import { withTheme } from '@dxos/react-ui/testing';
 
+import * as DebugPlugin from '#meta';
 import { translations } from '#translations';
 
-import * as DebugPlugin from '../../DebugPlugin.ts';
 import { StubDrawerPlugin, StubToolsPlugin, setDrawerState, useDrawerState } from '../../testing/index.ts';
 import { type DebugPanelViewState, debugPanelAspect } from '../DebugPanel/index.ts';
 import { DebugPanelDrawer, type DebugPanelDrawerProps } from './DebugPanelDrawer.tsx';

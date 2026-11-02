@@ -22,9 +22,10 @@ import { osTranslations } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
 import { DevicesForm } from '#components';
-import { meta } from '#meta';
 import { ClientOperation } from '#operations';
 import { ClientCapabilities, ClientOptions } from '#types';
+
+import { ClientNamespace } from '../../namespace.ts';
 
 export type DevicesContainerProps = Pick<ClientOptions.ClientPluginOptions, 'identityTestActions'> & {
   createInvitationUrl?: (invitationCode: string) => string;
@@ -156,7 +157,7 @@ const InvitationSection = ({
   onInvitationDone = () => {},
   onInvitationCreate = () => {},
 }: InvitationComponentProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(ClientNamespace.key);
   const authCode = event?._tag === 'readyForAuthentication' ? event.authCode : undefined;
   const activeView = !event
     ? 'init'
@@ -204,7 +205,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
   const emoji = hexToEmoji(id);
   return (
     <>
-      <p className='text-fg-muted'>{t('qr-code.description', { ns: meta.profile.key })}</p>
+      <p className='text-fg-muted'>{t('qr-code.description', { ns: ClientNamespace.key })}</p>
       <Layout.Grid role='group' cols={['fill', 'min']}>
         <Layout.Flex justify='center' classNames='py-4'>
           <div className='w-full md:max-w-80 aspect-square relative text-fg-muted'>

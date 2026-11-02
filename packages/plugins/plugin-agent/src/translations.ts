@@ -5,8 +5,9 @@
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { AgentChannels, AgentEmail, Goal } from '#types';
+
+import { AgentNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -32,7 +33,7 @@ export const translations = [
         'typename.label_other': 'Goals',
         'object-name.placeholder': 'New goal',
       },
-      [meta.profile.key]: {
+      [AgentNamespace.key]: {
         'plugin.name': 'Agent',
         'email-channel.label': 'Email address',
         'email-channel.description':

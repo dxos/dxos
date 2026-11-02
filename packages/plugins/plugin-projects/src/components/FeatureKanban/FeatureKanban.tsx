@@ -14,8 +14,7 @@ import * as Focus from '@dxos/react-ui/Focus';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Util from '@dxos/react-ui/Util';
 
-import { meta } from '#meta';
-
+import { ProjectsNamespace } from '../../namespace.ts';
 import {
   FEATURE_STATUSES,
   FeatureCard,
@@ -104,7 +103,7 @@ const FeatureKanbanCard = ({ data: feature, location, draggable, binding }: Mosa
 };
 
 const FeatureKanbanColumn = ({ data: status, location }: MosaicTileProps<FeatureStatus>) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const { model } = useBoard<FeatureStatus, FeatureModel>('FeatureKanban.Column');
   const { onChange } = useContext(FeatureKanbanContext);
   const count = useAtomValue(model.items(status)).length;
@@ -147,7 +146,7 @@ const FeatureKanbanColumn = ({ data: status, location }: MosaicTileProps<Feature
  * The Kanban view of one level of a project's features: a column per status, each feature's card in its status column.
  * Dragging a card to another column sets the feature's status; double-clicking one zooms into its subfeatures.
  */
-// Composable, so a host's slot (the Features tab's `Panel.Body asChild`) styles the board itself.
+// Composable, so a host's slot (the spec map's `Panel.Body asChild`) styles the board itself.
 export const FeatureKanban = Util.composable<HTMLDivElement, FeatureKanbanProps>(
   ({ features, onZoom, onChange, selectedId: selectedIdProp, defaultSelectedId, onSelect, ...props }, forwardedRef) => {
     const [selectedIdState, setSelectedIdState] = useState<string | undefined>(defaultSelectedId);

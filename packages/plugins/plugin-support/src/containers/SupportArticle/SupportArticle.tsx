@@ -16,13 +16,14 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { meta } from '#meta';
 import { Support } from '#types';
+
+import { SupportNamespace } from '../../namespace.ts';
 
 export type SupportArticleProps = AppSurface.ObjectArticleProps<Support.Ticket>;
 
 export const SupportArticle = ({ role, subject }: SupportArticleProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SupportNamespace.key);
   const [ticket] = useObject(subject);
 
   const handleSetTitle = useCallback(

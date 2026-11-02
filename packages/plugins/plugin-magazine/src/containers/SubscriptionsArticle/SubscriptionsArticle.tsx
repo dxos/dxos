@@ -19,13 +19,14 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { SubscriptionStack, type SubscriptionStackAction } from '#components';
-import { meta } from '#meta';
 import { FeedOperation, Subscription } from '#types';
+
+import { MagazineNamespace } from '../../namespace.ts';
 
 export type SubscriptionsArticleProps = AppSurface.SpaceArticleProps;
 
 export const SubscriptionsArticle = ({ role, space, attendableId }: SubscriptionsArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(MagazineNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const layout = ToolkitHooks.useLayout();
 

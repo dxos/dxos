@@ -10,9 +10,10 @@ import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import * as Feature from '@dxos/plugin-projects/Feature';
+import * as Spec from '@dxos/plugin-projects/Spec';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
 import { Text } from '@dxos/schema';
-import { Outline, Spec, Task, TaskSet } from '@dxos/types';
+import { Outline, SpecDocument, Task, TaskSet } from '@dxos/types';
 
 import specContent from '../../../assets/timeline/SPEC.mdl?raw';
 import { makeEvents } from '../presenter/partial.ts';
@@ -165,11 +166,13 @@ const SEQUENCE = ['Complete the spec', 'Draw the proposed architecture', 'Implem
 
 export type Provides = {
   project: Project.Project;
+  /** The feature map: names the project and owns the spec document. */
+  map: Spec.Spec;
   features: Feature.Feature[];
   tasks: Task.Task[];
   /** The events sheet the fixture task produced. */
   fixture: Sheet.Sheet;
-  spec: Spec.Spec;
+  spec: SpecDocument.SpecDocument;
 };
 
 export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('timeline', {
@@ -181,19 +184,20 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('timel
     Text.Text,
     TaskSet.TaskSet,
     Task.Task,
+    Spec.Spec,
     Feature.Feature,
     Feature.DependsOn,
     Feature.Implements,
     Sheet.Sheet,
     Sheet.Chart,
-    Spec.Spec,
+    SpecDocument.SpecDocument,
   ],
   run: () =>
     Effect.gen(function* () {
       const { sheet: events } = makeEvents();
       const fixture = yield* Database.add(events);
       const spec = yield* Database.add(
-        Obj.make(Spec.Spec, {
+        Obj.make(SpecDocument.SpecDocument, {
           name: 'Timeline',
           content: Ref.make(Text.make({ content: specContent })),
           [Obj.Meta]: { keys: [{ source: Feature.SPEC_KEY_SOURCE, id: SPEC_PATH }] },
@@ -235,10 +239,15 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('timel
           status: 'active',
           instructions: Ref.make(instructions),
           taskSet: Ref.make(taskSet),
-          artifacts: [Ref.make(spec), Ref.make(fixture)],
+          artifacts: [Ref.make(fixture)],
         }),
       );
 
+      // The spec document lives in the map, which the project that tracks its tasks owns.
+      const map = yield* Database.add(Spec.make({ name: 'Timeline', document: Ref.make(spec) }));
+      Obj.update(project, (project) => {
+        project.spec = Ref.make(map);
+      });
       const byKey = new Map<string, Feature.Feature>();
       for (const seed of FEATURES) {
         const feature = yield* Database.add(
@@ -247,14 +256,23 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('timel
             description: seed.description,
             status: seed.status,
             specs: [seed.spec],
-            project: Ref.make(project),
           }),
         );
-        for (const subfeature of seed.subfeatures ?? []) {
-          yield* Database.add(Feature.make({ ...subfeature, parent: Ref.make(feature) }));
+        if (seed.subfeatures) {
+          const parts: Ref.Ref<Feature.Feature>[] = [];
+          for (const subfeature of seed.subfeatures) {
+            parts.push(Ref.make(yield* Database.add(Feature.make({ ...subfeature }))));
+          }
+          const breakdown = yield* Database.add(Spec.make({ name: seed.name, features: parts }));
+          Obj.update(feature, (feature) => {
+            feature.spec = Ref.make(breakdown);
+          });
         }
         byKey.set(seed.key, feature);
       }
+      Obj.update(map, (map) => {
+        map.features.push(...[...byKey.values()].map((feature) => Ref.make(feature)));
+      });
 
       const featureOf = (key: string): Feature.Feature => {
         const feature = byKey.get(key);
@@ -276,6 +294,6 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('timel
         );
       }
 
-      return { project, features: [...byKey.values()], tasks, fixture, spec };
+      return { project, map, features: [...byKey.values()], tasks, fixture, spec };
     }),
 });

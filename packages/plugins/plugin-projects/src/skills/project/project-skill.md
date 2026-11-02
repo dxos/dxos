@@ -115,7 +115,8 @@ bare id with no `echo:` scheme, which is the single most common way these calls 
 
 **Prefer echoing back what you were given.** Tool results carry refs already in envelope form —
 pass that value straight through instead of rebuilding it. Only construct an envelope when all
-you hold is a bare object id, and then write the full URI: `{"/": "echo:///" + id}`.
+you hold is a bare 26-character object id, and then write `{"/": "echo:///" + id}`. Never prefix
+a value that already starts with `echo:`; that produces `echo:///echo://…`, which is rejected.
 
 ## The shape of a project
 
@@ -282,9 +283,15 @@ A **feature** is a goal state the product should reach ("Compose & send works ag
 - a **status** saying how far it has come: `planned`, `prototype`, `operational` or `failing`. Whether anyone is
   working on it is a separate axis, read from its linked tasks: an operational feature can be under work too.
 
-Features **nest**: a feature with a `parent` is one of that feature's **subfeatures**, a feature in its own right
-with its own description, requirements, status, dependencies and tasks. A top-level feature belongs to at most one
-**project**, whose Features tab shows it on a map; a reader zooms into a feature to see its subfeatures.
+Features live on **specs**. A spec is a map of the features one product area should reach; every feature is on
+exactly one spec's map. Features **nest** through specs: a feature may own one spec of its own that breaks it down,
+and the features on that spec are its **subfeatures**, each a feature in its own right with its own description,
+requirements, status, dependencies and tasks. A reader zooms into a feature to see its subfeatures. A top-level spec
+may be owned by the **project** whose tasks deliver it. Every spec holds the normative `.mdl` document its features
+come from. A project has at most one spec: giving a spec to a project that already has one is refused, and the error names
+that spec. A breakdown spec belongs to its feature, so no project can own it; its work is tracked in the project of
+the spec above it.
+A dependency may cross specs: a feature can need a feature on another spec's map.
 
 **Keep every string short.** A feature map is read at a glance, so write the fewest words that say it:
 
@@ -296,17 +303,21 @@ with its own description, requirements, status, dependencies and tasks. A top-le
 **Specs are the unstructured source; features add the structure.** A spec's `feat` blocks and their `req` lines
 become features and requirements: extract them rather than linking to the spec.
 
-- Read a project's features with `projects-get-features { project }` before changing them: it returns every
-  feature on the map, subfeatures included, with its description, status, requirements, parent, dependencies,
-  linked tasks and showcases.
-- Extract features from a spec with `projects-import-spec-features { path, text, project? | parent? }`: pass the
-  repo path and the spec's text. Each `feat` block becomes a feature (its prose the description, its `req` lines the
-  requirements) placed at the top of the project's map or beneath `parent`. Importing again updates the
-  requirements of the features it made before. Afterwards, rewrite any description that states the current state
-  rather than the ideal, and arrange the features into subfeatures where one is a part of another.
-- Create a feature with `projects-create-feature { name, description, requirements, project? | parent? }`.
-  Change one with `projects-update-feature`; `requirements` replaces the whole list, and `parent` or `project`
-  moves it (each clears the other). Record that one feature needs another with
+- Read a spec's features with `projects-get-features { spec }` before changing them: it returns every feature on
+  the map and on the specs nested beneath it, with its description, status, requirements, spec, parent,
+  dependencies, linked tasks and showcases.
+- Make a spec with `projects-create-spec { name, project?, feature? }`; pass `feature` for the spec that breaks that
+  feature down. Rename it, move it to another project, or release it (`project: null`) with `projects-update-spec`.
+- Extract features from a spec document with
+  `projects-import-spec-features { path, text, spec? | feature? | name?, project? }`: pass the repo path and the
+  text. The text becomes the spec's document, and each `feat` block becomes a feature (its prose the description,
+  its `req` lines the requirements) on the spec given, on the spec breaking `feature` down, or on a new spec.
+  Importing the same path again updates that spec and the requirements of the features it made before. Afterwards,
+  rewrite any description that states the current state rather than the ideal, and move features onto a parent's
+  spec where one is a part of another.
+- Create a feature with `projects-create-feature { name, description, requirements, spec? | parent? }`.
+  Change one with `projects-update-feature`; `requirements` replaces the whole list, and `spec` moves it onto that
+  spec's map. `projects-delete-feature` deletes a feature with its breakdown. Record that one feature needs another with
   `projects-add-feature-dependency { feature, dependsOn }` — a dependency that would close a cycle is refused, and
   the error names the cycle. `projects-remove-feature-dependency` undoes one.
 - **When you pick up a task that moves a feature**, link it with `projects-link-feature-task { task, feature }`
@@ -314,10 +325,11 @@ become features and requirements: extract them rather than linking to the spec.
 - **Set the status when you observe it**, with `projects-update-feature { feature, status }`: `prototype` when it
   works in a demo, `operational` when people can rely on it, and `failing` when it worked before and does not now.
 - **When you finish work that shows a feature working**, make a showcase with
-  `projects-create-showcase { name, content, targets, artifacts? }`: markdown saying what you showed and
-  how to reproduce it, the screenshots and videos you uploaded as files and the PRs it landed in as
-  `artifacts`, and every feature and task it demonstrates in `targets`. An `operational` feature without a showcase
-  is flagged on the map.
+  `projects-create-showcase { name, content, targets, artifacts? }`. A showcase is a slide deck you can present:
+  `content` is its first slide, markdown saying what you showed and how to reproduce it, and each of `artifacts`
+  becomes a further slide showing that object — the screenshots and videos you uploaded as files, diagrams, the PRs
+  the work landed in — in the order given. Pass every feature and task it demonstrates in `targets`. An
+  `operational` feature without a showcase is flagged on the map.
 
 ## Verbs
 

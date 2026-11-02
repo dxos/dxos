@@ -5,14 +5,23 @@
 import { type ComponentType } from 'react';
 import { lazy } from 'react';
 
+import { type AddFeatureDialogProps } from './AddFeatureDialog/index.ts';
 import { type FeatureArticleProps } from './FeatureArticle/index.ts';
 import { type FeatureCardContentProps } from './FeatureCardContent/index.ts';
-import { type FeatureCompanionProps } from './FeatureCompanion/index.ts';
+import {
+  type FeatureCompanionProps,
+  type FeatureLevelCompanionProps,
+  type ProjectFeatureCompanionProps,
+} from './FeatureCompanion/index.ts';
 import { type MoveTaskDialogProps } from './MoveTaskDialog/index.ts';
+import { type FeatureLevelArticleProps } from './ProjectArticle/index.ts';
 import { type ProjectBranchArticleProps } from './ProjectBranchArticle/index.ts';
-import { type ProjectFeaturesProps } from './ProjectFeatures/index.ts';
-import { type ShowcaseArticleProps } from './ShowcaseArticle/index.ts';
-import { type ShowcaseCardContentProps } from './ShowcaseCardContent/index.ts';
+import { type SpecDocumentArticleProps } from './SpecDocumentArticle/index.ts';
+import { type SpecArticleProps } from './SpecFeatures/index.ts';
+
+export const AddFeatureDialog: ComponentType<AddFeatureDialogProps> = lazy(() =>
+  import('./AddFeatureDialog/index.ts').then((module) => ({ default: module.AddFeatureDialog })),
+);
 
 export const FeatureArticle: ComponentType<FeatureArticleProps> = lazy(() =>
   import('./FeatureArticle/index.ts').then((module) => ({ default: module.FeatureArticle })),
@@ -26,9 +35,26 @@ export const FeatureCompanion: ComponentType<FeatureCompanionProps> = lazy(() =>
   import('./FeatureCompanion/index.ts').then((module) => ({ default: module.FeatureCompanion })),
 );
 
-// Lazy: the canvas engine is large, and only the Features tab needs it.
-export const ProjectFeatures: ComponentType<ProjectFeaturesProps> = lazy(() =>
-  import('./ProjectFeatures/index.ts').then((module) => ({ default: module.ProjectFeatures })),
+export const FeatureLevelArticle: ComponentType<FeatureLevelArticleProps> = lazy(() =>
+  import('./ProjectArticle/index.ts').then((module) => ({ default: module.FeatureLevelArticle })),
+);
+
+export const FeatureLevelCompanion: ComponentType<FeatureLevelCompanionProps> = lazy(() =>
+  import('./FeatureCompanion/index.ts').then((module) => ({ default: module.FeatureLevelCompanion })),
+);
+
+export const ProjectFeatureCompanion: ComponentType<ProjectFeatureCompanionProps> = lazy(() =>
+  import('./FeatureCompanion/index.ts').then((module) => ({ default: module.ProjectFeatureCompanion })),
+);
+
+// Lazy: the canvas engine is large, and only a spec's map needs it.
+export const SpecArticle: ComponentType<SpecArticleProps> = lazy(() =>
+  import('./SpecFeatures/index.ts').then((module) => ({ default: module.SpecArticle })),
+);
+
+// Lazy: the editor engine is large, and only an opened spec document needs it.
+export const SpecDocumentArticle: ComponentType<SpecDocumentArticleProps> = lazy(() =>
+  import('./SpecDocumentArticle/index.ts').then((module) => ({ default: module.SpecDocumentArticle })),
 );
 
 export const ProjectArticle: ComponentType<any> = lazy(() =>
@@ -41,14 +67,6 @@ export const ProjectChatsArticle: ComponentType<ProjectBranchArticleProps> = laz
 
 export const ProjectArtifactsArticle: ComponentType<ProjectBranchArticleProps> = lazy(() =>
   import('./ProjectBranchArticle/index.ts').then((module) => ({ default: module.ProjectArtifactsArticle })),
-);
-
-export const ShowcaseArticle: ComponentType<ShowcaseArticleProps> = lazy(() =>
-  import('./ShowcaseArticle/index.ts').then((module) => ({ default: module.ShowcaseArticle })),
-);
-
-export const ShowcaseCardContent: ComponentType<ShowcaseCardContentProps> = lazy(() =>
-  import('./ShowcaseCardContent/index.ts').then((module) => ({ default: module.ShowcaseCardContent })),
 );
 
 export const MoveTaskDialog: ComponentType<MoveTaskDialogProps> = lazy(() =>

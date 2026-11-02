@@ -33,14 +33,14 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
 
-import { meta } from '#meta';
-
+import { CodeNamespace } from '../../namespace.ts';
 import {
   type ChangelogEdgeKind,
   type ChangelogGraphModel,
   type ChangelogNodeModel,
   type DecisionActor,
   type DecisionModel,
+  type QuestionModel,
   type SpecBlockModel,
   buildChangelogGraph,
   githubAvatarUrl,
@@ -81,6 +81,7 @@ const EDGE_STYLE: Record<ChangelogEdgeKind, Pick<GraphEdge, 'ends' | 'style'> & 
   'builds-on': { ends: { start: 'arrow' }, labelled: false },
   'supersedes': { ends: { start: 'arrow' }, style: { hue: 'red', lineStyle: 'dashed' }, labelled: true },
   'approves': { ends: { start: 'arrow' }, style: { hue: 'green' }, labelled: true },
+  'answers': { ends: { start: 'arrow' }, style: { hue: 'amber' }, labelled: true },
   'affects': { ends: { end: 'arrow' }, style: { hue: 'sky', lineStyle: 'dotted' }, labelled: false },
 };
 
@@ -98,7 +99,7 @@ const NodeLookupContext = createContext<NodeLookup>(() => undefined);
 const SelectedContext = createContext<string | undefined>(undefined);
 
 const DecisionCard = ({ decision }: { decision: DecisionModel }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   const { entry, actor, handle, principal, supersededBy, approvedBy } = decision;
   const style = actor ? ACTOR_STYLE[actor] : undefined;
   const selected = useContext(SelectedContext) === entry.id;
@@ -178,6 +179,46 @@ const DecisionCard = ({ decision }: { decision: DecisionModel }) => {
   );
 };
 
+const QuestionNodeCard = ({ question }: { question: QuestionModel }) => {
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
+  const { entry, actor, handle, answer } = question;
+  const selected = useContext(SelectedContext) === entry.id;
+  return (
+    <Card.Root
+      grid
+      selected={selected}
+      classNames={['border-2 border-warning-border', answer && 'opacity-60']}
+      data-testid='changelog-graph.question'
+      data-question={entry.id}
+      data-answered={answer ? '' : undefined}
+    >
+      <Card.Header>
+        <Layout.Block rail='start'>
+          <ActorAvatar actor={actor} handle={handle} />
+        </Layout.Block>
+        <Card.Title lines={1}>
+          {entry.id} · {handle ?? t('changelog-graph.unknown-actor.label')}
+        </Card.Title>
+      </Card.Header>
+      <Card.Body>
+        <Card.Row icon='ph--question--regular'>
+          <Card.Text lines={3}>{entry.title}</Card.Text>
+        </Card.Row>
+        <Card.Row>
+          <Layout.Flex wrap gap='xs'>
+            {entry.date && <Tag.Tag>{entry.date}</Tag.Tag>}
+            {answer ? (
+              <Tag.Tag hue='success'>{t('changelog-graph.question.answered-in.label', { id: answer.id })}</Tag.Tag>
+            ) : (
+              <Tag.Tag hue='warning'>{t('changelog-graph.question.open.label')}</Tag.Tag>
+            )}
+          </Layout.Flex>
+        </Card.Row>
+      </Card.Body>
+    </Card.Root>
+  );
+};
+
 const BlockChip = ({ block }: { block: SpecBlockModel }) => (
   <Layout.Flex
     classNames='dx-cover items-center justify-center gap-2 rounded-sm border border-dashed border-separator bg-card-surface'
@@ -194,6 +235,7 @@ const ChangelogNodeView = ({ node }: NodeViewProps) => {
     // Inert, so a press anywhere on the card selects and drags the box rather than reaching the card.
     <Layout.Grid classNames='dx-cover overflow-hidden pointer-events-none'>
       {model?.kind === 'decision' && <DecisionCard decision={model} />}
+      {model?.kind === 'question' && <QuestionNodeCard question={model} />}
       {model?.kind === 'block' && <BlockChip block={model} />}
     </Layout.Grid>
   );
@@ -250,7 +292,7 @@ const toGraph = (model: ChangelogGraphModel, label: (kind: ChangelogEdgeKind) =>
 });
 
 const Legend = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   return (
     <Layout.Flex
       wrap
@@ -285,7 +327,7 @@ export type ChangelogGraphProps = {
  * order it was written, with an arrow to each decision it builds on, supersedes or approves.
  */
 export const ChangelogGraph = ({ content, affects = false, selected }: ChangelogGraphProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   const atomRegistry = useContext(RegistryContext);
   const model = useMemo(() => buildChangelogGraph(content, { affects }), [content, affects]);
   const lookup = useMemo<NodeLookup>(() => {

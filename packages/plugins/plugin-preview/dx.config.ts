@@ -2,12 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Config2 } from '@dxos/app-framework/config';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { trim } from '@dxos/util';
 
-export default Config2.make({
+import { PreviewNamespace } from './src/namespace.ts';
+import * as PreviewEvents from './src/PreviewEvents.ts';
+import * as PreviewCapabilities from './src/types/PreviewCapabilities.ts';
+
+// Annotated: the capability modules import `meta` from here, so inferring it would be circular.
+const config: Plugin.PluginConfig = Plugin.config({
   plugin: {
-    key: 'org.dxos.plugin.preview',
+    key: PreviewNamespace.key,
     name: 'Preview',
     author: 'DXOS',
     description: trim`
@@ -18,4 +25,31 @@ export default Config2.make({
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-preview',
     tags: ['system'],
   },
+  modules: [
+    // Browser-only with the popover it serves: the resolver loads objects for a card no headless host renders.
+    Capability.lazyModule(
+      'LinkResolver',
+      {
+        provides: [PreviewCapabilities.LinkResolver],
+        activatesOn: PreviewEvents.Start,
+        environments: ['browser', 'tauri'],
+      },
+      () => import('./src/capabilities/link-resolver.ts', { with: { type: 'module-url' } }),
+    ),
+    // Browser-only: the module mounts the popover itself, so its body is React all the way down.
+    Capability.lazyModule(
+      'PreviewPopover',
+      { provides: [], activatesOn: PreviewEvents.Start, environments: ['browser', 'tauri'] },
+      () => import('./src/capabilities/preview-popover.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
+      roles: ['org.dxos.role.cardContent', 'org.dxos.role.cardIcon', 'org.dxos.role.article'],
+    }),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
+  ],
 });
+
+export const { meta, make } = config;
+
+export default config;

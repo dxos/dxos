@@ -15,10 +15,11 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Popover from '@dxos/react-ui/Popover';
 
 import { type QueryFilterOwner } from '#hooks';
-import { meta } from '#meta';
+
+import { InboxNamespace } from '../../namespace.ts';
 
 export const SaveFilterPopover = ({ owner, filter }: { owner: QueryFilterOwner; filter: string }) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(InboxNamespace.key);
   const doneButton = useRef<HTMLButtonElement>(null);
   const [name, setName] = useState('');
   const { invokePromise } = Hooks.useOperationInvoker();

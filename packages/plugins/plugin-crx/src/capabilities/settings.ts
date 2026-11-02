@@ -8,8 +8,9 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as KvsStore from '@dxos/effect/KvsStore';
 
-import { meta } from '#meta';
 import { CrxCapabilities, Settings } from '#types';
+
+import { CrxNamespace } from '../namespace.ts';
 
 /**
  * Contributes the Settings atom both under the plugin-scoped capability (so
@@ -19,7 +20,7 @@ import { CrxCapabilities, Settings } from '#types';
 export default Capability.makeModule(() =>
   Effect.sync(() => {
     const settingsAtom = KvsStore.make({
-      key: meta.profile.key,
+      key: CrxNamespace.key,
       schema: Settings.Settings,
       defaultValue: () => Settings.defaults,
     });
@@ -27,7 +28,7 @@ export default Capability.makeModule(() =>
     return [
       Capability.contribute(CrxCapabilities.Settings, settingsAtom),
       Capability.contribute(AppCapabilities.Settings, {
-        prefix: meta.profile.key,
+        prefix: CrxNamespace.key,
         schema: Settings.Settings,
         atom: settingsAtom,
       }),
