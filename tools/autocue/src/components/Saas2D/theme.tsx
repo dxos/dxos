@@ -224,7 +224,8 @@ export const SvgPrim = ({ prim, camera }: { prim: Prim; camera: Camera }) => {
         return null;
       }
       // One raised band and one inset well, both shades of the field: role color belongs to what a body holds, not to
-      // it. Their shading is concentric, since an offset light draws each edge twice and reads as extra uneven rings.
+      // it. Light comes from the top left, but only through smooth gradients: an offset shadow draws each edge twice
+      // and reads as extra, uneven rings.
       const lit = r < 2000;
       const well = prim.well ?? WELL;
       const id = `nd-body-${prim.id.replace(/[^\w-]/g, '_')}`;
@@ -232,28 +233,39 @@ export const SvgPrim = ({ prim, camera }: { prim: Prim; camera: Camera }) => {
         <At x={x} y={y} opacity={opacity}>
           {lit && (
             <defs>
-              <radialGradient id={`${id}-halo`}>
-                <stop offset={1 / HALO} stopColor={SHADE} stopOpacity={0.55} />
-                <stop offset={1 / HALO + (1 - 1 / HALO) * 0.35} stopColor={SHADE} stopOpacity={0.2} />
+              <radialGradient id={`${id}-shadow`} cx='0.555' cy='0.555' r='0.5'>
+                <stop offset={0.8} stopColor={SHADE} stopOpacity={0.75} />
+                <stop offset={0.9} stopColor={SHADE} stopOpacity={0.3} />
                 <stop offset={1} stopColor={SHADE} stopOpacity={0} />
               </radialGradient>
-              <radialGradient id={`${id}-band`}>
-                <stop offset={well} stopColor={SHINE} stopOpacity={0} />
-                <stop offset={well + (1 - well) * 0.45} stopColor={SHINE} stopOpacity={0.045} />
+              <radialGradient id={`${id}-glint`} cx='0.445' cy='0.445' r='0.5'>
+                <stop offset={0.74} stopColor={SHINE} stopOpacity={0.07} />
+                <stop offset={0.86} stopColor={SHINE} stopOpacity={0.025} />
                 <stop offset={1} stopColor={SHINE} stopOpacity={0} />
               </radialGradient>
-              <radialGradient id={`${id}-well`}>
-                <stop offset={0.8} stopColor={SHADE} stopOpacity={0} />
-                <stop offset={0.95} stopColor={SHADE} stopOpacity={0.3} />
-                <stop offset={1} stopColor={SHADE} stopOpacity={0.55} />
+              <linearGradient id={`${id}-band`} x1='0.15' y1='0.15' x2='0.85' y2='0.85'>
+                <stop offset={0} stopColor={SHINE} stopOpacity={0.09} />
+                <stop offset={0.5} stopColor={SHINE} stopOpacity={0} />
+                <stop offset={1} stopColor={SHADE} stopOpacity={0.3} />
+              </linearGradient>
+              <linearGradient id={`${id}-well`} x1='0.15' y1='0.15' x2='0.85' y2='0.85'>
+                <stop offset={0} stopColor={SHADE} stopOpacity={0.45} />
+                <stop offset={0.55} stopColor={SHADE} stopOpacity={0} />
+                <stop offset={1} stopColor={SHINE} stopOpacity={0.05} />
+              </linearGradient>
+              <radialGradient id={`${id}-rim`}>
+                <stop offset={0.86} stopColor={SHADE} stopOpacity={0} />
+                <stop offset={1} stopColor={SHADE} stopOpacity={0.4} />
               </radialGradient>
             </defs>
           )}
-          {lit && <circle r={r * HALO} fill={`url(#${id}-halo)`} />}
+          {lit && <circle r={r * HALO} fill={`url(#${id}-shadow)`} />}
+          {lit && <circle r={r * HALO} fill={`url(#${id}-glint)`} />}
           <circle className='nd-body' r={r} fill={neu.lighter} />
           {lit && <circle r={r} fill={`url(#${id}-band)`} />}
           <circle r={r * well} fill={neu.bg} />
           {lit && <circle r={r * well} fill={`url(#${id}-well)`} />}
+          {lit && <circle r={r * well} fill={`url(#${id}-rim)`} />}
         </At>
       );
     }

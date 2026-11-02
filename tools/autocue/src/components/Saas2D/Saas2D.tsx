@@ -6,6 +6,7 @@ import React, { useMemo } from 'react';
 import { AbsoluteFill, type CalculateMetadataFunction, useCurrentFrame, useVideoConfig } from 'remotion';
 
 import holds from '../../../showcase/echo3d/voice/holds-fry-short.json';
+import { Captions } from './captions.tsx';
 import { type CardPrim, LAYERS, type Placed, type Prim, type Slide, TRANSITION, frameAt, place } from './engine.ts';
 import { loadNeuFonts } from './fonts.ts';
 import { slides } from './slides.ts';
@@ -55,6 +56,8 @@ export type Saas2DProps = {
   draft?: boolean;
   /** The current scene and time over every frame, so notes on a render can name the moment they mean. */
   clock?: boolean;
+  /** The chapter chip top left and a subtitle under each scene. */
+  captions?: boolean;
 };
 
 /** The opening of the story up to the spread, short holds around its cuts: a test of those transitions. */
@@ -95,9 +98,9 @@ const Clock = ({ timeline, seconds }: { timeline: Placed[]; seconds: number }) =
 };
 
 /** The SaaS story in neu-dark 2D, timed to the short Fry cut of the echo3d presentation. */
-export const Saas2D = ({ test, draft, clock }: Saas2DProps) => {
+export const Saas2D = ({ test, draft, clock, captions }: Saas2DProps) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const { fps, durationInFrames } = useVideoConfig();
   const timeline = useMemo(() => {
     const timing = test ?? UNIFORM;
     return place(
@@ -125,6 +128,7 @@ export const Saas2D = ({ test, draft, clock }: Saas2DProps) => {
       {visible.filter(isCard).map((prim) => (
         <Card key={prim.id} prim={prim} />
       ))}
+      {captions && <Captions timeline={timeline} seconds={seconds} total={durationInFrames / fps} />}
       {!draft && <Grain />}
       {(draft || clock) && <Clock timeline={timeline} seconds={seconds} />}
     </AbsoluteFill>

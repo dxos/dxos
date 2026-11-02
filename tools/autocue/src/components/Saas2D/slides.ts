@@ -967,7 +967,8 @@ export const slides = (holds: Record<string, number>): Slide[] => {
 
 const silo = (): Prim[] => [
   { kind: 'body', id: 'org', x: -300, y: 20, r: 150, well: ORG_WELL },
-  { kind: 'body', id: 'vendor', x: 300, y: 20, r: 150, role: 'lab' },
+  // As broad a band as your company's, so the two read as equals.
+  { kind: 'body', id: 'vendor', x: 300, y: 20, r: 150, role: 'lab', well: ORG_WELL },
   { kind: 'node', id: 'your-teams', x: -300, y: 20, r: 46, role: 'team', parent: 'body:org' },
   { kind: 'node', id: 'data-org', x: 300, y: 20, r: 46, role: 'data', parent: 'body:vendor' },
   label('org-label', -300, 20 - 150 - 32, 'Your company', { size: 30 }),
@@ -980,7 +981,8 @@ const silo = (): Prim[] => [
 
 const scale = (t: number, flows: boolean): Prim[] => {
   const prims: Prim[] = [
-    { kind: 'body', id: 'vendor', x: 0, y: 0, r: 300, role: 'lab' },
+    // The vendor's band narrows from the silo's as it grows (the default well, stated so it blends).
+    { kind: 'body', id: 'vendor', x: 0, y: 0, r: 300, role: 'lab', well: 0.84 },
     { kind: 'node', id: 'metadata', x: 0, y: 0, r: 100, color: METADATA_COLOR, glow: 0.3, parent: 'body:vendor' },
     label('metadata-label', 0, 0, '“Metadata”', { size: 28, parent: 'node:metadata' }),
     label('vendor-label', 0, -258, 'SaaS', { size: 30, parent: 'body:vendor' }),
