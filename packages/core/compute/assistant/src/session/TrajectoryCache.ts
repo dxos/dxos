@@ -41,6 +41,38 @@ type Memo<S> = Reducer.Checkpoint<S> & Position & { readonly reducer: string; re
 const MEMO_LIMIT = 64;
 const memos = new WeakMap<object, Map<string, Memo<unknown>>>();
 
+/**
+ * A feed's items as last read whole, and the cursor after them: a reader loads several reducers in turn, and each that
+ * refolds then reads only what came after the last whole read rather than the feed again.
+ */
+type FullRead = { readonly items: readonly (Trajectory.Event | Legacy.Record)[]; readonly cursor?: Feed.LocalCursor };
+const fullReads = new WeakMap<object, Map<string, FullRead>>();
+
+/** Every item of `feed`, from the last whole read of it plus what came after (see {@link FullRead}). */
+const readAll = Effect.fnUntraced(function* (
+  feed: Feed.Feed,
+): Effect.fn.Return<readonly (Trajectory.Event | Legacy.Record)[], never, Database.Service> {
+  const { db } = yield* Database.Service;
+  const byFeed = fullReads.get(db) ?? new Map<string, FullRead>();
+  fullReads.set(db, byFeed);
+  const key = trajectoryId(feed);
+  const known = byFeed.get(key);
+  const items =
+    known?.cursor !== undefined
+      ? [...known.items, ...(yield* readItems(feed, { after: known.cursor }))]
+      : yield* readItems(feed);
+  const last = items.at(-1);
+  byFeed.delete(key);
+  byFeed.set(key, { items, cursor: last && Feed.getLocalCursor(last) });
+  for (const oldest of byFeed.keys()) {
+    if (byFeed.size <= MEMO_LIMIT) {
+      break;
+    }
+    byFeed.delete(oldest);
+  }
+  return items;
+});
+
 /** A reducer's id names its state shape, so a memo stored under it holds that reducer's state. */
 const isMemoOf = <S>(memo: Memo<unknown>, reducer: Reducer.Durable<S>): memo is Memo<S> => memo.reducer === reducer.id;
 
@@ -117,7 +149,7 @@ const cached = Effect.fnUntraced(function* <S>(
   const resumed = fromMemo
     ? { checkpoint: remembered, position: remembered, saved: remembered.saved, tail: fromMemo }
     : sql && (yield* resumeStored(feed, reducer, sql));
-  const items = resumed?.tail ?? (yield* readItems(feed));
+  const items = resumed?.tail ?? (yield* readAll(feed));
   const checkpoint = Reducer.run(reducer, Legacy.toEvents(items), resumed?.checkpoint);
 
   const last = items.at(-1);
@@ -211,6 +243,7 @@ const resumeStored = Effect.fnUntraced(function* <S>(
 /** Drops the checkpoints this process holds for `db`, as a restart would; the stored ones stay. */
 export const forget = (db: object): void => {
   memos.delete(db);
+  fullReads.delete(db);
 };
 
 /** The id a trajectory's checkpoints are stored under; the feed that holds it is a storage detail. */

@@ -1456,7 +1456,7 @@ export class QueryExecutor extends Resource {
       return { selected: await select(toItems(blocks)), read: blocks.length };
     }
     // Pages grow, so a selector that keeps few of the blocks still ends in a handful of reads.
-    for (let pageLimit = Math.max(limit * 4, 64); ; pageLimit *= 4) {
+    for (let pageLimit = Math.max(limit * 4, 8); ; pageLimit *= 4) {
       const blocks = await read(pageLimit);
       const selected = await select(toItems(blocks));
       if (selected.length >= limit || blocks.length < pageLimit) {
