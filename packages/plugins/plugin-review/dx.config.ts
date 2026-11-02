@@ -7,7 +7,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import * as AppRole from '@dxos/app-toolkit/AppRole';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
@@ -93,7 +93,7 @@ const config: Plugin.PluginConfig<ReviewPluginOptions> = Plugin.config<ReviewPlu
       },
     ),
     AppCapability.surface(() => import('./src/capabilities/history-surface.tsx', { with: { type: 'module-url' } }), {
-      roles: [AppRole.Article, AppRole.ObjectProperties],
+      roles: [AppSurface.Article, AppSurface.ObjectProperties],
       name: 'HistorySurface',
     }),
     Capability.lazyModule(
@@ -139,7 +139,7 @@ const config: Plugin.PluginConfig<ReviewPluginOptions> = Plugin.config<ReviewPlu
       mimeType: 'application/x-mdl',
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: [AppRole.Article],
+      roles: [AppSurface.Article],
     }),
     Capability.lazyModule(
       'ReviewState',

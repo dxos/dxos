@@ -8,7 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import * as AppRole from '@dxos/app-toolkit/AppRole';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { trim } from '@dxos/util';
 
 import { PwaNamespace } from './src/namespace.ts';
@@ -31,7 +31,7 @@ const config: Plugin.PluginConfig<PwaOptions> = Plugin.config<PwaOptions>({
       activatesOn: ActivationEvents.Idle,
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: [AppRole.Article],
+      roles: [AppSurface.Article],
     }),
     Capability.lazyModule(
       'BootGate',

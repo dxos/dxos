@@ -203,7 +203,8 @@ const surfaceMaker: Maker<typeof Capabilities.ReactSurface> = Capability$.module
 
 /**
  * Module maker contributing React surfaces. Declaring `roles` (the role tokens the module's
- * surfaces bind, from the headless `AppRole` module or a plugin's own role module) gates the module on those roles' demand events
+ * surfaces bind, e.g. `AppSurface.Article` or a plugin's `<Plugin>Surface` tokens) gates the module
+ * on those roles' demand events
  * ({@link ActivationEvents.SurfacesRequested}) — it loads when a `Surface` for one of its roles
  * first renders instead of at startup. Modules without declared roles stay eager; an explicit
  * `activatesOn` wins over the derived gate.

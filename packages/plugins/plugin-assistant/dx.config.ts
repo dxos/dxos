@@ -8,7 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import * as AppRole from '@dxos/app-toolkit/AppRole';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
@@ -25,7 +25,7 @@ import { AssistantNamespace } from './src/namespace.ts';
 import * as AssistantCapabilities from './src/types/AssistantCapabilities.ts';
 import * as AssistantEvents from './src/types/AssistantEvents.ts';
 import type * as AssistantOptions from './src/types/AssistantOptions.ts';
-import * as ChatSurface from './src/types/ChatSurface.ts';
+import * as AssistantSurface from './src/types/AssistantSurface.ts';
 
 // Annotated: the capability modules import `meta` from here, so inferring it would be circular.
 const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void> =
@@ -102,15 +102,15 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
       }),
       AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
         roles: [
-          ChatSurface.ChatDetails,
-          ChatSurface.ChatSurface,
+          AssistantSurface.ChatDetails,
+          AssistantSurface.ChatSurface,
           SpaceSurface.SpaceHomeContent,
           SpaceSurface.SpaceHomePinBottom,
-          AppRole.Article,
-          AppRole.deckCompanion('trace'),
-          AppRole.Dialog,
-          AppRole.ObjectProperties,
-          AppRole.StatusIndicator,
+          AppSurface.Article,
+          AppSurface.deckCompanion('trace'),
+          AppSurface.Dialog,
+          AppSurface.ObjectProperties,
+          AppSurface.StatusIndicator,
         ],
       }),
       AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),

@@ -6,7 +6,7 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import * as AppRole from '@dxos/app-toolkit/AppRole';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
@@ -58,7 +58,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       mimeType: 'application/x-mdl',
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: [AppRole.Article, AppRole.CardContent, AppRole.ObjectProperties],
+      roles: [AppSurface.Article, AppSurface.CardContent, AppSurface.ObjectProperties],
     }),
     AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.skillDefinition(

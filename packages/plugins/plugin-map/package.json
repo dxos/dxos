@@ -106,10 +106,10 @@
       "node": "./dist/lib/MapPlugin.node.mjs",
       "import": "./dist/lib/MapPlugin.mjs"
     },
-    "./MapRole": {
-      "source": "./src/types/MapRole.ts",
-      "types": "./dist/types/src/types/MapRole.d.ts",
-      "import": "./dist/lib/MapRole.mjs"
+    "./MapSurface": {
+      "source": "./src/types/MapSurface.ts",
+      "types": "./dist/types/src/types/MapSurface.d.ts",
+      "import": "./dist/lib/MapSurface.mjs"
     },
     "./MapOperationHandlerSet": {
       "source": "./src/operations/MapOperationHandlerSet.ts",
@@ -140,8 +140,8 @@
       "MapOperation": [
         "dist/types/src/types/MapOperation.d.ts"
       ],
-      "MapRole": [
-        "dist/types/src/types/MapRole.d.ts"
+      "MapSurface": [
+        "dist/types/src/types/MapSurface.d.ts"
       ]
     }
   },

@@ -8,7 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import * as AppRole from '@dxos/app-toolkit/AppRole';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { trim } from '@dxos/util';
 
 import { ObservabilityNamespace } from './src/namespace.ts';
@@ -122,7 +122,7 @@ const config: Plugin.PluginConfig<ObservabilityOptions.ObservabilityPluginOption
         () => import('./src/capabilities/privacy-notice.ts', { with: { type: 'module-url' } }),
       ),
       AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-        roles: [AppRole.Article],
+        roles: [AppSurface.Article],
       }),
       AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
       // Unconditional `provides`: the body contributes nothing when `downloadLogs` is absent.

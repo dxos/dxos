@@ -16,7 +16,7 @@ import { MapSurface, MapViewEditor, WorldMapSurface } from '#containers';
 import { Map } from '#types';
 
 import { LocationAnnotationId } from '../types/MapCapabilities.ts';
-import { MapInline, World } from '../types/MapRole.ts';
+import { MapInline, World } from '../types/MapSurface.ts';
 import { LocationField } from './LocationField.tsx';
 
 export default Capability.makeModule(() =>

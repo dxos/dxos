@@ -8,7 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import * as AppRole from '@dxos/app-toolkit/AppRole';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
@@ -127,16 +127,16 @@ const config: Plugin.PluginConfig<SpaceSchema.SpacePluginOptions> = Plugin.confi
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: [
         SpaceSurface.SpaceHomeContent,
-        AppRole.Article,
-        AppRole.CardMasonry,
-        AppRole.Dialog,
-        AppRole.FormInput,
-        AppRole.NavbarEnd,
-        AppRole.NavtreeItemEnd,
-        AppRole.ObjectProperties,
-        AppRole.Popover,
-        AppRole.Section,
-        AppRole.StatusIndicator,
+        AppSurface.Article,
+        AppSurface.CardMasonry,
+        AppSurface.Dialog,
+        AppSurface.FormInput,
+        AppSurface.NavbarEnd,
+        AppSurface.NavtreeItemEnd,
+        AppSurface.ObjectProperties,
+        AppSurface.Popover,
+        AppSurface.Section,
+        AppSurface.StatusIndicator,
       ],
     }),
     Capability.lazyModule(

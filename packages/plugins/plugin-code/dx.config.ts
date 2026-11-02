@@ -7,7 +7,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import * as AppRole from '@dxos/app-toolkit/AppRole';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as GitHubCapabilities from '@dxos/plugin-github/GitHubCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
@@ -101,7 +101,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       mimeType: 'application/x-mdl',
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: [AppRole.Article, AppRole.Section],
+      roles: [AppSurface.Article, AppSurface.Section],
     }),
     AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {

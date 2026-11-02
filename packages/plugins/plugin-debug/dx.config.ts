@@ -8,7 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import * as AppRole from '@dxos/app-toolkit/AppRole';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
 import * as InboxEvents from '@dxos/plugin-inbox/InboxEvents';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
@@ -92,12 +92,12 @@ const config: Plugin.PluginConfig<Debug.DebugPluginOptions> = Plugin.config<Debu
       roles: [
         DebugSurface.Page,
         DebugSurface.Stats,
-        AppRole.Article,
-        AppRole.deckCompanion('spaceObjects'),
-        AppRole.DevtoolsOverview,
-        AppRole.Drawer,
-        AppRole.Section,
-        AppRole.StatusIndicator,
+        AppSurface.Article,
+        AppSurface.deckCompanion('spaceObjects'),
+        AppSurface.DevtoolsOverview,
+        AppSurface.Drawer,
+        AppSurface.Section,
+        AppSurface.StatusIndicator,
       ],
       requires: [Capabilities.AtomRegistry, Debug.DebugCapabilities.Settings, AppCapabilities.FileUploader],
     }),

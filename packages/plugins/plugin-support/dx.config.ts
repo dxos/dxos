@@ -7,10 +7,10 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import * as AppRole from '@dxos/app-toolkit/AppRole';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import * as DeckRole from '@dxos/plugin-deck/DeckRole';
+import * as DeckSurface from '@dxos/plugin-deck/DeckSurface';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import * as SpaceSurface from '@dxos/plugin-space/SpaceSurface';
 import { trim } from '@dxos/util';
@@ -97,14 +97,14 @@ const config: Plugin.PluginConfig<SupportPluginOptions> = Plugin.config<SupportP
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: [
         SpaceSurface.SpaceHomeContent,
-        DeckRole.Hints,
-        DeckRole.Keyshortcuts,
-        AppRole.Article,
-        AppRole.deckCompanion('discord'),
-        AppRole.deckCompanion('help'),
-        AppRole.Dialog,
-        AppRole.Section,
-        AppRole.StatusIndicator,
+        DeckSurface.Hints,
+        DeckSurface.Keyshortcuts,
+        AppSurface.Article,
+        AppSurface.deckCompanion('discord'),
+        AppSurface.deckCompanion('help'),
+        AppSurface.Dialog,
+        AppSurface.Section,
+        AppSurface.StatusIndicator,
       ],
     }),
     AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),

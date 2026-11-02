@@ -12,4 +12,5 @@ export * as Hooks from './Hooks.ts';
 export * as PluginManagerProvider from './PluginManagerProvider.ts';
 export * as SharedPackages from './SharedPackages.ts';
 export * as Surface from './Surface.ts';
+export * as SurfaceFilter from './SurfaceFilter.ts';
 export * as Translations from './Translations.ts';
