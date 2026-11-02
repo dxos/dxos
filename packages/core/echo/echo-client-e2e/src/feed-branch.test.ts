@@ -375,7 +375,7 @@ describe('feed branches', () => {
             .from(Scope.feed(feedUri, { walk: { branch: 'all' } }))
             .orderBy(Order.natural('asc')),
         );
-        const seen: string[][] = [];
+        const seen: (string | undefined)[][] = [];
         const unsubscribe = result.subscribe(() => seen.push(names(result.results)), { fire: true });
         yield* Feed.append(feed, [Obj.make(TestSchema.Person, { name: 'B3' })], { branch });
         yield* Database.flush();
