@@ -371,10 +371,10 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
   const [gridInstances] = Hooks.useCapabilities(SheetCapabilities.GridInstances);
   useEffect(() => {
     if (dxGrid && gridInstances) {
-      gridInstances.register(attendableId, dxGrid, setActiveRefs);
+      gridInstances.register(attendableId, { sheet: model.sheet, grid: dxGrid, setActiveRefs });
       return () => gridInstances.unregister(attendableId);
     }
-  }, [dxGrid, gridInstances, attendableId, setActiveRefs]);
+  }, [dxGrid, gridInstances, attendableId, model.sheet, setActiveRefs]);
 
   useSelectThreadOnCellFocus();
 

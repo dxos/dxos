@@ -8,6 +8,7 @@ export * as FeatureOperation from './FeatureOperation.ts';
 export * as FeatureSpec from './FeatureSpec.ts';
 export * as LegacyFeature from './LegacyFeature.ts';
 export * as LegacyShowcase from './LegacyShowcase.ts';
+export * as LegacySpec from './LegacySpec.ts';
 export * as FeatureMapView from './FeatureMapView.ts';
 export * as ProjectCapabilities from './ProjectCapabilities.ts';
 export * as ProjectMailboxOperation from './ProjectMailboxOperation.ts';

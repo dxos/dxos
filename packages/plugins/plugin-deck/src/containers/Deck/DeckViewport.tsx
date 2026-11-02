@@ -44,6 +44,7 @@ import {
   useDeckPresentation,
   useDeckSettings,
   useDeckState,
+  useIsLiveDeck,
   useSelectedCompanion,
   useSelectedCompanionVariant,
 } from '#hooks';
@@ -1369,7 +1370,7 @@ const useExposeInert = ({ getPlankTiles, expose }: { getPlankTiles: () => HTMLEl
 };
 
 /** Exits fullscreen on Escape, and returns the toggle so the exit button takes the same path. */
-const useFullscreen = (fullscreenId: string | undefined) => {
+const useFullscreen = (fullscreenId: string | undefined, live: boolean) => {
   const { invokePromise } = Hooks.useOperationInvoker();
 
   const toggleFullscreen = useCallback(() => {
@@ -1380,7 +1381,7 @@ const useFullscreen = (fullscreenId: string | undefined) => {
   }, [invokePromise, fullscreenId]);
 
   useEffect(() => {
-    if (!fullscreenId) {
+    if (!fullscreenId || !live) {
       return;
     }
 
@@ -1394,7 +1395,7 @@ const useFullscreen = (fullscreenId: string | undefined) => {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [fullscreenId, toggleFullscreen]);
+  }, [fullscreenId, live, toggleFullscreen]);
 
   return toggleFullscreen;
 };
@@ -1489,7 +1490,9 @@ export const DeckPlanks = () => {
   // Last of the layout effects, so it measures the deck only once the scroll, the folds and the scale have
   // all landed — the FLIP inversion is against the final geometry, not an intermediate one.
   const captureExposeGeometry = useExposeFlip({ stackRef, getPlankTiles, expose });
-  const toggleFullscreen = useFullscreen(fullscreenId);
+  // The deck being left stays mounted while it fades, and keys pressed meanwhile are for the entered one.
+  const live = useIsLiveDeck();
+  const toggleFullscreen = useFullscreen(fullscreenId, live);
   const { invokePromise } = Hooks.useOperationInvoker();
 
   // Read from refs so the key handler is bound once rather than rebound whenever the exposé toggles.
@@ -1519,6 +1522,9 @@ export const DeckPlanks = () => {
   // and Escape must win over the plank root's own key handling (which dives into / steps out of the
   // plank's content — meaningless against the exposé's inert miniatures).
   useEffect(() => {
+    if (!live) {
+      return;
+    }
     // Focuses a plank's attendable container without scrolling — the exposé parks the scroll at zero
     // to bring the whole row into frame (and the exit restores it), so focus must not fight either.
     const focusPlank = (id: string) => {
@@ -1627,7 +1633,7 @@ export const DeckPlanks = () => {
 
     document.addEventListener('keydown', handleKeyDown, { capture: true });
     return () => document.removeEventListener('keydown', handleKeyDown, { capture: true });
-  }, [invokePromise]);
+  }, [invokePromise, live]);
 
   // Clicking past the tiles leaves the exposé, the pointer equivalent of Escape. The tiles carry their own
   // hit target (see `DeckPlankTile`), so anything outside one is background.

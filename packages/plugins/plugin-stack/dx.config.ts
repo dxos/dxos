@@ -2,12 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { trim } from '@dxos/util';
 
 import { StackNamespace } from './src/namespace.ts';
+import * as StackCapabilities from './src/types/StackCapabilities.ts';
 
 // Annotated: the capability modules import `meta` from here, so inferring it would be circular.
 const config: Plugin.PluginConfig = Plugin.config({
@@ -46,6 +48,11 @@ const config: Plugin.PluginConfig = Plugin.config({
       roles: [AppSurface.Article],
     }),
     AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
+    Capability.lazyModule(
+      'SectionHeights',
+      { provides: [StackCapabilities.SectionHeights], environments: ['browser', 'tauri'] },
+      () => import('./src/capabilities/section-heights.ts', { with: { type: 'module-url' } }),
+    ),
     AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });

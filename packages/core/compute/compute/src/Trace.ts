@@ -677,6 +677,21 @@ export const AgentRequestEnd = EventType('assistant.agentRequestEnd', {
 });
 
 /**
+ * The end-request hooks a request runs, resolved when it begins (see `Hook.resolve`): which ran by their plugin's
+ * default, which a setting turned on but whose skill is unbound, and which plugins a setting turned on that this
+ * host lacks. Written only when one of those is non-empty.
+ */
+export const AgentHooksResolved = EventType('assistant.agentHooksResolved', {
+  schema: Schema.Struct({
+    run: Schema.Array(Schema.String),
+    byDefault: Schema.Array(Schema.String),
+    inactive: Schema.Array(Schema.String),
+    missing: Schema.Array(Schema.String),
+  }),
+  isEphemeral: false,
+});
+
+/**
  * Emitted by the supervisor when a delegated task is handed to a sub-agent process; the only durable
  * record of the task ↔ pid pairing, since nothing is stamped on the task itself.
  */

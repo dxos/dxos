@@ -6,6 +6,7 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Option from 'effect/Option';
 import { useContext, useEffect, useState } from 'react';
 
+import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -60,6 +61,20 @@ export const ancestorPaths = (id: string): string[] => {
   return segments.slice(0, -1).map((_, index) => segments.slice(0, index + 1).join('/'));
 };
 
+/**
+ * The ancestor paths to show, from the first that holds an object down, leaving out nodes that cannot be opened;
+ * `undefined` when no ancestor holds an object.
+ */
+export const trailPaths = (
+  paths: readonly string[],
+  nodes: readonly (Pick<AppGraphNode.Node, 'data' | 'properties'> | undefined)[],
+): string[] | undefined => {
+  const first = nodes.findIndex((node) => Obj.isObject(node?.data));
+  return first < 0
+    ? undefined
+    : paths.slice(first).filter((_, index) => nodes[first + index]?.properties.selectable !== false);
+};
+
 export const planksBefore = (active: readonly string[] | undefined, id: string): string[] => {
   const index = active?.indexOf(id) ?? -1;
   return active && index > 0 ? active.slice(0, index) : [];
@@ -68,7 +83,8 @@ export const planksBefore = (active: readonly string[] | undefined, id: string):
 /**
  * A node's place in the tree as breadcrumbs: its ancestors from the nearest object below the workspace (a project,
  * a collection's item) down to its parent, so a session reads `Project > Sessions`. The root, the workspace and the
- * navtree's section and type groups above that object are left out, since every node under them shares them.
+ * navtree's section and type groups above that object are left out, since every node under them shares them, and so
+ * are nodes that cannot be opened.
  * A node with no object above it (a plugin in the registry) falls back to `history`, the planks opened before it.
  */
 export const useAncestorBreadcrumbs = (id: string | undefined, history: readonly string[] = []): Breadcrumb[] => {
@@ -82,8 +98,11 @@ export const useAncestorBreadcrumbs = (id: string | undefined, history: readonly
     const fallback = id && historyKey.length > 0 ? historyKey.split('\0') : [];
     const atoms = paths.map((path) => graph.node(path));
     const update = () => {
-      const first = atoms.findIndex((atom) => Obj.isObject(Option.getOrUndefined(registry.get(atom))?.data));
-      const next = first < 0 ? fallback : paths.slice(first);
+      const next =
+        trailPaths(
+          paths,
+          atoms.map((atom) => Option.getOrUndefined(registry.get(atom))),
+        ) ?? fallback;
       setIds((prev) => (prev.join('\0') === next.join('\0') ? prev : next));
     };
 

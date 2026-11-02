@@ -243,10 +243,11 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('timel
         }),
       );
 
-      // The spec document lives in the map, which names the project that tracks its tasks.
-      const map = yield* Database.add(
-        Spec.make({ name: 'Timeline', project: Ref.make(project), document: Ref.make(spec) }),
-      );
+      // The spec document lives in the map, which the project that tracks its tasks owns.
+      const map = yield* Database.add(Spec.make({ name: 'Timeline', document: Ref.make(spec) }));
+      Obj.update(project, (project) => {
+        project.spec = Ref.make(map);
+      });
       const byKey = new Map<string, Feature.Feature>();
       for (const seed of FEATURES) {
         const feature = yield* Database.add(

@@ -23,6 +23,7 @@ export default defineConfig({
     'FeatureSpec': 'src/types/FeatureSpec.ts',
     'LegacyFeature': 'src/types/LegacyFeature.ts',
     'LegacyShowcase': 'src/types/LegacyShowcase.ts',
+    'LegacySpec': 'src/types/LegacySpec.ts',
     'FeatureOperation': 'src/types/FeatureOperation.ts',
     'ProjectCapabilities': 'src/types/ProjectCapabilities.ts',
     'ProjectMailboxOperation': 'src/types/ProjectMailboxOperation.ts',

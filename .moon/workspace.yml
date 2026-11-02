@@ -26,6 +26,10 @@ remote:
     clientCert: '.moon/certs/client.pem'
     clientKey: '.moon/certs/client.key'
     domain: 'cache.dxos.network'
+  cache:
+    # Only CI uploads: a dev or agent worktree often has a second moon run or a dev server rewriting
+    # `dist/` mid-build, and an entry archived from that state reaches every job that shares the hash.
+    localReadOnly: true
 
 vcs:
   client: git

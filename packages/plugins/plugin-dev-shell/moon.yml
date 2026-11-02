@@ -15,7 +15,7 @@ tasks:
   # Fail when the browser entry can reach the host. `./vite-plugin` spawns processes and reads the
   # filesystem; the plugin, its skill and its client have to stay loadable in a page, and only the
   # import graph proves the two halves stay apart.
-  check-module-structure:
+  check-browser-imports:
     command: >-
       bun $workspaceRoot/tools/dx-trace-imports/cli.js
       --export .
@@ -31,3 +31,7 @@ tasks:
       - /pnpm-lock.yaml
     options:
       timeout: 60
+  # Runs the browser check above wherever CI runs the inherited runtime check.
+  check-module-structure:
+    deps:
+      - check-browser-imports

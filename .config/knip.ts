@@ -537,6 +537,9 @@ for (const manifest of globSync(
       ),
       ...supplemental.map((p) => `${p}!`),
       ...AUXILIARY_ENTRY,
+      // Run by path with `vitest bench`, imported by nothing. Only where entries are declared: without
+      // them the whole-source glob above already reaches benches as production code.
+      ...(entry.length && !isApp ? ['src/**/*.bench.{ts,tsx}'] : []),
     ],
     project: PROJECT.map((path) => `${path}!`),
     paths: { ...WORKSPACE_PATHS, ...paths },

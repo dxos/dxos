@@ -32,8 +32,8 @@ type StoryArgs = { attendableId: string };
 
 const DefaultStory = ({ attendableId }: StoryArgs) => {
   const [space] = useSpaces();
-  // The seeded spec is the top-level one; the subfeatures' specs are owned by their features.
-  const [spec] = useQuery(space?.db, Filter.and(Filter.type(Spec.Spec), Filter.hasParent(false)));
+  // The seeded spec is the project's; the subfeatures' specs are owned by their features.
+  const spec = useQuery(space?.db, Filter.type(Spec.Spec)).find((spec) => !Spec.getOwner(spec));
   if (!spec) {
     return <Loading data={{ db: !!space?.db, spec: !!spec }} />;
   }
@@ -55,6 +55,12 @@ const expectHittable = async (element: HTMLElement) => {
   const { x, y, width, height } = element.getBoundingClientRect();
   const hit = document.elementFromPoint(x + width / 2, y + height / 2);
   await expect(hit && element.contains(hit)).toBe(true);
+};
+
+/** Switches the map from its default, the spec's document, to the canvas. */
+const showCanvas = async (canvasElement: HTMLElement) => {
+  const canvas = within(canvasElement);
+  await userEvent.click(await canvas.findByTestId('projectsPlugin.featureMap.canvas', undefined, { timeout: 10_000 }));
 };
 
 /** The canvas box that holds a feature's card; its frame takes the presses that select and zoom. */
@@ -143,9 +149,10 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** The map opens on the canvas: one box per top-level feature, laid out by dependency with an arrow per `DependsOn`. */
+/** The canvas: one box per top-level feature, laid out by dependency with an arrow per `DependsOn`. */
 export const Canvas: Story = {
   play: async ({ canvasElement }) => {
+    await showCanvas(canvasElement);
     const canvas = within(canvasElement);
     await waitFor(() => expect(canvas.getAllByTestId('feature-canvas-node')).toHaveLength(8), { timeout: 10_000 });
     await expect(canvas.getByTestId('feature-companion.empty')).toBeInTheDocument();
@@ -157,6 +164,7 @@ export const Canvas: Story = {
 /** A click selects a feature and the companion shows it in full: the ideal, its requirements and its subfeatures. */
 export const SelectShowsCompanion: Story = {
   play: async ({ canvasElement }) => {
+    await showCanvas(canvasElement);
     await userEvent.click(await findNode(canvasElement, 'Provider sync'));
     const detail = await companion();
     await expect(await detail.findAllByTestId(/^requirement-editor\.\d+\.text$/)).toHaveLength(3);
@@ -167,6 +175,7 @@ export const SelectShowsCompanion: Story = {
 /** A double-click zooms into the feature's subfeatures; the trail above the map zooms back out. */
 export const ZoomIn: Story = {
   play: async ({ canvasElement }) => {
+    await showCanvas(canvasElement);
     const canvas = within(canvasElement);
     doubleClick(await findNode(canvasElement, 'Provider sync'));
     await waitFor(() => expect(canvas.getAllByTestId('feature-canvas-node')).toHaveLength(2), { timeout: 10_000 });
@@ -181,6 +190,7 @@ export const ZoomIn: Story = {
 /** Fields are edited in the companion, where they have room; the card follows. */
 export const EditInCompanion: Story = {
   play: async ({ canvasElement }) => {
+    await showCanvas(canvasElement);
     const node = await findNode(canvasElement, 'Smart triage');
     await userEvent.click(node);
     const name = await (await companion()).findByDisplayValue('Smart triage', undefined, { timeout: 5_000 });
@@ -191,27 +201,14 @@ export const EditInCompanion: Story = {
   },
 };
 
-/** The toolbar's add button creates a feature named from the query and puts it on the map. */
-export const CreateFeature: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await waitFor(() => expect(canvas.getAllByTestId('feature-canvas-node')).toHaveLength(8), { timeout: 10_000 });
-    await userEvent.click(canvas.getByTestId('feature-map.add-feature'));
-    // Typed before the popup's search field takes focus, the query would go nowhere.
-    await waitFor(() => expect(document.activeElement?.tagName).toBe('INPUT'));
-    await userEvent.keyboard('Offline mode');
-    await userEvent.click(await screen.findByText(/Offline mode/, { selector: '[role="option"] *' }));
-    await userEvent.click(await screen.findByRole('button', { name: /save/i }));
-    await waitFor(() => expect(canvas.getAllByTestId('feature-canvas-node')).toHaveLength(9), { timeout: 5_000 });
-  },
-};
-
-/** New feature adds one to the level shown and selects it, so it is named in the companion. */
+/** The overflow's Add new feature adds one to the level shown and selects it, so it is named in the companion. */
 export const NewFeature: Story = {
   play: async ({ canvasElement }) => {
+    await showCanvas(canvasElement);
     const canvas = within(canvasElement);
     await waitFor(() => expect(canvas.getAllByTestId('feature-canvas-node')).toHaveLength(8), { timeout: 10_000 });
-    await userEvent.click(canvas.getByTestId('feature-map.new-feature'));
+    await userEvent.click(canvas.getByTestId('feature-map.overflow'));
+    await userEvent.click(await screen.findByTestId('feature-map.new-feature'));
     await waitFor(() => expect(canvas.getAllByTestId('feature-canvas-node')).toHaveLength(9), { timeout: 5_000 });
     const detail = await companion();
     await expect(await detail.findByDisplayValue('New feature', undefined, { timeout: 5_000 })).toBeInTheDocument();
@@ -221,6 +218,7 @@ export const NewFeature: Story = {
 /** Selecting a box and pressing Delete deletes the feature, with the spec that breaks it down. */
 export const CanvasRemove: Story = {
   play: async ({ canvasElement }) => {
+    await showCanvas(canvasElement);
     const canvas = within(canvasElement);
     await userEvent.click(await findNode(canvasElement, 'Smart triage'));
     await userEvent.keyboard('{Delete}');
