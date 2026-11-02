@@ -79,6 +79,7 @@ const config: Plugin.PluginConfig<Debug.DebugPluginOptions> = Plugin.config<Debu
     ),
     AppCapability.operationHandler(
       () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
+      { environments: ['browser', 'node', 'tauri'] },
     ),
     AppCapability.pluginAsset({
       pluginId: DebugNamespace.key,

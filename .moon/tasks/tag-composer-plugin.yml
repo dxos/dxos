@@ -1,0 +1,39 @@
+$schema: https://moonrepo.dev/schemas/tasks.json
+tasks:
+  # Fail when a plugin's runtime build reaches a package banned for that runtime in
+  # `/.config/import-bans.yml`. `--conditional-exports` picks every export subpath that declares the
+  # condition, so no subpath needs naming here. A project appends `--export <subpath>` for a subpath that
+  # declares no condition.
+  check-module-structure:
+    command: bun $workspaceRoot/tools/dx-trace-imports/cli.js
+    args:
+      - --conditional-exports
+      - --bans
+      - $workspaceRoot/.config/import-bans.yml
+      - --fail-on
+      - present
+      - --conditions
+      - workerd,worker
+      - --conditions
+      - node
+    deps:
+      - dx-trace-imports:build
+      - build
+    inputs:
+      - tsconfig.json
+      - package.json
+      - dx.config.ts
+      - '@group(production)'
+      - /.config/import-bans.yml
+      - /pnpm-lock.yaml
+    options:
+      timeout: 120
+
+  build:
+    # A plugin's per-runtime entries are generated from its module list; without it a changed
+    # `environments` replays a stale build.
+    inputs:
+      - dx.config.ts
+
+inheritedBy:
+  tags: composer-plugin

@@ -89,7 +89,7 @@ export const useFeatureEditing = (db: Database.Database | undefined, spec?: Spec
         ),
       fileTask: async (featureId, title) => {
         const [feature] = db ? await db.query(Filter.id(featureId)).run() : [];
-        const project = Feature.instanceOf(feature) ? await Spec.findProject(feature)?.tryLoad() : undefined;
+        const project = Feature.instanceOf(feature) ? Spec.findProject(feature) : undefined;
         if (!project?.taskSet) {
           return false;
         }

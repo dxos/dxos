@@ -68,9 +68,10 @@ export const FeaturesPartial: SampleSpace.Partial<FeaturesResult, FeaturesInput>
   schemas: [Spec.Spec, Feature.Feature, Feature.DependsOn, Feature.Implements],
   run: ({ tasks, project, spec }: FeaturesInput) =>
     Effect.gen(function* () {
-      const map = yield* Database.add(
-        Spec.make({ name: 'Ride Check', project: Ref.make(project.project), document: Ref.make(spec.spec) }),
-      );
+      const map = yield* Database.add(Spec.make({ name: 'Ride Check', document: Ref.make(spec.spec) }));
+      Obj.update(project.project, (project) => {
+        project.spec = Ref.make(map);
+      });
       const features: Feature.Feature[] = [];
       for (const seed of FEATURES) {
         const feature = yield* Database.add(

@@ -49,7 +49,9 @@ const config: Plugin.PluginConfig = Plugin.config({
       },
     ),
     // TODO(wittjosiah): Could some of these commands make use of operations?
-    AppCapability.commands(() => import('./src/capabilities/commands.ts', { with: { type: 'module-url' } })),
+    AppCapability.commands(() => import('./src/capabilities/commands.ts', { with: { type: 'module-url' } }), {
+      environments: ['browser', 'node', 'tauri'],
+    }),
     // The entry carries a live `customPanel` (`CreateRoutinePanel`) alongside the object factory, so the
     // module cannot be evaluated without React.
     SpaceCapability.createObject(
@@ -62,6 +64,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     // slice-materialisation time, so activation needs nothing — and providing
     // Capabilities.LayerSpec soft-orders this module before the process-manager snapshot.
     AppCapability.layerSpec(() => import('./src/capabilities/layer-specs.ts', { with: { type: 'module-url' } }), {
+      environments: ['browser', 'node', 'tauri'],
       name: 'LayerSpecs',
       provides: [Capabilities.TraceSink],
     }),

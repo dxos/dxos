@@ -6,13 +6,16 @@ import {
   type CellAddress,
   type CellRange,
   type CompleteCellRange,
+  RANGE_NOTATION,
   addressFromA1Notation,
   addressToA1Notation,
   isFormula,
+  rangeFromA1Notation,
 } from '@dxos/compute-hyperformula/types';
 import { randomBytes } from '@dxos/crypto/random';
 import { type Obj } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
+import type { Selection } from '@dxos/react-ui-attention/types';
 
 import type * as Sheet from '../types/Sheet.ts';
 
@@ -124,19 +127,71 @@ export const rangeFromIndex = (sheet: Sheet.Sheet, idx: string): CompleteCellRan
 };
 
 /**
- * Compares the positions of two cell indexes in a sheet.
- * Sorts primarily by row, then by column if rows are equal.
+ * The `AnchoredTo.anchor` of a comment on a cell range: its index range, so it follows its cells as rows and columns
+ * are inserted, deleted or moved.
  */
-export const compareIndexPositions = (sheet: Sheet.Sheet, indexA: string, indexB: string): number => {
-  const { row: rowA, col: columnA } = addressFromIndex(sheet, indexA);
-  const { row: rowB, col: columnB } = addressFromIndex(sheet, indexB);
+export const rangeToAnchor = (sheet: Sheet.Sheet, range: CellRange): string => rangeToIndex(sheet, range);
 
-  // Sort by row first, then by column.
-  if (rowA !== rowB) {
-    return rowA - rowB;
-  } else {
-    return columnA - columnB;
+/**
+ * The anchor for a comment on the sheet's published selection, which is in A1 notation.
+ */
+export const anchorFromSelection = (
+  sheet: Sheet.Sheet,
+  selection: Selection.Selection | undefined,
+): string | undefined => {
+  if (selection?.mode !== 'range' || !selection.from || !selection.to) {
+    return undefined;
   }
+
+  const range = completeRange(rangeFromA1Notation(`${selection.from}:${selection.to}`));
+  return isInSheet(sheet, range.from) && isInSheet(sheet, range.to) ? rangeToAnchor(sheet, range) : undefined;
+};
+
+/**
+ * The cells a comment anchor spans, top-left to bottom-right, or `undefined` once a row or column it names is deleted.
+ * Also reads the positional anchors stored before {@link rangeToAnchor}: A1 notation (`B2:C3`) and `col,row,col,row`.
+ */
+export const rangeFromAnchor = (sheet: Sheet.Sheet, anchor: string): CompleteCellRange | undefined => {
+  const range = INDEX_RANGE.test(anchor)
+    ? rangeFromIndex(sheet, anchor)
+    : RANGE_NOTATION.test(anchor)
+      ? completeRange(rangeFromA1Notation(anchor))
+      : COORDINATE_RANGE.test(anchor)
+        ? rangeFromCoordinates(anchor)
+        : undefined;
+  return range && isInSheet(sheet, range.from) && isInSheet(sheet, range.to) ? normalizeRange(range) : undefined;
+};
+
+const INDEX_RANGE = /^[a-zA-Z0-9]+@[a-zA-Z0-9]+:[a-zA-Z0-9]+@[a-zA-Z0-9]+$/;
+const COORDINATE_RANGE = /^\d+,\d+,\d+,\d+$/;
+
+const completeRange = ({ from, to = from }: CellRange): CompleteCellRange => ({ from, to });
+
+/** Moving rows or columns can reverse an index range's endpoints. */
+const normalizeRange = ({ from, to }: CompleteCellRange): CompleteCellRange => ({
+  from: { col: Math.min(from.col, to.col), row: Math.min(from.row, to.row) },
+  to: { col: Math.max(from.col, to.col), row: Math.max(from.row, to.row) },
+});
+
+const rangeFromCoordinates = (anchor: string): CompleteCellRange => {
+  const [fromCol, fromRow, toCol, toRow] = anchor.split(',').map((coord) => parseInt(coord, 10));
+  return { from: { col: fromCol, row: fromRow }, to: { col: toCol, row: toRow } };
+};
+
+const isInSheet = (sheet: Sheet.Sheet, { col, row }: CellAddress): boolean =>
+  col >= 0 && row >= 0 && col < sheet.columns.length && row < sheet.rows.length;
+
+/**
+ * Orders comment anchors by the top-left cell of their range, row first; anchors that no longer resolve sort last.
+ */
+export const compareAnchors = (sheet: Sheet.Sheet, anchorA: string, anchorB: string): number => {
+  const a = rangeFromAnchor(sheet, anchorA)?.from;
+  const b = rangeFromAnchor(sheet, anchorB)?.from;
+  if (!a || !b) {
+    return (a ? 0 : 1) - (b ? 0 : 1);
+  }
+
+  return a.row !== b.row ? a.row - b.row : a.col - b.col;
 };
 
 // TODO(burdon): Tests.
