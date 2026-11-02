@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
 
 import { Alarm, Legacy, TrajectoryCache, TrajectoryStore } from '@dxos/assistant';
@@ -92,19 +93,18 @@ export type CachedViewProps = {
  * empty. A legacy record after them (whose conversion needs the whole feed) loads them again.
  */
 export const makeCachedTrajectoryView = ({ load, follow }: CachedViewProps): Atom.Atom<TrajectoryView> => {
-  const base = Atom.make<{ readonly base: ViewBase; readonly tail: Atom.Atom<readonly Obj.Unknown[]> } | undefined>(
-    (get) => {
-      let open = true;
-      get.addFinalizer(() => {
-        open = false;
-      });
-      void load().then(
-        (loaded) => open && get.setSelf({ base: loaded, tail: follow(loaded.cursor) }),
-        (error) => log.catch(error),
-      );
-      return get.self() ?? undefined;
-    },
-  );
+  const base = Atom.make((get): Loaded | undefined => {
+    let open = true;
+    get.addFinalizer(() => {
+      open = false;
+    });
+    void load().then(
+      (loaded) => open && get.setSelf({ base: loaded, tail: follow(loaded.cursor) }),
+      (error) => log.catch(error),
+    );
+    // A reload keeps showing what the view had until the new checkpoints arrive.
+    return Option.getOrUndefined(get.self<Loaded>());
+  });
   return viewOf((get) => {
     const current = get(base);
     if (current === undefined) {
@@ -126,9 +126,11 @@ export const makeCachedTrajectoryView = ({ load, follow }: CachedViewProps): Ato
 export const makeTrajectoryView = (items: Atom.Atom<readonly Obj.Unknown[]>): Atom.Atom<TrajectoryView> =>
   viewOf((get) => ({ base: EMPTY_BASE, items: get(items).filter(isItem) }));
 
+type Loaded = { readonly base: ViewBase; readonly tail: Atom.Atom<readonly Obj.Unknown[]> };
+
 type Source = { readonly base: ViewBase; readonly items: readonly (Trajectory.Event | Legacy.Record)[] };
 
-const viewOf = (source: (get: Atom.Context) => Source | undefined): Atom.Atom<TrajectoryView> => {
+const viewOf = (source: (get: Atom.AtomContext) => Source | undefined): Atom.Atom<TrajectoryView> => {
   let last: Fold | undefined;
   const views = new Map<string, Message.Message>();
   const alarmViews = new Map<string, Alarm.Alarm>();
