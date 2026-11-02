@@ -131,7 +131,7 @@ const defines = (document: Scene.SceneDocument, object: string) =>
  * 2. Cube or Sphere places one where the pointer meets the ground; Link binds the next two clicked elements.
  * 3. Double-click a composite (the encapsulated cluster's shell) to edit its parts; Escape goes back out. Double-click a
  *    plain element to select the face under the pointer, which Extrude then drags; Escape clears it.
- * 4. Delete removes the selection; Orbit (or the middle button) orbits, shift or the right button pans, the wheel zooms.
+ * 4. Escape clears the selection; Delete removes it; Orbit (or the middle button) orbits, shift or the right button pans, the wheel zooms.
  */
 const DefaultStory = ({ exemplar, commitDelay, initialTool = 'select', grid, snap, plane }: StoryProps) => {
   const initial = useMemo(
@@ -927,6 +927,74 @@ export const MoveBodyTest: Story = {
     // 4.
     await fireEvent.keyDown(editor, { key: 'z', metaKey: true });
     await waitFor(() => expect(bounds('item-p')).toEqual(start.p));
+  },
+};
+
+/**
+ * Escape backs out of whatever is innermost, as in 2D: a drag, then the selection.
+ *
+ * Test:
+ * 1. A click on a cube selects it; Escape clears the selection.
+ * 2. Escape part way through a body drag puts the cube back and keeps it selected; the release then moves nothing.
+ * 3. Escape again clears the selection.
+ * 4. Escape part way through an extrusion drops it; the release then makes nothing.
+ */
+export const EscapeTest: Story = {
+  args: { exemplar: 'flush', initialTool: 'move', grid: true, snap: true },
+  play: async ({ canvasElement }) => {
+    const { canvas, editor, view, bounds, frame, find, pickAt, onGizmo, at, along } = await harness(
+      canvasElement,
+      'item-p',
+    );
+    const start = bounds('item-p');
+
+    // 1.
+    const onQ = find((x, y) => pickAt(x, y).name === 'item-q');
+    await fireEvent.pointerDown(view, { ...at(onQ), buttons: 1 });
+    await fireEvent.pointerUp(editor, { ...at(onQ), buttons: 0 });
+    await waitFor(() => expect(editor.dataset.selection).toBe('q'));
+    await fireEvent.keyDown(editor, { key: 'Escape' });
+    await waitFor(() => expect(editor.dataset.selection).toBe(''));
+
+    // 2.
+    const grab = find((x, y) => pickAt(x, y).name === 'item-p' && !onGizmo(x, y));
+    const point = pickAt(grab.x, grab.y).point;
+    if (!point) {
+      throw new Error('No point under the grab.');
+    }
+    const to = along(grab, point, new Vector3(0.9, 0, 0.3));
+    await fireEvent.pointerDown(view, { ...at(grab), buttons: 1 });
+    await fireEvent.pointerMove(editor, { ...to, buttons: 1 });
+    await waitFor(() => expect(bounds('item-p')?.[0]).toBeGreaterThan(0.2));
+    await fireEvent.keyDown(editor, { key: 'Escape' });
+    await waitFor(() => expect(bounds('item-p')).toEqual(start));
+    await expect(editor.dataset.selection).toBe('p');
+    await fireEvent.pointerUp(editor, { ...to, buttons: 0 });
+    await frame();
+    await expect(bounds('item-p')).toEqual(start);
+    await expect(editor.dataset.selection).toBe('p');
+
+    // 3.
+    await fireEvent.keyDown(editor, { key: 'Escape' });
+    await waitFor(() => expect(editor.dataset.selection).toBe(''));
+
+    // 4.
+    await userEvent.click(canvas.getByTestId('tool-extrude'));
+    const top = find((x, y) => {
+      const { name, normal } = pickAt(x, y);
+      return name === 'item-p' && (normal?.y ?? 0) > 0.9 && !onGizmo(x, y);
+    });
+    const pull = along(top, new Vector3(0, 1, 0), new Vector3(0, 0.5, 0));
+    await fireEvent.pointerMove(view, { ...at(top), buttons: 0 });
+    await fireEvent.pointerDown(view, { ...at(top), buttons: 1 });
+    await fireEvent.pointerMove(editor, { ...pull, buttons: 1 });
+    await waitFor(() => expect(bounds('item-extrude-1')).toBeDefined());
+    await fireEvent.keyDown(editor, { key: 'Escape' });
+    await waitFor(() => expect(bounds('item-extrude-1')).toBeUndefined());
+    await fireEvent.pointerUp(editor, { ...pull, buttons: 0 });
+    await frame();
+    await expect(bounds('item-extrude-1')).toBeUndefined();
+    await expect(editor.dataset.selection).toBe('');
   },
 };
 

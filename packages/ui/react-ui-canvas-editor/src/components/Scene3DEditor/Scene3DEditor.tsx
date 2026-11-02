@@ -158,8 +158,8 @@ const isGizmoMode = (tool: Tool3D): tool is GizmoMode => tool === 'move' || tool
 /**
  * Arranges a 3D layout: click selects (shift toggles, empty space clears), a gizmo moves, rotates or scales the one
  * selected element, the link tool binds two clicked elements, and a create or place tool puts an element where the
- * pointer meets the ground. A double-click on a composite edits its parts, with the rest of the scene faded; Escape
- * goes back out. The middle button orbits (Shift pans) while a tool owns the left; the right button opens the menu.
+ * pointer meets the ground. A double-click on a composite edits its parts, with the rest of the scene faded. Escape
+ * backs out of the innermost of a drag, a selected face, the selection and the composite. The middle button orbits (Shift pans) while a tool owns the left; the right button opens the menu.
  */
 export const Scene3DEditor = ({
   classNames,
@@ -1047,10 +1047,28 @@ export const Scene3DEditor = ({
         if (event.target !== event.currentTarget && event.target !== canvasRef.current) {
           return;
         }
+        // A gizmo drag has no way back short of its release, and the gizmo is on the selection.
+        if (event.key === 'Escape' && renderer?.dragging) {
+          return;
+        }
+        // Escape backs out of whatever is innermost, as in 2D: a gesture, then a selected face, the selection, the composite.
         if (event.key === 'Escape' && sizing.current) {
           cancelSizing();
+        } else if (event.key === 'Escape' && moving.current) {
+          moving.current = undefined;
+          press.current = undefined;
+          endMoveGuides();
+          setMoved(undefined);
+        } else if (event.key === 'Escape' && extruding.current) {
+          extruding.current = undefined;
+          press.current = undefined;
+          setPulling(undefined);
+          setExtrusion(undefined);
+          renderer?.snapFaces([]);
         } else if (event.key === 'Escape' && face) {
           onFaceChange?.(undefined);
+        } else if (event.key === 'Escape' && selection.length > 0) {
+          onSelect([]);
         } else if (event.key === 'Escape' && drilled && scene) {
           onSelect([]);
           onEdit(scene.layout);
