@@ -9,97 +9,12 @@ is [`saas2d-script-review.md`](saas2d-script-review.md).
 
 ## Narrative
 
-The story told in full, with no time limit, as a lecture on the business dynamics: what SaaS did, what that led to and
-why, why AI breaks it, and what the alternative is. Nobody in it acts badly; every consequence follows from the
-architecture. Every timed track is a cut of this. Two claims below come from the user and are outside the fact sheet's
-verified set: that a company can run EDGE in its own Cloudflare account, and that Composer is the first enterprise
-superapp.
-
-### The first revolution
-
-Software as a service revolutionized the software industry. The important thing it changed was the economics. One
-vendor runs one codebase for millions of customers, so the cost of every feature, every fix and every server is spread
-across all of them, and a company can adopt a product in an afternoon instead of a procurement cycle. Buyers gained
-speed and vendors gained scale, and nothing visible was lost. That is why it won everywhere.
-
-Two consequences followed from that economics, and both were structural rather than anyone's intent.
-
-The first is specialization. A vendor serving millions wins by being the best at one job, so the market organized
-itself around best-of-breed products, each excellent at its slice: one for customer records, one for conversations, one
-for documents, one for tickets, one for code, one for plans. A company assembles its operation from dozens of them, a
-large company from hundreds. Each product must hold the data for its job in order to do that job, so the company's data
-is partitioned by vendor, in each vendor's shape, behind each vendor's API. Integration is left to the buyer. It is
-never any vendor's core product, so it is always a step behind, and in practice people are the integration layer: the
-person who copies the figure across, who knows which system holds the answer, who keeps the spreadsheet that joins what
-the tools do not. The words for this condition are silos and fragmentation.
-
-The second is lock-in, and it is a consequence of the architecture rather than a strategy. The data accumulates inside
-the product in the product's own shape, and the cost of leaving grows with every day of use, because leaving means
-leaving the history behind. A vendor's position is defended not by its features, which competitors can copy, but by
-the data it holds, which they cannot. The data is held captive by the design, and the design was chosen for good
-reasons.
-
-That is the equilibrium the industry reached: dozens of silos, each individually excellent, collectively fragmented,
-with a company's complete picture of itself existing nowhere. For as long as the user of software was a person, this
-was a cost worth paying.
-
-### The second revolution
-
-The driver of change is AI, and specifically agents, and the architecture above is the wrong one for them.
-
-A SaaS product is built around a person in a session: a user interface, a login, a permission model about who may
-click what. The API is a secondary surface added so that other products can be bolted on. An agent is not a user of a
-product. It is a worker on a job, and a job cuts across products. To decide whether to escalate a ticket, an agent
-needs the ticket, the customer's record, the contract, the conversation last week and the engineer's plan for the fix,
-in a single step of reasoning. The value an agent produces is in those joins, and the joins are exactly what no vendor
-holds, because each holds only its own slice. Agents need access to everything to realize their full potential, and
-under this architecture, everything is in dozens of places, each with its own API, its own permission model and its
-own rate limit, and whatever the agent produces lands back in one of the silos. Each vendor's answer, an assistant of
-its own inside its own product, reproduces the fragmentation one level up: a dozen agents, each seeing a twelfth.
-
-It will get worse before it gets better, because AI is the second revolution, and it is as complete as the first. SaaS
-displaced installed software by changing who ran it. Agents displace the application itself by changing who uses it.
-When the work is done by an agent, the interface a vendor spent a decade refining is no longer the point; the data and
-the model are. Every SaaS vendor is exposed, and the organizations positioned to replace them are the few that can
-train frontier models, because that is a game very few can afford to play. Each of them is building a platform rather
-than a model: the model, the agents, their tools, their memory and the surfaces people reach them through, so that a
-company's work can move inside. For a company this looks like the cure for fragmentation, and it is, by consolidation:
-all of the data, all of the agents and all of the reasoning with one vendor whose model, prices and roadmap the company
-does not control. That is a deeper lock-in than SaaS ever produced, and companies are walking into it for the same
-reason they walked into the last one.
-
-### The alternative
-
-There is an alternative, and it rests on an inversion of control. Under SaaS the application owns the data and the
-company reaches in. Invert it: the company owns the data, and applications and agents reach in. That is a simple
-sentence and a hard architecture, because the thing at the centre has to be a database of an unusual kind.
-
-It has to be distributed, with copies on every device and at the edge, so nothing depends on a single vendor's
-servers. It has to be a graph, with relations as first-class data, so that the joins an agent needs live in the data
-rather than in integration code. It has to be typed, so that people, apps and agents agree on what an object means. It
-has to carry permissions in the data itself, so that access is a property of the object and not a setting in each app.
-And it has to treat an agent as a member, with an identity of its own, reading and writing the same objects as the
-people and reacting when they change, rather than as an external caller of an API.
-
-ECHO is that database: a distributed graph database, and the first built for agents from the start rather than opened
-to them afterwards. Its objects are typed and related; its unit of access is the space, which is also its unit of
-replication, so who can see what travels with the data; it is local-first, so every copy works offline and reconciles
-on reconnection; and an agent holds a HALO identity and joins a space like any other member. It replicates peer to
-peer and through EDGE, which runs on Cloudflare Workers and Durable Objects with R2 for storage and Workers AI for
-inference, in the company's own Cloudflare account, so the stack that holds the company's data is the company's.
-
-Composer is what runs on it: the first enterprise superapp, an extensible framework for building agent-assisted
-applications. Documents, mail, tasks, meetings and the agents that work on them are plugins over one graph. An agent
-in a space sees the same objects the people see and writes its results back where the next person or agent picks them
-up. Models plug in underneath and are interchangeable; the agent's identity, memory and permissions live in the space,
-so changing the model moves nothing else.
-
-The result is the inversion made concrete. The silos collapse into one graph. Agents get access to everything, because
-everything is in one place and the permissions travel with it. The frontier labs become suppliers of a component rather
-than landlords of the business. Control returns to the company, and with it the freedom to build whatever it wants on
-its own data.
-
-This is DXOS. Your team. Your apps. Your data.
+The full story and its three two-minute cuts live in
+[`tools/autocue/showcase/echo3d/NARRATIVE-SAAS2D.md`](../../../tools/autocue/showcase/echo3d/NARRATIVE-SAAS2D.md): a
+lecture on the business dynamics in three acts (the SaaS economics and what followed from it; why agents break that
+architecture and the deeper lock-in the frontier platforms offer; inversion of control on ECHO, Composer and
+Cloudflare). Two of its claims come from the user and sit outside the fact sheet's verified set: that a company can run
+EDGE in its own Cloudflare account, and that Composer is the first enterprise superapp.
 
 ## Brief
 
