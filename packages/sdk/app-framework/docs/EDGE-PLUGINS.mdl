@@ -183,7 +183,7 @@ there is no HTTP protocol.
 
 ```ts
 interface Entrypoint {
-  describe(): Promise<Catalog>; // { plugin, dependencies, operations, skills, types, failures }
+  describe(): Promise<Catalog>; // { plugin, operations, skills, types, failures }
   invoke(request: InvokeRequest, scope?: InvocationScope): Promise<InvokeResult>;
 }
 
@@ -208,8 +208,8 @@ type Failure = {
   implements now; the [InvocationScope](#types) type below is the target, in which `scope.spaceId`
   is authoritative and `InvokeRequest.spaceId` is removed.
 - **Operation keys** may be bare or DXNs; they are matched in bare form ([D-22]).
-- **Isolation.** The entrypoint serves only the primary plugin's operations, never a dependency's
-  ([D-21]).
+- **Isolation.** The entrypoint serves only its own plugin's operations; no other plugin is loaded
+  beside it ([D-41]).
 
 ### EDGE and Cloudflare
 
@@ -692,7 +692,7 @@ feat F-12: Tested end to end
     workerd, as PluginLoader does, and fails when an import is not vendored, a workerd module fails
     to activate, or the plugin contributes no operations, skills or types.
 
-  req F-12.2: The host is tested inside workerd: describe, invoke, dependency attribution and errors.
+  req F-12.2: The host is tested inside workerd: describe, invoke, standalone activation and errors.
 
   req F-12.3: EDGE end-to-end tests publish a bundle, route and invoke its operations in a real space,
     and cover scenarios T-1 to T-4, upgrade and revocation.
@@ -785,9 +785,6 @@ TODO: an override per DXN.
   opening a space root. Whether a manifest records the SDK version it was built from, and
   compute-service refuses a bundle the data plane cannot serve, or the data service protocol is
   versioned instead.
-- **Dependencies across bundles.** PluginLoader resolves a package both bundles vendor to the
-  primary's copy, as Composer's import map serves one version to every plugin; that is safe only
-  while the two versions are compatible. Whether a bundle records the version range it accepts.
 
 ## Changelog
 
@@ -1150,28 +1147,36 @@ decision D-40: [F-1.4] allows bundle files to import `node:*`, as Bundle format 
   for: user:dmaretskyi
   affects: [F-1.4, InvocationScope, PluginEntrypoint]
   why: Review found [F-1.4] stricter than rule 4 although the loader sets `nodejs_compat`, and the entrypoint snippet and the `InvocationScope` type giving two shapes with no statement of which holds.
+```
 
+```mdl
 decision D-41: A plugin runs alone on EDGE. Its bundle is loaded without the bundles of its `dependsOn` plugins, and `PluginHost` activates it without resolving `dependsOn`. A plugin can import another plugin's package for its types, schemas and operation definitions; those imports are vendored like any other package. Plugins on EDGE share no runtime state or capabilities, and contribute only operations, skills and types.
   date: 2026-11-02
   by: user:dmaretskyi
   supersedes: D-21
-  affects: [PluginLoader, PluginEntrypoint, PluginStore, Catalog]
+  affects: [PluginLoader, PluginEntrypoint, PluginStore, PluginCatalog, F-12.2]
   why: Plugins on EDGE are independent; bundling and activating dependencies coupled their versions and loaded code a plugin only needed types from.
+```
 
+```mdl
 decision D-42: A plugin package keeps its per-runtime `dx.config.ts` entries (`dx-env`, with `workerd` and `node` conditions on its config export) for consumers that bundle the config statically. The published bundle is still one build from the full entry, and a body is still never picked by condition.
   date: 2026-11-02
   by: agent:claude-code
   for: user:dmaretskyi
-  affects: [F-1.2, Rules]
+  affects: [F-1.2]
   why: edge's operation-service bundles plugin configs with the `workerd` condition and the `dx` CLI imports them with `node`; without those entries both reach browser-only bodies, which broke the CLI's module-structure check and edge's worker build. Narrows [D-23].
+```
 
+```mdl
 decision D-43: PluginStore refuses a bundle whose catalog lists any activation failure, stores `describe()`'s `PluginProtocol.Catalog` as the bundle's catalog, leaves channels in place when their version is revoked (resolution falls back to `latest`), and indexes only `/upload`, never private uploads.
   date: 2026-11-02
   by: agent:claude-code
   for: user:dmaretskyi
   affects: [F-1.3, F-2.4, F-10.3, PluginStore, PluginEntrypoint]
   why: Review asked for the refusal rule, the catalog projection, the revoke outcome for channels and the invocation boundary of private plugins; this is what the store implements.
+```
 
+```mdl
 decision D-44: Building and checking a bundle (`buildBundle`, `verifyBundle`, `check-bundle`, `check-release`) lives in the private Node package `@dxos/plugin-builder`, with its own binaries; `@dxos/plugin-host-cloudflare` keeps only the runtime vendored into a bundle. Narrows [D-20].
   date: 2026-11-02
   by: agent:claude-code

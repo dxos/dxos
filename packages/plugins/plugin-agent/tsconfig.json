@@ -136,9 +136,6 @@
       "path": "../../ui/ui-theme"
     },
     {
-      "path": "../plugin-assistant"
-    },
-    {
       "path": "../plugin-client"
     },
     {

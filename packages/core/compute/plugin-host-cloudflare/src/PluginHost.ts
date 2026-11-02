@@ -48,11 +48,6 @@ export type Options = {
 
 const DEFAULT_ACTIVATION_TIMEOUT = 20_000;
 
-/**
- * Hosts plugins as the main module of an EDGE plugin release.
- *
- * `makePlugins` is called inside the first request, so plugin options may read request-scoped state.
- */
 /** EDGE invokes operations by their bare key (`org.example.op`); an operation's own key is a DXN (`dxn:org.example.op`). */
 const operationKeyName = (key: string): string => (DXN.isDXN(key) ? DXN.getName(key) : key);
 
@@ -71,6 +66,11 @@ export const fromManifest = (manifest: unknown, loaders: Plugin.ManifestLoaders)
   return Plugin.fromManifest(definition, loaders).make();
 };
 
+/**
+ * Hosts plugins as the main module of an EDGE plugin release.
+ *
+ * `makePlugins` is called inside the first request, so plugin options may read request-scoped state.
+ */
 export const make = (makePlugins: () => PluginActivation.Plugins, options: Options = {}): Host => {
   const getActivation = memoizeActivation(makePlugins, options.activationTimeout ?? DEFAULT_ACTIVATION_TIMEOUT);
 

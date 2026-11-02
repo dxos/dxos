@@ -159,17 +159,25 @@ const pruneVendor = async (
   return Object.fromEntries(Object.entries(files).filter(([path]) => kept.has(path)));
 };
 
+const prefixed = (prefix: string, path: string | undefined): string | undefined =>
+  path === undefined ? undefined : `${prefix}${path}`;
+
 /**
  * One bundle's plugin as main-module source: its manifest, and a loader for each module body and adapter, keyed by the
  * URL the manifest gives it. The loaders import literal paths, since a computed specifier cannot resolve in Worker
- * Loader: a body by its path under `prefix`, an adapter's bare specifier by the file the import map gives it.
+ * Loader: a body or local adapter by its path under `prefix`, an adapter's bare specifier by the file the import map
+ * gives it.
  */
 const pluginSource = (bundle: Files, prefix: string, imports: ImportMap): string => {
   const manifestJson = text(bundle, MANIFEST_FILE) ?? '{}';
   const manifest: { modules?: { url: string; adapter?: { url: string } }[] } = JSON.parse(manifestJson);
   const loaders = (manifest.modules ?? []).flatMap(({ url, adapter }) => {
     const body = resolveRelative(MANIFEST_FILE, url);
-    const adapterPath = adapter ? imports[adapter.url] : undefined;
+    const adapterPath = !adapter
+      ? undefined
+      : isBare(adapter.url)
+        ? imports[adapter.url]
+        : prefixed(prefix, resolveRelative(MANIFEST_FILE, adapter.url));
     return [
       ...(body === undefined ? [] : [[url, `${prefix}${body}`]]),
       ...(adapter && adapterPath ? [[adapter.url, adapterPath]] : []),

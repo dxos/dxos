@@ -443,9 +443,10 @@ const BUNDLER_RESOLVED: Record<string, string[]> = {
   // `await import('@dxos/functions-runtime-cloudflare')` and gives esbuild a `resolveDir` of its
   // own source directory, so the import resolves from here rather than from any importing file.
   'packages/core/compute/edge-compute': ['@dxos/functions-runtime-cloudflare'],
-  // `check-edge-release` bundles a plugin's `dependsOn` closure from its `@dxos/plugin-*` dependencies, and the agent
-  // plugin depends on the assistant plugin by key in `dx.config.ts` without importing it.
-  'packages/plugins/plugin-agent': ['@dxos/plugin-assistant'],
+  // The builder vendors the host by its installed path (`node_modules/@dxos/plugin-host-cloudflare`), never importing it.
+  'packages/core/compute/plugin-builder': ['@dxos/plugin-host-cloudflare'],
+  // The fixture plugin `build-remote-plugin` builds lives under `__fixtures__`, which knip does not scan.
+  'packages/e2e/composer-e2e': ['@dxos/compute'],
   // `index.html` links these by path rather than importing them, so no module graph reaches them —
   // and unstyled, `#spaces` becomes a full-flow block over the todo list that swallows every click.
   'packages/apps/todomvc': ['todomvc-app-css', 'todomvc-common'],
@@ -467,6 +468,10 @@ const BUNDLER_RESOLVED: Record<string, string[]> = {
     '@opentui/core-linux-arm64',
     '@opentui/core-linux-x64',
     '@opentui/core-win32-x64',
+    // `dx registry publish` runs the builder's `check-bundle` in a subprocess and points a plugin's build at the host's
+    // entry, both by path.
+    '@dxos/plugin-builder',
+    '@dxos/plugin-host-cloudflare',
   ],
 };
 

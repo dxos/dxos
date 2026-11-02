@@ -21,7 +21,8 @@ const main = async () => {
   const { values } = parseArgs({ options: { package: { type: 'string' } } });
   const packageDir = resolve(values.package ?? process.cwd());
   const bundle = await buildBundle(packageDir);
-  const { problems, summary } = await verifyBundle(bundle);
+  // `buildBundle` always vendors the host, so a bundle without it is a broken build, not one to skip.
+  const { problems, summary } = await verifyBundle(bundle, { requireHost: true });
   if (problems.length > 0) {
     console.error(`✗ ${bundle}`);
     problems.forEach(({ path, message }) => console.error(`  - ${path}: ${message}`));

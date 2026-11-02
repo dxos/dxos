@@ -244,14 +244,17 @@ const fromDefinition = (
   definition: Plugin.Manifest,
   cache: PluginAssetCache.Cache,
 ): Plugin.Plugin => {
+  // A local adapter is a chunk beside the body, relative to the manifest; a bare one resolves through the import map.
   const loaders = Object.fromEntries(
-    definition.modules.map(({ url }) => [
-      url,
-      () =>
-        EffectEx.runPromise(cache.resolve(pluginId, new URL(url, manifestUrl).toString())).then(
-          (resolved) => import(/* @vite-ignore */ resolved),
-        ),
-    ]),
+    definition.modules
+      .flatMap(({ url, adapter }) => [url, ...(adapter?.url.startsWith('.') ? [adapter.url] : [])])
+      .map((url) => [
+        url,
+        () =>
+          EffectEx.runPromise(cache.resolve(pluginId, new URL(url, manifestUrl).toString())).then(
+            (resolved) => import(/* @vite-ignore */ resolved),
+          ),
+      ]),
   );
   return Plugin.fromManifest(definition, loaders).make();
 };

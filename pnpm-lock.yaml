@@ -8428,9 +8428,6 @@ importers:
       '@dxos/pipeline-rdf':
         specifier: workspace:*
         version: link:../../core/compute/pipeline-rdf
-      '@dxos/plugin-assistant':
-        specifier: workspace:*
-        version: link:../plugin-assistant
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client

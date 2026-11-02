@@ -62,6 +62,17 @@ describe('PluginLoader', () => {
     expect(main).not.toContain('deps/');
   });
 
+  test('loads a local adapter chunk by its path in the bundle', async ({ expect }) => {
+    const manifest = JSON.stringify({
+      key: 'org.example.plugin.sample',
+      modules: [{ id: 'Operations', url: './operations.mjs', adapter: { url: './adapter.mjs' } }],
+    });
+    const { main } = await PluginLoader.workerCode(
+      bundle({ 'manifest.json': manifest, 'adapter.mjs': 'export default 1;' }),
+    );
+    expect(main).toContain(`"./adapter.mjs": () => import("./adapter.mjs")`);
+  });
+
   test('Worker Loader modules hold the main module, code and wasm, and no source maps', async ({ expect }) => {
     const code = await PluginLoader.workerCode(bundle({ 'operations.mjs.map': '{}', 'vendor/asset.wasm': '\0asm' }));
     const modules = PluginLoader.toLoaderModules(code);

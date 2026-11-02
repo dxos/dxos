@@ -60,11 +60,11 @@ const loadPlugin = async (record: PluginRecord, entryPath: string): Promise<Plug
     const manifestUrl = pathToFileURL(manifestPath).toString();
     const { definition } = PluginManifest.parse(manifestUrl, JSON.parse(manifestJson));
     if (definition) {
+      // A local adapter is a chunk beside the body, relative to the manifest; a bare one resolves from the package.
       const loaders = Object.fromEntries(
-        definition.modules.map(({ url }) => [
-          url,
-          () => import(/* @vite-ignore */ new URL(url, manifestUrl).toString()),
-        ]),
+        definition.modules
+          .flatMap(({ url, adapter }) => [url, ...(adapter?.url.startsWith('.') ? [adapter.url] : [])])
+          .map((url) => [url, () => import(/* @vite-ignore */ new URL(url, manifestUrl).toString())]),
       );
       return Plugin.fromManifest(definition, loaders).make();
     }
