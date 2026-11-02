@@ -89,6 +89,42 @@ describe('TrajectoryStore on a feed with indexing disabled', () => {
     expect(resumed.state).toEqual(
       Reducer.run(Reducer.thread, await run(reader, TrajectoryStore.read(readerFeed))).state,
     );
+
+    // A reader that follows the feed walks on from the cursor the checkpoint stops at, and sees only what is new.
+    const { cursor } = await withSql(TrajectoryCache.loadAt(readerFeed, Reducer.thread));
+    expect(cursor).toBeDefined();
+    await run(db, TrajectoryStore.append(feed, [say('latest')]));
+    await db.flush({ secondaryIndexes: true });
+    const tail = await run(reader, Feed.walk(readerFeed, Filter.type(Trajectory.Event), { begin: cursor }).run);
+    expect(tail.map((event) => event.payload._tag === 'message' && event.payload.blocks)).toEqual([
+      [{ _tag: 'text', text: 'latest' }],
+    ]);
+  });
+
+  test('without SqlService the process still resumes from its own checkpoint', async ({ expect }) => {
+    const { db, reader, feed } = await openSpace();
+    await run(db, TrajectoryStore.append(feed, [say('question', 'user'), say('answer')]));
+    await db.flush({ secondaryIndexes: true });
+    const readerFeed = await feedOf(reader, feed);
+    expect(readerFeed).toBeDefined();
+    if (readerFeed === undefined) {
+      return;
+    }
+
+    const first = await run(reader, TrajectoryCache.loadAt(readerFeed, Reducer.session));
+    expect(first.checkpoint.count).toBe(2);
+    await run(db, TrajectoryStore.append(feed, [say('follow-up', 'user')]));
+    await db.flush({ secondaryIndexes: true });
+    const second = await run(reader, TrajectoryCache.loadAt(readerFeed, Reducer.session));
+    expect(second.checkpoint.count).toBe(3);
+    expect(second.cursor).not.toEqual(first.cursor);
+    expect(second.checkpoint.state).toEqual(
+      Reducer.run(Reducer.session, await run(reader, TrajectoryStore.read(readerFeed))).state,
+    );
+    // Nothing new: the load hands back the state it holds rather than refolding the feed.
+    expect((await run(reader, TrajectoryCache.loadAt(readerFeed, Reducer.session))).checkpoint.state).toBe(
+      second.checkpoint.state,
+    );
   });
 
   test('bound objects and connections are read from the feed store', async ({ expect }) => {

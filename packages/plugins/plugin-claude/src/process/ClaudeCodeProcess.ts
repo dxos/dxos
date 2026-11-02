@@ -28,6 +28,7 @@ import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as ShellService from '@dxos/compute/ShellService';
+import * as SqlService from '@dxos/compute/SqlService';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database, Feed, Registry } from '@dxos/echo';
@@ -71,6 +72,8 @@ export const make = (options: Options): AgentProcessDefinition =>
     // the agent's subscription token is found with one, and the chat's MCP connections with others.
     types: [Chat.Chat, Feed.Feed, ...TrajectoryStore.types, ...mcpServerTypes],
     services: [Database.Service, Registry.Service, Credential.CredentialsService, ShellService.ShellService],
+    // Where the host has one, `TrajectoryCache` keeps its checkpoints there, shared with the chat UI on this device.
+    optionalServices: [SqlService.SqlService],
     rpcs: HarnessControl,
   }).pipe(
     Operation.withDurableHandler((ctx) =>

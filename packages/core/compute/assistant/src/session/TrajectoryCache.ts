@@ -49,45 +49,61 @@ const isMemoOf = <S>(memo: Memo<unknown>, reducer: Reducer.Durable<S>): memo is 
  */
 const SAVE_EVERY = 64;
 
+/** A checkpoint and the local cursor of the last item it folded, so a reader can follow the feed from there. */
+export type Resumable<S> = {
+  readonly checkpoint: Reducer.Checkpoint<S>;
+  readonly cursor?: Feed.LocalCursor;
+};
+
 /**
- * Folds `feed` with `reducer`, resuming from the checkpoint stored for it and saving the new one, so a reader pays
- * for the events since its last read rather than for the whole conversation. Without `SqlService`, or when the stored
- * checkpoint cannot be trusted, it refolds the feed.
+ * Folds `feed` with `reducer`, resuming from the checkpoint this process holds or the one stored for it and saving the
+ * new one, so a reader pays for the events since its last read rather than for the whole conversation. Without
+ * `SqlService` only the process's own checkpoint is used; when no checkpoint can be trusted it refolds the feed.
  */
-export const load = Effect.fnUntraced(function* <S>(
+export const load = <S>(
   feed: Feed.Feed,
   reducer: Reducer.Durable<S>,
-): Effect.fn.Return<Reducer.Checkpoint<S>, never, Database.Service> {
+): Effect.Effect<Reducer.Checkpoint<S>, never, Database.Service> =>
+  Effect.map(loadAt(feed, reducer), (resumable) => resumable.checkpoint);
+
+/** {@link load}, with the cursor the checkpoint stops at: a reader that follows the feed walks on from there. */
+export const loadAt = Effect.fnUntraced(function* <S>(
+  feed: Feed.Feed,
+  reducer: Reducer.Durable<S>,
+): Effect.fn.Return<Resumable<S>, never, Database.Service> {
   const service = yield* Effect.serviceOption(SqlService.SqlService);
   if (Option.isNone(service)) {
-    return yield* refold(feed, reducer);
+    return yield* memoOnly(feed, reducer);
   }
 
-  return yield* cached(feed, reducer).pipe(
+  return yield* Effect.gen(function* () {
+    yield* migrate();
+    return yield* cached(feed, reducer, yield* SqlClient.SqlClient);
+  }).pipe(
     Effect.provide(SqlService.database({ name: DATABASE })),
     Effect.provideService(SqlService.SqlService, service.value),
     // The cache only saves work; an unusable one must not take the conversation down with it.
     Effect.catchTag('SqlError', (error) =>
       Effect.gen(function* () {
         log.warn('trajectory cache unavailable', { error });
-        return yield* refold(feed, reducer);
+        return yield* memoOnly(feed, reducer);
       }),
     ),
   );
 });
 
-const refold = <S>(
+/** {@link cached} without a store: with no client it runs no SQL, so it has no SQL error to fail with. */
+const memoOnly = <S>(
   feed: Feed.Feed,
-  reducer: Reducer.Reducer<S>,
-): Effect.Effect<Reducer.Checkpoint<S>, never, Database.Service> =>
-  Effect.map(readItems(feed), (items) => Reducer.run(reducer, Legacy.toEvents(items)));
+  reducer: Reducer.Durable<S>,
+): Effect.Effect<Resumable<S>, never, Database.Service> => cached(feed, reducer, undefined).pipe(Effect.orDie);
 
+/** Folds `feed` onto this process's checkpoint, else the one stored in `sql` (when given), else from the start. */
 const cached = Effect.fnUntraced(function* <S>(
   feed: Feed.Feed,
   reducer: Reducer.Durable<S>,
-): Effect.fn.Return<Reducer.Checkpoint<S>, SqlError.SqlError, Database.Service | SqlClient.SqlClient> {
-  yield* migrate();
-  const sql = yield* SqlClient.SqlClient;
+  sql: SqlClient.SqlClient | undefined,
+): Effect.fn.Return<Resumable<S>, SqlError.SqlError, Database.Service> {
   const trajectory = trajectoryId(feed);
   const { db } = yield* Database.Service;
   const memo = memos.get(db) ?? new Map<string, Memo<unknown>>();
@@ -99,7 +115,7 @@ const cached = Effect.fnUntraced(function* <S>(
   const fromMemo = remembered && (yield* tailAfter(feed, remembered));
   const resumed = fromMemo
     ? { checkpoint: remembered, position: remembered, saved: remembered.saved, tail: fromMemo }
-    : yield* resumeStored(feed, reducer);
+    : sql && (yield* resumeStored(feed, reducer, sql));
   const items = resumed?.tail ?? (yield* readItems(feed));
   const checkpoint = Reducer.run(reducer, Legacy.toEvents(items), resumed?.checkpoint);
 
@@ -107,7 +123,7 @@ const cached = Effect.fnUntraced(function* <S>(
   const lastCursor = last && Feed.getLocalCursor(last);
   const position = last && lastCursor !== undefined ? { cursor: lastCursor, head: last.id } : resumed?.position;
   let saved = resumed?.saved ?? 0;
-  if (position && (!resumed || checkpoint.count - saved >= SAVE_EVERY)) {
+  if (sql && position && (!resumed || checkpoint.count - saved >= SAVE_EVERY)) {
     const state = JSON.stringify(Schema.encodeSync(reducer.schema)(checkpoint.state));
     yield* sql`
         INSERT INTO trajectory_checkpoint (trajectory, reducer, cursor, head, count, state)
@@ -129,7 +145,8 @@ const cached = Effect.fnUntraced(function* <S>(
     memo.delete(oldest);
   }
 
-  return checkpoint;
+  const cursor = position && Schema.decodeUnknownOption(Feed.LocalCursor)(position.cursor);
+  return { checkpoint, cursor: cursor && Option.isSome(cursor) ? cursor.value : undefined };
 });
 
 /**
@@ -159,6 +176,7 @@ const tailAfter = Effect.fnUntraced(function* (
 const resumeStored = Effect.fnUntraced(function* <S>(
   feed: Feed.Feed,
   reducer: Reducer.Durable<S>,
+  sql: SqlClient.SqlClient,
 ): Effect.fn.Return<
   | {
       checkpoint: Reducer.Checkpoint<S>;
@@ -168,9 +186,8 @@ const resumeStored = Effect.fnUntraced(function* <S>(
     }
   | undefined,
   SqlError.SqlError,
-  Database.Service | SqlClient.SqlClient
+  Database.Service
 > {
-  const sql = yield* SqlClient.SqlClient;
   const [row] = yield* sql<Position & { readonly state: string }>`
       SELECT cursor, head, count, state FROM trajectory_checkpoint
       WHERE trajectory = ${trajectoryId(feed)} AND reducer = ${reducer.id}

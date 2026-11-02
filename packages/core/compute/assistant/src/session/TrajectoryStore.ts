@@ -16,7 +16,7 @@ import * as Legacy from './Legacy.ts';
 import { readItems } from './trajectory-items.ts';
 import * as TrajectoryCache from './TrajectoryCache.ts';
 
-export { type ReadRange, readItems } from './trajectory-items.ts';
+export { readItems } from './trajectory-items.ts';
 
 /**
  * The types a host registers to read and write conversations: trajectory events, and the legacy records older feeds

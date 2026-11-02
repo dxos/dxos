@@ -33,6 +33,7 @@ import * as Operation from '@dxos/compute/Operation';
 import type * as Process from '@dxos/compute/Process';
 import type * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Skill from '@dxos/compute/Skill';
+import type * as SqlService from '@dxos/compute/SqlService';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Obj, Order, Query, Ref, type Registry, Scope } from '@dxos/echo';
 import { UsageQuotaExceededError } from '@dxos/edge-client';
@@ -52,7 +53,7 @@ import { Outbox, type OutboxEntry, PromptCancelledError } from './outbox.ts';
 import { providerForModel } from './presets.ts';
 import { type ChatRequestContext, createPromptContent } from './prompt.ts';
 import { EMPTY_THREAD, type ThreadProjection, projectThread } from './thread.ts';
-import { EMPTY_VIEW, type TrajectoryView, makeTrajectoryView } from './trajectory-view.ts';
+import { EMPTY_VIEW, type TrajectoryView, loadViewBase, makeCachedTrajectoryView } from './trajectory-view.ts';
 
 /**
  * Space-scoped services materialised by the layer passed into
@@ -89,6 +90,11 @@ export type ChatModelOptions = {
   sender?: AgentService.PromptSender;
   /** Binds {@link TurnReviewSkill} so each turn is reviewed for struggles (opt-in setting). */
   reportStruggles?: boolean;
+  /**
+   * Where the chat's trajectory checkpoints are kept: the device's SQLite, which a local agent process folds into too.
+   * Without it, or when it does not resolve, the chat keeps checkpoints only for this process.
+   */
+  sqlLayer?: Layer.Layer<SqlService.SqlService, ServiceResolver.ServiceNotAvailableError>;
 };
 
 const defaultOptions: Partial<ChatModelOptions> = {
@@ -118,6 +124,9 @@ export type ChatSendOptions = {
 export type PromptSubmission = { resolve: () => void; reject: (error: unknown) => void };
 
 type OutboxPayload = { request: ChatRequest; prepare?: () => Promise<void> | void };
+
+/** What the chat view reads off its feed: trajectory events and the legacy records an older feed holds. */
+const trajectoryItems = Filter.or(...TrajectoryStore.types.map((type) => Filter.type(type)));
 
 /** User-facing message shown when an AI request is rejected for exceeding the account usage quota (HTTP 429). */
 const QUOTA_EXCEEDED_MESSAGE = 'You have reached your AI usage limit for this period.';
@@ -347,19 +356,37 @@ export class ChatModel {
     this.#registry = this._options.observableRegistry ?? AtomRegistry.make();
     this.#outbox = new Outbox(this.#registry, (payload) => this.#dispatch(payload));
     this.outbox = this.#outbox.entries;
-    // Held for the chat model's life: a query's atom is memoized per result, so the query must be too.
     const db = Obj.getDatabase(this._feed);
     const feedUri = Feed.getFeedUri(this._feed);
     this.trajectory =
       db && feedUri
-      ? makeTrajectoryView(
-          db.query(
-            Query.select(Filter.or(...TrajectoryStore.types.map((type) => Filter.type(type))))
-              .from(Scope.feed(feedUri.toString(), { walk: {} }))
-              .orderBy(Order.natural('asc')),
-          ).atom,
-        )
-      : Atom.make(EMPTY_VIEW);
+        ? makeCachedTrajectoryView({
+            load: () => {
+              const load = loadViewBase(this._feed).pipe(Effect.provide(Database.layer(db)));
+              const sqlLayer = this._options.sqlLayer;
+              return EffectEx.runPromise(
+                sqlLayer
+                  ? load.pipe(
+                      Effect.provide(sqlLayer),
+                      Effect.catch(() => load),
+                    )
+                  : load,
+              );
+            },
+            // Held until the view loads its checkpoints again: a query's atom is memoized per result, so the query
+            // must be too.
+            follow: (cursor) =>
+              db.query(
+                Query.select(
+                  cursor === undefined
+                    ? trajectoryItems
+                    : Filter.and(trajectoryItems, Filter.feedCursor({ begin: cursor })),
+                )
+                  .from(Scope.feed(feedUri.toString(), { walk: {} }))
+                  .orderBy(Order.natural('asc')),
+              ).atom,
+          })
+        : Atom.make(EMPTY_VIEW);
     this.#feedMessages = Atom.make((get) => get(this.trajectory).messages);
     this.thread = Atom.make((get) => {
       const view = get(this.trajectory);

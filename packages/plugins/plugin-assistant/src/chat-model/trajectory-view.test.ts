@@ -4,14 +4,14 @@
 
 import * as Atom from 'effect/reactivity/Atom';
 import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
-import { describe, test } from 'vitest';
+import { describe, test, vi } from 'vitest';
 
 import { Alarm, Legacy } from '@dxos/assistant';
 import { type Obj } from '@dxos/echo';
-import { Trajectory } from '@dxos/trajectory';
+import { Reducer, Trajectory } from '@dxos/trajectory';
 import { Message } from '@dxos/types';
 
-import { makeTrajectoryView } from './trajectory-view.ts';
+import { type ViewBase, makeCachedTrajectoryView, makeTrajectoryView } from './trajectory-view.ts';
 
 const say = (text: string, role: Trajectory.Role = 'assistant', thread?: Trajectory.EventId) =>
   Trajectory.make({ payload: { _tag: 'message', blocks: [{ _tag: 'text', text }] }, sender: { role }, thread });
@@ -80,5 +80,40 @@ describe('makeTrajectoryView', () => {
     set([Message.make({ sender: 'user', blocks: [{ _tag: 'text', text: 'legacy' }] }), alarm, say('new')]);
     expect(texts(read().messages)).toEqual(['legacy', 'new']);
     expect(read().alarms.map((entry) => entry.id)).toEqual([alarm.id]);
+  });
+});
+
+describe('makeCachedTrajectoryView', () => {
+  test('starts from the loaded checkpoints and folds only the items after them', async ({ expect }) => {
+    const registry = AtomRegistry.make();
+    const question = say('question', 'user');
+    const fire = Trajectory.make({ payload: { _tag: 'alarmFire', alarm: question.id }, sender: { role: 'event' } });
+    const folded = [question, say('answer'), fire];
+    const base: ViewBase = {
+      thread: Reducer.run(Reducer.thread, folded),
+      session: Reducer.run(Reducer.session, folded),
+    };
+    const tail = Atom.make<readonly Obj.Unknown[]>([]);
+    let followed = 0;
+    const view = makeCachedTrajectoryView({
+      load: async () => base,
+      follow: () => {
+        followed++;
+        return tail;
+      },
+    });
+    const unmount = registry.mount(view);
+
+    expect(registry.get(view).messages).toEqual([]);
+    await vi.waitFor(() => expect(texts(registry.get(view).messages)).toEqual(['question', 'answer']));
+    expect(registry.get(view).selfWakes).toBe(1);
+
+    registry.set(tail, [say('more')]);
+    expect(texts(registry.get(view).messages)).toEqual(['question', 'answer', 'more']);
+    registry.set(tail, [say('more'), say('again', 'user')]);
+    expect(texts(registry.get(view).messages)).toEqual(['question', 'answer', 'more', 'again']);
+    expect(registry.get(view).selfWakes).toBe(0);
+    expect(followed).toBe(1);
+    unmount();
   });
 });

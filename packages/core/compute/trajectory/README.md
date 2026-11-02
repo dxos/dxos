@@ -45,8 +45,14 @@ turn's prompt does not change under it.
   (`trajectory_checkpoint`), holding the encoded state, the head event and the event count. A load reads only the
   events after the head in local order and folds them onto the stored state. If the head is gone or the state no
   longer decodes, it refolds the whole feed. The process also keeps the last checkpoint it folded, so a load reads
-  only the new events and decodes nothing. Saving encodes the whole state, so it is batched: a checkpoint is saved
-  once 64 events have been folded since the last save, and a restarted process refolds at most those.
+  only the new events and decodes nothing, with or without SQLite. Saving encodes the whole state, so it is batched: a
+  checkpoint is saved once 64 events have been folded since the last save, and a restarted process refolds at most
+  those.
+- **The agent and the chat share one cache.** SQLite is the device's, served by the client services host. An agent
+  process takes it as an optional service, and the chat view loads its `thread` and `session` checkpoints from it
+  with `TrajectoryCache.loadAt`, then follows the feed with a live walk from the cursor they stop at. So a chat whose
+  agent runs on the same device opens from what the agent already folded, and one whose agent runs elsewhere builds
+  the same checkpoints itself.
 - **Reducers fold a batch in one pass.** `Reducer.run` hands the batch to a reducer's `fold`, which copies the state
   once and updates the copy in place, so a long fold stays linear while the state passed in is left as it was.
 - **An interrupted turn is redelivered.** A turn consumes its queued prompt when it begins. If the turn is

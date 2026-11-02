@@ -94,7 +94,14 @@ export type SessionState = {
    * here.
    */
   readonly rejected: readonly Trajectory.EventId[];
+  /** Alarms fired since the last prompt a person typed: the count a harness caps self-wakes at. */
+  readonly selfWakes: number;
 };
+
+/** Whether a message is a prompt a person typed, which ends a run of self-wakes. */
+const isTypedPrompt = (event: Trajectory.Event, payload: Trajectory.Message): boolean =>
+  event.sender.role === 'user' &&
+  payload.blocks.some((block) => block._tag === 'text' && block.disposition !== 'synthetic');
 
 const bind = <T extends { uri: string }>(current: readonly T[], added: readonly T[]): readonly T[] =>
   added.reduce<readonly T[]>(
@@ -109,12 +116,28 @@ const setThreadStatus = (threads: readonly ThreadInfo[], id: Trajectory.EventId,
   threads.map((thread) => (thread.id === id ? { ...thread, status } : thread));
 
 const sessionFold: Reducer<SessionState> = {
-  initial: { queue: [], alarms: [], skills: [], objects: [], background: [], threads: [], turns: [], rejected: [] },
+  initial: {
+    queue: [],
+    alarms: [],
+    skills: [],
+    objects: [],
+    background: [],
+    threads: [],
+    turns: [],
+    rejected: [],
+    selfWakes: 0,
+  },
   step: (state, event) => {
     const payload = event.payload;
     switch (payload._tag) {
       case 'message':
-        return event.sender.role === 'user' ? { ...state, queue: [...state.queue, event.id] } : state;
+        return event.sender.role === 'user'
+          ? {
+              ...state,
+              queue: [...state.queue, event.id],
+              selfWakes: isTypedPrompt(event, payload) ? 0 : state.selfWakes,
+            }
+          : state;
       case 'promptConsume':
       case 'promptCancel':
         return state.queue.includes(payload.message)
@@ -140,8 +163,13 @@ const sessionFold: Reducer<SessionState> = {
           alarms: [...state.alarms, { id: event.id, wakeAt: payload.wakeAt, message: payload.message }],
         };
       case 'alarmCancel':
-      case 'alarmFire':
         return { ...state, alarms: state.alarms.filter((alarm) => alarm.id !== payload.alarm) };
+      case 'alarmFire':
+        return {
+          ...state,
+          alarms: state.alarms.filter((alarm) => alarm.id !== payload.alarm),
+          selfWakes: state.selfWakes + 1,
+        };
       case 'toolBackground':
         return { ...state, background: [...state.background, { toolCallId: payload.toolCallId, pid: payload.pid }] };
       case 'toolDeliver':
@@ -798,6 +826,7 @@ const SessionStateSchema = Schema.Struct({
   model: Schema.optional(Trajectory.ModelChange.fields.model),
   turns: EventIds,
   rejected: EventIds,
+  selfWakes: Schema.Number,
 });
 
 const ThreadViewSchema = Schema.Struct({
@@ -868,7 +897,7 @@ const PromptStateSchema = Schema.Struct({
 
 export const session: Durable<SessionState> = {
   ...sessionFold,
-  id: 'session@1',
+  id: 'session@2',
   schema: SessionStateSchema,
   rebind: (state, makeRef) => ({
     ...state,

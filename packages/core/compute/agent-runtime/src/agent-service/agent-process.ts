@@ -36,6 +36,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
+import * as SqlService from '@dxos/compute/SqlService';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database, Feed, Filter, Obj, Ref, Registry } from '@dxos/echo';
@@ -225,6 +226,8 @@ export const AgentProcess = (options: AgentProcessOptions) =>
       // Needed in the fiber's context — `Header.byokLayer`'s per-request callback reads it.
       Credential.CredentialsService,
     ],
+    // Where the host has one, `TrajectoryCache` keeps its checkpoints there, shared with the chat UI on this device.
+    optionalServices: [SqlService.SqlService],
     rpcs: HarnessControl,
   }).pipe(
     Operation.withDurableHandler((ctx) =>
