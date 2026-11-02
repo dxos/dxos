@@ -36,8 +36,9 @@ tasks:
   # directory, which is where it finds `dx.config.ts`.
   build-remote-plugin:
     script: cd __fixtures__/remote-plugin && pnpm exec vite build --logLevel warn
+    # Every workspace package the fixture's `dx.config.ts` imports is loaded from its dist.
     deps:
-      - app-framework:build
+      - ^:build
     inputs:
       - __fixtures__/remote-plugin/**/*
       - '!__fixtures__/remote-plugin/dist/**/*'
