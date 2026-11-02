@@ -32,21 +32,17 @@ export const useRelatedObjects = (
     relations?: boolean;
   } = {},
 ) => {
-  // Graph traversals anchored on the subject, so the hook never watches every object in the space.
+  // One union of traversals anchored on the subject, so the hook never watches every object in the space.
   const subjectId = subject?.id;
-  const referencingQuery = useMemo(
-    () => (subjectId ? Query.select(Filter.id(subjectId)).referencedBy() : Query.select(Filter.nothing())),
-    [subjectId],
-  );
-  const relatedQuery = useMemo(() => {
-    if (!subjectId) {
-      return Query.select(Filter.nothing());
-    }
-    const anchor = Query.select(Filter.id(subjectId));
-    return Query.all(anchor.sourceOf().target(), anchor.targetOf().source());
-  }, [subjectId]);
-  const referenceSources = useQuery(options.references ? db : undefined, referencingQuery);
-  const relatedObjects = useQuery(options.relations ? db : undefined, relatedQuery);
+  const query = useMemo(() => {
+    const anchor = subjectId ? Query.select(Filter.id(subjectId)) : undefined;
+    const traversals = [
+      ...(anchor && options.references ? [anchor.referencedBy()] : []),
+      ...(anchor && options.relations ? [anchor.sourceOf().target(), anchor.targetOf().source()] : []),
+    ];
+    return traversals.length > 0 ? Query.all(...traversals) : Query.select(Filter.nothing());
+  }, [subjectId, options.references, options.relations]);
+  const linked = useQuery(db, query);
   const referencesAtom = useMemo(
     () =>
       Atom.make((get) => (subject ? getReferences(get(Obj.atom(subject))) : [])).pipe(
@@ -64,12 +60,9 @@ export const useRelatedObjects = (
 
     // TODO(burdon): Change Person => Organization to relations.
     if (options.references) {
-      related.push(...references.map((ref) => ref.target).filter(isNonNullable), ...referenceSources);
+      related.push(...references.map((ref) => ref.target).filter(isNonNullable));
     }
-
-    if (options.relations) {
-      related.push(...relatedObjects);
-    }
+    related.push(...linked);
 
     return (
       Array.from(new Set(related))
@@ -77,5 +70,5 @@ export const useRelatedObjects = (
         .filter((obj) => obj !== subject)
         .filter((obj) => !Obj.isObject(obj) || TypeOptions.isUserObject(obj))
     );
-  }, [subject, references, referenceSources, relatedObjects, options.references, options.relations]);
+  }, [subject, references, linked, options.references]);
 };
