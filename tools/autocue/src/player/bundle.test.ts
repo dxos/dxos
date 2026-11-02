@@ -102,6 +102,12 @@ describe('loadBundle', () => {
     expect(error.reason).toBe('not an autocue@1 manifest');
   });
 
+  test('a malformed recording fails with a BundleError', async () => {
+    const demo = { ...manifest.demos[0], recording: { git: { commit: 42 } } };
+    const error = await load('https://dx.pub/demo/chess/', { ...manifest, demos: [demo] });
+    expect(error.reason).toBe('not an autocue@1 manifest');
+  });
+
   test('an unsafe link fails with a BundleError', async () => {
     const error = await load('https://dx.pub/demo/chess/', { ...manifest, archive: 'javascript:alert(1)' });
     expect(error.reason).toBe('unsupported URL scheme: javascript:');

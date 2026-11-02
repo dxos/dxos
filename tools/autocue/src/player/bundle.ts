@@ -62,6 +62,27 @@ export class BundleError extends Data.TaggedError('BundleError')<{ url: string; 
 
 const isObject = (value: unknown): value is object => typeof value === 'object' && value !== null;
 
+/** Each of `keys` is absent or of `type` (the Recording view renders them directly). */
+const fieldsAre = (value: object, type: 'string' | 'boolean', keys: string[]) =>
+  keys.every((key) => {
+    const field: unknown = Reflect.get(value, key);
+    return field === undefined || typeof field === type;
+  });
+
+const isEnvironment = (value: unknown) =>
+  value === undefined || (isObject(value) && fieldsAre(value, 'string', ['url', 'environment', 'version']));
+
+const isRecording = (value: unknown) =>
+  isObject(value) &&
+  fieldsAre(value, 'string', ['recordedAt', 'target', 'flow', 'title', 'description', 'mdl', 'app', 'template']) &&
+  (!('git' in value) ||
+    value.git === undefined ||
+    (isObject(value.git) &&
+      fieldsAre(value.git, 'string', ['branch', 'commit', 'remote']) &&
+      fieldsAre(value.git, 'boolean', ['dirty']))) &&
+  isEnvironment('composer' in value ? value.composer : undefined) &&
+  isEnvironment('edge' in value ? value.edge : undefined);
+
 const isDemo = (value: unknown) =>
   isObject(value) &&
   'videos' in value &&
@@ -70,7 +91,7 @@ const isDemo = (value: unknown) =>
   'chapters' in value &&
   Array.isArray(value.chapters) &&
   'recording' in value &&
-  isObject(value.recording);
+  isRecording(value.recording);
 
 const isManifest = (value: unknown): value is Manifest =>
   isObject(value) &&
