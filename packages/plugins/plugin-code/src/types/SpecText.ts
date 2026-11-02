@@ -290,9 +290,14 @@ export const take = async (spec: Spec.Spec, { path, text: file }: TakeOptions): 
   }
 
   const changes: FeatureEmbed.Change[] = [];
+  // A feature holds one block of a file: a later block that names a feature an earlier one took becomes its own.
+  const claimed = new Set<string>();
   for (const { id, name, description, status, requirements, from, to } of blocks) {
     const source = FeatureSpec.getSource(path, id);
     let feature = existing.get(source);
+    if (feature && claimed.has(feature.id)) {
+      feature = undefined;
+    }
     const unfiled = feature ? undefined : numbered.get(id);
     if (unfiled) {
       Obj.update(unfiled, (unfiled) => {
@@ -301,6 +306,15 @@ export const take = async (spec: Spec.Spec, { path, text: file }: TakeOptions): 
       feature = unfiled;
     }
     if (feature) {
+      const sources = Feature.getSources(feature);
+      const kept = sources.filter(
+        (other) => other === source || Feature.getSpecPath(other) !== Feature.getSpecPath(path),
+      );
+      if (kept.length !== sources.length) {
+        Obj.update(feature, (feature) => {
+          Feature.setSources(feature, kept);
+        });
+      }
       const container = FeatureMap.getContainer(feature);
       // The block's embed lands in this text, so the feature moves here, unless the spec lies beneath it.
       if (container?.id !== spec.id && !FeatureMap.isWithin(spec, feature)) {
@@ -333,6 +347,7 @@ export const take = async (spec: Spec.Spec, { path, text: file }: TakeOptions): 
       FeatureMap.attach(spec, feature);
       result.created.push(feature.id);
     }
+    claimed.add(feature.id);
     changes.push({ from, to, insert: makeEmbed(feature) });
   }
 

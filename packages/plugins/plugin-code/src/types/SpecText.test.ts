@@ -222,6 +222,22 @@ describe('SpecText', () => {
     expect(await SpecText.expand(inbox, { base: edited })).toBe(edited);
   });
 
+  test('two blocks of a file that name one feature are taken in as two, so export writes both back', async ({
+    expect,
+  }) => {
+    const sync = addFeature('Sync');
+    Obj.update(sync, (sync) => {
+      Feature.setSources(sync, ['PLUGIN.mdl#F-3', 'PLUGIN.mdl#F-6']);
+    });
+    const inbox = addSpec('Inbox', [sync]);
+    const file = ['```mdl', 'feat F-3: Sync', '```', '', '```mdl', 'feat F-6: Retry', '```', ''].join('\n');
+    const { created } = await SpecText.take(inbox, { path: 'PLUGIN.mdl', text: file });
+    expect(created).toHaveLength(1);
+    expect(Feature.getSources(sync)).toEqual(['PLUGIN.mdl#F-3']);
+    expect(await embedded(inbox)).toEqual([sync.id, ...created]);
+    expect(await SpecText.expand(inbox, { base: file })).toBe(file);
+  });
+
   test('replaceBlock finds a block that shares its fence with others', async ({ expect }) => {
     const verdict = addFeature('Verdict');
     const map = addSpec('Ride Check', [verdict]);

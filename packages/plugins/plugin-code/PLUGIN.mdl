@@ -938,10 +938,12 @@ feat F-20: Feature embeds in the editor
 feat F-21: A spec as a file
   req F-21.1: Importing a file (`op:ImportSpec`) maps each `feat` block to the feature read in from it before, found by
              its source `path#F-n` wherever it has moved since, to the feature the spec numbered `F-n` before any file
-             held its block, or to a new one, and puts the feature's embed in place of the block. The file states the
-             feature's name, description, requirements and status, planned when the block has no `status:` line. The
-             description is the block's `desc:` field, the prose alone when it is a block scalar (`desc: |` or
-             `desc: >`), or its bare prose before the first `req`.
+             held its block, or to a new one, and puts the feature's embed in place of the block. A feature holds one
+             block of a file: when two blocks name the same feature, the first keeps it and drops its other sources in
+             that file, and each later block becomes a new feature. The file states the feature's name, description,
+             requirements and status, planned when the block has no `status:` line. The description is the block's
+             `desc:` field, the prose alone when it is a block scalar (`desc: |` or `desc: >`), or its bare prose before
+             the first `req`.
   req F-21.7: A fence that holds several `feat` blocks, or other blocks before one, is split so each `feat` block is a
              fence of its own, which its embed replaces on import and an export writes back.
   req F-21.2: A feature the document embedded that no block of the file names is kept at the end when it was added in
@@ -1935,4 +1937,15 @@ ext service
     ops?: OpMap
     errors?: ErrorMap
     note?: Prose
+```
+
+```mdl
+decision D-55: A feature holds one block of a file. When two blocks of a file name the same feature, the first keeps it and drops its other sources in that file, and each later block becomes a new feature.
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-21.1]
+  why: A feature migrated from 0.3.0 can record two blocks of one file. Both blocks mapped to it, the later one's fields overwrote the earlier one's, and export wrote only the first embed back, losing the other block's text.
+  rejected:
+    - Merging the two blocks into one feature, which loses one block's name and requirements on export.
 ```
