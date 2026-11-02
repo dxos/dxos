@@ -14,15 +14,15 @@ Cut 3 of NARRATIVE-SAAS2D.md: a lecture on the dynamics, nobody acts badly, ever
 
 ## 3. Your data lives inside SaaS (`#silo`)
 
-- Your company's data lives safely inside the platform.
+- Your company's data lives safely inside the platform;
 
 ## 4. Data in both directions (`#silo-comms`)
 
-- Every read and write passes through the cloud.
+- with every read and write passing through the cloud.
 
 ## 5. The vendor grows (`#scale`)
 
-- Providers specialized, each serving millions.
+- Providers specialized, each serving millions of users.
 
 ## 6. Your competitors (`#competitors`)
 
@@ -38,11 +38,11 @@ Cut 3 of NARRATIVE-SAAS2D.md: a lecture on the dynamics, nobody acts badly, ever
 
 ## 9. A frontier lab arrives (`#frontier`)
 
-- For agents, this architecture breaks down.
+- For agents, this architecture simply doesn't work.
 
 ## 10. Everyone talks to the lab (`#frontier-comms`)
 
-- An agent works across your company; the value is in the joins no single application contains.
+- Agents should work across your company; the value is in the joins that no single application contains.
 
 ## 11. The lab at the centre (`#orbit`)
 
@@ -58,7 +58,7 @@ Cut 3 of NARRATIVE-SAAS2D.md: a lecture on the dynamics, nobody acts badly, ever
 
 ## 14. The labs merge (`#merge-1`)
 
-- And the labs may themselves consolidate.
+- As the labs lead consolidation.
 
 ## 15. The Final Frontier (`#final-frontier`)
 
@@ -74,7 +74,7 @@ Cut 3 of NARRATIVE-SAAS2D.md: a lecture on the dynamics, nobody acts badly, ever
 
 ## 18. Back to your company (`#spread-again`)
 
-- What if your company kept control of your data, building interoperable apps and agents?
+- What if your company kept control of your data, building interoperable apps and agents on top?
 
 ## 19. Your data, in ECHO (`#echo-hub`)
 
@@ -82,23 +82,23 @@ Cut 3 of NARRATIVE-SAAS2D.md: a lecture on the dynamics, nobody acts badly, ever
 
 ## 20. The ECHO hypergraph (`#echo-spaces`)
 
-- Distributed, at the edge and on every device.
+- Distributed at the edge and on every device.
 
 ## 21. A graph of objects (`#objects`)
 
-- Realtime queries and workflows, with fine-grained access for people and agents.
+- Realtime queries and workflows, with fine-grained access-control for people and agents.
 
 ## 24. Work that builds on itself (`#object-created`)
 
-- Agent-native: agents are members, with identities of their own.
+- ECHO is that database, running on Cloudflare.
 
 ## 25. Everyone at work (`#echo-spaces-again`)
 
-- ECHO is that database, running on Cloudflare.
+- And Composer is the enterprise-superapp built on top.
 
 ## 26. Your company again (`#echo-hub-again`)
 
-- Composer is the extensible enterprise superapp built on top.
+- Open and extensible, by your team and your agents.
 
 ## 27. The silos fold in (`#saas-merge`)
 

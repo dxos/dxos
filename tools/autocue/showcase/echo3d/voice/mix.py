@@ -29,13 +29,14 @@ os.makedirs(f'{takes}/clean', exist_ok=True)
 
 at_slide, schedule, previous_end = 0, [], 0
 for slide, hold in holds.items():
-    if slide in clips:
-        cleaned = f'{takes}/clean/{slide}.wav'
-        length = clean(clips[slide], cleaned)
-        kind, offset = ANCHORS.get(slide, ('start', LEAD))
+    # A slide may carry extra takes (<slide>.1, <slide>.2, ...), each anchored on its own cue in the picture.
+    for take in sorted(name for name in clips if name == slide or name.startswith(f'{slide}.')):
+        cleaned = f'{takes}/clean/{take}.wav'
+        length = clean(clips[take], cleaned)
+        kind, offset = ANCHORS.get(take, ('start', LEAD))
         want = at_slide + offset - (length if kind == 'end' else 0)
         at = max(want, previous_end + GAP)
-        schedule.append((slide, cleaned, at, length, at - want))
+        schedule.append((take, cleaned, at, length, at - want))
         previous_end = at + length
     at_slide += hold
 
