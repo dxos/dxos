@@ -169,6 +169,9 @@
       "path": "../../plugins/plugin-cloudflare"
     },
     {
+      "path": "../../plugins/plugin-cloudflare-os"
+    },
+    {
       "path": "../../plugins/plugin-code"
     },
     {

@@ -1,0 +1,252 @@
+---
+id: org.dxos.plugin.cloudflareOs
+name: CloudflareOsPlugin
+version: 0.1.0
+---
+
+Uses a [Cloudflare OS](https://github.com/cloudflare/cloudflare-os) deployment as a backend for a
+Composer space. Composer stays the frontend and ECHO stays the system of record; the deployment
+supplies three things Composer does not have: gadgets (per-user apps that run in a sandbox), an agent
+that builds and changes them, and gatekeepers that let that agent act on outside services only with
+the user's approval.
+
+The plugin talks to the deployment as the Workshop frontend does: one Cap'n Web session over a
+WebSocket at `/api`, against the subset of the Workshop API that `Protocol` declares. That API is
+unversioned and moves with each deployment, so the subset is kept small.
+
+## Extensions
+
+| Term       | URI                           |
+| ---------- | ----------------------------- |
+| `type`     | `org.dxos.mdl.type@1.0`       |
+| `feat`     | `org.dxos.mdl.feat@1.0`       |
+| `scenario` | `org.dxos.mdl.scenario@1.0`   |
+| `test`     | `org.dxos.mdl.test@1.0`       |
+| `decision` | `org.dxos.mdl.decision@1.0`   |
+
+## Types
+
+```mdl
+type Workspace
+  desc: |
+    The Cloudflare OS workspace a space is bound to. The space holds one; it is the sync target
+    of a Cloudflare OS connection. Gadgets and workspace chats stay on the deployment; this object
+    names the workspace and lists its gadgets as of the last sync.
+  fields:
+    name?: string
+    workspaceId: string          # the workspace id on the deployment
+    connection: Ref<Connection>  # the account and deployment the workspace lives on
+    gadgets?: Gadget[]
+```
+
+```mdl
+type Gadget
+  desc: A gadget of the workspace, as of the last sync.
+  fields:
+    id: number                   # the gadget's workpiece id in its workspace
+    title: string
+    chatId?: number              # set while the gadget exists only in that chat's proposed changes
+```
+
+## Features
+
+```mdl
+feat F-1: Connect a Cloudflare OS account
+
+  req F-1.1: The connector form takes the deployment URL, a username and a password, and stores
+    only the session token `login()` returns, never the password.
+  req F-1.2: The password is hashed in the client with argon2id, salted with the Workshop's
+    service salt followed by the username, as the Workshop frontend does.
+  req F-1.3: The token's `AccessToken.source` is the deployment's hostname, so the connection
+    itself says which deployment it signs in to.
+  req F-1.4: Testing the connection authenticates the stored token; a rejected token fails with
+    `ConnectionTestError`.
+```
+
+```mdl
+feat F-2: Bind a workspace to the space
+
+  req F-2.1: The connection's sync targets are the account's workspaces, newest first, after a
+    "New workspace" target.
+  req F-2.2: Binding a workspace finds or creates the space's `Workspace` for that workspace id;
+    binding "New workspace" first creates and titles a workspace on the deployment.
+  req F-2.3: Syncing the connection refreshes the name and gadget list of every `Workspace` it
+    binds.
+```
+
+```mdl
+feat F-3: Run gadgets in the workspace article
+
+  req F-3.1: The article lists the workspace's gadgets live, as the deployment reports them, and
+    marks a gadget that only exists in a chat's proposed changes.
+  req F-3.2: The picked gadget's UI runs in a frame with a null origin, sandboxed to scripts and
+    user-opened popups, under a policy that forbids every network request.
+  req F-3.3: The frame's only connection is the `MessagePort` the gadget posts on start, which the
+    plugin bridges to the gadget's server through `connectToGadget`.
+```
+
+```mdl
+feat F-4: Chat with the workspace agent
+
+  req F-4.1: The workspace agent is offered in every chat's agent picker, beside Composer's own
+    agent and Claude Code, and runs in the workspace bound to the chat's space.
+  req F-4.2: A chat's first turn starts a workspace chat; the chat records its id as a foreign key
+    (source `cloudflare-os-chat`) and every later turn continues that workspace chat.
+  req F-4.3: The agent's messages are added to the chat as they complete: its reasoning, a line per
+    tool call, and its text.
+  req F-4.4: When a turn ends with proposed gadget changes, the chat asks to accept them
+    (`mergeChanges`) or revert them (`revertChanges`).
+  req F-4.5: When a turn ends with gatekeeper actions pending, the chat asks to approve or reject
+    each one, previewing what it would do.
+  req F-4.6: A space with no bound workspace fails the turn with a message that says to connect
+    Cloudflare OS and bind a workspace.
+```
+
+## Acceptance
+
+```mdl
+scenario T-1: Request ids round-trip
+  given: a merge request for chat 3 and an action request for action 12
+  then: decoding each request id returns its target; an id another agent issued decodes to nothing
+```
+
+```mdl
+scenario T-2: Agent messages become blocks
+  given: an agent message with reasoning, two tool calls (one failed) and text
+  then: it becomes a reasoning block, one text block listing both tool calls, and its text, in that order
+```
+
+```mdl
+scenario T-3: The gadget page has no network
+  given: a gadget's UI code
+  then: the page's policy sets `connect-src 'none'`, and the gadget code runs after the prelude that opens the port
+```
+
+## QA
+
+Executable tests against a running Composer and a live Cloudflare OS deployment. The account must
+already exist on the deployment: signups are closed there, so a test cannot create one.
+
+```mdl
+test QA-1: Connect, bind a workspace, and build a gadget with the Cloudflare OS agent
+  desc: |
+    The primary journey: sign in from the connector form, bind a new workspace to the space, ask the
+    workspace agent for a gadget from a Composer chat, accept its change, and use the gadget in the article.
+  actors: human
+  covers: [F-1.1, F-1.3, F-2.1, F-2.2, F-3.1, F-3.2, F-3.3, F-4.1, F-4.2, F-4.3, F-4.4]
+  status: unverified
+  given:
+    - an identity exists and a space is open
+    - plugin-cloudflare-os is enabled
+    - account: a password account on https://cloudflareos.dxos.network
+    - no Cloudflare OS connection exists in the space
+  steps:
+    - name: Open the space's connections
+      do: In the navtree, expand the space's Settings and click Connections.
+      expect: the Connections article shows "Add connection" with a Connect button
+    - name: Pick Cloudflare OS
+      do: Click Connect, choose Cloudflare OS and click Continue.
+      expect: a form asks for the deployment (filled with https://cloudflareos.dxos.network), a username and a password
+    - name: Sign in
+      do: Enter the account's username and password and click Save.
+      expect: |
+        the connection opens as "Cloudflare OS · <username>", its details name the deployment and the
+        account, and a target picker lists "New workspace" first, then the account's workspaces
+      note: The password is never stored; the connection holds the session token login() returned.
+    - name: Bind a new workspace
+      do: Choose "New workspace" and click Save.
+      expect: a "Cloudflare OS workspaces" section appears under the space's content, holding one workspace named "Composer"
+    - name: Open the workspace
+      do: Click the workspace in the navtree.
+      expect: its article opens and says the workspace has no gadgets yet
+    - name: Pick the Cloudflare OS agent
+      do: Open the Assistant companion, open the agent picker and choose Cloudflare OS.
+      expect: the picker lists Cloudflare OS beside Composer, and the prompt shows Cloudflare OS as the agent
+    - name: Ask for a gadget
+      do: Ask "Build a tally counter gadget with - and + buttons." and send it.
+      expect: |
+        the agent's reasoning, a line per tool call (createGadget, writeFile) and its reply appear in the
+        chat; the article lists the new gadget marked "(proposed)"; the turn ends with "Accept changes to
+        <gadget>?"
+      note: The agent is a model; its words and gadget title vary from run to run.
+    - name: Accept the change
+      do: Click "Accept changes".
+      expect: the card reads "Answered: Accept changes", and the gadget's tab loses "(proposed)"
+    - name: Run the gadget
+      do: Click the gadget's tab, then click + in the gadget three times.
+      expect: the gadget runs in the article and its count reads 3
+      note: Each click crosses the sandbox's port to Composer and the WebSocket to the gadget's server.
+```
+
+## Changelog
+
+```mdl
+decision D-1: Composer is the frontend and a Cloudflare OS deployment is the backend for a space, built as a Composer plugin.
+  date: 2026-11-02
+  by: user:dmaretskyi
+```
+
+```mdl
+decision D-2: A Cloudflare OS workspace maps one-to-one to a Composer space.
+  date: 2026-11-02
+  by: user:dmaretskyi
+  affects: [Workspace, F-2]
+```
+
+```mdl
+decision D-3: The Cloudflare OS agent is a third kind of chat agent, beside Composer's assistant and Claude.
+  date: 2026-11-02
+  by: user:dmaretskyi
+  affects: [F-4.1]
+```
+
+```mdl
+decision D-4: Authentication to Cloudflare OS goes through Composer connectors.
+  date: 2026-11-02
+  by: user:dmaretskyi
+  affects: [F-1]
+```
+
+```mdl
+decision D-5: For the prototype, the deployment's authentication may be loosened to make the integration work.
+  date: 2026-11-02
+  by: user:dmaretskyi
+  affects: [F-1]
+```
+
+```mdl
+decision D-6: The connector signs in with the deployment's own password login and stores the session token, with the deployment hostname as its source. Fills in [D-4] and [D-5].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.1, F-1.2, F-1.3]
+  why: A browser cannot set Cloudflare Access headers on a WebSocket, and with Access on the Workshop refuses `/api` from any other origin; password sign-in authenticates in-band and accepts any origin.
+  rejected: Access service tokens, which a browser cannot send on a WebSocket; relaying the WebSocket through EDGE, which needs an EDGE change.
+```
+
+```mdl
+decision D-7: A space binds its workspace as the connection's sync target, with a "New workspace" target that creates one. Fills in [D-2].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2]
+  why: The connector framework's target picker already asks which remote object a space binds, so the one-to-one binding needs no UI of its own.
+```
+
+```mdl
+decision D-8: Proposed gadget changes and pending gatekeeper actions become request blocks in the chat. Fills in [D-3].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4.4, F-4.5]
+  why: Composer already renders request blocks as approval cards and routes the answer to the agent's `respond`, which maps onto `mergeChanges`, `revertChanges`, `approveAction` and `rejectAction`.
+```
+
+```mdl
+decision D-9: Gadgets run in a frame that reproduces the Workshop's sandbox. Fills in [D-1].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.2, F-3.3]
+  why: A gadget's security rests on its frame having no network and only the port to its server; a looser frame in Composer would undo it.
+```
