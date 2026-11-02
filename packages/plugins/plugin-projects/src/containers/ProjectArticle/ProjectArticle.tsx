@@ -47,7 +47,15 @@ import * as Tabs from '@dxos/react-ui/Tabs';
 import { type Milestone, Task, type TaskSet } from '@dxos/types';
 
 import { ObjectGallery, ProjectPipeline } from '#components';
-import { Feature, FeatureOperation, ProjectCapabilities, ProjectOperation, ProjectSurface, ProjectView, Spec } from '#types';
+import {
+  Feature,
+  FeatureOperation,
+  ProjectCapabilities,
+  ProjectOperation,
+  ProjectSurface,
+  ProjectView,
+  Spec,
+} from '#types';
 
 import { useFeatureGraph, useOpenSpecLevel, useProjectSpec, useRefTargets, useSpecTreeIds } from '../../hooks/index.ts';
 import { ProjectsNamespace } from '../../namespace.ts';
