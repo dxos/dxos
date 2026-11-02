@@ -1145,10 +1145,13 @@ decision D-8: QA-17 covers loading a plugin from its `manifest.json`, the format
   date: 2026-10-30
   by: user:dmaretskyi
   affects: [QA-17]
+```
 
+```mdl
 decision D-9: QA-17 is run by a person or its Playwright spec, not the QA agent.
   date: 2026-11-02
   by: agent:claude-code
+  for: user:dmaretskyi
   affects: [QA-17]
   why: Listing the requests made to the plugin's origin has no operation behind it, so the agent cannot run that step.
 ```
