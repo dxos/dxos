@@ -33,10 +33,6 @@ const SCREEN: Camera = { x: WIDTH / 2, y: HEIGHT / 2, zoom: 1 };
 
 /** The inset well's radius, as a share of its body's. */
 const WELL = 0.84;
-/** How far a body's soft shadow reaches past its edge, as a multiple of its radius. */
-const HALO = 1.16;
-const SHADE = 'hsl(220 30% 2%)';
-const SHINE = 'hsl(220 20% 80%)';
 
 /** World to screen pixels, with the origin at the frame's top-left. */
 export const project = (camera: Camera, x: number, y: number): [number, number] => [
@@ -180,11 +176,11 @@ export const Defs = () => (
   </defs>
 );
 
-/** The field: a soft vignette, lighter where the story sits. */
+/** The field: a soft vignette, lighter where the story sits but never as light as a raised band, which must stand off it. */
 export const Background = () => (
   <AbsoluteFill
     style={{
-      background: `radial-gradient(ellipse at 50% 42%, hsl(220 10% 17.5%) 0%, ${neu.bg} 55%, hsl(220 11% 11%) 130%)`,
+      background: `radial-gradient(ellipse at 50% 42%, hsl(220 11% 16%) 0%, ${neu.bg} 55%, hsl(220 11% 11%) 130%)`,
     }}
   />
 );
@@ -194,7 +190,7 @@ export const Background = () => (
  * video adds a fine dither again at its final size). Seeded and static, so it never crawls.
  */
 export const Grain = () => (
-  <svg width={WIDTH} height={HEIGHT} style={{ position: 'absolute', inset: 0, opacity: 0.05, pointerEvents: 'none' }}>
+  <svg width={WIDTH} height={HEIGHT} style={{ position: 'absolute', inset: 0, opacity: 0.025, pointerEvents: 'none' }}>
     <filter id='nd-grain' x='0' y='0' width='100%' height='100%'>
       <feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='7' stitchTiles='stitch' />
       <feColorMatrix type='matrix' values='0.33 0.33 0.33 0 0  0.33 0.33 0.33 0 0  0.33 0.33 0.33 0 0  0 0 0 0 1' />
@@ -224,48 +220,44 @@ export const SvgPrim = ({ prim, camera }: { prim: Prim; camera: Camera }) => {
         return null;
       }
       // One raised band and one inset well, both shades of the field: role color belongs to what a body holds, not to
-      // it. Light comes from the top left, but only through smooth gradients: an offset shadow draws each edge twice
-      // and reads as extra, uneven rings.
+      // it. Light comes from the top left: one soft shadow close under the band, and smooth gradients across band and
+      // well; a wide or offset shadow reads as a second ring. Each gradient switches color only where it is clear, since
+      // SVG blends color and opacity apart and a fade from clear white to black would pass through grey.
       const lit = r < 2000;
       const well = prim.well ?? WELL;
       const id = `nd-body-${prim.id.replace(/[^\w-]/g, '_')}`;
+      const depth = r / 150;
       return (
         <At x={x} y={y} opacity={opacity}>
           {lit && (
             <defs>
-              <radialGradient id={`${id}-shadow`} cx='0.555' cy='0.555' r='0.5'>
-                <stop offset={0.8} stopColor={SHADE} stopOpacity={0.75} />
-                <stop offset={0.9} stopColor={SHADE} stopOpacity={0.3} />
-                <stop offset={1} stopColor={SHADE} stopOpacity={0} />
-              </radialGradient>
-              <radialGradient id={`${id}-glint`} cx='0.445' cy='0.445' r='0.5'>
-                <stop offset={0.74} stopColor={SHINE} stopOpacity={0.07} />
-                <stop offset={0.86} stopColor={SHINE} stopOpacity={0.025} />
-                <stop offset={1} stopColor={SHINE} stopOpacity={0} />
-              </radialGradient>
+              <filter id={`${id}-drop`} x='-0.4' y='-0.4' width='1.8' height='1.8' colorInterpolationFilters='sRGB'>
+                <feDropShadow
+                  dx={10 * depth}
+                  dy={12 * depth}
+                  stdDeviation={13 * depth}
+                  floodColor='#000'
+                  floodOpacity={0.55}
+                />
+              </filter>
               <linearGradient id={`${id}-band`} x1='0.15' y1='0.15' x2='0.85' y2='0.85'>
-                <stop offset={0} stopColor={SHINE} stopOpacity={0.09} />
-                <stop offset={0.5} stopColor={SHINE} stopOpacity={0} />
-                <stop offset={1} stopColor={SHADE} stopOpacity={0.3} />
+                <stop offset={0} stopColor='#fff' stopOpacity={0.05} />
+                <stop offset={0.5} stopColor='#fff' stopOpacity={0} />
+                <stop offset={0.5} stopColor='#000' stopOpacity={0} />
+                <stop offset={1} stopColor='#000' stopOpacity={0.25} />
               </linearGradient>
               <linearGradient id={`${id}-well`} x1='0.15' y1='0.15' x2='0.85' y2='0.85'>
-                <stop offset={0} stopColor={SHADE} stopOpacity={0.45} />
-                <stop offset={0.55} stopColor={SHADE} stopOpacity={0} />
-                <stop offset={1} stopColor={SHINE} stopOpacity={0.05} />
+                <stop offset={0} stopColor='#000' stopOpacity={0.4} />
+                <stop offset={0.55} stopColor='#000' stopOpacity={0} />
+                <stop offset={0.55} stopColor='#fff' stopOpacity={0} />
+                <stop offset={1} stopColor='#fff' stopOpacity={0.03} />
               </linearGradient>
-              <radialGradient id={`${id}-rim`}>
-                <stop offset={0.86} stopColor={SHADE} stopOpacity={0} />
-                <stop offset={1} stopColor={SHADE} stopOpacity={0.4} />
-              </radialGradient>
             </defs>
           )}
-          {lit && <circle r={r * HALO} fill={`url(#${id}-shadow)`} />}
-          {lit && <circle r={r * HALO} fill={`url(#${id}-glint)`} />}
-          <circle className='nd-body' r={r} fill={neu.lighter} />
+          <circle className='nd-body' r={r} fill={neu.lighter} filter={lit ? `url(#${id}-drop)` : undefined} />
           {lit && <circle r={r} fill={`url(#${id}-band)`} />}
           <circle r={r * well} fill={neu.bg} />
           {lit && <circle r={r * well} fill={`url(#${id}-well)`} />}
-          {lit && <circle r={r * well} fill={`url(#${id}-rim)`} />}
         </At>
       );
     }
