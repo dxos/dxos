@@ -513,43 +513,83 @@ const card = (props: Omit<CardPrim, 'kind' | 'width' | 'now'>, t: number, appear
 });
 
 /**
- * The roadmap thread, shown over the hypergraph: its card appears at `appear`, and each message lands `after` seconds
- * later than the next, pointing at an object somewhere in the graph.
+ * The conversations shown over the hypergraph, one card each down the right of the screen: a card appears at
+ * `appear`, and each message lands `after` seconds after the previous, pointing at an object somewhere in the graph.
  */
-const UPDATE_THREAD = [
-  { who: 'Bob', color: PALETTE.pink, text: 'Looks good. Can it note the Auth dependency?', target: 'Company-2' },
+type Conversation = {
+  id: string;
+  y: number;
+  type: string;
+  title: string;
+  rows: [string, string][];
+  appear: number;
+  after: number;
+  thread: { who: string; bot?: boolean; color: string; text: string; target: string }[];
+};
+
+const CONVERSATIONS: Conversation[] = [
   {
-    who: 'Writer',
-    bot: true,
-    color: PALETTE.gold,
-    text: 'Added Auth as a linked task, due Thursday.',
-    target: 'Customers-4',
+    id: 'card-update',
+    y: 70,
+    type: 'Document',
+    title: 'Roadmap update',
+    rows: [
+      ['Created by', 'Writer'],
+      ['Linked to', 'Roadmap'],
+      ['Status', 'Draft'],
+    ],
+    appear: 1.0,
+    after: 1.1,
+    thread: [
+      { who: 'Bob', color: PALETTE.pink, text: 'Looks good. Can it note the Auth dependency?', target: 'Company-2' },
+      {
+        who: 'Writer',
+        bot: true,
+        color: PALETTE.gold,
+        text: 'Added Auth as a linked task, due Thursday.',
+        target: 'Customers-4',
+      },
+      { who: 'Alice', color: '#5b8def', text: 'Share it with Sales before Friday.', target: 'Personal-1' },
+      {
+        who: 'Planner',
+        bot: true,
+        color: '#a07cf0',
+        text: 'Shared with Sales; review set for Friday.',
+        target: 'Company-5',
+      },
+    ],
   },
-  { who: 'Alice', color: '#5b8def', text: 'Share it with Sales before Friday.', target: 'Personal-1' },
   {
-    who: 'Planner',
-    bot: true,
-    color: '#a07cf0',
-    text: 'Shared with Sales; review set for Friday.',
-    target: 'Company-5',
+    id: 'card-launch-thread',
+    y: 560,
+    type: 'Checklist',
+    title: 'Launch checklist',
+    rows: [
+      ['Space', 'Platform'],
+      ['Items', '18 open'],
+    ],
+    appear: 2.6,
+    after: 1.1,
+    thread: [
+      { who: 'Dana', color: '#4fc38a', text: 'Which launch items are blocked?', target: 'Customers-1' },
+      { who: 'Triage', bot: true, color: PALETTE.gold, text: 'Three, all waiting on Auth.', target: 'Company-7' },
+      { who: 'Dana', color: '#4fc38a', text: 'Can Auth move up a week?', target: 'Personal-3' },
+    ],
   },
 ];
 
-const updateCard = (t: number, appear: number, after: number): CardPrim =>
-  card(
+/** A conversation's card, and the link from the object its latest message is about to the card's edge. */
+const conversation = ({ id, y, type, title, rows, appear, after, thread }: Conversation, t: number): Prim[] => {
+  const prim = card(
     {
-      id: 'card-update',
+      id,
       x: 1460,
-      y: 70,
-      type: 'Document',
-      title: 'Roadmap update',
+      y,
+      type,
+      title,
       accent: true,
-      rows: [
-        ['Created by', 'Writer'],
-        ['Linked to', 'Roadmap'],
-        ['Status', 'Draft'],
-      ],
-      thread: UPDATE_THREAD.map(({ target: _target, ...message }, index) => ({
+      rows,
+      thread: thread.map(({ target: _target, ...message }, index) => ({
         ...message,
         at: appear + after * (index + 1),
       })),
@@ -557,6 +597,21 @@ const updateCard = (t: number, appear: number, after: number): CardPrim =>
     t,
     appear,
   );
+  const landed = thread.filter((_, index) => t >= appear + after * (index + 1)).length;
+  const link: Prim = {
+    kind: 'link',
+    id: `card-link-${id}`,
+    x1: 0,
+    y1: 0,
+    x2: 1460,
+    y2: y + 70,
+    a: `node:sub-${thread[Math.max(0, landed - 1)].target}`,
+    screen2: true,
+    hot: true,
+    opacity: prim.opacity,
+  };
+  return [link, prim];
+};
 
 const objectCards = (t: number): CardPrim[] => [
   card(
@@ -830,25 +885,8 @@ export const slides = (holds: Record<string, number>): Slide[] => {
     {
       id: 'echo-spaces',
       transition: 2.5,
-      draw: (t) => {
-        // The thread's card sits over the graph; its link hops to whichever object the latest message is about.
-        const thread = updateCard(t, 1.2, 1.2);
-        const landed = (thread.thread ?? []).filter(({ at }) => t >= at).length;
-        const target = UPDATE_THREAD[Math.max(0, landed - 1)].target;
-        const link: Prim = {
-          kind: 'link',
-          id: 'card-link-update',
-          x1: 0,
-          y1: 0,
-          x2: CARD_EDGES['card-update'][0],
-          y2: CARD_EDGES['card-update'][1],
-          a: `node:sub-${target}`,
-          screen2: true,
-          hot: true,
-          opacity: thread.opacity,
-        };
-        return still([...echoSpaces(), link, thread], camera(ECHO_ZOOM));
-      },
+      draw: (t) =>
+        still([...echoSpaces(), ...CONVERSATIONS.flatMap((spec) => conversation(spec, t))], camera(ECHO_ZOOM)),
     },
 
     // Inside a space: a graph of objects, and the work people and agents do on them.
