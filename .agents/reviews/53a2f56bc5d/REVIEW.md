@@ -39,7 +39,7 @@ _7 error(s), 69 warning(s)._
 - 53a2f56bc5d-21 - ignored - business-logic-out-of-ui - packages/plugins/plugin-code/src/containers/FeatureEmbeds/feature-embed-extensions.tsx:51
 - 53a2f56bc5d-22 - ignored - story-for-new-ui-component - packages/plugins/plugin-code/src/containers/FeatureSection/FeatureSection.tsx:33
 - 53a2f56bc5d-23 - ignored - no-casts - packages/plugins/plugin-code/src/containers/index.ts:24
-- 53a2f56bc5d-24 - ignored - atom-lifetime-bound-to-owner - packages/plugins/plugin-code/src/containers/SpecArticle/spec-session.ts:34
+- 53a2f56bc5d-24 - resolved - atom-lifetime-bound-to-owner - packages/plugins/plugin-code/src/containers/SpecArticle/spec-session.ts:34
 - 53a2f56bc5d-25 - ignored - no-module-level-object-caches - packages/plugins/plugin-code/src/containers/SpecArticle/spec-session.ts:41
 - 53a2f56bc5d-26 - ignored - inject-dependencies-via-constructor - packages/plugins/plugin-code/src/containers/SpecArticle/spec-session.ts:41
 - 53a2f56bc5d-27 - resolved - no-styling-wrapper-divs - packages/plugins/plugin-code/src/containers/SpecArticle/SpecArticle.stories.tsx:169
@@ -423,6 +423,7 @@ Resolved:
 - 2: the migration test sets each parent at make time with `[Obj.Parent]` where the parent exists first. The legacy-spec tests keep `Obj.setParent`, because there the parent holds refs to its children and is made after them.
 - 6: `FeatureCanvasCells` tracks the hovered cell in a `useHoveredCell` hook, which also drops the `as Element` cast for an `instanceof` check.
 - 27: the `Companion` story lays out with `Layout.Grid`.
+- 24: the spec session drops `keepAlive`, so it lives while the spec's editor or panel reads it.
 - 44: `Feature.setSources` writes into the caller's `Obj.update` (from the base branch, merged in); each caller opens the update.
 
 Ignored, because the flagged line is unchanged from main (the stack only moved the file from plugin-projects, or did not touch the line): 1, 3, 4, 7, 8, 9, 10, 12, 13, 14, 16, 17, 18, 19, 20, 23, 28, 30, 31, 32, 33, 34, 35, 36, 37, 42, 47, 48, 49, 50, 51, 53, 54, 55, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 69, 71, 72, 73, 74, 76.
@@ -432,7 +433,6 @@ Ignored on reading:
 - 5, 15, 22, 29 (story-for-new-ui-component): each renders only inside a canvas, dialog or companion surface, and a container story drives it there: `FeatureLevel` AddFeature and AddExistingFeature, `SpecFeatures` NewFeature, `FeatureEmbeds` (via `FeatureEmbedSection`) and `SpecArticle` Companion.
 - 11 (use-context-scoped-cancellation): a CodeMirror extension's debounce timer, which has no `Context` in scope.
 - 21 (business-logic-out-of-ui): the extension only forwards the removed ids to `SpecText.sync`, which holds the logic.
-- 24 (atom-lifetime-bound-to-owner): the spec session is shared by the spec's editor and its companion panel, which mount and unmount apart; `keepAlive` keeps the view choice across that, at one small atom per spec opened.
 - 25 (no-module-level-object-caches): the editor registry holds an entry only while its editor is mounted; `registerEditor` returns the cleanup.
 - 26, 52 (inject-dependencies-via-constructor): module functions, not methods of a class with collaborators.
 - 46 (no-trivial-wrappers-over-official-apis): test teardown, not a wrapper.

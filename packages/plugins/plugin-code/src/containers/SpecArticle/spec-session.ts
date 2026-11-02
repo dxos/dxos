@@ -30,9 +30,9 @@ export type SpecSessionState = {
   fold: boolean;
 };
 
-/** One session per spec, keyed by the spec's id or a static spec's source key; kept while the app runs. */
+/** One session per spec, keyed by its id or a static spec's source key; dropped once no editor or panel shows it. */
 export const specSession = Atom.family((id: string) =>
-  Atom.make<SpecSessionState>({ view: 'definitions', fold: false }).pipe(Atom.keepAlive),
+  Atom.make<SpecSessionState>({ view: 'definitions', fold: false }),
 );
 
 /** The editor each session's spec is open in, so the panel can move it to an item. */
