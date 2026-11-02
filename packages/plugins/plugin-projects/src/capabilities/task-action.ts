@@ -51,7 +51,7 @@ export default Capability.makeModule(
 
 const ASSIGN: TasksCapabilities.TaskAction = {
   id: 'delegate-to-chat',
-  label: 'Assign to agent',
+  label: 'Delegate to agent',
   icon: 'ph--sparkle--regular',
   group: ASSIGN_GROUP,
   // Applies to every task: a conversation about it is always meaningful, so there is nothing
@@ -102,7 +102,7 @@ const agentLabel = (agent: AssistantCapabilities.Agent): string =>
 
 const assignTo = (agent: AssistantCapabilities.Agent): TasksCapabilities.TaskAction => ({
   id: `assign-to-${agent.id}`,
-  label: `Assign to ${agentLabel(agent)}`,
+  label: `Delegate to ${agentLabel(agent)}`,
   icon: agent.icon,
   group: ASSIGN_GROUP,
   unavailable: Atom.make((get) => {

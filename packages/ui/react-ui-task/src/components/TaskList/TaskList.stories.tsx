@@ -20,6 +20,7 @@ import { DX_ANCHOR_ACTIVATE, DxAnchorActivate } from '@dxos/ui-types';
 
 import { translations } from '#translations';
 
+import { type TaskMember } from '../../util/assignee-menu.ts';
 import { type TaskPlacement } from './hierarchy.ts';
 import { type TaskCreateHandler, TaskList } from './TaskList.tsx';
 
@@ -86,9 +87,11 @@ const seedFlat = (): Task.Task[] => [
     title: 'Draft launch email',
     status: 'started',
     priority: 'high',
-    assignee: { role: 'assistant', name: 'Scout' },
+    // Rich answers for it; the row shows Rich, badged with the agent doing the work.
+    assignee: { role: 'user', name: 'Rich' },
+    delegate: { role: 'assistant', name: 'Scout' },
     // Spans the cut-off: the oldest entries are past three days and read as calendar dates.
-    history: seedHistory(1, 'Created this task', 'Assigned to an agent', 'Status changed from todo to started').map(
+    history: seedHistory(1, 'Created this task', 'Delegated to Scout', 'Status changed from todo to started').map(
       (entry, index) =>
         index === 0 ? { ...entry, date: new Date(Date.now() - 9 * 24 * 60 * 60_000).toISOString() } : entry,
     ),
@@ -546,8 +549,8 @@ const DefaultStory = ({
   showGroupLabels,
   showOrdinals,
   showDescription = true,
-  showEstimates,
   acceptFiles = false,
+  members,
 }: {
   /**
    * The tasks to start from. A factory rather than a named fixture, so a story can compose its own
@@ -566,9 +569,10 @@ const DefaultStory = ({
   showGroupLabels?: boolean;
   showOrdinals?: boolean;
   showDescription?: boolean;
-  showEstimates?: boolean;
   /** Let the create pane take dropped files, recording what each create was handed. */
   acceptFiles?: boolean;
+  /** The space's members, offered by each row's assignee picker. */
+  members?: readonly TaskMember[];
 }) => {
   const [tasks, setTasks] = useState<Task.Task[]>(seed);
   // Stands in for the host's attach: the names of the files each create was handed.
@@ -660,7 +664,7 @@ const DefaultStory = ({
       showGroupLabels={showGroupLabels}
       showOrdinals={showOrdinals}
       showDescription={showDescription}
-      showEstimates={showEstimates}
+      members={members}
       getTaskActions={readonly ? undefined : getTaskActions}
       onTaskCreate={readonly ? undefined : handleCreate}
       onTaskUpdate={readonly ? undefined : handleUpdate}
@@ -760,7 +764,6 @@ export const WithoutDescription: Story = {
 export const ManyTasks: Story = {
   args: {
     seed: seedMany,
-    showEstimates: true,
     showDescription: true,
     showOrdinals: true,
   },
@@ -960,7 +963,6 @@ export const DeepHierarchy: Story = {
     draggable: true,
     hierarchical: true,
     showOrdinals: true,
-    showEstimates: true,
     showDescription: true,
   },
 };
@@ -1072,7 +1074,7 @@ export const WithArtifacts: Story = {
 /**
  * Tags render as chips with the task's artifacts — a line of their own under the title, starting
  * where the title cell does and above the description — while the assignee stays on the title line,
- * right-aligned before the trailing controls.
+ * right-aligned, and priority leads the row.
  */
 export const WithTags: Story = {
   render: ArtifactsStory,
@@ -1113,13 +1115,13 @@ export const WithTags: Story = {
       const title = titleCell(row).getBoundingClientRect();
       const box = assignee.getBoundingClientRect();
       const centre = (rect: DOMRect) => rect.top + rect.height / 2;
-      // On the title's line, after it, and flush against the trailing controls.
+      // On the title's line, after it; priority leads the row, before the title.
       await expect(Math.abs(centre(box) - centre(title))).toBeLessThan(2);
       await expect(box.left).toBeGreaterThanOrEqual(title.right - 0.5);
       const priority = row
         .querySelector<HTMLElement>('[data-testid="taskList.item.priority"]')!
         .getBoundingClientRect();
-      await expect(priority.left - box.right).toBeLessThan(40);
+      await expect(priority.right).toBeLessThanOrEqual(title.left + 0.5);
     }
 
     // A row with nothing to show as a chip holds no empty line for them.
@@ -1203,6 +1205,30 @@ export const TestArtifactPreviews: Story = {
 };
 
 /**
+ * The assignee column is a control on every row, as Linear's is: an unassigned row shows a placeholder that opens the
+ * same picker the properties panel uses, and picking a member assigns them in place.
+ */
+export const TestAssigneeControl: Story = {
+  args: {
+    showGroupLabels: false,
+    members: [{ did: 'did:key:riley', name: 'Riley' }],
+  },
+  play: async ({ canvasElement }) => {
+    const placeholders = () =>
+      Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item.assignee.unset"]'));
+    await waitFor(async () => expect(placeholders().length).toBeGreaterThan(0));
+    const row = placeholders()[0].closest<HTMLElement>('[data-testid="taskList.item"]')!;
+
+    await userEvent.click(placeholders()[0]);
+    const body = within(document.body);
+    await userEvent.click(await body.findByText('Riley'));
+
+    await waitFor(async () => expect(row.querySelector('[data-testid="taskList.item.assignee"]')).toBeTruthy());
+    await expect(row.querySelector('[data-testid="taskList.item.assignee.unset"]')).toBeNull();
+  },
+};
+
+/**
  * Checking is selection, not a status write, and it is not the current row either: the box toggles
  * independently of which row the reader is on, and leaves the task's status alone.
  */
@@ -1224,9 +1250,15 @@ export const TestCheckboxSelection: Story = {
     // Checkbox and ordinal are mutually exclusive: the box takes the gutter cell, so no row numbers.
     await expect(canvasElement.querySelectorAll('[data-testid="taskList.item.ordinal"]').length).toBe(0);
 
+    // Nothing checked: each box shows only on the row in play, as Linear's gutter does.
+    const hidden = () => boxes().filter((box) => box.closest('[data-part="item-actions"]'));
+    await expect(hidden()).toHaveLength(boxes().length);
+
     const before = statuses();
     await userEvent.click(boxes()[0]);
     await waitFor(async () => expect(boxes()[0].getAttribute('data-state')).toBe('checked'));
+    // Once something is checked every box stays, so the selection can be seen and extended.
+    await waitFor(async () => expect(hidden()).toHaveLength(0));
     // A second row checks alongside the first — a set, not a single selection.
     await userEvent.click(boxes()[1]);
     await waitFor(async () => expect(boxes()[1].getAttribute('data-state')).toBe('checked'));

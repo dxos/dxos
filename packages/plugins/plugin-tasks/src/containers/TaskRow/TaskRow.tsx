@@ -4,14 +4,11 @@
 
 import React, { useMemo } from 'react';
 
-import * as Hooks from '@dxos/app-framework/Hooks';
-import { Obj, Ref } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { TaskList } from '@dxos/react-ui-task';
 import { type Task } from '@dxos/types';
 
-import { TaskOperation } from '#types';
-
-import { useTaskActions } from '../../hooks/index.ts';
+import { useTaskActions, useTaskUpdate } from '../../hooks/index.ts';
 
 export type TaskRowProps = {
   subject: Task.Task;
@@ -24,11 +21,7 @@ export type TaskRowProps = {
 export const TaskRow = ({ subject: task }: TaskRowProps) => {
   const spaceId = Obj.getDatabase(task)?.spaceId;
   const getTaskActions = useTaskActions();
-  const handleUpdate = Hooks.useOperation(
-    TaskOperation.UpdateTask,
-    (task: Task.Task, props: Task.Edit) => ({ task: Ref.make(task), ...props }),
-    { spaceId },
-  );
+  const handleUpdate = useTaskUpdate(spaceId);
   const tasks = useMemo(() => [task], [task]);
 
   // Ungrouped: one row needs no status heading, and its own status control already says it.

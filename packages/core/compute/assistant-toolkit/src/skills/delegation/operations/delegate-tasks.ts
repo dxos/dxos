@@ -63,7 +63,7 @@ const handler: Operation.WithHandler<typeof DelegateTasks> = DelegateTasks.pipe(
           continue;
         }
         Obj.update(task, (task) => {
-          task.assignee = { role: 'assistant' };
+          task.delegate = { role: 'assistant' };
           task.status = 'todo';
         });
         delegated += 1;

@@ -148,7 +148,7 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     expect(chat.session?.model).toBe(model);
   });
 
-  test('files the chat under the task project, marks it started, and names a reviewer', async ({ expect }) => {
+  test('files the chat under the task project, marks it started, and delegates it to the chat', async ({ expect }) => {
     await using harness = await setup();
     const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
     invariant(space, 'Expected a default space.');
@@ -174,16 +174,15 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     expect(Obj.getParent(task)?.id).toBe(taskSet.id);
 
     // Started on delegation, not on completion: the row shows work is underway from the moment the
-    // session has it, and the chat's agent is who holds it.
+    // session has it, and the chat's agent is who does it.
     expect(task.status).toBe('started');
-    expect(task.assignee?.role).toBe('assistant');
-    // Held by that chat, named as the assignee's subject: a bare assistant role is the supervisor's
+    expect(task.delegate?.role).toBe('assistant');
+    // Held by that chat, named as the delegate's subject: a bare assistant role is the supervisor's
     // spawn request, whose orphan sweep would fail a started task no sub-agent is running.
-    expect(Task.refEntityId(task.assignee?.subject)).toBe(chat.id);
+    expect(Task.refEntityId(task.delegate?.subject)).toBe(chat.id);
 
-    // The delegating identity reviews the result, which is what will send the task to `review`
-    // rather than `done` when the work finishes.
-    expect(task.reviewers).toHaveLength(1);
+    // The delegating identity owns the unowned task, so the agent's `done` lands in `review`.
+    expect(task.assignee?.role).toBe('user');
   });
 
   test('binds the skills the project instructions name, alongside the delegation set', async ({ expect }) => {
@@ -242,9 +241,9 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     // Unnamed: a chat holding several tasks would be claiming to be about whichever came first.
     expect(chat.name).toBeUndefined();
 
-    // Every delegated task is underway and assigned to the agent; the one left unchecked is untouched.
+    // Every delegated task is underway and delegated to the agent; the one left unchecked is untouched.
     expect(tasks.map((task) => task.status)).toEqual(['started', 'todo', 'started']);
-    expect(tasks.map((task) => task.assignee?.role)).toEqual(['assistant', undefined, 'assistant']);
+    expect(tasks.map((task) => task.delegate?.role)).toEqual(['assistant', undefined, 'assistant']);
   });
 
   test('a parent brings its subtasks, parent first', async ({ expect }) => {

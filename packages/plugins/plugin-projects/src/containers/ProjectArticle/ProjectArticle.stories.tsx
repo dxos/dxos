@@ -537,7 +537,7 @@ export const Sections: Story = {
 };
 
 /** The contributed action's label, as written in `capabilities/task-action.ts`. */
-const TASK_ACTION_LABEL = 'Assign to agent';
+const TASK_ACTION_LABEL = 'Delegate to agent';
 
 /** The copy action's label, as written in `capabilities/task-action.ts`. */
 const COPY_PROMPT_LABEL = 'Copy prompt';

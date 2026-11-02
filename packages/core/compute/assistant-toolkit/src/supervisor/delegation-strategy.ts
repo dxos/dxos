@@ -64,17 +64,19 @@ const extractArtifactIds = (value: unknown): string[] => {
 };
 
 /**
- * A task handed to a sub-agent by the delegation verbs, which assign `{ role: 'assistant' }` and
- * nothing else. An assistant assignee carrying a `subject` names a concrete session that owns the
+ * A task handed to a sub-agent by the delegation verbs, which delegate to `{ role: 'assistant' }`
+ * and nothing else. An assistant worker carrying a `subject` names a concrete session that has the
  * task — the conversation's own agent starting it from the planning tool, or a remote session —
  * so it is that session's work, not a spawn request for the supervisor.
  */
-export const isSubAgentTask = (task: Task.Task): boolean =>
-  task.assignee?.role === 'assistant' && task.assignee.subject === undefined;
+export const isSubAgentTask = (task: Task.Task): boolean => {
+  const worker = Task.worker(task);
+  return worker?.role === 'assistant' && worker.subject === undefined;
+};
 
 /**
  * The durable agent tasks awaiting a sub-agent for this conversation: queued (`todo`) tasks of
- * the chat's checklist whose assignee is an agent, all of whose dependencies are done. Ordinary
+ * the chat's checklist delegated to a sub-agent, all of whose dependencies are done. Ordinary
  * (unassigned) tasks are never spawned — delegation happens only through the delegation verbs.
  * `started` always means a live process (set at spawn), so a started agent task with no process
  * is an orphan — {@link sweepOrphanedTasks}.

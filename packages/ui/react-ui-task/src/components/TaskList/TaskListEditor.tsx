@@ -33,13 +33,7 @@ import { translationKey } from '#translations';
 
 import { type TaskCreateHandler, type TaskCreateResult } from './TaskList.tsx';
 import { useTaskListContext } from './TaskListContext.ts';
-import {
-  TaskEstimateControl,
-  TaskEstimatePicker,
-  TaskPriorityIcon,
-  TaskPriorityPicker,
-  TaskStatusControl,
-} from './TaskRowCells.tsx';
+import { TaskPriorityIcon, TaskPriorityPicker, TaskStatusControl } from './TaskRowCells.tsx';
 import { TRACK } from './tracks.ts';
 
 export type TaskListEditorProps = ComposableProps<{
@@ -94,7 +88,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
     const { t } = Hooks.useTranslation(translationKey);
     const { className, ...rest } = Util.composableProps(props);
     const descriptionRef = useRef<MarkdownEditableController>(null);
-    const { tasks, selected, columns, showEstimates, flush, onTaskCreate, onTaskUpdate, onTaskSelect } =
+    const { tasks, selected, columns, flush, onTaskCreate, onTaskUpdate, onTaskSelect } =
       useTaskListContext('TaskList.Editor');
 
     const task = useMemo(
@@ -112,7 +106,6 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
     const [draft, setDraft] = useState('');
     // Set on the create row before the task exists, and sent with its draft.
     const [draftPriority, setDraftPriority] = useState<Task.Priority>();
-    const [draftEstimate, setDraftEstimate] = useState<Task.Estimate>();
     // Held by the pane, not the host: there is no task to attach them to until the create lands.
     const [files, setFiles] = useState<readonly File[]>([]);
     const [dragOver, setDragOver] = useState(false);
@@ -168,7 +161,6 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
           setFiles((files) => files.filter((file) => !sent.includes(file) || kept.has(file)));
           setDraft((draft) => (draft === sentTitle ? '' : draft));
           setDraftPriority(undefined);
-          setDraftEstimate(undefined);
           if (draftDescription.current === sentDescription) {
             draftDescription.current = '';
             setCreateEpoch((epoch) => epoch + 1);
@@ -182,7 +174,6 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
               title,
               ...(description.length > 0 && { description }),
               ...(draftPriority && { priority: draftPriority }),
-              ...(draftEstimate && { estimate: draftEstimate }),
             },
             sent.length > 0 ? sent : undefined,
           );
@@ -197,7 +188,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
           log.catch(error);
         });
       }
-    }, [draft, draftPriority, draftEstimate, files, task, current, onTaskCreate, onTaskUpdate]);
+    }, [draft, draftPriority, files, task, current, onTaskCreate, onTaskUpdate]);
 
     // Blur commits a rename but never a create: leaving the field is not a decision to add a task,
     // and half a title would become one — clicking the list, the thread, or anywhere else would
@@ -435,17 +426,6 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
             />
           </Input.Frame>
         )}
-        {showEstimates &&
-          (editing ? (
-            <TaskEstimateControl task={task} classNames={TRACK.estimate} />
-          ) : (
-            <TaskEstimatePicker
-              estimate={draftEstimate}
-              onChange={setDraftEstimate}
-              testId='taskList.edit.estimate'
-              classNames={TRACK.estimate}
-            />
-          ))}
         {editing ? (
           <TaskPriorityIcon task={task} classNames={TRACK.priority} />
         ) : (

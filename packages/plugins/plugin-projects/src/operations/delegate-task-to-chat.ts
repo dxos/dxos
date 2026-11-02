@@ -134,24 +134,24 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         // not run that plugin.
         db.add(chat);
 
-        // Whoever delegated the work reviews it, so a finished task comes back to them rather than
-        // closing itself. `reviewers` being non-empty is what sends the task to `review`.
-        const reviewer = yield* currentActor;
+        // The assignee keeps answering for the work and gets it back for review; an unowned task
+        // becomes the delegating person's, so nobody hands off work without owning it.
+        const delegator = yield* currentActor;
 
         // `started` on delegation, not on completion: the row shows work is underway from the moment
-        // the session has it.
+        // the session has it. The delegate is named by the chat, as the planning tool's is: a bare
+        // role is the supervisor's request to spawn a sub-agent, and its orphan sweep fails a started
+        // one no sub-agent is running.
         for (const task of tasks) {
-          Task.setStatus(task, 'started', { actor: reviewer });
-          Obj.update(task, (task) => {
-            // The chat's agent holds the work now, so the row says so rather than keeping whoever
-            // had it before. Named by the chat, as the planning tool's self-assignment is: a bare
-            // role is the supervisor's request to spawn a sub-agent, and its orphan sweep fails a
-            // started one no sub-agent is running.
-            task.assignee = { role: 'assistant', subject: Ref.make(chat) };
-            if (reviewer) {
-              task.reviewers = [reviewer];
-            }
-          });
+          Task.update(
+            task,
+            {
+              status: 'started',
+              delegate: { role: 'assistant', subject: Ref.make(chat) },
+              ...(task.assignee === undefined && delegator ? { assignee: delegator } : {}),
+            },
+            { actor: delegator },
+          );
         }
 
         // What a task was made from (an email, a document) is context the agent works from, and the
@@ -293,7 +293,7 @@ const resolveHarness = Effect.fnUntraced(function* (requested: string | undefine
   return agent && registry.value.get(agent.availability).available ? agent.id : SessionConfig.COMPOSER_HARNESS;
 });
 
-/** The delegating identity as an actor, for the reviewer field. */
+/** The delegating identity as an actor: the history entry's actor, and the owner of an unowned task. */
 const currentActor = Effect.gen(function* () {
   const client = yield* Capability.get(ClientCapabilities.Client);
   const identity = client.halo.identity.get();

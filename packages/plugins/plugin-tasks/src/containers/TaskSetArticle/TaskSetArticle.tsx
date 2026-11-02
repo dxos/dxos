@@ -44,7 +44,13 @@ import { Task, TaskSet } from '@dxos/types';
 import { meta } from '#meta';
 import { TaskOperation, TasksCapabilities, TaskSetView } from '#types';
 
-import { useDescriptionComponents, useMarkdownExtensions, useTaskActions } from '../../hooks/index.ts';
+import {
+  useDescriptionComponents,
+  useMarkdownExtensions,
+  useTaskActions,
+  useTaskMembers,
+  useTaskUpdate,
+} from '../../hooks/index.ts';
 import {
   ALL_STATUSES,
   STATUS_TERMS,
@@ -184,11 +190,8 @@ export const TaskSetArticle = ({
     [invokePromise, taskSet, spaceId, attachFile, db, onTaskCreated],
   );
 
-  const handleUpdate = Hooks.useOperation(
-    TaskOperation.UpdateTask,
-    (task: Task.Task, props: Task.Edit) => ({ task: Ref.make(task), ...props }),
-    { spaceId },
-  );
+  const handleUpdate = useTaskUpdate(spaceId);
+  const members = useTaskMembers(spaceId);
 
   const handleDelete = Hooks.useOperation(TaskOperation.DeleteTask, (task: Task.Task) => ({ task: Ref.make(task) }), {
     spaceId,
@@ -315,7 +318,7 @@ export const TaskSetArticle = ({
       hierarchical
       selectable
       showDescription={showDescription}
-      showEstimates
+      members={members}
       descriptionComponents={descriptionComponents}
       checked={checked}
       collapsed={collapsed}

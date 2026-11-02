@@ -4,6 +4,7 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
@@ -15,6 +16,9 @@ import { Milestone, RemoteSession, Task, TaskSet } from '@dxos/types';
 
 import createTask from './create-task.ts';
 import updateTask from './update-task.ts';
+
+/** Who `whoami` names: the person a coding session works for. */
+const owner = { name: 'Riley', identityDid: 'did:key:riley' };
 
 describe('update-task', () => {
   it.effect('patches only the provided fields', () =>
@@ -43,7 +47,7 @@ describe('update-task', () => {
     ),
   );
 
-  it.effect('assigns a coding-agent session by its harness id, creating the session record', () =>
+  it.effect('delegates to a coding-agent session by its harness id, creating the session record', () =>
     Effect.gen(function* () {
       const taskSet = yield* Database.add(TaskSet.make({}));
       yield* Database.flush();
@@ -52,11 +56,12 @@ describe('update-task', () => {
       yield* updateTask.handler({
         task: Ref.make(task),
         status: 'started',
+        assignee: owner,
         remoteSession: { sessionId: 'session_abc', title: 'Draft the thing', branch: 'claude/draft' },
       });
 
-      // The space did not hold this session, so claiming the work created it — an agent can assign
-      // itself on its first call rather than registering separately first.
+      // The space did not hold this session, so claiming the work created it — an agent can take
+      // work on its first call rather than registering separately first.
       const sessions = yield* Database.query(Filter.type(RemoteSession.RemoteSession)).run;
       expect(sessions).toHaveLength(1);
       expect(RemoteSession.getSessionId(sessions[0])).toBe('session_abc');
@@ -64,8 +69,10 @@ describe('update-task', () => {
 
       // The actor is the session object itself, not a bare role: a check-in finds its open tasks by
       // this ref, and a role alone would not say which run holds the task.
-      expect(task.assignee?.role).toBe('assistant');
-      expect(Task.refEntityId(task.assignee?.subject)).toBe(sessions[0].id);
+      expect(task.delegate?.role).toBe('assistant');
+      expect(Task.refEntityId(task.delegate?.subject)).toBe(sessions[0].id);
+      // The person behind the session answers for the task.
+      expect(task.assignee?.identityDid).toBe(owner.identityDid);
     }).pipe(
       Effect.provide(
         Layer.provideMerge(
@@ -90,8 +97,16 @@ describe('update-task', () => {
         }),
       );
       yield* Database.flush();
-      const { task: first } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Rotate the keys' });
-      const { task: second } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Backfill' });
+      const { task: first } = yield* createTask.handler({
+        taskSet: Ref.make(taskSet),
+        title: 'Rotate the keys',
+        assignee: owner,
+      });
+      const { task: second } = yield* createTask.handler({
+        taskSet: Ref.make(taskSet),
+        title: 'Backfill',
+        assignee: owner,
+      });
 
       yield* updateTask.handler({
         task: Ref.make(first),
@@ -117,6 +132,35 @@ describe('update-task', () => {
     ),
   );
 
+  it.effect('refuses a session claim that leaves no person answering for the task', () =>
+    Effect.gen(function* () {
+      const taskSet = yield* Database.add(TaskSet.make({}));
+      yield* Database.flush();
+      const { task } = yield* createTask.handler({
+        taskSet: Ref.make(taskSet),
+        title: 'Draft',
+        assignee: { role: 'assistant', name: 'Claude', identityDid: 'did:key:claude' },
+      });
+
+      const exit = yield* Effect.exit(
+        updateTask.handler({ task: Ref.make(task), remoteSession: { sessionId: 'session_abc' } }),
+      );
+
+      expect(Exit.isFailure(exit)).toBe(true);
+      expect(task.delegate).toBeUndefined();
+      expect(yield* Database.query(Filter.type(RemoteSession.RemoteSession)).run).toEqual([]);
+    }).pipe(
+      Effect.provide(
+        Layer.provideMerge(
+          Trace.writerLayerNoop,
+          TestDatabaseLayer({
+            types: [Milestone.Milestone, RemoteSession.RemoteSession, Task.Task, TaskSet.TaskSet],
+          }),
+        ),
+      ),
+    ),
+  );
+
   it.effect('reuses the session already recorded for that harness id', () =>
     Effect.gen(function* () {
       const taskSet = yield* Database.add(TaskSet.make({}));
@@ -124,7 +168,7 @@ describe('update-task', () => {
         RemoteSession.make({ sessionId: 'session_abc', state: 'running', started: new Date().toISOString() }),
       );
       yield* Database.flush();
-      const { task } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Draft' });
+      const { task } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Draft', assignee: owner });
 
       yield* updateTask.handler({
         task: Ref.make(task),
@@ -133,7 +177,7 @@ describe('update-task', () => {
 
       const sessions = yield* Database.query(Filter.type(RemoteSession.RemoteSession)).run;
       expect(sessions).toHaveLength(1);
-      expect(Task.refEntityId(task.assignee?.subject)).toBe(existing.id);
+      expect(Task.refEntityId(task.delegate?.subject)).toBe(existing.id);
       // A session missing a title takes the one the caller named; a session that has one keeps it,
       // since the session reports its own state and this call is not that report.
       expect(existing.title).toBe('Draft the thing');
@@ -357,23 +401,23 @@ describe('update-task subtree', () => {
     return { root, child, grandchild, other };
   });
 
-  it.effect('assigning a sub-task assigns its whole tree', () =>
+  it.effect('delegating a sub-task delegates its whole tree', () =>
     Effect.gen(function* () {
       const { root, child, grandchild, other } = yield* makeTree();
 
       yield* updateTask.handler({
         task: Ref.make(child),
-        assignee: { role: 'assistant', name: 'agent', identityDid: 'did:key:agent' },
+        delegate: { role: 'assistant', name: 'agent', identityDid: 'did:key:agent' },
       });
 
       for (const member of [root, child, grandchild]) {
-        expect(member.assignee?.name).toBe('agent');
+        expect(member.delegate?.name).toBe('agent');
         const changes = (member.history ?? []).filter(Task.isChangeEntry);
-        expect(changes.at(-1)?.description).toContain('Assigned to');
+        expect(changes.at(-1)?.description).toContain('Delegated to');
       }
-      // Assignment alone starts nothing.
+      // Delegation alone starts nothing.
       expect(root.status).toBe('todo');
-      expect(other.assignee).toBeUndefined();
+      expect(other.delegate).toBeUndefined();
     }).pipe(Effect.provide(layer)),
   );
 

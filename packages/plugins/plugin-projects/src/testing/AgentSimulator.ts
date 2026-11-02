@@ -215,7 +215,7 @@ const resolveSubtasks = (root: Task.Task): Task.Task[] =>
 const CHAT_CONTEXT = /<dxn>([^<]+)<\/dxn>\s*<typename>org\.dxos\.type\.assistant\.chat<\/typename>/;
 
 /**
- * The task delegated to the chat behind `request`. Delegation names the chat as the task's assignee,
+ * The task delegated to the chat behind `request`. Delegation names the chat as the task's delegate,
  * and the chat is among the prompt's context objects, so each session finds its own task even with
  * several delegated at once.
  */
@@ -224,7 +224,7 @@ const delegatedTo = (
   roots: readonly Task.Task[],
 ): Task.Task | undefined => {
   const chatId = request.system.match(CHAT_CONTEXT)?.[1]?.split('/').at(-1);
-  return chatId ? roots.find((task) => Task.refEntityId(task.assignee?.subject) === chatId) : undefined;
+  return chatId ? roots.find((task) => Task.refEntityId(Task.worker(task)?.subject) === chatId) : undefined;
 };
 
 export const make = ({

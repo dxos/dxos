@@ -21,10 +21,12 @@ const handler: Operation.WithHandler<typeof TaskOperation.CreateTask> = TaskOper
       description,
       priority,
       assignee,
+      delegate,
       parentTask,
       milestone,
     }) {
       yield* validateAssignee(assignee);
+      yield* validateAssignee(delegate);
       const taskSet = yield* Database.load(taskSetRef);
       const parent = parentTask ? yield* Database.load(parentTask) : undefined;
 
@@ -55,6 +57,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.CreateTask> = TaskOper
           description,
           priority,
           assignee,
+          delegate,
           milestone,
         }),
       );

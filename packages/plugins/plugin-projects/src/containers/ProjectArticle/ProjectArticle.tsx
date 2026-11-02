@@ -604,7 +604,7 @@ const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined, scope?: readonly 
         // The delegate action arms on whether the agent already holds a checked row, and delegation
         // writes both fields — without tracking them the bar would keep offering rows already handed over.
         get(Obj.atomProperty(task, 'status'));
-        get(Obj.atomProperty(task, 'assignee'));
+        get(Obj.atomProperty(task, 'delegate'));
       });
       return Task.orderTree(tasks, get(Obj.atomProperty(taskSet, 'tasks')) ?? []);
     });

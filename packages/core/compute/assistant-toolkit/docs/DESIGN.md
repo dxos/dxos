@@ -42,13 +42,13 @@ appended to the title, models paste them back through title-keyed upserts and du
 - **Planning** (`org.dxos.skill.planning`)
   - `update-tasks` — a batch of `changes`, each naming an existing task by ref or setting `create`
     (status `todo | started | done`); the assistant's own execution path (mark started → work →
-    mark done). Assignment moves the chat's checklist and the task's assignee together: `create`,
+    mark done). Assignment moves the chat's checklist and the task's worker (its delegate, or its assignee for the agent's own tasks) together: `create`,
     `assign` and `started` assign the task to the conversation's agent, `unassign` clears both. A
     malformed batch applies nothing.
   - `plan-reminder` — end-of-request hook: while open tasks remain, an ephemeral model check
     decides continue-vs-stop and enqueues a continuation prompt on "continue".
 - **Delegation** (`org.dxos.skill.delegation`)
-  - `delegate-task` — creates a NEW durable task (queued, agent assignee) from a title.
+  - `delegate-task` — creates a NEW durable task (queued, agent delegate) from a title.
   - `delegate-tasks` — delegates EXISTING tasks, selected by 1-based checklist ordinal or exact
     title (`tasks: (number | string)[]`), resolved server-side against checklist order. Terminal
     or already-running tasks are skipped and reported.
@@ -59,7 +59,7 @@ appended to the title, models paste them back through title-keyed upserts and du
 
 1. **Reconcile** (after each turn AND after each delegation exits): sweep orphans (`started`
    agent tasks with no live process → `failed`), then spawn one sub-agent per _pending_ task —
-   agent assignee, `todo`, not active, dependencies done. Spawning stamps `started`.
+   agent delegate, `todo`, not active, dependencies done. Spawning stamps `started`.
 2. **Sub-agent** — a synthesized `Instructions` run via `RunInstructions` with the supervisor's
    skills inherited (minus delegation, so sub-agents cannot recurse). It signals completion via
    the `completeJob` tool.
@@ -99,7 +99,7 @@ inside the agent session) — tracked in the ledger.
 ## UI
 
 `TaskList` (`@dxos/react-ui-task`): status-grouped rows with `showGroupLabels` / `showOrdinals`;
-a `started` task with an agent assignee spins (`ph--spinner` + `animate-spin`) — the durable
+a `started` task an agent is working (`Task.worker`) spins (`ph--spinner` + `animate-spin`) — the durable
 approximation of "actively worked"; the live-process signal is a tracked follow-up. `Chat.TaskList`
 (plugin-assistant) renders the strip between thread and prompt.
 
@@ -115,7 +115,7 @@ type the prompt yourself.
 ## Invariants
 
 - `started` ⇒ a live (or just-spawned) sub-agent; the sweep enforces it after crashes/reloads.
-- Delegation verbs only queue (assignee + `todo`); the runtime owns `started`.
+- Delegation verbs only queue (delegate + `todo`); the runtime owns `started`.
 - A failed dependency never readies its dependents — a drain ends with them still `todo`.
 - Sub-agents inherit the supervisor's skills minus delegation (no recursive delegation).
 

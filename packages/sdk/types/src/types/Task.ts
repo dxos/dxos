@@ -283,12 +283,21 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
       Schema.optional,
     ),
 
-    /** Human or agent assignment: a HALO identity (DID), a Person ref, a bare email, or a display name. */
+    /**
+     * Who answers for the task: a HALO identity (DID), a Person ref, or — for a task an agent made
+     * for its own work — the agent. Handing the work to an agent leaves it alone (see `delegate`).
+     */
     assignee: Schema.optional(Actor.Actor.annotate({ title: 'Assignee' })),
 
     /**
-     * Who must look at the finished work. Non-empty means the task goes to `review` rather than
-     * `done`, so delegated work comes back to whoever asked for it.
+     * Who is doing the work for the assignee: an agent's run, named by its `subject`. Unset means the
+     * assignee does it. A bare `{ role: 'assistant' }` is a request for a sub-agent, not yet a run.
+     */
+    delegate: Schema.optional(Actor.Actor.annotate({ title: 'Delegate' })),
+
+    /**
+     * Who must look at the finished work besides the assignee. Non-empty means the task goes to
+     * `review` rather than `done`.
      */
     reviewers: Schema.optional(Schema.Array(Actor.Actor).annotate({ title: 'Reviewers' })),
 
@@ -376,6 +385,7 @@ export type Edit = {
   priority?: Priority | null;
   estimate?: Estimate | null;
   assignee?: Actor.Actor | null;
+  delegate?: Actor.Actor | null;
 };
 
 /**
@@ -402,8 +412,21 @@ export type EditOptions = {
 const actorLabel = (actor: Actor.Actor): string =>
   actor.name ?? actor.email ?? actor.identityDid ?? (actor.role === 'assistant' ? 'an agent' : 'someone');
 
+/**
+ * A task delegated before `delegate` existed: the agent was written over `assignee` and the person
+ * who handed it over was made its sole reviewer. Returns that reviewer's index, so a write can move
+ * the agent to `delegate` and the person back to `assignee`.
+ */
+const legacyDelegation = (task: Task): { reviewer: number } | undefined => {
+  if (task.delegate !== undefined || task.assignee?.role !== 'assistant') {
+    return undefined;
+  }
+  const people = (task.reviewers ?? []).flatMap((reviewer, index) => (reviewer.role === 'assistant' ? [] : [index]));
+  return people.length === 1 ? { reviewer: people[0] } : undefined;
+};
+
 /** Compared on what identifies an actor, so re-assigning the same person records nothing. */
-const sameActor = (a: Actor.Actor | undefined, b: Actor.Actor | undefined): boolean => {
+export const sameActor = (a: Actor.Actor | undefined, b: Actor.Actor | undefined): boolean => {
   if (!a || !b) {
     return a === b;
   }
@@ -461,7 +484,16 @@ const mutableEntry = (entry: HistoryEntry) => {
  * recoverable from the status, so the caller has to say.
  */
 const finishStatus = (task: Task, status: Status, approve: boolean): Status =>
-  status === 'done' && !approve && (task.reviewers?.length ?? 0) > 0 ? 'review' : status;
+  status === 'done' && !approve && needsReview(task) ? 'review' : status;
+
+/**
+ * Whether a finish waits on a sign-off: someone is named to review, or the work was handed to a
+ * delegate by a person who still answers for it. An agent's own checklist item (assignee an agent)
+ * closes on the agent's say-so, since no person is there to approve it.
+ */
+const needsReview = (task: Task): boolean =>
+  (task.reviewers?.length ?? 0) > 0 ||
+  (task.delegate !== undefined && task.assignee !== undefined && task.assignee.role !== 'assistant');
 
 /**
  * Applies `changes` and records ONE entry describing them — an edit is what the person did, not
@@ -477,10 +509,14 @@ const finishStatus = (task: Task, status: Status, approve: boolean): Status =>
  * say about an edit says it through `options.description`, which is always recorded.
  */
 export const update = (task: Task, requested: Edit, options: EditOptions = {}): ChangeEntry | undefined => {
+  // Delegating to whoever already answers for the task is them doing it themselves.
+  const selfDelegated =
+    requested.delegate != null && sameActor(requested.delegate, requested.assignee ?? task.assignee);
+  const delegated: Edit = selfDelegated ? { ...requested, delegate: task.delegate ? null : undefined } : requested;
   const changes: Edit =
-    requested.status === undefined
-      ? requested
-      : { ...requested, status: finishStatus(task, requested.status, options.approve ?? false) };
+    delegated.status === undefined
+      ? delegated
+      : { ...delegated, status: finishStatus(task, delegated.status, options.approve ?? false) };
   const notes: string[] = [];
   // Whether anything at all differs, which decides if the write happens; `notes` decides whether it
   // is narrated. The two used to be the same question.
@@ -514,8 +550,18 @@ export const update = (task: Task, requested: Edit, options: EditOptions = {}): 
   if (changes.assignee !== undefined && !sameActor(changes.assignee ?? undefined, task.assignee)) {
     notes.push(changes.assignee === null ? 'Unassigned.' : `Assigned to ${actorLabel(changes.assignee)}.`);
   }
+  if (changes.delegate !== undefined && !sameActor(changes.delegate ?? undefined, task.delegate)) {
+    notes.push(
+      changes.delegate === null
+        ? `Handed back from ${task.delegate ? actorLabel(task.delegate) : 'the delegate'}.`
+        : `Delegated to ${actorLabel(changes.delegate)}.`,
+    );
+  }
 
-  changed ||= notes.length > 0;
+  // Not narrated: the task's meaning is unchanged, only the shape it was stored in.
+  const legacy = changes.assignee === undefined && changes.delegate === undefined ? legacyDelegation(task) : undefined;
+
+  changed ||= notes.length > 0 || legacy !== undefined;
   if (!changed) {
     return undefined;
   }
@@ -568,6 +614,21 @@ export const update = (task: Task, requested: Edit, options: EditOptions = {}): 
         delete task.assignee;
       } else {
         task.assignee = changes.assignee;
+      }
+    }
+    if (changes.delegate !== undefined) {
+      if (changes.delegate === null) {
+        delete task.delegate;
+      } else {
+        task.delegate = changes.delegate;
+      }
+    }
+    if (legacy && task.assignee && task.reviewers) {
+      task.delegate = { ...task.assignee };
+      task.assignee = { ...task.reviewers[legacy.reviewer] };
+      task.reviewers.splice(legacy.reviewer, 1);
+      if (task.reviewers.length === 0) {
+        delete task.reviewers;
       }
     }
     if (entry) {
@@ -761,6 +822,16 @@ export const answer = (
 export const setAssignee = (task: Task, assignee: Actor.Actor | null, options?: EditOptions): ChangeEntry | undefined =>
   update(task, { assignee }, options);
 
+/** Hands the work to `delegate` while the assignee keeps answering for it, or takes it back with `null`. */
+export const setDelegate = (task: Task, delegate: Actor.Actor | null, options?: EditOptions): ChangeEntry | undefined =>
+  update(task, { delegate }, options);
+
+/**
+ * Who is doing the work: the delegate, else the assignee. A task delegated before `delegate` existed
+ * carries the agent in `assignee`, so it reads correctly here before its next write moves it.
+ */
+export const worker = (task: Task | Obj.Snapshot<Task>): Actor.Actor | undefined => task.delegate ?? task.assignee;
+
 //
 // Derived views over a task list. Nothing here is stored: milestone grouping and progress are
 // computed from the hierarchy and `milestone`, so they cannot disagree with the refs. They take a
@@ -914,14 +985,14 @@ export const orderTree = (tasks: readonly Task[], refs: ReadonlyArray<Ref.Ref<Ta
 };
 
 /**
- * Whether an agent is working this task right now: assigned to one, and started.
+ * Whether an agent is working this task right now: worked by one (see {@link worker}), and started.
  *
  * `started` is stamped when the session takes the task, not when it produces anything, so the pair
- * is what says "underway" — an agent-assigned task still in `todo` is queued, and a started task
- * assigned to a person is someone else's, not a running process.
+ * is what says "underway" — an agent-delegated task still in `todo` is queued, and a started task
+ * a person is working is someone else's, not a running process.
  */
 export const isAgentWorking = (task: Task | Obj.Snapshot<Task>): boolean =>
-  task.assignee?.role === 'assistant' && task.status === 'started';
+  worker(task)?.role === 'assistant' && task.status === 'started';
 
 /**
  * Whether every `dependsOn` of `task` is `done`, resolved within `tasks` — a dangling dependency
