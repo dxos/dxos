@@ -4,7 +4,9 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { bundleRoot, manifestOf, rebaseManifest } from './bundle.ts';
+import * as Effect from 'effect/Effect';
+
+import { BundleError, bundleRoot, loadBundle, manifestOf, rebaseManifest } from './bundle.ts';
 import { type Manifest } from './types.ts';
 
 const manifest: Manifest = {
@@ -61,5 +63,38 @@ describe('rebaseManifest', () => {
   test('a hosted address the manifest names wins', () => {
     const rebased = rebaseManifest({ ...manifest, hosted: 'https://dx.pub/demo/chess/' }, 'http://localhost/chess/');
     expect(rebased.hosted).toBe('https://dx.pub/demo/chess/');
+  });
+
+  test('only http and https URLs are kept', () => {
+    expect(() => rebaseManifest({ ...manifest, archive: 'javascript:alert(1)' }, 'https://dx.pub/demo/chess/')).toThrow(
+      'unsupported URL scheme',
+    );
+    expect(() => rebaseManifest({ ...manifest, hosted: 'data:text/html,x' }, 'https://dx.pub/demo/chess/')).toThrow(
+      'unsupported URL scheme',
+    );
+  });
+});
+
+describe('loadBundle', () => {
+  const load = (url: string, body: unknown) => {
+    const fetch = globalThis.fetch;
+    globalThis.fetch = async () => new Response(JSON.stringify(body));
+    return Effect.runPromise(Effect.flip(loadBundle(url))).finally(() => {
+      globalThis.fetch = fetch;
+    });
+  };
+
+  test('a malformed URL fails with a BundleError', async () => {
+    expect(await load('not a url', manifest)).toBeInstanceOf(BundleError);
+  });
+
+  test('a demo without videos fails with a BundleError', async () => {
+    const error = await load('https://dx.pub/demo/chess/', { ...manifest, demos: [{ id: 'x', title: 'X' }] });
+    expect(error.reason).toBe('not an autocue@1 manifest');
+  });
+
+  test('an unsafe link fails with a BundleError', async () => {
+    const error = await load('https://dx.pub/demo/chess/', { ...manifest, archive: 'javascript:alert(1)' });
+    expect(error.reason).toBe('unsupported URL scheme: javascript:');
   });
 });

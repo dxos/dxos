@@ -138,11 +138,4 @@ decision D-2: The Player keeps @dxos/plugin-deck's Pane for its chrome
   by: user:burdon
   why: rebuilding the plank chrome from react-ui primitives would change the player's look; the dependency is noted
     in tools/autocue/DESIGN.md for a later pass.
-
-decision D-3: QA-1 is blocked on main by the app-graph regression, not by this plugin
-  date: 2026-11-01
-  by: agent:claude-opus-5-5
-  why: with caa28b313a7 (#14348) in place no newly created object opens (Video too); with its AppGraph.ts and
-    util.ts changes reverted, autocue/qa-1.mjs passes all five steps (take at
-    https://dx.pub/demo/2026-11-01-plugin-autocue-qa-1/).
 ```

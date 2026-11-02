@@ -25,15 +25,24 @@ export const bundleRoot = (url: string | URL): URL => {
 export const manifestOf = (url: string | URL): string =>
   /\.json$/i.test(new URL(url).pathname) ? new URL(url).href : new URL(MANIFEST_FILE, bundleRoot(url)).href;
 
+/** `path` resolved against `base`; only `http:` and `https:` are allowed, since the player renders them as links. */
+const webUrl = (path: string | URL, base?: string | URL): string => {
+  const url = new URL(path, base);
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+    throw new TypeError(`unsupported URL scheme: ${url.protocol}`);
+  }
+  return url.href;
+};
+
 /**
  * Rewrites the bundle-relative paths of `manifest` against `root`, so the player can run on a page that is not the
  * bundle's own `index.html`.
  */
 export const rebaseManifest = (manifest: Manifest, root: string | URL): Manifest => {
-  const absolute = (path: string) => new URL(path, root).href;
+  const absolute = (path: string) => webUrl(path, root);
   return {
     ...manifest,
-    hosted: manifest.hosted ?? new URL(root).href,
+    hosted: webUrl(manifest.hosted ?? root),
     archive: manifest.archive && absolute(manifest.archive),
     demos: manifest.demos.map((demo) => ({
       ...demo,
@@ -50,13 +59,23 @@ export class BundleError extends Data.TaggedError('BundleError')<{ url: string; 
   }
 }
 
+const isObject = (value: unknown): value is object => typeof value === 'object' && value !== null;
+
+const isDemo = (value: unknown) =>
+  isObject(value) &&
+  'videos' in value &&
+  Array.isArray(value.videos) &&
+  value.videos.every((video) => isObject(video) && 'src' in video && typeof video.src === 'string') &&
+  'chapters' in value &&
+  Array.isArray(value.chapters);
+
 const isManifest = (value: unknown): value is Manifest =>
-  typeof value === 'object' &&
-  value !== null &&
+  isObject(value) &&
   'format' in value &&
   value.format === 'autocue@1' &&
   'demos' in value &&
-  Array.isArray(value.demos);
+  Array.isArray(value.demos) &&
+  value.demos.every(isDemo);
 
 /**
  * Fetches the manifest of the autocue bundle at `url` (its folder, `index.html` or manifest) and rebases its
@@ -64,8 +83,10 @@ const isManifest = (value: unknown): value is Manifest =>
  */
 export const loadBundle = (url: string): Effect.Effect<Manifest, BundleError> =>
   Effect.gen(function* () {
-    const root = bundleRoot(url);
-    const manifestUrl = manifestOf(url);
+    const { root, manifestUrl } = yield* Effect.try({
+      try: () => ({ root: bundleRoot(url), manifestUrl: manifestOf(url) }),
+      catch: () => new BundleError({ url, reason: 'not a valid URL' }),
+    });
     const fail = (reason: string) => new BundleError({ url: manifestUrl, reason });
     const response = yield* Effect.tryPromise({
       try: (signal) => fetch(manifestUrl, { signal }),
@@ -81,5 +102,8 @@ export const loadBundle = (url: string): Effect.Effect<Manifest, BundleError> =>
     if (!isManifest(value)) {
       return yield* fail('not an autocue@1 manifest');
     }
-    return rebaseManifest(value, root);
+    return yield* Effect.try({
+      try: () => rebaseManifest(value, root),
+      catch: (error) => fail(error instanceof Error ? error.message : String(error)),
+    });
   });
