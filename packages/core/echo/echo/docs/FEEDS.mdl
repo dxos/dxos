@@ -414,6 +414,7 @@ module Feed
     LocalCursor: Schema<LocalCursor>                                               # opaque branded string; see type:LocalCursor.
     append: (feed, items, { branch?: BranchId, parent? }) => Effect<void>         # continues `branch`, or the root branch when absent [D-63].
     setBranch: (mutableItem, branch: BranchId) => void                            # puts an item on a branch before append, so one append can continue several branches [D-74].
+    branchKey: (branch: BranchId) => ForeignKey                                   # the same key, for an item made with it in its meta [D-76].
     fork: (feed, items, { at: Item | BlockId }) => Effect<BranchId>               # items[0] is the base block; the predecessor is `at` [D-39], [D-63].
     getBranch: (item) => BranchId | undefined                                     # undefined for a root item.
     isFork: (item) => boolean                                                     # true on a base block.
@@ -1330,6 +1331,15 @@ decision D-75: A walk of all branches reads only the blocks after its cursor (be
   why: The store keeps no item id beside a block, so to know whether an item started before the cursor a walk must read every block before it, and a reader that resumes after each change then pays for the whole feed on each read. A log of immutable items, such as a trajectory, never changes an item.
   rejected:
     - Read the whole feed on each page and drop the items that started before the cursor ([D-70] for a path walk) — one resumed read of a 1,000-turn chat took 1.9 s instead of tens of milliseconds.
+```
+
+```mdl
+decision D-76: `Feed.branchKey` gives the key that puts an item on a branch, so a writer makes the item with the key in its meta instead of opening a change with `Feed.setBranch` afterwards. Fills in [D-74].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.2]
+  why: A change on each new item cost about 110 µs; a writer that records every event of a turn on its branch paid it for every event.
 ```
 
 ## Appendix: Extension Definitions

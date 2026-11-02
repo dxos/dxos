@@ -594,6 +594,17 @@ const setBranchKey = (mutable: Entity.Mutable<Entity.Unknown>, branch: BranchId)
 };
 
 /**
+ * The foreign key that puts an item on `branch`, for an item built with it in its meta (`Obj.make(…, { [Obj.Meta]: {
+ * keys: [Feed.branchKey(branch)] } })`); cheaper than {@link setBranch}, which opens a change on an item made without it.
+ *
+ * @performance O(1).
+ */
+export const branchKey = (branch: BranchId): { readonly source: string; readonly id: string } => ({
+  source: KEY_FEED_BRANCH,
+  id: branch,
+});
+
+/**
  * Puts an item on a branch: a later {@link append} of it continues `branch`, so items for several
  * branches can be built before they are written. Must be called within an `Obj.update` callback.
  *

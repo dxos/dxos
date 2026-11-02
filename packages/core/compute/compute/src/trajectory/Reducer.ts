@@ -263,16 +263,30 @@ const resolveRequest = (
       : block,
   );
 
-type MutableView = { items: ThreadItem[]; lanes: Lane[]; laneOf: Record<Trajectory.ThreadId, Trajectory.ThreadId> };
+type MutableView = {
+  items: ThreadItem[];
+  lanes: Lane[];
+  laneOf: Record<Trajectory.ThreadId, Trajectory.ThreadId>;
+  /** Where each lane is in `lanes`: every turn is a lane, so a search per update would make a fold quadratic. */
+  laneIndex: Map<Trajectory.ThreadId, number>;
+  /** The lanes still running or waiting, so opening a lane does not scan every lane. */
+  running: Set<Trajectory.ThreadId>;
+};
 
 const isRunning = (lane: Lane) => lane.status === 'running' || lane.status === 'waiting';
 
 const updateLane = (view: MutableView, id: Trajectory.ThreadId | undefined, update: (lane: Lane) => Lane): boolean => {
-  const index = id === undefined ? -1 : view.lanes.findIndex((lane) => lane.id === id);
-  if (index === -1) {
+  const index = id === undefined ? undefined : view.laneIndex.get(id);
+  if (index === undefined) {
     return false;
   }
-  view.lanes[index] = update(view.lanes[index]);
+  const lane = update(view.lanes[index]);
+  view.lanes[index] = lane;
+  if (isRunning(lane)) {
+    view.running.add(lane.id);
+  } else {
+    view.running.delete(lane.id);
+  }
   return true;
 };
 
@@ -296,7 +310,10 @@ const openLane = (
     }
     return parentLane !== undefined;
   }
-  const running = view.lanes.filter(isRunning);
+  const running = [...view.running].flatMap((id) => {
+    const index = view.laneIndex.get(id);
+    return index === undefined ? [] : [view.lanes[index]];
+  });
   for (const other of running) {
     const sameOwner = other.owner.name === event.sender.name;
     updateLane(view, other.id, (existing) => ({
@@ -306,6 +323,8 @@ const openLane = (
     }));
   }
   view.laneOf[id] = id;
+  view.laneIndex.set(id, view.lanes.length);
+  view.running.add(id);
   view.lanes.push({
     id,
     status: 'running',
@@ -427,12 +446,18 @@ const applyThread = (view: MutableView, event: Trajectory.Event): boolean => {
  * fold just the tail of a long conversation.
  */
 const foldThread = (state: ThreadView, events: readonly Trajectory.Event[]): ThreadView => {
-  const view: MutableView = { items: [...state.items], lanes: [...state.lanes], laneOf: { ...state.laneOf } };
+  const view: MutableView = {
+    items: [...state.items],
+    lanes: [...state.lanes],
+    laneOf: { ...state.laneOf },
+    laneIndex: new Map(state.lanes.map((lane, index) => [lane.id, index])),
+    running: new Set(state.lanes.filter(isRunning).map((lane) => lane.id)),
+  };
   let changed = false;
   for (const event of events) {
     changed = applyThread(view, event) || changed;
   }
-  return changed ? view : state;
+  return changed ? { items: view.items, lanes: view.lanes, laneOf: view.laneOf } : state;
 };
 
 const threadFold: Reducer<ThreadView> = {

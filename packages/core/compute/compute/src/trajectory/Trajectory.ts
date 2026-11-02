@@ -404,19 +404,35 @@ export type MakeProps<T extends Payload = Payload> = {
 /**
  * Creates an event (not yet appended to a feed).
  */
-export const make = <T extends Payload>({ id, payload, sender, thread, created }: MakeProps<T>): Event => {
-  const event = Obj.make(Event, { id, sender, created: created ?? new Date().toISOString(), payload });
-  if (thread !== undefined) {
-    Obj.update(event, (event) => Feed.setBranch(event, thread));
-  }
-  return event;
-};
+export const make = <T extends Payload>({ id, payload, sender, thread, created }: MakeProps<T>): Event =>
+  Obj.make(Event, {
+    id,
+    sender,
+    created: created ?? new Date().toISOString(),
+    payload,
+    // Set at creation: putting it on afterwards opens a change on every event a turn writes.
+    ...(thread !== undefined ? { [Obj.Meta]: { keys: [Feed.branchKey(thread)] } } : {}),
+  });
+
+/** Branches already read off events: a fold asks for an event's thread several times, and reading meta keys is not free. */
+const threads = new WeakMap<Event, ThreadId>();
 
 /**
  * The thread an event belongs to: the branch it was written on, absent for the main thread. An opener (`turnBegin`,
  * `threadOpen`) is the base of its branch, so its thread is the one it opens.
  */
-export const threadOf = (event: Event): ThreadId | undefined => Feed.getBranch(event);
+export const threadOf = (event: Event): ThreadId | undefined => {
+  const known = threads.get(event);
+  if (known !== undefined) {
+    return known;
+  }
+  const thread = Feed.getBranch(event);
+  // An event keeps its branch once it has one; an opener has none until its fork is written, so only a found one is kept.
+  if (thread !== undefined) {
+    threads.set(event, thread);
+  }
+  return thread;
+};
 
 /**
  * Narrows an event by payload tag.
