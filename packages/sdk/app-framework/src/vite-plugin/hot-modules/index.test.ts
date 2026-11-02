@@ -31,11 +31,9 @@ describe('findModuleLoaders', () => {
     expect(findModuleLoaders('/dx.config.ts', code).map(({ specifier }) => specifier)).toEqual(['./a.ts', '#b']);
   });
 
-  test("finds a config's module list loaded by Plugin.lazy", ({ expect }) => {
-    const code = `export const make = Plugin.lazy(meta, () => import('./dx.config.ts?dx-modules'));`;
-    expect(findModuleLoaders('/dx.config.ts', code).map(({ specifier }) => specifier)).toEqual([
-      './dx.config.ts?dx-modules',
-    ]);
+  test('finds a module named by a query, loaded by Plugin.lazy', ({ expect }) => {
+    const code = `export const make = Plugin.lazy(meta, () => import('./plugin.ts?variant'));`;
+    expect(findModuleLoaders('/src/index.ts', code).map(({ specifier }) => specifier)).toEqual(['./plugin.ts?variant']);
   });
 
   test('skips lazy components, dependencies, assets and non-loader arrows', ({ expect }) => {
