@@ -2,8 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ARTIFACTS_SEGMENT, SESSIONS_SEGMENT } from './capabilities/app-graph-builder.ts';
 import * as ProjectGraph from './ProjectGraph.ts';
+
+/** Path segment of a project's Chats branch. */
+export const SESSIONS_SEGMENT = 'sessions';
+
+/** Path segment (and node id) of a project's Artifacts branch. */
+export const ARTIFACTS_SEGMENT = 'artifacts';
 
 /**
  * Path to a chat on a project's Chats branch. A project's chats are parented to it, so they are

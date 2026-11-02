@@ -432,10 +432,12 @@ const BUNDLER_RESOLVED: Record<string, string[]> = {
   'packages/apps/composer-app': [
     '@dxos/app-graph',
     '@dxos/echo',
+    '@dxos/echo-doc',
     '@dxos/echo-react',
     '@dxos/graph',
     '@dxos/react-ui-attention',
     '@dxos/react-ui-geo',
+    'decode-named-character-reference',
   ],
   // edge-compute generates a function entrypoint containing
   // `await import('@dxos/functions-runtime-cloudflare')` and gives esbuild a `resolveDir` of its
