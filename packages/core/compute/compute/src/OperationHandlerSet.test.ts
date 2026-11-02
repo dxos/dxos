@@ -40,7 +40,7 @@ describe('OperationHandlerSet.reactive', () => {
     let resolveCount = 0;
     const trackingSet: OperationHandlerSet.OperationHandlerSet = {
       [OperationHandlerSet.TypeId]: OperationHandlerSet.TypeId,
-      definitions: () => [],
+      descriptors: () => [],
       getHandlerFor: () => Promise.resolve(undefined),
       getHandlers: () => Promise.resolve([makeHandler(KEY_A, 'A')]),
       handlers: Effect.sync(() => {
@@ -63,7 +63,7 @@ describe('OperationHandlerSet.reactive', () => {
     let callCount = 0;
     const flakySet: OperationHandlerSet.OperationHandlerSet = {
       [OperationHandlerSet.TypeId]: OperationHandlerSet.TypeId,
-      definitions: () => [],
+      descriptors: () => [],
       getHandlerFor: () => Promise.resolve(undefined),
       getHandlers: () => Promise.resolve([]),
       handlers: Effect.suspend(() => {
@@ -103,14 +103,14 @@ describe('OperationHandlerSet.reactive', () => {
 });
 
 describe('OperationHandlerSet.lazy', () => {
-  test('definitions enumerate without loading any handler body', async ({ expect }) => {
+  test('descriptors enumerate without loading any handler body', async ({ expect }) => {
     let loads = 0;
     const set = OperationHandlerSet.lazy([
       Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY_A } }).pipe(
         Operation.lazyHandler(() => (loads++, Promise.resolve({ default: makeHandler(KEY_A, 'A') }))),
       ),
     ]);
-    expect(set.definitions().map((definition) => definition.meta.key)).toEqual([KEY_A]);
+    expect(set.descriptors().map((descriptor) => descriptor.key)).toEqual([KEY_A]);
     expect(loads).toEqual(0);
   });
 
@@ -176,7 +176,7 @@ describe('OperationHandlerSet.lazy', () => {
     expect(loads).toEqual({ a: 1, b: 1 });
   });
 
-  test('merge enumerates definitions without loading any handler', async ({ expect }) => {
+  test('merge enumerates descriptors without loading any handler', async ({ expect }) => {
     let loaded = 0;
     const set = OperationHandlerSet.merge(
       OperationHandlerSet.lazy([
@@ -189,8 +189,8 @@ describe('OperationHandlerSet.lazy', () => {
 
     expect(
       set
-        .definitions()
-        .map((definition) => definition.meta.key)
+        .descriptors()
+        .map((descriptor) => descriptor.key)
         .sort(),
     ).toEqual([KEY_A, KEY_B]);
     expect(loaded).toEqual(0);
@@ -243,7 +243,7 @@ describe('OperationHandlerSet.reactive getHandlerFor identity', () => {
     let rejectFirst!: (err: Error) => void;
     const pendingChild: OperationHandlerSet.OperationHandlerSet = {
       [OperationHandlerSet.TypeId]: OperationHandlerSet.TypeId,
-      definitions: () => [],
+      descriptors: () => [],
       getHandlerFor: () => new Promise((_, reject) => (rejectFirst = reject)),
       getHandlers: () => Promise.resolve([]),
       handlers: Effect.succeed([]),
@@ -265,7 +265,7 @@ describe('OperationHandlerSet.reactive getHandlerFor identity', () => {
     let calls = 0;
     const flakyChild: OperationHandlerSet.OperationHandlerSet = {
       [OperationHandlerSet.TypeId]: OperationHandlerSet.TypeId,
-      definitions: () => [],
+      descriptors: () => [],
       getHandlerFor: () => {
         calls++;
         return calls === 1 ? Promise.reject(new Error('transient')) : Promise.resolve(makeHandler(KEY_A, 'A'));
@@ -279,5 +279,45 @@ describe('OperationHandlerSet.reactive getHandlerFor identity', () => {
     const reactive = OperationHandlerSet.reactive(registry, atom);
     await expect(reactive.getHandlerFor(KEY_A)).rejects.toThrow('transient');
     expect((await reactive.getHandlerFor(KEY_A))?.meta.key).toEqual(KEY_A);
+  });
+});
+
+describe('OperationHandlerSet.fromLoaders', () => {
+  test('lists keys without loading, and a definition once its handler loads', async ({ expect }) => {
+    let loads = 0;
+    const set = OperationHandlerSet.fromLoaders({
+      [KEY_A]: () => (loads++, Promise.resolve({ default: makeHandler(KEY_A, 'A') })),
+      [KEY_B]: () => (loads++, Promise.resolve({ default: makeHandler(KEY_B, 'B') })),
+    });
+    expect(set.descriptors().map(({ key, definition }) => [key, definition])).toEqual([
+      [KEY_A, undefined],
+      [KEY_B, undefined],
+    ]);
+    expect(loads).toEqual(0);
+
+    const handler = await set.getHandlerFor(KEY_A);
+    expect(handler?.meta.key).toEqual(KEY_A);
+    expect(loads).toEqual(1);
+    expect(set.descriptors().find(({ key }) => key === KEY_A)?.definition).toBe(handler);
+  });
+
+  test('rejects a module that implements another operation', async ({ expect }) => {
+    const set = OperationHandlerSet.fromLoaders({
+      [KEY_A]: () => Promise.resolve({ default: makeHandler(KEY_B, 'B') }),
+    });
+    await expect(set.getHandlerFor(KEY_A)).rejects.toThrow(/implements/);
+  });
+
+  test('loadDefinitions loads only the operations the set does not hold', async ({ expect }) => {
+    let loads = 0;
+    const set = OperationHandlerSet.merge(
+      OperationHandlerSet.make(makeHandler(KEY_A, 'A')),
+      OperationHandlerSet.fromLoaders({
+        [KEY_B]: () => (loads++, Promise.resolve({ default: makeHandler(KEY_B, 'B') })),
+      }),
+    );
+    const definitions = await OperationHandlerSet.loadDefinitions(set);
+    expect(definitions.map((definition) => definition.meta.key)).toEqual([KEY_A, KEY_B]);
+    expect(loads).toEqual(1);
   });
 });

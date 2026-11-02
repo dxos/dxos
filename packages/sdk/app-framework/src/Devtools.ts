@@ -9,6 +9,7 @@ import * as Schema from 'effect/Schema';
 import * as SchemaIssue from 'effect/SchemaIssue';
 
 import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { DXN } from '@dxos/keys';
 
@@ -119,17 +120,18 @@ export const setup = (manager: PluginManager.PluginManager): void => {
       if (pluginId && owner !== pluginId) {
         return [];
       }
-      // `definitions()` is the enumerate-without-loading path; `getHandlers()` would pull every
-      // lazily-imported handler module just to list them.
+      // `descriptors()` is the enumerate-without-loading path; `getHandlers()` would pull every
+      // lazily-imported handler module just to list them. An operation known only by key lists
+      // without schema until its handler loads.
       return sets.flatMap((set) =>
-        set.definitions().map((definition) => ({
-          key: definition.meta.key,
-          name: definition.meta.name,
-          description: definition.meta.description,
+        set.descriptors().map(({ key, definition }) => ({
+          key,
+          name: definition?.meta.name,
+          description: definition?.meta.description,
           pluginId: owner,
           moduleId,
-          input: fieldsOf(definition.input),
-          output: fieldsOf(definition.output),
+          input: fieldsOf(definition?.input),
+          output: fieldsOf(definition?.output),
         })),
       );
     });
@@ -150,12 +152,12 @@ export const setup = (manager: PluginManager.PluginManager): void => {
     }
   };
 
-  const findDefinition = (key: string): Operation.Definition.Any | undefined => {
+  const findDefinition = async (key: string): Promise<Operation.Definition.Any | undefined> => {
     const wanted = normalizeKey(key);
     for (const set of manager.capabilities.getAll(Capabilities.OperationHandler)) {
-      const definition = set.definitions().find((candidate) => normalizeKey(candidate.meta.key) === wanted);
-      if (definition) {
-        return definition;
+      const descriptor = set.descriptors().find((candidate) => normalizeKey(candidate.key) === wanted);
+      if (descriptor) {
+        return OperationHandlerSet.findDefinition(set, descriptor.key);
       }
     }
     return undefined;
@@ -185,7 +187,7 @@ export const setup = (manager: PluginManager.PluginManager): void => {
   composer.operations = listOperations;
 
   composer.invoke = async (key, input, options) => {
-    const definition = findDefinition(key);
+    const definition = await findDefinition(key);
     if (!definition) {
       throw new Error(`Unknown operation: ${key} (try composer.operations())`);
     }

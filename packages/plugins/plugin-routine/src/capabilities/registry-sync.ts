@@ -9,6 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { yieldOrContinue } from '@dxos/async';
 import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
@@ -73,11 +74,9 @@ export default Capability.makeModule(
       (handlerSets) => {
         syncing = syncing.then(async () => {
           try {
-            // Serialization needs only the definitions: keyed sets enumerate them without loading
-            // any handler body (per-operation loading); unkeyed sets still force their handlers.
-            const handlers = (
-              await Promise.all(handlerSets.map((set) => (set.definitions ? set.definitions() : set.getHandlers())))
-            ).flat();
+            // Serialization needs schemas: sets that hold their definitions give them without loading
+            // a handler body; a set built from a manifest loads the handlers it does not hold yet.
+            const handlers = (await Promise.all(handlerSets.map(OperationHandlerSet.loadDefinitions))).flat();
             const seenKeys = new Set<string>();
             const batch: Operation.PersistentOperation[] = [];
             for (const handler of handlers) {

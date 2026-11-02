@@ -156,12 +156,10 @@ const OperationsToRegistrySpec = LayerSpec.make(
           ),
           Effect.ignore,
         );
-        // Registration needs only the definitions: keyed sets enumerate them without loading
-        // any handler body; unkeyed sets still force their own handlers (per-set, not global).
+        // Registration needs schemas: sets that hold their definitions give them without loading a
+        // handler body; a set built from a manifest loads the handlers it does not hold yet.
         const sets = capabilities.getAll(Capabilities.OperationHandler);
-        const sources = yield* Effect.promise(() =>
-          Promise.all(sets.map((set) => (set.definitions ? set.definitions() : set.getHandlers()))),
-        );
+        const sources = yield* Effect.promise(() => Promise.all(sets.map(OperationHandlerSet.loadDefinitions)));
         const definitions = sources.flat();
         // The only point every operation in the app is visible at once. Tool names derive from keys
         // non-injectively (`Operation.toolName`), so two keys can claim one name — which the resolver

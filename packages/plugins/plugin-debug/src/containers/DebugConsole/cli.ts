@@ -14,7 +14,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import type * as Devtools from '@dxos/app-framework/Devtools';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
-import type * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { BaseError } from '@dxos/errors';
 import { SpaceId } from '@dxos/keys';
 import { getDebugPortController } from '@dxos/react-client/devtools';
@@ -48,7 +48,10 @@ const findDefinition = Effect.fn(function* (key: string) {
   const capabilities = (yield* Plugin.Service).capabilities;
   const wanted = normalizeKey(key);
   for (const set of capabilities.getAll(Capabilities.OperationHandler)) {
-    const definition = set.definitions().find((candidate) => normalizeKey(candidate.meta.key) === wanted);
+    const descriptor = set.descriptors().find((candidate) => normalizeKey(candidate.key) === wanted);
+    const definition = descriptor
+      ? yield* Effect.promise(() => OperationHandlerSet.findDefinition(set, descriptor.key))
+      : undefined;
     if (definition) {
       return definition;
     }
@@ -61,7 +64,7 @@ const invokeOperation = Effect.fn(function* (key: string, input: unknown, spaceI
   const definition = yield* findDefinition(key);
   const invoker = capabilities.get(Capabilities.OperationInvoker);
   const { data, error } = yield* Effect.promise(() =>
-    invoker.invokePromise(definition as Operation.Definition.Any, input as never, spaceId ? { spaceId } : undefined),
+    invoker.invokePromise(definition, input as never, spaceId ? { spaceId } : undefined),
   );
   if (error) {
     return yield* Effect.fail(error instanceof BaseError ? error : DebugOperationError.wrap()(error));
@@ -177,8 +180,8 @@ const makeCommand = (options: DebugCliOptions = {}) => {
         const needle = filter[0]?.toLowerCase();
         const keys = new Set<string>();
         for (const set of capabilities.getAll(Capabilities.OperationHandler)) {
-          for (const definition of set.definitions()) {
-            const key = normalizeKey(definition.meta.key);
+          for (const descriptor of set.descriptors()) {
+            const key = normalizeKey(descriptor.key);
             if (!needle || key.toLowerCase().includes(needle)) {
               keys.add(key);
             }

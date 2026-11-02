@@ -735,20 +735,33 @@ export const getModule = <T>({ modules }: Pick<PluginConfig<T>, 'modules'>, name
 /** A capability tag as serialized in a {@link Manifest}: the identity the plugin manager matches on. */
 export type ManifestTag = { identifier: string; arity: Capability.Arity };
 
-/** One module of a {@link Manifest}: its activation spec as data and the URL of its body. */
-export type ManifestModule = {
+type ManifestModuleSpec = {
   id: string;
-  url: string;
   activatesOn?: ActivationEvent.Events;
   requires: readonly ManifestTag[];
   provides: readonly ManifestTag[];
-  /** Transform applied to what `url` exports, when the module's maker adapts a data module. */
-  adapter?: { url: string; args?: unknown };
   /** Runtimes the module loads in; present only in a library build, which serves every runtime. */
   environments?: readonly Capability.Environment[];
-  /** Keys of the operations the module handles, when it is an operations module. */
-  operations?: readonly string[];
 };
+
+/** One module of a {@link Manifest} whose body loads from `url`. */
+export type ManifestBodyModule = ManifestModuleSpec & {
+  url: string;
+  /** Transform applied to what `url` exports, when the module's maker adapts a data module. */
+  adapter?: { url: string; args?: unknown };
+};
+
+/**
+ * An operations module of a {@link Manifest}: no body, only a map from operation key to the URL of
+ * the module implementing it. The framework builds a lazy handler set from it, so nothing loads
+ * until an operation is invoked.
+ */
+export type ManifestOperationsModule = ManifestModuleSpec & {
+  operations: Readonly<Record<string, string>>;
+};
+
+/** One module of a {@link Manifest}: its activation spec as data, and where its code lives. */
+export type ManifestModule = ManifestBodyModule | ManifestOperationsModule;
 
 /**
  * Static loaders for a manifest's URLs, keyed by URL. A library build passes them so downstream
@@ -778,35 +791,61 @@ const isModuleAdapter = (value: unknown): value is ModuleAdapter => hasDefaultFu
 export const fromManifest = <T = void>(
   { modules, ...data }: Manifest,
   loaders: ManifestLoaders = {},
-): Pick<PluginConfig<T>, 'plugin' | 'meta' | 'make'> => {
+): Pick<PluginConfig<T>, 'plugin' | 'meta' | 'make' | 'operations'> => {
   const meta = getMetaFromConfig(data);
   const toTags = (tags: readonly ManifestTag[]) =>
     tags.map(({ identifier, arity }) => Capability.fromIdentifier(identifier, arity));
   const load = (url: string) => loaders[url]?.() ?? import(/* @vite-ignore */ url);
+
+  const operationSets: OperationHandlerSet.OperationHandlerSet[] = [];
+  const toModule = (module: ManifestModule): Capability.Module<T> => {
+    const { id, activatesOn, requires, provides, environments } = module;
+    if ('operations' in module) {
+      const [provided] = provides;
+      invariant(
+        provides.length === 1 && provided.arity === 'multi',
+        `Operations module ${id} must provide one multi capability.`,
+      );
+      const set = OperationHandlerSet.fromLoaders(
+        Object.fromEntries(Object.entries(module.operations).map(([key, url]) => [key, () => load(url)])),
+      );
+      operationSets.push(set);
+      const tag = Capability.makeTag<OperationHandlerSet.OperationHandlerSet, string, 'multi'>(
+        provided.identifier,
+        'multi',
+      );
+      return Capability.inlineModule<readonly [typeof tag], readonly [], void, T>(
+        id,
+        { provides: [tag], activatesOn, environments },
+        () => Effect.succeed(Capability.contribute(tag, set)),
+      );
+    }
+
+    const { url, adapter } = module;
+    return Capability.lazyModule(
+      id,
+      { activatesOn, requires: toTags(requires), provides: toTags(provides), environments },
+      async () => {
+        const loaded = await load(url);
+        if (!adapter) {
+          invariant(isModuleBody(loaded), `Module ${id} at ${url} has no default export.`);
+          return loaded;
+        }
+        const adapterModule = await load(adapter.url);
+        invariant(isModuleAdapter(adapterModule), `Adapter at ${adapter.url} has no default export.`);
+        const adapted = adapterModule.default(loaded, adapter.args);
+        invariant(isModuleBody(adapted), `Adapter at ${adapter.url} returned no module body.`);
+        return adapted;
+      },
+    );
+  };
+
+  const pluginModules = modules.map(toModule);
   return {
     plugin: data.plugin,
     meta,
-    make: fromModules<T>(
-      meta,
-      modules.map(({ id, url, activatesOn, requires, provides, adapter, environments }) =>
-        Capability.lazyModule(
-          id,
-          { activatesOn, requires: toTags(requires), provides: toTags(provides), environments },
-          async () => {
-            const loaded = await load(url);
-            if (!adapter) {
-              invariant(isModuleBody(loaded), `Module ${id} at ${url} has no default export.`);
-              return loaded;
-            }
-            const adapterModule = await load(adapter.url);
-            invariant(isModuleAdapter(adapterModule), `Adapter at ${adapter.url} has no default export.`);
-            const adapted = adapterModule.default(loaded, adapter.args);
-            invariant(isModuleBody(adapted), `Adapter at ${adapter.url} returned no module body.`);
-            return adapted;
-          },
-        ),
-      ),
-    ),
+    make: fromModules<T>(meta, pluginModules),
+    operations: OperationHandlerSet.merge(...operationSets),
   };
 };
 

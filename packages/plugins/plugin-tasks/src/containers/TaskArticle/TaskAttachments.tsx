@@ -42,10 +42,7 @@ import { TasksNamespace } from '../../namespace.ts';
 const useCanCreateFiles = (): boolean => {
   const handlerSets = Hooks.useCapabilities(Capabilities.OperationHandler);
   return useMemo(
-    () =>
-      handlerSets.some((set) =>
-        set.definitions().some((definition) => definition.meta.key === FileOperation.Create.meta.key),
-      ),
+    () => handlerSets.some((set) => set.descriptors().some(({ key }) => key === FileOperation.Create.meta.key)),
     [handlerSets],
   );
 };

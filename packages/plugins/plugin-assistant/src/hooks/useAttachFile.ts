@@ -24,10 +24,7 @@ export const useAttachFile = (
   const { invokePromise } = Hooks.useOperationInvoker();
   const handlerSets = Hooks.useCapabilities(Capabilities.OperationHandler);
   const canCreateFiles = useMemo(
-    () =>
-      handlerSets.some((set) =>
-        set.definitions().some((definition) => definition.meta.key === FileOperation.Create.meta.key),
-      ),
+    () => handlerSets.some((set) => set.descriptors().some(({ key }) => key === FileOperation.Create.meta.key)),
     [handlerSets],
   );
 

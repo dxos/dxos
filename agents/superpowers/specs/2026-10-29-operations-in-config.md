@@ -7,13 +7,9 @@ named a hand-written module (`src/capabilities/operation-handler.ts`), and that 
 `OperationHandlerSet.lazy([...])` built in `src/operations/<Plugin>OperationHandlerSet.ts`. So the
 build could not list what a plugin provides, and every plugin carried two files of boilerplate.
 
-The config is evaluated at build time in a Vite runnable environment and turned into a JSON
-manifest. Whatever it imports must load headless, so it can hold operation definitions but not
-handler bodies.
-
 ## Proposal
 
-The config holds the map itself:
+The config holds the map literally:
 
 ```ts
 AppCapability.operationHandler(
@@ -27,86 +23,108 @@ AppCapability.operationHandler(
 );
 ```
 
-It is `OperationHandlerSet.lazy`, not `.make`. `.make` takes handlers that are already loaded, so the
-config would import every handler body. The `module-url` attribute keeps each handler out of the
-config graph, as it does for module bodies.
+It uses `lazy`, not `make`. `make` takes handlers that are already loaded, so the config would
+import every handler body.
 
-### How the build records it
+### The manifest records a map, not a module
 
-1. `operationHandler(set)` returns an inline module tagged with the set
-   (`Capability.OperationsTag`). The set keeps its pairings (`OperationHandlerSet.getLazyEntries`).
-2. When the build evaluates the config, each handler loader returns a marker with its specifier,
-   as module bodies do. The build resolves each specifier to a file.
-3. The build finds each definition by identity: it searches the modules the evaluation loaded for
-   the one that exports that object by name. A module in the plugin's own package is imported by
-   file. A module in another package is imported through the package subpath whose `source` is that
-   file. Markdown's `CollaborationOperation.*` from `@dxos/app-toolkit` is an example of this.
-4. From these, the build generates the module body
-   (`\0dx-operations:<module>:<config path>`): static imports of the definitions, and one dynamic
-   import per handler. The bundler then makes each handler its own chunk.
-5. The manifest entry for the module gets `operations: [key, ...]`. This is the build-time list of
-   what the plugin provides. Its `url` points at the generated body.
+The build evaluates the config headless. There, each `module-url` import returns a marker, so the
+build reads each operation's key and handler location without loading the handler. The manifest
+entry has no body URL. It carries a plain JSON map from operation key to handler module URL:
 
-### How the runtime gets the set back
+```json
+{
+  "id": "OperationHandler",
+  "activatesOn": { "id": "dxn:org.dxos.app-framework.event.idle" },
+  "requires": [],
+  "provides": [{ "identifier": "org.dxos.app-framework.capability.operationHandler", "arity": "multi" }],
+  "operations": {
+    "dxn:org.dxos.operation.file.create": "/assets/create-C1b2.js",
+    "dxn:org.dxos.operation.file.read": "/assets/read-D3e4.js"
+  }
+}
+```
 
-No runtime change is needed. The manifest loads the generated body like any other module body.
-Activation imports only the definitions (they are small), and each handler loads on its first
-invocation through `OperationHandlerSet.lazy`.
+Each URL is the handler's own chunk in a build, its source URL when served, and its specifier in a
+library build. The map is plain data, so it moves unchanged when manifests become JSON files.
 
-Hosts that have no plugin manager read the set from the plugin. Examples are the CLI, node tests
-and stories. `Plugin.config` exposes `operations` (all operations modules merged), and so does a
-library build's plugin entry. These hosts used `@dxos/plugin-*/<Plugin>OperationHandlerSet`
-before. They now import `operations` from the plugin's `#meta` / `./<Plugin>Plugin` export.
+An earlier version of this spike generated a module body from the map. That module imported every
+definition statically, so a plugin's library entry imported them eagerly. The map removes the
+module, and the plugin entry now imports nothing but the framework.
+
+### The runtime builds the set from the map
+
+`Plugin.fromManifest` turns an operations entry into a module that contributes
+`OperationHandlerSet.fromLoaders(map)`. Nothing loads until an operation is invoked. Then the set
+imports that handler's URL and checks that the module's default export is a handler for that key.
+The loaded handler supplies the real definition and handler.
+
+### What needs definitions before a handler loads
+
+A set built from the map knows only keys until a handler loads, so `definitions()` is replaced by
+`descriptors()`. It returns `{ key, definition? }`: the definition is present when the set holds it
+in memory (an authored set, or a handler that has loaded).
+
+| Reader                                                               | Needs                                | Now                                                                |
+| -------------------------------------------------------------------- | ------------------------------------ | ------------------------------------------------------------------ |
+| Invoker input validation                                             | the schema, at invoke time           | The definition from the loaded handler.                            |
+| `plugin-assistant` `useAttachFile`, `plugin-tasks` `TaskAttachments` | whether a key exists                 | `descriptors()` keys.                                              |
+| `plugin-doctor` skills diagnostics                                   | keys usable as tool ids              | `descriptors()` keys.                                              |
+| `plugin-debug` CLI `ops`                                             | keys                                 | `descriptors()` keys.                                              |
+| `plugin-debug` CLI `invoke`, devtools `composer.invoke`              | the definition                       | `findDefinition`, which loads one handler.                         |
+| devtools `composer.operations()`                                     | key, name, fields                    | Descriptors; name and fields once loaded.                          |
+| `plugin-routine` `registry-sync` and `layer-specs`                   | full records (`Operation.serialize`) | `loadDefinitions`, which loads the handlers the set does not hold. |
+
+The last row is what #14332's registry descriptors are for. Each descriptor is the item's
+`PersistentOperation` JSON, which is exactly what `registry-sync` and `layer-specs` build at
+runtime. Descriptors join the map by operation key. MCP `queryOperations`, tool listing and the
+registry UI then read data and never load a handler. This option was chosen because both spikes
+then share one key space:
+
+- Loading the definitions module on first listing keeps the eager import this design removes.
+- Listing only keys breaks tool listing.
+
+**Until #14332 lands**, a converted plugin built from a manifest loads its handlers when
+`layer-specs` builds the operation registry and when `registry-sync` runs at idle. Tests, stories and
+authored configs hold their definitions in memory and load nothing. So this change should not
+merge before #14332.
+
+### Hosts without a plugin manager
+
+The CLI, tests and stories invoke operations directly, so a plugin still exposes `operations`.
+`Plugin.config` gives the authored set. A library entry gives the set built from the map, which is
+lazy and imports nothing until an operation is invoked.
 
 ### Drift check
 
-It is deleted, together with `OperationHandlerAdapter`. The map is the only declaration, so there
-is nothing for it to drift from.
-
-### Activation on first invoke
-
-This is not done. The registry needs full definitions (schemas) to list tools and validate input
-before a handler loads. Activating the module now costs only the definitions, so Idle/Startup
-stays as authored. A real `OperationInvoked(key)` event would need the invoker to wait on module
-activation. It is a separate change, and the manifest's key list makes it possible.
+It is gone. The map is the only declaration.
 
 ## Spike scope
 
 Three plugins are converted:
 
 - `plugin-file`: 5 operations, Idle.
-- `plugin-markdown`: 14 operations, Startup. Definitions come from two packages, and other
-  packages' tests and stories use its set.
-- `plugin-chess`: 4 operations, Idle. The CLI uses its set.
+- `plugin-markdown`: 14 operations, Startup, three of them defined in `@dxos/app-toolkit`.
+- `plugin-chess`: 4 operations, Idle.
 
 Each loses `src/capabilities/operation-handler.ts`, `src/operations/index.ts`, the
-`<Plugin>OperationHandlerSet` file, its `#operations` import and its public subpath.
+`<Plugin>OperationHandlerSet` module and its public subpath.
 
 ## Migration
 
 74 `dx.config.ts` files use `AppCapability.operationHandler`. 3 are converted here, and 71 remain.
-Each remaining plugin needs the following changes:
+Each remaining plugin needs these changes:
 
-1. Move its `lazy([...])` entries into the config.
-2. Prefix each handler path with `./src/operations/` and add the `module-url` attribute.
-3. Delete the three files.
-4. Repoint any outside consumer of its handler set to `operations`.
+1. Move its `lazy([...])` entries into the config, with `./src/operations/` paths and the
+   `module-url` attribute.
+2. Delete the three files.
+3. Repoint outside users of its handler set to `operations`.
 
-A codemod can do this, because every entry has the form `Def.pipe(Operation.lazyHandler(...))`.
-Sets built with `OperationHandlerSet.make` or `keyed` must become `lazy` first. When none remain,
-`operationHandler(loader)` can be removed.
+A codemod can do this. Sets built with `make` or `keyed` must become `lazy` first.
 
 ## Open questions
 
-1. The `operations` export needs a name. Today it is a plain set on the config. Another option is
-   a `Plugin.getOperations(config)` accessor that reads either shape.
-2. Should definitions modules be checked to stay import-light? The config, and now the generated
-   body, imports them statically.
-3. Should the manifest carry name and description next to each key, for a plugin catalog?
-4. Should EDGE (`workerd`) route by the manifest's key list instead of activating every plugin?
-
-## Verification
-
-See the PR. Builds and tests were run locally for the framework packages, the three plugins and
-their outside consumers. The app-build path (`emitFile` of the generated body) and the dev-server
-path (`/@id/` URL) have not been exercised by any test yet.
+1. #14332 descriptor join: reference descriptors from the map per key, or keep the two indexes
+   separate and join by key at runtime? This spike assumes the latter.
+2. Should `operationHandler(loader)` be removed once every plugin is converted?
+3. Should EDGE (`workerd`) route by the manifest's keys instead of activating every plugin?

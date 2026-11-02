@@ -34,19 +34,11 @@ export const skillToolsDiagnostic: DiagnosticProvider = {
       }
     }
 
-    // Operations registered as handlers — their meta.key is usable as a tool id. Keyed sets
-    // enumerate definitions without loading handler bodies; unkeyed sets still force their own.
-    const handlerSets = capabilities.getAll(Capabilities.OperationHandler);
-    const handlerLists = await Promise.all(
-      handlerSets.map((set) =>
-        set.definitions ? Promise.resolve(set.definitions()) : set.getHandlers().catch(() => []),
-      ),
-    );
-    for (const handlers of handlerLists) {
-      for (const handler of handlers) {
-        if (handler.meta?.key) {
-          knownTools.add(handler.meta.key);
-        }
+    // Operations registered as handlers — their key is usable as a tool id, and every set lists its
+    // keys without loading a handler body.
+    for (const set of capabilities.getAll(Capabilities.OperationHandler)) {
+      for (const { key } of set.descriptors()) {
+        knownTools.add(key);
       }
     }
 

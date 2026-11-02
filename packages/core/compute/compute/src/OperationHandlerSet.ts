@@ -16,7 +16,7 @@ import { assertArgument } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
 import { NoHandlerError } from './errors.ts';
-import type * as Operation from './Operation.ts';
+import * as Operation from './Operation.ts';
 
 export const TypeId = '~@dxos/operation/OperationHandlerSet' as const;
 export type TypeId = typeof TypeId;
@@ -34,8 +34,11 @@ export interface OperationHandlerSet {
 
   getHandlers(): Promise<Operation.WithHandler<Operation.Definition.Any>[]>;
 
-  /** The operation definitions this set resolves, enumerable WITHOUT loading any handler body. */
-  definitions(): readonly Operation.Definition.Any[];
+  /**
+   * The operations this set resolves, enumerable WITHOUT loading any handler body. A set built from a
+   * manifest knows only keys until a handler loads; {@link loadDefinitions} resolves the rest.
+   */
+  descriptors(): readonly Descriptor[];
 
   /**
    * Resolves a single operation's handler, loading only that operation's module — the
@@ -44,6 +47,18 @@ export interface OperationHandlerSet {
    */
   getHandlerFor(key: string): Promise<Operation.WithHandler<Operation.Definition.Any> | undefined>;
 }
+
+/**
+ * What a set knows about one operation before its handler loads. Registry descriptors (input/output
+ * JSON Schema, name, description) are joined to it by `key`.
+ */
+export type Descriptor = {
+  readonly key: string;
+  /** The live definition, when the set holds it in memory or has already loaded the handler. */
+  readonly definition?: Operation.Definition.Any;
+};
+
+const toDescriptor = (definition: Operation.Definition.Any): Descriptor => ({ key: definition.meta.key, definition });
 
 /**
  * Normalizes an operation key to a plain NSID so callers can pass either a ToolId (plain NSID)
@@ -63,7 +78,7 @@ export const empty: OperationHandlerSet = {
   [TypeId]: TypeId,
   handlers: Effect.succeed([]),
   getHandlers: () => Promise.resolve([]),
-  definitions: () => [],
+  descriptors: () => [],
   getHandlerFor: () => Promise.resolve(undefined),
 };
 
@@ -80,7 +95,7 @@ export const empty: OperationHandlerSet = {
  */
 export const make = (...handlers: Operation.WithHandler<Operation.Definition.Any>[]): OperationHandlerSet => ({
   [TypeId]: TypeId,
-  definitions: () => handlers,
+  descriptors: () => handlers.map(toDescriptor),
   getHandlerFor: (key) => {
     const normalized = normalizeKey(key);
     return Promise.resolve(handlers.find((handler) => normalizeKey(handler.meta.key) === normalized));
@@ -128,7 +143,7 @@ export const reactive = (
     [TypeId]: TypeId,
     getHandlers,
     handlers: Effect.promise(getHandlers),
-    definitions: () => registry.get(atom).flatMap((set) => set.definitions()),
+    descriptors: () => registry.get(atom).flatMap((set) => set.descriptors()),
     // Per-operation resolution over the CURRENT contributed sets: only the matched operation's
     // module loads; the load-everything paths above stay for enumerators.
     getHandlerFor: (key) => {
@@ -159,7 +174,7 @@ export const merge = (...sets: OperationHandlerSet[]): OperationHandlerSet => {
   const getHandlers = () => Promise.all(sets.map((set) => set.getHandlers())).then((handlers) => handlers.flat());
   return {
     [TypeId]: TypeId,
-    definitions: () => sets.flatMap((set) => set.definitions()),
+    descriptors: () => sets.flatMap((set) => set.descriptors()),
     getHandlerFor: (key) => resolveFromSets(sets, key),
     getHandlers,
     handlers: Effect.promise(getHandlers),
@@ -222,7 +237,7 @@ export const lazy = (entries: readonly Operation.LazyHandler[]): OperationHandle
   return {
     [TypeId]: TypeId,
     [LazyEntriesTag]: entries,
-    definitions: () => entries.map(({ definition }) => definition),
+    descriptors: () => entries.map(({ definition }) => toDescriptor(definition)),
     getHandlerFor: (key) => {
       const normalized = normalizeKey(key);
       const entry = entries.find(({ definition }) => normalizeKey(definition.meta.key) === normalized);
@@ -231,6 +246,83 @@ export const lazy = (entries: readonly Operation.LazyHandler[]): OperationHandle
     getHandlers,
     handlers: Effect.promise(getHandlers),
   };
+};
+
+/**
+ * Creates a handler set from handler module loaders keyed by operation key, as a build manifest
+ * records them. Nothing loads until an operation is invoked; the loaded module's default export
+ * supplies the definition and handler, and must be for the key it was loaded under.
+ */
+export const fromLoaders = (loaders: Readonly<Record<string, () => Promise<unknown>>>): OperationHandlerSet => {
+  const loaded = new Map<string, Promise<Operation.WithHandler<Operation.Definition.Any>>>();
+  const definitions = new Map<string, Operation.Definition.Any>();
+  const entries = Object.entries(loaders).map(([key, load]) => ({ key, normalized: normalizeKey(key), load }));
+  const loadEntry = ({ key, normalized, load }: (typeof entries)[number]) => {
+    let promise = loaded.get(normalized);
+    if (!promise) {
+      promise = load().then(
+        (module) => {
+          const handler =
+            typeof module === 'object' && module !== null && 'default' in module ? module.default : undefined;
+          assertArgument(
+            Operation.isOperationWithHandler(handler),
+            'module',
+            `Handler module for ${key} has no handler.`,
+          );
+          assertArgument(
+            normalizeKey(handler.meta.key) === normalized,
+            'module',
+            `Handler module for ${key} implements ${handler.meta.key}.`,
+          );
+          definitions.set(normalized, handler);
+          return handler;
+        },
+        // Evict on failure so a transient import failure is retried on the next invocation.
+        (err) => {
+          loaded.delete(normalized);
+          throw err;
+        },
+      );
+      loaded.set(normalized, promise);
+    }
+    return promise;
+  };
+  const getHandlers = () => Promise.all(entries.map(loadEntry));
+  return {
+    [TypeId]: TypeId,
+    descriptors: () => entries.map(({ key, normalized }) => ({ key, definition: definitions.get(normalized) })),
+    getHandlerFor: (key) => {
+      const normalized = normalizeKey(key);
+      const entry = entries.find((candidate) => candidate.normalized === normalized);
+      return entry ? loadEntry(entry) : Promise.resolve(undefined);
+    },
+    getHandlers,
+    handlers: Effect.promise(getHandlers),
+  };
+};
+
+/**
+ * Live definitions of every operation in the set: those held in memory directly, the rest by loading
+ * their handlers. For readers that need schemas; a key-only reader uses {@link OperationHandlerSet.descriptors}.
+ */
+export const loadDefinitions = async (set: OperationHandlerSet): Promise<Operation.Definition.Any[]> => {
+  const definitions = await Promise.all(
+    set.descriptors().map(({ key, definition }) => (definition ? Promise.resolve(definition) : set.getHandlerFor(key))),
+  );
+  return definitions.filter((definition) => definition !== undefined);
+};
+
+/** The live definition of one operation in the set, loading its handler only if the set does not hold it. */
+export const findDefinition = async (
+  set: OperationHandlerSet,
+  key: string,
+): Promise<Operation.Definition.Any | undefined> => {
+  const normalized = normalizeKey(key);
+  const descriptor = set.descriptors().find((candidate) => normalizeKey(candidate.key) === normalized);
+  if (!descriptor) {
+    return undefined;
+  }
+  return descriptor.definition ?? set.getHandlerFor(descriptor.key);
 };
 
 /**
