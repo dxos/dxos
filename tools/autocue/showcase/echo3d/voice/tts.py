@@ -37,7 +37,8 @@ slides = []
 for number, slide, body in re.findall(r'\n## (\d+)\. [^\n]*?\(`#([\w-]+)`\)\n(.*?)(?=\n## |\Z)', text, re.S):
     lines = [re.sub(r'\s+', ' ', re.sub(r'_\(.*?\)_', '', line[2:])).strip()
              for line in body.split('\n') if line.startswith('- ')]
-    spoken = ' '.join(line for line in lines if line).replace('DXOS', 'D-X-O-S')
+    # Spelled as the voice would otherwise read the letters.
+    spoken = ' '.join(line for line in lines if line).replace('DXOS', 'D-X-O-S').replace('SaaS', 'sass')
     if spoken:
         slides.append((int(number), slide, spoken))
 
