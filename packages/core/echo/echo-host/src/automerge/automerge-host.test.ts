@@ -657,6 +657,33 @@ describe('AutomergeHost', () => {
     expect(await host.getStoredHeads([documentId])).not.toEqual([undefined]);
   });
 
+  // With the saved heads forgotten, a save the throttle scheduled before the removal would rewrite what it deleted.
+  test('a change still waiting to be saved when its document is removed is not written back', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({ runtime, useSubduction: true });
+    await host.open();
+    onTestFinished(async () => {
+      if (host.isOpen) {
+        await host.close();
+      }
+    });
+
+    const documentId = await (async () => {
+      using lease = await host.createDoc<any>({ value: 1 });
+      await host.flush(Context.default());
+      lease.change((doc: any) => {
+        doc.value = 2;
+      });
+      return lease.documentId;
+    })();
+    await host.removeDocument(documentId);
+    await sleep(500);
+
+    expect(await host.hasDocOnDisk(documentId)).toBe(false);
+    expect(await host.getStoredHeads([documentId])).toEqual([undefined]);
+  });
+
   // The share-policy kick walks every resident document and Subduction ignores it for a diverged one,
   // so an evicted diverged document must not re-arm it on every diff pass.
   test('a diverged evicted document does not kick the share policy', async () => {
