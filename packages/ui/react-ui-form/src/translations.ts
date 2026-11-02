@@ -39,6 +39,7 @@ export const translations = [
         'ref-field.placeholder': 'Select…',
         'ref-field.placeholder_one': 'Select…',
         'ref-field.placeholder_other': 'Select items…',
+        'untitled.label': 'Untitled',
 
         'example.placeholder': 'Example',
         'select.placeholder': 'Select…',

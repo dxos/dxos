@@ -94,6 +94,28 @@ const historyKey = (path: string) => `history:${path}`;
 const HISTORY_LIMIT = 50;
 const DEFAULT_MAX_BYTES = 1024 * 1024;
 const MAX_PUSH_ATTEMPTS = 3;
+const BLOB_CACHE_BYTES = 16 * 1024 * 1024;
+
+/** Blob contents by SHA, least recently used first; a SHA names its content, so an entry never goes stale. */
+const blobCache = new Map<string, string>();
+let blobCacheBytes = 0;
+
+const cacheBlob = (sha: string, content: string) => {
+  const previous = blobCache.get(sha);
+  if (previous !== undefined) {
+    blobCache.delete(sha);
+    blobCacheBytes -= previous.length;
+  }
+  blobCache.set(sha, content);
+  blobCacheBytes += content.length;
+  for (const [oldest, evicted] of blobCache) {
+    if (blobCacheBytes <= BLOB_CACHE_BYTES) {
+      break;
+    }
+    blobCache.delete(oldest);
+    blobCacheBytes -= evicted.length;
+  }
+};
 
 /** The foreign key a mapped object carries, so a rename re-keys it rather than duplicating it. */
 export const fileKey = (repoId: string, path: string) => ({ source: GITHUB_SOURCE, id: `${repoId}:${path}` });
@@ -265,6 +287,19 @@ export const syncFileBinding = Effect.fn('syncFileBinding')(function* (
       const skipped: { path: string; reason: string }[] = [];
       let requests = 0;
       let pulled = 0;
+      /** A blob's content, from the cache when this process has read or written it. */
+      const readBlob = (sha: string) =>
+        Effect.gen(function* () {
+          const cached = blobCache.get(sha);
+          if (cached !== undefined) {
+            cacheBlob(sha, cached);
+            return cached;
+          }
+          const content = yield* GitHubApi.fetchBlob(owner, name, sha);
+          requests++;
+          cacheBlob(sha, content);
+          return content;
+        });
 
       // F-2.1: the read branch's head, conditional on the last ETag.
       const headResult = yield* GitHubApi.fetchBranchHead(owner, name, options.branch, state.headEtag);
@@ -364,6 +399,7 @@ export const syncFileBinding = Effect.fn('syncFileBinding')(function* (
 
             const content = yield* GitHubApi.fetchBlob(owner, name, change.blob);
             requests++;
+            cacheBlob(change.blob, content);
             if (new TextEncoder().encode(content).byteLength > maxBytes) {
               skipped.push({ path: change.path, reason: `larger than ${maxBytes} bytes` });
               return false;
@@ -403,6 +439,7 @@ export const syncFileBinding = Effect.fn('syncFileBinding')(function* (
             const baseHeads = fromPushed?.heads ?? marker.heads;
             const base = yield* GitHubApi.fetchBlob(owner, name, baseBlob);
             requests++;
+            cacheBlob(baseBlob, base);
             const imported = yield* Operation.invoke(mapping.import, {
               repository: Ref.make(repo),
               path: change.path,
@@ -445,8 +482,13 @@ export const syncFileBinding = Effect.fn('syncFileBinding')(function* (
           continue;
         }
         const exported = mapping.export;
-        const rendered = yield* resolveBound(marker.object).pipe(
-          Effect.flatMap((object) => Operation.invoke(exported, { object: Ref.make(object), path: marker.path })),
+        const rendered = yield* Effect.all([
+          resolveBound(marker.object),
+          readBlob(marker.pushed?.blob ?? marker.blob),
+        ]).pipe(
+          Effect.flatMap(([object, base]) =>
+            Operation.invoke(exported, { object: Ref.make(object), path: marker.path, base }),
+          ),
           Effect.catchCause((cause) => {
             log.warn('github file sync: export failed', { path: marker.path, cause });
             skipped.push({ path: marker.path, reason: 'export failed' });
@@ -478,8 +520,7 @@ export const syncFileBinding = Effect.fn('syncFileBinding')(function* (
         for (const marker of markers.values()) {
           // Edits pushed earlier and not merged yet: the tree starts from the read head, so they ride again.
           if (marker.pushed && !exports.some((entry) => entry.marker.path === marker.path)) {
-            carried.push({ path: marker.path, content: yield* GitHubApi.fetchBlob(owner, name, marker.pushed.blob) });
-            requests++;
+            carried.push({ path: marker.path, content: yield* readBlob(marker.pushed.blob) });
           }
         }
         const baseTree = yield* GitHubApi.fetchCommitTree(owner, name, head);
@@ -515,6 +556,7 @@ export const syncFileBinding = Effect.fn('syncFileBinding')(function* (
         }
 
         for (const entry of exports) {
+          cacheBlob(entry.blob, entry.content);
           setMarker({ ...entry.marker, pushed: { blob: entry.blob, heads: entry.heads, commit } });
           appendHistory(entry.marker.path, { commit, heads: entry.heads, direction: 'push' });
         }

@@ -5,6 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, {
+  type ComponentType,
   type PropsWithChildren,
   createContext,
   useContext,
@@ -157,6 +158,8 @@ export type Dimension2DOptions = {
   createGeneratorWorker?: () => Worker;
   /** How deep frames draw their live contents. */
   liveDepth?: number;
+  /** Drawn in scene coordinates over the scene, inside the engine's context (a host's affordances on empty cells, say). */
+  Overlay?: ComponentType;
   /**
    * The document as the engine draws it, a hook called on each render (a host's element fields, or runtime ports, where
    * the engine reads them); `kinds`' fields lifted when unset.
@@ -504,9 +507,10 @@ export const createDimension2D =
     };
     Root.displayName = 'SceneEditor.Root2D';
 
+    const { Overlay } = options;
     const Viewport = ({ children }: PropsWithChildren) => (
       <>
-        <Canvas.Viewport liveDepth={options.liveDepth} />
+        <Canvas.Viewport liveDepth={options.liveDepth} overlay={Overlay ? <Overlay /> : undefined} />
         {children}
       </>
     );
