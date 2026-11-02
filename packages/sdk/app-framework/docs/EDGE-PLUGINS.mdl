@@ -756,8 +756,8 @@ TODO: an override per DXN.
 
 ## Rollout
 
-1. **One bundle.** Plugin builds emit one bundle, with `vendor/`; the per-runtime
-   `dx-env` builds are removed ([F-1]).
+1. **One bundle.** Plugin builds publish one bundle, with `vendor/` ([F-1]); the per-runtime
+   `dx-env` config entries stay for consumers that bundle the config statically ([D-42]).
 2. **Store and index.** registry-service indexes the operation keys of uploaded bundles and serves
    their catalogs ([F-2], [F-10]).
 3. **Load and route.** compute-service routes `dxn:` targets to published plugins, with
