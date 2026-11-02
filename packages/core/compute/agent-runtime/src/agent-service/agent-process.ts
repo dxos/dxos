@@ -280,7 +280,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // Signals the lane scheduler that a prompt was queued while it runs; the alarm that also fires waits its turn.
         const wake = yield* Queue.sliding<void>(1);
         // Threads running a delegated subagent's task, as the lane scheduler found them.
-        const subagentThreads = new Set<Trajectory.EventId>();
+        const subagentThreads = new Set<Trajectory.ThreadId>();
         // KV holds only undelivered tool results; queued prompts and alarms live in the feed via
         // `sessionStore`.
         let toolResults: ToolResultEvent[] = [...(yield* ToolResultsCell.get)];
@@ -560,7 +560,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         }: {
           prompt: ContentBlock.Any[];
           dequeued: Message.Message | Alarm.Alarm | undefined;
-          thread?: Trajectory.EventId;
+          thread?: Trajectory.ThreadId;
           /** Whether the turn may delegate to subagents in background threads. */
           delegation?: boolean;
           /** Another agent sharing the chat that runs this turn; the process's own when absent. */

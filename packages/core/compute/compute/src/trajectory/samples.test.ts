@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { DXN } from '@dxos/echo';
+import { DXN, Obj } from '@dxos/echo';
 import { type ContentBlock } from '@dxos/types';
 
 import * as Reducer from './Reducer.ts';
@@ -20,6 +20,15 @@ const model = DXN.make('com.anthropic.model.claude-sonnet-5.default');
 
 const text = (value: string): ContentBlock.Any[] => [{ _tag: 'text', text: value }];
 
+/** An opener as `Feed.fork` writes it: the base of a branch of its own, which takes the opener's id here. */
+const opener = (props: Omit<Trajectory.MakeProps, 'id' | 'thread'>): Trajectory.Event => {
+  const id = Obj.ID.random();
+  return Trajectory.make({ ...props, id, thread: Trajectory.ThreadId.make(id) });
+};
+
+/** The thread an opener started. */
+const threadId = (event: Trajectory.Event): Trajectory.ThreadId => Trajectory.ThreadId.make(event.id);
+
 /** Renders prompt entries as `role: text` lines, the form README.md uses. */
 const lines = (entries: readonly Reducer.PromptEntry[]) =>
   entries.map(
@@ -33,25 +42,25 @@ describe('samples', () => {
       payload: { _tag: 'message', blocks: text('What is the weather in Oslo?') },
       sender: alice,
     });
-    const turn = Trajectory.make({
+    const turn = opener({
       payload: { _tag: 'turnBegin', model, from: { event: question.id } },
       sender: agent,
     });
     const followUp = Trajectory.make({ payload: { _tag: 'message', blocks: text('And in Bergen?') }, sender: alice });
     // Every event the turn produces carries `thread: turn.id`; #5 is typed by alice on the main thread meanwhile.
     const end = Trajectory.make({
-      payload: {
-        _tag: 'turnEnd',
-        begin: turn.id,
-        finishReason: 'stop',
-        usage: { inputTokens: 900, cacheReadTokens: 0 },
-      },
+      payload: { _tag: 'turnEnd', finishReason: 'stop', usage: { inputTokens: 900, cacheReadTokens: 0 } },
       sender: agent,
+      thread: threadId(turn),
     });
     const events = [
       question,
       turn,
-      Trajectory.make({ payload: { _tag: 'promptConsume', message: question.id }, sender: agent, thread: turn.id }),
+      Trajectory.make({
+        payload: { _tag: 'promptConsume', message: question.id },
+        sender: agent,
+        thread: threadId(turn),
+      }),
       Trajectory.make({
         payload: {
           _tag: 'message',
@@ -66,7 +75,7 @@ describe('samples', () => {
           ],
         },
         sender: agent,
-        thread: turn.id,
+        thread: threadId(turn),
       }),
       followUp,
       Trajectory.make({
@@ -83,19 +92,19 @@ describe('samples', () => {
           ],
         },
         sender: tool,
-        thread: turn.id,
+        thread: threadId(turn),
       }),
       Trajectory.make({
         payload: { _tag: 'message', blocks: text('Oslo is 12°C with rain.') },
         sender: agent,
-        thread: turn.id,
+        thread: threadId(turn),
       }),
     ];
 
     // While the turn runs, main is untouched and the turn sees main plus its own thread.
     const during = Reducer.run(Reducer.prompt, events);
     expect(lines(during.state.entries)).to.deep.eq([]);
-    expect(lines(Reducer.promptFor(during.state, turn.id))).to.deep.eq([
+    expect(lines(Reducer.promptFor(during.state, threadId(turn)))).to.deep.eq([
       'user: What is the weather in Oslo?',
       'assistant: toolCall',
       'tool: toolResult',
@@ -103,7 +112,7 @@ describe('samples', () => {
     ]);
 
     const afterTurn = Reducer.run(Reducer.prompt, [end], during);
-    expect(lines(afterTurn.state.entries)).to.deep.eq(lines(Reducer.promptFor(during.state, turn.id)));
+    expect(lines(afterTurn.state.entries)).to.deep.eq(lines(Reducer.promptFor(during.state, threadId(turn))));
 
     const session = Reducer.run(Reducer.session, [...events, end]).state;
     expect(session.queue).to.deep.eq([followUp.id]);
@@ -111,17 +120,17 @@ describe('samples', () => {
 
     // The next turn starts from what main showed after #8 and picks up the queued prompt; the earlier entries are
     // untouched, so the provider cache hits.
-    const nextTurn = Trajectory.make({
+    const nextTurn = opener({
       payload: { _tag: 'turnBegin', model, from: { event: end.id } },
       sender: agent,
     });
     const next = Trajectory.make({
       payload: { _tag: 'promptConsume', message: followUp.id },
       sender: agent,
-      thread: nextTurn.id,
+      thread: threadId(nextTurn),
     });
     const nextPrompt = Reducer.run(Reducer.prompt, [nextTurn, next], afterTurn);
-    expect(lines(Reducer.promptFor(nextPrompt.state, nextTurn.id))).to.deep.eq([
+    expect(lines(Reducer.promptFor(nextPrompt.state, threadId(nextTurn)))).to.deep.eq([
       ...lines(afterTurn.state.entries),
       'user: And in Bergen?',
     ]);
@@ -141,7 +150,7 @@ describe('samples', () => {
       payload: { _tag: 'alarmSet', wakeAt: 1_800_000, message: 'check CI' },
       sender: agent,
     });
-    const subagent = Trajectory.make({
+    const subagent = opener({
       payload: { _tag: 'threadOpen', mode: 'fresh', purpose: 'triage failures' },
       sender: agent,
     });
@@ -157,18 +166,18 @@ describe('samples', () => {
       Trajectory.make({
         payload: { _tag: 'message', blocks: text('Reading the failing logs.') },
         sender: agent,
-        thread: subagent.id,
+        thread: threadId(subagent),
       }),
       Trajectory.make({ payload: { _tag: 'alarmFire', alarm: set.id }, sender: alarm }),
       notice,
       Trajectory.make({
         payload: {
           _tag: 'threadMerge',
-          thread: subagent.id,
           mode: 'summary',
           summary: text('Both failures are a flaky echo test.'),
         },
         sender: agent,
+        thread: threadId(subagent),
       }),
     ];
 
@@ -212,23 +221,23 @@ describe('samples', () => {
       sender: alice,
     });
     // Both harnesses see #1 as their feed head and start a turn.
-    const laptopTurn = Trajectory.make({
+    const laptopTurn = opener({
       payload: { _tag: 'turnBegin', model, from: { event: question.id } },
       sender: laptop,
     });
-    const edgeTurn = Trajectory.make({
+    const edgeTurn = opener({
       payload: { _tag: 'turnBegin', model, from: { event: question.id } },
       sender: edge,
     });
     const won = Trajectory.make({
       payload: { _tag: 'promptConsume', message: question.id },
       sender: laptop,
-      thread: laptopTurn.id,
+      thread: threadId(laptopTurn),
     });
     const lost = Trajectory.make({
       payload: { _tag: 'promptConsume', message: question.id },
       sender: edge,
-      thread: edgeTurn.id,
+      thread: threadId(edgeTurn),
     });
     const notice = Trajectory.make({ payload: { _tag: 'message', blocks: text('CI is green.') }, sender: alarm });
     const events = [
@@ -239,16 +248,21 @@ describe('samples', () => {
       lost,
       // #5 folds after #4, so the edge harness lost the claim and ends its turn without calling the model.
       Trajectory.make({
-        payload: { _tag: 'turnEnd', begin: edgeTurn.id, finishReason: 'other', error: 'prompt claimed by laptop' },
+        payload: { _tag: 'turnEnd', finishReason: 'other', error: 'prompt claimed by laptop' },
         sender: edge,
+        thread: threadId(edgeTurn),
       }),
       notice,
       Trajectory.make({
         payload: { _tag: 'message', blocks: text('It replaces messages with one event log.') },
         sender: laptop,
-        thread: laptopTurn.id,
+        thread: threadId(laptopTurn),
       }),
-      Trajectory.make({ payload: { _tag: 'turnEnd', begin: laptopTurn.id, finishReason: 'stop' }, sender: laptop }),
+      Trajectory.make({
+        payload: { _tag: 'turnEnd', finishReason: 'stop' },
+        sender: laptop,
+        thread: threadId(laptopTurn),
+      }),
     ];
 
     const session = Reducer.run(Reducer.session, events).state;

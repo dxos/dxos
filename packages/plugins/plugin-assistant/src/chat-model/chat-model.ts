@@ -382,7 +382,7 @@ export class ChatModel {
                     ? trajectoryItems
                     : Filter.and(trajectoryItems, Filter.feedCursor({ begin: cursor })),
                 )
-                  .from(Scope.feed(feedUri.toString(), { walk: {} }))
+                  .from(Scope.feed(feedUri.toString(), { walk: { branch: 'all' } }))
                   .orderBy(Order.natural('asc')),
               ).atom,
           })

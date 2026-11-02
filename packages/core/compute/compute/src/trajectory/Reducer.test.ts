@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { DXN, Feed, Ref } from '@dxos/echo';
+import { DXN, Feed, Obj, Ref } from '@dxos/echo';
 
 import * as Reducer from './Reducer.ts';
 import * as Trajectory from './Trajectory.ts';
@@ -16,13 +16,30 @@ const model = DXN.make('com.anthropic.model.claude-sonnet-5.default');
 
 const text = (value: string) => [{ _tag: 'text' as const, text: value }];
 
+/**
+ * An event written in `thread` (absent: main). An opener starts a thread of its own, as `Feed.fork` makes it the base
+ * of a new branch; the branch takes the opener's id so a test can name the thread by its opener.
+ */
 const event = (
   payload: Trajectory.Payload,
   sender: Trajectory.Sender = assistant,
-  thread?: Trajectory.EventId,
-): Trajectory.Event => Trajectory.make({ payload, sender, thread });
+  thread?: string,
+): Trajectory.Event => {
+  if (payload._tag === 'turnBegin' || payload._tag === 'threadOpen') {
+    const id = Obj.ID.random();
+    return Trajectory.make({ id, payload, sender, thread: Trajectory.ThreadId.make(id) });
+  }
+  return Trajectory.make({
+    payload,
+    sender,
+    thread: thread === undefined ? undefined : Trajectory.ThreadId.make(thread),
+  });
+};
 
-const message = (value: string, sender: Trajectory.Sender = assistant, thread?: Trajectory.EventId) =>
+/** The thread an opener started: its branch, which takes the opener's id here. */
+const threadId = (opener: Trajectory.Event): Trajectory.ThreadId => Trajectory.ThreadId.make(opener.id);
+
+const message = (value: string, sender: Trajectory.Sender = assistant, thread?: string) =>
   event({ _tag: 'message', blocks: text(value) }, sender, thread);
 
 const texts = (entries: readonly Reducer.PromptEntry[]) =>
@@ -68,7 +85,7 @@ describe('Reducer', () => {
           result: { _tag: 'toolResult', toolCallId: 't1', name: 'x', providerExecuted: false },
         }),
         open,
-        event({ _tag: 'threadClose', thread: open.id, status: 'completed' }),
+        event({ _tag: 'threadClose', status: 'completed' }, assistant, open.id),
         turn,
       ]);
       expect(state.alarms).to.deep.eq([{ id: set.id, wakeAt: 10, message: 'ping' }]);
@@ -81,7 +98,7 @@ describe('Reducer', () => {
       const ended = Reducer.run(
         Reducer.session,
         [
-          event({ _tag: 'turnEnd', begin: turn.id, finishReason: 'stop' }),
+          event({ _tag: 'turnEnd', finishReason: 'stop' }, assistant, turn.id),
           event({ _tag: 'contextUnbind', skills: [], objects: [feed] }),
         ],
         { state, count: 10 },
@@ -106,8 +123,8 @@ describe('Reducer', () => {
       expect(thread.items.map((item) => item.thread)).to.deep.eq([first.id]);
 
       const prompt = Reducer.run(Reducer.prompt, events).state;
-      expect(texts(Reducer.promptFor(prompt, first.id))).to.deep.eq(['question']);
-      expect(texts(Reducer.promptFor(prompt, second.id))).to.deep.eq([]);
+      expect(texts(Reducer.promptFor(prompt, threadId(first)))).to.deep.eq(['question']);
+      expect(texts(Reducer.promptFor(prompt, threadId(second)))).to.deep.eq([]);
     });
   });
 
@@ -181,8 +198,8 @@ describe('Reducer', () => {
         message('turn reply', assistant, turn.id),
         message('subagent work', assistant, subagent.id),
         message('meanwhile', system),
-        event({ _tag: 'threadMerge', thread: turn.id, mode: 'raw' }),
-        event({ _tag: 'threadMerge', thread: subagent.id, mode: 'summary', summary: text('subagent summary') }),
+        event({ _tag: 'threadMerge', mode: 'raw' }, assistant, turn.id),
+        event({ _tag: 'threadMerge', mode: 'summary', summary: text('subagent summary') }, assistant, subagent.id),
       ]);
       expect(texts(state.entries)).to.deep.eq(['meanwhile', 'turn reply', 'subagent summary']);
       expect(state.threads).to.deep.eq({});
@@ -203,14 +220,18 @@ describe('Reducer', () => {
       ];
       const during = Reducer.run(Reducer.prompt, steps);
       expect(texts(during.state.entries)).to.deep.eq([]);
-      expect(texts(Reducer.promptFor(during.state, first.id))).to.deep.eq(['question', 'first: call', 'first: answer']);
-      expect(texts(Reducer.promptFor(during.state, second.id))).to.deep.eq(['second: call']);
+      expect(texts(Reducer.promptFor(during.state, threadId(first)))).to.deep.eq([
+        'question',
+        'first: call',
+        'first: answer',
+      ]);
+      expect(texts(Reducer.promptFor(during.state, threadId(second)))).to.deep.eq(['second: call']);
 
       const { state } = Reducer.run(
         Reducer.prompt,
         [
-          event({ _tag: 'turnEnd', begin: first.id, finishReason: 'stop' }),
-          event({ _tag: 'turnEnd', begin: second.id, finishReason: 'stop' }),
+          event({ _tag: 'turnEnd', finishReason: 'stop' }, assistant, first.id),
+          event({ _tag: 'turnEnd', finishReason: 'stop' }, assistant, second.id),
         ],
         during,
       );
@@ -218,7 +239,7 @@ describe('Reducer', () => {
       expect(state.threads).to.deep.eq({});
       // The second turn merged after a block it never saw.
       expect(Object.keys(state.stale)).to.deep.eq([second.id]);
-      expect(state.stale[second.id]).to.include.members([question.id, steps[4].id, steps[6].id]);
+      expect(state.stale[threadId(second)]).to.include.members([question.id, steps[4].id, steps[6].id]);
     });
 
     test('a turn sees only what was in the feed at its from.event, however late the rest syncs', ({ expect }) => {
@@ -235,11 +256,11 @@ describe('Reducer', () => {
         message('answer', assistant, turn.id),
       ]);
       expect(texts(during.state.entries)).to.deep.eq(['question', 'concurrent']);
-      expect(texts(Reducer.promptFor(during.state, turn.id))).to.deep.eq(['question', 'answer']);
+      expect(texts(Reducer.promptFor(during.state, threadId(turn)))).to.deep.eq(['question', 'answer']);
 
       const { state } = Reducer.run(
         Reducer.prompt,
-        [event({ _tag: 'turnEnd', begin: turn.id, finishReason: 'stop' })],
+        [event({ _tag: 'turnEnd', finishReason: 'stop' }, assistant, turn.id)],
         during,
       );
       expect(texts(state.entries)).to.deep.eq(['question', 'concurrent', 'answer']);
@@ -255,7 +276,7 @@ describe('Reducer', () => {
         consume,
         turn,
         message('answer', assistant, turn.id),
-        event({ _tag: 'turnEnd', begin: turn.id, finishReason: 'stop' }),
+        event({ _tag: 'turnEnd', finishReason: 'stop' }, assistant, turn.id),
       ]);
       expect(texts(state.entries)).to.deep.eq(['question', 'answer']);
       expect(state.stale).to.deep.eq({});
@@ -270,26 +291,30 @@ describe('Reducer', () => {
         message('after'),
         message('forked', assistant, fork.id),
       ]);
-      expect(texts(Reducer.promptFor(state, fork.id))).to.deep.eq(['before', 'forked']);
+      expect(texts(Reducer.promptFor(state, threadId(fork)))).to.deep.eq(['before', 'forked']);
     });
 
     test('a thread merged while a turn inside it runs stays frozen until the turn ends', ({ expect }) => {
       const fork = event({ _tag: 'threadOpen', mode: 'fork' });
       const brief = message('brief', system, fork.id);
-      const turn = event({ _tag: 'turnBegin', model, from: { thread: fork.id, event: brief.id } }, assistant, fork.id);
+      const turn = event(
+        { _tag: 'turnBegin', model, from: { thread: Trajectory.ThreadId.make(fork.id), event: brief.id } },
+        assistant,
+        fork.id,
+      );
       const during = Reducer.run(Reducer.prompt, [
         message('main'),
         fork,
         brief,
         turn,
-        event({ _tag: 'threadMerge', thread: fork.id, mode: 'summary', summary: text('fork summary') }),
+        event({ _tag: 'threadMerge', mode: 'summary', summary: text('fork summary') }, assistant, fork.id),
       ]);
-      expect(texts(Reducer.promptFor(during.state, turn.id))).to.deep.eq(['main', 'brief']);
-      expect(during.state.threads[fork.id]?.closed).to.eq(true);
+      expect(texts(Reducer.promptFor(during.state, threadId(turn)))).to.deep.eq(['main', 'brief']);
+      expect(during.state.threads[threadId(fork)]?.closed).to.eq(true);
 
       const { state } = Reducer.run(
         Reducer.prompt,
-        [message('work', assistant, turn.id), event({ _tag: 'turnEnd', begin: turn.id, finishReason: 'stop' })],
+        [message('work', assistant, turn.id), event({ _tag: 'turnEnd', finishReason: 'stop' }, assistant, turn.id)],
         during,
       );
       // The turn's parent had already ended, so its block lands in main; the frozen parent goes with it.
@@ -301,7 +326,7 @@ describe('Reducer', () => {
       const subagent = event({ _tag: 'threadOpen', mode: 'fresh' });
       const brief = message('brief', system, subagent.id);
       const turn = event(
-        { _tag: 'turnBegin', model, from: { thread: subagent.id, event: brief.id } },
+        { _tag: 'turnBegin', model, from: { thread: Trajectory.ThreadId.make(subagent.id), event: brief.id } },
         assistant,
         subagent.id,
       );
@@ -311,10 +336,10 @@ describe('Reducer', () => {
         brief,
         turn,
         message('work', assistant, turn.id),
-        event({ _tag: 'turnEnd', begin: turn.id, finishReason: 'stop' }, assistant, subagent.id),
+        event({ _tag: 'turnEnd', finishReason: 'stop' }, assistant, turn.id),
       ]);
       expect(texts(state.entries)).to.deep.eq(['main']);
-      expect(texts(Reducer.promptFor(state, subagent.id))).to.deep.eq(['brief', 'work']);
+      expect(texts(Reducer.promptFor(state, threadId(subagent)))).to.deep.eq(['brief', 'work']);
     });
 
     test('rewind drops the main prompt and thread from its event on, and a fork records its origin', ({ expect }) => {
@@ -447,7 +472,7 @@ describe('Reducer', () => {
           threads.push(created.id);
         } else if (roll < 0.9 && merged) {
           const mode = next() < 0.5 ? 'raw' : 'summary';
-          created = event({ _tag: 'threadMerge', thread: merged, mode, summary: text(`summary ${index}`) });
+          created = event({ _tag: 'threadMerge', mode, summary: text(`summary ${index}`) }, assistant, merged);
         } else if (roll < 0.95 && compactFrom && compactTo) {
           created = event({
             _tag: 'compact',
@@ -458,14 +483,20 @@ describe('Reducer', () => {
         } else if (roll < 0.97) {
           const head = events.at(-1);
           created = event(
-            { _tag: 'turnBegin', model, from: head ? { thread, event: head.id } : undefined },
+            {
+              _tag: 'turnBegin',
+              model,
+              from: head
+                ? { ...(thread !== undefined ? { thread: Trajectory.ThreadId.make(thread) } : {}), event: head.id }
+                : undefined,
+            },
             assistant,
             thread,
           );
           threads.push(created.id);
           turns.push(created.id);
         } else if (ending) {
-          created = event({ _tag: 'turnEnd', begin: ending, finishReason: 'stop' }, assistant);
+          created = event({ _tag: 'turnEnd', finishReason: 'stop' }, assistant, ending);
         } else {
           created = event({ _tag: 'alarmSet', wakeAt: index });
         }
@@ -495,7 +526,7 @@ describe('Reducer', () => {
         for (const next of sequence(seed, 60)) {
           const after = Reducer.prompt.step(state, next);
           if (next.payload._tag !== 'compact') {
-            for (const id of Object.keys(state.threads)) {
+            for (const id of Object.keys(state.threads).map((key) => Trajectory.ThreadId.make(key))) {
               if (after.threads[id]) {
                 const sent = Reducer.promptFor(state, id);
                 expect(Reducer.promptFor(after, id).slice(0, sent.length), `seed ${seed}`).to.deep.eq(sent);

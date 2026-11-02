@@ -38,14 +38,15 @@ mode `light`, its turns are ordinary turns whose parent is the thread, and a `th
 ```mdl
 type ThreadOpen
   desc: |
-    Opens a thread whose id is this event's id. A light thread forks main at `from.event` and starts with a
-    snapshot of each thread in `siblings`: its entries up to `from.event`, rendered as one transcript entry.
-    The event's `sender` is the thread's owner (role `assistant`, plus `subject`/`name` for the agent).
+    Opens a thread: the base of a new branch of the feed, whose id is the thread's id, and every event written in
+    the thread continues that branch [D-32]. A light thread forks main at `from.event` and starts with a snapshot of
+    each thread in `siblings`: its entries up to `from.event`, rendered as one transcript entry. The event's
+    `sender` is the thread's owner (role `assistant`, plus `subject`/`name` for the agent).
   fields:
     mode: fork | fresh | light
     from?: ThreadOrigin          # where the thread branches from; required for `light`
     purpose?: string             # short title, shown in the thread header and the separator
-    siblings?: EventId[]         # light only: the threads still running when it opened
+    siblings?: ThreadId[]        # light only: the threads still running when it opened
 ```
 
 ```mdl
@@ -54,7 +55,7 @@ type ThreadWait
     A turn waits for another thread to end before it continues; written in the waiting turn's thread. Display and
     recovery only: the wait itself is the `thread_wait` tool call.
   fields:
-    on: EventId                  # the thread waited for
+    on: ThreadId                 # the thread waited for
 ```
 
 ```mdl
@@ -752,4 +753,23 @@ decision D-30: A subagent's lane is in the background from the start, and it nev
   affects: [F-8.4, ThreadLane]
   why: The reader asked the delegating agent, not the subagent, so the subagent's work belongs in a card; its owner is
     `subagent`, which keeps [D-20]'s same-owner rule from moving the delegating lane.
+```
+
+```mdl
+decision D-31: A thread is a branch of the conversation's feed, and its id is the branch id in place of a thread id on each event. Every agent turn runs on a branch of its own, so an agent never writes on a branch another device owns.
+  date: 2026-11-02
+  by: user:dmaretskyi
+  affects: [ThreadOpen, ThreadWait]
+```
+
+```mdl
+decision D-32: A thread's opener (`turnBegin`, `threadOpen`) is the base of its branch, forked at the last event of the parent thread, and the events that end a thread (`turnEnd`, `threadMerge`, `threadClose`) are written on the branch they end, so they name no thread. `from.thread` still names the parent and `from.event` what the thread saw, which may be on another branch; the fork point is only where the branch attaches. A direct prompt goes on main before its turn forks, so the turn takes it as it takes a queued one. Fills in [D-31].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [ThreadOpen, ThreadWait]
+  why: The writer of an end owns the branch it ends, so the end never lands on the reader's main branch; `from.event` keeps the visibility rule of the reducers, while the fork point must lie on the parent's own branch for a walk of the thread to reach its ancestors.
+  rejected:
+    - The fork point as what the thread saw — an event merged from a sibling branch after the parent's last event would drop out of a turn's view.
+    - Keep a thread id on each event beside the branch — two records of one fact that can disagree.
 ```

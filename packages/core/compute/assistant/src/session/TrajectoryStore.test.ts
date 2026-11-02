@@ -4,6 +4,7 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 
 import * as Reducer from '@dxos/compute/Reducer';
 import * as Trajectory from '@dxos/compute/Trajectory';
@@ -111,28 +112,22 @@ describe('TrajectoryStore', () => {
         payload: { _tag: 'message', blocks: [{ _tag: 'text', text: 'new question' }] },
         sender: { role: 'user' },
       });
-      const turn = Trajectory.make({
-        payload: { _tag: 'turnBegin', model: DXN.make('com.anthropic.model.claude-sonnet-5.default') },
-        sender: { role: 'assistant' },
+      yield* TrajectoryStore.append(feed, [question]);
+      const turn = yield* TrajectoryStore.beginTurn(feed, {
+        model: DXN.make('com.anthropic.model.claude-sonnet-5.default'),
       });
-      yield* TrajectoryStore.append(feed, [
-        question,
-        turn,
-        Trajectory.make({
-          payload: { _tag: 'promptConsume', message: question.id },
-          sender: { role: 'assistant' },
-          thread: turn.id,
+      yield* TrajectoryStore.append(
+        feed,
+        TrajectoryStore.promptEvents(Message.make({ id: question.id, sender: 'user', blocks: [] }), turn, {
+          message: question.id,
         }),
-        Trajectory.make({
-          payload: { _tag: 'message', blocks: [{ _tag: 'text', text: 'new answer' }] },
-          sender: { role: 'assistant' },
-          thread: turn.id,
-        }),
-        Trajectory.make({
-          payload: { _tag: 'turnEnd', begin: turn.id, finishReason: 'stop' },
-          sender: { role: 'assistant' },
-        }),
-      ]);
+      );
+      yield* TrajectoryStore.appendMessages(
+        feed,
+        [Message.make({ sender: 'assistant', blocks: [{ _tag: 'text', text: 'new answer' }] })],
+        { thread: turn },
+      );
+      yield* TrajectoryStore.endTurn(feed, turn, Exit.void);
 
       expect(texts(yield* TrajectoryStore.history(feed))).toEqual([
         'before',

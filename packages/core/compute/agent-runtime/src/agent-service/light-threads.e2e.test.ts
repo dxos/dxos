@@ -19,7 +19,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Reducer from '@dxos/compute/Reducer';
 import * as Skill from '@dxos/compute/Skill';
-import type * as Trajectory from '@dxos/compute/Trajectory';
+import * as Trajectory from '@dxos/compute/Trajectory';
 import { type Feed } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';
@@ -117,10 +117,14 @@ const report = (feed: Feed.Feed, title: string, prompts: readonly string[], star
     const endOf = (lane: Reducer.Lane) =>
       events.find(
         (event) =>
-          (event.payload._tag === 'threadMerge' && event.payload.thread === lane.id) ||
-          (event.payload._tag === 'turnEnd' && event.payload.begin === lane.id),
+          (event.payload._tag === 'threadMerge' || event.payload._tag === 'turnEnd') &&
+          Trajectory.threadOf(event) === lane.id,
       )?.created;
     const waits = events.filter((event) => event.payload._tag === 'threadWait');
+    const laneOf = (event: Trajectory.Event) => {
+      const thread = Trajectory.threadOf(event);
+      return thread === undefined ? undefined : view.laneOf[thread];
+    };
     const history = yield* TrajectoryStore.history(feed);
     const lines = [
       `## ${title}`,
@@ -137,9 +141,9 @@ const report = (feed: Feed.Feed, title: string, prompts: readonly string[], star
         '',
         `id \`${lane.id}\`, status **${lane.status}**, opened ${at(start, lane.created)}, ended ${at(start, endOf(lane))}` +
           (lane.overlapped ? ', overlapped' : '') +
-          (waits.some((wait) => view.laneOf[wait.thread ?? ''] === lane.id)
+          (waits.some((wait) => laneOf(wait) === lane.id)
             ? `, waited on ${waits
-                .filter((wait) => view.laneOf[wait.thread ?? ''] === lane.id)
+                .filter((wait) => laneOf(wait) === lane.id)
                 .map((wait) => (wait.payload._tag === 'threadWait' ? `\`${wait.payload.on}\`` : ''))
                 .join(', ')}`
             : ''),

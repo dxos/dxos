@@ -14,8 +14,8 @@ Nothing in the log is ever edited; every view of the conversation is derived fro
 
 ## Several writers on one feed
 
-Reducers fold the feed in **local order**: the order this replica stored events in, read with `Feed.walk` and resumed
-from `Feed.getLocalCursor`. Unlike the feed position EDGE assigns, local order never changes under a
+Reducers fold the feed in **local order**: the order this replica stored events in, read with a walk of every branch
+(`Feed.walk` with `branch: 'all'`) and resumed from `Feed.getLocalCursor`. Unlike the feed position EDGE assigns, local order never changes under a
 reader, so a checkpoint stays valid while sync places other writers' events. An event that syncs in later is folded
 after everything already stored. Three rules follow:
 
@@ -89,21 +89,23 @@ The samples are built and asserted, output for output, in [`src/trajectory/sampl
 
 ### 1. A chat turn with a tool call and a prompt typed mid-turn
 
-Each turn is a thread: `turnBegin` opens it, records in `from` the parent thread and the last event the turn could see,
-and every event the turn produces carries `thread: <turnBegin id>`. `turnEnd` merges the turn into its parent as one
-block, so turns from two writers never interleave.
+Each turn is a thread, and a thread is a branch of the feed: `turnBegin` is the base of the turn's branch, forked from
+its parent thread, and records in `from` the parent and the last event the turn could see. Every event the turn
+produces continues that branch; the `thread` column names it by its `turnBegin`. `turnEnd`, the branch's last event,
+merges the turn into its parent as one block, so turns from two writers never interleave. An agent writes only on its
+own branches, never on main.
 
 | #   | sender     | thread | payload                                                    |
 | --- | ---------- | ------ | ---------------------------------------------------------- |
 | 1   | user alice |        | `message` "What is the weather in Oslo?"                   |
-| 2   | assistant  |        | `turnBegin { model, from: { event: #1 } }`                 |
+| 2   | assistant  | #2    | `turnBegin { model, from: { event: #1 } }`                 |
 | 3   | assistant  | #2     | `promptConsume { message: #1 }`                            |
 | 4   | assistant  | #2     | `message` toolCall `weather({"city":"Oslo"})`              |
 | 5   | user alice |        | `message` "And in Bergen?" (typed mid-turn)                |
 | 6   | tool       | #2     | `message` toolResult "12°C, rain"                          |
 | 7   | assistant  | #2     | `message` "Oslo is 12°C with rain."                        |
-| 8   | assistant  |        | `turnEnd { begin: #2, finishReason: 'stop' }`              |
-| 9   | assistant  |        | `turnBegin { model, from: { event: #8 } }` (the next turn) |
+| 8   | assistant  | #2     | `turnEnd { finishReason: 'stop' }`                         |
+| 9   | assistant  | #9    | `turnBegin { model, from: { event: #8 } }` (the next turn) |
 | 10  | assistant  | #9     | `promptConsume { message: #5 }`                            |
 
 While turn #2 runs, the main prompt is empty and `Reducer.promptFor(state, #2)` is what the turn sends. #8 merges it into
@@ -131,11 +133,11 @@ lists #1, #4, #6, #7 in thread #2, then #5 in thread #9.
 | 1   | user alice   |        | `message` "Watch CI and tell me what fails."                              |
 | 2   | assistant    |        | `promptConsume { message: #1 }`                                           |
 | 3   | assistant    |        | `alarmSet { wakeAt, message: 'check CI' }`                                |
-| 4   | assistant    |        | `threadOpen { mode: 'fresh', purpose: 'triage failures' }`                |
+| 4   | assistant    | #4    | `threadOpen { mode: 'fresh', purpose: 'triage failures' }`                |
 | 5   | assistant    | #4     | `message` "Reading the failing logs."                                     |
 | 6   | event alarm  |        | `alarmFire { alarm: #3 }`                                                 |
 | 7   | event alarm  |        | `message` "CI finished: 2 failures."                                      |
-| 8   | assistant    |        | `threadMerge { thread: #4, mode: 'summary', summary }`                    |
+| 8   | assistant    | #4     | `threadMerge { mode: 'summary', summary }`                                |
 | 9   | assistant    |        | `compact { from: #1, to: #7, summary }`                                   |
 
 `Reducer.prompt` after #8. The subagent's own work (#5) stays in its thread, and only its summary reaches the main
@@ -164,14 +166,14 @@ A laptop and an EDGE agent share the feed, and both see #1 as their head.
 | #   | sender           | thread | payload                                                           |
 | --- | ---------------- | ------ | ----------------------------------------------------------------- |
 | 1   | user alice       |        | `message` "Summarise the design doc."                             |
-| 2   | assistant laptop |        | `turnBegin { model, from: { event: #1 } }`                        |
-| 3   | assistant edge   |        | `turnBegin { model, from: { event: #1 } }`                        |
+| 2   | assistant laptop | #2    | `turnBegin { model, from: { event: #1 } }`                        |
+| 3   | assistant edge   | #3    | `turnBegin { model, from: { event: #1 } }`                        |
 | 4   | assistant laptop | #2     | `promptConsume { message: #1 }` (folded first, so it wins)        |
 | 5   | assistant edge   | #3     | `promptConsume { message: #1 }` (rejected)                        |
-| 6   | assistant edge   |        | `turnEnd { begin: #3, finishReason: 'other', error }`             |
+| 6   | assistant edge   | #3     | `turnEnd { finishReason: 'other', error }`                        |
 | 7   | event alarm      |        | `message` "CI is green." (lands on main while the laptop runs)    |
 | 8   | assistant laptop | #2     | `message` "It replaces messages with one event log."              |
-| 9   | assistant laptop |        | `turnEnd { begin: #2, finishReason: 'stop' }`                     |
+| 9   | assistant laptop | #2     | `turnEnd { finishReason: 'stop' }`                                |
 
 The edge harness sees #5 in `Reducer.session`'s `rejected` and ends its turn without calling the model. The laptop's
 turn sent only `user: Summarise the design doc.`, because #7 came after its `from.event`. #9 merges the turn after

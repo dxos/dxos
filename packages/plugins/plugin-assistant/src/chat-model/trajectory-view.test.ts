@@ -14,7 +14,7 @@ import { Message } from '@dxos/types';
 
 import { type ViewBase, makeCachedTrajectoryView, makeTrajectoryView } from './trajectory-view.ts';
 
-const say = (text: string, role: Trajectory.Role = 'assistant', thread?: Trajectory.EventId) =>
+const say = (text: string, role: Trajectory.Role = 'assistant', thread?: Trajectory.ThreadId) =>
   Trajectory.make({ payload: { _tag: 'message', blocks: [{ _tag: 'text', text }] }, sender: { role }, thread });
 
 const texts = (messages: readonly Message.Message[]) => messages.map((message) => Message.extractText(message));

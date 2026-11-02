@@ -212,6 +212,8 @@ export const runTurn = (
       });
 
     const produced: Message.Message[] = [];
+    // The turn's branch: a picked-up turn's is found by its key, a new turn's comes from opening it below.
+    let thread = pending ? yield* TrajectoryStore.turnThread(feed, turnId) : undefined;
     const append = (messages: Message.Message[]) =>
       Effect.gen(function* () {
         if (messages.length === 0) {
@@ -227,7 +229,7 @@ export const runTurn = (
           }
         }
         produced.push(...messages);
-        yield* TrajectoryStore.appendMessages(feed, messages, { thread: turnId });
+        yield* TrajectoryStore.appendMessages(feed, messages, { thread });
       });
 
     /** Adds what the agent produced, past what an earlier client already added for this turn. */
@@ -241,12 +243,13 @@ export const runTurn = (
         }
       });
 
-    // A picked-up turn is already open in the feed, under the same id; a new one opens and takes its prompt in.
-    if (!pending) {
-      yield* TrajectoryStore.beginTurn(feed, { id: turnId, model: request.model, thread: request.thread });
+    // A picked-up turn is already open in the feed, under the same key; a new one opens and takes its prompt in.
+    if (thread === undefined) {
       const prompt = Message.make({ sender: 'user', blocks: promptBlocks(request.prompt) });
       produced.push(prompt);
-      yield* TrajectoryStore.append(feed, TrajectoryStore.promptEvents(prompt, turnId, request.source));
+      const source = yield* TrajectoryStore.postPrompt(feed, prompt, request.source);
+      thread = yield* TrajectoryStore.beginTurn(feed, { id: turnId, model: request.model, thread: request.thread });
+      yield* TrajectoryStore.append(feed, TrajectoryStore.promptEvents(prompt, thread, source));
     }
     // Recorded before the prompt goes, so a client that closes right after still leaves it behind; the
     // prompt is sent again on pick-up, since EDGE drops a repeat of the same key.
@@ -345,8 +348,12 @@ export const runTurn = (
       Effect.gen(function* () {
         const turnId = pendingTurnOf(chat, options.definition.id)?.turnId;
         const feed = turnId !== undefined ? yield* Database.load(chat.feed).pipe(Effect.option) : Option.none();
-        if (turnId !== undefined && Option.isSome(feed)) {
-          yield* TrajectoryStore.endTurn(feed.value, turnId, exit);
+        const thread =
+          turnId !== undefined && Option.isSome(feed)
+            ? yield* TrajectoryStore.turnThread(feed.value, turnId)
+            : undefined;
+        if (thread !== undefined && Option.isSome(feed)) {
+          yield* TrajectoryStore.endTurn(feed.value, thread, exit);
         }
       }),
     ),

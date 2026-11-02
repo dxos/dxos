@@ -80,7 +80,7 @@ export type RunProps<R = never> = {
    * The light thread the turn runs in (`TrajectoryStore.openLightThread`); absent for main. Its history is the
    * thread's prompt, and it gets the tools for waiting on the threads beside it.
    */
-  thread?: Trajectory.EventId;
+  thread?: Trajectory.ThreadId;
 
   /**
    * Whether the turn may delegate to subagents (`thread_delegate`), which run in background threads; set by a host
@@ -205,8 +205,8 @@ export class Session extends Resource {
     });
   }
 
-  /** The latest open turn's `turnBegin` id, which its events carry as their thread; several run at once in light threads. */
-  #turn: Trajectory.EventId | undefined;
+  /** The latest open turn's thread (its branch), which its events continue; several run at once in light threads. */
+  #turn: Trajectory.ThreadId | undefined;
 
   /**
    * Opens a turn, recording first a rewind the UI left on the feed.
@@ -214,7 +214,7 @@ export class Session extends Resource {
   #beginTurn(
     model: RunProps['model'],
     thread: RunProps['thread'],
-  ): Effect.Effect<Trajectory.EventId, never, Database.Service> {
+  ): Effect.Effect<Trajectory.ThreadId, never, Database.Service> {
     return Effect.gen({ self: this }, function* () {
       yield* this.applyPendingRewind();
       const begin = yield* TrajectoryStore.beginTurn(this._feed, { model, thread });
@@ -230,7 +230,7 @@ export class Session extends Resource {
    */
   #outputEvents(
     message: Message.Message,
-    turn: Trajectory.EventId,
+    turn: Trajectory.ThreadId,
     prompt: { source?: TurnSource; resumed: boolean; written: boolean },
   ) {
     if (message.sender.role !== 'user') {
@@ -250,7 +250,9 @@ export class Session extends Resource {
     params: RunProps<R>,
   ): Effect.Effect<Message.Message[], AiRequest.RunError, AiRequest.RunRequirements | R> {
     // This request's own turn: turns in light threads run concurrently on one session.
-    let begun: Trajectory.EventId | undefined;
+    let begun: Trajectory.ThreadId | undefined;
+    // What the turn answers once a direct prompt is on main (see `TrajectoryStore.postPrompt`).
+    let source = params.source;
     return Effect.gen({ self: this }, function* () {
       yield* AiTelemetry.annotateKind(AiTelemetry.KIND.turn);
       const inputTruncated = yield* AiTelemetry.annotateContent(AiTelemetry.ATTRIBUTES.input, () =>
@@ -261,6 +263,16 @@ export class Session extends Resource {
       // Before the history is read, so a redelivered prompt's interrupted turn is part of it.
       const resumed = yield* TrajectoryStore.resumeInterrupted(this._feed, params.source);
       const history = yield* TrajectoryStore.history(this._feed, params.thread);
+      // A direct prompt goes on main before the turn forks, so the turn takes it as it takes a queued one.
+      source = yield* TrajectoryStore.postPrompt(
+        this._feed,
+        Message.make({
+          sender: { ...params.sender, role: 'user' },
+          blocks: typeof params.prompt === 'string' ? [{ _tag: 'text', text: params.prompt }] : [...params.prompt],
+        }),
+        params.source,
+        { resumed },
+      );
       const turn = yield* this.#beginTurn(params.model, params.thread);
       begun = turn;
       const turnToolkit =
@@ -272,7 +284,7 @@ export class Session extends Resource {
                 delegate: params.delegation,
               }),
             );
-      const prompt = { source: params.source, resumed, written: false };
+      const prompt = { source, resumed, written: false };
       markWork('session.history-loaded');
       const skills = this.context.getSkills();
       const objects = this.context.getObjects();
@@ -332,7 +344,7 @@ export class Session extends Resource {
         instructions: this.#instructions,
         prompt: params.prompt,
         sender: params.sender,
-        promptId: params.source && 'message' in params.source ? params.source.message : undefined,
+        promptId: source && 'message' in source ? source.message : undefined,
         system: params.system,
         systemPrompt: yield* formatSystem(skills, objects),
       });
@@ -398,9 +410,7 @@ export class Session extends Resource {
         if (this.#turn === turn) {
           this.#turn = undefined;
         }
-        return turn !== undefined
-          ? TrajectoryStore.endTurn(this._feed, turn, exit, { source: params.source })
-          : Effect.void;
+        return turn !== undefined ? TrajectoryStore.endTurn(this._feed, turn, exit, { source }) : Effect.void;
       }),
       Effect.provideService(Database.Service, Context.get(this._runtime, Database.Service)),
       Effect.provide(
@@ -506,7 +516,11 @@ export const connectMcpServers = (
 };
 
 /** A message of the turn as the event recording it, in the turn's thread when given. */
-const toEvent = (message: Message.Message, thread?: Trajectory.EventId, sender?: Trajectory.Sender): Trajectory.Event =>
+const toEvent = (
+  message: Message.Message,
+  thread?: Trajectory.ThreadId,
+  sender?: Trajectory.Sender,
+): Trajectory.Event =>
   Trajectory.make({
     id: message.id,
     payload: {

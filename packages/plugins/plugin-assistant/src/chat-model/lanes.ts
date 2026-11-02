@@ -108,7 +108,7 @@ export const arrangeLanes = ({
   }
 
   const hues = new Map(overlapped.map((lane, index) => [lane.id, LANE_HUES[index % LANE_HUES.length]]));
-  const byId = new Map(overlapped.map((lane) => [lane.id, lane]));
+  const byId = new Map<string, Reducer.Lane>(overlapped.map((lane) => [lane.id, lane]));
 
   const body = messages.slice(0, messages.length - tail);
   const buckets = new Map<string, Message.Message[]>();

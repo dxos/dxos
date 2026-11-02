@@ -5,10 +5,11 @@
 import * as Tool from 'effect/ai/Tool';
 import * as Toolkit from 'effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { OpaqueToolkit } from '@dxos/ai';
-import type * as Trajectory from '@dxos/compute/Trajectory';
+import * as Trajectory from '@dxos/compute/Trajectory';
 import { Database, type Feed } from '@dxos/echo';
 
 import * as TrajectoryStore from './TrajectoryStore.ts';
@@ -52,12 +53,17 @@ export type ThreadToolkitOptions = {
  */
 export const make = (
   feed: Feed.Feed,
-  turn: Trajectory.EventId,
+  turn: Trajectory.ThreadId,
   db: Database.Database,
   { delegate = false }: ThreadToolkitOptions = {},
 ): OpaqueToolkit.OpaqueToolkit => {
+  // The model names the thread by the id it was given; one that is not a thread id names no thread.
   const wait = ({ thread }: { thread: string }) =>
-    TrajectoryStore.waitForThread(feed, { turn, on: thread }).pipe(Effect.provideService(Database.Service, { db }));
+    Option.match(Schema.decodeUnknownOption(Trajectory.ThreadId)(thread), {
+      onNone: () => Effect.succeed(`There is no thread ${thread}.`),
+      onSome: (on) =>
+        TrajectoryStore.waitForThread(feed, { turn, on }).pipe(Effect.provideService(Database.Service, { db })),
+    });
   if (!delegate) {
     return OpaqueToolkit.make(WaitToolkit, WaitToolkit.toLayer({ [THREAD_WAIT]: wait }));
   }

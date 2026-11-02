@@ -5,6 +5,8 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
+import { Obj } from '@dxos/echo';
+
 import * as Reducer from './Reducer.ts';
 import * as Trajectory from './Trajectory.ts';
 
@@ -13,13 +15,30 @@ const assistant: Trajectory.Sender = { role: 'assistant', name: 'composer' };
 
 const text = (value: string) => [{ _tag: 'text' as const, text: value }];
 
+/**
+ * An event written in `thread` (absent: main). An opener starts a thread of its own, as `Feed.fork` makes it the base
+ * of a new branch; the branch takes the opener's id so a test can name the thread by its opener.
+ */
 const event = (
   payload: Trajectory.Payload,
   sender: Trajectory.Sender = assistant,
-  thread?: Trajectory.EventId,
-): Trajectory.Event => Trajectory.make({ payload, sender, thread });
+  thread?: string,
+): Trajectory.Event => {
+  if (payload._tag === 'turnBegin' || payload._tag === 'threadOpen') {
+    const id = Obj.ID.random();
+    return Trajectory.make({ id, payload, sender, thread: Trajectory.ThreadId.make(id) });
+  }
+  return Trajectory.make({
+    payload,
+    sender,
+    thread: thread === undefined ? undefined : Trajectory.ThreadId.make(thread),
+  });
+};
 
-const message = (value: string, sender: Trajectory.Sender = assistant, thread?: Trajectory.EventId) =>
+/** The thread an opener started: its branch, which takes the opener's id here. */
+const threadId = (opener: Trajectory.Event): Trajectory.ThreadId => Trajectory.ThreadId.make(opener.id);
+
+const message = (value: string, sender: Trajectory.Sender = assistant, thread?: string) =>
   event({ _tag: 'message', blocks: text(value) }, sender, thread);
 
 const texts = (entries: readonly Reducer.PromptEntry[]) =>
@@ -46,13 +65,13 @@ const parallel = () => {
     mode: 'light',
     from: { event: promptB.id },
     purpose: 'What is 17 times 23?',
-    siblings: [turnA.id],
+    siblings: [threadId(turnA)],
   });
-  const turnB = event({ _tag: 'turnBegin', from: { thread: light.id, event: light.id } });
+  const turnB = event({ _tag: 'turnBegin', from: { thread: Trajectory.ThreadId.make(light.id), event: light.id } });
   const consumeB = event({ _tag: 'promptConsume', message: promptB.id }, assistant, turnB.id);
   const answerB = message('391.', assistant, turnB.id);
-  const endB = event({ _tag: 'turnEnd', begin: turnB.id, finishReason: 'stop' });
-  const mergeB = event({ _tag: 'threadMerge', thread: light.id, mode: 'raw' });
+  const endB = event({ _tag: 'turnEnd', finishReason: 'stop' }, assistant, turnB.id);
+  const mergeB = event({ _tag: 'threadMerge', mode: 'raw' }, assistant, light.id);
   const resultA = event(
     {
       _tag: 'message',
@@ -62,7 +81,7 @@ const parallel = () => {
     turnA.id,
   );
   const poemA = message('The sea is wide.', assistant, turnA.id);
-  const endA = event({ _tag: 'turnEnd', begin: turnA.id, finishReason: 'stop' });
+  const endA = event({ _tag: 'turnEnd', finishReason: 'stop' }, assistant, turnA.id);
   return {
     promptA,
     turnA,
@@ -77,7 +96,7 @@ describe('light threads', () => {
   test('a light thread starts with main, a snapshot of its siblings, the separator and its prompt', ({ expect }) => {
     const { head, light, turnB, turnA } = parallel();
     const { state } = Reducer.run(Reducer.prompt, head);
-    const prompt = Reducer.promptFor(state, turnB.id);
+    const prompt = Reducer.promptFor(state, threadId(turnB));
     expect(prompt.map((entry) => entry.role)).to.deep.eq(['event', 'user']);
     const [snapshot, request] = texts(prompt);
     expect(snapshot).to.include(`<thread id="${turnA.id}"`);
@@ -92,7 +111,7 @@ describe('light threads', () => {
   test('the running turn does not see the light thread', ({ expect }) => {
     const { head, turnA } = parallel();
     const { state } = Reducer.run(Reducer.prompt, head);
-    expect(texts(Reducer.promptFor(state, turnA.id))).to.deep.eq(['Write a poem about the sea.', 'toolCall']);
+    expect(texts(Reducer.promptFor(state, threadId(turnA)))).to.deep.eq(['Write a poem about the sea.', 'toolCall']);
   });
 
   test('merging drops the snapshot and keeps the closure in merge order', ({ expect }) => {
@@ -115,14 +134,19 @@ describe('light threads', () => {
     const prompt = message('hello', user);
     const light = event({ _tag: 'threadOpen', mode: 'light', from: { event: prompt.id }, siblings: [] });
     const { state } = Reducer.run(Reducer.prompt, [prompt, light]);
-    expect(Reducer.promptFor(state, light.id)).to.deep.eq([]);
+    expect(Reducer.promptFor(state, threadId(light))).to.deep.eq([]);
   });
 
   test('a long sibling keeps its request and its latest entries', ({ expect }) => {
     const prompt = message('count', user);
     const turn = event({ _tag: 'turnBegin', from: { event: prompt.id } });
     const steps = Array.from({ length: 30 }, (_, index) => message(`step ${index}`, assistant, turn.id));
-    const light = event({ _tag: 'threadOpen', mode: 'light', from: { event: steps[29].id }, siblings: [turn.id] });
+    const light = event({
+      _tag: 'threadOpen',
+      mode: 'light',
+      from: { event: steps[29].id },
+      siblings: [threadId(turn)],
+    });
     const { state } = Reducer.run(Reducer.prompt, [
       prompt,
       turn,
@@ -130,7 +154,7 @@ describe('light threads', () => {
       ...steps,
       light,
     ]);
-    const [snapshot] = texts(Reducer.promptFor(state, light.id));
+    const [snapshot] = texts(Reducer.promptFor(state, threadId(light)));
     expect(snapshot).to.include('alice: count');
     expect(snapshot).to.include('earlier entries left out');
     expect(snapshot).to.include('step 29');
@@ -139,7 +163,7 @@ describe('light threads', () => {
 
   test('the thread view groups items into lanes and marks overlap, waits and ends', ({ expect }) => {
     const { head, tail, turnA, light, turnB } = parallel();
-    const wait = event({ _tag: 'threadWait', on: turnA.id }, assistant, turnB.id);
+    const wait = event({ _tag: 'threadWait', on: threadId(turnA) }, assistant, turnB.id);
     const running = Reducer.run(Reducer.thread, [...head, wait]).state;
     expect(
       running.lanes.map(({ id, kind, status, overlapped, backgrounded }) => ({
@@ -170,7 +194,7 @@ describe('light threads', () => {
     const prompt = message('plan it', user);
     const turn = event({ _tag: 'turnBegin', from: { event: prompt.id } });
     const other = event(
-      { _tag: 'threadOpen', mode: 'light', from: { event: turn.id }, siblings: [turn.id] },
+      { _tag: 'threadOpen', mode: 'light', from: { event: turn.id }, siblings: [threadId(turn)] },
       { role: 'assistant', name: 'claude' },
     );
     const { state } = Reducer.run(Reducer.thread, [prompt, turn, other]);
@@ -188,7 +212,7 @@ describe('light threads', () => {
       turn,
       event({ _tag: 'promptConsume', message: prompt.id }, assistant, turn.id),
       message('hello', assistant, turn.id),
-      event({ _tag: 'turnEnd', begin: turn.id, finishReason: 'stop' }),
+      event({ _tag: 'turnEnd', finishReason: 'stop' }, assistant, turn.id),
     ]);
     expect(state.lanes).to.have.length(1);
     expect(state.lanes[0].overlapped).to.eq(undefined);
@@ -204,8 +228,8 @@ describe('light threads', () => {
     const decodedThread = Schema.decodeUnknownSync(Reducer.thread.schema)(
       Schema.encodeSync(Reducer.thread.schema)(thread),
     );
-    expect(texts(Reducer.promptFor(decodedPrompt, head[6].id))).to.deep.eq(
-      texts(Reducer.promptFor(prompt, head[6].id)),
+    expect(texts(Reducer.promptFor(decodedPrompt, threadId(head[6])))).to.deep.eq(
+      texts(Reducer.promptFor(prompt, threadId(head[6]))),
     );
     expect(decodedThread.lanes).to.deep.eq(thread.lanes);
   });
@@ -225,17 +249,20 @@ const delegation = () => {
     { role: 'assistant', name: 'subagent' },
   );
   const task = message('Research effect.', { role: 'user', name: 'task' }, subagent.id);
-  const turnS = event({ _tag: 'turnBegin', from: { thread: subagent.id, event: task.id } });
+  const turnS = event({ _tag: 'turnBegin', from: { thread: Trajectory.ThreadId.make(subagent.id), event: task.id } });
   const consumeS = event({ _tag: 'promptConsume', message: task.id }, assistant, turnS.id);
   const workS = message('Reading the docs.', assistant, turnS.id);
   const answerS = message('Effect is a typed effect system.', assistant, turnS.id);
-  const endS = event({ _tag: 'turnEnd', begin: turnS.id, finishReason: 'stop' });
-  const merge = event({
-    _tag: 'threadMerge',
-    thread: subagent.id,
-    mode: 'summary',
-    summary: text('Subagent "Research effect" finished: Effect is a typed effect system.'),
-  });
+  const endS = event({ _tag: 'turnEnd', finishReason: 'stop' }, assistant, turnS.id);
+  const merge = event(
+    {
+      _tag: 'threadMerge',
+      mode: 'summary',
+      summary: text('Subagent "Research effect" finished: Effect is a typed effect system.'),
+    },
+    assistant,
+    subagent.id,
+  );
   return {
     turnA,
     turnS,
@@ -249,11 +276,11 @@ describe('delegated subagents', () => {
   test('a subagent sees only its task, and only its summary joins main', ({ expect }) => {
     const { running, rest, turnS, subagent } = delegation();
     const during = Reducer.run(Reducer.prompt, running).state;
-    expect(texts(Reducer.promptFor(during, turnS.id))).to.deep.eq(['Research effect.', 'Reading the docs.']);
+    expect(texts(Reducer.promptFor(during, threadId(turnS)))).to.deep.eq(['Research effect.', 'Reading the docs.']);
 
     const after = Reducer.run(Reducer.prompt, rest, Reducer.run(Reducer.prompt, running)).state;
     expect(texts(after.entries)).to.deep.eq(['Subagent "Research effect" finished: Effect is a typed effect system.']);
-    expect(after.threads[subagent.id]).to.eq(undefined);
+    expect(after.threads[threadId(subagent)]).to.eq(undefined);
   });
 
   test('a subagent is a lane of its own that starts in the background', ({ expect }) => {

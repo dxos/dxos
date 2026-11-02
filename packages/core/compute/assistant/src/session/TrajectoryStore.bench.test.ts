@@ -33,24 +33,17 @@ const REPEATS = 5;
 const SqlLayer = Layer.provideMerge(SqlService.layerGuarded, layerMemory);
 const TestLayer = Layer.merge(TestDatabaseLayer({ types: [Feed.Feed, ...TrajectoryStore.types] }), SqlLayer);
 
-/** One turn as a turn producer writes it, in a single append. */
-const turnEvents = (index: number): Trajectory.Event[] => {
-  const begin = Trajectory.make({ payload: { _tag: 'turnBegin' }, sender: { role: 'assistant' } });
-  const prompt = Message.make({ sender: 'user', blocks: [{ _tag: 'text', text: `question ${index}` }] });
-  return [
-    begin,
-    ...TrajectoryStore.promptEvents(prompt, begin.id),
-    Trajectory.make({
-      payload: { _tag: 'message', blocks: [{ _tag: 'text', text: `answer ${index} `.repeat(40) }] },
-      sender: { role: 'assistant' },
-      thread: begin.id,
-    }),
-    Trajectory.make({
-      payload: { _tag: 'turnEnd', begin: begin.id, finishReason: 'stop' },
-      sender: { role: 'assistant' },
-    }),
-  ];
-};
+/** The events one turn writes: the prompt on main, then `turnBegin`, its consume, the answer and `turnEnd`. */
+const EVENTS_PER_TURN = 5;
+
+/** One turn as a turn producer writes it: the prompt on main, then the turn on a branch of its own. */
+const writeTurn = (feed: Feed.Feed, index: number) =>
+  TrajectoryStore.turn(
+    feed,
+    { prompt: Message.make({ sender: 'user', blocks: [{ _tag: 'text', text: `question ${index}` }] }) },
+    (append) =>
+      append([Message.make({ sender: 'assistant', blocks: [{ _tag: 'text', text: `answer ${index} `.repeat(40) }] })]),
+  );
 
 /** One turn as a chat written before trajectory events holds it: the question and the answer. */
 const legacyTurn = (index: number): Message.Message[] => [
@@ -112,7 +105,7 @@ describe.runIf(process.env.DX_BENCH === '1')('TrajectoryStore load cost', () => 
           const [, write] = yield* timed(
             Effect.forEach(
               Array.from({ length: turns }, (_, index) => index),
-              (index) => TrajectoryStore.append(feed, turnEvents(index)),
+              (index) => writeTurn(feed, index),
             ),
           );
           yield* Database.flush();
@@ -129,7 +122,7 @@ describe.runIf(process.env.DX_BENCH === '1')('TrajectoryStore load cost', () => 
           TrajectoryCache.forget(db);
           const [, coldTurn] = yield* timed(turnReads(feed));
           const warmTurn = yield* median(turnReads(feed));
-          yield* TrajectoryStore.append(feed, turnEvents(turns));
+          yield* writeTurn(feed, turns);
           const [, nextTurn] = yield* timed(turnReads(feed));
           TrajectoryCache.forget(db);
           const [, reopenTurn] = yield* timed(turnReads(feed));
@@ -160,7 +153,7 @@ describe.runIf(process.env.DX_BENCH === '1')('TrajectoryStore load cost', () => 
           };
           results.push(result);
           log.info('trajectory load cost', result);
-          expect(cold.count).toBe(events.length + turnEvents(0).length);
+          expect(cold.count).toBe(events.length + EVENTS_PER_TURN);
         }).pipe(Effect.provide(TestLayer)),
       30 * 60_000,
     );

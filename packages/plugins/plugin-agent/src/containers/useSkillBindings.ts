@@ -6,7 +6,7 @@ import { useMemo } from 'react';
 
 import type * as Chat from '@dxos/assistant/Chat';
 import * as Trajectory from '@dxos/compute/Trajectory';
-import { DXN, Filter, Obj, Query } from '@dxos/echo';
+import { DXN, Feed, Filter, Obj, Query, Scope } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 
 /**
@@ -34,12 +34,16 @@ export const selectPrimaryChat = (chats: readonly Chat.Chat[]): Chat.Chat | unde
 export const useBindingCount = (chat: Chat.Chat | undefined): number => {
   const [feedRef] = useObject(chat, 'feed');
   const feed = useResolveRef(feedRef);
+  // Every branch: the agent's turns are written on branches of their own.
+  const feedUri = feed && Feed.getFeedUri(feed);
   const query = useMemo(
     () =>
-      feed
-        ? Query.select(Filter.or(Filter.type(LEGACY_BINDING_TYPE), Filter.type(Trajectory.Event))).from(feed)
+      feedUri
+        ? Query.select(Filter.or(Filter.type(LEGACY_BINDING_TYPE), Filter.type(Trajectory.Event))).from(
+            Scope.feed(feedUri.toString(), { walk: { branch: 'all' } }),
+          )
         : Query.select(Filter.nothing()),
-    [feed],
+    [feedUri?.toString()],
   );
   return useQuery(chat ? Obj.getDatabase(chat) : undefined, query).filter(isBindingEntry).length;
 };

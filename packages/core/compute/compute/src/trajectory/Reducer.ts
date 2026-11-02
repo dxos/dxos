@@ -69,7 +69,7 @@ export type BackgroundTool = { readonly toolCallId: string; readonly pid?: strin
 export type ThreadStatus = 'open' | 'merged' | Trajectory.ThreadStatus;
 
 export type ThreadInfo = {
-  readonly id: Trajectory.EventId;
+  readonly id: Trajectory.ThreadId;
   readonly mode: Trajectory.ThreadMode;
   readonly status: ThreadStatus;
 };
@@ -87,7 +87,7 @@ export type SessionState = {
   readonly threads: readonly ThreadInfo[];
   readonly model?: Trajectory.ModelChange['model'];
   /** `turnBegin`s of turns that have not ended; more than one when several writers run turns at once. */
-  readonly turns: readonly Trajectory.EventId[];
+  readonly turns: readonly Trajectory.ThreadId[];
   /**
    * `promptConsume`s and `promptCancel`s whose message was no longer queued, because another writer consumed or
    * cancelled it first; a harness claims a message by writing its consume and runs only if that consume is not listed
@@ -112,7 +112,16 @@ const bind = <T extends { uri: string }>(current: readonly T[], added: readonly 
 const unbind = <T extends { uri: string }>(current: readonly T[], removed: readonly T[]): readonly T[] =>
   current.filter((ref) => !removed.some((other) => other.uri === ref.uri));
 
-const setThreadStatus = (threads: readonly ThreadInfo[], id: Trajectory.EventId, status: ThreadStatus) =>
+const threadOf = Trajectory.threadOf;
+
+/** `ids` with the thread an opener opens; an opener not yet on a branch (unwritten) opens nothing. */
+const withThread = (ids: readonly Trajectory.ThreadId[], id: Trajectory.ThreadId | undefined) =>
+  id === undefined ? ids : [...ids, id];
+
+const withOpened = (state: SessionState, id: Trajectory.ThreadId | undefined, mode: Trajectory.ThreadMode) =>
+  id === undefined ? state : { ...state, threads: [...state.threads, { id, mode, status: 'open' as const }] };
+
+const setThreadStatus = (threads: readonly ThreadInfo[], id: Trajectory.ThreadId | undefined, status: ThreadStatus) =>
   threads.map((thread) => (thread.id === id ? { ...thread, status } : thread));
 
 const sessionFold: Reducer<SessionState> = {
@@ -144,9 +153,13 @@ const sessionFold: Reducer<SessionState> = {
           ? { ...state, queue: state.queue.filter((id) => id !== payload.message) }
           : { ...state, rejected: [...state.rejected, event.id] };
       case 'turnBegin':
-        return { ...state, turns: [...state.turns, event.id], model: payload.model ?? state.model };
+        return {
+          ...state,
+          turns: withThread(state.turns, threadOf(event)),
+          model: payload.model ?? state.model,
+        };
       case 'turnEnd':
-        return { ...state, turns: state.turns.filter((id) => id !== payload.begin) };
+        return { ...state, turns: state.turns.filter((id) => id !== threadOf(event)) };
       case 'modelChange':
         return { ...state, model: payload.model };
       case 'contextBind':
@@ -175,11 +188,11 @@ const sessionFold: Reducer<SessionState> = {
       case 'toolDeliver':
         return { ...state, background: state.background.filter((tool) => tool.toolCallId !== payload.toolCallId) };
       case 'threadOpen':
-        return { ...state, threads: [...state.threads, { id: event.id, mode: payload.mode, status: 'open' }] };
+        return withOpened(state, threadOf(event), payload.mode);
       case 'threadMerge':
-        return { ...state, threads: setThreadStatus(state.threads, payload.thread, 'merged') };
+        return { ...state, threads: setThreadStatus(state.threads, threadOf(event), 'merged') };
       case 'threadClose':
-        return { ...state, threads: setThreadStatus(state.threads, payload.thread, payload.status) };
+        return { ...state, threads: setThreadStatus(state.threads, threadOf(event), payload.status) };
       default:
         return state;
     }
@@ -199,9 +212,9 @@ export type ThreadItem = {
   readonly blocks: readonly ContentBlock.Any[];
   readonly created: string;
   /** Thread the message was written in; absent for the main thread. */
-  readonly thread?: Trajectory.EventId;
+  readonly thread?: Trajectory.ThreadId;
   /** The lane the message belongs to: the top-level thread or turn its thread nests in; absent outside any. */
-  readonly lane?: Trajectory.EventId;
+  readonly lane?: Trajectory.ThreadId;
   readonly status: ItemStatus;
 };
 
@@ -212,14 +225,14 @@ export type LaneStatus = 'running' | 'waiting' | 'done' | 'failed';
  * running at once are what the chat shows side by side.
  */
 export type Lane = {
-  readonly id: Trajectory.EventId;
+  readonly id: Trajectory.ThreadId;
   readonly kind: 'turn' | Trajectory.ThreadMode;
   readonly status: LaneStatus;
   readonly owner: Trajectory.Sender;
   readonly created: string;
   readonly purpose?: string;
   /** The lane this one is waiting for (`threadWait`). */
-  readonly waitingOn?: Trajectory.EventId;
+  readonly waitingOn?: Trajectory.ThreadId;
   /** Whether another lane was running at some point while this one was. */
   readonly overlapped?: boolean;
   /**
@@ -236,7 +249,7 @@ export type ThreadView = {
   /** In the order they opened. */
   readonly lanes: readonly Lane[];
   /** The lane of every thread and turn opened so far. */
-  readonly laneOf: Readonly<Record<Trajectory.EventId, Trajectory.EventId>>;
+  readonly laneOf: Readonly<Record<Trajectory.ThreadId, Trajectory.ThreadId>>;
 };
 
 /** `blocks` with the request the resolution answers settled; a request already settled keeps its first answer. */
@@ -250,11 +263,11 @@ const resolveRequest = (
       : block,
   );
 
-type MutableView = { items: ThreadItem[]; lanes: Lane[]; laneOf: Record<Trajectory.EventId, Trajectory.EventId> };
+type MutableView = { items: ThreadItem[]; lanes: Lane[]; laneOf: Record<Trajectory.ThreadId, Trajectory.ThreadId> };
 
 const isRunning = (lane: Lane) => lane.status === 'running' || lane.status === 'waiting';
 
-const updateLane = (view: MutableView, id: Trajectory.EventId | undefined, update: (lane: Lane) => Lane): boolean => {
+const updateLane = (view: MutableView, id: Trajectory.ThreadId | undefined, update: (lane: Lane) => Lane): boolean => {
   const index = id === undefined ? -1 : view.lanes.findIndex((lane) => lane.id === id);
   if (index === -1) {
     return false;
@@ -267,13 +280,17 @@ const updateLane = (view: MutableView, id: Trajectory.EventId | undefined, updat
 const openLane = (
   view: MutableView,
   event: Trajectory.Event,
-  parent: Trajectory.EventId | undefined,
+  parent: Trajectory.ThreadId | undefined,
   lane: Omit<Lane, 'id' | 'status' | 'owner' | 'created'>,
 ): boolean => {
+  const id = threadOf(event);
+  if (id === undefined) {
+    return false;
+  }
   if (parent !== undefined) {
     const parentLane = view.laneOf[parent];
     if (parentLane !== undefined) {
-      view.laneOf[event.id] = parentLane;
+      view.laneOf[id] = parentLane;
       // A lane that runs another turn (after a wait, or for a queued prompt) is running again.
       updateLane(view, parentLane, (existing) => ({ ...existing, status: 'running', waitingOn: undefined }));
     }
@@ -288,9 +305,9 @@ const openLane = (
       ...(sameOwner ? { backgrounded: true } : {}),
     }));
   }
-  view.laneOf[event.id] = event.id;
+  view.laneOf[id] = id;
   view.lanes.push({
-    id: event.id,
+    id,
     status: 'running',
     owner: event.sender,
     created: event.created,
@@ -302,7 +319,7 @@ const openLane = (
   return true;
 };
 
-const laneOfThread = (view: MutableView, thread: Trajectory.EventId | undefined) =>
+const laneOfThread = (view: MutableView, thread: Trajectory.ThreadId | undefined) =>
   thread === undefined ? undefined : view.laneOf[thread];
 
 /** Applies one event to the view, in place; `false` when the event leaves the view as it was. */
@@ -311,13 +328,13 @@ const applyThread = (view: MutableView, event: Trajectory.Event): boolean => {
   const payload = event.payload;
   switch (payload._tag) {
     case 'message': {
-      const lane = laneOfThread(view, event.thread);
+      const lane = laneOfThread(view, threadOf(event));
       items.push({
         id: event.id,
         sender: event.sender,
         blocks: payload.blocks,
         created: event.created,
-        thread: event.thread,
+        thread: threadOf(event),
         ...(lane !== undefined ? { lane } : {}),
         status: event.sender.role === 'user' ? 'queued' : 'sent',
       });
@@ -328,26 +345,29 @@ const applyThread = (view: MutableView, event: Trajectory.Event): boolean => {
       return true;
     }
     case 'turnBegin':
-      return openLane(view, event, payload.from?.thread ?? event.thread, { kind: 'turn' });
+      return openLane(view, event, payload.from?.thread, { kind: 'turn' });
     case 'threadOpen':
-      return openLane(view, event, payload.from?.feed ? undefined : (payload.from?.thread ?? event.thread), {
+      return openLane(view, event, payload.from?.feed ? undefined : payload.from?.thread, {
         kind: payload.mode,
         ...(payload.purpose !== undefined ? { purpose: payload.purpose } : {}),
       });
-    case 'turnEnd':
+    case 'turnEnd': {
       // A turn that is its own lane ends it; a turn inside a thread leaves the thread to its merge or close.
-      return view.laneOf[payload.begin] === payload.begin
-        ? updateLane(view, payload.begin, (lane) => ({
+      const turn = threadOf(event);
+      return turn !== undefined && view.laneOf[turn] === turn
+        ? updateLane(view, turn, (lane) => ({
             ...lane,
             status: payload.finishReason === 'error' ? 'failed' : 'done',
             waitingOn: undefined,
           }))
         : false;
+    }
     case 'threadMerge':
     case 'threadClose': {
       const failed = payload._tag === 'threadClose' && payload.status !== 'completed';
-      return view.laneOf[payload.thread] === payload.thread
-        ? updateLane(view, payload.thread, (lane) => ({
+      const thread = threadOf(event);
+      return thread !== undefined && view.laneOf[thread] === thread
+        ? updateLane(view, thread, (lane) => ({
             ...lane,
             status: failed ? 'failed' : 'done',
             waitingOn: undefined,
@@ -355,7 +375,7 @@ const applyThread = (view: MutableView, event: Trajectory.Event): boolean => {
         : false;
     }
     case 'threadWait':
-      return updateLane(view, laneOfThread(view, event.thread), (lane) => ({
+      return updateLane(view, laneOfThread(view, threadOf(event)), (lane) => ({
         ...lane,
         status: 'waiting',
         waitingOn: view.laneOf[payload.on] ?? payload.on,
@@ -367,8 +387,8 @@ const applyThread = (view: MutableView, event: Trajectory.Event): boolean => {
         return false;
       }
       const [item] = items.splice(index, 1);
-      const lane = laneOfThread(view, event.thread);
-      items.push({ ...item, thread: event.thread, ...(lane !== undefined ? { lane } : {}), status: 'consumed' });
+      const lane = laneOfThread(view, threadOf(event));
+      items.push({ ...item, thread: threadOf(event), ...(lane !== undefined ? { lane } : {}), status: 'consumed' });
       return true;
     }
     case 'requestResolve': {
@@ -380,7 +400,7 @@ const applyThread = (view: MutableView, event: Trajectory.Event): boolean => {
       return true;
     }
     case 'rewind': {
-      const from = event.thread === undefined ? items.findIndex((item) => item.id === payload.from) : -1;
+      const from = threadOf(event) === undefined ? items.findIndex((item) => item.id === payload.from) : -1;
       for (let index = Math.max(from, 0); from !== -1 && index < items.length; index++) {
         if (items[index].status !== 'queued') {
           items[index] = { ...items[index], status: 'rewound' };
@@ -442,7 +462,7 @@ export type PromptEntry = {
  * Entries written in an open thread or turn, merged into `parent` (absent: main) when it ends.
  */
 export type ThreadBuffer = {
-  readonly parent?: Trajectory.EventId;
+  readonly parent?: Trajectory.ThreadId;
   /** A fresh thread's prompt is its own entries only; a fork's starts with its parent's. */
   readonly fresh: boolean;
   /**
@@ -463,7 +483,7 @@ export type PromptState = {
   readonly entries: readonly PromptEntry[];
   /** User messages waiting for a `promptConsume`. */
   readonly held: Readonly<Record<Trajectory.EventId, PromptEntry>>;
-  readonly threads: Readonly<Record<Trajectory.EventId, ThreadBuffer>>;
+  readonly threads: Readonly<Record<Trajectory.ThreadId, ThreadBuffer>>;
   /** Events folded so far, which is the feed position of the next one. */
   readonly position: number;
   /** Feed position of every folded event, to resolve a `from.event`; persistent, since a copy per event is quadratic. */
@@ -472,7 +492,7 @@ export type PromptState = {
    * Threads and turns that merged into a parent holding entries they never saw, with those entries' source events.
    * The merge still happens; whether to accept, re-run or correct is the harness's call.
    */
-  readonly stale: Readonly<Record<Trajectory.EventId, readonly Trajectory.EventId[]>>;
+  readonly stale: Readonly<Record<Trajectory.ThreadId, readonly Trajectory.EventId[]>>;
   /** Conversation this feed continues (`fork`); its prompt up to `origin.event` precedes `entries`. */
   readonly origin?: Trajectory.ThreadOrigin;
 };
@@ -499,7 +519,7 @@ const grow = (entries: readonly PromptEntry[], entry: PromptEntry): readonly Pro
 
 const append = (
   state: PromptState,
-  threadId: Trajectory.EventId | undefined,
+  threadId: Trajectory.ThreadId | undefined,
   placed: Omit<PromptEntry, 'at'>,
 ): PromptState => {
   const entry: PromptEntry = { ...placed, at: state.position };
@@ -515,7 +535,7 @@ const append = (
  * Closes a thread, appending `entries` to its parent; a parent that has already ended stands in for main.
  * A fresh thread never saw its parent, so only a fork or turn can be stale.
  */
-const mergeInto = (state: PromptState, threadId: Trajectory.EventId, entries: readonly Omit<PromptEntry, 'at'>[]) => {
+const mergeInto = (state: PromptState, threadId: Trajectory.ThreadId, entries: readonly Omit<PromptEntry, 'at'>[]) => {
   const buffer = live(state, threadId);
   const parent = buffer?.parent;
   const target = parent !== undefined && live(state, parent) ? parent : undefined;
@@ -542,7 +562,7 @@ const placedAfter = (entries: readonly PromptEntry[], position: number): Traject
 };
 
 /** A thread that is open and has not been merged or closed. */
-const live = (state: PromptState, id: Trajectory.EventId) => {
+const live = (state: PromptState, id: Trajectory.ThreadId) => {
   const buffer = state.threads[id];
   return buffer && !buffer.closed ? buffer : undefined;
 };
@@ -551,7 +571,7 @@ const live = (state: PromptState, id: Trajectory.EventId) => {
  * Removes an ended thread, or freezes it while a child still builds on it; a frozen parent goes once its last child
  * has ended.
  */
-const end = (threads: PromptState['threads'], id: Trajectory.EventId): PromptState['threads'] => {
+const end = (threads: PromptState['threads'], id: Trajectory.ThreadId): PromptState['threads'] => {
   const buffer = threads[id];
   if (!buffer) {
     return threads;
@@ -575,16 +595,14 @@ const seenAt = (state: PromptState, origin?: Trajectory.ThreadOrigin) =>
     ? Option.getOrElse(HashMap.get(state.positions, origin.event), () => state.position)
     : state.position;
 
-const open = (state: PromptState, id: Trajectory.EventId, buffer: ThreadBuffer): PromptState => ({
-  ...state,
-  threads: { ...state.threads, [id]: buffer },
-});
+const open = (state: PromptState, id: Trajectory.ThreadId | undefined, buffer: ThreadBuffer): PromptState =>
+  id === undefined ? state : { ...state, threads: { ...state.threads, [id]: buffer } };
 
 /**
  * The prompt a turn in `thread` sends: its own entries after its parents', back to main, unless a fresh thread
  * cuts the chain.
  */
-export const promptFor = (state: PromptState, thread?: Trajectory.EventId): readonly PromptEntry[] => {
+export const promptFor = (state: PromptState, thread?: Trajectory.ThreadId): readonly PromptEntry[] => {
   const buffer = thread === undefined ? undefined : state.threads[thread];
   if (!buffer) {
     return state.entries;
@@ -599,10 +617,10 @@ export const promptFor = (state: PromptState, thread?: Trajectory.EventId): read
  * A thread's own entries and those of its open children, as a sibling sees them: placed at or before `seen`, in
  * placement order.
  */
-const workOf = (state: PromptState, id: Trajectory.EventId, seen: number): PromptEntry[] => {
+const workOf = (state: PromptState, id: Trajectory.ThreadId, seen: number): PromptEntry[] => {
   const own = state.threads[id]?.entries ?? [];
   const children = Object.entries(state.threads).flatMap(([childId, buffer]) =>
-    buffer.parent === id ? workOf(state, childId, seen) : [],
+    buffer.parent === id ? workOf(state, Trajectory.ThreadId.make(childId), seen) : [],
   );
   return [...own, ...children]
     .filter((entry) => entry.at <= seen && !entry.ephemeral)
@@ -624,6 +642,10 @@ const titleOf = (entries: readonly PromptEntry[]): string | undefined => {
  * Opens a light thread: a fork of main that starts with one entry holding the transcript of each running sibling.
  */
 const openLight = (state: PromptState, event: Trajectory.Event, payload: Trajectory.ThreadOpen): PromptState => {
+  const id = threadOf(event);
+  if (id === undefined) {
+    return state;
+  }
   const seen = seenAt(state, payload.from);
   const siblings = (payload.siblings ?? []).flatMap((id): Transcript.Thread[] => {
     const buffer = state.threads[id];
@@ -639,14 +661,14 @@ const openLight = (state: PromptState, event: Trajectory.Event, payload: Traject
           {
             role: 'event',
             name: 'threads',
-            blocks: [{ _tag: 'text', text: Transcript.snapshot(siblings, event.id) }],
+            blocks: [{ _tag: 'text', text: Transcript.snapshot(siblings, id) }],
             source: [event.id],
             at: state.position,
             ephemeral: true,
           },
         ]
       : [];
-  return open(state, event.id, {
+  return open(state, id, {
     fresh: false,
     seen,
     purpose: payload.purpose,
@@ -707,7 +729,7 @@ const place = (state: PromptState, event: Trajectory.Event): PromptState => {
       };
       return event.sender.role === 'user'
         ? { ...state, held: { ...state.held, [event.id]: entry } }
-        : append(state, event.thread, entry);
+        : append(state, threadOf(event), entry);
     }
     case 'promptConsume': {
       const entry = state.held[payload.message];
@@ -715,7 +737,7 @@ const place = (state: PromptState, event: Trajectory.Event): PromptState => {
         return state;
       }
 
-      return append({ ...state, held: omit(state.held, payload.message) }, event.thread, {
+      return append({ ...state, held: omit(state.held, payload.message) }, threadOf(event), {
         ...entry,
         source: [...entry.source, event.id],
       });
@@ -723,50 +745,54 @@ const place = (state: PromptState, event: Trajectory.Event): PromptState => {
     case 'promptCancel':
       return { ...state, held: omit(state.held, payload.message) };
     case 'toolDeliver':
-      return append(state, event.thread, { role: 'event', blocks: [payload.result], source: [event.id] });
+      return append(state, threadOf(event), { role: 'event', blocks: [payload.result], source: [event.id] });
     case 'hookEnd':
       return payload.blocks
-        ? append(state, event.thread, { role: 'event', blocks: payload.blocks, source: [event.id] })
+        ? append(state, threadOf(event), { role: 'event', blocks: payload.blocks, source: [event.id] })
         : state;
     case 'threadOpen':
       if (payload.mode === 'light') {
         return openLight(state, event, payload);
       }
       // A fork of another conversation has no parent in this log, so its history starts empty.
-      return open(state, event.id, {
-        parent: payload.from?.feed ? undefined : (payload.from?.thread ?? event.thread),
+      return open(state, threadOf(event), {
+        parent: payload.from?.feed ? undefined : payload.from?.thread,
         fresh: payload.mode === 'fresh' || payload.from?.feed !== undefined,
         seen: seenAt(state, payload.from),
         entries: [],
       });
     case 'turnBegin':
-      return open(state, event.id, {
-        parent: payload.from?.thread ?? event.thread,
+      return open(state, threadOf(event), {
+        parent: payload.from?.thread,
         fresh: false,
         seen: seenAt(state, payload.from),
         entries: [],
       });
     case 'turnEnd': {
-      const turn = live(state, payload.begin);
-      return turn ? mergeInto(state, payload.begin, turn.entries) : state;
+      const id = threadOf(event);
+      const turn = id === undefined ? undefined : live(state, id);
+      return id !== undefined && turn ? mergeInto(state, id, turn.entries) : state;
     }
     case 'threadMerge': {
-      if (state.threads[payload.thread]?.closed) {
+      const thread = threadOf(event);
+      if (thread === undefined || state.threads[thread]?.closed) {
         return state;
       }
 
-      const merged = state.threads[payload.thread]?.entries ?? [];
+      const merged = state.threads[thread]?.entries ?? [];
       return payload.mode === 'summary'
-        ? mergeInto(state, payload.thread, [{ role: 'event', blocks: payload.summary ?? [], source: [event.id] }])
-        : mergeInto(state, payload.thread, merged);
+        ? mergeInto(state, thread, [{ role: 'event', blocks: payload.summary ?? [], source: [event.id] }])
+        : mergeInto(state, thread, merged);
     }
-    case 'threadClose':
-      return live(state, payload.thread) ? { ...state, threads: end(state.threads, payload.thread) } : state;
+    case 'threadClose': {
+      const thread = threadOf(event);
+      return thread !== undefined && live(state, thread) ? { ...state, threads: end(state.threads, thread) } : state;
+    }
     case 'compact':
-      return event.thread === undefined ? { ...state, entries: compact(state, payload, event.id) } : state;
+      return threadOf(event) === undefined ? { ...state, entries: compact(state, payload, event.id) } : state;
     case 'rewind': {
       const from = state.entries.findIndex((entry) => entry.source.includes(payload.from));
-      return event.thread === undefined && from !== -1 ? { ...state, entries: state.entries.slice(0, from) } : state;
+      return threadOf(event) === undefined && from !== -1 ? { ...state, entries: state.entries.slice(0, from) } : state;
     }
     case 'fork':
       return { ...state, origin: payload.from };
@@ -807,6 +833,7 @@ export interface Durable<S> extends Reducer<S> {
 export type MakeRef = <T extends Obj.Unknown>(ref: Ref.Ref<T>) => Ref.Ref<T>;
 
 const EventIds = Schema.Array(Trajectory.EventId);
+const ThreadIds = Schema.Array(Trajectory.ThreadId);
 
 const SessionStateSchema = Schema.Struct({
   queue: EventIds,
@@ -818,13 +845,13 @@ const SessionStateSchema = Schema.Struct({
   background: Schema.Array(Schema.Struct({ toolCallId: Schema.String, pid: Schema.optional(Schema.String) })),
   threads: Schema.Array(
     Schema.Struct({
-      id: Trajectory.EventId,
+      id: Trajectory.ThreadId,
       mode: Trajectory.ThreadMode,
       status: Schema.Literals(['open', 'merged', 'completed', 'failed', 'cancelled']),
     }),
   ),
   model: Schema.optional(Trajectory.ModelChange.fields.model),
-  turns: EventIds,
+  turns: ThreadIds,
   rejected: EventIds,
   selfWakes: Schema.Number,
 });
@@ -836,25 +863,25 @@ const ThreadViewSchema = Schema.Struct({
       sender: Trajectory.Sender,
       blocks: Schema.Array(ContentBlock.Any),
       created: Schema.String,
-      thread: Schema.optional(Trajectory.EventId),
-      lane: Schema.optional(Trajectory.EventId),
+      thread: Schema.optional(Trajectory.ThreadId),
+      lane: Schema.optional(Trajectory.ThreadId),
       status: Schema.Literals(['queued', 'consumed', 'cancelled', 'sent', 'rewound']),
     }),
   ),
   lanes: Schema.Array(
     Schema.Struct({
-      id: Trajectory.EventId,
+      id: Trajectory.ThreadId,
       kind: Schema.Literals(['turn', 'fork', 'fresh', 'light']),
       status: Schema.Literals(['running', 'waiting', 'done', 'failed']),
       owner: Trajectory.Sender,
       created: Schema.String,
       purpose: Schema.optional(Schema.String),
-      waitingOn: Schema.optional(Trajectory.EventId),
+      waitingOn: Schema.optional(Trajectory.ThreadId),
       overlapped: Schema.optional(Schema.Boolean),
       backgrounded: Schema.optional(Schema.Boolean),
     }),
   ),
-  laneOf: Schema.Record(Trajectory.EventId, Trajectory.EventId),
+  laneOf: Schema.Record(Trajectory.ThreadId, Trajectory.ThreadId),
 });
 
 const PromptEntrySchema = Schema.Struct({
@@ -872,7 +899,7 @@ const PromptStateSchema = Schema.Struct({
   threads: Schema.Record(
     Schema.String,
     Schema.Struct({
-      parent: Schema.optional(Trajectory.EventId),
+      parent: Schema.optional(Trajectory.ThreadId),
       fresh: Schema.Boolean,
       seen: Schema.Number,
       closed: Schema.optional(Schema.Boolean),
@@ -897,7 +924,7 @@ const PromptStateSchema = Schema.Struct({
 
 export const session: Durable<SessionState> = {
   ...sessionFold,
-  id: 'session@2',
+  id: 'session@3',
   schema: SessionStateSchema,
   rebind: (state, makeRef) => ({
     ...state,
@@ -906,11 +933,11 @@ export const session: Durable<SessionState> = {
   }),
 };
 
-export const thread: Durable<ThreadView> = { ...threadFold, id: 'thread@3', schema: ThreadViewSchema };
+export const thread: Durable<ThreadView> = { ...threadFold, id: 'thread@4', schema: ThreadViewSchema };
 
 export const prompt: Durable<PromptState> = {
   ...promptFold,
-  id: 'prompt@1',
+  id: 'prompt@2',
   schema: PromptStateSchema,
   rebind: (state, makeRef) =>
     state.origin?.feed ? { ...state, origin: { ...state.origin, feed: makeRef(state.origin.feed) } } : state,

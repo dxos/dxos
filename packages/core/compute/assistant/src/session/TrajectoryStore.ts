@@ -15,7 +15,7 @@ import { type Database, Feed, type Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
 import * as Legacy from './Legacy.ts';
-import { readItems } from './trajectory-items.ts';
+import { lastOn, readItems } from './trajectory-items.ts';
 import * as TrajectoryCache from './TrajectoryCache.ts';
 
 export { readItems } from './trajectory-items.ts';
@@ -97,7 +97,7 @@ export const load = <S>(
  */
 export const history = Effect.fnUntraced(function* (
   feed: Feed.Feed,
-  thread?: Trajectory.EventId,
+  thread?: Trajectory.ThreadId,
 ): Effect.fn.Return<Message.Message[], never, Database.Service> {
   const { state } = yield* load(feed, Reducer.prompt);
   const origin = state.origin ? yield* originHistory(state.origin) : [];
@@ -106,22 +106,22 @@ export const history = Effect.fnUntraced(function* (
 });
 
 /** The top-level thread (or main turn) `thread` nests in: a lane of the chat. */
-const laneOf = (state: Reducer.PromptState, thread: Trajectory.EventId): Trajectory.EventId => {
+const laneOf = (state: Reducer.PromptState, thread: Trajectory.ThreadId): Trajectory.ThreadId => {
   const parent = state.threads[thread]?.parent;
   return parent === undefined ? thread : laneOf(state, parent);
 };
 
 /** Threads and main turns running beside each other: open buffers with no parent. */
-const runningLanes = (state: Reducer.PromptState): Trajectory.EventId[] =>
+const runningLanes = (state: Reducer.PromptState): Trajectory.ThreadId[] =>
   Object.entries(state.threads)
     .filter(([, buffer]) => buffer.parent === undefined && !buffer.closed)
-    .map(([id]) => id);
+    .map(([id]) => Trajectory.ThreadId.make(id));
 
 /**
  * The latest state of every other lane, after the history of a turn in a light thread, so it knows what changed since
  * its snapshot without the snapshot moving (which would cost the prompt cache).
  */
-const siblingStatus = (state: Reducer.PromptState, thread: Trajectory.EventId): Message.Message | undefined => {
+const siblingStatus = (state: Reducer.PromptState, thread: Trajectory.ThreadId): Message.Message | undefined => {
   const own = laneOf(state, thread);
   if (state.threads[own]?.entries.some((entry) => entry.ephemeral) !== true) {
     return undefined;
@@ -147,13 +147,32 @@ const siblingStatus = (state: Reducer.PromptState, thread: Trajectory.EventId): 
 };
 
 /**
- * Opens a light thread for a prompt that arrives while other lanes run: it forks main at this replica's head and
- * starts with a transcript of every running lane.
+ * Starts a thread: `opener` becomes the base of a new branch, forked at the last item of `parent` (absent: main), and
+ * `rest` continue the branch. Returns the thread's id, the branch's. Writers never append to a branch another writer
+ * owns, so the agent's work stays off the reader's main branch.
+ */
+const openThread = Effect.fnUntraced(function* (
+  feed: Feed.Feed,
+  parent: Trajectory.ThreadId | undefined,
+  opener: Trajectory.Event,
+  rest: readonly Trajectory.Event[] = [],
+): Effect.fn.Return<Trajectory.ThreadId, never, Database.Service> {
+  const at = yield* lastOn(feed, parent);
+  if (at === undefined) {
+    // A turn always follows a prompt on main, so a thread with nothing to fork from is a caller's bug.
+    return yield* Effect.die(new Error(`Thread ${parent ?? 'main'} has no event to fork a thread from.`));
+  }
+  return yield* Feed.fork(feed, [opener, ...rest], { at });
+});
+
+/**
+ * Opens a light thread for a prompt that arrives while other lanes run: it forks main and starts with a transcript of
+ * every running lane.
  */
 export const openLightThread = Effect.fnUntraced(function* (
   feed: Feed.Feed,
   { purpose, owner }: { purpose?: string; owner?: Trajectory.Sender } = {},
-): Effect.fn.Return<Trajectory.EventId, never, Database.Service> {
+): Effect.fn.Return<Trajectory.ThreadId, never, Database.Service> {
   const { state, head } = yield* load(feed, Reducer.prompt);
   const open = Trajectory.make({
     payload: {
@@ -165,8 +184,7 @@ export const openLightThread = Effect.fnUntraced(function* (
     },
     sender: owner ?? { role: 'assistant' },
   });
-  yield* append(feed, [open]);
-  return open.id;
+  return yield* openThread(feed, undefined, open);
 });
 
 /** Who a delegated subagent's lane names as its owner. */
@@ -179,7 +197,7 @@ export const SUBAGENT: Trajectory.Sender = { role: 'assistant', name: 'subagent'
 export const delegate = Effect.fnUntraced(function* (
   feed: Feed.Feed,
   { task, purpose }: { task: string; purpose?: string },
-): Effect.fn.Return<Trajectory.EventId, never, Database.Service> {
+): Effect.fn.Return<Trajectory.ThreadId, never, Database.Service> {
   const open = Trajectory.make({
     payload: { _tag: 'threadOpen', mode: 'fresh', ...(purpose !== undefined ? { purpose } : {}) },
     sender: SUBAGENT,
@@ -188,10 +206,8 @@ export const delegate = Effect.fnUntraced(function* (
   const prompt = Trajectory.make({
     payload: { _tag: 'message', blocks: [{ _tag: 'text', text: task }] },
     sender: { role: 'user', name: 'task' },
-    thread: open.id,
   });
-  yield* append(feed, [open, prompt]);
-  return open.id;
+  return yield* openThread(feed, undefined, open, [prompt]);
 });
 
 /**
@@ -200,7 +216,7 @@ export const delegate = Effect.fnUntraced(function* (
 export const delegatedThread = Effect.fnUntraced(function* (
   feed: Feed.Feed,
   message: Trajectory.EventId,
-): Effect.fn.Return<Trajectory.EventId | undefined, never, Database.Service> {
+): Effect.fn.Return<Trajectory.ThreadId | undefined, never, Database.Service> {
   const { state } = yield* load(feed, Reducer.thread);
   const item = state.items.find((item) => item.id === message && item.status === 'queued');
   const lane = item?.thread === undefined ? undefined : state.lanes.find((lane) => lane.id === item.thread);
@@ -208,7 +224,7 @@ export const delegatedThread = Effect.fnUntraced(function* (
 });
 
 /** The text of a lane's last assistant message: what a subagent answers. */
-const finalAnswer = (view: Reducer.ThreadView, lane: Trajectory.EventId): string =>
+const finalAnswer = (view: Reducer.ThreadView, lane: Trajectory.ThreadId): string =>
   view.items
     .filter((item) => item.lane === lane && item.sender.role === 'assistant' && item.status !== 'rewound')
     .map((item) => Message.extractText(Message.make({ sender: 'assistant', blocks: [...item.blocks] })).trim())
@@ -216,7 +232,7 @@ const finalAnswer = (view: Reducer.ThreadView, lane: Trajectory.EventId): string
     .at(-1) ?? '';
 
 /** How a subagent's answer reads in the conversation that delegated to it. */
-const subagentAnswer = (lane: Reducer.Lane | undefined, id: Trajectory.EventId, answer: string) =>
+const subagentAnswer = (lane: Reducer.Lane | undefined, id: Trajectory.ThreadId, answer: string) =>
   `Subagent ${lane?.purpose ? `"${lane.purpose}" ` : ''}(thread ${id}) finished:\n\n${answer || '(no answer)'}`;
 
 /**
@@ -225,20 +241,22 @@ const subagentAnswer = (lane: Reducer.Lane | undefined, id: Trajectory.EventId, 
  */
 export const mergeThread = Effect.fnUntraced(function* (
   feed: Feed.Feed,
-  thread: Trajectory.EventId,
+  thread: Trajectory.ThreadId,
   sender: Trajectory.Sender = { role: 'assistant' },
 ): Effect.fn.Return<void, never, Database.Service> {
   const { state: view } = yield* load(feed, Reducer.thread);
   const lane = view.lanes.find((lane) => lane.id === thread);
+  // Written on the thread's own branch, which ends it there.
   if (lane?.kind !== 'fresh') {
-    yield* append(feed, [Trajectory.make({ payload: { _tag: 'threadMerge', thread, mode: 'raw' }, sender })]);
+    yield* append(feed, [Trajectory.make({ payload: { _tag: 'threadMerge', mode: 'raw' }, sender, thread })]);
     return;
   }
   const summary = subagentAnswer(lane, thread, finalAnswer(view, thread));
   yield* append(feed, [
     Trajectory.make({
-      payload: { _tag: 'threadMerge', thread, mode: 'summary', summary: [{ _tag: 'text', text: summary }] },
+      payload: { _tag: 'threadMerge', mode: 'summary', summary: [{ _tag: 'text', text: summary }] },
       sender,
+      thread,
     }),
   ]);
 });
@@ -252,7 +270,7 @@ const WAIT_POLL_MS = 500;
  */
 export const waitForThread = Effect.fnUntraced(function* (
   feed: Feed.Feed,
-  { turn, on, timeout = 20 * 60_000 }: { turn: Trajectory.EventId; on: Trajectory.EventId; timeout?: number },
+  { turn, on, timeout = 20 * 60_000 }: { turn: Trajectory.ThreadId; on: Trajectory.ThreadId; timeout?: number },
 ): Effect.fn.Return<string, never, Database.Service> {
   const initial = (yield* load(feed, Reducer.thread)).state;
   const target = initial.laneOf[on] ?? on;
@@ -378,7 +396,7 @@ export const appendExchange = (
 export const appendMessages = (
   feed: Feed.Feed,
   messages: readonly Message.Message[],
-  options: { thread?: Trajectory.EventId } = {},
+  options: { thread?: Trajectory.ThreadId } = {},
 ): Effect.Effect<void, never, Database.Service> =>
   append(
     feed,
@@ -416,8 +434,40 @@ export type TurnSource = { readonly message: Trajectory.EventId } | { readonly a
 const ALARM: Trajectory.Sender = { role: 'event', name: 'alarm' };
 
 /**
- * Opens a turn: appends `turnBegin` recording the last item this replica has folded as what the turn saw, and
- * returns its id, which every event of the turn carries as its thread.
+ * Puts a direct prompt (one that was never queued) on the main thread, so the turn that answers it forks after it and
+ * takes it as it takes a queued prompt. Returns the source that turn answers; a queued source or a resumed turn
+ * writes nothing.
+ */
+export const postPrompt = Effect.fnUntraced(function* (
+  feed: Feed.Feed,
+  prompt: Message.Message,
+  source?: TurnSource,
+  { resumed = false }: { resumed?: boolean } = {},
+): Effect.fn.Return<TurnSource | undefined, never, Database.Service> {
+  if (source !== undefined || resumed) {
+    return source;
+  }
+  yield* append(feed, [promptMessage(prompt)]);
+  return { message: prompt.id };
+});
+
+/**
+ * The thread of the turn whose `turnBegin` has id `begin`, for a writer that keys a turn by that event (a hosted
+ * agent's turn key) and picks it up later; none when the feed does not hold it.
+ */
+export const turnThread = (
+  feed: Feed.Feed,
+  begin: Trajectory.EventId,
+): Effect.Effect<Trajectory.ThreadId | undefined, never, Database.Service> =>
+  Effect.map(read(feed), (events) => {
+    const opener = events.find((event) => event.id === begin);
+    return opener === undefined ? undefined : Trajectory.threadOf(opener);
+  });
+
+/**
+ * Opens a turn: a `turnBegin` that forks a branch of its own from `thread` (absent: main), recording the last item
+ * this replica has folded as what the turn saw. Returns the turn's thread, the branch every event of the turn
+ * continues.
  */
 export const beginTurn = Effect.fnUntraced(function* (
   feed: Feed.Feed,
@@ -425,8 +475,8 @@ export const beginTurn = Effect.fnUntraced(function* (
     id,
     model,
     thread,
-  }: { id?: Trajectory.EventId; model?: Trajectory.TurnBegin['model']; thread?: Trajectory.EventId } = {},
-): Effect.fn.Return<Trajectory.EventId, never, Database.Service> {
+  }: { id?: Trajectory.EventId; model?: Trajectory.TurnBegin['model']; thread?: Trajectory.ThreadId } = {},
+): Effect.fn.Return<Trajectory.ThreadId, never, Database.Service> {
   const { head } = yield* load(feed, Reducer.prompt);
   const begin = Trajectory.make({
     // Set when the turn already has an id elsewhere (a hosted agent's turn key), so a resumed turn is the same one.
@@ -434,19 +484,26 @@ export const beginTurn = Effect.fnUntraced(function* (
     payload: {
       _tag: 'turnBegin',
       model,
-      from:
-        thread !== undefined
-          ? // The thread's opener is in the feed, so a head is folded; the opener is the fallback if it is not yet.
-            { thread, event: head ?? thread }
-          : head !== undefined
-            ? { event: head }
-            : undefined,
+      from: head !== undefined ? { ...(thread !== undefined ? { thread } : {}), event: head } : undefined,
     },
     sender: { role: 'assistant' },
   });
-  yield* append(feed, [begin]);
-  return begin.id;
+  return yield* openThread(feed, thread, begin);
 });
+
+const promptMessage = (prompt: Message.Message, thread?: Trajectory.ThreadId, sender?: Trajectory.Sender) =>
+  Trajectory.make({
+    id: prompt.id,
+    payload: {
+      _tag: 'message',
+      blocks: prompt.blocks,
+      attachments: prompt.attachments,
+      properties: prompt.properties,
+    },
+    sender: sender ?? Legacy.toSender(prompt.sender),
+    thread,
+    created: prompt.created,
+  });
 
 /**
  * The events that put a turn's prompt into the conversation: a queued source is consumed (a message) or fired (an
@@ -454,7 +511,7 @@ export const beginTurn = Effect.fnUntraced(function* (
  */
 export const promptEvents = (
   prompt: Message.Message,
-  turn: Trajectory.EventId,
+  turn: Trajectory.ThreadId,
   source?: TurnSource,
   { resumed = false }: { resumed?: boolean } = {},
 ): Trajectory.Event[] => {
@@ -464,29 +521,16 @@ export const promptEvents = (
   if (source && 'message' in source) {
     return [consume(source.message, turn)];
   }
-  const event = (thread?: Trajectory.EventId, sender?: Trajectory.Sender) =>
-    Trajectory.make({
-      id: prompt.id,
-      payload: {
-        _tag: 'message',
-        blocks: prompt.blocks,
-        attachments: prompt.attachments,
-        properties: prompt.properties,
-      },
-      sender: sender ?? Legacy.toSender(prompt.sender),
-      thread,
-      created: prompt.created,
-    });
   if (source) {
     return [
       Trajectory.make({ payload: { _tag: 'alarmFire', alarm: source.alarm }, sender: ALARM, thread: turn }),
-      event(turn, ALARM),
+      promptMessage(prompt, turn, ALARM),
     ];
   }
-  return [event(), consume(prompt.id, turn)];
+  return [promptMessage(prompt), consume(prompt.id, turn)];
 };
 
-const consume = (message: Trajectory.EventId, thread: Trajectory.EventId): Trajectory.Event =>
+const consume = (message: Trajectory.EventId, thread: Trajectory.ThreadId): Trajectory.Event =>
   Trajectory.make({ payload: { _tag: 'promptConsume', message }, sender: { role: 'assistant' }, thread });
 
 /**
@@ -495,7 +539,7 @@ const consume = (message: Trajectory.EventId, thread: Trajectory.EventId): Traje
 export const interruptedTurn = Effect.fnUntraced(function* (
   feed: Feed.Feed,
   message: Trajectory.EventId,
-): Effect.fn.Return<Trajectory.EventId | undefined, never, Database.Service> {
+): Effect.fn.Return<Trajectory.ThreadId | undefined, never, Database.Service> {
   const { state: session } = yield* load(feed, Reducer.session);
   const { state: thread } = yield* load(feed, Reducer.thread);
   const item = thread.items.find((item) => item.id === message);
@@ -511,7 +555,7 @@ export const interruptedTurn = Effect.fnUntraced(function* (
 export const interruptedThread = Effect.fnUntraced(function* (
   feed: Feed.Feed,
   message: Trajectory.EventId,
-): Effect.fn.Return<Trajectory.EventId | undefined, never, Database.Service> {
+): Effect.fn.Return<Trajectory.ThreadId | undefined, never, Database.Service> {
   const turn = yield* interruptedTurn(feed, message);
   if (turn === undefined) {
     return undefined;
@@ -538,10 +582,12 @@ export const resumeInterrupted = Effect.fnUntraced(function* (
   return true;
 });
 
-const interrupted = (begin: Trajectory.EventId): Trajectory.Event =>
+/** Ends `turn` on its own branch. */
+const interrupted = (turn: Trajectory.ThreadId): Trajectory.Event =>
   Trajectory.make({
-    payload: { _tag: 'turnEnd', begin, finishReason: 'other', error: 'interrupted' },
+    payload: { _tag: 'turnEnd', finishReason: 'other', error: 'interrupted' },
     sender: { role: 'assistant' },
+    thread: turn,
   });
 
 /**
@@ -551,7 +597,7 @@ const interrupted = (begin: Trajectory.EventId): Trajectory.Event =>
  */
 export const endTurn = (
   feed: Feed.Feed,
-  begin: Trajectory.EventId,
+  turn: Trajectory.ThreadId,
   exit: Exit.Exit<unknown, unknown>,
   { source }: { source?: TurnSource } = {},
 ): Effect.Effect<void, never, Database.Service> => {
@@ -561,12 +607,13 @@ export const endTurn = (
   }
   return append(feed, [
     interruptedExit
-      ? interrupted(begin)
+      ? interrupted(turn)
       : Trajectory.make({
           payload: Exit.isSuccess(exit)
-            ? { _tag: 'turnEnd', begin, finishReason: 'stop' }
-            : { _tag: 'turnEnd', begin, finishReason: 'error', error: Cause.pretty(exit.cause) },
+            ? { _tag: 'turnEnd', finishReason: 'stop' }
+            : { _tag: 'turnEnd', finishReason: 'error', error: Cause.pretty(exit.cause) },
           sender: { role: 'assistant' },
+          thread: turn,
         }),
   ]);
 };
@@ -588,16 +635,17 @@ export const turn = Effect.fnUntraced(function* <A, E, R>(
     source?: TurnSource;
     model?: Trajectory.TurnBegin['model'];
     /** The light thread the turn runs in; absent for main. */
-    thread?: Trajectory.EventId;
+    thread?: Trajectory.ThreadId;
   },
   body: (
     append: (messages: readonly Message.Message[]) => Effect.Effect<void, never, Database.Service>,
   ) => Effect.Effect<A, E, R>,
 ): Effect.fn.Return<A, E, R | Database.Service> {
   const resumed = yield* resumeInterrupted(feed, source);
+  const posted = yield* postPrompt(feed, prompt, source, { resumed });
   const begin = yield* beginTurn(feed, { model, thread });
-  yield* append(feed, promptEvents(prompt, begin, source, { resumed }));
+  yield* append(feed, promptEvents(prompt, begin, posted, { resumed }));
   return yield* body((messages) => appendMessages(feed, messages, { thread: begin })).pipe(
-    Effect.onExit((exit) => endTurn(feed, begin, exit, { source })),
+    Effect.onExit((exit) => endTurn(feed, begin, exit, { source: posted })),
   );
 });

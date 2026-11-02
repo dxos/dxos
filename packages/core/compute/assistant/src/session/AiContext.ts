@@ -335,9 +335,10 @@ export class Binder extends Resource {
   }
 
   private async _follow(): Promise<void> {
-    // Walked in local order: a removal has to fold after the addition it undoes, and that order never changes under the fold.
+    // Every branch walked in local order: a turn binds in its own thread, and a removal has to fold after the addition
+    // it undoes, an order that never changes under the fold.
     const bindingsQuery = await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
-      Feed.walk(this._feed, Filter.or(Filter.type(Binding), Filter.type(Trajectory.Event))),
+      Feed.walk(this._feed, Filter.or(Filter.type(Binding), Filter.type(Trajectory.Event)), { branch: 'all' }),
     );
     this.#bindingsQuery = bindingsQuery;
 
@@ -757,7 +758,7 @@ const connectionChanges = (
 export const boundConnections = (
   feed: Feed.Feed,
 ): Effect.Effect<ReadonlyMap<URI.URI, boolean>, never, Database.Service> =>
-  Feed.walk(feed, Filter.or(Filter.type(Binding), Filter.type(Trajectory.Event))).run.pipe(
+  Feed.walk(feed, Filter.or(Filter.type(Binding), Filter.type(Trajectory.Event)), { branch: 'all' }).run.pipe(
     Effect.map((items) => connectionStates(toDeltas(items))),
   );
 
@@ -766,7 +767,7 @@ export const boundConnections = (
  * set at one moment without holding a {@link Binder} open.
  */
 export const boundObjects = (feed: Feed.Feed): Effect.Effect<Ref.Ref<Obj.Unknown>[], never, Database.Service> =>
-  Feed.walk(feed, Filter.or(Filter.type(Binding), Filter.type(Trajectory.Event))).run.pipe(
+  Feed.walk(feed, Filter.or(Filter.type(Binding), Filter.type(Trajectory.Event)), { branch: 'all' }).run.pipe(
     Effect.map((items) => [...reduce(toDeltas(items)).objects]),
   );
 

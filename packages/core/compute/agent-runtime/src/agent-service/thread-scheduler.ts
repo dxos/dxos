@@ -61,20 +61,20 @@ export type LaneRunner<R> = {
   /** Prompts waiting for a turn, oldest first. */
   readonly pending: Effect.Effect<readonly Message.Message[], never, R>;
   /** Runs one turn answering `message`, in `thread` when set (on main otherwise), and acks the message. */
-  readonly run: (message: Message.Message, thread: Trajectory.EventId | undefined) => Effect.Effect<void, never, R>;
+  readonly run: (message: Message.Message, thread: Trajectory.ThreadId | undefined) => Effect.Effect<void, never, R>;
   /** Opens a light thread for `message`. */
-  readonly open: (message: Message.Message) => Effect.Effect<Trajectory.EventId, never, R>;
+  readonly open: (message: Message.Message) => Effect.Effect<Trajectory.ThreadId, never, R>;
   /** Joins a light thread whose work is done to main. */
-  readonly merge: (thread: Trajectory.EventId) => Effect.Effect<void, never, R>;
+  readonly merge: (thread: Trajectory.ThreadId) => Effect.Effect<void, never, R>;
   /** The light thread of a turn that answered `message` and died mid-way, so its redelivery runs there again. */
-  readonly interrupted: (message: Message.Message) => Effect.Effect<Trajectory.EventId | undefined, never, R>;
+  readonly interrupted: (message: Message.Message) => Effect.Effect<Trajectory.ThreadId | undefined, never, R>;
   /** The subagent thread `message` was delegated to, which runs it; none for a person's prompt. */
-  readonly delegated: (message: Message.Message) => Effect.Effect<Trajectory.EventId | undefined, never, R>;
+  readonly delegated: (message: Message.Message) => Effect.Effect<Trajectory.ThreadId | undefined, never, R>;
   /** Whether the turn answering `message` has begun and taken it up, so a light thread opened now sees it. */
   readonly started: (message: Message.Message) => Effect.Effect<boolean, never, R>;
 };
 
-type Finished = { readonly id: string; readonly thread?: Trajectory.EventId; readonly exit: Exit.Exit<void> };
+type Finished = { readonly id: string; readonly thread?: Trajectory.ThreadId; readonly exit: Exit.Exit<void> };
 
 /**
  * Runs queued prompts in parallel lanes until the queue is drained and every lane has ended: the first prompt runs on
@@ -89,11 +89,11 @@ export const runLanes = <R>(
 ): Effect.Effect<void, never, R> =>
   Effect.gen(function* () {
     const finished = yield* Queue.unbounded<Finished>();
-    const running = new Map<string, Trajectory.EventId | undefined>();
+    const running = new Map<string, Trajectory.ThreadId | undefined>();
     // Prompts of running lanes whose turn is known to have begun.
     const begun = new Set<string>();
     // Threads of delegated subagents now running, up to `limit` of their own.
-    const subagents = new Set<Trajectory.EventId>();
+    const subagents = new Set<Trajectory.ThreadId>();
     const pendingById = new Map<string, Message.Message>();
 
     // A light thread snapshots the lanes running when it opens, so a lane started a moment ago (a burst of queued
@@ -118,7 +118,7 @@ export const runLanes = <R>(
     const handled = new Set<string>();
     let failure: Cause.Cause<never> | undefined;
 
-    const start = (message: Message.Message, thread: Trajectory.EventId | undefined) =>
+    const start = (message: Message.Message, thread: Trajectory.ThreadId | undefined) =>
       Effect.gen(function* () {
         running.set(message.id, thread);
         pendingById.set(message.id, message);

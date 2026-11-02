@@ -11,7 +11,7 @@ import type * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import type * as Skill from '@dxos/compute/Skill';
 import * as Trajectory from '@dxos/compute/Trajectory';
-import { Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Feed, Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { EID, type SpaceId } from '@dxos/keys';
 import * as ThreadOperation from '@dxos/plugin-thread/ThreadOperation';
@@ -261,12 +261,16 @@ const ConversationTile = ({ chat, onSelect, onDelete }: ConversationTileProps) =
   const [feedRef] = useObject(chat, 'feed');
   const feed = useResolveRef(feedRef);
   // Trajectory events and the legacy messages an older chat still holds; either carries the time it was written.
+  // Every branch: the agent's turns are written on branches of their own.
+  const feedUri = feed && Feed.getFeedUri(feed);
   const query = useMemo(
     () =>
-      feed
-        ? Query.select(Filter.or(Filter.type(Trajectory.Event), Filter.type(Message.Message))).from(feed)
+      feedUri
+        ? Query.select(Filter.or(Filter.type(Trajectory.Event), Filter.type(Message.Message))).from(
+            Scope.feed(feedUri.toString(), { walk: { branch: 'all' } }),
+          )
         : Query.select(Filter.nothing()),
-    [feed],
+    [feedUri?.toString()],
   );
   const items = useQuery(Obj.getDatabase(chat), query);
   const lastActivity = useMemo(

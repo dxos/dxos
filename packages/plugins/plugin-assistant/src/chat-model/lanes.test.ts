@@ -5,6 +5,7 @@
 import { describe, test } from 'vitest';
 
 import type * as Reducer from '@dxos/compute/Reducer';
+import * as Trajectory from '@dxos/compute/Trajectory';
 import { EntityId } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
@@ -22,7 +23,7 @@ const lane = (
   status: Reducer.LaneStatus,
   { overlapped = true, backgrounded = false }: { overlapped?: boolean; backgrounded?: boolean } = {},
 ): Reducer.Lane => ({
-  id,
+  id: Trajectory.ThreadId.make(id),
   kind: id === 'a' ? 'turn' : 'light',
   status,
   owner: { role: 'assistant' },

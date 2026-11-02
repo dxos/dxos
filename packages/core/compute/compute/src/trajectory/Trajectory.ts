@@ -18,6 +18,13 @@ import * as Skill from '../types/Skill.ts';
 export const EventId = Obj.ID;
 export type EventId = Schema.Schema.Type<typeof EventId>;
 
+/**
+ * A thread (or turn) is a branch of the conversation's feed: its opener is the branch's base, and every event written
+ * in it continues the branch. The main thread is the root branch, which has no id.
+ */
+export const ThreadId = Feed.BranchId;
+export type ThreadId = Schema.Schema.Type<typeof ThreadId>;
+
 //
 // Sender
 //
@@ -78,7 +85,7 @@ export const ThreadOrigin = Schema.Struct({
   /** Feed of another conversation; absent for the current one. */
   feed: Schema.optional(Ref.Ref(Feed.Feed)),
   /** Parent thread; absent for the main thread. */
-  thread: Schema.optional(EventId),
+  thread: Schema.optional(ThreadId),
   /**
    * Last event of the parent that was visible: the last event the writer had folded when it wrote the opener, so an
    * event that syncs in afterwards stays out of what the thread saw.
@@ -88,8 +95,8 @@ export const ThreadOrigin = Schema.Struct({
 export type ThreadOrigin = Schema.Schema.Type<typeof ThreadOrigin>;
 
 /**
- * Start of one model request, which opens a thread whose id is this event's id; every event the turn produces
- * carries it as `thread`, and `turnEnd` merges the thread into its parent.
+ * Start of one model request: the base of the turn's own branch, so every event the turn produces continues that
+ * branch, and `turnEnd` (the branch's last event) merges the turn into its parent.
  */
 export const TurnBegin = Schema.TaggedStruct('turnBegin', {
   /** Model DXN, as `SessionConfig.model` stores it; absent when the writer does not choose the model. */
@@ -99,8 +106,8 @@ export const TurnBegin = Schema.TaggedStruct('turnBegin', {
 });
 export type TurnBegin = Schema.Schema.Type<typeof TurnBegin>;
 
+/** Ends the turn whose branch it is written on. */
 export const TurnEnd = Schema.TaggedStruct('turnEnd', {
-  begin: EventId,
   finishReason: ContentBlock.FinishReason,
   usage: Schema.optional(Usage),
   error: Schema.optional(Schema.String),
@@ -196,7 +203,7 @@ export const HookBegin = Schema.TaggedStruct('hookBegin', {
   hook: Schema.String,
   kind: HookKind,
   /** Thread an agentic hook runs in. */
-  thread: Schema.optional(EventId),
+  thread: Schema.optional(ThreadId),
 });
 export type HookBegin = Schema.Schema.Type<typeof HookBegin>;
 
@@ -220,7 +227,7 @@ export const Compact = Schema.TaggedStruct('compact', {
   to: EventId,
   summary: Schema.Array(ContentBlock.Any),
   /** Threads whose merged entries the range holds; a thread still running is never in it. */
-  closure: Schema.optional(Schema.Array(EventId)),
+  closure: Schema.optional(Schema.Array(ThreadId)),
 });
 export type Compact = Schema.Schema.Type<typeof Compact>;
 
@@ -266,7 +273,7 @@ export const ThreadMode = Schema.Literals(['fork', 'fresh', 'light']);
 export type ThreadMode = Schema.Schema.Type<typeof ThreadMode>;
 
 /**
- * Opens a thread whose id is this event's id; the event's `sender` owns the thread.
+ * Opens a thread: the base of its own branch, whose id is the thread's; the event's `sender` owns the thread.
  */
 export const ThreadOpen = Schema.TaggedStruct('threadOpen', {
   mode: ThreadMode,
@@ -274,15 +281,15 @@ export const ThreadOpen = Schema.TaggedStruct('threadOpen', {
   from: Schema.optional(ThreadOrigin),
   purpose: Schema.optional(Schema.String),
   /** `light` only: threads (or turns on main) still running when it opened, whose work it starts with. */
-  siblings: Schema.optional(Schema.Array(EventId)),
+  siblings: Schema.optional(Schema.Array(ThreadId)),
 });
 export type ThreadOpen = Schema.Schema.Type<typeof ThreadOpen>;
 
 export const MergeMode = Schema.Literals(['raw', 'summary']);
 export type MergeMode = Schema.Schema.Type<typeof MergeMode>;
 
+/** Joins the thread whose branch it is written on to its parent. */
 export const ThreadMerge = Schema.TaggedStruct('threadMerge', {
-  thread: EventId,
   mode: MergeMode,
   summary: Schema.optional(Schema.Array(ContentBlock.Any)),
 });
@@ -292,15 +299,15 @@ export type ThreadMerge = Schema.Schema.Type<typeof ThreadMerge>;
  * A turn waits for another thread to end before it continues; written in the waiting turn's thread.
  */
 export const ThreadWait = Schema.TaggedStruct('threadWait', {
-  on: EventId,
+  on: ThreadId,
 });
 export type ThreadWait = Schema.Schema.Type<typeof ThreadWait>;
 
 export const ThreadStatus = Schema.Literals(['completed', 'failed', 'cancelled']);
 export type ThreadStatus = Schema.Schema.Type<typeof ThreadStatus>;
 
+/** Ends the thread whose branch it is written on without merging it. */
 export const ThreadClose = Schema.TaggedStruct('threadClose', {
-  thread: EventId,
   status: ThreadStatus,
 });
 export type ThreadClose = Schema.Schema.Type<typeof ThreadClose>;
@@ -372,10 +379,6 @@ export type PayloadOf<T extends PayloadTag> = Extract<Payload, { _tag: T }>;
  */
 export class Event extends Type.makeObject<Event>(DXN.make('org.dxos.type.trajectory.event', '0.1.0'))(
   Schema.Struct({
-    /** Thread the event belongs to: the id of its `threadOpen` or `turnBegin`, absent for the main thread. */
-    thread: Schema.optional(EventId),
-    /** Writer's head of `thread` when appending, so concurrent writers can be detected. */
-    prev: Schema.optional(EventId),
     sender: Sender,
     /** ISO timestamp; display only, ordering is by feed position. */
     created: Schema.String.pipe(Annotation.GeneratorAnnotation.set('date.iso8601')),
@@ -393,23 +396,27 @@ export type MakeProps<T extends Payload = Payload> = {
   id?: EventId;
   payload: T;
   sender: Sender;
-  thread?: EventId;
-  prev?: EventId;
+  /** The thread the event is written in: an append continues its branch. Absent for the main thread. */
+  thread?: ThreadId;
   created?: string;
 };
 
 /**
  * Creates an event (not yet appended to a feed).
  */
-export const make = <T extends Payload>({ id, payload, sender, thread, prev, created }: MakeProps<T>): Event =>
-  Obj.make(Event, {
-    id,
-    thread,
-    prev,
-    sender,
-    created: created ?? new Date().toISOString(),
-    payload,
-  });
+export const make = <T extends Payload>({ id, payload, sender, thread, created }: MakeProps<T>): Event => {
+  const event = Obj.make(Event, { id, sender, created: created ?? new Date().toISOString(), payload });
+  if (thread !== undefined) {
+    Obj.update(event, (event) => Feed.setBranch(event, thread));
+  }
+  return event;
+};
+
+/**
+ * The thread an event belongs to: the branch it was written on, absent for the main thread. An opener (`turnBegin`,
+ * `threadOpen`) is the base of its branch, so its thread is the one it opens.
+ */
+export const threadOf = (event: Event): ThreadId | undefined => Feed.getBranch(event);
 
 /**
  * Narrows an event by payload tag.

@@ -14,6 +14,7 @@ const user: Trajectory.Sender = { role: 'user', identity: IdentityDid.random(), 
 const assistant: Trajectory.Sender = { role: 'assistant' };
 const model = DXN.make('com.anthropic.model.claude-sonnet-5.default');
 const anchor = Obj.ID.random();
+const branch = Trajectory.ThreadId.make('3@a');
 
 const payloads: Trajectory.Payload[] = [
   { _tag: 'message', blocks: [{ _tag: 'text', text: 'hello' }] },
@@ -22,7 +23,7 @@ const payloads: Trajectory.Payload[] = [
     blocks: [{ _tag: 'toolCall', toolCallId: 't1', name: 'search', input: '{}', providerExecuted: false }],
   },
   { _tag: 'turnBegin', model },
-  { _tag: 'turnEnd', begin: anchor, finishReason: 'stop', usage: { inputTokens: 10, cacheReadTokens: 8 } },
+  { _tag: 'turnEnd', finishReason: 'stop', usage: { inputTokens: 10, cacheReadTokens: 8 } },
   { _tag: 'promptConsume', message: anchor },
   { _tag: 'promptCancel', message: anchor },
   { _tag: 'contextBind', skills: [], objects: [] },
@@ -36,16 +37,16 @@ const payloads: Trajectory.Payload[] = [
     toolCallId: 't1',
     result: { _tag: 'toolResult', toolCallId: 't1', name: 'search', providerExecuted: false },
   },
-  { _tag: 'hookBegin', hook: 'lint', kind: 'agentic', thread: anchor },
+  { _tag: 'hookBegin', hook: 'lint', kind: 'agentic', thread: branch },
   { _tag: 'hookEnd', begin: anchor, blocks: [{ _tag: 'text', text: 'ok' }] },
   { _tag: 'compact', from: anchor, to: anchor, summary: [{ _tag: 'text', text: 'earlier work' }] },
   { _tag: 'requestResolve', message: anchor, requestId: 'r1', resolution: { outcome: 'selected', optionId: 'allow' } },
   { _tag: 'rewind', from: anchor },
   { _tag: 'fork', from: { event: anchor } },
   { _tag: 'threadOpen', mode: 'fork', from: { event: anchor }, purpose: 'turn' },
-  { _tag: 'threadMerge', thread: anchor, mode: 'summary', summary: [{ _tag: 'text', text: 'subagent result' }] },
-  { _tag: 'threadClose', thread: anchor, status: 'completed' },
-  { _tag: 'threadWait', on: anchor },
+  { _tag: 'threadMerge', mode: 'summary', summary: [{ _tag: 'text', text: 'subagent result' }] },
+  { _tag: 'threadClose', status: 'completed' },
+  { _tag: 'threadWait', on: branch },
   { _tag: 'modelChange', model },
   { _tag: 'custom', type: 'org.example.checkpoint', visible: false, data: { step: 3 } },
 ];
@@ -72,21 +73,19 @@ describe('Trajectory', () => {
       const event = Trajectory.make({ payload, sender: assistant });
       expect(Obj.instanceOf(Trajectory.Event, event)).to.be.true;
       expect(event.payload._tag).to.eq(payload._tag);
-      expect(event.thread).to.be.undefined;
+      expect(Trajectory.threadOf(event)).to.be.undefined;
     }
   });
 
-  test('make() keeps thread linkage and timestamp', ({ expect }) => {
-    const open = Trajectory.make({ payload: { _tag: 'threadOpen', mode: 'fresh' }, sender: assistant });
+  test("make() puts the event on its thread's branch and keeps the timestamp", ({ expect }) => {
     const event = Trajectory.make({
       payload: { _tag: 'message', blocks: [{ _tag: 'text', text: 'hi' }] },
       sender: user,
-      thread: open.id,
-      prev: open.id,
+      thread: branch,
       created: '2026-01-01T00:00:00.000Z',
     });
-    expect(event.thread).to.eq(open.id);
-    expect(event.prev).to.eq(open.id);
+    expect(Trajectory.threadOf(event)).to.eq(branch);
+    expect(Feed.getBranch(event)).to.eq(branch);
     expect(event.created).to.eq('2026-01-01T00:00:00.000Z');
   });
 
