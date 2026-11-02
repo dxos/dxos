@@ -279,8 +279,36 @@ index 1ca836a0b386a69c63e0fa2f655b9f78d5dfe508..5126850c2da2c368d4ad42ec9f0059e0
  export { WebSocketEndpoint, WorkerWebSocketEndpoint, type ManagedTransport, type WebSocketEndpointInterface, type WorkerWebSocketEndpointOptions, } from "./subduction/websocket-endpoint.js";
  export { WorkerWebSocketError, type WorkerPortLike, type WorkerPortSource, type WorkerWebSocketErrorCode, } from "./subduction/worker-websocket/protocol.js";
  export { WorkerWebSocketTransport, type WorkerWebSocketConnectOptions, } from "./subduction/worker-websocket/transport.js";
+diff --git a/dist/storage/SavedHeads.d.ts b/dist/storage/SavedHeads.d.ts
+index 00dfa144ec400a6b9a930593e72116c351a771cd..ed25ba73eed2352b42b6b2fc551b73a348b25080 100644
+--- a/dist/storage/SavedHeads.d.ts
++++ b/dist/storage/SavedHeads.d.ts
+@@ -18,6 +18,8 @@ export declare class SavedHeads {
+      * Get the last saved heads for a document
+      */
+     lastSavedHeads(documentId: DocumentId): HeadsHandle;
++    /** DXOS patch: drops the last saved heads for a document. */
++    forget(documentId: DocumentId): void;
+ }
+ export declare class HeadsHandle {
+     #private;
+diff --git a/dist/storage/SavedHeads.js b/dist/storage/SavedHeads.js
+index 9c589e4237dc16625432ae6f076989fd457c74e4..072193663b3f21de65c9e63f5ce6e789613e5691 100644
+--- a/dist/storage/SavedHeads.js
++++ b/dist/storage/SavedHeads.js
+@@ -21,6 +21,10 @@ export class SavedHeads {
+     lastSavedHeads(documentId) {
+         return new HeadsHandle(documentId, ++this.#seq, this.#data);
+     }
++    /** DXOS patch: drops the last saved heads for a document. */
++    forget(documentId) {
++        this.#data.delete(documentId);
++    }
+ }
+ // Helpr class to manage applying heads updates in the correct order when there
+ // are concurrent saves
 diff --git a/dist/storage/StorageSubsystem.d.ts b/dist/storage/StorageSubsystem.d.ts
-index 8a78849f2df006e1e70fb035a5b47fbcea5c98d9..54070f29792878383308b6dd6a6a5068c22462dc 100644
+index 8a78849f2df006e1e70fb035a5b47fbcea5c98d9..173f6c0de146fa519a912c36d2d0e84b53b5d7f8 100644
 --- a/dist/storage/StorageSubsystem.d.ts
 +++ b/dist/storage/StorageSubsystem.d.ts
 @@ -59,7 +59,10 @@ export declare class StorageSubsystem extends EventEmitter<StorageSubsystemEvent
@@ -295,20 +323,21 @@ index 8a78849f2df006e1e70fb035a5b47fbcea5c98d9..54070f29792878383308b6dd6a6a5068
      /**
       * Saves the provided Automerge document to storage.
       *
-@@ -72,6 +75,11 @@ export declare class StorageSubsystem extends EventEmitter<StorageSubsystemEvent
+@@ -72,6 +75,12 @@ export declare class StorageSubsystem extends EventEmitter<StorageSubsystemEvent
       * Removes the Automerge document with the given ID from storage
       */
      removeDoc(documentId: DocumentId): Promise<void>;
 +    /**
-+     * DXOS patch: forgets which version of every document was saved, for a caller that deleted the stored bytes behind
-+     * them. A document that comes back with the heads it had would otherwise count as saved and never be written again.
++     * DXOS patch: forgets which version of the given documents (every document when omitted) was saved, for a caller
++     * that deleted the stored bytes behind them. A document that comes back with the heads it had would otherwise count
++     * as saved and never be written again.
 +     */
-+    forgetSavedDocuments(): void;
++    forgetSavedDocuments(documentIds?: DocumentId[]): void;
      loadSyncState(documentId: DocumentId, storageId: StorageId): Promise<A.SyncState | undefined>;
      saveSyncState(documentId: DocumentId, storageId: StorageId, syncState: A.SyncState): Promise<void>;
  }
 diff --git a/dist/storage/StorageSubsystem.js b/dist/storage/StorageSubsystem.js
-index 373de48918620aaf26b7d375d5269c8fc6ffada5..66431b2751e260338780a5967649d77703864820 100644
+index 373de48918620aaf26b7d375d5269c8fc6ffada5..07c60e5e193b0851136329318112041382209631 100644
 --- a/dist/storage/StorageSubsystem.js
 +++ b/dist/storage/StorageSubsystem.js
 @@ -5,7 +5,6 @@ import { mergeArrays } from "../helpers/mergeArrays.js";
@@ -360,23 +389,31 @@ index 373de48918620aaf26b7d375d5269c8fc6ffada5..66431b2751e260338780a5967649d777
          const sourceChunks = this.#chunkInfos.get(documentId) ?? [];
          if (this.#shouldCompact(sourceChunks)) {
              await this.#saveTotal(documentId, doc, sourceChunks);
-@@ -174,6 +193,15 @@ export class StorageSubsystem extends EventEmitter {
+@@ -174,6 +193,23 @@ export class StorageSubsystem extends EventEmitter {
          await this.#storageAdapter.removeRange([documentId, "incremental"]);
          await this.#storageAdapter.removeRange([documentId, "sync-state"]);
      }
 +    /**
-+     * DXOS patch: forgets which version of every document was saved, for a caller that deleted the stored bytes behind
-+     * them. A document that comes back with the heads it had would otherwise count as saved and never be written again.
++     * DXOS patch: forgets which version of the given documents (every document when omitted) was saved, for a caller
++     * that deleted the stored bytes behind them. A document that comes back with the heads it had would otherwise count
++     * as saved and never be written again.
 +     */
-+    forgetSavedDocuments() {
-+        // A save already in flight records its heads in the SavedHeads it read, not in this one.
-+        this.#storedHeads = new SavedHeads();
-+        this.#chunkInfos = new Map();
++    forgetSavedDocuments(documentIds) {
++        if (documentIds === undefined) {
++            // A save already in flight records its heads in the SavedHeads it read, not in this one.
++            this.#storedHeads = new SavedHeads();
++            this.#chunkInfos = new Map();
++            return;
++        }
++        for (const documentId of documentIds) {
++            this.#storedHeads.forget(documentId);
++            this.#chunkInfos.delete(documentId);
++        }
 +    }
      /**
       * Saves just the incremental changes since the last save.
       */
-@@ -271,7 +299,9 @@ export class StorageSubsystem extends EventEmitter {
+@@ -271,7 +307,9 @@ export class StorageSubsystem extends EventEmitter {
              return true;
          }
          const newHeads = A.getHeads(doc);
