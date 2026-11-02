@@ -163,8 +163,10 @@ describe('EnsureChannelChat', () => {
         });
         yield* Database.flush();
 
-        const bindings = yield* Feed.query(yield* Database.load(feed), Filter.type(AiContext.Binding)).run;
-        const skills = bindings.flatMap(({ skills }) => skills.added.map(({ uri }) => uri));
+        const events = yield* TrajectoryStore.read(yield* Database.load(feed));
+        const skills = events.flatMap(({ payload }) =>
+          payload._tag === 'contextBind' ? payload.skills.map(({ uri }) => uri) : [],
+        );
         expect(skills).toContain(Skill.registryURI(ConversationSkill.key));
         expect(skills).toContain(markdown.uri);
         expect(skills).not.toContain(Skill.registryURI(RelaySkill.key));
