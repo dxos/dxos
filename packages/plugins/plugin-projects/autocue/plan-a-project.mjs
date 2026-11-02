@@ -166,6 +166,10 @@ export const steps = [
       await pickProperty(demo, page, 'priority', 'High');
       await pickProperty(demo, page, 'status', 'Started');
       await page.locator(`${COMPANION} :text("Priority set to high")`).first().waitFor({ timeout: 10_000 });
+      // Rows are titles only: the description belongs to the task's detail.
+      if ((await page.locator(`${taskRow(TASKS[0])}:has-text("${TASK_DESCRIPTION}")`).count()) > 0) {
+        throw new Error('The row shows the task description.');
+      }
       await page.waitForTimeout(BEAT * 2);
     },
   },
@@ -241,7 +245,7 @@ export const steps = [
         label: TASKS[2],
       });
       await page
-        .locator(`${COMPANION} [data-testid="taskList.property.assignee"]`, { hasText: 'delegated to' })
+        .locator(`${COMPANION} [data-testid="taskList.property.assignee"]`, { hasText: 'delegated to Claude Code' })
         .first()
         .waitFor({ state: 'visible', timeout: 10_000 });
       await page.waitForTimeout(BEAT * 2);

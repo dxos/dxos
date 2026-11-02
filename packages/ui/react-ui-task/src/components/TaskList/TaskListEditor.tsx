@@ -15,13 +15,10 @@ import React, {
 import { Filter, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { MarkdownEditable, type MarkdownEditableController, type MarkdownEditableProps } from '@dxos/react-ui-markdown';
+import { type MarkdownEditableController, type MarkdownEditableProps } from '@dxos/react-ui-markdown';
 import * as Button from '@dxos/react-ui/Button';
-import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
-import * as Input from '@dxos/react-ui/Input';
-import * as Layout from '@dxos/react-ui/Layout';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Util from '@dxos/react-ui/Util';
@@ -32,9 +29,9 @@ import { type ComposableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
+import { type TaskDescriptionBehavior, TaskEditorForm, type TaskEditorProperties } from './TaskEditorFields.tsx';
 import { type TaskCreateHandler, type TaskCreateResult } from './TaskList.tsx';
 import { useTaskListContext } from './TaskListContext.ts';
-import { TaskPropertyPills, type TaskPropertyValues } from './TaskPropertyPills.tsx';
 
 export type TaskListEditorProps = ComposableProps<{
   /** Placeholder for the title field when nothing is selected (the create case); translated by default. */
@@ -105,10 +102,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
     const draftDescription = useRef('');
     const [draft, setDraft] = useState('');
     // Set on the create row's pills before the task exists, and sent with its draft.
-    const [draftProperties, setDraftProperties] = useState<TaskPropertyValues>({});
-    // Bumped when the draft's properties are cleared, to rebuild the pills' form, which holds an edit until its values
-    // catch up and so would keep showing a value cleared under it.
-    const [propertiesEpoch, setPropertiesEpoch] = useState(0);
+    const [draftProperties, setDraftProperties] = useState<TaskEditorProperties>({});
     // Held by the pane, not the host: there is no task to attach them to until the create lands.
     const [files, setFiles] = useState<readonly File[]>([]);
     const [dragOver, setDragOver] = useState(false);
@@ -164,7 +158,6 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
           setFiles((files) => files.filter((file) => !sent.includes(file) || kept.has(file)));
           setDraft((draft) => (draft === sentTitle ? '' : draft));
           setDraftProperties({});
-          setPropertiesEpoch((epoch) => epoch + 1);
           if (draftDescription.current === sentDescription) {
             draftDescription.current = '';
             setCreateEpoch((epoch) => epoch + 1);
@@ -254,7 +247,6 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
       }
       setDraft('');
       setDraftProperties({});
-      setPropertiesEpoch((epoch) => epoch + 1);
       setFiles([]);
       onTaskSelect?.(undefined);
     }, [task, current, onTaskSelect]);
@@ -308,20 +300,35 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
       [handleFiles],
     );
 
-    // A draft's cleared field is dropped rather than held as `null`, since a draft has nothing to clear.
-    const handlePropertyChange = useCallback(
-      (patch: Task.Edit) => {
+    // The title is held as a draft until Enter, Save or blur commits it. The description's editor commits on its own,
+    // into the task or, while creating, into the draft. A draft's cleared property is dropped rather than held as
+    // `null`, since a draft has nothing to clear.
+    const handleChange = useCallback(
+      ({ title, description, ...properties }: Task.Edit) => {
+        if (title !== undefined) {
+          setDraft(title ?? '');
+        }
+        if (description !== undefined) {
+          if (task && current) {
+            onTaskUpdate?.(task, { description });
+          } else {
+            draftDescription.current = description ?? '';
+          }
+        }
+        if (Object.keys(properties).length === 0) {
+          return;
+        }
         if (task && current) {
-          onTaskUpdate?.(task, patch);
+          onTaskUpdate?.(task, properties);
         } else {
-          setDraftProperties((properties) => {
-            const next: Record<string, unknown> = { ...properties, ...patch };
-            for (const key of Object.keys(patch)) {
+          setDraftProperties((draftProperties) => {
+            const next: Record<string, unknown> = { ...draftProperties, ...properties };
+            for (const key of Object.keys(properties)) {
               if (next[key] == null) {
                 delete next[key];
               }
             }
-            return next as TaskPropertyValues;
+            return next as TaskEditorProperties;
           });
         }
       },
@@ -346,7 +353,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
     const canSave = draft.trim().length > 0;
     // Something to throw away: an edit in progress, or a draft.
     const canCancel = !!current || canSave;
-    const values: TaskPropertyValues = current
+    const properties: TaskEditorProperties = current
       ? {
           status: current.status ?? undefined,
           priority: current.priority ?? undefined,
@@ -354,10 +361,18 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
           assignee: current.assignee ?? undefined,
         }
       : draftProperties;
+    const description: TaskDescriptionBehavior | undefined = hasDescription
+      ? {
+          // Per task; creating, remounted empty after each create, since there it holds the draft itself.
+          editorKey: current?.id ?? `create-${createEpoch}`,
+          controllerRef: descriptionRef,
+          placeholder: descriptionPlaceholder ?? t('task-description.placeholder'),
+          extensions,
+          controlled: !!current,
+        }
+      : undefined;
 
     return (
-      // A form of its own rather than a row on the list's columns: the title and description take the full width, and
-      // the task's other fields sit under them as pills, so they can all be set as the task is added.
       <div
         {...rest}
         className={mx(
@@ -378,115 +393,64 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
         })}
         ref={forwardedRef}
       >
-        <Field.Root classNames='min-w-0'>
-          <Input.Root
-            // An input clips its overflow rather than wrapping it, so a long title ends mid-word against the save button
-            // with nothing to say it continues; the ellipsis says so.
-            classNames='grow text-ellipsis'
-            data-testid='taskList.edit.title'
+        <TaskEditorForm
+          // Per task: switching tasks replaces what the form holds rather than carrying an edit across.
+          key={current?.id ?? 'create'}
+          values={{ title: draft, description: current?.description, ...properties }}
+          members={members}
+          people={people}
+          title={{
             // A host may name the row ("Add a step"), but the default is the package's own string: an English literal
             // in the component is a string no translation can reach.
-            placeholder={current ? t('task-title.placeholder') : (placeholder ?? t('add-task.placeholder'))}
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            onKeyDown={handleTitleKeyDown}
-            onBlur={handleTitleBlur}
-            // Only when there is something valid to save. `false` rather than nothing, so the field keeps its frame (and
-            // its test id) either way.
-            end={
-              canSave && (
-                <SystemButton.Save
-                  variant='primary'
-                  data-testid='taskList.edit.save'
-                  // Out of the tab order: Enter in the field saves, and Tab goes on to the description.
-                  tabIndex={-1}
-                  onClick={handleSave}
-                  onMouseDown={(event) => event.preventDefault()}
-                />
-              )
-            }
-          />
-        </Field.Root>
-        {hasDescription && (
-          // A control frame, as the title's Input is: the well, and the focus ring while the editor has focus.
-          <Input.Frame rows={2} data-testid='taskList.edit.description' classNames='min-w-0'>
-            {/* A description is markdown, so it is edited as markdown. `editing` is held open — the pane IS the editor,
-                so there is nothing to click into — and the key remounts it per task, since a field held open never
-                re-reads its subject. Creating, the field is uncontrolled: there is no task to read a value from, so it
-                holds the draft itself until the create collects it. */}
-            <MarkdownEditable
-              key={current?.id ?? `create-${createEpoch}`}
-              ref={descriptionRef}
-              // A long description scrolls within the field rather than growing the pane past the list it edits from:
-              // eight lines, with the scroller's line-height set to the lines' (CodeMirror's base theme gives it a
-              // smaller one) so `lh` measures a real line.
-              classNames='[&_.cm-scroller]:!leading-normal [&_.cm-scroller]:max-h-[8lh] [&_.cm-scroller]:overflow-y-auto'
-              editing
-              multiline
-              placeholder={descriptionPlaceholder ?? t('task-description.placeholder')}
-              extensions={extensions}
-              // Held open, so it must not pull focus: selecting a row by keyboard would otherwise land the reader in
-              // the description instead of the list.
-              autoFocus={false}
-              {...(current && { value: current.description ?? '' })}
-              onValueChange={(description) => {
-                if (task && current) {
-                  onTaskUpdate?.(task, { description });
-                } else {
-                  draftDescription.current = description;
-                }
-              }}
-            />
-          </Input.Frame>
-        )}
-
-        {takesFiles &&
-          files.length > 0 && (
-            // Under the description: what the task will be created with.
-            <div className='flex flex-wrap items-center gap-1 min-w-0'>
-              {files.map((file, index) => (
-                <Tag.Tag
-                  key={`${file.name}-${index}`}
-                  hue='neutral'
-                  classNames='inline-flex items-center gap-1'
-                  data-testid='taskList.edit.file'
-                >
-                  <Icon.Icon icon='ph--paperclip--regular' size='xs' />
-                  <span data-testid='taskList.edit.file.name'>{file.name}</span>
-                  <Button.Root
-                    variant='ghost'
-                    size='sm'
-                    iconOnly
-                    icon='ph--x--regular'
-                    iconSize='xs'
-                    label={t('remove-file.label', { name: file.name })}
-                    classNames='p-0 min-h-0 h-auto'
-                    onClick={() => setFiles((files) => files.filter((_, position) => position !== index))}
-                  />
-                </Tag.Tag>
-              ))}
-            </div>
-          )}
-
-        <Layout.Flex wrap align='center' gap='xs' classNames='min-w-0' data-testid='taskList.edit.properties'>
-          <TaskPropertyPills
-            key={current?.id ?? `create-${propertiesEpoch}`}
-            values={values}
-            members={members}
-            people={people}
-            onChange={handlePropertyChange}
-          />
-          {canCancel && (
-            // At the end of the pills: the way out of the pane, there while it holds something to throw away.
-            <SystemButton.Cancel
-              variant='ghost'
-              classNames='ms-auto'
-              data-testid='taskList.edit.cancel'
-              onClick={handleCancel}
-              onMouseDown={(event) => event.preventDefault()}
-            />
-          )}
-        </Layout.Flex>
+            placeholder: current ? t('task-title.placeholder') : (placeholder ?? t('add-task.placeholder')),
+            canSave,
+            onKeyDown: handleTitleKeyDown,
+            onBlur: handleTitleBlur,
+            onSave: handleSave,
+          }}
+          description={description}
+          end={
+            canCancel && (
+              // At the end of the pills: the way out of the pane, there while it holds something to throw away.
+              <SystemButton.Cancel
+                variant='ghost'
+                classNames='ms-auto'
+                data-testid='taskList.edit.cancel'
+                onClick={handleCancel}
+                onMouseDown={(event) => event.preventDefault()}
+              />
+            )
+          }
+          onChange={handleChange}
+        >
+          {takesFiles &&
+            files.length > 0 && (
+              // Under the description: what the task will be created with.
+              <div className='flex flex-wrap items-center gap-1 min-w-0'>
+                {files.map((file, index) => (
+                  <Tag.Tag
+                    key={`${file.name}-${index}`}
+                    hue='neutral'
+                    classNames='inline-flex items-center gap-1'
+                    data-testid='taskList.edit.file'
+                  >
+                    <Icon.Icon icon='ph--paperclip--regular' size='xs' />
+                    <span data-testid='taskList.edit.file.name'>{file.name}</span>
+                    <Button.Root
+                      variant='ghost'
+                      size='sm'
+                      iconOnly
+                      icon='ph--x--regular'
+                      iconSize='xs'
+                      label={t('remove-file.label', { name: file.name })}
+                      classNames='p-0 min-h-0 h-auto'
+                      onClick={() => setFiles((files) => files.filter((_, position) => position !== index))}
+                    />
+                  </Tag.Tag>
+                ))}
+              </div>
+            )}
+        </TaskEditorForm>
       </div>
     );
   },

@@ -469,8 +469,8 @@ export const ProjectArticle = ({
                   data={{
                     subject: taskSet,
                     attendableId,
-                    // Unset means shown: settings saved before the preference existed hold no key.
-                    showDescription: settings.showTaskDescriptions ?? true,
+                    // Rows are titles only, as Linear's are; the description is the task's detail. Opt-in.
+                    showDescription: settings.showTaskDescriptions ?? false,
                     scope,
                     onTaskCreated: handleTaskCreated,
                   }}

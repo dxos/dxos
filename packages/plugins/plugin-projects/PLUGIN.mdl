@@ -253,7 +253,7 @@ test QA-4: Plan a project and hand its tasks to an agent
       do: Click "Service both roasters", type a description, set its priority to High and its status to Started.
       expect: |
         the task opens in a "Task" tab beside the project, and its Activity records the priority and status
-        changes
+        changes. Its row in the list shows the title only, not the description
     - name: Assign a task from its row
       do: Point at "Order green beans", click the assignee placeholder at the end of its row, and pick yourself.
       expect: |
@@ -271,7 +271,7 @@ test QA-4: Plan a project and hand its tasks to an agent
         }
       expect: |
         the row shows you as its assignee with the agent badge on your avatar, and its status is Started. Opening the
-        task shows one Assignee row naming you, delegated to the session
+        task shows one Assignee row naming you, delegated to Claude Code: the agent, not the session's title
       note: Without `assignee` the claim is refused, since no person would answer for the task.
     - name: Select tasks for the agent
       do: |
@@ -1297,4 +1297,54 @@ decision D-112: QA-4 sets the last new task's priority from the Add task row's P
   for: user:wittjosiah
   affects: [QA-4]
   why: The Add task row's properties are pills on a schema form now, and no other step sets a property before the task exists.
+```
+
+```mdl
+decision D-113: A task delegated to an agent names the agent ("delegated to Claude"), not the title of the session or run doing the work.
+  date: 2026-11-02
+  by: user:wittjosiah
+  affects: [QA-4]
+```
+
+```mdl
+decision D-114: Rows in a task list do not show task descriptions; a description shows only in the task's detail view, as in Linear, so the list stays compact and easy to scan.
+  date: 2026-11-02
+  by: user:wittjosiah
+  affects: [QA-4]
+```
+
+```mdl
+decision D-115: The Add task row is one form to create a task: the title and description are fields of the same form as the task's other properties.
+  date: 2026-11-02
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-116: An agent is named by its harness's name, which for a coding session is "Claude Code". Fills in [D-113].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-4]
+  why: A session records the harness it runs in, not the model, and the model can change within a session.
+  rejected:
+    - The model's name, which a session does not record.
+```
+
+```mdl
+decision D-117: Show task descriptions stays a setting, off by default, for a reader who wants descriptions in rows. Fills in [D-114].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: A reader who turned the setting on keeps the rows they chose; everyone else gets title-only rows.
+  rejected:
+    - Removing the setting, which would take descriptions away from a reader who asked for them.
+```
+
+```mdl
+decision D-118: QA-4 expects the delegate to read "Claude Code", and a task given a description to keep a title-only row. Fills in [D-113], [D-114] and [D-116].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-4]
+  why: Fill in a task is the one step that gives a task a description, and A coding session takes a task the one that delegates.
 ```

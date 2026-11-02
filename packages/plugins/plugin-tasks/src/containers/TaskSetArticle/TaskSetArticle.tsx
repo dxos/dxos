@@ -85,7 +85,7 @@ export const TaskSetArticle = ({
   role,
   attendableId,
   subject: taskSet,
-  showDescription = true,
+  showDescription = false,
   scope,
   onTaskCreated,
 }: TaskSetArticleProps) => {

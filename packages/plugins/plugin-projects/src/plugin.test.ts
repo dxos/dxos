@@ -86,7 +86,7 @@ describe('ProjectsPlugin', () => {
     await harness.fire(ActivationEvents.Idle);
     expect(harness.manager.getActive()).toContain(moduleId('Settings'));
     const registry = harness.get(Capabilities.AtomRegistry);
-    expect(registry.get(harness.get(ProjectCapabilities.Settings)).showTaskDescriptions).toBe(true);
+    expect(registry.get(harness.get(ProjectCapabilities.Settings)).showTaskDescriptions).toBe(false);
     expect(harness.getAll(AppCapabilities.Settings).some((entry) => entry.prefix === ProjectsNamespace.key)).toBe(true);
   });
 });

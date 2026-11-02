@@ -60,8 +60,9 @@ export const getAssigneeDisplay = ({
     (session || subject === undefined ? Task.refEntityId(assignee.subject) : undefined);
   const label =
     contact?.fullName ??
-    session?.title ??
+    // The agent, not its run: a session's title names the work, which the task already does.
     (session && RemoteSession.harnessName(session)) ??
+    session?.title ??
     assignee.name ??
     assignee.email ??
     (assignee.identityDid ? shortDid(assignee.identityDid) : undefined) ??
