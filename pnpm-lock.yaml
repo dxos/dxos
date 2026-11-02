@@ -933,6 +933,9 @@ catalogs:
     debug:
       specifier: ^4.3.4
       version: 4.4.3
+    decode-named-character-reference:
+      specifier: ^1.0.2
+      version: 1.0.2
     deep-equal:
       specifier: ^2.2.3
       version: 2.2.3
@@ -2342,6 +2345,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-doc':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-doc
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
@@ -2792,6 +2798,9 @@ importers:
       crc-32:
         specifier: 'catalog:'
         version: 1.2.2
+      decode-named-character-reference:
+        specifier: 'catalog:'
+        version: 1.0.2
       effect:
         specifier: 4.0.4
         version: 4.0.4

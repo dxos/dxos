@@ -33,7 +33,8 @@ describe('composerPlugin', () => {
       root,
       configFile: false,
       logLevel: 'silent',
-      plugins: composerPlugin({ entry: 'src/plugin.ts' }),
+      // esbuild, which writes `vendor/`, refuses vitest's module sandbox; the vendor build is checked by check-bundle.
+      plugins: composerPlugin({ entry: 'src/plugin.ts', vendor: false }),
     });
 
     const manifest = JSON.parse(readFileSync(join(root, 'dist', 'manifest.json'), 'utf8'));

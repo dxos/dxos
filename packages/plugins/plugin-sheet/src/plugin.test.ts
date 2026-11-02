@@ -21,9 +21,10 @@ describe('SheetPlugin', () => {
       plugins: [ClientPlugin.make({}), SheetPlugin.make()],
     });
 
-    // OperationHandler and UndoMappings are dependency-mode roots, so they activate immediately too.
+    // The operation handler and UndoMappings are dependency-mode roots, so they activate immediately too; under node
+    // the handler is the headless one, without the operations that drive a live editor view.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('schema'), moduleId('OperationHandler'), moduleId('UndoMappings')]),
+      expect.arrayContaining([moduleId('schema'), moduleId('OperationHandlerHeadless'), moduleId('UndoMappings')]),
     );
   });
 });

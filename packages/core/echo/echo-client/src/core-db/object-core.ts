@@ -956,6 +956,34 @@ export class ObjectCore {
     );
   }
 
+  /**
+   * Adds to `ids` the same-space entities whose writes can change {@link isDeleted}: the strong dependencies it walks
+   * and the merge redirects between them. Nothing is loaded.
+   */
+  addDeletionDependencies(ids: Set<string>, remainingDepth: number = 10): void {
+    if (!this.entityManager || remainingDepth <= 0) {
+      return;
+    }
+    this.#readDeletionFields();
+    for (const dependency of [this.#parentId, this.#sourceId, this.#targetId]) {
+      // An entity already in `ids` has its dependencies there, but a redirect from it may not be.
+      let id = dependency;
+      while (id !== undefined) {
+        const seen = ids.has(id);
+        ids.add(id);
+        const core = this.entityManager.getObjectCoreById(id, LOOKUP_HELD);
+        const next = core?.getMergedInto();
+        if (next === undefined || next >= id) {
+          if (!seen) {
+            core?.addDeletionDependencies(ids, remainingDepth - 1);
+          }
+          break;
+        }
+        id = next;
+      }
+    }
+  }
+
   #readDeletionFields(): void {
     const root = this.#root();
     if (root === this.#deletionRoot) {

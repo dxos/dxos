@@ -21,10 +21,10 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Text } from '@dxos/schema';
 import { Outline, TaskSet } from '@dxos/types';
 
+import { ARTIFACTS_SEGMENT } from '../paths.ts';
 import * as ProjectGraph from '../ProjectGraph.ts';
 import {
   ARTIFACTS_SECTION_TYPE,
-  ARTIFACTS_SEGMENT,
   createProjectActionExtension,
   createProjectArtifactsActionExtension,
   createProjectArtifactsExtension,
