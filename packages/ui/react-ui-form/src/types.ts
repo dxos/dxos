@@ -40,7 +40,11 @@ export type FormFieldOverride = {
   hideLabel?: boolean;
   description?: string;
   placeholder?: string;
+  /** The field's glyph, shown where its value has none of its own (an unset pill, an option without an icon). */
+  icon?: string;
   readonly?: boolean;
+  /** This use of the form always holds a value, though the schema allows none: a select offers no "None". */
+  required?: boolean;
   hidden?: boolean;
   /**
    * Numeric bounds and step for this use of the field, narrower than the schema's: e.g. a range the editor
@@ -60,8 +64,9 @@ export type FormFieldOverride = {
  * - compact: Show label and control.
  * - inline: Control only.
  * - static: Plain DOM; omit all undefined values.
+ * - pill: Control only, as an outlined pill sized to its value, for a wrapping row of fields.
  */
-export type FormPresentation = 'full' | 'compact' | 'inline' | 'static';
+export type FormPresentation = 'full' | 'compact' | 'inline' | 'static' | 'pill';
 
 /**
  * Dynamic props passed to input components.
@@ -94,6 +99,8 @@ export type FormFieldRendererProps<T = any> = {
    */
   jsonPath?: string;
   placeholder?: string;
+  /** The field's glyph (see `FormFieldOverride.icon`). */
+  icon?: string;
   autoFocus?: boolean;
   /** Presentation mode for the field (full/compact/inline/static); see {@link FormPresentation}. */
   presentation?: FormPresentation;
