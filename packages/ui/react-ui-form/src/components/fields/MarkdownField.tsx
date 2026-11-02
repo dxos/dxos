@@ -21,6 +21,7 @@ import { type FormFieldRendererProps } from '#types';
 
 import { useFormContext } from '../../hooks/index.ts';
 import { presentationFor } from '../presentation.tsx';
+import { BoundTextEditor } from './BoundTextEditor.tsx';
 
 /** The editor's minimum height in lines, as the current field's `min-h-[6lh]`. */
 const ROWS = 6;
@@ -47,9 +48,12 @@ export const MarkdownField = ({
   placeholder,
   presentation,
   db,
+  jsonPath,
+  path,
   getValue,
   onValueChange,
 }: FormFieldRendererProps) => {
+  const { object } = useFormContext('MarkdownField');
   const value: unknown = getValue();
   const isStatic = presentationFor(presentation).isStatic;
   if (Ref.isRefType(type)) {
@@ -68,6 +72,17 @@ export const MarkdownField = ({
   }
 
   const text = typeof value === 'string' ? value : '';
+  if (object && path && !isStatic) {
+    return (
+      <BoundTextEditor
+        binding={{ object, path }}
+        markdown
+        placeholder={placeholder}
+        readonly={!!readonly}
+        testId={jsonPath}
+      />
+    );
+  }
   return isStatic ? (
     <Typography.Text>{text}</Typography.Text>
   ) : (

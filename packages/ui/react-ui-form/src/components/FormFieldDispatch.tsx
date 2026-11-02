@@ -141,6 +141,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     label,
     description,
     jsonPath,
+    path,
     // An indeterminate value reads as none, so its placeholder says why rather than naming the field.
     placeholder: indeterminate
       ? (override?.placeholder ?? t('indeterminate.placeholder'))

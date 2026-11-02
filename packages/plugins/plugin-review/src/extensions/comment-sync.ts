@@ -9,29 +9,24 @@ import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { getTextInRange } from '@dxos/echo-client';
-import { Doc } from '@dxos/echo-doc';
+import { type Doc } from '@dxos/echo-doc';
 import { OperationInvoker } from '@dxos/operation';
-import type * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { type Text } from '@dxos/schema';
 import { AnchoredTo, Thread } from '@dxos/types';
 import { comments } from '@dxos/ui-editor';
 
 import { CommentOperation, ReviewCapabilities } from '#types';
 
-// Resolve the anchor snippet against the document the editor produced the cursor from: the branch
-// content Text in Branch view, else main. Resolving a branch-doc cursor against main throws (the
-// automerge op is absent), so a stale/foreign cursor is tolerated rather than crashing.
-// TODO(burdon): Factor out.
-const getName = (text: Text.Text | undefined, anchor: string): string | undefined => {
-  if (!text) {
-    return undefined;
-  }
-  const [start, end] = anchor.split(':');
-  try {
-    return getTextInRange(Doc.createAccessor(text, ['content']), start, end);
-  } catch {
-    return undefined;
-  }
+/** The string an editor binds, and how the threads of its subject anchor into it. */
+export type CommentTarget = {
+  /** The object the threads anchor to. */
+  subject: Obj.Unknown;
+  /** The string the editor is bound to; anchor quotes resolve against it. */
+  accessor?: Doc.Accessor;
+  /**
+   * The string's place in the subject. Anchors into it are path anchors (`AnchoredTo.formatPathAnchor`); without a
+   * path they are the editor's own `from:to` cursor ranges, as in a Markdown document's content.
+   */
+  path?: readonly AnchoredTo.PathSegment[];
 };
 
 export type CommentSyncStore = {
@@ -44,9 +39,6 @@ export type CommentSyncOptions = {
   // the markdown editor (which resolves it from the per-object version selection) rather than read
   // from core `getCurrentBranch`, which stays 'main' under this branch's per-surface binding model.
   reviewBranch?: string;
-  // The branch content Text the editor is bound to in Branch view; undefined on main/diff. Comment
-  // anchors resolve against it.
-  branchText?: Text.Text;
   // The active branch is a per-user suggestion branch: inline comment creation is prohibited.
   suggestionBranch?: boolean;
   // Whether comment marks/creation render at all (per the review policy); `false` hides comments
@@ -55,25 +47,49 @@ export type CommentSyncOptions = {
 };
 
 /**
- * Construct comment-sync editor extensions for a document.
+ * Construct comment-sync editor extensions for the string an editor binds.
  */
 export const commentSync = (
   store: CommentSyncStore,
-  doc?: Markdown.Document,
+  target?: CommentTarget,
   invokePromise?: OperationInvoker.OperationInvoker['invokePromise'],
   options: CommentSyncOptions = {},
 ): Extension => {
-  const { reviewBranch, branchText, suggestionBranch, showComments = true } = options;
+  const { reviewBranch, suggestionBranch, showComments = true } = options;
+  const doc = target?.subject;
   const db = doc && Obj.getDatabase(doc);
   // The no-op keeps the comment facets present (so the editor never errors on their absence) while
   // rendering nothing — used both when comments are unavailable and when the policy hides them.
-  if (!doc || !db || !invokePromise || !showComments) {
+  if (!target || !doc || !db || !invokePromise || !showComments) {
     return [comments({ id: 'noop' })];
   }
 
-  // Anchors are cursors within whichever document the editor is bound to: the branch content in
-  // Branch view, else main.
-  const contentText = branchText ?? doc.content.target ?? undefined;
+  const { accessor, path } = target;
+  const prefix = path && AnchoredTo.formatPath(path);
+  // The editor's cursor range (`from:to`) for an anchor into this string; undefined for an anchor elsewhere.
+  const toCursor = (anchor: string | undefined): string | undefined => {
+    const parsed = anchor ? AnchoredTo.parsePathAnchor(anchor) : undefined;
+    if (prefix === undefined) {
+      return parsed ? undefined : anchor;
+    }
+    return parsed && AnchoredTo.formatPath(parsed.path) === prefix ? `${parsed.from}:${parsed.to}` : undefined;
+  };
+  const toAnchor = (cursor: string): string => {
+    if (!path) {
+      return cursor;
+    }
+    const [from, to] = cursor.split(':');
+    return AnchoredTo.formatPathAnchor({ path, from, to });
+  };
+  // A stale or foreign cursor (a branch-doc cursor resolved against main) throws, so it reads as no quote.
+  const getName = (cursor: string): string | undefined => {
+    const [start, end] = cursor.split(':');
+    try {
+      return accessor && getTextInRange(accessor, start, end);
+    } catch {
+      return undefined;
+    }
+  };
 
   const { registry, stateAtom } = store;
   const objectId = Obj.getURI(doc);
@@ -117,10 +133,11 @@ export const commentSync = (
     EditorView.updateListener.of((update) => {
       if (update.docChanged) {
         getAnchors().forEach((anchor) => {
-          if (anchor.anchor) {
+          const cursor = toCursor(anchor.anchor);
+          if (cursor) {
             // Only update if the name has changed, otherwise this will cause an infinite loop.
             // Skip if the name is empty; this means comment text was deleted, but thread name should remain.
-            const name = getName(contentText, anchor.anchor);
+            const name = getName(cursor);
             const thread = Relation.getSource(anchor) as Thread.Thread;
             if (name && name !== thread.name) {
               Obj.update(thread, (thread) => {
@@ -144,12 +161,10 @@ export const commentSync = (
       // a draft persists (see `CommentState`), which breaks every id comparison downstream —
       // decoration `data-current`, `scrollCommentIntoView`'s lookup, the delete/update matching below.
       getComments: () =>
-        getAnchors()
-          .filter((anchor) => anchor.anchor)
-          .map((anchor) => ({
-            id: Relation.getSource(anchor).id,
-            cursor: anchor.anchor,
-          })),
+        getAnchors().flatMap((anchor) => {
+          const cursor = toCursor(anchor.anchor);
+          return cursor ? [{ id: Relation.getSource(anchor).id, cursor }] : [];
+        }),
       subscribe: (sink) => {
         // Subscribe to both query changes and store state changes. `comments()` primes the initial read
         // itself (after this returns), so no manual first `sink()` is needed here.
@@ -185,9 +200,9 @@ export const commentSync = (
         };
       },
       onCreate: ({ cursor, branch }) => {
-        const name = getName(contentText, cursor);
+        const name = getName(cursor);
         void invokePromise(CommentOperation.Create, {
-          anchor: cursor,
+          anchor: toAnchor(cursor),
           name,
           subject: doc,
           branch,
@@ -222,10 +237,10 @@ export const commentSync = (
         if (draft) {
           const thread = Relation.getSource(draft) as Thread.Thread;
           Obj.update(thread, (thread) => {
-            thread.name = getName(contentText, cursor);
+            thread.name = getName(cursor);
           });
           Relation.update(draft, (draft) => {
-            draft.anchor = cursor;
+            draft.anchor = toAnchor(cursor);
           });
         }
 
@@ -234,10 +249,10 @@ export const commentSync = (
           const thread = Relation.getSource(relation);
           if (Obj.instanceOf(Thread.Thread, thread)) {
             Obj.update(thread, (thread) => {
-              thread.name = getName(contentText, cursor);
+              thread.name = getName(cursor);
             });
             Relation.update(relation, (relation) => {
-              relation.anchor = cursor;
+              relation.anchor = toAnchor(cursor);
             });
           }
         }

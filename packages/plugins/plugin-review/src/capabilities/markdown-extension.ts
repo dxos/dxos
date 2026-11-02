@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import { Doc } from '@dxos/echo-doc';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { type EditorState, commentsState, documentId, overlap } from '@dxos/ui-editor';
 
@@ -36,9 +37,12 @@ export default Capability.makeModule(
         const registry = capabilities.get(Capabilities.AtomRegistry);
         const stateAtom = capabilities.get(CommentCapabilities.State);
 
-        return commentSync({ registry, stateAtom }, doc, invokePromise, {
+        // Anchors are cursors within whichever text the editor is bound to: the branch content in Branch view,
+        // else main.
+        const text = branchText ?? doc?.content.target;
+        const target = doc && { subject: doc, accessor: text && Doc.createAccessor(text, ['content']) };
+        return commentSync({ registry, stateAtom }, target, invokePromise, {
           reviewBranch,
-          branchText,
           suggestionBranch,
           showComments,
         });

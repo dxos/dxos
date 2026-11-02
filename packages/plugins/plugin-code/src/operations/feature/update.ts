@@ -39,15 +39,15 @@ const handler: Operation.WithHandler<typeof CodeOperation.UpdateFeature> = CodeO
         if (description !== undefined) {
           feature.description = description;
         }
-        if (requirements !== undefined) {
-          const blockId = Feature.getBlockId(feature);
-          const copied = requirements.map((requirement) => ({ ...requirement }));
-          feature.requirements = blockId ? Feature.numberRequirements(blockId, copied) : copied;
-        }
         if (status !== undefined) {
           feature.status = status;
         }
       });
+      // Edited in place, numbered under the block id the new sources give, so comments on a requirement stay anchored.
+      if (requirements !== undefined) {
+        const blockId = Feature.getBlockId(feature);
+        Feature.setRequirements(feature, blockId ? Feature.numberRequirements(blockId, requirements) : requirements);
+      }
       const container = FeatureMap.getContainer(feature);
       // A position belongs to the canvas it was dragged on, so a move leaves it behind; the embed moves with it.
       if (target && container?.id !== target.id) {

@@ -6,7 +6,9 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import * as Spec from '@dxos/compute/Spec';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { getTextInRange, toCursor } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { Doc } from '@dxos/echo-doc';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { File, PullRequest, Task } from '@dxos/types';
@@ -69,7 +71,9 @@ describe('Feature', () => {
     // Only the top-level spec is a root, which is what the sidebar lists.
     const roots = await db.query(Filter.and(Filter.type(Spec.Spec), Filter.hasParent(false))).run();
     expect(roots.map(({ name }) => name)).toEqual(['Inbox']);
-    expect(sync.requirements).toEqual([{ id: 'F-3.1', text: 'New mail shows within a minute.' }]);
+    expect(sync.requirements).toEqual([
+      { key: expect.any(String), id: 'F-3.1', text: 'New mail shows within a minute.' },
+    ]);
 
     db.remove(sync);
     await db.flush();
@@ -131,5 +135,41 @@ describe('Feature', () => {
     expect(Feature.findDependencyCycle(edges, 'c', 'a')).toEqual(['a', 'b', 'c']);
     expect(Feature.findDependencyCycle(edges, 'a', 'c')).toBeUndefined();
     expect(Feature.findDependencyCycle(edges, 'a', 'a')).toEqual(['a']);
+  });
+
+  test('a rewritten requirement list keeps each key, matched by key, else spec id, else text', async ({ expect }) => {
+    const { db } = await open();
+    const feature = db.add(
+      Feature.make({
+        name: 'Sync',
+        status: 'planned',
+        requirements: [{ id: 'F-3.1', text: 'New mail shows within a minute.' }, { text: 'Sync resumes after sleep.' }],
+      }),
+    );
+    const [first, second] = (feature.requirements ?? []).map(({ key }) => key);
+    expect(first).toBeDefined();
+    expect(second).not.toBe(first);
+
+    Feature.setRequirements(feature, [
+      { text: 'Sync resumes after sleep.' },
+      { id: 'F-3.1', text: 'Unread mail shows within a minute.' },
+      { text: 'Sync stops when offline.' },
+    ]);
+    const keys = (feature.requirements ?? []).map(({ key }) => key);
+    expect(keys.slice(0, 2)).toEqual([second, first]);
+    expect(keys[2]).not.toBeOneOf([first, second, undefined]);
+  });
+
+  test('a requirement edited in place keeps the cursors into it', async ({ expect }) => {
+    const { db } = await open();
+    const feature = db.add(
+      Feature.make({ name: 'Sync', status: 'planned', requirements: [{ text: 'New mail shows within a minute.' }] }),
+    );
+    const key = feature.requirements?.[0].key;
+    const accessor = () => Doc.createAccessor(feature, ['requirements', 0, 'text']);
+    const [from, to] = [toCursor(accessor(), 4), toCursor(accessor(), 8)];
+
+    Feature.setRequirements(feature, [{ key, text: 'All new mail shows within a minute.' }]);
+    expect(getTextInRange(accessor(), from, to)).toBe('mail');
   });
 });

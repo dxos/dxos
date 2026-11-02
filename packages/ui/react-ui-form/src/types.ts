@@ -93,6 +93,8 @@ export type FormFieldRendererProps<T = any> = {
    * Dotted JSON path of this field within the form values (e.g. `runtime.client.storage.persistent`).
    */
   jsonPath?: string;
+  /** Key path of this field within the form values. */
+  path?: readonly (string | number)[];
   placeholder?: string;
   autoFocus?: boolean;
   /** Presentation mode for the field (full/compact/inline/static); see {@link FormPresentation}. */

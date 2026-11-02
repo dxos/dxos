@@ -5,6 +5,7 @@
 import { type Extension } from '@codemirror/state';
 import { useEffect, useMemo, useRef } from 'react';
 
+import { type Obj } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
@@ -37,6 +38,12 @@ export type FormContextValue<T extends AnyProperties = any> = {
 
   /** Editor extensions for the form's markdown fields, beyond their own (what a host's plugins contribute). */
   markdownExtensions?: Extension[];
+
+  /**
+   * The object whose fields the form shows, at the same paths. Its text fields then edit the object's strings in
+   * place (see `BoundTextEditor`) rather than handing back values, so concurrent edits merge and anchors survive.
+   */
+  object?: Obj.Unknown;
 } & FieldContext;
 
 export const [FormContextProvider, useFormContext] = createContext<FormContextValue>('Form');

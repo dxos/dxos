@@ -173,11 +173,14 @@ export const Default: Story = {
     invariant(feature, 'Missing feature.');
 
     await userEvent.click(first);
-    const name = within(first).getByTestId<HTMLInputElement>('name');
+    // The name is an editor bound to the feature, so each keystroke reaches it without a commit.
+    const name = within(first).getByTestId('name');
     await waitFor(() => expect(name.closest('[inert]')).toBeNull(), { timeout: 5_000 });
-    await userEvent.clear(name);
-    await userEvent.type(name, 'Renamed');
-    await waitFor(() => expect(feature.name).toBe('Renamed'), { timeout: 5_000 });
+    const original = feature.name;
+    const content = name.querySelector<HTMLElement>('.cm-content')!;
+    await userEvent.click(content);
+    await userEvent.type(content, '{End} 2');
+    await waitFor(() => expect(feature.name).toBe(`${original} 2`), { timeout: 5_000 });
   },
 };
 
@@ -201,7 +204,7 @@ export const SlashFeature: Story = {
       },
       { timeout: 5_000 },
     );
-    await expect(within(embed).getByTestId<HTMLInputElement>('name').value).toBe('Undo send');
+    await expect(within(embed).getByTestId('name')).toHaveTextContent('Undo send');
     await waitFor(() => expect(document.activeElement?.closest('[data-testid="feature-embed"]')).toBe(embed), {
       timeout: 5_000,
     });
@@ -252,7 +255,7 @@ export const FromProse: Story = {
       await placeCursor(view, paragraph);
       await userEvent.keyboard(' /feat');
       await acceptFeature();
-      await waitFor(() => expect(document.activeElement?.getAttribute('data-testid')).toBe('name'), {
+      await waitFor(() => expect(document.activeElement?.closest('[data-testid="name"]')).not.toBeNull(), {
         timeout: 5_000,
       });
       await userEvent.keyboard(name);

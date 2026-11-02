@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { EditorView } from '@codemirror/view';
 import * as Schema from 'effect/Schema';
 import React, { type KeyboardEvent, type MouseEvent, useCallback, useEffect, useRef } from 'react';
 
@@ -61,11 +62,13 @@ export const FeatureEmbedSection = ({ eid, label, view, db, attendableId, claimF
       return;
     }
     focusing.current = undefined;
-    // The description is rich text, the only editable element in the form.
-    const selector = field === 'name' ? 'input[data-testid="name"]' : '[contenteditable="true"]';
-    const element = containerRef.current?.querySelector<HTMLElement>(selector);
-    element?.focus();
-    element instanceof HTMLInputElement && element.select();
+    // Each field is an editor bound to the feature; the name is selected so typing replaces it.
+    const element = containerRef.current?.querySelector<HTMLElement>(
+      `[data-testid="${field}"] [contenteditable="true"]`,
+    );
+    const editor = element && EditorView.findFromDOM(element);
+    field === 'name' && editor?.dispatch({ selection: { anchor: 0, head: editor.state.doc.length } });
+    editor?.focus();
   }, [hasAttention]);
 
   const handleMouseDown = useCallback(

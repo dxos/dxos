@@ -96,6 +96,12 @@ const config: Plugin.PluginConfig<ReviewPluginOptions> = Plugin.config<ReviewPlu
       roles: [AppSurface.Article, AppSurface.ObjectProperties],
       name: 'HistorySurface',
     }),
+    // Comments in the live-bound field editors of any commentable object (a feature's name, description and
+    // requirements), through the neutral editor-extensions context rather than a plugin's own socket.
+    AppCapability.reactContext(
+      () => import('./src/capabilities/editor-extensions.tsx', { with: { type: 'module-url' } }),
+      { name: 'EditorExtensions' },
+    ),
     Capability.lazyModule(
       'MarkdownExtension',
       // OperationInvoker/AtomRegistry are ambient. `CommentCapabilities.State` is declared because the

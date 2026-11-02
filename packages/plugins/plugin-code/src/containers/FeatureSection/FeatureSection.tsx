@@ -17,7 +17,7 @@ import { FeatureCard, RequirementId } from '../../components/FeatureCard/index.t
 import { ObjectAddPicker } from '../../components/ObjectAddPicker/index.ts';
 import { useFeatureEditing, useFeatureGraph, useOpenFeatureTarget } from '../../hooks/index.ts';
 import { CodeNamespace } from '../../namespace.ts';
-import { FEATURE_FIELD_MAP, FeatureValues, useFeatureValues } from '../FeatureArticle/index.ts';
+import { FeatureValues, useFeatureValues } from '../FeatureArticle/index.ts';
 
 export type FeatureSectionProps = {
   subject: Feature.Feature;
@@ -32,7 +32,7 @@ export type FeatureSectionProps = {
  */
 export const FeatureSection = ({ subject, attendableId }: FeatureSectionProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
-  const { values, onValuesChanged } = useFeatureValues(subject);
+  const { values, fieldMap, onValuesChanged } = useFeatureValues(subject);
   // Read through the object, so a block id set by an import shows without a remount.
   const [snapshot] = useObject(subject);
   const blockId = snapshot && Feature.getBlockId(snapshot);
@@ -45,9 +45,10 @@ export const FeatureSection = ({ subject, attendableId }: FeatureSectionProps) =
   return (
     <Form.Root
       db={db}
+      object={subject}
       schema={FeatureValues}
       values={values}
-      fieldMap={FEATURE_FIELD_MAP}
+      fieldMap={fieldMap}
       onValuesChanged={onValuesChanged}
     >
       <div className='p-2'>

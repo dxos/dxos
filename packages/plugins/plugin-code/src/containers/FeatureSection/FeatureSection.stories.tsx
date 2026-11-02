@@ -85,7 +85,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(await canvas.findByDisplayValue(FEATURE_NAME, undefined, { timeout: 10_000 })).toBeInTheDocument();
+    await expect(await canvas.findByTestId('name', undefined, { timeout: 10_000 })).toHaveTextContent(FEATURE_NAME);
     await expect(canvas.getByTestId('feature-section.block-id').textContent).toMatch(/F-3/);
     const dependencies = within(
       await canvas.findByTestId('feature-section.dependencies', undefined, { timeout: 10_000 }),

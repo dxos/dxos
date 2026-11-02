@@ -9,8 +9,10 @@ import * as Input from '@dxos/react-ui/Input';
 
 import { type FormFieldRendererProps } from '#types';
 
+import { useFormContext } from '../../hooks/index.ts';
 import { FormStaticValue } from '../FormField.tsx';
 import { presentationFor } from '../presentation.tsx';
+import { BoundTextEditor } from './BoundTextEditor.tsx';
 
 export const TextField = ({
   type,
@@ -20,13 +22,20 @@ export const TextField = ({
   presentation,
   autoFocus,
   jsonPath,
+  path,
   getValue,
   onBlur,
   onValueChange,
 }: FormFieldRendererProps<string>) => {
+  const { object } = useFormContext('TextField');
   const value = getValue() ?? '';
   if (presentationFor(presentation).isStatic) {
     return <FormStaticValue value={value} format={format} />;
+  }
+  if (object && path) {
+    return (
+      <BoundTextEditor binding={{ object, path }} placeholder={placeholder} readonly={!!readonly} testId={jsonPath} />
+    );
   }
 
   // An opaque identifier is not prose: no spellcheck squiggles, no autocorrect, no capitalisation.

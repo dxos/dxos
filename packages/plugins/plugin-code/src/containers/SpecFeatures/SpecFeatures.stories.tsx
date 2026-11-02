@@ -212,11 +212,13 @@ export const EditInCompanion: Story = {
     await showCanvas(canvasElement);
     const node = await findNode(canvasElement, 'Smart triage');
     await userEvent.click(node);
-    const name = await (await companion()).findByDisplayValue('Smart triage', undefined, { timeout: 5_000 });
-    await userEvent.clear(name);
-    await userEvent.type(name, 'Smart inbox');
-    await userEvent.tab();
-    await expect(await within(node).findByText('Smart inbox', undefined, { timeout: 5_000 })).toBeInTheDocument();
+    // The name is an editor bound to the feature, so each keystroke reaches the card without a commit.
+    const name = await (await companion()).findByTestId('name', undefined, { timeout: 5_000 });
+    await expect(name).toHaveTextContent('Smart triage');
+    const content = name.querySelector<HTMLElement>('.cm-content')!;
+    await userEvent.click(content);
+    await userEvent.type(content, '{End} 2');
+    await expect(await within(node).findByText('Smart triage 2', undefined, { timeout: 5_000 })).toBeInTheDocument();
   },
 };
 
@@ -230,7 +232,7 @@ export const NewFeature: Story = {
     await userEvent.click(await screen.findByTestId('feature-map.new-feature'));
     await waitFor(() => expect(canvas.getAllByTestId('feature-canvas-node')).toHaveLength(9), { timeout: 5_000 });
     const detail = await companion();
-    await expect(await detail.findByDisplayValue('New feature', undefined, { timeout: 5_000 })).toBeInTheDocument();
+    await expect(await detail.findByTestId('name', undefined, { timeout: 5_000 })).toHaveTextContent('New feature');
   },
 };
 

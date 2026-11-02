@@ -226,6 +226,7 @@ feat F-1: Sync
       // The text holds an embed of the feature in place of its block.
       const content = yield* Database.load(target.content);
       expect(content.content).toBe(`\n${SpecText.makeEmbed(feature)}\n`);
+      const key = feature.requirements?.[0].key;
 
       // Without a target, the second import finds the spec by its key and rewrites the text in place.
       const second = yield* importSpec.handler({
@@ -233,7 +234,8 @@ feat F-1: Sync
         text: spec('New mail shows within ten seconds.'),
       });
       expect(second).toEqual({ spec: target.id, created: [], updated: [feature.id] });
-      expect(feature.requirements).toEqual([{ id: 'F-1.1', text: 'New mail shows within ten seconds.' }]);
+      // The requirement is reworded in place, so it keeps the key comments anchor to.
+      expect(feature.requirements).toEqual([{ key, id: 'F-1.1', text: 'New mail shows within ten seconds.' }]);
       expect(yield* Database.query(Filter.type(Spec.Spec)).run).toHaveLength(1);
       expect(content.content).toBe(`\n${SpecText.makeEmbed(feature)}\n`);
     }).pipe(Effect.provide(testLayer())),
@@ -296,7 +298,9 @@ feat F-1: Sync
       expect(Obj.getMeta(source).keys).toEqual([{ source: Feature.SPEC_KEY_SOURCE, id: 'packages/a/PLUGIN.mdl' }]);
       const content = yield* Database.load(source.content);
       expect(content.content).toBe(`\n${SpecText.makeEmbed(feature)}\n`);
-      expect(feature.requirements).toEqual([{ id: 'F-1.1', text: 'Mail arrives within ten seconds.' }]);
+      expect(feature.requirements).toEqual([
+        { key: expect.any(String), id: 'F-1.1', text: 'Mail arrives within ten seconds.' },
+      ]);
     }).pipe(Effect.provide(testLayer())),
   );
 });

@@ -73,6 +73,10 @@ const config: Plugin.PluginConfig = Plugin.config({
         activatesOn: ActivationEvents.Idle,
       },
     ),
+    AppCapability.operationHandler(
+      () => import('./src/capabilities/editor-operation-handler.ts', { with: { type: 'module-url' } }),
+      { name: 'EditorOperationHandler', environments: ['browser', 'tauri'] },
+    ),
     // Bundled so a feature that cites this plugin's spec opens it rendered in the app.
     AppCapability.pluginAsset({
       pluginId: ProjectsNamespace.key,

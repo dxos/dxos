@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Spec from '@dxos/compute/Spec';
-import { type Database, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { type Database, Filter, Obj, Query, Ref, Text } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import type * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 
@@ -324,19 +324,34 @@ export const take = async (spec: Spec.Spec, { path, text: file }: TakeOptions): 
         }
         FeatureMap.attach(spec, feature);
       }
+      // Keys are the space's own, so only the spec's fields are compared; text is edited in place so comments on it
+      // stay anchored.
+      const unkeyed = (list: readonly Feature.Requirement[]) => list.map(({ id, text }) => ({ id, text }));
+      const requirementsChanged =
+        JSON.stringify(unkeyed(feature.requirements ?? [])) !== JSON.stringify(unkeyed(requirements));
       if (
         feature.name !== name ||
         (feature.description ?? '') !== (description ?? '') ||
-        JSON.stringify(feature.requirements ?? []) !== JSON.stringify(requirements) ||
+        requirementsChanged ||
         (status ?? FeatureSpec.DEFAULT_STATUS) !== feature.status
       ) {
         Obj.update(feature, (feature) => {
-          feature.name = name;
-          feature.description = description;
-          feature.requirements = requirements;
+          if (feature.name !== name) {
+            Text.update(feature, 'name', name);
+          }
+          if ((feature.description ?? '') !== (description ?? '')) {
+            if (typeof feature.description === 'string' && description !== undefined) {
+              Text.update(feature, 'description', description);
+            } else {
+              feature.description = description;
+            }
+          }
           // A block without a `status:` line is planned, as export reads it.
           feature.status = status ?? FeatureSpec.DEFAULT_STATUS;
         });
+        if (requirementsChanged) {
+          Feature.setRequirements(feature, requirements);
+        }
         result.updated.push(feature.id);
       }
     } else {

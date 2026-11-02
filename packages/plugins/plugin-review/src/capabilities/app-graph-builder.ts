@@ -14,7 +14,7 @@ import { Obj } from '@dxos/echo';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { Selection } from '@dxos/react-ui-attention/types';
-import { createComment } from '@dxos/ui-editor/headless';
+import { createComment, documentId } from '@dxos/ui-editor/headless';
 import * as Position from '@dxos/util/Position';
 
 import { CommentOperation } from '#types';
@@ -79,6 +79,13 @@ export default Capability.makeModule(
                   return;
                 }
 
+                // A live-bound field of the object (a feature's name, say) holding a selection takes the comment.
+                const fieldView = yield* Effect.promise(() => findFieldEditor(objectUri));
+                if (fieldView) {
+                  createComment(fieldView);
+                  return;
+                }
+
                 // Fallback (non-editor objects): anchor to the current selection, or create an
                 // unanchored thread. Only derive a label from a real cursor anchor — the unanchored
                 // placeholder is not a cursor range the resolver could span.
@@ -115,3 +122,16 @@ export default Capability.makeModule(
     return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );
+
+/** The field editor of `uri` with a selection, the focused one first; fields bind with the object's URI as their id. */
+const findFieldEditor = async (uri: string) => {
+  if (typeof document === 'undefined') {
+    return undefined;
+  }
+  const { EditorView } = await import('@codemirror/view');
+  const views = Array.from(document.querySelectorAll<HTMLElement>('.cm-editor')).flatMap((element) => {
+    const view = EditorView.findFromDOM(element);
+    return view && view.state.facet(documentId) === uri && !view.state.selection.main.empty ? [view] : [];
+  });
+  return views.find((view) => view.hasFocus) ?? views[0];
+};

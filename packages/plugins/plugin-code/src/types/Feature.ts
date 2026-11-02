@@ -8,8 +8,9 @@ import * as Schema from 'effect/Schema';
 
 import * as Skill from '@dxos/compute/Skill';
 import * as Spec from '@dxos/compute/Spec';
-import { Annotation, DXN, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
+import { Annotation, DXN, Format, Obj, Ref, Relation, Text, Type } from '@dxos/echo';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
+import { EntityId } from '@dxos/keys';
 import { Task } from '@dxos/types';
 
 //
@@ -54,8 +55,12 @@ export type CodeLink = Schema.Schema.Type<typeof CodeLink>;
 // Feature
 //
 
-/** One thing the feature must do, as stated in its spec; `id` is the spec's own (`F-3.2`) when it came from one. */
+/**
+ * One thing the feature must do, as stated in its spec; `id` is the spec's own (`F-3.2`) when it came from one.
+ * `key` is hidden and never renumbered, so comments anchored to the requirement find it by `key`.
+ */
 export const Requirement = Schema.Struct({
+  key: Schema.optional(Schema.String.pipe(Annotation.FormInputAnnotation.set(false))),
   id: Schema.optional(Schema.String.pipe(Schema.annotate({ title: 'Id' }))),
   text: Schema.String.pipe(Schema.annotate({ title: 'Requirement' })),
 });
@@ -129,9 +134,92 @@ export class Feature extends Type.makeObject<Feature>(DXN.make('org.dxos.type.fe
 
 /** `requirements` starts as an empty list so two peers lazily creating it cannot each write a fresh one. */
 export const make = (props: Obj.MakeProps<typeof Feature>): Feature =>
-  Obj.make(Feature, { requirements: [], ...props });
+  Obj.make(Feature, { ...props, requirements: keyRequirements(props.requirements ?? []) });
 
 export const instanceOf = (value: unknown): value is Feature => Obj.instanceOf(Feature, value);
+
+export const makeRequirementKey = (): string => EntityId.random();
+
+/**
+ * `next` with every requirement keyed. One without a key takes the key of an unclaimed requirement in `previous`
+ * with the same spec id, else the same text, else a new key, so a rewritten list keeps the keys comments anchor to.
+ */
+export const keyRequirements = (next: readonly Requirement[], previous: readonly Requirement[] = []): Requirement[] => {
+  const unclaimed = previous.filter(
+    ({ key }) => key !== undefined && !next.some((requirement) => requirement.key === key),
+  );
+  const claim = (match: (requirement: Requirement) => boolean): string | undefined => {
+    const index = unclaimed.findIndex(match);
+    return index === -1 ? undefined : unclaimed.splice(index, 1)[0].key;
+  };
+  const byId = next.map(
+    ({ key, id }) => key ?? (id === undefined ? undefined : claim((previous) => previous.id === id)),
+  );
+  return next.map((requirement, index) => ({
+    ...requirement,
+    key: byId[index] ?? claim((previous) => previous.text === requirement.text) ?? makeRequirementKey(),
+  }));
+};
+
+/**
+ * Writes `next` over the feature's requirements in place. A requirement whose key survives (see `keyRequirements`)
+ * keeps its record and has its text edited rather than replaced, so comment cursors inside it survive. A list cannot
+ * move a record, so a reorder keeps the longest run already in order and re-inserts the rest, whose cursors are lost.
+ */
+export const setRequirements = (feature: Feature, next: readonly Requirement[]): void => {
+  const keyed = keyRequirements(next, feature.requirements ?? []);
+  const target = new Map(keyed.map(({ key }, index) => [key, index]));
+  const stable = longestIncreasingRun((feature.requirements ?? []).map(({ key }) => target.get(key) ?? -1));
+  Obj.update(feature, (feature) => {
+    feature.requirements ??= [];
+    const list = feature.requirements;
+    for (let index = list.length - 1; index >= 0; index--) {
+      if (!stable.has(target.get(list[index].key) ?? -1)) {
+        list.splice(index, 1);
+      }
+    }
+    keyed.forEach((requirement, index) => {
+      if (list[index]?.key !== requirement.key) {
+        list.splice(index, 0, { ...requirement });
+        return;
+      }
+      const current = list[index];
+      if (requirement.id === undefined) {
+        delete current.id;
+      } else if (current.id !== requirement.id) {
+        current.id = requirement.id;
+      }
+      if (current.text !== requirement.text) {
+        Text.update(feature, ['requirements', index, 'text'], requirement.text);
+      }
+    });
+  });
+};
+
+/** The values of the longest strictly increasing subsequence of `values`, ignoring negatives. */
+const longestIncreasingRun = (values: readonly number[]): Set<number> => {
+  const runs: number[][] = [];
+  for (const value of values) {
+    if (value < 0) {
+      continue;
+    }
+    const before = runs.filter((run) => run[run.length - 1] < value);
+    const longest = before.reduce<number[]>((best, run) => (run.length > best.length ? run : best), []);
+    runs.push([...longest, value]);
+  }
+  return new Set(runs.reduce<number[]>((best, run) => (run.length > best.length ? run : best), []));
+};
+
+/** Keys the feature's requirements that have none; writes only when one is missing. */
+export const ensureRequirementKeys = (feature: Feature): void => {
+  if ((feature.requirements ?? []).some(({ key }) => key === undefined)) {
+    Obj.update(feature, (feature) => {
+      for (const requirement of feature.requirements ?? []) {
+        requirement.key ??= makeRequirementKey();
+      }
+    });
+  }
+};
 
 /**
  * The spec blocks the feature was read in from, e.g. `packages/plugins/plugin-inbox/PLUGIN.mdl#F-3`: its foreign keys

@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
-import React, { type KeyboardEvent, useCallback, useMemo } from 'react';
+import React, { type KeyboardEvent, useCallback, useEffect, useMemo } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Project from '@dxos/compute/Project';
@@ -32,6 +32,7 @@ import {
 import { ObjectAddPicker } from '../../components/ObjectAddPicker/index.ts';
 import { useFeatureEditing, useFeatureGraph, useOpenFeatureTarget } from '../../hooks/index.ts';
 import { CodeNamespace } from '../../namespace.ts';
+import * as FeatureAnchor from '../../util/feature-anchor.ts';
 
 // The editable fields, picked from the schema on the AST as ProjectArticle does: `Type.getSchema` erases to
 // `Codec`, so the field types are re-attached here.
@@ -43,17 +44,48 @@ export const FeatureValues = Schema.make<Schema.Codec<FeatureValues, any>>(
 );
 
 /** Requirements render as rows that wrap to their whole text rather than the generic list of nested forms. */
-const RequirementsField: FormFieldRenderer = ({ type, label, getValue, onValueChange }) => (
-  <Form.Field label={label} standalone>
-    <RequirementEditor requirements={getValue() ?? []} onChange={(requirements) => onValueChange(type, requirements)} />
-  </Form.Field>
-);
+const makeFieldMap = (feature: Feature.Feature): FormFieldMap => {
+  const RequirementsField: FormFieldRenderer = ({ label, getValue }) => (
+    <Form.Field label={label} standalone>
+      <RequirementEditor
+        feature={feature}
+        requirements={getValue() ?? []}
+        onAdd={() =>
+          Obj.update(feature, (feature) => {
+            const requirements = [...(feature.requirements ?? []), { key: Feature.makeRequirementKey(), text: '' }];
+            const blockId = Feature.getBlockId(feature);
+            // Numbered under the feature's block id, as the spec would number it.
+            (feature.requirements ??= []).push(
+              (blockId ? Feature.numberRequirements(blockId, requirements) : requirements).at(-1)!,
+            );
+          })
+        }
+        onRemove={(index) => {
+          const key = feature.requirements?.[index]?.key;
+          Obj.update(feature, (feature) => {
+            feature.requirements?.splice(index, 1);
+          });
+          if (key) {
+            void FeatureAnchor.clearRequirementAnchors(feature, key);
+          }
+        }}
+      />
+    </Form.Field>
+  );
+  return { requirements: RequirementsField };
+};
 
-export const FEATURE_FIELD_MAP: FormFieldMap = { requirements: RequirementsField };
-
-/** The form values of a feature, bound to the live object so an edit elsewhere reaches an open form. */
+/**
+ * The form of a feature, bound to the live object so an edit elsewhere reaches an open form. Its text fields and
+ * requirements edit the feature in place (pass `subject` as the form's `object`), so only the status is handed back.
+ */
 export const useFeatureValues = (subject: Feature.Feature) => {
   const [snapshot, updateFeature] = useObject(subject);
+  // Comments anchor to requirements by key, so a feature made before keys existed gets them when opened.
+  useEffect(() => {
+    Feature.ensureRequirementKeys(subject);
+  }, [subject]);
+  const fieldMap = useMemo(() => makeFieldMap(subject), [subject]);
   const values = useMemo<Partial<FeatureValues>>(
     () => ({
       name: snapshot?.name,
@@ -65,24 +97,18 @@ export const useFeatureValues = (subject: Feature.Feature) => {
   );
 
   const onValuesChanged = useCallback(
-    (values: Partial<FeatureValues>) =>
-      updateFeature((feature) => {
-        if (values.name !== undefined) {
-          feature.name = values.name;
-        }
-        feature.description = values.description;
-        if (values.status !== undefined) {
-          feature.status = values.status;
-        }
-        const requirements = values.requirements?.map((requirement) => ({ ...requirement }));
-        const blockId = Feature.getBlockId(subject);
-        feature.requirements =
-          requirements && blockId ? Feature.numberRequirements(blockId, requirements) : requirements;
-      }),
+    (values: Partial<FeatureValues>) => {
+      const { status } = values;
+      if (status !== undefined && status !== subject.status) {
+        updateFeature((feature) => {
+          feature.status = status;
+        });
+      }
+    },
     [subject, updateFeature],
   );
 
-  return { values, onValuesChanged, updateFeature };
+  return { values, fieldMap, onValuesChanged, updateFeature };
 };
 
 export type FeatureDetailProps = {
@@ -99,7 +125,7 @@ export type FeatureDetailProps = {
  */
 export const FeatureDetail = ({ feature: subject, attendableId, onSelectSubfeature }: FeatureDetailProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
-  const { values, onValuesChanged, updateFeature } = useFeatureValues(subject);
+  const { values, fieldMap, onValuesChanged, updateFeature } = useFeatureValues(subject);
   const db = Obj.getDatabase(subject);
   const graph = useFeatureGraph(db, [subject.id], { neighbours: true });
   const feature = graph.lookup(subject.id);
@@ -159,9 +185,10 @@ export const FeatureDetail = ({ feature: subject, attendableId, onSelectSubfeatu
   return (
     <Form.Root
       db={db}
+      object={subject}
       schema={FeatureValues}
       values={values}
-      fieldMap={FEATURE_FIELD_MAP}
+      fieldMap={fieldMap}
       onValuesChanged={onValuesChanged}
     >
       <Form.Viewport scroll>

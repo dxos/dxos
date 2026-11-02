@@ -271,9 +271,13 @@ describe('SpecText', () => {
       {
         name: 'Verdict',
         description: 'The answer first.',
-        requirements: [{ id: 'F-1.1', text: 'Covers three hours.' }],
+        requirements: [{ key: expect.any(String), id: 'F-1.1', text: 'Covers three hours.' }],
       },
-      { name: 'Chart', description: undefined, requirements: [{ id: 'F-2.1', text: 'One column per hour.' }] },
+      {
+        name: 'Chart',
+        description: undefined,
+        requirements: [{ key: expect.any(String), id: 'F-2.1', text: 'One column per hour.' }],
+      },
     ]);
     expect(await embedded(map)).toEqual(features.map(({ id }) => id));
   });

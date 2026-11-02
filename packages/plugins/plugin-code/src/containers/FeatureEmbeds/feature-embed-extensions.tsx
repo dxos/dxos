@@ -71,7 +71,7 @@ export const featureEmbedExtensions = (
         const feature = db.add(
           Feature.make({
             name: prose || !text ? newName : text,
-            description: prose ? text : undefined,
+            description: prose ? text : '',
             status: 'planned',
           }),
         );
