@@ -278,15 +278,15 @@ const appAt = (app: string, cx: number, cy: number, radius: number, spin = 0): [
  * from what it orbits).
  */
 const app = (name: string, x: number, y: number, r: number, angle: number, { title = 1 } = {}): Prim[] => {
-  const cos = Math.cos(angle);
-  const [lx, ly] = polar(x, y, r + 14, angle);
+  // The name sits beside the ring, on the side away from the centre: right on the right half, left on the left.
+  const side = Math.cos(angle) >= -1e-6 ? 1 : -1;
   return [
     { kind: 'ring', id: `app-${name}`, x, y, r, color: APP_COLORS[name] },
     { kind: 'node', id: `data-org-${name}`, x, y, r: r * 0.28, role: 'data', parent: `ring:app-${name}` },
-    label(`app-label-${name}`, lx, ly, name, {
+    label(`app-label-${name}`, x + side * (r + 12), y, name, {
       size: Math.max(14, r * 0.6),
       weight: 500,
-      anchor: cos < -0.3 ? 'end' : cos > 0.3 ? 'start' : 'middle',
+      anchor: side > 0 ? 'start' : 'end',
       opacity: title,
       parent: `ring:app-${name}`,
     }),
@@ -916,7 +916,8 @@ const orbit = (spin: number, taken: number[] = APPS.map(() => 0)): Prim[] => {
       const [move, take] = phases(taken[index]);
       const size = APP_R * (1 - take);
       const angle = appAngle(name, spin);
-      const [x, y] = polar(0, 0, lerp(222, core + size, move), angle);
+      // The apps ride the middle of the lab's band (between its well and its rim).
+      const [x, y] = polar(0, 0, lerp((290 * (1 + LAB_WELL)) / 2, core + size, move), angle);
       return app(name, x, y, size, angle, { title: 1 - move });
     }),
   ];
@@ -1098,37 +1099,13 @@ const hub = (taken: number[] = APPS.map(() => 0), size = 1): Prim[] => {
       parent: 'body:org',
     },
     label('hub-label', 0, 0, 'Your data', { size: 30, opacity: ramp(size, 0.6, 0.4), parent: 'node:hub' }),
-    ...APPS.flatMap((app, index): Prim[] => {
+    ...APPS.flatMap((name, index): Prim[] => {
       const k = taken[index];
-      const [x, y] = appAt(app, 0, 0, 390);
+      const [x, y] = appAt(name, 0, 0, 390);
       return [
-        {
-          kind: 'ring',
-          id: `app-${app}`,
-          x: lerp(x, 0, k),
-          y: lerp(y, 0, k),
-          r: APP_R * (1 - k),
-          color: APP_COLORS[app],
-          opacity: 1 - k,
-        },
-        label(`app-label-${app}`, ...polar(lerp(x, 0, k), lerp(y, 0, k), APP_R + 14, appAngle(app)), app, {
-          size: 18,
-          weight: 500,
-          anchor: Math.cos(appAngle(app)) < -0.3 ? 'end' : Math.cos(appAngle(app)) > 0.3 ? 'start' : 'middle',
-          opacity: 1 - k,
-          parent: `ring:app-${app}`,
-        }),
-        {
-          kind: 'node',
-          id: `data-org-${app}`,
-          x: lerp(x, 0, k),
-          y: lerp(y, 0, k),
-          r: APP_R * 0.28 * (1 - k),
-          role: 'data',
-          opacity: 1 - k,
-          parent: `ring:app-${app}`,
-        },
-        edge(`link-org-${app}`, 'body:org', `ring:app-${app}`, { opacity: 0.7, parent: `ring:app-${app}` }),
+        // Each app folds into your data with the share it held.
+        ...app(name, lerp(x, 0, k), lerp(y, 0, k), APP_R * (1 - k), appAngle(name), { title: 1 - k }),
+        edge(`link-org-${name}`, 'body:org', `ring:app-${name}`, { opacity: 0.7, parent: `ring:app-${name}` }),
       ];
     }),
   ];
