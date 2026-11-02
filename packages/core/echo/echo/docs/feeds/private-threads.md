@@ -19,7 +19,7 @@ thread must:
 
 ## What exists today
 
-> A chat feed now holds `Trajectory.Event`s ([`@dxos/trajectory`](../../../core/compute/trajectory/README.md)),
+> A chat feed now holds `Trajectory.Event`s ([`@dxos/compute/Trajectory`](../../../../compute/compute/docs/trajectory/README.md)),
 > which carry threads natively. The `Binding`, `Alarm`, `SessionLink` records and queue annotations described
 > below are legacy records: the loader converts them to events in memory and nothing writes them any more.
 

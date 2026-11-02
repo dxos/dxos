@@ -19,6 +19,7 @@ import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
+import * as Reducer from '@dxos/compute/Reducer';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Ref, Registry } from '@dxos/echo';
@@ -30,7 +31,6 @@ import { initializeIdentity } from '@dxos/plugin-client/testing';
 import * as RegistryPlugin from '@dxos/plugin-registry/RegistryPlugin';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
-import { Reducer } from '@dxos/trajectory';
 
 import * as AssistantPlugin from '#meta';
 import { AssistantEvents, AssistantOperation } from '#types';

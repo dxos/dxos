@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Queue from 'effect/Queue';
 
+import type * as Trajectory from '@dxos/compute/Trajectory';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Trajectory } from '@dxos/trajectory';
 import { type Message } from '@dxos/types';
 
 import { type MakeTurnProducer } from './turn-producer.ts';

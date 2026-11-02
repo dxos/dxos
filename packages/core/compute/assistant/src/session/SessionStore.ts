@@ -4,8 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as Reducer from '@dxos/compute/Reducer';
+import * as Trajectory from '@dxos/compute/Trajectory';
 import { type Database, type Feed, Obj } from '@dxos/echo';
-import { Reducer, Trajectory } from '@dxos/trajectory';
 import { Message } from '@dxos/types';
 
 import * as Alarm from './Alarm.ts';

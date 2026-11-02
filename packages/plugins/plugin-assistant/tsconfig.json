@@ -76,9 +76,6 @@
       "path": "../../core/compute/mcp-client"
     },
     {
-      "path": "../../core/compute/trajectory"
-    },
-    {
       "path": "../../core/echo/echo"
     },
     {

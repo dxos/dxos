@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as Trajectory from '@dxos/compute/Trajectory';
 import { type Database, Feed, Filter, Obj } from '@dxos/echo';
-import { Trajectory } from '@dxos/trajectory';
 
 import * as Legacy from './Legacy.ts';
 
@@ -20,9 +20,8 @@ export const readItems = (
   feed: Feed.Feed,
   range: { readonly after?: Feed.LocalCursor } = {},
 ): Effect.Effect<(Trajectory.Event | Legacy.Record)[], never, Database.Service> =>
-  Effect.map(
-    Feed.walk(feed, items, range.after !== undefined ? { begin: range.after } : {}).run,
-    (results) => results.filter(isItem),
+  Effect.map(Feed.walk(feed, items, range.after !== undefined ? { begin: range.after } : {}).run, (results) =>
+    results.filter(isItem),
   );
 
 /** The item the feed's walk ends on: the last a fold of the whole feed takes in. */

@@ -11,11 +11,12 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { TrajectoryStore } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
+import * as Reducer from '@dxos/compute/Reducer';
+import * as Trajectory from '@dxos/compute/Trajectory';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Reducer, Trajectory } from '@dxos/trajectory';
 
 import { AssistantOperation } from '#types';
 

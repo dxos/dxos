@@ -1,6 +1,6 @@
-# @dxos/trajectory
+# Trajectories (`@dxos/compute`)
 
-An agent conversation stored as an append-only log of immutable `Trajectory.Event` objects in one ECHO feed.
+`@dxos/compute/Trajectory`, `@dxos/compute/Reducer` and `@dxos/compute/Transcript`: an agent conversation stored as an append-only log of immutable `Trajectory.Event` objects in one ECHO feed.
 Nothing in the log is ever edited; every view of the conversation is derived from it by a reducer.
 
 - `Trajectory.Event` has `sender` (`role`: `user` | `assistant` | `tool` | `event`, plus optional `identity`,
@@ -85,7 +85,7 @@ After that a turn costs about the same at any length.
 
 ## Sample trajectories
 
-The samples are built and asserted, output for output, in [`src/samples.test.ts`](src/samples.test.ts).
+The samples are built and asserted, output for output, in [`src/trajectory/samples.test.ts`](../../src/trajectory/samples.test.ts).
 
 ### 1. A chat turn with a tool call and a prompt typed mid-turn
 

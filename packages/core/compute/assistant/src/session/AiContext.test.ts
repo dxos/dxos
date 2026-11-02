@@ -8,11 +8,11 @@ import { describe, test, vi } from 'vitest';
 
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
+import * as Trajectory from '@dxos/compute/Trajectory';
 import { Database, DXN, Feed, Obj, Query, Ref, Type } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { Text } from '@dxos/schema';
-import { Trajectory } from '@dxos/trajectory';
 
 import * as AiContext from './AiContext.ts';
 

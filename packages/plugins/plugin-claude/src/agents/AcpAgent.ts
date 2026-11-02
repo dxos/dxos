@@ -17,11 +17,12 @@ import * as Semaphore from 'effect/Semaphore';
 
 import { type MakeTurnProducer, type TurnRequest } from '@dxos/agent-runtime';
 import { AiAssistantError, type Chat, TrajectoryStore } from '@dxos/assistant';
+import * as Reducer from '@dxos/compute/Reducer';
 import * as Trace from '@dxos/compute/Trace';
+import * as Trajectory from '@dxos/compute/Trajectory';
 import { type Database, Feed, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type McpToolkit } from '@dxos/mcp-client';
-import { Reducer, Trajectory } from '@dxos/trajectory';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import { AGENT_KEY_PREFIX } from '../constants.ts';

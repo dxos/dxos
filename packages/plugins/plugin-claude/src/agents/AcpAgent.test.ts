@@ -9,10 +9,11 @@ import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 
 import { AiSession, Chat, TrajectoryStore } from '@dxos/assistant';
+import * as Reducer from '@dxos/compute/Reducer';
 import * as Trace from '@dxos/compute/Trace';
+import * as Trajectory from '@dxos/compute/Trajectory';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
-import { Reducer, Trajectory } from '@dxos/trajectory';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import * as AcpAgent from './AcpAgent.ts';

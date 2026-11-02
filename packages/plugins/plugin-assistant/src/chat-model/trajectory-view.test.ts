@@ -7,8 +7,9 @@ import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import { describe, test, vi } from 'vitest';
 
 import { Alarm, Legacy } from '@dxos/assistant';
+import * as Reducer from '@dxos/compute/Reducer';
+import * as Trajectory from '@dxos/compute/Trajectory';
 import { type Obj } from '@dxos/echo';
-import { Reducer, Trajectory } from '@dxos/trajectory';
 import { Message } from '@dxos/types';
 
 import { type ViewBase, makeCachedTrajectoryView, makeTrajectoryView } from './trajectory-view.ts';

@@ -20,6 +20,7 @@ import type * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
 import * as Trace from '@dxos/compute/Trace';
+import * as Trajectory from '@dxos/compute/Trajectory';
 import { Resource } from '@dxos/context';
 import { Database, Feed, Obj, Registry } from '@dxos/echo';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
@@ -27,7 +28,6 @@ import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { McpToolkit } from '@dxos/mcp-client';
-import { Trajectory } from '@dxos/trajectory';
 import { type ContentBlock, Message } from '@dxos/types';
 import { markWork } from '@dxos/util';
 

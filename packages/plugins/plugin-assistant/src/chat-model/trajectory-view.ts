@@ -7,9 +7,10 @@ import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
 
 import { Alarm, Legacy, TrajectoryCache, TrajectoryStore } from '@dxos/assistant';
+import * as Reducer from '@dxos/compute/Reducer';
+import * as Trajectory from '@dxos/compute/Trajectory';
 import { Annotation, type Database, type Feed, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Reducer, Trajectory } from '@dxos/trajectory';
 import { Message } from '@dxos/types';
 
 /**

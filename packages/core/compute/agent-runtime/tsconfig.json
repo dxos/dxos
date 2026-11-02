@@ -56,9 +56,6 @@
     },
     {
       "path": "../mcp-client"
-    },
-    {
-      "path": "../trajectory"
     }
   ]
 }

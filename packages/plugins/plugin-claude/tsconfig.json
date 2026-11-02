@@ -61,9 +61,6 @@
       "path": "../../core/compute/mcp-server"
     },
     {
-      "path": "../../core/compute/trajectory"
-    },
-    {
       "path": "../../core/echo/echo"
     },
     {

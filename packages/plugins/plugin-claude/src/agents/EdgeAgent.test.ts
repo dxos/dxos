@@ -15,12 +15,12 @@ import { type RemoteProcessManager } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
 import * as Process from '@dxos/compute/Process';
 import * as Project from '@dxos/compute/Project';
+import * as Reducer from '@dxos/compute/Reducer';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { AccessToken } from '@dxos/link';
 import { MANAGED_ACCESS_TOKEN } from '@dxos/protocols';
-import { Reducer } from '@dxos/trajectory';
 import { type ContentBlock, Outline, Repo, TaskSet } from '@dxos/types';
 
 import { AgentError } from '../errors.ts';

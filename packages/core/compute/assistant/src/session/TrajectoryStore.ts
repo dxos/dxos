@@ -8,8 +8,10 @@ import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 
+import * as Reducer from '@dxos/compute/Reducer';
+import * as Trajectory from '@dxos/compute/Trajectory';
+import * as Transcript from '@dxos/compute/Transcript';
 import { type Database, Feed, type Obj } from '@dxos/echo';
-import { Reducer, Trajectory, Transcript } from '@dxos/trajectory';
 import { Message } from '@dxos/types';
 
 import * as Legacy from './Legacy.ts';

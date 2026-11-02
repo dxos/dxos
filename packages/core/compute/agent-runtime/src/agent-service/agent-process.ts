@@ -35,14 +35,15 @@ import * as Hook from '@dxos/compute/Hook';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
+import * as Reducer from '@dxos/compute/Reducer';
 import * as Skill from '@dxos/compute/Skill';
 import * as SqlService from '@dxos/compute/SqlService';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
+import type * as Trajectory from '@dxos/compute/Trajectory';
 import { Annotation, Database, Feed, Filter, Obj, Ref, Registry } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Reducer, type Trajectory } from '@dxos/trajectory';
 import { Actor, ContentBlock, Message } from '@dxos/types';
 import { markWork, trim } from '@dxos/util';
 

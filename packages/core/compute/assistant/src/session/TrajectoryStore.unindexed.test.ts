@@ -6,14 +6,15 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
+import * as Reducer from '@dxos/compute/Reducer';
 import * as SqlService from '@dxos/compute/SqlService';
+import * as Trajectory from '@dxos/compute/Trajectory';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { PublicKey } from '@dxos/keys';
 import { layerMemory } from '@dxos/sql-sqlite/Platform';
-import { Reducer, Trajectory } from '@dxos/trajectory';
 import { Message } from '@dxos/types';
 
 import * as AiContext from './AiContext.ts';

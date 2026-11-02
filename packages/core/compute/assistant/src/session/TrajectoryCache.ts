@@ -11,10 +11,11 @@ import * as Migrator from 'effect/sql/Migrator';
 import * as SqlClient from 'effect/sql/SqlClient';
 import type * as SqlError from 'effect/sql/SqlError';
 
+import * as Reducer from '@dxos/compute/Reducer';
 import * as SqlService from '@dxos/compute/SqlService';
+import type * as Trajectory from '@dxos/compute/Trajectory';
 import { Database, Feed } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Reducer, type Trajectory } from '@dxos/trajectory';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/trajectory-cache/index.ts';
 import * as Legacy from './Legacy.ts';

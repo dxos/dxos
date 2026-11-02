@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
+import type * as Reducer from '@dxos/compute/Reducer';
 import { EntityId } from '@dxos/keys';
-import { type Reducer } from '@dxos/trajectory';
 import { Message } from '@dxos/types';
 
 import { arrangeLanes } from './lanes.ts';

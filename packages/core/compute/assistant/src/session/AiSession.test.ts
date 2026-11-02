@@ -5,9 +5,9 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
+import * as Trajectory from '@dxos/compute/Trajectory';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
-import { Trajectory } from '@dxos/trajectory';
 import { Message } from '@dxos/types';
 
 import * as AiSession from './AiSession.ts';

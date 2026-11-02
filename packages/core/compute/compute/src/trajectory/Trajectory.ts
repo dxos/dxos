@@ -6,10 +6,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { IdentityDid } from '@dxos/keys';
 import { ContentBlock, Message as TypesMessage } from '@dxos/types';
+
+import * as Skill from '../types/Skill.ts';
 
 /**
  * Id of an earlier event in the same log; events reference each other by id because they are never mutated.

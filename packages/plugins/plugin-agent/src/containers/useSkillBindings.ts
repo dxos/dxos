@@ -5,9 +5,9 @@
 import { useMemo } from 'react';
 
 import type * as Chat from '@dxos/assistant/Chat';
+import * as Trajectory from '@dxos/compute/Trajectory';
 import { DXN, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
-import { Trajectory } from '@dxos/trajectory';
 
 /**
  * Typename of the records a chat's feed held, before trajectory events, each time a skill or object was bound to it;

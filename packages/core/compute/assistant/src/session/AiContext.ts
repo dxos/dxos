@@ -13,6 +13,7 @@ import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 
 import * as Skill from '@dxos/compute/Skill';
+import * as Trajectory from '@dxos/compute/Trajectory';
 import { Resource } from '@dxos/context';
 import { Database, DXN, Feed, Filter, Obj, type QueryResult, Ref, Type } from '@dxos/echo';
 import * as AtomEx from '@dxos/effect/AtomEx';
@@ -21,7 +22,6 @@ import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { EID, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Trajectory } from '@dxos/trajectory';
 import { ComplexSet, isNonNullable } from '@dxos/util';
 
 /**
@@ -757,14 +757,18 @@ const connectionChanges = (
 export const boundConnections = (
   feed: Feed.Feed,
 ): Effect.Effect<ReadonlyMap<URI.URI, boolean>, never, Database.Service> =>
-  Feed.walk(feed, Filter.or(Filter.type(Binding), Filter.type(Trajectory.Event))).run.pipe(Effect.map((items) => connectionStates(toDeltas(items))));
+  Feed.walk(feed, Filter.or(Filter.type(Binding), Filter.type(Trajectory.Event))).run.pipe(
+    Effect.map((items) => connectionStates(toDeltas(items))),
+  );
 
 /**
  * The objects a conversation's feed currently binds, read once: for a reader that needs the bound
  * set at one moment without holding a {@link Binder} open.
  */
 export const boundObjects = (feed: Feed.Feed): Effect.Effect<Ref.Ref<Obj.Unknown>[], never, Database.Service> =>
-  Feed.walk(feed, Filter.or(Filter.type(Binding), Filter.type(Trajectory.Event))).run.pipe(Effect.map((items) => [...reduce(toDeltas(items)).objects]));
+  Feed.walk(feed, Filter.or(Filter.type(Binding), Filter.type(Trajectory.Event))).run.pipe(
+    Effect.map((items) => [...reduce(toDeltas(items)).objects]),
+  );
 
 /** The entity id an ECHO URI names; none for any other URI. */
 const entityIdOf = (uri: URI.URI): string | undefined => {

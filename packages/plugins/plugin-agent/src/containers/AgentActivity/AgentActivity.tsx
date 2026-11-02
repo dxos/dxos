@@ -10,11 +10,11 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import type * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import type * as Skill from '@dxos/compute/Skill';
+import * as Trajectory from '@dxos/compute/Trajectory';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { EID, type SpaceId } from '@dxos/keys';
 import * as ThreadOperation from '@dxos/plugin-thread/ThreadOperation';
-import { Trajectory } from '@dxos/trajectory';
 import { type Channel, Message } from '@dxos/types';
 
 import { AgentActivity as AgentActivityComponent } from '#components';

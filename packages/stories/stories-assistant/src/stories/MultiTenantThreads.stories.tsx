@@ -40,7 +40,7 @@ const { text, reasoning, toolCall } = ScriptedLanguageModel;
  * takes plain prompts; a prompt starting with `@claude` goes to Claude Code. Each agent's work runs in lanes it owns,
  * with the same gutters, cards and notices as one agent's light threads, and each sees what the other is doing. Both
  * agents are scripted stand-ins: this sandbox has no Claude Code credentials, and storybook cannot host the ACP
- * adapter's process. See `packages/core/compute/trajectory/LIGHT-THREADS.mdl` QA-2.
+ * adapter's process. See `packages/core/compute/compute/docs/trajectory/LIGHT-THREADS.mdl` QA-2.
  */
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/MultiTenantThreads',

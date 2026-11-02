@@ -12,12 +12,13 @@ import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { Alarm, TrajectoryStore } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Reducer from '@dxos/compute/Reducer';
 import * as Skill from '@dxos/compute/Skill';
+import type * as Trajectory from '@dxos/compute/Trajectory';
 import { type Database, type Feed } from '@dxos/echo';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';
-import { Reducer, type Trajectory } from '@dxos/trajectory';
 import { Message } from '@dxos/types';
 
 import { AssistantTestLayer, makeScriptedTenant } from '../testing/index.ts';

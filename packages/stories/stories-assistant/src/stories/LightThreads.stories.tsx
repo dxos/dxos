@@ -25,7 +25,7 @@ const { text, reasoning, toolCall } = ScriptedLanguageModel;
  * Light threads: a prompt sent while the agent works starts a thread of its own that runs beside the first, which goes
  * to the background as a fixed-height card in its original place; its final answer shows full height where it
  * completes. Each thread has a colour in its gutter. See
- * `packages/core/compute/trajectory/LIGHT-THREADS.mdl`.
+ * `packages/core/compute/compute/docs/trajectory/LIGHT-THREADS.mdl`.
  */
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/LightThreads',

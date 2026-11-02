@@ -25,7 +25,7 @@ const { text, reasoning, toolCall } = ScriptedLanguageModel;
  * Subagents on light threads: the agent delegates self-contained tasks with `thread_delegate`; each runs in a
  * background thread of its own that starts with nothing but its task, shown as a card, and only its final answer joins
  * the conversation. The agent waits for the subagents with `thread_wait` while the reader keeps chatting. See
- * `packages/core/compute/trajectory/LIGHT-THREADS.mdl` (F-8).
+ * `packages/core/compute/compute/docs/trajectory/LIGHT-THREADS.mdl` (F-8).
  */
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Subagents',

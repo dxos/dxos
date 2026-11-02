@@ -8,8 +8,8 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { OpaqueToolkit } from '@dxos/ai';
+import type * as Trajectory from '@dxos/compute/Trajectory';
 import { Database, type Feed } from '@dxos/echo';
-import { type Trajectory } from '@dxos/trajectory';
 
 import * as TrajectoryStore from './TrajectoryStore.ts';
 

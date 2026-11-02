@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+import type * as Reducer from '@dxos/compute/Reducer';
 import { EntityId } from '@dxos/keys';
 import { type LaneCardData, type LaneLine, type ThreadLane, laneTag } from '@dxos/react-ui-assistant/types';
-import { type Reducer } from '@dxos/trajectory';
 import { Message } from '@dxos/types';
 
 /** Gutter colours, in the order lanes take them; distinct from one another at a glance. */

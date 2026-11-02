@@ -7,11 +7,12 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as SqlClient from 'effect/sql/SqlClient';
 
+import * as Reducer from '@dxos/compute/Reducer';
 import * as SqlService from '@dxos/compute/SqlService';
+import * as Trajectory from '@dxos/compute/Trajectory';
 import { Database, Feed } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { layerMemory } from '@dxos/sql-sqlite/Platform';
-import { Reducer, Trajectory } from '@dxos/trajectory';
 import { Message } from '@dxos/types';
 
 import * as TrajectoryCache from './TrajectoryCache.ts';

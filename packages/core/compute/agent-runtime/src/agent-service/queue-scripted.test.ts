@@ -17,11 +17,11 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
+import type * as Trajectory from '@dxos/compute/Trajectory';
 import { type Database, Feed, Obj } from '@dxos/echo';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
-import { type Trajectory } from '@dxos/trajectory';
 import { Message } from '@dxos/types';
 
 import { AssistantTestLayer } from '../testing/index.ts';

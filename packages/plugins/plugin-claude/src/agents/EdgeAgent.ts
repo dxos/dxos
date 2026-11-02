@@ -24,6 +24,7 @@ import { type RemoteProcessManager, accessTokenResolverFromEdge } from '@dxos/co
 import * as Credential from '@dxos/compute/Credential';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
+import * as Trajectory from '@dxos/compute/Trajectory';
 import { Annotation, Database, Feed, Obj, Query } from '@dxos/echo';
 import { EdgeProcessControl } from '@dxos/edge-compute';
 import { invariant } from '@dxos/invariant';
@@ -33,7 +34,6 @@ import { log } from '@dxos/log';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { isManagedAccessToken } from '@dxos/protocols';
-import { Trajectory } from '@dxos/trajectory';
 import { type ContentBlock, Message, Repo } from '@dxos/types';
 
 import { AgentError } from '../errors.ts';

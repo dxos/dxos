@@ -213,7 +213,6 @@
     "@dxos/plugin-projects": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
-    "@dxos/trajectory": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@tauri-apps/api": "catalog:",

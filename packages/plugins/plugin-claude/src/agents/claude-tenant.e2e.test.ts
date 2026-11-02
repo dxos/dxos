@@ -13,10 +13,10 @@ import { dirname, join } from 'node:path';
 import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer, makeScriptedTenant } from '@dxos/agent-runtime/testing';
 import { Alarm, TrajectoryStore } from '@dxos/assistant';
+import * as Reducer from '@dxos/compute/Reducer';
 import { type Database, type Feed } from '@dxos/echo';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { TestHelpers } from '@dxos/effect/testing';
-import { Reducer } from '@dxos/trajectory';
 import { Message } from '@dxos/types';
 
 import { serve } from '../agent-helper/server.ts';

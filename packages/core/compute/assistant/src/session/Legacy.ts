@@ -7,9 +7,9 @@
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
+import * as Trajectory from '@dxos/compute/Trajectory';
 import { Annotation, Feed, Obj } from '@dxos/echo';
 import { IdentityDid } from '@dxos/keys';
-import { Trajectory } from '@dxos/trajectory';
 import { Message } from '@dxos/types';
 
 import * as AiContext from './AiContext.ts';
