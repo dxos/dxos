@@ -1222,7 +1222,9 @@ const rivals = (first: number, second: number): Prim[] => {
   const topR = lerp(105, 175, secondTake);
   const top: [number, number] = [0, lerp(LABS.top[1], 0, second)];
   const rightR = lerp(105, 130, firstTake) * (1 - secondTake);
-  const right = lerpAt(LABS.right, touching(top, LABS.right, topR + rightR), secondMove);
+  // The first merge: left and right close on each other and meet at the centre, then the left folds into the right.
+  const met = lerpAt(LABS.right, [rightR, LABS.right[1]], firstMove);
+  const right = lerpAt(met, touching(top, met, topR + rightR), secondMove);
   const leftR = 105 * (1 - firstTake);
   const left = lerpAt(LABS.left, touching(right, LABS.left, rightR + leftR), firstMove);
   const ring = (r: number) => r + 45 + 30 * secondTake;

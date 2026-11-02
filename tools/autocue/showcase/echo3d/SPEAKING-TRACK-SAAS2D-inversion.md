@@ -42,7 +42,7 @@ Cut 3 of NARRATIVE-SAAS2D.md: a lecture on the dynamics, nobody acts badly, ever
 
 ## 10. Everyone talks to the lab (`#frontier-comms`)
 
-- Agents should work ACROSS your company; the value is in the CONNECTIONS no single application contains.
+- Agents should work ACROSS the organization; the value is in the CONNECTIONS no single application contains.
 
 ## 11. The lab at the centre (`#orbit`)
 
