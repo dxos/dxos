@@ -18,7 +18,7 @@ loadNeuFonts();
 const FIXED: Record<string, number> = {
   'frontier-comms': 7,
   'absorb': 9,
-  'merge-1': 10,
+  'merge-1': 8,
   'saas-merge': 8,
   'company-fills': 12,
 };

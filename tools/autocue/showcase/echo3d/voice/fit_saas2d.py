@@ -20,7 +20,7 @@ ORDER = ['blank', 'beginning', 'silo', 'silo-comms', 'scale', 'competitors', 'sp
          'spread-again', 'echo-hub', 'echo-spaces', 'objects', 'object-created', 'echo-spaces-again', 'echo-hub-again',
          'saas-merge', 'company-fills']
 # The shortest each scene can play in before its motion reads as rushed.
-SHORTEST = {'blank': 0.5, 'final-frontier': 2.5, 'frontier-comms': 6.5, 'absorb': 5.5, 'merge-1': 6.0,
+SHORTEST = {'blank': 0.5, 'final-frontier': 2.5, 'frontier-comms': 6.5, 'absorb': 5.5, 'merge-1': 4.5,
             'saas-merge': 5.0, 'company-fills': 10.0}
 # Where each take starts in its scene, and the silence after it before the next scene.
 LEAD, BREATH = 0.2, 0.3

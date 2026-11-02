@@ -910,9 +910,9 @@ export const slides = (holds: Record<string, number>): Slide[] => {
           label('org-label', 0, -170 - 32, 'Your company', { size: 30, opacity: 1 - ramp(t, 0.2, 0.5) }),
           label('hub-label', 0, 0, 'Your data', { size: 30, opacity: 1 - ramp(t, 0.2, 0.5), parent: 'node:hub' }),
           // The field takes the light yellow of your data's lit centre, so filling the frame never darkens it, then
-          // clears to white for the logo.
+          // clears to a warm off-white for the logo.
           { kind: 'fill', id: 'field', color: DATA_LIGHT, screen: true, opacity: field },
-          { kind: 'fill', id: 'field-white', color: '#ffffff', screen: true, opacity: ramp(t, 2.0, 0.8, easeInOut) },
+          { kind: 'fill', id: 'field-white', color: '#efede6', screen: true, opacity: ramp(t, 2.0, 0.8, easeInOut) },
           {
             kind: 'logo',
             id: 'logo',
