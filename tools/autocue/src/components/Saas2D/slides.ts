@@ -88,15 +88,6 @@ const SPACES = [
   { id: 'Personal', at: [-48.5, 28] },
   { id: 'Customers', at: [48.5, 28] },
 ] as const;
-/** The objects in each space on the hypergraph, as offsets from its centre; every one links to every other. */
-const SPACE_OBJECTS: [number, number][] = [
-  [0, -17],
-  [16, -6],
-  [10, 14],
-  [-10, 14],
-  [-16, -6],
-  [0, 0],
-];
 const SPACE_R = 40;
 const COMPANY_SPACE = SPACES[0];
 
@@ -391,33 +382,108 @@ const objects = (spin: number, { dim = 1, picked = {} }: { dim?: number; picked?
   return prims;
 };
 
-/** The ECHO hypergraph in your data: three spaces, each a small graph of linked objects. */
-const spaces = ({ subs = 1 } = {}): Prim[] =>
-  SPACES.flatMap(({ id, at }): Prim[] => [
+const SPACE_OBJECT_COUNT = 28;
+const SPACE_NEIGHBOURS = 2;
+const SPACE_BRIDGES = 2;
+
+/**
+ * The objects in each space on the hypergraph: a sunflower spiral packs them evenly, and a seeded jitter keeps the
+ * pattern from reading as a grid.
+ */
+const SPACE_OBJECTS = Object.fromEntries(
+  SPACES.map(({ id, at }) => {
+    const turn = hash(`turn-${id}`) * TAU;
+    const points = Array.from({ length: SPACE_OBJECT_COUNT }, (_, index): [number, number] => {
+      const radius = SPACE_R * 0.7 * Math.sqrt((index + 0.5) / SPACE_OBJECT_COUNT);
+      const [x, y] = polar(at[0], at[1], radius, index * 2.39996 + turn);
+      return polar(x, y, 2.2 * hash(`jitter-${id}-${index}`), hash(`heading-${id}-${index}`) * TAU);
+    });
+    return [id, points];
+  }),
+);
+
+const distance = ([x1, y1]: readonly [number, number], [x2, y2]: readonly [number, number]) =>
+  Math.hypot(x2 - x1, y2 - y1);
+
+/** Each object links to its nearest neighbours, so a space reads as one graph without a web of crossings. */
+const spaceLinks = (id: string): [number, number][] => {
+  const points = SPACE_OBJECTS[id];
+  const pairs = new Set<string>();
+  points.forEach((point, index) => {
+    points
+      .map((other, otherIndex) => ({ otherIndex, gap: distance(point, other) }))
+      .filter(({ otherIndex }) => otherIndex !== index)
+      .sort((left, right) => left.gap - right.gap)
+      .slice(0, SPACE_NEIGHBOURS)
+      .forEach(({ otherIndex }) => pairs.add(`${Math.min(index, otherIndex)}:${Math.max(index, otherIndex)}`));
+  });
+  return [...pairs].map((pair): [number, number] => {
+    const [first, second] = pair.split(':').map(Number);
+    return [first, second];
+  });
+};
+
+/**
+ * The objects of one space nearest another space: the ends of the links that bridge them, ordered across the line
+ * between the spaces so the bridges never cross.
+ */
+const facing = (
+  id: string,
+  toward: readonly [number, number],
+  [from, to]: readonly [readonly [number, number], readonly [number, number]],
+) =>
+  SPACE_OBJECTS[id]
+    .map((point, index) => ({ index, point, gap: distance(point, toward) }))
+    .sort((left, right) => left.gap - right.gap)
+    .slice(0, SPACE_BRIDGES)
+    .map(({ index, point }) => ({
+      index,
+      across: (point[0] - from[0]) * (from[1] - to[1]) + (point[1] - from[1]) * (to[0] - from[0]),
+    }))
+    .sort((left, right) => left.across - right.across)
+    .map(({ index }) => index);
+
+/** The ECHO hypergraph in your data: three spaces, each a graph of objects, with a few links between spaces. */
+const spaces = ({ subs = 1 } = {}): Prim[] => [
+  ...SPACES.flatMap(({ id, at }): Prim[] => [
     { kind: 'body', id: `space-${id}`, x: at[0], y: at[1], r: SPACE_R, parent: 'node:hub' },
-    label(`space-label-${id}`, at[0], at[1] - SPACE_R - 3.4, id, { size: 20, weight: 600, parent: `body:space-${id}` }),
-    ...SPACE_OBJECTS.map(([dx, dy], index): Prim => ({
+    ...SPACE_OBJECTS[id].map(([x, y], index): Prim => ({
       kind: 'node',
       id: `sub-${id}-${index}`,
-      x: at[0] + dx,
-      y: at[1] + dy,
-      r: 2.6,
+      x,
+      y,
+      r: 1.3 + hash(`sub-size-${id}-${index}`) * 0.7,
       color: '#c9ced6',
       glow: -0.35,
       opacity: subs,
       parent: `body:space-${id}`,
     })),
-    ...SPACE_OBJECTS.flatMap((_, index) =>
-      SPACE_OBJECTS.slice(index + 1).map((__, offset) => {
-        const other = index + 1 + offset;
-        return edge(`sub-link-${id}-${index}-${other}`, `node:sub-${id}-${index}`, `node:sub-${id}-${other}`, {
-          color: '#c9ced6',
-          opacity: subs,
-          parent: `body:space-${id}`,
-        });
+    ...spaceLinks(id).map(([first, second]) =>
+      edge(`sub-link-${id}-${first}-${second}`, `node:sub-${id}-${first}`, `node:sub-${id}-${second}`, {
+        color: '#c9ced6',
+        opacity: subs,
+        parent: `body:space-${id}`,
       }),
     ),
-  ]);
+  ]),
+  ...SPACES.flatMap((from, index) =>
+    SPACES.slice(index + 1).flatMap((to) => {
+      const ends = facing(to.id, from.at, [from.at, to.at]);
+      return facing(from.id, to.at, [from.at, to.at]).map((start, bridge) =>
+        edge(
+          `sub-bridge-${from.id}-${to.id}-${bridge}`,
+          `node:sub-${from.id}-${start}`,
+          `node:sub-${to.id}-${ends[bridge]}`,
+          {
+            color: '#c9ced6',
+            opacity: subs,
+            parent: `body:space-${from.id}`,
+          },
+        ),
+      );
+    }),
+  ),
+];
 
 const echoTitle = (): Prim[] => [
   label('echo-title', 120, 500, 'ECHO', { screen: true, size: 72, weight: 700, anchor: 'start' }),
