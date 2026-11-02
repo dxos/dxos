@@ -51,8 +51,6 @@ export const Default: Story = {};
 
 /** The listed objects sorted by label, each with its icon, under a search field the options never scroll beneath. */
 export const Test: Story = {
-  // TODO(wittjosiah): Flaky in CI (passes only on retry); fix and re-enable.
-  tags: ['!test'],
   play: async ({ canvasElement }) => {
     const body = within(canvasElement.ownerDocument.body);
 
@@ -77,7 +75,9 @@ export const Test: Story = {
     await expect(viewport.contains(search)).toBe(false);
     await expect(viewport.scrollHeight).toBeGreaterThan(viewport.clientHeight);
 
-    // 3. Typing narrows the list; Enter picks the first match.
+    // 3. Typing narrows the list; Enter picks the first match. zag focuses the field a frame after the popup opens,
+    //    and keys typed before that go to the trigger.
+    await waitFor(() => expect(search).toHaveFocus());
     await userEvent.keyboard('Collection D{Enter}');
     await waitFor(() => expect(body.queryByRole('dialog')).toBeNull());
     await expect(trigger).toHaveTextContent('Collection D');

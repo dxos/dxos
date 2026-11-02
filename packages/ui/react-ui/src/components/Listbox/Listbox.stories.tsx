@@ -455,3 +455,49 @@ export const Test: Story = {
     await expect(byTestId(canvasElement, 'empty-md')).toHaveTextContent('No items');
   },
 };
+
+const SWATCHES: Listbox.Option[] = ['Red', 'Orange', 'Amber', 'Green', 'Teal', 'Blue', 'Indigo', 'Violet'].map(
+  (label) => ({ value: label.toLowerCase(), label }),
+);
+
+const TilesStory = () => {
+  const [value, setValue] = useState(['green']);
+  return (
+    <Listbox.Root items={SWATCHES} tiles={4} value={value} onValueChange={setValue}>
+      <Listbox.Content aria-label='Swatches'>
+        {SWATCHES.map((item) => (
+          <Listbox.Item key={item.value} item={item} data-testid={`swatch-${item.value}`}>
+            <div className='aspect-video rounded-sm bg-input-surface' />
+            <Listbox.ItemText />
+          </Listbox.Item>
+        ))}
+      </Listbox.Content>
+    </Listbox.Root>
+  );
+};
+
+/**
+ * `tiles`: items in four equal columns, each a tile of its parts with the row states; ArrowRight moves along a row,
+ * ArrowDown to the tile below, and Enter selects.
+ */
+export const Tiles: Story = {
+  render: TilesStory,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const listbox = canvas.getByRole('listbox', { name: 'Swatches' });
+    const box = (value: string) => byTestId(canvasElement, `swatch-${value}`).getBoundingClientRect();
+    await expect(box('blue').top).toBeGreaterThan(box('red').bottom);
+    await expect(box('red').top).toBeCloseTo(box('green').top, 0);
+    await expect(box('teal').left).toBeCloseTo(box('red').left, 0);
+    await expect(box('red').width).toBeCloseTo(box('green').width, 0);
+    await expect(canvas.getByRole('option', { name: 'Green' })).toHaveAttribute('aria-selected', 'true');
+
+    listbox.focus();
+    await userEvent.keyboard('{Home}{ArrowRight}');
+    await waitFor(() => expect(highlighted(listbox)).toBe('Orange'));
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(highlighted(listbox)).toBe('Blue'));
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(canvas.getByRole('option', { name: 'Blue' })).toHaveAttribute('aria-selected', 'true'));
+  },
+};

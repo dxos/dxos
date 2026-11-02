@@ -1,0 +1,22 @@
+diagram @ -128,-64 flow=right box=256x128 grid=384x192
+group client "Client" {
+  node Query "Query + Filter" ref="packages/core/echo/echo/src/Query.ts" color=blue
+  node Atom "Reactive atom" ref="packages/core/echo/echo/src/internal/ref/atoms.ts"
+}
+group host "echo-host" color=light-violet {
+  node Service "QueryService" ref="packages/core/echo/echo-host/src/db-host/query-service.ts" color=violet
+  node Planner "QueryPlanner" ref="packages/core/echo/echo-host/src/query/query-planner.ts"
+  node Executor "QueryExecutor" ref="packages/core/echo/echo-host/src/query/query-executor.ts" color=light-red
+}
+group indexes "Indexes" color=light-green {
+  node Typename "Type index" ref="packages/core/echo/echo-host/src/db-host/index-scheduler.ts" color=green
+  node Text "Full-text index"
+  node Vector "Vector index"
+}
+edge Query -> Service "run"
+edge Service -> Planner "plan"
+edge Planner -> Executor
+edge Executor -> Typename
+edge Executor -> Text
+edge Executor -> Vector
+edge Service -> Atom "results"

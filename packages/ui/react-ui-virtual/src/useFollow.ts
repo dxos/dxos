@@ -14,7 +14,7 @@ const STICKY_THRESHOLD = 32;
 const GESTURE_WINDOW = 300;
 
 /** How long after a model change growth still counts as content arriving. */
-const FOLLOW_WINDOW = 1_000;
+export const FOLLOW_WINDOW = 1_000;
 
 /** Frames an instant arrival re-checks itself against the paint before trusting it. */
 const SETTLE_FRAMES = 12;
@@ -43,6 +43,8 @@ export type FollowHandle = {
    * near the top of a sticky feed moved the list a few pixels and no further.
    */
   onNavigate: (index: number) => void;
+  /** Follows from where the reader rests at the tail, without the re-arrival a jump makes. */
+  pin: () => void;
 };
 
 export type UseFollowOptions = {
@@ -201,6 +203,10 @@ export const useFollow = ({
   // the tail, by any means, opts back in.
   const lastOffset = useRef(0);
   const gestureAt = useRef(0);
+  const readerLeft = useCallback(
+    (current: number) => current < lastOffset.current - 1 && performance.now() - gestureAt.current < GESTURE_WINDOW,
+    [],
+  );
   useLayoutEffect(() => {
     const scroller = scrollerRef.current;
     if (!scroller || !enabled) {
@@ -215,7 +221,7 @@ export const useFollow = ({
       const current = axis === 'block' ? scroller.scrollTop : scroller.scrollLeft;
       const viewport = axis === 'block' ? scroller.clientHeight : scroller.clientWidth;
       const total = axis === 'block' ? scroller.scrollHeight : scroller.scrollWidth;
-      const back = current < lastOffset.current - 1;
+      const left = readerLeft(current);
       lastOffset.current = current;
       const end = total - current - viewport <= STICKY_THRESHOLD;
       // Same threshold as the intent, one listener: React bails out on an unchanged value, so a
@@ -223,7 +229,7 @@ export const useFollow = ({
       setAtEnd(end);
       if (end) {
         setFollowing(true);
-      } else if (back && performance.now() - gestureAt.current < GESTURE_WINDOW) {
+      } else if (left) {
         setFollowing(false);
         follower?.cancel();
       }
@@ -243,7 +249,7 @@ export const useFollow = ({
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scrollerRef.current, enabled, axis, reserve, follower, setFollowing]);
+  }, [scrollerRef.current, enabled, axis, reserve, follower, setFollowing, readerLeft]);
 
   // The correction. Following is a navigation, not a correction in the §7 sense: the content the
   // reader is pinned to has moved, so the scroll has to as well.
@@ -270,6 +276,14 @@ export const useFollow = ({
 
     const target = endTarget();
     const current = axis === 'block' ? scroller.scrollTop : scroller.scrollLeft;
+    // The reader's scroll event is dispatched at the next frame, and content arriving before then
+    // commits first: correcting now would drag them back to the tail they are leaving.
+    if (readerLeft(current)) {
+      setFollowing(false);
+      follower?.cancel();
+      return;
+    }
+
     const gap = target - current;
     if (Math.abs(gap) <= 1) {
       return;
@@ -347,14 +361,22 @@ export const useFollow = ({
     (index: number) => {
       const wants = index >= countRef.current - 1;
       setFollowing(!!enabled && wants);
-      if (!wants) {
+      if (wants) {
+        // A jump to the tail lands on estimates, so it arrives afresh and settles against the paint.
+        positioned.current = false;
+      } else {
         follower?.cancel();
       }
     },
     [enabled, follower, setFollowing],
   );
 
+  const pin = useCallback(() => setFollowing(!!enabled), [enabled, setFollowing]);
+
   // Stable across appends, so controllers built over it do not churn per model change; `atEnd` and
   // `following` change only when the reader crosses the threshold or turns back, which is not an append.
-  return useMemo(() => ({ atEnd, following: followingState, onNavigate }), [atEnd, followingState, onNavigate]);
+  return useMemo(
+    () => ({ atEnd, following: followingState, onNavigate, pin }),
+    [atEnd, followingState, onNavigate, pin],
+  );
 };

@@ -200,7 +200,7 @@ const resolveCredentials = (
 ) =>
   Effect.gen(function* () {
     const connection = yield* Database.load(connectionRef);
-    const accessToken = yield* Database.load(connection.accessToken);
+    const accessToken = yield* Database.load(Connection.getAccessToken(connection));
     const handle = accessToken.account;
     if (!handle) {
       return yield* Effect.fail(new MissingHandleError({ message: 'Connection access token has no account handle.' }));

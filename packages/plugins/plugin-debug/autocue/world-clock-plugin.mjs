@@ -12,7 +12,7 @@ const { BEAT, makeSteps } = await import(`./plugin-template.mjs${new URL(import.
  * on EDGE until `dx registry publish --private` uploads it; the take ends with the reader installing World Clock from
  * Plugins → Registry, opening its Clocks page and adding two timezones.
  *
- * @mdl packages/plugins/plugin-debug/PLUGIN.mdl test QA-11
+ * @mdl packages/plugins/plugin-debug/PLUGIN.mdl test QA-12
  * @app composer-app production bundle served by `vite preview` on :4173, talking to EDGE dev; see shogi-plugin.mjs
  *   for the build.
  */

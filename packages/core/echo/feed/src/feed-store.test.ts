@@ -8,12 +8,13 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Result from 'effect/Result';
 import * as SqlClient from 'effect/sql/SqlClient';
+import * as TestClock from 'effect/testing/TestClock';
 
 import { EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedProtocol } from '@dxos/protocols';
 
-import { FeedStore } from './feed-store.ts';
+import { FeedStore, TRIM_LIMIT, type WalkRequest } from './feed-store.ts';
 import { createInMemoryKeyProvider, createWebCryptoCypher } from './web-crypto-cypher.ts';
 
 const Block = FeedProtocol.Block;
@@ -23,6 +24,9 @@ const WellKnownNamespaces = FeedProtocol.WellKnownNamespaces;
 const TestLayer = SqliteClient.layer({
   filename: ':memory:',
 });
+
+/** A database of its own, so a replica does not read the rows of the store it replicates. */
+const ReplicaLayer = () => SqliteClient.layer({ filename: ':memory:' });
 
 // ActorIds.
 const ALICE = 'alice';
@@ -1202,4 +1206,576 @@ describe('FeedStore caught-up cursors', () => {
       expect(result.blocks).toHaveLength(1);
     }).pipe(Effect.provide(TestLayer)),
   );
+});
+
+describe('FeedStore retention', () => {
+  const NOW = 1_800_000_000_000;
+  const MINUTE = 60_000;
+  const HOUR = 60 * MINUTE;
+  const data = WellKnownNamespaces.data;
+
+  /** Appends one block per timestamp as `feedId`'s next sequences, with payload bytes from `start`. */
+  const appendAt = (store: FeedStore, spaceId: SpaceId, feedId: string, timestamps: number[], start = 0) =>
+    store.append({
+      requestId: 'append',
+      spaceId,
+      feedNamespace: data,
+      blocks: timestamps.map((timestamp, index) => ({
+        feedId,
+        actorId: ALICE,
+        sequence: start + index,
+        prevActorId: null,
+        prevSequence: null,
+        position: null,
+        timestamp,
+        data: new Uint8Array([start + index]),
+      })),
+    });
+
+  const message = (spaceId: SpaceId, feedId: string, feedNamespace: string) => ({
+    spaceId,
+    feedId,
+    feedNamespace,
+    data: new Uint8Array([1]),
+  });
+
+  const payloads = (store: FeedStore, spaceId: SpaceId, feedId: string) =>
+    store
+      .query({ requestId: 'q', spaceId, feedNamespace: data, query: { feedIds: [feedId] }, position: -1 })
+      .pipe(Effect.map(({ blocks }) => blocks.map((block) => block.data[0])));
+
+  it.effect('T-1: keeps the newest maxLength blocks after apply and after append', () =>
+    Effect.gen(function* () {
+      const store = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* store.migrate();
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const feed = { spaceId, feedId, feedNamespace: data };
+
+      yield* appendAt(
+        store,
+        spaceId,
+        feedId,
+        Array.from({ length: 10 }, () => NOW),
+      );
+      const applied = yield* store.setFeedOptions({ ...feed, options: { retention: { maxLength: 5 } } });
+      expect(applied).toEqual({ changed: true, trim: { deleted: 5, more: false } });
+
+      const appended = yield* appendAt(store, spaceId, feedId, [NOW, NOW, NOW], 10);
+      expect(appended.trim).toEqual({ deleted: 3, more: false });
+      expect(yield* payloads(store, spaceId, feedId)).toEqual([8, 9, 10, 11, 12]);
+      expect(yield* store.countBlocks({ spaceId, feedNamespace: data, feedId })).toBe(5);
+
+      const trimmed = yield* store.takeTrimmed();
+      expect(trimmed.blocks.map((block) => block.insertionId)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+      expect(trimmed.blocks[0]).toEqual({ spaceId, feedId, feedNamespace: data, insertionId: 1, position: 0 });
+      yield* store.clearTrimmed(trimmed.maxId);
+      expect(yield* store.takeTrimmed()).toEqual({ maxId: -1, blocks: [] });
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('T-2: hides blocks past maxAge at once and deletes them at the next append', () =>
+    Effect.gen(function* () {
+      const store = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* store.migrate();
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+
+      // Applied while neither block has expired, so only the clock moving past them can hide one.
+      yield* TestClock.setTime(NOW - 3 * HOUR);
+      yield* store.setFeedOptions({ spaceId, feedId, feedNamespace: data, options: { retention: { maxAge: HOUR } } });
+      yield* appendAt(store, spaceId, feedId, [NOW - 2 * HOUR, NOW - 10 * MINUTE]);
+
+      yield* TestClock.setTime(NOW);
+      expect(yield* payloads(store, spaceId, feedId)).toEqual([1]);
+      expect(yield* store.countBlocks({ spaceId, feedNamespace: data, feedId })).toBe(2);
+
+      const appended = yield* appendAt(store, spaceId, feedId, [NOW], 2);
+      expect(appended.trim).toEqual({ deleted: 1, more: false });
+      expect(yield* payloads(store, spaceId, feedId)).toEqual([1, 2]);
+      expect(yield* store.countBlocks({ spaceId, feedNamespace: data, feedId })).toBe(2);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('setFeedOptions creates the row of a feed with no blocks, and getFeedOptions returns them', () =>
+    Effect.gen(function* () {
+      const store = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* store.migrate();
+      const spaceId = SpaceId.random();
+      const feed = { spaceId, feedId: EntityId.random(), feedNamespace: data };
+      expect(yield* store.getFeedOptions(feed)).toBeUndefined();
+
+      const options = { indexing: { enabled: false }, retention: { maxLength: 3 } };
+      expect(yield* store.setFeedOptions({ ...feed, options })).toEqual({
+        changed: true,
+        trim: { deleted: 0, more: false },
+      });
+      expect(yield* store.getFeedOptions(feed)).toEqual(options);
+      expect(yield* store.listFeedOptions(spaceId)).toEqual(new Map([[feed.feedId, options]]));
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('lists the spaces with stored options and reads a feed namespace', () =>
+    Effect.gen(function* () {
+      const store = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* store.migrate();
+      const spaceId = SpaceId.random();
+      const feed = { spaceId, feedId: EntityId.random(), feedNamespace: 'trace' };
+      expect(yield* store.listSpacesWithOptions()).toEqual([]);
+      expect(yield* store.getFeedNamespace(feed)).toBeUndefined();
+
+      yield* store.setFeedOptions({ ...feed, options: { retention: { maxLength: 3 } } });
+      expect(yield* store.listSpacesWithOptions()).toEqual([spaceId]);
+      expect(yield* store.getFeedNamespace(feed)).toBe('trace');
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('setFeedOptions with the stored options changes nothing and trims nothing', () =>
+    Effect.gen(function* () {
+      const store = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* store.migrate();
+      const spaceId = SpaceId.random();
+      const feed = { spaceId, feedId: EntityId.random(), feedNamespace: data };
+      yield* store.setFeedOptions({ ...feed, options: { retention: { maxLength: 1, maxAge: HOUR } } });
+
+      // Written past the append path, so only a re-apply that trims would remove it.
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`
+          INSERT INTO blocks (feedPrivateId, position, sequence, actorId, timestamp, data)
+          SELECT feedPrivateId, value, value, ${ALICE}, ${NOW}, x'00' FROM feeds, json_each('[0, 1]')
+        `;
+
+      const reapplied = yield* store.setFeedOptions({
+        ...feed,
+        options: { retention: { maxAge: HOUR, maxLength: 1 } },
+      });
+      expect(reapplied).toEqual({ changed: false, trim: { deleted: 0, more: false } });
+      expect(yield* store.countBlocks(feed)).toBe(2);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('setFeedOptions rejects invalid options and stores nothing', () =>
+    Effect.gen(function* () {
+      const store = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* store.migrate();
+      const feed = { spaceId: SpaceId.random(), feedId: EntityId.random(), feedNamespace: data };
+      const exit = yield* Effect.exit(store.setFeedOptions({ ...feed, options: { retention: { maxLength: 0 } } }));
+      expect(Exit.isFailure(exit)).toBe(true);
+      expect(yield* store.getFeedOptions(feed)).toBeUndefined();
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('stored options that do not decode read as none', () =>
+    Effect.gen(function* () {
+      const store = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* store.migrate();
+      const spaceId = SpaceId.random();
+      const feed = { spaceId, feedId: EntityId.random(), feedNamespace: data };
+      yield* store.setFeedOptions({ ...feed, options: { retention: { maxLength: 1 } } });
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`UPDATE feeds SET options = '{"retention":'`;
+
+      expect(yield* store.getFeedOptions(feed)).toBeUndefined();
+      expect(yield* store.listFeedOptions(spaceId)).toEqual(new Map());
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('with both limits set, a block that breaks either is dropped', () =>
+    Effect.gen(function* () {
+      const store = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* store.migrate();
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      yield* TestClock.setTime(NOW);
+
+      // Block 0 breaks only the length, block 2 only the age.
+      yield* appendAt(store, spaceId, feedId, [NOW, NOW, NOW - 2 * HOUR, NOW]);
+      const applied = yield* store.setFeedOptions({
+        spaceId,
+        feedId,
+        feedNamespace: data,
+        options: { retention: { maxLength: 3, maxAge: HOUR } },
+      });
+      expect(applied.trim).toEqual({ deleted: 2, more: false });
+      expect(yield* payloads(store, spaceId, feedId)).toEqual([1, 3]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('an authority keeps its highest-positioned block past maxAge, hidden, so no position is re-issued', () =>
+    Effect.gen(function* () {
+      const store = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* store.migrate();
+      const spaceId = SpaceId.random();
+      const feed = { spaceId, feedId: EntityId.random(), feedNamespace: data };
+      yield* appendAt(store, spaceId, feed.feedId, [NOW - 2 * HOUR, NOW - 2 * HOUR]);
+
+      yield* TestClock.setTime(NOW);
+      const applied = yield* store.setFeedOptions({ ...feed, options: { retention: { maxAge: HOUR } } });
+      expect(applied.trim).toEqual({ deleted: 1, more: false });
+      expect(yield* payloads(store, spaceId, feed.feedId)).toEqual([]);
+
+      const appended = yield* appendAt(store, spaceId, feed.feedId, [NOW], 2);
+      expect(appended.positions).toEqual([2]);
+      expect(appended.trim).toEqual({ deleted: 1, more: false });
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('the host cap applies without options, and a feed maxLength can only lower it', () =>
+    Effect.gen(function* () {
+      const store = new FeedStore({
+        localActorId: ALICE,
+        assignPositions: true,
+        maxLengthCap: (feedNamespace) => (feedNamespace === WellKnownNamespaces.trace ? 3 : undefined),
+      });
+      yield* store.migrate();
+      const spaceId = SpaceId.random();
+      const feed = { spaceId, feedId: EntityId.random(), feedNamespace: WellKnownNamespaces.trace };
+      yield* store.appendLocal(Array.from({ length: 5 }, () => message(spaceId, feed.feedId, feed.feedNamespace)));
+      expect(yield* store.countBlocks(feed)).toBe(3);
+
+      yield* store.setFeedOptions({ ...feed, options: { retention: { maxLength: 10 } } });
+      expect(yield* store.countBlocks(feed)).toBe(3);
+      yield* store.setFeedOptions({ ...feed, options: { retention: { maxLength: 1 } } });
+      expect(yield* store.countBlocks(feed)).toBe(1);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('deletes at most TRIM_LIMIT blocks per call and reports more until done', () =>
+    Effect.gen(function* () {
+      const store = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* store.migrate();
+      const spaceId = SpaceId.random();
+      const feed = { spaceId, feedId: EntityId.random(), feedNamespace: data };
+      const other = { spaceId, feedId: EntityId.random(), feedNamespace: data };
+      yield* store.setFeedOptions({ ...feed, options: {} });
+      yield* store.setFeedOptions({ ...other, options: {} });
+
+      // Bulk-inserted, since TRIM_LIMIT appends one by one would dominate the suite.
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`
+          WITH RECURSIVE seq(n) AS (SELECT 0 UNION ALL SELECT n + 1 FROM seq WHERE n < ${TRIM_LIMIT + 9})
+          INSERT INTO blocks (feedPrivateId, position, sequence, actorId, timestamp, data)
+          SELECT feeds.feedPrivateId, NULL, n, ${ALICE}, ${NOW}, x'00'
+          FROM seq, feeds WHERE feeds.feedId IN (${feed.feedId}, ${other.feedId})
+        `;
+
+      const first = yield* store.setFeedOptions({ ...feed, options: { retention: { maxLength: 1 } } });
+      expect(first.trim).toEqual({ deleted: TRIM_LIMIT, more: true });
+      expect(yield* store.trim(feed, NOW)).toEqual({ deleted: 9, more: false });
+      expect(yield* store.trim(feed, NOW)).toEqual({ deleted: 0, more: false });
+      expect(yield* store.countBlocks(feed)).toBe(1);
+
+      // Set past setFeedOptions so that trimAll does the whole trim, from one budget for both feeds.
+      yield* sql`UPDATE feeds SET options = ${'{"retention":{"maxLength":1}}'} WHERE feedId = ${other.feedId}`;
+      yield* sql`
+          INSERT INTO blocks (feedPrivateId, position, sequence, actorId, timestamp, data)
+          SELECT feedPrivateId, NULL, ${TRIM_LIMIT + 10}, ${ALICE}, ${NOW}, x'00' FROM feeds WHERE feedId = ${feed.feedId}
+        `;
+      expect(yield* store.trimAll(spaceId, NOW)).toEqual({ deleted: TRIM_LIMIT, more: true });
+      expect(yield* store.trimAll(spaceId, NOW)).toEqual({ deleted: 10, more: false });
+      expect(yield* store.countBlocks(feed)).toBe(1);
+      expect(yield* store.countBlocks(other)).toBe(1);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('repeated trims converge on the same retained blocks', () =>
+    Effect.gen(function* () {
+      const store = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* store.migrate();
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      const feed = { spaceId, feedId, feedNamespace: data };
+      yield* appendAt(store, spaceId, feedId, [NOW - 3 * HOUR, NOW - 2 * HOUR, NOW, NOW, NOW, NOW]);
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`UPDATE feeds SET options = ${'{"retention":{"maxLength":3,"maxAge":3600000}}'}`;
+
+      expect(yield* store.trimAll(spaceId, NOW)).toEqual({ deleted: 3, more: false });
+      const retained = yield* payloads(store, spaceId, feedId);
+      expect(retained).toEqual([3, 4, 5]);
+      expect(yield* store.trim(feed, NOW)).toEqual({ deleted: 0, more: false });
+      expect(yield* store.trimAll(spaceId, NOW)).toEqual({ deleted: 0, more: false });
+      expect(yield* payloads(store, spaceId, feedId)).toEqual(retained);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('a replica never trims blocks it has not pushed', () =>
+    Effect.gen(function* () {
+      const store = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      yield* store.migrate();
+      const spaceId = SpaceId.random();
+      const feed = { spaceId, feedId: EntityId.random(), feedNamespace: data };
+      yield* store.appendLocal(Array.from({ length: 5 }, () => message(spaceId, feed.feedId, data)));
+
+      const applied = yield* store.setFeedOptions({ ...feed, options: { retention: { maxLength: 2 } } });
+      expect(applied.trim).toEqual({ deleted: 0, more: false });
+      expect(yield* store.countBlocks(feed)).toBe(5);
+
+      // Once the authority acknowledges the oldest three, they are trimmable.
+      yield* store.setPosition({
+        spaceId,
+        blocks: [0, 1, 2].map((sequence) => ({ ...feed, actorId: ALICE, sequence, position: sequence })),
+      });
+      expect(yield* store.trim(feed, NOW)).toEqual({ deleted: 3, more: false });
+      expect(yield* store.countBlocks(feed)).toBe(2);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+});
+
+describe('FeedStore branches', () => {
+  const namespace = FeedProtocol.WellKnownNamespaces.data;
+
+  const blockId = (block: FeedProtocol.Block) => FeedProtocol.formatBlockId(block.actorId, block.sequence);
+
+  const prevOf = (block: FeedProtocol.Block) =>
+    block.prevActorId === null || block.prevSequence === null
+      ? null
+      : FeedProtocol.formatBlockId(block.prevActorId, block.prevSequence);
+
+  const setup = Effect.gen(function* () {
+    const spaceId = SpaceId.random();
+    const feedId = EntityId.random();
+    const store = new FeedStore({ localActorId: 'alice', assignPositions: true });
+    yield* store.migrate();
+    const append = (options: { forkAt: string } | { branch?: string | null } = {}) =>
+      store
+        .appendLocal([{ spaceId, feedId, feedNamespace: namespace, data: new Uint8Array([1]), ...options }])
+        .pipe(Effect.map(([block]) => block));
+    const read = store
+      .query({ requestId: 'read', spaceId, feedNamespace: namespace, query: { feedIds: [feedId] }, position: -1 })
+      .pipe(Effect.map(({ blocks }) => blocks));
+    return { spaceId, feedId, store, append, read };
+  });
+
+  it.effect('a continuation follows the head of its branch, and a fork follows its fork point', () =>
+    Effect.gen(function* () {
+      const { append, read } = yield* setup;
+      const a1 = yield* append();
+      const a2 = yield* append();
+      const b1 = yield* append({ forkAt: blockId(a1) });
+      const branch = blockId(b1);
+      const b2 = yield* append({ branch });
+      const a3 = yield* append();
+
+      expect(prevOf(a1)).toBeNull();
+      expect(prevOf(a2)).toEqual(blockId(a1));
+      expect(b1.fork).toBe(true);
+      expect(prevOf(b1)).toEqual(blockId(a1));
+      expect(prevOf(b2)).toEqual(branch);
+      expect(prevOf(a3)).toEqual(blockId(a2));
+
+      const blocks = yield* read;
+      expect(blocks.map((block) => [blockId(block), block.fork ?? false, block.branch])).toEqual([
+        [blockId(a1), false, null],
+        [blockId(a2), false, null],
+        [branch, true, branch],
+        [blockId(b2), false, branch],
+        [blockId(a3), false, null],
+      ]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('keeps one row for each branch, with its base branch, its fork point and its head', () =>
+    Effect.gen(function* () {
+      const { append, read } = yield* setup;
+      const a1 = yield* append();
+      yield* append();
+      const b1 = yield* append({ forkAt: blockId(a1) });
+      const b2 = yield* append({ branch: blockId(b1) });
+      const c1 = yield* append({ forkAt: blockId(b2) });
+
+      const insertionIds = new Map((yield* read).map((block) => [blockId(block), block.insertionId]));
+      const sql = yield* SqlClient.SqlClient;
+      const rows = yield* sql<{
+        branchId: string;
+        baseBranchId: string | null;
+        baseInsertionId: number;
+        forkInsertionId: number | null;
+        headSequence: number;
+      }>`SELECT branchId, baseBranchId, baseInsertionId, forkInsertionId, headSequence FROM branches ORDER BY baseInsertionId`;
+      expect(rows).toEqual([
+        {
+          branchId: '',
+          baseBranchId: null,
+          baseInsertionId: insertionIds.get(blockId(a1)),
+          forkInsertionId: null,
+          headSequence: 1,
+        },
+        {
+          branchId: blockId(b1),
+          baseBranchId: '',
+          baseInsertionId: insertionIds.get(blockId(b1)),
+          forkInsertionId: insertionIds.get(blockId(a1)),
+          headSequence: b2.sequence,
+        },
+        {
+          branchId: blockId(c1),
+          baseBranchId: blockId(b1),
+          baseInsertionId: insertionIds.get(blockId(c1)),
+          forkInsertionId: insertionIds.get(blockId(b2)),
+          headSequence: c1.sequence,
+        },
+      ]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('a replica infers the same branches from the fork flag and the predecessors', () =>
+    Effect.gen(function* () {
+      const { spaceId, append, read } = yield* setup;
+      const a1 = yield* append();
+      const b1 = yield* append({ forkAt: blockId(a1) });
+      yield* append({ branch: blockId(b1) });
+      yield* append();
+      const written = yield* read;
+
+      // The local columns stay behind: the replica infers them again.
+      const blocks = written.map(({ branch: _branch, insertionId: _insertionId, ...block }) => block);
+      const { blocks: replicated } = yield* Effect.gen(function* () {
+        const replica = new FeedStore({ localActorId: 'bob', assignPositions: false });
+        yield* replica.migrate();
+        yield* replica.append({ requestId: 'pull', spaceId, feedNamespace: namespace, blocks });
+        return yield* replica.query({
+          requestId: 'read',
+          spaceId,
+          feedNamespace: namespace,
+          query: { feedIds: [blocks[0].feedId ?? ''] },
+          position: -1,
+        });
+      }).pipe(Effect.provide(ReplicaLayer()));
+      expect(replicated.map((block) => [blockId(block), block.branch])).toEqual(
+        written.map((block) => [blockId(block), block.branch]),
+      );
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('a replica that receives a fork before its fork point still walks to its ancestors', () =>
+    Effect.gen(function* () {
+      const { spaceId, feedId, append, read } = yield* setup;
+      const a1 = yield* append();
+      const b1 = yield* append({ forkAt: blockId(a1) });
+      const written = (yield* read).map(({ branch: _branch, insertionId: _insertionId, ...block }) => block);
+      const [rootBlock, forkBlock] = written;
+
+      const walked = yield* Effect.gen(function* () {
+        const replica = new FeedStore({ localActorId: 'bob', assignPositions: false });
+        yield* replica.migrate();
+        yield* replica.append({ requestId: 'fork', spaceId, feedNamespace: namespace, blocks: [forkBlock] });
+        yield* replica.append({ requestId: 'root', spaceId, feedNamespace: namespace, blocks: [rootBlock] });
+        return yield* replica.walk({
+          spaceId,
+          feedNamespace: namespace,
+          feedId,
+          branch: blockId(b1),
+          direction: 'asc',
+        });
+      }).pipe(Effect.provide(ReplicaLayer()));
+      expect(walked.map(blockId)).toEqual([blockId(a1), blockId(b1)]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('refuses a continuation of a branch the feed does not hold', () =>
+    Effect.gen(function* () {
+      const { append } = yield* setup;
+      yield* append();
+      const exit = yield* Effect.exit(append({ branch: '7@nobody' }));
+      expect(Exit.isFailure(exit)).toBe(true);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('refuses a fork at a block the feed does not hold', () =>
+    Effect.gen(function* () {
+      const { append } = yield* setup;
+      yield* append();
+      const exit = yield* Effect.exit(append({ forkAt: '7@nobody' }));
+      expect(Exit.isFailure(exit)).toBe(true);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  describe('walk', () => {
+    // a1 a2 b1(fork at a1) a3 b2 c1(fork at b1) b3: the root, a branch of it, and a branch of that.
+    const tree = Effect.gen(function* () {
+      const context = yield* setup;
+      const { append } = context;
+      const a1 = yield* append();
+      const a2 = yield* append();
+      const b1 = yield* append({ forkAt: blockId(a1) });
+      const a3 = yield* append();
+      const b2 = yield* append({ branch: blockId(b1) });
+      const c1 = yield* append({ forkAt: blockId(b1) });
+      const b3 = yield* append({ branch: blockId(b1) });
+      const names = new Map(
+        Object.entries({ a1, a2, b1, a3, b2, c1, b3 }).map(([name, block]) => [blockId(block), name]),
+      );
+      const walk = (request: Omit<WalkRequest, 'spaceId' | 'feedNamespace' | 'feedId'>) =>
+        context.store
+          .walk({ spaceId: context.spaceId, feedNamespace: namespace, feedId: context.feedId, ...request })
+          .pipe(Effect.map((blocks) => blocks.map((block) => names.get(blockId(block)))));
+      return {
+        walk,
+        store: context.store,
+        spaceId: context.spaceId,
+        feedId: context.feedId,
+        branchB: blockId(b1),
+        branchC: blockId(c1),
+        a1: blockId(a1),
+        b2: blockId(b2),
+      };
+    });
+
+    it.effect('forward to the root branch gives only the root', () =>
+      Effect.gen(function* () {
+        const { walk } = yield* tree;
+        expect(yield* walk({ direction: 'asc' })).toEqual(['a1', 'a2', 'a3']);
+      }).pipe(Effect.provide(TestLayer)),
+    );
+
+    it.effect('forward to a nested branch cuts each ancestor at the fork point of the next', () =>
+      Effect.gen(function* () {
+        const { walk, branchB, branchC } = yield* tree;
+        expect(yield* walk({ direction: 'asc', branch: branchB })).toEqual(['a1', 'b1', 'b2', 'b3']);
+        expect(yield* walk({ direction: 'asc', branch: branchC })).toEqual(['a1', 'b1', 'c1']);
+      }).pipe(Effect.provide(TestLayer)),
+    );
+
+    it.effect('with forks, a walk gives the base of each branch that forks at a walked block', () =>
+      Effect.gen(function* () {
+        const { walk, branchB } = yield* tree;
+        expect(yield* walk({ direction: 'asc', forks: true })).toEqual(['a1', 'b1', 'a2', 'a3']);
+        expect(yield* walk({ direction: 'asc', branch: branchB, forks: true })).toEqual(['a1', 'b1', 'c1', 'b2', 'b3']);
+      }).pipe(Effect.provide(TestLayer)),
+    );
+
+    it.effect('a cursor resumes after its block, also after a fork base', () =>
+      Effect.gen(function* () {
+        const { walk, branchB, a1 } = yield* tree;
+        expect(yield* walk({ direction: 'asc', branch: branchB, after: a1 })).toEqual(['b1', 'b2', 'b3']);
+        expect(yield* walk({ direction: 'asc', forks: true, after: branchB })).toEqual(['a2', 'a3']);
+        expect(yield* walk({ direction: 'asc', after: '9@nobody' })).toEqual([]);
+      }).pipe(Effect.provide(TestLayer)),
+    );
+
+    it.effect('a walk hides blocks past the maxAge of the feed, as every other read does', () =>
+      Effect.gen(function* () {
+        const { walk, store, spaceId, feedId } = yield* tree;
+        expect(yield* walk({ direction: 'asc' })).toEqual(['a1', 'a2', 'a3']);
+        // Applied while no block has expired, so only the clock moving past them can hide one.
+        yield* TestClock.setTime(Date.now());
+        yield* store.setFeedOptions({
+          spaceId,
+          feedId,
+          feedNamespace: namespace,
+          options: { retention: { maxAge: 60_000 } },
+        });
+        yield* TestClock.setTime(Date.now() + 120_000);
+        expect(yield* walk({ direction: 'asc' })).toEqual([]);
+      }).pipe(Effect.provide(TestLayer)),
+    );
+
+    it.effect('backward from a block goes to the root base through each base branch', () =>
+      Effect.gen(function* () {
+        const { walk, branchB, b2 } = yield* tree;
+        expect(yield* walk({ direction: 'desc', after: b2 })).toEqual(['b1', 'a1']);
+        expect(yield* walk({ direction: 'desc', branch: branchB })).toEqual(['b3', 'b2', 'b1', 'a1']);
+      }).pipe(Effect.provide(TestLayer)),
+    );
+  });
 });

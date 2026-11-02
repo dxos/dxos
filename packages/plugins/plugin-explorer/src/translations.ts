@@ -6,8 +6,9 @@ import { Type } from '@dxos/echo';
 import { translations as queryTranslations } from '@dxos/react-ui-query/translations';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Graph } from '#types';
+
+import { ExplorerNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -23,7 +24,7 @@ export const translations = [
         'delete-object.label': 'Delete explorer',
         'object-deleted.label': 'Explorer deleted',
       },
-      [meta.profile.key]: {
+      [ExplorerNamespace.key]: {
         'plugin.name': 'Explorer',
         'object-title.label': 'Title',
         'neighborhood-companion.label': 'Graph',

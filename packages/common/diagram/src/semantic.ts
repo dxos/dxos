@@ -41,9 +41,29 @@ export type Pin = ({ kind: 'point'; x: number; y: number } | { kind: 'cell'; col
   range: Range;
 };
 
+/**
+ * What a diagram depicts, which picks its layout: `structure` places boxes on the grid, `sequence`
+ * draws participants as columns and messages as rows in source order, `dataflow` places processes,
+ * stores and external entities on the grid like `structure`.
+ */
+export type DiagramKind = 'structure' | 'sequence' | 'dataflow';
+export const DIAGRAM_KINDS: readonly DiagramKind[] = ['structure', 'sequence', 'dataflow'];
+
+/** What a node stands for: `actor` in a sequence diagram; `process`, `store` or `external` in a data-flow diagram. */
+export type Role = 'actor' | 'process' | 'store' | 'external';
+export const ROLES: readonly Role[] = ['actor', 'process', 'store', 'external'];
+
+/** The roles each diagram kind accepts; a data-flow node without one is a process. */
+export const ROLES_BY_KIND: Readonly<Record<DiagramKind, readonly Role[]>> = {
+  structure: [],
+  sequence: ['actor'],
+  dataflow: ['process', 'store', 'external'],
+};
+
 export type Node = {
   id: string;
   label: string;
+  role?: Role;
   group?: string;
   ref?: string;
   pin?: Pin;
@@ -123,9 +143,23 @@ export type EdgeStyle = {
   color?: Scene.Color;
 };
 
+/**
+ * A sequence message: `call` is synchronous and opens an activation on its target, `send` is
+ * asynchronous, `return` answers the innermost open call. A plain `->` is a call without activation.
+ */
+export type Message = 'call' | 'send' | 'return';
+
+/** Message words an edge may use in a sequence diagram in place of `->`. */
+export const MESSAGES: Readonly<Record<string, Message>> = {
+  calls: 'call',
+  sends: 'send',
+  returns: 'return',
+};
+
 export type Edge = EdgeStyle & {
   /** Scene id of the connector, unique in the diagram. */
   id: string;
+  message?: Message;
   from: End;
   to: End;
   label?: string;
@@ -144,15 +178,42 @@ export type Bus = {
   hub: End;
   direction: 'out' | 'in';
   edges: readonly Edge[];
-  /** Text on the trunk, from a multi-target statement's label. */
+  /** Text on the trunk, from a multi-target statement's label or the property its edges share. */
   label?: string;
-  /** Gathered by relation rather than by a `bus` statement, so the router may still split it. */
+  /** Gathered by inheritance rather than by a `bus` statement, so the router may still split it. */
   implicit?: boolean;
 };
 
 export type Size = { w: number; h: number };
 
+/** A note in a sequence diagram: beside one participant, or over the span of several. */
+export type Note = {
+  id: string;
+  over: readonly string[];
+  side: 'left' | 'right' | 'over';
+  text: string;
+  color?: Scene.Color;
+  range: Range;
+};
+
+/** UML combined-fragment operators. */
+export type FragmentKind = 'alt' | 'opt' | 'loop' | 'par' | 'break' | 'critical';
+export const FRAGMENT_KINDS: readonly FragmentKind[] = ['alt', 'opt', 'loop', 'par', 'break', 'critical'];
+
+/** One operand of a fragment: its guard and what happens under it. */
+export type Section = { guard?: string; steps: Step[]; range: Range };
+
+/** A combined fragment around part of a sequence; `alt` and `par` take several sections, split by `else`. */
+export type Fragment = { id: string; kind: FragmentKind; sections: Section[]; range: Range };
+
+/** One entry of a sequence diagram's timeline, in source order. */
+export type Step =
+  | { kind: 'message'; edge: string }
+  | { kind: 'note'; note: Note }
+  | { kind: 'fragment'; fragment: Fragment };
+
 export type Diagram = {
+  kind: DiagramKind;
   flow: Flow;
   origin: Scene.Point;
   /** Cell pitch (box plus gutter), in scene units; measured from the boxes when absent. */
@@ -168,9 +229,12 @@ export type Diagram = {
   busLabels: Map<string, string>;
   /** Whether any statement said how to place or route — when none did, the mermaid engine's search is also tried. */
   hinted: boolean;
+  /** Messages, notes and fragments in source order; what a sequence diagram draws top to bottom. */
+  timeline: Step[];
 };
 
 export const empty = (): Diagram => ({
+  kind: 'structure',
   flow: 'down',
   origin: { x: 0, y: 0 },
   nodes: [],
@@ -178,6 +242,7 @@ export const empty = (): Diagram => ({
   edges: [],
   busLabels: new Map(),
   hinted: false,
+  timeline: [],
 });
 
 /** The key edges share a trunk under. */
@@ -197,17 +262,83 @@ export const inheritanceKey = (edge: Edge): string | undefined =>
     ? `${edge.to.node}|${edge.relation}|in`
     : undefined;
 
+/** Prefix of the keys `propertyKeys` gives, which carry their label to the trunk. */
+const PROPERTY = '@';
+
+/**
+ * The implicit bus keys of labelled edges: edges that carry one property (same label and style)
+ * out of one node — from one pinned side, if pinned — share a trunk, and so do those into one node.
+ * Fanning out wins over gathering in, so an edge joins at most one such bus.
+ */
+const propertyKeys = (edges: readonly Edge[]): Map<Edge, string> => {
+  const candidates = edges.filter(
+    (edge) =>
+      edge.bus === undefined &&
+      edge.label !== undefined &&
+      inheritanceKey(edge) === undefined &&
+      edge.via.length === 0 &&
+      edge.from.node !== edge.to.node,
+  );
+  const property = (edge: Edge, end: End, direction: Bus['direction']) =>
+    `${PROPERTY}${busKey(
+      end.node,
+      JSON.stringify([
+        edge.label,
+        end.sides,
+        end.soft,
+        edge.relation,
+        edge.head,
+        edge.tail,
+        edge.stroke,
+        edge.color,
+        edge.message,
+      ]),
+      direction,
+    )}`;
+  const keys = new Map<Edge, string>();
+  const claim = (pool: readonly Edge[], keyOf: (edge: Edge) => string) => {
+    const families = new Map<string, Edge[]>();
+    pool.forEach((edge) => families.set(keyOf(edge), [...(families.get(keyOf(edge)) ?? []), edge]));
+    for (const [key, family] of families) {
+      if (family.length > 1) {
+        family.forEach((edge) => keys.set(edge, key));
+      }
+    }
+  };
+  claim(candidates, (edge) => property(edge, edge.from, 'out'));
+  claim(
+    candidates.filter((edge) => !keys.has(edge)),
+    (edge) => property(edge, edge.to, 'in'),
+  );
+  return keys;
+};
+
+/**
+ * The key each edge shares a trunk under: a `bus` statement's, an inheritance edge's (`~`), or a
+ * property's (`@`); edges with none are drawn alone.
+ */
+export const busKeys = (diagram: Diagram): Map<Edge, string> => {
+  const properties = propertyKeys(diagram.edges);
+  return new Map(
+    diagram.edges.flatMap((edge) => {
+      const inherited = inheritanceKey(edge);
+      const key = edge.bus ?? (inherited === undefined ? properties.get(edge) : `~${inherited}`);
+      return key === undefined ? [] : [[edge, key] as const];
+    }),
+  );
+};
+
 /** The edges grouped into buses (two or more edges with one key) and the rest. */
 export const buses = (diagram: Diagram): { buses: Bus[]; single: Edge[] } => {
   const byKey = new Map<string, { hub: End; direction: Bus['direction']; edges: Edge[]; implicit: boolean }>();
+  const keys = busKeys(diagram);
   for (const edge of diagram.edges) {
-    const implicit = inheritanceKey(edge);
-    const key = edge.bus ?? (implicit === undefined ? undefined : `~${implicit}`);
+    const key = keys.get(edge);
     if (key === undefined) {
       continue;
     }
     const [hub, direction] = key.endsWith('|in') ? [edge.to, 'in' as const] : [edge.from, 'out' as const];
-    const entry = byKey.get(key) ?? { hub, direction, edges: [], implicit: edge.bus === undefined };
+    const entry = byKey.get(key) ?? { hub, direction, edges: [], implicit: key.startsWith('~') };
     entry.edges.push(edge);
     byKey.set(key, entry);
   }
@@ -223,7 +354,11 @@ export const buses = (diagram: Diagram): { buses: Bus[]; single: Edge[] } => {
       hub,
       direction,
       edges,
-      ...(diagram.busLabels.has(key) ? { label: diagram.busLabels.get(key) } : {}),
+      ...(diagram.busLabels.has(key)
+        ? { label: diagram.busLabels.get(key) }
+        : key.startsWith(PROPERTY)
+          ? { label: edges[0].label }
+          : {}),
       ...(implicit ? { implicit } : {}),
     });
   }

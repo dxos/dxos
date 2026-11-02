@@ -11,6 +11,8 @@
     isolation: isolate;
     border-radius: var(--radius-sm, 0.25rem);
     cursor: default;
+    /* The current row (the one the keys act on) is neutral; orange is the selection's, so a row that is both is orange. */
+    --dx-row-ring-color: var(--color-neutral-border);
   }
   /* Rows that run edge to edge would show their rounding against the container's own edges. */
   .dx-container[data-gutter='none'] > .dx-row {
@@ -26,6 +28,7 @@
   }
   /* `data-selected` too: a tree branch's `aria-selected` lands on its `display: contents` wrapper, not the row. */
   .dx-row:is([aria-selected='true'], [data-selected]) {
+    --dx-row-ring-color: var(--dx-focus-ring-color);
     background: var(--color-selected-surface);
   }
   .dx-row:is([aria-selected='true'], [data-selected]):hover {
@@ -64,7 +67,7 @@
     inset: 0;
     z-index: 1;
     border-radius: inherit;
-    box-shadow: inset 0 0 0 var(--dx-focus-ring-width) var(--dx-focus-ring-color);
+    box-shadow: inset 0 0 0 var(--dx-focus-ring-width) var(--dx-row-ring-color);
     pointer-events: none;
   }
 
@@ -99,6 +102,21 @@
   }
   [data-drop-target='bottom']::after {
     bottom: calc(var(--dx-drop-indicator-width) / -2);
+  }
+  /* A horizontal list or a grid of tiles lands beside the target, so its indicator is vertical. */
+  :is([data-drop-target='left'], [data-drop-target='right'])::after {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    width: var(--dx-drop-indicator-width);
+    background: var(--dx-drop-indicator-color);
+    pointer-events: none;
+  }
+  [data-drop-target='left']::after {
+    left: calc((var(--dx-drop-indicator-width) + var(--dx-gap-size, 0px)) / -2);
+  }
+  [data-drop-target='right']::after {
+    right: calc((var(--dx-drop-indicator-width) + var(--dx-gap-size, 0px)) / -2);
   }
 
   /* `virtual='variable'`: every row mounts, and the browser skips the layout of rows out of view. */

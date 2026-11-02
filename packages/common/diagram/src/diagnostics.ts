@@ -253,7 +253,8 @@ const connectors = (objects: readonly Scene.WorldObject[], targets: ReadonlyMap<
   const paths = new Map<string, Connector>();
   for (const object of objects) {
     for (const element of object.elements) {
-      if (element.kind === 'line') {
+      // A guide (lifeline, divider) is drawn beside the routes, not as one.
+      if (element.kind === 'line' && !element.guide) {
         const id = element.id.replace(/-path$/, '');
         const ref = `${object.id}/${id}`;
         paths.set(ref, { ref, points: element.points.map((point) => place(object, point)), headed: false });

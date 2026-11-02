@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { DXN } from '@dxos/echo';
 // Referenced in the emitted .d.ts of the operations (via `ConnectorSpec`'s schemas); importing it
 // lets TypeScript name it (TS2883).
@@ -89,4 +90,5 @@ export const SyncLinearTeams = Operation.make({
       tasks: Schema.Number,
     }),
   }),
+  services: [Trace.TraceService],
 }).pipe(Operation.visible);

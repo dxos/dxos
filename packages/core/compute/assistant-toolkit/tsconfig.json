@@ -79,6 +79,12 @@
     },
     {
       "path": "../compute-runtime"
+    },
+    {
+      "path": "../link"
+    },
+    {
+      "path": "../mcp-client"
     }
   ]
 }

@@ -15,10 +15,11 @@ import * as Obj from './Obj.ts';
 import * as Type from './Type.ts';
 
 export class Tag extends Type.makeObject<Tag>(internal.TagTypeDXN)(
-  Schema.Struct({
+  {
     label: Schema.String,
     hue: Schema.optional(Schema.String), // TODO(burdon): Color name?
-  }).pipe(internal.LabelAnnotation.set(['label'])),
+  },
+  internal.LabelAnnotation.set(['label']),
 ) {}
 
 /**

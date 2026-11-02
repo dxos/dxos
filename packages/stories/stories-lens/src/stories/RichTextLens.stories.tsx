@@ -64,7 +64,7 @@ const SideBySideStory = () => {
   }
 
   return (
-    <div className='dx-cover grid grid-cols-3 gap-3 p-3 overflow-hidden'>
+    <div className='dx-cover grid grid-cols-3 gap-3 p-trim-md overflow-hidden'>
       <DemoPanel label='Markdown — the string as stored' testId='markdown-panel'>
         <MarkdownEditor text={text} />
       </DemoPanel>
@@ -87,7 +87,7 @@ const CollaborationStory = () => {
   }
 
   return (
-    <div className='grid grid-rows-2 gap-3 p-3 h-full overflow-hidden'>
+    <div className='grid grid-rows-2 gap-3 p-trim-md h-full overflow-hidden'>
       {index === 0 ? (
         <DemoPanel label={`Peer ${index} — markdown, the string as stored`} testId='markdown-panel'>
           <MarkdownEditor text={text} />

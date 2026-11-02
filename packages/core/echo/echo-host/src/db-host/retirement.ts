@@ -40,34 +40,44 @@ export type IndexedObject = {
 };
 
 /**
- * Id of the document that replaces `documentId` when it is retired. Derived rather than random, so peers that
- * retire the same document concurrently write into one replacement instead of linking several.
+ * Id of a document derived from `seed` rather than random, so peers that create the document for the same reason
+ * concurrently write into one document instead of linking several.
  */
-export const replacementDocumentId = async (documentId: DocumentId): Promise<DocumentId> => {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`dxos:retired:${documentId}`));
+export const deriveDocumentId = async (seed: string): Promise<DocumentId> => {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(seed));
   const id = bs58check.encode(new Uint8Array(digest).subarray(0, 16));
-  invariant(isValidDocumentId(id), 'Derived replacement document id is invalid.');
+  invariant(isValidDocumentId(id), 'Derived document id is invalid.');
   return id;
 };
 
 /**
- * The replacement document as one deterministic change: its actor is derived from the document it replaces and the
- * content exactly as inserted, and its timestamp is fixed. Peers that rebuild the same state produce byte-identical
- * changes that merge into one; any difference yields a distinct actor, which Automerge merges as a conflict.
+ * A document as one deterministic change: its actor is derived from `seed` and the content exactly as inserted,
+ * and its timestamp is fixed. Peers that build the same state produce byte-identical changes that merge into one;
+ * any difference yields a distinct actor, which Automerge merges as a conflict.
  */
-export const buildReplacementDocument = async (
-  documentId: DocumentId,
+export const buildDeterministicDocument = async (
+  seed: string,
   directory: DatabaseDirectory,
 ): Promise<A.Doc<DatabaseDirectory>> => {
   const digest = await crypto.subtle.digest(
     'SHA-256',
-    new TextEncoder().encode(`dxos:retired:${documentId}:${JSON.stringify(directory)}`),
+    new TextEncoder().encode(`${seed}:${JSON.stringify(directory)}`),
   );
   const actor = Array.from(new Uint8Array(digest).subarray(0, 16), (byte) => byte.toString(16).padStart(2, '0')).join(
     '',
   );
   return A.change(A.init<DatabaseDirectory>({ actor }), { time: 0 }, (draft) => Object.assign(draft, directory));
 };
+
+/** Id of the document that replaces `documentId` when it is retired. */
+export const replacementDocumentId = (documentId: DocumentId): Promise<DocumentId> =>
+  deriveDocumentId(`dxos:retired:${documentId}`);
+
+/** The replacement document of `documentId`; see {@link buildDeterministicDocument}. */
+export const buildReplacementDocument = (
+  documentId: DocumentId,
+  directory: DatabaseDirectory,
+): Promise<A.Doc<DatabaseDirectory>> => buildDeterministicDocument(`dxos:retired:${documentId}`, directory);
 
 /** The directory that replaces an unloadable document: its objects rebuilt from the index, with no history. */
 export const makeReplacementDirectory = ({

@@ -30,7 +30,7 @@ on:
     inputs:
       edge:
         type: choice
-        description: 'Which EDGE to run against'
+        description: 'Join latency: which EDGE to run against'
         options: [preview, dev, local]
         default: preview
       objects:
@@ -41,16 +41,12 @@ on:
         type: string
         description: 'Join latency: peers that accept an invitation'
         default: '5'
-      soak_minutes:
+      # The soak's spec is `packages/e2e/blade-runner/configs/edge-stress-nightly.yml`; this is for
+      # debugging only and is merged over it, e.g. `{"edge":"dev","maxCommands":25}`.
+      soak_spec:
         type: string
-        description: 'Soak: wall-clock budget in minutes'
-        default: '60'
-      # Sized so the run keeps issuing commands for at least half an hour: a healthy command costs
-      # ~3s against preview, and overshooting is free because `maxRuntimeMs` stops the run early.
-      soak_commands:
-        type: string
-        description: 'Soak: executable commands to plan'
-        default: '800'
+        description: 'Soak: JSON override merged over configs/edge-stress-nightly.yml (empty = none)'
+        default: ''
 
 permissions:
   contents: read
@@ -156,8 +152,9 @@ jobs:
   # model. Independent of `join-latency`: a red soak should not withhold a latency number.
   soak:
     runs-on: ubuntu-24.04
-    # Headroom over the run's own `maxRuntimeMs`, which stops issuing commands and proceeds to the
-    # final assertion; hitting the job timeout instead cancels mid-flight and proves nothing.
+    # Headroom over `maxRuntimeMs` in `configs/edge-stress-nightly.yml` (60 minutes), which stops
+    # issuing commands and proceeds to the final assertion; hitting the job timeout instead cancels
+    # mid-flight and proves nothing.
     timeout-minutes: 90
     services:
       redis:
@@ -186,14 +183,17 @@ jobs:
       - name: Soak
         working-directory: packages/e2e/blade-runner
         env:
-          EDGE: ${{ inputs.edge || 'preview' }}
-          MINUTES: ${{ inputs.soak_minutes || '60' }}
-          COMMANDS: ${{ inputs.soak_commands || '800' }}
+          SPEC_OVERRIDE: ${{ inputs.soak_spec }}
         run: |
           SEED="soak-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           echo "Seed: $SEED"
+          OVERRIDE=()
+          if [ -n "$SPEC_OVERRIDE" ]; then
+            echo "Spec override: $SPEC_OVERRIDE"
+            OVERRIDE=(--spec "$SPEC_OVERRIDE")
+          fi
           GRAVITY_OUT_BASE="$PWD" node --import tsx src/main.ts edgeStress --no-browser --seed "$SEED" \
-            --spec "{\"edge\":\"$EDGE\",\"maxRuntimeMs\":$((MINUTES * 60000)),\"maxCommands\":$COMMANDS}"
+            -s configs/edge-stress-nightly.yml "${OVERRIDE[@]}"
 
       - name: Report
         if: always()

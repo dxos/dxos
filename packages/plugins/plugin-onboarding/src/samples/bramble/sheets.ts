@@ -126,8 +126,8 @@ const makeSheets = (): SheetsResult => {
       ...SheetRange.headerRanges(salesReportCells, 'F1:G1'),
     ],
     charts: [
-      { id: 'bags-sold', name: 'Bags sold by blend', range: 'A1:D7', type: 'bar', header: true, grid: true },
-      { id: 'revenue-mix', name: 'Revenue by channel', range: 'F1:G4', type: 'pie', header: true },
+      { name: 'Bags sold by blend', range: 'A1:D7', type: 'bar', header: true, grid: true },
+      { name: 'Revenue by channel', range: 'F1:G4', type: 'pie', header: true },
     ],
   });
 
@@ -149,7 +149,7 @@ const table = (column: string, rows: (string | number)[][]): Record<string, Shee
 export type SheetsResult = { greenInventory: Sheet.Sheet; priceList: Sheet.Sheet; salesReport: Sheet.Sheet };
 
 export const Sheets: SampleSpace.Partial<SheetsResult> = SampleSpace.partial('sheets', {
-  schemas: [Sheet.Sheet],
+  schemas: [Sheet.Sheet, Sheet.Chart],
   run: () =>
     Effect.gen(function* () {
       const sheets = makeSheets();

@@ -212,7 +212,9 @@ feat F-1: Author and maintain plans
     MCP edits a plan without touching ECHO directly.
   req F-1.3: Re-generating a plan from an updated spec matches existing cases by `key` and updates
     them in place, so historical results keep pointing at the same TestCase.
+```
 
+```mdl
 feat F-2: Record runs
 
   req F-2.1: Starting a run appends a TestRun with status `running` to the plan's feed and returns
@@ -225,20 +227,26 @@ feat F-2: Record runs
     `finishedAt`. A run that covered nothing, or reported nothing, therefore seals as `skipped`;
     `passed` is reachable only from a non-empty capture in which every case reported `passed`.
   req F-2.4: A run is immutable once finished; a correction is a new run, not an edit.
+```
 
+```mdl
 feat F-3: Evidence
 
   req F-3.1: An artifact is attached by reference to an existing object; the plugin never copies
     or stores bytes of its own.
   req F-3.2: Artifacts attach at step granularity as well as case granularity.
+```
 
+```mdl
 feat F-4: Read the history
 
   req F-4.1: The plan surface shows the feed newest-first, one row per run, with its target and
     pass/fail counts.
   req F-4.2: A case surface shows that case's outcome across every run, so a flaky or long-broken
     case is visible without opening runs one by one.
+```
 
+```mdl
 feat F-5: Agent access over MCP
 
   req F-5.1: A `QaSkill` names the plan-editing and result-pushing operations in its `tools`, which
@@ -475,38 +483,52 @@ scenario T-1: A run rolls up to the worst outcome
   given: a plan with three cases, and a started run
   when: results are pushed as passed, blocked, passed
   then: completeRun sets the run status to blocked, not passed
+```
 
+```mdl
 scenario T-2: A failure dominates a block
   given: a started run
   when: results are pushed as failed and blocked
   then: completeRun sets the run status to failed
+```
 
+```mdl
 scenario T-3: A run covering nothing seals as skipped
   given: a plan with no cases
   when: a run is started and finished without pushing anything
   then: the run status is skipped
   note: the same holds for startRun called with cases: [] on a plan that has cases
+```
 
+```mdl
 scenario T-4: An unreported case cannot seal as passed
   given: a run started over three cases
   when: one result is pushed as passed and the run is finished
   then: the run status is skipped, and `unreported` names the two cases that never reported
+```
 
+```mdl
 scenario T-5: A finished run is immutable
   given: a finished run
   when: pushResult is invoked for one of its cases
   then: it fails with RunFinishedError and the run is unchanged
+```
 
+```mdl
 scenario T-6: Re-generation preserves case identity
   given: a plan whose case QA-1 has results in two past runs
   when: setCase is invoked with key QA-1 and a changed title
   then: the same TestCase object is updated, and both past results still resolve to it
+```
 
+```mdl
 scenario T-7: Artifacts are references, not copies
   given: a Document in the space
   when: a result is pushed with that document as an artifact
   then: the result holds a Ref to the existing object and no new object is created
+```
 
+```mdl
 scenario T-8: A mid-run plan edit does not reject a captured case
   given: a run started over cases QA-1 and QA-2
   when: QA-2 is removed from the plan, then a result for QA-2 is pushed

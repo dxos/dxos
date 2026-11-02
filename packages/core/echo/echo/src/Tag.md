@@ -22,17 +22,16 @@ Helpers on the same module:
 
 Three ways an object can carry tags. Pick the one that matches your storage shape:
 
-### 1. `Obj.getMeta(obj).tags` — DXN refs on the object's metadata
+### 1. `Obj.getMeta(obj).tags` — `Tag` objects on the object's metadata
 
-The canonical user-tagging path. Each tag lives as a standalone `Tag` object in the space; the _target_ object holds an array of DXN refs to those tags inside its metadata bag. The form layer's [`ObjectProperties`](../../ui/react-ui-form/src/components/ObjectProperties) writes these via the `pinnedTags` control.
+The canonical user-tagging path. Each tag lives as a standalone `Tag` object in the space; the _target_ object's metadata holds an editable array of those `Tag` objects. They are strong dependencies, like a parent or a relation's endpoints: persisted as references, loaded with the object, and an object whose tags are not available is not surfaced by queries. Deleting a tag does not delete the objects that carry it; the deleted tag stays in their arrays (filter with `Obj.isDeleted`). The form layer's [`ObjectProperties`](../../ui/react-ui-form/src/components/ObjectProperties) writes these via the `pinnedTags` control.
 
 Use when: the target object is mutable. Tags can be added/removed cheaply by editing the metadata.
 
 ```ts
-const tag = Obj.make(Tag.Tag, { label: 'important', hue: 'amber' });
-db.add(tag);
-Obj.update(target, (t) => {
-  Obj.getMeta(t).tags = [tag.dxn];
+const tag = db.add(Tag.make({ label: 'important', hue: 'amber' }));
+Obj.update(target, (target) => {
+  Obj.addTag(target, tag); // Or edit the array: `Obj.getMeta(target).tags.push(tag)`.
 });
 ```
 

@@ -4,7 +4,7 @@
 
 import type { ActionGroupBuilderFn, ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 
-import { meta } from '#meta';
+import { SpacetimeNamespace } from '../../namespace.ts';
 
 export type SpacetimeTool = 'select' | 'move' | 'extrude';
 
@@ -21,7 +21,7 @@ export const createToolActions =
     builder.group(
       'tool',
       {
-        label: ['tool.label', { ns: meta.profile.key }],
+        label: ['tool.label', { ns: SpacetimeNamespace.key }],
         iconOnly: true,
         variant: 'toggleGroup',
         selectCardinality: 'single',
@@ -31,7 +31,7 @@ export const createToolActions =
         for (const [tool, icon] of Object.entries(tools)) {
           group.action(
             tool,
-            { label: [`tool.${tool}.label`, { ns: meta.profile.key }], checked: currentTool === tool, icon },
+            { label: [`tool.${tool}.label`, { ns: SpacetimeNamespace.key }], checked: currentTool === tool, icon },
             () => onToolChange(tool),
           );
         }

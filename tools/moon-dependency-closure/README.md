@@ -15,11 +15,12 @@ Nothing rebuilds the `.wasm` for you, and CI does not check it against the sourc
 crate, rebuild it and commit it with the change:
 
 ```bash
-moon run moon-dependency-closure:cargo-build
+moon run moon-dependency-closure:build-native
 ```
 
 This needs Rust; `rust-toolchain.toml` pins the version and the `wasm32-wasip1` target, which rustup
-installs on first use. `moon run moon-dependency-closure:test` runs the closure's tests, which CI also runs.
+installs on first use. `moon run moon-dependency-closure:test-native` runs the closure's tests, which
+Check's `native` job also runs.
 
 ## Debugging a cache miss
 

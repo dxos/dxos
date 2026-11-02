@@ -21,12 +21,12 @@ import { log } from '@dxos/log';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 
-import { meta } from '#meta';
 import { ConnectorAnnotations, ConnectorEvents, ConnectorSpec } from '#types';
 
 import * as Binding from '../Binding.ts';
 import * as ConnectorAuth from '../ConnectorAuth.ts';
 import { CONNECTIONS_SECTION_ID, CONNECTIONS_SECTION_TYPE } from '../constants.ts';
+import { ConnectorNamespace } from '../namespace.ts';
 
 /**
  * True when `connection`'s credential is for a different remote account than `target` already syncs, so
@@ -103,7 +103,7 @@ export default Capability.makeModule(
             if (connector?.sync) {
               actions.push(
                 AppGraphNode.makeAction({
-                  id: `${meta.profile.key}.sync-connection.${connection.id}`,
+                  id: `${ConnectorNamespace.key}.sync-connection.${connection.id}`,
                   // Runs through the account routine's trigger (dispatcher-driven continuation);
                   // a missing routine opens the seeded create-routine form instead.
                   data: () => {
@@ -114,7 +114,7 @@ export default Capability.makeModule(
                     return Binding.syncOrOfferRoutine({ connection, connector, db });
                   },
                   properties: {
-                    label: ['sync-connection.label', { ns: meta.profile.key }],
+                    label: ['sync-connection.label', { ns: ConnectorNamespace.key }],
                     icon: 'ph--arrows-clockwise--regular',
                     disposition: 'list-item',
                   },
@@ -123,7 +123,7 @@ export default Capability.makeModule(
             }
             actions.push(
               AppGraphNode.makeAction({
-                id: `${meta.profile.key}.delete-connection.${connection.id}`,
+                id: `${ConnectorNamespace.key}.delete-connection.${connection.id}`,
                 // Cursors are left dormant rather than deleted, so a re-connect of the same account
                 // resumes instead of re-walking the whole horizon; the sync Routine goes with the
                 // connection, or its schedule would keep firing against a connection that is gone.
@@ -140,7 +140,7 @@ export default Capability.makeModule(
                     );
                   }),
                 properties: {
-                  label: ['delete-connection.label', { ns: meta.profile.key }],
+                  label: ['delete-connection.label', { ns: ConnectorNamespace.key }],
                   icon: 'ph--trash--regular',
                   disposition: 'list-item',
                   testId: 'connectorPlugin.deleteConnection',
@@ -165,7 +165,7 @@ export default Capability.makeModule(
               type: CONNECTIONS_SECTION_TYPE,
               data: CONNECTIONS_SECTION_TYPE,
               properties: {
-                label: ['space-panel.name', { ns: meta.profile.key }],
+                label: ['space-panel.name', { ns: ConnectorNamespace.key }],
                 icon: 'ph--plugs--regular',
                 iconHue: 'emerald',
                 draggable: false,
@@ -186,7 +186,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeCompanion({
               variant: 'connector',
-              label: ['connection-companion.label', { ns: meta.profile.key }],
+              label: ['connection-companion.label', { ns: ConnectorNamespace.key }],
               icon: 'ph--plugs-connected--regular',
               data: cursor,
             }),

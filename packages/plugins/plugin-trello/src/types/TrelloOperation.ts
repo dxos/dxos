@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { DXN } from '@dxos/echo';
 // Referenced in the emitted .d.ts of the operations (via `ConnectorSpec`'s schemas); importing it
 // lets TypeScript name it (TS2883).
@@ -83,4 +84,5 @@ export const SyncTrelloBoard = Operation.make({
   // TODO(wittjosiah): same as GetTrelloBoards above — declare
   //   `services: [Database.Service]` once the OperationInvoker has a
   //   `databaseResolver`. Handler provides the layer itself for now.
+  services: [Trace.TraceService],
 }).pipe(Operation.visible);

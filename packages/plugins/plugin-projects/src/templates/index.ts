@@ -5,6 +5,7 @@
 import { ProjectCapabilities } from '#types';
 
 import { defaultTemplate } from './default.ts';
+import { featureSpec } from './feature-spec.ts';
 import { inboxResearch } from './inbox-research.ts';
 
 export {
@@ -12,17 +13,21 @@ export {
   IDS,
   NPMRC,
   PARENT_INSTRUCTIONS,
+  PLUGIN_KEY_SLOT,
   type PluginPackage,
   PluginToolchain,
   type Variant,
   cliSpec,
   composerPlugin,
   makeComposerPlugin,
+  mintPluginKey,
   packageJson,
   readGuide,
   readToolchain,
+  worldClockSpec,
   writePlugin,
 } from './composer-plugin.ts';
+export * from './feature-spec.ts';
 export * from './inbox-research.ts';
 export * from './scaffold.ts';
 
@@ -34,4 +39,4 @@ export * from './scaffold.ts';
 export { defaultTemplate };
 
 /** The Composer Plugin template is contributed on its own, once the client says which EDGE it runs on. */
-export const defaultTemplates: ProjectCapabilities.Template[] = [defaultTemplate, inboxResearch];
+export const defaultTemplates: ProjectCapabilities.Template[] = [defaultTemplate, featureSpec, inboxResearch];

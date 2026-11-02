@@ -6,7 +6,7 @@ import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 import { Channel } from '@dxos/types';
 
-import { meta } from '#meta';
+import { ThreadNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -23,7 +23,7 @@ export const translations = [
         'delete-object.label': 'Delete channel',
         'object-deleted.label': 'Channel deleted',
       },
-      [meta.profile.key]: {
+      [ThreadNamespace.key]: {
         'plugin.name': 'Chat',
         'channel-title.label': 'Title',
         'message.placeholder': 'Reply…',

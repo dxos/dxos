@@ -1,0 +1,69 @@
+# Builds the spec-viewer storybook (plugin-code's stories) and uploads it to the `agent-artifacts` R2 bucket,
+# so an agent sharing a spec as a Claude Artifact pulls it instead of building storybook
+# (`.agents/skills/sharing-specs/scripts/storybook-cache.ts pull`). Specs are not in the build — the packaged page
+# ships them — so only a change to viewer code needs a new build.
+#
+# Secrets required:
+#   R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY — S3 write on `agent-artifacts` (the pair deploy-apps.yml uses).
+
+name: Storybook Specs Cache
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'packages/plugins/plugin-code/**'
+      - 'packages/reflect/deus/**'
+      - 'packages/ui/**'
+      - 'tools/storybook-react/**'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/storybook-specs-cache.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Only the newest main build is ever pulled, so a newer commit supersedes one in flight.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Bound once here rather than at every setup call site: a composite action cannot read the
+  # `secrets` context, but it does inherit the process environment.
+  MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
+  MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+  MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
+
+jobs:
+  upload:
+    # `refs/main` is the pointer agents pull by default: only main may move it.
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      # Storybook resolves @dxos/* from source but reads some packages' dist (sharing-specs §3).
+      - name: Build dependencies
+        run: moon run plugin-code:build ui-theme:build
+
+      # DX_PERF_BUNDLE avoids the static build's top-level-await deadlock (tools/storybook-react/.storybook/perf-bundle.ts).
+      - name: Build storybook
+        working-directory: tools/storybook-react
+        env:
+          DX_STORIES: plugins/plugin-code
+          DX_PERF_BUNDLE: '1'
+          NODE_OPTIONS: --max-old-space-size=8192
+        run: npx storybook build --output-dir out/storybook-specs
+
+      - name: Upload to R2
+        env:
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: bun .agents/skills/sharing-specs/scripts/storybook-cache.ts push tools/storybook-react/out/storybook-specs --ref main

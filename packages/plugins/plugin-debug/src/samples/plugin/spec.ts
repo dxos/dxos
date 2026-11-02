@@ -8,11 +8,11 @@ import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Database, Obj, Ref } from '@dxos/echo';
 import * as Feature from '@dxos/plugin-projects/Feature';
 import { Text } from '@dxos/schema';
-import { Spec } from '@dxos/types';
+import { SpecDocument } from '@dxos/types';
 
 import { type Config } from './config.ts';
 
-export type SpecResult = { spec: Spec.Spec };
+export type SpecResult = { spec: SpecDocument.SpecDocument };
 
 /**
  * The plugin's spec in Deus, as the reader would import a repo spec into the space. It carries the repo-style path its
@@ -21,11 +21,11 @@ export type SpecResult = { spec: Spec.Spec };
  */
 export const makeSpec = (config: Config): SampleSpace.Partial<SpecResult> =>
   SampleSpace.partial('spec', {
-    schemas: [Spec.Spec, Text.Text],
+    schemas: [SpecDocument.SpecDocument, Text.Text],
     run: () =>
       Effect.gen(function* () {
         const spec = yield* Database.add(
-          Obj.make(Spec.Spec, {
+          Obj.make(SpecDocument.SpecDocument, {
             name: config.name,
             content: Ref.make(Text.make({ content: config.spec.content })),
             [Obj.Meta]: { keys: [{ source: Feature.SPEC_KEY_SOURCE, id: config.spec.path }] },

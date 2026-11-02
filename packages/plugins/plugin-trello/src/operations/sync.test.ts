@@ -54,7 +54,7 @@ describe('reconcileBoardCards (pull)', () => {
   ): Cursor.ExternalCursor => {
     const binding = db.add(
       Cursor.makeExternal({
-        source: connection.accessToken,
+        source: Connection.getAccessToken(connection),
         target: Ref.make(kanban),
         externalId: boardId,
       }),
@@ -364,7 +364,7 @@ describe('pushBoardCards (push)', () => {
   ): Cursor.ExternalCursor => {
     const binding = db.add(
       Cursor.makeExternal({
-        source: connection.accessToken,
+        source: Connection.getAccessToken(connection),
         target: Ref.make(kanban),
         externalId: boardId,
       }),

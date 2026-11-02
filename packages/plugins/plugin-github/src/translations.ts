@@ -6,8 +6,9 @@ import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 import { PullRequest } from '@dxos/types';
 
-import { meta } from '#meta';
 import { Walkthrough } from '#types';
+
+import { GitHubNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -32,7 +33,7 @@ export const translations = [
         'delete-object.label': 'Delete walkthrough',
         'object-deleted.label': 'Walkthrough deleted',
       },
-      [meta.profile.key]: {
+      [GitHubNamespace.key]: {
         'plugin.name': 'GitHub',
         'sync-now.label': 'Sync now',
         'sync-toast.success.label': 'Sync complete',
@@ -51,6 +52,7 @@ export const translations = [
           'Pull request not found — connect GitHub to import one from a private repository',
         'import-pull-request-inaccessible.title':
           'Pull request not found, or not accessible with your GitHub connection',
+        'import-pull-request-query.label': 'Import {{reference}} from GitHub',
         'import-pull-request-no-space.title': 'Open a space to import a pull request into',
         'open-pull-request.label': 'Open pull request',
         'github-token-rejected.title': 'GitHub rejected your connection — reconnect GitHub and try again',

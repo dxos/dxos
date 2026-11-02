@@ -1,0 +1,551 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-ibkr/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: IbkrPlugin
+
+The core is built and well covered by unit tests. The connector maps token and query id; the Flex client
+paces, polls past retryable codes and stops on rate-limit codes; the sync and import operations append
+`PortfolioReport`s to the feed the read operations parse; `MaterializeInstrument` is idempotent and
+folds new keys; `GetInstrumentFundamentals` reads SEC EDGAR through the CORS proxy; and the daily
+trigger is parented to the Portfolio. The gaps are mostly at the edges. There is no
+`PortfolioSyncAction` component (sync is an inline toolbar action in `PortfolioArticle`, and connect comes
+from `ConnectorAuthAnnotation`). Flex and SEC errors are untyped `Error`s or a single `IbkrSyncError`, so
+callers cannot tell RateLimited from FetchFailed. `FundamentalsValuation` is never filled, and the SEC
+client does no pacing. Containers import parsers and `resolveTradingViewSymbol` from the `services` barrel,
+which also exports the HTTP clients. None of the assistant behaviour (F-4.2 to F-4.5, T-10) is tested. The
+code also adds a persisted `Lot` type and a `SyncLots` operation that the spec does not describe.
+
+Of 72 items: 35 done, 19 untested, 15 partial, 1 diverged, 2 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict A-1.1: Network I/O sits in operation handlers; no component or container calls fetch.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/sync-portfolio.ts, github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/get-instrument-fundamentals.ts]
+  note: A grep of `src/containers` and `src/components` finds no `fetch` or proxy call; no test enforces the boundary.
+```
+
+```mdl
+verdict A-1.2: Surfaces invoke operations through useOperationInvoker for dynamic data.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/containers/InstrumentArticle/InstrumentArticle.tsx#InstrumentArticle, github:dxos/dxos/packages/plugins/plugin-ibkr/src/containers/PortfolioArticle/PortfolioImportAction.tsx]
+  note: `InstrumentArticle`, `PortfolioArticle`, `PortfolioImportAction` and `PortfolioReportDetail` all use `invokePromise`; no test checks it.
+```
+
+```mdl
+verdict A-1.3: Components read static fields and render presentation-only TradingView embeds.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/components/TradingViewChart/TradingViewChart.tsx#TradingViewChart, github:dxos/dxos/packages/plugins/plugin-ibkr/src/containers/InstrumentCard/InstrumentCard.tsx#InstrumentCard]
+  note: Only stories render these surfaces; nothing asserts the absence of parallel fetch paths.
+```
+
+```mdl
+verdict A-1.4: Containers import parsers from the services barrel, which also exports the Flex and SEC clients.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/index.ts, github:dxos/dxos/packages/plugins/plugin-ibkr/src/containers/PortfolioArticle/PortfolioArticle.tsx#PortfolioArticle, github:dxos/dxos/packages/plugins/plugin-ibkr/src/containers/InstrumentArticle/InstrumentArticle.tsx#InstrumentArticle]
+  note: |
+    `PortfolioArticle` and `PortfolioReportDetail` import `parsePositions` etc. and `InstrumentArticle` / `InstrumentCard`
+    import `resolveTradingViewSymbol` from `../../services/index.ts`, which re-exports `flex-client.ts` and
+    `sec-edgar-client.ts`. They call no client, but the import boundary the requirement draws is not kept.
+```
+
+```mdl
+verdict Portfolio: An ECHO type with optional name and a SetParent feed ref, created with a kind-keyed feed.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/types/Ibkr.ts#Portfolio, github:dxos/dxos/packages/plugins/plugin-ibkr/src/types/Ibkr.ts#makePortfolio]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/operations.test.ts, github:dxos/dxos/packages/plugins/plugin-ibkr/src/sync.test.ts]
+```
+
+```mdl
+verdict PortfolioReport: The Report ECHO type stores raw xml and fetchedAt.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/types/Ibkr.ts#Report]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/operations.test.ts]
+  note: The TypeScript symbol is `Report`; its typename is `org.dxos.type.ibkr.PortfolioReport`.
+```
+
+```mdl
+verdict Position: Positions are parsed from aggregate rows with the cost and P&L fallbacks.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/types/Ibkr.ts#Position, github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/flex-client.ts#parsePositions]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/flex-client.test.ts]
+```
+
+```mdl
+verdict Cash: Cash is parsed per currency and the BASE_SUMMARY row is dropped.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/types/Ibkr.ts#Cash, github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/flex-client.ts#parseCash]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/flex-client.test.ts]
+```
+
+```mdl
+verdict Trade: Trades map date, side, signed quantity, price, commission and currency.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/types/Ibkr.ts#Trade, github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/flex-client.ts#parseTrades]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/flex-client.test.ts]
+```
+
+```mdl
+verdict Lot: Open and closed lots are parsed as LotSnapshot; the code also persists Lot objects the spec does not describe.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/types/Ibkr.ts#LotSnapshot, github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/flex-client.ts#parseOpenLots, github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/flex-client.ts#parseClosedLots]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/flex-client.test.ts]
+  note: Beyond the spec, `Ibkr.Lot` is a persisted ECHO type with `portfolio` and `instrument` refs, written by the `SyncLots` operation.
+```
+
+```mdl
+verdict AssetClass: The literal union matches the spec; no test sets it.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/types/Ibkr.ts#AssetClass]
+  note: `MaterializeInstrument` passes `assetClass` through, but no test supplies one.
+```
+
+```mdl
+verdict Instrument: The Instrument type holds the static fields, with foreign keys on Obj.Meta.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/types/Ibkr.ts#Instrument, github:dxos/dxos/packages/plugins/plugin-ibkr/src/types/Ibkr.ts#makeInstrument]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/operations.test.ts, github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/instrument.test.ts]
+```
+
+```mdl
+verdict PortfolioArticle: Lists reports newest first with counts, with import and sync in the toolbar; no story or test.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/containers/PortfolioArticle/PortfolioArticle.tsx#PortfolioArticle, github:dxos/dxos/packages/plugins/plugin-ibkr/src/containers/PortfolioArticle/PortfolioImportAction.tsx]
+  note: The article sorts reports by `fetchedAt`, opens a report in the companion plank via `showItem`, and hosts the import and sync actions; it has no story and no test.
+```
+
+```mdl
+verdict PortfolioSyncAction: No such component; connect and sync are split between an annotation and an inline toolbar action.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/containers/PortfolioArticle/PortfolioArticle.tsx#PortfolioArticle, github:dxos/dxos/packages/plugins/plugin-ibkr/src/types/Ibkr.ts#Portfolio]
+  note: |
+    `PortfolioArticle` shows a Sync action only when a Connection with the IBKR connector id exists, and its handler runs
+    `SyncPortfolioReport` and then `SyncLots`. The Connect button comes from `ConnectorAuthAnnotation` on the
+    `Portfolio` type, not from a component.
+```
+
+```mdl
+verdict PortfolioProperties: A single switch creates the daily trigger on first enable and flips it after.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/containers/PortfolioProperties/PortfolioProperties.tsx#PortfolioProperties]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/containers/PortfolioProperties/PortfolioProperties.stories.tsx]
+```
+
+```mdl
+verdict PortfolioReportDetail: Parses one report into positions, open lots, trades, realized lots and cash.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/containers/PortfolioReportDetail/PortfolioReportDetail.tsx#PortfolioReportDetail, github:dxos/dxos/packages/plugins/plugin-ibkr/src/components/ReportSections/ReportSections.tsx]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/containers/PortfolioReportDetail/PortfolioReportDetail.stories.tsx]
+  note: It is not purely a read view as the spec says; its toolbar copies the XML and runs `SyncLots` for the report.
+```
+
+```mdl
+verdict InstrumentArticle: Static header, TradingView chart and fundamentals from GetInstrumentFundamentals via the invoker.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/containers/InstrumentArticle/InstrumentArticle.tsx#InstrumentArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/containers/InstrumentArticle/InstrumentArticle.stories.tsx]
+```
+
+```mdl
+verdict InstrumentCard: Compact identity and a mini chart from a locally derived symbol, with no operations.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/containers/InstrumentCard/InstrumentCard.tsx#InstrumentCard]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/containers/InstrumentCard/InstrumentCard.stories.tsx]
+```
+
+```mdl
+verdict FlexWebService: The two-step paced flow works through the CORS proxy, but its errors are untyped.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/flex-client.ts#fetchFlexReportXml, github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/flex-client.ts#fetchFlexReport]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/flex-client.test.ts]
+  note: |
+    Pacing (1.5 s, then 7 s for 8 attempts), retryable and rate-limit code sets and fail-fast match. The spec's
+    `RateLimited`, `SendRequestFailed`, `NoReferenceCode`, `GetStatementFailed` and `Timeout` are all plain `Error`s
+    told apart only by message text.
+```
+
+```mdl
+verdict SecEdgar: Resolves CIK and reads company facts through the proxy with a User-Agent, but does no pacing.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/sec-edgar-client.ts#resolveCik, github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/sec-edgar-client.ts#fetchEdgarFundamentals, github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/extract-edgar-fundamentals.ts#extractFundamentalsFromEdgar]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/sec-edgar-client.test.ts, github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/extract-edgar-fundamentals.test.ts]
+  note: `EdgarTickerNotFoundError` and `EdgarFetchError` match the spec; nothing paces requests to the ~10/s fair-access limit (only the ticker map is cached).
+```
+
+```mdl
+verdict SyncPortfolioReport: Fetches, appends a Report to the kind-keyed feed and returns counts; rate-limit and fetch errors share one type.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/types/IbkrOperation.ts#SyncPortfolioReport, github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/sync-portfolio.ts, github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/feed.ts#getOrCreatePortfolioFeed]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/operations.test.ts]
+  walkthrough:
+    - The operation declares an empty input and the count output. github:dxos/dxos/packages/plugins/plugin-ibkr/src/types/IbkrOperation.ts#SyncPortfolioReport
+    - The handler reads token and query id, fetches the XML and appends one Report. github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/sync-portfolio.ts
+    - The feed is found by IBKR_FEED_KIND or created. github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/feed.ts#getOrCreatePortfolioFeed
+  note: |
+    A missing credential fails with `IbkrConnectionError`; `RateLimited` and `FetchFailed` both become `IbkrSyncError`
+    with the original message. A feed created here is a standalone `Feed`, not one owned by a `Portfolio`.
+```
+
+```mdl
+verdict ImportPortfolioReport: Checks for a FlexQueryResponse root, then appends a Report stamped with the import time.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/types/IbkrOperation.ts#ImportPortfolioReport, github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/import-portfolio.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/operations.test.ts]
+```
+
+```mdl
+verdict GetPortfolio: Parses positions and cash from the report with the greatest fetchedAt, or returns empty.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/types/IbkrOperation.ts#GetPortfolio, github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/get-portfolio.ts, github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/feed.ts#latestReportFromFeed]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/operations.test.ts]
+```
+
+```mdl
+verdict GetTrades: Filters the latest report's trades to dates on or after now minus 7 days.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/types/IbkrOperation.ts#GetTrades, github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/get-trades.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/operations.test.ts]
+```
+
+```mdl
+verdict FundamentalsValuation: The valuation struct is declared but never filled.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/types/Ibkr.ts#FundamentalsValuation]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/extract-edgar-fundamentals.test.ts]
+  note: `marketCap`, `pe` and `pb` carry no `EdgarFieldAnnotation`, and SEC XBRL holds no market data, so the extractor never sets them; performance, ratios and additional facts are filled.
+```
+
+```mdl
+verdict MaterializeInstrument: Finds by any of the keys, folds new keys onto a match, or creates the Instrument.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/types/IbkrOperation.ts#MaterializeInstrument, github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/materialize-instrument.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/operations.test.ts]
+  note: Beyond the spec, it derives a `tradingview.com` key from the exchange and defaults `name` to the symbol.
+```
+
+```mdl
+verdict GetInstrumentFundamentals: Resolves the symbol and fetches SEC EDGAR facts without writing the Instrument.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/types/IbkrOperation.ts#GetInstrumentFundamentals, github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/get-instrument-fundamentals.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/operations.test.ts]
+```
+
+```mdl
+verdict F-1.1: The connector takes a Flex token and query id through a credential form.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/capabilities/connector.ts#createIbkrConnectorEntry]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/capabilities/connector.test.ts]
+```
+
+```mdl
+verdict F-1.2: Submit stores the token in AccessToken.token, the query id in account, and a Connection.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/capabilities/connector.ts#createIbkrConnectorEntry]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/capabilities/connector.test.ts]
+```
+
+```mdl
+verdict F-1.3: The plugin calls only Flex read endpoints; nothing places orders.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/flex-client.ts#fetchFlexReportXml]
+  note: Only `SendRequest` and `GetStatement` are called; no test pins the read-only boundary.
+```
+
+```mdl
+verdict F-1.4: The Sync action appears only when an IBKR Connection exists; untested.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/containers/PortfolioArticle/PortfolioArticle.tsx#PortfolioArticle]
+  note: `PortfolioArticle` adds the sync action when a Connection with the IBKR connector id exists; it has no story or test.
+```
+
+```mdl
+verdict F-2.1: The trigger is a 0 6 * * * timer that runs SyncPortfolioReport; no test checks the cron or firing.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/sync.ts#createDailySyncTrigger, github:dxos/dxos/packages/plugins/plugin-ibkr/src/constants.ts#IBKR_SYNC_CRON]
+  note: `sync.test.ts` checks a timer trigger runs the serialized operation, but not the cron string or a fire.
+```
+
+```mdl
+verdict F-2.2: A successful sync appends a Report; the article reads the feed reactively.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/sync-portfolio.ts, github:dxos/dxos/packages/plugins/plugin-ibkr/src/containers/PortfolioArticle/PortfolioArticle.tsx#PortfolioArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/operations.test.ts]
+```
+
+```mdl
+verdict F-2.3: Only the sync handler calls IBKR; reads parse stored XML.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/get-portfolio.ts, github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/get-trades.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/operations.test.ts]
+```
+
+```mdl
+verdict F-2.4: The first toggle creates an enabled trigger and later toggles flip it; the toggle is untested.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/containers/PortfolioProperties/PortfolioProperties.tsx#PortfolioProperties, github:dxos/dxos/packages/plugins/plugin-ibkr/src/sync.ts#createDailySyncTrigger]
+  note: `sync.test.ts` covers creation; no test drives the switch or the enable/disable flip.
+```
+
+```mdl
+verdict F-2.5: The trigger is a local timer, not remote, so it fires only while the app is open.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/sync.ts#createDailySyncTrigger]
+  note: A stated limitation; the trigger sets no `remote` flag, and no test covers it.
+```
+
+```mdl
+verdict F-2.6: The trigger and its serialized operation are parented to the Portfolio.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/sync.ts#createDailySyncTrigger]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/sync.test.ts]
+```
+
+```mdl
+verdict F-2.7: The import action uploads a file and ImportPortfolioReport validates and appends it.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/containers/PortfolioArticle/PortfolioImportAction.tsx, github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/import-portfolio.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/operations.test.ts]
+```
+
+```mdl
+verdict F-3.1: The client spaces SendRequest and polls to stay under the caps; tests run with no delay.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/flex-client.ts#fetchFlexReportXml]
+  note: Defaults are a 1.5 s first wait and 7 s between at most 8 polls; every test passes `delayMs: 0`.
+```
+
+```mdl
+verdict F-3.2: Codes 1018 and 1025 stop the flow at once with no retry.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/flex-client.ts#fetchFlexReportXml]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/flex-client.test.ts]
+```
+
+```mdl
+verdict F-3.3: Retryable codes keep polling up to the attempt cap, then the flow times out.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/flex-client.ts#fetchFlexReportXml]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/flex-client.test.ts]
+```
+
+```mdl
+verdict F-3.4: The skill tells the assistant to sync at most once and never in a loop; untested.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/skills/index.ts#IbkrSkill]
+  note: This is skill instruction text only; no eval or test checks assistant behaviour.
+```
+
+```mdl
+verdict F-4.1: The skill exposes GetPortfolio, GetTrades and SyncPortfolioReport, plus the two instrument operations.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/skills/index.ts#IbkrSkill, github:dxos/dxos/packages/plugins/plugin-ibkr/src/capabilities/skill-definition.ts]
+  note: No test reads the skill's tool list.
+```
+
+```mdl
+verdict F-4.2: The instructions direct position and cash questions to GetPortfolio; untested.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/skills/index.ts#IbkrSkill]
+  note: No assistant eval covers it.
+```
+
+```mdl
+verdict F-4.3: The instructions direct trade questions to GetTrades; untested.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/skills/index.ts#IbkrSkill]
+  note: No assistant eval covers it.
+```
+
+```mdl
+verdict F-4.4: The instructions allow one SyncPortfolioReport on an empty result or a refresh request; untested.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/skills/index.ts#IbkrSkill]
+  note: No assistant eval covers it.
+```
+
+```mdl
+verdict F-4.5: Results carry fetchedAt and the instructions ask the assistant to relay it and each currency.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/types/IbkrOperation.ts#GetPortfolio, github:dxos/dxos/packages/plugins/plugin-ibkr/src/skills/index.ts#IbkrSkill]
+  note: `fetchedAt` is tested on the operation output; the relaying is skill text with no eval.
+```
+
+```mdl
+verdict F-5.1: Reports are listed newest first with date and counts; no story or test renders the list.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/containers/PortfolioArticle/PortfolioArticle.tsx#PortfolioArticle]
+  note: The list rows show date, positions, trades and cash counts; `PortfolioArticle` has no story.
+```
+
+```mdl
+verdict F-5.2: Selecting a report opens PortfolioReportDetail in the companion plank.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/containers/PortfolioArticle/PortfolioArticle.tsx#PortfolioArticle, github:dxos/dxos/packages/plugins/plugin-ibkr/src/capabilities/app-graph-builder.ts]
+  note: `handleNavigate` calls `showItem` with the `report` companion segment; the detail story renders the plank alone, and nothing tests the selection.
+```
+
+```mdl
+verdict F-5.3: Rows and the detail view parse the stored XML on read.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/flex-client.ts#parsePositions, github:dxos/dxos/packages/plugins/plugin-ibkr/src/containers/PortfolioReportDetail/PortfolioReportDetail.tsx#PortfolioReportDetail]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/flex-client.test.ts]
+```
+
+```mdl
+verdict F-6.1: Instrument is the static-field type with ticker, ISIN, CUSIP, conid and TradingView keys.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/types/Ibkr.ts#Instrument, github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/instrument.ts#mergeForeignKeys]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/instrument.test.ts, github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/operations.test.ts]
+```
+
+```mdl
+verdict F-6.2: The article loads the TradingView embed and fundamentals through the operation.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/containers/InstrumentArticle/InstrumentArticle.tsx#InstrumentArticle, github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/instrument.ts#resolveTradingViewSymbol]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/containers/InstrumentArticle/InstrumentArticle.stories.tsx, github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/instrument.test.ts]
+```
+
+```mdl
+verdict F-6.3: The card renders static identity and a mini chart.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/containers/InstrumentCard/InstrumentCard.tsx#InstrumentCard]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/containers/InstrumentCard/InstrumentCard.stories.tsx]
+```
+
+```mdl
+verdict F-6.4: An existing foreign key returns the same Instrument with no duplicate.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/materialize-instrument.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/operations.test.ts]
+```
+
+```mdl
+verdict F-6.5: Fundamentals are fetched at view time and never written to the Instrument.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/get-instrument-fundamentals.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/operations.test.ts]
+```
+
+```mdl
+verdict F-6.6: The article uses the invoker, but imports the services barrel that re-exports the SEC client.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/containers/InstrumentArticle/InstrumentArticle.tsx#InstrumentArticle]
+  note: The article calls only `invokePromise`; its `resolveTradingViewSymbol` import comes from `services/index.ts`, which also exports `sec-edgar-client.ts` (see A-1.4).
+```
+
+```mdl
+verdict F-6.7: Selecting a position symbol does not materialize or open an Instrument (marked future).
+  status: missing
+  note: `PortfolioReportDetail` and `ReportSections` never invoke `MaterializeInstrument`; the requirement is tagged future.
+```
+
+```mdl
+verdict T-1: A unit test checks token, account, source and the Connection's connector id.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/capabilities/connector.test.ts]
+```
+
+```mdl
+verdict T-2: A test syncs from a stubbed Flex and checks counts and reads, but not the stored XML or the article.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/operations.test.ts]
+  note: `operations.test.ts` checks counts and that reads serve the new `fetchedAt`; it does not compare `Report.xml` to the fetched body or render `PortfolioArticle`.
+```
+
+```mdl
+verdict T-3: Tests read the latest report's fetchedAt, but only ever with one stored report.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/operations.test.ts]
+  note: No test stores two reports with different `fetchedAt` to check the newest wins.
+```
+
+```mdl
+verdict T-4: Tests check old fixture trades are excluded and a trade from yesterday is returned.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/operations.test.ts]
+```
+
+```mdl
+verdict T-5: A test checks empty positions and cash and no fetchedAt before any sync.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/operations.test.ts]
+```
+
+```mdl
+verdict T-6: A test checks 1025 stops after SendRequest, but not 1018 or the wait advice.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/flex-client.test.ts]
+  note: The test uses code 1025 and asserts `/rate limit/i` and one call; it does not use 1018 or check the "wait before retrying" text.
+```
+
+```mdl
+verdict T-7: A test polls past 1019 and returns the parsed report after two GetStatement calls.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/flex-client.test.ts]
+```
+
+```mdl
+verdict T-8: A test checks the sync fails without a credential, but not the message or that nothing is appended.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/operations.test.ts]
+  note: The assertion accepts `Credential not found` as well as the reconnect message, and does not check the feed stays empty.
+```
+
+```mdl
+verdict T-9: A test checks an enabled timer trigger is created once, but not the cron or the toggle-off.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/sync.test.ts]
+  note: `sync.test.ts` checks one enabled timer and one operation; it does not check `0 6 * * *` or that toggling off disables the same trigger.
+```
+
+```mdl
+verdict T-10: No test runs the assistant against a stored snapshot.
+  status: missing
+  note: There is no assistant eval or memoized conversation for the IBKR skill.
+```
+
+```mdl
+verdict T-11: Tests check idempotent materialization and that a new alias folds onto the same Instrument.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/operations.test.ts]
+```
+
+```mdl
+verdict T-12: The symbol derivation is tested and a story renders the article; nothing asserts the invoker call or an unchanged object.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/instrument.ts#resolveTradingViewSymbol]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/services/instrument.test.ts, github:dxos/dxos/packages/plugins/plugin-ibkr/src/containers/InstrumentArticle/InstrumentArticle.stories.tsx]
+  note: The spec's own `covered_by` concedes the invoker and no-write checks are structural, not asserted.
+```
+
+```mdl
+verdict T-13: A story renders the card, with no assertion on the visible fields or writes.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/containers/InstrumentCard/InstrumentCard.stories.tsx]
+  note: Render-level only; the story has no play function checking symbol, name, exchange and asset class.
+```
+
+```mdl
+verdict QA-1: Sync and the reads run against a stubbed Flex; the connect step and a real account are not automated.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/operations.test.ts, github:dxos/dxos/packages/plugins/plugin-ibkr/src/capabilities/connector.test.ts]
+  note: `operations.test.ts` syncs, then reads portfolio and trades, with a mocked fetch; `connector.test.ts` covers the form submit. No test runs the flow in the app or against IBKR.
+```
+
+```mdl
+verdict QA-2: Materialize, re-materialize and fundamentals run in unit tests against SEC fixtures.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-ibkr/src/operations/operations.test.ts]
+  note: `operations.test.ts` covers idempotent materialization and `GetInstrumentFundamentals` with fixture responses; it does not run the steps as operation invocations in the app.
+```

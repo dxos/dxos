@@ -117,9 +117,18 @@ export interface GmailHistoryStep {
   readonly messagesDeleted?: readonly string[];
 }
 
-/** Parses Gmail's `after:YYYY/MM/DD` / `before:YYYY/MM/DD` window (epoch-ms) from a list query. */
+/**
+ * Parses Gmail's `after:YYYY/MM/DD` / `before:YYYY/MM/DD` window (epoch-ms) from a list query, as local midnight
+ * since the sync formats those dates in local time; parsing them as UTC shifts the window by the zone's offset.
+ */
 const parseDateWindow = (query: string): { after?: number; before?: number } => {
-  const toMs = (value: string | undefined) => (value ? new Date(value.replace(/\//g, '-')).getTime() : undefined);
+  const toMs = (value: string | undefined) => {
+    if (!value) {
+      return undefined;
+    }
+    const [year, month, day] = value.split('/').map(Number);
+    return new Date(year, month - 1, day).getTime();
+  };
   return {
     after: toMs(query.match(/after:(\d{4}\/\d{2}\/\d{2})/)?.[1]),
     before: toMs(query.match(/before:(\d{4}\/\d{2}\/\d{2})/)?.[1]),

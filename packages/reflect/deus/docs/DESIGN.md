@@ -443,7 +443,7 @@ decision D-2: Bounds grow to the major grid. Fills in [D-1].
   why: Growing to the minor grid re-lays the canvas on every drag step.
 ```
 
-- **Every change adds a decision.** `scripts/check-changelog.ts` enforces this in CI. It tolerates
+- **Every change adds a decision.** `deus changelog check` enforces this in CI. It tolerates
   trivial edits (whitespace, small typo fixes), and a `Spec-Changelog-Skip: <reason>` commit
   trailer waives it for a bulk mechanical edit. It also rejects edits to existing entries: a
   reversal is a new entry with `supersedes: D-n`.
@@ -453,6 +453,10 @@ decision D-2: Bounds grow to the major grid. Fills in [D-1].
   restates what they said: references resolved, context included, wording fixed, but no
   information added or removed. What the agent filled in is
   in separate `agent:` entries. Approval of those entries is a later `user:` entry.
+- **Open questions live in the log too.** A `question Q-n` records a choice nobody has made yet.
+  Answering it appends a `decision` with `answers: Q-n`, decided by whoever answered, so the
+  question stays append-only and "answered" is derived. Composer lists open questions above the
+  decisions and answers them in place.
 
 ## Domain Dialects
 

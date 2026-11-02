@@ -162,4 +162,20 @@ export class IndexTracker {
         }
       }),
   );
+
+  /** Delete one source's cursors on `resourceIds` that stand at `cursor`. */
+  deleteCursorsAt = Effect.fn('IndexTracker.deleteCursorsAt')(
+    (query: {
+      sourceName: string;
+      spaceId: SpaceId;
+      resourceIds: readonly string[];
+      cursor: string;
+    }): Effect.Effect<void, SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
+        for (const chunk of chunkArray(query.resourceIds)) {
+          yield* sql`DELETE FROM indexCursor WHERE sourceName = ${query.sourceName} AND spaceId = ${query.spaceId} AND cursor = ${query.cursor} AND ${sql.in('resourceId', chunk)}`;
+        }
+      }),
+  );
 }

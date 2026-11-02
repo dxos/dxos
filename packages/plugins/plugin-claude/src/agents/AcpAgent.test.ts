@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 
-import { Chat } from '@dxos/assistant';
+import { AiSession, Chat } from '@dxos/assistant';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
@@ -223,6 +223,132 @@ describe('AcpAgent', () => {
         { prompt: 'second' },
       );
       expect(opened).toEqual([meta, meta]);
+    }).pipe(Effect.scoped, Effect.provide(TestLayer)),
+  );
+
+  it.live("offers the chat's connections, and reloads the session when they change", () =>
+    Effect.gen(function* () {
+      const { feed, chat, options } = yield* setup();
+      const servers: string[] = [];
+      const app = makeFakeAgent({ servers });
+      const offers: string[][] = [];
+      const withConnections: AcpAgent.AgentOptions = {
+        ...options,
+        connect: () => Effect.succeed(inMemory(app)),
+        connections: (_, connections) =>
+          Effect.sync(() => {
+            offers.push(connections.map(({ apiKey }) => apiKey ?? 'none'));
+            return connections.map(({ url }) => ({ type: 'http', name: new URL(url).hostname, url, headers: [] }));
+          }),
+      };
+      const linear = { url: 'https://linear.example.com/mcp', protocol: 'http' as const, apiKey: 'key-1' };
+      const github = { url: 'https://github.example.com/mcp', protocol: 'http' as const };
+      const turn = (prompt: string, connections: AcpAgent.McpConnection[]) =>
+        AcpAgent.runTurn(withConnections, { chat, feed }, { prompt, mcpServers: Effect.succeed(connections) });
+
+      yield* turn('first', [linear]);
+      // A refreshed credential is offered again, but the session the agent has stays open.
+      yield* turn('second', [{ ...linear, apiKey: 'key-2' }]);
+      yield* turn('third', [linear, github]);
+
+      expect(servers).toEqual(['new: linear.example.com', 'load: linear.example.com, github.example.com']);
+      expect(offers).toEqual([['key-1'], ['key-2'], ['key-1', 'none']]);
+      expect(AcpAgent.sessionIdOf(chat, 'fake')).toBe('fake-1');
+    }).pipe(Effect.scoped, Effect.provide(TestLayer)),
+  );
+
+  it.live('keeps the live session when its connections cannot be read', () =>
+    Effect.gen(function* () {
+      const { feed, chat, options } = yield* setup();
+      const servers: string[] = [];
+      const app = makeFakeAgent({ servers });
+      let offers = 0;
+      const withConnections: AcpAgent.AgentOptions = {
+        ...options,
+        connect: () => Effect.succeed(inMemory(app)),
+        connections: (_, connections) =>
+          Effect.sync(() => {
+            offers++;
+            return connections.map(({ url }) => ({ type: 'http', name: new URL(url).hostname, url, headers: [] }));
+          }),
+      };
+      const linear = { url: 'https://linear.example.com/mcp', protocol: 'http' as const };
+
+      yield* AcpAgent.runTurn(
+        withConnections,
+        { chat, feed },
+        { prompt: 'first', mcpServers: Effect.succeed([linear]) },
+      );
+      yield* AcpAgent.runTurn(
+        withConnections,
+        { chat, feed },
+        { prompt: 'second', mcpServers: Effect.fail(new AiSession.McpServersUnavailable({ message: 'timed out' })) },
+      );
+
+      expect(servers).toEqual(['new: linear.example.com']);
+      expect(offers).toBe(1);
+      expect((yield* transcript(feed)).at(-2)).toEqual(['assistant', 'text:echo: second']);
+    }).pipe(Effect.scoped, Effect.provide(TestLayer)),
+  );
+
+  it.live('reopens the session when a server it was opened without can now be offered', () =>
+    Effect.gen(function* () {
+      const { feed, chat, options } = yield* setup();
+      const servers: string[] = [];
+      const app = makeFakeAgent({ servers });
+      // The first offer fails to serve the proxy, as when the helper's relay is briefly down.
+      let served = false;
+      const withConnections: AcpAgent.AgentOptions = {
+        ...options,
+        connect: () => Effect.succeed(inMemory(app)),
+        connections: (_, connections) =>
+          Effect.sync(() => {
+            const offered = served
+              ? connections.map(({ url, name }) => ({ type: 'http' as const, name: name ?? url, url, headers: [] }))
+              : [];
+            served = true;
+            return offered;
+          }),
+      };
+      const linear = {
+        url: 'https://linear.example.com/mcp',
+        protocol: 'http' as const,
+        name: 'linear',
+        apiKey: 'key',
+      };
+      const turn = (prompt: string) =>
+        AcpAgent.runTurn(withConnections, { chat, feed }, { prompt, mcpServers: Effect.succeed([linear]) });
+
+      yield* turn('first');
+      yield* turn('second');
+      yield* turn('third');
+
+      expect(servers).toEqual(['new: ', 'load: linear']);
+    }).pipe(Effect.scoped, Effect.provide(TestLayer)),
+  );
+
+  it.live('offers proxied connections with the token the session started with', () =>
+    Effect.gen(function* () {
+      const { feed, chat, options } = yield* setup();
+      const tokens: (string | undefined)[] = [];
+      const withConnections = (token: string | undefined): AcpAgent.AgentOptions => ({
+        ...options,
+        sessions: options.sessions,
+        tools: () => Effect.succeed(token === undefined ? undefined : { servers: [], token }),
+        connections: (_, __, sessionToken) =>
+          Effect.sync(() => {
+            tokens.push(sessionToken);
+            return [];
+          }),
+      });
+
+      yield* AcpAgent.runTurn(withConnections('t1'), { chat, feed }, { prompt: 'first' });
+      yield* AcpAgent.runTurn(withConnections('t2'), { chat, feed }, { prompt: 'second' });
+      const fresh = { ...withConnections(undefined), sessions: yield* AcpAgent.Sessions.make() };
+      yield* AcpAgent.runTurn(fresh, { chat, feed }, { prompt: 'third' });
+
+      // The second turn reuses the first session, so its proxies keep that session's token.
+      expect(tokens).toEqual(['t1', 't1', undefined]);
     }).pipe(Effect.scoped, Effect.provide(TestLayer)),
   );
 

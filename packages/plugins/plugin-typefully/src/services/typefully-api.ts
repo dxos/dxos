@@ -51,7 +51,7 @@ export const fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
     TypefullyCredentials,
     Effect.gen(function* () {
       const connection = yield* Database.load(connectionRef);
-      const accessToken = yield* Database.load(connection.accessToken);
+      const accessToken = yield* Database.load(Connection.getAccessToken(connection));
       return { token: accessToken.token };
     }),
   );

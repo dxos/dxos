@@ -24,6 +24,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.1`         |
 | `test`      | `org.dxos.mdl.test@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
 
 ## Types
 
@@ -287,6 +288,65 @@ feat F-6: Skill Integration
   req F-6.3: An AI assistant can invoke the summary operation and present the result as a message.
 ```
 
+```mdl
+feat F-7: On-device Streaming Transcription (Whistle story)
+
+  req F-7.1:
+    when: the user presses Record, or holds Space outside a text field
+    then: the microphone streams into Whistle in a worker as one stream, re-decoded after every pass interval of new audio; nothing leaves the tab
+  req F-7.2:
+    when: two consecutive passes agree on a word
+    then: the word is committed; the unconfirmed tail is shown in italics after the last paragraph
+  req F-7.3: The pass interval is 1 s, as in Cactus's demo; Low latency makes it 200 ms, which commits sooner but agrees on half-heard words more often.
+  req F-7.4:
+    when: the audio holds 1.5 s of silence or more between two committed words, or the stream stops
+    then: a new paragraph starts; silence is measured in the audio against the noise floor, not between the model's word times
+  req F-7.5: Without a pause, a paragraph closes at the first sentence end after 30 words.
+  req F-7.6: Keywords bias recognition from the next pass; the list is prefilled with DXOS terms.
+  req F-7.7: The whole recording stays in the tab; each paragraph can be played back or saved as WAV, and so can the whole recording.
+  req F-7.8: The engine and model download on first use only and are kept in Cache Storage; mounting the story downloads nothing.
+  req F-7.9: After first use the microphone stays open, so push-to-talk does not clip the first word.
+  req F-7.10:
+    when: the audio holds no sound louder than -35 dBFS for 0.15 s
+    then: no stream is opened and nothing is decoded, so Whistle cannot invent words in silence or room tone; the last 0.5 s before sound is kept so the first word is heard from its onset
+```
+
+```mdl
+feat F-8: On-device Voice Home Assistant (Home story)
+
+  req F-8.1:
+    when: the user holds Space, or toggles Talk, and says a request such as "turn on the kitchen lights"
+    then: Whistle transcribes it as it is spoken, and Needle 3, loaded into the same engine and worker, answers it against five home tools when the request ends
+  req F-8.2: The tools are set_lights, set_thermostat, operate_door, set_blinds and play_music; each call changes a mock home drawn as a floor plan, and the rooms it touched are highlighted.
+  req F-8.3:
+    when: a request ends
+    then: it is answered from the stream's committed words and its latest unconfirmed tail, before the stream's closing pass; audio after a pass that already heard 0.15 s of silence is not decoded again
+  req F-8.4: Low latency (on by default) caps the answer at 32 tokens, which skips the model's reasoning line; a request that joins actions with "and", "then" or "also" keeps the 128-token budget so every call survives.
+  req F-8.5:
+    when: Hands-free is on and the microphone is open
+    then: a request ends after 0.7 s of silence following speech (0.5 s in Low latency), found in the audio as it reaches the worker, and capture continues into the next request
+  req F-8.10: Silence is handled in the worker, in audio time: passes pause once the stream has heard 0.15 s of silence, and a stream that hears nothing for 1 s is ended at the next silence, so each request's stream holds little more than the request.
+  req F-8.6:
+    when: the model withholds a call (suppressed_calls)
+    then: it is offered as "Did you mean …?" and runs only when the user confirms it
+  req F-8.7:
+    when: no tool serves the request
+    then: the log says so and nothing changes
+  req F-8.8: Each command in the log shows its transcript, what changed, the calls, the time from the end of the request to the answer, and the model's time and confidence.
+  req F-8.9: Call arguments are checked against the home before they apply; an argument outside the schema is an error in the log, never a change.
+```
+
+```mdl
+feat F-9: Audio Tooling and Evals
+
+  req F-9.1: The audio-view skill describes a recording's levels and speech/silence timeline as text, draws a labelled spectrogram, and replays it through the pinned Whistle engine in Node exactly as the story streams it.
+  req F-9.2: Recordings with real voices are private fixtures in the encrypted test-fixtures bucket, never in git; the agents scope holds whistle-silence, whistle-one-two-three, whistle-echo-query-a and whistle-echo-query-b.
+  req F-9.3:
+    when: the manual Whistle evals run and a fixture is present
+    then: each recording is replayed through the story's silence gate and its word error rate against the expected transcript, the words committed during silence and keyword recall are reported; whistle-silence must commit no words; a missing fixture skips its test, and CI does not run them
+  req F-9.4: A compare script runs one recording through larger hosted models (OpenAI whisper-1 and gpt-4o-transcribe, Cloudflare Workers AI whisper-large-v3-turbo), skips a provider without credentials, and prints the transcripts side by side with word error rate against a reference. Anthropic's API takes no audio input, so it is not compared.
+```
+
 ## Acceptance
 
 ```mdl
@@ -447,6 +507,141 @@ test QA-2: Record, transcribe, and summarize a meeting
       do: Right-click the Transcript in the navtree and choose Delete.
       invoke: org.dxos.operation.space.removeObjects { objects: [$given.transcript], target: $given.space }
       expect: the row leaves the navtree and its plank closes if it was open
+```
+
+## Changelog
+
+```mdl
+decision D-1: The Whistle story transcribes on the device the way Cactus's own demo does, with a low-latency mode, a waveform, a new paragraph after 1.5 s of silence, per-paragraph playback and WAV save, keyword bias, push-to-talk and the engine kept in Cache Storage.
+  date: 2026-10-23
+  by: user:dmaretskyi
+  affects: [F-7]
+```
+
+```mdl
+decision D-2: The Whistle story and the audio tooling are specified in this spec: the pipeline, the pass interval and low-latency mode, the 1.5 s paragraph rule, push-to-talk, keywords, recording retention, playback and WAV save, and fixture-based evals.
+  date: 2026-10-23
+  by: user:dmaretskyi
+  affects: [F-7, F-9]
+```
+
+```mdl
+decision D-3: Manual tests replay the four agents fixtures through the audio-view Whistle library and report word error rate, words committed in silence and keyword recall: whistle-silence expects no words, whistle-one-two-three expects "one two three", and both echo-query recordings expect "pull up the echo query framework". They are gated on the fixture being present and skipped by CI.
+  date: 2026-10-23
+  by: user:dmaretskyi
+  affects: [F-9.2, F-9.3]
+```
+
+```mdl
+decision D-4: A compare script runs a recording through bigger models, OpenAI whisper-1 and gpt-4o-transcribe and Cloudflare Workers AI whisper-large-v3-turbo, skipping providers without credentials, and prints the transcripts side by side with word error rate against a reference; Anthropic's API has no audio input, which the script notes rather than calling it.
+  date: 2026-10-23
+  by: user:dmaretskyi
+  affects: [F-9.4]
+```
+
+```mdl
+decision D-5: A new story extends voice transcription into a home assistant: it uses Cactus's local tool calling, draws a mock home, takes commands such as "turn on the lights", and is optimized for low latency.
+  date: 2026-10-23
+  by: user:dmaretskyi
+  affects: [F-8]
+```
+
+```mdl
+decision D-6: Needle 3 is the local tool-calling model, loaded into the Whistle worker's engine beside Whistle, and the request is answered from the latest pass before the stream's closing pass. Fills in [D-5].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-8.1, F-8.3]
+  why: The engine holds one text model and one speech model at once and keeps the live stream across an answer, so one worker serves both; the latest pass has already heard the whole request, so waiting for the closing pass only adds its decode time.
+  rejected:
+    - needle_complete on the raw clip: it transcribes the whole request again after it ends, instead of while it is spoken.
+    - A second worker for Needle: twice the engine memory, and the two would still run one after the other on a request.
+```
+
+```mdl
+decision D-7: Low latency caps the answer at 32 tokens, except for requests joining actions with "and", "then" or "also", which keep 128. Fills in [D-5].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-8.4]
+  why: Measured in Node on the pinned engine, 32 tokens skips the reasoning line and answers single requests in about 1 s instead of 1.5 s with the same calls; at 32 only the first of two requested calls survives, which the compound rule keeps.
+  rejected:
+    - 16 tokens: every request came back with no calls.
+```
+
+```mdl
+decision D-8: The home has five tools, one per action, with enums in the words people say, `all` rooms as the default for lights and blinds, and a warmer/cooler step beside a named temperature. Fills in [D-5].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-8.2, F-8.9]
+  why: Five or fewer tools all stay in the model's context, where a larger set is retrieved five at a time; separate lock and door-open actions stopped "open the garage" locking it, and the step made "make it warmer" a call instead of a refusal.
+```
+
+```mdl
+decision D-9: Calls the model withholds are offered for confirmation, never run unasked, and Hands-free ends a request at 0.7 s of trailing silence (0.5 s in Low latency). Fills in [D-5].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-8.5, F-8.6]
+  why: Withheld calls are mostly right but unconfirmed (for example "turn on the lights" with no room); a shorter pause answers sooner, and below about half a second a breath inside a request ends it.
+```
+
+```mdl
+decision D-10: Silence is handled in the worker as audio arrives: the end-of-request marker goes into the audio queue exactly where the pause ends, passes pause after 0.15 s of silence, and streams that hear nothing are ended after 1 s. Fills in [D-5].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-8.3, F-8.5, F-8.10]
+  why: Measured in Chromium with spoken commands, ending requests from the main thread on the live recording merged consecutive commands whenever passes fell behind, and re-decoding the silence between commands added about a second to each answer; with the worker handling it, every command split correctly and single commands answered in 0.95 to 1.8 s after the pause, against about 1 s of model time.
+  rejected:
+    - Ending requests on the main thread from each result: results arrive a pass late, so the silence measured is not the silence the pass heard.
+```
+
+```mdl
+decision D-11: In the fixture evals, accurate mode (1 s passes) must stay at or under 50% word error rate and commit no words during silence, low-latency mode must commit words and only logs its error rate, keyword recall is logged rather than asserted, and the silence recording is an expected failure while Whistle still commits "Thank you." over room tone. Digits score as number words. Fills in [D-3].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.3]
+  why: The recordings are few and short, so tight bounds would fail on one word; the expected failure turns into a failing test once Whistle stops inventing words over silence, which is the signal to make it a plain test. Whistle writes "1. 2. 3." for "one two three", which is correct and scored 100% wrong before.
+```
+
+```mdl
+decision D-12: Whistle committing "Thank you." over the silence recording is fixed in this change, not left as an expected failure.
+  date: 2026-10-23
+  by: user:dmaretskyi
+  affects: [F-7.10, F-9.3]
+```
+
+```mdl
+decision D-13: Silence is never decoded: a stream opens only once 0.15 s of audio is louder than both the noise-floor threshold and -35 dBFS, with 0.5 s of pre-roll, in the worker and in the replay the evals use; whistle-silence becomes a plain test. Fills in [D-12]. Supersedes the expected failure in [D-11].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-7.10, F-9.3]
+  supersedes: D-11
+  why: Whistle alone, and Cloudflare's whisper-large-v3-turbo too, transcribe the fixture's room tone as "Thank you.", so no model setting removes it; its 50 ms bars peak at -37 dBFS while every speech fixture has 27 or more bars above -35, and the speech fixtures transcribe the same with the gate as without it.
+  rejected:
+    - The noise-floor threshold alone: the room tone sits 30 dB above its own floor, so it counts as sound.
+    - Dropping "Thank you." from transcripts: it is a real phrase, and other inventions would remain.
+```
+
+```mdl
+decision D-14: The rest of [D-11] stands: accurate mode at or under 50% word error rate with no words committed in silence, low-latency mode committing words with its error rate logged, keyword recall logged, and digits scored as number words.
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.3]
+```
+
+```mdl
+decision D-15: The Whistle hook, capture, protocol and worker move from the story folder to `src/whistle`, exported as `@dxos/plugin-transcription/Whistle`, so other plugins can take spoken input; the stories import it from there.
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-7]
+  why: Code Graph's command bar asked for the microphone and Whistle, and the stories held the only copy.
 ```
 
 ## Appendix: Extension Definitions

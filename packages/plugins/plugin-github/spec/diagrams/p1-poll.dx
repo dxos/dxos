@@ -1,0 +1,23 @@
+diagram flow=right
+group compute "compute-service (EDGE)" {
+  node Timer "timer trigger" ref="packages/core/compute/compute/src/types/Trigger.ts"
+}
+group github "plugin-github" {
+  node Delta "delta since max" ref="packages/plugins/plugin-github/src/operations/sync.ts"
+  node Pulls "PR details" ref="packages/plugins/plugin-github/src/services/github-api.ts"
+  node Upsert "upsert + merge" ref="packages/plugins/plugin-github/src/operations/sync.ts"
+  node Advance "advance cursor" ref="packages/core/compute/link/src/Cursor.ts"
+}
+group api "api.github.com" {
+  node IssuesApi "/issues (ETag)"
+  node GraphQL "GraphQL ≤100 PRs"
+}
+node Echo "space objects" ref="packages/sdk/types/src/types/PullRequest.ts"
+edge Timer -> Delta "per binding"
+edge Delta -> IssuesApi "1 request"
+edge Delta -> Advance "304, none pending: done" stroke=dashed
+edge Delta -> Pulls "changed or pending PRs"
+edge Pulls -> GraphQL "1 request"
+edge Pulls -> Upsert
+edge Upsert -> Echo "changed fields"
+edge Upsert -> Advance

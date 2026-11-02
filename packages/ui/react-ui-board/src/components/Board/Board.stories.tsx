@@ -8,6 +8,7 @@ import React, { useCallback, useRef, useState } from 'react';
 import { Dnd } from '@dxos/react-ui-dnd';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
+import * as UiLayout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
@@ -16,44 +17,86 @@ import { cardDefaultInlineSize } from '@dxos/ui-theme';
 import { translations } from '#translations';
 
 import { Board, type BoardController, type BoardRootProps } from './Board.tsx';
-import { type GridMode, type Layout, rejectIfNoFit, resizeToFit } from './engine.ts';
+import { type GridMode, type GridPosition, type Layout, rejectIfNoFit, resizeToFit } from './engine.ts';
 
 type TestItem = {
   id: string;
   title: string;
+  subtitle?: string;
+  description?: string;
   image?: string;
 };
 
-const titles = ['A', 'B', 'C', 'D', 'X'];
+const NAMES = [
+  'Alice Ashe',
+  'Bartholomew Okonkwo-Lindqvist',
+  'Chen Wei',
+  'Dolores Haze',
+  'Emeka Nwosu',
+  'Fatima al-Zahra',
+  'Giovanni Rossi',
+  'Hana Kobayashi',
+];
 
-const testItems: TestItem[] = titles.map((title, index) => ({ id: String(index), title }));
+const ROLES = [
+  'Engineering Manager, Platform Infrastructure and Developer Experience',
+  'Designer',
+  'Product Lead',
+  'Account Executive',
+  'Research Scientist',
+];
 
-// Same items with a random poster image per tile (seeded for stable stories).
+const NOTES = [
+  'Owns the sync roadmap.',
+  'Met at the Lisbon offsite; follow up about the pilot, the pricing questions and the data-residency requirements their legal team raised.',
+  'Prefers async updates.',
+  'Introduced us to the hardware partner and has been the main point of contact since the first workshop in March.',
+  undefined,
+];
+
+// 12x12 board with a tile in each corner, one in the centre, and the rest spread between them with a
+// free gutter — exercises the edges (auto-scroll, overscroll, centering a far cell) and leaves room to drop.
+const TILE_COLUMNS = [0, 3, 7, 10];
+
+const tilePositions: GridPosition[] = [
+  ...TILE_COLUMNS.flatMap((y) => TILE_COLUMNS.map((x) => ({ x, y, w: 2, h: 2 }))),
+  { x: 5, y: 5, w: 2, h: 2 },
+];
+
+/** Deterministic people-like tiles (no randomness, so stories are stable) with varied text lengths. */
+const testItems: TestItem[] = tilePositions.map((_, index) => ({
+  id: String(index),
+  title: NAMES[index % NAMES.length],
+  subtitle: ROLES[index % ROLES.length],
+  description: NOTES[(index * 3) % NOTES.length],
+}));
+
+// Same items with a poster image per tile (seeded for stable stories).
 const posterItems: TestItem[] = ((seed = 42) =>
-  titles.map((title, index) => {
+  testItems.map((item, index) => {
     // Deterministic pseudo-random id for picsum so stories are stable without Math.random.
     const pic = (seed * (index + 7)) % 1000;
-    return {
-      id: String(index),
-      title,
-      image: `https://picsum.photos/seed/${pic}/600/400`,
-    };
+    return { ...item, image: `https://picsum.photos/seed/${pic}/600/400` };
   }))();
 
-// 12x12 board with a tile in each corner and one in the centre — exercises the edges (auto-scroll,
-// overscroll, centering a far cell) rather than a central cluster.
 const defaultLayout: Layout = {
-  items: {
-    '0': { x: 0, y: 0, w: 2, h: 2 },
-    '1': { x: 10, y: 0, w: 2, h: 2 },
-    '2': { x: 0, y: 10, w: 2, h: 2 },
-    '3': { x: 10, y: 10, w: 2, h: 2 },
-    '4': { x: 5, y: 5, w: 2, h: 2 },
-  },
+  items: Object.fromEntries(tilePositions.map((position, index) => [String(index), position])),
 };
 
 // A 12x12 initial board.
 const defaultBounds = { columns: 12, rows: 12 };
+
+/** Card content for a tile's body; the cell itself supplies the `Card.Root` and header. */
+const TileContent = ({ item }: { item: TestItem }) => (
+  <UiLayout.Flex column gap='xs' classNames='px-2 pb-2 min-w-0'>
+    {item.subtitle && <Card.Text truncate>{item.subtitle}</Card.Text>}
+    {item.description && (
+      <Card.Text variant='muted' lines={3}>
+        {item.description}
+      </Card.Text>
+    )}
+  </UiLayout.Flex>
+);
 
 type StoryArgs = BoardRootProps & { items: TestItem[] };
 
@@ -139,9 +182,13 @@ const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, zoom: zoomPr
                         item={item}
                         layout={itemLayout}
                         key={item.id}
-                        title={<Card.Text>{item.title}</Card.Text>}
+                        title={<Card.Title truncate>{item.title}</Card.Title>}
                       >
-                        {item.image ? <img src={item.image} alt='' className='size-full object-cover' /> : null}
+                        {item.image ? (
+                          <img src={item.image} alt='' className='size-full object-cover' />
+                        ) : (
+                          <TileContent item={item} />
+                        )}
                       </Board.Cell>
                     ) : null;
                   })}

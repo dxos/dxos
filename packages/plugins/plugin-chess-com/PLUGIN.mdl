@@ -73,7 +73,9 @@ op SyncGames
     appended: number
   effects: [http, echo:write]
   requires: [Database.Service]
+```
 
+```mdl
 op ClearSyncedGames
   key: org.dxos.operation.chessCom.clearSyncedGames
   desc: Replace the account games feed with a fresh empty feed, discarding synced games.

@@ -37,6 +37,12 @@ export interface IndexerObject {
   queuePosition?: number | null;
 
   /**
+   * Local insertion id of the feed block this object was read from, which retention names a deleted
+   * block by. Set only for queue objects read from a local store; null otherwise.
+   */
+  queueInsertionId?: number | null;
+
+  /**
    * Record id from the objectMeta index.
    * `Null` before the object is stored in the EntityMetaIndex.
    * Enriched by the IndexEngine after the object is stored in the EntityMetaIndex.
@@ -65,6 +71,12 @@ export interface IndexerObject {
    * bytes: the document's only object, not a branch, and small enough to ship. Absent otherwise.
    */
   heads?: readonly string[];
+
+  /**
+   * Heads of the document {@link data} was read at, whether or not the object can be backed: the version a
+   * query compares to the document's current heads to answer from the snapshot. Defaults to {@link heads}.
+   */
+  version?: readonly string[];
 
   /**
    * The document's Automerge bytes, kept with {@link heads} by a host whose document store is too slow

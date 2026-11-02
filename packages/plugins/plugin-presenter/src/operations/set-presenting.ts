@@ -15,7 +15,7 @@ import { Attention } from '@dxos/react-ui-attention/types';
 
 import { PresenterOperation } from '#types';
 
-import { getPresentationPath, isPresenting } from '../paths.ts';
+import { getPresentingPath, isPresenting } from '../paths.ts';
 
 /** The open plank showing the object, if any; its companions are the ones the graph has resolved. */
 const findPlank = Effect.fnUntraced(function* (object: Obj.Unknown) {
@@ -25,8 +25,8 @@ const findPlank = Effect.fnUntraced(function* (object: Obj.Unknown) {
 
 /**
  * Enters or exits presentation for the given object by toggling the deck's fullscreen overlay onto the
- * presenter companion of the object's plank, opening the object first when no plank shows it. The
- * overlay is independent of what is open, so presenting leaves the URL alone.
+ * presenter companion of the object's plank (a Presentation's own plank), opening the object first when
+ * no plank shows it. The overlay is independent of what is open, so presenting leaves the URL alone.
  */
 const handler: Operation.WithHandler<typeof PresenterOperation.SetPresenting> = PresenterOperation.SetPresenting.pipe(
   Operation.withHandler(
@@ -54,7 +54,10 @@ const handler: Operation.WithHandler<typeof PresenterOperation.SetPresenting> = 
         plank = yield* findPlank(object);
       }
       if (plank) {
-        yield* Operation.invoke(DeckOperation.Adjust, { type: 'fullscreen' as const, id: getPresentationPath(plank) });
+        yield* Operation.invoke(DeckOperation.Adjust, {
+          type: 'fullscreen' as const,
+          id: getPresentingPath(plank, object),
+        });
       }
     }),
   ),

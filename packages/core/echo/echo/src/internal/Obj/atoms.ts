@@ -297,15 +297,19 @@ export const makeLabelAtom = <T extends Entity.Unknown>(entity: T): Atom.Atom<st
   return labelAtomFamily(entity);
 };
 
-const readTags = (entity: Entity.Unknown): readonly Ref.Ref<Tag.Tag>[] => [...getMeta(entity).tags];
+const readTags = (entity: Entity.Unknown): readonly Tag.Tag[] => [...getMeta(entity).tags];
 
-const tagsAtomFamily = Atom.family(<T extends Entity.Unknown>(entity: T): Atom.Atom<readonly Ref.Ref<Tag.Tag>[]> => {
-  return Atom.make<readonly Ref.Ref<Tag.Tag>[]>((get) => {
+/** Tags are entities held by identity, so the list is unchanged while every element is the same entity. */
+const sameTags = (next: readonly Tag.Tag[], previous: readonly Tag.Tag[]): boolean =>
+  next.length === previous.length && next.every((tag, index) => tag === previous[index]);
+
+const tagsAtomFamily = Atom.family(<T extends Entity.Unknown>(entity: T): Atom.Atom<readonly Tag.Tag[]> => {
+  return Atom.make<readonly Tag.Tag[]>((get) => {
     let previous = readTags(entity);
 
     const unsubscribe = subscribe(entity, () => {
       const next = readTags(entity);
-      if (!snapshotEquals(next, previous)) {
+      if (!sameTags(next, previous)) {
         previous = next;
         get.setSelf(next);
       }
@@ -320,7 +324,7 @@ const tagsAtomFamily = Atom.family(<T extends Entity.Unknown>(entity: T): Atom.A
  * Create a read-only atom for the meta tags of a reactive ECHO entity.
  * Re-reads on entity mutation; only propagates when the tag list changes.
  */
-export const makeTagsAtom = <T extends Entity.Unknown>(entity: T): Atom.Atom<readonly Ref.Ref<Tag.Tag>[]> => {
+export const makeTagsAtom = <T extends Entity.Unknown>(entity: T): Atom.Atom<readonly Tag.Tag[]> => {
   assertArgument(isEntity(entity), 'entity', 'Must be a reactive ECHO entity');
   return tagsAtomFamily(entity);
 };

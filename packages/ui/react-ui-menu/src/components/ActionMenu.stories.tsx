@@ -43,7 +43,11 @@ const createBaseActionsAtom = (count = 3) => {
 const openDropdown = async (canvasElement: HTMLElement) => {
   const canvas = within(canvasElement);
   await userEvent.click(canvas.getByRole('button', { name: /options/i }));
-  return within(document.body);
+  const body = within(document.body);
+  // zag focuses the menu a frame after it opens; a key pressed before then (Escape) goes to the page instead.
+  const menu = await body.findByRole('menu');
+  await waitFor(() => expect(menu.contains(document.activeElement)).toBe(true));
+  return body;
 };
 
 /** A contributor: registers items with a menu it does not own, for as long as it is mounted. */

@@ -9,7 +9,7 @@
  *
  * @mdl packages/devtools/drawing/DRAWING.mdl test QA-1
  * @app the autocue terminal stage on :4180, running a shell in an empty scratch directory, and the
- *   `bundle-e2e` Composer (production EDGE, which the demo's CLI profile also uses) on :4173
+ *   `bundle-e2e` Composer (EDGE preview, which the demo's CLI profile also uses via `DX_LOCAL_DEV=1`) on :4173
  *
  *   moon run drawing:build cli:build composer-app:bundle-e2e
  *   (cd packages/apps/composer-app && pnpm exec vite preview --configLoader native --host 127.0.0.1 --port 4173) &
@@ -266,7 +266,7 @@ const joinFromComposer = async (page) => {
 
 const joinOnce = async (page) => {
   const share = spawn(path.join(ROOT, 'packages/devtools/cli/bin/dx'), ['space', 'share'], {
-    env: { ...process.env, DX_PROFILE: PROFILE, DX_LOCAL_DEV: '0' },
+    env: { ...process.env, DX_PROFILE: PROFILE, DX_LOCAL_DEV: '1' },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   let output = '';

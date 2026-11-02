@@ -1,0 +1,219 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-studio/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: StudioPlugin
+
+The generation core is solid and tested. `generate.test.ts` covers the `generate` op end to end
+against a mock provider: kind resolution, Connector credentials, variant append, cover seeding,
+`NoGenerationService`, and async enqueue/resume. The storyboard operations and the Studio template
+have their own tests. The type set, the default `image/*`, `video/*` and `audio/*` renderers,
+gallery, lightbox and card surfaces, and the generator selector all exist, but the React side is
+covered only by stories without play functions.
+
+Two parts of the spec are not built, and one type has diverged:
+
+- **The F-4 navigation hub is missing.** The app graph builder adds no "Studio" section and no
+  virtual "Artifacts" node, and there is no `ArtifactsArticle`. Creating a MediaArtifact goes
+  through plain `SpaceOperation.AddObject`, so nothing routes it under an Artifacts node.
+- **Uploading a file as a Variant (F-2.3) and the `GenerateForm` override surface (F-1.3) are missing.**
+  The upload control that exists fills a URL field of the generation request; it does not append a
+  `Variant` with `content: Ref<File>`.
+- **`MediaArtifact` has no `instructions`.** The prompt is a field of the persisted `request` record,
+  which replaces `config`; `meta` is gone. `generate` reads the prompt from `config.prompt`, not
+  `instructions.text`.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict MediaArtifact: The type has kind, generator, variants, cover and derived, but no instructions, config or meta.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-studio/src/types/MediaArtifact.ts#MediaArtifact, github:dxos/dxos/packages/plugins/plugin-studio/src/types/MediaArtifact.ts#make]
+  tests: [github:dxos/dxos/packages/plugins/plugin-studio/src/operations/generate.test.ts]
+  note: |
+    The prompt lives in `request` (a record holding the prompt and kind-specific fields) instead of
+    `instructions: Ref<Instructions>`. `make` creates no child Instructions, and there is no `makeVideo`.
+```
+
+```mdl
+verdict Variant: The type has contentType, content, url and generation, plus name, config and jobId.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-studio/src/types/Variant.ts#Variant, github:dxos/dxos/packages/plugins/plugin-studio/src/types/Generation.ts#Generation]
+  tests: [github:dxos/dxos/packages/plugins/plugin-studio/src/operations/generate.test.ts]
+  note: The request knobs moved from `Generation.parameters` to `Variant.config`.
+```
+
+```mdl
+verdict Lightbox: The type has name, referenced items and a BoardLayout.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-studio/src/types/Lightbox.ts#Lightbox, github:dxos/dxos/packages/plugins/plugin-studio/src/types/Lightbox.ts#cells]
+  tests: [github:dxos/dxos/packages/plugins/plugin-studio/src/templates/studio.test.ts]
+  note: Cells store spans as `w`/`h`; `cells` reads legacy `width`/`height`.
+```
+
+```mdl
+verdict generate: The op resolves the provider and credential, calls it, and appends variants with provenance and cover; the prompt comes from config.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-studio/src/types/StudioOperation.ts#Generate, github:dxos/dxos/packages/plugins/plugin-studio/src/operations/generate.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-studio/src/operations/generate.test.ts]
+  walkthrough:
+    - The operation declares the artifact, provider, config, variant and count inputs. github:dxos/dxos/packages/plugins/plugin-studio/src/types/StudioOperation.ts#Generate
+    - The handler resolves the service and credential, runs sync or async generation, and appends Variants. github:dxos/dxos/packages/plugins/plugin-studio/src/operations/generate.ts
+  note: |
+    The request is built from the input `config` (which carries `prompt`), not from `instructions.text` merged with
+    `artifact.config`. The handler also writes the config back to `artifact.request`.
+```
+
+```mdl
+verdict MediaArtifactArticle: The compose form has a generator selector, Connect/Generate and a schema form over the variants; there is no Upload or GenerateForm surface.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-studio/src/containers/MediaArtifactArticle/MediaArtifactArticle.tsx#MediaArtifactArticle, github:dxos/dxos/packages/plugins/plugin-studio/src/containers/MediaArtifactArticle/MediaArtifactForm.tsx#MediaArtifactForm, github:dxos/dxos/packages/plugins/plugin-studio/src/containers/MediaArtifactArticle/MediaArtifactVariants.tsx#MediaArtifactVariants]
+  note: There is no separate prompt editor; the prompt is a field of the request form. Stories only.
+```
+
+```mdl
+verdict kind: Ideogram provides kind image and HeyGen kind video; uploaded content is not supported.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-ideogram/src/services/ideogram-service.ts#makeIdeogramGenerationService, github:dxos/dxos/packages/plugins/plugin-studio/src/components/VariantRenderer/ImageVariant.tsx#ImageVariant]
+  tests: [github:dxos/dxos/packages/plugins/plugin-ideogram/src/services/ideogram-mapping.test.ts]
+  note: Generated output works; the "uploaded (Ref<File>)" content path from F-2.3 does not exist.
+```
+
+```mdl
+verdict F-1.1: The article shows the request form, with the prompt as one of its fields.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-studio/src/containers/MediaArtifactArticle/MediaArtifactForm.tsx#MediaArtifactForm]
+  note: No separate prompt editor. Stories only.
+```
+
+```mdl
+verdict F-1.2: Generate runs the op against the resolved provider and appends Variants.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-studio/src/operations/generate.ts, github:dxos/dxos/packages/plugins/plugin-studio/src/containers/MediaArtifactArticle/MediaArtifactForm.tsx#MediaArtifactForm]
+  tests: [github:dxos/dxos/packages/plugins/plugin-studio/src/operations/generate.test.ts]
+```
+
+```mdl
+verdict F-1.3: The form renders from requestSchema; there is no GenerateForm override surface.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-studio/src/containers/MediaArtifactArticle/MediaArtifactForm.tsx#MediaArtifactForm]
+  note: Searched `src/` for `GenerateForm`/`generateForm`; no role or surface exists. Untested.
+```
+
+```mdl
+verdict F-1.4: The MediaArtifact type's ConnectorAuthAnnotation resolves the provider's connector, so Connect appears.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-studio/src/types/MediaArtifact.ts#resolveArtifactConnectorIds]
+  note: No test checks that the Connect action appears.
+```
+
+```mdl
+verdict F-2.1: Default image, video and audio VariantRenderer surfaces filter on contentType.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-studio/src/capabilities/react-surface.ts, github:dxos/dxos/packages/plugins/plugin-studio/src/surfaces.ts#VariantRenderer]
+  note: Stories only.
+```
+
+```mdl
+verdict F-2.2: The role allows a Position.first override.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-studio/src/surfaces.ts#VariantRenderer]
+  note: No test registers an override.
+```
+
+```mdl
+verdict F-2.3: Uploading a file as a Variant is not built.
+  status: missing
+  note: |
+    `FileUrlField` uploads a file into a request URL field. Nothing appends a Variant with `content: Ref<File>`;
+    searched `src/` for `upload`.
+```
+
+```mdl
+verdict F-3.1: GalleryArticle renders artifact collections with create and multi-select delete.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-studio/src/containers/GalleryArticle/GalleryArticle.tsx#GalleryArticle, github:dxos/dxos/packages/plugins/plugin-studio/src/capabilities/react-surface.ts#isArtifactCollection]
+  note: Stories only.
+```
+
+```mdl
+verdict F-3.2: LightboxArticle lays artifacts on a board and persists drags.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-studio/src/containers/LightboxArticle/LightboxArticle.tsx#LightboxArticle]
+  note: Stories only.
+```
+
+```mdl
+verdict F-3.3: MediaArtifactCard is the CardContent surface.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-studio/src/components/MediaArtifactCard/MediaArtifactCard.tsx#MediaArtifactCard]
+  note: Stories only.
+```
+
+```mdl
+verdict F-4.1: No Studio section node exists.
+  status: missing
+  note: '`app-graph-builder.ts` adds only storyboard play, frame companion and hidden storyboard artifact nodes; no `makeSection` in `src/`.'
+```
+
+```mdl
+verdict F-4.2: No virtual Artifacts node exists.
+  status: missing
+  note: See F-4.1.
+```
+
+```mdl
+verdict F-4.3: There is no ArtifactsArticle.
+  status: missing
+  note: No component or surface by that name in `src/`; the create dialog's kind field covers kind choice.
+```
+
+```mdl
+verdict F-4.4: The generator selector writes MediaArtifact.generator, and generate uses it as provider.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-studio/src/containers/MediaArtifactArticle/MediaArtifactForm.tsx#MediaArtifactForm]
+  note: '`generate.test.ts` covers provider selection by id, but not the selector.'
+```
+
+```mdl
+verdict F-4.5: Create uses plain AddObject; there is no Artifacts-node routing.
+  status: missing
+  note: '`create-object.ts` invokes `SpaceOperation.AddObject` with the caller target only.'
+```
+
+```mdl
+verdict T-1: generate.test.ts runs the op against a mock provider and checks variants, generation, cover and count.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-studio/src/operations/generate.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-studio/src/operations/generate.test.ts]
+```
+
+```mdl
+verdict Storyboard: The types, operations and article exist; the operations are tested.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-studio/src/types/Storyboard.ts#Storyboard, github:dxos/dxos/packages/plugins/plugin-studio/src/types/Frame.ts#Frame, github:dxos/dxos/packages/plugins/plugin-studio/src/types/StudioOperation.ts#CreateStoryboard, github:dxos/dxos/packages/plugins/plugin-studio/src/types/StudioOperation.ts#AppendFrame, github:dxos/dxos/packages/plugins/plugin-studio/src/types/StudioOperation.ts#ListProviders, github:dxos/dxos/packages/plugins/plugin-studio/src/containers/StoryboardArticle/StoryboardArticle.tsx#StoryboardArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-studio/src/operations/storyboard.test.ts]
+  note: StoryboardArticle, FrameCompanion and StoryboardPlayer have stories but no play assertions.
+```
+
+```mdl
+verdict StudioSkill: The skill and the Studio template with one task and a Lightbox exist.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-studio/src/skills/StudioSkill.ts#key, github:dxos/dxos/packages/plugins/plugin-studio/src/templates/studio.ts#studioTemplate]
+  tests: [github:dxos/dxos/packages/plugins/plugin-studio/src/templates/studio.test.ts]
+```
+
+```mdl
+verdict QA-1: Manual/agent QA; no automation runs it.
+  status: missing
+  note: Status `unverified` in the spec.
+```

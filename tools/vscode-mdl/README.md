@@ -1,20 +1,41 @@
-# DEUS MDL — VS Code syntax highlighting
+# DEUS MDL — VS Code extension
 
-Highlights `.mdl` specification files and the ```` ```mdl ```` fenced blocks inside them (and inside
-ordinary markdown). Declarative only: grammars and language configuration, no activation code, no
-language server.
+Language support for `.mdl` specification files: highlighting of the file and its ```` ```mdl ```` fences
+(also inside ordinary markdown), and the features of
+[`mdl-language-server`](../mdl-language-server/README.md), which the extension bundles:
 
-## Install locally
+- **Review verdicts**: each item the spec's `<SPEC>.review.mdl` judges gets the spec viewer's chips as code
+  lenses — status (✓ Done, ? Untested, ◐ Partial, ≠ Diverged, ✗ Missing), `</> symbol` chips that open the
+  code and tests the verdict cites, and `no code` / `tested` / `not tested` — and a coloured line in the margin
+  and the overview ruler. Hover the declaration line for the verdict's note, walkthrough and code.
+- **Links**: `github:` keys, `<spec id>#<item>` references, `uses`/`dependsOn` ids and relative markdown links
+  are clickable, and Go to Definition (F12) opens the file at the symbol or the spec at the item.
+- **Hovers**: a key shows the declaration it names; a spec reference shows the other spec's block.
+- **Diagnostics**: the deus lint, keys whose file or symbol is gone, and review verdicts for unknown items.
+- **Completion**: block types, field names, spec ids after `uses`, items after `<id>#`, verdict statuses.
+- **Outline**: headings, blocks and their `req` items.
+
+## Install
+
+Download the `.vsix` and install it (Cursor and other VS Code forks take the same file):
+
+```bash
+code --install-extension vscode-mdl-0.2.0.vsix
+```
+
+Or build it from this checkout:
 
 ```bash
 moon run vscode-mdl:package                                   # -> tools/vscode-mdl/dist/vscode-mdl.vsix
 code --install-extension tools/vscode-mdl/dist/vscode-mdl.vsix
 ```
 
-Then reload VS Code (`Developer: Reload Window`) and open any `PLUGIN.mdl`. Cursor and other VS Code
-forks take the same `.vsix` (`cursor --install-extension …`).
+`package` bundles the client (`dist/extension.cjs`) and the server (`dist/server.cjs`) first, then packages
+from a staging copy whose manifest has no dependency fields, since vsce cannot read the workspace's
+`catalog:` versions.
 
-To try a change without installing, launch an Extension Development Host:
+Then reload VS Code (`Developer: Reload Window`) and open any `PLUGIN.mdl`. To try a change without
+installing, run `moon run vscode-mdl:bundle` and launch an Extension Development Host:
 
 ```bash
 code --extensionDevelopmentPath=$(pwd)/tools/vscode-mdl
@@ -22,6 +43,18 @@ code --extensionDevelopmentPath=$(pwd)/tools/vscode-mdl
 
 `Developer: Inspect Editor Tokens and Scopes` shows the scope under the cursor — the fastest way to see
 whether a rule matched.
+
+## Settings
+
+| Setting                 | Default | What                                                                                     |
+| ----------------------- | ------- | ---------------------------------------------------------------------------------------- |
+| `mdl.review.codeLens`   | `true`  | The verdict chips as code lenses above each reviewed item.                               |
+| `mdl.review.inlayHints` | `false` | The same chips as inlay hints at the end of the line.                                    |
+| `mdl.review.gutter`     | `true`  | Colour each reviewed line in the margin and overview ruler by its verdict.               |
+| `mdl.server.path`       | `""`    | Run this server script instead of the bundled one, e.g. a local `dist/server.cjs` build. |
+| `mdl.trace.server`      | `off`   | Log the LSP traffic to the "DEUS MDL" output channel.                                    |
+
+`MDL: Restart Language Server` restarts the server, e.g. after a branch switch.
 
 ## How it works
 
@@ -107,6 +140,8 @@ injection targets markdown:
 ```bash
 moon run vscode-mdl:test
 ```
+
+The language features are tested in `tools/mdl-language-server`; this package tests the grammars.
 
 `src/grammar.test.ts` loads the grammars the way VS Code does (`vscode-textmate` + oniguruma, with the
 markdown and YAML grammars from `tm-grammars`) and checks two things: targeted assertions per construct,

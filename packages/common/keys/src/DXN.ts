@@ -6,26 +6,34 @@
 
 import * as Schema from 'effect/Schema';
 
+import { EntityId } from './entity-id.ts';
 import type * as URI from './URI.ts';
 
 /**
- * Full DXN regex per spec: `dxn:<nsid>[:<version>]`.
+ * Full DXN regex per spec: `dxn:<nsid>[:<version>][#<mnemonic>]`.
  * Middle segments may contain hyphens; the final segment must be camelCase
- * (alphanumeric, leading letter — no hyphens or underscores).
+ * (alphanumeric, leading letter — no hyphens or underscores). The mnemonic is
+ * an ECHO object mnemonic (Crockford base32, either case).
  */
-const DXN_SPEC_REGEXP =
-  /^dxn:[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z][a-zA-Z0-9]{0,62})(:\d+\.\d+\.\d+)?$/;
+const DXN_SPEC_REGEXP = new RegExp(
+  '^dxn:[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\\.[a-zA-Z][a-zA-Z0-9]{0,62})' +
+    '(:\\d+\\.\\d+\\.\\d+)?' +
+    `(#[0-9A-HJKMNP-TV-Za-hjkmnp-tv-z]{${EntityId.mnemonicLength}})?$`,
+);
 
 /**
- * DXN names a resource (type, plugin, capability, etc.).
+ * DXN names a resource (type, plugin, capability, object, etc.).
  *
- * Format: `dxn:<nsid>[:<version>]` where NSID is an atproto-style dotted name.
+ * Format: `dxn:<nsid>[:<version>][#<mnemonic>]` where NSID is an atproto-style dotted name. The
+ * mnemonic (`Obj.getMnemonic`) tells apart objects that share a `meta.key`; there is no global
+ * resolver, so a DXN with a mnemonic resolves against the reader's own spaces.
  *
  * @example
  * ```
  * dxn:org.dxos.type.calendar
  * dxn:org.dxos.type.calendar:1.0.0
  * dxn:org.dxos.plugin.markdown
+ * dxn:network.dxos.team.features.mcp.codeMode#ABC123
  * ```
  */
 export type DXN = URI.URI & { readonly __DXN: unique symbol };
@@ -139,7 +147,10 @@ export type Name<T extends string> = [string] extends [T]
  * helper). Named `NameSchema` because a value cannot share the generic `Name` type's name.
  */
 export const NameSchema: Schema.Codec<string, string> = Schema.String.pipe(
-  Schema.refine((value): value is string => DXN_SPEC_REGEXP.test(`dxn:${value}`), { message: 'Invalid NSID name' }),
+  // The full grammar admits a mnemonic suffix, which a name must never carry.
+  Schema.refine((value): value is string => !value.includes('#') && DXN_SPEC_REGEXP.test(`dxn:${value}`), {
+    message: 'Invalid NSID name',
+  }),
   Schema.annotate({ title: 'DXN.Name', description: 'NSID name (the dxn: prefix omitted)' }),
 );
 
@@ -165,7 +176,13 @@ export const make: {
     nsid: [Name<T>] extends [never] ? `Invalid NSID "${T}": final segment must be camelCase (no hyphens)` : T,
     version?: string,
   ): DXN;
-} = (nsid: string, version?: string): DXN => parse(version != null ? `dxn:${nsid}:${version}` : `dxn:${nsid}`);
+} = (nsid: string, version?: string): DXN => {
+  // The grammar accepts a mnemonic suffix, but a type, plugin or operation key must never carry one.
+  if (nsid.includes('#') || version?.includes('#')) {
+    throw new Error(`Invalid DXN name: ${nsid}`);
+  }
+  return parse(version != null ? `dxn:${nsid}:${version}` : `dxn:${nsid}`);
+};
 
 /**
  * Parses a full DXN string. Returns undefined on failure.
@@ -188,11 +205,11 @@ const parse = (dxn: string): DXN => {
 };
 
 /**
- * Returns the NSID portion of a DXN (the part after `dxn:` and before optional `:<version>`).
+ * Returns the NSID portion of a DXN (the part after `dxn:` and before optional `:<version>` or `#<mnemonic>`).
  * @example getName('dxn:org.dxos.type.calendar:1.0.0') → 'org.dxos.type.calendar'
  */
 export const getName = (dxn: DXN): string => {
-  const match = /^dxn:([^:]+)/.exec(dxn);
+  const match = /^dxn:([^:#]+)/.exec(dxn);
   if (!match) {
     throw new Error(`Invalid DXN: ${dxn}`);
   }
@@ -204,8 +221,33 @@ export const getName = (dxn: DXN): string => {
  * @example getVersion('dxn:org.dxos.type.calendar:1.0.0') → '1.0.0'
  */
 export const getVersion = (dxn: DXN): string | undefined => {
-  const match = /^dxn:[^:]+:(\d+\.\d+\.\d+)$/.exec(dxn);
+  const match = /^dxn:[^:#]+:(\d+\.\d+\.\d+)(#|$)/.exec(dxn);
   return match?.[1];
+};
+
+/**
+ * Returns the mnemonic suffix of a DXN, uppercased, or undefined when it has none.
+ * @example getMnemonic('dxn:org.example.feature.codeMode#abc123') → 'ABC123'
+ */
+export const getMnemonic = (dxn: DXN): string | undefined => {
+  const index = dxn.indexOf('#');
+  return index === -1 ? undefined : EntityId.normalizeMnemonic(dxn.slice(index + 1));
+};
+
+/**
+ * Sets or replaces the mnemonic suffix of a DXN. Throws if the mnemonic is malformed.
+ * @example withMnemonic('dxn:org.example.feature.codeMode', 'abc123') → 'dxn:org.example.feature.codeMode#ABC123'
+ */
+export const withMnemonic = (dxn: DXN, mnemonic: string): DXN =>
+  parse(`${withoutMnemonic(dxn)}#${EntityId.normalizeMnemonic(mnemonic)}`);
+
+/**
+ * Removes the mnemonic suffix of a DXN, leaving the name and version.
+ * @example withoutMnemonic('dxn:org.example.feature.codeMode#ABC123') → 'dxn:org.example.feature.codeMode'
+ */
+export const withoutMnemonic = (dxn: DXN): DXN => {
+  const index = dxn.indexOf('#');
+  return index === -1 ? dxn : parse(dxn.slice(0, index));
 };
 
 /**
@@ -217,7 +259,7 @@ const Schema_: Schema.Codec<DXN, DXN> = Schema.String.pipe(
   Schema.refine((value): value is DXN => isDXN(value), { message: 'Invalid DXN' }),
   Schema.annotate({
     title: 'DXN',
-    description: 'DXN URI: dxn:<nsid>[:<version>]',
+    description: 'DXN URI: dxn:<nsid>[:<version>][#<mnemonic>]',
   }),
 ) as unknown as Schema.Codec<DXN, DXN>;
 export { Schema_ as Schema };

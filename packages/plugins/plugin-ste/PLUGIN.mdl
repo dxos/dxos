@@ -1,0 +1,205 @@
+---
+id: org.dxos.plugin.ste
+name: StePlugin
+version: 0.1.0
+---
+
+Simplified Technical English (ASD-STE100) for the assistant: a skill that writes technical text in STE, and a
+check tool that finds violations of the writing rules.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.1`         |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `step`      | `org.dxos.mdl.step@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
+
+## Components
+
+```mdl
+component SteSkill
+  desc: The STE writing rules (text types, verbs, sentences, words, safety instructions, hedges) as skill
+        instructions, with the Verify tool. The agent can enable it on demand.
+```
+
+## Operations
+
+```mdl
+op Verify
+  desc: Checks text or Markdown against the ASD-STE100 writing rules that a program can detect.
+  input:
+    text: string
+    mode?: procedural | descriptive | mixed   # default mixed
+    vocabulary?: boolean                      # default true
+  output: { passed: boolean, errors: Finding[], warnings: Finding[], unknownWords: string[] }
+  note: A port of `.agents/skills/simplified-technical-english/scripts/ste_check.py`; pure, no services.
+```
+
+## Features
+
+```mdl
+feat F-1: STE skill
+
+  req F-1.1: The STE skill is registered while the plugin is enabled, and absent when it is not.
+  req F-1.2:
+    when: the user asks for text in Simplified Technical English
+    then: the assistant writes the text in STE and runs Verify on it before it answers
+```
+
+```mdl
+feat F-2: Verify tool
+
+  req F-2.1: Sentences longer than 20 words (procedural) or 25 words (descriptive) are errors.
+  req F-2.2: Semicolons, contractions, "should/would/may/might/shall", "has/have/had" + participle,
+             passives and progressive forms are errors.
+  req F-2.3: A paragraph with more than 6 sentences is an error.
+  req F-2.4: Code, URLs and quoted text are not checked.
+  req F-2.5: Words not in the approved word list are returned as unknownWords, not as errors.
+```
+
+## QA
+
+```mdl
+test QA-1: Rewrite a procedure in STE
+  desc: The skill's primary journey — the assistant rewrites a short procedure in STE and checks it.
+  actors: human
+  covers: [F-1.1, F-1.2, F-2.2]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-assistant and plugin-ste are enabled
+  steps:
+    - name: Open a chat
+      do: Open the assistant companion and start a new chat.
+      expect: an empty chat opens with a prompt input
+    - name: Enable the skill
+      do: Open the chat's skills menu and enable "Simplified Technical English".
+      expect: the skill shows as enabled on the chat
+    - name: Ask for a rewrite
+      do: |
+        Send: Rewrite in STE: "You should make sure that the cache has been cleared before restarting; it'll fail otherwise."
+      expect: |
+        the chat shows a VerifySimplifiedTechnicalEnglish tool call, and the answer has no "should",
+        no semicolon, no contraction and no "has been"
+```
+
+## Changelog
+
+```mdl
+decision D-1: Composer has a plugin that contributes a Simplified Technical English skill to the assistant.
+  date: 2026-10-25
+  by: user:dmaretskyi
+  affects: [SteSkill]
+```
+
+```mdl
+decision D-2: The skill carries a Verify tool that ports the agent skill's `ste_check.py`, so the assistant checks its own STE output with the same findings coding agents get. Fills in [D-1].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [op:Verify, F-1.2, F-2]
+  why: The model alone misses sentence lengths and verb forms; a deterministic check catches them, and one ruleset across agents avoids two definitions of "valid STE".
+  rejected:
+    - Instructions only — no way to verify the output.
+```
+
+```mdl
+decision D-3: Words outside the approved word list are returned to the model as unknownWords, never as errors. Fills in [D-2].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.5]
+  why: Technical names are permitted and a program cannot tell them from unapproved words.
+```
+
+```mdl
+decision D-4: The agent can enable the STE skill on demand. Fills in [D-1].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [SteSkill]
+  why: A user asks for STE mid-conversation; making them enable the skill first adds a step for no gain.
+```
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using
+the core `ext` primitive — the only construct the base language provides.
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self              # feat blocks may contain feat blocks
+```
+
+```mdl
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap            # external inputs (immutable inside component)
+    state?: FieldMap            # internal reactive state
+    slots?: FieldMap            # named ReactNode injection points
+    actions?: ActionMap         # methods the component exposes or handles
+    emits?: EventMap            # events the component raises to its parent
+    layout?: CodeBlock          # ASCII sketch of visual structure (non-normative)
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap            # named input parameters
+    output?: TypeExpr           # return type
+    errors?: ErrorMap           # name: Prose  (when this error occurs)
+    effects?: EffectList        # echo:read | echo:write | http | fs | ...
+    requires?: ServiceList      # injected service dependencies
+    note?: Prose                # implementation guidance (non-normative)
+```
+
+```mdl
+ext decision
+  uri: org.dxos.mdl.decision@1.0
+  desc: |
+    One decision about the spec, attributed to exactly one actor. The inline prose is the decision
+    itself, stated as what is now true, not as the edit that was made.
+  fields:
+    date: Date                  # YYYY-MM-DD, the day the decision was made
+    by: ActorRef                # user:<handle> | agent:<name> — the decider
+    for?: UserRef               # agent entries only: the person the agent acted for
+    affects?: RefList           # block ids the decision constrains
+    supersedes?: Identifier     # an earlier decision this one replaces
+    why?: Prose                 # the reason; on a user entry, only a reason the person gave
+    rejected?: ProseList        # alternatives considered and why they lost
+    source?: URI                # PR, review comment, issue, or session where it was made
+  inline-prose: true
+```

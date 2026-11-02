@@ -10,11 +10,12 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 
-import { meta } from '#meta';
 import { DEFAULT_IGNORED_APPS, appDisplayName, selectMeetingApp } from '#recorder';
 import { MeetingRecorderCapabilities, MeetingRecorderOperation } from '#types';
 
-export const DETECTED_TOAST_ID = `${meta.profile.key}.detected`;
+import { MeetingRecorderNamespace } from '../namespace.ts';
+
+export const DETECTED_TOAST_ID = `${MeetingRecorderNamespace.key}.detected`;
 
 /** How long the "take notes?" prompt stays up; the meeting is still offered from the status bar after. */
 const PROMPT_DURATION = 30_000;
@@ -48,12 +49,12 @@ const handler: Operation.WithHandler<typeof MeetingRecorderOperation.HandleDetec
           yield* Operation.invoke(LayoutOperation.AddToast, {
             id: DETECTED_TOAST_ID,
             icon: 'ph--record--regular',
-            title: ['meeting-detected.title', { ns: meta.profile.key }],
+            title: ['meeting-detected.title', { ns: MeetingRecorderNamespace.key }],
             // Plain text: a toast label carries no interpolation values, and the app name is data.
             description: appDisplayName(app),
             duration: PROMPT_DURATION,
-            actionLabel: ['take-notes.label', { ns: meta.profile.key }],
-            actionAlt: ['take-notes.alt', { ns: meta.profile.key }],
+            actionLabel: ['take-notes.label', { ns: MeetingRecorderNamespace.key }],
+            actionAlt: ['take-notes.alt', { ns: MeetingRecorderNamespace.key }],
             onAction: () => {
               // The toast outlives the prompt; once the app has released the microphone there is no
               // meeting left to record.

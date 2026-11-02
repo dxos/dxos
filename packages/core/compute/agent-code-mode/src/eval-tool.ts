@@ -111,6 +111,11 @@ export const evaluate = Effect.fnUntraced(function* ({
     printer.print(result.success);
   }
 
+  const hint = dialect.name === 'effect' && printer.isEmpty() ? emptyOutputHint(code) : undefined;
+  if (hint) {
+    printer.print(hint);
+  }
+
   return printer.output();
 });
 
@@ -230,10 +235,25 @@ const truncationWarning = (maxOutput: number): string =>
  * is not an effect reads as `(intermediate value) is not iterable`, and is most often a ref loaded as
  * `yield* ref.load` or through a helper that does not exist.
  */
-const hintFor = (message: string): string =>
-  /is not iterable/.test(message)
-    ? '\nHint: `yield*` takes an Effect, and that value is not one. Load a ref with `yield* Database.load(ref)`.'
-    : '';
+const hintFor = (message: string): string => {
+  if (/is not iterable/.test(message)) {
+    return '\nHint: `yield*` takes an Effect, and that value is not one. Load a ref with `yield* Database.load(ref)`.';
+  }
+  const undefinedName = /^(?:ReferenceError: )?(\w+) is not defined/m.exec(message)?.[1];
+  if (undefinedName) {
+    return `\nHint: each eval call is a fresh program, so \`${undefinedName}\` from an earlier call does not exist here. Resolve or load it again in this call.`;
+  }
+  return '';
+};
+
+/**
+ * A pointer for an Effect-dialect program that printed nothing because it called `print` without
+ * `yield*`, which builds the effect and drops it.
+ */
+const emptyOutputHint = (code: string): string | undefined =>
+  /(?<!yield\*\s*)\bprint\(|console\.log\(/.test(code)
+    ? 'Nothing was printed. `print` is an effect: write `yield* print(...)`; `console.log` does not reach you.'
+    : undefined;
 
 /**
  * A failure's message cut to what the model can act on.

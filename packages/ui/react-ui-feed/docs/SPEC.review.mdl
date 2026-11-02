@@ -1,0 +1,426 @@
+---
+spec: github:dxos/dxos/packages/ui/react-ui-feed/docs/SPEC.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: FeedSpec
+
+The virtualizer is solid: `Placement`, `useWindow`, `Window`, `ListModel` and the follow ship in
+`@dxos/react-ui-virtual` and every F-1 invariant is checked by `placement.test.ts` or a
+`Window.stories.tsx` play function. The feed side (`MessageList`, `FeedModel`, the rails, the
+decoration and selection providers) is built and most of it is exercised by storybook play tests
+(`tail`, `bridge`, `widget`, `streaming`, `navigation`, Outline and Minimap stories).
+
+Of 52 items: 35 done, 6 untested, 9 partial, 0 diverged, 2 missing. Findings:
+
+- **The model is not atom-shaped.** `ListModel.count`, `FeedModel.stops` and `streamingId` are a
+  getter, a method and a getter; only `rowsAtom` is an atom, and changes come via `subscribe`,
+  not a Stream (ListModel, FeedModel, F-7.4).
+- **Selection is not the adopted aspect.** `useListSelection` has no range mode and the feed uses its
+  own `ItemSelectionProvider` (F-4.1, F-8.3); the Mosaic retrofit (F-8.2) has not started.
+- **One navigation seam is incomplete.** The Outline in the story scrolls directly, and the follow's
+  withdrawal on a backwards scroll and Cmd+Arrow have no test.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Extents: of(index) and exact, as specified.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-virtual/src/placement.ts#Extents]
+  tests: [github:dxos/dxos/packages/ui/react-ui-virtual/src/placement.test.ts]
+```
+
+```mdl
+verdict Layout: first, last, visible, offset and sizerExtent.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-virtual/src/placement.ts#Layout]
+  tests: [github:dxos/dxos/packages/ui/react-ui-virtual/src/placement.test.ts]
+```
+
+```mdl
+verdict WindowState: index, visible, mounted, count and pixel geometry.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-virtual/src/Window.tsx#WindowState]
+  tests: [github:dxos/dxos/packages/ui/react-ui-feed/src/components/Minimap/Minimap.stories.tsx, github:dxos/dxos/packages/ui/react-ui-virtual/src/Window.stories.tsx]
+```
+
+```mdl
+verdict ListModel: count, getId, at and told prepends exist; count is a plain getter and changes come through subscribe, not an Atom and a Stream.
+  status: partial
+  evidence: [github:dxos/dxos/packages/ui/react-ui-virtual/src/list-model.ts#ListModel, github:dxos/dxos/packages/ui/react-ui-virtual/src/list-model.ts#ListChange]
+  tests: [github:dxos/dxos/packages/ui/react-ui-virtual/src/list-model.test.ts]
+  note: |
+    `ListModel` has a synchronous face (`count` getter, `subscribe(listener)`) plus `rowsAtom`; there is no `count: Atom<number>` and no `changes: Stream`. It lives in `@dxos/react-ui-virtual`.
+```
+
+```mdl
+verdict FeedModel: Extends ListModel with a stops policy, streamingId and loadBefore/loadAfter, but none of them is an Atom.
+  status: partial
+  evidence: [github:dxos/dxos/packages/ui/react-ui-feed/src/model/feed.ts#FeedModel, github:dxos/dxos/packages/ui/react-ui-feed/src/model/feed.ts#fromMessages]
+  tests: [github:dxos/dxos/packages/ui/react-ui-feed/src/model/feed.test.ts]
+  note: |
+    `stops()` is a method computed on call and `streamingId` a getter, not `Atom<Stop[]>` / `Atom<string>`. `loadBefore` / `loadAfter` are constructor options returning a page of messages, consumed through `model.more(edge)`.
+```
+
+```mdl
+verdict Decoration: id, range and kind, delivered through DecorationsProvider and useDecorations(id).
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-feed/src/hooks/useDecorations.tsx#Decoration, github:dxos/dxos/packages/ui/react-ui-feed/src/hooks/useDecorations.tsx#useDecorations]
+  tests: [github:dxos/dxos/packages/ui/react-ui-feed/src/components/Block/block.stories.tsx]
+```
+
+```mdl
+verdict Stop: index, id and optional label.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-feed/src/model/feed.ts#Stop]
+  tests: [github:dxos/dxos/packages/ui/react-ui-feed/src/model/feed.test.ts]
+```
+
+```mdl
+verdict Marker: The fields match, under the name OutlineMarker.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-feed/src/components/Outline/Outline.tsx#OutlineMarker]
+  tests: [github:dxos/dxos/packages/ui/react-ui-feed/src/components/Outline/Outline.stories.tsx]
+```
+
+```mdl
+verdict EdgeDrift: edge and delta, reported through onEdge.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-virtual/src/placement.ts#EdgeDrift]
+  tests: [github:dxos/dxos/packages/ui/react-ui-virtual/src/placement.test.ts]
+```
+
+```mdl
+verdict Virtualizer: Placement, useWindow and Window ship in @dxos/react-ui-virtual with the specified props and events.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-virtual/src/placement.ts#Placement, github:dxos/dxos/packages/ui/react-ui-virtual/src/Window.tsx#useWindow, github:dxos/dxos/packages/ui/react-ui-virtual/src/Window.tsx#Window, github:dxos/dxos/packages/ui/react-ui-virtual/src/Window.tsx#WindowProps]
+  tests: [github:dxos/dxos/packages/ui/react-ui-virtual/src/placement.test.ts, github:dxos/dxos/packages/ui/react-ui-virtual/src/Window.stories.tsx]
+  walkthrough:
+    - Placement holds the anchor and id-keyed measurements as pure arithmetic. github:dxos/dxos/packages/ui/react-ui-virtual/src/placement.ts#Placement
+    - useWindow binds it to a host-owned scroller and emits onChange, onEdge and onMismatch. github:dxos/dxos/packages/ui/react-ui-virtual/src/Window.tsx#useWindow
+    - Window is the own-scroller binding, composing useFollow for sticky. github:dxos/dxos/packages/ui/react-ui-virtual/src/Window.tsx#Window
+  note: |
+    `model` is a `WindowModel` (count, getId, subscribe). `sticky` is honoured by `Window` only; `useWindow` leaves following to `useFollow`.
+```
+
+```mdl
+verdict MessageList: Root, Viewport, Item (and Nav) over useWindow, with useMessageList for outside chrome; no stepAnchor action.
+  status: partial
+  evidence: [github:dxos/dxos/packages/ui/react-ui-feed/src/components/MessageList/MessageList.tsx#MessageList, github:dxos/dxos/packages/ui/react-ui-feed/src/components/MessageList/MessageList.tsx#MessageListRootProps, github:dxos/dxos/packages/ui/react-ui-feed/src/components/MessageList/MessageList.tsx#useMessageList]
+  tests: [github:dxos/dxos/packages/ui/react-ui-feed/src/stories/tail.stories.tsx, github:dxos/dxos/packages/ui/react-ui-feed/src/stories/bridge.stories.tsx, github:dxos/dxos/packages/ui/react-ui-feed/src/stories/navigation.stories.tsx, github:dxos/dxos/packages/ui/react-ui-feed/src/stories/widget.stories.tsx]
+  note: |
+    Props match except `renderer`/`Chrome` defaults. There is no `stepAnchor(delta)`; drivers call `navigation.step` from `useFeedNavigation`, exposed on the controller. A `Nav` part was added.
+```
+
+```mdl
+verdict Outline: Ticks at a fixed pitch with one popover, data-pointer/navigated/shown, onSelect and onNavigate.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-feed/src/components/Outline/Outline.tsx#Outline, github:dxos/dxos/packages/ui/react-ui-feed/src/components/Outline/Outline.tsx#OutlineProps]
+  tests: [github:dxos/dxos/packages/ui/react-ui-feed/src/components/Outline/Outline.stories.tsx]
+```
+
+```mdl
+verdict Minimap: Draws track, mounted band and viewport band from WindowState.geometry; onSelect(fraction).
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-feed/src/components/Minimap/Minimap.tsx#Minimap, github:dxos/dxos/packages/ui/react-ui-feed/src/components/Minimap/Minimap.tsx#MinimapProps]
+  tests: [github:dxos/dxos/packages/ui/react-ui-feed/src/components/Minimap/Minimap.stories.tsx]
+```
+
+```mdl
+verdict F-1.1: Prepending moves nothing at or after the anchor.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-virtual/src/placement.ts#Placement]
+  tests: [github:dxos/dxos/packages/ui/react-ui-virtual/src/placement.test.ts, github:dxos/dxos/packages/ui/react-ui-virtual/src/Window.stories.tsx]
+```
+
+```mdl
+verdict F-1.2: Measuring after the anchor never moves it; measurements keyed by id.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-virtual/src/placement.ts#Placement]
+  tests: [github:dxos/dxos/packages/ui/react-ui-virtual/src/placement.test.ts]
+```
+
+```mdl
+verdict F-1.3: Corrections move the window transform, not the scroll offset.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-virtual/src/Window.tsx#useWindow]
+  tests: [github:dxos/dxos/packages/ui/react-ui-virtual/src/Window.stories.tsx]
+```
+
+```mdl
+verdict F-1.4: A scroll moves content by exactly the distance, including upward from the tail.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-virtual/src/Window.tsx#useWindow]
+  tests: [github:dxos/dxos/packages/ui/react-ui-feed/src/stories/bridge.stories.tsx]
+```
+
+```mdl
+verdict F-1.5: Reserve is a sizer term; the last row rests at the content end.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-virtual/src/placement.ts#PlacementOptions]
+  tests: [github:dxos/dxos/packages/ui/react-ui-virtual/src/placement.test.ts, github:dxos/dxos/packages/ui/react-ui-feed/src/stories/tail.stories.tsx]
+```
+
+```mdl
+verdict F-1.6: Edge drift is reported through onEdge.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-virtual/src/placement.ts#Placement, github:dxos/dxos/packages/ui/react-ui-virtual/src/Window.tsx#WindowProps]
+  tests: [github:dxos/dxos/packages/ui/react-ui-virtual/src/placement.test.ts]
+```
+
+```mdl
+verdict F-1.7: Block and inline share the arithmetic; an inline story renders real content.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-virtual/src/Window.tsx#WindowAxis]
+  tests: [github:dxos/dxos/packages/ui/react-ui-virtual/src/Window.stories.tsx, github:dxos/dxos/packages/ui/react-ui-feed/src/stories/horizontal.stories.tsx]
+```
+
+```mdl
+verdict F-2.1: Markdown, html and custom blocks are chosen by kind.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-feed/src/model/feed-model.ts#defaultRenderer, github:dxos/dxos/packages/ui/react-ui-feed/src/components/Block/MarkdownBlock.tsx#MarkdownBlock, github:dxos/dxos/packages/ui/react-ui-feed/src/components/Block/HtmlBlock.tsx#HtmlBlock]
+  tests: [github:dxos/dxos/packages/ui/react-ui-feed/src/model/feed-model.test.ts, github:dxos/dxos/packages/ui/react-ui-feed/src/components/Block/block.stories.tsx]
+```
+
+```mdl
+verdict F-2.2: Chrome is a host render-prop inside the measured row.
+  status: untested
+  evidence: [github:dxos/dxos/packages/ui/react-ui-feed/src/components/MessageList/MessageList.tsx#MessageChromeProps]
+  note: |
+    `Chrome` wraps the row content inside the measured element; no test checks that chrome changes leave measurement intact.
+```
+
+```mdl
+verdict F-2.3: Widget expansion after mount is just another measurement.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-feed/src/components/MessageList/MessageList.tsx#MessageList]
+  tests: [github:dxos/dxos/packages/ui/react-ui-feed/src/stories/widget.stories.tsx]
+```
+
+```mdl
+verdict F-2.4: Widget state lives in a Root-owned store and survives unmount.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-feed/src/components/Block/widget-state.tsx#createWidgetStateStore, github:dxos/dxos/packages/ui/react-ui-feed/src/components/Block/widget-state.tsx#useWidgetState]
+  tests: [github:dxos/dxos/packages/ui/react-ui-feed/src/stories/widget.stories.tsx]
+```
+
+```mdl
+verdict F-2.5: The streaming item reconciles by delta.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-feed/src/model/feed.ts#FeedModel, github:dxos/dxos/packages/ui/react-ui-feed/src/components/Block/diff-range.ts]
+  tests: [github:dxos/dxos/packages/ui/react-ui-feed/src/model/feed.test.ts, github:dxos/dxos/packages/ui/react-ui-feed/src/components/Block/diff-range.test.ts, github:dxos/dxos/packages/ui/react-ui-feed/src/components/Block/MarkdownBlock.test.tsx]
+```
+
+```mdl
+verdict F-3.1: Stops are a swappable model policy defaulting to every message; there is no isAnchor sugar.
+  status: partial
+  evidence: [github:dxos/dxos/packages/ui/react-ui-feed/src/model/feed.ts#StopsPolicy, github:dxos/dxos/packages/ui/react-ui-feed/src/model/feed.ts#FeedModel]
+  tests: [github:dxos/dxos/packages/ui/react-ui-feed/src/model/feed.test.ts]
+  note: |
+    `fromMessages` takes a `stops` policy (`message`, `prompt` or a predicate); the `isAnchor` sugar the spec keeps is gone. There is no `useStops` hook.
+```
+
+```mdl
+verdict F-3.2: Arrows go through useFeedNavigation; the Outline story calls scrollToIndex directly.
+  status: partial
+  evidence: [github:dxos/dxos/packages/ui/react-ui-feed/src/hooks/useFeedNavigation.ts#useFeedNavigation, github:dxos/dxos/packages/ui/react-ui-feed/src/components/MessageList/MessageList.tsx#MessageList]
+  tests: [github:dxos/dxos/packages/ui/react-ui-feed/src/stories/navigation.stories.tsx]
+  note: |
+    MessageList key handling calls `navigation.step/first/last`. In `testing/FeedStory.tsx` the Outline `onSelect` calls `scrollToIndex` rather than the navigation seam, and the minimap is not wired to it.
+```
+
+```mdl
+verdict F-3.3: The cursor is derived from the scroll offset; every press travels.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-feed/src/hooks/useFeedNavigation.ts#useFeedNavigation]
+  tests: [github:dxos/dxos/packages/ui/react-ui-feed/src/stories/navigation.stories.tsx]
+```
+
+```mdl
+verdict F-3.4: Steps glide within the mounted window; far jumps are instant.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-feed/src/hooks/useFeedNavigation.ts#useFeedNavigation, github:dxos/dxos/packages/ui/react-ui-virtual/src/Window.tsx#WindowController]
+  tests: [github:dxos/dxos/packages/ui/react-ui-feed/src/stories/navigation.stories.tsx, github:dxos/dxos/packages/ui/react-ui-virtual/src/Window.stories.tsx]
+```
+
+```mdl
+verdict F-3.5: Cmd/Ctrl+Arrow jumps to first or last.
+  status: untested
+  evidence: [github:dxos/dxos/packages/ui/react-ui-feed/src/components/MessageList/MessageList.tsx#MessageList, github:dxos/dxos/packages/ui/react-ui-feed/src/hooks/useFeedNavigation.ts#useFeedNavigation]
+  note: |
+    The meta/ctrl branch calls `navigation.first()` / `last()`; the navigation stories press plain arrows only.
+```
+
+```mdl
+verdict F-4.1: Single and multi exist in useListSelection; range does not.
+  status: partial
+  evidence: [github:dxos/dxos/packages/ui/react-ui-list/src/hooks/useListSelection.ts#ListSelectionMode]
+  tests: [github:dxos/dxos/packages/ui/react-ui-list/src/hooks/useListSelection.test.ts]
+  note: |
+    `ListSelectionMode` is `single | multi`; no range mode. The feed does not use `useListSelection` at all: `ItemSelectionProvider` takes `selectedIds` and `onSelect` from the host.
+```
+
+```mdl
+verdict F-4.2: Items read their selection by id through useItemSelection.
+  status: untested
+  evidence: [github:dxos/dxos/packages/ui/react-ui-feed/src/hooks/useItemSelection.tsx#useItemSelection, github:dxos/dxos/packages/ui/react-ui-feed/src/hooks/useItemSelection.tsx#ItemSelectionProvider]
+  note: |
+    Wired in `FeedStory`, but no play function or unit test selects an item.
+```
+
+```mdl
+verdict F-4.3: One SelectionGroup spans every editor.
+  status: untested
+  evidence: [github:dxos/dxos/packages/ui/react-ui-feed/src/components/MessageList/MessageList.tsx#MessageList, github:dxos/dxos/packages/ui/react-ui-feed/src/components/Block/selection-group.ts]
+  note: |
+    MessageList provides one `createSelectionGroup()`; no test drags a selection across editors.
+```
+
+```mdl
+verdict F-5.1: Following is an intent withdrawn only by a backwards scroll.
+  status: untested
+  evidence: [github:dxos/dxos/packages/ui/react-ui-virtual/src/useFollow.ts#useFollow]
+  note: |
+    `follow.test.ts` covers the glide velocity only; no test scrolls back during a stream and returns to the tail.
+```
+
+```mdl
+verdict F-5.2: An answer at the tail keeps the tail at rest.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-virtual/src/useFollow.ts#useFollow]
+  tests: [github:dxos/dxos/packages/ui/react-ui-feed/src/stories/bridge.stories.tsx, github:dxos/dxos/packages/ui/react-ui-feed/src/stories/streaming.stories.tsx]
+```
+
+```mdl
+verdict F-5.3: An answer while the reader is elsewhere moves nothing.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-virtual/src/placement.ts#Placement]
+  tests: [github:dxos/dxos/packages/ui/react-ui-virtual/src/placement.test.ts, github:dxos/dxos/packages/ui/react-ui-virtual/src/Window.stories.tsx]
+```
+
+```mdl
+verdict F-6.1: Pointer wins while pointing, keyboard while navigating; observable via data-*.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-feed/src/components/Outline/Outline.tsx#Outline]
+  tests: [github:dxos/dxos/packages/ui/react-ui-feed/src/components/Outline/Outline.stories.tsx]
+```
+
+```mdl
+verdict F-6.2: Minimap draws from geometry only, viewport inside the mounted band.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-feed/src/components/Minimap/Minimap.tsx#Minimap]
+  tests: [github:dxos/dxos/packages/ui/react-ui-feed/src/components/Minimap/Minimap.stories.tsx]
+```
+
+```mdl
+verdict F-6.3: Both rails default to 32px; no test asserts they are equal.
+  status: untested
+  evidence: [github:dxos/dxos/packages/ui/react-ui-feed/src/components/Outline/Outline.tsx#Outline, github:dxos/dxos/packages/ui/react-ui-feed/src/components/Minimap/Minimap.tsx#Minimap]
+  note: |
+    Each file declares `DEFAULT_WIDTH = 32`; nothing compares them.
+```
+
+```mdl
+verdict F-6.4: Outline and Minimap live here; react-ui-components has no Outline left.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-feed/src/components/Outline/Outline.tsx#Outline, github:dxos/dxos/packages/ui/react-ui-feed/src/components/Minimap/Minimap.tsx#Minimap]
+  tests: [github:dxos/dxos/packages/ui/react-ui-feed/src/components/Outline/Outline.stories.tsx, github:dxos/dxos/packages/ui/react-ui-feed/src/components/Minimap/Minimap.stories.tsx]
+```
+
+```mdl
+verdict F-7.1: The virtualizer binds to a model whose prepends are told.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-virtual/src/list-model.ts#ListModel, github:dxos/dxos/packages/ui/react-ui-virtual/src/Window.tsx#WindowModel]
+  tests: [github:dxos/dxos/packages/ui/react-ui-virtual/src/list-model.test.ts]
+```
+
+```mdl
+verdict F-7.2: Stops, streamingId and iteration are model concerns; onEdge reaches model.more.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-feed/src/model/feed.ts#FeedModel, github:dxos/dxos/packages/ui/react-ui-feed/src/components/MessageList/MessageList.tsx#MessageList]
+  tests: [github:dxos/dxos/packages/ui/react-ui-feed/src/model/feed.test.ts]
+```
+
+```mdl
+verdict F-7.3: fromMessages adapts an array; ECHO bindings live outside.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-feed/src/model/feed.ts#fromMessages]
+  tests: [github:dxos/dxos/packages/ui/react-ui-feed/src/model/feed.test.ts]
+```
+
+```mdl
+verdict F-7.4: The atom face exists, but stops and readouts are not atoms over the model.
+  status: partial
+  evidence: [github:dxos/dxos/packages/ui/react-ui-virtual/src/list-model.ts#ListModel]
+  tests: [github:dxos/dxos/packages/ui/react-ui-virtual/src/list-model.test.ts]
+  note: |
+    `rowsAtom` is the only atom; `stops()` and the window readouts are computed per call or published through `onChange`, not derived atoms.
+```
+
+```mdl
+verdict F-8.1: The virtualizer lives in @dxos/react-ui-virtual and this package depends on it.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-virtual/src/placement.ts#Placement, github:dxos/dxos/packages/ui/react-ui-virtual/src/Window.tsx#useWindow, github:dxos/dxos/packages/ui/react-ui-virtual/src/follow.ts#ScrollFollower]
+  tests: [github:dxos/dxos/packages/ui/react-ui-virtual/src/placement.test.ts, github:dxos/dxos/packages/ui/react-ui-virtual/src/follow.test.ts]
+```
+
+```mdl
+verdict F-8.2: Mosaic VirtualStack still runs @tanstack/react-virtual.
+  status: missing
+  note: |
+    `react-ui-mosaic/src/components/Mosaic/Stack.tsx` imports `useVirtualizer` from tanstack and `useVirtualizerPagination` is unchanged. The spec frames this as future work.
+```
+
+```mdl
+verdict F-8.3: useListSelection has no range mode and the feed does not adopt it.
+  status: missing
+  note: |
+    No range mode in `react-ui-list` `useListSelection`; feed rows set no listbox role or aria-selected in MessageList; useDecorations is used only by the feed.
+```
+
+```mdl
+verdict T-1: The tail stories open at rest on the bottom edge, including past-end reserve.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-virtual/src/placement.ts#Placement]
+  tests: [github:dxos/dxos/packages/ui/react-ui-feed/src/stories/tail.stories.tsx, github:dxos/dxos/packages/ui/react-ui-feed/src/stories/bridge.stories.tsx]
+```
+
+```mdl
+verdict T-2: Upward scrolling against bad estimates holds still.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-virtual/src/Window.tsx#useWindow]
+  tests: [github:dxos/dxos/packages/ui/react-ui-feed/src/stories/bridge.stories.tsx]
+```
+
+```mdl
+verdict T-3: A prepend moves no mounted row.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-virtual/src/placement.ts#Placement]
+  tests: [github:dxos/dxos/packages/ui/react-ui-virtual/src/Window.stories.tsx, github:dxos/dxos/packages/ui/react-ui-virtual/src/placement.test.ts]
+```
+
+```mdl
+verdict T-4: Following during a stream is tested; withdrawing it by scrolling up is not.
+  status: partial
+  evidence: [github:dxos/dxos/packages/ui/react-ui-virtual/src/useFollow.ts#useFollow]
+  tests: [github:dxos/dxos/packages/ui/react-ui-feed/src/stories/streaming.stories.tsx, github:dxos/dxos/packages/ui/react-ui-feed/src/stories/bridge.stories.tsx]
+  note: |
+    The Streaming and Tail stories check the tail stays at rest; no story scrolls up mid-stream and returns.
+```
+
+```mdl
+verdict T-5: Arrow stepping is tested; toolbar, outline and minimap landing on the same stops is not.
+  status: partial
+  evidence: [github:dxos/dxos/packages/ui/react-ui-feed/src/hooks/useFeedNavigation.ts#useFeedNavigation]
+  tests: [github:dxos/dxos/packages/ui/react-ui-feed/src/stories/navigation.stories.tsx]
+  note: |
+    navigation.stories.tsx drives arrows and rapid arrows only, with message stops rather than per-prompt stops.
+```

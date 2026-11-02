@@ -9,12 +9,14 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { DeckPlugin } from '#plugin';
+import * as DeckPlugin from '#meta';
 import { DeckCapabilities } from '#types';
+
+await Harness.preload({ plugins: [DeckPlugin.make()] });
 
 describe('LayoutOperation.UpdateDialog', () => {
   test('a close keeps what the dialog is showing until its exit has run', async ({ expect }) => {
-    await using harness = await Harness.createComposerTestApp({ plugins: [DeckPlugin()] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [DeckPlugin.make()] });
     const read = () => harness.get(Capabilities.AtomRegistry).get(harness.get(DeckCapabilities.EphemeralState));
 
     await harness.runPromise(
@@ -31,7 +33,7 @@ describe('LayoutOperation.UpdateDialog', () => {
   });
 
   test('a dialog opened while the last one is leaving is not cleared by it', async ({ expect }) => {
-    await using harness = await Harness.createComposerTestApp({ plugins: [DeckPlugin()] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [DeckPlugin.make()] });
     const read = () => harness.get(Capabilities.AtomRegistry).get(harness.get(DeckCapabilities.EphemeralState));
 
     await harness.runPromise(Operation.invoke(LayoutOperation.UpdateDialog, { subject: 'dxn:test:leaving' }));

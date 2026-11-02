@@ -139,7 +139,7 @@ export const fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
     TrelloCredentials,
     Effect.gen(function* () {
       const connection = yield* Database.load(connectionRef);
-      const accessToken = yield* Database.load(connection.accessToken);
+      const accessToken = yield* Database.load(Connection.getAccessToken(connection));
       return yield* credentialsFromToken(accessToken.token);
     }),
   );

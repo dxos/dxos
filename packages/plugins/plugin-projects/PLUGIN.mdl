@@ -17,9 +17,10 @@ template, which builds with the dev shell of a vite server.
 
 ## Extensions
 
-| Term   | URI                     |
-|--------|-------------------------|
-| `test` | `org.dxos.mdl.test@1.0` |
+| Term       | URI                         |
+|------------|-----------------------------|
+| `test`     | `org.dxos.mdl.test@1.0`     |
+| `decision` | `org.dxos.mdl.decision@1.0` |
 
 ## QA
 
@@ -81,18 +82,23 @@ test QA-1: Build a plugin with an agent in the desktop app
     - name: Uninstall World Clock
       do: Open Plugins, then Labs, open the World Clock card's detail page and click Uninstall.
       expect: World Clock leaves the registry and its WORLD CLOCK group leaves the navtree
+```
 
+```mdl
 test QA-2: Build a plugin with an agent in the browser and install it from the private registry
   desc: |
     The browser variant of QA-1. The agent works the same parent task and four subtasks in a Sandbox on EDGE, and the
     last one publishes the build with `dx registry publish --private`, authenticated by the account token the sandbox
     was given when the agent created it. Nothing is loaded by URL: World Clock appears in Plugins → Registry, listed
-    only to this identity, and the reader installs it there. Walked by the autocue flow
+    only to this identity, and the reader installs it there. The template seeds the plugin's `PLUGIN.mdl`, the
+    bundle ships it, and the registry opens it as the plugin's specification, so the spec round-trips from the
+    project to the registry. Walked by the autocue flow
     `packages/plugins/plugin-projects/autocue/composer-plugin-registry.mjs`.
   actors: both
   status: verified
   given:
-    - an identity exists and is associated with an account on the EDGE it talks to
+    - an identity exists and is associated with an account on the EDGE it talks to; on dev or preview a `test+…@dxos.org` email
+      binds one with no invitation (the flow does this off camera)
     - space: a space is open (the default "My Space" is fine)
     - Composer is a production bundle (remote plugins install only from a bundle), built from a commit of `main` that
       pkg.pr.new has published or with `DX_PLUGIN_TOOLCHAIN_COMMIT` naming one, and with a `dx` that has
@@ -125,7 +131,18 @@ test QA-2: Build a plugin with an agent in the browser and install it from the p
     - name: Open the Clocks page and add two timezones
       do: Click Clocks under the WORLD CLOCK group, then add two timezones with the plus card.
       expect: the page shows the map above three ticking clock cards and the plus card
+    - name: Open World Clock's specification from the registry
+      do: Open Plugins → Registry, click the World Clock card, then click Open Specification.
+      expect: |
+        the spec opens beside the plugin with its definitions sidebar listing the `Zone` and `Clock` types, the
+        `ClocksArticle` component and feature F-1, and its text is the `PLUGIN.mdl` the template seeded
+        (`worldClockSpec`, with the key the project was given)
+      note: |
+        The spec reaches the registry only through the published bundle: `dx.config.ts` names it with `spec`, and the
+        plugin contributes its text as a `pluginAsset`. Open Specification is absent when either is missing.
+```
 
+```mdl
 test QA-3: Read a project's tasks as details
   desc: |
     A project's task list opens each task as the project plank's detail. With the deck flattened (the default)
@@ -161,7 +178,9 @@ test QA-3: Read a project's tasks as details
       expect: |
         the task opens in the main plank with "Roastery Ops" in its breadcrumb, and its attachment is not open
         beside it
+```
 
+```mdl
 test QA-4: Plan a project and hand its tasks to an agent
   desc: |
     The demo path — create a project from the Default template, brief its agent, break the work into tasks, fill
@@ -195,7 +214,9 @@ test QA-4: Plan a project and hand its tasks to an agent
       do: Tick "Order green beans" and "Hire a roastery assistant", then point at "Assign selected tasks to agent".
       expect: the two rows are selected and the button is enabled
       note: Clicking it starts a delegated chat that needs a model; QA-1 and QA-2 walk that path.
+```
 
+```mdl
 test QA-5: Showcase clip
   desc: |
     The 20s showcase clip: Open a task of the Chess MCP on Workers project, then tick it and send it to the agent. Recorded light at 60 fps with no ident, captions or
@@ -216,4 +237,152 @@ test QA-5: Showcase clip
     - name: Send it to the agent
       do: Tick the first task and click Send to agent.
       expect: the Gantt panel opens
+```
+
+```mdl
+test QA-6: Walk a spec's feature map
+  desc: |
+    A spec is the feature map the sidebar lists. A feature nests by owning a spec of its own, which the map zooms
+    into. Walked by the autocue flow `spec-map` against the SpecFeatures story, whose seed puts eight features on one
+    spec and gives "Provider sync" two subfeatures.
+  actors: human
+  status: passing            # 2026-10-27, recorded by autocue/spec-map.mjs
+  given:
+    - storybook serves plugin-projects
+    - the seeded spec "Inbox and agents" is owned by a project and holds eight features
+  steps:
+    - name: Open a spec's feature map
+      do: Open the spec.
+      expect: the canvas shows eight feature cards with an arrow per dependency
+    - name: Select a feature
+      do: Click the "Provider sync" card.
+      expect: the companion shows its description, requirements and its subfeatures IMAP and Gmail
+    - name: Zoom into the feature's own spec
+      do: Double-click the "Provider sync" card.
+      expect: the canvas shows its two subfeatures, and the trail reads All features › Provider sync
+    - name: Add a subfeature
+      do: Click New feature.
+      expect: a third card appears on the nested spec and the companion shows "New feature"
+    - name: Zoom back out
+      do: Click "All features" in the trail.
+      expect: the eight top-level cards return, and "Provider sync" counts three subfeatures
+    - name: View the map by status
+      do: Click the Kanban toggle.
+      expect: one column per status, the eight features sorted into them
+```
+
+## Changelog
+
+```mdl
+decision D-1: Features live on specs, not projects: a spec owns its features and its canvas layout, a feature nests by owning one spec, and a spec may name the project that tracks its tasks and hold one spec document.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [QA-6]
+```
+
+```mdl
+decision D-2: A showcase is a presenter slide deck, not a type of its own. Creating one makes a `Presentation` whose first slide is the write-up and whose further slides each show one artifact, such as an image or video file, a diagram or a pull request. The same `Demonstrates` relation links the deck to the features and tasks it shows.
+  date: 2026-10-28
+  by: user:dmaretskyi
+```
+
+```mdl
+decision D-3: `Demonstrates` 0.2.0 takes any object as its source, and plugin-presenter implements `CreateShowcase` and migrates each `Showcase` 0.1.0 into a `Presentation` in place, keeping its id and its `Demonstrates` edges. Fills in [D-2].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: plugin-presenter depends on this plugin through plugin-studio, so this plugin cannot import the `Presentation` type without a dependency cycle.
+  rejected:
+    - Moving `Presentation` into a package both plugins import, which moves the deck's whole type module for one relation.
+```
+
+```mdl
+decision D-4: The Composer Plugin template's World Clock carries a spec that round-trips: the project that builds the plugin starts from it, and after the plugin is published to the private registry and installed, the registry's Open Specification shows it. QA-2 walks the round trip.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [QA-2]
+```
+
+```mdl
+decision D-5: The template seeds the spec's text and the agent writes it unchanged, rather than writing its own. Fills in [D-4].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-2]
+  why: A fixed text makes the round trip checkable, since the registry must show exactly what the project started from.
+  rejected:
+    - The agent writes the spec from the task text, which differs on every run, so nothing can be compared.
+```
+
+```mdl
+decision D-6: World Clock is published under the key `org.example.plugin.worldClock`, which the spec's `id` names. Fills in [D-4].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-2]
+  why: The registry attaches a spec to the plugin whose key matches the asset's `pluginId`, and the spec names that key.
+```
+
+```mdl
+decision D-7: Each project from the template gets its own plugin key, `org.example.plugin.worldClock` and six random hex digits, which the task text and the spec's `id` both carry. Fills in [D-4].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-2]
+  supersedes: D-6
+  why: Registry keys are global, so the fixed key was claimed by its first publisher and refused to every later one as "owned by another identity".
+  rejected:
+    - Let the agent pick a key: the spec's `id` would then differ from the text the template seeded.
+```
+
+```mdl
+decision D-8: The minted key's suffix is eight random hex digits rather than six. Fills in [D-4].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-2]
+  supersedes: D-7
+  why: Six digits give 16.8 million keys, so a thousand projects collide with about a 3% chance, and a collision refuses the later publisher.
+```
+
+```mdl
+decision D-9: A project owns its spec: `Project.spec` is a ref that makes the project the spec's ECHO parent, and the spec no longer names the project. A project has at most one spec, and a breakdown spec belongs to its feature, so no project can own it. Replaces the part of [D-1] where a spec names its project.
+  date: 2026-10-29
+  by: user:wittjosiah
+  affects: [QA-6]
+  supersedes: D-1
+  why: Deleting a project takes its spec with it, and a project reads its spec directly instead of querying for the spec that names it.
+```
+
+```mdl
+decision D-10: A project article shows one level of the project's spec: the project's own, or the breakdown of a feature beneath it. Every level is a nav-tree node under the project's Spec branch, addressed by the lineage of features above it, and opens the same article with Overview, Spec and Tasks narrowed to that level. A level's Spec tab shows only its own spec, never a slice of its parent's, and offers Add spec while there is none. The map's controls sit in the article's toolbar, and its views are Canvas, Kanban and Document, the last offering to write the spec's document while it has none.
+  date: 2026-10-29
+  by: user:wittjosiah
+  why: Three stacked toolbars (the project's, the map's and its trail) left little room for the map. A level as a node puts the trail in the plank heading, keeps the selected tab as the reader goes down, and makes a feature deep in the map feel like part of the project.
+```
+
+```mdl
+decision D-11: The Spec branch only groups the feature levels and is not selectable; the project's own spec is the project node's Spec tab. The map's views (Document, Canvas, Kanban, in that order) sit centred in the article's toolbar, and Add new feature and Add existing feature sit in its overflow, grouped above Create artifact. The Document view renders the spec's document as a section, which this plugin contributes as a plain MDL editor, so the view never depends on another plugin; it is also the article for a document no richer plugin renders. Refines [D-10].
+  date: 2026-10-29
+  by: user:wittjosiah
+  why: The spec is a part of the project, not a page of its own, and the document is the spec, with the map and board drawn from it. Adding features is occasional next to reading them.
+```
+
+```mdl
+decision D-12: Every spec holds its document: `Spec` 0.2.0 makes `document` required, a new spec is made with one headed by its name, and the 0.1.0 migration gives each spec without one a new document. The Spec tab opens on the Document view. Importing a `.mdl` file into a spec writes the spec's own document and moves the file's path to it, unless the spec lies beneath the one already holding that path. Refines [D-1] and [D-11].
+  date: 2026-10-29
+  by: user:wittjosiah
+  why: The document is the spec; a spec without one has nothing to read, and the map and board are drawn from it.
+```
+
+```mdl
+decision D-13: A feature level's nav-tree node holds the feature itself, so it gets every companion an object gets, such as the assistant, properties and debug. The project is found from the feature, through the specs above it. The article for a feature that a project tracks is that project's article narrowed to the feature; a feature no project tracks keeps its own article. The Spec branch holds no object, so it stays a group that opens nothing, and the deck leaves it out of a level's breadcrumbs. Refines [D-10] and [D-11].
+  date: 2026-10-30
+  by: user:wittjosiah
+  why: A feature is an object, so its level should behave like one; a level that wrapped the feature lost the assistant, properties and debug companions.
+
+decision D-14: A feature's assistant chat runs in its project's context. The chat binds the spec that lists the feature and the project that tracks it, along with the project's skills, context objects and instructions. A feature no project tracks binds only its spec.
+  date: 2026-10-30
+  by: user:wittjosiah
+  why: A question about a feature is usually a question about its spec and project, so the assistant should not have to be told where the feature lives.
 ```

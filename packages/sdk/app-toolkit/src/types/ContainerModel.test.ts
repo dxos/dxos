@@ -255,3 +255,41 @@ describe('ownership', () => {
     expect(results).toEqual([]);
   });
 });
+
+describe('isRemovable', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  test('any member is removable when the container does not delete owned members', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [Collection.Collection, Item] });
+    const item = db.add(Obj.make(Item, { name: 'alice' }));
+    const collection = db.add(Collection.make({ objects: [Ref.make(item)] }));
+    await db.flush();
+
+    expect(Obj.getParent(item)?.id).toBe(collection.id);
+    expect(ContainerModel.isRemovable(ContainerModel.collection(collection), item)).toBe(true);
+  });
+
+  test('owned members of a deleteOwned container are not removable; linked ones are', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [Collection.Collection, Item] });
+    const owned = db.add(Obj.make(Item, { name: 'alice' }));
+    const linked = db.add(Obj.make(Item, { name: 'bob' }));
+    const collection = db.add(Collection.make({ objects: [Ref.make(owned)] }));
+    db.add(Collection.make({ objects: [Ref.make(linked)] }));
+    Obj.update(collection, (collection) => {
+      collection.objects.push(Ref.make(linked));
+    });
+    await db.flush();
+
+    const container = ContainerModel.make(collection, 'objects', { deleteOwned: true });
+    expect(ContainerModel.isRemovable(container, owned)).toBe(false);
+    expect(ContainerModel.isRemovable(container, linked)).toBe(true);
+  });
+});

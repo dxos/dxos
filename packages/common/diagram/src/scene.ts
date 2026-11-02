@@ -99,6 +99,10 @@ export const Polyline = Schema.Struct({
   id,
   points: Schema.Array(Point).annotate({ description: 'Two or more points (object-local units).' }),
   closed: Schema.optional(Schema.Boolean).annotate({ description: 'Close the path back to the first point.' }),
+  guide: Schema.optional(Schema.Boolean).annotate({
+    description:
+      'A guide (lifeline, divider, outline) rather than a connector; layout checks do not count it as a route.',
+  }),
   ...styleFields,
 });
 export type Polyline = Schema.Schema.Type<typeof Polyline>;

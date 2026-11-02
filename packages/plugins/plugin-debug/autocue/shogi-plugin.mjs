@@ -11,7 +11,7 @@ const { BEAT, makeSteps } = await import(`./plugin-template.mjs${new URL(import.
  * sandbox on EDGE until `dx registry publish --private` uploads it; the take ends with the reader installing Shogi from
  * Plugins → Registry, opening its Board page and playing 7g-7f.
  *
- * @mdl packages/plugins/plugin-debug/PLUGIN.mdl test QA-10
+ * @mdl packages/plugins/plugin-debug/PLUGIN.mdl test QA-11
  * @app composer-app production bundle served by `vite preview` on :4173, talking to EDGE dev
  *
  *   export DX_EDGE_BASE_URL=https://dev.dxos.network/ DX_ENVIRONMENT=dev DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true

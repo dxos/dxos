@@ -34,6 +34,10 @@ export const EditorView = forwardRef<EditorController, EditorViewProps>(
     const onChangeRef = useRef(onChange);
     onChangeRef.current = onChange;
 
+    // Counts the edits reported through onChange; a `value` rendered before the latest of them is stale.
+    const emitted = useRef(0);
+    const renderedAt = emitted.current;
+
     const { parentRef, focusAttributes, view } = useTextEditor(
       () => ({
         id,
@@ -44,7 +48,11 @@ export const EditorView = forwardRef<EditorController, EditorViewProps>(
           NaturalEditorView.updateListener.of(({ view, docChanged, transactions }) => {
             const isInitialSync = transactions.some((tr) => tr.annotation(Transaction.userEvent) === initialSync.value);
             if (!isInitialSync && docChanged) {
-              onChangeRef.current?.(view.state.doc.toString());
+              const doc = view.state.doc.toString();
+              if (onChangeRef.current) {
+                emitted.current++;
+                onChangeRef.current(doc);
+              }
             }
           }),
         ],
@@ -58,11 +66,6 @@ export const EditorView = forwardRef<EditorController, EditorViewProps>(
       return createEditorController(view);
     }, [id, view]);
 
-    // Sync the editor doc to the controlled `value` prop, but only when they
-    // disagree. After internal typing the prop will already match the editor's
-    // doc, and dispatching anyway would race fast keystrokes — a stale rAF
-    // closure can replace doc content with an older value, dropping characters.
-    //
     // `undefined` means uncontrolled: the doc was seeded once from `value` at creation and the caller
     // isn't driving it, so leave it be (coalescing undefined→'' here would wipe that seed on mount). A
     // controlled caller clears the doc by passing '' explicitly.
@@ -71,12 +74,13 @@ export const EditorView = forwardRef<EditorController, EditorViewProps>(
         return;
       }
       const next = value;
-      if (view.state.doc.toString() === next) {
+      const stale = () => emitted.current !== renderedAt;
+      if (stale() || view.state.doc.toString() === next) {
         return;
       }
       requestAnimationFrame(() => {
         const current = view.state.doc.toString();
-        if (current === next) {
+        if (stale() || current === next) {
           return;
         }
         // Only what moved: replacing the whole document would drop the reader's folds, selection

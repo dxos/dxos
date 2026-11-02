@@ -40,7 +40,7 @@ import {
   MessageSchema as RouterMessageSchema,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { trace } from '@dxos/tracing';
-import { bufferToArray, compositeKey } from '@dxos/util';
+import { bufferToArray, compositeKey, markMilestone } from '@dxos/util';
 
 import {
   type AutomergeReplicatorConnection,
@@ -127,6 +127,8 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
   private _context: AutomergeReplicatorContext | null = null;
   private _connectedSpaces = new Set<SpaceId>();
   private _connections = new Map<SpaceId, EdgeSubductionReplicatorConnection>();
+  /** Whether the first space connection has been marked on the timeline. */
+  #replicationMarked = false;
   /** Replaced connections whose async close is still settling; force-closed on disconnect. */
   private readonly _closingConnections = new Set<EdgeSubductionReplicatorConnection>();
 
@@ -282,6 +284,10 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
       frameBatching: this._frameBatching,
       onRemoteConnected: async () => {
         log.trace('dxos.echo.edge.subduction-replicator.onRemoteConnected', { spaceId });
+        if (!this.#replicationMarked) {
+          this.#replicationMarked = true;
+          markMilestone('replication.connected', spaceId);
+        }
         this._context?.onConnectionOpen(connection);
       },
       onRemoteDisconnected: async () => {
@@ -528,11 +534,12 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
           return;
         }
         // The edge lost the session, not the link: re-running the handshake here keeps the peer id
-        // and every piece of sync state keyed by it.
+        // and every piece of sync state keyed by it. Verbose because the edge recycles an active
+        // space's instance every 15-25 s (DX-1275); the restart fallback below stays at info.
         if (this.#inPlaceRehandshakes < MAX_IN_PLACE_REHANDSHAKES && this._context.onConnectionTransportReset(this)) {
           this.#discardPendingFrames();
           this.#inPlaceRehandshakes++;
-          log.info('received subduction error; re-handshaking in place', {
+          log.verbose('received subduction error; re-handshaking in place', {
             message: payload.message,
             attempt: this.#inPlaceRehandshakes,
           });

@@ -19,6 +19,8 @@ import {
   type Capabilities,
   type CreateProps,
   type Intent,
+  type Layer,
+  type LayerId,
   type LineStyle,
   type Link,
   type LinkEnds,
@@ -96,7 +98,17 @@ export type DynamicOptions = {
    */
   createNode?: (node: GraphNode, props: CreateProps) => Node;
   /** How edges draw; by default a `curve` with no markers. Not `spline`, whose control points the layout does not make. */
-  link?: { type?: Exclude<LinkType, 'spline'>; ends?: LinkEnds };
+  link?: {
+    type?: Exclude<LinkType, 'spline'>;
+    ends?: LinkEnds;
+    /** The layer the links go on; the bottom one when unset. */
+    layer?: LayerId;
+  };
+  /**
+   * The scene's layers, bottom first by `z`, e.g. a backdrop under the graph; `createNode` puts each node on one and
+   * `link.layer` the links. A layer's links paint under its nodes, so a backdrop needs a layer of its own below them.
+   */
+  layers?: readonly Layer[];
 };
 
 /** Multiples of the major grid, so a laid-out graph is already snapped. */
@@ -108,15 +120,16 @@ const DEFAULTS: Required<Pick<DynamicOptions, 'pitch' | 'size'>> = {
 export const DYNAMIC_VIEW_ID = 'dynamic';
 
 /** Rank rows top-down along the edges; columns are the order within a row. Overrides win. */
-export const layoutGraph = (graph: GraphModel, overlay: Overlay, options: DynamicOptions): View => {
+export const layoutGraph = (
+  graph: GraphModel,
+  overlay: Overlay,
+  options: DynamicOptions,
+  /** Slots already arranged for `options`, reused for a graph seen before. */
+  slotsCache?: SlotsCache,
+): View => {
   const { pitch, size } = options.lattice ? latticeSlots(options.lattice) : { ...DEFAULTS, ...options };
-  const ids = graph.nodes.map(({ id }) => id);
-  const known = new Set(ids);
-  const edges = graph.edges.filter(({ from, to }) => known.has(from) && known.has(to));
-  const ranks = Layout.rank(ids, edges);
-  const seed = arrange(new Map(ids.map((id) => [id, ranks.get(id) ?? 0])), edges, options.arrange, options.force);
-  const slots =
-    options.arrange === 'routed' && options.lattice ? routedSlots(graph, edges, seed, options, options.lattice) : seed;
+  const known = new Set(graph.nodes.map(({ id }) => id));
+  const slots = slotsOf(graph, options, slotsCache);
 
   // Taken from the slots rather than from the placed nodes, so dragging a node (which only writes an
   // override) leaves the rest of the graph where it is.
@@ -152,10 +165,39 @@ export const layoutGraph = (graph: GraphModel, overlay: Overlay, options: Dynami
         ...((edge.ends ?? options.link?.ends) && { ends: edge.ends ?? options.link?.ends }),
         ...(edge.text !== undefined && { text: edge.text }),
         ...(edge.style && { style: edge.style }),
+        ...(options.link?.layer && { layer: options.link.layer }),
       };
     }
   });
-  return { id: DYNAMIC_VIEW_ID, name: 'Dynamic', nodes, links };
+  return {
+    id: DYNAMIC_VIEW_ID,
+    name: 'Dynamic',
+    nodes,
+    links,
+    ...(options.layers && { layers: Object.fromEntries(options.layers.map((layer) => [layer.id, layer])) }),
+  };
+};
+
+/**
+ * Each graph's slots, for one set of options: a drag re-runs the layout with a new overlay but the same graph, and
+ * arranging (a force simulation, a routed search) is the costly part. A projection owns one.
+ */
+export type SlotsCache = WeakMap<GraphModel, Map<string, Slot>>;
+
+const slotsOf = (graph: GraphModel, options: DynamicOptions, cache?: SlotsCache): Map<string, Slot> => {
+  const cached = cache?.get(graph);
+  if (cached) {
+    return cached;
+  }
+  const ids = graph.nodes.map(({ id }) => id);
+  const known = new Set(ids);
+  const edges = graph.edges.filter(({ from, to }) => known.has(from) && known.has(to));
+  const ranks = Layout.rank(ids, edges);
+  const seed = arrange(new Map(ids.map((id) => [id, ranks.get(id) ?? 0])), edges, options.arrange, options.force);
+  const slots =
+    options.arrange === 'routed' && options.lattice ? routedSlots(graph, edges, seed, options, options.lattice) : seed;
+  cache?.set(graph, slots);
+  return slots;
 };
 
 /** Weights of a routed arrangement's score: a crossing outweighs any number of bends, a bend any detour. */
@@ -278,8 +320,9 @@ export const createDynamicProjection = ({
   onDelete,
   constrained = () => true,
 }: DynamicProjectionOptions): Projection => {
+  const slotsCache: SlotsCache = new WeakMap();
   const scene = Atom.keepAlive(
-    Atom.make((get) => layoutGraph(get(graph), pruneOverlay(get(graph), get(overlay)), options)),
+    Atom.make((get) => layoutGraph(get(graph), pruneOverlay(get(graph), get(overlay)), options, slotsCache)),
   );
   // A free force layout leaves nodes between cells, so it keeps the lattice's sizes but not its snapping or routing.
   const lattice = options.arrange === 'force-free' ? undefined : options.lattice;

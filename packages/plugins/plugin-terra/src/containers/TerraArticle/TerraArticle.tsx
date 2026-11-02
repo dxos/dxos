@@ -18,10 +18,10 @@ import * as Tabs from '@dxos/react-ui/Tabs';
 import { useThemeContext } from '@dxos/react-ui/Theme';
 
 import { TelemetryPanel, type TelemetryRow, TerraForm, TerraMap } from '#components';
-import { meta } from '#meta';
 import { Terra, TerraCapabilities, TerraObject } from '#types';
 
 import { PlanetCache, SceneFpsWidget, SceneManager, type TerraConfigValues, seaRadius } from '../../engine/index.ts';
+import { TerraNamespace } from '../../namespace.ts';
 import { ChaseCamera, ExplosionLayer, GizmoLayer, ObjectLayer, TrailLayer } from '../../scene/index.ts';
 import { SimEngine, type SimObject, buildNavGrid, toGeo } from '../../sim/index.ts';
 
@@ -57,6 +57,23 @@ const buildSimEngine = (values: TerraConfigValues, definitions: readonly TerraOb
  */
 const TELEMETRY_SAMPLE_INTERVAL_MS = 150;
 
+/** Whether a new sample is due: `interval` after the last one committed, and never while one is still rendering. */
+const useSamplePacer = (interval: number, committed: unknown): (() => boolean) => {
+  const pacer = useRef({ committedAt: 0, rendering: false });
+  useEffect(() => {
+    pacer.current = { committedAt: performance.now(), rendering: false };
+  }, [committed]);
+  return useCallback(() => {
+    const { committedAt, rendering } = pacer.current;
+    if (rendering || performance.now() - committedAt < interval) {
+      return false;
+    }
+
+    pacer.current.rendering = true;
+    return true;
+  }, [interval]);
+};
+
 const RAD_TO_DEG = 180 / Math.PI;
 
 /** `objects`' current state as telemetry rows: lat/lng from `state.unit`, height as a percentage above the sea surface (not the raw, otherwise-meaningless radius), and speed converted from `TerraObject.speed`'s radians/sim-second to the more legible degrees/sec. */
@@ -79,7 +96,7 @@ const buildTelemetry = (objects: readonly SimObject[], config: TerraConfigValues
 export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticleProps) => {
   // The selected view tab reads as primary while this article has attention.
   const { hasAttention } = useAttention(attendableId);
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(TerraNamespace.key);
   const { themeMode } = useThemeContext();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const managerRef = useRef<SceneManager | null>(null);
@@ -102,9 +119,6 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
   // Mutated directly by `handleTogglePlaying` and read fresh each frame by the mount-once render-loop
   // observer below — mirrors `simEngineRef`'s ref-for-freshness pattern so the closure never goes stale.
   const clockRef = useRef<SimClock>({ pausedTotalMs: 0, pausedAtMs: null });
-  // Wall-clock instant the telemetry panel was last sampled at, so the render-loop observer (which
-  // runs every frame) only calls `setTelemetry` at `TELEMETRY_SAMPLE_INTERVAL_MS`, not 60 times a second.
-  const telemetrySampleRef = useRef(0);
   const [config, updateConfig] = useObject(terra, 'config');
   const [objectRefs] = useObject(terra, 'objects');
   // The plugin owns the cache so it survives this article's remounts (resize, companion, navigation);
@@ -115,6 +129,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
   const [gizmosVisible, setGizmosVisible] = useState(false);
   const [view, setView] = useState<ViewMode>('scene');
   const [telemetry, setTelemetry] = useState<TelemetryRow[]>([]);
+  const telemetryDue = useSamplePacer(TELEMETRY_SAMPLE_INTERVAL_MS, telemetry);
   // Sampled only while the map is showing; the 3D view reads the engine directly each frame.
   const [objects, setObjects] = useState<readonly SimObject[]>([]);
   // The object the chase camera rides and the map highlights — one selection, shared by both views.
@@ -185,9 +200,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
       }
 
       // Throttled: see `TELEMETRY_SAMPLE_INTERVAL_MS`'s doc for why this isn't every frame.
-      const wallClockNow = performance.now();
-      if (wallClockNow - telemetrySampleRef.current >= TELEMETRY_SAMPLE_INTERVAL_MS) {
-        telemetrySampleRef.current = wallClockNow;
+      if (telemetryDue()) {
         setTelemetry(buildTelemetry(engine.objects, engineConfig));
         // The map renders from React state, so it samples on the same throttle rather than every
         // frame; skipped entirely while it is hidden, when nothing would consume it.
@@ -331,7 +344,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
         .action(
           'toggle-playing',
           {
-            label: isPlaying ? ['pause.label', { ns: meta.profile.key }] : ['play.label', { ns: meta.profile.key }],
+            label: isPlaying ? ['pause.label', { ns: TerraNamespace.key }] : ['play.label', { ns: TerraNamespace.key }],
             icon: isPlaying ? 'ph--pause--regular' : 'ph--play--regular',
             disposition: 'toolbar',
             testId: 'terra.toolbar.toggle-playing',
@@ -341,7 +354,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
         .action(
           'add-random-object',
           {
-            label: ['add-random-object.label', { ns: meta.profile.key }],
+            label: ['add-random-object.label', { ns: TerraNamespace.key }],
             icon: 'ph--dice-five--regular',
             disposition: 'toolbar',
             testId: 'terra.toolbar.add-random-object',
@@ -354,22 +367,15 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
           'toggle-gizmos',
           {
             label: gizmosVisible
-              ? ['hide-gizmos.label', { ns: meta.profile.key }]
-              : ['show-gizmos.label', { ns: meta.profile.key }],
+              ? ['hide-gizmos.label', { ns: TerraNamespace.key }]
+              : ['show-gizmos.label', { ns: TerraNamespace.key }],
             icon: gizmosVisible ? 'ph--cube--regular' : 'ph--cube-transparent--regular',
             disposition: 'toolbar',
             testId: 'terra.toolbar.toggle-gizmos',
           },
           () => handleToggleGizmos(),
         )
-        .build(),
-    [isPlaying, handleTogglePlaying, handleAddRandomObject, gizmosVisible, handleToggleGizmos],
-  );
-
-  return (
-    <Panel.Root role={role}>
-      <Panel.Header classNames='dx-expand'>
-        <ActionToolbar {...menuActions} attendableId={attendableId}>
+        .custom('view', { label: ['view.label', { ns: TerraNamespace.key }] }, () => (
           <Tabs.Root
             orientation='horizontal'
             value={view}
@@ -388,7 +394,25 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
               </Tabs.Trigger>
             </Tabs.List>
           </Tabs.Root>
-        </ActionToolbar>
+        ))
+        .build(),
+    [
+      isPlaying,
+      handleTogglePlaying,
+      handleAddRandomObject,
+      gizmosVisible,
+      handleToggleGizmos,
+      view,
+      hasAttention,
+      handleViewChange,
+      t,
+    ],
+  );
+
+  return (
+    <Panel.Root role={role}>
+      <Panel.Header classNames='dx-expand'>
+        <ActionToolbar {...menuActions} attendableId={attendableId} />
       </Panel.Header>
       <Panel.Body asChild>
         <div className='relative'>
@@ -396,7 +420,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
                 the simulation the map draws, and `display: none` would collapse the canvas to 0x0. */}
           <canvas
             ref={canvasRef}
-            className={`dx-expand absolute inset-0 outline-none ${view === 'map' ? 'invisible' : ''}`}
+            className={`dx-expand absolute inset-0 outline-none bg-base-surface ${view === 'map' ? 'invisible' : ''}`}
             style={{ touchAction: 'none' }}
           />
           {view === 'map' && (

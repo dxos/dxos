@@ -22,14 +22,16 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Harness from '@dxos/plugin-testing/Harness';
 import { ComplexMap } from '@dxos/util';
 
-import { SpacePlugin } from '#plugin';
+import * as SpacePlugin from '#meta';
 import { SpaceCapabilities, SpaceOperation } from '#types';
+
+await Harness.preload({ plugins: [ClientPlugin.make({}), SpacePlugin.make({})] });
 
 describe('SpaceOperation.OpenSettings', () => {
   test('closes the companion once the settings are open', async ({ expect }) => {
     const calls: { op: string; input: unknown }[] = [];
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), SpacePlugin({}), makeRecordingLayoutPlugin(calls)],
+      plugins: [ClientPlugin.make({}), SpacePlugin.make({}), makeRecordingLayoutPlugin(calls)],
     });
 
     const client = harness.get(ClientCapabilities.Client);

@@ -14,7 +14,7 @@ import * as SpanAttributes from '@dxos/effect/SpanAttributes';
  * cannot know that the span will fail, and it sees the span name before the provider has annotated
  * it. Both decisions are only available once the span has ended — which is what "tail" means. The
  * canonical implementation of this is the OpenTelemetry Collector's tail-sampling processor, which
- * buffers whole traces server-side; there is no collector between Composer and SigNoz, so the same
+ * buffers whole traces server-side; there is no collector between Composer and PostHog, so the same
  * decisions are made here instead, on the spans this realm produced.
  *
  * The rules are the canonical tail-sampling set — keep what errored, keep what was slow, sample the

@@ -19,8 +19,18 @@ import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import * as TestingHarness from '@dxos/plugin-testing/Harness';
 
-import { ProjectsPlugin } from '#plugin';
+import * as ProjectsPlugin from '#meta';
 import { ProjectCapabilities, ProjectOperation } from '#types';
+
+await TestingHarness.preload({
+  plugins: [
+    ClientPlugin.make({}),
+    SpacePlugin.make({}),
+    AssistantPlugin.make(),
+    TasksPlugin.make(),
+    ProjectsPlugin.make(),
+  ],
+});
 
 describe('ProjectOperation.Create', () => {
   test('scaffolds the owned graph and files it with one cascading add', async ({ expect }) => {
@@ -107,9 +117,10 @@ const setup = async (): Promise<Harness> => {
     plugins: [
       ClientPlugin.make({}),
       SpacePlugin.make({}),
+      // Holds the view state a template's initial Features view is written to.
       AssistantPlugin.make(),
       TasksPlugin.make(),
-      ProjectsPlugin(),
+      ProjectsPlugin.make(),
     ],
   });
   const client = harness.get(ClientCapabilities.Client);

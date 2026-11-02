@@ -2,7 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Sheet, SheetRange } from '#types';
+import { defaultColSize } from '@dxos/lit-grid';
+
+import { Sheet, SheetRange, SheetUtil } from '#types';
+
+import { technologyTimeline } from './timeline.ts';
 
 export const createTestCells = (testSheetName = 'test'): Record<string, Sheet.CellValue> => ({
   B1: { value: 'Qty2' },
@@ -69,4 +73,21 @@ export const createChartTestCells = (): Record<string, Sheet.CellValue> => {
 export const createChartTestRanges = (): Sheet.Range[] => [
   ...['A1:C1', 'E1:F1', 'H1:I1'].map((range) => ({ range, key: SheetRange.styleKey, value: 'header' })),
   ...['B1:C1', 'F1', 'H1:I1'].map((range) => ({ range, key: SheetRange.alignKey, value: 'end' })),
+];
+
+/** Technology, macro, robotics and industrial-complex events (A1:E{n}), one per row, for timelines. */
+export const createTimelineTestCells = (): Record<string, Sheet.CellValue> =>
+  SheetUtil.cellsFromRows(technologyTimeline);
+
+/** The A1 range of the timeline test cells. */
+export const timelineTestRange = `A1:E${technologyTimeline.length}`;
+
+/** Rows enough for the timeline test cells, with room to add events. */
+export const timelineTestRows = technologyTimeline.length + 20;
+
+/** The description column is three columns wide. */
+export const timelineTestColumnSizes: Record<string, number> = { D: defaultColSize * 3 };
+
+export const createTimelineTestRanges = (): Sheet.Range[] => [
+  { range: 'A1:E1', key: SheetRange.styleKey, value: 'header' },
 ];

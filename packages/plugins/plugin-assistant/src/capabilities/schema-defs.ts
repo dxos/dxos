@@ -7,7 +7,6 @@ import * as Memory from '@dxos/assistant-toolkit/Memory';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
-import * as McpServer from '@dxos/compute/McpServer';
 import * as Skill from '@dxos/compute/Skill';
 import { Sequence } from '@dxos/conductor';
 import { Feed, type Type } from '@dxos/echo';
@@ -28,7 +27,6 @@ const types: ReadonlyArray<Type.AnyEntity> = [
   Message.Message,
   Instructions.Instructions,
   Agent.Agent,
-  McpServer.McpServer,
   Sequence.Sequence,
   Memory.Memory,
   Text.Text,

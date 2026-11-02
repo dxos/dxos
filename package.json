@@ -12,7 +12,7 @@
   "author": "info@dxos.org",
   "sideEffects": false,
   "scripts": {
-    "1p-credentials": "printf 'export DX_ANTHROPIC_API_KEY=\"op://CI/Claude - agents/credential\"\\nexport CLOUDFLARE_API_TOKEN=\"op://CI/dev.dxos.network/CLOUDFLARE_API_TOKEN\"\\nexport LINEAR_API_KEY=\"op://CI/dev.dxos.network/LINEAR_API_KEY\"\\nexport VITE_LINEAR_API_KEY=\"op://CI/dev.dxos.network/LINEAR_API_KEY\"\\n' | op inject",
+    "1p-credentials": "printf 'export DX_ANTHROPIC_API_KEY=\"op://eng-dev/com.anthropic.api/local/AGENTS_API_KEY\"\\nexport CLOUDFLARE_API_TOKEN=\"op://eng-dev/com.cloudflare/local/CLOUDFLARE_API_TOKEN\"\\nexport LINEAR_API_KEY=\"op://eng-dev/app.linear/local/DEVELOPER_API_KEY\"\\nexport VITE_LINEAR_API_KEY=\"op://eng-dev/app.linear/local/DEVELOPER_API_KEY\"\\n' | op inject",
     "audit-classes": "pnpm --filter @dxos/ui-theme audit-classes",
     "beast": "beast docs",
     "build": "moon run :build",
@@ -27,6 +27,7 @@
     "check-public-dependencies": "node scripts/check-public-dependencies.mjs",
     "check-publish-config": "node scripts/check-publish-config.mjs",
     "create-worktree": "./scripts/create-worktree",
+    "deus": "node --conditions=source packages/reflect/deus/bin/deus.ts",
     "fixtures": "node tools/fixtures/bin/fixtures.mjs",
     "format": "oxfmt",
     "format-check": "oxfmt --check",

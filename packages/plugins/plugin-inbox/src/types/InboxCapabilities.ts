@@ -8,12 +8,12 @@ import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import { meta } from '#meta';
+import { InboxNamespace } from '../namespace.ts';
 
 // Inline import to avoid `Settings` namespace alias colliding with the
 // `Settings` capability export below.
 export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings.ts').Settings>>()(
-  `${meta.profile.key}.capability.settings`,
+  `${InboxNamespace.key}.capability.settings`,
 );
 
 /**
@@ -21,7 +21,7 @@ export const Settings = Capability.makeSingleton<Atom.Writable<import('./Setting
  * Multiple plugins may register; the ExtractMessage operation selects one based on match() confidence.
  */
 export const ObjectExtractor = Capability.make<import('@dxos/extractor').ObjectExtractor>()(
-  `${meta.profile.key}.capability.objectExtractor`,
+  `${InboxNamespace.key}.capability.objectExtractor`,
 );
 
 /**
@@ -51,7 +51,7 @@ export type MailboxAction = {
 // Multi: `useCapabilities`/`getAll` readers render one menu item per contributed action, and more
 // than one plugin may contribute (currently plugin-brain).
 /** Plugins contribute mailbox toolbar-menu actions via this capability (see {@link MailboxAction}). */
-export const MailboxAction = Capability.make<MailboxAction>()(`${meta.profile.key}.capability.mailboxAction`);
+export const MailboxAction = Capability.make<MailboxAction>()(`${InboxNamespace.key}.capability.mailboxAction`);
 
 /**
  * A sender-scoped action injected into the per-message conversation menu. Mirrors {@link MailboxAction}
@@ -83,7 +83,7 @@ export type SenderAction = {
 
 // Multi: one menu item per contributed action; more than one plugin may contribute.
 /** Plugins contribute sender-scoped conversation-menu actions via this capability. */
-export const SenderAction = Capability.make<SenderAction>()(`${meta.profile.key}.capability.senderAction`);
+export const SenderAction = Capability.make<SenderAction>()(`${InboxNamespace.key}.capability.senderAction`);
 
 /** Run-scoped settings the cascade passes to every processor; each uses only what it needs. */
 export type MailboxProcessorOptions = {
@@ -152,7 +152,9 @@ export type MailboxProcessor = {
 // Multi: the whole point is that several plugins contribute; plugin-inbox contributes its own passes
 // through the same seam rather than privileging them.
 /** Plugins contribute mailbox feed processors via this capability (see {@link MailboxProcessor}). */
-export const MailboxProcessor = Capability.make<MailboxProcessor>()(`${meta.profile.key}.capability.mailboxProcessor`);
+export const MailboxProcessor = Capability.make<MailboxProcessor>()(
+  `${InboxNamespace.key}.capability.mailboxProcessor`,
+);
 
 /**
  * The operation that drafts an AI reply, contributed by whichever plugin can ground one.
@@ -178,7 +180,7 @@ export type ReplyGenerator = {
 };
 
 /** Plugins contribute AI reply generation via this capability (see {@link ReplyGenerator}). */
-export const ReplyGenerator = Capability.make<ReplyGenerator>()(`${meta.profile.key}.capability.replyGenerator`);
+export const ReplyGenerator = Capability.make<ReplyGenerator>()(`${InboxNamespace.key}.capability.replyGenerator`);
 
 /**
  * The send operation a mail provider handles outbound drafts with. Each provider plugin contributes one
@@ -188,6 +190,17 @@ export const ReplyGenerator = Capability.make<ReplyGenerator>()(`${meta.profile.
 export type MailSendOperation = {
   /** The contributing provider's `Connector.id` (matched against `Connection.connectorId`). */
   connectorId: string;
+  /**
+   * The connection to send a mailbox's mail through when the mailbox has no sync binding — for a
+   * provider whose mailboxes are not synced (a sample space's local mail). Undefined declines it.
+   */
+  resolveConnection?: (
+    mailbox: import('./Mailbox.ts').Mailbox,
+  ) => import('effect/Effect').Effect<
+    import('@dxos/echo').Ref.Ref<import('@dxos/link').Connection.Connection> | undefined,
+    never,
+    import('@dxos/echo').Database.Service
+  >;
   /**
    * Returns the send operation, typed against the shared `MailSend` contract so a provider cannot
    * contribute an operation the composer can't call. A closure rather than a value property for the
@@ -202,5 +215,5 @@ export type MailSendOperation = {
 
 /** Mail providers contribute their send operation via this capability (see {@link MailSendOperation}). */
 export const MailSendOperation = Capability.make<MailSendOperation>()(
-  `${meta.profile.key}.capability.mailSendOperation`,
+  `${InboxNamespace.key}.capability.mailSendOperation`,
 );

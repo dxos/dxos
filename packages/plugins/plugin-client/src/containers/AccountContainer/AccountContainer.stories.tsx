@@ -12,7 +12,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { HubHttpClient } from '@dxos/edge-client';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { ClientPlugin } from '#plugin';
+import * as ClientPlugin from '#meta';
 import { initializeIdentity } from '#testing';
 import { translations } from '#translations';
 import { ClientCapabilities } from '#types';
@@ -41,7 +41,7 @@ const decorators = (hub?: HubHttpClient) => [
   withLayout({ layout: 'fullscreen' }),
   withPluginManager({
     plugins: [
-      ClientPlugin({
+      ClientPlugin.make({
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {
             yield* initializeIdentity(client);

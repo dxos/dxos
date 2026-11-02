@@ -9,6 +9,7 @@ import React, {
   forwardRef,
   useCallback,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 
@@ -26,10 +27,10 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Menu from '@dxos/react-ui/Menu';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Status from '@dxos/react-ui/Status';
 import type * as Util from '@dxos/react-ui/Util';
 
-import { meta } from '#meta';
-
+import { StackNamespace } from '../../namespace.ts';
 import { StackContext, useStack, useStackContext } from './StackContext.ts';
 
 //
@@ -48,6 +49,8 @@ export type StackSectionItem = {
 /** Section-level callbacks consumed by stack sections. */
 export type StackContextValue = {
   attendableId: string;
+  /** Where sections remember their heights. */
+  heights: Hooks.HeightMemory;
   /** Ids of sections that are currently collapsed. */
   collapsed: ReadonlySet<string>;
   onCollapse: (id: string, collapsed: boolean) => void;
@@ -85,6 +88,7 @@ const StackRoot = ({
   eventHandler,
   children,
   attendableId,
+  heights,
   collapsed,
   onCollapse,
   onAdd,
@@ -100,6 +104,7 @@ const StackRoot = ({
       viewport,
       setViewport,
       attendableId,
+      heights,
       collapsed,
       onCollapse,
       onAdd,
@@ -107,7 +112,7 @@ const StackRoot = ({
       onMoveDown,
       onDelete,
     }),
-    [id, eventHandler, viewport, attendableId, collapsed, onCollapse, onAdd, onMoveUp, onMoveDown, onDelete],
+    [id, eventHandler, viewport, attendableId, heights, collapsed, onCollapse, onAdd, onMoveUp, onMoveDown, onDelete],
   );
 
   return <StackContext.Provider value={value}>{children}</StackContext.Provider>;
@@ -190,15 +195,35 @@ const DragHandleGlyph = () => (
   </svg>
 );
 
+/** A section's content while its surface loads, at a medium height so most sections move little when it lands. */
+const SECTION_PLACEHOLDER = (
+  <Layout.Flex column classNames='h-80 gap-2 p-4'>
+    <Status.Skeleton variant='text' classNames='w-1/3' />
+    <Status.Skeleton variant='text' />
+    <Status.Skeleton variant='text' classNames='w-2/3' />
+  </Layout.Flex>
+);
+
 const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
   const { id, object } = data;
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { attendableId: parentAttendableId, collapsed, onAdd, onMoveUp, onMoveDown, onCollapse, onDelete } = useStack();
+  const { t } = Hooks.useTranslation(StackNamespace.key);
+  const {
+    attendableId: parentAttendableId,
+    heights,
+    collapsed,
+    onAdd,
+    onMoveUp,
+    onMoveDown,
+    onCollapse,
+    onDelete,
+  } = useStack();
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
   const attendableId = GraphPath.getCollectionObjectPath(parentAttendableId, object.id);
   const attentionAttrs = useAttentionAttributes(attendableId);
   const surfaceData = useMemo(() => ({ attendableId, subject: object }), [object, attendableId]);
   const isCollapsed = collapsed.has(id);
+  const contentRef = useRef<HTMLDivElement>(null);
+  Hooks.useReservedHeight(heights, isCollapsed ? undefined : id, contentRef);
   const icon = Obj.getIcon(object)?.icon ?? 'ph--circle-dashed--regular';
   const title = useLabel(object, { fallback: 'typename' }) ?? t('untitled-section.title');
 
@@ -282,14 +307,14 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
           {rail}
         </Layout.Flex>
       </div>
-      <div {...attentionAttrs} className='min-w-0'>
+      <div {...attentionAttrs} ref={contentRef} className='min-w-0'>
         <span className='sr-only'>{title}</span>
         {isCollapsed ? (
           <Layout.Flex classNames='h-(--dx-toolbar-size) p-1'>
             <h2 className='flex items-center font-medium'>{title}</h2>
           </Layout.Flex>
         ) : (
-          <Surface.Surface type={AppSurface.Section} data={surfaceData} limit={1} />
+          <Surface.Surface type={AppSurface.Section} data={surfaceData} limit={1} placeholder={SECTION_PLACEHOLDER} />
         )}
       </div>
     </Mosaic.Tile>

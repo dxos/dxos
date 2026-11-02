@@ -72,7 +72,7 @@ type ToggleSpec = {
   activeIcon: string;
   labelKey: string;
   activeLabelKey: string;
-  iconValence?: 'warning';
+  iconValence?: 'warning' | 'success';
 };
 
 const createTogglePreset = (
@@ -154,6 +154,15 @@ const Bookmark = createTogglePreset('SystemButton.Bookmark', {
   activeIcon: 'ph--bookmark-simple--fill',
   labelKey: 'system-button.bookmark.label',
   activeLabelKey: 'system-button.unbookmark.label',
+});
+
+/** Marks one of several as chosen: an empty circle, and a green check circle while checked. */
+const Check = createTogglePreset('SystemButton.Check', {
+  icon: 'ph--circle--regular',
+  activeIcon: 'ph--check-circle--fill',
+  labelKey: 'system-button.check.label',
+  activeLabelKey: 'system-button.uncheck.label',
+  iconValence: 'success',
 });
 
 //
@@ -540,6 +549,7 @@ export {
   Ai,
   Bookmark,
   Cancel,
+  Check,
   Clipboard,
   Close,
   Delete,

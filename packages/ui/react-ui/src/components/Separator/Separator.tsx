@@ -15,7 +15,7 @@ export type SeparatorProps = {
   decorative?: boolean;
 };
 
-/** A 1px rule in the separator colour: horizontal across its track, or vertical and control-tall in a row. */
+/** A 1px rule in the separator colour: horizontal across its track, or vertical and half a control tall in a row. */
 export const Separator = composable<HTMLDivElement, SeparatorProps>(
   ({ orientation = 'horizontal', decorative, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props, { classNames: recipes.separator() });

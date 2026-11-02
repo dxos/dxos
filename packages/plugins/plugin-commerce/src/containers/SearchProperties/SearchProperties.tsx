@@ -13,9 +13,9 @@ import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { meta } from '#meta';
 import { Provider, Search, SearchOperation } from '#types';
 
+import { CommerceNamespace } from '../../namespace.ts';
 import { buildUnionFormSchema } from '../../util/index.ts';
 
 export type SearchPropertiesProps = {
@@ -29,7 +29,7 @@ export type SearchPropertiesProps = {
  * selector is duplicated here. The masonry results live in the article.
  */
 export const SearchProperties = ({ search }: SearchPropertiesProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(CommerceNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const database = Obj.getDatabase(search);
 

@@ -44,7 +44,7 @@ The plugin the Composer Plugin project template builds, handed to an agent as a 
 1. Create a space from the World Clock Plugin template; open its project › Tasks: the three planning tasks.
 2. Open the project › Features (Kanban): the four features, all Planned.
 3. Open "Clocks page" › Specs: the spec opens rendered in Composer (needs plugin-code), F-1 written and F-2 to F-4 only named.
-4. Assign the three tasks to the assistant: it writes F-2 to F-4 into the spec, draws the diagram, adds the implementation tasks linked to the features, and works them until `dx registry publish --private` uploads the plugin. The reader installs World Clock from Plugins › Registry, opens Clocks and adds Asia/Tokyo and Europe/London (plugin-debug QA-11).
+4. Assign the three tasks to the assistant: it writes F-2 to F-4 into the spec, draws the diagram, adds the implementation tasks linked to the features, and works them until `dx registry publish --private` uploads the plugin. The reader installs World Clock from Plugins › Registry, opens Clocks and adds Asia/Tokyo and Europe/London (plugin-debug QA-12).
 
 ## Checks
 

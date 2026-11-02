@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { Harness } from '@dxos/assistant';
+import * as Hook from '@dxos/compute/Hook';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Ref } from '@dxos/echo';
@@ -106,6 +107,6 @@ export const PlanReminder = Operation.make({
     description: 'Reminds the agent to continue when its plan still has incomplete tasks.',
   },
   input: Schema.Struct({}),
-  output: Schema.Void,
+  output: Hook.Output,
   services: [Harness.HarnessService, Database.Service, AiService.AiService],
 });

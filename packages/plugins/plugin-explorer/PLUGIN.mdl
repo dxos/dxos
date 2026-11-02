@@ -321,7 +321,9 @@ test QA-1: Create a Graph and switch layout variants
         `space.db.query(dxos.Filter.everything())` for the object named "QA Graph" and call
         `org.dxos.operation.space.removeObjects` with that reference, rather than the test
         guessing an id it was never given.
+```
 
+```mdl
 test QA-2: Showcase clip
   desc: |
     The 10s showcase clip: Pan a graph of the space. Recorded light at 60 fps with no ident, captions or

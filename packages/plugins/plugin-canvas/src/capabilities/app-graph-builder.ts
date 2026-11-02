@@ -14,15 +14,15 @@ import { Entity, Obj } from '@dxos/echo';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 
-import { meta } from '#meta';
 import { Canvas } from '#types';
 
 import { canvasViewAspect } from '../containers/CanvasArticle/view-state.ts';
+import { CanvasNamespace } from '../namespace.ts';
 
 // Module-level: the graph dedupes action properties by reference, so a tuple rebuilt per evaluation re-emits the node.
 type LabelTuple = [string, { ns: string }];
-const LOCK_LABEL: LabelTuple = ['lock-drawing.label', { ns: meta.profile.key }];
-const UNLOCK_LABEL: LabelTuple = ['unlock-drawing.label', { ns: meta.profile.key }];
+const LOCK_LABEL: LabelTuple = ['lock-drawing.label', { ns: CanvasNamespace.key }];
+const UNLOCK_LABEL: LabelTuple = ['unlock-drawing.label', { ns: CanvasNamespace.key }];
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

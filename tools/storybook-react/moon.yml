@@ -133,6 +133,15 @@ tasks:
       - diagnose.sh
       - static/*
     preset: server
+  # What the storybook-served `e2e` suites need built. They depend on this task rather than on these
+  # targets directly, since a cross-project task dep makes that project a dependency, and the package's test
+  # tasks would follow it through `^:build` to every plugin's build. Dependents set `cacheStrategy: hash`:
+  # moon leaves a task without outputs out of its dependents' hash by default.
+  e2e-deps:
+    command: noop
+    deps:
+      - '#vendor:build'
+      - '#storybook:#prebuild'
   # TODO(wittjosiah): No inputs or deps to avoid moon re-building things when running e2e tests.
   serve-e2e:
     command: storybook dev

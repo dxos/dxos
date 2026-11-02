@@ -19,6 +19,12 @@ export const DEFAULT_JOURNAL_MODE: SqliteJournalMode = 'wal';
 
 export const DEFAULT_SYNCHRONOUS: SqliteSynchronous = 'normal';
 
+/**
+ * Page-cache ceiling in KiB (SQLite's default is 2000).
+ * Pages are allocated on demand, so a database smaller than this costs only its own size.
+ */
+export const CACHE_SIZE_KIB = 32 * 1024;
+
 type Sqlite3 = ReturnType<typeof WaSqlite.Factory>;
 
 /**
@@ -35,6 +41,9 @@ export const applyOpfsPragmas = (sqlite3: Sqlite3, db: number, options: OpfsPrag
     // Statement journals and sorter spills otherwise land in OPFS pool files: they were the largest
     // share of a feed append's writes, ahead of the WAL itself.
     'PRAGMA temp_store=MEMORY',
+    // WAL's exclusive lock keeps cached pages valid across transactions, so a cache that holds the
+    // working set turns repeat queries' OPFS `xRead`s into memory hits.
+    `PRAGMA cache_size=-${CACHE_SIZE_KIB}`,
   ];
   for (const pragma of pragmas) {
     for (const stmt of sqlite3.statements(db, pragma)) {

@@ -36,8 +36,8 @@ import {
   nominalTemplates,
 } from '#audio';
 import { type AudioSourceKind, useNoteAnalyzer } from '#hooks';
-import { meta } from '#meta';
 
+import { HandpanNamespace } from '../../namespace.ts';
 import { EchoFilter, fromInstrumentCalibration, toInstrumentCalibration } from '../../notation/index.ts';
 import { HandpanLayout } from '../HandpanLayout/index.ts';
 import { LevelMeter } from '../LevelMeter/index.ts';
@@ -110,7 +110,7 @@ const describeHeard = (event: NoteEvent, notes: ScaleNote[]): string => {
 
 const loadNumber = (name: string): number | undefined => {
   try {
-    const value = Number(localStorage.getItem(`${meta.profile.key}.${name}`) ?? undefined);
+    const value = Number(localStorage.getItem(`${HandpanNamespace.key}.${name}`) ?? undefined);
     return Number.isFinite(value) ? value : undefined;
   } catch {
     return undefined;
@@ -119,7 +119,7 @@ const loadNumber = (name: string): number | undefined => {
 
 const saveNumber = (name: string, value: number) => {
   try {
-    localStorage.setItem(`${meta.profile.key}.${name}`, String(value));
+    localStorage.setItem(`${HandpanNamespace.key}.${name}`, String(value));
   } catch {
     // Storage unavailable.
   }
@@ -132,8 +132,8 @@ const RELATIVE_LEVEL = 0.1;
 /** Absolute floor (RMS) below which nothing counts as sounding. */
 const MIN_LEVEL = 0.002;
 
-const storageKey = (scaleId: string) => `${meta.profile.key}.calibration.${scaleId}`;
-const scaleStorageKey = `${meta.profile.key}.scale`;
+const storageKey = (scaleId: string) => `${HandpanNamespace.key}.calibration.${scaleId}`;
+const scaleStorageKey = `${HandpanNamespace.key}.scale`;
 
 const loadScaleId = (): string | undefined => {
   try {
@@ -189,7 +189,7 @@ export const Tuner = ({
   chords = false,
   onNote,
 }: TunerProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(HandpanNamespace.key);
   const [mode, setMode] = useState<TunerMode>(defaultMode);
   const [chordMode, setChordMode] = useState(chords);
   const [scaleId, setScaleId] = useState(() => {

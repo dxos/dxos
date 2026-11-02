@@ -1,5 +1,5 @@
 /*
- * Menu: a portalled popup (`.dx-popup` supplies size, level and the focus outline) of block-tall item rows.
+ * Menu: a portalled popup (`.dx-popup` supplies size, level and radius) of block-tall item rows.
  */
 
 @layer dx-components {
@@ -45,6 +45,11 @@
     padding-inline: calc(var(--dx-gap-size) * 1.5);
     border-radius: var(--radius-sm, 0.25rem);
     cursor: pointer;
+  }
+  /* Once any item in a menu leads with an icon, the rest keep an icon-wide space so every label starts in line. */
+  [data-scope='menu'][data-part='content']:has(.dx-menu-item > .dx-icon:first-child)
+    .dx-menu-item:not(:has(> :is(.dx-icon, .dx-menu-indicator):first-child)) {
+    padding-inline-start: calc(var(--dx-gap-size) * 2.5 + var(--dx-icon-size));
   }
   .dx-menu-item[data-highlighted] {
     background: var(--color-hover-surface);

@@ -11,9 +11,9 @@ import * as Layout from '@dxos/react-ui/Layout';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
 import { CallsCapabilities } from '#types';
 
+import { CallsNamespace } from '../../namespace.ts';
 import { Toolbar, type ToolbarProps } from '../Call/index.ts';
 import { VideoObject } from '../Media/index.ts';
 import { ResponsivePanel } from '../ResponsiveGrid/index.ts';
@@ -46,7 +46,7 @@ LobbyRoot.displayName = 'LobbyRoot';
 type LobbyPreviewProps = {};
 
 const LobbyPreview = (_props: LobbyPreviewProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(CallsNamespace.key);
   const call = Hooks.useCapability(CallsCapabilities.Manager);
   const videoEnabled = useAtomValue(call.videoEnabledAtom);
   const videoStream = useAtomValue(call.localVideoStreamAtom);

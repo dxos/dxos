@@ -25,8 +25,9 @@ import { Attention } from '@dxos/react-ui-attention/types';
 import { Channel, Event } from '@dxos/types';
 import * as Position from '@dxos/util/Position';
 
-import { meta } from '#meta';
 import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';
+
+import { MeetingNamespace } from '../namespace.ts';
 
 /**
  * Atom families to derive meeting state properties.
@@ -75,7 +76,7 @@ export default Capability.makeModule(
                 });
               }),
               properties: {
-                label: ['share-call-link.label', { ns: meta.profile.key }],
+                label: ['share-call-link.label', { ns: MeetingNamespace.key }],
                 icon: 'ph--share-network--regular',
               },
             },
@@ -111,7 +112,7 @@ export default Capability.makeModule(
                 variant: 'meeting',
                 label: [
                   data === 'meeting' ? 'meeting-list.label' : 'meeting-companion.label',
-                  { ns: meta.profile.key },
+                  { ns: MeetingNamespace.key },
                 ],
                 icon: 'ph--handshake--regular',
                 data,
@@ -174,8 +175,8 @@ export default Capability.makeModule(
                 }),
                 properties: {
                   label: enabled
-                    ? ['stop-transcription.label', { ns: meta.profile.key }]
-                    : ['start-transcription.label', { ns: meta.profile.key }],
+                    ? ['stop-transcription.label', { ns: MeetingNamespace.key }]
+                    : ['start-transcription.label', { ns: MeetingNamespace.key }],
                   icon: 'ph--subtitles--regular',
                   disposition: 'toolbar',
                 },
@@ -196,7 +197,7 @@ export default Capability.makeModule(
             return [
               AppNode.makeCompanion({
                 variant: 'transcript',
-                label: ['transcript-companion.label', { ns: meta.profile.key }],
+                label: ['transcript-companion.label', { ns: MeetingNamespace.key }],
                 icon: 'ph--subtitles--regular',
                 data: get(Obj.atom(meeting.transcript)),
                 position: Position.first,
@@ -226,7 +227,7 @@ export default Capability.makeModule(
             return [
               AppNode.makeCompanion({
                 variant: 'meeting',
-                label: ['meeting-companion.label', { ns: meta.profile.key }],
+                label: ['meeting-companion.label', { ns: MeetingNamespace.key }],
                 icon: 'ph--handshake--regular',
                 data: meeting,
                 position: Position.first,
@@ -269,7 +270,7 @@ export default Capability.makeModule(
                     });
                   }),
                   properties: {
-                    label: ['open-meeting-for-event.label', { ns: meta.profile.key }],
+                    label: ['open-meeting-for-event.label', { ns: MeetingNamespace.key }],
                     icon: 'ph--handshake--regular',
                     // Surface in the Event article toolbar (not just the node context menu).
                     disposition: 'toolbar',
@@ -284,7 +285,7 @@ export default Capability.makeModule(
                   yield* invoker.invoke(MeetingOperation.Create, { name: event.title, event: Ref.make(event) });
                 }),
                 properties: {
-                  label: ['create-meeting-for-event.label', { ns: meta.profile.key }],
+                  label: ['create-meeting-for-event.label', { ns: MeetingNamespace.key }],
                   icon: 'ph--handshake--regular',
                   // Surface in the Event article toolbar (not just the node context menu).
                   disposition: 'toolbar',

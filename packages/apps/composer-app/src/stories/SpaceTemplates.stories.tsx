@@ -36,9 +36,11 @@ import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import * as KanbanPlugin from '@dxos/plugin-kanban/KanbanPlugin';
 import * as MagazinePlugin from '@dxos/plugin-magazine/MagazinePlugin';
+import * as MapPlugin from '@dxos/plugin-map/MapPlugin';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as NavTreePlugin from '@dxos/plugin-navtree/NavTreePlugin';
 import * as PipelinePlugin from '@dxos/plugin-pipeline/PipelinePlugin';
+import * as PresenterPlugin from '@dxos/plugin-presenter/PresenterPlugin';
 import * as PreviewPlugin from '@dxos/plugin-preview/PreviewPlugin';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as ReviewPlugin from '@dxos/plugin-review/ReviewPlugin';
@@ -48,10 +50,12 @@ import * as SettingsPlugin from '@dxos/plugin-settings/SettingsPlugin';
 import * as SheetPlugin from '@dxos/plugin-sheet/SheetPlugin';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
+import * as SpacetimePlugin from '@dxos/plugin-spacetime/SpacetimePlugin';
 import * as TablePlugin from '@dxos/plugin-table/TablePlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import * as ThemePlugin from '@dxos/plugin-theme/ThemePlugin';
 import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
+import * as VoxelPlugin from '@dxos/plugin-voxel/VoxelPlugin';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -61,12 +65,16 @@ import { isNonNullable } from '@dxos/util';
 const TEMPLATES = {
   aiBriefing: 'org.dxos.plugin.magazine.template.ai-briefing',
   architecture: 'org.dxos.plugin.canvas.template.architecture',
+  demo: 'org.dxos.plugin-debug.template.demo',
   fieldstone: 'org.dxos.plugin-debug.template.fieldstone',
   incident: 'org.dxos.plugin-debug.template.incident',
+  presenter: 'org.dxos.plugin-debug.template.presenter',
+  sales: 'org.dxos.plugin.sheet.template.sales',
   pipeline: 'org.dxos.plugin-debug.template.pipeline',
   review: 'org.dxos.plugin-debug.template.review',
   stockfish: 'org.dxos.plugin-debug.template.stockfish',
   tidepool: 'org.dxos.plugin-debug.template.tidepool',
+  timeline: 'org.dxos.plugin-debug.template.timeline',
   weather: 'org.dxos.plugin-debug.template.weather',
   worker: 'org.dxos.plugin-debug.template.worker',
 } as const;
@@ -239,15 +247,19 @@ const meta = {
         InboxPlugin.make(),
         KanbanPlugin.make(),
         MagazinePlugin.make(),
+        MapPlugin.make(),
         MarkdownPlugin.make(),
         PipelinePlugin.make(),
+        PresenterPlugin.make(),
         ProjectsPlugin.make(),
         ReviewPlugin.make(),
         ScriptPlugin.make(),
         SheetPlugin.make(),
+        SpacetimePlugin.make(),
         TablePlugin.make(),
         TasksPlugin.make(),
         ThreadPlugin.make(),
+        VoxelPlugin.make(),
       ],
     })),
     withIframePath,
@@ -314,11 +326,18 @@ export const AiBriefing: Story = {
 
 export const Architecture: Story = { args: { template: TEMPLATES.architecture }, play };
 
+export const Demo: Story = { args: { template: TEMPLATES.demo }, play };
+
 export const AlienLabs: Story = { args: { template: TEMPLATES.fieldstone }, play };
 
 export const HelloWorker: Story = { args: { template: TEMPLATES.worker }, play };
 
 export const Incident: Story = { args: { template: TEMPLATES.incident }, play };
+
+/** The Macro events sheet, its timeline chart and a deck that presents the chart. */
+export const Presenter: Story = { args: { template: TEMPLATES.presenter }, play };
+
+export const Sales: Story = { args: { template: TEMPLATES.sales }, play };
 
 export const Pipeline: Story = { args: { template: TEMPLATES.pipeline }, play };
 
@@ -327,5 +346,8 @@ export const Review: Story = { args: { template: TEMPLATES.review }, play };
 export const Stockfish: Story = { args: { template: TEMPLATES.stockfish }, play };
 
 export const Tidepool: Story = { args: { template: TEMPLATES.tidepool }, play };
+
+/** The timeline chart's project: its feature map and open tasks. */
+export const TimelineProject: Story = { args: { template: TEMPLATES.timeline }, play };
 
 export const Weather: Story = { args: { template: TEMPLATES.weather }, play };

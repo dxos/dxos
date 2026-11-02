@@ -72,8 +72,8 @@ diagram-rule no-shared-trunks: Distinct arrows never run along the same line
   yes: Each arrow runs on its own line; parallel arrows keep a visible gap.
   no: Two or more arrows share a segment, so their ends cannot be paired up.
   Overlapping segments make it impossible to tell which arrow goes where; routers nudge parallel runs
-  apart for this reason. A deliberate merge of same-meaning arrows into one target (an inheritance
-  bus) does not count.
+  apart for this reason. A deliberate merge of same-meaning arrows (an inheritance bus, or one
+  property's edges sharing a trunk) does not count.
   Code: connector pairs that share a collinear run, scored 1 / (1 + pairs).
   Source: Wybrow et al. 2010 (nudging); Purchase 2002 ("no adjacent arrows" preferred).
 ```

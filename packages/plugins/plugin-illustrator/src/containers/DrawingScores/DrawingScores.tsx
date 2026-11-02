@@ -12,9 +12,10 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
 import { type Drawing, IllustratorCapabilities } from '#types';
 import { findVariant, scoreScene } from '#util';
+
+import { IllustratorNamespace } from '../../namespace.ts';
 
 export type DrawingScoresProps = {
   role?: string;
@@ -31,7 +32,7 @@ const tone = (score: number) => (score >= 0.75 ? 'bg-emerald-500' : score >= 0.4
  * version seen so far — so an agent redrawing in a loop shows its progression beside the picture.
  */
 export const DrawingScores = ({ role, drawing }: DrawingScoresProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(IllustratorNamespace.key);
   const variants = Hooks.useCapabilities(IllustratorCapabilities.VariantProvider);
   const ref = drawing.canvas;
   const [snapshot] = useObject(ref);
@@ -61,9 +62,9 @@ export const DrawingScores = ({ role, drawing }: DrawingScoresProps) => {
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
             {!result ? (
-              <p className='p-3 text-fg-muted'>{t('scores.empty.label')}</p>
+              <p className='p-trim-md text-fg-muted'>{t('scores.empty.label')}</p>
             ) : (
-              <Layout.Flex column gap='md' asChild classNames='p-3 text-sm'>
+              <Layout.Flex column gap='md' asChild classNames='p-trim-md text-sm'>
                 <div data-testid='illustrator.scores'>
                   <Layout.Flex align='baseline' gap='sm'>
                     <span className='text-3xl font-medium tabular-nums' data-testid='illustrator.scores.overall'>

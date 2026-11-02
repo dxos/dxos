@@ -15,9 +15,9 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 
 import { ConnectorAuthMenu } from '#components';
-import { meta } from '#meta';
 
 import { useChatReportContext } from '../../components/Chat/context.ts';
+import { AssistantNamespace } from '../../namespace.ts';
 
 const INTEGRATION_PROMPT_NAME = 'IntegrationPrompt';
 
@@ -37,7 +37,7 @@ export type IntegrationPromptProps = {
  * silently.
  */
 export const IntegrationPrompt = ({ service, scopes, reason }: IntegrationPromptProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   const space = ToolkitHooks.useActiveSpace();
   const connectors = Hooks.useCapabilities(ConnectorSpec.Connector).flat();
   const matched = useMemo(() => (service ? matchConnectors(connectors, service) : []), [connectors, service]);
@@ -50,7 +50,7 @@ export const IntegrationPrompt = ({ service, scopes, reason }: IntegrationPrompt
   }
 
   return (
-    <Layout.Flex role='group' column gap='sm' classNames='my-2 p-3 border border-separator-subtle rounded-sm'>
+    <Layout.Flex role='group' column gap='sm' classNames='my-2 p-trim-md border border-separator-subtle rounded-sm'>
       <Layout.Flex gap='sm' align='center'>
         <Icon.Icon icon='ph--plugs--regular' size='lg' tone='subtle' />
         <Layout.Flex column classNames='min-w-0'>
@@ -125,7 +125,8 @@ const useReportConnection = ({ connectors, db, service }: UseReportConnectionOpt
     const created = matched.find((connection) => !baseline.current?.has(connection.id));
     // Named only once the credential itself is in the space: the report carries the token's URI, so
     // an unresolved ref would name something the agent cannot yet read. Stays armed until it is.
-    if (!created || !created.accessToken.peek()) {
+    const credential = created?.accessToken;
+    if (!created || !credential?.peek()) {
       return;
     }
     // One report per flow: disarm before submitting so a later connection needs a fresh click.
@@ -134,7 +135,7 @@ const useReportConnection = ({ connectors, db, service }: UseReportConnectionOpt
     // this connection rather than the first of them.
     const label =
       connectors.find((connector) => connector.id === created.connectorId)?.label ?? service ?? created.connectorId;
-    submit(`Connected ${label}. Credential: ${created.accessToken.uri}`);
+    submit(`Connected ${label}. Credential: ${credential.uri}`);
   }, [matched, connectors, service, submit]);
 
   return { armReport };

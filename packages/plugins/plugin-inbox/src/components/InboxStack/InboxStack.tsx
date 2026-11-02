@@ -17,8 +17,10 @@ import * as Focus from '@dxos/react-ui/Focus';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Tag from '@dxos/react-ui/Tag';
 import * as Util from '@dxos/react-ui/Util';
 import { type Actor, type Message, Person } from '@dxos/types';
+import { toHue } from '@dxos/ui-theme';
 
 import { useVisibleTags } from '#hooks';
 
@@ -63,6 +65,9 @@ export type MessageGroup = {
 
 /** A stack entry: an individual message or a conversation group. Entries of both kinds may be mixed. */
 export type InboxStackItem = Message.Message | MessageGroup;
+
+/** A run of consecutive entries shown under one heading (e.g. a priority band). */
+export type InboxStackSection = { id: string; label: string; hue?: string; count: number };
 
 /** Per-message tag chip atom family; each tile subscribes to just its own message's tags. */
 export type MessageTagsFamily = (messageId: string) => Atom.Atom<InboxStackTag[]>;
@@ -135,6 +140,13 @@ export type InboxStackProps = {
   db?: Database.Database;
   /** Creates the Person for a sender the space does not know (the avatar's hover affordance). */
   onContactCreate?: (actor: Actor.Actor) => void;
+  /**
+   * The heading an entry sits under; consecutive entries with the same section id share one heading,
+   * drawn above the first of them. `items` must already be ordered by section.
+   */
+  getSection?: (item: InboxStackItem) => InboxStackSection | undefined;
+  /** Slides tiles to their new place when the order changes (e.g. after triage regroups the list). */
+  animateReorder?: boolean;
   onAction?: InboxStackActionHandler;
 };
 
@@ -158,6 +170,8 @@ export const InboxStack = Util.composable<HTMLDivElement, InboxStackProps>(
       searchQuery,
       db,
       onContactCreate,
+      getSection,
+      animateReorder,
       onAction,
       ...props
     },
@@ -168,9 +182,14 @@ export const InboxStack = Util.composable<HTMLDivElement, InboxStackProps>(
 
     const tileItems = useMemo(
       () =>
-        items?.map((item): StackTileData =>
-          isMessageGroup(item)
+        items?.map((item, index): StackTileData => {
+          const section = getSection?.(item);
+          const previous = index > 0 ? getSection?.(items[index - 1]) : undefined;
+          // Only the first entry of a run draws the heading.
+          const heading = section && section.id !== previous?.id ? { section } : {};
+          return isMessageGroup(item)
             ? {
+                ...heading,
                 conversationId: item.id,
                 messages: item.messages,
                 total: item.total,
@@ -186,6 +205,7 @@ export const InboxStack = Util.composable<HTMLDivElement, InboxStackProps>(
                 onAction,
               }
             : {
+                ...heading,
                 message: item,
                 tagsAtom: tagsAtom?.(item.id),
                 starredAtom: starredAtom?.(item.id),
@@ -197,10 +217,11 @@ export const InboxStack = Util.composable<HTMLDivElement, InboxStackProps>(
                 getContact,
                 onContactCreate,
                 onAction,
-              },
-        ),
+              };
+        }),
       [
         items,
+        getSection,
         tagsAtom,
         starredAtom,
         inboxAtom,
@@ -304,6 +325,7 @@ export const InboxStack = Util.composable<HTMLDivElement, InboxStackProps>(
                 gap={8}
                 inset={false}
                 pagination={pagination}
+                animateReorder={animateReorder}
               />
               {loading && (
                 <Layout.Grid role='status' center classNames='px-2 py-3'>
@@ -334,21 +356,47 @@ type StackTileData = MessageTileData | ConversationTileData;
 type StackTileProps = Pick<MosaicTileProps<StackTileData>, 'data' | 'location' | 'current' | 'binding'>;
 
 /** Dispatches on the entry kind: message entries render a message tile, groups a conversation tile. */
-const StackTile = forwardRef<HTMLDivElement, StackTileProps>(({ data, location, current, binding }, forwardedRef) =>
-  'message' in data ? (
-    <MessageTile ref={forwardedRef} data={data} location={location} current={current} binding={binding} />
+const StackTile = forwardRef<HTMLDivElement, StackTileProps>(({ data, location, current, binding }, forwardedRef) => {
+  const tile =
+    'message' in data ? (
+      <MessageTile ref={forwardedRef} data={data} location={location} current={current} binding={binding} />
+    ) : (
+      <ConversationTile ref={forwardedRef} data={data} location={location} current={current} binding={binding} />
+    );
+  return data.section ? (
+    <>
+      <SectionHeading section={data.section} />
+      {tile}
+    </>
   ) : (
-    <ConversationTile ref={forwardedRef} data={data} location={location} current={current} binding={binding} />
-  ),
-);
+    tile
+  );
+});
 
 StackTile.displayName = 'StackTile';
+
+/** The heading drawn above the first tile of a section. */
+const SectionHeading = ({ section }: { section: InboxStackSection }) => (
+  <div
+    role='heading'
+    aria-level={3}
+    className='flex items-center gap-2 px-1 pt-2 pb-2'
+    data-testid='inbox.section'
+    data-section={section.id}
+  >
+    <Tag.Tag hue={toHue(section.hue)}>{section.label}</Tag.Tag>
+    <span className='text-sm text-description'>{section.count}</span>
+  </div>
+);
 
 //
 // MessageTile
 //
 
-type MessageTileData = {
+/** Set on the first tile of a section, which draws its heading. */
+type SectionData = { section?: InboxStackSection };
+
+type MessageTileData = SectionData & {
   message: Message.Message;
   tagsAtom?: Atom.Atom<InboxStackTag[]>;
   starredAtom?: Atom.Atom<boolean>;
@@ -482,7 +530,7 @@ MessageTile.displayName = 'MessageTile';
 // ConversationTile
 //
 
-type ConversationTileData = {
+type ConversationTileData = SectionData & {
   conversationId: string;
   messages: Message.Message[];
   /** Full thread size when `messages` is a capped preview; drives the "+N more" affordance. */

@@ -7,6 +7,8 @@ tasks:
     inputs:
       - vite.config.ts
       - '*.html'
+      # `dx.yml`, `dx-env.yml` and `dx-local.yml`: the config plugin bakes them into the bundle too.
+      - 'dx*.yml'
       - '@group(production)'
       # Every var the build bakes into the bundle belongs here — `dx-env.yml`'s mappings plus anything
       # `DX_`-prefixed, which the config plugin sweeps into `runtime.app.env`. A missing entry means moon

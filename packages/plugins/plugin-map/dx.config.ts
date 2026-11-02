@@ -2,12 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Config2 } from '@dxos/app-framework/config';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { trim } from '@dxos/util';
 
-export default Config2.make({
+import { MapNamespace } from './src/namespace.ts';
+import * as MapCapabilities from './src/types/MapCapabilities.ts';
+import * as MapEvents from './src/types/MapEvents.ts';
+
+// Annotated: the capability modules import `meta` from here, so inferring it would be circular.
+const config: Plugin.PluginConfig = Plugin.config({
   plugin: {
-    key: 'org.dxos.plugin.map',
+    key: MapNamespace.key,
     name: 'Maps',
     author: 'DXOS',
     description: trim`
@@ -29,4 +38,69 @@ export default Config2.make({
     tags: ['alpha'],
     screenshots: [{ dark: 'https://media.dxos.network/plugin-details-map-dark.png' }],
   },
+  modules: [
+    AppCapability.appGraphBuilder(
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
+      {
+        requires: [MapCapabilities.MarkerProvider],
+        environments: ['browser', 'node', 'tauri'],
+      },
+    ),
+    SpaceCapability.createObject(
+      () => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } }),
+      {
+        environments: ['browser', 'node', 'tauri'],
+      },
+    ),
+    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
+      activatesOn: ActivationEvents.Idle,
+      provides: [MapCapabilities.Settings],
+    }),
+    Capability.lazyModule(
+      'MapState',
+      { provides: [MapCapabilities.State], activatesOn: MapEvents.Start },
+      () => import('./src/capabilities/state.ts', { with: { type: 'module-url' } }),
+    ),
+    // Browser-only: a `MarkerProvider` contributes a `useMarkers` React hook, and this one calls
+    // `useMemo`/`useQuery`/`useObject` in its own body.
+    Capability.lazyModule(
+      'MarkerProvider',
+      { provides: [MapCapabilities.MarkerProvider], activatesOn: MapEvents.Start, environments: ['browser', 'tauri'] },
+      () => import('./src/capabilities/marker-provider.tsx', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.operationHandler(
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
+      {
+        activatesOn: ActivationEvents.Idle,
+      },
+    ),
+    AppCapability.pluginAsset({
+      pluginId: MapNamespace.key,
+      path: 'PLUGIN.mdl',
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
+      mimeType: 'application/x-mdl',
+    }),
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
+      roles: [
+        'org.dxos.plugin.map.role.map',
+        'org.dxos.plugin.map.role.world',
+        'org.dxos.role.article',
+        'org.dxos.role.formInput',
+        'org.dxos.role.objectProperties',
+        'org.dxos.role.section',
+      ],
+    }),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
+    AppCapability.skillDefinition(
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
+      {
+        environments: ['browser', 'node', 'tauri'],
+      },
+    ),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
+  ],
 });
+
+export const { meta, make } = config;
+
+export default config;

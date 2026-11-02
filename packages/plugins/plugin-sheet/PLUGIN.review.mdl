@@ -1,0 +1,358 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-sheet/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: SheetPlugin
+
+The core is solid. `Sheet` is an ECHO type (`org.dxos.type.sheet` at 0.2.0) with sparse indexed cells,
+ordered row and column indices, axis meta and a flat `ranges` array. `SheetModel` evaluates
+formulas through HyperFormula and maps A1 references to indices. The axis ops are wired with undo
+(`DropAxis` inverts to `RestoreAxis`). `ComputeGraphRegistry`, the markdown `ExtensionProvider`
+and `AnchorSort` are contributed. The Playwright spec covers cell entry, SUM with a row deletion,
+and range alignment. `sheet-model.test.ts` covers formulas and index mapping.
+
+The spec lags the formatting model. A highlight is a `highlight` key whose value is a CSS colour,
+alongside the `style` values `header`, `highlight` and `softwrap`. Comment overlays come from thread
+anchors, not from `comment` ranges. `Range.range` holds an indexed range, not A1 notation.
+`scrollToAnchor` takes `id`, not `ref`. None of the ops (`insertAxis`, `restoreAxis`,
+`scrollToAnchor`, `create`) is invoked by a test, and nothing tests two-peer replication.
+
+Of 43 items: 12 done, 15 untested, 9 partial, 3 diverged, 4 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict CellValue: CellValue is a struct with one value field of any type.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/types/Sheet.ts#CellValue]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sheet/src/model/sheet-model.test.ts]
+```
+
+```mdl
+verdict RowColumnMeta: RowColumnMeta holds an optional size.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/types/Sheet.ts#RowColumnMeta]
+  note: No test reads or writes a size.
+```
+
+```mdl
+verdict Range: Range has range, key and value strings, but range holds an indexed range, not A1 notation.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/types/Sheet.ts#Range, github:dxos/dxos/packages/plugins/plugin-sheet/src/types/SheetRange.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sheet/src/types/SheetRange.test.ts, github:dxos/dxos/packages/plugins/plugin-sheet/src/components/FormattingToolbar/formatting.test.ts]
+  note: |
+    `Sheet.make` converts A1 input with `rangeToIndex`, and `RangeList` converts back for display, so stored ranges
+    are index-based. The keys include `highlight` (a CSS colour value) beside `alignment`, `comment` and `style`.
+```
+
+```mdl
+verdict Axis: Axis is a row | col literal union, local to SheetOperation.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/types/SheetOperation.ts#Axis]
+  note: It is not exported (a TODO says it duplicates `DxGridAxis`). No test invokes an op with it.
+```
+
+```mdl
+verdict Sheet: Sheet has every spec field, plus description and owned charts.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/types/Sheet.ts#Sheet, github:dxos/dxos/packages/plugins/plugin-sheet/src/types/Sheet.ts#make]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sheet/src/model/sheet-model.test.ts, github:dxos/dxos/packages/plugins/plugin-sheet/src/capabilities/migrations.test.ts]
+  note: The typename version is 0.2.0. `charts` (owned `Chart` refs) and `description` are extra.
+```
+
+```mdl
+verdict SheetArticle: SheetArticle renders the grid with toolbar and statusbar, edits cells and manages axes.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/containers/SheetArticle/SheetArticle.tsx#SheetArticle, github:dxos/dxos/packages/plugins/plugin-sheet/src/components/SheetContent/SheetContent.tsx#SheetContent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sheet/src/playwright/sheet.spec.ts]
+  note: The Playwright spec runs against the SheetArticle story. Props come from the surface, and the registry is read from a capability rather than passed in.
+```
+
+```mdl
+verdict RangeList: RangeList lists ranges with a formatting toolbar each, and can retarget or remove them; it does not add ranges.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/containers/RangeList/RangeList.tsx#RangeList, github:dxos/dxos/packages/plugins/plugin-sheet/src/components/FormattingToolbar/formatting.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sheet/src/playwright/sheet.spec.ts, github:dxos/dxos/packages/plugins/plugin-sheet/src/components/FormattingToolbar/formatting.test.ts]
+  note: New ranges come from the sheet toolbar, not an `addRange` action in the list. The Playwright `ranges` test checks that a new range appears in the list.
+```
+
+```mdl
+verdict insertAxis: The op inserts count rows or columns at index through the model.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/types/SheetOperation.ts#InsertAxis, github:dxos/dxos/packages/plugins/plugin-sheet/src/operations/insert-axis.ts, github:dxos/dxos/packages/plugins/plugin-sheet/src/model/sheet-model.ts#SheetModel.insertRows]
+  walkthrough:
+    - The op declares model, axis, index and count. github:dxos/dxos/packages/plugins/plugin-sheet/src/types/SheetOperation.ts#InsertAxis
+    - The handler calls insertRows or insertColumns on the model. github:dxos/dxos/packages/plugins/plugin-sheet/src/operations/insert-axis.ts
+  note: `SheetPlugin.workerd.test.ts` checks only that the op is contributed; no test invokes it.
+```
+
+```mdl
+verdict dropAxis: The op drops a row or column and returns the undo data.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/types/SheetOperation.ts#DropAxis, github:dxos/dxos/packages/plugins/plugin-sheet/src/operations/drop-axis.ts, github:dxos/dxos/packages/plugins/plugin-sheet/src/model/sheet-model.ts#SheetModel.dropRow]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sheet/src/model/sheet-model.test.ts, github:dxos/dxos/packages/plugins/plugin-sheet/src/playwright/sheet.spec.ts]
+  walkthrough:
+    - The op declares its input and the DropAxisOutput schema. github:dxos/dxos/packages/plugins/plugin-sheet/src/types/SheetOperation.ts#DropAxis
+    - The handler calls dropRow or dropColumn and returns the undo data. github:dxos/dxos/packages/plugins/plugin-sheet/src/operations/drop-axis.ts
+  note: The tests exercise `model.dropRow` and the UI row deletion; neither invokes the op by key.
+```
+
+```mdl
+verdict restoreAxis: The op restores a dropped row or column and is the undo inverse of dropAxis.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/types/SheetOperation.ts#RestoreAxis, github:dxos/dxos/packages/plugins/plugin-sheet/src/operations/restore-axis.ts, github:dxos/dxos/packages/plugins/plugin-sheet/src/capabilities/undo-mappings.ts]
+  walkthrough:
+    - The op declares the undo data as input. github:dxos/dxos/packages/plugins/plugin-sheet/src/types/SheetOperation.ts#RestoreAxis
+    - The handler calls restoreRow or restoreColumn. github:dxos/dxos/packages/plugins/plugin-sheet/src/operations/restore-axis.ts
+    - The undo mapping registers it as the inverse of DropAxis. github:dxos/dxos/packages/plugins/plugin-sheet/src/capabilities/undo-mappings.ts
+  note: No test restores an axis.
+```
+
+```mdl
+verdict scrollToAnchor: The op focuses the cursor cell and sets active refs, taking id rather than ref.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/types/SheetOperation.ts#ScrollToAnchor, github:dxos/dxos/packages/plugins/plugin-sheet/src/operations/scroll-to-anchor.ts]
+  walkthrough:
+    - The op declares subject, cursor and an optional id. github:dxos/dxos/packages/plugins/plugin-sheet/src/types/SheetOperation.ts#ScrollToAnchor
+    - The handler finds the grid instance, sets active refs and focuses the range end. github:dxos/dxos/packages/plugins/plugin-sheet/src/operations/scroll-to-anchor.ts
+  note: The highlight field is `id`, not `ref`. No test invokes it.
+```
+
+```mdl
+verdict create: The create op makes a Sheet with default rows and columns and returns its DXN.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/types/SheetOperation.ts#Create, github:dxos/dxos/packages/plugins/plugin-sheet/src/operations/create.ts]
+  note: No test invokes `create`, `getRange` or `setRange`; the workerd test checks only that they are contributed.
+```
+
+```mdl
+verdict F-1.1: Sheet is an ECHO object type with typename org.dxos.type.sheet.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/types/Sheet.ts#Sheet]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sheet/src/capabilities/migrations.test.ts, github:dxos/dxos/packages/plugins/plugin-sheet/src/SheetPlugin.workerd.test.ts]
+```
+
+```mdl
+verdict F-1.2: Cells are a sparse record keyed by row and column index.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/types/Sheet.ts#Sheet, github:dxos/dxos/packages/plugins/plugin-sheet/src/types/SheetUtil.ts#addressToIndex]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sheet/src/model/sheet-model.test.ts]
+```
+
+```mdl
+verdict F-1.3: Ordered index arrays keep cell references stable across row deletion.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/model/sheet-model.ts#SheetModel, github:dxos/dxos/packages/plugins/plugin-sheet/src/types/SheetUtil.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sheet/src/model/sheet-model.test.ts, github:dxos/dxos/packages/plugins/plugin-sheet/src/playwright/sheet.spec.ts]
+  note: Deletion is tested (the SUM follows the dropped row); insertion is not.
+```
+
+```mdl
+verdict F-1.4: Formatting ranges are a flat array on the Sheet.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/types/Sheet.ts#Sheet]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sheet/src/components/FormattingToolbar/formatting.test.ts, github:dxos/dxos/packages/plugins/plugin-sheet/src/playwright/sheet.spec.ts]
+```
+
+```mdl
+verdict F-2.1: Formulas start with = and are evaluated by HyperFormula through the compute graph.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/model/sheet-model.ts#SheetModel]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sheet/src/model/sheet-model.test.ts, github:dxos/dxos/packages/plugins/plugin-sheet/src/playwright/sheet.spec.ts]
+```
+
+```mdl
+verdict F-2.2: HyperFormula's built-in function set is loaded; no test counts or samples the categories.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/capabilities/compute-graph-registry.ts]
+  note: The registry is built from `@dxos/compute-hyperformula` with `defaultPlugins`. Only SUM is exercised.
+```
+
+```mdl
+verdict F-2.3: Dependent cells recompute when a referenced value changes.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/model/sheet-model.ts#SheetModel]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sheet/src/model/sheet-model.test.ts, github:dxos/dxos/packages/plugins/plugin-sheet/src/playwright/sheet.spec.ts]
+  note: Tests recompute after a row deletion. No automated test changes a referenced value and checks the dependent cell; only the autocue `budget.mjs` does.
+```
+
+```mdl
+verdict F-2.4: Formula references are stored as indices and mapped to and from A1 notation.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/types/SheetUtil.ts#mapFormulaRefsToIndices, github:dxos/dxos/packages/plugins/plugin-sheet/src/types/SheetUtil.ts#mapFormulaIndicesToRefs]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sheet/src/model/sheet-model.test.ts]
+```
+
+```mdl
+verdict F-3.1: insertAxis inserts rows or columns at the index.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/operations/insert-axis.ts, github:dxos/dxos/packages/plugins/plugin-sheet/src/model/sheet-model.ts#SheetModel.insertRows]
+  note: No test inserts an axis.
+```
+
+```mdl
+verdict F-3.2: dropAxis removes and returns undo data; restoreAxis reverses it.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/operations/drop-axis.ts, github:dxos/dxos/packages/plugins/plugin-sheet/src/operations/restore-axis.ts, github:dxos/dxos/packages/plugins/plugin-sheet/src/capabilities/undo-mappings.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sheet/src/model/sheet-model.test.ts]
+  note: The drop is tested through `model.dropRow`; the restore is not tested.
+```
+
+```mdl
+verdict F-3.3: Sizes are stored in rowMeta and columnMeta, and an absent size falls back to the grid default.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/types/Sheet.ts#RowColumnMeta, github:dxos/dxos/packages/plugins/plugin-sheet/src/components/SheetContent/SheetContent.tsx#SheetContent]
+  note: No test resizes an axis and reads the meta.
+```
+
+```mdl
+verdict F-4.1: Ranges support start, center and end alignment.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/types/SheetRange.ts, github:dxos/dxos/packages/plugins/plugin-sheet/src/components/FormattingToolbar/formatting.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sheet/src/playwright/sheet.spec.ts, github:dxos/dxos/packages/plugins/plugin-sheet/src/types/SheetRange.test.ts]
+```
+
+```mdl
+verdict F-4.2: Commented cells get an overlay class, but from thread anchors, not from comment ranges.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/components/SheetContent/util.ts, github:dxos/dxos/packages/plugins/plugin-sheet/src/integrations/thread-ranges.ts]
+  note: |
+    `util.ts` adds `commentedClassName` when a cell has `threadRefs`, which come from thread anchors. A `comment` key in
+    `ranges` maps to `bg-grid-comment` in `SheetRange.ts`, but threads, not ranges, drive the overlay. No test covers it.
+```
+
+```mdl
+verdict F-4.3: Style ranges support header, highlight and softwrap; colour highlights are a separate highlight key.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/types/SheetRange.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sheet/src/types/SheetRange.test.ts]
+  note: '`header` is an extra style value. The test covers header styling and the `highlight` colour key, not `style: highlight` or `softwrap`.'
+```
+
+```mdl
+verdict F-4.4: RangeList in the object-properties surface shows and edits range formatting.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/containers/RangeList/RangeList.tsx#RangeList, github:dxos/dxos/packages/plugins/plugin-sheet/src/capabilities/react-surface.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sheet/src/playwright/sheet.spec.ts]
+```
+
+```mdl
+verdict F-5.1: Cell edits write to the ECHO Sheet object, which replicates.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/model/sheet-model.ts#SheetModel]
+  note: The model writes `sheet.cells` through ECHO. No test runs two peers.
+```
+
+```mdl
+verdict F-5.2: The model re-reads cells on object change, so a remote write re-renders without reload.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/model/sheet-model.ts#SheetModel, github:dxos/dxos/packages/plugins/plugin-sheet/src/model/useSheetModel.ts]
+  note: No test writes from a second peer.
+```
+
+```mdl
+verdict F-5.3: ComputeGraphRegistry keeps one graph per space on each peer; peers do not share a graph instance.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/capabilities/compute-graph-registry.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sheet/src/model/sheet-model.test.ts]
+  note: Each client builds its own HyperFormula graph from the replicated cells; "share the same formula graph" holds only in that sense.
+```
+
+```mdl
+verdict F-6.1: The plugin contributes a MarkdownCapabilities.ExtensionProvider that adds the compute-graph facet.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/capabilities/markdown-extension.ts]
+  note: `plugin.test.ts` checks module activation events, not the markdown contribution.
+```
+
+```mdl
+verdict F-6.2: The compute extension evaluates formulas in fenced code blocks against the space graph.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/extensions/compute.ts#computeGraphFacet, github:dxos/dxos/packages/plugins/plugin-sheet/src/capabilities/markdown-extension.ts]
+  walkthrough:
+    - The provider resolves the document's space and supplies its graph through the facet. github:dxos/dxos/packages/plugins/plugin-sheet/src/capabilities/markdown-extension.ts
+    - The extension walks FencedCode nodes and evaluates them with the facet's graph. github:dxos/dxos/packages/plugins/plugin-sheet/src/extensions/compute.ts#computeGraphFacet
+  note: `compute.stories.tsx` has no play test; `sheet-extension.test.ts` tests the formula parser, not this extension.
+```
+
+```mdl
+verdict F-7.1: scrollToAnchor focuses the target cell and sets active refs.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/operations/scroll-to-anchor.ts]
+  note: No test invokes it.
+```
+
+```mdl
+verdict F-7.2: AnchorSort orders sheet anchors by index position.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sheet/src/capabilities/anchor-sort.ts, github:dxos/dxos/packages/plugins/plugin-sheet/src/types/SheetUtil.ts#compareIndexPositions]
+  note: No test covers the comparator.
+```
+
+```mdl
+verdict T-1: The Playwright spec types a value and sees it in the grid; it does not check Sheet.cells.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-sheet/src/playwright/sheet.spec.ts]
+  note: `basic interactions` checks the rendered value only.
+```
+
+```mdl
+verdict T-2: SUM is evaluated in the browser, but no test changes an input and checks the recompute.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-sheet/src/playwright/sheet.spec.ts, github:dxos/dxos/packages/plugins/plugin-sheet/src/model/sheet-model.test.ts]
+  note: The spec's `=A1+A2` and the change-to-15 step are not run. The tests check SUM after a row deletion.
+```
+
+```mdl
+verdict T-3: No test inserts a row via insertAxis or restores one via restoreAxis.
+  status: missing
+  note: Searched `*.test.ts` and `sheet.spec.ts`; only row deletion is tested.
+```
+
+```mdl
+verdict T-4: The Playwright ranges test applies centre alignment, not a highlight style.
+  status: diverged
+  tests: [github:dxos/dxos/packages/plugins/plugin-sheet/src/playwright/sheet.spec.ts]
+  note: It checks `text-center` and the RangeList row, not `style: highlight` or the highlight background class.
+```
+
+```mdl
+verdict T-5: No test runs two peers on one sheet.
+  status: missing
+  note: Searched plugin-sheet tests and specs.
+```
+
+```mdl
+verdict T-6: No test invokes scrollToAnchor.
+  status: missing
+  note: Searched plugin-sheet tests and specs.
+```
+
+```mdl
+verdict QA-1: No automation runs create, setRange and getRange as a round trip.
+  status: missing
+  note: The QA test is unverified. No test invokes the three agent ops.
+```
+
+```mdl
+verdict QA-2: The autocue script drives the budget flow and waits for each total, including the recompute.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-sheet/autocue/budget.mjs]
+  note: The script waits for 300, 355 and the edited total. It runs as an autocue recording against a bundled app, not in CI.
+```
+
+```mdl
+verdict QA-3: The autocue script opens the sales report and switches charts; it does not check the range selection.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-sheet/autocue/sales-charts.mjs]
+  note: It waits for each plot to render. The selected range (F1:G4, A1:D7) is not checked. It runs as a recording, not in CI.
+```

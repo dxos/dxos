@@ -7,6 +7,7 @@ import React, { useMemo } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
+import * as Collapsible from '@dxos/react-ui/Collapsible';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -32,7 +33,7 @@ export const RequestWidget = ({ children, message }: RequestWidgetProps) => {
     return null;
   }
 
-  const { requestId, title, options, resolution } = request.value;
+  const { requestId, title, options, resolution, preview } = request.value;
   const chosen = options.find((option) => option.id === resolution?.optionId);
   return (
     <Card.Root data-testid='assistant.request'>
@@ -62,6 +63,14 @@ export const RequestWidget = ({ children, message }: RequestWidgetProps) => {
               </Button.Root>
             ))}
           </Layout.Flex>
+        )}
+        {preview && (
+          <Collapsible.Root data-testid='assistant.request.preview'>
+            <Collapsible.Trigger>{preview.label}</Collapsible.Trigger>
+            <Collapsible.Content>
+              <Card.Description classNames='whitespace-pre-wrap'>{preview.text}</Card.Description>
+            </Collapsible.Content>
+          </Collapsible.Root>
         )}
       </Card.Body>
     </Card.Root>

@@ -3,8 +3,10 @@
 //
 
 import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
+import * as Cause from 'effect/Cause';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
@@ -13,6 +15,7 @@ import { AnthropicResolver } from '@dxos/ai/resolvers';
 import * as Credential from '@dxos/compute/Credential';
 import * as Header from '@dxos/compute/Header';
 import * as Operation from '@dxos/compute/Operation';
+import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, Hypergraph, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
@@ -136,16 +139,15 @@ export const wrapFunctionHandler = (
           }
         }
 
-        let result: any = await func.handler(dataWithDecodedRefs);
-
-        if (Effect.isEffect(result)) {
-          result = await EffectEx.runAndForwardErrors(
-            (result as Effect.Effect<unknown, unknown, EdgeFunctionServices>).pipe(
-              Effect.orDie,
-              Effect.provide(funcContext.createLayer()),
-            ),
-          );
-        }
+        const returned: any = await func.handler(dataWithDecodedRefs);
+        const exit: Exit.Exit<unknown> = Effect.isEffect(returned)
+          ? await Effect.runPromiseExit(
+              (returned as Effect.Effect<unknown, unknown, EdgeFunctionServices>).pipe(
+                Effect.orDie,
+                Effect.provide(funcContext.createLayer()),
+              ),
+            )
+          : Exit.succeed(returned);
 
         // Flush in-memory ECHO writes before the function scope closes.
         // Writes performed by `db.add` / `db.remove` are buffered in the in-memory
@@ -154,10 +156,17 @@ export const wrapFunctionHandler = (
         // `await using` above) calls `db.close()` but does NOT flush, so mutations
         // performed by handlers that declare `Database.Service` (e.g. `object-create`,
         // `object-update`, `relation-create`) would be silently dropped before reaching
-        // the edge `AutomergeReplicator`. Flushing here closes that hole.
-        if (serviceTags.includes(Database.Service.key) && funcContext.db) {
+        // the edge `AutomergeReplicator`. A `runAgain` exit is a checkpoint the next
+        // run continues from, so its writes are kept too.
+        if (
+          (Exit.isSuccess(exit) || isRunAgainExit(exit)) &&
+          serviceTags.includes(Database.Service.key) &&
+          funcContext.db
+        ) {
           await funcContext.db.flush({ disk: true, indexes: false });
         }
+
+        const result = EffectEx.unwrapExit(exit);
 
         if (func.output && !SchemaAST.isAnyKeyword(func.output.ast)) {
           try {
@@ -178,6 +187,12 @@ export const wrapFunctionHandler = (
     },
   };
 };
+
+/** Whether every reason in `exit` is the {@link Operation.runAgain} defect: the run stopped at a checkpoint, not on an error. */
+const isRunAgainExit = (exit: Exit.Exit<unknown>): boolean =>
+  Exit.isFailure(exit) &&
+  exit.cause.reasons.length > 0 &&
+  exit.cause.reasons.every((reason) => Cause.isDieReason(reason) && Process.RunAgainError.is(reason.defect));
 
 /**
  * Container for services and context for a function.

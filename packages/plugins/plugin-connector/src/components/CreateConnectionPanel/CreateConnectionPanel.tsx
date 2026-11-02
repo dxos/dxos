@@ -17,8 +17,7 @@ import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import * as Banner from '@dxos/react-ui/Banner';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
-import { meta } from '#meta';
-
+import { ConnectorNamespace } from '../../namespace.ts';
 import { Connector, type ConnectorEntry, type ConnectorKind } from '../../types/ConnectorSpec.ts';
 
 /** Picker order: connecting as Composer first, then as yourself, then your own credentials. */
@@ -50,7 +49,7 @@ export const CreateConnectionPanel = ({
   onCancel,
   connectors: connectorsProp,
 }: CreateConnectionPanelProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(ConnectorNamespace.key);
   const capabilityConnectors = Hooks.useCapabilities(Connector).flat();
   const connectors = connectorsProp ?? capabilityConnectors;
   const [connectorId, setConnectorId] = useState<string>();
@@ -100,7 +99,12 @@ export const CreateConnectionPanel = ({
   const sharedAccountNote = considered?.kind === 'user' && members.length > 1 && (
     <Banner.Root valence='warning' data-testid='create-connection-panel.shared-account'>
       <Banner.Title>{t('user-connection-shared.title')}</Banner.Title>
-      <Banner.Body>{t('user-connection-shared.message')}</Banner.Body>
+      {/* An MCP server lets every member's agent write as this account, not just sync through it. */}
+      <Banner.Body>
+        {considered.mcp
+          ? t('user-connection-shared-mcp.message', { service: considered.label ?? considered.id })
+          : t('user-connection-shared.message')}
+      </Banner.Body>
     </Banner.Root>
   );
 

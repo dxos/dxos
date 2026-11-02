@@ -4,7 +4,7 @@
 
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
-import { Aggregate, type Entity, Filter, Obj, Order, Query, type QueryResult, Scope } from '@dxos/echo';
+import { Aggregate, type Entity, Feed, Filter, Obj, Order, Query, type QueryResult, Ref, Scope } from '@dxos/echo';
 import { DatabaseImpl, type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
@@ -352,7 +352,7 @@ describe('synchronous query propagation', () => {
   describe('index-backed objects', () => {
     // Reopened from disk, so query results are backed by the index's JSON and hold no document.
     const openReloaded = async (populate: (db: EchoDatabase) => void) => {
-      const peer = await builder.createPeer({ types: [TestSchema.Person, TestSchema.Task] });
+      const peer = await builder.createPeer({ types: [TestSchema.Person, TestSchema.Task, TestSchema.Organization] });
       const initialDb = await peer.createDatabase();
       populate(initialDb);
       await initialDb.flush({ indexes: true, secondaryIndexes: true });
@@ -439,6 +439,145 @@ describe('synchronous query propagation', () => {
       await waitForIndexAnswer(db, query);
       expect(query.results.map((member) => member.name)).toEqual(['a', 'c', 'd']);
       expect(updates).toHaveLength(baseline + 2);
+    });
+
+    test('a traversal hit whose edge the holder dropped leaves before the edit returns', async () => {
+      const db = await openReloaded((db) => {
+        const acme = db.add(Obj.make(TestSchema.Organization, { name: 'acme' }));
+        db.add(Obj.make(TestSchema.Person, { name: 'alice', employer: Ref.make(acme) }));
+      });
+      const [alice] = await db.query(Filter.type(TestSchema.Person, { name: 'alice' })).run();
+      const query = db.query(Query.select(Filter.type(TestSchema.Person)).reference('employer'));
+      const updates = recordUpdates(query);
+      await waitForCompleteness(query, 'complete');
+      expect(query.results.map((organization) => organization.name)).toEqual(['acme']);
+      const baseline = updates.length;
+
+      Obj.update(alice, (alice) => {
+        alice.employer = undefined;
+      });
+      expect(query.results).toEqual([]);
+      expect(updates).toHaveLength(baseline + 1);
+
+      await waitForIndexAnswer(db, query);
+      expect(query.results).toEqual([]);
+    });
+
+    test('a traversal hit whose anchor no longer matches leaves before the edit returns', async () => {
+      const db = await openReloaded((db) => {
+        const acme = db.add(Obj.make(TestSchema.Organization, { name: 'acme' }));
+        db.add(Obj.make(TestSchema.Person, { name: 'alice', employer: Ref.make(acme) }));
+      });
+      const [alice] = await db.query(Filter.type(TestSchema.Person, { name: 'alice' })).run();
+      const query = db.query(Query.select(Filter.type(TestSchema.Person, { name: 'alice' })).reference('employer'));
+      recordUpdates(query);
+      await waitForCompleteness(query, 'complete');
+      expect(query.results.map((organization) => organization.name)).toEqual(['acme']);
+
+      Obj.update(alice, (alice) => {
+        alice.name = 'alicia';
+      });
+      expect(query.results).toEqual([]);
+    });
+
+    test('a count over index-backed objects follows a local write before it returns', async () => {
+      const db = await openReloaded((db) => {
+        db.add(person({ name: 'a', age: 30 }));
+        db.add(person({ name: 'b', age: 30 }));
+        db.add(person({ name: 'c', age: 40 }));
+      });
+      const [a] = await db.query(Filter.type(TestSchema.Person, { name: 'a' })).run();
+      const query = db.query(
+        Query.select(Filter.type(TestSchema.Person)).aggregate({
+          age: Aggregate.group('age'),
+          count: Aggregate.count(),
+        }),
+      );
+      onTestFinished(query.subscribe());
+      await waitForCompleteness(query, 'complete');
+      const counts = () => Object.fromEntries(query.results.map((row) => [row.age, row.count]));
+      expect(counts()).toEqual({ 30: 2, 40: 1 });
+
+      Obj.update(a, (a) => {
+        a.age = 40;
+      });
+      expect(counts()).toEqual({ 30: 1, 40: 2 });
+
+      db.add(person({ name: 'd', age: 50 }));
+      expect(counts()).toEqual({ 30: 1, 40: 2, 50: 1 });
+
+      await waitForIndexAnswer(db, query);
+      expect(counts()).toEqual({ 30: 1, 40: 2, 50: 1 });
+    });
+  });
+
+  describe('local ordering', () => {
+    test('a property order applies over local and index entries alike, before the write returns', async () => {
+      const db = await openDatabase();
+      db.add(person({ name: 'bob' }));
+      db.add(person({ name: 'dave' }));
+      await db.flush({ indexes: true });
+      const query = db.query(Query.select(Filter.type(TestSchema.Person)).orderBy(Order.property('name', 'asc')));
+      recordUpdates(query);
+      await waitForCompleteness(query, 'complete');
+      const names = () => query.results.map((person) => person.name);
+      expect(names()).toEqual(['bob', 'dave']);
+
+      db.add(person({ name: 'carol' }));
+      expect(names()).toEqual(['bob', 'carol', 'dave']);
+    });
+  });
+
+  describe('feeds', () => {
+    test('an append is in a feed query before the append returns', async () => {
+      const peer = await builder.createPeer({ types: [TestSchema.Person, Feed.Feed] });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'people' }));
+      await db.appendToFeed(feed, [person({ name: 'john' })]);
+      await db.flush({ indexes: true });
+      const query = db.query(Query.select(Filter.type(TestSchema.Person)).from(feed));
+      const updates = recordUpdates(query);
+      await expect.poll(() => query.results.length).toBe(1);
+      const baseline = updates.length;
+
+      db.add(person({ name: 'jane' }), { to: feed });
+      expect(query.results.map((person) => person.name).sort()).toEqual(['jane', 'john']);
+      expect(updates.length).toBeGreaterThan(baseline);
+
+      await db.flush({ indexes: true });
+      await expect.poll(() => query.completeness).toBe('complete');
+      expect(query.results.map((person) => person.name).sort()).toEqual(['jane', 'john']);
+    });
+
+    test('an edit or delete of an unacknowledged write moves it in or out of a property query at once', async () => {
+      const peer = await builder.createPeer({ types: [TestSchema.Person, Feed.Feed] });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'people' }));
+      await db.flush({ indexes: true });
+      const query = db.query(Query.select(Filter.type(TestSchema.Person, { name: 'jane' })).from(feed));
+      recordUpdates(query);
+
+      const written = db.add(person({ name: 'john' }), { to: feed });
+      expect(query.results).toEqual([]);
+
+      Obj.update(written, (written) => {
+        written.name = 'jane';
+      });
+      expect(ids(query.results)).toEqual([written.id]);
+
+      Obj.update(written, (written) => {
+        written.name = 'janet';
+      });
+      expect(query.results).toEqual([]);
+
+      Obj.update(written, (written) => {
+        written.name = 'jane';
+      });
+      expect(ids(query.results)).toEqual([written.id]);
+
+      const deleted = db.deleteFromFeed(feed, [written]);
+      expect(query.results).toEqual([]);
+      await deleted;
     });
   });
 
@@ -620,13 +759,24 @@ describe('Query.characteristics', () => {
     expect(remote).toMatchObject({ class: 'unsupported' });
   });
 
-  test('a feed scope is remote-only', ({ expect }) => {
-    const [branch] = branches(
-      Query.select(Filter.everything()).from(
-        Scope.feed(EID.make({ entityId: EntityId.make('01J00000000000000000000000') })),
-      ),
-    );
-    expect(branch).toMatchObject({ class: 'remote-only' });
+  test('a simple selection over a feed is local-partial; a window over it is remote-only', ({ expect }) => {
+    const feed = Scope.feed(EID.make({ entityId: EntityId.make('01J00000000000000000000000') }));
+    const [selection] = branches(Query.select(Filter.everything()).from(feed));
+    expect(selection).toMatchObject({ class: 'local-partial', revalidation: 'entry' });
+
+    const [byId] = branches(Query.select(Filter.id(EntityId.make('01J00000000000000000000001'))).from(feed));
+    expect(byId).toMatchObject({ class: 'local-partial' });
+
+    const [window] = branches(Query.select(Filter.everything()).from(feed).limit(10));
+    expect(window).toMatchObject({ class: 'remote-only' });
+  });
+
+  test('an order the working set can apply is not a window; an index order or a limit is', ({ expect }) => {
+    const [ordered] = branches(Query.select(Filter.type(TestSchema.Person)).orderBy(Order.property('name', 'asc')));
+    expect(ordered).toMatchObject({ class: 'local-partial', window: { order: 'local-property' } });
+
+    const [ranked] = branches(Query.select(Filter.type(TestSchema.Person)).orderBy(Order.rank()));
+    expect(ranked).toMatchObject({ class: 'local-revalidating' });
   });
 
   test('a query is synchronous exactly when some branch has a local contribution', ({ expect }) => {

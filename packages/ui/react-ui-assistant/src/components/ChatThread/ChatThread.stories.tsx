@@ -433,8 +433,6 @@ export const Assistant: Story = {
  * not dragged back by the stream. Returning to the tail opts back in.
  */
 export const Interrupted: Story = {
-  // TODO(wittjosiah): Flaky in CI (passes only on retry); fix and re-enable.
-  tags: ['!test'],
   args: { chunkDelay: 40, count: 60 },
   play: async ({ canvasElement }) => {
     await settle(40);

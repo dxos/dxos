@@ -8,13 +8,13 @@ import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import { meta } from '#meta';
+import { CrxNamespace } from '../namespace.ts';
 
 /**
  * Writable atom holding the plugin's Settings.
  */
 export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings.ts').Settings>>()(
-  `${meta.profile.key}.capability.settings`,
+  `${CrxNamespace.key}.capability.settings`,
 );
 
 /**
@@ -22,5 +22,5 @@ export const Settings = Capability.makeSingleton<Atom.Writable<import('./Setting
  * Multi: each contributor provides one array (e.g. plugin-bookmarks); consumers flatten via `getAll`.
  */
 export const PageAction = Capability.make<import('./PageAction.ts').PageAction[]>()(
-  `${meta.profile.key}.capability.pageAction`,
+  `${CrxNamespace.key}.capability.pageAction`,
 );

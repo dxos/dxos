@@ -117,7 +117,8 @@ export type Options = {
    */
   createRuntime: (args: {
     config: Record<string, any> | undefined;
-    requestShutdown: () => void;
+    /** `reason` is reported to the leader with the shutdown (see {@link WorkerProtocol.DedicatedWorkerShuttingDownMessage}). */
+    requestShutdown: (reason?: string) => void;
     /** Sends the leader a `status` message (see {@link WorkerProtocol.DedicatedWorkerStatusMessage}). */
     reportStatus: (status: unknown) => void;
   }) => Effect.Effect<RuntimeHandle, BaseError, Scope.Scope>;
@@ -132,6 +133,16 @@ const defaultEndpoint = (): WorkerProtocol.WorkerEndpoint => {
     close: () => scope.close(),
   };
 };
+
+/** The `name` this worker was constructed with (`new Worker(url, { name })`), when it has one. */
+const workerGlobalName = (): string | undefined => {
+  const name: unknown = Reflect.get(globalThis, 'name');
+  return typeof name === 'string' && name.length > 0 ? name : undefined;
+};
+
+type ShutdownInfo = Pick<WorkerProtocol.DedicatedWorkerShuttingDownMessage, 'detail' | 'displacedBy'>;
+
+const describeError = (err: unknown): string => (err instanceof Error ? `${err.name}: ${err.message}` : String(err));
 
 /**
  * Runs the generic dedicated-worker message loop: storage lock, liveness lock, displacement of prior
@@ -153,17 +164,20 @@ export const run = ({
   // Identifies this worker to the tab that owns it, so an escalation this worker raised cannot come
   // back as an order to terminate it.
   const workerId = crypto.randomUUID();
+  const workerName = workerGlobalName();
+  log('worker starting', { workerId, workerName, storageLockKey });
   // Displacement is a worker-to-worker handshake, so the channel listens and the stop signal goes out
   // before this worker queues on the storage lock: the incumbent releases that lock only when it is
   // displaced, and a signal broadcast after the grant can never reach the worker being waited on.
   const channel = new DisplaceChannel(displaceChannel);
   // Replaced by `shutdown` the moment the lock is granted; until then a displace only records that a
   // newer worker exists, since a worker serving nothing has nothing to stand down from.
-  let displaced = false;
-  channel.onStop = () => {
-    displaced = true;
+  let displacedBy: WorkerProtocol.DisplaceIssuer | undefined;
+  channel.onStop = (issuer) => {
+    log('stop received while queued for the storage lock', { workerId, displacedBy: issuer });
+    displacedBy = issuer;
   };
-  channel.postStop();
+  channel.postStop({ workerId, name: workerName });
   // Second level, for an incumbent wedged badly enough not to service the channel at all (a busy CPU
   // loop being the clearest case): it never runs `shutdown`, so it releases neither the liveness nor
   // the storage lock, and only the tab holding its `Worker` handle can free them. Fires at most once
@@ -177,14 +191,14 @@ export const run = ({
   }, displaceGraceTimeout);
 
   // Set once the storage lock is held; a lock stolen from under this worker ends it through here.
-  let shutdownOnLockLost: (() => Promise<void>) | undefined;
+  let shutdownWorker: ((reason: WorkerProtocol.WorkerShutdownReason, info?: ShutdownInfo) => Promise<void>) | undefined;
   const onLockLost = (lockName: string) => (err: unknown) => {
     if (signal?.aborted) {
       return;
     }
     // A holder whose lock was stolen keeps running, but its storage is no longer its own to serve.
     log.warn('worker lock lost, shutting down', { lockName, err });
-    void shutdownOnLockLost?.();
+    void shutdownWorker?.('lock-lost', { detail: `${lockName}: ${describeError(err)}` });
   };
   // Aborting a granted request leaves the lock held, so a running worker is shut down explicitly; a
   // worker that never got the lock only has its channel to release.
@@ -193,8 +207,8 @@ export const run = ({
     () => {
       // The channel is about to close, and posting an escalation on a closed BroadcastChannel throws.
       clearTimeout(escalation);
-      if (shutdownOnLockLost) {
-        void shutdownOnLockLost();
+      if (shutdownWorker) {
+        void shutdownWorker('aborted');
       } else {
         channel.close();
       }
@@ -202,7 +216,7 @@ export const run = ({
     { once: true },
   );
   const storageLock = navigator.locks.request(storageLockKey, { signal }, async () => {
-    log('lock acquired');
+    log('lock acquired', { workerId });
     clearTimeout(escalation);
 
     let runtime: RuntimeHandle | undefined;
@@ -233,12 +247,29 @@ export const run = ({
     void livenessLock.catch(onLockLost(livenessLockKey));
 
     let shuttingDown = false;
-    const shutdown = async () => {
+    const shutdown = async (reason: WorkerProtocol.WorkerShutdownReason, info: ShutdownInfo = {}) => {
       if (shuttingDown) {
         return;
       }
       shuttingDown = true;
-      log('worker shutting down');
+      // A runtime-requested shutdown is routine (its last tab closed); every other reason ends a worker early.
+      if (reason === 'requested') {
+        log.info('worker shutting down', { workerId, workerName, reason, ...info });
+      } else {
+        log.warn('worker shutting down', { workerId, workerName, reason, ...info });
+      }
+      // Sent first: this worker's own log sink closes with it, and a teardown that hangs would
+      // otherwise leave the tab with no record of why its worker went away.
+      try {
+        endpoint.postMessage({
+          type: 'shutting-down',
+          workerId,
+          reason,
+          ...info,
+        } satisfies WorkerProtocol.DedicatedWorkerMessage);
+      } catch (err) {
+        log.catch(err);
+      }
       channel.close();
       await asyncTimeout(EffectEx.runPromise(Scope.close(runtimeScope, Exit.void)), shutdownTimeout).catch((err) => {
         if (err instanceof TimeoutError) {
@@ -252,20 +283,20 @@ export const run = ({
       releaseLivenessLock();
       releaseStorageLock();
     };
-    shutdownOnLockLost = shutdown;
+    shutdownWorker = shutdown;
     // Set before the first await, so a displace arriving while this worker starts up cannot land in a
     // gap and leave it holding the storage lock a displacer is waiting on.
-    channel.onStop = () => {
-      log('displaced by newer worker, shutting down');
-      void shutdown();
+    channel.onStop = (issuer) => {
+      log.warn('displaced by newer worker, shutting down', { workerId, displacedBy: issuer });
+      void shutdown('displaced', { displacedBy: issuer });
     };
-    if (displaced) {
+    if (displacedBy) {
       // A newer worker broadcast while this one queued: it is waiting behind us on the storage lock,
       // and serving here would strand it for the leader session's whole budget.
-      log('displaced while waiting for the storage lock, not serving');
+      log.warn('displaced while waiting for the storage lock, not serving', { workerId, displacedBy });
       // Through `shutdown` rather than closing the channel alone, so the liveness lock is released:
       // clients watch that key to detect termination and would otherwise see this worker as alive.
-      await shutdown();
+      await shutdown('displaced-while-queued', { displacedBy });
       return;
     }
 
@@ -277,7 +308,7 @@ export const run = ({
       return;
     }
 
-    const requestShutdown = () => void shutdown();
+    const requestShutdown = (reason?: string) => void shutdown('requested', { detail: reason });
 
     const reportStatus = (status: unknown) =>
       endpoint.postMessage({ type: 'status', status } satisfies WorkerProtocol.DedicatedWorkerMessage);
@@ -302,7 +333,7 @@ export const run = ({
               type: 'init-failed',
               error: WorkerProtocol.encodeError(err),
             } satisfies WorkerProtocol.DedicatedWorkerMessage);
-            await shutdown();
+            await shutdown('init-failed', { detail: describeError(err) });
             break;
           }
           log('dedicated-worker: runtime ready, posting ready');
@@ -440,7 +471,8 @@ export const run = ({
     };
 
     endpoint.addEventListener('message', handleMessage);
-    endpoint.postMessage({ type: 'listening' } satisfies WorkerProtocol.DedicatedWorkerMessage);
+    log('worker listening', { workerId });
+    endpoint.postMessage({ type: 'listening', workerId } satisfies WorkerProtocol.DedicatedWorkerMessage);
 
     await storageLockHeld;
     endpoint.removeEventListener('message', handleMessage);

@@ -2,10 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Chunk, unifiedMergeView } from '@codemirror/merge';
+import { Change, Chunk, diff, unifiedMergeView } from '@codemirror/merge';
 import { type Extension, Text } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { diffWordsWithSpace } from 'diff';
+import { diffLines, diffWordsWithSpace } from 'diff';
+
+import { type Hunk, computeWordHunks } from './hunks.ts';
 
 export type DiffOptions = {
   /**
@@ -13,6 +15,15 @@ export type DiffOptions = {
    * insertions and deletions are shown relative to this original.
    */
   original: string;
+  /**
+   * How changes are coloured. `accept` (the default) previews accepting the original into the
+   * editor's document, so the original's content reads as an addition. `changes` reads the editor's
+   * document as the newer version: its new text is tinted green and the original's removed text is
+   * faded and struck through, as a reviewer reads a change.
+   */
+  orientation?: 'accept' | 'changes';
+  /** Folds runs of unchanged lines, keeping this many lines of context around each change. */
+  collapseUnchanged?: number;
 };
 
 /**
@@ -37,14 +48,90 @@ const reviewOrientationTheme = EditorView.theme({
 });
 
 /**
+ * Reads the editor's document as the newer version. New lines are tinted and their new words filled, so an
+ * addition stands out; removed lines stay in place, faded and struck through, so they read as gone.
+ */
+const changesOrientationTheme = EditorView.theme({
+  // An inserted line carries both tints, so together they add up to one surface and the syntax colours stay legible.
+  '&.cm-merge-b .cm-changedLine': {
+    backgroundColor: 'oklch(from var(--color-cm-diff-add-surface) l c h / calc(alpha * 0.4))',
+  },
+  '&.cm-merge-b .cm-changedText': {
+    background: 'oklch(from var(--color-cm-diff-add-surface) l c h / calc(alpha * 0.6))',
+    borderRadius: '2px',
+  },
+  '& .cm-deletedChunk': {
+    backgroundColor: 'transparent',
+    opacity: '0.55',
+    filter: 'grayscale(0.6)',
+    paddingBlock: '1px',
+  },
+  '& .cm-deletedChunk .cm-deletedText, &.cm-merge-b .cm-deletedText': {
+    background: 'var(--color-cm-diff-remove-surface)',
+    textDecoration: 'line-through',
+    textDecorationColor: 'var(--color-cm-diff-remove-gutter)',
+  },
+  '&.cm-merge-b .cm-changedLineGutter': { background: 'var(--color-cm-diff-add-gutter)' },
+  '& .cm-deletedLineGutter': { background: 'var(--color-cm-diff-remove-gutter)' },
+});
+
+/**
+ * A line-first diff, as git shows one: whole lines are matched first, then each replaced run of lines is diffed by
+ * character so only the words that changed are marked. The merge view's own diff gives up on a long document (it
+ * bounds its search) and marks whole paragraphs as replaced when one line was inserted above them.
+ */
+export const lineDiff = (original: string, modified: string): readonly Change[] => {
+  const changes: Change[] = [];
+  let [positionA, positionB] = [0, 0];
+  let pending: { fromA: number; toA: number; fromB: number; toB: number } | undefined;
+  const flush = () => {
+    if (!pending) {
+      return;
+    }
+    const { fromA, toA, fromB, toB } = pending;
+    if (fromA === toA || fromB === toB) {
+      changes.push(new Change(fromA, toA, fromB, toB));
+    } else {
+      for (const change of diff(original.slice(fromA, toA), modified.slice(fromB, toB))) {
+        changes.push(new Change(change.fromA + fromA, change.toA + fromA, change.fromB + fromB, change.toB + fromB));
+      }
+    }
+    pending = undefined;
+  };
+  for (const part of diffLines(original, modified)) {
+    const length = part.value.length;
+    if (part.removed) {
+      pending ??= { fromA: positionA, toA: positionA, fromB: positionB, toB: positionB };
+      pending.toA += length;
+      positionA += length;
+    } else if (part.added) {
+      pending ??= { fromA: positionA, toA: positionA, fromB: positionB, toB: positionB };
+      pending.toB += length;
+      positionB += length;
+    } else {
+      flush();
+      positionA += length;
+      positionB += length;
+    }
+  }
+  flush();
+  return changes;
+};
+
+/**
  * Inline (unified) diff view: renders the editor's document with insertions and deletions marked
  * relative to {@link DiffOptions.original}. The editor stays editable — edits to the document update
  * the diff against the (static) original live — so it can overlay a live editor to compare the
  * current state against another version (e.g. another branch) without locking editing.
  */
-export const diffView = ({ original }: DiffOptions): Extension => [
-  unifiedMergeView({ original, mergeControls: false }),
-  reviewOrientationTheme,
+export const diffView = ({ original, orientation = 'accept', collapseUnchanged }: DiffOptions): Extension => [
+  unifiedMergeView({
+    original,
+    mergeControls: false,
+    ...(orientation === 'changes' && { diffConfig: { override: lineDiff } }),
+    ...(collapseUnchanged !== undefined && { collapseUnchanged: { margin: collapseUnchanged, minSize: 4 } }),
+  }),
+  orientation === 'changes' ? changesOrientationTheme : reviewOrientationTheme,
 ];
 
 /**
@@ -247,9 +334,6 @@ export const rebaseHunksWith = (charHunks: Hunk[], hunks: DiffHunk[]): DiffHunk[
   });
 };
 
-/** A changed hunk between two documents as character ranges in each (A = original, B = modified). */
-export type Hunk = { fromA: number; toA: number; fromB: number; toB: number };
-
 /**
  * LINE-level changed hunks between `original` (A) and `modified` (B) as character ranges (via
  * `@codemirror/merge` `Chunk.build`). Coarser than {@link computeWordHunks}; retained for callers that
@@ -262,42 +346,6 @@ export const computeHunks = (original: string, modified: string): Hunk[] =>
     fromB: chunk.fromB,
     toB: chunk.toB,
   }));
-
-/**
- * WORD-level changed hunks between `original` (A) and `modified` (B), each carrying both coordinate
- * ranges. Matches the word granularity of {@link diffHunks} (same `diffWordsWithSpace` alignment), so
- * {@link cherryPickHunk} / {@link revertHunk} resolve exactly the anchored word(s) — accepting one
- * word does not pull in the rest of its line.
- */
-export const computeWordHunks = (original: string, modified: string): Hunk[] => {
-  const hunks: Hunk[] = [];
-  let positionA = 0;
-  let positionB = 0;
-  let pending: Hunk | undefined;
-  const flush = () => {
-    if (pending) {
-      hunks.push(pending);
-      pending = undefined;
-    }
-  };
-  for (const change of diffWordsWithSpace(original, modified)) {
-    if (change.added) {
-      pending ??= { fromA: positionA, toA: positionA, fromB: positionB, toB: positionB };
-      positionB += change.value.length;
-      pending.toB = positionB;
-    } else if (change.removed) {
-      pending ??= { fromA: positionA, toA: positionA, fromB: positionB, toB: positionB };
-      positionA += change.value.length;
-      pending.toA = positionA;
-    } else {
-      flush();
-      positionA += change.value.length;
-      positionB += change.value.length;
-    }
-  }
-  flush();
-  return hunks;
-};
 
 /**
  * CHARACTER-level changed hunks between `original` (A) and `modified` (B), each carrying both
@@ -442,61 +490,3 @@ const slideToWordBoundary = (original: string, modified: string, hunk: Hunk): Hu
  * pure insertion: the inserted text occupies no span on the other side, and the caller anchors it at
  * a single offset. Those collapse to a containment test, or accepting an insertion is impossible.
  */
-const overlaps = (from: number, to: number, range: { start: number; end: number }): boolean =>
-  from === to || range.start === range.end
-    ? from <= range.end && to >= range.start
-    : from < range.end && to > range.start;
-
-/**
- * Resolve a single change to apply when cherry-picking from `compare` (A) into `current` (B): find
- * the hunk overlapping `range` (a character range in `current`) and return the splice that replaces
- * that hunk's current text with the compare version. Returns undefined if no hunk overlaps the range
- * (e.g. the change was already applied/reverted). `compare` is read live by the caller, so applying
- * the result always reflects the latest diff — not a snapshot.
- */
-export const cherryPickHunk = (
-  current: string,
-  compare: string,
-  range: { start: number; end: number },
-): { from: number; del: number; insert: string } | undefined => {
-  // Merge EVERY hunk the range overlaps into one splice: a range spanning a delimiter pair (two
-  // word-hunks wrapping unchanged text) must apply atomically — half an accepted pair is broken
-  // syntax. A cursor-anchored range still resolves a single hunk, unchanged.
-  const matched = computeWordHunks(compare, current).filter((h) => overlaps(h.fromB, h.toB, range));
-  if (matched.length === 0) {
-    return undefined;
-  }
-  const first = matched[0];
-  const last = matched[matched.length - 1];
-  return {
-    from: first.fromB,
-    del: Math.min(last.toB, current.length) - first.fromB,
-    insert: compare.slice(first.fromA, Math.min(last.toA, compare.length)),
-  };
-};
-
-/**
- * Resolve the splice that reverts a single change on `compare` (a branch) back to `base` (main) —
- * the reject counterpart to {@link cherryPickHunk}. `baseRange` is a character range in `base`; the
- * hunk overlapping it is located and the returned splice (in `compare` coordinates) replaces the
- * branch's version with the base text. Returns undefined if no hunk overlaps the range.
- */
-export const revertHunk = (
-  base: string,
-  compare: string,
-  baseRange: { start: number; end: number },
-): { from: number; del: number; insert: string } | undefined => {
-  // A = base, B = compare (branch); locate the hunks by the base-side range and merge them so a
-  // pair-spanning reject reverts the whole formatting action (mirror of cherryPickHunk).
-  const matched = computeWordHunks(base, compare).filter((h) => overlaps(h.fromA, h.toA, baseRange));
-  if (matched.length === 0) {
-    return undefined;
-  }
-  const first = matched[0];
-  const last = matched[matched.length - 1];
-  return {
-    from: first.fromB,
-    del: Math.min(last.toB, compare.length) - first.fromB,
-    insert: base.slice(first.fromA, Math.min(last.toA, base.length)),
-  };
-};

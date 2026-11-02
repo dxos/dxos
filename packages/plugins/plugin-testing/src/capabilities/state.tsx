@@ -10,6 +10,8 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
 import { StorybookCapabilities } from '#types';
 
+import type { StorybookPluginOptions } from '../types/StorybookPluginOptions.ts';
+
 const defaultState: StorybookCapabilities.LayoutStateProps = {
   sidebarState: 'closed',
   complementarySidebarState: 'closed',
@@ -19,7 +21,7 @@ const defaultState: StorybookCapabilities.LayoutStateProps = {
 };
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* (props?: { initialState?: Partial<StorybookCapabilities.LayoutStateProps> }) {
+  Effect.fnUntraced(function* (props?: StorybookPluginOptions) {
     const { initialState } = props ?? {};
     const stateAtom = Atom.make<StorybookCapabilities.LayoutStateProps>({ ...defaultState, ...initialState });
 

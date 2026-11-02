@@ -10,14 +10,12 @@ import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 
 import { ProjectPartial } from './project.ts';
-import { WeatherSkill } from './skill.ts';
 import { Tasks } from './tasks.ts';
 import { REFERENCE } from './util.ts';
 
 export { FORECAST_URL } from './util.ts';
 
 const partials = {
-  skill: WeatherSkill,
   tasks: Tasks,
   project: ProjectPartial,
 };
@@ -29,8 +27,8 @@ const partials = {
  *
  * It sits between `WorkerSpace` (a deploy with nothing to call) and `StockfishSpace` (an engine, a
  * design stage and a publish step): enough to exercise the whole build → deploy → configure → call
- * path, small enough to run unattended. The account stays temporary and unclaimed, and the server is
- * configured on a seeded skill because a skill is where a chat reads MCP servers from.
+ * path, small enough to run unattended. The account stays temporary and unclaimed, and the agent adds
+ * the server to the space as an MCP connection.
  */
 export const make = (): SampleSpace.Definition<typeof partials, void> =>
   SampleSpace.make({
@@ -41,12 +39,11 @@ export const make = (): SampleSpace.Definition<typeof partials, void> =>
     partials,
     build: (partials) =>
       Effect.gen(function* () {
-        const skill = yield* partials.skill();
         const tasks = yield* partials.tasks();
-        yield* partials.project({ tasks, skill });
+        yield* partials.project({ tasks });
 
-        // No root collection: this space seeds no documents — the project, its tasks and the skill
-        // surface through their own containers.
+        // No root collection: this space seeds no documents — the project and its tasks surface
+        // through their own containers.
       }),
   });
 

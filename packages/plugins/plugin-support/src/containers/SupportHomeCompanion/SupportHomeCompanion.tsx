@@ -14,8 +14,9 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { meta } from '#meta';
 import { HelpOperation } from '#types';
+
+import { SupportNamespace } from '../../namespace.ts';
 
 const WELCOME_SLIDE = {
   src: 'https://customer-5rxcjpyab08avpmn.cloudflarestream.com/f58459bcdf3a6f3e93644a4e0f39b22a/iframe?poster=https%3A%2F%2Fcustomer-5rxcjpyab08avpmn.cloudflarestream.com%2Ff58459bcdf3a6f3e93644a4e0f39b22a%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600',
@@ -23,7 +24,7 @@ const WELCOME_SLIDE = {
 };
 
 export const SupportHomeCompanion = () => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(SupportNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
 
   return (
@@ -40,7 +41,7 @@ export const SupportHomeCompanion = () => {
       </Panel.Header>
       <Panel.Body>
         <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport classNames='p-3'>
+          <ScrollArea.Viewport classNames='p-trim-md'>
             <WelcomePanel />
           </ScrollArea.Viewport>
         </ScrollArea.Root>
@@ -50,7 +51,7 @@ export const SupportHomeCompanion = () => {
 };
 
 const WelcomePanel = memo(() => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(SupportNamespace.key);
   const manager = PluginManagerProvider.usePluginManager();
 
   const slides = useMemo(() => {

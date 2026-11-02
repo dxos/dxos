@@ -5,8 +5,9 @@
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { ClaudeAgentSession, ClaudeManagedAgent } from '#types';
+
+import { ClaudeNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -30,7 +31,7 @@ export const translations = [
         'rename-object.label': 'Rename session',
         'delete-object.label': 'Delete session',
       },
-      [meta.profile.key]: {
+      [ClaudeNamespace.key]: {
         'plugin.name': 'Claude',
         'project-folder.label': 'Code folder on this device',
         'project-folder.description':

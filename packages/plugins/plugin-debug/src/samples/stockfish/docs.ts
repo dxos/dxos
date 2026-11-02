@@ -19,7 +19,7 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 const BRIEF_MD = `# Brief — chess engine as an MCP server on Workers
 
 A chess engine any chat in this space can consult, built as one Cloudflare Worker speaking MCP and
-registered against this space. The reader runs it end to end from the assistant, with no Cloudflare
+added to this space as a connection. The reader runs it end to end from the assistant, with no Cloudflare
 account, no GitHub account until the last stage, and no Anthropic key at any point.
 
 ## Shape
@@ -43,11 +43,11 @@ best move from it — over a chess engine compiled to WebAssembly and bundled in
 ## Out of scope
 
 Opening books, endgame tablebases, multi-PV analysis, game persistence, per-caller rate limiting,
-and authentication beyond the shared key the MCP server record already carries.
+and authentication beyond the shared key the MCP connection already carries.
 
 ## Done means
 
-The Worker is registered as an MCP server in this space, and a chat opened on the seeded game
+The Worker is added to this space as an MCP connection, and a chat opened on the seeded game
 answers "what is the best move here?" from the engine's reply rather than from its own knowledge —
 visible as a tool call in the transcript.
 `;

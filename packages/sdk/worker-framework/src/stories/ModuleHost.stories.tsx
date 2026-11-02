@@ -47,7 +47,7 @@ const ModulePanel = ({ connection, info }: { connection: ModuleHostConnection; i
   );
 
   return (
-    <div className='flex flex-col gap-2 rounded-md border border-separator p-3'>
+    <div className='flex flex-col gap-2 rounded-md border border-separator p-trim-md'>
       <div className='flex items-baseline justify-between gap-2'>
         <span className='font-medium'>{info.name ?? 'failed to load'}</span>
         <span className='truncate font-mono text-xs text-fg-subtle' title={info.url}>

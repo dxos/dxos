@@ -122,11 +122,11 @@ const evaluate = (client: SandboxClient, init: SandboxInit) =>
     // the host with its handler. It exists so the Effect dialect's `Database.resolve` can answer the
     // operation's DXN exactly as in-process; the call itself crosses home through the forwarding
     // service below, where the conversation it belongs to lives.
-    const operations: SandboxOperation[] = init.operations.map(({ key, name, description, parameters }) => ({
+    const operations: SandboxOperation[] = init.operations.map(({ key, name, description, parameters, backed }) => ({
       name,
       description,
       parameters,
-      definition: standInDefinition(key, name, description),
+      definition: backed ? standInDefinition(key, name, description) : undefined,
       invoke: (input: unknown) => invokeOperation(key, toWire(input)),
     }));
 

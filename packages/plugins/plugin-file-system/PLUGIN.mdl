@@ -4,6 +4,19 @@ name: FileSystemPlugin
 version: 0.1.0
 ---
 
+```mdl
+plugin FileSystemPlugin: Opens local directories as workspaces and gives every plugin local file access.
+  id: org.dxos.plugin.fileSystem
+  modules:
+    - AppGraphBuilder: workspace, directory and file nodes in the navtree
+    - Markdown: binds workspace markdown files to the markdown editor
+    - OperationHandler: openDirectory, closeDirectory and refreshDirectory
+    - PluginAsset: this document, served as the plugin's own spec
+    - ReactSurface: the workspace settings and file surfaces
+    - State: the open workspaces, their trees and the disk mirror
+    - Translations: the plugin's strings
+```
+
 A native filesystem plugin for `DXOS` Composer that lets users open local directories as workspaces on the desktop.
 Markdown files and images inside the directory are surfaced in the app graph alongside ECHO objects.
 Changes to files on disk are reflected in real time; edits made in Composer are persisted back to disk.
@@ -22,6 +35,9 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.1`         |
 | `test`      | `org.dxos.mdl.test@1.0`       |
+| `service`   | `org.dxos.mdl.service@1.0`    |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
+| `plugin`    | `org.dxos.mdl.plugin@1.0`     |
 
 ## Types
 
@@ -96,6 +112,34 @@ component WorkspaceSettings
     ├─────────────────────────────┤
     │ [Close Workspace] button    │
     └─────────────────────────────┘
+```
+
+## Services
+
+```mdl
+service FileSystem
+  desc: |
+    Local files by absolute path, for any plugin: workspaces opened here, spec
+    sync in plugin-code, and general dev work on a checkout. One interface,
+    two backends: the Tauri fs plugin in the desktop app, and the dev-only
+    route `/__dx/fs` in a Composer dev server, which reads only inside the
+    workspace root and the roots in `DX_FS_ROOTS` and writes or removes only
+    `.mdl` files. A deployed web app has neither; `available()` is then false
+    and callers degrade. There is no watch: callers poll.
+  loading: lazy
+  ops:
+    available() → boolean
+    read(path: string) → string | undefined        # undefined when the file does not exist
+    write(path: string, content: string) → void    # creates parent directories
+    remove(path: string) → void
+    list(dir: string, suffix?: string) → string[]  # relative paths; dot-dirs and node_modules skipped
+    roots() → { repo: string, path: string }[]     # checkouts the host knows (dev server: its own tree)
+  errors:
+    - FileSystemError: the backend refused the path or the request failed
+  note: |
+    Exported as `@dxos/plugin-file-system/FileSystem` (`FileSystem.get()`).
+    This plugin's own workspace code still reads disk through its state
+    module; moving it onto the service is a follow-up.
 ```
 
 ## Operations
@@ -314,6 +358,32 @@ test QA-1: Open, refresh and close a workspace
       blocked: Same reachability blocker — no runtime instance of this operation exists outside Tauri.
 ```
 
+## Changelog
+
+```mdl
+decision D-1: Make the spec-sync file access a generic file-system service, and move it to this plugin.
+  date: 2026-10-23
+  by: user:dmaretskyi
+  affects: [FileSystem]
+```
+
+```mdl
+decision D-2: This spec opens with a `plugin FileSystemPlugin` block listing the modules the plugin adds (`lang/plugin.mdl`).
+  date: 2026-10-23
+  by: user:dmaretskyi
+  affects: [FileSystemPlugin]
+```
+
+```mdl
+decision D-3: `service FileSystem` offers available, read, write, remove, list and roots, with a Tauri backend and a dev route `/__dx/fs` that reads inside the workspace and `DX_FS_ROOTS` (symlinks followed) and writes or removes only `.mdl` files; it has no watch, callers poll; the desktop backend's roots() is empty, so checkouts there come from settings.
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [FileSystem]
+  why: These are the operations spec sync needs, and a dev route that writes arbitrary files would let any page in the dev server rewrite source code.
+  rejected: A watch stream, which neither backend needed yet; unrestricted dev-route writes.
+```
+
 ---
 
 ## Appendix: Extension Definitions
@@ -382,4 +452,16 @@ ext op
     effects?: EffectList        # echo:read | echo:write | http | fs | ...
     requires?: ServiceList      # injected service dependencies
     note?: Prose                # implementation guidance (non-normative)
+```
+
+```mdl
+ext service
+  uri: org.dxos.mdl.service@1.0
+  desc: An external or system-level dependency providing named operations.
+  fields:
+    desc?: Prose
+    loading?: eager | lazy
+    ops?: OpMap
+    errors?: ErrorMap
+    note?: Prose
 ```

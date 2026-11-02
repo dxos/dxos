@@ -1,0 +1,733 @@
+---
+id: org.dxos.echo.query
+name: ECHO queries
+version: 0.1.0
+---
+
+How a live ECHO query gets its answer: from the `Query` builder in `@dxos/echo`, through the client's
+`LocalQueryEngine`, to the host index and EDGE and back.
+
+Two properties define the subsystem and outrank everything else:
+
+- **A local write is visible before the writing call returns.** For any branch with an in-process
+  contribution, an object added, edited or removed through this database is in `results` and has
+  notified subscribers by the time `db.add`, `Obj.update` or `db.remove` returns [F-2].
+- **A remote answer is evidence, not truth.** The index and EDGE answer from copies that can be
+  behind this tab. Each remote entry is checked against what the tab holds and is dropped when local
+  state contradicts it [F-5].
+
+The packages involved:
+
+| Package              | Role                                                                                    |
+| -------------------- | --------------------------------------------------------------------------------------- |
+| `@dxos/echo`         | `Query`, `Filter`, `Order`, `Aggregate` builders; the public `QueryResult` type.        |
+| `@dxos/echo-protocol`| `QueryAST`; `Query.characteristics`, the static classification of a query.             |
+| `@dxos/echo-client`  | `QueryResultImpl`, `LocalQueryEngine`, `WorkingSetView`, `RegistryView`, the merge.     |
+| `@dxos/protocols`    | The `QueryService` wire schema shared by the host and EDGE.                             |
+| `@dxos/echo-host`    | `QueryExecutor` (memory and SQL), `SqlPlanCompiler`.                                    |
+| `@dxos/index-core`   | The object snapshot index: each object's JSON copy, its heads and its version.         |
+
+The long-form design, with the reasoning and the rejected alternatives, is
+`packages/core/echo/echo-client/docs/SYNC_QUERIES.md`. Tests map to the acceptance scenarios:
+`echo-client-e2e/src/sync-query.test.ts` (T-1 to T-9), `echo-client/src/query/local-query-engine.test.ts`
+(T-10, T-11) and the executor-evidence suite in `echo-host/src/db-host/echo-host.test.ts` (T-12, T-13).
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is resolved via its URI.
+
+| Term       | URI                         |
+| ---------- | --------------------------- |
+| `type`     | `org.dxos.mdl.type@1.0`     |
+| `service`  | `org.dxos.mdl.service@1.0`  |
+| `feat`     | `org.dxos.mdl.feat@1.0`     |
+| `scenario` | `org.dxos.mdl.scenario@1.0` |
+| `decision` | `org.dxos.mdl.decision@1.0` |
+
+## Diagrams
+
+Diagrams are plugin-illustrator renders. The `diagram` block is the source; regenerate the image with
+`moon run plugin-illustrator:render-diagrams -- <abs path>/spec/diagrams/<name>.dx`.
+
+### Pipeline
+
+![QueryResultImpl reads the LocalQueryEngine, which owns a WorkingSetView per database and the RegistryView, takes verdicts from merge-plan, and reads RemoteQuerySources; IndexQuerySource implements RemoteQuerySource over QueryService to the host's QueryExecutor, which compiles SQL and answers from the object snapshot index.](diagrams/pipeline.dx.svg)
+
+```diagram
+diagram flow=down
+group client "@dxos/echo-client" {
+  node Result "QueryResultImpl" ref="packages/core/echo/echo-client/src/query/query-result.ts"
+  node Engine "LocalQueryEngine" ref="packages/core/echo/echo-client/src/query/local-query-engine.ts"
+  node WorkingSet "WorkingSetView" ref="packages/core/echo/echo-client/src/query/working-set-view.ts"
+  node Registry "RegistryView" ref="packages/core/echo/echo-client/src/query/registry-view.ts"
+  node Plan "merge-plan" ref="packages/core/echo/echo-client/src/query/merge-plan.ts"
+  node Remote "RemoteQuerySource" ref="packages/core/echo/echo-client/src/query/remote-query-source.ts"
+  node Index "IndexQuerySource" ref="packages/core/echo/echo-client/src/client/index-query-source-provider.ts"
+}
+group host "@dxos/echo-host" {
+  node Service "QueryServiceImpl" ref="packages/core/echo/echo-host/src/db-host/query-service.ts"
+  node Executor "QueryExecutor" ref="packages/core/echo/echo-host/src/query/query-executor.ts"
+  node Sql "SqlPlanCompiler" ref="packages/core/echo/echo-host/src/query/sql/compile.ts"
+}
+group core "@dxos/index-core" {
+  node Snapshots "ObjectSnapshotIndex" ref="packages/core/echo/index-core/src/indexes/object-snapshot-index.ts"
+}
+edge Result -> Engine
+edge Engine owns WorkingSet
+edge Engine owns Registry
+edge Engine -> Plan "verdicts"
+edge Engine -> Remote
+edge Index implements Remote
+edge Index -> Service "QueryService"
+edge Service -> Executor
+edge Executor -> Sql
+edge Executor -> Snapshots "index copies"
+```
+
+### Remote entry verdicts
+
+![A remote entry for a feed item is checked against the local feed write; a flat-query entry is verified when held at its version, and otherwise its filter is re-checked; a traversal entry has its paths checked. Each check ends in verified, drop or trusted.](diagrams/verdicts.dx.svg)
+
+```diagram
+diagram flow=right
+node Entry "remote entry" ref="packages/core/echo/echo-client/src/query/merge-plan.ts"
+node Paths "check paths" ref="packages/core/echo/echo-client/src/query/path-revalidation.ts"
+node Version "held at version?" ref="packages/core/echo/echo-client/src/query/merge-plan.ts"
+node Filter "re-check filter" ref="packages/core/echo/echo-client/src/query/merge-plan.ts"
+node Tail "feed local write" ref="packages/core/echo/echo-client/src/query/working-set-view.ts"
+node Verified "verified"
+node Drop "drop"
+node Trusted "trusted"
+edge Entry -> Paths "traversal"
+edge Entry -> Version "flat query"
+edge Entry -> Tail "feed item"
+edge Version -> Verified "equal heads"
+edge Version -> Filter "differ"
+edge Filter -> Verified "matches"
+edge Filter -> Drop "no match"
+edge Filter -> Trusted "not loaded"
+edge Paths -> Verified "a path holds"
+edge Paths -> Drop "all broken"
+edge Paths -> Trusted "unknown"
+edge Tail -> Verified "matches"
+edge Tail -> Drop "no match"
+```
+
+## Types
+
+```mdl
+type Completeness
+  desc: |
+    How much of the answer a live query holds right now. Reading it never notifies; subscribers hear only
+    a change of ids or order [F-2.3].
+  literals: complete | local-only | merged | stale | failed | pending
+```
+
+| Value        | Meaning                                                                                   |
+| ------------ | ----------------------------------------------------------------------------------------- |
+| `complete`   | Nothing outstanding.                                                                      |
+| `local-only` | In-process results are shown; no remote has answered yet.                                 |
+| `merged`     | Some remotes answered and some have not, or an answer withheld paths or a manifest.       |
+| `stale`      | A remote answer predates a local write inside its scope; the re-run has not arrived.      |
+| `failed`     | A remote source errored or timed out; `sources` names it.                                 |
+| `pending`    | Nothing in-process contributes and no remote has answered.                                |
+
+```mdl
+type Version
+  desc: |
+    The state a remote evaluated an entry at. Compared for equality only: equal heads mean the tab holds
+    exactly what the remote evaluated, so its own re-check would reproduce the verdict.
+  variants:
+    automerge: { documentId: string, heads: string[] }
+    feed: { insertionId: number }
+```
+
+```mdl
+type PathEdge
+  desc: |
+    One hop of a traversal the index took to reach a hit. The holder is the object whose document records
+    the edge: the `from` side for a reference or a parent pointer, the `to` side for an incoming reference
+    or a child, the relation for a relation endpoint.
+  fields:
+    from: EntityId
+    to: EntityId
+    kind: ref | incoming-ref | relation-source | relation-target | parent | child
+    property?: string        # the reference's escaped property path
+    holder: EntityId
+    holderHeads?: string[]   # the holder's heads when the index read the edge
+```
+
+```mdl
+type ManifestEntry
+  desc: One member's share of a collapsed group's scalar aggregates.
+  fields:
+    id: EntityId
+    version?: Version
+    contribution: string     # JSON map of aggregate name to value: 1 for a count, the property for the rest
+```
+
+```mdl
+type Verdict
+  desc: What the engine does with one remote entry.
+  literals: drop | verified | trusted
+```
+
+```mdl
+type BranchCharacteristics
+  desc: |
+    The static classification `Query.characteristics(ast)` returns per branch: one record per union
+    member, with wrappers above a union applied to each member.
+  fields:
+    class: local-complete | local-partial | local-revalidating | remote-only | unsupported
+    revalidation: entry | path | manifest | none
+    selection: id | type | wildcard | text | timestamp | changes | feed-cursor | incoming-ref
+    predicates: local | index
+    traversal: number        # hops, child-of counting as one
+    window: { order: none | natural | local-property | index, limit?: number, skip?: number }
+    aggregate: none | members | scalar | index
+    scope: { space: boolean, feeds: boolean, registry: none | local | remote }
+```
+
+## Services
+
+```mdl
+service LocalQueryEngine
+  desc: |
+    The client side of every live query. Owns one WorkingSetView per database and the RegistryView, plans
+    the query once, judges each remote entry, merges, and computes completeness. One engine serves one
+    QueryResultImpl.
+  ops:
+    update(query: QueryAST.Query) → void
+    getResults() → SourceEntry[]
+    run(query: QueryAST.Query) → Promise<SourceEntry[]>
+    getCompleteness() → Completeness
+    getSourceStates() → SourceState[]
+    isSynchronous() → boolean
+    hasPendingSources() → boolean
+    start() → void
+    stop() → void
+    addDatabase(database: DatabaseImpl) → void
+    addRemoteSource(source: RemoteQuerySource) → void
+```
+
+```mdl
+service RemoteQuerySource
+  desc: |
+    An out-of-process answerer: the host index, or EDGE through the same QueryService. Implemented by
+    IndexQuerySource. One instance serves one engine.
+  ops:
+    update(query: QueryAST.Query) → void   # sets the query and starts its reactive stream
+    getResults() → SourceEntry[]           # entries of the latest integrated answer
+    run(query: QueryAST.Query) → Promise<SourceEntry[]>
+    isServing() → boolean
+    isPending() → boolean
+    isFailed() → boolean
+    isTruncated() → boolean
+    answers() → number                     # answers integrated, unchanged re-runs included
+    open() → void
+    close() → void
+```
+
+```mdl
+service QueryService
+  desc: |
+    The streamed RPC the host and EDGE both serve (`@dxos/protocols`). Every field the engine uses for
+    revalidation is optional, so an old host or EDGE yields trusted entries.
+  ops:
+    execQuery(request: QueryRequest) → stream QueryResponse
+  fields:
+    QueryResult.version?: Version
+    QueryResult.paths?: PathEdge[][]
+    QueryResult.manifest?: ManifestEntry[]
+    QueryResponse.unchanged?: boolean      # a reactive re-run whose result matches the last one sent
+    QueryResponse.truncated?: paths | manifest
+```
+
+## Features
+
+```mdl
+feat F-1: One engine, local views, remote sources
+
+  req F-1.1:
+    when: a live query is created
+    then: its QueryResultImpl reads one LocalQueryEngine, which owns a WorkingSetView per database and
+          the RegistryView; neither view is a query source
+
+  req F-1.2:
+    when: the engine needs an answer from outside the tab
+    then: it reads RemoteQuerySources only — the host index and EDGE, both through QueryService
+
+  req F-1.3:
+    when: the engine stops and starts again
+    then: stop closes the views and the remote streams, and start re-applies the current query, so a
+          restarted engine serves it again
+```
+
+```mdl
+feat F-2: Local writes are synchronous
+
+  req F-2.1:
+    when: an object is added, edited or removed through this database inside the scope of a branch with
+          an in-process contribution
+    then: the result reflects it and subscribers are notified before the writing call returns
+
+  req F-2.2:
+    when: a subscriber writes from inside a notification
+    then: that write is a separate commit with its own notification, after the first commit's
+          notifications are delivered
+
+  req F-2.3:
+    when: a recompute leaves the result's ids and order unchanged
+    then: no subscriber is notified; a completeness transition alone is silent
+
+  req F-2.4:
+    when: a query has no order of its own
+    then: entries appear in natural order (by id), wherever each object is held
+```
+
+```mdl
+feat F-3: Characteristics and completeness
+
+  req F-3.1:
+    when: Query.characteristics(ast) is called
+    then: it returns one BranchCharacteristics per branch, derived from the AST alone
+
+  req F-3.2:
+    when: a text, timestamp, feed-cursor, changes or in-query node appears anywhere in a branch's filter
+    then: the branch's revalidation is none and nothing is dropped locally
+
+  req F-3.3:
+    when: a live query is read
+    then: completeness is computed from the plan and the remote sources' states, per [Completeness]
+```
+
+```mdl
+feat F-4: Versions
+
+  req F-4.1:
+    when: a remote row is sent
+    then: it carries a Version — the document's id and the heads it was read at, or the feed block's
+          insertion id
+
+  req F-4.2:
+    when: the indexer stores an object's copy
+    then: objectSnapshot.version records the heads the copy was read at, and objectSnapshot.heads marks a
+          copy at the document's saved heads that can back the row; a row stored before the version column
+          reads its version from heads
+
+  req F-4.3:
+    when: a remote entry's object is held here at exactly the entry's version
+    then: the entry is verified without re-evaluating the filter
+```
+
+```mdl
+feat F-5: Remote entries are revalidated
+
+  req F-5.1:
+    when: a remote entry of a flat query names an object loaded here with a body
+    then: the filter and the deleted option are re-evaluated against the local document; a match is
+          verified and a mismatch is dropped
+
+  req F-5.2:
+    when: a remote entry names an object not loaded here, or the branch's revalidation is none
+    then: the entry is trusted and shown on the remote's word, with resolution.verified false
+
+  req F-5.3:
+    when: a remote entry is verified
+    then: resolution.verified is true and resolution.version is the version the remote sent
+```
+
+```mdl
+feat F-6: By-id queries
+
+  req F-6.1:
+    when: every id of a live by-id query is loaded with a body in a space the query covers
+    then: the engine answers from the working set alone and no remote stream is open — neither the index
+          nor EDGE
+
+  req F-6.2:
+    when: a by-id query names an id that is not loaded
+    then: the remote streams open, and the ids no remote answered are loaded through their documents
+
+  req F-6.3:
+    when: run() is called on a by-id query
+    then: it answers the loaded ids first, then takes the remote answer, then loads only the ids no
+          remote answered
+```
+
+```mdl
+feat F-7: Traversal paths
+
+  req F-7.1:
+    when: a traversal reaches a hit
+    then: the hit carries one path per derivation, each a list of PathEdge; both executors produce them
+
+  req F-7.2:
+    when: the engine checks a hit's paths
+    then: each edge is checked against its holder's document and each level's filter against each loaded
+          object; an edge whose holder is held at holderHeads stands without a read; a path is holds,
+          broken or unknown, and the hit is verified when any path holds, dropped when every path is
+          broken, and trusted otherwise
+
+  req F-7.3:
+    when: a hit has more than 16 paths or a compiled row more than 512 edges
+    then: the hit ships no paths and is trusted
+
+  req F-7.4:
+    when: one answer's paths exceed 256 KiB
+    then: the response sets truncated: paths and completeness reads merged
+
+  req F-7.5:
+    when: a traversal sits inside a union branch or a subquery
+    then: its hits ship no paths and are trusted
+```
+
+```mdl
+feat F-8: Aggregate manifests
+
+  req F-8.1:
+    when: a remote collapses a group of scalar aggregates (no items aggregate)
+    then: the group carries a manifest: each member's id, version and share of count, sum, min and max
+
+  req F-8.2:
+    when: the engine adjusts a group
+    then: it subtracts the share of each member it holds, adds the value of each local member, and lists
+          local members by evaluating the query with an items aggregate appended
+
+  req F-8.3:
+    when: a local value would narrow min or max
+    then: the extreme only widens, and removing a held extreme marks the group unverified
+
+  req F-8.4:
+    when: one answer's manifests exceed 256 KiB
+    then: the response sets truncated: manifest and completeness reads merged
+```
+
+```mdl
+feat F-9: Local ordering and windows
+
+  req F-9.1:
+    when: a query has a property or natural order and no limit or skip
+    then: the engine applies the order over the merged local and remote entries, and characteristics does
+          not class it as a window
+
+  req F-9.2:
+    when: a property-ordered window has a limit and no skip
+    then: loaded local matches that sort at or before the last entry of a full remote window are admitted,
+          re-sorted with the host's comparator and cut to the limit; a short remote window admits every
+          local match
+
+  req F-9.3:
+    when: any other window is merged
+    then: local evidence can only drop entries from it, never re-page it
+```
+
+```mdl
+feat F-10: Feeds
+
+  req F-10.1:
+    when: an object is appended to or edited in a feed through its handle
+    then: a simple selection over that feed, or over all feeds of the space, shows it before the write
+          returns, and keeps showing it after the feed service acknowledges it, so it does not vanish
+          before the index catches up
+
+  req F-10.2:
+    when: a feed is first opened after a query over all feeds starts
+    then: its writes join that query
+
+  req F-10.3:
+    when: a remote feed entry has a local write of the same id that no longer matches
+    then: the entry is dropped
+
+  req F-10.4:
+    when: a write appends, edits or deletes feed objects
+    then: only the objects it names are re-evaluated, so a turn of n appends costs O(n), not O(n²)
+
+  req F-10.5:
+    when: a feed query is a window (a limit or a skip)
+    then: it is remote-only
+```
+
+```mdl
+feat F-11: The host answers from index copies
+
+  req F-11.1:
+    when: the memory executor matches an object whose index copy is at the document's current heads
+    then: it answers from the copy and does not load the document; it counts echo.querySnapshotHits and
+          echo.queryDocumentLoads
+
+  req F-11.2:
+    when: the SQL executor answers
+    then: it never loads a document
+
+  req F-11.3:
+    when: a client subscription already holds a hit's document
+    then: the row ships without its JSON copy or stored changes
+```
+
+## Current limits
+
+- EDGE's executor sends no versions, paths or manifests, so every EDGE entry is trusted.
+- The working set keeps no typename map: window admission and shapes without a delta scan every loaded
+  object.
+- A re-run already in flight when a local write lands can clear `stale` early.
+
+## Acceptance
+
+```mdl
+scenario T-1: An add notifies once, before it returns
+  given: a subscribed type query that the index has answered
+  when: an object of the type is added
+  then:
+    - the subscriber has been notified once when db.add returns
+    - the index's re-run for the add notifies nobody
+```
+
+```mdl
+scenario T-2: An edit that disqualifies an object removes it at once
+  given: a subscribed property query holding an object
+  when: the object is edited so it no longer matches
+  then:
+    - it is gone from results when Obj.update returns
+    - the index's later answer does not bring it back
+```
+
+```mdl
+scenario T-3: An edit to an unread property notifies nobody
+  given: a subscribed property query
+  when: an object in the result is edited on a property the filter does not read
+  then: no subscriber is notified
+```
+
+```mdl
+scenario T-4: A write from a notification is its own commit
+  given: a subscriber that adds an object when it is notified
+  when: a matching object is added
+  then: the subscriber sees two notifications, one per commit, in order
+```
+
+```mdl
+scenario T-5: A traversal hit leaves when its holder drops the edge
+  given: an index-backed traversal hit whose edge is held by a loaded object
+  when: the holder is edited to drop the reference
+  then: the hit leaves the result before the edit returns
+```
+
+```mdl
+scenario T-6: A count follows a local write
+  given: an index-answered count over index-backed objects
+  when: a member is edited out of the group
+  then: the count drops by one before the edit returns
+```
+
+```mdl
+scenario T-7: A property order spans local and index entries
+  given: a property-ordered query with no limit, answered by the index
+  when: a local object is added that sorts between two index entries
+  then: it appears between them before the add returns
+```
+
+```mdl
+scenario T-8: Feed writes appear at once
+  given: a property query over a feed
+  when: an unacknowledged write is edited into the filter, out of it, back in, then deleted
+  then: it enters, leaves, enters and leaves the result as each call returns
+```
+
+```mdl
+scenario T-9: Completeness follows the sources
+  given: a type query and a text query
+  then:
+    - the type query is local-only until the index answers, then complete
+    - the text query is pending until the index answers, and stale after a local write until it
+      answers again
+```
+
+```mdl
+scenario T-10: A by-id query over loaded ids opens no remote stream
+  given: a live by-id query whose every id is loaded with a body
+  then: no remote source has been given the query
+```
+
+```mdl
+scenario T-11: A by-id run loads only what the index lacks
+  given: a by-id run over loaded, index-only and missing ids
+  then: it returns the loaded ids at once and loads only the ids no remote answered
+```
+
+```mdl
+scenario T-12: Rows ship their versions
+  given: a host with an indexed object, under both executors
+  when: a query matches it
+  then: the row's version holds the document id and the heads its copy was read at
+```
+
+```mdl
+scenario T-13: Traversal hits and groups ship their evidence
+  given: a host with a reference traversal and a collapsed count, under both executors
+  then:
+    - the traversal hit ships the edge that reached it, with its holder
+    - a re-run that reaches the same hit by another edge resends it
+    - the collapsed group ships each member with its share
+```
+
+## Changelog
+
+```mdl
+decision D-1: The query pipeline is Query API → LocalQueryEngine, which holds the working set → RemoteQuerySource, which is the index or EDGE. SpaceQuerySource and GraphQueryContext are removed.
+  date: 2026-10-22
+  by: user:dmaretskyi
+  affects: [F-1, LocalQueryEngine, RemoteQuerySource]
+  source: https://claude.ai/code/session_01YC6uMyS9swEy81skapjfyC
+```
+
+```mdl
+decision D-2: Traversal results carry the paths that derived them, and the client revalidates those paths.
+  date: 2026-10-22
+  by: user:dmaretskyi
+  affects: [F-7]
+  source: https://claude.ai/code/session_01YC6uMyS9swEy81skapjfyC
+```
+
+```mdl
+decision D-3: Aggregates carry manifests, and ordering is applied locally.
+  date: 2026-10-22
+  by: user:dmaretskyi
+  affects: [F-8, F-9]
+  source: https://claude.ai/code/session_01YC6uMyS9swEy81skapjfyC
+```
+
+```mdl
+decision D-4: Feed queries get a local half, as phase 4 of SYNC_QUERIES.md describes.
+  date: 2026-10-22
+  by: user:dmaretskyi
+  affects: [F-10]
+  source: https://claude.ai/code/session_01YC6uMyS9swEy81skapjfyC
+```
+
+```mdl
+decision D-5: Heads go on the wire as versions.
+  date: 2026-10-22
+  by: user:dmaretskyi
+  affects: [F-4, Version]
+  source: https://claude.ai/code/session_01YC6uMyS9swEy81skapjfyC
+```
+
+```mdl
+decision D-6: A by-id query skips the remote stream when all its ids are loaded. The instruction noted that it still opens the index stream.
+  date: 2026-10-22
+  by: user:dmaretskyi
+  affects: [F-6]
+  source: https://claude.ai/code/session_01YC6uMyS9swEy81skapjfyC
+```
+
+```mdl
+decision D-7: App startup does not load Automerge documents for most objects, because nothing mutates at startup.
+  date: 2026-10-22
+  by: user:dmaretskyi
+  affects: [F-11]
+  source: https://claude.ai/code/session_01YC6uMyS9swEy81skapjfyC
+```
+
+```mdl
+decision D-8: Each remote entry is dropped, verified or trusted. Local state overrules a remote entry only when the object is loaded here with a body; an unloaded object is trusted. Fills in [D-1].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5, Verdict]
+  why: A loaded document already contains this tab's writes and replication merges peers into it, so the local verdict is the one the merged document will give; an unloaded object has no local evidence.
+  rejected:
+    - Trust the remote on concurrent heads: it shows an object the tab has just edited out of the filter.
+    - Ask the remote for negative evidence (id X excluded at version V): an exclusion list on every answer, to hide objects whose visible state matches.
+```
+
+```mdl
+decision D-9: A version is `{documentId, heads}` for a document object and `{insertionId}` for a feed block, compared for equality only. The index stores it in a new nullable objectSnapshot.version column, and objectSnapshot.heads keeps its meaning. Fills in [D-5].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4, Version]
+  why: Equality is all a rule acts on — equal heads skip the re-check; a loaded object is re-checked whether it is ahead, behind or concurrent. The document id is part of the version because objects move between documents.
+  rejected:
+    - Redefine heads as the version: a reverted build would read the new values as backing markers.
+    - Ahead, behind or concurrent comparison: no rule uses it, and it costs a wasm call per entry.
+```
+
+```mdl
+decision D-10: With every id loaded, both remote streams close, the index's as well as EDGE's. A loaded document is kept current by replication, so the working set alone answers the query. Fills in [D-6].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-6.1]
+  why: The note that the index stream still opens is read as describing the gap phase 1 left open, which this closes.
+```
+
+```mdl
+decision D-11: A path edge names the holder whose document records it, with the holder's heads. A path holds, is broken or is unknown; a hit is verified when any path holds and dropped only when every path is broken. Hits are capped at 16 paths, compiled rows at 512 edges and answers at 256 KiB of paths; past a cap a hit is trusted and the answer reads merged. Fills in [D-2].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-7, PathEdge]
+  why: The holder is not the from side for three of the six edge kinds, so the edge has to be checked against the document that records it. An unknown path keeps the hit, because an unloaded holder is no evidence against it.
+  rejected:
+    - Per-hop frontiers instead of paths: a broken edge cannot be attributed to the hits it led to.
+```
+
+```mdl
+decision D-12: A collapsed group carries each member's id, version and share of count, sum, min and max. The client replaces held members' shares with local values; min and max only widen, and removing a held extreme marks the group unverified. Manifests share the 256 KiB answer budget. Fills in [D-3].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-8, ManifestEntry]
+  why: A count or sum is exact after subtracting and adding shares; an extreme cannot be narrowed without the runner-up, which the manifest does not carry.
+  rejected:
+    - Send the top k values per group so min and max narrow too: more bytes per group for a rarer case.
+```
+
+```mdl
+decision D-13: The engine applies a property or natural order without limit or skip over the merged entries, and puts unordered results in id order. A property-ordered window with a limit and no skip admits local matches that sort inside the remote window; every other window is drop-only. Fills in [D-3].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9, F-2.4]
+  why: Without a total order an object's position depended on which source held it, so a write that loaded an index-backed object moved it ahead of the rest. A window is a slice of a set only the remote holds, so local evidence cannot re-page it.
+```
+
+```mdl
+decision D-14: Feed writes made through a handle join the working set as a feed tail before the write returns, and stay in it past the feed service's acknowledgement so they do not vanish before the index catches up. Each write names the objects it appended, edited or deleted, and the tail re-checks only those. Fills in [D-4].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-10]
+  why: Re-checking every unacknowledged write on each append made an agent turn quadratic per live query — about 3.8 s of page CPU per turn in the perf flow's assistant stage.
+  rejected:
+    - Coalesce appends into one notification: a write would no longer be visible before it returns.
+```
+
+```mdl
+decision D-15: The memory executor answers from an object's index copy when the copy is at the document's current heads, and loads the document otherwise; the SQL executor never loads documents. Fills in [D-7].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-11]
+  why: At startup nothing has changed since indexing, so the copy and the document agree, and loading the document only repeats what the copy already holds.
+```
+
+```mdl
+decision D-16: A live query reports one of six completeness values, computed from its plan and its sources. Subscribers hear only a change of ids or order, so a completeness transition alone is silent. Fills in [D-1].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3, F-2.3, Completeness]
+  why: Before this a failed stream looked like an empty answer and a held re-run looked complete; a UI needs to tell those apart without being re-rendered for each transition.
+```
+
+```mdl
+decision D-17: Every revalidation field on the wire is optional. An old host or EDGE omits them, and the engine treats their entries as trusted. Fills in [D-5].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QueryService]
+  why: The host, EDGE and clients deploy separately; optional fields keep every pairing working without a protocol version.
+```

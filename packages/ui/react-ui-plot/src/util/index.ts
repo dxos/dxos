@@ -3,3 +3,4 @@
 //
 
 export * from './data.ts';
+export * from './timeline.ts';

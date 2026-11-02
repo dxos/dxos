@@ -56,8 +56,8 @@ describe('ClaudeCodeConnector', () => {
       });
       expect(result.kind).toBe('complete');
       if (result.kind === 'complete') {
-        expect(result.accessToken.source).toBe(CLAUDE_CODE_TOKEN_SOURCE);
-        expect(result.accessToken.token).toBe('sk-ant-oat01-abc');
+        expect(result.accessToken?.source).toBe(CLAUDE_CODE_TOKEN_SOURCE);
+        expect(result.accessToken?.token).toBe('sk-ant-oat01-abc');
         expect(result.connection.connectorId).toBe(ClaudeCodeConnector.id);
       }
     }).pipe(Effect.provide(TestDatabaseLayer({ types: [AccessToken.AccessToken, Connection.Connection] }))),

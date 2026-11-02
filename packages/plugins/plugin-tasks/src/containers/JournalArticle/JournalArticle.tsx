@@ -14,13 +14,14 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
 import { Journal as JournalComponent, type JournalProps } from '#components';
-import { meta } from '#meta';
 import { Journal } from '#types';
+
+import { TasksNamespace } from '../../namespace.ts';
 
 export type JournalArticleProps = AppSurface.ObjectArticleProps<Journal.Journal>;
 
 export const JournalArticle = ({ role, attendableId: _attendableId, subject: journal }: JournalArticleProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(TasksNamespace.key);
   const [showCalendar, setShowCalendar] = useState(false);
   const controllerRef = useRef<CalendarController>(null);
 

@@ -8,8 +8,9 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as UndoMapping from '@dxos/app-framework/UndoMapping';
 
-import { meta } from '#meta';
 import { CommentOperation } from '#types';
+
+import { ReviewNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -26,22 +27,18 @@ export default Capability.makeModule(
             anchor: output.anchor,
           };
         },
-        message: ['thread-deleted.label', { ns: meta.profile.key }],
+        message: ['thread-deleted.label', { ns: ReviewNamespace.key }],
       }),
       UndoMapping.make({
         operation: CommentOperation.DeleteMessage,
         inverse: CommentOperation.RestoreMessage,
         deriveContext: (input, output) => {
-          if (!output.message || output.messageIndex === undefined) {
+          if (!output.message) {
             return;
           }
-          return {
-            anchor: input.anchor,
-            message: output.message,
-            messageIndex: output.messageIndex,
-          };
+          return { anchor: input.anchor, message: output.message };
         },
-        message: ['message-deleted.label', { ns: meta.profile.key }],
+        message: ['message-deleted.label', { ns: ReviewNamespace.key }],
       }),
     ]);
   }),

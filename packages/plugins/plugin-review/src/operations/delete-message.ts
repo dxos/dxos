@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Obj, Relation } from '@dxos/echo';
+import { Database, Feed, Obj, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 import { Thread } from '@dxos/types';
@@ -19,35 +19,30 @@ const handler: Operation.WithHandler<typeof CommentOperation.DeleteMessage> = Co
       const db = Obj.getDatabase(subject);
       invariant(db, 'Database not found');
 
-      // Match on the reference's own uri, not `ref.target?.id`: `target` reads undefined until the
-      // message loads, so an unresolved ref finds nothing and the delete silently no-ops.
-      const msgIndex = thread.messages.findIndex((ref) => ref.uri === message.uri);
-      if (msgIndex === -1) {
-        return { messageIndex: -1 };
+      const messages = yield* Effect.promise(() => Thread.loadMessages(thread));
+      if (!messages.some(({ id }) => id === message.id)) {
+        return {};
       }
-      const msg = yield* Effect.promise(() => thread.messages[msgIndex].load());
 
-      if (msgIndex === 0 && thread.messages.length === 1) {
+      if (messages.length === 1) {
         // TODO(wittjosiah): This doesn't support restoring the thread.
         yield* Operation.invoke(CommentOperation.Delete, { subject, anchor });
-        return { messageIndex: -1 };
+        return {};
       }
 
-      Obj.update(thread, (thread) => {
-        thread.messages.splice(msgIndex, 1);
-      });
+      const feed = yield* Effect.promise(() => thread.feed.load());
+      yield* Feed.remove(feed, [message]).pipe(Effect.provide(Database.layer(db)));
 
       yield* Operation.schedule(ObservabilityOperation.SendEvent, {
         name: 'comments.message.delete',
         properties: {
           spaceId: db.spaceId,
           threadId: thread.id,
-          threadLength: thread.messages.length,
-          messageId: msg.id,
+          messageId: message.id,
         },
       });
 
-      return { message: msg, messageIndex: msgIndex };
+      return { message };
     }),
   ),
 );

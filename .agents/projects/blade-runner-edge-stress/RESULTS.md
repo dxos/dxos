@@ -54,13 +54,14 @@ cd packages/services/edge && pnpm exec tsx scripts/dev.mts \
 redis-server --port 6379 &
 cd packages/e2e/blade-runner
 GRAVITY_OUT_BASE=$PWD node --import tsx src/main.ts edgeStress --no-browser --seed <seed> \
-  [--spec '{"edge":"dev"}']
+  -s configs/edge-stress-nightly.yml [--spec '{"edge":"local"}']
 ```
 
-There is no config file. Every default lives in `defaultsFor` (`src/spec/edge-stress/plan.ts`) and
-every knob is documented on `EdgeStressSpec` (`system.ts`); `--spec` and `-s <file>` alike supply
-only what a run changes and are merged over those defaults rather than replacing them. So a variant
-of a run — another EDGE, cleanup off, partitions on, a fixed plan — is a flag:
+There are no defaults in code. The spec file `configs/edge-stress-nightly.yml` is the nightly's
+complete spec, every knob is documented on the `EdgeStressSpec` schema (`system.ts`), and the plan
+decodes the spec against it before it creates anything. `--spec` supplies only what a run changes
+and is merged over the file. So a variant of a run — another EDGE, cleanup off, partitions on, a
+fixed plan — is a flag:
 
 ```bash
 --spec '{"edge":"dev"}'                              # against dev.dxos.network (DX_HUB_API_KEY for the fallback)

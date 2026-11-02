@@ -4,12 +4,12 @@
 
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { MeetingRecorderNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [MeetingRecorderNamespace.key]: {
         'plugin.name': 'Meeting Recorder',
 
         'record-meeting.label': 'Record a meeting',

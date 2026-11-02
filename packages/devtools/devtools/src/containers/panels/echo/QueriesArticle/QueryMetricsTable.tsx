@@ -63,14 +63,14 @@ const COLUMNS: Column[] = [
   {
     id: 'avg',
     label: 'Avg ms',
-    title: 'Mean time to answer.',
+    title: 'Mean evaluation time, excluding time spent queued or waiting for documents.',
     value: averageQueryTime,
     render: (query) => time(averageQueryTime(query)),
   },
   {
     id: 'max',
     label: 'Max ms',
-    title: 'Slowest time to answer.',
+    title: 'Slowest evaluation time, excluding time spent queued or waiting for documents.',
     value: (query) => query.maxTime,
     render: (query) => time(query.maxTime),
   },

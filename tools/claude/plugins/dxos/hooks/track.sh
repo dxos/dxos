@@ -87,7 +87,7 @@ emit_setup() {
 }
 
 emit_new() {
-  emit "$(printf 'TASK-PLANNING PROJECT DIRECTIVE: `/dxos:project new` — args: "%s". Add an `active` registry entry (user = `whoami`, host = `hostname -s`, created = today) and scaffold `<registry-dir>/<name>/{TASKS,DESIGN}.md` unless the docs already live elsewhere (record that path instead). Set this session'"'"'s title to the project name via the session-management set_session_title tool (session_id "self") when that tool is available. Confirm in one line.' "$1")"
+  emit "$(printf 'TASK-PLANNING PROJECT DIRECTIVE: `/dxos:project new` — args: "%s". Add an `active` registry entry (user = `whoami`, host = `hostname -s`, created = today) and scaffold `<package>/docs/{TASKS,DESIGN}.md` in the package the work changes, or `<registry-dir>/<name>/{TASKS,DESIGN}.md` when it spans packages or has none, unless the docs already live elsewhere (record that path instead). Set this session'"'"'s title to the project name via the session-management set_session_title tool (session_id "self") when that tool is available. Confirm in one line.' "$1")"
 }
 
 emit_end() {

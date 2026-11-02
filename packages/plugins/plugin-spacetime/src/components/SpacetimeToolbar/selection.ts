@@ -4,8 +4,7 @@
 
 import type { ActionGroupBuilderFn, ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 
-import { meta } from '#meta';
-
+import { SpacetimeNamespace } from '../../namespace.ts';
 import { type SelectionMode } from '../../tools/index.ts';
 
 export type { SelectionMode };
@@ -22,7 +21,7 @@ export const createSelectionModeActions =
     builder.group(
       'selection-mode',
       {
-        label: ['selection-mode.label', { ns: meta.profile.key }],
+        label: ['selection-mode.label', { ns: SpacetimeNamespace.key }],
         iconOnly: true,
         variant: 'toggleGroup',
         selectCardinality: 'single',
@@ -33,7 +32,7 @@ export const createSelectionModeActions =
           group.action(
             mode,
             {
-              label: [`selection-mode.${mode}.label`, { ns: meta.profile.key }],
+              label: [`selection-mode.${mode}.label`, { ns: SpacetimeNamespace.key }],
               checked: currentMode === mode,
               icon,
             },

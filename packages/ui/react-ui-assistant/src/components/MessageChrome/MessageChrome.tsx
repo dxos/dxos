@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type PropsWithChildren, memo, useEffect, useState } from 'react';
+import React, { type PropsWithChildren, memo } from 'react';
 
 import { TogglePanel } from '@dxos/react-ui-components';
 import { type MessageChromeProps, isPrompt } from '@dxos/react-ui-feed';
@@ -11,6 +11,7 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Typography from '@dxos/react-ui/Typography';
 import type * as Util from '@dxos/react-ui/Util';
 import { type Actor, type ContentBlock, Message } from '@dxos/types';
 import { getStyles, mx } from '@dxos/ui-theme';
@@ -18,7 +19,6 @@ import { stringToFallback } from '@dxos/util';
 
 import { translationKey } from '../../translations.ts';
 import { type DeliveryStatus, getDelivery, isUnread } from '../../types.ts';
-import { formatTime } from './format-time.ts';
 
 //
 // Context
@@ -91,23 +91,9 @@ const MessageId = ({ message }: { message: Message.Message }) => {
   );
 };
 
-/** How often a relative time is re-read; the coarsest label it shows changes by the minute. */
-const TIME_REFRESH_MS = 30_000;
-
 const Time = ({ message }: { message: Message.Message }) => {
   const { t } = Hooks.useTranslation(translationKey);
-  // Its own clock: the toolbar is memoized, so nothing else re-renders a label that has gone stale.
-  const [now, setNow] = useState(Date.now);
-  useEffect(() => {
-    const interval = setInterval(() => setNow(Date.now()), TIME_REFRESH_MS);
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <time dateTime={message.created} title={new Date(message.created).toLocaleString()}>
-      {formatTime(message.created, { now, justNow: t('just-now.label') })}
-    </time>
-  );
+  return <Typography.Timestamp date={message.created} variant='relative' justNow={t('just-now.label')} />;
 };
 
 export type MessageToolbarProps = Util.ThemedClassName<{

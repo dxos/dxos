@@ -38,7 +38,9 @@ type Archived = {
   'title'?: string;
   'status'?: string;
   'specs'?: string[];
-  'project'?: { '/': string };
+  'document'?: { '/': string };
+  'spec'?: { '/': string };
+  'features'?: Array<{ '/': string }>;
   'dependsOn'?: Array<{ '/': string }>;
   'assignee'?: { role?: string; name?: string };
   '@relationSource'?: string;
@@ -56,6 +58,8 @@ const ofType = (objects: Archived[], typename: string) =>
 describe.each([ShogiSpace.CONFIG, WorldClockSpace.CONFIG])('$space.name template', (config) => {
   const build = () => EffectEx.runPromise(buildArchive(PluginSpace.make(config, TOOLCHAIN)));
   const archive = async (): Promise<Archived[]> => JSON.parse((await build()).json).objects;
+  const brokenDown = config.features.filter((seed) => seed.subfeatures !== undefined);
+  const subfeatureCount = brokenDown.reduce((total, seed) => total + (seed.subfeatures?.length ?? 0), 0);
 
   test(
     'builds the project, its three planning steps, the spec and the feature map, and nothing else',
@@ -69,12 +73,16 @@ describe.each([ShogiSpace.CONFIG, WorldClockSpace.CONFIG])('$space.name template
           .reduce((total, [, count]) => total + count, 0);
 
       expect(objectCount).toBeGreaterThan(0);
-      expect(countOf('type.project')).toBe(1);
+      // With the colon, so the specs' `type.projects.spec` is not counted as a project.
+      expect(countOf('type.project:')).toBe(1);
       expect(countOf('type.instructions')).toBe(1);
       expect(countOf('type.taskSet')).toBe(1);
       expect(countOf('type.task:')).toBe(3);
-      expect(countOf('type.feature:')).toBe(4);
-      expect(countOf('type.spec:')).toBe(1);
+      // The features, and the parts of each one that is broken down.
+      expect(countOf('type.feature:')).toBe(config.features.length + subfeatureCount);
+      // The map, and a spec per broken-down feature; every spec holds its document.
+      expect(countOf('type.projects.spec:')).toBe(1 + brokenDown.length);
+      expect(countOf('type.specDocument:')).toBe(1 + brokenDown.length);
       // The diagram and the published plugin are what the run produces, so the space ships no documents.
       expect(countOf('type.document')).toBe(0);
     },
@@ -85,16 +93,28 @@ describe.each([ShogiSpace.CONFIG, WorldClockSpace.CONFIG])('$space.name template
     { timeout: 120_000 },
     async ({ expect }) => {
       const objects = await archive();
-      const [project] = ofType(objects, 'type.project');
-      const features = ofType(objects, 'type.feature:');
+      const [project] = ofType(objects, 'type.project:');
+      const all = ofType(objects, 'type.feature:');
+      const byRef = (ref: { '/': string } | undefined) =>
+        objects.find((object) => `echo:///${object.id}` === ref?.['/']);
+      const map = byRef(project.spec);
+      const features = (map?.features ?? []).flatMap((ref) => byRef(ref) ?? []);
       const tasks = ofType(objects, 'type.task:');
 
       expect(features.map((feature) => feature.name)).toEqual(config.features.map((feature) => feature.name));
       expect(features.every((feature) => feature.status === 'planned')).toBe(true);
-      expect(features.every((feature) => feature.project?.['/'] === `echo:///${project.id}`)).toBe(true);
+      expect(map?.['@type']).toContain('type.projects.spec:');
       expect(features.map((feature) => feature.specs)).toEqual(
         ['F-1', 'F-2', 'F-3', 'F-4'].map((feat) => [`${config.spec.path}#${feat}`]),
       );
+      // A feature's parts are features of their own, on the spec that breaks it down.
+      const subfeatures = features.flatMap((feature) =>
+        (byRef(feature.spec)?.features ?? []).flatMap((ref) => byRef(ref) ?? []),
+      );
+      expect(subfeatures.map((feature) => feature.name)).toEqual(
+        brokenDown.flatMap((seed) => seed.subfeatures?.map((subfeature) => subfeature.name) ?? []),
+      );
+      expect(all).toHaveLength(features.length + subfeatures.length);
 
       // Each feature needs the one before it.
       const dependsOn = ofType(objects, 'relation.dependsOn');
@@ -111,9 +131,10 @@ describe.each([ShogiSpace.CONFIG, WorldClockSpace.CONFIG])('$space.name template
         ]),
       ).toEqual([[`echo:///${diagram?.id}`, `echo:///${features[0].id}`]]);
 
-      // The spec is the space's copy of the path the features cite, so their cards open it instead of GitHub.
-      const [spec] = ofType(objects, 'type.spec:');
-      expect(spec['@meta']?.keys).toEqual([{ source: Feature.SPEC_KEY_SOURCE, id: config.spec.path }]);
+      // The map's document is the space's copy of the path the features cite, so their cards open it instead of GitHub.
+      const document = ofType(objects, 'type.specDocument:').find(({ id }) => map?.document?.['/'] === `echo:///${id}`);
+      expect(document).toBeDefined();
+      expect(document?.['@meta']?.keys).toEqual([{ source: Feature.SPEC_KEY_SOURCE, id: config.spec.path }]);
     },
   );
 

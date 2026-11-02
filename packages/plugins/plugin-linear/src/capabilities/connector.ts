@@ -14,7 +14,7 @@ import { OAuthProvider } from '@dxos/protocols';
 
 import { LinearOperation } from '#types';
 
-import { LINEAR_APP_PROVIDER_ID, LINEAR_PROVIDER_ID, LINEAR_SOURCE } from '../constants.ts';
+import { LINEAR_APP_PROVIDER_ID, LINEAR_MCP_ENDPOINT, LINEAR_PROVIDER_ID, LINEAR_SOURCE } from '../constants.ts';
 import { LinearApi } from '../services/index.ts';
 
 /**
@@ -93,6 +93,7 @@ export default Capability.makeModule(
         source: LINEAR_SOURCE,
         label: 'Linear',
         kind: 'user',
+        mcp: () => LINEAR_MCP_ENDPOINT,
         oauth: {
           provider: OAuthProvider.LINEAR,
           scopes: ['read', 'write'],
@@ -106,6 +107,7 @@ export default Capability.makeModule(
         source: LINEAR_SOURCE,
         label: 'Linear App',
         kind: 'app',
+        mcp: () => LINEAR_MCP_ENDPOINT,
         oauth: {
           provider: OAuthProvider.LINEAR,
           scopes: ['read', 'write'],

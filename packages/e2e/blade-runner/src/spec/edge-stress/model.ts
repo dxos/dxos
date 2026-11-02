@@ -71,7 +71,7 @@ export const makeFleetModel = ({
   devicesPerIdentity,
   limits,
 }: {
-  devicesPerIdentity: number[];
+  devicesPerIdentity: readonly number[];
   limits: Model['limits'];
 }): Model => {
   const model = makeModel(limits);

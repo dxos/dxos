@@ -10,7 +10,7 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Menu from '@dxos/react-ui/Menu';
 
-import { meta } from '#meta';
+import { SupportNamespace } from '../../namespace.ts';
 
 export type UpdateMenuItemProps = {
   manager: AppUpdate.Manager;
@@ -26,7 +26,7 @@ const percent = (progress?: AppUpdate.Progress) =>
  * then restart once the update is staged.
  */
 export const UpdateMenuItem = ({ manager }: UpdateMenuItemProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(SupportNamespace.key);
   const status = useAtomValue(manager.status);
   const setStatus = useAtomSet(manager.status);
 

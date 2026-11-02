@@ -156,7 +156,7 @@ const specText = (page) =>
       const space = dxos.spaces().find((candidate) => candidate.id === globalThis[key]);
       const [spec] = space
         ? await space.db
-            .query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.spec')))
+            .query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.specDocument')))
             .run()
             .catch(() => [])
         : [];

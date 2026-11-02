@@ -8,10 +8,12 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Schema from 'effect/Schema';
 
+import { mcpServerTypes } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
+import * as Credential from '@dxos/compute/Credential';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -155,6 +157,13 @@ describe('RunInstructions', () => {
       TestHelpers.provideTestContext,
     ),
   );
+
+  // The runtime registers declared types and provides declared services, so a run that reads the space's
+  // MCP connections without them finds none, or connects a keyed server without its key.
+  it('declares what reading the MCP connections needs', () => {
+    expect(AgentOperation.RunInstructions.types).toEqual(expect.arrayContaining([...mcpServerTypes]));
+    expect(AgentOperation.RunInstructions.services).toContain(Credential.CredentialsService);
+  });
 });
 
 // Scripting the `completeJob` call drives the whole operation without a live model, so what is

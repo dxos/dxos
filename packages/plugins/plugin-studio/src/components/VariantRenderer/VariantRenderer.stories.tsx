@@ -10,6 +10,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type VariantContent } from '#surfaces';
 import { translations } from '#translations';
 
+import { AudioVariant } from './AudioVariant.tsx';
 import { ImageVariant } from './ImageVariant.tsx';
 import { VideoVariant } from './VideoVariant.tsx';
 
@@ -23,6 +24,11 @@ const videoVariant: VariantContent = {
   contentType: 'video/mp4',
   url: 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
   generation: { provider: 'mock', prompt: 'A blooming flower time-lapse.' },
+};
+
+const audioVariant: VariantContent = {
+  contentType: 'audio/mpeg',
+  url: 'https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3',
 };
 
 const meta: Meta = {
@@ -47,6 +53,14 @@ export const Video: Story = {
   render: () => (
     <div className='w-96'>
       <VideoVariant variant={videoVariant} />
+    </div>
+  ),
+};
+
+export const Audio: Story = {
+  render: () => (
+    <div className='w-96'>
+      <AudioVariant variant={audioVariant} />
     </div>
   ),
 };

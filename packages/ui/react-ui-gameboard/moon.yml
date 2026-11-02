@@ -19,3 +19,7 @@ tasks:
       - src/gen
     tags:
       - prebuild
+  # The stories import `src/gen`; the inherited `^:#prebuild` reaches only dependencies' generators.
+  test-storybook:
+    deps:
+      - ~:prebuild

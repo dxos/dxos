@@ -8,8 +8,9 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Util from '@dxos/react-ui/Util';
 
 import { Initialize } from '#components';
-import { meta } from '#meta';
 import { Mailbox } from '#types';
+
+import { InboxNamespace } from '../../namespace.ts';
 
 export type InitializeMailboxProps = {
   mailbox: Mailbox.Mailbox;
@@ -17,7 +18,7 @@ export type InitializeMailboxProps = {
 
 export const InitializeMailbox = Util.composable<HTMLDivElement, InitializeMailboxProps>(
   ({ mailbox, ...props }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(InboxNamespace.key);
     return (
       <Initialize
         {...props}

@@ -9,16 +9,19 @@ import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceEvents from '@dxos/plugin-space/SpaceEvents';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
-import { SamplePlugin } from '#plugin';
+import * as SamplePlugin from '#meta';
 import { SampleItem, SampleOperation } from '#types';
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+import { SampleNamespace } from './namespace.ts';
+
+const moduleId = (name: string) => `${SampleNamespace.key}.module.${name}`;
+
+await Harness.preload({ plugins: [ClientPlugin.make({}), SamplePlugin.make()] });
 
 describe('SamplePlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), SamplePlugin()],
+      plugins: [ClientPlugin.make({}), SamplePlugin.make()],
     });
 
     expect(harness.manager.getActive()).toEqual(
@@ -32,7 +35,7 @@ describe('SamplePlugin', () => {
     // `create-object` body is invisible to tests and surfaces in production as a type silently
     // missing from the create dialog.
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), SamplePlugin()],
+      plugins: [ClientPlugin.make({}), SamplePlugin.make()],
     });
 
     await harness.fire(SpaceEvents.CreateObjectRequested);
@@ -41,14 +44,14 @@ describe('SamplePlugin', () => {
   });
 
   test('CreateSampleItem returns a SampleItem object', async ({ expect }) => {
-    await using harness = await Harness.createComposerTestApp({ plugins: [SamplePlugin()] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [SamplePlugin.make()] });
     const { object } = await harness.invoke(SampleOperation.CreateSampleItem, { name: 'hello' });
     expect(object.name).toBe('hello');
     expect(object.status).toBe('active');
   });
 
   test('Randomize mutates the SampleItem fields in place', async ({ expect }) => {
-    await using harness = await Harness.createComposerTestApp({ plugins: [SamplePlugin()] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [SamplePlugin.make()] });
     const item = SampleItem.make({ name: 'before' });
     await harness.invoke(SampleOperation.Randomize, { item });
     expect(item.name).not.toBe('before');
@@ -57,7 +60,7 @@ describe('SamplePlugin', () => {
   });
 
   test('UpdateStatus sets the status field', async ({ expect }) => {
-    await using harness = await Harness.createComposerTestApp({ plugins: [SamplePlugin()] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [SamplePlugin.make()] });
     const item = SampleItem.make({ name: 'task', status: 'active' });
     await harness.invoke(SampleOperation.UpdateStatus, { item, status: 'archived' });
     expect(item.status).toBe('archived');

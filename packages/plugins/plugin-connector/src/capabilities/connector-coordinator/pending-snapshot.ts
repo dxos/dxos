@@ -3,6 +3,7 @@
 //
 
 import { type Key } from '@dxos/echo';
+import { type Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 
 import { pendingConnectionStorageKey } from '../../constants.ts';
@@ -14,7 +15,8 @@ export type PendingSnapshot = {
   spaceId: Key.SpaceId;
   connectorId: string;
   tokenSnapshot: { source: string; account?: string; scopes: readonly string[] };
-  connectionSnapshot: { name: string; connectorId: string };
+  /** `mcp` is set for a custom MCP server, whose endpoint the connector cannot supply. */
+  connectionSnapshot: { name: string; connectorId: string; mcp?: Connection.McpEndpoint };
   /**
    * `Ref.uri` of the existing target to bind the first new selection to — an `echo:` EID, not a
    * `dxn:` DXN (a DXN names a type or capability and cannot address an object).

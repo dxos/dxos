@@ -13,7 +13,8 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Position from '@dxos/util/Position';
 
 import { CommandsDialogContent, CommandsTrigger, NavTreeContainer, NavTreeDocumentTitle } from '#containers';
-import { COMMANDS_DIALOG } from '#meta';
+
+import { COMMANDS_DIALOG } from '../constants.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

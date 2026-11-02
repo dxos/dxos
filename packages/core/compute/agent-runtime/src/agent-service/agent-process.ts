@@ -17,13 +17,11 @@ import * as Struct from 'effect/Struct';
 
 import { AiService, Model, OpaqueToolkit } from '@dxos/ai';
 import {
-  AiContext,
   Alarm,
   HarnessControl,
   type HarnessControlRpcs,
   type PendingState,
   SessionStore,
-  SkillHooks,
   getOperationFromTool,
   makeToolExecutionService,
   makeToolResolverFromOperations,
@@ -31,22 +29,22 @@ import {
 import * as Chat from '@dxos/assistant/Chat';
 import { OperationProcess } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
-import * as McpServer from '@dxos/compute/McpServer';
+import * as Hook from '@dxos/compute/Hook';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
-import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
+import { Annotation, Database, Feed, Filter, Obj, Ref, Registry } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
-import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Actor, ContentBlock, Message } from '@dxos/types';
 import { markWork, trim } from '@dxos/util';
 
+import { mcpServerTypes } from '../mcp-server-types.ts';
 import { type DelegationStrategy } from './delegation-strategy.ts';
-import { loadSpaceMcpServers } from './mcp-servers.ts';
+import { type McpEndpointOf, loadMcpServers } from './mcp-servers.ts';
 import { type MakeTurnProducer, makeAiSessionTurnProducer } from './turn-producer.ts';
 
 export interface AgentProcessOptions {
@@ -92,9 +90,24 @@ export interface AgentProcessOptions {
    * (the default) the process behaves as a plain conversational agent.
    */
   delegationStrategy?: DelegationStrategy;
+
+  /**
+   * The MCP server a connection exposes. Defaults to the endpoint the connection stores itself, which
+   * only a custom MCP connection has; a host that knows the connector registry resolves the rest.
+   */
+  mcpEndpoint?: McpEndpointOf;
+
+  /**
+   * The lifecycle hooks this host can run. Which of them a request runs is up to the space's and the
+   * instructions' {@link Hook.SettingsAnnotation}, resolved when the request begins.
+   */
+  hooks?: () => readonly Hook.Definition[];
 }
 
 export const AGENT_PROCESS_KEY = 'org.dxos.testing.process.agent';
+
+/** `SpaceProperties` (`@dxos/client-protocol`), by typename: the space's hook settings are on it. */
+const SPACE_PROPERTIES_TYPENAME = 'org.dxos.type.spaceProperties';
 
 const AgentPrompt = Schema.Union([Schema.String, Schema.Array(ContentBlock.Any)]);
 
@@ -188,17 +201,8 @@ export const AgentProcess = (options: AgentProcessOptions) =>
     // registers exactly these with the process's database, and a typed query for a type it does
     // not know matches nothing. Without them a hosted agent reads its own skill bindings back
     // empty and runs every turn with an EMPTY TOOLKIT — the model can only answer in prose.
-    // `McpServer` and `AccessToken` are read each turn to connect the space's MCP servers.
-    types: [
-      Chat.Chat,
-      Feed.Feed,
-      Message.Message,
-      Alarm.Alarm,
-      AiContext.Binding,
-      Skill.Skill,
-      McpServer.McpServer,
-      AccessToken.AccessToken,
-    ],
+    // `mcpServerTypes` (bindings among them) are read each turn to connect the MCP servers.
+    types: [Chat.Chat, Feed.Feed, Message.Message, Alarm.Alarm, Skill.Skill, ...mcpServerTypes],
     services: [
       Database.Service,
       OpaqueToolkit.OpaqueToolkitProvider,
@@ -317,35 +321,78 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           Process.ManagerService | OperationHandlerSet.OperationHandlerProvider
         >();
 
-        // Fire end-request hooks declared by the bound skills (e.g. the planning plan-reminder).
-        // Each hook runs as a child operation with `conversation` set, so it resolves the full
-        // HarnessService (Tier B) and can enqueue a continuation back onto this host's queue — which
-        // keeps the process alive past this turn.
+        // Queues a hook's follow-up as the next prompt. Armed like any other queued write, since the
+        // eventually-consistent read may not show it to the completion check that runs next.
+        const enqueueFollowUp = Effect.fnUntraced(function* (text: string) {
+          const message = Message.make({
+            sender: { role: 'user' },
+            blocks: [ContentBlock.Text.make({ text, disposition: 'synthetic' })],
+          });
+          yield* sessionStore.enqueueMessage(feed, message);
+          unseenWriteIds.add(message.id);
+          yield* ctx.setAlarm(0);
+        });
+
+        // Snapshots the end-request hooks for the request now beginning, and records why each runs and any plugin a
+        // setting turns on that this host lacks, so a hook that did not run is still on file.
+        const resolveRequestHooks = Effect.gen(function* () {
+          const [properties] = yield* Database.query(Filter.type(DXN.make(SPACE_PROPERTIES_TYPENAME))).run;
+          const resolution = Hook.resolve({
+            catalog: options.hooks?.() ?? [],
+            event: 'end-request',
+            space: properties && Annotation.get(properties, Hook.SettingsAnnotation).pipe(Option.getOrUndefined),
+            instructions:
+              instructions && Annotation.get(instructions, Hook.SettingsAnnotation).pipe(Option.getOrUndefined),
+            skillKeys: new Set(session.getSkills().flatMap((skill) => Obj.getMeta(skill).key ?? [])),
+          });
+          const run = resolution.run.map((hook) => hook.key);
+          if (run.length + resolution.inactive.length + resolution.missing.length > 0) {
+            yield* Trace.write(Trace.AgentHooksResolved, { ...resolution, run });
+          }
+          yield* RequestHooksCell.set(run);
+        });
+
+        // Fires the end-request hooks snapshotted when the request began, each as a child operation with
+        // `conversation` set so it can read the conversation. Returns whether one queued a follow-up, which
+        // continues the request instead of ending it. A failing hook is logged and skipped, so it cannot abort
+        // the request or its sibling hooks.
         const runEndRequestHooks = Effect.gen(function* () {
-          yield* SkillHooks.runHooks({
-            skills: session.getSkills(),
-            phase: 'end-request',
-            invoke: (operation, input, hook) =>
-              Effect.gen(function* () {
-                const handle = yield* Process.spawn(OperationProcess.make(operation), input, {
+          const catalog = options.hooks?.() ?? [];
+          const hooks = (yield* RequestHooksCell.get).flatMap((key) => catalog.filter((hook) => hook.key === key));
+          let followedUp = false;
+          for (const hook of hooks) {
+            yield* Effect.gen(function* () {
+              const handle = yield* Process.spawn(
+                OperationProcess.make(hook.operation),
+                { ...hook.input },
+                {
                   environment: { conversation: Obj.getURI(feed) },
                   traceMeta: { conversation: Ref.make(feed) },
-                });
-                if (hook.async) {
-                  if (untrackedExits.delete(handle.pid)) {
-                    return;
-                  }
-                  // Not awaited, so the request settles now; the child is linked, so its exit wakes
-                  // `onChildEvent`, which completes the process once every background hook is done.
-                  asyncHooks.push(handle.pid);
-                  yield* AsyncHooksCell.set(asyncHooks);
+                },
+              );
+              if (hook.async) {
+                if (untrackedExits.delete(handle.pid)) {
                   return;
                 }
-                // A child failure surfaces in the Effect channel, so the outer `Effect.orDie` (and the
-                // hook runner's `catchAllCause`) handle it instead of it being silently discarded.
-                yield* Process.awaitOutput(handle);
-              }).pipe(Effect.provide(childServices), Effect.asVoid, Effect.orDie),
-          });
+                // Not awaited, so the request settles now; the child is linked, so its exit wakes
+                // `onChildEvent`, which completes the process once every background hook is done.
+                asyncHooks.push(handle.pid);
+                yield* AsyncHooksCell.set(asyncHooks);
+                return;
+              }
+              const followUp = Hook.followUp(yield* Process.awaitOutput(handle));
+              if (followUp !== undefined) {
+                yield* enqueueFollowUp(followUp);
+                followedUp = true;
+              }
+            }).pipe(
+              Effect.provide(childServices),
+              Effect.catchCause((cause) =>
+                Effect.sync(() => log.warn('end-request hook failed', { operation: hook.operation.meta.key, cause })),
+              ),
+            );
+          }
+          return followedUp;
         });
 
         // Whether this incarnation has actually run a turn. An empty queue means two different things:
@@ -414,9 +461,12 @@ export const AgentProcess = (options: AgentProcessOptions) =>
 
             if (!endHooksFired) {
               endHooksFired = true;
-              // The hook may enqueue work (e.g. a plan continuation reminder) via HarnessService Tier B,
-              // which appends to the feed queue; re-check before succeeding so the turn is not dropped.
-              yield* runEndRequestHooks;
+              // A follow-up is queued work the read may not show yet; the alarm it armed picks it up.
+              if (yield* runEndRequestHooks) {
+                log('end-request hook queued a follow-up, continuing');
+                return;
+              }
+              // A hook may also have queued work itself, through HarnessService Tier B.
               const after = yield* sessionStore.loadPending(feed);
               if (pendingWork(after)) {
                 log('agent work enqueued by end-request hook, continuing');
@@ -614,25 +664,19 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 yield* Trace.emitRequestPhase('preparing');
               }
 
-              // The MCP servers are read concurrently with the writes below: neither depends on the
-              // other, and each is a round trip to the database that the turn would otherwise wait on in series.
-              const [mcpServers] = yield* Effect.all(
-                [
-                  loadSpaceMcpServers(),
-                  Effect.gen(function* () {
-                    // The turn appends its own user message built from `prompt`, so the queue entry that
-                    // supplied it must leave the queue view now or the same content shows in both places
-                    // until the late ack below.
-                    if (dequeued !== undefined) {
-                      yield* sessionStore.markInFlight(feed, dequeued);
-                    }
-                    log('begin request', { prompt });
-                    log('trace agent request begin');
-                    yield* Trace.write(Trace.AgentRequestBegin, {});
-                  }),
-                ],
-                { concurrency: 'unbounded' },
-              );
+              // The turn appends its own user message built from `prompt`, so the queue entry that
+              // supplied it must leave the queue view now or the same content shows in both places
+              // until the late ack below.
+              if (dequeued !== undefined) {
+                yield* sessionStore.markInFlight(feed, dequeued);
+              }
+              log('begin request', { prompt });
+              log('trace agent request begin');
+              yield* Trace.write(Trace.AgentRequestBegin, {});
+              yield* resolveRequestHooks;
+              const mcpContext = yield* Effect.context<
+                Database.Service | Registry.Service | Credential.CredentialsService
+              >();
               markWork('agent.turn-begin');
               yield* session
                 .runTurn({
@@ -643,7 +687,9 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   // TODO(dmaretskyi): Polling currently broken, agent relies on completion notifications being delivered.
                   // toolkit: AsynchronousExectionToolkit,
                   system: options.systemPrompt,
-                  mcpServers,
+                  mcpServers: loadMcpServers({ feed, endpointOf: options.mcpEndpoint }).pipe(
+                    Effect.provide(mcpContext),
+                  ),
                 })
                 .pipe(
                   Effect.onExit((exit) =>
@@ -719,6 +765,11 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               // A failed background hook is reported and dropped, like a failed inline hook.
               if (Exit.isFailure(exit)) {
                 log.warn('background end-request hook failed', { pid: event.pid });
+              }
+              const followUp = Exit.isSuccess(exit) ? Hook.followUp(exit.value) : undefined;
+              if (followUp !== undefined) {
+                yield* enqueueFollowUp(followUp);
+                return;
               }
               yield* maybeComplete;
               return;
@@ -859,7 +910,13 @@ const DelegationsCell = StorageService.cell(
   'delegations',
 ).pipe(StorageService.withDefault(() => []));
 
-/** Pids of background ({@link Skill.Hook.async}) end-request hooks the process is waiting on. */
+/** Keys of the end-request hooks the current request runs, snapshotted when it began. */
+const RequestHooksCell = StorageService.cell(
+  Schema.fromJsonString(Schema.Array(Schema.String).pipe(Schema.mutable)),
+  'requestHooks',
+).pipe(StorageService.withDefault(() => []));
+
+/** Pids of background ({@link Hook.Definition.async}) end-request hooks the process is waiting on. */
 const AsyncHooksCell = StorageService.cell(
   Schema.fromJsonString(Schema.Array(Process.ID).pipe(Schema.mutable)),
   'asyncHooks',

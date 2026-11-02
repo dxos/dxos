@@ -250,3 +250,14 @@ describe('AiSession.sessionAnnotations', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 });
+
+describe('AiSession.readMcpServers', () => {
+  it.effect('connects no servers for a step whose read fails, and reads them again next step', () =>
+    Effect.gen(function* () {
+      const server = { url: 'https://mcp.example.com/mcp', protocol: 'http' as const, name: 'example' };
+      const failed = Effect.fail(new AiSession.McpServersUnavailable({ message: 'timed out' }));
+      expect(yield* AiSession.readMcpServers(failed)).toEqual([]);
+      expect(yield* AiSession.readMcpServers(Effect.succeed([server]))).toEqual([server]);
+    }),
+  );
+});

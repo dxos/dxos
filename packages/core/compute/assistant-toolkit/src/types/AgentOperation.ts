@@ -6,8 +6,10 @@
 
 import * as Schema from 'effect/Schema';
 
+import { mcpServerTypes } from '@dxos/agent-runtime/mcp-server-types';
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import * as Chat from '@dxos/assistant/Chat';
+import * as Credential from '@dxos/compute/Credential';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
@@ -48,9 +50,12 @@ export const RunInstructions = Operation.make({
   output: Schema.Any,
   // ECHO types that the handler loads via Database.load(). Declaring them here ensures the
   // runtime registers their schema before remote invocation (e.g. via the EDGE function service).
-  types: [Instructions.Instructions, Text.Text, Feed.Feed, Chat.Chat],
+  // `mcpServerTypes` are read each step to connect the space's MCP servers.
+  types: [Instructions.Instructions, Text.Text, Feed.Feed, Chat.Chat, ...mcpServerTypes],
   services: [
     AiService.AiService,
+    // Resolves an MCP connection's key.
+    Credential.CredentialsService,
     Database.Service,
     OpaqueToolkit.OpaqueToolkitProvider,
     Registry.Service,

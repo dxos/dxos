@@ -1097,7 +1097,8 @@ export const usePointerMachine = ({
         case 'vertex': {
           // The frame refits to the vertices in the same update, so the edit is one undo step.
           const node = scene.nodes[current.id];
-          if (!node || !hasVertices(node)) {
+          // A node locked while its vertex was dragged keeps the shape it had.
+          if (!node || node.locked || !hasVertices(node)) {
             break;
           }
           const before = polylineVertices(node);

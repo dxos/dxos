@@ -3,8 +3,13 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
+import * as Progress from '@dxos/app-toolkit/Progress';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -13,7 +18,7 @@ import { Milestone, Task, TaskSet } from '@dxos/types';
 
 import { LINEAR_SOURCE } from '../constants.ts';
 import { LinearApi } from '../services/index.ts';
-import { pushTeamUpdates, upsertMilestone, upsertProject, upsertTask } from './sync.ts';
+import { pushTeamUpdates, syncTeamBinding, upsertMilestone, upsertProject, upsertTask } from './sync.ts';
 
 const issue = (overrides: Partial<LinearApi.Issue> = {}): LinearApi.Issue => ({
   id: 'issue-1',
@@ -45,6 +50,30 @@ const projectMilestone = (overrides: Partial<LinearApi.ProjectMilestone> = {}): 
   ...overrides,
 });
 
+/** Answers each Linear GraphQL query with one page of fixture data, keyed by the query's operation name. */
+const mockLinearFetch =
+  (data: { projects: readonly LinearApi.Project[]; issues: readonly LinearApi.Issue[] }): typeof globalThis.fetch =>
+  async (input, init) => {
+    const { query } = await new Request(input, init).json();
+    const page = <T>(nodes: readonly T[]) => ({ nodes, pageInfo: { hasNextPage: false } });
+    const responses: Record<string, unknown> = {
+      Teams: { teams: page([{ id: 'team-1', key: 'TEAM', name: 'Example' }]) },
+      TeamProjects: { team: { projects: page(data.projects) } },
+      ProjectMilestones: { project: { projectMilestones: page([]) } },
+      TeamIssues: { team: { issues: page(data.issues) } },
+      TeamWorkflowStates: { team: { states: page([]) } },
+    };
+    const operationName = /^\s*query (\w+)/.exec(query)?.[1] ?? '';
+    return new Response(JSON.stringify({ data: responses[operationName] }));
+  };
+
+// Toasts are fire-and-forget (`Effect.ignore`), so a missing handler is the honest stub.
+const operationServiceLayer = Layer.succeed(Operation.Service, {
+  invoke: () => Effect.fail(new Operation.NoHandlerError('toast')),
+  schedule: () => Effect.void,
+  invokePromise: async () => ({ error: new Error('Operation.Service unused') }),
+});
+
 describe('plugin-linear sync', () => {
   let builder: EchoTestBuilder;
 
@@ -74,7 +103,7 @@ describe('plugin-linear sync', () => {
     const teamRoot = db.add(TaskSet.make({ name: 'TEAM · Example' }));
     const binding = db.add(
       Cursor.makeExternal({
-        source: connection.accessToken,
+        source: Connection.getAccessToken(connection),
         target: Ref.make(teamRoot),
         externalId: 'team-1',
       }),
@@ -465,5 +494,54 @@ describe('plugin-linear sync', () => {
     }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     expect(task.milestone).toBeUndefined();
+  });
+
+  test('team sync reports one meter whose total is its projects plus issues', async ({ expect }) => {
+    const { binding, teamRoot } = await setup();
+    const projects = [project({ id: 'proj-1' }), project({ id: 'proj-2', name: 'Q3 launch' })];
+    const issues = [
+      issue({ id: 'issue-1' }),
+      issue({ id: 'issue-2', identifier: 'TEAM-2', project: { id: 'proj-1' } }),
+      issue({ id: 'issue-3', identifier: 'TEAM-3', project: { id: 'proj-2' } }),
+    ];
+
+    const statusUpdates: Trace.PayloadType<typeof Trace.StatusUpdate>[] = [];
+    const traceLayer = Trace.testTraceService().pipe(
+      Layer.provide(
+        Layer.succeed(Trace.TraceSink, {
+          write: (message) => {
+            for (const event of Trace.flatten(message)) {
+              if (Trace.isOfType(Trace.StatusUpdate, event)) {
+                statusUpdates.push(event.data);
+              }
+            }
+          },
+        }),
+      ),
+    );
+
+    await syncTeamBinding(binding).pipe(
+      Effect.provideService(FetchHttpClient.Fetch, mockLinearFetch({ projects, issues })),
+      Effect.provide(Layer.mergeAll(traceLayer, operationServiceLayer)),
+      EffectEx.runAndForwardErrors,
+    );
+
+    const expectedTotal = projects.length + issues.length;
+    const totals = statusUpdates.flatMap((update) =>
+      update.progress?.total === undefined ? [] : [update.progress.total],
+    );
+    const counts = statusUpdates.flatMap((update) =>
+      update.progress?.current === undefined ? [] : [update.progress.current],
+    );
+    expect(new Set(totals)).toEqual(new Set([expectedTotal]));
+    expect(counts.at(-1)).toBe(expectedTotal);
+    // The total lands before the first item is counted, so the meter never shows a partial total.
+    expect(
+      statusUpdates
+        .filter((update) => (update.progress?.current ?? 0) > 0)
+        .every((update) => update.progress?.total === expectedTotal),
+    ).toBe(true);
+    expect(statusUpdates.at(-1)?.message).toBe(Progress.STATUS_COMPLETE);
+    expect(statusUpdates.every((update) => update.progress?.key === Progress.createSyncKey(teamRoot))).toBe(true);
   });
 });

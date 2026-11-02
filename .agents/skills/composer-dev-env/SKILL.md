@@ -67,7 +67,7 @@ spaces; then `queryOperations` (no arguments) lists `org.dxos.operation.space.ad
 `whoami`, `createUpload` and `createDownload` are static; everything else comes from EDGE's
 `operation-service` over RPC. When that RPC fails, `mcp-space-service` serves an empty registry
 (`edge/packages/services/mcp-space-service/src/mcp/gateway.ts`). Invoking by key then answers
-`Unknown operation`. Confirm in SigNoz (the claude.ai SigNoz connector):
+`Unknown operation`. Confirm in PostHog logs (project 126171, the claude.ai PostHog connector):
 
 - `mcp-space-service`, body `operation registry unavailable; serving the static surface only`.
 - The cause, in `operation-service` logs: filter

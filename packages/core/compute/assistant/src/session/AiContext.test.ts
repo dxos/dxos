@@ -112,6 +112,76 @@ describe('AiContext.Binder', () => {
       .pipe(Effect.runPromise);
   });
 
+  test('a connection is on until the conversation turns it off, and the latest change survives a reopen', async ({
+    expect,
+  }) => {
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make());
+      const runtime = yield* Effect.context<Database.Service>();
+      const [a, b, c] = yield* Effect.forEach([0, 1, 2], () => Database.add(Obj.make(TypeA, {})));
+
+      const binder = new AiContext.Binder({ feed, runtime });
+      yield* Effect.promise(() => binder.open());
+      yield* Effect.promise(() => binder.setConnection(Ref.make(a), false));
+      yield* Effect.promise(() => binder.setConnection(Ref.make(b), false));
+      yield* Effect.promise(() => binder.setConnection(Ref.make(b), true));
+      yield* Effect.promise(() => binder.close());
+
+      const reader = new AiContext.Binder({ feed, runtime });
+      yield* Effect.promise(() => reader.open());
+      const states = reader.getConnections();
+      yield* Effect.promise(() => reader.close());
+
+      expect([a, b, c].map((connection) => AiContext.isConnectionOn(states, connection))).toEqual([false, true, true]);
+    })
+      .pipe(Effect.provide(TestLayer))
+      .pipe(Effect.runPromise);
+  });
+
+  test('a built-in connection is off until turned on, and is bound by its key in every process', async ({ expect }) => {
+    // Each process makes its own copy of a built-in from code: same key, different object.
+    const builtin = () => Obj.make(TypeA, { [Obj.Meta]: { key: 'org.dxos.mcp.test' } });
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make());
+      const runtime = yield* Effect.context<Database.Service>();
+      const here = builtin();
+
+      const binder = new AiContext.Binder({ feed, runtime });
+      yield* Effect.promise(() => binder.open());
+      const before = AiContext.isConnectionOn(binder.getConnections(), here);
+      yield* Effect.promise(() => binder.setConnection(AiContext.connectionRef(here), true));
+      yield* Effect.promise(() => binder.close());
+
+      const states = yield* AiContext.boundConnections(feed);
+      expect(before).toBe(false);
+      expect(AiContext.isConnectionOn(states, builtin())).toBe(true);
+    })
+      .pipe(Effect.provide(TestLayer))
+      .pipe(Effect.runPromise);
+  });
+
+  test('a holding binder writes its connection changes when flushed', async ({ expect }) => {
+    await Effect.gen(function* () {
+      const feed = Feed.make();
+      const runtime = yield* Effect.context<Database.Service>();
+      const a = yield* Database.add(Obj.make(TypeA, {}));
+
+      const binder = new AiContext.Binder({ feed, runtime, hold: true });
+      yield* Effect.promise(() => binder.open());
+      yield* Effect.promise(() => binder.setConnection(Ref.make(a), false));
+      const held = AiContext.isConnectionOn(binder.getConnections(), a);
+      yield* Database.add(feed);
+      yield* Effect.promise(() => binder.flush());
+      yield* Effect.promise(() => binder.close());
+
+      const states = yield* AiContext.boundConnections(feed);
+      expect(held).toBe(false);
+      expect(AiContext.isConnectionOn(states, a)).toBe(false);
+    })
+      .pipe(Effect.provide(TestLayer))
+      .pipe(Effect.runPromise);
+  });
+
   test('a holding binder resolves a registry skill bound by URI', async ({ expect }) => {
     const registered = Skill.make({ key: 'org.dxos.skill.registered', name: 'Registered' });
     await Effect.gen(function* () {
@@ -196,6 +266,196 @@ describe('AiContext.Binder', () => {
 
       expect(idleReads).toBe(0);
       expect(writeReads).toBe(1);
+      expect(objects.map((obj) => Obj.getURI(obj))).toEqual([Obj.getURI(a)]);
+    })
+      .pipe(Effect.provide(TestLayer))
+      .pipe(Effect.runPromise);
+  });
+
+  test('sync re-reads a binding written outside this realm once the host notes it', async ({ expect }) => {
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make());
+      const runtime = yield* Effect.context<Database.Service>();
+      const a = yield* Database.add(Obj.make(TypeA, {}));
+
+      const agent = new AiContext.Binder({ feed, runtime });
+      yield* Effect.promise(() => agent.open());
+
+      // Appended straight to the feed, as a tool running in another worker does: this realm counts no write.
+      yield* Feed.append(feed, [
+        Obj.make(AiContext.Binding, {
+          skills: { added: [], removed: [] },
+          objects: { added: [Ref.make(a)], removed: [] },
+        }),
+      ]);
+      const probe = yield* Effect.promise(() =>
+        RuntimeProvider.runPromise(Effect.succeed(runtime))(Feed.query(feed, Query.type(AiContext.Binding))),
+      );
+      const run = vi.spyOn(Object.getPrototypeOf(probe), 'run');
+      yield* Effect.promise(() => agent.sync());
+      const unnotedReads = run.mock.calls.length;
+
+      AiContext.noteExternalBindingWrite();
+      yield* Effect.promise(() => agent.sync());
+      const notedReads = run.mock.calls.length - unnotedReads;
+      run.mockRestore();
+      const objects = agent.getObjects();
+      yield* Effect.promise(() => agent.close());
+
+      expect(unnotedReads).toBe(0);
+      expect(notedReads).toBe(1);
+      expect(objects.map((obj) => Obj.getURI(obj))).toEqual([Obj.getURI(a)]);
+    })
+      .pipe(Effect.provide(TestLayer))
+      .pipe(Effect.runPromise);
+  });
+
+  test('sync after a noted external write waits for the index to return it', async ({ expect }) => {
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make());
+      const runtime = yield* Effect.context<Database.Service>();
+      const a = yield* Database.add(Obj.make(TypeA, {}));
+
+      const agent = new AiContext.Binder({ feed, runtime });
+      yield* Effect.promise(() => agent.open());
+
+      yield* Feed.append(feed, [
+        Obj.make(AiContext.Binding, {
+          skills: { added: [], removed: [] },
+          objects: { added: [Ref.make(a)], removed: [] },
+        }),
+      ]);
+      const probe = yield* Effect.promise(() =>
+        RuntimeProvider.runPromise(Effect.succeed(runtime))(Feed.query(feed, Query.type(AiContext.Binding))),
+      );
+      // The first read returns the feed as an index that has not yet seen the append would.
+      const run = vi.spyOn(Object.getPrototypeOf(probe), 'run').mockResolvedValueOnce([]);
+      AiContext.noteExternalBindingWrite();
+      yield* Effect.promise(() => agent.sync());
+      const reads = run.mock.calls.length;
+      run.mockRestore();
+      const objects = agent.getObjects();
+      yield* Effect.promise(() => agent.close());
+
+      expect(reads).toBe(2);
+      expect(objects.map((obj) => Obj.getURI(obj))).toEqual([Obj.getURI(a)]);
+    })
+      .pipe(Effect.provide(TestLayer))
+      .pipe(Effect.runPromise);
+  });
+
+  test('a local binding read first does not end the wait for a noted external one', async ({ expect }) => {
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make());
+      const runtime = yield* Effect.context<Database.Service>();
+      const local = yield* Database.add(Obj.make(TypeA, {}));
+      const external = yield* Database.add(Obj.make(TypeA, {}));
+
+      const agent = new AiContext.Binder({ feed, runtime });
+      yield* Effect.promise(() => agent.open());
+      yield* Effect.promise(() => agent.bind({ objects: [Ref.make(local)] }));
+      yield* Feed.append(feed, [
+        Obj.make(AiContext.Binding, {
+          skills: { added: [], removed: [] },
+          objects: { added: [Ref.make(external)], removed: [] },
+        }),
+      ]);
+      const probe = yield* Effect.promise(() =>
+        RuntimeProvider.runPromise(Effect.succeed(runtime))(Feed.query(feed, Query.type(AiContext.Binding))),
+      );
+      const [localBinding] = yield* Effect.promise(() => probe.run());
+      // The first read holds the local binding but not yet the external one.
+      const run = vi.spyOn(Object.getPrototypeOf(probe), 'run').mockResolvedValueOnce([localBinding]);
+      AiContext.noteExternalBindingWrite();
+      yield* Effect.promise(() => agent.sync());
+      const reads = run.mock.calls.length;
+      run.mockRestore();
+      const objects = agent.getObjects();
+      yield* Effect.promise(() => agent.close());
+
+      // The stale first read is retried; how many more reads the index needs is not this test's concern.
+      expect(reads).toBeGreaterThanOrEqual(2);
+      expect(objects.map((obj) => Obj.getURI(obj))).toEqual([Obj.getURI(local), Obj.getURI(external)]);
+    })
+      .pipe(Effect.provide(TestLayer))
+      .pipe(Effect.runPromise);
+  });
+
+  test('a local write the index has not returned yet still counts toward the next external wait', async ({
+    expect,
+  }) => {
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make());
+      const runtime = yield* Effect.context<Database.Service>();
+      const local = yield* Database.add(Obj.make(TypeA, {}));
+      const external = yield* Database.add(Obj.make(TypeA, {}));
+
+      const agent = new AiContext.Binder({ feed, runtime });
+      yield* Effect.promise(() => agent.open());
+      yield* Effect.promise(() => agent.bind({ objects: [Ref.make(local)] }));
+      const probe = yield* Effect.promise(() =>
+        RuntimeProvider.runPromise(Effect.succeed(runtime))(Feed.query(feed, Query.type(AiContext.Binding))),
+      );
+      const [localBinding] = yield* Effect.promise(() => probe.run());
+      // A local-only sync whose read does not yet hold the local write.
+      const run = vi.spyOn(Object.getPrototypeOf(probe), 'run').mockResolvedValueOnce([]);
+      yield* Effect.promise(() => agent.sync());
+
+      yield* Feed.append(feed, [
+        Obj.make(AiContext.Binding, {
+          skills: { added: [], removed: [] },
+          objects: { added: [Ref.make(external)], removed: [] },
+        }),
+      ]);
+      // The next read holds the late local write but not yet the external one.
+      run.mockResolvedValueOnce([localBinding]);
+      const before = run.mock.calls.length;
+      AiContext.noteExternalBindingWrite();
+      yield* Effect.promise(() => agent.sync());
+      const reads = run.mock.calls.length - before;
+      run.mockRestore();
+      const objects = agent.getObjects();
+      yield* Effect.promise(() => agent.close());
+
+      expect(reads).toBeGreaterThanOrEqual(2);
+      expect(objects.map((obj) => Obj.getURI(obj))).toEqual([Obj.getURI(local), Obj.getURI(external)]);
+    })
+      .pipe(Effect.provide(TestLayer))
+      .pipe(Effect.runPromise);
+  });
+
+  test('a failed retry leaves the noted write for the next sync', async ({ expect }) => {
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make());
+      const runtime = yield* Effect.context<Database.Service>();
+      const a = yield* Database.add(Obj.make(TypeA, {}));
+
+      const agent = new AiContext.Binder({ feed, runtime });
+      yield* Effect.promise(() => agent.open());
+      yield* Feed.append(feed, [
+        Obj.make(AiContext.Binding, {
+          skills: { added: [], removed: [] },
+          objects: { added: [Ref.make(a)], removed: [] },
+        }),
+      ]);
+      const probe = yield* Effect.promise(() =>
+        RuntimeProvider.runPromise(Effect.succeed(runtime))(Feed.query(feed, Query.type(AiContext.Binding))),
+      );
+      const run = vi
+        .spyOn(Object.getPrototypeOf(probe), 'run')
+        .mockResolvedValueOnce([])
+        .mockRejectedValueOnce(new Error('index query timed out'));
+      AiContext.noteExternalBindingWrite();
+      yield* Effect.promise(() => agent.sync());
+      const failedSyncReads = run.mock.calls.length;
+      yield* Effect.promise(() => agent.sync());
+      const nextSyncReads = run.mock.calls.length - failedSyncReads;
+      run.mockRestore();
+      const objects = agent.getObjects();
+      yield* Effect.promise(() => agent.close());
+
+      expect(failedSyncReads).toBe(2);
+      expect(nextSyncReads).toBe(1);
       expect(objects.map((obj) => Obj.getURI(obj))).toEqual([Obj.getURI(a)]);
     })
       .pipe(Effect.provide(TestLayer))

@@ -10,22 +10,11 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": false,
+  "sideEffects": [
+    "*.css"
+  ],
   "type": "module",
   "imports": {
-    "#capabilities": {
-      "source": {
-        "workerd": "./src/capabilities/gen/workerd.ts",
-        "node": "./src/capabilities/gen/node.ts",
-        "tauri": "./src/capabilities/gen/tauri.ts",
-        "browser": "./src/capabilities/gen/browser.ts"
-      },
-      "types": "./dist/types/src/capabilities/index.d.ts",
-      "workerd": "./dist/lib/capabilities.workerd.mjs",
-      "node": "./dist/lib/capabilities.node.mjs",
-      "tauri": "./dist/lib/capabilities.tauri.mjs",
-      "browser": "./dist/lib/capabilities.browser.mjs"
-    },
     "#components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
@@ -36,24 +25,41 @@
       "types": "./dist/types/src/containers/index.d.ts",
       "default": "./dist/lib/containers.mjs"
     },
+    "#deck": {
+      "source": "./src/deck/index.ts",
+      "types": "./dist/types/src/deck/index.d.ts",
+      "default": "./dist/lib/deck.mjs"
+    },
+    "#hooks": {
+      "source": "./src/hooks/index.ts",
+      "types": "./dist/types/src/hooks/index.d.ts",
+      "default": "./dist/lib/hooks.mjs"
+    },
+    "#markdown": {
+      "source": "./src/markdown/index.ts",
+      "types": "./dist/types/src/markdown/index.d.ts",
+      "default": "./dist/lib/markdown.mjs"
+    },
     "#meta": {
-      "source": "./src/meta.ts",
-      "types": "./dist/types/src/meta.d.ts",
-      "default": "./dist/lib/meta.mjs"
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/PresenterPlugin.workerd.mjs",
+      "node": "./dist/lib/PresenterPlugin.node.mjs",
+      "default": "./dist/lib/PresenterPlugin.mjs"
     },
     "#operations": {
       "source": "./src/operations/index.ts",
       "types": "./dist/types/src/operations/index.d.ts",
       "default": "./dist/lib/operations.mjs"
     },
-    "#plugin": {
-      "source": "./src/plugin.tsx",
-      "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/plugin.mjs"
+    "#skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "default": "./dist/lib/skills.mjs"
     },
     "#testing": {
-      "source": "./src/testing.ts",
-      "types": "./dist/types/src/testing.d.ts",
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
       "default": "./dist/lib/testing.mjs"
     },
     "#translations": {
@@ -80,6 +86,11 @@
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
+    "./Presentation": {
+      "source": "./src/types/Presentation.ts",
+      "types": "./dist/types/src/types/Presentation.d.ts",
+      "import": "./dist/lib/Presentation.mjs"
+    },
     "./PresenterCapabilities": {
       "source": "./src/types/PresenterCapabilities.ts",
       "types": "./dist/types/src/types/PresenterCapabilities.d.ts",
@@ -96,21 +107,43 @@
       "import": "./dist/lib/PresenterOperation.mjs"
     },
     "./PresenterPlugin": {
-      "source": "./src/PresenterPlugin.ts",
-      "types": "./dist/types/src/PresenterPlugin.d.ts",
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/PresenterPlugin.workerd.mjs",
+      "node": "./dist/lib/PresenterPlugin.node.mjs",
       "import": "./dist/lib/PresenterPlugin.mjs"
     },
-    "./Settings": {
-      "source": "./src/types/Settings.ts",
-      "types": "./dist/types/src/types/Settings.d.ts",
-      "import": "./dist/lib/Settings.mjs"
+    "./PresenterSettings": {
+      "source": "./src/types/PresenterSettings.ts",
+      "types": "./dist/types/src/types/PresenterSettings.d.ts",
+      "import": "./dist/lib/PresenterSettings.mjs"
+    },
+    "./PresenterSurface": {
+      "source": "./src/types/PresenterSurface.ts",
+      "types": "./dist/types/src/types/PresenterSurface.d.ts",
+      "import": "./dist/lib/PresenterSurface.mjs"
+    },
+    "./SlideEditorViewState": {
+      "source": "./src/types/SlideEditorViewState.ts",
+      "types": "./dist/types/src/types/SlideEditorViewState.d.ts",
+      "import": "./dist/lib/SlideEditorViewState.mjs"
+    },
+    "./SlideTheme": {
+      "source": "./src/types/SlideTheme.ts",
+      "types": "./dist/types/src/types/SlideTheme.d.ts",
+      "import": "./dist/lib/SlideTheme.mjs"
+    },
+    "./SlideViewState": {
+      "source": "./src/types/SlideViewState.ts",
+      "types": "./dist/types/src/types/SlideViewState.d.ts",
+      "import": "./dist/lib/SlideViewState.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "Presenter": [
-        "dist/types/src/types/Presenter.d.ts"
+      "Presentation": [
+        "dist/types/src/types/Presentation.d.ts"
       ],
       "PresenterCapabilities": [
         "dist/types/src/types/PresenterCapabilities.d.ts"
@@ -121,8 +154,14 @@
       "PresenterOperation": [
         "dist/types/src/types/PresenterOperation.d.ts"
       ],
-      "Settings": [
-        "dist/types/src/types/Settings.d.ts"
+      "PresenterSettings": [
+        "dist/types/src/types/PresenterSettings.d.ts"
+      ],
+      "PresenterSurface": [
+        "dist/types/src/types/PresenterSurface.d.ts"
+      ],
+      "SlideViewState": [
+        "dist/types/src/types/SlideViewState.d.ts"
       ]
     }
   },
@@ -133,42 +172,84 @@
     "PLUGIN.mdl"
   ],
   "dependencies": {
+    "@codemirror/autocomplete": "catalog:",
     "@codemirror/state": "catalog:",
+    "@codemirror/view": "catalog:",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-doc": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/log": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",
+    "@dxos/plugin-file": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
-    "@dxos/random": "workspace:*",
+    "@dxos/plugin-projects": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
+    "@dxos/plugin-studio": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
+    "@dxos/react-ui-menu": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
-    "hastscript": "catalog:",
-    "highlight.js": "catalog:",
-    "marked": "catalog:",
-    "react-markdown": "catalog:",
-    "react-resize-detector": "catalog:",
-    "rehype-add-classes": "catalog:",
-    "rehype-highlight": "catalog:",
+    "@fontsource-variable/fira-code": "catalog:",
+    "@fontsource-variable/geist": "catalog:",
+    "@fontsource-variable/inter": "catalog:",
+    "@fontsource-variable/nunito": "catalog:",
+    "@fontsource-variable/orbitron": "catalog:",
+    "@fontsource-variable/source-serif-4": "catalog:",
+    "@fontsource-variable/space-grotesk": "catalog:",
+    "@fontsource-variable/unbounded": "catalog:",
+    "@fontsource/ibm-plex-mono": "catalog:",
+    "@fontsource/lxgw-wenkai": "catalog:",
+    "@fontsource/mali": "catalog:",
+    "@fontsource/opendyslexic": "catalog:",
+    "hast-util-to-jsx-runtime": "catalog:",
     "remark-frontmatter": "catalog:",
-    "remark-parse-frontmatter": "catalog:",
-    "reveal.js": "catalog:"
+    "remark-gfm": "catalog:",
+    "remark-parse": "catalog:",
+    "remark-rehype": "catalog:",
+    "unified": "catalog:",
+    "yaml": "catalog:"
   },
   "devDependencies": {
+    "@dxos/agent-runtime": "workspace:*",
+    "@dxos/ai": "workspace:*",
+    "@dxos/assistant": "workspace:*",
+    "@dxos/assistant-toolkit": "workspace:*",
+    "@dxos/client-protocol": "workspace:*",
+    "@dxos/diagram": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
+    "@dxos/plugin-assistant": "workspace:*",
+    "@dxos/plugin-illustrator": "workspace:*",
+    "@dxos/plugin-preview": "workspace:*",
+    "@dxos/plugin-routine": "workspace:*",
+    "@dxos/plugin-tasks": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
+    "@dxos/random": "workspace:*",
+    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect/atom-react": "catalog:",
+    "@effect/vitest": "catalog:",
     "@storybook/react-vite": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@types/hast": "catalog:",
+    "@types/mdast": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "@types/reveal.js": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",

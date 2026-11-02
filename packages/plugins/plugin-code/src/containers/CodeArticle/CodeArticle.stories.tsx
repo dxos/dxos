@@ -14,10 +14,10 @@ import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
-import { Spec } from '@dxos/types';
+import { SpecDocument } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { CodePlugin } from '#plugin';
+import * as CodePlugin from '#meta';
 import { translations } from '#translations';
 import { CodeProject, SourceFile } from '#types';
 
@@ -114,20 +114,20 @@ const meta = {
       plugins: [
         ...CorePlugins.make(),
         ClientPlugin.make({
-          types: [Spec.Spec, CodeProject.CodeProject, SourceFile.SourceFile, Text.Text],
+          types: [SpecDocument.SpecDocument, CodeProject.CodeProject, SourceFile.SourceFile, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);
               const [space] = client.spaces.get();
               yield* Effect.promise(() => space.waitUntilReady());
 
-              const spec = space.db.add(Spec.make());
+              const spec = space.db.add(SpecDocument.make());
               const files = seed.map((entry) => space.db.add(SourceFile.make(entry)));
               space.db.add(CodeProject.make({ name, spec, files }));
               yield* Effect.promise(() => space.db.flush({ indexes: true }));
             }),
         }),
-        CodePlugin(),
+        CodePlugin.make(),
       ],
     })),
   ],

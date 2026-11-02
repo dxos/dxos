@@ -24,7 +24,7 @@ import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 import { ViewModel } from '@dxos/schema';
-import { Cell } from '@dxos/storybook-testing';
+import { Cell, addToRootCollection } from '@dxos/storybook-testing';
 import { Employer, HasConnection, HasSubject, Message, Organization, Person, Pipeline, ProfileOf } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -33,7 +33,6 @@ import {
   ModuleContainer,
   ResearchInputQueue,
   addTestData,
-  addToRootCollection,
   createDecorators,
   createTestMailbox,
   loadMockInbox,
@@ -204,12 +203,11 @@ export const WithProject: Story = {
       const people = await space.db.query(Filter.type(Person.Person)).run();
       const organizations = await space.db.query(Filter.type(Organization.Organization)).run();
       const tag = space.db.add(Tag.make({ label: 'Project' }));
-      const tagRef = Ref.make(tag);
       const tagUri = Obj.getURI(tag);
 
       people.slice(0, 4).forEach((person) => {
         Obj.update(person, (person) => {
-          Obj.getMeta(person).tags = [tagRef];
+          Obj.getMeta(person).tags = [tag];
         });
       });
 
@@ -233,7 +231,7 @@ export const WithProject: Story = {
       );
       [dxosResearch, blueyardResearch].forEach((research) => {
         Obj.update(research, (research) => {
-          Obj.getMeta(research).tags = [tagRef];
+          Obj.getMeta(research).tags = [tag];
         });
       });
 
@@ -241,7 +239,7 @@ export const WithProject: Story = {
       const blueyard = organizations.find((org) => org.name === 'BlueYard')!;
       [dxos, blueyard].forEach((organization) => {
         Obj.update(organization, (organization) => {
-          Obj.getMeta(organization).tags = [tagRef];
+          Obj.getMeta(organization).tags = [tag];
         });
       });
 

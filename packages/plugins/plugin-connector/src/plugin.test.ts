@@ -7,15 +7,18 @@ import { describe, test } from 'vitest';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
-import { ConnectorPlugin } from '#plugin';
+import * as ConnectorPlugin from '#meta';
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+import { ConnectorNamespace } from './namespace.ts';
+
+await Harness.preload({ plugins: [ClientPlugin.make({}), ConnectorPlugin.make()] });
+
+const moduleId = (name: string) => `${ConnectorNamespace.key}.module.${name}`;
 
 describe('ConnectorPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), ConnectorPlugin()],
+      plugins: [ClientPlugin.make({}), ConnectorPlugin.make()],
     });
 
     // After autoStart: AppGraphBuilder, schema, OperationHandler all auto-cascade.

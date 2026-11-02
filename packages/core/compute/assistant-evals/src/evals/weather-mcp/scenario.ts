@@ -8,15 +8,14 @@ import * as Effect from 'effect/Effect';
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
+import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
 import * as Chat from '@dxos/assistant/Chat';
-import type * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
-import { Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Ref } from '@dxos/echo';
 import * as EchoError from '@dxos/echo/Error';
 import type { SpaceId } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as WeatherSpace from '@dxos/plugin-debug/WeatherSpace';
-import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { type Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -30,7 +29,6 @@ import { type SeedResult } from '../../runner.ts';
 //
 
 export const PROJECT_NAME = 'Weather MCP';
-export const SKILL_KEY = 'org.dxos.skill.weatherMcp';
 
 /** The template's four steps, all the session's. */
 export const TASK_TITLES: readonly string[] = [
@@ -65,44 +63,44 @@ export const OPENING_PROMPT = trim`
 export const isWeatherCall = ({ name, operationKey, error, result }: ToolInvocation): boolean =>
   !operationKey && /weather|forecast/i.test(name) && !error && TEMPERATURE.test(JSON.stringify(result ?? ''));
 
-/** The Database skill's update tool, the one write that reaches a skill's `mcpServers`. */
-const UPDATE_OBJECT_KEY = `dxn:${String(SpaceOperation.UpdateObject.meta.key).replace(/^dxn:/, '')}`;
+/** The Skill Manager's tool that adds an MCP server to the space as a connection. */
+const ADD_MCP_CONNECTION_KEY = `dxn:${String(SkillManagerSkill.Operations.AddMcpConnection.meta.key).replace(/^dxn:/, '')}`;
 
-/** The session's own write that put a server at `server` into a skill's `mcpServers`. */
+/** The session's own call that added a server at `server` as a connection. */
 export const isConfiguration =
   (server: RegExp) =>
   ({ operationKey, input, error }: ToolInvocation): boolean => {
-    if (error || operationKey !== UPDATE_OBJECT_KEY) {
+    if (error || operationKey !== ADD_MCP_CONNECTION_KEY) {
       return false;
     }
-    const servers = parseInput(input)?.properties?.mcpServers;
-    return Array.isArray(servers) && servers.some((entry) => typeof entry?.url === 'string' && server.test(entry.url));
+    const url = parseInput(input)?.url;
+    return typeof url === 'string' && server.test(url);
   };
 
-type UpdatePatch = { properties?: { mcpServers?: { url?: unknown }[] } };
+type AddInput = { url?: unknown };
 
 /** The tool's arguments as the transcript stores them; anything unparseable configured nothing. */
-const parseInput = (input: string): UpdatePatch | undefined => {
+const parseInput = (input: string): AddInput | undefined => {
   try {
     const parsed: unknown = JSON.parse(input);
-    return typeof parsed === 'object' && parsed !== null ? (parsed as UpdatePatch) : undefined;
+    return typeof parsed === 'object' && parsed !== null ? (parsed as AddInput) : undefined;
   } catch {
     return undefined;
   }
 };
 
 export type HandOff = {
-  /** The session wrote a server into the skill's configuration. */
+  /** The session added the server as a connection. */
   readonly configured: boolean;
   /** The session got a forecast back from a weather tool. */
   readonly called: boolean;
-  /** Picked up on the fly: the call comes after the write, in the same session, with no restart. */
+  /** Picked up on the fly: the call comes after the add, in the same session, with no restart. */
   readonly calledAfterConfiguring: boolean;
 };
 
 /**
  * How the session got from configuring the server to calling it, read off its transcript. `server`
- * is what a configuring write must name: the deployed Worker for the eval, a loopback host for a test.
+ * is what the add must name: the deployed Worker for the eval, a loopback host for a test.
  */
 export const evaluateHandOff = (invocations: readonly ToolInvocation[], options: { server: RegExp }): HandOff => {
   const configuredAt = invocations.find(isConfiguration(options.server))?.calledAt;
@@ -119,16 +117,13 @@ export const evaluateHandOff = (invocations: readonly ToolInvocation[], options:
 export class SeedError extends Data.TaggedError('SeedError')<{ message: string }> {}
 
 /**
- * Stands the run up on the template: applies the template, binds the project's skills to the
- * run's instructions, and files a chat carrying the four steps under the project. Returns what the
- * runner binds into the session context.
+ * Stands the run up on the template: applies the template and files a chat carrying the four steps
+ * under the project. Returns what the runner binds into the session context.
  */
 export const seed = ({
   spaceId,
-  instructions,
 }: {
   spaceId: SpaceId;
-  instructions: Instructions.Instructions;
 }): Effect.Effect<
   SeedResult,
   SeedError | Capability.NotFoundError | EchoError.EntityNotFoundError | SampleSpace.SampleSpaceError,
@@ -152,17 +147,6 @@ export const seed = ({
     );
     if (steps.length !== TASK_TITLES.length) {
       return yield* new SeedError({ message: 'The template did not produce the four steps.' });
-    }
-
-    // The Weather MCP skill reaches the session through the project's instructions, which a
-    // delegated session does not bind yet. It is the session's own configuration: the server the
-    // run sets on it is connected at the start of the session's next turn.
-    const projectInstructions = yield* Database.load(project.instructions);
-    for (const ref of projectInstructions.skills) {
-      const skill = yield* Database.load(ref);
-      Obj.update(instructions, (instructions) => {
-        instructions.skills.push(Ref.make(skill));
-      });
     }
 
     // The chat the session runs on, carrying the four steps and filed under the project.

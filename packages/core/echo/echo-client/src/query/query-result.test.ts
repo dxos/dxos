@@ -13,6 +13,7 @@ import { invariant } from '@dxos/invariant';
 import { EntityId, PublicKey } from '@dxos/keys';
 import { range } from '@dxos/util';
 
+import { getObjectCore } from '../echo-handler/index.ts';
 import { EchoTestBuilder, createTmpPath } from '../testing/index.ts';
 import { type QueryContext, type SourceEntry } from './query-context.ts';
 import { QueryResultImpl } from './query-result.ts';
@@ -134,7 +135,9 @@ describe('QueryResultImpl', () => {
     }
   });
 
-  test('an id lookup asks the index only for the ids the working set cannot answer', async ({ expect }) => {
+  test('an id lookup shows what the index holds without loading it, and asks only for what is not held', async ({
+    expect,
+  }) => {
     const tmpPath = createTmpPath();
     const builder = new EchoTestBuilder();
     await builder.open();
@@ -157,12 +160,15 @@ describe('QueryResultImpl', () => {
       const execQuery = vi.spyOn(peer.host.queryService, 'QueryService.execQuery');
       const indexQueriesNaming = (objectId: string) =>
         execQuery.mock.calls.filter(([request]) => request.query.includes(objectId));
-      expect((await db.query(Filter.id(id)).run()).map((person) => person.name)).toEqual(['Alice']);
-      expect(indexQueriesNaming(id)).toEqual([]);
+      const [alice] = await db.query(Filter.id(id)).run();
+      expect(alice?.name).toEqual('Alice');
+      expect(indexQueriesNaming(id)).toHaveLength(1);
+      // Placed from the index row: its document loads only on the first write.
+      expect(getObjectCore(alice).snapshot).toBeDefined();
 
       const missingId = EntityId.random();
       expect((await db.query(Filter.id(id, missingId)).run()).map((person) => person.name)).toEqual(['Alice']);
-      expect(indexQueriesNaming(id)).toEqual([]);
+      expect(indexQueriesNaming(id)).toHaveLength(1);
       expect(indexQueriesNaming(missingId)).toHaveLength(1);
     } finally {
       await builder.close();

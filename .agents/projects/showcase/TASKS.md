@@ -106,6 +106,33 @@ Three 20s tour shots and ~30 short shots recorded in Screen Studio, assembled in
       `tour-1..3` as tours, renders with a 20s hold (`render.mjs --hold`), writes `composite.mp4` to the folder.
 - [ ] **Record the shots** (user), then run `assemble.mjs --clips /Volumes/SSD1/Media/Showcase/2026-10-17`.
 
+## Phase 6: Narration and the recording plugin
+
+### Tasks
+
+- [ ] **Record the ECHO voice-over** with the prompter (`temp/voice`, script in `tools/autocue/showcase/docs/ECHO.md`,
+      synced by `tools/autocue/showcase/cues.mjs`); lay the take on `ECHO.m4v`, freezing the picture at each logged hold.
+- [ ] **Re-render the ECHO animation to the voice's timings** (later; the stretched cut ships first). The animation is
+      the Flow story in the `data-molecule-animation` worktree
+      (`packages/plugins/plugin-canvas/src/samples/molecules/Flow.stories.tsx`, fixed-length chapters), rendered by
+      `packages/ui/react-ui-canvas/scripts/render-story.mjs --story plugins-plugin-canvas-samples-flow--default
+--seconds 60 --fps 60`. Slowing a section in the edit (`voice-mux.mjs`) duplicates frames; a re-render keeps
+      every motion at full rate.
+  1. Take the chapter lengths from the final take's `sections` (`temp/voice/echo-<time>.json`, `seconds` per
+     section, plus `--extra-last`): for take `echo-20261026-021700` they are 13.9, 13.7, 18.4, 17.3 and 18.7s.
+  2. Make the Flow story's chapter lengths a story arg (an array of seconds), defaulting to today's, so a render can
+     pass them without editing the story; keep the pan's speed ramps proportional to each chapter.
+  3. Render at those lengths (`--seconds` = their sum) and check each chapter boundary against the take's speech gaps
+     (`silencedetect`), as for the stretched cut.
+  4. Add the DXOS open (3s) and the end card (2.6s) from `tools/ident` back around it, matching `ECHO.m4v`.
+  5. Lay the voice on with `voice-mux.mjs` and no fit (sections already match), normalize to -16 LUFS, and compare it
+     with the stretched cut before replacing it.
+- [ ] **Record the Composer demo voice-over** the same way (`docs/COMPOSER.md`, `docs/cues/composer.json`).
+- [ ] **Composite**: the voiced ECHO video, then the voiced Composer demo, one DXOS end card.
+- [ ] **Email Brad** with the composite (needs his address; attachments over Gmail's 25MB limit need compressing).
+- [ ] **Recording plugin**: a Composer plugin that works with plugin-studio to record audio and video — the prompter's
+      gated playback, holds, mic picker and level meter, as a plugin. After the recordings are done.
+
 ## Phase 3: Open issues
 
 ### Tasks
@@ -125,4 +152,4 @@ Three 20s tour shots and ~30 short shots recorded in Screen Studio, assembled in
 ### References
 
 - PR: https://github.com/dxos/dxos/pull/14026
-- Rules and script table: `tools/autocue/showcase/SHOWCASE.md`
+- Rules and script table: `tools/autocue/showcase/docs/SHOWCASE.md`

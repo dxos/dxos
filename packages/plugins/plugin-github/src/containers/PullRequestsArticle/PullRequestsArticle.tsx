@@ -21,11 +21,11 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Status from '@dxos/react-ui/Status';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Typography from '@dxos/react-ui/Typography';
 import { PullRequest, Task } from '@dxos/types';
 
-import { meta } from '#meta';
-
 import { useOpenObject, usePullRequestChecks } from '../../hooks/index.ts';
+import { GitHubNamespace } from '../../namespace.ts';
 import * as PullRequestsView from '../../types/PullRequestsView.ts';
 import {
   CI_HUE,
@@ -37,7 +37,6 @@ import {
   groupRows,
   sortRows,
 } from './arrange.ts';
-import { formatRelative } from './format.ts';
 
 const PULL_REQUEST_TYPENAME = Type.getTypename(PullRequest.PullRequest);
 
@@ -76,7 +75,7 @@ export const PullRequestsArticle = ({ db, ...props }: PullRequestsArticleProps) 
 PullRequestsArticle.displayName = 'PullRequestsArticle';
 
 const PullRequestList = ({ role, attendableId, db }: PullRequestsArticleProps & { db: Database.Database }) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(GitHubNamespace.key);
   const { hasAttention } = useAttention(attendableId);
   const editorRef = useRef<EditorController>(null);
   const contextId = db.spaceId;
@@ -207,7 +206,7 @@ const PullRequestList = ({ role, attendableId, db }: PullRequestsArticleProps & 
 type OpenHandler = (object: Obj.Any) => Promise<void>;
 
 const GroupSection = ({ group, onOpen }: { group: PullRequestRowGroup; onOpen: OpenHandler }) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(GitHubNamespace.key);
   return (
     <Listbox.ItemGroup>
       <Listbox.ItemGroupLabel>
@@ -232,7 +231,7 @@ const PullRequestListRow = ({
   row: PullRequestRow;
   onOpen: OpenHandler;
 }) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(GitHubNamespace.key);
   const time = pullRequest.updatedAt ?? pullRequest.createdAt;
   return (
     <Listbox.Item
@@ -258,11 +257,7 @@ const PullRequestListRow = ({
         </Layout.Flex>
         <Layout.Flex align='center' gap='sm' classNames='min-w-0 text-xs text-description'>
           {pullRequest.author && <span className='shrink-0'>{pullRequest.author}</span>}
-          {time && (
-            <time className='shrink-0' dateTime={time} title={new Date(time).toLocaleString()}>
-              {formatRelative(time)}
-            </time>
-          )}
+          {time && <Typography.Timestamp date={time} variant='relative' classNames='shrink-0' />}
           {tasks.length > 0 && (
             <Layout.Flex align='center' gap='xs' classNames='min-w-0' data-testid='pull-requests.row.tasks'>
               <Icon.Icon icon='ph--check-square-offset--regular' size='xs' classNames='shrink-0' />
@@ -276,7 +271,7 @@ const PullRequestListRow = ({
 };
 
 const ChecksTag = ({ pullRequest, checks }: { pullRequest: PullRequest.PullRequest; checks?: PullRequestChecks }) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(GitHubNamespace.key);
   // A finished pull request's checks are not read (see `usePullRequestChecks`), so it shows none.
   if (!checks) {
     return pullRequest.state === 'open' || pullRequest.state === 'draft' ? (

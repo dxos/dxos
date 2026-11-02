@@ -161,7 +161,7 @@ const PLAN: TaskSeed = {
         {
           title: 'Add the deployed URL as an MCP server in this space',
           description:
-            'Register the URL as it stands AFTER the claim — a `workers.dev` hostname is account-scoped, so confirm it by fetching before trusting it. Protocol `http` — Streamable HTTP, not the deprecated SSE transport. Its key is stored in plaintext and replicates to everyone in the space, so keep it to one the Worker can rotate.',
+            "Add it as an MCP connection with the Skill Manager's `add-mcp-connection` tool, using the URL as it stands AFTER the claim — a `workers.dev` hostname is account-scoped, so confirm it by fetching before trusting it. Protocol `http` — Streamable HTTP, not the deprecated SSE transport. Its key is stored in the space and readable by every member, so keep it to one the Worker can rotate.",
           estimate: 's',
         },
         {

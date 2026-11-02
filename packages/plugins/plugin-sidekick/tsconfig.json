@@ -46,6 +46,9 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-masonry"
+    },
+    {
       "path": "../../ui/ui-theme"
     },
     {

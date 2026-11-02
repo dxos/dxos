@@ -147,7 +147,41 @@ const searchGrid = (
   const horizontals = gutterLines(region.top, region.bottom, pitchY);
   const xs = sortedUnique([...verticals, start.x, end.x]);
   const ys = sortedUnique([...horizontals, start.y, end.y]);
-  const clear = (a: Point, b: Point) => !frames.some((frame) => crosses(a, b, frame));
+  const [columns, rows] = [xs.length, ys.length];
+  // Only frames overlapping the grid can block one of its segments.
+  const grid = { x: xs[0], y: ys[0], width: xs[columns - 1] - xs[0], height: ys[rows - 1] - ys[0] };
+  const near = frames.filter(
+    (frame) =>
+      frame.x < grid.x + grid.width + EPSILON &&
+      frame.x + frame.width > grid.x - EPSILON &&
+      frame.y < grid.y + grid.height + EPSILON &&
+      frame.y + frame.height > grid.y - EPSILON,
+  );
+  // A horizontal segment can only pass through a frame its row line runs inside, and a vertical one through a frame
+  // its column line runs inside.
+  const acrossRow = ys.map((y) =>
+    near.filter((frame) => y > frame.y + EPSILON && y < frame.y + frame.height - EPSILON),
+  );
+  const acrossColumn = xs.map((x) =>
+    near.filter((frame) => x > frame.x + EPSILON && x < frame.x + frame.width - EPSILON),
+  );
+  // Each segment between neighbouring grid points is tested once, though the search reaches it from both axes:
+  // 0 untested, 1 clear, 2 blocked; indexed by the segment's lower point.
+  const blockedH = new Uint8Array(columns * rows);
+  const blockedV = new Uint8Array(columns * rows);
+  const clear = (i: number, j: number, ni: number, nj: number): boolean => {
+    const [lowI, lowJ] = [Math.min(i, ni), Math.min(j, nj)];
+    const horizontal = nj === j;
+    const cache = horizontal ? blockedH : blockedV;
+    const index = lowJ * columns + lowI;
+    if (cache[index] === 0) {
+      const a = { x: xs[i], y: ys[j] };
+      const b = { x: xs[ni], y: ys[nj] };
+      const candidates = horizontal ? acrossRow[j] : acrossColumn[i];
+      cache[index] = candidates.some((frame) => crosses(a, b, frame)) ? 2 : 1;
+    }
+    return cache[index] === 1;
+  };
 
   const indexOf = (values: number[], value: number) => values.indexOf(Math.round(value * 1000) / 1000);
   const [startI, startJ] = [indexOf(xs, start.x), indexOf(ys, start.y)];
@@ -156,16 +190,15 @@ const searchGrid = (
   const axisOf = (end: RouteEnd): Axis => (end.side === 'e' || end.side === 'w' ? 'h' : 'v');
 
   // Dijkstra over (column, row, arriving axis), the open set a binary heap: a route is searched for each candidate
-  // pair of ports, so each search must be cheap.
-  type State = { i: number; j: number; axis: Axis };
-  const key = ({ i, j, axis }: State) => `${i},${j},${axis}`;
-  const cost = new Map<string, number>();
-  const previous = new Map<string, State>();
-  const open = new MinHeap<State>();
-  const startState: State = { i: startI, j: startJ, axis: axisOf(from) };
-  cost.set(key(startState), 0);
+  // pair of ports, so each search must be cheap. A state is a number, `(row * columns + column) * 2 + axis`.
+  const stateOf = (i: number, j: number, axis: Axis) => (j * columns + i) * 2 + (axis === 'h' ? 0 : 1);
+  const cost = new Float64Array(columns * rows * 2).fill(Infinity);
+  const previous = new Int32Array(columns * rows * 2).fill(-1);
+  const open = new MinHeap<number>();
+  const startState = stateOf(startI, startJ, axisOf(from));
+  cost[startState] = 0;
   open.push(startState, 0);
-  let best: State | undefined;
+  let best = -1;
   let bestCost = Infinity;
   while (open.size > 0) {
     const entry = open.pop();
@@ -173,7 +206,7 @@ const searchGrid = (
       break;
     }
     const current = entry.value;
-    const currentCost = cost.get(key(current)) ?? Infinity;
+    const currentCost = cost[current];
     // A state queued again at a lower cost leaves its older entry behind; skip the stale one.
     if (entry.priority > currentCost) {
       continue;
@@ -181,47 +214,49 @@ const searchGrid = (
     if (currentCost >= bestCost) {
       break;
     }
-    if (current.i === endI && current.j === endJ) {
+    const cell = current >> 1;
+    const [ci, cj] = [cell % columns, Math.floor(cell / columns)];
+    const currentAxis: Axis = (current & 1) === 0 ? 'h' : 'v';
+    if (ci === endI && cj === endJ) {
       // Entering the target's stub off its axis is one more bend.
-      const total = currentCost + (current.axis === axisOf(to) ? 0 : TURN_COST);
+      const total = currentCost + (currentAxis === axisOf(to) ? 0 : TURN_COST);
       if (total < bestCost) {
         bestCost = total;
         best = current;
       }
       continue;
     }
-    const here = { x: xs[current.i], y: ys[current.j] };
     const steps: [number, number, Axis][] = [
-      [current.i - 1, current.j, 'h'],
-      [current.i + 1, current.j, 'h'],
-      [current.i, current.j - 1, 'v'],
-      [current.i, current.j + 1, 'v'],
+      [ci - 1, cj, 'h'],
+      [ci + 1, cj, 'h'],
+      [ci, cj - 1, 'v'],
+      [ci, cj + 1, 'v'],
     ];
     for (const [i, j, axis] of steps) {
-      if (i < 0 || j < 0 || i >= xs.length || j >= ys.length) {
+      if (i < 0 || j < 0 || i >= columns || j >= rows) {
         continue;
       }
-      const there = { x: xs[i], y: ys[j] };
-      if (!clear(here, there)) {
+      if (!clear(ci, cj, i, j)) {
         continue;
       }
-      const next: State = { i, j, axis };
+      const next = stateOf(i, j, axis);
       const nextCost =
-        currentCost + Math.abs(there.x - here.x) + Math.abs(there.y - here.y) + (axis === current.axis ? 0 : TURN_COST);
-      if (nextCost < (cost.get(key(next)) ?? Infinity)) {
-        cost.set(key(next), nextCost);
-        previous.set(key(next), current);
+        currentCost + Math.abs(xs[i] - xs[ci]) + Math.abs(ys[j] - ys[cj]) + (axis === currentAxis ? 0 : TURN_COST);
+      if (nextCost < cost[next]) {
+        cost[next] = nextCost;
+        previous[next] = current;
         open.push(next, nextCost);
       }
     }
   }
-  if (!best) {
+  if (best < 0) {
     return undefined;
   }
 
   const corners: Point[] = [];
-  for (let state: State | undefined = best; state; state = previous.get(key(state))) {
-    corners.unshift({ x: xs[state.i], y: ys[state.j] });
+  for (let state = best; state >= 0; state = previous[state]) {
+    const cell = state >> 1;
+    corners.unshift({ x: xs[cell % columns], y: ys[Math.floor(cell / columns)] });
   }
   return { points: collapse([from.point, ...corners, to.point]), cost: bestCost };
 };

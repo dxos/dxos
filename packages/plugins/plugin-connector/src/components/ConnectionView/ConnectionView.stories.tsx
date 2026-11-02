@@ -121,7 +121,7 @@ const meta = {
               const roadmap = space.db.add(Obj.make(Expando.Expando, { name: 'Product Roadmap' }));
               const roadmapCursor = space.db.add(
                 Cursor.makeExternal({
-                  source: connection.accessToken,
+                  source: Connection.getAccessToken(connection),
                   target: Ref.make(roadmap),
                   externalId: 'board-1',
                   label: 'Product Roadmap',
@@ -136,7 +136,7 @@ const meta = {
               const engineering = space.db.add(Obj.make(Expando.Expando, { name: 'Engineering' }));
               const engineeringCursor = space.db.add(
                 Cursor.makeExternal({
-                  source: connection.accessToken,
+                  source: Connection.getAccessToken(connection),
                   target: Ref.make(engineering),
                   externalId: 'board-2',
                   label: 'Engineering',
@@ -150,7 +150,7 @@ const meta = {
               const orphaned = space.db.add(Obj.make(Expando.Expando, { name: 'Deleted Board' }));
               space.db.add(
                 Cursor.makeExternal({
-                  source: connection.accessToken,
+                  source: Connection.getAccessToken(connection),
                   target: Ref.make(orphaned),
                   externalId: 'board-3',
                   label: 'Deleted Board',

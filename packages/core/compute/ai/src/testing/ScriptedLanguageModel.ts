@@ -74,6 +74,8 @@ export type ScriptedTurn =
       readonly emitToolCalls?: boolean;
       /** Held before the turn's first part, so a UI driven by the script sees a turn in flight. */
       readonly delay?: Duration.Input;
+      /** Held until it resolves, before the turn's first part, so a test can observe the state the turn changes. */
+      readonly gate?: () => Promise<void>;
     }
   | { readonly fail: AiError.AiError };
 
@@ -326,6 +328,9 @@ export const makeScriptedLanguageModel = (script: Script): Effect.Effect<Languag
           if (turn.delay !== undefined) {
             yield* Effect.sleep(turn.delay);
           }
+          if (turn.gate) {
+            yield* Effect.promise(turn.gate);
+          }
           return encodeTurn(turn.parts, index, turn.finishReason ?? finishReasonFor(turn.parts));
         }),
       streamText: (options) =>
@@ -338,6 +343,9 @@ export const makeScriptedLanguageModel = (script: Script): Effect.Effect<Languag
             }
             if (turn.delay !== undefined) {
               yield* Effect.sleep(turn.delay);
+            }
+            if (turn.gate) {
+              yield* Effect.promise(turn.gate);
             }
             return Stream.fromIterable(
               encodeStreamTurn(turn.parts, index, turn.finishReason ?? finishReasonFor(turn.parts), {

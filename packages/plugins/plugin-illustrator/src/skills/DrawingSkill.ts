@@ -7,9 +7,9 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
-import { DrawingOperation } from '#types';
+import { Drawing, DrawingOperation } from '#types';
 
-export const key = 'org.dxos.skill.drawing';
+export const key = Drawing.SKILL_KEY;
 
 const operations = [
   DrawingOperation.Create,
@@ -29,8 +29,9 @@ export const semanticDiagrams = trim`
   ${Operation.toolName(DrawingOperation.Draw)} takes SEMANTIC statements: you state the boxes, arrows and
   groups, plus only the placement or routing you care about, and the engine does the rest — boxes on
   a grid, arrows through the gutters with the fewest bends, ports spread along each side, labels
-  beside their own arrow. Prefer this to coordinates for any boxes-and-arrows diagram, and to
-  mermaid when you want a say in where things go. Write it directly; there is no intermediate step.
+  beside their own arrow. Prefer this to coordinates for any boxes-and-arrows diagram, and never
+  write mermaid: it is deprecated. Write it directly; there is no intermediate step. \`diagram kind=\`
+  picks what is drawn: \`structure\` (the default, below), \`sequence\` and \`dataflow\` (after it).
 
   \`\`\`
   diagram flow=down                     # optional: flow=down|up|right|left
@@ -97,7 +98,12 @@ export const semanticDiagrams = trim`
   - Fans: \`edge A -> B, C\` is one arrow per target. Add \`bus\` (\`edge A -> B, C "label" bus\`) to
     draw one trunk that splits, labelled once; \`edge B, C -> A bus\` gathers many sources into one
     trunk with one arrowhead at A, and lines the sources up across the flow. To keep a label per
-    branch, give separate edges with the same source (or target) the same \`bus=<name>\`. A bus
+    branch, give separate edges with the same source (or target) the same \`bus=<name>\`.
+    Same-label edges from one node bundle automatically: separate \`edge A -> B "content"\` and
+    \`edge A -> C "content"\` share one port and one trunk labelled once, and same-label edges into
+    one node gather the same way. Give edges one label only when they are one property. A trunk's
+    targets are laid out side by side, a target with edges of its own at the end of the row; when two
+    trunks feed the same targets, one whose source nothing feeds is mirrored onto the far side. A bus
     the engine cannot draw as one trunk is drawn as separate edges with a warning.
   - Waypoints: \`via X,_\` makes the route run vertically at x=X, \`via _,Y\` horizontally at y=Y,
     \`via X,Y\` passes the point; several waypoints are visited in order. In grid units,
@@ -133,6 +139,69 @@ export const semanticDiagrams = trim`
   \`diagnostics\`: every \`error\` (overlapping boxes, a connector through a box, a label that does
   not fit) must be fixed; \`warning\`s (crossings, bends) are quality hints. Adjust relations to
   remove crossings.
+
+  ## Sequence diagrams
+
+  For an interaction over time (a request through services, a protocol handshake), declare
+  \`diagram kind=sequence\`. Participants are the nodes, as columns in the order you declare them;
+  messages are the edges, as rows top to bottom in the order you write them. There is no placement
+  to state, and placement hints, sides, waypoints and buses are ignored with a warning.
+
+  \`\`\`
+  diagram kind=sequence
+  node User "User" role=actor
+  node App "Composer"
+  group cloud "EDGE" { node Router "Router"  node Db "Space DB" }
+  edge User -> App "open space"
+  edge App calls Router "query"
+  edge Router calls Db "load"
+  edge Db returns Router "docs"
+  note Router "merges local state"
+  edge Router returns App "objects"
+  fragment loop "every 5s" {
+    edge App sends Router "heartbeat"
+  }
+  fragment alt "cached" {
+    edge App -> App "read cache"
+  } else "miss" {
+    edge App calls Router "fetch"
+    edge Router returns App "rows"
+  }
+  \`\`\`
+
+  - Messages: \`->\` is a plain message; \`calls\` is a synchronous call and opens an activation bar
+    on its target; \`returns\` answers the innermost open call (dashed, open head) and closes its
+    bar; \`sends\` is asynchronous (open head). \`edge A -> A\` loops back to the same lifeline.
+  - \`role=actor\` draws a participant as a stick figure. A \`group\` frames adjacent participants.
+  - \`note A "…"\` sits right of A, \`note A:left "…"\` left of it, \`note A, B "…"\` over both.
+  - Fragments: \`fragment alt|opt|loop|par|break|critical ["guard"] { edge… note… fragment… }\`;
+    \`alt\` and \`par\` take more sections with \`else ["guard"] { … }\`. Fragments nest.
+  - The result has one object per participant (its head and lifeline) and one \`edges\` object with
+    the messages, bars, notes and fragments.
+
+  ## Data-flow diagrams
+
+  For how data moves through a system, declare \`diagram kind=dataflow\`. Every node has a role:
+  \`process\` (the default, drawn as a bubble) transforms data, \`store\` (a box with its id, D1, D2…,
+  in a compartment) holds it, \`external\` (a shaded box) is outside the system. Label every edge
+  with the data that flows. Groups make trust boundaries. Placement and routing work exactly as in a
+  structure diagram.
+
+  \`\`\`
+  diagram kind=dataflow flow=right
+  node Customer role=external
+  node Place "Place order"
+  node Orders role=store
+  node Bill "Bill customer"
+  edge Customer -> Place "order details"
+  edge Place -> Orders "new order"
+  edge Orders -> Bill "open orders"
+  edge Bill -> Customer "invoice"
+  \`\`\`
+
+  The result warns where data moves without a process (an external or a store straight to another
+  external or store), where a process takes data but gives none or gives data but takes none, and
+  where a store is written but never read. Fix them unless the drawing is meant to show the gap.
 `;
 
 export const make = () =>
@@ -146,7 +215,7 @@ export const make = () =>
 
         You can draw and edit diagrams on a shared canvas.
 
-        For any boxes-and-arrows diagram (architecture, data flow, a process), state the boxes, arrows and
+        For any boxes-and-arrows diagram (architecture, data flow, a sequence of messages), state the boxes, arrows and
         groups and let the layout engine place them: call ${Operation.toolName(DrawingOperation.Draw)} with semantic statements (below).
         Never position the boxes of such a diagram by hand. Use coordinates (the scene model below) only for a
         picture that is not a graph, or to touch up one object the engine placed.

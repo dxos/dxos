@@ -28,8 +28,8 @@ const partials = (config: Config) => ({
 });
 
 /**
- * A Composer plugin seeded as a plan for the agent to finish. The space holds a partial spec (the first feature
- * written, the rest only named), the project's feature map with one feature per spec block, and three tasks: complete
+ * A Composer plugin seeded as a plan for the agent to finish. The space holds a spec whose document is partial (the
+ * first feature written, the rest only named), with one feature per spec block, and three tasks: complete
  * the spec, draw it, and plan the implementation as tasks. The agent then builds the plugin in a sandbox on EDGE and
  * publishes it to the reader's private plugin registry, where installing it is the reader's click.
  *
@@ -45,11 +45,11 @@ export const make = (config: Config, toolchain: Toolchain): SampleSpace.Definiti
       Effect.gen(function* () {
         const tasks = yield* partials.tasks();
         const project = yield* partials.project({ tasks, ...toolchain });
-        yield* partials.spec();
-        yield* partials.features({ tasks, project });
+        const spec = yield* partials.spec();
+        yield* partials.features({ tasks, project, spec });
 
         // No root collection: the root holds collections only, and this space seeds no documents —
-        // the project, its tasks and features, and the spec its features open surface through their own containers.
+        // the project, its tasks, and the spec with its features and document surface through their own containers.
       }),
   });
 

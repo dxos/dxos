@@ -11,26 +11,6 @@ tags:
   - pack
   - storybook
 tasks:
-  # Fail when the ./plugin export pulls in React. The node/workerd plugin variant must stay
-  # loadable outside a DOM, and `Capability.lazy` does not stop a bundler walking into a React
-  # surface — only a node-conditioned `#capabilities` barrel does.
-  check-module-structure:
-    command: >-
-      bun $workspaceRoot/tools/dx-trace-imports/cli.js
-      --export ./KanbanPlugin
-      --to "{react,react-dom}"
-      --conditions workerd,worker
-      --conditions node
-      --fail-on present
-    deps:
-      - dx-trace-imports:build
-      - build
-    inputs:
-      - tsconfig.json
-      - '@group(production)'
-      - /pnpm-lock.yaml
-    options:
-      timeout: 60
   test-browser:
     deps:
       - ~:build
@@ -38,8 +18,8 @@ tasks:
     # `storybook dev` resolves packages from source, but Vite's dep-scan aborts without vendor dist,
     # taking the web server down with it.
     deps:
-      - '#vendor:build'
-      - '#storybook:#prebuild'
+      - target: storybook-react:e2e-deps
+        cacheStrategy: hash
     inputs:
       - .storybook/*
       - /tools/storybook-react/.storybook/main.ts

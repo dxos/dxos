@@ -25,9 +25,10 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { PostCard } from '#components';
-import { meta } from '#meta';
 import { BloggerOperation } from '#operations';
 import { Blog, BloggerCapabilities } from '#types';
+
+import { BloggerNamespace } from '../../namespace.ts';
 
 type ViewMode = 'gallery' | 'instructions';
 
@@ -47,7 +48,7 @@ export type PublicationArticleProps = AppSurface.ObjectArticleProps<Blog.Publica
  * `plugin-markdown`'s `surface.document`).
  */
 export const PublicationArticle = ({ role, attendableId, subject }: PublicationArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(BloggerNamespace.key);
   const [publication] = useObject(subject);
   const { invokePromise } = Hooks.useOperationInvoker();
   const { graph } = ToolkitHooks.useAppGraph();
@@ -90,12 +91,15 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
   const publisher = publishers[0];
   const db = Obj.getDatabase(subject);
   const connections = useQuery(db, Filter.type(Connection.Connection));
-  const accessTokenRefs = useMemo(() => connections.map((connection) => connection.accessToken), [connections]);
+  const accessTokenRefs = useMemo(
+    () => connections.flatMap((connection) => (connection.accessToken ? [connection.accessToken] : [])),
+    [connections],
+  );
   const loadedAccessTokens = useObjects(accessTokenRefs);
   const connection = useMemo(
     () =>
       publisher
-        ? connections.find((candidate) => candidate.accessToken.target?.source === publisher.source)
+        ? connections.find((candidate) => candidate.accessToken?.target?.source === publisher.source)
         : undefined,
     [connections, loadedAccessTokens, publisher],
   );
@@ -154,7 +158,10 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
         .action(
           'toggle-view',
           {
-            label: [mode === 'gallery' ? 'instructions-view.label' : 'gallery-view.label', { ns: meta.profile.key }],
+            label: [
+              mode === 'gallery' ? 'instructions-view.label' : 'gallery-view.label',
+              { ns: BloggerNamespace.key },
+            ],
             icon: mode === 'gallery' ? 'ph--note-pencil--regular' : 'ph--squares-four--regular',
             disposition: 'toolbar',
             testId: 'publication.toolbar.toggleView',
@@ -164,7 +171,7 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
         .action(
           'add-post',
           {
-            label: ['add-post.label', { ns: meta.profile.key }],
+            label: ['add-post.label', { ns: BloggerNamespace.key }],
             icon: 'ph--plus--regular',
             disposition: 'toolbar',
             testId: 'publication.toolbar.addPost',
@@ -175,7 +182,7 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
         .action(
           'sync',
           {
-            label: ['sync.label', { ns: meta.profile.key }],
+            label: ['sync.label', { ns: BloggerNamespace.key }],
             icon: 'ph--arrows-clockwise--regular',
             disposition: 'toolbar',
             disabled: !canSync,
@@ -188,7 +195,7 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
           menu.action(
             'delete',
             {
-              label: ['delete.label', { ns: meta.profile.key }],
+              label: ['delete.label', { ns: BloggerNamespace.key }],
               icon: 'ph--trash--regular',
               testId: 'publication.toolbar.delete',
             },

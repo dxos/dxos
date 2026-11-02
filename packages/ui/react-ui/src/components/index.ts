@@ -10,6 +10,7 @@ export * from './Breadcrumb/index.ts';
 export * from './Card/index.ts';
 export * from './Carousel/index.ts';
 export * from './Collapsible/index.ts';
+export * from './ColorPicker/index.ts';
 export * from './Combobox/index.ts';
 export * from './Dialog/index.ts';
 export * from './DragHandle/index.ts';

@@ -155,19 +155,19 @@ export const makeSteps = ({ template: TEMPLATE, project: PROJECT, plugin: PLUGIN
   const published = async (page) =>
     (await allTasks(page)).some((task) => /publish/i.test(task.title) && FINISHED.includes(task.status));
 
-  /** The spec's text in the take's space, read from ECHO. */
+  /** The text of every spec document in the take's space, read from ECHO; a broken-down feature's spec has its own. */
   const specText = (page) =>
     page
       .evaluate(async (key) => {
         const space = dxos.spaces().find((candidate) => candidate.id === globalThis[key]);
-        const [spec] = space
+        const documents = space
           ? await space.db
-              .query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.spec')))
+              .query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.specDocument')))
               .run()
               .catch(() => [])
           : [];
-        const text = await spec?.content?.load?.();
-        return text?.content ?? '';
+        const texts = await Promise.all(documents.map(async (document) => (await document.content?.load?.())?.content));
+        return texts.filter(Boolean).join('\n');
       }, TAKE_SPACE)
       .catch(() => '');
 

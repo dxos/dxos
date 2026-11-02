@@ -1,0 +1,416 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-connector/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: plugin-connector
+
+The spec still describes the pre-rename model. The code calls an Integration a `Connection`
+(`org.dxos.type.connection` in `@dxos/link`), an IntegrationProvider a `Connector`, and it has moved the
+`targets` array out of the record into separate `Cursor` objects (`spec.kind: 'external'`) that point at
+the connection's access token. So the types, the auth button, the provider picker and
+`SetIntegrationTargets` are `diverged`, even though most of the behaviour they describe still exists.
+
+The flow behaviour is solid. The coordinator drafts the token and connection, writes a `localStorage`
+snapshot for every flow, calls EDGE `/oauth/initiate`, opens a popup or a new tab, finalizes on
+`postMessage` or on the `/redirect/oauth` startup module, sets `AccessToken.parent`, runs
+`onTokenCreated` (failures are caught and logged), then navigates. `reconcileCursors` is well tested.
+Most coordinator paths have no test: none of `connector-coordinator.ts` is exercised, so most reqs are
+`untested`, and seven of the ten scenarios have no automation. The real gaps are smaller. A failure
+message only raises a toast and leaves the pending entry in the map. `CustomTokenDialog` has no generic
+raw-token fallback, so it shows an error when a connector has no `credentialForm`. And
+`SetIntegrationTargets` is not a registered operation.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict IntegrationTarget: Targets are separate Cursor objects with an external spec, not rows on the record.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/core/compute/link/src/Cursor.ts#Cursor, github:dxos/dxos/packages/core/compute/link/src/Cursor.ts#ExternalSpec]
+  note: '`Cursor` carries `max`/`min` (for `cursor`), `lastTick` (for `lastSyncAt`) and `lastError`; its `ExternalSpec` holds `source` (the AccessToken ref), `target`, `externalId`, `label`, `options` and `snapshots`. A binding is found by token, not by an array on the connection.'
+```
+
+```mdl
+verdict Integration: The record is Connection (org.dxos.type.connection), with no targets or snapshots.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/core/compute/link/src/Connection.ts#Connection]
+  note: Fields are `name`, `connectorId` (for `providerId`), an optional `accessToken` and an optional `mcp` endpoint. `targets` became Cursor objects and `snapshots` moved onto each cursor's spec.
+```
+
+```mdl
+verdict RemoteTarget: The wire schema matches.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/types/ConnectorSpec.ts#RemoteTarget]
+  note: No test decodes a discovery result; the reconcile tests pass selections, not RemoteTargets.
+```
+
+```mdl
+verdict IntegrationOAuthSpec: ConnectorOAuthSpec carries provider, scopes and useRedirectFlow.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/types/ConnectorSpec.ts#ConnectorOAuthSpec]
+  tests: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/oauth.test.ts]
+```
+
+```mdl
+verdict CredentialFormResult: The union has complete and oauth, plus an mcp-oauth variant.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/types/ConnectorSpec.ts#CredentialFormResult]
+  note: '`complete` carries an optional AccessToken and a Connection; `mcp-oauth` (an MCP endpoint whose authorization server EDGE discovers) is not in the spec. No test submits a form.'
+```
+
+```mdl
+verdict IntegrationProviderEntry: ConnectorEntry nests discovery and sync under `sync` and adds required and extra fields.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/types/ConnectorSpec.ts#ConnectorEntry, github:dxos/dxos/packages/plugins/plugin-connector/src/types/ConnectorSpec.ts#ConnectorSync]
+  note: '`getSyncTargets`, `sync` and `optionsSchema` live on `sync: ConnectorSync` (as `getTargets`, `operation`, `optionsSchema`, with `materializeTarget`, `trigger`, `auto`, `remote`); `kind` is required; `testConnection`, `describeConnection` and `mcp` are additions.'
+```
+
+```mdl
+verdict IntegrationArticle: ConnectionArticle shows the connection, its bindings and its actions.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/containers/ConnectionArticle/ConnectionArticle.tsx#ConnectionArticle, github:dxos/dxos/packages/plugins/plugin-connector/src/components/ConnectionView/ConnectionView.tsx#ConnectionView]
+  note: Renamed, and the action set is larger (sync now, test, reauthenticate, change targets, delete). Only a story renders `ConnectionView`; no test.
+```
+
+```mdl
+verdict IntegrationAuthButton: There is no integration--auth surface; auth is offered as graph actions.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/ConnectorAuth.ts#actions, github:dxos/dxos/packages/plugins/plugin-connector/src/types/ConnectorAnnotations.ts#ConnectorAuthAnnotation]
+  tests: [github:dxos/dxos/packages/plugins/plugin-connector/src/ConnectorAuth.test.ts, github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-auth-actions.test.ts]
+  note: Types opt in with `ConnectorAuthAnnotation`; the app graph contributes a Connect action group that calls the coordinator with `existingTarget`. No component other plugins render.
+```
+
+```mdl
+verdict SyncTargetsChecklist: SyncTargetsDialog lists remote targets and submits through coordinator.setCursors.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/containers/SyncTargetsDialog/SyncTargetsDialog.tsx#SyncTargetsDialog]
+  note: Renamed; submits `setCursors`, not an operation. Only a story renders it.
+```
+
+```mdl
+verdict CustomTokenDialog: It renders a connector's credentialForm, but has no raw-token fallback.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/containers/CustomTokenDialog/CustomTokenDialog.tsx#CustomTokenDialog]
+  note: With no `credentialForm` it shows a `no-form` error message instead of a generic token input. No test.
+```
+
+```mdl
+verdict CreateIntegration: The createConnection operation makes a Connection in the token's database.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/types/ConnectorOperation.ts#CreateConnection, github:dxos/dxos/packages/plugins/plugin-connector/src/operations/create-connection.ts]
+  walkthrough:
+    - The operation declares the key, the accessToken ref and the optional name. github:dxos/dxos/packages/plugins/plugin-connector/src/types/ConnectorOperation.ts#CreateConnection
+    - The handler resolves the token's database and adds a new Connection. github:dxos/dxos/packages/plugins/plugin-connector/src/operations/create-connection.ts
+  note: No test invokes it.
+```
+
+```mdl
+verdict SetIntegrationTargets: The reconcile behaviour exists as reconcileCursors behind coordinator.setCursors, not as an operation.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/reconcile-cursors.ts#reconcileCursors, github:dxos/dxos/packages/plugins/plugin-connector/src/types/ConnectorCoordination.ts#ConnectorCoordinator]
+  tests: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/reconcile-cursors.test.ts]
+  note: Selections are `{ externalId, name }`; it adds and removes Cursor objects and returns `{ added, removed, existing }`. It has no operation key, so the invoker cannot drive it.
+```
+
+```mdl
+verdict F-1.1: Any plugin can contribute ConnectorEntry rows through the multi Connector capability.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/types/ConnectorSpec.ts#Connector, github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connectors.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-connector/src/types/ConnectorSpec.test.ts]
+```
+
+```mdl
+verdict F-1.2: The UI reads the Connector capability at render time and follows registrations.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/components/CreateConnectionPanel/CreateConnectionPanel.tsx#CreateConnectionPanel, github:dxos/dxos/packages/plugins/plugin-connector/src/ConnectorAuth.ts#actions]
+  tests: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-auth-actions.test.ts]
+```
+
+```mdl
+verdict F-1.3: OAuth connectors start the flow through EDGE with the connector's provider and scopes.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/oauth.ts#beginOAuthFlow]
+  tests: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/oauth.test.ts]
+```
+
+```mdl
+verdict F-1.4: A connector with a credentialForm opens the form dialog before any OAuth.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/connector-coordinator.ts#openConnectorFormDialog]
+  note: '`createConnection` opens the dialog when a `credentialForm` exists and no `loginHint` was given; no test.'
+```
+
+```mdl
+verdict F-1.5: A connector with getTargets opens the targets dialog after OAuth.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/connector-coordinator.ts#finalizePendingEntry, github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/connector-coordinator.ts#openSyncTargetsDialogAfterConnectionCreated]
+  note: No test drives finalize.
+```
+
+```mdl
+verdict F-2.1: The coordinator calls EDGE initiate and opens a popup at the returned authUrl.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/oauth.ts#beginOAuthFlow]
+  tests: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/oauth.test.ts]
+```
+
+```mdl
+verdict F-2.2: A success postMessage from the EDGE origin finalizes the pending entry.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/connector-coordinator.ts#finalizePendingEntry, github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/oauth.ts#decodeOAuthMessageData]
+  note: The message handler checks the origin, decodes, takes the pending entry, writes the token value and finalizes. No test.
+```
+
+```mdl
+verdict F-2.3: A failure message writes nothing, but the pending entry is not discarded.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/connector-coordinator.ts#reportOAuthFailed]
+  note: The failure branch logs and raises a toast, then returns; the failure payload carries no token id, so the entry and its snapshot stay until the page unloads.
+```
+
+```mdl
+verdict F-2.4: Pending entries are keyed by AccessToken id and a localStorage snapshot is written for every flow.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/pending-snapshot.ts#writePendingSnapshot]
+  note: '`pending-snapshot.test.ts` only checks that a Ref URI round-trips; nothing tests the write or the keying.'
+```
+
+```mdl
+verdict F-3.1: useRedirectFlow opens the authUrl in a new tab.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/oauth.ts#beginOAuthFlow]
+  note: '`window.open(authUrl, ''_blank'')` for redirect connectors; the oauth tests stub `window.open` without checking it.'
+```
+
+```mdl
+verdict F-3.2: The snapshot is written before the tab opens.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/pending-snapshot.ts#writePendingSnapshot]
+  note: Written in `startOAuth` before `beginOAuthFlow`, for all connectors, not only redirect ones. No test.
+```
+
+```mdl
+verdict F-3.3: A startup module captures /redirect/oauth tokens and calls finalizeRedirectFlow.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/oauth-redirect.ts]
+  note: It is a startup capability module, not a NavigationHandler. No test.
+```
+
+```mdl
+verdict F-3.4: finalizeRedirectFlow rebuilds the token and connection from the snapshot and runs finalize.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/pending-snapshot.ts#readPendingSnapshot, github:dxos/dxos/packages/plugins/plugin-connector/src/types/ConnectorCoordination.ts#ConnectorCoordinator]
+  note: It pins the token id to `accessTokenId` and also handles reauth snapshots. No test.
+```
+
+```mdl
+verdict F-3.5: The snapshot is deleted on finalize.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/pending-snapshot.ts#deletePendingSnapshot]
+  note: Deleted right after it is read, before finalize, so a failed finalize does not keep it. No test.
+```
+
+```mdl
+verdict F-4.1: Non-OAuth connectors open the form dialog, but only a declared credentialForm renders.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/containers/CustomTokenDialog/CustomTokenDialog.tsx#CustomTokenDialog]
+  note: The coordinator opens the dialog, but without a `credentialForm` it shows an error rather than a generic raw-token form.
+```
+
+```mdl
+verdict F-4.2: A complete result is persisted through the finalize path.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/connector-coordinator.ts#finalizePendingEntry]
+  note: '`submitCredentialForm` calls `finalizePendingEntry` directly rather than `createCustomConnection`; same effect. No test.'
+```
+
+```mdl
+verdict F-4.3: An oauth result re-enters createConnection with the loginHint.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/types/ConnectorCoordination.ts#ConnectorCoordinator]
+  note: An empty hint fails instead of looping. No test.
+```
+
+```mdl
+verdict F-5.1: After OAuth the coordinator invokes getTargets and opens the dialog with the result.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/connector-coordinator.ts#openSyncTargetsDialogAfterConnectionCreated]
+  note: No test.
+```
+
+```mdl
+verdict F-5.2: Confirming the dialog reconciles cursors and returns added and removed counts.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/containers/SyncTargetsDialog/SyncTargetsDialog.tsx#SyncTargetsDialog, github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/reconcile-cursors.ts#reconcileCursors]
+  tests: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/reconcile-cursors.test.ts]
+```
+
+```mdl
+verdict F-5.3: Re-selected targets keep their cursor and options.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/reconcile-cursors.ts#reconcileCursors]
+  tests: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/reconcile-cursors.test.ts]
+```
+
+```mdl
+verdict F-5.4: The first new selection binds existingTarget.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/reconcile-cursors.ts#reconcileCursors]
+  tests: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/reconcile-cursors.test.ts]
+```
+
+```mdl
+verdict F-6.1: Finalize adds the connection and token and sets the token's parent to the connection.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/connector-coordinator.ts#finalizePendingEntry]
+  note: No test drives finalize.
+```
+
+```mdl
+verdict F-6.2: Finalize navigates to the new connection, unless the flow began from an existing target.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/connector-coordinator.ts#navigateToNewConnection]
+  note: No test.
+```
+
+```mdl
+verdict F-6.3: onTokenCreated runs once after persistence and before navigation.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/connector-coordinator.ts#runOnTokenCreated]
+  note: No test.
+```
+
+```mdl
+verdict F-6.4: onTokenCreated failures and defects are logged and do not abort finalize.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/connector-coordinator.ts#runOnTokenCreated]
+  note: Both `Effect.catch` and `Effect.catchDefect` log with `log.warn`. No test.
+```
+
+```mdl
+verdict F-7.1: ConnectionArticle is the article surface for Connection objects.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/react-surface.ts]
+  note: The type is `org.dxos.type.connection`, not `org.dxos.type.integration`. No test renders it.
+```
+
+```mdl
+verdict F-7.2: Each binding shows its label, last sync time and last error.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/components/ConnectionView/ConnectionView.tsx#ConnectionView]
+  note: The binding row reads `spec.label`, `lastTick` and `lastError`. Only a story renders it.
+```
+
+```mdl
+verdict F-7.3: The Change targets action loads getTargets and opens the dialog.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/hooks/useSyncTargets.ts#useSyncTargets]
+  note: No test.
+```
+
+```mdl
+verdict F-7.4: Delete removes the connection, and the parented token goes with it.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/containers/ConnectionArticle/ConnectionArticle.tsx#ConnectionArticle]
+  note: '`RemoveObjects` on the connection; `db.remove` cascades to the token through its ECHO parent. Cursors are left dormant on purpose. No test.'
+```
+
+```mdl
+verdict F-8.1: The create form uses a custom panel, not a providerId annotation.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/create-object.ts, github:dxos/dxos/packages/plugins/plugin-connector/src/components/CreateConnectionPanel/CreateConnectionPanel.tsx#CreateConnectionPanel]
+  note: '`IntegrationProviderAnnotationId` does not exist; the create entry supplies `CreateConnectionPanel`, which picks a connector and then shows its credential fields.'
+```
+
+```mdl
+verdict F-8.2: No form-input surface renders a provider SelectField; the panel lists connectors itself.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/components/CreateConnectionPanel/CreateConnectionPanel.tsx#CreateConnectionPanel]
+  tests: [github:dxos/dxos/packages/plugins/plugin-connector/src/components/CreateConnectionPanel/CreateConnectionPanel.test.tsx]
+  note: The panel renders its own connector list from the Connector capability.
+```
+
+```mdl
+verdict F-8.3: The panel reads the Connector capability through a live hook.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-connector/src/components/CreateConnectionPanel/CreateConnectionPanel.tsx#CreateConnectionPanel]
+  note: '`Hooks.useCapabilities(Connector)` follows registration changes; no test registers a connector while the panel is open.'
+```
+
+```mdl
+verdict T-1: The oauth test checks the initiate request, not the popup or the absence of writes.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/oauth.test.ts]
+  note: It calls `beginOAuthFlow` with a stub EDGE client and asserts only the `kind` field; it does not assert scopes or spaceId, the popup URL, or that nothing was written.
+```
+
+```mdl
+verdict T-2: No test drives the success postMessage through finalize.
+  status: missing
+  note: '`connector-coordinator.ts` has no test file.'
+```
+
+```mdl
+verdict T-3: No test drives a failure postMessage.
+  status: missing
+  note: '`connector-coordinator.ts` has no test file.'
+```
+
+```mdl
+verdict T-4: No test runs finalizeRedirectFlow.
+  status: missing
+  note: '`pending-snapshot.test.ts` covers only URI parsing.'
+```
+
+```mdl
+verdict T-5: No test submits a credential form to completion.
+  status: missing
+  note: '`CreateConnectionPanel.test.tsx` checks the shared-account warning only.'
+```
+
+```mdl
+verdict T-6: Reconcile tests cover removal and preservation separately, not one add-and-remove call.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/reconcile-cursors.test.ts]
+  note: Separate tests assert `removed = 1`, a preserved cursor with its `max` and `lastTick`, and `added = 1`; none runs the A,B to B,C selection in one call.
+```
+
+```mdl
+verdict T-7: The single-target cursor is preserved in a test, but with a non-empty selection.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/reconcile-cursors.test.ts]
+  note: The test submits `[new]`, so it asserts `removed = 0` with `added = 1`, not `{ 0, 0 }` for an empty selection.
+```
+
+```mdl
+verdict T-8: The existingTarget binding is tested, but not the rename.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-connector/src/capabilities/connector-coordinator/reconcile-cursors.test.ts]
+  note: The test checks the cursor's `externalId` and target id. The code sets the target's label whenever a name is given, not only when it is empty, and no test checks it.
+```
+
+```mdl
+verdict T-9: No test adds a connector while the create panel is open.
+  status: missing
+  note: '`connector-auth-actions.test.ts` checks late registration for the Connect action group, not the create panel.'
+```
+
+```mdl
+verdict T-10: No test runs finalize with a throwing onTokenCreated.
+  status: missing
+  note: '`connector-coordinator.ts` has no test file.'
+```
+
+```mdl
+verdict QA-1: The QA test is human-run and no automation runs it.
+  status: missing
+  note: Marked `actors: human`; no e2e covers the create-from-token path.
+```

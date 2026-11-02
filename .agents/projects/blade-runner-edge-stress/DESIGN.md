@@ -373,16 +373,16 @@ type EdgeStressSpec = {
 };
 ```
 
-**Every field is optional at the edges and complete in the middle.** `defaultsFor(edge)` in
-`plan.ts` is the only place a default is written down, `resolveSpec` merges the overrides over it
-(reading `edge` first, since it selects them), and `urlsFor(edge)` derives `edgeUrl` and the
-`/hub/` endpoint from that one field so the two halves cannot name different deployments.
+**Every field is required, and none has a default in code.** `EdgeStressSpec` is an Effect
+schema, and the plan decodes its spec against it before the run starts, rejecting a missing, unknown
+or out-of-range field. `urlsFor(edge)` derives `edgeUrl` and the `/hub/` endpoint from that one field
+so the two halves cannot name different deployments.
 
-There is deliberately **no config file**: a file holding the defaults would be a second copy of
-them, and one holding only comments would be a second copy of this type's documentation. A one-off
-variant is `--spec '<json>'` (`{"edge":"dev"}`, `{"cleanup":false}`,
-`{"plan":"out/<run>/command-trace.jsonl"}`), merged over the defaults; `-s <file>` still works for
-a spec worth keeping, and is merged the same way.
+The values live in `configs/edge-stress-nightly.yml`, which the nightly reads with `-s` and nothing
+else. A one-off variant is `--spec '<json>'` (`{"edge":"dev"}`, `{"cleanup":false}`,
+`{"plan":"out/<run>/command-trace.jsonl"}`) merged over that file; the workflow's `soak_spec`
+dispatch input passes the same override for debugging in CI. `defaultSpec()` throws, so a run with
+no spec file fails at once.
 
 Nightly targets (D12): 10 clients / 7 identities / 10 spaces / 60-minute budget / node-only.
 

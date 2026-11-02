@@ -2,7 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import Defuddle, { type DefuddleResponse } from 'defuddle/full';
+import type { DefuddleResponse } from 'defuddle/node';
+
+import { parseArticle } from '#defuddle';
 
 /**
  * Article extracted from a web page: main body content (denoised), plus
@@ -30,8 +32,6 @@ export type ExtractedArticle = {
   /** Word count of the extracted body. */
   wordCount?: number;
 };
-
-const isDocumentParserAvailable = (): boolean => typeof DOMParser !== 'undefined';
 
 const collectImageUrls = (lead: string | undefined, contentHtml: string): string[] => {
   const seen = new Set<string>();
@@ -246,25 +246,10 @@ const mapResult = (result: DefuddleResponse): ExtractedArticle => {
  * Extracts the main article from a web page's HTML using `defuddle`.
  * Discards navigation, comments, ads, and other chrome; returns the body
  * as Markdown plus structured metadata.
- *
- * Works in both browser/worker (uses `DOMParser`) and Node (delegates to
- * `defuddle/node`, which uses linkedom). The Node path is loaded lazily so
- * the linkedom dependency stays out of browser bundles.
  */
 export const extractArticle = async (html: string, url?: string): Promise<ExtractedArticle> => {
   if (!html) {
     return { markdown: '', html: '', imageUrls: [] };
   }
-  if (isDocumentParserAvailable()) {
-    const doc = new DOMParser().parseFromString(html, 'text/html');
-    pruneTrailingChrome(doc);
-    return mapResult(new Defuddle(doc, { url, separateMarkdown: true }).parse());
-  }
-  // Node path: defuddle/node accepts an HTML string and returns a Promise.
-  // Trailing-chrome pruning is currently DOM-based and only runs in the
-  // browser path; agent operations using the Node path may see boilerplate
-  // bleed-through on sites like theregister.com until linkedom-based pruning
-  // is added.
-  const { Defuddle: DefuddleNode } = await import('defuddle/node');
-  return mapResult(await DefuddleNode(html, url, { separateMarkdown: true }));
+  return mapResult(await parseArticle(html, url, pruneTrailingChrome));
 };

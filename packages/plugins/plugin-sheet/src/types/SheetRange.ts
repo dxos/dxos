@@ -15,6 +15,21 @@ export const commentKey = 'comment';
 export type CommentKey = typeof commentKey;
 export type CommentValue = string;
 
+/** A cell range's highlight: the value is a CSS color, painted behind the cells. */
+export const highlightKey = 'highlight';
+export type HighlightKey = typeof highlightKey;
+
+// Only plain colors reach a cell's inline style: hex, a name, or a color function of numbers.
+const COLOR_PATTERN =
+  /^(#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})|[a-z]+|(rgb|rgba|hsl|hsla|oklch|oklab|lab|lch)\([\d\s.,%/+-]*\))$/i;
+
+/** True for a color a highlight may hold. */
+export const isColor = (value: unknown): value is string => typeof value === 'string' && COLOR_PATTERN.test(value);
+
+/** The background of a cell under these ranges: the last highlight that applies, if any. */
+export const cellBackgroundForRanges = (ranges: readonly Sheet.Sheet['ranges'][number][]): string | undefined =>
+  ranges.findLast(({ key, value }) => key === highlightKey && isColor(value))?.value;
+
 export const styleKey = 'style';
 export type StyleKey = typeof styleKey;
 export type StyleValue = 'header' | 'highlight' | 'softwrap';

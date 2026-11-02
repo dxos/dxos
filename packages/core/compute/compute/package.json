@@ -53,15 +53,15 @@
       "types": "./dist/types/src/types/Instructions.d.ts",
       "import": "./dist/lib/types/Instructions.mjs"
     },
+    "./Hook": {
+      "source": "./src/Hook.ts",
+      "types": "./dist/types/src/Hook.d.ts",
+      "import": "./dist/lib/Hook.mjs"
+    },
     "./LayerSpec": {
       "source": "./src/LayerSpec.ts",
       "types": "./dist/types/src/LayerSpec.d.ts",
       "import": "./dist/lib/LayerSpec.mjs"
-    },
-    "./McpServer": {
-      "source": "./src/McpServer.ts",
-      "types": "./dist/types/src/McpServer.d.ts",
-      "import": "./dist/lib/McpServer.mjs"
     },
     "./Operation": {
       "source": "./src/Operation.ts",
@@ -167,7 +167,6 @@
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",

@@ -11,11 +11,7 @@ import * as ObservabilityMapping from '@dxos/app-toolkit/ObservabilityMapping';
 import { Annotation } from '@dxos/echo';
 import { MigrationVersionAnnotation } from '@dxos/migrations';
 
-import { SpaceOperation } from '#types';
-
-type ObservabilityMappingsOptions = {
-  observability?: boolean;
-};
+import { SpaceOperation, type SpaceSchema } from '#types';
 
 /**
  * The events a space operation's invocation stands for, registered rather than emitted: the verbs
@@ -23,7 +19,8 @@ type ObservabilityMappingsOptions = {
  * event would bind them to one.
  */
 export default Capability.makeModule(
-  Effect.fnUntraced(function* ({ observability }: ObservabilityMappingsOptions) {
+  Effect.fnUntraced(function* (options: SpaceSchema.SpacePluginOptions) {
+    const { observability } = options;
     // Contributed even when the host opts out, so the capability the listener requires always
     // resolves; the empty registration is what turns the events off.
     if (!observability) {

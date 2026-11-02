@@ -106,7 +106,7 @@ export const connectionTokens = (
       if (!connection.connectorId || !GITHUB_CONNECTOR_IDS.includes(connection.connectorId)) {
         continue;
       }
-      const accessToken = yield* Database.load(connection.accessToken);
+      const accessToken = yield* Database.load(Connection.getAccessToken(connection));
       const token = yield* GitHubApi.resolveToken(accessToken).pipe(
         Effect.provide(credentials),
         Effect.catchTag('GitHubConnectionUnavailableError', (error) =>

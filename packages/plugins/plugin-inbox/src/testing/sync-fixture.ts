@@ -68,7 +68,13 @@ export const seedMailboxBinding = async (
   const accessToken = db.add(AccessToken.make({ source, token }));
   const connection = db.add(Connection.make({ connectorId, accessToken: Ref.make(accessToken) }));
   const binding = db.add(
-    Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(mailbox), max, min, options }),
+    Cursor.makeExternal({
+      source: Connection.getAccessToken(connection),
+      target: Ref.make(mailbox),
+      max,
+      min,
+      options,
+    }),
   );
   await db.flush({ indexes: true });
   return { db, mailbox, connection, binding };

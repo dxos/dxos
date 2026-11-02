@@ -11,8 +11,9 @@ import { invariant } from '@dxos/invariant';
 import { Cursor } from '@dxos/link';
 import { getFeedRef } from '@dxos/schema';
 
-import { meta } from '#meta';
 import { Mailbox } from '#types';
+
+import { InboxNamespace } from '../namespace.ts';
 
 /**
  * Any object whose schema carries `FeedAnnotation`. The feed is resolved through the property the
@@ -31,7 +32,7 @@ export type FeedOwner = Obj.Any;
 export type CursorSubject = Obj.Any;
 
 /** Foreign-key tag isolating this plugin's cursors from other feed consumers (DXN-conformant). */
-export const FEED_CURSOR_KEY_SOURCE = meta.profile.key;
+export const FEED_CURSOR_KEY_SOURCE = InboxNamespace.key;
 export const CLASSIFY_CURSOR_KEY_ID = 'classifyMailbox';
 export const ANALYZE_CURSOR_KEY_ID = 'analyzeMailbox';
 

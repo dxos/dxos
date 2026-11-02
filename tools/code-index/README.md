@@ -17,7 +17,7 @@ addon refuses to open the store:
 ```bash
 moon run code-index:serve -- --provider anthropic     # the web UI, deps built first
 moon run code-index:cli -- index                      # any subcommand, deps built first
-moon run code-index-native:cargo-build                # just the addon
+moon run code-index-native:build-native                # just the addon
 ```
 
 Running `bun tools/code-index/bin/code-index.ts` directly skips those builds and is the faster loop
@@ -214,8 +214,8 @@ chosen from the ambient runtime), against the addon, which the task builds first
 spawn the real child process and skip where Bun is absent:
 
 ```bash
-moon run code-index:test
-moon run code-index-native:cargo-test   # the crate's own engine and store tests
+moon run code-index:test-native
+moon run code-index-native:test-native  # the crate's own engine and store tests
 ```
 
 The store is single-writer (RocksDB), so `serve` and any other `code-index` command,

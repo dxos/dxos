@@ -28,7 +28,9 @@ statement {
   DiagramDecl |
   GroupDecl |
   NodeDecl |
-  EdgeDecl
+  EdgeDecl |
+  NoteDecl |
+  FragmentDecl
 }
 
 // object <id> [@ x,y] [scale=…] [index=…] [ref=…] { … }
@@ -50,7 +52,7 @@ ObjectAttr { Origin | Attribute }
 // Semantic statements.
 //
 
-// diagram [@ x,y] [flow=down] [grid=384x224] [box=192x96] [aspect=4:3]
+// diagram [@ x,y] [kind=structure|sequence|dataflow] [flow=down] [grid=384x224] [box=192x96] [aspect=4:3]
 DiagramDecl { kw<"diagram"> (Origin | Attribute)* }
 
 // group <id> ["label"] [relation <group>]* [compact] [gap=…] [max-width=…] [color=…] { node … edge … }
@@ -92,6 +94,16 @@ Waypoint { Coord "," Coord | CellRef }
 Coord { Number | Unbound }
 
 Bus { kw<"bus"> ("=" Id)? }
+
+// Sequence diagrams. `note A "…"` sits right of A, `note A:left "…"` left of it, `note A, B "…"` over both.
+NoteDecl { ckw<"note"> EndList Label Attribute* }
+
+// fragment loop "every 5s" { … } — the operator is a plain name the reader checks, like a relation;
+// `alt` and `par` split into sections with `else ["guard"] { … }`. Fragments nest.
+FragmentDecl { ckw<"fragment"> FragmentKind Label? FragmentBody (Else Label? FragmentBody)* }
+FragmentKind { name }
+Else { ckw<"else"> }
+FragmentBody { "{" (EdgeDecl | NoteDecl | FragmentDecl)* "}" }
 Origin { "@" Point }
 
 Body { "{" Element* "}" }
@@ -160,6 +172,10 @@ Size   { size }
 // Keyword specialization: the statement and element-kind words drive the structure, so they
 // must not lex as ids. An id that collides is written quoted (the printer does it).
 kw<term> { @specialize[@name={term}]<name, term> }
+
+// The sequence words came after documents already used `note` (and could use the others) as ids, so
+// they are contextual: a keyword where a statement or section starts, an ordinary name anywhere else.
+ckw<term> { @extend[@name={term}]<name, term> }
 
 @tokens {
   nameStart { $[a-zA-Z_] }

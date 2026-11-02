@@ -10,8 +10,9 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Operation from '@dxos/compute/Operation';
 import * as Observability from '@dxos/observability/Observability';
 
-import { meta } from '#meta';
 import { ObservabilityCapabilities, ObservabilityOperation, Settings } from '#types';
+
+import { ObservabilityNamespace } from '../namespace.ts';
 
 const handler: Operation.WithHandler<typeof ObservabilityOperation.SetEnabled> = ObservabilityOperation.SetEnabled.pipe(
   Operation.withHandler(
@@ -34,7 +35,7 @@ const handler: Operation.WithHandler<typeof ObservabilityOperation.SetEnabled> =
 
       const settingsObj = capabilities
         .getAll(AppCapabilities.Settings)
-        .find((candidate: AppCapabilities.Settings) => candidate.prefix === meta.profile.key);
+        .find((candidate: AppCapabilities.Settings) => candidate.prefix === ObservabilityNamespace.key);
       if (settingsObj) {
         const registry = capabilities.get(Capabilities.AtomRegistry);
         const settings = registry.get(settingsObj.atom) as Settings.Settings;

@@ -12,8 +12,9 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Status from '@dxos/react-ui/Status';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 
-import { meta } from '#meta';
 import { Result } from '#types';
+
+import { CommerceNamespace } from '../../namespace.ts';
 
 export type ResultDetailProps = {
   result?: Result.Result;
@@ -25,7 +26,7 @@ export type ResultDetailProps = {
 
 /** Detail pane for the selected search result. */
 export const ResultDetail = ({ result: subject, starred = false, onToggleStar, onClose }: ResultDetailProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CommerceNamespace.key);
   // Subscribe so the pane re-renders when the result loads.
   const [result] = useObject(subject);
   if (!result) {
@@ -35,7 +36,7 @@ export const ResultDetail = ({ result: subject, starred = false, onToggleStar, o
   const properties = Object.entries(result.properties ?? {});
 
   return (
-    <Layout.Flex column gap='md' classNames='p-3 overflow-y-auto'>
+    <Layout.Flex column gap='md' classNames='p-trim-md overflow-y-auto'>
       <Layout.Grid cols={['fill', 'min', 'min']} gap='sm' align='start'>
         <h2 className='text-lg font-medium'>{result.title}</h2>
         <SystemButton.Star iconOnly variant='ghost' pressed={starred} onClick={onToggleStar} />

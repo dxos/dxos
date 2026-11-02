@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { type Arrangement, DEFAULT_FORCE, type ForceOptions, type Point } from '@dxos/react-ui-canvas/scene';
 import * as Button from '@dxos/react-ui/Button';
@@ -14,7 +14,7 @@ import { translations as reactUiTranslations } from '@dxos/react-ui/translations
 
 import { translations } from '#translations';
 
-import { type FeatureChanges, type FeatureModel } from '../FeatureCard/index.ts';
+import { type FeatureModel } from '../FeatureCard/index.ts';
 import { LAYERED_FEATURES, SAMPLE_FEATURES } from '../FeatureCard/testing.ts';
 import { FeatureCanvas } from './FeatureCanvas.tsx';
 
@@ -26,14 +26,22 @@ type StoryArgs = {
   snap?: boolean;
   /** Changing it drops the dragged positions, so the layout runs again from the arrangement alone. */
   layoutKey?: number;
+  onSelect?: (id: string | undefined) => void;
+  onZoom?: (id: string) => void;
 };
 
-const DefaultStory = ({ arrange, features: initial = SAMPLE_FEATURES, force, lattice, layoutKey }: StoryArgs) => {
-  const [features, setFeatures] = useState(initial);
+const DefaultStory = ({
+  arrange,
+  features = SAMPLE_FEATURES,
+  force,
+  lattice,
+  layoutKey,
+  onSelect,
+  onZoom,
+}: StoryArgs) => {
   const [positions, setPositions] = useState<Record<string, Point>>({});
+  const [selectedId, setSelectedId] = useState<string>();
   useEffect(() => setPositions({}), [layoutKey]);
-  const handleChange = (id: string, changes: FeatureChanges) =>
-    setFeatures((current) => current.map((feature) => (feature.id === id ? { ...feature, ...changes } : feature)));
   return (
     <div className='dx-fill relative'>
       <FeatureCanvas
@@ -43,7 +51,12 @@ const DefaultStory = ({ arrange, features: initial = SAMPLE_FEATURES, force, lat
         arrange={arrange}
         force={force}
         lattice={lattice}
-        onChange={handleChange}
+        selectedId={selectedId}
+        onSelect={(id) => {
+          setSelectedId(id);
+          onSelect?.(id);
+        }}
+        onZoom={onZoom}
       />
     </div>
   );
@@ -65,7 +78,7 @@ const ForceStory = ({ features = LAYERED_FEATURES, snap: initialSnap = false }: 
         lattice={snap}
         layoutKey={layoutKey}
       />
-      <div className='absolute top-2 right-2 w-64 p-3 flex flex-col gap-3 rounded-md bg-base-surface border border-separator'>
+      <div className='absolute top-2 right-2 w-64 p-trim-md flex flex-col gap-3 rounded-md bg-base-surface border border-separator'>
         <Input.Slider
           label={`Attraction ${attraction.toFixed(2)}`}
           value={[attraction]}
@@ -103,6 +116,13 @@ const ForceStory = ({ features = LAYERED_FEATURES, snap: initialSnap = false }: 
   );
 };
 
+/** A double-click at the element's centre: the canvas hit-tests the pointer's position, which `userEvent` leaves at 0,0. */
+const doubleClick = (element: HTMLElement) => {
+  const { x, y, width, height } = element.getBoundingClientRect();
+  const init = { bubbles: true, cancelable: true, clientX: x + width / 2, clientY: y + height / 2 };
+  element.dispatchEvent(new MouseEvent('dblclick', { ...init, detail: 2 }));
+};
+
 const meta: Meta<StoryArgs> = {
   title: 'plugins/plugin-projects/components/FeatureCanvas',
   render: DefaultStory,
@@ -112,13 +132,22 @@ const meta: Meta<StoryArgs> = {
 
 export default meta;
 
-/** Cards on the lattice, ranked from dependents down to foundations, with a smart arrow per dependency. Drag a box; a pencil edits a title. */
+/**
+ * Cards on the lattice, ranked from dependents down to foundations, with a smart arrow per dependency. A click selects
+ * a card (the app shows it in the companion) and a double-click zooms into its subfeatures.
+ */
 export const Default: StoryObj<typeof meta> = {
-  play: async ({ canvasElement }) => {
+  args: { onSelect: fn(), onZoom: fn() },
+  play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     await waitFor(() => expect(canvas.getAllByTestId('feature-canvas-node')).toHaveLength(SAMPLE_FEATURES.length), {
       timeout: 10_000,
     });
+    const sync = canvas.getByText('Provider sync');
+    await userEvent.click(sync);
+    await waitFor(() => expect(args.onSelect).toHaveBeenCalledWith('sync'));
+    doubleClick(sync);
+    await waitFor(() => expect(args.onZoom).toHaveBeenCalledWith('sync'));
   },
 };
 

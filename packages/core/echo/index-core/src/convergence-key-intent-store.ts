@@ -9,6 +9,7 @@ import type * as SqlError from 'effect/sql/SqlError';
 
 import { type SpaceId } from '@dxos/keys';
 
+import { type ConvergenceKeyIntent } from './indexer-intent.ts';
 import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/convergence-key-intents/index.ts';
 
 /**
@@ -50,7 +51,9 @@ export class ConvergenceKeyIntentStore {
    * pass services the key and clears the intent, every later pass re-presents it.
    */
   record = Effect.fn('ConvergenceKeyIntentStore.record')(
-    (intents: readonly { spaceId: SpaceId; convergenceKey: string }[]): Effect.Effect<void, SqlError.SqlError> =>
+    (
+      intents: readonly Pick<ConvergenceKeyIntent, 'spaceId' | 'convergenceKey'>[],
+    ): Effect.Effect<void, SqlError.SqlError> =>
       Effect.gen({ self: this }, function* () {
         if (intents.length === 0) {
           return;

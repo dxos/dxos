@@ -52,6 +52,8 @@ export type NativeOAuthRequest = {
   loginHint?: string;
   /** `app` for a grant that acts as DXOS's registered app; absent for a user grant. */
   kind?: 'user' | 'app';
+  /** The MCP server a `provider: 'mcp'` grant is for. */
+  resource?: string;
 };
 
 /**

@@ -12,7 +12,7 @@ metric, and how far it is from where it should be.
   on one date with a commit range is a target. A slow drift is a budget question first
   (`packages/apps/composer-app/spec/PERF-BUDGETS.md`).
 - **Budgets**: `pnpm perf run -n 3` scores the working tree. A metric past its limit is a target.
-- **Field**: SigNoz `dxos.client.runtime.eventLoop.lag` per realm, and user reports. These say
+- **Field**: PostHog `dxos.client.runtime.eventLoop.lag` per realm, and user reports. These say
   something is slow in production; they rarely say what. The lag gauge discards gaps over 10 s, so
   the longest freezes are missing from it. Go to [REPRO.md](REPRO.md).
 - **The App Performance project** in the DXOS space lists known problems; claim the task before

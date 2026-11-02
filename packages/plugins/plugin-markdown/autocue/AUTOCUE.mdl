@@ -45,7 +45,9 @@ test QA-4: Write, comment on, and link from a document
       do: Type "Next: @Release checklist", choose "Add object", then Document.
       expect: a "Release checklist" reference appears inline and a new document of that name joins
         the navtree
+```
 
+```mdl
 test QA-5: Showcase clip
   desc: |
     The 20s showcase clip: Comment on the DXOS Architecture guide, ask @kai for a diagram, and embed a Canvas drawing inline. Recorded light at 60 fps with no ident, captions or

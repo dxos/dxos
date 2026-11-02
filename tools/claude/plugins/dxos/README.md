@@ -176,7 +176,7 @@ journeys crossing plugins).
 | `/dxos:qa help`                    | Table of every verb                                                     |
 
 Rows are addressable by number, as with `/dxos:project list`. Enumeration is
-`scripts/list-tests.mjs`; execution is the repo's `composer-qa` skill, which the
+`pnpm deus qa list` (the `deus` CLI in `packages/reflect/deus`); execution is the repo's `composer-qa` skill, which the
 command defers to rather than restating.
 
 Unlike `/dxos:project`, there is no `UserPromptSubmit` hook: the store is the

@@ -77,6 +77,11 @@ export class ManagerState {
    */
   readonly reactivateOnNextPass = new Set<string>();
   /**
+   * Modules being re-run by a hot reload. Their failures are edits in progress, so the failure
+   * supervisor leaves the owning plugin enabled for the next edit to recover.
+   */
+  readonly reloading = new Set<string>();
+  /**
    * Modules in a structural error state (cycle member, duplicate provider, impossible
    * require): excluded from activation rounds until a plugin-set change re-evaluates them.
    */

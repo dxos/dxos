@@ -7,15 +7,18 @@ import { describe, test } from 'vitest';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
-import { BoardPlugin } from '#plugin';
+import * as BoardPlugin from '#meta';
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+import { BoardNamespace } from './namespace.ts';
+
+await Harness.preload({ plugins: [ClientPlugin.make({}), BoardPlugin.make()] });
+
+const moduleId = (name: string) => `${BoardNamespace.key}.module.${name}`;
 
 describe('BoardPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), BoardPlugin()],
+      plugins: [ClientPlugin.make({}), BoardPlugin.make()],
     });
 
     // Modules expected to be active after a normal startup.

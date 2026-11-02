@@ -82,7 +82,7 @@ export const ResetDialog = ({
   }, [feedbackSent]);
 
   // Tag any error that surfaces the fatal dialog so alerts can key off `fatal_dialog: true`.
-  // Logging routes through all processors (PostHog + OTEL/SigNoz) unlike captureException.
+  // Logging routes through all processors (PostHog + OTEL) unlike captureException.
   useEffect(() => {
     if (!errorProp) {
       return;

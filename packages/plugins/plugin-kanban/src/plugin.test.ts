@@ -6,15 +6,18 @@ import { describe, test } from 'vitest';
 
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
-import { KanbanPlugin } from '#plugin';
+import * as KanbanPlugin from '#meta';
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+import { KanbanNamespace } from './namespace.ts';
+
+await Harness.preload({ plugins: [KanbanPlugin.make()] });
+
+const moduleId = (name: string) => `${KanbanNamespace.key}.module.${name}`;
 
 describe('KanbanPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [KanbanPlugin()],
+      plugins: [KanbanPlugin.make()],
     });
 
     // The harness fires every plugin's start event after startup, so both start-gated modules are active.

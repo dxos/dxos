@@ -43,7 +43,7 @@ projects:
     host: burdon-mbp-2022 # machine the project lives on (`hostname -s`)
     created: 2026-07-05
     summary: One line — what this stream delivers.
-    tasks: path/to/TASKS.md # a package file, or <registry-dir>/<name>/TASKS.md
+    tasks: path/to/TASKS.md # <package>/docs/TASKS.md, or <registry-dir>/<name>/TASKS.md
     design: path/to/DESIGN.md # spec + decisions (a REPORT.md counts)
     prs: [12163]
     resume: 'The single next action.'
@@ -51,8 +51,10 @@ ended: []
 ```
 
 - The registry records the **location** of each doc, so an existing effort points
-  at its package files and a brand-new project defaults to
-  `<registry-dir>/<name>/{TASKS.md,DESIGN.md}`. Keep it committed and current.
+  at its package files. A brand-new project defaults to the `docs/` directory of
+  the package it changes (`<package>/docs/{TASKS.md,DESIGN.md}`), and only falls
+  back to `<registry-dir>/<name>/{TASKS.md,DESIGN.md}` when it spans packages or
+  has no package. Keep it committed and current.
 
 ### The `/dxos:project` command
 
@@ -99,10 +101,13 @@ ask which (list them numbered) — never a guess.
 
 ## Location & Format
 
-One file per unit of work: `<root>/TASKS.md`, where `<root>` is the package root
-when there is one (e.g. `packages/plugins/plugin-magazine/TASKS.md`), or
-otherwise the directory you're working in (e.g.
-`tools/claude/plugins/dxos/skills/task-planning/TASKS.md`). Match the existing convention:
+One file per unit of work: `<root>/docs/TASKS.md`, where `<root>` is the package
+root when there is one (e.g. `packages/plugins/plugin-magazine/docs/TASKS.md`,
+with its `DESIGN.md` beside it). A registered project that spans packages or has
+none uses `<registry-dir>/<name>/TASKS.md`, the path its registry entry records.
+Unregistered work with no package uses the directory you're working in (e.g.
+`tools/claude/plugins/dxos/skills/task-planning/TASKS.md`). An existing
+package-root `TASKS.md` stays where it is. Match the existing convention:
 
 ```markdown
 # <Package> — Tasks

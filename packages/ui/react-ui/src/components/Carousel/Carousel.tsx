@@ -9,7 +9,7 @@
 // each slide renders.
 
 import { Carousel as CarouselPrimitive, useCarouselContext } from '@ark-ui/react/carousel';
-import React, { type ReactNode, forwardRef, useEffect, useMemo, useRef } from 'react';
+import React, { type ReactNode, createContext, forwardRef, useContext, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useComposedRefs } from '@dxos/react-hooks';
@@ -21,14 +21,22 @@ import { translationKey } from '#translations';
 import { recipes } from '../../recipes.ts';
 import { animationsDisabled, useReducedMotion } from '../../util/animation.ts';
 import { Button } from '../Button/Button.tsx';
+import { resolveMediaElement } from '../MediaPlayer/media-kind.ts';
 import { MediaPlayer, type MediaPlayerProps } from '../MediaPlayer/MediaPlayer.tsx';
 
 //
 // Root
 //
 
+/** How many slides a page shows and how many a move advances, as the machine counts them, to map a page to its slides. */
+const PagingContext = createContext({ perPage: 1, perMove: 1 });
+
+// No `autoSize`: slides fill the 16:9 frame, and one whose media is not mounted would size to nothing.
 type CarouselRootProps = ThemedClassName<
-  Omit<CarouselPrimitive.RootProps, 'slideCount' | 'defaultPage' | 'loop' | 'autoplay' | 'translations' | 'orientation'>
+  Omit<
+    CarouselPrimitive.RootProps,
+    'slideCount' | 'defaultPage' | 'loop' | 'autoplay' | 'translations' | 'orientation' | 'autoSize'
+  >
 > & {
   /** Number of slides; nothing renders without any. */
   count: number;
@@ -49,6 +57,14 @@ type CarouselRootProps = ThemedClassName<
 const CarouselRoot = forwardRef<HTMLDivElement, CarouselRootProps>(
   ({ classNames, count, autoAdvance = 0, defaultIndex = 0, continuous = false, children, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
+    const { slidesPerPage = 1, slidesPerMove = 'auto' } = props;
+    const paging = useMemo(
+      () => ({
+        perPage: Math.ceil(slidesPerPage),
+        perMove: slidesPerMove === 'auto' ? Math.floor(slidesPerPage) : slidesPerMove,
+      }),
+      [slidesPerPage, slidesPerMove],
+    );
     const reducedMotion = useReducedMotion();
 
     // The machine names its controls in English; the app names them in the reader's language.
@@ -79,7 +95,7 @@ const CarouselRoot = forwardRef<HTMLDivElement, CarouselRootProps>(
         className={mx(recipes.carousel(), classNames)}
         ref={forwardedRef}
       >
-        {children}
+        <PagingContext.Provider value={paging}>{children}</PagingContext.Provider>
       </CarouselPrimitive.Root>
     );
   },
@@ -126,6 +142,15 @@ const CarouselItem = forwardRef<HTMLDivElement, CarouselItemProps>(
     forwardedRef,
   ) => {
     const { page } = useCarouselContext();
+    const { perPage, perMove } = useContext(PagingContext);
+    // Slides keep their size empty, so media mounts only where it is seen: playable media on a slide of the page, which
+    // also stops it when the page is left (an embed cannot be paused from here), and an image on its neighbours too.
+    // By the page, which changes once a scroll settles: a mount mid-swipe makes the machine snap back to the old page.
+    const first = page * perMove;
+    const shown = (slide: number) => slide >= first && slide < first + perPage;
+    const mounted =
+      src !== undefined &&
+      (resolveMediaElement(src, kind) === 'image' ? [index - 1, index, index + 1].some(shown) : shown(index));
     return (
       <CarouselPrimitive.Item
         {...props}
@@ -134,13 +159,13 @@ const CarouselItem = forwardRef<HTMLDivElement, CarouselItemProps>(
         ref={forwardedRef}
       >
         {children ??
-          (src && (
+          (src && mounted && (
             <MediaPlayer
               src={src}
               kind={kind}
               alt={alt}
-              // Every slide stays in the track, so only the one on show may play: the others would be heard, not seen.
-              autoPlay={autoPlay && page === index}
+              // One plays at a time, on the page's first slide.
+              autoPlay={autoPlay && index === first}
               loop={loop}
               muted={muted}
               controls={controls}

@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as SemanticEngine from '../semantic-engine.ts';
+import * as SequenceEngine from '../sequence-engine.ts';
 import { type ParseResult, read, withLayout } from './parse.ts';
 
 /** Options for {@link compile}. */
@@ -21,6 +22,10 @@ export const compile: (text: string, options?: CompileOptions) => Effect.Effect<
     const { diagram } = reading;
     if (!diagram) {
       return withLayout(reading);
+    }
+    // A sequence diagram's layout is its statement order; there is nothing to search.
+    if (diagram.kind === 'sequence') {
+      return withLayout(reading, SequenceEngine.solve(diagram));
     }
     const solution = yield* Effect.promise(() => SemanticEngine.compile(diagram, options));
     return withLayout(reading, solution);

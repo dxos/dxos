@@ -4,6 +4,11 @@ tags:
   - typecheck
   - ts-test
 tasks:
+  # The longest node suite, at the end of a ~48-deep `^:build` chain: without this it starts after most
+  # other suites in its Check cell.
+  test:
+    options:
+      priority: critical
   # Fail when the CLI entrypoint pulls in React. The binary runs under bun with no DOM, and
   # React arrived here four separate ways before — a plugin's React surface, `@dxos/react-client`
   # re-exports, `@effect-atom/atom-react` in headless packages, and a string helper that happened

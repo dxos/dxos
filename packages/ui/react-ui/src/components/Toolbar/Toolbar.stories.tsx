@@ -180,11 +180,11 @@ export const Test: Story = {
     await expect(getComputedStyle(scroller).overflowY).toBe('hidden');
     await expect(getComputedStyle(scroller).scrollbarWidth).toBe('none');
 
-    // The separator is a control-tall vertical rule and no item: roving focus passes over it.
+    // The separator is a half-control-tall vertical rule and no item: roving focus passes over it.
     const separator = byTestId(canvasElement, 'separator-md');
     await expect(separator).toHaveAttribute('role', 'separator');
     await expect(separator).toHaveAttribute('aria-orientation', 'vertical');
-    await expect(separator.getBoundingClientRect().height).toBeCloseTo(controlSize('md'), 0);
+    await expect(separator.getBoundingClientRect().height).toBeCloseTo(controlSize('md') / 2, 0);
     await expect(separator).not.toHaveAttribute('tabindex');
 
     for (const size of ['md', 'lg'] as const) {

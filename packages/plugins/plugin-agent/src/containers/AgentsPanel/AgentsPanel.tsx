@@ -7,33 +7,35 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import { type Space } from '@dxos/client/echo';
+import { type Contact } from '@dxos/client/halo';
 import { type PublicKey } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { toPublicKey } from '@dxos/protocols/buf';
-import { type SpaceMember } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Form } from '@dxos/react-ui-form';
 import * as Field from '@dxos/react-ui/Field';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 
-import { AgentList, type AgentListAdmin, type AgentListEntry } from '#components';
-import { meta } from '#meta';
+import { AgentList, type AgentListSpace } from '#components';
 import { AgentSpace } from '#types';
 
+import { AgentNamespace } from '../../namespace.ts';
+
 /**
- * The agents the identity administers, read from its own agent spaces (nothing is asked of EDGE), laid out like the
- * contacts book: a search field once there is more than one, then a row per agent.
+ * The agents the identity administers, read from its own agent spaces (nothing is asked of EDGE), in the contacts
+ * book's rows: an agent is a contact.
  */
 export const AgentsPanel = () => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AgentNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
-  const agents = useAdministeredAgents();
+  const { agents, spaces } = useAdministeredAgents();
   const [filter, setFilter] = useState('');
 
-  const handleOpen = useCallback(
-    (spaceId: string) =>
-      void invokePromise(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(spaceId) }),
+  const handleSelectSpace = useCallback(
+    (selected: AgentListSpace) =>
+      void invokePromise(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(selected.id) }),
     [invokePromise],
   );
 
@@ -52,7 +54,13 @@ export const AgentsPanel = () => {
                 />
               </Field.Root>
             )}
-            <AgentList agents={agents} filter={filter} onOpen={handleOpen} />
+            <AgentList
+              classNames='mt-3'
+              agents={agents}
+              spaces={spaces}
+              filter={filter}
+              onSelectSpace={handleSelectSpace}
+            />
           </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
@@ -60,8 +68,10 @@ export const AgentsPanel = () => {
   );
 };
 
-/** Re-read whenever the client's spaces, its identity, or the members of one of its spaces change. */
-const useAdministeredAgents = (): AgentListEntry[] => {
+type AdministeredAgents = { agents: Contact[]; spaces: AgentListSpace[] };
+
+/** Re-read whenever the client's spaces, its identity, its contacts, or the members of one of its spaces change. */
+const useAdministeredAgents = (): AdministeredAgents => {
   const client = Hooks.useCapability(ClientCapabilities.Client);
   const [revision, setRevision] = useState(0);
   useEffect(() => {
@@ -83,9 +93,11 @@ const useAdministeredAgents = (): AgentListEntry[] => {
       changed();
     });
     const identity = client.halo.identity.subscribe(changed);
+    const contacts = client.halo.contacts.subscribe(changed);
     return () => {
       spaces.unsubscribe();
       identity.unsubscribe();
+      contacts.unsubscribe();
       members.forEach((subscription) => subscription.unsubscribe());
     };
   }, [client]);
@@ -93,45 +105,34 @@ const useAdministeredAgents = (): AgentListEntry[] => {
   return useMemo(() => {
     const viewer = toPublicKey(client.halo.identity.get()?.identityKey);
     const all = client.spaces.get();
-    return viewer ? AgentSpace.administeredBy(all, viewer).map((space) => entryOf(space, all, viewer)) : [];
+    const agentKeys = viewer
+      ? AgentSpace.administeredAgents(all, viewer).flatMap(({ identityKey }) => (identityKey ? [identityKey] : []))
+      : [];
+    const agents = client.halo.contacts.get().flatMap((contact) => {
+      const identityKey = toPublicKey(contact.identityKey);
+      if (!identityKey || !agentKeys.some((agentKey) => agentKey.equals(identityKey))) {
+        return [];
+      }
+      // A space the agent was removed from keeps its membership record, so it is still a common space of the contact.
+      const commonSpaces = contact.commonSpaces.filter((spaceKey) => isMember(all, toPublicKey(spaceKey), identityKey));
+      return [{ ...contact, commonSpaces }];
+    });
+    const spaces = all.map((space): AgentListSpace => ({
+      id: space.id,
+      key: space.key,
+      name: space.isOpen ? space.properties.name : undefined,
+    }));
+    return { agents, spaces };
   }, [client, revision]);
 };
 
-const entryOf = (space: AgentSpace.Space, all: readonly AgentSpace.Space[], viewer: PublicKey): AgentListEntry => {
-  const agent = AgentSpace.agentOf(space);
-  const agentKey = toPublicKey(agent?.identity?.identityKey);
-  const joined = agentKey
-    ? all.filter(
-        (other) =>
-          other.id !== space.id &&
-          other.members
-            .get()
-            .some(
-              (member) =>
-                member.role !== SpaceMember_Role.REMOVED &&
-                (toPublicKey(member.identity?.identityKey)?.equals(agentKey) ?? false),
-            ),
-      )
-    : [];
-  return {
-    spaceId: space.id,
-    spaces: [space, ...joined].map((member) => ({
-      id: member.id,
-      name: member.isOpen ? member.properties?.name : undefined,
-    })),
-    // EDGE names the agent's space after the agent, which stands in until the agent's profile reaches the client.
-    name: agent?.identity?.profile?.displayName ?? (space.isOpen ? space.properties?.name : undefined) ?? '',
-    identityKey: toPublicKey(agent?.identity?.identityKey)?.toHex(),
-    did: agent?.identity?.did || undefined,
-    admins: AgentSpace.admins(space).map((member) => adminOf(member, viewer)),
-  };
-};
-
-const adminOf = (member: SpaceMember, viewer: PublicKey): AgentListAdmin => {
-  const identityKey = toPublicKey(member.identity?.identityKey);
-  return {
-    identityKey: identityKey?.toHex() ?? '',
-    name: member.identity?.profile?.displayName ?? identityKey?.truncate() ?? '',
-    you: identityKey?.equals(viewer) ?? false,
-  };
-};
+/** Whether the identity is a member of the space with this key, not one removed from it. */
+const isMember = (spaces: readonly Space[], spaceKey: PublicKey | undefined, identityKey: PublicKey): boolean =>
+  spaces
+    .find((space) => spaceKey !== undefined && space.key.equals(spaceKey))
+    ?.members.get()
+    .some(
+      (member) =>
+        member.role !== SpaceMember_Role.REMOVED &&
+        (toPublicKey(member.identity?.identityKey)?.equals(identityKey) ?? false),
+    ) ?? false;

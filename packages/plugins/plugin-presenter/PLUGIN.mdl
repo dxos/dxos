@@ -4,7 +4,7 @@ name: PresenterPlugin
 version: 0.1.0
 ---
 
-A presentation plugin for DXOS Composer that turns existing workspace objects — markdown documents and collections — into interactive slideshows with fullscreen mode and keyboard navigation.
+A presentation plugin for DXOS Composer. A Presentation is an ordered deck of sections, each an owned markdown slide or a link to any workspace object, shown in the navtree as a folder of slides and presented with fullscreen mode and keyboard navigation. A markdown document can still be previewed as a deck through its Presenter companion. Slides are written in a strict Slidev subset (layouts, slots, click steps, notes) with DXOS extensions (video backgrounds, embedded object surfaces).
 
 ## Extensions
 
@@ -20,92 +20,292 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `op`        | `org.dxos.mdl.op@1.1`         |
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `step`      | `org.dxos.mdl.step@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
 
 ## Types
 
 ```mdl
-type PresentationTarget
-  literals: document | collection
-  desc: The kind of workspace object being presented.
+type Presentation
+  desc: |
+    An ordered deck of slides. Typename `org.dxos.type.presentation@0.2.0`. Each slide is a `Slide` object owned
+    by the presentation. It is tagged as a collection item, so it is filed into the space's Collections. Its
+    navtree node lists `slides`; deleting a slide deletes its `Slide` (and the slide's owned `Text`), while a
+    linked object it shows is only unlinked. Deleting the Presentation deletes its slides; linked objects stay.
+    Version 0.1.0 held `sections: Ref<Obj>[]` directly; its migration wraps each section in a `Slide`.
+    A plugin-projects showcase is a Presentation (see CreateShowcase); a `Showcase` 0.1.0 migrates into one in
+    place, its markdown the first slide and each artifact a linked slide, so its `Demonstrates` edges still hold.
+  fields:
+    name?: string
+    description?: string
+    slides: Ref<Slide>[]        # slide order
+    theme?: SlideTheme.Settings # deck theme; overrides the first slide's `theme:` headmatter
 ```
 
 ```mdl
-type SlideIndex
+type Slide
+  desc: |
+    One slide of a Presentation, owned by it. Typename `org.dxos.type.slide@0.1.0`. Its `content` is either an
+    owned markdown `Text` (parented to the Slide, written in the Slidev subset of F-6) or a link to any other
+    ECHO object, rendered through its `role=slide` surface. The fields hold what applies to any content, so a
+    linked object can be hidden, annotated and given an image as a markdown slide can; `layout` and
+    `background` stay in a markdown slide's frontmatter. A slide opened from the navtree or the grid opens the
+    `Slide`, so the assistant beside it has the slide as its context.
   fields:
-    current: number             # zero-based index of the active slide
-    count: number               # total number of slides in the presentation
+    content: Ref<Obj>           # owned Text or a linked object
+    title?: string              # overrides the label read from the content's first heading
+    hidden?: boolean            # left out when presenting; replaces frontmatter `hide:`
+    notes?: Ref<Text>           # speaker notes for any slide
+    image?: Ref<MediaArtifact>  # the image a layout places (cover and image layouts), from plugin-studio
+    duration?: number           # desired length in seconds, shown against the time on the slide while presenting
+    takes?: Ref<Variant>[]      # recorded voice-over takes (plugin-recorder), owned by the slide
+    mainTake?: Ref<Variant>     # the take that voices the slide
 ```
 
 ```mdl
-type PresentationSettings
+type SlideViewState
+  desc: |
+    Per-user, per-deck view state (`presenter-slide`, local backend) in `@dxos/react-ui-attention`,
+    keyed by the Presentation's (or previewed document's) URI. Never syncs to collaborators.
   fields:
-    presentCollections?: boolean  # when true, Collections may also be presented as slideshows (experimental)
+    index: number               # zero-based index of the slide this user is viewing; clamped to the deck on read
+```
+
+```mdl
+type PresenterSettings
+  desc: |
+    The plugin's settings (`PresenterSettings.Settings`, persisted per device).
+  fields:
+    notes?: off | subtitles | window   # where speaker notes show while presenting; default off
+```
+
+```mdl
+type SlideTheme
+  desc: |
+    A deck's theme settings (`SlideTheme.Settings`): a built-in theme name and optional overrides. Applied as
+    `--slide-*` CSS variables on each slide; linked object slides are painted with the same variables.
+  fields:
+    name?: default | light | dark | serif
+    accent?: string             # plain CSS color
+    background?: string         # plain CSS color
+    foreground?: string         # plain CSS color
+    font?: string               # font-family list for body and headings
+```
+
+```mdl
+type SlideSource
+  literals: text | object | markdown | pending
+  desc: |
+    One slide of a deck: `text` is an owned Text rendered as markdown; `object` is any linked object (a
+    Markdown.Document included) rendered through the slide surface fallback; `markdown` is one `---`-separated
+    slide of a previewed document (its id is positional); `pending` is a section whose
+    target has not loaded yet. A section whose target was deleted yields no slide.
 ```
 
 ## Components
 
 ```mdl
-component DocumentArticle
+component Deck
   desc: |
-    Full-screen Reveal.js player for a single Markdown document.
-    Parses the document content into slides using horizontal/vertical `---` separators.
-    Renders in a Panel that fills the available viewport.
+    A composite (`Deck.Root`, headless, holding the state and keys; `Deck.Content`, the focus scope that handles keys
+    and prints; `Deck.Viewport`, the current slide; `Deck.Grid`, every slide as a thumbnail; `Deck.Pager`,
+    `Deck.PageNumber` and `Deck.PlayButton`), composed by its containers into a Panel.
+    Paged slide deck. Inline it shows the pager centered in a status bar below the slide; in fullscreen an overlay pager that auto-hides when idle
+    and wakes on pointer movement. Keys are scoped to the deck's focus scope, never `window`: left and right
+    step, Shift+left and Shift+right (or Home and End) jump to first and last, `f` toggles fullscreen,
+    Escape exits fullscreen. Space and right advance a click step, else the slide; left retreats a click step,
+    else lands on the previous slide fully revealed. Click steps are ephemeral and reset on slide change; Space
+    does not act on a focused button or link. While the focused (or fullscreen) deck prints, it renders every
+    slide into a print-only container, one 16:9 page each with every click step shown, and drops the rest of the
+    app from the printout.
   props:
-    document: Markdown.Document
-  slots:
-    (none)
+    slides: SlideSource[]       # Deck.Root
+    index: number               # Deck.Root
+    fullscreen: boolean         # Deck.Root
+    theme?: SlideTheme          # Deck.Root; without a name, the first slide's `theme:` headmatter applies
   actions:
-    exit()                      # navigates back to the originating document view
+    onIndexChange(index: number)              # Deck.Root
+    onFullscreenChange(fullscreen: boolean)   # Deck.Root
+    onAddSlide()                              # Deck.Viewport; offered when the deck is empty
+    onMove(from: number, to: number)          # Deck.Grid; enables dragging thumbnails
   layout: |
     ┌─────────────────────────────┐
+    │ [toolbar]              [⛶] │  ← hidden in fullscreen
+    ├─────────────────────────────┤
     │                             │
-    │        RevealPlayer         │
-    │  (full-screen slide canvas) │
-    │                             │
+    │   Deck.Viewport (slide N)   │
+    │   (overlay pager, idle)     │
+    ├─────────────────────────────┤
+    │      ◀◀ ◀  3 / 12  ▶ ▶▶     │  ← status bar; hidden in fullscreen and in the grid view
+    └─────────────────────────────┘
+  grid: |
+    ┌─────────────────────────────┐
+    │ [toolbar]              [⛶] │
+    ├─────────────────────────────┤
+    │ ┌────┐ ┌────┐ ┌────┐ ┌────┐ │  ← Deck.Grid: thumbnails, current one outlined;
+    │ │ 1  │ │ 2  │ │[3] │ │ 4  │ │    scrolls vertically; columns follow the width
+    │ └────┘ └────┘ └────┘ └────┘ │
+    │ ┌────┐                      │
+    │ │ 5  │                      │
+    │ └────┘                      │
     └─────────────────────────────┘
 ```
 
 ```mdl
-component CollectionArticle
+component PresentationArticle
   desc: |
-    Slideshow player for a Collection.
-    Renders one slide per object in the collection's ordered items array.
-    The active slide is delegated to the AppSurface.Slide surface, so each
-    item's own plugin renders it (e.g. SlideArticle for documents).
+    A Presentation's article is a grid of its slides (`Deck.Grid`); presenting shows one slide at a time (`Deck.Viewport`).
+    Fullscreen is read per object (is this Presentation on the
+    fullscreen plank) and toggles in place on the Presentation's own plank; the current slide is per-viewer
+    view state. The toolbar adds slides and links objects through SectionPicker.
   props:
-    subject: Collection.Collection
-    role?: string
-  state:
-    slide: number               # zero-based index of the current slide
-    running: boolean            # whether keyboard navigation is active (from PresenterContext)
-  slots:
-    (none)
+    subject: Presentation
+    attendableId?: string
+```
+
+```mdl
+component SlideEditorArticle
+  desc: |
+    Article for an owned slide, opened by clicking the slide's child node in the navtree. A toolbar (formatting,
+    slide tools, view controls) sits above the markdown editor; the rendered slide shows below it in a vertical
+    split, or in the plank's companion. Cursor and preview stay in sync both ways.
+  props:
+    subject: Text
+```
+
+```mdl
+component SectionPicker
+  desc: |
+    Toolbar picker ("Add to presentation") over the space's objects that links the chosen object into the
+    presentation as a section. It queries the space only while open; an unnamed object is listed as
+    "Untitled <type>".
+  props:
+    presentation: Presentation
+```
+
+```mdl
+component Slide
+  desc: |
+    A composite: `Slide.Root` (headless) holds one SlideSource and its options; `Slide.Frame` is a fixed 16:9
+    logical canvas scaled to its container (inset in a solid void with `inset`, unscaled for print), so every slide
+    contributor designs for one size; `Slide.Content` draws the source. Text sources render markdown through
+    MarkdownSlide; markdown sources (the preview companion's raw slides) do the same; pending sources show a
+    loading slide; object sources render through the AppSurface.Slide surface, falling back to a title slide while
+    no surface matches, and request gated slide surfaces on demand. It supplies MarkdownSlide's embedded surfaces
+    from the database of the slide's owner.
+  props:
+    source: SlideSource         # Slide.Root
+    step?: number               # Slide.Root
+    inset?: boolean             # Slide.Frame
+```
+
+```mdl
+component MarkdownSlide
+  desc: |
+    Renders one slide of the Slidev markdown subset on the 2560x1440 canvas: per-slide frontmatter
+    (`layout`, `image`, `background`, `class`, `backgroundVideo`, `backgroundOpacity`, `backgroundPosition`,
+    `bleed`, and `theme` on the first slide; `title` is parsed and reserved, not rendered),
+    `::default::` / `::left::` / `::middle::` / `::right::` / `::bottom-left::` / `::bottom-right::` slots,
+    `<v-click>`, `<v-clicks>` (`depth`, `every`) and `<v-after>` click steps, highlighted code blocks with
+    static line ranges, and notes. All other raw HTML is escaped, never rendered. Elements with a later click
+    step stay laid out but invisible. `class:` accepts only Tailwind utilities already generated.
+  props:
+    content: string
+    step?: number               # undefined reveals everything
+    renderSurface?: (uri, role) => ReactNode
+```
+
+```mdl
+component SlideLayouts
+  desc: |
+    The layouts a slide's `layout` names: default, cover, center, section, intro, end, fact, statement, quote,
+    two-cols, two-cols-header, three-cols, two-by-two, image, image-left, image-right, full, none. An unknown
+    name renders with default and is reported as a validation issue. `bleed: left | right` takes the outer column
+    of `two-cols` or `three-cols` to the slide's edges.
+  props:
+    slots: { default, left, middle, right, bottom-left, bottom-right }
+    frontmatter: SlideFrontmatter
+```
+
+```mdl
+component SlideBackground
+  desc: |
+    The slide's background: a colour, an `image`, or a looping, muted, autoplaying `backgroundVideo`, with
+    `backgroundOpacity` and `backgroundPosition`. In the `image` layout a theme scrim sits between the
+    picture and any slide content so text over a photo stays legible; other layouts draw no scrim.
+  props:
+    frontmatter: SlideFrontmatter
+    layout: string
+```
+
+```mdl
+component EmbeddedSurface
+  desc: |
+    Renders the object a slide's `<Surface ref="echo:///<id>" role="slide|section|card" />` names, through
+    ObjectSurface (fallback `slide`, `section`, `card`, then a title slide). A malformed, missing or deleted
+    ref settles on a "Missing object" placeholder, never a spinner left running; a space-qualified ref
+    resolves only while that space is open in the client. A ref to a `Text` (such as another deck's owned
+    slide) renders that markdown as a scaled slide, whose own `<Surface>`s stay placeholders. An embed of an
+    object that already encloses it (the slide's own subject, or a cycle), or one nested more than 3 levels
+    deep, renders an "Embedded in itself" placeholder instead.
+  props:
+    uri: string
+    role: slide | section | card
+    db: Database
+```
+
+```mdl
+component DocumentArticle
+  desc: |
+    Presenter companion of a Markdown document: the shared Deck over the document content, split into slides
+    on horizontal `---` separators outside fenced code, honouring leading headmatter and per-slide frontmatter
+    (markdown sources). Vertical slides are not configured. Nothing is persisted. Fullscreen is read
+    per object from the deck's fullscreen plank (is this document presented), not from the global layout mode.
+  props:
+    document: Markdown.Document
   actions:
-    setSlide(index: number)
-    exit()
-  layout: |
-    ┌─────────────────────────────┐
-    │                             │
-    │       Surface (slide N)     │  ← AppSurface.Slide surface
-    │                             │
-    ├────────────────┬────────────┤
-    │   [Pager]      │ [PageNum]  │
-    └────────────────┴────────────┘
+    exit()                      # exits fullscreen for this document
 ```
 
 ```mdl
 component SlideArticle
   desc: |
-    Renders a single Markdown document as a slide panel inside a Collection presentation.
-    Used as the AppSurface.Slide surface implementation for Markdown.Document objects.
+    The AppSurface.Slide surface for Markdown.Document objects: renders the document as a slide, without a
+    frame (Slide.Frame owns it).
   props:
     document: Markdown.Document
-  layout: |
-    ┌─────────────────────────────┐
-    │  Panel                      │
-    │   └─ Slide (markdown)       │
-    └─────────────────────────────┘
 ```
+
+```mdl
+component SpeakerNotes
+  desc: |
+    A composite: `SpeakerNotes.Subtitles` shows the current slide's notes over the bottom of a presented slide;
+    `SpeakerNotes.Prompter` is the speaker's view: the slide's notes large (one line per bullet or sentence), its
+    position, the time on the slide against its desired length (flagged when over), and the next slide's notes.
+  props:
+    lines: string[]             # Subtitles, Prompter
+    title?: string              # Prompter
+    next?: { title?, lines }    # Prompter
+    index: number               # Prompter
+    count: number               # Prompter
+    elapsed: number             # Prompter; seconds on the slide
+    duration?: number           # Prompter; the slide's desired length
+```
+
+```mdl
+component PresentedOverlay
+  desc: |
+    Drawn over a presented Presentation (inside `Deck.Viewport`): the speaker notes as the `notes` setting asks —
+    subtitles, or a second browser window (a portal, so it shares the app's state; keys pressed there move the deck;
+    a refused popup offers a button to open it) — the `PresenterSurface.Overlay` slot, and the
+    `PresentationEventHandler` callbacks: start on mount, stop on unmount, and every slide or click-step change.
+  props:
+    presentation: Presentation
+```
+
+Extension points: `PresenterSurface.Toolbar` (data `{ subject: Presentation }`) adds items to a Presentation's
+toolbar before the play button; `PresenterSurface.Overlay` draws over the presented deck; the
+`PresentationEventHandler` capability (`onStart`, `onSlide({ presentation, slide?, id, title?, index, step })`,
+`onStop`) follows a presentation. Another plugin (the recorder) uses them; presenter depends on none of them.
 
 ## Operations
 
@@ -113,19 +313,57 @@ component SlideArticle
 op TogglePresentation
   key: org.dxos.operation.presenter.setPresenting
   desc: |
-    Enters or exits presentation for a Markdown document or Collection by toggling the deck's
-    fullscreen overlay (EphemeralDeckState.fullscreen) onto the presenter companion node.
+    Enters or exits presentation for a Markdown document or Presentation by toggling the deck's
+    fullscreen overlay (EphemeralDeckState.fullscreen). A Markdown document presents through its presenter
+    companion node; a Presentation presents fullscreen on its own plank, since its article is the deck.
     The overlay is independent of what is open, so neither direction navigates: the URL and the
     open planks are unchanged.
   input:
-    object: Markdown.Document | Collection.Collection
+    object: Markdown.Document | Presentation
     state: boolean              # on or off; callers that flip read the current state first
   output: void
   effects: [deck:fullscreen]
   requires: [DeckCapabilities.EphemeralState, DeckOperation.Adjust]
   note: |
-    Resolves the presenter companion node path as `<objectPath>/~presenter`.
+    For a document the path is `<objectPath>/~presenter`; for a Presentation it is the plank's own path.
     Keyboard shortcut: Shift+Cmd+P (macOS), Shift+Alt+P (Windows/Linux).
+```
+
+```mdl
+op CreateShowcase
+  key: org.dxos.operation.projects.createShowcase
+  desc: |
+    Declared by plugin-projects, whose project skill offers it, and implemented here. Makes a Presentation whose
+    first slide is an owned markdown `Text` holding `content` (`# <name>` when it is blank) and whose further
+    slides each link one of `artifacts` in order, such as an image or video `File`, a diagram or a `PullRequest`;
+    each renders through the slide surface fallback. A `Demonstrates` relation goes from the deck to each target.
+    Every target and artifact is loaded before anything is written.
+  input:
+    name: string
+    content: string             # markdown for the first slide
+    targets: Ref<Obj>[]         # the features and tasks it demonstrates
+    artifacts?: Ref<Obj>[]      # one linked slide each
+  output:
+    showcase: Presentation
+  effects: [echo:write]
+  requires: [Database.Service]
+```
+
+```mdl
+op GenerateSlideImage
+  key: org.dxos.operation.presenter.generateSlideImage
+  desc: |
+    Generates an image for a slide from a prompt with plugin-studio's `StudioOperation.Generate` (image kind,
+    the space's configured provider), stores it as a `MediaArtifact`, and sets it as the slide's `image`. A
+    markdown slide whose layout places no image is switched to `layout: image` (or keeps an `image-left` /
+    `image-right` / `cover` layout it already has).
+  input:
+    slide: Ref<Slide>
+    prompt: string
+  output:
+    artifact: Ref<MediaArtifact>
+  effects: [echo:write]
+  requires: [Database.Service, Operation.Service]
 ```
 
 ## Features
@@ -135,50 +373,194 @@ feat F-1: Presentation Mode
 
   req F-1.1: Every Markdown document in the workspace has a companion "Presenter" node in the app graph.
   req F-1.2:
-    when: settings.presentCollections is true
-    then: every Collection also has a companion Presenter node
-  req F-1.3:
-    when: user activates TogglePresentation on a document or collection
+    when: user activates TogglePresentation on a document
     then: the presenter companion fills the screen in the deck's fullscreen overlay, without the companion tab strip, and the URL does not change
-  req F-1.4:
+  req F-1.3:
     when: user presses Shift+Cmd+P (macOS) or Shift+Alt+P (Windows)
     then: TogglePresentation is invoked for the focused object
+  req F-1.4:
+    when: user activates TogglePresentation on a Presentation
+    then: the Presentation's own plank fills the screen in the fullscreen overlay and the URL does not change
 ```
 
 ```mdl
-feat F-2: Document Slideshow (Reveal.js)
+feat F-2: Document Preview
 
   req F-2.1:
     when: DocumentArticle mounts with a Markdown.Document
-    then: RevealPlayer parses the document content and renders slides
-  req F-2.2: Horizontal slides are separated by `---`; vertical slides by `----`.
+    then: the Deck renders the document content as slides
+  req F-2.2: Slides are separated by horizontal `---`; vertical slides are not configured.
   req F-2.3:
     when: user presses Escape or the exit action is triggered
-    then: presenter navigates back to the originating document view
+    then: fullscreen exits for that document, leaving it and its companion as they were
 ```
 
 ```mdl
-feat F-3: Collection Slideshow
+feat F-3: Presentation Object
 
-  req F-3.1:
-    when: CollectionArticle mounts with a Collection
-    then: slide 0 is shown, corresponding to collection.objects[0]
-  req F-3.2:
-    when: user navigates to slide N via the Pager
-    then: the AppSurface.Slide surface renders collection.objects[N]
-  req F-3.3: PageNumber displays the current slide index and total count.
+  req F-3.1: A Presentation is created from the space's create-object menu, is filed into the space's Collections, and holds an ordered `sections` array.
+  req F-3.2: One section is exactly one slide; `---` inside a section is a horizontal rule, not a slide break.
+  req F-3.3: A section is an owned markdown Text (parented to the presentation) or a link to any object.
   req F-3.4:
-    when: user presses Escape or the exit action is triggered
-    then: presenter navigates back to the collection view
+    when: user adds a slide from the toolbar
+    then: a new owned Text section is appended
+  req F-3.5:
+    when: user links an object through SectionPicker
+    then: the object becomes a section and keeps its own parent
+  req F-3.6:
+    when: an owned slide is deleted with the space's Delete
+    then: it leaves the deck and the navtree, and the delete can be undone
+  req F-3.7:
+    when: a linked section is removed from the presentation
+    then: only the link is removed; the object remains
+  req F-3.8: Presentation deletion does not cascade to linked objects.
 ```
 
 ```mdl
-feat F-4: Plugin Settings
+feat F-4: Presentation Deck
 
-  req F-4.1: PresenterSettings panel is registered for the plugin settings surface.
-  req F-4.2:
-    when: user enables "Present collections (experimental)"
-    then: settings.presentCollections is set to true and Collection nodes gain Presenter companions
+  req F-4.1:
+    when: PresentationArticle mounts
+    then: the slide at the viewer's stored index is shown, clamped to the deck
+  req F-4.2: The pager shows the current slide and total count; an empty deck shows none.
+  req F-4.3: Keys bind to the deck's focus scope, never `window`.
+  req F-4.4:
+    when: user presses `f`
+    then: the deck toggles fullscreen in place
+  req F-4.5:
+    when: the deck is fullscreen and the pointer is idle
+    then: the overlay pager hides, and shows again on pointer movement
+  req F-4.6:
+    when: user presses Escape in fullscreen
+    then: the deck exits fullscreen
+  req F-4.7: The current slide index is per-user view state, kept across navigation and reloads, and never shared with collaborators.
+  req F-4.8: Only an attended deck takes focus on mount.
+  req F-4.9: A linked object with no slide surface renders as a title slide rather than failing.
+  req F-4.10: A section whose target was deleted is omitted from the deck; one whose target has not loaded shows a pending slide.
+  req F-4.11: Inline, a Presentation shows every slide as a fully revealed thumbnail in a vertically scrolling grid with no pager; the current slide is selected, and arrow keys or a click move it.
+  req F-4.12:
+    when: user drags a thumbnail before or after another
+    then: the section moves there, and the moved slide stays current
+  req F-4.13:
+    when: user double-clicks a thumbnail
+    then: the deck presents fullscreen from that slide
+```
+
+```mdl
+feat F-6: Markdown Slides
+
+  req F-6.1: A slide is written in a strict Slidev subset: per-slide frontmatter `layout`, `image`, `background`, `class`, `title` (and the DXOS keys of F-8.1 and F-8.5 and the `theme` headmatter of F-6.8); slots `::left::`, `::right::`, `::default::`, and for the DXOS layouts `three-cols` and `two-by-two` also `::middle::`, `::bottom-left::` and `::bottom-right::`; notes as the slide's last HTML comment.
+  req F-6.2: The layouts are default, cover, center, section, intro, end, fact, statement, quote, two-cols, two-cols-header, three-cols, two-by-two, image, image-left, image-right, full and none.
+  req F-6.3:
+    when: a slide names an unknown layout
+    then: it renders with default, no error is shown, and a validation issue is reported
+  req F-6.4:
+    when: a slide's frontmatter YAML is malformed
+    then: the body still renders, the frontmatter is ignored and a validation issue is reported
+  req F-6.5: Raw HTML other than `v-click`, `v-clicks`, `v-after`, `Surface` and `br` is escaped, never rendered or executed; URLs with unsafe schemes are not followed.
+  req F-6.6: A fenced code block renders highlighted; a `{2,4-5}` meta marks the lines that stay emphasised, and Slidev's `{lines:true}` option numbers the lines.
+  req F-6.7: In the preview companion `---` splits slides except inside a fenced code block, and a leading frontmatter block is slide metadata.
+  req F-6.8: A deck has one theme, `default`, `light`, `dark` or `serif`, named by the first slide's `theme:` headmatter; `default` follows the app's light/dark mode and `light`/`dark` force one, code highlighting included.
+  req F-6.9: A Presentation's `theme` setting names the theme and may override its accent, background and text colors, its text font (`mono`, `sans`, `rounded`, `serif`, `display`, `space-grotesk`, `mali`, `geist`, `orbitron`, `unbounded`, `opendyslexic`, `lxgw-wenkai`) and its code font (`jetbrains`, `fira`, `plex`, `system`); it wins over headmatter, and linked object slides are painted with it too.
+  req F-6.10:
+    when: a slide names an unknown theme, or an override is not a plain color or font list
+    then: the default theme or value applies and, for an unknown name, a validation issue is reported
+```
+
+```mdl
+feat F-7: Click Steps
+
+  req F-7.1: `<v-click>`, `<v-clicks>` (`depth`, `every`) and `<v-after>` reveal their content one click at a time; a hidden element keeps its layout.
+  req F-7.2:
+    when: user presses Space or right with steps remaining
+    then: the next step reveals, and only after the last step does the deck advance
+  req F-7.3:
+    when: user presses left with steps revealed
+    then: the last step hides; at step 0 the previous slide shows fully revealed
+  req F-7.4: Click steps reset on any slide change and are never persisted; only the slide index is view state.
+  req F-7.5: Space on a focused button or link activates it and does not advance.
+```
+
+```mdl
+feat F-8: Backgrounds and Embedded Surfaces
+
+  req F-8.1: Frontmatter `backgroundVideo` plays as a looping, muted, autoplaying background, with `backgroundOpacity` and `backgroundPosition`.
+  req F-8.2:
+    when: a slide contains `<Surface ref="echo:///<id>" role="slide|section|card" />` in any slot
+    then: the referenced object renders there through its slide surface, falling back to section, card and a title slide
+  req F-8.3:
+    when: the ref is malformed, never existed, or its target is deleted
+    then: a "Missing object" placeholder shows in its place, with no spinner left
+  req F-8.4: An image whose URL is an object URI (`![label](echo:///<id>)`) embeds that object as `<Surface ref>` with the `slide` role; alone in its paragraph it fills its slot, and the label is ignored.
+  req F-8.5: Frontmatter `bleed: left` or `bleed: right` takes the outer column of a `two-cols` or `three-cols` slide to the slide's edges on that side, top and bottom, with no padding, for an embedded object to fill.
+```
+
+```mdl
+feat F-9: Printing
+
+  req F-9.1:
+    when: the focused or fullscreen deck is printed
+    then: every slide of the deck prints, one per 16:9 page at full size, with every click step shown and the app chrome, overlay and other decks left out
+  req F-9.2: Print rules apply only while a deck is printing, so printing anything else in the app is unaffected.
+```
+
+```mdl
+feat F-10: Slide Editor
+
+  req F-10.1: The slide editor has a toolbar with markdown formatting, slide tools (layout, click step, column break, object, background, notes) and view controls (preview mode, previous/next slide, present from here).
+  req F-10.2: Picking a layout writes the slide's `layout:` frontmatter, keeping its other keys; each toolbar edit is one undo step.
+  req F-10.3: The preview shows below the editor in a resizable vertical split, or in the plank's companion; the mode and split position are kept per user.
+  req F-10.4:
+    when: the cursor is inside a `<v-click>` or `<v-clicks>` group
+    then: the preview reveals up to that group's step, and in a slotted layout the cursor's slot is outlined
+  req F-10.5:
+    when: user clicks an element in the preview
+    then: the editor's caret moves to the start of that element's source (no range is selected) and scrolls into view
+  req F-10.6: "Present from here" opens the deck fullscreen at this slide.
+```
+
+```mdl
+feat F-5: Navtree Folder
+
+  req F-5.1: A Presentation node lists its sections as children.
+  req F-5.2: An owned slide is labelled by its name, else its first markdown heading, else "Slide N".
+  req F-5.3:
+    when: user drags a child to a new position
+    then: `sections` is reordered to match
+  req F-5.4:
+    when: user clicks a slide child
+    then: the slide's own article opens (SlideEditorArticle for an owned slide)
+  req F-5.5: An owned slide offers no remove action, only the space's Delete; a linked section's remove action is labelled "Remove from presentation".
+  req F-5.6: The children are the deck's slides in deck order, so a deleted section leaves both.
+```
+
+```mdl
+feat F-11: Slides as Objects
+
+  req F-11.1: A Presentation's slides are `Slide` objects, each holding its content (an owned Text or a linked object) and the slide's own metadata (title, hidden, notes, image).
+  req F-11.2: A Presentation has an optional description.
+  req F-11.3: Opening a slide opens its `Slide`; the assistant companion beside it has the Slide, its content and its presentation as context, with the presenter skill enabled.
+  req F-11.4:
+    when: the assistant is asked for an image on the slide it is beside
+    then: it calls `GenerateSlideImage`, and the slide shows the generated image in its layout
+  req F-11.5: An image is held as a ref to a plugin-studio `MediaArtifact`, which the slide background resolves to its image.
+  req F-11.6: Presentations of version 0.1.0 migrate in place: each section becomes a `Slide`, and a markdown slide's `hide: true` becomes `hidden`.
+```
+
+```mdl
+feat F-12: Speaker Notes
+
+  req F-12.1: A slide's speaker notes are its `notes` text, else the markdown slide's trailing notes comment; they are read one line per bullet or paragraph, split again after each sentence.
+  req F-12.2:
+    when: the `notes` setting is `subtitles` and a Presentation is presented
+    then: the current slide's notes show over the bottom of the slide
+  req F-12.3:
+    when: the `notes` setting is `window` and a Presentation is presented
+    then: a second window shows the current slide's notes, the time on the slide against its desired length, and the next slide's notes; it closes when the presentation ends
+  req F-12.4: Arrow keys and Space pressed in the notes window move the deck as they do in the deck.
+  req F-12.5: When the browser refuses the notes window, the deck shows a button that opens it.
+  req F-12.6: A slide has an optional desired length (`duration`, seconds), edited with its other properties.
+  req F-12.7: Other plugins add toolbar items and overlays through `PresenterSurface.Toolbar` and `PresenterSurface.Overlay`, and follow a presentation through `PresentationEventHandler`.
 ```
 
 ## Acceptance
@@ -188,17 +570,17 @@ scenario T-1: Document presenter opens in fullscreen
   given: a Markdown document exists in the workspace
   when: user invokes TogglePresentation (keyboard or action menu)
   then:
-    - Composer switches to solo-fullscreen layout
-    - DocumentArticle is shown with the document content
-    - RevealPlayer is visible with at least one slide
+    - the presenter companion fills the screen in the deck's fullscreen overlay
+    - the Deck is visible with at least one slide
+    - the URL is unchanged
 ```
 
 ```mdl
-scenario T-2: Slide navigation via Reveal.js
+scenario T-2: Document slides split on separators
   given: a Markdown document with three `---`-separated sections
   when: DocumentArticle renders the document
   then:
-    - three horizontal slides are produced
+    - three slides are produced
     - arrow-key navigation advances and retreats between slides
 ```
 
@@ -210,29 +592,28 @@ scenario T-3: Exit returns to document view
 ```
 
 ```mdl
-scenario T-4: Collection slideshow renders per-item surfaces
-  given: a Collection with two Markdown documents and settings.presentCollections = true
-  when: CollectionArticle mounts
+scenario T-4: Presentation renders one slide per section
+  given: a Presentation with one owned slide and one linked Markdown document
+  when: PresentationArticle mounts
   then:
-    - slide 0 shows SlideArticle for collection.objects[0]
-    - Pager shows count = 2
+    - the grid shows two thumbnails, the owned slide first
+    - the first thumbnail is selected
 ```
 
 ```mdl
-scenario T-5: Collection slide advance
-  given: CollectionArticle at slide 0 with a three-item collection
-  when: user clicks the next-slide control in Pager
+scenario T-5: Slide advance
+  given: PresentationArticle at slide 0 with a three-section Presentation
+  when: user presses the right arrow
   then:
     - slide index advances to 1
-    - AppSurface.Slide renders collection.objects[1]
-    - PageNumber shows "2 / 3"
+    - the second thumbnail is selected
 ```
 
 ```mdl
-scenario T-6: Collections hidden when setting disabled
-  given: settings.presentCollections is false (default)
-  when: app graph is built for a Collection node
-  then: no Presenter companion node is created for the collection
+scenario T-6: Slide index survives reload
+  given: PresentationArticle at slide 1
+  when: the app reloads and the Presentation is opened again
+  then: slide 1 is shown
 ```
 
 ```mdl
@@ -243,6 +624,31 @@ scenario T-7: Keyboard shortcut registered
     - keyBinding shows Shift+Cmd+P on macOS
 ```
 
+```mdl
+scenario T-8: Presentation presents fullscreen on its own plank
+  given: a Presentation is open
+  when: user presses `f`
+  then:
+    - the deck fills the screen with the overlay pager
+    - Escape returns the deck to its plank
+```
+
+```mdl
+scenario T-9: Reorder in the navtree
+  given: a Presentation with three slides
+  when: user drags the third slide to the top
+  then: the deck order and the pager follow the navtree order
+```
+
+```mdl
+scenario T-10: Removing a linked section keeps the object
+  given: a Presentation with a linked Markdown document
+  when: user removes the section
+  then:
+    - the section leaves the Presentation
+    - the document still exists
+```
+
 ---
 
 ## QA
@@ -251,10 +657,40 @@ Executable tests. Each step carries a human instruction (`do`) and, where the st
 invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
+test QA-4: Slidev subset and click steps
+  desc: Preview a document that uses layouts, click steps, a video background and an embedded surface, then step through it.
+  actors: human
+  covers: [F-6.1, F-6.2, F-6.3, F-7.1, F-7.2, F-7.3, F-7.4, F-8.1, F-8.2, F-8.3, F-9.1]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-markdown, plugin-presenter enabled
+  steps:
+    - name: Write the slides
+      do: Create a document with a `two-cols` slide containing `::right::` and `<Surface ref="echo:///<id of another document>" />`, followed by a slide with `<v-clicks>` over a three-item list, and a slide with an unknown `layout`.
+      expect: the Presenter companion shows the two-cols slide with the other document embedded on the right
+    - name: Step clicks
+      do: Open the list slide and press right three times, then once more.
+      expect: each press reveals one item, the fourth moves to the next slide, and left from there lands on the list slide fully revealed
+    - name: Unknown layout
+      do: Go to the slide with the unknown layout.
+      expect: it renders as a default slide without an error
+    - name: Missing surface
+      do: Change the embedded ref to `echo:///not-an-id`.
+      expect: a "Missing object" placeholder shows, with no spinner
+    - name: Print preview
+      do: Click the deck, then open the browser's print preview.
+      expect: one landscape page per slide of the deck, every list item visible and no toolbar or status bar
+      note: The print container mounts at `beforeprint`, so content that loads asynchronously (Prism grammars, embedded surfaces, images) can be missing or blank in the printout; a print/export operation that awaits the container is a follow-up.
+
+```
+
+```mdl
 test QA-1: Preview a document in the companion, then present it
   desc: The core presenter round-trip — create a document with slide separators, preview it in the presenter companion, present it fullscreen, then exit.
   actors: both
-  covers: [F-1.1, F-1.3, F-2.1, F-2.2, F-2.3, T-1, T-3]
+  covers: [F-1.1, F-1.2, F-2.1, F-2.2, F-2.3, T-1, T-3]
   status: unverified
   automated:
     - composer-e2e:presenter.spec.ts#Presenter › preview a document in the companion, then present it
@@ -295,7 +731,9 @@ test QA-1: Preview a document in the companion, then present it
       do: Right-click "QA Slides" in the navtree and choose Delete.
       invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
       expect: the row leaves the navtree and its plank closes
+```
 
+```mdl
 test QA-2: Showcase clip
   desc: |
     The 10s showcase clip: Present a document as slides and page through them. Recorded light at 60 fps with no ident, captions or
@@ -313,6 +751,731 @@ test QA-2: Showcase clip
     - name: Page through
       do: Press the right arrow three times.
       expect: each slide shows in turn
+```
+
+```mdl
+test QA-3: Build and present a Presentation
+  desc: Create a Presentation, add a slide, link a markdown document, reorder in the navtree, present it fullscreen, step, exit and reload.
+  actors: human
+  covers: [F-3.1, F-3.2, F-3.4, F-3.5, F-3.6, F-3.7, F-4.1, F-4.4, F-4.5, F-4.6, F-4.7, F-4.8, F-4.9, F-5.1, F-5.2, F-5.3, F-5.5, T-4, T-5, T-6, T-8, T-9, T-10]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-markdown, plugin-presenter enabled
+  steps:
+    - name: Create a Presentation
+      do: In the space's create-object menu choose Presentation and name it "QA Deck".
+      expect: "QA Deck" appears in the navtree as a folder with no children
+    - name: Add a slide
+      do: Open "QA Deck" and click the add-slide button.
+      expect: a child "New slide" appears and the pager shows "1 / 1"
+    - name: Link a document
+      do: Use the link-object picker to link an existing markdown document.
+      expect: the document appears as a second child and the pager shows "1 / 2"
+    - name: Reorder
+      do: Drag the second child above the first in the navtree.
+      expect: the order of the children and of the deck follows the drag
+    - name: Present
+      do: Press `f`, then step with the arrow keys.
+      expect: the deck fills the screen, the overlay pager shows and hides with pointer movement, and each arrow press changes the slide
+    - name: Exit and reload
+      do: Press Escape, then reload the app and reopen "QA Deck".
+      expect: the deck is inline again and shows the slide that was current before the reload
+    - name: Remove the linked document
+      do: In the navtree, open the linked document's menu under "QA Deck" and choose "Remove from presentation".
+      expect: the child leaves the folder, the pager shows "1 / 1", and the document is still in Collections
+    - name: Delete the owned slide
+      do: Open the owned slide's menu under "QA Deck"; it has no "Remove from presentation". Choose Delete.
+      expect: the child leaves the folder and the pager shows "0 / 0"; undo brings the slide back
+```
+
+## Changelog
+
+```mdl
+decision D-1: A dedicated `Presentation` object owns an ordered list of sections, each an owned markdown `Text` or a link to any object, and is shown in the navtree as a folder of slides.
+  date: 2026-10-22
+  by: user:richburdon
+  affects: [Presentation, F-3, F-5]
+  source: docs/DESIGN.md Q1
+```
+
+```mdl
+decision D-2: One section is exactly one slide.
+  date: 2026-10-22
+  by: user:richburdon
+  affects: [F-3.2]
+  source: docs/DESIGN.md Q2
+```
+
+```mdl
+decision D-3: The markdown document companion stays as a quick preview split on `---`.
+  date: 2026-10-22
+  by: user:richburdon
+  affects: [DocumentArticle, F-2]
+  source: docs/DESIGN.md Q2b
+```
+
+```mdl
+decision D-4: An object without a slide surface still renders through a fallback chain ending in a title slide; the picker toggle filters to objects with a dedicated slide surface.
+  date: 2026-10-22
+  by: user:richburdon
+  affects: [SlideRenderer, F-4.9]
+  source: docs/DESIGN.md Q3
+```
+
+```mdl
+decision D-5: The current slide index is per-user, per-deck view state in `react-ui-attention` with the local backend.
+  date: 2026-10-22
+  by: user:richburdon
+  affects: [SlideViewState, F-4.7]
+  source: docs/DESIGN.md Q4
+```
+
+```mdl
+decision D-6: The pager is a separate `Pager` primitive; `Carousel` shares its styles.
+  date: 2026-10-22
+  by: user:richburdon
+  affects: [Deck]
+  source: docs/DESIGN.md Q5
+```
+
+```mdl
+decision D-7: The assistant skill is annotated on `Presentation` only and `agentCanEnable`.
+  date: 2026-10-22
+  by: user:richburdon
+  affects: [Presentation]
+  source: docs/DESIGN.md Q6
+```
+
+```mdl
+decision D-8: A presenter view is deferred to a later phase; speaker notes are parsed now.
+  date: 2026-10-22
+  by: user:richburdon
+  affects: [Deck]
+  source: docs/DESIGN.md Q7
+```
+
+```mdl
+decision D-9: Slide syntax is a strict Slidev-compatible subset rendered by the plugin's own pipeline.
+  date: 2026-10-22
+  by: user:richburdon
+  affects: [F-2]
+  source: docs/DESIGN.md Q8
+```
+
+```mdl
+decision D-10: Collection decks, the `presentCollections` setting and the Settings module are removed; a Presentation replaces them. Fills in [D-1].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Presentation, F-1, F-3]
+  why: A first-class deck object makes the experimental collection mode redundant.
+  rejected: Keeping collection decks behind the setting.
+```
+
+```mdl
+decision D-11: Owned slides are parented to the presentation explicitly when created, not by a schema annotation. Fills in [D-1].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Presentation, F-3.8]
+  why: A parent annotation would also adopt linked parentless objects, so deleting a Presentation could delete them.
+  rejected: `Annotation.SetParent` on `sections`.
+```
+
+```mdl
+decision D-12: A Presentation presents fullscreen on its own plank. Fills in [D-4].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [TogglePresentation, F-1.4, T-8]
+  why: A Presentation has no presenter companion; its article is the deck.
+  rejected: Giving Presentation a presenter companion.
+```
+
+```mdl
+decision D-13: Fullscreen state is read per object, so a fullscreen change for one deck does not remount or refocus another. Fills in [D-12].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [PresentationArticle, DocumentArticle]
+  why: The global layout mode changes for every deck when any one toggles.
+  rejected: Reading the global layout mode.
+```
+
+```mdl
+decision D-14: Clicking a slide child in the navtree opens that slide's own article, the markdown editor for an owned slide. Fills in [D-1].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-5.4, SlideEditorArticle]
+  why: Slides need an editing surface, and the navtree is where a slide is selected.
+  rejected: Opening the presentation at that slide.
+```
+
+```mdl
+decision D-15: An owned slide's navtree label is its name, else its first heading, else "Slide N". Fills in [D-1].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-5.2]
+  why: The Text type carries a name field that a person sets deliberately, so it takes precedence.
+```
+
+```mdl
+decision D-16: Removing an owned slide from the navtree is labelled "Remove from presentation". Fills in [D-1].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-5.5]
+  why: The generic label "Remove from collection" misdescribes a delete of the owned Text.
+```
+
+```mdl
+decision D-17: An owned slide has no navtree remove action; the space's undoable Delete is the only way to delete it, and a linked section keeps "Remove from presentation", which only unlinks. Fills in [D-1].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  supersedes: D-16
+  affects: [Presentation, F-3.6, F-5.5]
+  why: A container remove that deletes cannot be undone, and an owned slide would show both remove and Delete.
+  rejected: Routing an owned remove through the space delete operation under a "Delete slide" label.
+```
+
+```mdl
+decision D-18: A section whose target was deleted is omitted from the deck and from the navtree folder; a target that has not loaded stays a pending slide. Fills in [D-1].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [SlideSource, F-4.10, F-5.6]
+  why: A deleted target never loads, so a pending placeholder would wait forever, and the pager and navtree must agree.
+  rejected: A placeholder slide for a deleted target.
+```
+
+```mdl
+decision D-19: A Presentation is tagged as a collection item, so it is filed into the space's Collections when created. Fills in [D-1].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Presentation, F-3.1]
+  why: Without the tag a new Presentation is filed nowhere and cannot be found in the navtree.
+```
+
+```mdl
+decision D-20: The Phase 1 fixes are applied in one wave after the running-app verification. Fills in [D-1].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Presentation]
+  why: Bugs found in the running app then land with the review fixes in one set of commits.
+```
+
+```mdl
+decision D-21: Inline, the Deck pager sits centered in a status bar below the slide, not in the top toolbar. Fills in [D-1].
+  date: 2026-10-22
+  by: user:richburdon
+  affects: [Deck]
+  why: The toolbar keeps the editing actions; navigation sits under the slide it controls.
+```
+
+```mdl
+decision D-22: Reveal.js and RevealPlayer are deleted; the document preview renders on the shared Deck with no setting. Fills in [D-3].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [DocumentArticle, F-2]
+  why: One renderer for decks and previews; the Settings module is gone, so there is nothing to put reveal behind.
+```
+
+```mdl
+decision D-23: Slides are written in a strict Slidev-compatible subset (layouts, slots, click steps, notes, static line highlights); anything outside it is not rendered. Fills in [D-3].
+  date: 2026-10-22
+  by: user:richburdon
+  affects: [MarkdownSlide, SlideLayouts, F-6, F-7]
+  source: docs/DESIGN.md Q8
+```
+
+```mdl
+decision D-24: Frontmatter gains `backgroundVideo` (looping, muted, autoplaying), `backgroundOpacity` and `backgroundPosition` as DXOS extensions to the Slidev subset. Fills in [D-23].
+  date: 2026-10-22
+  by: user:richburdon
+  affects: [SlideBackground, F-8.1]
+  source: docs/DESIGN.md section 6
+```
+
+```mdl
+decision D-25: A slide embeds an object with `<Surface ref="echo:///<id>" role="slide|section|card" />`, resolved through the same fallback chain as a linked section. Fills in [D-4].
+  date: 2026-10-22
+  by: user:richburdon
+  affects: [EmbeddedSurface, F-8.2, F-8.3]
+  source: docs/DESIGN.md section 6
+```
+
+```mdl
+decision D-26: No `@slidev/parser`; the slide splitter and frontmatter reader are owned in `src/markdown`. Fills in [D-23].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [MarkdownSlide, F-6.7]
+  why: The parser is not in the repo and targets Node, while the splitter is about sixty lines and must run in the browser.
+  rejected: Adding `@slidev/parser` as a dependency.
+```
+
+```mdl
+decision D-27: Going back with left lands on the previous slide fully revealed, as Slidev does. Fills in [D-23].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Deck, F-7.3]
+  why: Returning to a slide to review it should show everything that was on it.
+  rejected: Restarting the previous slide at step 0.
+```
+
+```mdl
+decision D-28: Click steps are ephemeral and reset on slide change; only the slide index is view state. Fills in [D-5].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Deck, F-7.4]
+  why: A step count persisted across reloads would reopen a slide half-revealed with no cue why.
+```
+
+```mdl
+decision D-29: Code blocks render with `SyntaxHighlighter` from `@dxos/react-ui-syntax-highlighter`, whose styles are inline, and the global highlight.js stylesheets are dropped. Fills in [D-22].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [MarkdownSlide, F-6.6]
+  why: One highlighter across Composer, with no global CSS that leaks into the host app.
+  rejected: Keeping highlight.js with its stylesheets.
+```
+
+```mdl
+decision D-30: Embedded surfaces are rendered with the database of the slide's owner: an owned slide uses its Text's database and a preview slide the document's. Fills in [D-25].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [SlideRenderer, EmbeddedSurface, F-8.2]
+  why: A ref to an object in the same space has to resolve without the slide naming the space.
+  rejected: Threading the database through Deck for every slide source.
+```
+
+```mdl
+decision D-31: A `---` / blank line / `key: value` / `---` block at the head of a slide reads as frontmatter, so a formatter that inserts a blank line does not lose it. Fills in [D-23].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [MarkdownSlide, F-6.7]
+  why: A formatter-touched document would otherwise silently drop its layout and background.
+  rejected: Excluding the decks from the formatter, which protects only those files.
+```
+
+```mdl
+decision D-32: Printing is scoped to the focused or fullscreen deck: it sets `data-printing-deck` on `<html>` between `beforeprint` and `afterprint`, renders every slide into a print-only container, and every print rule is keyed on that attribute. Fills in [D-23].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Deck, F-9.1, F-9.2]
+  why: Unscoped print rules blank every other print in the app and overlap when two decks are open, and printing only the current slide drops the rest of the deck.
+  rejected: A global `@media print` stylesheet that hides everything outside the deck.
+```
+
+```mdl
+decision D-33: Print does not wait for asynchronous slide content; the limitation is recorded in QA-4 and a print/export operation that pre-mounts and awaits the print container is a follow-up. Fills in [D-32].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Deck, F-9.1]
+  why: The browser takes the print layout straight after `beforeprint`, which leaves no time for code grammars, embedded surfaces or images to load.
+  rejected: Delaying `beforeprint`, which the browser does not allow.
+```
+
+```mdl
+decision D-34: The theme scrim applies only in the `image` layout, over its full-bleed picture. Fills in [D-24].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [SlideBackground]
+  why: Other layouts place text beside or away from the picture, and a scrim there would dim a `background` the author chose.
+  rejected: A scrim over every image background.
+```
+
+```mdl
+decision D-35: The frontmatter `title` is parsed and reserved; it is not rendered on the slide. Fills in [D-23].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [MarkdownSlide, F-6.1]
+  why: Slidev uses it for the browser title and slide index, which have no presenter surface yet, and keeping it parsed avoids an unknown-key issue on converted decks.
+```
+
+```mdl
+decision D-36: An embedded `<Surface ref>` whose target is a `Text` renders the text as a slide, not through the surface chain. Fills in [D-25].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [EmbeddedSurface, F-8.2]
+  why: A `Text`'s section surface is a markdown editor, so embedding another deck's owned slide showed a tiny editor instead of the slide.
+  rejected: Registering a slide surface for every `Text`, which would also change linked sections elsewhere.
+```
+
+```mdl
+decision D-37: A link whose URL is removed as unsafe renders without `href` or a new-tab target. Fills in [D-23].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [MarkdownSlide]
+  why: An empty `href` with `target="_blank"` opens the app itself in a new tab.
+```
+
+```mdl
+decision D-38: An embed whose target already encloses it (the slide's subject or an embedding ancestor), or one nested more than 3 levels deep, renders an "Embedded in itself" placeholder. Fills in [D-25].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [EmbeddedSurface, F-8.2]
+  why: An author-controlled document must not hang the app; a document that embeds itself, or two that embed each other, otherwise render without limit.
+  rejected: Dropping `renderSurface` below the first embed, which would leave every nested surface a placeholder.
+```
+
+```mdl
+decision D-39: Slides are themed through `--slide-*` CSS variables, with built-in `default`, `light`, `dark` and `serif` themes chosen by `theme:` headmatter or the Presentation's `theme` setting, which also carries color and font overrides. Fills in [D-23].
+  date: 2026-10-22
+  by: user:richburdon
+  affects: [Presentation, MarkdownSlide, Deck, F-6.8, F-6.9]
+  source: chat 2026-10-22 (themes Q1 option 2, Q2 option 1)
+```
+
+```mdl
+decision D-40: Only the first slide's `theme:` is read, as Slidev headmatter, and the Presentation's `theme` name wins over it. Fills in [D-39].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Deck, F-6.8, F-6.9]
+  why: A per-slide theme would break the strict Slidev subset, and the object setting is the one a user edits in a form.
+```
+
+```mdl
+decision D-41: Theme overrides accept only plain colors (hex, names, `rgb`/`hsl`/`oklch`-style functions of numbers) and font lists, checked in the schema and again at render. Fills in [D-39].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [SlideTheme, F-6.10]
+  why: Override values reach inline styles from synced, author-controlled data; `url(...)` would load remote resources and a `;` could inject declarations.
+```
+
+```mdl
+decision D-42: `light` and `dark` force their mode by setting `color-scheme` on the slide (the app tokens use `light-dark()`), and the code block passes the mode to `SyntaxHighlighter`'s new `themeMode` prop. Fills in [D-39].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [MarkdownSlide, F-6.8]
+  why: The highlighter picks its palette in script from the app's mode, which CSS cannot override.
+  rejected: Toggling the `.dark` class on the slide, which cannot switch a dark app's slide to light.
+```
+
+```mdl
+decision D-43: An image whose URL is an object URI (`![label](echo:///<id>)`) embeds the object like `<Surface ref>` with the `slide` role; alone in its paragraph it fills its slot, and the label is ignored. Fills in [D-25].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [MarkdownSlide, F-8.2, F-8.4]
+  why: Main's reveal player gained this syntax (#14152) and plugin-debug's presenter sample uses it to show a timeline chart; deleting reveal must not drop it.
+```
+
+```mdl
+decision D-44: The slide editor previews the slide either below the editor in a vertical split or in the plank's companion; there is no picture-in-picture mode.
+  date: 2026-10-23
+  by: user:richburdon
+  affects: [SlideEditorArticle, F-10.3]
+  source: chat 2026-10-23 (slide editor Q1 option 2, renderer at the bottom)
+```
+
+```mdl
+decision D-45: The slide editor toolbar carries formatting, slide tools (layout, click step, column break, object, background, notes) and view controls.
+  date: 2026-10-23
+  by: user:richburdon
+  affects: [SlideEditorArticle, F-10.1, F-10.2]
+  source: chat 2026-10-23 (slide editor Q2 option 1)
+```
+
+```mdl
+decision D-46: The new slide editor serves Presentation slides only; markdown documents keep plugin-markdown's editor and the companion deck preview.
+  date: 2026-10-23
+  by: user:richburdon
+  affects: [SlideEditorArticle, DocumentArticle]
+  source: chat 2026-10-23 (slide editor Q3 option 1)
+```
+
+```mdl
+decision D-47: Cursor and preview sync both ways: the cursor's click group sets the preview step and outlines its slot, and clicking the preview selects the element's source through `data-source` ranges kept from mdast positions.
+  date: 2026-10-23
+  by: user:richburdon
+  affects: [SlideEditorArticle, MarkdownSlide, F-10.4, F-10.5]
+  source: chat 2026-10-23 (slide editor Q4 option 2)
+```
+
+```mdl
+decision D-48: Clicking the preview moves the editor's caret to the start of the element's source rather than selecting the source. Fills in [D-47].
+  date: 2026-10-23
+  by: user:richburdon
+  affects: [SlideEditorArticle, F-10.5]
+  why: A selected range is replaced by the next keystroke, which a click meant only to navigate should not risk.
+  source: chat 2026-10-23
+```
+
+```mdl
+decision D-49: Each slide-toolbar action is one editor change, so one undo reverts it. Fills in [D-45].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [SlideEditorArticle, F-10.2]
+  why: A toolbar action is one intent; an author undoing a layout pick or an inserted click group expects it gone in one step.
+  rejected: Writing the slide's `content` through ECHO directly, which bypasses the editor's history and moves the cursor.
+```
+
+```mdl
+decision D-50: Frontmatter edits go through the YAML document API, keeping the block's other keys, their order and its comments; malformed or non-mapping frontmatter is left as written. Fills in [D-45].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [SlideEditorArticle, F-10.2]
+  why: The frontmatter is hand-written text; a picker must not reformat what the author wrote around the one key it sets.
+  rejected: Re-serialising the parsed frontmatter object, which drops comments and reorders keys.
+```
+
+```mdl
+decision D-51: A Presentation's article shows its slides as a grid of thumbnails without a pager; dragging a thumbnail reorders the sections and double-clicking presents from it. Supersedes the inline single-slide deck of [F-4.1].
+  date: 2026-10-23
+  by: user:richburdon
+  affects: [PresentationArticle, Deck, F-4.11, F-4.12, F-4.13]
+  why: The article is where a deck is arranged; one slide at a time hides the order, and the slide editor already edits a single slide.
+  rejected: A toggle between grid and single slide inline; presenting already shows one slide at a time.
+```
+
+```mdl
+decision D-52: A theme's fonts are picked by name, a text font and a code font, from a fixed set; web fonts among them (Inter, Nunito, Source Serif 4, Fira Code, IBM Plex Mono) are imported only when a deck uses them. Supersedes the free-text font list of [F-6.9].
+  date: 2026-10-23
+  by: user:richburdon
+  affects: [SlideTheme, F-6.9]
+  why: A picker is easier than writing a CSS font list, and a deck pays only for the fonts it picks.
+  rejected: A free-text font-family list, which names fonts the app may not have; system font lists only, which look different on every machine.
+```
+
+```mdl
+decision D-53: Two layouts beyond Slidev's set: `three-cols` (default content, then `::middle::` and `::right::`) and `grid`, 2 × 2 in reading order (default content, `::right::`, `::bottom-left::`, `::bottom-right::`); both, like `two-cols`, take `::left::` content into their first region, and "Start the next column" inserts the marker after the one holding the caret.
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-6.1, MarkdownSlide, SlideToolbar]
+  why: The user asked for a three-column and a 2 × 2 layout; reusing `::right::` keeps a two-cols slide valid when its layout is switched to either.
+  rejected: Positional names such as `::top-left::` for the grid, which would make a two-cols slide lose its right column when switched to `grid`.
+```
+
+```mdl
+decision D-54: A column bleeds to the slide's edges by a per-slide frontmatter key, `bleed: left | right`, rather than by an attribute on an embed; with it the layout pads its columns instead of its frame.
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-8.5, MarkdownSlide]
+  why: The user asked to optionally drop the padding around an embedded object; a column is the unit the padding belongs to, and frontmatter is where a slide's layout is already set.
+  rejected: `<Surface … bleed />`, which would need negative margins matched to each layout's padding.
+```
+
+```mdl
+decision D-55: Slides offer a three-column layout and a 2 × 2 layout. [D-53] records how they were filled in.
+  date: 2026-10-23
+  by: user:richburdon
+  affects: [F-6.1, F-6.2]
+  why: Content often splits three ways or into a grid of four, which two columns cannot hold.
+```
+
+```mdl
+decision D-56: A slide can drop the padding around an embedded object, so the object reaches the slide's edges. [D-54] records how it was filled in.
+  date: 2026-10-23
+  by: user:richburdon
+  affects: [F-8.5]
+  why: An embedded object (a drawing, a map, an image) reads better edge to edge than inset in a padded column.
+```
+
+```mdl
+decision D-57: The 2 × 2 layout is named `two-by-two`, not `grid`. Supersedes the name in [D-53].
+  date: 2026-10-23
+  by: user:richburdon
+  affects: [F-6.1, F-6.2, SlideLayouts]
+  why: It matches the name dxos/dxos#14188 gives the same layout, and `grid` already names the presentation's thumbnail view.
+```
+
+```mdl
+decision D-58: The deck and the slide are Radix-style composites, `Deck.*` and `Slide.*`, with a headless `Root`; they stay internal to the plugin until they move to a `react-ui-presenter` package.
+  date: 2026-10-24
+  by: user:richburdon
+  affects: [Deck, Slide]
+  why: Containers compose the parts they need (a grid inline, one slide fullscreen, a pager or not) instead of switching modes through props.
+```
+
+```mdl
+decision D-59: `Deck.Root` holds the slides, index, click step, fullscreen and the key handler; `Deck.Content` is the focus scope (keys, print); the parent chooses `Deck.Viewport` or `Deck.Grid`, and the fullscreen pager lives inside `Deck.Viewport`. `Slide.Frame` needs no `Slide.Root`, so a bare markdown slide can be framed directly. Fills in [D-58].
+  date: 2026-10-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Deck, Slide]
+  why: Fullscreen changes which parts render, so the parent that composes them decides; keeping the pager inside the viewport keeps it over the slide it pages.
+  rejected: A `Deck.Overlay` part, which every fullscreen composition would have to remember to include.
+```
+
+```mdl
+decision D-60: The text fonts add Space Grotesk, Mali, Geist, Orbitron, Unbounded and OpenDyslexic, each loaded on demand like the others of [D-52].
+  date: 2026-10-24
+  by: user:richburdon
+  affects: [SlideTheme, F-6.9]
+  why: A wider choice of faces for decks, including OpenDyslexic for readability.
+```
+
+```mdl
+decision D-61: LXGW WenKai joins the text fonts, loaded on demand and kept out of the web app's install-time cache, despite shipping as one 8.4 MB file per weight.
+  date: 2026-10-24
+  by: user:richburdon
+  affects: [SlideTheme, F-6.9]
+  why: It covers Chinese text, which none of the other fonts do; on the web its size is paid only by decks that use it.
+```
+
+```mdl
+decision D-62: Add two layouts beyond Slidev's built-ins: three-cols (slots `default`, `::middle::`, `::right::`) and two-by-two (`default`, `::right::`, `::bottom-left::`, `::bottom-right::`); "Start next column" inserts the marker of the column after the cursor's. Recorded on dxos/dxos#14188 as D-53; renumbered when merged, and [D-55] records the same request.
+  date: 2026-10-24
+  by: user:richburdon
+  affects: [F-6.2]
+  why: Comparison and quadrant slides need more than two columns.
+```
+
+```mdl
+decision D-63: In the presentation grid, double-clicking a slide or adding one opens it in the slide editor; the toolbar's add button is a split button whose caret sets the layout later adds use; a ghost tile after the last slide adds one; a tile's context menu hides or shows a slide and deletes it; the toolbar presents with the editor's present icon and has no fullscreen button; a slide can be hidden from the presentation.
+  date: 2026-10-24
+  by: user:richburdon
+  affects: [PresentationArticle, Deck, SlideGrid]
+  why: The grid is where a deck is assembled, so opening, adding, hiding and removing slides belong there; presenting is the one way to go fullscreen.
+```
+
+```mdl
+decision D-64: A slide is hidden by Slidev's own frontmatter key, `hide: true`; presenting skips it while the grid still shows it, dimmed with an eye-slash, and the presented index maps back to the slide's position in the whole deck. Deleting an owned slide invokes the space's undoable `RemoveObjects`, as the navtree does; a linked object is only unlinked. Fills in [D-63].
+  date: 2026-10-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-6.1, PresentationArticle, SlideGrid]
+  why: Keeping to Slidev's key keeps a deck portable; the stored index stays the grid's, so hiding a slide never moves the viewer's place.
+  rejected: A `hidden` flag on the section ref, which a linked object could carry but plain markdown could not.
+```
+
+```mdl
+decision D-65: A grid tile's right-click menu is the app's context menu for the slide's graph node, not a menu of the grid's own: it lists the node's navtree actions (delete, remove from presentation), and hiding or showing a slide is a graph action on owned slides. Supersedes the grid-local menu of [D-63].
+  date: 2026-10-24
+  by: user:richburdon
+  affects: [PresentationArticle, SlideGrid]
+  why: One context menu for the whole app, whose items plugins contribute by context, rather than a menu per component.
+```
+
+```mdl
+decision D-66: A Presentation holds `Slide` objects rather than bare section refs; a Slide refs its content (an owned Text or a linked object) and carries the slide's own metadata. A Presentation gains a description, and `sections` is renamed `slides`.
+  date: 2026-10-24
+  by: user:richburdon
+  affects: [Presentation, Slide, F-11.1, F-11.2]
+  why: A section was always exactly one slide, and metadata that applies to any slide (hidden, notes, an image) had nowhere to live for a linked object.
+```
+
+```mdl
+decision D-67: Slide metadata that applies to any content (`hidden`, `notes`, `image`, `title`) lives on the `Slide`; `layout` and `background` stay in a markdown slide's frontmatter, and an export writes the fields back as frontmatter.
+  date: 2026-10-24
+  by: user:richburdon
+  affects: [Slide, F-11.1]
+  why: A linked object has no frontmatter, so frontmatter alone could not hide or annotate it.
+  rejected: Keeping everything in frontmatter, which is portable Slidev but serves owned markdown slides only.
+```
+
+```mdl
+decision D-68: A slide's image is a ref to a plugin-studio `MediaArtifact`, which the slide background resolves; it is generated through plugin-studio's `StudioOperation.Generate`, not a provider called directly.
+  date: 2026-10-24
+  by: user:richburdon
+  affects: [Slide, GenerateSlideImage, F-11.4, F-11.5]
+  why: The artifact keeps the image's provenance and variants, and studio owns provider choice.
+  rejected: Writing the image URL into frontmatter `image:`, which renders today but loses the link to the artifact.
+```
+
+```mdl
+decision D-69: The prototype is a story of a slide beside the assistant companion, with a mocked AI service whose scripted reply calls the real `GenerateSlideImage` tool, which writes the image onto the slide. Fills in [D-66] and [D-68].
+  date: 2026-10-24
+  by: user:richburdon
+  affects: [F-11.3, F-11.4]
+  why: It shows the slide-scoped assistant end to end without a network, with only the model's reply scripted.
+```
+
+```mdl
+decision D-70: plugin-presenter displays speaker notes while presenting; a plugin setting chooses a separate window or subtitles over the presented slide. Each slide has a field for its desired length. Supersedes the deferral of [D-8].
+  date: 2026-10-26
+  by: user:richburdon
+  supersedes: D-8
+  affects: [PresenterSettings, Slide, F-12]
+```
+
+```mdl
+decision D-71: The plugin has a Settings module again, holding only the `notes` setting. Fills in [D-70].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  supersedes: D-10
+  affects: [PresenterSettings]
+  why: [D-70] asks for a plugin setting; [D-10] removed the module along with the collection-deck setting it held.
+```
+
+```mdl
+decision D-72: The notes window is a React portal into `window.open`, carrying the app's stylesheets and theme, with the deck's keys forwarded from it; subtitles are fixed white on black like video captions. Fills in [D-70].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [PresentedOverlay, SpeakerNotes, F-12.3, F-12.4]
+  why: A portal keeps one React tree, so the notes follow the deck's state with no messaging between windows.
+  rejected: A separate route opened in the window, which would need its own client and a channel to the deck.
+```
+
+```mdl
+decision D-73: Presenter offers `PresenterSurface.Toolbar`, `PresenterSurface.Overlay` and the `PresentationEventHandler` capability, so plugin-recorder can add a Record item, draw its indicator over the deck and follow the slides without presenter depending on it. Fills in [D-70].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-12.7, PresentedOverlay]
+  why: The recorder needs the deck's slide changes and a place in its toolbar; the dependency must point from recorder to presenter.
+```
+
+```mdl
+decision D-74: `PresentationEventHandler.onStop` fires a task after the presented deck unmounts, and a remount for the same presentation cancels it. Fills in [D-73].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [PresentedOverlay, F-12.7]
+  why: React's StrictMode remounts at once in development, which otherwise stopped a recording the moment it started.
+```
+
+```mdl
+decision D-75: A Slide has an array of takes (plugin-studio Variants, owned by the slide) and a main take, so each slide keeps its own voice-over recordings.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [Slide]
+```
+
+```mdl
+decision D-76: A plugin-projects showcase is a Presentation: its write-up is the first slide and each artifact (an image or video, a diagram, a pull request) a linked slide after it, linked to the features it shows by `Demonstrates`.
+  date: 2026-10-28
+  by: user:dmaretskyi
+  affects: [Presentation, CreateShowcase]
+```
+
+```mdl
+decision D-77: Presenter implements plugin-projects' `CreateShowcase` operation and migrates `Showcase` 0.1.0 into a Presentation in place, so the deck keeps the showcase's id and its `Demonstrates` edges. Fills in [D-76].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [Presentation, CreateShowcase]
+  why: Presenter already depends on plugin-projects through plugin-studio, so only this side can name both the deck and the relation.
 ```
 
 ---

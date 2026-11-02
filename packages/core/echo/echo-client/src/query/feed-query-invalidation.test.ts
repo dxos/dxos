@@ -25,6 +25,8 @@ describe('feed query invalidation', () => {
       Array.from({ length: 50 }, (_, index) => Obj.make(TestSchema.Person, { name: `person-${index}` })),
     );
     await db.flush({ indexes: true });
+    // Nothing written here stays held, so the index answers the query and its re-runs are what this counts.
+    await db.evictFeedHandle(feed);
 
     const feedUri = Obj.getURI(feed);
     let feedQueryRuns = 0;
@@ -49,7 +51,8 @@ describe('feed query invalidation', () => {
 
     // Control: a write the query can see still re-runs it.
     await db.appendToFeed(feed, [Obj.make(TestSchema.Person, { name: 'person-50' })]);
-    await vi.waitFor(() => expect(result.results).toHaveLength(51));
-    expect(feedQueryRuns).toBe(2);
+    // The append is in the results from the feed's local writes at once; the host's re-run follows.
+    expect(result.results).toHaveLength(51);
+    await vi.waitFor(() => expect(feedQueryRuns).toBe(2));
   });
 });

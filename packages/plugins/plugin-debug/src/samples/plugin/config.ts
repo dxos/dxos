@@ -13,7 +13,8 @@ export type FeatureSeed = {
   readonly description: string;
   /** The spec block it is described by; F-1 is seeded, the agent writes the rest. */
   readonly feat: string;
-  readonly subfeatures?: readonly Feature.Subfeature[];
+  /** Its parts, each added as a feature on the spec that breaks this one down. */
+  readonly subfeatures?: readonly { readonly name: string; readonly status: Feature.Status }[];
   /** Indexes into the template's task list. */
   readonly tasks: readonly number[];
 };

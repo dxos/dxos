@@ -1,0 +1,52 @@
+[
+  {
+    "at": 0.5,
+    "title": "The Silo Problem",
+    "lines": [
+      "Enterprise data has been siloed for decades;",
+      "this was a consequence of SaaS software economics.",
+      "But agents need a unified view across the organization to be effective.",
+      "And this demands a new data and security model."
+    ],
+    "text": "Enterprise data has been siloed for decades; this was a consequence of SaaS software economics. But agents need a unified view across the organization to be effective. And this demands a new data and security model."
+  },
+  {
+    "at": 10.5,
+    "title": "Monolithic Agents",
+    "lines": [
+      "Today, agents access our data through point-to-point connections with broad permissions.",
+      "This approach is risky, and simply doesn't work for agents that run continuously with evolving requirements."
+    ],
+    "text": "Today, agents access our data through point-to-point connections with broad permissions. This approach is risky, and simply doesn't work for agents that run continuously with evolving requirements."
+  },
+  {
+    "at": 20.5,
+    "title": "ECHO Graph Database",
+    "lines": [
+      "DXOS takes a fundamentally different approach.",
+      "Enterprise, team, and personal data all connect into a virtual semantic graph.",
+      "And Composer brings this together as an extensible super app, replacing dozens of separate tools."
+    ],
+    "text": "DXOS takes a fundamentally different approach. Enterprise, team, and personal data all connect into a virtual semantic graph. And Composer brings this together as an extensible super app, replacing dozens of separate tools."
+  },
+  {
+    "at": 30.5,
+    "title": "ECHO Hypergraph",
+    "lines": [
+      "The graph is partitioned into interconnected workspaces;",
+      "enabling teams and agents to work within a secure shared context.",
+      "Workspaces are flexible containers, drawing in data from different sources as plans and tasks evolve."
+    ],
+    "text": "The graph is partitioned into interconnected workspaces; enabling teams and agents to work within a secure shared context. Workspaces are flexible containers, drawing in data from different sources as plans and tasks evolve."
+  },
+  {
+    "at": 40.5,
+    "title": "Open and Extensible",
+    "lines": [
+      "Open by design, Composer lets teams and agents build and customize apps, plugins and skills.",
+      "And the entire stack runs on Cloudflare Workers, so it's secure, cost-effective, and scales on demand.",
+      "DXOS is the operating system for the new enterprise."
+    ],
+    "text": "Open by design, Composer lets teams and agents build and customize apps, plugins and skills. And the entire stack runs on Cloudflare Workers, so it's secure, cost-effective, and scales on demand. DXOS is the operating system for the new enterprise."
+  }
+]

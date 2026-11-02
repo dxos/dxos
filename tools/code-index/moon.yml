@@ -2,13 +2,13 @@ layer: tool
 language: typescript
 tags:
   - ts-compile
-  - ts-test
+  - ts-test-native
 
 tasks:
-  test:
+  test-native:
     # The store is the Rust addon, so the suite needs it built first.
     deps:
-      - code-index-native:cargo-build
+      - code-index-native:build-native
     options:
       mergeOutputs: replace
     outputs: []
@@ -19,7 +19,7 @@ tasks:
     command: bun bin/code-index.ts serve
     deps:
       - '^:build'
-      - code-index-native:cargo-build
+      - code-index-native:build-native
     options:
       cache: false
       runInCI: false
@@ -30,7 +30,7 @@ tasks:
     command: bun bin/code-index.ts
     deps:
       - '^:build'
-      - code-index-native:cargo-build
+      - code-index-native:build-native
     options:
       cache: false
       runInCI: false
@@ -39,7 +39,7 @@ tasks:
   bench:
     command: bun scripts/bench.ts
     deps:
-      - code-index-native:cargo-build
+      - code-index-native:build-native
     options:
       cache: false
       runInCI: false

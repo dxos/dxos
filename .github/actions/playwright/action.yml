@@ -1,0 +1,175 @@
+name: Playwright
+description: >
+  Install one Playwright browser with its system dependencies: from the mounted workspace snapshot when it
+  carries them, otherwise from the network, keeping the apt packages those dependencies download in the
+  Actions cache. Call after the setup action.
+
+inputs:
+  browser:
+    description: The browser to install (chromium, firefox or webkit).
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    # needrestart would restart php-fpm and other services the runner never uses after every install: ~10 s.
+    - name: Keep apt from restarting services
+      shell: bash
+      run: |
+        if [ -d /etc/needrestart/conf.d ]; then
+          echo '$nrconf{restart} = "l";' | sudo tee /etc/needrestart/conf.d/99-ci.conf > /dev/null
+        fi
+
+    # The mounted workspace snapshot's second file: every browser and an offline apt bundle (lists and
+    # packages). Fetched here rather than at mount, so only the jobs that run a browser download it.
+    - name: Mount the snapshot's browsers
+      if: ${{ env.WORKSPACE_SNAPSHOT_REF != '' }}
+      shell: bash
+      env:
+        REF: ${{ env.WORKSPACE_SNAPSHOT_REF }}
+      run: |
+        # A second browser in the same job reuses the mount; fetching again would overwrite the mounted image.
+        if mountpoint -q /mnt/ws/playwright; then exit 0; fi
+        mount_browsers() (
+          set -euo pipefail
+          image=/mnt/ws/playwright.sqfs
+          bash "$GITHUB_ACTION_PATH/../workspace-snapshot/fetch.sh" "${REF%:*}" "${REF##*:}" playwright.sqfs "$image"
+          mkdir -p /mnt/ws/playwright
+          sudo mount -t squashfs -o loop,ro "$image" /mnt/ws/playwright
+          for pair in "playwright:$HOME/.cache/ms-playwright" "playwright-apt:$HOME/.cache/playwright-offline"; do
+            name=${pair%%:*}; target=${pair#*:}
+            mkdir -p "/mnt/ws/upper/$name" "/mnt/ws/work/$name" "$target"
+            sudo mount -t overlay overlay \
+              -o "lowerdir=/mnt/ws/playwright/$name,upperdir=/mnt/ws/upper/$name,workdir=/mnt/ws/work/$name" "$target"
+          done
+        )
+        set +e
+        mount_browsers
+        status=$?
+        set -e
+        if [ "$status" -ne 0 ]; then
+          echo "::warning::The snapshot's browsers are unavailable; installing from the network."
+          for target in "$HOME/.cache/ms-playwright" "$HOME/.cache/playwright-offline" /mnt/ws/playwright; do
+            sudo umount "$target" 2>/dev/null || true
+          done
+        fi
+
+    # With the bundle mounted, this installs with no network. Anything it lacks falls through to the steps
+    # below.
+    - name: Install from the snapshot
+      id: offline
+      shell: bash
+      env:
+        BROWSER: ${{ inputs.browser }}
+      run: |
+        bundle="$HOME/.cache/playwright-offline"
+        [ -d "$bundle/lists" ] || exit 0
+        offline_install() (
+          set -euo pipefail
+          # The dry run asks apt what it would install, so it reads the bundle's lists, not the image's.
+          sudo cp -a "$bundle/lists/." /var/lib/apt/lists/
+          mapfile -t pkgs < <(pnpm exec playwright install-deps --dry-run "$BROWSER" 2>&1 | sed -n 's/^  //p')
+          source=snapshot
+          if [ "${#pkgs[@]}" -gt 0 ]; then
+            mkdir -p "$bundle/archives/partial"
+            install=(sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends
+              -o Dir::Cache::Archives="$bundle/archives/" "${pkgs[@]}")
+            # A runner image newer or older than the snapshot's can need a package the bundle lacks: fetch just
+            # that one against the bundle's lists, still without `apt-get update`.
+            if ! "${install[@]}" --no-download >/dev/null; then
+              source="snapshot, plus packages it lacked"
+              timeout --kill-after=15 240 "${install[@]}" -o Acquire::http::Timeout=30 -o Acquire::Retries=3 >/dev/null
+            fi
+          fi
+          timeout 240 pnpm exec playwright install "$BROWSER"
+          echo "installed $BROWSER and ${#pkgs[@]} system packages from the $source"
+        )
+        set +e
+        offline_install
+        status=$?
+        set -e
+        if [ "$status" -eq 0 ]; then
+          echo "done=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "::warning::Playwright could not install from the snapshot; installing from the network."
+        fi
+
+    # `--with-deps` downloads 50-100 MB of fonts, codecs and GStreamer from the runner's Ubuntu
+    # mirror, which has run at ~35 kB/s and timed a cell out mid-install. Cached, apt downloads only
+    # the packages whose versions changed since.
+    - name: Point apt at the package cache
+      id: apt
+      if: ${{ steps.offline.outputs.done != 'true' }}
+      shell: bash
+      run: |
+        dir="$HOME/.cache/playwright-apt"
+        mkdir -p "$dir/partial"
+        printf 'Dir::Cache::Archives "%s/";\nAPT::Keep-Downloaded-Packages "true";\n' "$dir" \
+          | sudo tee /etc/apt/apt.conf.d/99playwright-cache > /dev/null
+        echo "dir=$dir" >> "$GITHUB_OUTPUT"
+        echo "image=$ImageOS" >> "$GITHUB_OUTPUT"
+        echo "version=$(pnpm exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+
+    # A cache key is immutable, so the primary key is per run and restore takes the newest cache for
+    # this version, then for any version.
+    - name: Restore the package cache
+      id: restore
+      if: ${{ steps.offline.outputs.done != 'true' }}
+      uses: actions/cache/restore@v5
+      with:
+        path: ${{ steps.apt.outputs.dir }}
+        key: playwright-apt-${{ runner.arch }}-${{ steps.apt.outputs.image }}-${{ inputs.browser }}-${{ steps.apt.outputs.version }}-${{ github.run_id }}
+        restore-keys: |
+          playwright-apt-${{ runner.arch }}-${{ steps.apt.outputs.image }}-${{ inputs.browser }}-${{ steps.apt.outputs.version }}-
+          playwright-apt-${{ runner.arch }}-${{ steps.apt.outputs.image }}-${{ inputs.browser }}-
+
+    - name: List the cached packages
+      if: ${{ steps.offline.outputs.done != 'true' }}
+      shell: bash
+      env:
+        DIR: ${{ steps.apt.outputs.dir }}
+      run: find "$DIR" -maxdepth 1 -name '*.deb' -printf '%f\n' | sort > "$RUNNER_TEMP/playwright-apt-before.txt"
+
+    # The install takes under a minute, but the Ubuntu mirror has stalled `apt-get update` for the
+    # rest of the job's cap; a fresh attempt gets a fresh connection.
+    - name: Install
+      if: ${{ steps.offline.outputs.done != 'true' }}
+      shell: bash
+      env:
+        BROWSER: ${{ inputs.browser }}
+      run: |
+        bash "$GITHUB_ACTION_PATH/ubuntu-sources-only.sh"
+        for attempt in 1 2 3; do
+          timeout --kill-after=15 240 pnpm exec playwright install --with-deps "$BROWSER" && exit 0
+          echo "::warning::Playwright install attempt $attempt failed or stalled (exit $?)."
+          sudo pkill -x apt-get || true
+          sudo pkill -f /usr/lib/apt/methods/ || true
+          sudo dpkg --configure -a
+        done
+        exit 1
+
+    # `autoclean` drops superseded revisions so the cache does not grow with every update. apt leaves
+    # `partial/` and `lock` owned by root, which the cache save cannot read.
+    - name: Release the package cache
+      id: release
+      if: ${{ steps.offline.outputs.done != 'true' }}
+      shell: bash
+      env:
+        DIR: ${{ steps.apt.outputs.dir }}
+      run: |
+        sudo apt-get autoclean -qq
+        sudo rm -rf "$DIR/partial" "$DIR/lock"
+        sudo chown -R "$(id -u):$(id -g)" "$DIR"
+        find "$DIR" -maxdepth 1 -name '*.deb' -printf '%f\n' | sort > "$RUNNER_TEMP/playwright-apt-after.txt"
+        added=$(comm -13 "$RUNNER_TEMP/playwright-apt-before.txt" "$RUNNER_TEMP/playwright-apt-after.txt" | wc -l)
+        echo "Cached $(wc -l < "$RUNNER_TEMP/playwright-apt-after.txt") packages, $(du -sh "$DIR" | cut -f1); $added downloaded."
+        echo "added=$added" >> "$GITHUB_OUTPUT"
+
+    # Only when apt downloaded something. Saved here rather than in a post-job step, which a cell that
+    # later times out skips.
+    - name: Save the package cache
+      if: ${{ steps.offline.outputs.done != 'true' && steps.release.outputs.added != '0' }}
+      uses: actions/cache/save@v5
+      with:
+        path: ${{ steps.apt.outputs.dir }}
+        key: ${{ steps.restore.outputs.cache-primary-key }}

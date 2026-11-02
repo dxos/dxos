@@ -13,3 +13,8 @@ declare module '*?raw' {
   const content: string;
   export default content;
 }
+
+declare module '*.mdl?spec' {
+  const file: import('./testing/index.ts').SpecFile;
+  export default file;
+}

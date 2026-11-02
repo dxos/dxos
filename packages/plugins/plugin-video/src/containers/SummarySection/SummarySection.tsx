@@ -11,8 +11,9 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import { Video } from '@dxos/types';
 
 import { Pending, Summary } from '#components';
-import { meta } from '#meta';
 import { VideoOperation } from '#types';
+
+import { VideoNamespace } from '../../namespace.ts';
 
 // TODO(burdon): Use AppSurface.Section.
 export type SummarySectionProps = {
@@ -29,7 +30,7 @@ export type SummarySectionProps = {
  * alongside the cross-origin player iframe.
  */
 export const SummarySection = ({ subject }: SummarySectionProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(VideoNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const [video] = useObject(subject);
   const uri = Obj.getURI(subject);
@@ -56,7 +57,7 @@ export const SummarySection = ({ subject }: SummarySectionProps) => {
       },
       {
         spaceId: Obj.getDatabase(subject)?.spaceId,
-        notify: { error: ['summarize-error.message', { ns: meta.profile.key }] },
+        notify: { error: ['summarize-error.message', { ns: VideoNamespace.key }] },
       },
     ).finally(() => {
       runningRef.current = false;

@@ -45,6 +45,7 @@
     "@dxos/react-ui-components": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*"

@@ -44,7 +44,7 @@ A reader hands an agent a plan to finish: a partial spec of a Composer plugin th
 1. Create a space from the Shogi Plugin template; open its project › Tasks: the three planning tasks.
 2. Open the project › Features (Kanban): the four features, all Planned.
 3. Open "Board" › Specs: the spec opens rendered in Composer (needs plugin-code), F-1 written and F-2 to F-4 only named.
-4. Assign the three tasks to the assistant: it writes F-2 to F-4 into the spec, draws the diagram, adds the implementation tasks linked to the features, and works them until `dx registry publish --private` uploads the plugin. The reader installs Shogi from Plugins › Registry, opens Board and plays 7g-7f (plugin-debug QA-10).
+4. Assign the three tasks to the assistant: it writes F-2 to F-4 into the spec, draws the diagram, adds the implementation tasks linked to the features, and works them until `dx registry publish --private` uploads the plugin. The reader installs Shogi from Plugins › Registry, opens Board and plays 7g-7f (plugin-debug QA-11).
 
 ## Checks
 

@@ -37,6 +37,7 @@
     "@storybook/addon-links": "catalog:",
     "@storybook/addon-themes": "catalog:",
     "@storybook/addon-vitest": "catalog:",
+    "@storybook/react-dom-shim": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

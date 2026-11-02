@@ -2,9 +2,22 @@
 // Copyright 2026 DXOS.org
 //
 
-import { userEvent, within } from 'storybook/test';
+import { userEvent, waitFor } from 'storybook/test';
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+export const findPromptEditor = (canvasElement: HTMLElement, timeout: number): Promise<HTMLElement> =>
+  waitFor(
+    () => {
+      const editor = canvasElement.querySelector<HTMLElement>('[data-testid="assistant.prompt"] .cm-content');
+      if (!editor) {
+        throw new Error('Chat editor not found.');
+      }
+
+      return editor;
+    },
+    { timeout },
+  );
 
 /**
  * Submit a prompt through the chat's CodeMirror editor. Submission is dropped silently while the
@@ -12,12 +25,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
  * actually shows up in the thread (the editor clearing is NOT proof of submission).
  */
 export const submitPrompt = async (canvasElement: HTMLElement, text: string): Promise<void> => {
-  const canvas = within(canvasElement);
-  const placeholder = await canvas.findByText(/ask anything/i, {}, { timeout: 60_000 });
-  const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
-  if (!editor) {
-    throw new Error('Chat editor not found.');
-  }
+  const editor = await findPromptEditor(canvasElement, 60_000);
 
   const needle = text.slice(0, 30);
   // The prompt editor itself holds the text until it clears; any OTHER editor line containing the

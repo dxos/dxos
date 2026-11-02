@@ -1,0 +1,467 @@
+---
+spec: github:dxos/dxos/packages/core/echo/echo/SPEC.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: Echo
+
+The namespace-module surface is solid: Relation, Ref, Entity, Query, Filter, Order, Aggregate, Registry, Scope,
+Migration, Text, Blob, Annotation, Json, JsonSchema, Collection, Tag and View export what the spec lists, and the
+query, Effect and serialization behaviour is tested here and in `@dxos/echo-client` / `echo-client-e2e`. Feature
+F-7 (feed options) is now built: the `Feed` object carries optional `indexing` and `retention` fields,
+`IndexingOptions` and `RetentionOptions` are schemas with the specified bounds, and `setIndexing` / `setRetention`
+validate and write in one `Obj.update`; `Feed.test.ts` and `echo-client` `feed.test.ts` run scenario T-6.
+Remaining divergences are in the older API lists: `Obj.getSchema`, `Obj.getDXN`, `Type.isMutable`,
+`Database.runQuery` / `schemaQuery` / `runSchemaQuery` and `Feed.cursor` / `next` / `nextOption` do not exist,
+`Format` has no `string`/`number`/... members, and `Obj.fromJSON` takes `{ refResolver, database }` rather than
+`{ graph, db }`. Scenario T-3 conflicts with the code: a query subscription does not fire when a matched object
+is mutated without changing the result set.
+
+Of 54 items: 40 done, 5 untested, 7 partial, 1 diverged, 1 missing (T-4).
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Type: The Type namespace declares and introspects types; `isMutable` does not exist.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Type.ts#makeObject, github:dxos/dxos/packages/core/echo/echo/src/Type.ts#makeRelation, github:dxos/dxos/packages/core/echo/echo/src/Type.ts#makeObjectFromJsonSchema, github:dxos/dxos/packages/core/echo/echo/src/Type.ts#makeRelationFromJsonSchema, github:dxos/dxos/packages/core/echo/echo/src/Type.ts#getURI, github:dxos/dxos/packages/core/echo/echo/src/Type.ts#getTypename, github:dxos/dxos/packages/core/echo/echo/src/Type.ts#getVersion, github:dxos/dxos/packages/core/echo/echo/src/Type.ts#isType]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/Type.test.ts, github:dxos/dxos/packages/core/echo/echo/src/testing/api.test.ts]
+  note: |
+    makeObject, makeRelation, both JSON-Schema factories, the Any* bounds, InstanceType, getURI, getTypename,
+    getVersion, getMeta, isObject, isRelation and isType are exported. `Type.isMutable` is not: src/Type.ts
+    exports `Mutable` (a type), `isTypeKind` and assertion helpers instead. The JSON-Schema factories take a props
+    bag `{ typename, version, jsonSchema }` (and source/target for relations), not a bare jsonSchema.
+```
+
+```mdl
+verdict Obj: The Obj namespace covers the listed surface except `getSchema` and `getDXN`, and `fromJSON` takes different options.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Obj.ts#make, github:dxos/dxos/packages/core/echo/echo/src/Obj.ts#instanceOf, github:dxos/dxos/packages/core/echo/echo/src/Obj.ts#getURI, github:dxos/dxos/packages/core/echo/echo/src/Obj.ts#getType, github:dxos/dxos/packages/core/echo/echo/src/Obj.ts#clone, github:dxos/dxos/packages/core/echo/echo/src/Obj.ts#subscribe, github:dxos/dxos/packages/core/echo/echo/src/Obj.ts#toJSON, github:dxos/dxos/packages/core/echo/echo/src/Obj.ts#fromJSON]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/Obj.test.ts, github:dxos/dxos/packages/core/echo/echo/src/internal/Obj/json-serializer.test.ts]
+  note: |
+    There is no `Obj.getSchema` (the code has `Obj.getType`, which returns the type entity) and no `Obj.getDXN`
+    (the code has `Obj.getURI`, which returns a URI/EID, not a `dxn:echo:` DXN). `Obj.fromJSON` takes
+    `{ refResolver, uri, database, parent }`, not `{ graph, db }`. The rest (make, Unknown/Any, MakeProps, isObject,
+    instanceOf, isDeleted, getTypename/getTypeURI, getMeta, getSnapshot/snapshotOf, clone, getValue/setValue/update,
+    subscribe, toJSON, Meta, ID) is exported.
+```
+
+```mdl
+verdict Relation: The Relation namespace exports every listed member.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Relation.ts#make, github:dxos/dxos/packages/core/echo/echo/src/Relation.ts#Source, github:dxos/dxos/packages/core/echo/echo/src/Relation.ts#Target, github:dxos/dxos/packages/core/echo/echo/src/Relation.ts#getSource, github:dxos/dxos/packages/core/echo/echo/src/Relation.ts#getTarget, github:dxos/dxos/packages/core/echo/echo/src/Relation.ts#getSourceURI, github:dxos/dxos/packages/core/echo/echo/src/Relation.ts#isRelation]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/Relation.test.ts, github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed.test.ts]
+```
+
+```mdl
+verdict Ref: The Ref namespace exports every listed member.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Ref.ts#Ref, github:dxos/dxos/packages/core/echo/echo/src/Ref.ts#Array, github:dxos/dxos/packages/core/echo/echo/src/Ref.ts#make, github:dxos/dxos/packages/core/echo/echo/src/Ref.ts#fromURI, github:dxos/dxos/packages/core/echo/echo/src/Ref.ts#isRef, github:dxos/dxos/packages/core/echo/echo/src/Ref.ts#hasEntityId, github:dxos/dxos/packages/core/echo/echo/src/Ref.ts#isRefType, github:dxos/dxos/packages/core/echo/echo/src/Ref.ts#Resolver]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/internal/Ref/ref.test.ts]
+```
+
+```mdl
+verdict Entity: The Entity namespace exports every listed member.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Entity.ts#Kind, github:dxos/dxos/packages/core/echo/echo/src/Entity.ts#Unknown, github:dxos/dxos/packages/core/echo/echo/src/Entity.ts#isEntity, github:dxos/dxos/packages/core/echo/echo/src/Entity.ts#instanceOf, github:dxos/dxos/packages/core/echo/echo/src/Entity.ts#isSnapshot]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/Entity.test.ts]
+```
+
+```mdl
+verdict Query: The Query namespace exports every listed builder.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Query.ts#select, github:dxos/dxos/packages/core/echo/echo/src/Query.ts#type, github:dxos/dxos/packages/core/echo/echo/src/Query.ts#from, github:dxos/dxos/packages/core/echo/echo/src/Query.ts#all, github:dxos/dxos/packages/core/echo/echo/src/Query.ts#without, github:dxos/dxos/packages/core/echo/echo/src/Query.ts#fromAst, github:dxos/dxos/packages/core/echo/echo/src/Query.ts#pretty]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/Query.test.ts]
+```
+
+```mdl
+verdict Filter: The Filter namespace exports every listed builder.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Filter.ts#type, github:dxos/dxos/packages/core/echo/echo/src/Filter.ts#props, github:dxos/dxos/packages/core/echo/echo/src/Filter.ts#id, github:dxos/dxos/packages/core/echo/echo/src/Filter.ts#text, github:dxos/dxos/packages/core/echo/echo/src/Filter.ts#eq, github:dxos/dxos/packages/core/echo/echo/src/Filter.ts#contains, github:dxos/dxos/packages/core/echo/echo/src/Filter.ts#childOf, github:dxos/dxos/packages/core/echo/echo/src/Filter.ts#not]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/Filter.test.ts, github:dxos/dxos/packages/core/echo/echo/src/Query.test.ts]
+```
+
+```mdl
+verdict QueryResult: The QueryResult interface exposes `run` and `subscribe`.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/QueryResult.ts#QueryResult, github:dxos/dxos/packages/core/echo/echo/src/QueryResult.ts#QueryResultEffect]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client/src/query/query-effect.test.ts, github:dxos/dxos/packages/core/echo/echo-client/src/query/query-result.test.ts]
+  note: |
+    QueryResult.ts declares only types; the implementation is in @dxos/echo-client (query/query-result.ts).
+```
+
+```mdl
+verdict Order: The Order namespace exports every listed ordering.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Order.ts#natural, github:dxos/dxos/packages/core/echo/echo/src/Order.ts#property, github:dxos/dxos/packages/core/echo/echo/src/Order.ts#rank, github:dxos/dxos/packages/core/echo/echo/src/Order.ts#created, github:dxos/dxos/packages/core/echo/echo/src/Order.ts#updated]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/query.test.ts]
+```
+
+```mdl
+verdict Aggregate: The Aggregate namespace exports every listed reducer.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Aggregate.ts#group, github:dxos/dxos/packages/core/echo/echo/src/Aggregate.ts#count, github:dxos/dxos/packages/core/echo/echo/src/Aggregate.ts#min, github:dxos/dxos/packages/core/echo/echo/src/Aggregate.ts#max, github:dxos/dxos/packages/core/echo/echo/src/Aggregate.ts#items, github:dxos/dxos/packages/core/echo/echo/src/Aggregate.ts#Spec]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/query.test.ts]
+```
+
+```mdl
+verdict Database: The Database Effect surface exists, but `runQuery`, `schemaQuery` and `runSchemaQuery` do not.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Database.ts#Database, github:dxos/dxos/packages/core/echo/echo/src/Database.ts#Service, github:dxos/dxos/packages/core/echo/echo/src/Database.ts#layer, github:dxos/dxos/packages/core/echo/echo/src/Database.ts#notAvailable, github:dxos/dxos/packages/core/echo/echo/src/Database.ts#makeService, github:dxos/dxos/packages/core/echo/echo/src/Database.ts#query, github:dxos/dxos/packages/core/echo/echo/src/Database.ts#load, github:dxos/dxos/packages/core/echo/echo/src/Database.ts#spaceId]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client/src/query/query-effect.test.ts, github:dxos/dxos/packages/core/echo/echo-client/src/proxy-db/database.test.ts]
+  note: |
+    Missing: `Database.runQuery`, `Database.schemaQuery`, `Database.runSchemaQuery` (searched src/Database.ts; schema
+    queries go through `Registry.runQuery`, and `Database.query(...)` returns a QueryResultEffect whose `.run` executes).
+    `Database.spaceId` is an Effect value, not a function `() => Effect`. The interface exposes `registry`, not
+    `schemaRegistry`. Present: Database, Service, layer, notAvailable, makeService, query, add, remove, flush,
+    resolve, load (no Service requirement), spaceId, isDatabase.
+```
+
+```mdl
+verdict Registry: The Registry namespace exports every listed member.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Registry.ts#Registry, github:dxos/dxos/packages/core/echo/echo/src/Registry.ts#Service, github:dxos/dxos/packages/core/echo/echo/src/Registry.ts#runQuery, github:dxos/dxos/packages/core/echo/echo/src/Registry.ts#isRegistry]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/registry.test.ts]
+```
+
+```mdl
+verdict Hypergraph: The Hypergraph namespace declares the three listed interfaces.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Hypergraph.ts#Hypergraph, github:dxos/dxos/packages/core/echo/echo/src/Hypergraph.ts#RefResolutionContext, github:dxos/dxos/packages/core/echo/echo/src/Hypergraph.ts#RefResolverOptions]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/query.test.ts]
+  note: |
+    The module also exports Service, layer, makeService, notAvailable and withDatabase, which the spec does not list.
+```
+
+```mdl
+verdict Scope: The Scope namespace exports space, registry and feed.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Scope.ts#space, github:dxos/dxos/packages/core/echo/echo/src/Scope.ts#registry, github:dxos/dxos/packages/core/echo/echo/src/Scope.ts#feed]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/query.test.ts, github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed.test.ts]
+```
+
+```mdl
+verdict Migration: The Migration namespace exports define and the listed types.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Migration.ts#define, github:dxos/dxos/packages/core/echo/echo/src/Migration.ts#ObjectMigration, github:dxos/dxos/packages/core/echo/echo/src/Migration.ts#ObjectMigrationContext, github:dxos/dxos/packages/core/echo/echo/src/Migration.ts#TransformResult]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/Migration.test.ts, github:dxos/dxos/packages/core/echo/echo-client/src/proxy-db/rename-migration.test.ts]
+```
+
+```mdl
+verdict Text: The Text namespace exports update, splice, apply and the listed types.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Text.ts#update, github:dxos/dxos/packages/core/echo/echo/src/Text.ts#splice, github:dxos/dxos/packages/core/echo/echo/src/Text.ts#apply, github:dxos/dxos/packages/core/echo/echo/src/Text.ts#KeyPath, github:dxos/dxos/packages/core/echo/echo/src/Text.ts#Edit]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/Text.test.ts]
+```
+
+```mdl
+verdict Blob: The Blob namespace exports every listed member.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Blob.ts#Blob, github:dxos/dxos/packages/core/echo/echo/src/Blob.ts#make, github:dxos/dxos/packages/core/echo/echo/src/Blob.ts#inlineData, github:dxos/dxos/packages/core/echo/echo/src/Blob.ts#externalData, github:dxos/dxos/packages/core/echo/echo/src/Blob.ts#fromBytes, github:dxos/dxos/packages/core/echo/echo/src/Blob.ts#read, github:dxos/dxos/packages/core/echo/echo/src/Blob.ts#exists, github:dxos/dxos/packages/core/echo/echo/src/Blob.ts#url, github:dxos/dxos/packages/core/echo/echo/src/Blob.ts#MAX_INLINE_SIZE]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/Blob.test.ts, github:dxos/dxos/packages/core/echo/echo-client/src/blob/blob.test.ts]
+```
+
+```mdl
+verdict Format: Format exports named format schemas, not `string / number / date / object / select` members.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Format.ts, github:dxos/dxos/packages/core/echo/echo/src/internal/Format/string.ts#Email, github:dxos/dxos/packages/core/echo/echo/src/internal/Format/number.ts#Currency, github:dxos/dxos/packages/core/echo/echo/src/internal/Format/date.ts#DateTime, github:dxos/dxos/packages/core/echo/echo/src/internal/Format/object.ts#GeoPoint, github:dxos/dxos/packages/core/echo/echo/src/internal/Format/select.ts#SelectOption]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/internal/Format/format.test.ts]
+  note: |
+    src/Format.ts re-exports src/internal/Format/index.ts, which exports individual schemas (Email, Hostname,
+    Regex, Currency, Percent, Timestamp, DateOnly, DateTime, Duration, GeoPoint, SelectOption, the Format/TypeFormat
+    enums). The names string/number/date/object/select are the source file names, not exported members, so
+    `Format.string` etc. do not exist.
+```
+
+```mdl
+verdict Annotation: The Annotation namespace exports every listed member.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Annotation.ts#make, github:dxos/dxos/packages/core/echo/echo/src/Annotation.ts#get, github:dxos/dxos/packages/core/echo/echo/src/Annotation.ts#set, github:dxos/dxos/packages/core/echo/echo/src/Annotation.ts#getFromAst, github:dxos/dxos/packages/core/echo/echo/src/Annotation.ts#atomProperty, github:dxos/dxos/packages/core/echo/echo/src/Annotation.ts#Dictionary, github:dxos/dxos/packages/core/echo/echo/src/Annotation.ts#buildDictionary]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/Annotation.test.ts]
+```
+
+```mdl
+verdict Json: Json exports a ref-aware replacer.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Json.ts#createRefReplacer]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/Json.test.ts]
+```
+
+```mdl
+verdict JsonSchema: JsonSchema converts between Effect Schema and JSON Schema.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/JsonSchema.ts#toEffectSchema, github:dxos/dxos/packages/core/echo/echo/src/JsonSchema.ts#toJsonSchema, github:dxos/dxos/packages/core/echo/echo/src/JsonSchema.ts#JsonSchema]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/internal/JsonSchema/json-schema.test.ts, github:dxos/dxos/packages/core/echo/echo/src/internal/JsonSchema/effect-schema.test.ts]
+```
+
+```mdl
+verdict Key: Key re-exports the identifier types and ForeignKey.
+  status: untested
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Key.ts]
+  note: |
+    Re-exports only (from @dxos/keys and @dxos/echo-protocol); no test imports them through `Key`.
+```
+
+```mdl
+verdict Collection: Collection exports the type, make and isCollection.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Collection.ts#Collection, github:dxos/dxos/packages/core/echo/echo/src/Collection.ts#make, github:dxos/dxos/packages/core/echo/echo/src/Collection.ts#isCollection]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/query.test.ts]
+```
+
+```mdl
+verdict Feed: The Feed namespace has the object, options schemas and setters; cursor navigation is not as listed.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#Feed, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#make, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#append, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#remove, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#query, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#sync, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#getSyncState, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#getFeedUri, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#IndexingOptions, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#RetentionOptions, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#setIndexing, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#setRetention]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client/src/feed/feed.test.ts, github:dxos/dxos/packages/core/echo/echo/src/Feed.test.ts]
+  note: |
+    Present: Feed (org.dxos.type.feed, with `indexing` and `retention`), make, append, remove, query, sync,
+    getSyncState, getFeedUri, IndexingOptions, RetentionOptions, FeedOptions, setIndexing and setRetention. There is
+    no `cursor` / `next` / `nextOption`: the code has the `Cursor` brand, `getCursor(item)`, `START` and
+    `CursorAnnotation`, and resumes by passing a cursor to `query`.
+```
+
+```mdl
+verdict Tag: The Tag namespace exports every listed member.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Tag.ts#Tag, github:dxos/dxos/packages/core/echo/echo/src/Tag.ts#make, github:dxos/dxos/packages/core/echo/echo/src/Tag.ts#findOrCreate, github:dxos/dxos/packages/core/echo/echo/src/Tag.ts#findTagByLabel, github:dxos/dxos/packages/core/echo/echo/src/Tag.ts#sortTags, github:dxos/dxos/packages/core/echo/echo/src/Tag.ts#createTagList, github:dxos/dxos/packages/core/echo/echo/src/Tag.ts#Map]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client/src/proxy-db/tag.test.ts]
+```
+
+```mdl
+verdict View: The View namespace exports every listed member.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/View.ts#View, github:dxos/dxos/packages/core/echo/echo/src/View.ts#make, github:dxos/dxos/packages/core/echo/echo/src/View.ts#Projection, github:dxos/dxos/packages/core/echo/echo/src/View.ts#FieldSchema, github:dxos/dxos/packages/core/echo/echo/src/View.ts#createFieldId, github:dxos/dxos/packages/core/echo/echo/src/View.ts#KeyValueProps]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/query.test.ts, github:dxos/dxos/packages/sdk/schema/src/projection/projection.test.ts]
+```
+
+```mdl
+verdict Dataset: Dataset exports the shape and its predicate.
+  status: untested
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Dataset.ts#Dataset, github:dxos/dxos/packages/core/echo/echo/src/Dataset.ts#isDataset]
+  note: |
+    Query.test.ts queries by `Dataset.Dataset`, but nothing exercises `isDataset`.
+```
+
+```mdl
+verdict F-1.1: Every module is a namespace export with a matching subpath entrypoint.
+  status: untested
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/index.ts, github:dxos/dxos/packages/core/echo/echo/package.json]
+  walkthrough:
+    - index.ts re-exports each module as `export * as <Name>`. github:dxos/dxos/packages/core/echo/echo/src/index.ts
+    - package.json declares a `./<Name>` export for each of the 30 modules. github:dxos/dxos/packages/core/echo/echo/package.json
+  note: |
+    Checked: every `export * as` in index.ts has a package.json subpath. No test imports a module through its subpath. Index also exports `Change` and `Error`, which the spec does not list.
+```
+
+```mdl
+verdict F-1.2: DXN, EID, URI and QueryAST are re-exported at the root.
+  status: untested
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/index.ts]
+  note: |
+    index.ts re-exports them; no test imports them from the package root.
+```
+
+```mdl
+verdict F-2.1: A class extending `Type.makeObject<X>(dxn)(schema)` is both schema and instance type.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Type.ts#makeObject, github:dxos/dxos/packages/core/echo/echo/src/Type.ts#ObjClass]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/Type.test.ts, github:dxos/dxos/packages/core/echo/echo/src/testing/api.test.ts]
+```
+
+```mdl
+verdict F-2.2: `Type.makeRelation<X>(dxn)({ source, target })(schema)` binds typed endpoints.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Type.ts#makeRelation, github:dxos/dxos/packages/core/echo/echo/src/Type.ts#RelationClass]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/Type.test.ts]
+```
+
+```mdl
+verdict F-2.3: Type.getURI, getTypename, getVersion and getMeta return identity and metadata.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Type.ts#getURI, github:dxos/dxos/packages/core/echo/echo/src/Type.ts#getTypename, github:dxos/dxos/packages/core/echo/echo/src/Type.ts#getVersion, github:dxos/dxos/packages/core/echo/echo/src/Type.ts#getMeta]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/Type.test.ts, github:dxos/dxos/packages/core/echo/echo/src/testing/api.test.ts]
+```
+
+```mdl
+verdict F-3.1: Obj.make creates an object with id, type and schema.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Obj.ts#make]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/Obj.test.ts, github:dxos/dxos/packages/core/echo/echo/src/internal/Obj/create-object.test.ts]
+```
+
+```mdl
+verdict F-3.2: Obj.subscribe fires on mutation and query subscriptions re-evaluate.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Obj.ts#subscribe, github:dxos/dxos/packages/core/echo/echo/src/Obj.ts#update]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/Text.test.ts, github:dxos/dxos/packages/core/echo/echo-client/src/echo-handler/subscription.test.ts, github:dxos/dxos/packages/core/echo/echo-client-e2e/src/query.test.ts]
+  note: |
+    Mutation must happen inside `Obj.update`; direct assignment outside it throws. A query re-evaluates on every mutation but notifies only when its result set changes (see the e2e test 'does not fire on object updates').
+```
+
+```mdl
+verdict F-3.3: Accessors on an object outside a database return undefined.
+  status: untested
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Obj.ts#getDatabase, github:dxos/dxos/packages/core/echo/echo/src/Obj.ts#getType]
+  note: |
+    getDatabase and getType return `undefined` when unresolvable, and Obj.test.ts calls getURI outside a db, but no test asserts the undefined-not-throw contract. `Obj.getKeys` throws for a non-ECHO plain object.
+```
+
+```mdl
+verdict F-3.4: Obj.toJSON / fromJSON round-trip id, type, meta and refs.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Obj.ts#toJSON, github:dxos/dxos/packages/core/echo/echo/src/Obj.ts#fromJSON, github:dxos/dxos/packages/core/echo/echo/src/internal/Obj/json-serializer.ts#objectFromJSON]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/internal/Obj/json-serializer.test.ts]
+  walkthrough:
+    - Obj.toJSON and Obj.fromJSON are the public entry points. github:dxos/dxos/packages/core/echo/echo/src/Obj.ts#fromJSON
+    - objectFromJSON decodes id, type, meta and resolves refs through the refResolver. github:dxos/dxos/packages/core/echo/echo/src/internal/Obj/json-serializer.ts#objectFromJSON
+```
+
+```mdl
+verdict F-4.1: Ref.Ref(Schema) stores a DXN and resolves lazily.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Ref.ts#Ref]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/internal/Ref/ref.test.ts]
+```
+
+```mdl
+verdict F-4.2: Database.load fails with EntityNotFoundError when the target is missing.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Database.ts#load, github:dxos/dxos/packages/core/echo/echo/src/Error.ts#EntityNotFoundError]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client/src/proxy-db/database.test.ts]
+  note: |
+    The test asserts only that the Exit is a failure, not the error tag.
+```
+
+```mdl
+verdict F-5.1: db.query returns a QueryResult with run and subscribe.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Database.ts#QueryFn, github:dxos/dxos/packages/core/echo/echo/src/QueryResult.ts#QueryResult]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client/src/query/query-effect.test.ts, github:dxos/dxos/packages/core/echo/echo-client/src/query/query-result.test.ts]
+```
+
+```mdl
+verdict F-5.2: Filter builders compile to one QueryAST.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Filter.ts#type, github:dxos/dxos/packages/core/echo/echo/src/Filter.ts#and, github:dxos/dxos/packages/core/echo/echo/src/Filter.ts#or, github:dxos/dxos/packages/core/echo/echo/src/Filter.ts#not]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/Filter.test.ts, github:dxos/dxos/packages/core/echo/echo/src/Query.test.ts]
+```
+
+```mdl
+verdict F-5.3: Order and Aggregate modifiers apply over the matched set.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Order.ts#property, github:dxos/dxos/packages/core/echo/echo/src/Aggregate.ts#group]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/query.test.ts]
+```
+
+```mdl
+verdict F-6.1: Database.query / add / remove / flush / resolve are Effects that require the service.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Database.ts#query, github:dxos/dxos/packages/core/echo/echo/src/Database.ts#add, github:dxos/dxos/packages/core/echo/echo/src/Database.ts#remove, github:dxos/dxos/packages/core/echo/echo/src/Database.ts#flush, github:dxos/dxos/packages/core/echo/echo/src/Database.ts#resolve]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client/src/query/query-effect.test.ts]
+  note: |
+    `Database.resolve` without a schema is typed as never failing, yet fails with EntityNotFoundError when the target is absent.
+```
+
+```mdl
+verdict F-6.2: Database.layer provides the service and notAvailable stubs it.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Database.ts#layer, github:dxos/dxos/packages/core/echo/echo/src/Database.ts#notAvailable]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client/src/query/query-effect.test.ts, github:dxos/dxos/packages/plugins/plugin-assistant/src/templates/routine-templates.test.ts]
+  note: |
+    notAvailable throws a plain Error on reading `db` (a defect), not a typed failure.
+```
+
+```mdl
+verdict F-7.1: The Feed schema has optional indexing and retention fields; absent means enabled and untrimmed.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#Feed, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#FeedOptions]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/Feed.test.ts, github:dxos/dxos/packages/core/echo/echo-client/src/feed/feed.test.ts]
+```
+
+```mdl
+verdict F-7.2: IndexingOptions is a single enabled switch, and disabled feeds get no index rows at all.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#IndexingOptions, github:dxos/dxos/packages/core/echo/echo-host/src/db-host/feed-data-source.ts#FeedDataSource]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed-options.test.ts]
+  walkthrough:
+    - IndexingOptions holds only `enabled`, so there is no partial mode. github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#IndexingOptions
+    - The feed data source skips every block of a disabled feed, and its rows are deleted when the options apply. github:dxos/dxos/packages/core/echo/echo-host/src/db-host/feed-data-source.ts#FeedDataSource
+```
+
+```mdl
+verdict F-7.3: RetentionOptions has integer maxLength >= 1 and positive finite maxAge in ms; setRetention converts a Duration.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#RetentionOptions, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#setRetention, github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.trim]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/Feed.test.ts, github:dxos/dxos/packages/core/echo/feed/src/feed-store.test.ts]
+```
+
+```mdl
+verdict F-7.4: setIndexing and setRetention write the field in one Obj.update and return without waiting for the store.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#setIndexing, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#setRetention]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/Feed.test.ts]
+```
+
+```mdl
+verdict F-7.5: setRetention decodes through RetentionOptions first, so an invalid value fails and nothing is written.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#setRetention]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/Feed.test.ts, github:dxos/dxos/packages/core/echo/echo-client/src/feed/feed.test.ts]
+```
+
+```mdl
+verdict T-1: Type and api tests check typename, assignability and instanceOf on class-declared types.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Type.ts#makeObject, github:dxos/dxos/packages/core/echo/echo/src/testing/test-schema.ts#TestSchema]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/testing/api.test.ts, github:dxos/dxos/packages/core/echo/echo/src/Type.test.ts]
+```
+
+```mdl
+verdict T-2: The serializer test round-trips through a ref resolver, not through a db.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/internal/Obj/json-serializer.ts#objectFromJSON]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/internal/Obj/json-serializer.test.ts]
+  note: |
+    json-serializer.test.ts checks that id, type, meta and ref targets survive toJSON/fromJSON, but the object is never added to a db, and fromJSON gets a StaticRefResolver, not `{ graph, db }` (that option shape does not exist).
+```
+
+```mdl
+verdict T-3: E2E tests cover add-fires and run-equals-subscribe; a mutation of an existing match does not fire.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/QueryResult.ts#QueryResult]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/query.test.ts]
+  note: |
+    query.test.ts 'fires only once when new objects are added' covers the add step, and 'run() matches subscribed results' compares run with subscribe (for an aggregate query). 'does not fire on object updates' shows a mutation that keeps the result set unchanged does NOT fire the subscription, contrary to the scenario.
+```
+
+```mdl
+verdict T-4: No test checks that Database.query needs Database.Service.
+  status: missing
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Database.ts#query]
+  note: |
+    The requirement is in the type (`R = Service`), but no type-level or runtime test runs the program without the service. Searched *.test.ts for expectTypeOf on Database.Service.
+```
+
+```mdl
+verdict T-5: A test checks that Database.load fails, but not with catchTag.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Database.ts#load]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client/src/proxy-db/database.test.ts]
+  note: |
+    database.test.ts 'Database.load fails with EntityNotFoundError for a deleted target' asserts only `Exit.isFailure`; no test catches it by tag with `Effect.catchTag('EntityNotFoundError', ...)`.
+```
+
+```mdl
+verdict T-6: echo-client's feed test sets both options, checks toJSON and a second client, and rejects maxLength 0.
+  status: done
+  tests: [github:dxos/dxos/packages/core/echo/echo-client/src/feed/feed.test.ts, github:dxos/dxos/packages/core/echo/echo/src/Feed.test.ts]
+```

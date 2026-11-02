@@ -8,6 +8,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
+import * as Progress from '@dxos/app-toolkit/Progress';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { type IdentityIndex, buildIdentityIndex } from '@dxos/extractor';
@@ -40,11 +41,13 @@ const updateTimeOf = (person: GoogleContacts.Person): number => {
 
 /**
  * Fetch all members of a contact group by resource name.
- * Returns resource names like `people/c1234567890`.
+ * Returns resource names like `people/c1234567890`, and the group's size.
  */
 const fetchGroupMembers = Effect.fn(function* (groupResourceName: string) {
   const group = yield* GoogleContacts.getContactGroup(groupResourceName, 1000);
-  return group.memberResourceNames ?? [];
+  const memberNames = new Set(group.memberResourceNames ?? []);
+  // `memberResourceNames` stops at `maxMembers`, so a larger group is sized by `memberCount`.
+  return { memberNames, memberCount: Math.max(memberNames.size, group.memberCount ?? 0) };
 });
 
 /** Streams all contacts via paginated `people.connections.list` (one page at a time). */
@@ -124,7 +127,7 @@ const upsertPerson =
     });
 
 /** Syncs one bound contact group: stream connections → filter to group members → map → upsert. */
-const syncContactGroup = (binding: Cursor.ExternalCursor) =>
+export const syncContactGroup = (binding: Cursor.ExternalCursor) =>
   Effect.gen(function* () {
     const db = Obj.getDatabase(binding);
     const groupResourceName = binding.spec.externalId;
@@ -135,39 +138,54 @@ const syncContactGroup = (binding: Cursor.ExternalCursor) =>
     }
     log('syncing google contact group', { groupResourceName });
 
-    // The group membership is the set of resource names to keep; the source streams all
-    // connections (paginated) and we filter to the group.
-    const memberNames = new Set(yield* fetchGroupMembers(groupResourceName));
-    const cursorKey = Cursor.parseKey(binding.max);
+    // Keyed by the binding rather than its target: a contacts binding targets the connection, which
+    // every bound group shares.
+    const label = binding.spec.label;
+    return yield* Progress.withReporter(
+      { key: Progress.createSyncKey(binding), label: label ? `Syncing ${label}` : 'Syncing contacts' },
+      (reporter) =>
+        Effect.gen(function* () {
+          // The group membership is the set of resource names to keep; the source streams all
+          // connections (paginated) and we filter to the group.
+          const { memberNames, memberCount } = yield* fetchGroupMembers(groupResourceName);
+          reporter.total(memberCount);
+          const cursorKey = Cursor.parseKey(binding.max);
 
-    // Pipeline: stream connections → filter to group members → map → upsert into the space. It's a
-    // DB target (no feed); the upsert sink is idempotent via the foreign key and advances the
-    // cursor (high-water contact `updateTime`) + run status in the same place as the write.
-    //
-    // NB: no dedup-by-cursor here — a contact added to the group without being modified has an
-    // `updateTime` older than the cursor, so deduping would silently drop it. We re-upsert every
-    // member each run (idempotent).
-    // TODO(wittjosiah): Skip unchanged contacts (dedup by updateTime) once we also detect group
-    //   membership changes, so newly-added-but-unmodified contacts still sync.
-    // One query per identity type up front, then every lookup is O(1) and sees this run's writes.
-    const index = yield* buildIdentityIndex(db, InboxResolver.identitySpecs);
-    const stats: Cursor.Stats = { newMessages: 0 };
-    yield* connectionsSource().pipe(
-      Stage.filter('group-member', (person: GoogleContacts.Person) => memberNames.has(person.resourceName)),
-      mapPersonStage,
-      Stream.grouped(COMMIT_PAGE_SIZE),
-      Pipeline.run({ sink: Cursor.upsertCommit(upsertPerson(index)) }),
-      Effect.provide(
-        Cursor.layer({ cursor: binding, foreignKeySource: GOOGLE_INTEGRATION_SOURCE, maxKey: cursorKey, stats }),
-      ),
+          // Pipeline: stream connections → filter to group members → map → upsert into the space. It's a
+          // DB target (no feed); the upsert sink is idempotent via the foreign key and advances the
+          // cursor (high-water contact `updateTime`) + run status in the same place as the write.
+          //
+          // NB: no dedup-by-cursor here — a contact added to the group without being modified has an
+          // `updateTime` older than the cursor, so deduping would silently drop it. We re-upsert every
+          // member each run (idempotent).
+          // TODO(wittjosiah): Skip unchanged contacts (dedup by updateTime) once we also detect group
+          //   membership changes, so newly-added-but-unmodified contacts still sync.
+          // One query per identity type up front, then every lookup is O(1) and sees this run's writes.
+          const index = yield* buildIdentityIndex(db, InboxResolver.identitySpecs);
+          const upsert = upsertPerson(index);
+          const stats: Cursor.Stats = { newMessages: 0 };
+          yield* connectionsSource().pipe(
+            Stage.filter('group-member', (person: GoogleContacts.Person) => memberNames.has(person.resourceName)),
+            mapPersonStage,
+            Stream.grouped(COMMIT_PAGE_SIZE),
+            Pipeline.run({
+              sink: Cursor.upsertCommit((person: MappedPerson) =>
+                upsert(person).pipe(Effect.tap(() => Effect.sync(() => reporter.advance()))),
+              ),
+            }),
+            Effect.provide(
+              Cursor.layer({ cursor: binding, foreignKeySource: GOOGLE_INTEGRATION_SOURCE, maxKey: cursorKey, stats }),
+            ),
+          );
+
+          log('contact group sync complete', {
+            groupResourceName,
+            members: memberNames.size,
+            upserted: stats.newMessages,
+          });
+          return { upserted: stats.newMessages };
+        }),
     );
-
-    log('contact group sync complete', {
-      groupResourceName,
-      members: memberNames.size,
-      upserted: stats.newMessages,
-    });
-    return { upserted: stats.newMessages };
   });
 
 const handler = GoogleOperation.GoogleContactsSync.pipe(

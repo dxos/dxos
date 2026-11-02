@@ -19,8 +19,9 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Tag from '@dxos/react-ui/Tag';
 
-import { meta } from '#meta';
 import { Book } from '#types';
+
+import { LibraryNamespace } from '../../namespace.ts';
 
 // The user's per-book reading state — the editable subset of the Book schema. The catalog metadata is
 // read-only (sourced from BookHive), so it is presented above but excluded from the form.
@@ -52,7 +53,7 @@ const STATUS_LABELS: Record<Book.Status, string> = {
  * genres, description — is sourced from BookHive and never editable here.
  */
 export const BookInfo = ({ book }: { book: Book.Book }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LibraryNamespace.key);
   // Subscribe so external edits re-render (and the form reflects saved values); writes still target the
   // original `book` (subject).
   const [live = book] = useObject(book);

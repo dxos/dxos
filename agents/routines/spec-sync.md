@@ -89,9 +89,8 @@ Per plugin, in order, with one subagent per plugin when more than three are sele
 
 Then:
 
-9. `node tools/claude/plugins/dxos/scripts/list-tests.mjs` must still list every test; run
-   `node tools/qa-lint/qa-lint.mjs` and `node tools/qa-lint/teardown-lint.mjs` and fix what they
-   report in the specs you touched. Run `pnpm format`.
+9. `pnpm deus qa list` must still list every test; run `pnpm deus qa lint` (unbound references
+   and unsafe teardowns) and fix what it reports in the specs you touched. Run `pnpm format`.
 10. Commit as `spec-sync: <plugin>, <plugin>, …` and open one PR with the `submit-pr` skill. The
     body lists, per plugin: keys backfilled, ops added / removed / marked unimplemented, types and
     surfaces changed, tests marked unverified, and any judgement you made that a human should

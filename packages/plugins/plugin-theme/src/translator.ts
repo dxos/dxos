@@ -9,6 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { type Resource, addResources, translator } from '@dxos/i18n';
 import { translations as reactUiCalendarTranslations } from '@dxos/react-ui-calendar/translations';
+import { translations as reactUiMenuTranslations } from '@dxos/react-ui-menu/translations';
 import { translations as reactUiMosaicTranslations } from '@dxos/react-ui-mosaic/translations';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { osTranslations } from '@dxos/ui-theme';
@@ -37,6 +38,7 @@ export default Capability.makeModule(
       ...reactUiTranslations,
       ...reactUiMosaicTranslations,
       ...reactUiCalendarTranslations,
+      ...reactUiMenuTranslations,
       ...translations,
       ...resourceExtensions,
       ...(appName ? [{ 'en-US': { [osTranslations]: { 'current-app.name': appName } } }] : []),

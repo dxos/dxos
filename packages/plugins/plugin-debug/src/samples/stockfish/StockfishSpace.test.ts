@@ -49,9 +49,9 @@ describe('Chess MCP template', () => {
           expect(declared).toContain(typename);
         }
       }
-      // And the two the plan creates at run time are not among them: stage four adds the server
-      // record and stage five the repository, so seeding either would name a URL that does not exist.
-      expect([...declared].filter((type) => /mcpServer|\.repo$/.test(type))).toEqual([]);
+      // And the two the plan creates at run time are not among them: stage four adds the server's
+      // connection and stage five the repository, so seeding either would name a URL that does not exist.
+      expect([...declared].filter((type) => /\.connection$|\.repo$/.test(type))).toEqual([]);
     },
   );
 

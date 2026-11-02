@@ -1,0 +1,440 @@
+---
+id: org.dxos.plugin.codeGraph
+name: CodeGraphPlugin
+version: 0.1.0
+---
+
+A canvas of the codebase, built from code-index. Boxes are resources in the index (packages, files,
+symbols); arrows are facts between them (imports, package dependencies). The assistant fills and reshapes
+a graph by querying the index. The canvas lays the same graph out with the illustrator's semantic engine,
+a force-directed layout, or by dependency rank, and can show the illustrator's full drawing.
+
+Dev only: the page reaches the index through a `vite dev` route that runs `code-index mcp` beside the app
+(`tauri dev` loads the same dev server). See `docs/DESIGN.md`.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.1`         |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `step`      | `org.dxos.mdl.step@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
+
+## Types
+
+```mdl
+type CodeGraph
+  desc: A curated view of the code index. Boxes and arrows are held inline; each box stands for a resource in the index.
+  fields:
+    name?: string
+    layout?: Layout
+    grouped?: boolean        # frame boxes by package (illustrator layout and drawing)
+    nodes: Node[]
+    edges: Edge[]
+```
+
+```mdl
+type Node
+  desc: One box.
+  fields:
+    id: string             # the resource IRI, e.g. https://dxos.org/deus/package/@dxos/echo
+    label: string
+    kind: NodeKind
+    group?: string         # the package directory; the illustrator frames boxes by it
+    position?: Position    # where the user dragged the box
+```
+
+```mdl
+type Edge
+  desc: One arrow, from the subject to the object of a triple.
+  fields:
+    from: string
+    to: string
+    kind?: string          # the predicate's local name, e.g. imports, usesPackage
+```
+
+```mdl
+type NodeKind
+  literals: package | file | symbol | module | spec | other
+```
+
+```mdl
+type Layout
+  literals: illustrator | force | rank | diagram
+```
+
+## Operations
+
+```mdl
+op query
+  key: org.dxos.operation.codeGraph.query
+  desc: Runs a SPARQL SELECT over the index and returns the rows; draws nothing.
+```
+
+```mdl
+op inspect
+  key: org.dxos.operation.codeGraph.inspect
+  desc: Returns one resource's outgoing facts and incoming counts.
+```
+
+```mdl
+op read
+  key: org.dxos.operation.codeGraph.read
+  desc: Returns a graph's boxes, arrows and layout.
+```
+
+```mdl
+op addFromQuery
+  key: org.dxos.operation.codeGraph.addFromQuery
+  desc: Runs a SELECT and draws its rows; ?from/?to rows are arrows, ?node rows are boxes.
+```
+
+```mdl
+op addNodes
+  key: org.dxos.operation.codeGraph.addNodes
+  desc: Adds boxes for resources and connects every box pair the index links by imports or usesPackage.
+```
+
+```mdl
+op addNeighbors
+  key: org.dxos.operation.codeGraph.addNeighbors
+  desc: Adds the neighbours of boxes along one predicate, outward, inward or both.
+```
+
+```mdl
+op remove
+  key: org.dxos.operation.codeGraph.remove
+  desc: Removes boxes and their arrows, or everything.
+```
+
+```mdl
+op setLayout
+  key: org.dxos.operation.codeGraph.setLayout
+  desc: Chooses the layout, optionally forgets dragged positions, and optionally turns grouping by package on or off.
+```
+
+```mdl
+op runCommand
+  key: org.dxos.operation.codeGraph.runCommand
+  desc: Carries out one short command with its own fast model, which may only add SPARQL results or remove boxes by a text filter; a decision model ends the loop.
+```
+
+## Components
+
+```mdl
+component CodeGraphArticle
+  desc: The article surface. A toolbar picks the layout, groups by package and resets positions; the body is the canvas or the drawing, with a details panel for the selected box and the same panel as a card on hover.
+  props:
+    subject: CodeGraph
+```
+
+```mdl
+component CodeGraphCanvas
+  desc: react-ui-canvas's dynamic projection with one box per resource, as plugin-projects' FeatureCanvas uses it. Arrangement and an overlay of positions place the boxes. A box shows a symbol's own name and a coloured tag of its kind from the index. Package frames are the canvas's own diagram nodes, on a backdrop layer under the boxes and arrows.
+```
+
+```mdl
+component CodeGraphDiagram
+  desc: plugin-illustrator's SceneSvg drawing of the semantic layout, read-only, with package frames and routed arrows.
+```
+
+```mdl
+component NodeDetails
+  desc: The selected resource's facts, with expand and remove actions.
+```
+
+```mdl
+component CommandBar
+  desc: A floating button (or `/`) that opens a one-line command field over the canvas, with a microphone toggle for spoken commands and a line for the outcome and the trailer.
+```
+
+## Features
+
+```mdl
+feat F-1: Read the index from the app
+  req F-1.1: A same-origin dev-server route answers read-only code-index tools by running `code-index mcp` as a child process.
+  req F-1.2: The route accepts only loopback callers and JSON requests, so other pages and machines cannot read the source tree.
+  req F-1.3: Without the route (a deployed build), every operation fails with an error that names the missing route.
+```
+
+```mdl
+feat F-2: The assistant shapes the graph
+  req F-2.1: The Code Graph skill offers query, inspect, read, addFromQuery, addNodes, addNeighbors, remove and setLayout, and the space's addObject to create a graph.
+  req F-2.2: A chat about a CodeGraph object carries the skill (SkillsAnnotation).
+  req F-2.3: Adding never duplicates a box or an arrow, and a box an arrow needs is added with it.
+  req F-2.4: An addition that would take a graph past 300 boxes fails whole with `LimitError`.
+```
+
+```mdl
+feat F-3: Two layouts on one canvas
+  req F-3.1: The illustrator layout solves the graph as semantic DSL and places canvas boxes at the solved centres; when the graph is grouped it frames each package's boxes, the package box included, in a tinted frame titled with the package's name, one colour per package.
+  req F-3.2: The force layout uses the canvas's own force arrangement; rank uses its fewest-crossings arrangement.
+  req F-3.3: Dragging a box saves only its position; boxes the user did not move stay under the layout.
+  req F-3.4: The diagram layout renders the illustrator's full drawing with SceneSvg.
+```
+
+```mdl
+feat F-4: Inspect a box
+  req F-4.1: Double-clicking a box opens its facts from the index.
+  req F-4.2: The details panel expands the box's dependencies or dependents, or removes it.
+```
+
+feat F-5: Single commands
+  req F-5.1: A command bar, apart from the chat assistant, takes one typed or spoken command and runs it with RunCommand.
+  req F-5.2: The command model sees the graph as it is and may only add the rows of a SPARQL SELECT or remove boxes matching a text filter (`*`, `kind:<kind>`, `/regex/`, or text).
+  req F-5.3: Between turns a decision model (the space's default, Clef on Workers AI unless configured) judges whether the command is done; a failed or empty action earns another turn without asking, and a turn that only removed boxes ends the command; at most 3 turns.
+  req F-5.4: A command adds at most 40 boxes; the rest are left out and summarised in a trailer (counts by kind and package, and a few names) shown to the user and the model.
+  req F-5.5: Speaking uses Whistle on the device: with the microphone on, each pause ends a command.
+  req F-5.6: Before the first model call, the packages and exported symbols the command names are looked up in the index and given to the model as exact IRIs; the lookup is skipped after 1.5 s.
+  req F-5.7: A verbose toggle in the bar, remembered per browser, lists every step of the last command (lookup, model call, add, remove, judge) with its time, its token counts or row counts, and the SPARQL or filter it ran.
+
+## Acceptance
+
+```mdl
+scenario T-1: Draw package dependencies
+  given: an index of this repository, and composer-app under `vite dev`
+  when: the assistant is asked to draw the @dxos packages plugin-markdown depends on
+  then: a code graph shows plugin-markdown with an arrow to each dependency, laid out by the illustrator
+```
+
+```mdl
+scenario T-2: Switch layout
+  given: a code graph with boxes
+  when: the user picks the force layout
+  then: the same boxes are re-placed by the force arrangement, and the graph's layout field reads force
+```
+
+scenario T-3: Clear the graph
+  given: a code graph with boxes
+  when: the user runs the command "clear the graph"
+  then: the graph is empty after one model turn
+
+scenario T-4: Show a package's exports
+  given: a code graph showing unrelated packages
+  when: the user runs "show me the ECHO package exports"
+  then: the graph shows only the exports of @dxos/echo
+
+scenario T-5: Draw dependents
+  given: an empty code graph
+  when: the user runs "What depends on identity service in halo"
+  then: the graph shows the identity service with an arrow from each file that imports it, the first 40 boxes at most and a trailer for the rest
+
+## QA
+
+```mdl
+test QA-1: Draw and reshape a package graph
+  desc: The primary journey — create a graph, fill it from the index, expand a box, switch layouts.
+  actors: human, agent
+  covers: [F-1.1, F-2.1, F-2.3, F-3.1, F-3.2, F-5.1]
+  status: passing           # 2026-10-23; driven by a Playwright script against `vite dev`: steps 1-3 by `invoke`, step 4 and the details panel's Expand by clicks. The assistant chat itself was not exercised (no model key in the sandbox).
+  given:
+    - the index is built (`bun tools/code-index/bin/code-index.ts index`) and no other code-index process holds it
+    - composer-app runs under `moon run composer-app:serve`
+    - space: a space is open
+    - plugin-code-graph is enabled
+  steps:
+    - name: Create the graph
+      do: In the navtree, click + and choose Code Graph. Name it "QA Code Graph".
+      invoke: org.dxos.operation.space.addObject { object: { "@type": "org.dxos.type.codeGraph", name: "QA Code Graph", nodes: [], edges: [] } }
+      capture: graph
+      expect: an empty Code Graph article opens with the message asking the assistant to draw here
+    - name: Draw a package's dependencies
+      do: Ask the assistant to draw the @dxos packages that @dxos/plugin-markdown depends on.
+      invoke: [op:addFromQuery] { graph: $graph.object, sparql: "SELECT ?from ?to WHERE { BIND(<https://dxos.org/deus/package/@dxos/plugin-markdown> AS ?from) ?from deus:usesPackage ?to . ?to deus:name ?name . FILTER(STRSTARTS(?name, \"@dxos/\")) }" }
+      expect: boxes for plugin-markdown and its @dxos dependencies, with arrows from plugin-markdown, placed on a grid
+      assert: return $result.addedEdges > 0 && $result.nodes === $result.addedNodes;
+    - name: Expand a dependency
+      do: Double-click the @dxos/echo box and choose Expand dependencies.
+      invoke: [op:addNeighbors] { graph: $graph.object, nodes: ["pkg:@dxos/echo"] }
+      expect: the packages echo depends on appear, with arrows from echo
+      assert: return $result.addedNodes > 0;
+    - name: Switch to the force layout
+      do: Click the force-directed layout button in the toolbar.
+      invoke: [op:setLayout] { graph: $graph.object, layout: "force" }
+      expect: the same boxes are re-placed; none overlap
+    - name: Run a command
+      do: Press /, type "clear the graph" and press Enter.
+      invoke: [op:runCommand] { graph: $graph.object, command: "clear the graph" }
+      expect: the canvas empties and the command bar says what it did
+      assert: return $result.removedNodes > 0;
+  after:
+    - name: Delete the graph
+      do: Right-click "QA Code Graph" in the navtree and choose Delete.
+      expect: the graph leaves the navtree
+```
+
+```mdl
+test QA-2: Single commands
+  desc: The command bar, apart from the chat: replace the graph with a package's exports, draw what depends on a service, then clear it.
+  actors: human, agent
+  covers: [F-5.1, F-5.2, F-5.3, F-5.4]
+  status: passing           # 2026-10-23; driven by autocue/commands.mjs against `vite dev` with EDGE preview; 9.3 s for the first command (index process cold), 4–5 s after. Speech was not exercised (no microphone in the sandbox).
+  given:
+    - the index is built (`bun tools/code-index/bin/code-index.ts index`) and no other code-index process holds it
+    - composer-app runs under `moon run composer-app:serve` with an AI service (EDGE preview, `DX_EDGE_BASE_URL=https://preview.dxos.network/`)
+    - space: a space is open
+    - plugin-code-graph is enabled
+    - a Code Graph named "Commands" is open
+  steps:
+    - name: Show a package's exports
+      do: Press /, type "show me the ECHO package exports" and press Enter.
+      expect: the graph shows @dxos/echo with an arrow to each module it exports, and the bar says what it drew
+    - name: Draw what depends on a service
+      do: Type "What depends on identity service in halo" and press Enter.
+      expect: the echo exports are replaced by Identity.Service and the symbols and operations that use it
+    - name: Clear the graph
+      do: Type "clear the graph" and press Enter.
+      expect: the canvas is empty
+```
+
+## Changelog
+
+Every change to this spec adds a decision, newest last. See `lang/changelog.mdl` for the attribution rules.
+
+```mdl
+decision D-1: A Composer plugin integrates with code-index; it may work only under `vite dev` or in Tauri.
+  date: 2026-10-23
+  by: user:dmaretskyi
+  affects: [F-1]
+```
+
+```mdl
+decision D-2: The plugin's article is a canvas of the code graph, and the assistant gets tools to query and change that graph.
+  date: 2026-10-23
+  by: user:dmaretskyi
+  affects: [CodeGraphArticle, F-2]
+```
+
+```mdl
+decision D-3: The canvas lays the graph out both with the illustrator's layout and as a force-directed graph, sharing the canvas and illustrator code the way feature maps do.
+  date: 2026-10-23
+  by: user:dmaretskyi
+  affects: [CodeGraphCanvas, F-3]
+```
+
+```mdl
+decision D-4: The page reaches code-index through a dev-server route that runs `code-index mcp` as a child process. Fills in [D-1].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.1, F-1.2]
+  why: The index's store is single-process behind a native addon, and the code-index web server has no SPARQL route; the MCP server already serves the read-only tools.
+  rejected: Opening the store in the vite process, which would hold its lock and load the addon there.
+```
+
+```mdl
+decision D-5: One canvas serves the illustrator, force and rank layouts; the illustrator's semantic engine supplies box positions as the canvas overlay, and a fourth view shows the illustrator's own drawing. Fills in [D-3].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [CodeGraphCanvas, CodeGraphDiagram, F-3.1, F-3.2, F-3.4]
+  why: Feature maps use react-ui-canvas's dynamic projection, which already has a force arrangement; feeding it illustrator positions compares both layouts on one component.
+```
+
+```mdl
+decision D-6: Illustrator positions are centred on the origin, and the canvas refits when they arrive. Fills in [D-5].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [CodeGraphCanvas, F-3.1]
+  why: The engine's coordinates start at its own origin and arrive after the canvas's first fit, so the graph opened off-centre and too small to read.
+```
+
+```mdl
+decision D-7: The skill creates a graph with the space's addObject from a typed draft; the plugin has no create operation. Fills in [D-2].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.1]
+  why: An assistant cannot pass a live object back from a tool call, so it needs a draft form, which addObject already accepts; a create operation that also saved the object duplicated it.
+  rejected: A create operation that adds the graph to the space itself.
+```
+
+```mdl
+decision D-8: A graph holds at most 300 boxes; an addition past that fails whole with LimitError. Fills in [D-2].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.4]
+  why: An assistant expanding without end would grow the document and the layouts past what stays fast or readable.
+  rejected: Truncating the addition silently.
+```
+
+```mdl
+decision D-9: Grouping by package is a saved switch on the graph, and the canvas draws the frames with its own diagram nodes on a backdrop layer. Fills in [D-5].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.1]
+  why: Implicit framing for 2 to 6 packages left no way to see a graph by package, or to turn frames off; the canvas already draws the illustrator's tinted group frames, and a layer under the arrows keeps them from covering the arrows.
+  rejected: A frame view of the plugin's own; framing only when there are few packages.
+```
+
+```mdl
+decision D-10: A single-command mode, apart from Composer's agent, runs typed or spoken commands with a model that sees the graph and may only add SPARQL results or remove boxes by a text filter; a decision model judges between turns whether to stop, and an addition past N boxes adds the first N with a trailer summarising the rest.
+  date: 2026-10-23
+  by: user:dmaretskyi
+  affects: [CommandBar, F-5]
+```
+
+```mdl
+decision D-11: The command loop asks for one structured step per turn (actions and a sentence) from Claude Haiku rather than running a tool-calling agent; the judge is the AI service's default decision model. Fills in [D-10].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.2, F-5.3]
+  why: A command should take one model round trip; several actions fit in one step, and a decision model answers "is this done" faster and cheaper than another language-model turn.
+  rejected: Reusing the chat assistant's tool loop, which plans and explains at length.
+```
+
+```mdl
+decision D-12: A command adds at most 40 boxes; a failed or empty action earns a turn without the judge, a turn that only removed boxes ends the command without it, and with no decision model a command stops after its first successful turn. Fills in [D-10].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.3, F-5.4]
+  why: Forty boxes stay readable under every layout; retrying a refused query, or accepting a removal that did what it said, needs no judgement, so asking would only add latency.
+```
+
+```mdl
+decision D-13: Whistle moves from plugin-transcription's stories to `@dxos/plugin-transcription/Whistle` so the command bar can use it. Fills in [D-10].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.5]
+  why: The command bar asked for the microphone and Whistle; the stories held the only copy of the on-device speech hook.
+```
+
+```mdl
+decision D-14: The command loop looks up the packages and symbols a command names before the model's first turn, and the article loads the index's package list when it opens. Fills in [D-10].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.6]
+  why: A model that guessed names with CONTAINS filters drew the wrong things or wrote queries the index refused, and each retry cost another 2 s model call; an exact lookup on a warm index costs about 10 ms. The first query on a cold index takes seconds, so opening the article pays for it.
+  rejected: More turns or a larger model, which add seconds to every command.
+```
+
+```mdl
+decision D-15: RunCommand returns a trace of timed steps, and the command bar shows it in a verbose mode the user turns on. Fills in [D-10].
+  date: 2026-10-26
+  by: user:dmaretskyi
+  affects: [F-5.7, CommandBar]
+  why: A slow or wrong command could not be explained from the outcome line; the trace shows where the time went and which query the model ran.
+```
+
+```mdl
+decision D-16: The judge is the space's default decision model, which is Cloudflare's Clef unless configured, and Code Graph depends on the TypeSafe plugin so that a decision model is always there. Fills in [D-11].
+  date: 2026-10-26
+  by: user:dmaretskyi
+  affects: [F-5.3]
+  why: With TypeSafe off (it defaults on only in dev builds) no resolver served decision models, so every command stopped after its first turn; Clef answers through EDGE with no key, in about 0.3 s once signed in.
+```

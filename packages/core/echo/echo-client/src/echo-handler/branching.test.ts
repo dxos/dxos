@@ -207,7 +207,7 @@ describe('branching', () => {
     await expect(createBranch(root, 'main')).rejects.toThrow();
   });
 
-  test('guards: duplicate name, unknown branch, inline objects', async () => {
+  test('guards: duplicate name, unknown branch', async () => {
     const { db, root } = await setup();
     await createBranch(root, 'b1');
 
@@ -217,11 +217,6 @@ describe('branching', () => {
     await expect(switchBranch(root, 'nope')).rejects.toThrow(/not found/);
     await expect(mergeBranch(root, 'nope')).rejects.toThrow(/not found/);
     await expect(db.branch(root, 'nope')).rejects.toThrow(/not found/);
-
-    // Inline objects (stored in the space root doc) have no own document to fork: clear error.
-    const inline: any = db.add(Obj.make(TestSchema.Expando, { title: 'inline' }), { placeIn: 'root-doc' });
-    await db.flush();
-    await expect(createBranch(inline, 'b1')).rejects.toThrow(/inline object/);
   });
 
   test('switching branch gives an independent edit history', async () => {

@@ -17,6 +17,8 @@ import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { ClientCapabilities, ClientEvents } from '#types';
 
+await Harness.preload({ plugins: [ClientPlugin.make({})] });
+
 const NOTE_URI = DXN.make('example.com.type.note', '0.1.0');
 
 class Note extends Type.makeObject<Note>(NOTE_URI)(Schema.Struct({ title: Schema.String })) {}

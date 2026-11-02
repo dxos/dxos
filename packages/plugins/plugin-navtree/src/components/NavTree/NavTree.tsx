@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { forwardRef, useMemo } from 'react';
+import React, { forwardRef, memo, useMemo } from 'react';
 
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
@@ -25,32 +25,34 @@ export type NavTreeProps = { id: string; root?: AppGraphNode.Node; tab: string }
 >;
 
 // TODO(wittjosiah): Refactor to Radix-style.
-export const NavTree = forwardRef<HTMLDivElement, NavTreeProps>(({ id, root, tab, ...props }, forwardedRef) => {
-  const { onBack, onItemHover } = useNavTreeContext();
-  const { topLevelActions, l0Items, pinnedItems, userAccountItem, topLevelItems } = useTopLevelNavItems(root);
+export const NavTree = memo(
+  forwardRef<HTMLDivElement, NavTreeProps>(({ id, root, tab, ...props }, forwardedRef) => {
+    const { onBack, onItemHover } = useNavTreeContext();
+    const { topLevelActions, l0Items, pinnedItems, userAccountItem, topLevelItems } = useTopLevelNavItems(root);
 
-  useLoadDescendents(root);
-  const path = useMemo(() => [id], [id]);
+    useLoadDescendents(root);
+    const path = useMemo(() => [id], [id]);
 
-  return (
-    // TODO(thure): `Tabs.Root` forces all items that should be able to receive focus to use `Tabs.Tab(Primitive)` since
-    //  it uses RovingFocus and doesn't support moving focus to an item that is not a tab. Assess whether this situation
-    //  should change including whether it should motivate a change in the design/taxonomy, or if this means this should
-    //  not use `Tabs` at all.
-    <Tabs.Root value={tab} orientation='vertical' classNames='relative' ref={forwardedRef}>
-      <L0Menu
-        menuActions={topLevelActions as MenuItem[]}
-        topLevelItems={l0Items}
-        pinnedItems={pinnedItems}
-        userAccountItem={userAccountItem}
-        path={path}
-        parent={root}
-        onItemHover={onItemHover}
-      />
-      <L1Tabs topLevelItems={topLevelItems} path={path} currentItemId={tab} onBack={onBack} {...props} />
-    </Tabs.Root>
-  );
-});
+    return (
+      // TODO(thure): `Tabs.Root` forces all items that should be able to receive focus to use `Tabs.Tab(Primitive)` since
+      //  it uses RovingFocus and doesn't support moving focus to an item that is not a tab. Assess whether this situation
+      //  should change including whether it should motivate a change in the design/taxonomy, or if this means this should
+      //  not use `Tabs` at all.
+      <Tabs.Root value={tab} orientation='vertical' classNames='relative' ref={forwardedRef}>
+        <L0Menu
+          menuActions={topLevelActions as MenuItem[]}
+          topLevelItems={l0Items}
+          pinnedItems={pinnedItems}
+          userAccountItem={userAccountItem}
+          path={path}
+          parent={root}
+          onItemHover={onItemHover}
+        />
+        <L1Tabs topLevelItems={topLevelItems} path={path} currentItemId={tab} onBack={onBack} {...props} />
+      </Tabs.Root>
+    );
+  }),
+);
 
 /**
  * Partitions root children into workspaces, pinned items, user-account, and top-level actions.

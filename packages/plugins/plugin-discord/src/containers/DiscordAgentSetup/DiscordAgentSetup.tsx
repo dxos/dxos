@@ -20,10 +20,10 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Typography from '@dxos/react-ui/Typography';
 
 import { DiscordSetup } from '#components';
-import { meta } from '#meta';
 import { DiscordAdminOperation } from '#types';
 
 import { DISCORD_USER_PROVIDER_ID, edgeConsoleUrl, kaiApplicationId } from '../../constants.ts';
+import { DiscordNamespace } from '../../namespace.ts';
 
 /**
  * The permissions Kai asks for when installed: view, send, read history, create public threads, send in threads, and
@@ -52,7 +52,7 @@ export type DiscordAgentSetupProps = {
  * that server's channels to this agent.
  */
 export const DiscordAgentSetup = ({ role, agent, attendableId }: DiscordAgentSetupProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(DiscordNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   // Absent until plugin-connector activates it (or when it is not enabled); Connect stays disabled meanwhile.
   const [coordinator] = Hooks.useCapabilities(ConnectorCoordination.ConnectorCoordinator);

@@ -9,6 +9,7 @@ import * as Scope from 'effect/Scope';
 import { describe, onTestFinished, test } from 'vitest';
 
 import * as Operation from '@dxos/compute/Operation';
+import * as Process from '@dxos/compute/Process';
 import { FibonacciHandler, ReplyHandler } from '@dxos/compute/testing';
 import { Database, Filter, Hypergraph, Obj, Query, Ref, Registry, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
@@ -87,6 +88,61 @@ describe('wrapFunctionHandler', () => {
     const result = await wrapFunctionHandler(ReadsGraph).handler({ data: {}, context: { services: {} } });
 
     expect(result).toEqual({ resolved: true });
+  });
+});
+
+describe('ECHO flush on exit', () => {
+  const Note = Type.makeObject(DXN.make('com.example.type.note', '0.1.0'))(Schema.Struct({ title: Schema.String }));
+
+  // `failFinalizer` adds a second defect after `runAgain`, so the exit is not a clean checkpoint.
+  const WritesThenRunsAgain = Operation.make({
+    meta: { key: DXN.make('com.example.operation.writesThenRunsAgain'), name: 'Writes Then Runs Again' },
+    services: [Database.Service],
+    input: Schema.Struct({ id: Schema.String, failFinalizer: Schema.Boolean }),
+    output: Schema.Void,
+  }).pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* ({ id, failFinalizer }) {
+        yield* Database.add(Obj.make(Note, { id, title: 'checkpoint' }));
+        return yield* Operation.runAgain().pipe(
+          Effect.ensuring(failFinalizer ? Effect.die(new Error('finalizer failed')) : Effect.void),
+        );
+      }),
+    ),
+  );
+
+  /** Runs the operation, then reads the note back from the space reopened on a fresh client. */
+  const runAndReopen = async (failFinalizer: boolean) => {
+    const { peer, services } = await openPeer();
+    const db = await peer.createDatabase();
+    const id = EntityId.random();
+
+    const error = await wrapFunctionHandler(WritesThenRunsAgain, { types: [Note] })
+      .handler({
+        data: { id, failFinalizer },
+        context: { services, spaceId: db.spaceId, spaceKey: db.spaceKey.toHex(), spaceRootUrl: db.rootUrl },
+      })
+      .then(
+        () => undefined,
+        (err: unknown) => err,
+      );
+
+    const reopened = await peer.openDatabase(db.spaceKey, db.rootUrl, { client: await peer.createClient() });
+    return { error, notes: await reopened.query(Filter.id(id)).run() };
+  };
+
+  test('persists writes made before Operation.runAgain', async ({ expect }) => {
+    const { error, notes } = await runAndReopen(false);
+
+    expect(Process.RunAgainError.is(error)).toBe(true);
+    expect(notes).toHaveLength(1);
+  });
+
+  test('drops writes when runAgain comes with another defect', async ({ expect }) => {
+    const { error, notes } = await runAndReopen(true);
+
+    expect(error).toBeDefined();
+    expect(notes).toHaveLength(0);
   });
 });
 

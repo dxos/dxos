@@ -17,14 +17,17 @@ import type * as AppGraphNode$ from '@dxos/app-graph/AppGraphNode';
 import type { Client } from '@dxos/client';
 import type { Space } from '@dxos/client/echo';
 import * as Credential from '@dxos/compute/Credential';
+import * as Hook from '@dxos/compute/Hook';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import type { Database, Obj, Type } from '@dxos/echo';
 import type * as Retention from '@dxos/graph/Retention';
 import { type Translator as Translator$ } from '@dxos/i18n';
 import { type URI } from '@dxos/keys';
+import type { Connection } from '@dxos/link';
 import { Progress } from '@dxos/progress';
-import type { AnchoredTo } from '@dxos/types';
+import type { Selection } from '@dxos/react-ui-attention/types';
+import type { AnchoredTo, Message, Thread } from '@dxos/types';
 import * as Position from '@dxos/util/Position';
 
 // eslint-disable-next-line @dxos/rules/import-as-namespace
@@ -253,6 +256,22 @@ export const SkillDefinition = Capability$.make<Skill.Definition>()(
 );
 
 /**
+ * A hook the agent host runs at a point in a request's lifecycle, usually scoped to one of the plugin's
+ * skills. Read per request, so a hook contributed after the agent service was built still fires.
+ *
+ * @category Capability
+ */
+export const HookDefinition = Capability$.make<Hook.Definition>()('org.dxos.app-framework.capability.hookDefinition');
+
+/**
+ * An MCP server a plugin ships, needing no credential. It is synced into the registry, where every
+ * chat lists it off until the chat or its agent turns it on; nothing is written to a space.
+ *
+ * @category Capability
+ */
+export const McpServer = Capability$.make<Connection.Builtin>()('org.dxos.app-framework.capability.mcpServer');
+
+/**
  * A static asset bundled with a plugin's published package, exposed for
  * other plugins to read.
  *
@@ -362,12 +381,33 @@ export type CommentConfig = Readonly<{
   comments: 'anchored' | 'unanchored';
   selectionMode?: string;
   scrollToAnchor?: Operation.Definition.Any;
+  /** The anchor a new comment on `selection` stores, when the object's anchors are not the selection's own form. */
+  anchorFromSelection?: (obj: any, selection: Selection.Selection | undefined) => string | undefined;
 }>;
 
 /**
  * @category Capability
  */
 export const CommentConfig = Capability$.make<CommentConfig>()('org.dxos.app-framework.capability.commentConfig');
+
+/**
+ * Runs one agent turn on a comment thread, after the triggering `message` is already in the thread's feed.
+ * Contributed by the assistant, so the review plugin owns threads without depending on any AI stack.
+ */
+export type CommentAgentRunner = Readonly<{
+  run: (input: {
+    thread: Thread.Thread;
+    subject: Obj.Unknown;
+    message: Message.Message;
+  }) => Effect$.Effect<void, Error, Capability$.Service>;
+}>;
+
+/**
+ * @category Capability
+ */
+export const CommentAgentRunner = Capability$.make<CommentAgentRunner>()(
+  'org.dxos.app-framework.capability.commentAgentRunner',
+);
 
 /**
  * Where an object of a tagged type goes when it is created without a target. Keyed by a tag on the

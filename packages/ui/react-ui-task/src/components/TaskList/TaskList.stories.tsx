@@ -509,7 +509,7 @@ const seedTagged = (): Task.Task[] => {
   for (const task of tasks) {
     Obj.update(task, (task) => {
       for (const tag of byTitle[task.title] ?? []) {
-        Obj.addTag(task, Ref.make(tag));
+        Obj.addTag(task, tag);
       }
       // A tagged row with a description, so the story shows the chips sitting between the two.
       if (task.title === 'Design the new label') {
@@ -673,7 +673,7 @@ const DefaultStory = ({
         <TaskList.Viewport>
           <TaskList.Content />
         </TaskList.Viewport>
-        <Layout.Flex classNames='p-3'>
+        <Layout.Flex classNames='p-trim-md'>
           <TaskList.Editor
             showDescription={showDescription}
             acceptFiles={acceptFiles}

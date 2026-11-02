@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export * as ScriptPlugin from './ScriptPlugin.ts';
+export * as ScriptPlugin from '#meta';
 export * from '#types';
 export * as ScriptFunction from './ScriptFunction.ts';
 export * as Templates from './Templates.ts';

@@ -13,7 +13,7 @@ import { invariant } from '@dxos/invariant';
 import { IdentityRecovery_Kind } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { ClientPlugin } from '#plugin';
+import * as ClientPlugin from '#meta';
 import { initializeIdentity } from '#testing';
 import { translations } from '#translations';
 
@@ -43,7 +43,7 @@ const decorators = (credentials: SeedCredential[] = []) => [
   withLayout({ layout: 'fullscreen' }),
   withPluginManager({
     plugins: [
-      ClientPlugin({
+      ClientPlugin.make({
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {
             yield* initializeIdentity(client);

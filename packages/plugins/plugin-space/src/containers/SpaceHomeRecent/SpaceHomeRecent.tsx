@@ -23,7 +23,7 @@ import * as Status from '@dxos/react-ui/Status';
 import * as Theme from '@dxos/react-ui/Theme';
 import { getStyles } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
+import { SpaceNamespace } from '../../namespace.ts';
 
 /** Number of recently-modified objects to surface as cards. */
 const RECENT_LIMIT = 10;
@@ -34,7 +34,7 @@ type SpaceScopedProps = {
 };
 
 export const SpaceHomeRecent = ({ space, onClose }: SpaceScopedProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
 
   const { recent, placeholderCount } = useRecentObjects(space);
   const items = useMemo<RecentItem[]>(
@@ -121,7 +121,7 @@ PlaceholderTile.displayName = 'PlaceholderTile';
 
 const RecentObjectTile = ({ data }: { data: Obj.Unknown; index: number }) => {
   const { invokePromise } = Hooks.useOperationInvoker();
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const typename = Obj.getTypename(data);
   const objectLabel = useLabel(data);
   const label = Theme.toLocalizedString(

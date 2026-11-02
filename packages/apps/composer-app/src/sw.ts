@@ -118,6 +118,17 @@ registerRoute(
   }),
 );
 
+// Cache-first for fonts the precache leaves out (the slide theme fonts a deck loads on demand), so a font used once
+// is available offline; the precache route above serves the rest. No age bound, since the files are content-hashed.
+registerRoute(
+  ({ url, request }) =>
+    request.method === 'GET' && url.origin === self.location.origin && request.destination === 'font',
+  new CacheFirst({
+    cacheName: 'dxos-fonts-v1',
+    plugins: [new ExpirationPlugin({ maxEntries: 200 })],
+  }),
+);
+
 const PLUGIN_ASSET_CACHE = 'dxos-plugin-assets-v1';
 const INDEX_DB_NAME = 'dxos-plugin-asset-index';
 const INDEX_STORE = 'plugin-urls';

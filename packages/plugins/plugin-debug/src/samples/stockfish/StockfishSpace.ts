@@ -33,7 +33,7 @@ const partials = {
  *
  * The other space templates depict a project mid-flight; this one is meant to be RUN. Every task is
  * `todo`, the design artifact the first stage produces is deliberately absent, and neither the MCP
- * server record nor a repository is seeded — stages four and five create them.
+ * connection nor a repository is seeded — stages four and five create them.
  *
  * It is deliberately reachable with no credentials but the reader's own DXOS identity: the chat runs
  * DeepSeek through the edge, the first deploy uses wrangler's unauthenticated mode, and the only two

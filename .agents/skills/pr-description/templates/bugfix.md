@@ -36,7 +36,7 @@ first.
 
 | Slot                    | Fill with                                                                                                                                                                                    |
 | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `{{FOUND_BY}}`          | One of `user report`, `Linear DX-123`, `CI failure (<run link>)`, `SigNoz alert`, `Sentry`, `while working on <X>`.                                                                          |
+| `{{FOUND_BY}}`          | One of `user report`, `Linear DX-123`, `CI failure (<run link>)`, `PostHog alert`, `Sentry`, `while working on <X>`.                                                                         |
 | `{{SYMPTOM}}`           | One or two sentences: what the user or caller saw.                                                                                                                                           |
 | `{{ERROR_OR_LOG_LINE}}` | The exact error text or log line, quoted verbatim. When there is none (a wrong value, a hang), drop the whole fenced block, not just its contents.                                           |
 | `{{TEST_FILE}}`         | Repo-relative path of the reproducing test.                                                                                                                                                  |
