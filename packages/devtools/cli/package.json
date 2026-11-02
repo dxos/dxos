@@ -47,6 +47,7 @@
     "@dxos/mcp-server": "workspace:*",
     "@dxos/observability": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
+    "@dxos/plugin-builder": "workspace:*",
     "@dxos/plugin-chess": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",

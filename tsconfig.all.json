@@ -412,6 +412,9 @@
       "path": "packages/plugins/plugin-brain/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/plugin-builder/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-calls/tsconfig.json"
     },
     {

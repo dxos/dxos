@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 //
 // Copyright 2026 DXOS.org
 //
@@ -7,7 +8,7 @@
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 
-import { verifyBundle } from '../bundle/verify-bundle.ts';
+import { verifyBundle } from '../verify-bundle.ts';
 
 /**
  * Checks a built plugin bundle before it is published: the manifest, that every module parses and its imports resolve

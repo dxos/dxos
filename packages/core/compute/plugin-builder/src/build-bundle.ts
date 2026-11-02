@@ -2,21 +2,32 @@
 // Copyright 2026 DXOS.org
 //
 
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { PluginLoader } from '@dxos/edge-compute/plugin-loader';
+import { invariant } from '@dxos/invariant';
 
 /** Where a plugin package's bundle is built, relative to the package. */
 export const BUNDLE_DIR = 'dist/plugin';
 
-/** This package's main module, built beside this chunk: the host EDGE starts a plugin with. */
+/**
+ * The entry of the `@dxos/plugin-host-cloudflare` this package installs: the host EDGE starts a plugin with. Its
+ * `source` when this module runs from source in tests and tools, since the host's build may not exist then.
+ */
 const hostEntry = (): string => {
-  const modulePath = fileURLToPath(import.meta.url);
-  // From source in tests and tools, from the build beside this chunk otherwise.
-  return modulePath.endsWith('.ts')
-    ? join(dirname(modulePath), '..', 'index.ts')
-    : join(dirname(modulePath), 'index.mjs');
+  const fromSource = fileURLToPath(import.meta.url).endsWith('.ts');
+  for (let dir = dirname(fileURLToPath(import.meta.url)); ; dir = dirname(dir)) {
+    const packageDir = join(dir, 'node_modules', PluginLoader.HOST_SPECIFIER);
+    if (existsSync(join(packageDir, 'package.json'))) {
+      const { exports } = JSON.parse(readFileSync(join(packageDir, 'package.json'), 'utf8'));
+      const entry = exports?.['.']?.[fromSource ? 'source' : 'import'];
+      invariant(typeof entry === 'string', `${PluginLoader.HOST_SPECIFIER} has no entry`);
+      return join(packageDir, entry);
+    }
+    invariant(dirname(dir) !== dir, `${PluginLoader.HOST_SPECIFIER} is not installed`);
+  }
 };
 
 /**

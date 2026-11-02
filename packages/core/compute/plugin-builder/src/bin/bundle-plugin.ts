@@ -7,7 +7,7 @@
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 
-import { buildBundle } from '../bundle/build-bundle.ts';
+import { buildBundle } from '../build-bundle.ts';
 
 /**
  * Builds a plugin package's one bundle with `composerPlugin`, the same build `dx registry publish` runs, into

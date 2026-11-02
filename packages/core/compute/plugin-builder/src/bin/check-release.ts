@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 //
 // Copyright 2026 DXOS.org
 //
@@ -7,8 +8,8 @@
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 
-import { buildBundle } from '../bundle/build-bundle.ts';
-import { verifyBundle } from '../bundle/verify-bundle.ts';
+import { buildBundle } from '../build-bundle.ts';
+import { verifyBundle } from '../verify-bundle.ts';
 
 /**
  * Checks that a plugin package can be published to EDGE: builds its one bundle as `dx registry publish` does and runs

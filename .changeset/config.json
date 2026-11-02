@@ -258,6 +258,7 @@
       "@dxos/plugin-board",
       "@dxos/plugin-bookmarks",
       "@dxos/plugin-brain",
+      "@dxos/plugin-builder",
       "@dxos/plugin-calls",
       "@dxos/plugin-canvas",
       "@dxos/plugin-chess",
