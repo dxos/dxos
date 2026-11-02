@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import * as Project from '@dxos/compute/Project';
 import * as Spec from '@dxos/compute/Spec';
-import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { DXN, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Doc } from '@dxos/echo-doc';
 import { Text } from '@dxos/schema';
@@ -32,6 +33,14 @@ import {
   projectSpecs,
   specDocuments,
 } from './migrations.ts';
+
+/** Stands in for another plugin's object that links a spec's document, as a code project does. */
+class Linker extends Type.makeObject<Linker>(DXN.make('org.dxos.type.test.linker', '0.1.0'))(
+  Schema.Struct({
+    spec: Ref.Ref(LegacySpec.Document),
+    specs: Schema.Array(Ref.Ref(LegacySpec.Document)),
+  }),
+) {}
 
 /** The names of the features the spec holds, in its order. */
 const featureNames = async (spec: Spec.Spec | undefined) =>
@@ -231,11 +240,11 @@ describe('feature migrations', () => {
     expect(made && (await made.content.load()).content).toContain('name: Sync');
   });
 
-  test("a 0.2.0 spec takes its document's text, keys, features and layout, and the document is deleted", async ({
+  test("a 0.2.0 spec takes its document's text, keys, features, layout and links, and the document is deleted", async ({
     expect,
   }) => {
     const { db, graph } = await builder.createDatabase({ types: [Text.Text] });
-    graph.registry.add([LegacySpec.SpecV2, LegacySpec.Document, Spec.Spec, Feature.Feature]);
+    graph.registry.add([LegacySpec.SpecV2, LegacySpec.Document, Spec.Spec, Feature.Feature, Linker]);
     const document = db.add(LegacySpec.makeDocument('Inbox'));
     Obj.update(document, (document) => {
       Obj.getMeta(document).keys.push({ source: Feature.SPEC_KEY_SOURCE, id: 'packages/a/PLUGIN.mdl' });
@@ -252,6 +261,7 @@ describe('feature migrations', () => {
     );
     Obj.setParent(document, legacy);
     Obj.setParent(sync, legacy);
+    const linker = db.add(Obj.make(Linker, { spec: Ref.make(document), specs: [Ref.make(document)] }));
     await db.flush();
     await db.runMigrations([makeSpecContent()]);
 
@@ -263,6 +273,7 @@ describe('feature migrations', () => {
     expect(await featureNames(spec)).toEqual(['Sync']);
     expect(FeatureMap.getLayout(spec)?.positions[sync.id]).toEqual({ x: 1, y: 2 });
     expect(await db.query(Filter.type(LegacySpec.Document)).run()).toEqual([]);
+    expect([linker.spec.uri, ...linker.specs.map(({ uri }) => uri)]).toEqual([Ref.make(spec).uri, Ref.make(spec).uri]);
   });
 
   test('a spec document no spec held, under either typename, becomes a spec of its own', async ({ expect }) => {

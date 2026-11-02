@@ -1337,3 +1337,19 @@ decision D-95: The seeded "Inbox and agents" opens with a paragraph and a list o
   rejected:
     - Seeding the prose for every story that uses the sample features, which the other stories' checks do not need.
 ```
+
+```mdl
+decision D-96: An object that links a spec document the `Spec` 0.2.0 migration deletes, such as a code project's `spec`, links the spec that took the document's text in its place. Refines [D-51].
+  date: 2026-11-02
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-97: Before the migration deletes a held document, it finds every object that refers to the document and points each such ref, in a top-level field or a list of refs, at the spec. It does this through references in the database, not a list of the types that may link a document, so plugin-projects needs no knowledge of code projects. Fills in [D-96].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: Plugins that hold refs to specs depend on plugin-projects, not the other way round, and a reverse-reference query finds their objects without naming their types.
+  rejected:
+    - A `CodeProject` migration in plugin-code, which runs after the document is gone and cannot tell which spec held it.
+```

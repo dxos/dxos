@@ -7,7 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Project from '@dxos/compute/Project';
 import * as Spec from '@dxos/compute/Spec';
-import { type Database, Filter, Migration, Obj, Ref } from '@dxos/echo';
+import { type Database, Filter, Migration, Obj, Query, Ref } from '@dxos/echo';
+import { EID } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { Text } from '@dxos/schema';
 
@@ -292,6 +293,36 @@ export const documentRename = Migration.define({
   transform: async ({ name, content }) => ({ name, content }),
 });
 
+/** Whether the ref points at the object with this id. */
+const targets = (value: unknown, id: string): boolean =>
+  Ref.isRef(value) && EID.getEntityId(EID.parse(value.uri)) === id;
+
+/**
+ * Points each ref to `from`, in any object's top-level fields, at `to`. Objects of other plugins (a code project's
+ * spec) link a document the migration deletes, and this keeps them linked to the spec that replaces it.
+ */
+const repoint = async (db: Database.Database, from: Obj.Unknown, to: Obj.Unknown) => {
+  const referrers = await db.query(Query.select(Filter.id(from.id)).referencedBy()).run();
+  for (const referrer of referrers) {
+    if (referrer.id === to.id) {
+      continue;
+    }
+    Obj.update(referrer, (referrer) => {
+      for (const [key, value] of Object.entries(referrer)) {
+        if (targets(value, from.id)) {
+          Obj.setValue(referrer, [key], Ref.make(to));
+        } else if (Array.isArray(value)) {
+          value.forEach((item, index) => {
+            if (targets(item, from.id)) {
+              Obj.setValue(referrer, [key, index], Ref.make(to));
+            }
+          });
+        }
+      }
+    });
+  }
+};
+
 /**
  * `Spec` 0.2.0 → 0.3.0: the spec owns its `Text` (`content`) where it held a document that owned it, and its features
  * and canvas layout move from fields to annotations. The document's `Text` moves onto the spec rather than being
@@ -344,6 +375,7 @@ export const makeSpecContent = (): Migration.ObjectMigration => {
       const held = documents.get(object.id);
       documents.delete(object.id);
       if (held) {
+        await repoint(db, held, object);
         db.remove(held);
       }
     },
