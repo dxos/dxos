@@ -124,10 +124,11 @@ for (const { name, path: pkgPath } of packages) {
     value !== null &&
     (condition in value || Object.values(value).some((nested) => hasCondition(nested, condition)));
   for (const [importPath, importValue] of Object.entries(pkgImports)) {
-    // One bundle serves EDGE too, built for the browser, so a `workerd` condition is never resolved there.
+    // One bundle serves EDGE too, built for the browser, so a `workerd` condition is never resolved there; a warning
+    // rather than an error while plugins that still pick a variant this way move to one module per environment.
     if (isPlugin && hasCondition(importValue, 'workerd')) {
       addDiagnostic(
-        'error',
+        'warning',
         'plugin-runtime-condition',
         `import "${importPath}" picks a workerd variant by condition; a plugin has one bundle, so declare one module per environment instead`,
       );
