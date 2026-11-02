@@ -4,6 +4,7 @@
 
 export { type EditorController, createEditorController, noopController } from './controller.ts';
 export { useEditorContext } from './EditorContext.ts';
+export { useCommentActions } from './useCommentActions.ts';
 
 export * from './Editor.tsx';
 

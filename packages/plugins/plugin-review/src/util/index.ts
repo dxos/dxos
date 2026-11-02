@@ -5,5 +5,6 @@
 export * from './author-hue.ts';
 export * from './commentable.ts';
 export * from './comment-state.ts';
+export * from './field-editor.ts';
 export * from './message.ts';
 export * from './pending.ts';

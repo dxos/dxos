@@ -24,6 +24,8 @@ export type EditorBinding = {
    * rather than an index; defaults to `path`.
    */
   anchor?: readonly EditorPathSegment[];
+  /** The object annotations such as comments belong to, when it only references `object` (a document's text). */
+  subject?: Obj.Unknown;
 };
 
 /** Extensions for every live-bound editor beneath the provider, given what the editor edits. */
@@ -39,6 +41,6 @@ export const useEditorExtensions = (binding: EditorBinding | undefined): Extensi
   const place = binding && JSON.stringify([binding.path, binding.anchor]);
   return useMemo(
     () => (binding ? factories.map((factory) => factory(binding)) : []),
-    [factories, binding?.object, place],
+    [factories, binding?.object, binding?.subject, place],
   );
 };

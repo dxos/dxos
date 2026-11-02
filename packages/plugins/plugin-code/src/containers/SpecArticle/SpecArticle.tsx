@@ -16,7 +16,7 @@ import { Doc } from '@dxos/echo-doc';
 import { useIdentity } from '@dxos/halo-react';
 import { getSpace } from '@dxos/react-client/echo';
 import { Attention } from '@dxos/react-ui-attention';
-import { Editor } from '@dxos/react-ui-editor';
+import { Editor, useCommentActions, useEditorExtensions } from '@dxos/react-ui-editor';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -108,6 +108,12 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
       useSpecModel(source);
     const { fold } = session;
     const open = useOpenSource({ ...source, id, key, setSession });
+    // Extensions bound to the spec's text (comments on the spec), from enclosing `EditorExtensionsProvider`s.
+    const binding = useMemo(
+      () => (spec && target ? { object: target, path: ['content'], subject: spec } : undefined),
+      [spec, target],
+    );
+    const bindingExtensions = useEditorExtensions(binding);
 
     useEffect(() => {
       if (defaultDiff) {
@@ -194,6 +200,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
               messenger: space,
               identity,
             }),
+          ...bindingExtensions,
         ].filter(isTruthy),
       [
         id,
@@ -212,6 +219,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
         baseText,
         fold,
         contributed,
+        bindingExtensions,
       ],
     );
 
@@ -226,7 +234,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
       <Editor.Root extensions={extensions} widgets={widgets}>
         <Editor.Blocks />
         <Panel.Root role={role} ref={forwardedRef}>
-          <Panel.Header>{!readOnly && <Editor.Toolbar role={role} attendableId={attendableId} />}</Panel.Header>
+          <Panel.Header>{!readOnly && <SpecToolbar role={role} attendableId={attendableId} />}</Panel.Header>
           <Panel.Body>
             {panel ? (
               <Splitter.Root
@@ -270,3 +278,9 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
 );
 
 SpecArticle.displayName = 'SpecArticle';
+
+/** The editor's toolbar and, while another plugin adds comments to the editor, its comment action. */
+const SpecToolbar = ({ role, attendableId }: Pick<SpecArticleProps, 'role' | 'attendableId'>) => {
+  const customActions = useCommentActions();
+  return <Editor.Toolbar role={role} attendableId={attendableId} customActions={customActions} />;
+};

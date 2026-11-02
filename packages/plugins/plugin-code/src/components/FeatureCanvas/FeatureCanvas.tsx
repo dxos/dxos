@@ -5,7 +5,7 @@
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
+import React, { type ReactNode, createContext, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 
 import {
   type Arrangement,
@@ -43,13 +43,14 @@ const createFeatureNode = (props: CreateProps): Node => ({ type: FEATURE_NODE_TY
 
 type FeatureNodeContextValue = {
   lookup: FeatureLookup;
+  renderMarks?: (id: string) => ReactNode;
 };
 
 /** Node views get no host props, so the cards' data reach them through context. */
 const FeatureNodeContext = createContext<FeatureNodeContextValue>({ lookup: () => undefined });
 
 const FeatureNodeView = ({ node }: NodeViewProps) => {
-  const { lookup } = useContext(FeatureNodeContext);
+  const { lookup, renderMarks } = useContext(FeatureNodeContext);
   const feature = lookup(node.id);
   return (
     // One bounded row, so the card fits the box; it is a summary that never scrolls, so presses, the wheel and
@@ -60,6 +61,7 @@ const FeatureNodeView = ({ node }: NodeViewProps) => {
           <FeatureCard.Header>
             <FeatureCard.Status />
             <FeatureCard.Title />
+            {renderMarks?.(feature.id)}
             <FeatureCard.Marks />
           </FeatureCard.Header>
           {/* Dependencies are the canvas's arrows, and the rest is the companion's, so the card stays a summary. */}
@@ -159,6 +161,8 @@ export type FeatureCanvasProps = {
   force?: ForceOptions;
   /** False lays the boxes out freely, with no lattice cells to snap to or guides to draw; on by default. */
   lattice?: boolean;
+  /** Marks for a card's header beside its own, by feature id. */
+  renderMarks?: (id: string) => ReactNode;
 };
 
 /**
@@ -182,10 +186,11 @@ export const FeatureCanvas = ({
   arrange = 'crossings',
   force,
   lattice = true,
+  renderMarks,
 }: FeatureCanvasProps) => {
   const atomRegistry = useContext(RegistryContext);
   const lookup = useMemo(() => makeFeatureLookup(features), [features]);
-  const nodeContext = useMemo(() => ({ lookup }), [lookup]);
+  const nodeContext = useMemo(() => ({ lookup, renderMarks }), [lookup, renderMarks]);
   // Owned by this component: the projection's scene atom reads both, so they live while the canvas is mounted.
   const graph = useMemo(() => Atom.make<GraphModel>(toGraph(features)), []);
   const overlay = useMemo(() => Atom.make<Overlay>({ positions }), []);

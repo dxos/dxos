@@ -14,7 +14,7 @@ import { Obj } from '@dxos/echo';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { Selection } from '@dxos/react-ui-attention/types';
-import { createComment, documentId } from '@dxos/ui-editor/headless';
+import { createComment } from '@dxos/ui-editor/headless';
 import * as Position from '@dxos/util/Position';
 
 import { CommentOperation } from '#types';
@@ -22,6 +22,7 @@ import { CommentOperation } from '#types';
 import { ReviewNamespace } from '../namespace.ts';
 // Not the `../util` barrel: it re-exports `author-hue`, whose palette lookup is UI-only.
 import { findCommentConfig, getCommentConfig } from '../util/commentable.ts';
+import { findFieldEditor } from '../util/field-editor.ts';
 import { getAnchor } from '../util/message.ts';
 
 export default Capability.makeModule(
@@ -29,6 +30,7 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
     // Read through the atom: a config contributed after the relation expands has to reach the matcher.
     const commentConfigsAtom = yield* Capability.atom(AppCapabilities.CommentConfig);
+    const commentScopesAtom = yield* Capability.atom(AppCapabilities.CommentScope);
 
     const getAnchorResolver = (typename: string) =>
       capabilities.getAll(AppCapabilities.AnchorResolver).find(({ key }) => key === typename);
@@ -38,7 +40,10 @@ export default Capability.makeModule(
         id: 'commentsCompanion',
         relation: AppNode.companion,
         match: (node, get) =>
-          findCommentConfig(get(commentConfigsAtom), node.data) ? Option.some(node) : Option.none(),
+          findCommentConfig(get(commentConfigsAtom), node.data) ||
+          get(commentScopesAtom).some((scope) => scope.resolve(node.data, get))
+            ? Option.some(node)
+            : Option.none(),
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
@@ -80,7 +85,7 @@ export default Capability.makeModule(
                 }
 
                 // A live-bound field of the object (a feature's name, say) holding a selection takes the comment.
-                const fieldView = yield* Effect.promise(() => findFieldEditor(objectUri));
+                const fieldView = yield* Effect.promise(() => findFieldEditor([objectUri]));
                 if (fieldView) {
                   createComment(fieldView);
                   return;
@@ -122,16 +127,3 @@ export default Capability.makeModule(
     return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );
-
-/** The field editor of `uri` with a selection, the focused one first; fields bind with the object's URI as their id. */
-const findFieldEditor = async (uri: string) => {
-  if (typeof document === 'undefined') {
-    return undefined;
-  }
-  const { EditorView } = await import('@codemirror/view');
-  const views = Array.from(document.querySelectorAll<HTMLElement>('.cm-editor')).flatMap((element) => {
-    const view = EditorView.findFromDOM(element);
-    return view && view.state.facet(documentId) === uri && !view.state.selection.main.empty ? [view] : [];
-  });
-  return views.find((view) => view.hasFocus) ?? views[0];
-};

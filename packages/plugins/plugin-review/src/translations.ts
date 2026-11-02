@@ -57,8 +57,12 @@ export const translations = [
         'draft.button': 'DRAFT',
         'no-comments.message': 'Select text and click <commentIcon></commentIcon> in the toolbar to create a comment.',
         'no-comments-unanchored.message': 'Click <addIcon></addIcon> to add a comment.',
+        'no-comments-fields.message':
+          'Select text and click <addIcon></addIcon> to comment on it, or click it with nothing selected to comment on the whole.',
         'add-object-comment.label': 'Add comment',
         'comments.label': 'Comments',
+        'comment-count.label_one': '{{count}} open thread',
+        'comment-count.label_other': '{{count}} open threads',
         'show-unresolved.label': 'Active comments',
         'show-all.label': 'All comments',
         'add-comment.label': 'Add comment',

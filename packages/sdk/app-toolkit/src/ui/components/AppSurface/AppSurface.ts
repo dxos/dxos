@@ -486,6 +486,9 @@ export const CardContent: Role.Role<CardData<any>> = Role.make('org.dxos.role.ca
  */
 export const CardMenu: Role.Role<CardMenuData<any>> = Role.make('org.dxos.role.cardMenu');
 
+/** Marks a plugin adds at the end of a card's header, such as a count of open comment threads; a miss renders nothing. */
+export const CardMarks: Role.Role<CardData<any>> = Role.make('org.dxos.role.cardMarks');
+
 /** Surface data for the card menu role. */
 export type CardMenuData<Subject = unknown> = {
   subject: Subject;

@@ -95,9 +95,11 @@ export const CommentThread = ({
   onAcceptChange,
 }: CommentThreadProps) => {
   const { t } = Hooks.useTranslation(ReviewNamespace.key);
-  const detached = !anchor.anchor;
   const source = useRelationSource(anchor);
   const thread = source && Obj.instanceOf(ThreadType.Thread, source) ? source : undefined;
+  // A thread with no anchor is on the whole object and quotes nothing, unless it had quoted text that is now gone.
+  const wholeObject = !anchor.anchor && !thread?.name;
+  const detached = !anchor.anchor && !wholeObject;
   const threadUri = thread ? Obj.getURI(thread) : undefined;
   const [status] = useObject(thread, 'status');
   const feedMessages = useThreadMessages(thread);
@@ -214,7 +216,7 @@ export const CommentThread = ({
     <Thread.Header
       current={current}
       title={thread.name}
-      timestamp={loadedMessages[0]?.created}
+      timestamp={wholeObject ? undefined : loadedMessages[0]?.created}
       onSelect={handleActivate}
       controls={headerControls}
     />

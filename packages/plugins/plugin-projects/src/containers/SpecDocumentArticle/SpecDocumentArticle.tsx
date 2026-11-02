@@ -8,6 +8,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import type * as Spec from '@dxos/compute/Spec';
 import { useObject } from '@dxos/echo-react';
+import { Editor, useCommentActions, useEditorContext } from '@dxos/react-ui-editor';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 
@@ -34,15 +35,31 @@ export const SpecDocumentArticle = ({ role, subject, attendableId }: SpecDocumen
   );
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Body>
-        <SpecDocumentEditor
-          spec={subject}
-          extensions={extensions}
-          classNames='h-full'
-          data-testid='spec-document.editor'
-        />
-      </Panel.Body>
-    </Panel.Root>
+    <Editor.Root>
+      <Panel.Root role={role}>
+        <Panel.Header>
+          <SpecDocumentToolbar attendableId={attendableId} />
+        </Panel.Header>
+        <Panel.Body>
+          <SpecDocumentEditor
+            spec={subject}
+            extensions={extensions}
+            classNames='h-full'
+            data-testid='spec-document.editor'
+          />
+        </Panel.Body>
+      </Panel.Root>
+    </Editor.Root>
   );
+};
+
+/** The editor's formatting toolbar and, while another plugin adds comments to the editor, its comment action. */
+const SpecDocumentToolbar = ({ attendableId }: { attendableId?: string }) => {
+  const { controller } = useEditorContext('SpecDocumentToolbar');
+  const customActions = useCommentActions();
+
+  // The toolbar's actions act on the editor, so it waits for the editor to mount.
+  return controller?.view ? (
+    <Editor.Toolbar classNames='dx-document' attendableId={attendableId} customActions={customActions} />
+  ) : null;
 };

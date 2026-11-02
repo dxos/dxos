@@ -3,20 +3,39 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
+import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { Relation, Type } from '@dxos/echo';
+import * as Project from '@dxos/compute/Project';
+import * as Spec from '@dxos/compute/Spec';
+import { Annotation, Obj, Relation, Type } from '@dxos/echo';
 import * as ProjectOperation from '@dxos/plugin-projects/ProjectOperation';
 import { type AnchoredTo } from '@dxos/types';
 
-import { Feature } from '#types';
+import { Feature, FeatureMap } from '#types';
 
+import { CodeNamespace } from '../namespace.ts';
 import * as FeatureAnchor from '../util/feature-anchor.ts';
 
 const typename = Type.getTypename(Feature.Feature);
 
-/** Comments anchored into a feature's name, description and requirements, read and ordered by the anchor module. */
+/** The features on a spec's map, read through `get` so the list follows edits. */
+const getMapFeatures = (spec: Spec.Spec, get: Atom.AtomContext): Feature.Feature[] => {
+  const refs = Option.getOrElse(get(Annotation.atom(spec, FeatureMap.FeaturesAnnotation)), () => []);
+  return get(Obj.atomReactive(refs)).filter(Feature.instanceOf);
+};
+
+/** A spec with the features on its map. */
+const withFeatures = (spec: Spec.Spec | undefined, get: Atom.AtomContext): Obj.Unknown[] =>
+  spec ? [spec, ...getMapFeatures(spec, get)] : [];
+
+/**
+ * Comments anchored into a feature's name, description and requirements, read and ordered by the anchor module; and,
+ * for a project, a spec or a feature's level, the threads on the features on each map it shows. Deeper levels keep
+ * their own.
+ */
 export default Capability.makeModule(() =>
   Effect.succeed([
     Capability.contribute(AppCapabilities.CommentConfig, {
@@ -36,6 +55,24 @@ export default Capability.makeModule(() =>
     Capability.contribute(AppCapabilities.AnchorResolver, {
       key: typename,
       getText: (feature: Feature.Feature, anchor: string) => FeatureAnchor.getText(feature, anchor),
+    }),
+    Capability.contribute(AppCapabilities.CommentScope, {
+      id: `${CodeNamespace.key}.feature-map`,
+      resolve: (data, get) => {
+        if (Obj.instanceOf(Project.Project, data)) {
+          const specs = get(Obj.atomReactive(get(Obj.atom(data)).specs)).filter(Spec.instanceOf);
+          return { subject: data, targets: [data, ...specs.flatMap((spec) => withFeatures(spec, get))] };
+        }
+        if (Spec.instanceOf(data)) {
+          return { subject: data, targets: withFeatures(data, get) };
+        }
+        if (Feature.instanceOf(data)) {
+          const breakdown = get(Obj.atom(data)).spec;
+          const spec = breakdown && get(Obj.atomReactive(breakdown));
+          return { subject: data, targets: [data, ...withFeatures(Spec.instanceOf(spec) ? spec : undefined, get)] };
+        }
+        return undefined;
+      },
     }),
   ]),
 );

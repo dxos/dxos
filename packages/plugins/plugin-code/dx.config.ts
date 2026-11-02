@@ -165,11 +165,16 @@ const config: Plugin.PluginConfig = Plugin.config({
       },
       () => import('./src/capabilities/spec-sync.ts', { with: { type: 'module-url' } }),
     ),
-    // Comments on a feature's fields: plugin-review's companion and field-editor comments read them per typename.
+    // Comments on a feature's fields and the features on a map, which plugin-review reads.
     Capability.lazyModule(
       'FeatureComments',
       {
-        provides: [AppCapabilities.CommentConfig, AppCapabilities.AnchorSort, AppCapabilities.AnchorResolver],
+        provides: [
+          AppCapabilities.AnchorResolver,
+          AppCapabilities.AnchorSort,
+          AppCapabilities.CommentConfig,
+          AppCapabilities.CommentScope,
+        ],
         activatesOn: ProjectsEvents.Start,
       },
       () => import('./src/capabilities/feature-comments.ts', { with: { type: 'module-url' } }),

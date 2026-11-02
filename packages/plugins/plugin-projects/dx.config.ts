@@ -64,6 +64,20 @@ const config: Plugin.PluginConfig = Plugin.config({
         environments: ['browser', 'tauri'],
       },
     ),
+    // Comments on projects and specs (their fields, a spec's text, a level's objects), which plugin-review reads.
+    Capability.lazyModule(
+      'ProjectComments',
+      {
+        provides: [
+          AppCapabilities.AnchorResolver,
+          AppCapabilities.AnchorSort,
+          AppCapabilities.CommentConfig,
+          AppCapabilities.CommentScope,
+        ],
+        activatesOn: ProjectsEvents.Start,
+      },
+      () => import('./src/capabilities/project-comments.ts', { with: { type: 'module-url' } }),
+    ),
     AppCapability.navigationResolver(
       () => import('./src/capabilities/navigation-target-resolver.ts', { with: { type: 'module-url' } }),
     ),

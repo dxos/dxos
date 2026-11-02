@@ -335,7 +335,8 @@ export const ProjectArticle = ({
     });
   }, [db, subject, attendableId, invokePromise, updateProject]);
 
-  // Only the edited path is written, so typing a name does not rewrite the specs.
+  // Only the edited paths are written, so typing a name does not rewrite the specs. The name and description are
+  // edited in place (the project is the form's `object`), so they arrive unchanged and are skipped.
   const handleValuesChanged = useCallback(
     (values: Partial<HeaderValues>, { changed }: FormUpdateMeta<HeaderValues>) => {
       const paths = Object.keys(changed)
@@ -343,7 +344,10 @@ export const ProjectArticle = ({
         .filter((path) => changed[path]);
       updateProject((project) => {
         for (const path of paths) {
-          Obj.setValue(project, SchemaEx.splitJsonPath(path), SchemaEx.getValue(values, path));
+          const value = SchemaEx.getValue(values, path);
+          if (value !== Obj.getValue(project, SchemaEx.splitJsonPath(path))) {
+            Obj.setValue(project, SchemaEx.splitJsonPath(path), value);
+          }
         }
       });
     },
@@ -380,6 +384,7 @@ export const ProjectArticle = ({
           {tab === 'overview' && !level && (
             <Form.Root
               db={db}
+              object={subject}
               schema={HeaderValues}
               values={values}
               onValuesChanged={handleValuesChanged}

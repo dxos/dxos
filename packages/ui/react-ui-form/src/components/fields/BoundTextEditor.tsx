@@ -22,6 +22,9 @@ import {
 /** A markdown field's minimum height in lines. */
 const ROWS = 6;
 
+/** A text area's minimum height in lines. */
+const TEXT_AREA_ROWS = 3;
+
 const fieldTheme = EditorView.theme({
   '&': { minHeight: '100%' },
   '.cm-content': { overflowWrap: 'anywhere' },
@@ -40,6 +43,8 @@ export type BoundTextEditorProps = {
   binding: EditorBinding;
   /** Multi-line markdown, framed like a text area; otherwise one line of plain text, framed like an input. */
   markdown?: boolean;
+  /** Multi-line plain text, framed like a text area. */
+  multiline?: boolean;
   placeholder?: string;
   readonly?: boolean;
   autoFocus?: boolean;
@@ -53,6 +58,7 @@ export type BoundTextEditorProps = {
 export const BoundTextEditor = ({
   binding,
   markdown,
+  multiline,
   placeholder,
   readonly,
   autoFocus,
@@ -78,19 +84,27 @@ export const BoundTextEditor = ({
         ? [
             createBasicExtensions({ placeholder, readOnly: readonly, lineWrapping: true }),
             createThemeExtensions({ syntaxHighlighting: markdown, themeMode }),
-            markdown ? [createMarkdownExtensions(), decorateMarkdown(), fieldTheme] : singleLine,
+            markdown
+              ? [createMarkdownExtensions(), decorateMarkdown(), fieldTheme]
+              : multiline
+                ? fieldTheme
+                : singleLine,
             createDataExtensions({ id: Obj.getURI(object), text: Doc.createAccessor(object, [...path]) }),
             ...bindingExtensions,
           ]
         : [],
-    [ready, placeholder, readonly, markdown, themeMode, object, pathKey, bindingExtensions],
+    [ready, placeholder, readonly, markdown, multiline, themeMode, object, pathKey, bindingExtensions],
   );
   if (!ready) {
     return null;
   }
 
   return (
-    <Input.Frame rows={markdown ? ROWS : undefined} disabled={readonly} data-testid={testId}>
+    <Input.Frame
+      rows={markdown ? ROWS : multiline ? TEXT_AREA_ROWS : undefined}
+      disabled={readonly}
+      data-testid={testId}
+    >
       <Editor.Root>
         {/* Seeded with the string, so the editor holds it from its first frame rather than once the binding syncs. */}
         <Editor.View extensions={extensions} initialValue={Obj.getValue(object, path)} autoFocus={autoFocus} />

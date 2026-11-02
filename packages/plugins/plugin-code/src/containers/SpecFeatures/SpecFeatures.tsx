@@ -76,6 +76,15 @@ export const SpecMap = ({ spec, mode, attendableId, exclude, onZoom }: SpecMapPr
   const editing = useFeatureEditing(db, spec);
   const { selectedId, select } = useFeatureSelection(attendableId);
   const { createAt, addAt } = useAddFeature({ db, spec, attendableId, exclude });
+  // Other plugins mark a card through a surface, such as with its open comment threads.
+  const objects = useQuery(ids.length > 0 ? db : undefined, Filter.id(...ids));
+  const renderMarks = useCallback(
+    (id: string) => {
+      const feature = objects.find((object) => object.id === id);
+      return feature && <Surface.Surface type={AppSurface.CardMarks} data={{ subject: feature }} />;
+    },
+    [objects],
+  );
   const handleZoom = useCallback((id: string | undefined) => id && onZoom(id), [onZoom]);
 
   // Only the boxes that moved are written, so a drag touches one entry of the layout rather than all of it.
@@ -118,6 +127,7 @@ export const SpecMap = ({ spec, mode, attendableId, exclude, onZoom }: SpecMapPr
       onSelect={select}
       onZoom={handleZoom}
       onChange={editing.update}
+      renderMarks={renderMarks}
     />
   ) : (
     <div className='relative h-full' data-testid='feature-map.canvas'>
@@ -136,6 +146,7 @@ export const SpecMap = ({ spec, mode, attendableId, exclude, onZoom }: SpecMapPr
         onRemove={editing.removeFeature}
         onCreate={(position) => void createAt(position)}
         onAdd={addAt}
+        renderMarks={renderMarks}
       />
     </div>
   );
