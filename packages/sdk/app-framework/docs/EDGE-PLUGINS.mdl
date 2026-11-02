@@ -204,6 +204,9 @@ type Failure = {
 - **`env`** holds the space-agnostic bindings `DATA_SERVICE`, `QUEUE_SERVICE` and
   `FUNCTIONS_AI_SERVICE` (`PluginProtocol.Env`). Everything that differs per call travels in `scope`
   ([D-6]).
+- **The space travels in `InvokeRequest.spaceId` today.** The snippet above is what the host
+  implements now; the [InvocationScope](#types) type below is the target, in which `scope.spaceId`
+  is authoritative and `InvokeRequest.spaceId` is removed.
 - **Operation keys** may be bare or DXNs; they are matched in bare form ([D-22]).
 - **Isolation.** The entrypoint serves only the primary plugin's operations, never a dependency's
   ([D-21]).
@@ -528,7 +531,7 @@ feat F-1: Publish a plugin from the CLI
           catalog; a bundle that fails to load or activate is refused
 
   req F-1.4: The bundle carries `vendor/`, so a Dynamic Worker loads it from its `modules` map alone:
-    after PluginLoader's rewrite, its files import nothing but each other, `vendor/` and
+    after PluginLoader's rewrite, its files import nothing but each other, `vendor/`, `node:*` and
     `cloudflare:*`.
 
   req F-1.5:
@@ -1133,4 +1136,13 @@ decision D-39: The edge repository installs the `dx` CLI as a dev dependency fro
   date: 2026-11-02
   by: user:dmaretskyi
   affects: [publishPlugin, F-12.3]
+```
+
+```mdl
+decision D-40: [F-1.4] allows bundle files to import `node:*`, as Bundle format rule 4 already does. `PluginProtocol.Entrypoint` carries the space in `InvokeRequest.spaceId` today; the `InvocationScope` type, with `scope.spaceId` authoritative, is the target that replaces it. Fills in [D-6] and [D-34].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.4, InvocationScope, PluginEntrypoint]
+  why: Review found [F-1.4] stricter than rule 4 although the loader sets `nodejs_compat`, and the entrypoint snippet and the `InvocationScope` type giving two shapes with no statement of which holds.
 ```
