@@ -660,10 +660,11 @@ const notes = (t: number): Prim[] =>
       return {
         kind: 'chip',
         id: `note-${space}-${index}`,
-        x: home[0] + side * (r + 34),
+        x: home[0] + side * (r + 24),
         y: home[1] - 8 + index * 16,
         text: line,
         scale: 0.85,
+        align: side > 0 ? 'start' : 'end',
         opacity: shown,
         parent: `body:space-${space}`,
       };

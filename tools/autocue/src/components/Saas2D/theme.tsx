@@ -294,8 +294,8 @@ export const SvgPrim = ({ prim, camera }: { prim: Prim; camera: Camera }) => {
       const [x, y] = project(view, prim.x, prim.y);
       const { height, dot, lead, gap, trail, size, weight } = CHIP;
       const width = Math.ceil(lead + dot * 2 + gap + measure(prim.text, size, weight) + trail);
-      const left = -Math.round(width / 2);
-      const dotX = left + lead + dot;
+      const left = prim.align === 'start' ? 0 : prim.align === 'end' ? -width : -Math.round(width / 2);
+      const dotX = prim.align === 'end' ? left + width - lead - dot : left + lead + dot;
       const scale = prim.scale ?? 1;
       return (
         <At x={x} y={y} opacity={opacity}>
@@ -311,7 +311,12 @@ export const SvgPrim = ({ prim, camera }: { prim: Prim; camera: Camera }) => {
             />
             <circle cx={dotX} r={dot * 2.2} fill='url(#nd-glow-accent)' />
             <circle cx={dotX} r={dot} fill={neu.accent} />
-            <Text x={dotX + dot + gap} size={size} weight={weight} anchor='start'>
+            <Text
+              x={prim.align === 'end' ? dotX - dot - gap : dotX + dot + gap}
+              size={size}
+              weight={weight}
+              anchor={prim.align === 'end' ? 'end' : 'start'}
+            >
               {prim.text}
             </Text>
           </g>

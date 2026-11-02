@@ -46,8 +46,18 @@ export type NodePrim = Base & {
   color?: string;
   glow?: number;
 };
-/** A raised chip with an accent dot: an app. */
-export type ChipPrim = Base & { kind: 'chip'; x: number; y: number; text: string; scale?: number };
+/**
+ * A raised chip with an accent dot: an app. Centred on its point unless `align` hangs it off that point to the right
+ * (`start`) or the left (`end`), its dot on the near edge, so a chip beside a space faces it.
+ */
+export type ChipPrim = Base & {
+  kind: 'chip';
+  x: number;
+  y: number;
+  text: string;
+  scale?: number;
+  align?: 'start' | 'end';
+};
 /** A dotted orbit, drawn face-on. */
 /** A dotted orbit, or with `color` a solid colored ring (an app). */
 export type RingPrim = Base & { kind: 'ring'; x: number; y: number; r: number; color?: string };
