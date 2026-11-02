@@ -46,7 +46,7 @@ feat F-4: A project's specs
              Overview tab is the nesting plugin's `ProjectSurface.LevelOverview` surface, and its Specs tab shows the
              level's own spec, or offers Add spec when it has none.
   req F-4.7: The project article's toolbar holds its tabs, then the tools of the tab shown: Create artifact on the
-             Overview; the spec dropdown, the view toggle and the Extensions menu on the Specs tab; Assign to agent and
+             Overview; the spec dropdown, the view toggle and the Extensions menu on the Specs tab; Delegate to agent and
              the Gantt toggle on the Tasks tab. It has no overflow menu and no button to start a session, which is the
              assistant companion's.
   req F-4.8: A spec offers its text, and each view a plugin contributes (`ProjectCapabilities.SpecView`) for a dialect
@@ -90,8 +90,8 @@ test QA-1: Build a plugin with an agent in the desktop app
       do: Click + on the space, choose Project, pick the "Composer Plugin" template, title it "World Clock" and click Create.
       capture: project
       expect: a "World Clock" project opens; its Tasks tab holds "Build the World Clock plugin" over four subtasks
-    - name: Assign the parent task to the agent
-      do: Open the project's Tasks tab, tick the parent task, click "Assign selected tasks to agent", then open the companion's Assistant tab.
+    - name: Delegate the parent task to the agent
+      do: Open the project's Tasks tab, tick the parent task, click "Delegate selected tasks to agent", then open the companion's Assistant tab.
       expect: the delegated chat holds the parent and its four subtasks and is working
     - name: Wait for the agent to offer the plugin
       do: Watch the subtasks tick off.
@@ -150,8 +150,8 @@ test QA-2: Build a plugin with an agent in the browser and install it from the p
       do: Click + on the space, choose Project, pick the "Composer Plugin" template, title it "World Clock" and click Create.
       capture: project
       expect: a "World Clock" project opens; its Tasks tab holds "Build the World Clock plugin" over four subtasks
-    - name: Assign the parent task to the agent
-      do: Open the project's Tasks tab, tick the parent task, click "Assign selected tasks to agent", then open the companion's Assistant tab.
+    - name: Delegate the parent task to the agent
+      do: Open the project's Tasks tab, tick the parent task, click "Delegate selected tasks to agent", then open the companion's Assistant tab.
       expect: the delegated chat holds the parent and its four subtasks and is working
     - name: Wait for the agent to publish the plugin
       do: Watch the subtasks tick off.
@@ -224,11 +224,11 @@ test QA-3: Read a project's tasks as details
 test QA-4: Plan a project and hand its tasks to an agent
   desc: |
     The demo path — create a project from the Default template, brief its agent, break the work into tasks, fill
-    one in, and select tasks for the agent. Walked by the autocue flow
+    one in, assign one from its row, let a coding session take one, and select tasks for the agent. Walked by the autocue flow
     `packages/plugins/plugin-projects/autocue/plan-a-project.mjs`; it stops short of delegating, so no model is
     needed.
   actors: human
-  status: passing            # 2026-10-09, recorded by autocue/plan-a-project.mjs
+  status: passing            # 2026-11-02, recorded by autocue/plan-a-project.mjs
   given:
     - an identity exists, on a fresh profile
     - space: the default space is open on its Home
@@ -244,15 +244,38 @@ test QA-4: Plan a project and hand its tasks to an agent
     - name: Break the work into tasks
       do: Open the Tasks tab and add "Service both roasters", "Order green beans" and "Hire a roastery assistant"
         from the Add task row, pressing Enter after each.
-      expect: the three tasks list in the order added
+      expect: |
+        the three tasks list in the order added. Each row shows its priority beside its status, ahead of the title,
+        and ends in an assignee placeholder
     - name: Fill in a task
       do: Click "Service both roasters", type a description, set its priority to High and its status to Started.
       expect: |
         the task opens in a "Task" tab beside the project, and its Activity records the priority and status
         changes
+    - name: Assign a task from its row
+      do: Point at "Order green beans", click the assignee placeholder at the end of its row, and pick yourself.
+      expect: the row shows your avatar in place of the placeholder, and the task does not open
+    - name: A coding session takes a task
+      do: |
+        From a coding session connected over MCP, claim "Hire a roastery assistant" with `tasks-update`, passing
+        status Started, `remoteSession` with the session's id, and the person `whoami` names as `assignee`.
+      invoke: |
+        org.dxos.operation.tasks.update {
+          task: <"Hire a roastery assistant">, status: "started",
+          assignee: { identityDid: $whoami.identityDid, name: $whoami.displayName },
+          remoteSession: { sessionId: "qa-4", title: "Hire a roastery assistant" }
+        }
+      expect: |
+        the row shows you as its assignee with the agent badge on your avatar, and its status is Started. Opening the
+        task shows you as Assignee and the session as Delegate
+      note: Without `assignee` the claim is refused, since no person would answer for the task.
     - name: Select tasks for the agent
-      do: Tick "Order green beans" and "Hire a roastery assistant", then point at "Assign selected tasks to agent".
-      expect: the two rows are selected and the button is enabled
+      do: |
+        Point at "Order green beans" and tick it, then tick "Hire a roastery assistant", then point at "Delegate
+        selected tasks to agent".
+      expect: |
+        a row's checkbox shows only while the row is pointed at until one is ticked, then on every row. The two rows
+        are selected and the button is enabled
       note: Clicking it starts a delegated chat that needs a model; QA-1 and QA-2 walk that path.
 ```
 
@@ -1202,4 +1225,45 @@ decision D-104: The `SpecView`, `Level` and `LevelOverview` surface roles are ro
   for: user:wittjosiah
   affects: [F-4.6, F-4.8]
   why: Role tokens live in `ProjectSurface`, apart from the view state in `ProjectView`, and a plugin declares the roles it renders by token rather than by string.
+```
+
+```mdl
+decision D-105: A task's assignee is the person who answers for it, and a separate delegate is the agent doing the work, as in Linear. Handing tasks to an agent sets the delegate and leaves the assignee.
+  date: 2026-11-02
+  by: user:wittjosiah
+  affects: [F-4.7, QA-1, QA-2, QA-4]
+```
+
+```mdl
+decision D-106: A coding session that picks up a task over MCP makes the person it works for the assignee and itself the delegate, and the project skill says so.
+  date: 2026-11-02
+  by: user:wittjosiah
+  affects: [QA-4]
+```
+
+```mdl
+decision D-107: The task row takes Linear as its model: priority beside status, an assignee control on every row, the estimate only when set, and selection checkboxes that show on hover.
+  date: 2026-11-02
+  by: user:wittjosiah
+  affects: [QA-4]
+```
+
+```mdl
+decision D-108: A session's claim names the person from `whoami` as `assignee`, and `tasks-update` refuses a claim that would leave no person as the task's assignee. Fills in [D-106].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-4]
+  why: The operation cannot read the identity an MCP grant was issued to, so the session has to say whom it works for.
+  rejected:
+    - Leaving the assignee empty and the session as delegate, which leaves nobody to review the work.
+```
+
+```mdl
+decision D-109: QA-4 assigns a task from its row's placeholder, has a coding session claim a task through `tasks-update`, and checks that selection checkboxes show on hover until one is ticked. "Assign to agent" is "Delegate to agent" throughout. Fills in [D-105] to [D-107].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.7, QA-1, QA-2, QA-4]
+  why: QA-4 walks a project's task list without a model, and both the row's assignee control and a session's claim work without one.
 ```
