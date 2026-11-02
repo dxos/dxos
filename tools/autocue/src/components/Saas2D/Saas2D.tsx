@@ -53,6 +53,8 @@ export type Saas2DProps = {
   test?: Record<string, number>;
   /** Flat shapes with the current scene and time over them: no filters or grain, so a render to review motion is fast. */
   draft?: boolean;
+  /** The current scene and time over every frame, so notes on a render can name the moment they mean. */
+  clock?: boolean;
 };
 
 /** The opening of the story up to the spread, short holds around its cuts: a test of those transitions. */
@@ -73,17 +75,27 @@ export const saas2dMetadata: CalculateMetadataFunction<Saas2DProps> = ({ props }
 };
 
 /** The scene playing and the time, in the story and in the scene. */
-const DraftClock = ({ timeline, seconds }: { timeline: Placed[]; seconds: number }) => {
+const Clock = ({ timeline, seconds }: { timeline: Placed[]; seconds: number }) => {
   const current = timeline.findLast((placed) => placed.start <= seconds) ?? timeline[0];
   return (
-    <div style={{ position: 'absolute', left: 24, top: 16, font: '500 28px monospace', color: '#fff', opacity: 0.8 }}>
+    <div
+      style={{
+        position: 'absolute',
+        left: 24,
+        bottom: 16,
+        font: '500 28px monospace',
+        color: '#fff',
+        opacity: 0.8,
+        textShadow: '0 0 4px #000',
+      }}
+    >
       {seconds.toFixed(2)}s · {current.slide.id} +{(seconds - current.start).toFixed(2)}s
     </div>
   );
 };
 
 /** The SaaS story in neu-dark 2D, timed to the short Fry cut of the echo3d presentation. */
-export const Saas2D = ({ test, draft }: Saas2DProps) => {
+export const Saas2D = ({ test, draft, clock }: Saas2DProps) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const timeline = useMemo(() => {
@@ -113,7 +125,8 @@ export const Saas2D = ({ test, draft }: Saas2DProps) => {
       {visible.filter(isCard).map((prim) => (
         <Card key={prim.id} prim={prim} />
       ))}
-      {draft ? <DraftClock timeline={timeline} seconds={seconds} /> : <Grain />}
+      {!draft && <Grain />}
+      {(draft || clock) && <Clock timeline={timeline} seconds={seconds} />}
     </AbsoluteFill>
   );
 };

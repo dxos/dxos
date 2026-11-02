@@ -8,7 +8,7 @@
 //   node scripts/render-saas2d.mjs --out ../../temp/voice/saas2d-neu-dark.mp4
 //   node scripts/render-saas2d.mjs --draft --scenes silo-comms:3,scale:5 --out ../../temp/voice/scale-draft.mp4
 //
-// `--draft` renders flat shapes at half size with the scene and time burnt in, to review motion quickly; `--scenes`
+// `--clock` burns the scene and time into a full render; `--draft` renders flat shapes at half size with the scene and time burnt in, to review motion quickly; `--scenes`
 // plays only those slides, with those holds (seconds).
 //
 // The video renders at 2x and is downscaled with a Lanczos filter, so glows and gradients on the dark field do not band.
@@ -29,12 +29,14 @@ const { values } = parseArgs({
     scale: { type: 'string', default: '2' },
     concurrency: { type: 'string', default: '6' },
     draft: { type: 'boolean', default: false },
+    clock: { type: 'boolean', default: false },
     scenes: { type: 'string' },
   },
 });
 
 const inputProps = {
   ...(values.draft ? { draft: true } : {}),
+  ...(values.clock ? { clock: true } : {}),
   ...(values.scenes
     ? {
         test: Object.fromEntries(
