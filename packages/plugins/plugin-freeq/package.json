@@ -17,8 +17,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/FreeqPlugin.workerd.mjs",
-      "node": "./dist/lib/FreeqPlugin.node.mjs",
       "default": "./dist/lib/FreeqPlugin.mjs"
     },
     "#translations": {
@@ -42,8 +40,6 @@
     "./FreeqPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/FreeqPlugin.workerd.mjs",
-      "node": "./dist/lib/FreeqPlugin.node.mjs",
       "import": "./dist/lib/FreeqPlugin.mjs"
     },
     "./translations": {

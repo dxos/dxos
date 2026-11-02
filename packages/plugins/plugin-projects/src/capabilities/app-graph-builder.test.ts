@@ -23,12 +23,11 @@ import { Outline, TaskSet } from '@dxos/types';
 import { Feature, Spec } from '#types';
 
 import { attach } from '../operations/feature/util.ts';
+import { ARTIFACTS_SEGMENT, SPEC_SEGMENT } from '../paths.ts';
 import {
   ARTIFACTS_SECTION_TYPE,
-  ARTIFACTS_SEGMENT,
   SPEC_BRANCH_TYPE,
   SPEC_LEVEL_TYPE,
-  SPEC_SEGMENT,
   createProjectActionExtension,
   createProjectArtifactsActionExtension,
   createProjectArtifactsExtension,

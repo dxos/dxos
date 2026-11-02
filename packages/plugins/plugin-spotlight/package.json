@@ -24,8 +24,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/SpotlightPlugin.workerd.mjs",
-      "node": "./dist/lib/SpotlightPlugin.node.mjs",
       "default": "./dist/lib/SpotlightPlugin.mjs"
     },
     "#operations": {
@@ -65,8 +63,6 @@
     "./SpotlightPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/SpotlightPlugin.workerd.mjs",
-      "node": "./dist/lib/SpotlightPlugin.node.mjs",
       "import": "./dist/lib/SpotlightPlugin.mjs"
     }
   },

@@ -26,8 +26,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/StudioPlugin.workerd.mjs",
-      "node": "./dist/lib/StudioPlugin.node.mjs",
       "default": "./dist/lib/StudioPlugin.mjs"
     },
     "#operations": {
@@ -122,8 +120,6 @@
     "./StudioPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/StudioPlugin.workerd.mjs",
-      "node": "./dist/lib/StudioPlugin.node.mjs",
       "import": "./dist/lib/StudioPlugin.mjs"
     },
     "./StudioSkill": {

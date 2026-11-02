@@ -21,8 +21,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/SettingsPlugin.workerd.mjs",
-      "node": "./dist/lib/SettingsPlugin.node.mjs",
       "default": "./dist/lib/SettingsPlugin.mjs"
     },
     "#operations": {
@@ -60,8 +58,6 @@
     "./SettingsPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/SettingsPlugin.workerd.mjs",
-      "node": "./dist/lib/SettingsPlugin.node.mjs",
       "import": "./dist/lib/SettingsPlugin.mjs"
     },
     "./testing": {

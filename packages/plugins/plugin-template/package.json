@@ -21,8 +21,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/TemplatePlugin.workerd.mjs",
-      "node": "./dist/lib/TemplatePlugin.node.mjs",
       "default": "./dist/lib/TemplatePlugin.mjs"
     },
     "#translations": {
@@ -55,8 +53,6 @@
     "./TemplatePlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/TemplatePlugin.workerd.mjs",
-      "node": "./dist/lib/TemplatePlugin.node.mjs",
       "import": "./dist/lib/TemplatePlugin.mjs"
     }
   },

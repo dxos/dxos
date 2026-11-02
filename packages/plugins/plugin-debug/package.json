@@ -26,8 +26,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/DebugPlugin.workerd.mjs",
-      "node": "./dist/lib/DebugPlugin.node.mjs",
       "default": "./dist/lib/DebugPlugin.mjs"
     },
     "#operations": {
@@ -75,8 +73,6 @@
     "./DebugPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/DebugPlugin.workerd.mjs",
-      "node": "./dist/lib/DebugPlugin.node.mjs",
       "import": "./dist/lib/DebugPlugin.mjs"
     },
     "./DebugSurface": {

@@ -1197,10 +1197,9 @@ const conditionalSubpathEntries = (cwd: string): Record<string, string> => {
 /**
  * Build entries for every `package.json` export or import whose source is `dx.config.ts`, named after
  * the built target: a `Plugin.config` plugin declares its modules there, so the build adds that one
- * entry and {@link dxConfigPlugin} emits each module body from it.
+ * entry and {@link dxConfigPlugin} emits each module body from it. One entry serves every runtime: each
+ * module carries its `environments`, and a runtime activates only its own.
  */
-const DX_CONFIG_ENVIRONMENTS = ['workerd', 'node', 'tauri', 'browser'] as const;
-
 const dxConfigEntries = (cwd: string): Record<string, string> => {
   const pkgPath = join(cwd, 'package.json');
   if (!existsSync(join(cwd, 'dx.config.ts')) || !existsSync(pkgPath)) {
@@ -1208,20 +1207,13 @@ const dxConfigEntries = (cwd: string): Record<string, string> => {
   }
   const { exports, imports } = JSON.parse(readFileSync(pkgPath, 'utf8'));
   const entries: Record<string, string> = {};
-  const entryName = (built: string) => path.posix.basename(built).replace(/\.mjs$/, '');
   for (const target of [...Object.values<any>(exports ?? {}), ...Object.values<any>(imports ?? {})]) {
     if (target?.source !== './dx.config.ts') {
       continue;
     }
     const built = target.import ?? target.default;
     if (typeof built === 'string') {
-      entries[entryName(built)] = 'dx.config.ts';
-    }
-    // A runtime condition gets an entry holding only that runtime's modules (see `pluginConfigPlugin`).
-    for (const env of DX_CONFIG_ENVIRONMENTS) {
-      if (typeof target[env] === 'string') {
-        entries[entryName(target[env])] = `dx.config.ts?dx-env=${env}`;
-      }
+      entries[path.posix.basename(built).replace(/\.mjs$/, '')] = 'dx.config.ts';
     }
   }
   return entries;

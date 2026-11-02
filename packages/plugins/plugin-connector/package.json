@@ -49,8 +49,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/ConnectorPlugin.workerd.mjs",
-      "node": "./dist/lib/ConnectorPlugin.node.mjs",
       "default": "./dist/lib/ConnectorPlugin.mjs"
     },
     "#operations": {
@@ -119,8 +117,6 @@
     "./ConnectorPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/ConnectorPlugin.workerd.mjs",
-      "node": "./dist/lib/ConnectorPlugin.node.mjs",
       "import": "./dist/lib/ConnectorPlugin.mjs"
     },
     "./ConnectorSpec": {

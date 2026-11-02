@@ -27,8 +27,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/SequencerPlugin.workerd.mjs",
-      "node": "./dist/lib/SequencerPlugin.node.mjs",
       "default": "./dist/lib/SequencerPlugin.mjs"
     },
     "#translations": {
@@ -93,8 +91,6 @@
     "./SequencerPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/SequencerPlugin.workerd.mjs",
-      "node": "./dist/lib/SequencerPlugin.node.mjs",
       "import": "./dist/lib/SequencerPlugin.mjs"
     },
     "./Track": {

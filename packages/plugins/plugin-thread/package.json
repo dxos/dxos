@@ -31,8 +31,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/ThreadPlugin.workerd.mjs",
-      "node": "./dist/lib/ThreadPlugin.node.mjs",
       "default": "./dist/lib/ThreadPlugin.mjs"
     },
     "#operations": {
@@ -92,8 +90,6 @@
     "./ThreadPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/ThreadPlugin.workerd.mjs",
-      "node": "./dist/lib/ThreadPlugin.node.mjs",
       "import": "./dist/lib/ThreadPlugin.mjs"
     }
   },

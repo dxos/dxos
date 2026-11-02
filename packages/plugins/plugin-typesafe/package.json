@@ -17,8 +17,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/TypeSafePlugin.workerd.mjs",
-      "node": "./dist/lib/TypeSafePlugin.node.mjs",
       "default": "./dist/lib/TypeSafePlugin.mjs"
     },
     "#types": {
@@ -46,8 +44,6 @@
     "./TypeSafePlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/TypeSafePlugin.workerd.mjs",
-      "node": "./dist/lib/TypeSafePlugin.node.mjs",
       "import": "./dist/lib/TypeSafePlugin.mjs"
     },
     "./TypeSafeSettings": {

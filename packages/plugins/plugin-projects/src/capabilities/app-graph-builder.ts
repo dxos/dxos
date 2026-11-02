@@ -12,7 +12,6 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
-import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
@@ -28,9 +27,11 @@ import { Task } from '@dxos/types';
 
 import { Feature, ProjectOperation, Spec } from '#types';
 
+import { artifacts } from '../artifacts.ts';
 import { FEATURE_COMPANION } from '../constants.ts';
 import { ProjectsNamespace } from '../namespace.ts';
 import { refId } from '../operations/feature/util.ts';
+import { ARTIFACTS_SEGMENT, SESSIONS_SEGMENT, SPEC_SEGMENT } from '../paths.ts';
 import { inboxResearch } from '../templates/index.ts';
 
 /**
@@ -214,9 +215,6 @@ export const createMailboxProjectExtension = () =>
 /** Node `type` of a project's virtual Chats branch; the child extension below matches on it. */
 export const CHATS_SECTION_TYPE = 'org.dxos.plugin.projects.chats-section';
 
-/** Path segment of the Chats branch. */
-export const SESSIONS_SEGMENT = 'sessions';
-
 /**
  * One URL binding for everything a project contains, shared with the type section that addresses the
  * project itself — so `project/<id>` is the project, `project/<id>+sessions` its Sessions branch, and
@@ -398,9 +396,6 @@ export const SPEC_BRANCH_TYPE = 'org.dxos.plugin.projects.spec-branch';
 /** Node `type` of a feature level beneath the Spec branch; the node's data is the feature. */
 export const SPEC_LEVEL_TYPE = 'org.dxos.plugin.projects.spec-level';
 
-/** Path segment (and node id) of the Spec branch under its project. */
-export const SPEC_SEGMENT = 'spec';
-
 const matchSpecLevel = (node: AppGraphNode.Node): Option.Option<{ feature: Feature.Feature; space: unknown }> =>
   node.type === SPEC_LEVEL_TYPE && Feature.instanceOf(node.data)
     ? Option.some({ feature: node.data, space: node.properties.space })
@@ -499,16 +494,8 @@ const makeFeatureCompanion = () =>
     data: FEATURE_COMPANION,
   });
 
-export const artifacts = (project: Project.Project): ContainerModel.Container =>
-  ContainerModel.make(project, 'artifacts', {
-    removeLabel: ['remove-from-project.label', { ns: ProjectsNamespace.key }],
-  });
-
 /** Node `type` of a project's virtual Artifacts branch; the two extensions below match on it. */
 export const ARTIFACTS_SECTION_TYPE = 'org.dxos.plugin.projects.artifacts-section';
-
-/** Path segment (and node id) of that branch under its project. */
-export const ARTIFACTS_SEGMENT = 'artifacts';
 
 /** Data carried by the Artifacts branch node; tagged for the reason {@link ChatsBranch} is. */
 export type ArtifactsBranch = { branch: 'artifacts'; project: Project.Project };

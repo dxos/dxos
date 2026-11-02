@@ -17,8 +17,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/DuffelPlugin.workerd.mjs",
-      "node": "./dist/lib/DuffelPlugin.node.mjs",
       "default": "./dist/lib/DuffelPlugin.mjs"
     },
     "#services": {
@@ -57,8 +55,6 @@
     "./DuffelPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/DuffelPlugin.workerd.mjs",
-      "node": "./dist/lib/DuffelPlugin.node.mjs",
       "import": "./dist/lib/DuffelPlugin.mjs"
     },
     "./Settings": {

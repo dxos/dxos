@@ -21,8 +21,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/CrxPlugin.workerd.mjs",
-      "node": "./dist/lib/CrxPlugin.node.mjs",
       "default": "./dist/lib/CrxPlugin.mjs"
     },
     "#operations": {
@@ -72,8 +70,6 @@
     "./CrxPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/CrxPlugin.workerd.mjs",
-      "node": "./dist/lib/CrxPlugin.node.mjs",
       "import": "./dist/lib/CrxPlugin.mjs"
     },
     "./PageAction": {

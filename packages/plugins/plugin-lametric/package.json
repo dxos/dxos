@@ -22,8 +22,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/LaMetricPlugin.workerd.mjs",
-      "node": "./dist/lib/LaMetricPlugin.node.mjs",
       "default": "./dist/lib/LaMetricPlugin.mjs"
     },
     "#protocol": {
@@ -72,8 +70,6 @@
     "./LaMetricPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/LaMetricPlugin.workerd.mjs",
-      "node": "./dist/lib/LaMetricPlugin.node.mjs",
       "import": "./dist/lib/LaMetricPlugin.mjs"
     },
     "./package.json": "./package.json",

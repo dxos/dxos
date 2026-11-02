@@ -30,18 +30,7 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/ObservabilityPlugin.workerd.mjs",
-      "node": "./dist/lib/ObservabilityPlugin.node.mjs",
       "default": "./dist/lib/ObservabilityPlugin.mjs"
-    },
-    "#operation-handler": {
-      "source": {
-        "workerd": "./src/capabilities/operation-handler.workerd.ts",
-        "default": "./src/capabilities/operation-handler.ts"
-      },
-      "types": "./dist/types/src/capabilities/operation-handler.d.ts",
-      "workerd": "./dist/lib/operation-handler.workerd.mjs",
-      "default": "./dist/lib/operation-handler.mjs"
     },
     "#privacy-banner": {
       "source": {
@@ -103,8 +92,6 @@
     "./ObservabilityPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/ObservabilityPlugin.workerd.mjs",
-      "node": "./dist/lib/ObservabilityPlugin.node.mjs",
       "import": "./dist/lib/ObservabilityPlugin.mjs"
     },
     "./Settings": {

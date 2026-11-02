@@ -27,8 +27,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/RecorderPlugin.workerd.mjs",
-      "node": "./dist/lib/RecorderPlugin.node.mjs",
       "default": "./dist/lib/RecorderPlugin.mjs"
     },
     "#operations": {
@@ -78,8 +76,6 @@
     "./RecorderPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/RecorderPlugin.workerd.mjs",
-      "node": "./dist/lib/RecorderPlugin.node.mjs",
       "import": "./dist/lib/RecorderPlugin.mjs"
     },
     "./RecorderSettings": {

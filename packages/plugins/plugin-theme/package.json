@@ -16,8 +16,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/ThemePlugin.workerd.mjs",
-      "node": "./dist/lib/ThemePlugin.node.mjs",
       "default": "./dist/lib/ThemePlugin.mjs"
     },
     "#translations": {
@@ -61,8 +59,6 @@
     "./ThemePlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/ThemePlugin.workerd.mjs",
-      "node": "./dist/lib/ThemePlugin.node.mjs",
       "import": "./dist/lib/ThemePlugin.mjs"
     }
   },

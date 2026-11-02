@@ -24,8 +24,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/MapPlugin.workerd.mjs",
-      "node": "./dist/lib/MapPlugin.node.mjs",
       "default": "./dist/lib/MapPlugin.mjs"
     }
   },
@@ -39,8 +37,6 @@
     "./MapPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/MapPlugin.workerd.mjs",
-      "node": "./dist/lib/MapPlugin.node.mjs",
       "import": "./dist/lib/MapPlugin.mjs"
     },
     "./MapSolidEvents": {

@@ -17,8 +17,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/StePlugin.workerd.mjs",
-      "node": "./dist/lib/StePlugin.node.mjs",
       "default": "./dist/lib/StePlugin.mjs"
     },
     "#operations": {
@@ -51,8 +49,6 @@
     "./StePlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/StePlugin.workerd.mjs",
-      "node": "./dist/lib/StePlugin.node.mjs",
       "import": "./dist/lib/StePlugin.mjs"
     },
     "./SteSkill": {

@@ -36,8 +36,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/SandboxPlugin.workerd.mjs",
-      "node": "./dist/lib/SandboxPlugin.node.mjs",
       "default": "./dist/lib/SandboxPlugin.mjs"
     },
     "#skills": {
@@ -107,8 +105,6 @@
     "./SandboxPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/SandboxPlugin.workerd.mjs",
-      "node": "./dist/lib/SandboxPlugin.node.mjs",
       "import": "./dist/lib/SandboxPlugin.mjs"
     },
     "./SandboxService": {

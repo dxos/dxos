@@ -43,8 +43,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/PresenterPlugin.workerd.mjs",
-      "node": "./dist/lib/PresenterPlugin.node.mjs",
       "default": "./dist/lib/PresenterPlugin.mjs"
     },
     "#operations": {
@@ -109,8 +107,6 @@
     "./PresenterPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/PresenterPlugin.workerd.mjs",
-      "node": "./dist/lib/PresenterPlugin.node.mjs",
       "import": "./dist/lib/PresenterPlugin.mjs"
     },
     "./PresenterSettings": {

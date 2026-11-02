@@ -22,8 +22,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/UmlPlugin.workerd.mjs",
-      "node": "./dist/lib/UmlPlugin.node.mjs",
       "default": "./dist/lib/UmlPlugin.mjs"
     },
     "#skills": {
@@ -56,8 +54,6 @@
     "./UmlPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/UmlPlugin.workerd.mjs",
-      "node": "./dist/lib/UmlPlugin.node.mjs",
       "import": "./dist/lib/UmlPlugin.mjs"
     },
     "./UmlSkill": {

@@ -27,8 +27,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/ChessComPlugin.workerd.mjs",
-      "node": "./dist/lib/ChessComPlugin.node.mjs",
       "default": "./dist/lib/ChessComPlugin.mjs"
     },
     "#operations": {
@@ -78,8 +76,6 @@
     "./ChessComPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/ChessComPlugin.workerd.mjs",
-      "node": "./dist/lib/ChessComPlugin.node.mjs",
       "import": "./dist/lib/ChessComPlugin.mjs"
     }
   },

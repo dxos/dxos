@@ -26,8 +26,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/VoxelPlugin.workerd.mjs",
-      "node": "./dist/lib/VoxelPlugin.node.mjs",
       "default": "./dist/lib/VoxelPlugin.mjs"
     },
     "#operations": {
@@ -82,8 +80,6 @@
     "./VoxelPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/VoxelPlugin.workerd.mjs",
-      "node": "./dist/lib/VoxelPlugin.node.mjs",
       "import": "./dist/lib/VoxelPlugin.mjs"
     }
   },

@@ -32,8 +32,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/LingoPlugin.workerd.mjs",
-      "node": "./dist/lib/LingoPlugin.node.mjs",
       "default": "./dist/lib/LingoPlugin.mjs"
     },
     "#operations": {
@@ -86,8 +84,6 @@
     "./LingoPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/LingoPlugin.workerd.mjs",
-      "node": "./dist/lib/LingoPlugin.node.mjs",
       "import": "./dist/lib/LingoPlugin.mjs"
     },
     "./LingoSettings": {

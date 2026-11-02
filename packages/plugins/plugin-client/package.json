@@ -35,8 +35,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/ClientPlugin.workerd.mjs",
-      "node": "./dist/lib/ClientPlugin.node.mjs",
       "default": "./dist/lib/ClientPlugin.mjs"
     },
     "#operations": {
@@ -104,8 +102,6 @@
     "./ClientPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/ClientPlugin.workerd.mjs",
-      "node": "./dist/lib/ClientPlugin.node.mjs",
       "import": "./dist/lib/ClientPlugin.mjs"
     },
     "./CliLogin": {

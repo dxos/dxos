@@ -17,8 +17,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/S3Plugin.workerd.mjs",
-      "node": "./dist/lib/S3Plugin.node.mjs",
       "default": "./dist/lib/S3Plugin.mjs"
     }
   },
@@ -31,8 +29,6 @@
     "./S3Plugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/S3Plugin.workerd.mjs",
-      "node": "./dist/lib/S3Plugin.node.mjs",
       "import": "./dist/lib/S3Plugin.mjs"
     }
   },

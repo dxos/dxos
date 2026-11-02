@@ -32,8 +32,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/MobilePlugin.workerd.mjs",
-      "node": "./dist/lib/MobilePlugin.node.mjs",
       "default": "./dist/lib/MobilePlugin.mjs"
     },
     "#translations": {
@@ -57,8 +55,6 @@
     "./MobilePlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/MobilePlugin.workerd.mjs",
-      "node": "./dist/lib/MobilePlugin.node.mjs",
       "import": "./dist/lib/MobilePlugin.mjs"
     }
   },

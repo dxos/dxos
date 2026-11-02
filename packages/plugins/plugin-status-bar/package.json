@@ -26,8 +26,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/StatusBarPlugin.workerd.mjs",
-      "node": "./dist/lib/StatusBarPlugin.node.mjs",
       "default": "./dist/lib/StatusBarPlugin.mjs"
     },
     "#translations": {
@@ -50,8 +48,6 @@
     "./StatusBarPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/StatusBarPlugin.workerd.mjs",
-      "node": "./dist/lib/StatusBarPlugin.node.mjs",
       "import": "./dist/lib/StatusBarPlugin.mjs"
     },
     "./translations": {

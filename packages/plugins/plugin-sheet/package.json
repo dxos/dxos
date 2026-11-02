@@ -26,20 +26,7 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/SheetPlugin.workerd.mjs",
-      "node": "./dist/lib/SheetPlugin.node.mjs",
       "default": "./dist/lib/SheetPlugin.mjs"
-    },
-    "#operations": {
-      "source": {
-        "workerd": "./src/operations/node.ts",
-        "node": "./src/operations/node.ts",
-        "default": "./src/operations/index.ts"
-      },
-      "types": "./dist/types/src/operations/index.d.ts",
-      "workerd": "./dist/lib/operations/node.mjs",
-      "node": "./dist/lib/operations/node.mjs",
-      "default": "./dist/lib/operations.mjs"
     },
     "#skills": {
       "source": "./src/skills/index.ts",
@@ -103,8 +90,6 @@
     "./SheetPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/SheetPlugin.workerd.mjs",
-      "node": "./dist/lib/SheetPlugin.node.mjs",
       "import": "./dist/lib/SheetPlugin.mjs"
     },
     "./SheetRange": {

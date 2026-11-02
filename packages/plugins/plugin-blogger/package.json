@@ -27,8 +27,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/BloggerPlugin.workerd.mjs",
-      "node": "./dist/lib/BloggerPlugin.node.mjs",
       "default": "./dist/lib/BloggerPlugin.mjs"
     },
     "#operations": {
@@ -77,8 +75,6 @@
     "./BloggerPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/BloggerPlugin.workerd.mjs",
-      "node": "./dist/lib/BloggerPlugin.node.mjs",
       "import": "./dist/lib/BloggerPlugin.mjs"
     },
     "./Publisher": {

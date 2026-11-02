@@ -22,8 +22,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/IrohBeaconPlugin.workerd.mjs",
-      "node": "./dist/lib/IrohBeaconPlugin.node.mjs",
       "default": "./dist/lib/IrohBeaconPlugin.mjs"
     },
     "#translations": {
@@ -56,8 +54,6 @@
     "./IrohBeaconPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/IrohBeaconPlugin.workerd.mjs",
-      "node": "./dist/lib/IrohBeaconPlugin.node.mjs",
       "import": "./dist/lib/IrohBeaconPlugin.mjs"
     }
   },

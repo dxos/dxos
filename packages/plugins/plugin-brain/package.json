@@ -22,8 +22,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/BrainPlugin.workerd.mjs",
-      "node": "./dist/lib/BrainPlugin.node.mjs",
       "default": "./dist/lib/BrainPlugin.mjs"
     },
     "#operations": {
@@ -77,8 +75,6 @@
     "./BrainPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/BrainPlugin.workerd.mjs",
-      "node": "./dist/lib/BrainPlugin.node.mjs",
       "import": "./dist/lib/BrainPlugin.mjs"
     },
     "./BrainSettings": {

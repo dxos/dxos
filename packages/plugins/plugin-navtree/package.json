@@ -31,8 +31,6 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/NavTreePlugin.workerd.mjs",
-      "node": "./dist/lib/NavTreePlugin.node.mjs",
       "default": "./dist/lib/NavTreePlugin.mjs"
     },
     "#operations": {
@@ -76,8 +74,6 @@
     "./NavTreePlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/NavTreePlugin.workerd.mjs",
-      "node": "./dist/lib/NavTreePlugin.node.mjs",
       "import": "./dist/lib/NavTreePlugin.mjs"
     },
     "./NavTreeSurface": {

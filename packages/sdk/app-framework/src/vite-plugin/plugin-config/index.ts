@@ -128,15 +128,17 @@ export const moduleBodyAttributePlugin = (): VitePlugin => ({
   },
 });
 
-/** Query parameter on a library entry for `dx.config.ts` that limits it to one runtime's modules. */
-export const LIBRARY_ENV_PARAM = 'dx-env';
-
 /** Query parameter for an app's lazily loaded half of a config: the module list a plugin needs once enabled. */
 const MODULES_PARAM = 'dx-modules';
+
+/** One module of a library build's manifest, with the source file its body (and adapter) load from. */
+export type LibraryModule = Plugin.ManifestModule & { bodyFile: string; adapterFile?: string };
 
 export type PluginConfigPluginOptions = {
   /** Restricts the plugin to one command, e.g. `'build'` for a library whose tests import the config. */
   apply?: 'build' | 'serve';
+  /** Called with each config a library build emits, so a caller can map module bodies to the chunks they become. */
+  onLibraryManifest?: (manifest: { configFile: string; modules: readonly LibraryModule[] }) => void;
 };
 
 /**
@@ -145,7 +147,7 @@ export type PluginConfigPluginOptions = {
  * and the URL of each body. Module bodies become their own chunks; bodies for other environments are
  * never emitted. In dev the config is re-evaluated on every load, so edits hot-reload.
  */
-export const pluginConfigPlugin = ({ apply }: PluginConfigPluginOptions = {}): VitePlugin => {
+export const pluginConfigPlugin = ({ apply, onLibraryManifest }: PluginConfigPluginOptions = {}): VitePlugin => {
   let evaluator: Promise<RunnableDevEnvironment> | undefined;
   const getEvaluator = (root: string) =>
     (evaluator ??= (async () => {
@@ -245,12 +247,10 @@ export const pluginConfigPlugin = ({ apply }: PluginConfigPluginOptions = {}): V
             ? 'workerd'
             : 'node';
 
-      // A library's dist is re-bundled downstream, so each body loads through an import a bundler can
-      // follow. The default entry keeps every module with its environments; a `?dx-env=` entry keeps
-      // one runtime's modules, so a headless bundle never reaches a browser-only body.
-      const libraryEnv = library ? query.get(LIBRARY_ENV_PARAM) : null;
-      const keep = (environments?: readonly string[]) =>
-        !environments || (library ? !libraryEnv || environments.includes(libraryEnv) : environments.includes(target));
+      // A library serves every runtime from one build: it keeps every module with its environments, and
+      // each runtime activates only its own (`Plugin.fromModules`); an app build keeps its target's modules.
+      const keep = (environments?: readonly string[]) => library || !environments || environments.includes(target);
+      const libraryModules: LibraryModule[] = [];
       const loaders: string[] = [];
       const chunkRefs: string[] = [];
       // Dev serves the source file directly; a build emits it as a chunk whose URL replaces the token.
@@ -315,6 +315,12 @@ export const pluginConfigPlugin = ({ apply }: PluginConfigPluginOptions = {}): V
             : {}),
           ...(library && module.environments ? { environments: module.environments } : {}),
         });
+        if (library) {
+          libraryModules.push({ ...modules[modules.length - 1], bodyFile, adapterFile });
+        }
+      }
+      if (library) {
+        onLibraryManifest?.({ configFile: file, modules: libraryModules });
       }
 
       const manifest: Plugin.Manifest = { plugin: config.plugin, publish: config.publish, modules };

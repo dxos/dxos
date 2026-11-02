@@ -85,8 +85,6 @@
     "./LighthousePlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
-      "workerd": "./dist/lib/LighthousePlugin.workerd.mjs",
-      "node": "./dist/lib/LighthousePlugin.node.mjs",
       "import": "./dist/lib/LighthousePlugin.mjs"
     },
     "./package.json": "./package.json",

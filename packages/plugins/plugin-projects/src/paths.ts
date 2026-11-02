@@ -6,7 +6,14 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as Project from '@dxos/compute/Project';
 import { Type } from '@dxos/echo';
 
-import { ARTIFACTS_SEGMENT, SESSIONS_SEGMENT, SPEC_SEGMENT } from './capabilities/app-graph-builder.ts';
+/** Path segment of a project's Chats branch. */
+export const SESSIONS_SEGMENT = 'sessions';
+
+/** Path segment (and node id) of a project's Artifacts branch. */
+export const ARTIFACTS_SEGMENT = 'artifacts';
+
+/** Path segment (and node id) of a project's Spec branch. */
+export const SPEC_SEGMENT = 'spec';
 
 const PROJECT_TYPENAME = Type.getTypename(Project.Project)!;
 
