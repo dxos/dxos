@@ -100,7 +100,7 @@ const delegationScript = (request: ScriptedLanguageModel.ScriptedRequest) => {
   // `text` holds only text parts; tool results are in the prompt, where their quotes are escaped.
   const prompt = JSON.stringify(request.prompt.content);
   const started = (purpose: string) =>
-    new RegExp(`Started subagent thread (\\w+) \\(\\\\*"${purpose}`).exec(prompt)?.[1];
+    new RegExp(`Started subagent thread ([\\w@-]+) \\(\\\\*"${purpose}`).exec(prompt)?.[1];
   const alpha = started('Alpha');
   const beta = started('Beta');
   if (alpha === undefined || beta === undefined) {

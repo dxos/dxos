@@ -93,7 +93,7 @@ const toolResultsSince = ({ prompt }: ScriptedLanguageModel.ScriptedRequest, ind
 
 /** The thread a subagent was started in, from the delegating call's result (quotes escaped in the prompt's JSON). */
 const startedThread = (prompt: string, plan: Plan) =>
-  new RegExp(`Started subagent thread (\\w+) \\(\\\\*"${purposeOf(plan)}`).exec(prompt)?.[1];
+  new RegExp(`Started subagent thread ([\\w@-]+) \\(\\\\*"${purposeOf(plan)}`).exec(prompt)?.[1];
 
 /** A subagent computes its plan one calculator call at a time, then reports. */
 const subagent = (plan: Plan, step: number): ScriptedLanguageModel.ScriptedTurn => {
