@@ -10,7 +10,7 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Project from '@dxos/compute/Project';
 import * as Spec from '@dxos/compute/Spec';
-import * as ProjectView from '@dxos/plugin-projects/ProjectView';
+import * as ProjectSurface from '@dxos/plugin-projects/ProjectSurface';
 
 import {
   AddFeatureDialog,
@@ -104,13 +104,13 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'feature.level.overview',
-        filter: Surface.makeFilter(ProjectView.LevelOverview, ({ subject }) => Feature.instanceOf(subject)),
+        filter: Surface.makeFilter(ProjectSurface.LevelOverview, ({ subject }) => Feature.instanceOf(subject)),
         component: FeatureLevelOverview,
         props: ({ data }) => data,
       }),
       Surface.create({
         id: 'feature.specView',
-        filter: Surface.makeFilter(ProjectView.SpecView, ({ view }) => SPEC_MAP_VIEWS.some((mode) => mode === view)),
+        filter: Surface.makeFilter(ProjectSurface.SpecView, ({ view }) => SPEC_MAP_VIEWS.some((mode) => mode === view)),
         component: FeatureSpecView,
         props: ({ data }) => data,
       }),

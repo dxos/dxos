@@ -12,7 +12,7 @@ import type * as Project from '@dxos/compute/Project';
 import * as Spec from '@dxos/compute/Spec';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
-import * as ProjectView from '@dxos/plugin-projects/ProjectView';
+import * as ProjectSurface from '@dxos/plugin-projects/ProjectSurface';
 import { type Task } from '@dxos/types';
 
 import { Feature, FeatureMap, type FeatureMapView, FeatureOperation } from '#types';
@@ -86,7 +86,7 @@ export const FeatureLevelArticle = ({ role, subject, attendableId }: FeatureLeve
 
   return (
     <Surface.Surface
-      type={ProjectView.Level}
+      type={ProjectSurface.Level}
       data={{
         role,
         project,
@@ -129,7 +129,7 @@ export const FeatureLevelOverview = ({ subject: feature, project, attendableId }
 /** The Specs tab's map views: a spec's features on a canvas or by status, at the level the tab is at. */
 export const SPEC_MAP_VIEWS: readonly FeatureMapView.Mode[] = ['canvas', 'kanban'];
 
-export type FeatureSpecViewProps = ProjectView.SpecViewData;
+export type FeatureSpecViewProps = ProjectSurface.SpecViewData;
 
 /** A spec's feature map as a view of the project's Specs tab; a double-click on a card opens the feature's level. */
 export const FeatureSpecView = ({ subject, view, project, level, attendableId }: FeatureSpecViewProps) => {

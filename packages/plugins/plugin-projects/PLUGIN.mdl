@@ -42,18 +42,18 @@ feat F-4: A project's specs
   req F-4.6: The nav tree lists each spec under the project's Specs branch at `project/<id>/specs/<spec>`, and a spec a
              project owns opens as the project's article on that spec. Another plugin nests levels of its own beneath a
              spec with `ProjectGraph.makeLevelNode`, at `…/specs/<spec>/<level>/…`, each node holding its object. A
-             level opens as the project's article narrowed to it, through the `ProjectView.Level` surface; its Overview
-             tab is the nesting plugin's `ProjectView.LevelOverview` surface, and its Specs tab shows the level's own
-             spec, or offers Add spec when it has none.
+             level opens as the project's article narrowed to it, through the `ProjectSurface.Level` surface; its
+             Overview tab is the nesting plugin's `ProjectSurface.LevelOverview` surface, and its Specs tab shows the
+             level's own spec, or offers Add spec when it has none.
   req F-4.7: The project article's toolbar holds its tabs, then the tools of the tab shown: Create artifact on the
              Overview; the spec dropdown, the view toggle and the Extensions menu on the Specs tab; Assign to agent and
              the Gantt toggle on the Tasks tab. It has no overflow menu and no button to start a session, which is the
              assistant companion's.
   req F-4.8: A spec offers its text, and each view a plugin contributes (`ProjectCapabilities.SpecView`) for a dialect
-             the spec uses, drawn by that plugin's `ProjectView.SpecView` surface. A package is a set of dialects a
+             the spec uses, drawn by that plugin's `ProjectSurface.SpecView` surface. A package is a set of dialects a
              plugin contributes (`ProjectCapabilities.SpecPackage`). The view toggle shows only when a spec has more
-             than one view. The Extensions menu lists the packages and checks each one whose dialects the spec all
-             uses; checking one adds its dialects and unchecking removes them.
+             than one view. The Extensions menu lists the packages and checks each one whose dialects the spec all uses;
+             checking one adds its dialects and unchecking removes them.
   req F-4.10: A spec's text offers a slash command for each block its packages' dialects define. A command writes the
               block's structure in place, fenced as `mdl`, with its fields empty and its id numbered after the blocks
               of its kind already in the text; text before the slash becomes the block's title.
@@ -1193,4 +1193,13 @@ decision D-103: plugin-code's feature migrations list this plugin's `Project` 0.
   why: The client runs every plugin's migrations as one list, deduplicated by identity, in an order this plugin does not control.
   rejected:
     - Leaving the order to plugin load order, which would run the spec migrations against projects not yet migrated.
+```
+
+```mdl
+decision D-104: The `SpecView`, `Level` and `LevelOverview` surface roles are role tokens in `ProjectSurface`, beside `Settings`, and the plugins that render them declare them by token in their `dx.config`. Fills in [D-100] and [D-101].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.6, F-4.8]
+  why: Role tokens live in `ProjectSurface`, apart from the view state in `ProjectView`, and a plugin declares the roles it renders by token rather than by string.
 ```

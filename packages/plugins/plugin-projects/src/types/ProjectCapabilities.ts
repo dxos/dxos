@@ -105,7 +105,7 @@ export const SpecPackage = Capability.make<SpecPackage>()(`${ProjectsNamespace.k
 
 /**
  * A view of a spec beside its text, such as a map of what it describes, offered on a project's Specs tab for the specs
- * using all its `dialects`; the contributor renders it through the `ProjectView.SpecView` surface.
+ * using all its `dialects`; the contributor renders it through the `ProjectSurface.SpecView` surface.
  */
 export type SpecView = {
   id: string;

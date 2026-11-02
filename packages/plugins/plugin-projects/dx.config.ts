@@ -7,6 +7,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as AssistantEvents from '@dxos/plugin-assistant/AssistantEvents';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
@@ -19,6 +20,7 @@ import { trim } from '@dxos/util';
 import { ProjectsNamespace } from './src/namespace.ts';
 import * as ProjectCapabilities from './src/types/ProjectCapabilities.ts';
 import * as ProjectsEvents from './src/types/ProjectsEvents.ts';
+import * as ProjectSurface from './src/types/ProjectSurface.ts';
 
 // Annotated: the capability modules import `meta` from here, so inferring it would be circular.
 const config: Plugin.PluginConfig = Plugin.config({
@@ -79,12 +81,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       mimeType: 'application/x-mdl',
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: [
-        'org.dxos.plugin.projects.role.level',
-        'org.dxos.role.article',
-        'org.dxos.role.dialog',
-        'org.dxos.role.section',
-      ],
+      roles: [AppSurface.Article, AppSurface.Dialog, AppSurface.Section, ProjectSurface.Level],
     }),
     AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {

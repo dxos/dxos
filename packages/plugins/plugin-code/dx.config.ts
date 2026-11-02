@@ -7,12 +7,14 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as AssistantEvents from '@dxos/plugin-assistant/AssistantEvents';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as GitHubCapabilities from '@dxos/plugin-github/GitHubCapabilities';
 import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 import * as ProjectsEvents from '@dxos/plugin-projects/ProjectsEvents';
+import * as ProjectSurface from '@dxos/plugin-projects/ProjectSurface';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { trim } from '@dxos/util';
 
@@ -115,17 +117,17 @@ const config: Plugin.PluginConfig = Plugin.config({
     }),
     AppCapability.surface(() => import('./src/capabilities/feature-surface.ts', { with: { type: 'module-url' } }), {
       roles: [
-        'org.dxos.plugin.projects.role.levelOverview',
-        'org.dxos.plugin.projects.role.specView',
-        'org.dxos.role.article',
-        'org.dxos.role.cardContent',
-        'org.dxos.role.dialog',
-        'org.dxos.role.section',
+        AppSurface.Article,
+        AppSurface.CardContent,
+        AppSurface.Dialog,
+        AppSurface.Section,
+        ProjectSurface.LevelOverview,
+        ProjectSurface.SpecView,
       ],
       name: 'FeatureSurface',
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: ['org.dxos.role.article', 'org.dxos.role.section'],
+      roles: [AppSurface.Article, AppSurface.Section],
     }),
     AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {

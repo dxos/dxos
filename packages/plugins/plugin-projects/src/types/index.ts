@@ -7,5 +7,6 @@ export * as ProjectCapabilities from './ProjectCapabilities.ts';
 export * as ProjectMailboxOperation from './ProjectMailboxOperation.ts';
 export * as ProjectOperation from './ProjectOperation.ts';
 export * as ProjectsEvents from './ProjectsEvents.ts';
+export * as ProjectSurface from './ProjectSurface.ts';
 export * as ProjectView from './ProjectView.ts';
 export * as Settings from './Settings.ts';

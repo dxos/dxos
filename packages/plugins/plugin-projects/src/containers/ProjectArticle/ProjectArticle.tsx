@@ -48,7 +48,7 @@ import * as Tabs from '@dxos/react-ui/Tabs';
 import { type Milestone, Task, type TaskSet } from '@dxos/types';
 
 import { ObjectGallery, ProjectPipeline } from '#components';
-import { ProjectCapabilities, ProjectOperation, ProjectView } from '#types';
+import { ProjectCapabilities, ProjectOperation, ProjectSurface, ProjectView } from '#types';
 
 import { useProjectSpecs, useRefTargets, useSelectedSpec } from '../../hooks/index.ts';
 import { ProjectsNamespace } from '../../namespace.ts';
@@ -74,7 +74,7 @@ const DOCUMENT_VIEW = 'document';
 const PIPELINE_SIZE = 14;
 
 export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project> &
-  Pick<ProjectView.LevelData, 'taskScope' | 'onTaskCreated' | 'onAddSpec'> & {
+  Pick<ProjectSurface.LevelData, 'taskScope' | 'onTaskCreated' | 'onAddSpec'> & {
     /** The spec the plank shows, as a level of the nav tree names it; the Specs tab's pick when absent. */
     spec?: Spec.Spec;
     /** The level another plugin nests beneath a spec, whose breakdown `spec` is; the project's own level when absent. */
@@ -371,7 +371,7 @@ export const ProjectArticle = ({
               never recovers. The tablist still owns the switching. */}
           {tab === 'overview' && level && (
             <Surface.Surface
-              type={ProjectView.LevelOverview}
+              type={ProjectSurface.LevelOverview}
               data={{ subject: level, project: subject, attendableId }}
               limit={1}
             />
@@ -427,7 +427,7 @@ export const ProjectArticle = ({
                   </Form.FieldSet>
 
                   {/* Settings other plugins keep for this project, such as its folder on this device. */}
-                  <Surface.Surface type={ProjectView.Settings} data={{ project: subject }} />
+                  <Surface.Surface type={ProjectSurface.Settings} data={{ project: subject }} />
                 </Form.Content>
               </Form.Viewport>
             </Form.Root>
@@ -443,7 +443,7 @@ export const ProjectArticle = ({
             )}
           {tab === 'spec' && spec && view !== DOCUMENT_VIEW && (
             <Surface.Surface
-              type={ProjectView.SpecView}
+              type={ProjectSurface.SpecView}
               data={{ subject: spec, view, project: subject, level, attendableId }}
               limit={1}
             />
@@ -765,7 +765,7 @@ const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined, scope?: readonly 
   return { tasks, checkedTasks, delegatableTasks, uncheck };
 };
 
-export type LevelArticleProps = ProjectView.LevelData & { role?: string };
+export type LevelArticleProps = ProjectSurface.LevelData & { role?: string };
 
 /** The project article at a level another plugin nests beneath one of its specs. */
 export const LevelArticle = ({ project, ...props }: LevelArticleProps) => (

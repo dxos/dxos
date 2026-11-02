@@ -22,7 +22,7 @@ import {
   SpecDocumentArticle,
   SpecLevelArticle,
 } from '#containers';
-import { ProjectView } from '#types';
+import { ProjectSurface } from '#types';
 
 import { isArtifactsBranch, isChatsBranch } from '../capabilities/app-graph-builder.ts';
 import { MOVE_TASK_DIALOG } from '../constants.ts';
@@ -44,7 +44,7 @@ export default Capability.makeModule(() =>
       // A level another plugin nests beneath a spec, which it renders through this role.
       Surface.create({
         id: 'project.level',
-        filter: Surface.makeFilter(ProjectView.Level),
+        filter: Surface.makeFilter(ProjectSurface.Level),
         component: LevelArticle,
         props: ({ data }) => data,
       }),

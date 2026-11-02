@@ -11,7 +11,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx, osTranslations } from '@dxos/ui-theme';
 
-import { DeckRole } from '#types';
+import { DeckSurface } from '#types';
 
 import { DeckNamespace } from '../../namespace.ts';
 import { CloseSidebarButton, ToggleSidebarButton } from '../Sidebar/index.ts';
@@ -38,7 +38,7 @@ export const Banner = ({ variant, classNames }: Util.ThemedClassName<{ variant?:
         </div>
       )}
       <span className='grow' />
-      <Surface.Surface type={DeckRole.VersionInfo} limit={1} />
+      <Surface.Surface type={DeckSurface.VersionInfo} limit={1} />
     </header>
   );
 };
