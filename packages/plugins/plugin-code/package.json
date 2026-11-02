@@ -26,6 +26,8 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/CodePlugin.workerd.mjs",
+      "node": "./dist/lib/CodePlugin.node.mjs",
       "default": "./dist/lib/CodePlugin.mjs"
     },
     "#skills": {
@@ -80,6 +82,8 @@
     "./CodePlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/CodePlugin.workerd.mjs",
+      "node": "./dist/lib/CodePlugin.node.mjs",
       "import": "./dist/lib/CodePlugin.mjs"
     },
     "./CodeProject": {

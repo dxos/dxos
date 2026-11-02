@@ -31,6 +31,8 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/ExplorerPlugin.workerd.mjs",
+      "node": "./dist/lib/ExplorerPlugin.node.mjs",
       "default": "./dist/lib/ExplorerPlugin.mjs"
     },
     "#translations": {
@@ -64,6 +66,8 @@
     "./ExplorerPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/ExplorerPlugin.workerd.mjs",
+      "node": "./dist/lib/ExplorerPlugin.node.mjs",
       "import": "./dist/lib/ExplorerPlugin.mjs"
     },
     "./ForceGraph": {

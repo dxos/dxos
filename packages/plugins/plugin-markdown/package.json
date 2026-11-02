@@ -31,6 +31,8 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/MarkdownPlugin.workerd.mjs",
+      "node": "./dist/lib/MarkdownPlugin.node.mjs",
       "default": "./dist/lib/MarkdownPlugin.mjs"
     },
     "#operations": {
@@ -99,6 +101,8 @@
     "./MarkdownPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/MarkdownPlugin.workerd.mjs",
+      "node": "./dist/lib/MarkdownPlugin.node.mjs",
       "import": "./dist/lib/MarkdownPlugin.mjs"
     },
     "./Settings": {

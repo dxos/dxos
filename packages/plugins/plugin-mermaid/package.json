@@ -16,6 +16,8 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/MermaidPlugin.workerd.mjs",
+      "node": "./dist/lib/MermaidPlugin.node.mjs",
       "default": "./dist/lib/MermaidPlugin.mjs"
     }
   },
@@ -29,6 +31,8 @@
     "./MermaidPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/MermaidPlugin.workerd.mjs",
+      "node": "./dist/lib/MermaidPlugin.node.mjs",
       "import": "./dist/lib/MermaidPlugin.mjs"
     }
   },

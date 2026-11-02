@@ -17,6 +17,8 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/DeepSeekPlugin.workerd.mjs",
+      "node": "./dist/lib/DeepSeekPlugin.node.mjs",
       "default": "./dist/lib/DeepSeekPlugin.mjs"
     },
     "#skills": {
@@ -39,6 +41,8 @@
     "./DeepSeekPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/DeepSeekPlugin.workerd.mjs",
+      "node": "./dist/lib/DeepSeekPlugin.node.mjs",
       "import": "./dist/lib/DeepSeekPlugin.mjs"
     }
   },

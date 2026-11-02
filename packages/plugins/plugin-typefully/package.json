@@ -17,6 +17,8 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/TypefullyPlugin.workerd.mjs",
+      "node": "./dist/lib/TypefullyPlugin.node.mjs",
       "default": "./dist/lib/TypefullyPlugin.mjs"
     },
     "#services": {
@@ -49,6 +51,8 @@
     "./TypefullyPlugin": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/TypefullyPlugin.workerd.mjs",
+      "node": "./dist/lib/TypefullyPlugin.node.mjs",
       "import": "./dist/lib/TypefullyPlugin.mjs"
     }
   },
