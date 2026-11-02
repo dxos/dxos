@@ -163,12 +163,15 @@ test QA-1: Connect, bind a workspace, and build a gadget with the Cloudflare OS 
       do: Open the Assistant companion, open the agent picker and choose Cloudflare OS.
       expect: the picker lists Cloudflare OS beside Composer, and the prompt shows Cloudflare OS as the agent
     - name: Ask for a gadget
-      do: Ask "Build a tally counter gadget with - and + buttons." and send it.
+      do: Ask "Build a tally counter gadget that shows the count, with - and + buttons." and send it.
       expect: |
         the agent's reasoning, a line per tool call (createGadget, writeFile) and its reply appear in the
         chat; the article lists the new gadget marked "(proposed)"; the turn ends with "Accept changes to
         <gadget>?"
-      note: The agent is a model; its words and gadget title vary from run to run.
+      note: |
+        The agent is a model; its words, gadget title and code vary from run to run. A run once built a
+        gadget that passed a plain class to `gadget.subscribe()` and never showed its count, which is why
+        the prompt asks for the count to be shown.
     - name: Accept the change
       do: Click "Accept changes".
       expect: the card reads "Answered: Accept changes", and the gadget's tab loses "(proposed)"
@@ -259,4 +262,13 @@ decision D-10: A turn follows the workspace chat by polling with one-request HTT
   affects: [F-4.3, F-3.1]
   why: A live WebSocket subscription that drops ends silently, which left a turn waiting after the agent had finished; a request has no connection to lose.
   rejected: Reconnecting the turn's subscription and replaying from the last sequence, which needs the same end-of-turn detection polling gives directly.
+```
+
+```mdl
+decision D-11: The QA prompt asks for a gadget "that shows the count". Fills in [D-1].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-1]
+  why: Without it the agent once built a counter whose display never received the count, so the test could not judge the run step.
 ```

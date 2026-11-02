@@ -157,7 +157,7 @@ export const steps = [
       await demo.caption({ value: 'Ask for a gadget', subtitle: SOURCE });
       await demo.type({
         selector: '[data-testid="assistant.prompt"] .cm-content',
-        value: 'Build a tally counter gadget with - and + buttons.',
+        value: 'Build a tally counter gadget that shows the count, with - and + buttons.',
         delay: 40,
       });
       await demo.press({ key: 'Enter' });
