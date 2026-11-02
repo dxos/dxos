@@ -104,10 +104,10 @@ const Chip = ({ number, title, opacity }: { number: number; title: string; opaci
   </div>
 );
 
-/** A subtitle line, its bracketed phrase set on the accent, rising into place over the first half second. */
+/** A subtitle line, its bracketed phrase set on the accent, settling up a few pixels as the line appears. */
 const Line = ({ text, opacity, into }: { text: string; opacity: number; into: number }) => {
   const [before, highlight = '', after = ''] = text.split(/\[|\]/);
-  const risen = ramp(into, 0.1, 0.5);
+  const risen = ramp(into, 0.05, 0.7);
   return (
     <div
       style={{
@@ -132,8 +132,8 @@ const Line = ({ text, opacity, into }: { text: string; opacity: number; into: nu
             color: neu.onAccent,
             padding: '0 16px',
             textShadow: 'none',
-            opacity: risen,
-            transform: `translateY(${(1 - risen) * 36}px)`,
+            opacity: 0.4 + 0.6 * risen,
+            transform: `translateY(${(1 - risen) * 10}px)`,
           }}
         >
           {highlight}
