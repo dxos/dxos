@@ -14,11 +14,11 @@ Cut 3 of NARRATIVE-SAAS2D.md: a lecture on the dynamics, nobody acts badly, ever
 
 ## 3. Your data lives inside SaaS (`#silo`)
 
-- The application sits at the centre, and the company reaches in.
+- The company's data lives inside the vendor's application.
 
 ## 4. Data in both directions (`#silo-comms`)
 
-- The data lives there too.
+- Every read and write passes through the vendor.
 
 ## 5. The vendor grows (`#scale`)
 
@@ -34,31 +34,31 @@ Cut 3 of NARRATIVE-SAAS2D.md: a lecture on the dynamics, nobody acts badly, ever
 
 ## 8. Teams and their apps (`#spread-comms`)
 
-- Silos, fragmentation, lock-in: consequences of the architecture.
+- Silos, fragmentation, lock-in.
 
 ## 9. A frontier lab arrives (`#frontier`)
 
-- That architecture fails for agents.
+- For agents, this architecture breaks down.
 
 ## 10. Everyone talks to the lab (`#frontier-comms`)
 
-- An agent works a job that cuts across products, and its value is in the joins no vendor holds.
+- An agent works across products, and its value is in the joins no vendor holds.
 
 ## 11. The lab at the centre (`#orbit`)
 
-- Agents need access to everything.
+- Agents need access to everything, across the silos.
 
 ## 12. The apps are absorbed (`#absorb`)
 
-- And the few labs able to train frontier models are offering to hold everything.
+- SaaS vendors bolt on AI; the labs build the apps into their platforms.
 
 ## 13. Three labs (`#rivals`)
 
-- That cures fragmentation with a deeper dependence.
+- Greater dependence on fewer providers, who set the price.
 
 ## 14. The labs merge (`#merge-1`)
 
-- The labs themselves are consolidating.
+- Consolidation among the labs themselves is likely.
 
 ## 15. The Final Frontier (`#final-frontier`)
 
@@ -66,15 +66,15 @@ Cut 3 of NARRATIVE-SAAS2D.md: a lecture on the dynamics, nobody acts badly, ever
 
 ## 16. The Singularity (`#engulf`)
 
-- Every company depends on a winnowing few.
+- Data, models and applications, concentrated in a few hands.
 
 ## 17. The Alternative (`#dont-panic`)
 
-- Invert the architecture.
+- There is an alternative: an inversion of control.
 
 ## 18. Back to your company (`#spread-again`)
 
-- The company owns the data; applications and agents reach in.
+- What if the company kept its data, with interoperable apps on a new architecture?
 
 ## 19. Your data, in ECHO (`#echo-hub`)
 
@@ -82,11 +82,11 @@ Cut 3 of NARRATIVE-SAAS2D.md: a lecture on the dynamics, nobody acts badly, ever
 
 ## 20. The ECHO hypergraph (`#echo-spaces`)
 
-- Distributed, on every device and at the edge. A graph: the joins live in the data.
+- Distributed, on every device and at the edge.
 
 ## 21. A graph of objects (`#objects`)
 
-- Typed. Permissioned in the object itself.
+- Realtime and typed, with fine-grained access for people and agents.
 
 ## 24. Work that builds on itself (`#object-created`)
 
@@ -94,11 +94,11 @@ Cut 3 of NARRATIVE-SAAS2D.md: a lecture on the dynamics, nobody acts badly, ever
 
 ## 25. Everyone at work (`#echo-spaces-again`)
 
-- ECHO is that database, running on Cloudflare Workers and Durable Objects.
+- ECHO is that database, running on Cloudflare.
 
 ## 26. Your company again (`#echo-hub-again`)
 
-- Composer is the enterprise superapp built on it, for agent-assisted applications.
+- Composer is the extensible enterprise superapp built on top.
 
 ## 27. The silos fold in (`#saas-merge`)
 
