@@ -37,11 +37,13 @@ const positiveInt = (name: string, fallback: number): number => {
 /** How many of the branch's objects to open (`DX_PERF_OBJECTS`); each opens once per pass. */
 const OBJECTS = positiveInt('DX_PERF_OBJECTS', 8);
 
+const DEFAULT_BRANCH = 'content/collections';
+
 /**
  * The navtree branch, under `root/<space>/`, whose children the stages open (`DX_PERF_OBJECT_BRANCH`): the root
  * collection by default; `ai/org.dxos.type.project` for the Projects section.
  */
-const BRANCH = process.env.DX_PERF_OBJECT_BRANCH ?? 'content/collections';
+const BRANCH = process.env.DX_PERF_OBJECT_BRANCH ?? DEFAULT_BRANCH;
 
 /** Passes over the objects (`DX_PERF_OBJECT_PASSES`): `cold`, `warm`, then `warm3`, `warm4`… to show a trend. */
 const PASSES = Array.from({ length: positiveInt('DX_PERF_OBJECT_PASSES', 2) }, (_, index) =>
@@ -120,9 +122,12 @@ defineScenario({
   flow: 'object-open',
   reproduces:
     "Opening an object from the navtree takes 70-450 ms and frames of 150-350 ms on the reporter's own profile, against a 40 ms target (2026-10-28 debug session).",
-  scale: ARCHIVE
-    ? `archive=${Math.round(statSync(ARCHIVE).size / 1e6)}MB,objects=${OBJECTS}`
-    : `${seedLabel(SEEDED_DOCUMENTS)},objects=${OBJECTS}`,
+  // A non-default branch opens other objects, so it is a series of its own.
+  scale: [
+    ARCHIVE ? `archive=${Math.round(statSync(ARCHIVE).size / 1e6)}MB` : seedLabel(SEEDED_DOCUMENTS),
+    `objects=${OBJECTS}`,
+    ...(BRANCH === DEFAULT_BRANCH ? [] : [`branch=${BRANCH}`]),
+  ].join(','),
   timeoutMs: 30 * 60_000 + PASSES.length * OBJECTS * STAGE_MS,
   privateData: ARCHIVE !== undefined,
   // Seeded or imported in a browser of its own, so the measured one boots on the profile as a returning user does.
