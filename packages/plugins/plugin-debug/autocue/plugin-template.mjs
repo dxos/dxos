@@ -447,11 +447,16 @@ export const makeSteps = ({ template: TEMPLATE, project: PROJECT, plugin: PLUGIN
       run: async ({ demo, page }) => {
         await caption(demo, `${PLUGIN_NAME} is in Plugins → Registry: install it`);
         await closeCompanion(page);
-        await demo.click({ selector: '[data-testid="treeView.pluginRegistry"]', label: 'Plugins' });
         const registryTab = '[data-testid="pluginRegistry.registry"]';
-        await page.locator(registryTab).first().waitFor({ state: 'visible', timeout: 15_000 });
-        await demo.click({ selector: `${registryTab} >> nth=0`, label: 'Registry' });
         const plugin = page.locator(card(PLUGIN_NAME)).first();
+        // A second click on the Plugins rail button collapses the sidebar, so a resumed step opens it only when shut.
+        if (!(await visible(plugin, 2_000))) {
+          if (!(await visible(page.locator(registryTab), 2_000))) {
+            await demo.click({ selector: '[data-testid="treeView.pluginRegistry"]', label: 'Plugins' });
+          }
+          await page.locator(registryTab).first().waitFor({ state: 'visible', timeout: 15_000 });
+          await demo.click({ selector: `${registryTab} >> nth=0`, label: 'Registry' });
+        }
         await plugin.waitFor({ state: 'visible', timeout: 60_000 });
         await plugin.scrollIntoViewIfNeeded();
         await demo.hover({ selector: `${card(PLUGIN_NAME)} >> nth=0`, label: PLUGIN_NAME });
@@ -461,12 +466,19 @@ export const makeSteps = ({ template: TEMPLATE, project: PROJECT, plugin: PLUGIN
           timeout: 60_000,
         });
         await page.waitForTimeout(BEAT);
-        // The finale starts in the space's navtree, where the plugin adds its group; the registry leaves Plugins open.
-        const spaceId = await page.evaluate((key) => globalThis[key], TAKE_SPACE);
-        await demo.click({
-          selector: `[data-testid="spacePlugin.space"][data-object-id="root/${spaceId}"]`,
-          label: TEMPLATE,
-        });
+        // The finale starts in the space's navtree, where the plugin adds its group; the registry leaves Plugins open,
+        // and the space button toggles the sidebar, so it is clicked only while the project's row is hidden.
+        if (!(await visible(page.locator(PROJECT_NODE), 2_000))) {
+          const spaceId = await page.evaluate((key) => globalThis[key], TAKE_SPACE);
+          await demo.click({
+            selector: `[data-testid="spacePlugin.space"][data-object-id="root/${spaceId}"]`,
+            label: TEMPLATE,
+          });
+          await page
+            .getByTestId('org.dxos.type.project.section')
+            .first()
+            .waitFor({ state: 'visible', timeout: 15_000 });
+        }
       },
     },
     ...finale,
