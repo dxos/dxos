@@ -276,7 +276,7 @@ export const SvgPrim = ({ prim, camera }: { prim: Prim; camera: Camera }) => {
       return (
         <At x={x} y={y} opacity={opacity}>
           <circle className='nd-body' r={r} fill={neu.lighter} filter={lit ? `url(#nd-raised${deep})` : undefined} />
-          <circle r={r * WELL} fill={neu.bg} filter={lit ? `url(#nd-inset${deep})` : undefined} />
+          <circle r={r * (prim.well ?? WELL)} fill={neu.bg} filter={lit ? `url(#nd-inset${deep})` : undefined} />
         </At>
       );
     }

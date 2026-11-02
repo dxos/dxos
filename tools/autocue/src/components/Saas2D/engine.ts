@@ -27,7 +27,15 @@ type Base = {
 };
 
 /** A soft container (company, vendor, lab, space): raised disc with an inset well; `role` names what it is, not its color. */
-export type BodyPrim = Base & { kind: 'body'; x: number; y: number; r: number; role?: Role };
+export type BodyPrim = Base & {
+  kind: 'body';
+  x: number;
+  y: number;
+  r: number;
+  role?: Role;
+  /** The inset well's radius as a share of the body's; a smaller well makes a broader raised band. */
+  well?: number;
+};
 /** A lit disc in a role color (or `color`), glowing. */
 export type NodePrim = Base & {
   kind: 'node';
