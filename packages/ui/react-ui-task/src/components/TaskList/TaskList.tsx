@@ -10,12 +10,14 @@ import { Tag as EchoTag, Filter, Obj } from '@dxos/echo';
 import { useLabel, useObject, useQuery } from '@dxos/echo-react';
 import { Tree } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuAction, type MenuItem, executeMenuAction, fallbackIcon } from '@dxos/react-ui-menu';
+import * as Avatar from '@dxos/react-ui/Avatar';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Theme from '@dxos/react-ui/Theme';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 import * as Util from '@dxos/react-ui/Util';
 import { type Actor, Person, PullRequest, Task } from '@dxos/types';
 import { mx, toHue } from '@dxos/ui-theme';
@@ -847,39 +849,57 @@ const TaskListAssignee = Util.composable<HTMLButtonElement, TaskListAssigneeProp
 
     const hue = agent ? 'purple' : 'indigo';
 
-    // Icon-only, a square button in the row's controls; its tooltip names the assignee, unless a session shows its card
-    // on hover, which already names the run and a tooltip would stack on.
+    // Icon-only, an avatar in the row's controls: round for a person, square for an agent, as the app draws people and
+    // things. Its tooltip names the assignee, unless a session shows its card on hover, which already names the run and
+    // a tooltip would stack on.
     if (iconOnly && label) {
       const trigger = props.onClick !== undefined;
-      return (
-        <span className='relative inline-grid'>
-          <Button.Root
-            iconOnly
-            icon={icon}
-            hue={hue}
-            label={label}
-            showTooltip={!session}
-            data-testid='taskList.item.assignee'
-            {...(session &&
-              (trigger
-                ? {
-                    onPointerEnter: anchor.onPointerEnter,
-                    onPointerLeave: anchor.onPointerLeave,
-                    onBlur: anchor.onBlur,
-                  }
-                : anchor))}
-            {...props}
-            ref={forwardedRef}
-          />
-          {badged && (
-            <Icon.Icon
-              icon={worker.icon}
+      const button = (
+        <Button.Root
+          variant='ghost'
+          compact
+          data-testid='taskList.item.assignee'
+          classNames='justify-center min-w-(--dx-control-size)'
+          {...(session &&
+            (trigger
+              ? {
+                  onPointerEnter: anchor.onPointerEnter,
+                  onPointerLeave: anchor.onPointerLeave,
+                  onBlur: anchor.onBlur,
+                }
+              : anchor))}
+          {...props}
+          ref={forwardedRef}
+        >
+          <span className='relative inline-grid'>
+            <Avatar.Root
               size='xs'
-              classNames='absolute bottom-0 end-0 pointer-events-none rounded-full bg-base-surface text-purple-500'
-              data-testid='taskList.item.delegate'
+              variant={agent ? 'square' : 'circle'}
+              hue={hue}
+              icon={agent ? icon : undefined}
+              fallback={(assignee ? owner : worker).label}
+              // Names the button: its label prop reaches `aria-label` only when it is icon-only.
+              label={label}
             />
-          )}
-        </span>
+            {badged && (
+              <Avatar.Root
+                variant='square'
+                hue='purple'
+                icon={worker.icon}
+                aria-hidden
+                classNames='absolute -bottom-1 -end-1 size-3 ring-2 ring-base-surface'
+                data-testid='taskList.item.delegate'
+              />
+            )}
+          </span>
+        </Button.Root>
+      );
+      return session ? (
+        button
+      ) : (
+        <Tooltip.Trigger asChild content={label}>
+          {button}
+        </Tooltip.Trigger>
       );
     }
 
