@@ -185,7 +185,7 @@ export class UpdateDispatch {
 }
 
 /** The id of a loaded object's parent; nothing is loaded. */
-export const parentId = (database: DatabaseImpl, id: string): string | undefined => {
+const parentId = (database: DatabaseImpl, id: string): string | undefined => {
   const ref = database.getObjectCoreById(id, { load: false })?.getParent();
   const eid = ref && EncodedReference.isEncodedReference(ref) ? EID.tryParse(EncodedReference.toURI(ref)) : undefined;
   return eid && EID.getEntityId(eid);

@@ -9,7 +9,7 @@ import { BACKED_OBJECT_LIMIT } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 
 import { type DatabaseImpl } from '../proxy-db/index.ts';
-import { EchoTestBuilder, createTmpPath } from '../testing/index.ts';
+import { EchoTestBuilder, createTmpPath, getObjectCore } from '../testing/index.ts';
 import { WorkingSetView } from './working-set-view.ts';
 
 describe('WorkingSetView', () => {
@@ -150,6 +150,19 @@ describe('WorkingSetView', () => {
     expect(query.ids()).toEqual([leaf.id]);
 
     db.remove(alice);
+    expect(query.ids()).toEqual([]);
+  });
+
+  test('deleting the survivor an anchor merged into removes its children', ({ expect }) => {
+    const winner = person('winner');
+    const loser = person('loser');
+    const task = childTask(loser, 'task');
+    // Ids are minted in creation order, and a redirect must point at a smaller id.
+    getObjectCore(loser).setMergedInto(winner.id, []);
+    const query = watch(Query.select(Filter.and(Filter.type(TestSchema.Task), Filter.childOf(loser))));
+    expect(query.ids()).toEqual([task.id]);
+
+    db.remove(winner);
     expect(query.ids()).toEqual([]);
   });
 

@@ -17,7 +17,7 @@ import { type FeedHandle } from '../feed/feed-handle.ts';
 import { type DatabaseImpl } from '../proxy-db/index.ts';
 import { type MergePlan, createMergePlan, evaluateCore, matchesFeedSelection, ordersLocally } from './merge-plan.ts';
 import { type SourceEntry } from './query-context.ts';
-import { type DispatchKeys, type UpdateDispatch, parentId } from './update-dispatch.ts';
+import { type DispatchKeys, type UpdateDispatch } from './update-dispatch.ts';
 import {
   type HierarchyScope,
   getHierarchyScope,
@@ -395,22 +395,15 @@ export class WorkingSetView {
   }
 
   /**
-   * The writes that can change `results`: the members; the anchors and their ancestors, since deletion cascades down
-   * through parents; the objects between each member and its anchor; and anything that lands under an anchor.
+   * The writes that can change `results`: the members and anchors, the strong dependencies they inherit deletion
+   * from (which include the objects between each member and its anchor), and anything that lands under an anchor.
    */
   #keysFor(results: SourceEntry<Obj.Any>[], { anchors, depth }: HierarchyScope): DispatchKeys {
-    const ids = new Set(results.map((result) => result.id));
-    for (const anchor of anchors) {
-      for (let id: string | undefined = anchor, hops = 0; id && hops <= MAX_DELETION_DEPTH; hops++) {
+    const ids = new Set<string>();
+    for (const id of [...anchors, ...results.map((result) => result.id)]) {
+      if (!ids.has(id)) {
         ids.add(id);
-        id = parentId(this._database, id);
-      }
-    }
-    for (const { id: member } of results) {
-      let id = parentId(this._database, member);
-      for (let hops = 1; id && !anchors.has(id) && hops < depth; hops++) {
-        ids.add(id);
-        id = parentId(this._database, id);
+        this._database._entityManager.getObjectCoreById(id, { load: false })?.addDeletionDependencies(ids);
       }
     }
     return { ids, anchors: { ids: anchors, depth } };
@@ -531,9 +524,6 @@ export class WorkingSetView {
     );
   }
 }
-
-/** Matches `ObjectCore.isDeleted`'s walk over strong dependencies. */
-const MAX_DELETION_DEPTH = 10;
 
 const evaluatesOrderOnly = (query: QueryAST.Query): boolean => {
   let local = true;
