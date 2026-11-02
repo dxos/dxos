@@ -54,19 +54,19 @@ Cut 3 of NARRATIVE-SAAS2D.md: a lecture on the dynamics, nobody acts badly, ever
 
 ## 13. Three labs (`#rivals`)
 
-- Over time, fewer providers, greater centralization.
+- Over time, fewer providers, greater centralization;
 
 ## 14. The labs merge (`#merge-1`)
 
-- As the labs drive further consolidation.
+- as the labs drive further consolidation.
 
 ## 15. The Final Frontier (`#final-frontier`)
 
-- _(Silence; let the caption read.)_
+- Leaving data, models, apps, and infrastructure in a few hands.
 
 ## 16. The Singularity (`#engulf`)
 
-- Leaving data, models, apps, and infrastructure in a few hands.
+-
 
 ## 17. The Alternative (`#dont-panic`)
 
@@ -82,27 +82,27 @@ Cut 3 of NARRATIVE-SAAS2D.md: a lecture on the dynamics, nobody acts badly, ever
 
 ## 20. The ECHO hypergraph (`#echo-spaces`)
 
-- Distributed at the edge and on every device.
+- Distributed at the edge and on every device. Realtime queries and workflows, with fine-grained access-control for people and agents.
 
 ## 21. A graph of objects (`#objects`)
 
-- Realtime queries and workflows, with fine-grained access-control for people and agents.
+- ECHO is that database.
 
 ## 24. Work that builds on itself (`#object-created`)
 
-- ECHO is that database.
+- And Composer is the enterprise-superapp built on top.
 
 ## 25. Everyone at work (`#echo-spaces-again`)
 
-- And Composer is the enterprise-superapp built on top.
+- Open and extensible, by your team and your agents.
 
 ## 26. Your company again (`#echo-hub-again`)
 
-- Open and extensible, by your team and your agents.
+-
 
 ## 27. The silos fold in (`#saas-merge`)
 
-- The silos merge into a single unified semantic graph.
+- The silos dissolve into a single unified semantic graph.
 
 ## 28. DXOS (`#company-fills`)
 
