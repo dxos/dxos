@@ -803,7 +803,7 @@ export const slides = (holds: Record<string, number>): Slide[] => {
     // After the curtain: your company and its apps again; then ECHO puts your data at its centre.
     { id: 'spread-again', transition: 1.6, draw: () => still(appsAround()) },
     { id: 'echo-hub', transition: 2.0, draw: (t) => still(hub(undefined, ramp(t, 0.5, 4.0, easeInOut))) },
-    { id: 'echo-spaces', transition: 2.5, draw: () => still(echoSpaces(), camera(ECHO_ZOOM)) },
+    { id: 'echo-spaces', transition: 2.5, draw: (t) => still([...echoSpaces(), ...notes(t)], camera(ECHO_ZOOM)) },
 
     // Inside a space: a graph of objects, and the work people and agents do on them.
     {
@@ -850,7 +850,7 @@ export const slides = (holds: Record<string, number>): Slide[] => {
     },
 
     // Back out to the spaces, alive with work.
-    { id: 'echo-spaces-again', transition: 2.5, draw: (t) => still([...echoSpaces(), ...notes(t)], camera(ECHO_ZOOM)) },
+    { id: 'echo-spaces-again', transition: 2.5, draw: () => still(echoSpaces(), camera(ECHO_ZOOM)) },
     { id: 'echo-hub-again', transition: 2.5, draw: () => still(hub()) },
 
     // The apps fold into your data: they come to you.

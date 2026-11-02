@@ -16,7 +16,8 @@ const CHAPTERS: { title: string; scenes: string[] }[] = [
   { title: 'Consolidation', scenes: ['rivals', 'merge-1', 'final-frontier', 'engulf'] },
   { title: 'The Alternative', scenes: ['dont-panic', 'spread-again'] },
   { title: 'ECHO', scenes: ['echo-hub', 'echo-spaces'] },
-  { title: 'Composer', scenes: ['objects', 'object-detail', 'object-thread', 'object-created', 'echo-spaces-again'] },
+  // The chip leaves before the chat cards of `object-created`, which carry their own labels.
+  { title: 'Composer', scenes: ['objects', 'object-detail', 'object-thread'] },
   { title: 'DXOS', scenes: ['echo-hub-again', 'saas-merge'] },
 ];
 
