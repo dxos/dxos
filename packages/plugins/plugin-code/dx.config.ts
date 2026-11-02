@@ -7,8 +7,12 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
+import * as AssistantEvents from '@dxos/plugin-assistant/AssistantEvents';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as GitHubCapabilities from '@dxos/plugin-github/GitHubCapabilities';
+import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
+import * as ProjectsEvents from '@dxos/plugin-projects/ProjectsEvents';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { trim } from '@dxos/util';
 
@@ -64,6 +68,12 @@ const config: Plugin.PluginConfig = Plugin.config({
     dependsOn: ['org.dxos.plugin.projects'],
   },
   modules: [
+    // Eager, as every migration provider is: a migration missing when a space opens is a data hazard.
+    Capability.lazyModule(
+      'FeatureMigrations',
+      { provides: [ClientCapabilities.Migration] },
+      () => import('./src/capabilities/migrations.ts', { with: { type: 'module-url' } }),
+    ),
     // Registered at startup so a GitHub file sync on EDGE, where no UI event fires, finds the mapping.
     Capability.lazyModule(
       'SpecFileMapping',
@@ -72,6 +82,14 @@ const config: Plugin.PluginConfig = Plugin.config({
     ),
     AppCapability.appGraphBuilder(
       () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
+    ),
+    // Narrower than the `appGraphBuilder` family default: the feature nodes open levels through the app shell.
+    AppCapability.appGraphBuilder(
+      () => import('./src/capabilities/feature-graph-builder.ts', { with: { type: 'module-url' } }),
+      {
+        environments: ['browser', 'tauri'],
+        name: 'FeatureAppGraphBuilder',
+      },
     ),
     Capability.lazyModule(
       'BuildRunState',
@@ -95,6 +113,17 @@ const config: Plugin.PluginConfig = Plugin.config({
       content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
+    AppCapability.surface(() => import('./src/capabilities/feature-surface.ts', { with: { type: 'module-url' } }), {
+      roles: [
+        'org.dxos.plugin.projects.role.levelOverview',
+        'org.dxos.plugin.projects.role.specView',
+        'org.dxos.role.article',
+        'org.dxos.role.cardContent',
+        'org.dxos.role.dialog',
+        'org.dxos.role.section',
+      ],
+      name: 'FeatureSurface',
+    }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
       roles: ['org.dxos.role.article', 'org.dxos.role.section'],
     }),
@@ -106,6 +135,23 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.skillDefinition(
       () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
     ),
+    // Eager, as the migrations are: a spec synced to its file before the codec arrives would take the file's `feat`
+    // blocks in as text.
+    Capability.lazyModule(
+      'SpecCodec',
+      { provides: [ProjectCapabilities.SpecCodec] },
+      () => import('./src/capabilities/spec-codec.ts', { with: { type: 'module-url' } }),
+    ),
+    // Off the boot path: an editor that opened before they arrive is rebuilt with the cards.
+    Capability.lazyModule(
+      'SpecExtensions',
+      {
+        provides: [ProjectCapabilities.SpecExtensions, ProjectCapabilities.SpecPackage, ProjectCapabilities.SpecView],
+        activatesOn: ActivationEvents.Idle,
+        environments: ['browser', 'tauri'],
+      },
+      () => import('./src/capabilities/spec-extensions.ts', { with: { type: 'module-url' } }),
+    ),
     // Local files are reachable only from the desktop app or a dev server; settings supply the configured checkouts.
     Capability.lazyModule(
       'SpecSync',
@@ -115,6 +161,16 @@ const config: Plugin.PluginConfig = Plugin.config({
         environments: ['browser', 'tauri'],
       },
       () => import('./src/capabilities/spec-sync.ts', { with: { type: 'module-url' } }),
+    ),
+    Capability.lazyModule(
+      'FeatureSubjectContext',
+      { provides: [AssistantCapabilities.SubjectContext], activatesOn: AssistantEvents.Start },
+      () => import('./src/capabilities/feature-subject-context.ts', { with: { type: 'module-url' } }),
+    ),
+    Capability.lazyModule(
+      'FeatureTemplates',
+      { provides: [ProjectCapabilities.Template], activatesOn: ProjectsEvents.Start },
+      () => import('./src/capabilities/templates.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],

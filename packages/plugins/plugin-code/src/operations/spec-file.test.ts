@@ -14,12 +14,11 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Doc } from '@dxos/echo-doc';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
-import * as Feature from '@dxos/plugin-projects/Feature';
-import * as FeatureMap from '@dxos/plugin-projects/FeatureMap';
 import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
-import * as SpecText from '@dxos/plugin-projects/SpecText';
 import { Text } from '@dxos/schema';
 import { Repo } from '@dxos/types';
+
+import { Feature, FeatureMap, SpecText } from '#types';
 
 import exportSpecFile from './export-spec-file.ts';
 import importSpecFile from './import-spec-file.ts';

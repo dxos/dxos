@@ -35,10 +35,16 @@
       "path": "../../common/invariant"
     },
     {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/log"
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/compute/assistant"
     },
     {
       "path": "../../core/compute/compute"
@@ -95,16 +101,25 @@
       "path": "../../ui/react-ui-canvas"
     },
     {
+      "path": "../../ui/react-ui-dnd"
+    },
+    {
       "path": "../../ui/react-ui-editor"
     },
     {
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-list"
+    },
+    {
       "path": "../../ui/react-ui-menu"
     },
     {
       "path": "../../ui/react-ui-mosaic"
+    },
+    {
+      "path": "../../ui/react-ui-search"
     },
     {
       "path": "../../ui/react-ui-task"
@@ -116,6 +131,9 @@
       "path": "../../ui/ui-theme"
     },
     {
+      "path": "../plugin-assistant"
+    },
+    {
       "path": "../plugin-client"
     },
     {
@@ -125,10 +143,19 @@
       "path": "../plugin-github"
     },
     {
+      "path": "../plugin-markdown"
+    },
+    {
       "path": "../plugin-projects"
     },
     {
+      "path": "../plugin-registry"
+    },
+    {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-tasks"
     },
     {
       "path": "../plugin-testing"

@@ -7,8 +7,8 @@ import { describe, test } from 'vitest';
 import { buildArchive, histogram } from '@dxos/app-toolkit/testing';
 import { Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import * as Feature from '@dxos/plugin-projects/Feature';
-import * as FeatureEmbed from '@dxos/plugin-projects/FeatureEmbed';
+import * as Feature from '@dxos/plugin-code/Feature';
+import * as FeatureEmbed from '@dxos/plugin-code/FeatureEmbed';
 
 import * as RideCheckSpace from './RideCheckSpace.ts';
 import { SPEC_PATH } from './spec.ts';

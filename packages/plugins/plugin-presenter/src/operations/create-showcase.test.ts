@@ -8,9 +8,9 @@ import * as Exit from 'effect/Exit';
 
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
+import * as Feature from '@dxos/plugin-code/Feature';
+import * as Showcase from '@dxos/plugin-code/Showcase';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import * as Feature from '@dxos/plugin-projects/Feature';
-import * as Showcase from '@dxos/plugin-projects/Showcase';
 import { Text } from '@dxos/schema';
 import { PullRequest, Task } from '@dxos/types';
 

@@ -11,10 +11,9 @@ import { Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
-import * as Feature from '@dxos/plugin-projects/Feature';
-import * as FeatureMap from '@dxos/plugin-projects/FeatureMap';
-import * as SpecText from '@dxos/plugin-projects/SpecText';
 import { Text } from '@dxos/schema';
+
+import { Feature, FeatureMap, SpecText } from '#types';
 
 import * as FrontMatter from './front-matter.ts';
 import { detectRepo, parseGitConfigRemote, parseRepoEntry, resolvePath, resolveRoots } from './repo-roots.ts';

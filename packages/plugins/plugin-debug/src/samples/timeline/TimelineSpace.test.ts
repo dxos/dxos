@@ -6,8 +6,8 @@ import { describe, test } from 'vitest';
 
 import { buildArchive } from '@dxos/app-toolkit/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import * as Feature from '@dxos/plugin-projects/Feature';
-import * as FeatureMap from '@dxos/plugin-projects/FeatureMap';
+import * as Feature from '@dxos/plugin-code/Feature';
+import * as FeatureMap from '@dxos/plugin-code/FeatureMap';
 
 import * as TimelineSpace from './TimelineSpace.ts';
 

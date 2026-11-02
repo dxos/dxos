@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import type * as Spec from '@dxos/compute/Spec';
 import { Database, Obj, Ref, Relation } from '@dxos/echo';
-import * as Feature from '@dxos/plugin-projects/Feature';
-import * as FeatureMap from '@dxos/plugin-projects/FeatureMap';
-import * as SpecText from '@dxos/plugin-projects/SpecText';
+import * as Feature from '@dxos/plugin-code/Feature';
+import * as FeatureMap from '@dxos/plugin-code/FeatureMap';
+import * as SpecText from '@dxos/plugin-code/SpecText';
 
 import { type ProjectResult } from './project.ts';
 import specContent from './SPEC.mdl?raw';

@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import * as Spec from '@dxos/compute/Spec';
 import { Database, Obj } from '@dxos/echo';
-import * as Feature from '@dxos/plugin-projects/Feature';
+import * as Feature from '@dxos/plugin-code/Feature';
 import { Text } from '@dxos/schema';
 
 import content from './SPEC.mdl?raw';

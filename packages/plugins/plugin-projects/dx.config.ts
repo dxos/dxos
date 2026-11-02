@@ -79,7 +79,12 @@ const config: Plugin.PluginConfig = Plugin.config({
       mimeType: 'application/x-mdl',
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.dialog', 'org.dxos.role.section'],
+      roles: [
+        'org.dxos.plugin.projects.role.level',
+        'org.dxos.role.article',
+        'org.dxos.role.dialog',
+        'org.dxos.role.section',
+      ],
     }),
     AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {
@@ -88,23 +93,6 @@ const config: Plugin.PluginConfig = Plugin.config({
     }),
     AppCapability.skillDefinition(
       () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
-    ),
-    // Eager, as the migrations are: a spec synced to its file before the codec arrives would take the file's `feat`
-    // blocks in as text.
-    Capability.lazyModule(
-      'SpecCodec',
-      { provides: [ProjectCapabilities.SpecCodec] },
-      () => import('./src/capabilities/spec-codec.ts', { with: { type: 'module-url' } }),
-    ),
-    // Off the boot path: an editor that opened before they arrive is rebuilt with the cards.
-    Capability.lazyModule(
-      'SpecExtensions',
-      {
-        provides: [ProjectCapabilities.SpecExtensions, ProjectCapabilities.SpecPackage],
-        activatesOn: ActivationEvents.Idle,
-        environments: ['browser', 'tauri'],
-      },
-      () => import('./src/capabilities/spec-extensions.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'SubjectContext',
