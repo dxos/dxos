@@ -893,6 +893,8 @@ export class SceneRenderer3D {
       this.#engine.stopRenderLoop();
       this.#looping = false;
       this.#settling = false;
+      // The loop's last frame still shows the gizmo or arrow just taken away, and a still view keeps it until it draws.
+      this.#redraw();
     }
   }
 

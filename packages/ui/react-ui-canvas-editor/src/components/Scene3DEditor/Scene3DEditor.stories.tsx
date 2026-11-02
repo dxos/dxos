@@ -934,7 +934,7 @@ export const MoveBodyTest: Story = {
  * Escape backs out of whatever is innermost, as in 2D: a drag, then the selection.
  *
  * Test:
- * 1. A click on a cube selects it; Escape clears the selection.
+ * 1. A click on a cube selects it; Escape clears the selection and takes its gizmo off the screen.
  * 2. Escape part way through a body drag puts the cube back and keeps it selected; the release then moves nothing.
  * 3. Escape again clears the selection.
  * 4. Escape part way through an extrusion drops it; the release then makes nothing.
@@ -942,19 +942,35 @@ export const MoveBodyTest: Story = {
 export const EscapeTest: Story = {
   args: { exemplar: 'flush', initialTool: 'move', grid: true, snap: true },
   play: async ({ canvasElement }) => {
-    const { canvas, editor, view, bounds, frame, find, pickAt, onGizmo, at, along } = await harness(
+    const { canvas, editor, view, scene, bounds, frame, find, pickAt, onGizmo, at, along } = await harness(
       canvasElement,
       'item-p',
     );
     const start = bounds('item-p');
+    // Whether the last frame drawn showed a gizmo: a still view keeps that frame on screen until it draws again.
+    let drewGizmo = false;
+    scene()?.onAfterRenderObservable.add(() => {
+      drewGizmo =
+        scene()
+          ?.getEngine()
+          ._virtualScenes.some((layer) =>
+            layer.meshes.some(
+              (mesh) =>
+                mesh.name !== 'pointerDragPlane' && mesh.isEnabled() && mesh.isVisible && mesh.getTotalVertices() > 0,
+            ),
+          ) === true;
+    });
 
     // 1.
     const onQ = find((x, y) => pickAt(x, y).name === 'item-q');
     await fireEvent.pointerDown(view, { ...at(onQ), buttons: 1 });
     await fireEvent.pointerUp(editor, { ...at(onQ), buttons: 0 });
     await waitFor(() => expect(editor.dataset.selection).toBe('q'));
+    await waitFor(() => expect(drewGizmo).toBe(true));
     await fireEvent.keyDown(editor, { key: 'Escape' });
     await waitFor(() => expect(editor.dataset.selection).toBe(''));
+    await frame();
+    await expect(drewGizmo).toBe(false);
 
     // 2.
     const grab = find((x, y) => pickAt(x, y).name === 'item-p' && !onGizmo(x, y));
