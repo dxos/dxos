@@ -93,20 +93,13 @@ export class UpdateDispatch {
     }
   }
 
+  /** Drops `listener`, and the subscription with the last one; a later {@link set} subscribes again. */
   delete(listener: DispatchListener): void {
     this.#remove(listener);
     if (this.#listeners.size === 0) {
-      this.close();
+      this.#unsubscribe?.();
+      this.#unsubscribe = undefined;
     }
-  }
-
-  /** Drops every listener and the subscription; a later {@link set} subscribes again. */
-  close(): void {
-    for (const listener of [...this.#listeners.keys()]) {
-      this.#remove(listener);
-    }
-    this.#unsubscribe?.();
-    this.#unsubscribe = undefined;
   }
 
   #remove(listener: DispatchListener): void {

@@ -199,7 +199,7 @@ export class EntityManager implements IDatabaseBinding {
   readonly _updateEvent = new Event<ItemsUpdatedEvent>();
   /** Objects a local commit wrote, emitted synchronously after the commit and before {@link _updateEvent}. */
   readonly _localCommitEvent = new Event<ItemsUpdatedEvent>();
-  /** Routes {@link _updateEvent} to the live queries it can change. */
+  /** Routes {@link _updateEvent} to the live queries it can change; they stay registered across a close and reopen. */
   readonly updateDispatch = new UpdateDispatch(this._updateEvent, (id) => this.getObjectCoreById(id, { load: false }));
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
 
@@ -475,7 +475,6 @@ export class EntityManager implements IDatabaseBinding {
     // close would be re-created over themselves.
     this.#closed = true;
     this.#lifetimeEnded.emit();
-    this.updateDispatch.close();
     // Dropped before the proxy closes, so a change delivered during teardown cannot trigger a load
     // against a closed proxy.
     this._unsubscribeFromHandles();

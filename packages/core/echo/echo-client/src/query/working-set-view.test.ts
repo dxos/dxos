@@ -183,4 +183,14 @@ describe('WorkingSetView', () => {
     await expect.poll(ids).toContain(id);
     view.close();
   });
+
+  test('a live query keeps hearing writes after the database closes and reopens', async ({ expect }) => {
+    const query = watch(Query.select(Filter.type(TestSchema.Person)));
+    expect(query.ids()).toEqual([]);
+
+    await db.close();
+    await db.open();
+    const alice = person('alice');
+    expect(query.ids()).toEqual([alice.id]);
+  });
 });
