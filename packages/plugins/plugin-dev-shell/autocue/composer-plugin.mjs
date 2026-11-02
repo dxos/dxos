@@ -306,10 +306,13 @@ export const prepare = async ({ demo, page }, { codingDev }) => {
       }
     }
     await demo.fill({ selector: 'input[placeholder="Filter…"]', value: 'Dev Shell', hud: false });
-    const toggle = page.locator('input[id="org.dxos.plugin.devShell-input"]');
-    await toggle.waitFor({ state: 'visible', timeout: 10_000 });
-    if (!(await toggle.isChecked())) {
-      await toggle.click();
+    // The switch's input is visually hidden; the visible control is its root.
+    const toggle = page.locator(
+      '[data-scope="switch"][data-part="root"]:has(input[role="switch"][aria-label="Dev Shell"])',
+    );
+    await toggle.first().waitFor({ state: 'visible', timeout: 10_000 });
+    if (!(await toggle.first().locator('input').isChecked())) {
+      await toggle.first().click();
     }
     await demo.fill({ selector: 'input[placeholder="Filter…"]', value: '', hud: false });
   }
