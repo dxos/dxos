@@ -5,6 +5,7 @@
 import { describe, expect, test } from 'vitest';
 
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 
 import { BundleError, bundleRoot, loadBundle, manifestOf, rebaseManifest } from './bundle.ts';
 import { type Manifest } from './types.ts';
@@ -79,9 +80,11 @@ describe('loadBundle', () => {
   const load = (url: string, body: unknown) => {
     const fetch = globalThis.fetch;
     globalThis.fetch = async () => new Response(JSON.stringify(body));
-    return Effect.runPromise(Effect.flip(loadBundle(url))).finally(() => {
-      globalThis.fetch = fetch;
-    });
+    return Effect.runPromiseExit(Effect.flip(loadBundle(url)))
+      .then((exit) => (Exit.isSuccess(exit) ? exit.value : Promise.reject(exit.cause)))
+      .finally(() => {
+        globalThis.fetch = fetch;
+      });
   };
 
   test('a malformed URL fails with a BundleError', async () => {
