@@ -205,7 +205,7 @@ const SessionMeta = ({
 };
 
 const LatencyPanel = ({ ping, ready }: { ping: PingMeasurement | undefined; ready: boolean }) => (
-  <div className='rounded-md border border-separator p-3'>
+  <div className='rounded-md border border-separator p-trim-md'>
     <div className='mb-2 text-xs font-medium uppercase tracking-wide text-fg-subtle'>
       Ping (auto {PING_INTERVAL_MS}ms)
     </div>
@@ -230,7 +230,7 @@ const TimingStatsPanel = ({ stats }: { stats: TimingStatsSnapshot | undefined })
   const recent = stats?.samples.slice(-8).reverse() ?? [];
 
   return (
-    <div className='rounded-md border border-separator p-3'>
+    <div className='rounded-md border border-separator p-trim-md'>
       <div className='mb-2 flex items-baseline justify-between gap-2'>
         <div className='text-xs font-medium uppercase tracking-wide text-fg-subtle'>RPC timing stats</div>
         <div className='text-xs text-fg-subtle'>
@@ -267,7 +267,7 @@ const BlockWorkerPanel = ({
   const [durationMs, setDurationMs] = useState(String(DEFAULT_BLOCK_MS));
 
   return (
-    <div className='rounded-md border border-separator p-3'>
+    <div className='rounded-md border border-separator p-trim-md'>
       <div className='mb-2 text-xs font-medium uppercase tracking-wide text-fg-subtle'>Block worker thread</div>
       <p className='mb-3 text-xs text-fg-subtle'>
         Spins the worker event loop synchronously. Watch ping RTT and queue wait rise while blocked.

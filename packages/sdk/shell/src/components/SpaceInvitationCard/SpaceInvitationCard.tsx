@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { formatDistanceToNow } from 'date-fns';
 import React from 'react';
 
 import { type PublicKey } from '@dxos/keys';
@@ -14,6 +13,7 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Typography from '@dxos/react-ui/Typography';
 import type * as Util from '@dxos/react-ui/Util';
 import { keyToFallback } from '@dxos/util';
 
@@ -121,7 +121,7 @@ export const SpaceInvitationCard = ({
       {/* No trailing control, so the details run into the end rail. */}
       <Card.Row span='end'>
         <Card.Text variant='muted' lines={3}>
-          {sentAt ? `${description} · ${formatDistanceToNow(sentAt, { addSuffix: true })}` : description}
+          {sentAt ? `${description} · ${Typography.formatRelative(sentAt)}` : description}
         </Card.Text>
       </Card.Row>
     </Card.Section>

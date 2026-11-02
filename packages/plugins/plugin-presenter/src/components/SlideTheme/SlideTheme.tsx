@@ -128,7 +128,7 @@ const THEMES: Record<SlideTheme.Name, ThemeDefinition> = {
  * The style for a theme with its overrides applied; invalid override values are ignored.
  */
 export const slideThemeStyle = (settings: SlideTheme.Settings = {}): SlideThemeStyle => {
-  const { colorScheme, vars } = THEMES[SlideTheme.isName(settings.name) ? settings.name : 'default'];
+  const { colorScheme, vars } = THEMES[SlideTheme.isName(settings.base) ? settings.base : 'default'];
   const pick = (value: string | undefined, valid: (value: unknown) => value is string, fallback: string) =>
     valid(value) ? value : fallback;
   // Stored settings are not re-validated on read, so an unknown name falls back to the theme's own font.
@@ -181,7 +181,7 @@ export const useSlideThemeStyle = (): SlideThemeStyle => {
  */
 export const useSlideColorScheme = (): 'light' | 'dark' | undefined => {
   const settings = useContext(SlideThemeContext);
-  return THEMES[SlideTheme.isName(settings.name) ? settings.name : 'default'].colorScheme;
+  return THEMES[SlideTheme.isName(settings.base) ? settings.base : 'default'].colorScheme;
 };
 
 export type SlideThemeScopeProps = Util.ThemedClassName<PropsWithChildren<{}>>;

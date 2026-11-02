@@ -65,6 +65,11 @@ export const DelegateTaskToChat = Operation.make({
           "Id of the agent that works the tasks, e.g. composer or claude-code. Defaults to the reader's default agent.",
       }),
     ),
+    openCompanion: Schema.optional(
+      Schema.Boolean.annotate({
+        description: "Opens the Assistant companion beside the reader's current plank, showing the new chat.",
+      }),
+    ),
   }),
   output: Schema.Struct({
     chat: Type.getSchema(Chat.Chat),

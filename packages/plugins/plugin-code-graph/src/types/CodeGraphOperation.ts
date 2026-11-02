@@ -220,6 +220,18 @@ export const RunCommand = Operation.make({
     removedNodes: Schema.Number,
     /** What did not fit on the graph, summarised. */
     trailer: Schema.optional(Schema.String),
+    elapsedMs: Schema.Number,
+    /** Every model call, action and judgement, timed, for the verbose view. */
+    trace: Schema.Array(
+      Schema.Struct({
+        kind: Schema.Literals(['ground', 'model', 'add', 'remove', 'judge']),
+        turn: Schema.Number,
+        ms: Schema.Number,
+        label: Schema.String,
+        detail: Schema.optional(Schema.String),
+        error: Schema.optional(Schema.String),
+      }),
+    ),
   }),
   services: [Database.Service, AiService.AiService],
 });

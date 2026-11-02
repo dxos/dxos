@@ -1,0 +1,214 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-handpan/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: HandpanPlugin
+
+Phase 1 is built and the analysis layer is well tested. `Analyzer` runs a peak-normalized spectral-flux
+`OnsetDetector`, merges onsets within 100 ms, and measures pitch from 8192-sample windows either side of
+the onset; `audio.test.ts` checks overlapping D Kurd notes within 5 cents, level independence, taks,
+calibration and the pitch tracker, and `chord.test.ts` checks the NNLS chord decomposer, resonance
+attribution and the D3+D4 octave limit. `Tuner` and its sub-components have stories but no play
+functions, so the UI-only requirements (reset and redo, persistence, gain and sensitivity sliders, level
+threshold) have no automated check, and nothing runs QA-1.
+
+Of 27 items: 22 done, 4 untested, 0 partial, 0 diverged, 1 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Scale: A scale has id, name, optional ding and notes; notes are ordered ding first, then ascending.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/scale.ts#Scale, github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/scale.ts#getScaleNotes]
+  tests: [github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/audio.test.ts]
+```
+
+```mdl
+verdict NoteEvent: The analyzer's resolved strike carries every field the spec lists.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/analyzer.ts#NoteEvent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/audio.test.ts]
+```
+
+```mdl
+verdict NoteTemplate: A calibrated note with pitch, median frequency, partials and optional merged peaks.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/classify.ts#NoteTemplate, github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/calibration.ts#getTemplates]
+  tests: [github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/audio.test.ts]
+```
+
+```mdl
+verdict Tuner: The pure Tuner component owns its audio session and takes the props the spec lists.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-handpan/src/components/Tuner/Tuner.tsx#Tuner]
+  tests: [github:dxos/dxos/packages/plugins/plugin-handpan/src/components/Tuner/Tuner.stories.tsx]
+```
+
+```mdl
+verdict HandpanLayout: The top-down pan draws the ding, target, active pads and progress rings, and emits onSelect.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-handpan/src/components/HandpanLayout/HandpanLayout.tsx#HandpanLayout]
+  tests: [github:dxos/dxos/packages/plugins/plugin-handpan/src/components/HandpanLayout/HandpanLayout.stories.tsx]
+```
+
+```mdl
+verdict NoteDisplay: Shows the current note, chord or Tak with a cents meter.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-handpan/src/components/NoteDisplay/NoteDisplay.tsx#NoteDisplay]
+  tests: [github:dxos/dxos/packages/plugins/plugin-handpan/src/components/NoteDisplay/NoteDisplay.stories.tsx]
+```
+
+```mdl
+verdict LevelMeter: Shows the input level on a dB scale with the threshold marked.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-handpan/src/components/LevelMeter/LevelMeter.tsx#LevelMeter]
+  tests: [github:dxos/dxos/packages/plugins/plugin-handpan/src/components/LevelMeter/LevelMeter.stories.tsx]
+```
+
+```mdl
+verdict F-1.1: Onsets come from a peak-normalized spectral-flux detector and are found in distant-microphone input.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/onset.ts#OnsetDetector]
+  tests: [github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/audio.test.ts]
+```
+
+```mdl
+verdict F-1.2: Onsets closer than 100 ms are merged, so attack and tone bloom are one strike.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/analyzer.ts#Analyzer]
+  tests: [github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/audio.test.ts]
+```
+
+```mdl
+verdict F-1.3: Pitch is measured from 8192-sample windows either side of the onset; ringing notes stay within 5 cents.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/analyzer.ts#Analyzer, github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/harmonic.ts#harmonicPitch]
+  tests: [github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/audio.test.ts]
+```
+
+```mdl
+verdict F-1.4: Unpitched strikes are classified as percussive.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/analyzer.ts#Analyzer]
+  tests: [github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/audio.test.ts, github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/chord.test.ts]
+```
+
+```mdl
+verdict F-2.1: Calibration starts at the ding and advances after the configured number of accepted strikes.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/calibration.ts#createCalibration, github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/calibration.ts#addStrike]
+  tests: [github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/audio.test.ts]
+```
+
+```mdl
+verdict F-2.2: Each strike is logged as accepted with cents, a different note, no clear pitch, or struck too soon.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/calibration.ts#StrikeRejection, github:dxos/dxos/packages/plugins/plugin-handpan/src/components/Tuner/Tuner.tsx#Tuner]
+  tests: [github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/audio.test.ts]
+```
+
+```mdl
+verdict F-2.3: Octave and compound-fifth readings fold onto the target, and another scale note does not.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/calibration.ts#addStrike]
+  tests: [github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/audio.test.ts]
+```
+
+```mdl
+verdict F-2.4: Calibrated pads use the success colour, and reset and per-note redo exist, but no test drives them.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-handpan/src/components/HandpanLayout/HandpanLayout.tsx#HandpanLayout, github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/calibration.ts#selectNote, github:dxos/dxos/packages/plugins/plugin-handpan/src/components/Tuner/Tuner.tsx#Tuner]
+  note: `HandpanLayout` draws complete notes with `success` tokens and `Tuner` wires the reset button and pad `selectNote`; the stories have no play function and no unit test resets or redoes a note.
+```
+
+```mdl
+verdict F-2.5: With persist, the scale and calibration samples go to localStorage and load on mount; untested.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-handpan/src/components/Tuner/Tuner.tsx#Tuner, github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/calibration.ts#restore]
+  note: `audio.test.ts` checks `restore` from saved samples, but nothing tests the localStorage read and write in `Tuner`.
+```
+
+```mdl
+verdict F-2.6: Calibration maps to and from Instrument.calibration by MIDI pitch, and the article binds it.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-handpan/src/notation/instrument.ts#toInstrumentCalibration, github:dxos/dxos/packages/plugins/plugin-handpan/src/notation/instrument.ts#fromInstrumentCalibration, github:dxos/dxos/packages/plugins/plugin-handpan/src/containers/InstrumentArticle/InstrumentArticle.tsx#InstrumentArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-handpan/src/notation/instrument.test.ts]
+  walkthrough:
+    - The article passes the instrument's calibration to Tuner and writes changes back. github:dxos/dxos/packages/plugins/plugin-handpan/src/containers/InstrumentArticle/InstrumentArticle.tsx#InstrumentArticle
+    - The mapping converts calibration state to and from instrument notes, matched by MIDI pitch. github:dxos/dxos/packages/plugins/plugin-handpan/src/notation/instrument.ts#fromInstrumentCalibration
+```
+
+```mdl
+verdict F-3.1: PitchTracker switches after a persistent note and releases after sustained silence.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/tracker.ts#PitchTracker]
+  tests: [github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/audio.test.ts]
+```
+
+```mdl
+verdict F-3.2: Gain and sensitivity sliders with tooltips exist while listening; untested.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-handpan/src/components/Tuner/Tuner.tsx#Tuner]
+  note: `Tuner` wraps both sliders in `Tooltip.Trigger` with translated descriptions; no test or story play function checks them.
+```
+
+```mdl
+verdict F-3.3: The level meter shows input against the adaptive sounding threshold; untested.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-handpan/src/components/LevelMeter/LevelMeter.tsx#LevelMeter, github:dxos/dxos/packages/plugins/plugin-handpan/src/components/Tuner/Tuner.tsx#Tuner]
+  note: `Tuner` passes its running threshold to `LevelMeter`; only a story renders it, with no assertion.
+```
+
+```mdl
+verdict F-4.1: Strikes are decomposed by NNLS against note templates and reported as one chord.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/chord.ts#ChordDecomposer, github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/chord.ts#selectNotes]
+  tests: [github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/chord.test.ts, github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/audio.test.ts]
+```
+
+```mdl
+verdict F-4.2: Learned templates attribute sympathetic resonance to the struck note.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/chord.ts#mergePeaks, github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/chord.ts#ChordDecomposer]
+  tests: [github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/chord.test.ts]
+```
+
+```mdl
+verdict F-4.3: The octave pair D3+D4 is the one pair the resonance test expects to miss.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/chord.ts#ChordDecomposer]
+  tests: [github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/chord.test.ts]
+```
+
+```mdl
+verdict T-1: A test strikes the nine D Kurd notes 0.3 s apart and checks each is precise within 5 cents.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/audio.test.ts]
+```
+
+```mdl
+verdict T-2: A test calibrates two notes with two strikes each and checks completion and templates.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/audio.test.ts]
+```
+
+```mdl
+verdict T-3: A test strikes each note with -3 dB partner resonance and checks the chord holds only that note.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-handpan/src/audio/chord.test.ts]
+```
+
+```mdl
+verdict QA-1: No automated test runs the simulated calibrate-and-play session.
+  status: missing
+  note: The `SimulatedSession` story in `Tuner.stories.tsx` has no play function, and no e2e test drives it.
+```

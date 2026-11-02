@@ -30,9 +30,9 @@ import { Text, ViewModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { NotebookMenu, NotebookStack, type NotebookStackProps, type TypescriptEditorProps } from '#components';
-import { meta } from '#meta';
 import { Notebook } from '#types';
 
+import { ScriptNamespace } from '../../namespace.ts';
 import { ComputeGraph } from '../../notebook/index.ts';
 
 const INCLUDE_SKILLS = ['org.dxos.skill.assistant', 'org.dxos.skill.database', 'org.dxos.skill.markdown'];
@@ -42,7 +42,7 @@ const INCLUDE_SKILLS = ['org.dxos.skill.assistant', 'org.dxos.skill.database', '
 export type NotebookArticleProps = AppSurface.ObjectArticleProps<Notebook.Notebook, Pick<TypescriptEditorProps, 'env'>>;
 
 export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: NotebookArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(ScriptNamespace.key);
   const registry = useContext(RegistryContext);
   const db = notebook ? Obj.getDatabase(notebook) : undefined;
   const { hasAttention } = useAttention(attendableId);

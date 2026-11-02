@@ -23,19 +23,19 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 import { useInputSurfaceLookup } from '#hooks';
-import { meta } from '#meta';
 import { SpaceOperation, SpaceSchema } from '#types';
 
+import { SpaceNamespace } from '../../namespace.ts';
 import { getTemplateIcon, getTemplateIconGlyph } from '../../util/index.ts';
 
-export const CREATE_SPACE_DIALOG = `${meta.profile.key}.CreateSpaceDialog`;
+export const CREATE_SPACE_DIALOG = `${SpaceNamespace.key}.CreateSpaceDialog`;
 
 type FormValues = Schema.Schema.Type<typeof SpaceSchema.SpaceForm>;
 const initialValues: FormValues = { private: false, edgeReplication: true };
 
 export const CreateSpaceDialog = () => {
   const closeRef = useRef<HTMLButtonElement | null>(null);
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const { invoke } = Hooks.useOperationInvoker();
 
   const inputSurfaceLookup = useInputSurfaceLookup();
@@ -46,7 +46,9 @@ export const CreateSpaceDialog = () => {
       contributed
         .filter(({ hidden }) => !hidden)
         // `icon` seeds the form, which stores a bare name on the space; `glyph` renders the row.
-        .map((template) => ({ ...template, icon: getTemplateIcon(template), glyph: getTemplateIconGlyph(template) })),
+        .map((template) => ({ ...template, icon: getTemplateIcon(template), glyph: getTemplateIconGlyph(template) }))
+        // Contributed in plugin load order, which means nothing to the user.
+        .sort((first, second) => first.label.localeCompare(second.label)),
     [contributed],
   );
   const [template, setTemplate] = useState<string | undefined>(undefined);
@@ -88,9 +90,9 @@ export const CreateSpaceDialog = () => {
           Effect.gen(function* () {
             log.catch(Cause.squash(cause));
             yield* invoke(LayoutOperation.AddToast, {
-              id: `${meta.profile.key}.create-space-failed`,
+              id: `${SpaceNamespace.key}.create-space-failed`,
               icon: 'ph--warning--regular',
-              title: ['create-space-dialog.error.message', { ns: meta.profile.key }],
+              title: ['create-space-dialog.error.message', { ns: SpaceNamespace.key }],
             });
           }),
         ),

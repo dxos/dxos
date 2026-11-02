@@ -344,7 +344,7 @@ export class IndexEngine {
     this.#activityIndex = new ActivityIndex(sql);
     this.#convergenceKeyIntents = new ConvergenceKeyIntentStore(sql);
     this.#feedOptionsIntents = new FeedOptionsIntentStore(sql);
-    this.#indexedObjectSource = new IndexedObjectSource(sql);
+    this.#indexedObjectSource = new IndexedObjectSource(this.#objectSnapshotIndex);
   }
 
   /** Applies every store's pending migrations; `onProgress` receives the running count applied. */
@@ -680,6 +680,24 @@ export class IndexEngine {
         }),
       )
       .pipe(Effect.withSpan('IndexEngine.deleteFeedObjects'), SpanAttributes.annotateSpace(opts.spaceId));
+  }
+
+  /**
+   * Deletes the index rows of one feed's items that are on a branch other than main, as when the
+   * feed's index mode changes from all branches to the main branch only.
+   *
+   * @returns Number of `objectMeta` rows deleted.
+   */
+  deleteFeedBranchObjects(opts: { spaceId: SpaceId; queueId: string }): Effect.Effect<number, SqlError.SqlError> {
+    return this.#sql
+      .withTransaction(
+        Effect.gen({ self: this }, function* () {
+          const recordIds = yield* this.#objectMetaIndex.selectFeedBranchRecordIds(opts);
+          yield* this.#deleteRecords(recordIds);
+          return recordIds.length;
+        }),
+      )
+      .pipe(Effect.withSpan('IndexEngine.deleteFeedBranchObjects'), SpanAttributes.annotateSpace(opts.spaceId));
   }
 
   /**

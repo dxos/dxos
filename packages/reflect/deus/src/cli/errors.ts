@@ -18,3 +18,6 @@ export class ReviewCheckError extends BaseError.extend('DeusReviewCheckError', '
 
 /** One or more `.mdl` files have lint errors. */
 export class LintError extends BaseError.extend('DeusLintError', 'The .mdl files have lint errors.') {}
+
+/** The feature map has errors: a bad status, a spec reference that resolves to nothing, or a dependency cycle. */
+export class FeatureCheckError extends BaseError.extend('DeusFeatureCheckError', 'The feature map has errors.') {}

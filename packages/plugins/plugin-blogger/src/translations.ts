@@ -5,8 +5,9 @@
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Blog } from '#types';
+
+import { BloggerNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -27,7 +28,7 @@ export const translations = [
         'object-name.placeholder': 'New post',
         'add-object.label': 'Add post',
       },
-      [meta.profile.key]: {
+      [BloggerNamespace.key]: {
         'plugin.name': 'Blog',
         'publications.label': 'Publications',
         'post-card.untitled.label': 'Untitled post',

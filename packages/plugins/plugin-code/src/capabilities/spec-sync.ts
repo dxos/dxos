@@ -12,7 +12,7 @@ import { Filter } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
-import { Spec } from '@dxos/types';
+import { SpecDocument } from '@dxos/types';
 
 import { SyncBases, getSpecKey, resolveRoots, syncSpec } from '#sync';
 import { CodeCapabilities } from '#types';
@@ -57,9 +57,9 @@ export default Capability.makeModule(
         if (!space.isOpen) {
           continue;
         }
-        const linked = (yield* Effect.promise(() => space.db.query(Filter.type(Spec.Spec)).run())).filter(
-          (spec) => getSpecKey(spec) !== undefined,
-        );
+        const linked = (yield* Effect.promise(() =>
+          space.db.query(Filter.type(SpecDocument.SpecDocument)).run(),
+        )).filter((spec) => getSpecKey(spec) !== undefined);
         for (const spec of linked) {
           // Loads the text the first time a spec is synced; later passes find it resolved.
           yield* Effect.promise(() => spec.content.load());

@@ -1,7 +1,7 @@
 ---
 spec: github:dxos/dxos/packages/core/echo/echo/SPEC.mdl
-commit: 6874b54c6686411050ace940d092822def2e7853
-date: 2026-10-25
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
 by: agent:claude-code
 ---
 
@@ -10,13 +10,16 @@ by: agent:claude-code
 The namespace-module surface is solid: Relation, Ref, Entity, Query, Filter, Order, Aggregate, Registry, Scope,
 Migration, Text, Blob, Annotation, Json, JsonSchema, Collection, Tag and View export what the spec lists, and the
 query, Effect and serialization behaviour is tested here and in `@dxos/echo-client` / `echo-client-e2e`. Feature
-F-7 (feed options) is a design not yet implemented: the Feed object has no `indexing` or `retention` field,
-`IndexingOptions` and `setIndexing` do not exist, `RetentionOptions` is a `{ cursor?: string }` stub and
-`setRetention` is a no-op. Smaller divergences in the pre-existing API lists: `Obj.getSchema`, `Obj.getDXN`,
-`Type.isMutable`, `Database.runQuery` / `schemaQuery` / `runSchemaQuery` and `Feed.cursor` / `next` /
-`nextOption` do not exist, `Format` has no `string`/`number`/... members, and `Obj.fromJSON` takes
-`{ refResolver, database }` rather than `{ graph, db }`. Scenario T-3 conflicts with the code: a query
-subscription does not fire when a matched object is mutated without changing the result set.
+F-7 (feed options) is now built: the `Feed` object carries optional `indexing` and `retention` fields,
+`IndexingOptions` and `RetentionOptions` are schemas with the specified bounds, and `setIndexing` / `setRetention`
+validate and write in one `Obj.update`; `Feed.test.ts` and `echo-client` `feed.test.ts` run scenario T-6.
+Remaining divergences are in the older API lists: `Obj.getSchema`, `Obj.getDXN`, `Type.isMutable`,
+`Database.runQuery` / `schemaQuery` / `runSchemaQuery` and `Feed.cursor` / `next` / `nextOption` do not exist,
+`Format` has no `string`/`number`/... members, and `Obj.fromJSON` takes `{ refResolver, database }` rather than
+`{ graph, db }`. Scenario T-3 conflicts with the code: a query subscription does not fire when a matched object
+is mutated without changing the result set.
+
+Of 54 items: 40 done, 5 untested, 7 partial, 1 diverged, 1 missing (T-4).
 
 ## Extensions
 
@@ -215,17 +218,15 @@ verdict Collection: Collection exports the type, make and isCollection.
 ```
 
 ```mdl
-verdict Feed: The Feed namespace has the stub retention API and lacks the indexing, options-field and cursor-navigation members.
+verdict Feed: The Feed namespace has the object, options schemas and setters; cursor navigation is not as listed.
   status: partial
-  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#Feed, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#make, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#append, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#remove, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#query, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#sync, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#getSyncState, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#getFeedUri, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#RetentionOptions, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#setRetention]
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#Feed, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#make, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#append, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#remove, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#query, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#sync, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#getSyncState, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#getFeedUri, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#IndexingOptions, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#RetentionOptions, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#setIndexing, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#setRetention]
   tests: [github:dxos/dxos/packages/core/echo/echo-client/src/feed/feed.test.ts, github:dxos/dxos/packages/core/echo/echo/src/Feed.test.ts]
   note: |
-    Present: Feed (org.dxos.type.feed), make, append, remove, query, sync, getSyncState, getFeedUri.
-    Not as specified: the Feed schema has name, kind, namespace and rewindFrom only, with no `indexing` or
-    `retention` field; `IndexingOptions` and `setIndexing` do not exist; `RetentionOptions` is a TS interface
-    `{ cursor?: string }`, not a `{ maxLength?, maxAge? }` schema; `setRetention` returns `Effect.void` and writes
-    nothing. There is no `cursor` / `next` / `nextOption`: the code has the `Cursor` brand, `getCursor(item)`,
-    `START` and `CursorAnnotation`, and resumes by passing a cursor to `query`.
+    Present: Feed (org.dxos.type.feed, with `indexing` and `retention`), make, append, remove, query, sync,
+    getSyncState, getFeedUri, IndexingOptions, RetentionOptions, FeedOptions, setIndexing and setRetention. There is
+    no `cursor` / `next` / `nextOption`: the code has the `Cursor` brand, `getCursor(item)`, `START` and
+    `CursorAnnotation`, and resumes by passing a cursor to `query`.
 ```
 
 ```mdl
@@ -380,42 +381,41 @@ verdict F-6.2: Database.layer provides the service and notAvailable stubs it.
 ```
 
 ```mdl
-verdict F-7.1: The Feed object has no `indexing` or `retention` field.
-  status: missing
-  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#Feed]
-  note: |
-    Searched src/Feed.ts: the Feed schema holds name, kind, namespace and rewindFrom only. Not implemented yet (design on this branch).
+verdict F-7.1: The Feed schema has optional indexing and retention fields; absent means enabled and untrimmed.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#Feed, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#FeedOptions]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/Feed.test.ts, github:dxos/dxos/packages/core/echo/echo-client/src/feed/feed.test.ts]
 ```
 
 ```mdl
-verdict F-7.2: Nothing can disable indexing of a feed.
-  status: missing
-  note: |
-    No IndexingOptions in @dxos/echo, and no indexing switch in packages/core/echo/index-core/src or packages/core/echo/feed/src (searched for indexing/enabled).
+verdict F-7.2: IndexingOptions is a single enabled switch, and disabled feeds get no index rows at all.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#IndexingOptions, github:dxos/dxos/packages/core/echo/echo-host/src/db-host/feed-data-source.ts#FeedDataSource]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed-options.test.ts]
+  walkthrough:
+    - IndexingOptions holds only `enabled`, so there is no partial mode. github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#IndexingOptions
+    - The feed data source skips every block of a disabled feed, and its rows are deleted when the options apply. github:dxos/dxos/packages/core/echo/echo-host/src/db-host/feed-data-source.ts#FeedDataSource
 ```
 
 ```mdl
-verdict F-7.3: RetentionOptions is `{ cursor?: string }`, and nothing trims a feed.
-  status: diverged
-  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#RetentionOptions, github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore]
-  note: |
-    The code declares a TS interface `RetentionOptions { cursor?: string }` ("retain items after this cursor"), with no maxLength or maxAge. FeedStore.appendLocal carries a TODO for retention and never drops blocks.
+verdict F-7.3: RetentionOptions has integer maxLength >= 1 and positive finite maxAge in ms; setRetention converts a Duration.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#RetentionOptions, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#setRetention, github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.trim]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/Feed.test.ts, github:dxos/dxos/packages/core/echo/feed/src/feed-store.test.ts]
 ```
 
 ```mdl
-verdict F-7.4: setIndexing does not exist and setRetention is a no-op.
-  status: diverged
+verdict F-7.4: setIndexing and setRetention write the field in one Obj.update and return without waiting for the store.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#setIndexing, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#setRetention]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/Feed.test.ts]
+```
+
+```mdl
+verdict F-7.5: setRetention decodes through RetentionOptions first, so an invalid value fails and nothing is written.
+  status: done
   evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#setRetention]
-  note: |
-    `Feed.setRetention(_feed, _options)` returns `Effect.void` and writes nothing to the object. There is no `Feed.setIndexing`.
-```
-
-```mdl
-verdict F-7.5: setRetention never validates its input.
-  status: missing
-  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#setRetention]
-  note: |
-    RetentionOptions is a TS interface, not a schema, and setRetention succeeds for any value. No schema check exists.
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/Feed.test.ts, github:dxos/dxos/packages/core/echo/echo-client/src/feed/feed.test.ts]
 ```
 
 ```mdl
@@ -461,8 +461,7 @@ verdict T-5: A test checks that Database.load fails, but not with catchTag.
 ```
 
 ```mdl
-verdict T-6: Nothing runs the feed-options scenario.
-  status: missing
-  note: |
-    Feed.test.ts and echo-client feed.test.ts have no setIndexing/setRetention test; the feature is not implemented.
+verdict T-6: echo-client's feed test sets both options, checks toJSON and a second client, and rejects maxLength 0.
+  status: done
+  tests: [github:dxos/dxos/packages/core/echo/echo-client/src/feed/feed.test.ts, github:dxos/dxos/packages/core/echo/echo/src/Feed.test.ts]
 ```

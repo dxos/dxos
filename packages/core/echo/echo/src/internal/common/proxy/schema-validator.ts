@@ -10,6 +10,7 @@ import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { invariant } from '@dxos/invariant';
 
 import { SchemaAstId, SchemaId } from '../types/index.ts';
+import { EntityValueAnnotationId } from './symbols.ts';
 
 // TODO(burdon): Reconcile with @dxos/effect visit().
 
@@ -66,6 +67,20 @@ export class SchemaValidator {
     propertyPath: KeyPath,
     getProperty: (path: KeyPath) => any = () => null,
   ): Schema.Top {
+    const ast = this.getPropertyAstChain(rootObjectSchema, propertyPath, getProperty).at(-1) ?? rootObjectSchema.ast;
+    return ast === rootObjectSchema.ast ? rootObjectSchema : Schema.make<Schema.Top>(ast);
+  }
+
+  /**
+   * The AST of every property along `propertyPath`, outermost first (one per path segment), so a caller
+   * can find an annotation set on an enclosing field rather than on the written leaf.
+   */
+  public static getPropertyAstChain(
+    rootObjectSchema: Schema.Top,
+    propertyPath: KeyPath,
+    getProperty: (path: KeyPath) => any = () => null,
+  ): SchemaAST.AST[] {
+    const chain: SchemaAST.AST[] = [];
     let ast = rootObjectSchema.ast;
     for (let i = 0; i < propertyPath.length; i++) {
       const propertyName = propertyPath[i];
@@ -76,21 +91,20 @@ export class SchemaValidator {
         const propertyType = getPropertyType(ast, propertyName.toString(), (propertyName) =>
           getProperty([...propertyPath.slice(0, i), propertyName]),
         );
-        if (propertyType == null) {
+        if (propertyType != null) {
+          ast = propertyType;
+        } else {
           const indexSignatureType = getIndexSignatureValueType(ast);
-          if (indexSignatureType != null) {
-            ast = indexSignatureType;
-            continue;
+          if (indexSignatureType == null) {
+            throw new TypeError(`Unknown property: ${formatPropertyPath([...propertyPath.slice(0, i), propertyName])}`);
           }
-
-          throw new TypeError(`Unknown property: ${formatPropertyPath([...propertyPath.slice(0, i), propertyName])}`);
+          ast = indexSignatureType;
         }
-
-        ast = propertyType;
       }
+      chain.push(ast);
     }
 
-    return ast === rootObjectSchema.ast ? rootObjectSchema : Schema.make<Schema.Top>(ast);
+    return chain;
   }
 
   /**
@@ -436,7 +450,8 @@ const resolveTypeLiteral = (
   return typeAstList[typeIndex];
 };
 
-const isPlainRecord = (value: unknown): value is Record<string, unknown> => {
+/** True for an object literal (or `Object.create(null)`), as opposed to an array, byte array or class instance. */
+export const isPlainRecord = (value: unknown): value is Record<string, unknown> => {
   if (typeof value !== 'object' || value === null || Array.isArray(value) || value instanceof Uint8Array) {
     return false;
   }
@@ -457,3 +472,13 @@ export const checkIdNotPresentOnSchema = (schema: Schema.Codec<any, any, any>) =
 
 // TODO(burdon): Reconcile with JsonPath.
 type KeyPath = readonly (string | number)[];
+
+/**
+ * Whether the AST describes an array of root entities held by identity (elements annotated with
+ * {@link EntityValueAnnotationId}).
+ */
+export const isEntityArrayAst = (ast: SchemaAST.AST): boolean => {
+  const arrayAst = unwrapArray(ast);
+  const elementAst = arrayAst?.rest[0];
+  return elementAst != null && SchemaAST.getAnnotation<boolean>(elementAst, EntityValueAnnotationId) === true;
+};

@@ -1,0 +1,183 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-spotlight/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: SpotlightPlugin
+
+The code matches the spec closely. `SpotlightOperationHandlerSet` intercepts `UpdateDialog`, `Open`,
+`SwitchWorkspace` and `Close` exactly as described, with the 100 ms `DISMISS_DEBOUNCE_MS`, and
+registers no-op handlers for the eight listed layout operations. `SpotlightLayout` renders the
+commands dialog in a non-modal `Dialog.Root`, resets state on focus and focuses the search input.
+`SpotlightDismiss` hides the window on focus loss and Escape. The `State` module publishes the
+spotlight `Layout` atom.
+
+The gap is tests. The only test, `plugin.test.ts`, checks that the `State`, `SpotlightDismiss` and
+`OperationHandler` modules activate; no test runs a handler, the dismiss listeners or the layout.
+Every behaviour is therefore `untested`, and no acceptance scenario has automation. All handlers
+call Tauri APIs, so a test would need stubs for `@tauri-apps/api`. The QA test is human-only and
+marked `blocked` in the spec.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict SpotlightState: The type has dialogOpen, dialogContent and dismissTimeout.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spotlight/src/types/SpotlightCapabilities.ts#SpotlightState, github:dxos/dxos/packages/plugins/plugin-spotlight/src/types/SpotlightCapabilities.ts#State]
+  note: '`dismissTimeout` is typed as `ReturnType<typeof setTimeout>`, not `number`. No test reads the state.'
+```
+
+```mdl
+verdict SpotlightLayout: Renders the dialog surface in an open non-modal Dialog.Root and resets on focus.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spotlight/src/components/SpotlightLayout.tsx#SpotlightLayout, github:dxos/dxos/packages/plugins/plugin-spotlight/src/components/useSpotlightState.ts#useSpotlightState]
+  note: '`plugin.test.ts` notes that `ReactRoot` is stubbed in node, so the layout is never rendered by a test.'
+```
+
+```mdl
+verdict UpdateDialog: Switches content and cancels the timer on subject; schedules a 100 ms hide on state=false.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spotlight/src/operations/index.ts#SpotlightOperationHandlerSet, github:dxos/dxos/packages/plugins/plugin-spotlight/src/operations/index.ts#DISMISS_DEBOUNCE_MS]
+  note: No test runs the handler.
+```
+
+```mdl
+verdict Open: Emits spotlight:invoke with the whole input to main, then invokes hide_spotlight.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spotlight/src/operations/index.ts#SpotlightOperationHandlerSet]
+  note: No test runs the handler.
+```
+
+```mdl
+verdict SwitchWorkspace: Emits switch-workspace with the subject to main and does not hide.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spotlight/src/operations/index.ts#SpotlightOperationHandlerSet]
+  note: No test runs the handler.
+```
+
+```mdl
+verdict Close: Invokes hide_spotlight and changes no state.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spotlight/src/operations/index.ts#SpotlightOperationHandlerSet]
+  note: No test runs the handler.
+```
+
+```mdl
+verdict F-1.1: The commands dialog surface renders inside a non-modal Dialog.Root.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spotlight/src/components/SpotlightLayout.tsx#SpotlightLayout, github:dxos/dxos/packages/plugins/plugin-spotlight/src/capabilities/state.tsx]
+  note: The default state opens `COMMANDS_DIALOG`. No render test.
+```
+
+```mdl
+verdict F-1.2: On focus gained, state resets to the commands dialog and the search input is focused and selected.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spotlight/src/components/SpotlightLayout.tsx#SpotlightLayout, github:dxos/dxos/packages/plugins/plugin-spotlight/src/components/SpotlightLayout.tsx#focusSearchInput]
+  note: No test.
+```
+
+```mdl
+verdict F-2.1: onFocusChanged(false) invokes hide_spotlight.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spotlight/src/capabilities/spotlight-dismiss.ts]
+  note: '`plugin.test.ts` only checks that the module activates; outside Tauri it registers nothing.'
+```
+
+```mdl
+verdict F-2.2: An Escape keydown invokes hide_spotlight.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spotlight/src/capabilities/spotlight-dismiss.ts]
+  note: No test.
+```
+
+```mdl
+verdict F-3.1: UpdateDialog({ state false }) schedules hide_spotlight after 100 ms.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spotlight/src/operations/index.ts#SpotlightOperationHandlerSet]
+  note: No test.
+```
+
+```mdl
+verdict F-3.2: A subject before the timer fires clears the timeout and switches content.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spotlight/src/operations/index.ts#SpotlightOperationHandlerSet]
+  note: No test.
+```
+
+```mdl
+verdict F-4.1: Open is forwarded with emitTo and the panel is hidden.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spotlight/src/operations/index.ts#SpotlightOperationHandlerSet]
+  note: No test.
+```
+
+```mdl
+verdict F-4.2: SwitchWorkspace is forwarded without hiding.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spotlight/src/operations/index.ts#SpotlightOperationHandlerSet]
+  note: No test.
+```
+
+```mdl
+verdict F-4.3: The eight listed layout operations have Effect.void handlers.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spotlight/src/operations/index.ts#SpotlightOperationHandlerSet]
+  note: No test.
+```
+
+```mdl
+verdict F-5.1: The State module contributes a Layout atom with mode spotlight and empty lists.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-spotlight/src/capabilities/state.tsx]
+  note: '`plugin.test.ts` checks that `State` activates, not the atom values. The atom also sets `dialogOpen` and `workspace`.'
+```
+
+```mdl
+verdict T-1: No automated test opens the spotlight window.
+  status: missing
+  note: Only `plugin.test.ts` exists, and it checks module activation.
+```
+
+```mdl
+verdict T-2: No automated test presses Escape.
+  status: missing
+  note: Nothing runs `spotlight-dismiss.ts` against a Tauri stub.
+```
+
+```mdl
+verdict T-3: No automated test simulates focus loss.
+  status: missing
+  note: Nothing runs `spotlight-dismiss.ts` against a Tauri stub.
+```
+
+```mdl
+verdict T-4: No automated test checks the debounce.
+  status: missing
+  note: The `UpdateDialog` handler has no test.
+```
+
+```mdl
+verdict T-5: No automated test checks Open forwarding.
+  status: missing
+  note: The `Open` handler has no test.
+```
+
+```mdl
+verdict T-6: No automated test checks SwitchWorkspace forwarding.
+  status: missing
+  note: The `SwitchWorkspace` handler has no test.
+```
+
+```mdl
+verdict QA-1: Human-only test on a native Tauri build; no automation runs it.
+  status: missing
+  note: The spec marks it `blocked`; it needs a Tauri build and a global hotkey.
+```

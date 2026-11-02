@@ -14,11 +14,11 @@ import { Database, type Key, Obj, type Ref } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 
-import { meta } from '#meta';
 import { ConnectorCoordination, ConnectorSpec } from '#types';
 
 import * as Binding from './Binding.ts';
 import { connectionsDeckSubject } from './constants.ts';
+import { ConnectorNamespace } from './namespace.ts';
 
 /**
  * The "Connect" control for an object that can be bound to a remote account: one dropdown group whose
@@ -139,7 +139,7 @@ export const actions = ({
   return [
     AppNode.makeToolbarActionGroup({
       id: GROUP_ID,
-      label: ['connect.label', { ns: meta.profile.key }],
+      label: ['connect.label', { ns: ConnectorNamespace.key }],
       icon: CONNECT_ICON,
       // Show the "Connect" label next to the icon rather than icon-only.
       iconOnly: false,
@@ -168,7 +168,7 @@ export const GROUP_ID = 'connectorAuth';
 export const unavailableActions = (): AppGraphNode.NodeArg<typeof AppGraphNode.actionGroupSymbol>[] => [
   AppNode.makeToolbarActionGroup({
     id: GROUP_ID,
-    label: ['connect.label', { ns: meta.profile.key }],
+    label: ['connect.label', { ns: ConnectorNamespace.key }],
     icon: CONNECT_ICON,
     iconOnly: false,
     disabled: true,

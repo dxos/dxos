@@ -398,7 +398,8 @@ const ActionMenuRoot = ({
           {children}
         </Menu.Trigger>
       )}
-      <Menu.Content container={containerRef}>
+      {/* A menu opened at a point (a right-click) has no trigger for an arrow to point at. */}
+      <Menu.Content container={containerRef} arrow={virtualRef ? false : undefined}>
         <ActionMenuItems menu={menu} group={group} actions={typeof actions === 'function' ? actions() : actions} />
       </Menu.Content>
     </Menu.Root>

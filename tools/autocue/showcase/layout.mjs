@@ -17,12 +17,14 @@
  * composite. `--reuse-tours` lets the tour clips fill grid cells too, for a run with few other clips, and `--once`
  * names clips placed at most once. Each `--pin <clip>@<col>,<row>` puts a clip on that cell before the rest are laid out.
  *
+ * Writes `layout.json` beside the clips, naming the recording each file copies.
+ *
  * Exits non-zero when two copies of a clip end up closer than `--min` cells (Chebyshev distance: a diagonal
  * neighbour is 1), so a run with too few clips is caught before the composite is rendered.
  */
 
 import { execFileSync } from 'node:child_process';
-import { copyFileSync, mkdirSync, readdirSync, rmSync } from 'node:fs';
+import { copyFileSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
@@ -41,6 +43,7 @@ const { values: options } = parseArgs({
     'reuse-tours': { type: 'boolean', default: false },
     'once': { type: 'string', default: '' },
     'pin': { type: 'string', multiple: true, default: [] },
+    'variant': { type: 'string', default: 'light' },
   },
 });
 
@@ -49,7 +52,7 @@ if (!options.run) {
   process.exit(2);
 }
 
-const CLIPS = path.resolve(ROOT, options.run, 'clips', 'light');
+const CLIPS = path.resolve(ROOT, options.run, 'clips', options.variant);
 const GRID = path.join(ROOT, 'temp', 'grid-zoom');
 const COLS = Number(options.cols);
 const ROWS = Number(options.rows);
@@ -166,6 +169,18 @@ for (const [step, name] of tour.entries()) {
 for (const { index, name } of grid) {
   copyFileSync(path.join(CLIPS, `${name}.mp4`), path.join(GRID, `clip-${String(index).padStart(2, '0')}.mp4`));
 }
+// Which recording each file copies, so the Grid can tell repeats apart (a drift keeps them out of one column).
+writeFileSync(
+  path.join(GRID, 'layout.json'),
+  JSON.stringify(
+    Object.fromEntries([
+      ...tour.map((name, step) => [`tour-${step + 1}`, name]),
+      ...grid.map(({ index, name }) => [`clip-${String(index).padStart(2, '0')}`, name]),
+    ]),
+    null,
+    2,
+  ) + '\n',
+);
 
 for (let row = 0; row < ROWS; row++) {
   const line = [];

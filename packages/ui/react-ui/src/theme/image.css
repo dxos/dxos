@@ -5,6 +5,9 @@
 @layer dx-components {
   .dx-image {
     display: grid;
+    /* One track the size of the frame: with auto tracks the img's height: 100% resolved to its own height, which
+       a contained image (a wide logo) overflowed and was cropped. */
+    grid-template: minmax(0, 1fr) / minmax(0, 1fr);
     place-items: center;
     overflow: hidden;
     aspect-ratio: var(--dx-image-aspect, 16 / 9);

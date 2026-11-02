@@ -6,8 +6,7 @@ import React from 'react';
 
 import * as Hooks from '@dxos/react-ui/Hooks';
 
-import { meta } from '#meta';
-
+import { SidekickNamespace } from '../namespace.ts';
 import { Section } from './Section.tsx';
 
 export type DayAheadProps = {
@@ -15,7 +14,7 @@ export type DayAheadProps = {
 };
 
 export const DayAhead = ({ summary }: DayAheadProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SidekickNamespace.key);
   return (
     <Section title={t('day-ahead.title')}>
       {summary ? (

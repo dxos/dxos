@@ -2,11 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+import { flow } from 'effect/Function';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { DXN, EntityId } from '@dxos/keys';
 
+import * as Annotation from './Annotation.ts';
 import * as Entity from './Entity.ts';
 import * as Filter from './Filter.ts';
 import * as JsonSchema from './JsonSchema.ts';
@@ -280,6 +283,55 @@ describe('Type', () => {
 
       const filter = Filter.type(Person);
       expect(filter).toBeDefined();
+    });
+  });
+
+  // Type-level behavior is covered by `Type.tst.ts`.
+  describe('makeObject with struct fields', () => {
+    test('builds the struct and applies the annotations', ({ expect }) => {
+      class Labeled extends Type.makeObject<Labeled>(DXN.make('com.example.type.labeled', '0.1.0'))(
+        { label: Schema.String },
+        flow(Annotation.LabelAnnotation.set(['label']), Annotation.DescriptionAnnotation.set('A labeled type.')),
+      ) {}
+
+      const obj = Obj.make(Labeled, { label: 'Hello' });
+      expect(obj.label).toBe('Hello');
+      expect(Obj.getLabel(obj)).toBe('Hello');
+      expect(Option.getOrUndefined(Annotation.DescriptionAnnotation.get(Type.getSchema(Labeled)))).toBe(
+        'A labeled type.',
+      );
+      expect(Type.getTypename(Labeled)).toBe('com.example.type.labeled');
+    });
+
+    test('accepts fields without an annotate function', ({ expect }) => {
+      class Plain extends Type.makeObject<Plain>(DXN.make('com.example.type.plain', '0.1.0'))({
+        name: Schema.String,
+      }) {}
+
+      expect(Obj.make(Plain, { name: 'Test' }).name).toBe('Test');
+    });
+  });
+
+  describe('makeRelation with struct fields', () => {
+    test('builds the struct and applies the annotations', ({ expect }) => {
+      class Employs extends Type.makeRelation<Employs>(DXN.make('com.example.type.employs', '0.1.0'))({
+        source: TestSchema.Organization,
+        target: TestSchema.Person,
+      })(
+        { role: Schema.String },
+        flow(Annotation.LabelAnnotation.set(['role']), Annotation.DescriptionAnnotation.set('Employs a person.')),
+      ) {}
+
+      const org = Obj.make(TestSchema.Organization, { name: 'DXOS' });
+      const person = Obj.make(TestSchema.Person, { name: 'Alice' });
+      const rel = Relation.make(Employs, { [Relation.Source]: org, [Relation.Target]: person, role: 'Engineer' });
+      expect(rel.role).toBe('Engineer');
+      expect(Relation.getSource(rel)).toBe(org);
+      expect(Relation.getTarget(rel)).toBe(person);
+      expect(Option.getOrUndefined(Annotation.LabelAnnotation.get(Type.getSchema(Employs)))).toEqual(['role']);
+      expect(Option.getOrUndefined(Annotation.DescriptionAnnotation.get(Type.getSchema(Employs)))).toBe(
+        'Employs a person.',
+      );
     });
   });
 });

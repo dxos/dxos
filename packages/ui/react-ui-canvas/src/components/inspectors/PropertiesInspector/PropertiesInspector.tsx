@@ -76,6 +76,7 @@ import { FontField, FontSizeField } from './FontField.tsx';
 import { FrameField } from './FrameField.tsx';
 import { LayerClassField, LayersContext } from './LayerField.tsx';
 import { LineStyleField } from './LineStyleField.tsx';
+import { MarkerField } from './MarkerField.tsx';
 import { PolygonFitField } from './PolygonFitField.tsx';
 import { ViewField, ViewOptionsContext } from './ViewField.tsx';
 
@@ -130,6 +131,8 @@ export const DEFAULT_FIELDS: FormFieldMap = {
   'style.alignHorizontal': AlignField,
   'style.fontFamily': FontField,
   'style.lineStyle': LineStyleField,
+  'ends.start': MarkerField,
+  'ends.end': MarkerField,
   'rotation': FrameField,
   'params.fit': PolygonFitField,
   'scene': ViewField,

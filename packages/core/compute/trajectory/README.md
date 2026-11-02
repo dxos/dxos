@@ -14,8 +14,8 @@ Nothing in the log is ever edited; every view of the conversation is derived fro
 
 ## Several writers on one feed
 
-Reducers fold the feed in **local order**: the order this replica stored events in, read with
-`Filter.feedCursor({ order: 'local' })`. Unlike the feed position EDGE assigns, local order never changes under a
+Reducers fold the feed in **local order**: the order this replica stored events in, read with `Feed.walk` and resumed
+from `Feed.getLocalCursor`. Unlike the feed position EDGE assigns, local order never changes under a
 reader, so a checkpoint stays valid while sync places other writers' events. An event that syncs in later is folded
 after everything already stored. Three rules follow:
 

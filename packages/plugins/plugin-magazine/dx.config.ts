@@ -2,12 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Config2 } from '@dxos/app-framework/config';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
+import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
+import * as RoutineEvents from '@dxos/plugin-routine/RoutineEvents';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { trim } from '@dxos/util';
 
-export default Config2.make({
+import { MagazineNamespace } from './src/namespace.ts';
+
+// Annotated: the capability modules import `meta` from here, so inferring it would be circular.
+const config: Plugin.PluginConfig = Plugin.config({
   plugin: {
-    key: 'org.dxos.plugin.magazine',
+    key: MagazineNamespace.key,
     name: 'Magazine',
     author: 'DXOS',
     description: trim`
@@ -45,4 +55,52 @@ export default Config2.make({
     spec: 'PLUGIN.mdl',
     tags: ['alpha'],
   },
+  modules: [
+    AppCapability.appGraphBuilder(
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
+      {
+        environments: ['browser', 'tauri'],
+        requires: [AttentionCapabilities.ViewState],
+      },
+    ),
+    SpaceCapability.createObject(() => import('./src/capabilities/create-object.ts', { with: { type: 'module-url' } })),
+    AppCapability.operationHandler(
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
+      {
+        activatesOn: ActivationEvents.Idle,
+      },
+    ),
+    AppCapability.pluginAsset({
+      pluginId: MagazineNamespace.key,
+      path: 'PLUGIN.mdl',
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
+      mimeType: 'application/x-mdl',
+    }),
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
+      roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.objectProperties'],
+    }),
+    Capability.lazyModule(
+      'RoutineTemplates',
+      { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
+      () => import('./src/capabilities/routine-templates.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
+    AppCapability.skillDefinition(
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'module-url' } }),
+    ),
+    AppCapability.spaceTemplates(
+      () => import('./src/capabilities/space-templates.ts', { with: { type: 'module-url' } }),
+    ),
+    // Startup rather than the default dependency-mode gate: the consumers read the capability set
+    // (`capabilities.getAll`) instead of declaring it as a requirement, so nothing would ever demand it
+    // and a Post would stay unreadable — no reading companion, no extraction.
+    AppCapability.textContent(() => import('./src/capabilities/text-content.ts', { with: { type: 'module-url' } }), {
+      activatesOn: ActivationEvents.Startup,
+    }),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
+  ],
 });
+
+export const { meta, make } = config;
+
+export default config;

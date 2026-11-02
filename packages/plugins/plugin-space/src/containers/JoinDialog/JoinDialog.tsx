@@ -14,9 +14,9 @@ import { type InvitationResult } from '@dxos/react-client/invitations';
 import * as Dialog from '@dxos/react-ui/Dialog';
 import { JoinPanel, type JoinPanelProps } from '@dxos/shell/react';
 
-import { meta } from '#meta';
+import { SpaceNamespace } from '../../namespace.ts';
 
-export const JOIN_DIALOG = `${meta.profile.key}.JoinDialog`;
+export const JOIN_DIALOG = `${SpaceNamespace.key}.JoinDialog`;
 
 export type JoinDialogProps = JoinPanelProps & {
   navigableCollections?: boolean;
@@ -35,10 +35,10 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
 
       await Promise.all([
         invokePromise(LayoutOperation.AddToast, {
-          id: `${meta.profile.key}.join-success`,
+          id: `${SpaceNamespace.key}.join-success`,
           duration: 5_000,
-          title: ['join-success.label', { ns: meta.profile.key }],
-          closeLabel: ['dismiss.label', { ns: meta.profile.key }],
+          title: ['join-success.label', { ns: SpaceNamespace.key }],
+          closeLabel: ['dismiss.label', { ns: SpaceNamespace.key }],
         }),
         invokePromise(LayoutOperation.UpdateDialog, { state: false }),
       ]);

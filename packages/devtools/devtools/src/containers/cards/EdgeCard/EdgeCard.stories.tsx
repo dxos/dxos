@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { edgeSocket, edgeSpaceNames, edgeStatus, edgeStatusDegraded } from '../testing/fixtures.ts';
+import { edgeSocket, edgeSpaces, edgeStatus, edgeStatusDegraded } from '../testing/fixtures.ts';
 import { EdgeCard } from './EdgeCard.tsx';
 
 const meta = {
@@ -20,11 +20,11 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: { edge: edgeSocket, status: edgeStatus, spaceNames: edgeSpaceNames, onRefresh: () => {}, onCopy: () => {} },
+  args: { edge: edgeSocket, status: edgeStatus, spaces: edgeSpaces, onRefresh: () => {}, onCopy: () => {} },
 };
 
 export const Degraded: Story = {
-  args: { status: edgeStatusDegraded, spaceNames: edgeSpaceNames, onRefresh: () => {} },
+  args: { status: edgeStatusDegraded, spaces: edgeSpaces, onRefresh: () => {} },
 };
 
 export const Empty: Story = {};

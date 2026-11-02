@@ -3,7 +3,8 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { useCallback, useMemo } from 'react';
+import * as Atom from 'effect/reactivity/Atom';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Hooks from '@dxos/app-framework/Hooks';
@@ -15,7 +16,7 @@ import { Entity, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import type * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
+import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import {
   type BackgroundGrid,
@@ -37,7 +38,6 @@ import * as Banner from '@dxos/react-ui/Banner';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 
-import { meta } from '#meta';
 import {
   canvasRecordOf,
   generatorCompiler,
@@ -51,6 +51,8 @@ import {
 // Aliased: `Canvas` here is the scene engine's component namespace.
 import { CanvasCapabilities, Canvas as CanvasFormat } from '#types';
 
+import { CanvasNamespace } from '../../namespace.ts';
+import { CanvasEditCommands } from './CanvasEditCommands.tsx';
 import { CanvasDatabaseContext } from './CanvasViewNodeView.tsx';
 import { createTrackerHistory } from './tracker-history.ts';
 import { createGeneratorWorker, useBoundCanvasStore, useCanvasGenerators, useCanvasNodes } from './use-canvas-scene.ts';
@@ -58,9 +60,11 @@ import { canvasViewAspect } from './view-state.ts';
 
 export type CanvasArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
 
+const NO_REFITS = Atom.make<Record<string, number>>({});
+
 /** Why a canvas a newer plugin saved opens read-only, and what unlocks it. */
 const NewerFormatBanner = () => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(CanvasNamespace.key);
   return (
     <Banner.Root valence='warning' data-testid='canvas.newer-format'>
       <Banner.Title>{t('newer-format.title')}</Banner.Title>
@@ -93,12 +97,18 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   );
   // In Composer the canvas's edits join the app's history, scoped to this canvas; without a tracker it keeps its own.
   const tracker = Hooks.useOptionalCapability(Capabilities.HistoryTracker);
+  const [element, setElement] = useState<HTMLDivElement | null>(null);
+  const [hovered, setHovered] = useState(false);
   const history = useMemo(
     () => (tracker ? createTrackerHistory({ tracker, invoker, canvas }) : undefined),
     [tracker, invoker, canvas],
   );
   const nodes = useCanvasNodes(openObject);
   const bound = useBoundCanvasStore(canvas);
+  // An agent's drawing edit asks for a refit, so the view frames what changed rather than where the viewer left it.
+  const [refitAtom] = Hooks.useCapabilities(IllustratorCapabilities.Refit);
+  const refits = useAtomValue(refitAtom ?? NO_REFITS);
+  const refitKey = refits[Obj.getURI(canvas)];
   const generators = useCanvasGenerators(db);
 
   // The drawing's settings, edited in the properties companion: the lattice picks the projection.
@@ -205,10 +215,29 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
     [registry, bound, db],
   );
 
+  // Panel.Root takes no pointer handlers, so the section tracks the pointer on its element.
+  useEffect(() => {
+    if (!section || !element) {
+      return;
+    }
+    const enter = () => setHovered(true);
+    const leave = () => setHovered(false);
+    element.addEventListener('pointerenter', enter);
+    element.addEventListener('pointerleave', leave);
+    return () => {
+      element.removeEventListener('pointerenter', enter);
+      element.removeEventListener('pointerleave', leave);
+    };
+  }, [section, element]);
+
   return (
     // A section takes the document's width and has no height of its own (read-only, it has no dock), so its height
     // follows from the drawing's 3:2 frame.
-    <Panel.Root role={role} classNames={section ? 'w-full aspect-[3/2]' : slide ? 'bg-transparent' : undefined}>
+    <Panel.Root
+      role={role}
+      classNames={section ? 'w-full aspect-[3/2]' : slide ? 'bg-transparent' : undefined}
+      ref={setElement}
+    >
       {newer && !embedded && (
         <Panel.Header>
           <NewerFormatBanner />
@@ -241,6 +270,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
               // enlarged rather than kept at 1:1.
               margin={slide ? 0 : undefined}
               fitZoom={slide ? MAX_ZOOM : undefined}
+              refitKey={refitKey}
               // A newer plugin's format stays read-only here, so the toggle that would unlock it is not offered.
               onReadonlyChange={embedded || newer ? undefined : handleReadonlyChange}
               initialCamera={savedCamera}
@@ -255,8 +285,10 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
               createGeneratorWorker={createGeneratorWorker}
             >
               <Canvas.Viewport liveDepth={settings.liveDepth} />
-              {/* Unset means shown: settings saved before the default existed hold neither key. */}
-              {!slide && (settings.showToolbar ?? true) && (
+              <CanvasEditCommands element={element} />
+              {/* Unset means shown: settings saved before the default existed hold neither key. A section shows its bars
+                  only under the pointer, so an embed in a document reads as a picture until it is used. */}
+              {!slide && (!section || hovered) && (settings.showToolbar ?? true) && (
                 <>
                   <Canvas.Navigation />
                   <Canvas.Actions />

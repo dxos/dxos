@@ -12,7 +12,7 @@ import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import * as Dialog from '@dxos/react-ui/Dialog';
 import { withLayout } from '@dxos/react-ui/testing';
 
-import { NavTreePlugin } from '#plugin';
+import * as NavTreePlugin from '#meta';
 import { translations } from '#translations';
 
 import { CommandsDialogContent } from './CommandsDialogContent.tsx';
@@ -30,7 +30,7 @@ const meta = {
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
-      plugins: [...CorePlugins.make(), StorybookPlugin.make({}), NavTreePlugin()],
+      plugins: [...CorePlugins.make(), StorybookPlugin.make({}), NavTreePlugin.make()],
     }),
   ],
   tags: ['test'],

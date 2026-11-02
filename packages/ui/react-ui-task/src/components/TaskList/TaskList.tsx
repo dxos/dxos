@@ -709,34 +709,20 @@ export const TaskTags = ({ task }: { task: Task.Task }) => {
 TaskTags.displayName = 'TaskList.Tags';
 
 /**
- * The task's tags, as chips in the same cell as its artifacts and assignee. Queried by id for the
- * reason artifacts are: a tag's target is not in memory on a cold load.
+ * The task's tags, as chips in the same cell as its artifacts and assignee. Tags are strong
+ * dependencies of the task, so they are in memory whenever the task is.
  */
 const TaskListItemTags = ({ task }: { task: Task.Task }) => {
-  const db = Obj.getDatabase(task);
   const tags = useAtomValue(Obj.tagsAtom(task));
-  const ids = useMemo(
-    () =>
-      tags.flatMap((ref) => {
-        const id = Task.refEntityId(ref);
-        return id ? [id] : [];
-      }),
-    [tags],
-  );
-  const queried = useQuery(ids.length > 0 ? db : undefined, Filter.id(...ids));
-  const resolved = useMemo(
-    () => (db ? queried : tags.flatMap((ref) => (ref.target ? [ref.target] : []))),
-    [db, queried, tags],
-  );
   const labelledAtom = useMemo(
     () =>
       Atom.make((get) =>
-        resolved
-          .filter((object) => Obj.instanceOf(EchoTag.Tag, object))
+        tags
+          .filter((tag) => !Obj.isDeleted(tag))
           .map((tag) => get(Obj.atom(tag)))
           .sort(EchoTag.sortTags),
       ),
-    [resolved],
+    [tags],
   );
   const labelled = useAtomValue(labelledAtom);
 

@@ -82,6 +82,7 @@ export {
 } from './icon-registry.ts';
 export * from './IconRegistry.tsx';
 export { TranslationsContext, useTranslation } from './TranslationsContext.ts';
+export { TranslationsProvider, type TranslationsProviderProps } from './TranslationsProvider.tsx';
 export * from '../../hooks/useThemeContext.ts';
 export * from '../../hooks/useTranslationsContext.ts';
 export * from '../../theme/bindTheme.ts';

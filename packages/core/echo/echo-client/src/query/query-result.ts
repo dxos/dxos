@@ -14,6 +14,7 @@ import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { countWork, getDeep, isNonNullable } from '@dxos/util';
 
+import { type DeletionMemo } from '../core-db/index.ts';
 import { getObjectCore, isEchoObject } from '../echo-handler/index.ts';
 import { type QueryContext, type SourceEntry } from './query-context.ts';
 import { queryMetrics } from './query-metrics.ts';
@@ -55,8 +56,8 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
   private _objectCache?: T[] = undefined;
   private _subscribers: number = 0;
   private _atom: Atom.Atom<T[]> | undefined = undefined;
-  /** When the reactive query started, until it first holds every source's answer. */
-  private _startedAt?: number = undefined;
+  /** Set when the reactive query starts, until it first holds every source's answer. */
+  private _awaitingAnswer = false;
 
   constructor(
     private readonly _queryContext: QueryContext<T>,
@@ -225,14 +226,20 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
   }
 
   private async _runOnce(opts?: { timeout?: number }): Promise<PresentedResults<T>> {
-    const begin = performance.now();
+    // Evaluation time only, reported by the context in parts: waiting on the host or on document loads is excluded.
+    let executionTime = 0;
     const filteredResults = await this._queryContext.run(Context.default(), this._query.ast, {
       timeout: opts?.timeout ?? 30_000,
+      onExecutionTime: (time) => {
+        executionTime += time;
+      },
     });
+    const begin = performance.now();
     const presented = this._presentResults(filteredResults);
+    executionTime += performance.now() - begin;
     countWork('echo.queryRuns');
     countWork('echo.queryResultObjects', presented.objects.length);
-    queryMetrics.executed(this._metricsKey, performance.now() - begin, presented.objects.length, 'run');
+    queryMetrics.executed(this._metricsKey, executionTime, presented.objects.length, 'run');
     return presented;
   }
 
@@ -254,10 +261,12 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     countWork('echo.queryRecomputes');
     countWork('echo.queryResultObjects', presented.objects.length);
     queryMetrics.updated(this._metricsKey, end - begin, presented.objects.length);
-    // Time to answer: the first recompute after start at which no source is still outstanding.
-    if (this._startedAt !== undefined && !this._queryContext.hasPendingSources()) {
-      queryMetrics.executed(this._metricsKey, end - this._startedAt, presented.objects.length, 'reactive');
-      this._startedAt = undefined;
+    // The first recompute after start at which no source is still outstanding completes the answer, which cost
+    // the remotes' reported evaluation plus this recompute; the wait for the remotes is not counted.
+    if (this._awaitingAnswer && !this._queryContext.hasPendingSources()) {
+      const executionTime = (this._queryContext.getRemoteExecutionTime?.() ?? 0) + (end - begin);
+      queryMetrics.executed(this._metricsKey, executionTime, presented.objects.length, 'reactive');
+      this._awaitingAnswer = false;
     }
 
     const changed =
@@ -341,11 +350,15 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
 
     const kept: SourceEntry<T>[] = [];
     const removed: SourceEntry<T>[] = [];
+    // Remote entries under one parent share its deletion walk.
+    const memo: DeletionMemo = new Map();
     for (const entry of entries) {
       // The working set already applied the deleted option, so only remote entries can carry a tombstone;
       // skipping the rest keeps this off the per-write path of a synchronous notification.
       const tombstone =
-        entry.resolution?.source !== 'local' && isEchoObject(entry.result) && getObjectCore(entry.result).isDeleted();
+        entry.resolution?.source !== 'local' &&
+        isEchoObject(entry.result) &&
+        getObjectCore(entry.result).isDeleted(undefined, memo);
       (tombstone ? removed : kept).push(entry);
     }
     return { kept, removed };
@@ -383,7 +396,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
 
   private _start(): void {
     this._isActive = true;
-    this._startedAt = performance.now();
+    this._awaitingAnswer = true;
     queryMetrics.started(this._metricsKey);
     this._queryContext.start();
     this._diagnostic.isActive = true;
@@ -393,7 +406,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     this._queryContext.stop();
     this._isActive = false;
     this._diagnostic.isActive = false;
-    this._startedAt = undefined;
+    this._awaitingAnswer = false;
     queryMetrics.stopped(this._metricsKey);
   }
 

@@ -1,0 +1,26 @@
+diagram @ -128,-64 flow=down box=256x128 grid=384x192
+group space "Space" color=light-violet {
+  node Space "Space" ref="packages/core/echo/echo/src/Database.ts" color=violet
+  node Database "Database" ref="packages/core/echo/echo/src/Database.ts"
+  node Collection "Collection" ref="packages/core/echo/echo/src/Collection.ts"
+}
+group entities "Entities" {
+  node Object "Object" ref="packages/core/echo/echo/src/Obj.ts" color=blue
+  node Relation "Relation" ref="packages/core/echo/echo/src/Relation.ts"
+  node Ref "Ref" ref="packages/core/echo/echo/src/Ref.ts" color=light-blue
+  node Feed "Feed" ref="packages/core/echo/echo/src/Feed.ts"
+}
+group types "Types" color=light-green {
+  node Schema "Schema" ref="packages/core/echo/echo/src/Type.ts" color=green
+  node Typename "Typename + version" ref="packages/core/echo/echo/src/Type.ts"
+  node Dxn "DXN / EID" ref="packages/common/keys/src/EID.ts"
+}
+edge Space -> Database "holds"
+edge Database -> Collection
+edge Database -> Object "adds"
+edge Database -> Feed "appends"
+edge Object -> Ref "points by"
+edge Relation -> Object "source, target"
+edge Ref -> Dxn "names"
+edge Object -> Schema "instance of"
+edge Schema -> Typename

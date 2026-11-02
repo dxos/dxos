@@ -36,7 +36,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
-import { AssistantPlugin } from '#plugin';
+import * as AssistantPlugin from '#meta';
 import { translations } from '#translations';
 
 // TODO(dmaretskyi): testing.ts module shadows the ./testing dir.
@@ -356,8 +356,8 @@ export const Default: Story = {
               yield* Effect.promise(() => space.waitUntilReady());
             }),
         }),
-        AssistantPlugin(),
-        RoutinePlugin(),
+        AssistantPlugin.make(),
+        RoutinePlugin.make(),
       ],
     }),
   ],
@@ -380,7 +380,7 @@ export const WithSnapshot: Story = {
           types: [Feed.Feed, Trace.Message],
           onClientInitialized: initClientFromSpaceSnapshot(() => import('../../testing/data/trace-timeline.dx.json')),
         }),
-        RoutinePlugin(),
+        RoutinePlugin.make(),
       ],
     }),
   ],
@@ -400,7 +400,7 @@ export const WithRemoteSnapshot: Story = {
             () => import('../../testing/data/trace-timeline-remote.dx.json'),
           ),
         }),
-        RoutinePlugin(),
+        RoutinePlugin.make(),
       ],
     }),
   ],
@@ -420,7 +420,7 @@ export const WithRemoteMultipleSnapshot: Story = {
             () => import('../../testing/data/trace-timeline-multiple.dx.json'),
           ),
         }),
-        RoutinePlugin(),
+        RoutinePlugin.make(),
       ],
     }),
   ],

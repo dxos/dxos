@@ -13,7 +13,6 @@ import * as Ref from 'effect/Ref';
 import * as Performance from '@dxos/effect/Performance';
 import { log } from '@dxos/log';
 
-import { ActivationEvents } from '../../common/index.ts';
 import * as ActivationEvent from '../activation-event.ts';
 import type * as CapabilityManager from '../capability-manager.ts';
 import * as Capability from '../capability.ts';
@@ -191,7 +190,7 @@ export class ActivationScheduler {
   #activateWhenIdle(): Effect.Effect<void, never, Plugin.Service> {
     return Effect.gen({ self: this }, function* () {
       yield* this.#whenIdle;
-      yield* this.activate(ActivationEvents.Idle).pipe(
+      yield* this.activate(ActivationEvent.Idle).pipe(
         Effect.catch((error) => Effect.sync(() => log.warn('idle activation failed', { error: String(error) }))),
       );
     });
@@ -281,14 +280,19 @@ export class ActivationScheduler {
    * marked for reactivation when a provider returns.
    */
   deactivatePlugin(id: string): Effect.Effect<boolean, Error> {
-    return Effect.gen({ self: this }, function* () {
+    return Effect.suspend(() => {
       const plugin = this.#state.getPlugin(id);
-      if (!plugin) {
-        return false;
-      }
+      return plugin ? this.deactivateModules(plugin.modules) : Effect.succeed(false);
+    });
+  }
 
-      const modules = plugin.modules;
-
+  /**
+   * Deactivates the given modules. Active modules outside the set that require a singleton
+   * capability they provide are deactivated first (reverse activation order) and marked for
+   * reactivation when a provider returns.
+   */
+  deactivateModules(modules: readonly Plugin.PluginModule[]): Effect.Effect<boolean, Error> {
+    return Effect.gen({ self: this }, function* () {
       const dependents = this.#collectCapabilityDependents(modules);
       for (const dependent of dependents) {
         yield* this.#loader.deactivate(dependent);
@@ -300,6 +304,72 @@ export class ActivationScheduler {
         { concurrency: 'unbounded' },
       );
       return results.every((result) => result);
+    });
+  }
+
+  /**
+   * Deactivates the given modules — and every active module that transitively requires a
+   * singleton capability they provide — then activates the same set again. Used by hot module
+   * replacement: a module's `activate` resolves its body afresh, so re-running it swaps in new
+   * code. A module whose last activation failed is retried, so fixing a broken edit recovers it.
+   * Never-loaded or unknown ids are ignored; returns false when none was reloadable.
+   */
+  reloadModules(ids: readonly string[]): Effect.Effect<boolean, Error, Plugin.Service> {
+    return Effect.gen({ self: this }, function* () {
+      const wanted = new Set(ids);
+      // A module mid-load would otherwise contribute after its own deactivation.
+      yield* Effect.all(
+        [...wanted].map((id) => this.#loader.awaitSettled(id)),
+        { concurrency: 'unbounded', discard: true },
+      );
+
+      // Settled and not active means the last activation failed; its memoized failure is cleared
+      // by the deactivation below.
+      const active = this.#state.getActiveIds();
+      const modules = this.#state
+        .getModules()
+        .filter((module) => wanted.has(module.id) && (active.includes(module.id) || this.#loader.isLoading(module.id)));
+      if (modules.length === 0) {
+        return false;
+      }
+
+      log('reloading modules', { modules: modules.map((module) => module.id) });
+      const dependents = this.#collectCapabilityDependents(modules);
+      for (const module of [...dependents, ...[...modules].reverse()]) {
+        yield* this.#loader.deactivate(module);
+      }
+      for (const module of modules) {
+        const pluginId = this.#state.pluginIdOfModule(module.id);
+        if (pluginId !== undefined) {
+          this.#state.clearFailure(pluginId);
+        }
+      }
+
+      // The edited modules run first, alone; their dependents then go through the ordinary pass,
+      // which admits a module only once its requires are satisfied. Running both as one candidate
+      // set would leave a dependent of a failed edit waiting out the activation timeout, holding
+      // up the next edit. Consumers that never activated while a module was broken are admitted
+      // by the same pass.
+      const reloaded = [...modules, ...dependents];
+      reloaded.forEach((module) => this.#state.reloading.add(module.id));
+      dependents.forEach((module) => this.#state.reactivateOnNextPass.add(module.id));
+      return yield* Effect.gen({ self: this }, function* () {
+        const ran = yield* this.runDependencyPass({ candidateModules: modules, scopedToCandidates: true });
+        yield* this.runDependencyPass();
+        const active = this.#state.getActiveIds();
+        return ran && reloaded.every((module) => active.includes(module.id));
+      }).pipe(
+        // Failed ids stay flagged: the supervisor reads the error message asynchronously, and the
+        // module remains an edit in progress until a later reload activates it.
+        Effect.ensuring(
+          Effect.sync(() => {
+            const active = this.#state.getActiveIds();
+            reloaded
+              .filter((module) => active.includes(module.id))
+              .forEach((module) => this.#state.reloading.delete(module.id));
+          }),
+        ),
+      );
     });
   }
 

@@ -11,3 +11,4 @@ export * from './discord.ts';
 export * from './setup-plugin.ts';
 export * from './story-settings.ts';
 export * from './support-team.ts';
+export * from './fake-comment-agent.ts';

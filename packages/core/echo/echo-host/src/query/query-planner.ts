@@ -1133,10 +1133,6 @@ export class QueryPlanner {
         return processedPlan;
       }
       if (OBJECT_SET_CHANGERS.has(step._tag)) {
-        // A local-order read is ordered by its window; a natural order would sort it by id instead.
-        if (step._tag === 'SelectStep' && step.feedCursorRange?.order === 'local') {
-          return processedPlan;
-        }
         // An outgoing reference traversal emits each anchor's refs in array order, which is the only
         // order a ref array has. Order the anchors instead, so the result stays deterministic.
         if (isOutgoingReferenceTraversal(step)) {
@@ -1434,8 +1430,11 @@ const feedScanForLimit = (
   if (selectStep.scope.length === 0 || !selectStep.scope.every((scope) => scope._tag === 'feed')) {
     return undefined;
   }
-  // A cursor read is already windowed by position, which is a different ordering.
-  if (selectStep.feedCursorRange !== undefined) {
+  // A cursor read is already windowed by position, and a walk by its path: both are different orderings.
+  if (
+    selectStep.feedCursorRange !== undefined ||
+    selectStep.scope.some((scope) => scope._tag === 'feed' && scope.walk)
+  ) {
     return undefined;
   }
   // The index seeks by id or type; every other selector reaches rows the window cannot order.
@@ -1695,10 +1694,10 @@ const _splitFeedCursor = (
 
 const _feedCursorRange = (
   filter: QueryAST.FilterFeedCursor,
-): { begin?: string; end?: string; order?: 'position' | 'local' } => ({
+): { begin?: string; end?: string; positions?: 'local' | 'edge' } => ({
   ...(filter.begin !== undefined ? { begin: filter.begin } : {}),
   ...(filter.end !== undefined ? { end: filter.end } : {}),
-  ...(filter.order !== undefined ? { order: filter.order } : {}),
+  ...(filter.positions !== undefined ? { positions: filter.positions } : {}),
 });
 
 const _containsFeedCursor = (filter: QueryAST.Filter): boolean => {

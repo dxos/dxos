@@ -4,15 +4,19 @@
 
 import React, { useEffect, useMemo, useRef } from 'react';
 
+import {
+  type Snippet,
+  type SourceKey,
+  type WalkthroughStep,
+  declarationSnippet,
+  formatSourceKey,
+  parseSourceKey,
+} from '@dxos/deus/review';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { type SourceKey, formatSourceKey, parseSourceKey } from '#sync';
-
-import { type Snippet, declarationSnippet } from '../CodeView/symbol.ts';
 import { type SourceReader } from '../SpecEditor/snippet-card.ts';
 import { mountSnippet } from '../SpecEditor/snippet-view.ts';
-import { type WalkthroughStep } from '../SpecModel/index.ts';
 
 export type WalkthroughProps = {
   steps: readonly WalkthroughStep[];

@@ -20,10 +20,10 @@ import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as Harness from '@dxos/plugin-testing/Harness';
 import { hotkeyStore, setHotkeyScope } from '@dxos/react-focus/store';
 
-import { NavTreePlugin } from '#plugin';
+import * as NavTreePlugin from '#meta';
 import { NavTreeCapabilities } from '#types';
 
-await Harness.preload({ plugins: [NavTreePlugin()] });
+await Harness.preload({ plugins: [NavTreePlugin.make()] });
 
 const OBJECT_SEGMENT = 'object';
 const OBJECT_TYPE = 'example.com.type.object';
@@ -33,7 +33,7 @@ describe('NavTreePlugin', () => {
     const fired: string[] = [];
     const version = Atom.make(1);
     await using harness = await Harness.createComposerTestApp({
-      plugins: [makeHostPlugin(fired, version)(), NavTreePlugin()],
+      plugins: [makeHostPlugin(fired, version)(), NavTreePlugin.make()],
     });
 
     const builder = await harness.waitForCapability(AppCapabilities.AppGraph);
@@ -57,7 +57,7 @@ describe('NavTreePlugin', () => {
     const fired: string[] = [];
     const version = Atom.make(1);
     await using harness = await Harness.createComposerTestApp({
-      plugins: [makeHostPlugin(fired, version)(), NavTreePlugin()],
+      plugins: [makeHostPlugin(fired, version)(), NavTreePlugin.make()],
     });
 
     const builder = await harness.waitForCapability(AppCapabilities.AppGraph);
@@ -87,7 +87,7 @@ describe('NavTreePlugin', () => {
 
   test('expose opens the ancestors of the subject but not the subject itself', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [makeHostPlugin([], Atom.make(1))(), NavTreePlugin()],
+      plugins: [makeHostPlugin([], Atom.make(1))(), NavTreePlugin.make()],
     });
 
     const objectId = GraphNode.qualifyId(GraphNode.RootId, OBJECT_SEGMENT);

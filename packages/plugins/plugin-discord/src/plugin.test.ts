@@ -9,19 +9,20 @@ import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
 
-import { meta } from '#meta';
-import { DiscordPlugin } from '#plugin';
+import * as DiscordPlugin from '#meta';
+
+import { DiscordNamespace } from './namespace.ts';
 
 await Harness.preload({
-  plugins: [ClientPlugin.make({}), ConnectorPlugin.make(), ThreadPlugin.make(), DiscordPlugin()],
+  plugins: [ClientPlugin.make({}), ConnectorPlugin.make(), ThreadPlugin.make(), DiscordPlugin.make()],
 });
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+const moduleId = (name: string) => `${DiscordNamespace.key}.module.${name}`;
 
 describe('DiscordPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), ConnectorPlugin.make(), ThreadPlugin.make(), DiscordPlugin()],
+      plugins: [ClientPlugin.make({}), ConnectorPlugin.make(), ThreadPlugin.make(), DiscordPlugin.make()],
     });
 
     // Both modules are dependency-mode with no requires, so they activate in the

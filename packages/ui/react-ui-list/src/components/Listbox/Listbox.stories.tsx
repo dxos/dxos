@@ -218,8 +218,9 @@ const SwatchTile = ({ value, controller }: { value: string; controller: ReorderL
  * A grid of cards: `tiles` columns in a `Viewport` that scrolls vertically, a neutral outline on hover and the focus
  * outline on the selected tile, and tiles dragged to reorder them (`useReorderList` with `axis='horizontal'`).
  */
-const TilesStory = () => {
+const TilesStory = ({ tileWidth }: { tileWidth?: number }) => {
   const [order, setOrder] = useState(SWATCHES);
+  const [large, setLarge] = useState(false);
   const [selected, setSelected] = useState<string | undefined>('green');
   const { controller } = useReorderList<string>({
     items: order,
@@ -236,8 +237,25 @@ const TilesStory = () => {
   });
   const items = order.map((value) => ({ value, label: value[0].toUpperCase() + value.slice(1) }));
   return (
-    <div className='flex flex-col h-80 [grid-column:full]'>
-      <Listbox.Root items={items} tiles={4} value={selected} onValueChange={setSelected} classNames='dx-grow'>
+    // With `tileWidth` the grid fills the viewport (escaping the meta's fixed-width frame), so resizing the window reflows it.
+    <div
+      className={tileWidth ? 'fixed inset-0 flex flex-col dx-base-surface' : 'flex flex-col h-80 [grid-column:full]'}
+    >
+      {tileWidth && (
+        <label className='flex items-center gap-2 p-2'>
+          <input type='checkbox' checked={large} onChange={(event) => setLarge(event.target.checked)} />
+          Large tiles
+        </label>
+      )}
+      <Listbox.Root
+        items={items}
+        {...(tileWidth
+          ? { tileWidth: { min: tileWidth * (large ? 2 : 1), max: tileWidth * (large ? 3 : 1.5) } }
+          : { tiles: 4 })}
+        value={selected}
+        onValueChange={setSelected}
+        classNames='dx-grow'
+      >
         <Listbox.Viewport>
           <Listbox.Content aria-label='Swatches'>
             {order.map((value) => (
@@ -252,7 +270,7 @@ const TilesStory = () => {
 
 /** Tiles wrap into rows that scroll, the selected tile is outlined, and arrow keys move across and down the grid. */
 export const Tiles: Story = {
-  render: TilesStory,
+  render: () => <TilesStory />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const listbox = canvas.getByRole('listbox', { name: 'Swatches' });
@@ -272,4 +290,9 @@ export const Tiles: Story = {
     await userEvent.keyboard('{ArrowDown}{Enter}');
     await waitFor(() => expect(canvas.getByRole('option', { name: 'Blue' })).toHaveAttribute('aria-selected', 'true'));
   },
+};
+
+/** Tiles at least `tileWidth` wide, as many columns as fit: resize the window and they reflow without stretching. */
+export const ResponsiveTiles: Story = {
+  render: () => <TilesStory tileWidth={120} />,
 };

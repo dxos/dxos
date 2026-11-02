@@ -191,6 +191,20 @@ export const cloudflareClefFlash: Model = make('com.cloudflare.model.clef-flash.
 export const decisionModels: readonly Model[] = [typesafeJev, cloudflareJev, cloudflareClef, cloudflareClefFlash];
 
 /**
+ * Cloudflare's Clairic (`@cf/cloudflare/clairic`, https://developers.cloudflare.com/workers-ai/models/clairic/)
+ * on Workers AI: an extraction model, answering typed fields (text spans, dates, numbers, estimates).
+ */
+export const cloudflareClairic: Model = make('com.cloudflare.model.clairic.default', {
+  provider: Provider.workersAi.id,
+  backend: 'clairic',
+  label: 'Clairic (Cloudflare Workers AI)',
+  characteristics: { contextWindow: 65_536, image: true },
+});
+
+/** Every extraction model, for pickers; not in `all`, which lists language models. */
+export const extractionModels: readonly Model[] = [cloudflareClairic];
+
+/**
  * Stands for whichever decision model the space is configured to use, so a consumer that has no reason
  * to pin one asks for this and follows the user's choice. Resolvers substitute it; it is not a model.
  */

@@ -8,8 +8,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Filter, Obj } from '@dxos/echo';
 
-import { meta } from '#meta';
-
+import { DoctorNamespace } from '../../namespace.ts';
 import { getReadyDatabases } from '../helpers.ts';
 import { type DiagnosticIssue, type DiagnosticProvider } from '../types.ts';
 
@@ -22,8 +21,8 @@ import { type DiagnosticIssue, type DiagnosticProvider } from '../types.ts';
  */
 export const skillToolsDiagnostic: DiagnosticProvider = {
   id: 'skill-tools',
-  label: ['diagnostic.skill-tools.label', { ns: meta.profile.key }],
-  description: ['diagnostic.skill-tools.description', { ns: meta.profile.key }],
+  label: ['diagnostic.skill-tools.label', { ns: DoctorNamespace.key }],
+  description: ['diagnostic.skill-tools.description', { ns: DoctorNamespace.key }],
   run: async ({ spaces, graph, capabilities, reportProgress, signal }) => {
     const issues: DiagnosticIssue[] = [];
     const knownTools = new Set<string>();

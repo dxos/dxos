@@ -7,8 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Tree, type TreeNode, type TreeSelectEvent, createStaticTreeModel } from '@dxos/react-ui-list';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
-import { meta } from '#meta';
-
+import { SandboxNamespace } from '../../namespace.ts';
 import type { TreeEntry } from '../../services/RepositoryClient.ts';
 
 /** A tree row: a directory listing entry, or the synthetic root. */
@@ -59,7 +58,7 @@ export const RepositoryFileTree = ({
   onExpandedChange,
   onSelect,
 }: RepositoryFileTreeProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SandboxNamespace.key);
   const root = useMemo(() => buildNode({ path: '', name: '', type: 'root' }, directories), [directories]);
 
   const model = useMemo(

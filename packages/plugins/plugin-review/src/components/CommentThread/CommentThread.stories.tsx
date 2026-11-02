@@ -3,9 +3,9 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
-import { Obj, Ref, Relation } from '@dxos/echo';
+import { Obj, Relation } from '@dxos/echo';
 import { createObject } from '@dxos/echo-client';
 import { type MessageMetadata } from '@dxos/react-ui-thread';
 import { translations as threadTranslations } from '@dxos/react-ui-thread/translations';
@@ -38,16 +38,7 @@ const Render = () => {
   // Live in-memory ECHO objects (no client): the anchored thread the component subscribes to.
   const { anchor, thread } = useMemo(() => {
     const text = createObject(Text.make({ content: DOCUMENT }));
-    const thread = createObject(
-      Thread.make({
-        name: PHRASE,
-        status: 'active',
-        messages: [
-          Ref.make(message('Alice', 'Should we tighten this opening line?')),
-          Ref.make(message('Bob', 'Agreed — it reads a little slow.')),
-        ],
-      }),
-    );
+    const thread = createObject(Thread.make({ name: PHRASE, status: 'active' }));
     const start = DOCUMENT.indexOf(PHRASE);
     const anchor = createObject(
       Relation.make(AnchoredTo.AnchoredTo, {
@@ -59,14 +50,13 @@ const Render = () => {
     return { anchor, thread };
   }, []);
 
-  const onComment = useCallback(
-    (_anchor: AnchoredTo.AnchoredTo, text: string) => {
-      Obj.update(thread, (thread) => {
-        (thread.messages as Ref.Ref<Message.Message>[]).push(Ref.make(message('You', text)));
-      });
-    },
-    [thread],
-  );
+  const [messages, setMessages] = useState(() => [
+    message('Alice', 'Should we tighten this opening line?'),
+    message('Bob', 'Agreed — it reads a little slow.'),
+  ]);
+  const onComment = useCallback((_anchor: AnchoredTo.AnchoredTo, text: string) => {
+    setMessages((messages) => [...messages, message('You', text)]);
+  }, []);
 
   const onResolve = useCallback(
     (_anchor: AnchoredTo.AnchoredTo) => {
@@ -80,6 +70,7 @@ const Render = () => {
   return (
     <CommentThread
       anchor={anchor}
+      messages={messages}
       components={{}}
       getMetadata={getMetadata}
       authorMetadata={authorMetadata}

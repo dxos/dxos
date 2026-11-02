@@ -22,7 +22,7 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Branch, History, Version } from '@dxos/versioning';
 
-import { ReviewPlugin } from '#plugin';
+import * as ReviewPlugin from '#meta';
 import { translations } from '#translations';
 import { ReviewCapabilities } from '#types';
 
@@ -111,8 +111,8 @@ const meta = {
               yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
-        SpacePlugin({}),
-        ReviewPlugin(),
+        SpacePlugin.make({}),
+        ReviewPlugin.make(),
         HistoryProviderPlugin(),
       ],
     })),

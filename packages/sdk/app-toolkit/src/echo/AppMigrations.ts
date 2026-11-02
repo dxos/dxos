@@ -21,11 +21,11 @@ export const NAMESPACE = 'composer.dxos.org';
 export const MIGRATIONS: Migration[] = [
   {
     version: '2024-06-10-collections',
-    next: async () => {},
+    migrations: [],
   },
   {
     version: '2024-06-12/fully-qualified-typenames',
-    next: async () => {},
+    migrations: [],
   },
 ];
 

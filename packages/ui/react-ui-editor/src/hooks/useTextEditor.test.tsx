@@ -87,4 +87,43 @@ describe('useTextEditor', () => {
     );
     expect(view?.state.selection.main.anchor).toBe(7);
   });
+
+  // A document that shrank while closed: the scroll no longer fits, the selection still does.
+  test('restores the part of the state that still fits', async ({ expect }) => {
+    let view: EditorView | undefined;
+    await mount(
+      <RestoringEditor
+        id='doc'
+        initialValue='hello world'
+        scrollTo={500}
+        selection={{ anchor: 3 }}
+        onView={(next) => (view = next)}
+      />,
+    );
+    expect(view?.state.selection.main.anchor).toBe(3);
+  });
+
+  test('restores the part of the state that fits the content once it arrives', async ({ expect }) => {
+    let view: EditorView | undefined;
+    await mount(<RestoringEditor id='doc' scrollTo={500} selection={{ anchor: 5 }} onView={(next) => (view = next)} />);
+
+    await act(async () => {
+      view?.dispatch({ changes: { from: 0, insert: 'hello world' } });
+      await Promise.resolve();
+    });
+    expect(view?.state.selection.main.anchor).toBe(5);
+  });
+
+  test('restores a selection once content arriving over several updates reaches it', async ({ expect }) => {
+    let view: EditorView | undefined;
+    await mount(<RestoringEditor id='doc' selection={{ anchor: 8 }} onView={(next) => (view = next)} />);
+
+    for (const insert of ['hello', ' world']) {
+      await act(async () => {
+        view?.dispatch({ changes: { from: view.state.doc.length, insert } });
+        await Promise.resolve();
+      });
+    }
+    expect(view?.state.selection.main.anchor).toBe(8);
+  });
 });

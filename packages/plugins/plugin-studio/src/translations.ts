@@ -6,8 +6,9 @@ import { Type } from '@dxos/echo';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Frame, Lightbox, MediaArtifact, Storyboard, Variant } from '#types';
+
+import { StudioNamespace } from './namespace.ts';
 
 export const translations = [
   // The request form's own strings (ref pickers, comboboxes) render inside the studio's articles.
@@ -58,7 +59,7 @@ export const translations = [
         'typename.label_other': 'Frames',
         'object-name.placeholder': 'New frame',
       },
-      [meta.profile.key]: {
+      [StudioNamespace.key]: {
         'plugin.name': 'Studio',
         'generate.label': 'Generate',
         'generating.label': 'Generating…',

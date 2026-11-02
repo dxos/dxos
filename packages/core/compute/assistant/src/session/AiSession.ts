@@ -36,7 +36,6 @@ import { ToolExecutionServices } from '../tool-runtime/index.ts';
 import * as AiContext from './AiContext.ts';
 import * as Harness from './Harness.ts';
 import * as Legacy from './Legacy.ts';
-import * as SkillHooks from './SkillHooks.ts';
 import * as ThreadToolkit from './thread-toolkit.ts';
 import { createToolkit } from './toolkit.ts';
 import * as TrajectoryStore from './TrajectoryStore.ts';
@@ -339,14 +338,6 @@ export class Session extends Resource {
       });
 
       markWork('session.request-begun');
-
-      // Fire begin-request hooks declared by the bound skills. These run in the agent's turn
-      // fiber (Tier A only), so they cannot reach the live host (Tier B) — that is the end hook's job.
-      yield* SkillHooks.runHooks({
-        skills,
-        phase: 'begin-request',
-        invoke: (operation, input) => Operation.invoke(operation, input).pipe(Effect.asVoid, Effect.orDie),
-      });
 
       // Turn loop: recompute toolkit and system prompt between turns to pick up dynamically enabled skills.
       // Each iteration is scoped so the MCP connections it opens are closed before the next opens its own.

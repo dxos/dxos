@@ -135,6 +135,7 @@ Field reference for `plugin`:
 | `homePage`    | no       | Homepage URL.                                                                                                                           |
 | `tags`        | no       | List of tags for categorization/discovery.                                                                                              |
 | `screenshots` | no       | Preview images for the plugin's detail view. Each entry is a `{ light?, dark? }` record of theme-specific URLs.                         |
+| `spec`        | no       | Path of the plugin's `.mdl` spec inside the package, e.g. `PLUGIN.mdl`. See [Ship a spec](#ship-a-spec).                                |
 
 Field reference for `publish`:
 
@@ -482,6 +483,11 @@ in the manifest comes from a `package.json` next to `dx.config.ts`, or `0.0.0` w
 
 Things to know:
 
+- A plugin can also be defined entirely in `dx.config.ts` with `Plugin.config({ plugin, modules })`, the way
+  plugins inside the DXOS repository are, naming each module body with
+  `import('./src/capabilities/x.ts', { with: { type: 'module-url' } })`. When `dx.config.ts` defines the plugin,
+  `composerPlugin` builds from it instead of `src/plugin.tsx` and turns it into a static manifest whose module
+  bodies are chunks of the bundle; the `Plugin.define(meta).pipe(...)` layout shown here keeps working.
 - Import only packages the host shares through its import map — the `@dxos/*` libraries and `react`,
   `react-dom` and `effect`; the build leaves those as bare imports. `@dxos/plugin-*` packages are not shared,
   so the build bundles whatever you use from them.
@@ -831,6 +837,80 @@ const WorldClockArticle = ({ db }: { db?: Database.Database }) => {
   );
 };
 ```
+
+### Ship a spec
+
+A plugin can carry its `.mdl` spec (a `PLUGIN.mdl` beside `dx.config.ts`). The registry's detail view then shows
+**Open Specification**, which renders the spec with its definitions sidebar. It takes three changes:
+
+1. Name the file in `dx.config.ts`: `spec: 'PLUGIN.mdl'`.
+2. Contribute its text from the plugin, so the bundle carries it. The module loads the file only when the spec is
+   first opened, and `pluginId` must be the plugin's key:
+
+   ```tsx
+   // src/plugin.tsx
+   import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+
+   export default Plugin.define(meta).pipe(
+     // ...the plugin's other modules.
+     Plugin.addModule(
+       AppCapability.pluginAsset({
+         pluginId: meta.profile.key,
+         path: 'PLUGIN.mdl',
+         content: () => import('../PLUGIN.mdl?raw'),
+         mimeType: 'application/x-mdl',
+       }),
+     ),
+     Plugin.make,
+   );
+   ```
+
+   When `dx.config.ts` defines the plugin with `Plugin.config`, add the module to its `modules` and give it a body
+   of its own:
+
+   ```ts
+   // dx.config.ts, in `modules`
+   Capability.lazyModule(
+     'pluginAsset',
+     {
+       provides: [AppCapabilities.PluginAsset],
+       activatesOn: ActivationEvents.PluginAssetsRequested,
+       environments: ['browser', 'tauri'],
+     },
+     () => import('./src/capabilities/plugin-asset.ts', { with: { type: 'module-url' } }),
+   ),
+   ```
+
+   ```ts
+   // src/capabilities/plugin-asset.ts
+   import * as Effect from 'effect/Effect';
+
+   import * as Capability from '@dxos/app-framework/Capability';
+   import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+
+   import content from '../../PLUGIN.mdl?raw';
+
+   export default Capability.makeModule(() =>
+     Effect.succeed(
+       Capability.contribute(AppCapabilities.PluginAsset, {
+         pluginId: 'org.example.plugin.hello',
+         path: 'PLUGIN.mdl',
+         content,
+         mimeType: 'application/x-mdl',
+       }),
+     ),
+   );
+   ```
+
+3. Declare Vite's `?raw` imports for `tsc`, since the example `tsconfig.json` loads no ambient types:
+
+   ```ts
+   // src/raw.d.ts
+   declare module '*?raw' {
+     const content: string;
+     export default content;
+   }
+   ```
 
 ## Command reference
 

@@ -14,8 +14,9 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref } from '@dxos/echo';
 
-import { meta } from '#meta';
 import { Drawing, DrawingOperation, IllustratorCapabilities } from '#types';
+
+import { IllustratorNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -30,7 +31,7 @@ export default Capability.makeModule(
         Effect.succeed([
           AppNode.makeCompanion({
             variant: 'scores',
-            label: ['scores.label', { ns: meta.profile.key }],
+            label: ['scores.label', { ns: IllustratorNamespace.key }],
             icon: 'ph--gauge--regular',
             data: 'scores',
           }),

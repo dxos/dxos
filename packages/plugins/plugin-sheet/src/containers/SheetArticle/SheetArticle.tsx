@@ -49,9 +49,15 @@ const SheetArticleInner = ({
     return null;
   }
 
+  // A slide shows the sheet as a picture: the used range fitted to the slide, with no status bar.
+  const slide = role === AppSurface.Slide.role;
   return (
     <SheetComponent.Root graph={graph} sheet={sheet} attendableId={attendableId!} ignoreAttention={ignoreAttention}>
-      <Panel.Root classNames={role === AppSurface.Section.role && 'aspect-square w-full max-h-full min-h-0'}>
+      <Panel.Root
+        classNames={
+          role === AppSurface.Section.role ? 'aspect-square w-full max-h-full min-h-0' : slide && 'bg-transparent'
+        }
+      >
         {/* Editing chrome belongs to the main article; an embed or companion shows the bare grid. */}
         {role === AppSurface.Article.role && (
           <Panel.Header>
@@ -59,11 +65,13 @@ const SheetArticleInner = ({
           </Panel.Header>
         )}
         <Panel.Body asChild>
-          <SheetComponent.Content />
+          <SheetComponent.Content fit={slide} />
         </Panel.Body>
-        <Panel.Footer>
-          <SheetComponent.Statusbar />
-        </Panel.Footer>
+        {!slide && (
+          <Panel.Footer>
+            <SheetComponent.Statusbar />
+          </Panel.Footer>
+        )}
       </Panel.Root>
     </SheetComponent.Root>
   );

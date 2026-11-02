@@ -1,0 +1,31 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-terra/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: TerraPlugin
+
+The spec is prose plus QA tests, so the only judged item is QA-1. The autocue flow
+`autocue/planet.mjs` (tagged `@mdl ... test QA-1`) drives the create and reshape steps in a real
+browser: it creates a planet, reseeds it, and nudges the water and tree-density sliders. It does not
+assert that the same seed reproduces the same terrain, and it does not run the delete cleanup, so
+QA-1 is partly automated. It is a recording driver, not part of CI.
+
+Of 1 item: 0 done, 0 untested, 1 partial, 0 diverged, 0 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict QA-1: The planet autocue flow creates a planet and reshapes it live, but checks neither determinism nor cleanup.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-terra/autocue/planet.mjs]
+  note: The flow reseeds and moves the sliders without asserting that the same inputs give the same terrain, and it does not delete the planet. It is a recording driver outside CI.
+```

@@ -23,6 +23,15 @@ export const SessionConfig = Schema.Struct({
   /** The agent that runs the session, by the id its plugin registered (`composer`, `claude-code`, …). */
   harness: Schema.optional(Schema.String),
 
+  /** The model an agent that chooses its own model runs on, by an id the agent offers. */
+  agentModel: Schema.optional(Schema.String),
+
+  /** How hard such an agent thinks (`low` … `max`), by an id the agent offers. */
+  agentEffort: Schema.optional(Schema.String),
+
+  /** How freely such an agent acts without asking (its permission mode), by an id the agent offers. */
+  agentMode: Schema.optional(Schema.String),
+
   /** HALO device key (hex) of the device that runs an external harness; only that device drives it. */
   host: Schema.optional(Schema.String),
 

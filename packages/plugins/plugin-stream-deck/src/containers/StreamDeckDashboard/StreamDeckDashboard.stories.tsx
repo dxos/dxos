@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Annotation, DXN, Obj, Ref, Tag, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Tag, Type } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Dashboard from '@dxos/plugin-space/Dashboard';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
@@ -30,9 +30,8 @@ class StoryItem extends Type.makeObject<StoryItem>(DXN.make('org.dxos.type.test.
 
 const seed = async (space: Space) => {
   const tag = await Tag.findOrCreate(space.db, { label: Dashboard.FAVORITE_TAG });
-  const tagRef = Ref.make(tag);
   for (const name of ['Inbox', 'Roadmap', 'Weekly team notes', 'Contacts']) {
-    space.db.add(Obj.make(StoryItem, { name, [Obj.Meta]: { tags: [tagRef] } }));
+    space.db.add(Obj.make(StoryItem, { name, [Obj.Meta]: { tags: [tag] } }));
   }
   space.db.add(Obj.make(StoryItem, { name: 'Not a favorite' }));
   await space.db.flush({ indexes: true });

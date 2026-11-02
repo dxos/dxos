@@ -22,6 +22,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
 | `test`      | `org.dxos.mdl.test@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
 
 ## Types
 
@@ -193,9 +194,9 @@ feat F-3: Playback
   req F-3.2: Pressing stop MUST stop all layers, close the AudioContext,
     and release all Web Audio resources.
 
-  req F-3.3: When Dream.duration > 0, a countdown timer MUST be displayed.
-    At FADE_OUT_SECONDS (10 s) before the end the master gain MUST fade
-    to zero linearly, and playback MUST stop automatically when remaining === 0.
+  req F-3.3: When Dream.duration > 0, a countdown timer MUST be displayed,
+    and playback MUST stop automatically when remaining === 0. The fade before
+    the stop is [F-6].
 
   req F-3.4: Updating a layer's source, volume, or mute state while playing
     MUST hot-swap only that layer's audio node without restarting others.
@@ -232,6 +233,20 @@ feat F-5: Sample playback
     stopping the audio node.
 ```
 
+```mdl
+feat F-6: Sleep fade
+
+  req F-6.1: When Dream.duration > 0, the master gain MUST ramp linearly to zero
+    over the last SLEEP_FADE_SECONDS (30 s) of playback, or over the whole Dream
+    when Dream.duration is shorter, reaching zero when remaining === 0; playback
+    then stops as [F-3.3] states.
+
+  req F-6.2: Pressing stop MUST stop playback at once, without a fade, whether or
+    not a fade has started.
+
+  req F-6.3: When Dream.duration is 0 or absent, the master gain MUST NOT fade.
+```
+
 ## Acceptance
 
 ```mdl
@@ -262,8 +277,8 @@ scenario T-3: Timed playback auto-stop
   given: a Dream with duration = 15 s, one sample layer
   when: user presses Play
   then:
-    - countdown shows 15:00 and counts down each second
-    - at 10 s remaining the master gain begins fading to zero
+    - countdown shows 00:15 and counts down each second
+    - the master gain begins fading to zero at once, because the Dream is shorter than 30 s
     - at 0 s remaining playback stops automatically
 ```
 
@@ -361,6 +376,39 @@ test QA-1: Build a Dream, add layers, and play it back
         NO `invoke` — nothing upstream ever ran through the operation invoker (the create step
         has none, so there is no live ref to capture), so `space.removeObjects` has nothing to
         target here; deletion is a navtree click, same as creation.
+```
+
+---
+
+## Changelog
+
+```mdl
+decision D-1: A timed Dream fades its master gain to zero over its last 30 seconds, or over the whole Dream when it is shorter, then stops; stopping by hand and untimed Dreams do not fade. Stated as [F-6].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-6, F-6.1, F-6.2, F-6.3]
+  why: Carries the feature plugin-zen.sleep-fade from the feature map (org.dxos.features D-2) into this spec. A timed Dream is for falling asleep, and an abrupt stop wakes the listener.
+```
+
+```mdl
+decision D-2: The fade moves out of [F-3.3] into [F-6.1], and its length goes from 10 s to 30 s; scenario T-3 follows it.
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.3, F-6.1, T-3]
+  why: F-3.3 stated a 10 s fade, which contradicts the 30 s fade of the feature map; one requirement owns the fade so the two cannot disagree again.
+  rejected:
+    - Keep both and let F-6.1 override F-3.3 — two requirements would state different fade lengths.
+```
+
+```mdl
+decision D-3: A manual stop during a fade stops at once, and the fade is not resumed or finished. Fills in [D-1].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-6.2]
+  why: The feature map says stopping by hand is unaffected; a listener who presses stop wants silence now, not 30 s of fading.
 ```
 
 ---

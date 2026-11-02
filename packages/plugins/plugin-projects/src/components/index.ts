@@ -3,7 +3,6 @@
 //
 
 export * from './CreateProjectPanel/index.ts';
-export * from './FeatureBoard/index.ts';
 export * from './FeatureCard/index.ts';
 export * from './FeatureKanban/index.ts';
 export * from './MoveTaskPanel/index.ts';

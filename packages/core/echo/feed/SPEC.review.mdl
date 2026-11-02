@@ -1,35 +1,30 @@
 ---
 spec: github:dxos/dxos/packages/core/echo/feed/SPEC.mdl
-commit: f422d67796344b94c90bf175288bcec84c65e2f9
-date: 2026-10-25
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
 by: agent:claude-code
 ---
 
 # Review: Feed
 
-The spec is a new design, and the code does not implement it yet. The six `FeedStore` ops that
-already exist (`append`, `appendLocal`, `query`, `subscribe`, `countBlocks`, `deleteOldestBlocks`)
-are present and tested. The four new ops are not: `setFeedOptions`, `getFeedOptions`, `trim` and
-`trimAll` exist nowhere in `dxos` or `edge`. No migration adds `feeds.options` or the
-`idx_blocks_feedPrivateId_timestamp` index; the latest migration is
-`0004_sync_state_blocks_to_pull.sql`. `append` and `appendLocal` do not trim, and `query` and
-`subscribe` do not filter by age. The upstream side is missing too: `Feed.RetentionOptions` in
-`@dxos/echo` holds only `cursor`, and `Feed.setRetention` is a no-op.
+The spec is now built. `FeedStore` gained `setFeedOptions`, `getFeedOptions`, `trim`, `trimAll`,
+`takeTrimmed` and `clearTrimmed`; migration `0005_feed_options.sql` adds `feeds.options`, the
+`(feedPrivateId, timestamp)` index and `trimmed_blocks`. `append` (and so `appendLocal` and every
+sync pull) trims in its own transaction, `query` hides blocks past `maxAge`, trims are bounded by
+`TRIM_LIMIT` and oldest-first, a replica never trims unpositioned blocks, and the authority keeps its
+highest-positioned block. EchoHost trims at open and drains with `trimUntilDone`; EDGE's `FeedSpace`
+exposes `setFeedOptions` / `takeTrimmed` over RPC, caps trace feeds via `maxLengthCap`, and finishes
+large or age trims from its alarm. Tests cover nearly all of it in `feed-store.test.ts`,
+`sync.test.ts`, `echo-client-e2e/feed-options.test.ts` and EDGE's `feed-options.workerd.test.ts`.
 
-The only retention in the code today is on EDGE. `FeedSpace._trimFeedIfNeeded` caps trace-namespace
-feeds at `config.queues.maxTraceQueueItems` (default 1000) using `countBlocks` and
-`deleteOldestBlocks`. It runs from the notification-queue alarm, after the append has committed, not
-in the same transaction, and it has no bound per call. This is the base that F-2.6 builds on.
+Of 19 items: 16 done, 2 untested, 1 partial, 0 diverged, 0 missing. Findings:
 
-Of 17 items: 0 done, 0 untested, 3 partial, 0 diverged, 14 missing. Three findings matter most:
-
-- **No options storage at all.** F-1 depends on a column, a migration and two ops that do not exist,
-  and the `Feed` object on the echo side carries neither `maxLength` nor `maxAge`.
-- **No transactional trim.** `deleteOldestBlocks` deletes by `insertionId` in its own statement and
-  has no `TRIM_LIMIT` bound and no `more` signal, so F-2.1, F-2.4, F-2.7 and F-2.8 have nothing to
-  build on beyond that primitive.
-- **EDGE trims out of band.** The trace cap runs on the alarm, after the append commits, so even
-  F-2.6's existing half does not match F-2.1's "in the same transaction".
+- **T-3's device half is not automated.** EDGE's Indexer applying an intent and trimming is tested,
+  but no test pulls from a trimmed EDGE store to a device.
+- **F-1.4 and F-2.5 are true by construction, not by test.** Nothing asserts that options stay out
+  of sync messages, or that a live object's newest version is still trimmed.
+- **`subscribe` only registers a subscription.** The hiding the spec puts on `subscribe` happens in
+  `query`, which reads through the subscription; the effect matches, the shape differs slightly.
 
 ## Extensions
 
@@ -40,171 +35,200 @@ Of 17 items: 0 done, 0 untested, 3 partial, 0 diverged, 14 missing. Three findin
 ## Verdicts
 
 ```mdl
-verdict FeedStore: The six existing ops are present and tested; the four new ops are missing, and the existing ones neither trim nor hide.
-  status: partial
+verdict FeedStore: All ten ops exist as SqlClient Effects, with TRIM_LIMIT and TrimResult, and are tested.
+  status: done
   evidence:
     [github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.append,
      github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.appendLocal,
      github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.query,
      github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.subscribe,
-     github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.countBlocks,
-     github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.deleteOldestBlocks]
+     github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.setFeedOptions,
+     github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.getFeedOptions,
+     github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.trim,
+     github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.trimAll,
+     github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#TRIM_LIMIT]
   tests: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.test.ts, github:dxos/dxos/packages/core/echo/feed/src/sync.test.ts]
   note: |
-    `append`, `appendLocal`, `query`, `subscribe`, `countBlocks` and `deleteOldestBlocks` exist on `FeedStore` as
-    Effects that require `SqlClient`; `feed-store.test.ts` exercises all six (`countBlocks` and `deleteOldestBlocks`
-    in the two tests near L578-700). The ops take an options bag (`{ spaceId, feedNamespace, feedId }`), not a
-    `FeedKey` type, which the spec's note describes informally. Missing: `setFeedOptions`, `getFeedOptions`, `trim`,
-    `trimAll`, `TrimResult` and `TRIM_LIMIT`, which appear nowhere in the dxos or edge repos. The annotations on the
-    existing ops are not met: `append` and `appendLocal` do not trim after insert (`appendLocal` carries a TODO for
-    retention), and `query` and `subscribe` do not hide blocks past `maxAge`.
+    `setFeedOptions` returns `{ changed, trim }` rather than void. `subscribe` only stores a subscription;
+    the `maxAge` filter is applied by `query`, which serves subscription reads.
 ```
 
 ```mdl
-verdict F-1.1: There is no setFeedOptions or getFeedOptions, and no migration adds feeds.options.
-  status: missing
-  note: |
-    Searched `packages/` in dxos and edge for `setFeedOptions`, `getFeedOptions` and `FeedOptions`: no matches (only the
-    unrelated `AppendToAgentFeedOptions` on EDGE). `src/migrations/0001_init.sql` defines `feeds` with `feedPrivateId`,
-    `spaceId`, `feedId` and `feedNamespace` only, and 0002-0004 alter `blocks` and `sync_state`, never `feeds`.
-    `#ensureFeed` creates a feed row only on the first append, so a row for a feed with no blocks has no creation path
-    yet.
-```
-
-```mdl
-verdict F-1.2: Nothing to be idempotent: setFeedOptions does not exist.
-  status: missing
-  note: No `setFeedOptions` op, so there is no options comparison and no trim on apply. Searched as for F-1.1.
-```
-
-```mdl
-verdict F-1.3: Every feed already behaves as if it had no options (indexing on, only the host's limits), but there is no options column to be NULL.
-  status: partial
+verdict F-1.1: setFeedOptions stores JSON in feeds.options, creating the row if needed; getFeedOptions reads it back.
+  status: done
   evidence:
-    [github:dxos/edge/packages/services/db-service/src/worker/feed-space/feed-space.ts#FeedSpace._getMaxQueueSize,
-     github:dxos/edge/packages/services/db-service/src/worker/feed-space/feed-space.ts#FeedSpace._trimFeedIfNeeded]
-  tests: [github:dxos/edge/packages/services/db-service/test/feed-space.workerd.test.ts]
-  note: |
-    De facto the defaults hold: the device store applies no limit, and EDGE applies only its own trace cap
-    (`_getMaxQueueSize` returns `maxTraceQueueItems` for the trace namespace, `undefined` otherwise). The part that
-    is missing is the mechanism the requirement names: a stored, nullable `feeds.options` whose NULL means these
-    defaults, and indexing that can be turned off at all.
+    [github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.setFeedOptions,
+     github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.getFeedOptions,
+     github:dxos/dxos/packages/core/echo/feed/src/migrations/0005_feed_options.sql]
+  tests: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.test.ts]
 ```
 
 ```mdl
-verdict F-1.4: Options do not exist, so the store learns them from no path, including its own index pass.
-  status: missing
-  note: |
-    The sync protocol (`FeedProtocol.AppendRequest`, `QueryRequest` in `packages/core/protocols/src/FeedProtocol.ts`)
-    carries no options, which matches the first clause trivially. Nothing in the indexer (`org.dxos.index-core`)
-    carries a feed-options intent to the store, so the second clause has no implementation. Searched for
-    `setFeedOptions` and `FeedOptions` in dxos and edge.
+verdict F-1.2: Options equal to the stored JSON return changed false and trim nothing.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.setFeedOptions]
+  tests: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.test.ts]
 ```
 
 ```mdl
-verdict F-1.5: FeedSpace has no setFeedOptions method and none is in its rpcMethods.
-  status: missing
-  note: |
-    `FeedSpace` in `edge/packages/services/db-service/src/worker/feed-space/feed-space.ts` declares no
-    `setFeedOptions`, and the `rpcMethods` for `FeedSpace` in `edge/packages/services/db-service/src/durable-objects.ts`
-    do not list one. No Indexer DO call site exists either.
-```
-
-```mdl
-verdict F-2.1: No per-feed maxLength; nothing trims after append, pull or options apply on the device store.
-  status: missing
-  note: |
-    `FeedStore.append` and `FeedStore.appendLocal` insert and return without any trim, and there is no
-    `retention.maxLength` to read. The closest code is EDGE's trace cap (`FeedSpace._trimFeedIfNeeded`), which uses the
-    host's config, not a feed's option, and runs from the notification-queue alarm after the append has committed, not
-    in the same transaction. `deleteOldestBlocks` is the primitive a trim would call.
-```
-
-```mdl
-verdict F-2.2: No maxAge: query and subscribe return every block, and nothing deletes by age.
-  status: missing
-  note: |
-    `FeedStore.query` and `FeedStore.subscribe` filter by feed, position and cursor only, never by `timestamp`. No
-    `trimAll` runs at store open or on the FeedSpace alarm, and there is no `idx_blocks_feedPrivateId_timestamp`
-    index in `src/migrations/`. `blocks.timestamp` exists (0001_init.sql), so the column the filter needs is present.
-```
-
-```mdl
-verdict F-2.3: Neither limit exists, so their combination does not either.
-  status: missing
-  note: No `trim` op and no `maxLength` or `maxAge` in the store or in `Feed.RetentionOptions` (which holds only `cursor`).
-```
-
-```mdl
-verdict F-2.4: A sync pull inserts every block it receives; nothing drops them in that transaction.
-  status: missing
-  note: |
-    `FeedStore.append` (the pull path, via `sync-client.ts`) runs `#insertSealed` in one transaction with no
-    retention step, and `recordPullProgress` advances the pull position independently of any trim. Nothing keeps a
-    dropped block from being requested again because nothing drops one.
-```
-
-```mdl
-verdict F-2.5: There is no retention to delete live-object blocks, so the rule is not implemented.
-  status: missing
-  note: |
-    No retention exists to apply the rule to. The existing primitive already has the stated property:
-    `deleteOldestBlocks` deletes by `insertionId` order with no regard to object ids or superseded versions. The rule
-    says "by position"; `deleteOldestBlocks` orders by `insertionId`, which differs from `position` on a replica, so
-    `trim` should state which order it uses.
-```
-
-```mdl
-verdict F-2.6: EDGE caps trace feeds at maxTraceQueueItems, but no feed option can lower that cap.
-  status: partial
+verdict F-1.3: NULL options mean indexing on and only the host cap; the cap applies with no options.
+  status: done
   evidence:
-    [github:dxos/edge/packages/services/db-service/src/worker/feed-space/feed-space.ts#FeedSpace._getMaxQueueSize,
-     github:dxos/edge/packages/services/db-service/src/worker/feed-space/feed-space.ts#FeedSpace._trimFeedIfNeeded,
-     github:dxos/edge/packages/services/db-service/src/worker/feed-space/feed-space.ts#DEFAULT_TRACE_QUEUE_MAX_SIZE]
-  tests: [github:dxos/edge/packages/services/db-service/test/feed-space.workerd.test.ts]
+    [github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStoreOptions,
+     github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.trim]
+  tests: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.test.ts]
+```
+
+```mdl
+verdict F-1.4: Sync messages carry no options; each store learns them from its own index pass.
+  status: untested
+  evidence:
+    [github:dxos/dxos/packages/core/echo/feed/src/sync-client.ts#SyncClient,
+     github:dxos/dxos/packages/core/echo/feed/src/sync-server.ts#SyncServer,
+     github:dxos/dxos/packages/core/echo/echo-host/src/db-host/echo-host.ts#EchoHost]
+  note: |
+    Neither `SyncClient` nor `SyncServer` reads or sends `feeds.options`, and EchoHost applies options only
+    from feed-options intents. No test asserts that options set on one peer stay off the other.
+```
+
+```mdl
+verdict F-1.5: FeedSpace.setFeedOptions is a public RPC method in rpcMethods and applies options in one store transaction.
+  status: done
+  evidence:
+    [github:dxos/edge/packages/services/db-service/src/worker/feed-space/feed-space.ts#FeedSpace.setFeedOptions,
+     github:dxos/edge/packages/services/db-service/src/durable-objects.ts]
+  tests: [github:dxos/edge/packages/services/db-service/test/feed-options.workerd.test.ts]
   walkthrough:
-    - The cap is maxTraceQueueItems for the trace namespace, falling back to 1000, and undefined otherwise. github:dxos/edge/packages/services/db-service/src/worker/feed-space/feed-space.ts#FeedSpace._getMaxQueueSize
-    - After each queued append notification, the alarm counts the feed's blocks and deletes the excess oldest ones. github:dxos/edge/packages/services/db-service/src/worker/feed-space/feed-space.ts#FeedSpace._trimFeedIfNeeded
+    - The lazy DO proxy lists setFeedOptions and takeTrimmed among the FeedSpace rpcMethods. github:dxos/edge/packages/services/db-service/src/durable-objects.ts
+    - FeedSpace forwards to the store, arms the alarm for leftover or age trims, and discards the trimmed log of unindexed shards. github:dxos/edge/packages/services/db-service/src/worker/feed-space/feed-space.ts#FeedSpace.setFeedOptions
+    - The store writes the options and trims in one transaction. github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.setFeedOptions
+```
+
+```mdl
+verdict F-2.1: append, every pull (which goes through append) and setFeedOptions trim maxLength in the same transaction.
+  status: done
+  evidence:
+    [github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.append,
+     github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.appendLocal,
+     github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.setFeedOptions]
+  tests: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.test.ts, github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed-options.test.ts]
+```
+
+```mdl
+verdict F-2.2: query hides expired blocks; deletes happen on append, pull, apply, EchoHost open and the EDGE alarm; the authority keeps its top block.
+  status: done
+  evidence:
+    [github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.query,
+     github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.trimAll,
+     github:dxos/dxos/packages/core/echo/echo-host/src/db-host/echo-host.ts#EchoHost,
+     github:dxos/edge/packages/services/db-service/src/worker/feed-space/feed-space.ts#FeedSpace]
+  tests:
+    [github:dxos/dxos/packages/core/echo/feed/src/feed-store.test.ts,
+     github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed-options.test.ts,
+     github:dxos/edge/packages/services/db-service/test/feed-options.workerd.test.ts]
+  walkthrough:
+    - Reads add a not-expired condition per feed with maxAge (unpositioned blocks stay visible on a replica). github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.query
+    - Trim deletes by timestamp but keeps the authority's highest-positioned block. github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.trim
+    - EchoHost runs trimAll for every space with options when it opens. github:dxos/dxos/packages/core/echo/echo-host/src/db-host/echo-host.ts#EchoHost
+    - FeedSpace's alarm runs a retention pass on a fixed age cadence while any feed has maxAge. github:dxos/edge/packages/services/db-service/src/worker/feed-space/feed-space.ts#FeedSpace
+```
+
+```mdl
+verdict F-2.3: Length and age conditions are OR-ed, so a block breaking either is dropped.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.trim]
+  tests: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.test.ts]
+```
+
+```mdl
+verdict F-2.4: Pulled blocks are trimmed in the inserting transaction, and the pull cursor advances past them.
+  status: done
+  evidence:
+    [github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.append,
+     github:dxos/dxos/packages/core/echo/feed/src/sync-client.ts#SyncClient]
+  tests: [github:dxos/dxos/packages/core/echo/feed/src/sync.test.ts]
+```
+
+```mdl
+verdict F-2.5: Trim orders by insertionId and never compacts superseded versions.
+  status: untested
+  evidence: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.appendLocal]
   note: |
-    Done: the "with no maxLength" clause. `_getMaxQueueSize` applies `config.queues.maxTraceQueueItems` (default
-    `DEFAULT_TRACE_QUEUE_MAX_SIZE = 1000`), and the workerd test "trace namespace keeps only the latest entries" checks
-    it. Missing: there are no stored options, so the limit is never `min(retention.maxLength, maxTraceQueueItems)`.
-    The trim also runs in its own statements from the alarm and deletes the whole excess in one call, unbounded.
+    The trim has no notion of object versions, and `appendLocal`'s doc states the no-compaction rule. No test
+    trims a block holding the newest version of a live feed object.
 ```
 
 ```mdl
-verdict F-2.7: There is no trim or trimAll, no TRIM_LIMIT and no more flag.
-  status: missing
+verdict F-2.6: EDGE caps trace feeds at min(maxLength, maxTraceQueueItems) via maxLengthCap.
+  status: done
+  evidence:
+    [github:dxos/edge/packages/services/db-service/src/worker/feed-space/feed-space.ts#FeedSpace,
+     github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStoreOptions]
+  tests: [github:dxos/edge/packages/services/db-service/test/feed-options.workerd.test.ts, github:dxos/dxos/packages/core/echo/feed/src/feed-store.test.ts]
+  walkthrough:
+    - FeedSpace builds its store with maxLengthCap returning maxTraceQueueItems for the trace namespace. github:dxos/edge/packages/services/db-service/src/worker/feed-space/feed-space.ts#FeedSpace
+    - The store takes the smaller of the feed's maxLength and the cap, or the cap alone. github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStoreOptions
+```
+
+```mdl
+verdict F-2.9: A store without assignPositions only trims blocks with a position.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.trim]
+  tests: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.test.ts]
+```
+
+```mdl
+verdict F-2.10: Trim inserts each deleted block into trimmed_blocks in the same transaction; the sync client no longer reads an empty cursor slot as a rewind.
+  status: done
+  evidence:
+    [github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.takeTrimmed,
+     github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.clearTrimmed,
+     github:dxos/dxos/packages/core/echo/feed/src/sync-client.ts#SyncClient]
+  tests: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.test.ts, github:dxos/dxos/packages/core/echo/feed/src/sync.test.ts]
+```
+
+```mdl
+verdict F-2.7: Each call deletes at most TRIM_LIMIT oldest-first and reports more; EchoHost loops at once, EDGE from the alarm.
+  status: done
+  evidence:
+    [github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#TRIM_LIMIT,
+     github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.trimAll,
+     github:dxos/dxos/packages/core/echo/echo-host/src/db-host/echo-host.ts#EchoHost,
+     github:dxos/edge/packages/services/db-service/src/worker/feed-space/feed-space.ts#FeedSpace]
+  tests: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.test.ts, github:dxos/edge/packages/services/db-service/test/feed-options.workerd.test.ts]
+  walkthrough:
+    - The store bounds each call by the first candidate past the budget and reports more. github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.trimAll
+    - EchoHost repeats the trim with trimUntilDone until more is false. github:dxos/dxos/packages/core/echo/echo-host/src/db-host/echo-host.ts#EchoHost
+    - FeedSpace sets TRIM_PENDING and its alarm repeats trimAll a bounded number of times per run. github:dxos/edge/packages/services/db-service/src/worker/feed-space/feed-space.ts#FeedSpace
+```
+
+```mdl
+verdict F-2.8: Every partial trim is a prefix of the full one, so repeats converge.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.trim]
+  tests: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.test.ts]
+  note: Repeated trims are tested; concurrent trims rely on SQLite transaction serialization and have no dedicated test.
+```
+
+```mdl
+verdict T-1: Retention by length is tested at the store and through Feed.query end to end.
+  status: done
+  tests: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.test.ts, github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed-options.test.ts]
+```
+
+```mdl
+verdict T-2: Retention by age hides at once and deletes at the next append, at the store and end to end.
+  status: done
+  tests: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.test.ts, github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed-options.test.ts]
+```
+
+```mdl
+verdict T-3: EDGE's Indexer applying a retention intent is tested; a device pulling the trimmed feed from EDGE is not.
+  status: partial
+  evidence: [github:dxos/edge/packages/services/db-service/src/worker/indexer/indexer.ts#Indexer]
+  tests: [github:dxos/edge/packages/services/db-service/test/feed-options.workerd.test.ts]
   note: |
-    `deleteOldestBlocks` takes a caller-chosen `count`, deletes oldest first by `insertionId`, and returns the number
-    deleted; it has no 10,000 cap and no `more` result. EDGE's `_trimFeedIfNeeded` passes the whole excess as `count`,
-    so a large first trim is unbounded in one call. No EchoHost or FeedSpace loop repeats a trim.
-```
-
-```mdl
-verdict F-2.8: No trim exists to be idempotent or safe under concurrency.
-  status: missing
-  note: |
-    No `trim` op. `deleteOldestBlocks` is not idempotent by itself (it deletes `count` more blocks on every call); the
-    convergence the requirement describes must come from `trim` computing the excess from the limits each time.
-```
-
-```mdl
-verdict T-1: No test applies retention { maxLength: 5 } and checks that only 5 blocks remain.
-  status: missing
-  note: |
-    `feed-store.test.ts` tests `countBlocks` and `deleteOldestBlocks` with an explicit count, which is not retention by
-    options. EDGE's trace-trim workerd test is the closest, but uses the host config, not a feed's `maxLength`.
-```
-
-```mdl
-verdict T-2: No test checks that expired items are hidden from query or deleted on the next append.
-  status: missing
-  note: No test sets `maxAge` or checks `timestamp`-based filtering; searched `src/*.test.ts` in `@dxos/feed` and the EDGE db-service tests.
-```
-
-```mdl
-verdict T-3: No test runs the EDGE Indexer DO's options intent or FeedSpace.setFeedOptions.
-  status: missing
-  note: Neither `FeedSpace.setFeedOptions` nor an options intent exists, so no EDGE test can run it; searched `edge/packages/services/db-service/test/`.
+    `Indexer feed options` tests the intent applied to FeedSpace and trimmed items leaving the index, and
+    `setFeedOptions with maxLength keeps the newest blocks` checks the stored count. No test syncs a device
+    against that EDGE store; `sync.test.ts` covers a client trimming with its own options only.
 ```

@@ -15,8 +15,9 @@ import * as Combobox from '@dxos/react-ui/Combobox';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { meta } from '#meta';
 import { AssistantCapabilities, Ollama } from '#types';
+
+import { AssistantNamespace } from '../../namespace.ts';
 
 /** Quick-pick model names (Ollama pull tags) sourced from the curated catalog. */
 const QUICK_PICKS = Model.forProvider(Provider.ollama.id).map((model) => model.backend);
@@ -39,7 +40,7 @@ export const OllamaModels = () => {
 };
 
 export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   // Explicit subscription: the list and badges must re-render as pulls/installs/loads land.
   const state = useAtomValue(manager.state);
   const [query, setQuery] = useState('');

@@ -1,0 +1,130 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-chess-com/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: ChessComPlugin
+
+The plugin implements the whole spec. `ChessComAccount.Account` has every listed field, a child games
+feed and the `chess.com` foreign key; the create form asks only for a username; `SyncGames` loads the
+player profile, walks the monthly archives, imports each game as a `Game` with a `Chess.State`
+variant and skips games whose `game/<uuid>` key is already in the feed. `sync-games.test.ts` covers
+import and dedup against a stubbed chess.com API. The article lists games in a masonry of
+`CardContent` surfaces.
+
+The gaps are test coverage, not behaviour: nothing tests the create-object path, the foreign key on
+the account, the applied profile fields or the article. Two small differences: the username is
+lower-cased before it is stored and keyed, and creating an account also schedules a first sync.
+
+Of 14 items: 6 done, 6 untested, 0 partial, 0 diverged, 2 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict ChessComAccount: The type has every spec field, a child games feed and the chess.com foreign key, under the spec typename.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-chess-com/src/types/ChessComAccount.ts#Account, github:dxos/dxos/packages/plugins/plugin-chess-com/src/types/ChessComAccount.ts#makeAccount]
+  tests: [github:dxos/dxos/packages/plugins/plugin-chess-com/src/operations/sync-games.test.ts]
+  note: `makeAccount` lower-cases and trims the username before storing it and using it as the key id.
+```
+
+```mdl
+verdict ChessGameArticle: The article has a Sync games toolbar action over a masonry of game cards.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-chess-com/src/containers/ChessGameArticle/ChessGameArticle.tsx#ChessGameArticle, github:dxos/dxos/packages/plugins/plugin-chess-com/src/capabilities/react-surface.ts]
+  note: No story or test renders it. It is also contributed on the Section role, and shows an empty-state message when the feed has no games.
+```
+
+```mdl
+verdict SyncGames: SyncGames applies the profile, fetches all archived games and appends new Game objects, returning appended.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-chess-com/src/types/ChessComOperation.ts#SyncGames, github:dxos/dxos/packages/plugins/plugin-chess-com/src/operations/sync-games.ts, github:dxos/dxos/packages/plugins/plugin-chess-com/src/services/chess-com-api.ts#fetchAllGames]
+  tests: [github:dxos/dxos/packages/plugins/plugin-chess-com/src/operations/sync-games.test.ts]
+  walkthrough:
+    - The operation declares an account ref in and appended out. github:dxos/dxos/packages/plugins/plugin-chess-com/src/types/ChessComOperation.ts#SyncGames
+    - The API client fetches the archive list, then each month's games. github:dxos/dxos/packages/plugins/plugin-chess-com/src/services/chess-com-api.ts#fetchAllGames
+    - The handler applies the profile, filters out known uuids and appends Game plus Chess.State objects. github:dxos/dxos/packages/plugins/plugin-chess-com/src/operations/sync-games.ts
+```
+
+```mdl
+verdict F-1.1: The create entry's input schema has only a username field.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-chess-com/src/types/ChessComAccount.ts#CreateAccountSchema, github:dxos/dxos/packages/plugins/plugin-chess-com/src/capabilities/create-object.ts]
+  note: No test drives the create-object entry. It also schedules a first `SyncGames` after adding the account.
+```
+
+```mdl
+verdict F-1.2: makeAccount stamps Obj.Meta keys with source chess.com and the normalized username.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-chess-com/src/types/ChessComAccount.ts#makeAccount]
+  note: No test reads the account's foreign key; the sync test only checks game keys indirectly through dedup.
+```
+
+```mdl
+verdict F-1.3: makeAccount creates a child Feed and refs it from games.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-chess-com/src/types/ChessComAccount.ts#makeAccount]
+  tests: [github:dxos/dxos/packages/plugins/plugin-chess-com/src/operations/sync-games.test.ts]
+```
+
+```mdl
+verdict F-2.1: SyncGames fetches the Published API player profile and applies the defined fields to the account.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-chess-com/src/services/chess-com-api.ts#fetchPlayer, github:dxos/dxos/packages/plugins/plugin-chess-com/src/types/ChessComAccount.ts#applyProfile]
+  note: The sync test stubs the player endpoint but asserts no profile field on the account.
+```
+
+```mdl
+verdict F-2.2: Each archived game becomes a Game named "white vs black" with a Chess.State holding PGN and FEN.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-chess-com/src/services/chess-com-api.ts#fetchAllGames, github:dxos/dxos/packages/plugins/plugin-chess-com/src/operations/sync-games.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-chess-com/src/operations/sync-games.test.ts]
+```
+
+```mdl
+verdict F-2.3: Re-sync skips games whose game/<uuid> foreign key is already in the feed.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-chess-com/src/operations/sync-games.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-chess-com/src/operations/sync-games.test.ts]
+```
+
+```mdl
+verdict F-3.1: The article queries Game objects from the account feed and lays them out with Masonry.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-chess-com/src/containers/ChessGameArticle/ChessGameArticle.tsx#ChessGameArticle]
+  note: No story or test renders the gallery.
+```
+
+```mdl
+verdict F-3.2: Each tile renders a CardContent surface for its Game inside an ObjectCard.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-chess-com/src/containers/ChessGameArticle/ChessGameArticle.tsx#ChessGameArticle]
+  note: The tile is the internal `GameTile`; nothing tests that plugin-chess's card fills it.
+```
+
+```mdl
+verdict T-1: No test creates an account from a username and checks the foreign key.
+  status: missing
+  note: `sync-games.test.ts` and `clear-synced-games.test.ts` call `makeAccount` but assert neither the username nor the key.
+```
+
+```mdl
+verdict T-2: The sync test re-runs SyncGames against the same stubbed archive and expects appended 0.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-chess-com/src/operations/sync-games.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-chess-com/src/operations/sync-games.test.ts]
+```
+
+```mdl
+verdict QA-1: No automation runs the create, sync, re-sync and clear round-trip.
+  status: missing
+  note: No e2e test covers it; the operations are unit-tested separately against a stub API.
+```

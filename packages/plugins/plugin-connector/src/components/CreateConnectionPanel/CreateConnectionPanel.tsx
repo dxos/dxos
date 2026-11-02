@@ -17,8 +17,7 @@ import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import * as Banner from '@dxos/react-ui/Banner';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
-import { meta } from '#meta';
-
+import { ConnectorNamespace } from '../../namespace.ts';
 import { Connector, type ConnectorEntry, type ConnectorKind } from '../../types/ConnectorSpec.ts';
 
 /** Picker order: connecting as Composer first, then as yourself, then your own credentials. */
@@ -50,7 +49,7 @@ export const CreateConnectionPanel = ({
   onCancel,
   connectors: connectorsProp,
 }: CreateConnectionPanelProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(ConnectorNamespace.key);
   const capabilityConnectors = Hooks.useCapabilities(Connector).flat();
   const connectors = connectorsProp ?? capabilityConnectors;
   const [connectorId, setConnectorId] = useState<string>();

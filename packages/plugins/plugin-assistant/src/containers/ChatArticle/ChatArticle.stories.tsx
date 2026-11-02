@@ -55,7 +55,7 @@ import { File, Message, Organization, Outline, Person, Task } from '@dxos/types'
 
 import { ChatDetailsSection } from '#components';
 import { usePromptActions } from '#hooks';
-import { AssistantPlugin } from '#plugin';
+import * as AssistantPlugin from '#meta';
 import { translations } from '#translations';
 import { ChatSurface } from '#types';
 
@@ -324,8 +324,8 @@ const meta = {
                 yield* Effect.promise(() => space.db.flush({ indexes: true }));
               }),
           }),
-          RoutinePlugin(),
-          AssistantPlugin({
+          RoutinePlugin.make(),
+          AssistantPlugin.make({
             // Only the stories that declare their turns are scripted; the rest keep the real service, so
             // `Default` stays a place to actually talk to a model rather than one with an empty script.
             aiServiceMiddleware: messages.length > 0 ? scriptedAiServiceMiddleware(messages) : undefined,
@@ -335,7 +335,7 @@ const meta = {
           // operations this plugin owns. Without it the system prompt advertises `space-*` tools the
           // toolkit cannot build, and the first turn that takes the model up on one dies with
           // ToolNotFoundError.
-          SpacePlugin({}),
+          SpacePlugin.make({}),
           // Contributes the task verbs the `/task:*` commands invoke.
           TasksPlugin.make(),
           ...(workspace ? [FilePlugin.make()] : []),

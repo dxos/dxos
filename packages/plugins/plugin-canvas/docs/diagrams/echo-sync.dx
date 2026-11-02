@@ -1,0 +1,24 @@
+diagram @ -128,-64 flow=down box=256x128 grid=384x192
+group device "Device" {
+  node Proxy "Object proxy" ref="packages/core/echo/echo-client/src" color=blue
+  node Core "ObjectCore" ref="packages/core/echo/echo-client/src/core-db"
+  node Host "AutomergeHost" ref="packages/core/echo/echo-host/src/automerge/automerge-host.ts" color=violet
+  node Sqlite "SQLite" ref="packages/core/echo/echo-host/src/automerge/sqlite-storage-adapter.ts" color=green
+}
+group peers "Peers" {
+  node Mesh "MESH swarm" ref="packages/core/mesh" color=orange
+  node Peer "Other devices"
+}
+group cloud "EDGE" color=light-violet {
+  node Router "Router" ref="edge/packages/services/router"
+  node DbService "db-service" ref="edge/packages/services/db"
+  node Subduction "Subduction" ref="edge/packages/services/db" color=violet
+}
+edge Proxy -> Core "mutate"
+edge Core -> Host "change"
+edge Host -> Sqlite "persist"
+edge Host -> Mesh "replicate"
+edge Mesh -> Peer "sync"
+edge Host -> Router "WebSocket"
+edge Router -> DbService
+edge DbService -> Subduction "compact"

@@ -18,12 +18,12 @@ describe('slideThemeStyle', () => {
   });
 
   test('light and dark force a color scheme', () => {
-    expect(slideThemeStyle({ name: 'light' }).colorScheme).toBe('light');
-    expect(slideThemeStyle({ name: 'dark' }).colorScheme).toBe('dark');
+    expect(slideThemeStyle({ base: 'light' }).colorScheme).toBe('light');
+    expect(slideThemeStyle({ base: 'dark' }).colorScheme).toBe('dark');
   });
 
   test('serif changes body and heading fonts only', () => {
-    const style = slideThemeStyle({ name: 'serif' });
+    const style = slideThemeStyle({ base: 'serif' });
     expect(style['--slide-font-body']).toMatch(/serif$/);
     expect(style['--slide-font-heading']).toMatch(/serif$/);
     expect(style['--slide-font-mono']).toBe('var(--font-mono)');
@@ -38,7 +38,7 @@ describe('slideThemeStyle', () => {
   });
 
   test('the text and code fonts are picked separately', () => {
-    const style = slideThemeStyle({ name: 'serif', font: 'sans', monoFont: 'fira' });
+    const style = slideThemeStyle({ base: 'serif', font: 'sans', monoFont: 'fira' });
     expect(style['--slide-font-body']).toContain('Inter');
     expect(style['--slide-font-heading']).toContain('Inter');
     expect(style['--slide-font-mono']).toContain('Fira Code');
@@ -57,8 +57,8 @@ describe('slideThemeStyle', () => {
 describe('SlideTheme.Settings', () => {
   const decode = Schema.decodeUnknownResult(SlideTheme.Settings);
 
-  test('accepts a name with overrides', () => {
-    expect(Result.isSuccess(decode({ name: 'dark', accent: '#f80' }))).toBe(true);
+  test('accepts a base theme with overrides', () => {
+    expect(Result.isSuccess(decode({ base: 'dark', accent: '#f80' }))).toBe(true);
   });
 
   test('accepts only the named fonts', () => {
@@ -72,8 +72,8 @@ describe('SlideTheme.Settings', () => {
     expect(['#ab', '#abcde', '#abcdefa', '#abcdefabc'].some(SlideTheme.isColor)).toBe(false);
   });
 
-  test('rejects unknown names and unsafe values', () => {
-    expect(Result.isSuccess(decode({ name: 'neon' }))).toBe(false);
+  test('rejects unknown base themes and unsafe values', () => {
+    expect(Result.isSuccess(decode({ base: 'neon' }))).toBe(false);
     expect(Result.isSuccess(decode({ background: 'url(x)' }))).toBe(false);
   });
 });

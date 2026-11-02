@@ -15,6 +15,7 @@ import { DIAGRAM_COMMANDS } from './compiled.ts';
 import { loadDiagramDrawings } from './diagrams.ts';
 import { type Docs, makeDocs } from './docs.ts';
 import { makeEchoDeck } from './echo-deck.ts';
+import { makeEchoBenchmarks, makeEchoDesign } from './echo-design.ts';
 import { makePluginMetrics } from './metrics.ts';
 import { architectureDiagrams } from './sets.ts';
 
@@ -26,6 +27,10 @@ export type Provides = {
   readonly echo: Presentation.Presentation;
   /** Per-plugin LOC, PRs and tests, with a bar chart of them. */
   readonly metrics: Sheet.Sheet;
+  /** The ECHO design document, embedding the three ECHO diagrams and the benchmarks sheet. */
+  readonly design: Markdown.Document;
+  /** ECHO benchmark timings against their targets, with a bar chart. */
+  readonly benchmarks: Sheet.Sheet;
 };
 
 /** Composer and EDGE as nested canvas drawings, with the three documents that introduce them and a sheet of plugin metrics. Spec: `CONTENT.md`. */
@@ -58,10 +63,18 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('archi
       }
       const echo = yield* Database.add(makeEchoDeck(Object.fromEntries(drawings)));
       const metrics = yield* Database.add(makePluginMetrics());
+      const [model, sync, query] = ['echo-model', 'echo-sync', 'echo-query'].map((id) => drawings.get(id));
+      if (!model || !sync || !query) {
+        return yield* Effect.die(new Error('The architecture diagram set is missing an ECHO diagram.'));
+      }
+      const benchmarks = yield* Database.add(makeEchoBenchmarks());
+      const design = yield* Database.add(
+        makeEchoDesign({ 'echo-model': model, 'echo-sync': sync, 'echo-query': query, 'echo-benchmarks': benchmarks }),
+      );
       yield* SampleSpace.collection(
         'Architecture',
-        [docs.composer, docs.dxos, docs.edge, echo, composer, edge, metrics].map((object) => Ref.make(object)),
+        [docs.composer, docs.dxos, docs.edge, design, echo, composer, edge, metrics].map((object) => Ref.make(object)),
       );
-      return { drawings, docs, echo, metrics };
+      return { drawings, docs, echo, metrics, design, benchmarks };
     }),
 });

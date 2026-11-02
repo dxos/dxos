@@ -265,7 +265,7 @@ const HomeStory = ({ lowLatency = true, handsFree: handsFreeProp = false }: Stor
 
       <Panel.Root classNames='w-96 dx-base-surface'>
         <Panel.Header>
-          <div className='flex flex-col gap-2 p-3'>
+          <div className='flex flex-col gap-2 p-trim-md'>
             <Input.Switch label='Low latency' checked={fast} onCheckedChange={({ checked }) => setFast(checked)} />
             <Input.Switch
               label='Hands-free'

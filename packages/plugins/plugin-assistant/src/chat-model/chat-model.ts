@@ -34,7 +34,7 @@ import type * as Process from '@dxos/compute/Process';
 import type * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Skill from '@dxos/compute/Skill';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, Feed, Filter, Obj, Query, Ref, type Registry } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Order, Query, Ref, type Registry, Scope } from '@dxos/echo';
 import { UsageQuotaExceededError } from '@dxos/edge-client';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
@@ -45,6 +45,7 @@ import { markWork } from '@dxos/util';
 import { TurnReviewSkill } from '#skills';
 import { AssistantOperation } from '#types';
 
+import { consentGuard } from '../util/consent-guard.ts';
 import { findInCause } from '../util/error-cause.ts';
 import { arrangeLanes, makeLaneRowCache } from './lanes.ts';
 import { Outbox, type OutboxEntry, PromptCancelledError } from './outbox.ts';
@@ -348,15 +349,14 @@ export class ChatModel {
     this.outbox = this.#outbox.entries;
     // Held for the chat model's life: a query's atom is memoized per result, so the query must be too.
     const db = Obj.getDatabase(this._feed);
-    this.trajectory = db
+    const feedUri = Feed.getFeedUri(this._feed);
+    this.trajectory =
+      db && feedUri
       ? makeTrajectoryView(
           db.query(
-            Query.select(
-              Filter.and(
-                Filter.or(...TrajectoryStore.types.map((type) => Filter.type(type))),
-                Filter.feedCursor({ begin: Feed.START, order: 'local' }),
-              ),
-            ).from(this._feed),
+            Query.select(Filter.or(...TrajectoryStore.types.map((type) => Filter.type(type))))
+              .from(Scope.feed(feedUri.toString(), { walk: {} }))
+              .orderBy(Order.natural('asc')),
           ).atom,
         )
       : Atom.make(EMPTY_VIEW);
@@ -702,9 +702,12 @@ export class ChatModel {
       // The model is the chat's, so the provider has to be the one that serves THAT model: the
       // configured provider can have moved on since the chat made its selection.
       const model = chat.session?.model ?? selected;
+      const location = Agent.chatLocation(chat);
       return yield* AgentService.getSession(chat, {
         provider: model ? providerForModel(model, this._options.provider) : this._options.provider,
-        location: Agent.chatLocation(chat),
+        location,
+        // A guard is a closure, so only a local agent can ask the person for consent.
+        ...(location === 'local' ? { guard: yield* consentGuard(chat) } : {}),
       });
     });
   }

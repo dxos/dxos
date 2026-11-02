@@ -20,8 +20,9 @@ import * as Tooltip from '@dxos/react-ui/Tooltip';
 import type * as Util from '@dxos/react-ui/Util';
 import { ComplexMap, hexToFallback } from '@dxos/util';
 
-import { meta } from '#meta';
 import { SpaceCapabilities, SpaceSchema } from '#types';
+
+import { SpaceNamespace } from '../../namespace.ts';
 
 // TODO(thure): Get/derive these values from protocol
 const REFRESH_INTERVAL = 5000;
@@ -255,7 +256,7 @@ export type SmallPresenceProps = {
 } & Pick<AttentionGlyphProps, 'attended' | 'containsAttended'>;
 
 export const SmallPresence = ({ count = 0, attended, containsAttended }: SmallPresenceProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
 
   return (
     <Tooltip.Trigger asChild content={t('presence.label', { count })} side='bottom'>

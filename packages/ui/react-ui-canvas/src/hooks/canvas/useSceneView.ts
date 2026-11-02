@@ -121,6 +121,15 @@ export const useSceneView = ({
   const fitting = useAtomValue(fittingAtom);
   const setFitting = useCallback((value: boolean) => registry.set(fittingAtom, value), [registry, fittingAtom]);
   const exitFit = useCallback(() => setFitting(false), [setFitting]);
+  // A refit the host asks for frames the scene even after the user took the camera over: it re-enters fit mode, and
+  // the fit below then animates to the new frame.
+  const refitKeyRef = useRef(refitKey);
+  useEffect(() => {
+    if (refitKeyRef.current !== refitKey) {
+      refitKeyRef.current = refitKey;
+      setFitting(true);
+    }
+  }, [refitKey, setFitting]);
   // Seeded once per atoms, before the host hears of any change, so restoring the toggles reports nothing back.
   const reportedRef = useRef<SceneDisplay | undefined>(undefined);
   useLayoutEffect(() => {

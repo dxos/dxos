@@ -16,8 +16,10 @@ import { Filter, Obj } from '@dxos/echo';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { Task, TaskSet } from '@dxos/types';
 
-import { QUICK_ENTRY_DIALOG, meta } from '#meta';
 import { OutlineOperation } from '#types';
+
+import { QUICK_ENTRY_DIALOG } from '../constants.ts';
+import { TasksNamespace } from '../namespace.ts';
 
 const matchTaskSet = (node: AppGraphNode.Node) =>
   Obj.instanceOf(TaskSet.TaskSet, node.data) ? Option.some(node.data) : Option.none();
@@ -39,7 +41,7 @@ export default Capability.makeModule(
                 });
               }),
               properties: {
-                label: ['quick-entry.label', { ns: meta.profile.key }],
+                label: ['quick-entry.label', { ns: TasksNamespace.key }],
                 icon: 'ph--calendar-plus--regular',
               },
             }),

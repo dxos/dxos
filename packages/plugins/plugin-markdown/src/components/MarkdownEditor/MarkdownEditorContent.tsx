@@ -2,12 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
+import { redo, redoDepth, undo, undoDepth } from '@codemirror/commands';
 import { Compartment } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import type * as Atom from 'effect/reactivity/Atom';
 import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useMemo } from 'react';
 
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { INITIAL_FOCUS_ATTRIBUTE } from '@dxos/react-focus';
 import {
@@ -37,8 +39,7 @@ import { type EditorViewMode } from '@dxos/ui-editor/types';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
-import { meta } from '#meta';
-
+import { MarkdownNamespace } from '../../namespace.ts';
 import { type MarkdownEditorToolbarProps } from './MarkdownEditorToolbar.tsx';
 
 export type MarkdownEditorContentProps = Util.ThemedClassName<{
@@ -85,7 +86,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
     },
     forwardedRef,
   ) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(MarkdownNamespace.key);
     const themeMode = Hooks.useThemeMode();
     const registry = useContext(RegistryContext);
 
@@ -182,6 +183,21 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
         editorView.dispatch({ effects: dynamicCompartment.reconfigure(dynamicExtensions()) });
       }
     }, [editorView, dynamicExtensions]);
+
+    // The editor's own history backs the context menu's undo and redo; cut, copy and paste stay the browser's.
+    useEffect(() => {
+      if (!editorView) {
+        return;
+      }
+      const run = (command: (view: EditorView) => boolean) => () => {
+        editorView.focus();
+        command(editorView);
+      };
+      return AppNode.registerEditCommands(editorView.dom, {
+        undo: { run: run(undo), enabled: () => !editorView.state.readOnly && undoDepth(editorView.state) > 0 },
+        redo: { run: run(redo), enabled: () => !editorView.state.readOnly && redoDepth(editorView.state) > 0 },
+      });
+    }, [editorView]);
 
     useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => editorView, [editorView]);
 

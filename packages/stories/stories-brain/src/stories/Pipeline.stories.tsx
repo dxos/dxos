@@ -500,7 +500,7 @@ const ThreadList = ({ result }: { result: { threads: readonly Thread[] } }) => (
 );
 
 const TranscriptView = ({ lines, summary }: { lines: readonly string[]; summary?: string }) => (
-  <div className='flex flex-col gap-3 p-3 h-full overflow-auto'>
+  <div className='flex flex-col gap-3 p-trim-md h-full overflow-auto'>
     {summary && (
       <div className='flex flex-col gap-1'>
         <span className='text-sm text-fg-muted'>Summary</span>
@@ -533,7 +533,7 @@ const meta = {
       await space.db.flush({ indexes: true, secondaryIndexes: true });
     },
     plugins: [
-      SpacePlugin({}),
+      SpacePlugin.make({}),
       MarkdownPlugin.make(),
       TranscriptionPlugin.make(),
       BrainPlugin.make(),

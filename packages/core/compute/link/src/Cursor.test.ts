@@ -540,6 +540,24 @@ describe('token accessors', () => {
     expect([...Cursor.readTagHeads(cursor)!]).toEqual(['head-a']);
   });
 
+  test('deltaIds persist while the token holds and clear when it advances or is cleared', async ({ expect }) => {
+    const cursor = await makeExternalCursor();
+    Cursor.writeSyncState(cursor, { token: 'history-1' });
+    expect(Cursor.readDeltaIds(cursor)).toEqual([]);
+
+    Cursor.writeSyncState(cursor, { deltaIds: ['msg-1', 'msg-2'] });
+    expect(Cursor.readToken(cursor)).toBe('history-1');
+    expect([...Cursor.readDeltaIds(cursor)]).toEqual(['msg-1', 'msg-2']);
+
+    // The ids name messages past `history-1`, so a new token drops them.
+    Cursor.writeSyncState(cursor, { token: 'history-2', tagHeads: ['head-a'] });
+    expect(Cursor.readDeltaIds(cursor)).toEqual([]);
+
+    Cursor.writeSyncState(cursor, { deltaIds: ['msg-3'] });
+    Cursor.clearToken(cursor);
+    expect(Cursor.readDeltaIds(cursor)).toEqual([]);
+  });
+
   test('snapshot writes cost O(changed entry): unchanged rewrites write nothing', async ({ expect }) => {
     const cursor = await makeExternalCursor();
     const description = 'x'.repeat(200);
@@ -648,6 +666,178 @@ describe('foreignIndex (reconcileFilter)', () => {
     );
 
     expect(state.foreignIndex).toBeUndefined();
+  });
+});
+
+describe('dedupStage with delta items', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  type Item = { id: string; key: number; fromDelta: boolean };
+
+  test('a delta item at or above min is kept whatever its date; one below min is left to the backfill', async ({
+    expect,
+  }) => {
+    const { db } = await builder.createDatabase({ types: [Cursor.Cursor, Feed.Feed, Expando.Expando] });
+    const feed = db.add(Feed.make());
+    const target = db.add(Expando.make({ name: 'mailbox' }));
+    const cursor = db.add(Cursor.makeFeed({ source: Ref.make(feed), target: Ref.make(target), max: '100', min: '50' }));
+    await EffectEx.runPromise(
+      Feed.append(feed, [
+        Expando.make({ [Obj.Meta]: { keys: [{ id: 'committed-60', source: 'test' }] }, key: 60 }),
+      ]).pipe(Effect.provide(Database.layer(db))),
+    );
+    const deltaHandled = new Set(['replayed-70']);
+
+    const { kept, extent } = await Effect.gen(function* () {
+      const kept = yield* Stream.fromIterable<Item>([
+        // An import keeping its original date: new, but dated inside (min, max).
+        { id: 'imported-80', key: 80, fromDelta: true },
+        // Handled by an earlier run under the same token, and already in the feed.
+        { id: 'replayed-70', key: 70, fromDelta: true },
+        { id: 'committed-60', key: 60, fromDelta: true },
+        // Below `min`: the backward window lists it by date, and it must not lower `min` meanwhile.
+        { id: 'imported-40', key: 40, fromDelta: true },
+        // Listed by a date window, so the interior shortcut still drops it.
+        { id: 'window-90', key: 90, fromDelta: false },
+      ]).pipe(
+        Cursor.dedupStage(
+          'dedup',
+          (item: Item) => item.id,
+          (item: Item) => item.key,
+          (item: Item) => item.fromDelta,
+        ),
+        Stream.runCollect,
+      );
+      return { kept, extent: (yield* Cursor.Service).extent };
+    }).pipe(
+      Effect.provide(
+        Layer.provideMerge(
+          Cursor.layer({
+            cursor,
+            feed,
+            foreignKeySource: 'test',
+            maxKey: 100,
+            minKey: 50,
+            trackRange: true,
+            dedupSeedType: Expando.Expando,
+            stats: { newMessages: 0 },
+            deltaHandled,
+          }),
+          Database.layer(db),
+        ),
+      ),
+      EffectEx.runAndForwardErrors,
+    );
+
+    expect([...kept].map((item) => item.id)).toEqual(['imported-80']);
+    expect([...deltaHandled].sort()).toEqual(['committed-60', 'imported-40', 'replayed-70']);
+    expect(extent).toEqual({ maxKey: 90, minKey: 90 });
+  });
+
+  test('a delta id the backward window also lists below min commits once, from the window', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [Cursor.Cursor, Feed.Feed, Expando.Expando] });
+    const feed = db.add(Feed.make());
+    const target = db.add(Expando.make({ name: 'mailbox' }));
+    const cursor = db.add(Cursor.makeFeed({ source: Ref.make(feed), target: Ref.make(target), max: '100', min: '50' }));
+
+    const { kept, extent } = await Effect.gen(function* () {
+      const kept = yield* Stream.fromIterable<Item>([
+        { id: 'both-40', key: 40, fromDelta: true },
+        { id: 'both-40', key: 40, fromDelta: false },
+        { id: 'window-30', key: 30, fromDelta: false },
+      ]).pipe(
+        Cursor.dedupStage(
+          'dedup',
+          (item: Item) => item.id,
+          (item: Item) => item.key,
+          (item: Item) => item.fromDelta,
+        ),
+        Stream.runCollect,
+      );
+      return { kept, extent: (yield* Cursor.Service).extent };
+    }).pipe(
+      Effect.provide(
+        Layer.provideMerge(
+          Cursor.layer({
+            cursor,
+            feed,
+            foreignKeySource: 'test',
+            maxKey: 100,
+            minKey: 50,
+            trackRange: true,
+            dedupSeedType: Expando.Expando,
+            stats: { newMessages: 0 },
+            deltaHandled: new Set(),
+          }),
+          Database.layer(db),
+        ),
+      ),
+      EffectEx.runAndForwardErrors,
+    );
+
+    expect([...kept]).toEqual([
+      { id: 'both-40', key: 40, fromDelta: false },
+      { id: 'window-30', key: 30, fromDelta: false },
+    ]);
+    expect(extent).toEqual({ maxKey: 40, minKey: 30 });
+  });
+
+  const runDedup = async (cursorKeys: { max?: string; min?: string }, items: Item[]) => {
+    const { db } = await builder.createDatabase({ types: [Cursor.Cursor, Feed.Feed, Expando.Expando] });
+    const feed = db.add(Feed.make());
+    const target = db.add(Expando.make({ name: 'mailbox' }));
+    const cursor = db.add(Cursor.makeFeed({ source: Ref.make(feed), target: Ref.make(target), ...cursorKeys }));
+    return Stream.fromIterable(items).pipe(
+      Cursor.dedupStage(
+        'dedup',
+        (item: Item) => item.id,
+        (item: Item) => item.key,
+        (item: Item) => item.fromDelta,
+      ),
+      Stream.runCollect,
+      Effect.map((kept) => [...kept]),
+      Effect.provide(
+        Layer.provideMerge(
+          Cursor.layer({
+            cursor,
+            feed,
+            foreignKeySource: 'test',
+            maxKey: Cursor.parseKey(cursorKeys.max),
+            minKey: Cursor.parseKey(cursorKeys.min),
+            trackRange: true,
+            dedupSeedType: Expando.Expando,
+            stats: { newMessages: 0 },
+            deltaHandled: new Set(),
+          }),
+          Database.layer(db),
+        ),
+      ),
+      EffectEx.runAndForwardErrors,
+    );
+  };
+
+  test('a never-synced cursor leaves a delta id to the backward window, which lists it once', async ({ expect }) => {
+    const kept = await runDedup({}, [
+      { id: 'both-80', key: 80, fromDelta: true },
+      { id: 'both-80', key: 80, fromDelta: false },
+    ]);
+    expect(kept).toEqual([{ id: 'both-80', key: 80, fromDelta: false }]);
+  });
+
+  test('with min unset the split falls back to max, as the backward window does', async ({ expect }) => {
+    const kept = await runDedup({ max: '100' }, [
+      { id: 'imported-40', key: 40, fromDelta: true },
+      { id: 'arrival-120', key: 120, fromDelta: true },
+    ]);
+    expect(kept.map((item) => item.id)).toEqual(['arrival-120']);
   });
 });
 

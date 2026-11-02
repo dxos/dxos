@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
@@ -224,6 +225,146 @@ describe('Graph', () => {
 
     Graph.removeNode(graph, EXAMPLE_ID);
     expect(node.pipe(Option.getOrNull)).toEqual(null);
+  });
+
+  test('re-adding an action with a new closure and rebuilt label emits nothing and invokes the latest closure', () => {
+    const graph = Graph.make();
+    const invoked: string[] = [];
+    const action = (name: string) =>
+      Node.makeAction({
+        id: EXAMPLE_ID,
+        data: () => Effect.sync(() => invoked.push(name)),
+        properties: { label: ['action.label', { ns: EXAMPLE_TYPE }] },
+      });
+
+    Graph.addNode(graph, action('first'));
+    let changes = 0;
+    graph.onNodeChanged.on(() => {
+      changes++;
+    });
+    Graph.addNode(graph, action('second'));
+    expect(changes).toEqual(0);
+
+    const node = Graph.getNode(graph, EXAMPLE_ID).pipe(Option.getOrThrow);
+    assert.ok(Node.isAction(node));
+    Effect.runSync(node.data());
+    expect(invoked).toEqual(['second']);
+
+    Graph.addNode(graph, { ...action('third'), properties: { label: ['other.label', { ns: EXAMPLE_TYPE }] } });
+    expect(changes).toEqual(1);
+  });
+
+  test('re-adding an action read back from the graph keeps it invocable', () => {
+    const graph = Graph.make();
+    const invoked: string[] = [];
+    Graph.addNode(
+      graph,
+      Node.makeAction({ id: EXAMPLE_ID, data: () => Effect.sync(() => invoked.push('first')), properties: {} }),
+    );
+    const read = Graph.getNode(graph, EXAMPLE_ID).pipe(Option.getOrThrow);
+    let changes = 0;
+    graph.onNodeChanged.on(() => {
+      changes++;
+    });
+
+    Graph.addNode(graph, read);
+    expect(changes).toEqual(0);
+    const node = Graph.getNode(graph, EXAMPLE_ID).pipe(Option.getOrThrow);
+    assert.ok(Node.isAction(node));
+    Effect.runSync(node.data());
+    expect(invoked).toEqual(['first']);
+  });
+
+  test('a constructor-seeded action re-offered with the same closure emits nothing', () => {
+    const invoke = () => Effect.void;
+    const graph = Graph.make({ nodes: [{ id: EXAMPLE_ID, type: Node.ActionType, data: invoke, properties: {} }] });
+    let changes = 0;
+    graph.onNodeChanged.on(() => {
+      changes++;
+    });
+    Graph.addNode(graph, Node.makeAction({ id: EXAMPLE_ID, data: invoke, properties: {} }));
+    expect(changes).toEqual(0);
+  });
+
+  test('an action copied from another node keeps its own forwarder', () => {
+    const graph = Graph.make();
+    const invoked: string[] = [];
+    const action = (id: string, name: string) =>
+      Node.makeAction({ id, data: () => Effect.sync(() => invoked.push(name)), properties: {} });
+    Graph.addNode(graph, action(exampleId(1), 'a'));
+    const copied = Graph.getNode(graph, exampleId(1)).pipe(Option.getOrThrow);
+    Graph.addNode(graph, { ...copied, id: exampleId(2) });
+    Graph.addNode(graph, action(exampleId(2), 'b'));
+
+    for (const id of [exampleId(1), exampleId(2)]) {
+      const node = Graph.getNode(graph, id).pipe(Option.getOrThrow);
+      assert.ok(Node.isAction(node));
+      Effect.runSync(node.data());
+    }
+    expect(invoked).toEqual(['a', 'b']);
+  });
+
+  test('re-offering an action with a new context updates it', () => {
+    const graph = Graph.make();
+    const invoke = () => Effect.void;
+    const withContext = (context: Node.ActionContext) => {
+      const action = { ...Node.makeAction({ id: EXAMPLE_ID, data: invoke, properties: {} }), _actionContext: context };
+      return action;
+    };
+    // Distinct contexts: `Context.empty()` is one shared instance, which would hide a stale context.
+    const Value = Context.Service<number>('app-graph/test/Value');
+    const second = Context.make(Value, 2);
+    Graph.addNode(graph, withContext(Context.make(Value, 1)));
+    Graph.addNode(graph, withContext(second));
+    const node = Graph.getNode(graph, EXAMPLE_ID).pipe(Option.getOrThrow);
+    assert.ok(Node.isAction(node));
+    expect(node._actionContext).toBe(second);
+  });
+
+  test('a constructor-seeded node without data keeps null data', () => {
+    const graph = Graph.make({ nodes: [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, properties: {} }] });
+    expect(Graph.getNode(graph, EXAMPLE_ID).pipe(Option.getOrThrow).data).toBeNull();
+  });
+
+  test('an action copied between graphs and back stays invocable', () => {
+    const first = Graph.make();
+    const second = Graph.make();
+    const invoked: string[] = [];
+    Graph.addNode(
+      first,
+      Node.makeAction({ id: EXAMPLE_ID, data: () => Effect.sync(() => invoked.push('a')), properties: {} }),
+    );
+    Graph.addNode(second, Graph.getNode(first, EXAMPLE_ID).pipe(Option.getOrThrow));
+    Graph.addNode(first, Graph.getNode(second, EXAMPLE_ID).pipe(Option.getOrThrow));
+
+    for (const graph of [first, second]) {
+      const node = Graph.getNode(graph, EXAMPLE_ID).pipe(Option.getOrThrow);
+      assert.ok(Node.isAction(node));
+      Effect.runSync(node.data());
+    }
+    expect(invoked).toEqual(['a', 'a']);
+  });
+
+  test('re-offering an action without its context keeps the stored one and emits nothing', () => {
+    const graph = Graph.make();
+    const invoke = () => Effect.void;
+    const Value = Context.Service<number>('app-graph/test/Value');
+    const context = Context.make(Value, 1);
+    const withContext = {
+      ...Node.makeAction({ id: EXAMPLE_ID, data: invoke, properties: {} }),
+      _actionContext: context,
+    };
+    Graph.addNode(graph, withContext);
+    let changes = 0;
+    graph.onNodeChanged.on(() => {
+      changes++;
+    });
+    Graph.addNode(graph, Node.makeAction({ id: EXAMPLE_ID, data: invoke, properties: {} }));
+    Graph.addNode(graph, Node.makeAction({ id: EXAMPLE_ID, data: invoke, properties: {} }));
+    expect(changes).toEqual(0);
+    const node = Graph.getNode(graph, EXAMPLE_ID).pipe(Option.getOrThrow);
+    assert.ok(Node.isAction(node));
+    expect(node._actionContext).toBe(context);
   });
 
   test('add edge', () => {

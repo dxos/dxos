@@ -31,7 +31,8 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Position from '@dxos/util/Position';
 
 import { useMobileLayout } from '#components';
-import { meta } from '#meta';
+
+import { MobileNamespace } from '../namespace.ts';
 
 const MAIN_MENU_GROUP_ID = 'navbar-main-menu';
 
@@ -162,7 +163,7 @@ const createMobileAccountMenuSection = (
  * Builds the mobile navbar actions including companion tabs, separator, and main menu dropdown.
  */
 export const useMobileNavbarActions = (): MobileNavbarActions => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(MobileNamespace.key);
   const { graph } = ToolkitHooks.useAppGraph();
   const runAction = GraphHooks.useActionRunner();
   const stateAtom = Hooks.useCapability(DeckCapabilities.State);
@@ -216,7 +217,7 @@ export const useMobileNavbarActions = (): MobileNavbarActions => {
  * Builds the mobile drawer actions including companion tabs and toolbar buttons.
  */
 export const useMobileDrawerActions = (consumerName: string): MobileDrawerActions => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(MobileNamespace.key);
   const stateAtom = Hooks.useCapability(DeckCapabilities.State);
   const ephemeralAtom = Hooks.useCapability(DeckCapabilities.EphemeralState);
   const { graph } = ToolkitHooks.useAppGraph();

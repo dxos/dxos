@@ -21,7 +21,6 @@ import {
   type NodeViewProps,
   type Overlay,
   type Point,
-  SCENE_OVERLAY_ATTRIBUTE,
   createCanvasAtoms,
   createDynamicProjection,
   createMemoryStore,
@@ -32,14 +31,7 @@ import {
 } from '@dxos/react-ui-canvas/scene';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import {
-  FeatureCard,
-  type FeatureChanges,
-  type FeatureLookup,
-  type FeatureModel,
-  type FeatureTarget,
-  makeFeatureLookup,
-} from '../FeatureCard/index.ts';
+import { FeatureCard, type FeatureLookup, type FeatureModel, makeFeatureLookup } from '../FeatureCard/index.ts';
 
 const FEATURE_NODE_TYPE = 'feature';
 
@@ -48,50 +40,32 @@ const FeatureNode = Schema.Struct({ type: Schema.Literal(FEATURE_NODE_TYPE), ...
 
 const createFeatureNode = (props: CreateProps): Node => ({ type: FEATURE_NODE_TYPE, ...props });
 
-type FeatureNodeContextValue = Pick<FeatureCanvasProps, 'onChange' | 'editingId' | 'onEditingChange'> & {
+type FeatureNodeContextValue = {
   lookup: FeatureLookup;
 };
 
-/** Node views get no host props, so the cards' data and edits reach them through context. */
+/** Node views get no host props, so the cards' data reach them through context. */
 const FeatureNodeContext = createContext<FeatureNodeContextValue>({ lookup: () => undefined });
 
-/** The card's body takes the wheel while it has more to scroll; otherwise the canvas pans. */
-const wheelOverlay = { [SCENE_OVERLAY_ATTRIBUTE]: true };
-
 const FeatureNodeView = ({ node }: NodeViewProps) => {
-  const { lookup, onChange, editingId, onEditingChange } = useContext(FeatureNodeContext);
+  const { lookup } = useContext(FeatureNodeContext);
   const feature = lookup(node.id);
   return (
-    // One bounded row, so the card fits the box and its body scrolls; presses on the card bubble to the box, which
-    // selects and drags it.
-    <Layout.Grid
-      classNames='dx-cover grid-rows-[minmax(0,1fr)] overflow-hidden'
-      data-testid='feature-canvas-node'
-      {...wheelOverlay}
-    >
+    // One bounded row, so the card fits the box; it is a summary that never scrolls, so presses, the wheel and
+    // double-clicks all reach the canvas, which selects, pans and zooms.
+    <Layout.Grid classNames='dx-cover grid-rows-[minmax(0,1fr)] overflow-hidden' data-testid='feature-canvas-node'>
       {feature && (
-        <FeatureCard.Root
-          feature={feature}
-          lookup={lookup}
-          scroll
-          onChange={onChange ? (feature, changes) => onChange(feature.id, changes) : undefined}
-          // Controlled only for a host that tracks it; otherwise the edit button's toggle would be overridden.
-          editing={onEditingChange ? feature.id === editingId : undefined}
-          onEditingChange={(editing) => onEditingChange?.(editing ? feature.id : undefined)}
-        >
+        <FeatureCard.Root feature={feature} lookup={lookup} classNames='h-full'>
           <FeatureCard.Header>
             <FeatureCard.Status />
             <FeatureCard.Title />
-            <FeatureCard.Save />
-            <FeatureCard.Menu />
+            <FeatureCard.Marks />
           </FeatureCard.Header>
-          {/* Dependencies are the canvas's arrows, so the card leaves them out. */}
+          {/* Dependencies are the canvas's arrows, and the rest is the companion's, so the card stays a summary. */}
           <FeatureCard.Body>
-            <FeatureCard.Description />
-            <FeatureCard.Tags />
-            <FeatureCard.SubfeatureCount />
-            <FeatureCard.TaskCount />
-            <FeatureCard.ShowcaseLead />
+            <FeatureCard.Description lines={3} />
+            <FeatureCard.Summary />
+            <FeatureCard.External />
           </FeatureCard.Body>
         </FeatureCard.Root>
       )}
@@ -99,7 +73,7 @@ const FeatureNodeView = ({ node }: NodeViewProps) => {
   );
 };
 
-/** The node registry, with `hostOpen` so a double-click opens the feature instead of drilling into the box. */
+/** The node registry, with `hostOpen` so a double-click zooms the map into the feature instead of into the box. */
 const createRegistry = (open: (id: string) => void) =>
   createNodeRegistry(
     {
@@ -138,7 +112,10 @@ const LAYOUT: Omit<DynamicOptions, 'nodes'> = {
 
 const EDGE_SEPARATOR = '->';
 
-/** Edges point from a feature to what it depends on, so rows read from dependents down to foundations. */
+/**
+ * Edges point from a feature to what it depends on, so rows read from dependents down to foundations; a dependency on
+ * another spec's feature has no box here, and its card marks it instead.
+ */
 const toGraph = (features: readonly FeatureModel[]): GraphModel => {
   const ids = new Set(features.map((feature) => feature.id));
   return {
@@ -159,19 +136,18 @@ export type FeatureCanvasProps = {
   /** Positions the user dragged, by feature id; the rest are laid out by dependency rank. */
   positions?: Record<string, Point>;
   onPositionsChange?: (positions: Record<string, Point>) => void;
-  /** Double-clicking a box opens its feature. */
-  onOpen?: (target: FeatureTarget) => void;
+  /** The box selected by a click; a press on the background or Escape clears it. */
+  onSelect?: (id: string | undefined) => void;
+  /** Double-clicking a box zooms the map into the feature, to its subfeatures. */
+  onZoom?: (id: string) => void;
   /** A dependency drawn from one box to another; without it, arrows cannot be drawn. */
   onLink?: (featureId: string, dependsOnId: string) => void;
   /** A selected arrow deleted; without it, arrows cannot be deleted. */
   onUnlink?: (featureId: string, dependsOnId: string) => void;
-  /** A selected box deleted: the feature leaves its project and is kept. Without it, boxes cannot be deleted. */
+  /** A selected box deleted: the feature is deleted, with its breakdown. Without it, boxes cannot be deleted. */
   onRemove?: (id: string) => void;
-  /** Add each box's edit button, whose edit mode changes the name and description. */
-  onChange?: (id: string, changes: FeatureChanges) => void;
-  /** The box whose name field is open, as for a feature just created; cleared when it closes. */
-  editingId?: string;
-  onEditingChange?: (id: string | undefined) => void;
+  /** A box to select from outside, as for a feature just created. */
+  selectedId?: string;
   /** How boxes take their lattice cells (see `Arrangement`); fewest crossing arrows by default. */
   arrange?: Arrangement;
   /** Strengths of the force arrangements. */
@@ -181,31 +157,28 @@ export type FeatureCanvasProps = {
 };
 
 /**
- * The canvas view of a project's features: each feature's card in a box, laid out by dependency rank with a
- * gutter-routed arrow per dependency. Boxes always move; drawing and deleting arrows and boxes are offered for
- * each callback given, and change the model rather than the picture, so a refused edit never appears.
+ * The canvas view of one level of a spec's features: each feature's card in a box, laid out by dependency rank with
+ * a gutter-routed arrow per dependency. A click selects a box and a double-click zooms into it. Boxes always move;
+ * drawing and deleting arrows and boxes are offered for each callback given, and change the model rather than the
+ * picture, so a refused edit never appears.
  */
 export const FeatureCanvas = ({
   features,
   positions = {},
   onPositionsChange,
-  onOpen,
+  onSelect,
+  onZoom,
   onLink,
   onUnlink,
   onRemove,
-  onChange,
-  editingId,
-  onEditingChange,
+  selectedId,
   arrange = 'crossings',
   force,
   lattice = true,
 }: FeatureCanvasProps) => {
   const atomRegistry = useContext(RegistryContext);
   const lookup = useMemo(() => makeFeatureLookup(features), [features]);
-  const nodeContext = useMemo(
-    () => ({ lookup, onChange, editingId, onEditingChange }),
-    [lookup, onChange, editingId, onEditingChange],
-  );
+  const nodeContext = useMemo(() => ({ lookup }), [lookup]);
   // Owned by this component: the projection's scene atom reads both, so they live while the canvas is mounted.
   const graph = useMemo(() => Atom.make<GraphModel>(toGraph(features)), []);
   const overlay = useMemo(() => Atom.make<Overlay>({ positions }), []);
@@ -213,14 +186,34 @@ export const FeatureCanvas = ({
   const atoms = useMemo(() => createCanvasAtoms(DYNAMIC_VIEW_ID), []);
 
   // Read through a ref so the registry and projection, which the canvas does not expect to change, stay stable.
-  const callbacks = useRef({ onOpen, onLink, onUnlink, onRemove });
-  callbacks.current = { onOpen, onLink, onUnlink, onRemove };
-  const nodes = useMemo(() => createRegistry((id) => callbacks.current.onOpen?.({ type: 'object', id })), []);
+  const callbacks = useRef({ onSelect, onZoom, onLink, onUnlink, onRemove });
+  callbacks.current = { onSelect, onZoom, onLink, onUnlink, onRemove };
+  const nodes = useMemo(() => createRegistry((id) => callbacks.current.onZoom?.(id)), []);
   const editable = { link: !!onLink, delete: !!(onUnlink || onRemove) };
 
   useEffect(() => {
     atomRegistry.set(graph, toGraph(features));
   }, [atomRegistry, graph, features]);
+
+  // A single selected box is the selected feature; an arrow, several boxes or none select nothing.
+  useEffect(
+    () =>
+      atomRegistry.subscribe(atoms.selection, (selection) => {
+        const [id] = selection;
+        const feature = selection.size === 1 && !id.includes(EDGE_SEPARATOR) ? id : undefined;
+        callbacks.current.onSelect?.(feature);
+      }),
+    [atomRegistry, atoms],
+  );
+
+  useEffect(() => {
+    if (selectedId && lookup(selectedId)) {
+      const current = atomRegistry.get(atoms.selection);
+      if (current.size !== 1 || !current.has(selectedId)) {
+        atomRegistry.set(atoms.selection, new Set([selectedId]));
+      }
+    }
+  }, [atomRegistry, atoms, selectedId, lookup]);
 
   // Positions come back from the database after every drag and from other peers; only a real change re-lays out.
   useEffect(() => {

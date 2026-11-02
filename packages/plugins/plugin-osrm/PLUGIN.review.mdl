@@ -1,0 +1,105 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-osrm/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: OsrmPlugin
+
+The routing half of the milestone is built and tested. plugin-osrm contributes `makeOsrmRoutingService`
+(Nominatim geocoding plus OSRM routing) under `TripCapabilities.RoutingService`, with fixture tests for
+the mapping and a mocked-fetch test for the service. plugin-trip has the `Routing` DTOs, the
+`RoadDetails.routes` field, the `PlanRoute` operation (tested), a "Plan route" toolbar action, and a
+marker provider that draws the routed polyline.
+
+The plugin-map half is not built. There is no `TileProvider` registry, no `tileProvider` setting and no
+bespoke settings surface; `buildTileUrl` still hardcodes MapTiler `streets-v2` from a `maptiler.com` key.
+
+Of 9 items: 2 done, 3 untested, 0 partial, 1 diverged, 3 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict RoutingService: The capability and interface match: id, label, profiles and an async route().
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trip/src/types/TripCapabilities.ts#RoutingService, github:dxos/dxos/packages/plugins/plugin-trip/src/types/Routing.ts#RoutingService]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trip/src/operations/plan-route.test.ts, github:dxos/dxos/packages/plugins/plugin-osrm/src/services/OsrmRoutingService.test.ts]
+  note: Declared with `Capability.makeSingleton` rather than `Capability.make`; `PlanRoute` still resolves it with `getAll`.
+```
+
+```mdl
+verdict RouteProfile: The profile is the single literal driving.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trip/src/types/Routing.ts#RouteProfile]
+  note: `Schema.Literal('driving')`. No test decodes it.
+```
+
+```mdl
+verdict PlanRoute: Routes each road segment with both endpoints and writes routes and endpoint geo back.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trip/src/types/RoutingOperation.ts#PlanRoute, github:dxos/dxos/packages/plugins/plugin-trip/src/operations/plan-route.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trip/src/operations/plan-route.test.ts]
+  walkthrough:
+    - The operation declares the trip and optional provider input and the legs and totals output. github:dxos/dxos/packages/plugins/plugin-trip/src/types/RoutingOperation.ts#PlanRoute
+    - The handler picks a service, routes each complete road segment, and writes routes and geo with Obj.update. github:dxos/dxos/packages/plugins/plugin-trip/src/operations/plan-route.ts
+  note: |
+    Behaviour matches and is tested. Two differences from the spec: no `NoRoutingService` error exists (a
+    missing service fails with `RouteError('No routing service configured.')`), and an input that is not a
+    Trip returns zeros instead of failing.
+```
+
+```mdl
+verdict PlanRouteAction: TripArticle shows a Plan route action once a road segment exists, with a planning label while it runs.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trip/src/containers/TripArticle/TripArticle.tsx#TripArticle]
+  note: The action invokes `PlanRoute` and toggles `planning`. The TripArticle stories render road trips but no play function clicks the action.
+```
+
+```mdl
+verdict TripRoutePolyline: The marker provider draws the planned route's geometry, else the straight arc.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trip/src/capabilities/marker-provider.tsx#tripMarkerProvider]
+  note: |
+    `segmentLines` reads `routes[0]` through `Routing.routeGeometry` (the spec's `RoadDetails.path` was
+    superseded by `routes`). `marker-provider.test.ts` tests only `toLatLng`.
+```
+
+```mdl
+verdict TileProvider: No tile-provider registry exists in plugin-map.
+  status: missing
+  note: Searched `plugin-map/src` for `TILE_PROVIDERS`, `TileProvider` and `tileProvider`; none found. `Settings` still has only `apiKeys` and `RECOGNIZED_API_KEY_DOMAINS = ['maptiler.com']`.
+```
+
+```mdl
+verdict MapTileSettingsSurface: No bespoke settings surface; buildTileUrl still hardcodes MapTiler.
+  status: missing
+  evidence: [github:dxos/dxos/packages/plugins/plugin-map/src/containers/MapSurface/build-tile-url.ts#buildTileUrl]
+  note: plugin-map registers settings through `AppCapability.settings` (auto form). `buildTileUrl` returns a MapTiler `streets-v2` URL when a `maptiler.com` key exists, else undefined.
+```
+
+```mdl
+verdict OsrmRoutingService: Geocodes name-only waypoints with throttling, routes through OSRM, and maps legs into Routes.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-osrm/src/services/OsrmRoutingService.ts#makeOsrmRoutingService, github:dxos/dxos/packages/plugins/plugin-osrm/src/services/NominatimClient.ts#geocode, github:dxos/dxos/packages/plugins/plugin-osrm/src/services/OsrmClient.ts#fetchRoute, github:dxos/dxos/packages/plugins/plugin-osrm/src/services/osrm-mapping.ts#parseRoutes, github:dxos/dxos/packages/plugins/plugin-osrm/src/capabilities/routing-service.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-osrm/src/services/OsrmRoutingService.test.ts, github:dxos/dxos/packages/plugins/plugin-osrm/src/services/osrm-mapping.test.ts]
+  walkthrough:
+    - The capability module contributes the service under TripCapabilities.RoutingService. github:dxos/dxos/packages/plugins/plugin-osrm/src/capabilities/routing-service.ts
+    - The service passes through Places, geocodes strings 1.1 s apart, and throws GeocodeError on no result. github:dxos/dxos/packages/plugins/plugin-osrm/src/services/OsrmRoutingService.ts#makeOsrmRoutingService
+    - The Nominatim client queries search with jsonv2, limit 1 and a User-Agent header. github:dxos/dxos/packages/plugins/plugin-osrm/src/services/NominatimClient.ts#geocode
+    - The OSRM client requests the driving route with full GeoJSON geometry and steps. github:dxos/dxos/packages/plugins/plugin-osrm/src/services/OsrmClient.ts#fetchRoute
+    - The mapper turns each OSRM route into a Route and throws RouteError when code is not Ok. github:dxos/dxos/packages/plugins/plugin-osrm/src/services/osrm-mapping.ts#parseRoutes
+  note: The User-Agent header is ignored by browsers, as the client's comment says.
+```
+
+```mdl
+verdict QA-1: The QA test is manual or agent-driven; no automated test runs it end to end.
+  status: missing
+  note: Status `unverified`. `plan-route.test.ts` uses a fake service, not the OSRM provider against the network.
+```

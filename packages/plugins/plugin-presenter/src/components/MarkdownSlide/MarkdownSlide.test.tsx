@@ -26,7 +26,7 @@ describe('MarkdownSlide', () => {
 
   test('provider theme forces its color scheme and overrides', ({ expect }) => {
     const markup = renderToStaticMarkup(
-      <SlideThemeProvider settings={{ name: 'dark', accent: '#ff0000' }}>
+      <SlideThemeProvider settings={{ base: 'dark', accent: '#ff0000' }}>
         <MarkdownSlide content='# Title' />
       </SlideThemeProvider>,
     );

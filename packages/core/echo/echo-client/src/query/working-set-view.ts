@@ -4,7 +4,7 @@
 
 import { Event, type ReadOnlyEvent } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Entity, type Obj } from '@dxos/echo';
+import { type Entity, Feed, type Obj } from '@dxos/echo';
 import { filterMatchDoc } from '@dxos/echo-host/filter';
 import { GroupBy, QueryPlanner, queryContainsChanges } from '@dxos/echo-host/query';
 import { type EntityStructure, QueryAST } from '@dxos/echo-protocol';
@@ -12,13 +12,13 @@ import { resolveMergeRedirect } from '@dxos/echo/internal';
 import { EID, EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db/index.ts';
+import { type DeletionMemo, type ItemsUpdatedEvent, type ObjectCore } from '../core-db/index.ts';
 import { type FeedHandle } from '../feed/feed-handle.ts';
 import { type DatabaseImpl } from '../proxy-db/index.ts';
 import { type MergePlan, createMergePlan, evaluateCore, matchesFeedSelection, ordersLocally } from './merge-plan.ts';
 import { type SourceEntry } from './query-context.ts';
 import {
-  getTargetFeedsForQuery,
+  getTargetFeedBranchesForQuery,
   getTargetSpacesForQuery,
   isSimpleSelectionQuery,
   queryAggregateNeedsIndex,
@@ -119,6 +119,15 @@ export class WorkingSetView {
     return this.coreById(id)?.getObjectStructure() !== undefined;
   }
 
+  /**
+   * Whether local evaluation can return `id` now: its body is held and its strong dependencies are satisfied. A held
+   * object whose closure is still resolving is left out of local results, so its remote answer must stand.
+   */
+  surfaces(id: string): boolean {
+    const core = this.coreById(id);
+    return core?.getObjectStructure() !== undefined && this._database.areStrongDepsSatisfied(core);
+  }
+
   /** The live end of `id`'s convergence-key merge redirects here: a merged-away loser stands for its survivor. */
   survivorId(id: string): string {
     return EntityId.isValid(id)
@@ -130,7 +139,7 @@ export class WorkingSetView {
    * Every object with an unindexed local write that local evaluation admits under the plan's flat filter and `admit`
    * accepts by its document data, with that data.
    */
-  matchLocal(plan: MergePlan, admit?: (data: EntityStructure['data']) => boolean): LocalMatch[] {
+  matchLocal(plan: MergePlan, admit?: (data: EntityStructure['data']) => boolean, memo?: DeletionMemo): LocalMatch[] {
     const matches: LocalMatch[] = [];
     // Only an object with a local write the index has not seen can be missing from an index answer.
     for (const id of this._database.unindexedWrites()) {
@@ -141,7 +150,7 @@ export class WorkingSetView {
         core &&
         data !== undefined &&
         (admit === undefined || admit(data)) &&
-        evaluateCore(plan, core) === true &&
+        evaluateCore(plan, core, memo) === true &&
         // Every other working-set result waits for its strong dependencies, so an admitted one does too.
         this._database.areStrongDepsSatisfied(core)
       ) {
@@ -253,16 +262,25 @@ export class WorkingSetView {
     if (allFeeds && targetSpaces.length > 0 && !targetSpaces.includes(this._database.spaceId)) {
       return undefined;
     }
-    const handles = allFeeds
-      ? [...this._database._knownFeedHandles()].filter(
-          (handle) => EID.getSpaceId(handle.uri) === this._database.spaceId,
-        )
-      : getTargetFeedsForQuery(query).flatMap((uri) => {
-          const eid = EID.tryParse(uri);
-          const handle = eid ? this._database._tryGetFeedHandle(eid) : undefined;
-          return handle ? [handle] : [];
-        });
-    return handles.length > 0 ? { filter: simple.filter, options: simple.options, handles } : undefined;
+    const branches = new Map<FeedHandle, ReadonlyArray<string | null> | undefined>();
+    if (allFeeds) {
+      // A read of every feed is a default read, so it covers only the main branch.
+      for (const handle of this._database._knownFeedHandles()) {
+        if (EID.getSpaceId(handle.uri) === this._database.spaceId) {
+          branches.set(handle, [null]);
+        }
+      }
+    } else {
+      for (const [uri, scopeBranches] of getTargetFeedBranchesForQuery(query)) {
+        const eid = EID.tryParse(uri);
+        const handle = eid ? this._database._tryGetFeedHandle(eid) : undefined;
+        if (handle) {
+          branches.set(handle, scopeBranches);
+        }
+      }
+    }
+    const handles = [...branches.keys()];
+    return handles.length > 0 ? { filter: simple.filter, options: simple.options, handles, branches } : undefined;
   }
 
   /** Loads the objects into the working set through their documents. */
@@ -468,13 +486,24 @@ type FeedTail = {
   filter: QueryAST.Filter;
   options: QueryAST.QueryOptions | undefined;
   handles: readonly FeedHandle[];
+  /** The branches each handle's scope reads, `null` naming main; `undefined` reads every branch. */
+  branches: ReadonlyMap<FeedHandle, ReadonlyArray<string | null> | undefined>;
 };
 
-const feedEntries = ({ filter, options, handles }: FeedTail): SourceEntry[] =>
-  handles.flatMap((handle) =>
-    handle
-      .localWrites()
-      .flatMap((object) => (matchesFeedSelection(filter, options, object) ? [tailEntry(object)] : [])),
+/** Whether a feed write is on one of the branches its scope reads, as the host filters indexed items. */
+const isOnBranches = (object: Entity.Unknown, branches: ReadonlyArray<string | null> | undefined): boolean => {
+  if (branches === undefined) {
+    return true;
+  }
+  return branches.includes(Feed.getBranch(object) ?? null);
+};
+
+const matchesTail = (tail: FeedTail, handle: FeedHandle, object: Entity.Unknown): boolean =>
+  isOnBranches(object, tail.branches.get(handle)) && matchesFeedSelection(tail.filter, tail.options, object);
+
+const feedEntries = (tail: FeedTail): SourceEntry[] =>
+  tail.handles.flatMap((handle) =>
+    handle.localWrites().flatMap((object) => (matchesTail(tail, handle, object) ? [tailEntry(object)] : [])),
   );
 
 const tailEntry = (object: Entity.Unknown): SourceEntry => ({
@@ -496,7 +525,7 @@ class FeedTailMatches {
     for (const handle of _tail.handles) {
       const matches = new Map<string, { object: Entity.Unknown; matched: boolean }>();
       for (const object of handle.localWrites()) {
-        matches.set(object.id, { object, matched: this.#matchesFilter(object) });
+        matches.set(object.id, { object, matched: matchesTail(_tail, handle, object) });
       }
       this.#matches.set(handle, matches);
     }
@@ -517,7 +546,7 @@ class FeedTailMatches {
         matches.delete(object.id);
         continue;
       }
-      const matched = this.#matchesFilter(written);
+      const matched = matchesTail(this._tail, handle, written);
       // Setting an existing key keeps its place, so the entries stay in write order.
       matches.set(object.id, { object: written, matched });
       changed ||= matched !== (before?.matched ?? false);
@@ -539,10 +568,6 @@ class FeedTailMatches {
     return this.entries()
       .map((entry) => entry.id)
       .join(',');
-  }
-
-  #matchesFilter(object: Entity.Unknown): boolean {
-    return matchesFeedSelection(this._tail.filter, this._tail.options, object);
   }
 }
 

@@ -8,10 +8,8 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { createTestApp } from '@dxos/app-framework/testing';
 
-import { meta } from '#meta';
+import config, { meta } from '#meta';
 import { HelpCapabilities } from '#types';
-
-import { HelpState } from './index.ts';
 
 const storage = new Map<string, string>();
 vi.stubGlobal('localStorage', {
@@ -27,7 +25,7 @@ vi.stubGlobal('localStorage', {
 
 const createApp = async () => {
   const harness = await createTestApp({
-    plugins: [Plugin.define(meta).pipe(Plugin.addModule(HelpState), Plugin.make)()],
+    plugins: [Plugin.fromModules(meta, [Plugin.getModule(config, 'HelpState')])()],
   });
   await harness.fire(ActivationEvents.Idle);
   return harness;

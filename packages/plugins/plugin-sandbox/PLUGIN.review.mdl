@@ -1,0 +1,152 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-sandbox/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: SandboxPlugin
+
+Every operation in the spec is declared (`types/SandboxOperation.ts`, `types/RepositoryOperation.ts`)
+with the specified keys and has a handler in `skills/functions`. The sandbox ops run against
+`SandboxService.Service` and are exercised end to end by the local-backend suite
+(`testing/LocalSandbox.test.ts`, skipped where the OS sandbox is unavailable) and the composer harness
+test. Repository handlers exist, but only the EDGE repository client is tested, not
+`attachRepository`, `createRepository` or the log read. The one schema gap: `exec` has no `stdin`
+input. The ops also carry fields the spec omits (`accountAccess`/`accountTokenEnv` on
+`createSandbox`, `credentials` on `Sandbox`, plus an unspecified `grantAccountAccess` op).
+QA-2 has no automated counterpart.
+
+Of 15 items: 9 done, 3 untested, 2 partial (exec, QA-1), 0 diverged, 1 missing (QA-2).
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Sandbox: The ECHO type carries name, baseImage, timestamps and repositories, plus an unspecified credentials list.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sandbox/src/types/Sandbox.ts#Sandbox]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sandbox/src/testing/LocalSandbox.test.ts]
+  note: Also declares `credentials: { env, token: Ref<AccessToken> }[]`, which the spec does not list.
+```
+
+```mdl
+verdict createSandbox: Creates the Sandbox object and the service sandbox, attaching repositories.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sandbox/src/types/SandboxOperation.ts#CreateSandbox, github:dxos/dxos/packages/plugins/plugin-sandbox/src/skills/functions/create-sandbox.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sandbox/src/testing/LocalSandbox.test.ts, github:dxos/dxos/packages/plugins/plugin-sandbox/src/plugin.test.ts]
+  walkthrough:
+    - The operation declares name, baseImage and repositories and returns the sandbox id. github:dxos/dxos/packages/plugins/plugin-sandbox/src/types/SandboxOperation.ts#CreateSandbox
+    - The handler creates the object, the service sandbox and any repository attachments. github:dxos/dxos/packages/plugins/plugin-sandbox/src/skills/functions/create-sandbox.ts
+  note: Adds an `accountAccess` input and `accountTokenEnv` output not in the spec. Creating with repositories attached is not tested.
+```
+
+```mdl
+verdict exec: Runs a command with cwd, env, timeout and background, but the op has no stdin input.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sandbox/src/types/SandboxOperation.ts#Exec, github:dxos/dxos/packages/plugins/plugin-sandbox/src/skills/functions/exec.ts, github:dxos/dxos/packages/plugins/plugin-sandbox/src/services/exec-stream.ts#foldExecStream]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sandbox/src/testing/LocalSandbox.test.ts, github:dxos/dxos/packages/plugins/plugin-sandbox/src/services/exec-stream.test.ts]
+  walkthrough:
+    - The operation declares the command and its options. github:dxos/dxos/packages/plugins/plugin-sandbox/src/types/SandboxOperation.ts#Exec
+    - The handler merges credential env and reports a request failure as a failed command. github:dxos/dxos/packages/plugins/plugin-sandbox/src/skills/functions/exec.ts
+    - The EDGE client folds the streamed output into one result. github:dxos/dxos/packages/plugins/plugin-sandbox/src/services/exec-stream.ts#foldExecStream
+  note: The `Exec` input schema has no `stdin` field, so the spec's `stdin?: string` cannot be passed (only the local backend's internal `input` option exists).
+```
+
+```mdl
+verdict exposePort: Publishes a port at a public URL, validating 1024-65535 except 3000 and forwarding command and cwd.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sandbox/src/types/SandboxOperation.ts#ExposePort, github:dxos/dxos/packages/plugins/plugin-sandbox/src/skills/functions/expose-port.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sandbox/src/services/SandboxClient.edge.test.ts]
+  note: The only test runs against a deployed sandbox-service and is skipped unless `DX_SANDBOX_EDGE_URL` is set; token checks and restart-on-sleep live in EDGE's sandbox-service.
+```
+
+```mdl
+verdict uploadFile: Writes an ECHO File's bytes into the sandbox at an absolute path.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sandbox/src/types/SandboxOperation.ts#UploadFile, github:dxos/dxos/packages/plugins/plugin-sandbox/src/skills/functions/upload-file.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sandbox/src/testing/LocalSandbox.test.ts]
+```
+
+```mdl
+verdict downloadFile: Reads a sandbox file into a new or existing ECHO File.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sandbox/src/types/SandboxOperation.ts#DownloadFile, github:dxos/dxos/packages/plugins/plugin-sandbox/src/skills/functions/download-file.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sandbox/src/testing/LocalSandbox.test.ts]
+```
+
+```mdl
+verdict publishFiles: The desktop helper serves a directory under a per-call key; other backends report the reason.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sandbox/src/types/SandboxOperation.ts#PublishFiles, github:dxos/dxos/packages/plugins/plugin-sandbox/src/skills/functions/publish-files.ts, github:dxos/dxos/packages/plugins/plugin-sandbox/src/local/server.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sandbox/src/local/server.test.ts, github:dxos/dxos/packages/plugins/plugin-sandbox/src/testing/LocalSandbox.test.ts]
+  walkthrough:
+    - The operation declares the directory and returns a URL or an error. github:dxos/dxos/packages/plugins/plugin-sandbox/src/types/SandboxOperation.ts#PublishFiles
+    - The handler calls the backend's publish, or answers that it cannot. github:dxos/dxos/packages/plugins/plugin-sandbox/src/skills/functions/publish-files.ts
+    - The helper's server serves the directory without the token and nothing outside it. github:dxos/dxos/packages/plugins/plugin-sandbox/src/local/server.ts
+```
+
+```mdl
+verdict attachRepository: Adds the repository to the object and to EDGE, and returns the remote name.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sandbox/src/types/SandboxOperation.ts#AttachRepository, github:dxos/dxos/packages/plugins/plugin-sandbox/src/skills/functions/attach-repository.ts, github:dxos/dxos/packages/plugins/plugin-sandbox/src/services/remote-name.ts#remoteName]
+  walkthrough:
+    - The operation declares the sandbox and repository refs. github:dxos/dxos/packages/plugins/plugin-sandbox/src/types/SandboxOperation.ts#AttachRepository
+    - The handler resolves attachments, calls setRepositories (EDGE only) and updates the object. github:dxos/dxos/packages/plugins/plugin-sandbox/src/skills/functions/attach-repository.ts
+    - Remote names are slugged and kept unique. github:dxos/dxos/packages/plugins/plugin-sandbox/src/services/remote-name.ts#remoteName
+  note: Only `remoteName` is tested (`remote-name.test.ts`); no test runs the handler or checks that a local sandbox is refused.
+```
+
+```mdl
+verdict createRepository: Creates an EDGE-keyed Repo and the repository on EDGE, returning id and remote.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sandbox/src/types/RepositoryOperation.ts#CreateRepository, github:dxos/dxos/packages/plugins/plugin-sandbox/src/skills/functions/repository/create-repository.ts]
+  note: No test invokes the handler; the EDGE create call is exercised only indirectly by the create-on-read backend test.
+```
+
+```mdl
+verdict listRepositoryBranches: Reads branches via the EDGE repository client, creating the repository on first read.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sandbox/src/types/RepositoryOperation.ts#GetBranches, github:dxos/dxos/packages/plugins/plugin-sandbox/src/skills/functions/repository/read.ts#branches, github:dxos/dxos/packages/plugins/plugin-sandbox/src/services/repository-backend.ts#makeRepositoryBackend]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sandbox/src/services/repository-backend.test.ts]
+```
+
+```mdl
+verdict getRepositoryLog: Lists commits with ref, limit and offset through the EDGE client.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sandbox/src/types/RepositoryOperation.ts#GetLog, github:dxos/dxos/packages/plugins/plugin-sandbox/src/skills/functions/repository/read.ts#log]
+  note: `repository-backend.test.ts` covers branches, tree and file reads but not the log; the 100-commit cap is only a description.
+```
+
+```mdl
+verdict listRepositoryFiles: Lists a directory at a ref, passing ref and path as query parameters.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sandbox/src/types/RepositoryOperation.ts#GetTree, github:dxos/dxos/packages/plugins/plugin-sandbox/src/skills/functions/repository/read.ts#tree]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sandbox/src/services/repository-backend.test.ts]
+```
+
+```mdl
+verdict readRepositoryFile: Reads a file at a ref, with base64 for binary content.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sandbox/src/types/RepositoryOperation.ts#ReadFile, github:dxos/dxos/packages/plugins/plugin-sandbox/src/skills/functions/repository/read.ts#readFile]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sandbox/src/services/repository-backend.test.ts]
+```
+
+```mdl
+verdict QA-1: Create and exec are automated; the delete teardown is not.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-sandbox/src/skills/functions/create-sandbox.ts, github:dxos/dxos/packages/plugins/plugin-sandbox/src/skills/functions/exec.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-sandbox/src/plugin.test.ts, github:dxos/dxos/packages/plugins/plugin-sandbox/src/testing/LocalSandbox.test.ts]
+  note: `plugin.test.ts` invokes CreateSandbox then Exec (`echo hello world`) through the composer harness; no test removes the sandbox and checks the environment is torn down.
+```
+
+```mdl
+verdict QA-2: No automated test pushes to a repository from one sandbox and pulls it in another.
+  status: missing
+  note: Searched the package's tests for CreateRepository, AttachRepository and git push; only the repository client and remote naming are tested.
+```

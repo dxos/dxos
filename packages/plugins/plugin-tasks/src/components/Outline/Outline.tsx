@@ -45,7 +45,7 @@ import {
   syncLinkLabels,
 } from '@dxos/ui-editor';
 
-import { meta } from '#meta';
+import { TasksNamespace } from '../../namespace.ts';
 
 /** Link inserted in place of a converted item. */
 export type OutlineLink = {
@@ -217,7 +217,7 @@ const OutlineContent = Util.composable<HTMLDivElement, OutlineContentProps>((pro
     extensions,
     viewRef,
   } = useOutlineContext(OUTLINE_CONTENT_NAME);
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(TasksNamespace.key);
   const themeMode = Hooks.useThemeMode();
 
   const { parentRef, focusAttributes, view } = useTextEditor(

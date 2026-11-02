@@ -54,9 +54,9 @@ import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import * as IrohBeaconPlugin from '@dxos/plugin-iroh-beacon/IrohBeaconPlugin';
 import * as JmapPlugin from '@dxos/plugin-jmap/JmapPlugin';
 import * as KanbanPlugin from '@dxos/plugin-kanban/KanbanPlugin';
-import * as LabelerPlugin from '@dxos/plugin-labeler/LabelerPlugin';
 import * as LaMetricPlugin from '@dxos/plugin-lametric/LaMetricPlugin';
 import * as LibraryPlugin from '@dxos/plugin-library/LibraryPlugin';
+import * as LighthousePlugin from '@dxos/plugin-lighthouse/LighthousePlugin';
 import * as LinearPlugin from '@dxos/plugin-linear/LinearPlugin';
 import * as LingoPlugin from '@dxos/plugin-lingo/LingoPlugin';
 import * as MagazinePlugin from '@dxos/plugin-magazine/MagazinePlugin';
@@ -72,6 +72,7 @@ import * as PipelinePlugin from '@dxos/plugin-pipeline/PipelinePlugin';
 import * as PresenterPlugin from '@dxos/plugin-presenter/PresenterPlugin';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as QaPlugin from '@dxos/plugin-qa/QaPlugin';
+import * as RecorderPlugin from '@dxos/plugin-recorder/RecorderPlugin';
 import * as ReviewPlugin from '@dxos/plugin-review/ReviewPlugin';
 import * as S3Plugin from '@dxos/plugin-s3/S3Plugin';
 import * as SamplePlugin from '@dxos/plugin-sample/SamplePlugin';
@@ -168,7 +169,6 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       IdeogramPlugin.meta.profile.key,
       AgentPlugin.meta.profile.key,
       IrohBeaconPlugin.meta.profile.key,
-      LabelerPlugin.meta.profile.key,
       LaMetricPlugin.meta.profile.key,
       TypeSafePlugin.meta.profile.key,
       LibraryPlugin.meta.profile.key,
@@ -294,8 +294,9 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     InboxPlugin.make(),
     JmapPlugin.make(),
     KanbanPlugin.make(),
-    LabelerPlugin.make(),
     LibraryPlugin.make(),
+    // Not in the defaults: it talks to a lighthouse server on localhost, which raises the local network prompt.
+    LighthousePlugin.make(),
     MagazinePlugin.make(),
     MapPlugin.make(),
     isLocal && MapSolidMapPlugin.make(),
@@ -311,6 +312,8 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     PipelinePlugin.make(),
     PresenterPlugin.make(),
     QaPlugin.make(),
+    // Records a presentation's voice-over; it asks for the microphone only when Record is pressed.
+    RecorderPlugin.make(),
     ProjectsPlugin.make(),
     ReviewPlugin.make(),
     isLocal && SamplePlugin.make(),

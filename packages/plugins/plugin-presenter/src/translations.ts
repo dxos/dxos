@@ -5,8 +5,9 @@
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Presentation } from '#types';
+
+import { PresenterNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -22,15 +23,18 @@ export const translations = [
         'delete-object.label': 'Delete presentation',
         'object-deleted.label': 'Presentation deleted',
       },
-      [meta.profile.key]: {
+      [PresenterNamespace.key]: {
         'plugin.name': 'Presenter',
         'toggle-presentation.label': 'Present',
         'slide-pending.label': 'Loading…',
+        'theme-group.label': 'Theme',
         'theme-color.placeholder': 'From theme',
         'default-font.placeholder': '{{font}} (default)',
         'add-slide.label': 'Add slide',
         'add-slide-layout.label': 'Layout of new slides',
         'slide-grid.label': 'Slides',
+        'grid-size-small.label': 'Small thumbnails',
+        'grid-size-large.label': 'Large thumbnails',
         'add-section.label': 'Add to presentation',
         'untitled-object.label': 'Untitled {{type}}',
         'slide-fallback.label': 'Slide {{count}}',
@@ -74,6 +78,11 @@ export const translations = [
         'next-slide.label': 'Next slide',
         'present-from-here.label': 'Present from this slide',
         'slide-preview.label': 'Slide',
+        'slide-position.label': '{{index}} / {{count}}',
+        'no-notes.label': 'No speaker notes for this slide.',
+        'next-slide-notes.label': 'Next: {{title}}',
+        'speaker-notes-window.title': 'Speaker notes: {{name}}',
+        'open-speaker-notes.label': 'Open speaker notes',
       },
     },
   },

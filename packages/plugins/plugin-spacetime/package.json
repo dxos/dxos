@@ -1,7 +1,6 @@
 {
   "name": "@dxos/plugin-spacetime",
   "version": "0.16.0",
-  "private": true,
   "description": "3D modeling plugin with Babylon.js and Manifold",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -14,19 +13,6 @@
   "sideEffects": false,
   "type": "module",
   "imports": {
-    "#capabilities": {
-      "source": {
-        "workerd": "./src/capabilities/gen/workerd.ts",
-        "node": "./src/capabilities/gen/node.ts",
-        "tauri": "./src/capabilities/gen/tauri.ts",
-        "browser": "./src/capabilities/gen/browser.ts"
-      },
-      "types": "./dist/types/src/capabilities/index.d.ts",
-      "workerd": "./dist/lib/capabilities.workerd.mjs",
-      "node": "./dist/lib/capabilities.node.mjs",
-      "tauri": "./dist/lib/capabilities.tauri.mjs",
-      "browser": "./dist/lib/capabilities.browser.mjs"
-    },
     "#components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
@@ -38,14 +24,11 @@
       "default": "./dist/lib/containers.mjs"
     },
     "#meta": {
-      "source": "./src/meta.ts",
-      "types": "./dist/types/src/meta.d.ts",
-      "default": "./dist/lib/meta.mjs"
-    },
-    "#plugin": {
-      "source": "./src/plugin.tsx",
-      "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/plugin.mjs"
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/SpacetimePlugin.workerd.mjs",
+      "node": "./dist/lib/SpacetimePlugin.node.mjs",
+      "default": "./dist/lib/SpacetimePlugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -102,9 +85,16 @@
       "import": "./dist/lib/SpacetimeEvents.mjs"
     },
     "./SpacetimePlugin": {
-      "source": "./src/SpacetimePlugin.ts",
-      "types": "./dist/types/src/SpacetimePlugin.d.ts",
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/SpacetimePlugin.workerd.mjs",
+      "node": "./dist/lib/SpacetimePlugin.node.mjs",
       "import": "./dist/lib/SpacetimePlugin.mjs"
+    },
+    "./SpacetimePresets": {
+      "source": "./src/SpacetimePresets.ts",
+      "types": "./dist/types/src/SpacetimePresets.d.ts",
+      "import": "./dist/lib/SpacetimePresets.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -124,6 +114,9 @@
       ],
       "SpacetimeEvents": [
         "dist/types/src/types/SpacetimeEvents.d.ts"
+      ],
+      "SpacetimePresets": [
+        "dist/types/src/SpacetimePresets.d.ts"
       ]
     }
   },
@@ -176,5 +169,8 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

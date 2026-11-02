@@ -7,12 +7,8 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    SpotlightPlugin: 'src/SpotlightPlugin.ts',
-    capabilities: 'src/capabilities/index.ts',
     components: 'src/components/index.ts',
-    meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
-    plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
     SpotlightCapabilities: 'src/types/SpotlightCapabilities.ts',
     types: 'src/types/index.ts',

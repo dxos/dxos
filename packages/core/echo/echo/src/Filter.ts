@@ -505,15 +505,15 @@ export const created = (range: TimeRange): Any => _timeRangeFilter('createdAt', 
  */
 export type FeedCursorRange = {
   /** Read after this cursor. Defaults to the start of the feed ({@link Feed.START}). */
-  begin?: Feed.Cursor;
+  begin?: Feed.Cursor | Feed.LocalCursor;
   /** Read up to but not including this cursor. Defaults to the end of the feed. */
   end?: Feed.Cursor;
   /**
-   * `position` (default): confirmed items in the order the position authority assigned, cursors from
-   * `Feed.getCursor`. `local`: every item, unconfirmed ones included, in the order this replica indexed it, cursors
-   * from `Feed.getLocalCursor`; that order never changes under a reader, so state derived from it stays valid.
+   * The order the cursors are positions in: `edge`, the position the authority assigned
+   * ({@link Feed.getCursor}), or `local`, a walk's local cursor ({@link Feed.getLocalCursor}).
+   * Defaults to `local` in a walk scope and `edge` elsewhere.
    */
-  order?: 'position' | 'local';
+  positions?: 'local' | 'edge';
 };
 
 /**
@@ -543,7 +543,7 @@ export const feedCursor = (range: FeedCursorRange = {}): Any =>
     type: 'feed-cursor',
     ...(range.begin !== undefined ? { begin: range.begin } : {}),
     ...(range.end !== undefined ? { end: range.end } : {}),
-    ...(range.order !== undefined ? { order: range.order } : {}),
+    ...(range.positions !== undefined ? { positions: range.positions } : {}),
   });
 
 export type ChildOfOptions = {

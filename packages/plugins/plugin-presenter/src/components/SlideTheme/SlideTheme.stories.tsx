@@ -40,7 +40,7 @@ const DefaultStory = ({ themes }: StoryProps) => (
   <div className='size-full overflow-y-auto'>
     <div className='flex flex-col gap-8 p-8 max-w-[64rem] mx-auto'>
       {themes.map((settings, index) => (
-        <figure key={index} data-theme-name={settings.name} className='flex flex-col gap-2 m-0'>
+        <figure key={index} data-theme-name={settings.base} className='flex flex-col gap-2 m-0'>
           <figcaption className='text-sm text-description font-mono'>{caption(settings)}</figcaption>
           <div className='flex aspect-video'>
             <SlideThemeProvider settings={settings}>
@@ -125,7 +125,7 @@ type Story = StoryObj<typeof meta>;
 
 /** Every built-in theme rendering the same slide. */
 export const Default: Story = {
-  args: { themes: SlideTheme.NAMES.map((name) => ({ name })) },
+  args: { themes: SlideTheme.NAMES.map((base) => ({ base })) },
   play: async ({ canvasElement }) => {
     const slide = (name: string) => {
       const element = canvasElement.querySelector(`[data-theme-name="${name}"] [data-slide]`);
@@ -143,23 +143,23 @@ export const Default: Story = {
 
 /** Accent, background, text color and font overrides; the unsafe accent is ignored. */
 const OVERRIDES: SlideTheme.Settings[] = [
-  { name: 'dark', accent: '#f97316' },
-  { name: 'light', background: '#fef3c7', foreground: '#451a03', accent: '#b45309' },
-  { name: 'serif', accent: 'oklch(65% 0.2 300)' },
-  { name: 'default', accent: 'url(https://example.com/x)', font: 'sans' },
+  { base: 'dark', accent: '#f97316' },
+  { base: 'light', background: '#fef3c7', foreground: '#451a03', accent: '#b45309' },
+  { base: 'serif', accent: 'oklch(65% 0.2 300)' },
+  { base: 'default', accent: 'url(https://example.com/x)', font: 'sans' },
 ];
 
 /** Each text font with a code font; web fonts load on first use. */
 const FONTS: SlideTheme.Settings[] = [
-  { name: 'default', font: 'sans', monoFont: 'fira' },
-  { name: 'default', font: 'rounded', monoFont: 'plex' },
-  { name: 'light', font: 'serif', monoFont: 'jetbrains' },
-  { name: 'dark', font: 'display', monoFont: 'system' },
+  { base: 'default', font: 'sans', monoFont: 'fira' },
+  { base: 'default', font: 'rounded', monoFont: 'plex' },
+  { base: 'light', font: 'serif', monoFont: 'jetbrains' },
+  { base: 'dark', font: 'display', monoFont: 'system' },
 ];
 
 /** Every variant in one column: the built-in themes, then overrides, then font pairings. */
 export const All: Story = {
-  args: { themes: [...SlideTheme.NAMES.map((name) => ({ name })), ...OVERRIDES, ...FONTS] },
+  args: { themes: [...SlideTheme.NAMES.map((base) => ({ base })), ...OVERRIDES, ...FONTS] },
 };
 
 export const Overrides: Story = { args: { themes: OVERRIDES } };

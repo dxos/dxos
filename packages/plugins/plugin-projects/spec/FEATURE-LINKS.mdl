@@ -1,0 +1,293 @@
+---
+id: org.dxos.plugin.projects.featureLinks
+name: Feature links
+version: 0.1.0
+---
+
+Tests and analytics in the code link to the features on a spec's feature map. A feature is named by a DXN:
+its `meta.key`, then `#` and its mnemonic, for example `dxn:network.dxos.team.features.mcp.codeMode#ABC123`.
+Code cites that DXN in a `@feature` JSDoc tag; analytics events carry it in a `feature` property. A scanner
+collects the tags, and the feature map shows each feature's DXN and the code that cites it.
+
+There is no global resolver. A DXN resolves against the spaces the reader is a member of.
+
+It spans three places: the DXN grammar in `@dxos/keys` (`DXN`), the mnemonic in `@dxos/echo`
+(`Obj.getMnemonic`, `Filter.mnemonic`, `Filter.key`), and plugin-projects (`Feature`, the feature map).
+
+## Extensions
+
+| Term       | URI                         |
+|------------|-----------------------------|
+| `type`     | `org.dxos.mdl.type@1.0`     |
+| `op`       | `org.dxos.mdl.op@1.0`       |
+| `feat`     | `org.dxos.mdl.feat@1.0`     |
+| `scenario` | `org.dxos.mdl.scenario@1.0` |
+| `test`     | `org.dxos.mdl.test@1.0`     |
+| `decision` | `org.dxos.mdl.decision@1.0` |
+
+## Diagram
+
+```diagram
+diagram flow=right
+group repo "repository" {
+  node Test "test file"
+  node Event "analytics event"
+  node Scanner "feature-link scanner"
+}
+group keys "@dxos/keys" {
+  node Dxn "DXN"
+}
+group projects "plugin-projects" {
+  node Import "importFeatureLinks"
+  node Resolve "resolveFeatureLink"
+  node Feature "Feature"
+  node Map "feature map"
+}
+node PostHog "PostHog"
+edge Test -> Scanner "@feature dxn:…#ABC123"
+edge Scanner -> Import "links"
+edge Import -> Resolve "each DXN"
+edge Resolve depends-on Dxn "parse"
+edge Resolve -> Feature "meta.key + mnemonic"
+edge Import -> Feature "write code links"
+edge Feature -> Map "DXN, code links"
+edge Event -> PostHog "feature: dxn:…"
+```
+
+## Naming a feature
+
+A DXN with a mnemonic is `dxn:<nsid>[:<version>][#<mnemonic>]`. The NSID is the object's `meta.key`. The mnemonic
+is `Obj.getMnemonic`: the last six characters of the object id, uppercased. They are the random part of the ULID,
+so they stay the same for the life of the object.
+
+```mdl
+feat F-1: DXN mnemonic suffix
+
+  req F-1.1: `DXN.tryMake` accepts an optional `#<mnemonic>` after the NSID and the optional version, where the mnemonic is six Crockford base32 characters (`EntityId.isValidMnemonic`), in either case.
+
+  req F-1.2: `DXN.getName` and `DXN.getVersion` ignore the suffix; `DXN.getMnemonic` returns it uppercased, or undefined when there is none.
+
+  req F-1.3: `DXN.withMnemonic(dxn, mnemonic)` sets or replaces the suffix and `DXN.withoutMnemonic(dxn)` removes it.
+
+  req F-1.4: `DXN.make` builds DXNs without a suffix only, so a type, plugin or operation key never carries one.
+```
+
+```mdl
+feat F-2: Feature key
+
+  req F-2.1: A feature's NSID is its `meta.key`. `op:CreateFeature` and `op:UpdateFeature` take an optional `key`, validated by `DXN.NameSchema`; an update with `key: null` removes it.
+
+  req F-2.2: `Feature.getLink(feature)` returns `dxn:<meta.key>#<mnemonic>`, or undefined when the feature has no `meta.key`.
+
+  req F-2.3: Two features in one space with the same `meta.key` are allowed; the mnemonic tells them apart.
+```
+
+## Resolving a link
+
+```mdl
+feat F-3: Resolution
+
+  req F-3.1:
+    when: a DXN is resolved against a database
+    then: the resolver queries features by `Filter.key` on the NSID; with a mnemonic, the match whose mnemonic is equal wins
+
+  req F-3.2:
+    when: the key matches no feature but the mnemonic matches one
+    then: that feature is the result, with status `renamed`, so a link survives a change of `meta.key`
+
+  req F-3.3:
+    when: the key matches features and none has the mnemonic
+    then: the result is `stale` when exactly one feature has the key, and `ambiguous` when several do
+
+  req F-3.4: The result is one of `exact`, `renamed`, `stale`, `ambiguous` or `missing`, and names the feature for every status except `missing` and `ambiguous`.
+
+  req F-3.5: A reader resolves a link against each space they are a member of; a link resolves only where the feature's space is open to the reader.
+```
+
+## Citing a feature in code
+
+```mdl
+feat F-4: The `@feature` tag
+
+  req F-4.1: Code cites a feature with a JSDoc block tag `@feature <dxn>`, one DXN per tag; a block can have several tags.
+
+  req F-4.2: A tag on a `describe` applies to every test inside it; a tag on a `test`, a function, a class or a constant applies to that symbol.
+
+  req F-4.3: The DXN in a tag carries a mnemonic, so it resolves when two spaces hold a feature with the same key.
+
+  req F-4.4: An analytics event that measures a feature carries the same DXN in a `feature` property, because a JSDoc tag does not exist at runtime.
+```
+
+```mdl
+feat F-5: Scanner
+
+  req F-5.1: `scanFeatureLinks(path, text)` returns one link per tag: the DXN, the file path, the 1-based line of the tag, the symbol the comment documents, and its kind (`test`, `suite` or `code`).
+
+  req F-5.2: The kind is `suite` for a `describe`, `test` for a `test` or `it`, and `code` for anything else.
+
+  req F-5.3: A tag whose value is not a valid DXN is reported as an error with its path and line, not dropped.
+
+  req F-5.4: The `scan-feature-links` script runs the scanner over the TypeScript files git tracks and prints the links as JSON, so the output can be passed to `op:ImportFeatureLinks` without editing.
+```
+
+## On the feature map
+
+```mdl
+feat F-6: Code links on features
+
+  req F-6.1: A feature holds the code that cites it in `code`, a list of links (path, line, symbol, kind), so the feature map reads them without the repository.
+
+  req F-6.2: `op:ImportFeatureLinks` resolves each link's DXN in the space, replaces the `code` list of every feature it resolved, and returns the links it could not resolve with their status.
+
+  req F-6.3: The feature card shows how many tests cite the feature; a feature that no test cites shows nothing.
+
+  req F-6.4: The feature article shows the feature's DXN with a copy button, and lists its code links, each opening the file at its line on GitHub.
+
+  req F-6.5: A feature without a `meta.key` shows no DXN, and its article offers to set the key.
+```
+
+```mdl
+scenario T-1: A test links to its feature
+  given: a feature with `meta.key` `network.dxos.team.features.mcp.codeMode` and mnemonic `ABC123`
+  when: a test file holds `@feature dxn:network.dxos.team.features.mcp.codeMode#ABC123` on a `describe`, and its scan is imported
+  then:
+    - the feature's `code` holds one `suite` link to that file and line
+    - the feature card shows one test
+    - the article lists the link and opens it on GitHub
+```
+
+```mdl
+scenario T-2: A renamed key keeps its links
+  given: a test cites `dxn:org.example.features.old#ABC123`, and the feature with mnemonic `ABC123` now has the key `org.example.features.new`
+  when: the scan is imported
+  then:
+    - the link resolves with status `renamed`
+    - the feature's `code` holds the link
+```
+
+## QA
+
+```mdl
+test QA-1: Cite a feature from code
+  desc: |
+    A feature on the map shows the DXN that code cites it by and the tests and code that cite it; a feature with
+    no key offers to set one. Walked by the autocue flow `plugin-projects/feature-links`
+    against the SpecFeatures and FeatureArticle stories, whose seed gives "Provider sync" a key and three code
+    links.
+  actors: human
+  status: passing            # 2026-10-25, recorded by the plugin-projects/feature-links flow
+  given:
+    - storybook serves plugin-projects
+    - the seeded "Provider sync" feature has the key `org.dxos.plugin.inbox.feature.providerSync` and three code links
+  steps:
+    - name: See which features are tested
+      do: Open the spec's feature map as cards.
+      expect: the "Provider sync" card shows "2 tests"; a feature that no test cites shows no count
+    - name: Open a feature with a key
+      do: Open the "Provider sync" feature.
+      expect: the article shows `dxn:org.dxos.plugin.inbox.feature.providerSync#<mnemonic>` with a copy button
+    - name: Read its code links
+      do: Scroll to the Code section.
+      expect: it lists a suite, a test and an analytics function, each with its path and line
+    - name: Open a code link
+      do: Point at the "Gmail sync" row.
+      expect: it links to `gmail-sync.test.ts#L24` on GitHub
+    - name: Set a key on a feature without one
+      do: Open "OAuth tokens", type `org.dxos.plugin.connector.feature.oauthTokens` in the key field and press Enter.
+      expect: the key field goes away and the article shows the feature's DXN
+```
+
+## Out of scope
+
+- Showing analytics on the feature map (event counts per feature). Events carry the DXN now ([F-4.4]), so a
+  later change can read them from PostHog.
+- A global resolver, or resolving in spaces the reader is not a member of.
+
+## Changelog
+
+```mdl
+decision D-1: Tests and analytics in the code link to features in a space, cited by a JSDoc tag.
+  date: 2026-10-25
+  by: user:dmaretskyi
+  affects: [F-4]
+```
+
+```mdl
+decision D-2: A feature is named by a DXN, `dxn:<nsid>#<mnemonic>`, where `#` and the mnemonic disambiguate the name; the suffix is part of the DXN standard. There is no global resolver: a DXN resolves against the reader's own spaces.
+  date: 2026-10-25
+  by: user:dmaretskyi
+  affects: [F-1, F-3.5]
+```
+
+```mdl
+decision D-3: The mnemonic in the suffix is the ECHO mnemonic (`Obj.getMnemonic`).
+  date: 2026-10-25
+  by: user:dmaretskyi
+  affects: [F-1.1]
+```
+
+```mdl
+decision D-4: The DXN's NSID is the object's `meta.key` field, which is standardized.
+  date: 2026-10-25
+  by: user:dmaretskyi
+  affects: [F-2.1, F-2.2]
+```
+
+```mdl
+decision D-5: The tag is a custom `@feature` block tag, not `@link`.
+  date: 2026-10-25
+  by: user:dmaretskyi
+  affects: [F-4.1]
+```
+
+```mdl
+decision D-6: The key finds the feature and the mnemonic picks among features with that key; when the key finds none, the mnemonic alone resolves it as `renamed`. Fills in [D-2] and [D-4].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3]
+  why: |
+    `meta.key` is the standardized identity, so it leads. The mnemonic is enough on its own to find an object in the
+    reader's spaces, so a link whose key changed still resolves rather than going dead.
+  rejected:
+    - Mnemonic only, the key as a hint — ignores the standardized key and accepts a link whose key is wrong.
+    - Key only — a key that changes breaks every link to it.
+```
+
+```mdl
+decision D-7: The suffix follows the optional version, and `DXN.make` never adds one. Fills in [D-2].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.1, F-1.4]
+  why: Types, plugins and operations are named by `DXN.make`; keeping the suffix out of it means a key can never carry an object's mnemonic.
+```
+
+```mdl
+decision D-8: Analytics events carry the DXN in a `feature` property. Fills in [D-1].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4.4]
+  why: A JSDoc tag is gone at runtime, so an event can only be grouped by feature if it carries the DXN itself.
+```
+
+```mdl
+decision D-9: The scan is imported into the space and stored on each feature as `code`. Fills in [D-1].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5, F-6]
+  why: Composer cannot read the repository, and storing the links on the feature lets the feature map show them offline, the way `specs` already holds repo paths.
+  rejected:
+    - Relations to a code object per link — many objects for data that is replaced on every scan.
+```
+
+```mdl
+decision D-10: Features live on specs rather than projects, so the feature map is a spec's, opened from the sidebar; the links to code are unchanged.
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-1]
+  why: A spec is now the container of features and the sidebar lists specs; a project only tracks a spec's tasks.
+```

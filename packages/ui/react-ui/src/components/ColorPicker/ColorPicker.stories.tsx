@@ -11,15 +11,19 @@ import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
 import { withLayout, withTheme } from '../../testing/index.ts';
 import * as ColorPicker from './ColorPicker.tsx';
 
-type StoryArgs = { defaultValue?: string; disabled?: boolean } & Pick<ColorPicker.TriggerProps, 'tones'>;
+type StoryArgs = { defaultValue?: string; disabled?: boolean } & Pick<ColorPicker.TriggerProps, 'tones' | 'views'>;
 
 /** A text box with the picker's swatch as its end decoration, as a form's color field lays it out. */
-const DefaultStory = ({ defaultValue, disabled, tones }: StoryArgs) => {
+const DefaultStory = ({ defaultValue, disabled, tones, views }: StoryArgs) => {
   const [value, setValue] = useState(defaultValue);
   return (
     <div className='flex flex-col gap-2 w-72'>
       <ColorPicker.Root value={value} onValueChange={setValue} disabled={disabled}>
-        <ColorPicker.Input placeholder='None' data-testid='color.input' end={<ColorPicker.Trigger tones={tones} />} />
+        <ColorPicker.Input
+          placeholder='None'
+          data-testid='color.input'
+          end={<ColorPicker.Trigger tones={tones} views={views} />}
+        />
       </ColorPicker.Root>
       <code data-testid='color.value'>{value ?? 'unset'}</code>
     </div>
@@ -107,5 +111,39 @@ export const Keyboard: Story = {
     await waitFor(() => expect(value()).toBe(red));
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(value()).toBe(orange));
+  },
+};
+
+/** One view: the swatches alone, with no tabs. */
+export const SwatchesOnly: Story = {
+  args: { views: ['swatches'], tones: [300, 400, 500, 600, 700, 800, 900] },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Pick color' }));
+    await expect(await screen.findByRole('radio', { name: 'red-300' })).toBeVisible();
+    await expect(screen.queryByRole('tab', { name: 'Wheel' })).toBeNull();
+  },
+};
+
+const HueGridStory = () => {
+  const [value, setValue] = useState<string | undefined>('purple');
+  return (
+    <div className='flex flex-col gap-2'>
+      <ColorPicker.HueGrid value={value} onValueChange={setValue} />
+      <code data-testid='hue.value'>{value ?? 'unset'}</code>
+    </div>
+  );
+};
+
+/** The hue-only variant: the value is a theme hue's name, and every hue fits its grid. */
+export const HueGrid: Story = {
+  render: HueGridStory,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('radio', { name: 'purple' })).toHaveAttribute('aria-checked', 'true');
+    await userEvent.click(canvas.getByRole('radio', { name: 'blue' }));
+    await expect(canvas.getByTestId('hue.value')).toHaveTextContent('blue');
+    await userEvent.keyboard('{ArrowRight}');
+    await expect(canvas.getByTestId('hue.value')).not.toHaveTextContent('blue');
   },
 };

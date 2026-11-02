@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type PropsWithChildren, useState } from 'react';
-import { useResizeDetector } from 'react-resize-detector';
+import React, { type PropsWithChildren, type RefObject, useLayoutEffect, useRef, useState } from 'react';
 
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
@@ -21,24 +20,9 @@ export type SlideCanvasProps = Util.ThemedClassName<
  * The 2560 × 1440 slide canvas scaled to fit its container (16:9); `Slide.Frame` and embedded text slides share it.
  */
 export const SlideCanvas = ({ children, classNames, inset }: SlideCanvasProps) => {
-  const [props, setProps] = useState({});
   const themeStyle = useSlideThemeStyle();
-  const {
-    ref: containerRef,
-    width,
-    height,
-  } = useResizeDetector({
-    refreshMode: 'debounce',
-    refreshRate: 200,
-    refreshOptions: {
-      leading: true,
-    },
-    onResize: ({ width, height }) => {
-      if (width && height) {
-        setProps(createLayoutProps({ width, height }));
-      }
-    },
-  });
+  const containerRef = useRef<HTMLDivElement>(null);
+  const size = useContainerSize(containerRef);
 
   // TODO(burdon): Reconcile highlight colors with markdown editor.
   const frame = (
@@ -53,13 +37,43 @@ export const SlideCanvas = ({ children, classNames, inset }: SlideCanvasProps) =
       )}
       style={inset ? undefined : themeStyle}
     >
-      <div className={mx('dx-expand absolute')} style={props}>
-        {!!width && !!height && children}
+      <div className={mx('dx-expand absolute')} style={size ? createLayoutProps(size) : undefined}>
+        {size && children}
       </div>
     </div>
   );
 
   return inset ? <div className='flex grow relative p-4 overflow-hidden bg-deck-surface'>{frame}</div> : frame;
+};
+
+type Size = { width: number; height: number };
+
+/**
+ * The container's size, measured before the first paint and on every resize (no debounce), so the slide is scaled in
+ * the same frame its container changes: a debounced measure painted it at the old scale first (entering fullscreen,
+ * resizing the grid) and then jumped.
+ */
+const useContainerSize = (ref: RefObject<HTMLDivElement | null>): Size | undefined => {
+  const [size, setSize] = useState<Size>();
+  useLayoutEffect(() => {
+    const element = ref.current;
+    if (!element) {
+      return;
+    }
+    const measure = () => {
+      const { width, height } = element.getBoundingClientRect();
+      if (width && height) {
+        setSize((previous) =>
+          previous?.width === width && previous?.height === height ? previous : { width, height },
+        );
+      }
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [ref]);
+  return size;
 };
 
 /**
@@ -72,7 +86,7 @@ export const SlideCanvas = ({ children, classNames, inset }: SlideCanvasProps) =
  * Default  2560 x 1440     1728 x 1117 (Actual height 1080 - 37 pixel notch)
  * Aspect   1.77 (16/9)     1.54
  */
-const createLayoutProps = ({ width, height }: { width: number; height: number }) => {
+const createLayoutProps = ({ width, height }: Size) => {
   // Config.
   const aspectRatio = 16 / 9;
   const nominalWidth = 2560;

@@ -62,11 +62,15 @@ export const operations: readonly Operation.Definition.Any[] = [
   // Features are the goal states work moves; linking and showcasing are how the feature map shows that work.
   FeatureOperation.Create,
   FeatureOperation.Update,
+  FeatureOperation.Delete,
+  FeatureOperation.CreateSpec,
+  FeatureOperation.UpdateSpec,
   FeatureOperation.AddDependency,
   FeatureOperation.RemoveDependency,
   FeatureOperation.LinkTask,
   FeatureOperation.CreateShowcase,
   FeatureOperation.GetFeatures,
+  FeatureOperation.ImportSpec,
 ];
 
 /**

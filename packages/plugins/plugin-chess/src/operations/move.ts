@@ -14,7 +14,7 @@ import { Chess, ChessOperation } from '#types';
 const handler: Operation.WithHandler<typeof ChessOperation.Move> = ChessOperation.Move.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ game, move }) {
-      const { variant } = yield* GameUtil.loadGame(game, Chess.State);
+      const { game: loaded, variant } = yield* GameUtil.loadGame(game, Chess.State);
       const chess = new ChessJS();
       if (variant.pgn) {
         chess.loadPgn(variant.pgn);
@@ -26,6 +26,10 @@ const handler: Operation.WithHandler<typeof ChessOperation.Move> = ChessOperatio
       const pgn = chess.pgn();
       Obj.update(variant, (variant) => {
         variant.pgn = pgn;
+      });
+      // The game's description is its current position, so tables and cards can show it.
+      Obj.update(loaded, (loaded) => {
+        loaded.description = chess.fen();
       });
       return { pgn };
     }),

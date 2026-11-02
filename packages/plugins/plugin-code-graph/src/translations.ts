@@ -5,8 +5,9 @@
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { CodeGraph } from '#types';
+
+import { CodeGraphNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -22,7 +23,7 @@ export const translations = [
         'delete-object.label': 'Delete code graph',
         'object-deleted.label': 'Code graph deleted',
       },
-      [meta.profile.key]: {
+      [CodeGraphNamespace.key]: {
         'plugin.name': 'Code Graph',
         'layout.label': 'Layout',
         'layout-illustrator.label': 'Illustrator layout',
@@ -44,6 +45,8 @@ export const translations = [
         'command-close.label': 'Close command bar',
         'command-listen.label': 'Speak a command',
         'command-stop-listening.label': 'Stop listening',
+        'command-verbose-on.label': 'Show steps and timings',
+        'command-verbose-off.label': 'Hide steps and timings',
       },
     },
   },

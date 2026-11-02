@@ -7,8 +7,9 @@ import React, { useMemo } from 'react';
 import { GroupMenu, SortMenu } from '@dxos/react-ui-menu';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
-import { meta } from '#meta';
 import { TaskSetView } from '#types';
+
+import { TasksNamespace } from '../../namespace.ts';
 
 const SORT_ICONS: Record<TaskSetView.SortField, string> = {
   manual: 'ph--hand-grabbing--regular',
@@ -38,7 +39,7 @@ export type TaskSortMenuProps = {
  * it is the only field without a direction to pick.
  */
 export const TaskSortMenu = ({ value, onChange }: TaskSortMenuProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(TasksNamespace.key);
   const fields = useMemo(
     () => TaskSetView.SortField.literals.map((id) => ({ id, label: t(`sort-${id}.label`), icon: SORT_ICONS[id] })),
     [t],
@@ -66,7 +67,7 @@ export type TaskGroupMenuProps = {
 
 /** What the list is grouped by, as a single-select menu beside the sort. */
 export const TaskGroupMenu = ({ value, onChange }: TaskGroupMenuProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(TasksNamespace.key);
   const fields = useMemo(
     () => TaskSetView.GroupField.literals.map((id) => ({ id, label: t(`group-${id}.label`), icon: GROUP_ICONS[id] })),
     [t],

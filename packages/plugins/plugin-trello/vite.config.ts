@@ -7,11 +7,7 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    TrelloPlugin: 'src/TrelloPlugin.ts',
-    capabilities: 'src/capabilities/index.ts',
-    meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
-    plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
     TrelloEvents: 'src/types/TrelloEvents.ts',
     TrelloOperation: 'src/types/TrelloOperation.ts',

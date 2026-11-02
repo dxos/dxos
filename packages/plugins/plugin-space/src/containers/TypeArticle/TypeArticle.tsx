@@ -23,9 +23,9 @@ import * as Tabs from '@dxos/react-ui/Tabs';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx, osTranslations } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
 import { SpaceCapabilities, SpaceOperation } from '#types';
 
+import { SpaceNamespace } from '../../namespace.ts';
 import { ObjectMasonry, type TileData } from '../ObjectMasonry/index.ts';
 import { useDuplicatesGroup } from './duplicatesGroup.tsx';
 import { useDuplicates } from './useDuplicates.ts';
@@ -63,7 +63,7 @@ export type TypeArticleProps = {
  * type node resolved on demand.
  */
 export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const [layout, setLayout] = useState<Layout>('masonry');
   const typeUri = Type.getURI(type);
@@ -181,7 +181,7 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
   // (which would fire on every cell click and fight with in-cell editing).
   const rowActions = useMemo(
     (): TableRowAction[] => [
-      { id: 'open', label: ['open-object.label', { ns: meta.profile.key }] },
+      { id: 'open', label: ['open-object.label', { ns: SpaceNamespace.key }] },
       ...(TypeOptions.isUserType(type)
         ? [
             {
@@ -219,7 +219,7 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
               builder.action(
                 'delete-selected',
                 {
-                  label: ['delete-selected.label', { ns: meta.profile.key, count: selectedIds.length }],
+                  label: ['delete-selected.label', { ns: SpaceNamespace.key, count: selectedIds.length }],
                   icon: 'ph--trash--regular',
                 },
                 handleDeleteSelected,
@@ -233,11 +233,11 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
             variant: 'toggleGroup',
             selectCardinality: 'single',
             value: layout,
-            label: ['layout.label', { ns: meta.profile.key }],
+            label: ['layout.label', { ns: SpaceNamespace.key }],
           },
           (group) => {
             layouts.forEach(({ value, icon }) => {
-              group.action(value, { label: [`layout-${value}.label`, { ns: meta.profile.key }], icon }, () =>
+              group.action(value, { label: [`layout-${value}.label`, { ns: SpaceNamespace.key }], icon }, () =>
                 setLayout(value),
               );
             });

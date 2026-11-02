@@ -185,21 +185,25 @@ export const googleMailSyncProvider = (options: {
                 if (forwardIds) {
                   onEnumerated(forwardIds.length);
                 }
-                return {
-                  additions: fetchMessages({
+                const fetchItems = (fetchWindows: Cursor.Windows, ids: readonly string[] | undefined) =>
+                  fetchMessages({
                     userId,
                     label,
-                    windows,
+                    windows: fetchWindows,
                     searchFilter: filter,
                     onEnumerated,
                     onEstimate,
                     onRetrieved,
-                    forwardIds,
+                    forwardIds: ids,
                   }).pipe(
                     Stream.map(toItem),
                     Stream.provideService(GoogleMailApi, api),
                     Stream.mapError(MailSync.MailSyncError.wrap()),
-                  ),
+                  );
+                // The delta's ids and the backward window are fetched apart, so the harness reads the delta first.
+                return {
+                  deltaAdditions: forwardIds ? fetchItems({}, forwardIds) : undefined,
+                  windowAdditions: fetchItems(forwardIds ? { backward: windows.backward } : windows, undefined),
                   // Empty on non-incremental runs; resolved to `Change`s by the shared `reconcileToChanges`.
                   reconciles: MailSync.reconcileToChanges(Stream.fromIterable(reconcileItems)),
                 };

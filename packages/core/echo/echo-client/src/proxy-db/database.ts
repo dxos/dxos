@@ -4,6 +4,7 @@
 
 import { type Heads } from '@automerge/automerge';
 import * as EffectContext from 'effect/Context';
+import * as Effect from 'effect/Effect';
 import * as Equal from 'effect/Equal';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
@@ -52,6 +53,7 @@ import {
   setRefResolver,
 } from '@dxos/echo/internal';
 import { getProxyTarget, isProxy } from '@dxos/echo/internal';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { assertArgument, assertState, invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -65,8 +67,10 @@ import {
   type BranchStore,
   type DocumentRetention,
   EntityManager,
+  type ExportWorkingSetOptions,
   type LoadObjectOptions,
   type SpaceDocumentHeads,
+  type WorkingSetRow,
 } from '../core-db/index.ts';
 import {
   EchoReactiveHandler,
@@ -132,6 +136,8 @@ export interface EchoDatabase extends Database.Database {
 
   /**
    * Returns the number of objects stored inline in the space root document.
+   *
+   * @deprecated Inline directory objects are migrated into linked documents; this counts the ones not migrated yet.
    */
   getNumberOfInlineObjects(): number;
 
@@ -144,18 +150,6 @@ export interface EchoDatabase extends Database.Database {
    * Returns the loaded automerge document handles.
    */
   getLoadedDocumentHandles(): DocHandleProxy<unknown>[];
-
-  /**
-   * Migration-scoped accessor to the automerge repo.
-   * Will be moved to a dedicated internal entrypoint in a future stage.
-   */
-  readonly _repo: RepoProxy;
-
-  /**
-   * Returns the space root document handle for migration tools.
-   * Will be moved to a dedicated internal entrypoint in a future stage.
-   */
-  _getSpaceRootDocHandle(): DocHandleProxy<DatabaseDirectory>;
 
   //
   // Branching — inherited from {@link Database.Database} (`createBranch`/`switchBranch`/
@@ -180,7 +174,11 @@ export interface EchoDatabase extends Database.Database {
   /**
    * Removes feed entities by id.
    */
-  removeFeedItemsByIds(feed: Feed.Feed, ids: string[]): Promise<void>;
+  removeFeedItemsByIds(
+    feed: Feed.Feed,
+    ids: string[],
+    options?: { branches?: ReadonlyArray<string | null> },
+  ): Promise<void>;
 
   /**
    * Syncs a feed with the server.
@@ -225,6 +223,9 @@ export type EchoDatabaseProps = {
 
   /** @deprecated Use spaceId */
   spaceKey: PublicKey;
+
+  /** Starts a new space epoch whose root is the given document; enables `beginMigration({ root: 'replace' })`. */
+  createEpoch?: (rootUrl: string) => Promise<void>;
 };
 
 /**
@@ -369,6 +370,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   private _rootUrl: string | undefined = undefined;
   private readonly _reactiveSchemaQuery: boolean;
   private readonly _preloadSchemaOnOpen: boolean;
+  #seed?: readonly WorkingSetRow[];
 
   /**
    * Backend for feed operations. Set on construction and refreshed on reconnect.
@@ -377,6 +379,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   /** Runtime used to run effect-rpc feed calls at Promise boundaries. */
   readonly #runtime: EffectContext.Context<never>;
+  readonly #createEpoch?: (rootUrl: string) => Promise<void>;
 
   /**
    * Feed handles keyed by feed URI. A feed is a regular ECHO object whose items live in an
@@ -396,6 +399,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     this._hypergraph = params.graph;
     this.#feedService = params.feedService;
     this.#runtime = params.runtime;
+    this.#createEpoch = params.createEpoch;
 
     this._entityManager = new EntityManager({
       graph: params.graph,
@@ -475,14 +479,27 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   protected override async _open(): Promise<void> {
     await this._entityManager.open(this._ctx);
 
+    const seed = this.#seed;
+    this.#seed = undefined;
+    if (seed) {
+      this._entityManager.seedDocuments(seed);
+    }
+
     if (this._rootUrl !== undefined) {
       await this._entityManager.openWithSpaceState(this._ctx, { rootUrl: this._rootUrl });
+      if (seed) {
+        this._entityManager.placeSeededObjects(seed);
+      }
     }
 
     if (this._preloadSchemaOnOpen) {
-      await this.query(Filter.type(PersistentSchema))
+      const preload = this.query(Filter.type(PersistentSchema))
         .run()
         .catch((err) => log.warn('schema preload failed', { spaceId: this.spaceId, err }));
+      // A seeded open is usable from its seed; the preload's answer comes from the host, which may still be starting.
+      if (!seed) {
+        await preload;
+      }
     }
 
     if (this._reactiveSchemaQuery) {
@@ -503,6 +520,22 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     await Promise.allSettled([...this.#retiredFeeds]);
     this.#retiredFeeds.clear();
     await this._entityManager.close(ctx);
+  }
+
+  // ── Working set persistence ─────────────────────────────────────────────
+
+  /**
+   * Rows the next {@link open} shows and edits the working set from, before the host delivers anything;
+   * the host's later updates bring them current.
+   */
+  seedWorkingSet(rows: readonly WorkingSetRow[]): void {
+    assertState(this._lifecycleState !== LifecycleState.OPEN, 'Seed the working set before the database opens.');
+    this.#seed = rows;
+  }
+
+  /** The working set as rows to {@link seedWorkingSet} a later session with; empty until the space root is loaded. */
+  exportWorkingSet(options: ExportWorkingSetOptions): WorkingSetRow[] {
+    return this._lifecycleState === LifecycleState.OPEN ? this._entityManager.exportWorkingSet(options) : [];
   }
 
   // ── Space state ─────────────────────────────────────────────────────────
@@ -737,7 +770,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     // endpoints become absolute, same-space relative, and unpersisted endpoints are added here.
     EchoReactiveHandler.instance.rebindRelationEndpoints(target);
     EchoReactiveHandler.instance.saveRefs(target);
-    this._entityManager.addCore(getObjectCore(obj), opts);
+    this._entityManager.addCore(getObjectCore(obj));
     if (created) {
       trace.events.emit(Database.TraceEvents.objectAdd, this.#entityAttributes(obj, opts?.origin));
     }
@@ -781,15 +814,33 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     this.#emitFeedAppend(feed, entities, opts?.origin);
   }
 
+  async forkFeed(
+    feed: Feed.Feed,
+    base: Entity.Unknown,
+    opts: { at: Entity.Unknown | Entity.Snapshot | Feed.BlockId },
+  ): Promise<Feed.BranchId> {
+    const handle = this.#getFeedHandle(feed);
+    const at = typeof opts.at === 'string' ? opts.at : handle.blockIdOf(opts.at);
+    invariant(at !== undefined, 'fork: the fork point has no block yet; flush it first');
+    const branch = Feed.BranchId.make(await handle.fork(base, at));
+    this.#emitFeedAppend(feed, [base], undefined);
+    return branch;
+  }
+
   async deleteFromFeed(feed: Feed.Feed, entities: Entity.Unknown[]): Promise<void> {
     await this.removeFeedItemsByIds(
       feed,
       entities.map((entity) => entity.id),
+      { branches: entities.map((entity) => Feed.getBranch(entity) ?? null) },
     );
   }
 
-  async removeFeedItemsByIds(feed: Feed.Feed, ids: string[]): Promise<void> {
-    await this.#getFeedHandle(feed).delete(ids);
+  async removeFeedItemsByIds(
+    feed: Feed.Feed,
+    ids: string[],
+    options?: { branches?: ReadonlyArray<string | null> },
+  ): Promise<void> {
+    await this.#getFeedHandle(feed).delete(ids, options?.branches);
   }
 
   async syncFeed(feed: Feed.Feed, options?: Feed.SyncOptions): Promise<void> {
@@ -952,6 +1003,9 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
         await this.#runRenameMigration(migration);
       } else if (Migration.isContentMigration(migration)) {
         contentTypes.add(migration.type);
+      } else if (Migration.isTransactionMigration(migration)) {
+        const transaction = await this.beginMigration(migration.options);
+        await EffectEx.runPromise(migration.run(transaction, { db: this }).pipe(Effect.andThen(transaction.commit())));
       }
     }
     // Content steps run per type, after object migrations have moved objects onto the types they name.
@@ -1177,6 +1231,28 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   getLoadedDocumentHandles(): DocHandleProxy<unknown>[] {
     return this._entityManager.getLoadedDocumentHandles();
+  }
+
+  async beginMigration(options: Migration.TransactionOptions = {}): Promise<Migration.Transaction> {
+    invariant(options.root === 'update' || this.#createEpoch, 'Database cannot create epochs.');
+    // Loaded on demand: migrations never run during boot.
+    const { MigrationTransaction } = await import('./migration-transaction.ts');
+    return new MigrationTransaction({
+      repo: this._repo,
+      rootHandle: this._entityManager.getSpaceRootDocHandle(),
+      // spaceKey is deprecated but still written so older clients can resolve the owning space.
+      access: { spaceId: this.spaceId, spaceKey: this.spaceKey.toHex() },
+      flush: () => this.flush(),
+      createEpoch: this.#createEpoch && this.#createEpochAndAwaitRoot.bind(this, this.#createEpoch),
+      options,
+    });
+  }
+
+  /** The epoch can be applied before this database loads its root; a following transaction must read the new root. */
+  async #createEpochAndAwaitRoot(createEpoch: (rootUrl: string) => Promise<void>, rootUrl: string): Promise<void> {
+    const switched = this.rootChanged.waitFor(() => this._entityManager.getSpaceRootDocHandle().url === rootUrl);
+    await createEpoch(rootUrl);
+    await switched;
   }
 
   get _repo(): RepoProxy {

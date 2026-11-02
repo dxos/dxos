@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { addressFromA1Notation, isFormula, rangeFromA1Notation } from '@dxos/compute-hyperformula/types';
 import * as Skill from '@dxos/compute/Skill';
-import { Annotation, Collection, DXN, EID, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Collection, DXN, EID, Format, Obj, Ref, Type } from '@dxos/echo';
 
 import { addressToIndex, initialize, mapFormulaRefsToIndices, rangeToIndex } from './SheetUtil.ts';
 
@@ -118,6 +118,7 @@ export const RowColumnMeta = Schema.Struct({
 export class Sheet extends Type.makeObject<Sheet>(DXN.make('org.dxos.type.sheet', '0.2.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
+    description: Schema.optional(Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Text))),
 
     // Sparse map of cells referenced by index.
     cells: Schema.Record(Schema.String, CellValue).pipe(Annotation.FormInputAnnotation.set(false)),

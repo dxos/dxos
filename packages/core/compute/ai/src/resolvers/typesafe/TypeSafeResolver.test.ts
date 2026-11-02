@@ -217,6 +217,47 @@ describe('TypeSafe resolver', () => {
     ]);
   });
 
+  test('with no default configured, the alias is clef on Workers AI, or jev without that route', async ({ expect }) => {
+    const sent: { url: string; model: unknown }[] = [];
+    const recording = Layer.succeed(
+      HttpClient.HttpClient,
+      HttpClient.make((request) =>
+        Effect.sync(() => {
+          const body =
+            request.body._tag === 'Uint8Array' ? JSON.parse(new TextDecoder().decode(request.body.body)) : {};
+          sent.push({ url: request.url, model: body.model });
+          return HttpClientResponse.fromWeb(
+            request,
+            Response.json({ model: body.model, answers: { urgent: { type: 'noul', noul: 0.9 } } }),
+          );
+        }),
+      ),
+    );
+    const typesafe = { apiKey: Effect.succeed(undefined), endpoint: () => 'http://typesafe.test/v1/systemone' };
+    const workersAi = { apiKey: Effect.succeed(undefined), endpoint: () => 'http://workers-ai.test/v1/systemone' };
+    const ask = (routes: TypeSafeResolver.Routes) =>
+      DecisionModel.decide(Urgency, { input: OUTAGE }).pipe(
+        Effect.provide(
+          AiService.decisionModel(Model.defaultDecisionModel).pipe(
+            Layer.provide(
+              AiModelResolver.buildAiService.pipe(
+                Layer.provide(TypeSafeResolver.make(routes)),
+                Layer.provide(recording),
+              ),
+            ),
+          ),
+        ),
+      );
+
+    await EffectEx.runPromise(ask({ typesafe, workersAi }));
+    await EffectEx.runPromise(ask({ typesafe }));
+
+    expect(sent).toEqual([
+      { url: 'http://workers-ai.test/v1/systemone', model: 'clef' },
+      { url: 'http://typesafe.test/v1/systemone', model: 'jev-latest' },
+    ]);
+  });
+
   test('clef receives images as data URLs and jev refuses them', async ({ expect }) => {
     const bodies: Record<string, unknown>[] = [];
     const recording = Layer.succeed(

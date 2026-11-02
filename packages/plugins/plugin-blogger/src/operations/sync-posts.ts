@@ -11,9 +11,9 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import { isNonNullable } from '@dxos/util';
 
-import { meta } from '#meta';
 import { Blog, BloggerCapabilities, Publisher } from '#types';
 
+import { BloggerNamespace } from '../namespace.ts';
 import { SyncPosts } from './definitions.ts';
 import { linkedId, postText, resolvePublisherService, tryPublisher } from './sync-support.ts';
 
@@ -120,7 +120,7 @@ const handler: Operation.WithHandler<typeof SyncPosts> = SyncPosts.pipe(
       // Publish a progress monitor when the app registry is present (absent in headless tests);
       // `runSyncPosts` drives it per post/draft, and it is removed when the run settles or fails.
       const registry = (yield* Capability.getAll(AppCapabilities.ProgressRegistry))[0];
-      const monitor = registry?.register(`${meta.profile.key}/sync/${publication.id}`, { label: 'Syncing posts…' });
+      const monitor = registry?.register(`${BloggerNamespace.key}/sync/${publication.id}`, { label: 'Syncing posts…' });
       const result = yield* runSyncPosts(service, publication, connection, (current, total) => {
         monitor?.total(total);
         monitor?.set(current);

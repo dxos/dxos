@@ -8,6 +8,7 @@ import * as Exit from 'effect/Exit';
 import { pipe } from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Queue from 'effect/Queue';
+import * as Rpc from 'effect/rpc/Rpc';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 import { afterEach, beforeEach, describe, onTestFinished, test, vi } from 'vitest';
@@ -381,6 +382,96 @@ describe('Feed', () => {
       const results = await db.query(Query.select(Filter.everything()).from(FeedScope.feed(feedUri))).run();
       expect(results).toHaveLength(1);
       expect((results[0] as TestSchema.Person).name).toEqual('john');
+    });
+
+    // F-4.1: until the store names the branch of a fork base it would read as a root item, a retry included.
+    test('a fork whose first send fails stays out of root reads through its retry', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      let failNext = false;
+      const realHandlers = peer.host.feedService;
+      db._setFeedService(
+        await makeFeedClient({
+          ...realHandlers,
+          'FeedService.insertIntoFeed': (...args: Parameters<(typeof realHandlers)['FeedService.insertIntoFeed']>) => {
+            if (failNext) {
+              failNext = false;
+              return Effect.fail(new EchoClientError({ message: 'simulated insertIntoFeed failure' }));
+            }
+            return realHandlers['FeedService.insertIntoFeed'](...args);
+          },
+        }),
+      );
+      const feed = db.add(Feed.make({ name: 'flaky-fork' }));
+      const a1 = Obj.make(TestSchema.Person, { name: 'A1' });
+      await db.appendToFeed(feed, [a1]);
+      await db.flush();
+
+      const feedUri = Feed.getFeedUri(feed)?.toString() ?? '';
+      const query = db.query(Query.select(Filter.type(TestSchema.Person)).from(FeedScope.feed(feedUri)));
+      const seen = new Set<string>();
+      const unsubscribe = query.subscribe(() => query.results.forEach((item) => seen.add(item.name ?? '')), {
+        fire: true,
+      });
+      const b1 = Obj.make(TestSchema.Person, { name: 'B1' });
+      failNext = true;
+      await expect(db.forkFeed(feed, b1, { at: a1 })).rejects.toThrow();
+      expect(seen.has('B1')).toBe(false);
+
+      await db.flush();
+      expect(Feed.getBranch(b1)).toEqual(Feed.getBlockId(b1));
+      const all = await db
+        .query(Query.select(Filter.type(TestSchema.Person)).from(FeedScope.feed(feedUri, { branches: 'all' })))
+        .run();
+      expect(all.map((item) => item.name).sort()).toEqual(['A1', 'B1']);
+      await expect.poll(() => query.results.map((item) => item.name)).toEqual(['A1']);
+      expect(seen.has('B1')).toBe(false);
+      unsubscribe();
+    });
+
+    // F-4.1: an edit of a fork base made while the fork is in flight continues its branch, never the root.
+    test('an edit of a fork base during its send lands on the branch', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      let gate: Trigger | undefined;
+      const realHandlers = peer.host.feedService;
+      db._setFeedService(
+        await makeFeedClient({
+          ...realHandlers,
+          'FeedService.insertIntoFeed': (...args: Parameters<(typeof realHandlers)['FeedService.insertIntoFeed']>) => {
+            const held = gate;
+            return held === undefined
+              ? realHandlers['FeedService.insertIntoFeed'](...args)
+              : Rpc.wrapMap(realHandlers['FeedService.insertIntoFeed'](...args), (insert) =>
+                  Effect.promise(() => held.wait()).pipe(Effect.andThen(insert)),
+                );
+          },
+        }),
+      );
+      const feed = db.add(Feed.make({ name: 'held-fork' }));
+      const a1 = Obj.make(TestSchema.Person, { name: 'A1' });
+      await db.appendToFeed(feed, [a1]);
+      await db.flush();
+
+      gate = new Trigger();
+      const b1 = Obj.make(TestSchema.Person, { name: 'B1' });
+      const forked = db.forkFeed(feed, b1, { at: a1 });
+      Obj.update(b1, (b1) => {
+        b1.name = 'B1 v2';
+      });
+      const release = gate;
+      gate = undefined;
+      release.wake();
+      const branch = await forked;
+      await db.flush();
+
+      const feedUri = Feed.getFeedUri(feed)?.toString() ?? '';
+      const read = async (branches?: ReadonlyArray<Feed.BranchId | null>) =>
+        (await db.query(Query.select(Filter.type(TestSchema.Person)).from(FeedScope.feed(feedUri, { branches }))).run())
+          .map((item) => item.name)
+          .sort();
+      expect(await read()).toEqual(['A1']);
+      expect(await read([branch])).toEqual(['B1 v2']);
     });
 
     test('subscription deltas reposition and remove blocks without re-reading them', async ({ expect }) => {

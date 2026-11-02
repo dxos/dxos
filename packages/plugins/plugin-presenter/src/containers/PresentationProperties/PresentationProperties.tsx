@@ -15,13 +15,14 @@ import {
 } from '@dxos/react-ui-form';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
-import { meta } from '#meta';
 import { Presentation, SlideTheme } from '#types';
+
+import { PresenterNamespace } from '../../namespace.ts';
 
 /** Related settings side by side: the theme and its accent, the two colors, the two fonts. */
 const TEMPLATE = `
   <grid cols="2">
-    <field name="name"/>
+    <field name="base"/>
     <field name="accent"/>
     <field name="background"/>
     <field name="foreground"/>
@@ -51,22 +52,22 @@ export type PresentationPropertiesProps = { presentation: Presentation.Presentat
  * collapsed group in the generic object form.
  */
 export const PresentationProperties = ({ presentation }: PresentationPropertiesProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(PresenterNamespace.key);
   const [theme] = useObject(presentation, 'theme');
-  const name = SlideTheme.isName(theme?.name) ? theme.name : undefined;
+  const base = SlideTheme.isName(theme?.base) ? theme.base : undefined;
 
   // Unset, each field shows what the theme supplies rather than the field's description, which reads as a value.
   const fieldOverrides = useMemo<Record<string, FormFieldOverride>>(() => {
     const color = { placeholder: t('theme-color.placeholder') };
     return {
-      name: { placeholder: 'default' },
+      base: { placeholder: 'default' },
       accent: color,
       background: color,
       foreground: color,
-      font: { placeholder: t('default-font.placeholder', { font: SlideTheme.defaultFont(name) }) },
+      font: { placeholder: t('default-font.placeholder', { font: SlideTheme.defaultFont(base) }) },
       monoFont: { placeholder: t('default-font.placeholder', { font: SlideTheme.DEFAULT_MONO_FONT }) },
     };
-  }, [t, name]);
+  }, [t, base]);
 
   const handleSave = useCallback(
     (next: SlideTheme.Settings) =>
@@ -86,7 +87,10 @@ export const PresentationProperties = ({ presentation }: PresentationPropertiesP
       autoSave
       onSave={handleSave}
     >
-      <Form.Layout template={TEMPLATE} fieldMap={FIELD_MAP} />
+      {/* The theme is one sub-object, so its fields sit in one nested group, as the form shows any nested object. */}
+      <Form.FieldSet label={t('theme-group.label')} nested collapsible data-testid='presentation.theme'>
+        <Form.Layout template={TEMPLATE} fieldMap={FIELD_MAP} />
+      </Form.FieldSet>
     </Form.Root>
   );
 };

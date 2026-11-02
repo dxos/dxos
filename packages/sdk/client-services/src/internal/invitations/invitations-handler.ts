@@ -61,6 +61,16 @@ const metrics = _trace.metrics;
 
 const MAX_DELEGATED_INVITATION_HOST_TRIES = 3;
 
+/**
+ * Host-side callbacks into the invitation flow.
+ */
+export type InvitationFlowHooks = {
+  /**
+   * Awaited after a single-use invitation admitted its guest and before SUCCESS is emitted.
+   */
+  beforeSingleUseComplete?: () => Promise<void>;
+};
+
 export type InvitationConnectionProps = {
   teleport: Partial<TeleportProps>;
   edgeInvitations?: EdgeInvitationConfig;
@@ -116,6 +126,7 @@ export class InvitationsHandler {
     stream: PushStream<Invitation>,
     protocol: InvitationProtocol,
     invitation: Invitation,
+    hooks: InvitationFlowHooks = {},
   ): void {
     log.verbose('dxos.sdk.invitations-handler.handleInvitationFlow', {
       state: invitation.state,
@@ -206,6 +217,11 @@ export class InvitationsHandler {
               log.verbose('connected', { ...protocol.toJSON() });
               const deviceKey = await extension.completedTrigger.wait({ timeout: invitation.timeout });
               log.verbose('admitted guest', { guest: deviceKey, ...protocol.toJSON() });
+              if (!invitation.multiUse && hooks.beforeSingleUseComplete) {
+                // Settle bookkeeping before SUCCESS is reported: a host that exits as soon as it sees SUCCESS
+                // (e.g. `dx space share`) would otherwise leave the redeemed invitation persisted.
+                await hooks.beforeSingleUseComplete().catch((err) => log.warn('invitation cleanup failed', { err }));
+              }
               guardedState.set(extension, Invitation_State.SUCCESS);
               metrics.increment('dxos.invitation.success', 1, { tags: { role: 'host', method: 'swarm' } });
               _trace.events.emit(ClientTraceEvents.invitationAdmit, invitationEventAttributes(guardedState.current));

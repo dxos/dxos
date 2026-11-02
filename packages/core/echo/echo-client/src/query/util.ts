@@ -274,17 +274,37 @@ export const queryIncludesAllFeeds = (query: QueryAST.Query): boolean => {
   return includes;
 };
 
-/** The feed URIs the query's scopes name explicitly. */
-export const getTargetFeedsForQuery = (query: QueryAST.Query): string[] => {
-  const feeds = new Set<string>();
+/** The branches two scopes of one feed read together; `undefined`, every branch, absorbs any list. */
+const unionBranches = (
+  left: ReadonlyArray<string | null> | undefined,
+  right: ReadonlyArray<string | null> | undefined,
+): ReadonlyArray<string | null> | undefined => {
+  if (left === undefined || right === undefined) {
+    return undefined;
+  }
+  return [...new Set([...left, ...right])];
+};
+
+/**
+ * The branches each feed the query's scopes name explicitly reads, `null` naming main; `undefined` reads
+ * every branch. An absent scope filter reads main only, and several scopes of one feed read their union.
+ */
+export const getTargetFeedBranchesForQuery = (
+  query: QueryAST.Query,
+): ReadonlyMap<string, ReadonlyArray<string | null> | undefined> => {
+  const feeds = new Map<string, ReadonlyArray<string | null> | undefined>();
   QueryAST.visit(query, (node) => {
     if (node.type === 'from' && node.from._tag === 'scope') {
       for (const scope of node.from.scopes) {
         if (scope._tag === 'feed') {
-          feeds.add(scope.feedUri);
+          const branches = scope.branches === 'all' ? undefined : (scope.branches ?? [null]);
+          feeds.set(
+            scope.feedUri,
+            feeds.has(scope.feedUri) ? unionBranches(feeds.get(scope.feedUri), branches) : branches,
+          );
         }
       }
     }
   });
-  return [...feeds];
+  return feeds;
 };

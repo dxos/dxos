@@ -4,14 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 
+import { type SourceKey, isSpecKey } from '@dxos/deus/review';
 import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { log } from '@dxos/log';
 import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
-import { type Spec } from '@dxos/types';
+import { type SpecDocument } from '@dxos/types';
 
 import { resolvePath } from './repo-roots.ts';
-import { type SourceKey, fromMetaKey, isSpecKey } from './spec-key.ts';
+import { fromMetaKey } from './spec-key.ts';
 
 /** What a sync pass did to one spec. */
 export type SyncStatus =
@@ -49,7 +50,7 @@ export const reconcile = ({ local, disk, base }: { local: string; disk: string; 
 };
 
 /** The repository location a spec is linked to, from its meta keys. */
-export const getSpecKey = (spec: Spec.Spec): SourceKey | undefined =>
+export const getSpecKey = (spec: SpecDocument.SpecDocument): SourceKey | undefined =>
   Obj.getMeta(spec)
     .keys.map(fromMetaKey)
     .find((key) => key !== undefined && isSpecKey(key));
@@ -87,7 +88,7 @@ export type SyncResult = { status: SyncStatus; path?: string; error?: string };
 /** One sync pass for one spec. */
 export const syncSpec = Effect.fnUntraced(
   function* (
-    spec: Spec.Spec,
+    spec: SpecDocument.SpecDocument,
     { fs, roots, bases }: { fs: FileSystem.FileSystem; roots: readonly FileSystem.RepoRoot[]; bases: SyncBases },
   ) {
     const key = getSpecKey(spec);

@@ -39,8 +39,7 @@ Populate it from 1Password. The agents' key is `op://eng-dev/com.anthropic.api/l
 transcript (cloud sandbox only, where `OP_SERVICE_ACCOUNT_TOKEN` is set — see the `1password` skill):
 
 ```bash
-DX_ANTHROPIC_API_KEY='op://eng-dev/com.anthropic.api/local/AGENTS_API_KEY' DX_UPDATE_MODEL_FIXTURES=1 \
-  op run -- moon run <package-name>:test -- <file>
+pnpm -ws 1p-credentials   # exports DX_ANTHROPIC_API_KEY (op://eng-dev/com.anthropic.api/local/AGENTS_API_KEY)
 ```
 
 `pnpm -ws 1p-credentials` exports the same variable from the 1Password `CI` vault, where a session can read it.

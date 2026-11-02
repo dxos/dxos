@@ -16,6 +16,7 @@ import { isAiServiceUnavailable } from '../operations/extractor/ai-gate.ts';
 export type MailboxExtractorMenuItem = {
   id: string;
   label: string;
+  icon?: string;
   onSelect: () => void;
 };
 

@@ -4,8 +4,8 @@
 
 import { type SpaceId } from '@dxos/keys';
 
-import { meta } from '#meta';
+import { ClientNamespace } from '../namespace.ts';
 
 /** Stable progress-monitor key for a space's combined (documents + feed blocks) replication backlog. */
 export const createSpaceReplicationProgressKey = (spaceId: SpaceId): string =>
-  `${meta.profile.key}:space:${spaceId}#replication`;
+  `${ClientNamespace.key}:space:${spaceId}#replication`;

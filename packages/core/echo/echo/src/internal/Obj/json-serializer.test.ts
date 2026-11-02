@@ -10,6 +10,7 @@ import { DXN, EID, EntityId, URI } from '@dxos/keys';
 
 import * as Obj from '../../Obj.ts';
 import * as Relation from '../../Relation.ts';
+import * as Tag from '../../Tag.ts';
 import { TestSchema } from '../../testing/index.ts';
 import * as Type from '../../Type.ts';
 import { getTypename, getTypeURI } from '../Annotation/index.ts';
@@ -110,15 +111,23 @@ describe('Object JSON serializer', () => {
     expect(getTypeURI(contactFromJson)).toEqual(Type.getURI(TestSchema.Person));
   });
 
-  test('upgrades bare string tags to encoded references on deserialize', async () => {
+  test('resolves tags to Tag objects on deserialize, including legacy bare string tags', async () => {
+    const urgent = Tag.make({ label: 'urgent' });
+    const legacy = Tag.make({ label: 'legacy' });
     const expando = Obj.make(TestSchema.Expando, { message: 'hi' });
+    Obj.update(expando, (expando) => Obj.addTag(expando, urgent));
     const json = objectToJSON(expando) as any;
-    // Simulate data serialized before the tags-as-refs migration: bare id strings.
-    json['@meta'] = { keys: [], tags: ['echo:/TAGLEGACY'] };
+    expect(json['@meta'].tags).toEqual([{ '/': EID.make({ entityId: urgent.id }) }]);
+    // Data serialized before tags became references held bare id strings.
+    json['@meta'].tags.push(EID.make({ entityId: legacy.id }));
 
-    const fromJson = (await objectFromJSON(json)) as any;
-    // Decodes to a materialized `Ref` (the shared ref codec), not a raw encoded reference.
-    expect(fromJson[MetaId].tags.map((ref: any) => ref.uri)).toEqual(['echo:/TAGLEGACY']);
+    const refResolver = new StaticRefResolver().addObject(urgent).addObject(legacy);
+    const fromJson = (await objectFromJSON(json, { refResolver })) as any;
+    expect(fromJson[MetaId].tags).toEqual([urgent, legacy]);
+
+    // Without a resolver a tag cannot be held as an entity, so it is dropped.
+    const unresolved = (await objectFromJSON(json)) as any;
+    expect(unresolved[MetaId].tags).toEqual([]);
   });
 
   test('deserializes expando without leaking internal json keys', async () => {

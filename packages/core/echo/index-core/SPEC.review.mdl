@@ -1,21 +1,31 @@
 ---
 spec: github:dxos/dxos/packages/core/echo/index-core/SPEC.mdl
-commit: f422d67796344b94c90bf175288bcec84c65e2f9
-date: 2026-10-25
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
 by: agent:claude-code
 ---
 
 # Review: IndexCore
 
-The convergence-key intent mechanism is solid: `IndexEngine` records intents inside the transaction
-that writes the index rows, `ConvergenceKeyIntentStore` gives the record / take / clear contract with
-an id-bounded clear (tested), and `EchoHost._runIndexPass` services the intents through
-`ConvergenceKeyMerger` after the Automerge leg, clearing only serviced keys (exercised end to end by
-the echo-client-e2e convergence tests). Everything new in this spec is missing: there is no
-`IndexerIntent` union, no feed-options intent kind, store or table, no `setFeedOptions` on either
-host, no indexing-disabled state in either `FeedDataSource`, and no removal of index rows when a
-store trims blocks. The biggest gap against today's behaviour is F-4.1: EDGE's `FeedSpace` trims
-feeds with `FeedStore.deleteOldestBlocks` and leaves their index rows behind.
+Both intent kinds are built. `IndexerIntent` is the tagged union of `ConvergenceKeyIntent` and
+`FeedOptionsIntent`; `FeedOptionsIntentStore` has its own table and migration set and gives
+record / take (newest per feed) / clear (id-bounded), and `IndexEngine` records both kinds inside
+the transaction that writes index rows. EchoHost and EDGE's Indexer DO take, apply through
+`setFeedOptions` and clear; disabling indexing deletes a feed's rows and makes the feed data
+sources skip it; re-enabling runs a backfill cursor (EchoHost) or resets the feed cursor (EDGE);
+trimmed blocks are purged from the index via `purgeFeedBlocks`, keyed on
+`objectMeta.queueInsertionId`. Tests cover the store, the engine, EchoHost, the e2e client and the
+EDGE Indexer.
+
+Of 23 items: 19 done, 2 untested, 1 partial, 1 diverged, 0 missing. Findings:
+
+- **F-4.2 only on the device.** EchoHost's `QueryExecutor` drops items past `maxAge` from
+  index-answered queries; EDGE's Indexer `queryText` has no such filter, so an expired item stays
+  findable there until the alarm trims it.
+- **Intent shape differs from the spec.** `FeedOptionsIntent` nests `{ indexing, retention }` under
+  `options` rather than carrying them as top-level fields.
+- **Atomicity is by construction, not test.** No test crashes between the index-row write and the
+  intent record (F-1.2); restart-after-failure is tested instead.
 
 ## Extensions
 
@@ -26,201 +36,221 @@ feeds with `FeedStore.deleteOldestBlocks` and leaves their index rows behind.
 ## Verdicts
 
 ```mdl
-verdict FeedOptionsIntentStore: No feed-options intent store exists.
-  status: missing
+verdict FeedOptionsIntentStore: migrate, record, take and clear exist with the specified semantics; the intent nests its options.
+  status: diverged
+  evidence:
+    [github:dxos/dxos/packages/core/echo/index-core/src/feed-options-intent-store.ts#FeedOptionsIntentStore,
+     github:dxos/dxos/packages/core/echo/index-core/src/indexer-intent.ts#FeedOptionsIntent,
+     github:dxos/dxos/packages/core/echo/index-core/src/index-engine.ts#IndexEngine.takeFeedOptionsIntents,
+     github:dxos/dxos/packages/core/echo/index-core/src/index-engine.ts#IndexEngine.clearFeedOptionsIntents]
+  tests: [github:dxos/dxos/packages/core/echo/index-core/src/feed-options-intent-store.test.ts]
   note: |
-    Searched index-core/src and the repo for FeedOptionsIntentStore, FeedOptionsIntent and
-    feedOptionsIntents: nothing. Only ConvergenceKeyIntentStore exists, and IndexEngine has no
-    takeFeedOptionsIntents / clearFeedOptionsIntents pass-throughs.
+    Behaviour matches, and `IndexEngine` exposes the take/clear pass-throughs. The spec's FeedOptionsIntent is
+    `{ spaceId, feedId, namespace, indexing?, retention? }`; the code has `{ kind, spaceId, feedId, namespace,
+    options: Feed.FeedOptions }`, matching the table's single `options` column. Spec or type should be aligned.
 ```
 
 ```mdl
-verdict F-1.1: The one existing intent kind has its own table, migration set and store, but there is no IndexerIntent union.
-  status: partial
-  evidence: [github:dxos/dxos/packages/core/echo/index-core/src/convergence-key-intent-store.ts#ConvergenceKeyIntentStore, github:dxos/dxos/packages/core/echo/index-core/src/migrations/convergence-key-intents/index.ts#MIGRATIONS_TABLE]
-  tests: [github:dxos/dxos/packages/core/echo/index-core/src/indexes/entity-meta-index.test.ts]
-  note: |
-    Done: convergence-key intents have the convergenceKeyIntents table, their own migration set
-    (convergence_key_intent_migrations) and a record / take / clear store. Not done: no
-    IndexerIntent tagged union with a `kind` discriminator is declared or exported from
-    @dxos/index-core; the intent shape is an inline `{ spaceId, convergenceKey }` type.
-```
-
-```mdl
-verdict F-1.2: IndexEngine records convergence-key intents in the transaction that writes the batch's index rows.
+verdict F-1.1: IndexerIntent is the tagged union of both kinds, each with its own table, migrations and store.
   status: done
-  evidence: [github:dxos/dxos/packages/core/echo/index-core/src/index-engine.ts#IndexEngine, github:dxos/dxos/packages/core/echo/index-core/src/index-engine.ts#convergenceKeyIntents, github:dxos/dxos/packages/core/echo/index-core/src/convergence-key-intent-store.ts#ConvergenceKeyIntentStore.record]
-  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/convergence.test.ts]
-  walkthrough:
-    - The engine derives one intent per (space, key) from the slice being written. github:dxos/dxos/packages/core/echo/index-core/src/index-engine.ts#convergenceKeyIntents
-    - The write transaction records them beside the entity-meta and index rows and the cursors. github:dxos/dxos/packages/core/echo/index-core/src/index-engine.ts#IndexEngine
-    - The store inserts one row per intent on the caller's transaction connection. github:dxos/dxos/packages/core/echo/index-core/src/convergence-key-intent-store.ts#ConvergenceKeyIntentStore.record
-  note: |
-    Judged for the only intent kind that exists. The transactional atomicity itself is not asserted
-    by a test; the e2e convergence tests exercise recording through indexing.
+  evidence:
+    [github:dxos/dxos/packages/core/echo/index-core/src/indexer-intent.ts#IndexerIntent,
+     github:dxos/dxos/packages/core/echo/index-core/src/feed-options-intent-store.ts#FeedOptionsIntentStore,
+     github:dxos/dxos/packages/core/echo/index-core/src/convergence-key-intent-store.ts#ConvergenceKeyIntentStore]
+  tests: [github:dxos/dxos/packages/core/echo/index-core/src/feed-options-intent-store.test.ts, github:dxos/dxos/packages/core/echo/index-core/src/migrations/migrations.test.ts]
 ```
 
 ```mdl
-verdict F-1.3: take() returns the pending intents with the highest id read, and clear(…, upToId) keeps later rows.
-  status: done
-  evidence: [github:dxos/dxos/packages/core/echo/index-core/src/convergence-key-intent-store.ts#ConvergenceKeyIntentStore.take, github:dxos/dxos/packages/core/echo/index-core/src/convergence-key-intent-store.ts#ConvergenceKeyIntentStore.clear]
-  tests: [github:dxos/dxos/packages/core/echo/index-core/src/indexes/entity-meta-index.test.ts]
-  note: |
-    For convergence-key intents take() returns them deduplicated per space as a
-    Map<SpaceId, Set<string>>, and clear is per (spaceId, convergenceKey) bounded by upToId.
-```
-
-```mdl
-verdict F-1.4: Unserviced convergence-key intents stay pending and the startup pass offers them again.
+verdict F-1.2: Both intent kinds are recorded in the per-slice write that also updates the index legs.
   status: untested
-  evidence: [github:dxos/dxos/packages/core/echo/echo-host/src/db-host/echo-host.ts#EchoHost._runIndexPass, github:dxos/dxos/packages/core/echo/echo-host/src/db-host/convergence-key-merge.ts#ConvergenceKeyMerger.mergeDuplicates, github:dxos/dxos/packages/core/echo/echo-host/src/db-host/index-scheduler.ts#IndexScheduler]
-  walkthrough:
-    - The merger reports a throwing group as un-serviced instead of failing the batch. github:dxos/dxos/packages/core/echo/echo-host/src/db-host/convergence-key-merge.ts#ConvergenceKeyMerger.mergeDuplicates
-    - The index pass clears only the keys the merger reports serviced, so the rest stay in the table. github:dxos/dxos/packages/core/echo/echo-host/src/db-host/echo-host.ts#EchoHost._runIndexPass
-    - The scheduler runs a pass on open, which takes the pending intents again. github:dxos/dxos/packages/core/echo/echo-host/src/db-host/index-scheduler.ts#IndexScheduler
+  evidence: [github:dxos/dxos/packages/core/echo/index-core/src/index-engine.ts#IndexEngine]
   note: |
-    The code does it for convergence-key intents on the device. No test stops a host before clear
-    and checks that the next pass re-offers the intent; convergence-key-merge.test.ts only checks
-    that a throwing group is reported un-serviced. EDGE has no intent consumer at all.
+    `#writeTransaction` records convergence-key and feed-options intents for each slice before the leg updates,
+    inside the caller's transaction. Tests check that intents are recorded, not that they commit or roll back
+    with the index rows.
 ```
 
 ```mdl
-verdict F-1.5: Keyed objects record a convergence-key intent and EchoHost's ConvergenceKeyMerger services it after the Automerge leg.
+verdict F-1.3: take returns the high-water id; clear deletes only rows up to it.
   status: done
-  evidence: [github:dxos/dxos/packages/core/echo/index-core/src/index-engine.ts#convergenceKeyIntents, github:dxos/dxos/packages/core/echo/index-core/src/index-engine.ts#IndexEngine.takeConvergenceKeyIntents, github:dxos/dxos/packages/core/echo/echo-host/src/db-host/echo-host.ts#EchoHost._runIndexPass, github:dxos/dxos/packages/core/echo/echo-host/src/db-host/convergence-key-merge.ts#ConvergenceKeyMerger]
-  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/convergence.test.ts, github:dxos/dxos/packages/core/echo/echo-host/src/db-host/convergence-key-merge.test.ts]
+  evidence: [github:dxos/dxos/packages/core/echo/index-core/src/feed-options-intent-store.ts#FeedOptionsIntentStore]
+  tests: [github:dxos/dxos/packages/core/echo/index-core/src/feed-options-intent-store.test.ts]
+```
+
+```mdl
+verdict F-1.4: A failed apply leaves the intent pending and the startup pass applies it.
+  status: done
+  evidence:
+    [github:dxos/dxos/packages/core/echo/echo-host/src/db-host/echo-host.ts#EchoHost,
+     github:dxos/edge/packages/services/db-service/src/worker/indexer/indexer.ts#Indexer]
+  tests: [github:dxos/dxos/packages/core/echo/echo-host/src/db-host/echo-host.test.ts]
   walkthrough:
-    - The engine reads a non-empty @meta.convergenceKey off each indexed object and records an intent. github:dxos/dxos/packages/core/echo/index-core/src/index-engine.ts#convergenceKeyIntents
-    - The engine exposes the store's take to the host. github:dxos/dxos/packages/core/echo/index-core/src/index-engine.ts#IndexEngine.takeConvergenceKeyIntents
-    - After the Automerge leg, the index pass takes the intents, merges and clears the serviced keys. github:dxos/dxos/packages/core/echo/echo-host/src/db-host/echo-host.ts#EchoHost._runIndexPass
-    - The merger looks each key's group up and merges duplicates. github:dxos/dxos/packages/core/echo/echo-host/src/db-host/convergence-key-merge.ts#ConvergenceKeyMerger
+    - EchoHost catches each failed apply and leaves its intent uncleared for the next pass, including the one at startup. github:dxos/dxos/packages/core/echo/echo-host/src/db-host/echo-host.ts#EchoHost
+    - EDGE's Indexer logs a failed intent and clears it only after setFeedOptions returns. github:dxos/edge/packages/services/db-service/src/worker/indexer/indexer.ts#Indexer
 ```
 
 ```mdl
-verdict F-2.1: IndexEngine records no feed-options intent.
-  status: missing
+verdict F-1.5: Keyed objects record convergence-key intents, which EchoHost's ConvergenceKeyMerger services.
+  status: done
+  evidence:
+    [github:dxos/dxos/packages/core/echo/index-core/src/convergence-key-intent-store.ts#ConvergenceKeyIntentStore,
+     github:dxos/dxos/packages/core/echo/echo-host/src/db-host/convergence-key-merge.ts#ConvergenceKeyMerger]
+  tests: [github:dxos/dxos/packages/core/echo/echo-host/src/db-host/convergence-key-merge.test.ts, github:dxos/dxos/packages/core/echo/echo-client-e2e/src/convergence.test.ts]
+  walkthrough:
+    - IndexEngine records a convergence-key intent per keyed object in the index transaction. github:dxos/dxos/packages/core/echo/index-core/src/convergence-key-intent-store.ts#ConvergenceKeyIntentStore
+    - EchoHost takes the intents after the Automerge leg and has the merger fold each group. github:dxos/dxos/packages/core/echo/echo-host/src/db-host/convergence-key-merge.ts#ConvergenceKeyMerger
+```
+
+```mdl
+verdict F-2.1: Indexing a Feed object records a feed-options intent keyed by its entity id, namespace defaulting to data.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/index-core/src/index-engine.ts#IndexEngine]
+  tests: [github:dxos/dxos/packages/core/echo/index-core/src/index-engine.test.ts]
+```
+
+```mdl
+verdict F-2.2: take returns only the newest pending intent per feed.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/index-core/src/feed-options-intent-store.ts#FeedOptionsIntentStore]
+  tests: [github:dxos/dxos/packages/core/echo/index-core/src/feed-options-intent-store.test.ts]
+```
+
+```mdl
+verdict F-2.3: EchoHost takes intents after the object leg, calls setFeedOptions and clears each after it commits.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-host/src/db-host/echo-host.ts#EchoHost]
+  tests: [github:dxos/dxos/packages/core/echo/echo-host/src/db-host/echo-host.test.ts]
+```
+
+```mdl
+verdict F-2.4: EDGE's Indexer takes intents, calls FeedSpace.setFeedOptions and clears each after it returns.
+  status: done
+  evidence:
+    [github:dxos/edge/packages/services/db-service/src/worker/indexer/indexer.ts#Indexer,
+     github:dxos/edge/packages/services/db-service/src/worker/feed-space/feed-space.ts#FeedSpace.setFeedOptions]
+  tests: [github:dxos/edge/packages/services/db-service/test/feed-options.workerd.test.ts]
+  walkthrough:
+    - The Indexer applies a bounded batch of intents per pass, index side first. github:dxos/edge/packages/services/db-service/src/worker/indexer/indexer.ts#Indexer
+    - FeedSpace stores the options and trims. github:dxos/edge/packages/services/db-service/src/worker/feed-space/feed-space.ts#FeedSpace.setFeedOptions
+```
+
+```mdl
+verdict F-2.5: Until applied, the store keeps its previous options; there is no other path.
+  status: untested
+  evidence: [github:dxos/dxos/packages/core/echo/echo-host/src/db-host/feed-data-source.ts#FeedDataSource]
   note: |
-    Nothing in index-engine.ts inspects org.dxos.type.feed objects or records a feed-options
-    intent; only convergenceKeyIntents is derived in #writeTransaction.
+    Feed data sources and trims read only the store's stored options, so a pending intent has no effect until
+    applied. No test asserts behaviour in the window between recording and applying.
 ```
 
 ```mdl
-verdict F-2.2: No feed-options take() exists to collapse intents per feed.
-  status: missing
-  note: There is no feedOptionsIntents table, idx_feedOptionsIntents_feed index or take() for it.
+verdict F-3.1: Both FeedDataSources skip a disabled feed's blocks and advance the cursor past them.
+  status: done
+  evidence:
+    [github:dxos/dxos/packages/core/echo/echo-host/src/db-host/feed-data-source.ts#FeedDataSource,
+     github:dxos/edge/packages/services/db-service/src/worker/indexer/feed-data-source.ts#FeedDataSource]
+  tests: [github:dxos/dxos/packages/core/echo/echo-host/src/db-host/feed-data-source.test.ts, github:dxos/edge/packages/services/db-service/test/feed-options.workerd.test.ts]
+  walkthrough:
+    - EchoHost's source reads the store's options and skips disabled feeds. github:dxos/dxos/packages/core/echo/echo-host/src/db-host/feed-data-source.ts#FeedDataSource
+    - EDGE's source gets the disabled set from the Indexer's storage. github:dxos/edge/packages/services/db-service/src/worker/indexer/feed-data-source.ts#FeedDataSource
 ```
 
 ```mdl
-verdict F-2.3: EchoHost applies no feed options.
-  status: missing
-  note: |
-    _runIndexPass takes only convergence-key intents. FeedStore has no setFeedOptions; searched
-    packages/core/echo/feed and echo-host for setFeedOptions and feed options handling.
+verdict F-3.2: Applying a disable deletes the feed's rows via deleteFeedObjects on both hosts.
+  status: done
+  evidence:
+    [github:dxos/dxos/packages/core/echo/index-core/src/index-engine.ts#IndexEngine.deleteFeedObjects,
+     github:dxos/dxos/packages/core/echo/echo-host/src/db-host/echo-host.ts#EchoHost,
+     github:dxos/edge/packages/services/db-service/src/worker/indexer/indexer.ts#Indexer]
+  tests: [github:dxos/dxos/packages/core/echo/index-core/src/index-engine.test.ts, github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed-options.test.ts]
 ```
 
 ```mdl
-verdict F-2.4: EDGE's Indexer DO applies no feed options.
-  status: missing
-  evidence: [github:dxos/edge/packages/services/db-service/src/worker/indexer/indexer.ts#Indexer]
-  note: |
-    The Indexer DO has no intent consumer and FeedSpace has no setFeedOptions; searched
-    db-service/src/worker for setFeedOptions and intent handling.
+verdict F-3.3: Index-answered queries return nothing of a disabled feed.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-host/src/query/query-executor.ts#QueryExecutor]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed-options.test.ts, github:dxos/edge/packages/services/db-service/test/feed-options.workerd.test.ts]
 ```
 
 ```mdl
-verdict F-2.5: Feed options never reach a store, so there is no previous-options behaviour to judge.
-  status: missing
-  note: |
-    No feed-options intent exists. Feed.setRetention is a stub returning Effect.void, and the only
-    trimming is EDGE's fixed maxQueueSize per namespace, not per-feed options.
+verdict F-3.4: The query executor reads a disabled feed's blocks from the feed store and matches in memory.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-host/src/query/query-executor.ts#QueryExecutor]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed-options.test.ts]
 ```
 
 ```mdl
-verdict F-3.1: Neither FeedDataSource skips blocks of a feed with indexing disabled.
-  status: missing
-  evidence: [github:dxos/dxos/packages/core/echo/echo-host/src/db-host/feed-data-source.ts#FeedDataSource, github:dxos/edge/packages/services/db-service/src/worker/indexer/feed-data-source.ts#FeedDataSource]
-  note: |
-    Neither the device nor the EDGE FeedDataSource reads stored feed options; feeds carry no
-    indexing option in the feed store. (EDGE skips trace-namespace feeds by not notifying the
-    indexer, which is a namespace rule, not a per-feed option.)
+verdict F-3.5: Re-enabling seeds a backfill/<namespace>/<feedId> cursor on EchoHost and resets the feed cursor on EDGE.
+  status: done
+  evidence:
+    [github:dxos/dxos/packages/core/echo/echo-host/src/db-host/feed-data-source.ts#backfillResourceId,
+     github:dxos/dxos/packages/core/echo/echo-host/src/db-host/echo-host.ts#EchoHost,
+     github:dxos/edge/packages/services/db-service/src/worker/indexer/indexer.ts#Indexer]
+  tests:
+    [github:dxos/dxos/packages/core/echo/echo-host/src/db-host/feed-data-source.test.ts,
+     github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed-options.test.ts,
+     github:dxos/edge/packages/services/db-service/test/feed-options.workerd.test.ts]
+  walkthrough:
+    - EchoHost seeds the backfill cursor before storing the re-enabled options. github:dxos/dxos/packages/core/echo/echo-host/src/db-host/echo-host.ts#EchoHost
+    - The feed source reads the backfill feed alone to its end, then marks it finished for deletion. github:dxos/dxos/packages/core/echo/echo-host/src/db-host/feed-data-source.ts#backfillResourceId
+    - EDGE's Indexer resets that feed's own cursor and remembers where it stood, so triggers do not refire. github:dxos/edge/packages/services/db-service/src/worker/indexer/indexer.ts#Indexer
 ```
 
 ```mdl
-verdict F-3.2: Disabling indexing purges nothing, because indexing cannot be disabled.
-  status: missing
-  note: No code removes a feed's rows from the indexes on an options change; searched index-core and echo-host.
+verdict F-3.6: FeedSpace still notifies the Indexer for a disabled feed, and its triggers fire.
+  status: done
+  evidence: [github:dxos/edge/packages/services/db-service/src/worker/feed-space/feed-space.ts#FeedSpace]
+  tests: [github:dxos/edge/packages/services/db-service/test/feed-options.workerd.test.ts]
 ```
 
 ```mdl
-verdict F-3.3: Index-answered queries do not exclude feeds with indexing disabled.
-  status: missing
-  note: There is no indexing-disabled state for the query executor or FTS index to filter on.
+verdict F-4.1: Trimmed blocks' rows are purged next pass, only where the row's queueInsertionId was trimmed.
+  status: done
+  evidence:
+    [github:dxos/dxos/packages/core/echo/index-core/src/index-engine.ts#IndexEngine.purgeFeedBlocks,
+     github:dxos/dxos/packages/core/echo/echo-host/src/db-host/echo-host.ts#EchoHost,
+     github:dxos/edge/packages/services/db-service/src/worker/indexer/indexer.ts#Indexer]
+  tests:
+    [github:dxos/dxos/packages/core/echo/index-core/src/index-engine.test.ts,
+     github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed-options.test.ts,
+     github:dxos/edge/packages/services/db-service/test/feed-options.workerd.test.ts]
+  walkthrough:
+    - Migration 0011 adds objectMeta.queueInsertionId, and purgeFeedBlocks deletes rows whose current block was trimmed. github:dxos/dxos/packages/core/echo/index-core/src/index-engine.ts#IndexEngine.purgeFeedBlocks
+    - EchoHost drains takeTrimmed in bounded batches, purges, then clearTrimmed. github:dxos/dxos/packages/core/echo/echo-host/src/db-host/echo-host.ts#EchoHost
+    - EDGE's Indexer does the same against the data FeedSpace while a purge token is set. github:dxos/edge/packages/services/db-service/src/worker/indexer/indexer.ts#Indexer
 ```
 
 ```mdl
-verdict F-3.4: Feed.query does not fall back to FeedService.queryFeed for an unindexed feed.
-  status: missing
-  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#query]
-  note: |
-    Feed.query today is Database.query scoped with Scope.feed, answered by the host's query
-    executor; nothing routes a disabled feed to FeedService.queryFeed (which only the client's
-    feed handle calls for its own object load). No indexing-disabled state exists.
-```
-
-```mdl
-verdict F-3.5: Re-enabling indexing triggers no reset or backfill.
-  status: missing
-  note: |
-    No EDGE per-feed cursor reset and no device one-off feed backfill exist; searched both
-    FeedDataSource implementations and IndexEngine.
-```
-
-```mdl
-verdict F-3.6: FeedSpace always notifies the Indexer DO of data-feed appends, but there is no disabled state whose index write it could skip.
+verdict F-4.2: EchoHost's query executor drops expired feed items from index answers; EDGE's index queries do not.
   status: partial
-  evidence: [github:dxos/edge/packages/services/db-service/src/worker/feed-space/feed-space.ts#FeedSpace._notifyFeedItemsInserted, github:dxos/edge/packages/services/db-service/src/worker/indexer/indexer.ts#Indexer.onFeedItemsChanged]
-  walkthrough:
-    - FeedSpace notifies functions-service and then the Indexer DO after a data-namespace append. github:dxos/edge/packages/services/db-service/src/worker/feed-space/feed-space.ts#FeedSpace._notifyFeedItemsInserted
-    - The Indexer indexes the feed items, which is what makes query triggers fire. github:dxos/edge/packages/services/db-service/src/worker/indexer/indexer.ts#Indexer.onFeedItemsChanged
+  evidence: [github:dxos/dxos/packages/core/echo/echo-host/src/query/query-executor.ts#QueryExecutor]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed-options.test.ts]
   note: |
-    Done: the notification is unconditional for data feeds. Not done: no per-feed indexing flag,
-    so the Indexer cannot keep triggers firing while skipping the index write.
+    The executor computes per-feed cutoffs from stored `maxAge` and filters rows. EDGE's Indexer `queryText` and
+    query paths have no `maxAge` filter (searched `indexer/` for maxAge/cutoff), so an expired item stays
+    queryable there until the alarm's age trim and the next purge.
 ```
 
 ```mdl
-verdict F-4.1: Retention deletes blocks but leaves their index rows behind.
-  status: missing
-  evidence: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore.deleteOldestBlocks, github:dxos/edge/packages/services/db-service/src/worker/feed-space/feed-space.ts#FeedSpace._trimFeedIfNeeded]
-  note: |
-    EDGE's FeedSpace trims a feed to maxQueueSize with FeedStore.deleteOldestBlocks; nothing tells
-    the Indexer or removes the deleted items' objectSnapshot / fts / entity-meta rows, so queries
-    can still return trimmed items (as D-7 states). The device has no retention at all.
+verdict T-1: EchoHost tests that an intent whose apply failed is applied by the startup pass after a restart.
+  status: done
+  tests: [github:dxos/dxos/packages/core/echo/echo-host/src/db-host/echo-host.test.ts]
 ```
 
 ```mdl
-verdict T-1: No test runs a crash before a feed-options intent is applied.
-  status: missing
-  note: Feed-options intents do not exist; no test in index-core, echo-host or echo-client-e2e covers this.
+verdict T-2: The intent store tests that an intent recorded during apply survives clear up to the earlier id.
+  status: done
+  tests: [github:dxos/dxos/packages/core/echo/index-core/src/feed-options-intent-store.test.ts]
 ```
 
 ```mdl
-verdict T-2: No test runs the newer-intent-during-apply case for feed-options intents.
-  status: missing
-  note: |
-    The analogous convergence-key case is tested in entity-meta-index.test.ts, but nothing runs it
-    for feed-options intents, which do not exist.
+verdict T-3: The e2e client tests disable hides from text search but not Feed.query, and re-enable restores.
+  status: done
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed-options.test.ts]
 ```
 
 ```mdl
-verdict T-3: No test disables and re-enables a feed's indexing.
-  status: missing
-  note: Feed.setIndexing does not exist; searched the echo packages' tests.
-```
-
-```mdl
-verdict T-4: No test checks that trimmed items leave the index.
-  status: missing
-  note: |
-    feed-store.test.ts covers deleteOldestBlocks on the store only; no test checks index rows or a
-    text query after a trim, and retention { maxLength } does not exist.
+verdict T-4: The e2e client and EDGE test that items retention trims leave the text index.
+  status: done
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed-options.test.ts, github:dxos/edge/packages/services/db-service/test/feed-options.workerd.test.ts]
 ```

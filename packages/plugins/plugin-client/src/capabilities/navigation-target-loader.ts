@@ -13,8 +13,9 @@ import { Database, EID } from '@dxos/echo';
 import { EntityId, SpaceId } from '@dxos/keys';
 import { QueryRequestSchema } from '@dxos/protocols/buf/dxos/echo/query_pb';
 
-import { meta } from '#meta';
 import { ClientCapabilities } from '#types';
+
+import { ClientNamespace } from '../namespace.ts';
 
 /** Cap on the remote edge existence check so an unreachable edge cannot block navigation. */
 const EDGE_EXISTENCE_TIMEOUT = '3 seconds';
@@ -30,7 +31,7 @@ export default Capability.makeModule(
     );
 
     const loader: AppCapabilities.NavigationTargetLoader = {
-      id: meta.profile.key,
+      id: ClientNamespace.key,
       load: ({ spaceId, entityId }) =>
         Effect.gen(function* () {
           // A synthetic node id is not evidence that anything was deleted.

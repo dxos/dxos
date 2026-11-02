@@ -193,7 +193,7 @@ const PROFILE_FACTS: RDF.Fact[] = [
     rdfFact(`p-knows-${index}`, [entity('alice', 'Alice Chen'), 'knows', entity(slugOf(name), name)], PROFILE),
   ),
   rdfFact('p-2', [entity('alice', 'Alice Chen'), 'authored', entity('paper-a', 'Paper A')], PROFILE),
-  rdfFact('p-3', [entity('alice', 'Alice Chen'), 'authored', entity('paper-b', 'Paper B')], PROFILE),
+  rdfFact('p-trim-md', [entity('alice', 'Alice Chen'), 'authored', entity('paper-b', 'Paper B')], PROFILE),
   rdfFact('p-4', [entity('david', 'David'), 'knows', entity('alice', 'Alice Chen')], PROFILE),
   rdfFact('p-5', [entity('emma', 'Emma'), 'knows', entity('alice', 'Alice Chen')], PROFILE),
   rdfFact('p-6', [entity('bob', 'Bob'), 'works at', entity('acme', 'Acme')], PROFILE),

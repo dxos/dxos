@@ -717,6 +717,38 @@ describe('Worker displacement', () => {
     await asyncTimeout(incumbent.closed, 5_000);
   }, 20_000);
 
+  test('a displaced worker tells its tab which worker displaced it', async () => {
+    const { storageLockKey } = uniqueKeys();
+
+    const incumbent = startBareWorker(storageLockKey);
+    await asyncTimeout(incumbent.listening, 5_000);
+
+    const successor = startBareWorker(storageLockKey);
+    const successorId = await asyncTimeout(successor.listening, 5_000);
+    const report = await asyncTimeout(incumbent.shutdownReport, 5_000);
+
+    expect(successorId).toBeDefined();
+    expect(report.reason).toBe('displaced');
+    expect(report.displacedBy?.workerId).toBe(successorId);
+    await asyncTimeout(incumbent.closed, 5_000);
+  }, 20_000);
+
+  test('a stop from a worker that predates the issuer fields still displaces, reported without an issuer', async () => {
+    const { storageLockKey } = uniqueKeys();
+
+    const incumbent = startBareWorker(storageLockKey);
+    await asyncTimeout(incumbent.listening, 5_000);
+
+    const legacy = new BroadcastChannel(displaceChannelFor(storageLockKey));
+    onTestFinished(() => legacy.close());
+    legacy.postMessage({ action: 'stop' });
+
+    const report = await asyncTimeout(incumbent.shutdownReport, 5_000);
+    expect(report.reason).toBe('displaced');
+    expect(report.displacedBy).toEqual({ workerId: undefined, name: undefined });
+    await asyncTimeout(incumbent.closed, 5_000);
+  }, 20_000);
+
   test('a leader session opens against a storage lock a previous worker still holds', async () => {
     const hub = createHub();
     const keys = uniqueKeys();
@@ -1047,11 +1079,15 @@ const startBareWorker = (storageLockKey: string, { displaceGraceTimeout }: { dis
   const channel = new MessageChannel();
   channel.port1.start();
   channel.port2.start();
-  const listening = new Trigger();
+  const listening = new Trigger<string | undefined>();
   const closed = new Trigger();
+  const shutdownReport = new Trigger<WorkerProtocol.DedicatedWorkerShuttingDownMessage>();
   channel.port2.addEventListener('message', (event) => {
-    if ((event as MessageEvent<WorkerProtocol.DedicatedWorkerMessage>).data.type === 'listening') {
-      listening.wake();
+    const message = (event as MessageEvent<WorkerProtocol.DedicatedWorkerMessage>).data;
+    if (message.type === 'listening') {
+      listening.wake(message.workerId);
+    } else if (message.type === 'shutting-down') {
+      shutdownReport.wake(message);
     }
   });
   Worker.run({
@@ -1068,7 +1104,7 @@ const startBareWorker = (storageLockKey: string, { displaceGraceTimeout }: { dis
     displaceGraceTimeout,
     createRuntime: () => Effect.succeed({ createSession: () => Effect.never }),
   });
-  return { listening: listening.wait(), closed: closed.wait() };
+  return { listening: listening.wait(), closed: closed.wait(), shutdownReport: shutdownReport.wait() };
 };
 
 /**

@@ -202,6 +202,16 @@ export class Impl implements Manager {
   readonly #handles = new Map<Process.ID, ProcessHandle.Impl<any, any, any>>();
   /** Guards of live processes, kept beside the handles because a guard is a closure and is never persisted. */
   readonly #guards = new Map<Process.ID, Process.Guard>();
+  /**
+   * Live processes kept out of the durable store, each with the clear of its storage in {@link #memoryKvStore}; see
+   * {@link Operation.DurableProps.resumable}.
+   */
+  readonly #inMemory = new Map<Process.ID, Effect.Effect<void>>();
+  readonly #memoryKvStore = Effect.runSync(
+    Effect.gen(function* () {
+      return yield* KeyValueStore.KeyValueStore;
+    }).pipe(Effect.provide(KeyValueStore.layerMemory)),
+  );
   readonly #registry: Registry.AtomRegistry;
   readonly #kvStore: KeyValueStore.KeyValueStore;
   readonly #serviceResolver: ServiceResolver.ServiceResolver;
@@ -351,6 +361,11 @@ export class Impl implements Manager {
     }
     this.#handles.delete(pid);
     this.#guards.delete(pid);
+    const clearStorage = this.#inMemory.get(pid);
+    this.#inMemory.delete(pid);
+    if (clearStorage) {
+      Effect.runSync(clearStorage);
+    }
     this.#finished.push(handle.snapshotProcessInfo());
     if (this.#finished.length > FINISHED_PROCESS_RETENTION) {
       this.#finished.shift();
@@ -386,6 +401,10 @@ export class Impl implements Manager {
         }
         this.#handles.clear();
         this.#guards.clear();
+        for (const clearStorage of this.#inMemory.values()) {
+          yield* clearStorage;
+        }
+        this.#inMemory.clear();
         this.#finished.length = 0;
         this.#shutDown = true;
         this.#refreshProcessTree();
@@ -433,7 +452,15 @@ export class Impl implements Manager {
       const tracer = yield* Effect.tracer;
       const outputQueue = yield* Queue.unbounded<ProcessHandle.OutputItem<O>>();
 
-      const storage = storageServiceLayer(this.#kvStore, `process/${id}/`);
+      // A child follows its parent, so a persisted parent still hears back from it after a restart.
+      const persisted =
+        options?.parentProcessId !== undefined
+          ? !this.#inMemory.has(options.parentProcessId)
+          : definition.resumable !== false;
+      const storage = storageServiceLayer(persisted ? this.#kvStore : this.#memoryKvStore, `process/${id}/`);
+      if (!persisted) {
+        this.#inMemory.set(id, storage.clear());
+      }
 
       const parentOption = Option.fromNullishOr(options?.parentProcessId);
 
@@ -573,13 +600,23 @@ export class Impl implements Manager {
         });
 
       // Persistence adapter bound to this process id.
-      const persistence = {
-        setAlarm: (dueAt: number | null) => this.#store.setAlarm(id, dueAt),
-        setState: (state: Process.State) => this.#store.setState(id, state),
-        removeEvent: (seq: number) => this.#store.removeEvent(id, seq),
-        appendEvent: (event: import('./process-store.ts').PersistedEventInput) => this.#store.appendEvent(id, event),
-        deleteRecord: () => this.#store.deleteProcess(id).pipe(Effect.tap(() => Effect.sync(() => this.#release(id)))),
-      };
+      const persistence = persisted
+        ? {
+            setAlarm: (dueAt: number | null) => this.#store.setAlarm(id, dueAt),
+            setState: (state: Process.State) => this.#store.setState(id, state),
+            removeEvent: (seq: number) => this.#store.removeEvent(id, seq),
+            appendEvent: (event: import('./process-store.ts').PersistedEventInput) =>
+              this.#store.appendEvent(id, event),
+            deleteRecord: () =>
+              this.#store.deleteProcess(id).pipe(Effect.tap(() => Effect.sync(() => this.#release(id)))),
+          }
+        : {
+            setAlarm: () => Effect.void,
+            setState: () => Effect.void,
+            removeEvent: () => Effect.void,
+            appendEvent: () => Effect.succeed(0),
+            deleteRecord: () => Effect.sync(() => this.#release(id)),
+          };
 
       // Operation.makeDurable spreads opts into the definition object at runtime; cast is safe at this boundary.
       const defRaw = definition as unknown as { input: Schema.Codec<I, any, never> };
@@ -619,7 +656,8 @@ export class Impl implements Manager {
         () => this.#terminateChildren(id),
         persistence,
         false,
-        encodeInput,
+        // Encoded only to be stored, so a process kept in memory hands its input straight through.
+        persisted ? encodeInput : undefined,
         undefined,
         cancellation,
       );
@@ -634,18 +672,20 @@ export class Impl implements Manager {
       // rather than a put and a read-modify-write, since each is an IndexedDB round trip on the
       // turn's critical path. The seq is passed to runOnSpawn so it's removed when the handler settles.
       const spawnSeq = 1;
-      yield* this.#store.putProcess({
-        id,
-        key: definition.key,
-        params: { name: params.name ?? null, annotations: params.annotations },
-        environment: { space: environment.space, conversation: environment.conversation },
-        parentId: Option.getOrNull(parentOption),
-        ...(origin !== undefined ? { origin } : {}),
-        state: Process.State.RUNNING,
-        alarmDueAt: null,
-        events: [{ _tag: 'spawn', seq: spawnSeq }],
-      });
-      markWork('process.persisted');
+      if (persisted) {
+        yield* this.#store.putProcess({
+          id,
+          key: definition.key,
+          params: { name: params.name ?? null, annotations: params.annotations },
+          environment: { space: environment.space, conversation: environment.conversation },
+          parentId: Option.getOrNull(parentOption),
+          ...(origin !== undefined ? { origin } : {}),
+          state: Process.State.RUNNING,
+          alarmDueAt: null,
+          events: [{ _tag: 'spawn', seq: spawnSeq }],
+        });
+        markWork('process.persisted');
+      }
       yield* handle.runOnSpawn(spawnSeq);
       markWork('process.started');
       log('lifecycle: started', { pid: id, key: definition.key });

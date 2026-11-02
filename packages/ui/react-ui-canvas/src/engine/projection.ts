@@ -21,6 +21,7 @@ import {
   type ViewId,
   type ViewStore,
   endpointNode,
+  isViewNode,
   removeTargets,
   updateView,
 } from '../model/index.ts';
@@ -89,6 +90,10 @@ export const reduceIntent = (scene: View, intent: Intent): View => {
     }
 
     case 'create': {
+      // An Object is drawn at every placement, so a View inside it would be a navigable place with no single path.
+      if (scene.kind === 'composite' && isViewNode(intent.node)) {
+        return scene;
+      }
       return { ...scene, nodes: { ...scene.nodes, [intent.node.id]: intent.node } };
     }
 

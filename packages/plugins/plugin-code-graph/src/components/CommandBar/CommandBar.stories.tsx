@@ -48,6 +48,38 @@ export const Outcome: Story = {
   },
 };
 
+/** Verbose mode: every step with its timing, and the SPARQL each add ran. */
+export const Verbose: Story = {
+  args: {
+    open: true,
+    verbose: true,
+    onVerboseChange: () => {},
+    outcome: {
+      command: 'What depends on identity service in halo',
+      message: 'Symbols that depend on Identity.Service.',
+      elapsedMs: 3400,
+      trace: [
+        { kind: 'ground', turn: 0, ms: 12, label: '2 candidates', detail: 'Identity.Service, @dxos/halo' },
+        {
+          kind: 'model',
+          turn: 1,
+          ms: 2950,
+          label: '1 action · 3120 in / 140 out tokens',
+          detail: 'Symbols that depend on Identity.Service.',
+        },
+        {
+          kind: 'add',
+          turn: 1,
+          ms: 38,
+          label: '24 rows → +18 boxes, +24 arrows',
+          detail:
+            'SELECT DISTINCT ?from ?to WHERE {\n  BIND(<https://dxos.org/deus/file/packages/core/halo/halo/src/Identity.ts#Service> AS ?to)\n  ?from deus:implDependsOn|deus:apiDependsOn ?to .\n}',
+        },
+      ],
+    },
+  },
+};
+
 /** A command in flight. */
 export const Pending: Story = {
   args: { open: true, pending: true, outcome: { command: 'show me the ECHO package exports' } },

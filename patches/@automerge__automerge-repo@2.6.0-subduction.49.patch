@@ -1634,3 +1634,46 @@ index 37f9cc727f7ab1d24118879efadc4bb44f90e827..7c3f51b53a8df1512ee45f69c6a7c0d4
      // ==================== Commits (compound storage with blob) ====================
      async saveCommit(sedimentreeId, commitId, signedCommit, blob) {
          // Encode the signed commit to bytes
+diff --git a/dist/synchronizer/DocSynchronizer.js b/dist/synchronizer/DocSynchronizer.js
+--- a/dist/synchronizer/DocSynchronizer.js
++++ b/dist/synchronizer/DocSynchronizer.js
+@@ -302,6 +302,21 @@
+         }
+     }
+     /**
++     * Whether the doc holds the initial heads `peer` advertised. A peer's
++     * initial heads are fixed for its status and a doc never loses heads, so
++     * a positive answer is kept on the status: `A.hasHeads` rebuilds each
++     * change from the op set, which costs as much as the whole doc on every
++     * message once evaluated per peer per sync message.
++     */
++    #hasInitialHeads(doc, peer) {
++        if (peer.status.hasInitialHeads)
++            return true;
++        const has = A.hasHeads(doc, peer.status.theirInitialHeads);
++        if (has)
++            peer.status.hasInitialHeads = true;
++        return has;
++    }
++    /**
+      * Returns true if any "has" peer advertised initial heads that we
+      * don't yet have locally.
+      */
+@@ -311,7 +326,7 @@
+                 continue;
+             if (peer.sharePolicyState === "denied")
+                 continue;
+-            if (!A.hasHeads(doc, peer.status.theirInitialHeads))
++            if (!this.#hasInitialHeads(doc, peer))
+                 return true;
+         }
+         return false;
+@@ -327,7 +342,7 @@
+                 continue;
+             if (peer.sharePolicyState === "denied")
+                 continue;
+-            if (A.hasHeads(doc, peer.status.theirInitialHeads))
++            if (this.#hasInitialHeads(doc, peer))
+                 return true;
+         }
+         return false;

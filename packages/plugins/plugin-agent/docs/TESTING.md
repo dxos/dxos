@@ -54,7 +54,7 @@ channel whose bot runs on a local EDGE stack (`:8787`, [SETUP.md](./SETUP.md)); 
 `DISCORD_BOT_TOKEN_DEV` for the space's placeholder token. The ids default to Kai's bot and the DXOS
 `#test-bot` channel (change them in Controls); press **Start bot** in the Activity panel and
 mention the bot in Discord: the conversation appears under Conversations and in the chat panel, and the
-Discord bot panel logs each gateway transition. Needs dxos/edge#1279. Tagged `!test`. **AgentDiscord › Scripted** runs the same panels against a fake EDGE bot host and checks
+Discord bot panel logs each gateway transition. Needs dxos/edge#1279. Tagged `!test`. **DiscordAgent › Scripted** runs the same panels against a fake EDGE bot host and checks
 Start → connecting → ready → Stop in CI.
 
 ## 2. Tests and stories (CI)

@@ -1,0 +1,128 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-thread/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: ThreadPlugin
+
+The channel operations are built on a pluggable backend: `CreateChannel`, `AppendChannelMessage`,
+`SendToChannel`, `OpenDirect` and `ConnectChannel` all resolve a `ChannelBackend` provider by
+`channel.backend.kind`, and `channel-operations.test.ts` covers send, direct and connection
+dispatch and the typed failures. The `Channel` type no longer has a `feed` Ref: it carries a
+`backend: { kind, config }` pair whose config is the feed for the default backend. Thread articles
+append to the thread's feed, not to `thread.messages`. No `OnCreateSpace` hook exists in
+plugin-thread, so new spaces get no default "General" channel.
+
+Of 12 items: 3 done, 4 untested, 0 partial, 2 diverged, 3 missing. Findings:
+
+- **OnCreateSpace is missing.** Nothing in plugin-thread contributes an OnCreateSpace capability, so
+  QA-2 cannot pass.
+- **Channel diverged.** The spec's optional `feed` Ref is now `backend.kind` plus an owned
+  `backend.config` Ref, with the feed as the default backend's config.
+- **F-2.1 diverged.** `ThreadArticle` appends messages with `db.appendToFeed(thread.feed, ...)`
+  rather than pushing onto `thread.messages`.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Channel: Channel has a name and a backend {kind, config} pair instead of an optional feed Ref.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/sdk/types/src/types/Channel.ts#Channel, github:dxos/dxos/packages/sdk/types/src/types/Channel.ts#getFeed]
+  tests: [github:dxos/dxos/packages/sdk/types/src/types/Channel.test.ts]
+  note: The feed lives at `backend.config` for the default `org.dxos.channel.backend.feed` kind; other backends store their own config there.
+```
+
+```mdl
+verdict OnCreateSpace: No onCreateSpace operation or OnCreateSpace capability exists in plugin-thread.
+  status: missing
+  note: Searched plugin-thread src for OnCreateSpace, onCreateSpace and "General"; none found.
+```
+
+```mdl
+verdict CreateChannel: The operation creates a Channel for the space, with an optional backend kind and options.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-thread/src/types/ThreadOperation.ts#CreateChannel, github:dxos/dxos/packages/plugins/plugin-thread/src/operations/create-channel.ts]
+  walkthrough:
+    - The operation takes spaceId and name, plus kind and options the spec does not list. github:dxos/dxos/packages/plugins/plugin-thread/src/types/ThreadOperation.ts#CreateChannel
+    - The handler makes a feed-backed channel by default or asks the provider for its config. github:dxos/dxos/packages/plugins/plugin-thread/src/operations/create-channel.ts
+  note: The handler returns the object without adding it to the space. No test invokes it.
+```
+
+```mdl
+verdict AppendChannelMessage: The handler builds a text Message from sender and sends it through the channel's provider.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-thread/src/types/ThreadOperation.ts#AppendChannelMessage, github:dxos/dxos/packages/plugins/plugin-thread/src/operations/append-channel-message.ts]
+  note: The feed provider's send is exercised through SendToChannel's test, not through this operation.
+```
+
+```mdl
+verdict SendToChannel: Sends to a channel or a backend thread through the resolved provider, with refusals and typed errors.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-thread/src/types/ThreadOperation.ts#SendToChannel, github:dxos/dxos/packages/plugins/plugin-thread/src/operations/send-to-channel.ts, github:dxos/dxos/packages/plugins/plugin-thread/src/types/ChannelBackend.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-thread/src/operations/channel-operations.test.ts]
+  walkthrough:
+    - The operation declares channel, optional thread and text, returning a SendReceipt. github:dxos/dxos/packages/plugins/plugin-thread/src/types/ThreadOperation.ts#SendToChannel
+    - The handler resolves the provider and calls its send or thread send. github:dxos/dxos/packages/plugins/plugin-thread/src/operations/send-to-channel.ts
+```
+
+```mdl
+verdict OpenDirect: Opens a direct conversation through the backend's optional openDirect and fails typed when absent.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-thread/src/types/ThreadOperation.ts#OpenDirect, github:dxos/dxos/packages/plugins/plugin-thread/src/operations/open-direct.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-thread/src/operations/channel-operations.test.ts]
+```
+
+```mdl
+verdict ConnectChannel: Starts the backend connection; DisconnectChannel and GetChannelStatus stop and report it.
+  status: done
+  evidence:
+    [github:dxos/dxos/packages/plugins/plugin-thread/src/types/ThreadOperation.ts#ConnectChannel,
+     github:dxos/dxos/packages/plugins/plugin-thread/src/operations/connect-channel.ts,
+     github:dxos/dxos/packages/plugins/plugin-thread/src/operations/disconnect-channel.ts,
+     github:dxos/dxos/packages/plugins/plugin-thread/src/operations/get-channel-status.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-thread/src/operations/channel-operations.test.ts]
+```
+
+```mdl
+verdict F-1.1: ChannelArticle renders the provider's messages in MessageThread and sends through AppendChannelMessage.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-thread/src/containers/ChannelArticle/ChannelArticle.tsx#ChannelArticle, github:dxos/dxos/packages/plugins/plugin-thread/src/hooks/useMessages.ts#useMessages]
+  walkthrough:
+    - useMessages subscribes to the channel's provider for its message list. github:dxos/dxos/packages/plugins/plugin-thread/src/hooks/useMessages.ts#useMessages
+    - ChannelArticle renders MessageThread and invokes AppendChannelMessage on send. github:dxos/dxos/packages/plugins/plugin-thread/src/containers/ChannelArticle/ChannelArticle.tsx#ChannelArticle
+  note: No story or test renders ChannelArticle or checks message order.
+```
+
+```mdl
+verdict F-1.2: Channels with foreign-key meta render read-only, unless the provider sets its own policy.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-thread/src/containers/ChannelArticle/ChannelArticle.tsx#ChannelArticle, github:dxos/dxos/packages/plugins/plugin-thread/src/capabilities/channel-backend-feed.ts]
+  note: The article passes readOnly to MessageThread from the provider's `readOnly` or the meta keys; no test checks it (the operations test covers `isMirrored`, a different policy).
+```
+
+```mdl
+verdict F-2.1: ThreadArticle renders the thread's feed messages and appends new ones to the feed, not to thread.messages.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-thread/src/containers/ThreadArticle/ThreadArticle.tsx#ThreadArticle]
+  note: Messages are read with `Thread.messagesQuery(feed)` and written with `space.db.appendToFeed`; there is no `thread.messages` array. No test.
+```
+
+```mdl
+verdict QA-1: No automation runs the create-channel-and-send QA flow.
+  status: missing
+  note: No playwright spec or autocue flow for plugin-thread.
+```
+
+```mdl
+verdict QA-2: No default channel is created, and no automation runs this QA flow.
+  status: missing
+  note: OnCreateSpace is not implemented in plugin-thread.
+```

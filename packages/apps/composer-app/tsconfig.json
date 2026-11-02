@@ -271,13 +271,13 @@
       "path": "../../plugins/plugin-kanban"
     },
     {
-      "path": "../../plugins/plugin-labeler"
-    },
-    {
       "path": "../../plugins/plugin-lametric"
     },
     {
       "path": "../../plugins/plugin-library"
+    },
+    {
+      "path": "../../plugins/plugin-lighthouse"
     },
     {
       "path": "../../plugins/plugin-linear"
@@ -350,6 +350,9 @@
     },
     {
       "path": "../../plugins/plugin-qa"
+    },
+    {
+      "path": "../../plugins/plugin-recorder"
     },
     {
       "path": "../../plugins/plugin-registry"

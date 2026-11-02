@@ -17,8 +17,11 @@ const feature = (id: string, props: Partial<FeatureModel> = {}): FeatureModel =>
   id,
   name: id,
   status: 'prototype',
+  active: false,
+  requirements: [],
   specs: [],
   subfeatures: [],
+  code: [],
   dependsOn: [],
   tasks: [],
   showcases: [],
@@ -32,11 +35,10 @@ describe('getFeatureSignals', () => {
     expect(getFeatureSignals(top, makeFeatureLookup([failing, top]))).toEqual(['blocked', 'ahead', 'no-evidence']);
   });
 
-  test('open tasks are in flight; a planned feature with none is unplanned', ({ expect }) => {
+  test('a planned feature with no tasks is unplanned', ({ expect }) => {
     const lookup = makeFeatureLookup([]);
-    expect(getFeatureSignals(feature('a', { tasks: [{ id: 't', title: 't', done: false }] }), lookup)).toEqual([
-      'in-flight',
-    ]);
+    const task = { id: 't', title: 't', done: false, active: false };
+    expect(getFeatureSignals(feature('a', { status: 'planned', tasks: [task] }), lookup)).toEqual([]);
     expect(getFeatureSignals(feature('b', { status: 'planned' }), lookup)).toEqual(['unplanned']);
   });
 
@@ -64,15 +66,22 @@ describe('buildFeatureModels', () => {
   test('joins relations onto features in map order', ({ expect }) => {
     const models = buildFeatureModels({
       features: [
-        { id: 'b', name: 'B', status: 'planned', subfeatures: [] },
-        { id: 'a', name: 'A', status: 'operational', specs: ['x.mdl#F-1'], subfeatures: [] },
+        { id: 'b', name: 'B', status: 'planned' },
+        { id: 'a', name: 'A', status: 'operational', specs: ['x.mdl#F-1'] },
       ],
+      children: [[{ id: 'c', name: 'C', status: 'planned' }, 'a']],
       dependsOn: [['b', 'a']],
-      implementedBy: [[{ id: 't', title: 'T', done: false }, 'b']],
+      implementedBy: [[{ id: 't', title: 'T', done: false, active: true }, 'b']],
       showcasedBy: [[{ id: 's', name: 'S' }, 'a']],
     });
     expect(models.map((model) => model.id)).toEqual(['b', 'a']);
-    expect(models[0]).toMatchObject({ dependsOn: ['a'], tasks: [{ id: 't' }], showcases: [], specs: [] });
-    expect(models[1]).toMatchObject({ dependsOn: [], showcases: [{ id: 's' }], specs: ['x.mdl#F-1'] });
+    expect(models[0]).toMatchObject({ active: true, dependsOn: ['a'], tasks: [{ id: 't' }], showcases: [], specs: [] });
+    expect(models[1]).toMatchObject({
+      active: false,
+      dependsOn: [],
+      showcases: [{ id: 's' }],
+      specs: ['x.mdl#F-1'],
+      subfeatures: [{ id: 'c', name: 'C', status: 'planned' }],
+    });
   });
 });

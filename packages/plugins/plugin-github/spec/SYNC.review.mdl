@@ -1,0 +1,264 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-github/spec/SYNC.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: GitHub polling sync
+
+Part 1 is implemented and tested closely against the spec. `syncRepoBinding` sends one conditional
+`listIssuesSince` per poll, batches pull requests (plus pending ones, and every open one on the hourly
+read) into `fetchPullRequestDetails`, merges issues three ways, backfills oldest first in 10-page chunks,
+and advances `Cursor.max` to the newest `updated_at` minus 5 s only after every page. `sync-poll.test.ts`
+runs T-1, T-2, T-3, T-5, T-6 and T-7 against a fake GitHub (its test named "T-4" is really T-7). Gaps:
+the `SyncGitHubRepositories` input has no `binding` field (it takes the shared `SyncInput`, with
+`priority` only); spec T-4 (import of a synced pull request) has no test; and `useSyncPullRequest`
+refreshes on open in every space, bound or not.
+
+Of 33 items: 26 done, 3 untested, 3 partial, 0 diverged, 1 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict PullRequest: The PullRequest type carries repository, headSha, checks, reviewDecision and closes.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/types/src/types/PullRequest.ts#PullRequest]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+```
+
+```mdl
+verdict SyncOptions: maxDaysBack sets the first run's since; no test sets it.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/types/GitHubOperation.ts#SyncOptions, github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#sinceFromOptions]
+  note: `sinceFromOptions` applies `maxDaysBack` only when the binding has no watermark; no test passes options.
+```
+
+```mdl
+verdict IssueSnapshot: Issue snapshots hold title, description and status for the three-way merge.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#TaskSnapshot]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict RepoSnapshot: The repository snapshot records name, description, etag, readAt and membersReadAt.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#RepoSnapshot]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+```
+
+```mdl
+verdict DeltaItem: The delta item is the GitHub issue schema, with pull_request marking a pull request.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/services/github-api.ts#DeltaItem, github:dxos/dxos/packages/plugins/plugin-github/src/services/github-api.ts#GitHubIssue]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+```
+
+```mdl
+verdict PullRequestDetail: The GraphQL detail schema has every field the spec lists.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/services/github-api.ts#PullRequestDetail]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+  note: `closingIssuesReferences` is read as GraphQL `nodes { databaseId }`, a wrapper the spec's flat list leaves out.
+```
+
+```mdl
+verdict GitHubApi: listIssuesSince, fetchPullRequestDetails and fetchRepoConditional exist with the Conditional result.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/services/github-api.ts#Conditional, github:dxos/dxos/packages/plugins/plugin-github/src/services/github-api.ts#listIssuesSince, github:dxos/dxos/packages/plugins/plugin-github/src/services/github-api.ts#fetchPullRequestDetails, github:dxos/dxos/packages/plugins/plugin-github/src/services/github-api.ts#fetchRepoConditional]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+  note: The spec's `Unauthorized` and `NetworkError` are not distinct error types; failures surface as HTTP errors read through `responseStatus`.
+```
+
+```mdl
+verdict MaterializeGitHubTarget: The handler finds or creates the Repo by GitHub id and the TaskSet that shares the key.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/types/GitHubOperation.ts#MaterializeGitHubTarget, github:dxos/dxos/packages/plugins/plugin-github/src/operations/materialize-target.ts, github:dxos/dxos/packages/plugins/plugin-github/src/operations/repo.ts#ensureRepo, github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#ensureIssueSet]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/materialize-target.test.ts, github:dxos/dxos/packages/plugins/plugin-github/src/operations/repo.test.ts]
+  walkthrough:
+    - The operation takes the connection and remote target and returns the Repo ref. github:dxos/dxos/packages/plugins/plugin-github/src/types/GitHubOperation.ts#MaterializeGitHubTarget
+    - The handler parses owner and name and runs in the connection's database. github:dxos/dxos/packages/plugins/plugin-github/src/operations/materialize-target.ts
+    - ensureRepo finds the Repo by GitHub id or coordinates, or files a new one. github:dxos/dxos/packages/plugins/plugin-github/src/operations/repo.ts#ensureRepo
+    - ensureIssueSet finds or creates the TaskSet carrying the same foreign key. github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#ensureIssueSet
+```
+
+```mdl
+verdict SyncGitHubRepositories: The poll runs per binding as specified, but the input has no binding field.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/types/GitHubOperation.ts#SyncGitHubRepositories, github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#syncRepoBinding]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+  note: |
+    The input is `ConnectorSpec.SyncInput` (`connection`, `priority`); there is no `binding?: Ref<Cursor>` to poll one
+    binding, and the handler always runs `Binding.syncAll`. Errors are `GitHubRepoInaccessibleError` /
+    `GitHubRepoUnresolvedError` and HTTP errors, not the spec's named set.
+```
+
+```mdl
+verdict SyncResult: The result counts bindings, 304s, requests, pulls and pushes.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/types/GitHubOperation.ts#SyncResult, github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#foldResults]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+```
+
+```mdl
+verdict F-1.1: The binding's Cursor targets a Repo found or created by its github.com key.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/repo.ts#ensureRepo, github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#resolveBoundRepo]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/repo.test.ts, github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+```
+
+```mdl
+verdict F-1.2: Sync, import and adoption all converge on one PullRequest with repository set.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#upsertPullRequest, github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#findPullRequest]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+```
+
+```mdl
+verdict F-1.3: Issues are Tasks in the TaskSet keyed by the Repo's github.com id; TaskSet has no repository field.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#ensureIssueSet, github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#upsertTask, github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#setTaskContainer]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts, github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict F-1.4: ImportPullRequest returns a stored PullRequest without fetching, but no test checks it.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/import-pull-request.ts]
+  note: The handler queries by owner, repo and number and returns `imported: false` before any request; `import-pull-request.test.ts` covers only token fallback.
+```
+
+```mdl
+verdict F-1.5: A Task mirrored from a pull request is replaced by a PullRequest and dropped from sets and parents.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#upsertPullRequest, github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#removeFromContainers]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+```
+
+```mdl
+verdict F-2.1: The delta is listIssuesSince with since from Cursor.max and the stored ETag.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#syncRepoBinding, github:dxos/dxos/packages/plugins/plugin-github/src/services/github-api.ts#listIssuesSince]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+  note: On an hourly poll the repository and milestone reads precede the delta.
+```
+
+```mdl
+verdict F-2.2: A 304 with no pending pull request ends the binding's run after one request and stamps lastTick.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#syncRepoBinding]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+```
+
+```mdl
+verdict F-2.3: Pull requests in the delta are fetched in batches of at most 100.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#syncRepoBinding, github:dxos/dxos/packages/plugins/plugin-github/src/services/github-api.ts#PULL_REQUEST_BATCH_SIZE]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+```
+
+```mdl
+verdict F-2.4: Pending pull requests join every batch, and every open one joins on the hourly read.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#queryOpenPullRequests, github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#syncRepoBinding]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+```
+
+```mdl
+verdict F-2.5: Cursor.max advances to the newest updated_at minus 5 s only after every page.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#syncRepoBinding]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+```
+
+```mdl
+verdict F-2.6: The repository and milestones are read hourly, the organization daily, and a non-404 failure is retried.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#readRepoMetadata]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+```
+
+```mdl
+verdict F-2.8: Without an ETag the delta backfills oldest first in 10-page runs that ask to run again.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#syncRepoBinding, github:dxos/dxos/packages/plugins/plugin-github/src/services/github-api.ts#listIssuesSince]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+```
+
+```mdl
+verdict F-2.7: Issues keep the three-way merge and push; pull-request status is pull-only.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#upsertTask, github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.ts#pushRepoUpdates]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync.test.ts, github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+```
+
+```mdl
+verdict F-3.1: The connector's sync sets a 3-minute timer trigger with remote true; no test checks it.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/capabilities/connector.ts#GITHUB_SYNC_CRON, github:dxos/dxos/packages/plugins/plugin-github/src/capabilities/connector.ts#sync]
+  note: `sync.trigger` is `Trigger.specTimer('*/3 * * * *')` with `remote: true`; no test reads the connector entry's trigger.
+```
+
+```mdl
+verdict F-3.2: RefreshPullRequests skips pull requests in bound repositories.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/refresh.ts#queryUnboundInFlightPullRequests, github:dxos/dxos/packages/plugins/plugin-github/src/operations/refresh-pull-requests.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/refresh.test.ts]
+```
+
+```mdl
+verdict F-3.3: useSyncPullRequest refreshes on open, but in every space, not only spaces with no binding.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-github/src/hooks/useSyncPullRequest.ts#useSyncPullRequest]
+  note: The hook skips only previews and pull requests synced within 5 minutes; neither it nor `SyncPullRequest` checks for a binding, so bound pull requests are also read on open.
+```
+
+```mdl
+verdict T-1: A test checks one 304 request, no object change and notModified.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+```
+
+```mdl
+verdict T-2: A test checks two requests, the changed fields and the watermark.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+```
+
+```mdl
+verdict T-3: A test checks a 304 delta still batches the pending pull request and settles its checks.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+```
+
+```mdl
+verdict T-4: No test imports a pull request that sync already holds.
+  status: missing
+  note: The sync-poll test named "T-4" exercises T-7; `import-pull-request.test.ts` covers only token fallback.
+```
+
+```mdl
+verdict T-7: A test checks sync adopts an imported pull request in place with key and repository.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+```
+
+```mdl
+verdict T-5: A test checks a pull-request Task is replaced and removed from its TaskSet.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+```
+
+```mdl
+verdict T-6: A test checks a three-page delta advances the watermark only after the last page.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-github/src/operations/sync-poll.test.ts]
+  note: The test reads three pages and checks the watermark, including a failed third page; it does not edit an issue so that the first page's ETag stops matching.
+```

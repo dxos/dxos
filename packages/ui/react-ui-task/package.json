@@ -48,8 +48,7 @@
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/ui-types": "workspace:*",
-    "@effect/atom-react": "catalog:",
-    "date-fns": "catalog:"
+    "@effect/atom-react": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",

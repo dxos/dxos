@@ -22,13 +22,14 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `op`        | `org.dxos.mdl.op@1.0`         |
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `step`      | `org.dxos.mdl.step@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
 
 ## Types
 
 ```mdl
 type Settings
   fields:
-    # No user-visible settings fields yet; reserved for future configuration.
+    autoUpdate?: boolean      # install an update while the app starts; unset follows defaultAutoUpdate
 ```
 
 ```mdl
@@ -52,11 +53,13 @@ type UpdateState
 component NativeSettings
   desc: |
     Settings panel section rendered inside the global Settings dialog under the
-    App (native) plugin entry.  Shows the current update status and exposes
-    Check / Update Now / Relaunch actions depending on the UpdateState.
+    App (native) plugin entry.  Holds the Update on startup switch, and shows the
+    current update status with Check / Update Now / Relaunch actions depending on the
+    UpdateState.
   props:
     settings: Settings
     onSettingsChange(patch: Partial<Settings>)
+    defaultAutoUpdate?: boolean  # the switch's value while Settings.autoUpdate is unset
   state:
     pending: null | 'check' | 'install' | 'apply'
     status: UpdateState          # derived from AppCapabilities.UpdateManager (shared with plugin-pwa)
@@ -66,8 +69,9 @@ component NativeSettings
     relaunchApp()
   layout: |
     ┌─────────────────────────────────────────┐
-    │  Updates                                │
+    │  Update on startup               [on/off]│
     ├─────────────────────────────────────────┤
+    │  Updates                                │
     │  [status description]   [Check / Update]│
     └─────────────────────────────────────────┘
 ```
@@ -153,6 +157,18 @@ feat F-2: Over-the-Air Updates
   req F-2.5:
     when: the Updater module is torn down
     then: the background update-check fiber is interrupted cleanly
+
+  req F-2.6:
+    when: the app starts with Settings.autoUpdate on (unset follows the plugin's defaultAutoUpdate, which Composer sets in preview)
+    then: a boot gate holds the loader while it checks for an update; when one is available it shows "Downloading update" with the download's progress, then "Updating", and relaunches onto the new version
+
+  req F-2.7:
+    when: the app starts offline, the check finds nothing or fails, 3 s pass from the gate's start without the check finding an update, or the download makes no progress for 30 s
+    then: the gate releases and the app opens on the running version; a failed check leaves the status idle, not failed; the background fiber still handles a later update
+
+  req F-2.8:
+    when: the boot gate and the background fiber check or install at the same time
+    then: the second caller joins the call in flight instead of starting another
 ```
 
 ```mdl
@@ -263,6 +279,88 @@ test QA-1: Check for an OTA update
 ```
 
 ---
+
+## Changelog
+
+```mdl
+decision D-1: With "Update automatically" on, the app checks for an update while it starts; the boot loader shows the update's download progress, then the app applies it. The setting is on by default in preview and off elsewhere, and the desktop app has it too.
+  date: 2026-10-29
+  by: user:wittjosiah
+  affects: [Settings, NativeSettings, F-2.6]
+```
+
+```mdl
+decision D-2: The gate starts the download itself when the check reports `available`, and applies a ready update by relaunching. Fills in [D-1].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-2.6]
+  why: On desktop, checking and downloading are separate steps, so a gate that only checked would release on `available` and never update.
+```
+
+```mdl
+decision D-3: The gate releases when the check takes longer than 5 s, or the download makes no progress for 30 s. Fills in [D-1].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-2.7]
+  why: An unreachable update server or a stalled download must not keep the app from opening.
+  rejected: a total download budget — a large update on a slow connection would fail even while it progresses
+```
+
+```mdl
+decision D-4: The Updater activates at startup, and a check or install already in flight is shared between the gate and the background fiber. Fills in [D-1].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-2.1, F-2.8]
+  why: The startup pass does not pull a provider forward from the plugin's start event, so the gate would wait until the loader had gone; once both start at boot, they would otherwise download the same update twice.
+```
+
+```mdl
+decision D-5: The boot check has a strict timeout. When the app is offline or the check's request fails, the app boots on the version it has and does not update; a failed check is not an error.
+  date: 2026-10-29
+  by: user:wittjosiah
+  affects: [F-2.7]
+```
+
+```mdl
+decision D-6: The gate releases 3 s after it starts unless the check has found an update, or when a download makes no progress for 30 s. Fills in [D-5].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-3
+  affects: [F-2.7]
+  why: The 5 s check budget restarted on every status change, so a check could hold the loader past it.
+  rejected: a deadline counted from when the app is otherwise ready — the gate cannot tell when that is
+```
+
+```mdl
+decision D-7: Offline (`navigator.onLine` false) the gate does not check; when its check fails the gate sets the status back to idle. A check started from settings still reports its failure. Fills in [D-5].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-2.7]
+  why: Offline the request can only fail, and an "Update failed" row would report a check the user never asked for.
+  rejected: hiding failures of a check started from settings — the user who pressed it needs to know it did not work
+```
+
+```mdl
+decision D-8: The setting's name says that it forces an update when the app starts. With the setting off, the app still gets updates; it only does not install one before it opens.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [NativeSettings]
+```
+
+```mdl
+decision D-9: The switch is labelled "Update on startup", and its description says that updates still download in the background and the app asks to restart when it is off. Fills in [D-8].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [NativeSettings]
+  why: "Startup" is the word a user knows; "boot" is internal.
+  rejected: "Force update on startup" — "force" reads as if updates stop when the switch is off
+```
 
 ## Appendix: Extension Definitions
 

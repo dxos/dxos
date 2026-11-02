@@ -18,7 +18,7 @@ import { Reducer, type Trajectory } from '@dxos/trajectory';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/trajectory-cache/index.ts';
 import * as Legacy from './Legacy.ts';
-import { readItems } from './trajectory-items.ts';
+import { lastItem, readItems } from './trajectory-items.ts';
 
 /** Namespace owning the cache's tables. */
 const DATABASE = 'trajectory-cache';
@@ -133,28 +133,25 @@ const cached = Effect.fnUntraced(function* <S>(
 });
 
 /**
- * The items after `position`, or `undefined` when a checkpoint taken there cannot be resumed: the item at its cursor
- * is no longer the one it was taken at (a rebuilt index), or the tail holds a legacy record (whose conversion needs
- * the whole feed).
+ * The items after `position`, or `undefined` when a checkpoint taken there cannot be resumed: its cursor is not a walk's
+ * local cursor (a checkpoint from before walks), the walk no longer reaches it, or the tail holds a legacy record
+ * (whose conversion needs the whole feed).
  */
 const tailAfter = Effect.fnUntraced(function* (
   feed: Feed.Feed,
   position: Omit<Position, 'count'>,
 ): Effect.fn.Return<(Trajectory.Event | Legacy.Record)[] | undefined, never, Database.Service> {
-  const at = Number(position.cursor);
-  if (!Number.isSafeInteger(at)) {
+  const cursor = Schema.decodeUnknownOption(Feed.LocalCursor)(position.cursor);
+  if (Option.isNone(cursor) || !position.cursor.includes('|')) {
     return undefined;
   }
 
-  const [head] = yield* readItems(feed, {
-    after: Feed.Cursor.make(String(at - 1)),
-    before: Feed.Cursor.make(String(at + 1)),
-  });
-  if (head?.id !== position.head) {
+  const tail = yield* readItems(feed, { after: cursor.value });
+  // A walk gives nothing after a cursor it cannot place, as it does when nothing is new; only in the second case is
+  // the checkpoint's head still the walk's last item.
+  if (tail.length === 0 && (yield* lastItem(feed))?.id !== position.head) {
     return undefined;
   }
-
-  const tail = yield* readItems(feed, { after: Feed.Cursor.make(position.cursor) });
   return tail.some(Legacy.isRecord) ? undefined : tail;
 });
 

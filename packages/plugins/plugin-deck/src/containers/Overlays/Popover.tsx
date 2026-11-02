@@ -21,7 +21,8 @@ import * as Theme from '@dxos/react-ui/Theme';
 import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 
 import { useDeckState } from '#hooks';
-import { meta } from '#meta';
+
+import { DeckNamespace } from '../../namespace.ts';
 
 const DEBOUNCE_DELAY = 40;
 
@@ -108,7 +109,7 @@ export const PopoverRoot = ({ children }: PopoverRootProps) => {
 };
 
 export const PopoverContent = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(DeckNamespace.key);
   const { state } = useDeckState();
   const popoverSubject =
     state.popoverContent && 'subject' in state.popoverContent ? state.popoverContent.subject : undefined;

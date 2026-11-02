@@ -9,7 +9,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Spec } from '@dxos/types';
+import { SpecDocument } from '@dxos/types';
 
 import { CodeProject } from '#types';
 
@@ -18,10 +18,10 @@ export default Capability.makeModule(
     return [
       Capability.contributeAll(SpaceCapabilities.CreateObjectEntry, [
         {
-          id: Type.getTypename(Spec.Spec),
+          id: Type.getTypename(SpecDocument.SpecDocument),
           createObject: (props, options) =>
             Effect.gen(function* () {
-              const object = Spec.make(props);
+              const object = SpecDocument.make(props);
               return yield* Operation.invoke(
                 SpaceOperation.AddObject,
                 {
@@ -36,7 +36,7 @@ export default Capability.makeModule(
           id: Type.getTypename(CodeProject.CodeProject),
           createObject: (props, options) =>
             Effect.gen(function* () {
-              const spec = Spec.make();
+              const spec = SpecDocument.make();
               const project = CodeProject.make({ name: props?.name, spec });
               // Add the linked Spec to the space so the Ref resolves.
               yield* Operation.invoke(

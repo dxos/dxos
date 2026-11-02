@@ -1,5 +1,5 @@
 ---
-id: org.dxos.plugin.spacetime
+id: org.dxos.plugin.spacetime.draft
 name: SpacetimePlugin
 version: 0.1.0
 extends: [dxos.plugin.base]
@@ -20,6 +20,7 @@ and ECHO for collaborative persistence.
 | `scenario`  | `org.dxos.mdl.scenario@1.0`  |
 | `component` | `org.dxos.mdl.component@1.0` |
 | `service`   | `org.dxos.mdl.service@1.0`   |
+| `decision`  | `org.dxos.mdl.decision@1.0`  |
 
 ## Types
 
@@ -384,4 +385,16 @@ scenario T-FR-8: Keyboard scope
   given: focus is in a text input (not canvas)
   when: user presses "m" or "e" or "x"
   then: no tool action fires
+```
+
+## Changelog
+
+```mdl
+decision D-1: This document's id is `org.dxos.plugin.spacetime.draft`, so the plugin's spec, `PLUGIN.mdl` beside the package, alone carries `org.dxos.plugin.spacetime`.
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:richburdon
+  why: A spec id names one file, so a reference to it resolves; this document is the earlier draft (status draft) of the same requirements, which the plugin's spec has since extended.
+  rejected:
+    - Changing the id of the plugin's own spec, which must equal the plugin id that dx.config.ts and `dependsOn` entries name.
 ```

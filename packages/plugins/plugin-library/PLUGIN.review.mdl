@@ -1,0 +1,124 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-library/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: LibraryPlugin
+
+The plugin is built and the publishing boundary is solid: `Book` carries an `AtprotoRecordAnnotation`
+for `buzz.bookhive.book` with a declarative Panproto lens, fields are marked `publish`/`mirror`, and
+`book-lens.test.ts` proves private fields never reach the encoded record. The create form offers a
+BookHive combobox and autofills the catalog on submit. The biggest divergence is the `Book` type itself:
+catalog fields are nested under an inline `catalog` struct, `owned` is published rather than private,
+`personalTags`, `format` and a stored `hiveBookUri` do not exist, and `progress` and `content` were added.
+The collection card omits reading status, and the article shows the catalog read-only with only the
+activity fields editable. No automated test drives the autocomplete create flow. The spec's T-2
+(private fields never publish) is not listed by `deus review items`, so it has no verdict here; `book-lens.test.ts`
+runs it end to end.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Book: The Book type exists but its shape differs from the spec: catalog fields are nested, owned is public, personalTags and format are absent.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-library/src/types/Book.ts#Book, github:dxos/dxos/packages/plugins/plugin-library/src/types/Book.ts#Catalog]
+  tests: [github:dxos/dxos/packages/plugins/plugin-library/src/atproto/book-lens.test.ts]
+  note: |
+    `title`, `authors`, `genres`, cover and `identifiers.hiveId` live under `catalog` (`Catalog` struct) rather than top-level;
+    `coverUrl` is `catalog.cover`. `owned` is annotated `publish` (spec: private), `review`/`notes` are `Ref<Text>`, and
+    `personalTags`, `format` and a stored `hiveBookUri` are missing (the URI is derived by the lens). Adds `progress` and `content`.
+```
+
+```mdl
+verdict F-1.1: A type section for Book is added to the content group.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-library/src/capabilities/app-graph-builder.ts]
+  note: '`TypeSection.createTypeSectionExtension(Book.Book, ...)` matches the content nav-tree group; no test covers the graph extension.'
+```
+
+```mdl
+verdict F-1.2: Create, rename and delete go through generic space ops; the article edits only the activity fields.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-library/src/capabilities/create-object.ts, github:dxos/dxos/packages/plugins/plugin-library/src/containers/BookArticle/BookArticle.tsx#BookArticle, github:dxos/dxos/packages/plugins/plugin-library/src/containers/BookArticle/BookInfo.tsx#BookInfo]
+  walkthrough:
+    - The create-object entry builds a Book from the form and adds it via SpaceOperation.AddObject. github:dxos/dxos/packages/plugins/plugin-library/src/capabilities/create-object.ts
+    - The article toggles between an info view and an EPUB/PDF reader. github:dxos/dxos/packages/plugins/plugin-library/src/containers/BookArticle/BookArticle.tsx#BookArticle
+    - The info view shows the catalog read-only plus an activity form. github:dxos/dxos/packages/plugins/plugin-library/src/containers/BookArticle/BookInfo.tsx#BookInfo
+  note: |
+    Rename and delete are the generic space actions, not plugin code. The full-page view is not one editable form: catalog
+    metadata is read-only, and private notes are in a separate companion. Only a storybook story renders the article.
+```
+
+```mdl
+verdict F-1.3: The card shows cover, authors and rating but not reading status.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-library/src/containers/BookCard/BookCard.tsx#BookCard]
+  tests: [github:dxos/dxos/packages/plugins/plugin-library/src/containers/BookCard/BookCard.stories.tsx]
+  note: '`BookCard` renders `catalog.cover`, authors and `★ stars/10` with publication year; `status` is never read.'
+```
+
+```mdl
+verdict F-2.1: The create form's hiveId field is a combobox over buzz.bookhive.searchBooks.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-library/src/capabilities/create-object.ts, github:dxos/dxos/packages/plugins/plugin-library/src/operations/bookhive.ts#searchBooks]
+  walkthrough:
+    - The create schema annotates hiveId with an options lookup that calls searchBooks. github:dxos/dxos/packages/plugins/plugin-library/src/capabilities/create-object.ts
+    - searchBooks queries the public XRPC endpoint and normalizes hits. github:dxos/dxos/packages/plugins/plugin-library/src/operations/bookhive.ts#searchBooks
+  note: No test exercises `searchBooks` or the lookup annotation.
+```
+
+```mdl
+verdict F-2.2: Selecting a result autofills the title in the form and the catalog on submit; hiveBookUri is not stored.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-library/src/capabilities/create-object.ts, github:dxos/dxos/packages/plugins/plugin-library/src/operations/bookhive.ts#lookupHiveBook]
+  note: |
+    Only `title` autofills in the form; authors, cover, genres and identifiers are filled from `lookupHiveBook` when the
+    object is created. `hiveBookUri` is never stored (the lens derives it from the hive id). No test covers it.
+```
+
+```mdl
+verdict F-3.1: Book carries AtprotoRecordAnnotation for buzz.bookhive.book with a declarative lens.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-library/src/types/Book.ts#Book, github:dxos/dxos/packages/plugins/plugin-library/src/atproto/book-lens.ts#bookLens]
+  tests: [github:dxos/dxos/packages/plugins/plugin-library/src/atproto/book-lens.test.ts]
+  note: The codec is a hand-written Panproto lens, not generated.
+```
+
+```mdl
+verdict F-3.2: Fields carry publish/mirror visibility, but egress is decided by the lens adapters, and owned is publish.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-library/src/types/Book.ts#Book, github:dxos/dxos/packages/plugins/plugin-library/src/atproto/hive.ts#canPublishBook]
+  tests: [github:dxos/dxos/packages/plugins/plugin-library/src/atproto/book-lens.test.ts]
+  note: |
+    `catalog` is `mirror` with title/authors/identifiers `publish`, and `progress.cfi` is forced `private`. `owned` is annotated
+    `publish` though the spec lists it private (the lens has no adapter for it, so it is not emitted). No test checks the
+    annotations against the lens.
+```
+
+```mdl
+verdict F-3.3: The egress-gate test asserts notes, owned and purchase fields never appear in the encoded record.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-library/src/atproto/book-lens.ts#bookLens]
+  tests: [github:dxos/dxos/packages/plugins/plugin-library/src/atproto/book-lens.test.ts]
+  note: '`personalTags` does not exist on the type, so it cannot leak.'
+```
+
+```mdl
+verdict T-1: No automated test drives the autocomplete create flow.
+  status: missing
+  note: Searched `src/**/*.test.ts` and stories; `searchBooks` and the create-object entry are not exercised.
+```
+
+```mdl
+verdict QA-1: Manual QA only; no automation runs it.
+  status: missing
+  note: The test is human-only by design (no create op, live BookHive call); nothing automated runs these steps.
+```

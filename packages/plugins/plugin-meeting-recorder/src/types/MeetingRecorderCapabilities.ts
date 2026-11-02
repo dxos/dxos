@@ -10,8 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { type Database } from '@dxos/echo';
 import type * as Meeting from '@dxos/plugin-meeting/Meeting';
 
-import { meta } from '#meta';
-
+import { MeetingRecorderNamespace } from '../namespace.ts';
 import type * as SettingsModule from './Settings.ts';
 
 /** An app holding the microphone, as the native side reports it. */
@@ -44,7 +43,7 @@ export interface CaptureBridge {
   stopSystemAudio(): Promise<void>;
 }
 
-export const Bridge = Capability.makeSingleton<CaptureBridge>()(`${meta.profile.key}.capability.bridge`);
+export const Bridge = Capability.makeSingleton<CaptureBridge>()(`${MeetingRecorderNamespace.key}.capability.bridge`);
 
 export type RecorderState =
   | { phase: 'idle' }
@@ -67,10 +66,12 @@ export type RecorderState =
     }
   | { phase: 'stopping'; meeting: Meeting.Meeting };
 
-export const State = Capability.makeSingleton<Atom.Writable<RecorderState>>()(`${meta.profile.key}.capability.state`);
+export const State = Capability.makeSingleton<Atom.Writable<RecorderState>>()(
+  `${MeetingRecorderNamespace.key}.capability.state`,
+);
 
 export const Settings = Capability.makeSingleton<Atom.Writable<SettingsModule.Settings>>()(
-  `${meta.profile.key}.capability.settings`,
+  `${MeetingRecorderNamespace.key}.capability.settings`,
 );
 
 /** Owns the live audio pipeline of the current recording; the operations drive it. */
@@ -81,4 +82,4 @@ export interface Recorder {
   stop(): Promise<void>;
 }
 
-export const Recorder = Capability.makeSingleton<Recorder>()(`${meta.profile.key}.capability.recorder`);
+export const Recorder = Capability.makeSingleton<Recorder>()(`${MeetingRecorderNamespace.key}.capability.recorder`);

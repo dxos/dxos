@@ -8,6 +8,7 @@ import * as Layer from 'effect/Layer';
 import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as Process from '@dxos/compute/Process';
@@ -59,6 +60,7 @@ const makeAgentServiceSpec = (codeModeTurnProducer: AssistantOptions.AssistantPl
                 .map((agent) => ({ name: agent.id, makeTurnProducer: agent.makeTurnProducer }));
               return { limit: values.parallelThreadLimit, ...(tenants.length > 0 ? { tenants } : {}) };
             },
+            hooks: () => manager.getAll(AppCapabilities.HookDefinition),
             mcpEndpoint: (connection) =>
               ConnectorSpec.mcpEndpoint(manager.getAll(ConnectorSpec.Connector).flat(), connection),
           });

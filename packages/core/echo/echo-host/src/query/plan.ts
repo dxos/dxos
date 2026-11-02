@@ -90,7 +90,7 @@ export namespace QueryPlan {
      * whole feed. Present (possibly with no bounds set) whenever the filter was, since a cursor read
      * covers positioned blocks only.
      */
-    feedCursorRange?: { begin?: string; end?: string; order?: 'position' | 'local' };
+    feedCursorRange?: { begin?: string; end?: string; positions?: 'local' | 'edge' };
 
     /**
      * Set when the planner has proved the step's {@link limit} can be applied by the feed scan

@@ -1,0 +1,280 @@
+---
+id: org.dxos.plugin.inbox.triage
+name: Inbox triage
+version: 0.1.0
+---
+
+Triages a mailbox: labels each message with the space's own tags and a priority band by asking a
+decision model two questions per message (three when the space has tags of its own), applying only the answers it is confident about, and
+extracts what a message asks of the reader as tasks with an extraction model.
+
+## Extensions
+
+| Term       | URI                          |
+| ---------- | ---------------------------- |
+| `feat`     | `org.dxos.mdl.feat@1.0`      |
+| `scenario` | `org.dxos.mdl.scenario@1.0`  |
+| `decision` | `org.dxos.mdl.decision@1.0`  |
+
+## Features
+
+```mdl
+feat F-1: Ask about a message
+
+  req F-1.1: Each message is asked three questions in one call: needs-reply (probability), label (classify), urgency (rate).
+  req F-1.2: The label options are the space's own user tags plus "none of these"; canonical and provider tags are excluded.
+  req F-1.3: With no user tags in the space the label question is omitted and the other two still run.
+  req F-1.4: The state sent is the sender, subject and a snippet — never the full message body.
+```
+
+```mdl
+feat F-2: Apply only what it is confident about
+
+  req F-2.1: A label is applied only when its confidence reaches the threshold (default 0.5).
+  req F-2.2: `Needs reply` is applied at a probability of 0.6 or above.
+  req F-2.3: Every message is placed in exactly one priority band — Urgent, High priority, Normal or Low priority — applied as the inbox's priority system tags; Urgent needs the top of the scale and a confident answer.
+  req F-2.4: The message itself is not modified: triage writes tags, and the tasks and project of F-4.
+```
+
+```mdl
+feat F-3: Run it over the inbox
+
+  req F-3.1: A toolbar action, "Triage inbox", runs triage over the whole mailbox.
+  req F-3.2: A cascade pass (`label`, after `contacts`) runs it as part of Analyze.
+  req F-3.3: A message already carrying a priority band is skipped, so a re-run is cheap.
+  req F-3.4: A run is capped (default 50, max 200 messages) since each message costs a decision call, and one that needs a reply an extraction call too.
+```
+
+```mdl
+feat F-4: Extract what a message asks for as tasks
+
+  req F-4.1: A message that needs a reply is read by an extraction model (Cloudflare's Clairic) for up to three requests and the due date of the first.
+  req F-4.2: The first request becomes a task at a low confidence bar; further ones only when clear-cut, so what the sender will do themselves is not filed as the reader's work.
+  req F-4.3: Tasks are filed in one project per mailbox, created on first use, whose instructions tell an agent how to answer the email a task came from.
+  req F-4.4: A task carries its message's priority, names the email it came from, references the message, and is recorded as extracted from it so it shows under the email.
+  req F-4.5: A message with a task already recorded against it is not read again, whatever else was extracted from it; a failed or unavailable extraction leaves the message labelled.
+```
+
+## Acceptance
+
+```mdl
+scenario T-1: An urgent request is tagged
+  given: a mailbox with a message asking the user to act today
+  when: TriageMailbox runs
+  then: the message carries `Needs reply` and `Urgent`
+```
+
+```mdl
+scenario T-2: A receipt is labelled with the user's own tag
+  given: a space with a user tag "Receipts" and a mailbox holding a payment receipt
+  when: TriageMailbox runs
+  then: the receipt carries "Receipts" and not `Needs reply`
+```
+
+```mdl
+scenario T-4: A request becomes a task in the inbox project
+  given: a mailbox with a message asking the reader to approve an invoice today
+  when: TriageMailbox runs
+  then: the message is Urgent and a task "Approve the invoice today" is in the mailbox's project, extracted from the message
+```
+
+```mdl
+scenario T-3: Re-running changes nothing
+  given: a mailbox whose messages were labelled by a previous run
+  when: TriageMailbox runs again
+  then: every message is reported skipped and no decision call is made
+```
+
+## QA
+
+```mdl
+test QA-1: Label an inbox from the toolbar
+  desc: Triage's whole journey — a mailbox of mixed mail, one click, tags that match.
+  actors: human
+  covers: [F-1.1, F-2.1, F-3.1, F-3.3]
+  status: partial            # 2026-09-17; recorded against the Northwind Sales template with a live
+                             # TypeSafe key. Steps 1 and 2 verified on screen in the recorded take:
+                             # four of the eight messages take "Needs reply" and the rest none. The
+                             # re-run (step 4) was verified in an earlier take on the same build,
+                             # which reported every message skipped. Step 3 is NOT
+                             # covered — the template seeds no user tags, so the label question is not
+                             # asked at all and the choice path is only covered by
+                             # src/operations/triage/triage-mailbox.test.ts.
+                             # Tag chips render only with Inbox's "Group by conversation" OFF:
+                             # in conversation mode MailboxArticle passes no tagsAtom to the tile.
+  given:
+    - an identity exists
+    - space: a space is open with a synced mailbox holding at least one request and one receipt
+    - tags: at least one user tag exists in the space (e.g. "Receipts")
+    - inbox: "Group by conversation" is off, so per-message tag chips render
+  steps:
+    - name: Run the labeller
+      do: Open the mailbox and choose "Triage inbox" from the toolbar's magic-wand menu.
+      invoke: org.dxos.operation.inbox.triageMailbox
+      expect: progress reports the mailbox, then messages show tags
+    - name: Check a request
+      do: Open a message that asks the user to do something.
+      expect: it carries "Needs reply"; "Urgent" only if the message says so
+    - name: Check a receipt
+      do: Open a payment receipt.
+      expect: it carries the user's "Receipts" tag and not "Needs reply"
+    - name: Run it again
+      do: Choose "Triage inbox" a second time.
+      invoke: org.dxos.operation.inbox.triageMailbox
+      expect: the run reports every message skipped and no tag changes
+```
+
+test QA-2: Triage an inbox, then let the agent answer the most urgent email
+  desc: The demo journey — one click sorts an unread inbox into priority bands and turns requests into
+        tasks; the top task goes to the agent, which drafts the reply and asks before it sends.
+  actors: human
+  covers: [F-2.3, F-3.1, F-4.1, F-4.3, F-4.4]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space created from the "Inbox triage" template (plugin-debug), whose sample mailbox sends locally
+    - plugin-debug is enabled
+    - extraction reaches Clairic, through EDGE or the TypeSafe `extractionEndpoint` setting
+  steps:
+    - name: Start with an unsorted inbox
+      do: Open the Inbox mailbox.
+      expect: nine unread messages in date order, none grouped or carrying a label or priority
+    - name: Triage the inbox
+      do: Choose "Triage inbox" from the toolbar's magic-wand menu.
+      invoke: org.dxos.operation.inbox.triageMailbox
+      expect: the list regroups under Urgent, High priority, Normal and Low priority, with the renewal alone under Urgent
+    - name: Every request becomes a task
+      do: Open the "Inbox tasks" project from the navtree and its Tasks tab.
+      expect: a task for each request the extraction model is confident about, each with its email's priority
+    - name: Open the most urgent email
+      do: Back in the inbox, open the message under Urgent.
+      expect: the task extracted from it is listed under its body
+    - name: Assign the task to the agent
+      do: Open the task's "…" menu and choose "Assign to agent".
+      expect: the Assistant companion opens on a new chat that starts working on the task
+    - name: The agent asks before it sends
+      expect: the chat shows a permission card asking to send an email reply
+      note: sending is the inbox's send-email permission; the agent cannot send without the person's answer
+    - name: Allow it to send
+      do: Choose "Allow" on the card.
+      expect: the card shows the answer and the agent finishes the task
+    - name: See the reply under the email
+      do: Open the renewal email again.
+      expect: the reply ("Re: …") is threaded under the original message, tagged Sent
+```
+
+## Changelog
+
+```mdl
+decision D-1: Triage applies a priority band to every message with the decision model, extracts tasks from each message with an extraction model served by Cloudflare, and the mailbox list groups messages by priority.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-2.3, F-4.1]
+```
+
+```mdl
+decision D-2: Extracted tasks are shown under the email they came from, and a task assigned to the agent from there opens the Assistant, which drafts the reply and asks for the send-email permission before sending it.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-4.4, QA-2]
+```
+
+```mdl
+decision D-3: Four bands (Urgent, High priority, Normal, Low priority) as inbox system tags; urgency at or above 0.9, or a reply needed at 0.5, is High; a reply needed or urgency at 0.5 is Normal. Fills in [D-1].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.3]
+  why: Every message must sit in one band for the list to group the whole inbox; the tags live in the inbox so the list can group without depending on this plugin.
+  rejected: Storing a numeric priority on the message (feed messages are immutable snapshots).
+```
+
+```mdl
+decision D-4: Clairic is asked for three request slots and a due date; the first slot is kept from confidence 0.15, later slots from 0.6, and only messages that need a reply are read. Fills in [D-1].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4.1, F-4.2]
+  why: A Clairic list field answers with short fragments, while separate text fields answer with whole requests; later slots are where it picks up the sender's own next steps.
+```
+
+```mdl
+decision D-5: Tasks file into one project per mailbox, keyed to the mailbox, whose instructions bind the inbox skills and name the send-reply operation. Fills in [D-2].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4.3]
+  why: A delegated chat takes its skills and system prompt from its task's project, so the project is where the agent learns how to answer an email.
+```
+
+```mdl
+decision D-6: The urgency and needs-reply questions name marketing and automated mail as never urgent and never asking for a reply. Fills in [D-3].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.1]
+  why: Asked plainly, Jev rated a conference promotion ending tonight as urgent and needing a reply.
+```
+
+```mdl
+decision D-7: QA-1 runs the labeller through "Triage inbox", the toolbar action's current name. Fills in [D-1].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-1]
+  why: The action was renamed from "Label messages" when it took on priority and extraction, so the old step named a menu item that no longer exists.
+```
+
+```mdl
+decision D-8: High priority is an urgency rating at or above 0.9, or a needed reply with urgency at or above 0.5; Normal is a needed reply or urgency at or above 0.5; a reply is needed at probability 0.6 or more. Supersedes [D-3].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  supersedes: D-3
+  affects: [F-2.3]
+  why: D-3's "a reply needed at 0.5" reads as a reply probability of 0.5; these are the thresholds `toPriority` and `toVerdict` apply.
+```
+
+```mdl
+decision D-9: The needs-reply question rules out marketing and automated mail; the urgency question rules out a sale or promotion ending. Supersedes [D-6].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  supersedes: D-6
+  affects: [F-1.1]
+  why: The two questions carry separate exclusions, which D-6 stated as one.
+```
+
+```mdl
+decision D-10: QA-2 needs extraction to reach Clairic and expects a task only for each request the model is confident about; F-3.4 counts the extraction call a reply-needed message adds. Fills in [D-4].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.4, QA-2]
+  why: Without a reachable extraction model triage still labels but files no tasks, and the confidence cut in D-4 can leave a request without one.
+```
+
+```mdl
+decision D-11: Triage is part of plugin-inbox rather than its own plugin; the operation is `TriageMailbox` (`org.dxos.operation.inbox.triageMailbox`), and the spec moves to plugin-inbox/docs/TRIAGE.mdl.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-3.1, F-3.2, QA-1, QA-2]
+  why: Triage only acts on a mailbox, and as an opt-in plugin it was off wherever inbox was on.
+```
+
+```mdl
+decision D-12: Only a recorded task marks a message as already read for tasks; contacts and summaries recorded against the same message do not. Fills in [D-4].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4.5]
+  why: Inbox records the contacts and summaries it extracts on sync in the same per-message ledger, so on a synced mailbox every message read as extracted and triage filed no tasks.
+```
+
+```mdl
+decision D-13: Triage needs no TypeSafe plugin: the default decision model and Clairic are keyless Workers AI models through EDGE, served wherever the assistant is.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-1.1, F-4.1, QA-1, QA-2]
+  why: With the resolvers in the opt-in TypeSafe plugin, triage failed with AiModelNotAvailableError on a default install.
+```

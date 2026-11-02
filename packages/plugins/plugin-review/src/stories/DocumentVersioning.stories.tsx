@@ -46,7 +46,7 @@ import { AnchoredTo, Message, Thread } from '@dxos/types';
 import { EditorView } from '@dxos/ui-editor';
 import { Branch } from '@dxos/versioning';
 
-import { ReviewPlugin } from '#plugin';
+import * as ReviewPlugin from '#meta';
 import { translations } from '#translations';
 
 import {
@@ -306,13 +306,13 @@ const meta = {
                 }
                 if (context.parameters?.ambientReview) {
                   const text = yield* Effect.promise(() => doc.content.load());
-                  seedComments(defaultSpace, doc, text, [COMMENT_ANCHOR]);
+                  yield* Effect.promise(() => seedComments(defaultSpace, doc, text, [COMMENT_ANCHOR]));
                 }
                 yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
               }),
           }),
-          SpacePlugin({}),
-          ReviewPlugin(),
+          SpacePlugin.make({}),
+          ReviewPlugin.make(),
           MarkdownPlugin.make(),
         ],
       };

@@ -329,7 +329,9 @@ test QA-2: Build a typed table and sort it
     - name: Sort by rating
       do: Open the Rating column's menu and choose Sort Descending.
       expect: the rows reorder to Neuromancer, Foundation, Dune, Snow Crash, and the header shows a sort icon
+```
 
+```mdl
 test QA-3: Showcase clip
   desc: |
     The 10s showcase clip: Open a new table. Recorded light at 60 fps with no ident, captions or

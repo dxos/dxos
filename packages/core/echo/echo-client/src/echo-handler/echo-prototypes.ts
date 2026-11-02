@@ -266,10 +266,10 @@ const resolveStrongDepFromWorkingSet = (database: EchoDatabase, uri: URI.URI): a
 };
 
 /**
- * Resolve a strong-dependency endpoint (relation source/target, parent) referenced by `ref`:
+ * Resolve a strong dependency (relation source/target, parent, tag) referenced by `ref`:
  * via the database working set once bound, or the object's local link cache beforehand.
  */
-const resolveEndpoint = (core: ObjectCore, ref: EncodedReference): any => {
+export const resolveStrongDep = (core: ObjectCore, ref: EncodedReference): any => {
   const database = getEchoDatabase(core);
   return database ? resolveStrongDepFromWorkingSet(database, EncodedReference.toURI(ref)) : core.lookupInLinkCache(ref);
 };
@@ -339,13 +339,13 @@ export const setParent = (target: ProxyTarget, value: any): void => {
 export const getRelationSource = (target: ProxyTarget): any => {
   const sourceRef = target[symbolInternals].getSource();
   invariant(sourceRef);
-  return resolveEndpoint(target[symbolInternals], sourceRef);
+  return resolveStrongDep(target[symbolInternals], sourceRef);
 };
 
 export const getRelationTarget = (target: ProxyTarget): any => {
   const targetRef = target[symbolInternals].getTarget();
   invariant(targetRef);
-  return resolveEndpoint(target[symbolInternals], targetRef);
+  return resolveStrongDep(target[symbolInternals], targetRef);
 };
 
 /**
@@ -510,7 +510,10 @@ export const lookupRef = (target: ProxyTarget, encodedRef: EncodedReference): Re
   return refImpl;
 };
 
-const compactMeta = (meta: EntityMeta): Partial<EntityMeta> => {
+/** Meta as serialized: tags are stored references rather than entities. */
+type StoredMeta = Omit<EntityMeta, 'tags'> & { tags: readonly EncodedReference[] };
+
+const compactMeta = (meta: StoredMeta): Partial<StoredMeta> => {
   const { tags, annotations, ...rest } = meta;
   return {
     ...rest,
@@ -528,9 +531,11 @@ const toJSON = (self: ProxyTarget): ObjectJSON => {
   const obj: Partial<ObjectJSON> = {
     id: target[symbolInternals].id,
     [ATTR_TYPE]: typeRef ? EncodedReference.toURI(typeRef) : undefined,
-    // Codec boundary: meta holds live refs in `tags`; they serialize to encoded references via
-    // each ref's `toJSON`. Typed as the JSON meta shape.
-    [ATTR_META]: compactMeta(getMeta(self)) as unknown as EntityMetaJSON,
+    // Codec boundary: meta holds tag entities, which serialize as their stored encoded references.
+    [ATTR_META]: compactMeta({
+      ...getMeta(self),
+      tags: target[symbolInternals].getTags(),
+    }) as unknown as EntityMetaJSON,
   };
 
   if (target[symbolInternals].isDeleted()) {

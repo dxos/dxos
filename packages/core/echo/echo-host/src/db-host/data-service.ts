@@ -16,9 +16,12 @@ import { toServiceError } from '@dxos/protocols';
 import { type DataService } from '@dxos/protocols/rpc';
 
 import { type AutomergeHost, type DocumentLease, deriveCollectionIdFromSpaceId } from '../automerge/index.ts';
-import { DocumentsSynchronizer } from './documents-synchronizer.ts';
+import { DocumentsSynchronizer, type DocumentsSynchronizerProps } from './documents-synchronizer.ts';
 import { type IndexStatusTracker } from './index-status.ts';
 import { type SpaceStateManager } from './space-state-manager.ts';
+
+/** Space sync-state recomputations per second; the scheduler still runs a trailing pass, so the last state lands. */
+const SYNC_STATE_MAX_FREQ = 2;
 
 export type DataServiceProps = {
   automergeHost: AutomergeHost;
@@ -30,6 +33,8 @@ export type DataServiceProps = {
     options: DataService.RunGarbageCollectionRequest,
   ) => Promise<DataService.GarbageCollectionReport>;
   indexStatus: IndexStatusTracker;
+  /** See {@link DocumentsSynchronizerProps.readDirectorySnapshot}. */
+  readDirectorySnapshot?: DocumentsSynchronizerProps['readDirectorySnapshot'];
 };
 
 /**
@@ -53,6 +58,7 @@ export class DataServiceImpl implements DataService.Handlers {
   private readonly '_automergeHost': AutomergeHost;
   private readonly '_spaceStateManager': SpaceStateManager;
   private readonly '_indexStatus': IndexStatusTracker;
+  readonly #readDirectorySnapshot: DataServiceProps['readDirectorySnapshot'];
   private readonly '_updateIndexes': (request: DataService.UpdateIndexesRequest) => Promise<void>;
   private readonly '_getSpaceStats': (spaceId: SpaceId) => Promise<DataService.DatabaseStats>;
   private readonly '_runGarbageCollection': (
@@ -67,6 +73,7 @@ export class DataServiceImpl implements DataService.Handlers {
     this._getSpaceStats = params.getSpaceStats;
     this._runGarbageCollection = params.runGarbageCollection;
     this._indexStatus = params.indexStatus;
+    this.#readDirectorySnapshot = params.readDirectorySnapshot;
   }
 
   ['DataService.subscribe'](
@@ -76,6 +83,7 @@ export class DataServiceImpl implements DataService.Handlers {
       const synchronizer = new DocumentsSynchronizer({
         automergeHost: this._automergeHost,
         sendUpdates: (updates) => void emit.single(updates),
+        readDirectorySnapshot: this.#readDirectorySnapshot,
       });
       synchronizer
         .open()
@@ -306,11 +314,17 @@ export class DataServiceImpl implements DataService.Handlers {
         }
       });
 
-      const scheduler = new UpdateScheduler(ctx, async () => {
-        const state = collectionId ? await this._automergeHost.getCollectionSyncState(collectionId) : { peers: [] };
+      // Every local save fires `collectionStateUpdated`, and each run diffs every document against every
+      // peer, so an unthrottled stream re-diffs the whole space per keystroke for a status indicator.
+      const scheduler = new UpdateScheduler(
+        ctx,
+        async () => {
+          const state = collectionId ? await this._automergeHost.getCollectionSyncState(collectionId) : { peers: [] };
 
-        void emit.single({ peers: state.peers });
-      });
+          void emit.single({ peers: state.peers });
+        },
+        { maxFrequency: SYNC_STATE_MAX_FREQ },
+      );
 
       this._automergeHost.collectionStateUpdated.on(ctx, (e) => {
         if (e.collectionId === collectionId) {

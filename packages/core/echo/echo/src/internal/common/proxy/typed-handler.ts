@@ -34,6 +34,7 @@ import {
   getEchoRoot,
   getOwner,
   getRawTarget,
+  hasEntityElements,
   hasForeignOwner,
   notifyOwnerChain,
   setOwnerRecursive,
@@ -49,8 +50,8 @@ import {
   symbolReactivePrototype,
 } from './proxy-utils.ts';
 import { ReactiveArray } from './reactive-array.ts';
-import { SchemaValidator, assertsWithDetail } from './schema-validator.ts';
-import { ChangeId, ChangeKeyId, EventId } from './symbols.ts';
+import { SchemaValidator, assertsWithDetail, isEntityArrayAst } from './schema-validator.ts';
+import { ChangeId, ChangeKeyId, EntityElementsId, EventId } from './symbols.ts';
 
 // Re-export for external consumers.
 export { getEchoRoot, setMetaOwner } from './ownership.ts';
@@ -105,6 +106,14 @@ const deepCopy = <T>(value: T, visited = new Map<object, object>()): T => {
     return visited.get(actualValue) as T;
   }
 
+  // Entities held by identity are shared, not copied.
+  if (hasEntityElements(actualValue)) {
+    const copy = toEntityArray(actualValue);
+    visited.set(actualValue, copy);
+    copyHiddenProperties(actualValue, copy);
+    return copy as T;
+  }
+
   // Handle ReactiveArray specially to preserve reactivity.
   if (actualValue instanceof ReactiveArray) {
     const copy = new ReactiveArray<any>();
@@ -155,6 +164,16 @@ const setDeepOnRawTargets = (target: object, path: readonly (string | number)[],
     parent = getRawTarget(parent[key]);
   }
   parent[path[path.length - 1]] = value;
+};
+
+/** A fresh reactive array of the given entities, marked so they stay held by identity. */
+const toEntityArray = (items: readonly unknown[]): ReactiveArray<unknown> => {
+  const array = new ReactiveArray<unknown>();
+  for (const item of items) {
+    array[array.length] = item;
+  }
+  defineHiddenProperty(array, EntityElementsId, true);
+  return array;
 };
 
 /**
@@ -519,6 +538,17 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return { echoRoot, preparedValue: value };
     }
 
+    // An element of an entity array is a reference to another root: validated, never owned or copied.
+    if (hasEntityElements(target)) {
+      return { echoRoot, preparedValue: this._validateValue(target, prop, value) };
+    }
+    if (Array.isArray(value) && isEntityArrayAst(SchemaValidator.getTargetPropertyAst(target, prop))) {
+      const entities = toEntityArray(value);
+      const validated = this._validateValue(target, prop, entities);
+      setOwnerRecursive(validated, echoRoot);
+      return { echoRoot, preparedValue: createProxy(validated, this) };
+    }
+
     // Check for cycles before assignment.
     if (isValidProxyTarget(value) || isProxy(value)) {
       if (wouldCreateCycle(echoRoot, value)) {
@@ -668,6 +698,9 @@ const setNestedSchema = (obj: any, ast: SchemaAST.AST) => {
 };
 
 const setChildSchemas = (obj: any, ast: SchemaAST.AST) => {
+  if (hasEntityElements(obj)) {
+    return;
+  }
   if (Array.isArray(obj)) {
     for (let index = 0; index < obj.length; index++) {
       if (isValidProxyTarget(obj[index])) {
@@ -722,7 +755,21 @@ export const validateAndReactifyTarget = <T>(target: T, schema: Schema.Schema<T>
     assertsWithDetail(schema, target);
     SchemaValidator.assertExactProperties(schema.ast, target, (path) => getDeep(target, path));
   }
+  markEntityArrays(target, schema.ast);
   makeArraysReactive(target);
+};
+
+/** Marks the target's top-level entity-array properties (e.g. `meta.tags`) as held by identity. */
+const markEntityArrays = (target: any, ast: SchemaAST.AST) => {
+  if (!SchemaAST.isObjects(ast)) {
+    return;
+  }
+  for (const property of ast.propertySignatures) {
+    const value = target[property.name];
+    if (Array.isArray(value) && !hasEntityElements(value) && isEntityArrayAst(property.type)) {
+      target[property.name] = toEntityArray(value);
+    }
+  }
 };
 
 /**
@@ -748,6 +795,9 @@ const makeArraysReactive = (target: any) => {
   for (const key in target) {
     const value = target[key];
     if (value == null || typeof value !== 'object' || isProxy(value)) {
+      continue;
+    }
+    if (hasEntityElements(value)) {
       continue;
     }
     if (Array.isArray(value) && !(value instanceof ReactiveArray)) {

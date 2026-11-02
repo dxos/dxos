@@ -3,14 +3,16 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { Type } from '@dxos/echo';
+import { type Obj, Type } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
 
-import { SpaceCapabilities } from '#types';
+import * as SpaceCapabilities from '../types/SpaceCapabilities.ts';
 
 export type SpaceOperationConfig = {
   createInvitationUrl: (invitationCode: string) => string;
   createJoinUrl: (spaceKey: PublicKey) => string;
+  /** Absent on a host with no public origin to link to. */
+  createObjectUrl?: (object: Obj.Unknown) => string | undefined;
 };
 
 export const SpaceOperationConfig = Capability.makeSingleton<SpaceOperationConfig>()(
