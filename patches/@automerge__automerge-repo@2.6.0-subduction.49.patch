@@ -1,5 +1,5 @@
 diff --git a/dist/Repo.d.ts b/dist/Repo.d.ts
-index 15d4ca65aa613fb567335f09c8fcb8cb9c4a954a..4ece0f7b9522ae7dcf0e5dcb13a2e718a94b8602 100644
+index 15d4ca65aa613fb567335f09c8fcb8cb9c4a954a..4d4b26475e64a5b92017b33c20330fd24e40b014 100644
 --- a/dist/Repo.d.ts
 +++ b/dist/Repo.d.ts
 @@ -8,6 +8,7 @@ import { StorageAdapterInterface } from "./storage/StorageAdapterInterface.js";
@@ -35,7 +35,22 @@ index 15d4ca65aa613fb567335f09c8fcb8cb9c4a954a..4ece0f7b9522ae7dcf0e5dcb13a2e718
      /**
       * Drain pending writes for the given documents (or all documents
       * when `documents` is omitted) so they are durable in storage.
-@@ -222,6 +234,11 @@ export interface RepoConfig {
+@@ -178,7 +190,13 @@ export declare class Repo extends EventEmitter<RepoEvents> {
+      * @hidden this API is experimental and may change.
+      * @param documentId - documentId of the DocHandle to remove from handleCache, if present in cache.
+      */
+-    removeFromCache(documentId: DocumentId): Promise<void>;
++    removeFromCache(documentId: DocumentId, options?: {
++        /**
++         * DXOS patch: drops the save the storage source already scheduled for the handle, for a caller about to delete
++         * the document's bytes, which that save would otherwise write back.
++         */
++        discardPendingSaves?: boolean;
++    }): Promise<void>;
+     shutdown(): Promise<void>;
+     metrics(): {
+         documents: {
+@@ -222,6 +240,11 @@ export interface RepoConfig {
       * loading documents that are known to be too resource intensive.
       */
      denylist?: AutomergeUrl[];
@@ -47,7 +62,7 @@ index 15d4ca65aa613fb567335f09c8fcb8cb9c4a954a..4ece0f7b9522ae7dcf0e5dcb13a2e718
      /**
       * The debounce rate in milliseconds for saving documents. Defaults to 100ms.
       */
-@@ -345,6 +362,18 @@ export interface RepoEvents {
+@@ -345,6 +368,18 @@ export interface RepoEvents {
      "heal-exhausted": (payload: {
          documentId: DocumentId;
      }) => void;
@@ -67,7 +82,7 @@ index 15d4ca65aa613fb567335f09c8fcb8cb9c4a954a..4ece0f7b9522ae7dcf0e5dcb13a2e718
       * A Subduction peer (e.g. the sync server) advertised new heads for a
       * document. `storageId` is the peer's verifying-key peer id. Fires only for
 diff --git a/dist/Repo.js b/dist/Repo.js
-index adfddd9b3926510604274217c42f97f104e119a3..66de2cd053546ae18157d63278d8e8ea92d193dd 100644
+index adfddd9b3926510604274217c42f97f104e119a3..bc4091a1232ad7a2e3a0e83aa775f44cf52dde7e 100644
 --- a/dist/Repo.js
 +++ b/dist/Repo.js
 @@ -57,7 +57,7 @@ export class Repo extends EventEmitter {
@@ -174,11 +189,23 @@ index adfddd9b3926510604274217c42f97f104e119a3..66de2cd053546ae18157d63278d8e8ea
      /**
       * Drain pending writes for the given documents (or all documents
       * when `documents` is omitted) so they are durable in storage.
+@@ -701,7 +760,10 @@ export class Repo extends EventEmitter {
+      * @hidden this API is experimental and may change.
+      * @param documentId - documentId of the DocHandle to remove from handleCache, if present in cache.
+      */
+-    async removeFromCache(documentId) {
++    async removeFromCache(documentId, { discardPendingSaves = false } = {}) {
++        if (discardPendingSaves) {
++            this.#sources.get("storage")?.discardPendingSaves(documentId);
++        }
+         for (const source of this.#sources.values()) {
+             source.detach(documentId);
+         }
 diff --git a/dist/StorageSource.d.ts b/dist/StorageSource.d.ts
-index b6866657601c8a6b93e438e0050e7b24eecc78b7..8ce2b7f8856143ab4f442b7923e4baf16608e4b2 100644
+index b6866657601c8a6b93e438e0050e7b24eecc78b7..f8066aac840df86a66c8a4548f479ca2c334e6ff 100644
 --- a/dist/StorageSource.d.ts
 +++ b/dist/StorageSource.d.ts
-@@ -10,8 +10,12 @@ import type { DocumentId } from "./types.js";
+@@ -10,11 +10,17 @@ import type { DocumentId } from "./types.js";
  export declare class StorageSource implements DocumentSource {
      #private;
      readonly priority: SourcePriority;
@@ -192,11 +219,17 @@ index b6866657601c8a6b93e438e0050e7b24eecc78b7..8ce2b7f8856143ab4f442b7923e4baf1
      });
      attach(query: DocumentQuery<unknown>): void;
      detach(documentId: DocumentId): void;
++    /** DXOS patch: a save already scheduled for the document's current handle does nothing when it runs. */
++    discardPendingSaves(documentId: DocumentId): void;
+     shareConfigChanged(): void;
+ }
+ //# sourceMappingURL=StorageSource.d.ts.map
+\ No newline at end of file
 diff --git a/dist/StorageSource.js b/dist/StorageSource.js
-index 2701ebc492066feba0d05cf556a3d8473312bc39..2dcad036549619eea11a75102d4c3c59c8645c88 100644
+index 2701ebc492066feba0d05cf556a3d8473312bc39..627d6929b4eddbc18f68c68e52cc73741a87c4c3 100644
 --- a/dist/StorageSource.js
 +++ b/dist/StorageSource.js
-@@ -11,17 +11,26 @@ export class StorageSource {
+@@ -11,17 +11,28 @@ export class StorageSource {
      #storage;
      #saveDebounceRate;
      #saveFns = {};
@@ -204,6 +237,8 @@ index 2701ebc492066feba0d05cf556a3d8473312bc39..2dcad036549619eea11a75102d4c3c59
 +    #handles = {};
      #log = makeLogger("automerge-repo:storage-source");
 -    constructor(storage, saveDebounceRate, { priority = 1 } = {}) {
++    /** DXOS patch: handles whose scheduled saves were discarded; a later handle for the same document saves as usual. */
++    #discardedHandles = new WeakSet();
 +    /** DXOS patch: reports a document whose stored bytes could not be loaded. */
 +    #onLoadError;
 +    /** DXOS patch: refuses to inflate a document blocked while its read was in flight. */
@@ -224,7 +259,7 @@ index 2701ebc492066feba0d05cf556a3d8473312bc39..2dcad036549619eea11a75102d4c3c59
          // If the handle already has data (e.g. from create/import), persist it
          // immediately rather than waiting for a future heads-changed event.
          if (Automerge.getHeads(handle.fullDoc()).length > 0) {
-@@ -32,7 +41,7 @@ export class StorageSource {
+@@ -32,7 +43,7 @@ export class StorageSource {
          // Load from storage
          query.sourcePending("storage");
          void this.#storage
@@ -233,7 +268,7 @@ index 2701ebc492066feba0d05cf556a3d8473312bc39..2dcad036549619eea11a75102d4c3c59
              .then(loaded => {
              if (loaded && Automerge.getHeads(loaded).length > 0) {
                  // Sync may have delivered data while we were loading from disk —
-@@ -54,10 +63,25 @@ export class StorageSource {
+@@ -54,16 +65,41 @@ export class StorageSource {
              // sources (e.g. sync) may still deliver the document.
              this.#log.error(`Error loading document ${handle.documentId} from storage`, err);
              query.sourceUnavailable("storage");
@@ -256,9 +291,25 @@ index 2701ebc492066feba0d05cf556a3d8473312bc39..2dcad036549619eea11a75102d4c3c59
 +        }
          delete this.#saveFns[documentId];
 +        delete this.#handles[documentId];
++    }
++    /** DXOS patch: a save already scheduled for the document's current handle does nothing when it runs. */
++    discardPendingSaves(documentId) {
++        const handle = this.#handles[documentId];
++        if (handle) {
++            this.#discardedHandles.add(handle);
++        }
      }
      shareConfigChanged() { }
      #makeSaveFn(documentId) {
+         let fn = this.#saveFns[documentId];
+         if (!fn) {
+             fn = this.#saveFns[documentId] = asyncThrottle(async ({ doc, handle, }) => {
++                if (this.#discardedHandles.has(handle)) {
++                    return;
++                }
+                 try {
+                     await this.#storage.saveDoc(handle.documentId, doc);
+                 }
 diff --git a/dist/index.d.ts b/dist/index.d.ts
 index 1ca836a0b386a69c63e0fa2f655b9f78d5dfe508..5126850c2da2c368d4ad42ec9f0059e088b80025 100644
 --- a/dist/index.d.ts
@@ -293,16 +344,18 @@ index 00dfa144ec400a6b9a930593e72116c351a771cd..ed25ba73eed2352b42b6b2fc551b73a3
  export declare class HeadsHandle {
      #private;
 diff --git a/dist/storage/SavedHeads.js b/dist/storage/SavedHeads.js
-index 9c589e4237dc16625432ae6f076989fd457c74e4..072193663b3f21de65c9e63f5ce6e789613e5691 100644
+index 9c589e4237dc16625432ae6f076989fd457c74e4..c8509cca602c04d3079c310ecbb91673eb08ae71 100644
 --- a/dist/storage/SavedHeads.js
 +++ b/dist/storage/SavedHeads.js
-@@ -21,6 +21,10 @@ export class SavedHeads {
+@@ -21,6 +21,12 @@ export class SavedHeads {
      lastSavedHeads(documentId) {
          return new HeadsHandle(documentId, ++this.#seq, this.#data);
      }
 +    /** DXOS patch: drops the last saved heads for a document. */
 +    forget(documentId) {
-+        this.#data.delete(documentId);
++        // Recorded rather than deleted: a handle taken before this, by a load still in flight, has an older seq, so
++        // its update can no longer restore the heads just forgotten.
++        this.#data.set(documentId, { heads: null, seq: ++this.#seq });
 +    }
  }
  // Helpr class to manage applying heads updates in the correct order when there

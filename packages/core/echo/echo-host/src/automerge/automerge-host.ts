@@ -1207,17 +1207,14 @@ export class AutomergeHost extends Resource {
   }
 
   /**
-   * Flushed, then evicted, so the handle cannot re-persist bytes about to be deleted — collection loads the document
-   * to check ownership, so one is usually live here. Eviction only detaches the save listener; a throttled save already
-   * scheduled still runs, and the flush is what makes it a no-op, since its heads then match the last save.
+   * Evicted with its scheduled saves discarded, so the handle cannot re-persist bytes about to be deleted — collection
+   * loads the document to check ownership, so one is usually live here. Eviction alone only detaches the save listener,
+   * and a throttled save already scheduled would still run after the deletion; with the saved heads forgotten, it would
+   * write the document back.
    */
   async #unloadForRemoval(documentId: DocumentId): Promise<void> {
     if (this._repo.getHandle(documentId)) {
-      // A quarantined document's handle holds at most a partial load, which must not be saved over its bytes.
-      if (!this.#quarantined.has(documentId)) {
-        await this._repo.flush([documentId]);
-      }
-      await this._repo.removeFromCache(documentId);
+      await this._repo.removeFromCache(documentId, { discardPendingSaves: true });
     }
     // Dropped from the registry too: the document is about to stop existing, so a later eviction of
     // it would re-create — and re-announce — the query the removal deletes.
