@@ -946,15 +946,20 @@ const rivals = (spin: number, first: number, second: number): Prim[] => {
           : lerpAt(polar(...left, ring(leftR), angle), aroundRight, firstTake);
     const all = polar(...top, ring(topR), tenantAngle(index) + spin);
     const [x, y] = lerpAt(own, all, secondTake);
+    // A company passing to another lab's ring hands its link over halfway, and the link fades out and back in around
+    // the handover, so it never cuts across a lab.
+    const passing = group === 0 ? 0 : group === 2 || firstTake >= 1 ? secondTake : firstTake;
     const holder =
-      group === 0 || secondTake >= 1 ? 'body:lab' : group === 2 || firstTake >= 1 ? 'body:rival-2' : 'body:rival-1';
+      group === 0 || secondTake >= 0.5 ? 'body:lab' : group === 2 || firstTake >= 0.5 ? 'body:rival-2' : 'body:rival-1';
     const tenant = index === YOURS ? 'body:org' : `node:tenant-${index}`;
     if (index === YOURS) {
       prims.push(...yoursInRing(x, y, { labels: false }));
     } else {
       prims.push({ kind: 'node', id: `tenant-${index}`, x, y, r: 7, color: TENANT_COLOR, glow: -0.2 });
     }
-    prims.push(edge(`tenant-link-${index}`, tenant, holder, { opacity: 0.45, parent: tenant }));
+    prims.push(
+      edge(`tenant-link-${index}`, tenant, holder, { opacity: 0.45 * Math.abs(1 - 2 * passing), parent: tenant }),
+    );
   }
   return prims;
 };
@@ -987,8 +992,14 @@ const merged = (spin: number, r = 175): Prim[] => {
   ];
 };
 
-/** Your company at the centre with its apps, each holding a share of your data. */
-const appsAround = (): Prim[] => [...company(0, 0, 1, { teams: false }), ...appRing(0, 0, 390)];
+/** Your company at the centre with its apps, each holding a share of your data and linked to your company. */
+const appsAround = (): Prim[] => [
+  ...company(0, 0, 1, { teams: false }),
+  ...appRing(0, 0, 390),
+  ...APPS.map((app) =>
+    edge(`link-org-${app}`, 'body:org', `body:app-${app}`, { opacity: 0.7, parent: `body:app-${app}` }),
+  ),
+];
 
 /**
  * ECHO in your company: your data grows at its centre (`size`, 0 … 1) while every app, linked to your company, still

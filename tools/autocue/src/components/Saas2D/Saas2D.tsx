@@ -13,11 +13,11 @@ import { Background, Card, Defs, Grain, HEIGHT, SvgPrim, WIDTH } from './theme.t
 
 loadNeuFonts();
 
-/** Scenes whose keyframes are timed in real seconds, with the length they need; they are not sped up. */
-const FIXED: Record<string, number> = { 'company-fills': 7 };
+/** Scenes given their own length, since their motion reads badly when sped up to an equal share. */
+const FIXED: Record<string, number> = { 'absorb': 6, 'merge-1': 7, 'company-fills': 7 };
 
-/** Each scene's length in the voiced cut, which its keyframes are timed for. */
-const AUTHORED: Record<string, number> = { ...holds, ...FIXED };
+/** Each scene's length in the voiced cut, which its keyframes are timed for; company-fills is timed in real seconds. */
+const AUTHORED: Record<string, number> = { ...holds, 'company-fills': 7 };
 
 /** The story's length; every scene gets an equal share of it. */
 export const SAAS2D_SECONDS = 90;
