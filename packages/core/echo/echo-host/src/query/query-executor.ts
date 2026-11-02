@@ -1423,7 +1423,13 @@ export class QueryExecutor extends Resource {
         const merged = data[ATTR_TYPE] === undefined && previous?.data ? { ...previous.data, ...data } : data;
         items.set(id, { first: previous?.first ?? block, last: block, data: isObjectJSON(merged) ? merged : null });
       }
-      return [...items.entries()].flatMap(([objectId, { first, last, data }]): QueryItem[] =>
+      // In the walk's direction: the step cuts its limit before any ordering, so the first items must be the ones
+      // the walk reaches first.
+      const ordered = [...items.entries()].sort(
+        ([, left], [, right]) =>
+          (direction === 'desc' ? -1 : 1) * ((left.first.insertionId ?? 0) - (right.first.insertionId ?? 0)),
+      );
+      return ordered.flatMap(([objectId, { first, last, data }]): QueryItem[] =>
         data === null || !EntityId.isValid(objectId)
           ? []
           : [

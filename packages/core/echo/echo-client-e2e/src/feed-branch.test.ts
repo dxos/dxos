@@ -361,6 +361,13 @@ describe('feed branches', () => {
           limit: 2,
         }).run;
         expect(names(backward)).toEqual(['B2', 'A3']);
+        // A limit of one is the last item, as a reader that checks a feed's head asks for it.
+        const [last] = yield* Feed.walk(feed, Filter.type(TestSchema.Person), {
+          branch: 'all',
+          order: 'desc',
+          limit: 1,
+        }).run;
+        expect(last?.name).toEqual('B2');
       }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
     });
 
