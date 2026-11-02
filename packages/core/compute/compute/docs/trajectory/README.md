@@ -65,23 +65,26 @@ turn's prompt does not change under it.
   `beginTurn` → `promptEvents` → `appendMessages` → `endTurn`. Each call is a single `Feed.append`, so a turn costs a
   handful of writes however many events it holds.
 
-Measured with `DX_BENCH=1` (`TrajectoryStore.bench.test.ts`, in-memory database, 5 events per turn). "Turn reads"
-is what a turn does before calling the model: `SessionStore.loadState`, which loads all three reducers and builds the
-history.
+Measured with `DX_BENCH=1` (`TrajectoryStore.bench.test.ts`, in-memory database, 5 events per turn, indexing off).
+"Turn reads" is what a turn does before calling the model: `SessionStore.loadState`, which loads all three reducers and
+builds the history.
 
-| Turn reads                                    | 100 turns | 1,000 turns | 5,000 turns |
-| --------------------------------------------- | --------- | ----------- | ----------- |
-| First open on a device (no checkpoint)        | 210 ms    | 1.30 s      | 8.9 s       |
-| Reopen after a restart (stored checkpoints)   | 71 ms     | 351 ms      | 1.53 s      |
-| Next turn, nothing new                        | 38 ms     | 34 ms       | 44 ms       |
-| Next turn, one new turn folded                | 46 ms     | 47 ms       | 52 ms       |
-| Legacy chat, first open                       | 351 ms    | 2.63 s      | 14.8 s      |
-| Legacy chat, next turn                        | 40 ms     | 37 ms       | 39 ms       |
-| Writing one turn                              | 4.4 ms    | 3.9 ms      | 3.6 ms      |
-| Folding every event (`prompt`/`thread`/`session`) | 3 / 0.4 / 0.3 ms | 14 / 2 / 2 ms | 136 / 24 / 30 ms |
+| Turn reads                                         | 100 turns            | 1,000 turns          | 5,000 turns            |
+| -------------------------------------------------- | -------------------- | -------------------- | ---------------------- |
+| First open on a device (no checkpoint)             | 195 ms               | 1.58 s               | 7.3 s                  |
+| Reopen after a restart (stored checkpoints)        | 106 ms               | 657 ms               | 3.6 s                  |
+| Next turn, nothing new                             | 54 ms                | 81 ms                | 288 ms                 |
+| Next turn, one new turn folded                     | 53 ms                | 57 ms                | 90 ms                  |
+| Legacy chat, first open                            | 556 ms               | 4.9 s                | 26 s                   |
+| Legacy chat, next turn                             | 55 ms                | 49 ms                | 117 ms                 |
+| One whole turn (reads, fork, prompt, answer, end)  | 70 ms                | 72 ms                | 153 ms                 |
+| Folding every event (`prompt`/`thread`/`session`)  | 5 / 2 / 0.7 ms       | 38 / 19 / 14 ms      | 223 / 104 / 80 ms      |
 
-A first open is dominated by reading the feed (1.9 s for 25,000 events) and happens once per conversation and device.
-After that a turn costs about the same at any length.
+A first open reads the whole feed once (3.0 s for 25,000 events) and happens once per conversation and device; the
+three reducers share that read. After it, a turn reads only what is new: the events after the checkpoint's cursor, and
+the feed's last event to check the cursor still stands. Both are walks of every branch, bounded by the cursor or by a
+limit. "One whole turn" is everything a turn producer writes through `TrajectoryStore.turn`, including the fork of
+the turn's branch, which waits for the store.
 
 ## Sample trajectories
 
