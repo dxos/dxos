@@ -341,7 +341,7 @@ export const SvgPrim = ({ prim, camera }: { prim: Prim; camera: Camera }) => {
         const r = prim.r * view.zoom;
         return r < 0.5 ? null : (
           <At x={x} y={y} opacity={opacity}>
-            <circle r={r} fill={neu.bg} stroke={prim.color} strokeWidth={Math.max(1.5, r * 0.09)} />
+            <circle r={r * 0.85} fill={neu.bg} stroke={prim.color} strokeWidth={Math.max(2, r * 0.3)} />
           </At>
         );
       }
