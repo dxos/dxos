@@ -11,8 +11,8 @@ import { SheetCapabilities } from '#types';
 const createGridRegistry = (): SheetCapabilities.GridRegistry => {
   const grids = new Map<string, SheetCapabilities.GridEntry>();
   return {
-    register: (attendableId, grid, setActiveRefs) => {
-      grids.set(attendableId, { grid, setActiveRefs });
+    register: (attendableId, entry) => {
+      grids.set(attendableId, entry);
     },
     unregister: (attendableId) => {
       grids.delete(attendableId);

@@ -13,6 +13,6 @@ in channels (Discord, freeq, local feeds) and Composer chats.
   operation service can host the operations.
 
 Docs: [design](./docs/DESIGN.md), [facts and profiles](./docs/FACTS.md), [developing behaviour](./docs/TESTING.md), [knowledge ontology](./docs/ONTOLOGY.md), and
-[end-to-end setup with Discord](./docs/SETUP.md).
+[setup: environments, Composer, Storybook, Discord and email](./docs/SETUP.md).
 
 License: [FSL-1.1-Apache-2.0](./LICENSE) Copyright 2026 © DXOS

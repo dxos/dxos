@@ -13,6 +13,7 @@ export default defineConfig({
     'Cancellation': 'src/Cancellation.ts',
     'Credential': 'src/Credential.ts',
     'Header': 'src/Header.ts',
+    'Hook': 'src/Hook.ts',
     'LayerSpec': 'src/LayerSpec.ts',
     'Operation': 'src/Operation.ts',
     'OperationHandlerSet': 'src/OperationHandlerSet.ts',

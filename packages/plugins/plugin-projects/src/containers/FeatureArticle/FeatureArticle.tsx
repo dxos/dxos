@@ -8,8 +8,9 @@ import * as Schema from 'effect/Schema';
 import React, { type KeyboardEvent, useCallback, useMemo } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as Project from '@dxos/compute/Project';
 import { DXN, Filter, Obj, Type } from '@dxos/echo';
-import { useObject, useResolveRef } from '@dxos/echo-react';
+import { useObject } from '@dxos/echo-react';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { Form, type FormFieldMap, type FormFieldRenderer } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
@@ -86,22 +87,18 @@ export const FeatureDetail = ({ feature: subject, attendableId, onSelectSubfeatu
   const editing = useFeatureEditing(db);
   // A feature cannot depend on itself; the operation refuses longer cycles with their path.
   const excludedDependencies = useMemo(() => [subject.id, ...(feature?.dependsOn ?? [])], [subject.id, feature]);
-  // Filing needs somewhere to file into: the project tracking the feature's spec, and its task set. Read through each
-  // spec's atom up the chain, so a project assigned while the article is open shows the filing input.
+  // Filing needs somewhere to file into: the project owning the top-level spec above the feature, and its task set.
+  // Read through the spec's parent atom, so a project given the spec while the article is open shows the filing input.
   const projectAtom = useMemo(
     () =>
       Atom.make((get) => {
-        for (const spec of Spec.getAncestry(Spec.getContainer(subject))) {
-          const { project } = get(Obj.atom(spec));
-          if (project) {
-            return project;
-          }
-        }
-        return undefined;
+        const top = Spec.getAncestry(Spec.getContainer(subject)).at(-1);
+        const parent = top && get(Obj.parentAtom(top));
+        return Obj.instanceOf(Project.Project, parent) ? parent : undefined;
       }),
     [subject],
   );
-  const project = useResolveRef(useAtomValue(projectAtom));
+  const project = useAtomValue(projectAtom);
   const canFileTask = !!project?.taskSet;
   const handleEnter = (action: (value: string) => void) => (event: KeyboardEvent<HTMLInputElement>) => {
     const input = event.currentTarget;

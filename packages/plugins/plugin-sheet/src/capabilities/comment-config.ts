@@ -8,13 +8,14 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Type } from '@dxos/echo';
 
-import { Sheet, SheetOperation } from '#types';
+import { Sheet, SheetOperation, SheetUtil } from '#types';
 
 const activate = Effect.fnUntraced(function* () {
   const config: AppCapabilities.CommentConfig = {
     id: Type.getTypename(Sheet.Sheet),
     comments: 'anchored',
     scrollToAnchor: SheetOperation.ScrollToAnchor,
+    anchorFromSelection: SheetUtil.anchorFromSelection,
   };
   return [Capability.contribute(AppCapabilities.CommentConfig, config)];
 });

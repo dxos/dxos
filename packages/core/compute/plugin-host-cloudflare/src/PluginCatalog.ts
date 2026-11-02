@@ -64,18 +64,4 @@ const toSkillRecord = (key: string, skill: Skill.Skill): PluginProtocol.SkillRec
   mcpPrompt: Skill.isMcpPrompt(skill),
   // A plain array, so branded tool ids survive structured clone.
   tools: Array.from(skill.tools ?? []).map(String),
-  hooks: (skill.hooks ?? []).flatMap((hook) => {
-    const operation = hook.function?.target;
-    const operationKey =
-      operation && Obj.instanceOf(Operation.PersistentOperation, operation) ? Operation.getKey(operation) : undefined;
-    return operationKey == null
-      ? []
-      : [
-          {
-            phase: hook.spec._tag,
-            operation: String(operationKey),
-            ...(hook.input ? { input: { ...hook.input } } : {}),
-          },
-        ];
-  }),
 });

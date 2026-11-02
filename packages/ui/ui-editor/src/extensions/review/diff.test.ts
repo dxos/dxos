@@ -6,7 +6,6 @@ import { describe, test } from 'vitest';
 
 import {
   type DiffHunk,
-  cherryPickHunk,
   computeCharHunks,
   computeHunks,
   diffHunks,
@@ -15,8 +14,8 @@ import {
   pairMarkupHunks,
   rebaseHunks,
   rebaseHunksWith,
-  revertHunk,
 } from './diff.ts';
+import { cherryPickHunk, revertHunk } from './hunks.ts';
 
 describe('diff hunks', () => {
   const original = ['# Title', '', 'Line one.', 'Line two.', ''].join('\n');

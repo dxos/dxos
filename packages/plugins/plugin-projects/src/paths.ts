@@ -12,6 +12,9 @@ export const SESSIONS_SEGMENT = 'sessions';
 /** Path segment (and node id) of a project's Artifacts branch. */
 export const ARTIFACTS_SEGMENT = 'artifacts';
 
+/** Path segment (and node id) of a project's Spec branch. */
+export const SPEC_SEGMENT = 'spec';
+
 const PROJECT_TYPENAME = Type.getTypename(Project.Project)!;
 
 /** Canonical path to a project's navtree row — the AI group's Projects section. */
@@ -29,3 +32,10 @@ export const getProjectChatPath = (spaceId: string, projectId: string, chatId: s
 /** Path to an artifact on a project's Artifacts branch. */
 export const getProjectArtifactPath = (spaceId: string, projectId: string, artifactId: string): string =>
   `${getProjectPath(spaceId, projectId)}/${ARTIFACTS_SEGMENT}/${artifactId}`;
+
+/**
+ * Path to one level of a project's spec: the Spec branch, or the breakdown of the last of `lineage`, the features from
+ * the top of the spec down (see `Spec.getLineage`).
+ */
+export const getSpecLevelPath = (spaceId: string, projectId: string, lineage: readonly string[] = []): string =>
+  [getProjectPath(spaceId, projectId), SPEC_SEGMENT, ...lineage].join('/');

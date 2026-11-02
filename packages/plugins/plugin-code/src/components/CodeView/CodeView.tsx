@@ -26,14 +26,17 @@ import {
 
 import { CodeNamespace } from '../../namespace.ts';
 
+// Built once: every `EditorView.theme` call mints a new stylesheet, which restyles the whole document.
+const symbolLineTheme = EditorView.theme({
+  '.dx-symbol-line': {
+    backgroundColor: 'var(--color-warning-surface)',
+    boxShadow: 'inset 3px 0 0 var(--color-warning-text)',
+  },
+});
+
 /** Highlights the symbol's line and scrolls it to the top third of the view once the editor has laid out. */
 const revealLine = (line: number): Extension => [
-  EditorView.theme({
-    '.dx-symbol-line': {
-      backgroundColor: 'var(--color-warning-surface)',
-      boxShadow: 'inset 3px 0 0 var(--color-warning-text)',
-    },
-  }),
+  symbolLineTheme,
   EditorView.decorations.compute([], (state) =>
     line <= state.doc.lines
       ? Decoration.set([Decoration.line({ class: 'dx-symbol-line' }).range(state.doc.line(line).from)])

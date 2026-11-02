@@ -60,13 +60,6 @@ export type PluginRecord = {
   readonly name?: string;
 };
 
-/** A skill hook, by the key of the operation it runs. */
-export type SkillHookRecord = {
-  readonly phase: string;
-  readonly operation: string;
-  readonly input?: Record<string, unknown>;
-};
-
 /** A skill as data: its instructions are resolved, since their `Text` lives in no database. */
 export type SkillRecord = {
   readonly key: string;
@@ -75,7 +68,6 @@ export type SkillRecord = {
   readonly instructions?: string;
   readonly mcpPrompt: boolean;
   readonly tools: readonly string[];
-  readonly hooks: readonly SkillHookRecord[];
 };
 
 /** An ECHO type the bundle contributes. */

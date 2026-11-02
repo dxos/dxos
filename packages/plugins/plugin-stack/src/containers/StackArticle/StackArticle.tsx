@@ -20,6 +20,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { arrayMove, isNonNullable } from '@dxos/util';
 
 import { Stack, type StackSectionItem } from '#components';
+import { StackCapabilities } from '#types';
 
 import { StackNamespace } from '../../namespace.ts';
 
@@ -27,6 +28,7 @@ export type StackArticleProps = AppSurface.ObjectArticleProps<Collection.Collect
 
 export const StackArticle = ({ attendableId, subject: collection }: StackArticleProps) => {
   const { invokePromise } = Hooks.useOperationInvoker();
+  const heights = Hooks.useCapability(StackCapabilities.SectionHeights);
   const { t } = UiHooks.useTranslation(StackNamespace.key);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
 
@@ -205,6 +207,7 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
         <Stack.Root
           id={Obj.getURI(collection)}
           attendableId={attendableId}
+          heights={heights}
           collapsed={collapsed}
           eventHandler={eventHandler}
           onCollapse={handleCollapse}
