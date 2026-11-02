@@ -2,10 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
-
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import { describe, expect, test } from 'vitest';
 
 import { BundleError, bundleRoot, loadBundle, manifestOf, rebaseManifest } from './bundle.ts';
 import { type Manifest } from './types.ts';
