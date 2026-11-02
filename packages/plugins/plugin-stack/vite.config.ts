@@ -11,6 +11,7 @@ export default defineConfig({
     containers: 'src/containers/index.ts',
     translations: 'src/translations.ts',
     Stack: 'src/types/Stack.ts',
+    StackCapabilities: 'src/types/StackCapabilities.ts',
     StackEvents: 'src/types/StackEvents.ts',
     types: 'src/types/index.ts',
   },

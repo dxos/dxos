@@ -31,7 +31,7 @@ A reader with no Cloudflare account hands an agent a plan to finish: a spec of o
 
 ### Features (`features.ts`)
 
-- 1 `Spec.Spec` "Hello Worker" → the project (`project`), owning the spec document (`document`), and listing the four features below (`features`).
+- 1 `Spec.Spec` "Hello Worker", owned by the project (`Project.spec`), owning the spec document (`document`), and listing the four features below (`features`).
 - 4 `Feature.Feature`, all `planned`, each citing one spec block (`specs: ['hello-worker/SPEC.mdl#F-n']`):
   - `greeting` "Greeting endpoint" (F-1), owning a `Spec.Spec` "Greeting endpoint" (`spec`) that lists its subfeatures "JSON greeting" and "UTC time", both `planned`.
   - `deploy` "Deploy without an account" (F-2).
@@ -52,6 +52,6 @@ A reader with no Cloudflare account hands an agent a plan to finish: a spec of o
 - Exactly 1 project, 1 instructions, 1 task set, 3 tasks, 6 features (4 and 2 subfeatures), 2 specs, 1 spec document and no documents.
 - Every persisted typename is declared by a partial.
 - Tasks are `todo`, in order, each depending on the one before it, and none is assigned.
-- Features are `planned`, sit on the spec that names the project, cite F-1 to F-4 in order, and each depends on the one before it.
+- Features are `planned`, sit on the spec the project owns, cite F-1 to F-4 in order, and each depends on the one before it.
 - The only `Implements` is the diagram task → "Greeting endpoint".
 - The spec document is the map's `document`, and its foreign key is the path the features cite.

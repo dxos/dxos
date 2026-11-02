@@ -53,6 +53,11 @@
       "types": "./dist/types/src/types/Instructions.d.ts",
       "import": "./dist/lib/types/Instructions.mjs"
     },
+    "./Hook": {
+      "source": "./src/Hook.ts",
+      "types": "./dist/types/src/Hook.d.ts",
+      "import": "./dist/lib/Hook.mjs"
+    },
     "./LayerSpec": {
       "source": "./src/LayerSpec.ts",
       "types": "./dist/types/src/LayerSpec.d.ts",

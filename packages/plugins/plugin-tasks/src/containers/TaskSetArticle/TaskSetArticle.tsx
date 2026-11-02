@@ -45,7 +45,15 @@ import { meta } from '#meta';
 import { TaskOperation, TasksCapabilities, TaskSetView } from '#types';
 
 import { useDescriptionComponents, useMarkdownExtensions, useTaskActions } from '../../hooks/index.ts';
-import { ALL_STATUSES, STATUS_TERMS, filterTasks, foldStatuses, groupTasks, sortTasks } from '../../util/index.ts';
+import {
+  ALL_STATUSES,
+  STATUS_TERMS,
+  filterTasks,
+  foldStatuses,
+  groupTasks,
+  sortTasks,
+  withinScope,
+} from '../../util/index.ts';
 import { useAttachFile } from '../TaskArticle/TaskAttachments.tsx';
 import { TaskFilter } from './TaskFilter.tsx';
 import { TaskGroupMenu, TaskSortMenu } from './TaskViewOptions.tsx';
@@ -53,6 +61,10 @@ import { TaskGroupMenu, TaskSortMenu } from './TaskViewOptions.tsx';
 export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet> & {
   /** Whether rows render their task's description beneath the title. */
   showDescription?: boolean;
+  /** Ids of the tasks to show, with the tasks filed under them; every task in the set when absent. */
+  scope?: readonly string[];
+  /** Runs on each task the footer creates, before it is shown; a scoped host uses it to bring the task into scope. */
+  onTaskCreated?: (task: Task.Task) => Promise<void>;
 };
 
 /**
@@ -67,13 +79,20 @@ export const TaskSetArticle = ({
   attendableId,
   subject: taskSet,
   showDescription = true,
+  scope,
+  onTaskCreated,
 }: TaskSetArticleProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const { hasAttention } = useAttention(attendableId);
   const filterEditorRef = useRef<EditorController>(null);
   const spaceId = Obj.getDatabase(taskSet)?.spaceId;
   const db = Obj.getDatabase(taskSet);
-  const allTasks = useTasks(taskSet);
+  const setTasks = useTasks(taskSet);
+  const scopeKey = scope?.join(',');
+  const allTasks = useMemo(
+    () => (scopeKey === undefined ? setTasks : withinScope(setTasks, new Set(scopeKey.split(',')))),
+    [setTasks, scopeKey],
+  );
   // The toolbar's filter, as the mailbox composes its own: the query editor's text is what the
   // reader edits, its parse is what the list is narrowed by. The status menu is a second view over
   // the same text — its choice lives in the text's `status:` terms — so there is one value, persisted
@@ -112,6 +131,9 @@ export const TaskSetArticle = ({
   // Dragging writes the set's own order, so it is offered only while that is the order shown: under a
   // sort the row would not land where it was dropped, and a group header is not a parent.
   const arranged = sort.field !== 'manual' || !!groups;
+  // A scoped list roots a branch at its first kept task, so a drop placed against the rows shown could detach that
+  // task from a parent outside the scope.
+  const movable = !arranged && scope === undefined;
   // Row order as rendered, so the article's arrow keys walk the rows the reader sees.
   const rows = useMemo(() => (groups ? groups.flatMap((group) => group.tasks) : tasks), [groups, tasks]);
   const handleStatusesChange = useCallback(
@@ -138,10 +160,16 @@ export const TaskSetArticle = ({
       if (error || !data) {
         return { error: error ?? new Error('Task was not created.') };
       }
-      if (files.length === 0) {
+      if (files.length === 0 && !onTaskCreated) {
         return;
       }
       const [task] = db?.query(Filter.and(Filter.type(Task.Task), Filter.id(data.task.id))).runSync() ?? [];
+      if (task && onTaskCreated) {
+        await onTaskCreated(task);
+      }
+      if (files.length === 0) {
+        return;
+      }
       if (!task || !attachFile) {
         return { rejectedFiles: files };
       }
@@ -153,7 +181,7 @@ export const TaskSetArticle = ({
       }
       return { rejectedFiles };
     },
-    [invokePromise, taskSet, spaceId, attachFile, db],
+    [invokePromise, taskSet, spaceId, attachFile, db, onTaskCreated],
   );
 
   const handleUpdate = Hooks.useOperation(
@@ -297,7 +325,7 @@ export const TaskSetArticle = ({
       onCollapsedChange={setCollapsed}
       onTaskCreate={handleCreate}
       onTaskUpdate={handleUpdate}
-      onTaskMove={arranged ? undefined : handleMove}
+      onTaskMove={movable ? handleMove : undefined}
       onTaskSelect={handleOpen}
     >
       <Panel.Root role={role}>

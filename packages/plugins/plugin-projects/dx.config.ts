@@ -79,7 +79,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       mimeType: 'application/x-mdl',
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.dialog'],
+      roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.dialog', 'org.dxos.role.section'],
     }),
     AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'module-url' } }), {

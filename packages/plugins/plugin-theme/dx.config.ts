@@ -31,11 +31,16 @@ const config: Plugin.PluginConfig<ThemePluginOptions> = Plugin.config<ThemePlugi
       requires: [Capabilities.AtomRegistry, ThemeCapabilities.Settings],
     }),
     AppCapability.settings(() => import('./src/settings.ts', { with: { type: 'module-url' } }), {
+      environments: ['browser', 'tauri'],
       provides: [ThemeCapabilities.Settings],
     }),
     Capability.lazyModule(
       'Translator',
-      { requires: [Capabilities.AtomRegistry, AppCapabilities.Translations], provides: [AppCapabilities.Translator] },
+      {
+        environments: ['browser', 'tauri'],
+        requires: [Capabilities.AtomRegistry, AppCapabilities.Translations],
+        provides: [AppCapabilities.Translator],
+      },
       () => import('./src/translator.ts', { with: { type: 'module-url' } }),
     ),
   ],

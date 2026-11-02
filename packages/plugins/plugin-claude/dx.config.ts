@@ -46,6 +46,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     Capability.lazyModule(
       'ClaudeCodeAgent',
       {
+        environments: ['browser', 'node', 'tauri'],
         provides: [AssistantCapabilities.Agent, AssistantCapabilities.AgentProcess],
         // Off the boot path: loading it pulls in the MCP SDK, and agents are only read once the assistant runs a turn.
         activatesOn: AppActivationEvents.AssistantStart,
@@ -54,7 +55,11 @@ const config: Plugin.PluginConfig = Plugin.config({
     ),
     Capability.lazyModule(
       'ClaudeCodeEdgeAgent',
-      { provides: [AssistantCapabilities.Agent], activatesOn: AppActivationEvents.AssistantStart },
+      {
+        environments: ['browser', 'node', 'tauri'],
+        provides: [AssistantCapabilities.Agent],
+        activatesOn: AppActivationEvents.AssistantStart,
+      },
       () => import('./src/capabilities/claude-code-edge-agent.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(

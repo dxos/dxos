@@ -53,7 +53,7 @@ type UpdateState
 component NativeSettings
   desc: |
     Settings panel section rendered inside the global Settings dialog under the
-    App (native) plugin entry.  Holds the Update automatically switch, and shows the
+    App (native) plugin entry.  Holds the Update on startup switch, and shows the
     current update status with Check / Update Now / Relaunch actions depending on the
     UpdateState.
   props:
@@ -69,7 +69,7 @@ component NativeSettings
     relaunchApp()
   layout: |
     ┌─────────────────────────────────────────┐
-    │  Update automatically            [on/off]│
+    │  Update on startup               [on/off]│
     ├─────────────────────────────────────────┤
     │  Updates                                │
     │  [status description]   [Check / Update]│
@@ -343,6 +343,23 @@ decision D-7: Offline (`navigator.onLine` false) the gate does not check; when i
   affects: [F-2.7]
   why: Offline the request can only fail, and an "Update failed" row would report a check the user never asked for.
   rejected: hiding failures of a check started from settings — the user who pressed it needs to know it did not work
+```
+
+```mdl
+decision D-8: The setting's name says that it forces an update when the app starts. With the setting off, the app still gets updates; it only does not install one before it opens.
+  date: 2026-10-30
+  by: user:wittjosiah
+  affects: [NativeSettings]
+```
+
+```mdl
+decision D-9: The switch is labelled "Update on startup", and its description says that updates still download in the background and the app asks to restart when it is off. Fills in [D-8].
+  date: 2026-10-30
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [NativeSettings]
+  why: "Startup" is the word a user knows; "boot" is internal.
+  rejected: "Force update on startup" — "force" reads as if updates stop when the switch is off
 ```
 
 ## Appendix: Extension Definitions

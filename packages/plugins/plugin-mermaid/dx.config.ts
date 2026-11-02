@@ -44,7 +44,11 @@ const config: Plugin.PluginConfig = Plugin.config({
   modules: [
     Capability.lazyModule(
       'MarkdownExtension',
-      { provides: [MarkdownCapabilities.ExtensionProvider], activatesOn: MarkdownEvents.Start },
+      {
+        environments: ['browser', 'tauri'],
+        provides: [MarkdownCapabilities.ExtensionProvider],
+        activatesOn: MarkdownEvents.Start,
+      },
       () => import('./src/capabilities/markdown.ts', { with: { type: 'module-url' } }),
     ),
     // Gated on demand: nothing reads a spec at boot.

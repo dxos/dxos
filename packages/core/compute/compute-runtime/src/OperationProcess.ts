@@ -49,6 +49,8 @@ export const make = <const Op extends Operation.Definition.Any>(
     input: op.input,
     output: op.output,
     services: [...op.services, OperationHandlerSet.OperationHandlerProvider],
+    // A non-idempotent operation re-delivered after a restart fails on its started marker.
+    resumable: Operation.isIdempotent(op),
   });
 
   return Operation.withDurableHandler(definition, (ctx) =>

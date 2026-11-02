@@ -56,9 +56,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     ),
     AppCapability.operationHandler(
       () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
-      {
-        activatesOn: ActivationEvents.Idle,
-      },
+      { environments: ['browser', 'node', 'tauri'], activatesOn: ActivationEvents.Idle },
     ),
     AppCapability.pluginAsset({
       pluginId: ScriptNamespace.key,

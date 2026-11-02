@@ -93,6 +93,11 @@
       "types": "./dist/types/src/types/LegacyShowcase.d.ts",
       "import": "./dist/lib/LegacyShowcase.mjs"
     },
+    "./LegacySpec": {
+      "source": "./src/types/LegacySpec.ts",
+      "types": "./dist/types/src/types/LegacySpec.d.ts",
+      "import": "./dist/lib/LegacySpec.mjs"
+    },
     "./ProjectCapabilities": {
       "source": "./src/types/ProjectCapabilities.ts",
       "types": "./dist/types/src/types/ProjectCapabilities.d.ts",
@@ -189,13 +194,16 @@
     "src"
   ],
   "dependencies": {
+    "@codemirror/state": "catalog:",
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/deus": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-doc": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
@@ -218,6 +226,7 @@
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-canvas": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-masonry": "workspace:*",
@@ -227,6 +236,7 @@
     "@dxos/react-ui-task": "workspace:*",
     "@dxos/react-ui-trace": "workspace:*",
     "@dxos/types": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },

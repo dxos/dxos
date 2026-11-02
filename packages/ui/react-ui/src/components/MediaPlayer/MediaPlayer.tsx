@@ -8,7 +8,7 @@ import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
-import { type MediaKind, detectMediaKind, isEmbedUrl } from './media-kind.ts';
+import { type MediaKind, resolveMediaElement } from './media-kind.ts';
 
 export type MediaPlayerKind = MediaKind;
 
@@ -31,10 +31,6 @@ const getIframeSandbox = (): string => {
     ? `${IFRAME_SANDBOX} allow-presentation`
     : IFRAME_SANDBOX);
 };
-
-/** Cloudflare Stream `/iframe` embeds: `https://customer-<code>.cloudflarestream.com/<32-hex-uid>/iframe[?…]`. */
-const CLOUDFLARE_STREAM_IFRAME_PATTERN =
-  /^https:\/\/[a-z0-9-]+\.cloudflarestream\.com\/[a-f0-9]{32}\/iframe(?:[/?#]|$)/i;
 
 export type MediaPlayerProps = ThemedClassName<{
   'src': string;
@@ -78,9 +74,7 @@ export const MediaPlayer = ({
   const [result, setResult] = useState<{ src: string; status: MediaPlayerStatus }>();
   const status: MediaPlayerStatus = result?.src === src ? result.status : 'loading';
 
-  // An explicit `kind` forces native playback even for extensionless URLs (e.g. `blob:`/`data:`).
-  const resolved = kind || isEmbedUrl(src) ? (kind ?? detectMediaKind(src) ?? 'video') : undefined;
-  const element = resolved ?? (CLOUDFLARE_STREAM_IFRAME_PATTERN.test(src) ? 'embed' : 'image');
+  const element = resolveMediaElement(src, kind);
   const partProps = {
     'data-scope': 'media-player',
     'data-part': 'root',
