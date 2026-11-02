@@ -134,7 +134,7 @@ test QA-1: Connect, bind a workspace, and build a gadget with the Cloudflare OS 
     workspace agent for a gadget from a Composer chat, accept its change, and use the gadget in the article.
   actors: human
   covers: [F-1.1, F-1.3, F-2.1, F-2.2, F-3.1, F-3.2, F-3.3, F-4.1, F-4.2, F-4.3, F-4.4]
-  status: unverified
+  status: passing            # 2026-11-02; recorded by the autocue flow build-a-gadget against cloudflareos.dxos.network
   given:
     - an identity exists and a space is open
     - plugin-cloudflare-os is enabled
