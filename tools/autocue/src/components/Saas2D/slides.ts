@@ -84,15 +84,15 @@ const OBJECTS = 150;
 const OBJECT_SPIN = 0.08;
 
 const SPACES = [
-  { id: 'Company', at: [0, -56] },
-  { id: 'Personal', at: [-48.5, 28] },
-  { id: 'Customers', at: [48.5, 28] },
+  { id: 'Company', at: [0, -50], r: 46 },
+  { id: 'Personal', at: [-54, 44], r: 30 },
+  { id: 'Customers', at: [50, 38], r: 38 },
 ] as const;
-const SPACE_R = 40;
 const COMPANY_SPACE = SPACES[0];
 
 const ECHO_ZOOM = 3.4;
-const OBJECTS_ZOOM = 11.25;
+/** Frames the company space at the same size on screen whatever its radius. */
+const OBJECTS_ZOOM = 450 / COMPANY_SPACE.r;
 
 /** Your company's place in the ring of companies around the vendor, and the camera that comes to it. */
 const YOURS_AT: [number, number] = [-400, 0];
@@ -344,7 +344,7 @@ const lab = (x: number, y: number, r: number, { core = 0, title = true, coreTitl
 /** The objects of one space, as a flat disc turning slowly in the screen plane. */
 const objectAt = (index: number, cx: number, cy: number, spin: number): [number, number] => {
   // A sunflower spiral packs the disc evenly; the outer objects sit a little further apart.
-  const radius = SPACE_R * 0.83 * Math.sqrt((index + 0.5) / OBJECTS);
+  const radius = COMPANY_SPACE.r * 0.83 * Math.sqrt((index + 0.5) / OBJECTS);
   return polar(cx, cy, radius, index * 2.39996 + spin);
 };
 
@@ -391,10 +391,12 @@ const SPACE_BRIDGES = 2;
  * pattern from reading as a grid.
  */
 const SPACE_OBJECTS = Object.fromEntries(
-  SPACES.map(({ id, at }) => {
+  SPACES.map(({ id, at, r }) => {
+    // Larger spaces hold more objects at the same density.
+    const count = Math.round(SPACE_OBJECT_COUNT * (r / 40) ** 2);
     const turn = hash(`turn-${id}`) * TAU;
-    const points = Array.from({ length: SPACE_OBJECT_COUNT }, (_, index): [number, number] => {
-      const radius = SPACE_R * 0.7 * Math.sqrt((index + 0.5) / SPACE_OBJECT_COUNT);
+    const points = Array.from({ length: count }, (_, index): [number, number] => {
+      const radius = r * 0.7 * Math.sqrt((index + 0.5) / count);
       const [x, y] = polar(at[0], at[1], radius, index * 2.39996 + turn);
       return polar(x, y, 2.2 * hash(`jitter-${id}-${index}`), hash(`heading-${id}-${index}`) * TAU);
     });
@@ -445,8 +447,8 @@ const facing = (
 
 /** The ECHO hypergraph in your data: three spaces, each a graph of objects, with a few links between spaces. */
 const spaces = ({ subs = 1 } = {}): Prim[] => [
-  ...SPACES.flatMap(({ id, at }): Prim[] => [
-    { kind: 'body', id: `space-${id}`, x: at[0], y: at[1], r: SPACE_R, parent: 'node:hub' },
+  ...SPACES.flatMap(({ id, at, r }): Prim[] => [
+    { kind: 'body', id: `space-${id}`, x: at[0], y: at[1], r, parent: 'node:hub' },
     ...SPACE_OBJECTS[id].map(([x, y], index): Prim => ({
       kind: 'node',
       id: `sub-${id}-${index}`,
@@ -634,14 +636,14 @@ const NOTES = [
 /** Short conversations beside the spaces: people and agents at work all over the graph. */
 const notes = (t: number): Prim[] =>
   NOTES.flatMap(({ space, lines, at, side }) => {
-    const home = SPACES.find((candidate) => candidate.id === space)?.at ?? [0, 0];
+    const { at: home, r } = SPACES.find((candidate) => candidate.id === space) ?? COMPANY_SPACE;
     return lines.map((line, index): Prim => {
       const start = at + index * 0.9;
       const shown = ramp(t, start, 0.4) * (1 - ramp(t, at + 3.4, 0.6));
       return {
         kind: 'chip',
         id: `note-${space}-${index}`,
-        x: home[0] + side * (SPACE_R + 34),
+        x: home[0] + side * (r + 34),
         y: home[1] - 8 + index * 16,
         text: line,
         scale: 0.85,
@@ -1246,7 +1248,7 @@ const companySpace = (): Prim[] => [
     id: `space-${COMPANY_SPACE.id}`,
     x: COMPANY_SPACE.at[0],
     y: COMPANY_SPACE.at[1],
-    r: SPACE_R,
+    r: COMPANY_SPACE.r,
     parent: 'node:hub',
   },
 ];
