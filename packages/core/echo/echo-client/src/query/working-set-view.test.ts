@@ -42,7 +42,7 @@ describe('WorkingSetView', () => {
 
   /** A task parented to `parent`, which holds a ref to it as a parent edge requires. */
   const childTask = (parent: TestSchema.Person | TestSchema.Task, title: string) => {
-    const task = db.add(Obj.make(TestSchema.Task, { title }));
+    const task = db.add(Obj.make(TestSchema.Task, { [Obj.Parent]: parent, title }));
     if (Obj.instanceOf(TestSchema.Person, parent)) {
       Obj.update(parent, (parent) => parent.tasks?.push(Ref.make(task)));
     } else {
@@ -50,7 +50,6 @@ describe('WorkingSetView', () => {
         parent.previous = Ref.make(task);
       });
     }
-    Obj.setParent(task, parent);
     return task;
   };
 
