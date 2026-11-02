@@ -19,7 +19,7 @@ import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabili
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
 import * as AcpAgent from '@dxos/plugin-claude/AcpAgent';
 import * as DrawingSkill from '@dxos/plugin-illustrator/DrawingSkill';
-import { Cell } from '@dxos/storybook-testing';
+import { Cell, addToRootCollection } from '@dxos/storybook-testing';
 import { Message } from '@dxos/types';
 
 import { StoryRole } from '../modules/index.ts';
@@ -27,7 +27,6 @@ import {
   Calculate,
   CalculatorSkill,
   ModuleContainer,
-  addToRootCollection,
   createDecorators,
   storyParameters,
   submitPrompt,
