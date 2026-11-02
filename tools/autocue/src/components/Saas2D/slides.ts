@@ -52,16 +52,11 @@ const TEAMS = [
 
 const APPS = ['HubSpot', 'Workday', 'Google Workspace', 'Slack', 'Notion', 'Salesforce', 'Jira'];
 
-const TEAM_APPS: Record<string, string[]> = {
-  Eng: ['Slack', 'Jira', 'Notion'],
-  Sales: ['Salesforce', 'HubSpot', 'Google Workspace'],
-  Ops: ['Workday', 'Google Workspace', 'Slack'],
-};
-
 const TENANTS = 48;
 /** An app is a vendor as small as your smallest team. */
 const APP_R = 30;
 const METADATA_COLOR = '#ff8a3d';
+const DATA_LIGHT = '#f6d585';
 /** Each app's own color, none of them a team's or your data's. */
 const APP_COLORS: Record<string, string> = {
   'HubSpot': '#ff7a59',
@@ -302,26 +297,22 @@ const appRing = (cx: number, cy: number, radius: number, { scale = 1, spin = 0 }
     return app(name, x, y, APP_R * scale, appAngle(name, spin));
   });
 
-/** Each team's links to the apps it works in, with data flowing when `t` is given. */
-const teamLinks = (t?: number): Prim[] =>
-  Object.entries(TEAM_APPS).flatMap(([team, apps]) =>
-    apps.flatMap((app): Prim[] => {
-      const [a, b] = [`node:team-${team}`, `ring:app-${app}`];
-      const link = edge(`link-${team}-${app}`, a, b, { parent: a });
-      if (t === undefined) {
-        return [link];
-      }
-      const color = TEAMS.find((candidate) => candidate.id === team)?.color ?? neu.accent;
-      return [
-        link,
-        flow(`flow-${team}-${app}`, a, b, t * FLOW_RATE + hash(`${team}${app}`), color, {
-          count: 2,
-          size: 5,
-          parent: a,
-        }),
-      ];
-    }),
-  );
+/** Your company's link to each app, with the app's data flowing to you in its color when `t` is given. */
+const appLinks = (t?: number): Prim[] =>
+  APPS.flatMap((app): Prim[] => {
+    const link = edge(`link-org-${app}`, 'body:org', `ring:app-${app}`, { opacity: 0.7, parent: `ring:app-${app}` });
+    if (t === undefined) {
+      return [link];
+    }
+    return [
+      link,
+      flow(`flow-${app}`, `ring:app-${app}`, 'body:org', t * FLOW_RATE + hash(app), APP_COLORS[app], {
+        count: 2,
+        size: 5,
+        parent: `ring:app-${app}`,
+      }),
+    ];
+  });
 
 /** A frontier lab with its gold core of everyone's data. */
 const lab = (x: number, y: number, r: number, { core = 0, title = true, coreTitle = true } = {}): Prim[] => [
@@ -690,18 +681,21 @@ export const slides = (holds: Record<string, number>): Slide[] => {
       id: 'engulf',
       draw: (t) => {
         const r = lerp(175, 1800, ramp(t, 0.6, 6.4, easeInOut));
-        return still([
-          ...merged(since('final-frontier', t) * 0.02, r),
-          {
-            kind: 'title',
-            id: 'welcome',
-            x: 0,
-            y: 0,
-            text: 'Welcome to the Singularity',
-            size: 80,
-            opacity: ramp(t, 8.5, 1.0),
-          },
-        ]);
+        // Everything fades where it is into the empty field of the next scene.
+        return still(
+          [
+            ...merged(since('final-frontier', t) * 0.02, r),
+            {
+              kind: 'title',
+              id: 'welcome',
+              x: 0,
+              y: 0,
+              text: 'Welcome to the Singularity',
+              size: 80,
+              opacity: ramp(t, 8.5, 1.0),
+            } satisfies Prim,
+          ].map((prim): Prim => ({ ...prim, exit: 'fade' })),
+        );
       },
     },
     {
@@ -709,7 +703,6 @@ export const slides = (holds: Record<string, number>): Slide[] => {
       transition: 1.0,
       draw: (t) =>
         still([
-          { kind: 'fill', id: 'curtain', color: PALETTE.black, screen: true },
           {
             kind: 'title',
             id: 'dont-panic',
@@ -799,9 +792,22 @@ export const slides = (holds: Record<string, number>): Slide[] => {
             glow: 0.5,
             parent: 'body:org',
           },
-          label('org-label', 0, -170 - 32, 'Your company', { size: 30, opacity: 1 - grow }),
-          label('hub-label', 0, 0, 'Your data', { size: 30, opacity: 1 - grow, parent: 'node:hub' }),
-          { kind: 'fill', id: 'field', color: PALETTE.gold, screen: true, opacity: field },
+          // As your data fills the frame its shading gives way to its light centre color, so it never darkens.
+          {
+            kind: 'node',
+            id: 'hub-light',
+            x: 0,
+            y: 0,
+            r: lerp(150, 1300, grow),
+            color: DATA_LIGHT,
+            glow: 0,
+            opacity: grow,
+            parent: 'node:hub',
+          },
+          label('org-label', 0, -170 - 32, 'Your company', { size: 30, opacity: 1 - ramp(t, 0.2, 0.5) }),
+          label('hub-label', 0, 0, 'Your data', { size: 30, opacity: 1 - ramp(t, 0.2, 0.5), parent: 'node:hub' }),
+          // The field takes the light yellow of your data's lit centre, so filling the frame never darkens it.
+          { kind: 'fill', id: 'field', color: DATA_LIGHT, screen: true, opacity: field },
           {
             kind: 'logo',
             id: 'logo',
@@ -874,14 +880,14 @@ const scale = (t: number, flows: boolean): Prim[] => {
 const spread = (t?: number): Prim[] => [
   ...company(...YOURS_AT, 1, { title: false }),
   ...appRing(...YOURS_AT, 390),
-  ...teamLinks(t),
+  ...appLinks(t),
 ];
 
 /** Your company and its apps beside a frontier lab, joined by one link; `grow` (0 … 1) grows the lab's data. */
 const frontier = (t?: number, grow = 0): Prim[] => [
   ...company(...FRONTIER_AT, FRONTIER_SCALE),
   ...appRing(...FRONTIER_AT, 255, { scale: FRONTIER_SCALE }),
-  ...teamLinks(t),
+  ...appLinks(t),
   ...lab(...LAB_AT, 210, { core: lerp(66, 120, grow) }),
   edge('link-org-lab', 'body:org', 'node:lab-core', { parent: 'body:org' }),
 ];

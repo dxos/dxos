@@ -14,7 +14,13 @@ import { Background, Card, Defs, Grain, HEIGHT, SvgPrim, WIDTH } from './theme.t
 loadNeuFonts();
 
 /** Scenes given their own length, since their motion reads badly when sped up to an equal share. */
-const FIXED: Record<string, number> = { 'absorb': 9, 'merge-1': 10, 'saas-merge': 8, 'company-fills': 7 };
+const FIXED: Record<string, number> = {
+  'frontier-comms': 7,
+  'absorb': 9,
+  'merge-1': 10,
+  'saas-merge': 8,
+  'company-fills': 7,
+};
 
 /** Each scene's length in the voiced cut, which its keyframes are timed for; company-fills is timed in real seconds. */
 const AUTHORED: Record<string, number> = { ...holds, 'company-fills': 7 };
