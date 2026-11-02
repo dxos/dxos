@@ -28,6 +28,7 @@ export default defineConfig({
     'ProjectCapabilities': 'src/types/ProjectCapabilities.ts',
     'ProjectMailboxOperation': 'src/types/ProjectMailboxOperation.ts',
     'ProjectOperation': 'src/types/ProjectOperation.ts',
+    'ProjectSurface': 'src/types/ProjectSurface.ts',
     'ProjectView': 'src/types/ProjectView.ts',
     'ProjectsEvents': 'src/types/ProjectsEvents.ts',
     'Settings': 'src/types/Settings.ts',
