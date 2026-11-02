@@ -80,7 +80,6 @@ const COMPETITORS = [9, 16, 39];
 const VENDOR_DATA = TENANTS;
 
 const OBJECT_PALETTE = ['#4f8dff', '#3ccf6e', '#ff8a3d', '#a66bff', '#22c7c7', '#f2c230', '#ff5fa2', '#7fa3ff'];
-const OBJECTS = 150;
 const OBJECT_SPIN = 0.08;
 
 const SPACES = [
@@ -341,47 +340,6 @@ const lab = (x: number, y: number, r: number, { core = 0, title = true, coreTitl
     : []),
 ];
 
-/** The objects of one space, as a flat disc turning slowly in the screen plane. */
-const objectAt = (index: number, cx: number, cy: number, spin: number): [number, number] => {
-  // A sunflower spiral packs the disc evenly; the outer objects sit a little further apart.
-  const radius = COMPANY_SPACE.r * 0.83 * Math.sqrt((index + 0.5) / OBJECTS);
-  return polar(cx, cy, radius, index * 2.39996 + spin);
-};
-
-const OBJECT_COLOR = (index: number) => OBJECT_PALETTE[Math.floor(hash(`object-${index}`) * OBJECT_PALETTE.length)];
-
-const objects = (spin: number, { dim = 1, picked = {} }: { dim?: number; picked?: Record<number, number> } = {}) => {
-  const [cx, cy] = COMPANY_SPACE.at;
-  const prims: Prim[] = [];
-  for (let index = 0; index < OBJECTS; index++) {
-    const [x, y] = objectAt(index, cx, cy, spin);
-    const pick = picked[index];
-    prims.push({
-      kind: 'node',
-      id: `object-${index}`,
-      x,
-      y,
-      r: (0.55 + hash(`size-${index}`) * 0.45) * (pick ?? 1),
-      color: OBJECT_COLOR(index),
-      opacity: pick === undefined ? dim : 1,
-      glow: pick === undefined ? 0 : 0.4,
-      parent: `body:space-${COMPANY_SPACE.id}`,
-    });
-    // Sunflower neighbours differ by Fibonacci steps, so these links stay short.
-    const next = index + 13;
-    if (next < OBJECTS && hash(`link-${index}`) < 0.32) {
-      prims.push(
-        edge(`object-link-${index}`, `node:object-${index}`, `node:object-${next}`, {
-          color: '#3a4560',
-          opacity: 0.9,
-          parent: `node:object-${index}`,
-        }),
-      );
-    }
-  }
-  return prims;
-};
-
 const SPACE_OBJECT_COUNT = 28;
 const SPACE_NEIGHBOURS = 2;
 const SPACE_BRIDGES = 2;
@@ -455,14 +413,14 @@ const spaces = ({ subs = 1 } = {}): Prim[] => [
       x,
       y,
       r: 1.3 + hash(`sub-size-${id}-${index}`) * 0.7,
-      color: '#c9ced6',
+      color: OBJECT_GREY,
       glow: -0.35,
       opacity: subs,
       parent: `body:space-${id}`,
     })),
     ...spaceLinks(id).map(([first, second]) =>
       edge(`sub-link-${id}-${first}-${second}`, `node:sub-${id}-${first}`, `node:sub-${id}-${second}`, {
-        color: '#c9ced6',
+        color: OBJECT_GREY,
         opacity: subs,
         parent: `body:space-${id}`,
       }),
@@ -477,7 +435,7 @@ const spaces = ({ subs = 1 } = {}): Prim[] => [
           `node:sub-${from.id}-${start}`,
           `node:sub-${to.id}-${ends[bridge]}`,
           {
-            color: '#c9ced6',
+            color: OBJECT_GREY,
             opacity: subs,
             parent: `body:space-${from.id}`,
           },
@@ -486,6 +444,48 @@ const spaces = ({ subs = 1 } = {}): Prim[] => [
     }),
   ),
 ];
+
+const OBJECT_COLOR = (index: number) => OBJECT_PALETTE[Math.floor(hash(`object-${index}`) * OBJECT_PALETTE.length)];
+const OBJECT_GREY = '#c9ced6';
+
+/**
+ * The company space's own objects from the hypergraph, close up: the same nodes and links, turning slowly about the
+ * space's centre and taking on their colors (`color` 0–1).
+ */
+const objects = (
+  spin: number,
+  { dim = 1, picked = {}, color = 1 }: { dim?: number; picked?: Record<number, number>; color?: number } = {},
+): Prim[] => {
+  const { id, at } = COMPANY_SPACE;
+  const turned = (index: number) => {
+    const [x, y] = SPACE_OBJECTS[id][index];
+    return polar(at[0], at[1], Math.hypot(x - at[0], y - at[1]), Math.atan2(y - at[1], x - at[0]) + spin);
+  };
+  return [
+    ...SPACE_OBJECTS[id].map((_, index): Prim => {
+      const [x, y] = turned(index);
+      const pick = picked[index];
+      return {
+        kind: 'node',
+        id: `sub-${id}-${index}`,
+        x,
+        y,
+        r: (1.3 + hash(`sub-size-${id}-${index}`) * 0.7) * (pick ?? 1),
+        color: `color-mix(in oklab, ${OBJECT_COLOR(index)} ${Math.round(color * 100)}%, ${OBJECT_GREY})`,
+        glow: pick === undefined ? -0.35 : 0.4,
+        opacity: pick === undefined ? dim : 1,
+        parent: `body:space-${id}`,
+      };
+    }),
+    ...spaceLinks(id).map(([first, second]) =>
+      edge(`sub-link-${id}-${first}-${second}`, `node:sub-${id}-${first}`, `node:sub-${id}-${second}`, {
+        color: OBJECT_GREY,
+        opacity: dim,
+        parent: `body:space-${id}`,
+      }),
+    ),
+  ];
+};
 
 const echoTitle = (): Prim[] => [
   label('echo-title', 120, 500, 'ECHO', { screen: true, size: 72, weight: 700, anchor: 'start' }),
@@ -617,15 +617,32 @@ const objectCards = (t: number): CardPrim[] => [
   ),
 ];
 
-/** The object each card belongs to, and the edge of the card its link meets. */
-const CARD_OBJECTS: Record<string, { object: number; edge: [number, number] }> = {
-  'card-update': { object: 37, edge: [1460, 140] },
-  'card-review': { object: 61, edge: [1460, 700] },
-  'card-launch': { object: 88, edge: [460, 140] },
-  'card-blockers': { object: 104, edge: [460, 480] },
-  'card-pricing': { object: 123, edge: [460, 700] },
-  'card-faq': { object: 142, edge: [460, 950] },
+/** The edge of each card that its link meets, in screen pixels. */
+const CARD_EDGES: Record<string, [number, number]> = {
+  'card-update': [1460, 140],
+  'card-review': [1460, 700],
+  'card-launch': [460, 140],
+  'card-blockers': [460, 480],
+  'card-pricing': [460, 700],
+  'card-faq': [460, 950],
 };
+
+/** The object each card belongs to: a different one for each card, out toward the card from the space's centre. */
+const CARD_OBJECTS: Record<string, { object: number; edge: [number, number] }> = (() => {
+  const { id, at, r } = COMPANY_SPACE;
+  const taken = new Set<number>();
+  return Object.fromEntries(
+    Object.entries(CARD_EDGES).map(([card, cardEdge]) => {
+      const toward = polar(at[0], at[1], r * 0.5, Math.atan2(cardEdge[1] - HEIGHT / 2, cardEdge[0] - WIDTH / 2));
+      const object = SPACE_OBJECTS[id]
+        .map((point, index) => ({ index, gap: distance(point, toward) }))
+        .filter(({ index }) => !taken.has(index))
+        .sort((left, right) => left.gap - right.gap)[0].index;
+      taken.add(object);
+      return [card, { object, edge: cardEdge }];
+    }),
+  );
+})();
 
 const NOTES = [
   { space: 'Company', lines: ['Who owns this?', 'Ops, since Monday.'], at: 1.4, side: 1 },
@@ -807,7 +824,11 @@ export const slides = (holds: Record<string, number>): Slide[] => {
     {
       id: 'objects',
       transition: 2.5,
-      draw: (t) => still([...companySpace(), ...objects(t * OBJECT_SPIN)], camera(OBJECTS_ZOOM, ...COMPANY_SPACE.at)),
+      draw: (t) =>
+        still(
+          [...companySpace(), ...objects(t * OBJECT_SPIN, { color: ramp(t, 0.8, 1.5, easeInOut) })],
+          camera(OBJECTS_ZOOM, ...COMPANY_SPACE.at),
+        ),
     },
     {
       id: 'object-created',
@@ -830,7 +851,7 @@ export const slides = (holds: Record<string, number>): Slide[] => {
             y1: 0,
             x2,
             y2,
-            a: `node:object-${object}`,
+            a: `node:sub-${COMPANY_SPACE.id}-${object}`,
             screen2: true,
             hot: prim.accent,
             opacity: prim.opacity,
