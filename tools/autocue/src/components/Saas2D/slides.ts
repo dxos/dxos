@@ -45,9 +45,9 @@ const polar = (cx: number, cy: number, radius: number, angle: number): [number, 
 
 /** Your teams, packed with an even gap (16) between each pair. */
 const TEAMS = [
-  { id: 'Eng', color: ROLES.team, r: 52, at: [7, -52] },
-  { id: 'Sales', color: PALETTE.green, r: 40, at: [-47, 41] },
-  { id: 'Ops', color: PALETTE.pink, r: 30, at: [39, 41] },
+  { id: 'Eng', color: ROLES.team, r: 40, at: [0, -55.4] },
+  { id: 'Sales', color: PALETTE.green, r: 40, at: [-48, 27.7] },
+  { id: 'Ops', color: PALETTE.pink, r: 40, at: [48, 27.7] },
 ] as const;
 
 const APPS = ['HubSpot', 'Workday', 'Google Workspace', 'Slack', 'Notion', 'Salesforce', 'Jira'];
@@ -254,9 +254,10 @@ const company = (cx: number, cy: number, scale: number, { teams = true, title = 
           parent: 'body:org',
           from: 'node:your-teams',
         },
-        label(`team-label-${id}`, cx + at[0] * scale, cy + (at[1] - r) * scale - 14, id, {
-          size: 17,
-          weight: 500,
+        // Named inside its circle, so the team and its name read as one thing.
+        label(`team-label-${id}`, cx + at[0] * scale, cy + at[1] * scale, id, {
+          size: Math.max(11, Math.round(17 * scale)),
+          weight: 600,
           parent: `node:team-${id}`,
         }),
       ])
@@ -807,7 +808,7 @@ export const slides = (holds: Record<string, number>): Slide[] => {
             id: 'dont-panic',
             x: 0,
             y: 0,
-            text: 'Don’t Panic',
+            text: 'THE ALTERNATIVE',
             size: 80,
             color: neu.muted,
             opacity: ramp(t, 3.5, 1.0),
@@ -1035,6 +1036,22 @@ const lerpAt = (a: readonly [number, number], b: readonly [number, number], k: n
 ];
 
 /**
+ * `from` carried round `centre` to `radius` and `angle` (0 … `k` … 1), by distance and bearing from the centre: a path
+ * that orbits the centre instead of cutting across it.
+ */
+const swing = (
+  from: readonly [number, number],
+  centre: readonly [number, number],
+  radius: number,
+  angle: number,
+  k: number,
+): [number, number] => {
+  const bearing = Math.atan2(from[1] - centre[1], from[0] - centre[0]);
+  const distance = Math.hypot(from[0] - centre[0], from[1] - centre[1]);
+  return polar(centre[0], centre[1], lerp(distance, radius, k), turnTo(bearing, angle, k));
+};
+
+/**
  * The lab at the centre; the apps orbit inside it, around its core of data. `taken` (per app, 0 … 1) brings each app
  * in until its rim touches the core, then shrinks it into the core, which grows, the rims touching all the while.
  */
@@ -1146,8 +1163,8 @@ const rivals = (first: number, second: number): Prim[] => {
   for (let index = 0; index < TENANTS; index++) {
     const group = index % 3;
     const start = startAngle(index);
-    // Each lab's companies spread over its far side as it meets another lab, and keep their angle as their lab shrinks
-    // into the other: they become that side of the other lab's ring.
+    // Each lab's companies spread over its far side as it meets another lab; as their lab shrinks into the other they
+    // swing round the other's centre onto their place in its ring.
     let x: number;
     let y: number;
     if (group === 0) {
@@ -1155,9 +1172,11 @@ const rivals = (first: number, second: number): Prim[] => {
     } else {
       const first = FIRST.get(index) ?? start;
       const angle = turnTo(turnTo(start, first, firstMove), mergedAngle(index), secondMove);
-      const aroundRight = polar(...right, ring(rightR), angle);
-      const own = group === 1 ? lerpAt(polar(...left, ring(leftR), angle), aroundRight, firstTake) : aroundRight;
-      [x, y] = lerpAt(own, polar(...top, ring(topR), angle), secondTake);
+      const own =
+        group === 1
+          ? swing(polar(...left, ring(leftR), angle), right, ring(rightR), angle, firstTake)
+          : polar(...right, ring(rightR), angle);
+      [x, y] = swing(own, top, ring(topR), angle, secondTake);
     }
     // A company passing to another lab's ring hands its link over halfway, and the link fades out and back in around
     // the handover, so it never cuts across a lab.
@@ -1205,10 +1224,13 @@ const merged = (spin: number, r = 175): Prim[] => {
   ];
 };
 
+/** How far your apps sit from your company once you keep your data: close in, as a team's own tools. */
+const AROUND_R = 300;
+
 /** Your company at the centre with its apps, each holding a share of your data and linked to your company. */
 const appsAround = (): Prim[] => [
   ...company(0, 0, 1, { teams: false }),
-  ...appRing(0, 0, 390),
+  ...appRing(0, 0, AROUND_R),
   ...APPS.map((app) =>
     edge(`link-org-${app}`, 'body:org', `ring:app-${app}`, { opacity: 0.7, parent: `ring:app-${app}` }),
   ),
@@ -1235,7 +1257,7 @@ const hub = (taken: number[] = APPS.map(() => 0), size = 1): Prim[] => {
     label('hub-label', 0, 0, 'Your data', { size: 30, opacity: ramp(size, 0.6, 0.4), parent: 'node:hub' }),
     ...APPS.flatMap((name, index): Prim[] => {
       const k = taken[index];
-      const [x, y] = appAt(name, 0, 0, 390);
+      const [x, y] = appAt(name, 0, 0, AROUND_R);
       return [
         // Each app folds into your data with the share it held.
         ...app(name, lerp(x, 0, k), lerp(y, 0, k), APP_R * (1 - k), appAngle(name), { title: 1 - k }),

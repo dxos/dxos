@@ -14,7 +14,7 @@ const CHAPTERS: { title: string; scenes: string[] }[] = [
   { title: 'Scale', scenes: ['scale', 'competitors', 'spread', 'spread-comms'] },
   { title: 'AI', scenes: ['frontier', 'frontier-comms', 'orbit', 'absorb'] },
   { title: 'Consolidation', scenes: ['rivals', 'merge-1', 'final-frontier', 'engulf'] },
-  { title: "Don't Panic", scenes: ['dont-panic', 'spread-again'] },
+  { title: 'The Alternative', scenes: ['dont-panic', 'spread-again'] },
   { title: 'ECHO', scenes: ['echo-hub', 'echo-spaces'] },
   { title: 'Composer', scenes: ['objects', 'object-detail', 'object-thread', 'object-created', 'echo-spaces-again'] },
   { title: 'DXOS', scenes: ['echo-hub-again', 'saas-merge'] },
