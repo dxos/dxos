@@ -84,7 +84,6 @@ import {
 } from '../echo-handler/index.ts';
 import { FeedHandle } from '../feed/feed-handle.ts';
 import { type HypergraphImpl } from '../hypergraph.ts';
-import { UpdateDispatch } from '../query/update-dispatch.ts';
 
 export interface EchoDatabase extends Database.Database {
   /**
@@ -365,12 +364,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    */
   readonly _entityManager: EntityManager;
 
-  /**
-   * Routes {@link _updateEvent} to the live queries over this database.
-   * @internal
-   */
-  readonly _updateDispatch = new UpdateDispatch(this);
-
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
 
   private readonly _hypergraph: HypergraphImpl;
@@ -526,7 +519,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     this.#feeds.clear();
     await Promise.allSettled([...this.#retiredFeeds]);
     this.#retiredFeeds.clear();
-    this._updateDispatch.close();
     await this._entityManager.close(ctx);
   }
 

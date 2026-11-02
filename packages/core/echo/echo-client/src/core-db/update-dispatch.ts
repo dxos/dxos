@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type CleanupFn } from '@dxos/async';
+import { type CleanupFn, type ReadOnlyEvent } from '@dxos/async';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { DXN, EID } from '@dxos/keys';
 import { defaultMap } from '@dxos/util';
 
-import { type ItemsUpdatedEvent } from '../core-db/index.ts';
-import { type DatabaseImpl } from '../proxy-db/index.ts';
+import { type ObjectCore } from './object-core.ts';
+import { type ItemsUpdatedEvent } from './types.ts';
 
 /** Matches the executors' `child-of` walk: no anchor reaches deeper. */
 const MAX_ANCHOR_DEPTH = 10;
@@ -26,6 +26,9 @@ export type DispatchKeys = {
   anchors?: { ids: Iterable<string>; depth: number };
 };
 
+/** Looks up a loaded object without loading it. */
+export type HeldCoreLookup = (id: string) => ObjectCore | undefined;
+
 type Registration = { ids: Set<string>; typenames: Set<string>; anchors: Set<string>; depth: number };
 
 /**
@@ -42,7 +45,13 @@ export class UpdateDispatch {
   readonly #byAnchor = new Map<string, Map<DispatchListener, number>>();
   #unsubscribe?: CleanupFn = undefined;
 
-  constructor(private readonly _database: DatabaseImpl) {}
+  readonly #updateEvent: ReadOnlyEvent<ItemsUpdatedEvent>;
+  readonly #getCore: HeldCoreLookup;
+
+  constructor(updateEvent: ReadOnlyEvent<ItemsUpdatedEvent>, getCore: HeldCoreLookup) {
+    this.#updateEvent = updateEvent;
+    this.#getCore = getCore;
+  }
 
   /** Routes events to `listener` by `keys`, or delivers every event whole when there are none. */
   set(listener: DispatchListener, keys?: DispatchKeys): void {
@@ -69,7 +78,7 @@ export class UpdateDispatch {
       this.#listeners.set(listener, undefined);
       this.#wide.add(listener);
     }
-    this.#unsubscribe ??= this._database._updateEvent.on(this.#onUpdate);
+    this.#unsubscribe ??= this.#updateEvent.on(this.#onUpdate);
   }
 
   /** Adds id keys to a keyed listener, for results that grew without a recompute. */
@@ -164,14 +173,14 @@ export class UpdateDispatch {
         }
       }
       if (this.#byAnchor.size > 0) {
-        let parent = parentId(this._database, id);
+        let parent = this.#parentId(id);
         for (let hops = 1; parent && hops <= MAX_ANCHOR_DEPTH; hops++) {
           this.#byAnchor.get(parent)?.forEach((depth, listener) => {
             if (hops <= depth) {
               add(listener, id);
             }
           });
-          parent = parentId(this._database, parent);
+          parent = this.#parentId(parent);
         }
       }
     }
@@ -179,17 +188,17 @@ export class UpdateDispatch {
   }
 
   #typenameKeysOf(id: string): readonly string[] {
-    const type = this._database.getObjectCoreById(id, { load: false })?.getType();
+    const type = this.#getCore(id)?.getType();
     return type ? objectTypenameKeys(EncodedReference.toURI(type)) : [];
   }
-}
 
-/** The id of a loaded object's parent; nothing is loaded. */
-const parentId = (database: DatabaseImpl, id: string): string | undefined => {
-  const ref = database.getObjectCoreById(id, { load: false })?.getParent();
-  const eid = ref && EncodedReference.isEncodedReference(ref) ? EID.tryParse(EncodedReference.toURI(ref)) : undefined;
-  return eid && EID.getEntityId(eid);
-};
+  /** The id of a loaded object's parent; nothing is loaded. */
+  #parentId(id: string): string | undefined {
+    const ref = this.#getCore(id)?.getParent();
+    const eid = ref && EncodedReference.isEncodedReference(ref) ? EID.tryParse(EncodedReference.toURI(ref)) : undefined;
+    return eid && EID.getEntityId(eid);
+  }
+}
 
 // `compareTypenameStrings` judges a filter typename by the first form it parses as (an EID, then a DXN, then the raw
 // string) and accepts any object type with the same entity id or name in that form. So the filter is keyed by its
