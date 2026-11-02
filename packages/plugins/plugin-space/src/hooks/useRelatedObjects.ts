@@ -7,7 +7,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import { useMemo } from 'react';
 
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
-import { type Database, Entity, Filter, Obj, Ref, Relation } from '@dxos/echo';
+import { type Database, type Entity, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { isNonNullable } from '@dxos/util';
 
@@ -24,7 +24,6 @@ const getReferences = (obj: Entity.Unknown | Entity.Snapshot): Ref.Unknown[] =>
  * the rest belongs to the consumer (see `useRelatedTypeFilter`).
  */
 // TODO(burdon): Factor out (make more generally useful -- e.g., in cards).
-// TODO(wittjosiah): This is a hack. ECHO needs to have a back reference index to easily query for related objects.
 export const useRelatedObjects = (
   db?: Database.Database,
   subject?: Obj.Unknown,
@@ -33,7 +32,21 @@ export const useRelatedObjects = (
     relations?: boolean;
   } = {},
 ) => {
-  const objects = useQuery(db, Filter.everything());
+  // Graph traversals anchored on the subject, so the hook never watches every object in the space.
+  const subjectId = subject?.id;
+  const referencingQuery = useMemo(
+    () => (subjectId ? Query.select(Filter.id(subjectId)).referencedBy() : Query.select(Filter.nothing())),
+    [subjectId],
+  );
+  const relatedQuery = useMemo(() => {
+    if (!subjectId) {
+      return Query.select(Filter.nothing());
+    }
+    const anchor = Query.select(Filter.id(subjectId));
+    return Query.all(anchor.sourceOf().target(), anchor.targetOf().source());
+  }, [subjectId]);
+  const referenceSources = useQuery(options.references ? db : undefined, referencingQuery);
+  const relatedObjects = useQuery(options.relations ? db : undefined, relatedQuery);
   const referencesAtom = useMemo(
     () =>
       Atom.make((get) => (subject ? getReferences(get(Obj.atom(subject))) : [])).pipe(
@@ -51,34 +64,11 @@ export const useRelatedObjects = (
 
     // TODO(burdon): Change Person => Organization to relations.
     if (options.references) {
-      const referenceTargets = references.map((ref) => ref.target).filter(isNonNullable);
-      const referenceSources = objects.filter((obj) => {
-        const refs = getReferences(obj);
-        return refs.some((ref) => ref.target === subject);
-      });
-
-      related.push(...referenceTargets, ...referenceSources);
+      related.push(...references.map((ref) => ref.target).filter(isNonNullable), ...referenceSources);
     }
 
     if (options.relations) {
-      // TODO(dmaretskyi): Workaround until https://github.com/dxos/dxos/pull/10100 lands.
-      const isValidRelation = (obj: Relation.Unknown) => {
-        try {
-          return Relation.isRelation(obj) && Relation.getSource(obj) && Relation.getTarget(obj);
-        } catch {
-          return false;
-        }
-      };
-
-      const relations = objects.filter(Relation.isRelation).filter((obj) => isValidRelation(obj));
-      const targetObjects = relations
-        .filter((relation) => Relation.getTarget(relation) === subject)
-        .map((relation) => Relation.getSource(relation));
-      const sourceObjects = relations
-        .filter((relation) => Relation.getSource(relation) === subject)
-        .map((relation) => Relation.getTarget(relation));
-
-      related.push(...targetObjects, ...sourceObjects);
+      related.push(...relatedObjects);
     }
 
     return (
@@ -87,5 +77,5 @@ export const useRelatedObjects = (
         .filter((obj) => obj !== subject)
         .filter((obj) => !Obj.isObject(obj) || TypeOptions.isUserObject(obj))
     );
-  }, [subject, references, objects, options.references, options.relations]);
+  }, [subject, references, referenceSources, relatedObjects, options.references, options.relations]);
 };
