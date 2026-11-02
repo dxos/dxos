@@ -8,6 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
 import * as InboxEvents from '@dxos/plugin-inbox/InboxEvents';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
@@ -102,6 +103,17 @@ const config: Plugin.PluginConfig<Debug.DebugPluginOptions> = Plugin.config<Debu
     }),
     AppCapability.spaceTemplates(
       () => import('./src/capabilities/space-templates.ts', { with: { type: 'module-url' } }),
+    ),
+    // Separate from the static list: built from the client's EDGE and the toolchain the app was built from.
+    Capability.lazyModule(
+      'PluginTemplates',
+      {
+        requires: [ClientCapabilities.Client],
+        provides: [AppCapabilities.SpaceTemplate],
+        activatesOn: ActivationEvents.SpaceTemplatesRequested,
+        environments: ['browser'],
+      },
+      () => import('./src/capabilities/plugin-templates.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'StatsPanel',
