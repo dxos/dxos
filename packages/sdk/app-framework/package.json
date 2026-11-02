@@ -174,7 +174,6 @@
       "import": "./dist/lib/vite-plugin.mjs"
     },
     "./vite-plugin/config": {
-      "source": "./src/vite-plugin/config.ts",
       "types": "./dist/types/src/vite-plugin/config.d.ts",
       "import": "./dist/lib/vite-plugin/config.mjs"
     }
