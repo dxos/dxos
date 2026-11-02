@@ -22,8 +22,20 @@ const ARCHIVE = process.env.DX_PERF_PROFILE_ARCHIVE;
  */
 let SPACE = process.env.DX_PERF_OBJECT_SPACE ?? '';
 
+/** A positive integer from the environment, or `fallback` when unset; anything else is an error, not a default. */
+const positiveInt = (name: string, fallback: number): number => {
+  const value = process.env[name];
+  if (value === undefined || value === '') {
+    return fallback;
+  }
+  if (!/^[1-9]\d*$/.test(value)) {
+    throw new Error(`${name} must be a positive integer, got ${JSON.stringify(value)}`);
+  }
+  return Number(value);
+};
+
 /** How many of the branch's objects to open (`DX_PERF_OBJECTS`); each opens once per pass. */
-const OBJECTS = Number.parseInt(process.env.DX_PERF_OBJECTS ?? '', 10) || 8;
+const OBJECTS = positiveInt('DX_PERF_OBJECTS', 8);
 
 /**
  * The navtree branch, under `root/<space>/`, whose children the stages open (`DX_PERF_OBJECT_BRANCH`): the root
@@ -32,10 +44,12 @@ const OBJECTS = Number.parseInt(process.env.DX_PERF_OBJECTS ?? '', 10) || 8;
 const BRANCH = process.env.DX_PERF_OBJECT_BRANCH ?? 'content/collections';
 
 /** Passes over the objects (`DX_PERF_OBJECT_PASSES`): `cold`, `warm`, then `warm3`, `warm4`… to show a trend. */
-const PASSES = ['cold', 'warm', ...Array.from({ length: 98 }, (_, index) => `warm${index + 3}`)].slice(
-  0,
-  Math.max(1, Number.parseInt(process.env.DX_PERF_OBJECT_PASSES ?? '', 10) || 2),
+const PASSES = Array.from({ length: positiveInt('DX_PERF_OBJECT_PASSES', 2) }, (_, index) =>
+  index === 0 ? 'cold' : index === 1 ? 'warm' : `warm${index + 1}`,
 );
+
+/** Each stage's open, and the settle after it, on top of the half hour `prepare`'s reindex may take. */
+const STAGE_MS = 10_000;
 
 /** The counters that move while the worker indexes. */
 const INDEX_COUNTERS = ['echo.indexPasses', 'echo.indexedObjects'];
@@ -109,7 +123,7 @@ defineScenario({
   scale: ARCHIVE
     ? `archive=${Math.round(statSync(ARCHIVE).size / 1e6)}MB,objects=${OBJECTS}`
     : `${seedLabel(SEEDED_DOCUMENTS)},objects=${OBJECTS}`,
-  timeoutMs: 30 * 60_000,
+  timeoutMs: 30 * 60_000 + PASSES.length * OBJECTS * STAGE_MS,
   privateData: ARCHIVE !== undefined,
   // Seeded or imported in a browser of its own, so the measured one boots on the profile as a returning user does.
   persistentProfile: true,
@@ -138,10 +152,14 @@ defineScenario({
     const ids = await objectRows(page, budget);
     for (const pass of PASSES) {
       for (const [index, id] of ids.entries()) {
-        await stage(`${pass}-${index + 1}`, async () => {
+        const ran = await stage(`${pass}-${index + 1}`, async () => {
           await page.locator(row(id)).click();
           await waitForPlank(page, id, budget);
         });
+        // Every stage after one `--until` skipped is skipped too.
+        if (!ran) {
+          return;
+        }
         // Between stages, so one open's trailing work does not land in the next stage.
         await page.waitForTimeout(1_500);
       }
