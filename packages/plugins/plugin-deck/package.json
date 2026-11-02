@@ -82,10 +82,10 @@
       "node": "./dist/lib/DeckPlugin.node.mjs",
       "import": "./dist/lib/DeckPlugin.mjs"
     },
-    "./DeckRole": {
-      "source": "./src/types/DeckRole.ts",
-      "types": "./dist/types/src/types/DeckRole.d.ts",
-      "import": "./dist/lib/DeckRole.mjs"
+    "./DeckSurface": {
+      "source": "./src/types/DeckSurface.ts",
+      "types": "./dist/types/src/types/DeckSurface.d.ts",
+      "import": "./dist/lib/DeckSurface.mjs"
     },
     "./DeckSchema": {
       "source": "./src/types/DeckSchema.ts",
@@ -133,8 +133,8 @@
       "DeckOperation": [
         "dist/types/src/types/DeckOperation.d.ts"
       ],
-      "DeckRole": [
-        "dist/types/src/types/DeckRole.d.ts"
+      "DeckSurface": [
+        "dist/types/src/types/DeckSurface.d.ts"
       ],
       "DeckSchema": [
         "dist/types/src/types/DeckSchema.d.ts"

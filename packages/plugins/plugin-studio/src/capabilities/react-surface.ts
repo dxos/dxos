@@ -12,7 +12,7 @@ import { Collection, Obj } from '@dxos/echo';
 
 import { AudioVariant, ImageVariant, MediaArtifactCard, VideoVariant } from '#components';
 import { FrameCompanion, GalleryArticle, LightboxArticle, MediaArtifactArticle, StoryboardArticle } from '#containers';
-import { VariantRenderer } from '#surfaces';
+import { StudioSurface } from '#types';
 import { Lightbox, MediaArtifact, Storyboard } from '#types';
 
 import { FRAME_COMPANION } from '../constants.ts';
@@ -90,7 +90,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'imageVariant',
         filter: Surface.makeFilter(
-          VariantRenderer,
+          StudioSurface.VariantRenderer,
           (data) => typeof data.contentType === 'string' && data.contentType.startsWith('image/'),
         ),
         component: ImageVariant,
@@ -99,7 +99,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'videoVariant',
         filter: Surface.makeFilter(
-          VariantRenderer,
+          StudioSurface.VariantRenderer,
           (data) => typeof data.contentType === 'string' && data.contentType.startsWith('video/'),
         ),
         component: VideoVariant,
@@ -108,7 +108,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'audioVariant',
         filter: Surface.makeFilter(
-          VariantRenderer,
+          StudioSurface.VariantRenderer,
           (data) => typeof data.contentType === 'string' && data.contentType.startsWith('audio/'),
         ),
         component: AudioVariant,

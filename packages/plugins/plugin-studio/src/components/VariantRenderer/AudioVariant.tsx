@@ -6,16 +6,16 @@ import React from 'react';
 
 import * as Media from '@dxos/react-ui/Media';
 
-import { type VariantContent } from '#surfaces';
+import { type StudioSurface } from '#types';
 
 import { useVariantSource } from '../../hooks/useVariantSource.ts';
 
 export type AudioVariantProps = {
-  variant: VariantContent;
+  variant: StudioSurface.VariantContent;
 };
 
 /**
- * Default `VariantRenderer` for `audio/*`: a native `<audio>` player resolved from the variant's url/content.
+ * Default `StudioSurface.VariantRenderer` for `audio/*`: a native `<audio>` player resolved from the variant's url/content.
  * `kind='audio'` forces native playback for extensionless `blob:`/`data:` sources (materialized content).
  */
 export const AudioVariant = ({ variant }: AudioVariantProps) => {

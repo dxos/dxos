@@ -48,7 +48,7 @@ import {
   useSelectedCompanion,
   useSelectedCompanionVariant,
 } from '#hooks';
-import { DeckOperation, DeckRole } from '#types';
+import { DeckOperation, DeckSurface } from '#types';
 
 import { DeckNamespace } from '../../namespace.ts';
 import { Navigation } from '../../url/index.ts';
@@ -252,7 +252,7 @@ export const DeckContentEmpty = () => {
       data-tauri-drag-region='deep'
       data-testid='layoutPlugin.firstRunMessage'
     >
-      <Surface.Surface type={DeckRole.Keyshortcuts} />
+      <Surface.Surface type={DeckSurface.Keyshortcuts} />
       {!topbar && <ToggleSidebarButton />}
     </Layout.Flex>
   );
