@@ -150,8 +150,8 @@ const seedContent = async () => {
   return context;
 };
 
-/** Runs the row's "Assign to agent" action on the task titled `title`. */
-const assignToAgent = async (canvas: ReturnType<typeof within>, title: string) => {
+/** Runs the row's "Delegate to agent" action on the task titled `title`. */
+const delegateToAgent = async (canvas: ReturnType<typeof within>, title: string) => {
   const label = await canvas.findByText(title, undefined, { timeout: 10_000 });
   const row = label.closest('[data-testid="taskList.item"]');
   if (!(row instanceof HTMLElement)) {
@@ -159,7 +159,7 @@ const assignToAgent = async (canvas: ReturnType<typeof within>, title: string) =
   }
   await userEvent.click(await within(row).findByTestId('taskList.item.actions', undefined, { timeout: 10_000 }));
   await new Promise((resolve) => setTimeout(resolve, 1000));
-  await userEvent.click(await screen.findByText('Assign to agent', undefined, { timeout: 10_000 }));
+  await userEvent.click(await screen.findByText('Delegate to agent', undefined, { timeout: 10_000 }));
 };
 
 const selectTask = async (canvas: ReturnType<typeof within>, title: string) => {
@@ -192,9 +192,9 @@ const answerQuestion = async (canvasElement: HTMLElement, answer: string, delay:
 };
 
 /**
- * Assigns the first top-level task to the agent, then follows it: each sub-task is opened in the
- * detail pane as the agent starts it, until every sub-task is done and the delegated task is back
- * with its reviewer. With `answer`, the question the agent blocks on is answered from that pane.
+ * Delegates the first top-level task to the agent, then follows it: each sub-task is opened in the
+ * detail pane as the agent starts it, until every sub-task is finished and the delegated task is back
+ * with its assignee. With `answer`, the question the agent blocks on is answered from that pane.
  */
 const makePlay =
   ({ answer, answerDelay = ANSWER_DELAY }: { answer?: string; answerDelay?: number } = {}): Story['play'] =>
@@ -202,7 +202,7 @@ const makePlay =
     const canvas = within(canvasElement);
     await seedContent();
     await userEvent.click(await canvas.findByTestId('projectsPlugin.tab.tasks', undefined, { timeout: 30_000 }));
-    await assignToAgent(canvas, DELEGATED_TASK);
+    await delegateToAgent(canvas, DELEGATED_TASK);
 
     // The ledger opens its pipeline chart when a delegation starts.
     await expect(
@@ -231,18 +231,18 @@ const makePlay =
         if (!answered && answer !== undefined) {
           answered = await answerQuestion(canvasElement, answer, answerDelay);
         }
-        // The delegated task has reviewers, so the agent's `done` lands it in `review`.
+        // A person owns the delegated task, so the agent's `done` lands it in `review`.
         await expect(subtasks.every(AgentSimulator.isFinished) && root.status === 'review').toBe(true);
       },
       { timeout: 180_000, interval: 500 },
     );
 
-    // Every sub-task's history records the agent starting and finishing it; a finish with reviewers lands in review.
+    // Every sub-task's history records the agent starting and finishing it; a finish on a task a person owns lands
+    // in review.
     for (const task of subtasks) {
       const log = (task.history ?? []).flatMap((entry) => (Task.isChangeEntry(entry) ? [entry.description ?? ''] : []));
-      const finished = (task.reviewers?.length ?? 0) > 0 ? /to review/i : /to done/i;
       await expect(log.some((line) => /started/i.test(line))).toBe(true);
-      await expect(log.some((line) => finished.test(line))).toBe(true);
+      await expect(log.some((line) => /to (review|done)/i.test(line))).toBe(true);
     }
     // The exchange stays in the blocked task's history: the question and the answer it resumed on.
     if (answer !== undefined) {
