@@ -12,8 +12,6 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Typography from '@dxos/react-ui/Typography';
 import { type WidgetProps, getXmlTextChild } from '@dxos/ui-editor';
 
-import { meta } from '#meta';
-
 import { asNumber, asRecord, asString } from '../../client/decode.ts';
 import { type Pick } from '../../client/types.ts';
 import { toImageRefs } from '../../model/images.ts';
@@ -26,6 +24,7 @@ import {
   type RunData,
   decodeRuns,
 } from '../../model/trajectory.ts';
+import { LighthouseNamespace } from '../../namespace.ts';
 import { InputImages } from '../InputImages/InputImages.tsx';
 
 const parse = (children: WidgetProps['children']): Record<string, unknown> | undefined => {
@@ -137,7 +136,7 @@ const Heading = ({ children }: { children: string }) => (
 
 /** The agent's report, inline: one compact row per pick, then the gaps in a line. */
 const Picks = ({ picks, gaps }: { picks: Pick[]; gaps?: string }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LighthouseNamespace.key);
   return (
     <Layout.Flex column gap='xs' classNames='py-2 text-sm' data-testid='lighthouse.picks'>
       <Heading>{t('picks.label', { count: picks.length })}</Heading>
@@ -164,7 +163,7 @@ const Picks = ({ picks, gaps }: { picks: Pick[]; gaps?: string }) => {
 
 /** The results a run put into the graph, as compact rows: kind or rank, title, price. */
 const PillList = ({ run }: { run: RunData }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LighthouseNamespace.key);
   return (
     <Layout.Flex column gap='xs' classNames='p-2 border-t border-separator text-sm' data-testid='lighthouse.results'>
       <Heading>
@@ -244,7 +243,7 @@ const CallRow = ({ call }: { call: RunCall }) => {
  * narration, how many calls and results, failures and the time; open, every call, then the results as pills.
  */
 const RunRow = ({ run }: { run: RunData }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LighthouseNamespace.key);
   const failed = run.calls.filter((call) => call.ok === false).length;
   const running = run.calls.some((call) => call.ok === undefined);
   const ms = run.calls.reduce((total, call) => total + (call.ms ?? 0), 0);

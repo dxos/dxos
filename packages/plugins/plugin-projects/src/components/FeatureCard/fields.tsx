@@ -8,8 +8,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import type * as Tag from '@dxos/react-ui/Tag';
 
-import { meta } from '#meta';
-
+import { ProjectsNamespace } from '../../namespace.ts';
 import { type FeatureStatus } from './feature.ts';
 
 export const FEATURE_STATUS_STYLE: Record<FeatureStatus, { icon: string; hue: Tag.TagHue }> = {
@@ -39,7 +38,7 @@ type StatusIconProps = {
 
 /** The status glyph, labelled with the status for assistive technology and the tooltip. */
 export const StatusIcon = ({ status, muted }: StatusIconProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const style = FEATURE_STATUS_STYLE[status];
   return (
     <Icon.Icon

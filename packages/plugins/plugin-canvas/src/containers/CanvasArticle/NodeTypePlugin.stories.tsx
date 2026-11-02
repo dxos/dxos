@@ -19,8 +19,8 @@ import * as Icon from '@dxos/react-ui/Icon';
 import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
 import { mx } from '@dxos/ui-theme';
 
+import * as CanvasPlugin from '#meta';
 import { ROOT_VIEW_ID, createCanvas, nodeKey } from '#model';
-import { CanvasPlugin } from '#plugin';
 import { translations } from '#translations';
 import { CanvasCapabilities } from '#types';
 
@@ -105,7 +105,7 @@ const seed = (canvas: Drawing.Canvas) => {
 const decorators = (plugins: Plugin.Plugin[]) =>
   createStoryDecorators({
     types: [Drawing.Drawing, Drawing.Canvas],
-    plugins: [IllustratorPlugin.make(), CanvasPlugin(), ...plugins],
+    plugins: [IllustratorPlugin.make(), CanvasPlugin.make(), ...plugins],
     onInit: async ({ space }) => {
       const canvas = space.db.add(createCanvas());
       seed(canvas);

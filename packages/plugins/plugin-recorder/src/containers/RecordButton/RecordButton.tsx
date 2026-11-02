@@ -10,10 +10,10 @@ import type * as Presentation from '@dxos/plugin-presenter/Presentation';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
-import { meta } from '#meta';
 import { RecorderCapabilities } from '#types';
 
 import { useStartRecording } from '../../hooks/index.ts';
+import { RecorderNamespace } from '../../namespace.ts';
 
 export type RecordButtonProps = {
   subject: Presentation.Presentation;
@@ -28,7 +28,7 @@ export const RecordButton = ({ subject }: RecordButtonProps) => {
 RecordButton.displayName = 'RecordButton';
 
 const RecordButtonInner = ({ subject, recorder }: RecordButtonProps & { recorder: RecorderCapabilities.Recorder }) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(RecorderNamespace.key);
   const state = useAtomValue(recorder.state);
   const busy = state.status !== 'idle';
   const handleClick = useStartRecording(recorder, subject);

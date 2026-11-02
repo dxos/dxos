@@ -10,9 +10,8 @@ import * as Layout from '@dxos/react-ui/Layout';
 import { type ThemedClassName } from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
-
 import { type GraphEdge, type SubjectGraph as SubjectGraphData } from '../../client/types.ts';
+import { LighthouseNamespace } from '../../namespace.ts';
 import { GraphNodeCard } from './GraphNodeCard.tsx';
 import { type Layout as GraphLayout, clipEdge, layoutGraph } from './layout.ts';
 import { FAMILIES, type Family, familyOf, splitCurie } from './model.ts';
@@ -77,7 +76,7 @@ export type SubjectGraphProps = ThemedClassName<{
  * canvas to pan, scroll to zoom; hover or select a card and its edges carry their predicates.
  */
 export const SubjectGraph = ({ graph, selectedId, onSelect, onFocus, onMore, classNames }: SubjectGraphProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LighthouseNamespace.key);
   const viewportRef = useRef<HTMLDivElement>(null);
   const [box, setBox] = useState({ width: 0, height: 0 });
   const [view, setView] = useState<View>({ x: 0, y: 0, k: 1 });

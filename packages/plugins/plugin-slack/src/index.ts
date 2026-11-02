@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as SlackPlugin from './SlackPlugin.ts';
+export * as SlackPlugin from '#meta';
 export * from '#types';

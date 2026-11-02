@@ -19,9 +19,9 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Branch, type History, Version } from '@dxos/versioning';
 
-import { meta } from '#meta';
 import { ReviewCapabilities } from '#types';
 
+import { ReviewNamespace } from '../../namespace.ts';
 import { MAIN_BRANCH, commitToSelection, createTimelineModel } from './timeline.ts';
 
 export type ObjectHistoryProps = AppSurface.ObjectArticleProps<History.VersionedObject>;
@@ -32,7 +32,7 @@ export type ObjectHistoryProps = AppSurface.ObjectArticleProps<History.Versioned
  * Gated per-type by a `ReviewCapabilities.HistoryProvider` contribution.
  */
 export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role, subject }, forwardedRef) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(ReviewNamespace.key);
   const providers = Hooks.useCapabilities(ReviewCapabilities.HistoryProvider);
   const provider = providers.find(({ id }) => id === Obj.getTypename(subject));
   const [naming, setNaming] = useState<'checkpoint' | 'branch' | undefined>(undefined);

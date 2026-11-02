@@ -4,12 +4,12 @@
 
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from './meta.ts';
+import { OnboardingNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [OnboardingNamespace.key]: {
         'login.title': 'Request access or login',
         'existing-identity.title': 'Sign up to access your account',
         'beta.description': 'Enter your email to request early access to Composer.',

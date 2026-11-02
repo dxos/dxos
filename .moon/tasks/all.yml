@@ -9,9 +9,11 @@ fileGroups:
 
   sources:
     - src/**/*
+    - dx.config.*
 
   production:
     - src/**/*
+    - dx.config.*
     - '!src/test/**/*'
     - '!src/**/*.test.ts'
     - '!src/**/*.test.tsx'

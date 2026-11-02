@@ -15,9 +15,9 @@ import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { RoutinePlugin } from '#plugin';
+import * as RoutinePlugin from '#meta';
 
-await Harness.preload({ plugins: [ClientPlugin.make({ types: [Feed.Feed] }), RoutinePlugin()] });
+await Harness.preload({ plugins: [ClientPlugin.make({ types: [Feed.Feed] }), RoutinePlugin.make()] });
 
 /**
  * Resolve the per-space {@link TriggerDispatcher} from the harness'
@@ -35,7 +35,7 @@ const getDispatcher = (harness: Awaited<ReturnType<typeof Harness.createComposer
 describe('TriggerRuntimeController', () => {
   test('toggles the per-space TriggerDispatcher as triggersDisabled changes', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({ types: [Feed.Feed] }), RoutinePlugin()],
+      plugins: [ClientPlugin.make({ types: [Feed.Feed] }), RoutinePlugin.make()],
     });
 
     // Creating identity also creates the default space and emits SpacesAvailable,
@@ -79,7 +79,7 @@ describe('TriggerRuntimeController', () => {
 
   test('does not re-issue start when triggersDisabled is reasserted to the same value', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({ types: [Feed.Feed] }), RoutinePlugin()],
+      plugins: [ClientPlugin.make({ types: [Feed.Feed] }), RoutinePlugin.make()],
     });
 
     const { defaultSpace } = await EffectEx.runAndForwardErrors(

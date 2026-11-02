@@ -5,8 +5,9 @@
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Kanban } from '#types';
+
+import { KanbanNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -22,7 +23,7 @@ export const translations = [
         'delete-object.label': 'Delete kanban',
         'object-deleted.label': 'Kanban deleted',
       },
-      [meta.profile.key]: {
+      [KanbanNamespace.key]: {
         'action-menu.label': 'Actions',
         'plugin.name': 'Kanban',
         'kanban-title.label': 'Title',

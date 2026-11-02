@@ -12,10 +12,9 @@ import * as Layout from '@dxos/react-ui/Layout';
 import { Tag } from '@dxos/react-ui/Tag';
 import * as Typography from '@dxos/react-ui/Typography';
 
-import { meta } from '#meta';
-
 import { type GraphNode } from '../../client/types.ts';
 import { toCard } from '../../model/results.ts';
+import { LighthouseNamespace } from '../../namespace.ts';
 import { iconOf, kindOfNode, nodeEntity } from './model.ts';
 
 /** Facts a graph card shows beyond the result card's rows, for the kinds a graph is mostly made of. */
@@ -45,7 +44,7 @@ export type GraphNodeCardProps = {
 const isLogo = (types: readonly string[]) => /Organization|VentureFund|Corporation/.test(types.join(' '));
 
 export const GraphNodeCard = ({ node, root = false, selected = false, more, onMore }: GraphNodeCardProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LighthouseNamespace.key);
   const card = toCard(nodeEntity(node));
   const seen = new Set<string>();
   const facts = [

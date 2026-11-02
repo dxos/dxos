@@ -15,9 +15,9 @@ import { log } from '@dxos/log';
 import { type Message } from '@dxos/types';
 
 import { type EditMessageProps } from '#components';
-import { meta } from '#meta';
 import { type InboxCapabilities, Mailbox } from '#types';
 
+import { InboxNamespace } from '../namespace.ts';
 import { markSent, resolveMailRoute } from '../util/index.ts';
 
 /**
@@ -71,8 +71,8 @@ export const useSendEmail = (
           const invokeOptions = {
             spaceId,
             notify: {
-              success: ['send-email-success.title', { ns: meta.profile.key }],
-              error: ['send-email-error.title', { ns: meta.profile.key }],
+              success: ['send-email-success.title', { ns: InboxNamespace.key }],
+              error: ['send-email-error.title', { ns: InboxNamespace.key }],
             },
           } satisfies Operation.InvokeOptions;
           const result = yield* Operation.invoke(

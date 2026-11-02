@@ -9,7 +9,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import { type Event } from '@dxos/types';
 
-import { meta } from '#meta';
+import { InboxNamespace } from '../../namespace.ts';
 
 export type RelatedEventsProps = {
   recent: Event.Event[];
@@ -18,7 +18,7 @@ export type RelatedEventsProps = {
 };
 
 export const RelatedEvents = ({ recent, upcoming, onEventClick }: RelatedEventsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(InboxNamespace.key);
 
   return (
     <>

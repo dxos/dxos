@@ -7,17 +7,18 @@ import { describe, test } from 'vitest';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
-import { PipelinePlugin } from '#plugin';
+import * as PipelinePlugin from '#meta';
 
-await Harness.preload({ plugins: [ClientPlugin.make({}), PipelinePlugin()] });
+import { PipelineNamespace } from './namespace.ts';
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+await Harness.preload({ plugins: [ClientPlugin.make({}), PipelinePlugin.make()] });
+
+const moduleId = (name: string) => `${PipelineNamespace.key}.module.${name}`;
 
 describe('PipelinePlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), PipelinePlugin()],
+      plugins: [ClientPlugin.make({}), PipelinePlugin.make()],
     });
 
     // After autoStart: CreateObject and schema auto-cascade.

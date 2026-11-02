@@ -116,6 +116,7 @@
       "@dxos/markdown",
       "@dxos/mcp-client",
       "@dxos/mcp-server",
+      "@dxos/mdl-language-server",
       "@dxos/merkle-search-tree",
       "@dxos/messaging",
       "@dxos/migrations",

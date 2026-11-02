@@ -30,7 +30,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Text } from '@dxos/schema';
 import { Transcript } from '@dxos/types';
 
-import { MeetingPlugin } from '#plugin';
+import * as MeetingPlugin from '#meta';
 import { Meeting } from '#types';
 
 type StoryArgs = {};
@@ -194,7 +194,7 @@ const meta = {
         StorybookPlugin.make({}),
         CallsPlugin.make(),
         TranscriptionPlugin.make(),
-        MeetingPlugin(),
+        MeetingPlugin.make(),
         MarkdownPlugin.make(),
         PreviewPlugin.make(),
       ],

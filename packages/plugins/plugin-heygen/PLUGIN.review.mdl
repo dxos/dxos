@@ -27,7 +27,7 @@ Of 4 items: 2 done, 1 untested, 0 partial, 0 diverged, 1 missing.
 ```mdl
 verdict HeyGenConnector: The connector entry trims the key and stores an AccessToken and Connection; no test covers it.
   status: untested
-  evidence: [github:dxos/dxos/packages/plugins/plugin-heygen/src/capabilities/connector.ts#createHeyGenConnectorEntry, github:dxos/dxos/packages/plugins/plugin-heygen/src/capabilities/index.ts#Connector]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-heygen/src/capabilities/connector.ts#createHeyGenConnectorEntry, github:dxos/dxos/packages/plugins/plugin-heygen/dx.config.ts]
   note: |
     `onSubmit` trims, rejects an empty key and returns `{ kind: 'complete', accessToken, connection }`. The module activates
     on `ConnectorEvents.Start` rather than the `SetupConnectors` event the spec names. No test file exercises the entry.

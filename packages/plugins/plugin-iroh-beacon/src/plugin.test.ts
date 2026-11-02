@@ -6,17 +6,18 @@ import { describe, test } from 'vitest';
 
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
-import { IrohBeaconPlugin } from '#plugin';
+import * as IrohBeaconPlugin from '#meta';
 
-await Harness.preload({ plugins: [IrohBeaconPlugin()] });
+import { IrohBeaconNamespace } from './namespace.ts';
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+await Harness.preload({ plugins: [IrohBeaconPlugin.make()] });
+
+const moduleId = (name: string) => `${IrohBeaconNamespace.key}.module.${name}`;
 
 describe('IrohBeaconPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [IrohBeaconPlugin()],
+      plugins: [IrohBeaconPlugin.make()],
     });
 
     // Both of this plugin's real modules are demand-gated, so the plugin contributes nothing to

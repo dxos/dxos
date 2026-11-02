@@ -16,23 +16,23 @@ import { ViewAnnotation, getTypeURIFromQuery } from '@dxos/schema';
 import { osTranslations } from '@dxos/ui-theme';
 import { type Label } from '@dxos/ui-types/translations';
 
-import { meta } from '#meta';
+import { SpaceNamespace } from '../../../namespace.ts';
 
 //
 // Virtual Node Types
 //
 
-export const DATABASE_SECTION_TYPE = `${meta.profile.key}.database`;
-export const COLLECTIONS_SECTION_TYPE = `${meta.profile.key}.collections`;
+export const DATABASE_SECTION_TYPE = `${SpaceNamespace.key}.database`;
+export const COLLECTIONS_SECTION_TYPE = `${SpaceNamespace.key}.collections`;
 /** Tags every type node under the Database section — both static (compile-time) and database (dynamic) schemas. */
-export const SCHEMA_NODE_TYPE = `${meta.profile.key}.static-schema`;
+export const SCHEMA_NODE_TYPE = `${SpaceNamespace.key}.static-schema`;
 
 //
 // Constants
 //
 
 /** Shared translation namespace descriptor. */
-export const META_NS: { ns: string } = { ns: meta.profile.key };
+export const META_NS: { ns: string } = { ns: SpaceNamespace.key };
 
 //
 // Stable Callbacks

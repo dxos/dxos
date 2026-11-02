@@ -13,11 +13,10 @@ import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { Tag } from '@dxos/react-ui/Tag';
 import * as Typography from '@dxos/react-ui/Typography';
 
-import { meta } from '#meta';
-
 import { type Entity, type Extension } from '../../client/types.ts';
 import { type Rating } from '../../model/rating.ts';
 import { type CardModel, factsOf } from '../../model/results.ts';
+import { LighthouseNamespace } from '../../namespace.ts';
 import { LocationPopover } from '../LocationPopover/LocationPopover.tsx';
 import { type AreaNote } from '../ResultCard/ResultCard.tsx';
 
@@ -42,7 +41,7 @@ const ResearchItems = ({
   extension: Extension;
   research: { status: string; busy: boolean; items: readonly Entity[] };
 }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LighthouseNamespace.key);
   const fields = extension.research?.fields ?? {};
   // The extension names a section predicate the items may not use (lh:menuItemSection vs lh:menuSection): fall
   // back to the items' own *Section property.
@@ -137,7 +136,7 @@ export const ResultDetail = ({
   onExtend,
   onClose,
 }: ResultDetailProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LighthouseNamespace.key);
   const facts = factsOf(entity);
   const read = extensions.filter((extension) => extensionNodes[extension.id] || research[extension.id]);
   const unread = extensions.filter((extension) => !extensionNodes[extension.id] && !research[extension.id]);

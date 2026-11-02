@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as ProjectsPlugin from './ProjectsPlugin.ts';
+export * as ProjectsPlugin from '#meta';
 export * from '#operations';
 export * from '#skills';
 export * from '#types';

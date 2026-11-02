@@ -15,8 +15,9 @@ import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu'
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { RoutineForm } from '#components';
-import { meta } from '#meta';
 import { RoutineOperation } from '#types';
+
+import { RoutineNamespace } from '../../namespace.ts';
 
 export type RoutineArticleProps = AppSurface.ObjectArticleProps<Routine.Routine>;
 
@@ -56,7 +57,7 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
       { routine: Ref.make(subject) },
       {
         spaceId: db.spaceId,
-        notify: { error: ['run-error.message', { ns: meta.profile.key }] },
+        notify: { error: ['run-error.message', { ns: RoutineNamespace.key }] },
         ...(triggerRef ? { tracing: { trigger: triggerRef } } : {}),
       },
     ).finally(() => registry.set(runningAtom, false));
@@ -97,7 +98,7 @@ const useArticleMenuActions = ({ canRun, runningAtom, handleRun }: ArticleMenuAc
         .action(
           'run',
           {
-            label: ['run.label', { ns: meta.profile.key }],
+            label: ['run.label', { ns: RoutineNamespace.key }],
             icon: 'ph--play--regular',
             disabled: get(runningAtom) || !canRun,
             disposition: 'toolbar',

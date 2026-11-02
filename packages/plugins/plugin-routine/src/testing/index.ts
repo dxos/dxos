@@ -3,6 +3,6 @@
 //
 
 // Eager re-export of the plugin. See `@dxos/plugin-testing/src/core.ts` for the rationale.
-export * from '#plugin';
+export * as RoutinePlugin from '#meta';
 
 export * from './test-functions.ts';

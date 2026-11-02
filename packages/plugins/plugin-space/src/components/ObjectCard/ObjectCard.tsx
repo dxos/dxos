@@ -16,7 +16,7 @@ import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { meta } from '#meta';
+import { SpaceNamespace } from '../../namespace.ts';
 
 export type ObjectCardProps = {
   data: Entity.Unknown;
@@ -37,7 +37,7 @@ export type ObjectCardProps = {
  * renders a related object, a record's reference or a tile in a `CardMasonry`.
  */
 export const ObjectCard = ({ data: subject, classNames, CardMenu, detailOf }: ObjectCardProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SpaceNamespace.key);
   const data = useMemo(() => ({ subject }), [subject]);
 
   // The card menu renders in a portal; resolve the origin plank from the card element instead.

@@ -6,7 +6,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { type Obj, Type } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
 
-import { SpaceCapabilities } from '#types';
+import * as SpaceCapabilities from '../types/SpaceCapabilities.ts';
 
 export type SpaceOperationConfig = {
   createInvitationUrl: (invitationCode: string) => string;

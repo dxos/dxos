@@ -30,7 +30,6 @@ type Archived = {
   'title'?: string;
   'status'?: string;
   'specs'?: string[];
-  'project'?: { '/': string };
   'document'?: { '/': string };
   'spec'?: { '/': string };
   'features'?: Array<{ '/': string }>;
@@ -70,9 +69,9 @@ describe('Ride Check template', () => {
       expect(countOf('type.task:')).toBe(3);
       // Four features, and the verdict's two subfeatures.
       expect(countOf('type.feature:')).toBe(6);
-      // The map, and the spec that breaks the verdict down; the map holds the one document.
+      // The map, and the spec that breaks the verdict down; every spec holds its document.
       expect(countOf('type.projects.spec:')).toBe(2);
-      expect(countOf('type.specDocument:')).toBe(1);
+      expect(countOf('type.specDocument:')).toBe(2);
       // The URL and the diagram are what the run produces, so the space ships no documents.
       expect(countOf('type.document')).toBe(0);
     },
@@ -90,7 +89,7 @@ describe('Ride Check template', () => {
       const all = ofType('type.feature:');
       const byRef = (ref: { '/': string } | undefined) =>
         objects.find((object) => `echo:///${object.id}` === ref?.['/']);
-      const map = ofType('type.projects.spec:').find((spec) => spec.project);
+      const map = byRef(project.spec);
       const features = (map?.features ?? []).flatMap((ref) => byRef(ref) ?? []);
       const tasks = ofType('type.task:');
 
@@ -105,7 +104,7 @@ describe('Ride Check template', () => {
       const subfeatures = (byRef(features[0].spec)?.features ?? []).flatMap((ref) => byRef(ref) ?? []);
       expect(subfeatures.map((feature) => feature.name)).toEqual(['Rain rule', 'Wind rule']);
       expect(all).toHaveLength(features.length + subfeatures.length);
-      expect(map?.project?.['/']).toBe(`echo:///${project.id}`);
+      expect(map?.['@type']).toContain('type.projects.spec:');
       expect(features.map((feature) => feature.specs)).toEqual(
         ['F-1', 'F-2', 'F-3', 'F-4'].map((feat) => [`${SPEC_PATH}#${feat}`]),
       );
@@ -125,9 +124,9 @@ describe('Ride Check template', () => {
       expect(implementsLinks).toEqual(features.map((feature) => [`echo:///${build?.id}`, `echo:///${feature.id}`]));
 
       // The map's document is the space's copy of the path the features cite, so their cards open it instead of GitHub.
-      const [document] = ofType('type.specDocument:');
-      expect(map?.document?.['/']).toBe(`echo:///${document.id}`);
-      expect(document['@meta']?.keys).toEqual([{ source: Feature.SPEC_KEY_SOURCE, id: SPEC_PATH }]);
+      const document = ofType('type.specDocument:').find(({ id }) => map?.document?.['/'] === `echo:///${id}`);
+      expect(document).toBeDefined();
+      expect(document?.['@meta']?.keys).toEqual([{ source: Feature.SPEC_KEY_SOURCE, id: SPEC_PATH }]);
       for (const feature of features) {
         expect(Feature.getSpecPath(feature.specs?.[0] ?? '')).toBe(SPEC_PATH);
       }

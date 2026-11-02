@@ -179,6 +179,11 @@ const FilterFeedCursor_ = Schema.Struct({
   begin: Schema.optional(Schema.String),
   /** Read up to but not including this cursor. */
   end: Schema.optional(Schema.String),
+  /**
+   * The order the cursors are positions in: `edge`, the position the authority assigned, or `local`, a
+   * local cursor of a walk. Absent is `local` in a walk scope and `edge` elsewhere.
+   */
+  positions: Schema.optional(Schema.Literals(['local', 'edge'])),
 });
 
 export interface FilterFeedCursor extends Schema.Schema.Type<typeof FilterFeedCursor_> {}
@@ -733,6 +738,23 @@ export interface SpaceScope extends Schema.Schema.Type<typeof SpaceScope> {}
  */
 export const FeedScope = Schema.TaggedStruct('feed', {
   feedUri: Schema.String,
+  /**
+   * Restricts the read to items that are members of these branches: a branch id, or `null` for the
+   * main branch. Absent reads the main branch only, so a private branch never reaches a reader that
+   * did not ask for it; `'all'` reads every branch.
+   */
+  branches: Schema.optional(Schema.Union([Schema.Literal('all'), Schema.Array(Schema.NullOr(Schema.String))])),
+  /**
+   * Reads the feed as a walk along the path from the root branch to `branch` (`null` or absent: the root
+   * branch, or on a backward walk the branch of the cursor), in local order, each item once at its latest
+   * block on the path. `forks` also gives the base item of each branch that forks at a block the walk gives.
+   */
+  walk: Schema.optional(
+    Schema.Struct({
+      branch: Schema.optional(Schema.NullOr(Schema.String)),
+      forks: Schema.optional(Schema.Boolean),
+    }),
+  ),
 });
 export interface FeedScope extends Schema.Schema.Type<typeof FeedScope> {}
 

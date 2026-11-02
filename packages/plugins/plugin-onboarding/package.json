@@ -14,23 +14,12 @@
   "sideEffects": false,
   "type": "module",
   "imports": {
-    "#plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/plugin.mjs"
-    },
-    "#capabilities": {
-      "source": {
-        "workerd": "./src/capabilities/gen/workerd.ts",
-        "node": "./src/capabilities/gen/node.ts",
-        "tauri": "./src/capabilities/gen/tauri.ts",
-        "browser": "./src/capabilities/gen/browser.ts"
-      },
-      "types": "./dist/types/src/capabilities/index.d.ts",
-      "workerd": "./dist/lib/capabilities.workerd.mjs",
-      "node": "./dist/lib/capabilities.node.mjs",
-      "tauri": "./dist/lib/capabilities.tauri.mjs",
-      "browser": "./dist/lib/capabilities.browser.mjs"
+    "#meta": {
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/OnboardingPlugin.workerd.mjs",
+      "node": "./dist/lib/OnboardingPlugin.node.mjs",
+      "default": "./dist/lib/OnboardingPlugin.mjs"
     }
   },
   "exports": {
@@ -45,14 +34,17 @@
       "import": "./dist/lib/translations.mjs"
     },
     "./OnboardingPlugin": {
-      "source": "./src/OnboardingPlugin.ts",
-      "types": "./dist/types/src/OnboardingPlugin.d.ts",
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/OnboardingPlugin.workerd.mjs",
+      "node": "./dist/lib/OnboardingPlugin.node.mjs",
       "import": "./dist/lib/OnboardingPlugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
+    "dx.config.ts",
     "src"
   ],
   "dependencies": {

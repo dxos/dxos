@@ -23,7 +23,7 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Channel, Message, Thread } from '@dxos/types';
 
-import { BlueskyPlugin } from '#plugin';
+import * as BlueskyPlugin from '#meta';
 import { translations } from '#translations';
 import { BlueskyChannel, makeBlueskyChannel } from '#types';
 
@@ -85,9 +85,9 @@ const meta = {
               );
             }),
         }),
-        SpacePlugin({}),
+        SpacePlugin.make({}),
         ThreadPlugin.make(),
-        BlueskyPlugin(),
+        BlueskyPlugin.make(),
       ],
     }),
   ],

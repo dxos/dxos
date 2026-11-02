@@ -36,14 +36,23 @@
     "tailwindcss": "catalog:"
   },
   "devDependencies": {
+    "@dxos/node-std": "workspace:*",
+    "@dxos/plugin-deck": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-canvas": "workspace:*",
+    "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@dxos/vite-plugin-import-source": "workspace:*",
+    "@phosphor-icons/core": "catalog:",
     "@remotion/bundler": "catalog:",
     "@remotion/player": "catalog:",
     "@remotion/renderer": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
-    "typescript": "catalog:"
+    "@vitejs/plugin-react": "catalog:",
+    "effect": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
   }
 }

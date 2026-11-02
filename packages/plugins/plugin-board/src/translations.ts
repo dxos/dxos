@@ -5,8 +5,9 @@
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Board } from '#types';
+
+import { BoardNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -22,7 +23,7 @@ export const translations = [
         'delete-object.label': 'Delete board',
         'object-deleted.label': 'Board deleted',
       },
-      [meta.profile.key]: {
+      [BoardNamespace.key]: {
         'plugin.name': 'Board',
       },
     },

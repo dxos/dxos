@@ -20,7 +20,7 @@ import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
-import { MagazinePlugin } from '#plugin';
+import * as MagazinePlugin from '#meta';
 import { MagazineSkill } from '#skills';
 import { generateCuratedPost, generateFeed, generateMagazine } from '#testing';
 import { translations } from '#translations';
@@ -77,9 +77,9 @@ const buildMeta = (options: {
           types: [Subscription.Subscription, Subscription.Post, Magazine.Magazine],
           onClientInitialized: seedSpace(options),
         }),
-        SpacePlugin({}),
+        SpacePlugin.make({}),
         StorybookPlugin.make({}),
-        MagazinePlugin(),
+        MagazinePlugin.make(),
       ],
     }),
   ],
@@ -193,9 +193,9 @@ export const CurateFlow: Story = {
           types: [Feed.Feed, Subscription.Subscription, Subscription.Post, Magazine.Magazine],
           onClientInitialized: seedSpaceWithQueueItems,
         }),
-        SpacePlugin({}),
+        SpacePlugin.make({}),
         StorybookPlugin.make({}),
-        MagazinePlugin(),
+        MagazinePlugin.make(),
       ],
     }),
   ],

@@ -18,8 +18,7 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Typography from '@dxos/react-ui/Typography';
 
-import { meta } from '#meta';
-
+import { LighthouseNamespace } from '../../namespace.ts';
 import { type MapPoint, OSM_ATTRIBUTION, OSM_TILES, coordinatesLine, googleLink, isPrecise, osmLink } from './osm.ts';
 
 const ACCENT = '#2f6fdb';
@@ -89,7 +88,7 @@ export type LocationPopoverProps = PropsWithChildren<{
  * leave, blur or Escape.
  */
 export const LocationPopover = ({ point, address, children }: LocationPopoverProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LighthouseNamespace.key);
   return (
     <HoverCard.Root openDelay={280} closeDelay={180} positioning={{ placement: 'right-start' }}>
       <HoverCard.Trigger asChild>

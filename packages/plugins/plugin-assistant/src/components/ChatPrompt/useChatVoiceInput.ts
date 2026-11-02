@@ -15,7 +15,7 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import { type ContentBlock } from '@dxos/types';
 import { PendingTextStreamer, cancelPendingText, editorPendingTextSink, pendingTextState } from '@dxos/ui-editor';
 
-import { meta } from '#meta';
+import { AssistantNamespace } from '../../namespace.ts';
 
 // Recorder chunk interval; the transcriber's chunk threshold is derived from the buffering setting.
 const RECORDER_INTERVAL_MS = 200;
@@ -26,7 +26,7 @@ const RECORDER_INTERVAL_MS = 200;
  * matches the given docId and the session is recording.
  */
 export const useChatVoiceInput = (docId: string, editorRef: RefObject<ChatEditorController | null>): void => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   // Voice input is optional: tolerate the transcription plugin being absent (no session ⇒ inactive).
   const [session, setSession] = Hooks.useOptionalAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
   const [settings] = Hooks.useOptionalAtomCapabilityState(TranscriptionCapabilities.Settings);

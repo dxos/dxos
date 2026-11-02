@@ -13,19 +13,6 @@
   "sideEffects": false,
   "type": "module",
   "imports": {
-    "#capabilities": {
-      "source": {
-        "workerd": "./src/capabilities/gen/workerd.ts",
-        "node": "./src/capabilities/gen/node.ts",
-        "tauri": "./src/capabilities/gen/tauri.ts",
-        "browser": "./src/capabilities/gen/browser.ts"
-      },
-      "types": "./dist/types/src/capabilities/index.d.ts",
-      "workerd": "./dist/lib/capabilities.workerd.mjs",
-      "node": "./dist/lib/capabilities.node.mjs",
-      "tauri": "./dist/lib/capabilities.tauri.mjs",
-      "browser": "./dist/lib/capabilities.browser.mjs"
-    },
     "#components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
@@ -37,14 +24,11 @@
       "default": "./dist/lib/containers.mjs"
     },
     "#meta": {
-      "source": "./src/meta.ts",
-      "types": "./dist/types/src/meta.d.ts",
-      "default": "./dist/lib/meta.mjs"
-    },
-    "#plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/plugin.mjs"
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/StackPlugin.workerd.mjs",
+      "node": "./dist/lib/StackPlugin.node.mjs",
+      "default": "./dist/lib/StackPlugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
@@ -75,14 +59,21 @@
       "types": "./dist/types/src/types/Stack.d.ts",
       "import": "./dist/lib/Stack.mjs"
     },
+    "./StackCapabilities": {
+      "source": "./src/types/StackCapabilities.ts",
+      "types": "./dist/types/src/types/StackCapabilities.d.ts",
+      "import": "./dist/lib/StackCapabilities.mjs"
+    },
     "./StackEvents": {
       "source": "./src/types/StackEvents.ts",
       "types": "./dist/types/src/types/StackEvents.d.ts",
       "import": "./dist/lib/StackEvents.mjs"
     },
     "./StackPlugin": {
-      "source": "./src/StackPlugin.ts",
-      "types": "./dist/types/src/StackPlugin.d.ts",
+      "source": "./dx.config.ts",
+      "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/StackPlugin.workerd.mjs",
+      "node": "./dist/lib/StackPlugin.node.mjs",
       "import": "./dist/lib/StackPlugin.mjs"
     }
   },
@@ -91,6 +82,9 @@
     "*": {
       "Stack": [
         "dist/types/src/types/Stack.d.ts"
+      ],
+      "StackCapabilities": [
+        "dist/types/src/types/StackCapabilities.d.ts"
       ],
       "StackEvents": [
         "dist/types/src/types/StackEvents.d.ts"

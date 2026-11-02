@@ -331,6 +331,9 @@
       "path": "packages/core/compute/mcp-server/tsconfig.json"
     },
     {
+      "path": "tools/mdl-language-server/tsconfig.json"
+    },
+    {
       "path": "packages/common/merkle-search-tree/tsconfig.json"
     },
     {

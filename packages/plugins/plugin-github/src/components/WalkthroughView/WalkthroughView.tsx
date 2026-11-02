@@ -10,8 +10,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Status from '@dxos/react-ui/Status';
 
-import { meta } from '#meta';
-
+import { GitHubNamespace } from '../../namespace.ts';
 import { spaceHeadings } from '../../walkthrough/headings.ts';
 import { type DiffDocumentOptions, diffDocumentExtensions } from './extensions.ts';
 
@@ -48,7 +47,7 @@ export type WalkthroughPlaceholderProps = {
 
 /** What the walkthrough tab shows before there is a walkthrough: the offer to write one, or its progress. */
 export const WalkthroughPlaceholder = ({ generating, onGenerate }: WalkthroughPlaceholderProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(GitHubNamespace.key);
   return (
     <Layout.Flex column center gap='md' classNames='dx-expand'>
       <Status.Empty>{t(generating ? 'walkthrough-generating.message' : 'no-walkthrough.message')}</Status.Empty>

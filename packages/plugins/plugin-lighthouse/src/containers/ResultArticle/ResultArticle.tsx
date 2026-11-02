@@ -30,10 +30,10 @@ import {
   useSession,
   useSubjectGraph,
 } from '#hooks';
-import { meta } from '#meta';
 import { applyOverrides, matchPicks, rateAll, toCard, withLinkedGeo } from '#model';
 import { Finding, LighthouseOperation, Research } from '#types';
 
+import { LighthouseNamespace } from '../../namespace.ts';
 import { findingEntity } from '../../util/index.ts';
 
 export type ResultArticleProps = AppSurface.ArticleProps<string, {}, Research.Research>;
@@ -43,7 +43,7 @@ export type ResultArticleProps = AppSurface.ArticleProps<string, {}, Research.Re
  * stream, shared), with its provenance from the graph; a kept Finding stands in when the session no longer has it.
  */
 export const ResultArticle = ({ role, companionTo: research, attendableId }: ResultArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(LighthouseNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const [snapshot] = useObject(research);
   const db = Obj.getDatabase(research);

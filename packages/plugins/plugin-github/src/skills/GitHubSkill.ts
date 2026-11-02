@@ -19,16 +19,18 @@ export const key = 'org.dxos.skill.github';
 export const operations: readonly Operation.Definition.Any[] = [
   GitHubOperation.ImportPullRequest,
   GitHubOperation.GenerateWalkthrough,
+  GitHubOperation.EnableGitHubFileSync,
 ];
 
-/** GitHub pull requests: import them into a space by URL and walk through them. */
+/** GitHub pull requests and repository files: import pull requests, walk through them, and sync a repository's files. */
 export const make = (): Skill.Skill =>
   Skill.make({
     key,
     name: 'GitHub',
     description:
-      'Import GitHub pull requests into a space by URL or owner/repo#number and generate walkthroughs. ' +
-      'Use when a task, message or the user names a pull request.',
+      'Import GitHub pull requests into a space by URL or owner/repo#number, generate walkthroughs, and sync a ' +
+      "repository's files (such as .mdl specs) with the space. Use when a task, message or the user names a pull " +
+      'request, or asks to sync specs or files from a GitHub repository.',
     agentCanEnable: true,
     mcpPrompt: true,
     tools: Skill.toolDefinitions({ operations }),
@@ -42,6 +44,9 @@ export const make = (): Skill.Skill =>
         The import also returns the pull request's repository as a repo reference; add it to a project's repositories, or bind it to the chat, to have coding agents check it out.
         Read a pull request's live state, reviews and CI status with the GitHub MCP server's pull request tools before reporting whether it is open, merged or green; the stored object may be stale.
         Those tools come from the space's GitHub connection; if you cannot see them, the conversation has the connection's MCP server turned off.
+        To sync a repository's files with the space (for example its .mdl specs, which become Spec objects), call ${Operation.toolName(GitHubOperation.EnableGitHubFileSync)} with the repository's org.dxos.type.repo object.
+        The repository must already be bound by the space's GitHub connection; if it is not, ask the user to add it as a sync target first.
+        Enabling is idempotent and only starts the sync: files arrive on the connection's next sync, and Composer edits are committed to the write branch with one pull request, never to the read branch.
       `,
     }),
   });

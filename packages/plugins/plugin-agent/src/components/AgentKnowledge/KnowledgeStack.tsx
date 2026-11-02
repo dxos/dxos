@@ -14,8 +14,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as Status from '@dxos/react-ui/Status';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { meta } from '#meta';
-
+import { AgentNamespace } from '../../namespace.ts';
 import { EntityCardField } from './EntityCard.tsx';
 
 //
@@ -37,7 +36,7 @@ export type KnowledgeStackProps<T> = {
  * out in the form's frame so the cards read as the forms beside them.
  */
 export const KnowledgeStack = <T,>({ items, getId, getText, renderItem, before }: KnowledgeStackProps<T>) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AgentNamespace.key);
   const [filter, setFilter] = useState('');
   const visible = useMemo(() => {
     const text = filter.trim().toLowerCase();

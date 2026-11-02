@@ -9,9 +9,8 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Typography from '@dxos/react-ui/Typography';
 
-import { meta } from '#meta';
-
 import { type SubjectGraph as SubjectGraphData } from '../../client/types.ts';
+import { LighthouseNamespace } from '../../namespace.ts';
 import { iconOf, kindOfNode, neighbourhood, neighboursOf, splitCurie } from '../SubjectGraph/model.ts';
 import { SubjectGraph } from '../SubjectGraph/SubjectGraph.tsx';
 
@@ -28,7 +27,7 @@ export type RelationsPanelProps = {
  * list grouped by predicate (the list reads where the graph is too small to).
  */
 export const RelationsPanel = ({ graph, iri, onSelect }: RelationsPanelProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LighthouseNamespace.key);
   const near = useMemo(() => (graph ? neighbourhood(graph, iri) : undefined), [graph, iri]);
   const groups = useMemo(() => {
     const byPredicate = new Map<string, ReturnType<typeof neighboursOf>>();

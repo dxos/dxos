@@ -4,12 +4,12 @@
 
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { PreviewNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [PreviewNamespace.key]: {
         'unable-to-create-preview.message': 'No preview',
         'todo.label': 'To do',
         'in-progress.label': 'In progress',
@@ -20,6 +20,7 @@ export const translations = [
         'unsupported-type.title': 'Nothing here can open this',
         'unsupported-type.message':
           'No enabled plugin supports {{typename}}, so there is nothing to show. The item itself is unchanged and still stored in the space.',
+        'find-plugin.label': 'Find plugin',
       },
     },
   },

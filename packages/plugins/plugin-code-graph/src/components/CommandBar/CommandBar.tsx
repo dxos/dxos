@@ -11,7 +11,7 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { meta } from '#meta';
+import { CodeGraphNamespace } from '../../namespace.ts';
 
 /** One timed step of a command: grounding, a model call, an add or remove, or the judge. */
 export type CommandStep = {
@@ -67,7 +67,7 @@ export const CommandBar = ({
   verbose,
   onVerboseChange,
 }: CommandBarProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(CodeGraphNamespace.key);
   const [value, setValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 

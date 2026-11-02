@@ -16,9 +16,9 @@ import { type Text } from '@dxos/schema';
 
 import { type SlideSource } from '#deck';
 import { useSlideImage } from '#hooks';
-import { meta } from '#meta';
 import { type Presentation } from '#types';
 
+import { PresenterNamespace } from '../../namespace.ts';
 import { MarkdownSlide, type MarkdownSlideProps } from '../MarkdownSlide/index.ts';
 import { SlideThemeScope } from '../SlideTheme/index.ts';
 import { SlideCanvas } from './canvas.tsx';
@@ -136,7 +136,7 @@ const MarkdownContent = ({
 };
 
 const PendingContent = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(PresenterNamespace.key);
   return (
     <SlideThemeScope classNames='items-center justify-center gap-6 text-6xl'>
       <Icon.Icon icon='ph--circle-notch--regular' spin classNames='size-16' />

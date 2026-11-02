@@ -38,10 +38,10 @@ import { hexToHue } from '@dxos/util';
 
 import { CommentThread, type CommentThreadProps, Suggestions } from '#components';
 import { type SuggestionGroup, useStatus } from '#hooks';
-import { meta } from '#meta';
 import { AgentIdentity, CommentCapabilities, CommentOperation, ReviewCapabilities } from '#types';
 
 import { commentsViewAspect } from '../../capabilities/comments-view-state.ts';
+import { ReviewNamespace } from '../../namespace.ts';
 import { currentObjectId, findCommentConfig, getMessageMetadata } from '../../util/index.ts';
 
 /**
@@ -107,7 +107,7 @@ const threadComponents = { Object: ObjectTile };
 export type CommentsArticleProps = AppSurface.ObjectArticleProps<Obj.Any>;
 
 export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(ReviewNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const registry = Hooks.useCapability(Capabilities.AtomRegistry);
   const identity = useIdentity();

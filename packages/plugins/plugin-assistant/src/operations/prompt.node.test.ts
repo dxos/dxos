@@ -21,9 +21,9 @@ import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 import { Message } from '@dxos/types';
 
-import { AssistantPlugin } from '#plugin';
+import * as AssistantPlugin from '#meta';
 
-await Harness.preload({ plugins: [ClientPlugin.make({}), AssistantPlugin(), RoutinePlugin.make()] });
+await Harness.preload({ plugins: [ClientPlugin.make({}), AssistantPlugin.make(), RoutinePlugin.make()] });
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -35,7 +35,7 @@ describe('Agent prompt (composer plugin harness)', () => {
     { tags: ['manual'], timeout: 60_000 },
     async ({ expect }) => {
       await using harness = await Harness.createComposerTestApp({
-        plugins: [ClientPlugin.make({}), AssistantPlugin(), RoutinePlugin.make()],
+        plugins: [ClientPlugin.make({}), AssistantPlugin.make(), RoutinePlugin.make()],
       });
 
       const { defaultSpace } = await EffectEx.runAndForwardErrors(

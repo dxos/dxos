@@ -28,8 +28,9 @@ import {
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { SampleItemView } from '#components';
-import { meta } from '#meta';
 import { SampleItem } from '#types';
+
+import { SampleNamespace } from '../namespace.ts';
 
 export type SampleArticleProps = AppSurface.ObjectArticleProps<SampleItem.SampleItem>;
 
@@ -107,7 +108,7 @@ const useMenuActions = (
 
   const onAction: ActionExecutor = useCallback(
     (action) => {
-      void runAction(action as AppGraphNode.Action, { caller: meta.profile.key });
+      void runAction(action as AppGraphNode.Action, { caller: SampleNamespace.key });
     },
     [runAction],
   );

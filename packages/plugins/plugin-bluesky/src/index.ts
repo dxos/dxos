@@ -3,4 +3,4 @@
 //
 
 export * as BlueskyEvents from './BlueskyEvents.ts';
-export * as BlueskyPlugin from './BlueskyPlugin.ts';
+export * as BlueskyPlugin from '#meta';

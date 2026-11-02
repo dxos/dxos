@@ -13,10 +13,11 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
 
 import { useEdgeStatus } from '#hooks';
-import { meta } from '#meta';
+
+import { SpaceNamespace } from '../../namespace.ts';
 
 export const InlineSyncStatus = ({ space, open }: { space: Space; open?: boolean }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SpaceNamespace.key);
   const qualifiedId = GraphPath.getSpacePath(space.id);
   const { hasAttention, isAncestor, isRelated } = useAttention(qualifiedId);
   const attended = hasAttention || isRelated;

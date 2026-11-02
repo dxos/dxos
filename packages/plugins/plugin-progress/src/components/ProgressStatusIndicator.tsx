@@ -14,7 +14,7 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Popover from '@dxos/react-ui/Popover';
 
-import { meta } from '#meta';
+import { ProgressNamespace } from '../namespace.ts';
 
 /**
  * R0 rail status indicator: shows a spinner icon while any provider is active and, on click, a
@@ -22,7 +22,7 @@ import { meta } from '#meta';
  * provider is active, so the rail stays clean when idle.
  */
 export const ProgressStatusIndicator = () => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(ProgressNamespace.key);
   const registry = Hooks.useCapability(AppCapabilities.ProgressRegistry);
   const monitors = ToolkitHooks.useProgressMonitors();
   const active = monitors.filter((monitor) => monitor.status === 'running' || monitor.status === 'pending');

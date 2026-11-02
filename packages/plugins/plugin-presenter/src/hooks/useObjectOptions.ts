@@ -9,7 +9,7 @@ import { type Database, Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
-import { meta } from '#meta';
+import { PresenterNamespace } from '../namespace.ts';
 
 export type ObjectOption = { id: string; label: string; object: Obj.Unknown };
 
@@ -21,7 +21,7 @@ export const useObjectOptions = (
   db: Database.Database | undefined,
   include: (object: Obj.Unknown) => boolean = () => true,
 ): ObjectOption[] => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(PresenterNamespace.key);
   const objects = useQuery(db, Filter.everything());
   return useMemo(
     () =>

@@ -6,7 +6,6 @@ import { Type } from '@dxos/echo';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Finding, Research } from '#types';
 
 import { filtersTranslations } from './components/FiltersPanel/translations.ts';
@@ -17,6 +16,7 @@ import { modelTranslations } from './components/ModelPanel/translations.ts';
 import { mapTranslations } from './components/ResultsMap/translations.ts';
 import { graphTranslations } from './components/SubjectGraph/translations.ts';
 import { traceTranslations } from './components/TracePanel/translations.ts';
+import { LighthouseNamespace } from './namespace.ts';
 
 export const translations = [
   ...formTranslations,
@@ -34,7 +34,7 @@ export const translations = [
         'typename.label': 'Finding',
         'typename.label_other': 'Findings',
       },
-      [meta.profile.key]: {
+      [LighthouseNamespace.key]: {
         ...graphTranslations,
         ...imageTranslations,
         ...traceTranslations,
@@ -51,6 +51,19 @@ export const translations = [
         'mode-graph.label': 'Graph',
         'mode-trace.label': 'Trace',
         'model-toggle.label': 'Rating model',
+        'research-list.title_one': '{{count}} research',
+        'research-list.title_other': '{{count}} research',
+        'research-new.label': 'New research',
+        'research-list-empty.message': 'No research in this space yet. Start one with New research.',
+        'research-list-pages.label_one': '{{count}} page',
+        'research-list-pages.label_other': '{{count}} pages',
+        'research-state.new': 'not started',
+        'research-state.unknown': '…',
+        'research-state.running': 'running',
+        'research-state.idle': 'idle',
+        'research-state.reported': 'reported',
+        'research-state.failed': 'failed',
+        'research-state.stopped': 'stopped',
         'filters-toggle.label': 'Filters',
         'graph-loading.message': 'Loading the graph…',
         'graph-empty.message': 'No subjects to draw yet: the graph appears once the agent identifies them.',

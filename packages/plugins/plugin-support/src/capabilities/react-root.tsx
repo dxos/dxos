@@ -9,12 +9,13 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 
 import { GuidedTourContainer } from '#containers';
-import { meta } from '#meta';
+
+import { SupportNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactRoot, {
-      id: meta.profile.key,
+      id: SupportNamespace.key,
       root: () => <GuidedTourContainer />,
     }),
   ),

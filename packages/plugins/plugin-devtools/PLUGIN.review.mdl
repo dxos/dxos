@@ -279,7 +279,7 @@ verdict F-7.2: Log download gzips logStore.exportBlob and saves it as a browser 
 ```mdl
 verdict F-8.1: DevtoolsPlugin's setup module registers composer.changeStorageVersionInMetadata.
   status: done
-  evidence: [github:dxos/dxos/packages/plugins/plugin-devtools/src/capabilities/index.ts#SetupDevtools]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-devtools/dx.config.ts]
   tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/basic.spec.ts]
   note: It is DevtoolsPlugin, not DebugPlugin as the requirement says, that registers it.
 ```
@@ -287,7 +287,7 @@ verdict F-8.1: DevtoolsPlugin's setup module registers composer.changeStorageVer
 ```mdl
 verdict F-8.2: The function destroys the client, rewrites the storage version and reloads to /.
   status: done
-  evidence: [github:dxos/dxos/packages/plugins/plugin-devtools/src/capabilities/index.ts#setupDevtools]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-devtools/dx.config.ts]
   tests: [github:dxos/dxos/packages/e2e/composer-e2e/src/playwright/basic.spec.ts]
 ```
 

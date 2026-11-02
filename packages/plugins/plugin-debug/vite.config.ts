@@ -7,12 +7,8 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    DebugPlugin: 'src/DebugPlugin.ts',
-    plugin: 'src/plugin.tsx',
-    capabilities: 'src/capabilities/index.ts',
     components: 'src/components/index.ts',
     containers: 'src/containers/index.ts',
-    meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
     DemoSpace: 'src/samples/demo/DemoSpace.ts',
     FieldstoneSpace: 'src/samples/fieldstone/FieldstoneSpace.ts',

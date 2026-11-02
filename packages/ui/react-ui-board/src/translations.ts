@@ -4,8 +4,10 @@
 
 import type * as Theme from '@dxos/react-ui/Theme';
 
+/** Namespace of this package's strings in the i18n resources. */
 export const translationKey = '@dxos/react-ui-board';
 
+/** English strings for the board components. */
 export const translations = [
   {
     'en-US': {

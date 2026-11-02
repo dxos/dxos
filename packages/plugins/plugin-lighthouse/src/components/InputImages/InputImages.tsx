@@ -8,11 +8,10 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { meta } from '#meta';
-
 import { type LighthouseClient } from '../../client/client.ts';
 import { type Entity } from '../../client/types.ts';
 import { type ImageRead, type InputImageRef, imageQueryIri, toImageRead } from '../../model/images.ts';
+import { LighthouseNamespace } from '../../namespace.ts';
 
 /**
  * The thread's widgets are rendered from markdown, so they reach the session's client through context: blobs and the
@@ -102,7 +101,7 @@ const BlobImage = ({ blob, alt, className }: { blob: string; alt: string; classN
 };
 
 const InputImage = ({ image }: { image: InputImageRef }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LighthouseNamespace.key);
   const read = useImageRead(image.blob);
   return (
     <figure className='m-0 flex flex-col gap-2 min-w-0' data-testid='lighthouse.input-image'>

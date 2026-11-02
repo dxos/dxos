@@ -10,8 +10,9 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 import { getEnvString } from '@dxos/config';
 
-import { meta } from '#meta';
 import { ObservabilityCapabilities } from '#types';
+
+import { ObservabilityNamespace } from '../namespace.ts';
 
 /**
  * Shows the privacy notice toast once when an identity is first created.
@@ -34,15 +35,15 @@ export default Capability.makeModule(
     if (!state.notified && notify) {
       yield* Effect.tryPromise(() =>
         invokePromise(LayoutOperation.AddToast, {
-          id: `${meta.profile.key}.notice`,
-          title: ['observability-toast.label', { ns: meta.profile.key }],
-          description: ['observability-toast.description', { ns: meta.profile.key }],
+          id: `${ObservabilityNamespace.key}.notice`,
+          title: ['observability-toast.label', { ns: ObservabilityNamespace.key }],
+          description: ['observability-toast.description', { ns: ObservabilityNamespace.key }],
           duration: Infinity,
           icon: 'ph--info--regular',
-          actionLabel: ['observability-toast-action.label', { ns: meta.profile.key }],
-          actionAlt: ['observability-toast-action.alt', { ns: meta.profile.key }],
-          closeLabel: ['observability-toast-close.label', { ns: meta.profile.key }],
-          onAction: () => invokePromise(SettingsOperation.Open, { plugin: meta.profile.key }),
+          actionLabel: ['observability-toast-action.label', { ns: ObservabilityNamespace.key }],
+          actionAlt: ['observability-toast-action.alt', { ns: ObservabilityNamespace.key }],
+          closeLabel: ['observability-toast-close.label', { ns: ObservabilityNamespace.key }],
+          onAction: () => invokePromise(SettingsOperation.Open, { plugin: ObservabilityNamespace.key }),
         }),
       );
       registry.set(stateAtom, { ...registry.get(stateAtom), notified: true });

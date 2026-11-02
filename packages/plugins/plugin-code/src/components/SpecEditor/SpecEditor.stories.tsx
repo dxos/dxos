@@ -7,6 +7,7 @@ import React, { useMemo, useState } from 'react';
 import { expect, fireEvent, waitFor, within } from 'storybook/test';
 
 import { mdl, mdlBlockDescription } from '@dxos/deus/extension';
+import { type SourceKey, formatSourceKey } from '@dxos/deus/review';
 import { type SpecIndex } from '@dxos/deus/spec-index';
 import { Editor } from '@dxos/react-ui-editor';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -18,8 +19,6 @@ import {
   documentSlots,
   editorClassNames,
 } from '@dxos/ui-editor';
-
-import { type SourceKey, formatSourceKey } from '#sync';
 
 import { sourceLinks } from './source-links.ts';
 

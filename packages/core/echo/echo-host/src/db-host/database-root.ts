@@ -2,20 +2,35 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as A from '@automerge/automerge';
+import { next as A } from '@automerge/automerge';
 import {
   type AutomergeUrl,
-  type DocHandle,
   type DocumentId,
   interpretAsDocumentId,
   isValidAutomergeUrl,
 } from '@automerge/automerge-repo';
 
-import { DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
+import { Event } from '@dxos/async';
+import { DatabaseDirectory, type DirectoryJson, SpaceDocVersion } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
 import { type DocumentLease } from '../automerge/document-lease.ts';
 import { type DocMetrics, measureDocMetrics } from './automerge-metrics.ts';
+
+/** A space directory's JSON and the stored heads it was read at; see `directoryJson` in `@dxos/echo-protocol`. */
+export type DirectorySnapshot = { heads: A.Heads; json: DirectoryJson };
+
+export type DatabaseRootSource =
+  | { lease: DocumentLease<DatabaseDirectory> }
+  | {
+      documentId: DocumentId;
+      snapshot: DirectorySnapshot;
+      /** Leases the root's document once it is loaded. */
+      load: () => Promise<DocumentLease<DatabaseDirectory>>;
+      /** Each save on the host; one for this root means the snapshot no longer shows it. */
+      headsChanged: Event<{ documentId: DocumentId }>;
+    };
 
 export class DatabaseRoot implements Disposable {
   static mapLinks(document: DocumentLease<DatabaseDirectory>, mapping: Record<DocumentId, DocumentId>): void {
@@ -48,24 +63,84 @@ export class DatabaseRoot implements Disposable {
     });
   }
 
+  readonly #documentId: DocumentId;
+
+  /** Held once the root is loaded; a root opened from a snapshot takes it on its first write or change. */
+  #lease: DocumentLease<DatabaseDirectory> | undefined;
+
+  /** What the root shows until it is loaded: its directory JSON at the heads the host stores it at. */
+  #snapshot: DirectorySnapshot | undefined;
+
+  readonly #source: DatabaseRootSource;
+  #loading: Promise<void> | undefined;
+  #disposed = false;
+  readonly #unsubscribe: () => void;
+
+  /** Emitted when the directory changes: each change of the loaded root, and the load that ends a snapshot. */
+  readonly changed = new Event<void>();
+
   /**
-   * @param _lease - Lease on the root doc, held for as long as the space is open. Carries both the
-   * `DocHandle` and the actual readiness state — see `getHandleState` in `@dxos/echo-host` for why
-   * we read liveness off the query rather than `DocHandle.*` predicates.
+   * A root from a lease is loaded for as long as the space is open. A root from a snapshot is read from it without
+   * loading, until something writes to the root or its stored heads move; then it loads and stays loaded.
    */
-  constructor(private readonly _lease: DocumentLease<DatabaseDirectory>) {}
+  constructor(source: DatabaseRootSource) {
+    this.#source = source;
+    if ('lease' in source) {
+      this.#documentId = source.lease.documentId;
+      this.#attach(source.lease);
+      this.#unsubscribe = () => {};
+    } else {
+      this.#documentId = source.documentId;
+      this.#snapshot = source.snapshot;
+      this.#unsubscribe = source.headsChanged.on(({ documentId }) => {
+        if (documentId === this.#documentId && !this.#lease) {
+          void this.load().catch((err) => log.warn('space root failed to load after a change', { documentId, err }));
+        }
+      });
+    }
+  }
 
   get documentId(): DocumentId {
-    return this._lease.documentId;
+    return this.#documentId;
   }
 
   /** Derived from the id, so a root whose lease was released still reports which document it was. */
   get url(): AutomergeUrl {
-    return `automerge:${this._lease.documentId}` as AutomergeUrl;
+    return `automerge:${this.#documentId}` as AutomergeUrl;
   }
 
+  /** Whether the root's Automerge document is loaded. */
   get isLoaded(): boolean {
-    return !this._lease.disposed && this._lease.state === 'ready';
+    const lease = this.#lease;
+    return lease !== undefined && !lease.disposed && lease.state === 'ready';
+  }
+
+  /** Whether the root can be read: loaded, or shown from its snapshot. */
+  get isAvailable(): boolean {
+    return this.isLoaded || this.#snapshot !== undefined;
+  }
+
+  /** Loads the root's document if it was opened from a snapshot; writers await it before {@link change}. */
+  async load(): Promise<void> {
+    if (this.#lease || this.#disposed) {
+      return;
+    }
+    const source = this.#source;
+    invariant(!('lease' in source));
+    this.#loading ??= source.load().then((lease) => {
+      if (this.#disposed) {
+        lease[Symbol.dispose]();
+        return;
+      }
+      this.#attach(lease);
+      this.#snapshot = undefined;
+      this.changed.emit();
+    });
+    try {
+      await this.#loading;
+    } finally {
+      this.#loading = undefined;
+    }
   }
 
   /**
@@ -73,28 +148,45 @@ export class DatabaseRoot implements Disposable {
    * host had evicted, so the operations the root needs are proxied instead.
    */
   change(callback: Parameters<DocumentLease<DatabaseDirectory>['change']>[0]): void {
-    this._lease.change(callback);
-  }
-
-  on(...args: Parameters<DocumentLease<DatabaseDirectory>['on']>): void {
-    this._lease.on(...args);
-  }
-
-  off(...args: Parameters<DocumentLease<DatabaseDirectory>['off']>): void {
-    this._lease.off(...args);
+    invariant(this.#lease, 'A space root opened from its snapshot must load before it is written.');
+    this.#lease.change(callback);
   }
 
   /** Releases the root document, which is the last thing keeping the space's directory resident. */
   [Symbol.dispose](): void {
-    this._lease[Symbol.dispose]();
+    this.#disposed = true;
+    this.#unsubscribe();
+    if (this.#lease) {
+      this.#lease.off('change', this.#onChange);
+      this.#lease[Symbol.dispose]();
+    }
   }
 
+  /** The root's directory as it reads now: the loaded document, or the snapshot it was opened from. */
+  directory(): DatabaseDirectory | null {
+    return this.doc() ?? this.#snapshot?.json ?? null;
+  }
+
+  /** The heads {@link directory} is read at. */
+  heads(): A.Heads | null {
+    const doc = this.doc();
+    return doc ? A.getHeads(doc) : (this.#snapshot?.heads ?? null);
+  }
+
+  #attach(lease: DocumentLease<DatabaseDirectory>): void {
+    this.#lease = lease;
+    lease.on('change', this.#onChange);
+  }
+
+  readonly #onChange = (): void => this.changed.emit();
+
+  /** The loaded Automerge document; null for a root shown from its snapshot. */
   doc(): A.Doc<DatabaseDirectory> | null {
-    return this.isLoaded ? this._lease.doc() : null;
+    return this.isLoaded && this.#lease ? this.#lease.doc() : null;
   }
 
   getVersion(): SpaceDocVersion | null {
-    const doc = this.doc();
+    const doc = this.directory();
     if (!doc) {
       return null;
     }
@@ -103,7 +195,7 @@ export class DatabaseRoot implements Disposable {
   }
 
   getSpaceKey(): string | null {
-    const doc = this.doc();
+    const doc = this.directory();
     if (!doc) {
       return null;
     }
@@ -113,7 +205,7 @@ export class DatabaseRoot implements Disposable {
 
   /** @deprecated Inline directory objects are migrated into linked documents; this counts the ones left. */
   getInlineObjectCount(): number | null {
-    const doc = this.doc();
+    const doc = this.directory();
     if (!doc) {
       return null;
     }
@@ -122,7 +214,7 @@ export class DatabaseRoot implements Disposable {
   }
 
   getLinkedObjectCount(): number | null {
-    const doc = this.doc();
+    const doc = this.directory();
     if (!doc) {
       return null;
     }
@@ -131,7 +223,7 @@ export class DatabaseRoot implements Disposable {
   }
 
   getAllLinkedDocuments(): AutomergeUrl[] {
-    const doc = this.doc();
+    const doc = this.directory();
     invariant(doc);
 
     // .toString() to handle RawString. Branch documents are referenced via the `branches` registry

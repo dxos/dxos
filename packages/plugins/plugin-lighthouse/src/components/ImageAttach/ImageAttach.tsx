@@ -8,9 +8,8 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { meta } from '#meta';
-
 import { type InputImage } from '../../client/types.ts';
+import { LighthouseNamespace } from '../../namespace.ts';
 
 /** An image picked for the next input: its bytes as a data URL, sent as base64. */
 export type Attachment = { id: string; name: string; type: string; dataUrl: string; bytes: number };
@@ -33,7 +32,7 @@ export type Attachments = ReturnType<typeof useAttachments>;
  * that is not an image is ignored (lighthouse web ImageAttach).
  */
 export const useAttachments = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LighthouseNamespace.key);
   const [images, setImages] = useState<Attachment[]>([]);
   const [error, setError] = useState<string>();
   const [dragging, setDragging] = useState(false);
@@ -117,7 +116,7 @@ export const useAttachments = () => {
 
 /** The attach button and its hidden file input. */
 export const AttachButton = ({ attachments, disabled }: { attachments: Attachments; disabled?: boolean }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LighthouseNamespace.key);
   return (
     <>
       <Button.Root
@@ -149,7 +148,7 @@ export const AttachButton = ({ attachments, disabled }: { attachments: Attachmen
 
 /** Thumbnails of the images that go with the next input, each removable. */
 export const AttachmentStrip = ({ attachments }: { attachments: Attachments }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LighthouseNamespace.key);
   if (!attachments.images.length && !attachments.error) {
     return null;
   }

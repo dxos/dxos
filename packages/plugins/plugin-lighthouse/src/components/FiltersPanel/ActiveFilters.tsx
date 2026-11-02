@@ -9,8 +9,9 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { meta } from '#meta';
 import { type ResultsView, describeFilter, describeSort, isActive } from '#model';
+
+import { LighthouseNamespace } from '../../namespace.ts';
 
 export type ActiveFiltersProps = {
   view: ResultsView;
@@ -27,7 +28,7 @@ const CHIP = 'inline-flex items-center rounded-sm border border-separator bg-bas
 
 /** The active filters and the person's sort as removable chips above the cards, with "N of M" and "Clear all". */
 export const ActiveFilters = ({ view, unknown, shown, total, onChange, onOpen }: ActiveFiltersProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(LighthouseNamespace.key);
   const active = (view.filters ?? []).filter(isActive);
   const sorted = view.sort && view.sort.by !== 'score';
   if (!active.length && !sorted) {

@@ -36,8 +36,9 @@ import * as Panel from '@dxos/react-ui/Panel';
 import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
 import { downloadBlob } from '@dxos/util';
 
-import { meta } from '#meta';
 import { TableOperation } from '#types';
+
+import { TableNamespace } from '../../namespace.ts';
 
 export type TableArticleProps = AppSurface.ObjectArticleProps<Table.Table>;
 
@@ -98,7 +99,7 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
     }, []);
 
     const rowActions = useMemo(
-      (): TableRowAction[] => [{ id: 'open', label: ['open-object.label', { ns: meta.profile.key }] }],
+      (): TableRowAction[] => [{ id: 'open', label: ['open-object.label', { ns: TableNamespace.key }] }],
       [],
     );
 

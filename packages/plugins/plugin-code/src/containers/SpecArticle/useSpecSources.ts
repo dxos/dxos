@@ -10,10 +10,11 @@ import * as Schedule from 'effect/Schedule';
 import { useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import { type SourceKey, formatSourceKey, parseSourceKey } from '@dxos/deus/review';
 import { log } from '@dxos/log';
 import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
 
-import { type SourceKey, formatSourceKey, parseSourceKey, resolvePath } from '#sync';
+import { resolvePath } from '#sync';
 import { CodeCapabilities } from '#types';
 
 const UNAVAILABLE = Atom.make<CodeCapabilities.SpecSyncState>({ available: false, roots: [], specs: {} });

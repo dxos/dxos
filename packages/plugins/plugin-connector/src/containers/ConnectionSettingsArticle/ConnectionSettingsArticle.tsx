@@ -18,9 +18,8 @@ import { Listbox } from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
-import { meta } from '#meta';
-
 import { connectionDeckSubject } from '../../constants.ts';
+import { ConnectorNamespace } from '../../namespace.ts';
 
 // The add-connection action uses Form's `settings` variant for its labeled-row chrome
 // (an action-mode `Form.Field`); there are no fields to bind, so the schema is empty.
@@ -30,7 +29,7 @@ const ACTIONS_VALUES = {};
 export type ConnectionSettingsArticleProps = Record<string, never>;
 
 export const ConnectionSettingsArticle = (_props: ConnectionSettingsArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(ConnectorNamespace.key);
   const space = ToolkitHooks.useActiveSpace();
   const { invokePromise } = Hooks.useOperationInvoker();
   const connections = useQuery(

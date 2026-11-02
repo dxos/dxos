@@ -6,8 +6,7 @@ import type * as AppGraph from '@dxos/app-graph/AppGraph';
 import { MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 import { AI_ACTION_ICON } from '@dxos/ui-types';
 
-import { meta } from '#meta';
-
+import { InboxNamespace } from '../../namespace.ts';
 import { deleteAction, openGroup } from '../Toolbar/index.ts';
 import { type ExtractorMenuItem } from './useExtractorActions.tsx';
 
@@ -58,7 +57,7 @@ export const useMessageActions = ({
   return useMenuBuilder(
     (get) =>
       MenuBuilder.make()
-        .root({ label: ['message-toolbar.label', { ns: meta.profile.key }] })
+        .root({ label: ['message-toolbar.label', { ns: InboxNamespace.key }] })
         // Gmail pattern: Reply All is the single visible action; everything else lives in the
         // overflow menu so the per-message toolbar stays compact. (The tile right-aligns the toolbar.)
         .subgraph(
@@ -67,7 +66,7 @@ export const useMessageActions = ({
               builder.action(
                 'replyAll',
                 {
-                  label: ['message-toolbar-reply-all.menu', { ns: meta.profile.key }],
+                  label: ['message-toolbar-reply-all.menu', { ns: InboxNamespace.key }],
                   icon: 'ph--arrow-bend-double-up-left--regular',
                   testId: 'inbox.message.replyAll',
                 },
@@ -84,7 +83,7 @@ export const useMessageActions = ({
               builder.action(
                 'reply',
                 {
-                  label: ['message-toolbar-reply.menu', { ns: meta.profile.key }],
+                  label: ['message-toolbar-reply.menu', { ns: InboxNamespace.key }],
                   icon: 'ph--arrow-bend-up-left--regular',
                   testId: 'inbox.message.reply',
                 },
@@ -95,7 +94,7 @@ export const useMessageActions = ({
               builder.action(
                 'forward',
                 {
-                  label: ['message-toolbar-forward.menu', { ns: meta.profile.key }],
+                  label: ['message-toolbar-forward.menu', { ns: InboxNamespace.key }],
                   icon: 'ph--arrow-bend-up-right--regular',
                   testId: 'inbox.message.forward',
                 },
@@ -106,7 +105,7 @@ export const useMessageActions = ({
               builder.action(
                 'ai-reply',
                 {
-                  label: ['message-toolbar-ai-reply.menu', { ns: meta.profile.key }],
+                  label: ['message-toolbar-ai-reply.menu', { ns: InboxNamespace.key }],
                   icon: AI_ACTION_ICON,
                   testId: 'inbox.message.aiReply',
                 },
@@ -126,8 +125,8 @@ export const useMessageActions = ({
                   'archive',
                   {
                     label: inInbox
-                      ? ['message-toolbar-archive.menu', { ns: meta.profile.key }]
-                      : ['message-toolbar-move-to-inbox.menu', { ns: meta.profile.key }],
+                      ? ['message-toolbar-archive.menu', { ns: InboxNamespace.key }]
+                      : ['message-toolbar-move-to-inbox.menu', { ns: InboxNamespace.key }],
                     icon: inInbox ? 'ph--archive--regular' : 'ph--tray--regular',
                     testId: 'inbox.message.archive',
                   },
@@ -135,7 +134,7 @@ export const useMessageActions = ({
                 );
               }
               if (onDelete) {
-                deleteAction(builder, { ns: meta.profile.key, labelKey: 'message-toolbar-delete.menu', onDelete });
+                deleteAction(builder, { ns: InboxNamespace.key, labelKey: 'message-toolbar-delete.menu', onDelete });
               }
             }
 
@@ -148,7 +147,7 @@ export const useMessageActions = ({
               builder.action(
                 'create-project',
                 {
-                  label: ['message-toolbar-create-project.menu', { ns: meta.profile.key }],
+                  label: ['message-toolbar-create-project.menu', { ns: InboxNamespace.key }],
                   icon: 'ph--stack--regular',
                   testId: 'inbox.message.createProject',
                 },
@@ -186,7 +185,7 @@ export const useMessageActions = ({
             // Open, plus actions contributed by other plugins.
             if (onOpen) {
               builder.separator('line');
-              openGroup({ ns: meta.profile.key, labelKey: 'message-toolbar-open.menu', onOpen })(builder);
+              openGroup({ ns: InboxNamespace.key, labelKey: 'message-toolbar-open.menu', onOpen })(builder);
             }
             builder.subgraph(graphActions(graph, get, nodeId, { filter: isToolbarAction, rootId: 'more' }));
           },

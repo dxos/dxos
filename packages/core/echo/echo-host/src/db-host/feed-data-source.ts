@@ -55,11 +55,17 @@ const parseBackfillResourceId = (resourceId: string): { feedNamespace: string; f
 
 const isIndexingDisabled = (options: FeedOptions | undefined): boolean => options?.indexing?.enabled === false;
 
+/** Whether the feed's index holds every branch; absent, it holds only the main branch. */
+export const indexesAllBranches = (options: FeedOptions | undefined): boolean => options?.indexing?.mode === 'all';
+
 /** What one pass read beyond the objects it returned, for the host to act on once the pass ends. */
 export type FeedPassReport = {
   /** Spaces whose feeds returned blocks, indexed or skipped; retention may have more to trim there. */
   spaces: Set<SpaceId>;
-  /** Feeds whose blocks were skipped because indexing is disabled, keyed by space; their readers still need invalidating. */
+  /**
+   * Feeds whose blocks were skipped because indexing is disabled or the block is on a branch the index
+   * does not hold, keyed by space; their readers still need invalidating.
+   */
   skippedFeeds: Map<SpaceId, Set<string>>;
   /** Backfill cursors that reached {@link BACKFILL_FINISHED}, for the host to delete. */
   finishedBackfills: Map<SpaceId, Set<string>>;
@@ -298,6 +304,10 @@ export class FeedDataSource implements IndexDataSource {
               // Stamp the block's id and position (mirrors the local feed-service read path); the index
               // snapshot persists them, which is how a reader recognises a block it already applied.
               const data = EchoFeedCodec.decodeBlock(block) as ObjectJSON;
+              if (EchoFeedCodec.branchOf(data) !== undefined && !indexesAllBranches(feedOptions.get(feedId))) {
+                addTo(this.#report.skippedFeeds, spaceId, feedId);
+                continue;
+              }
 
               objects.push({
                 spaceId,

@@ -7,17 +7,18 @@ import { describe, test } from 'vitest';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
-import { SheetPlugin } from '#plugin';
+import * as SheetPlugin from '#meta';
 
-await Harness.preload({ plugins: [ClientPlugin.make({}), SheetPlugin()] });
+import { SheetNamespace } from './namespace.ts';
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+await Harness.preload({ plugins: [ClientPlugin.make({}), SheetPlugin.make()] });
+
+const moduleId = (name: string) => `${SheetNamespace.key}.module.${name}`;
 
 describe('SheetPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), SheetPlugin()],
+      plugins: [ClientPlugin.make({}), SheetPlugin.make()],
     });
 
     // OperationHandler and UndoMappings are dependency-mode roots, so they activate immediately too.

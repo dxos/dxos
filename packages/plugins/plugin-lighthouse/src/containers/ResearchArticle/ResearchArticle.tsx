@@ -46,7 +46,6 @@ import {
   useAttachments,
 } from '#components';
 import { useEngines, useExplain, useLighthouseClient, useSession, useSubjectGraph } from '#hooks';
-import { meta } from '#meta';
 import {
   BUDGETS,
   type CardModel,
@@ -71,6 +70,7 @@ import {
 import { Finding, LighthouseOperation, Research } from '#types';
 
 import { LIGHTHOUSE_CONNECTOR_ID, RESULT_COMPANION } from '../../constants.ts';
+import { LighthouseNamespace } from '../../namespace.ts';
 import { findingEntity } from '../../util/index.ts';
 
 export type ResearchArticleProps = AppSurface.ObjectArticleProps<Research.Research>;
@@ -120,7 +120,7 @@ const toFindingInput = (entity: Entity, card: CardModel, extra: { score?: number
 });
 
 const Meters = ({ session, connected }: { session: Session; connected: boolean }) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(LighthouseNamespace.key);
   const { spent, budget } = session;
   const minutes = Math.floor(spent.seconds / 60);
   const seconds = String(Math.round(spent.seconds % 60)).padStart(2, '0');
@@ -143,7 +143,7 @@ const Meters = ({ session, connected }: { session: Session; connected: boolean }
  * results ranked by the session's rating model. Selecting a tile opens its detail in the companion.
  */
 export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(LighthouseNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const showItem = ToolkitHooks.useShowItem();
   const research = subject;
@@ -188,6 +188,19 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
   // A double-click refocuses the graph on a node; Back to subjects returns to the session's roots.
   const [focus, setFocus] = useState<string>();
   const [editing, setEditing] = useState(false);
+  // A new Research (the section's +) opens with the keyboard in its goal; so does Edit.
+  const goalRef = useRef<HTMLDivElement>(null);
+  const fresh = !snapshot.run && !snapshot.goal.trim();
+  useEffect(() => {
+    if (!fresh && !editing) {
+      return;
+    }
+    // The form renders its fields after mount; wait a frame for the goal's textarea.
+    const frame = requestAnimationFrame(() => {
+      goalRef.current?.querySelector<HTMLElement>('textarea, [contenteditable="true"], input')?.focus();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [fresh, editing, research.id]);
   const [error, setError] = useState<string>();
   const spaceId = db?.spaceId;
 
@@ -462,6 +475,15 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
     [research],
   );
 
+  // The form's values are seeded once per Research (and per Edit), not re-fed from each autosave: feeding the saved goal
+  // back while the person types resets the field and drops the keystrokes typed since the save.
+  const seededGoal = snapshot.goal || session?.goal || '';
+  const formValues = useMemo(
+    () => ({ goal: seededGoal, budget: snapshot.budget ?? 'quick' }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [research.id, editing, !!session?.goal],
+  );
+
   const handleToggleEngine = useCallback(
     (engine: string, checked: boolean) => {
       Obj.update(research, (research) => {
@@ -595,19 +617,21 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
     const builder = MenuBuilder.make().group(
       'view',
       {
-        label: ['view-filter.label', { ns: meta.profile.key }],
+        label: ['view-filter.label', { ns: LighthouseNamespace.key }],
         variant: 'toggleGroup',
         selectCardinality: 'single',
         value: view,
       },
       (group) => {
-        group.action('all', { label: ['view-all.label', { ns: meta.profile.key }], icon: 'ph--list--regular' }, () =>
-          setView('all'),
+        group.action(
+          'all',
+          { label: ['view-all.label', { ns: LighthouseNamespace.key }], icon: 'ph--list--regular' },
+          () => setView('all'),
         );
         group.action(
           'findings',
           {
-            label: ['view-findings.label', { ns: meta.profile.key }],
+            label: ['view-findings.label', { ns: LighthouseNamespace.key }],
             icon: view === 'findings' ? 'ph--push-pin--fill' : 'ph--push-pin--regular',
           },
           () => setView('findings'),
@@ -617,7 +641,7 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
     builder.group(
       'mode',
       {
-        label: ['view-mode.label', { ns: meta.profile.key }],
+        label: ['view-mode.label', { ns: LighthouseNamespace.key }],
         variant: 'toggleGroup',
         selectCardinality: 'single',
         value: mode,
@@ -625,23 +649,23 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
       (group) => {
         group.action(
           'results',
-          { label: ['mode-results.label', { ns: meta.profile.key }], icon: 'ph--squares-four--regular' },
+          { label: ['mode-results.label', { ns: LighthouseNamespace.key }], icon: 'ph--squares-four--regular' },
           () => setMode('results'),
         );
         group.action(
           'graph',
-          { label: ['mode-graph.label', { ns: meta.profile.key }], icon: 'ph--graph--regular' },
+          { label: ['mode-graph.label', { ns: LighthouseNamespace.key }], icon: 'ph--graph--regular' },
           () => setMode('graph'),
         );
         group.action(
           'trace',
-          { label: ['mode-trace.label', { ns: meta.profile.key }], icon: 'ph--tree-structure--regular' },
+          { label: ['mode-trace.label', { ns: LighthouseNamespace.key }], icon: 'ph--tree-structure--regular' },
           () => setMode('trace'),
         );
         if (located) {
           group.action(
             'map',
-            { label: ['mode-map.label', { ns: meta.profile.key }], icon: 'ph--map-trifold--regular' },
+            { label: ['mode-map.label', { ns: LighthouseNamespace.key }], icon: 'ph--map-trifold--regular' },
             () => setMode('map'),
           );
         }
@@ -650,7 +674,7 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
     if (mode === 'graph' && focus) {
       builder.action(
         'subjects',
-        { label: ['graph-subjects.label', { ns: meta.profile.key }], icon: 'ph--arrow-u-up-left--regular' },
+        { label: ['graph-subjects.label', { ns: LighthouseNamespace.key }], icon: 'ph--arrow-u-up-left--regular' },
         () => setFocus(undefined),
       );
     }
@@ -658,7 +682,7 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
       builder.action(
         'model',
         {
-          label: ['model-toggle.label', { ns: meta.profile.key }],
+          label: ['model-toggle.label', { ns: LighthouseNamespace.key }],
           icon: showModel ? 'ph--sliders-horizontal--fill' : 'ph--sliders-horizontal--regular',
         },
         () => setShowModel((show) => !show),
@@ -668,7 +692,7 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
       builder.action(
         'filters',
         {
-          label: ['filters-toggle.label', { ns: meta.profile.key, count: activeFilters }],
+          label: ['filters-toggle.label', { ns: LighthouseNamespace.key, count: activeFilters }],
           icon: showFilters || activeFilters > 0 ? 'ph--funnel--fill' : 'ph--funnel--regular',
         },
         () => setShowFilters((show) => !show),
@@ -677,7 +701,7 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
     if (busy) {
       builder.action(
         'stop',
-        { label: ['stop.label', { ns: meta.profile.key }], icon: 'ph--stop--regular' },
+        { label: ['stop.label', { ns: LighthouseNamespace.key }], icon: 'ph--stop--regular' },
         handleStop,
       );
     }
@@ -729,13 +753,8 @@ export const ResearchArticle = ({ role, subject, attendableId }: ResearchArticle
                   />
                 </Layout.Grid>
               ) : (
-                <Form.Root
-                  schema={ResearchFormSchema}
-                  values={{ goal: snapshot.goal || session?.goal || '', budget }}
-                  autoSave
-                  onSave={handleSave}
-                >
-                  <div {...goalImages.dropTarget} data-dragging={goalImages.dragging || undefined}>
+                <Form.Root schema={ResearchFormSchema} values={formValues} autoSave onSave={handleSave}>
+                  <div ref={goalRef} {...goalImages.dropTarget} data-dragging={goalImages.dragging || undefined}>
                     <Form.Fields />
                   </div>
                 </Form.Root>

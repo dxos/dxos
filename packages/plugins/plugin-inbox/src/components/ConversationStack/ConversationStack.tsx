@@ -36,9 +36,9 @@ import { type Actor, ContentBlock, DraftMessage, type Message as MessageType, Ta
 import { mx } from '@dxos/ui-theme';
 
 import { useCidResolver, useEmailComposerExtensions, useMessageTags, useSendEmail } from '#hooks';
-import { meta } from '#meta';
 import { InboxCapabilities, Mailbox, SystemTags } from '#types';
 
+import { InboxNamespace } from '../../namespace.ts';
 import { parseAddressList } from '../../operations/correspondents/correspondence.ts';
 import { createDraftMessage, formatAge, getMessageProps } from '../../util/index.ts';
 import { EditMessage } from '../EditMessage/index.ts';
@@ -415,7 +415,7 @@ const modelLabel = (model: string): string => model.replace(/^.*\.model\./, '').
  * reader whether it predates the newest replies — a summary is advisory, so it must be datable.
  */
 const ConversationSummaryTile = ({ summary }: ConversationSummaryTileProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(InboxNamespace.key);
   // Recomputed per render rather than ticked: the tile re-renders whenever the annotation feed does,
   // and an age this coarse does not warrant a timer.
   const age = formatAge(new Date(summary.created), new Date());
@@ -935,7 +935,7 @@ type DraftTileProps = {
  * always defined) so they stay unconditional while the live object resolves.
  */
 const DraftTile = ({ id, message }: DraftTileProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(InboxNamespace.key);
   const { mailbox, runtime, sendOperations, onDelete } = useConversationStackContext(MESSAGE_DRAFT_NAME);
   const db = Obj.getDatabase(mailbox ? mailbox : message);
   const live = useQuery(db, Filter.id(message.id))[0];
@@ -1010,13 +1010,13 @@ const useThreadViewActions = ({ options, onCollapseAll, onExpandAll }: UseThread
   return useMenuBuilder(
     () =>
       MenuBuilder.make()
-        .root({ label: ['conversation-toolbar.label', { ns: meta.profile.key }] })
-        .subgraph(viewModeGroup({ ns: meta.profile.key, viewMode, setViewMode }))
+        .root({ label: ['conversation-toolbar.label', { ns: InboxNamespace.key }] })
+        .subgraph(viewModeGroup({ ns: InboxNamespace.key, viewMode, setViewMode }))
         .subgraph((builder) =>
           builder.action(
             'load-images',
             {
-              label: ['message-toolbar-load-images.menu', { ns: meta.profile.key }],
+              label: ['message-toolbar-load-images.menu', { ns: InboxNamespace.key }],
               icon: loadRemoteImages ? 'ph--image--regular' : 'ph--image-broken--regular',
               iconOnly: true,
               checked: loadRemoteImages,
@@ -1031,7 +1031,7 @@ const useThreadViewActions = ({ options, onCollapseAll, onExpandAll }: UseThread
                 builder.action(
                   'collapse-all',
                   {
-                    label: ['collapse-all.menu', { ns: meta.profile.key }],
+                    label: ['collapse-all.menu', { ns: InboxNamespace.key }],
                     icon: 'ph--arrows-in-line-vertical--regular',
                     iconOnly: true,
                   },
@@ -1045,7 +1045,7 @@ const useThreadViewActions = ({ options, onCollapseAll, onExpandAll }: UseThread
                 builder.action(
                   'expand-all',
                   {
-                    label: ['expand-all.menu', { ns: meta.profile.key }],
+                    label: ['expand-all.menu', { ns: InboxNamespace.key }],
                     icon: 'ph--arrows-out-line-vertical--regular',
                     iconOnly: true,
                   },

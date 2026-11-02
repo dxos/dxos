@@ -10,20 +10,19 @@ import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import { meta } from '#meta';
-
 import type * as Protocol from '../agents/Protocol.ts';
 import type { AgentError } from '../errors.ts';
+import { ClaudeNamespace } from '../namespace.ts';
 import type * as SettingsModule from './Settings.ts';
 import type * as StateModule from './State.ts';
 
 export const Settings = Capability.makeSingleton<Atom.Writable<SettingsModule.Settings>>()(
-  `${meta.profile.key}.capability.settings`,
+  `${ClaudeNamespace.key}.capability.settings`,
 );
 
 /** What the plugin keeps on this device only, such as each project's repository folder. */
 export const State = Capability.makeSingleton<Atom.Writable<StateModule.State>>()(
-  `${meta.profile.key}.capability.state`,
+  `${ClaudeNamespace.key}.capability.state`,
 );
 
 /**
@@ -56,4 +55,4 @@ export type AgentHelper = {
 /** Answers one HTTP request an agent made of an MCP server the page serves. */
 export type McpHandle = (request: Request) => Promise<Response>;
 
-export const AgentHelper = Capability.makeSingleton<AgentHelper>()(`${meta.profile.key}.capability.agentHelper`);
+export const AgentHelper = Capability.makeSingleton<AgentHelper>()(`${ClaudeNamespace.key}.capability.agentHelper`);

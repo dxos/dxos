@@ -6,7 +6,7 @@
 
 import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 
-import { meta } from '#meta';
+import { RecorderNamespace } from '../namespace.ts';
 
 /** The feature's start event, fired when one of the plugin's surfaces first renders. */
-export const Start = ActivationEvent.pluginStart(meta.profile.key);
+export const Start = ActivationEvent.pluginStart(RecorderNamespace.key);

@@ -5,13 +5,13 @@
 import type * as Theme from '@dxos/react-ui/Theme';
 import { translations as shellTranslations } from '@dxos/shell/translations';
 
-import { meta } from '#meta';
+import { ClientNamespace } from './namespace.ts';
 
 // TODO(burdon): Disambiguate with sdk/shell
 const pluginTranslations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [ClientNamespace.key]: {
         'account.label': 'User profile',
         'profile.label': 'Profile',
         'profile.description': 'User profile and account settings.',

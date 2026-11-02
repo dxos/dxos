@@ -18,6 +18,9 @@ const SOURCE_FILE = /\.[cm]?[jt]sx?$/;
  */
 const LAZY_CALLEE = 'lazy';
 
+/** A query that makes an import an asset rather than a module (`?raw`, `?url`, `?worker`, …). */
+const ASSET_QUERY = /[?&](raw|url|inline|worker|sharedworker)\b/;
+
 /** Relative files and package subpath imports (`#plugin`); anything else is a dependency. */
 const isLocalSpecifier = (specifier: string): boolean => specifier.startsWith('.') || specifier.startsWith('#');
 
@@ -49,9 +52,17 @@ function* walk(root: ESTree.Node): Generator<ESTree.Node> {
   }
 }
 
+/** A call argument and, for an object argument, each of its property values. */
+const loaderCandidates = (argument: ESTree.Node): ESTree.Node[] =>
+  argument.type === 'ObjectExpression'
+    ? argument.properties.flatMap((property) => (property.type === 'Property' ? [property.value] : []))
+    : [argument];
+
 /**
  * Finds the `() => import('./x')` loaders passed to a call — the shape of `Capability.lazyModule`, every
- * maker built on it, and `Plugin.lazy`. Specifiers with a query are assets.
+ * maker built on it, and `Plugin.lazy` — or passed as the values of an object argument, the loader map a
+ * dev manifest hands `Plugin.fromManifest`. Asset imports (`?raw`, `?url`, …) are skipped; another query,
+ * such as a config's `?dx-modules` half, names a module of its own.
  */
 export const findModuleLoaders = (program: ESTree.Program): ModuleLoader[] => {
   const loaders: ModuleLoader[] = [];
@@ -60,7 +71,7 @@ export const findModuleLoaders = (program: ESTree.Program): ModuleLoader[] => {
       continue;
     }
     const firstLoaderArgument = calleeName(node.callee) === LAZY_CALLEE ? 1 : 0;
-    for (const argument of node.arguments.slice(firstLoaderArgument)) {
+    for (const argument of node.arguments.slice(firstLoaderArgument).flatMap(loaderCandidates)) {
       if (
         argument.type === 'ArrowFunctionExpression' &&
         argument.params.length === 0 &&
@@ -68,7 +79,7 @@ export const findModuleLoaders = (program: ESTree.Program): ModuleLoader[] => {
         argument.body.source.type === 'Literal' &&
         typeof argument.body.source.value === 'string' &&
         isLocalSpecifier(argument.body.source.value) &&
-        !argument.body.source.value.includes('?')
+        !ASSET_QUERY.test(argument.body.source.value)
       ) {
         loaders.push({ specifier: argument.body.source.value, start: argument.body.start, end: argument.body.end });
       }
@@ -162,8 +173,15 @@ export const hotModulesPlugin = (): Plugin => {
         // which cannot follow a value import of Vite.
         for (const loader of findModuleLoaders(this.parse(code))) {
           const resolved = await this.resolve(loader.specifier, file);
-          const target = resolved?.id.split('?')[0];
-          if (target === undefined || !SOURCE_FILE.test(target) || target.includes('/node_modules/')) {
+          // Keyed with its query: `dx.config.ts?dx-modules` is a body, the plain `dx.config.ts` is not.
+          const target = resolved?.id;
+          const targetFile = target?.split('?')[0];
+          if (
+            target === undefined ||
+            targetFile === undefined ||
+            !SOURCE_FILE.test(targetFile) ||
+            targetFile.includes('/node_modules/')
+          ) {
             continue;
           }
           loaders.push(loader);
@@ -171,14 +189,14 @@ export const hotModulesPlugin = (): Plugin => {
             bodies.add(target);
             // Already transformed through another importer: drop the cached result so it is wrapped.
             const graph = this.environment.mode === 'dev' ? this.environment.moduleGraph : undefined;
-            graph?.getModulesByFile(target)?.forEach((module) => graph.invalidateModule(module));
+            graph?.getModulesByFile(targetFile)?.forEach((module) => graph.invalidateModule(module));
           }
         }
         result = acceptLoaderTargets(rewriteLoaders(result, loaders), loaders);
       }
 
-      if (bodies.has(file) && !code.includes('$RefreshReg$')) {
-        result = wrapModuleBody(result, `/${path.relative(root, file)}`);
+      if (bodies.has(id) && !code.includes('$RefreshReg$')) {
+        result = wrapModuleBody(result, `/${path.relative(root, id)}`);
       }
       // Every insertion is on an existing line, so the incoming mappings stay correct line by line.
       return result === code ? null : { code: result, map: null };

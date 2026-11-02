@@ -60,7 +60,7 @@ export const sectionQuery = (type: Type.AnyEntity): Query.Any =>
  * each space as a dedicated sidebar section.
  *
  * The section id, type, plural label, and icon are all derived from the schema's
- * typename and annotations — no manual wiring needed. The section is suppressed
+ * typename and annotations — no manual wiring needed. The section is suppressed (unless `showEmpty`)
  * when the space has no matching objects.
  *
  * Requires two coordinated pieces: `GraphPath.createTypeSectionPaths` and this extension, with a
@@ -128,6 +128,16 @@ export const createTypeSectionExtension = <T extends Type.AnyObj>(
      * only accepts objects of its own type, as reorders.
      */
     dropInto?: (object: Type.InstanceType<T>) => ContainerModel.Container;
+    /**
+     * A fixed order for the section's objects (e.g. newest first, for sessions). The section then keeps that order
+     * rather than one the person drags into place, so its objects cannot be rearranged.
+     */
+    sort?: (a: Type.InstanceType<T>, b: Type.InstanceType<T>) => number;
+    /**
+     * Keep the section in the sidebar while the space has none of the type, so its "+" can start the first one (a
+     * section that is where its objects are made, like sessions). By default an empty section is suppressed.
+     */
+    showEmpty?: boolean;
   },
 ): Effect.Effect<AppGraphBuilder.BuilderExtension[], never, never> => {
   const typename = Type.getTypename(type);
@@ -157,6 +167,9 @@ export const createTypeSectionExtension = <T extends Type.AnyObj>(
     const objects = get(space.db.query(query).atom) as Type.InstanceType<T>[];
     if (objects.length === 0) {
       return [];
+    }
+    if (options.sort) {
+      return [...objects].sort(options.sort);
     }
 
     // Re-emits when space.properties changes; the stored order is a list of object refs (uri read without
@@ -206,7 +219,7 @@ export const createTypeSectionExtension = <T extends Type.AnyObj>(
     url: options.sectionUrlKey ? { key: options.sectionUrlKey, kind: 'singleton', path: groupSegments } : undefined,
     match: options.match ?? AppNodeMatcher.whenSpace,
     connector: (space, get) => {
-      if (queryOrderedObjects(space, get).length === 0) {
+      if (!options.showEmpty && queryOrderedObjects(space, get).length === 0) {
         return Effect.succeed([]);
       }
 
@@ -236,8 +249,9 @@ export const createTypeSectionExtension = <T extends Type.AnyObj>(
             role: 'branch',
             draggable: false,
             droppable: false,
-            canDrop: canDropSameType,
-            onRearrange: makeSectionRearrangeCallback(space, typename),
+            // A fixed sort takes no drops; otherwise objects of the type reorder by drag.
+            canDrop: options.sort ? (): boolean => false : canDropSameType,
+            ...(options.sort ? {} : { onRearrange: makeSectionRearrangeCallback(space, typename) }),
             space,
             testId,
             ...(options.position ? { position: options.position } : {}),

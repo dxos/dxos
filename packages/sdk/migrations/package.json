@@ -25,15 +25,13 @@
     "src"
   ],
   "dependencies": {
-    "@automerge/automerge": "catalog:",
     "@automerge/automerge-repo": "catalog:",
     "@dxos/client": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/keys": "workspace:*",
-    "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },
   "publishConfig": {

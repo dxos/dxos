@@ -11,8 +11,7 @@ import * as Tag from '@dxos/react-ui/Tag';
 import * as Util from '@dxos/react-ui/Util';
 import { getHashHue } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
-
+import { AgentNamespace } from '../../namespace.ts';
 import { type EntityCardModel, type EntityCardProperty, type EntityCardValue, propertyKey } from './subgraph.ts';
 
 const TYPE_ICON = 'ph--shapes--regular';
@@ -70,7 +69,7 @@ const Values = ({
   hues?: EntityCardProps['hues'];
   onSelect?: (id: string) => void;
 }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AgentNamespace.key);
   const entities = values.filter((value) => value.kind === 'entity');
   // Text values (a memory's claims) are sentences, not links, so the card counts them; choosing the row opens them.
   const statements = values.length - entities.length;
@@ -165,7 +164,7 @@ export const EntityCard = Util.composable<HTMLDivElement, EntityCardProps>(
     { card, icons, hues, selected, currentProperty, onClick, onSelectProperty, onSelect, onClose, ...props },
     forwardedRef,
   ) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(AgentNamespace.key);
     const rows = { icons, hues, currentProperty, onSelectProperty, onSelect };
     return (
       <Card.Root

@@ -10,9 +10,8 @@ import { Type } from '@dxos/echo';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 
+import * as ProjectsPlugin from '#meta';
 import { Feature, FeatureOperation, ProjectOperation, Showcase } from '#types';
-
-import * as ProjectsPlugin from './ProjectsPlugin.ts';
 
 describe('ProjectsPlugin in workerd', () => {
   test('activates headless and contributes its operations and types', async ({ expect }) => {

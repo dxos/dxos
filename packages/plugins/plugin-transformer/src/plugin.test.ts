@@ -7,20 +7,21 @@ import { describe, test } from 'vitest';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
-import { TransformerPlugin } from '#plugin';
+import * as TransformerPlugin from '#meta';
 
-await Harness.preload({ plugins: [ClientPlugin.make({}), TransformerPlugin()] });
+import { TransformerNamespace } from './namespace.ts';
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+await Harness.preload({ plugins: [ClientPlugin.make({}), TransformerPlugin.make()] });
+
+const moduleId = (name: string) => `${TransformerNamespace.key}.module.${name}`;
 
 describe('TransformerPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), TransformerPlugin()],
+      plugins: [ClientPlugin.make({}), TransformerPlugin.make()],
     });
 
     // Modules expected to be active after a normal startup.
-    expect(harness.manager.getActive()).toContain(moduleId('schema'));
+    expect(harness.manager.getActive()).toContain(moduleId('translations'));
   });
 });

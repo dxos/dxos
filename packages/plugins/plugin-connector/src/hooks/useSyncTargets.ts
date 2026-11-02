@@ -11,9 +11,9 @@ import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 
 import { useConnector } from '#hooks';
-import { meta } from '#meta';
 
 import { SYNC_TARGETS_DIALOG } from '../constants.ts';
+import { ConnectorNamespace } from '../namespace.ts';
 
 export type UseSyncTargetsResult = {
   /** True when the connection's connector exposes `sync.getTargets`. Drives "edit" button visibility. */
@@ -66,12 +66,12 @@ export const useSyncTargets = (connection: Connection.Connection | undefined): U
     } catch (err) {
       log.catch(err);
       void invokePromise(LayoutOperation.AddToast, {
-        id: `${meta.profile.key}/get-sync-targets-error`,
+        id: `${ConnectorNamespace.key}/get-sync-targets-error`,
         icon: 'ph--warning--regular',
         duration: 5_000,
-        title: ['get-sync-targets-error.title', { ns: meta.profile.key }],
+        title: ['get-sync-targets-error.title', { ns: ConnectorNamespace.key }],
         description: String((err as Error).message ?? err),
-        closeLabel: ['close.label', { ns: meta.profile.key }],
+        closeLabel: ['close.label', { ns: ConnectorNamespace.key }],
       });
     } finally {
       setLoading(false);

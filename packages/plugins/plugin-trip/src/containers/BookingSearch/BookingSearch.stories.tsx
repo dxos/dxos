@@ -87,7 +87,7 @@ const meta = {
             }),
         }),
         StorybookPlugin.make({}),
-        TripPlugin(),
+        TripPlugin.make(),
         StubBookingPlugin(),
       ],
     })),

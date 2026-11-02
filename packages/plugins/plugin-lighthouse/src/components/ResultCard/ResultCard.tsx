@@ -13,9 +13,8 @@ import { Tag } from '@dxos/react-ui/Tag';
 import * as Typography from '@dxos/react-ui/Typography';
 import * as Util from '@dxos/react-ui/Util';
 
-import { meta } from '#meta';
-
 import { type CardModel } from '../../model/results.ts';
+import { LighthouseNamespace } from '../../namespace.ts';
 import { LocationPopover } from '../LocationPopover/LocationPopover.tsx';
 
 /** Why a card's location row carries a note: outside the person's drawn areas, or no point to place it. */
@@ -50,7 +49,7 @@ const stop = (handler?: () => void) => (event: MouseEvent) => {
  */
 export const ResultCard = Util.composable<HTMLDivElement, ResultCardProps>(
   ({ card, current, starred = false, score, missed, areaNote, onToggleStar, classNames, ...props }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(LighthouseNamespace.key);
     const image = card.images[0];
     const note = areaNote ?? (card.unlocated ? 'no-location' : undefined);
     // The first location row carries the map popover, or the note.
