@@ -348,6 +348,53 @@ const runDeclarationBuild = async (): Promise<void> => {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`tsc failed: ${message} cwd=${process.cwd()}`);
   }
+  assertDeclarationsEmitted(process.cwd());
+};
+
+/**
+ * Fails the build when a `dist/types/` path that `package.json` declares (`types`, or a `types`
+ * condition under `exports`/`imports`) is missing after `tsc`.
+ *
+ * moon only checks that a directory output exists before it archives, so an empty or partial
+ * `dist/types/` would otherwise be uploaded to the remote cache and break every consumer with TS7016.
+ */
+const assertDeclarationsEmitted = (cwd: string): void => {
+  const pkgPath = join(cwd, 'package.json');
+  if (!existsSync(pkgPath)) {
+    return;
+  }
+
+  const { types, exports, imports } = JSON.parse(readFileSync(pkgPath, 'utf8'));
+  const declared = new Set<string>();
+  const collect = (node: unknown): void => {
+    if (node === null || typeof node !== 'object') {
+      return;
+    }
+    for (const [key, value] of Object.entries(node)) {
+      if (key === 'types' && typeof value === 'string') {
+        declared.add(value);
+      } else {
+        collect(value);
+      }
+    }
+  };
+  if (typeof types === 'string') {
+    declared.add(types);
+  }
+  collect(exports);
+  collect(imports);
+
+  const missing = [...declared]
+    .map((declaredPath) => path.posix.normalize(declaredPath))
+    .filter((declaredPath) => declaredPath.startsWith('dist/types/') && !existsSync(join(cwd, declaredPath)));
+  if (missing.length > 0) {
+    const message =
+      `tsc emitted no declaration for ${missing.join(', ')} (declared in package.json) cwd=${cwd}; ` +
+      'refusing to finish a build whose dist/types/ is incomplete.';
+    // The build task runs with `--logLevel silent`, which drops the plugin error's message.
+    process.stderr.write(`${message}\n`);
+    throw new Error(message);
+  }
 };
 
 /**
