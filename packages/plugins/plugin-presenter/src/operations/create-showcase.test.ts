@@ -32,7 +32,7 @@ const testLayer = () =>
     ],
   });
 
-describe('FeatureOperation.CreateShowcase', () => {
+describe('CodeOperation.CreateShowcase', () => {
   it.effect('writes nothing when a target does not resolve', () =>
     Effect.gen(function* () {
       const gone = yield* Database.add(Feature.make({ name: 'Gone', status: 'planned' }));

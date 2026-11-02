@@ -8,11 +8,11 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Spec from '@dxos/compute/Spec';
 import { Database, Filter, Obj } from '@dxos/echo';
 
-import { Feature, FeatureMap, FeatureOperation, SpecText } from '#types';
+import { CodeOperation, Feature, FeatureMap, SpecText } from '#types';
 
 import { addSpec, ensureBreakdown } from './util.ts';
 
-const handler: Operation.WithHandler<typeof FeatureOperation.ImportSpec> = FeatureOperation.ImportSpec.pipe(
+const handler: Operation.WithHandler<typeof CodeOperation.ImportSpecFeatures> = CodeOperation.ImportSpecFeatures.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ path, text, spec: specRef, feature: featureRef, name, project }) {
       const key = { source: Feature.SPEC_KEY_SOURCE, id: Feature.getSpecPath(path) };

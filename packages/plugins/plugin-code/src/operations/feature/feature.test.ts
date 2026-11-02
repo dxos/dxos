@@ -15,7 +15,7 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { File, Milestone, PullRequest, Task } from '@dxos/types';
 
-import { Feature, FeatureEmbed, FeatureMap, FeatureOperation, Showcase, SpecText } from '#types';
+import { CodeOperation, Feature, FeatureEmbed, FeatureMap, Showcase, SpecText } from '#types';
 
 import addDependency from './add-dependency.ts';
 import createSpec from './create-spec.ts';
@@ -60,7 +60,7 @@ const featureIds = (spec: Spec.Spec) =>
 const embedIds = (spec: Spec.Spec) =>
   Effect.promise(() => SpecText.read(spec)).pipe(Effect.map((text) => FeatureEmbed.parse(text).map(({ id }) => id)));
 
-describe('FeatureOperation.Create', () => {
+describe('CodeOperation.CreateFeature', () => {
   it.effect('defaults to planned and lists the feature on the spec given, which becomes its parent', () =>
     Effect.gen(function* () {
       const spec = yield* addSpec();
@@ -93,7 +93,7 @@ describe('FeatureOperation.Create', () => {
   );
 });
 
-describe('FeatureOperation.Update', () => {
+describe('CodeOperation.UpdateFeature', () => {
   it.effect('sets the fields given, replacing the requirement list, and keeps the rest', () =>
     Effect.gen(function* () {
       const sync = yield* Database.add(Feature.make({ name: 'Sync', status: 'planned', description: 'Kept.' }));
@@ -137,7 +137,7 @@ describe('FeatureOperation.Update', () => {
   );
 });
 
-describe('FeatureOperation.CreateSpec', () => {
+describe('CodeOperation.CreateSpec', () => {
   it.effect('adds each spec to the project in order, and refuses a project for a breakdown', () =>
     Effect.gen(function* () {
       const project = yield* Database.add(Project.make({ name: 'Mail' }));
@@ -155,7 +155,7 @@ describe('FeatureOperation.CreateSpec', () => {
       const breakdown = yield* Effect.flip(
         createSpec.handler({ name: 'Sync', feature: ref(sync), project: ref(project) }),
       );
-      expect(breakdown).toBeInstanceOf(FeatureOperation.BreakdownSpecError);
+      expect(breakdown).toBeInstanceOf(CodeOperation.BreakdownSpecError);
       expect(sync.spec).toBeUndefined();
       expect(yield* Database.query(Filter.type(Spec.Spec)).run).toHaveLength(2);
     }).pipe(Effect.provide(testLayer())),
@@ -171,7 +171,7 @@ describe('FeatureOperation.CreateSpec', () => {
   );
 });
 
-describe('FeatureOperation.UpdateSpec', () => {
+describe('CodeOperation.UpdateSpec', () => {
   it.effect('moves a spec between projects, beside the specs a project has, and releases it on null', () =>
     Effect.gen(function* () {
       const mail = yield* Database.add(Project.make({ name: 'Mail' }));
@@ -191,7 +191,7 @@ describe('FeatureOperation.UpdateSpec', () => {
   );
 });
 
-describe('FeatureOperation.ImportSpec', () => {
+describe('CodeOperation.ImportSpecFeatures', () => {
   const spec = (requirement: string) => `
 \`\`\`mdl
 feat F-1: Sync
@@ -253,7 +253,7 @@ feat F-1: Sync
   );
 });
 
-describe('FeatureOperation.ImportSpec into an explicit spec', () => {
+describe('CodeOperation.ImportSpecFeatures into an explicit spec', () => {
   const text = `
 \`\`\`mdl
 feat F-1: Sync
@@ -301,7 +301,7 @@ feat F-1: Sync
   );
 });
 
-describe('FeatureOperation.ExportSpec', () => {
+describe('CodeOperation.ExportSpecFeatures', () => {
   it.effect('writes the imported text back out, with each feature as its block', () =>
     Effect.gen(function* () {
       const text =
@@ -313,7 +313,7 @@ describe('FeatureOperation.ExportSpec', () => {
   );
 });
 
-describe('FeatureOperation.AddDependency', () => {
+describe('CodeOperation.AddFeatureDependency', () => {
   it.effect('is idempotent and refuses a cycle, naming it', () =>
     Effect.gen(function* () {
       const accounts = yield* Database.add(Feature.make({ name: 'Accounts', status: 'operational' }));
@@ -333,7 +333,7 @@ describe('FeatureOperation.AddDependency', () => {
   );
 });
 
-describe('FeatureOperation.RemoveDependency', () => {
+describe('CodeOperation.RemoveFeatureDependency', () => {
   it.effect('removes only the named edge', () =>
     Effect.gen(function* () {
       const accounts = yield* Database.add(Feature.make({ name: 'Accounts', status: 'operational' }));
@@ -349,7 +349,7 @@ describe('FeatureOperation.RemoveDependency', () => {
   );
 });
 
-describe('FeatureOperation.LinkTask', () => {
+describe('CodeOperation.LinkFeatureTask', () => {
   it.effect('links a task once however often it is called', () =>
     Effect.gen(function* () {
       const compose = yield* Database.add(Feature.make({ name: 'Compose', status: 'planned' }));
@@ -362,7 +362,7 @@ describe('FeatureOperation.LinkTask', () => {
   );
 });
 
-describe('FeatureOperation.Delete', () => {
+describe('CodeOperation.DeleteFeature', () => {
   it.effect('takes the feature off its spec and deletes its breakdown with it', () =>
     Effect.gen(function* () {
       const inbox = yield* addSpec('Inbox');
@@ -379,7 +379,7 @@ describe('FeatureOperation.Delete', () => {
   );
 });
 
-describe('FeatureOperation.GetFeatures', () => {
+describe('CodeOperation.GetFeatures', () => {
   it.effect('reads each member with its dependencies, tasks, showcases and subfeatures', () =>
     Effect.gen(function* () {
       const inbox = yield* addSpec('Inbox');
@@ -414,7 +414,7 @@ describe('FeatureOperation.GetFeatures', () => {
   );
 });
 
-describe('FeatureOperation key', () => {
+describe('feature key', () => {
   it.effect('create sets meta.key, update replaces it and null removes it', () =>
     Effect.gen(function* () {
       const { feature } = yield* create.handler({
@@ -432,7 +432,7 @@ describe('FeatureOperation key', () => {
   );
 });
 
-describe('FeatureOperation.ImportLinks', () => {
+describe('CodeOperation.ImportFeatureLinks', () => {
   it.effect('replaces the code links of each feature it resolves and reports the rest', () =>
     Effect.gen(function* () {
       const spec = ref(yield* addSpec());

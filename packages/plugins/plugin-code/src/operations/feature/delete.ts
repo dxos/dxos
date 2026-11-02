@@ -7,11 +7,11 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 
-import { FeatureMap, FeatureOperation, SpecText } from '#types';
+import { CodeOperation, FeatureMap, SpecText } from '#types';
 
 import { detach } from './util.ts';
 
-const handler: Operation.WithHandler<typeof FeatureOperation.Delete> = FeatureOperation.Delete.pipe(
+const handler: Operation.WithHandler<typeof CodeOperation.DeleteFeature> = CodeOperation.DeleteFeature.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ feature: featureRef }) {
       const feature = yield* Database.load(featureRef);

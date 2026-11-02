@@ -9,7 +9,7 @@ import * as Spec from '@dxos/compute/Spec';
 import { Database, Filter, Obj, Query, type Ref } from '@dxos/echo';
 import { Task } from '@dxos/types';
 
-import { Feature, FeatureMap, FeatureOperation, Showcase } from '#types';
+import { CodeOperation, Feature, FeatureMap, Showcase } from '#types';
 
 import { endpoints, refId } from './util.ts';
 
@@ -19,7 +19,7 @@ type Member = { feature: Feature.Feature; spec: Spec.Spec; parent?: Feature.Feat
 const loadOptional = <T>(ref: Ref.Ref<T>) =>
   Database.load(ref).pipe(Effect.catchTag('EntityNotFoundError', () => Effect.succeed(undefined)));
 
-const handler: Operation.WithHandler<typeof FeatureOperation.GetFeatures> = FeatureOperation.GetFeatures.pipe(
+const handler: Operation.WithHandler<typeof CodeOperation.GetFeatures> = CodeOperation.GetFeatures.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ spec: specRef }) {
       // The spec's features, each followed by the features of the spec that breaks it down, depth first.
@@ -44,7 +44,7 @@ const handler: Operation.WithHandler<typeof FeatureOperation.GetFeatures> = Feat
         },
       );
       yield* visit(yield* Database.load(specRef));
-      const features: FeatureOperation.FeatureSummary[] = [];
+      const features: CodeOperation.FeatureSummary[] = [];
       for (const { feature, spec, parent } of members) {
         const selected = Query.select(Filter.id(feature.id));
         const dependsOn = yield* Database.query(selected.sourceOf(Feature.DependsOn)).run;

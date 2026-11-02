@@ -14,7 +14,7 @@ tasks:
   check-module-structure:
     args:
       - --export
-      - ./FeatureOperationHandlerSet
+      - ./CodeOperationHandlerSet
   scan-feature-links:
     # Prints every `@feature` tag in the repository as the input of the importFeatureLinks operation.
     command: bun $projectRoot/scripts/scan-feature-links.ts

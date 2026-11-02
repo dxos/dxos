@@ -7,11 +7,11 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
-import { FeatureOperation } from '#types';
+import { CodeOperation } from '#types';
 
 import { clearProject, setProject } from './util.ts';
 
-const handler: Operation.WithHandler<typeof FeatureOperation.UpdateSpec> = FeatureOperation.UpdateSpec.pipe(
+const handler: Operation.WithHandler<typeof CodeOperation.UpdateSpec> = CodeOperation.UpdateSpec.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ spec: specRef, name, description, project }) {
       const spec = yield* Database.load(specRef);

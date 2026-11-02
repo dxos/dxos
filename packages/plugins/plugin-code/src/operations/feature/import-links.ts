@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Filter, Obj } from '@dxos/echo';
 
-import { Feature, FeatureLink, FeatureOperation } from '#types';
+import { CodeOperation, Feature, FeatureLink } from '#types';
 
 /** Finds the feature a DXN names in this space ({@link FeatureLink.resolve}). */
 const resolveLink = Effect.fn(function* (
@@ -24,7 +24,7 @@ const resolveLink = Effect.fn(function* (
   return FeatureLink.resolve(dxn, { byKey, byMnemonic });
 });
 
-const handler: Operation.WithHandler<typeof FeatureOperation.ImportLinks> = FeatureOperation.ImportLinks.pipe(
+const handler: Operation.WithHandler<typeof CodeOperation.ImportFeatureLinks> = CodeOperation.ImportFeatureLinks.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ links }) {
       const code = new Map<Feature.Feature, Feature.CodeLink[]>();

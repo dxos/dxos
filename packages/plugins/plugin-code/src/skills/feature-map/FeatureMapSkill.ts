@@ -9,12 +9,12 @@ import * as Skill from '@dxos/compute/Skill';
 import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
-import { FeatureOperation } from '#types';
+import { CodeOperation } from '#types';
 
 // The workflow content lives beside this module as markdown so it can be edited as prose.
 import instructions from './feature-map-skill.md?raw';
 
-export const key = 'org.dxos.skill.featureMap';
+export const key = 'org.dxos.skill.code.featureMap';
 
 /**
  * Every verb the skill drives. Imported rather than named as strings: an unresolvable ToolId is dropped from the
@@ -22,18 +22,18 @@ export const key = 'org.dxos.skill.featureMap';
  */
 export const operations: readonly Operation.Definition.Any[] = [
   // Features are the goal states work moves; linking and showcasing are how the feature map shows that work.
-  FeatureOperation.Create,
-  FeatureOperation.Update,
-  FeatureOperation.Delete,
-  FeatureOperation.CreateSpec,
-  FeatureOperation.UpdateSpec,
-  FeatureOperation.AddDependency,
-  FeatureOperation.RemoveDependency,
-  FeatureOperation.LinkTask,
-  FeatureOperation.CreateShowcase,
-  FeatureOperation.GetFeatures,
-  FeatureOperation.ImportSpec,
-  FeatureOperation.ExportSpec,
+  CodeOperation.CreateFeature,
+  CodeOperation.UpdateFeature,
+  CodeOperation.DeleteFeature,
+  CodeOperation.CreateSpec,
+  CodeOperation.UpdateSpec,
+  CodeOperation.AddFeatureDependency,
+  CodeOperation.RemoveFeatureDependency,
+  CodeOperation.LinkFeatureTask,
+  CodeOperation.CreateShowcase,
+  CodeOperation.GetFeatures,
+  CodeOperation.ImportSpecFeatures,
+  CodeOperation.ExportSpecFeatures,
 ];
 
 /**

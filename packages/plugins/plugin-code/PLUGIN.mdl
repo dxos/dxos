@@ -976,8 +976,9 @@ feat F-22: The feature map in a project
               button: a feature map does not nest scenes, and a double-click opens a feature's own level.
   req F-22.6: The software package offers `/feature`, which also makes the feature, and `/type`, `/op`, `/scenario`,
               `/test` and `/table`, which write text only.
-  req F-22.7: The feature operations' keys are in this plugin's domain (`org.dxos.operation.code.*`), and the Feature
-              Map skill (`org.dxos.skill.featureMap`) declares them.
+  req F-22.7: The feature operations are `CodeOperation`s, keyed in this plugin's domain (`org.dxos.operation.code.*`)
+              and handled by `CodeOperationHandlerSet`. The Feature Map skill (`org.dxos.skill.code.featureMap`)
+              declares them.
   req F-22.8: The feature map, its types and their migrations are present only while this plugin is enabled.
 ```
 
@@ -1948,4 +1949,21 @@ decision D-55: A feature holds one block of a file. When two blocks of a file na
   why: A feature migrated from 0.3.0 can record two blocks of one file. Both blocks mapped to it, the later one's fields overwrote the earlier one's, and export wrote only the first embed back, losing the other block's text.
   rejected:
     - Merging the two blocks into one feature, which loses one block's name and requirements on export.
+```
+
+```mdl
+decision D-56: The plugin's namespace is `code`: the feature operations are part of `CodeOperation`, their handlers part of `CodeOperationHandlerSet`, and the Feature Map skill's key is `org.dxos.skill.code.featureMap`. The skill stays separate from the coder skill.
+  date: 2026-11-02
+  by: user:wittjosiah
+  supersedes: D-51
+  affects: [F-22.7]
+```
+
+```mdl
+decision D-57: In `CodeOperation`, the feature operations whose names would be ambiguous beside the other code operations take `Feature` in their names (`CreateFeature`, `UpdateFeature`, `DeleteFeature`, `AddFeatureDependency`, `RemoveFeatureDependency`, `LinkFeatureTask`, `ImportSpecFeatures`, `ExportSpecFeatures`, `ImportFeatureLinks`), matching their keys. Their keys do not change. Fills in [D-56].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-22.7]
+  why: Each name now matches the last segment of its key, so `CodeOperation.CreateFeature` is `org.dxos.operation.code.createFeature`.
 ```

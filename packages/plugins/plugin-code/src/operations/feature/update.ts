@@ -7,18 +7,18 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
-import { Feature, FeatureMap, FeatureOperation, SpecText } from '#types';
+import { CodeOperation, Feature, FeatureMap, SpecText } from '#types';
 
 import { attach, detach } from './util.ts';
 
-const handler: Operation.WithHandler<typeof FeatureOperation.Update> = FeatureOperation.Update.pipe(
+const handler: Operation.WithHandler<typeof CodeOperation.UpdateFeature> = CodeOperation.UpdateFeature.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ feature: featureRef, key, name, description, requirements, status, specs, spec: specRef }) {
       const feature = yield* Database.load(featureRef);
       const target = specRef && (yield* Database.load(specRef));
       if (target && FeatureMap.isWithin(target, feature)) {
         return yield* Effect.fail(
-          new FeatureOperation.SpecCycleError({
+          new CodeOperation.SpecCycleError({
             message: `"${feature.name}" cannot move into a spec that breaks it down.`,
           }),
         );

@@ -7,18 +7,18 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
-import { FeatureOperation } from '#types';
+import { CodeOperation } from '#types';
 
 import { addSpec, ensureBreakdown } from './util.ts';
 
-const handler: Operation.WithHandler<typeof FeatureOperation.CreateSpec> = FeatureOperation.CreateSpec.pipe(
+const handler: Operation.WithHandler<typeof CodeOperation.CreateSpec> = CodeOperation.CreateSpec.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ name, description, dialects, project, feature: featureRef }) {
       if (featureRef) {
         const feature = yield* Database.load(featureRef);
         if (project) {
           return yield* Effect.fail(
-            new FeatureOperation.BreakdownSpecError({
+            new CodeOperation.BreakdownSpecError({
               message: `The spec breaking down "${feature.name}" belongs to it; its work is tracked in the project above it.`,
             }),
           );

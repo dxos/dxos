@@ -42,7 +42,7 @@ describe('featureSpec', () => {
     const instructions = await project.instructions?.tryLoad();
     expect(instructions?.skills?.map((ref: Ref.Ref<Obj.Unknown>) => ref.uri)).toEqual([
       expect.stringContaining('org.dxos.skill.project'),
-      expect.stringContaining('org.dxos.skill.featureMap'),
+      expect.stringContaining('org.dxos.skill.code.featureMap'),
     ]);
     expect(project.artifacts).toEqual([]);
   });

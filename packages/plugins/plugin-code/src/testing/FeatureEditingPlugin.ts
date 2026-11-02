@@ -14,12 +14,12 @@ import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities'
 
 import FeatureSurface from '../capabilities/feature-surface.ts';
 import SpecExtensions from '../capabilities/spec-extensions.ts';
-import * as FeatureOperationHandlerSet from '../FeatureOperationHandlerSet.ts';
+import { CodeOperationHandlerSet } from '../operations/index.ts';
 
 const OperationHandler = Capability.inlineModule(
   'FeatureEditingOperationHandler',
   { provides: [Capabilities.OperationHandler] },
-  () => Effect.succeed([Capability.contribute(Capabilities.OperationHandler, FeatureOperationHandlerSet.handlers)]),
+  () => Effect.succeed([Capability.contribute(Capabilities.OperationHandler, CodeOperationHandlerSet)]),
 );
 
 const SpecEditing = Capability.inlineModule(

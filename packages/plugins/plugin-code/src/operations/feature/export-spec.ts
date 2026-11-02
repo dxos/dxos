@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 
-import { FeatureOperation, SpecText } from '#types';
+import { CodeOperation, SpecText } from '#types';
 
-const handler: Operation.WithHandler<typeof FeatureOperation.ExportSpec> = FeatureOperation.ExportSpec.pipe(
+const handler: Operation.WithHandler<typeof CodeOperation.ExportSpecFeatures> = CodeOperation.ExportSpecFeatures.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ spec: specRef }) {
       const spec = yield* Database.load(specRef);

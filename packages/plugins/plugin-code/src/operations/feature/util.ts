@@ -8,7 +8,7 @@ import * as Project from '@dxos/compute/Project';
 import * as Spec from '@dxos/compute/Spec';
 import { Database, EID, Obj, Ref, Relation } from '@dxos/echo';
 
-import { type Feature, FeatureMap, FeatureOperation } from '#types';
+import { CodeOperation, type Feature, FeatureMap } from '#types';
 
 /** Entity id of a ref or a relation endpoint; space-qualified and local URIs may name the same object. */
 export const entityId = (uri: string): string => {
@@ -38,7 +38,7 @@ export const setProject = Effect.fn(function* (spec: Spec.Spec, projectRef: Ref.
   const project = yield* Database.load(projectRef);
   if (FeatureMap.getOwner(spec)) {
     return yield* Effect.fail(
-      new FeatureOperation.BreakdownSpecError({
+      new CodeOperation.BreakdownSpecError({
         message: `"${spec.name}" breaks down a feature, so its work is tracked in the project above it.`,
       }),
     );

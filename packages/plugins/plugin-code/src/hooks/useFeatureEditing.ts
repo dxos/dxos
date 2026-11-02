@@ -12,7 +12,7 @@ import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import * as TaskOperation from '@dxos/plugin-tasks/TaskOperation';
 import { Task } from '@dxos/types';
 
-import { Feature, FeatureMap, FeatureOperation } from '#types';
+import { CodeOperation, Feature, FeatureMap } from '#types';
 
 import { CodeNamespace } from '../namespace.ts';
 
@@ -33,7 +33,7 @@ export type FeatureEditing = {
 };
 
 /**
- * Edits for a spec's feature map, each through the `FeatureOperation` verb an agent would use, so a person and an agent
+ * Edits for a spec's feature map, each through the `CodeOperation` verb an agent would use, so a person and an agent
  * get the same rules. A refused edit (a dependency that would close a cycle) is shown as a toast carrying the
  * operation's own message, which names the features involved.
  */
@@ -74,19 +74,22 @@ export const useFeatureEditing = (db: Database.Database | undefined, spec?: Spec
 
     return {
       update: (featureId, changes) =>
-        void featureRef(featureId).then((feature) => feature && run(FeatureOperation.Update, { feature, ...changes })),
+        void featureRef(featureId).then(
+          (feature) => feature && run(CodeOperation.UpdateFeature, { feature, ...changes }),
+        ),
       addDependency: (featureId, dependsOnId) =>
         void Promise.all([featureRef(featureId), featureRef(dependsOnId)]).then(
-          ([feature, dependsOn]) => feature && dependsOn && run(FeatureOperation.AddDependency, { feature, dependsOn }),
+          ([feature, dependsOn]) =>
+            feature && dependsOn && run(CodeOperation.AddFeatureDependency, { feature, dependsOn }),
         ),
       removeDependency: (featureId, dependsOnId) =>
         void Promise.all([featureRef(featureId), featureRef(dependsOnId)]).then(
           ([feature, dependsOn]) =>
-            feature && dependsOn && run(FeatureOperation.RemoveDependency, { feature, dependsOn }),
+            feature && dependsOn && run(CodeOperation.RemoveFeatureDependency, { feature, dependsOn }),
         ),
       linkTask: (taskId, featureId) =>
         void Promise.all([taskRef(taskId), featureRef(featureId)]).then(
-          ([task, feature]) => task && feature && run(FeatureOperation.LinkTask, { task, feature }),
+          ([task, feature]) => task && feature && run(CodeOperation.LinkFeatureTask, { task, feature }),
         ),
       fileTask: async (featureId, title) => {
         const [feature] = db ? await db.query(Filter.id(featureId)).run() : [];
@@ -102,14 +105,14 @@ export const useFeatureEditing = (db: Database.Database | undefined, spec?: Spec
         if (!task || !featureRefValue) {
           return false;
         }
-        await run(FeatureOperation.LinkTask, { task, feature: featureRefValue });
+        await run(CodeOperation.LinkFeatureTask, { task, feature: featureRefValue });
         return true;
       },
       removeFeature: (featureId) =>
-        void featureRef(featureId).then((feature) => feature && run(FeatureOperation.Delete, { feature })),
+        void featureRef(featureId).then((feature) => feature && run(CodeOperation.DeleteFeature, { feature })),
       createFeature: async (name, parentId) => {
         const parent = parentId ? await featureRef(parentId) : undefined;
-        const result = await run(FeatureOperation.Create, parent ? { name, parent } : { name, spec: specRef });
+        const result = await run(CodeOperation.CreateFeature, parent ? { name, parent } : { name, spec: specRef });
         return result?.feature.id;
       },
       moveFeature: (featureId, parentId) =>
@@ -125,14 +128,14 @@ export const useFeatureEditing = (db: Database.Database | undefined, spec?: Spec
           // A parent without a breakdown gets one: `CreateSpec` returns the one it has, else makes it.
           let target = specRef;
           if (parent) {
-            const created = await run(FeatureOperation.CreateSpec, {
+            const created = await run(CodeOperation.CreateSpec, {
               name: parent.target?.name ?? '',
               feature: parent,
             });
             target = created ? await refOf(created.spec.id, Spec.instanceOf) : undefined;
           }
           if (target) {
-            await run(FeatureOperation.Update, { feature, spec: target });
+            await run(CodeOperation.UpdateFeature, { feature, spec: target });
           }
         })(),
     };

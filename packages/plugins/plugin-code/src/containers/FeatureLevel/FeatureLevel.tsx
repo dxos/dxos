@@ -15,7 +15,7 @@ import { useObject, useResolveRef } from '@dxos/echo-react';
 import * as ProjectSurface from '@dxos/plugin-projects/ProjectSurface';
 import { type Task } from '@dxos/types';
 
-import { Feature, FeatureMap, type FeatureMapView, FeatureOperation } from '#types';
+import { CodeOperation, Feature, FeatureMap, type FeatureMapView } from '#types';
 
 import { useFeatureGraph, useOpenSpecLevel, useSpecTreeIds } from '../../hooks/index.ts';
 import { CodeNamespace } from '../../namespace.ts';
@@ -56,7 +56,7 @@ export const FeatureLevelArticle = ({ role, subject, attendableId }: FeatureLeve
   const handleTaskCreated = useCallback(
     async (task: Task.Task) => {
       const { error } = await invokePromise(
-        FeatureOperation.LinkTask,
+        CodeOperation.LinkFeatureTask,
         { task: Ref.make(task), feature: Ref.make(subject) },
         { spaceId },
       );
@@ -75,8 +75,7 @@ export const FeatureLevelArticle = ({ role, subject, attendableId }: FeatureLeve
 
   // Named after the feature it breaks down.
   const handleAddSpec = useCallback(
-    () =>
-      void invokePromise(FeatureOperation.CreateSpec, { name: subject.name, feature: Ref.make(subject) }, { spaceId }),
+    () => void invokePromise(CodeOperation.CreateSpec, { name: subject.name, feature: Ref.make(subject) }, { spaceId }),
     [invokePromise, subject, spaceId],
   );
 

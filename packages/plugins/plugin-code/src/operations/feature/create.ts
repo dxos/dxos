@@ -7,18 +7,18 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
-import { Feature, FeatureOperation, SpecText } from '#types';
+import { CodeOperation, Feature, SpecText } from '#types';
 
 import { attach, ensureBreakdown } from './util.ts';
 
-const handler: Operation.WithHandler<typeof FeatureOperation.Create> = FeatureOperation.Create.pipe(
+const handler: Operation.WithHandler<typeof CodeOperation.CreateFeature> = CodeOperation.CreateFeature.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ key, name, description, requirements, status = 'planned', specs, spec: specRef, parent }) {
       const spec = specRef
         ? yield* Database.load(specRef)
         : parent
           ? yield* ensureBreakdown(yield* Database.load(parent))
-          : yield* Effect.fail(new FeatureOperation.NoSpecError());
+          : yield* Effect.fail(new CodeOperation.NoSpecError());
       const draft = Feature.make({
         name,
         description,

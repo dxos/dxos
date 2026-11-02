@@ -7,11 +7,11 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Query, Relation } from '@dxos/echo';
 
-import { Feature, FeatureOperation } from '#types';
+import { CodeOperation, Feature } from '#types';
 
 import { endpoints } from './util.ts';
 
-const handler: Operation.WithHandler<typeof FeatureOperation.LinkTask> = FeatureOperation.LinkTask.pipe(
+const handler: Operation.WithHandler<typeof CodeOperation.LinkFeatureTask> = CodeOperation.LinkFeatureTask.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ task: taskRef, feature: featureRef }) {
       const task = yield* Database.load(taskRef);

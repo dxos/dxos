@@ -11,7 +11,7 @@ import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 
 import * as CodePlugin from '#meta';
-import { Feature, FeatureOperation, Showcase } from '#types';
+import { CodeOperation, Feature, Showcase } from '#types';
 
 describe('CodePlugin in workerd', () => {
   // Feature maps are driven over MCP, whose hosts activate the plugin headless like this.
@@ -27,6 +27,6 @@ describe('CodePlugin in workerd', () => {
     for (const type of [Feature.Feature, Showcase.Demonstrates]) {
       expect(typenames).toContain(Type.getTypename(type));
     }
-    expect(operationKeys).toContain(String(FeatureOperation.GetFeatures.meta.key));
+    expect(operationKeys).toContain(String(CodeOperation.GetFeatures.meta.key));
   });
 });

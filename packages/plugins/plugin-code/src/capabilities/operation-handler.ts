@@ -9,13 +9,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 
 import { CodeOperationHandlerSet } from '#operations';
 
-import * as FeatureOperationHandlerSet from '../FeatureOperationHandlerSet.ts';
-
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [
-      Capability.contribute(Capabilities.OperationHandler, CodeOperationHandlerSet),
-      Capability.contribute(Capabilities.OperationHandler, FeatureOperationHandlerSet.handlers),
-    ];
+    return Capability.contribute(Capabilities.OperationHandler, CodeOperationHandlerSet);
   }),
 );
