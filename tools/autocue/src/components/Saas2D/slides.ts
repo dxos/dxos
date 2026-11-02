@@ -830,18 +830,21 @@ export const slides = (holds: Record<string, number>): Slide[] => {
             }),
           ),
           // A second after the last tag: what it runs on.
-          label('powered-by', WIDTH / 2, HEIGHT - 150, 'Powered by', {
+          // “Powered by” sits on the wordmark's baseline (1019 px; its own baseline is 0.32 em below its centre), and the
+          // pair is centred together.
+          label('powered-by', WIDTH / 2 - 61, 1019 - 0.32 * 16, 'Powered by', {
             screen: true,
-            size: 22,
+            size: 16,
             weight: 500,
             color: PALETTE.graphite,
             plain: true,
+            anchor: 'end',
             opacity: ramp(t, 6.7, 0.6),
           }),
           {
             kind: 'logo',
             id: 'cloudflare',
-            x: WIDTH / 2,
+            x: WIDTH / 2 + 48,
             y: HEIGHT - 92,
             width: 190,
             src: 'brand/cloudflare.png',
