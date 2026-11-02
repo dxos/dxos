@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type Placed } from './engine.ts';
+import { type Placed, ramp } from './engine.ts';
 import { neu } from './theme.tsx';
 import { FONTS } from './tokens.ts';
 
@@ -103,9 +103,10 @@ const Chip = ({ number, title, opacity }: { number: number; title: string; opaci
   </div>
 );
 
-/** A subtitle line, its bracketed phrase set on the accent. */
-const Line = ({ text, opacity }: { text: string; opacity: number }) => {
+/** A subtitle line, its bracketed phrase set on the accent, rising into place over the first half second. */
+const Line = ({ text, opacity, into }: { text: string; opacity: number; into: number }) => {
   const [before, highlight = '', after = ''] = text.split(/\[|\]/);
+  const risen = ramp(into, 0.1, 0.5);
   return (
     <div
       style={{
@@ -124,7 +125,16 @@ const Line = ({ text, opacity }: { text: string; opacity: number }) => {
     >
       <span>{before}</span>
       {highlight && (
-        <span style={{ background: neu.accent, color: neu.onAccent, padding: '0 16px', textShadow: 'none' }}>
+        <span
+          style={{
+            background: neu.accent,
+            color: neu.onAccent,
+            padding: '0 16px',
+            textShadow: 'none',
+            opacity: risen,
+            transform: `translateY(${(1 - risen) * 36}px)`,
+          }}
+        >
           {highlight}
         </span>
       )}
@@ -158,7 +168,7 @@ export const Captions = ({
           opacity={fade(seconds - span[0], span[1] - seconds)}
         />
       )}
-      {text && <Line text={text} opacity={fade(scene.into, scene.left)} />}
+      {text && <Line text={text} opacity={fade(scene.into, scene.left)} into={scene.into} />}
     </>
   );
 };

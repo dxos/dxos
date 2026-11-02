@@ -797,23 +797,8 @@ export const slides = (holds: Record<string, number>): Slide[] => {
         );
       },
     },
-    {
-      id: 'dont-panic',
-      transition: 1.0,
-      draw: (t) =>
-        still([
-          {
-            kind: 'title',
-            id: 'dont-panic',
-            x: 0,
-            y: 0,
-            text: 'THE ALTERNATIVE',
-            size: 80,
-            color: neu.muted,
-            opacity: ramp(t, 3.5, 1.0),
-          },
-        ]),
-    },
+    // An empty field: the chapter chip names the alternative, so the frame carries no title of its own.
+    { id: 'dont-panic', transition: 1.0, draw: () => still([]) },
 
     // After the curtain: your company and its apps again; then ECHO puts your data at its centre.
     { id: 'spread-again', transition: 1.6, draw: () => still(appsAround()) },
