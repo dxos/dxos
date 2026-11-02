@@ -17,9 +17,7 @@ const bundle = (overrides: Record<string, string> = {}) =>
   files({
     'manifest.json': JSON.stringify({
       key: 'org.example.plugin.sample',
-      modules: [
-        { id: 'Operations', url: './operations.mjs', adapter: { url: '@dxos/app-toolkit/SchemaAdapter' } },
-      ],
+      modules: [{ id: 'Operations', url: './operations.mjs', adapter: { url: '@dxos/app-toolkit/SchemaAdapter' } }],
     }),
     'operations.mjs': "import { name } from 'effect'; export * from 'effect'; export default () => import('effect');",
     'vendor/manifest.json': JSON.stringify({
@@ -44,7 +42,7 @@ describe('PluginLoader', () => {
     const source = bundle();
     const rewritten = await PluginLoader.rewriteImports(source, PluginLoader.readVendor(source) ?? {});
     expect(decoder.decode(rewritten['operations.mjs'])).toBe(
-      'import { name } from \'./vendor/effect.mjs\'; export * from \'./vendor/effect.mjs\'; export default () => import("./vendor/effect.mjs");',
+      "import { name } from './vendor/effect.mjs'; export * from './vendor/effect.mjs'; export default () => import(\"./vendor/effect.mjs\");",
     );
     expect(decoder.decode(rewritten['vendor/@dxos/app-toolkit/SchemaAdapter.mjs'])).toBe(
       "import { name } from '../../effect.mjs'; export default name;",
@@ -70,14 +68,14 @@ describe('PluginLoader', () => {
     // The main module builds each plugin from its manifest, with literal imports of bodies and adapters.
     expect(main).toContain(`import('./vendor/@dxos/plugin-host-cloudflare.mjs')`);
     expect(main).toContain(`"./operations.mjs": () => import("./operations.mjs")`);
-    expect(main).toContain(`"@dxos/app-toolkit/SchemaAdapter": () => import("./vendor/@dxos/app-toolkit/SchemaAdapter.mjs")`);
+    expect(main).toContain(
+      `"@dxos/app-toolkit/SchemaAdapter": () => import("./vendor/@dxos/app-toolkit/SchemaAdapter.mjs")`,
+    );
     expect(main).toContain(`"./operations.mjs": () => import("./deps/0/operations.mjs")`);
   });
 
   test('Worker Loader modules hold the main module, code and wasm, and no source maps', async ({ expect }) => {
-    const code = await PluginLoader.workerCode(
-      bundle({ 'operations.mjs.map': '{}', 'vendor/asset.wasm': '\0asm' }),
-    );
+    const code = await PluginLoader.workerCode(bundle({ 'operations.mjs.map': '{}', 'vendor/asset.wasm': '\0asm' }));
     const modules = PluginLoader.toLoaderModules(code);
     expect(modules[PluginLoader.MAIN_MODULE]).toEqual({ js: code.main });
     expect(Object.keys(modules)).not.toContain('operations.mjs.map');
