@@ -632,6 +632,31 @@ describe('AutomergeHost', () => {
     expect(host.loadedDocumentIds).not.toContain(removed.documentId);
   });
 
+  // A peer can send a removed document back at the heads it was last saved at.
+  test('a removed document that comes back unchanged is stored again', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({ runtime, useSubduction: true });
+    await host.open();
+    onTestFinished(async () => {
+      if (host.isOpen) {
+        await host.close();
+      }
+    });
+
+    const { documentId, bytes } = await (async () => {
+      using lease = await host.createDoc<any>({ value: 1 });
+      await host.flush(Context.default());
+      return { documentId: lease.documentId, bytes: await host.exportDoc(lease.documentId) };
+    })();
+    await host.removeDocument(documentId);
+    expect(await host.getStoredHeads([documentId])).toEqual([undefined]);
+
+    using _restored = await host.createDoc(bytes, { preserveHistory: true, documentId });
+    await host.flush(Context.default());
+    expect(await host.getStoredHeads([documentId])).not.toEqual([undefined]);
+  });
+
   // The share-policy kick walks every resident document and Subduction ignores it for a diverged one,
   // so an evicted diverged document must not re-arm it on every diff pass.
   test('a diverged evicted document does not kick the share policy', async () => {

@@ -1177,6 +1177,8 @@ export class AutomergeHost extends Resource {
       }),
     );
 
+    // The document could come back at the heads it was last saved at, which would then not count as a change to save.
+    this._repo.storageSubsystem?.forgetSavedDocuments([documentId]);
     this.#forgetRemoved(documentId);
   }
 
@@ -1210,7 +1212,7 @@ export class AutomergeHost extends Resource {
    * scheduled still runs, and the flush is what makes it a no-op, since its heads then match the last save.
    */
   async #unloadForRemoval(documentId: DocumentId): Promise<void> {
-    if (this._repo.handles[documentId]) {
+    if (this._repo.getHandle(documentId)) {
       // A quarantined document's handle holds at most a partial load, which must not be saved over its bytes.
       if (!this.#quarantined.has(documentId)) {
         await this._repo.flush([documentId]);
