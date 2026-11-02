@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { init, parse } from 'es-module-lexer/js';
+import { parse } from 'es-module-lexer/js';
 
 /** A plugin bundle's files by path relative to its root, with `/` separators. */
 export type Files = Readonly<Record<string, Uint8Array>>;
@@ -84,7 +84,6 @@ type ImportRecord = { specifier: string | undefined; start: number; end: number;
 
 /** The imports of an ES module; dynamic ones with a computed specifier have none. */
 const parseImports = async (source: string): Promise<ImportRecord[]> => {
-  await init;
   const [imports] = parse(source);
   return imports
     .filter((entry) => entry.d !== -2)
