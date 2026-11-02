@@ -13,6 +13,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Format, Obj, Ref } from '@dxos/echo';
 import { Channel, Task } from '@dxos/types';
 
+import * as AgentChannels from './AgentChannels.ts';
 import * as BrainService from './BrainService.ts';
 import * as Relay from './Relay.ts';
 
@@ -132,7 +133,7 @@ export const SendMessage = Operation.make({
     chat: Schema.optional(Ref.Ref(Chat.Chat).annotate({ description: 'The chat the message was recorded in.' })),
     reason: Schema.optional(Schema.String.annotate({ description: 'Why the message was not delivered.' })),
   }),
-});
+}).pipe(AgentChannels.channelSend('chat'));
 
 /** Marks an agent's chat as its conversation with a person, so deliveries to them land there. */
 export const AssignChatParticipant = Operation.make({

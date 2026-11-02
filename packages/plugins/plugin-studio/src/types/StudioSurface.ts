@@ -2,10 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Role from '@dxos/app-framework/Role';
 import { type Obj, type Ref } from '@dxos/echo';
 
-import { Generation } from '#types';
+import type * as Generation from './Generation.ts';
 
 /**
  * The renderable content of a variant, decoupled from the ECHO object (works for both a live object

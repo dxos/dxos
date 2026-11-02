@@ -5,7 +5,7 @@
 import React from 'react';
 
 import * as Surface from '@dxos/app-framework/Surface';
-import * as DeckRole from '@dxos/plugin-deck/DeckRole';
+import * as DeckSurface from '@dxos/plugin-deck/DeckSurface';
 
 import StatusBarActionsDefault from '../StatusBarActions/index.ts';
 
@@ -16,7 +16,7 @@ export const StatusBarPanel = (_props: StatusBarPanelProps) => {
     <>
       <StatusBarActionsDefault />
       <span role='separator' className='grow' />
-      <Surface.Surface type={DeckRole.StatusBar} />
+      <Surface.Surface type={DeckSurface.StatusBar} />
     </>
   );
 };
