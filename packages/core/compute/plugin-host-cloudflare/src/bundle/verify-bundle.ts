@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { PluginLoader } from '@dxos/edge-compute/plugin-loader';
+
 import { loadBundle } from './load-bundle.ts';
 import * as PluginBundle from './PluginBundle.ts';
 
@@ -41,11 +43,11 @@ export const verifyBundle = async (
       summary: '',
     };
   }
-  if (!vendor?.specifiers[PluginBundle.HOST_SPECIFIER]) {
+  if (!vendor?.specifiers[PluginLoader.HOST_SPECIFIER]) {
     if (requireHost) {
       return {
         problems: [
-          { path: PluginBundle.VENDOR_MANIFEST_FILE, message: `does not provide ${PluginBundle.HOST_SPECIFIER}` },
+          { path: PluginBundle.VENDOR_MANIFEST_FILE, message: `does not provide ${PluginLoader.HOST_SPECIFIER}` },
         ],
         summary: '',
       };

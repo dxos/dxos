@@ -48,6 +48,9 @@
       "path": "../compute-runtime"
     },
     {
+      "path": "../edge-compute"
+    },
+    {
       "path": "../functions-runtime-cloudflare"
     }
   ]

@@ -7,6 +7,8 @@ import { readFile, realpath } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { PluginLoader } from '@dxos/edge-compute/plugin-loader';
+
 import * as PluginBundle from './PluginBundle.ts';
 
 /** Where a plugin package's bundle is built, relative to the package. */
@@ -39,7 +41,7 @@ export const buildBundle = async (packageDir: string): Promise<string> => {
       configFile: false,
       logLevel: 'warn',
       plugins: composerPlugin({
-        vendor: { extra: [{ specifier: PluginBundle.HOST_SPECIFIER, importers: [], path: hostEntry() }] },
+        vendor: { extra: [{ specifier: PluginLoader.HOST_SPECIFIER, importers: [], path: hostEntry() }] },
       }),
       build: { outDir: BUNDLE_DIR, emptyOutDir: true },
     });

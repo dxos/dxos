@@ -53,6 +53,7 @@
     "@dxos/compute": "workspace:*",
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/edge-compute": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/functions-runtime-cloudflare": "workspace:*",

@@ -4,9 +4,9 @@
 
 import { Miniflare } from 'miniflare';
 
+import { PluginLoader } from '@dxos/edge-compute/plugin-loader';
 import { type PluginProtocol } from '@dxos/protocols';
 
-import * as PluginRelease from '../PluginRelease.ts';
 import * as PluginBundle from './PluginBundle.ts';
 
 /** Why one module failed to import. */
@@ -95,16 +95,16 @@ export const loadBundle = async (files: PluginBundle.Files, options: LoadBundleO
       `The bundle has no ${PluginBundle.VENDOR_MANIFEST_FILE}: ${problems.map(({ message }) => message).join('; ')}`,
     );
   }
-  const { files: modules, mainModule, main } = PluginBundle.workerCode(files, vendor, options.dependencies ?? []);
+  const { files: modules, mainModule, main } = await PluginLoader.workerCode(files, options.dependencies ?? []);
   const miniflare = new Miniflare({
     modules: true,
     script: LOADER_HOST,
-    compatibilityDate: PluginRelease.COMPATIBILITY_DATE,
-    compatibilityFlags: [...PluginRelease.COMPATIBILITY_FLAGS],
+    compatibilityDate: PluginLoader.COMPATIBILITY_DATE,
+    compatibilityFlags: [...PluginLoader.COMPATIBILITY_FLAGS],
     workerLoaders: { LOADER: {} },
     bindings: {
-      COMPATIBILITY_DATE: PluginRelease.COMPATIBILITY_DATE,
-      COMPATIBILITY_FLAGS: [...PluginRelease.COMPATIBILITY_FLAGS],
+      COMPATIBILITY_DATE: PluginLoader.COMPATIBILITY_DATE,
+      COMPATIBILITY_FLAGS: [...PluginLoader.COMPATIBILITY_FLAGS],
       MAIN_MODULE: mainModule,
       HOST_MAIN: main,
       IMPORT_MAIN,
