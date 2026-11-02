@@ -80,6 +80,8 @@ export type UploadPluginBundleRequest = {
   slug: string;
   version: string;
   files: { path: string; content: string }[];
+  /** A channel EDGE moves to this version besides `latest`, like an npm dist-tag. */
+  channel?: string;
 };
 
 export type CreateApiTokenRequest = {

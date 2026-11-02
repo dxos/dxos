@@ -91,6 +91,18 @@ export const publish = Command.make(
           'Authenticates as the logged-in identity, or with the API token in $DX_API_TOKEN.',
       ),
     ),
+    channel: Options.String('channel').pipe(
+      Options.withDescription(
+        'A channel EDGE moves to this version, like an npm dist-tag. `latest` moves on every version that is not a prerelease.',
+      ),
+      Options.optional,
+    ),
+    uploadOnly: Options.Boolean('upload-only').pipe(
+      Options.withDefault(false),
+      Options.withDescription(
+        'Upload the bundle and write no AT Protocol records: EDGE runs it, the registry does not list it to browsers.',
+      ),
+    ),
     edgeUrl: Options.String('edge-url').pipe(
       Options.withDescription(
         'Edge base URL for bundle upload (e.g. http://localhost:8787). Bypasses profile config; a public upload then skips auth (requires WORKER_ENV=dev on the server), a --private one never does.',
@@ -196,6 +208,21 @@ export const publish = Command.make(
           return;
         }
 
+        const channel = Option.getOrUndefined(options.channel);
+        if (options.uploadOnly) {
+          const client = yield* ClientService;
+          const moduleUrl = yield* uploadToEdge({
+            client,
+            edgeUrl: Option.getOrUndefined(options.edgeUrl),
+            key,
+            version,
+            outdir,
+            channel,
+          });
+          yield* Console.log(`Uploaded:  ${moduleUrl}`);
+          return;
+        }
+
         // Authenticate for the record writes BEFORE uploading: hosted bundles are immutable once
         // uploaded, so a publish whose PDS session cannot authenticate must fail before it burns
         // the version with an orphaned upload.
@@ -213,23 +240,14 @@ export const publish = Command.make(
           moduleUrl = new URL('manifest.json', ensureTrailingSlash(assetBaseUrl)).toString();
           yield* Console.log(`Self-hosted: ${moduleUrl}`);
         } else {
-          // Upload to the edge registry via the authenticated edge client (hub-identity VP).
-          // When --edge-url is provided we bypass the profile's edge config and post directly
-          // with auth: false — relies on WORKER_ENV=dev skipAuth on the server (local dev only).
-          const explicitEdgeUrl = Option.getOrUndefined(options.edgeUrl);
-          const apiKey = Option.getOrUndefined(yield* Config.option(Config.String('DX_HUB_API_KEY')));
-          if (explicitEdgeUrl) {
-            const http = new EdgeHttpClient(explicitEdgeUrl);
-            moduleUrl = yield* uploadBundleDirect({ http, key, version, outdir });
-          } else if (apiKey) {
-            // Headless callers (CI) hold no HALO identity, so the VP flow cannot run; the admin
-            // API key authenticates the upload instead.
-            const http = new EdgeHttpClient(client.edge.http.baseUrl, { apiKey });
-            moduleUrl = yield* uploadBundleDirect({ http, key, version, outdir });
-          } else {
-            const hasIdentity = !!client.halo.identity.get();
-            moduleUrl = yield* uploadBundle({ client, key, version, outdir, auth: hasIdentity });
-          }
+          moduleUrl = yield* uploadToEdge({
+            client,
+            edgeUrl: Option.getOrUndefined(options.edgeUrl),
+            key,
+            version,
+            outdir,
+            channel,
+          });
           yield* Console.log(`Uploaded:  ${moduleUrl}`);
         }
 
@@ -299,6 +317,37 @@ const readBundleFiles = (outdir: string) =>
   });
 
 /**
+ * Uploads to the edge registry: to `edgeUrl` without auth when given (local dev), with the admin API key in
+ * `DX_HUB_API_KEY` for headless callers (CI) that hold no HALO identity, otherwise as the profile's identity.
+ */
+const uploadToEdge = ({
+  client,
+  edgeUrl,
+  key,
+  version,
+  outdir,
+  channel,
+}: {
+  client: Client;
+  edgeUrl: string | undefined;
+  key: string;
+  version: string;
+  outdir: string;
+  channel: string | undefined;
+}) =>
+  Effect.gen(function* () {
+    const apiKey = Option.getOrUndefined(yield* Config.option(Config.String('DX_HUB_API_KEY')));
+    if (edgeUrl) {
+      return yield* uploadBundleDirect({ http: new EdgeHttpClient(edgeUrl), key, version, outdir, channel });
+    }
+    if (apiKey) {
+      const http = new EdgeHttpClient(client.edge.http.baseUrl, { apiKey });
+      return yield* uploadBundleDirect({ http, key, version, outdir, channel });
+    }
+    return yield* uploadBundle({ client, key, version, outdir, channel, auth: !!client.halo.identity.get() });
+  });
+
+/**
  * Upload the build output to the edge registry via the authenticated edge client.
  * The edge gates `/registry/upload` on the caller's hub identity (verifiable
  * presentation; bypassed for local dev). Release integrity is anchored by the
@@ -310,43 +359,48 @@ const uploadBundle = ({
   key,
   version,
   outdir,
+  channel,
   auth = true,
 }: {
   client: Client;
   key: string;
   version: string;
   outdir: string;
+  channel?: string;
   auth?: boolean;
 }) =>
   Effect.gen(function* () {
     const files = yield* readBundleFiles(outdir);
 
     const { moduleUrl } = yield* Effect.tryPromise(() =>
-      client.edge.http.uploadPluginBundle(Context.default(), { slug: key, version, files }, { auth }),
+      client.edge.http.uploadPluginBundle(Context.default(), { slug: key, version, files, channel }, { auth }),
     );
     return moduleUrl;
   });
 
 /**
  * Upload using a standalone EdgeHttpClient (no DXOS profile required).
- * Auth is skipped — the server must have WORKER_ENV=dev to accept unauthenticated uploads.
+ * No identity is presented: the client's API key authenticates, or the server must have WORKER_ENV=dev to accept
+ * unauthenticated uploads.
  */
 const uploadBundleDirect = ({
   http,
   key,
   version,
   outdir,
+  channel,
 }: {
   http: EdgeHttpClient;
   key: string;
   version: string;
   outdir: string;
+  channel?: string;
 }) =>
   Effect.gen(function* () {
     const files = yield* readBundleFiles(outdir);
 
     const { moduleUrl } = yield* Effect.tryPromise({
-      try: () => http.uploadPluginBundle(Context.default(), { slug: key, version, files }, { auth: false }),
+      try: () => http.uploadPluginBundle(Context.default(), { slug: key, version, files, channel }, { auth: false }),
       // Keep EdgeCallFailedError intact for the conflict recovery below; type everything else.
       catch: (error) =>
         error instanceof EdgeCallFailedError
