@@ -8,6 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { trim } from '@dxos/util';
@@ -91,7 +92,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       mimeType: 'application/x-mdl',
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section', 'org.dxos.role.slide'],
+      roles: [AppSurface.Article, AppSurface.CardContent, AppSurface.Section, AppSurface.Slide],
     }),
     Capability.lazyModule(
       'RefitState',

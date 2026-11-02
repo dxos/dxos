@@ -1089,7 +1089,7 @@ export class EntityMetaIndex implements Index {
   /**
    * Query children by parent object ids.
    * Matches both:
-   * - Objects whose `parent` field references one of the given parent ids (standard parent/child hierarchy).
+   * - Objects whose parent is one of the given parent ids within the same space (standard parent/child hierarchy).
    * - Queue items whose `queueId` equals one of the parent ids (e.g. items inside a Feed, since a feed's queue
    *   DXN uses the feed's object id as its queue id — see `Feed.getFeedUri`).
    */
@@ -1101,16 +1101,16 @@ export class EntityMetaIndex implements Index {
         }
 
         const sql = this.#sql;
-        // Each parent id binds twice (as a DXN and as a queue id) and each space id once, so a
+        // Each parent id binds twice (as a parent id and as a queue id) and each space id once, so a
         // third of the budget per list keeps the statement whole.
         const chunkSize = chunkSizeForBoundVariables(3);
-        // A row can match one chunk by `parent` and another by `queueId`, so it is deduplicated.
+        // A row can match one chunk by `parentId` and another by `queueId`, so it is deduplicated.
         const byRecordId = new Map<number, EntityMeta>();
         for (const spaceIds of chunkArray(query.spaceId, chunkSize)) {
           for (const parentIds of chunkArray(query.parentIds, chunkSize)) {
-            const parentDxns = parentIds.map((id) => EID.make({ entityId: id }));
+            // `parentId` is the parent's bare id whether the reference was stored with its space or without.
             const rows =
-              yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', spaceIds)} AND (${sql.in('parent', parentDxns)} OR ${sql.in('queueId', parentIds)})`;
+              yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', spaceIds)} AND (${sql.in('parentId', parentIds)} OR ${sql.in('queueId', parentIds)})`;
             for (const row of rows) {
               byRecordId.set(row.recordId, { ...row, deleted: !!row.deleted });
             }

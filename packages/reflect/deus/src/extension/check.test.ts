@@ -133,6 +133,14 @@ describe('mdl lint', () => {
     const d1 = decision('D-1', 'Use X.');
     const d2 = decision('D-2', 'Use Y.');
 
+    test('a fence holding several decisions is read as one entry each', ({ expect }) => {
+      const both = block(
+        'decision D-1: Use X.\n  date: 2026-10-20\n  by: user:bob\n\ndecision D-2: Use Y.\n  date: 2026-10-20\n  by: user:bob',
+      );
+      expect(parseChangelog(spec('X', both)).entries.map(({ id }) => id)).toEqual(['D-1', 'D-2']);
+      expect(checkChangelogChange(spec('X', both), spec('X and Y', both, decision('D-3', 'Use Z.')))).toEqual([]);
+    });
+
     test('body change with a new decision', ({ expect }) => {
       expect(checkChangelogChange(spec('X', d1), spec('X and Y', d1, d2))).toEqual([]);
     });
