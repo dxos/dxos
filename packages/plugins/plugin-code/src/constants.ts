@@ -16,6 +16,9 @@ export const CODE_PROJECT_BUILD_TYPE = `${CodeNamespace.key}.code-project-build`
  */
 export const PLUGIN_SPEC_TYPE = 'org.dxos.plugin.spec';
 
+/** Companion variant of a spec's panel of views: its definitions, review, decisions and the rest. */
+export const SPEC_COMPANION = 'spec';
+
 /** Registry key of the built-in introspect-mcp server behind the Coder skill. */
 export const INTROSPECT_MCP_KEY = 'org.dxos.mcp.introspect';
 

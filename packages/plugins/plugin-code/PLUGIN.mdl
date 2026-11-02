@@ -183,9 +183,9 @@ component FileTree
 ```mdl
 component SpecArticle
   desc: |
-    Article and section surface for a Spec, laid out as an IDE page: the MDL editor beside a
-    panel of views (definitions graph, review, code, decisions by person, decision graph,
-    data model, API).
+    Article and section surface for a Spec: the MDL editor. A Spec's panel of views is its
+    SpecCompanion; static content (a bundled PLUGIN.mdl), which has no node to be the companion
+    of, shows the SpecPanel beside the editor.
     Uses `react-ui-editor`'s Editor primitives with the `mdl()` extensions.
     Source keys to other specs are links (F-15); the latest review marks each
     reviewed item and links it to its code (F-16). Extensions plugin-projects
@@ -197,9 +197,7 @@ component SpecArticle
     content?: string            # static text, e.g. a bundled PLUGIN.mdl
     sourceKey?: string          # github: key of static content
     attendableId?: string
-  state:
-    view: definitions | review | code | log | decisions | data | api
-    codeTarget?: string         # the github: key open in the code view
+    panel?: boolean             # the panel beside the editor; static content only by default
   layout: |
     ┌──────────────────────────┬──────────────────────────────┐
     │ key · sync status        │ [Defs|Review|Code|…]         │
@@ -208,6 +206,32 @@ component SpecArticle
     │ feat F-1: …   [Missing]  │  │ F-1 │──▶  Database        │
     │  org.dxos.echo#Database  │  └─────┘   └ ─ ─ ─ ┘         │
     └──────────────────────────┴──────────────────────────────┘
+```
+
+```mdl
+component SpecPanel
+  desc: |
+    A spec's panel of views: definitions graph, review, code, decisions by person, decision
+    graph, data model and API. It shares a session with the spec's editor, wherever each is
+    shown: a chip in the editor's margin opens its view, and the panel moves the editor to an
+    item. An answer goes through the open editor, else into the spec's text.
+  props:
+    spec?: Spec
+    content?: string
+    sourceKey?: string
+  state:
+    view: definitions | review | code | log | decisions | data | api
+    codeTarget?: string         # the github: key open in the code view
+    diff?: base | head          # what the editor compares the spec with
+```
+
+```mdl
+component SpecCompanion
+  desc: |
+    The SpecPanel as a companion: beside a spec's level, and beside a project that owns a
+    spec, for the spec its Specs tab picked.
+  props:
+    companionTo: Spec | Project
 ```
 
 ```mdl
@@ -1530,6 +1554,25 @@ decision D-46: The sync maps front matter in plugin-code's `FrontMatter`, around
 ```
 
 ---
+
+```mdl
+decision D-47: A spec's panel of views (definitions, review, code, its decisions and the rest) is a companion of the spec, beside wherever the spec is shown.
+  date: 2026-11-02
+  by: user:wittjosiah
+  affects: [SpecArticle]
+```
+
+```mdl
+decision D-48: The panel is SpecPanel, which SpecCompanion shows beside a spec's level and beside a project that owns a spec, for the spec its Specs tab picked. The editor and the panel share a session per spec, so a margin chip opens the companion at its view and the panel moves the editor; an answer goes through the open editor, else straight into the text. Static content, which has no node to be the companion of, keeps the panel beside the editor. Fills in [D-47].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [SpecArticle, SpecPanel, SpecCompanion]
+  why: The spec is edited inside the project's Specs tab, which has no room for a second pane, and a companion sits beside the plank on every level.
+  rejected:
+    - Keeping the panel inside the article and showing it in the Specs tab, which splits a tab that already has its own toolbar.
+```
+
 
 ## Appendix: Extension Definitions
 

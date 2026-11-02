@@ -8,11 +8,13 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as Project from '@dxos/compute/Project';
 import * as Spec from '@dxos/compute/Spec';
 
-import { CodeArticle, CodeSettings, SpecArticle } from '#containers';
+import { CodeArticle, CodeSettings, SpecArticle, SpecCompanion } from '#containers';
 import { CodeProject } from '#types';
 
+import { SPEC_COMPANION } from '../constants.ts';
 import { CodeNamespace } from '../namespace.ts';
 import { isPluginSpecSubject } from '../plugin-spec.ts';
 
@@ -32,6 +34,18 @@ export default Capability.makeModule(() =>
         filter: AppSurface.object(AppSurface.Section, Spec.Spec),
         component: SpecArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+      }),
+      Surface.create({
+        id: 'specCompanion',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, SPEC_COMPANION),
+          AppSurface.oneOf(
+            AppSurface.companion(AppSurface.Article, Spec.Spec),
+            AppSurface.companion(AppSurface.Article, Project.Project),
+          ),
+        ),
+        component: SpecCompanion,
+        props: ({ data: { companionTo } }) => ({ companionTo }),
       }),
       Surface.create({
         id: 'codeArticle',

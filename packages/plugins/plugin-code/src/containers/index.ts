@@ -7,3 +7,4 @@ import { type ComponentType, lazy } from 'react';
 export const CodeArticle: ComponentType<any> = lazy(() => import('./CodeArticle/index.ts'));
 export const CodeSettings: ComponentType<any> = lazy(() => import('./CodeSettings/index.ts'));
 export const SpecArticle: ComponentType<any> = lazy(() => import('./SpecArticle/index.ts'));
+export const SpecCompanion: ComponentType<any> = lazy(() => import('./SpecCompanion/index.ts'));

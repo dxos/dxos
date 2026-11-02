@@ -85,6 +85,7 @@ export const translations = [
         'spec-view.api.label': 'API',
         'spec-view.review.label': 'Review',
         'spec-view.code.label': 'Code',
+        'spec-companion.label': 'Spec',
         'spec-panel.hide.label': 'Hide panel',
         'spec-panel.show.label': 'Show panel',
         'spec-panel.resize.label': 'Resize panel',

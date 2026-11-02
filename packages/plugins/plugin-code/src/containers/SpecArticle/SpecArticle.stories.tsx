@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useEffect, useState } from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as Spec from '@dxos/compute/Spec';
@@ -24,6 +25,7 @@ import PLUGIN_CODE_MDL from '../../../PLUGIN.mdl?raw';
 import { useSpecTexts } from '../../testing/index.ts';
 import PLUGIN_CODE_BASE_MDL from './__fixtures__/plugin-code.base.mdl?raw';
 import { SpecArticle } from './SpecArticle.tsx';
+import { SpecPanel } from './SpecPanel.tsx';
 
 const DefaultStory = ({ content }: { content?: string }) => {
   const spaces = useSpaces();
@@ -40,7 +42,8 @@ const DefaultStory = ({ content }: { content?: string }) => {
     return <Loading />;
   }
 
-  return <SpecArticle role='article' subject={spec} attendableId='story' />;
+  // Storybook has no companion, so the panel shows beside the text.
+  return <SpecArticle role='article' subject={spec} attendableId='story' panel />;
 };
 
 const meta = {
@@ -158,6 +161,26 @@ export const AnySpec: Story = {
       <SpecTabStory tab={tab} />
     ) : (
       <SpecArticle role='article' attendableId='story' content={PLUGIN_CODE_MDL} />
+    );
+  },
+};
+
+/** The panel apart from the text, as the spec's companion shows it: a decision chip in the margin shows the decision. */
+export const Companion: Story = {
+  render: () => (
+    <div className='grid grid-cols-2 h-full'>
+      <SpecArticle role='article' attendableId='story' content={PLUGIN_CODE_MDL} panel={false} />
+      <SpecPanel content={PLUGIN_CODE_MDL} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const chips = await waitFor(() => canvas.getAllByTestId('spec-changelog.gutter-chip'), { timeout: 10_000 });
+    await userEvent.click(chips[0]);
+    await waitFor(() =>
+      expect(canvasElement.querySelector('[data-testid="spec-article.panel"]')?.getAttribute('data-view')).toMatch(
+        /^(decisions|log)$/,
+      ),
     );
   },
 };
