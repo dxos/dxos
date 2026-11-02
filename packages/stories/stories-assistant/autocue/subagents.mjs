@@ -6,7 +6,7 @@
  * Subagents: the agent delegates three tasks to subagents that run in background threads, keeps answering the reader,
  * and compares their results once they report.
  *
- * @mdl packages/core/compute/trajectory/LIGHT-THREADS.mdl test QA-4
+ * @mdl packages/core/compute/compute/docs/trajectory/LIGHT-THREADS.mdl test QA-4
  * @app storybook via `DX_STORIES=stories/stories-assistant moon run storybook-react:serve` on :9009,
  *   story `stories-stories-assistant-subagents--demo` in isolation mode
  */

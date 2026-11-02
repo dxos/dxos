@@ -5,7 +5,7 @@
 /**
  * Light threads: three prompts sent while the agent researches run beside it, and one waits for it.
  *
- * @mdl packages/core/compute/trajectory/LIGHT-THREADS.mdl test QA-1
+ * @mdl packages/core/compute/compute/docs/trajectory/LIGHT-THREADS.mdl test QA-1
  * @app storybook via `DX_STORIES=stories/stories-assistant moon run storybook-react:serve` on :9009,
  *   story `stories-stories-assistant-lightthreads--demo` in isolation mode
  */

@@ -9,7 +9,7 @@ import { join } from 'node:path';
  * Two real agents in one chat: DeepSeek V4 Flash draws a flowchart on a canvas while Claude Code edits files, and
  * neither prompts the other.
  *
- * @mdl packages/core/compute/trajectory/LIGHT-THREADS.mdl test QA-3
+ * @mdl packages/core/compute/compute/docs/trajectory/LIGHT-THREADS.mdl test QA-3
  * @app storybook via `DX_STORIES=plugins/plugin-assistant,stories/stories-assistant moon run storybook-react:serve`
  *   on :9009, story `stories-stories-assistant-multitenantthreads--live` in isolation mode with
  *   `&helperPort=<port>&helperToken=<token>&cwd=<folder>` appended; the agent helper (plugin-claude

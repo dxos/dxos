@@ -5,7 +5,7 @@
 /**
  * Agent multi-tenancy: DeepSeek V4 Flash and Claude Code work in one chat, each in lanes it owns.
  *
- * @mdl packages/core/compute/trajectory/LIGHT-THREADS.mdl test QA-2
+ * @mdl packages/core/compute/compute/docs/trajectory/LIGHT-THREADS.mdl test QA-2
  * @app storybook via `DX_STORIES=plugins/plugin-assistant,stories/stories-assistant moon run storybook-react:serve`
  *   on :9009, story `stories-stories-assistant-multitenantthreads--demo` in isolation mode
  */
