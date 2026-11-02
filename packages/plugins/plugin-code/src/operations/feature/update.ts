@@ -24,6 +24,10 @@ const handler: Operation.WithHandler<typeof FeatureOperation.Update> = FeatureOp
         );
       }
       Obj.update(feature, (feature) => {
+        // First, so requirements below are numbered under the block id the new sources give.
+        if (specs !== undefined) {
+          Feature.setSources(feature, specs);
+        }
         if (key === null) {
           delete Obj.getMeta(feature).key;
         } else if (key !== undefined) {
@@ -44,9 +48,6 @@ const handler: Operation.WithHandler<typeof FeatureOperation.Update> = FeatureOp
           feature.status = status;
         }
       });
-      if (specs !== undefined) {
-        Feature.setSources(feature, specs);
-      }
       const container = FeatureMap.getContainer(feature);
       // A position belongs to the canvas it was dragged on, so a move leaves it behind; the embed moves with it.
       if (target && container?.id !== target.id) {

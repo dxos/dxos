@@ -149,20 +149,18 @@ export const getBlockId = (feature: Feature | Obj.Snapshot<Feature>): string | u
     .find((id) => id !== undefined);
 
 /** Sets the spec blocks the feature was read in from, leaving its other foreign keys. */
-export const setSources = (feature: Feature, sources: readonly string[]): void => {
+export const setSources = (feature: Obj.Mutable<Feature>, sources: readonly string[]): void => {
   const current = getSources(feature);
   if (current.length === sources.length && current.every((source, index) => source === sources[index])) {
     return;
   }
-  Obj.update(feature, (feature) => {
-    const keys = Obj.getMeta(feature).keys;
-    keys.splice(
-      0,
-      keys.length,
-      ...keys.filter(({ source }) => source !== SPEC_KEY_SOURCE),
-      ...sources.map((id) => ({ source: SPEC_KEY_SOURCE, id })),
-    );
-  });
+  const keys = Obj.getMeta(feature).keys;
+  keys.splice(
+    0,
+    keys.length,
+    ...keys.filter(({ source }) => source !== SPEC_KEY_SOURCE),
+    ...sources.map((id) => ({ source: SPEC_KEY_SOURCE, id })),
+  );
 };
 
 /**

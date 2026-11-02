@@ -88,7 +88,9 @@ export const FeaturesPartial: SampleSpace.Partial<FeaturesResult, FeaturesInput>
             status: 'planned',
           }),
         );
-        Feature.setSources(feature, [`${SPEC_PATH}#${seed.feat}`]);
+        Obj.update(feature, (feature) => {
+          Feature.setSources(feature, [`${SPEC_PATH}#${seed.feat}`]);
+        });
         if (seed.subfeatures) {
           const parts: Feature.Feature[] = [];
           for (const subfeature of seed.subfeatures) {

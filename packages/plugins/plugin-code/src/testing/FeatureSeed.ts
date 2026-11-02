@@ -90,7 +90,9 @@ export const seed = (
         code: model.code.map((link) => ({ ...link })),
       }),
     );
-    Feature.setSources(feature, model.specs);
+    Obj.update(feature, (feature) => {
+      Feature.setSources(feature, model.specs);
+    });
     if (model.subfeatures.length > 0) {
       const subfeatures = model.subfeatures.map((subfeature) =>
         db.add(Feature.make({ name: subfeature.name, status: subfeature.status })),

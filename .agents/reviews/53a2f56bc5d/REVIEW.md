@@ -59,7 +59,7 @@ _7 error(s), 69 warning(s)._
 - 53a2f56bc5d-41 - ignored - no-unused-new-api - packages/plugins/plugin-code/src/skills/feature-map/index.ts:1
 - 53a2f56bc5d-42 - ignored - import-as-namespace-is-all-or-nothing - packages/plugins/plugin-code/src/sync/index.ts:1
 - 53a2f56bc5d-43 - ignored - operations-resolve-database-from-service - packages/plugins/plugin-code/src/testing/FeatureSeed.ts:73
-- 53a2f56bc5d-44 - ignored - setter-must-not-own-transaction - packages/plugins/plugin-code/src/types/Feature.ts:152
+- 53a2f56bc5d-44 - resolved - setter-must-not-own-transaction - packages/plugins/plugin-code/src/types/Feature.ts:152
 - 53a2f56bc5d-45 - ignored - import-as-namespace-is-all-or-nothing - packages/plugins/plugin-code/src/types/FeatureEmbed.ts:1
 - 53a2f56bc5d-46 - ignored - no-trivial-wrappers-over-official-apis - packages/plugins/plugin-code/src/types/SpecText.test.ts:31
 - 53a2f56bc5d-47 - ignored - bounded-live-state - packages/plugins/plugin-debug/src/samples/ride-check/features.ts:70
@@ -423,6 +423,7 @@ Resolved:
 - 2: the migration test sets each parent at make time with `[Obj.Parent]` where the parent exists first. The legacy-spec tests keep `Obj.setParent`, because there the parent holds refs to its children and is made after them.
 - 6: `FeatureCanvasCells` tracks the hovered cell in a `useHoveredCell` hook, which also drops the `as Element` cast for an `instanceof` check.
 - 27: the `Companion` story lays out with `Layout.Grid`.
+- 44: `Feature.setSources` writes into the caller's `Obj.update` (from the base branch, merged in); each caller opens the update.
 
 Ignored, because the flagged line is unchanged from main (the stack only moved the file from plugin-projects, or did not touch the line): 1, 3, 4, 7, 8, 9, 10, 12, 13, 14, 16, 17, 18, 19, 20, 23, 28, 30, 31, 32, 33, 34, 35, 36, 37, 42, 47, 48, 49, 50, 51, 53, 54, 55, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 69, 71, 72, 73, 74, 76.
 
@@ -439,7 +440,6 @@ Ignored on reading:
 - 39, 41 (no-unused-new-api): `FeatureMapSkill` is contributed in `skill-definition.ts` and referenced by the feature spec template.
 - 40, 45, 67, 70 (import-as-namespace-is-all-or-nothing): these modules follow the namespace pattern; `check-module-structure` and the subpath lint pass.
 - 43 (operations-resolve-database-from-service): `FeatureSeed.seed` is a testing helper, not an operation.
-- 44 (setter-must-not-own-transaction): no caller invokes `Feature.setSources` inside an open `Obj.update`; `update.ts` runs two updates one after the other.
 - 56 (options-object-with-defaults): `(props, options)` is the `CreateObjectEntry.createObject` contract.
 - 68 (test-asserts-real-behavior): the test activates the plugin headless and asserts what it contributes.
 - 75 (no-casts): `useCreateObject` has no cast; it narrows with `invariant`.

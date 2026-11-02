@@ -25,15 +25,17 @@ const handler: Operation.WithHandler<typeof FeatureOperation.Create> = FeatureOp
         status,
         requirements: requirements?.map((requirement) => ({ ...requirement })) ?? [],
       });
-      if (key) {
+      if (key || specs) {
         Obj.update(draft, (draft) => {
-          Obj.getMeta(draft).key = key;
+          if (key) {
+            Obj.getMeta(draft).key = key;
+          }
+          if (specs) {
+            Feature.setSources(draft, specs);
+          }
         });
       }
       const feature = yield* Database.add(draft);
-      if (specs) {
-        Feature.setSources(feature, specs);
-      }
       attach(spec, feature);
       // The document is canonical for what the spec holds, so the feature is embedded there too.
       yield* Effect.promise(async () => {
