@@ -92,10 +92,11 @@ const config: Plugin.PluginConfig = Plugin.config({
       () => import('./src/capabilities/migrations.ts', { with: { type: 'module-url' } }),
     ),
     // Legacy scene drawings move onto `Canvas`es as each space loads, so no surface reads the legacy records.
+    // `SchemaRegistered` pulls the idle-gated type registration ahead of it: the spaces load first on a cold boot.
     Capability.lazyModule(
       'legacy-migration',
       {
-        requires: [ClientCapabilities.Client],
+        requires: [ClientCapabilities.Client, ClientCapabilities.SchemaRegistered],
         provides: [],
         activatesOn: ClientEvents.SpacesAvailable,
         environments: ['browser', 'node', 'tauri'],

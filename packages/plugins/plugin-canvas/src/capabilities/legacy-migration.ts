@@ -29,7 +29,9 @@ const migrateSpace = (space: Space) =>
     Effect.asVoid,
     Effect.catchCause((cause) =>
       Effect.sync(() => {
-        Cause.hasInterruptsOnly(cause) || log.warn('legacy drawing migration failed', { space: space.id, cause });
+        // A `Cause` logs as `{}`, which hides what failed.
+        Cause.hasInterruptsOnly(cause) ||
+          log.warn('legacy drawing migration failed', { space: space.id, error: Cause.pretty(cause) });
       }),
     ),
   );
