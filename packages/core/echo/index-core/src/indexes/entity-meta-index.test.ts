@@ -202,6 +202,46 @@ describe('EntityMetaIndex', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
+  it.effect('queryChildren matches a parent named with or without its space, and feed items by queue', () =>
+    Effect.gen(function* () {
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
+      yield* index.migrate();
+
+      const spaceId = SpaceId.random();
+      const parentId = EntityId.random();
+      const [bareChild, qualifiedChild, crossSpaceChild, feedItem] = Array.from({ length: 4 }, () => EntityId.random());
+      const document = (id: EntityId, parent: EID.EID): IndexerObject => ({
+        spaceId,
+        queueId: null,
+        queueNamespace: null,
+        documentId: `doc-${id}`,
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: { id, [ATTR_TYPE]: TYPE_PERSON, [ATTR_DELETED]: false, [ATTR_PARENT]: parent },
+      });
+      const objects: IndexerObject[] = [
+        document(bareChild, EID.make({ entityId: parentId })),
+        document(qualifiedChild, EID.make({ spaceId, entityId: parentId })),
+        document(crossSpaceChild, EID.make({ spaceId: SpaceId.random(), entityId: parentId })),
+        {
+          spaceId,
+          queueId: parentId,
+          queueNamespace: 'data',
+          documentId: null,
+          recordId: null,
+          createdAt: null,
+          updatedAt: Date.now(),
+          data: { id: feedItem, [ATTR_TYPE]: TYPE_PERSON, [ATTR_DELETED]: false },
+        },
+      ];
+      yield* index.update(objects);
+
+      const children = yield* index.queryChildren({ spaceId: [spaceId], parentIds: [parentId] });
+      expect(children.map((child) => child.objectId).sort()).toEqual([bareChild, qualifiedChild, feedItem].sort());
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('should store and update object metadata', () =>
     Effect.gen(function* () {
       const index = new EntityMetaIndex(yield* SqlClient.SqlClient);

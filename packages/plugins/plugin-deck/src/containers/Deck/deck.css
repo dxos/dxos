@@ -51,12 +51,4 @@
       }
     }
   }
-
-  /* The new-state snapshot is captured a frame into a running slide, so the layout would jump the rest of the way when the view transition ends. */
-  :root:active-view-transition {
-    .dx-main-content-padding-transitions,
-    .dx-main-intrinsic-size {
-      transition: none;
-    }
-  }
 }

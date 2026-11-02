@@ -5,6 +5,7 @@
 import React from 'react';
 
 import * as Banner from '@dxos/react-ui/Banner';
+import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -16,13 +17,15 @@ export type UnsupportedTypeProps = {
   role?: string;
   /** Typename of the object no enabled plugin can render. */
   typename: string;
+  /** Opens the plugin registry to find the plugin; omitted where the build has no registry. */
+  onFindPlugin?: () => void;
 };
 
 /**
- * Inert, status-only stand-in for an object no enabled plugin can render — offers no remedy; which
- * objects reach it is `capabilities/react-surface.ts`'s call.
+ * Stand-in for an object no enabled plugin can render; which objects reach it is
+ * `capabilities/react-surface.ts`'s call.
  */
-export const UnsupportedType = ({ role, typename }: UnsupportedTypeProps) => {
+export const UnsupportedType = ({ role, typename, onFindPlugin }: UnsupportedTypeProps) => {
   const { t } = Hooks.useTranslation(PreviewNamespace.key);
 
   return (
@@ -34,6 +37,13 @@ export const UnsupportedType = ({ role, typename }: UnsupportedTypeProps) => {
             <Banner.Body data-testid='previewPlugin.unsupportedType'>
               {t('unsupported-type.message', { typename })}
             </Banner.Body>
+            {onFindPlugin && (
+              <Layout.Flex>
+                <Button.Root variant='primary' onClick={onFindPlugin} data-testid='previewPlugin.findPlugin'>
+                  {t('find-plugin.label')}
+                </Button.Root>
+              </Layout.Flex>
+            )}
           </Banner.Root>
         </Layout.Grid>
       </Panel.Body>

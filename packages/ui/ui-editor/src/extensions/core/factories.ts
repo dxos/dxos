@@ -232,6 +232,12 @@ export const defaultStyles = {
   light: vscodeLightStyle,
 };
 
+// Built once: every `HighlightStyle.define` call mints a new stylesheet, which restyles the whole document.
+const defaultHighlightStyles = {
+  dark: HighlightStyle.define(defaultStyles.dark),
+  light: HighlightStyle.define(defaultStyles.light),
+};
+
 /**
  * https://codemirror.net/examples/styling
  */
@@ -248,7 +254,7 @@ export const createThemeExtensions = ({
     EditorView.darkTheme.of(themeMode === 'dark'),
     createFontTheme({ monospace }),
     syntaxHighlightingProp &&
-      syntaxHighlighting(HighlightStyle.define(themeMode === 'dark' ? defaultStyles.dark : defaultStyles.light)),
+      syntaxHighlighting(themeMode === 'dark' ? defaultHighlightStyles.dark : defaultHighlightStyles.light),
     slots.editor?.className && EditorView.editorAttributes.of({ class: slots.editor.className }),
     slots.content?.className && EditorView.contentAttributes.of({ class: slots.content.className }),
     (slots.scroller?.className || scrollbarThin) &&

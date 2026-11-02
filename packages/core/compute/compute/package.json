@@ -53,6 +53,11 @@
       "types": "./dist/types/src/types/Instructions.d.ts",
       "import": "./dist/lib/types/Instructions.mjs"
     },
+    "./Hook": {
+      "source": "./src/Hook.ts",
+      "types": "./dist/types/src/Hook.d.ts",
+      "import": "./dist/lib/Hook.mjs"
+    },
     "./LayerSpec": {
       "source": "./src/LayerSpec.ts",
       "types": "./dist/types/src/LayerSpec.d.ts",
@@ -88,6 +93,11 @@
       "source": "./src/types/Routine.ts",
       "types": "./dist/types/src/types/Routine.d.ts",
       "import": "./dist/lib/types/Routine.mjs"
+    },
+    "./Spec": {
+      "source": "./src/types/Spec.ts",
+      "types": "./dist/types/src/types/Spec.d.ts",
+      "import": "./dist/lib/types/Spec.mjs"
     },
     "./Runnable": {
       "source": "./src/Runnable.ts",

@@ -8,15 +8,17 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import { trim } from '@dxos/util';
 
 import { NativeNamespace } from './src/namespace.ts';
+import { type NativeOptions } from './src/settings-store.ts';
 import * as NativeCapabilities from './src/types/NativeCapabilities.ts';
 import * as NativeEvents from './src/types/NativeEvents.ts';
 
 // Annotated: the capability modules import `meta` from here, so inferring it would be circular.
-const config: Plugin.PluginConfig = Plugin.config({
+const config: Plugin.PluginConfig<NativeOptions> = Plugin.config<NativeOptions>({
   plugin: {
     key: NativeNamespace.key,
     name: 'App',
@@ -30,7 +32,8 @@ const config: Plugin.PluginConfig = Plugin.config({
 
       Manages over-the-air application updates via the Tauri updater plugin, automatically
       checking for new releases in the background, streaming download progress, and surfacing
-      a toast notification with a one-click Relaunch action when an update is ready.
+      a toast notification with a one-click Relaunch action when an update is ready. With
+      "Update on startup" on, it installs an update while the app starts and relaunches.
 
       Spawns the bundled Ollama process on localhost for local AI model inference, registering
       it as an AiModelResolver so Assistant features can resolve model requests without any
@@ -70,7 +73,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       mimeType: 'application/x-mdl',
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: ['org.dxos.role.article'],
+      roles: [AppSurface.Article],
     }),
     Capability.lazyModule(
       'SpotlightListener',
@@ -79,11 +82,21 @@ const config: Plugin.PluginConfig = Plugin.config({
     ),
     AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
     Capability.lazyModule(
+      'BootGate',
+      {
+        activatesOn: ActivationEvents.Startup,
+        requires: [Capabilities.AtomRegistry, NativeCapabilities.UpdateManager],
+        provides: [Capabilities.BootGate],
+      },
+      () => import('./src/capabilities/boot-gate.ts', { with: { type: 'module-url' } }),
+    ),
+    // Startup: `BootGate` requires this, and the startup pass activates only startup modules.
+    Capability.lazyModule(
       'Updater',
       {
         requires: [Capabilities.AtomRegistry, Capabilities.OperationInvoker],
         provides: [NativeCapabilities.UpdateManager],
-        activatesOn: NativeEvents.Start,
+        activatesOn: ActivationEvents.Startup,
       },
       () => import('./src/capabilities/updater.ts', { with: { type: 'module-url' } }),
     ),

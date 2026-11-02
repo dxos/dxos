@@ -46,19 +46,11 @@ type ObjectFormModelOptions = {
 };
 
 /**
- * The form model shared by `ObjectForm` and `ObjectProperties`: the object's values with its editable meta tags under
- * {@link META_TAGS_KEY}, a change handler writing changed paths (and tags) back through `Obj.update`, and a create
- * handler that adds a ref field's new target to the object's database.
+ * A form's `onCreate` that adds a ref field's new target to `db`. A type whose structure `Obj.make` alone cannot produce
+ * (a required backing ref) declares a `FactoryAnnotation`.
  */
-const useObjectFormModel = ({ object, snapshot, db }: ObjectFormModelOptions) => {
-  const storedTags = useAtomValue(Obj.tagsAtom(object));
-  // Provider-owned tags are held out of the form and written back untouched (see `partitionMetaTags`).
-  const { editable: tags, preserved: preservedTags } = useMemo(() => partitionMetaTags(storedTags), [storedTags]);
-  // The picker edits refs; the tags themselves are what meta holds.
-  const values = useMemo(() => ({ [META_TAGS_KEY]: tags.map((tag) => Ref.make(tag)), ...snapshot }), [snapshot, tags]);
-
-  // A type whose structure `Obj.make` alone cannot produce (a required backing ref) declares a `FactoryAnnotation`.
-  const handleCreate = useCallback(
+export const useCreateObject = (db: Database.Database | undefined) =>
+  useCallback(
     (type: Type.AnyEntity, values: any): Obj.Unknown => {
       invariant(db);
       invariant(Type.isObject(type));
@@ -71,6 +63,19 @@ const useObjectFormModel = ({ object, snapshot, db }: ObjectFormModelOptions) =>
     },
     [db],
   );
+
+/**
+ * The form model shared by `ObjectForm` and `ObjectProperties`: the object's values with its editable meta tags under
+ * {@link META_TAGS_KEY}, a change handler writing changed paths (and tags) back through `Obj.update`, and a create
+ * handler that adds a ref field's new target to the object's database.
+ */
+const useObjectFormModel = ({ object, snapshot, db }: ObjectFormModelOptions) => {
+  const storedTags = useAtomValue(Obj.tagsAtom(object));
+  // Provider-owned tags are held out of the form and written back untouched (see `partitionMetaTags`).
+  const { editable: tags, preserved: preservedTags } = useMemo(() => partitionMetaTags(storedTags), [storedTags]);
+  // The picker edits refs; the tags themselves are what meta holds.
+  const values = useMemo(() => ({ [META_TAGS_KEY]: tags.map((tag) => Ref.make(tag)), ...snapshot }), [snapshot, tags]);
+  const handleCreate = useCreateObject(db);
 
   const handleChange = useCallback(
     (

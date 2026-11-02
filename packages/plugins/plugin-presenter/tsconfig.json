@@ -124,6 +124,9 @@
       "path": "../plugin-client"
     },
     {
+      "path": "../plugin-code"
+    },
+    {
       "path": "../plugin-deck"
     },
     {

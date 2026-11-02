@@ -294,21 +294,23 @@ const reactiveDriver = (parse: NonNullable<PosOptions['parse']>, debounceMs: num
   return [initial, onEdit];
 };
 
+// Built once: every `EditorView.theme` call mints a new stylesheet, which restyles the whole document.
+const posStyles = EditorView.theme({
+  '.cm-pos': {
+    borderRadius: '0.125rem',
+  },
+  ...Object.fromEntries(
+    Object.entries(POS_HUE).map(([upos, hue]) => [
+      `.cm-pos-${upos}`,
+      {
+        borderBottom: `2px solid var(--color-${hue}-500)`,
+      },
+    ]),
+  ),
+});
+
 /** Colored underline per UPOS tag (stale dimming lives in the always-on base theme). */
-export const posTheme = (): Extension =>
-  EditorView.theme({
-    '.cm-pos': {
-      borderRadius: '0.125rem',
-    },
-    ...Object.fromEntries(
-      Object.entries(POS_HUE).map(([upos, hue]) => [
-        `.cm-pos-${upos}`,
-        {
-          borderBottom: `2px solid var(--color-${hue}-500)`,
-        },
-      ]),
-    ),
-  });
+export const posTheme = (): Extension => posStyles;
 
 // Stale dimming must apply even when the underline theme is disabled (e.g. popover-only mode), so a
 // diverged span never presents confident decorations.

@@ -15,6 +15,7 @@ import React, {
   type KeyboardEvent,
   type PropsWithChildren,
   type ReactNode,
+  type RefObject,
   forwardRef,
   useEffect,
   useLayoutEffect,
@@ -254,6 +255,109 @@ const SELECTED_STYLE = {
   outlineOffset: '1px',
 };
 
+type SwatchGridProps = ThemedClassName<{
+  /** Cell names, row by row; each is its cell's accessible name. */
+  names: readonly string[];
+  columns: number;
+  /** A cell's fill, as a CSS color. */
+  colorOf: (name: string) => string;
+  /** Index of the selected cell, or -1. */
+  selected: number;
+  onSelect: (index: number) => void;
+  /** Grid track sizes; equal shares of the grid's width, one swatch tall, by default. */
+  columnWidth?: string;
+  rowHeight?: string;
+  onEnter?: () => void;
+  onEscape?: () => void;
+  /** After a click's selection; arrow keys select without it. */
+  onClickCell?: (index: number) => void;
+  /** The grid element, for a caller that reads the cells' computed colors. */
+  gridRef?: RefObject<HTMLDivElement | null>;
+}>;
+
+/**
+ * A radio group of color cells whose selection follows focus: arrow keys, Home and End pick as they move, and a roving
+ * tab stop enters the grid at the selected cell.
+ */
+const SwatchGrid = ({
+  classNames,
+  names,
+  columns,
+  colorOf,
+  selected,
+  onSelect,
+  columnWidth = 'minmax(0, 1fr)',
+  rowHeight = '1rem',
+  onEnter,
+  onEscape,
+  onClickCell,
+  gridRef: gridRefProp,
+}: SwatchGridProps) => {
+  const ownRef = useRef<HTMLDivElement>(null);
+  const gridRef = gridRefProp ?? ownRef;
+  const [active, setActive] = useState(0);
+  useEffect(() => {
+    if (selected >= 0) {
+      setActive(selected);
+    }
+  }, [selected]);
+
+  const select = (index: number) => {
+    setActive(index);
+    gridRef.current?.querySelectorAll<HTMLButtonElement>('button')[index]?.focus();
+    onSelect(index);
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const last = names.length - 1;
+    const step: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -columns, ArrowDown: columns };
+    if (event.key in step) {
+      event.preventDefault();
+      select(Math.min(last, Math.max(0, active + step[event.key])));
+    } else if (event.key === 'Home' || event.key === 'End') {
+      event.preventDefault();
+      select(event.key === 'Home' ? 0 : last);
+    } else if (event.key === 'Enter' && onEnter) {
+      event.preventDefault();
+      onEnter();
+    } else if (event.key === 'Escape') {
+      onEscape?.();
+    }
+  };
+
+  return (
+    <div
+      ref={gridRef}
+      role='radiogroup'
+      className={mx('grid gap-0.5', classNames)}
+      style={{ gridTemplateColumns: `repeat(${columns}, ${columnWidth})`, gridAutoRows: rowHeight }}
+      onKeyDown={handleKeyDown}
+    >
+      {names.map((name, index) => (
+        <button
+          key={name}
+          type='button'
+          role='radio'
+          aria-checked={index === selected}
+          aria-label={name}
+          title={name}
+          tabIndex={index === active ? 0 : -1}
+          // A cell is too small for the inset focus ring, so focus and selection ring it outside, raised over its neighbours.
+          className='relative rounded-xs outline-none focus-visible:z-20 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-(--dx-focus-ring-color)'
+          style={{
+            backgroundColor: colorOf(name),
+            ...(index === selected && SELECTED_STYLE),
+          }}
+          onClick={() => {
+            select(index);
+            onClickCell?.(index);
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
 type SwatchesProps = {
   hues: SwatchHue[];
   tones: number[];
@@ -266,8 +370,7 @@ type SwatchesProps = {
 /**
  * One row per hue, one column per tone; a pick writes the tone's resolved color, since a value must not be a `var()`.
  * The grid is the wheel's width whatever the tone count, and rows stay one swatch tall, so fewer tones widen the cells.
- * A radio group whose selection follows focus: arrow keys pick as they move, Enter closes the popover keeping the pick,
- * and Escape closes it restoring the color it opened with.
+ * Enter closes the popover keeping the pick, and Escape closes it restoring the color it opened with.
  */
 const Swatches = ({ hues, tones, value, onPick }: SwatchesProps) => {
   const { open, setOpen } = useArkColorPickerContext();
@@ -289,71 +392,65 @@ const Swatches = ({ hues, tones, value, onPick }: SwatchesProps) => {
     setResolved(style ? names.map((name) => style.getPropertyValue(`--color-${name}`).trim()) : []);
   }, [names]);
 
-  const selected = value === undefined ? -1 : resolved.indexOf(value);
-  const [active, setActive] = useState(0);
-  useEffect(() => {
-    if (selected >= 0) {
-      setActive(selected);
-    }
-  }, [selected]);
-
-  const select = (index: number) => {
-    setActive(index);
-    gridRef.current?.querySelectorAll<HTMLButtonElement>('button')[index]?.focus();
-    if (resolved[index]) {
-      onPick(resolved[index]);
-    }
-  };
-
-  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    const columns = tones.length;
-    const last = names.length - 1;
-    const step: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -columns, ArrowDown: columns };
-    if (event.key in step) {
-      event.preventDefault();
-      select(Math.min(last, Math.max(0, active + step[event.key])));
-    } else if (event.key === 'Home' || event.key === 'End') {
-      event.preventDefault();
-      select(event.key === 'Home' ? 0 : last);
-    } else if (event.key === 'Enter') {
-      event.preventDefault();
-      setOpen(false);
-    } else if (event.key === 'Escape') {
-      // The picker's own Escape handling then closes the popover.
-      onPick(initialValue.current);
-    }
-  };
-
   return (
-    <div
-      ref={gridRef}
-      role='radiogroup'
-      className='grid w-48 gap-0.5'
-      style={{ gridTemplateColumns: `repeat(${tones.length}, minmax(0, 1fr))`, gridAutoRows: '1rem' }}
-      onKeyDown={handleKeyDown}
-    >
-      {names.map((name, index) => (
-        <button
-          key={name}
-          type='button'
-          role='radio'
-          aria-checked={index === selected}
-          aria-label={name}
-          title={name}
-          // Roving focus: Tab enters the grid at the current (or selected) swatch, and arrows move within it.
-          tabIndex={index === active ? 0 : -1}
-          // A cell is too small for the inset focus ring, so focus and selection ring it outside, raised over its neighbours.
-          className='relative rounded-xs outline-none focus-visible:z-20 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-(--dx-focus-ring-color)'
-          style={{
-            backgroundColor: `var(--color-${name})`,
-            ...(index === selected && SELECTED_STYLE),
-          }}
-          onClick={() => select(index)}
-        />
-      ))}
-    </div>
+    <SwatchGrid
+      gridRef={gridRef}
+      classNames='w-48'
+      names={names}
+      columns={tones.length}
+      colorOf={(name) => `var(--color-${name})`}
+      selected={value === undefined ? -1 : resolved.indexOf(value)}
+      onSelect={(index) => resolved[index] && onPick(resolved[index])}
+      onEnter={() => setOpen(false)}
+      // The picker's own Escape handling then closes the popover.
+      onEscape={() => onPick(initialValue.current)}
+    />
   );
 };
+
+//
+// HueGrid
+//
+
+type ColorPickerHueGridProps = ThemedClassName<{
+  /** The theme hues offered, in order; every chromatic hue by default. */
+  hues?: readonly string[];
+  /** Cells per row. */
+  columns?: number;
+  /** The selected hue's name (e.g. `blue`). */
+  value?: string;
+  onValueChange?: (hue: string) => void;
+  /** Called on Enter or a click, so a host popover can close keeping the pick. */
+  onCommit?: () => void;
+}>;
+
+/**
+ * The hue-only variant: a grid of theme hues whose value is the hue's name rather than a color, for a setting that
+ * follows the theme (a space's or an identity's hue). It has no Root; any popover can host it.
+ */
+const ColorPickerHueGrid = ({
+  classNames,
+  hues = allHues,
+  columns = 6,
+  value,
+  onValueChange,
+  onCommit,
+}: ColorPickerHueGridProps) => (
+  <SwatchGrid
+    classNames={['gap-1', classNames]}
+    names={hues}
+    columns={columns}
+    colorOf={(hue) => `var(--color-${hue}-surface)`}
+    selected={value === undefined ? -1 : hues.indexOf(value)}
+    onSelect={(index) => onValueChange?.(hues[index])}
+    columnWidth='1.5rem'
+    rowHeight='1.5rem'
+    onEnter={onCommit}
+    onClickCell={onCommit}
+  />
+);
+
+ColorPickerHueGrid.displayName = 'ColorPicker.HueGrid';
 
 ColorPickerTrigger.displayName = 'ColorPicker.Trigger';
 
@@ -361,13 +458,20 @@ ColorPickerTrigger.displayName = 'ColorPicker.Trigger';
 // Exports
 //
 
-export { ColorPickerInput as Input, ColorPickerRoot as Root, ColorPickerTrigger as Trigger, useColorPickerContext };
+export {
+  ColorPickerHueGrid as HueGrid,
+  ColorPickerInput as Input,
+  ColorPickerRoot as Root,
+  ColorPickerTrigger as Trigger,
+  useColorPickerContext,
+};
 
 export { DEFAULT_HUES, DEFAULT_TONES };
 
 export type { SwatchHue, ColorPickerView as View };
 
 export type {
+  ColorPickerHueGridProps as HueGridProps,
   ColorPickerInputProps as InputProps,
   ColorPickerRootProps as RootProps,
   ColorPickerTriggerProps as TriggerProps,

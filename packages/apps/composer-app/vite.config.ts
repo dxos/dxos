@@ -779,7 +779,6 @@ export default defineConfig((env) => ({
         // so any icon the app has rendered once stays available offline.
         globIgnores: ['**/phosphor/**', ...ON_DEMAND_FONTS.map((font) => `**/${font}-${FONT_SUBSETS}-*.woff2`)],
       },
-      includeAssets: ['favicon.ico'],
       manifest: {
         name: 'DXOS Composer',
         short_name: 'Composer',

@@ -22,6 +22,6 @@ describe('TransformerPlugin', () => {
     });
 
     // Modules expected to be active after a normal startup.
-    expect(harness.manager.getActive()).toContain(moduleId('schema'));
+    expect(harness.manager.getActive()).toContain(moduleId('translations'));
   });
 });

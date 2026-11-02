@@ -133,3 +133,134 @@ export const Test: Story = {
     await expect(getComputedStyle(byTestId(md, 'disabled-md')).opacity).toBe('0.5');
   },
 };
+
+const VariantsStory = ({ size }: SizeArgs) => {
+  const [value, setValue] = useState('40');
+  return (
+    <>
+      <Field.Root>
+        <Field.Label>Split</Field.Label>
+        <NumberInput defaultValue='5' stepper='split' data-testid={`split-${size}`} />
+      </Field.Root>
+      <Field.Root>
+        <Field.Label>Aligned</Field.Label>
+        <NumberInput defaultValue='1250' align='end' stepper='split' data-testid={`aligned-${size}`} />
+      </Field.Root>
+      <Field.Root>
+        <Field.Label>Hover right-aligned</Field.Label>
+        <NumberInput defaultValue='12' align='end' stepperOnHover data-testid={`leading-${size}`} />
+      </Field.Root>
+      <Field.Root>
+        <Field.Label>Hover left-aligned</Field.Label>
+        <NumberInput defaultValue='3' stepperOnHover data-testid={`hover-${size}`} />
+      </Field.Root>
+      <Field.Root>
+        <Field.Label>Volume</Field.Label>
+        <NumberInput
+          min={0}
+          max={100}
+          step={5}
+          value={value}
+          onValueChange={setValue}
+          stepper={false}
+          slider
+          align='end'
+          data-testid={`slider-${size}`}
+        />
+        <Field.HelperText>
+          <output data-testid={`slider-${size}-value`}>{value}</output>
+        </Field.HelperText>
+      </Field.Root>
+    </>
+  );
+};
+
+/** Stepper placements (`split`, `start`), hover-revealed steppers, end-aligned figures and the slider button. */
+export const Variants: Story = {
+  render: VariantsStory,
+};
+
+/**
+ * `split` puts decrement before the input and increment after it, each inside the row; `align='end'` right-aligns the
+ * figures; `stepperOnHover` steppers sit opposite the number and are hidden until the row is hovered or focused; the slider button opens a slider that drives the value.
+ */
+export const VariantsTest: Story = {
+  render: VariantsStory,
+  play: async ({ canvasElement }) => {
+    const md = sizeRow(canvasElement, 'md');
+    const canvas = within(md);
+
+    const split = byTestId(md, 'split-md');
+    const splitRect = split.getBoundingClientRect();
+    const input = within(split).getByRole('spinbutton');
+    const decrement = within(split).getByRole('button', { name: 'Decrement' });
+    const increment = within(split).getByRole('button', { name: 'Increment' });
+    await expect(decrement.getBoundingClientRect().right).toBeLessThanOrEqual(input.getBoundingClientRect().left);
+    await expect(increment.getBoundingClientRect().left).toBeGreaterThanOrEqual(input.getBoundingClientRect().right);
+    for (const button of [decrement, increment]) {
+      const rect = button.getBoundingClientRect();
+      await expect(rect.left).toBeGreaterThanOrEqual(splitRect.left);
+      await expect(rect.right).toBeLessThanOrEqual(splitRect.right);
+    }
+    await userEvent.click(decrement);
+    await waitFor(() => expect(input).toHaveValue('4'));
+    await userEvent.click(increment);
+    await userEvent.click(increment);
+    await waitFor(() => expect(input).toHaveValue('6'));
+
+    await expect(getComputedStyle(canvas.getByRole('spinbutton', { name: 'Aligned' })).textAlign).toBe('end');
+    await expect(getComputedStyle(canvas.getByRole('spinbutton', { name: 'Split' })).textAlign).not.toBe('end');
+
+    const leading = byTestId(md, 'leading-md');
+    const leadingInput = within(leading).getByRole<HTMLInputElement>('spinbutton');
+    // Hidden until hovered; focus reveals the pair through the same rule.
+    await expect(getComputedStyle(within(leading).getAllByRole('button', { hidden: true })[0]).visibility).toBe(
+      'hidden',
+    );
+    // Clicks before the first digit, which focus overrides.
+    await userEvent.pointer({ keys: '[MouseLeft]', target: leadingInput, offset: 0 });
+    const leadingIncrement = within(leading).getByRole('button', { name: 'Increment' });
+    await expect(leadingIncrement.getBoundingClientRect().right).toBeLessThanOrEqual(
+      leadingInput.getBoundingClientRect().left,
+    );
+    await expect(
+      within(leading).getByRole('button', { name: 'Decrement' }).getBoundingClientRect().left,
+    ).toBeGreaterThanOrEqual(leading.getBoundingClientRect().left);
+    await expect(getComputedStyle(leadingInput).textAlign).toBe('end');
+    // Focus puts the caret after the last digit.
+    await waitFor(() => expect(leadingInput.selectionStart).toBe(leadingInput.value.length));
+    await userEvent.click(leadingIncrement);
+    await waitFor(() => expect(leadingInput).toHaveValue('13'));
+
+    const hover = byTestId(md, 'hover-md');
+    // Hidden buttons have no accessible name, so take the pair by position.
+    const hoverButtons = within(hover).getAllByRole('button', { hidden: true });
+    await expect(hoverButtons).toHaveLength(2);
+    for (const button of hoverButtons) {
+      await expect(getComputedStyle(button).visibility).toBe('hidden');
+    }
+    // Synthetic pointer events cannot set CSS `:hover`; focus reveals the pair through the same rule.
+    await userEvent.click(within(hover).getByRole('spinbutton'));
+    await waitFor(() => expect(within(hover).getByRole('button', { name: 'Increment' })).toBeVisible());
+    await expect(
+      within(hover).getByRole('button', { name: 'Decrement' }).getBoundingClientRect().left,
+    ).toBeGreaterThanOrEqual(within(hover).getByRole('spinbutton').getBoundingClientRect().right);
+    await userEvent.click(within(hover).getByRole('button', { name: 'Increment' }));
+    await waitFor(() => expect(canvas.getByRole('spinbutton', { name: 'Hover left-aligned' })).toHaveValue('4'));
+
+    const sliderRow = byTestId(md, 'slider-md');
+    // A trailing slider button takes the same end cell as a trailing stepper, so end-aligned figures line up.
+    await expect(within(sliderRow).getByRole('spinbutton').getBoundingClientRect().right).toBeCloseTo(
+      canvas.getByRole('spinbutton', { name: 'Aligned' }).getBoundingClientRect().right,
+      0,
+    );
+    await expect(within(sliderRow).queryByRole('button', { name: 'Increment' })).toBeNull();
+    await userEvent.click(within(sliderRow).getByRole('button', { name: 'Adjust' }));
+    const thumb = await within(canvasElement.ownerDocument.body).findByRole('slider', { name: 'Adjust' });
+    await expect(thumb).toHaveAttribute('aria-valuenow', '40');
+    thumb.focus();
+    await userEvent.keyboard('{ArrowRight}{ArrowRight}');
+    await waitFor(() => expect(byTestId(md, 'slider-md-value')).toHaveTextContent('50'));
+    await userEvent.keyboard('{Escape}');
+  },
+};

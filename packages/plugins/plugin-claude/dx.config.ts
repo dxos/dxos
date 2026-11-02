@@ -10,6 +10,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
+import * as ProjectSurface from '@dxos/plugin-projects/ProjectSurface';
 import { trim } from '@dxos/util';
 
 import { ClaudeNamespace } from './src/namespace.ts';
@@ -46,6 +47,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     Capability.lazyModule(
       'ClaudeCodeAgent',
       {
+        environments: ['browser', 'node', 'tauri'],
         provides: [AssistantCapabilities.Agent, AssistantCapabilities.AgentProcess],
         // Off the boot path: loading it pulls in the MCP SDK, and agents are only read once the assistant runs a turn.
         activatesOn: AppActivationEvents.AssistantStart,
@@ -54,7 +56,11 @@ const config: Plugin.PluginConfig = Plugin.config({
     ),
     Capability.lazyModule(
       'ClaudeCodeEdgeAgent',
-      { provides: [AssistantCapabilities.Agent], activatesOn: AppActivationEvents.AssistantStart },
+      {
+        environments: ['browser', 'node', 'tauri'],
+        provides: [AssistantCapabilities.Agent],
+        activatesOn: AppActivationEvents.AssistantStart,
+      },
       () => import('./src/capabilities/claude-code-edge-agent.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
@@ -69,7 +75,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       mimeType: 'application/x-mdl',
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: ['org.dxos.plugin.projects.role.settings'],
+      roles: [ProjectSurface.Settings],
     }),
     AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.operationHandler(

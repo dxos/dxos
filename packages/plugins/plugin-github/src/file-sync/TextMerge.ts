@@ -36,6 +36,16 @@ export const applyAt = (
     catch: (cause) => new TextMergeError({ cause, context: { heads: change.heads } }),
   });
 
+/**
+ * Merges the `base` → `local` and `base` → `next` changes to a string as Automerge merges concurrent edits, for an
+ * object whose file text is rendered from it rather than held as its own text.
+ */
+export const merge = (change: { readonly base: string; readonly local: string; readonly next: string }): string => {
+  const base = A.save(A.from({ text: change.base }));
+  const edit = (text: string) => A.change(A.load<{ text: string }>(base), (doc) => A.updateText(doc, ['text'], text));
+  return A.merge(edit(change.local), edit(change.next)).text;
+};
+
 /** The heads of `text`'s document now: what `content` was read at. */
 export const currentHeads = (text: Text.Text): readonly string[] => Obj.version(text).automergeHeads ?? [];
 

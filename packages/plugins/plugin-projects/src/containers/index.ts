@@ -5,28 +5,22 @@
 import { type ComponentType } from 'react';
 import { lazy } from 'react';
 
-import { type FeatureArticleProps } from './FeatureArticle/index.ts';
-import { type FeatureCardContentProps } from './FeatureCardContent/index.ts';
-import { type FeatureCompanionProps } from './FeatureCompanion/index.ts';
 import { type MoveTaskDialogProps } from './MoveTaskDialog/index.ts';
+import { type LevelArticleProps, type SpecLevelArticleProps } from './ProjectArticle/index.ts';
 import { type ProjectBranchArticleProps } from './ProjectBranchArticle/index.ts';
-import { type SpecArticleProps } from './SpecFeatures/index.ts';
+import { type SpecDocumentArticleProps } from './SpecDocumentArticle/index.ts';
 
-export const FeatureArticle: ComponentType<FeatureArticleProps> = lazy(() =>
-  import('./FeatureArticle/index.ts').then((module) => ({ default: module.FeatureArticle })),
+export const LevelArticle: ComponentType<LevelArticleProps> = lazy(() =>
+  import('./ProjectArticle/index.ts').then((module) => ({ default: module.LevelArticle })),
 );
 
-export const FeatureCardContent: ComponentType<FeatureCardContentProps> = lazy(() =>
-  import('./FeatureCardContent/index.ts').then((module) => ({ default: module.FeatureCardContent })),
+// Lazy: the editor engine is large, and only an opened spec document needs it.
+export const SpecDocumentArticle: ComponentType<SpecDocumentArticleProps> = lazy(() =>
+  import('./SpecDocumentArticle/index.ts').then((module) => ({ default: module.SpecDocumentArticle })),
 );
 
-export const FeatureCompanion: ComponentType<FeatureCompanionProps> = lazy(() =>
-  import('./FeatureCompanion/index.ts').then((module) => ({ default: module.FeatureCompanion })),
-);
-
-// Lazy: the canvas engine is large, and only a spec's map needs it.
-export const SpecArticle: ComponentType<SpecArticleProps> = lazy(() =>
-  import('./SpecFeatures/index.ts').then((module) => ({ default: module.SpecArticle })),
+export const SpecLevelArticle: ComponentType<SpecLevelArticleProps> = lazy(() =>
+  import('./ProjectArticle/index.ts').then((module) => ({ default: module.SpecLevelArticle })),
 );
 
 export const ProjectArticle: ComponentType<any> = lazy(() =>

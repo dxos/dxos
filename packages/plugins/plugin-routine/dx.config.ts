@@ -7,6 +7,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
@@ -49,7 +50,9 @@ const config: Plugin.PluginConfig = Plugin.config({
       },
     ),
     // TODO(wittjosiah): Could some of these commands make use of operations?
-    AppCapability.commands(() => import('./src/capabilities/commands.ts', { with: { type: 'module-url' } })),
+    AppCapability.commands(() => import('./src/capabilities/commands.ts', { with: { type: 'module-url' } }), {
+      environments: ['browser', 'node', 'tauri'],
+    }),
     // The entry carries a live `customPanel` (`CreateRoutinePanel`) alongside the object factory, so the
     // module cannot be evaluated without React.
     SpaceCapability.createObject(
@@ -62,6 +65,7 @@ const config: Plugin.PluginConfig = Plugin.config({
     // slice-materialisation time, so activation needs nothing — and providing
     // Capabilities.LayerSpec soft-orders this module before the process-manager snapshot.
     AppCapability.layerSpec(() => import('./src/capabilities/layer-specs.ts', { with: { type: 'module-url' } }), {
+      environments: ['browser', 'node', 'tauri'],
       name: 'LayerSpecs',
       provides: [Capabilities.TraceSink],
     }),
@@ -75,7 +79,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       mimeType: 'application/x-mdl',
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: ['org.dxos.role.article', 'org.dxos.role.cardContent'],
+      roles: [AppSurface.Article, AppSurface.CardContent],
     }),
     Capability.lazyModule(
       'RegistrySync',

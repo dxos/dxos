@@ -69,6 +69,9 @@ export type TaskSeed = Pick<Task.Task, 'title' | 'description' | 'estimate'>;
 
 /** What differs between a run on the Computer shell and one in a local sandbox. */
 export type Variant = {
+  /** Distinct per variant offered alongside another, since the template list keys its rows by id. */
+  id?: string;
+  label?: string;
   skill: string;
   instructions: string;
   steps: ReadonlyArray<TaskSeed>;
@@ -296,8 +299,8 @@ const makeTasks = (steps: ReadonlyArray<TaskSeed>, pluginKey: string): Task.Task
  * Each project gets its own plugin key from `mintKey`.
  */
 export const makeComposerPlugin = (variant: Variant, mintKey = mintPluginKey): ProjectCapabilities.Template => ({
-  id: 'org.dxos.project.composerPlugin',
-  label: 'Composer Plugin',
+  id: variant.id ?? 'org.dxos.project.composerPlugin',
+  label: variant.label ?? 'Composer Plugin',
   icon: 'ph--puzzle-piece--regular',
   scaffold: ({ name }) =>
     Effect.sync(() => {

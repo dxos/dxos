@@ -8,6 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { trim } from '@dxos/util';
 
@@ -103,6 +104,7 @@ const config: Plugin.PluginConfig<DeckCapabilities.DeckPluginOptions> =
       ),
       AppCapability.operationHandler(
         () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
+        { environments: ['browser', 'node', 'tauri'] },
       ),
       AppCapability.pluginAsset({
         pluginId: DeckNamespace.key,
@@ -112,7 +114,7 @@ const config: Plugin.PluginConfig<DeckCapabilities.DeckPluginOptions> =
       }),
       AppCapability.reactRoot(() => import('./src/capabilities/react-root.tsx', { with: { type: 'module-url' } })),
       AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-        roles: ['org.dxos.role.article'],
+        roles: [AppSurface.Article],
       }),
       AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
       Capability.lazyModule(
