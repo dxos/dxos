@@ -134,11 +134,21 @@ const Line = ({ text, opacity }: { text: string; opacity: number }) => {
 };
 
 /** The chapter chip and the subtitle for the moment `seconds` of `timeline`. */
-export const Captions = ({ timeline, seconds, total }: { timeline: Placed[]; seconds: number; total: number }) => {
+export const Captions = ({
+  timeline,
+  seconds,
+  total,
+  subtitles = SUBTITLES,
+}: {
+  timeline: Placed[];
+  seconds: number;
+  total: number;
+  subtitles?: Record<string, string>;
+}) => {
   const scene = sceneAt(timeline, seconds, total);
   const chapter = CHAPTERS.findIndex(({ scenes }) => scenes.includes(scene.id));
   const span = chapter >= 0 ? spanOf(timeline, CHAPTERS[chapter].scenes, total) : undefined;
-  const text = SUBTITLES[scene.id];
+  const text = subtitles[scene.id];
   return (
     <>
       {span && (

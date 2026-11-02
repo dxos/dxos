@@ -61,6 +61,8 @@ export type Saas2DProps = {
   clock?: boolean;
   /** The chapter chip top left and a subtitle under each scene. */
   captions?: boolean;
+  /** A subtitle per scene id in place of the built-in ones, so a voiced cut can carry its own. */
+  subtitles?: Record<string, string>;
 };
 
 /** The opening of the story up to the spread, short holds around its cuts: a test of those transitions. */
@@ -101,7 +103,7 @@ const Clock = ({ timeline, seconds }: { timeline: Placed[]; seconds: number }) =
 };
 
 /** The SaaS story in neu-dark 2D, timed to the short Fry cut of the echo3d presentation. */
-export const Saas2D = ({ test, draft, clock, captions }: Saas2DProps) => {
+export const Saas2D = ({ test, draft, clock, captions, subtitles }: Saas2DProps) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
   const timeline = useMemo(() => {
@@ -131,7 +133,9 @@ export const Saas2D = ({ test, draft, clock, captions }: Saas2DProps) => {
       {visible.filter(isCard).map((prim) => (
         <Card key={prim.id} prim={prim} />
       ))}
-      {captions && <Captions timeline={timeline} seconds={seconds} total={durationInFrames / fps} />}
+      {captions && (
+        <Captions timeline={timeline} seconds={seconds} total={durationInFrames / fps} subtitles={subtitles} />
+      )}
       {!draft && <Grain />}
       {(draft || clock) && <Clock timeline={timeline} seconds={seconds} />}
     </AbsoluteFill>

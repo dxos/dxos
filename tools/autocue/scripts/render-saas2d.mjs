@@ -9,7 +9,7 @@
 //   node scripts/render-saas2d.mjs --holds showcase/echo3d/voice/holds-saas2d-pro.json --out ../../temp/voice/saas2d-pro-video.mp4
 //   node scripts/render-saas2d.mjs --draft --scenes silo-comms:3,scale:5 --out ../../temp/voice/scale-draft.mp4
 //
-// `--captions` adds the chapter chip and subtitles; `--clock` burns the scene and time into a full render; `--draft` renders flat shapes at half size with the scene and time burnt in, to review motion quickly; `--scenes`
+// `--captions` adds the chapter chip and subtitles (`--subtitles <json>` replaces the built-in lines, keyed by scene); `--clock` burns the scene and time into a full render; `--draft` renders flat shapes at half size with the scene and time burnt in, to review motion quickly; `--scenes`
 // plays only those slides, with those holds (seconds); `--holds` reads them from a JSON file, as fitted to a voice-over.
 //
 // The video renders at 2x and is downscaled with a Lanczos filter, so glows and gradients on the dark field do not band.
@@ -32,6 +32,7 @@ const { values } = parseArgs({
     draft: { type: 'boolean', default: false },
     clock: { type: 'boolean', default: false },
     captions: { type: 'boolean', default: false },
+    subtitles: { type: 'string' },
     scenes: { type: 'string' },
     holds: { type: 'string' },
   },
@@ -41,6 +42,7 @@ const inputProps = {
   ...(values.draft ? { draft: true } : {}),
   ...(values.clock ? { clock: true } : {}),
   ...(values.captions ? { captions: true } : {}),
+  ...(values.subtitles ? { subtitles: JSON.parse(fs.readFileSync(values.subtitles, 'utf8')) } : {}),
   ...(values.holds ? { test: JSON.parse(fs.readFileSync(values.holds, 'utf8')) } : {}),
   ...(values.scenes
     ? {
