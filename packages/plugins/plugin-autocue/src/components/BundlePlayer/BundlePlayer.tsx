@@ -29,15 +29,19 @@ export const BundlePlayer = ({ url }: BundlePlayerProps) => {
       return;
     }
     setState({ status: 'loading' });
+    // Interrupting is asynchronous, so a load for a previous url can still complete; drop its result.
+    let active = true;
+    const update = (next: BundleState) => active && setState(next);
     const fiber = Effect.runFork(
       loadBundle(url).pipe(
         Effect.match({
-          onFailure: (error) => setState({ status: 'error', error: error.message }),
-          onSuccess: (manifest) => setState({ status: 'ready', manifest }),
+          onFailure: (error) => update({ status: 'error', error: error.message }),
+          onSuccess: (manifest) => update({ status: 'ready', manifest }),
         }),
       ),
     );
     return () => {
+      active = false;
       void Effect.runFork(Fiber.interrupt(fiber));
     };
   }, [url]);
