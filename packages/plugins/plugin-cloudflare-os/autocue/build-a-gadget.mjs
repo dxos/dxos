@@ -139,7 +139,10 @@ export const steps = [
         await demo.click({ selector: '[data-testid="plankHeading.companion"]', label: 'Companion' });
       }
       await demo.click({ selector: '[data-testid="deck.companion.tab.assistant-chat"]', label: 'Assistant' });
-      await demo.click({ selector: '[data-testid="assistant.agent-picker"]', label: 'Agent' });
+      // The picker stays disabled until the companion's chat exists.
+      const picker = '[data-testid="assistant.agent-picker"]:not([disabled])';
+      await page.locator(picker).first().waitFor({ state: 'visible', timeout: 30_000 });
+      await demo.click({ selector: picker, label: 'Agent' });
       await page.waitForTimeout(BEAT);
       await demo.click({ selector: '[role=menu] :text-is("Cloudflare OS")', label: 'Cloudflare OS' });
       await page
