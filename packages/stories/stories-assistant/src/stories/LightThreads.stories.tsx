@@ -199,3 +199,19 @@ export const Demo: Story = {
   },
   tags: ['!test'],
 };
+
+/**
+ * {@link Demo} with the conversation's trajectory as a git graph beside the chat: a commit per event, a branch per feed
+ * branch (main, each turn, each light thread), and a merge where a thread ends.
+ */
+export const Graph: Story = {
+  decorators: createDecorators({
+    skills: [CalculatorSkill.key],
+    scripted: script,
+    assistantSettings: { parallelThreads: true },
+  }),
+  args: {
+    layout: [[StoryRole.Chat], [StoryRole.TrajectoryGraph]],
+  },
+  tags: ['!test'],
+};
