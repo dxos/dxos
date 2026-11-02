@@ -258,7 +258,9 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('timel
             status: seed.status,
           }),
         );
-        Feature.setSources(feature, [seed.spec]);
+        Obj.update(feature, (feature) => {
+          Feature.setSources(feature, [seed.spec]);
+        });
         if (seed.subfeatures) {
           const parts: Ref.Ref<Feature.Feature>[] = [];
           for (const subfeature of seed.subfeatures) {

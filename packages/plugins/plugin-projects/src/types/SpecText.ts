@@ -188,16 +188,19 @@ export const number = async (spec: Spec.Spec): Promise<void> => {
     ...features.flatMap((feature) => Feature.getBlockId(feature) ?? []),
   ]);
   for (const feature of features) {
-    let blockId = Feature.getBlockId(feature);
-    if (!blockId) {
-      blockId = `F-${next++}`;
-      Feature.setSources(feature, [...Feature.getSources(feature), FeatureSpec.getSource('', blockId)]);
-    }
+    const current = Feature.getBlockId(feature);
+    const blockId = current ?? `F-${next++}`;
     const requirements = feature.requirements ?? [];
     const numbered = Feature.numberRequirements(blockId, requirements);
-    if (numbered.some((requirement, index) => requirement.id !== requirements[index].id)) {
+    const renumbered = numbered.some((requirement, index) => requirement.id !== requirements[index].id);
+    if (!current || renumbered) {
       Obj.update(feature, (feature) => {
-        feature.requirements = numbered;
+        if (!current) {
+          Feature.setSources(feature, [...Feature.getSources(feature), FeatureSpec.getSource('', blockId)]);
+        }
+        if (renumbered) {
+          feature.requirements = numbered;
+        }
       });
     }
   }
@@ -299,7 +302,9 @@ export const take = async (spec: Spec.Spec, { path, text: file }: TakeOptions): 
     let feature = existing.get(source);
     const unfiled = feature ? undefined : numbered.get(id);
     if (unfiled) {
-      Feature.setSources(unfiled, [source]);
+      Obj.update(unfiled, (unfiled) => {
+        Feature.setSources(unfiled, [source]);
+      });
       feature = unfiled;
     }
     if (feature) {
@@ -329,7 +334,9 @@ export const take = async (spec: Spec.Spec, { path, text: file }: TakeOptions): 
       }
     } else {
       feature = db.add(Feature.make({ name, description, requirements, status: status ?? FeatureSpec.DEFAULT_STATUS }));
-      Feature.setSources(feature, [source]);
+      Obj.update(feature, (feature) => {
+        Feature.setSources(feature, [source]);
+      });
       attach(spec, feature);
       result.created.push(feature.id);
     }

@@ -181,7 +181,11 @@ export const makeFeatureSpecs = (): Migration.ObjectMigration => {
       return { name, description, requirements, status, code };
     },
     onMigration: async ({ before, object, db }) => {
-      Feature.setSources(object, before.specs ?? []);
+      Obj.update(object, (object) => {
+        Obj.update(object, (object) => {
+          Feature.setSources(object, before.specs ?? []);
+        });
+      });
       const state = getState(db);
       const placement = state.placements.get(object.id) ?? {};
       state.migrated.set(object.id, object);
@@ -221,7 +225,9 @@ export const featureSources = Migration.define({
     code,
   }),
   onMigration: async ({ before, object }) => {
-    Feature.setSources(object, before.specs ?? []);
+    Obj.update(object, (object) => {
+      Feature.setSources(object, before.specs ?? []);
+    });
     const container = Spec.getContainer(object);
     if (container) {
       await SpecText.replaceBlock(container, object, Feature.getBlockId(object));

@@ -111,7 +111,9 @@ describe('SpecText', () => {
     Obj.update(sync, (sync) => {
       sync.requirements = [{ id: 'F-1.1', text: 'Mail arrives within a minute.' }];
     });
-    Feature.setSources(sync, ['packages/a/PLUGIN.mdl#F-1']);
+    Obj.update(sync, (sync) => {
+      Feature.setSources(sync, ['packages/a/PLUGIN.mdl#F-1']);
+    });
     const archive = addFeature('Archive');
     const other = addFeature('Elsewhere');
     addSpec('Mail', [other]);
@@ -142,7 +144,9 @@ describe('SpecText', () => {
     expect,
   }) => {
     const sync = addFeature('Sync');
-    Feature.setSources(sync, ['packages/a/PLUGIN.mdl#F-4']);
+    Obj.update(sync, (sync) => {
+      Feature.setSources(sync, ['packages/a/PLUGIN.mdl#F-4']);
+    });
     const archive = addFeature('Archive');
     Obj.update(archive, (archive) => {
       archive.requirements = [{ text: 'Archived mail is searchable.' }, { id: 'F-5.3', text: 'Undo restores it.' }];
