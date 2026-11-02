@@ -27,6 +27,18 @@ later. Storing them in the repo would mean repeating this in each of them.
 Without the 1Password CLI, get `ca.pem`, `client.pem` and `client.key` from an admin and pass the
 directory instead of `--op`.
 
+A local machine only reads the remote cache: `remote.cache.localReadOnly` in `.moon/workspace.yml`
+leaves uploads to CI (moon treats a run with `CI` set as CI). A worktree often has a second moon run
+or a dev server rewriting `dist/` while a build is archived, and an entry uploaded from that state
+reaches every job that shares the hash.
+
+### Evicting a bad entry
+
+bazel-remote has no delete. To replace a bad entry, re-run the task with `--force` in CI, for example
+`moon run util:build --force`. That run skips hydration, builds the outputs again and overwrites the
+action-cache entry for the same hash. To drop an entry outright, an operator deletes its file under
+the server's `ac/` directory on the droplet.
+
 Check it is actually working — moon **never fails** on a broken cache, it just quietly rebuilds:
 
 ```bash

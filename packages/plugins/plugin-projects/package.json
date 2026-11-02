@@ -140,6 +140,11 @@
       "node": "./dist/lib/ProjectsPlugin.node.mjs",
       "import": "./dist/lib/ProjectsPlugin.mjs"
     },
+    "./ProjectSurface": {
+      "source": "./src/types/ProjectSurface.ts",
+      "types": "./dist/types/src/types/ProjectSurface.d.ts",
+      "import": "./dist/lib/ProjectSurface.mjs"
+    },
     "./ProjectView": {
       "source": "./src/types/ProjectView.ts",
       "types": "./dist/types/src/types/ProjectView.d.ts",

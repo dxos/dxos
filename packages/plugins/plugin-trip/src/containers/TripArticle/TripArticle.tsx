@@ -15,7 +15,7 @@ import { Obj } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as MapCapabilities from '@dxos/plugin-map/MapCapabilities';
-import * as MapRole from '@dxos/plugin-map/MapRole';
+import * as MapSurface from '@dxos/plugin-map/MapSurface';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -295,7 +295,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
         {showGlobe && mapAvailable && (
           <Panel.Root classNames='border-t border-separator'>
             <Panel.Body>
-              <Surface.Surface type={MapRole.MapInline} data={{ subject, attendableId: id }} limit={1} />
+              <Surface.Surface type={MapSurface.MapInline} data={{ subject, attendableId: id }} limit={1} />
             </Panel.Body>
           </Panel.Root>
         )}
