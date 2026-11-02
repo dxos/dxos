@@ -3,7 +3,8 @@
 #
 
 # Lays the cleaned takes onto the slide timeline from a holds file and writes the voice track.
-# Usage: python3 mix.py <take dir> <holds.json> <video.mp4> <out.m4a>
+# Usage: python3 mix.py <take dir> <holds.json> <video.mp4> <out.m4a> [lead seconds] [scene:start,...]
+# The optional arguments replace the echo3d timing: where each take starts in its scene, and the scenes anchored apart.
 # Cleaned takes go to <take dir>/clean/.
 
 import glob
@@ -16,6 +17,9 @@ from audio import clean, duration, loudnorm, run
 takes, holds_file, video, out = sys.argv[1:5]
 # Where a take must start or end, in seconds from its slide's start, measured on the picture.
 ANCHORS = {'engulf': ('end', 7.5), 'dont-panic': ('start', 2.5), 'company-fills': ('start', 3.0)}
+LEAD = float(sys.argv[5]) if len(sys.argv) > 5 else 0.5
+if len(sys.argv) > 6:
+    ANCHORS = {scene: ('start', float(at)) for scene, at in (entry.split(':') for entry in sys.argv[6].split(','))}
 # Shortest silence between two takes.
 GAP = 0.35
 
@@ -28,7 +32,7 @@ for slide, hold in holds.items():
     if slide in clips:
         cleaned = f'{takes}/clean/{slide}.wav'
         length = clean(clips[slide], cleaned)
-        kind, offset = ANCHORS.get(slide, ('start', 0.5))
+        kind, offset = ANCHORS.get(slide, ('start', LEAD))
         want = at_slide + offset - (length if kind == 'end' else 0)
         at = max(want, previous_end + GAP)
         schedule.append((slide, cleaned, at, length, at - want))
