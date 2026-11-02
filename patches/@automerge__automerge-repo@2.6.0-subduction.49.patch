@@ -280,7 +280,7 @@ index 1ca836a0b386a69c63e0fa2f655b9f78d5dfe508..5126850c2da2c368d4ad42ec9f0059e0
  export { WorkerWebSocketError, type WorkerPortLike, type WorkerPortSource, type WorkerWebSocketErrorCode, } from "./subduction/worker-websocket/protocol.js";
  export { WorkerWebSocketTransport, type WorkerWebSocketConnectOptions, } from "./subduction/worker-websocket/transport.js";
 diff --git a/dist/storage/StorageSubsystem.d.ts b/dist/storage/StorageSubsystem.d.ts
-index 8a78849f2df006e1e70fb035a5b47fbcea5c98d9..60908e0acd5c450a51abb77dd50bd30e8e5919b5 100644
+index 8a78849f2df006e1e70fb035a5b47fbcea5c98d9..54070f29792878383308b6dd6a6a5068c22462dc 100644
 --- a/dist/storage/StorageSubsystem.d.ts
 +++ b/dist/storage/StorageSubsystem.d.ts
 @@ -59,7 +59,10 @@ export declare class StorageSubsystem extends EventEmitter<StorageSubsystemEvent
@@ -295,8 +295,20 @@ index 8a78849f2df006e1e70fb035a5b47fbcea5c98d9..60908e0acd5c450a51abb77dd50bd30e
      /**
       * Saves the provided Automerge document to storage.
       *
+@@ -72,6 +75,11 @@ export declare class StorageSubsystem extends EventEmitter<StorageSubsystemEvent
+      * Removes the Automerge document with the given ID from storage
+      */
+     removeDoc(documentId: DocumentId): Promise<void>;
++    /**
++     * DXOS patch: forgets which version of every document was saved, for a caller that deleted the stored bytes behind
++     * them. A document that comes back with the heads it had would otherwise count as saved and never be written again.
++     */
++    forgetSavedDocuments(): void;
+     loadSyncState(documentId: DocumentId, storageId: StorageId): Promise<A.SyncState | undefined>;
+     saveSyncState(documentId: DocumentId, storageId: StorageId, syncState: A.SyncState): Promise<void>;
+ }
 diff --git a/dist/storage/StorageSubsystem.js b/dist/storage/StorageSubsystem.js
-index 373de48918620aaf26b7d375d5269c8fc6ffada5..3ac4a6b65fd10429600aebf752176651a6c19195 100644
+index 373de48918620aaf26b7d375d5269c8fc6ffada5..66431b2751e260338780a5967649d77703864820 100644
 --- a/dist/storage/StorageSubsystem.js
 +++ b/dist/storage/StorageSubsystem.js
 @@ -5,7 +5,6 @@ import { mergeArrays } from "../helpers/mergeArrays.js";
@@ -348,7 +360,23 @@ index 373de48918620aaf26b7d375d5269c8fc6ffada5..3ac4a6b65fd10429600aebf752176651
          const sourceChunks = this.#chunkInfos.get(documentId) ?? [];
          if (this.#shouldCompact(sourceChunks)) {
              await this.#saveTotal(documentId, doc, sourceChunks);
-@@ -271,7 +290,9 @@ export class StorageSubsystem extends EventEmitter {
+@@ -174,6 +193,15 @@ export class StorageSubsystem extends EventEmitter {
+         await this.#storageAdapter.removeRange([documentId, "incremental"]);
+         await this.#storageAdapter.removeRange([documentId, "sync-state"]);
+     }
++    /**
++     * DXOS patch: forgets which version of every document was saved, for a caller that deleted the stored bytes behind
++     * them. A document that comes back with the heads it had would otherwise count as saved and never be written again.
++     */
++    forgetSavedDocuments() {
++        // A save already in flight records its heads in the SavedHeads it read, not in this one.
++        this.#storedHeads = new SavedHeads();
++        this.#chunkInfos = new Map();
++    }
+     /**
+      * Saves just the incremental changes since the last save.
+      */
+@@ -271,7 +299,9 @@ export class StorageSubsystem extends EventEmitter {
              return true;
          }
          const newHeads = A.getHeads(doc);
@@ -1635,12 +1663,14 @@ index 37f9cc727f7ab1d24118879efadc4bb44f90e827..7c3f51b53a8df1512ee45f69c6a7c0d4
      async saveCommit(sedimentreeId, commitId, signedCommit, blob) {
          // Encode the signed commit to bytes
 diff --git a/dist/synchronizer/DocSynchronizer.js b/dist/synchronizer/DocSynchronizer.js
+index ec0cbbf273d3af58c744e5126cbb58f599916f9b..dcde85ad84cd9fa9785f78413309a1cf11dfafdc 100644
 --- a/dist/synchronizer/DocSynchronizer.js
 +++ b/dist/synchronizer/DocSynchronizer.js
-@@ -302,6 +302,21 @@
+@@ -301,6 +301,21 @@ export class DocSynchronizer extends EventEmitter {
+             }
          }
      }
-     /**
++    /**
 +     * Whether the doc holds the initial heads `peer` advertised. A peer's
 +     * initial heads are fixed for its status and a doc never loses heads, so
 +     * a positive answer is kept on the status: `A.hasHeads` rebuilds each
@@ -1655,11 +1685,10 @@ diff --git a/dist/synchronizer/DocSynchronizer.js b/dist/synchronizer/DocSynchro
 +            peer.status.hasInitialHeads = true;
 +        return has;
 +    }
-+    /**
+     /**
       * Returns true if any "has" peer advertised initial heads that we
       * don't yet have locally.
-      */
-@@ -311,7 +326,7 @@
+@@ -311,7 +326,7 @@ export class DocSynchronizer extends EventEmitter {
                  continue;
              if (peer.sharePolicyState === "denied")
                  continue;
@@ -1668,7 +1697,7 @@ diff --git a/dist/synchronizer/DocSynchronizer.js b/dist/synchronizer/DocSynchro
                  return true;
          }
          return false;
-@@ -327,7 +342,7 @@
+@@ -327,7 +342,7 @@ export class DocSynchronizer extends EventEmitter {
                  continue;
              if (peer.sharePolicyState === "denied")
                  continue;
