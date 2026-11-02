@@ -6,15 +6,33 @@ import React, { useMemo } from 'react';
 import { AbsoluteFill, type CalculateMetadataFunction, useCurrentFrame, useVideoConfig } from 'remotion';
 
 import holds from '../../../showcase/echo3d/voice/holds-fry-short.json';
-import { type CardPrim, LAYERS, type Placed, type Prim, frameAt, place } from './engine.ts';
+import { type CardPrim, LAYERS, type Placed, type Prim, type Slide, TRANSITION, frameAt, place } from './engine.ts';
 import { loadNeuFonts } from './fonts.ts';
 import { slides } from './slides.ts';
 import { Background, Card, Defs, Grain, HEIGHT, SvgPrim, WIDTH } from './theme.tsx';
 
 loadNeuFonts();
 
-/** The timeline's length, for the composition's duration. */
-export const SAAS2D_SECONDS = Object.values(holds).reduce((sum, hold) => sum + hold, 0);
+/** Each scene's length in the voiced cut, which its keyframes are timed for. */
+const AUTHORED: Record<string, number> = holds;
+
+/** The story's length; every scene gets an equal share of it. */
+export const SAAS2D_SECONDS = 90;
+
+/** Equal holds for every scene; each plays its choreography, timed by the voice-over's holds, sped up to fit. */
+const UNIFORM: Record<string, number> = Object.fromEntries(
+  Object.keys(AUTHORED).map((id) => [id, SAAS2D_SECONDS / Object.keys(AUTHORED).length]),
+);
+
+/** A morph takes at most this share of its scene, so every scene also rests on its own layout. */
+const MORPH_SHARE = 0.6;
+
+/** `slide` played in `seconds` instead of the `authored` seconds its keyframes were timed for. */
+const fit = (slide: Slide, authored: number, seconds: number): Slide => ({
+  ...slide,
+  draw: (t) => slide.draw((t * authored) / seconds),
+  transition: Math.min(slide.transition ?? TRANSITION, seconds * MORPH_SHARE),
+});
 
 const isCard = (prim: Prim): prim is CardPrim => prim.kind === 'card';
 
@@ -38,7 +56,7 @@ export const MORPH_TEST: Record<string, number> = {
 /** Sizes a composition to the slides it plays; a draft runs at 30 fps, which is enough to judge motion. */
 export const saas2dMetadata: CalculateMetadataFunction<Saas2DProps> = ({ props }) => {
   const fps = props.draft ? 30 : 60;
-  const seconds = Object.values(props.test ?? holds).reduce((sum, hold) => sum + hold, 0);
+  const seconds = Object.values(props.test ?? UNIFORM).reduce((sum, hold) => sum + hold, 0);
   return { fps, durationInFrames: Math.round(seconds * fps) };
 };
 
@@ -57,9 +75,11 @@ export const Saas2D = ({ test, draft }: Saas2DProps) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const timeline = useMemo(() => {
-    const timing = test ?? holds;
+    const timing = test ?? UNIFORM;
     return place(
-      slides(holds).filter((slide) => slide.id in timing),
+      slides(AUTHORED)
+        .filter((slide) => slide.id in timing)
+        .map((slide) => fit(slide, AUTHORED[slide.id], timing[slide.id])),
       timing,
     );
   }, [test]);
@@ -73,7 +93,7 @@ export const Saas2D = ({ test, draft }: Saas2DProps) => {
       <svg width={WIDTH} height={HEIGHT} viewBox={`0 0 ${WIDTH} ${HEIGHT}`} style={{ position: 'absolute', inset: 0 }}>
         <Defs />
         {/* The CSS property overrides every `filter` attribute, which is where nearly all of a frame's render time goes. */}
-        {draft && <style>{'* { filter: none !important; }'}</style>}
+        {draft && <style>{'* { filter: none !important; } .nd-body { stroke: #5a6070; stroke-width: 1.5px; }'}</style>}
         {ordered.map((prim) => (
           <SvgPrim key={`${prim.kind}:${prim.id}`} prim={prim} camera={camera} />
         ))}

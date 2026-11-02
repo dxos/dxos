@@ -58,6 +58,9 @@ const TEAM_APPS: Record<string, string[]> = {
 };
 
 const TENANTS = 48;
+/** An app is a vendor as small as your smallest team. */
+const APP_R = 30;
+const METADATA_COLOR = '#ff8a3d';
 const TENANT_COLOR = '#8fa3d9';
 /** Your company takes this place in every ring of companies, on the left. */
 const YOURS = TENANTS / 2;
@@ -70,16 +73,16 @@ const OBJECTS = 150;
 const OBJECT_SPIN = 0.08;
 
 const SPACES = [
-  { id: 'Personal', at: [-42, -36], children: ['Notes', 'Inbox'] },
-  { id: 'Company', at: [42, -36], children: ['Engineering', 'Sales', 'Ops'] },
-  { id: 'Partners', at: [-42, 36], children: ['Cloudflare', 'Agency'] },
-  { id: 'Customers', at: [42, 36], children: ['Acme', 'Globex', 'Initech'] },
+  { id: 'Personal', at: [-48, -48], children: ['Notes', 'Inbox'] },
+  { id: 'Company', at: [48, -48], children: ['Engineering', 'Sales', 'Ops'] },
+  { id: 'Partners', at: [-48, 48], children: ['Cloudflare', 'Agency'] },
+  { id: 'Customers', at: [48, 48], children: ['Acme', 'Globex', 'Initech'] },
 ] as const;
-const SPACE_R = 30;
+const SPACE_R = 40;
 const COMPANY_SPACE = SPACES[1];
 
 const ECHO_ZOOM = 3.4;
-const OBJECTS_ZOOM = 15;
+const OBJECTS_ZOOM = 11.25;
 
 /** Your company's place in the ring of companies around the vendor, and the camera that comes to it. */
 const YOURS_AT: [number, number] = [-400, 0];
@@ -251,34 +254,40 @@ const company = (cx: number, cy: number, scale: number, { teams = true, title = 
 const appAt = (app: string, cx: number, cy: number, radius: number, spin = 0): [number, number] =>
   polar(cx, cy, radius, -Math.PI / 2 + (APPS.indexOf(app) / APPS.length) * TAU + spin);
 
-/** The apps as chips around a centre: every app is another SaaS vendor, so the many grow out of the one. */
-const appRing = (cx: number, cy: number, radius: number, { scale = 1, spin = 0 } = {}): Prim[] =>
-  APPS.map((app): Prim => {
-    const [x, y] = appAt(app, cx, cy, radius, spin);
-    return { kind: 'chip', id: `app-${app}`, x, y, text: app, scale, from: 'body:vendor' };
-  });
+/**
+ * One app: a small vendor holding a share of your data at its centre, named on its outer side (`angle` points away
+ * from what it orbits).
+ */
+const app = (name: string, x: number, y: number, r: number, angle: number, { title = 1 } = {}): Prim[] => {
+  const cos = Math.cos(angle);
+  const [lx, ly] = polar(x, y, r + 14, angle);
+  return [
+    { kind: 'body', id: `app-${name}`, x, y, r },
+    { kind: 'node', id: `data-org-${name}`, x, y, r: r * 0.28, role: 'data', parent: `body:app-${name}` },
+    label(`app-label-${name}`, lx, ly, name, {
+      size: Math.max(14, r * 0.6),
+      weight: 500,
+      anchor: cos < -0.3 ? 'end' : cos > 0.3 ? 'start' : 'middle',
+      opacity: title,
+      parent: `body:app-${name}`,
+    }),
+  ];
+};
 
-/** Your data, a share held by each app, on the app's inner side; it comes from the one dot the first vendor held. */
-const appData = (cx: number, cy: number, radius: number, { inset = 52, spin = 0 } = {}): Prim[] =>
-  APPS.map((app): Prim => {
-    const [x, y] = appAt(app, cx, cy, radius - inset, spin);
-    return {
-      kind: 'node',
-      id: `data-org-${app}`,
-      x,
-      y,
-      r: 7,
-      role: 'data',
-      parent: `chip:app-${app}`,
-      from: 'node:data-org',
-    };
+const appAngle = (name: string, spin = 0) => -Math.PI / 2 + (APPS.indexOf(name) / APPS.length) * TAU + spin;
+
+/** The apps in a ring around a centre: every app is another SaaS vendor. */
+const appRing = (cx: number, cy: number, radius: number, { scale = 1, spin = 0 } = {}): Prim[] =>
+  APPS.flatMap((name) => {
+    const [x, y] = appAt(name, cx, cy, radius, spin);
+    return app(name, x, y, APP_R * scale, appAngle(name, spin));
   });
 
 /** Each team's links to the apps it works in, with data flowing when `t` is given. */
 const teamLinks = (t?: number): Prim[] =>
   Object.entries(TEAM_APPS).flatMap(([team, apps]) =>
     apps.flatMap((app): Prim[] => {
-      const [a, b] = [`node:team-${team}`, `chip:app-${app}`];
+      const [a, b] = [`node:team-${team}`, `body:app-${app}`];
       const link = edge(`link-${team}-${app}`, a, b, { parent: a });
       if (t === undefined) {
         return [link];
@@ -292,16 +301,20 @@ const teamLinks = (t?: number): Prim[] =>
   );
 
 /** A frontier lab with its gold core of everyone's data. */
-const lab = (x: number, y: number, r: number, { core = 0, title = true } = {}): Prim[] => [
+const lab = (x: number, y: number, r: number, { core = 0, title = true, coreTitle = true } = {}): Prim[] => [
   { kind: 'body', id: 'lab', x, y, r, role: 'lab' },
   ...(core > 0
     ? [
         { kind: 'node', id: 'lab-core', x, y, r: core, role: 'data', glow: 0.2, parent: 'body:lab' } satisfies Prim,
-        label('lab-core-label', x, y, '“Metadata”', {
-          size: Math.min(30, core / 4),
-          weight: 600,
-          parent: 'node:lab-core',
-        }),
+        ...(coreTitle
+          ? [
+              label('lab-core-label', x, y, '“Metadata”', {
+                size: Math.min(30, core / 4),
+                weight: 600,
+                parent: 'node:lab-core',
+              }),
+            ]
+          : []),
       ]
     : []),
   // With a core, the title sits in the body's rim, clear of the apps and companies orbiting outside.
@@ -318,7 +331,7 @@ const lab = (x: number, y: number, r: number, { core = 0, title = true } = {}): 
 /** The objects of one space, as a flat disc turning slowly in the screen plane. */
 const objectAt = (index: number, cx: number, cy: number, spin: number): [number, number] => {
   // A sunflower spiral packs the disc evenly; the outer objects sit a little further apart.
-  const radius = 25 * Math.sqrt((index + 0.5) / OBJECTS);
+  const radius = SPACE_R * 0.83 * Math.sqrt((index + 0.5) / OBJECTS);
   return polar(cx, cy, radius, index * 2.39996 + spin);
 };
 
@@ -362,18 +375,13 @@ const spaces = ({ subs = 1 } = {}): Prim[] =>
     { kind: 'body', id: `space-${id}`, x: at[0], y: at[1], r: SPACE_R, parent: 'node:hub' },
     label(`space-label-${id}`, at[0], at[1] - SPACE_R - 3.4, id, { size: 20, weight: 600, parent: `body:space-${id}` }),
     ...children.map((child, index): Prim => {
-      const [x, y] = polar(
-        at[0],
-        at[1],
-        children.length === 2 ? 11 : 12,
-        (index / children.length) * TAU - Math.PI / 2 + hash(child),
-      );
+      const [x, y] = polar(at[0], at[1], SPACE_R * 0.45, (index / children.length) * TAU - Math.PI / 2);
       return {
         kind: 'node',
         id: `sub-${child}`,
         x,
         y,
-        r: 8.5,
+        r: 9,
         color: '#9aa6d6',
         glow: -0.2,
         opacity: subs,
@@ -620,13 +628,6 @@ export const slides = (holds: Record<string, number>): Slide[] => {
               size: 5,
             }),
           ),
-          ...APPS.map((app) =>
-            flow(`flow-data-${app}`, `node:data-org-${app}`, 'node:lab-core', t * 0.3 + hash(app), ROLES.data, {
-              count: 2,
-              size: 4,
-              opacity: ramp(t, 2, 1.5),
-            }),
-          ),
         ]),
     },
 
@@ -636,13 +637,14 @@ export const slides = (holds: Record<string, number>): Slide[] => {
       id: 'absorb',
       draw: (t) => {
         const spin = since('orbit', t) * 0.05;
-        const taken = APPS.map((_, index) => ramp(t, 1 + index * 0.6, 1.0, easeInOut));
+        const taken = APPS.map((_, index) => ramp(t, 0.8 + index * 0.6, 1.6, easeInOut));
         return still(orbit(spin, taken));
       },
     },
 
     // Two more labs grow out of the first; they will merge back into one.
-    { id: 'rivals', transition: 2.5, draw: (t) => still(rivals(t * 0.02, 0, 0)) },
+    // A cut, not a morph: the labs that appear are new players, not parts of the one before.
+    { id: 'rivals', transition: 0, draw: (t) => still(rivals(t * 0.02, 0, 0)) },
     {
       id: 'merge-1',
       draw: (t) => still(rivals(since('rivals', t) * 0.02, ramp(t, 1.5, 2.5, easeInOut), ramp(t, 4.8, 3.0, easeInOut))),
@@ -652,15 +654,8 @@ export const slides = (holds: Record<string, number>): Slide[] => {
       draw: (t) =>
         still([
           ...merged(since('rivals', t, 'merge-1') * 0.02),
-          {
-            kind: 'title',
-            id: 'final-title',
-            x: 0,
-            y: -340,
-            text: 'The Final Frontier',
-            size: 64,
-            opacity: ramp(t, 0.4, 1.0),
-          },
+          // The last lab's name becomes the title: it rises and grows as one text gives way to the other.
+          ...finalTitle(ramp(t, 0.4, 1.4, easeInOut)),
         ]),
     },
 
@@ -711,11 +706,7 @@ export const slides = (holds: Record<string, number>): Slide[] => {
     {
       id: 'objects',
       transition: 2.5,
-      draw: (t) =>
-        still(
-          [...echoSpaces({ subs: 0, titles: false }), ...objects(t * OBJECT_SPIN)],
-          camera(OBJECTS_ZOOM, ...COMPANY_SPACE.at),
-        ),
+      draw: (t) => still([...companySpace(), ...objects(t * OBJECT_SPIN)], camera(OBJECTS_ZOOM, ...COMPANY_SPACE.at)),
     },
     {
       id: 'object-created',
@@ -745,7 +736,7 @@ export const slides = (holds: Record<string, number>): Slide[] => {
           };
         });
         return still(
-          [...echoSpaces({ subs: 0, titles: false }), ...objects(spin, { dim: 0.28, picked }), ...links, ...cards],
+          [...companySpace(), ...objects(spin, { dim: 0.28, picked }), ...links, ...cards],
           camera(OBJECTS_ZOOM, ...COMPANY_SPACE.at),
         );
       },
@@ -831,7 +822,7 @@ const silo = (): Prim[] => [
 const scale = (t: number, flows: boolean): Prim[] => {
   const prims: Prim[] = [
     { kind: 'body', id: 'vendor', x: 0, y: 0, r: 300, role: 'lab' },
-    { kind: 'node', id: 'metadata', x: 0, y: 0, r: 100, role: 'lab', glow: 0.3, parent: 'body:vendor' },
+    { kind: 'node', id: 'metadata', x: 0, y: 0, r: 100, color: METADATA_COLOR, glow: 0.3, parent: 'body:vendor' },
     label('metadata-label', 0, 0, '“Metadata”', { size: 28, parent: 'node:metadata' }),
     label('vendor-label', 0, -258, 'SaaS', { size: 30, parent: 'body:vendor' }),
     ...tenantRing(0, 0, 400, { holder: 'body:vendor', flows, t, fromData: { delay: 1.2 } }),
@@ -854,52 +845,50 @@ const scale = (t: number, flows: boolean): Prim[] => {
 };
 
 const spread = (t?: number): Prim[] => [
-  ...company(...YOURS_AT, 1),
+  ...company(...YOURS_AT, 1, { title: false }),
   ...appRing(...YOURS_AT, 390),
-  ...appData(...YOURS_AT, 390),
   ...teamLinks(t),
 ];
 
 const frontier = (t?: number): Prim[] => [
   ...company(...FRONTIER_AT, FRONTIER_SCALE),
-  ...appRing(...FRONTIER_AT, 255, { scale: 0.8 }),
-  ...appData(...FRONTIER_AT, 255, { inset: 44 }),
+  ...appRing(...FRONTIER_AT, 255, { scale: FRONTIER_SCALE }),
   ...teamLinks(t),
   ...lab(...LAB_AT, 210, { core: 66 }),
   ...TEAMS.map(({ id }) => edge(`link-${id}-lab`, `node:team-${id}`, 'node:lab-core', { parent: `node:team-${id}` })),
 ];
 
-/** The lab at the centre with its core; the apps orbit it, and `taken` (per app, 0 … 1) folds them into the core. */
+/** The first part of a merge (0 … 0.4 of `k`) brings two circles together; the rest shrinks one into the other. */
+const phases = (k: number): [number, number] => [clamp(k / 0.4), clamp((k - 0.4) / 0.6)];
+
+/** `[x, y]` at `distance` from `centre`, toward `toward`. */
+const touching = (centre: readonly [number, number], toward: readonly [number, number], distance: number) => {
+  const angle = Math.atan2(toward[1] - centre[1], toward[0] - centre[0]);
+  return polar(centre[0], centre[1], distance, angle);
+};
+
+const lerpAt = (a: readonly [number, number], b: readonly [number, number], k: number): [number, number] => [
+  lerp(a[0], b[0], k),
+  lerp(a[1], b[1], k),
+];
+
+/**
+ * The lab at the centre with its core; the apps orbit it, and `taken` (per app, 0 … 1) brings each app in until their
+ * rims touch, then shrinks it into the lab, which grows, the rims touching all the while.
+ */
 const orbit = (spin: number, taken: number[] = APPS.map(() => 0)): Prim[] => {
-  const growth = taken.reduce((sum, k) => sum + k, 0) / APPS.length;
+  const shrink = taken.map((k) => phases(k)[1]);
+  const growth = shrink.reduce((sum, k) => sum + k, 0) / APPS.length;
+  const r = 250 + 45 * growth;
   return [
-    ...lab(0, 0, 250, { core: 150 + 40 * growth }),
+    ...lab(0, 0, r, { core: 150 + 40 * growth, coreTitle: false }),
     ...tenantRing(0, 0, 420, { holder: 'body:lab', labels: false, spin: spin * 0.4 }),
-    ...APPS.flatMap((app, index): Prim[] => {
-      const k = taken[index];
-      const [x, y] = appAt(app, 0, 0, 310, spin);
-      const [dx, dy] = appAt(app, 0, 0, 272, spin);
-      return [
-        {
-          kind: 'chip',
-          id: `app-${app}`,
-          x: lerp(x, 0, k),
-          y: lerp(y, 0, k),
-          text: app,
-          scale: 0.8 * (1 - k),
-          opacity: 1 - k,
-        },
-        {
-          kind: 'node',
-          id: `data-org-${app}`,
-          x: lerp(dx, 0, k),
-          y: lerp(dy, 0, k),
-          r: 7 * (1 - k),
-          role: 'data',
-          opacity: 1 - k,
-          parent: `chip:app-${app}`,
-        },
-      ];
+    ...APPS.flatMap((name, index): Prim[] => {
+      const [move, take] = phases(taken[index]);
+      const size = APP_R * (1 - take);
+      const angle = appAngle(name, spin);
+      const [x, y] = polar(0, 0, lerp(335, r + size, move), angle);
+      return app(name, x, y, size, angle, { title: 1 - move });
     }),
   ];
 };
@@ -908,54 +897,36 @@ const orbit = (spin: number, taken: number[] = APPS.map(() => 0)): Prim[] => {
 const LABS = { top: [0, -190], left: [-330, 200], right: [330, 200] } as const;
 
 /**
- * Three frontier labs, each with a third of the companies; `first` merges the left one into the right, `second` merges
- * that into the top one, which moves to the centre.
+ * Three frontier labs, each with a third of the companies. `first` brings the left lab to the right one until their rims
+ * touch, then shrinks it into it; `second` does the same with the right lab and the top one, which ends at the centre.
  */
 const rivals = (spin: number, first: number, second: number): Prim[] => {
-  const mergedR = lerp(105, 175, second);
+  const [firstMove, firstTake] = phases(first);
+  const [secondMove, secondTake] = phases(second);
+  const topR = lerp(105, 175, secondTake);
   const top: [number, number] = [0, lerp(LABS.top[1], 0, second)];
-  const right: [number, number] = [lerp(LABS.right[0], top[0], second), lerp(LABS.right[1], top[1], second)];
-  const rightR = lerp(lerp(105, 130, first), mergedR, second);
-  const left: [number, number] = [lerp(LABS.left[0], right[0], first), lerp(LABS.left[1], right[1], first)];
-  const leftR = lerp(105, rightR, first);
-  const ring = (r: number) => r + 45 + 30 * second;
+  const rightR = lerp(105, 130, firstTake) * (1 - secondTake);
+  const right = lerpAt(LABS.right, touching(top, LABS.right, topR + rightR), secondMove);
+  const leftR = 105 * (1 - firstTake);
+  const left = lerpAt(LABS.left, touching(right, LABS.left, rightR + leftR), firstMove);
+  const ring = (r: number) => r + 45 + 30 * secondTake;
   const prims: Prim[] = [
-    { kind: 'body', id: 'lab', x: top[0], y: top[1], r: mergedR, role: 'lab' },
-    ...(second < 1
-      ? [
-          {
-            kind: 'body',
-            id: 'rival-2',
-            x: right[0],
-            y: right[1],
-            r: rightR,
-            role: 'lab',
-            from: 'body:lab',
-          } satisfies Prim,
-        ]
+    { kind: 'body', id: 'lab', x: top[0], y: top[1], r: topR, role: 'lab' },
+    ...(secondTake < 1
+      ? [{ kind: 'body', id: 'rival-2', x: right[0], y: right[1], r: rightR, role: 'lab' } satisfies Prim]
       : []),
-    ...(first < 1
-      ? [
-          {
-            kind: 'body',
-            id: 'rival-1',
-            x: left[0],
-            y: left[1],
-            r: leftR,
-            role: 'lab',
-            from: 'body:lab',
-          } satisfies Prim,
-        ]
+    ...(firstTake < 1
+      ? [{ kind: 'body', id: 'rival-1', x: left[0], y: left[1], r: leftR, role: 'lab' } satisfies Prim]
       : []),
-    label('lab-label', top[0], top[1] - ring(mergedR) - 34, 'Frontier Labs', { size: 26, parent: 'body:lab' }),
-    label('rival-1-label', left[0], left[1] - ring(leftR) - 34, 'Frontier Labs', {
+    label('lab-label', top[0], top[1] - ring(topR) - 34, 'Frontier Lab', { size: 26, parent: 'body:lab' }),
+    label('rival-1-label', left[0], left[1] - ring(leftR) - 34, 'Frontier Lab', {
       size: 26,
-      opacity: 1 - first,
+      opacity: 1 - firstMove,
       parent: 'body:rival-1',
     }),
-    label('rival-2-label', right[0], right[1] - ring(rightR) - 34, 'Frontier Labs', {
+    label('rival-2-label', right[0], right[1] - ring(rightR) - 34, 'Frontier Lab', {
       size: 26,
-      opacity: 1 - second,
+      opacity: 1 - secondMove,
       parent: 'body:rival-2',
     }),
   ];
@@ -963,17 +934,19 @@ const rivals = (spin: number, first: number, second: number): Prim[] => {
     const group = index % 3;
     const slot = Math.floor(index / 3);
     const angle = (slot / (TENANTS / 3)) * TAU + spin + group * 2.1;
+    // Each lab's companies sit on a ring just outside it and pass to the lab it merges into; once one lab is left they
+    // take their places in its ring.
+    const aroundRight = polar(...right, ring(rightR), angle);
     const own =
       group === 0
-        ? polar(...top, ring(mergedR), angle)
-        : group === 1
-          ? polar(...left, ring(leftR), angle)
-          : polar(...right, ring(rightR), angle);
-    // Each lab's companies sit on a ring just outside it; as the last merge completes they take their places in one ring.
-    const all = polar(...top, ring(mergedR), tenantAngle(index) + spin);
-    const [x, y]: [number, number] = [lerp(own[0], all[0], second), lerp(own[1], all[1], second)];
+        ? polar(...top, ring(topR), angle)
+        : group === 2
+          ? aroundRight
+          : lerpAt(polar(...left, ring(leftR), angle), aroundRight, firstTake);
+    const all = polar(...top, ring(topR), tenantAngle(index) + spin);
+    const [x, y] = lerpAt(own, all, secondTake);
     const holder =
-      group === 0 || second >= 1 ? 'body:lab' : group === 2 || first >= 1 ? 'body:rival-2' : 'body:rival-1';
+      group === 0 || secondTake >= 1 ? 'body:lab' : group === 2 || firstTake >= 1 ? 'body:rival-2' : 'body:rival-1';
     const tenant = index === YOURS ? 'body:org' : `node:tenant-${index}`;
     if (index === YOURS) {
       prims.push(...yoursInRing(x, y, { labels: false }));
@@ -983,6 +956,24 @@ const rivals = (spin: number, first: number, second: number): Prim[] => {
     prims.push(edge(`tenant-link-${index}`, tenant, holder, { opacity: 0.45, parent: tenant }));
   }
   return prims;
+};
+
+/** The last lab's name, above its ring of companies, turning into the title as `k` goes to 1. */
+const finalTitle = (k: number): Prim[] => {
+  const y = lerp(-284, -340, k);
+  return [
+    // One text leaves before the other arrives, so the two are never on screen at once.
+    label('lab-label', 0, y, 'Frontier Lab', { size: lerp(26, 64, k), opacity: clamp(1 - 2 * k) }),
+    {
+      kind: 'title',
+      id: 'final-title',
+      x: 0,
+      y,
+      text: 'The Final Frontier',
+      size: lerp(26, 64, k),
+      opacity: clamp(2 * k - 1),
+    },
+  ];
 };
 
 /** The one lab left, with every company around it; `r` grows it until it swallows them. */
@@ -996,7 +987,7 @@ const merged = (spin: number, r = 175): Prim[] => {
 };
 
 /** Your company at the centre with its apps, each holding a share of your data. */
-const appsAround = (): Prim[] => [...company(0, 0, 1, { teams: false }), ...appRing(0, 0, 390), ...appData(0, 0, 390)];
+const appsAround = (): Prim[] => [...company(0, 0, 1, { teams: false }), ...appRing(0, 0, 390)];
 
 /**
  * ECHO in your company: your data at its centre, linked to every app; the data the apps held moves into it. `taken`
@@ -1021,10 +1012,17 @@ const hub = (taken: number[] = APPS.map(() => 0)): Prim[] => {
       const k = taken[index];
       const [x, y] = appAt(app, 0, 0, 390);
       return [
-        { kind: 'chip', id: `app-${app}`, x: lerp(x, 0, k), y: lerp(y, 0, k), text: app, scale: 1 - k, opacity: 1 - k },
+        { kind: 'body', id: `app-${app}`, x: lerp(x, 0, k), y: lerp(y, 0, k), r: APP_R * (1 - k), opacity: 1 - k },
+        label(`app-label-${app}`, ...polar(lerp(x, 0, k), lerp(y, 0, k), APP_R + 14, appAngle(app)), app, {
+          size: 18,
+          weight: 500,
+          anchor: Math.cos(appAngle(app)) < -0.3 ? 'end' : Math.cos(appAngle(app)) > 0.3 ? 'start' : 'middle',
+          opacity: 1 - k,
+          parent: `body:app-${app}`,
+        }),
         // The share of your data each app held is now in the hub.
         { kind: 'node', id: `data-org-${app}`, x: 0, y: 0, r: 7, role: 'data', opacity: 0, parent: 'node:hub' },
-        edge(`link-hub-${app}`, 'node:hub', `chip:app-${app}`, { opacity: 0.7, parent: `chip:app-${app}` }),
+        edge(`link-hub-${app}`, 'node:hub', `body:app-${app}`, { opacity: 0.7, parent: `body:app-${app}` }),
       ];
     }),
   ];
@@ -1035,4 +1033,16 @@ const echoSpaces = ({ subs = 1, titles = true }: { subs?: number; titles?: boole
   { kind: 'node', id: 'hub', x: 0, y: 0, r: 110, role: 'data', glow: -0.3, opacity: 0.12, parent: 'body:org' },
   ...spaces({ subs }),
   ...(titles ? echoTitle() : []),
+];
+
+/** The one space the camera enters, without the hypergraph around it. */
+const companySpace = (): Prim[] => [
+  {
+    kind: 'body',
+    id: `space-${COMPANY_SPACE.id}`,
+    x: COMPANY_SPACE.at[0],
+    y: COMPANY_SPACE.at[1],
+    r: SPACE_R,
+    parent: 'node:hub',
+  },
 ];

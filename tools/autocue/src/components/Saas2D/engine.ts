@@ -312,7 +312,7 @@ export const mix = (from: Frame, to: Frame, t: number, seconds: number): Frame =
   const prims: Prim[] = [];
   for (const prim of to.prims) {
     const previous = before.get(key(prim));
-    const own = curve((t - (prim.delay ?? 0)) / (seconds - (prim.delay ?? 0)));
+    const own = curve((t - (prim.delay ?? 0)) / Math.max(0.1, seconds - (prim.delay ?? 0)));
     if (previous) {
       prims.push(blend(previous, prim, own));
       continue;
@@ -327,9 +327,11 @@ export const mix = (from: Frame, to: Frame, t: number, seconds: number): Frame =
       continue;
     }
     const end = prim.screen ? undefined : destination(prim);
-    // A leaving element moves from its own place (1 - k = 1) to its destination (1 - k = 0).
+    // A leaving element moves from its own place (1 - k = 1) to its destination (1 - k = 0), or shrinks where it is.
     prims.push(
-      end ? travel(grow({ ...prim, opacity: (prim.opacity ?? 1) * (1 - k) }, 1 - k), end, 1 - k) : fade(prim, 1 - k),
+      end
+        ? travel(grow({ ...prim, opacity: (prim.opacity ?? 1) * (1 - k) }, 1 - k), end, 1 - k)
+        : grow({ ...prim, opacity: (prim.opacity ?? 1) * (1 - k) }, 1 - k),
     );
   }
   return { camera: blendCamera(from.camera, to.camera, k), prims };
