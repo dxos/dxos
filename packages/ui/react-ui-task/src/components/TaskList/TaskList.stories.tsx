@@ -8,6 +8,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Blob, Obj, Ref, Tag } from '@dxos/echo';
 import { random } from '@dxos/random';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { createMenuAction } from '@dxos/react-ui-menu';
 import * as Card from '@dxos/react-ui/Card';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -763,7 +764,8 @@ const meta = {
   title: 'ui/react-ui-task/TaskList',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
-  parameters: { translations },
+  // The editor's pills are a react-ui-form form, whose strings ("None") are that package's.
+  parameters: { translations: [...translations, ...formTranslations] },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -1518,7 +1520,7 @@ export const TestCreateFailureKeepsDraft: Story = {
 };
 
 /**
- * The create pane's chips set the new task's fields before it exists: what they hold is created with the title, and
+ * The create pane's pills set the new task's fields before it exists: what they hold is created with the title, and
  * they read as unset again once it lands.
  */
 export const TestCreateWithProperties: Story = {
@@ -1528,19 +1530,20 @@ export const TestCreateWithProperties: Story = {
   },
   play: async ({ canvasElement }) => {
     const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
-    const chip = (field: string) => pane.querySelector<HTMLElement>(`[data-testid="taskList.edit.${field}"]`)!;
+    const pill = (field: string) =>
+      pane.querySelector<HTMLElement>(`[data-testid="taskList.edit.properties"] [data-testid="${field}"]`)!;
     const body = within(document.body);
 
     await userEvent.click(pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input')!);
     await userEvent.keyboard('Order green beans');
-    await userEvent.click(chip('priority'));
-    await userEvent.click(await body.findByRole('menuitemradio', { name: /High/ }));
-    await userEvent.click(chip('assignee'));
+    await userEvent.click(pill('priority'));
+    await userEvent.click(await body.findByRole('option', { name: /High/ }));
+    await userEvent.click(pill('assignee'));
     await userEvent.click(await body.findByText('Riley'));
-    await userEvent.click(chip('estimate'));
-    await userEvent.click(await body.findByRole('menuitemradio', { name: /^M\b/ }));
-    await expect(chip('priority').textContent).toContain('High');
-    await expect(chip('assignee').textContent).toContain('Riley');
+    await userEvent.click(pill('estimate'));
+    await userEvent.click(await body.findByRole('option', { name: /^M$/ }));
+    await waitFor(async () => expect(pill('priority').textContent).toContain('High'));
+    await expect(pill('assignee').textContent).toContain('Riley');
 
     await userEvent.click(pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input')!);
     await userEvent.keyboard('{Enter}');
@@ -1555,7 +1558,7 @@ export const TestCreateWithProperties: Story = {
     });
     await expect(row.querySelector('[data-testid="taskList.item.assignee"]')).toBeTruthy();
     await expect(row.querySelector('[data-testid="taskList.item.estimate"]')?.textContent).toEqual('M');
-    await waitFor(async () => expect(chip('priority').textContent).toContain('Priority'));
+    await waitFor(async () => expect(pill('priority').textContent).toContain('Priority'));
   },
 };
 

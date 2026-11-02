@@ -948,7 +948,10 @@ export const Updates: Story = {
     addTask(space, taskSet, MILESTONE_TASK, milestone);
     // Its task is only a row: the task list does not group by milestone, so no backlog split appears.
     await expect(canvas.findByText(MILESTONE_TASK, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    await waitFor(() => expect(canvas.queryByText('Backlog')).toBeNull(), { timeout: 10_000 });
+    // The create pane's status select lists `Backlog` among its options; a backlog split would be a heading.
+    await waitFor(() => expect(canvas.queryByText('Backlog', { ignore: 'script, style, option' })).toBeNull(), {
+      timeout: 10_000,
+    });
 
     // The milestone renders in its own Overview section.
     await showTab(canvas, 'overview');

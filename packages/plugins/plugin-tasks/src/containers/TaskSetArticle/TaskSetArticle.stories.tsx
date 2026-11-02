@@ -511,7 +511,10 @@ export const Behavior: Story = {
     // Unfiled tasks are not segregated into a backlog — they are rows like any other.
     await expect(canvas.findByText('Schedule cuppings', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await waitFor(() => expect(canvas.queryByText('Roasting')).toBeNull(), { timeout: 10_000 });
-    await waitFor(() => expect(canvas.queryByText('Backlog')).toBeNull(), { timeout: 10_000 });
+    // The create pane's status select lists `Backlog` among its options; a milestone would be a heading.
+    await waitFor(() => expect(canvas.queryByText('Backlog', { ignore: 'script, style, option' })).toBeNull(), {
+      timeout: 10_000,
+    });
 
     const context = seeded;
     if (!context) {

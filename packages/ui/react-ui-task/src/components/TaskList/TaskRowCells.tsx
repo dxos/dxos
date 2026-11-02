@@ -16,19 +16,13 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
+import * as Typography from '@dxos/react-ui/Typography';
 import { Task } from '@dxos/types';
 import { getHashHue, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import {
-  UNSET_ICON,
-  estimateTextStyle,
-  priorityIcon,
-  priorityTextStyle,
-  statusIcon,
-  statusTextStyle,
-} from '../../util/status-icons.ts';
+import { UNSET_ICON, priorityIcon, priorityTextStyle, statusIcon, statusTextStyle } from '../../util/status-icons.ts';
 import { useTaskListContext } from './TaskListContext.ts';
 
 /**
@@ -233,9 +227,9 @@ TaskCheckbox.displayName = 'TaskList.Checkbox';
  */
 export const TaskEstimateLabel = ({ estimate }: { estimate?: Task.Estimate }) =>
   estimate ? (
-    <span data-testid='taskList.item.estimate' className={mx('px-1 text-xs tabular-nums', estimateTextStyle(estimate))}>
-      {estimate.toUpperCase()}
-    </span>
+    <Typography.Text asChild tone='muted' data-testid='taskList.item.estimate'>
+      <span>{estimate.toUpperCase()}</span>
+    </Typography.Text>
   ) : null;
 
 TaskEstimateLabel.displayName = 'TaskList.EstimateLabel';

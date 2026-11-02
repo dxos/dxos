@@ -11,6 +11,7 @@ import { useLabel, useObject, useQuery } from '@dxos/echo-react';
 import { Tree } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuAction, type MenuItem, executeMenuAction, fallbackIcon } from '@dxos/react-ui-menu';
 import * as Avatar from '@dxos/react-ui/Avatar';
+import * as Badge from '@dxos/react-ui/Badge';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -875,7 +876,7 @@ const TaskListAssignee = Util.composable<HTMLButtonElement, TaskListAssigneeProp
           {...props}
           ref={forwardedRef}
         >
-          <span className='relative inline-grid'>
+          <Badge.Root>
             <Avatar.Root
               size='xs'
               variant={agent ? 'square' : 'circle'}
@@ -886,16 +887,11 @@ const TaskListAssignee = Util.composable<HTMLButtonElement, TaskListAssigneeProp
               label={label}
             />
             {badged && (
-              <Avatar.Root
-                variant='square'
-                hue='purple'
-                icon={worker.icon}
-                aria-hidden
-                classNames='absolute -bottom-1 -end-1 size-3 ring-2 ring-base-surface'
-                data-testid='taskList.item.delegate'
-              />
+              <Badge.Mark data-testid='taskList.item.delegate'>
+                <Avatar.Root fill variant='square' hue='purple' icon={worker.icon} aria-hidden />
+              </Badge.Mark>
             )}
-          </span>
+          </Badge.Root>
         </Button.Root>
       );
       return session ? (

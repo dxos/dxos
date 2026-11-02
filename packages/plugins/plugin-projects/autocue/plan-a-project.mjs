@@ -33,6 +33,7 @@ const COMPANION = '[data-testid="deck.companion"]';
 const INSTRUCTIONS = `${PLANK} .cm-content[aria-placeholder="Describe what the agent should do in each session."]`;
 const ADD_TASK = `${PLANK} input[placeholder="Add task"]`;
 const TASK_ROW = `${PLANK} [data-testid="taskList.item"]`;
+const ADD_PRIORITY = `${PLANK} [data-testid="taskList.edit.properties"] [data-testid="priority"]`;
 
 /** The person the coding session works for. */
 const DISPLAY_NAME = 'Riley';
@@ -135,6 +136,14 @@ export const steps = [
       await page.locator(ADD_TASK).first().waitFor({ state: 'visible', timeout: 10_000 });
       for (const [index, task] of TASKS.entries()) {
         await demo.type({ selector: `${ADD_TASK} >> nth=0`, value: task, label: 'Add task' });
+        if (index === TASKS.length - 1) {
+          // The last one is set up in the row before it exists; a pick leaves focus on the pill, so back to the title.
+          await demo.click({ selector: `${ADD_PRIORITY} >> nth=0`, label: 'Priority' });
+          const low = '[role="option"]:has-text("Low")';
+          await page.locator(low).first().waitFor({ state: 'visible', timeout: 5_000 });
+          await demo.click({ selector: `${low} >> nth=0`, label: 'Low' });
+          await demo.click({ selector: `${ADD_TASK} >> nth=0`, label: 'Add task', hud: false });
+        }
         await demo.press({ key: 'Enter', hud: false });
         await page.locator(TASK_ROW).nth(index).waitFor({ state: 'visible', timeout: 10_000 });
       }

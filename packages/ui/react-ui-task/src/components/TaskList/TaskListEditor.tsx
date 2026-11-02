@@ -21,6 +21,7 @@ import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Util from '@dxos/react-ui/Util';
@@ -33,7 +34,7 @@ import { translationKey } from '#translations';
 
 import { type TaskCreateHandler, type TaskCreateResult } from './TaskList.tsx';
 import { useTaskListContext } from './TaskListContext.ts';
-import { TaskPropertyChips, type TaskPropertyValues } from './TaskPropertyChips.tsx';
+import { TaskPropertyPills, type TaskPropertyValues } from './TaskPropertyPills.tsx';
 
 export type TaskListEditorProps = ComposableProps<{
   /** Placeholder for the title field when nothing is selected (the create case); translated by default. */
@@ -103,8 +104,11 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
     // synchronously — a `setState` would still hold the previous render's text.
     const draftDescription = useRef('');
     const [draft, setDraft] = useState('');
-    // Set on the create row's chips before the task exists, and sent with its draft.
+    // Set on the create row's pills before the task exists, and sent with its draft.
     const [draftProperties, setDraftProperties] = useState<TaskPropertyValues>({});
+    // Bumped when the draft's properties are cleared, to rebuild the pills' form, which holds an edit until its values
+    // catch up and so would keep showing a value cleared under it.
+    const [propertiesEpoch, setPropertiesEpoch] = useState(0);
     // Held by the pane, not the host: there is no task to attach them to until the create lands.
     const [files, setFiles] = useState<readonly File[]>([]);
     const [dragOver, setDragOver] = useState(false);
@@ -160,6 +164,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
           setFiles((files) => files.filter((file) => !sent.includes(file) || kept.has(file)));
           setDraft((draft) => (draft === sentTitle ? '' : draft));
           setDraftProperties({});
+          setPropertiesEpoch((epoch) => epoch + 1);
           if (draftDescription.current === sentDescription) {
             draftDescription.current = '';
             setCreateEpoch((epoch) => epoch + 1);
@@ -249,6 +254,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
       }
       setDraft('');
       setDraftProperties({});
+      setPropertiesEpoch((epoch) => epoch + 1);
       setFiles([]);
       onTaskSelect?.(undefined);
     }, [task, current, onTaskSelect]);
@@ -351,7 +357,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
 
     return (
       // A form of its own rather than a row on the list's columns: the title and description take the full width, and
-      // the task's other fields sit under them as chips, so they can all be set as the task is added.
+      // the task's other fields sit under them as pills, so they can all be set as the task is added.
       <div
         {...rest}
         className={mx(
@@ -462,10 +468,16 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
             </div>
           )}
 
-        <div className='flex flex-wrap items-center gap-1 min-w-0' data-testid='taskList.edit.properties'>
-          <TaskPropertyChips values={values} members={members} people={people} onChange={handlePropertyChange} />
+        <Layout.Flex wrap align='center' gap='xs' classNames='min-w-0' data-testid='taskList.edit.properties'>
+          <TaskPropertyPills
+            key={current?.id ?? `create-${propertiesEpoch}`}
+            values={values}
+            members={members}
+            people={people}
+            onChange={handlePropertyChange}
+          />
           {canCancel && (
-            // At the end of the chips: the way out of the pane, there while it holds something to throw away.
+            // At the end of the pills: the way out of the pane, there while it holds something to throw away.
             <SystemButton.Cancel
               variant='ghost'
               classNames='ms-auto'
@@ -474,7 +486,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
               onMouseDown={(event) => event.preventDefault()}
             />
           )}
-        </div>
+        </Layout.Flex>
       </div>
     );
   },

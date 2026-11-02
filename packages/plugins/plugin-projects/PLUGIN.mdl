@@ -243,10 +243,12 @@ test QA-4: Plan a project and hand its tasks to an agent
       expect: both fields keep what was typed
     - name: Break the work into tasks
       do: Open the Tasks tab and add "Service both roasters", "Order green beans" and "Hire a roastery assistant"
-        from the Add task row, pressing Enter after each.
+        from the Add task row, pressing Enter after each. Before adding the last, set its priority to Low from the
+        row's Priority pill.
       expect: |
         the three tasks list in the order added. Each row shows its priority beside its status, ahead of the title,
-        and ends in an assignee placeholder
+        and ends in an assignee placeholder; "Hire a roastery assistant" shows Low, and the Priority pill reads unset
+        again once it is added
     - name: Fill in a task
       do: Click "Service both roasters", type a description, set its priority to High and its status to Started.
       expect: |
@@ -1286,4 +1288,13 @@ decision D-111: Picking a person in the assignee picker takes the task back from
   why: The picker holds one answer to who has the task, so a person picked over an agent replaces it rather than sharing the task with it.
   rejected:
     - Keeping the delegate when a person is picked, which leaves an agent at work for someone who did not hand it the task.
+```
+
+```mdl
+decision D-112: QA-4 sets the last new task's priority from the Add task row's Priority pill before adding it, and expects the pill to read unset once the task is added.
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-4]
+  why: The Add task row's properties are pills on a schema form now, and no other step sets a property before the task exists.
 ```
