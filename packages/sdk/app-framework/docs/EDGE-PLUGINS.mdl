@@ -223,7 +223,7 @@ reaches the network only through its bindings.
 | `PluginBuilder`    | dxos: app-framework (`composerPlugin`) | The plugin's vite build: bundle, manifest and `vendor/`.                    |
 | `PluginStore`      | edge: registry-service               | The existing `/upload` store, plus an index of operation keys to versions.    |
 | `PluginRouter`     | edge: compute-service                | Resolves an operation key to the plugin version that implements it.          |
-| `PluginLoader`     | edge: compute-service                | Rewrites bare imports to `vendor/` and loads the bundle into a Dynamic Worker. |
+| `PluginLoader`     | edge: compute-service, on a published dxos package | Rewrites bare imports to `vendor/` and loads the bundle into a Dynamic Worker. |
 | `PluginHost`       | dxos: `@dxos/plugin-host-cloudflare` | Shipped in `vendor/`: activates the plugin's workerd modules, serves RPC.     |
 | `PluginSupervisor` | edge: compute-service                | A Durable Object that runs a plugin's durable module as a facet (phase 3).    |
 
@@ -231,8 +231,9 @@ An invocation of `org.dxos.operation.markdown.create` in space `S` flows:
 
 1. A caller (MCP `invokeOperation`, a trigger, an agent, the Composer client) asks compute-service to
    invoke `dxn:org.dxos.operation.markdown.create` in `S`.
-2. `PluginRouter` looks the key up in the operation index and gets the newest version that
-   implements it, `org.dxos.plugin.markdown@0.9.2`, with content hash `h`.
+2. `PluginRouter` looks the key up in the operation index and gets the version `S`'s channel
+   (`latest` unless `S` selects another) points to, `org.dxos.plugin.markdown@0.9.2`, with content
+   hash `h`.
 3. `PluginLoader` calls `LOADER.get("plugin:h", load)`. On a cold isolate `load` reads the bundle
    from R2, rewrites its bare imports to `vendor/`, adds a main module that starts `PluginHost`,
    and returns the `WorkerCode`; on a warm one nothing is read.
@@ -306,12 +307,36 @@ type PluginCatalog
 type OperationRoute
   desc: |
     One row of the operation index: which plugin version implements an operation key. A key belongs
-    to exactly one plugin key; each published version adds rows, and the router picks the newest.
+    to exactly one plugin key; each published version adds rows, and the router picks the version the
+    space's channel points to.
   fields:
     operationKey: NSID
     pluginKey: NSID
     version: SemVer
     hash: string
+```
+
+```mdl
+type Channel
+  desc: |
+    A named, movable pointer from a plugin key to one published version, like an npm dist-tag.
+    `latest` always exists: publishing a version that is not a prerelease moves it. Other channels
+    (`next`, `dev`, ...) move only when a publish or a `channel set` names them. Moving a channel
+    rebuilds nothing; it points at bytes already published.
+  fields:
+    pluginKey: NSID
+    name: string                 # e.g. latest, next, dev
+    version: SemVer
+```
+
+```mdl
+type SpacePluginChannel
+  desc: |
+    The channel a space runs its plugins from: an annotation on the space's `Properties` object,
+    `latest` when absent. It applies to every plugin the space invokes; a plugin with no version on
+    that channel runs its `latest`.
+  fields:
+    channel: string              # default latest
 ```
 
 ```mdl
@@ -358,7 +383,8 @@ service PluginStore
     getManifest(pluginKey: NSID, version?: SemVer) → Plugin.Manifest
     getCatalog(pluginKey: NSID, version?: SemVer) → PluginCatalog
     query(filter: { text?, pluginKey?, operationKey?, typename?, skillKey? }) → PluginBundle[]
-    resolveOperation(operationKey: NSID) → OperationRoute
+    resolveOperation(operationKey: NSID, channel: string) → OperationRoute
+    setChannel(pluginKey: NSID, channel: string, version: SemVer) → Channel
     revoke(pluginKey: NSID, version: SemVer) → void
   errors:
     VersionExists: the version is uploaded with a different hash
@@ -402,12 +428,12 @@ service PluginEntrypoint
 ```mdl
 service PluginRouter
   desc: |
-    compute-service's resolution of a `dxn:<operation key>[@<version>]` target to the newest version
-    that implements it, from PluginStore's operation index, falling back to operation-service while
-    operation-service still runs ([F-6.6]). TODO: a per-space setting, with an override per DXN,
-    picks another version.
+    compute-service's resolution of a `dxn:<operation key>[@<version>]` target to a plugin version,
+    from PluginStore's operation index: an explicit version wins, otherwise the version the invoking
+    space's channel (SpacePluginChannel, `latest` by default) points to, otherwise `latest`. Falls back
+    to operation-service while operation-service still runs ([F-6.6]). TODO: an override per DXN.
   ops:
-    route(target: string) → OperationRoute
+    route(target: string, spaceId?: SpaceId) → OperationRoute
   errors:
     OperationNotFound: no published version implements the key
 ```
@@ -432,7 +458,8 @@ service PluginSupervisor
 ```mdl
 op publishPlugin
   desc: |
-    CLI `dx registry publish [--private]`, the command that already publishes a plugin's bundle: it
+    CLI `dx registry publish [--private] [--channel <name>]`, the command that already publishes a
+    plugin's bundle, and moves `latest` (for a version that is not a prerelease) or the named channel: it
     runs the plugin's vite build with `DX_PLUGIN_HOST_ENTRY` naming the CLI's `PluginHost`, so the
     build vendors the host whatever the plugin's own vite config says, loads the bundle in a local
     workerd and calls `describe()`, and
@@ -519,8 +546,9 @@ feat F-2: Versioning
   req F-2.1: A (plugin key, version) pair holds one bundle; uploading it again with another hash
     fails with VersionExists, with the same hash it is a no-op.
 
-  req F-2.2: An invocation runs the newest published version that implements its operation key, the
-    rule the browser registry uses for the version it offers.
+  req F-2.2: An invocation runs the version that the invoking space's channel points to for the
+    plugin implementing its operation key; a space with no channel set uses `latest`, and a plugin
+    with no version on the space's channel runs its `latest`.
 
   req F-2.3: An invocation may name a version (`dxn:<key>@<version>`); it then runs that version.
 
@@ -529,6 +557,13 @@ feat F-2: Versioning
 
   req F-2.5: The isolate id is the bundle hash, so a changed bundle never reuses an isolate of the
     old one and an unchanged bundle always can.
+
+  req F-2.6: Channels are npm-style dist-tags: publishing moves `latest` (or the channel the publish
+    names), and `dx registry channel set <key>@<version> <channel>` moves a channel to a version
+    already published, without rebuilding.
+
+  req F-2.7: A space selects its channel with an annotation on its `Properties` object; changing it
+    takes effect on the space's next invocation.
 ```
 
 ```mdl
@@ -697,10 +732,19 @@ scenario T-4: Operation key conflict
 
 ## Versions
 
-Which version runs when the caller does not name one: the newest published version that
-implements the operation key, by semver, the same rule the browser registry uses for the version
-it offers. An explicit version (`dxn:<key>@<version>`) wins. There are no channels. TODO: a
-per-space setting, with an override per DXN, picks a version for a space.
+Channels work like npm dist-tags. Each plugin key has named channels, each pointing at one published
+version; `latest` always exists and moves when a version that is not a prerelease is published.
+Publishing with `--channel next` moves `next` instead, and `dx registry channel set` moves any
+channel to a version already published.
+
+Which version runs for an invocation, in order:
+
+1. the version the target names (`dxn:<key>@<version>`);
+2. the version the invoking space's channel points to (an annotation on the space's `Properties`
+   object, `latest` by default);
+3. the plugin's `latest`, when it has no version on the space's channel.
+
+TODO: an override per DXN.
 
 ## Rollout
 
@@ -1056,4 +1100,37 @@ decision D-35: Every host builds a plugin from its `manifest.json` and imports e
   by: user:dmaretskyi
   affects: [PluginBundle, PluginLoader, PluginHost, F-1.1]
   why: The manifest already carries every module's spec and body URL, so an entry module that re-encodes it as code is a second source of truth and the one file every host had to execute first.
+```
+
+```mdl
+decision D-36: Plugin versions sit on channels, like npm dist-tags, and a space selects its channel with an annotation on its `Properties` object, defaulting to `latest`. Supersedes the channel-less routing of [D-25]; EDGE still uses the existing plugin store.
+  date: 2026-11-02
+  by: user:dmaretskyi
+  supersedes: D-25
+  affects: [Channel, SpacePluginChannel, PluginStore, PluginRouter, publishPlugin, F-2.2, F-2.6, F-2.7]
+```
+
+```mdl
+decision D-37: `latest` moves on every publish of a version that is not a prerelease; `--channel <name>` moves another channel instead; `dx registry channel set` moves a channel to a version already published. A space's channel applies to every plugin it invokes, and a plugin with no version on that channel runs its `latest`. Fills in [D-36].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [Channel, PluginRouter, publishPlugin, F-2.2, F-2.6]
+  why: The npm model the decision names: `latest` is what a plain install gets, other tags are opt-in, and moving a tag never rebuilds; falling back to `latest` lets a space on `next` keep running plugins that have no `next`.
+  rejected:
+    - A channel per plugin per space: a space would have to list every plugin to opt into a preview.
+```
+
+```mdl
+decision D-38: The loader code EDGE runs — the rewrite of bare imports through the joined `vendor/` import map and the main module that builds each plugin from its manifest — lives in a published dxos package that compute-service imports, not in a copy in edge.
+  date: 2026-11-02
+  by: user:dmaretskyi
+  affects: [PluginLoader, PluginHost]
+```
+
+```mdl
+decision D-39: The edge repository installs the `dx` CLI as a dev dependency from pkg.pr.new, like its other `@dxos` packages, and its end-to-end tests build and publish a sample plugin with it; local work links a dxos checkout over it. Fills in [D-18].
+  date: 2026-11-02
+  by: user:dmaretskyi
+  affects: [publishPlugin, F-12.3]
 ```
