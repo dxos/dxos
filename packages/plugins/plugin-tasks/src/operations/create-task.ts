@@ -19,7 +19,9 @@ const handler: Operation.WithHandler<typeof TaskOperation.CreateTask> = TaskOper
       taskSet: taskSetRef,
       title,
       description,
+      status,
       priority,
+      estimate,
       assignee,
       delegate,
       parentTask,
@@ -53,9 +55,10 @@ const handler: Operation.WithHandler<typeof TaskOperation.CreateTask> = TaskOper
       const task = yield* TaskSet.addPersisted(
         Task.make({
           title: title.trim(),
-          status: 'todo',
+          status: status ?? 'todo',
           description,
           priority,
+          estimate,
           assignee,
           delegate,
           milestone,

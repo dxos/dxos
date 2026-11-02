@@ -20,7 +20,7 @@ import { DX_ANCHOR_ACTIVATE, DxAnchorActivate } from '@dxos/ui-types';
 
 import { translations } from '#translations';
 
-import { type TaskMember } from '../../util/assignee-menu.ts';
+import { type TaskMember } from '../../util/property-menus.ts';
 import { type TaskPlacement } from './hierarchy.ts';
 import { type TaskCreateHandler, TaskList } from './TaskList.tsx';
 
@@ -801,6 +801,7 @@ export const WithDescriptions: Story = {
     showGroupLabels: false,
     showOrdinals: true,
     showDescription: true,
+    members: [{ did: 'did:key:riley', name: 'Riley' }],
   },
 };
 
@@ -1468,6 +1469,48 @@ export const TestCreateFailureKeepsDraft: Story = {
     await userEvent.keyboard(' and more');
     await waitFor(async () => expect(titles()).toContain('slow to land'), { timeout: 5_000 });
     await expect(title().value).toEqual('slow to land and more');
+  },
+};
+
+/**
+ * The create pane's chips set the new task's fields before it exists: what they hold is created with the title, and
+ * they read as unset again once it lands.
+ */
+export const TestCreateWithProperties: Story = {
+  args: {
+    showGroupLabels: false,
+    members: [{ did: 'did:key:riley', name: 'Riley' }],
+  },
+  play: async ({ canvasElement }) => {
+    const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
+    const chip = (field: string) => pane.querySelector<HTMLElement>(`[data-testid="taskList.edit.${field}"]`)!;
+    const body = within(document.body);
+
+    await userEvent.click(pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input')!);
+    await userEvent.keyboard('Order green beans');
+    await userEvent.click(chip('priority'));
+    await userEvent.click(await body.findByRole('menuitemradio', { name: /High/ }));
+    await userEvent.click(chip('assignee'));
+    await userEvent.click(await body.findByText('Riley'));
+    await userEvent.click(chip('estimate'));
+    await userEvent.click(await body.findByRole('menuitemradio', { name: /^M\b/ }));
+    await expect(chip('priority').textContent).toContain('High');
+    await expect(chip('assignee').textContent).toContain('Riley');
+
+    await userEvent.click(pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input')!);
+    await userEvent.keyboard('{Enter}');
+    const row = await waitFor(() => {
+      const row = [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')].find((row) =>
+        row.textContent?.includes('Order green beans'),
+      );
+      if (!row) {
+        throw new Error('The created task is not listed yet.');
+      }
+      return row;
+    });
+    await expect(row.querySelector('[data-testid="taskList.item.assignee"]')).toBeTruthy();
+    await expect(row.querySelector('[data-testid="taskList.item.estimate"]')?.textContent).toEqual('M');
+    await waitFor(async () => expect(chip('priority').textContent).toContain('Priority'));
   },
 };
 

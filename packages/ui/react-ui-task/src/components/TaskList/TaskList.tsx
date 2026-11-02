@@ -24,7 +24,8 @@ import { type ComposableProps } from '@dxos/ui-types';
 import { translationKey } from '#translations';
 
 import { useAssigneeDisplay } from '../../hooks/index.ts';
-import { type TaskMember, assigneeMenuActions } from '../../util/assignee-menu.ts';
+import { UNASSIGNED_ICON } from '../../util/assignee.ts';
+import { type TaskMember, assigneeMenuActions } from '../../util/property-menus.ts';
 import { STATUS_ORDER } from '../../util/status-icons.ts';
 import { type TaskPlacement } from './hierarchy.ts';
 import { TaskDescription, type TaskDescriptionProps } from './TaskDescription.tsx';
@@ -926,11 +927,11 @@ const TaskListAssigneeControl = ({
       deferUntilOpen
       actions={() =>
         assigneeMenuActions({
-          task,
+          assignee,
           current,
           members,
           people: Obj.getDatabase(task)?.query(Filter.type(Person.Person)).runSync() ?? [],
-          onTaskUpdate,
+          onChange: (assignee) => onTaskUpdate(task, { assignee }),
           t,
         })
       }
@@ -957,10 +958,6 @@ const TaskListAssigneeControl = ({
     </ActionMenu>
   );
 };
-
-/** An empty assignee slot: a dashed person, as Linear draws it, rather than the dot an unset priority shows. */
-const UNASSIGNED_ICON = 'ph--user-circle-dashed--regular';
-
 //
 // TaskList
 //

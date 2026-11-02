@@ -8,6 +8,9 @@ import { type Actor, type Person, RemoteSession, Task } from '@dxos/types';
 /** The glyph for a person assignee. */
 export const PERSON_ICON = 'ph--user--regular';
 
+/** An empty assignee slot: a dashed person, as Linear draws it, rather than the dot an unset priority shows. */
+export const UNASSIGNED_ICON = 'ph--user-circle-dashed--regular';
+
 /** The glyph for an assistant whose harness has no mark of its own. */
 export const AGENT_ICON = 'ph--robot--regular';
 

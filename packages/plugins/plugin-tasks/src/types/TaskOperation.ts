@@ -46,7 +46,9 @@ export const CreateTask = Operation.make({
     }),
     title: Schema.String,
     description: Schema.optional(Schema.String),
+    status: Schema.optional(Task.Status),
     priority: Schema.optional(Task.Priority),
+    estimate: Schema.optional(Task.Estimate),
     assignee: Schema.optional(Actor.Actor),
     /** The agent doing the work for the assignee. */
     delegate: Schema.optional(Actor.Actor),

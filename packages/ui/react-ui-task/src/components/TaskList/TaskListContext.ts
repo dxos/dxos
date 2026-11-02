@@ -10,7 +10,7 @@ import type { MenuItem } from '@dxos/react-ui-menu';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import { type Task } from '@dxos/types';
 
-import { type TaskMember } from '../../util/assignee-menu.ts';
+import { type TaskMember } from '../../util/property-menus.ts';
 import { type TaskPlacement } from './hierarchy.ts';
 import { type TaskDescriptionProps } from './TaskDescription.tsx';
 import { type TaskCreateHandler } from './TaskList.tsx';

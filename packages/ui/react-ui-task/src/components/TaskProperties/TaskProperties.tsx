@@ -19,8 +19,15 @@ import { mx } from '@dxos/ui-theme';
 import { translationKey } from '#translations';
 
 import { useAssigneeDisplay } from '../../hooks/index.ts';
-import { type TaskMember, assigneeMenuActions } from '../../util/assignee-menu.ts';
 import {
+  type TaskMember,
+  assigneeMenuActions,
+  estimateMenuActions,
+  priorityMenuActions,
+  statusMenuActions,
+} from '../../util/property-menus.ts';
+import {
+  ESTIMATE_ICON,
   UNSET_ICON,
   estimateTextStyle,
   priorityIcon,
@@ -30,9 +37,6 @@ import {
 } from '../../util/status-icons.ts';
 import { TASK_GRID, TASK_GRID_ICON } from '../task-grid.ts';
 import { TaskMnemonic } from '../TaskList/TaskRowCells.tsx';
-
-/** The glyph for an estimate, which the list renders as letters and has none of its own. */
-const ESTIMATE_ICON = 'ph--ruler--regular';
 
 export type { TaskMember };
 
@@ -114,15 +118,7 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
           testId='taskList.property.status'
           actions={
             onTaskUpdate &&
-            (() =>
-              Task.StatusOptions.map(({ id }) =>
-                createMenuAction(`status-${id}`, () => onTaskUpdate(task, { status: id }), {
-                  label: t(`status-${id}.label`),
-                  icon: statusIcon(id),
-                  iconClassNames: statusTextStyle(id),
-                  checked: status === id,
-                }),
-              ))
+            (() => statusMenuActions({ status, onChange: (status) => onTaskUpdate(task, { status }), t }))
           }
         />
 
@@ -135,11 +131,11 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
             onTaskUpdate &&
             (() =>
               assigneeMenuActions({
-                task,
+                assignee,
                 current: { label: assigneeLabel, icon: assigneeIcon },
                 members,
                 people,
-                onTaskUpdate,
+                onChange: (assignee) => onTaskUpdate(task, { assignee }),
                 t,
               }))
           }
@@ -171,16 +167,7 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
           testId='taskList.property.priority'
           actions={
             onTaskUpdate &&
-            (() =>
-              [Task.NullOption, ...Task.PriorityOptions].map(({ id, icon }) =>
-                createMenuAction(`priority-${id}`, () => onTaskUpdate(task, { priority: id === 'none' ? null : id }), {
-                  label: t(`priority-${id}.label`),
-                  // `None` takes the unset glyph, so every option has an icon and the labels align.
-                  icon: icon ?? UNSET_ICON,
-                  iconClassNames: priorityTextStyle(id),
-                  checked: (priority ?? 'none') === id,
-                }),
-              ))
+            (() => priorityMenuActions({ priority, onChange: (priority) => onTaskUpdate(task, { priority }), t }))
           }
         />
 
@@ -192,13 +179,7 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
           testId='taskList.property.estimate'
           actions={
             onTaskUpdate &&
-            (() =>
-              [Task.NullOption, ...Task.EstimateOptions].map(({ id, title }) =>
-                createMenuAction(`estimate-${id}`, () => onTaskUpdate(task, { estimate: id === 'none' ? null : id }), {
-                  label: title,
-                  checked: (estimate ?? 'none') === id,
-                }),
-              ))
+            (() => estimateMenuActions({ estimate, onChange: (estimate) => onTaskUpdate(task, { estimate }) }))
           }
         />
       </section>
