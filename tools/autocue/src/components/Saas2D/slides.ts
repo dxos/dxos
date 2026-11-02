@@ -146,7 +146,7 @@ const tenantData = (index: number) => {
 /**
  * Every company as a ring around a holder (a vendor or a lab), linked to it; your company sits on the left. Companies
  * that appear grow out of yours (companies like yours), or, with `fromData`, out of their data in the vendor's ring once
- * it has formed (`delay`).
+ * it has formed (`delay`), and stay linked to that data rather than to the holder.
  */
 const tenantRing = (
   cx: number,
@@ -189,10 +189,11 @@ const tenantRing = (
         ...(fromData ? { from: tenantData(index), delay: fromData.delay } : { from: 'body:org' }),
       });
     }
-    prims.push(edge(`tenant-link-${index}`, tenant, holder, { opacity: 0.6, parent: tenant }));
+    const target = fromData ? tenantData(index) : holder;
+    prims.push(edge(`tenant-link-${index}`, tenant, target, { opacity: 0.6, parent: tenant }));
     if (flows) {
       prims.push(
-        flow(`tenant-flow-${index}`, tenant, holder, t * 0.35 + hash(`flow-${index}`), ROLES.data, {
+        flow(`tenant-flow-${index}`, tenant, target, t * 0.35 + hash(`flow-${index}`), ROLES.data, {
           count: 1,
           size: 3.5,
           opacity: 0.8,
