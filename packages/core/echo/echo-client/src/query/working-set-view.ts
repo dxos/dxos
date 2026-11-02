@@ -60,7 +60,12 @@ export class WorkingSetView {
   /** Present when only writes under the query's parents can change it. */
   #hierarchy?: HierarchyScope = undefined;
   /** Present when a simple selection only matches objects with one of these ids or typenames. */
-  #selection?: { ids: string[]; typenames: string[] } = undefined;
+  #selection?: { ids: string[]; typenames: string[]; deletionMatters: boolean } = undefined;
+  /**
+   * The cached members of a simple selection keyed by the dependencies they inherit deletion from: a write to a
+   * dependency writes only its own document, so the members it can delete are re-evaluated in its place.
+   */
+  readonly #dependents = new Map<string, Set<string>>();
   /** Delivers only the writes {@link #route} says can change the results. */
   readonly #dispatch: UpdateDispatch;
   /** Present when the query selects from feeds: their unacknowledged writes, which no index has seen yet. */
@@ -204,6 +209,7 @@ export class WorkingSetView {
     this._results = undefined;
     this.#hierarchy = undefined;
     this.#selection = undefined;
+    this.#dependents.clear();
     this.#dispatch.delete(this._onUpdate);
     void this._ctx.dispose().catch((err) => log.catch(err));
   }
@@ -214,6 +220,7 @@ export class WorkingSetView {
     this._results = undefined;
     this.#hierarchy = undefined;
     this.#selection = undefined;
+    this.#dependents.clear();
     this.#dispatch.delete(this._onUpdate);
     // The handles were watched through the context just disposed, so each one is subscribed again.
     this.#feedTail = undefined;
@@ -241,7 +248,8 @@ export class WorkingSetView {
     this.#delta = deltaFor(query);
     this.#hierarchy = getHierarchyScope(query);
     const simple = this.#hierarchy ? null : isSimpleSelectionQuery(query);
-    this.#selection = simple && !simple.hasQueues ? getSelectionKeys(simple.filter) : undefined;
+    const keys = simple && !simple.hasQueues ? getSelectionKeys(simple.filter) : undefined;
+    this.#selection = keys && { ...keys, deletionMatters: simple?.options?.deleted !== 'include' };
     this.#route();
     this.changed.emit();
   }
@@ -344,8 +352,9 @@ export class WorkingSetView {
       return;
     }
 
+    const written = this.#withDependents(updateEvent);
     if (this._results && this.#delta) {
-      if (this.#applyDelta(this._results, this.#delta, updateEvent)) {
+      if (this.#applyDelta(this._results, this.#delta, written)) {
         this.changed.emit();
       }
       return;
@@ -355,7 +364,7 @@ export class WorkingSetView {
     // before the write returns, rather than at whatever later event first computes its results.
     const resultIds = new Set((this._results ?? []).map((result) => result.id));
     const query = this._query;
-    const changed = updateEvent.itemsUpdated.some(({ id: objectId }) => {
+    const changed = written.some((objectId) => {
       if (resultIds.has(objectId)) {
         return true;
       }
@@ -372,6 +381,19 @@ export class WorkingSetView {
       this.#invalidate();
     }
   };
+
+  /** The written ids, followed by the cached members whose deletion state they can change. */
+  #withDependents(event: ItemsUpdatedEvent): string[] {
+    const ids = event.itemsUpdated.map(({ id }) => id);
+    if (this.#dependents.size === 0) {
+      return ids;
+    }
+    const expanded = new Set(ids);
+    for (const id of ids) {
+      this.#dependents.get(id)?.forEach((member) => expanded.add(member));
+    }
+    return [...expanded];
+  }
 
   #invalidate(): void {
     this._results = undefined;
@@ -392,8 +414,13 @@ export class WorkingSetView {
       this.#dispatch.set(this._onUpdate, results && this.#keysFor(results, this.#hierarchy));
     } else if (this.#selection) {
       // A member is keyed by its id as well, in case a write changes its type.
-      const ids = [...this.#selection.ids, ...(results ?? []).map((result) => result.id)];
-      this.#dispatch.set(this._onUpdate, { ids, typenames: this.#selection.typenames });
+      const members = (results ?? []).map((result) => result.id);
+      this.#dependents.clear();
+      this.#dispatch.set(this._onUpdate, {
+        ids: [...this.#selection.ids, ...members],
+        typenames: this.#selection.typenames,
+      });
+      this.#watchDeletionDependencies(members);
     } else {
       this.#dispatch.set(this._onUpdate);
     }
@@ -414,6 +441,29 @@ export class WorkingSetView {
     return { ids, anchors: { ids: anchors, depth } };
   }
 
+  /** Keys a simple selection's new members by the dependencies they inherit deletion from. */
+  #watchDeletionDependencies(members: readonly string[]): void {
+    if (!this.#selection?.deletionMatters) {
+      return;
+    }
+    const entityManager = this._database._entityManager;
+    const dependencies: string[] = [];
+    for (const member of members) {
+      const ids = new Set<string>();
+      entityManager.getObjectCoreById(member, { load: false })?.addDeletionDependencies(ids);
+      for (const id of ids) {
+        const dependents = this.#dependents.get(id);
+        if (dependents) {
+          dependents.add(member);
+        } else {
+          this.#dependents.set(id, new Set([member]));
+          dependencies.push(id);
+        }
+      }
+    }
+    this.#dispatch.addIds(this._onUpdate, dependencies);
+  }
+
   /**
    * Applies written objects to the cached results, in the natural (id) order a full recompute produces, so a
    * synchronous notification per write costs the write rather than a working-set scan.
@@ -423,11 +473,11 @@ export class WorkingSetView {
   #applyDelta(
     results: SourceEntry<Obj.Any>[],
     { filter, options }: { filter: QueryAST.Filter; options: QueryAST.QueryOptions | undefined },
-    event: ItemsUpdatedEvent,
+    written: readonly string[],
   ): boolean {
     const entityManager = this._database._entityManager;
     let next = results;
-    for (const { id } of event.itemsUpdated) {
+    for (const id of written) {
       const core = entityManager.getObjectCoreById(id, { load: false });
       const matches = core != null && this._filterCore(core, filter, options);
       const index = next.findIndex((entry) => entry.id === id);
@@ -442,6 +492,10 @@ export class WorkingSetView {
           resolution: { source: 'local', time: 0 },
         });
         this.#dispatch.addIds(this._onUpdate, [id]);
+      }
+      if (matches) {
+        // A member's write can move it under other dependencies; stale ones only cost a re-evaluation.
+        this.#watchDeletionDependencies([id]);
       }
     }
     if (next === results) {
