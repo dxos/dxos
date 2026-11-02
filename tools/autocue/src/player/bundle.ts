@@ -87,6 +87,7 @@ const isDemo = (value: unknown) =>
   isObject(value) &&
   'videos' in value &&
   Array.isArray(value.videos) &&
+  value.videos.length > 0 &&
   value.videos.every((video) => isObject(video) && 'src' in video && typeof video.src === 'string') &&
   'chapters' in value &&
   Array.isArray(value.chapters) &&
