@@ -32,9 +32,12 @@ export default Capability.makeModule(
     const extension = yield* AppGraphBuilder.createExtension({
       id: 'canvasActions',
       match: (node, get) =>
-        Option.filter(AppNodeMatcher.whenEchoType(Drawing.Drawing)(node, get), (drawing) =>
-          Canvas.isSceneSchema(get(Obj.atom(drawing.canvas))?.schema),
-        ),
+        Option.filter(AppNodeMatcher.whenEchoType(Drawing.Drawing)(node, get), (drawing) => {
+          // Read through the atom so the match follows the canvas; the live object is what is checked.
+          get(Obj.atom(drawing.canvas));
+          const canvas = drawing.canvas.target;
+          return Canvas.isCanvas(canvas) || (Drawing.isCanvas(canvas) && Canvas.isSceneSchema(canvas.schema));
+        }),
       actions: (drawing, get) => {
         // The mode is this viewer's, kept in the canvas's view state where the article reads it; the item flips it, so
         // it names the one it switches to.
@@ -44,7 +47,12 @@ export default Capability.makeModule(
         const state = viewState && contextId ? get(viewState.atom(canvasViewAspect, contextId)) : {};
         // A viewer who has not chosen sees the drawing's own default (a template's drawings open read-only). Read from
         // the canvas record inline: `#model` would pull React into the plugin's node and workerd entries.
-        const record: unknown = get(Obj.atom(drawing.canvas))?.content?.canvas;
+        get(Obj.atom(drawing.canvas));
+        const record: unknown = Canvas.isCanvas(canvas)
+          ? canvas.settings
+          : Drawing.isCanvas(canvas)
+            ? canvas.content?.canvas
+            : undefined;
         const readonlyDefault =
           typeof record === 'object' && record !== null && Reflect.get(record, 'readonly') === true;
         const readonly = state.readonly ?? readonlyDefault;

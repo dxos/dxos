@@ -8,7 +8,8 @@
 // resize shapes in the UI. An object's `origin` is the top-left of its bounding box.
 //
 
-import { type ReadResult, type ReadWorldObject, type Scene } from '@dxos/diagram';
+import { type ReadResult, type ReadWorldObject } from '@dxos/diagram';
+import { Shape } from '@dxos/scene';
 
 import { type CanvasContent } from './RecordBuilder.ts';
 import { type ExternalBox } from './render.ts';
@@ -52,7 +53,7 @@ const readObject = (objectId: string, records: ShapeRecord[], content: CanvasCon
     x: Math.min(...records.map((record) => bounds(record).x)),
     y: Math.min(...records.map((record) => bounds(record).y)),
   };
-  const local = (abs: { x: number; y: number }): Scene.Point => ({
+  const local = (abs: { x: number; y: number }): Shape.Point => ({
     x: round((abs.x - origin.x) / scale),
     y: round((abs.y - origin.y) / scale),
   });
@@ -60,19 +61,19 @@ const readObject = (objectId: string, records: ShapeRecord[], content: CanvasCon
 
   const elements = records
     .map((record) => readElement(record, { local, length, objectId, content }))
-    .filter((element): element is Scene.Element => element !== undefined);
+    .filter((element): element is Shape.Element => element !== undefined);
 
   return { id: objectId, origin, scale, elements };
 };
 
 type ReadContext = {
-  local: (abs: { x: number; y: number }) => Scene.Point;
+  local: (abs: { x: number; y: number }) => Shape.Point;
   length: (px: number) => number;
   objectId: string;
   content: CanvasContent;
 };
 
-const readElement = (record: ShapeRecord, ctx: ReadContext): Scene.Element | undefined => {
+const readElement = (record: ShapeRecord, ctx: ReadContext): Shape.Element | undefined => {
   const id = record.meta.element;
   const kind = record.meta.kind;
   switch (record.type) {
@@ -155,13 +156,13 @@ const arrowRefs = (record: ShapeRecord, ctx: ReadContext): { from?: string; to?:
 };
 
 /** Report only non-default styles to keep the read output compact. */
-const readStyle = (record: ShapeRecord): Partial<Pick<Scene.Box, 'color' | 'fill' | 'stroke' | 'weight'>> => {
+const readStyle = (record: ShapeRecord): Partial<Pick<Shape.Box, 'color' | 'fill' | 'stroke' | 'weight'>> => {
   const { color, fill, dash, size } = record.props;
   return {
     ...(color && color !== 'black' ? { color } : {}),
     ...(fill && fill !== 'none' ? { fill: fill === 'pattern' ? ('pattern' as const) : ('solid' as const) } : {}),
-    ...(dash && dash !== 'draw' ? { stroke: dash as Scene.Stroke } : {}),
-    ...(size && size !== 'm' ? { weight: size as Scene.Weight } : {}),
+    ...(dash && dash !== 'draw' ? { stroke: dash as Shape.Stroke } : {}),
+    ...(size && size !== 'm' ? { weight: size as Shape.Weight } : {}),
   };
 };
 

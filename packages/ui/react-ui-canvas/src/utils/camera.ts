@@ -9,7 +9,9 @@
 
 import { interpolateZoom } from 'd3';
 
-import { type Bounds, type Camera, type Node, type Point, type Size } from '../model/index.ts';
+import { type Bounds, type Node, type Point, type Size, nodeFrame } from '@dxos/scene';
+
+import { type Camera } from '../model/index.ts';
 import { nodeBounds } from './shapes.ts';
 
 export const MIN_ZOOM = 1 / 32;
@@ -82,9 +84,14 @@ export const portalScale = (portal: Node, region: Bounds) => {
  * and never smaller than the box itself, so the preview shrinks a large scene to fit but never magnifies a
  * small one. Every scene keeps its own scale: the frame only says where the child sits under the portal,
  * and entering it maps the camera through the frame, so a shape is the same size at the same zoom on any
- * level. An empty child is the box itself, centred on its origin.
+ * level. An empty child is the box itself, centred on its origin. A portal with a `frame` (a placed composite at its
+ * scale) shows that region instead.
  */
 export const portalFrame = (portal: Node, child: Bounds | undefined): Bounds => {
+  const fixed = nodeFrame(portal);
+  if (fixed) {
+    return fixed;
+  }
   const { width, height } = nodeBounds(portal);
   const content = child ?? { x: 0, y: 0, width: 0, height: 0 };
   const factor = Math.max(1, content.width / width, content.height / height);
@@ -190,7 +197,58 @@ export const interpolateCamera = (
   return Object.assign((t: number) => fromView(interpolate(t), viewport), { duration: interpolate.duration });
 };
 
-/** Animate between cameras, over `fixedDuration` ms or a time fitted to the distance; returns a cancel function. */
+/** How fast the camera moves, per ms, in its centre (scene px) and the log of its visible width. */
+export type CameraVelocity = readonly [number, number, number];
+
+const STILL: CameraVelocity = [0, 0, 0];
+
+const toLogView = (camera: Camera, viewport: Size): [number, number, number] => {
+  const [cx, cy, width] = toView(camera, viewport);
+  return [cx, cy, Math.log(width)];
+};
+
+/**
+ * The camera at progress `t` (0–1) along a curve that leaves `from` at `velocity` and comes to rest on `to` after
+ * `duration` ms: a retarget mid-move keeps the camera's speed rather than easing in again. A speed that would carry it
+ * past `to` is held back to the most that stops on it.
+ */
+export const retargetCamera = (
+  from: Camera,
+  velocity: CameraVelocity,
+  to: Camera,
+  viewport: Size,
+  duration: number,
+): ((t: number) => Camera) => {
+  const start = toLogView(from, viewport);
+  const end = toLogView(to, viewport);
+  // A cubic whose tangent leaves at under three times the distance stays monotone, so it cannot overshoot.
+  const tangent = start.map((value, index) => {
+    const distance = end[index] - value;
+    const reach = velocity[index] * duration;
+    return Math.sign(reach) === Math.sign(distance) && Math.abs(reach) > 3 * Math.abs(distance) ? 3 * distance : reach;
+  });
+  return (t: number) => {
+    const t2 = t * t;
+    const t3 = t2 * t;
+    const [cx, cy, logWidth] = start.map(
+      (value, index) =>
+        (2 * t3 - 3 * t2 + 1) * value + (t3 - 2 * t2 + t) * tangent[index] + (3 * t2 - 2 * t3) * end[index],
+    );
+    return fromView([cx, cy, Math.exp(logWidth)], viewport);
+  };
+};
+
+/** An animation in flight. */
+export type CameraAnimation = {
+  cancel: () => void;
+  /** How fast the camera was moving at the last frame drawn. */
+  velocity: () => CameraVelocity;
+};
+
+/**
+ * Animate between cameras, over `fixedDuration` ms or a time fitted to the distance. Given the `velocity` of a move
+ * already under way it carries on at that speed into the new target, so rapid steps read as one motion.
+ */
 export const animateCamera = (
   from: Camera,
   to: Camera,
@@ -198,23 +256,35 @@ export const animateCamera = (
   apply: (camera: Camera) => void,
   done?: () => void,
   fixedDuration?: number,
-  continuing = false,
-): (() => void) => {
+  velocity?: CameraVelocity,
+): CameraAnimation => {
   const interpolate = interpolateCamera(from, to, viewport);
   const duration = fixedDuration ?? Math.min(MAX_ANIMATION_MS, Math.max(MIN_ANIMATION_MS, interpolate.duration));
+  const curve = velocity
+    ? retargetCamera(from, velocity, to, viewport, duration)
+    : (t: number) => interpolate(easeInOut(t));
   const start = performance.now();
   let frame = 0;
+  let last: { time: number; view: [number, number, number] } | undefined;
+  let speed: CameraVelocity = STILL;
   const tick = (now: number) => {
     const t = Math.min(1, (now - start) / duration);
-    // Continuing a move already under way, it sets off at speed and only eases into the new target: easing in again
-    // would stall the camera at every retarget, so rapid steps read as separate jumps.
-    apply(interpolate(continuing ? 1 - (1 - t) ** 3 : easeInOut(t)));
+    const camera = curve(t);
+    const view = toLogView(camera, viewport);
+    if (last && now > last.time) {
+      const elapsed = now - last.time;
+      const [px, py, pw] = last.view;
+      speed = [(view[0] - px) / elapsed, (view[1] - py) / elapsed, (view[2] - pw) / elapsed];
+    }
+    last = { time: now, view };
+    apply(camera);
     if (t < 1) {
       frame = requestAnimationFrame(tick);
     } else {
+      speed = STILL;
       done?.();
     }
   };
   frame = requestAnimationFrame(tick);
-  return () => cancelAnimationFrame(frame);
+  return { cancel: () => cancelAnimationFrame(frame), velocity: () => speed };
 };

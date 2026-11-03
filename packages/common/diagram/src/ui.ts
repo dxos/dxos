@@ -16,6 +16,8 @@
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
+import { Shape } from '@dxos/scene';
+
 import type * as Scene from './scene.ts';
 
 //
@@ -166,7 +168,7 @@ const PAD = 16;
 const TITLE_H = 22;
 const PLUS_H = 20;
 
-type Emit = { commands: Scene.Command[]; elements: Scene.Element[] };
+type Emit = { commands: Scene.Command[]; elements: Shape.Element[] };
 
 const controlHeight = (node: Control) => (node.label ? LABEL_H : 0) + CONTROL_H;
 
@@ -218,7 +220,7 @@ const qualify = (prefix: string, path: string): string => (prefix ? `${prefix}.$
 /** One world object per control (id = container path), so drawn controls stay individually addressable. */
 const emitControl = (node: Control, x: number, y: number, emit: Emit, prefix: string): void => {
   const top = node.label ? LABEL_H : 0;
-  const elements: Scene.Element[] = node.label
+  const elements: Shape.Element[] = node.label
     ? [{ kind: 'text', id: 'label', x: 0, y: 0, text: node.label, weight: 's', color: 'grey' }]
     : [];
   switch (node.control) {
@@ -240,7 +242,7 @@ const emitControl = (node: Control, x: number, y: number, emit: Emit, prefix: st
 };
 
 const frame = (id: string, x: number, y: number, w: number, h: number, title: string | undefined, emit: Emit): void => {
-  const elements: Scene.Element[] = [{ kind: 'rect', id: 'frame', x: 0, y: 0, w, h, stroke: 'dashed', color: 'grey' }];
+  const elements: Shape.Element[] = [{ kind: 'rect', id: 'frame', x: 0, y: 0, w, h, stroke: 'dashed', color: 'grey' }];
   if (title) {
     elements.push({ kind: 'text', id: 'title', x: PAD / 2, y: 2, text: title, weight: 's' });
   }
@@ -322,7 +324,7 @@ const emitNode = (node: UiNode, x: number, y: number, emit: Emit, prefix = ''): 
 
 export type CompileOptions = {
   /** Canvas position of the schematic's top-left, in canvas px. */
-  origin?: Scene.Point;
+  origin?: Shape.Point;
   /** Canvas px per scene unit. */
   scale?: number;
 };

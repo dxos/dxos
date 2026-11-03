@@ -24,7 +24,14 @@ export type FormRootProps<T extends AnyProperties = AnyProperties> = Merge<
   Omit<FormContextValue<T>, 'form'>,
   Pick<
     FormHandlerProps<T>,
-    'schema' | 'autoSave' | 'fieldOverrides' | 'values' | 'defaultValues' | 'onValidate' | 'onValuesChanged'
+    | 'schema'
+    | 'autoSave'
+    | 'commitOn'
+    | 'fieldOverrides'
+    | 'values'
+    | 'defaultValues'
+    | 'onValidate'
+    | 'onValuesChanged'
   >,
   Omit<FormFieldsProps<T>, 'path' | 'schema'>,
   PropsWithChildren<{

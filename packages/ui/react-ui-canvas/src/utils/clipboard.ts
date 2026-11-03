@@ -4,26 +4,25 @@
 
 //
 // Cut, copy and paste as pure functions over the model (§8): the clipboard holds a fragment of nodes
-// and the links between them; a paste mints fresh ids, offsets the fragment and returns one `batch`
-// intent so the projection applies it atomically and undo takes it back in one step.
+// and the links between them; a paste mints fresh ids, offsets the fragment and returns one edit, so the
+// scene takes it atomically and undo takes it back in one step.
 //
 
 import {
   type Bounds,
   type ElementId,
   type Endpoint,
-  type Intent,
   type LayerId,
   type Link,
   type Node,
   type Point,
-  type View,
   type ViewId,
-  type ViewMap,
   isPointEndpoint,
-  openedRecord,
-} from '../model/index.ts';
+} from '@dxos/scene';
+
+import { type RenderList2D, type RenderLists2D, openedRecord } from '../model/index.ts';
 import { promotedBy } from './compose.ts';
+import { type SceneEdit, chainEdits, insertLink, insertNode } from './edits.ts';
 import { unionBounds } from './hit.ts';
 import { between, topZ } from './order.ts';
 import { nodeBounds } from './shapes.ts';
@@ -38,12 +37,12 @@ export type Clipboard = {
    * The records the nodes open (child Views and Objects, and the records those open) as they were copied, so a paste
    * after a cut, which deleted them as orphans, puts them back.
    */
-  views?: ViewMap;
+  views?: RenderLists2D;
 };
 
 /** The records `nodes` open in `views`, and the records those open, by id. */
-const openedRecords = (views: ViewMap, nodes: readonly Node[]): ViewMap => {
-  const result: Record<ViewId, View> = {};
+const openedRecords = (views: RenderLists2D, nodes: readonly Node[]): RenderLists2D => {
+  const result: Record<ViewId, RenderList2D> = {};
   const pending = nodes.flatMap((node) => openedRecord(node) ?? []);
   for (let id = pending.pop(); id !== undefined; id = pending.pop()) {
     const view = views[id];
@@ -59,7 +58,11 @@ const openedRecords = (views: ViewMap, nodes: readonly Node[]): ViewMap => {
  * The selected nodes and the links joining them; a link is copied whether or not it was selected. Given the store's
  * `views`, the records the nodes open come too.
  */
-export const copySelection = (scene: View, selection: Iterable<ElementId>, views?: ViewMap): Clipboard | undefined => {
+export const copySelection = (
+  scene: RenderList2D,
+  selection: Iterable<ElementId>,
+  views?: RenderLists2D,
+): Clipboard | undefined => {
   const ids = new Set(selection);
   const nodes = Object.values(scene.nodes).filter((node) => ids.has(node.id));
   const nodeIds = new Set(nodes.map(({ id }) => id));
@@ -86,7 +89,7 @@ export const clipboardBounds = (clipboard: Clipboard): Bounds | undefined =>
  * The records a paste of `clipboard` writes into the store: those it copied that are gone (cut with their nodes) come
  * back as they were, and an anonymous Object still present is placed a second time, so it joins the library.
  */
-export const pastedRecords = (scenes: ViewMap, clipboard: Clipboard): Record<ViewId, View> => {
+export const pastedRecords = (scenes: RenderLists2D, clipboard: Clipboard): Record<ViewId, RenderList2D> => {
   const restored = Object.fromEntries(Object.entries(clipboard.views ?? {}).filter(([id]) => !scenes[id]));
   return { ...promotedBy(scenes, clipboard.nodes), ...restored };
 };
@@ -103,9 +106,9 @@ export type PasteOptions = {
   layer?: LayerId;
 };
 
-export type Paste = { intent: Intent; ids: ElementId[] };
+export type Paste = { edit: SceneEdit; ids: ElementId[] };
 
-/** The batch that recreates the fragment with fresh ids at `offset`, and the ids it will create. */
+/** The edit that recreates the fragment with fresh ids at `offset`, and the ids it will create. */
 export const pasteFragment = ({ clipboard, offset, createId, nodeZ, linkZ, layer }: PasteOptions): Paste => {
   const idMap = new Map<ElementId, ElementId>();
   const shift = (point: Point): Point => ({ x: point.x + offset.x, y: point.y + offset.y });
@@ -127,23 +130,17 @@ export const pasteFragment = ({ clipboard, offset, createId, nodeZ, linkZ, layer
       : { ...link, ...onLayer, id, z: linkZ(index), ...ends };
   });
   return {
-    intent: {
-      kind: 'batch',
-      intents: [
-        ...nodes.map((node): Intent => ({ kind: 'create', node })),
-        ...links.map((link): Intent => ({ kind: 'link', link })),
-      ],
-    },
+    edit: chainEdits([...nodes.map(insertNode), ...links.map(insertLink)]),
     ids: [...nodes.map(({ id }) => id), ...links.map(({ id }) => id)],
   };
 };
 
 /**
- * The batch that copies the selected nodes (and the links between them) `offset` away, above everything
+ * The edit that copies the selected nodes (and the links between them) `offset` away, above everything
  * else, and the ids it creates; nothing when the selection holds no node.
  */
 export const duplicateSelection = (
-  scene: View,
+  scene: RenderList2D,
   selection: Iterable<ElementId>,
   offset: Point,
   createId: (prefix: string) => string,

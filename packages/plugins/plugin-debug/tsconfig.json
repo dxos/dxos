@@ -47,6 +47,9 @@
       "path": "../../common/random"
     },
     {
+      "path": "../../common/scene"
+    },
+    {
       "path": "../../common/tracing"
     },
     {
@@ -213,9 +216,6 @@
     },
     {
       "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-spacetime"
     },
     {
       "path": "../plugin-status-bar"

@@ -14,17 +14,10 @@ import {
   useState,
 } from 'react';
 
+import { type Bounds, type Point, type Size, type ViewId } from '@dxos/scene';
+
 import { type CanvasAtoms, type Drag } from '../../engine/index.ts';
-import {
-  type Bounds,
-  type Camera,
-  type Point,
-  type Size,
-  type Timeline,
-  type ViewId,
-  applyCameraKey,
-  sampleCamera,
-} from '../../model/index.ts';
+import { type Camera } from '../../model/index.ts';
 import { NOMINAL_ZOOM, fitBounds, panBy } from '../../utils/index.ts';
 import { type useRegistry } from '../useRegistry.ts';
 import { type SceneCamera } from './useSceneCamera.ts';
@@ -51,8 +44,6 @@ export type UseSceneViewOptions = {
   path: ViewId[];
   camera: Camera;
   drag: Drag | undefined;
-  timeline: Timeline | undefined;
-  time: number;
   /** What Fit frames. */
   fitTarget: Bounds;
   /** Least gap between that frame and each viewport edge, in scene units. */
@@ -76,13 +67,11 @@ export type SceneView = {
   /** Enters fit mode, which the caller follows by framing the scene. */
   enterFit: () => void;
   exitFit: () => void;
-  /** A camera track drives the camera as the clock moves. */
-  hasCameraTrack: boolean;
 };
 
 /**
- * The camera's own life between gestures: fit mode, the camera a host restores, a refit the host asks for, drift, a
- * camera track, and what the host hears of the view.
+ * The camera's own life between gestures: fit mode, the camera a host restores, a refit the host asks for, drift, and
+ * what the host hears of the view.
  */
 export const useSceneView = ({
   registry,
@@ -93,8 +82,6 @@ export const useSceneView = ({
   path,
   camera,
   drag,
-  timeline,
-  time,
   fitTarget,
   inset,
   fitZoom = NOMINAL_ZOOM,
@@ -178,6 +165,26 @@ export const useSceneView = ({
       setCamera(fitBounds(fitTarget, size, inset, fitZoom));
     }
   }, [fitting, measured, viewport, fitTarget, inset, fitZoom, setCamera, sceneId, refitKey]);
+  // Until the size has held still for `FIT_DEBOUNCE_MS` the view is still opening (a docked panel mounts once its
+  // sections register), so a resize refits in the same frame rather than sliding the drawing across after load.
+  const settledRef = useRef(false);
+  useLayoutEffect(() => {
+    const fitted = fittedRef.current;
+    if (!fitting || !measured || !fitted || settledRef.current || fitted.scene !== sceneId || fitted.key === fitKey) {
+      return;
+    }
+    fittedRef.current = { scene: sceneId, key: fitKey };
+    setCamera(fitBounds(fitTarget, viewport, inset, fitZoom));
+  }, [fitting, measured, sceneId, fitKey, fitTarget, viewport, inset, fitZoom, setCamera]);
+  useEffect(() => {
+    if (!fittedRef.current || settledRef.current) {
+      return;
+    }
+    const timeout = setTimeout(() => {
+      settledRef.current = true;
+    }, FIT_DEBOUNCE_MS);
+    return () => clearTimeout(timeout);
+  }, [fitting, measured, fitKey]);
   // Keyed on values, not identities: the scene and the camera helpers are rebuilt on unrelated renders, and each rerun
   // would restart the debounce before it fires. The latest helpers and frame are read when it does.
   const fitLatestRef = useRef({
@@ -257,30 +264,12 @@ export const useSceneView = ({
     };
   }, [drifting, exitFit, setCamera, registry, atoms.clock]);
 
-  // A camera track drives the camera as the clock moves (ANIMATION.md §5.5); keys hold the view's centre, so the same
-  // point is framed whatever the viewport's size.
-  const hasCameraTrack = sampleCamera(timeline, 0) !== undefined;
-  useLayoutEffect(() => {
-    const key = sampleCamera(timeline, time);
-    if (key && measured) {
-      setCamera((camera) => applyCameraKey(camera, key, viewport.width, viewport.height));
-    }
-  }, [timeline, time, measured, viewport.width, viewport.height, setCamera]);
-  useEffect(() => {
-    if (hasCameraTrack) {
-      exitFit();
-    }
-  }, [hasCameraTrack, exitFit]);
-
   // Dragging the canvas takes the camera over.
   useEffect(() => {
     if (drag?.kind === 'pan') {
       exitFit();
-      if (hasCameraTrack) {
-        registry.set(atoms.clock.playing, false);
-      }
     }
-  }, [drag?.kind, exitFit, hasCameraTrack, registry, atoms.clock]);
+  }, [drag?.kind, exitFit]);
   // Reported after a quiet beat, so a wheel gesture or an animation is persisted once, where it ends.
   const atRoot = path.length === 1;
   useEffect(() => {
@@ -296,5 +285,5 @@ export const useSceneView = ({
     fittedRef.current = { scene: sceneId, key: fitKey };
   }, [setFitting, sceneId, fitKey]);
 
-  return { fitting: fittingAtom, enterFit, exitFit, hasCameraTrack };
+  return { fitting: fittingAtom, enterFit, exitFit };
 };

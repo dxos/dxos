@@ -1,3 +1,4 @@
+import { Shape } from '@dxos/scene';
 //
 // Copyright 2026 DXOS.org
 //
@@ -7,8 +8,6 @@
 // (mermaid flowchart, UML class). Ranking is longest-path over the forward edges; cycles are
 // broken by ignoring DFS back edges so a loop cannot push a node below its own successors.
 //
-
-import type * as Scene from './scene.ts';
 
 export type LayoutEdge = {
   from: string;
@@ -27,7 +26,7 @@ export type FontMetrics = {
  * ~18/25/38/48 px): charW ≈ 0.6–0.67 em, lineH ≈ 1.35 em. Dialects size boxes from these so text
  * fits without the renderer growing shapes over their neighbours.
  */
-export const FONT_METRICS: Record<Scene.Weight, FontMetrics> = {
+export const FONT_METRICS: Record<Shape.Weight, FontMetrics> = {
   s: { charW: 12, lineH: 26 },
   m: { charW: 15, lineH: 34 },
   l: { charW: 23, lineH: 51 },

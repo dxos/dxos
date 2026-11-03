@@ -254,6 +254,19 @@ describe('Graph', () => {
     expect(changes).toEqual(1);
   });
 
+  test('a node whose data is a function but no action keeps that function, as a type node keeps its schema', () => {
+    class Schema {
+      static readonly typename = 'org.dxos.type.example';
+    }
+    const graph = Graph.make({ nodes: [{ id: exampleId(1), type: EXAMPLE_TYPE, data: Schema, properties: {} }] });
+    Graph.addNode(graph, { id: exampleId(2), type: EXAMPLE_TYPE, data: Schema });
+    Graph.addNode(graph, { id: exampleId(2), type: EXAMPLE_TYPE, data: Schema });
+
+    for (const id of [exampleId(1), exampleId(2)]) {
+      expect(Graph.getNode(graph, id).pipe(Option.getOrThrow).data).toBe(Schema);
+    }
+  });
+
   test('re-adding an action read back from the graph keeps it invocable', () => {
     const graph = Graph.make();
     const invoked: string[] = [];

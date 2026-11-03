@@ -5,8 +5,10 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useMemo } from 'react';
 
+import { type Bounds, type ElementId, isViewNode } from '@dxos/scene';
+
 import { GRID_LEVELS, GRID_RANGE, useChanging } from '../../hooks/index.ts';
-import { type Bounds, type Camera, type ElementId, type SceneLook, isViewNode } from '../../model/index.ts';
+import { type Camera, type SceneLook } from '../../model/index.ts';
 import { GRID_CLASSES, cameraTransform, enterPortal, nodeBounds, screenBounds } from '../../utils/index.ts';
 import {
   BackgroundField,
@@ -39,11 +41,12 @@ export const ViewportBackground = ({
   focus,
   backgroundBounds,
 }: ViewportBackgroundProps) => {
-  const { store, readonly, transparent, projection, grid } = useCanvasServices('Canvas.Viewport');
+  const { store, readonly, transparent, draw, grid } = useCanvasServices('Canvas.Viewport');
   const { displayScene, bounds, measured } = useCanvasGesture('Canvas.Viewport');
   const tools = useCanvasTools('Canvas.Viewport');
   const { childFrame } = useCanvasNavigation('Canvas.Viewport').commands;
   const snapEnabled = useAtomValue(tools.atoms.snap);
+  const axesShown = useAtomValue(tools.atoms.axes);
   const field = useMemo(
     () => backgroundField(look.background, backgroundBounds ?? bounds, latticeBounds),
     [look.background, backgroundBounds, bounds, latticeBounds],
@@ -52,10 +55,10 @@ export const ViewportBackground = ({
   // While editing with snap on, a lines grid is the snap grid, which adapts its levels to the zoom, so the field draws
   // no lines too; with snap off, or on a lattice scene that snaps to its cells, the field draws the lines itself.
   const snapLines = !readonly && look.background.grid === 'lines';
-  const snapGridDrawn = snapEnabled && snapLines && !projection.lattice;
+  const snapGridDrawn = snapEnabled && snapLines && !draw.lattice;
   // Dots are drawn in screen space, as the snap grid is, so they hold their size and keep showing while the camera moves.
   // A lattice scene shows its cells instead, which are what a shape lands on, so it draws no dots or lines at all.
-  const latticeScene = projection.lattice !== undefined;
+  const latticeScene = draw.lattice !== undefined;
   const dotsDrawn = look.background.grid === 'dots' && !latticeScene;
   // As a frame grows to fill the view the canvas's grid fades and the frame's own scene grid fades in inside it, mapped
   // as drilling in maps the scene, so the drill crossfades into the grid the scene then shows rather than swapping.
@@ -147,6 +150,16 @@ export const ViewportBackground = ({
                 }
               : undefined
           }
+        />
+      )}
+      {/* The axes through the origin, in the grid's colour but stronger; whatever grid is drawn, or none. */}
+      {measured && axesShown && (
+        <GridComponent
+          scale={camera.zoom}
+          offset={{ x: camera.x * camera.zoom, y: camera.y * camera.zoom }}
+          showAxes
+          ratios={[]}
+          opacity={gridOpacity}
         />
       )}
       {measured && subGrid && (snapGridDrawn || dotsDrawn) && (

@@ -87,7 +87,7 @@ export const useFormValues: {
 export const useFormFieldState = (componentName: string, path: (string | number)[] = []): FormFieldStateProps => {
   const stablePath = useMemo(() => path, [Array.isArray(path) ? path.join('.') : path]);
   const {
-    form: { getStatus, getValue, onBlur, onValueChange },
+    form: { getStatus, getValue, onBlur, onValueChange, onRevert },
   } = useFormContext(componentName);
 
   return useMemo(
@@ -96,7 +96,8 @@ export const useFormFieldState = (componentName: string, path: (string | number)
       getValue: () => getValue(stablePath),
       onBlur: () => onBlur(stablePath),
       onValueChange: (ast: SchemaAST.AST, value: any) => onValueChange(stablePath, ast, value),
+      onRevert: () => onRevert(stablePath),
     }),
-    [getStatus, getValue, onBlur, onValueChange, stablePath],
+    [getStatus, getValue, onBlur, onValueChange, onRevert, stablePath],
   );
 };
