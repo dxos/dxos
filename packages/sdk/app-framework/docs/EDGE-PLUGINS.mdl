@@ -245,7 +245,7 @@ call to the invocation's space, caller and reply origin.
 | `DiscordSource.Endpoint`                 | dev EDGEs only (`DISCORD_API_URL`)           | TODO: not carried                                        |
 | Blob backends                            | `BLOB_SERVICE`                               | TODO: inline storage only; compute-runtime's context has no backend option |
 | OTEL tracer for Effect spans             | `withOtelTracer`                             | not carried; logs and the trace sink only                |
-| Live objects in a nested call's input   | kept: the callee runs in process             | TODO: another plugin's operation receives `Entity.toJSON`, so an object the caller has not flushed (`projects.create` → `space.addObject`) does not arrive |
+| Live objects in a nested call's input   | kept: the callee runs in process             | passed by reference: added and flushed by the caller, loaded by the callee, loaded back from the output ([D-64]) |
 
 ### EDGE and Cloudflare
 
@@ -1441,12 +1441,21 @@ decision D-63: The plugin protocol has a version (`PluginProtocol.PROTOCOL_VERSI
 ```
 
 ```mdl
-decision D-64: A nested call to another plugin's operation sends its input in JSON form, as any EDGE invocation does: the callee runs in its own bundle, so a live object in the input arrives as `Entity.toJSON` without the caller's unflushed writes. Operations that hand a live object to another plugin's operation (`projects.create` → `space.addObject`) stay on operation-service until that hand-off is redesigned; `space.addObject` and `space.addRelation` accept a draft typed by versioned DXN, as an encoded object carries it.
+decision D-64: A nested call to another plugin's operation passes ECHO objects by reference, as operation-service's in-process call passes them live: the caller's host adds any object in the input it has not saved to the invocation's database (cascading the graph the object heads), flushes, and sends `{ '/': uri }`; the callee's host loads a reference left where the input schema takes an object (`resolveObjectReferences`), and the caller's host loads every entity in the output back from its database. `space.addObject` and `space.addRelation` also accept a draft typed by versioned DXN.
   date: 2026-11-03
   by: agent:claude-code
   for: user:dmaretskyi
   affects: [F-5.3, F-5.7]
-  why: Bundles run alone ([D-41]), so the in-process hand-off operation-service relies on (`withLocalOperations`) is not available across plugins; found by edge's mcp-space-service suite in plugins mode.
+  why: Bundles run alone ([D-41]), so `projects.create` handed `space.addObject` an unsaved project graph that arrived as JSON and was refused; the caller then expects the live project back.
   rejected:
-    - Flush the caller's database before a nested call and pass refs — the callee's input schema takes an object or a draft, not a ref, and a half-built object would be persisted on failure.
+    - Send an unsaved object as a JSON draft — a draft cannot carry the owned objects and parent links of the graph it heads, and the caller would get a copy rather than its own object back.
+```
+
+```mdl
+decision D-65: A failure carries the handler's error as `ErrorCodec` encodes it (`Failure.encoded`, version 2), and EDGE rethrows `ErrorCodec.decode` of it, as it rethrows operation-service's errors; a nested call rethrows it too. A failure without it raises `PluginInvocationError`, as before.
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.2, PluginEntrypoint]
+  why: A tool error's text reached the agent wrapped as `PluginInvocationError: …` on the plugin path, so the same turn read differently on the two routings and its recorded conversation no longer matched.
 ```
