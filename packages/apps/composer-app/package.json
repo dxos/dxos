@@ -81,6 +81,7 @@
     "@dxos/plugin-claude": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-cloudflare": "workspace:*",
+    "@dxos/plugin-cloudflare-os": "workspace:*",
     "@dxos/plugin-code": "workspace:*",
     "@dxos/plugin-code-graph": "workspace:*",
     "@dxos/plugin-commerce": "workspace:*",

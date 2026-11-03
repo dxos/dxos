@@ -25,6 +25,21 @@ const nodeBuiltins = (): EsbuildPlugin => ({
   },
 });
 
+/**
+ * Resolves a Vite `?url` import (e.g. `manifold-3d/manifold.wasm?url`) to an empty URL: it locates an asset for a
+ * browser to fetch, which nothing in a Dynamic Worker does, and esbuild would otherwise keep the query on the import.
+ */
+const assetUrls = (): EsbuildPlugin => ({
+  name: 'dx-vendor-asset-urls',
+  setup: (build) => {
+    build.onResolve({ filter: /\?url$/ }, (args) => ({ path: args.path, namespace: 'dx-vendor-asset-url' }));
+    build.onLoad({ filter: /.*/, namespace: 'dx-vendor-asset-url' }, () => ({
+      contents: "export default '';",
+      loader: 'js',
+    }));
+  },
+});
+
 /** Styles and fonts a shared UI package imports; nothing in a Dynamic Worker can use them. */
 const BROWSER_ASSETS = ['.css', '.pcss', '.scss', '.woff', '.woff2', '.ttf', '.otf'];
 
@@ -158,7 +173,7 @@ const buildOnce = async (
     external: RUNTIME_MODULES,
     // Workerd imports a `.wasm` file as a `WebAssembly.Module`, so it stays a file beside the code that imports it.
     loader: { '.wasm': 'copy', ...Object.fromEntries(BROWSER_ASSETS.map((extension) => [extension, 'empty'])) },
-    plugins: [resolveEntries(specifiers, root), nodeBuiltins(), shared],
+    plugins: [resolveEntries(specifiers, root), nodeBuiltins(), assetUrls(), shared],
     // CommonJS dependencies keep their `require` calls in ESM output; workerd provides `require` only through `node:module`, and leaves `import.meta.url` unset, so the path is fixed.
     banner: {
       js: "import { createRequire as __dxCreateRequire } from 'node:module'; const require = __dxCreateRequire('/vendor/');",

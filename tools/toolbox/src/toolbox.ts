@@ -30,7 +30,7 @@ const raise = (err: Error) => {
  * subpath — where `@dxos/plugin-*` packages put browser code — opts out via `withCustomExports`
  * instead, since moon tags (which `pkg-lint` uses to tell the two apart) aren't visible here.
  */
-const BUILD_TOOL_EXPORT = /^\.\/(vite|esbuild|rollup)-plugin$/;
+const BUILD_TOOL_EXPORT = /^\.\/(vite|esbuild|rollup)-plugin(\/[\w-]+)?$/;
 
 /**
  * A package consumed from dist declares it by omitting `source`, which is what keeps node/bun and
