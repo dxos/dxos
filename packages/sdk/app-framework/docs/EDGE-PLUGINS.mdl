@@ -470,8 +470,9 @@ op publishPlugin
     runs the plugin's vite build with `DX_PLUGIN_HOST_ENTRY` naming the CLI's `PluginHost`, so the
     build vendors the host whatever the plugin's own vite config says, loads the bundle in a local
     workerd and calls `describe()`, and
-    uploads the one bundle, `vendor/` included, through `/upload` with a verifiable presentation, API
-    token or admin key; PluginStore calls `describe()` again on upload. Publishing fails when either
+    uploads the one bundle, `vendor/` included, through `/upload/multipart` (one part per file, streamed
+    into R2) with a verifiable presentation, API token or admin key; PluginStore calls `describe()` again
+    on upload. Publishing fails when either
     call fails. Nothing is built or uploaded separately for EDGE.
   status: unimplemented
   input:
@@ -1183,4 +1184,12 @@ decision D-44: Building and checking a bundle (`buildBundle`, `verifyBundle`, `c
   for: user:dmaretskyi
   affects: [PluginHost]
   why: Review asked why the host package carries the build; the builder needs Vite, Miniflare and oxc-parser, which the workerd runtime must not depend on.
+```
+
+```mdl
+decision D-45: `dx registry publish` uploads a public bundle through `/upload/multipart`, one part per file named by its path in the bundle; `/private/upload` keeps the JSON body.
+  date: 2026-11-03
+  by: user:dmaretskyi
+  affects: [publishPlugin]
+  why: The JSON body holds the whole bundle base64-encoded in the worker's memory, which a 56 MB bundle (presenter) exceeds; the multipart route streams each part into R2.
 ```

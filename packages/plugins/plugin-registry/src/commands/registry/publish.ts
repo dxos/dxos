@@ -196,7 +196,11 @@ export const publish = Command.make(
           // An API token authenticates as the account that minted it, which is how a sandbox with no
           // identity of its own publishes for its user.
           const http = token ? new EdgeHttpClient(baseUrl, { apiKey: token }) : identityHttpClient(client, baseUrl);
-          const files = yield* readBundleFiles(outdir);
+          // The private route takes the bundle as JSON, each file base64-encoded.
+          const files = (yield* readBundleFiles(outdir)).map(({ path, content }) => ({
+            path,
+            content: Buffer.from(content).toString('base64'),
+          }));
           const { moduleUrl } = yield* Effect.tryPromise({
             try: () => http.uploadPrivatePluginBundle(Context.default(), { slug: key, version, files }),
             catch: (error) => new PublishError({ message: 'Private bundle upload failed.', cause: error }),
@@ -296,22 +300,23 @@ export const publish = Command.make(
     ),
 ).pipe(Command.withDescription('Build, host, and publish the plugin in the current directory to the registry.'));
 
-/** Every file under the build output, base64-encoded with a `/`-separated relative path. */
+/** Every file under the build output, with a `/`-separated relative path. */
 const readBundleFiles = (outdir: string) =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
 
     const entries = yield* fs.readDirectory(outdir, { recursive: true });
-    const files: { path: string; content: string }[] = [];
+    const files: { path: string; content: Uint8Array<ArrayBuffer> }[] = [];
     for (const entry of entries) {
       const full = path.join(outdir, entry);
       const info = yield* fs.stat(full);
       if (info.type !== 'File') {
         continue;
       }
-      const bytes = yield* fs.readFile(full);
-      files.push({ path: entry.split(path.sep).join('/'), content: Buffer.from(bytes).toString('base64') });
+      // Copied so the bytes own a plain `ArrayBuffer`, which is what a multipart `Blob` part takes.
+      const content = new Uint8Array(yield* fs.readFile(full));
+      files.push({ path: entry.split(path.sep).join('/'), content });
     }
     return files;
   });
