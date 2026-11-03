@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 import { Fibonacci, Reply } from '@dxos/compute/testing';
 import { Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import type { PluginProtocol } from '@dxos/protocols';
+import { PluginProtocol } from '@dxos/protocols';
 
 import * as PluginHost from './PluginHost.ts';
 import {
@@ -53,6 +53,11 @@ describe('PluginHost', () => {
     expect(catalog.skills[0].tools.length).toBe(1);
     const operations = JSON.stringify(catalog.operations);
     expect(operations).toContain(String(Reply.meta.key));
+  });
+
+  // EDGE speaks to a bundle at the version of the host it was published with (EDGE-PLUGINS F-6.9).
+  test.fails('reports the protocol version it speaks', async ({ expect }) => {
+    expect((await makeHost().describe()).protocolVersion).toBe(PluginProtocol.PROTOCOL_VERSION);
   });
 
   test('invokes an operation of the primary plugin by key', async ({ expect }) => {

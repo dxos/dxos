@@ -20,6 +20,8 @@ export interface LoadedBundle extends AsyncDisposable {
   importModules(paths: readonly string[]): Promise<readonly ImportFailure[]>;
   /** Runs an operation through the bundle's `PluginProtocol.Entrypoint`, with the data plane as its `DATA_SERVICE`. */
   invoke(request: PluginProtocol.InvokeRequest): Promise<PluginProtocol.InvokeResult>;
+  /** The protocol version of the bundle's vendored host, as EDGE's router asks it. */
+  protocolVersion(): Promise<number>;
 }
 
 /**
@@ -142,6 +144,10 @@ export default {
         const result = await load(env, 'host', env.MAIN_MODULE, env.HOST_MAIN).getEntrypoint().invoke(invocation);
         return Response.json({ result });
       }
+      if (method === 'version') {
+        const result = await load(env, 'host', env.MAIN_MODULE, env.HOST_MAIN).getEntrypoint().protocolVersion();
+        return Response.json({ result });
+      }
       if (method === 'import') {
         return load(env, 'import', '__import__.js', env.IMPORT_MAIN).getEntrypoint().fetch('http://bundle/', {
           method: 'POST',
@@ -208,7 +214,7 @@ export const loadBundle = async (
   });
 
   const call = async (
-    method: 'describe' | 'import' | 'invoke',
+    method: 'describe' | 'import' | 'invoke' | 'version',
     { paths, invocation }: { paths?: readonly string[]; invocation?: PluginProtocol.InvokeRequest } = {},
   ): Promise<string> => {
     const response = await miniflare.dispatchFetch('http://bundle.local/', {
@@ -233,6 +239,10 @@ export const loadBundle = async (
     },
     invoke: async (invocation) => {
       const { result }: { result: PluginProtocol.InvokeResult } = JSON.parse(await call('invoke', { invocation }));
+      return result;
+    },
+    protocolVersion: async () => {
+      const { result }: { result: number } = JSON.parse(await call('version'));
       return result;
     },
     [Symbol.asyncDispose]: () => miniflare.dispose(),

@@ -13,6 +13,26 @@ import { type EdgeFunctionEnv } from './edge/index.ts';
 // - Workers RPC drops an error's class and stack, so `invoke` returns failures as data instead of throwing.
 
 /**
+ * The version of this contract a host speaks. A bundle keeps the host it was published with, so EDGE asks the bundle
+ * (`Entrypoint.protocolVersion`) and speaks that version to it.
+ *
+ * - 1: `describe` and `invoke`; the scope holds `accessTokenService` only; output as structured clone returns it.
+ * - 2: the scope's request context, host services and nested operations; output encoded as JSON.
+ */
+export const PROTOCOL_VERSION = 2;
+
+/** The version of a host that reports none, which predates versioning. */
+export const UNVERSIONED = 1;
+
+// TODO(edge-plugins): Not implemented yet.
+/** Whether EDGE speaking {@link PROTOCOL_VERSION} can serve a host speaking `version`. */
+export const isSupported = (_version: number): boolean => true;
+
+// TODO(edge-plugins): Not implemented yet.
+/** The scope a host speaking `version` reads: fields it does not know are left out, so no stub it never releases is sent. */
+export const scopeFor = (_version: number, scope: InvocationScope): InvocationScope => scope;
+
+/**
  * The bindings EDGE gives a bundle's isolate. They are the same for every space and caller, so one isolate serves them
  * all; each is optional, since an invocation outside a space, or a test, runs without them.
  */
@@ -195,6 +215,8 @@ export type Catalog = {
   readonly skills: readonly SkillRecord[];
   readonly types: readonly TypeRecord[];
   readonly failures: readonly FailureRecord[];
+  /** The {@link PROTOCOL_VERSION} of the host that produced the catalog; absent before versioning. */
+  readonly protocolVersion?: number;
 };
 
 /** The RPC surface of a plugin bundle's Dynamic Worker. */
@@ -203,4 +225,6 @@ export interface Entrypoint {
   describe(): Promise<Catalog>;
   /** Runs an operation of the primary plugin. */
   invoke(request: InvokeRequest, scope?: InvocationScope): Promise<InvokeResult>;
+  /** The {@link PROTOCOL_VERSION} of the bundle's host, without activating the plugin. */
+  protocolVersion(): Promise<number>;
 }

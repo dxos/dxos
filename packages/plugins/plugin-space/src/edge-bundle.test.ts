@@ -15,7 +15,7 @@ import { DXN, JsonSchema, Type } from '@dxos/echo';
 import { SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/keys';
 import { type DataPlane, type LoadedBundle, PluginBundle, buildBundle, loadBundle } from '@dxos/plugin-builder';
-import { type EdgeFunctionEnv, type PluginProtocol } from '@dxos/protocols';
+import { type EdgeFunctionEnv, PluginProtocol } from '@dxos/protocols';
 
 // The space plugin's bundle, built from source the way `check-edge-release` builds it, run alone as EDGE runs it
 // (EDGE-PLUGINS D-41), against a space served from memory in place of EDGE's db-service.
@@ -124,6 +124,11 @@ describe('space plugin bundle on EDGE', { timeout: 180_000 }, () => {
     if (bundleDir !== undefined) {
       await rm(bundleDir, { recursive: true, force: true });
     }
+  });
+
+  // EDGE speaks to a bundle at the version of the host it was published with (EDGE-PLUGINS F-6.9).
+  test.fails('reports the protocol version of its vendored host', async ({ expect }) => {
+    expect(await bundle.protocolVersion()).toBe(PluginProtocol.PROTOCOL_VERSION);
   });
 
   test('adds an object of a type the bundle declares', async ({ expect }) => {
