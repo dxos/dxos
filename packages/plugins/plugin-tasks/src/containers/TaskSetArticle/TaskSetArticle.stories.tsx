@@ -460,6 +460,30 @@ export const SortAndGroup: Story = {
   },
 };
 
+/** The create pane offers the space's contacts before the set holds a task, not only once one exists. */
+export const EmptySetOffersContacts: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = within(document.body);
+    await expect(canvas.findByText('Source green coffee', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    const context = seeded;
+    if (!context) {
+      throw new Error('The story did not seed a task set.');
+    }
+    for (const task of TaskSet.resolveTasks(context.taskSet)) {
+      context.space.db.remove(task);
+    }
+    await waitFor(() => expect(canvasElement.querySelector('[data-testid="taskList.item"]')).toBeNull(), {
+      timeout: 10_000,
+    });
+
+    await userEvent.click(
+      canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit.properties"] [data-testid="assignee"]')!,
+    );
+    await expect(body.findByText('Kai Watanabe')).resolves.toBeTruthy();
+  },
+};
+
 /**
  * The gutter's checkbox is selection, not a status write: it marks which rows a contributed action
  * will act on, and it is offered only because a plugin contributed one (`StoryTaskActionPlugin`).

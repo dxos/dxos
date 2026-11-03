@@ -149,6 +149,113 @@ describe('update-task', () => {
       expect(Exit.isFailure(exit)).toBe(true);
       expect(task.delegate).toBeUndefined();
       expect(yield* Database.query(Filter.type(RemoteSession.RemoteSession)).run).toEqual([]);
+
+      // A claim refused for its move is refused before the session is recorded, too.
+      const { task: parent } = yield* createTask.handler({
+        taskSet: Ref.make(taskSet),
+        title: 'Parent',
+        assignee: owner,
+      });
+      const { task: child } = yield* createTask.handler({
+        taskSet: Ref.make(taskSet),
+        title: 'Child',
+        parentTask: Ref.make(parent),
+      });
+      const moved = yield* Effect.exit(
+        updateTask.handler({
+          task: Ref.make(parent),
+          parentTask: Ref.make(child),
+          remoteSession: { sessionId: 'session_abc' },
+        }),
+      );
+      expect(Exit.isFailure(moved)).toBe(true);
+      expect(yield* Database.query(Filter.type(RemoteSession.RemoteSession)).run).toEqual([]);
+    }).pipe(
+      Effect.provide(
+        Layer.provideMerge(
+          Trace.writerLayerNoop,
+          TestDatabaseLayer({
+            types: [Milestone.Milestone, RemoteSession.RemoteSession, Task.Task, TaskSet.TaskSet],
+          }),
+        ),
+      ),
+    ),
+  );
+
+  it.effect('a session claim names a person only for a task nobody answers for yet', () =>
+    Effect.gen(function* () {
+      const taskSet = yield* Database.add(TaskSet.make({}));
+      yield* Database.flush();
+      const { task } = yield* createTask.handler({
+        taskSet: Ref.make(taskSet),
+        title: 'Hire a roastery assistant',
+        assignee: { name: 'Sam', identityDid: 'did:key:sam' },
+      });
+
+      yield* updateTask.handler({
+        task: Ref.make(task),
+        status: 'started',
+        assignee: owner,
+        remoteSession: { sessionId: 'session_claim' },
+      });
+
+      expect(task.assignee?.name).toBe('Sam');
+      expect(task.delegate?.role).toBe('assistant');
+
+      // Naming the session as delegate directly is the same claim.
+      yield* updateTask.handler({
+        task: Ref.make(task),
+        assignee: owner,
+        delegate: { role: 'assistant', name: 'Claude', identityDid: 'did:key:claude' },
+      });
+      expect(task.assignee?.name).toBe('Sam');
+
+      // The session is the delegate whatever the caller passed; a person's fields are not the session's.
+      yield* updateTask.handler({
+        task: Ref.make(task),
+        delegate: { role: 'user', ...owner },
+        remoteSession: { sessionId: 'session_claim' },
+      });
+      expect(task.delegate?.role).toBe('assistant');
+      expect(task.delegate?.identityDid).toBeUndefined();
+      expect(task.delegate?.name).toBeUndefined();
+    }).pipe(
+      Effect.provide(
+        Layer.provideMerge(
+          Trace.writerLayerNoop,
+          TestDatabaseLayer({
+            types: [Milestone.Milestone, RemoteSession.RemoteSession, Task.Task, TaskSet.TaskSet],
+          }),
+        ),
+      ),
+    ),
+  );
+
+  it.effect('refuses an edit that leaves an agent working with no person answering for the task', () =>
+    Effect.gen(function* () {
+      const taskSet = yield* Database.add(TaskSet.make({}));
+      yield* Database.flush();
+      const { task } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Draft', assignee: owner });
+      const agent = { role: 'assistant' as const, name: 'Claude', identityDid: 'did:key:claude' };
+
+      for (const claim of [
+        { remoteSession: { sessionId: 'session_abc' }, assignee: null },
+        { remoteSession: { sessionId: 'session_abc' }, assignee: agent },
+        { delegate: agent, assignee: null },
+      ]) {
+        const exit = yield* Effect.exit(updateTask.handler({ task: Ref.make(task), ...claim }));
+        expect(Exit.isFailure(exit)).toBe(true);
+      }
+      expect(task.assignee?.name).toBe('Riley');
+      expect(task.delegate).toBeUndefined();
+
+      yield* updateTask.handler({ task: Ref.make(task), delegate: agent });
+      for (const edit of [{ assignee: null }, { assignee: { ...agent, name: 'Relay' } }]) {
+        const exit = yield* Effect.exit(updateTask.handler({ task: Ref.make(task), ...edit }));
+        expect(Exit.isFailure(exit)).toBe(true);
+      }
+      expect(task.assignee?.name).toBe('Riley');
+      expect(task.delegate?.name).toBe('Claude');
     }).pipe(
       Effect.provide(
         Layer.provideMerge(
@@ -407,17 +514,146 @@ describe('update-task subtree', () => {
 
       yield* updateTask.handler({
         task: Ref.make(child),
+        assignee: owner,
         delegate: { role: 'assistant', name: 'agent', identityDid: 'did:key:agent' },
       });
 
       for (const member of [root, child, grandchild]) {
         expect(member.delegate?.name).toBe('agent');
+        // Whoever answers for the task answers for its tree, so each member's finish waits on them.
+        expect(member.assignee?.name).toBe('Riley');
         const changes = (member.history ?? []).filter(Task.isChangeEntry);
         expect(changes.at(-1)?.description).toContain('Delegated to');
       }
       // Delegation alone starts nothing.
       expect(root.status).toBe('todo');
       expect(other.delegate).toBeUndefined();
+    }).pipe(Effect.provide(layer)),
+  );
+
+  it.effect("a session's claim on an unowned step of a person's tree answers to that person", () =>
+    Effect.gen(function* () {
+      const { root, child, grandchild } = yield* makeTree();
+      yield* updateTask.handler({ task: Ref.make(root), assignee: { name: 'Sam', identityDid: 'did:key:sam' } });
+
+      yield* updateTask.handler({
+        task: Ref.make(child),
+        status: 'started',
+        assignee: owner,
+        delegate: { role: 'assistant', name: 'agent', identityDid: 'did:key:agent' },
+      });
+
+      for (const member of [root, child, grandchild]) {
+        expect(member.assignee?.name).toBe('Sam');
+      }
+    }).pipe(Effect.provide(layer)),
+  );
+
+  it.effect("a claim carries to each member its parent's person, an owned middle step included", () =>
+    Effect.gen(function* () {
+      const { root, child, grandchild } = yield* makeTree();
+      yield* updateTask.handler({ task: Ref.make(child), assignee: { name: 'Sam', identityDid: 'did:key:sam' } });
+
+      yield* updateTask.handler({
+        task: Ref.make(root),
+        assignee: owner,
+        delegate: { role: 'assistant', name: 'agent', identityDid: 'did:key:agent' },
+      });
+
+      expect(root.assignee?.name).toBe('Riley');
+      expect(child.assignee?.name).toBe('Sam');
+      expect(grandchild.assignee?.name).toBe('Sam');
+
+      // Claiming below the owned step answers to it, though the root above had nobody of its own.
+      const { root: bare, child: middle, grandchild: below } = yield* makeTree();
+      yield* updateTask.handler({ task: Ref.make(middle), assignee: { name: 'Sam', identityDid: 'did:key:sam' } });
+      yield* updateTask.handler({
+        task: Ref.make(below),
+        assignee: owner,
+        delegate: { role: 'assistant', name: 'agent', identityDid: 'did:key:agent' },
+      });
+      expect(below.assignee?.name).toBe('Sam');
+      expect(bare.assignee?.name).toBe('Sam');
+    }).pipe(Effect.provide(layer)),
+  );
+
+  it.effect("a claim that also re-parents answers to the person of the parent the task moves under", () =>
+    Effect.gen(function* () {
+      const { child, other } = yield* makeTree();
+      yield* updateTask.handler({ task: Ref.make(child), assignee: { name: 'Sam', identityDid: 'did:key:sam' } });
+
+      yield* updateTask.handler({
+        task: Ref.make(other),
+        parentTask: Ref.make(child),
+        assignee: owner,
+        delegate: { role: 'assistant', name: 'agent', identityDid: 'did:key:agent' },
+      });
+
+      expect(other.assignee?.name).toBe('Sam');
+    }).pipe(Effect.provide(layer)),
+  );
+
+  it.effect("a session's later claim on a sub-task of its tree is accepted, and its finish waits on review", () =>
+    Effect.gen(function* () {
+      const { root, grandchild } = yield* makeTree();
+      const session = { role: 'assistant' as const, name: 'agent', identityDid: 'did:key:agent' };
+      yield* updateTask.handler({ task: Ref.make(root), assignee: owner, delegate: session });
+
+      yield* updateTask.handler({ task: Ref.make(grandchild), delegate: session, status: 'done' });
+
+      expect(grandchild.status).toBe('review');
+    }).pipe(Effect.provide(layer)),
+  );
+
+  it.effect('handing a sub-task back hands its whole tree back', () =>
+    Effect.gen(function* () {
+      const { root, child, grandchild } = yield* makeTree();
+      yield* updateTask.handler({
+        task: Ref.make(root),
+        assignee: owner,
+        delegate: { role: 'assistant', name: 'agent', identityDid: 'did:key:agent' },
+      });
+
+      yield* updateTask.handler({ task: Ref.make(child), assignee: owner, delegate: null });
+
+      for (const member of [root, child, grandchild]) {
+        expect(member.delegate).toBeUndefined();
+      }
+    }).pipe(Effect.provide(layer)),
+  );
+
+  it.effect('delegating a sub-task to whoever answers for it hands its whole tree back', () =>
+    Effect.gen(function* () {
+      const { root, child, grandchild } = yield* makeTree();
+      yield* updateTask.handler({ task: Ref.make(grandchild), assignee: { name: 'Sam', identityDid: 'did:key:sam' } });
+      yield* updateTask.handler({
+        task: Ref.make(root),
+        assignee: owner,
+        delegate: { role: 'assistant', name: 'agent', identityDid: 'did:key:agent' },
+      });
+
+      yield* updateTask.handler({ task: Ref.make(child), delegate: owner });
+
+      for (const member of [root, child, grandchild]) {
+        expect(member.delegate).toBeUndefined();
+      }
+    }).pipe(Effect.provide(layer)),
+  );
+
+  it.effect("a claim on a tree leaves an agent's own sub-task to it", () =>
+    Effect.gen(function* () {
+      const { root, grandchild } = yield* makeTree();
+      const own = { role: 'assistant' as const, name: 'Scout', identityDid: 'did:key:scout' };
+      yield* updateTask.handler({ task: Ref.make(grandchild), assignee: own });
+
+      yield* updateTask.handler({
+        task: Ref.make(root),
+        assignee: owner,
+        delegate: { role: 'assistant', name: 'agent', identityDid: 'did:key:agent' },
+      });
+
+      expect(grandchild.assignee?.name).toBe('Scout');
+      expect(grandchild.delegate).toBeUndefined();
     }).pipe(Effect.provide(layer)),
   );
 

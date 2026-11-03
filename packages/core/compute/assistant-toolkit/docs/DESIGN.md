@@ -20,7 +20,7 @@ here lives in this package unless noted; the UI surface is `@dxos/react-ui-task`
   live process, and an orphaned `started` is detectable.
 - **`Task.dependsOn`**: execution-ordering refs (orthogonal to `subtasks` hierarchy and
   `milestone` grouping). A task is _ready_ when every dependency resolved within the checklist is
-  `done` (`Task.isTaskReady`; a dangling ref reads as satisfied).
+  `done` or in `review` (`Task.isTaskReady`; a dangling ref reads as satisfied).
 
 ## Prompt surface
 
@@ -59,7 +59,7 @@ appended to the title, models paste them back through title-keyed upserts and du
 
 1. **Reconcile** (after each turn AND after each delegation exits): sweep orphans (`started`
    agent tasks with no live process → `failed`), then spawn one sub-agent per _pending_ task —
-   agent delegate, `todo`, not active, dependencies done. Spawning stamps `started`.
+   agent delegate, `todo`, not active, dependencies done or in review. Spawning stamps `started`.
 2. **Sub-agent** — a synthesized `Instructions` run via `RunInstructions` with the supervisor's
    skills inherited (minus delegation, so sub-agents cannot recurse). It signals completion via
    the `completeJob` tool.

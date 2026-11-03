@@ -185,6 +185,49 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     expect(task.assignee?.role).toBe('user');
   });
 
+  test('the delegating identity answers for a task an agent was assigned, so its finish still waits on review', async ({
+    expect,
+  }) => {
+    await using harness = await setup();
+    const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
+    invariant(space, 'Expected a default space.');
+    const task = space.db.add(
+      Task.make({ title: 'Write a poem', status: 'todo', assignee: { role: 'assistant', name: 'Old session' } }),
+    );
+    await space.db.flush();
+
+    await harness.runPromise(
+      Operation.invoke(ProjectOperation.DelegateTaskToChat, { tasks: [Ref.make(task)] }, { spaceId: space.id }),
+    );
+
+    expect(task.assignee?.role).toBe('user');
+    Task.setStatus(task, 'done');
+    expect(task.status).toBe('review');
+  });
+
+  test("an unowned step answers to its parent's person, not the delegating identity", async ({ expect }) => {
+    await using harness = await setup();
+    const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
+    invariant(space, 'Expected a default space.');
+    const step = space.db.add(Task.make({ title: 'Draft the verse', status: 'todo' }));
+    const poem = space.db.add(
+      Task.make({
+        title: 'Write a poem',
+        status: 'todo',
+        assignee: { name: 'Riley', identityDid: 'did:key:riley' },
+        subtasks: [Ref.make(step)],
+      }),
+    );
+    Obj.setParent(step, poem);
+    await space.db.flush();
+
+    await harness.runPromise(
+      Operation.invoke(ProjectOperation.DelegateTaskToChat, { tasks: [Ref.make(step)] }, { spaceId: space.id }),
+    );
+
+    expect(step.assignee?.name).toBe('Riley');
+  });
+
   test('binds the skills the project instructions name, alongside the delegation set', async ({ expect }) => {
     await using harness = await setup();
     const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));

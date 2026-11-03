@@ -167,7 +167,7 @@ export const taskMigration = Migration.define({
   to: Task.Task,
   transform: async (from, { db }) => {
     const plan = await planFor(db, from.id);
-    const { parentTask: _parentTask, ...rest } = from;
+    const { parentTask: _parentTask, reviewers: _reviewers, ...rest } = from;
     return {
       ...rest,
       // By URI: a child not yet migrated is still the legacy type, which a typed ref cannot name.

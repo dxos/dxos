@@ -8,7 +8,7 @@ import { Obj } from '@dxos/echo';
 import { TaskList } from '@dxos/react-ui-task';
 import { type Task } from '@dxos/types';
 
-import { useDelegateActions, useTaskActions, useTaskUpdate } from '../../hooks/index.ts';
+import { useDelegateActions, useTaskActions, useTaskMembers, useTaskUpdate } from '../../hooks/index.ts';
 
 export type TaskRowProps = {
   subject: Task.Task;
@@ -23,6 +23,7 @@ export const TaskRow = ({ subject: task }: TaskRowProps) => {
   const getTaskActions = useTaskActions();
   const getDelegateActions = useDelegateActions();
   const handleUpdate = useTaskUpdate(spaceId);
+  const members = useTaskMembers(spaceId);
   const tasks = useMemo(() => [task], [task]);
 
   // Ungrouped: one row needs no status heading, and its own status control already says it.
@@ -32,6 +33,7 @@ export const TaskRow = ({ subject: task }: TaskRowProps) => {
       flush
       groupByStatus={false}
       showAssignees
+      members={members}
       getTaskActions={getTaskActions}
       getDelegateActions={getDelegateActions}
       onTaskUpdate={handleUpdate}

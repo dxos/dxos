@@ -1348,3 +1348,264 @@ decision D-118: QA-4 expects the delegate to read "Claude Code", and a task give
   affects: [QA-4]
   why: Fill in a task is the one step that gives a task a description, and A coding session takes a task the one that delegates.
 ```
+
+```mdl
+decision D-119: Tasks stored with an agent as their assignee are left as they are. They are not migrated; each changes when a person reassigns it.
+  date: 2026-11-02
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-120: When an agent hands a task back and finishes it, the task goes to review, not done.
+  date: 2026-11-02
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-121: A task assigned to an agent with a person among its reviewers reads as the agent's own task, and its finish waits on that reviewer. Fills in [D-119].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: Such a task is valid as stored, and the review gate already holds its finish for the named reviewer.
+  rejected:
+    - Reading it as a delegation from the reviewer, which guessed at intent and changed how a task read after a write.
+```
+
+```mdl
+decision D-122: Picking an agent for a task a person already answers for keeps that person as the assignee; you become the assignee only of a task no person answers for. Fills in [D-110].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-4]
+  why: Replacing the assignee would take the task away from whoever answers for it just because someone else started the agent.
+  rejected:
+    - Always making the person who picks the agent the assignee.
+```
+
+```mdl
+decision D-123: An agent that finishes a task marks it for review, not done.
+  date: 2026-11-03
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-124: A task has no reviewers. The assignee reviews the work when a delegate finishes it. A task can also be set to review while it waits on review outside the app.
+  date: 2026-11-03
+  by: user:wittjosiah
+  supersedes: D-121
+```
+
+```mdl
+decision D-125: Any finish without a person's sign-off lands in review when a person answers for the task, before or after the edit; only an agent's own task closes on its done. Fills in [D-123] and [D-124].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: A write cannot tell an agent from a person, and a person's own done already signs off through AcceptTask. Gating on the delegate alone let an agent clear it and then finish.
+  rejected:
+    - Sending every agent finish to review, which would leave an agent's own checklist items unable to close.
+```
+
+```mdl
+decision D-126: A task created already finished goes to review only when it is created delegated. Fills in [D-125].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: The create form lets a person pick Done for their own task, and creating a task cannot tell who is asking.
+```
+
+```mdl
+decision D-127: A task created already finished goes to review whenever a person answers for it, as an edit does. The create form signs off a person's own Done through AcceptTask. Fills in [D-125].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-126
+  why: Relaxing the create operation let an agent create a person's task already done; the form, not the operation, knows a person is asking.
+```
+
+```mdl
+decision D-128: A sub-task filed under a delegated task, naming no assignee or delegate of its own, joins the parent's delegation: it takes the parent's assignee and delegate. Fills in [D-125].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: A delegated tree is one unit of work; a sub-task the agent files while working it would otherwise close on the agent's done with no sign-off.
+```
+
+```mdl
+decision D-129: A task in review satisfies the tasks that depend on it, so dependents start while the person who answers for it has not yet signed off.
+  date: 2026-11-03
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-130: A sub-task filed under a delegated task, naming no assignee or delegate of its own, takes the parent's person assignee and no delegate. Fills in [D-125].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-128
+  why: The person who answers for the tree is what makes the sub-task's finish wait on sign-off. Copying the delegate wrote half a claim: a chat delegate's checklist never listed the task, and a finished parent's session got new work.
+  rejected:
+    - Running the claim cascade at creation, which would also have to add the task to a chat's checklist and decide whether a finished parent's claim is still live.
+```
+
+```mdl
+decision D-131: A sub-task filed under a delegated task with no assignee of its own takes the parent's person assignee, whether or not it names a delegate; the owner check then runs on that result. Fills in [D-130].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: A session filing a step it holds was refused for want of an assignee its parent already had, and the retry named whoever `whoami` returned, splitting the tree between two people.
+```
+
+```mdl
+decision D-132: A coding session's claim (`tasks-update` with `remoteSession`) names its person only on a task nobody answers for yet. On a task with a person assignee, a different person is ignored; clearing the assignee or naming an agent is refused. Fills in [D-124].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: A session passes the person it works for on every claim, so a claim on someone else's task reassigned it and sent its finish to the wrong reviewer.
+```
+
+```mdl
+decision D-133: A delegate must be an agent (`role: assistant`). Naming the task's own assignee as delegate stays allowed, since that hands the task back. Fills in [D-124].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: A person stored as delegate drew an agent badge on a task no agent works, and the supervisor and review gate read the field as an agent.
+```
+
+```mdl
+decision D-134: A session's check-in lists only its unfinished tasks: a task in review waits on its person, not on the session. Fills in [D-123].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: Every finish a person answers for lands in review, so the reminder of open work listed finished tasks until someone signed them off.
+```
+
+```mdl
+decision D-135: Any agent claim, a coding session's or an edit naming an agent as delegate, names its person only on a task nobody answers for yet; a session's delegate is always stored as an agent. Supersedes [D-132] and fills in [D-133].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-132
+  why: Keyed on `remoteSession` alone, the rule missed the skill's other documented claim (naming the session as delegate), and a caller's role overrode the session's.
+```
+
+```mdl
+decision D-136: A request for a sub-agent is exactly `{ role: 'assistant' }`, one predicate (`Task.isSubAgentRequest`) read by the supervisor and the planning tool's unassign. An agent named by a session, identity or contact is a concrete delegate. Fills in [D-125].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: Three readings disagreed, and the widest let a conversation's unassign release another agent's claim.
+```
+
+```mdl
+decision D-137: A sub-task filed with a delegate under any parent a person answers for takes that person as assignee when it names none. Fills in [D-131].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: Under D-130 the step below a delegated task is owned but not delegated, so a session filing a held step one level further down was refused again.
+```
+
+```mdl
+decision D-138: A session's check-in drops a task in review only when a person answers for it; the session's own task held in review stays listed, since nobody else will close it. Supersedes [D-134].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-134
+```
+
+```mdl
+decision D-139: An agent claim on a step nobody answers for takes the person who answers for its tree's root, before the person the claim names; the claim cascade then carries that person to the tree. Fills in [D-135].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: Asked of the claimed step alone, the rule kept the session's person on an unowned step of someone else's tree, so one unit of work answered to two people.
+```
+
+```mdl
+decision D-140: A step answers to its own person, else the nearest person up its tree. One `Task` helper owns that rule, and creating a task, an agent's claim, the claim cascade and a session's question each store its result on the step.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [Task]
+```
+
+```mdl
+decision D-141: A sub-task filed with no assignee takes the person its parent answers to (`Task.answerer`), whether or not the tree is delegated; one filed with a delegate takes that person over one the caller names. Fills in [D-140].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-137
+  why: Asked only under a delegated parent, a step two levels down had no person and closed without review.
+```
+
+```mdl
+decision D-142: An agent claim takes the person the claimed step answers to, so an owned middle step wins over an unowned root; the claim cascade gives each member with no person the nearest one up its own tree, and the claim's person only where there is none. Fills in [D-140].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-139
+  why: Asked of the root, a claim under an owned middle step fell through to the session's person and wrote them over the whole tree.
+```
+
+```mdl
+decision D-143: A session's question (`AskQuestion` with `remoteSession`) is a claim: the task takes the person it answers to and the session holds its tree. On a task no person answers for it is refused before anything is filed. Fills in [D-140].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: The question path delegated the task with no person behind it, so its finish closed unreviewed and the rest of the tree stayed unclaimed.
+  rejected:
+    - Filing the question without delegating, which leaves the session's check-in blind to the task it is blocked on.
+```
+
+```mdl
+decision D-144: An agent claim on a task a person answers for keeps that person and ignores a different person the edit names, for a direct delegate edit as for a session; the operation description says so, and a reassignment goes in its own edit. Fills in [D-142].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: A session also claims by naming itself as delegate and passes `whoami` every time, so the edit cannot tell a deliberate reassignment from that habit.
+  rejected:
+    - Refusing the edit when the named person differs, which fails every session working someone else's task.
+```
+
+```mdl
+decision D-145: An agent claim writes the person only on a step with no person of its own; a step that has one is left unwritten. A claim that also re-parents the step takes the person of the tree it moves into. Fills in [D-142].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: Writing the same person back on every claim raced a person's reassignment made on another replica, and a re-parenting claim read the old tree while its cascade wrote the new one.
+```
+
+```mdl
+decision D-146: Delegating a task to a chat (`DelegateTaskToChat`) and the planning tool's claim each give a step with no assignee the nearest person up its tree; the delegating person fills in only where the tree has nobody. Fills in [D-140].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: Both still read the step alone, so the delegating person, or nobody, answered for a step of someone else's tree, and the agent's finish skipped review.
+  rejected:
+    - Making `DelegateTaskToChat` claim the whole tree as `UpdateTask` does; a person delegates the tasks they chose.
+```
+
+```mdl
+decision D-147: The planning tool's claim gives the nearest person up the tree to a step another agent was left holding, as every other claim does; only a task the conversation made for itself is left as it is. Fills in [D-146].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: Keyed on any assignee, the planning tool left a legacy agent-held step unowned where `UpdateTask`, `AskQuestion` and `DelegateTaskToChat` gave it the tree's person.
+```
+
+```mdl
+decision D-148: Who a step answers to is `Task.owner`, with no second helper: a step with no person of its own takes its parent's `Task.owner`, which the stored rule has already written there.
+  date: 2026-11-03
+  by: user:wittjosiah
+  supersedes: D-140
+  affects: [Task]
+```
+
+```mdl
+decision D-149: Where [D-141], [D-142], [D-146] and [D-147] give a step the nearest person up its tree, each now gives it its parent's person. The claim cascade still runs root first, so a member reads a parent it has just written; a member whose parent has no person takes the claim's person. Fills in [D-148].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [Task]
+  why: Every writer stores the person on each step it touches, so one level up already holds the answer a walk would find.
+  rejected:
+    - Keeping a walk inside `Task.owner`, which makes every read inherit and leaves the stored person optional.
+```

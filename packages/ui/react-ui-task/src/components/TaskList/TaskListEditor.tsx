@@ -12,7 +12,6 @@ import React, {
   useState,
 } from 'react';
 
-import { Filter, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { type MarkdownEditableController, type MarkdownEditableProps } from '@dxos/react-ui-markdown';
@@ -22,7 +21,7 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Util from '@dxos/react-ui/Util';
-import { Person, type Task } from '@dxos/types';
+import { Task } from '@dxos/types';
 import { submitOnModEnter } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
@@ -85,7 +84,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
     const { t } = Hooks.useTranslation(translationKey);
     const { className, ...rest } = Util.composableProps(props);
     const descriptionRef = useRef<MarkdownEditableController>(null);
-    const { tasks, selected, members, flush, onTaskCreate, onTaskUpdate, onTaskSelect } =
+    const { tasks, selected, showAssignees, members, people, flush, onTaskCreate, onTaskUpdate, onTaskSelect } =
       useTaskListContext('TaskList.Editor');
 
     const task = useMemo(
@@ -335,14 +334,6 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
       [task, current, onTaskUpdate],
     );
 
-    // The space's contacts, for the assignee picker: read off the task being edited, or any task in the list while
-    // creating, since a draft has no database of its own.
-    const people = useCallback(() => {
-      const subject = task ?? tasks[0];
-      const db = subject && Obj.getDatabase(subject);
-      return db?.query(Filter.type(Person.Person)).runSync() ?? [];
-    }, [task, tasks]);
-
     // Nothing to create with and nothing to edit: the pane has no purpose.
     if (!onTaskCreate && !(current && onTaskUpdate)) {
       return null;
@@ -358,7 +349,8 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
           status: current.status ?? undefined,
           priority: current.priority ?? undefined,
           estimate: current.estimate ?? undefined,
-          assignee: current.assignee ?? undefined,
+          assignee: current.assignee,
+          delegate: current.delegate,
         }
       : draftProperties;
     const description: TaskDescriptionBehavior | undefined = hasDescription
@@ -397,6 +389,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
           // Per task: switching tasks replaces what the form holds rather than carrying an edit across.
           key={current?.id ?? 'create'}
           values={{ title: draft, description: current?.description, ...properties }}
+          showAssignee={showAssignees}
           members={members}
           people={people}
           title={{

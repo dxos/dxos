@@ -944,8 +944,9 @@ const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
     [chat, tasks],
   );
 
+  // The reader's edit, so their `done` is their sign-off, not an agent's finish waiting on review.
   const handleUpdate = useCallback((task: Task.Task, patch: Task.Edit) => {
-    Task.update(task, patch);
+    Task.update(task, patch, { approve: true });
   }, []);
 
   // Execution is a prompt, not a direct write: the agent owns the task's lifecycle (assignment,

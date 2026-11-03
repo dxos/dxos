@@ -6,6 +6,7 @@ import { describe, it } from '@effect/vitest';
 import * as AiError from 'effect/ai/AiError';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import { test } from 'vitest';
 
 import { AssistantTestLayer, collectEphemeral, messageTextIncludes, waitForMessage } from '@dxos/agent-runtime/testing';
@@ -153,11 +154,19 @@ const addChecklist = (chat: Chat.Chat) =>
     );
     // Not begun.
     const queued = yield* Database.add(Task.make({ title: 'Send the notice', status: 'todo' }));
+    // On this checklist but worked by another agent, whose own run decides it.
+    const elsewhere = yield* Database.add(
+      Task.make({
+        title: 'Book the venue',
+        status: 'started',
+        delegate: { role: 'assistant', name: 'Claude', identityDid: 'did:key:claude' },
+      }),
+    );
     Obj.update(chat, (chat) => {
-      chat.tasks.push(Ref.make(held), Ref.make(delegated), Ref.make(queued));
+      chat.tasks.push(Ref.make(held), Ref.make(delegated), Ref.make(queued), Ref.make(elsewhere));
     });
     yield* Database.flush();
-    return { held, delegated, queued };
+    return { held, delegated, queued, elsewhere };
   });
 
 describe('makeDelegationStrategy', () => {
@@ -257,6 +266,35 @@ describe('makeDelegationStrategy', () => {
   );
 });
 
+describe('makeDelegationStrategy.onComplete', () => {
+  it.effect(
+    "a sub-agent's finish on a task a person answers for waits on their review",
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const agent = yield* Agent.makeInitialized({ name: 'Supervisor', instructions: '' }, DelegationSkill.make());
+        yield* Database.flush();
+        const chat = yield* Agent.loadChat(agent);
+        invariant(chat, 'Agent chat not found.');
+        const task = yield* Database.add(
+          Task.make({
+            title: 'Compute 10 factorial',
+            status: 'started',
+            assignee: { name: 'Rich' },
+            delegate: { role: 'assistant' },
+          }),
+        );
+        yield* Database.flush();
+
+        yield* makeDelegationStrategy().onComplete(chat, task.id, Exit.succeed('3628800'));
+
+        expect(task.status).toBe('review');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+});
+
 describe('makeDelegationStrategy.onTurnFailed', () => {
   it.effect(
     'fails the tasks the conversation holds, and leaves sub-agent and queued tasks alone',
@@ -266,7 +304,7 @@ describe('makeDelegationStrategy.onTurnFailed', () => {
         yield* Database.flush();
         const chat = yield* Agent.loadChat(agent);
         invariant(chat, 'Agent chat not found.');
-        const { held, delegated, queued } = yield* addChecklist(chat);
+        const { held, delegated, queued, elsewhere } = yield* addChecklist(chat);
 
         const strategy = makeDelegationStrategy();
         invariant(strategy.onTurnFailed, 'Expected the supervisor to handle a failed turn.');
@@ -280,6 +318,16 @@ describe('makeDelegationStrategy.onTurnFailed', () => {
         // A spawned sub-agent is still running; its own exit decides its task.
         expect(delegated.status).toBe('started');
         expect(queued.status).toBe('todo');
+        expect(elsewhere.status).toBe('started');
+
+        // A plain chat has no agent of its own, which must not read as matching a worker with no subject.
+        const plain = yield* Database.add(Chat.make({ feed: Ref.make(Feed.make()) }));
+        yield* Database.flush();
+        const checklist = yield* addChecklist(plain);
+        yield* strategy.onTurnFailed(plain, Cause.fail(new Error(USAGE_LIMIT)));
+        expect(checklist.held.status).toBe('failed');
+        expect(checklist.delegated.status).toBe('started');
+        expect(checklist.elsewhere.status).toBe('started');
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -336,6 +384,12 @@ describe('isSubAgentTask', () => {
     expect(isSubAgentTask(Task.make({ title: 'unassigned' }))).toBe(false);
     expect(isSubAgentTask(Task.make({ title: 'person', assignee: { name: 'Alice' } }))).toBe(false);
     expect(isSubAgentTask(Task.make({ title: 'delegated', assignee: { role: 'assistant' } }))).toBe(true);
+    // An agent named by its identity is a concrete delegate, not a spawn request.
+    expect(
+      isSubAgentTask(
+        Task.make({ title: 'named', delegate: { role: 'assistant', name: 'Claude', identityDid: 'did:key:claude' } }),
+      ),
+    ).toBe(false);
     // The planning tool's self-assignment: started by this conversation's agent, not a spawn request.
     expect(isSubAgentTask(Task.make({ title: 'self', assignee: { role: 'assistant', subject: Ref.make(chat) } }))).toBe(
       false,

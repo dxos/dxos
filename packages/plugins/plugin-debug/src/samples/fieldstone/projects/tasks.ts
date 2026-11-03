@@ -98,7 +98,7 @@ export type TaskSeed = {
   readonly priority: Task.Priority;
   readonly estimate: Task.Estimate;
   readonly assignee: AgentKey | PersonKey;
-  /** The person who signs off an agent's work. */
+  /** The person an agent's task is delegated for, who signs off its work. */
   readonly reviewer?: PersonKey;
   readonly milestone?: MilestoneKey;
   readonly dependsOn?: ReadonlyArray<string>;
@@ -981,10 +981,16 @@ const makeTask = (
     status: seed.status,
     priority: seed.priority,
     estimate: seed.estimate,
-    assignee: isAgentKey(seed.assignee)
-      ? { identityDid: team.agents[seed.assignee].did, name: team.agents[seed.assignee].name }
-      : personActor(team.people[seed.assignee]),
-    ...(seed.reviewer && { reviewers: [personActor(team.people[seed.reviewer])] }),
+    // An agent's task is delegated to it, with the person who reviews it answering for it; an agent's own task (no
+    // reviewer) is assigned to it.
+    ...(isAgentKey(seed.assignee)
+      ? seed.reviewer
+        ? {
+            assignee: personActor(team.people[seed.reviewer]),
+            delegate: agentActor(team.agents[seed.assignee]),
+          }
+        : { assignee: agentActor(team.agents[seed.assignee]) }
+      : { assignee: personActor(team.people[seed.assignee]) }),
     ...(seed.milestone && { milestone: Ref.make(milestones[seed.milestone]) }),
     history: [
       {

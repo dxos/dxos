@@ -149,12 +149,12 @@ a value that already starts with `echo:`; that produces `echo:///echo://…`, wh
   object exists for this run, say so rather than inventing a name. A delegated task you finish
   lands in `review`: the assignee closes it, not you.
 - **You are never the assignee of a project task.** Over MCP you work for the person whose grant
-  the session holds, and `whoami` names them. When you take a task that has no person as its
-  assignee (none, or an agent left there by an older claim), pass
+  the session holds, and `whoami` names them. When you take a task that no person answers for (none
+  on the task or its parent, or an agent left there by an older claim), pass
   `assignee: {"identityDid": "<whoami identityDid>", "name": "<whoami displayName>"}` in the same
   `tasks-update` call that sets you as the delegate. `tasks-update` refuses a `remoteSession` claim
-  that would leave no person answering for the task. A task that already has a person as its
-  assignee keeps them: never overwrite it.
+  that would leave no person answering for the task. A step answers to its own person, else its
+  parent's: a claim keeps that person and ignores the `assignee` you pass.
 - **Outline** — the free-text scratch surface (`tasks-get-outline`/`tasks-update-outline`). Keep a line
   starting `Resume:` holding the single next action, and a `Design: {"/": "echo:///<doc-id>"}` line
   pointing at the design document.
@@ -194,7 +194,8 @@ guessing: an assumption the ledger then carries as fact costs more than the roun
   user may still type their own, so never phrase the list as exhaustive, and never pick an answer
   yourself), and pass your own actor as `actor` (see "Assignee and delegate" above). A coding-agent session
   passes `remoteSession: { "sessionId": "<the harness session id>" }` instead: the blocked task is
-  delegated to that session and the question is recorded as asked by it, as `tasks-update` does.
+  delegated to that session and the question is recorded as asked by it, as `tasks-update` does. It
+  is refused on a task no person answers for: claim the task with `tasks-update` first.
   It returns the question's `questionId`.
 - One open question per task: a second call while the first is unanswered is refused. Ask
   everything you need in one question.

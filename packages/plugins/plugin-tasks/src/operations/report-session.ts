@@ -77,6 +77,10 @@ const objectId = (uri: string | undefined): string | undefined => uri?.split('/'
 /** Statuses that mean the work is over; a reminder listing them would be noise. */
 const CLOSED: ReadonlySet<string> = new Set(['done', 'duplicate', 'cancelled', 'failed']);
 
+/** Whether the session still has work on the task: one in `review` waits on its person, unless nobody answers for it. */
+const isOpen = (task: Task.Task): boolean =>
+  !CLOSED.has(task.status ?? '') && !(task.status === 'review' && Task.needsReview(task));
+
 /**
  * The open tasks this session is working (see `Task.worker`).
  *
@@ -88,7 +92,7 @@ const assignedTasks = (graph: Hypergraph.Hypergraph, session: RemoteSession.Remo
     Effect.map((result) =>
       [...result]
         .filter((task) => objectId(Task.worker(task)?.subject?.uri) === objectId(Obj.getURI(session)))
-        .filter((task) => !CLOSED.has(task.status ?? ''))
+        .filter(isOpen)
         .map((task) => {
           // Containment, not a lookup: `TaskSet.tasks` and `Project.taskSet` both set parent, so the
           // project is two hops up from any task filed in one.

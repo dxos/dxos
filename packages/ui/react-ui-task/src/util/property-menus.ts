@@ -69,6 +69,9 @@ export const estimateMenuActions = ({
     }),
   );
 
+/** Who holds the task, as one edit: the assignee, and the delegate when picking a person takes the task back. */
+export type AssigneePatch = Pick<Task.Edit, 'assignee' | 'delegate'>;
+
 export type AssigneeMenuOptions = {
   assignee?: Actor.Actor;
   /** How the current assignee is shown, so one the people list cannot name is still listed. */
@@ -79,14 +82,15 @@ export type AssigneeMenuOptions = {
   people: readonly Person.Person[];
   /** The agents the host can hand the task to, after the people; each item runs its own delegation. */
   agents?: readonly MenuItem[];
-  onChange: (assignee: Actor.Actor | null) => void;
+  onChange: (patch: AssigneePatch) => void;
   t: Translate;
 };
 
 /**
  * One picker for who holds the task: unassigned, the current assignee when no other option names it, the space's
  * members and contacts, then a separator and the agents. Picking an agent delegates to it and keeps (or makes) the
- * reader the assignee; picking a person is the caller's cue to take the task back from any agent.
+ * reader the assignee; picking a person takes the task back from any agent, since the picker holds one answer to who
+ * has it.
  */
 export const assigneeMenuActions = ({
   assignee,
@@ -97,50 +101,56 @@ export const assigneeMenuActions = ({
   agents = [],
   onChange,
   t,
-}: AssigneeMenuOptions): MenuItem[] => [
-  createMenuAction('assignee-none', () => onChange(null), {
-    label: t('assignee-none.label'),
-    // The unset glyph, as the priority picker's `None` takes, so every option's label aligns.
-    icon: UNSET_ICON,
-    checked: !assignee,
-  }),
-  // An assignee the people list cannot show — an agent, or an actor with no contact — is listed as itself, so the
-  // picker says who holds the task before it is switched away.
-  ...(assignee && !assignee.contact && !members.some((member) => member.did === assignee.identityDid) && current?.label
-    ? [
-        createMenuAction('assignee-current', () => {}, {
-          label: current.label,
-          icon: current.icon,
-          checked: true,
-          testId: 'taskList.assignee.current',
-        }),
-      ]
-    : []),
-  ...members.map((member) =>
-    createMenuAction(`assignee-member-${member.did}`, () => onChange({ identityDid: member.did, name: member.name }), {
-      label: member.name ?? shortDid(member.did),
-      icon: PERSON_ICON,
-      checked: assignee?.identityDid === member.did,
-      testId: 'taskList.assignee.member',
+}: AssigneeMenuOptions): MenuItem[] => {
+  const pick = (assignee: Actor.Actor | null) => onChange({ assignee, ...(delegate && { delegate: null }) });
+  return [
+    createMenuAction('assignee-none', () => pick(null), {
+      label: t('assignee-none.label'),
+      // The unset glyph, as the priority picker's `None` takes, so every option's label aligns.
+      icon: UNSET_ICON,
+      checked: !assignee && !delegate,
     }),
-  ),
-  ...people.map((person) =>
-    createMenuAction(`assignee-${person.id}`, () => onChange({ contact: Ref.make(person) }), {
-      label: Obj.getLabel(person) ?? person.id,
-      icon: PERSON_ICON,
-      checked: Task.refEntityId(assignee?.contact) === person.id,
-    }),
-  ),
-  ...(delegate || agents.length > 0 ? createLineSeparator('assignee-agents-separator').nodes : []),
-  ...(delegate
-    ? [
-        createMenuAction('assignee-delegate', () => {}, {
-          label: delegate.label ?? t('assignee-agent.label'),
-          icon: delegate.icon,
-          checked: true,
-          testId: 'taskList.assignee.delegate',
-        }),
-      ]
-    : []),
-  ...agents,
-];
+    // An assignee the people list cannot show — an agent, or an actor with no contact — is listed as itself, so the
+    // picker says who holds the task before it is switched away.
+    ...(assignee &&
+    !assignee.contact &&
+    !members.some((member) => member.did === assignee.identityDid) &&
+    current?.label
+      ? [
+          createMenuAction('assignee-current', () => {}, {
+            label: current.label,
+            icon: current.icon,
+            checked: true,
+            testId: 'taskList.assignee.current',
+          }),
+        ]
+      : []),
+    ...members.map((member) =>
+      createMenuAction(`assignee-member-${member.did}`, () => pick({ identityDid: member.did, name: member.name }), {
+        label: member.name ?? shortDid(member.did),
+        icon: PERSON_ICON,
+        checked: assignee?.identityDid === member.did,
+        testId: 'taskList.assignee.member',
+      }),
+    ),
+    ...people.map((person) =>
+      createMenuAction(`assignee-${person.id}`, () => pick({ contact: Ref.make(person) }), {
+        label: Obj.getLabel(person) ?? person.id,
+        icon: PERSON_ICON,
+        checked: Task.refEntityId(assignee?.contact) === person.id,
+      }),
+    ),
+    ...(delegate || agents.length > 0 ? createLineSeparator('assignee-agents-separator').nodes : []),
+    ...(delegate
+      ? [
+          createMenuAction('assignee-delegate', () => {}, {
+            label: delegate.label ?? t('assignee-agent.label'),
+            icon: delegate.icon,
+            checked: true,
+            testId: 'taskList.assignee.delegate',
+          }),
+        ]
+      : []),
+    ...agents,
+  ];
+};

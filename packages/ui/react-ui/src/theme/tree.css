@@ -197,12 +197,15 @@
   }
 
   /* Row controls take the row's tracks; where the pointer can hover they show only on the row in play (hovered,
-     focused within, selected, or holding an open menu), so a list of rows does not read as a wall of buttons. */
+     focused within, selected, or holding an open menu), so a list of rows does not read as a wall of buttons. Pinned
+     controls show on every row. */
   .dx-tree-item-actions {
     display: contents;
   }
   @media (hover: hover) {
-    .dx-tree-item:not(:hover, :focus-within, [data-selected], :has([aria-expanded='true'])) .dx-tree-item-actions > * {
+    .dx-tree-item:not(:hover, :focus-within, [data-selected], :has([aria-expanded='true']))
+      .dx-tree-item-actions:not([data-pinned])
+      > * {
       opacity: 0;
     }
   }
