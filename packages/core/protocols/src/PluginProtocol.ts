@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type EdgeFunctionEnv } from './edge/index.ts';
+import { type EdgeFunctionEnv, type SerializedError } from './edge/index.ts';
 
 //
 // Plugin protocol: the contract between EDGE and a plugin bundle's Dynamic Worker.
@@ -167,6 +167,11 @@ export type Failure = {
   /** The error's name, e.g. a handler's typed error tag. */
   readonly name?: string;
   readonly stack?: string;
+  /**
+   * The handler's error as `ErrorCodec` encodes it, cause chain included, which EDGE rethrows so a caller sees the
+   * error operation-service would have raised. Version 2.
+   */
+  readonly encoded?: SerializedError;
 };
 
 export type InvokeResult =

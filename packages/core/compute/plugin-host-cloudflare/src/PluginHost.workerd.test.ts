@@ -8,17 +8,19 @@ import { describe, test } from 'vitest';
 import { Fibonacci, Reply } from '@dxos/compute/testing';
 import { Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { PluginProtocol } from '@dxos/protocols';
+import { ErrorCodec, PluginProtocol } from '@dxos/protocols';
 
 import * as PluginHost from './PluginHost.ts';
 import {
   Delegate,
+  Fails,
   Greet,
   Greeter,
   Inspect,
   InspectEvent,
   TEST_PLUGIN_KEY,
   TestPlugin,
+  TestFailure,
   TestSkill,
 } from './testing/index.ts';
 
@@ -90,6 +92,16 @@ describe('PluginHost', () => {
     ]);
     await host.describe();
     expect(made).toBe(1);
+  });
+
+  // A tool error reads the same whichever routing ran the operation (operation-service rethrows `ErrorCodec`'s form).
+  test.fails("returns the handler's error encoded as operation-service sends it", async ({ expect }) => {
+    const result = await makeHost().invoke({ operationKey: String(Fails.meta.key), input: {} }, {});
+    expect(result.ok).toBe(false);
+    const expected = ErrorCodec.encode(new TestFailure({ context: { uri: 'echo:///missing' } }));
+    const encoded = result.ok ? undefined : result.error.encoded;
+    expect(encoded && ErrorCodec.decode(encoded).message).toBe(ErrorCodec.decode(expected).message);
+    expect(encoded?.name).toBe('TestFailure');
   });
 
   test('returns failures as data: an unknown operation and an invalid or unserved space', async ({ expect }) => {

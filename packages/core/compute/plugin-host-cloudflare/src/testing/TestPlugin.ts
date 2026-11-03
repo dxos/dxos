@@ -19,6 +19,7 @@ import * as Skill from '@dxos/compute/Skill';
 import { Fibonacci, Reply, ReplyHandler } from '@dxos/compute/testing';
 import * as Trace from '@dxos/compute/Trace';
 import { TestSchema } from '@dxos/echo/testing';
+import { BaseError } from '@dxos/errors';
 import { DXN, EntityId } from '@dxos/keys';
 
 export const TEST_PLUGIN_KEY = 'org.dxos.plugin.hostTest';
@@ -114,6 +115,20 @@ const DelegateHandler = Delegate.pipe(
   ),
 );
 
+/** The typed error {@link Fails} raises. */
+export class TestFailure extends BaseError.extend('TestFailure', 'The test operation failed.') {}
+
+/** Fails with a typed error that carries context, as `agent.recordFacts` does with `EntityNotFoundError`. */
+export const Fails = Operation.make({
+  meta: { key: DXN.make('com.example.operation.hostTest.fails'), name: 'Fails' },
+  input: Schema.Struct({}),
+  output: Schema.Struct({}),
+});
+
+const FailsHandler = Fails.pipe(
+  Operation.withHandler(() => Effect.fail(new TestFailure({ context: { uri: 'echo:///missing' } }))),
+);
+
 /** A plugin with no UI that contributes one type, one operation and one skill. */
 export const TestPlugin = Plugin.define(Plugin.makeMeta({ key: DXN.make(TEST_PLUGIN_KEY), name: 'Host test' })).pipe(
   Plugin.addModule(AppCapability.schema([TestSchema.Person])),
@@ -122,7 +137,7 @@ export const TestPlugin = Plugin.define(Plugin.makeMeta({ key: DXN.make(TEST_PLU
       Effect.succeed(
         Capability.contribute(
           Capabilities.OperationHandler,
-          OperationHandlerSet.make(ReplyHandler, InspectHandler, GreetHandler, DelegateHandler),
+          OperationHandlerSet.make(ReplyHandler, InspectHandler, GreetHandler, DelegateHandler, FailsHandler),
         ),
       ),
     ),
