@@ -221,6 +221,30 @@ type Failure = {
 - **Isolation.** The entrypoint serves only its own plugin's operations; no other plugin is loaded
   beside it ([D-41]).
 
+### Host services
+
+What operation-service gives a handler, and where a bundle's handler gets it. A service only EDGE
+holds is served per invocation through `InvocationScope.services`: the host provides a proxy under
+the service's own key, each method a JSON call to EDGE (streams arrive as arrays), and EDGE binds the
+call to the invocation's space, caller and reply origin.
+
+| Service                                  | operation-service                            | PluginHost                                               |
+| ---------------------------------------- | -------------------------------------------- | -------------------------------------------------------- |
+| Database, Feed, Registry, Hypergraph     | function context on DATA/QUEUE_SERVICE        | the same function context, on the same bindings         |
+| Credentials, AiService, OpaqueToolkit    | function context                             | the same function context                                |
+| `Trace.TraceService`                     | `traceSink`                                  | `scope.traceSink` ([F-5.6])                              |
+| `Cancellation.Service`                   | `cancellation`                               | `scope.cancellation` ([F-5.6])                           |
+| `HarnessService`                         | rebuilt from `conversation`                  | rebuilt from `scope.conversation` ([F-5.6])              |
+| `Capability.Service`                     | every plugin's capabilities                  | the bundle's own capabilities                            |
+| `Operation.Service`                      | local handlers, then its own FunctionsService | the bundle's handlers, then `scope.operations`           |
+| `DiscordBot.DiscordBotService`           | `DISCORD_AGENT` binding, with the origin      | `scope.services`                                         |
+| `AgentMailbox.AgentMailboxService`       | `AGENT_MAILBOX` binding                      | `scope.services`                                         |
+| `BrainService`                           | `BRAIN_SERVICE` binding, with the caller      | `scope.services`; TODO: methods whose arguments or results are ECHO objects (`subscribe`, `subscriptions`, `take`, `wake`) need EDGE to decode their JSON form |
+| `Space.Service` (`members`, `get`)       | db-service's member keys                     | `scope.services`, `members` as a stream                  |
+| `DiscordSource.Endpoint`                 | dev EDGEs only (`DISCORD_API_URL`)           | TODO: not carried                                        |
+| Blob backends                            | `BLOB_SERVICE`                               | TODO: inline storage only; compute-runtime's context has no backend option |
+| OTEL tracer for Effect spans             | `withOtelTracer`                             | not carried; logs and the trace sink only                |
+
 ### EDGE and Cloudflare
 
 PluginLoader calls `LOADER.get(id, () => WorkerCode)` with the bundle's content hash as `id`. The
@@ -652,6 +676,12 @@ feat F-5: Operations are exposed and callable
     the pid), the caller's cancellation aborts `Cancellation.signal`, a test's id seed pins the ids it
     mints, and a conversation provides its `HarnessService`. The caller and the reply origin bind the
     host services EDGE serves to the invocation ([F-5.7]).
+
+  req F-5.7: A handler gets every service operation-service gives it (the inventory in the Host
+    services section): its function context's, the request context's ([F-5.6]), services only EDGE
+    holds, served per invocation through `InvocationScope.services`, and `Operation.Service`, which
+    runs the bundle's own operations in process and re-enters EDGE's router for any other through
+    `InvocationScope.operations`.
 ```
 
 ```mdl
@@ -1360,4 +1390,16 @@ decision D-60: The `InvocationScope` carries every per-call field operation-serv
   rejected:
     - Put the per-call fields in `env` — `env` is shared by every space and caller of an isolate ([D-6]).
     - Import `@dxos/assistant` statically in the host — only invocations with a conversation need it, so it is imported when one arrives.
+```
+
+```mdl
+decision D-61: A service only EDGE holds reaches a bundle as a per-invocation `ServiceHost` stub with a list of descriptors (service key, and which methods return streams); PluginHost provides a proxy under each key whose methods call EDGE with JSON arguments. Nested operations run in process when the bundle handles them and otherwise re-enter EDGE's router through an `OperationHost` stub, inheriting the space, conversation and pid. Fills in [D-6].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.3, F-5.7, InvocationScope]
+  why: Effect resolves a service by its key, so one generic proxy serves every plugin's tag without the host importing plugins; binding the stub per call lets EDGE apply the caller and origin, which are per call ([D-6]).
+  rejected:
+    - Typed bindings in `env` per service (BRAIN_SERVICE, DISCORD_AGENT) — the adapters would move from EDGE into the host, which would then import plugin-agent and plugin-discord, and `env` cannot carry the caller.
+    - Provide a proxy for every service a handler declares — it would shadow the services the function context provides.
 ```

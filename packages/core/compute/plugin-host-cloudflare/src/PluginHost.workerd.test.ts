@@ -173,7 +173,7 @@ describe('PluginHost', () => {
 
   // Services only EDGE holds, and other plugins' operations (EDGE-PLUGINS F-5.7).
   describe('host services', () => {
-    test.fails('a handler reaches a service EDGE serves, its methods and streams', async ({ expect }) => {
+    test('a handler reaches a service EDGE serves, its methods and streams', async ({ expect }) => {
       const calls: unknown[] = [];
       const services: PluginProtocol.HostServices = {
         descriptors: [{ key: Greeter.key, streams: ['names'] }],
@@ -195,7 +195,7 @@ describe('PluginHost', () => {
       ]);
     });
 
-    test.fails('a service failure fails the handler with its message', async ({ expect }) => {
+    test('a service failure fails the handler with its message', async ({ expect }) => {
       const services: PluginProtocol.HostServices = {
         descriptors: [{ key: Greeter.key, streams: ['names'] }],
         host: { call: async () => ({ ok: false, error: { code: 'failed', message: 'The bot is offline.' } }) },
@@ -212,12 +212,12 @@ describe('PluginHost', () => {
       });
     });
 
-    test.fails("runs its own operations in process and other plugins' through EDGE", async ({ expect }) => {
+    test("runs its own operations in process and other plugins' through EDGE", async ({ expect }) => {
       const invoked: unknown[] = [];
       const operations: PluginProtocol.OperationHost = {
         invoke: async (operationKey, input, options) => {
           invoked.push({ operationKey, input, options });
-          return { ok: true, output: 55 };
+          return { ok: true, output: { result: '55' } };
         },
       };
       const result = await makeHost().invoke(
@@ -225,7 +225,7 @@ describe('PluginHost', () => {
         {},
         { operations, pid: 'outer' },
       );
-      expect(result).toEqual({ ok: true, output: { reply: { n: 10 }, fibonacci: 55 } });
+      expect(result).toEqual({ ok: true, output: { reply: { n: 10 }, fibonacci: { result: '55' } } });
       expect(invoked).toEqual([
         { operationKey: 'com.example.operation.fib', input: { iterations: 10 }, options: { parentPid: 'outer' } },
       ]);

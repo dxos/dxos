@@ -23,6 +23,7 @@ import { DXN, EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { FunctionProtocol, PluginProtocol } from '@dxos/protocols';
 
+import * as HostServices from './HostServices.ts';
 import * as Output from './Output.ts';
 import * as PluginActivation from './PluginActivation.ts';
 import * as PluginCatalog from './PluginCatalog.ts';
@@ -121,8 +122,20 @@ export const make = (makePlugins: () => PluginActivation.Plugins, options: Optio
     });
     const cancellation = RequestContext.listenForCancel(scope.cancellation);
 
+    // Innermost first: the nested-operation service captures the context every wrapper outside it provides.
+    const withOperations = HostServices.withOperations(handler, {
+      handlers: activation.operationHandlers,
+      host: scope.operations,
+      spaceId,
+      conversation: scope.conversation,
+      pid,
+      idSeed: scope.idSeed,
+    });
     const contextual = RequestContext.withConversation(
-      RequestContext.withCancellation(withCapabilities(handler, activation.capabilities), cancellation.signal),
+      RequestContext.withCancellation(
+        withCapabilities(HostServices.withHostServices(withOperations, scope.services), activation.capabilities),
+        cancellation.signal,
+      ),
       scope.conversation,
     );
     const func = wrapFunctionHandler(contextual, {
