@@ -77,8 +77,8 @@ const readRunReport = (reportPath, since) => {
 };
 
 /**
- * Per target: the workspace-relative outputs it declares (globs are optional by definition and skipped),
- * and the targets it depends on.
+ * Per target: the workspace-relative outputs it must produce, and the targets it depends on. Globs and
+ * `optional` literals are skipped, since moon allows them to be missing.
  */
 const readTaskGraph = (root) => {
   const result = spawnSync(MOON, ['query', 'tasks'], {
@@ -95,7 +95,12 @@ const readTaskGraph = (root) => {
   const deps = new Map();
   for (const [project, tasks] of Object.entries(JSON.parse(result.stdout.toString()).tasks ?? {})) {
     for (const [id, task] of Object.entries(tasks)) {
-      outputs.set(`${project}:${id}`, Object.keys(task.outputFiles ?? {}));
+      outputs.set(
+        `${project}:${id}`,
+        Object.entries(task.outputFiles ?? {})
+          .filter(([, params]) => !params?.optional)
+          .map(([path]) => path),
+      );
       deps.set(`${project}:${id}`, (task.deps ?? []).map((dep) => dep.target).filter(Boolean));
     }
   }
@@ -203,6 +208,15 @@ const main = () => {
   // Every later job that shares the hash would hydrate the same empty entry, so this fails the step.
   if (unrepaired.length > 0) {
     return status !== 0 ? status : repairStatus !== 0 ? repairStatus : 1;
+  }
+
+  // moon archives only a task that succeeded, so a failed rebuild left the bad entry in place.
+  if (repairStatus !== 0) {
+    annotate(
+      'error',
+      `Rebuilding ${targets.join(', ')} failed (exit ${repairStatus}); the cache entry was not replaced.`,
+    );
+    return status !== 0 ? status : repairStatus;
   }
 
   if (status === 0) {
