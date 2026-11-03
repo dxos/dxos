@@ -281,9 +281,9 @@ op AddMessage
 op SendNotifications
   key: org.dxos.operation.review.sendNotifications
   desc: |
-    Send one comment to the subject's comment subscribers through `MessengerCapabilities.Sender`,
+    Send one comment to the subject's comment subscribers through `AppCapabilities.InboxSender`,
     skipping its author, this identity, and DIDs that are not current members of the space
-    (removed members included). Scheduled by AddMessage; a no-op when plugin-messenger is not loaded.
+    (removed members included). Scheduled by AddMessage; a no-op when no inbox sender is contributed.
   input: { subject: Ref<Obj.Any>, thread: Ref<Thread>, messageId: ObjectId }
   requires: [Capability.Service]
   note: |
@@ -911,4 +911,11 @@ decision D-6: Only entries added to an existing `Subscription` map merge. The fi
   by: agent:claude-code
   for: user:wittjosiah
   affects: [F-8.1, F-8.2]
+```
+
+```mdl
+decision D-7: SendNotifications reaches the inbox through `AppCapabilities.InboxSender` from `@dxos/app-toolkit`, which plugin-messenger contributes, so this plugin does not depend on plugin-messenger.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [SendNotifications]
 ```

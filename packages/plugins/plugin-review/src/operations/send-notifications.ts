@@ -5,12 +5,12 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { contentCaptureAllowed } from '@dxos/observability/AiObservability';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import * as MessengerCapabilities from '@dxos/plugin-messenger/MessengerCapabilities';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Message, Subscription, Thread } from '@dxos/types';
 
@@ -24,7 +24,7 @@ const handler: Operation.WithHandler<typeof CommentOperation.SendNotifications> 
   CommentOperation.SendNotifications.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* ({ subject: subjectRef, thread: threadRef, messageId }) {
-        const [sender] = yield* Capability.getAll(MessengerCapabilities.Sender);
+        const [sender] = yield* Capability.getAll(AppCapabilities.InboxSender);
         if (!sender) {
           return;
         }

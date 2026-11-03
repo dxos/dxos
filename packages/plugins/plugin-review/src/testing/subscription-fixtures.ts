@@ -8,12 +8,12 @@ import { onTestFinished } from 'vitest';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Client } from '@dxos/client';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { DXN, Feed, Obj, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import * as MessengerCapabilities from '@dxos/plugin-messenger/MessengerCapabilities';
 import * as Harness from '@dxos/plugin-testing/Harness';
 import { AnchoredTo, Message, Task, Thread } from '@dxos/types';
 
@@ -23,16 +23,16 @@ const TYPES = [AnchoredTo.AnchoredTo, Feed.Feed, Message.Message, Task.Task, Thr
 
 export type SentNotification = { recipientDid: string; message: Message.Message };
 
-const makeHostPlugin = (client: Client, sender: MessengerCapabilities.Sender) =>
+const makeHostPlugin = (client: Client, sender: AppCapabilities.InboxSender) =>
   Plugin.define(Plugin.makeMeta({ key: DXN.make('example.com.plugin.host'), name: 'Host' })).pipe(
     Plugin.addModule({
       id: 'host',
-      provides: [ClientCapabilities.Client, MessengerCapabilities.Sender],
+      provides: [AppCapabilities.InboxSender, ClientCapabilities.Client],
       activatesOn: ActivationEvents.Startup,
       activate: () =>
         Effect.succeed([
+          Capability.contribute(AppCapabilities.InboxSender, sender),
           Capability.contribute(ClientCapabilities.Client, client),
-          Capability.contribute(MessengerCapabilities.Sender, sender),
         ]),
     }),
     Plugin.make,
@@ -61,7 +61,7 @@ export const createSubscriptionHarness = async () => {
   invariant(aliceDid && bobDid);
 
   const sent: SentNotification[] = [];
-  const sender: MessengerCapabilities.Sender = {
+  const sender: AppCapabilities.InboxSender = {
     send: (recipientDid, message) => Effect.sync(() => void sent.push({ recipientDid, message })),
   };
   const harness = await Harness.createComposerTestApp({

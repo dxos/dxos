@@ -177,7 +177,6 @@
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
-    "@dxos/plugin-messenger": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/protocols": "workspace:*",

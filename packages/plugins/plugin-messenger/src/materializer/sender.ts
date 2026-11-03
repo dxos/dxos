@@ -4,22 +4,23 @@
 
 import * as Effect from 'effect/Effect';
 
+import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { type Halo } from '@dxos/client-protocol';
 import { InboxAccountRequiredError, InboxPayloadTooLargeError } from '@dxos/protocols';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { InboxService } from '@dxos/protocols/rpc';
 import { Message } from '@dxos/types';
 
-import { type MessengerCapabilities, MessengerError } from '#types';
+import { MessengerError } from '#types';
 
 /** Resolved per call, since `client.halo` is replaced when the services reconnect. */
 export type SenderHalo = () => Pick<Halo, 'contacts' | 'inbox'>;
 
 /**
- * Builds the {@link MessengerCapabilities.Sender}: the recipient DID is resolved through the contact
+ * Builds the `AppCapabilities.InboxSender`: the recipient DID is resolved through the contact
  * book, since a DID cannot be turned back into the identity key the relay addresses.
  */
-export const makeSender = (halo: SenderHalo): MessengerCapabilities.Sender => ({
+export const makeSender = (halo: SenderHalo): AppCapabilities.InboxSender<MessengerError.InboxSendError> => ({
   send: (recipientDid, message) =>
     Effect.gen(function* () {
       const { contacts, inbox } = halo();
