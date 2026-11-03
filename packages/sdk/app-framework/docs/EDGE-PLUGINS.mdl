@@ -201,8 +201,8 @@ type Failure = {
 - **Failures are data.** Workers RPC drops an error's class and stack, so `invoke` returns them in
   `InvokeResult` rather than throwing. `describe` rejects only when the host itself cannot start;
   modules that fail to activate are listed in `Catalog.failures`.
-- **`env`** holds the space-agnostic bindings `DATA_SERVICE`, `QUEUE_SERVICE` and
-  `FUNCTIONS_AI_SERVICE` (`PluginProtocol.Env`). Everything that differs per call travels in `scope`
+- **`env`** holds the space-agnostic bindings `DATA_SERVICE`, `QUEUE_SERVICE`,
+  `FUNCTIONS_AI_SERVICE` and `TYPE_REGISTRY` (`PluginProtocol.Env`). Everything that differs per call travels in `scope`
   ([D-6]).
 - **The space travels in `InvokeRequest.spaceId` today.** The snippet above is what the host
   implements now; the [InvocationScope](#types) type below is the target, in which `scope.spaceId`
@@ -392,6 +392,7 @@ service PluginStore
     getCatalog(pluginKey: NSID, version?: SemVer) → PluginCatalog
     query(filter: { text?, pluginKey?, operationKey?, typename?, skillKey? }) → PluginBundle[]
     resolveOperation(operationKey: NSID, channel: string) → OperationRoute
+    resolveType(typename: NSID, version?: SemVer) → TypeRecord | undefined
     setChannel(pluginKey: NSID, channel: string, version: SemVer) → Channel
     revoke(pluginKey: NSID, version: SemVer) → void
   errors:
@@ -408,7 +409,8 @@ service PluginLoader
     callback reads R2 only on a cold start. The callback loads the bundle alone ([D-41]), rewrites
     every bare import by its VendorMap, drops vendored files nothing reaches, and adds a main module
     that starts `PluginHost` from `vendor/`. `env` holds only space-agnostic
-    bindings: DATA_SERVICE, QUEUE_SERVICE, an AI service and loopback entrypoints from `ctx.exports`
+    bindings: DATA_SERVICE, QUEUE_SERVICE, an AI service, TYPE_REGISTRY (PluginStore.resolveType) and
+    loopback entrypoints from `ctx.exports`
     whose props name the plugin, never a space. `tails` routes logs to FunctionsLoggerEntrypoint.
   loading: lazy
   ops:
@@ -586,6 +588,20 @@ feat F-3: Types are exposed
     handler needs no per-operation `types`.
 
   req F-3.3: PluginStore.query finds the bundle that contributes a typename.
+
+  req F-3.4: The types an operation declares (`Operation.make({ types })`) are bundled with its plugin
+    and registered before the operation runs.
+
+  req F-3.5: A type the invocation has not registered, named by a query, by an object it loads or by
+    a generic operation such as `space.queryObjects`, is resolved by DXN from EDGE's type registry,
+    to which every published plugin contributes the types in its catalog. The resolved type is
+    registered for the rest of the invocation.
+
+  req F-3.6: When several plugins contribute a type with one DXN, the type registry returns the
+    first one contributed.
+
+  req F-3.7: The DXN of every type a plugin contributes extends the plugin's key; PluginStore
+    refuses an upload whose catalog holds a type outside it. TODO: not enforced yet.
 ```
 
 ```mdl
@@ -1192,4 +1208,75 @@ decision D-45: `dx registry publish` uploads a public bundle through `/upload/mu
   by: user:dmaretskyi
   affects: [publishPlugin]
   why: The JSON body holds the whole bundle base64-encoded in the worker's memory, which a 56 MB bundle (presenter) exceeds; the multipart route streams each part into R2.
+```
+
+```mdl
+decision D-46: The types an operation declares in `Operation.make({ types })` are bundled with its plugin and registered before the operation is invoked on EDGE.
+  date: 2026-11-03
+  by: user:dmaretskyi
+  affects: [F-3.4, PluginHost]
+```
+
+```mdl
+decision D-47: A type that is not registered when a query names it or an object of it is loaded is resolved on EDGE by an async query, by DXN, into a global EDGE type registry to which every plugin contributes its types. This covers the places that may hold any type: generic operations such as `space.queryObjects`, a task's artifacts, relations, the agents' database toolkit and dynamic schema, none of which an operation can list in `types`.
+  date: 2026-11-03
+  by: user:dmaretskyi
+  affects: [F-3.5, PluginStore, PluginHost]
+```
+
+```mdl
+decision D-48: Once resolving types from the EDGE type registry proves consistent and reliable, it can replace operations declaring their types, and `Operation.make({ types })` can be deprecated.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-3.4, F-3.5]
+```
+
+```mdl
+decision D-49: For now several plugins may contribute a type with the same DXN, and the type registry picks the first one.
+  date: 2026-11-03
+  by: user:dmaretskyi
+  affects: [F-3.6, PluginStore]
+```
+
+```mdl
+decision D-50: A type that several plugins export today, such as the message type exported by both the inbox and the review plugin, moves to one canonical place: a plugin they both depend on, which may hold nothing but types and is enabled automatically with the plugins that depend on it.
+  date: 2026-11-03
+  by: user:wittjosiah
+  why: Two definitions with one DXN can differ, and then neither is authoritative; plugins can now depend on other plugins and enable them automatically, which they could not when these types were placed.
+```
+
+```mdl
+decision D-51: As a short-term follow-up, the DXN of every type a plugin contributes must extend the plugin's key, and this is enforced when the plugin is deployed, so no two plugins contribute the same DXN.
+  date: 2026-11-03
+  by: user:dmaretskyi
+  affects: [F-3.7, PluginStore]
+```
+
+```mdl
+decision D-52: The type registry is PluginStore.resolveType, reached from a bundle through the `TYPE_REGISTRY` binding in `PluginProtocol.Env`; it returns the catalog's `TypeRecord` (JSON Schema). ECHO's hypergraph takes an async type source that resolution tries after the registry and the space; PluginHost installs one that calls `TYPE_REGISTRY` and rebuilds the record as a static type (`Type.makeObject`, or `Type.makeRelation` with any-object endpoints), which the hypergraph adds to the invocation's registry. Fills in [D-47].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.5, PluginStore, PluginHost, PluginLoader]
+  why: The hypergraph already resolves a type URI asynchronously (registry, then the space), so a third source reaches every typed query and loaded object with one hook; the catalog already carries each type's JSON Schema. A type rebuilt from JSON Schema in memory (`Type.makeObjectFromJsonSchema`) reports no object or relation kind until it is persisted, which `space.addObject` requires.
+  rejected:
+    - Shipping every published type into each bundle at load time — an isolate is shared by every space and would hold types it never uses, and a newly published type would need the bundle reloaded.
+```
+
+```mdl
+decision D-53: The "first one" of [D-49] is the type from the earliest-uploaded unrevoked bundle whose catalog lists the DXN, matching its version when the DXN names one. Fills in [D-49].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.6, PluginStore]
+  why: Upload order is the only order the store records that does not change when a channel moves.
+```
+
+```mdl
+decision D-54: `space.queryObjects`, `space.addObject` and `space.addRelation` resolve a typename they do not find among the registry's and the space's types through the hypergraph (`Database.resolveType`) before reporting it missing. Fills in [D-47].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.5]
+  why: These operations list the declared types rather than resolving one URI, so they do not pass through the hypergraph's resolver on their own.
 ```

@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Filter, Obj, Query, Ref, Relation, Scope, Type } from '@dxos/echo';
+import { Database, DXN, Filter, Obj, Query, Ref, Relation, Scope, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 import { SpaceOperation } from '#types';
@@ -51,7 +51,10 @@ const resolveRelationType = Effect.fnUntraced(function* (db: Database.Database, 
   const types = yield* Effect.promise(() =>
     db.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).run(),
   );
-  const schema = types.find((type) => Type.getTypename(type) === typename);
+  const schema =
+    types.find((type) => Type.getTypename(type) === typename) ??
+    // A type no plugin here registered may still be published elsewhere; the graph's type sources resolve it.
+    (yield* Database.resolveType(DXN.make(typename)).pipe(Effect.provide(Database.layer(db))));
   invariant(schema, `Schema not found: ${typename}`);
   invariant(Type.isRelation(schema), `Not a relation schema: ${typename}`);
   return schema;

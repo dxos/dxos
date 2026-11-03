@@ -86,7 +86,11 @@ const typeFilter = Effect.fnUntraced(function* (typename: string) {
   const types = yield* Database.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).run;
   const declared = types.filter((type) => Type.getTypename(type) === typename);
   if (declared.length === 0) {
-    return yield* Effect.fail(new SpaceOperationError({ message: `Schema not found: ${typename}` }));
+    // A type no plugin here registered may still be published elsewhere; the graph's type sources resolve it.
+    if ((yield* Database.resolveType(DXN.make(typename))) === undefined) {
+      return yield* Effect.fail(new SpaceOperationError({ message: `Schema not found: ${typename}` }));
+    }
+    return Filter.type(DXN.make(typename));
   }
   // Objects of a type persisted in the space are stamped with its `echo:` id, which the bare typename
   // does not match, so each persisted registration is matched alongside it.

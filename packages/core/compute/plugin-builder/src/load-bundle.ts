@@ -36,6 +36,8 @@ export interface DataPlane {
 export type LoadOptions = {
   /** Serves the bundle's `DATA_SERVICE`; without it a space-scoped invocation is refused, as on a host with no data bindings. */
   readonly dataPlane?: DataPlane;
+  /** Serves the bundle's `TYPE_REGISTRY`, standing in for EDGE's registry of published types. */
+  readonly typeRegistry?: PluginProtocol.TypeRegistry;
 };
 
 /** The worker's name, which its own service bindings name to reach its entrypoints. */
@@ -90,14 +92,27 @@ export class DataService extends WorkerEntrypoint {
   execQuery(_ctx, _request) { return { results: [], objects: [] }; }
 }
 
+export class TypeRegistry extends WorkerEntrypoint {
+  async resolveType(typename, version) {
+    const response = await this.env.TYPE_PLANE.fetch('http://type-plane/', { method: 'POST', body: JSON.stringify({ typename, version }) });
+    const body = await response.json();
+    if (!response.ok) {
+      throw new Error(body.error);
+    }
+    return body.result ?? undefined;
+  }
+}
+
 export class Unavailable extends WorkerEntrypoint {
   fetch() { throw new Error('Not served by the plugin loader host.'); }
 }
 
-const bindings = (env) =>
-  env.DATA_SERVICE === undefined
+const bindings = (env) => ({
+  ...(env.DATA_SERVICE === undefined
     ? {}
-    : { DATA_SERVICE: env.DATA_SERVICE, QUEUE_SERVICE: env.QUEUE_SERVICE, FUNCTIONS_AI_SERVICE: env.FUNCTIONS_AI_SERVICE };
+    : { DATA_SERVICE: env.DATA_SERVICE, QUEUE_SERVICE: env.QUEUE_SERVICE, FUNCTIONS_AI_SERVICE: env.FUNCTIONS_AI_SERVICE }),
+  ...(env.TYPE_REGISTRY === undefined ? {} : { TYPE_REGISTRY: env.TYPE_REGISTRY }),
+});
 
 const load = (env, id, mainModule, main) =>
   env.LOADER.get(id, () => {
@@ -146,7 +161,10 @@ export default {
  * Loads a plugin bundle through Worker Loader in a local workerd, exactly as EDGE's loader does: bare imports rewritten
  * to `vendor/` and a main module that starts the vendored host. The plugin runs alone, as on EDGE.
  */
-export const loadBundle = async (files: PluginBundle.Files, { dataPlane }: LoadOptions = {}): Promise<LoadedBundle> => {
+export const loadBundle = async (
+  files: PluginBundle.Files,
+  { dataPlane, typeRegistry }: LoadOptions = {},
+): Promise<LoadedBundle> => {
   const { problems, vendor } = PluginBundle.check(files);
   if (!vendor) {
     throw new Error(
@@ -161,14 +179,22 @@ export const loadBundle = async (files: PluginBundle.Files, { dataPlane }: LoadO
     compatibilityDate: PluginLoader.COMPATIBILITY_DATE,
     compatibilityFlags: [...PluginLoader.COMPATIBILITY_FLAGS],
     workerLoaders: { LOADER: {} },
-    serviceBindings: dataPlane
-      ? {
-          DATA_PLANE: (request: Request) => serveDataPlane(dataPlane, request),
-          DATA_SERVICE: { name: LOADER_HOST_NAME, entrypoint: 'DataService' },
-          QUEUE_SERVICE: { name: LOADER_HOST_NAME, entrypoint: 'Unavailable' },
-          FUNCTIONS_AI_SERVICE: { name: LOADER_HOST_NAME, entrypoint: 'Unavailable' },
-        }
-      : {},
+    serviceBindings: {
+      ...(dataPlane
+        ? {
+            DATA_PLANE: (request: Request) => serveDataPlane(dataPlane, request),
+            DATA_SERVICE: { name: LOADER_HOST_NAME, entrypoint: 'DataService' },
+            QUEUE_SERVICE: { name: LOADER_HOST_NAME, entrypoint: 'Unavailable' },
+            FUNCTIONS_AI_SERVICE: { name: LOADER_HOST_NAME, entrypoint: 'Unavailable' },
+          }
+        : {}),
+      ...(typeRegistry
+        ? {
+            TYPE_PLANE: (request: Request) => serveTypeRegistry(typeRegistry, request),
+            TYPE_REGISTRY: { name: LOADER_HOST_NAME, entrypoint: 'TypeRegistry' },
+          }
+        : {}),
+    },
     bindings: {
       COMPATIBILITY_DATE: PluginLoader.COMPATIBILITY_DATE,
       COMPATIBILITY_FLAGS: [...PluginLoader.COMPATIBILITY_FLAGS],
@@ -233,6 +259,22 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
   value !== null && typeof value === 'object' && !Array.isArray(value);
 
 /** Answers one relayed `DATA_SERVICE` call; the arguments are checked, since they cross a JSON boundary. */
+/** Answers the loader host's `TypeRegistry` entrypoint from Node; an unknown type is `null` on the wire. */
+const serveTypeRegistry = async (registry: PluginProtocol.TypeRegistry, request: Request): Promise<Response> => {
+  try {
+    const body: unknown = JSON.parse(await request.text());
+    const typename = isRecord(body) ? body.typename : undefined;
+    const version = isRecord(body) ? body.version : undefined;
+    if (!isString(typename) || !(version === undefined || version === null || isString(version))) {
+      throw new Error('Invalid type registry call.');
+    }
+    const result = await registry.resolveType(typename, version ?? undefined);
+    return Response.json({ result: result ?? null });
+  } catch (error) {
+    return Response.json({ error: String(error) }, { status: 500 });
+  }
+};
+
 const serveDataPlane = async (dataPlane: DataPlane, request: Request): Promise<Response> => {
   try {
     const body = fromWire(await request.text());

@@ -43,6 +43,7 @@
   "devDependencies": {
     "@automerge/automerge": "catalog:",
     "@automerge/automerge-repo": "catalog:",
+    "@dxos/echo": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/keys": "workspace:*",
     "vitest": "catalog:"

@@ -20,6 +20,9 @@
       "path": "../../../sdk/app-framework"
     },
     {
+      "path": "../../echo/echo"
+    },
+    {
       "path": "../../echo/echo-protocol"
     },
     {

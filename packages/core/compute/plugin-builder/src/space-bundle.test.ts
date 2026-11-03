@@ -4,12 +4,14 @@
 
 import * as Automerge from '@automerge/automerge';
 import { generateAutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
+import * as Schema from 'effect/Schema';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
+import { DXN, JsonSchema, Type } from '@dxos/echo';
 import { SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/keys';
 import { type EdgeFunctionEnv, type PluginProtocol } from '@dxos/protocols';
@@ -33,6 +35,25 @@ const QUERY_OBJECTS = 'org.dxos.operation.space.queryObjects';
 const ADD_OBJECT = 'org.dxos.operation.space.addObject';
 
 type Document = Automerge.Doc<Record<string, unknown>>;
+
+const DOCUMENT_VERSION = '0.1.0';
+
+/** Stands in for plugin-markdown's document type, which the space bundle knows only through the type registry. */
+class PublishedDocument extends Type.makeObject<PublishedDocument>(DXN.make(DOCUMENT_TYPENAME, DOCUMENT_VERSION))(
+  Schema.Struct({ name: Schema.optional(Schema.String) }),
+) {}
+
+/** EDGE's registry of published types, holding the document type as plugin-markdown's catalog would list it. */
+class MemoryTypeRegistry implements PluginProtocol.TypeRegistry {
+  readonly requests: string[] = [];
+
+  async resolveType(typename: string): Promise<PluginProtocol.TypeRecord | undefined> {
+    this.requests.push(typename);
+    return typename === DOCUMENT_TYPENAME
+      ? { typename, version: DOCUMENT_VERSION, jsonSchema: JsonSchema.toJsonSchema(PublishedDocument) }
+      : undefined;
+  }
+}
 
 /** EDGE's `DATA_SERVICE` over Automerge documents held in memory; one space, with an empty directory. */
 class MemoryDataPlane implements DataPlane {
@@ -90,13 +111,15 @@ describe('space plugin bundle on EDGE', { timeout: 180_000 }, () => {
   let bundleDir: string | undefined;
   let bundle: LoadedBundle;
   let spaceId: string;
+  let typeRegistry: MemoryTypeRegistry;
 
   beforeAll(async () => {
     bundleDir = await mkdtemp(join(tmpdir(), 'plugin-space-bundle-'));
     await buildBundle(SPACE_PACKAGE_DIR, bundleDir);
     const dataPlane = new MemoryDataPlane();
     spaceId = await dataPlane.createSpace();
-    bundle = await loadBundle(await PluginBundle.readBundle(bundleDir), { dataPlane });
+    typeRegistry = new MemoryTypeRegistry();
+    bundle = await loadBundle(await PluginBundle.readBundle(bundleDir), { dataPlane, typeRegistry });
   }, 300_000);
 
   afterAll(async () => {
@@ -115,24 +138,33 @@ describe('space plugin bundle on EDGE', { timeout: 180_000 }, () => {
     expect(outputOf(result)).toMatchObject({ id: expect.stringMatching(/^echo:/) });
   });
 
-  // TODO(edge-plugins): The bundle registers only its own plugin's types (D-41), so a typename another plugin
-  //   declares is "Schema not found" in `typeFilter` and `instantiate` of plugin-space.
-  test.fails('queries objects of a type another plugin declares', async ({ expect }) => {
+  // The bundle registers only its own plugin's types (D-41); another plugin's type comes from the type registry (D-47).
+  test('queries objects of a type another plugin declares', async ({ expect }) => {
     const result = await bundle.invoke({
       operationKey: QUERY_OBJECTS,
       spaceId,
       input: { typename: DOCUMENT_TYPENAME },
     });
     expect(outputOf(result)).toMatchObject({ results: [], truncated: false });
+    expect(typeRegistry.requests).toContain(DOCUMENT_TYPENAME);
   });
 
-  test.fails('adds an object of a type another plugin declares', async ({ expect }) => {
+  test('adds an object of a type another plugin declares', async ({ expect }) => {
     const result = await bundle.invoke({
       operationKey: ADD_OBJECT,
       spaceId,
       input: { object: { '@type': DOCUMENT_TYPENAME, 'name': 'Notes' } },
     });
     expect(outputOf(result)).toMatchObject({ id: expect.stringMatching(/^echo:/) });
+  });
+
+  test('a type no plugin publishes is still not found', async ({ expect }) => {
+    const result = await bundle.invoke({
+      operationKey: QUERY_OBJECTS,
+      spaceId,
+      input: { typename: 'org.example.type.unpublished' },
+    });
+    expect(outputOf(result)).toMatchObject({ failed: expect.stringContaining('Schema not found') });
   });
 
   // TODO(edge-plugins): The host returns the handler's output as Workers RPC clones it, which drops a live ECHO object
