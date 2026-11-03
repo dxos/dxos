@@ -87,6 +87,11 @@
       "types": "./dist/types/src/skills/ClaudeSkill.d.ts",
       "import": "./dist/lib/ClaudeSkill.mjs"
     },
+    "./RepositoriesSkill": {
+      "source": "./src/skills/RepositoriesSkill.ts",
+      "types": "./dist/types/src/skills/RepositoriesSkill.d.ts",
+      "import": "./dist/lib/RepositoriesSkill.mjs"
+    },
     "./ClaudeManagedAgent": {
       "source": "./src/types/ClaudeManagedAgent.ts",
       "types": "./dist/types/src/types/ClaudeManagedAgent.d.ts",
