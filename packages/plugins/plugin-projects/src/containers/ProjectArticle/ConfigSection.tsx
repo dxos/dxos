@@ -24,7 +24,6 @@ import { ProjectCapabilities } from '#types';
 
 import { ProjectsNamespace } from '../../namespace.ts';
 
-// The Context group edits only the instructions' standing context objects.
 const CONTEXT_FIELDS: readonly string[] = ['objects'];
 
 export type ConfigSectionProps = {
@@ -33,10 +32,6 @@ export type ConfigSectionProps = {
   instructions?: Instructions.Instructions;
 };
 
-/**
- * The overview's Config section: the project's own Agent group (instructions, skills, context), then each group other
- * plugins declare with {@link ProjectCapabilities.ConfigGroup}, every one folded until opened.
- */
 export const ConfigSection = ({ db, project, instructions }: ConfigSectionProps) => {
   const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
   const groups = useConfigGroups();
@@ -74,7 +69,6 @@ export const ConfigSection = ({ db, project, instructions }: ConfigSectionProps)
   );
 };
 
-/** The declared groups, contributions with one id merged into one group, groups and their fields sorted by `order`. */
 const useConfigGroups = (): readonly ProjectCapabilities.ConfigGroup[] => {
   const contributed = Hooks.useCapabilities(ProjectCapabilities.ConfigGroup);
   return useMemo(() => mergeGroups(contributed), [contributed]);
@@ -102,7 +96,7 @@ export const mergeGroups = (
   return [...groups.values()].map((group) => ({ ...group, fields: [...group.fields].sort(byOrder) })).sort(byOrder);
 };
 
-/** A group's line when folded: the count of each list, a string as itself, nothing for what is empty. */
+/** A folded group's line: the count of each list, a string as itself, nothing for what is empty. */
 export const summarize = (entries: readonly (readonly [label: string, value: unknown])[]): string | undefined => {
   const parts = entries.flatMap(([label, value]) => {
     if (Array.isArray(value)) {
@@ -122,7 +116,6 @@ export const summarize = (entries: readonly (readonly [label: string, value: unk
 
 type ConfigGroupFieldSetProps = PropsWithChildren<{ id: string; label: string; summary?: string }>;
 
-/** A folded group whose legend reads its summary until it is opened. */
 const ConfigGroupFieldSet = ({ id, label, summary, children }: ConfigGroupFieldSetProps) => {
   const [open, setOpen] = useState(false);
   return (
@@ -168,7 +161,6 @@ type ConfigFieldsProps = {
   fields: readonly ProjectCapabilities.ConfigField[];
 };
 
-/** Fields other plugins add to the project's own group. */
 const ConfigFields = ({ db, project, fields }: ConfigFieldsProps) => {
   const state = useConfigFieldValues(project, fields);
   return <ConfigForm db={db} project={project} fields={fields} {...state} />;
@@ -176,7 +168,6 @@ const ConfigFields = ({ db, project, fields }: ConfigFieldsProps) => {
 
 type ConfigFormProps = ConfigFieldsProps & ConfigFieldValues;
 
-/** The group's fields as one form over their schemas, each edit written back through the field's atom. */
 const ConfigForm = ({ db, project, fields, values, hidden }: ConfigFormProps) => {
   const registry = Hooks.useCapability(Capabilities.AtomRegistry);
   const schema = useMemo(
@@ -235,11 +226,9 @@ const ConfigForm = ({ db, project, fields, values, hidden }: ConfigFormProps) =>
 type ConfigFieldValues = {
   /** The project's value for every field, applicable or not, so the form validates. */
   values: Record<string, unknown>;
-  /** The keys of the fields that do not apply here. */
   hidden: readonly string[];
 };
 
-/** Each field's value for the project and whether it applies, read as one atom. */
 const useConfigFieldValues = (
   project: Project.Project,
   fields: readonly ProjectCapabilities.ConfigField[],

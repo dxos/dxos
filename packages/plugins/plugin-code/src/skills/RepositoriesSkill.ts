@@ -16,7 +16,6 @@ export const key = 'org.dxos.skill.code.repositories';
 /** Operation definitions behind the skill's tools, for hosts without a registry to resolve ToolIds. */
 export const operations: readonly Operation.Definition.Any[] = [CodeOperation.UpdateProjectRepositories];
 
-/** Builds the skill, binding the operations above as its tools. */
 export const make = (): Skill.Skill =>
   Skill.make({
     key,

@@ -118,29 +118,21 @@ export type SpecView = {
 
 export const SpecView = Capability.make<SpecView>()(`${ProjectsNamespace.key}.capability.specView`);
 
-/**
- * One setting in a {@link ConfigGroup}: a schema the overview's form renders, and the project's value as a writable
- * atom, so the form reads and writes it without knowing where it lives (an annotation on the project, or state kept on
- * this device).
- */
+/** One setting in a {@link ConfigGroup}; `value` is a writable atom so the form never knows where it is stored. */
 export type ConfigField = {
-  /** Names the field in its group's form; unique within the group. */
+  /** Unique within the group. */
   key: string;
-  /** The field's schema, whose title and description label it. */
+  /** Its `title` and `description` annotations label the field. */
   schema: Schema.Top;
   value: (project: Project.Project) => Atom.Writable<any, any>;
-  /** Whether the field applies here, such as only where an agent host exists; shown when absent. */
+  /** Hides the field while false; absent means always shown. */
   enabled?: Atom.Atom<boolean>;
-  /** A button at the end of a text field that sets its value, such as the desktop app's folder picker. */
   action?: FormFieldAction;
-  /** Fields sort by it within their group, lowest first, so plugins that fill one group interleave predictably. */
+  /** Sort key within the group, lowest first. */
   order?: number;
 };
 
-/**
- * A group of settings in the Config section of a project's overview, folded by default. Contributions with the same
- * `id` merge, so several plugins can fill one group; the project's own `agent` group comes first.
- */
+/** A group of settings in a project's Config section; contributions with the same `id` merge into one group. */
 export type ConfigGroup = {
   id: string;
   label: Translations.Label;
@@ -151,5 +143,5 @@ export type ConfigGroup = {
 
 export const ConfigGroup = Capability.make<ConfigGroup>()(`${ProjectsNamespace.key}.capability.configGroup`);
 
-/** The id of the group holding the project's own instructions, skills and context. */
+/** Contributing a group with this id adds its fields to the project's own Agent group. */
 export const AgentConfigGroupId = 'agent';

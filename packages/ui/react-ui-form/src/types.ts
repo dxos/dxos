@@ -38,7 +38,7 @@ export type FormFieldOverride = {
   label?: string;
   /** Draw no label: the control names itself, or the section heading above it already does. */
   hideLabel?: boolean;
-  /** This field's presentation in place of the form's `layout`, such as a `title` or a `section`. */
+  /** Overrides the form's `layout` for this field alone. */
   presentation?: FormPresentation;
   description?: string;
   placeholder?: string;
@@ -58,7 +58,7 @@ export type FormFieldOverride = {
   /** A nested object's group: whether it is open, for a host that keeps the state (unset, it starts open). */
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  /** A button at the end of a text control that sets its value, such as the desktop app's folder picker. */
+  /** A button at the end of a text control that sets its value. */
   action?: FormFieldAction;
 };
 

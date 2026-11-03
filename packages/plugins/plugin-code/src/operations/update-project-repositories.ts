@@ -11,7 +11,7 @@ import { Repo } from '@dxos/types';
 
 import { CodeOperation } from '#types';
 
-/** Compares refs by entity id: a space-qualified and a local URI may name the same repository. */
+/** A space-qualified and a local URI may name the same repository. */
 const refKey = (ref: Ref.Ref<Repo.Repo>): string => {
   const eid = EID.tryParse(ref.uri);
   return (eid && EID.getEntityId(eid)) ?? ref.uri;

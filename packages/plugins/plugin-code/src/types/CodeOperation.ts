@@ -709,10 +709,7 @@ export const ImportFeatureLinks = Operation.make({
   }),
 }).pipe(Operation.mutation('write'));
 
-/**
- * Edits the project's `Repo.RepositoriesAnnotation`, which has no field a generic object write reaches. Adding is
- * idempotent by entity id, so a repository already listed keeps its place.
- */
+/** Edits the project's `Repo.RepositoriesAnnotation`, which no generic object write reaches. */
 export const UpdateProjectRepositories = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.code.updateProjectRepositories'),

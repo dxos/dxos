@@ -95,19 +95,17 @@ export const issueUrl = (repo: Repo, number: number): string | undefined =>
   repo.url ? `${repo.url.replace(/\/+$/, '')}/issues/${number}` : undefined;
 
 /**
- * The repositories an object's work lands in, in order. On a project, the first is the one its bare issue numbers
- * resolve against and the one a cloud coding agent starts in. An annotation, so the annotated type names no repository.
+ * The repositories an object's work lands in. Order matters: on a project, bare issue numbers resolve against the
+ * first, and a cloud coding agent starts in it.
  */
 export const RepositoriesAnnotation = Annotation.make({
   id: 'org.dxos.annotation.repositories',
   schema: Schema.Array(Ref.Ref(Repo)),
 });
 
-/** The refs to the repositories the object names, in order. */
 export const getRepositories = (object: Entity.Unknown | Entity.Snapshot): readonly Ref.Ref<Repo>[] =>
   Annotation.get(object, RepositoriesAnnotation).pipe(Option.getOrElse(() => []));
 
-/** Makes the object's repositories exactly `repositories`, in that order. */
 export const setRepositories = (object: Obj.Unknown, repositories: readonly Ref.Ref<Repo>[]): void => {
   if (Option.isNone(Annotation.get(object, RepositoriesAnnotation))) {
     Obj.update(object, (object) => {

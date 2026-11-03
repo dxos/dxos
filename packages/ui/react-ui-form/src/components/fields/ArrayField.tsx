@@ -35,7 +35,6 @@ export type ArrayFieldProps = {
   label: string;
   /** Leave the header's text empty while the list keeps `label` as its name, for a host whose heading already says it. */
   hideLabel?: boolean;
-  /** The array as a section of its own (the `section` presentation). */
   section?: boolean;
   fieldProps: FormFieldStateProps;
 } & FormFieldDispatchProps;

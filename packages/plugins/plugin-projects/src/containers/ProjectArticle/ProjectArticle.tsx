@@ -66,7 +66,6 @@ const HeaderValues = Schema.make<Schema.Codec<HeaderValues, any>>(
   SchemaAST.pick(Type.getSchema(Project.Project).ast, ['name', 'status', 'description', 'specs']),
 );
 
-/** How many artifacts the overview shows before offering the rest. */
 const ARTIFACT_LIMIT = 6;
 
 /** The Specs tab's own view of its spec: the text. */
@@ -126,7 +125,6 @@ export const ProjectArticle = ({
   const artifacts = useRefTargets(project.artifacts);
   // Membership only: fires when a milestone is added or removed, not on milestone edits.
   const [milestoneRefs = []] = useObject(taskSet, 'milestones');
-  // A milestone opens the Tasks tab narrowed to it, through the task list's own milestone filter.
   const { update: updateTaskView } = useViewStateActions(TaskSetView.aspect, taskSet?.id);
   const handleOpenMilestone = useCallback(
     (milestone: Milestone.Milestone) => {
@@ -308,7 +306,6 @@ export const ProjectArticle = ({
       // A project always has a status, so its pill offers no "None".
       status: { required: true },
       description: { presentation: 'plain', placeholder: t('project-description.placeholder') },
-      // The list is a section of its own, its add button on the heading's row.
       specs: { presentation: 'section', label: t('specs.label') },
     }),
     [t],
@@ -412,8 +409,6 @@ export const ProjectArticle = ({
             >
               <Form.Viewport scroll>
                 <Form.Content>
-                  {/* The name reads as the page's title with the status pill at its end, and the description as its
-                    first paragraph. */}
                   <Layout.Flex align='center' gap='sm'>
                     <Layout.Flex column grow>
                       <Form.Fields include={['name']} />
@@ -544,15 +539,11 @@ ProjectArticle.displayName = 'ProjectArticle';
 
 type MilestoneListProps = {
   refs: ReadonlyArray<Ref.Ref<Milestone.Milestone>>;
-  /** The level's tasks, which each milestone's progress counts. */
   tasks: readonly Task.Task[];
   onOpen: (milestone: Milestone.Milestone) => void;
 };
 
-/**
- * Milestones are authored through the agent/MCP verbs; each shows its progress, derived from its tasks, and opens
- * the tasks under it.
- */
+/** Read-only: milestones are authored through the agent/MCP verbs. */
 const MilestoneList = ({ refs, tasks, onOpen }: MilestoneListProps) => (
   <Layout.Container role='list' gap='sm' gutter='none'>
     {refs.map((milestoneRef) => (

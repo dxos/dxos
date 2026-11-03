@@ -12,14 +12,12 @@ import { type Milestone } from '@dxos/types';
 import { TasksNamespace } from '../../namespace.ts';
 
 export type TaskMilestoneFilterProps = {
-  /** The set's milestones, in its order. */
   milestones: readonly Milestone.Milestone[];
   /** The id of the milestone the list is narrowed to; absent shows every milestone. */
   value?: string;
   onChange: (value: string | undefined) => void;
 };
 
-/** Which milestone the ledger shows, as a single-select menu beside the sort and the grouping. */
 export const TaskMilestoneFilter = ({ milestones, value, onChange }: TaskMilestoneFilterProps) => {
   const { t } = Hooks.useTranslation(TasksNamespace.key);
   const current = value === undefined ? undefined : milestones.find((milestone) => milestone.id === value);

@@ -20,7 +20,6 @@ import * as Spec from './Spec.ts';
 export const ProjectStatus = Schema.Literals(['active', 'paused', 'blocked', 'ended']);
 export type ProjectStatus = Schema.Schema.Type<typeof ProjectStatus>;
 
-/** How each status reads wherever it is picked or shown: its title, and the hue and icon its pill takes. */
 export const ProjectStatusOptions: Task.Option<ProjectStatus>[] = [
   { id: 'active', title: 'Active', color: 'green', icon: 'ph--play-circle--regular' },
   { id: 'paused', title: 'Paused', color: 'amber', icon: 'ph--pause-circle--regular' },

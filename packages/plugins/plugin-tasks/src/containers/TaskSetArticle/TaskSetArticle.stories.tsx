@@ -326,7 +326,6 @@ export const StatusFilter: Story = {
   },
 };
 
-/** Picking a milestone in the toolbar narrows the list to its tasks and names it on the trigger, until Show all. */
 export const MilestoneFilter: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

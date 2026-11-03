@@ -35,10 +35,7 @@ export class ProjectV6 extends Type.makeObject<ProjectV6>(DXN.make('org.dxos.typ
   }),
 ) {}
 
-/**
- * The 0.7.0 `Project`, which named its repositories in two fields (`repo`, `repositories`) and held a default session
- * config (`session`). Kept solely so `Migration.define` can read existing data. Never constructed by this plugin.
- */
+/** The 0.7.0 `Project`, kept only so `projectRepositories` can read existing data. */
 export class ProjectV7 extends Type.makeObject<ProjectV7>(DXN.make('org.dxos.type.project', '0.7.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
@@ -69,10 +66,7 @@ export const projectSpecs = Migration.define({
   }),
 });
 
-/**
- * `Project` 0.7.0 → 0.8.0: the project's repositories move from `repo` and `repositories` to the
- * `Repo.RepositoriesAnnotation`, `repo` first and each repository once, and `session` is dropped.
- */
+/** `Project` 0.7.0 → 0.8.0: `repo` and `repositories` move to `Repo.RepositoriesAnnotation`; `session` is dropped. */
 const makeProjectRepositories = (): Migration.ObjectMigration => {
   // Each project's repository URIs, read in the transform while its refs are still live.
   const repositories = new Map<string, URI.URI[]>();

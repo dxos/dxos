@@ -42,7 +42,7 @@ const Software = Capability.inlineModule('SoftwareConfig', { provides: [ProjectC
   ]),
 );
 
-/** A config group from a plugin other than plugin-projects: the project's repositories, kept as its annotation. */
+/** Stands in for a plugin other than plugin-projects contributing a config group. */
 export const make = Plugin.define(
   Plugin.makeMeta({
     key: DXN.make('org.dxos.plugin.projects.testing.softwareConfig'),

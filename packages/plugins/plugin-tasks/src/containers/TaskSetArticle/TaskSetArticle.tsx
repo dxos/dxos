@@ -531,7 +531,6 @@ const useArrangedTasks = (
   return useAtomValue(atom);
 };
 
-/** The set's milestones, in its order, re-read when one is added, removed or moved. */
 const useMilestones = (taskSet: TaskSet.TaskSet): readonly Milestone.Milestone[] => {
   const atom = useMemo(
     () =>

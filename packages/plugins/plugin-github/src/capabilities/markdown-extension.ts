@@ -65,7 +65,6 @@ export default Capability.makeModule(
   }),
 );
 
-/** The first repository of the project owning `object`, else the repository its adopted task set mirrors. */
 const projectRepo = (db: Database.Database, object: Obj.Unknown): string | undefined => {
   const project = owningProject(object);
   if (!project) {

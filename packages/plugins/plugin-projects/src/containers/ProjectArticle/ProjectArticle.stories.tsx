@@ -244,7 +244,6 @@ const findPainted = async (canvas: ReturnType<typeof within>, text: string) => {
   );
 };
 
-/** Opens one of the Config section's folded groups by its disclosure. */
 const openConfigGroup = async (canvas: ReturnType<typeof within>, id: string) => {
   const group = await canvas.findByTestId(`projectsPlugin.config.${id}`, undefined, { timeout: 10_000 });
   await userEvent.click(within(group).getAllByRole('button')[0]);
@@ -322,7 +321,7 @@ const meta = {
         // Provides `RemoteProcessManager`, which Assistant's `AgentService` spec now requires — the
         // spec is pruned without it, so delegating a task fails with "Chat not found".
         RoutinePlugin.make(),
-        // Contributes the `#123` decoration (the project's first repository is what it resolves against), the link
+        // Contributes the `#123` decoration, the link
         // chips, and the resolver behind a chip's hover card; PreviewPlugin owns the popover and the
         // fixture source answers the resolver without the network.
         GitHubPlugin.make(),
@@ -659,10 +658,6 @@ export const Sections: Story = {
   },
 };
 
-/**
- * The Config section: groups start folded with a summary of what they hold, and a group another plugin contributes
- * edits the project through its field's atom (here the repositories annotation).
- */
 export const Config: Story = {
   ...Default,
   play: async ({ canvasElement }) => {
@@ -672,7 +667,6 @@ export const Config: Story = {
     const software = await canvas.findByTestId('projectsPlugin.config.software', undefined, { timeout: 10_000 });
     await expect(within(software).findByText('Repositories (1)')).resolves.toBeTruthy();
 
-    // Clearing the list through the form clears the annotation.
     await openConfigGroup(canvas, 'software');
     await userEvent.click(await within(software).findByLabelText('Delete', undefined, { timeout: 10_000 }));
     await waitFor(() => expect(Repo.getRepositories(project)).toHaveLength(0), { timeout: 10_000 });
@@ -930,13 +924,6 @@ export const TaskLink: Story = {
   },
 };
 
-/**
- * Every section stays live after its first paint. Each step below mutates the seeded objects the
- * way the operation verbs do and asserts the DOM follows — the failure this guards against is a
- * section that resolves once and then goes inert, which is how the previous parent-edge model
- * behaved (`Query.children()` never re-emitted on a member's property change).
- */
-/** A milestone's open button shows the Tasks tab narrowed to the tasks under it. */
 export const OpenMilestone: Story = {
   ...Default,
   play: async ({ canvasElement }) => {
@@ -956,6 +943,12 @@ export const OpenMilestone: Story = {
   },
 };
 
+/**
+ * Every section stays live after its first paint. Each step below mutates the seeded objects the
+ * way the operation verbs do and asserts the DOM follows — the failure this guards against is a
+ * section that resolves once and then goes inert, which is how the previous parent-edge model
+ * behaved (`Query.children()` never re-emitted on a member's property change).
+ */
 export const Updates: Story = {
   ...Default,
   play: async ({ canvasElement }) => {

@@ -148,7 +148,6 @@ const FieldActionStory = () => {
   );
 };
 
-/** A field `action`: a button at the end of a text control that sets its value (the desktop app's folder picker). */
 export const FieldAction: Story = {
   render: () => <FieldActionStory />,
   play: async ({ canvasElement }) => {

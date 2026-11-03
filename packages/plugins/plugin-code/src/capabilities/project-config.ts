@@ -15,7 +15,6 @@ import { Repo } from '@dxos/types';
 
 import { CodeNamespace } from '../namespace.ts';
 
-/** Where the group sorts among the Config section's groups, after the project's own. */
 const SOFTWARE_ORDER = 10;
 
 const repositories = Atom.family((project: Project.Project) =>
@@ -26,7 +25,6 @@ const repositories = Atom.family((project: Project.Project) =>
   ),
 );
 
-/** The project's Software settings: the repositories coding agents check out, kept as its `Repo.RepositoriesAnnotation`. */
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(ProjectCapabilities.ConfigGroup, {
