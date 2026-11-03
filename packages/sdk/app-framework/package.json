@@ -172,6 +172,10 @@
     "./vite-plugin": {
       "types": "./dist/types/src/vite-plugin/index.d.ts",
       "import": "./dist/lib/vite-plugin.mjs"
+    },
+    "./vite-plugin/config": {
+      "types": "./dist/types/src/vite-plugin/config.d.ts",
+      "import": "./dist/lib/vite-plugin/config.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
