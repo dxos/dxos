@@ -213,12 +213,16 @@ export const makeOperations = ({
     return Output.encode(input, { entities: 'reference' });
   };
 
-  /** The output with every entity's JSON form replaced by the object, loaded from this invocation's database. */
+  /** The output with each entity's JSON form and each ref restored from this invocation's database. */
   const loadEntities = async (output: unknown): Promise<unknown> => {
     const database = databaseOf();
     return database === undefined
       ? output
-      : Output.decodeEntities(output, (uri) => database.makeRef(URI.make(uri)).load());
+      : Output.decodeEntities(
+          output,
+          (uri) => database.makeRef(URI.make(uri)).load(),
+          (uri) => database.makeRef(URI.make(uri)),
+        );
   };
 
   /** The output of a local run is the handler's value; of a remote one its encoded form, decoded here. */
@@ -230,7 +234,12 @@ export const makeOperations = ({
     const handler = local(op);
     return (
       handler === undefined
-        ? remote(op, input, options).pipe(Effect.flatMap(Schema.decodeUnknownEffect(op.output)))
+        ? // With a database the entities and refs are restored, so the output is checked against the type side.
+          remote(op, input, options).pipe(
+            Effect.flatMap(
+              Schema.decodeUnknownEffect(databaseOf() === undefined ? op.output : Schema.toType(op.output)),
+            ),
+          )
         : // The handler's own nested operations go through this service too.
           Effect.promise(() =>
             Effect.runPromiseExitWith(Context.add(context, Operation.Service, service))(handler.handler(input)),

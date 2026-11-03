@@ -129,7 +129,7 @@ export const wrapFunctionHandler = (
           funcContext.db && !SchemaAST.isAnyKeyword(func.input.ast)
             ? decodeRefsFromSchema(func.input.ast, data, funcContext.db)
             : data;
-        // Ref fields are decoded above, so an envelope still left sits where the schema takes an object.
+        // Ref fields are decoded above, so an envelope still left in a top-level field is one that takes an object.
         const dataWithDecodedRefs =
           opts.resolveObjectReferences && funcContext.db && !SchemaAST.isAnyKeyword(func.input.ast)
             ? await loadObjectReferences(decoded, funcContext.db)
@@ -497,20 +497,21 @@ const unavailableOperationServiceLayer = Layer.succeed(Operation.Service, {
   }),
 } as Operation.OperationService);
 
-/** Replaces each reference envelope in plain objects and arrays with the object it names, loaded from `db`. */
+/**
+ * Replaces each top-level field holding a reference envelope with the object it names, loaded from `db`. Only direct
+ * fields: an envelope nested deeper (a draft's ref property) is a ref the handler resolves itself.
+ */
 const loadObjectReferences = async (value: unknown, db: DatabaseImpl): Promise<unknown> => {
-  if (isEncodedReference(value)) {
-    return refFromEncodedReference(value, db.graph.createRefResolver({ context: { space: db.spaceId } })).load();
-  }
-  if (Array.isArray(value)) {
-    return Promise.all(value.map((entry) => loadObjectReferences(entry, db)));
-  }
   if (value === null || typeof value !== 'object' || Object.getPrototypeOf(value) !== Object.prototype) {
     return value;
   }
+  const resolver = db.graph.createRefResolver({ context: { space: db.spaceId } });
   return Object.fromEntries(
     await Promise.all(
-      Object.entries(value).map(async ([key, entry]) => [key, await loadObjectReferences(entry, db)] as const),
+      Object.entries(value).map(
+        async ([key, entry]) =>
+          [key, isEncodedReference(entry) ? await refFromEncodedReference(entry, resolver).load() : entry] as const,
+      ),
     ),
   );
 };

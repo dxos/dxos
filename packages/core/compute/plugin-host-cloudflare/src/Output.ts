@@ -40,21 +40,32 @@ export const encode = (value: unknown, options: EncodeOptions = {}, seen = new W
   return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, encode(entry, options, seen)]));
 };
 
-/** Replaces each entity's JSON form (an object with `@uri` and `@type`) in plain objects and arrays with `load(uri)`. */
-export const decodeEntities = async (value: unknown, load: (uri: string) => Promise<unknown>): Promise<unknown> => {
+/**
+ * The type-side form of an output that crossed EDGE: each entity's JSON form (an object with `@uri` and `@type`) is
+ * replaced by `load(uri)` and each `{ '/': uri }` by `ref(uri)`, in plain objects and arrays.
+ */
+export const decodeEntities = async (
+  value: unknown,
+  load: (uri: string) => Promise<unknown>,
+  ref: (uri: string) => unknown,
+): Promise<unknown> => {
   if (value === null || typeof value !== 'object') {
     return value;
   }
   if (Array.isArray(value)) {
-    return Promise.all(value.map((entry) => decodeEntities(entry, load)));
+    return Promise.all(value.map((entry) => decodeEntities(entry, load, ref)));
   }
   const uri = Reflect.get(value, '@uri');
   if (typeof uri === 'string' && typeof Reflect.get(value, '@type') === 'string') {
     return load(uri);
   }
+  const target = Reflect.get(value, '/');
+  if (typeof target === 'string' && Object.keys(value).length === 1) {
+    return ref(target);
+  }
   return Object.fromEntries(
     await Promise.all(
-      Object.entries(value).map(async ([key, entry]) => [key, await decodeEntities(entry, load)] as const),
+      Object.entries(value).map(async ([key, entry]) => [key, await decodeEntities(entry, load, ref)] as const),
     ),
   );
 };
