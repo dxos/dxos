@@ -42,16 +42,17 @@ export const open = (
 ): Effect.Effect<RpcStub<Protocol.AuthenticatedApi>, CloudflareOsError, Scope.Scope> => Client.authenticate(account);
 
 /** The bound workspace's account and an open session to it, closed with the scope. */
-export const openWorkspace = (
+export const openWorkspace: (
   workspace: CloudflareOs.Workspace,
-): Effect.Effect<RpcStub<Protocol.Overseer>, CloudflareOsError, Database.Service | Scope.Scope> =>
-  Effect.gen(function* () {
+) => Effect.Effect<RpcStub<Protocol.Overseer>, CloudflareOsError, Database.Service | Scope.Scope> = Effect.fnUntraced(
+  function* (workspace) {
     const account = yield* fromConnectionRef(workspace.connection);
     const user = yield* open(account);
     const overseer = user.openWorkspace(workspace.workspaceId);
     yield* Effect.addFinalizer(() => Effect.sync(() => Client.dispose(overseer)));
     return overseer;
-  });
+  },
+);
 
 /** The gadget a workpiece summary describes, or undefined for a worktree. */
 export const toGadget = (summary: Protocol.WorkpieceSummary): CloudflareOs.Gadget | undefined =>
