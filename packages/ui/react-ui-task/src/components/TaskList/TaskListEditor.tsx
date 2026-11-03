@@ -96,9 +96,6 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
     const [snapshot] = useObject(task);
     const current = snapshot ?? task;
 
-    // What the form holds that no task has yet: the title until Enter, Save or blur commits it, and while creating, the
-    // whole new task. `latest` follows it so the create reads the description in the same tick it commits the field:
-    // `useEditable` calls back synchronously, and a render's `draft` would still hold the previous text.
     const [draft, setDraft] = useState<TaskEditorValues>(EMPTY_DRAFT);
     const latest = useRef(draft);
     useEffect(() => {
@@ -120,12 +117,6 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
     // Set while a create is in flight, so a second Enter on the still-shown draft does not file it twice.
     const creating = useRef(false);
 
-    // The pane is a view onto whichever task is selected, so switching tasks replaces the draft
-    // rather than carrying the previous one's across. That includes a description: the field
-    // remounts empty on the way back to creating, but `commit()` on an already-empty field never
-    // calls back — so text abandoned before a selection would otherwise ride along, unseen, into
-    // the next task created.
-    //
     // State rather than a ref for the previous id (React's adjust-state-on-prop-change pattern): a
     // render React abandons leaves a ref already mutated, so the retry would skip the reset and the
     // pane would keep the previous task's text.
@@ -142,8 +133,6 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
           onTaskUpdate?.(task, { title });
         }
       } else if (draft.title.trim().length > 0 && !creating.current) {
-        // Nothing has committed the description yet — it is held open and the reader is in the
-        // title — so commit it here, before reading the draft it belongs to.
         descriptionRef.current?.commit();
         const sentDraft = latest.current;
         const { title, description, ...properties } = sentDraft;
@@ -303,9 +292,6 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
       [handleFiles],
     );
 
-    // Editing, the title is held in the draft until Enter, Save or blur commits it, and every other field writes the
-    // task. Creating, every field goes to the draft, where a cleared one is dropped rather than held as `null`, since a
-    // draft has nothing to clear.
     const handleChange = useCallback(
       ({ title, ...edit }: Task.Edit) => {
         if (task && current) {
@@ -357,7 +343,6 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
       : draft;
     const description: TaskDescriptionBehavior | undefined = hasDescription
       ? {
-          // Per task; creating, remounted empty after each create, since there it holds the draft itself.
           editorKey: current?.id ?? `create-${createEpoch}`,
           controllerRef: descriptionRef,
           placeholder: descriptionPlaceholder ?? t('task-description.placeholder'),
@@ -387,7 +372,6 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
         ref={forwardedRef}
       >
         <TaskEditorForm
-          // Per task: switching tasks replaces what the form holds rather than carrying an edit across.
           key={current?.id ?? 'create'}
           values={values}
           showAssignee={showAssignees}
@@ -405,7 +389,6 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
           description={description}
           end={
             canCancel && (
-              // At the end of the pills: the way out of the pane, there while it holds something to throw away.
               <SystemButton.Cancel
                 variant='ghost'
                 classNames='ms-auto'
@@ -417,33 +400,31 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
           }
           onChange={handleChange}
         >
-          {takesFiles &&
-            files.length > 0 && (
-              // Under the description: what the task will be created with.
-              <div className='flex flex-wrap items-center gap-1 min-w-0'>
-                {files.map((file, index) => (
-                  <Tag.Tag
-                    key={`${file.name}-${index}`}
-                    hue='neutral'
-                    classNames='inline-flex items-center gap-1'
-                    data-testid='taskList.edit.file'
-                  >
-                    <Icon.Icon icon='ph--paperclip--regular' size='xs' />
-                    <span data-testid='taskList.edit.file.name'>{file.name}</span>
-                    <Button.Root
-                      variant='ghost'
-                      size='sm'
-                      iconOnly
-                      icon='ph--x--regular'
-                      iconSize='xs'
-                      label={t('remove-file.label', { name: file.name })}
-                      classNames='p-0 min-h-0 h-auto'
-                      onClick={() => setFiles((files) => files.filter((_, position) => position !== index))}
-                    />
-                  </Tag.Tag>
-                ))}
-              </div>
-            )}
+          {takesFiles && files.length > 0 && (
+            <div className='flex flex-wrap items-center gap-1 min-w-0'>
+              {files.map((file, index) => (
+                <Tag.Tag
+                  key={`${file.name}-${index}`}
+                  hue='neutral'
+                  classNames='inline-flex items-center gap-1'
+                  data-testid='taskList.edit.file'
+                >
+                  <Icon.Icon icon='ph--paperclip--regular' size='xs' />
+                  <span data-testid='taskList.edit.file.name'>{file.name}</span>
+                  <Button.Root
+                    variant='ghost'
+                    size='sm'
+                    iconOnly
+                    icon='ph--x--regular'
+                    iconSize='xs'
+                    label={t('remove-file.label', { name: file.name })}
+                    classNames='p-0 min-h-0 h-auto'
+                    onClick={() => setFiles((files) => files.filter((_, position) => position !== index))}
+                  />
+                </Tag.Tag>
+              ))}
+            </div>
+          )}
         </TaskEditorForm>
       </div>
     );

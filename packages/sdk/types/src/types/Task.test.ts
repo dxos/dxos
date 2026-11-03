@@ -227,7 +227,6 @@ describe('review', () => {
       );
       yield* Database.flush();
 
-      // `review` is a status of its own: work is finished but not closed.
       expect(task.status).toEqual('review');
       // The artifact is a ref, not a child: completing the task must not cascade to what it made.
       expect(Task.refEntityId(task.artifacts?.[0])).toEqual(doc.id);
@@ -245,13 +244,10 @@ describe('completion', () => {
       const unreviewed = yield* Database.add(Task.make({ title: 'Unreviewed', status: 'started' }));
       yield* Database.flush();
 
-      // Every writer asks for `done` and none of them know who answers for the task, so the rule is on
-      // the write itself.
       Task.setStatus(reviewed, 'done');
       Task.setStatus(unreviewed, 'done');
       yield* Database.flush();
 
-      // Finished, not closed: a person signs it off.
       expect(reviewed.status).toEqual('review');
       expect(unreviewed.status).toEqual('done');
 
@@ -375,7 +371,6 @@ describe('delegation', () => {
       expect(delegated.assignee?.name).toEqual('Rich');
       expect(Task.worker(delegated)?.name).toEqual('Scout');
       expect(delegated.status).toEqual('review');
-      // An agent's own checklist item has no person to approve it.
       expect(own.status).toEqual('done');
     }).pipe(Effect.provide(testLayer())),
   );

@@ -88,7 +88,6 @@ const seedFlat = (): Task.Task[] => [
     title: 'Draft launch email',
     status: 'started',
     priority: 'high',
-    // Rich answers for it; the row shows Rich, badged with the agent doing the work.
     assignee: { role: 'user', name: 'Rich' },
     delegate: { role: 'assistant', name: 'Scout' },
     // Spans the cut-off: the oldest entries are past three days and read as calendar dates.
@@ -575,9 +574,7 @@ const DefaultStory = ({
   showAssignees?: boolean;
   /** Let the create pane take dropped files, recording what each create was handed. */
   acceptFiles?: boolean;
-  /** The space's members, offered by each row's assignee picker. */
   members?: readonly TaskMember[];
-  /** Offer an agent after the people in the assignee picker, as a host's delegation would. */
   agents?: boolean;
 }) => {
   const [tasks, setTasks] = useState<Task.Task[]>(seed);
@@ -627,12 +624,10 @@ const DefaultStory = ({
   }, []);
 
   const handleUpdate = useCallback((task: Task.Task, patch: Task.Edit) => {
-    // The host's write path, so a null clears the field as `Task.Edit` reads it.
     Task.update(task, patch);
     setTasks((tasks) => [...tasks]);
   }, []);
 
-  // Stands in for a host's delegation: the agent takes the work and the reader answers for it, unless someone does.
   const getDelegateActions = useCallback(
     (task: Task.Task) => [
       createMenuAction(
@@ -767,7 +762,6 @@ const meta = {
   title: 'ui/react-ui-task/TaskList',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
-  // The editor's pills are a react-ui-form form, whose strings ("None") are that package's.
   parameters: { translations: [...translations, ...formTranslations] },
 } satisfies Meta<typeof DefaultStory>;
 
@@ -1140,7 +1134,6 @@ export const WithTags: Story = {
       const title = titleCell(row).getBoundingClientRect();
       const box = assignee.getBoundingClientRect();
       const centre = (rect: DOMRect) => rect.top + rect.height / 2;
-      // On the title's line, after it; priority leads the row, before the title.
       await expect(Math.abs(centre(box) - centre(title))).toBeLessThan(2);
       await expect(box.left).toBeGreaterThanOrEqual(title.right - 0.5);
       const priority = row
@@ -1229,10 +1222,6 @@ export const TestArtifactPreviews: Story = {
   },
 };
 
-/**
- * The assignee column is a control on every row, as Linear's is: an unassigned row shows a placeholder that opens the
- * same picker the properties panel uses, and picking a member assigns them in place.
- */
 export const TestAssigneeControl: Story = {
   args: {
     showGroupLabels: false,
@@ -1253,7 +1242,6 @@ export const TestAssigneeControl: Story = {
   },
 };
 
-/** One picker holds who has the task: an agent below the people delegates, and a person picked takes it back. */
 export const TestDelegateFromAssignee: Story = {
   args: {
     showGroupLabels: false,
@@ -1279,7 +1267,6 @@ export const TestDelegateFromAssignee: Story = {
   },
 };
 
-/** The editor's assignee pill is the same picker: a person picked there takes the task back from its agent too. */
 export const TestEditorHandsBackFromAgent: Story = {
   args: {
     showGroupLabels: false,
@@ -1314,7 +1301,6 @@ export const TestEditorHandsBackFromAgent: Story = {
   },
 };
 
-/** A list that hides who holds its tasks offers no assignee in its editor either. */
 export const TestEditorWithoutAssignees: Story = {
   args: {
     showGroupLabels: false,
@@ -1328,7 +1314,6 @@ export const TestEditorWithoutAssignees: Story = {
   },
 };
 
-/** The editor's assignee pill names the agent working a task nobody answers for, as the row does. */
 export const TestEditDelegateOnly: Story = {
   args: {
     showGroupLabels: false,
@@ -1354,7 +1339,6 @@ export const TestEditDelegateOnly: Story = {
   },
 };
 
-/** A task with no status reads as Todo in the editor, as it does in its row. */
 export const TestEditUnsetStatus: Story = {
   args: {
     showGroupLabels: false,
@@ -1400,16 +1384,13 @@ export const TestCheckboxSelection: Story = {
     // Checkbox and ordinal are mutually exclusive: the box takes the gutter cell, so no row numbers.
     await expect(canvasElement.querySelectorAll('[data-testid="taskList.item.ordinal"]').length).toBe(0);
 
-    // Nothing checked: each box shows only on the row in play, as Linear's gutter does.
     const hidden = () => boxes().filter((box) => box.closest('[data-part="item-actions"]:not([data-pinned])'));
     await expect(hidden()).toHaveLength(boxes().length);
 
     const before = statuses();
     await userEvent.click(boxes()[0]);
     await waitFor(async () => expect(boxes()[0].getAttribute('data-state')).toBe('checked'));
-    // Once something is checked every box stays, so the selection can be seen and extended.
     await waitFor(async () => expect(hidden()).toHaveLength(0));
-    // The box the reader checked keeps their focus as every box comes into view.
     await expect(boxes()[0].contains(document.activeElement)).toBe(true);
     // A second row checks alongside the first — a set, not a single selection.
     await userEvent.click(boxes()[1]);
@@ -1623,10 +1604,6 @@ export const TestCreateFailureKeepsDraft: Story = {
   },
 };
 
-/**
- * The create pane's pills set the new task's fields before it exists: what they hold is created with the title, and
- * they read as unset again once it lands.
- */
 export const TestCreateWithProperties: Story = {
   args: {
     showGroupLabels: false,
@@ -1764,7 +1741,6 @@ export const TestCreateWithDescription: Story = {
     await expect(title().value).toEqual('');
     await waitFor(async () => expect(content().textContent).not.toContain('Roast it twice'));
 
-    // The next task created from the title alone carries no description: the form's draft was cleared, not just the field.
     await userEvent.click(title());
     await userEvent.keyboard('Second task{Enter}');
     await waitFor(async () => expect(rows()).toHaveLength(before + 2));

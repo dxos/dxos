@@ -8,7 +8,6 @@ import { type Actor, type Person, RemoteSession, Task } from '@dxos/types';
 /** The glyph for a person assignee. */
 export const PERSON_ICON = 'ph--user--regular';
 
-/** An empty assignee slot: a dashed person, as Linear draws it, rather than the dot an unset priority shows. */
 export const UNASSIGNED_ICON = 'ph--user-circle-dashed--regular';
 
 /** The glyph for an assistant whose harness has no mark of its own. */
@@ -60,7 +59,6 @@ export const getAssigneeDisplay = ({
     (session || subject === undefined ? Task.refEntityId(assignee.subject) : undefined);
   const label =
     contact?.fullName ??
-    // The agent, not its run: a session's title names the work, which the task already does.
     (session && RemoteSession.harnessName(session)) ??
     session?.title ??
     assignee.name ??

@@ -463,16 +463,7 @@ const mutableEntry = (entry: HistoryEntry) => {
   return { ...rest, ...actor, ...(options ? { options: options.map((option) => ({ ...option })) } : {}) };
 };
 
-/**
- * A finish nobody has signed off on lands in `review`, not `done`: a task a person answers for does
- * not close without them.
- *
- * The rule lives on the write because every caller that finishes a task — the planning tool,
- * `UpdateTask`, a delegate's run — simply asks for `done`. Only {@link approve} is exempt: who is
- * asking is not recoverable from the status, so the person's surface has to say.
- */
 const finishStatus = (current: Task, next: Holders, status: Status, approve: boolean): Status =>
-  // A task already closed stays closed: a repeated `done` is not a new finish.
   status === 'done' && !approve && current.status !== 'done' && (needsReview(current) || needsReview(next))
     ? 'review'
     : status;
@@ -497,14 +488,12 @@ export const needsReview = (next: Holders): boolean => owner(next) !== undefined
  * say about an edit says it through `options.description`, which is always recorded.
  */
 export const update = (task: Task, requested: Edit, options: EditOptions = {}): ChangeEntry | undefined => {
-  // Delegating to whoever already answers for the task is them doing it themselves.
   const selfDelegated = requested.delegate != null && sameActor(requested.delegate, holders(task, requested).assignee);
   const delegated: Edit = selfDelegated ? { ...requested, delegate: task.delegate ? null : undefined } : requested;
   const changes: Edit =
     delegated.status === undefined
       ? delegated
-      : // Judged on who holds the task before and after: claiming or handing back in a finishing edit still waits on review.
-        {
+      : {
           ...delegated,
           status: finishStatus(task, holders(task, delegated), delegated.status, options.approve ?? false),
         };
@@ -969,10 +958,6 @@ export const orderTree = (tasks: readonly Task[], refs: ReadonlyArray<Ref.Ref<Ta
 
 /**
  * Whether an agent is working this task right now: worked by one (see {@link worker}), and started.
- *
- * `started` is stamped when the session takes the task, not when it produces anything, so the pair
- * is what says "underway" — an agent-delegated task still in `todo` is queued, and a started task
- * a person is working is someone else's, not a running process.
  */
 export const isAgentWorking = (task: Task | Obj.Snapshot<Task>): boolean =>
   worker(task)?.role === 'assistant' && task.status === 'started';

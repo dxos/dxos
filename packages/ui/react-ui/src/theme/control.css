@@ -801,10 +801,6 @@
     grid-column: 3;
     margin-inline-start: var(--dx-control-inset);
   }
-  /*
-   * Pill: a Button or Select trigger outlined and fully rounded, hugging its content, for a row of field values (a
-   * composer's status, priority, assignee). Without a value (Ark's `data-placeholder-shown` on a trigger) it reads muted.
-   */
   :is(.dx-button, .dx-select-trigger)[data-pill] {
     width: auto;
     flex: none;

@@ -101,7 +101,6 @@ describe('UpdateTasks', () => {
         expect(subTask.delegate?.role).toEqual('assistant');
         // A plain chat is its own session object.
         expect(subTask.delegate?.subject?.target?.id).toEqual(chat.id);
-        // One log line per edit: the delegation rides the status change rather than adding an entry.
         expect((subTask.history ?? []).filter(Task.isChangeEntry).map(({ description }) => description)).toEqual([
           'Status changed from todo to started. Delegated to an agent.',
         ]);
@@ -133,7 +132,6 @@ describe('UpdateTasks', () => {
         yield* invoke([{ task: Ref.make(step), status: 'done' }]);
         expect(step.status).toEqual('review');
 
-        // A step another agent was left holding is nobody's either, as for every claim.
         const legacy = yield* Database.add(
           Task.make({ title: 'Test the tools', status: 'todo', assignee: { role: 'assistant', name: 'Old session' } }),
         );
@@ -145,7 +143,6 @@ describe('UpdateTasks', () => {
         yield* invoke([{ task: Ref.make(legacy), status: 'started' }]);
         expect(legacy.assignee?.name).toEqual('Riley');
 
-        // The conversation's own task under the same tree stays its own.
         const own = yield* Database.add(
           Task.make({
             title: 'Note the versions',
@@ -207,15 +204,12 @@ describe('UpdateTasks', () => {
         );
         yield* Database.flush();
         yield* invoke([{ task: Ref.make(task), assign: true }]);
-        // Alice takes it back, leaving it on this checklist.
         Task.setDelegate(task, null);
 
         yield* invoke([{ task: Ref.make(task), unassign: true }]);
         expect(chat.tasks).toEqual([]);
         expect(task.assignee?.name).toEqual('Alice');
 
-        // A task this agent planned and then queued for a sub-agent: both holders are its own to release, so
-        // neither outlives the checklist entry.
         const queued = yield* Database.add(
           Task.make({
             title: 'Draft the notice',
@@ -230,7 +224,6 @@ describe('UpdateTasks', () => {
         expect(queued.delegate).toBeUndefined();
         expect(queued.assignee).toBeUndefined();
 
-        // Another agent's claim is not this conversation's to release: the task only leaves the checklist.
         const elsewhere = yield* Database.add(
           Task.make({
             title: 'Book the venue',
@@ -314,7 +307,6 @@ describe('UpdateTasks', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         const { invoke } = yield* setupChat();
-        // A task a person answers for does not close on the model's word: `done` lands it in `review`.
         const task = yield* Database.add(
           Task.make({ title: 'Reviewed', status: 'started', assignee: { name: 'Alice', role: 'user' } }),
         );

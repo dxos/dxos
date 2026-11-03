@@ -11,7 +11,6 @@ import { TaskOperation } from '#types';
 
 import { applyPersonEdit } from './useTaskUpdate.ts';
 
-/** Records each operation invoked, and fails the ones named in `failing`. */
 const makeInvoker = (failing: readonly Operation.Definition.Any[] = []) => {
   const invoked: Operation.Definition.Any[] = [];
   const invoke = async (op: Operation.Definition.Any) => {

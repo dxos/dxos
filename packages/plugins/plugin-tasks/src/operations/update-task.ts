@@ -49,24 +49,18 @@ const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOper
 
       const newParent = parentTask ? yield* TaskSet.resolveParentTask(taskSet, task, parentTask) : undefined;
 
-      // An agent's claim (a session, or an agent named as delegate) on a step with no person of its own takes its
-      // parent's, the parent it is moving under when the edit also re-parents it.
       const agentClaim = remoteSession !== undefined || delegate?.role === 'assistant';
       const answering = Task.owner(parentTask === undefined ? Task.getParentTask(task) : newParent);
       const claimed = agentClaim
         ? claimedAssignee(answering, assignee, { owned: Task.owner(task) !== undefined })
         : assignee;
-      // Judged on the shape the edit leaves: an agent at work needs a person answering for the task.
       const next = Task.holders(task, { assignee: claimed, delegate });
-      // A session supplies the subject itself, so only a bare actor is checked.
       if (!remoteSession) {
         yield* validateDelegate(delegate, next.assignee);
       }
       if (remoteSession || (next.delegate && (claimed !== undefined || delegate != null))) {
         yield* requireOwner(task.title, Task.owner(next));
       }
-      // Resolved before the patch so the actor it produces is what `Task.update` writes, and so a
-      // session that does not exist yet is created rather than dropping the delegation.
       const sessionDelegate = remoteSession
         ? yield* assignToSession(remoteSession, delegate ?? undefined, { defaultTitle: title ?? task.title })
         : undefined;
@@ -74,7 +68,6 @@ const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOper
       // Through `Task.edit`, so the change and the log entry that explains it land together and a
       // no-op patch records nothing. Milestone stays here: it is set membership, not a field edit.
       const previousStatus = task.status;
-      // A copy: the stored record is gone once the update hands the task back.
       const previousDelegate = task.delegate && { ...task.delegate };
       Task.update(task, {
         title,
@@ -85,8 +78,6 @@ const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOper
         assignee: claimed,
         delegate: sessionDelegate ?? delegate,
       });
-      // The resolved status, not the requested one: a task a person answers for lands in `review`. This is
-      // what cuts an agent session's timeline into per-task segments.
       if (task.status !== undefined && task.status !== previousStatus) {
         yield* Trace.write(Trace.TaskStatusChanged, {
           taskId: task.id,
@@ -114,7 +105,6 @@ const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOper
       }
 
       // After any re-parent, so the cascade reaches the tree the task now belongs to.
-      // What the write did, not what was asked: delegating to the task's own assignee is a hand-back.
       const requested = sessionDelegate ?? delegate;
       yield* cascadeClaim(task, {
         delegate: requested === undefined ? undefined : (task.delegate ?? (previousDelegate ? null : undefined)),

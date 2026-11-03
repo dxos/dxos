@@ -14,11 +14,9 @@ describe('claimedAssignee', () => {
   test('the person the step answers to wins over one the claim names, and is written only on a step without one', () => {
     expect(claimedAssignee(riley, sam)?.name).toBe('Riley');
     expect(claimedAssignee(riley, undefined)?.name).toBe('Riley');
-    // A step that has its own person is left as it is: rewriting it would race a reassignment elsewhere.
     expect(claimedAssignee(riley, sam, { owned: true })).toBeUndefined();
     expect(claimedAssignee(undefined, sam, { owned: true })).toBeUndefined();
     expect(claimedAssignee(undefined, sam)?.name).toBe('Sam');
-    // Clearing or naming an agent passes through, for the owner check to refuse.
     expect(claimedAssignee(riley, null, { owned: true })).toBeNull();
     expect(claimedAssignee(riley, agent)?.role).toBe('assistant');
   });

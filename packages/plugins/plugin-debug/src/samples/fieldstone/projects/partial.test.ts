@@ -77,12 +77,10 @@ describe('Alien Labs projects', () => {
     expect(result.tasks.cacheKeyCollision).toBeDefined();
     expect(result.tasks.release18).toBeDefined();
 
-    // 35 tasks are worked by an agent.
     const agentDids = new Set(typed(archive.objects, 'type.agent:').map((agent) => (agent as { did?: string }).did));
     expect(agentDids.size).toBe(4);
     const agentTasks = tasks.filter((task) => agentDids.has((task.delegate ?? task.assignee)?.identityDid));
     expect(agentTasks).toHaveLength(35);
-    // An agent is never delegated to by another agent: delegated work has a person answering for it.
     expect(agentTasks.filter((task) => task.delegate && agentDids.has(task.assignee?.identityDid))).toEqual([]);
 
     // 40 chats, with a run in every week from −60d to the reference date.

@@ -49,7 +49,6 @@ import { usePreviewAnchor } from './usePreviewAnchor.ts';
 /** Shared empty set, so a list with nothing in flight does not allocate one per render. */
 const EMPTY_IDS: ReadonlySet<string> = new Set<string>();
 
-/** Shared empty list, for a list whose host offers no members to assign. */
 const EMPTY_MEMBERS: readonly TaskMember[] = [];
 
 /** Shared empty map, for a tree rendered without the ordinal gutter. */
@@ -121,10 +120,7 @@ type TaskListRootProps = PropsWithChildren<{
   showOrdinals?: boolean;
   /** Render who holds each task; off collapses the assignee track. On by default. */
   showAssignees?: boolean;
-  /**
-   * The space's members, offered by each row's assignee picker beside the space's contacts. Passed in rather than read
-   * here: membership lives in HALO, which this package does not depend on.
-   */
+  /** The space's members, offered by each row's assignee picker beside the space's contacts. */
   members?: readonly TaskMember[];
   /** The space whose contacts the assignee pickers offer; the first task's when omitted, so an empty list has none. */
   db?: Database.Database;
@@ -284,8 +280,6 @@ const TaskListRoot = ({
     [hierarchical, groups, showOrdinals, onTaskCheck, showMnemonics, showAssignees, hasActions],
   );
 
-  // The contacts the pickers offer: one live query for the list rather than a read per menu, which would see only the
-  // contacts already loaded.
   const db = dbProp ?? (tasks[0] && Obj.getDatabase(tasks[0]));
   const people = useQuery(showAssignees && (onTaskUpdate || onTaskCreate) ? db : undefined, Filter.type(Person.Person));
 
@@ -393,11 +387,9 @@ const buildGridTemplate = ({
     [undefined, toggle ? 'var(--dx-half-block-size)' : '0px'],
     // Fixed rather than `auto`, so the edit pane, which leaves it empty, keeps the rows' width for it.
     gutter > 0 && ['gutter', `calc(${gutter} * var(--dx-block-size))`],
-    // Leading, as Linear sets it: how urgent a task is reads before what it is.
     ['priority', 'var(--dx-block-size)'],
     ['status', 'var(--dx-block-size)'],
     ['title', 'minmax(0, 1fr)'],
-    // Sized by its content: a row with no pull request or estimate holds no width for one.
     ['artifacts', 'auto'],
     // Kept, at no width, when hidden: the description spans `title / assignee` and so needs the line.
     ['assignee', showAssignees ? 'var(--dx-block-size)' : '0px'],
@@ -551,9 +543,6 @@ const TaskListItem = ({
       {showGutter && (
         <Layout.Flex center gap='xs' classNames={TRACK.gutter}>
           {onTaskCheck && (
-            // Shown on the row in play until something is checked, as Linear does: a column of empty boxes reads as a
-            // form, and once a selection exists every box stays so it can be seen and extended. Pinned rather than moved
-            // out, so checking the first box keeps the reader's focus on it.
             <Tree.ItemActions pinned={checkedIds.size > 0}>
               <TaskCheckbox task={task} checked={checked} onCheckedChange={onTaskCheck} />
             </Tree.ItemActions>
@@ -590,7 +579,6 @@ const TaskListItem = ({
         data-testid='taskList.item.artifacts'
       >
         <TaskListItemArtifacts task={task} filter={(artifact) => PullRequest.instanceOf(artifact)} />
-        {/* Only when set, and read-only: an estimate is set from the task's properties, so an unset one takes no room. */}
         <TaskEstimateLabel estimate={current.estimate} />
       </Layout.Flex>
       {showAssignees && (
@@ -821,12 +809,6 @@ const pullRequestStateStyle: Record<PullRequest.State, string> = {
   draft: 'text-fg-muted',
 };
 
-//
-// Assignee — actor-aware chip, named and marked by `useAssigneeDisplay` so it agrees with the
-// properties row. A delegated task shows who answers for it, badged with the agent doing the work
-// (as Linear does), and opens the agent's run on hover.
-//
-
 type TaskListAssigneeProps = {
   assignee?: Actor.Actor;
   delegate?: Actor.Actor;
@@ -862,9 +844,6 @@ const TaskListAssignee = Util.composable<HTMLButtonElement, TaskListAssigneeProp
 
     const hue = agent ? 'purple' : 'indigo';
 
-    // Icon-only, an avatar in the row's controls: round for a person, square for an agent, as the app draws people and
-    // things. Its tooltip names the assignee, unless a session shows its card on hover, which already names the run and
-    // a tooltip would stack on.
     if (iconOnly && label) {
       const trigger = props.onClick !== undefined;
       const button = (
@@ -891,7 +870,6 @@ const TaskListAssignee = Util.composable<HTMLButtonElement, TaskListAssigneeProp
               hue={hue}
               icon={agent ? icon : undefined}
               fallback={(assignee ? owner : worker).label}
-              // Names the button: its label prop reaches `aria-label` only when it is icon-only.
               label={label}
             />
             {badged && (
@@ -928,11 +906,6 @@ const TaskListAssignee = Util.composable<HTMLButtonElement, TaskListAssigneeProp
 
 TaskListAssignee.displayName = 'TaskList.Assignee';
 
-/**
- * The row's assignee column, a control as Linear's is: the assignee's glyph (badged with a delegate) or, unassigned, a
- * placeholder, either one opening the picker the properties panel uses. Read-only without `onTaskUpdate`, when an
- * unassigned row leaves the column empty.
- */
 const TaskListAssigneeControl = ({
   task,
   assignee,
@@ -951,7 +924,6 @@ const TaskListAssigneeControl = ({
   }
 
   return (
-    // Deferred, as the row's other menus are.
     <ActionMenu
       deferUntilOpen
       actions={() =>
@@ -972,7 +944,6 @@ const TaskListAssigneeControl = ({
           assignee={assignee}
           delegate={delegate}
           iconOnly
-          // The row is the selection target; opening its menu must not also select it.
           onClick={(event: MouseEvent) => event.stopPropagation()}
         />
       ) : (

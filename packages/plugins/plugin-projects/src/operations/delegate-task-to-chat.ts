@@ -79,8 +79,6 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         const tasks = descendants.filter((task) => !Task.isAgentWorking(task));
         invariant(tasks.length > 0, 'Expected at least one task not already delegated.');
 
-        // The assignee keeps answering for the work and gets it back for review; an unowned task answers to its
-        // parent's person, else becomes the delegating person's, so nobody hands off work without owning it.
         const delegator = yield* currentActor;
         invariant(
           delegator || tasks.every((task) => Task.owner(task) ?? Task.owner(Task.getParentTask(task))),
@@ -142,10 +140,6 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         // not run that plugin.
         db.add(chat);
 
-        // `started` on delegation, not on completion: the row shows work is underway from the moment
-        // the session has it. The delegate is named by the chat, as the planning tool's is: a bare
-        // role is the supervisor's request to spawn a sub-agent, and its orphan sweep fails a started
-        // one no sub-agent is running.
         for (const task of tasks) {
           const answering = Task.owner(Task.getParentTask(task)) ?? delegator;
           Task.update(
@@ -153,7 +147,6 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
             {
               status: 'started',
               delegate: { role: 'assistant', subject: Ref.make(chat) },
-              // An agent assignee answers for nothing: the parent's person or the delegator does, so the finish waits on them.
               ...(!Task.owner(task) && answering ? { assignee: { ...answering } } : {}),
             },
             { actor: delegator },
@@ -299,7 +292,6 @@ const resolveHarness = Effect.fnUntraced(function* (requested: string | undefine
   return agent && registry.value.get(agent.availability).available ? agent.id : SessionConfig.COMPOSER_HARNESS;
 });
 
-/** The delegating identity as an actor: the history entry's actor, and the owner of an unowned task. */
 const currentActor = Effect.gen(function* () {
   const client = yield* Capability.get(ClientCapabilities.Client);
   const identity = client.halo.identity.get();

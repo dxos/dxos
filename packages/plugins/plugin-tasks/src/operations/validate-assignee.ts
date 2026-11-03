@@ -26,10 +26,6 @@ export const validateAssignee = (
         }),
       );
 
-/**
- * As {@link validateAssignee}, and fails unless the actor is an agent: the delegate is who does the work for the
- * assignee. Naming the assignee itself is allowed, since that hands the task back (see `Task.update`).
- */
 export const validateDelegate = (
   delegate: Actor.Actor | null | undefined,
   assignee?: Actor.Actor,
@@ -42,10 +38,6 @@ export const validateDelegate = (
         }),
       );
 
-/**
- * Fails unless a person answers for the task being delegated: a delegate works for them, and its finish waits on their
- * review. A coding session works for whoever holds the MCP grant, which a handler cannot see, so the caller names them.
- */
 export const requireOwner = (
   title: string,
   owner: Actor.Actor | undefined,

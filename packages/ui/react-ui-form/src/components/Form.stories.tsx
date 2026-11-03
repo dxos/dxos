@@ -175,10 +175,6 @@ const PillStory = () => {
   );
 };
 
-/**
- * The `pill` presentation: each field an outlined pill naming its value, with the option's icon and hue from the
- * schema, or naming the field, muted, while unset. An optional field's options start with "None".
- */
 export const Pill: Story = {
   render: () => <PillStory />,
   play: async ({ canvasElement }) => {
@@ -187,20 +183,17 @@ export const Pill: Story = {
     const state = canvas.getByTestId('state');
     const size = canvas.getByTestId('size');
 
-    // A set value names its option and shows its icon; an unset one names its field, muted, with the field's icon.
     await expect(state.textContent).toContain('Open');
     await expect(state.querySelector('svg')).not.toBeNull();
     await expect(size.textContent).toContain('Size');
     await expect(size).toHaveAttribute('data-placeholder-shown');
     await expect(size.querySelector('svg')).not.toBeNull();
 
-    // A required field offers no "None".
     await userEvent.click(state);
     await userEvent.click(await body.findByRole('option', { name: 'Closed' }));
     await expect(body.queryByRole('option', { name: 'None' })).toBeNull();
     await waitFor(async () => expect(readValues(canvasElement).state).toEqual('closed'));
 
-    // An optional one does, and choosing it clears the value.
     await userEvent.click(size);
     await userEvent.click(await body.findByRole('option', { name: 'm' }));
     await waitFor(async () => expect(readValues(canvasElement).size).toEqual('m'));

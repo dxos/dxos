@@ -17,7 +17,6 @@ import { Milestone, RemoteSession, Task, TaskSet } from '@dxos/types';
 import createTask from './create-task.ts';
 import updateTask from './update-task.ts';
 
-/** Who `whoami` names: the person a coding session works for. */
 const owner = { name: 'Riley', identityDid: 'did:key:riley' };
 
 describe('update-task', () => {
@@ -60,8 +59,6 @@ describe('update-task', () => {
         remoteSession: { sessionId: 'session_abc', title: 'Draft the thing', branch: 'claude/draft' },
       });
 
-      // The space did not hold this session, so claiming the work created it — an agent can take
-      // work on its first call rather than registering separately first.
       const sessions = yield* Database.query(Filter.type(RemoteSession.RemoteSession)).run;
       expect(sessions).toHaveLength(1);
       expect(RemoteSession.getSessionId(sessions[0])).toBe('session_abc');
@@ -71,7 +68,6 @@ describe('update-task', () => {
       // this ref, and a role alone would not say which run holds the task.
       expect(task.delegate?.role).toBe('assistant');
       expect(Task.refEntityId(task.delegate?.subject)).toBe(sessions[0].id);
-      // The person behind the session answers for the task.
       expect(task.assignee?.identityDid).toBe(owner.identityDid);
     }).pipe(
       Effect.provide(
@@ -150,7 +146,6 @@ describe('update-task', () => {
       expect(task.delegate).toBeUndefined();
       expect(yield* Database.query(Filter.type(RemoteSession.RemoteSession)).run).toEqual([]);
 
-      // A claim refused for its move is refused before the session is recorded, too.
       const { task: parent } = yield* createTask.handler({
         taskSet: Ref.make(taskSet),
         title: 'Parent',
@@ -202,7 +197,6 @@ describe('update-task', () => {
       expect(task.assignee?.name).toBe('Sam');
       expect(task.delegate?.role).toBe('assistant');
 
-      // Naming the session as delegate directly is the same claim.
       yield* updateTask.handler({
         task: Ref.make(task),
         assignee: owner,
@@ -210,7 +204,6 @@ describe('update-task', () => {
       });
       expect(task.assignee?.name).toBe('Sam');
 
-      // The session is the delegate whatever the caller passed; a person's fields are not the session's.
       yield* updateTask.handler({
         task: Ref.make(task),
         delegate: { role: 'user', ...owner },
@@ -520,12 +513,10 @@ describe('update-task subtree', () => {
 
       for (const member of [root, child, grandchild]) {
         expect(member.delegate?.name).toBe('agent');
-        // Whoever answers for the task answers for its tree, so each member's finish waits on them.
         expect(member.assignee?.name).toBe('Riley');
         const changes = (member.history ?? []).filter(Task.isChangeEntry);
         expect(changes.at(-1)?.description).toContain('Delegated to');
       }
-      // Delegation alone starts nothing.
       expect(root.status).toBe('todo');
       expect(other.delegate).toBeUndefined();
     }).pipe(Effect.provide(layer)),
@@ -564,7 +555,6 @@ describe('update-task subtree', () => {
       expect(child.assignee?.name).toBe('Sam');
       expect(grandchild.assignee?.name).toBe('Sam');
 
-      // Claiming below the owned step answers to it, though the root above had nobody of its own.
       const { root: bare, child: middle, grandchild: below } = yield* makeTree();
       yield* updateTask.handler({ task: Ref.make(middle), assignee: { name: 'Sam', identityDid: 'did:key:sam' } });
       yield* updateTask.handler({

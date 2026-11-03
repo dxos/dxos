@@ -62,7 +62,6 @@ describe('create-task', () => {
         title: 'Agent epic',
         assignee: { role: 'assistant', name: 'agent', identityDid: 'did:key:agent' },
       });
-      // An agent's own task queued for a sub-agent, as the delegation verbs write it.
       Obj.update(own, (own) => {
         own.delegate = { role: 'assistant' };
       });
@@ -84,7 +83,6 @@ describe('create-task', () => {
       expect(child.delegate).toBeUndefined();
       expect(child.status).toBe('review');
 
-      // The session working the tree files a step it holds: it answers to the tree's person, not whoever it names.
       const { task: held } = yield* createTask.handler({
         taskSet: Ref.make(taskSet),
         title: 'Step two',
@@ -93,7 +91,6 @@ describe('create-task', () => {
       });
       expect(held.assignee?.name).toBe('Riley');
       expect(held.delegate?.name).toBe('agent');
-      // A level further down, under a step that answers to Riley but is not itself delegated.
       const { task: deeper } = yield* createTask.handler({
         taskSet: Ref.make(taskSet),
         title: 'Step one, part a',
@@ -131,7 +128,6 @@ describe('create-task', () => {
       expect(plain.assignee?.name).toBe('Riley');
       expect(plain.status).toBe('review');
 
-      // An agent filing a step it holds names whoever it works for; the tree's person wins.
       const { task: held } = yield* createTask.handler({
         taskSet: Ref.make(taskSet),
         title: 'Part b',
@@ -141,7 +137,6 @@ describe('create-task', () => {
       });
       expect(held.assignee?.name).toBe('Riley');
 
-      // A person naming someone for a step is that step's own person.
       const { task: picked } = yield* createTask.handler({
         taskSet: Ref.make(taskSet),
         title: 'Part c',
@@ -174,7 +169,6 @@ describe('create-task', () => {
 
       const unowned = yield* Effect.exit(createTask.handler({ taskSet: Ref.make(taskSet), title: 'Nope', delegate }));
       expect(unowned._tag).toBe('Failure');
-      // The delegate is the agent doing the work; a person there would read as an agent at work.
       const person = yield* Effect.exit(
         createTask.handler({
           taskSet: Ref.make(taskSet),
@@ -202,7 +196,6 @@ describe('create-task', () => {
       });
       expect(finished.status).toBe('review');
 
-      // The operation cannot tell who is asking: a person's own Done signs off through AcceptTask.
       const { task: own } = yield* createTask.handler({
         taskSet: Ref.make(taskSet),
         title: 'Shipped myself',

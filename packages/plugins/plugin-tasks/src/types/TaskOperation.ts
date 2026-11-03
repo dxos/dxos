@@ -219,7 +219,6 @@ export const AcceptTask = Operation.make({
     name: 'Accept Task',
     description: 'Sign off on a finished task and close it.',
     icon: 'ph--check-circle--regular',
-    // The worker is an agent; handing it the tool to approve its own work is the gate removed.
     skipRegistry: true,
   },
   services: [Database.Service, Trace.TraceService],

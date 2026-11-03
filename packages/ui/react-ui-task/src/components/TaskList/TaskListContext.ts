@@ -39,9 +39,7 @@ export type TaskListContextValue = {
   showGutter: boolean;
   /** Render who holds each task; off collapses the assignee track. */
   showAssignees: boolean;
-  /** The space's members, offered by each row's assignee picker. */
   members: readonly TaskMember[];
-  /** The space's contacts, offered by the assignee pickers after the members. */
   people: readonly Person.Person[];
   /** Render each task's mnemonic in the leading column, beside its ordinal. */
   showMnemonics: boolean;

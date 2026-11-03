@@ -220,11 +220,6 @@ export const TaskCheckbox = ({ task, checked, onCheckedChange, classNames }: Tas
 
 TaskCheckbox.displayName = 'TaskList.Checkbox';
 
-/**
- * Estimate as its own label rather than a glyph: the sizes are a vocabulary a reader already knows (`XS`…`XL`), and two
- * ordinal ramps side by side would be read as one. Rendered only when set, as Linear does, and read-only: an estimate is
- * set from the task's properties, so the row spends no room on one it does not have.
- */
 export const TaskEstimateLabel = ({ estimate }: { estimate?: Task.Estimate }) =>
   estimate ? (
     <Typography.Text asChild tone='muted' data-testid='taskList.item.estimate'>

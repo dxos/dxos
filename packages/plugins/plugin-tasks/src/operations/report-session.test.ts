@@ -230,7 +230,6 @@ describe('report-session', () => {
       const taskSet = yield* Database.add(TaskSet.make({ name: 'Backlog' }));
       const open = yield* Database.add(Task.make({ title: 'Ship the thing', status: 'started', assignee }));
       const closed = yield* Database.add(Task.make({ title: 'Already done', status: 'done', assignee }));
-      // Finished by the session and waiting on the person it works for: not the session's open work.
       const reviewed = yield* Database.add(
         Task.make({
           title: 'Awaiting sign-off',
@@ -239,7 +238,6 @@ describe('report-session', () => {
           delegate: assignee,
         }),
       );
-      // The session's own task, held for review outside the app: nobody else will close it.
       const held = yield* Database.add(Task.make({ title: 'Awaiting the vendor', status: 'review', assignee }));
       const project = yield* Database.add(Project.make({ name: 'Voyage', taskSet: Ref.make(taskSet) }));
       Obj.update(taskSet, (taskSet) => {

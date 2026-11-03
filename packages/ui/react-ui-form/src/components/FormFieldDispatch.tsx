@@ -323,13 +323,8 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
 
 FormFieldDispatch.displayName = 'Form.FieldDispatch';
 
-/** A single-select's option table, as its schema annotates it (`{ id, title, color, icon }`). */
 type SingleSelectOption = { id: string; title?: string; color?: string; icon?: string };
 
-/**
- * The literal options, labelled by the projection's option titles where it has them, else the schema's; each takes
- * its icon and hue from the schema's option table.
- */
 const selectOptions = (
   options: Format.Options[],
   projection: FormFieldDispatchProps['projection'],

@@ -98,7 +98,6 @@ export type TaskSeed = {
   readonly priority: Task.Priority;
   readonly estimate: Task.Estimate;
   readonly assignee: AgentKey | PersonKey;
-  /** The person an agent's task is delegated for, who signs off its work. */
   readonly reviewer?: PersonKey;
   readonly milestone?: MilestoneKey;
   readonly dependsOn?: ReadonlyArray<string>;
@@ -981,8 +980,6 @@ const makeTask = (
     status: seed.status,
     priority: seed.priority,
     estimate: seed.estimate,
-    // An agent's task is delegated to it, with the person who reviews it answering for it; an agent's own task (no
-    // reviewer) is assigned to it.
     ...(isAgentKey(seed.assignee)
       ? seed.reviewer
         ? {
