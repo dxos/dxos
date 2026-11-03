@@ -2,14 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { Database, DXN, JsonSchema, Obj, Type } from '@dxos/echo';
+import { type Database, DXN, Filter, JsonSchema, Obj, Query, Scope, Type } from '@dxos/echo';
 import { type TypeSource } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import * as EffectEx from '@dxos/effect/EffectEx';
 import { PublicKey, type URI } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
 
@@ -48,8 +46,17 @@ const setup = async () => {
   return { db };
 };
 
-const resolveType = (db: Database.Database, typename: string) =>
-  EffectEx.runPromise(Database.resolveType(DXN.make(typename)).pipe(Effect.provide(Database.layer(db))));
+/** The registrations of a typename, asking the remote registry for what the local one lacks. */
+const queryType = async (
+  db: Database.Database,
+  typename: string,
+  scopes = [Scope.registry(), Scope.registry('remote')],
+) => {
+  const [type] = await db
+    .query(Query.select(Filter.and(Filter.type(Type.Type), Filter.key(typename))).from(...scopes))
+    .run();
+  return type;
+};
 
 describe('type sources', () => {
   test('a type the registry does not hold resolves from the source and is then registered', async ({ expect }) => {
@@ -58,13 +65,13 @@ describe('type sources', () => {
     db.graph.registerTypeSource(registry.source);
 
     expect(db.graph.registry.getByURI(DXN.make(TYPENAME, VERSION))).toBeUndefined();
-    const type = await resolveType(db, TYPENAME);
+    const type = await queryType(db, TYPENAME);
     expect(type).toBeDefined();
     expect(type && Type.getTypename(type)).toBe(TYPENAME);
     expect(db.graph.registry.getByURI(DXN.make(TYPENAME, VERSION))).toBe(type);
 
     // Registered now, so the source is not asked again.
-    expect(await resolveType(db, TYPENAME)).toBe(type);
+    expect(await queryType(db, TYPENAME)).toBe(type);
     expect(registry.requests).toHaveLength(1);
   });
 
@@ -72,7 +79,7 @@ describe('type sources', () => {
     const { db } = await setup();
     db.graph.registerTypeSource(makeMockRegistry().source);
 
-    const type = await resolveType(db, TYPENAME);
+    const type = await queryType(db, TYPENAME);
     expect(type && Type.isObject(type)).toBe(true);
     if (type === undefined || !Type.isObject(type)) {
       return;
@@ -86,7 +93,7 @@ describe('type sources', () => {
     const registry = makeMockRegistry();
     db.graph.registerTypeSource(registry.source);
 
-    expect(await resolveType(db, Type.getTypename(Type.Type))).toBe(Type.Type);
+    expect(await queryType(db, Type.getTypename(Type.Type))).toBe(Type.Type);
     expect(registry.requests).toHaveLength(0);
   });
 
@@ -95,7 +102,7 @@ describe('type sources', () => {
     const registry = makeMockRegistry();
     db.graph.registerTypeSource(registry.source);
 
-    expect(await resolveType(db, 'com.example.type.unknown')).toBeUndefined();
+    expect(await queryType(db, 'com.example.type.unknown')).toBeUndefined();
     expect(registry.requests).toHaveLength(1);
   });
 
@@ -103,7 +110,7 @@ describe('type sources', () => {
     const { db } = await setup();
     db.graph.registerTypeSource(makeMockRegistry({ fail: true }).source);
 
-    expect(await resolveType(db, TYPENAME)).toBeUndefined();
+    expect(await queryType(db, TYPENAME)).toBeUndefined();
   });
 
   test('without a source the type is missing; unregistering removes the source', async ({ expect }) => {
@@ -112,11 +119,40 @@ describe('type sources', () => {
     const unregister = db.graph.registerTypeSource(registry.source);
     unregister();
 
-    expect(await resolveType(db, TYPENAME)).toBeUndefined();
+    expect(await queryType(db, TYPENAME)).toBeUndefined();
     expect(registry.requests).toHaveLength(0);
   });
 
-  test('the deprecated schema resolver reaches the source too', async ({ expect }) => {
+  test('a query without the remote registry scope does not ask the source', async ({ expect }) => {
+    const { db } = await setup();
+    const registry = makeMockRegistry();
+    db.graph.registerTypeSource(registry.source);
+
+    expect(await queryType(db, TYPENAME, [Scope.registry()])).toBeUndefined();
+    expect(registry.requests).toHaveLength(0);
+  });
+
+  test('a reactive query picks up the type once the remote registry answers', async ({ expect }) => {
+    const { db } = await setup();
+    db.graph.registerTypeSource(makeMockRegistry().source);
+
+    const result = db.query(
+      Query.select(Filter.and(Filter.type(Type.Type), Filter.key(TYPENAME))).from(Scope.registry('remote')),
+    );
+    let unsubscribe: (() => void) | undefined;
+    const typename = await new Promise<string | undefined>((resolve) => {
+      unsubscribe = result.subscribe(() => {
+        const [type] = result.results;
+        if (type !== undefined) {
+          resolve(Type.getTypename(type));
+        }
+      });
+    });
+    unsubscribe?.();
+    expect(typename).toBe(TYPENAME);
+  });
+
+  test('loading an object of an unregistered type resolves its schema from the source', async ({ expect }) => {
     const { db } = await setup();
     db.graph.registerTypeSource(makeMockRegistry().source);
 

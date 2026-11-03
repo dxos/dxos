@@ -343,6 +343,32 @@ export const getRegistryScopeForQuery = (query: QueryAST.Query): RegistryQuerySc
 };
 
 /**
+ * The registry keys (typenames, for types) a query filters on when it includes the remote registry
+ * (`Scope.registry('remote')`); empty otherwise, or when the query names no key, so nothing is asked remotely.
+ */
+export const getRemoteRegistryKeys = (query: QueryAST.Query): string[] => {
+  if (!getRegistryScopeForQuery(query).locations.has('remote')) {
+    return [];
+  }
+  const keys = new Set<string>();
+  const collect = (node: unknown): void => {
+    if (Array.isArray(node)) {
+      node.forEach(collect);
+    } else if (node !== null && typeof node === 'object') {
+      for (const [field, value] of Object.entries(node)) {
+        if (field === 'metaKey' && typeof value === 'string') {
+          keys.add(value);
+        } else {
+          collect(value);
+        }
+      }
+    }
+  };
+  collect(query);
+  return [...keys];
+};
+
+/**
  * Finds the (last) `from` clause within a query AST.
  * Reading the closure-assigned result through a function return boundary preserves
  * the nullable type — a bare local would be narrowed to `null` by control-flow analysis,

@@ -5,7 +5,7 @@ import * as Effect from 'effect/Effect';
 import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import * as DefaultParent from '@dxos/app-toolkit/DefaultParent';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, DXN, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { BaseError, messageOf } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
@@ -67,13 +67,18 @@ export default handler;
  */
 const instantiate = Effect.fnUntraced(function* (db: Database.Database, draft: SpaceOperation.ObjectDraft) {
   const { '@type': typename, ...properties } = draft;
-  const types = yield* Effect.promise(() =>
-    db.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).run(),
+  // A type published by a plugin that is not loaded here comes from the remote registry.
+  const [schema] = yield* Effect.promise(() =>
+    db
+      .query(
+        Query.select(Filter.and(Filter.type(Type.Type), Filter.key(typename))).from(
+          Scope.space(),
+          Scope.registry(),
+          Scope.registry('remote'),
+        ),
+      )
+      .run(),
   );
-  const schema =
-    types.find((type) => Type.getTypename(type) === typename) ??
-    // A type no plugin here registered may still be published elsewhere; the graph's type sources resolve it.
-    (yield* Database.resolveType(DXN.make(typename)).pipe(Effect.provide(Database.layer(db))));
   if (!schema) {
     return yield* Effect.fail(new InvalidDraftError({ message: `Schema not found: ${typename}` }));
   }

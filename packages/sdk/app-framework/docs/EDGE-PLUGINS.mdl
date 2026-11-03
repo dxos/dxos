@@ -1280,3 +1280,23 @@ decision D-54: `space.queryObjects`, `space.addObject` and `space.addRelation` r
   affects: [F-3.5]
   why: These operations list the declared types rather than resolving one URI, so they do not pass through the hypergraph's resolver on their own.
 ```
+
+```mdl
+decision D-55: Resolving a typename is a registry query: a query that filters types by typename reaches the remote registry, so `space.queryObjects`, `space.addObject` and similar code each make one query over the space and the registries, and `Database.resolveType` is removed.
+  date: 2026-11-03
+  by: user:dmaretskyi
+  supersedes: D-54
+  affects: [F-3.5]
+  source: https://github.com/dxos/dxos/pull/14389#discussion_r4457642602
+```
+
+```mdl
+decision D-56: `Scope.registry('remote')` is the remote registry. A query including it that filters by key (`Filter.key(typename)`) asks the hypergraph's type sources for each key the in-process registry lacks, adds what they return to that registry and answers from it; concurrent requests for one key share one lookup. Fills in [D-55].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.5]
+  why: The scope existed in the query AST unimplemented, and caching remote answers in the local registry lets the reactive and one-shot paths read them the same way.
+  rejected:
+    - A remote query source revalidated against the working set — registry entries have no document to revalidate.
+```

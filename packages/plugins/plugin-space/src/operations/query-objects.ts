@@ -82,15 +82,18 @@ export default handler;
  * The registry is still consulted to reject a typename nothing declares, and to add the `echo:` id
  * of every registration persisted in the space, since objects of such a type carry that id instead.
  */
+/** Every registration of a typename: persisted in the space, code-shipped here, or published by another plugin. */
+const typesNamed = (typename: string) =>
+  Query.select(Filter.and(Filter.type(Type.Type), Filter.key(typename))).from(
+    Scope.space(),
+    Scope.registry(),
+    Scope.registry('remote'),
+  );
+
 const typeFilter = Effect.fnUntraced(function* (typename: string) {
-  const types = yield* Database.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).run;
-  const declared = types.filter((type) => Type.getTypename(type) === typename);
+  const declared = yield* Database.query(typesNamed(typename)).run;
   if (declared.length === 0) {
-    // A type no plugin here registered may still be published elsewhere; the graph's type sources resolve it.
-    if ((yield* Database.resolveType(DXN.make(typename))) === undefined) {
-      return yield* Effect.fail(new SpaceOperationError({ message: `Schema not found: ${typename}` }));
-    }
-    return Filter.type(DXN.make(typename));
+    return yield* Effect.fail(new SpaceOperationError({ message: `Schema not found: ${typename}` }));
   }
   // Objects of a type persisted in the space are stamped with its `echo:` id, which the bare typename
   // does not match, so each persisted registration is matched alongside it.

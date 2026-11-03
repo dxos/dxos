@@ -21,7 +21,7 @@ import * as Error from './Error.ts';
 import type * as Feed from './Feed.ts';
 import type * as Filter from './Filter.ts';
 import type * as Hypergraph from './Hypergraph.ts';
-import { type AnyProperties, EntityKind, KindId, getEntityKindBrand } from './internal/common/types/index.ts';
+import { type AnyProperties, EntityKind, KindId } from './internal/common/types/index.ts';
 // Deep import (not the `./internal/Entity` barrel) to avoid a cycle:
 // Database → internal/Entity → entity → JsonSchema → Ref → Database.
 import { isInstanceOf } from './internal/Entity/type-uri.ts';
@@ -628,23 +628,6 @@ export const resolve: {
     invariant(!schema || isInstanceOf(schema as any, object), 'Object type mismatch.');
     return object as any;
   }).pipe(Effect.withSpan('Database.resolve'), withSpaceId)) as any;
-
-/** `Type.isType`, which this module cannot import at runtime without a cycle through the internal barrel. */
-const isTypeEntity = (value: unknown): value is Type.AnyEntity => getEntityKindBrand(value) === EntityKind.Type;
-
-/**
- * Resolves a type by its URI (a typename DXN, or the `echo:` URI of a type persisted in the space) through the
- * hypergraph: the registry, then the space, then any type source registered on the graph.
- *
- * @performance Async; a registry hit is O(1), otherwise reads the space or asks the type sources over the network.
- */
-export const resolveType = (uri: URI.URI): Effect.Effect<Type.AnyEntity | undefined, never, Service> =>
-  Effect.gen(function* () {
-    const { db } = yield* Service;
-    const request = db.graph.createRefResolver({ context: { space: db.spaceId } }).resolve(uri, { source: 'network' });
-    const entity = yield* Effect.promise(() => request.wait());
-    return isTypeEntity(entity) ? entity : undefined;
-  }).pipe(Effect.withSpan('Database.resolveType'), withSpaceId);
 
 /**
  * Starts staging structural changes in the current database; see {@link Migration.Transaction}.

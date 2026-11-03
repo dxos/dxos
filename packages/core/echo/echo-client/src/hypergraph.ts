@@ -87,6 +87,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   /** Malformed `echo:` URIs already warned about; a ref is read on every render, so one warning each. */
   readonly #reportedMalformedUris = new Set<string>();
   #typeSources: TypeSource[] = [];
+  readonly #typeSourceRequests = new Map<URI.URI, Promise<Type.AnyEntity | undefined>>();
 
   constructor() {
     this._registry = makeRegistry();
@@ -599,7 +600,18 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
    * Asks each registered source, in order, for a typename DXN the registry does not hold; the first answer is added to
    * the registry so the next lookup is synchronous.
    */
-  async #resolveFromTypeSources(uri: URI.URI): Promise<Type.AnyEntity | undefined> {
+  #resolveFromTypeSources(uri: URI.URI): Promise<Type.AnyEntity | undefined> {
+    // A reactive query and its one-shot run ask for the same type at once; one request answers both.
+    const pending = this.#typeSourceRequests.get(uri);
+    if (pending !== undefined) {
+      return pending;
+    }
+    const request = this.#askTypeSources(uri).finally(() => this.#typeSourceRequests.delete(uri));
+    this.#typeSourceRequests.set(uri, request);
+    return request;
+  }
+
+  async #askTypeSources(uri: URI.URI): Promise<Type.AnyEntity | undefined> {
     if (!DXN.isDXN(uri)) {
       return undefined;
     }
@@ -1001,6 +1013,14 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   private _createLiveObjectQueryContext(): QueryContext {
     const context = new LocalQueryEngine({
       registry: this._registry,
+      resolveRemoteRegistry: async (keys) => {
+        await Promise.all(
+          keys.flatMap((key) => {
+            const dxn = DXN.tryMake(`dxn:${key}`);
+            return dxn === undefined ? [] : [this.#resolveFromTypeSources(dxn)];
+          }),
+        );
+      },
       onStart: () => {
         this._queryContexts.add(context);
       },
