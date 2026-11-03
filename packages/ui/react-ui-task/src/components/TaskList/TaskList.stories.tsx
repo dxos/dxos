@@ -755,6 +755,14 @@ const ListDetailStory = ({ seed = seedQuestions }: { seed?: () => Task.Task[] })
   );
 };
 
+/** Fails the play naming what is missing, where `!` would fail later on a null read. */
+const found = <T,>(value: T | null | undefined, what: string): T => {
+  if (value == null) {
+    throw new Error(`${what} not found.`);
+  }
+  return value;
+};
+
 /** The row's title cell: the grid track that the mnemonic chip and the title text share. */
 const titleCell = (row: Element): HTMLElement => row.querySelector<HTMLElement>('[data-testid="taskList.item.title"]')!;
 
@@ -1231,7 +1239,10 @@ export const TestAssigneeControl: Story = {
     const placeholders = () =>
       Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item.assignee.unset"]'));
     await waitFor(async () => expect(placeholders().length).toBeGreaterThan(0));
-    const row = placeholders()[0].closest<HTMLElement>('[data-testid="taskList.item"]')!;
+    const row = found(
+      placeholders()[0].closest<HTMLElement>('[data-testid="taskList.item"]'),
+      'Row of the unassigned control',
+    );
 
     await userEvent.click(placeholders()[0]);
     const body = within(document.body);
@@ -1330,7 +1341,10 @@ export const TestEditDelegateOnly: Story = {
       return row;
     });
     await userEvent.click(row);
-    const title = canvasElement.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input')!;
+    const title = found(
+      canvasElement.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input'),
+      'Title input',
+    );
     await waitFor(async () => expect(title.value).toEqual('Draft notes'));
     const pill = canvasElement.querySelector<HTMLElement>(
       '[data-testid="taskList.edit.properties"] [data-testid="assignee"]',
@@ -1353,7 +1367,10 @@ export const TestEditUnsetStatus: Story = {
       return row;
     });
     await userEvent.click(row);
-    const title = canvasElement.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input')!;
+    const title = found(
+      canvasElement.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input'),
+      'Title input',
+    );
     await waitFor(async () => expect(title.value).toEqual('Sort the pantry'));
     const status = canvasElement.querySelector<HTMLElement>(
       '[data-testid="taskList.edit.properties"] [data-testid="status"]',
@@ -1605,12 +1622,17 @@ export const TestCreateWithProperties: Story = {
     members: [{ did: 'did:key:riley', name: 'Riley' }],
   },
   play: async ({ canvasElement }) => {
-    const pane = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]')!;
+    const pane = found(canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]'), 'Create pane');
     const pill = (field: string) =>
-      pane.querySelector<HTMLElement>(`[data-testid="taskList.edit.properties"] [data-testid="${field}"]`)!;
+      found(
+        pane.querySelector<HTMLElement>(`[data-testid="taskList.edit.properties"] [data-testid="${field}"]`),
+        `${field} pill`,
+      );
+    const title = () =>
+      found(pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input'), 'Title input');
     const body = within(document.body);
 
-    await userEvent.click(pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input')!);
+    await userEvent.click(title());
     await userEvent.keyboard('Order green beans');
     await userEvent.click(pill('priority'));
     await userEvent.click(await body.findByRole('option', { name: /High/ }));
@@ -1621,7 +1643,7 @@ export const TestCreateWithProperties: Story = {
     await waitFor(async () => expect(pill('priority').textContent).toContain('High'));
     await expect(pill('assignee').textContent).toContain('Riley');
 
-    await userEvent.click(pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input')!);
+    await userEvent.click(title());
     await userEvent.keyboard('{Enter}');
     const row = await waitFor(() => {
       const row = [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')].find((row) =>

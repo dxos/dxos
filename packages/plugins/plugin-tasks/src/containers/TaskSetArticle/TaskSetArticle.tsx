@@ -49,6 +49,7 @@ import {
   useDescriptionComponents,
   useMarkdownExtensions,
   useTaskActions,
+  useTaskErrorToast,
   useTaskMembers,
   useTaskUpdate,
 } from '../../hooks/index.ts';
@@ -159,6 +160,7 @@ export const TaskSetArticle = ({
   const { checked, onTaskCheck } = useCheckedTasks(taskSet);
 
   const handleUpdate = useTaskUpdate(spaceId);
+  const showError = useTaskErrorToast();
   const { invokePromise } = Hooks.useOperationInvoker();
   // Files dropped on the create pane attach once the task exists: the create answers with the new
   // task's id, and the live object is in the working set by then, since this client wrote it.
@@ -180,8 +182,12 @@ export const TaskSetArticle = ({
         return;
       }
       const [task] = db?.query(Filter.and(Filter.type(Task.Task), Filter.id(data.task.id))).runSync() ?? [];
-      if (task && finished) {
-        await handleUpdate(task, { status });
+      if (finished) {
+        if (task) {
+          await handleUpdate(task, { status });
+        } else {
+          showError(new Error('The new task was not found to sign off.'));
+        }
       }
       if (task && onTaskCreated) {
         await onTaskCreated(task);
@@ -200,7 +206,7 @@ export const TaskSetArticle = ({
       }
       return { rejectedFiles };
     },
-    [invokePromise, handleUpdate, taskSet, spaceId, attachFile, db, onTaskCreated],
+    [invokePromise, handleUpdate, showError, taskSet, spaceId, attachFile, db, onTaskCreated],
   );
 
   const members = useTaskMembers(spaceId);
