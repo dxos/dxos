@@ -210,7 +210,6 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   }, [markdownDoc, versionSelection]);
   const activeBranch = reviewBranch ?? 'main';
 
-  // Only this identity's entry, so another subscriber's change does not re-render the toolbar.
   const subscription = useAtomValue(
     useMemo(
       () => Annotation.atomProperty(subject, Subscription.Subscription, identity?.did ?? ''),
@@ -592,7 +591,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
                 variant='ghost'
                 iconOnly
                 icon={subscribed ? 'ph--bell-ringing--regular' : 'ph--bell-slash--regular'}
-                label={t(subscribed ? 'unsubscribe-comments.label' : 'subscribe-comments.label')}
+                label={t('subscribe-comments.label')}
                 aria-pressed={subscribed}
                 onClick={handleToggleSubscription}
                 data-testid='comments.subscription.toggle'

@@ -91,5 +91,5 @@ export const createSubscriptionHarness = async () => {
     return message;
   };
 
-  return { harness, space, subject, thread, anchor, aliceDid, bobDid, sent, comment };
+  return { harness, space, bob, subject, thread, anchor, aliceDid, bobDid, sent, comment };
 };

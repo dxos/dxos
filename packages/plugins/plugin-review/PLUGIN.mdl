@@ -282,8 +282,8 @@ op SendNotifications
   key: org.dxos.operation.review.sendNotifications
   desc: |
     Send one comment to the subject's comment subscribers through `MessengerCapabilities.Sender`,
-    skipping its author, this identity, and DIDs that are not members of the space. Scheduled by
-    AddMessage; a no-op when plugin-messenger is not loaded.
+    skipping its author, this identity, and DIDs that are not current members of the space
+    (removed members included). Scheduled by AddMessage; a no-op when plugin-messenger is not loaded.
   input: { subject: Ref<Obj.Any>, thread: Ref<Thread>, messageId: ObjectId }
   requires: [Capability.Service]
   note: |
@@ -612,10 +612,10 @@ feat F-8: Comment subscriptions
 
   req F-8.1: An object's subscribers MUST live in one `Subscription` annotation on the object
     (`@dxos/types`), a map keyed by identity DID, written one key at a time so concurrent subscribers
-    merge. No object is created per subscriber.
+    merge once the map exists. No object is created per subscriber.
 
   req F-8.2: Commenting MUST subscribe the commenter to the subject's comments, unless they already have
-    an entry; an unsubscribe outlives later comments.
+    an entry or are an agent; an unsubscribe outlives later comments.
 
   req F-8.3: Each comment MUST notify every comment subscriber except its author through the
     notifications inbox, from the commenter's client; nothing is fired from EDGE.
@@ -767,8 +767,9 @@ test QA-2: Commenting subscribes you, and the bell turns notifications off and o
     - identity: an identity exists, its Actor used as the comment `sender`
     - space: a space is open
     - collection: a collection in that space, to create into
-    - doc: a Markdown document named "QA Subscriptions Doc" exists in the collection, open in a plank
-      with its Comments companion showing
+    - doc: a Markdown document named "QA Subscriptions Doc" exists in the collection (created via
+      plugin-markdown's [op:createDraft], placed with `space.addObject` and opened with
+      `appToolkit.open`, per its own QA-1), open in a plank with its Comments companion showing
     - the document has no `org.dxos.annotation.subscription` annotation and no comment thread — ABORT
       rather than reusing one this test did not create
   steps:
@@ -900,5 +901,14 @@ decision D-4: Comments notify an object's subscribers. Subscribers live in one `
 decision D-5: An unsubscribe is kept as an entry with `comments: false`, so commenting again does not re-subscribe; a notification from an E2E space carries only the ref and "New comment", since inbox envelopes are signed but not encrypted. Whether EDGE may read a space is `contentCaptureAllowed`, not the device's EDGE replication preference, which a joined space does not get until the next start.
   date: 2026-11-03
   by: agent:claude-code
+  for: user:wittjosiah
   affects: [F-8.2, F-8.4, SendNotifications]
+```
+
+```mdl
+decision D-6: Only entries added to an existing `Subscription` map merge. The first entry creates the map with one whole-value write, so when two people write the first entry before either write has synced, one entry is lost. Nothing restores it: a commenter whose entry was lost is added again only if they comment again, and a choice made with the bell, an unsubscribe included, is gone until they make it again.
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.1, F-8.2]
 ```
