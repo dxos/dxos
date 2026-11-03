@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { findEmbeds, insertEmbeds, placeEmbeds, removeEmbeds } from './print-embeds.ts';
+import { findEmbeds, placeEmbeds, removeEmbeds } from './print-embeds.ts';
 
 describe('print-embeds', () => {
   test('finds object embeds but not links or images', ({ expect }) => {
@@ -25,8 +25,14 @@ describe('print-embeds', () => {
 
   test('places and inserts only printable embeds', ({ expect }) => {
     const rendered = [undefined, '<b>$&</b>'];
-    const source = placeEmbeds('A\n\n![x](echo:/1)\n\n![y](echo:/2)\n\nB', rendered);
-    expect(source).not.toContain('DXEMBED0X');
-    expect(insertEmbeds('<p>A</p>\n<p>DXEMBED1X</p>\n<p>B</p>', rendered)).toEqual('<p>A</p>\n<b>$&</b>\n<p>B</p>');
+    const { source, insert } = placeEmbeds('A\n\n![x](echo:/1)\n\n![y](echo:/2)\n\nB', rendered);
+    expect(source.match(/DXEMBED\w+/g)).toEqual(['DXEMBED0N1X']);
+    expect(insert('<p>A</p>\n<p>DXEMBED0N1X</p>\n<p>B</p>')).toEqual('<p>A</p>\n<b>$&</b>\n<p>B</p>');
+  });
+
+  test('document text never collides with a placeholder', ({ expect }) => {
+    const { source, insert } = placeEmbeds('DXEMBED0N1X\n\n![x](echo:/1)\n\n![y](echo:/2)', [undefined, '<b>y</b>']);
+    expect(source.match(/DXEMBED\w+/g)).toEqual(['DXEMBED0N1X', 'DXEMBED1N1X']);
+    expect(insert('<p>DXEMBED0N1X</p>\n<p>DXEMBED1N1X</p>')).toEqual('<p>DXEMBED0N1X</p>\n<b>y</b>');
   });
 });
