@@ -75,7 +75,7 @@ describe('ProjectsPlugin', () => {
     expect(client.graph.registry.getByURI(String(Type.getURI(Project.Project)))).toBeDefined();
   });
 
-  test('the settings default to showing task descriptions', async ({ expect }) => {
+  test('the settings default to hiding task descriptions', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
       // Assistant and Tasks are declared in `dependsOn`, so the manager refuses to resolve Projects
       // without them.

@@ -1250,20 +1250,20 @@ export const TestDelegateFromAssignee: Story = {
   },
   play: async ({ canvasElement }) => {
     const body = within(document.body);
-    const placeholders = () =>
-      Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item.assignee.unset"]'));
-    await waitFor(async () => expect(placeholders().length).toBeGreaterThan(0));
-    const row = placeholders()[0].closest<HTMLElement>('[data-testid="taskList.item"]')!;
+    const [row] = (await within(canvasElement).findAllByTestId('taskList.item')).filter((item) =>
+      item.querySelector('[data-testid="taskList.item.assignee.unset"]'),
+    );
+    const cell = within(row);
 
-    await userEvent.click(placeholders()[0]);
+    await userEvent.click(cell.getByTestId('taskList.item.assignee.unset'));
     await userEvent.click(await body.findByTestId('story.delegate'));
-    await waitFor(async () => expect(row.querySelector('[data-testid="taskList.item.delegate"]')).toBeTruthy());
+    await waitFor(async () => expect(cell.queryByTestId('taskList.item.delegate')).toBeTruthy());
 
-    await userEvent.click(row.querySelector<HTMLElement>('[data-testid="taskList.item.assignee"]')!);
+    await userEvent.click(cell.getByTestId('taskList.item.assignee'));
     await expect(await body.findByTestId('taskList.assignee.delegate')).toBeTruthy();
     await userEvent.click(await body.findByTestId('taskList.assignee.member'));
-    await waitFor(async () => expect(row.querySelector('[data-testid="taskList.item.delegate"]')).toBeNull());
-    await expect(row.querySelector('[data-testid="taskList.item.assignee"]')).toBeTruthy();
+    await waitFor(async () => expect(cell.queryByTestId('taskList.item.delegate')).toBeNull());
+    await expect(cell.queryByTestId('taskList.item.assignee')).toBeTruthy();
   },
 };
 
