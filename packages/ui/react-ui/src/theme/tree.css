@@ -69,9 +69,7 @@
     outline-style: dashed;
   }
   .dx-tree-item[data-drop-target]::after {
-    inset-inline-start: calc(
-      var(--dx-tree-inset) + var(--dx-tree-lead, 0px) + var(--dx-tree-drop-level, 0) * var(--dx-half-block-size)
-    );
+    inset-inline-start: calc(var(--dx-tree-inset) + var(--dx-tree-drop-level, 0) * var(--dx-half-block-size));
   }
   /* A link adds a reference and leaves the item where it is, so its line is dashed. */
   .dx-tree-item[data-drop-kind='link']::after {
@@ -204,9 +202,7 @@
     display: contents;
   }
   @media (hover: hover) {
-    .dx-tree-item:not(:hover, :focus-within, [data-selected], :has([aria-expanded='true']))
-      .dx-tree-item-actions:not([data-pinned])
-      > * {
+    .dx-tree-item:not(:hover, :focus-within, [data-selected], :has([aria-expanded='true'])) .dx-tree-item-actions > * {
       opacity: 0;
     }
   }
@@ -244,8 +240,7 @@
     position: absolute;
     inset-block: 0;
     inset-inline-start: calc(
-      var(--dx-tree-inset, 0px) + var(--dx-tree-lead, 0px) + (var(--dx-tree-guide-level) + 0.5) *
-        var(--dx-half-block-size)
+      var(--dx-tree-inset, 0px) + (var(--dx-tree-guide-level) + 0.5) * var(--dx-half-block-size)
     );
     width: 0;
     border-inline-start: 1px solid var(--color-separator-subtle);

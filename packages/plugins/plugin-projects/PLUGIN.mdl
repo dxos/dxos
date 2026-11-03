@@ -275,11 +275,10 @@ test QA-4: Plan a project and hand its tasks to an agent
       note: Without `assignee` the claim is refused, since no person would answer for the task.
     - name: Select tasks for the agent
       do: |
-        Point at "Order green beans" and tick it, then tick "Hire a roastery assistant", then point at "Delegate
-        selected tasks to agent".
+        Tick "Order green beans", then tick "Hire a roastery assistant", then point at "Delegate selected tasks to
+        agent".
       expect: |
-        a row's checkbox shows only while the row is pointed at until one is ticked, then on every row. The two rows
-        are selected and the button is enabled
+        every row shows its checkbox, beside its mnemonic button. The two rows are selected and the button is enabled
       note: Clicking it starts a delegated chat that needs a model; QA-1 and QA-2 walk that path.
 ```
 
@@ -1608,4 +1607,11 @@ decision D-149: Where [D-141], [D-142], [D-146] and [D-147] give a step the near
   why: Every writer stores the person on each step it touches, so one level up already holds the answer a walk would find.
   rejected:
     - Keeping a walk inside `Task.owner`, which makes every read inherit and leaves the stored person optional.
+```
+
+```mdl
+decision D-150: Selection checkboxes show on every row at all times, beside the mnemonic button, in place of the hover-only checkboxes of [D-107]. The caret and the indent guides stay ahead of them.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [QA-4]
 ```

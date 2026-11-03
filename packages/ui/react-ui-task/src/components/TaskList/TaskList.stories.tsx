@@ -1384,14 +1384,9 @@ export const TestCheckboxSelection: Story = {
     // Checkbox and ordinal are mutually exclusive: the box takes the gutter cell, so no row numbers.
     await expect(canvasElement.querySelectorAll('[data-testid="taskList.item.ordinal"]').length).toBe(0);
 
-    const hidden = () => boxes().filter((box) => box.closest('[data-part="item-actions"]:not([data-pinned])'));
-    await expect(hidden()).toHaveLength(boxes().length);
-
     const before = statuses();
     await userEvent.click(boxes()[0]);
     await waitFor(async () => expect(boxes()[0].getAttribute('data-state')).toBe('checked'));
-    await waitFor(async () => expect(hidden()).toHaveLength(0));
-    await expect(boxes()[0].contains(document.activeElement)).toBe(true);
     // A second row checks alongside the first — a set, not a single selection.
     await userEvent.click(boxes()[1]);
     await waitFor(async () => expect(boxes()[1].getAttribute('data-state')).toBe('checked'));
