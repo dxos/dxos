@@ -40,7 +40,7 @@ const shapeError = ({ task, create, assign, unassign, title, status }: TaskChang
     return '`assign` and `unassign` contradict each other';
   }
   if (unassign && (create || status === 'started')) {
-    return 'a task you create or start is assigned to you, so it cannot also be unassigned';
+    return 'a task you create or start is yours to work, so it cannot also be unassigned';
   }
   return undefined;
 };
@@ -59,7 +59,8 @@ const claim = (
   { assigning, unassign }: { assigning: boolean; unassign?: boolean },
 ): Pick<Task.Edit, 'assignee' | 'delegate'> => {
   if (assigning) {
-    const answering = Task.owner(task) || Task.sameActor(task.assignee, self) ? undefined : Task.owner(Task.getParentTask(task));
+    const answering =
+      Task.owner(task) || Task.sameActor(task.assignee, self) ? undefined : Task.owner(Task.getParentTask(task));
     return { delegate: self, ...(answering ? { assignee: { ...answering } } : {}) };
   }
   if (unassign) {
