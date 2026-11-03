@@ -30,6 +30,7 @@
       "types": "./dist/types/src/data.d.ts",
       "import": "./dist/lib/data.mjs"
     },
+    "./data/raw/*": "./data/raw/*",
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",

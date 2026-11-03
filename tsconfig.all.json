@@ -418,6 +418,9 @@
       "path": "packages/plugins/plugin-brain/tsconfig.json"
     },
     {
+      "path": "packages/core/compute/plugin-builder/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-calls/tsconfig.json"
     },
     {
@@ -437,6 +440,9 @@
     },
     {
       "path": "packages/plugins/plugin-cloudflare/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-cloudflare-os/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-code/tsconfig.json"
@@ -518,6 +524,9 @@
     },
     {
       "path": "packages/plugins/plugin-higgsfield/tsconfig.json"
+    },
+    {
+      "path": "packages/core/compute/plugin-host-cloudflare/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-ibkr/tsconfig.json"

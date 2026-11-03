@@ -2,11 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, test } from 'vitest';
+import { EditorState } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
+import { describe, test, vi } from 'vitest';
 
 import { trim } from '@dxos/util';
 
-import { xmlElementLength } from './typewriter.ts';
+import { typewriter, xmlElementLength } from './typewriter.ts';
 
 describe('typewriter', () => {
   test('xmlElementLength handles hyphenated custom element names', ({ expect }) => {
@@ -61,5 +63,16 @@ describe('typewriter', () => {
   test('xmlElementLength handles tags with only blank lines', ({ expect }) => {
     const el = '<reasoning>\n\n\n</reasoning>';
     expect(xmlElementLength(el)).toBe(el.length);
+  });
+
+  test('cursor lingers after the last drained character', async ({ expect }) => {
+    const view = new EditorView({ state: EditorState.create({ extensions: [typewriter({ cursor: true })] }) });
+    try {
+      view.dispatch({ changes: { from: 0, insert: 'task' } });
+      await vi.waitFor(() => expect(view.state.doc.toString()).toBe('task'));
+      expect(view.contentDOM.textContent).toBe('task∗');
+    } finally {
+      view.destroy();
+    }
   });
 });

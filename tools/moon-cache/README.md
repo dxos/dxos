@@ -200,6 +200,11 @@ MOON_CACHE_SHARED_WORKTREE_CACHE=false MOON_EXPERIMENT_CAS_OUTPUTS_CACHE=false m
    queueing is inside `bazel-remote` rather than under it. Hydration is what CI waits on, so this
    is a lower priority than it looks. Pinning it down needs `--profile_address` on the unit, which
    needs a restart; add it the next time one is spent.
+9. **Blobs cross the wire as zstd, not only on disk.** `remote.cache.compression: 'zstd'` in
+   `.moon/workspace.yml` matches the server's `--storage_mode zstd`. Dropping it multiplies the
+   droplet's billed egress by about the server's storage ratio, 3.1× across the whole cache (one
+   small build chain measured 5.5× on download). If the server ever stops advertising zstd, moon
+   logs one warning ending "falling back to no compression" and carries on uncompressed.
 
 ## The server
 
