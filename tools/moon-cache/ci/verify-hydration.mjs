@@ -155,6 +155,9 @@ const dropLocalManifest = (root, hash) => {
   }
 };
 
+/** Set once a bad entry is found, so an exception after that point fails the step instead of passing. */
+const repairState = { started: false };
+
 /** Checks what the finished run hydrated and repairs bad entries; returns the exit status to report. */
 const verify = (args, startedAt, status) => {
   const root = findWorkspaceRoot(process.cwd());
@@ -180,6 +183,7 @@ const verify = (args, startedAt, status) => {
     return status;
   }
 
+  repairState.started = true;
   for (const task of broken) {
     annotate(
       'warning',
@@ -244,7 +248,12 @@ const main = () => {
   try {
     return verify(args, startedAt, status);
   } catch (error) {
-    annotate('warning', `Hydration check failed: ${error instanceof Error ? error.message : String(error)}`);
+    const message = error instanceof Error ? error.message : String(error);
+    if (repairState.started) {
+      annotate('error', `Repairing a bad cache entry failed: ${message}`);
+      return status !== 0 ? status : 1;
+    }
+    annotate('warning', `Hydration check failed: ${message}`);
     return status;
   }
 };
