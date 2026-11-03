@@ -72,7 +72,7 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
         patch.description = values.description;
       }
       if (Object.keys(patch).length > 0) {
-        handleUpdate(task, patch);
+        void handleUpdate(task, patch);
       }
     },
     [task, handleUpdate],

@@ -45,7 +45,6 @@ import { meta } from '#meta';
 import { TaskOperation, TasksCapabilities, TaskSetView } from '#types';
 
 import {
-  applyPersonEdit,
   useDelegateActions,
   useDescriptionComponents,
   useMarkdownExtensions,
@@ -174,7 +173,7 @@ export const TaskSetArticle = ({
       }
       const [task] = db?.query(Filter.and(Filter.type(Task.Task), Filter.id(data.task.id))).runSync() ?? [];
       if (task && finished) {
-        await applyPersonEdit(invokePromise, task, { status }, spaceId);
+        await invokePromise(TaskOperation.AcceptTask, { task: Ref.make(task) }, { spaceId });
       }
       if (task && onTaskCreated) {
         await onTaskCreated(task);
