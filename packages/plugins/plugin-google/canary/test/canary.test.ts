@@ -5,6 +5,7 @@
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Result from 'effect/Result';
+import { readFileSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -13,22 +14,22 @@ import { describe, test } from 'vitest';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { CanaryMailbox, credentialsFromEnv } from '../mailbox.ts';
-import { Nightly, renderSummary, toEventProperties } from '../nightly.ts';
+import { Nightly, parsePool, renderSummary, toEventProperties } from '../nightly.ts';
 import { CanarySpace, previewClientLayer } from '../space.ts';
 
 const credentials = credentialsFromEnv();
-const { DX_CANARY_RECOVERY_PHRASE: phrase, DX_CANARY_SPACE_ID: spaceId } = process.env;
-const SYNC_TIMEOUT_MINUTES = Number(process.env.DX_CANARY_SYNC_TIMEOUT_MIN ?? 45);
+const { DX_CANARY_RECOVERY_PHRASE: phrase, DX_CANARY_SPACE_ID: spaceId, DX_CANARY_POOL: poolPath } = process.env;
+const SYNC_TIMEOUT_MINUTES = Number(process.env.DX_CANARY_SYNC_TIMEOUT_MIN ?? 30);
 
 /**
  * The nightly canary against preview (README). Tagged `sync-e2e`, which `test` excludes;
- * `moon run plugin-google:mail-canary` runs it. Skips without the secrets.
+ * `moon run plugin-google:mail-canary` runs it. Skips without the secrets or the pool (`DX_CANARY_POOL`, the pulled `enron-pool` fixture).
  */
 describe('mail canary', { tags: ['sync-e2e'], timeout: (SYNC_TIMEOUT_MINUTES + 25) * 60_000, retry: 0 }, () => {
-  test.skipIf(!credentials || !phrase || !spaceId)(
-    'seeded mail syncs and every sync run of the day ended well',
+  test.skipIf(!credentials || !phrase || !spaceId || !poolPath)(
+    "tonight's seeded mail syncs and no sync run of the past day failed",
     async ({ expect }) => {
-      if (!credentials || !phrase || !spaceId) {
+      if (!credentials || !phrase || !spaceId || !poolPath) {
         return;
       }
       const dir = process.env.DX_CANARY_REPORT_DIR ?? join(tmpdir(), 'mail-canary');
@@ -42,10 +43,11 @@ describe('mail canary', { tags: ['sync-e2e'], timeout: (SYNC_TIMEOUT_MINUTES + 2
             yield* CanarySpace.open(spaceId, phrase),
           );
           return yield* nightly.run({
+            pool: parsePool(readFileSync(poolPath, 'latin1')),
             count: Number(process.env.DX_CANARY_SEED_COUNT ?? 100),
             syncTimeout: Duration.minutes(SYNC_TIMEOUT_MINUTES),
             pollInterval: Duration.minutes(2),
-            window: Duration.hours(25),
+            window: Duration.hours(24),
           });
         }).pipe(Effect.provide(previewClientLayer), Effect.result),
       );

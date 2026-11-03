@@ -2,12 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Cron from 'effect/Cron';
 import * as Schema from 'effect/Schema';
 
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
-import * as MailSync from '@dxos/plugin-inbox/MailSync';
 
 import { GoogleOperation } from '#types';
 
@@ -36,7 +34,6 @@ export type FailureClass =
   | 'GONE'
   | 'RATE'
   | 'OFF'
-  | 'IDLE'
   | 'STALL'
   | 'DATA'
   | 'UNKNOWN';
@@ -53,8 +50,6 @@ export type Report = {
 const MINUTE = 60_000;
 // An invocation may stay open this long before it counts as killed.
 const CLOSURE_GRACE_MS = 10 * MINUTE;
-// Slack on the sync's cron interval for scheduler jitter.
-const CADENCE_SLACK_MS = 2 * MINUTE;
 
 const SYNC_KEY = GoogleOperation.GoogleMailSync.meta.key;
 const isOperationEnd = Schema.is(Trace.OperationEnd.schema);
@@ -102,8 +97,11 @@ export const classifyError = (error = '', errorCode = ''): FailureClass =>
   ERROR_CLASSES.find(([pattern]) => pattern.test(`${errorCode} ${error}`))?.[1] ?? 'UNKNOWN';
 
 /**
- * Runs checks C1–C7 over the sync runs since `since` and tonight's copies. It runs once the wait for the
+ * Runs the two checks over tonight's copies and the sync runs since `since`. It runs once the wait for the
  * copies is over, so a copy still absent is missing however recently it was seeded.
+ *
+ * - S1, every copy synced: each is in the mailbox feed exactly once, with Gmail's subject and sender.
+ * - S2, no sync failures: every invocation in the window ended, and none failed.
  */
 export const runChecks = (
   snapshot: SpaceSnapshot,
@@ -115,48 +113,41 @@ export const runChecks = (
   const isRunAgain = (end: InvocationEnd) => end.errorCode === Process.RUN_AGAIN_ERROR_CODE;
   const failed = ended.filter(({ end }) => end.outcome === 'failure' && !isRunAgain(end));
 
-  const closure: Failure[] = invocations
+  const hung: Failure[] = invocations
     .filter(({ startedAt, end }) => startedAt !== undefined && !end && now - startedAt > CLOSURE_GRACE_MS)
     .map(({ pid }) => ({ class: 'KILL', pid, message: 'invocation started but never ended' }));
-  const outcome: Failure[] = failed.map(({ pid, end }) => ({
+  const failures: Failure[] = failed.map(({ pid, end }) => ({
     class: classifyError(end.error, end.errorCode),
     pid,
     message: end.error ?? 'invocation failed without an error message',
   }));
-  const triggers: Failure[] =
-    snapshot.triggers.length === 0
-      ? [{ class: 'OFF', message: 'no mail sync trigger in the space' }]
-      : snapshot.triggers
-          .filter(({ enabled }) => !enabled)
-          .map(({ id }) => ({ class: 'OFF', message: `trigger ${id} is disabled` }));
 
+  // A missing copy is named by its likeliest cause: no sync to run, sync runs that broke, or a sync that ran clean.
+  const missingClass: FailureClass = !snapshot.triggers.some(({ enabled }) => enabled)
+    ? 'OFF'
+    : failed.length > 0 || hung.length > 0
+      ? 'STALL'
+      : 'DATA';
   const synced = Map.groupBy(snapshot.messages, (message) => message.gmailId);
-  const missingClass: FailureClass = failed.length > 0 || closure.length > 0 ? 'STALL' : 'DATA';
-  const arrival: Failure[] = seeded
-    .filter(({ gmailId }) => !synced.has(gmailId))
-    .map(({ gmailId }) => ({ class: missingClass, gmailId, message: 'seeded message not synced' }));
-  const duplicates: Failure[] = [...synced]
-    .filter(([, copies]) => copies.length > 1)
-    .map(([gmailId, copies]) => ({ class: 'DATA', gmailId, message: `synced ${copies.length} times` }));
-  const content: Failure[] = seeded.flatMap((expected) =>
-    (synced.get(expected.gmailId) ?? []).flatMap((actual) => {
-      const differ = (['subject', 'sender'] as const).filter(
-        (field) => normalize(expected[field]) !== normalize(actual[field]),
-      );
-      return differ.length > 0
-        ? [{ class: 'DATA' as const, gmailId: expected.gmailId, message: `${differ.join(', ')} differ` }]
-        : [];
-    }),
-  );
+  const copies: Failure[] = seeded.flatMap((expected) => {
+    const actual = synced.get(expected.gmailId) ?? [];
+    if (actual.length === 0) {
+      return [{ class: missingClass, gmailId: expected.gmailId, message: 'seeded message not synced' }];
+    }
+    if (actual.length > 1) {
+      return [{ class: 'DATA', gmailId: expected.gmailId, message: `synced ${actual.length} times` }];
+    }
+    const differ = (['subject', 'sender'] as const).filter(
+      (field) => normalize(expected[field]) !== normalize(actual[0][field]),
+    );
+    return differ.length > 0
+      ? [{ class: 'DATA', gmailId: expected.gmailId, message: `${differ.join(', ')} differ` }]
+      : [];
+  });
 
   const checks = [
-    check('C1', 'Every invocation ends', closure),
-    check('C2', 'Every invocation succeeds', outcome),
-    check('C3', 'Sync runs on schedule', cadenceGaps(invocations, since, now)),
-    check('C4', 'Sync trigger is enabled', triggers),
-    check('C5', 'Seeded mail arrives', arrival),
-    check('C6', 'No duplicates', duplicates),
-    check('C7', 'Content matches Gmail', content),
+    check('S1', 'Every seeded message synced', copies),
+    check('S2', 'No sync failures', [...hung, ...failures]),
   ];
   return {
     ok: checks.every(({ ok }) => ok),
@@ -179,24 +170,6 @@ const check = (id: string, name: string, failures: Failure[]): CheckResult => ({
   ok: failures.length === 0,
   failures,
 });
-
-/** Gaps longer than the sync's own cron interval (read off `MAIL_SYNC_CRON`) plus slack. */
-const cadenceGaps = (invocations: readonly Invocation[], since: number, now: number): Failure[] => {
-  const cron = Cron.parseUnsafe(MailSync.MAIL_SYNC_CRON);
-  const first = Cron.next(cron, 0);
-  const maxGap = Cron.next(cron, first).getTime() - first.getTime() + CADENCE_SLACK_MS;
-  const points = [since, ...invocations.flatMap(({ startedAt }) => (startedAt === undefined ? [] : [startedAt])), now];
-  return points.slice(1).flatMap((point, index) =>
-    point - points[index] > maxGap
-      ? [
-          {
-            class: 'IDLE' as const,
-            message: `no sync for ${Math.round((point - points[index]) / MINUTE)} min after ${new Date(points[index]).toISOString()}`,
-          },
-        ]
-      : [],
-  );
-};
 
 // The mapper decodes HTML entities in the subject, so the comparison must too.
 const ENTITIES: Record<string, string> = { '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': "'" };

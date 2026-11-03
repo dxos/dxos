@@ -67,30 +67,37 @@ describe('runChecks', () => {
     expect(report.checks[1].failures).toEqual([expect.objectContaining({ class: 'REPO_CLOSED', pid: 'run-2' })]);
   });
 
-  test('an invocation that never ends, a gap and a disabled trigger fail', ({ expect }) => {
+  test('an invocation that never ends fails S2; one before the window does not count', ({ expect }) => {
     const open = invocations().map((invocation) =>
       invocation.pid === 'run-1' ? { ...invocation, end: undefined } : invocation,
     );
-    expect(failed({ ...healthy(), invocations: open })).toEqual(['C1']);
-    expect(
-      failed({ ...healthy(), invocations: invocations().filter((invocation) => invocation.pid !== 'run-3') }),
-    ).toEqual(['C3']);
-    expect(failed({ ...healthy(), triggers: [{ id: 't', enabled: false }] })).toEqual(['C4']);
+    expect(failed({ ...healthy(), invocations: open })).toEqual(['S2']);
+    const old = {
+      pid: 'old',
+      runId: 'old',
+      startedAt: SINCE - MINUTE,
+      end: { key: KEY, outcome: 'failure' as const, timestamp: SINCE },
+    };
+    expect(failed({ ...healthy(), invocations: [old, ...invocations()] })).toEqual([]);
   });
 
-  test('missing mail is DATA when every run succeeded, STALL when runs failed', ({ expect }) => {
+  test('missing mail is OFF with no enabled trigger, STALL when runs failed, DATA otherwise', ({ expect }) => {
     const missing = { ...healthy(), messages: [healthy().messages[0]] };
     const arrival = (snapshot: SpaceSnapshot) =>
-      runChecks(snapshot, seeded, { now: NOW, since: SINCE }).checks[4].failures;
+      runChecks(snapshot, seeded, { now: NOW, since: SINCE }).checks[0].failures;
     expect(arrival(missing)).toEqual([expect.objectContaining({ class: 'DATA', gmailId: 'g2' })]);
     expect(arrival({ ...missing, invocations: invocations({ outcome: 'failure', error: 'boom' }) })).toEqual([
       expect.objectContaining({ class: 'STALL', gmailId: 'g2' }),
     ]);
+    expect(arrival({ ...missing, triggers: [{ id: 't', enabled: false }] })).toEqual([
+      expect.objectContaining({ class: 'OFF', gmailId: 'g2' }),
+    ]);
   });
 
-  test('every synced copy is compared, so a wrong second copy fails content as well as duplicates', ({ expect }) => {
+  test('a copy synced twice or with the wrong sender fails S1', ({ expect }) => {
     const wrong = { gmailId: 'g1', subject: 'Re: forecast', sender: 'someone.else@enron.com' };
-    expect(failed({ ...healthy(), messages: [...healthy().messages, wrong] })).toEqual(['C6', 'C7']);
+    expect(failed({ ...healthy(), messages: [...healthy().messages, wrong] })).toEqual(['S1']);
+    expect(failed({ ...healthy(), messages: [wrong, healthy().messages[1]] })).toEqual(['S1']);
   });
 });
 

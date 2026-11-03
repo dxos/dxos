@@ -33,8 +33,8 @@ export type GmailCredentials = {
 /** The only mailbox the canary may write to. */
 export const CANARY_ACCOUNT = LIVE_GMAIL_ACCOUNT;
 
-/** The only label the canary puts on the test account's mail. */
-export const POOL_LABEL = 'enron-pool';
+/** The only label the canary puts on the test account's mail: every seeded copy carries it. */
+export const SEED_LABEL = 'enron-seed';
 
 export const credentialsFromEnv = (env = process.env): GmailCredentials | undefined =>
   env.GMAIL_CLIENT_ID && env.GMAIL_CLIENT_SECRET && env.GMAIL_REFRESH_TOKEN
@@ -48,7 +48,6 @@ type Request = (path: string, init?: { method?: string; body?: string }) => Effe
 
 const API = 'https://gmail.googleapis.com/gmail/v1/users/me';
 const Ref = Schema.Struct({ id: Schema.String });
-const Raw = Schema.Struct({ raw: Schema.String });
 
 /**
  * The test account's mailbox over plugin-google's Gmail client. It adds only what the canary needs:
@@ -79,22 +78,18 @@ export class CanaryMailbox {
     this.#request = request;
   }
 
-  /** Every message id matching a Gmail search, newest first. */
-  listIds(query: string): Effect.Effect<string[], MailboxError> {
+  /** The ids of messages matching a Gmail search, newest first: all of them, or the first `limit`. */
+  listIds(query: string, limit = Infinity): Effect.Effect<string[], MailboxError> {
     return Effect.gen({ self: this }, function* () {
       const ids: string[] = [];
       let pageToken: string | undefined;
       do {
-        const page = yield* retrying(this.#api.listMessages('me', query, 500, pageToken));
+        const page = yield* retrying(this.#api.listMessages('me', query, Math.min(500, limit), pageToken));
         ids.push(...(page.messages ?? []).map((message) => message.id));
         pageToken = page.nextPageToken;
-      } while (pageToken);
-      return ids;
+      } while (pageToken && ids.length < limit);
+      return ids.slice(0, limit);
     });
-  }
-
-  getRaw(id: string): Effect.Effect<string, MailboxError> {
-    return this.#call(Raw, `/messages/${id}?format=raw`).pipe(Effect.map(({ raw }) => decode(raw)));
   }
 
   /** The named headers, keyed by the names asked for: header names are case-insensitive. */
@@ -115,15 +110,6 @@ export class CanaryMailbox {
   /** Puts a message in the mailbox as if delivered now, without sending it. */
   insert(message: string, labelIds: readonly string[]): Effect.Effect<string, MailboxError> {
     return this.#write('/messages?internalDateSource=receivedTime', message, labelIds);
-  }
-
-  /** Imports a message as received mail dated by its own `Date` header, never as spam. */
-  import(message: string, labelIds: readonly string[]): Effect.Effect<string, MailboxError> {
-    return this.#write('/messages/import?internalDateSource=dateHeader&neverMarkSpam=true', message, labelIds);
-  }
-
-  trash(id: string): Effect.Effect<void, MailboxError> {
-    return retrying(this.#api.trashMessage('me', id)).pipe(Effect.asVoid);
   }
 
   /** The id of a user label, created when it does not exist yet. */
@@ -194,6 +180,5 @@ const accessToken = ({ clientId, clientSecret, refreshToken }: GmailCredentials)
     catch: (cause) => new CanaryError({ message: `cannot mint a Gmail access token: ${String(cause)}` }),
   });
 
-// Latin-1 round-trips every byte, so an 8-bit body survives decode and re-encode unchanged.
+// The pool is read as Latin-1, which round-trips every byte, so an 8-bit body reaches Gmail unchanged.
 const encode = (message: string): string => Buffer.from(message, 'latin1').toString('base64url');
-const decode = (raw: string): string => Buffer.from(raw, 'base64url').toString('latin1');

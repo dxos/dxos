@@ -12,7 +12,7 @@ on:
     inputs:
       count:
         type: string
-        description: 'Pool messages to rotate into fresh copies'
+        description: 'Pool messages to seed as new mail'
         default: '100'
 
 permissions:
@@ -24,7 +24,7 @@ env:
   MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
   MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
 
-# Two runs at once would rotate the same mailbox and judge each other's copies.
+# Two runs at once would read the same cursor and judge each other's copies.
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false
@@ -32,13 +32,28 @@ concurrency:
 jobs:
   canary:
     runs-on: ubuntu-24.04
-    timeout-minutes: 75
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
           filter: blob:none
       - uses: ./.github/actions/setup
+
+      # The pool lives in the encrypted `enron-pool` agents fixture, not in Gmail: the sync takes every message
+      # added to the account, so mail parked there would sync before the night it is seeded.
+      - name: Pull the Enron pool
+        env:
+          AGE_KEY: ${{ secrets.MAIL_CANARY_FIXTURES_AGE_KEY }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.MAIL_CANARY_R2_TOKEN }}
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends age
+          KEY_FILE="$RUNNER_TEMP/fixtures.key"
+          (umask 077 && printf '%s\n' "$AGE_KEY" > "$KEY_FILE")
+          DX_FIXTURES_AGE_KEY="$KEY_FILE" node tools/fixtures/bin/fixtures.mjs pull enron-pool --scope agents
+          rm -f "$KEY_FILE"
+          echo "DX_CANARY_POOL=$(ls testing/fixtures/enron-pool-*.mbox | sort | tail -1)" >> "$GITHUB_ENV"
 
       - name: Run canary
         env:

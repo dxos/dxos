@@ -7,8 +7,9 @@ import * as Effect from 'effect/Effect';
 
 import * as MailSync from '@dxos/plugin-inbox/MailSync';
 
+import { splitMbox } from '../scripts/mbox.ts';
 import { type Report, type SeededMessage, type SpaceSnapshot, runChecks } from './checks.ts';
-import { CanaryError, type CanaryMailbox, type MailboxError, POOL_LABEL } from './mailbox.ts';
+import { CanaryError, type CanaryMailbox, type MailboxError, SEED_LABEL } from './mailbox.ts';
 import { type CanarySpace } from './space.ts';
 
 /** Everything one nightly run produced; written to disk before the test asserts. */
@@ -17,33 +18,41 @@ export type NightlyReport = Report & {
   readonly spaceId: string;
   readonly seeded: number;
   readonly poolSize: number;
+  /** Pool index of tonight's first copy; the next run starts where this one ended. */
+  readonly poolStart: number;
   /** Minutes until every copy was in the mailbox feed; absent when they never all arrived. */
   readonly syncMinutes?: number;
 };
 
 export type NightlyOptions = {
-  /** Pool messages to rotate into fresh copies. */
+  /** The Enron pool, one RFC 5322 message per entry, in a fixed order. */
+  readonly pool: readonly string[];
+  /** Pool messages to seed as new mail. */
   readonly count: number;
   /** How long to wait for every copy to reach the mailbox feed. */
   readonly syncTimeout: Duration.Input;
   readonly pollInterval: Duration.Input;
-  /** How far back the trace checks look; over a day, so consecutive nights overlap. */
+  /** How far back the sync failure check looks. */
   readonly window: Duration.Input;
 };
 
 /** The Gmail calls a run makes. */
-export type NightlyMailbox = Pick<
-  CanaryMailbox,
-  'ensureLabel' | 'listIds' | 'getRaw' | 'insert' | 'trash' | 'getHeaders'
->;
+export type NightlyMailbox = Pick<CanaryMailbox, 'ensureLabel' | 'listIds' | 'insert' | 'getHeaders'>;
 
 // Gmail allows 250 quota units per user per second; an insert costs 25.
 const WRITE_CONCURRENCY = 4;
 
+/** Names a copy's pool index. */
+const SEED_HEADER = 'X-Dx-Seed';
+/** The pool index the next run starts at; every copy of a run carries the same one, so any of them is the cursor. */
+const NEXT_HEADER = 'X-Dx-Seed-Next';
+
 /**
- * One nightly run. It rotates the oldest pool messages into copies dated now (inserted before their
- * originals are trashed, so a failed night never shrinks the pool), waits for the space's own sync to
- * pick them up, then checks the whole window of sync runs and tonight's copies.
+ * One nightly run. It inserts the next `count` pool messages as mail received now, waits for the space's own
+ * sync to pick them up, then checks that every copy arrived intact and that no sync run in the window failed.
+ *
+ * The pool stays out of Gmail: the sync takes every message added to the account, so mail parked there would
+ * be synced the moment it landed rather than tonight.
  */
 export class Nightly {
   readonly #mailbox: NightlyMailbox;
@@ -54,10 +63,10 @@ export class Nightly {
     this.#space = space;
   }
 
-  run({ count, syncTimeout, pollInterval, window }: NightlyOptions): Effect.Effect<NightlyReport, MailboxError> {
+  run({ pool, count, syncTimeout, pollInterval, window }: NightlyOptions): Effect.Effect<NightlyReport, MailboxError> {
     return Effect.gen({ self: this }, function* () {
       const startedAt = new Date();
-      const { poolSize, seeded } = yield* this.rotate(count, startedAt);
+      const { start, seeded } = yield* this.seed(pool, count, startedAt);
 
       const deadline = startedAt.getTime() + Duration.toMillis(syncTimeout);
       let snapshot: SpaceSnapshot = yield* this.#space.snapshot();
@@ -82,31 +91,31 @@ export class Nightly {
         startedAt: startedAt.toISOString(),
         spaceId: this.#space.spaceId,
         seeded: seeded.length,
-        poolSize,
+        poolSize: pool.length,
+        poolStart: start,
         syncMinutes,
       };
     });
   }
 
-  /** Copies the `count` oldest pool messages into the inbox as new mail and trashes the originals. */
-  rotate(count: number, now: Date): Effect.Effect<{ poolSize: number; seeded: SeededMessage[] }, MailboxError> {
+  /** Inserts the `count` pool messages after the last run's into the inbox as mail received `now`. */
+  seed(
+    pool: readonly string[],
+    count: number,
+    now: Date,
+  ): Effect.Effect<{ start: number; seeded: SeededMessage[] }, MailboxError> {
     return Effect.gen({ self: this }, function* () {
-      // `slice(-count)` takes the whole pool for 0 or NaN, and a short pool would seed too few copies to judge.
-      const pool = Number.isInteger(count) && count > 0 ? yield* this.#mailbox.listIds(`label:${POOL_LABEL}`) : [];
-      if (pool.length < count || pool.length === 0) {
-        return yield* new CanaryError({ message: `cannot rotate ${count} of a pool of ${pool.length}` });
+      if (!Number.isInteger(count) || count <= 0 || count > pool.length) {
+        return yield* new CanaryError({ message: `cannot seed ${count} of a pool of ${pool.length}` });
       }
-      const label = yield* this.#mailbox.ensureLabel(POOL_LABEL);
-      // Gmail lists newest first, so the oldest pool messages are at the end.
+      const label = yield* this.#mailbox.ensureLabel(SEED_LABEL);
+      const start = yield* this.#cursor(pool.length);
+      const next = (start + count) % pool.length;
       const seeded = yield* Effect.forEach(
-        pool.slice(-count),
-        (poolId) =>
+        Array.from({ length: count }, (_, offset) => (start + offset) % pool.length),
+        (index) =>
           Effect.gen({ self: this }, function* () {
-            const id = yield* this.#mailbox.insert(makeSeedCopy(yield* this.#mailbox.getRaw(poolId), poolId, now), [
-              'INBOX',
-              label,
-            ]);
-            yield* this.#mailbox.trash(poolId);
+            const id = yield* this.#mailbox.insert(makeSeedCopy(pool[index], { index, next, now }), ['INBOX', label]);
             const { headers } = yield* this.#mailbox.getHeaders(id, ['Subject', 'From']);
             return {
               gmailId: id,
@@ -116,29 +125,53 @@ export class Nightly {
           }),
         { concurrency: WRITE_CONCURRENCY },
       );
-      return { poolSize: pool.length, seeded };
+      return { start, seeded };
+    });
+  }
+
+  /** Where the last run left off, read off its newest copy; 0 before the first run or on a pool it overran. */
+  #cursor(poolSize: number): Effect.Effect<number, MailboxError> {
+    return Effect.gen({ self: this }, function* () {
+      const [newest] = yield* this.#mailbox.listIds(`label:${SEED_LABEL}`, 1);
+      if (!newest) {
+        return 0;
+      }
+      const { headers } = yield* this.#mailbox.getHeaders(newest, [NEXT_HEADER]);
+      const next = Number(headers[NEXT_HEADER]);
+      return Number.isInteger(next) && next >= 0 && next < poolSize ? next : 0;
     });
   }
 }
 
-const DROPPED_HEADER = /^(date|message-id|bcc|x-dx-seed):/i;
+const DROPPED_HEADER = /^(date|message-id|bcc|x-dx-seed|x-dx-seed-next):/i;
 
 /**
- * A fresh copy of a pool message: new `Date` and `Message-ID` (Gmail may drop an insert whose id it has
- * seen) and an `X-Dx-Seed` header naming the original; `Bcc` is dropped and the body left byte for byte.
+ * A copy of a pool message as new mail: a `Date` of now, a fresh `Message-ID` (Gmail may drop an insert whose
+ * id it has seen) and the seed headers; `Bcc` is dropped and the body left byte for byte.
  */
-export const makeSeedCopy = (message: string, poolId: string, now: Date): string => {
+export const makeSeedCopy = (
+  message: string,
+  { index, next, now }: { index: number; next: number; now: Date },
+): string => {
   const end = /\r?\n\r?\n/.exec(message);
   const head = end ? message.slice(0, end.index) : message;
   // A header's folded continuation lines start with whitespace, so splitting before any other line keeps them.
   const kept = head.split(/\r?\n(?![ \t])/).filter((header) => !DROPPED_HEADER.test(header));
   const added = [
     `Date: ${now.toUTCString().replace('GMT', '+0000')}`,
-    `Message-ID: <${poolId}.${now.getTime()}@canary.dxos.org>`,
-    `X-Dx-Seed: ${poolId}`,
+    `Message-ID: <seed-${index}.${now.getTime()}@canary.dxos.org>`,
+    `${SEED_HEADER}: ${index}`,
+    `${NEXT_HEADER}: ${next}`,
   ];
   return [...added, ...kept].join(head.includes('\r\n') ? '\r\n' : '\n') + (end ? message.slice(end.index) : '');
 };
+
+// Gmail's simple upload takes 5 MB, and base64url grows a message by a third.
+const MAX_MESSAGE_BYTES = 3_500_000;
+
+/** The pool mbox as messages, in file order, without any too large to insert. */
+export const parsePool = (mbox: string): string[] =>
+  splitMbox(mbox).filter((message) => Buffer.byteLength(message, 'latin1') <= MAX_MESSAGE_BYTES);
 
 /** Flat properties for the `ci.mail-canary` PostHog event: no nesting, no message content. */
 export const toEventProperties = (report: NightlyReport): Record<string, string | number | boolean> => ({
@@ -149,6 +182,7 @@ export const toEventProperties = (report: NightlyReport): Record<string, string 
     .join(','),
   seeded: report.seeded,
   poolSize: report.poolSize,
+  poolStart: report.poolStart,
   syncMinutes: report.syncMinutes ?? -1,
   ...report.runs,
 });
@@ -160,7 +194,7 @@ export const renderSummary = (report: NightlyReport): string => {
   return [
     `## Mail canary: ${report.ok ? 'passed' : 'FAILED'}`,
     '',
-    `Space \`${report.spaceId}\`, ${report.startedAt}: seeded ${report.seeded} of ${report.poolSize}; the copies ${arrived}.`,
+    `Space \`${report.spaceId}\`, ${report.startedAt}: seeded ${report.seeded} from pool index ${report.poolStart} of ${report.poolSize}; the copies ${arrived}.`,
     `Sync runs: ${report.runs.runs} (${report.runs.invocations} invocations, ${report.runs.failed} failed).`,
     '',
     '| Check | Result | Failures |',
