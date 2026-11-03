@@ -18,15 +18,14 @@ import { CloudflareOs } from '#types';
 export type Account = { url: string; token: string };
 
 /** The account a connection stores: its token's source is the deployment's hostname. */
-export const fromConnection = (
+export const fromConnection: (
   connection: Connection.Connection,
-): Effect.Effect<Account, CloudflareOsError, Database.Service> =>
-  Effect.gen(function* () {
-    const accessToken = yield* Database.load(Connection.getAccessToken(connection)).pipe(
-      Effect.mapError((cause) => new CloudflareOsError({ message: 'The connection has no credential.', cause })),
-    );
-    return { url: Client.urlFromHost(accessToken.source), token: accessToken.token };
-  });
+) => Effect.Effect<Account, CloudflareOsError, Database.Service> = Effect.fnUntraced(function* (connection) {
+  const accessToken = yield* Database.load(Connection.getAccessToken(connection)).pipe(
+    Effect.mapError((cause) => new CloudflareOsError({ message: 'The connection has no credential.', cause })),
+  );
+  return { url: Client.urlFromHost(accessToken.source), token: accessToken.token };
+});
 
 /** The account a connection ref points at. */
 export const fromConnectionRef = (
@@ -43,16 +42,17 @@ export const open = (
 ): Effect.Effect<RpcStub<Protocol.AuthenticatedApi>, CloudflareOsError, Scope.Scope> => Client.authenticate(account);
 
 /** The bound workspace's account and an open session to it, closed with the scope. */
-export const openWorkspace = (
+export const openWorkspace: (
   workspace: CloudflareOs.Workspace,
-): Effect.Effect<RpcStub<Protocol.Overseer>, CloudflareOsError, Database.Service | Scope.Scope> =>
-  Effect.gen(function* () {
+) => Effect.Effect<RpcStub<Protocol.Overseer>, CloudflareOsError, Database.Service | Scope.Scope> = Effect.fnUntraced(
+  function* (workspace) {
     const account = yield* fromConnectionRef(workspace.connection);
     const user = yield* open(account);
     const overseer = user.openWorkspace(workspace.workspaceId);
     yield* Effect.addFinalizer(() => Effect.sync(() => Client.dispose(overseer)));
     return overseer;
-  });
+  },
+);
 
 /** The gadget a workpiece summary describes, or undefined for a worktree. */
 export const toGadget = (summary: Protocol.WorkpieceSummary): CloudflareOs.Gadget | undefined =>
@@ -112,23 +112,29 @@ export const gadgetSubscriber = (
   });
 };
 
+/** How long a gadget listing may take; a dropped socket never sends `ready`. */
+const LIST_TIMEOUT_MS = 30_000;
+
 /** The gadgets an overseer lists, read through a subscription closed once the listing is complete. */
 export const listGadgets = (
   overseer: RpcStub<Protocol.Overseer>,
 ): Effect.Effect<CloudflareOs.Gadget[], CloudflareOsError> =>
-  Client.call(
-    'Could not list the workspace gadgets.',
-    () =>
-      new Promise<CloudflareOs.Gadget[]>((resolve, reject) => {
-        const subscription = overseer.subscribeToWorkpieces(
-          gadgetSubscriber(
-            () => {},
-            (gadgets) => {
-              resolve(gadgets);
-              void subscription.then(Client.dispose, () => {});
-            },
-          ),
-        );
-        subscription.catch(reject);
+  Effect.suspend(() => {
+    // Per run, released on every exit (a timeout included), and safe if the subscription resolves after it.
+    let release = (): void => {};
+    return Client.call(
+      'Could not list the workspace gadgets.',
+      () =>
+        new Promise<CloudflareOs.Gadget[]>((resolve, reject) => {
+          const subscription = overseer.subscribeToWorkpieces(gadgetSubscriber(() => {}, resolve));
+          release = () => void subscription.then(Client.dispose, () => {});
+          subscription.catch(reject);
+        }),
+    ).pipe(
+      Effect.timeoutOrElse({
+        duration: LIST_TIMEOUT_MS,
+        orElse: () => Effect.fail(new CloudflareOsError({ message: 'Listing the workspace gadgets timed out.' })),
       }),
-  );
+      Effect.ensuring(Effect.sync(() => release())),
+    );
+  });

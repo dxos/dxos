@@ -19,7 +19,7 @@ import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, Hypergraph, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
-import { type DatabaseImpl, EchoClient, makeRegistry } from '@dxos/echo-client';
+import { type DatabaseImpl, EchoClient, type TypeSource, makeRegistry } from '@dxos/echo-client';
 import { refFromEncodedReference } from '@dxos/echo/internal';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
@@ -67,6 +67,11 @@ export interface FunctionWrappingOptions {
    * Toolkits to make available via the `OpaqueToolkitProvider`.
    */
   toolkits?: OpaqueToolkit.OpaqueToolkit[];
+
+  /**
+   * Resolves a type the database's registry and space do not hold, e.g. from EDGE's registry of published types.
+   */
+  typeSource?: TypeSource;
 }
 
 /**
@@ -208,6 +213,7 @@ export class FunctionContext extends Resource {
   readonly opts: FunctionWrappingOptions;
   /** Released in `_close`: this is a `Resource`, so a reopen would otherwise stack registrations. */
   #unregisterBlobBackend: (() => void) | undefined;
+  #unregisterTypeSource: (() => void) | undefined;
 
   constructor(context: FunctionProtocol.Context, opts: FunctionWrappingOptions) {
     super();
@@ -281,6 +287,9 @@ export class FunctionContext extends Resource {
     if (this.opts.types?.length && this.db) {
       this.db.graph.registry.add(this.opts.types);
     }
+    if (this.opts.typeSource && this.client) {
+      this.#unregisterTypeSource = this.client.graph.registerTypeSource(this.opts.typeSource);
+    }
 
     // Register the S3 backend so a handler running here can write to a bucket the space is
     // connected to. Without it this host has inline storage only (4 MiB), and an upload would land
@@ -303,6 +312,8 @@ export class FunctionContext extends Resource {
   override async _close() {
     this.#unregisterBlobBackend?.();
     this.#unregisterBlobBackend = undefined;
+    this.#unregisterTypeSource?.();
+    this.#unregisterTypeSource = undefined;
     await this.db?.close();
     await this.client?.close();
   }
