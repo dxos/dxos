@@ -74,7 +74,7 @@ export const ConfigSection = ({ db, project, instructions }: ConfigSectionProps)
   );
 };
 
-/** The declared groups, contributions with one id merged into one group in contribution order, sorted by `order`. */
+/** The declared groups, contributions with one id merged into one group, groups and their fields sorted by `order`. */
 const useConfigGroups = (): readonly ProjectCapabilities.ConfigGroup[] => {
   const contributed = Hooks.useCapabilities(ProjectCapabilities.ConfigGroup);
   return useMemo(() => mergeGroups(contributed), [contributed]);
@@ -98,7 +98,8 @@ export const mergeGroups = (
     );
   }
 
-  return [...groups.values()].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const byOrder = <T extends { order?: number }>(a: T, b: T) => (a.order ?? 0) - (b.order ?? 0);
+  return [...groups.values()].map((group) => ({ ...group, fields: [...group.fields].sort(byOrder) })).sort(byOrder);
 };
 
 /** A group's line when folded: the count of each list, a string as itself, nothing for what is empty. */

@@ -11,7 +11,6 @@ export default defineConfig({
     'operations': 'src/operations/index.ts',
     'skills': 'src/skills/index.ts',
     'ClaudeSkill': 'src/skills/ClaudeSkill.ts',
-    'RepositoriesSkill': 'src/skills/RepositoriesSkill.ts',
     'translations': 'src/translations.ts',
     'ClaudeAgentOperation': 'src/types/ClaudeAgentOperation.ts',
     'ClaudeAgentSession': 'src/types/ClaudeAgentSession.ts',

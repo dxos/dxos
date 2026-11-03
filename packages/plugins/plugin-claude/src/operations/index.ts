@@ -17,7 +17,4 @@ export const ClaudeAgentOperationHandlerSet = OperationHandlerSet.lazy([
     Operation.lazyHandler(() => import('./update-session-credentials.ts')),
   ),
   ClaudeAgentOperation.GetTranscript.pipe(Operation.lazyHandler(() => import('./get-transcript.ts'))),
-  ClaudeAgentOperation.UpdateProjectRepositories.pipe(
-    Operation.lazyHandler(() => import('./update-project-repositories.ts')),
-  ),
 ]);

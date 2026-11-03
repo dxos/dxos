@@ -24,6 +24,6 @@ describe('RepositoriesSkill', () => {
       .map((operation) => Operation.toolName(operation));
 
     expect(unprojectable).toEqual([]);
-    expect([...RepositoriesSkill.make().tools]).toEqual(['claude-update-project-repositories']);
+    expect([...RepositoriesSkill.make().tools]).toEqual(['code-update-project-repositories']);
   });
 });

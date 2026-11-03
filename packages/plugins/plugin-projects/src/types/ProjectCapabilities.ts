@@ -133,6 +133,8 @@ export type ConfigField = {
   enabled?: Atom.Atom<boolean>;
   /** A button at the end of a text field that sets its value, such as the desktop app's folder picker. */
   action?: FormFieldAction;
+  /** Fields sort by it within their group, lowest first, so plugins that fill one group interleave predictably. */
+  order?: number;
 };
 
 /**
@@ -142,7 +144,7 @@ export type ConfigField = {
 export type ConfigGroup = {
   id: string;
   label: Translations.Label;
-  /** Groups sort by it, lowest first; a group's fields keep contribution order. */
+  /** Groups sort by it, lowest first. */
   order?: number;
   fields: readonly ConfigField[];
 };

@@ -35,4 +35,5 @@ export const CodeOperationHandlerSet = OperationHandlerSet.lazy([
   CodeOperation.ImportFeatureLinks.pipe(Operation.lazyHandler(() => import('./feature/import-links.ts'))),
   CodeOperation.ImportSpecFeatures.pipe(Operation.lazyHandler(() => import('./feature/import-spec.ts'))),
   CodeOperation.ExportSpecFeatures.pipe(Operation.lazyHandler(() => import('./feature/export-spec.ts'))),
+  CodeOperation.UpdateProjectRepositories.pipe(Operation.lazyHandler(() => import('./update-project-repositories.ts'))),
 ]);

@@ -9,12 +9,12 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
-import { ClaudeAgentOperation } from '#types';
+import { CodeOperation } from '#types';
 
-export const key = 'org.dxos.skill.claude.repositories';
+export const key = 'org.dxos.skill.code.repositories';
 
 /** Operation definitions behind the skill's tools, for hosts without a registry to resolve ToolIds. */
-export const operations: readonly Operation.Definition.Any[] = [ClaudeAgentOperation.UpdateProjectRepositories];
+export const operations: readonly Operation.Definition.Any[] = [CodeOperation.UpdateProjectRepositories];
 
 /** Builds the skill, binding the operations above as its tools. */
 export const make = (): Skill.Skill =>

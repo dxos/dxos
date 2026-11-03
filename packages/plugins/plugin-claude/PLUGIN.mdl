@@ -333,20 +333,11 @@ feat F-9: Claude Code (cloud)
       started, and EDGE reports the mode and model the agent actually runs with
 
   req F-9.6:
-    when: a project's overview is open
+    when: a project's overview is open where an agent host exists
     then: |
-      the Software group of its Config section lists the project's
-      repositories, which a cloud session checks out, and the user adds,
-      removes and reorders them there; where an agent host exists, the group
-      also holds the project's code folder on this device, as a path the user
-      types or, in the desktop app, chooses with the folder picker
-
-  req F-9.7:
-    when: an agent is asked to give a project a repository, or to take one away
-    then: |
-      it adds or removes the repository in the project's repositories with
-      Update Project Repositories, from the Project Repositories skill; a
-      repository already listed keeps its place
+      the Software group of its Config section holds the project's code
+      folder on this device, below the project's repositories, as a path the
+      user types or, in the desktop app, chooses with the folder picker
 ```
 
 ## Acceptance
@@ -787,6 +778,23 @@ decision D-16: The code folder field carries a field action, shown only in the d
   why: A field action is data the overview's form renders, so the group keeps to plugin-projects D-160. The web app has no directory dialog, so there the folder stays a typed path.
   rejected:
     - Replacing the text control with the picker, which leaves the web app and a pasted path with no way in.
+```
+
+```mdl
+decision D-17: The repositories operation, its skill and the Software group's repositories field belong in plugin-code, where a project's software extensions are. This plugin keeps the code folder in that group, below the repositories, and depends on plugin-code, so enabling Claude enables Code.
+  date: 2026-11-03
+  by: user:wittjosiah
+  supersedes: D-12
+  affects: [F-9.6, F-9.7]
+```
+
+```mdl
+decision D-18: The dependency is the `dependsOn` this plugin already declares on plugin-code, which the plugin manager enables first. The code folder field sorts after the repositories by its field order, and F-9.7 moves to plugin-code as its F-23.2. Fills in [D-17]; replaces where [D-13] and [D-14] put the operation, the skill and the repositories field.
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.6, F-9.7]
+  why: Fields from two plugins in one group keep plugin load order, which puts this plugin's ahead of plugin-code's.
 ```
 
 ## Appendix: Extension Definitions
