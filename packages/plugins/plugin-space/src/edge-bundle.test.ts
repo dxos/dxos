@@ -14,16 +14,13 @@ import { afterAll, beforeAll, describe, test } from 'vitest';
 import { DXN, JsonSchema, Type } from '@dxos/echo';
 import { SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/keys';
+import { type DataPlane, type LoadedBundle, PluginBundle, buildBundle, loadBundle } from '@dxos/plugin-builder';
 import { type EdgeFunctionEnv, type PluginProtocol } from '@dxos/protocols';
-
-import { buildBundle } from './build-bundle.ts';
-import { type DataPlane, type LoadedBundle, loadBundle } from './load-bundle.ts';
-import * as PluginBundle from './PluginBundle.ts';
 
 // The space plugin's bundle, built from source the way `check-edge-release` builds it, run alone as EDGE runs it
 // (EDGE-PLUGINS D-41), against a space served from memory in place of EDGE's db-service.
 
-const SPACE_PACKAGE_DIR = fileURLToPath(new URL('../../../../plugins/plugin-space', import.meta.url));
+const SPACE_PACKAGE_DIR = fileURLToPath(new URL('..', import.meta.url));
 
 /** Declared by plugin-markdown, whose bundle never runs beside the space plugin's on EDGE. */
 const DOCUMENT_TYPENAME = 'org.dxos.type.document';
