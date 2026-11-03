@@ -188,7 +188,7 @@ export const HistoryEntry = Schema.Union([CreatedEntry, UpdatedEntry, QuestionEn
 });
 export type HistoryEntry = Schema.Schema.Type<typeof HistoryEntry>;
 
-export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '0.6.0'))(
+export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '0.7.0'))(
   Schema.Struct({
     title: Schema.String.pipe(
       Schema.annotate({ title: 'Title' }),

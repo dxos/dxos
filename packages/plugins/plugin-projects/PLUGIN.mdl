@@ -1646,13 +1646,29 @@ decision D-151: QA-1 expects the agent to leave its five tasks in `review`, as Q
 ```
 
 ```mdl
-decision D-152: A project's two repository fields, `repo` and `repositories`, become one list of repositories.
+decision D-152: `Task` 0.7.0 holds `delegate` in place of `reviewers`. The migration from 0.6.0 makes the reviewer of a task assigned to an agent its assignee, and the agent its delegate. Fills in [D-124].
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [Task]
+```
+
+```mdl
+decision D-153: The migration takes the first person among a task's reviewers, drops the reviewers of a task a person is assigned, and takes a 0.5.0 task straight to 0.7.0 with the same conversion. It runs before the 0.5.0 pass, so that pass finds every migrated task at 0.7.0. Fills in [D-152].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [Task]
+  why: The assignee of a delegated task signs it off ([D-124]), so a second person reviewing a person's own task has no field to go to.
+  rejected:
+    - Chaining 0.5.0 through a frozen 0.6.0 type, which would make the hierarchy and set passes check for two task versions.
+
+decision D-154: A project's two repository fields, `repo` and `repositories`, become one list of repositories.
   date: 2026-11-03
   by: user:wittjosiah
 ```
 
 ```mdl
-decision D-153: The project's repositories are the `Repo.RepositoriesAnnotation` on it, an ordered list of repository refs defined beside `Repo`, and `Project` 0.8.0 has no repository field. The first repository takes over `repo`'s role: bare issue numbers resolve against it, and a cloud coding agent starts in it. plugin-claude renders the list in the project's settings. Fills in [D-152] and [D-45].
+decision D-155: The project's repositories are the `Repo.RepositoriesAnnotation` on it, an ordered list of repository refs defined beside `Repo`, and `Project` 0.8.0 has no repository field. The first repository takes over `repo`'s role: bare issue numbers resolve against it, and a cloud coding agent starts in it. plugin-claude renders the list in the project's settings. Fills in [D-154] and [D-45].
   date: 2026-11-03
   by: agent:claude-code
   for: user:wittjosiah
@@ -1664,7 +1680,7 @@ decision D-153: The project's repositories are the `Repo.RepositoriesAnnotation`
 ```
 
 ```mdl
-decision D-154: `Project` drops `session`, so delegating a task no longer seeds the chat's session config from its project. Fills in [D-152].
+decision D-156: `Project` drops `session`, so delegating a task no longer seeds the chat's session config from its project. Fills in [D-154].
   date: 2026-11-03
   by: agent:claude-code
   for: user:wittjosiah
@@ -1674,7 +1690,7 @@ decision D-154: `Project` drops `session`, so delegating a task no longer seeds 
 ```
 
 ```mdl
-decision D-155: The `Project` 0.7.0 migration moves `repo` and then `repositories` into the annotation, each repository once, and drops `session`. It runs after the 0.6.0 migration, and plugin-code lists both in that order before its spec migrations. Fills in [D-103] and [D-153].
+decision D-157: The `Project` 0.7.0 migration moves `repo` and then `repositories` into the annotation, each repository once, and drops `session`. It runs after the 0.6.0 migration, and plugin-code lists both in that order before its spec migrations. Fills in [D-103] and [D-155].
   date: 2026-11-03
   by: agent:claude-code
   for: user:wittjosiah
@@ -1682,35 +1698,35 @@ decision D-155: The `Project` 0.7.0 migration moves `repo` and then `repositorie
 ```
 
 ```mdl
-decision D-156: The project overview puts the most-used parts first: the name and description, then Notes, Artifacts, Milestones and Specs, then a Config section at the bottom. Artifacts stays a masonry but shows a limited number, with Show all once there are more; Show all should open a companion that lists every artifact, which is a to-do.
+decision D-158: The project overview puts the most-used parts first: the name and description, then Notes, Artifacts, Milestones and Specs, then a Config section at the bottom. Artifacts stays a masonry but shows a limited number, with Show all once there are more; Show all should open a companion that lists every artifact, which is a to-do.
   date: 2026-11-03
   by: user:wittjosiah
   affects: [F-5.2, F-5.3]
 ```
 
 ```mdl
-decision D-157: Config is a section like Milestones and Specs. Agent and Software are groups within it, each folded by default, and another plugin contributes Software, since the repositories come from an annotation.
+decision D-159: Config is a section like Milestones and Specs. Agent and Software are groups within it, each folded by default, and another plugin contributes Software, since the repositories come from an annotation.
   date: 2026-11-03
   by: user:wittjosiah
   affects: [F-5.5]
 ```
 
 ```mdl
-decision D-158: A plugin contributes a group as schema and data only, with no UI of its own: the form's existing fields render it.
+decision D-160: A plugin contributes a group as schema and data only, with no UI of its own: the form's existing fields render it.
   date: 2026-11-03
   by: user:wittjosiah
   affects: [F-5.6]
 ```
 
 ```mdl
-decision D-159: The project's name and description are edited in place, not behind an edit button.
+decision D-161: The project's name and description are edited in place, not behind an edit button.
   date: 2026-11-03
   by: user:wittjosiah
   affects: [F-5.1]
 ```
 
 ```mdl
-decision D-160: A group is a `ProjectCapabilities.ConfigGroup` (id, label, order, fields), and each field a key, a schema and a function from the project to a writable atom, with an optional `enabled` atom. The overview renders a group's fields as one nested form over a struct of their schemas and writes an edit through the field's atom; contributions with one id merge, and the project's own group is `agent`. This replaces the `ProjectSurface.Settings` surface. Fills in [D-157] and [D-158].
+decision D-162: A group is a `ProjectCapabilities.ConfigGroup` (id, label, order, fields), and each field a key, a schema and a function from the project to a writable atom, with an optional `enabled` atom. The overview renders a group's fields as one nested form over a struct of their schemas and writes an edit through the field's atom; contributions with one id merge, and the project's own group is `agent`. This replaces the `ProjectSurface.Settings` surface. Fills in [D-159] and [D-160].
   date: 2026-11-03
   by: agent:claude-code
   for: user:wittjosiah
@@ -1723,7 +1739,7 @@ decision D-160: A group is a `ProjectCapabilities.ConfigGroup` (id, label, order
 ```
 
 ```mdl
-decision D-161: The status sits beside the name in a four-column row, and neither shows a label. react-ui-form's field override gains `appearance`: `title` renders a text field in react-ui's new `title` input variant, and `plain` drops the input's well, as the description does. The Specs list heads its own section, and its list keeps "Specs" as its accessible name. Fills in [D-159].
+decision D-163: The status sits beside the name in a four-column row, and neither shows a label. react-ui-form's field override gains `appearance`: `title` renders a text field in react-ui's new `title` input variant, and `plain` drops the input's well, as the description does. The Specs list heads its own section, and its list keeps "Specs" as its accessible name. Fills in [D-161].
   date: 2026-11-03
   by: agent:claude-code
   for: user:wittjosiah
@@ -1732,7 +1748,7 @@ decision D-161: The status sits beside the name in a four-column row, and neithe
 ```
 
 ```mdl
-decision D-162: The overview shows six artifacts, and Show all shows the rest in place until the companion exists. Fills in [D-156].
+decision D-164: The overview shows six artifacts, and Show all shows the rest in place until the companion exists. Fills in [D-158].
   date: 2026-11-03
   by: agent:claude-code
   for: user:wittjosiah
@@ -1741,7 +1757,7 @@ decision D-162: The overview shows six artifacts, and Show all shows the rest in
 ```
 
 ```mdl
-decision D-163: A folded group's summary counts each list, quotes each text and skips what is empty. Fills in [D-157].
+decision D-165: A folded group's summary counts each list, quotes each text and skips what is empty. Fills in [D-159].
   date: 2026-11-03
   by: agent:claude-code
   for: user:wittjosiah
@@ -1750,7 +1766,7 @@ decision D-163: A folded group's summary counts each list, quotes each text and 
 ```
 
 ```mdl
-decision D-164: A milestone's progress counts the tasks of the level the overview shows, not every task in the project. Fills in [D-156].
+decision D-166: A milestone's progress counts the tasks of the level the overview shows, not every task in the project. Fills in [D-158].
   date: 2026-11-03
   by: agent:claude-code
   for: user:wittjosiah
@@ -1759,21 +1775,21 @@ decision D-164: A milestone's progress counts the tasks of the level the overvie
 ```
 
 ```mdl
-decision D-165: The project's status is shown as a pill in the top right corner of the overview, using the form's pill presentation.
+decision D-167: The project's status is shown as a pill in the top right corner of the overview, using the form's pill presentation.
   date: 2026-11-03
   by: user:wittjosiah
   affects: [F-5.1]
 ```
 
 ```mdl
-decision D-166: The project's name and description line up with the headings of the overview's sections (Notes, Artifacts, Specs).
+decision D-168: The project's name and description line up with the headings of the overview's sections (Notes, Artifacts, Specs).
   date: 2026-11-03
   by: user:wittjosiah
   affects: [F-5.1]
 ```
 
 ```mdl
-decision D-167: The status pill is required, so it offers no "None", and it sits at the end of the name's row. Supersedes the four-column row of [D-161]. Fills in [D-165].
+decision D-169: The status pill is required, so it offers no "None", and it sits at the end of the name's row. Supersedes the four-column row of [D-163]. Fills in [D-167].
   date: 2026-11-03
   by: agent:claude-code
   for: user:wittjosiah
@@ -1782,7 +1798,7 @@ decision D-167: The status pill is required, so it offers no "None", and it sits
 ```
 
 ```mdl
-decision D-168: react-ui's Input and Textarea gain a `plain` variant with no well and no inline inset, and `title` drops the inset too; the form's `plain` and `title` appearances use them. Fills in [D-166].
+decision D-170: react-ui's Input and Textarea gain a `plain` variant with no well and no inline inset, and `title` drops the inset too; the form's `plain` and `title` appearances use them. Fills in [D-168].
   date: 2026-11-03
   by: agent:claude-code
   for: user:wittjosiah
@@ -1793,35 +1809,35 @@ decision D-168: react-ui's Input and Textarea gain a `plain` variant with no wel
 ```
 
 ```mdl
-decision D-169: Each project status has a colour, and its name is capitalized wherever the UI shows it.
+decision D-171: Each project status has a colour, and its name is capitalized wherever the UI shows it.
   date: 2026-11-03
   by: user:wittjosiah
   affects: [F-5.1]
 ```
 
 ```mdl
-decision D-170: The gap between two of the overview's sections is wide enough that Artifacts, Milestones, Specs and Config never read as cramped together.
+decision D-172: The gap between two of the overview's sections is wide enough that Artifacts, Milestones, Specs and Config never read as cramped together.
   date: 2026-11-03
   by: user:wittjosiah
   affects: [F-5.2]
 ```
 
 ```mdl
-decision D-171: The Specs add button sits on the Specs heading's row, so no gap opens between the heading and the specs, and the specs line up with the Config groups at the same level of nesting.
+decision D-173: The Specs add button sits on the Specs heading's row, so no gap opens between the heading and the specs, and the specs line up with the Config groups at the same level of nesting.
   date: 2026-11-03
   by: user:wittjosiah
   affects: [F-5.7]
 ```
 
 ```mdl
-decision D-172: The overview keeps one consistent edge down its left side and its right side.
+decision D-174: The overview keeps one consistent edge down its left side and its right side.
   date: 2026-11-03
   by: user:wittjosiah
   affects: [F-5.2]
 ```
 
 ```mdl
-decision D-173: `Project`'s schema annotates its status with an option table, as `Task` does: Active in green, Paused in amber, Blocked in rose and Ended in neutral, each with an icon. The form's pill takes the title, icon and hue from it. Fills in [D-169].
+decision D-175: `Project`'s schema annotates its status with an option table, as `Task` does: Active in green, Paused in amber, Blocked in rose and Ended in neutral, each with an icon. The form's pill takes the title, icon and hue from it. Fills in [D-171].
   date: 2026-11-03
   by: agent:claude-code
   for: user:wittjosiah
@@ -1832,7 +1848,7 @@ decision D-173: `Project`'s schema annotates its status with an option table, as
 ```
 
 ```mdl
-decision D-174: A form section after another leaves three gaps above its heading, where rows inside a section leave one. A description edited in place is as tall as its text rather than three lines. Fills in [D-170].
+decision D-176: A form section after another leaves three gaps above its heading, where rows inside a section leave one. A description edited in place is as tall as its text rather than three lines. Fills in [D-172].
   date: 2026-11-03
   by: agent:claude-code
   for: user:wittjosiah
@@ -1841,7 +1857,7 @@ decision D-174: A form section after another leaves three gaps above its heading
 ```
 
 ```mdl
-decision D-175: react-ui-form's field override takes `appearance: 'section'` for an array, which renders the array as a section of its own with its label as the heading and its add button in the heading's actions. A form's array rows drop the list row's leading inset, so a row's fields start on the section's edge. Fills in [D-171] and [D-172].
+decision D-177: react-ui-form's field override takes `appearance: 'section'` for an array, which renders the array as a section of its own with its label as the heading and its add button in the heading's actions. A form's array rows drop the list row's leading inset, so a row's fields start on the section's edge. Fills in [D-173] and [D-174].
   date: 2026-11-03
   by: agent:claude-code
   for: user:wittjosiah
@@ -1852,21 +1868,21 @@ decision D-175: react-ui-form's field override takes `appearance: 'section'` for
 ```
 
 ```mdl
-decision D-176: The overview's Notes section shows no description; once the notes have content it only takes up space.
+decision D-178: The overview's Notes section shows no description; once the notes have content it only takes up space.
   date: 2026-11-03
   by: user:wittjosiah
   affects: [F-5.2]
 ```
 
 ```mdl
-decision D-177: Opening a milestone from the overview shows the Tasks tab filtered to that milestone's tasks.
+decision D-179: Opening a milestone from the overview shows the Tasks tab filtered to that milestone's tasks.
   date: 2026-11-03
   by: user:wittjosiah
   affects: [F-5.4]
 ```
 
 ```mdl
-decision D-178: A milestone row ends in an open button, on the right edge where a spec row's buttons sit, and the filter is the task list's own milestone filter (its per-device view state), which keeps a task by its effective milestone and keeps the ancestors of a match. Fills in [D-177].
+decision D-180: A milestone row ends in an open button, on the right edge where a spec row's buttons sit, and the filter is the task list's own milestone filter (its per-device view state), which keeps a task by its effective milestone and keeps the ancestors of a match. Fills in [D-179].
   date: 2026-11-03
   by: agent:claude-code
   for: user:wittjosiah
@@ -1879,13 +1895,13 @@ decision D-178: A milestone row ends in an open button, on the right edge where 
 ```
 
 ```mdl
-decision D-179: A config field may carry an action: a label, an icon and a function from the field's value to its new value. The form renders it as a button at the end of the field's text control and writes the value it returns, so a plugin keeps a picker without UI of its own. Fills in plugin-claude D-15, within [D-158].
+decision D-181: A config field may carry an action: a label, an icon and a function from the field's value to its new value. The form renders it as a button at the end of the field's text control and writes the value it returns, so a plugin keeps a picker without UI of its own. Fills in plugin-claude D-15, within [D-160].
   date: 2026-11-03
   by: agent:claude-code
   for: user:wittjosiah
   affects: [F-5.6]
-  why: An action is data the form renders, so [D-158] holds. The function returns a value and leaves the write to the form, so the field's atom stays the one write path.
+  why: An action is data the form renders, so [D-160] holds. The function returns a value and leaves the write to the form, so the field's atom stays the one write path.
   rejected:
-    - A custom field component from the plugin, which [D-158] rules out.
+    - A custom field component from the plugin, which [D-160] rules out.
     - A function that writes the atom itself, which gives the field a second write path.
 ```

@@ -765,10 +765,10 @@ decision D-14: The repositories and the code folder are the Software group of th
   by: agent:claude-code
   for: user:wittjosiah
   affects: [F-9.6]
-  why: plugin-projects D-158 asks for groups as schema and data with no UI of a plugin's own, and the form has no folder picker. Both fields come from this plugin, so it declares the group.
+  why: plugin-projects D-160 asks for groups as schema and data with no UI of a plugin's own, and the form has no folder picker. Both fields come from this plugin, so it declares the group.
   rejected:
     - plugin-code declaring Software, which owns neither field.
-    - Keeping the folder picker as a custom field, which plugin-projects D-158 rules out.
+    - Keeping the folder picker as a custom field, which plugin-projects D-160 rules out.
 ```
 
 ```mdl
@@ -784,7 +784,7 @@ decision D-16: The code folder field carries a field action, shown only in the d
   by: agent:claude-code
   for: user:wittjosiah
   affects: [F-9.6]
-  why: A field action is data the overview's form renders, so the group keeps to plugin-projects D-158. The web app has no directory dialog, so there the folder stays a typed path.
+  why: A field action is data the overview's form renders, so the group keeps to plugin-projects D-160. The web app has no directory dialog, so there the folder stays a typed path.
   rejected:
     - Replacing the text control with the picker, which leaves the web app and a pasted path with no way in.
 ```
