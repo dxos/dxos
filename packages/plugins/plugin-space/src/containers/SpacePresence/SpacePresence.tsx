@@ -2,15 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type ComponentProps, forwardRef, useCallback, useEffect, useState } from 'react';
+import React, { type ComponentProps, forwardRef, useEffect, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { generateName } from '@dxos/display-name';
-import { type Key, Obj } from '@dxos/echo';
+import { type Key } from '@dxos/echo';
 import { type Space } from '@dxos/halo';
 import { useIdentity, useMembers } from '@dxos/halo-react';
-import { PublicKey } from '@dxos/keys';
-import { useSpace } from '@dxos/react-client/echo';
 import { AttentionGlyph, type AttentionGlyphProps, useAttention } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
 import * as Avatar from '@dxos/react-ui/Avatar';
@@ -18,76 +16,60 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Popover from '@dxos/react-ui/Popover';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
 import type * as Util from '@dxos/react-ui/Util';
-import { ComplexMap, hexToFallback } from '@dxos/util';
+import { hexToFallback } from '@dxos/util';
 
 import { SpaceCapabilities, SpaceSchema } from '#types';
 
 import { SpaceNamespace } from '../../namespace.ts';
+import { PRESENCE_EXPIRY } from '../../util/index.ts';
 
-// TODO(thure): Get/derive these values from protocol
 const REFRESH_INTERVAL = 5000;
-const ACTIVITY_DURATION = 30_000;
-
-// TODO(thure): This is chiefly meant to satisfy TS & provide an empty map after `deepSignal` interactions.
-const noViewers = new ComplexMap<PublicKey, SpaceSchema.ObjectViewerProps>(PublicKey.hash);
 
 // TODO(wittjosiah): Factor out?
 const getName = (member: Space.Member) => member.displayName ?? generateName(member.identityKey ?? '0');
 
-export type SpacePresenceProps = {
-  object: Obj.Unknown;
-  spaceId?: Key.SpaceId;
-};
+const isActive = (viewer: SpaceSchema.ObjectViewerProps, now: number) => now - viewer.lastSeen < PRESENCE_EXPIRY;
 
-export const SpacePresence = ({ object, spaceId }: SpacePresenceProps) => {
-  const ephemeral = Hooks.useAtomCapability(SpaceCapabilities.EphemeralState);
-  const identity = useIdentity();
-  const db = Obj.getDatabase(object);
-  const space = useSpace(spaceId ?? db?.spaceId);
-  const spaceMembers = useMembers(spaceId ?? db?.spaceId);
-
-  const [_moment, setMoment] = useState(Date.now());
-
-  // NOTE(thure): This is necessary so Presence updates without any underlying data updating.
+/** Re-renders on an interval so viewers whose heartbeat lapsed drop out. */
+const useNow = () => {
+  const [now, setNow] = useState(Date.now());
   useEffect(() => {
-    const interval = setInterval(() => setMoment(Date.now()), REFRESH_INTERVAL);
+    const interval = setInterval(() => setNow(Date.now()), REFRESH_INTERVAL);
     return () => clearInterval(interval);
   }, []);
+  return now;
+};
 
-  const memberOnline = useCallback((member: Space.Member) => member.online, []);
-  const memberIsNotSelf = useCallback(
-    (member: Space.Member) => identity?.identityKey !== member.identityKey,
-    [identity?.identityKey],
-  );
+export type SpacePresenceProps = {
+  spaceId?: Key.SpaceId;
+  /** The EID peers report while viewing the object or space (see `getPresenceKeyFrom*`). */
+  presenceKey?: string;
+};
 
-  // TODO(thure): Could it be a smell to return early when there are interactions with `deepSignal` later, since it
-  //  prevents reactivity?
-  if (!identity || !ephemeral || !space) {
+export const SpacePresence = ({ spaceId, presenceKey }: SpacePresenceProps) => {
+  const ephemeral = Hooks.useAtomCapability(SpaceCapabilities.EphemeralState);
+  const identity = useIdentity();
+  const spaceMembers = useMembers(spaceId);
+  const now = useNow();
+
+  if (!identity || !ephemeral || !presenceKey) {
     return null;
   }
 
-  const currentObjectViewers = ephemeral.viewersByObject[Obj.getURI(object)] ?? noViewers;
-
-  const membersForObject = spaceMembers
-    .filter((member) => memberOnline(member) && memberIsNotSelf(member))
+  const viewers = ephemeral.viewersByObject[presenceKey] ?? {};
+  const members = spaceMembers
     .flatMap((member) => {
-      // Presence viewers are keyed by `PublicKey`; the HALO member carries a hex identity key.
-      const memberKey = member.identityKey ? PublicKey.fromHex(member.identityKey) : undefined;
-      const objectView = memberKey ? currentObjectViewers.get(memberKey) : undefined;
-      if (!objectView) {
+      const viewer = member.identityKey ? viewers[member.identityKey] : undefined;
+      if (!member.online || member.identityKey === identity.identityKey || !viewer || !isActive(viewer, now)) {
         return [];
       }
-      return [
-        {
-          ...member,
-          currentlyAttended: objectView.currentlyAttended ?? false,
-          lastSeen: objectView.lastSeen ?? -Infinity,
-        },
-      ];
+      return [{ ...member, currentlyAttended: viewer.currentlyAttended, lastSeen: viewer.lastSeen }];
     })
-    .toSorted((a, b) => a.lastSeen - b.lastSeen);
+    // Ordered by identity, not recency: heartbeats refresh `lastSeen`, so sorting by it reshuffles the
+    // avatars every interval. Every client shows a given set of peers in the same order.
+    .toSorted((a, b) => (a.identityKey ?? '').localeCompare(b.identityKey ?? ''));
 
-  return <FullPresence members={membersForObject} />;
+  return <FullPresence members={members} />;
 };
 
 export type Member = Space.Member & {
@@ -220,35 +202,15 @@ const PresenceAvatar = forwardRef<HTMLDivElement, PresenceAvatarProps>(
 export type SmallPresenceLiveProps = {
   id?: string;
   open?: boolean;
-  viewers?: ComplexMap<PublicKey, SpaceSchema.ObjectViewerProps>;
+  viewers?: Record<string, SpaceSchema.ObjectViewerProps>;
 };
 
 export const SmallPresenceLive = ({ id, open, viewers }: SmallPresenceLiveProps) => {
   const { hasAttention, isAncestor, isRelated } = useAttention(id);
-  const attended = hasAttention || isRelated;
-  const containsAttended = isAncestor && !open;
-  const getActiveViewers = (
-    viewers: ComplexMap<PublicKey, SpaceSchema.ObjectViewerProps>,
-  ): SpaceSchema.ObjectViewerProps[] => {
-    const moment = Date.now();
-    return Array.from<SpaceSchema.ObjectViewerProps>(viewers.values()).filter(
-      (viewer) => moment - viewer.lastSeen < ACTIVITY_DURATION,
-    );
-  };
+  const now = useNow();
+  const count = viewers ? Object.values(viewers).filter((viewer) => isActive(viewer, now)).length : 0;
 
-  const [activeViewers, setActiveViewers] = useState(viewers ? getActiveViewers(viewers) : []);
-
-  useEffect(() => {
-    if (viewers) {
-      setActiveViewers(getActiveViewers(viewers));
-      const interval = setInterval(() => {
-        setActiveViewers(getActiveViewers(viewers));
-      }, REFRESH_INTERVAL);
-      return () => clearInterval(interval);
-    }
-  }, [viewers]);
-
-  return <SmallPresence count={activeViewers.length} attended={attended} containsAttended={containsAttended} />;
+  return <SmallPresence count={count} attended={hasAttention || isRelated} containsAttended={isAncestor && !open} />;
 };
 
 export type SmallPresenceProps = {
