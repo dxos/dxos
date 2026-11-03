@@ -245,8 +245,9 @@ const findPainted = async (canvas: ReturnType<typeof within>, text: string) => {
 };
 
 const openConfigGroup = async (canvas: ReturnType<typeof within>, id: string) => {
-  const group = await canvas.findByTestId(`projectsPlugin.config.${id}`, undefined, { timeout: 10_000 });
-  await userEvent.click(within(group).getAllByRole('button')[0]);
+  await userEvent.click(
+    await canvas.findByTestId(`projectsPlugin.config.${id}.disclosure`, undefined, { timeout: 10_000 }),
+  );
 };
 
 /** Radix unmounts an inactive tab panel, so a story asserts a tab's content only while it is shown. */

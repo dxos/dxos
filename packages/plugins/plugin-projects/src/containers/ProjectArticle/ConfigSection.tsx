@@ -177,15 +177,15 @@ const ConfigForm = ({ db, project, fields, values, hidden }: ConfigFormProps) =>
       ),
     [fields],
   );
-  const hiddenKey = hidden.join(',');
-  const fieldOverrides = useMemo(() => {
-    const hiddenKeys = new Set(hiddenKey.split(',').filter(Boolean));
-    return Object.fromEntries(
-      fields.flatMap(({ key, action }): [string, FormFieldOverride][] =>
-        hiddenKeys.has(key) ? [[key, { hidden: true }]] : action ? [[key, { action }]] : [],
+  const fieldOverrides = useMemo(
+    () =>
+      Object.fromEntries(
+        fields.flatMap(({ key, action }): [string, FormFieldOverride][] =>
+          hidden.includes(key) ? [[key, { hidden: true }]] : action ? [[key, { action }]] : [],
+        ),
       ),
-    );
-  }, [fields, hiddenKey]);
+    [fields, hidden],
+  );
   const handleCreate = useCreateObject(db);
 
   const handleValuesChanged = useCallback(
@@ -233,16 +233,17 @@ const useConfigFieldValues = (
   project: Project.Project,
   fields: readonly ProjectCapabilities.ConfigField[],
 ): ConfigFieldValues => {
-  const atom = useMemo(
-    () =>
-      Atom.make((get): ConfigFieldValues => ({
-        values: Object.fromEntries(fields.map((field) => [field.key, get(field.value(project))])),
-        hidden: fields.filter((field) => field.enabled && !get(field.enabled)).map(({ key }) => key),
-      })),
+  const valuesAtom = useMemo(
+    () => Atom.make((get) => Object.fromEntries(fields.map((field) => [field.key, get(field.value(project))]))),
     [project, fields],
   );
+  // Reads only the `enabled` atoms, so the list keeps its identity while values are edited.
+  const hiddenAtom = useMemo(
+    () => Atom.make((get) => fields.filter((field) => field.enabled && !get(field.enabled)).map(({ key }) => key)),
+    [fields],
+  );
 
-  return useAtomValue(atom);
+  return { values: useAtomValue(valuesAtom), hidden: useAtomValue(hiddenAtom) };
 };
 
 const fieldTitle = (field: ProjectCapabilities.ConfigField): string =>

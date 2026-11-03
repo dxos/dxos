@@ -66,7 +66,13 @@ export const FormFieldSet = ({
       {label}
       {actions}
       {canCollapse && (
-        <SystemButton.Disclosure variant='ghost' label={label} expanded={open} onExpandedChange={setOpen} />
+        <SystemButton.Disclosure
+          variant='ghost'
+          label={label}
+          expanded={open}
+          onExpandedChange={setOpen}
+          data-testid={testId && `${testId}.disclosure`}
+        />
       )}
     </Fieldset.Legend>
   );
