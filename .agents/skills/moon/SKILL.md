@@ -201,6 +201,30 @@ inputs:
   - '$NODE_ENV' # Environment variable
 ```
 
+### Keep Static Assets Out of Build Outputs
+
+Every file in a task's `outputs` is a blob in the remote cache (`tools/moon-cache/README.md`), and moon downloads all of them on each remote hit, even when the local cache already holds the same bytes. A library build that copies or inlines audio, images or data files re-ships them every time its hash changes, and a package with many dependencies re-hashes on most CI runs.
+
+Import such files by the package's own specifier instead. The library build (`vite.base.config.ts`) leaves the import external and the app's bundler emits the file:
+
+```ts
+import hero from '@dxos/plugin-onboarding/assets/hero.webp?url';
+```
+
+- Export the directory from `package.json`: `"./assets/*": "./assets/*"`.
+- Don't set `assetsAsFiles` in `vite.config.ts`; it copies `?url` imports into `dist/lib/assets`.
+- Add the directory to the build task's inputs, since `@group(sources)` covers only `src/`. Otherwise an asset edit doesn't re-hash the build or anything bundled from it:
+
+```yaml
+# moon.yml
+tasks:
+  build:
+    inputs:
+      - assets/**/*
+```
+
+Examples: plugin-zen (audio), plugin-onboarding (image), react-ui-geo (topology JSON, fetched at runtime).
+
 ## Toolchain Configuration
 
 ```yaml
