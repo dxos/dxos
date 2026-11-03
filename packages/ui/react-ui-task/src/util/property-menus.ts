@@ -86,6 +86,12 @@ export type AssigneeMenuOptions = {
   t: Translate;
 };
 
+/** A pick of who holds the task: naming a person, or nobody, takes the task back from any agent working it. */
+export const pickAssignee = (assignee: Actor.Actor | null, delegate: unknown): AssigneePatch => ({
+  assignee,
+  ...(delegate ? { delegate: null } : {}),
+});
+
 /**
  * One picker for who holds the task: unassigned, the current assignee when no other option names it, the space's
  * members and contacts, then a separator and the agents. Picking an agent delegates to it and keeps (or makes) the
@@ -102,7 +108,7 @@ export const assigneeMenuActions = ({
   onChange,
   t,
 }: AssigneeMenuOptions): MenuItem[] => {
-  const pick = (assignee: Actor.Actor | null) => onChange({ assignee, ...(delegate && { delegate: null }) });
+  const pick = (assignee: Actor.Actor | null) => onChange(pickAssignee(assignee, delegate));
   return [
     createMenuAction('assignee-none', () => pick(null), {
       label: t('assignee-none.label'),

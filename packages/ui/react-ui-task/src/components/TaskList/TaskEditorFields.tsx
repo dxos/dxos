@@ -29,7 +29,7 @@ import { translationKey } from '#translations';
 
 import { useAssigneeDisplay } from '../../hooks/index.ts';
 import { UNASSIGNED_ICON } from '../../util/assignee.ts';
-import { type TaskMember, assigneeMenuActions } from '../../util/property-menus.ts';
+import { type TaskMember, assigneeMenuActions, pickAssignee } from '../../util/property-menus.ts';
 import { ESTIMATE_ICON, UNSET_ICON } from '../../util/status-icons.ts';
 
 export type TaskEditorValues = {
@@ -42,8 +42,6 @@ export type TaskEditorValues = {
   /** Not a field of its own: the assignee pill shows it, and picking a person takes the task back from it. */
   delegate?: Actor.Actor;
 };
-
-export type TaskEditorProperties = Omit<TaskEditorValues, 'title' | 'description'>;
 
 /** What the title field does beyond holding its value: Enter and Save commit it, and blur may. */
 export type TaskTitleBehavior = {
@@ -62,8 +60,6 @@ export type TaskDescriptionBehavior = {
   controllerRef: RefObject<MarkdownEditableController | null>;
   placeholder: string;
   extensions: MarkdownEditableProps['extensions'];
-  /** Reads its value from the form; otherwise the editor holds the draft itself until the create collects it. */
-  controlled: boolean;
 };
 
 export type TaskEditorFormProps = PropsWithChildren<{
@@ -78,7 +74,7 @@ export type TaskEditorFormProps = PropsWithChildren<{
   description?: TaskDescriptionBehavior;
   /** After the pills, at the row's end. */
   end?: ReactNode;
-  /** Each change names the one field it set; an unset value is `null`. */
+  /** Each change names the fields it set; an unset value is `null`. */
   onChange: (patch: Task.Edit) => void;
 }>;
 
@@ -114,8 +110,8 @@ export const TaskEditorForm = ({
     [t],
   );
   const context = useMemo(
-    () => ({ members, people, title, description, delegate: values.delegate, onChange }),
-    [members, people, title, description, values.delegate, onChange],
+    () => ({ members, people, title, description, delegate: values.delegate }),
+    [members, people, title, description, values.delegate],
   );
   const textFields = useMemo(() => (description ? ['title', 'description'] : ['title']), [description]);
   const propertyFields = useMemo(
@@ -124,10 +120,12 @@ export const TaskEditorForm = ({
   );
 
   const handleValuesChanged = useCallback(
-    (next: Partial<Task.Task>, { changed }: FormUpdateMeta<Task.Task>) =>
-      onChange(
-        Object.fromEntries(Object.keys(changed).map((key) => [key, next[key as keyof Task.Task] ?? null])) as Task.Edit,
-      ),
+    (next: Partial<Task.Task>, { changed }: FormUpdateMeta<Task.Task>) => {
+      const patch = Object.fromEntries(
+        Object.keys(changed).map((key) => [key, next[key as keyof Task.Task] ?? null]),
+      ) as Task.Edit;
+      onChange('assignee' in changed ? { ...patch, ...pickAssignee(patch.assignee ?? null, next.delegate) } : patch);
+    },
     [onChange],
   );
 
@@ -153,8 +151,7 @@ export const TaskEditorForm = ({
 
 /** What the editor's fields need beyond their value, which a field renderer is not given. */
 const TaskEditorContext = createContext<
-  | (Pick<TaskEditorFormProps, 'members' | 'people' | 'title' | 'description' | 'onChange'> &
-      Pick<TaskEditorValues, 'delegate'>)
+  | (Pick<TaskEditorFormProps, 'members' | 'people' | 'title' | 'description'> & Pick<TaskEditorValues, 'delegate'>)
   | undefined
 >(undefined);
 
@@ -224,7 +221,7 @@ const DescriptionField = ({ type, getValue, onValueChange }: FormFieldRendererPr
         // Held open, so it must not pull focus: selecting a row by keyboard would otherwise land the reader in the
         // description instead of the list.
         autoFocus={false}
-        {...(description.controlled && { value: getValue() ?? '' })}
+        value={getValue() ?? ''}
         onValueChange={(next) => onValueChange(type, next)}
       />
     </Input.Frame>
@@ -233,12 +230,18 @@ const DescriptionField = ({ type, getValue, onValueChange }: FormFieldRendererPr
 
 /**
  * The assignee as a pill. A Button rather than the form's select: the picker lists members, then contacts, each with
- * its own avatar, which a select's flat option list cannot. Its pick is the editor's whole change rather than this
- * field's value, since picking a person also takes the task back from its delegate.
+ * its own avatar, which a select's flat option list cannot. The pick is this field's value; the form adds taking the
+ * task back from its delegate.
  */
-const AssigneePill = ({ label, jsonPath, getValue }: FormFieldRendererProps<Actor.Actor | undefined>) => {
+const AssigneePill = ({
+  type,
+  label,
+  jsonPath,
+  getValue,
+  onValueChange,
+}: FormFieldRendererProps<Actor.Actor | undefined>) => {
   const { t } = Hooks.useTranslation(translationKey);
-  const { members, people, delegate, onChange } = useTaskEditorContext();
+  const { members, people, delegate } = useTaskEditorContext();
   const assignee = getValue();
   const current = useAssigneeDisplay(assignee);
   const worker = useAssigneeDisplay(delegate);
@@ -252,7 +255,7 @@ const AssigneePill = ({ label, jsonPath, getValue }: FormFieldRendererProps<Acto
           delegate: delegate && worker,
           members,
           people,
-          onChange,
+          onChange: ({ assignee }) => onValueChange(type, assignee ?? undefined),
           t,
         })
       }

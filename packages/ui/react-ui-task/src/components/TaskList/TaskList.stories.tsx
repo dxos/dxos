@@ -1763,6 +1763,14 @@ export const TestCreateWithDescription: Story = {
     // field is not empty-stringed: CodeMirror paints the placeholder inside `.cm-content`.
     await expect(title().value).toEqual('');
     await waitFor(async () => expect(content().textContent).not.toContain('Roast it twice'));
+
+    // The next task created from the title alone carries no description: the form's draft was cleared, not just the field.
+    await userEvent.click(title());
+    await userEvent.keyboard('Second task{Enter}');
+    await waitFor(async () => expect(rows()).toHaveLength(before + 2));
+    const second = rows().find((row) => row.textContent?.includes('Second task'));
+    await expect(second).not.toBeUndefined();
+    await expect(second!.textContent).not.toContain('Roast it twice');
   },
 };
 
