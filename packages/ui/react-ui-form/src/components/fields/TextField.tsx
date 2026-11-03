@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 import { Format } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -31,9 +31,16 @@ export const TextField = ({
   onRevert,
 }: FormFieldRendererProps<string>) => {
   const value = getValue() ?? '';
-  // An action resolves after later renders: it writes through the latest callbacks, and not over a newer edit.
-  const callbacks = useDynamicRef({ onValueChange, onBlur });
-  const editsRef = useRef(0);
+  // An action resolves after later renders. Only the newest run of a mounted field writes, through the latest
+  // callbacks, and only while the value is still the one it started from.
+  const latest = useDynamicRef({ value, onValueChange, onBlur });
+  const runRef = useRef(0);
+  useEffect(
+    () => () => {
+      runRef.current++;
+    },
+    [],
+  );
   const { isStatic, showLabel } = presentationFor(presentation);
   if (isStatic) {
     return <FormStaticValue value={value} format={format} />;
@@ -42,13 +49,13 @@ export const TextField = ({
   // An opaque identifier is not prose: no spellcheck squiggles, no autocorrect, no capitalisation.
   const key = format === Format.TypeFormat.Key;
   const handleAction = () => {
-    const edits = editsRef.current;
+    const run = ++runRef.current;
     return action
       ?.run(value || undefined)
       .then((next) => {
-        if (next !== undefined && editsRef.current === edits) {
-          callbacks.current.onValueChange(type, next);
-          callbacks.current.onBlur();
+        if (next !== undefined && run === runRef.current && latest.current.value === value) {
+          latest.current.onValueChange(type, next);
+          latest.current.onBlur();
         }
       })
       .catch((error) => log.warn('field action failed', { error }));
@@ -64,10 +71,7 @@ export const TextField = ({
       aria-label={showLabel ? undefined : label || undefined}
       value={value}
       onBlur={onBlur}
-      onChange={(event) => {
-        editsRef.current++;
-        onValueChange(type, event.target.value);
-      }}
+      onChange={(event) => onValueChange(type, event.target.value)}
       // Enter commits the field as leaving it does, so an auto-saving form saves without the user tabbing away.
       onKeyDown={(event) => {
         if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
@@ -75,7 +79,6 @@ export const TextField = ({
         }
         // Escape drops the uncommitted edit, so the field shows the saved value and its blur saves nothing.
         if (event.key === 'Escape') {
-          editsRef.current++;
           onRevert();
         }
       }}
