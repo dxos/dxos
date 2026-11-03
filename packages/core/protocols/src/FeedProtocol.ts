@@ -18,6 +18,11 @@ export {
 export const KEY_QUEUE_POSITION = 'org.dxos.key.queue-position';
 
 /**
+ * Meta key carrying the order in which this replica indexed a feed block; stable across sync, unlike the position.
+ */
+export const KEY_FEED_LOCAL_ORDER = 'org.dxos.key.feed-local-order';
+
+/**
  * Foreign-key source for the block an object was read from (`<sequence>@<actorId>`), which names
  * that block within its feed before and after it is positioned.
  */

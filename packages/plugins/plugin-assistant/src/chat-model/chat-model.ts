@@ -20,6 +20,7 @@ import {
   AiSession,
   Harness,
   ToolExecutionServices,
+  TrajectoryStore,
   createSystemPrompt,
   formatSystemPrompt,
 } from '@dxos/assistant';
@@ -32,8 +33,9 @@ import * as Operation from '@dxos/compute/Operation';
 import type * as Process from '@dxos/compute/Process';
 import type * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Skill from '@dxos/compute/Skill';
+import type * as SqlService from '@dxos/compute/SqlService';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, Feed, Filter, Obj, Query, Ref, type Registry } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Order, Query, Ref, type Registry, Scope } from '@dxos/echo';
 import { UsageQuotaExceededError } from '@dxos/edge-client';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
@@ -46,10 +48,12 @@ import { AssistantOperation } from '#types';
 
 import { consentGuard } from '../util/consent-guard.ts';
 import { findInCause } from '../util/error-cause.ts';
+import { arrangeLanes, makeLaneRowCache } from './lanes.ts';
 import { Outbox, type OutboxEntry, PromptCancelledError } from './outbox.ts';
 import { providerForModel } from './presets.ts';
 import { type ChatRequestContext, createPromptContent } from './prompt.ts';
 import { EMPTY_THREAD, type ThreadProjection, projectThread } from './thread.ts';
+import { EMPTY_VIEW, type TrajectoryView, loadViewBase, makeCachedTrajectoryView } from './trajectory-view.ts';
 
 /**
  * Space-scoped services materialised by the layer passed into
@@ -86,6 +90,11 @@ export type ChatModelOptions = {
   sender?: AgentService.PromptSender;
   /** Binds {@link TurnReviewSkill} so each turn is reviewed for struggles (opt-in setting). */
   reportStruggles?: boolean;
+  /**
+   * Where the chat's trajectory checkpoints are kept: the device's SQLite, which a local agent process folds into too.
+   * Without it, or when it does not resolve, the chat keeps checkpoints only for this process.
+   */
+  sqlLayer?: Layer.Layer<SqlService.SqlService, ServiceResolver.ServiceNotAvailableError>;
 };
 
 const defaultOptions: Partial<ChatModelOptions> = {
@@ -115,6 +124,9 @@ export type ChatSendOptions = {
 export type PromptSubmission = { resolve: () => void; reject: (error: unknown) => void };
 
 type OutboxPayload = { request: ChatRequest; prepare?: () => Promise<void> | void };
+
+/** What the chat view reads off its feed: trajectory events and the legacy records an older feed holds. */
+const trajectoryItems = Filter.or(...TrajectoryStore.types.map((type) => Filter.type(type)));
 
 /** User-facing message shown when an AI request is rejected for exceeding the account usage quota (HTTP 429). */
 const QUOTA_EXCEEDED_MESSAGE = 'You have reached your AI usage limit for this period.';
@@ -262,6 +274,9 @@ export class ChatModel {
   /** Set of message IDs that have been finalized (non-pending delivered via ephemeral). */
   readonly #finalizedIds = new Set<string>();
 
+  /** Lane rows kept between arrangements, so a lane's card keeps its identity while the chat is open. */
+  readonly #laneRows = makeLaneRowCache();
+
   /** Timestamp of the newest trace event applied this turn, overall and per streamed message. */
   #appliedAt = 0;
   readonly #appliedAtByMessage = new Map<string, number>();
@@ -297,6 +312,9 @@ export class ChatModel {
 
   /** The feed's messages, live: what the outbox and the streamed turn are reconciled against. */
   readonly #feedMessages: Atom.Atom<readonly Message.Message[]>;
+
+  /** The feed folded into what the chat renders besides the thread: pending alarms and self-wakes. */
+  public readonly trajectory: Atom.Atom<TrajectoryView>;
 
   /**
    * What the chat renders: the feed's turns, the turn streaming now, and the prompts on their way to
@@ -338,20 +356,59 @@ export class ChatModel {
     this.#registry = this._options.observableRegistry ?? AtomRegistry.make();
     this.#outbox = new Outbox(this.#registry, (payload) => this.#dispatch(payload));
     this.outbox = this.#outbox.entries;
-    // Held for the chat model's life: a query's atom is memoized per result, so the query must be too.
     const db = Obj.getDatabase(this._feed);
-    this.#feedMessages = db
-      ? db.query(Query.select(Filter.type(Message.Message)).from(this._feed)).atom
-      : Atom.make<readonly Message.Message[]>([]);
-    this.thread = Atom.make((get) =>
-      projectThread({
+    const feedUri = Feed.getFeedUri(this._feed);
+    this.trajectory =
+      db && feedUri
+        ? makeCachedTrajectoryView({
+            load: () => {
+              const load = loadViewBase(this._feed).pipe(Effect.provide(Database.layer(db)));
+              const sqlLayer = this._options.sqlLayer;
+              return EffectEx.runPromise(
+                sqlLayer
+                  ? load.pipe(
+                      Effect.provide(sqlLayer),
+                      Effect.catch(() => load),
+                    )
+                  : load,
+              );
+            },
+            // Held until the view loads its checkpoints again: a query's atom is memoized per result, so the query
+            // must be too.
+            follow: (cursor) =>
+              db.query(
+                Query.select(
+                  cursor === undefined
+                    ? trajectoryItems
+                    : Filter.and(trajectoryItems, Filter.feedCursor({ begin: cursor })),
+                )
+                  .from(Scope.feed(feedUri.toString(), { walk: { branch: 'all' } }))
+                  .orderBy(Order.natural('asc')),
+              ).atom,
+          })
+        : Atom.make(EMPTY_VIEW);
+    this.#feedMessages = Atom.make((get) => get(this.trajectory).messages);
+    this.thread = Atom.make((get) => {
+      const view = get(this.trajectory);
+      const projection = projectThread({
         feedMessages: get(this.#feedMessages),
         pendingMessages: get(this.messages),
+        discarded: view.discarded,
         rewindFrom: get(Obj.atom(this._feed)).rewindFrom,
         outbox: get(this.outbox),
         sender: this._options.sender,
-      }),
-    );
+        laneOf: view.laneOf,
+      });
+      const arranged = arrangeLanes({
+        messages: projection.messages,
+        tail: projection.tail,
+        lanes: view.lanes,
+        laneOf: view.laneOf,
+        delivery: projection.delivery,
+        cache: this.#laneRows,
+      });
+      return { ...projection, ...arranged };
+    });
     if (this._options.model && !this._options.system) {
       const capabilities = this._options.modelRegistry?.getCapabilities(this._options.model) ?? {};
       this._options.system = createSystemPrompt(capabilities);
@@ -919,12 +976,16 @@ export class ChatModel {
   }
 }
 
-export type ChatModelState = Pick<ChatModel, 'streaming' | 'active' | 'thread' | 'error' | 'mcpErrors' | 'activity'>;
+export type ChatModelState = Pick<
+  ChatModel,
+  'streaming' | 'active' | 'thread' | 'trajectory' | 'error' | 'mcpErrors' | 'activity'
+>;
 
 const idleChatModelState: ChatModelState = {
   streaming: Atom.make(false),
   active: Atom.make(false),
   thread: Atom.make<ThreadProjection>(EMPTY_THREAD),
+  trajectory: Atom.make<TrajectoryView>(EMPTY_VIEW),
   error: Atom.make<Option.Option<Error>>(Option.none()),
   mcpErrors: Atom.make<readonly Trace.PayloadType<typeof Trace.McpServerError>[]>([]),
   activity: Atom.make<Trace.PayloadType<typeof Trace.RequestPhase> | undefined>(undefined),
