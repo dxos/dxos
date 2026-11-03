@@ -27,6 +27,11 @@ describe('Client', () => {
     expect(again).toEqual(first);
     expect(other).not.toEqual(first);
   });
+
+  test('a deadline passes an answer through and rejects a request that never answers', async ({ expect }) => {
+    await expect(Client.withDeadline(Promise.resolve(7), 1_000)).resolves.toBe(7);
+    await expect(Client.withDeadline(new Promise(() => {}), 10)).rejects.toThrow('No answer within 10 ms.');
+  });
 });
 
 describe('Sandbox', () => {

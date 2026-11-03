@@ -30,6 +30,15 @@ const TURN_TIMEOUT_MS = 10 * 60_000;
 /** How often a running turn is read; each read is one HTTP request. */
 const POLL_INTERVAL_MS = 1_500;
 
+/** How long one poll may take before it is abandoned and retried, so a stalled request cannot outlast the turn. */
+const POLL_TIMEOUT_MS = 15_000;
+
+/** How long stopping the agent may take; a stalled deployment must not hold up cancelling the turn. */
+const STOP_TIMEOUT_MS = 5_000;
+
+/** How long starting or continuing the workspace chat may take; a cancel waits for it, so it must end. */
+const START_TIMEOUT_MS = 30_000;
+
 /** The workspace chat a Composer chat continues, recorded on the chat after its first turn. */
 export const chatIdOf = (chat: Chat.Chat): number | undefined => {
   const key = Obj.getMeta(chat).keys.find(({ source }) => source === CHAT_KEY_SOURCE);
@@ -92,58 +101,90 @@ const poll = (account: Account.Account, workspaceId: string, chatId: number) =>
   );
 
 /** Runs one turn of the workspace agent for a Composer chat. */
-const runTurn = (
-  { chat, feed }: { chat: Chat.Chat; feed: Feed.Feed },
+const runTurn: (
+  context: { chat: Chat.Chat; feed: Feed.Feed },
   request: TurnRequest,
-): Effect.Effect<Message.Message[], CloudflareOsError, Database.Service> =>
-  Effect.gen(function* () {
-    const workspace = yield* boundWorkspace;
-    const account = yield* Account.fromConnectionRef(workspace.connection);
-    const produced: Message.Message[] = [];
-    const append = (messages: Message.Message[]) =>
-      Effect.gen(function* () {
-        if (messages.length > 0) {
-          produced.push(...messages);
-          yield* Feed.append(feed, messages);
-        }
-      });
-
-    yield* append([Message.make({ sender: 'user', blocks: promptBlocks(request.prompt) })]);
-
-    const existing = chatIdOf(chat);
-    const [models, before] = yield* Client.call('Could not reach the workspace.', () => {
-      const overseer = batchOverseer(account, workspace.workspaceId);
-      return Promise.all([
-        overseer.listModels(),
-        existing === undefined ? undefined : overseer.getChatHistory(existing),
-      ]);
+) => Effect.Effect<Message.Message[], CloudflareOsError, Database.Service> = Effect.fnUntraced(function* (
+  { chat, feed },
+  request,
+) {
+  const workspace = yield* boundWorkspace;
+  const account = yield* Account.fromConnectionRef(workspace.connection);
+  const produced: Message.Message[] = [];
+  const append = (messages: Message.Message[]) =>
+    Effect.gen(function* () {
+      if (messages.length > 0) {
+        produced.push(...messages);
+        yield* Feed.append(feed, messages);
+      }
     });
-    const model = chat.session?.agentModel ?? models[0]?.id ?? null;
-    const text = promptText(request.prompt);
 
-    // Only messages past the chat's current end belong to this turn.
-    let seen = before ? lastSequence(before.messages) : -1;
-    let chatId: number;
+  yield* append([Message.make({ sender: 'user', blocks: promptBlocks(request.prompt) })]);
+
+  const existing = chatIdOf(chat);
+  const [models, before] = yield* Client.call('Could not reach the workspace.', () => {
+    const overseer = batchOverseer(account, workspace.workspaceId);
+    return Promise.all([overseer.listModels(), existing === undefined ? undefined : overseer.getChatHistory(existing)]);
+  });
+  const model = chat.session?.agentModel ?? models[0]?.id ?? null;
+  const text = promptText(request.prompt);
+
+  // Only messages past the chat's current end belong to this turn.
+  let seen = before ? lastSequence(before.messages) : -1;
+  let chatId: number | undefined = existing;
+  // Stopping the remote agent keeps a cancelled or abandoned turn from queuing actions afterwards.
+  const stopAgent = Effect.suspend(() => {
+    const target = chatId;
+    return target === undefined
+      ? Effect.void
+      : Client.call('Could not stop the workspace agent.', () =>
+          batchOverseer(account, workspace.workspaceId).stopAgent(target),
+        ).pipe(
+          Effect.timeoutOrElse({
+            duration: STOP_TIMEOUT_MS,
+            orElse: () => Effect.fail(new CloudflareOsError({ message: 'Stopping the agent timed out.' })),
+          }),
+          Effect.ignore,
+        );
+  });
+
+  // The turn has ended once its agent stops running, after it was seen running or answered.
+  const { ended: finished, activeChatId: turnChatId } = yield* Effect.gen(function* () {
+    // Uninterruptible: a cancel during the start waits for the chat id, so the agent it starts can be stopped.
+    // The id is stored inside the region, since a pending interrupt is delivered the moment it ends.
+    const activeChatId = yield* Effect.uninterruptible(
+      (existing === undefined
+        ? Client.call('Could not start a workspace chat.', () =>
+            Client.withDeadline(batchOverseer(account, workspace.workspaceId).newChat(text, model), START_TIMEOUT_MS),
+          )
+        : Client.call('Could not send the message.', () =>
+            Client.withDeadline(
+              batchOverseer(account, workspace.workspaceId).sendChatMessage(existing, text, model),
+              START_TIMEOUT_MS,
+            ),
+          ).pipe(Effect.as(existing))
+      ).pipe(
+        Effect.tap((id) =>
+          Effect.sync(() => {
+            chatId = id;
+          }),
+        ),
+      ),
+    );
     if (existing === undefined) {
-      chatId = yield* Client.call('Could not start a workspace chat.', () =>
-        batchOverseer(account, workspace.workspaceId).newChat(text, model),
-      );
-      recordChatId(chat, chatId);
-    } else {
-      chatId = existing;
-      yield* Client.call('Could not send the message.', () =>
-        batchOverseer(account, workspace.workspaceId).sendChatMessage(chatId, text, model),
-      );
+      recordChatId(chat, activeChatId);
     }
-
-    // The turn has ended once its agent stops running, after it was seen running or answered.
     const deadline = Date.now() + TURN_TIMEOUT_MS;
     let started = false;
     let answered = false;
-    let finished: Protocol.ChatMetadata | undefined;
-    while (finished === undefined && Date.now() < deadline) {
+    let ended: Protocol.ChatMetadata | undefined;
+    while (ended === undefined && Date.now() < deadline) {
       yield* Effect.sleep(POLL_INTERVAL_MS);
-      const result = yield* poll(account, workspace.workspaceId, chatId).pipe(
+      const result = yield* poll(account, workspace.workspaceId, activeChatId).pipe(
+        Effect.timeoutOrElse({
+          duration: POLL_TIMEOUT_MS,
+          orElse: () => Effect.fail(new CloudflareOsError({ message: 'The poll timed out.' })),
+        }),
         Effect.map(Option.some),
         Effect.catch((error) =>
           Effect.sync(() => {
@@ -164,72 +205,76 @@ const runTurn = (
       if (metadata?.activeAgent) {
         started = true;
       } else if (metadata && (started || answered)) {
-        finished = metadata;
+        ended = metadata;
       }
     }
-    if (finished === undefined) {
-      return yield* Effect.fail(new CloudflareOsError({ message: 'The Cloudflare OS agent did not finish in time.' }));
-    }
+    return { ended, activeChatId };
+  }).pipe(Effect.onInterrupt(() => stopAgent));
+  if (finished === undefined) {
+    yield* stopAgent;
+    return yield* Effect.fail(new CloudflareOsError({ message: 'The Cloudflare OS agent did not finish in time.' }));
+  }
 
-    const gadgets = yield* refreshWorkspace(workspace).pipe(
-      Effect.catch((error) =>
-        Effect.sync(() => {
-          log.warn('refresh failed', { error });
-          return [...(workspace.gadgets ?? [])];
-        }),
-      ),
-    );
-    const requests: ContentBlock.Request[] = [];
-    const proposed = finished.proposedChangeWorkpieces ?? [];
-    if (proposed.length > 0) {
-      const titles = proposed.flatMap((id) => gadgets.find((gadget) => gadget.id === id)?.title ?? []);
-      requests.push(Projection.mergeRequest(chatId, titles));
-    }
-    const actions = yield* Client.call('Could not read pending actions.', () =>
-      batchOverseer(account, workspace.workspaceId).listActions(),
-    );
-    requests.push(
-      ...actions.entries
-        .filter((entry) => entry.type === 'action' && entry.state === 'pending')
-        .map(Projection.actionRequest),
-    );
-    if (requests.length > 0) {
-      yield* append([Message.make({ sender: 'assistant', blocks: requests })]);
-    }
-    return produced;
-  });
+  const gadgets = yield* refreshWorkspace(workspace).pipe(
+    Effect.catch((error) =>
+      Effect.sync(() => {
+        log.warn('refresh failed', { error });
+        return [...(workspace.gadgets ?? [])];
+      }),
+    ),
+  );
+  const requests: ContentBlock.Request[] = [];
+  const proposed = finished.proposedChangeWorkpieces ?? [];
+  if (proposed.length > 0) {
+    const titles = proposed.flatMap((id) => gadgets.find((gadget) => gadget.id === id)?.title ?? []);
+    requests.push(Projection.mergeRequest(turnChatId, titles));
+  }
+  const actions = yield* Client.call('Could not read pending actions.', () =>
+    batchOverseer(account, workspace.workspaceId).listActions(),
+  );
+  requests.push(
+    ...actions.entries
+      .filter((entry) => entry.type === 'action' && entry.state === 'pending')
+      .map(Projection.actionRequest),
+  );
+  if (requests.length > 0) {
+    yield* append([Message.make({ sender: 'assistant', blocks: requests })]);
+  }
+  return produced;
+});
 
 /** Answers a request this agent added: keeps or reverts a turn's changes, or approves or rejects an action. */
-const respond = ({
+const respond: (
+  response: AssistantCapabilities.AgentResponse,
+) => Effect.Effect<boolean, CloudflareOsError, Database.Service> = Effect.fnUntraced(function* ({
   chat,
   message,
   requestId,
   optionId,
-}: AssistantCapabilities.AgentResponse): Effect.Effect<boolean, CloudflareOsError, Database.Service> =>
-  Effect.gen(function* () {
-    const target = Projection.decodeRequestId(requestId);
-    if (!target) {
-      return false;
-    }
-    const workspace = yield* boundWorkspace;
-    const account = yield* Account.fromConnectionRef(workspace.connection);
-    yield* runAnswer(batchOverseer(account, workspace.workspaceId), target, optionId);
-    Obj.update(message, (message) => {
-      for (const block of message.blocks) {
-        if (block._tag === 'request' && block.requestId === requestId && block.resolution === undefined) {
-          block.resolution = { outcome: 'selected', optionId };
-        }
+}) {
+  const target = Projection.decodeRequestId(requestId);
+  if (!target) {
+    return false;
+  }
+  const workspace = yield* boundWorkspace;
+  const account = yield* Account.fromConnectionRef(workspace.connection);
+  yield* runAnswer(batchOverseer(account, workspace.workspaceId), target, optionId);
+  Obj.update(message, (message) => {
+    for (const block of message.blocks) {
+      if (block._tag === 'request' && block.requestId === requestId && block.resolution === undefined) {
+        block.resolution = { outcome: 'selected', optionId };
       }
-    });
-    const feed = yield* Database.load(chat.feed).pipe(Effect.option);
-    if (Option.isSome(feed)) {
-      yield* Feed.append(feed.value, [message]);
     }
-    yield* refreshWorkspace(workspace).pipe(
-      Effect.catch((error) => Effect.sync(() => log.warn('refresh failed', { error }))),
-    );
-    return true;
   });
+  const feed = yield* Database.load(chat.feed).pipe(Effect.option);
+  if (Option.isSome(feed)) {
+    yield* Feed.append(feed.value, [message]);
+  }
+  yield* refreshWorkspace(workspace).pipe(
+    Effect.catch((error) => Effect.sync(() => log.warn('refresh failed', { error }))),
+  );
+  return true;
+});
 
 const runAnswer = (
   overseer: RpcStub<Protocol.Overseer>,
