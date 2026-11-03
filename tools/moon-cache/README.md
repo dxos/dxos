@@ -47,8 +47,9 @@ in it. A task that fails the check is rebuilt with `moon run <target> --force`, 
 and overwrites the remote entry, and a command that failed is run once more. The job log carries a
 `moon cache` warning naming the task, its hash and the missing path.
 
-The retry happens only when every task that failed depends on a rebuilt one. Any other failure keeps
-the first run's verdict, so a flaky or broken test never gets a second attempt through this path.
+The retry happens only when every task that failed depends on a rebuilt one. That is a heuristic, not
+proof of cause: a flaky test downstream of a rebuilt task can still pass on the retry. A failure in a
+task that does not depend on any rebuilt task always keeps the first run's verdict.
 
 If a task leaves the output empty even when built from scratch, the script reports an error instead
 of retrying: make the task write a file there, or declare the output as a glob if it may be empty.
