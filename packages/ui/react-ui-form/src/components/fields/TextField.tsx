@@ -31,8 +31,8 @@ export const TextField = ({
   onRevert,
 }: FormFieldRendererProps<string>) => {
   const value = getValue() ?? '';
-  // An action resolves after later renders. Only the newest run of a mounted field writes, through the latest
-  // callbacks, and only while the value is still the one it started from.
+  // An action resolves after later renders. Only the newest run of a mounted field that nobody has edited since
+  // writes, through the latest callbacks, and only while the value is still the one it started from.
   const latest = useDynamicRef({ value, onValueChange, onBlur });
   const runRef = useRef(0);
   useEffect(
@@ -71,7 +71,10 @@ export const TextField = ({
       aria-label={showLabel ? undefined : label || undefined}
       value={value}
       onBlur={onBlur}
-      onChange={(event) => onValueChange(type, event.target.value)}
+      onChange={(event) => {
+        runRef.current++;
+        onValueChange(type, event.target.value);
+      }}
       // Enter commits the field as leaving it does, so an auto-saving form saves without the user tabbing away.
       onKeyDown={(event) => {
         if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
@@ -79,6 +82,7 @@ export const TextField = ({
         }
         // Escape drops the uncommitted edit, so the field shows the saved value and its blur saves nothing.
         if (event.key === 'Escape') {
+          runRef.current++;
           onRevert();
         }
       }}

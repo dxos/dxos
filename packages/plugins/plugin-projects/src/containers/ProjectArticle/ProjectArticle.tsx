@@ -303,7 +303,7 @@ export const ProjectArticle = ({
   const fieldOverrides = useMemo<Record<string, FormFieldOverride>>(
     () => ({
       name: { presentation: 'title', placeholder: t('untitled-project.label') },
-      // A project always has a status, so its pill offers no "None".
+      // A status once picked is never cleared, so the pill offers no "None".
       status: { required: true },
       description: { presentation: 'plain', placeholder: t('project-description.placeholder') },
       specs: { presentation: 'section', label: t('specs.label') },

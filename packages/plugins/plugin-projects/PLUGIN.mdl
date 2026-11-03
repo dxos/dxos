@@ -1898,7 +1898,7 @@ decision D-180: A milestone row ends in an open button, on the right edge where 
 ```
 
 ```mdl
-decision D-181: A config field may carry an action: a label, an icon and a function from the field's value to its new value. The form renders it as a button at the end of the field's text control and writes the value it returns, so a plugin keeps a picker without UI of its own. Fills in plugin-claude D-15, within [D-160].
+decision D-181: A config field may carry an action: a label, an icon and a function from the field's value to its new value. The form renders it as a button at the end of the field's text control and writes the value it returns, so a plugin keeps a picker, such as plugin-claude's folder picker, without UI of its own. Fills in [D-160].
   date: 2026-11-03
   by: agent:claude-code
   for: user:wittjosiah
@@ -1910,7 +1910,7 @@ decision D-181: A config field may carry an action: a label, an icon and a funct
 ```
 
 ```mdl
-decision D-182: A config field has an `order`, and a group's fields sort by it, those with equal orders keeping contribution order. Fills in plugin-claude D-17.
+decision D-182: A config field has an `order`, and a group's fields sort by it, those with equal orders keeping contribution order. Fills in [D-159].
   date: 2026-11-03
   by: agent:claude-code
   for: user:wittjosiah
@@ -1932,4 +1932,22 @@ decision D-184: An override's presentation applies to its field alone, so an obj
   for: user:wittjosiah
   affects: [F-5.1]
   why: An array shown as a section holds rows that are ordinary fields, and a section has no meaning for a scalar, whose label and control `compact` already show.
+```
+
+```mdl
+decision D-185: plugin-code, not plugin-claude, renders a project's repositories, in the overview's Software group, and plugin-claude adds only the code folder there. Replaces the plugin-claude rendering of [D-155].
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.6]
+```
+
+```mdl
+decision D-186: `Project.status` stays optional, so a project made without one, or migrated without one, shows an empty pill until a status is picked. The pill offers no "None", so a status once picked is never cleared. Corrects the rationale of [D-169].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.1]
+  why: A default status would need a schema change and a migration for every existing project, and an empty pill already reads as unset.
+  rejected:
+    - Defaulting `status` to `active` in `Project.make` and the migration, which writes a status to every project nobody chose one for.
 ```
