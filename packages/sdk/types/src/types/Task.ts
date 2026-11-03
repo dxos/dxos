@@ -415,9 +415,9 @@ export const holders = (task: Holders, edit: Pick<Edit, 'assignee' | 'delegate'>
   delegate: edit.delegate === undefined ? task.delegate : (edit.delegate ?? undefined),
 });
 
-/** The person who answers for the task: its assignee, unless that is an agent. A delegated task's finish waits on them. */
+/** The person who answers for the task: its assignee, when that is a person. A delegated task's finish waits on them. */
 export const owner = (task: Holders | undefined): Actor.Actor | undefined =>
-  task?.assignee?.role === 'assistant' ? undefined : task?.assignee;
+  task?.assignee?.role === undefined || task.assignee.role === 'user' ? task?.assignee : undefined;
 
 /** Compared on what identifies an actor, so re-assigning the same person records nothing. */
 export const sameActor = (a: Actor.Actor | undefined, b: Actor.Actor | undefined): boolean => {

@@ -60,6 +60,7 @@ export const translations = [
         'task-set.tasks.label': 'Tasks',
         'task-create.placeholder': 'Add task',
         'move-task-error.title': 'Could not move task',
+        'update-task-error.title': 'Could not update task',
         'close.label': 'Close',
         'filter.label': 'Filter tasks',
         'filter.placeholder': 'Filter',
