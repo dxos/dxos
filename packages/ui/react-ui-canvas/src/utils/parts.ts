@@ -8,7 +8,9 @@
 // one. A part is named by the property it edits; a `lines` part reads and writes a list one entry per line.
 //
 
-import { type Node, type NodeRegistry, type NodeValues, nodeDef } from '../model/index.ts';
+import { type Node } from '@dxos/scene';
+
+import { type NodeRegistry, type NodeValues, nodeDef } from '../model/index.ts';
 
 /** A part's name: the node property it edits. */
 export type PartKey = string;

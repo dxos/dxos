@@ -2,43 +2,31 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { type Database, Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import {
   type GeneratorSource,
-  type Node,
   type NodeRegistry,
   createNodeRegistry,
   defaultNodePrototypes,
   defaultNodeTypes,
-  useRegistry,
-} from '@dxos/react-ui-canvas/scene';
+  kindNodeDef,
+  kindRegistry,
+} from '@dxos/react-ui-canvas';
+import { type KindRegistry, type Node } from '@dxos/scene';
 
-import { type BoundCanvasStore, CanvasViewNode, ImageNode, bindCanvasStore } from '#model';
+import { CanvasViewNode, ImageNode } from '#model';
 import { CanvasCapabilities, Generator } from '#types';
 
 import { CanvasViewNodeView, CanvasViewToolbar } from './CanvasViewNodeView.tsx';
 import { ImageNodeView } from './ImageNodeView.tsx';
 
-/** The canvas's scene store, bound for the canvas's lifetime in this view; a new canvas rebinds. */
-export const useBoundCanvasStore = (canvas: Drawing.Canvas): BoundCanvasStore | undefined => {
-  const registry = useRegistry();
-  const [bound, setBound] = useState<BoundCanvasStore>();
-  useEffect(() => {
-    const next = bindCanvasStore(registry, canvas);
-    setBound(next);
-    return () => next.dispose();
-  }, [registry, canvas]);
-  return bound;
-};
-
 /**
  * The built-in node types and whatever other plugins contribute (a contribution may replace a built-in).
- * The canvas's frame may show an object (`object`): a canvas drawing the store binds alongside, else a surface.
+ * The canvas's frame shows an object (`object`) as that object's surface.
  */
 export const useCanvasNodes = (hostOpen?: (node: Node) => (() => void) | undefined): NodeRegistry => {
   const contributed = Hooks.useCapabilities(CanvasCapabilities.NodeType);
@@ -67,11 +55,20 @@ export const useCanvasNodes = (hostOpen?: (node: Node) => (() => void) | undefin
             // The picture is the shape: no fill or border unless the style asks for them.
             bare: true,
           },
-          ...Object.fromEntries(contributed.map(({ type, spec }) => [type, spec])),
+          ...Object.fromEntries(contributed.map(({ type, spec }) => [type, kindNodeDef(type, spec)])),
         },
         defaultNodePrototypes,
       ),
     [contributed, hostOpen],
+  );
+};
+
+/** The element kinds other plugins contribute, whose elements keep their own fields at their top (decision 13). */
+export const useCanvasKinds = (): KindRegistry => {
+  const contributed = Hooks.useCapabilities(CanvasCapabilities.NodeType);
+  return useMemo(
+    () => kindRegistry(Object.fromEntries(contributed.map(({ type, spec }) => [type, spec]))),
+    [contributed],
   );
 };
 

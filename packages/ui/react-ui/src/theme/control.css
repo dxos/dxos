@@ -212,6 +212,16 @@
     color: inherit;
   }
   /* A trailing icon-only Button ends flush with the row, its inset cell standing in for the row's padding. */
+  /* A short label inside the row's start (a vector axis's letter), centred in its own cell; muted with the adornment. */
+  .dx-input-prefix {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    /* A narrow fixed cell, so every axis's letter sits on one column, centred whatever its width. */
+    width: 8px;
+    font-size: var(--dx-label-font-size);
+    user-select: none;
+  }
   .dx-input-adornment {
     display: flex;
     align-items: center;

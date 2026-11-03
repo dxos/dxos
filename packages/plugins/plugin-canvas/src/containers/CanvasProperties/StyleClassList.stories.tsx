@@ -5,8 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { type StyleClass } from '@dxos/react-ui-canvas/scene';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { type StyleClass } from '@dxos/scene';
 
 import { StyleClassList } from './StyleClassList.tsx';
 

@@ -6,17 +6,11 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import {
-  type LatticeCell,
-  type Point,
-  cellBounds,
-  occupancy,
-  useCanvasGesture,
-  useCanvasServices,
-} from '@dxos/react-ui-canvas';
+import { type LatticeCell, cellBounds, occupancy, useCanvasGesture, useCanvasServices } from '@dxos/react-ui-canvas';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Menu from '@dxos/react-ui/Menu';
+import { type Point } from '@dxos/scene';
 
 import { CodeNamespace } from '../../namespace.ts';
 
@@ -39,8 +33,8 @@ const sameCell = (left?: LatticeCell, right?: LatticeCell) => left?.col === righ
 /** The cell under the pointer, mapped from the pointer's position to the scene through a mark drawn at its origin. */
 const useHoveredCell = (consumerName: string) => {
   const registry = useContext(RegistryContext);
-  const { atoms, projection } = useCanvasServices(consumerName);
-  const lattice = projection.lattice;
+  const { atoms, draw } = useCanvasServices(consumerName);
+  const lattice = draw.lattice;
   const origin = useRef<HTMLDivElement>(null);
   const [hovered, setHovered] = useState<LatticeCell>();
   useEffect(() => {
@@ -85,10 +79,10 @@ const useHoveredCell = (consumerName: string) => {
  */
 export const FeatureCanvasCells = ({ onCreate, onAdd, onPin }: FeatureCanvasCellsProps) => {
   const { t } = UiHooks.useTranslation(CodeNamespace.key);
-  const { atoms, projection, readonly } = useCanvasServices(FeatureCanvasCells.displayName);
+  const { atoms, draw, readonly } = useCanvasServices(FeatureCanvasCells.displayName);
   const { displayScene } = useCanvasGesture(FeatureCanvasCells.displayName);
   const drag = useAtomValue(atoms.drag);
-  const lattice = projection.lattice;
+  const lattice = draw.lattice;
   const occupied = useMemo(
     () => (lattice ? occupancy(Object.values(displayScene.nodes), lattice) : new Map()),
     [displayScene, lattice],

@@ -5,6 +5,7 @@
 import { describe, test } from 'vitest';
 
 import * as EffectEx from '@dxos/effect/EffectEx';
+import { Shape } from '@dxos/scene';
 
 import { analyze, errors } from './diagnostics.ts';
 import { compile, parse, read, toScene } from './dsl/index.ts';
@@ -25,7 +26,7 @@ const sceneOf = (text: string) => {
 const rectOf = (objects: readonly Scene.WorldObject[], id: string): Rect => {
   const object = objects.find((entry) => entry.id === id);
   const box = object?.elements.find(
-    (element): element is Scene.Box => element.kind === 'rect' || element.kind === 'ellipse',
+    (element): element is Shape.Box => element.kind === 'rect' || element.kind === 'ellipse',
   );
   if (!object || !box) {
     throw new Error(`no box for ${id}`);
@@ -34,7 +35,7 @@ const rectOf = (objects: readonly Scene.WorldObject[], id: string): Rect => {
 };
 
 /** A connector's whole polyline: its `-path` line (if any) joined with its arrow, or a bare line. */
-const pathOf = (objects: readonly Scene.WorldObject[], id: string): Scene.Point[] => {
+const pathOf = (objects: readonly Scene.WorldObject[], id: string): Shape.Point[] => {
   const elements = objects.find((entry) => entry.id === 'edges')?.elements ?? [];
   const line = elements.find(
     (element) => element.id === `${id}-path` || (element.id === id && element.kind === 'line'),
@@ -45,7 +46,7 @@ const pathOf = (objects: readonly Scene.WorldObject[], id: string): Scene.Point[
   return [...prefix.slice(0, head.length ? -1 : undefined), ...head];
 };
 
-const bendsOf = (points: readonly Scene.Point[]) => Math.max(0, points.length - 2);
+const bendsOf = (points: readonly Shape.Point[]) => Math.max(0, points.length - 2);
 
 const contains = (outer: Rect, inner: Rect) =>
   inner.x >= outer.x &&
@@ -403,7 +404,7 @@ describe('semantic engine', { timeout: 120_000 }, () => {
 
   describe('edge labels', () => {
     /** Gap between a rect and a polyline of axis-aligned runs. */
-    const gapTo = (rect: Rect, points: readonly Scene.Point[]) =>
+    const gapTo = (rect: Rect, points: readonly Shape.Point[]) =>
       Math.min(
         ...points.slice(1).map((to, index) => {
           const from = points[index];
@@ -622,8 +623,8 @@ describe('semantic engine', { timeout: 120_000 }, () => {
       { id: 'H-A', bus: undefined },
       { id: 'H-B', bus: undefined },
     ]);
-    const runsOf = (points: readonly Scene.Point[]) => points.slice(1).map((point, index) => [points[index], point]);
-    const sharedRun = ([a1, a2]: Scene.Point[], [b1, b2]: Scene.Point[]) =>
+    const runsOf = (points: readonly Shape.Point[]) => points.slice(1).map((point, index) => [points[index], point]);
+    const sharedRun = ([a1, a2]: Shape.Point[], [b1, b2]: Shape.Point[]) =>
       a1.x === a2.x && b1.x === b2.x && a1.x === b1.x
         ? Math.min(Math.max(a1.y, a2.y), Math.max(b1.y, b2.y)) - Math.max(Math.min(a1.y, a2.y), Math.min(b1.y, b2.y))
         : a1.y === a2.y && b1.y === b2.y && a1.y === b1.y

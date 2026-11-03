@@ -6,7 +6,7 @@ import React, { type MouseEvent, useCallback, useMemo, useState } from 'react';
 
 import { type ReviewModel, type VerdictStatus, reviewAnnotations, statusOf } from '@dxos/deus/review';
 import { type SpecIndex } from '@dxos/deus/spec-index';
-import { type GraphModel, type LatticeSpec } from '@dxos/react-ui-canvas/scene';
+import { type GraphModel, type LatticeSpec } from '@dxos/react-ui-canvas';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';

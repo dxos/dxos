@@ -22,3 +22,4 @@ export * from './SelectField.tsx';
 export * from './SelectOptionField.tsx';
 export * from './TextAreaField.tsx';
 export * from './TextField.tsx';
+export * from './VectorField.tsx';

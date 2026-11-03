@@ -6,3 +6,8 @@ declare module '*.mdl?raw' {
   const text: string;
   export default text;
 }
+
+declare module '*.dx?raw' {
+  const text: string;
+  export default text;
+}

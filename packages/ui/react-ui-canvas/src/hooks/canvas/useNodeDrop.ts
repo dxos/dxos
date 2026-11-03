@@ -5,8 +5,10 @@
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { type RefObject, useEffect, useRef } from 'react';
 
+import { type NodeType } from '@dxos/scene';
+
 import { type Drag } from '../../engine/index.ts';
-import { type Capabilities, type NodeRegistry, type NodeType } from '../../model/index.ts';
+import { type Capabilities, type NodeRegistry } from '../../model/index.ts';
 import { nodeDragType, nominalSize } from '../../utils/index.ts';
 import { type PointerMachine } from './usePointerMachine.ts';
 

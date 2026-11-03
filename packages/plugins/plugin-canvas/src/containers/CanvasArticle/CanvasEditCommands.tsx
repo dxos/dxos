@@ -2,47 +2,30 @@
 // Copyright 2026 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import { useEffect } from 'react';
 
 import * as AppNode from '@dxos/app-toolkit/AppNode';
-import { useCanvasDocument, useCanvasEditing, useCanvasSelection, useRegistry } from '@dxos/react-ui-canvas/scene';
+import { useSceneCommands } from '@dxos/react-ui-canvas-editor';
 
-const CONSUMER = 'CanvasEditCommands';
-
-export type CanvasEditCommandsProps = {
-  /** The element whose right-clicks offer the canvas's commands: the whole article, toolbars included. */
-  element: HTMLElement | null;
-};
-
-/**
- * Offers the canvas's undo, redo and shape clipboard to the app's context menu. Rendered inside `Canvas.Root`, whose
- * context holds the commands; renders nothing.
- */
-export const CanvasEditCommands = ({ element }: CanvasEditCommandsProps) => {
-  const registry = useRegistry();
-  const { document, readonly } = useCanvasDocument(CONSUMER);
-  const { atoms: editingAtoms, commands: editing } = useCanvasEditing(CONSUMER);
-  const { atoms: selectionAtoms } = useCanvasSelection(CONSUMER);
-
+/** The app's edit commands (undo, redo, cut, copy, paste) on the article, from the editor's command table. */
+export const CanvasEditCommands = ({ element }: { element: HTMLElement | null }) => {
+  const commands = useAtomValue(useSceneCommands('CanvasEditCommands').atoms.table);
   useEffect(() => {
     if (!element) {
       return;
     }
-
-    // Read when the menu opens, so the items reflect the canvas at the right-click.
-    const selected = () => registry.get(selectionAtoms.selection).size > 0;
-    const history = () => registry.get(document.history);
-    return AppNode.registerEditCommands(element, {
-      undo: { run: document.undo, enabled: () => !readonly && history().canUndo },
-      redo: { run: document.redo, enabled: () => !readonly && history().canRedo },
-      cut: { run: editing.cut, enabled: () => !readonly && selected() },
-      copy: { run: () => void editing.copy(), enabled: selected },
-      paste: {
-        run: () => editing.paste(),
-        enabled: () => !readonly && registry.get(editingAtoms.clipboard) !== undefined,
-      },
+    const editCommand = (id: 'undo' | 'redo' | 'cut' | 'copy' | 'paste') => ({
+      run: () => commands.get(id)?.run(),
+      enabled: () => commands.get(id)?.enabled ?? false,
     });
-  }, [element, registry, document, readonly, editing, editingAtoms, selectionAtoms]);
-
+    return AppNode.registerEditCommands(element, {
+      undo: editCommand('undo'),
+      redo: editCommand('redo'),
+      cut: editCommand('cut'),
+      copy: editCommand('copy'),
+      paste: editCommand('paste'),
+    });
+  }, [element, commands]);
   return null;
 };
