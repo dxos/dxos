@@ -5,3 +5,8 @@ tags:
   - ts-vite-build
   - ts-test
   - pack
+
+tasks:
+  build:
+    inputs:
+      - assets/**/*
