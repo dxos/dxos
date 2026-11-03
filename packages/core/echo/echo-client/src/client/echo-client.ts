@@ -331,6 +331,12 @@ export class EchoClient extends Resource {
     }
 
     const objectDocId = db.getObjectDocumentId(objectId) ?? (await this._waitForObjectLink(db, objectId));
+    // A close settles the wait with `undefined`, which an undefined `documentId` would match,
+    // carrying a closing database into the load below.
+    if (db.isClosing) {
+      return undefined;
+    }
+
     if (objectDocId !== documentId) {
       // Dropping the hit makes the result short, which reads to a caller as "no such object".
       log.warn('index hit dropped: the space root does not route the object to the indexed document', {
