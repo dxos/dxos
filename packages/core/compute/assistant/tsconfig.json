@@ -56,9 +56,6 @@
       "path": "../../echo/echo-protocol"
     },
     {
-      "path": "../../protocols"
-    },
-    {
       "path": "../ai"
     },
     {

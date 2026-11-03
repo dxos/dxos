@@ -108,7 +108,6 @@
     "@dxos/log": "workspace:*",
     "@dxos/mcp-client": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/protocols": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/sql-sqlite": "workspace:*",
     "@dxos/types": "workspace:*",
