@@ -91,6 +91,16 @@ describe('space plugin bundle on EDGE', { timeout: 180_000 }, () => {
     expect(outputOf(result)).toMatchObject({ id: expect.stringMatching(/^echo:/) });
   });
 
+  // A nested call from another bundle names the type as its encoded object does: a versioned DXN.
+  test.fails("adds an object of another plugin's type named by versioned DXN", async ({ expect }) => {
+    const result = await bundle.invoke({
+      operationKey: ADD_OBJECT,
+      spaceId,
+      input: { object: { '@type': `dxn:${DOCUMENT_TYPENAME}:${DOCUMENT_VERSION}`, 'name': 'Versioned' } },
+    });
+    expect(outputOf(result)).toMatchObject({ id: expect.stringMatching(/^echo:/) });
+  });
+
   // The isolate outlives an invocation, and a published type does not change under its DXN (EDGE-PLUGINS F-3.8).
   test('two invocations needing one published type ask the registry once', async ({ expect }) => {
     const asked = () => typeRegistry.requests.filter((typename) => typename === DOCUMENT_TYPENAME).length;
