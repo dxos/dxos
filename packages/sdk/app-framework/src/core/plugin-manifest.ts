@@ -11,7 +11,10 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
 import { BaseError } from '@dxos/errors';
-import { PLUGIN_ENTRY_FILENAME, PluginManifestSchema } from '@dxos/protocols';
+import { DXN } from '@dxos/keys';
+import { Config2, PLUGIN_ENTRY_FILENAME, PluginManifestSchema } from '@dxos/protocols';
+
+import type * as Plugin from './plugin.ts';
 
 /**
  * Default port the Vite plugin (`composerPlugin`) binds the dev server to.
@@ -48,6 +51,25 @@ export class PluginManifestError extends BaseError.extend('PluginManifestError',
  * required to enumerate every file in dev mode — chunks and styles flow through
  * the dev server on demand.
  */
+const ActivationEventSchema = Schema.Struct({ id: DXN.Schema, specifier: Schema.optional(Schema.String) });
+
+/** One module of a library build's manifest: a `Plugin.ManifestModule` as JSON. */
+const ManifestModuleSchema = Schema.Struct({
+  id: Schema.String,
+  url: Schema.String,
+  activatesOn: Schema.optional(
+    Schema.Union([
+      ActivationEventSchema,
+      Schema.Struct({ type: Schema.Literal('one-of'), events: Schema.mutable(Schema.Array(ActivationEventSchema)) }),
+      Schema.Struct({ type: Schema.Literal('all-of'), events: Schema.mutable(Schema.Array(ActivationEventSchema)) }),
+    ]),
+  ),
+  requires: Schema.Array(Schema.Struct({ identifier: Schema.String, arity: Schema.Literals(['single', 'multi']) })),
+  provides: Schema.Array(Schema.Struct({ identifier: Schema.String, arity: Schema.Literals(['single', 'multi']) })),
+  adapter: Schema.optional(Schema.Struct({ url: Schema.String, args: Schema.optional(Schema.Unknown) })),
+  environments: Schema.optional(Schema.Array(Schema.String)),
+});
+
 export const Manifest = Schema.Struct({
   // Reuse the build manifest field definitions from `@dxos/protocols` (the shape `composerPlugin`
   // emits), minus `assets` which we relax below, plus the dev-only `devEntry`.
@@ -59,6 +81,11 @@ export const Manifest = Schema.Struct({
   assets: Schema.Array(Schema.String),
   /** Present only for dev-server manifests; points at the unbundled source entry. */
   devEntry: Schema.optional(Schema.String),
+  /**
+   * Every module of a `Plugin.config` plugin, with its body's URL relative to the manifest. A host builds the plugin from
+   * these alone; a manifest without them (a plugin built from `src/plugin.tsx`) is loaded through its entry module.
+   */
+  modules: Schema.optional(Schema.Array(ManifestModuleSchema)),
 });
 
 export type Manifest = Schema.Schema.Type<typeof Manifest>;
@@ -74,7 +101,22 @@ export type ResolvedManifest = Pick<Manifest, 'key' | 'name' | 'version' | 'depe
   entryUrl: string;
   assetUrls: readonly string[];
   dev: boolean;
+  /** The plugin's definition, when the manifest lists its modules; module URLs stay relative to the manifest. */
+  definition?: Plugin.Manifest;
 };
+
+/**
+ * The plugin definition a manifest describes, or `undefined` when it lists no modules: its `Config2.Plugin` metadata,
+ * which the manifest carries flat, and its modules.
+ */
+export const toDefinition = (manifest: Manifest): Plugin.Manifest | undefined =>
+  manifest.modules === undefined
+    ? undefined
+    : { plugin: Schema.decodeUnknownSync(Config2.Plugin)(manifest), modules: manifest.modules };
+
+/** Whether the manifest names a way to load the plugin: its modules, a dev entry, or the entry module in `assets`. */
+const isLoadable = (manifest: Manifest): boolean =>
+  manifest.modules !== undefined || manifest.devEntry !== undefined || manifest.assets.includes(PLUGIN_ENTRY_FILENAME);
 
 /**
  * Resolves a parsed manifest's relative asset paths against the manifest's URL.
@@ -90,6 +132,7 @@ const resolve = (manifestUrl: string, manifest: Manifest): ResolvedManifest => {
     entryUrl: new URL(dev ? manifest.devEntry! : PLUGIN_ENTRY_FILENAME, manifestUrl).toString(),
     assetUrls: manifest.assets.map((asset) => new URL(asset, manifestUrl).toString()),
     dev,
+    ...(dev ? {} : { definition: toDefinition(manifest) }),
     ...(manifest.dependencies !== undefined ? { dependencies: manifest.dependencies } : {}),
   };
 };
@@ -101,8 +144,8 @@ const resolve = (manifestUrl: string, manifest: Manifest): ResolvedManifest => {
  */
 export const parse = (manifestUrl: string, payload: unknown): ResolvedManifest => {
   const manifest = Schema.decodeUnknownSync(Manifest)(payload);
-  if (manifest.devEntry === undefined && !manifest.assets.includes(PLUGIN_ENTRY_FILENAME)) {
-    throw new Error(`Manifest at ${manifestUrl} does not list ${PLUGIN_ENTRY_FILENAME} in assets.`);
+  if (!isLoadable(manifest)) {
+    throw new Error(`Manifest at ${manifestUrl} lists no modules and no ${PLUGIN_ENTRY_FILENAME} in assets.`);
   }
   return resolve(manifestUrl, manifest);
 };
@@ -126,11 +169,11 @@ export const fetchManifest = (manifestUrl: string): Effect.Effect<ResolvedManife
     const manifest = yield* HttpClientResponse.schemaBodyJson(Manifest)(response).pipe(
       Effect.mapError((cause) => new PluginManifestError({ context: { manifestUrl, reason: 'parse-failed' }, cause })),
     );
-    if (manifest.devEntry === undefined && !manifest.assets.includes(PLUGIN_ENTRY_FILENAME)) {
+    if (!isLoadable(manifest)) {
       return yield* Effect.fail(
         new PluginManifestError({
           context: { manifestUrl, reason: 'invalid' },
-          cause: `assets does not include ${PLUGIN_ENTRY_FILENAME}`,
+          cause: `lists no modules and assets does not include ${PLUGIN_ENTRY_FILENAME}`,
         }),
       );
     }

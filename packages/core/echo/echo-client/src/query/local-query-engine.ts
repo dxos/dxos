@@ -27,11 +27,13 @@ import { type CoreLookup } from './path-revalidation.ts';
 import { type QueryContext, type QueryContextRunOptions, type SourceEntry } from './query-context.ts';
 import { RegistryView } from './registry-view.ts';
 import { type RemoteQuerySource } from './remote-query-source.ts';
-import { isSimpleSelectionQuery } from './util.ts';
+import { getRegistryTypeKeys, isSimpleSelectionQuery } from './util.ts';
 import { WorkingSetView, compareIds } from './working-set-view.ts';
 
 export type LocalQueryEngineProps = {
   registry: Registry.Registry;
+  /** Resolves registry keys `registry` lacks from the graph's type sources, adding what they return to it. */
+  resolveRegistryKeys?: (keys: readonly string[]) => Promise<void>;
   onStart: () => void;
   onStop: () => void;
 };
@@ -161,6 +163,8 @@ export class LocalQueryEngine implements QueryContext {
       view.update(query);
     }
     this.#registry.update(query);
+    // What resolves lands in the registry, whose change re-emits this query.
+    void this.#resolveRegistryKeys(query);
     this.#remotesActive = false;
     this.#loadRequested.clear();
     this.#syncRemotes();
@@ -272,6 +276,10 @@ export class LocalQueryEngine implements QueryContext {
         onExecutionTime?.(performance.now() - begin);
       }
     };
+    // A type source is remote, so a stalled one must not hold the query past its timeout; the local registry answers.
+    await asyncTimeout(this.#resolveRegistryKeys(query), Math.max(0, timeout)).catch((err) =>
+      log('type sources did not answer; using the local registry', { err }),
+    );
     const { plan, local } = timed(() => ({ plan: createMergePlan(query), local: this.#evaluateLocal(query) }));
     const ids = getSelectedIds(query);
     if (ids === undefined) {
@@ -316,6 +324,13 @@ export class LocalQueryEngine implements QueryContext {
       });
     }
     return timed(() => this.#merge(query, plan, [...local, ...loaded], remote ?? [], remote !== undefined));
+  }
+
+  async #resolveRegistryKeys(query: QueryAST.Query): Promise<void> {
+    const keys = getRegistryTypeKeys(query);
+    if (keys.length > 0) {
+      await this._params.resolveRegistryKeys?.(keys);
+    }
   }
 
   #evaluateLocal(query: QueryAST.Query): SourceEntry[] {

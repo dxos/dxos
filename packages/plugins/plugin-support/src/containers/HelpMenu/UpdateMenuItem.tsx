@@ -11,6 +11,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Menu from '@dxos/react-ui/Menu';
 
 import { SupportNamespace } from '../../namespace.ts';
+import { menuCaptionClasses } from './styles.ts';
 
 export type UpdateMenuItemProps = {
   manager: AppUpdate.Manager;
@@ -104,7 +105,7 @@ export const UpdateMenuItem = ({ manager }: UpdateMenuItemProps) => {
         closeOnSelect={status.kind === 'ready'}
         onClick={onClick ? () => void onClick() : undefined}
       />
-      {caption && <Layout.Flex classNames='ps-8 pe-2 pb-2 text-xs text-fg-muted'>{caption}</Layout.Flex>}
+      {caption && <Layout.Flex classNames={menuCaptionClasses}>{caption}</Layout.Flex>}
     </>
   );
 };
