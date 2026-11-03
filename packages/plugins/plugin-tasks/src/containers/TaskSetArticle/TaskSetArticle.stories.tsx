@@ -326,6 +326,34 @@ export const StatusFilter: Story = {
   },
 };
 
+/** Picking a milestone in the toolbar narrows the list to its tasks and names it on the trigger, until Show all. */
+export const MilestoneFilter: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.findByText('Draft launch email', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    const context = seeded;
+    if (!context) {
+      throw new Error('The story did not seed a task set.');
+    }
+
+    // Re-queried rather than held: the trigger is rebuilt when the deferred menu mounts under it.
+    const trigger = () => canvasElement.querySelector<HTMLElement>('[data-testid="tasks.filter.milestone"]');
+    const item = (id: string) => document.querySelector<HTMLElement>(`[data-testid="tasks.filter.milestone.${id}"]`);
+    await userEvent.click(trigger()!);
+    await waitFor(() => expect(item(context.roasting.id)).toBeTruthy(), { timeout: 10_000 });
+    await userEvent.click(item(context.roasting.id)!);
+
+    await waitFor(() => expect(canvas.queryByText('Draft launch email')).toBeNull(), { timeout: 10_000 });
+    await expect(canvas.findByText('Finalize roast curve', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await waitFor(() => expect(trigger()).toHaveTextContent('Roasting'), { timeout: 10_000 });
+
+    await userEvent.click(trigger()!);
+    await waitFor(() => expect(item('all')).toBeTruthy(), { timeout: 10_000 });
+    await userEvent.click(item('all')!);
+    await expect(canvas.findByText('Draft launch email', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+  },
+};
+
 /**
  * The status menu and the query text are two views over one value: picking a status in the menu
  * rewrites the text, and editing the text re-checks the menu. The value is persisted per device,
