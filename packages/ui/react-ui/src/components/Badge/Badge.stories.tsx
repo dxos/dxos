@@ -8,6 +8,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, within } from 'storybook/test';
 
+import { Flex } from '../../layout/Flex/Flex.tsx';
 import { withLayout, withTheme } from '../../testing/index.ts';
 import * as Avatar from '../Avatar/Avatar.tsx';
 import * as Icon from '../Icon/Icon.tsx';
@@ -16,7 +17,7 @@ import * as Badge from './Badge.tsx';
 const CORNERS: Badge.Corner[] = ['top-start', 'top-end', 'bottom-start', 'bottom-end'];
 
 const DefaultStory = () => (
-  <div className='flex items-center gap-4'>
+  <Flex align='center' gap='lg'>
     {CORNERS.map((corner) => (
       <Badge.Root key={corner} data-testid={`root-${corner}`}>
         <Avatar.Root hue='indigo' fallback='Ada Lovelace' label='Ada Lovelace' />
@@ -31,7 +32,7 @@ const DefaultStory = () => (
         <Icon.Icon icon='ph--lock--fill' />
       </Badge.Mark>
     </Badge.Root>
-  </div>
+  </Flex>
 );
 
 const meta = {

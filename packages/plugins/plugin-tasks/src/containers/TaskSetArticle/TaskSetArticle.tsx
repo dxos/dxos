@@ -45,7 +45,6 @@ import { meta } from '#meta';
 import { TaskOperation, TasksCapabilities, TaskSetView } from '#types';
 
 import {
-  applyPersonEdit,
   useDelegateActions,
   useDescriptionComponents,
   useMarkdownExtensions,
@@ -152,6 +151,7 @@ export const TaskSetArticle = ({
   const handleClearFilter = useCallback(() => setFilterText(''), [setFilterText]);
   const { checked, onTaskCheck } = useCheckedTasks(taskSet);
 
+  const handleUpdate = useTaskUpdate(spaceId);
   const { invokePromise } = Hooks.useOperationInvoker();
   // Files dropped on the create pane attach once the task exists: the create answers with the new
   // task's id, and the live object is in the working set by then, since this client wrote it.
@@ -174,7 +174,7 @@ export const TaskSetArticle = ({
       }
       const [task] = db?.query(Filter.and(Filter.type(Task.Task), Filter.id(data.task.id))).runSync() ?? [];
       if (task && finished) {
-        await applyPersonEdit(invokePromise, task, { status }, spaceId);
+        await handleUpdate(task, { status });
       }
       if (task && onTaskCreated) {
         await onTaskCreated(task);
@@ -193,10 +193,9 @@ export const TaskSetArticle = ({
       }
       return { rejectedFiles };
     },
-    [invokePromise, taskSet, spaceId, attachFile, db, onTaskCreated],
+    [invokePromise, handleUpdate, taskSet, spaceId, attachFile, db, onTaskCreated],
   );
 
-  const handleUpdate = useTaskUpdate(spaceId);
   const members = useTaskMembers(spaceId);
 
   const handleDelete = Hooks.useOperation(TaskOperation.DeleteTask, (task: Task.Task) => ({ task: Ref.make(task) }), {

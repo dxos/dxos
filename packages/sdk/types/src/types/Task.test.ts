@@ -424,9 +424,10 @@ describe('delegation', () => {
     expect(task.status).toEqual('done');
   });
 
-  test('the owner is the person who answers for the task, never an agent', ({ expect }) => {
+  test('the owner is the person who answers for the task, never an agent or a tool', ({ expect }) => {
     expect(Task.owner(Task.make({ title: 'Mine', assignee: rich }))?.name).toEqual('Rich');
     expect(Task.owner(Task.make({ title: "An agent's own", assignee: scout }))).toBeUndefined();
+    expect(Task.owner(Task.make({ title: 'A tool', assignee: { role: 'tool', name: 'Linter' } }))).toBeUndefined();
     expect(Task.owner(Task.make({ title: 'Nobody' }))).toBeUndefined();
   });
 });

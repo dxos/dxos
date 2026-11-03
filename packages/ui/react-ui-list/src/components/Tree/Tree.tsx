@@ -152,6 +152,8 @@ type TreeRootProps<T extends { id: string } = any> = {
    * `Tree.ItemIndicator` starts with its `var(--dx-half-block-size)` track.
    */
   columns?: string;
+  /** The width of the tracks `columns` puts ahead of the disclosure, so the indent guides stay under the carets. */
+  lead?: string;
   /**
    * Let a row grow past one block for cells placed on further grid lines (a description under the label): the first
    * line stays one block and later lines size to their content. A fixed window assumes one block per row, so pair it
@@ -218,6 +220,7 @@ const TreeRoot = <T extends { id: string }>({
   path,
   size,
   columns = DEFAULT_COLUMNS,
+  lead,
   multiline = false,
   selectionMode = 'single',
   selectionFollowsFocus = false,
@@ -684,7 +687,10 @@ const TreeRoot = <T extends { id: string }>({
     [onItemHover],
   );
 
-  const style: CSSProperties & Record<'--dx-tree-columns', string> = { '--dx-tree-columns': columns };
+  const style: CSSProperties & Record<`--${string}`, string> = {
+    '--dx-tree-columns': columns,
+    ...(lead !== undefined ? { '--dx-tree-lead': lead } : {}),
+  };
 
   return (
     <TreeProvider
@@ -1361,20 +1367,20 @@ TreeItemGroupLabel.displayName = 'Tree.ItemGroupLabel';
 // ItemIndicator
 //
 
-type TreeItemIndicatorProps = {
+type TreeItemIndicatorProps = Util.ThemedClassName<{
   /** The caret glyph; it turns a quarter while the branch is open. */
   icon?: string;
-};
+}>;
 
 /**
  * The disclosure cell: half a block wide and one block tall, holding the caret-only branch trigger on a branch (dimmed once an
  * open branch proves empty) and nothing on a leaf, so labels
  * align at every level.
  */
-const TreeItemIndicator = ({ icon = 'ph--caret-right--regular' }: TreeItemIndicatorProps) => {
+const TreeItemIndicator = ({ classNames, icon = 'ph--caret-right--regular' }: TreeItemIndicatorProps) => {
   const { node } = useTreeItemContext('Tree.ItemIndicator');
   return (
-    <Layout.Block classNames='dx-tree-item-indicator'>
+    <Layout.Block classNames={['dx-tree-item-indicator', classNames]}>
       {node.branch && (
         <TreeView.BranchTrigger className='dx-tree-branch-trigger' data-empty={node.empty ? '' : undefined}>
           <TreeView.BranchIndicator className='dx-tree-branch-indicator'>

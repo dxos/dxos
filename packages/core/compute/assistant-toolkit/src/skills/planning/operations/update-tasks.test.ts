@@ -136,7 +136,7 @@ describe('UpdateTasks', () => {
           Task.make({ title: 'Test the tools', status: 'todo', assignee: { role: 'assistant', name: 'Old session' } }),
         );
         Obj.update(root, (root) => {
-          root.subtasks = [...(root.subtasks ?? []), Ref.make(legacy)];
+          root.subtasks?.push(Ref.make(legacy));
         });
         Obj.setParent(legacy, root);
         yield* Database.flush();

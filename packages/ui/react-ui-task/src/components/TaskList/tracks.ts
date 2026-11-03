@@ -5,9 +5,12 @@
 /**
  * A cell's place on the list's column template, by track name, on the title line. Shared by the tree's rows and the
  * edit pane, which lay out on the same template, so a field sits exactly where the value it edits is read; a cell
- * that is absent leaves its track empty. Literal so Tailwind finds the classes.
+ * that is absent leaves its track empty. The checkbox is placed by line, since its track goes unnamed, and pulled back
+ * past the row's indent so every depth's box sits in one column. Literal so Tailwind finds the classes.
  */
 export const TRACK = {
+  check: 'row-start-1 col-start-1 -translate-x-[calc(var(--dx-tree-depth)*var(--dx-half-block-size))]',
+  disclosure: 'row-start-1 col-[disclosure]',
   gutter: 'row-start-1 col-[gutter]',
   priority: 'row-start-1 col-[priority]',
   status: 'row-start-1 col-[status]',
