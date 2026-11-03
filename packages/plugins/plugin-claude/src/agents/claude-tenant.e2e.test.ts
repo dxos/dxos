@@ -5,6 +5,7 @@
 import { createWebSocketStream } from '@agentclientprotocol/sdk/experimental/ws-client';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Fiber from 'effect/Fiber';
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -12,9 +13,9 @@ import { dirname, join } from 'node:path';
 
 import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer, makeScriptedTenant } from '@dxos/agent-runtime/testing';
-import { Alarm, TrajectoryStore } from '@dxos/assistant';
+import { Alarm, Chat, TrajectoryStore } from '@dxos/assistant';
 import * as Reducer from '@dxos/compute/Reducer';
-import { type Database, type Feed } from '@dxos/echo';
+import { type Database, type Feed, Obj } from '@dxos/echo';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { TestHelpers } from '@dxos/effect/testing';
 import { Message } from '@dxos/types';
@@ -91,6 +92,37 @@ const describeLanes = (view: Reducer.ThreadView): string =>
 
 const read = (feed: Feed.Feed) => Effect.map(TrajectoryStore.load(feed, Reducer.thread), ({ state }) => state);
 
+/**
+ * Answers Claude Code's permission requests as a person would in the chat: allows each one once. Whether the turn
+ * asks at all is the model's choice (a shell command asks, a file listing does not), and nobody else answers here.
+ */
+const approveRequests = (sessions: AcpAgent.Sessions, chat: Chat.Chat, feed: Feed.Feed) =>
+  Effect.gen(function* () {
+    const answered = new Set<string>();
+    for (;;) {
+      const { state } = yield* TrajectoryStore.load(feed, Reducer.thread);
+      for (const item of state.items) {
+        for (const block of item.blocks) {
+          const allow =
+            block._tag === 'request' && block.resolution === undefined && !answered.has(block.requestId)
+              ? block.options.find((option) => option.kind === 'allow_once')
+              : undefined;
+          if (block._tag === 'request' && allow !== undefined) {
+            answered.add(block.requestId);
+            yield* AcpAgent.respond(sessions, {
+              chat,
+              feed,
+              message: Message.make({ id: item.id, sender: { role: 'assistant' }, blocks: [...item.blocks] }),
+              requestId: block.requestId,
+              optionId: allow.id,
+            });
+          }
+        }
+      }
+      yield* Effect.sleep(500);
+    }
+  });
+
 /** Polls the thread view until `done` holds. */
 const waitFor = (feed: Feed.Feed, done: (view: Reducer.ThreadView) => boolean) =>
   Effect.gen(function* () {
@@ -110,6 +142,8 @@ describe.runIf(ENABLED && (OAUTH_TOKEN || API_KEY) && CLAUDE)('Claude Code share
   const work = join(root, 'work');
   const token = 'e2e'.repeat(12);
   let port = 0;
+  /** The tenant's sessions, which the approver answers requests through; made when the tenant's producer is. */
+  let sessions: AcpAgent.Sessions | undefined;
 
   const claude = AcpAgent.makeTurnProducer;
 
@@ -147,6 +181,11 @@ describe.runIf(ENABLED && (OAUTH_TOKEN || API_KEY) && CLAUDE)('Claude Code share
         port = server.port;
 
         const session = yield* AgentService.createSession();
+        const chat = session.chat;
+        if (!Obj.instanceOf(Chat.Chat, chat) || sessions === undefined) {
+          return yield* Effect.die(new Error('the session has no chat, or the Claude tenant was never made'));
+        }
+        const approver = yield* approveRequests(sessions, chat, session.feed).pipe(Effect.forkChild);
         yield* session.submitPrompt('Draft a three-step plan for migrating the chat store to events.');
         yield* waitFor(session.feed, (view) => view.lanes.length === 1);
         yield* session.submitPrompt(
@@ -168,6 +207,7 @@ describe.runIf(ENABLED && (OAUTH_TOKEN || API_KEY) && CLAUDE)('Claude Code share
         expect(answer).toContain('TrajectoryStore.ts');
 
         yield* session.waitForCompletion();
+        yield* Fiber.interrupt(approver);
         const done = yield* read(session.feed);
         expect(done.lanes.map((lane) => lane.status)).toEqual(['done', 'done']);
         // Both lanes merged into main: a later prompt sees Claude's answer and the plan.
@@ -194,10 +234,11 @@ describe.runIf(ENABLED && (OAUTH_TOKEN || API_KEY) && CLAUDE)('Claude Code share
                 {
                   name: 'claude',
                   makeTurnProducer: (context) =>
-                    Effect.flatMap(AcpAgent.Sessions.make(), (sessions) =>
-                      claude({
+                    Effect.flatMap(AcpAgent.Sessions.make(), (made) => {
+                      sessions = made;
+                      return claude({
                         id: 'claude-code',
-                        sessions,
+                        sessions: made,
                         connect: (cwd) =>
                           Effect.succeed(
                             createWebSocketStream(Protocol.acpUrl({ port, agent: 'claude-code', cwd }), {
@@ -206,8 +247,8 @@ describe.runIf(ENABLED && (OAUTH_TOKEN || API_KEY) && CLAUDE)('Claude Code share
                           ),
                         workspace: () => Effect.succeed(work),
                         mode: () => 'acceptEdits',
-                      })(context),
-                    ),
+                      })(context);
+                    }),
                 },
               ],
             }),
