@@ -9,6 +9,7 @@ import { escapeHtml, htmlTable } from './print.ts';
 describe('print', () => {
   test('escapeHtml', () => {
     expect(escapeHtml('<a href="x">&</a>')).to.eq('&lt;a href=&quot;x&quot;&gt;&amp;&lt;/a&gt;');
+    expect(escapeHtml("it's")).to.eq('it&#39;s');
   });
 
   test('htmlTable', () => {

@@ -25,7 +25,12 @@ const PRINT_STYLE = `
 
 /** Escape text for an HTML element body or quoted attribute. */
 export const escapeHtml = (text: string): string =>
-  text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 
 /** A plain HTML table of text cells, for printing tabular objects. */
 export const htmlTable = (rows: readonly (readonly string[])[], { header }: { header?: readonly string[] } = {}) => {
