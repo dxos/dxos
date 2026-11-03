@@ -202,7 +202,7 @@ const copyHiddenProperties = (source: any, target: any): void => {
 //     │         set/has/... traps run here; there is no `get` trap, so reads land on the target
 //     ▼
 //   target            the user's object. OWN enumerable props = user data ({ name, age, ... });
-//     │ [[Prototype]] OWN symbol props are removed by `compactMetadataToInstanceState` after init.
+//     │ [[Prototype]] a root's OWN symbol props are removed by `compactMetadataToInstanceState` after init.
 //     ▼
 //   instanceState     `Object.create(TypedObjectPrototype)`. Holds the relocated symbol-keyed
 //     │ [[Prototype]] metadata as hidden props: [EventId] (root only), [ObjectDeletedId], [SchemaId],
@@ -219,7 +219,9 @@ const copyHiddenProperties = (source: any, target: any): void => {
 //
 // Root vs nested: a root object owns an `[EventId]`; nested records share their root's reactivity
 // and have none. That presence is the "is this an initialized root" signal (it replaced an earlier
-// `[ChangeId] === true` marker).
+// `[ChangeId] === true` marker). Only a root gets an instanceState: a nested record never changes
+// handler, so it keeps its metadata as own properties and points straight at TypedObjectPrototype
+// (`shareTypedObjectPrototype`).
 //
 // `this` in the accessors below: the get trap calls `Reflect.get(target, prop, receiver)`, so
 // `this` is the PROXY (receiver) on the common path, or the raw target when read directly.
@@ -275,6 +277,18 @@ Object.defineProperties(TypedObjectPrototype, {
         : (that: unknown) => getRawTarget(that) === target;
     },
   },
+  // One shared inspector rather than a bound function per record: a nested JSON Schema alone is dozens of records.
+  [inspectCustom]: {
+    value(
+      this: ProxyTarget,
+      _depth: number,
+      options: InspectOptionsStylized,
+      inspectFn: (value: any, options?: InspectOptionsStylized) => string,
+    ): string {
+      const inspected = inspectFn(getRawTarget(this), { ...options, showHidden: false, customInspect: false });
+      return `Typed ${inspected}`;
+    },
+  },
   [StaticTypeSchemaSlot]: {
     // Lazily rebuild the source Effect Schema from `jsonSchema` and cache it as an own (hidden)
     // property so subsequent reads short-circuit this accessor; the set-trap deletes the cache when
@@ -325,6 +339,20 @@ const compactMetadataToInstanceState = (target: ProxyTarget): void => {
 };
 
 /**
+ * Point a nested record straight at {@link TypedObjectPrototype}, keeping its metadata as own properties.
+ *
+ * Unlike {@link compactMetadataToInstanceState} this keeps the record in V8's fast-property mode: deleting the moved
+ * properties would turn the target into a dictionary, and so would making the per-record state a prototype. Both
+ * cost ~0.5 KiB a record, which for an object holding JSON Schema (one record per schema node) is most of its heap.
+ */
+const shareTypedObjectPrototype = (target: ProxyTarget): void => {
+  if (Array.isArray(target) || Object.getPrototypeOf(target) !== Object.prototype) {
+    return;
+  }
+  Object.setPrototypeOf(target, TypedObjectPrototype);
+};
+
+/**
  * Typed in-memory reactive store (with Schema).
  * Reactivity is based on Event subscriptions, not signals.
  */
@@ -347,8 +375,8 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     // Default to not-deleted, but preserve a deletion marker already stamped on the target (e.g. by
-    // `objectFromJSON` when hydrating a tombstone snapshot).
-    if (!(ObjectDeletedId in target)) {
+    // `objectFromJSON` when hydrating a tombstone snapshot). Only entities are deleted, never a nested record.
+    if (!hasOwner && !(ObjectDeletedId in target)) {
       defineHiddenProperty(target, ObjectDeletedId, false);
     }
 
@@ -377,16 +405,14 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       }
     }
 
-    // Maybe have been set by `create`.
-    Object.defineProperty(target, inspectCustom, {
-      enumerable: false,
-      configurable: true,
-      value: this._inspect.bind(target),
-    });
-
-    // Relocate per-object metadata onto an instance-state prototype, leaving only user data as own
-    // properties on the target. Done last so all metadata set above (and by `prepareTypedTarget`) moves.
-    compactMetadataToInstanceState(target);
+    // Relocate a root's metadata onto an instance-state prototype, leaving only user data as own properties on the
+    // target. Done last so all metadata set above (and by `prepareTypedTarget`) moves. A nested record never changes
+    // handler, so it needs no state of its own: see `shareTypedObjectPrototype`.
+    if (hasOwner) {
+      shareTypedObjectPrototype(target);
+    } else {
+      compactMetadataToInstanceState(target);
+    }
 
     // After compaction and ownership, so each child is stamped and owned before it gets a proxy of its
     // own. Recursive: wrapping a child runs its `init`, which wraps that child's children.
@@ -616,20 +642,6 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     return value;
-  }
-
-  private _inspect(
-    _: number,
-    options: InspectOptionsStylized,
-    inspectFn: (value: any, options?: InspectOptionsStylized) => string,
-  ): string {
-    const inspected = inspectFn(this, {
-      ...options,
-      showHidden: false,
-      customInspect: false,
-    });
-
-    return `Typed ${inspected}`;
   }
 }
 
