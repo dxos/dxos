@@ -17,11 +17,12 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import * as Account from '@dxos/plugin-client/Account';
 import * as ClientOperation from '@dxos/plugin-client/ClientOperation';
+// A package specifier keeps the image out of `dist/`: the library build leaves it external and the app's bundler emits it.
+import hero from '@dxos/plugin-onboarding/assets/hero.webp?url';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as HelpOperation from '@dxos/plugin-support/HelpOperation';
 import { osTranslations } from '@dxos/ui-theme';
 
-import hero from '../assets/hero.webp?url';
 import { AUTHORIZING_DEVICE_DIALOG, WELCOME_SCREEN } from './constants.ts';
 import { OnboardingNamespace } from './namespace.ts';
 import { isInvalidRecoveryToken, queryAllCredentials, removeQueryParamByValue } from './util.ts';

@@ -12,7 +12,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // https://github.com/topojson/world-atlas
 // https://www.naturalearthdata.com/downloads
-const resolutions = ['110m', '50m', '10m'];
+// 50m and 10m are loaded from `data/raw/` at runtime (see `loadTopology`).
+const resolutions = ['110m'];
 
 for (const resolution of resolutions) {
   const source = path.join(__dirname, `../data/raw/countries-${resolution}.json`);

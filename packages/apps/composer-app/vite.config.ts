@@ -772,7 +772,8 @@ export default defineConfig((env) => ({
       filename: 'sw.ts',
       injectManifest: {
         maximumFileSizeToCacheInBytes: 30000000,
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,wasm,woff2}'],
+        // react-ui-geo fetches its 50m and 10m topologies as JSON files, which must stay available offline.
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,wasm,woff2}', '**/countries-*.json'],
         // The Phosphor catalog (~9,000 SVGs in /phosphor/) is deliberately NOT precached: the
         // manifest entries alone would add one install-time request per file, slowing every
         // install/update. sw.ts caches /phosphor/ fetches at runtime (cache-first) instead,
