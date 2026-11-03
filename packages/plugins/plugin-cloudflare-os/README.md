@@ -7,6 +7,6 @@ Uses a [Cloudflare OS](https://github.com/cloudflare/cloudflare-os) deployment a
 - **Gadgets.** The workspace article lists the workspace's gadgets and runs the picked one in the same sandbox Cloudflare OS uses: a null-origin frame with no network, talking to its server over a `MessagePort`.
 - **Agent.** The workspace's agent appears in Composer's agent picker. Its proposed gadget changes and the actions it queues behind a gatekeeper come back as approval cards in the chat.
 
-The plugin talks to the deployment over Cap'n Web, against the subset of the Workshop API declared in `src/api/protocol.ts`.
+The plugin talks to the deployment over Cap'n Web, against the subset of the Workshop API declared in `src/api/Protocol.ts`.
 
 See [`PLUGIN.mdl`](./PLUGIN.mdl) for the spec and [`docs/DESIGN.md`](./docs/DESIGN.md) for the design and its open questions.

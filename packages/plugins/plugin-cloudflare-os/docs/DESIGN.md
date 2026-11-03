@@ -8,7 +8,7 @@ gatekeepers. ECHO remains the system of record for everything else in the space.
 Cloudflare OS has no REST or MCP surface. The Workshop frontend talks to its kernel over one Cap'n Web
 session at `wss://<deployment>/api`, typed by `packages/workshop-shared/src/api.ts` upstream. That file
 says it exists to allow alternative clients. The package is unpublished and moves with each
-deployment, so this plugin vendors only the calls it makes (`src/api/protocol.ts`) and must follow
+deployment, so this plugin vendors only the calls it makes (`src/api/Protocol.ts`) and must follow
 upstream changes by hand.
 
 ## Authentication
