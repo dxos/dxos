@@ -5968,6 +5968,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../../sdk/app-toolkit
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../assistant
       '@dxos/compute':
         specifier: workspace:*
         version: link:../compute

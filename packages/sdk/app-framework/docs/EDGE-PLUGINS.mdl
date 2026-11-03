@@ -188,7 +188,17 @@ interface Entrypoint {
 }
 
 type InvokeRequest = { operationKey: string; input?: unknown; spaceId?: string };
-type InvocationScope = { accessTokenService?: AccessTokenService };
+type InvocationScope = {
+  accessTokenService?: AccessTokenService;
+  conversation?: string; // version 2: the agent turn's chat or feed
+  origin?: string; // version 2: where a channel reply is routed
+  caller?: Caller; // version 2
+  traceSink?: TraceSink; // version 2, with pid, parentPid and runId
+  cancellation?: CancellationSignal; // version 2
+  idSeed?: IdSeed; // version 2, tests only
+  services?: HostServices; // version 2: services only EDGE holds
+  operations?: OperationHost; // version 2: other plugins' operations
+};
 type InvokeResult = { ok: true; output: unknown } | { ok: false; error: Failure };
 type Failure = {
   code: 'operation-not-found' | 'invalid-request' | 'failed';
@@ -636,6 +646,12 @@ feat F-5: Operations are exposed and callable
   req F-5.5: An operation's output reaches the caller in the JSON form its schema describes: every
     live ECHO object as `Entity.toJSON` (with `@uri` and `@type`) and every ref as `{ '/': uri }`,
     as operation-service returns it.
+
+  req F-5.6: A handler sees the request context operation-service gives it: the trace sink receives its
+    trace events between `operation.start` and `operation.end` envelopes (none when the caller minted
+    the pid), the caller's cancellation aborts `Cancellation.signal`, a test's id seed pins the ids it
+    mints, and a conversation provides its `HarnessService`. The caller and the reply origin bind the
+    host services EDGE serves to the invocation ([F-5.7]).
 ```
 
 ```mdl
@@ -1332,4 +1348,16 @@ decision D-59: PluginHost encodes a handler's output before returning it over Wo
   why: Structured clone copies none of a live entity's properties and cannot clone a `Ref`, so `space.addObject` returned `{ id }` without its object; the router cannot recover what the clone dropped, so the host has to encode.
   rejected:
     - Encode in compute-service's router — the entity is already gone by the time the result crosses the RPC boundary.
+```
+
+```mdl
+decision D-60: The `InvocationScope` carries every per-call field operation-service's `InvokeOperationRequest` does (conversation, origin, caller, trace sink with pid, parentPid and runId, cancellation, id seed), and PluginHost consumes each as operation-service does: trace envelopes, `Cancellation.Service`, `EntityId` seeding, and a `HarnessService` rebuilt from the conversation. A conversation without a space is refused as `invalid-request`. Fills in [D-6].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.6, InvocationScope, PluginEntrypoint]
+  why: `agent.ensureReplySent` reads the conversation's chat and `agent.resetBrain` checks the caller; without these fields a bundle ran both as if no agent turn and no caller existed.
+  rejected:
+    - Put the per-call fields in `env` — `env` is shared by every space and caller of an isolate ([D-6]).
+    - Import `@dxos/assistant` statically in the host — only invocations with a conversation need it, so it is imported when one arrives.
 ```

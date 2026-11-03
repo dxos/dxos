@@ -94,11 +94,9 @@ describe('PluginHost', () => {
     });
   });
 
-  // Request context operation-service gives a handler (EDGE-PLUGINS F-5.6).
+  // The request context operation-service gives a handler (EDGE-PLUGINS F-5.6).
   describe('request context', () => {
-    test.fails("forwards the handler's trace events to the sink, between start and end envelopes", async ({
-      expect,
-    }) => {
+    test("forwards the handler's trace events to the sink, between start and end envelopes", async ({ expect }) => {
       const { messages, sink } = collectingSink();
       const result = await makeHost().invoke(
         { operationKey: String(Inspect.meta.key), input: {} },
@@ -114,7 +112,7 @@ describe('PluginHost', () => {
       expect(messages[0].meta).toMatchObject({ parentPid: 'parent' });
     });
 
-    test.fails('a caller-minted pid owns the envelopes', async ({ expect }) => {
+    test('a caller-minted pid owns the envelopes', async ({ expect }) => {
       const { messages, sink } = collectingSink();
       await makeHost().invoke(
         { operationKey: String(Inspect.meta.key), input: {} },
@@ -125,7 +123,7 @@ describe('PluginHost', () => {
       expect(messages[0].meta).toMatchObject({ pid: 'minted' });
     });
 
-    test.fails("aborts the handler's cancellation signal when the caller cancels", async ({ expect }) => {
+    test("aborts the handler's cancellation signal when the caller cancels", async ({ expect }) => {
       const result = await makeHost().invoke(
         { operationKey: String(Inspect.meta.key), input: { waitForCancel: true } },
         {},
@@ -134,7 +132,7 @@ describe('PluginHost', () => {
       expect(result).toMatchObject({ ok: true, output: { cancelled: true } });
     });
 
-    test.fails('pins the ids the handler mints to the seed', async ({ expect }) => {
+    test('pins the ids the handler mints to the seed', async ({ expect }) => {
       const host = makeHost();
       const invoke = () =>
         host.invoke(
@@ -147,7 +145,7 @@ describe('PluginHost', () => {
       expect(first).toEqual(second);
     });
 
-    test.fails('a conversation needs a space, whose database holds it', async ({ expect }) => {
+    test('a conversation needs a space, whose database holds it', async ({ expect }) => {
       expect(
         await makeHost().invoke(
           { operationKey: String(Inspect.meta.key), input: {} },
