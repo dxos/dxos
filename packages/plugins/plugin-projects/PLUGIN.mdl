@@ -1636,6 +1636,7 @@ decision D-150: Selection checkboxes show on every row at all times, beside the 
   date: 2026-11-03
   by: user:wittjosiah
   affects: [QA-4]
+  supersedes: D-107
 ```
 
 ```mdl
@@ -1651,6 +1652,7 @@ decision D-152: `Task` 0.7.0 holds `delegate` in place of `reviewers`. The migra
   date: 2026-11-03
   by: user:wittjosiah
   affects: [Task]
+  supersedes: D-119
 ```
 
 ```mdl
