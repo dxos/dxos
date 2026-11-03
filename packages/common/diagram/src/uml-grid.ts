@@ -9,6 +9,8 @@
 // can substitute channel assignment or full obstacle-avoiding routers later.
 //
 
+import { Shape } from '@dxos/scene';
+
 import * as Layout from './layout.ts';
 import { makeAvoidingRouter } from './ortho-router.ts';
 import type * as Scene from './scene.ts';
@@ -69,10 +71,10 @@ export type RoutedRelation = {
  * Produces the connector waypoints for one relation, in scene units. The returned polyline is
  * rendered verbatim (last segment carries the arrowhead), so a router fully controls the path.
  */
-export type Router = (edge: RoutedRelation) => Scene.Point[];
+export type Router = (edge: RoutedRelation) => Shape.Point[];
 
 /** Z route along y: leave the facing horizontal edge, run a channel at mid, enter the peer's. */
-const routeAlongY = (from: Rect, to: Rect, shift: number, ports?: RoutedRelation['ports']): Scene.Point[] => {
+const routeAlongY = (from: Rect, to: Rect, shift: number, ports?: RoutedRelation['ports']): Shape.Point[] => {
   const down = to.y >= from.y;
   const start = { x: ports?.start ?? from.x + from.w / 2, y: down ? from.y + from.h : from.y };
   const end = { x: ports?.end ?? to.x + to.w / 2, y: down ? to.y : to.y + to.h };
@@ -88,7 +90,7 @@ const routeAlongY = (from: Rect, to: Rect, shift: number, ports?: RoutedRelation
 };
 
 /** Z route along x; mirror of `routeAlongY`. */
-const routeAlongX = (from: Rect, to: Rect, shift: number, ports?: RoutedRelation['ports']): Scene.Point[] => {
+const routeAlongX = (from: Rect, to: Rect, shift: number, ports?: RoutedRelation['ports']): Shape.Point[] => {
   const right = to.x >= from.x;
   const start = { x: right ? from.x + from.w : from.x, y: ports?.start ?? from.y + from.h / 2 };
   const end = { x: right ? to.x : to.x + to.w, y: ports?.end ?? to.y + to.h / 2 };
@@ -107,7 +109,7 @@ const routeAlongX = (from: Rect, to: Rect, shift: number, ports?: RoutedRelation
  * include the two boxes) with the fewest bends, leaving along the axis that separates the boxes more. How an editor
  * re-routes a laid-out connector once one of its ends has moved off the route the layout gave it.
  */
-export const rerouteConnector = (from: Rect, to: Rect, obstacles: readonly Rect[]): Scene.Point[] => {
+export const rerouteConnector = (from: Rect, to: Rect, obstacles: readonly Rect[]): Shape.Point[] => {
   const gapX = Math.max(to.x - (from.x + from.w), from.x - (to.x + to.w));
   const gapY = Math.max(to.y - (from.y + from.h), from.y - (to.y + to.h));
   const router = makeAvoidingRouter([from, to, ...obstacles], zRouter, { step: GRID / 4 });
@@ -247,7 +249,7 @@ export const measureCell = (model: UmlModel, { maxWidth, cell: override = {}, ti
 
 export type CompileOptions = {
   /** Canvas position of the diagram's top-left, in canvas px. */
-  origin?: Scene.Point;
+  origin?: Shape.Point;
   /** Canvas px per scene unit. */
   scale?: number;
   /** Gap between ranks along the flow direction, in scene units (default GRID × 4, snapped). */
@@ -273,7 +275,7 @@ export type Placement = {
 };
 
 export type EmitOptions = {
-  origin?: Scene.Point;
+  origin?: Shape.Point;
   scale?: number;
   route?: Router;
 };
@@ -372,7 +374,7 @@ export const emit = (
                   w: cell.w - TEXT_PAD * 2,
                   text: members,
                   weight: 's',
-                } satisfies Scene.Text,
+                } satisfies Shape.Text,
               ]
             : []),
         ],
@@ -521,7 +523,7 @@ export const emit = (
     }
 
     const assigned = new Map<string, number>();
-    const elements: Scene.Element[] = [];
+    const elements: Shape.Element[] = [];
     model.relations.forEach((relation, index) => {
       const gutter = gutterOf(relation);
       const position = assigned.get(gutter) ?? 0;

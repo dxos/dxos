@@ -3,77 +3,50 @@
 //
 
 //
-// The canvas content encoding: `Drawing.Canvas.content` holds one record per scene, node and link
-// (plus one `canvas` record naming the root), so ECHO merges concurrent edits element by element and
-// the illustrator DSL bridge (`handler.ts`) can stamp its identity on the records it manages.
+// The canvas content records: one per scene, node and link (plus one `canvas` record naming the root). The illustrator
+// DSL bridge (`handler.ts`, `canvas-content.ts`) reads and edits a `Canvas` through them, stamping its identity on the
+// records it manages, and the legacy migration reads them where a `Drawing.Canvas` stored them before `Canvas`.
 //
 
 import * as Schema from 'effect/Schema';
 
 import { type ContentMap } from '@dxos/diagram';
 import {
-  BackgroundGrid,
-  CAMERA_TARGET,
   DEFAULT_LAYER,
+  type RenderList2D,
+  type RenderLists2D,
+  elementLayer,
+  orphanViews,
+  sortByZ,
+} from '@dxos/react-ui-canvas/headless';
+import {
   Layer,
   LINE_STYLES,
   Link,
   type Node,
   NodeBase,
-  OPACITY_PATH,
+  Scene,
   StyleClass,
   type StyleMap,
-  Timeline,
-  type View,
   type ViewId,
-  ViewKind,
-  type ViewMap,
   type ViewNode,
-  elementLayer,
   isViewNode,
-  orphanViews,
-  sortByZ,
-  trackId,
   withLegacyNodeType,
   withLegacyParams,
-} from '@dxos/react-ui-canvas/headless';
+} from '@dxos/scene';
+
+import { Canvas } from '#types';
 
 /**
  * DSL identity of a record the illustrator bridge manages; `ref` and `index` are the object's, `portal`
  * the drawing a portal element shows.
  */
-export const DslIdentity = Schema.Struct({
-  object: Schema.String,
-  element: Schema.String,
-  ref: Schema.optional(Schema.String),
-  index: Schema.optional(Schema.String),
-  portal: Schema.optional(Schema.String),
-});
-export type DslIdentity = Schema.Schema.Type<typeof DslIdentity>;
 
 /** Names the root scene and holds the drawing's settings; one per canvas, under the key `canvas`. */
 export const CanvasRecord = Schema.Struct({
   kind: Schema.Literal('canvas'),
   root: Schema.String,
-  /** Shapes snap to the lattice's cells and links route along its gutters. */
-  lattice: Schema.optional(Schema.Boolean),
-  /** Minor grid spacing in scene px; the engine's default when unset. */
-  grid: Schema.optional(Schema.Number),
-  /** Opens read-only for a viewer who has not chosen otherwise (their view state's `readonly` wins). */
-  readonly: Schema.optional(Schema.Boolean),
-  /** The theme every collaborator sees, over each one's own default; an id the theme registry resolves. */
-  theme: Schema.optional(Schema.String),
-  /** Overrides the theme's style set. */
-  styleSet: Schema.optional(Schema.String),
-  /** Overrides the theme's background. */
-  background: Schema.optional(Schema.String),
-  /** Overrides the background's grid. */
-  backgroundGrid: Schema.optional(BackgroundGrid),
-  /**
-   * The illustrator DSL's elements draw as the diagram's own SVG renderer draws them (diagram nodes and connectors)
-   * rather than as canvas shapes: a laid-out diagram brought onto the canvas keeps the look it had.
-   */
-  diagramShapes: Schema.optional(Schema.Boolean),
+  ...Canvas.CanvasSettings.fields,
 });
 export type CanvasRecord = Schema.Schema.Type<typeof CanvasRecord>;
 
@@ -85,11 +58,9 @@ export const SceneRecord = Schema.Struct({
   /** The scene's layers, kept with it since they are few and change together. */
   layers: Schema.optional(Schema.Record(Schema.String, Layer)),
   /** A composite object's definition rather than a plain scene (`Scene.kind`; `kind` here names the record). */
-  sceneKind: Schema.optional(ViewKind),
-  /** An Object the Group command made, kept out of the library until it is named or placed again (`View.anonymous`). */
+  sceneKind: Schema.optional(Scene.LayoutKind),
+  /** An Object the Group command made, kept out of the library until it is named or placed again (`RenderList2D.anonymous`). */
   anonymous: Schema.optional(Schema.Boolean),
-  /** The scene's animation, kept whole with it: keys are edited as a set and few. */
-  timeline: Schema.optional(Timeline),
 });
 export type SceneRecord = Schema.Schema.Type<typeof SceneRecord>;
 
@@ -98,7 +69,7 @@ export const NodeRecord = Schema.Struct({
   kind: Schema.Literal('node'),
   scene: Schema.String,
   node: NodeBase,
-  dsl: Schema.optional(DslIdentity),
+  dsl: Schema.optional(Scene.DslIdentity),
 });
 export type NodeRecord = Schema.Schema.Type<typeof NodeRecord>;
 
@@ -107,7 +78,7 @@ export const LinkRecord = Schema.Struct({
   kind: Schema.Literal('link'),
   scene: Schema.String,
   link: Link,
-  dsl: Schema.optional(DslIdentity),
+  dsl: Schema.optional(Scene.DslIdentity),
 });
 export type LinkRecord = Schema.Schema.Type<typeof LinkRecord>;
 
@@ -124,7 +95,7 @@ export type ElementRecord = Schema.Schema.Type<typeof ElementRecord>;
 export const ROOT_VIEW_ID = 'root';
 
 /** The root id drawings were saved with before it lost the `scene:` its key already adds. */
-const LEGACY_ROOT_VIEW_ID = 'scene:root';
+export const LEGACY_ROOT_VIEW_ID = 'scene:root';
 const CANVAS_KEY = 'canvas';
 
 export const sceneKey = (id: ViewId) => `scene:${id}`;
@@ -488,24 +459,6 @@ const withLegacyNode = (node: Node): Node => {
   return Object.assign({}, node, style ? { style } : {}, { link });
 };
 
-/** A timeline saved before a node's opacity moved into its style keys `style.opacity` where it keyed `opacity`. */
-const withLegacyTimeline = (timeline: Timeline): Timeline => {
-  const legacy = Object.values(timeline.tracks).some(
-    (track) => track.property === 'opacity' && track.target !== CAMERA_TARGET,
-  );
-  if (!legacy) {
-    return timeline;
-  }
-  const tracks = Object.fromEntries(
-    Object.entries(timeline.tracks).map(([id, track]) =>
-      track.property === 'opacity' && track.target !== CAMERA_TARGET
-        ? [trackId(track.target, OPACITY_PATH), { ...track, property: OPACITY_PATH }]
-        : [id, track],
-    ),
-  );
-  return { ...timeline, tracks };
-};
-
 /**
  * A stored node in the current shape: its legacy type name (`frame`), settings beside the shared fields, opacity
  * and frame fields moved. Returns a fresh clone.
@@ -515,12 +468,9 @@ export const upgradeNode = (node: Node): Node => withLegacyNode(withLegacyParams
 /** A stored link in the current shape: the retired `directed` and `line` moved into `ends` and `style`. Returns a fresh clone. */
 export const upgradeLink = (link: Link): Link => withLegacyLine(withLegacyDirection(clone(link)));
 
-/** A stored timeline in the current shape: opacity tracks keyed by `style.opacity`. Returns a fresh clone. */
-export const upgradeTimeline = (timeline: Timeline): Timeline => withLegacyTimeline(clone(timeline));
-
 /**
  * The content with every record in the current shape: the legacy root scene renamed (`migrateContent`) and each
- * node, link and timeline upgraded. Pure, so peers migrating one canvas write the same records; returns a new map.
+ * node and link upgraded. Pure, so peers migrating one canvas write the same records; returns a new map.
  */
 export const upgradeSceneContent = (content: ContentMap): ContentMap => {
   const next = clone(content);
@@ -531,15 +481,13 @@ export const upgradeSceneContent = (content: ContentMap): ContentMap => {
       next[key] = { ...record, node: upgradeNode(record.node) } satisfies NodeRecord;
     } else if (isLinkRecord(record)) {
       next[key] = { ...record, link: upgradeLink(record.link) } satisfies LinkRecord;
-    } else if (isSceneRecord(record) && record.timeline) {
-      next[key] = { ...record, timeline: upgradeTimeline(record.timeline) } satisfies SceneRecord;
     }
   }
   return next;
 };
 
 /** Scenes assembled from the records; nodes and links of an unknown scene are dropped. */
-export const readViews = (content: ContentMap): ViewMap => {
+export const readViews = (content: ContentMap): RenderLists2D => {
   const headers: Record<ViewId, SceneRecord> = {};
   const nodes: Record<ViewId, Record<string, Node>> = {};
   const links: Record<ViewId, Record<string, Link>> = {};
@@ -557,7 +505,7 @@ export const readViews = (content: ContentMap): ViewMap => {
       links[record.scene][record.link.id] = upgradeLink(record.link);
     }
   }
-  const scenes: Record<ViewId, View> = {};
+  const scenes: Record<ViewId, RenderList2D> = {};
   for (const header of Object.values(headers)) {
     scenes[header.id] = {
       id: header.id,
@@ -567,7 +515,6 @@ export const readViews = (content: ContentMap): ViewMap => {
       ...(header.layers ? { layers: clone(header.layers) } : {}),
       ...(header.sceneKind ? { kind: header.sceneKind } : {}),
       ...(header.anonymous ? { anonymous: true } : {}),
-      ...(header.timeline ? { timeline: upgradeTimeline(header.timeline) } : {}),
     };
   }
   return scenes;
@@ -578,7 +525,7 @@ export const readViews = (content: ContentMap): ViewMap => {
  * DSL identity of a record whose element the canvas edited. Scenes, nodes and links absent from
  * `scenes` are removed. Returns whether anything was written.
  */
-export const writeViews = (content: ContentMap, scenes: ViewMap): boolean => {
+export const writeViews = (content: ContentMap, scenes: RenderLists2D): boolean => {
   let changed = false;
   const same = (left: unknown, right: unknown) => JSON.stringify(left) === JSON.stringify(right);
 
@@ -591,7 +538,6 @@ export const writeViews = (content: ContentMap, scenes: ViewMap): boolean => {
       ...(scene.layers ? { layers: clone(scene.layers) } : {}),
       ...(scene.kind && scene.kind !== 'view' ? { sceneKind: scene.kind } : {}),
       ...(scene.anonymous ? { anonymous: true } : {}),
-      ...(scene.timeline ? { timeline: clone(scene.timeline) } : {}),
     };
     if (!same(content[key], record)) {
       content[key] = record;
@@ -647,14 +593,4 @@ export const sceneRecordOf = (content: ContentMap, id: ViewId): SceneRecord | un
 /** Writes a node record into scene `scene`, in place; the node goes on the scene's bottom layer unless it names one. */
 export const putNodeRecord = (content: ContentMap, scene: ViewId, node: Node): void => {
   content[nodeKey(node.id)] = { kind: 'node', scene, node: clone(node) } satisfies NodeRecord;
-};
-
-/** Replaces scene `scene`'s timeline in place; the scene must exist. */
-export const putTimeline = (content: ContentMap, scene: ViewId, timeline: Timeline): boolean => {
-  const record = sceneRecordOf(content, scene);
-  if (!record) {
-    return false;
-  }
-  content[sceneKey(scene)] = { ...clone(record), timeline: clone(timeline) } satisfies SceneRecord;
-  return true;
 };

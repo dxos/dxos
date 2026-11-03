@@ -7,10 +7,10 @@
 // Kept bidirectional so `read.ts` can report only non-default styles back to the agent.
 //
 
-import { type Scene } from '@dxos/diagram';
+import { Shape } from '@dxos/scene';
 
 /** Scene palette → excalidraw stroke colors (tldraw-compatible hues). */
-const COLOR_TO_HEX: Record<Scene.Color, string> = {
+const COLOR_TO_HEX: Record<Shape.Color, string> = {
   'black': '#1e1e1e',
   'grey': '#9fa8b2',
   'light-violet': '#e085f4',
@@ -28,11 +28,11 @@ const COLOR_TO_HEX: Record<Scene.Color, string> = {
 
 const HEX_TO_COLOR = Object.fromEntries(Object.entries(COLOR_TO_HEX).map(([color, hex]) => [hex, color])) as Record<
   string,
-  Scene.Color
+  Shape.Color
 >;
 
-const WEIGHT_TO_STROKE_WIDTH: Record<Scene.Weight, number> = { s: 1, m: 2, l: 4, xl: 8 };
-const WEIGHT_TO_FONT_SIZE: Record<Scene.Weight, number> = { s: 16, m: 20, l: 28, xl: 36 };
+const WEIGHT_TO_STROKE_WIDTH: Record<Shape.Weight, number> = { s: 1, m: 2, l: 4, xl: 8 };
+const WEIGHT_TO_FONT_SIZE: Record<Shape.Weight, number> = { s: 16, m: 20, l: 28, xl: 36 };
 
 export type StyleProps = {
   strokeColor: string;
@@ -43,7 +43,7 @@ export type StyleProps = {
   roughness: number;
 };
 
-type SceneStyle = Partial<Pick<Scene.Box, 'color' | 'fill' | 'stroke' | 'weight'>>;
+type SceneStyle = Partial<Pick<Shape.Box, 'color' | 'fill' | 'stroke' | 'weight'>>;
 
 /** Compile scene style fields into excalidraw element props (defaults resolved). */
 export const toStyle = ({
@@ -61,25 +61,25 @@ export const toStyle = ({
   roughness: stroke === 'sketchy' ? 1 : 0,
 });
 
-export const toFontSize = (weight: Scene.Weight = 'm'): number => WEIGHT_TO_FONT_SIZE[weight];
+export const toFontSize = (weight: Shape.Weight = 'm'): number => WEIGHT_TO_FONT_SIZE[weight];
 
 /** Report only non-default styles to keep the read output compact. */
 export const readStyle = (record: Record<string, any>): SceneStyle => {
   const color = HEX_TO_COLOR[record.strokeColor];
-  const fill: Scene.Fill =
+  const fill: Shape.Fill =
     !record.backgroundColor || record.backgroundColor === 'transparent'
       ? 'none'
       : record.fillStyle === 'hachure'
         ? 'pattern'
         : 'solid';
-  const stroke: Scene.Stroke =
+  const stroke: Shape.Stroke =
     record.strokeStyle === 'dashed' || record.strokeStyle === 'dotted'
       ? record.strokeStyle
       : record.roughness > 0
         ? 'sketchy'
         : 'solid';
   const weight = (Object.entries(WEIGHT_TO_STROKE_WIDTH).find(([, width]) => width === record.strokeWidth)?.[0] ??
-    'm') as Scene.Weight;
+    'm') as Shape.Weight;
   return {
     ...(color && color !== 'black' ? { color } : {}),
     ...(fill !== 'none' ? { fill } : {}),
@@ -93,7 +93,7 @@ export const readTextStyle = (record: Record<string, any>, scale = 1): SceneStyl
   const color = HEX_TO_COLOR[record.strokeColor];
   const fontSize = record.fontSize / scale;
   const weight = (Object.entries(WEIGHT_TO_FONT_SIZE).find(([, size]) => size === fontSize)?.[0] ??
-    'm') as Scene.Weight;
+    'm') as Shape.Weight;
   return {
     ...(color && color !== 'black' ? { color } : {}),
     ...(weight !== 'm' ? { weight } : {}),

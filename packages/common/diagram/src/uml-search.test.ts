@@ -4,6 +4,7 @@
 
 import { describe, test } from 'vitest';
 
+import { Shape } from '@dxos/scene';
 import { trim } from '@dxos/util';
 
 import type * as Scene from './scene.ts';
@@ -75,7 +76,7 @@ describe('uml-search', () => {
     );
     const rects = new Map(
       compiled.map((object) => {
-        const frame = object.elements[0] as Scene.Box;
+        const frame = object.elements[0] as Shape.Box;
         return [object.id, { x: object.origin!.x, y: object.origin!.y, w: frame.w, h: frame.h }];
       }),
     );
@@ -95,7 +96,7 @@ describe('uml-search', () => {
     const frames = objects.filter((object) => object.id.startsWith('group:'));
     expect(frames.length).toBe(2);
     const bounds = frames.map((frame) => {
-      const rect = frame.elements[0] as Scene.Box;
+      const rect = frame.elements[0] as Shape.Box;
       return { x: frame.origin!.x, y: frame.origin!.y, w: rect.w, h: rect.h };
     });
     const [a, b] = bounds;

@@ -793,7 +793,7 @@ test QA-13: Plugin showcase
       do: Create a Map, zoom into Europe and drag across it.
       expect: map tiles render and follow the drag
     - name: Spin a planet, a scene and a voxel world
-      do: Create a Terra world, a Spacetime scene and a Voxel world in turn, dragging across each.
+      do: Create a Terra world, a 3D canvas and a Voxel world in turn, dragging across each.
       expect: each renders in 3D and the view orbits with the drag
     - name: Fill a sheet
       do: Create a sheet and type three rows of a label, a number and a formula doubling it.
@@ -1141,14 +1141,20 @@ decision D-7: A document's tour ends when the reader leaves the document, and QA
 ```
 
 ```mdl
-decision D-8: QA-17 covers loading a plugin from its `manifest.json`, the format every host now loads a plugin from, with an end-to-end spec that fails if Composer imports the bundle's `index.mjs`.
+decision D-8: plugin-spacetime is deleted, so the 3D step creates a 3D canvas (plugin-canvas) in place of a Spacetime scene.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-9: QA-17 covers loading a plugin from its `manifest.json`, the format every host now loads a plugin from, with an end-to-end spec that fails if Composer imports the bundle's `index.mjs`.
   date: 2026-10-30
   by: user:dmaretskyi
   affects: [QA-17]
 ```
 
 ```mdl
-decision D-9: QA-17 is run by a person or its Playwright spec, not the QA agent.
+decision D-10: QA-17 is run by a person or its Playwright spec, not the QA agent.
   date: 2026-11-02
   by: agent:claude-code
   for: user:dmaretskyi

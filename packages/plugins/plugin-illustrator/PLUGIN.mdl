@@ -30,10 +30,12 @@ Each extension is defined in the Appendix or resolved via its URI.
 
 ```mdl
 type Drawing
-  desc: Named handle around a renderer-specific canvas object.
+  desc: >
+    Named handle around a renderer-specific canvas object: a `Canvas` (tldraw, excalidraw, svg), or a renderer's own
+    canvas type, which its variant names. Every drawing is a `Drawing`, so one query lists them all.
   fields:
     name?: string
-    canvas: Ref<Canvas>
+    canvas: Ref<Canvas | Any>
 ```
 
 ```mdl
@@ -52,7 +54,8 @@ type Canvas
 ```mdl
 component VariantProvider
   desc: Contributed by renderer plugins; supplies the canvas type, a scene-DSL builder
-        (read/apply), a create factory, and Article/Card surface components.
+        (read/apply), a create factory, and Article/Card surface components. A drawing is matched to the
+        variant whose canvas type its canvas is, else by its `Canvas.schema`.
 ```
 
 ## Operations
@@ -332,3 +335,12 @@ decision D-3: The spec names the types and operations as the code does: `Drawing
   affects: [Drawing, Canvas, VariantProvider, draw, score]
   why: The code renamed `Sketch` to `Drawing` and added `draw` and `score`; the spec had not followed.
 ```
+
+```mdl
+decision D-4: `Drawing.canvas` is a Ref to either the base `Canvas`, which tldraw and excalidraw keep unchanged, or a renderer's own canvas type; a drawing is matched to the variant naming its canvas type, else to the one claiming its `Canvas.schema`.
+  date: 2026-10-29
+  by: user:richburdon
+  affects: [Drawing, VariantProvider]
+  source: packages/common/scene/SPEC.mdl D-26
+```
+
