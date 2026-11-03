@@ -20,6 +20,8 @@ import { dirname, join, resolve } from 'node:path';
 
 const MOON = process.env.MOON_REAL_BIN || 'moon';
 const LABEL = 'moon cache';
+// Action statuses in moon's run report that mean the task did not succeed.
+const FAILED_STATUSES = new Set(['failed', 'invalid', 'timed-out', 'aborted']);
 
 /** Prints a GitHub annotation in CI, a plain line elsewhere. */
 const annotate = (level, message) => {
@@ -42,29 +44,43 @@ const findWorkspaceRoot = (start) => {
 
 const runMoon = (args) => spawnSync(MOON, args, { stdio: 'inherit' }).status ?? 1;
 
-/** Targets of tasks whose outputs came from the local or remote cache, with their hashes. */
-const readHydratedTasks = (reportPath, since) => {
+/**
+ * From the run report: tasks whose outputs came from the local or remote cache, with their hashes, and
+ * the targets of tasks that failed.
+ */
+const readRunReport = (reportPath, since) => {
   if (!existsSync(reportPath) || statSync(reportPath).mtimeMs < since) {
-    return [];
+    return { hydrated: [], failed: [] };
   }
 
   const report = JSON.parse(readFileSync(reportPath, 'utf8'));
-  return (report.actions ?? []).flatMap((action) => {
+  const hydrated = [];
+  const failed = [];
+  for (const action of report.actions ?? []) {
     const target = action.node?.params?.target;
+    if (!target) {
+      continue;
+    }
+    if (FAILED_STATUSES.has(action.status)) {
+      failed.push(target);
+    }
     const operations = action.operations ?? [];
-    const hydrated = operations.some(
+    const restored = operations.some(
       (operation) => operation.meta?.type === 'output-hydration' && String(operation.status).startsWith('cached'),
     );
-    if (!target || !hydrated) {
-      return [];
+    if (restored) {
+      const hash = operations.find((operation) => operation.meta?.type === 'hash-generation')?.meta?.hash ?? '';
+      hydrated.push({ target, hash });
     }
-    const hash = operations.find((operation) => operation.meta?.type === 'hash-generation')?.meta?.hash ?? '';
-    return [{ target, hash }];
-  });
+  }
+  return { hydrated, failed };
 };
 
-/** Workspace-relative outputs declared by each task, keyed by target. Globs are optional by definition and skipped. */
-const readDeclaredOutputs = (root) => {
+/**
+ * Per target: the workspace-relative outputs it declares (globs are optional by definition and skipped),
+ * and the targets it depends on.
+ */
+const readTaskGraph = (root) => {
   const result = spawnSync(MOON, ['query', 'tasks'], {
     cwd: root,
     stdio: ['ignore', 'pipe', 'inherit'],
@@ -76,12 +92,26 @@ const readDeclaredOutputs = (root) => {
   }
 
   const outputs = new Map();
+  const deps = new Map();
   for (const [project, tasks] of Object.entries(JSON.parse(result.stdout.toString()).tasks ?? {})) {
     for (const [id, task] of Object.entries(tasks)) {
       outputs.set(`${project}:${id}`, Object.keys(task.outputFiles ?? {}));
+      deps.set(`${project}:${id}`, (task.deps ?? []).map((dep) => dep.target).filter(Boolean));
     }
   }
-  return outputs;
+  return { outputs, deps };
+};
+
+/** True when `target` is one of `roots` or depends on one of them, directly or transitively. */
+const reaches = (deps, target, roots, seen = new Set()) => {
+  if (roots.has(target)) {
+    return true;
+  }
+  if (seen.has(target)) {
+    return false;
+  }
+  seen.add(target);
+  return (deps.get(target) ?? []).some((dep) => reaches(deps, dep, roots, seen));
 };
 
 /** True when the path is a file, or a directory with at least one file somewhere beneath it. */
@@ -130,15 +160,16 @@ const main = () => {
     return status;
   }
 
-  const hydrated = readHydratedTasks(join(root, '.moon', 'cache', 'runReport.json'), startedAt);
+  const { hydrated, failed } = readRunReport(join(root, '.moon', 'cache', 'runReport.json'), startedAt);
   if (hydrated.length === 0) {
     return status;
   }
 
-  const outputs = readDeclaredOutputs(root);
-  if (!outputs) {
+  const graph = readTaskGraph(root);
+  if (!graph) {
     return status;
   }
+  const { outputs, deps } = graph;
 
   const broken = hydrated
     .map((task) => ({ ...task, empty: findEmptyOutputs(root, outputs, task.target) }))
@@ -169,6 +200,18 @@ const main = () => {
   }
 
   if (status === 0 || repaired.length === 0) {
+    return status;
+  }
+
+  // A retry's verdict replaces the first run's only for failures the repair can explain; any other
+  // failure would get a free second attempt and could turn a real red into green.
+  const repairedSet = new Set(repaired);
+  const unexplained = failed.filter((target) => !reaches(deps, target, repairedSet));
+  if (failed.length === 0 || unexplained.length > 0) {
+    annotate(
+      'notice',
+      `Not re-running: ${unexplained.length > 0 ? unexplained.join(', ') : 'the failure'} does not depend on the rebuilt ${repaired.join(', ')}.`,
+    );
     return status;
   }
 
