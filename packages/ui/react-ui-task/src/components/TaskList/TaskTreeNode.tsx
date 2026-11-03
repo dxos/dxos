@@ -43,8 +43,8 @@ import {
 
 /**
  * The task list rendered as a Next `Tree`, so the machine owns disclosure, roving focus and the APG keymap. A row's
- * cells lay out on the Root's `columns`: the gutter, the disclosure (when the list can disclose), status and title, then
- * the trailing cells; the chips and the description are placed on the row's later lines.
+ * cells lay out on the Root's `columns`: the checkbox, the disclosure (when the list can disclose), the gutter, status and
+ * title, then the trailing cells; the chips and the description are placed on the row's later lines.
  *
  * `Shift+Arrow` and `Tab` restructuring reach the consumer's key handler before the machine's, which ignores modified
  * arrows anyway; a taken key keeps focus on the moved row as it remounts under its new path.
@@ -340,6 +340,8 @@ export const TaskTreeNode = ({
       id={TASK_TREE_ROOT_ID}
       model={model}
       columns={columns}
+      // The checkbox sits ahead of the carets.
+      lead={onTaskCheck ? 'var(--dx-block-size)' : undefined}
       // Chips and the description sit on the row's later lines, so a row grows to fit them; the window
       // measures each row rather than assuming one pitch, and mounts only those in view, since every
       // row carries several menus and tooltips and a project's list runs to hundreds of tasks.
@@ -377,7 +379,7 @@ export const TaskTreeNode = ({
 const TaskGroupHeading = ({ group, translationKey }: { group: TaskGroupHeader; translationKey: string }) => {
   const { t } = Hooks.useTranslation(translationKey);
   return (
-    <div className='col-[priority/assignee] flex min-w-0 items-center gap-2' data-testid='taskList.group.header'>
+    <div className='col-[gutter/assignee] flex min-w-0 items-center gap-2' data-testid='taskList.group.header'>
       {group.icon && <Icon.Icon icon={group.icon} size='md' classNames={group.iconClassNames} />}
       <span className='truncate font-medium'>{Theme.toLocalizedString(group.label, t)}</span>
       <span className='text-sm text-fg-muted' data-testid='taskList.group.count'>

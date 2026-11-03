@@ -261,23 +261,20 @@ const TaskListRoot = ({
     [collapsedControlled, onCollapsedChange],
   );
 
-  // The checkbox shares the ordinal's gutter, so a checkable list reserves the track even when it
-  // shows no numbers. A movable one does not: the whole row is the drag source, and a track held
-  // for a handle that no longer exists only pushed every title one square right.
-  // The leading column holds the ordinal (or the checkbox in its place) and the mnemonic.
-  const showGutter = showOrdinals || showMnemonics || !!onTaskCheck;
+  // The gutter holds the one button that shows the number and copies the reference.
+  const showGutter = showOrdinals || showMnemonics;
   // The menu column takes the rows' actions, and the edit pane's cancel in an editable list.
   const hasActions = !!getTaskActions || !!onTaskCreate || !!onTaskUpdate;
   const columns = useMemo(
     () =>
       buildGridTemplate({
+        checkable: !!onTaskCheck,
         toggle: hierarchical || !!groups,
-        // The checkbox, and the one button that shows the number and copies the reference.
-        gutter: (onTaskCheck ? 1 : 0) + (showOrdinals || showMnemonics ? 1 : 0),
+        gutter: showGutter,
         showAssignees,
         hasActions,
       }),
-    [hierarchical, groups, showOrdinals, onTaskCheck, showMnemonics, showAssignees, hasActions],
+    [onTaskCheck, hierarchical, groups, showGutter, showAssignees, hasActions],
   );
 
   const db = dbProp ?? (tasks[0] && Obj.getDatabase(tasks[0]));
@@ -296,7 +293,6 @@ const TaskListRoot = ({
       showDescription={showDescription}
       descriptionComponents={descriptionComponents}
       hierarchical={hierarchical}
-      showGutter={showGutter}
       showAssignees={showAssignees}
       members={members}
       people={people}
@@ -365,28 +361,31 @@ const MAX_ORDINAL = 99;
  * its field starts where their titles do.
  *
  * Every cell is placed by its track's name ({@link TRACK}), so a track exists only when its option is on and an absent
- * cell leaves its track empty. The first track is the gutter, ahead of the disclosure so a hidden checkbox leaves no
- * gap between the caret and the row's icons. It is always present (at no width when unused) and goes unnamed: the row
- * wraps its columns in `[content-start] …`, and two bracketed names with no track between them invalidate the template.
+ * cell leaves its track empty. The first track is the checkbox's, so a hidden box leaves no gap between the caret and
+ * the gutter. It is always present (at no width when unused) and goes unnamed: the row wraps its columns in
+ * `[content-start] …`, and two bracketed names with no track between them invalidate the template.
  */
 const buildGridTemplate = ({
+  checkable,
   toggle,
   gutter,
   showAssignees,
   hasActions,
 }: {
+  checkable: boolean;
   /** A hierarchical list has branches to disclose; a flat one holds no square for a chevron. */
   toggle: boolean;
-  /** How many blocks the leading column holds: the ordinal (or the checkbox) and the mnemonic, each a block. */
-  gutter: number;
+  /** Whether the list shows the ordinal or mnemonic button. */
+  gutter: boolean;
   showAssignees: boolean;
   hasActions: boolean;
 }): string => {
   const candidates: (readonly [name: string | undefined, size: string] | false)[] = [
-    // Fixed rather than `auto`, so the edit pane, which leaves it empty, keeps the rows' width for it.
-    [undefined, gutter > 0 ? `calc(${gutter} * var(--dx-block-size))` : '0px'],
+    [undefined, checkable ? 'var(--dx-block-size)' : '0px'],
     // Half a block, the tree's indent step.
     ['disclosure', toggle ? 'var(--dx-half-block-size)' : '0px'],
+    // Fixed rather than `auto`, so the edit pane, which leaves it empty, keeps the rows' width for it.
+    ['gutter', gutter ? 'var(--dx-block-size)' : '0px'],
     ['priority', 'var(--dx-block-size)'],
     ['status', 'var(--dx-block-size)'],
     ['title', 'minmax(0, 1fr)'],
@@ -419,7 +418,6 @@ const TaskListContent = (_props: TaskListContentProps) => {
     showOrdinals,
     showDescription,
     descriptionComponents,
-    showGutter,
     columns,
     isCollapsed,
     onCollapseToggle,
@@ -522,7 +520,7 @@ const TaskListItem = ({
   onTaskUpdate,
 }: TaskItemProps) => {
   const { t } = Hooks.useTranslation(itemTranslationKey);
-  const { showGutter, showMnemonics, showAssignees, checked: checkedIds } = useTaskListContext('TaskList.Item');
+  const { showMnemonics, showAssignees, checked: checkedIds } = useTaskListContext('TaskList.Item');
   const task = node.task;
   // Subscribed per row: the model is rebuilt from the task array, whose identity a property edit does not change, so
   // a rename made anywhere else would leave the row showing its old title. Read through the snapshot; the controls
@@ -538,21 +536,17 @@ const TaskListItem = ({
 
   return (
     <>
+      {onTaskCheck && (
+        <Tree.ItemActions pinned={checkedIds.size > 0}>
+          <TaskCheckbox task={task} checked={checked} onCheckedChange={onTaskCheck} classNames={TRACK.check} />
+        </Tree.ItemActions>
+      )}
       {indicator}
-      {showGutter && (
-        <Layout.Flex center gap='xs' classNames={TRACK.gutter}>
-          {onTaskCheck && (
-            <Tree.ItemActions pinned={checkedIds.size > 0}>
-              <TaskCheckbox task={task} checked={checked} onCheckedChange={onTaskCheck} />
-            </Tree.ItemActions>
-          )}
-          {/* One button for the number and the reference it copies. Not beside a checkbox: a number beside a box reads
-              as two ways to act on the row. The live task, not the snapshot: only the live object knows its space,
-              which the copied URI names. */}
-          {(showMnemonics || ordinal !== undefined) && (
-            <TaskMnemonic task={task} ordinal={onTaskCheck ? undefined : ordinal} />
-          )}
-        </Layout.Flex>
+      {/* One button for the number and the reference it copies. Not the number beside a checkbox: a number beside a box
+          reads as two ways to act on the row. The live task, not the snapshot: only the live object knows its space,
+          which the copied URI names. */}
+      {(showMnemonics || ordinal !== undefined) && (
+        <TaskMnemonic task={task} ordinal={onTaskCheck ? undefined : ordinal} classNames={TRACK.gutter} />
       )}
       <TaskPriorityIcon task={task} classNames={TRACK.priority} />
       <TaskStatusControl task={task} onTaskUpdate={onTaskUpdate} classNames={TRACK.status} />

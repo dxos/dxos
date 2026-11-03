@@ -35,8 +35,6 @@ export type TaskListContextValue = {
   descriptionComponents?: TaskDescriptionProps['components'];
   /** Render the questions in each task's history under its title. */
   hierarchical: boolean;
-  /** Whether the leading gutter is rendered at all — it holds the ordinal or the checkbox. */
-  showGutter: boolean;
   /** Render who holds each task; off collapses the assignee track. */
   showAssignees: boolean;
   members: readonly TaskMember[];
