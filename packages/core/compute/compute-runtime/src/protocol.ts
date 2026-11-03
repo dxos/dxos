@@ -72,6 +72,13 @@ export interface FunctionWrappingOptions {
    * Resolves a type the database's registry and space do not hold, e.g. from EDGE's registry of published types.
    */
   typeSource?: TypeSource;
+
+  /**
+   * Loads a reference envelope (`{ '/': uri }`) left where the input schema takes a live object, as a plugin bundle's
+   * nested call to another plugin's operation sends one.
+   */
+  // TODO(edge-plugins): Not implemented yet.
+  resolveObjectReferences?: boolean;
 }
 
 /**
