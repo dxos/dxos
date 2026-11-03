@@ -193,7 +193,8 @@ export const ArrayField = ({
     </OrderedList.Root>
   );
 
-  if (section) {
+  // A section with no name has no heading to carry its add button, so it keeps the plain header.
+  if (section && label) {
     return (
       <FormFieldSet label={label} actions={addButton} presentation='section'>
         {list}
