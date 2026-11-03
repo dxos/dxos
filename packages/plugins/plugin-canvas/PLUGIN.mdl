@@ -230,10 +230,6 @@ decision D-1: Converting a tldraw drawing to a canvas always makes a copy. When 
   date: 2026-10-20
   by: user:richburdon
   affects: [QA-5]
-
-decision D-2: A canvas drawing saves and prints as SVG with every shape in the open 2D view, not only those the diagram language manages, and its links along the routes the canvas engine draws them (lattice gutters and lanes included). The diagram renderer draws the shapes, so polygons, clouds, polylines and images draw as boxes, and hand-drawn nodes have no fill. Only a 2D canvas offers the actions; other drawing formats and 3D canvases do not.
-  date: 2026-11-03
-  by: agent:claude-opus-5-5
 ```
 
 ```mdl
@@ -405,4 +401,11 @@ decision D-20: The plugin contributes library objects through `CanvasCapabilitie
   for: user:richburdon
   affects: [CanvasPlugin]
   why: Another plugin can add library objects as it adds node types; the OBJ sources (~400KB) stay out of boot.
+
+decision D-21: A canvas drawing saves and prints as SVG with every shape in the open 2D view, not only those the diagram language manages, and its links along the routes the canvas engine draws them (lattice gutters and lanes included). The diagram renderer draws the shapes, so polygons, clouds, polylines and images draw as boxes, and hand-drawn nodes have no fill. Only a 2D canvas offers the actions; other drawing formats and 3D canvases do not.
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [CanvasPlugin]
+  why: A printed or saved drawing must match what the user sees, so links keep the engine's routes; the diagram renderer is the only headless SVG renderer, so shapes it has no form for are approximated.
 ```
