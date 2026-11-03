@@ -79,7 +79,8 @@ feat F-5: A project's overview
              instructions, skills and context), then the groups other plugins declare.
   req F-5.6: A plugin declares a group with `ProjectCapabilities.ConfigGroup`: its fields are each a schema and a
              writable atom holding the project's value, which the overview's form renders and writes with no UI of the
-             plugin's own. Groups with the same id merge, and a field whose `enabled` atom is false is hidden.
+             plugin's own. Groups with the same id merge, and a field whose `enabled` atom is false is hidden. A
+             field may carry an action, a button at the end of its control that sets its value.
 ```
 
 ## QA
@@ -1875,4 +1876,16 @@ decision D-178: A milestone row ends in an open button, on the right edge where 
     - The whole row as a ghost button, whose inset moves the row off the headings' left edge.
     - A `milestone:` term in the list's query, since a query value cannot name a milestone by reference and a milestone's name can hold spaces.
     - Grouping the list by milestone, which shows every milestone rather than the one opened.
+```
+
+```mdl
+decision D-179: A config field may carry an action: a label, an icon and a function from the field's value to its new value. The form renders it as a button at the end of the field's text control and writes the value it returns, so a plugin keeps a picker without UI of its own. Fills in plugin-claude D-15, within [D-158].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.6]
+  why: An action is data the form renders, so [D-158] holds. The function returns a value and leaves the write to the form, so the field's atom stays the one write path.
+  rejected:
+    - A custom field component from the plugin, which [D-158] rules out.
+    - A function that writes the atom itself, which gives the field a second write path.
 ```

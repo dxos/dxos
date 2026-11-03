@@ -10121,6 +10121,9 @@ importers:
       '@tauri-apps/api':
         specifier: 'catalog:'
         version: 2.11.1
+      '@tauri-apps/plugin-dialog':
+        specifier: 'catalog:'
+        version: 2.8.0
       '@tauri-apps/plugin-shell':
         specifier: 'catalog:'
         version: 2.4.0

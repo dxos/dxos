@@ -150,6 +150,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     icon: override?.icon,
     presentation: layout,
     appearance: override?.appearance,
+    action: override?.action,
     required,
     indeterminate,
     min: override?.min,

@@ -220,6 +220,7 @@
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@tauri-apps/api": "catalog:",
+    "@tauri-apps/plugin-dialog": "catalog:",
     "@tauri-apps/plugin-shell": "catalog:",
     "effect": "catalog:",
     "ws": "catalog:"

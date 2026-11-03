@@ -58,6 +58,15 @@ export type FormFieldOverride = {
   /** A nested object's group: whether it is open, for a host that keeps the state (unset, it starts open). */
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  /** A button at the end of a text control that sets its value, such as the desktop app's folder picker. */
+  action?: FormFieldAction;
+};
+
+export type FormFieldAction = {
+  label: string;
+  icon: string;
+  /** The field's new value from its current one; `undefined` keeps the current value. */
+  run: (value: string | undefined) => Promise<string | undefined>;
 };
 
 /**
@@ -120,6 +129,7 @@ export type FormFieldRendererProps<T = any> = {
   presentation?: FormPresentation;
   /** From the caller's override; see {@link FormFieldAppearance}. */
   appearance?: FormFieldAppearance;
+  action?: FormFieldAction;
   /** Whether the field is required AND still unfilled; surfaces a trailing asterisk on the label. */
   required?: boolean;
   /** The field shows no value until it is edited (see `FormFieldOverride.indeterminate`). */

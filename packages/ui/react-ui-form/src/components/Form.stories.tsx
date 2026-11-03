@@ -120,6 +120,44 @@ export const FieldOverrides: Story = {
   },
 };
 
+const ACTION_OVERRIDES = {
+  name: {
+    action: {
+      label: 'Choose name',
+      icon: 'ph--folder-open--regular',
+      run: async (current: string | undefined) => `${current ?? ''} Lovelace`,
+    },
+  },
+};
+
+const FieldActionStory = () => {
+  const [values, setValues] = useState<ScalarValues>(SCALAR_VALUES);
+  return (
+    <NextJsonLayout data={values}>
+      <Form.Root
+        schema={ScalarSchema}
+        values={values}
+        fieldOverrides={ACTION_OVERRIDES}
+        onValuesChanged={(next) => setValues((previous) => ({ ...previous, ...next }))}
+      >
+        <Form.Content>
+          <Form.Fields include={['name']} />
+        </Form.Content>
+      </Form.Root>
+    </NextJsonLayout>
+  );
+};
+
+/** A field `action`: a button at the end of a text control that sets its value (the desktop app's folder picker). */
+export const FieldAction: Story = {
+  render: () => <FieldActionStory />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByRole('button', { name: 'Choose name' }));
+    await waitFor(async () => expect(readValues(canvasElement).name).toEqual('Ada Lovelace'));
+  },
+};
+
 /** `Form.Submit` with its own icon, spinning while busy (a send rather than a save). */
 export const Submit: Story = {
   render: () => (

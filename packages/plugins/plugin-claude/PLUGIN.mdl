@@ -338,7 +338,8 @@ feat F-9: Claude Code (cloud)
       the Software group of its Config section lists the project's
       repositories, which a cloud session checks out, and the user adds,
       removes and reorders them there; where an agent host exists, the group
-      also holds the project's code folder on this device, as a typed path
+      also holds the project's code folder on this device, as a path the user
+      types or, in the desktop app, chooses with the folder picker
 
   req F-9.7:
     when: an agent is asked to give a project a repository, or to take one away
@@ -768,6 +769,24 @@ decision D-14: The repositories and the code folder are the Software group of th
   rejected:
     - plugin-code declaring Software, which owns neither field.
     - Keeping the folder picker as a custom field, which plugin-projects D-158 rules out.
+```
+
+```mdl
+decision D-15: The desktop app keeps its folder picker for the code folder in the Software group, for compatibility. Reverses the part of [D-14] that drops the picker.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-9.6]
+```
+
+```mdl
+decision D-16: The code folder field carries a field action, shown only in the desktop app, that opens the system's directory dialog at the current folder and returns the chosen path; a cancelled or failed dialog keeps the current value. The path stays editable as text. Fills in [D-15].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.6]
+  why: A field action is data the overview's form renders, so the group keeps to plugin-projects D-158. The web app has no directory dialog, so there the folder stays a typed path.
+  rejected:
+    - Replacing the text control with the picker, which leaves the web app and a pasted path with no way in.
 ```
 
 ## Appendix: Extension Definitions

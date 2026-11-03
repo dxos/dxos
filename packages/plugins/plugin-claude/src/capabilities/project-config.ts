@@ -10,8 +10,10 @@ import * as Schema from 'effect/Schema';
 import * as Capability from '@dxos/app-framework/Capability';
 import type * as Project from '@dxos/compute/Project';
 import { Annotation, Format, Ref } from '@dxos/echo';
+import { log } from '@dxos/log';
 import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 import { Repo } from '@dxos/types';
+import { isTauri } from '@dxos/util';
 
 import { ClaudeCapabilities } from '#types';
 
@@ -74,6 +76,21 @@ export default Capability.makeModule(
           ),
           value: (project) => folder(project.id),
           enabled: Atom.make((get) => get(hostsAtom).length > 0),
+          // The desktop app picks the folder with the system dialog; a browser takes the typed path alone.
+          ...(isTauri() && {
+            action: {
+              label: 'Choose folder…',
+              icon: 'ph--folder-open--regular',
+              run: (current: string | undefined) =>
+                import('@tauri-apps/plugin-dialog')
+                  .then(({ open }) => open({ directory: true, multiple: false, defaultPath: current }))
+                  .then((selected) => (typeof selected === 'string' ? selected : undefined))
+                  .catch((error) => {
+                    log.warn('folder picker failed', { error });
+                    return undefined;
+                  }),
+            },
+          }),
         },
       ],
     });

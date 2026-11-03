@@ -14,6 +14,7 @@ import type * as Translations from '@dxos/app-toolkit/Translations';
 import * as Project from '@dxos/compute/Project';
 import type * as Spec from '@dxos/compute/Spec';
 import type { Database, Obj } from '@dxos/echo';
+import type { FormFieldAction } from '@dxos/react-ui-form';
 
 import { ProjectsNamespace } from '../namespace.ts';
 
@@ -130,6 +131,8 @@ export type ConfigField = {
   value: (project: Project.Project) => Atom.Writable<any, any>;
   /** Whether the field applies here, such as only where an agent host exists; shown when absent. */
   enabled?: Atom.Atom<boolean>;
+  /** A button at the end of a text field that sets its value, such as the desktop app's folder picker. */
+  action?: FormFieldAction;
 };
 
 /**

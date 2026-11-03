@@ -5,6 +5,8 @@
 import React from 'react';
 
 import { Format } from '@dxos/echo';
+import { log } from '@dxos/log';
+import * as Button from '@dxos/react-ui/Button';
 import * as Input from '@dxos/react-ui/Input';
 
 import { type FormFieldRendererProps } from '#types';
@@ -19,6 +21,7 @@ export const TextField = ({
   placeholder,
   presentation,
   appearance,
+  action,
   autoFocus,
   jsonPath,
   getValue,
@@ -33,6 +36,16 @@ export const TextField = ({
 
   // An opaque identifier is not prose: no spellcheck squiggles, no autocorrect, no capitalisation.
   const key = format === Format.TypeFormat.Key;
+  const handleAction = () =>
+    action
+      ?.run(value || undefined)
+      .then((next) => {
+        if (next !== undefined) {
+          onValueChange(type, next);
+          onBlur();
+        }
+      })
+      .catch((error) => log.warn('field action failed', { error }));
   return (
     <Input.Root
       noAutoFill
@@ -53,6 +66,20 @@ export const TextField = ({
         }
       }}
       data-testid={jsonPath}
+      end={
+        action && (
+          <Button.Root
+            variant='ghost'
+            compact
+            icon={action.icon}
+            iconOnly
+            label={action.label}
+            disabled={!!readonly}
+            data-testid={`${jsonPath}.action`}
+            onClick={handleAction}
+          />
+        )
+      }
       {...((appearance === 'title' || appearance === 'plain') && { variant: appearance })}
       {...(key && { variant: 'mono', spellCheck: false, autoCorrect: 'off', autoCapitalize: 'none' })}
     />

@@ -16,7 +16,7 @@ import { useObject } from '@dxos/echo-react';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
 import * as InstructionsEditor from '@dxos/plugin-routine/InstructionsEditor';
-import { Form, type FormUpdateMeta, useCreateObject } from '@dxos/react-ui-form';
+import { Form, type FormFieldOverride, type FormUpdateMeta, useCreateObject } from '@dxos/react-ui-form';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Theme from '@dxos/react-ui/Theme';
 
@@ -186,16 +186,14 @@ const ConfigForm = ({ db, project, fields, values, hidden }: ConfigFormProps) =>
     [fields],
   );
   const hiddenKey = hidden.join(',');
-  const fieldOverrides = useMemo(
-    () =>
-      Object.fromEntries(
-        hiddenKey
-          .split(',')
-          .filter(Boolean)
-          .map((key) => [key, { hidden: true }]),
+  const fieldOverrides = useMemo(() => {
+    const hiddenKeys = new Set(hiddenKey.split(',').filter(Boolean));
+    return Object.fromEntries(
+      fields.flatMap(({ key, action }): [string, FormFieldOverride][] =>
+        hiddenKeys.has(key) ? [[key, { hidden: true }]] : action ? [[key, { action }]] : [],
       ),
-    [hiddenKey],
-  );
+    );
+  }, [fields, hiddenKey]);
   const handleCreate = useCreateObject(db);
 
   const handleValuesChanged = useCallback(
