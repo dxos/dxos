@@ -231,36 +231,37 @@ const runTurn: (
 });
 
 /** Answers a request this agent added: keeps or reverts a turn's changes, or approves or rejects an action. */
-const respond = ({
+const respond: (
+  response: AssistantCapabilities.AgentResponse,
+) => Effect.Effect<boolean, CloudflareOsError, Database.Service> = Effect.fnUntraced(function* ({
   chat,
   message,
   requestId,
   optionId,
-}: AssistantCapabilities.AgentResponse): Effect.Effect<boolean, CloudflareOsError, Database.Service> =>
-  Effect.gen(function* () {
-    const target = Projection.decodeRequestId(requestId);
-    if (!target) {
-      return false;
-    }
-    const workspace = yield* boundWorkspace;
-    const account = yield* Account.fromConnectionRef(workspace.connection);
-    yield* runAnswer(batchOverseer(account, workspace.workspaceId), target, optionId);
-    Obj.update(message, (message) => {
-      for (const block of message.blocks) {
-        if (block._tag === 'request' && block.requestId === requestId && block.resolution === undefined) {
-          block.resolution = { outcome: 'selected', optionId };
-        }
+}) {
+  const target = Projection.decodeRequestId(requestId);
+  if (!target) {
+    return false;
+  }
+  const workspace = yield* boundWorkspace;
+  const account = yield* Account.fromConnectionRef(workspace.connection);
+  yield* runAnswer(batchOverseer(account, workspace.workspaceId), target, optionId);
+  Obj.update(message, (message) => {
+    for (const block of message.blocks) {
+      if (block._tag === 'request' && block.requestId === requestId && block.resolution === undefined) {
+        block.resolution = { outcome: 'selected', optionId };
       }
-    });
-    const feed = yield* Database.load(chat.feed).pipe(Effect.option);
-    if (Option.isSome(feed)) {
-      yield* Feed.append(feed.value, [message]);
     }
-    yield* refreshWorkspace(workspace).pipe(
-      Effect.catch((error) => Effect.sync(() => log.warn('refresh failed', { error }))),
-    );
-    return true;
   });
+  const feed = yield* Database.load(chat.feed).pipe(Effect.option);
+  if (Option.isSome(feed)) {
+    yield* Feed.append(feed.value, [message]);
+  }
+  yield* refreshWorkspace(workspace).pipe(
+    Effect.catch((error) => Effect.sync(() => log.warn('refresh failed', { error }))),
+  );
+  return true;
+});
 
 const runAnswer = (
   overseer: RpcStub<Protocol.Overseer>,
