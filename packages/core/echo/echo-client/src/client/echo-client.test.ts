@@ -2,13 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import { EntityId } from '@dxos/keys';
 
 import { EchoTestBuilder } from '../testing/index.ts';
 
 describe('EchoClient', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   // An index hit carries no document id when the host's result omits one, and a close settles the
   // wait with `undefined` — so the two match and the load must still stop.
   for (const documentId of ['some-other-document', undefined]) {
@@ -16,6 +20,11 @@ describe('EchoClient', () => {
       await using builder = new EchoTestBuilder();
       await builder.open();
       const { peer, db } = await builder.createDatabase();
+
+      // The fallback timer resolves the wait on its own, so only the timer's disappearance shows
+      // that the close is what settled it.
+      vi.useFakeTimers();
+      const timersBeforeWait = vi.getTimerCount();
 
       // An id the space root does not route anywhere parks the load on `_waitForObjectLink`.
       const pending = peer.client['_loadObjectFromDocument']({
@@ -28,6 +37,7 @@ describe('EchoClient', () => {
 
       await db.close();
 
+      expect(vi.getTimerCount()).toBe(timersBeforeWait);
       // Before the close was wired in, the wait's timer outlived the database and asserted on the
       // released space root handle instead.
       await expect(pending).resolves.toBeUndefined();
