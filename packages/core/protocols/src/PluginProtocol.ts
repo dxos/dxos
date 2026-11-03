@@ -39,11 +39,98 @@ export type InvokeRequest = {
   readonly spaceId?: string;
 };
 
-/** What differs between two calls to the same isolate, passed with each call rather than in `env`. */
+/**
+ * What differs between two calls to the same isolate, passed with each call rather than in `env`. Every field is
+ * optional: a host reads only the fields its {@link PROTOCOL_VERSION} knows, and EDGE sends a host only those.
+ */
 export type InvocationScope = {
   /** Mints the caller's credentials; bound by EDGE to this caller and space. */
   readonly accessTokenService?: EdgeFunctionEnv.AccessTokenService;
+  /** URI of the chat or feed of the agent turn that made the call; handlers get its `HarnessService`. Version 2. */
+  readonly conversation?: string;
+  /** The conversation a channel reply is routed back to, when it differs from `conversation`. Version 2. */
+  readonly origin?: string;
+  /** The identity the invocation acts for; absent for a trigger or a process turn. Version 2. */
+  readonly caller?: Caller;
+  /** Receives the invocation's trace messages. Version 2. */
+  readonly traceSink?: TraceSink;
+  /** A process id the caller minted; the caller then owns the start and end envelopes. Version 2. */
+  readonly pid?: string;
+  /** The invoking process, stamped on every trace message as `meta.parentPid`. Version 2. */
+  readonly parentPid?: string;
+  /** The run this invocation continues (`Trace.Meta.runId`). Version 2. */
+  readonly runId?: string;
+  /** Resolves when the caller cancels the invocation. Version 2. */
+  readonly cancellation?: CancellationSignal;
+  /** TEST-ONLY. Pins the ids the invocation mints. Version 2. */
+  readonly idSeed?: IdSeed;
+  /** Services only EDGE holds, bound to this invocation's space, caller and conversation. Version 2. */
+  readonly services?: HostServices;
+  /** Runs an operation the bundle does not handle, re-entering EDGE's router. Version 2. */
+  readonly operations?: OperationHost;
 };
+
+/** An identity EDGE verified. */
+export type Caller = {
+  readonly identityKey: string;
+  readonly identityDid: string;
+};
+
+/** TEST-ONLY. A ULID seed: `time` is the pinned timestamp, `seed` starts the random component's PRNG. */
+export type IdSeed = {
+  readonly time: number;
+  readonly seed: number;
+};
+
+/** Where an invocation's trace messages go: each is a `Trace.Message` in `Obj.toJSON` form. */
+export interface TraceSink {
+  /** Over RPC every call returns a promise; the host drains them before the invocation returns. */
+  write(message: object): void | Promise<void>;
+}
+
+/** Resolves when the invocation is cancelled; the caller also settles it when the invocation ends. */
+export interface CancellationSignal {
+  waitForCancel(): Promise<void>;
+}
+
+/**
+ * A service EDGE serves to the bundle: an Effect service whose methods each return an Effect, or a Stream for those
+ * named in `streams`.
+ */
+export type ServiceDescriptor = {
+  /** The service's Effect key, e.g. `@dxos/plugin-discord/DiscordBotService`. */
+  readonly key: string;
+  readonly streams?: readonly string[];
+};
+
+/** The services EDGE serves to one invocation. */
+export type HostServices = {
+  readonly descriptors: readonly ServiceDescriptor[];
+  readonly host: ServiceHost;
+};
+
+/** Calls a method of a service EDGE serves; arguments and the result are JSON (ECHO objects in `Obj.toJSON` form). */
+export interface ServiceHost {
+  call(service: string, method: string, args: readonly unknown[]): Promise<ServiceResult>;
+}
+
+/** A method's result, a stream's items as an array; a failure is data, as for `invoke`. */
+export type ServiceResult =
+  | { readonly ok: true; readonly value: unknown }
+  | { readonly ok: false; readonly error: Failure };
+
+/** Options of a nested invocation; the caller, trace sink and cancellation are inherited from the outer one. */
+export type OperationOptions = {
+  readonly spaceId?: string;
+  readonly conversation?: string;
+  readonly parentPid?: string;
+  readonly idSeed?: IdSeed;
+};
+
+/** EDGE's router, for operations of other plugins. */
+export interface OperationHost {
+  invoke(operationKey: string, input: unknown, options: OperationOptions): Promise<InvokeResult>;
+}
 
 /** Why an invocation failed. */
 export type ErrorCode =

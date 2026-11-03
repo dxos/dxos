@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { Fibonacci, Reply } from '@dxos/compute/testing';
@@ -9,9 +10,24 @@ import { Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
 import * as PluginHost from './PluginHost.ts';
-import { TEST_PLUGIN_KEY, TestPlugin, TestSkill } from './testing/index.ts';
+import { Inspect, InspectEvent, TEST_PLUGIN_KEY, TestPlugin, TestSkill } from './testing/index.ts';
 
 const SPACE_ID = 'B2N35FBQKXIOTC5XEOCRVORIYQZHM2IBM';
+
+/** The part of a `Trace.Message` JSON the tests read. */
+const SinkMessage = Schema.Struct({
+  meta: Schema.Struct({ pid: Schema.String, parentPid: Schema.optional(Schema.String) }),
+  events: Schema.Array(Schema.Struct({ type: Schema.String })),
+});
+
+/** A trace sink that keeps what it is sent. */
+const collectingSink = () => {
+  const messages: Schema.Schema.Type<typeof SinkMessage>[] = [];
+  return {
+    messages,
+    sink: { write: (message: object) => void messages.push(Schema.decodeUnknownSync(SinkMessage)(message)) },
+  };
+};
 
 const makeHost = () => PluginHost.make(() => ({ primary: TestPlugin() }));
 
@@ -75,6 +91,75 @@ describe('PluginHost', () => {
     expect(await host.invoke({ operationKey: String(Reply.meta.key), spaceId: SPACE_ID }, {})).toMatchObject({
       ok: false,
       error: { code: 'invalid-request' },
+    });
+  });
+
+  // Request context operation-service gives a handler (EDGE-PLUGINS F-5.6).
+  describe('request context', () => {
+    test.fails("forwards the handler's trace events to the sink, between start and end envelopes", async ({
+      expect,
+    }) => {
+      const { messages, sink } = collectingSink();
+      const result = await makeHost().invoke(
+        { operationKey: String(Inspect.meta.key), input: {} },
+        {},
+        {
+          traceSink: sink,
+          parentPid: 'parent',
+        },
+      );
+      expect(result).toMatchObject({ ok: true });
+      const types = messages.flatMap((message) => message.events.map((event) => event.type));
+      expect(types).toEqual(['operation.start', InspectEvent.key, 'operation.end']);
+      expect(messages[0].meta).toMatchObject({ parentPid: 'parent' });
+    });
+
+    test.fails('a caller-minted pid owns the envelopes', async ({ expect }) => {
+      const { messages, sink } = collectingSink();
+      await makeHost().invoke(
+        { operationKey: String(Inspect.meta.key), input: {} },
+        {},
+        { traceSink: sink, pid: 'minted' },
+      );
+      expect(messages).toHaveLength(1);
+      expect(messages[0].meta).toMatchObject({ pid: 'minted' });
+    });
+
+    test.fails("aborts the handler's cancellation signal when the caller cancels", async ({ expect }) => {
+      const result = await makeHost().invoke(
+        { operationKey: String(Inspect.meta.key), input: { waitForCancel: true } },
+        {},
+        { cancellation: { waitForCancel: () => new Promise((resolve) => setTimeout(resolve, 10)) } },
+      );
+      expect(result).toMatchObject({ ok: true, output: { cancelled: true } });
+    });
+
+    test.fails('pins the ids the handler mints to the seed', async ({ expect }) => {
+      const host = makeHost();
+      const invoke = () =>
+        host.invoke(
+          { operationKey: String(Inspect.meta.key), input: {} },
+          {},
+          { idSeed: { time: 1_700_000_000_000, seed: 7 } },
+        );
+      const [first, second] = [await invoke(), await invoke()];
+      expect(first).toMatchObject({ ok: true });
+      expect(first).toEqual(second);
+    });
+
+    test.fails('a conversation needs a space, whose database holds it', async ({ expect }) => {
+      expect(
+        await makeHost().invoke(
+          { operationKey: String(Inspect.meta.key), input: {} },
+          {},
+          {
+            conversation: 'echo://B2N35FBQKXIOTC5XEOCRVORIYQZHM2IBM/01KABCDEFGHJKMNPQRSTVWXYZ0',
+          },
+        ),
+      ).toMatchObject({
+        ok: false,
+        error: { code: 'invalid-request', message: expect.stringContaining('conversation') },
+      });
     });
   });
 });
