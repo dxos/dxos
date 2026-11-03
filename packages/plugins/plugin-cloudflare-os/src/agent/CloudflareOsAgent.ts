@@ -139,42 +139,51 @@ const runTurn = (
       );
     }
 
+    // Stopping the remote agent keeps a cancelled or abandoned turn from queuing actions afterwards.
+    const stopAgent = Client.call('Could not stop the workspace agent.', () =>
+      batchOverseer(account, workspace.workspaceId).stopAgent(chatId),
+    ).pipe(Effect.ignore);
+
     // The turn has ended once its agent stops running, after it was seen running or answered.
-    const deadline = Date.now() + TURN_TIMEOUT_MS;
-    let started = false;
-    let answered = false;
-    let finished: Protocol.ChatMetadata | undefined;
-    while (finished === undefined && Date.now() < deadline) {
-      yield* Effect.sleep(POLL_INTERVAL_MS);
-      const result = yield* poll(account, workspace.workspaceId, chatId).pipe(
-        Effect.timeoutOrElse({
-          duration: POLL_TIMEOUT_MS,
-          orElse: () => Effect.fail(new CloudflareOsError({ message: 'The poll timed out.' })),
-        }),
-        Effect.map(Option.some),
-        Effect.catch((error) =>
-          Effect.sync(() => {
-            log.warn('poll failed; retrying', { error });
-            return Option.none();
+    const finished = yield* Effect.gen(function* () {
+      const deadline = Date.now() + TURN_TIMEOUT_MS;
+      let started = false;
+      let answered = false;
+      let ended: Protocol.ChatMetadata | undefined;
+      while (ended === undefined && Date.now() < deadline) {
+        yield* Effect.sleep(POLL_INTERVAL_MS);
+        const result = yield* poll(account, workspace.workspaceId, chatId).pipe(
+          Effect.timeoutOrElse({
+            duration: POLL_TIMEOUT_MS,
+            orElse: () => Effect.fail(new CloudflareOsError({ message: 'The poll timed out.' })),
           }),
-        ),
-      );
-      if (Option.isNone(result)) {
-        continue;
+          Effect.map(Option.some),
+          Effect.catch((error) =>
+            Effect.sync(() => {
+              log.warn('poll failed; retrying', { error });
+              return Option.none();
+            }),
+          ),
+        );
+        if (Option.isNone(result)) {
+          continue;
+        }
+        const { messages, metadata } = result.value;
+        const fresh = messages.filter(({ sequence }) => sequence > seen).sort((a, b) => a.sequence - b.sequence);
+        seen = Math.max(seen, lastSequence(fresh));
+        answered ||= fresh.some(({ author }) => author.type === 'agent');
+        const blocks = fresh.flatMap(Projection.messageBlocks);
+        yield* append(blocks.length > 0 ? [Message.make({ sender: 'assistant', blocks })] : []);
+        if (metadata?.activeAgent) {
+          started = true;
+        } else if (metadata && (started || answered)) {
+          ended = metadata;
+        }
       }
-      const { messages, metadata } = result.value;
-      const fresh = messages.filter(({ sequence }) => sequence > seen).sort((a, b) => a.sequence - b.sequence);
-      seen = Math.max(seen, lastSequence(fresh));
-      answered ||= fresh.some(({ author }) => author.type === 'agent');
-      const blocks = fresh.flatMap(Projection.messageBlocks);
-      yield* append(blocks.length > 0 ? [Message.make({ sender: 'assistant', blocks })] : []);
-      if (metadata?.activeAgent) {
-        started = true;
-      } else if (metadata && (started || answered)) {
-        finished = metadata;
-      }
-    }
+      return ended;
+    }).pipe(Effect.onInterrupt(() => stopAgent));
     if (finished === undefined) {
+      yield* stopAgent;
       return yield* Effect.fail(new CloudflareOsError({ message: 'The Cloudflare OS agent did not finish in time.' }));
     }
 
