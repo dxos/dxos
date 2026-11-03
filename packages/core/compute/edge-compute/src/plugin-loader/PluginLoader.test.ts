@@ -62,6 +62,40 @@ describe('PluginLoader', () => {
     expect(main).not.toContain('deps/');
   });
 
+  test('ships only what the bodies that run on workerd reach', async ({ expect }) => {
+    const manifest = JSON.stringify({
+      key: 'org.example.plugin.sample',
+      modules: [
+        { id: 'Operations', url: './operations.mjs', environments: ['node', 'workerd'] },
+        { id: 'Surfaces', url: './surfaces.mjs', environments: ['browser'] },
+      ],
+    });
+    const vendor = JSON.stringify({
+      specifiers: {
+        'effect': 'effect.mjs',
+        'react-dom': 'react-dom.mjs',
+        '@dxos/plugin-host-cloudflare': '@dxos/plugin-host-cloudflare.mjs',
+      },
+    });
+    const { files: code, main } = await PluginLoader.workerCode(
+      bundle({
+        'manifest.json': manifest,
+        'vendor/manifest.json': vendor,
+        'surfaces.mjs': "import { render } from 'react-dom'; import './chunk-ui.mjs'; export default render;",
+        'chunk-ui.mjs': 'export const ui = 1;',
+        'vendor/react-dom.mjs': 'export const render = 1;',
+      }),
+    );
+    expect(Object.keys(code).sort()).toEqual([
+      'operations.mjs',
+      'vendor/@dxos/plugin-host-cloudflare.mjs',
+      'vendor/chunk.mjs',
+      'vendor/effect.mjs',
+    ]);
+    expect(main).toContain(`"./operations.mjs": () => import("./operations.mjs")`);
+    expect(main).not.toContain('import("./surfaces.mjs")');
+  });
+
   test('loads a local adapter chunk by its path in the bundle', async ({ expect }) => {
     const manifest = JSON.stringify({
       key: 'org.example.plugin.sample',

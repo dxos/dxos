@@ -51,7 +51,8 @@ differently.
   textual rewrite of import specifiers, not a second build: no plugin code is recompiled.
 
 The browser ignores `vendor/`; EDGE never loads a module whose `environments` exclude `workerd`, so
-browser-only modules and their stylesheets are in the bundle but are never read.
+browser-only modules and their stylesheets are in the bundle but are never read. The `WorkerCode` holds
+only what the `workerd` modules, their adapters and `PluginHost` reach by literal imports [D-59].
 
 ## Bundle format
 
@@ -1317,4 +1318,13 @@ decision D-58: A query over `Scope.registry()` that selects type entities (`Filt
   for: user:dmaretskyi
   affects: [F-3.5]
   why: Limiting it to queries for types keeps operation and skill lookups from reaching the type registry.
+```
+
+```mdl
+decision D-59: A Dynamic Worker is given only the files the `workerd` modules, their adapters and the vendored `PluginHost` reach by literal imports, and `check-edge-release` fails a bundle that gives it over 32 MB of modules or takes over 10 s to load and activate.
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.4, F-6.3]
+  why: The isolate holds every module it is given; shipping browser-only bodies put presenter's 49 MB of UI code against the isolate's 128 MB heap and the 20 s activation limit.
 ```
