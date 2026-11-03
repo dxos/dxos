@@ -92,7 +92,7 @@ describe('space plugin bundle on EDGE', { timeout: 180_000 }, () => {
   });
 
   // A nested call from another bundle names the type as its encoded object does: a versioned DXN.
-  test.fails("adds an object of another plugin's type named by versioned DXN", async ({ expect }) => {
+  test("adds an object of another plugin's type named by versioned DXN", async ({ expect }) => {
     const result = await bundle.invoke({
       operationKey: ADD_OBJECT,
       spaceId,
