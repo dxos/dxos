@@ -387,10 +387,14 @@ const styles = EditorView.theme({
   '.cm-content[data-pending-text] .cm-placeholder': {
     display: 'none',
   },
+  // Plain inline (not an inline box) so a preview inside a paragraph wraps with the text around it.
   '.cm-pending-text': {
     position: 'relative',
-    display: 'inline-flex',
-    alignItems: 'center',
+  },
+  '.cm-pending-text .cm-marker-text': {
+    display: 'inline',
+    boxDecorationBreak: 'clone',
+    WebkitBoxDecorationBreak: 'clone',
   },
   // Float the affordances above the preview's end so showing them never reflows the text.
   '.cm-pending-text .cm-marker-buttons': {
@@ -415,8 +419,7 @@ const styles = EditorView.theme({
     opacity: 0,
   },
   '.cm-pending-text-paragraph': {
-    display: 'flex',
-    alignItems: 'start',
+    display: 'block',
   },
   '.cm-pending-text-space-before': {
     marginBlockStart: '1lh',
