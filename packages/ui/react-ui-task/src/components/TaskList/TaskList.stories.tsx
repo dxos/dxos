@@ -57,7 +57,7 @@ const seedFlat = (): Task.Task[] => [
   Task.make({
     title: 'Write the launch poem',
     status: 'review',
-    reviewers: [{ name: 'Rich', role: 'user' }],
+    assignee: { name: 'Rich', role: 'user' },
     artifacts: [Ref.make(Task.make({ title: 'Ode to a Coffee Bean' }))],
   }),
   Task.make({
@@ -550,6 +550,7 @@ const DefaultStory = ({
   showGroupLabels,
   showOrdinals,
   showDescription = true,
+  showAssignees,
   acceptFiles = false,
   members,
   agents = false,
@@ -571,6 +572,7 @@ const DefaultStory = ({
   showGroupLabels?: boolean;
   showOrdinals?: boolean;
   showDescription?: boolean;
+  showAssignees?: boolean;
   /** Let the create pane take dropped files, recording what each create was handed. */
   acceptFiles?: boolean;
   /** The space's members, offered by each row's assignee picker. */
@@ -683,6 +685,7 @@ const DefaultStory = ({
       showGroupLabels={showGroupLabels}
       showOrdinals={showOrdinals}
       showDescription={showDescription}
+      showAssignees={showAssignees}
       members={members}
       getTaskActions={readonly ? undefined : getTaskActions}
       getDelegateActions={readonly || !agents ? undefined : getDelegateActions}
@@ -1276,6 +1279,105 @@ export const TestDelegateFromAssignee: Story = {
   },
 };
 
+/** The editor's assignee pill is the same picker: a person picked there takes the task back from its agent too. */
+export const TestEditorHandsBackFromAgent: Story = {
+  args: {
+    showGroupLabels: false,
+    members: [{ did: 'did:key:riley', name: 'Riley' }],
+  },
+  play: async ({ canvasElement }) => {
+    const body = within(document.body);
+    const row = await waitFor(() => {
+      const row = [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')].find((row) =>
+        row.querySelector('[data-testid="taskList.item.delegate"]'),
+      );
+      if (!row) {
+        throw new Error('No delegated task is listed.');
+      }
+      return row;
+    });
+
+    await userEvent.click(row);
+    const pill = await waitFor(() => {
+      const pill = canvasElement.querySelector<HTMLElement>(
+        '[data-testid="taskList.edit.properties"] [data-testid="assignee"]',
+      );
+      if (!pill?.textContent?.includes('Rich')) {
+        throw new Error('The editor is not editing the delegated task.');
+      }
+      return pill;
+    });
+    await userEvent.click(pill);
+    await expect(await body.findByTestId('taskList.assignee.delegate')).toBeTruthy();
+    await userEvent.click(await body.findByTestId('taskList.assignee.member'));
+    await waitFor(async () => expect(row.querySelector('[data-testid="taskList.item.delegate"]')).toBeNull());
+  },
+};
+
+/** A list that hides who holds its tasks offers no assignee in its editor either. */
+export const TestEditorWithoutAssignees: Story = {
+  args: {
+    showGroupLabels: false,
+    showAssignees: false,
+  },
+  play: async ({ canvasElement }) => {
+    const pill = (field: string) =>
+      canvasElement.querySelector(`[data-testid="taskList.edit.properties"] [data-testid="${field}"]`);
+    await waitFor(async () => expect(pill('status')).toBeTruthy());
+    await expect(pill('assignee')).toBeNull();
+  },
+};
+
+/** The editor's assignee pill names the agent working a task nobody answers for, as the row does. */
+export const TestEditDelegateOnly: Story = {
+  args: {
+    showGroupLabels: false,
+    seed: () => [
+      Task.make({ title: 'Draft notes', status: 'started', delegate: { role: 'assistant', name: 'Scout' } }),
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const row = await waitFor(() => {
+      const row = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.item"]');
+      if (!row) {
+        throw new Error('The task is not listed yet.');
+      }
+      return row;
+    });
+    await userEvent.click(row);
+    const title = canvasElement.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input')!;
+    await waitFor(async () => expect(title.value).toEqual('Draft notes'));
+    const pill = canvasElement.querySelector<HTMLElement>(
+      '[data-testid="taskList.edit.properties"] [data-testid="assignee"]',
+    );
+    await expect(pill?.textContent).toContain('Scout');
+  },
+};
+
+/** A task with no status reads as Todo in the editor, as it does in its row. */
+export const TestEditUnsetStatus: Story = {
+  args: {
+    showGroupLabels: false,
+    seed: () => [Task.make({ title: 'Sort the pantry' })],
+  },
+  play: async ({ canvasElement }) => {
+    const row = await waitFor(() => {
+      const row = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.item"]');
+      if (!row) {
+        throw new Error('The task is not listed yet.');
+      }
+      return row;
+    });
+    await userEvent.click(row);
+    const title = canvasElement.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input')!;
+    await waitFor(async () => expect(title.value).toEqual('Sort the pantry'));
+    const status = canvasElement.querySelector<HTMLElement>(
+      '[data-testid="taskList.edit.properties"] [data-testid="status"]',
+    );
+    await expect(status?.textContent).toContain('Todo');
+  },
+};
+
 /**
  * Checking is selection, not a status write, and it is not the current row either: the box toggles
  * independently of which row the reader is on, and leaves the task's status alone.
@@ -1299,7 +1401,7 @@ export const TestCheckboxSelection: Story = {
     await expect(canvasElement.querySelectorAll('[data-testid="taskList.item.ordinal"]').length).toBe(0);
 
     // Nothing checked: each box shows only on the row in play, as Linear's gutter does.
-    const hidden = () => boxes().filter((box) => box.closest('[data-part="item-actions"]'));
+    const hidden = () => boxes().filter((box) => box.closest('[data-part="item-actions"]:not([data-pinned])'));
     await expect(hidden()).toHaveLength(boxes().length);
 
     const before = statuses();
@@ -1307,6 +1409,8 @@ export const TestCheckboxSelection: Story = {
     await waitFor(async () => expect(boxes()[0].getAttribute('data-state')).toBe('checked'));
     // Once something is checked every box stays, so the selection can be seen and extended.
     await waitFor(async () => expect(hidden()).toHaveLength(0));
+    // The box the reader checked keeps their focus as every box comes into view.
+    await expect(boxes()[0].contains(document.activeElement)).toBe(true);
     // A second row checks alongside the first — a set, not a single selection.
     await userEvent.click(boxes()[1]);
     await waitFor(async () => expect(boxes()[1].getAttribute('data-state')).toBe('checked'));
@@ -1659,6 +1763,14 @@ export const TestCreateWithDescription: Story = {
     // field is not empty-stringed: CodeMirror paints the placeholder inside `.cm-content`.
     await expect(title().value).toEqual('');
     await waitFor(async () => expect(content().textContent).not.toContain('Roast it twice'));
+
+    // The next task created from the title alone carries no description: the form's draft was cleared, not just the field.
+    await userEvent.click(title());
+    await userEvent.keyboard('Second task{Enter}');
+    await waitFor(async () => expect(rows()).toHaveLength(before + 2));
+    const second = rows().find((row) => row.textContent?.includes('Second task'));
+    await expect(second).not.toBeUndefined();
+    await expect(second!.textContent).not.toContain('Roast it twice');
   },
 };
 

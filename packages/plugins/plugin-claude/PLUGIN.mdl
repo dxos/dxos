@@ -264,7 +264,7 @@ feat F-8: Claude Code on this computer
 
   req F-8.1:
     when: the plugin is enabled in the desktop app and `claude` is installed
-    then: Claude Code is a registered agent, and a task's menu offers "Assign to Claude Code"
+    then: Claude Code is a registered agent, and a task's assignee picker offers "Claude Code"
 
   req F-8.2:
     when: the plugin is enabled outside the desktop app, or `claude` is not found
@@ -298,7 +298,7 @@ feat F-9: Claude Code (cloud)
     when: the plugin is enabled
     then: |
       Claude Code is offered on EDGE in a chat's agent picker and as
-      "Assign to Claude Code (EDGE)" in a task's menu, and runs Claude Code in
+      "Claude Code (EDGE)" in a task's assignee picker, and runs Claude Code in
       an EDGE sandbox rather than on this computer
 
   req F-9.2:
@@ -465,7 +465,7 @@ test QA-2: Assign a project task to Claude Code
     flow `packages/plugins/plugin-claude/autocue/claude-code-task.mjs`.
   actors: human
   covers: [F-8.1, F-8.3, F-8.4]
-  status: verified
+  status: unverified        # 2026-11-02, the assignee picker now reads "Claude Code"; re-run its flow
   given:
     - Composer is the desktop app (for autocue, the test build from
       `moon run composer-app:tauri-build-test`)
@@ -488,7 +488,7 @@ test QA-2: Assign a project task to Claude Code
         --shout, print the greeting in capitals. Document the flag in the README."
       expect: the task is listed
     - name: Assign the task to Claude Code
-      do: Open the task's menu and choose "Assign to Claude Code".
+      do: Open the task's assignee picker and choose "Claude Code".
       expect: the task is started, and the project's chat holds the task brief as a context panel
     - name: Watch Claude work, allowing what it asks to run
       do: Open the Assistant companion and answer any permission card with Yes.
@@ -577,7 +577,7 @@ test QA-5: A project task on Claude Code (cloud) opens a pull request
     autocue flow `packages/plugins/plugin-claude/autocue/claude-code-cloud-task.mjs`.
   actors: human
   covers: [F-9.1, F-9.2, F-9.3]
-  status: unverified        # 2026-10-21, the task menu now reads "Assign to Claude Code (EDGE)"; re-run its flow
+  status: unverified        # 2026-11-02, the assignee picker now reads "Claude Code (EDGE)"; re-run its flow
   given:
     - as QA-4
   steps:
@@ -593,7 +593,7 @@ test QA-5: A project task on Claude Code (cloud) opens a pull request
         pushed, with a draft pull request opened by `gh pr create --draft`.
       expect: the task is listed
     - name: Assign the task to Claude Code (cloud)
-      do: Open the task's menu and choose "Assign to Claude Code (EDGE)".
+      do: Open the task's assignee picker and choose "Claude Code (EDGE)".
       expect: the task is started and the project's chat opens on Claude Code (cloud)
     - name: Watch it open the pull request
       do: Open the Assistant companion.
@@ -718,8 +718,18 @@ decision D-9: The EDGE sandbox runs the agent in the first repository it checked
     - A CLAUDE.md in the checkout root that imports each repository's: it brings in neither skills nor settings.
 ```
 
+---
+
 ```mdl
-decision D-10: This plugin edits a project's repositories, the list plugin-projects keeps as the `Repo.RepositoriesAnnotation`, in the project's settings above the code folder. A cloud session checks out the project's repositories in their order, then the repositories bound to the chat, each once.
+decision D-10: Claude Code is offered as "Claude Code" and "Claude Code (EDGE)" in a task's assignee picker, where plugin-projects now lists agents, instead of as "Assign to …" in the task's menu; F-8.1, F-9.1, QA-2 and QA-5 say so.
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: dxos/dxos#14378 moved delegation from a task's menu into its assignee picker, so the old entries no longer exist.
+```
+
+```mdl
+decision D-11: This plugin edits a project's repositories, the list plugin-projects keeps as the `Repo.RepositoriesAnnotation`, in the project's settings above the code folder. A cloud session checks out the project's repositories in their order, then the repositories bound to the chat, each once.
   date: 2026-11-03
   by: agent:claude-code
   for: user:wittjosiah
@@ -730,14 +740,14 @@ decision D-10: This plugin edits a project's repositories, the list plugin-proje
 ```
 
 ```mdl
-decision D-11: Agents get an operation in this plugin that writes a project's repositories, and the GitHub skill points at it.
+decision D-12: Agents get an operation in this plugin that writes a project's repositories, and the GitHub skill points at it.
   date: 2026-11-03
   by: user:wittjosiah
   affects: [F-9.7]
 ```
 
 ```mdl
-decision D-12: The operation is Update Project Repositories, which appends the repositories given in `add`, removes those in `remove`, and returns the list; with neither it only reads. A repository already listed keeps its place, compared by entity id. It is the one tool of the Project Repositories skill (`org.dxos.skill.claude.repositories`), which an agent can enable, and the GitHub skill names that skill by key. Fills in [D-11].
+decision D-13: The operation is Update Project Repositories, which appends the repositories given in `add`, removes those in `remove`, and returns the list; with neither it only reads. A repository already listed keeps its place, compared by entity id. It is the one tool of the Project Repositories skill (`org.dxos.skill.claude.repositories`), which an agent can enable, and the GitHub skill names that skill by key. Fills in [D-12].
   date: 2026-11-03
   by: agent:claude-code
   for: user:wittjosiah
@@ -748,7 +758,17 @@ decision D-12: The operation is Update Project Repositories, which appends the r
     - Adding the tool to the GitHub skill, which would make plugin-github depend on this plugin.
 ```
 
----
+```mdl
+decision D-14: The repositories and the code folder are the Software group of the project overview's Config section, declared as `ProjectCapabilities.ConfigGroup` fields: the repositories as the project's annotation, the code folder as this plugin's local state, shown only where an agent host exists. The folder is a typed path, and the desktop app's folder picker goes. Refines where [D-11] put the list.
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.6]
+  why: plugin-projects D-156 asks for groups as schema and data with no UI of a plugin's own, and the form has no folder picker. Both fields come from this plugin, so it declares the group.
+  rejected:
+    - plugin-code declaring Software, which owns neither field.
+    - Keeping the folder picker as a custom field, which plugin-projects D-156 rules out.
+```
 
 ## Appendix: Extension Definitions
 
@@ -784,14 +804,3 @@ ext scenario
     tags?: TagList
 ```
 
-```mdl
-decision D-13: The repositories and the code folder are the Software group of the project overview's Config section, declared as `ProjectCapabilities.ConfigGroup` fields: the repositories as the project's annotation, the code folder as this plugin's local state, shown only where an agent host exists. The folder is a typed path, and the desktop app's folder picker goes. Refines where [D-10] put the list.
-  date: 2026-11-03
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-9.6]
-  why: plugin-projects D-111 asks for groups as schema and data with no UI of a plugin's own, and the form has no folder picker. Both fields come from this plugin, so it declares the group.
-  rejected:
-    - plugin-code declaring Software, which owns neither field.
-    - Keeping the folder picker as a custom field, which D-111 rules out.
-```

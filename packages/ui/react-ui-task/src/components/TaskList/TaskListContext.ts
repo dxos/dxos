@@ -8,7 +8,7 @@
 
 import type { MenuItem } from '@dxos/react-ui-menu';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import { type Task } from '@dxos/types';
+import { type Person, type Task } from '@dxos/types';
 
 import { type TaskMember } from '../../util/property-menus.ts';
 import { type TaskPlacement } from './hierarchy.ts';
@@ -41,6 +41,8 @@ export type TaskListContextValue = {
   showAssignees: boolean;
   /** The space's members, offered by each row's assignee picker. */
   members: readonly TaskMember[];
+  /** The space's contacts, offered by the assignee pickers after the members. */
+  people: readonly Person.Person[];
   /** Render each task's mnemonic in the leading column, beside its ordinal. */
   showMnemonics: boolean;
   /** Rows and the edit pane run to the host's edges, with no inline inset. */

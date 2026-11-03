@@ -276,12 +276,18 @@ export const steps = [
   {
     name: 'Assign the task to Claude Code',
     run: async ({ demo, page }) => {
-      await demo.caption({ value: 'Assign the task to Claude Code', subtitle: 'From the task’s menu' });
+      await demo.caption({ value: 'Assign the task to Claude Code', subtitle: 'From the task’s assignee picker' });
       const row = `[data-testid="taskList.item"]:has-text("${TASK_TITLE}")`;
       await demo.hover({ selector: row });
-      await demo.click({ selector: `${row} >> [data-testid="taskList.item.actions"]`, label: 'Task actions' });
+      await demo.click({
+        selector: `${row} >> :is([data-testid="taskList.item.assignee"], [data-testid="taskList.item.assignee.unset"])`,
+        label: 'Assignee',
+      });
       await page.waitForTimeout(LINGER);
-      await demo.click({ text: 'Assign to Claude Code', label: 'Assign to Claude Code' });
+      await demo.click({
+        selector: '[role="menuitem"]:has-text("Claude Code"):not(:has-text("EDGE"))',
+        label: 'Claude Code',
+      });
       for (let attempt = 0; (await taskStatus(page)) !== 'started'; attempt++) {
         if (attempt >= 30) {
           throw new Error('the task did not start');

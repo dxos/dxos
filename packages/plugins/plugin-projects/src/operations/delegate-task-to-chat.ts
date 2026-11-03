@@ -79,6 +79,14 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         const tasks = descendants.filter((task) => !Task.isAgentWorking(task));
         invariant(tasks.length > 0, 'Expected at least one task not already delegated.');
 
+        // The assignee keeps answering for the work and gets it back for review; an unowned task answers to its
+        // parent's person, else becomes the delegating person's, so nobody hands off work without owning it.
+        const delegator = yield* currentActor;
+        invariant(
+          delegator || tasks.every((task) => Task.owner(task) ?? Task.owner(Task.getParentTask(task))),
+          'Expected a person to answer for every delegated task.',
+        );
+
         // The chat is filed under the tasks' project, so it lands in that project's navtree rather
         // than loose in the space. Walked from the tasks rather than taken as input: the list the
         // action runs from knows the tasks and nothing else.
@@ -133,21 +141,19 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         // not run that plugin.
         db.add(chat);
 
-        // The assignee keeps answering for the work and gets it back for review; an unowned task
-        // becomes the delegating person's, so nobody hands off work without owning it.
-        const delegator = yield* currentActor;
-
         // `started` on delegation, not on completion: the row shows work is underway from the moment
         // the session has it. The delegate is named by the chat, as the planning tool's is: a bare
         // role is the supervisor's request to spawn a sub-agent, and its orphan sweep fails a started
         // one no sub-agent is running.
         for (const task of tasks) {
+          const answering = Task.owner(Task.getParentTask(task)) ?? delegator;
           Task.update(
             task,
             {
               status: 'started',
               delegate: { role: 'assistant', subject: Ref.make(chat) },
-              ...(task.assignee === undefined && delegator ? { assignee: delegator } : {}),
+              // An agent assignee answers for nothing: the parent's person or the delegator does, so the finish waits on them.
+              ...(!Task.owner(task) && answering ? { assignee: { ...answering } } : {}),
             },
             { actor: delegator },
           );

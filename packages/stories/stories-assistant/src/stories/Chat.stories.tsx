@@ -115,10 +115,10 @@ const seedProjectTask = async ({
     project.taskSet = Ref.make(taskSet);
   });
 
-  // A named reviewer is what sends the finished task to `review` rather than `done`.
+  // A person answering for the task is what sends the session's finish to `review` rather than `done`.
   const task = Chat.addTask(db, chat, POEM_TASK_TITLE, {
     status: 'todo',
-    reviewers: [{ name: 'Rich', role: 'user' }],
+    assignee: { name: 'Rich', role: 'user' },
   });
   Obj.update(taskSet, (taskSet) => {
     taskSet.tasks = [Ref.make(task)];
@@ -880,8 +880,8 @@ export const TestProjectTaskDelegationScripted: Story = {
     const documents = await storySpace.db.query(Filter.type(Markdown.Document)).run();
     await expect(documents.map((document) => document.name)).toContain(POEM_DOC_NAME);
 
-    // Finished, not closed: the task named a reviewer, so the session marking it done lands on
-    // `review`. The model asked for `done` and cannot know about reviewers — the rule is the task's.
+    // Finished, not closed: Rich answers for the task, so the session marking it done lands on
+    // `review`. The model asked for `done` and cannot know who answers for it — the rule is the task's.
     const tasks = await storySpace.db.query(Filter.type(Task.Task)).run();
     const worked = tasks.find(({ title }) => title === POEM_TASK_TITLE);
     await expect(worked?.status).toEqual('review');

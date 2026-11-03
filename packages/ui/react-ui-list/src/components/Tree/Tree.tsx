@@ -1481,14 +1481,22 @@ TreeItemCount.displayName = 'Tree.ItemCount';
 
 type TreeItemActionsProps = {
   children?: ReactNode;
+  /** Shows the controls on every row, not only the row in play. */
+  pinned?: boolean;
 };
 
 /**
  * Trailing row controls (e.g. an actions menu), each in its own track. Where the pointer can hover they show only on
  * the row in play: hovered, focused within, selected, or holding an open menu.
  */
-const TreeItemActions = ({ children }: TreeItemActionsProps) => (
-  <div role='none' data-scope='tree-view' data-part='item-actions' className='dx-tree-item-actions'>
+const TreeItemActions = ({ children, pinned }: TreeItemActionsProps) => (
+  <div
+    role='none'
+    data-scope='tree-view'
+    data-part='item-actions'
+    data-pinned={pinned || undefined}
+    className='dx-tree-item-actions'
+  >
     {children}
   </div>
 );

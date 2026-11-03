@@ -40,7 +40,7 @@ const shapeError = ({ task, create, assign, unassign, title, status }: TaskChang
     return '`assign` and `unassign` contradict each other';
   }
   if (unassign && (create || status === 'started')) {
-    return 'a task you create or start is assigned to you, so it cannot also be unassigned';
+    return 'a task you create or start is yours to work, so it cannot also be unassigned';
   }
   return undefined;
 };
@@ -49,8 +49,9 @@ type Resolved = { change: TaskChange; task?: Task.Task };
 
 /**
  * The edit that takes a task on or lets it go. Taking it on makes this agent its delegate, so a
- * person who answers for it keeps it; on a task the agent made for itself (its own assignee) that
- * writes nothing. Letting go clears whichever of the two this agent holds.
+ * person who answers for it keeps it, and a step nobody answers for takes its parent's person. A task
+ * the agent made for itself (its own assignee) stays its own, under a person's tree too; `Task.update` drops the
+ * self-delegation. Letting go clears each of the two this agent holds.
  */
 const claim = (
   task: Task.Task,
@@ -58,10 +59,16 @@ const claim = (
   { assigning, unassign }: { assigning: boolean; unassign?: boolean },
 ): Pick<Task.Edit, 'assignee' | 'delegate'> => {
   if (assigning) {
-    return { delegate: self };
+    const answering =
+      Task.owner(task) || Task.sameActor(task.assignee, self) ? undefined : Task.owner(Task.getParentTask(task));
+    return { delegate: self, ...(answering ? { assignee: { ...answering } } : {}) };
   }
   if (unassign) {
-    return Task.sameActor(task.delegate, self) ? { delegate: null } : { assignee: null };
+    // A sub-agent this conversation queued leaves with the checklist entry, as its own claim does.
+    return {
+      ...(Task.sameActor(task.delegate, self) || Task.isSubAgentRequest(task.delegate) ? { delegate: null } : {}),
+      ...(Task.sameActor(task.assignee, self) ? { assignee: null } : {}),
+    };
   }
   return {};
 };
@@ -130,8 +137,8 @@ export default UpdateTasks.pipe(
 
         const assigning = assign || status === 'started';
         const previousStatus = task.status;
-        // Through `Task.update`, so the edit and its history entry land together, and a task someone
-        // was named to review lands in `review` rather than closing on the model's `done`.
+        // Through `Task.update`, so the edit and its history entry land together, and a task a person
+        // answers for lands in `review` rather than closing on the model's `done`.
         Task.update(task, { title: title?.trim(), status, ...claim(task, self, { assigning, unassign }) });
         if (assigning) {
           Chat.assignTasks(chat, [Ref.make(task)]);
@@ -139,7 +146,7 @@ export default UpdateTasks.pipe(
           Chat.unassignTasks(chat, [Ref.make(task)]);
         }
 
-        // The resolved status, not the requested one: a reviewed task lands in `review`.
+        // The resolved status, not the requested one: a task a person answers for lands in `review`.
         if (task.status !== undefined && task.status !== previousStatus) {
           yield* Trace.write(Trace.TaskStatusChanged, {
             taskId: task.id,

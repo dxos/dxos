@@ -778,8 +778,8 @@ const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined, scope?: readonly 
       const tasks: readonly Task.Task[] = get(query.atom);
       tasks.forEach((task) => {
         get(Obj.atomProperty(task, 'subtasks'));
-        // The delegate action arms on whether the agent already holds a checked row, and delegation
-        // writes both fields — without tracking them the bar would keep offering rows already handed over.
+        // The delegate action arms on whether an agent already works a checked row, which reads its status and every
+        // field `Task.worker` does — without tracking them the bar would keep offering rows already handed over.
         get(Obj.atomProperty(task, 'status'));
         get(Obj.atomProperty(task, 'assignee'));
         get(Obj.atomProperty(task, 'delegate'));

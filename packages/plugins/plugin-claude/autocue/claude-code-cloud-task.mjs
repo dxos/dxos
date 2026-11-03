@@ -257,14 +257,17 @@ export const steps = [
   {
     name: 'Assign the task to Claude Code (cloud)',
     run: async ({ demo, page }) => {
-      await demo.caption({ value: 'Assign it to Claude Code (cloud)', subtitle: 'From the task’s menu' });
+      await demo.caption({ value: 'Assign it to Claude Code (cloud)', subtitle: 'From the task’s assignee picker' });
       const row = `[data-testid="taskList.item"]:has-text("${TASK_TITLE}")`;
       await demo.hover({ selector: row });
-      await demo.click({ selector: `${row} >> [data-testid="taskList.item.actions"]`, label: 'Task actions' });
+      await demo.click({
+        selector: `${row} >> :is([data-testid="taskList.item.assignee"], [data-testid="taskList.item.assignee.unset"])`,
+        label: 'Assignee',
+      });
       await page.waitForTimeout(1_500);
       await demo.click({
-        selector: '[role="menuitem"]:has-text("Assign to Claude Code (EDGE)")',
-        label: 'Assign to Claude Code (EDGE)',
+        selector: '[role="menuitem"]:has-text("Claude Code (EDGE)")',
+        label: 'Claude Code (EDGE)',
       });
       await page.waitForTimeout(LINGER);
     },

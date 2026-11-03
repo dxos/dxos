@@ -29,7 +29,7 @@ import { translationKey } from '#translations';
 
 import { useAssigneeDisplay } from '../../hooks/index.ts';
 import { UNASSIGNED_ICON } from '../../util/assignee.ts';
-import { type TaskMember, assigneeMenuActions } from '../../util/property-menus.ts';
+import { type TaskMember, assigneeMenuActions, pickAssignee } from '../../util/property-menus.ts';
 import { ESTIMATE_ICON, UNSET_ICON } from '../../util/status-icons.ts';
 
 export type TaskEditorValues = {
@@ -39,9 +39,9 @@ export type TaskEditorValues = {
   priority?: Task.Priority;
   estimate?: Task.Estimate;
   assignee?: Actor.Actor;
+  /** Not a field of its own: the assignee pill shows it, and picking a person takes the task back from it. */
+  delegate?: Actor.Actor;
 };
-
-export type TaskEditorProperties = Omit<TaskEditorValues, 'title' | 'description'>;
 
 /** What the title field does beyond holding its value: Enter and Save commit it, and blur may. */
 export type TaskTitleBehavior = {
@@ -60,21 +60,21 @@ export type TaskDescriptionBehavior = {
   controllerRef: RefObject<MarkdownEditableController | null>;
   placeholder: string;
   extensions: MarkdownEditableProps['extensions'];
-  /** Reads its value from the form; otherwise the editor holds the draft itself until the create collects it. */
-  controlled: boolean;
 };
 
 export type TaskEditorFormProps = PropsWithChildren<{
   values: TaskEditorValues;
+  /** Off for a list that hides who holds its tasks: the editor then offers no assignee either. */
+  showAssignee?: boolean;
   members: readonly TaskMember[];
-  /** The space's contacts, read when the assignee picker opens. */
-  people: () => readonly Person.Person[];
+  /** The space's contacts, offered by the assignee picker after the members. */
+  people: readonly Person.Person[];
   title: TaskTitleBehavior;
   /** Omitted to leave the description out of the form. */
   description?: TaskDescriptionBehavior;
   /** After the pills, at the row's end. */
   end?: ReactNode;
-  /** Each change names the one field it set; an unset value is `null`. */
+  /** Each change names the fields it set; an unset value is `null`. */
   onChange: (patch: Task.Edit) => void;
 }>;
 
@@ -90,6 +90,7 @@ const PROPERTY_FIELDS = ['status', 'priority', 'assignee', 'estimate'];
 export const TaskEditorForm = ({
   children,
   values,
+  showAssignee = true,
   members,
   people,
   title,
@@ -108,14 +109,23 @@ export const TaskEditorForm = ({
     }),
     [t],
   );
-  const context = useMemo(() => ({ members, people, title, description }), [members, people, title, description]);
+  const context = useMemo(
+    () => ({ members, people, title, description, delegate: values.delegate }),
+    [members, people, title, description, values.delegate],
+  );
   const textFields = useMemo(() => (description ? ['title', 'description'] : ['title']), [description]);
+  const propertyFields = useMemo(
+    () => (showAssignee ? PROPERTY_FIELDS : PROPERTY_FIELDS.filter((field) => field !== 'assignee')),
+    [showAssignee],
+  );
 
   const handleValuesChanged = useCallback(
-    (next: Partial<Task.Task>, { changed }: FormUpdateMeta<Task.Task>) =>
-      onChange(
-        Object.fromEntries(Object.keys(changed).map((key) => [key, next[key as keyof Task.Task] ?? null])) as Task.Edit,
-      ),
+    (next: Partial<Task.Task>, { changed }: FormUpdateMeta<Task.Task>) => {
+      const patch = Object.fromEntries(
+        Object.keys(changed).map((key) => [key, next[key as keyof Task.Task] ?? null]),
+      ) as Task.Edit;
+      onChange('assignee' in changed ? { ...patch, ...pickAssignee(patch.assignee ?? null, next.delegate) } : patch);
+    },
     [onChange],
   );
 
@@ -123,7 +133,7 @@ export const TaskEditorForm = ({
     <TaskEditorContext.Provider value={context}>
       <Form.Root
         schema={TASK_SCHEMA}
-        values={{ status: 'todo', ...values }}
+        values={{ ...values, status: values.status ?? 'todo' }}
         fieldOverrides={fieldOverrides}
         fieldMap={FIELD_MAP}
         onValuesChanged={handleValuesChanged}
@@ -131,7 +141,7 @@ export const TaskEditorForm = ({
         <Form.Fields include={textFields} sort={textFields} />
         {children}
         <Layout.Flex wrap align='center' gap='xs' classNames='min-w-0' data-testid='taskList.edit.properties'>
-          <Form.Fields include={PROPERTY_FIELDS} sort={PROPERTY_FIELDS} layout='pill' />
+          <Form.Fields include={propertyFields} sort={propertyFields} layout='pill' />
           {end}
         </Layout.Flex>
       </Form.Root>
@@ -141,7 +151,8 @@ export const TaskEditorForm = ({
 
 /** What the editor's fields need beyond their value, which a field renderer is not given. */
 const TaskEditorContext = createContext<
-  Pick<TaskEditorFormProps, 'members' | 'people' | 'title' | 'description'> | undefined
+  | (Pick<TaskEditorFormProps, 'members' | 'people' | 'title' | 'description'> & Pick<TaskEditorValues, 'delegate'>)
+  | undefined
 >(undefined);
 
 const useTaskEditorContext = () => {
@@ -210,7 +221,7 @@ const DescriptionField = ({ type, getValue, onValueChange }: FormFieldRendererPr
         // Held open, so it must not pull focus: selecting a row by keyboard would otherwise land the reader in the
         // description instead of the list.
         autoFocus={false}
-        {...(description.controlled && { value: getValue() ?? '' })}
+        value={getValue() ?? ''}
         onValueChange={(next) => onValueChange(type, next)}
       />
     </Input.Frame>
@@ -219,7 +230,8 @@ const DescriptionField = ({ type, getValue, onValueChange }: FormFieldRendererPr
 
 /**
  * The assignee as a pill. A Button rather than the form's select: the picker lists members, then contacts, each with
- * its own avatar, which a select's flat option list cannot.
+ * its own avatar, which a select's flat option list cannot. The pick is this field's value; the form adds taking the
+ * task back from its delegate.
  */
 const AssigneePill = ({
   type,
@@ -229,9 +241,10 @@ const AssigneePill = ({
   onValueChange,
 }: FormFieldRendererProps<Actor.Actor | undefined>) => {
   const { t } = Hooks.useTranslation(translationKey);
-  const { members, people } = useTaskEditorContext();
+  const { members, people, delegate } = useTaskEditorContext();
   const assignee = getValue();
   const current = useAssigneeDisplay(assignee);
+  const worker = useAssigneeDisplay(delegate);
   return (
     <ActionMenu
       deferUntilOpen
@@ -239,18 +252,20 @@ const AssigneePill = ({
         assigneeMenuActions({
           assignee,
           current,
+          delegate: delegate && worker,
           members,
-          people: people(),
-          onChange: (next) => onValueChange(type, next ?? undefined),
+          people,
+          onChange: ({ assignee }) => onValueChange(type, assignee ?? undefined),
           t,
         })
       }
     >
+      {/* Who holds the task, as the row shows it: the person, else the agent working it nobody answers for. */}
       <Button.Root
         pill
-        icon={assignee ? current.icon : UNASSIGNED_ICON}
-        label={(assignee && current.label) || label}
-        data-placeholder-shown={assignee ? undefined : ''}
+        icon={assignee ? current.icon : delegate ? worker.icon : UNASSIGNED_ICON}
+        label={(assignee ? current.label : delegate && worker.label) || label}
+        data-placeholder-shown={assignee || delegate ? undefined : ''}
         data-testid={jsonPath}
       />
     </ActionMenu>

@@ -11,7 +11,8 @@ import { Task, TaskSet } from '@dxos/types';
 import { TaskOperation } from '#types';
 
 import { InvalidOperationInput } from '../errors.ts';
-import { validateAssignee } from './validate-assignee.ts';
+import { claimedAssignee } from './claim.ts';
+import { requireOwner, validateAssignee, validateDelegate } from './validate-assignee.ts';
 
 const handler: Operation.WithHandler<typeof TaskOperation.CreateTask> = TaskOperation.CreateTask.pipe(
   Operation.withHandler(
@@ -28,9 +29,19 @@ const handler: Operation.WithHandler<typeof TaskOperation.CreateTask> = TaskOper
       milestone,
     }) {
       yield* validateAssignee(assignee);
-      yield* validateAssignee(delegate);
+      yield* validateDelegate(delegate);
       const taskSet = yield* Database.load(taskSetRef);
       const parent = parentTask ? yield* Database.load(parentTask) : undefined;
+      // A sub-task answers to the person its parent does, so its finish waits on them; an agent filing one it holds
+      // claims it, as `UpdateTask` does.
+      const answering = Task.owner(parent);
+      const holders = {
+        assignee: delegate ? claimedAssignee(answering, assignee) : (assignee ?? (answering && { ...answering })),
+        delegate,
+      };
+      if (delegate) {
+        yield* requireOwner(title, Task.owner(holders));
+      }
 
       // A task may only be filed under a milestone of its own set — the milestone sequence is what
       // the set renders, so a cross-set ref would show work under a milestone that never lists it.
@@ -55,12 +66,12 @@ const handler: Operation.WithHandler<typeof TaskOperation.CreateTask> = TaskOper
       const task = yield* TaskSet.addPersisted(
         Task.make({
           title: title.trim(),
-          status: status ?? 'todo',
+          // A task created finished waits on the person who answers for it, as an edit does.
+          status: status === 'done' && Task.needsReview(holders) ? 'review' : (status ?? 'todo'),
           description,
           priority,
           estimate,
-          assignee,
-          delegate,
+          ...holders,
           milestone,
         }),
       );

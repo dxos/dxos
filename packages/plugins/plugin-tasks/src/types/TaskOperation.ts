@@ -36,7 +36,9 @@ export const CreateTask = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.tasks.create'),
     name: 'Create Task',
-    description: 'Create a task in a task set. Defaults status to todo.',
+    description:
+      "Create a task in a task set. Defaults status to todo. A sub-task with no assignee takes its parent task's " +
+      'person.',
     icon: 'ph--check-circle--regular',
   },
   services: [Database.Service],
@@ -88,7 +90,8 @@ export const UpdateTask = Operation.make({
       'Pass `remoteSession` with a harness session id to delegate the task to that coding-agent session, ' +
       'creating the session record in the space if it is not there yet. A session works for a person: ' +
       'when the task has no person as its assignee, also pass `assignee: { identityDid, name }` with the ' +
-      '`identityDid` and `displayName` that `whoami` returns. ' +
+      '`identityDid` and `displayName` that `whoami` returns. A task answers to its own person, else its ' +
+      "parent's: an agent claim keeps that person and ignores a different `assignee`; reassign in its own edit. " +
       'A task with sub-tasks is one unit of work: delegating or starting any task in a tree ' +
       'delegates (and starts, if not yet started) its root and every sub-task too.',
     icon: 'ph--pencil-simple--regular',
@@ -144,7 +147,9 @@ export const AskQuestion = Operation.make({
       'The question is recorded in the task history, where the user answers it. Offer likely answers ' +
       'in `options`; the user may still type their own. Refused while the task already has an ' +
       'unanswered question. Pass `remoteSession` with your harness session id to delegate the blocked task ' +
-      "to your session. Read the answer back later from the task's `history`: the entry with " +
+      'to your session; that is refused when no person answers for the task or its tree, so first claim it with ' +
+      "`tasks-update`, naming the person `whoami` returns as `assignee`. Read the answer back later from the task's " +
+      '`history`: the entry with ' +
       '`event: "answer"` whose `questionId` is the id this returns.',
     icon: 'ph--question--regular',
   },
@@ -205,8 +210,8 @@ export const AnswerQuestion = Operation.make({
 }).pipe(Operation.mutation('write'));
 
 /**
- * Closes a task in `review` on a person's sign-off — the one write that may reach `done` past a
- * delegate or named reviewers (see `Task.approve`).
+ * Closes a task in `review` on a person's sign-off — the one write that may reach `done` on a task
+ * a person answers for (see `Task.approve`).
  */
 export const AcceptTask = Operation.make({
   meta: {

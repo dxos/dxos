@@ -150,8 +150,7 @@ export const TaskProperties = ({
                 members,
                 people,
                 agents: delegateActions,
-                // A person picked takes the task back from any agent: the picker holds one answer to who has it.
-                onChange: (assignee) => onTaskUpdate(task, { assignee, ...(delegate && { delegate: null }) }),
+                onChange: (patch) => onTaskUpdate(task, patch),
                 t,
               }))
           }

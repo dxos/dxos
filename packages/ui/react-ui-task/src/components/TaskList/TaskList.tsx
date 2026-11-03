@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { type MouseEvent, type PropsWithChildren, useCallback, useMemo, useRef, useState } from 'react';
 
-import { Tag as EchoTag, Filter, Obj } from '@dxos/echo';
+import { type Database, Tag as EchoTag, Filter, Obj } from '@dxos/echo';
 import { useLabel, useObject, useQuery } from '@dxos/echo-react';
 import { Tree } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuAction, type MenuItem, executeMenuAction, fallbackIcon } from '@dxos/react-ui-menu';
@@ -126,6 +126,8 @@ type TaskListRootProps = PropsWithChildren<{
    * here: membership lives in HALO, which this package does not depend on.
    */
   members?: readonly TaskMember[];
+  /** The space whose contacts the assignee pickers offer; the first task's when omitted, so an empty list has none. */
+  db?: Database.Database;
   /** Render each task's mnemonic before its title. On by default. */
   showMnemonics?: boolean;
   /** Rows and the edit pane run to the host's edges, with no inline inset (a list inside a framed host). */
@@ -204,6 +206,7 @@ const TaskListRoot = ({
   descriptionComponents,
   showAssignees = true,
   members = EMPTY_MEMBERS,
+  db: dbProp,
   showMnemonics = true,
   flush = false,
   hierarchical = false,
@@ -281,6 +284,11 @@ const TaskListRoot = ({
     [hierarchical, groups, showOrdinals, onTaskCheck, showMnemonics, showAssignees, hasActions],
   );
 
+  // The contacts the pickers offer: one live query for the list rather than a read per menu, which would see only the
+  // contacts already loaded.
+  const db = dbProp ?? (tasks[0] && Obj.getDatabase(tasks[0]));
+  const people = useQuery(showAssignees && (onTaskUpdate || onTaskCreate) ? db : undefined, Filter.type(Person.Person));
+
   return (
     <TaskListProvider
       tasks={tasks}
@@ -297,6 +305,7 @@ const TaskListRoot = ({
       showGutter={showGutter}
       showAssignees={showAssignees}
       members={members}
+      people={people}
       showMnemonics={showMnemonics}
       flush={flush}
       isCollapsed={isCollapsed}
@@ -533,6 +542,7 @@ const TaskListItem = ({
   }
 
   const description = showDescription ? current.description?.trim() || undefined : undefined;
+  const { assignee, delegate } = current;
 
   return (
     <>
@@ -540,16 +550,14 @@ const TaskListItem = ({
       {indicator}
       {showGutter && (
         <Layout.Flex center gap='xs' classNames={TRACK.gutter}>
-          {onTaskCheck &&
+          {onTaskCheck && (
             // Shown on the row in play until something is checked, as Linear does: a column of empty boxes reads as a
-            // form, and once a selection exists every box stays so it can be seen and extended.
-            (checkedIds.size > 0 ? (
+            // form, and once a selection exists every box stays so it can be seen and extended. Pinned rather than moved
+            // out, so checking the first box keeps the reader's focus on it.
+            <Tree.ItemActions pinned={checkedIds.size > 0}>
               <TaskCheckbox task={task} checked={checked} onCheckedChange={onTaskCheck} />
-            ) : (
-              <Tree.ItemActions>
-                <TaskCheckbox task={task} checked={checked} onCheckedChange={onTaskCheck} />
-              </Tree.ItemActions>
-            ))}
+            </Tree.ItemActions>
+          )}
           {/* One button for the number and the reference it copies. Not beside a checkbox: a number beside a box reads
               as two ways to act on the row. The live task, not the snapshot: only the live object knows its space,
               which the copied URI names. */}
@@ -587,7 +595,7 @@ const TaskListItem = ({
       </Layout.Flex>
       {showAssignees && (
         <Layout.Grid center classNames={TRACK.assignee}>
-          <TaskListAssigneeControl task={task} assignee={current.assignee} delegate={current.delegate} />
+          <TaskListAssigneeControl task={task} assignee={assignee} delegate={delegate} />
         </Layout.Grid>
       )}
       <TaskListItemActions task={task} classNames={TRACK.actions} />
@@ -935,7 +943,7 @@ const TaskListAssigneeControl = ({
   delegate?: Actor.Actor;
 }) => {
   const { t } = Hooks.useTranslation(translationKey);
-  const { members, onTaskUpdate, getDelegateActions } = useTaskListContext('TaskList.AssigneeControl');
+  const { members, people, onTaskUpdate, getDelegateActions } = useTaskListContext('TaskList.AssigneeControl');
   const current = useAssigneeDisplay(assignee);
   const worker = useAssigneeDisplay(delegate);
   if (!onTaskUpdate) {
@@ -943,7 +951,7 @@ const TaskListAssigneeControl = ({
   }
 
   return (
-    // Deferred, as the row's other menus are; the space's contacts are read when it opens, not once per row.
+    // Deferred, as the row's other menus are.
     <ActionMenu
       deferUntilOpen
       actions={() =>
@@ -952,10 +960,9 @@ const TaskListAssigneeControl = ({
           current,
           delegate: delegate && worker,
           members,
-          people: Obj.getDatabase(task)?.query(Filter.type(Person.Person)).runSync() ?? [],
+          people,
           agents: getDelegateActions?.(task),
-          // A person picked takes the task back from any agent: the picker holds one answer to who has it.
-          onChange: (assignee) => onTaskUpdate(task, { assignee, ...(delegate && { delegate: null }) }),
+          onChange: (patch) => onTaskUpdate(task, patch),
           t,
         })
       }

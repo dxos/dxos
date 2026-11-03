@@ -7,12 +7,12 @@ import React, {
   type DragEvent,
   type KeyboardEvent,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
 } from 'react';
 
-import { Filter, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { type MarkdownEditableController, type MarkdownEditableProps } from '@dxos/react-ui-markdown';
@@ -22,14 +22,14 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Util from '@dxos/react-ui/Util';
-import { Person, type Task } from '@dxos/types';
+import { Task } from '@dxos/types';
 import { submitOnModEnter } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { type TaskDescriptionBehavior, TaskEditorForm, type TaskEditorProperties } from './TaskEditorFields.tsx';
+import { type TaskDescriptionBehavior, TaskEditorForm, type TaskEditorValues } from './TaskEditorFields.tsx';
 import { type TaskCreateHandler, type TaskCreateResult } from './TaskList.tsx';
 import { useTaskListContext } from './TaskListContext.ts';
 
@@ -85,7 +85,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
     const { t } = Hooks.useTranslation(translationKey);
     const { className, ...rest } = Util.composableProps(props);
     const descriptionRef = useRef<MarkdownEditableController>(null);
-    const { tasks, selected, members, flush, onTaskCreate, onTaskUpdate, onTaskSelect } =
+    const { tasks, selected, showAssignees, members, people, flush, onTaskCreate, onTaskUpdate, onTaskSelect } =
       useTaskListContext('TaskList.Editor');
 
     const task = useMemo(
@@ -96,13 +96,18 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
     const [snapshot] = useObject(task);
     const current = snapshot ?? task;
 
-    // The create row's description, mirrored out of the field. A ref rather than state because the
-    // create reads it in the same tick it commits the field, and `useEditable` calls back
-    // synchronously — a `setState` would still hold the previous render's text.
-    const draftDescription = useRef('');
-    const [draft, setDraft] = useState('');
-    // Set on the create row's pills before the task exists, and sent with its draft.
-    const [draftProperties, setDraftProperties] = useState<TaskEditorProperties>({});
+    // What the form holds that no task has yet: the title until Enter, Save or blur commits it, and while creating, the
+    // whole new task. `latest` follows it so the create reads the description in the same tick it commits the field:
+    // `useEditable` calls back synchronously, and a render's `draft` would still hold the previous text.
+    const [draft, setDraft] = useState<TaskEditorValues>(EMPTY_DRAFT);
+    const latest = useRef(draft);
+    useEffect(() => {
+      latest.current = draft;
+    }, [draft]);
+    const updateDraft = useCallback((update: (draft: TaskEditorValues) => TaskEditorValues) => {
+      latest.current = update(latest.current);
+      setDraft(latest.current);
+    }, []);
     // Held by the pane, not the host: there is no task to attach them to until the create lands.
     const [files, setFiles] = useState<readonly File[]>([]);
     const [dragOver, setDragOver] = useState(false);
@@ -115,11 +120,11 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
     // Set while a create is in flight, so a second Enter on the still-shown draft does not file it twice.
     const creating = useRef(false);
 
-    // The pane is a view onto whichever task is selected, so switching tasks replaces the text it
-    // holds rather than carrying the previous one's across. The description ref is cleared here too:
-    // the field remounts empty on the way back to creating, but `commit()` on an already-empty field
-    // never calls back — so text abandoned before a selection would otherwise ride along, unseen,
-    // into the next task created.
+    // The pane is a view onto whichever task is selected, so switching tasks replaces the draft
+    // rather than carrying the previous one's across. That includes a description: the field
+    // remounts empty on the way back to creating, but `commit()` on an already-empty field never
+    // calls back — so text abandoned before a selection would otherwise ride along, unseen, into
+    // the next task created.
     //
     // State rather than a ref for the previous id (React's adjust-state-on-prop-change pattern): a
     // render React abandons leaves a ref already mutated, so the retry would skip the reset and the
@@ -127,26 +132,24 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
     const [editingId, setEditingId] = useState<string | undefined>(undefined);
     if (editingId !== current?.id) {
       setEditingId(current?.id);
-      setDraft(current?.title ?? '');
-      draftDescription.current = '';
+      setDraft({ title: current?.title ?? '' });
     }
 
     const commitTitle = useCallback(() => {
-      const title = draft.trim();
       if (task && current) {
+        const title = draft.title.trim();
         if (title.length > 0 && title !== current.title) {
           onTaskUpdate?.(task, { title });
         }
-      } else if (title.length > 0 && !creating.current) {
+      } else if (draft.title.trim().length > 0 && !creating.current) {
         // Nothing has committed the description yet — it is held open and the reader is in the
-        // title — so commit it here, before assembling the draft it belongs to.
+        // title — so commit it here, before reading the draft it belongs to.
         descriptionRef.current?.commit();
-        const sentDescription = draftDescription.current;
-        const description = sentDescription.trim();
-        const sentTitle = draft;
+        const sentDraft = latest.current;
+        const { title, description, ...properties } = sentDraft;
         const sent = files;
         // The draft is cleared only once the host reports the task created: a refused create keeps
-        // what was typed, and each field is cleared only if it still holds what was sent, so a create
+        // what was typed, and the text is cleared only if it still holds what was sent, so a create
         // that lands late does not wipe text typed while it was pending.
         const settle = (result: TaskCreateResult | void) => {
           creating.current = false;
@@ -156,10 +159,12 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
           }
           const kept = new Set(result?.rejectedFiles ?? []);
           setFiles((files) => files.filter((file) => !sent.includes(file) || kept.has(file)));
-          setDraft((draft) => (draft === sentTitle ? '' : draft));
-          setDraftProperties({});
-          if (draftDescription.current === sentDescription) {
-            draftDescription.current = '';
+          const sentDescriptionKept = latest.current.description === sentDraft.description;
+          updateDraft((draft) => ({
+            title: draft.title === sentDraft.title ? '' : draft.title,
+            ...(!sentDescriptionKept && { description: draft.description }),
+          }));
+          if (sentDescriptionKept) {
             setCreateEpoch((epoch) => epoch + 1);
           }
         };
@@ -168,9 +173,9 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
         try {
           result = onTaskCreate?.(
             {
-              title,
-              ...(description.length > 0 && { description }),
-              ...draftProperties,
+              ...properties,
+              title: title.trim(),
+              ...(description?.trim() && { description: description.trim() }),
             },
             sent.length > 0 ? sent : undefined,
           );
@@ -185,7 +190,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
           log.catch(error);
         });
       }
-    }, [draft, draftProperties, files, task, current, onTaskCreate, onTaskUpdate]);
+    }, [draft.title, files, task, current, updateDraft, onTaskCreate, onTaskUpdate]);
 
     // Blur commits a rename but never a create: leaving the field is not a decision to add a task,
     // and half a title would become one — clicking the list, the thread, or anywhere else would
@@ -219,11 +224,11 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
     // Unlike the Save button, the key is a no-op on an untitled create row: the button is hidden
     // there, and the key must not clear the draft the reader is still writing.
     const handleSubmit = useCallback(() => {
-      if (!(task && current) && draft.trim().length === 0) {
+      if (!(task && current) && draft.title.trim().length === 0) {
         return;
       }
       handleSave();
-    }, [task, current, draft, handleSave]);
+    }, [task, current, draft.title, handleSave]);
 
     // Read through a ref so the extension is built once: a new extensions array rebuilds the editor
     // and drops focus, and `handleSubmit` changes on every keystroke of the title. Synced in an effect
@@ -242,14 +247,12 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
       if (task && current) {
         descriptionRef.current?.revert();
       } else {
-        draftDescription.current = '';
         setCreateEpoch((epoch) => epoch + 1);
       }
-      setDraft('');
-      setDraftProperties({});
+      updateDraft(() => EMPTY_DRAFT);
       setFiles([]);
       onTaskSelect?.(undefined);
-    }, [task, current, onTaskSelect]);
+    }, [task, current, updateDraft, onTaskSelect]);
 
     // Only while creating: an existing task's attachments are its article's to manage. Captured, so
     // the description editor does not take a dropped file and insert its bytes as text.
@@ -300,48 +303,36 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
       [handleFiles],
     );
 
-    // The title is held as a draft until Enter, Save or blur commits it. The description's editor commits on its own,
-    // into the task or, while creating, into the draft. A draft's cleared property is dropped rather than held as
-    // `null`, since a draft has nothing to clear.
+    // Editing, the title is held in the draft until Enter, Save or blur commits it, and every other field writes the
+    // task. Creating, every field goes to the draft, where a cleared one is dropped rather than held as `null`, since a
+    // draft has nothing to clear.
     const handleChange = useCallback(
-      ({ title, description, ...properties }: Task.Edit) => {
-        if (title !== undefined) {
-          setDraft(title ?? '');
-        }
-        if (description !== undefined) {
-          if (task && current) {
-            onTaskUpdate?.(task, { description });
-          } else {
-            draftDescription.current = description ?? '';
+      ({ title, ...edit }: Task.Edit) => {
+        if (task && current) {
+          if (title !== undefined) {
+            updateDraft((draft) => ({ ...draft, title: title ?? '' }));
           }
-        }
-        if (Object.keys(properties).length === 0) {
+          if (Object.keys(edit).length > 0) {
+            onTaskUpdate?.(task, edit);
+          }
           return;
         }
-        if (task && current) {
-          onTaskUpdate?.(task, properties);
-        } else {
-          setDraftProperties((draftProperties) => {
-            const next: Record<string, unknown> = { ...draftProperties, ...properties };
-            for (const key of Object.keys(properties)) {
-              if (next[key] == null) {
-                delete next[key];
-              }
+        updateDraft((draft) => {
+          const next: Record<string, unknown> = {
+            ...draft,
+            ...edit,
+            title: title === undefined ? draft.title : (title ?? ''),
+          };
+          for (const key of Object.keys(edit)) {
+            if (next[key] == null) {
+              delete next[key];
             }
-            return next as TaskEditorProperties;
-          });
-        }
+          }
+          return next as TaskEditorValues;
+        });
       },
-      [task, current, onTaskUpdate],
+      [task, current, updateDraft, onTaskUpdate],
     );
-
-    // The space's contacts, for the assignee picker: read off the task being edited, or any task in the list while
-    // creating, since a draft has no database of its own.
-    const people = useCallback(() => {
-      const subject = task ?? tasks[0];
-      const db = subject && Obj.getDatabase(subject);
-      return db?.query(Filter.type(Person.Person)).runSync() ?? [];
-    }, [task, tasks]);
 
     // Nothing to create with and nothing to edit: the pane has no purpose.
     if (!onTaskCreate && !(current && onTaskUpdate)) {
@@ -350,17 +341,20 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
 
     const hasDescription = !!(showDescription && (current ? onTaskUpdate : onTaskCreate));
     // Valid only with a title: a task cannot be created, or renamed, to nothing.
-    const canSave = draft.trim().length > 0;
+    const canSave = draft.title.trim().length > 0;
     // Something to throw away: an edit in progress, or a draft.
     const canCancel = !!current || canSave;
-    const properties: TaskEditorProperties = current
+    const values: TaskEditorValues = current
       ? {
+          title: draft.title,
+          description: current.description,
           status: current.status ?? undefined,
           priority: current.priority ?? undefined,
           estimate: current.estimate ?? undefined,
-          assignee: current.assignee ?? undefined,
+          assignee: current.assignee,
+          delegate: current.delegate,
         }
-      : draftProperties;
+      : draft;
     const description: TaskDescriptionBehavior | undefined = hasDescription
       ? {
           // Per task; creating, remounted empty after each create, since there it holds the draft itself.
@@ -368,7 +362,6 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
           controllerRef: descriptionRef,
           placeholder: descriptionPlaceholder ?? t('task-description.placeholder'),
           extensions,
-          controlled: !!current,
         }
       : undefined;
 
@@ -396,7 +389,8 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
         <TaskEditorForm
           // Per task: switching tasks replaces what the form holds rather than carrying an edit across.
           key={current?.id ?? 'create'}
-          values={{ title: draft, description: current?.description, ...properties }}
+          values={values}
+          showAssignee={showAssignees}
           members={members}
           people={people}
           title={{
@@ -455,6 +449,8 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
     );
   },
 );
+
+const EMPTY_DRAFT: TaskEditorValues = { title: '' };
 
 /** Whether a drag carries files from outside the page, rather than an element dragged within it. */
 const isFileDrag = (event: DragEvent): boolean => Array.from(event.dataTransfer.types).includes('Files');

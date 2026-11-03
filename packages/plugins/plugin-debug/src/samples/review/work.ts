@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import * as Project from '@dxos/compute/Project';
 import { Database, type Obj, Ref } from '@dxos/echo';
-import { Outline, Person, PullRequest, Repo, Task, TaskSet } from '@dxos/types';
+import { Outline, PullRequest, Repo, Task, TaskSet } from '@dxos/types';
 
 import { type ImageKey, type MediaResult, type VideoKey } from './assets.ts';
 import { daysAgo } from './util.ts';
@@ -75,13 +75,6 @@ const PULL_REQUEST_SEEDS: ReadonlyArray<
   },
 ];
 
-type ReviewerKey = 'mira' | 'kai';
-
-const REVIEWER_SEEDS: ReadonlyArray<SampleSpace.Seed<ReviewerKey, { fullName: string; jobTitle: string }>> = [
-  { key: 'mira', fullName: 'Mira Okafor', jobTitle: 'Design engineer' },
-  { key: 'kai', fullName: 'Kai Lindqvist', jobTitle: 'Platform engineer' },
-];
-
 type TaskSeed = {
   readonly title: string;
   readonly status: Task.Status;
@@ -90,7 +83,6 @@ type TaskSeed = {
   readonly pullRequest?: PullRequestKey;
   readonly images?: ReadonlyArray<ImageKey>;
   readonly videos?: ReadonlyArray<VideoKey>;
-  readonly reviewers?: ReadonlyArray<ReviewerKey>;
   /** Days before the reference date the task was opened. */
   readonly opened: number;
 };
@@ -131,7 +123,6 @@ const TASK_SEEDS: ReadonlyArray<TaskSeed> = [
     description: 'Logging out, recovering or joining another identity wipes the profile and reloads the app.',
     pullRequest: 'halo',
     videos: ['haloLogin'],
-    reviewers: ['kai'],
     opened: 6,
   },
   {
@@ -141,7 +132,6 @@ const TASK_SEEDS: ReadonlyArray<TaskSeed> = [
     description: 'Render a package’s module graph as a diagram an agent can generate and a person can read.',
     pullRequest: 'archify',
     videos: ['archify'],
-    reviewers: ['mira', 'kai'],
     opened: 12,
   },
   {
@@ -167,17 +157,9 @@ export type WorkResult = {
   pullRequests: Record<PullRequestKey, PullRequest.PullRequest>;
 };
 
-/** Pull requests, reviewers, the task set, and the project that gathers them with the media. */
+/** Pull requests, the task set, and the project that gathers them with the media. */
 export const Work: SampleSpace.Partial<WorkResult, MediaResult> = SampleSpace.partial('work', {
-  schemas: [
-    PullRequest.PullRequest,
-    Person.Person,
-    Task.Task,
-    TaskSet.TaskSet,
-    Outline.Outline,
-    Repo.Repo,
-    Project.Project,
-  ],
+  schemas: [PullRequest.PullRequest, Task.Task, TaskSet.TaskSet, Outline.Outline, Repo.Repo, Project.Project],
   run: ({ images, videos }: MediaResult) =>
     Effect.gen(function* () {
       const pullRequests = yield* SampleSpace.seed(PULL_REQUEST_SEEDS, ({ key: _key, ...seed }) =>
@@ -192,17 +174,12 @@ export const Work: SampleSpace.Partial<WorkResult, MediaResult> = SampleSpace.pa
         ),
       );
 
-      const reviewers = yield* SampleSpace.seed(REVIEWER_SEEDS, ({ key: _key, ...seed }) =>
-        Database.add(Person.make(seed)),
-      );
-
       const tasks = TASK_SEEDS.map((seed) =>
         Task.make({
           title: seed.title,
           description: seed.description,
           status: seed.status,
           priority: seed.priority,
-          reviewers: seed.reviewers?.map((key) => ({ contact: Ref.make(reviewers[key]) })),
           artifacts: [
             ...(seed.pullRequest ? [Ref.make(pullRequests[seed.pullRequest])] : []),
             ...(seed.images ?? []).map((key) => Ref.make(images[key])),

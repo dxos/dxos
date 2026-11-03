@@ -7,13 +7,14 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Obj } from '@dxos/echo';
-import { type Actor, Task, TaskSet } from '@dxos/types';
+import { Task, TaskSet } from '@dxos/types';
 
 import { TaskOperation } from '#types';
 
 import { InvalidOperationInput } from '../errors.ts';
+import { cascadeClaim, claimedAssignee } from './claim.ts';
 import { assignToSession } from './session-assignee.ts';
-import { validateAssignee } from './validate-assignee.ts';
+import { requireOwner, validateAssignee, validateDelegate } from './validate-assignee.ts';
 
 const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOperation.UpdateTask.pipe(
   Operation.withHandler(
@@ -31,28 +32,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOper
       parentTask,
     }) {
       yield* validateAssignee(assignee);
-      // A session supplies the subject itself, so only a bare actor is checked.
-      if (!remoteSession) {
-        yield* validateAssignee(delegate);
-      }
       const task = yield* Database.load(taskRef);
-      // A coding session works for whoever holds the MCP grant, which this handler cannot see; the
-      // caller names them from `whoami` so the session never ends up answering for the task itself.
-      if (remoteSession && !assignee && (task.assignee === undefined || task.assignee.role === 'assistant')) {
-        return yield* Effect.fail(
-          new InvalidOperationInput({
-            message:
-              `"${task.title}" has no person as its assignee. Pass \`assignee: { identityDid, name }\` ` +
-              'with the identityDid and displayName that `whoami` returns: the session is the delegate, ' +
-              'working for them.',
-          }),
-        );
-      }
-      // Resolved before the patch so the actor it produces is what `Task.update` writes, and so a
-      // session that does not exist yet is created rather than dropping the delegation.
-      const sessionDelegate = remoteSession
-        ? yield* assignToSession(remoteSession, delegate ?? undefined, { defaultTitle: title ?? task.title })
-        : undefined;
       const taskSet =
         milestone !== undefined || parentTask !== undefined ? yield* TaskSet.findTaskSet(task) : undefined;
 
@@ -69,19 +49,43 @@ const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOper
 
       const newParent = parentTask ? yield* TaskSet.resolveParentTask(taskSet, task, parentTask) : undefined;
 
+      // An agent's claim (a session, or an agent named as delegate) on a step with no person of its own takes its
+      // parent's, the parent it is moving under when the edit also re-parents it.
+      const agentClaim = remoteSession !== undefined || delegate?.role === 'assistant';
+      const answering = Task.owner(parentTask === undefined ? Task.getParentTask(task) : newParent);
+      const claimed = agentClaim
+        ? claimedAssignee(answering, assignee, { owned: Task.owner(task) !== undefined })
+        : assignee;
+      // Judged on the shape the edit leaves: an agent at work needs a person answering for the task.
+      const next = Task.holders(task, { assignee: claimed, delegate });
+      // A session supplies the subject itself, so only a bare actor is checked.
+      if (!remoteSession) {
+        yield* validateDelegate(delegate, next.assignee);
+      }
+      if (remoteSession || (next.delegate && (claimed !== undefined || delegate != null))) {
+        yield* requireOwner(task.title, Task.owner(next));
+      }
+      // Resolved before the patch so the actor it produces is what `Task.update` writes, and so a
+      // session that does not exist yet is created rather than dropping the delegation.
+      const sessionDelegate = remoteSession
+        ? yield* assignToSession(remoteSession, delegate ?? undefined, { defaultTitle: title ?? task.title })
+        : undefined;
+
       // Through `Task.edit`, so the change and the log entry that explains it land together and a
       // no-op patch records nothing. Milestone stays here: it is set membership, not a field edit.
       const previousStatus = task.status;
+      // A copy: the stored record is gone once the update hands the task back.
+      const previousDelegate = task.delegate && { ...task.delegate };
       Task.update(task, {
         title,
         description,
         status,
         priority,
         estimate,
-        assignee,
+        assignee: claimed,
         delegate: sessionDelegate ?? delegate,
       });
-      // The resolved status, not the requested one: a task with reviewers lands in `review`. This is
+      // The resolved status, not the requested one: a task a person answers for lands in `review`. This is
       // what cuts an agent session's timeline into per-task segments.
       if (task.status !== undefined && task.status !== previousStatus) {
         yield* Trace.write(Trace.TaskStatusChanged, {
@@ -110,40 +114,18 @@ const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOper
       }
 
       // After any re-parent, so the cascade reaches the tree the task now belongs to.
-      yield* cascadeClaim(task, { delegate: sessionDelegate ?? delegate ?? undefined, started: status === 'started' });
+      // What the write did, not what was asked: delegating to the task's own assignee is a hand-back.
+      const requested = sessionDelegate ?? delegate;
+      yield* cascadeClaim(task, {
+        delegate: requested === undefined ? undefined : (task.delegate ?? (previousDelegate ? null : undefined)),
+        previousDelegate,
+        owner: Task.owner(task),
+        started: status === 'started',
+      });
 
       return { task: task };
     }),
   ),
 );
-
-/** Statuses a claim moves to `started`; anything further along keeps its own state. */
-const UNSTARTED: ReadonlySet<Task.Status | undefined> = new Set([undefined, 'todo', 'backlog']);
-
-/**
- * A task with sub-tasks is one unit of work, so claiming any task in the tree — delegating it, or
- * starting it — claims the root and every descendant with it; otherwise a sub-task can be picked up
- * by a second session working against the first. Only the worker spreads: who answers for each task
- * is that task's own.
- */
-const cascadeClaim = Effect.fnUntraced(function* (
-  task: Task.Task,
-  { delegate, started }: { delegate: Actor.Actor | undefined; started: boolean },
-) {
-  if (!delegate && !started) {
-    return;
-  }
-  const tree = yield* Task.collectTree(task);
-  for (const member of tree) {
-    if (member.id === task.id) {
-      continue;
-    }
-    Task.update(member, {
-      // A copy per task: ECHO refuses to store a record another object already owns.
-      ...(delegate ? { delegate: { ...delegate } } : {}),
-      ...(started && UNSTARTED.has(member.status) ? { status: 'started' as const } : {}),
-    });
-  }
-});
 
 export default handler;

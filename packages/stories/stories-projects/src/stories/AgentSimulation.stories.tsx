@@ -150,16 +150,27 @@ const seedContent = async () => {
   return context;
 };
 
-/** Runs the row's "Delegate to agent" action on the task titled `title`. */
+/** Picks "Default agent" from the assignee picker of the task titled `title`. */
 const delegateToAgent = async (canvas: ReturnType<typeof within>, title: string) => {
   const label = await canvas.findByText(title, undefined, { timeout: 10_000 });
   const row = label.closest('[data-testid="taskList.item"]');
   if (!(row instanceof HTMLElement)) {
     throw new Error(`No task row titled "${title}".`);
   }
-  await userEvent.click(await within(row).findByTestId('taskList.item.actions', undefined, { timeout: 10_000 }));
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-  await userEvent.click(await screen.findByText('Delegate to agent', undefined, { timeout: 10_000 }));
+  const control = await waitFor(
+    () => {
+      const control = row.querySelector<HTMLElement>(
+        '[data-testid="taskList.item.assignee"], [data-testid="taskList.item.assignee.unset"]',
+      );
+      if (!control) {
+        throw new Error('No assignee control on the row.');
+      }
+      return control;
+    },
+    { timeout: 10_000 },
+  );
+  await userEvent.click(control);
+  await userEvent.click(await screen.findByText('Default agent', undefined, { timeout: 10_000 }));
 };
 
 const selectTask = async (canvas: ReturnType<typeof within>, title: string) => {

@@ -45,6 +45,7 @@ import { meta } from '#meta';
 import { TaskOperation, TasksCapabilities, TaskSetView } from '#types';
 
 import {
+  applyPersonEdit,
   useDelegateActions,
   useDescriptionComponents,
   useMarkdownExtensions,
@@ -158,19 +159,24 @@ export const TaskSetArticle = ({
   // Reports a failed create, so the pane keeps the draft, and the files left unattached, which the
   // pane keeps rather than dropping.
   const handleCreate = useCallback<TaskCreateHandler>(
-    async (props, files = []) => {
+    async ({ status, ...props }, files = []) => {
+      // A person's Done is their sign-off: the task is created open and closed as an edit would close it.
+      const finished = status === 'done';
       const { data, error } = await invokePromise(
         TaskOperation.CreateTask,
-        { taskSet: Ref.make(taskSet), ...props },
+        { taskSet: Ref.make(taskSet), ...props, status: finished ? undefined : status },
         { spaceId },
       );
       if (error || !data) {
         return { error: error ?? new Error('Task was not created.') };
       }
-      if (files.length === 0 && !onTaskCreated) {
+      if (files.length === 0 && !onTaskCreated && !finished) {
         return;
       }
       const [task] = db?.query(Filter.and(Filter.type(Task.Task), Filter.id(data.task.id))).runSync() ?? [];
+      if (task && finished) {
+        await applyPersonEdit(invokePromise, task, { status }, spaceId);
+      }
       if (task && onTaskCreated) {
         await onTaskCreated(task);
       }
@@ -321,6 +327,7 @@ export const TaskSetArticle = ({
       selectable
       showDescription={showDescription}
       members={members}
+      db={db}
       descriptionComponents={descriptionComponents}
       checked={checked}
       collapsed={collapsed}
