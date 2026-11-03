@@ -22,6 +22,7 @@ import { DXN, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { FunctionProtocol, PluginProtocol } from '@dxos/protocols';
 
+import * as Output from './Output.ts';
 import * as PluginActivation from './PluginActivation.ts';
 import * as PluginCatalog from './PluginCatalog.ts';
 import * as TypeSource from './TypeSource.ts';
@@ -114,7 +115,7 @@ export const make = (makePlugins: () => PluginActivation.Plugins, options: Optio
 
   const invoke: Host['invoke'] = async (request, env, scope = {}) => {
     try {
-      return { ok: true, output: await run(request, env, scope) };
+      return { ok: true, output: Output.encode(await run(request, env, scope)) };
     } catch (error) {
       log.error('plugin operation failed', { operationKey: request.operationKey, error });
       return { ok: false, error: toFailure(error) };

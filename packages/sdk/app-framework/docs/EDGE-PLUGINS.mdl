@@ -632,6 +632,10 @@ feat F-5: Operations are exposed and callable
 
   req F-5.4: An operation key belongs to exactly one plugin key; an upload whose catalog claims a key
     of another plugin fails with KeyConflict.
+
+  req F-5.5: An operation's output reaches the caller in the JSON form its schema describes: every
+    live ECHO object as `Entity.toJSON` (with `@uri` and `@type`) and every ref as `{ '/': uri }`,
+    as operation-service returns it.
 ```
 
 ```mdl
@@ -1317,4 +1321,15 @@ decision D-58: A query over `Scope.registry()` that selects type entities (`Filt
   for: user:dmaretskyi
   affects: [F-3.5]
   why: Limiting it to queries for types keeps operation and skill lookups from reaching the type registry.
+```
+
+```mdl
+decision D-59: PluginHost encodes a handler's output before returning it over Workers RPC: live ECHO entities become their JSON form and refs `{ '/': uri }`, by the same walk as operation-service's `snapshotEntities`; plain objects and arrays are walked, any other class instance is returned as is.
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.5, PluginEntrypoint]
+  why: Structured clone copies none of a live entity's properties and cannot clone a `Ref`, so `space.addObject` returned `{ id }` without its object; the router cannot recover what the clone dropped, so the host has to encode.
+  rejected:
+    - Encode in compute-service's router — the entity is already gone by the time the result crosses the RPC boundary.
 ```
