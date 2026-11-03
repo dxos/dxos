@@ -12,7 +12,7 @@ const PRINT_STYLE = `
   h1, h2, h3, h4, h5, h6 { line-height: 1.25; break-after: avoid; }
   pre, code { font-family: ui-monospace, monospace; font-size: 10pt; }
   pre { white-space: pre-wrap; padding: 8px; background: #f4f4f4; }
-  img, svg { max-width: 100%; }
+  img, svg { max-width: 100%; height: auto; }
   table { border-collapse: collapse; width: 100%; }
   th, td { border: 1px solid #999; padding: 4px 6px; text-align: left; vertical-align: top; }
   th { background: #eee; }

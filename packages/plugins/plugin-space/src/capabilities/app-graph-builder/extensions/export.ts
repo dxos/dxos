@@ -29,7 +29,7 @@ export const createExportExtensions = Effect.fnUntraced(function* () {
       actions: (object, get) => {
         const typename = Obj.getTypename(object);
         const exporter = get(capabilities.atom(AppCapabilities.Exporter)).find(({ id }) => id === typename);
-        if (!exporter) {
+        if (!exporter || exporter.available?.(object, get) === false) {
           return Effect.succeed([]);
         }
 

@@ -393,6 +393,8 @@ export class ExportError extends BaseError.extend('ExportError', 'The object cou
  */
 export type Exporter = Readonly<{
   id: string;
+  /** Whether the menu offers this object, for a type only some of whose objects can leave; every object when absent. */
+  available?: (object: any, get: Atom.AtomContext) => boolean;
   /** The object as a file in its native format (e.g. `.md`, `.csv`). */
   save?: (object: any) => Effect$.Effect<ExportFile, ExportError>;
   /** The object as an HTML fragment, which the browser prints (or saves as PDF). */
