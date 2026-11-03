@@ -64,9 +64,6 @@ const HeaderValues = Schema.make<Schema.Codec<HeaderValues, any>>(
   SchemaAST.pick(Type.getSchema(Project.Project).ast, ['name', 'status', 'description', 'specs']),
 );
 
-// The name reads as the page's title with the status beside it, and the description as its first paragraph.
-const HEADER_LAYOUT = '<grid cols="4"><field name="name" span="3"/><field name="status"/></grid>';
-
 /** How many artifacts the overview shows before offering the rest. */
 const ARTIFACT_LIMIT = 6;
 
@@ -297,7 +294,8 @@ export const ProjectArticle = ({
   const fieldOverrides = useMemo<Record<string, FormFieldOverride>>(
     () => ({
       name: { hideLabel: true, appearance: 'title', placeholder: t('untitled-project.label') },
-      status: { hideLabel: true, placeholder: t('project-status.placeholder') },
+      // A project always has a status, so its pill offers no "None".
+      status: { required: true },
       description: { hideLabel: true, appearance: 'plain', placeholder: t('project-description.placeholder') },
       // The section heading names the list.
       specs: { hideLabel: true },
@@ -403,7 +401,14 @@ export const ProjectArticle = ({
             >
               <Form.Viewport scroll>
                 <Form.Content>
-                  <Form.Layout template={HEADER_LAYOUT} />
+                  {/* The name reads as the page's title with the status pill at its end, and the description as its
+                    first paragraph. */}
+                  <Layout.Flex align='center' gap='sm'>
+                    <Layout.Flex column grow>
+                      <Form.Fields include={['name']} />
+                    </Layout.Flex>
+                    <Form.Fields include={['status']} layout='pill' />
+                  </Layout.Flex>
                   <Form.Fields include={['description']} />
 
                   {/* Above Tasks: the outline is where work is drafted, the task set where it lands.

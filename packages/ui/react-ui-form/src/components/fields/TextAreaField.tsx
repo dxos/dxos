@@ -31,7 +31,7 @@ export const TextAreaField = ({
   return (
     <Input.Textarea
       autoResize
-      variant={appearance ? 'subdued' : 'default'}
+      variant={appearance ? 'plain' : 'default'}
       data-testid={jsonPath}
       disabled={!!readonly}
       placeholder={placeholder}

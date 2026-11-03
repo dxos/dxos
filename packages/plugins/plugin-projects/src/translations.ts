@@ -55,7 +55,6 @@ export const translations = [
         'agent-config.label': 'Agent',
         'skills.label': 'Skills',
         'project-description.placeholder': 'What is this project for?',
-        'project-status.placeholder': 'Status',
         'milestones.label': 'Milestones',
         'views.label': 'Views',
         'overview.label': 'Overview',

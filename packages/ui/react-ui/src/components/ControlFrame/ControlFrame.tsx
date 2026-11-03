@@ -8,7 +8,7 @@ import { recipes } from '../../recipes.ts';
 import { composable, composableProps } from '../../util/slots.ts';
 import { type CSSVariables } from '../Container/Container.tsx';
 
-export type ControlFrameVariant = 'default' | 'subdued' | 'mono' | 'title';
+export type ControlFrameVariant = 'default' | 'subdued' | 'mono' | 'plain' | 'title';
 
 export type ControlFrameProps = {
   'data-testid'?: string;
@@ -16,7 +16,10 @@ export type ControlFrameProps = {
   'start'?: ReactNode;
   /** Trailing content inside the frame (an Icon, a unit, or icon-only Buttons). */
   'end'?: ReactNode;
-  /** `subdued` drops the well; `mono` sets the frame's text in the monospace font; `title` reads as a page's title. */
+  /**
+   * `subdued` drops the well; `mono` sets the frame's text in the monospace font; `plain` drops the well and the inset,
+   * for text edited in place on a page; `title` is `plain` at the size of a page's title.
+   */
   'variant'?: ControlFrameVariant;
   /** Dims the frame, for content (an editor) that has no `disabled` state of its own. */
   'disabled'?: boolean;

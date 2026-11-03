@@ -322,7 +322,7 @@ const meta = {
         // Provides `RemoteProcessManager`, which Assistant's `AgentService` spec now requires — the
         // spec is pruned without it, so delegating a task fails with "Chat not found".
         RoutinePlugin.make(),
-        // Contributes the `#123` decoration (`project.repo` is what it resolves against), the link
+        // Contributes the `#123` decoration (the project's first repository is what it resolves against), the link
         // chips, and the resolver behind a chip's hover card; PreviewPlugin owns the popover and the
         // fixture source answers the resolver without the network.
         GitHubPlugin.make(),

@@ -156,10 +156,14 @@
   .dx-input[data-variant='subdued'] {
     background: transparent;
   }
-  /* A page's title edited in place: no well, and the title's size rather than the control's. */
+  /* Text edited in place on a page: no well and no inset, so it lines up with the page's headings. */
+  .dx-input:is([data-variant='title'], [data-variant='plain']) {
+    background: transparent;
+    padding-inline: 0;
+  }
+  /* A page's title edited in place, at the title's size rather than the control's. */
   .dx-input[data-variant='title'] {
     height: auto;
-    background: transparent;
     font-size: var(--text-xl);
     line-height: var(--text-xl--line-height);
     font-weight: 500;

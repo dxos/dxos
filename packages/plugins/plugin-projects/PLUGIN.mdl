@@ -64,8 +64,9 @@ feat F-4: A project's specs
 
 ```mdl
 feat F-5: A project's overview
-  req F-5.1: The overview opens on the project's name as its title, its status beside it and its description below,
-             each edited in place with no edit button.
+  req F-5.1: The overview opens on the project's name as its title, its status as a pill in the top right corner and
+             its description below, each edited in place with no edit button. The name and description start at the
+             same left edge as the section headings.
   req F-5.2: Below the header the sections are, in order: Notes, Artifacts, Milestones, Specs and Config.
   req F-5.3: Artifacts shows at most six, and Show all shows the rest.
   req F-5.4: Each milestone shows how many of its tasks are done out of those not cancelled.
@@ -1474,4 +1475,38 @@ decision D-131: A milestone's progress counts the tasks of the level the overvie
   for: user:wittjosiah
   affects: [F-5.4]
   why: The overview already narrows to its level, and its Tasks tab lists the same tasks.
+```
+
+```mdl
+decision D-132: The project's status is shown as a pill in the top right corner of the overview, using the form's pill presentation.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.1]
+```
+
+```mdl
+decision D-133: The project's name and description line up with the headings of the overview's sections (Notes, Artifacts, Specs).
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.1]
+```
+
+```mdl
+decision D-134: The status pill is required, so it offers no "None", and it sits at the end of the name's row. Supersedes the four-column row of [D-128]. Fills in [D-132].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.1]
+  why: A project always has a status, and the name takes the rest of the row so a long name never pushes the pill.
+```
+
+```mdl
+decision D-135: react-ui's Input and Textarea gain a `plain` variant with no well and no inline inset, and `title` drops the inset too; the form's `plain` and `title` appearances use them. Fills in [D-133].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.1]
+  why: The inset was what pushed the text right of the headings, and react-ui-form takes no classes of its own.
+  rejected:
+    - Insetting the section headings to match, which would misalign them with every other form.
 ```

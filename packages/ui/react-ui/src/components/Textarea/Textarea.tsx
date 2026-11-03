@@ -15,8 +15,8 @@ const MIN_ROWS = 3;
 export type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
   /** Grow with the content from `rows` lines (at least 3) instead of scrolling. */
   autoResize?: boolean;
-  /** `subdued` drops the well, as Input's. */
-  variant?: 'default' | 'subdued';
+  /** `subdued` drops the well, and `plain` the well and the inset, as Input's. */
+  variant?: 'default' | 'subdued' | 'plain';
 };
 
 /** Multi-line text at control width; inside a `Field.Root` it takes the field's id, label and description wiring. */
