@@ -16588,6 +16588,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/observability':
+        specifier: workspace:*
+        version: link:../../sdk/observability
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/compute/operation
@@ -16600,6 +16603,9 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
+      '@dxos/plugin-messenger':
+        specifier: workspace:*
+        version: link:../plugin-messenger
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../plugin-observability

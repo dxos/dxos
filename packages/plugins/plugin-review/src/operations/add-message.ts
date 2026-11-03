@@ -14,7 +14,7 @@ import { batchEvents } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { AnchoredTo, Message, Thread } from '@dxos/types';
+import { AnchoredTo, Message, Subscription, Thread } from '@dxos/types';
 
 import { AgentIdentity, CommentCapabilities, CommentOperation } from '#types';
 
@@ -83,6 +83,16 @@ const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = Comme
           messageId: message.id,
           messageLength: text.length,
         },
+      });
+
+      // A person who comments follows the object's comments from then on; an agent never does.
+      if (sender.identityDid && message.sender.role !== 'assistant') {
+        Subscription.add(subject, sender.identityDid);
+      }
+      yield* Operation.schedule(CommentOperation.SendNotifications, {
+        subject: Ref.make(subject),
+        thread: Ref.make(thread),
+        messageId: message.id,
       });
 
       // Gate the comment-thread agent. Identity is optional — if no capability

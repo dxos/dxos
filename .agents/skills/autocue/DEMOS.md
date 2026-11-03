@@ -1,3 +1,5 @@
+| [plugin-review/comment-notifications](../../../packages/plugins/plugin-review/autocue/comment-notifications.mjs) | Two people side by side: Bob follows a document with the bell, Alice's comment lands in his notifications, and his reply reaches her. | plugin-review QA-3 | — |
+
 # Autocue demos
 
 Every committed autocue flow, the `.mdl` test it was written from, and its published video when there is one.

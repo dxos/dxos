@@ -271,9 +271,36 @@ op Create
 op AddMessage
   key: org.dxos.operation.review.addMessage
   desc: |
-    Append a user message to a thread (promoting a staged draft to active). Evaluates the agent
-    trigger gate and schedules RespondToThread when it passes.
+    Append a user message to a thread (promoting a staged draft to active). Adds the sender to the
+    subject's `Subscription` annotation unless they have an entry, then schedules SendNotifications.
+    Evaluates the agent trigger gate and schedules RespondToThread when it passes.
   input: { subject: Obj.Any, anchor: AnchoredTo, sender: Actor, text: String }
+```
+
+```mdl
+op SendNotifications
+  key: org.dxos.operation.review.sendNotifications
+  desc: |
+    Send one comment to the subject's comment subscribers through `MessengerCapabilities.Sender`,
+    skipping its author, this identity, and DIDs that are not members of the space. Scheduled by
+    AddMessage; a no-op when plugin-messenger is not loaded.
+  input: { subject: Ref<Obj.Any>, thread: Ref<Thread>, messageId: ObjectId }
+  requires: [Capability.Service]
+  note: |
+    The inbox relay can read envelopes, so the message carries the subject's title and a 280-character
+    excerpt only when EDGE may already read the space (`contentCaptureAllowed`, true for every space
+    until E2E spaces exist); otherwise it says "New comment" and carries the ref alone. The one
+    attachment is the subject, named by its title under the same rule; the notifications panel opens
+    it. A failed send to one recipient is logged and skipped.
+```
+
+```mdl
+op SetSubscription
+  key: org.dxos.operation.review.setSubscription
+  desc: Subscribe the current identity to the subject's comments, or unsubscribe it.
+  input: { subject: Obj.Any, subscribed: boolean }
+  requires: [Capability.Service]
+  note: An unsubscribe is an entry with `kinds.comments: false`, kept so that commenting again does not undo it.
 ```
 
 ```mdl
@@ -369,7 +396,9 @@ component CommentsArticle
     comment threads (AnchoredTo query + in-memory drafts, scoped to the branch under review) AND the
     suggestion review cards (Suggestions), with per-author visibility toggle chips. Tabs switch
     unresolved / all. The current change (viewAspect.suggestion) is shared with the editor: clicking
-    a card reveals the change; clicking a change accents its card.
+    a card reveals the change; clicking a change accents its card. A bell in the toolbar
+    (`comments.subscription.toggle`, `aria-pressed` while subscribed) shows and sets the current
+    identity's comment subscription to the subject through SetSubscription.
   props:
     attendableId?: String
     subject: Obj.Any
@@ -578,6 +607,25 @@ feat F-7: Independence & testability
     storybook play executor (full plugin stack), so the tiers cannot drift.
 ```
 
+```mdl
+feat F-8: Comment subscriptions
+
+  req F-8.1: An object's subscribers MUST live in one `Subscription` annotation on the object
+    (`@dxos/types`), a map keyed by identity DID, written one key at a time so concurrent subscribers
+    merge. No object is created per subscriber.
+
+  req F-8.2: Commenting MUST subscribe the commenter to the subject's comments, unless they already have
+    an entry; an unsubscribe outlives later comments.
+
+  req F-8.3: Each comment MUST notify every comment subscriber except its author through the
+    notifications inbox, from the commenter's client; nothing is fired from EDGE.
+
+  req F-8.4: A notification from an E2E space, one whose plaintext EDGE may not read, MUST NOT
+    carry the subject's title or the comment's text.
+
+  req F-8.5: The Comments companion MUST let the current identity subscribe and unsubscribe by hand.
+```
+
 ## Acceptance
 
 Each DESIGN.md invariant names its enforcing test; the primary suites are:
@@ -708,6 +756,116 @@ test QA-1: Comment on a document, reply, and resolve
       expect: the thread no longer appears in the companion
 ```
 
+```mdl
+test QA-2: Commenting subscribes you, and the bell turns notifications off and on
+  desc: The subscription round trip for one identity. A comment subscribes its author, the bell
+    unsubscribes them, a later comment leaves the unsubscribe in place, and the bell subscribes again.
+  actors: agent
+  covers: [F-8.1, F-8.2, F-8.5]
+  status: unverified
+  given:
+    - identity: an identity exists, its Actor used as the comment `sender`
+    - space: a space is open
+    - collection: a collection in that space, to create into
+    - doc: a Markdown document named "QA Subscriptions Doc" exists in the collection, open in a plank
+      with its Comments companion showing
+    - the document has no `org.dxos.annotation.subscription` annotation and no comment thread — ABORT
+      rather than reusing one this test did not create
+  steps:
+    - name: Comment on the document
+      do: Click + in the Comments companion, type "QA: first $runId" and press Enter.
+      invoke: org.dxos.operation.review.create { subject: $given.doc, name: "QA: first $runId", text: "QA: first $runId", sender: $given.identity }
+      capture: first
+      expect: the comment appears in the companion, and the bell in its toolbar shows as on
+      assert: |
+        const { Obj, client } = window.__DXOS__;
+        const did = client.halo.identity.get().did;
+        const entry = Obj.getMeta($given.doc).annotations['org.dxos.annotation.subscription']?.[did];
+        const bell = document.querySelector('[data-testid="comments.subscription.toggle"]');
+        return !!entry && entry.kinds?.comments !== false && bell?.getAttribute('aria-pressed') === 'true';
+
+    - name: Turn notifications off
+      do: Click the bell in the Comments companion toolbar.
+      invoke: org.dxos.operation.review.setSubscription { subject: $given.doc, subscribed: false }
+      expect: the bell shows crossed out
+      assert: |
+        const { Obj, client } = window.__DXOS__;
+        const did = client.halo.identity.get().did;
+        const entry = Obj.getMeta($given.doc).annotations['org.dxos.annotation.subscription']?.[did];
+        const bell = document.querySelector('[data-testid="comments.subscription.toggle"]');
+        return entry?.kinds?.comments === false && bell?.getAttribute('aria-pressed') === 'false';
+
+    - name: Comment again
+      do: Click + in the Comments companion, type "QA: second $runId" and press Enter.
+      invoke: org.dxos.operation.review.create { subject: $given.doc, name: "QA: second $runId", text: "QA: second $runId", sender: $given.identity }
+      capture: second
+      expect: the second comment appears, and the bell stays crossed out
+      assert: |
+        const { Obj, client } = window.__DXOS__;
+        const did = client.halo.identity.get().did;
+        return Obj.getMeta($given.doc).annotations['org.dxos.annotation.subscription']?.[did]?.kinds?.comments === false;
+
+    - name: Turn notifications back on
+      do: Click the bell again.
+      invoke: org.dxos.operation.review.setSubscription { subject: $given.doc, subscribed: true }
+      expect: the bell shows as on
+      assert: |
+        const bell = document.querySelector('[data-testid="comments.subscription.toggle"]');
+        return bell?.getAttribute('aria-pressed') === 'true';
+  after:
+    - name: Delete the first thread
+      do: Right-click the first thread and choose Delete.
+      invoke: org.dxos.operation.review.delete { anchor: Obj("echo://$given.space.id/$first.anchorId"), subject: $given.doc, thread: Obj("echo://$given.space.id/$first.threadId") }
+      expect: the thread no longer appears in the companion
+    - name: Delete the second thread
+      do: Right-click the second thread and choose Delete.
+      invoke: org.dxos.operation.review.delete { anchor: Obj("echo://$given.space.id/$second.anchorId"), subject: $given.doc, thread: Obj("echo://$given.space.id/$second.threadId") }
+      expect: the thread no longer appears in the companion
+```
+
+```mdl
+test QA-3: A comment reaches the other subscribers' notifications
+  desc: Two people share a space. Bob follows a document with the bell, Alice comments on it, and the
+    comment arrives in Bob's notifications panel. Bob replies in the thread, and because commenting
+    subscribed Alice, his reply reaches her.
+  actors: human
+  covers: [F-8.2, F-8.3, F-8.5]
+  status: passing           # 2026-11-03, recorded by autocue/comment-notifications.mjs against EDGE preview
+  given:
+    - two people, Alice and Bob, each in their own Composer with their own identity and a display name
+    - space: a space both are members of, through an invitation, which replicates through EDGE
+    - doc: a Markdown document in that space titled "Requirements", open in both people's decks
+  steps:
+    - name: Bob follows the document
+      do: As Bob, open the document's Comments companion and click the bell.
+      expect: Bob's bell shows as on
+      note: Runs in Bob's Composer; the agent port reaches one app, so this test is driven by a person
+        or by the side-by-side autocue flow.
+
+    - name: Alice comments
+      do: As Alice, select a phrase in the document, click the comment button, type "Should this cover
+        JMAP too?" and press Enter.
+      expect: the comment appears in Alice's Comments companion, and her bell shows as on without her
+        clicking it
+
+    - name: Bob is notified
+      do: As Bob, open the notifications companion.
+      expect: the badge on Bob's notifications tab went up by one, and the panel holds an unread
+        notification titled "Requirements" from Alice that reads "Should this cover JMAP too?"
+
+    - name: Bob opens the notification
+      do: Click the notification.
+      expect: the notification is marked read, and Bob's deck shows the document
+
+    - name: Bob replies, and Alice is notified
+      do: As Bob, reply "Yes, both IMAP and JMAP." in the thread. As Alice, open the notifications
+        companion.
+      expect: Alice's panel holds a notification from Bob titled "Requirements" that reads "Yes, both
+        IMAP and JMAP."
+  then:
+    - Neither person is notified about their own comment.
+```
+
 ## Changelog
 
 ```mdl
@@ -729,4 +887,18 @@ decision D-3: While an agent turn runs the thread shows a pending reply in the a
   date: 2026-10-25
   by: user:richburdon
   affects: [RespondToThread, F-6.2]
+```
+
+```mdl
+decision D-4: Comments notify an object's subscribers. Subscribers live in one `Subscription` annotation on the object (`@dxos/types`), not an object per subscriber; commenting subscribes you; each comment notifies everyone else listed through the messenger inbox. v1 is comments only and fires from the commenter's client, with the behaviour in this plugin.
+  date: 2026-11-02
+  by: user:wittjosiah
+  affects: [F-8, AddMessage, SendNotifications, SetSubscription]
+```
+
+```mdl
+decision D-5: An unsubscribe is kept as an entry with `comments: false`, so commenting again does not re-subscribe; a notification from an E2E space carries only the ref and "New comment", since inbox envelopes are signed but not encrypted. Whether EDGE may read a space is `contentCaptureAllowed`, not the device's EDGE replication preference, which a joined space does not get until the next start.
+  date: 2026-11-03
+  by: agent:claude-code
+  affects: [F-8.2, F-8.4, SendNotifications]
 ```

@@ -58,6 +58,8 @@ export const translations = [
         'no-comments.message': 'Select text and click <commentIcon></commentIcon> in the toolbar to create a comment.',
         'no-comments-unanchored.message': 'Click <addIcon></addIcon> to add a comment.',
         'add-object-comment.label': 'Add comment',
+        'subscribe-comments.label': 'Notify me of comments',
+        'unsubscribe-comments.label': 'Stop notifying me of comments',
         'comments.label': 'Comments',
         'show-unresolved.label': 'Active comments',
         'show-all.label': 'All comments',
