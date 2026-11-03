@@ -326,7 +326,7 @@ export class EchoClient extends Resource {
       throw err;
     }
 
-    if (!db.isOpen) {
+    if (db.isClosing) {
       return undefined;
     }
 
@@ -363,7 +363,7 @@ export class EchoClient extends Resource {
       const settle = () => {
         stop();
         // A close releases the space root handle, which `getObjectDocumentId` asserts on.
-        resolve(db.isOpen ? db.getObjectDocumentId(objectId) : undefined);
+        resolve(db.isClosing ? undefined : db.getObjectDocumentId(objectId));
       };
       // Links reach a loaded root by its change events and a passive one by its JSON; both report here.
       const unsubscribeFromLinks = db.linksAdded.on((added) => {

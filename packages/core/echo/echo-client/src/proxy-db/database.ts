@@ -478,6 +478,14 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._entityManager.lifetimeEnded;
   }
 
+  /**
+   * Whether a close has begun. Distinct from `isOpen`, which is also false while `_open` runs — and
+   * the preload query it awaits reaches the working set through this database.
+   */
+  get isClosing(): boolean {
+    return this._entityManager.isClosing;
+  }
+
   // ── Resource lifecycle ──────────────────────────────────────────────────
 
   @synchronized
