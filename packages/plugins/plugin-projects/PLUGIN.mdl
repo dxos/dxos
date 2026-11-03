@@ -1573,3 +1573,10 @@ decision D-142: react-ui-form's field override takes `appearance: 'section'` for
   rejected:
     - The add button in a section's actions, written by the plugin, which would duplicate how the form creates an owned object.
 ```
+
+```mdl
+decision D-143: The overview's Notes section shows no description; once the notes have content it only takes up space.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.2]
+```

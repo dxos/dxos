@@ -44,6 +44,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as Splitter from '@dxos/react-ui/Splitter';
 import * as Status from '@dxos/react-ui/Status';
 import * as Tabs from '@dxos/react-ui/Tabs';
+import * as Typography from '@dxos/react-ui/Typography';
 import { type Milestone, Task, type TaskSet } from '@dxos/types';
 
 import { ObjectGallery, ProjectPipeline } from '#components';
@@ -415,7 +416,7 @@ export const ProjectArticle = ({
                     `taskSet` rides along so promoting an item files it into THIS project's ledger
                     rather than into a set owned by the outline. */}
                   {outline && (
-                    <Form.FieldSet label={t('outline.label')} description={t('outline.description')}>
+                    <Form.FieldSet label={t('outline.label')}>
                       <Surface.Surface
                         type={AppSurface.Section}
                         data={{ subject: outline, attendableId, taskSet }}
@@ -742,9 +743,9 @@ const MilestoneRow = ({
       {progress.total > 0 && (
         <Layout.Flex gap='sm' align='center' classNames='ms-auto shrink-0'>
           <Status.Progress value={progress.ratio} classNames='w-20' />
-          <span className='text-fg-subtle text-sm tabular-nums'>
+          <Typography.Text tone='subtle' classNames='tabular-nums'>
             {progress.done}/{progress.total}
-          </span>
+          </Typography.Text>
         </Layout.Flex>
       )}
     </Layout.Flex>
