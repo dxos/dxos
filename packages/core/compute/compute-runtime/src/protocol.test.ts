@@ -405,7 +405,7 @@ describe('object references in the input', () => {
     ),
   );
 
-  test.fails('loads a referenced object where the schema takes a live one', async ({ expect }) => {
+  test('loads a referenced object where the schema takes a live one', async ({ expect }) => {
     const { peer, services } = await openPeer();
     const db = await peer.createDatabase();
     db.graph.registry.add([Note]);
