@@ -24,6 +24,7 @@ import type { FunctionProtocol, PluginProtocol } from '@dxos/protocols';
 
 import * as PluginActivation from './PluginActivation.ts';
 import * as PluginCatalog from './PluginCatalog.ts';
+import * as TypeSource from './TypeSource.ts';
 
 export class OperationNotFoundError extends BaseError.extend('OperationNotFoundError', 'Operation not found') {}
 
@@ -98,6 +99,7 @@ export const make = (makePlugins: () => PluginActivation.Plugins, options: Optio
       // Registering types needs a database, which exists only for a space-scoped invocation.
       types: spaceId === undefined ? undefined : [...activation.registeredTypes],
       toolkits: [...activation.toolkits],
+      typeSource: env.TYPE_REGISTRY === undefined ? undefined : TypeSource.fromRegistry(env.TYPE_REGISTRY),
     });
 
     // The in-process rpc clients bridged onto the bindings live for one invocation.
