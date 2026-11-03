@@ -38,8 +38,8 @@ export type FormFieldOverride = {
   label?: string;
   /** Draw no label: the control names itself, or the section heading above it already does. */
   hideLabel?: boolean;
-  /** Read the field as part of the page rather than a form row; see {@link FormFieldAppearance}. */
-  appearance?: FormFieldAppearance;
+  /** This field's presentation in place of the form's `layout`, such as a `title` or a `section`. */
+  presentation?: FormPresentation;
   description?: string;
   placeholder?: string;
   /** The field's glyph, shown where its value has none of its own (an unset pill, an option without an icon). */
@@ -70,21 +70,18 @@ export type FormFieldAction = {
 };
 
 /**
- * How a field reads as part of a page. A text control edited in place reads as the page's heading (`title`) or as body
- * text (`plain`), with no well until it is focused. An array reads as a `section` of its own: its label is the section
- * heading, with the add button on the heading's row.
- */
-export type FormFieldAppearance = 'title' | 'plain' | 'section';
-
-/**
  * FormPresentation mode.
  * - full: Show label, control, and status.
  * - compact: Show label and control.
  * - inline: Control only.
  * - static: Plain DOM; omit all undefined values.
  * - pill: Control only, as an outlined pill sized to its value, for a wrapping row of fields.
+ * - title: A text control only, edited in place as the page's heading, with no well until it is focused.
+ * - plain: A text control only, edited in place as body text, with no well until it is focused.
+ * - section: An array as a section of its own, its label the heading and its add button on the heading's row; other
+ *   fields show as `compact`.
  */
-export type FormPresentation = 'full' | 'compact' | 'inline' | 'static' | 'pill';
+export type FormPresentation = 'full' | 'compact' | 'inline' | 'static' | 'pill' | 'title' | 'plain' | 'section';
 
 /** When a typed value commits: as each value parses, or only on blur and Enter. */
 export type CommitOn = 'change' | 'blur';
@@ -127,8 +124,6 @@ export type FormFieldRendererProps<T = any> = {
   autoFocus?: boolean;
   /** Presentation mode for the field (full/compact/inline/static); see {@link FormPresentation}. */
   presentation?: FormPresentation;
-  /** From the caller's override; see {@link FormFieldAppearance}. */
-  appearance?: FormFieldAppearance;
   action?: FormFieldAction;
   /** Whether the field is required AND still unfilled; surfaces a trailing asterisk on the label. */
   required?: boolean;

@@ -17,14 +17,13 @@ export const TextAreaField = ({
   readonly,
   placeholder,
   presentation,
-  appearance,
   jsonPath,
   getValue,
   onValueChange,
   onBlur,
 }: FormFieldRendererProps<string>) => {
   const value = getValue() ?? '';
-  const inPlace = appearance === 'title' || appearance === 'plain';
+  const inPlace = presentation === 'title' || presentation === 'plain';
   if (presentationFor(presentation).isStatic) {
     return <FormStaticValue value={value} format={format} />;
   }

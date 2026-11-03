@@ -304,12 +304,12 @@ export const ProjectArticle = ({
   const handleCreate = useCreateObject(db);
   const fieldOverrides = useMemo<Record<string, FormFieldOverride>>(
     () => ({
-      name: { hideLabel: true, appearance: 'title', placeholder: t('untitled-project.label') },
+      name: { presentation: 'title', placeholder: t('untitled-project.label') },
       // A project always has a status, so its pill offers no "None".
       status: { required: true },
-      description: { hideLabel: true, appearance: 'plain', placeholder: t('project-description.placeholder') },
+      description: { presentation: 'plain', placeholder: t('project-description.placeholder') },
       // The list is a section of its own, its add button on the heading's row.
-      specs: { appearance: 'section', label: t('specs.label') },
+      specs: { presentation: 'section', label: t('specs.label') },
     }),
     [t],
   );

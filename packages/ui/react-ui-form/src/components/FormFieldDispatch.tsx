@@ -121,6 +121,8 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
   );
   const label = override?.hideLabel ? '' : accessibleLabel;
   const readonly = override?.readonly ?? readonlyProp;
+  // The override's presentation applies to this field alone; nested fields keep the form's layout.
+  const presentation = override?.presentation ?? layout;
   const required = override?.required ?? requiredProp;
   // A settings row shows its description beside the control, so the description never doubles as the placeholder.
   const placeholder = useMemo(
@@ -148,8 +150,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
       ? (override?.placeholder ?? t('indeterminate.placeholder'))
       : (override?.placeholder ?? placeholder),
     icon: override?.icon,
-    presentation: layout,
-    appearance: override?.appearance,
+    presentation,
     action: override?.action,
     required,
     indeterminate,
@@ -160,7 +161,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     ...fieldState,
   };
 
-  if (override?.hidden || ((readonly || layout === 'static') && hideEmpty && fieldState.getValue() == null)) {
+  if (override?.hidden || ((readonly || presentation === 'static') && hideEmpty && fieldState.getValue() == null)) {
     return null;
   }
 
@@ -200,7 +201,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
         fieldProps={fieldState}
         label={accessibleLabel}
         hideLabel={override?.hideLabel}
-        section={override?.appearance === 'section'}
+        section={presentation === 'section'}
         {...props}
       />
     );
@@ -269,7 +270,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     indeterminate,
     required: fieldProps.required,
     readonly,
-    presentation: layout,
+    presentation,
   };
   const scalar = resolution.kind === 'scalar' ? scalarField(resolution.scalar) : undefined;
   return (

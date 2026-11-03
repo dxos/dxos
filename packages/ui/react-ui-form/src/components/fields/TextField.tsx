@@ -20,7 +20,6 @@ export const TextField = ({
   readonly,
   placeholder,
   presentation,
-  appearance,
   action,
   autoFocus,
   jsonPath,
@@ -80,7 +79,7 @@ export const TextField = ({
           />
         )
       }
-      {...((appearance === 'title' || appearance === 'plain') && { variant: appearance })}
+      {...((presentation === 'title' || presentation === 'plain') && { variant: presentation })}
       {...(key && { variant: 'mono', spellCheck: false, autoCorrect: 'off', autoCapitalize: 'none' })}
     />
   );

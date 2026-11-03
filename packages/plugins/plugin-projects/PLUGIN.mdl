@@ -1915,3 +1915,19 @@ decision D-182: A config field has an `order`, and a group's fields sort by it, 
   affects: [F-5.6]
   why: Contribution order follows plugin load order, which would put plugin-claude's code folder above plugin-code's repositories in Software.
 ```
+
+```mdl
+decision D-183: react-ui-form's field `appearance` folds into its presentation. `title`, `plain` and `section` are presentations, a field override takes a `presentation` of its own in place of the form's layout, and `title` and `plain` hide the field's label, so the overview's name and description no longer hide theirs separately. Replaces the `appearance` of [D-163], [D-170] and [D-177].
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.1]
+```
+
+```mdl
+decision D-184: An override's presentation applies to its field alone, so an object's or an array's nested fields keep the form's layout. `section` on a field other than an array shows it as `compact`. Fills in [D-183].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.1]
+  why: An array shown as a section holds rows that are ordinary fields, and a section has no meaning for a scalar, whose label and control `compact` already show.
+```
