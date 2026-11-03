@@ -99,24 +99,19 @@ export const session = (url: string): Effect.Effect<RpcStub<Protocol.PublicApi>,
   );
 
 /** Signs in with a username and password, returning the session token `authenticate()` takes later. */
-export const login = ({
-  url,
-  username,
-  password,
-}: {
+export const login: (credentials: {
   url: string;
   username: string;
   password: string;
-}): Effect.Effect<string, CloudflareOsError> =>
-  Effect.gen(function* () {
-    const api = yield* session(url);
-    const passwordHash = yield* hashPassword(username, password);
-    const token = yield* call('Cloudflare OS refused the sign-in.', () => api.login(username, passwordHash));
-    if (!token) {
-      return yield* Effect.fail(new CloudflareOsError({ message: 'Wrong username or password.' }));
-    }
-    return token;
-  }).pipe(Effect.scoped);
+}) => Effect.Effect<string, CloudflareOsError> = Effect.fnUntraced(function* ({ url, username, password }) {
+  const api = yield* session(url);
+  const passwordHash = yield* hashPassword(username, password);
+  const token = yield* call('Cloudflare OS refused the sign-in.', () => api.login(username, passwordHash));
+  if (!token) {
+    return yield* Effect.fail(new CloudflareOsError({ message: 'Wrong username or password.' }));
+  }
+  return token;
+}, Effect.scoped);
 
 /** An authenticated session for a stored session token, closed with the scope. */
 export const authenticate = ({
