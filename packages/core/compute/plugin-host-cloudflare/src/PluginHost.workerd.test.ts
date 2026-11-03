@@ -19,8 +19,8 @@ import {
   Inspect,
   InspectEvent,
   TEST_PLUGIN_KEY,
-  TestPlugin,
   TestFailure,
+  TestPlugin,
   TestSkill,
 } from './testing/index.ts';
 
@@ -95,7 +95,7 @@ describe('PluginHost', () => {
   });
 
   // A tool error reads the same whichever routing ran the operation (operation-service rethrows `ErrorCodec`'s form).
-  test.fails("returns the handler's error encoded as operation-service sends it", async ({ expect }) => {
+  test("returns the handler's error encoded as operation-service sends it", async ({ expect }) => {
     const result = await makeHost().invoke({ operationKey: String(Fails.meta.key), input: {} }, {});
     expect(result.ok).toBe(false);
     const expected = ErrorCodec.encode(new TestFailure({ context: { uri: 'echo:///missing' } }));

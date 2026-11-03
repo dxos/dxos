@@ -21,7 +21,7 @@ import { BaseError, messageOf } from '@dxos/errors';
 import { ServiceContainer, createFunctionContext } from '@dxos/functions-runtime-cloudflare';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type FunctionProtocol, PluginProtocol } from '@dxos/protocols';
+import { ErrorCodec, type FunctionProtocol, PluginProtocol } from '@dxos/protocols';
 
 import * as HostServices from './HostServices.ts';
 import * as Output from './Output.ts';
@@ -149,6 +149,8 @@ export const make = (makePlugins: () => PluginActivation.Plugins, options: Optio
       types: spaceId === undefined ? undefined : [...activation.registeredTypes],
       toolkits: [...activation.toolkits],
       typeSource: env.TYPE_REGISTRY === undefined ? undefined : TypeSource.fromRegistry(env.TYPE_REGISTRY),
+      // Another bundle's nested call passes the objects it holds by reference.
+      resolveObjectReferences: true,
     });
 
     if (!callerOwnsEnvelopes) {
@@ -202,7 +204,7 @@ const toFailure = (error: unknown): PluginProtocol.Failure => ({
         ? 'invalid-request'
         : 'failed',
   message: messageOf(error) ?? String(error),
-  ...(error instanceof Error ? { name: error.name, stack: error.stack } : {}),
+  ...(error instanceof Error ? { name: error.name, stack: error.stack, encoded: ErrorCodec.encode(error) } : {}),
 });
 
 /**

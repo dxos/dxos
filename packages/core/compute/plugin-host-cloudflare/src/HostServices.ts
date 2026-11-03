@@ -6,13 +6,16 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import * as Operation from '@dxos/compute/Operation';
+import { Database, Entity, Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
-import { DXN, EntityId, type SpaceId } from '@dxos/keys';
+import { DXN, EntityId, type SpaceId, URI } from '@dxos/keys';
+import { ErrorCodec } from '@dxos/protocols';
 import type { PluginProtocol } from '@dxos/protocols';
 
 import * as Output from './Output.ts';
@@ -164,13 +167,58 @@ export const makeOperations = ({
       // TEST-ONLY: a child seed drawn from the seeded stream keeps the whole call tree reproducible.
       ...(idSeed === undefined ? {} : { idSeed: { time: idSeed.time, seed: childSeed(EntityId.random()) } }),
     };
-    return Effect.promise(() => host.invoke(bareKey(String(op.meta.key)), Output.encode(input), nested)).pipe(
+    return Effect.promise(async () => host.invoke(bareKey(String(op.meta.key)), await byReference(input), nested)).pipe(
       Effect.flatMap((result) =>
         result.ok
-          ? Effect.succeed(result.output)
-          : Effect.die(new Error(`${String(op.meta.key)} failed on EDGE: ${result.error.message}`)),
+          ? Effect.promise(() => loadEntities(result.output))
+          : // The callee's own error, as operation-service would have raised it.
+            Effect.die(
+              result.error.encoded === undefined
+                ? new Error(`${String(op.meta.key)} failed on EDGE: ${result.error.message}`)
+                : ErrorCodec.decode(result.error.encoded),
+            ),
       ),
     );
+  };
+
+  /**
+   * The invocation's database, where another bundle's call finds the objects this one passes it; undefined outside a
+   * space, where `Database.notAvailable` throws on access.
+   */
+  const databaseOf = (): Database.Database | undefined => {
+    const service = Option.getOrUndefined(Context.getOption(context, Database.Service));
+    try {
+      return service?.db;
+    } catch {
+      return undefined;
+    }
+  };
+
+  /**
+   * The input with every entity as a reference: one this invocation has not added yet is added and flushed first, so
+   * the callee loads the graph it heads, as an in-process call would receive it.
+   */
+  const byReference = async (input: unknown): Promise<unknown> => {
+    const database = databaseOf();
+    if (database === undefined) {
+      return Output.encode(input);
+    }
+    const unsaved = collectEntities(input).filter((entity) => Obj.getDatabase(entity) === undefined);
+    if (unsaved.length > 0) {
+      for (const entity of unsaved) {
+        database.add(entity);
+      }
+      await database.flush();
+    }
+    return Output.encode(input, { entities: 'reference' });
+  };
+
+  /** The output with every entity's JSON form replaced by the object, loaded from this invocation's database. */
+  const loadEntities = async (output: unknown): Promise<unknown> => {
+    const database = databaseOf();
+    return database === undefined
+      ? output
+      : Output.decodeEntities(output, (uri) => database.makeRef(URI.make(uri)).load());
   };
 
   /** The output of a local run is the handler's value; of a remote one its encoded form, decoded here. */
@@ -222,4 +270,20 @@ const childSeed = (id: string): number => {
     hash = Math.imul(hash, 16777619);
   }
   return hash >>> 0;
+};
+
+/** Every entity in plain objects and arrays, outermost first. */
+const collectEntities = (value: unknown, seen = new WeakSet<object>()): Entity.Unknown[] => {
+  if (Entity.isEntity(value)) {
+    return [value];
+  }
+  if (value === null || typeof value !== 'object' || seen.has(value)) {
+    return [];
+  }
+  seen.add(value);
+  const prototype = Object.getPrototypeOf(value);
+  if (!Array.isArray(value) && prototype !== Object.prototype && prototype !== null) {
+    return [];
+  }
+  return Object.values(value).flatMap((entry) => collectEntities(entry, seen));
 };
