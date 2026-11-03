@@ -50,6 +50,12 @@ type DatabaseResolution = { readonly entity?: Entity.Unknown; readonly indexed: 
 /**
  * Manages cross-space database interactions.
  */
+/**
+ * Resolves a type the registry and the spaces do not hold, e.g. from a remote registry of published types.
+ * Called with the type's URI (a typename DXN); returns undefined when the source does not know it.
+ */
+export type TypeSource = (uri: URI.URI) => Promise<Type.AnyEntity | undefined>;
+
 export class HypergraphImpl implements Hypergraph.Hypergraph {
   private readonly _databases = new Map<SpaceId, DatabaseImpl>();
 
@@ -80,7 +86,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
   /** Malformed `echo:` URIs already warned about; a ref is read on every render, so one warning each. */
   readonly #reportedMalformedUris = new Set<string>();
-  #typeSources: Hypergraph.TypeSource[] = [];
+  #typeSources: TypeSource[] = [];
 
   constructor() {
     this._registry = makeRegistry();
@@ -577,7 +583,12 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     return this._resolveObjectInSpaceFeeds(spaceId, entityId);
   }
 
-  registerTypeSource(source: Hypergraph.TypeSource): CleanupFn {
+  /**
+   * Registers a source that type resolution consults after the registry and the spaces; a type it returns is added to
+   * the registry, so it is fetched once.
+   * @returns A cleanup function that unregisters the source.
+   */
+  registerTypeSource(source: TypeSource): CleanupFn {
     this.#typeSources.push(source);
     return () => {
       this.#typeSources = this.#typeSources.filter((entry) => entry !== source);

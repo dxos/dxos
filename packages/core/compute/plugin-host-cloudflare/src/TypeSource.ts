@@ -6,7 +6,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Entity, type Hypergraph, JsonSchema, Obj, Type } from '@dxos/echo';
+import { type FunctionWrappingOptions } from '@dxos/compute-runtime';
+import { Entity, JsonSchema, Obj, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import type { PluginProtocol } from '@dxos/protocols';
 
@@ -15,7 +16,7 @@ import type { PluginProtocol } from '@dxos/protocols';
  * looked up there and rebuilt from the JSON Schema the contributing bundle's catalog carries.
  */
 export const fromRegistry =
-  (registry: PluginProtocol.TypeRegistry): Hypergraph.TypeSource =>
+  (registry: PluginProtocol.TypeRegistry): NonNullable<FunctionWrappingOptions['typeSource']> =>
   async (uri) => {
     if (!DXN.isDXN(uri)) {
       return undefined;

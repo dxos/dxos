@@ -16,7 +16,6 @@ import type * as Entity from './Entity.ts';
 import type * as Key from './Key.ts';
 import type * as Ref from './Ref.ts';
 import type * as Registry from './Registry.ts';
-import type * as Type from './Type.ts';
 
 /**
  * Resolution context.
@@ -42,12 +41,6 @@ export interface RefResolverOptions {
    */
   context?: RefResolutionContext;
 }
-
-/**
- * Resolves a type the registry and the spaces do not hold, e.g. from a remote registry of published types.
- * Called with the type's URI (a typename DXN); returns undefined when the source does not know it.
- */
-export type TypeSource = (uri: URI.URI) => Promise<Type.AnyEntity | undefined>;
 
 /**
  * Manages cross-space database interactions.
@@ -113,15 +106,6 @@ export interface Hypergraph extends Database.Queryable {
    * reflects the most recent `registerBlobBackend(name, backend, { default: true })` call.
    */
   get defaultBlobStorage(): string;
-
-  /**
-   * Registers a source that type resolution consults after the registry and the spaces; a type it returns is added to
-   * the registry, so it is fetched once.
-   * @returns A cleanup function that unregisters the source.
-   *
-   * @performance O(1).
-   */
-  registerTypeSource(source: TypeSource): CleanupFn;
 }
 
 /**

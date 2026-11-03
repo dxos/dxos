@@ -6,7 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { Database, DXN, type Hypergraph, JsonSchema, Obj, Type } from '@dxos/echo';
+import { Database, DXN, JsonSchema, Obj, Type } from '@dxos/echo';
+import { type TypeSource } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { PublicKey, type URI } from '@dxos/keys';
@@ -24,7 +25,7 @@ const remoteJsonSchema = JsonSchema.toJsonSchema(Remote);
 /** An async registry that counts its lookups, standing in for EDGE's registry of published types. */
 const makeMockRegistry = (options: { fail?: boolean } = {}) => {
   const requests: string[] = [];
-  const source: Hypergraph.TypeSource = async (uri: URI.URI) => {
+  const source: TypeSource = async (uri: URI.URI) => {
     requests.push(uri);
     await new Promise((resolve) => setTimeout(resolve, 5));
     if (options.fail) {

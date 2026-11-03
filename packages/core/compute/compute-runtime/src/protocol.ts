@@ -19,7 +19,7 @@ import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, Hypergraph, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
-import { type DatabaseImpl, EchoClient, makeRegistry } from '@dxos/echo-client';
+import { type DatabaseImpl, EchoClient, type TypeSource, makeRegistry } from '@dxos/echo-client';
 import { refFromEncodedReference } from '@dxos/echo/internal';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
@@ -71,7 +71,7 @@ export interface FunctionWrappingOptions {
   /**
    * Resolves a type the database's registry and space do not hold, e.g. from EDGE's registry of published types.
    */
-  typeSource?: Hypergraph.TypeSource;
+  typeSource?: TypeSource;
 }
 
 /**

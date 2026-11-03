@@ -136,8 +136,4 @@ export class SqliteHypergraph implements Hypergraph.Hypergraph {
   registerBlobBackend(): CleanupFn {
     throw new UnsupportedOperationError('registerBlobBackend');
   }
-
-  registerTypeSource(): CleanupFn {
-    throw new UnsupportedOperationError('registerTypeSource');
-  }
 }
