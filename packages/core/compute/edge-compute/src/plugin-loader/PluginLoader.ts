@@ -207,6 +207,8 @@ export const workerCode = async (files: Files): Promise<WorkerCode> => {
   const main = [
     "import { WorkerEntrypoint } from 'cloudflare:workers';",
     'let host;',
+    // A host that predates versioning exports no `PROTOCOL_VERSION`.
+    'let protocolVersion;',
     // Imported inside a request: module evaluation runs in global scope, where workerd disallows timers.
     'const getHost = async () => {',
     '  if (host === undefined) {',
@@ -215,6 +217,7 @@ export const workerCode = async (files: Files): Promise<WorkerCode> => {
       ? `    throw new Error(${JSON.stringify(`vendor/ does not provide ${HOST_SPECIFIER}, which EDGE starts the plugin with.`)});`
       : `    const { PluginHost } = await import('./${host}');`,
     `    const plugin = ${plugin};`,
+    '    protocolVersion = PluginHost.PROTOCOL_VERSION ?? 1;',
     '    host ??= PluginHost.make(() => ({ primary: PluginHost.fromManifest(plugin.manifest, plugin.loaders) }));',
     '  }',
     '  return host;',
@@ -229,6 +232,11 @@ export const workerCode = async (files: Files): Promise<WorkerCode> => {
     '    }',
     '  }',
     '  async invoke(request, scope) { return (await getHost()).invoke(request, this.env, scope); }',
+    // Starting the host does not activate the plugin: that happens on the first describe or invoke.
+    '  async protocolVersion() {',
+    '    await getHost();',
+    '    return protocolVersion;',
+    '  }',
     '}',
   ].join('\n');
   return {

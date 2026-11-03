@@ -56,7 +56,7 @@ describe('PluginHost', () => {
   });
 
   // EDGE speaks to a bundle at the version of the host it was published with (EDGE-PLUGINS F-6.9).
-  test.fails('reports the protocol version it speaks', async ({ expect }) => {
+  test('reports the protocol version it speaks', async ({ expect }) => {
     expect((await makeHost().describe()).protocolVersion).toBe(PluginProtocol.PROTOCOL_VERSION);
   });
 

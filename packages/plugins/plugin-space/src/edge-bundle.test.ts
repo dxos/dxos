@@ -127,7 +127,7 @@ describe('space plugin bundle on EDGE', { timeout: 180_000 }, () => {
   });
 
   // EDGE speaks to a bundle at the version of the host it was published with (EDGE-PLUGINS F-6.9).
-  test.fails('reports the protocol version of its vendored host', async ({ expect }) => {
+  test('reports the protocol version of its vendored host', async ({ expect }) => {
     expect(await bundle.protocolVersion()).toBe(PluginProtocol.PROTOCOL_VERSION);
   });
 

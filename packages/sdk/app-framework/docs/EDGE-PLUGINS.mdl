@@ -183,8 +183,9 @@ there is no HTTP protocol.
 
 ```ts
 interface Entrypoint {
-  describe(): Promise<Catalog>; // { plugin, operations, skills, types, failures }
+  describe(): Promise<Catalog>; // { plugin, operations, skills, types, failures, protocolVersion }
   invoke(request: InvokeRequest, scope?: InvocationScope): Promise<InvokeResult>;
+  protocolVersion(): Promise<number>; // the vendored host's PROTOCOL_VERSION, 1 before versioning
 }
 
 type InvokeRequest = { operationKey: string; input?: unknown; spaceId?: string };
@@ -715,6 +716,12 @@ feat F-6: compute-service routes invocations to published plugins
 
   req F-6.8: The KV operation catalog is rebuilt from bundle catalogs on every upload or revoke, not
     by a cron that activates plugins.
+
+  req F-6.9: A bundle keeps the host it was published with, so PluginRouter asks each bundle its
+    protocol version (`Entrypoint.protocolVersion`, answered by the loader's main module from the
+    vendored host, 1 when the host predates versioning) and speaks that version: a scope trimmed to
+    the fields the host reads (`PluginProtocol.scopeFor`), and operation-service for a bundle whose
+    version it cannot serve (`PluginProtocol.isSupported`). The catalog records the version too.
 ```
 
 ```mdl
@@ -1418,4 +1425,16 @@ decision D-62: PluginHost caches resolved `TypeRecord`s per isolate in a least-r
   rejected:
     - Cache the in-flight promise — a request awaiting another request's promise hangs when the first request ends.
     - Cache unknown types — a type published after the first miss would stay unknown for the isolate's lifetime.
+```
+
+```mdl
+decision D-63: The plugin protocol has a version (`PluginProtocol.PROTOCOL_VERSION`, now 2; 1 is every host before it). The loader's generated main module, which is EDGE's code rather than the bundle's, reports the vendored host's `PROTOCOL_VERSION` (1 when absent) without activating the plugin; the router sends a host only the scope fields its version reads and falls back to operation-service for a version newer than it serves. The catalog records the version for the registry.
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-6.9, PluginRouter, PluginEntrypoint, PluginCatalog]
+  why: Bundles keep the dxos version they were published with, so EDGE talks to several host versions at once; asking the live main module works for bundles published before versioning, which a catalog field alone cannot describe.
+  rejected:
+    - Read the version from the stored catalog only — catalogs stored before versioning have none, and registry-service would need a migration to serve it with the route.
+    - Refuse version 1 bundles — they lose only the request context and encoded output, which they never had; refusing them would send every published bundle back to operation-service.
 ```

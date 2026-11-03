@@ -15,7 +15,7 @@ const fullScope: PluginProtocol.InvocationScope = {
 };
 
 describe('PluginProtocol', () => {
-  test.fails('serves hosts from the first version up to its own', ({ expect }) => {
+  test('serves hosts from the first version up to its own', ({ expect }) => {
     expect(PluginProtocol.isSupported(PluginProtocol.UNVERSIONED)).toBe(true);
     expect(PluginProtocol.isSupported(PluginProtocol.PROTOCOL_VERSION)).toBe(true);
     expect(PluginProtocol.isSupported(PluginProtocol.PROTOCOL_VERSION + 1)).toBe(false);
@@ -23,7 +23,7 @@ describe('PluginProtocol', () => {
     expect(PluginProtocol.isSupported(1.5)).toBe(false);
   });
 
-  test.fails('sends a version 1 host only the access token service', ({ expect }) => {
+  test('sends a version 1 host only the access token service', ({ expect }) => {
     expect(PluginProtocol.scopeFor(1, fullScope)).toEqual({ accessTokenService: fullScope.accessTokenService });
     expect(PluginProtocol.scopeFor(PluginProtocol.PROTOCOL_VERSION, fullScope)).toEqual(fullScope);
   });

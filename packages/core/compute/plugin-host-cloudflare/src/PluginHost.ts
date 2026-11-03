@@ -21,7 +21,7 @@ import { BaseError, messageOf } from '@dxos/errors';
 import { ServiceContainer, createFunctionContext } from '@dxos/functions-runtime-cloudflare';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import type { FunctionProtocol, PluginProtocol } from '@dxos/protocols';
+import { type FunctionProtocol, PluginProtocol } from '@dxos/protocols';
 
 import * as HostServices from './HostServices.ts';
 import * as Output from './Output.ts';
@@ -29,6 +29,12 @@ import * as PluginActivation from './PluginActivation.ts';
 import * as PluginCatalog from './PluginCatalog.ts';
 import * as RequestContext from './RequestContext.ts';
 import * as TypeSource from './TypeSource.ts';
+
+/**
+ * The protocol version this host speaks. The loader's generated main module reads it from the vendored host, which a
+ * bundle keeps from its publish, so EDGE learns each bundle's version without activating it.
+ */
+export const PROTOCOL_VERSION: number = PluginProtocol.PROTOCOL_VERSION;
 
 export class OperationNotFoundError extends BaseError.extend('OperationNotFoundError', 'Operation not found') {}
 

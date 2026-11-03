@@ -24,13 +24,13 @@ export const PROTOCOL_VERSION = 2;
 /** The version of a host that reports none, which predates versioning. */
 export const UNVERSIONED = 1;
 
-// TODO(edge-plugins): Not implemented yet.
-/** Whether EDGE speaking {@link PROTOCOL_VERSION} can serve a host speaking `version`. */
-export const isSupported = (_version: number): boolean => true;
+/** Whether EDGE speaking {@link PROTOCOL_VERSION} can serve a host speaking `version`: any version up to its own. */
+export const isSupported = (version: number): boolean =>
+  Number.isInteger(version) && version >= UNVERSIONED && version <= PROTOCOL_VERSION;
 
-// TODO(edge-plugins): Not implemented yet.
 /** The scope a host speaking `version` reads: fields it does not know are left out, so no stub it never releases is sent. */
-export const scopeFor = (_version: number, scope: InvocationScope): InvocationScope => scope;
+export const scopeFor = (version: number, scope: InvocationScope): InvocationScope =>
+  version >= 2 ? scope : scope.accessTokenService === undefined ? {} : { accessTokenService: scope.accessTokenService };
 
 /**
  * The bindings EDGE gives a bundle's isolate. They are the same for every space and caller, so one isolate serves them

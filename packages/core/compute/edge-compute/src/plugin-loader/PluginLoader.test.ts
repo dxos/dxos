@@ -63,9 +63,7 @@ describe('PluginLoader', () => {
   });
 
   // A bundle keeps the host it was published with; the main module, generated at load, reports its version.
-  test.fails("reports the vendored host's protocol version, 1 for a host that predates versioning", async ({
-    expect,
-  }) => {
+  test("reports the vendored host's protocol version, 1 for a host that predates versioning", async ({ expect }) => {
     const { main } = await PluginLoader.workerCode(bundle());
     expect(main).toContain('async protocolVersion()');
     expect(main).toContain('PluginHost.PROTOCOL_VERSION ?? 1');
