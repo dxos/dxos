@@ -32,6 +32,8 @@ type Item = { id: string; index: number };
 
 export type ArrayFieldProps = {
   label: string;
+  /** Leave the header's text empty while the list keeps `label` as its name, for a host whose heading already says it. */
+  hideLabel?: boolean;
   fieldProps: FormFieldStateProps;
 } & FormFieldDispatchProps;
 
@@ -40,7 +42,16 @@ export type ArrayFieldProps = {
  * control and a remove Button; a `FormOrderedAnnotation` array adds a DragHandle (pointer drag and keyboard moves).
  * An owned-ref array (`FormCreateAnnotation`) adds by creating the target, and each row is the target's fields inline.
  */
-export const ArrayField = ({ type, path, label, readonly, layout, fieldProps, ...props }: ArrayFieldProps) => {
+export const ArrayField = ({
+  type,
+  path,
+  label,
+  hideLabel,
+  readonly,
+  layout,
+  fieldProps,
+  ...props
+}: ArrayFieldProps) => {
   const { t } = Hooks.useTranslation(translationKey);
   // A suspended element (a recursive or circular schema) renders as the type it resolves to.
   const element = SchemaEx.getArrayElementType(type);
@@ -127,7 +138,7 @@ export const ArrayField = ({ type, path, label, readonly, layout, fieldProps, ..
   return (
     <>
       <Field.Header>
-        <Typography.Text truncate>{label}</Typography.Text>
+        <Typography.Text truncate>{hideLabel ? '' : label}</Typography.Text>
         {editable && (
           <Button.Root
             iconOnly

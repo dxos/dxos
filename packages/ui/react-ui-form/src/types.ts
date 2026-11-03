@@ -38,6 +38,8 @@ export type FormFieldOverride = {
   label?: string;
   /** Draw no label: the control names itself, or the section heading above it already does. */
   hideLabel?: boolean;
+  /** Read the control as page text rather than an input; see {@link FormFieldAppearance}. */
+  appearance?: FormFieldAppearance;
   description?: string;
   placeholder?: string;
   readonly?: boolean;
@@ -53,6 +55,12 @@ export type FormFieldOverride = {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 };
+
+/**
+ * How a text control reads when edited in place: `title` as the page's heading, `plain` as body text. Either drops the
+ * input's well, so the value looks like the page it sits on until it is focused.
+ */
+export type FormFieldAppearance = 'title' | 'plain';
 
 /**
  * FormPresentation mode.
@@ -102,6 +110,8 @@ export type FormFieldRendererProps<T = any> = {
   autoFocus?: boolean;
   /** Presentation mode for the field (full/compact/inline/static); see {@link FormPresentation}. */
   presentation?: FormPresentation;
+  /** From the caller's override; see {@link FormFieldAppearance}. */
+  appearance?: FormFieldAppearance;
   /** Whether the field is required AND still unfilled; surfaces a trailing asterisk on the label. */
   required?: boolean;
   /** The field shows no value until it is edited (see `FormFieldOverride.indeterminate`). */

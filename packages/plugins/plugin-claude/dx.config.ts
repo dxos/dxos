@@ -10,7 +10,8 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
-import * as ProjectSurface from '@dxos/plugin-projects/ProjectSurface';
+import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
+import * as ProjectsEvents from '@dxos/plugin-projects/ProjectsEvents';
 import { trim } from '@dxos/util';
 
 import { ClaudeNamespace } from './src/namespace.ts';
@@ -74,9 +75,15 @@ const config: Plugin.PluginConfig = Plugin.config({
       content: () => import('./PLUGIN.mdl?raw', { with: { type: 'module-url' } }),
       mimeType: 'application/x-mdl',
     }),
-    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: [ProjectSurface.Settings],
-    }),
+    Capability.lazyModule(
+      'ProjectConfig',
+      {
+        requires: [ClaudeCapabilities.State],
+        provides: [ProjectCapabilities.ConfigGroup],
+        activatesOn: ProjectsEvents.Start,
+      },
+      () => import('./src/capabilities/project-config.ts', { with: { type: 'module-url' } }),
+    ),
     AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'module-url' } })),
     AppCapability.operationHandler(
       () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),

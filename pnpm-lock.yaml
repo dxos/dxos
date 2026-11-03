@@ -10112,9 +10112,6 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
-      '@dxos/react-ui-form':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-form
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
@@ -10124,9 +10121,6 @@ importers:
       '@tauri-apps/api':
         specifier: 'catalog:'
         version: 2.11.1
-      '@tauri-apps/plugin-dialog':
-        specifier: 'catalog:'
-        version: 2.8.0
       '@tauri-apps/plugin-shell':
         specifier: 'catalog:'
         version: 2.4.0
@@ -10152,15 +10146,9 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
-      '@effect/atom-react':
-        specifier: 'catalog:'
-        version: 4.0.4(effect@4.0.4)(react@19.3.1)(scheduler@0.28.0)
       '@effect/vitest':
         specifier: 'catalog:'
         version: 4.0.4(effect@4.0.4)(vitest@4.1.10)
-      '@storybook/react-vite':
-        specifier: 'catalog:'
-        version: 10.6.1(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.3.0)(prettier@3.6.2)(react@19.3.1))(vite@8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1))
       '@types/react':
         specifier: ~19.3.0
         version: 19.3.0

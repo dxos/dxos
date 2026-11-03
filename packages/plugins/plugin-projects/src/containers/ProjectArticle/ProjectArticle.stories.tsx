@@ -31,7 +31,7 @@ import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 import * as PreviewEvents from '@dxos/plugin-preview/PreviewEvents';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
-import { VideoPackagePlugin } from '@dxos/plugin-projects/testing';
+import { SoftwareConfigPlugin, VideoPackagePlugin } from '@dxos/plugin-projects/testing';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { translations as routineTranslations } from '@dxos/plugin-routine/translations';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
@@ -244,6 +244,12 @@ const findPainted = async (canvas: ReturnType<typeof within>, text: string) => {
   );
 };
 
+/** Opens one of the Config section's folded groups by its disclosure. */
+const openConfigGroup = async (canvas: ReturnType<typeof within>, id: string) => {
+  const group = await canvas.findByTestId(`projectsPlugin.config.${id}`, undefined, { timeout: 10_000 });
+  await userEvent.click(within(group).getAllByRole('button')[0]);
+};
+
 /** Radix unmounts an inactive tab panel, so a story asserts a tab's content only while it is shown. */
 const showTab = async (canvas: ReturnType<typeof within>, tab: ProjectView.Tab) => {
   await userEvent.click(await canvas.findByTestId(`projectsPlugin.tab.${tab}`, undefined, { timeout: 10_000 }));
@@ -350,6 +356,7 @@ const meta = {
         StorybookPlugin.make({}),
         MockDeckOperationsPlugin(),
         // A second plugin's extension package, beside plugin-projects' Software one.
+        SoftwareConfigPlugin.make(),
         VideoPackagePlugin.make(),
       ],
       // Both start events at setup, so the markdown extensions and the link resolver are live before
@@ -631,7 +638,8 @@ export const Sections: Story = {
     // setup runs async, so allow more than testing-library's default 1s timeout.
     await expect(canvas.findByDisplayValue(PROJECT_NAME, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
 
-    // Instructions: the owned Instructions markdown editor mounts.
+    // Instructions: the owned Instructions markdown editor mounts once the folded Agent group opens.
+    await openConfigGroup(canvas, 'agent');
     await waitFor(() => expect(canvasElement.querySelector('.cm-editor')).toBeTruthy(), { timeout: 10_000 });
 
     // Artifacts: the section heading renders, and the seeded artifact's label resolves.
@@ -648,6 +656,26 @@ export const Sections: Story = {
     // assertion — an invalid surface id is dropped silently, leaving an empty panel.
     await showTab(canvas, 'tasks');
     await expect(canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+  },
+};
+
+/**
+ * The Config section: groups start folded with a summary of what they hold, and a group another plugin contributes
+ * edits the project through its field's atom (here the repositories annotation).
+ */
+export const Config: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const { project } = await seedContent();
+
+    const software = await canvas.findByTestId('projectsPlugin.config.software', undefined, { timeout: 10_000 });
+    await expect(within(software).findByText('Repositories (1)')).resolves.toBeTruthy();
+
+    // Clearing the list through the form clears the annotation.
+    await openConfigGroup(canvas, 'software');
+    await userEvent.click(await within(software).findByLabelText('Delete', undefined, { timeout: 10_000 }));
+    await waitFor(() => expect(Repo.getRepositories(project)).toHaveLength(0), { timeout: 10_000 });
   },
 };
 
@@ -941,9 +969,10 @@ export const Updates: Story = {
     await expect(canvas.findByText(MILESTONE_TASK, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await waitFor(() => expect(canvas.queryByText('Backlog')).toBeNull(), { timeout: 10_000 });
 
-    // The milestone renders in its own Overview section.
+    // The milestone renders in its own Overview section, with its progress counted from its tasks.
     await showTab(canvas, 'overview');
     await expect(canvas.findByText(MILESTONE_NAME, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await expect(canvas.findByText('0/1', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
 
     // A rename reaches the row, which holds its own subscription.
     Obj.update(milestone, (milestone) => {

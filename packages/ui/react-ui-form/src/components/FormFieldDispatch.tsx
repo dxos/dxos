@@ -113,13 +113,12 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
   const title = SchemaEx.getAnnotation<string>(SchemaAST.TitleAnnotationId)(type);
   const description = override?.description ?? SchemaEx.getAnnotation<string>(SchemaAST.DescriptionAnnotationId)(type);
   const examples = SchemaEx.getAnnotation<string[]>(SchemaAST.ExamplesAnnotationId)(type);
-  const label = useMemo(
-    () =>
-      override?.hideLabel
-        ? ''
-        : (override?.label ?? labelProp ?? title ?? (name == null ? '' : String.capitalize(name))),
-    [override?.hideLabel, override?.label, labelProp, title, name],
+  // The field's name even when its label is hidden, for a control that still needs one (a list's accessible name).
+  const accessibleLabel = useMemo(
+    () => override?.label ?? labelProp ?? title ?? (name == null ? '' : String.capitalize(name)),
+    [override?.label, labelProp, title, name],
   );
+  const label = override?.hideLabel ? '' : accessibleLabel;
   const readonly = override?.readonly ?? readonlyProp;
   // A settings row shows its description beside the control, so the description never doubles as the placeholder.
   const placeholder = useMemo(
@@ -147,6 +146,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
       ? (override?.placeholder ?? t('indeterminate.placeholder'))
       : (override?.placeholder ?? placeholder),
     presentation: layout,
+    appearance: override?.appearance,
     required,
     indeterminate,
     min: override?.min,
@@ -191,7 +191,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
   const refArray =
     refProps?.isArray && Option.isNone(Annotation.FormCreateAnnotation.getFromAst(type)) ? refProps : undefined;
   if (resolution.kind === 'array' && !refArray) {
-    return <ArrayField fieldProps={fieldState} label={label} {...props} />;
+    return <ArrayField fieldProps={fieldState} label={accessibleLabel} hideLabel={override?.hideLabel} {...props} />;
   }
   const refArrayField = refArray && (
     <RefArrayField

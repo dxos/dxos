@@ -217,11 +217,9 @@
     "@dxos/plugin-connector": "workspace:*",
     "@dxos/plugin-projects": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/react-ui-form": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@tauri-apps/api": "catalog:",
-    "@tauri-apps/plugin-dialog": "catalog:",
     "@tauri-apps/plugin-shell": "catalog:",
     "effect": "catalog:",
     "ws": "catalog:"
@@ -233,9 +231,7 @@
     "@dxos/plugin-tasks": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/schema": "workspace:*",
-    "@effect/atom-react": "catalog:",
     "@effect/vitest": "catalog:",
-    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/ws": "catalog:",
     "react": "catalog:",
@@ -243,7 +239,6 @@
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
-    "@effect/atom-react": "catalog:",
     "react": "catalog:"
   }
 }

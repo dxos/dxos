@@ -335,8 +335,10 @@ feat F-9: Claude Code (cloud)
   req F-9.6:
     when: a project's overview is open
     then: |
-      its settings list the project's repositories, which a cloud session
-      checks out, and the user adds, removes and reorders them there
+      the Software group of its Config section lists the project's
+      repositories, which a cloud session checks out, and the user adds,
+      removes and reorders them there; where an agent host exists, the group
+      also holds the project's code folder on this device, as a typed path
 
   req F-9.7:
     when: an agent is asked to give a project a repository, or to take one away
@@ -476,10 +478,10 @@ test QA-2: Assign a project task to Claude Code
       expect: Claude is enabled, and the Code plugin with it
     - name: Create a project
       do: Click + on the space, choose Project, name it "Greeter" and save.
-      expect: the project opens on its Overview, which has a "Code folder on this device" section
-    - name: Choose the project's code folder
-      do: Click "Choose folder…" and pick the repository.
-      expect: the folder's path replaces "Not set"
+      expect: the project opens on its Overview, whose Config section has a Software group
+    - name: Set the project's code folder
+      do: Open Software under Config and type the repository's path into "Code folder on this device".
+      expect: the field shows the path, and Software's summary names it while folded
     - name: Add a task
       do: |
         Open Tasks and add "Add a --shout flag to greet.js", described as "With
@@ -780,4 +782,16 @@ ext scenario
     when?: Step | Step[]
     then: Step | Step[]
     tags?: TagList
+```
+
+```mdl
+decision D-13: The repositories and the code folder are the Software group of the project overview's Config section, declared as `ProjectCapabilities.ConfigGroup` fields: the repositories as the project's annotation, the code folder as this plugin's local state, shown only where an agent host exists. The folder is a typed path, and the desktop app's folder picker goes. Refines where [D-10] put the list.
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.6]
+  why: plugin-projects D-111 asks for groups as schema and data with no UI of a plugin's own, and the form has no folder picker. Both fields come from this plugin, so it declares the group.
+  rejected:
+    - plugin-code declaring Software, which owns neither field.
+    - Keeping the folder picker as a custom field, which D-111 rules out.
 ```

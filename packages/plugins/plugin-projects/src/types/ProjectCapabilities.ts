@@ -7,6 +7,7 @@
 import type { Extension } from '@codemirror/state';
 import type * as Effect from 'effect/Effect';
 import type * as Atom from 'effect/reactivity/Atom';
+import type * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import type * as Translations from '@dxos/app-toolkit/Translations';
@@ -115,3 +116,35 @@ export type SpecView = {
 };
 
 export const SpecView = Capability.make<SpecView>()(`${ProjectsNamespace.key}.capability.specView`);
+
+/**
+ * One setting in a {@link ConfigGroup}: a schema the overview's form renders, and the project's value as a writable
+ * atom, so the form reads and writes it without knowing where it lives (an annotation on the project, or state kept on
+ * this device).
+ */
+export type ConfigField = {
+  /** Names the field in its group's form; unique within the group. */
+  key: string;
+  /** The field's schema, whose title and description label it. */
+  schema: Schema.Top;
+  value: (project: Project.Project) => Atom.Writable<any, any>;
+  /** Whether the field applies here, such as only where an agent host exists; shown when absent. */
+  enabled?: Atom.Atom<boolean>;
+};
+
+/**
+ * A group of settings in the Config section of a project's overview, folded by default. Contributions with the same
+ * `id` merge, so several plugins can fill one group; the project's own `agent` group comes first.
+ */
+export type ConfigGroup = {
+  id: string;
+  label: Translations.Label;
+  /** Groups sort by it, lowest first; a group's fields keep contribution order. */
+  order?: number;
+  fields: readonly ConfigField[];
+};
+
+export const ConfigGroup = Capability.make<ConfigGroup>()(`${ProjectsNamespace.key}.capability.configGroup`);
+
+/** The id of the group holding the project's own instructions, skills and context. */
+export const AgentConfigGroupId = 'agent';

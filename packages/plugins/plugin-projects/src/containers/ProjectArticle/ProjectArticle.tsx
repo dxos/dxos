@@ -23,12 +23,11 @@ import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
-import * as InstructionsEditor from '@dxos/plugin-routine/InstructionsEditor';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as TasksUtil from '@dxos/plugin-tasks/TasksUtil';
 import { useSpace } from '@dxos/react-client/echo';
 import { useSelection, useSelectionActions, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
-import { Form, type FormUpdateMeta, useCreateObject } from '@dxos/react-ui-form';
+import { Form, type FormFieldOverride, type FormUpdateMeta, useCreateObject } from '@dxos/react-ui-form';
 import {
   type ActionGraphProps,
   type ActionGroupBuilderFn,
@@ -54,18 +53,22 @@ import { useProjectSpecs, useRefTargets, useSelectedSpec } from '../../hooks/ind
 import { ProjectsNamespace } from '../../namespace.ts';
 import { getProjectChatPath } from '../../paths.ts';
 import * as ProjectGraph from '../../ProjectGraph.ts';
+import { ConfigSection } from './ConfigSection.tsx';
 
 // Pick the editable header fields from the Project schema rather than redeclaring them. v4 exposes
 // `mapFields` only on a `Struct`, and `Type.getSchema` erases to `Codec`, so the pick runs on the AST
 // and the field types are re-attached here.
-type HeaderValues = Pick<Project.Project, 'name' | 'description' | 'specs'>;
+type HeaderValues = Pick<Project.Project, 'name' | 'status' | 'description' | 'specs'>;
 
 const HeaderValues = Schema.make<Schema.Codec<HeaderValues, any>>(
-  SchemaAST.pick(Type.getSchema(Project.Project).ast, ['name', 'description', 'specs']),
+  SchemaAST.pick(Type.getSchema(Project.Project).ast, ['name', 'status', 'description', 'specs']),
 );
 
-// The Context section edits only the instructions' standing context objects.
-const CONTEXT_FIELDS: readonly string[] = ['objects'];
+// The name reads as the page's title with the status beside it, and the description as its first paragraph.
+const HEADER_LAYOUT = '<grid cols="4"><field name="name" span="3"/><field name="status"/></grid>';
+
+/** How many artifacts the overview shows before offering the rest. */
+const ARTIFACT_LIMIT = 6;
 
 /** The Specs tab's own view of its spec: the text. */
 const DOCUMENT_VIEW = 'document';
@@ -284,12 +287,25 @@ export const ProjectArticle = ({
   const values = useMemo<Partial<HeaderValues>>(
     () => ({
       name: project.name,
+      status: project.status,
       description: project.description,
       specs: project.specs,
     }),
     [project],
   );
   const handleCreate = useCreateObject(db);
+  const fieldOverrides = useMemo<Record<string, FormFieldOverride>>(
+    () => ({
+      name: { hideLabel: true, appearance: 'title', placeholder: t('untitled-project.label') },
+      status: { hideLabel: true, placeholder: t('project-status.placeholder') },
+      description: { hideLabel: true, appearance: 'plain', placeholder: t('project-description.placeholder') },
+      // The section heading names the list.
+      specs: { hideLabel: true },
+    }),
+    [t],
+  );
+  const [showAllArtifacts, setShowAllArtifacts] = useState(false);
+  const shownArtifacts = showAllArtifacts ? artifacts : artifacts.slice(0, ARTIFACT_LIMIT);
 
   const handleOpen = useCallback(
     (object: Obj.Unknown) => {
@@ -381,26 +397,14 @@ export const ProjectArticle = ({
               db={db}
               schema={HeaderValues}
               values={values}
+              fieldOverrides={fieldOverrides}
               onValuesChanged={handleValuesChanged}
               onCreate={handleCreate}
             >
               <Form.Viewport scroll>
                 <Form.Content>
-                  <Form.Fields />
-
-                  {instructions && <InstructionsEditor.InstructionsEditor db={db} instructions={instructions} />}
-
-                  {/* Standing context (inputs bound into every project session) — deliberately a
-                      separate labeled section from Artifacts (outputs the project owns). */}
-                  {instructions && (
-                    <Form.FieldSet label={t('context.label')}>
-                      <InstructionsEditor.InstructionsEditor
-                        db={db}
-                        instructions={instructions}
-                        fields={CONTEXT_FIELDS}
-                      />
-                    </Form.FieldSet>
-                  )}
+                  <Form.Layout template={HEADER_LAYOUT} />
+                  <Form.Fields include={['description']} />
 
                   {/* Above Tasks: the outline is where work is drafted, the task set where it lands.
                     `taskSet` rides along so promoting an item files it into THIS project's ledger
@@ -415,18 +419,38 @@ export const ProjectArticle = ({
                     </Form.FieldSet>
                   )}
 
+                  <Form.FieldSet
+                    label={t('artifacts.label')}
+                    data-testid='projectsPlugin.artifacts'
+                    actions={
+                      artifacts.length > ARTIFACT_LIMIT && (
+                        // TODO(wittjosiah): Open a companion listing every artifact rather than growing the overview.
+                        <Button.Root
+                          variant='ghost'
+                          data-testid='projectsPlugin.artifacts.showAll'
+                          onClick={() => setShowAllArtifacts((showAll) => !showAll)}
+                        >
+                          {showAllArtifacts
+                            ? t('show-fewer-artifacts.label')
+                            : t('show-all-artifacts.label', { count: artifacts.length })}
+                        </Button.Root>
+                      )
+                    }
+                  >
+                    <ObjectGallery objects={shownArtifacts} onOpen={handleOpen} onDelete={handleDeleteArtifact} />
+                  </Form.FieldSet>
+
                   {milestoneRefs.length > 0 && (
                     <Form.FieldSet label={t('milestones.label')}>
-                      <MilestoneList refs={milestoneRefs} />
+                      <MilestoneList refs={milestoneRefs} tasks={tasks} />
                     </Form.FieldSet>
                   )}
 
-                  <Form.FieldSet label={t('artifacts.label')} data-testid='projectsPlugin.artifacts'>
-                    <ObjectGallery objects={artifacts} onOpen={handleOpen} onDelete={handleDeleteArtifact} />
+                  <Form.FieldSet label={t('specs.label')} data-testid='projectsPlugin.specs'>
+                    <Form.Fields include={['specs']} />
                   </Form.FieldSet>
 
-                  {/* Settings other plugins keep for this project, such as its repositories and its folder on this device. */}
-                  <Surface.Surface type={ProjectSurface.Settings} data={{ project: subject }} />
+                  <ConfigSection db={db} project={subject} instructions={instructions} />
                 </Form.Content>
               </Form.Viewport>
             </Form.Root>
@@ -505,11 +529,17 @@ export const ProjectArticle = ({
 
 ProjectArticle.displayName = 'ProjectArticle';
 
-/** Read-only: milestones are authored through the agent/MCP verbs, and store no status to render. */
-const MilestoneList = ({ refs }: { refs: ReadonlyArray<Ref.Ref<Milestone.Milestone>> }) => (
+type MilestoneListProps = {
+  refs: ReadonlyArray<Ref.Ref<Milestone.Milestone>>;
+  /** The level's tasks, which each milestone's progress counts. */
+  tasks: readonly Task.Task[];
+};
+
+/** Read-only: milestones are authored through the agent/MCP verbs; each shows its progress, derived from its tasks. */
+const MilestoneList = ({ refs, tasks }: MilestoneListProps) => (
   <Layout.Container role='list' gap='sm' gutter='none'>
     {refs.map((milestoneRef) => (
-      <MilestoneRow key={milestoneRef.uri.toString()} milestoneRef={milestoneRef} />
+      <MilestoneRow key={milestoneRef.uri.toString()} milestoneRef={milestoneRef} tasks={tasks} />
     ))}
   </Layout.Container>
 );
@@ -687,9 +717,17 @@ const useSpecPackageActions = (spec: Spec.Spec | undefined) => {
 };
 
 /** One row, holding its own subscription so a rename re-renders just that row. */
-const MilestoneRow = ({ milestoneRef }: { milestoneRef: Ref.Ref<Milestone.Milestone> }) => {
+const MilestoneRow = ({
+  milestoneRef,
+  tasks,
+}: {
+  milestoneRef: Ref.Ref<Milestone.Milestone>;
+  tasks: readonly Task.Task[];
+}) => {
   const [milestone] = useObject(milestoneRef);
-  if (!milestone) {
+  const target = useResolveRef(milestoneRef);
+  const progress = useMemo(() => target && Task.milestoneProgress(tasks, target), [tasks, target]);
+  if (!milestone || !progress) {
     return null;
   }
 
@@ -698,6 +736,14 @@ const MilestoneRow = ({ milestoneRef }: { milestoneRef: Ref.Ref<Milestone.Milest
       <Icon.Icon icon='ph--flag--regular' valence='info' />
       <span className='truncate'>{milestone.name}</span>
       {milestone.targetDate && <span className='text-fg-subtle shrink-0'>{milestone.targetDate}</span>}
+      {progress.total > 0 && (
+        <Layout.Flex gap='sm' align='center' classNames='ms-auto shrink-0'>
+          <Status.Progress value={progress.ratio} classNames='w-20' />
+          <span className='text-fg-subtle text-sm tabular-nums'>
+            {progress.done}/{progress.total}
+          </span>
+        </Layout.Flex>
+      )}
     </Layout.Flex>
   );
 };
@@ -732,6 +778,8 @@ const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined, scope?: readonly 
         // writes both fields — without tracking them the bar would keep offering rows already handed over.
         get(Obj.atomProperty(task, 'status'));
         get(Obj.atomProperty(task, 'assignee'));
+        // Milestone progress counts the tasks filed under each milestone.
+        get(Obj.atomProperty(task, 'milestone'));
       });
       return Task.orderTree(tasks, get(Obj.atomProperty(taskSet, 'tasks')) ?? []);
     });

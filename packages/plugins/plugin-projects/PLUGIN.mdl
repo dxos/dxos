@@ -62,6 +62,20 @@ feat F-4: A project's specs
               and the list's `+` creates a spec, its row open for the name.
 ```
 
+```mdl
+feat F-5: A project's overview
+  req F-5.1: The overview opens on the project's name as its title, its status beside it and its description below,
+             each edited in place with no edit button.
+  req F-5.2: Below the header the sections are, in order: Notes, Artifacts, Milestones, Specs and Config.
+  req F-5.3: Artifacts shows at most six, and Show all shows the rest.
+  req F-5.4: Each milestone shows how many of its tasks are done out of those not cancelled.
+  req F-5.5: Config holds folded groups, each showing a summary of what it holds until it is opened: first Agent (the
+             instructions, skills and context), then the groups other plugins declare.
+  req F-5.6: A plugin declares a group with `ProjectCapabilities.ConfigGroup`: its fields are each a schema and a
+             writable atom holding the project's value, which the overview's form renders and writes with no UI of the
+             plugin's own. Groups with the same id merge, and a field whose `enabled` atom is false is hidden.
+```
+
 ## QA
 
 Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an invocable
@@ -1238,4 +1252,81 @@ decision D-108: The `Project` 0.7.0 migration moves `repo` and then `repositorie
   by: agent:claude-code
   for: user:wittjosiah
   why: `repo` was the repository a project named first, and plugin-code's spec migrations recognize a spec's owner only as a current `Project`.
+```
+
+```mdl
+decision D-109: The project overview puts the most-used parts first: the name and description, then Notes, Artifacts, Milestones and Specs, then a Config section at the bottom. Artifacts stays a masonry but shows a limited number, with Show all once there are more; Show all should open a companion that lists every artifact, which is a to-do.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.2, F-5.3]
+```
+
+```mdl
+decision D-110: Config is a section like Milestones and Specs. Agent and Software are groups within it, each folded by default, and another plugin contributes Software, since the repositories come from an annotation.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.5]
+```
+
+```mdl
+decision D-111: A plugin contributes a group as schema and data only, with no UI of its own: the form's existing fields render it.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.6]
+```
+
+```mdl
+decision D-112: The project's name and description are edited in place, not behind an edit button.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.1]
+```
+
+```mdl
+decision D-113: A group is a `ProjectCapabilities.ConfigGroup` (id, label, order, fields), and each field a key, a schema and a function from the project to a writable atom, with an optional `enabled` atom. The overview renders a group's fields as one nested form over a struct of their schemas and writes an edit through the field's atom; contributions with one id merge, and the project's own group is `agent`. This replaces the `ProjectSurface.Settings` surface. Fills in [D-110] and [D-111].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.5, F-5.6]
+  why: A writable atom hides where a value lives, so an annotation on the project and state kept on one device are the same kind of field, and the form needs no knowledge of either.
+  rejected:
+    - A surface per group, which needs the contributor's own UI and lets only one plugin fill a group.
+    - A capability declaring the group and surfaces filling it, which still needs the contributor's own UI.
+    - Fields that name an annotation, which cannot hold a value kept on one device, such as a code folder.
+```
+
+```mdl
+decision D-114: The status sits beside the name in a four-column row, and neither shows a label. react-ui-form's field override gains `appearance`: `title` renders a text field in react-ui's new `title` input variant, and `plain` drops the input's well, as the description does. The Specs list heads its own section, and its list keeps "Specs" as its accessible name. Fills in [D-112].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.1]
+  why: The override says how one use of a field reads, which the schema cannot, and react-ui-form takes no classes of its own.
+```
+
+```mdl
+decision D-115: The overview shows six artifacts, and Show all shows the rest in place until the companion exists. Fills in [D-109].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.3]
+  why: Six fills two rows of the masonry at a plank's usual width.
+```
+
+```mdl
+decision D-116: A folded group's summary counts each list, quotes each text and skips what is empty. Fills in [D-110].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.5]
+  why: The counts are what tell a reader whether a group is worth opening.
+```
+
+```mdl
+decision D-117: A milestone's progress counts the tasks of the level the overview shows, not every task in the project. Fills in [D-109].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.4]
+  why: The overview already narrows to its level, and its Tasks tab lists the same tasks.
 ```

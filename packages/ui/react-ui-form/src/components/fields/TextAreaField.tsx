@@ -17,6 +17,8 @@ export const TextAreaField = ({
   readonly,
   placeholder,
   presentation,
+  appearance,
+  jsonPath,
   getValue,
   onValueChange,
   onBlur,
@@ -29,6 +31,8 @@ export const TextAreaField = ({
   return (
     <Input.Textarea
       autoResize
+      variant={appearance ? 'subdued' : 'default'}
+      data-testid={jsonPath}
       disabled={!!readonly}
       placeholder={placeholder}
       value={value}

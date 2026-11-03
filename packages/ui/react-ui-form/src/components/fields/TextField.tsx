@@ -18,6 +18,7 @@ export const TextField = ({
   readonly,
   placeholder,
   presentation,
+  appearance,
   autoFocus,
   jsonPath,
   getValue,
@@ -52,6 +53,7 @@ export const TextField = ({
         }
       }}
       data-testid={jsonPath}
+      {...(appearance && { variant: appearance === 'title' ? 'title' : 'subdued' })}
       {...(key && { variant: 'mono', spellCheck: false, autoCorrect: 'off', autoCapitalize: 'none' })}
     />
   );
