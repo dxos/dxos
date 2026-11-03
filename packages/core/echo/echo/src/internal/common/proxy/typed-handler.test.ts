@@ -63,6 +63,14 @@ describe('nested record layout', () => {
     expect(Object.getPrototypeOf(object.outer)).toBe(Object.prototype);
     expect(inspect(object.outer)).toMatch(/^Typed /);
   });
+
+  test('nested arrays print without their hidden owner', () => {
+    const schema = Schema.Struct({ secret: Schema.String, items: Schema.Array(Schema.Number) });
+    const object = makeObject(schema, { secret: 'root-only', items: [1, 2] });
+    const printed = inspect(object.items, { showHidden: true });
+    expect(printed).toMatch(/^Typed /);
+    expect(printed).not.toContain('root-only');
+  });
 });
 
 describe('complex schema validations', () => {

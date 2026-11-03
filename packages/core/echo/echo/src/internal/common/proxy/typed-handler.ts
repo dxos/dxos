@@ -235,6 +235,20 @@ const copyHiddenProperties = (source: any, target: any): void => {
  * doesn't perturb the target's own-property shape. Marked as a reactive prototype so the "plain
  * object" gates (`isValidProxyTarget` / `deepCopy`) still treat such targets as data records.
  */
+/**
+ * Node inspector for typed targets. Forces `showHidden: false` so a target's hidden metadata, including its owner and
+ * through it unrelated fields of the root, never prints.
+ */
+function inspectTypedTarget(
+  this: ProxyTarget,
+  _depth: number,
+  options: InspectOptionsStylized,
+  inspectFn: (value: any, options?: InspectOptionsStylized) => string,
+): string {
+  const inspected = inspectFn(getRawTarget(this), { ...options, showHidden: false, customInspect: false });
+  return `Typed ${inspected}`;
+}
+
 const TypedObjectPrototype: object = Object.create(Object.prototype);
 defineHiddenProperty(TypedObjectPrototype, symbolReactivePrototype, true);
 
@@ -278,17 +292,7 @@ Object.defineProperties(TypedObjectPrototype, {
     },
   },
   // One shared inspector rather than a bound function per record: a nested JSON Schema alone is dozens of records.
-  [inspectCustom]: {
-    value(
-      this: ProxyTarget,
-      _depth: number,
-      options: InspectOptionsStylized,
-      inspectFn: (value: any, options?: InspectOptionsStylized) => string,
-    ): string {
-      const inspected = inspectFn(getRawTarget(this), { ...options, showHidden: false, customInspect: false });
-      return `Typed ${inspected}`;
-    },
-  },
+  [inspectCustom]: { value: inspectTypedTarget },
   [StaticTypeSchemaSlot]: {
     // Lazily rebuild the source Effect Schema from `jsonSchema` and cache it as an own (hidden)
     // property so subsequent reads short-circuit this accessor; the set-trap deletes the cache when
@@ -408,7 +412,10 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
     // Relocate a root's metadata onto an instance-state prototype, leaving only user data as own properties on the
     // target. Done last so all metadata set above (and by `prepareTypedTarget`) moves. A nested record never changes
     // handler, so it needs no state of its own: see `shareTypedObjectPrototype`.
-    if (hasOwner) {
+    if (Array.isArray(target)) {
+      // Arrays keep their `ReactiveArray` prototype, so they carry the shared inspector themselves.
+      defineHiddenProperty(target, inspectCustom, inspectTypedTarget);
+    } else if (hasOwner) {
       shareTypedObjectPrototype(target);
     } else {
       compactMetadataToInstanceState(target);
