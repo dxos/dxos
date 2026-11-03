@@ -620,6 +620,46 @@ describe('EdgeHttpClient api key', () => {
     expect((uploadCall![1]?.headers as Record<string, string>).Authorization).toBe('Bearer secret-key');
   });
 
+  test('uploadPluginBundle streams the bundle as multipart, one part per file named by its path', async ({
+    expect,
+  }) => {
+    const fetchMock = vi.fn(
+      async (_input: any, _init?: RequestInit) =>
+        new Response(JSON.stringify({ success: true, data: { moduleUrl: 'url' } }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const client = new EdgeHttpClient('https://edge.example.com', { apiKey: 'secret-key' });
+    const content = new TextEncoder().encode('{}');
+    await client.uploadPluginBundle(
+      Context.default(),
+      {
+        slug: 'org.example.plugin',
+        version: '1.0.0',
+        channel: 'beta',
+        files: [{ path: 'vendor/manifest.json', content }],
+      },
+      { auth: false },
+    );
+
+    const [input, init] = fetchMock.mock.calls.find((call) => String(call[0]).includes('/registry/upload')) ?? [];
+    const url = new URL(String(input));
+    expect(url.pathname).toBe('/registry/upload/multipart');
+    expect(Object.fromEntries(url.searchParams)).toEqual({
+      slug: 'org.example.plugin',
+      version: '1.0.0',
+      channel: 'beta',
+    });
+    const body = init?.body;
+    expect(body).toBeInstanceOf(FormData);
+    const part = body instanceof FormData ? body.get('vendor/manifest.json') : null;
+    expect(part).toBeInstanceOf(Blob);
+    expect(part instanceof Blob ? await part.text() : undefined).toBe('{}');
+  });
+
   test('uploadPrivatePluginBundle posts to the private route with the key as a Bearer header', async ({ expect }) => {
     const fetchMock = vi.fn(
       async (_input: any, _init?: RequestInit) =>
