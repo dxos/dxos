@@ -577,7 +577,7 @@ describe('update-task subtree', () => {
     }).pipe(Effect.provide(layer)),
   );
 
-  it.effect("a claim that also re-parents answers to the person of the parent the task moves under", () =>
+  it.effect('a claim that also re-parents answers to the person of the parent the task moves under', () =>
     Effect.gen(function* () {
       const { child, other } = yield* makeTree();
       yield* updateTask.handler({ task: Ref.make(child), assignee: { name: 'Sam', identityDid: 'did:key:sam' } });
