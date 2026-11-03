@@ -1,4 +1,4 @@
-| [plugin-review/comment-notifications](../../../packages/plugins/plugin-review/autocue/comment-notifications.mjs) | Two people side by side: Bob follows a document with the bell, Alice's comment lands in his notifications, and his reply reaches her. | plugin-review QA-3 | — |
+| [plugin-review/comment-notifications](../../../packages/plugins/plugin-review/autocue/comment-notifications.mjs) | Two people side by side: Bob follows a document with the bell, Alice's comment lands in his notifications, and his reply reaches her. | plugin-review QA-3 | [2026-11-03](https://github.com/user-attachments/assets/a4ab9b2a-23ad-4f5c-90d5-c144896b9b0e) |
 
 # Autocue demos
 
