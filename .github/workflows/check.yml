@@ -872,6 +872,19 @@ jobs:
       # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps
       # run. Avoids 504 Outdated Optimize Dep when graph differs from bundle step. Storybook puts
       # cache under node_modules/.cache/storybook/<hash>/sb-vite per package.
+      # DIAGNOSTIC (do not merge): record which process deletes restored moon outputs.
+      - name: Audit deletions (diagnostic)
+        run: |
+          sudo apt-get install -y -qq auditd >/dev/null 2>&1 || true
+          sudo service auditd start || sudo systemctl start auditd || true
+          sudo auditctl -b 65536 || true
+          for d in packages/ui/react-ui-experimental/src/shaders/glsl packages/sdk/types/dist; do
+            mkdir -p "$d"
+            sudo auditctl -w "$GITHUB_WORKSPACE/$d" -p w -k dxdiag
+          done
+          sudo auditctl -l
+          sudo auditctl -s
+
       - name: Clear Storybook Vite cache
         run: find . -type d -path '*/node_modules/.cache/storybook' -prune -print0 | xargs -0 rm -rf
 
@@ -896,12 +909,24 @@ jobs:
           moon exec --on-failure continue composer-e2e:e2e --
           --shard=${{ env.CELL_SHARD }}/${{ env.CELL_TOTAL }} --workers=${{ env.CELL_WORKERS }}
 
+      - name: Audit report (diagnostic)
+        if: always()
+        run: |
+          date -u
+          ls -la packages/ui/react-ui-experimental/src/shaders/glsl packages/ui/react-ui-experimental/src/shaders/glsl/gen packages/sdk/types/dist || true
+          sudo auditctl -s || true
+          sudo ausearch -k dxdiag -i > /tmp/dxdiag.txt 2>&1 || true
+          wc -l /tmp/dxdiag.txt
+          echo '=== events touching glsl/gen with a DELETE or rename ==='
+          awk 'BEGIN{RS="----"} /glsl/ && (/nametype=DELETE/ || /syscall=rename/ || /syscall=unlink/ || /syscall=rmdir/)' /tmp/dxdiag.txt | head -c 200000
+          echo '=== events touching types/dist with a DELETE ==='
+          awk 'BEGIN{RS="----"} /types\/dist/ && /nametype=DELETE/' /tmp/dxdiag.txt | head -c 60000
+
       # Trends every test's outcome in PostHog; the event contract and the gate are documented in
       # `packages/e2e/composer-e2e/DASHBOARD.md`. `always()` because a RED run is the report worth
       # having.
       - name: Publish results
-        if: >-
-          ${{ always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}
+        if: false
         env:
           DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
         run: node packages/e2e/composer-e2e/scripts/publish-results.mjs
