@@ -36,6 +36,9 @@ const POLL_TIMEOUT_MS = 15_000;
 /** How long stopping the agent may take; a stalled deployment must not hold up cancelling the turn. */
 const STOP_TIMEOUT_MS = 5_000;
 
+/** How long starting or continuing the workspace chat may take; a cancel waits for it, so it must end. */
+const START_TIMEOUT_MS = 30_000;
+
 /** The workspace chat a Composer chat continues, recorded on the chat after its first turn. */
 export const chatIdOf = (chat: Chat.Chat): number | undefined => {
   const key = Obj.getMeta(chat).keys.find(({ source }) => source === CHAT_KEY_SOURCE);
@@ -148,16 +151,26 @@ const runTurn: (
   // The turn has ended once its agent stops running, after it was seen running or answered.
   const { ended: finished, activeChatId: turnChatId } = yield* Effect.gen(function* () {
     // Uninterruptible: a cancel during the start waits for the chat id, so the agent it starts can be stopped.
+    // The id is stored inside the region, since a pending interrupt is delivered the moment it ends.
     const activeChatId = yield* Effect.uninterruptible(
-      existing === undefined
+      (existing === undefined
         ? Client.call('Could not start a workspace chat.', () =>
-            batchOverseer(account, workspace.workspaceId).newChat(text, model),
+            Client.withDeadline(batchOverseer(account, workspace.workspaceId).newChat(text, model), START_TIMEOUT_MS),
           )
         : Client.call('Could not send the message.', () =>
-            batchOverseer(account, workspace.workspaceId).sendChatMessage(existing, text, model),
-          ).pipe(Effect.as(existing)),
+            Client.withDeadline(
+              batchOverseer(account, workspace.workspaceId).sendChatMessage(existing, text, model),
+              START_TIMEOUT_MS,
+            ),
+          ).pipe(Effect.as(existing))
+      ).pipe(
+        Effect.tap((id) =>
+          Effect.sync(() => {
+            chatId = id;
+          }),
+        ),
+      ),
     );
-    chatId = activeChatId;
     if (existing === undefined) {
       recordChatId(chat, activeChatId);
     }

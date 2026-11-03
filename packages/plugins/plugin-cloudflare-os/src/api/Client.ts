@@ -56,6 +56,18 @@ export const hashPassword = (username: string, password: string): Effect.Effect<
 export const call = <T>(message: string, run: () => PromiseLike<T>): Effect.Effect<T, CloudflareOsError> =>
   Effect.tryPromise({ try: () => Promise.resolve(run()), catch: (cause) => new CloudflareOsError({ message, cause }) });
 
+/**
+ * Settles with `promise`, or rejects once `timeoutMs` passes; for a request that must finish even while its
+ * effect is uninterruptible, where an Effect timeout could not cut it short.
+ */
+export const withDeadline = <T>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> => {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const expired = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`No answer within ${timeoutMs} ms.`)), timeoutMs);
+  });
+  return Promise.race([Promise.resolve(promise), expired]).finally(() => clearTimeout(timer));
+};
+
 /** Disposes an RPC stub; a stub whose session already closed has nothing left to release. */
 export const dispose = (stub: { [Symbol.dispose](): void }): void => {
   try {
