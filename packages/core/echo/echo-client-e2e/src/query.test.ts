@@ -2237,6 +2237,33 @@ describe('Query', () => {
     await expect(db.query(Query.select(Filter.everything())).run()).rejects.toBeInstanceOf(Error);
   });
 
+  test('live query recomputes past an object whose document was deleted', async () => {
+    const spaceKey = PublicKey.random();
+
+    const builder = new EchoTestBuilder();
+    onTestFinished(async () => {
+      await builder.close();
+    });
+
+    const peer = await builder.createPeer();
+    const db = await peer.createDatabase(spaceKey);
+    const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
+
+    const query = db.query(Filter.everything());
+    const unsubscribe = query.subscribe(() => {});
+    onTestFinished(() => unsubscribe());
+
+    const obj1Core = getObjectCore(obj1);
+    invariant(obj1Core.docHandle, 'docHandle missing');
+    obj1Core.docHandle.delete();
+
+    // The write recomputes the live query, which must not read the deleted document.
+    const obj3 = db.add(Obj.make(TestSchema.Expando, { name: 'obj3' }));
+    const ids = query.results.map((obj) => obj.id);
+    expect(ids).not.toContain(obj1.id);
+    expect(ids).toEqual(expect.arrayContaining([obj2.id, obj3.id]));
+  });
+
   // TODO(burdon): Flakey.
   test.skip('map over refs in query result', async () => {
     const { db } = await builder.createDatabase();

@@ -240,6 +240,11 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     return body?.kind === 'passive' ? body.heads : undefined;
   }
 
+  /** True once {@link delete} has run; a deleted handle has no document to read. */
+  get isDeleted(): boolean {
+    return this.#body === undefined;
+  }
+
   /** Loads a passive handle's bytes. */
   doc(): A.Doc<T> {
     return this.#loaded().doc;
