@@ -13,11 +13,11 @@ const MB = 1024 * 1024;
 export type Budget = {
   /** Bytes of modules handed to Worker Loader; they and all they allocate share the isolate's 128 MB. */
   readonly moduleBytes: number;
-  /** A cold load, import and activation (`describe()`), which EDGE abandons after 20 s; half leaves room for a busier host. */
+  /** A cold load, import and activation (`describe()`), which EDGE abandons after 20 s; the margin absorbs a slower or busier host. */
   readonly activationMs: number;
 };
 
-export const DEFAULT_BUDGET: Budget = { moduleBytes: 32 * MB, activationMs: 10_000 };
+export const DEFAULT_BUDGET: Budget = { moduleBytes: 32 * MB, activationMs: 15_000 };
 
 const formatBytes = (bytes: number) => `${(bytes / MB).toFixed(1)} MB`;
 

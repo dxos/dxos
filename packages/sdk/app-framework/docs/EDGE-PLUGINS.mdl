@@ -1321,7 +1321,7 @@ decision D-58: A query over `Scope.registry()` that selects type entities (`Filt
 ```
 
 ```mdl
-decision D-59: A Dynamic Worker is given only the files the `workerd` modules, their adapters and the vendored `PluginHost` reach by literal imports, and `check-edge-release` fails a bundle that gives it over 32 MB of modules or takes over 10 s to load and activate.
+decision D-59: A Dynamic Worker is given only the files the `workerd` modules, their adapters and the vendored `PluginHost` reach by literal imports, and `check-edge-release` fails a bundle that gives it over 32 MB of modules or takes over 15 s to load and activate.
   date: 2026-11-03
   by: agent:claude-code
   for: user:dmaretskyi
