@@ -49,10 +49,9 @@ Design: [DESIGN.md](./DESIGN.md).
 - [ ] ArrowUp/ArrowDown jump to first/last (carried from the legacy pager, never requested); reconsider.
 - [ ] `Panel.Header` + `Toolbar.Root` stand in for a `Panel.Toolbar` that does not exist; adopt one if it lands.
 - [ ] `Button.Root iconOnly` stands in for `IconButton` (not exported where needed); switch when available.
-- [ ] Opening an owned slide warns "equally specific URL bindings address one node": plugin-space's
-      `collections` and `objects` app-graph extensions share the `object` URL key and path, and both claim the
-      nested node `…/collections/<presentation>/<slide>`. Not presenter's binding; fix in plugin-space (and teach
-      `resolveCollectionObjectPath` about container-annotated objects so slide deep links resolve).
+- [x] Opening an owned slide warned "equally specific URL bindings address one node": plugin-space's
+      `collections` extension no longer binds the `object` key, so `objects` alone addresses every depth.
+- [ ] Teach `resolveCollectionObjectPath` about container-annotated objects so slide deep links resolve.
 - [ ] Navtree connector rebuilds children on every owned-slide keystroke; derive a heading-only atom.
 - [ ] Tighten the "no settings module" test (checks a substring).
 

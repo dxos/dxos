@@ -3,130 +3,157 @@
 //
 
 //
-// The scene store over a `CanvasBoard` (MIGRATION.md M4): `layout.nodes` are the scene's nodes and
-// `layout.edges` its links, so a board written by the old editor opens on the engine unchanged. The
-// store is the only seam that changes — `Canvas` takes this exactly as it takes the memory store.
-//
-// The two representations differ in three places, and each is translated rather than migrated:
-// z-order (an array in the layout, a fractional key in the scene), style (`guide` / `classNames` at the
-// top of a shape, a `style` object on a node) and link ends (an edge's `input` / `output` property
-// names, a link endpoint's anchor-id port).
+// A `CanvasBoard` as a 2D scene layout (COMMON-CORE.md decision 10): the board keeps its stored graph (`layout.nodes`
+// are shapes, `layout.edges` connections), so boards the old editor wrote open unchanged, and the shared editor reads
+// and edits it as a `LayoutRecord2D` through `LayoutIntent`s. Three things are translated rather than migrated: z-order
+// (array order in the board, a fractional key on the element), style (`guide` / `style` / `class` on a shape,
+// `overrides` / `style` on the element) and link ends (a connection's `input` / `output` property names, an endpoint's
+// anchor-id port). A compute shape's own fields (its compute `node`, a value, a note's `text`) stay at the top of the
+// element, as a plugin kind's do (decision 13).
 //
 
 import * as Equal from 'effect/Equal';
-import * as Atom from 'effect/reactivity/Atom';
+import * as Schema from 'effect/Schema';
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
-import {
-  type Link,
-  LINK_TYPES,
-  type LinkType,
-  type Node,
-  type NodeStyle,
-  type View,
-  type ViewId,
-  type ViewMap,
-  type ViewStore,
-  initialKeys,
-  sortByZ,
-} from '@dxos/react-ui-canvas/scene';
+import { type VersionedSource, initialKeys, readPath, sortByZ, writePath } from '@dxos/react-ui-canvas/headless';
+import { type LayoutIntent, LINK_TYPES, NodeStyle, Scene, applyIntent } from '@dxos/scene';
 
 import { createAnchorId, parseAnchorId } from '../shapes/defs.ts';
 import { type CanvasBoard } from '../types/index.ts';
+import { type ComputeProjection } from './projection.ts';
 
-/** A board's layout as both representations see it: the arrays, whether live (ECHO) or plain. */
-type Layout = { nodes: CanvasBoard.Shape[]; edges: CanvasBoard.Connection[] };
+/** A stored shape: the graph node's id and whatever fields its editor wrote. */
+export type BoardShape = { id: string; [field: string]: unknown };
 
-/** The scene id a board's own layout takes; a board holds one scene, so it is the board's id. */
-export const boardViewId = (board: CanvasBoard.CanvasBoard): ViewId => board.id;
+/** A stored connection between two shapes. */
+export type BoardConnection = { id: string; source: string; target: string; [field: string]: unknown };
 
-/** An edge naming a type the engine does not have is drawn as a curve, which is what the editor drew. */
-const DEFAULT_LINK_TYPE: LinkType = 'curve';
-const linkType = (type: string | undefined): LinkType =>
-  LINK_TYPES.find((candidate) => candidate === type) ?? DEFAULT_LINK_TYPE;
+/** A board's stored graph, live (ECHO) or plain. */
+export type BoardLayout = { nodes: BoardShape[]; edges: BoardConnection[] };
+
+/** An element of a 2D layout, with any fields its kind adds. */
+export type BoardElement = Scene.LayoutRecord2D['elements'][string];
+
+/** A connection naming no link type is drawn as a smart link, the default for every generated diagram. */
+const DEFAULT_LINK_TYPE = 'smart';
+
+const isNodeStyle = Schema.is(NodeStyle);
+const isLayoutRecord = Schema.is(Scene.LayoutRecord2D);
+
+const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
+
+const text = (value: unknown): string | undefined => (typeof value === 'string' ? value : undefined);
 
 //
 // Read
 //
 
-/**
- * The scene a layout stands for. `z` comes from array order — the order the editor painted in — so the
- * first read of an existing board reproduces its stacking exactly; every later read uses the key the
- * write path put the node's position in the array for.
- */
-export const viewFromLayout = (id: ViewId, layout: Partial<Layout> | undefined, name?: string): View => {
-  const shapes = layout?.nodes ?? [];
-  const edges = layout?.edges ?? [];
-  const nodeKeys = initialKeys(shapes.length);
-  const linkKeys = initialKeys(edges.length);
-  const nodes: Record<string, Node> = {};
-  shapes.forEach((shape, index) => {
-    nodes[shape.id] = nodeFromShape(shape, nodeKeys[index]);
-  });
-  const links: Record<string, Link> = {};
-  edges.forEach((edge, index) => {
-    links[edge.id] = linkFromEdge(edge, linkKeys[index]);
-  });
-  return { id, ...(name ? { name } : {}), nodes, links };
-};
-
-const nodeFromShape = (shape: CanvasBoard.Shape, z: string): Node => {
-  // `classNames` rides through on the node untouched: the old editor reads it, the engine draws no host classes.
-  const { guide: _guide, ...rest } = shape as CanvasBoard.Shape & { style?: NodeStyle };
-  const style = styleFromShape(shape);
+/** The element a shape stands for: geometry and look in the element's slots, the rest as its kind's fields. */
+export const elementFromShape = (shape: BoardShape, z: string): BoardElement => {
+  const { guide, style, class: named, z: _z, ...own } = shape;
+  const overrides = { ...(typeof guide === 'boolean' ? { guide } : {}), ...(isNodeStyle(style) ? style : {}) };
+  const type = text(shape.type);
   return {
-    ...(rest as unknown as Node),
+    ...own,
+    ...(type !== undefined ? { type } : {}),
     z,
-    ...(style ? { style } : {}),
+    ...(Object.keys(overrides).length > 0 ? { overrides } : {}),
+    ...(typeof named === 'string' ? { style: named } : {}),
   };
 };
 
-/** A shape's look: its own `style` when the engine wrote one, else the editor's top-level `guide`. */
-const styleFromShape = (shape: CanvasBoard.Shape): NodeStyle | undefined => {
-  const { style, guide } = shape as CanvasBoard.Shape & { style?: NodeStyle };
-  const legacy: NodeStyle = guide !== undefined ? { guide } : {};
-  const merged = { ...legacy, ...style };
-  return Object.keys(merged).length > 0 ? merged : undefined;
+/**
+ * The link a connection stands for. Both ends are node ends, the editor having no free endpoints, and the property
+ * names it stores become the anchor ids the compute node definitions draw ports for.
+ */
+const elementFromEdge = (edge: BoardConnection, z: string): BoardElement => {
+  const type = LINK_TYPES.find((candidate) => candidate === edge.type) ?? DEFAULT_LINK_TYPE;
+  return {
+    id: edge.id,
+    type: 'link',
+    z,
+    source: { node: edge.source, port: createAnchorId('output', text(edge.output) ?? DEFAULT_OUTPUT) },
+    target: { node: edge.target, port: createAnchorId('input', text(edge.input) ?? DEFAULT_INPUT) },
+    props: { canvas: { type, ends: { end: 'arrow' } } },
+  };
 };
 
 /**
- * The link an edge stands for. Both ends are node ends: the editor has no free endpoints, and the
- * property names it stores become the anchor ids the compute node definitions draw ports for.
+ * The 2D layout a board's graph stands for. `z` comes from array order, shapes below links, so the first read of a
+ * board reproduces the stacking the editor painted.
  */
-const linkFromEdge = (edge: CanvasBoard.Connection, z: string): Link => {
-  const { id, source, target, input, output, type } = edge;
-  return {
-    id,
-    type: linkType(type),
-    z,
-    source: { node: source, port: createAnchorId('output', output ?? DEFAULT_OUTPUT) },
-    target: { node: target, port: createAnchorId('input', input ?? DEFAULT_INPUT) },
-  } as Link;
+export const boardLayout = (
+  id: string,
+  layout: Partial<BoardLayout> | undefined,
+  name?: string,
+): Scene.LayoutRecord2D => {
+  const shapes = layout?.nodes ?? [];
+  const edges = layout?.edges ?? [];
+  const keys = initialKeys(shapes.length + edges.length);
+  const elements: Record<string, BoardElement> = {};
+  shapes.forEach((shape, index) => {
+    elements[shape.id] = elementFromShape(shape, keys[index]);
+  });
+  edges.forEach((edge, index) => {
+    elements[edge.id] = elementFromEdge(edge, keys[shapes.length + index]);
+  });
+  return { id, dim: '2d', ...(name ? { name } : {}), elements };
 };
 
 //
 // Write
 //
 
+/** The shape an element is stored as: its own fields, its look back in the shape's `guide` / `style` / `class`. */
+export const shapeFromElement = (element: BoardElement): BoardShape => {
+  const { z: _z, overrides, style: named, ...own } = element;
+  const { guide, ...look } = overrides ?? {};
+  return {
+    ...own,
+    ...(guide !== undefined ? { guide } : {}),
+    ...(Object.keys(look).length > 0 ? { style: look } : {}),
+    ...(named !== undefined ? { class: named } : {}),
+  };
+};
+
+/** The connection a link is stored as; the default link type is written only where the stored connection has one. */
+const edgeFromElement = ({ id, source, target, props }: BoardElement, stored?: BoardConnection): BoardConnection => {
+  const type = (isRecord(props?.canvas) ? text(props.canvas.type) : undefined) ?? DEFAULT_LINK_TYPE;
+  return {
+    id,
+    ...(type !== DEFAULT_LINK_TYPE || stored?.type !== undefined ? { type } : {}),
+    source: source?.node ?? '',
+    target: target?.node ?? '',
+    output: parseAnchorId(source?.port ?? '')[1] || DEFAULT_OUTPUT,
+    input: parseAnchorId(target?.port ?? '')[1] || DEFAULT_INPUT,
+  };
+};
+
+const isLink = (element: BoardElement): boolean => element.type === 'link';
+
 /**
- * The scene applied to a layout in place: each element updated, added or removed on its own, and the
- * arrays left in z order. A wholesale rebuild would be one Automerge delta per drag frame covering the
- * whole board, so every change here touches only what changed.
+ * The layout written into a board's graph in place: each shape and connection updated, added or removed on its own,
+ * and the arrays left in z order. A wholesale rebuild would be one Automerge delta per write covering the whole board.
  */
-export const applyViewToLayout = (layout: Layout, scene: View): void => {
-  applyElements(layout.nodes, sortByZ(Object.values(scene.nodes)).map(shapeFromNode));
-  applyElements(layout.edges, sortByZ(Object.values(scene.links)).map(edgeFromLink));
+export const writeBoardLayout = (layout: BoardLayout, record: Scene.LayoutRecord2D): void => {
+  const ordered = sortByZ(Object.values(record.elements).map((element) => ({ ...element, z: element.z ?? '' })));
+  const stored = new Map(layout.edges.map((edge) => [edge.id, edge]));
+  applyElements(layout.nodes, ordered.filter((element) => !isLink(element)).map(shapeFromElement));
+  applyElements(
+    layout.edges,
+    ordered.filter(isLink).map((element) => edgeFromElement(element, stored.get(element.id))),
+  );
 };
 
 /** One array reconciled against the elements it should hold, in that order. */
-const applyElements = <T extends { id: string }>(current: T[], next: readonly T[]): void => {
+const applyElements = <T extends { id: string; [field: string]: unknown }>(current: T[], next: readonly T[]): void => {
   const wanted = new Map(next.map((element) => [element.id, element]));
   for (let index = current.length - 1; index >= 0; index--) {
-    const element = current[index];
-    const update = wanted.get(element.id);
+    const update = wanted.get(current[index].id);
     if (update) {
-      assignFields(element as Record<string, unknown>, update as Record<string, unknown>);
+      assignFields(current[index], update);
     } else {
       current.splice(index, 1);
     }
@@ -157,34 +184,10 @@ const reorder = <T extends { id: string }>(current: T[], next: readonly T[]): vo
   }
 };
 
-/** The shape a node is stored as: the node's own fields, the style kept and also mirrored for the editor. */
-const shapeFromNode = (node: Node): CanvasBoard.Shape => {
-  const { z: _z, style, ...rest } = node as Node & { style?: NodeStyle };
-  return {
-    ...(rest as unknown as CanvasBoard.Shape),
-    ...(style ? { style } : {}),
-    // The old editor reads `guide`, so a board stays readable by it (M5 retires it with the package).
-    ...(style?.guide !== undefined ? { guide: style.guide } : {}),
-  } as CanvasBoard.Shape;
-};
-
-const edgeFromLink = (link: Link): CanvasBoard.Connection => {
-  const source = 'node' in link.source ? link.source : undefined;
-  const target = 'node' in link.target ? link.target : undefined;
-  return {
-    id: link.id,
-    type: link.type,
-    source: source?.node ?? '',
-    target: target?.node ?? '',
-    output: parseAnchorId(source?.port ?? '')[1] || DEFAULT_OUTPUT,
-    input: parseAnchorId(target?.port ?? '')[1] || DEFAULT_INPUT,
-  } as CanvasBoard.Connection;
-};
-
 /** Fields written one by one, so an unchanged field produces no Automerge change. */
 const assignFields = (element: Record<string, unknown>, next: Record<string, unknown>): void => {
   for (const [key, value] of Object.entries(next)) {
-    // Structural, so a node whose geometry object was rebuilt but holds the same numbers writes nothing.
+    // Structural, so a geometry object rebuilt with the same numbers writes nothing.
     if (key !== 'id' && !Equal.equals(element[key], value)) {
       element[key] = value;
     }
@@ -200,44 +203,69 @@ const assignFields = (element: Record<string, unknown>, next: Record<string, unk
 // Store
 //
 
-export type EchoStoreOptions = {
-  /** The scene the board's own layout is; defaults to the board's id. */
-  sceneId?: ViewId;
+/** The layout id a board's graph takes; a board holds one layout, so it is the board's id. */
+export const boardLayoutId = (board: CanvasBoard.CanvasBoard): string => board.id;
+
+/** A board as a scene document: one 2D scene over its one layout, with no model. */
+export const boardDocument = (layout: Scene.LayoutRecord2D): Scene.SceneDocument => ({
+  scenes: [{ id: layout.id, dim: '2d', layout: layout.id, camera: { center: { x: 0, y: 0 }, zoom: 1 } }],
+  layouts: [layout],
+  models: [],
+});
+
+export type BoardStore = {
+  /** The id of the board's layout (and of its one scene). */
+  readonly layout: string;
+  /** The board's graph as it is stored now. */
+  read: () => Scene.LayoutRecord2D;
+  /** Writes an edit to the board, mirrored into the compute graph. */
+  write: (intent: LayoutIntent) => void;
+  /** The board's layout under its id, for the editor's field-level undo. */
+  source: VersionedSource;
+};
+
+export type BoardStoreOptions = {
+  /** Keeps the compute graph in step with every write; without it the board is a plain diagram. */
+  projection?: ComputeProjection;
 };
 
 /**
- * A `ViewStore` over a board's layout: reads derive the scene from the object (re-deriving whenever
- * ECHO announces a change, including a peer's edit), writes go back through `Obj.update`. Only the
- * board's own scene lives here — a nested scene needs another object and is not part of M4.
+ * The shared editor's store over a board: reads take a snapshot of the stored graph as a layout, intents are applied to
+ * it (through the compute projection) and written back with `Obj.update`, and undo patches the layout's fields.
  */
-export const createEchoStore = (board: CanvasBoard.CanvasBoard, options: EchoStoreOptions = {}): ViewStore => {
-  const sceneId = options.sceneId ?? boardViewId(board);
-  const scenes = Atom.keepAlive(
-    Atom.writable<ViewMap, ViewMap>(
-      (get) => {
-        const snapshot = get(Obj.atom(board));
-        return { [sceneId]: viewFromLayout(sceneId, snapshot.layout as Partial<Layout>, snapshot.name) };
-      },
-      (ctx, next) => {
-        const scene = next[sceneId];
-        if (scene) {
-          Obj.update(board, (board) => applyViewToLayout(board.layout as Layout, scene));
-        }
-        ctx.refreshSelf();
-      },
-    ),
-  );
-
-  const derived = new Map<ViewId, Atom.Atom<View | undefined>>();
+export const createBoardStore = (
+  board: CanvasBoard.CanvasBoard,
+  { projection }: BoardStoreOptions = {},
+): BoardStore => {
+  const id = boardLayoutId(board);
+  const read = () => {
+    const snapshot = Obj.getSnapshot(board);
+    return boardLayout(id, snapshot.layout, snapshot.name);
+  };
+  const store = (record: Scene.LayoutRecord2D) => Obj.update(board, (board) => writeBoardLayout(board.layout, record));
+  const heads = () => ({ [id]: read() });
   return {
-    views: scenes,
-    view: (id) => {
-      let atom = derived.get(id);
-      if (!atom) {
-        atom = Atom.keepAlive(Atom.make((get) => get(scenes)[id]));
-        derived.set(id, atom);
-      }
-      return atom;
+    layout: id,
+    read,
+    write: (intent) => {
+      const before = read();
+      const after = projection ? projection.apply(before, intent) : applyIntent(before, intent);
+      after !== before && store(after);
+    },
+    source: {
+      heads,
+      read: (path, at) => readPath(at ?? heads(), path),
+      write: (writes) => {
+        const before = read();
+        const next = readPath(
+          writes.reduce<unknown>((value, { path, value: entry }) => writePath(value, path, entry), { [id]: before }),
+          [id],
+        );
+        if (isLayoutRecord(next)) {
+          projection?.restored(before, next);
+          store(next);
+        }
+      },
     },
   };
 };

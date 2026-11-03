@@ -63,6 +63,9 @@ export type FormFieldOverride = {
  */
 export type FormPresentation = 'full' | 'compact' | 'inline' | 'static';
 
+/** When a typed value commits: as each value parses, or only on blur and Enter. */
+export type CommitOn = 'change' | 'blur';
+
 /**
  * Dynamic props passed to input components.
  */
@@ -72,6 +75,8 @@ export type FormFieldStateProps<T = any> = {
   /** Marks the field touched, so its error may show; the event is not read. */
   onBlur: (event?: FocusEvent<HTMLElement>) => void;
   onValueChange: (type: SchemaAST.AST, value: T) => void;
+  /** Drops the field's uncommitted edit (Escape), so it shows the committed value again. */
+  onRevert: () => void;
 };
 
 /**

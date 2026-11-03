@@ -8,7 +8,8 @@
 // this module draws the three node roles and checks the rules that make a data-flow diagram valid.
 //
 
-import type * as Scene from './scene.ts';
+import { Shape } from '@dxos/scene';
+
 import type * as Semantic from './semantic.ts';
 
 /** Width of a store's id compartment, in scene units: room for `D99` inside the label inset. */
@@ -32,7 +33,7 @@ export const nodeElements = (
   diagram: Semantic.Diagram,
   node: Semantic.Node,
   { w, h }: Semantic.Size,
-): Scene.Element[] => {
+): Shape.Element[] => {
   const style = {
     ...(node.color ? { color: node.color } : {}),
     ...(node.stroke ? { stroke: node.stroke } : {}),

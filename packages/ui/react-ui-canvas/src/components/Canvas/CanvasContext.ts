@@ -5,16 +5,17 @@
 import type * as Atom from 'effect/reactivity/Atom';
 
 import { createContext } from '@dxos/react-hooks';
+import { type Bounds, type Size, type ViewId } from '@dxos/scene';
 
 import {
   type CanvasAtoms,
   type CanvasController,
+  type DrawScene,
+  type DrawState,
   type EditingCommands,
   type LookCommands,
   type NavigationCommands,
-  type Projection,
   type SelectionCommands,
-  type TimeCommands,
   type ToolsCommands,
 } from '../../engine/index.ts';
 import { type GeneratorFrames } from '../../generator/index.ts';
@@ -28,17 +29,12 @@ import {
 } from '../../hooks/index.ts';
 import {
   type BackgroundGrid,
-  type Bounds,
   type Capabilities,
   type LinkRegistry,
   type NodeRegistry,
+  type RenderList2D,
   type SceneLook,
-  type Size,
   type ThemeRegistry,
-  type Timeline,
-  type View,
-  type ViewId,
-  type ViewStore,
 } from '../../model/index.ts';
 
 /**
@@ -51,12 +47,10 @@ export type CanvasServices = {
   /** The canvas's commands by aspect, made once per canvas (DESIGN.md §13). */
   controller: CanvasController;
   atoms: CanvasAtoms;
-  store: ViewStore;
+  store: DrawState;
   /** The canvas's root View, which navigation starts from. */
   root: ViewId;
-  projection: Projection;
-  /** The projection under the animated one: what keys and timeline edits are written through. */
-  baseProjection: Projection;
+  draw: DrawScene;
   capabilities: Capabilities;
   /** The scene is only looked at: the parts that edit it (selection frame, ports, actions, properties) hide. */
   readonly: boolean;
@@ -70,8 +64,6 @@ export type CanvasServices = {
   grid: number;
   /** Fit mode: the camera keeps the scene framed until the user pans or zooms. */
   fitting: Atom.Atom<boolean>;
-  /** The current scene's timeline, as stored. */
-  timeline: Atom.Atom<Timeline | undefined>;
   document: DocumentCommands;
   objectActions: ObjectActions;
 };
@@ -83,29 +75,16 @@ export type CanvasAspect<Atoms, Commands> = { atoms: Atoms; commands: Commands }
 
 /** What the canvas shows, and the one write path. */
 export const useCanvasDocument = (consumer: string) => {
-  const {
-    store,
-    root,
-    projection,
-    baseProjection,
-    capabilities,
-    readonly,
-    nodeRegistry,
-    linkRegistry,
-    timeline,
-    document,
-    controller,
-  } = useCanvasServices(consumer);
+  const { store, root, draw, capabilities, readonly, nodeRegistry, linkRegistry, document, controller } =
+    useCanvasServices(consumer);
   return {
     store,
     root,
-    projection,
-    baseProjection,
+    draw,
     capabilities,
     readonly,
     nodeRegistry,
     linkRegistry,
-    timeline,
     document,
     intents: controller.document,
   };
@@ -135,10 +114,13 @@ export const useCanvasSelection = (
 /** The active tool and the grid aids. */
 export const useCanvasTools = (
   consumer: string,
-): CanvasAspect<Pick<CanvasAtoms, 'tool' | 'linkType' | 'layer' | 'snap' | 'guides' | 'debug'>, ToolsCommands> => {
+): CanvasAspect<
+  Pick<CanvasAtoms, 'tool' | 'linkType' | 'layer' | 'snap' | 'guides' | 'axes' | 'debug'>,
+  ToolsCommands
+> => {
   const { atoms, controller } = useCanvasServices(consumer);
-  const { tool, linkType, layer, snap, guides, debug } = atoms;
-  return { atoms: { tool, linkType, layer, snap, guides, debug }, commands: controller.tools };
+  const { tool, linkType, layer, snap, guides, axes, debug } = atoms;
+  return { atoms: { tool, linkType, layer, snap, guides, axes, debug }, commands: controller.tools };
 };
 
 /**
@@ -159,12 +141,9 @@ export type CanvasLook = {
 
 export const [CanvasLookProvider, useCanvasLook] = createContext<CanvasLook>('Canvas.Root');
 
-/** The clock and keyframing; its own provider, as a canvas may have no timeline. */
-export type CanvasTime = CanvasAspect<
-  { time: CanvasAtoms['clock']['time']; playing: CanvasAtoms['clock']['playing']; autoKey: CanvasAtoms['autoKey'] },
-  TimeCommands
-> & {
-  timeline: Atom.Atom<Timeline | undefined>;
+/** The clock the view draws at; its own provider, as only an animated view's parts read it. */
+export type CanvasTime = {
+  atoms: { time: CanvasAtoms['clock']['time']; playing: CanvasAtoms['clock']['playing'] };
   /** What the scene's generators drew, and for which time: the generator host's output, which it hands over as it comes. */
   generated: GeneratorFrames | undefined;
 };
@@ -182,8 +161,8 @@ export const [CanvasEditingProvider, useCanvasEditing] = createContext<CanvasEdi
  */
 export type CanvasGesture = {
   /** The scene as drawn while a gesture is in flight. */
-  displayScene: View;
-  /** The gesture in flight would be refused by the projection (e.g. an overlap on the lattice). */
+  displayScene: RenderList2D;
+  /** The gesture in flight would be refused by the layout's mode (e.g. an overlap on the lattice). */
   blocked: boolean;
   /** The bounds a create gesture would land, drawn whether or not the node itself previews. */
   createFrame: Bounds | undefined;

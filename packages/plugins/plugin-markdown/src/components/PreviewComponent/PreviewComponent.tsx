@@ -113,6 +113,9 @@ export const PreviewComponent = ({
   // Fall back to the app's surface registry unless a caller injects a check (e.g. from a story).
   const defaultIsSurfaceAvailable = Surface.useIsAvailable();
   const isSurfaceAvailable = isSurfaceAvailableProp ?? defaultIsSurfaceAvailable;
+  // The check above reads without subscribing: a preview module that loads after the first render must render this again.
+  Surface.useContributions(AppSurface.Section);
+  Surface.useContributions(AppSurface.CardContent);
   const containerRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -364,7 +367,10 @@ export const PreviewComponent = ({
           <div
             className={mx(
               'grid grid-rows-[minmax(0,1fr)] overflow-hidden overscroll-contain border rounded-md',
-              hasAttention ? 'border-focus-ring-subtle' : 'border-separator-subtle',
+              // The border is kept transparent rather than removed so hovering does not shift the content.
+              hasAttention
+                ? 'border-focus-ring-subtle'
+                : 'border-transparent group-hover/embed:border-separator-subtle transition-colors',
             )}
             inert={hasAttention ? undefined : true}
           >

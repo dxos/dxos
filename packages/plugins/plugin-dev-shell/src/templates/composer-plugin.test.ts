@@ -18,6 +18,11 @@ import { composerPlugin } from './composer-plugin.ts';
 describe('Composer Plugin project template', () => {
   let builder: EchoTestBuilder;
 
+  test("does not share the id of plugin-projects' template, which a browser may offer beside it", ({ expect }) => {
+    expect(composerPlugin?.id).toBe('org.dxos.project.composerPluginDevServer');
+    expect(composerPlugin?.label).toBe('Composer Plugin (Dev Server)');
+  });
+
   beforeEach(async () => {
     builder = await new EchoTestBuilder().open();
   });

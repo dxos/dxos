@@ -7,16 +7,24 @@ import * as Effect from 'effect/Effect';
 
 import { Database, type Ref } from '@dxos/echo';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { type ViewId } from '@dxos/react-ui-canvas/headless';
 
-import { readViews, rootOf, seedContent } from '../model/content.ts';
+import { Canvas } from '#types';
 
-/** A drawing's canvas, loaded, with its scenes read and the scene `scene` (the root by default) resolved. */
-export const loadScene = Effect.fn(function* (ref: Ref.Ref<Drawing.Drawing>, scene?: ViewId) {
-  const drawing = yield* Database.load(ref);
-  const canvas = yield* Database.load(drawing.canvas);
-  const id = scene ?? rootOf(canvas.content) ?? seedContent({});
-  return { canvas, id, scenes: readViews(canvas.content) };
+import { loadCanvas } from '../model/canvas-document.ts';
+
+/** The `Canvas` an operation was given, with what it reaches loaded, or a failure naming what it was instead. */
+export const canvasOf = Effect.fn(function* (ref: Ref.Ref<unknown>) {
+  const canvas = yield* Database.load(ref);
+  if (!Canvas.isCanvas(canvas)) {
+    return yield* Effect.fail(new DrawingDialectError({ message: `Object ${ref.uri} is not a scene canvas.` }));
+  }
+  yield* loadCanvas(canvas);
+  return canvas;
+});
+
+/** The `Canvas` a drawing draws on. */
+export const drawingCanvasOf = Effect.fn(function* (drawing: Drawing.Drawing) {
+  return yield* canvasOf(drawing.canvas);
 });
 
 /** The drawing has no scene or node of the id an operation named. */
@@ -29,9 +37,6 @@ export class DrawingDialectError extends Data.TaggedError('DrawingDialectError')
 export class InvalidIntentError extends Data.TaggedError('InvalidIntentError')<{ message: string }> {}
 
 /** A canvas with no version history, whose edits could not be undone. */
-/** A canvas a newer plugin wrote, whose format this one must not write. */
-export class NewerCanvasError extends Data.TaggedError('NewerCanvasError')<{ message: string }> {}
-
 export class UnversionedCanvasError extends Data.TaggedError('UnversionedCanvasError')<{
   message: string;
 }> {}

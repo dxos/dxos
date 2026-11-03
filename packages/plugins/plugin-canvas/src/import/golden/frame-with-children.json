@@ -1,0 +1,296 @@
+{
+  "layout": {
+    "id": "root",
+    "dim": "2d",
+    "layers": {
+      "frames": {
+        "id": "frames",
+        "name": "Frames",
+        "z": "G"
+      },
+      "layer": {
+        "id": "layer",
+        "name": "Layer 1",
+        "z": "V"
+      }
+    },
+    "elements": {
+      "frame": {
+        "id": "frame",
+        "type": "rect",
+        "z": "V",
+        "center": {
+          "x": 288,
+          "y": 256
+        },
+        "size": {
+          "width": 448,
+          "height": 384
+        },
+        "label": "Stage",
+        "layer": "frames",
+        "overrides": {
+          "tone": 0,
+          "alignHorizontal": "left",
+          "alignVertical": "top"
+        },
+        "props": {
+          "canvas": {}
+        }
+      },
+      "inner-a": {
+        "id": "inner-a",
+        "type": "rect",
+        "z": "l",
+        "center": {
+          "x": 192,
+          "y": 192
+        },
+        "size": {
+          "width": 128,
+          "height": 128
+        },
+        "label": "A",
+        "layer": "layer",
+        "overrides": {
+          "tone": 0
+        },
+        "props": {
+          "canvas": {}
+        }
+      },
+      "inner-b": {
+        "id": "inner-b",
+        "type": "rect",
+        "z": "t",
+        "center": {
+          "x": 384,
+          "y": 320
+        },
+        "size": {
+          "width": 128,
+          "height": 128
+        },
+        "label": "B",
+        "layer": "layer",
+        "overrides": {
+          "tone": 0
+        },
+        "props": {
+          "canvas": {}
+        }
+      },
+      "outside": {
+        "id": "outside",
+        "type": "rect",
+        "z": "z",
+        "center": {
+          "x": 768,
+          "y": 192
+        },
+        "size": {
+          "width": 128,
+          "height": 128
+        },
+        "label": "Out",
+        "layer": "layer",
+        "overrides": {
+          "tone": 0
+        },
+        "props": {
+          "canvas": {}
+        }
+      },
+      "inner-arrow": {
+        "id": "inner-arrow",
+        "type": "link",
+        "z": "x",
+        "source": {
+          "node": "inner-a"
+        },
+        "target": {
+          "node": "inner-b"
+        },
+        "layer": "layer",
+        "props": {
+          "canvas": {
+            "type": "line",
+            "ends": {
+              "end": "arrow"
+            }
+          }
+        }
+      },
+      "cross": {
+        "id": "cross",
+        "type": "link",
+        "z": "zV",
+        "source": {
+          "node": "outside"
+        },
+        "target": {
+          "node": "inner-a"
+        },
+        "layer": "layer",
+        "props": {
+          "canvas": {
+            "type": "line",
+            "ends": {
+              "end": "arrow"
+            }
+          }
+        }
+      }
+    }
+  },
+  "parts": [],
+  "objects": [],
+  "intents": [
+    {
+      "kind": "create",
+      "element": {
+        "id": "frame",
+        "type": "rect",
+        "z": "V",
+        "center": {
+          "x": 288,
+          "y": 256
+        },
+        "size": {
+          "width": 448,
+          "height": 384
+        },
+        "label": "Stage",
+        "layer": "frames",
+        "overrides": {
+          "tone": 0,
+          "alignHorizontal": "left",
+          "alignVertical": "top"
+        },
+        "props": {
+          "canvas": {}
+        }
+      }
+    },
+    {
+      "kind": "create",
+      "element": {
+        "id": "inner-a",
+        "type": "rect",
+        "z": "l",
+        "center": {
+          "x": 192,
+          "y": 192
+        },
+        "size": {
+          "width": 128,
+          "height": 128
+        },
+        "label": "A",
+        "layer": "layer",
+        "overrides": {
+          "tone": 0
+        },
+        "props": {
+          "canvas": {}
+        }
+      }
+    },
+    {
+      "kind": "create",
+      "element": {
+        "id": "inner-b",
+        "type": "rect",
+        "z": "t",
+        "center": {
+          "x": 384,
+          "y": 320
+        },
+        "size": {
+          "width": 128,
+          "height": 128
+        },
+        "label": "B",
+        "layer": "layer",
+        "overrides": {
+          "tone": 0
+        },
+        "props": {
+          "canvas": {}
+        }
+      }
+    },
+    {
+      "kind": "create",
+      "element": {
+        "id": "outside",
+        "type": "rect",
+        "z": "z",
+        "center": {
+          "x": 768,
+          "y": 192
+        },
+        "size": {
+          "width": 128,
+          "height": 128
+        },
+        "label": "Out",
+        "layer": "layer",
+        "overrides": {
+          "tone": 0
+        },
+        "props": {
+          "canvas": {}
+        }
+      }
+    },
+    {
+      "kind": "create",
+      "element": {
+        "id": "inner-arrow",
+        "type": "link",
+        "z": "x",
+        "source": {
+          "node": "inner-a"
+        },
+        "target": {
+          "node": "inner-b"
+        },
+        "layer": "layer",
+        "props": {
+          "canvas": {
+            "type": "line",
+            "ends": {
+              "end": "arrow"
+            }
+          }
+        }
+      }
+    },
+    {
+      "kind": "create",
+      "element": {
+        "id": "cross",
+        "type": "link",
+        "z": "zV",
+        "source": {
+          "node": "outside"
+        },
+        "target": {
+          "node": "inner-a"
+        },
+        "layer": "layer",
+        "props": {
+          "canvas": {
+            "type": "line",
+            "ends": {
+              "end": "arrow"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "skipped": {},
+  "approximated": {}
+}
