@@ -155,11 +155,8 @@ const dropLocalManifest = (root, hash) => {
   }
 };
 
-const main = () => {
-  const args = process.argv.slice(2);
-  const startedAt = Date.now();
-  const status = runMoon(args);
-
+/** Checks what the finished run hydrated and repairs bad entries; returns the exit status to report. */
+const verify = (args, startedAt, status) => {
   const root = findWorkspaceRoot(process.cwd());
   if (!root) {
     return status;
@@ -237,6 +234,19 @@ const main = () => {
 
   annotate('notice', `Re-running \`moon ${args.join(' ')}\` against the rebuilt outputs of ${repaired.join(', ')}.`);
   return runMoon(args);
+};
+
+const main = () => {
+  const args = process.argv.slice(2);
+  const startedAt = Date.now();
+  const status = runMoon(args);
+  // The check is best-effort; a bug in it must not turn moon's own verdict into a failure.
+  try {
+    return verify(args, startedAt, status);
+  } catch (error) {
+    annotate('warning', `Hydration check failed: ${error instanceof Error ? error.message : String(error)}`);
+    return status;
+  }
 };
 
 process.exit(main());
