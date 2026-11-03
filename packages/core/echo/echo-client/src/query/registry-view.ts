@@ -81,8 +81,7 @@ export class RegistryView {
 /** A simple selection over an explicit local registry scope; anything else the registry does not serve. */
 const isRegistryQuery = (query: QueryAST.Query): boolean => {
   const scope = getRegistryScopeForQuery(query);
-  // Remote registry entries are cached into the local registry as they resolve, so either location reads it.
-  if (!scope.included || (!scope.locations.has('local') && !scope.locations.has('remote'))) {
+  if (!scope.included || !scope.locations.has('local')) {
     return false;
   }
   const simple = isSimpleSelectionQuery(query);

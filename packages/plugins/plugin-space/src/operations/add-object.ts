@@ -67,15 +67,11 @@ export default handler;
  */
 const instantiate = Effect.fnUntraced(function* (db: Database.Database, draft: SpaceOperation.ObjectDraft) {
   const { '@type': typename, ...properties } = draft;
-  // A type published by a plugin that is not loaded here comes from the remote registry.
+  // The registry reaches the graph's type sources, so a type another plugin publishes resolves too.
   const [schema] = yield* Effect.promise(() =>
     db
       .query(
-        Query.select(Filter.and(Filter.type(Type.Type), Filter.key(typename))).from(
-          Scope.space(),
-          Scope.registry(),
-          Scope.registry('remote'),
-        ),
+        Query.select(Filter.and(Filter.type(Type.Type), Filter.key(typename))).from(Scope.space(), Scope.registry()),
       )
       .run(),
   );

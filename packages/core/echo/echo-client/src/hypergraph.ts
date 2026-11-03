@@ -1013,7 +1013,10 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   private _createLiveObjectQueryContext(): QueryContext {
     const context = new LocalQueryEngine({
       registry: this._registry,
-      resolveRemoteRegistry: async (keys) => {
+      resolveRegistryKeys: async (keys) => {
+        if (this.#typeSources.length === 0) {
+          return;
+        }
         await Promise.all(
           keys.flatMap((key) => {
             const dxn = DXN.tryMake(`dxn:${key}`);

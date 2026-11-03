@@ -1300,3 +1300,21 @@ decision D-56: `Scope.registry('remote')` is the remote registry. A query includ
   rejected:
     - A remote query source revalidated against the working set — registry entries have no document to revalidate.
 ```
+
+```mdl
+decision D-57: Type resolution does not use `Scope.registry('remote')`, which would mean different things on a client and on EDGE: the same registry query (`Scope.registry()`) reaches published types wherever a type source is installed, so the same code runs in both places.
+  date: 2026-11-03
+  by: user:dmaretskyi
+  supersedes: D-56
+  affects: [F-3.5]
+  source: https://github.com/dxos/dxos/pull/14389#discussion_r4459081379
+```
+
+```mdl
+decision D-58: A query over `Scope.registry()` that selects type entities (`Filter.type(Type.Type)`) and filters by key asks the hypergraph's type sources for each key the in-process registry lacks, adds what they return to it, and answers from it; concurrent requests for one key share a lookup, and with no source installed nothing is asked. Fills in [D-57].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.5]
+  why: Limiting it to queries for types keeps operation and skill lookups from reaching the type registry.
+```

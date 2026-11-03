@@ -46,12 +46,8 @@ const setup = async () => {
   return { db };
 };
 
-/** The registrations of a typename, asking the remote registry for what the local one lacks. */
-const queryType = async (
-  db: Database.Database,
-  typename: string,
-  scopes = [Scope.registry(), Scope.registry('remote')],
-) => {
+/** The registrations of a typename; the registry asks the type sources for what it lacks. */
+const queryType = async (db: Database.Database, typename: string, scopes = [Scope.registry()]) => {
   const [type] = await db
     .query(Query.select(Filter.and(Filter.type(Type.Type), Filter.key(typename))).from(...scopes))
     .run();
@@ -123,12 +119,21 @@ describe('type sources', () => {
     expect(registry.requests).toHaveLength(0);
   });
 
-  test('a query without the remote registry scope does not ask the source', async ({ expect }) => {
+  test('a query outside the registry does not ask the source', async ({ expect }) => {
     const { db } = await setup();
     const registry = makeMockRegistry();
     db.graph.registerTypeSource(registry.source);
 
-    expect(await queryType(db, TYPENAME, [Scope.registry()])).toBeUndefined();
+    expect(await queryType(db, TYPENAME, [Scope.space()])).toBeUndefined();
+    expect(registry.requests).toHaveLength(0);
+  });
+
+  test('a registry query by key for something other than types does not ask the source', async ({ expect }) => {
+    const { db } = await setup();
+    const registry = makeMockRegistry();
+    db.graph.registerTypeSource(registry.source);
+
+    await db.query(Query.select(Filter.key('com.example.operation.any')).from(Scope.registry())).run();
     expect(registry.requests).toHaveLength(0);
   });
 
@@ -137,7 +142,7 @@ describe('type sources', () => {
     db.graph.registerTypeSource(makeMockRegistry().source);
 
     const result = db.query(
-      Query.select(Filter.and(Filter.type(Type.Type), Filter.key(TYPENAME))).from(Scope.registry('remote')),
+      Query.select(Filter.and(Filter.type(Type.Type), Filter.key(TYPENAME))).from(Scope.registry()),
     );
     let unsubscribe: (() => void) | undefined;
     const typename = await new Promise<string | undefined>((resolve) => {

@@ -84,11 +84,7 @@ export default handler;
  */
 /** Every registration of a typename: persisted in the space, code-shipped here, or published by another plugin. */
 const typesNamed = (typename: string) =>
-  Query.select(Filter.and(Filter.type(Type.Type), Filter.key(typename))).from(
-    Scope.space(),
-    Scope.registry(),
-    Scope.registry('remote'),
-  );
+  Query.select(Filter.and(Filter.type(Type.Type), Filter.key(typename))).from(Scope.space(), Scope.registry());
 
 const typeFilter = Effect.fnUntraced(function* (typename: string) {
   const declared = yield* Database.query(typesNamed(typename)).run;

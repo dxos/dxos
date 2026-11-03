@@ -32,8 +32,7 @@ export const space = (options?: { id?: string; includeAllFeeds?: boolean }): Que
  * Scope targeting a code-shipped object/type registry.
  *
  * - `'local'`  — the in-process registry attached to the hypergraph (default).
- * - `'remote'` — the registry of published types: a query that filters by key (`Filter.key(typename)`) asks the
- *   hypergraph's type sources for the keys the in-process registry lacks and caches what they return there.
+ * - `'remote'` — a remote registry service (not yet implemented).
  *
  * @example
  * ```ts
