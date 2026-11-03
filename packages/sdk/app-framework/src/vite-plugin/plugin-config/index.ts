@@ -2,12 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { basename, dirname, relative } from 'node:path';
+import { dirname, posix, relative } from 'node:path';
 import type * as Vite from 'vite';
-import { type RunnableDevEnvironment, type Plugin as VitePlugin } from 'vite';
+import { type DevEnvironment, type RunnableDevEnvironment, type Plugin as VitePlugin } from 'vite';
 
 import * as Capability from '../../core/capability.ts';
 import type * as Plugin from '../../core/plugin.ts';
+import { type HotModulesApi, getHotModulesApi } from '../hot-modules/index.ts';
 
 const CONFIG_FILE = /\/dx\.config\.ts$/;
 
@@ -131,8 +132,17 @@ export const moduleBodyAttributePlugin = (): VitePlugin => ({
 /** Query parameter on a library entry for `dx.config.ts` that limits it to one runtime's modules. */
 export const LIBRARY_ENV_PARAM = 'dx-env';
 
-/** Query parameter for an app's lazily loaded half of a config: the module list a plugin needs once enabled. */
-const MODULES_PARAM = 'dx-modules';
+/** Where a build emits each app plugin's manifest, relative to the output directory. */
+export const manifestFileName = (key: string) => `plugins/${key}/manifest.json`;
+
+/** Path the dev server serves each app plugin's manifest on, mirroring the build's {@link manifestFileName}. */
+const DEV_MANIFEST_PATH = /\/@dx-plugins\/([^/]+)\/manifest\.json$/;
+const devManifestPath = (key: string) => `@dx-plugins/${encodeURIComponent(key)}/manifest.json`;
+
+// A chunk's URL is known only once the bundle is written, so the manifest holds a token until then.
+const CHUNK_TOKEN = /"__DX_CHUNK_(\d+)__"/g;
+
+type PendingManifest = { json: string; chunkRefs: readonly string[] };
 
 /** One module of a library build's manifest, with the source file its body (and adapter) load from. */
 export type LibraryModule = Plugin.ManifestModule & { bodyFile: string; adapterFile?: string };
@@ -145,10 +155,12 @@ export type PluginConfigPluginOptions = {
 };
 
 /**
- * Evaluates every `dx.config.ts` defined with `Plugin.config` at build time and replaces it, for the
- * app, with its {@link Plugin.Manifest}: static JSON listing the modules for the target environment
- * and the URL of each body. Module bodies become their own chunks; bodies for other environments are
- * never emitted. In dev the config is re-evaluated on every load, so edits hot-reload.
+ * Evaluates every `dx.config.ts` defined with `Plugin.config` at build time. For an app, the config
+ * becomes the plugin's metadata plus the URL of its {@link Plugin.Manifest}: a JSON file listing the
+ * modules for the target environment and the URL of each body, fetched when the plugin is enabled.
+ * A build emits it as `plugins/<key>/manifest.json` and each body as its own chunk; the dev server
+ * serves it from `/@dx-plugins/<key>/manifest.json`, re-evaluating the config after every edit.
+ * A library keeps a JS entry, because its consumers bundle it again.
  */
 export const pluginConfigPlugin = ({ apply, onLibraryManifest }: PluginConfigPluginOptions = {}): VitePlugin => {
   let evaluator: Promise<RunnableDevEnvironment> | undefined;
@@ -205,12 +217,102 @@ export const pluginConfigPlugin = ({ apply, onLibraryManifest }: PluginConfigPlu
     return run;
   };
 
+  // Every config the evaluator loaded that imports `file`, itself included.
+  const configsImporting = async (root: string, file: string): Promise<Set<string>> => {
+    const configs = new Set<string>();
+    if (!evaluator) {
+      return configs;
+    }
+    const { moduleGraph } = await getEvaluator(root);
+    const seen = new Set<Vite.EnvironmentModuleNode>();
+    const visit = (module: Vite.EnvironmentModuleNode) => {
+      if (seen.has(module)) {
+        return;
+      }
+      seen.add(module);
+      if (module.file && CONFIG_FILE.test(module.file)) {
+        configs.add(module.file);
+      }
+      module.importers.forEach(visit);
+    };
+    moduleGraph.getModulesByFile(file)?.forEach(visit);
+    return configs;
+  };
+
+  // Dev: each plugin's manifest by key, refreshed whenever its config is loaded again.
+  const devManifests = new Map<string, { file: string; json: string }>();
+  // Build: each environment's manifests by output file name, completed once chunk names are final.
+  const pendingManifests = new Map<string, Map<string, PendingManifest>>();
+  let hotModules: HotModulesApi | undefined;
+
   return {
     name: 'dx-plugin-config',
     enforce: 'pre',
     apply,
+    configResolved(config) {
+      hotModules = config.plugins.map(getHotModulesApi).find((api) => api !== undefined);
+    },
+    buildStart() {
+      pendingManifests.delete(this.environment.name);
+    },
     watchChange(id) {
       changed.add(id);
+    },
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const match = DEV_MANIFEST_PATH.exec((req.url ?? '').split('?')[0]);
+        if (!match) {
+          return next();
+        }
+        const key = decodeURIComponent(match[1]);
+        const entry = devManifests.get(key);
+        if (!entry) {
+          res.statusCode = 404;
+          res.end(`No plugin manifest for '${key}'; its dx.config.ts has not been loaded.`);
+          return;
+        }
+        // Loading the config again when an edit invalidated it is what refreshes its manifest.
+        const environment = server.environments.client;
+        const [module] = environment.moduleGraph.getModulesByFile(entry.file) ?? [];
+        void (module ? environment.transformRequest(module.url) : Promise.resolve(null))
+          .then(() => {
+            // A plugin served to another origin (a third-party dev server) is fetched from there.
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            res.setHeader('Content-Type', 'application/json');
+            res.setHeader('Cache-Control', 'no-store');
+            res.end(devManifests.get(key)?.json ?? entry.json);
+          })
+          .catch(next);
+      });
+    },
+    async hotUpdate({ file, modules }) {
+      if (this.environment.config.consumer !== 'client') {
+        return;
+      }
+      // An edit to a file a config imports changes its manifest, though the app's graph does not link them.
+      // Only files in the config's own package: a shared framework file would re-create every plugin.
+      const configs = [...(await configsImporting(this.environment.config.root, file))].filter(
+        (config) => config !== file && file.startsWith(`${dirname(config)}/`),
+      );
+      const { moduleGraph } = this.environment;
+      const stale = configs.flatMap((config) => [...(moduleGraph.getModulesByFile(config) ?? [])]);
+      if (stale.length === 0) {
+        return;
+      }
+      stale.forEach((module) => moduleGraph.invalidateModule(module));
+      return [...modules, ...stale];
+    },
+    generateBundle(_options, bundle) {
+      for (const [fileName, { json, chunkRefs }] of pendingManifests.get(this.environment.name) ?? []) {
+        const asset = bundle[fileName];
+        if (asset?.type !== 'asset') {
+          this.error(`Plugin manifest ${fileName} is missing from the bundle.`);
+        }
+        // Relative to the manifest, so the app resolves bodies against wherever the manifest is hosted.
+        asset.source = json.replace(CHUNK_TOKEN, (_match, index) =>
+          JSON.stringify(posix.relative(posix.dirname(fileName), this.getFileName(chunkRefs[Number(index)]))),
+        );
+      }
     },
     async load(id) {
       const file = id.split('?')[0];
@@ -226,19 +328,7 @@ export const pluginConfigPlugin = ({ apply, onLibraryManifest }: PluginConfigPlu
 
       const library = this.environment.mode === 'build' && Boolean(this.environment.config.build.lib);
       const query = new URLSearchParams(id.split('?')[1] ?? '');
-      // An app boots with each plugin's metadata only; its module list loads when the plugin is enabled.
-      if (!library && !query.has(MODULES_PARAM)) {
-        return [
-          "import * as Plugin from '@dxos/app-framework/Plugin';",
-          `const plugin = ${JSON.stringify(config.plugin)};`,
-          'export const meta = Plugin.getMetaFromConfig({ plugin });',
-          // Relative, so the dev server's hot-module transform takes the module list for the plugin's definition.
-          `export const make = Plugin.lazy(meta, () => import(${JSON.stringify(`./${basename(file)}?${MODULES_PARAM}`)}));`,
-          'export default { plugin, meta, make };',
-          // An edit re-creates the plugin through its module list; its importers keep the `make` they hold.
-          ...(this.environment.mode === 'dev' ? ['if (import.meta.hot) { import.meta.hot.accept(); }'] : []),
-        ].join('\n');
-      }
+      const devEnvironment: DevEnvironment | undefined = this.environment.mode === 'dev' ? this.environment : undefined;
 
       const { conditions } = this.environment.config.resolve;
       const target =
@@ -261,22 +351,19 @@ export const pluginConfigPlugin = ({ apply, onLibraryManifest }: PluginConfigPlu
       const chunkRefs: string[] = [];
       // Dev serves the source file directly; a build emits it as a chunk whose URL replaces the token.
       const toUrl = (moduleFile: string, specifier = `./${relative(dirname(file), moduleFile)}`) => {
-        if (moduleFile.startsWith('/')) {
-          this.addWatchFile(moduleFile);
-        }
         if (library) {
+          if (moduleFile.startsWith('/')) {
+            this.addWatchFile(moduleFile);
+          }
           loaders.push(
             `${JSON.stringify(specifier)}: () => import(${JSON.stringify(specifier.startsWith('.') ? moduleFile : specifier)})`,
           );
           return specifier;
         }
-        if (this.environment.mode !== 'build') {
-          const url = `/@fs${moduleFile}`;
-          // A static import, so the dev server's hot-module transform finds the body and makes it hot-replaceable.
-          if (specifier.startsWith('.') || specifier.startsWith('#')) {
-            loaders.push(`${JSON.stringify(url)}: () => import(${JSON.stringify(specifier)})`);
-          }
-          return url;
+        if (devEnvironment) {
+          // The app imports the body by this URL, so no transformed file names it as a loader target.
+          hotModules?.addModuleBody(moduleFile, devEnvironment);
+          return `/@fs${moduleFile}`;
         }
         // App builds drop entry exports; the body's `default` is the contract the manifest loads.
         chunkRefs.push(this.emitFile({ type: 'chunk', id: moduleFile, preserveSignature: 'exports-only' }));
@@ -330,17 +417,46 @@ export const pluginConfigPlugin = ({ apply, onLibraryManifest }: PluginConfigPlu
       }
 
       const manifest: Plugin.Manifest = { plugin: config.plugin, publish: config.publish, modules };
-      const json = JSON.stringify(manifest, null, 2).replace(
-        /"__DX_CHUNK_(\d+)__"/g,
-        (_match, index) => `import.meta.ROLLUP_FILE_URL_${chunkRefs[Number(index)]}`,
-      );
-      return [
+      const json = JSON.stringify(manifest, null, 2);
+      if (library) {
+        return [
+          "import * as Plugin from '@dxos/app-framework/Plugin';",
+          `const plugin = Plugin.fromManifest(${json}, {${loaders.join(', ')}});`,
+          'export const { meta, make } = plugin;',
+          'export default plugin;',
+        ].join('\n');
+      }
+
+      // An app boots with each plugin's metadata only; the manifest is fetched when the plugin is enabled.
+      const head = [
         "import * as Plugin from '@dxos/app-framework/Plugin';",
-        `const plugin = Plugin.fromManifest(${json}, {${loaders.join(', ')}});`,
-        // The app's lazy half is loaded by `Plugin.lazy`, which takes the factory as the default export.
-        ...(library
-          ? ['export const { meta, make } = plugin;', 'export default plugin;']
-          : ['export default plugin.make;']),
+        `const plugin = ${JSON.stringify(config.plugin)};`,
+        'export const meta = Plugin.getMetaFromConfig({ plugin });',
+      ];
+      const { key } = config.plugin;
+      if (!devEnvironment) {
+        const fileName = manifestFileName(key);
+        // Named by key rather than content: the boot chunk names the manifest, and the manifest names chunks.
+        const ref = this.emitFile({ type: 'asset', fileName, source: json });
+        const pending = pendingManifests.get(this.environment.name) ?? new Map<string, PendingManifest>();
+        pendingManifests.set(this.environment.name, pending.set(fileName, { json, chunkRefs }));
+        return [
+          ...head,
+          `export const make = Plugin.fromManifestUrl(meta, new URL(import.meta.ROLLUP_FILE_URL_${ref}, import.meta.url).href);`,
+          'export default { plugin, meta, make };',
+        ].join('\n');
+      }
+
+      devManifests.set(key, { file, json });
+      return [
+        ...head,
+        // Against this module's origin, so a host on another origin fetches it from this dev server; not
+        // `new URL(path, import.meta.url)`, which Vite rewrites into a `/@fs/` file URL.
+        `const url = new URL(${JSON.stringify(`${this.environment.config.base}${devManifestPath(key)}`)}, new URL(import.meta.url).origin).href;`,
+        'export const make = Plugin.fromManifestUrl(meta, url, { hot: true });',
+        'export default { plugin, meta, make };',
+        // An edit re-creates the plugin from its new manifest; its importers keep the `make` they hold.
+        'if (import.meta.hot) { import.meta.hot.accept(() => { void globalThis.__DX_HOT_MODULES__?.update(url, {}); }); }',
       ].join('\n');
     },
   };

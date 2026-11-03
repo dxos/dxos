@@ -104,6 +104,12 @@ const latest = (namespace: unknown): unknown => {
 
 globalThis.__DX_HOT_MODULES__ = { has: (key) => state.files.has(key), update, latest, state };
 
+/**
+ * The newest version of a body a loader just imported by URL. After a hot update the browser keeps
+ * serving the original URL's stale instance, so the swap happens where the import resolves.
+ */
+export const newest = (namespace: unknown): unknown => latest(namespace) ?? namespace;
+
 /** Registers a manager to receive hot updates; held weakly so a disposed manager is collected. */
 export const register = (manager: Reloadable): void => {
   state.managers.add(new WeakRef(manager));

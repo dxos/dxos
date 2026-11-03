@@ -593,7 +593,7 @@ export default defineConfig((env) => ({
     rolldownOptions: { experimental: { chunkOptimization: false } },
   },
   plugins: [
-    // Serves each `Plugin.config`-defined `dx.config.ts` as its build-time manifest.
+    // Serves each `Plugin.config`-defined `dx.config.ts` as its metadata plus a `plugins/<key>/manifest.json`.
     pluginConfigPlugin(),
     traceBootLeak(path.resolve(dirname, 'src/main.tsx')),
     ShutdownPlugin(),
@@ -772,7 +772,8 @@ export default defineConfig((env) => ({
       filename: 'sw.ts',
       injectManifest: {
         maximumFileSizeToCacheInBytes: 30000000,
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,wasm,woff2}'],
+        // Plugin manifests too, since enabling a plugin offline fetches its manifest before any module.
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,wasm,woff2}', 'plugins/*/manifest.json'],
         // The Phosphor catalog (~9,000 SVGs in /phosphor/) is deliberately NOT precached: the
         // manifest entries alone would add one install-time request per file, slowing every
         // install/update. sw.ts caches /phosphor/ fetches at runtime (cache-first) instead,

@@ -3,7 +3,7 @@
 //
 
 import path from 'node:path';
-import { type ESTree, type Plugin } from 'vite';
+import { type DevEnvironment, type ESTree, type Plugin } from 'vite';
 
 // Mirrors `core/hot-modules.ts`; duplicated because this file runs in node and must not pull in the runtime.
 const HOT_KEY_EXPORT = '__dxHotKey';
@@ -61,8 +61,8 @@ const loaderCandidates = (argument: ESTree.Node): ESTree.Node[] =>
 /**
  * Finds the `() => import('./x')` loaders passed to a call — the shape of `Capability.lazyModule`, every
  * maker built on it, and `Plugin.lazy` — or passed as the values of an object argument, the loader map a
- * dev manifest hands `Plugin.fromManifest`. Asset imports (`?raw`, `?url`, …) are skipped; another query,
- * such as a config's `?dx-modules` half, names a module of its own.
+ * library manifest hands `Plugin.fromManifest`. Asset imports (`?raw`, `?url`, …) are skipped; another
+ * query names a module of its own.
  */
 export const findModuleLoaders = (program: ESTree.Program): ModuleLoader[] => {
   const loaders: ModuleLoader[] = [];
@@ -138,6 +138,26 @@ export const wrapModuleBody = (code: string, key: string): string => {
   return `${accept}${code}\nexport const ${HOT_KEY_EXPORT} = ${literal};\n`;
 };
 
+/** Name of {@link hotModulesPlugin}, by which other plugins find its {@link HotModulesApi}. */
+export const HOT_MODULES_PLUGIN = 'dxos:hot-modules';
+
+/** What {@link hotModulesPlugin} exposes to other plugins through its `api`. */
+export type HotModulesApi = {
+  /**
+   * Marks a file as a module body that the app imports by URL, which no loader in any transformed
+   * file names; a plugin manifest lists its bodies this way.
+   */
+  addModuleBody(id: string, environment: DevEnvironment): void;
+};
+
+// Plugins carry `api` untyped; only this module's own plugin puts an `addModuleBody` there.
+const isHotModulesApi = (api: unknown): api is HotModulesApi =>
+  typeof api === 'object' && api !== null && 'addModuleBody' in api && typeof api.addModuleBody === 'function';
+
+/** Reads the {@link HotModulesApi} off a resolved plugin, if it is {@link hotModulesPlugin}. */
+export const getHotModulesApi = (plugin: { name: string; api?: unknown }): HotModulesApi | undefined =>
+  plugin.name === HOT_MODULES_PLUGIN && isHotModulesApi(plugin.api) ? plugin.api : undefined;
+
 /**
  * Dev-server plugin that makes plugin modules hot-replaceable: editing a module body (the file a
  * `Capability.lazyModule` loader imports), or any file only it imports, re-runs that module and
@@ -151,8 +171,21 @@ export const hotModulesPlugin = (): Plugin => {
   const bodies = new Set<string>();
   let root = process.cwd();
 
+  const addBody = (id: string, environment: DevEnvironment | undefined) => {
+    if (bodies.has(id)) {
+      return;
+    }
+    bodies.add(id);
+    // Already transformed through another importer: drop the cached result so it is wrapped.
+    const graph = environment?.moduleGraph;
+    graph?.getModulesByFile(id.split('?')[0])?.forEach((module) => graph.invalidateModule(module));
+  };
+
+  const api: HotModulesApi = { addModuleBody: addBody };
+
   return {
-    name: 'dxos:hot-modules',
+    name: HOT_MODULES_PLUGIN,
+    api,
     apply: 'serve',
     // After `@vitejs/plugin-react`, so a Fast Refresh footer is visible.
     enforce: 'post',
@@ -173,7 +206,7 @@ export const hotModulesPlugin = (): Plugin => {
         // which cannot follow a value import of Vite.
         for (const loader of findModuleLoaders(this.parse(code))) {
           const resolved = await this.resolve(loader.specifier, file);
-          // Keyed with its query: `dx.config.ts?dx-modules` is a body, the plain `dx.config.ts` is not.
+          // Keyed with its query, since a query can name a module of its own.
           const target = resolved?.id;
           const targetFile = target?.split('?')[0];
           if (
@@ -185,12 +218,7 @@ export const hotModulesPlugin = (): Plugin => {
             continue;
           }
           loaders.push(loader);
-          if (!bodies.has(target)) {
-            bodies.add(target);
-            // Already transformed through another importer: drop the cached result so it is wrapped.
-            const graph = this.environment.mode === 'dev' ? this.environment.moduleGraph : undefined;
-            graph?.getModulesByFile(targetFile)?.forEach((module) => graph.invalidateModule(module));
-          }
+          addBody(target, this.environment.mode === 'dev' ? this.environment : undefined);
         }
         result = acceptLoaderTargets(rewriteLoaders(result, loaders), loaders);
       }

@@ -9,3 +9,7 @@
 /assets/plugin-tldraw/*
   ! Cache-Control
   Cache-Control: public, max-age=0, must-revalidate
+
+# Plugin manifests keep their path across builds while the chunks they list change: an update must reach existing clients.
+/plugins/*
+  Cache-Control: public, max-age=0, must-revalidate

@@ -10,6 +10,7 @@ import * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
 import type * as Types from 'effect/Types';
 
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -763,7 +764,8 @@ export const fromManifest = <T = void>(
   const meta = getMetaFromConfig(data);
   const toTags = (tags: readonly ManifestTag[]) =>
     tags.map(({ identifier, arity }) => Capability.fromIdentifier(identifier, arity));
-  const load = (url: string) => loaders[url]?.() ?? import(/* @vite-ignore */ url);
+  const load = (url: string): Promise<unknown> =>
+    loaders[url]?.() ?? import(/* @vite-ignore */ url).then(HotModules.newest);
   return {
     plugin: data.plugin,
     meta,
@@ -790,6 +792,98 @@ export const fromManifest = <T = void>(
     ),
   };
 };
+
+/**
+ * Tagged error for a {@link Manifest} served as JSON that cannot be loaded. `context.url` is the
+ * manifest's URL; `context.reason` is `'fetch-failed' | 'http-error' | 'invalid'`.
+ */
+export class ManifestError extends BaseError.extend('ManifestError', 'Failed to load plugin manifest') {}
+
+const ManifestTagSchema = Schema.Struct({
+  identifier: Schema.String,
+  arity: Schema.Literals(['single', 'multi']),
+});
+
+const ActivationEventSchema = Schema.Struct({ id: DXN.Schema, specifier: Schema.optional(Schema.String) });
+
+const ActivationEventsSchema = Schema.Union([
+  ActivationEventSchema,
+  Schema.Struct({ type: Schema.Literal('one-of'), events: Schema.mutable(Schema.Array(ActivationEventSchema)) }),
+  Schema.Struct({ type: Schema.Literal('all-of'), events: Schema.mutable(Schema.Array(ActivationEventSchema)) }),
+]);
+
+/** The JSON form of a {@link Manifest}, as the build emits it and {@link fetchManifest} reads it. */
+export const ManifestSchema = Schema.Struct({
+  ...Config2.Config.fields,
+  modules: Schema.Array(
+    Schema.Struct({
+      id: Schema.String,
+      url: Schema.String,
+      activatesOn: Schema.optional(ActivationEventsSchema),
+      requires: Schema.Array(ManifestTagSchema),
+      provides: Schema.Array(ManifestTagSchema),
+      adapter: Schema.optional(Schema.Struct({ url: Schema.String, args: Schema.optional(Schema.Unknown) })),
+      environments: Schema.optional(Schema.Array(Schema.String)),
+    }),
+  ),
+});
+
+/**
+ * Fetches a {@link Manifest} served as JSON and resolves each module URL against the manifest's own,
+ * so a build can list its chunks relative to wherever the manifest is hosted.
+ */
+export const fetchManifest = (url: string): Effect.Effect<Manifest, ManifestError> =>
+  Effect.gen(function* () {
+    const response = yield* Effect.tryPromise({
+      // Revalidated, because a manifest keeps its path across builds while the chunks it lists do not.
+      try: () => fetch(url, { cache: 'no-cache' }),
+      catch: (cause) => new ManifestError({ context: { url, reason: 'fetch-failed' }, cause }),
+    });
+    if (!response.ok) {
+      return yield* Effect.fail(new ManifestError({ context: { url, reason: 'http-error', status: response.status } }));
+    }
+    const json = yield* Effect.tryPromise({
+      try: (): Promise<unknown> => response.json(),
+      catch: (cause) => new ManifestError({ context: { url, reason: 'invalid' }, cause }),
+    });
+    const manifest = yield* Schema.decodeUnknownEffect(ManifestSchema)(json).pipe(
+      Effect.mapError((cause) => new ManifestError({ context: { url, reason: 'invalid' }, cause })),
+    );
+    const resolveUrl = (moduleUrl: string) => new URL(moduleUrl, url).href;
+    return {
+      ...manifest,
+      modules: manifest.modules.map((module) => ({
+        ...module,
+        url: resolveUrl(module.url),
+        ...(module.adapter ? { adapter: { ...module.adapter, url: resolveUrl(module.adapter.url) } } : {}),
+      })),
+    };
+  });
+
+export type FromManifestUrlOptions = {
+  /** Keys the loaded plugin by the manifest URL, so a dev server's update event can re-create it. */
+  hot?: boolean;
+};
+
+/**
+ * A lazy plugin whose {@link Manifest} is fetched from `url` when the plugin is first enabled. The
+ * build serves each app plugin this way, so boot carries only `meta`; `url` must be absolute.
+ */
+export const fromManifestUrl = <T = void>(
+  meta: Meta,
+  url: string,
+  { hot = false }: FromManifestUrlOptions = {},
+): PluginFactory<T> =>
+  lazy<T>(meta, () =>
+    EffectEx.runPromise(
+      fetchManifest(url).pipe(
+        Effect.map((manifest) => ({
+          default: fromManifest<T>(manifest).make,
+          ...(hot ? { [HotModules.HOT_KEY_EXPORT]: url } : {}),
+        })),
+      ),
+    ),
+  );
 
 /**
  * Tagged error for failures during lazy plugin resolution. `context.id` is
