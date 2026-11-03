@@ -115,11 +115,13 @@ export class SheetModel extends Resource {
       SheetUtil.initialize(obj);
     });
 
-    this._graph.update.on((event) => {
-      if (event.type === 'functionsUpdated') {
-        this.reset();
-      }
-    });
+    this._ctx.onDispose(
+      this._graph.update.on((event) => {
+        if (event.type === 'functionsUpdated') {
+          this.reset();
+        }
+      }),
+    );
 
     // TODO(burdon): SheetModel should extend ComputeNode and be constructed via the graph.
     this._node = this._graph.getOrCreateNode(
