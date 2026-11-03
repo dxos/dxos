@@ -191,6 +191,20 @@ const copyHiddenProperties = (source: any, target: any): void => {
   }
 };
 
+/**
+ * Node inspector for typed targets. Forces `showHidden: false` so a target's hidden metadata, including its owner and
+ * through it unrelated fields of the root, never prints.
+ */
+function inspectTypedTarget(
+  this: ProxyTarget,
+  _depth: number,
+  options: InspectOptionsStylized,
+  inspectFn: (value: any, options?: InspectOptionsStylized) => string,
+): string {
+  const inspected = inspectFn(getRawTarget(this), { ...options, showHidden: false, customInspect: false });
+  return `Typed ${inspected}`;
+}
+
 //
 // Object layering for an in-memory typed reactive object (`TypedReactiveHandler`).
 //
@@ -229,26 +243,13 @@ const copyHiddenProperties = (source: any, target: any): void => {
 // metadata chain both hang off the raw target, and `executeChange` keys the change context by it.
 //
 /**
- * Behaviour prototype for typed reactive records. A record's per-object metadata is moved onto an
+ * Behaviour prototype for typed reactive records. A root's per-object metadata is moved onto an
  * intermediate instance-state object whose prototype is this, so that swapping the handler that
  * backs an object (e.g. an in-memory object becoming database-backed) is a prototype re-point that
- * doesn't perturb the target's own-property shape. Marked as a reactive prototype so the "plain
- * object" gates (`isValidProxyTarget` / `deepCopy`) still treat such targets as data records.
+ * doesn't perturb the target's own-property shape. A nested record never swaps handler, so it points
+ * here directly and keeps its metadata as own properties. Marked as a reactive prototype so the
+ * "plain object" gates (`isValidProxyTarget` / `deepCopy`) still treat such targets as data records.
  */
-/**
- * Node inspector for typed targets. Forces `showHidden: false` so a target's hidden metadata, including its owner and
- * through it unrelated fields of the root, never prints.
- */
-function inspectTypedTarget(
-  this: ProxyTarget,
-  _depth: number,
-  options: InspectOptionsStylized,
-  inspectFn: (value: any, options?: InspectOptionsStylized) => string,
-): string {
-  const inspected = inspectFn(getRawTarget(this), { ...options, showHidden: false, customInspect: false });
-  return `Typed ${inspected}`;
-}
-
 const TypedObjectPrototype: object = Object.create(Object.prototype);
 defineHiddenProperty(TypedObjectPrototype, symbolReactivePrototype, true);
 
@@ -350,6 +351,8 @@ const compactMetadataToInstanceState = (target: ProxyTarget): void => {
  * cost ~0.5 KiB a record, which for an object holding JSON Schema (one record per schema node) is most of its heap.
  */
 const shareTypedObjectPrototype = (target: ProxyTarget): void => {
+  // `isValidProxyTarget` admits only records rooted at `Object.prototype` or at a prototype carrying
+  // `symbolReactivePrototype`, which only `TypedObjectPrototype` sets, so a record skipped here already inherits it.
   if (Array.isArray(target) || Object.getPrototypeOf(target) !== Object.prototype) {
     return;
   }
