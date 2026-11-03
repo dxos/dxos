@@ -270,6 +270,7 @@
       "@dxos/plugin-claude",
       "@dxos/plugin-client",
       "@dxos/plugin-cloudflare",
+      "@dxos/plugin-cloudflare-os",
       "@dxos/plugin-code",
       "@dxos/plugin-code-graph",
       "@dxos/plugin-commerce",

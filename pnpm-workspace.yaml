@@ -363,6 +363,7 @@ catalog:
   buffer-from: ^0.1.1
   bytes: ^3.1.2
   cbor-x: ^1.5.4
+  capnweb: ^0.12.0
   chai: ^4.4.1
   chai-dom: ^1.11.0
   chalk: ^4.1.2
@@ -450,6 +451,7 @@ catalog:
   glslify: ^7.1.1
   handlebars: 4.7.8
   happy-dom: ^20.0.0
+  hash-wasm: ^4.12.0
   hast-util-to-jsx-runtime: ^2.3.6
   html-to-image: ^1.11.13
   husky: ^8.0.0
