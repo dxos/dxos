@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-// Package specifiers, not relative paths: the library build leaves them external, so the 50 MB of audio
-// stays out of `dist/` (and the build cache) and the app's bundler emits it from `assets/`.
 import gong1 from '@dxos/plugin-zen/assets/instrument/gongs-1.m4a?url';
 import gong2 from '@dxos/plugin-zen/assets/instrument/gongs-2.m4a?url';
 import fireplace from '@dxos/plugin-zen/assets/nature/fireplace.m4a?url';

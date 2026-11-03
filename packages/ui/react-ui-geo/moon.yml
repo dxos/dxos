@@ -8,8 +8,6 @@ tags:
   - storybook
 
 tasks:
-  # `src/` bundles `data/*.ts` and fetches the 50m and 10m topologies from `data/raw/` by package specifier,
-  # so an edit under `data/` must re-hash the build and everything bundled from it.
   build:
     inputs:
       - data/**/*

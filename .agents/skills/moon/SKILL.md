@@ -216,7 +216,6 @@ import hero from '@dxos/plugin-onboarding/assets/hero.webp?url';
 - Add the directory to the build task's inputs, since `@group(sources)` covers only `src/`. Otherwise an asset edit doesn't re-hash the build or anything bundled from it:
 
 ```yaml
-# moon.yml
 tasks:
   build:
     inputs:

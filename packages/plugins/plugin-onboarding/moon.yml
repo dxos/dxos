@@ -6,8 +6,6 @@ tags:
   - ts-test
 
 tasks:
-  # `dist/` imports the hero image by package specifier rather than carrying it, so an edit under `assets/`
-  # must still re-hash the build and everything bundled from it.
   build:
     inputs:
       - assets/**/*

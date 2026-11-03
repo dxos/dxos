@@ -88,6 +88,8 @@ const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core
  * worker caches each on first use instead. Matched by Fontsource's `<font>-<subset>-…` file names, so a family
  * that only shares a prefix (`nunito-sans`) is not caught.
  */
+const GEO_TOPOLOGY_FILES = '**/countries-*.json';
+
 const ON_DEMAND_FONTS = [
   'inter',
   'nunito',
@@ -772,8 +774,7 @@ export default defineConfig((env) => ({
       filename: 'sw.ts',
       injectManifest: {
         maximumFileSizeToCacheInBytes: 30000000,
-        // react-ui-geo fetches its 50m and 10m topologies as JSON files, which must stay available offline.
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,wasm,woff2}', '**/countries-*.json'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,wasm,woff2}', GEO_TOPOLOGY_FILES],
         // The Phosphor catalog (~9,000 SVGs in /phosphor/) is deliberately NOT precached: the
         // manifest entries alone would add one install-time request per file, slowing every
         // install/update. sw.ts caches /phosphor/ fetches at runtime (cache-first) instead,

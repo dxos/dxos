@@ -17,19 +17,17 @@ export type CountriesResolution = '110m' | '50m' | '10m';
 
 export const loadTopology = async (resolution: CountriesResolution = '110m'): Promise<Topology> => {
   switch (resolution) {
-    // The larger resolutions are fetched as files by package specifier, so the library build leaves them external
-    // and they stay out of `dist/`. 110m stays a module so node callers can load it without a fetch.
     case '10m':
-      return fetchTopology((await import('@dxos/react-ui-geo/data/raw/countries-10m.json?url')).default);
+      return fetchTopologyFile((await import('@dxos/react-ui-geo/data/raw/countries-10m.json?url')).default);
     case '50m':
-      return fetchTopology((await import('@dxos/react-ui-geo/data/raw/countries-50m.json?url')).default);
+      return fetchTopologyFile((await import('@dxos/react-ui-geo/data/raw/countries-50m.json?url')).default);
     case '110m':
     default:
       return (await import('../data/countries-110m.ts')).default;
   }
 };
 
-const fetchTopology = async (url: string): Promise<Topology> => {
+const fetchTopologyFile = async (url: string): Promise<Topology> => {
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`Failed to load topology: ${url} (${response.status})`);
