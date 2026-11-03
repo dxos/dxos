@@ -119,6 +119,18 @@ describe('type sources', () => {
     expect(registry.requests).toHaveLength(0);
   });
 
+  test('a stalled source does not hold a query past its timeout', async ({ expect }) => {
+    const { db } = await setup();
+    db.graph.registerTypeSource(() => new Promise(() => {}));
+
+    const started = Date.now();
+    const types = await db
+      .query(Query.select(Filter.and(Filter.type(Type.Type), Filter.key(TYPENAME))).from(Scope.registry()))
+      .run({ timeout: 200 });
+    expect(types).toHaveLength(0);
+    expect(Date.now() - started).toBeLessThan(5_000);
+  });
+
   test('a query outside the registry does not ask the source', async ({ expect }) => {
     const { db } = await setup();
     const registry = makeMockRegistry();

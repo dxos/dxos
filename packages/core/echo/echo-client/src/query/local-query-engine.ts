@@ -276,7 +276,10 @@ export class LocalQueryEngine implements QueryContext {
         onExecutionTime?.(performance.now() - begin);
       }
     };
-    await this.#resolveRegistryKeys(query);
+    // A type source is remote, so a stalled one must not hold the query past its timeout; the local registry answers.
+    await asyncTimeout(this.#resolveRegistryKeys(query), Math.max(0, timeout)).catch((err) =>
+      log('type sources did not answer; using the local registry', { err }),
+    );
     const { plan, local } = timed(() => ({ plan: createMergePlan(query), local: this.#evaluateLocal(query) }));
     const ids = getSelectedIds(query);
     if (ids === undefined) {
