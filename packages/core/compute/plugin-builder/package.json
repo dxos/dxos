@@ -41,6 +41,10 @@
     "vite": "catalog:"
   },
   "devDependencies": {
+    "@automerge/automerge": "catalog:",
+    "@automerge/automerge-repo": "catalog:",
+    "@dxos/echo-protocol": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "vitest": "catalog:"
   }
 }
