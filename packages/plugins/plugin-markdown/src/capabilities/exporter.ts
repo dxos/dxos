@@ -13,7 +13,7 @@ import { escapeHtml } from '@dxos/util';
 import { Markdown } from '#types';
 
 import { parseEmbedLabel } from '../components/PreviewComponent/parse-embed-label.ts';
-import { findEmbeds, placeEmbeds, removeEmbeds } from './print-embeds.ts';
+import { findEmbeds, removeEmbeds, renderWithEmbeds } from './print-embeds.ts';
 
 const loadContent = (document: Markdown.Document) =>
   Effect.tryPromise({
@@ -83,8 +83,9 @@ export default Capability.makeModule(
             catch: AppCapabilities.ExportError.wrap(),
           });
           // Raw HTML in the source stays escaped (micromark's default), so printing cannot run script.
-          const placed = placeEmbeds(content, embedded);
-          return placed.insert(micromark(placed.source, { extensions: [gfm()], htmlExtensions: [gfmHtml()] }));
+          return renderWithEmbeds(content, embedded, (markdown) =>
+            micromark(markdown, { extensions: [gfm()], htmlExtensions: [gfmHtml()] }),
+          );
         }).pipe(Effect.ensuring(Effect.sync(() => printing.delete(document.id)))),
     };
 

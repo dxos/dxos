@@ -50,33 +50,35 @@ export const replaceEmbeds = (
 /** Removes every object embed, since an exported file cannot resolve them. */
 export const removeEmbeds = (content: string): string => replaceEmbeds(content, () => undefined);
 
-export type PlacedEmbeds = {
-  /** The document with each printable embed replaced by a placeholder paragraph, and the rest removed. */
-  source: string;
-  /** Swaps each placeholder in the source's rendered HTML for its embed's HTML. */
-  insert: (html: string) => string;
-};
-
-/** Placeholders micromark leaves untouched; the prefix is chosen to occur nowhere in the document, so its own text is never replaced. */
-export const placeEmbeds = (content: string, rendered: readonly (string | undefined)[]): PlacedEmbeds => {
-  let nonce = 0;
-  while (content.includes(`DXEMBED${nonce}N`)) {
-    nonce++;
-  }
-
-  const placeholder = (index: number) => `DXEMBED${nonce}N${index}X`;
-  return {
-    source: replaceEmbeds(content, (_, index) =>
-      rendered[index] === undefined ? undefined : `\n\n${placeholder(index)}\n\n`,
-    ),
-    insert: (html) =>
-      rendered.reduce<string>(
-        // A function replacer, since a string one would expand `$` sequences in the embed's HTML.
-        (result, embed, index) =>
-          embed === undefined
-            ? result
-            : result.replace(`<p>${placeholder(index)}</p>`, () => embed).replace(placeholder(index), () => embed),
-        html,
+/**
+ * The document rendered by `render`, with each printable embed's HTML at its position and the rest removed.
+ * Each embed is a placeholder paragraph while rendering; the placeholder prefix is advanced until the rendered
+ * document's own text holds none (character references included), so each placeholder occurs exactly once.
+ */
+export const renderWithEmbeds = (
+  content: string,
+  rendered: readonly (string | undefined)[],
+  render: (markdown: string) => string,
+): string => {
+  const placed = rendered.filter((embed) => embed !== undefined).length;
+  for (let nonce = 0; ; nonce++) {
+    const placeholder = (index: number) => `DXEMBED${nonce}N${index}X`;
+    const html = render(
+      replaceEmbeds(content, (_, index) =>
+        rendered[index] === undefined ? undefined : `\n\n${placeholder(index)}\n\n`,
       ),
-  };
+    );
+    if ((html.match(new RegExp(`DXEMBED${nonce}N`, 'g'))?.length ?? 0) !== placed) {
+      continue;
+    }
+
+    return rendered.reduce<string>(
+      // A function replacer, since a string one would expand `$` sequences in the embed's HTML.
+      (result, embed, index) =>
+        embed === undefined
+          ? result
+          : result.replace(`<p>${placeholder(index)}</p>`, () => embed).replace(placeholder(index), () => embed),
+      html,
+    );
+  }
 };
