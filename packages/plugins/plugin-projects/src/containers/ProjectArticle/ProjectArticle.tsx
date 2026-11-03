@@ -58,10 +58,10 @@ import * as ProjectGraph from '../../ProjectGraph.ts';
 // Pick the editable header fields from the Project schema rather than redeclaring them. v4 exposes
 // `mapFields` only on a `Struct`, and `Type.getSchema` erases to `Codec`, so the pick runs on the AST
 // and the field types are re-attached here.
-type HeaderValues = Pick<Project.Project, 'name' | 'description' | 'repositories' | 'specs'>;
+type HeaderValues = Pick<Project.Project, 'name' | 'description' | 'specs'>;
 
 const HeaderValues = Schema.make<Schema.Codec<HeaderValues, any>>(
-  SchemaAST.pick(Type.getSchema(Project.Project).ast, ['name', 'description', 'repositories', 'specs']),
+  SchemaAST.pick(Type.getSchema(Project.Project).ast, ['name', 'description', 'specs']),
 );
 
 // The Context section edits only the instructions' standing context objects.
@@ -285,7 +285,6 @@ export const ProjectArticle = ({
     () => ({
       name: project.name,
       description: project.description,
-      repositories: project.repositories,
       specs: project.specs,
     }),
     [project],
@@ -426,7 +425,7 @@ export const ProjectArticle = ({
                     <ObjectGallery objects={artifacts} onOpen={handleOpen} onDelete={handleDeleteArtifact} />
                   </Form.FieldSet>
 
-                  {/* Settings other plugins keep for this project, such as its folder on this device. */}
+                  {/* Settings other plugins keep for this project, such as its repositories and its folder on this device. */}
                   <Surface.Surface type={ProjectSurface.Settings} data={{ project: subject }} />
                 </Form.Content>
               </Form.Viewport>

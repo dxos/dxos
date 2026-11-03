@@ -228,6 +228,7 @@
     "@dxos/plugin-tasks": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@effect/atom-react": "catalog:",
     "@effect/vitest": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
@@ -237,6 +238,7 @@
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
+    "@effect/atom-react": "catalog:",
     "react": "catalog:"
   }
 }

@@ -1,0 +1,18 @@
+---
+'@dxos/compute': minor
+'@dxos/plugin-claude': minor
+'@dxos/plugin-code': patch
+'@dxos/plugin-debug': patch
+'@dxos/plugin-github': patch
+'@dxos/plugin-projects': minor
+'@dxos/types': minor
+---
+
+A project's repositories are one ordered list, the `Repo.RepositoriesAnnotation` on the project, read with `Repo.getRepositories` and written with `Repo.setRepositories`. The first repository is the one bare issue numbers resolve against and the one a cloud coding agent starts in. plugin-claude edits the list in the project's settings, above the code folder. A cloud session checks out the project's repositories in their order, then the repositories bound to the chat, each once.
+
+Breaking:
+
+- `Project` 0.8.0 drops `repo`, `repositories` and `session`. plugin-projects' migration moves `repo` and then `repositories` into the annotation, each repository once, and drops `session`. Migrated projects cannot be read by an older build.
+- Delegating a task no longer seeds the chat's session config from its project, since `Project.session` is gone.
+- The project overview's form no longer has a Repositories field. The list is edited only while plugin-claude is enabled.
+- The GitHub skill tells an agent to bind a pull request's repository to the chat, or to ask the user to add it to the project's repositories, since no operation writes the annotation.

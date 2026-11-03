@@ -12,7 +12,7 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { AiContext } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import { DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
@@ -122,30 +122,6 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     );
 
     await expect.poll(() => chat.name).toBe('Coffee Prep');
-  });
-
-  test("starts the chat on the project's session config", async ({ expect }) => {
-    await using harness = await setup();
-    const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
-    invariant(space, 'Expected a default space.');
-
-    const { project } = await harness.runPromise(
-      Operation.invoke(ProjectOperation.Create, { name: 'Voyage' }, { spaceId: space.id }),
-    );
-    const model = DXN.make('com.anthropic.model.claude-haiku-4-5.default');
-    Obj.update(project, (project) => {
-      project.session = { model };
-    });
-    const taskSet = await project.taskSet?.tryLoad();
-    invariant(taskSet, 'Expected the scaffolded task set.');
-    const task = space.db.add(Task.make({ [Obj.Parent]: taskSet, title: 'Write a poem', status: 'todo' }));
-    await space.db.flush();
-
-    const { chat } = await harness.runPromise(
-      Operation.invoke(ProjectOperation.DelegateTaskToChat, { tasks: [Ref.make(task)] }, { spaceId: space.id }),
-    );
-
-    expect(chat.session?.model).toBe(model);
   });
 
   test('files the chat under the task project, marks it started, and names a reviewer', async ({ expect }) => {

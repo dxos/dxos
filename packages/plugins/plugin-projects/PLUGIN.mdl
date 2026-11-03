@@ -1203,3 +1203,39 @@ decision D-104: The `SpecView`, `Level` and `LevelOverview` surface roles are ro
   affects: [F-4.6, F-4.8]
   why: Role tokens live in `ProjectSurface`, apart from the view state in `ProjectView`, and a plugin declares the roles it renders by token rather than by string.
 ```
+
+```mdl
+decision D-105: A project's two repository fields, `repo` and `repositories`, become one list of repositories.
+  date: 2026-11-03
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-106: The project's repositories are the `Repo.RepositoriesAnnotation` on it, an ordered list of repository refs defined beside `Repo`, and `Project` 0.8.0 has no repository field. The first repository takes over `repo`'s role: bare issue numbers resolve against it, and a cloud coding agent starts in it. plugin-claude renders the list in the project's settings. Fills in [D-105] and [D-45].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: This plugin is on by default and must migrate every project, so it writes the annotation and has to import it. plugin-github and plugin-claude are not on by default, and either one importing the other's annotation would make one depend on the other.
+  rejected:
+    - The annotation in plugin-github, which syncs repositories and resolves issue numbers. A space without plugin-github would keep its projects at 0.7.0, and plugin-claude would depend on plugin-github to check repositories out.
+    - The annotation in plugin-claude, which checks repositories out. plugin-github would depend on plugin-claude to resolve an issue number.
+    - Keeping one `repositories` field on `Project`, which leaves a coding concept in the type every project has.
+```
+
+```mdl
+decision D-107: `Project` drops `session`, so delegating a task no longer seeds the chat's session config from its project. Fills in [D-105].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: Nothing in the app wrote the field, and delegating a task was its only reader.
+  rejected:
+    - An annotation plugin-assistant owns for a per-project session default. It waits until a person wants that default and decides where it is edited.
+```
+
+```mdl
+decision D-108: The `Project` 0.7.0 migration moves `repo` and then `repositories` into the annotation, each repository once, and drops `session`. It runs after the 0.6.0 migration, and plugin-code lists both in that order before its spec migrations. Fills in [D-103] and [D-106].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: `repo` was the repository a project named first, and plugin-code's spec migrations recognize a spec's owner only as a current `Project`.
+```

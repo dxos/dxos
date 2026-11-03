@@ -115,7 +115,7 @@ const createProject = (space: Space, storyGeneration: number) => {
   }
 
   // The project names its repository, which is what makes a `#nnn` reference in its documents
-  // resolve (plugin-github reads `project.repo`).
+  // resolve (plugin-github reads the project's first repository).
   const repo = space.db.add(Repo.make({ name: 'dxos', owner: 'dxos', url: 'https://github.com/dxos/dxos' }));
   const instructions = Instructions.make({
     [Obj.Parent]: project,
@@ -123,10 +123,10 @@ const createProject = (space: Space, storyGeneration: number) => {
   });
   const artifact = space.db.add(Text.make({ name: ARTIFACT_TITLE, content: 'Notes.' }));
   Obj.update(project, (project) => {
-    project.repo = Ref.make(repo);
     project.instructions = Ref.make(instructions);
     project.artifacts = [Ref.make(artifact)];
   });
+  Repo.setRepositories(project, [Ref.make(repo)]);
 
   const task = space.db.add(Task.make({ [Obj.Parent]: taskSet, title: TASK_TITLE, status: 'todo' }));
   // An exchange in the log, written by the verbs that write it in the app rather than by hand: the

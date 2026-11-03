@@ -358,7 +358,7 @@ describe('EdgeAgent', () => {
     }).pipe(Effect.scoped, Effect.provide(TestLayer)),
   );
 
-  it.live("checks out the project's repositories in the sandbox", () =>
+  it.live("checks out the project's repositories in their order, then the chat's, each once", () =>
     Effect.gen(function* () {
       const { feed, chat, edge, options } = yield* setup((turnId) => [
         { _tag: 'turn-end', turnId, stopReason: 'end_turn' },
@@ -366,10 +366,16 @@ describe('EdgeAgent', () => {
       const dxos = yield* Database.add(Repo.make({ owner: 'dxos', name: 'dxos', defaultBranch: 'main' }));
       const edgeRepo = yield* Database.add(Repo.make({ owner: 'dxos', name: 'edge' }));
       const fork = yield* Database.add(Repo.make({ owner: 'someone', name: 'edge' }));
-      const project = yield* Database.add(
-        Project.make({ repo: Ref.make(dxos), repositories: [Ref.make(edgeRepo), Ref.make(dxos), Ref.make(fork)] }),
-      );
+      const docs = yield* Database.add(Repo.make({ owner: 'dxos', name: 'docs' }));
+      const project = yield* Database.add(Project.make());
+      Repo.setRepositories(project, [Ref.make(dxos), Ref.make(edgeRepo), Ref.make(dxos), Ref.make(fork)]);
       Obj.setParent(chat, project);
+      yield* Feed.append(feed, [
+        Obj.make(AiContext.Binding, {
+          skills: { added: [], removed: [] },
+          objects: { added: [Ref.make(docs), Ref.make(edgeRepo)], removed: [] },
+        }),
+      ]);
       yield* EdgeAgent.runTurn(options, { chat, feed }, { prompt: 'build it' });
 
       expect(edge.spawned[0]).toMatchObject({
@@ -378,6 +384,7 @@ describe('EdgeAgent', () => {
             { name: 'dxos', url: 'https://github.com/dxos/dxos.git', branch: 'main' },
             { name: 'edge', url: 'https://github.com/dxos/edge.git' },
             { name: 'someone-edge', url: 'https://github.com/someone/edge.git' },
+            { name: 'docs', url: 'https://github.com/dxos/docs.git' },
           ],
         },
       });

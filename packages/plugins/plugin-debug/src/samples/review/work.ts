@@ -233,7 +233,6 @@ export const Work: SampleSpace.Partial<WorkResult, MediaResult> = SampleSpace.pa
           name: 'Composer polish',
           description: 'Small, visible fixes to Composer, each landed as a reviewed pull request with a demo.',
           status: 'active',
-          repo: Ref.make(repo),
           taskSet: Ref.make(taskSet),
           outline: Ref.make(outline),
           artifacts: [
@@ -243,6 +242,8 @@ export const Work: SampleSpace.Partial<WorkResult, MediaResult> = SampleSpace.pa
           ],
         }),
       );
+
+      Repo.setRepositories(project, [Ref.make(repo)]);
 
       return { project, taskSet, tasks, pullRequests };
     }),

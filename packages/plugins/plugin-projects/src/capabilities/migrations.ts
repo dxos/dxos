@@ -9,6 +9,12 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { LegacyProject } from '#types';
 
+// In version order, so one pass takes a project from any earlier version to the current one.
 export default Capability.makeModule(() =>
-  Effect.succeed(Capability.contribute(ClientCapabilities.Migration, [LegacyProject.projectSpecs])),
+  Effect.succeed(
+    Capability.contribute(ClientCapabilities.Migration, [
+      LegacyProject.projectSpecs,
+      LegacyProject.projectRepositories,
+    ]),
+  ),
 );

@@ -221,7 +221,9 @@ export const steps = [
             .spaces(spaceId)
             .db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.project')))
             .run();
-          return (projects.findLast((project) => project.name === title)?.repositories ?? []).length;
+          const project = projects.findLast((project) => project.name === title);
+          return (project ? (dxos.Obj.getMeta(project).annotations['org.dxos.annotation.repositories'] ?? []) : [])
+            .length;
         },
         { spaceId, title: PROJECT_TITLE },
       );

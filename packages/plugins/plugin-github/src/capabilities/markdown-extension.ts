@@ -65,14 +65,14 @@ export default Capability.makeModule(
   }),
 );
 
-/** The `repo` of the project owning `object`, else the repository its adopted task set mirrors. */
+/** The first repository of the project owning `object`, else the repository its adopted task set mirrors. */
 const projectRepo = (db: Database.Database, object: Obj.Unknown): string | undefined => {
   const project = owningProject(object);
   if (!project) {
     return undefined;
   }
 
-  const repo = project.repo?.target;
+  const repo = Repo.getRepositories(project)[0]?.target;
   if (repo && Repo.instanceOf(repo)) {
     return Repo.fullName(repo);
   }

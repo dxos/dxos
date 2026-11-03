@@ -313,9 +313,11 @@ feat F-9: Claude Code (cloud)
   req F-9.3:
     when: the chat belongs to a project with repositories
     then: |
-      the sandbox checks them out before the agent's first turn, and the agent
-      works in the first one, with the others as additional directories, so it
-      reads the CLAUDE.md, skills and settings of every one of them
+      the sandbox checks them out before the agent's first turn, in the
+      project's order and then the repositories bound to the chat, each once;
+      the agent works in the first one, with the others as additional
+      directories, so it reads the CLAUDE.md, skills and settings of every one
+      of them
 
   req F-9.4:
     when: a chat is switched to Claude Code (cloud) before its first message
@@ -329,6 +331,12 @@ feat F-9: Claude Code (cloud)
       Bypass permissions), each defaulting to Claude Code's default and the
       plugin's permission setting; the choices are fixed once the chat has
       started, and EDGE reports the mode and model the agent actually runs with
+
+  req F-9.6:
+    when: a project's overview is open
+    then: |
+      its settings list the project's repositories, which a cloud session
+      checks out, and the user adds, removes and reorders them there
 ```
 
 ## Acceptance
@@ -699,6 +707,17 @@ decision D-9: The EDGE sandbox runs the agent in the first repository it checked
   why: Claude Code reads CLAUDE.md, skills and settings from its working directory and the directories above it, never below, so an agent started in the checkout root saw none of the repositories' instructions; and Claude Code falls back from a mode it cannot run without failing the request.
   rejected:
     - A CLAUDE.md in the checkout root that imports each repository's: it brings in neither skills nor settings.
+```
+
+```mdl
+decision D-10: This plugin edits a project's repositories, the list plugin-projects keeps as the `Repo.RepositoriesAnnotation`, in the project's settings above the code folder. A cloud session checks out the project's repositories in their order, then the repositories bound to the chat, each once.
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.3, F-9.6]
+  why: The project's form no longer has a repositories field, and cloud sessions are what the list is for. The code folder's description already points at the repositories above it.
+  rejected:
+    - The editor in plugin-github, which would make plugin-github depend on plugin-projects for its settings surface while plugin-projects' stories depend on plugin-github.
 ```
 
 ---
