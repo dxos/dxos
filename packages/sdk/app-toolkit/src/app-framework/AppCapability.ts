@@ -238,6 +238,14 @@ export const commentConfig: Maker<typeof AppCapabilities.CommentConfig> = Capabi
   { environments: ['browser', 'node', 'tauri', 'workerd'] },
 );
 
+/** Module maker contributing an object exporter (print / save). */
+export const exporter: Maker<typeof AppCapabilities.Exporter> = Capability$.moduleMaker(
+  'Exporter',
+  AppCapabilities.Exporter,
+  // Browser-only: printing and saving go through the DOM.
+  { environments: ['browser', 'tauri'] },
+);
+
 /** Module maker contributing a text content extractor. */
 export const textContent: Maker<typeof AppCapabilities.TextContent> = Capability$.moduleMaker(
   'TextContent',
