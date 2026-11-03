@@ -56,6 +56,7 @@ export const translations = [
         'skills.label': 'Skills',
         'project-description.placeholder': 'What is this project for?',
         'milestones.label': 'Milestones',
+        'show-milestone-tasks.label': 'Show its tasks',
         'views.label': 'Views',
         'overview.label': 'Overview',
         'specs.label': 'Specs',

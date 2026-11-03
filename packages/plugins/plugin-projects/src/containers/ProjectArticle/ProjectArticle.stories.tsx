@@ -936,6 +936,26 @@ export const TaskLink: Story = {
  * section that resolves once and then goes inert, which is how the previous parent-edge model
  * behaved (`Query.children()` never re-emitted on a member's property change).
  */
+/** A milestone's open button shows the Tasks tab narrowed to the tasks under it. */
+export const OpenMilestone: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const { space, taskSet } = await seedContent();
+    const milestone = space.db.add(Milestone.make({ [Obj.Parent]: taskSet, name: MILESTONE_NAME }));
+    Obj.update(taskSet, (taskSet) => {
+      taskSet.milestones.push(Ref.make(milestone));
+    });
+    const MILESTONE_TASK = 'Filed under the milestone';
+    addTask(space, taskSet, MILESTONE_TASK, milestone);
+
+    await userEvent.click(await canvas.findByTestId('projectsPlugin.milestone.open', undefined, { timeout: 10_000 }));
+    await expect(canvas.getByTestId('projectsPlugin.tab.tasks')).toHaveAttribute('aria-selected', 'true');
+    await expect(canvas.findByText(MILESTONE_TASK, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await waitFor(() => expect(canvas.queryByText(TASK_TITLE)).toBeNull(), { timeout: 10_000 });
+  },
+};
+
 export const Updates: Story = {
   ...Default,
   play: async ({ canvasElement }) => {

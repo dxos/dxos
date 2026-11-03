@@ -71,7 +71,8 @@ feat F-5: A project's overview
              space between two sections than between the rows inside one. Every section's content starts and ends on
              the same left and right edges as its heading.
   req F-5.3: Artifacts shows at most six, and Show all shows the rest.
-  req F-5.4: Each milestone shows how many of its tasks are done out of those not cancelled.
+  req F-5.4: Each milestone shows how many of its tasks are done out of those not cancelled, and opens the Tasks tab
+             filtered to the tasks under it.
   req F-5.7: The Specs heading carries the add button on its own row, and each spec is a row directly under it at the
              same level of nesting as a Config group.
   req F-5.5: Config holds folded groups, each showing a summary of what it holds until it is opened: first Agent (the
@@ -1846,4 +1847,24 @@ decision D-175: The overview's Notes section shows no description; once the note
   date: 2026-11-03
   by: user:wittjosiah
   affects: [F-5.2]
+```
+
+```mdl
+decision D-176: Opening a milestone from the overview shows the Tasks tab filtered to that milestone's tasks.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.4]
+```
+
+```mdl
+decision D-177: A milestone row ends in an open button, on the right edge where a spec row's buttons sit, and the filter is the task list's own milestone filter (its per-device view state), which keeps a task by its effective milestone and keeps the ancestors of a match. Fills in [D-176].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.4]
+  why: A button on the row's right edge keeps the name on the headings' left edge, and react-ui exports no in-app link. The effective milestone is the one the row's progress counts, so the filtered list holds the tasks the count names. A filter the task list owns can be changed or cleared from its own toolbar.
+  rejected:
+    - The whole row as a ghost button, whose inset moves the row off the headings' left edge.
+    - A `milestone:` term in the list's query, since a query value cannot name a milestone by reference and a milestone's name can hold spaces.
+    - Grouping the list by milestone, which shows every milestone rather than the one opened.
 ```

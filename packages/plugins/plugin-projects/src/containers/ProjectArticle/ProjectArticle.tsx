@@ -24,6 +24,7 @@ import { useObject, useResolveRef } from '@dxos/echo-react';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import * as TaskSetView from '@dxos/plugin-tasks/TaskSetView';
 import * as TasksUtil from '@dxos/plugin-tasks/TasksUtil';
 import { useSpace } from '@dxos/react-client/echo';
 import { useSelection, useSelectionActions, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
@@ -125,6 +126,15 @@ export const ProjectArticle = ({
   const artifacts = useRefTargets(project.artifacts);
   // Membership only: fires when a milestone is added or removed, not on milestone edits.
   const [milestoneRefs = []] = useObject(taskSet, 'milestones');
+  // A milestone opens the Tasks tab narrowed to it, through the task list's own milestone filter.
+  const { update: updateTaskView } = useViewStateActions(TaskSetView.aspect, taskSet?.id);
+  const handleOpenMilestone = useCallback(
+    (milestone: Milestone.Milestone) => {
+      updateTaskView((view) => ({ ...view, milestone: milestone.id }));
+      setTab('tasks');
+    },
+    [updateTaskView, setTab],
+  );
   const settings = useAtomValue(Hooks.useCapability(ProjectCapabilities.Settings));
   // The level's spec: the selected one of the project's, or the one breaking a nested level down; the Specs tab offers
   // to add it.
@@ -448,7 +458,7 @@ export const ProjectArticle = ({
 
                   {milestoneRefs.length > 0 && (
                     <Form.FieldSet label={t('milestones.label')}>
-                      <MilestoneList refs={milestoneRefs} tasks={tasks} />
+                      <MilestoneList refs={milestoneRefs} tasks={tasks} onOpen={handleOpenMilestone} />
                     </Form.FieldSet>
                   )}
 
@@ -536,13 +546,17 @@ type MilestoneListProps = {
   refs: ReadonlyArray<Ref.Ref<Milestone.Milestone>>;
   /** The level's tasks, which each milestone's progress counts. */
   tasks: readonly Task.Task[];
+  onOpen: (milestone: Milestone.Milestone) => void;
 };
 
-/** Read-only: milestones are authored through the agent/MCP verbs; each shows its progress, derived from its tasks. */
-const MilestoneList = ({ refs, tasks }: MilestoneListProps) => (
+/**
+ * Milestones are authored through the agent/MCP verbs; each shows its progress, derived from its tasks, and opens
+ * the tasks under it.
+ */
+const MilestoneList = ({ refs, tasks, onOpen }: MilestoneListProps) => (
   <Layout.Container role='list' gap='sm' gutter='none'>
     {refs.map((milestoneRef) => (
-      <MilestoneRow key={milestoneRef.uri.toString()} milestoneRef={milestoneRef} tasks={tasks} />
+      <MilestoneRow key={milestoneRef.uri.toString()} milestoneRef={milestoneRef} tasks={tasks} onOpen={onOpen} />
     ))}
   </Layout.Container>
 );
@@ -723,14 +737,17 @@ const useSpecPackageActions = (spec: Spec.Spec | undefined) => {
 const MilestoneRow = ({
   milestoneRef,
   tasks,
+  onOpen,
 }: {
   milestoneRef: Ref.Ref<Milestone.Milestone>;
   tasks: readonly Task.Task[];
+  onOpen: (milestone: Milestone.Milestone) => void;
 }) => {
+  const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
   const [milestone] = useObject(milestoneRef);
   const target = useResolveRef(milestoneRef);
   const progress = useMemo(() => target && Task.milestoneProgress(tasks, target), [tasks, target]);
-  if (!milestone || !progress) {
+  if (!milestone || !target || !progress) {
     return null;
   }
 
@@ -747,6 +764,15 @@ const MilestoneRow = ({
           </Typography.Text>
         </Layout.Flex>
       )}
+      <Button.Root
+        variant='ghost'
+        icon='ph--arrow-right--regular'
+        iconOnly
+        label={t('show-milestone-tasks.label')}
+        classNames={progress.total > 0 ? 'shrink-0' : 'ms-auto shrink-0'}
+        data-testid='projectsPlugin.milestone.open'
+        onClick={() => onOpen(target)}
+      />
     </Layout.Flex>
   );
 };
