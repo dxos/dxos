@@ -3,6 +3,7 @@
 //
 
 import * as Cause from 'effect/Cause';
+import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
@@ -53,6 +54,10 @@ export default Capability.makeModule(
     }
     log('initializing client (forked)...');
 
+    // Settled by the forked initialization below, so a consumer that awaits the client sees the
+    // failure that stopped it rather than waiting out a timeout of its own.
+    const initialized = yield* Deferred.make<void, ClientInitError>();
+
     let subscription: { unsubscribe: () => void } | undefined;
     let removeUnloadGuard: (() => void) | undefined;
 
@@ -79,7 +84,11 @@ export default Capability.makeModule(
     yield* Effect.gen(function* () {
       // Bounded so a handshake that never completes becomes a failure the app can surface,
       // rather than leaving every suspended consumer waiting on a promise that never settles.
-      yield* Effect.tryPromise(() => untilStalled(client, client.initialize(), initializeTimeout));
+      yield* Effect.tryPromise({
+        try: () => untilStalled(client, client.initialize(), initializeTimeout),
+        catch: (error) => new ClientInitError({ context: { initializeTimeout }, cause: error }),
+      });
+      yield* Deferred.succeed(initialized, undefined);
       performance.mark('milestone:client-initialize:end');
       log('client.initialize() returned successfully');
       if (onClientInitialized) {
@@ -168,12 +177,19 @@ export default Capability.makeModule(
       // The fork is outside the render tree, so the app has to be told — React never sees it.
       Effect.catch((error) =>
         Effect.gen(function* () {
-          log.error('client initialization failed', { error: String(error) });
+          // A no-op once initialization succeeded: a later callback failure is not an init failure.
+          yield* Deferred.fail(
+            initialized,
+            error instanceof ClientInitError ? error : new ClientInitError({ cause: error }),
+          );
+          log.error('client initialization failed', { error });
           if (onClientInitializationError) {
             yield* onClientInitializationError({ error });
           }
         }),
       ),
+      // Interrupted before it settled, the client never initializes; waiting consumers must not hang on it.
+      Effect.onInterrupt(() => Deferred.interrupt(initialized)),
       Effect.provideService(Capability.Service, capabilityManager),
       Effect.provideService(Plugin.Service, pluginManager),
       // Scoped, not daemon: the module's scope closes on deactivation (and on manager shutdown),
@@ -184,16 +200,8 @@ export default Capability.makeModule(
 
     log('client capability ready (initialization in flight)');
 
-    // `waitUntilInitialized` is the completion signal only — a failed `initialize()` rejects at its
-    // own call site and leaves this pending forever, so the wait is bounded by the same budget.
     const clientServiceLayer = awaitInitialization
-      ? Layer.effect(
-          ClientService,
-          Effect.tryPromise({
-            try: () => untilStalled(client, client.waitUntilInitialized(), initializeTimeout),
-            catch: (error) => new ClientInitError({ context: { initializeTimeout }, cause: error }),
-          }).pipe(Effect.as(client)),
-        )
+      ? Layer.effect(ClientService, Deferred.await(initialized).pipe(Effect.as(client)))
       : fromClient(client);
 
     return [
