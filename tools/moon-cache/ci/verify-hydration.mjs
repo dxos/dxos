@@ -191,7 +191,8 @@ const main = () => {
   const targets = broken.map((task) => task.target);
   const repairStatus = runMoon(['run', ...targets, '--force']);
   const repaired = targets.filter((target) => findEmptyOutputs(root, outputs, target).length === 0);
-  for (const target of targets.filter((target) => !repaired.includes(target))) {
+  const unrepaired = targets.filter((target) => !repaired.includes(target));
+  for (const target of unrepaired) {
     annotate(
       'error',
       `${target} leaves ${findEmptyOutputs(root, outputs, target).join(', ')} missing or empty even when built from scratch (exit ${repairStatus}). ` +
@@ -199,7 +200,12 @@ const main = () => {
     );
   }
 
-  if (status === 0 || repaired.length === 0) {
+  // Every later job that shares the hash would hydrate the same empty entry, so this fails the step.
+  if (unrepaired.length > 0) {
+    return status !== 0 ? status : repairStatus !== 0 ? repairStatus : 1;
+  }
+
+  if (status === 0) {
     return status;
   }
 

@@ -51,8 +51,9 @@ The retry happens only when every task that failed depends on a rebuilt one. Tha
 proof of cause: a flaky test downstream of a rebuilt task can still pass on the retry. A failure in a
 task that does not depend on any rebuilt task always keeps the first run's verdict.
 
-If a task leaves the output empty even when built from scratch, the script reports an error instead
-of retrying: make the task write a file there, or declare the output as a glob if it may be empty.
+If a task leaves the output empty even when built from scratch, the script reports an error and fails
+the step without retrying, since every later job would hydrate the same empty entry: make the task
+write a file there, or declare the output as a glob if it may be empty.
 
 ### Evicting a bad entry by hand
 
