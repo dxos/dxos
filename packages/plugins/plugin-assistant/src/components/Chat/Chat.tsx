@@ -46,7 +46,7 @@ import { type Actor, Message, Task } from '@dxos/types';
 import { hexToFallback, keyToFallback, markWork } from '@dxos/util';
 
 import { type ChatSwitcher, bindMentions, useChatToolbarActions, useDebug, useSlashCommands } from '#hooks';
-import { AssistantOperation, ChatSurface } from '#types';
+import { AssistantOperation, AssistantSurface } from '#types';
 
 import {
   AiUsageQuotaError,
@@ -897,7 +897,7 @@ const ChatContextDrawer = () => {
   const { chat, db, chatModel } = useChatContext(CHAT_CONTEXT_DRAWER_NAME);
   return (
     <div className='flex flex-col gap-1 p-1' data-testid='assistant.details'>
-      {chat && <Surface.Surface type={ChatSurface.ChatDetails} data={{ chat, db, context: chatModel?.context }} />}
+      {chat && <Surface.Surface type={AssistantSurface.ChatDetails} data={{ chat, db, context: chatModel?.context }} />}
     </div>
   );
 };

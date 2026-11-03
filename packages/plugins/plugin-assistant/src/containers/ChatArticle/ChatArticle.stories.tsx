@@ -57,7 +57,7 @@ import { ChatDetailsSection } from '#components';
 import { usePromptActions } from '#hooks';
 import * as AssistantPlugin from '#meta';
 import { translations } from '#translations';
-import { ChatSurface } from '#types';
+import { AssistantSurface } from '#types';
 
 import { ChatArticle, ChatArticleProps } from './ChatArticle.tsx';
 
@@ -176,7 +176,7 @@ const seedWorkspace = (db: Database.Database): Obj.Unknown[] => {
 
 const changesSection = Surface.create({
   id: 'storyChanges',
-  filter: Surface.makeFilter(ChatSurface.ChatDetails),
+  filter: Surface.makeFilter(AssistantSurface.ChatDetails),
   component: () => (
     <ChatDetailsSection icon='ph--git-diff--regular' title='Changes' count={3}>
       <p className='px-2 py-1 text-sm text-fg-muted'>3 files changed on claude/prompt-redesign</p>

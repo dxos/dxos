@@ -3,9 +3,12 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState } from 'react';
+import * as Schema from 'effect/Schema';
+import React, { useMemo, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -14,6 +17,7 @@ import { withTheme } from '@dxos/react-ui/testing';
 import * as Typography from '@dxos/react-ui/Typography';
 
 import { type PaneArgs, nextTranslations, withNextPane } from '../testing/next-pane.tsx';
+import { Organization } from '../testing/schema.ts';
 import { Form } from './Form.tsx';
 import { ArraySchema, type ArrayValues } from './testing.ts';
 
@@ -122,5 +126,80 @@ export const Test: Story = {
     const group = value.closest('[role="group"][data-inset]');
     invariant(group);
     await expect(getComputedStyle(group).borderTopWidth).toBe('1px');
+  },
+};
+
+// The form owns its organizations: add creates one, and each row is its fields inline.
+const OwnedSchema = Schema.Struct({
+  organizations: Schema.Array(Ref.Ref(Organization)).pipe(
+    Annotation.FormCreateAnnotation.set(Type.getTypename(Organization)),
+    Schema.annotate({ title: 'Organizations' }),
+  ),
+});
+
+type OwnedValues = Schema.Schema.Type<typeof OwnedSchema>;
+
+/** An owned-ref array: local objects, so the form creates and edits them without a database. */
+const OwnedStory = (_: PaneArgs) => {
+  const acme = useMemo(() => Obj.make(Organization, { name: 'Acme' }), []);
+  const [acmeName] = useObject(acme, 'name');
+  const [values, setValues] = useState<OwnedValues>(() => ({ organizations: [Ref.make(acme)] }));
+  return (
+    <Panel.Root>
+      <Panel.Body asChild>
+        <ScrollArea.Root>
+          <ScrollArea.Viewport asChild>
+            <Layout.Container>
+              <Form.Root
+                schema={OwnedSchema}
+                values={values}
+                useType={() => Organization}
+                onCreate={(type, values) =>
+                  Type.isObject(type) ? Obj.make(type, { name: 'Initech', ...values }) : undefined
+                }
+                onValuesChanged={(next) => setValues((previous) => ({ ...previous, ...next }))}
+              >
+                <Form.Content>
+                  <Form.Fields />
+                </Form.Content>
+              </Form.Root>
+            </Layout.Container>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Body>
+      <Panel.Footer>
+        <Typography.Text truncate data-testid='count'>
+          {values.organizations.length}
+        </Typography.Text>
+        <Typography.Text truncate data-testid='acme'>
+          {acmeName}
+        </Typography.Text>
+      </Panel.Footer>
+    </Panel.Root>
+  );
+};
+
+/** 1. Test: owned rows start folded under the target's name, add creates an open row, and edits reach the target. */
+export const Owned: Story = {
+  render: OwnedStory,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // 2. The existing row is folded and named by its target.
+    const acme = canvas.getByRole('group', { name: 'Acme' });
+    await expect(within(acme).queryByRole('textbox', { name: 'Full name' })).toBeNull();
+
+    // 3. Unfolded, its fields write back to the target.
+    await userEvent.click(within(acme).getByRole('button', { name: 'Acme' }));
+    const name = await within(acme).findByRole('textbox', { name: 'Full name' });
+    await userEvent.type(name, ' Corp');
+    await waitFor(() => expect(canvas.getByTestId('acme')).toHaveTextContent('Acme Corp'));
+
+    // 4. Add creates a target whose row starts open, and naming it names the row.
+    await userEvent.click(canvas.getByTestId('organizations.add'));
+    await waitFor(() => expect(canvas.getByTestId('count')).toHaveTextContent('2'));
+    const created = canvas.getByRole('group', { name: 'Initech' });
+    await userEvent.type(within(created).getByRole('textbox', { name: 'Full name' }), ' Ltd');
+    await expect(await canvas.findByRole('group', { name: 'Initech Ltd' })).toBeInTheDocument();
   },
 };

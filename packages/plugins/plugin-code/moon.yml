@@ -5,10 +5,22 @@ tags:
   - ts-vite-build
   - ts-test
   - ts-test-storybook
+  - ts-test-workerd
   - pack
   - storybook
 
 tasks:
+  # EDGE's operation-service imports this handler set directly, and it declares no condition.
+  check-module-structure:
+    args:
+      - --export
+      - ./CodeOperationHandlerSet
+  scan-feature-links:
+    # Prints every `@feature` tag in the repository as the input of the importFeatureLinks operation.
+    command: bun $projectRoot/scripts/scan-feature-links.ts
+    options:
+      cache: false
+      runInCI: false
   build:
     deps:
       - ~:prebuild-spec-index

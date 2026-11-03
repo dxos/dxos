@@ -16,7 +16,7 @@ import { useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as MapPlugin from '@dxos/plugin-map/MapPlugin';
-import * as MapRole from '@dxos/plugin-map/MapRole';
+import * as MapSurface from '@dxos/plugin-map/MapSurface';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
@@ -217,7 +217,7 @@ const MapStory = () => {
 
   return (
     <AttendableContainer id={ATTENDABLE_ID} classNames='contents'>
-      <Surface.Surface type={MapRole.MapInline} data={{ subject: trip, attendableId: ATTENDABLE_ID }} limit={1} />
+      <Surface.Surface type={MapSurface.MapInline} data={{ subject: trip, attendableId: ATTENDABLE_ID }} limit={1} />
     </AttendableContainer>
   );
 };

@@ -37,6 +37,7 @@ import {
   SelectField,
   TextAreaField,
   TextField,
+  VectorField,
   getArrayPresentation,
 } from './fields/index.ts';
 import { FormFieldRow } from './FormField.tsx';
@@ -103,6 +104,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     onCreate,
     resolveCreateEntry,
     refInline,
+    defaultOpen,
   } = props;
   const { t } = Hooks.useTranslation(translationKey);
   const { variant, form } = useFormContext(FormFieldDispatch.displayName);
@@ -179,6 +181,10 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
   if (resolution.kind === 'provided') {
     return resolution.element;
   }
+  // A vector names its group and labels each axis itself, so it takes no field row.
+  if (resolution.kind === 'vector') {
+    return <VectorField {...fieldProps} />;
+  }
   // An array of refs the form does not own (`FormCreateAnnotation` targets render inline per element) is a
   // RefArrayField: chips (`tag`) in a field row, or (`title`) rows under a header of their own.
   const refProps = resolution.kind === 'array' ? getRefProps(type) : undefined;
@@ -231,7 +237,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
   }
 
   if (resolution.kind === 'ref' && resolution.inline) {
-    return <InlineRefField {...fieldProps} db={db} useType={useType} onCreate={onCreate} />;
+    return <InlineRefField {...fieldProps} db={db} useType={useType} onCreate={onCreate} defaultOpen={defaultOpen} />;
   }
 
   const control = renderControl(resolution);

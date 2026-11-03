@@ -4,6 +4,8 @@
 
 import { describe, test } from 'vitest';
 
+import { MAJOR_GRID } from '@dxos/scene';
+
 import {
   createArtifactCircuit,
   createAudioCircuit,
@@ -16,26 +18,26 @@ import {
   createTransformCircuit,
 } from './circuits.ts';
 
-/** A cell of the coarse grid the `position` helper lays these out on. */
-const CELL = 32;
+type Layout = { nodes: { center: { x: number; y: number }; size?: { width: number; height: number } }[] };
 
-const circuits: [string, () => { nodes: { center: { x: number; y: number } }[] }, number][] = [
-  ['basic', createBasicCircuit, CELL / 2],
-  ['transform', createTransformCircuit, CELL / 2],
-  ['logic', createLogicCircuit, CELL / 2],
-  ['control', createControlCircuit, CELL / 2],
-  ['template', createTemplateCircuit, CELL / 2],
-  ['artifact', createArtifactCircuit, CELL / 2],
-  ['audio', createAudioCircuit, CELL / 2],
-  ['voice', createGPTRealtimeCircuit, CELL / 2],
-  // The GPT circuit is assembled from optional blocks over a shared core, so no single set of literals
-  // centres every variant exactly; a cell of drift is the price of one layout serving all of them.
-  ['gpt', () => createGptCircuit({ history: true }), CELL],
-  ['gpt (plugins)', () => createGptCircuit({ history: true, image: true, artifact: true }), CELL],
+/** Every node's top-left sits on the major grid, so a layout can only be centred to within half a cell. */
+const TOLERANCE = MAJOR_GRID / 2;
+
+const circuits: [string, () => Layout][] = [
+  ['basic', createBasicCircuit],
+  ['transform', createTransformCircuit],
+  ['logic', createLogicCircuit],
+  ['control', createControlCircuit],
+  ['template', createTemplateCircuit],
+  ['artifact', createArtifactCircuit],
+  ['audio', createAudioCircuit],
+  ['voice', createGPTRealtimeCircuit],
+  ['gpt', () => createGptCircuit({ history: true })],
+  ['gpt (plugins)', () => createGptCircuit({ history: true, image: true, artifact: true })],
 ];
 
 describe('circuit layout', () => {
-  for (const [name, build, tolerance] of circuits) {
+  for (const [name, build] of circuits) {
     test(`the ${name} circuit is laid out around the origin`, ({ expect }) => {
       const centers = build().nodes.map((node) => node.center);
       expect(centers.length).toBeGreaterThan(0);
@@ -43,7 +45,36 @@ describe('circuit layout', () => {
       for (const axis of ['x', 'y'] as const) {
         const values = centers.map((center) => center[axis]);
         const midpoint = (Math.min(...values) + Math.max(...values)) / 2;
-        expect(Math.abs(midpoint), `${name} ${axis} midpoint`).toBeLessThanOrEqual(tolerance);
+        expect(Math.abs(midpoint), `${name} ${axis} midpoint`).toBeLessThanOrEqual(TOLERANCE);
+      }
+    });
+
+    test(`every node of the ${name} circuit has its top-left on the major grid, where a move snaps it`, ({
+      expect,
+    }) => {
+      for (const { center, size = { width: 0, height: 0 } } of build().nodes) {
+        expect(Math.abs((center.x - size.width / 2) % MAJOR_GRID), `${name} left`).toBe(0);
+        expect(Math.abs((center.y - size.height / 2) % MAJOR_GRID), `${name} top`).toBe(0);
+      }
+    });
+
+    test(`no two nodes of the ${name} circuit come within a grid cell of each other`, ({ expect }) => {
+      const bounds = build().nodes.map(({ center, size = { width: 0, height: 0 } }) => ({
+        left: center.x - size.width / 2,
+        right: center.x + size.width / 2,
+        top: center.y - size.height / 2,
+        bottom: center.y + size.height / 2,
+      }));
+      for (const [index, first] of bounds.entries()) {
+        for (const second of bounds.slice(index + 1)) {
+          const gap = Math.max(
+            second.left - first.right,
+            first.left - second.right,
+            second.top - first.bottom,
+            first.top - second.bottom,
+          );
+          expect(gap, `${name} gap`).toBeGreaterThanOrEqual(MAJOR_GRID);
+        }
       }
     });
   }

@@ -28,7 +28,7 @@ export default defineConfig({
     'AssistantOptions': 'src/types/AssistantOptions.ts',
     'AssistantPreset': 'src/types/AssistantPreset.ts',
     'AssistantService': 'src/types/AssistantService.ts',
-    'ChatSurface': 'src/types/ChatSurface.ts',
+    'AssistantSurface': 'src/types/AssistantSurface.ts',
     'Settings': 'src/types/Settings.ts',
     'Assistant': 'src/types/Assistant.ts',
     'AssistantOperation': 'src/types/AssistantOperation.ts',
