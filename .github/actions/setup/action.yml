@@ -298,3 +298,11 @@ runs:
       with:
         path: ${{ steps.pnpm-store.outputs.pnpm-store }}
         key: ${{ steps.pnpm-cache.outputs.cache-primary-key }}
+
+    # moon archives an empty output directory as a cache entry that restores nothing, and hydrates it as a
+    # success, so every job sharing the hash fails downstream. The shim checks what each run hydrated and
+    # rebuilds a task that came back without its outputs, which overwrites the entry: tools/moon-cache/README.md.
+    # Last in this action so it precedes every other `moon` on PATH.
+    - name: Check outputs restored from the moon cache
+      run: echo "$GITHUB_WORKSPACE/tools/moon-cache/ci" >> "$GITHUB_PATH"
+      shell: bash
