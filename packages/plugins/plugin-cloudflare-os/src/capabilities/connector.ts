@@ -11,7 +11,7 @@ import { AccessToken, Connection } from '@dxos/link';
 import * as ConnectorError from '@dxos/plugin-connector/ConnectorError';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
-import { Client } from '#api';
+import { Client, CloudflareOsError } from '#api';
 import { CloudflareOs, CloudflareOsOperation } from '#types';
 
 import { CLOUDFLARE_OS_CONNECTOR_ID } from '../constants.ts';
@@ -29,26 +29,39 @@ const SignInForm = Schema.Struct({
 
 type SignInValues = Schema.Schema.Type<typeof SignInForm>;
 
-const normalizeUrl = (url: string): string => new URL(url.trim()).origin;
+/** The deployment's origin; https only, since sign-in sends the password hash, which acts as the credential. */
+const normalizeUrl = (url: string): Effect.Effect<string, CloudflareOsError> =>
+  Effect.try({
+    try: () => new URL(url.trim()),
+    catch: (cause) => new CloudflareOsError({ message: 'Enter a valid https URL for the deployment.', cause }),
+  }).pipe(
+    Effect.filterOrFail(
+      (parsed) => parsed.protocol === 'https:',
+      () => new CloudflareOsError({ message: 'The deployment URL must use https.' }),
+    ),
+    Effect.map((parsed) => parsed.origin),
+  );
 
 /** Signs in once, storing the session token rather than the password. */
-const onSubmit: ConnectorSpec.CredentialForm<SignInValues>['onSubmit'] = ({ values, connector }) =>
-  Effect.gen(function* () {
-    const url = normalizeUrl(values.url);
-    const username = values.username.trim().toLowerCase();
-    const token = yield* Client.login({ url, username, password: values.password });
-    const accessToken = Obj.make(AccessToken.AccessToken, {
-      source: Client.hostFromUrl(url),
-      account: username,
-      token,
-    });
-    const connection = Obj.make(Connection.Connection, {
-      name: `${connector.label ?? LABEL} · ${username}`,
-      connectorId: connector.id,
-      accessToken: Ref.make(accessToken),
-    });
-    return { kind: 'complete' as const, accessToken, connection };
+const onSubmit: ConnectorSpec.CredentialForm<SignInValues>['onSubmit'] = Effect.fnUntraced(function* ({
+  values,
+  connector,
+}) {
+  const url = yield* normalizeUrl(values.url);
+  const username = values.username.trim().toLowerCase();
+  const token = yield* Client.login({ url, username, password: values.password });
+  const accessToken = Obj.make(AccessToken.AccessToken, {
+    source: Client.hostFromUrl(url),
+    account: username,
+    token,
   });
+  const connection = Obj.make(Connection.Connection, {
+    name: `${connector.label ?? LABEL} · ${username}`,
+    connectorId: connector.id,
+    accessToken: Ref.make(accessToken),
+  });
+  return { kind: 'complete' as const, accessToken, connection };
+});
 
 /** The stored session token still opens the account. */
 const testConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
@@ -70,6 +83,7 @@ export const CloudflareOsConnector: ConnectorSpec.ConnectorEntry = {
   credentialForm: {
     schema: SignInForm,
     defaultValues: { url: Client.DEFAULT_URL, username: '', password: '' },
+    onValidate: ({ values }) => Effect.asVoid(normalizeUrl(values.url)),
     onSubmit,
   },
   testConnection,

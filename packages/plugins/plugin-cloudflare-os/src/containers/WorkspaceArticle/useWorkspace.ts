@@ -16,8 +16,13 @@ import * as Account from '../../Account.ts';
 /** How long to wait before reopening a dropped session. */
 const RECONNECT_DELAY_MS = 2_000;
 
+/** How long the listing may take to reach `ready`; an open socket that stalls never reports a break. */
+const SNAPSHOT_TIMEOUT_MS = 30_000;
+
 export type WorkspaceSession = {
   gadgets: CloudflareOs.Gadget[];
+  /** The selected gadget, or the first one when none is selected. */
+  gadgetId?: number;
   error?: string;
   /** The selected gadget's UI code, once loaded; null when the gadget has no UI yet. */
   jsCode?: string | null;
@@ -29,15 +34,17 @@ export type WorkspaceSession = {
  * A live session to the bound workspace: its gadgets as the deployment reports them, and the selected
  * gadget's UI code and server connection. Closed when the article unmounts or the account changes.
  */
-export const useWorkspace = (workspace: CloudflareOs.Workspace, gadgetId: number | undefined): WorkspaceSession => {
+export const useWorkspace = (workspace: CloudflareOs.Workspace, selected: number | undefined): WorkspaceSession => {
   const [connection] = useObject(workspace.connection);
   const [accessToken] = useObject(connection?.accessToken);
   const [overseer, setOverseer] = useState<{ stub: RpcStub<Protocol.Overseer> }>();
   const [gadgets, setGadgets] = useState<CloudflareOs.Gadget[]>(() => [...(workspace.gadgets ?? [])]);
   const [error, setError] = useState<string>();
+  const [gadgetError, setGadgetError] = useState<string>();
   const [jsCode, setJsCode] = useState<string | null>();
   // Bumped when the session drops, which reopens it.
   const [generation, setGeneration] = useState(0);
+  const gadgetId = selected ?? gadgets[0]?.id;
   // A gadget that only exists in a chat's proposed changes is shown as that chat proposes it.
   const chatId = gadgets.find(({ id }) => id === gadgetId)?.chatId;
 
@@ -52,7 +59,29 @@ export const useWorkspace = (workspace: CloudflareOs.Workspace, gadgetId: number
     // Wrapped: a stub is callable, so React would treat it as a state updater.
     setOverseer({ stub });
     setError(undefined);
-    const subscription = stub.subscribeToWorkpieces(Account.gadgetSubscriber(setGadgets));
+    // The listing replays every gadget before `ready`; publishing only the complete snapshot keeps the
+    // selected gadget from flickering out and drops gadgets removed while the session was down.
+    let ready = false;
+    const subscription = stub.subscribeToWorkpieces(
+      Account.gadgetSubscriber(
+        (next) => {
+          if (ready) {
+            setGadgets(next);
+          }
+        },
+        (snapshot) => {
+          ready = true;
+          clearTimeout(deadline);
+          setGadgets(snapshot);
+        },
+      ),
+    );
+    const deadline = setTimeout(() => {
+      if (!closed && !ready) {
+        log.warn('workspace listing stalled; reopening the session');
+        setGeneration((value) => value + 1);
+      }
+    }, SNAPSHOT_TIMEOUT_MS);
     // A dropped WebSocket ends the subscription silently, so reopen the session after a pause.
     let reconnect: ReturnType<typeof setTimeout> | undefined;
     api.onRpcBroken(() => {
@@ -69,6 +98,7 @@ export const useWorkspace = (workspace: CloudflareOs.Workspace, gadgetId: number
     });
     return () => {
       closed = true;
+      clearTimeout(deadline);
       clearTimeout(reconnect);
       void subscription.then(Client.dispose, () => {});
       Client.dispose(stub);
@@ -78,6 +108,7 @@ export const useWorkspace = (workspace: CloudflareOs.Workspace, gadgetId: number
 
   useEffect(() => {
     setJsCode(undefined);
+    setGadgetError(undefined);
     if (!overseer || gadgetId === undefined) {
       return;
     }
@@ -92,7 +123,7 @@ export const useWorkspace = (workspace: CloudflareOs.Workspace, gadgetId: number
       (err: unknown) => {
         if (!cancelled) {
           log.catch(err);
-          setError('Could not load the gadget.');
+          setGadgetError('Could not load the gadget.');
         }
       },
     );
@@ -114,5 +145,5 @@ export const useWorkspace = (workspace: CloudflareOs.Workspace, gadgetId: number
     [overseer, gadgetId, chatId],
   );
 
-  return { gadgets, error, jsCode, connect };
+  return { gadgets, gadgetId, error: error ?? gadgetError, jsCode, connect };
 };

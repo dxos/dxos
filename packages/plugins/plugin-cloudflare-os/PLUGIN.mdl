@@ -10,9 +10,10 @@ supplies three things Composer does not have: gadgets (per-user apps that run in
 that builds and changes them, and gatekeepers that let that agent act on outside services only with
 the user's approval.
 
-The plugin talks to the deployment as the Workshop frontend does: one Cap'n Web session over a
-WebSocket at `/api`, against the subset of the Workshop API that `Protocol` declares. That API is
-unversioned and moves with each deployment, so the subset is kept small.
+The plugin talks to the deployment over Cap'n Web, against the subset of the Workshop API that
+`Protocol` declares. The workspace article holds a live session over a WebSocket at `/api`, as the
+Workshop frontend does; an agent turn follows its workspace chat by polling with one-request HTTP
+batches. That API is unversioned and moves with each deployment, so the subset is kept small.
 
 ## Extensions
 
@@ -98,7 +99,8 @@ feat F-4: Chat with the workspace agent
     (`mergeChanges`) or revert them (`revertChanges`).
   req F-4.5: When a turn ends with gatekeeper actions pending, the chat asks to approve or reject
     each one, previewing what it would do.
-  req F-4.6: A space with no bound workspace fails the turn with a message that says to connect
+  req F-4.6: A turn that is cancelled or runs out of time stops the workspace agent.
+  req F-4.7: A space with no bound workspace fails the turn with a message that says to connect
     Cloudflare OS and bind a workspace.
 ```
 
@@ -271,4 +273,13 @@ decision D-11: The QA prompt asks for a gadget "that shows the count". Fills in 
   for: user:dmaretskyi
   affects: [QA-1]
   why: Without it the agent once built a counter whose display never received the count, so the test could not judge the run step.
+```
+
+```mdl
+decision D-12: A cancelled or timed-out turn stops the workspace agent. Fills in [D-3].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4.6]
+  why: Otherwise the agent keeps running on the deployment after Composer stops following it, and can queue gated actions nobody is watching for.
 ```
