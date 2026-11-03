@@ -2,8 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as Stream from 'effect/Stream';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -14,7 +16,7 @@ import * as Cancellation from '@dxos/compute/Cancellation';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
-import { Reply, ReplyHandler } from '@dxos/compute/testing';
+import { Fibonacci, Reply, ReplyHandler } from '@dxos/compute/testing';
 import * as Trace from '@dxos/compute/Trace';
 import { TestSchema } from '@dxos/echo/testing';
 import { DXN, EntityId } from '@dxos/keys';
@@ -67,13 +69,61 @@ const InspectHandler = Inspect.pipe(
   ),
 );
 
+/** A service only EDGE holds, as plugin-discord's bot is. */
+export class Greeter extends Context.Service<
+  Greeter,
+  {
+    readonly greet: (name: string) => Effect.Effect<string, Error>;
+    readonly names: () => Stream.Stream<string, Error>;
+  }
+>()('@dxos/plugin-host-cloudflare/testing/Greeter') {}
+
+/** Greets everyone the {@link Greeter} names. */
+export const Greet = Operation.make({
+  meta: { key: DXN.make('com.example.operation.hostTest.greet'), name: 'Greet' },
+  services: [Greeter],
+  input: Schema.Struct({}),
+  output: Schema.Array(Schema.String),
+});
+
+const GreetHandler = Greet.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(function* () {
+      const greeter = yield* Greeter;
+      const names = yield* Stream.runCollect(greeter.names()).pipe(Effect.orDie);
+      return yield* Effect.forEach(names, (name) => greeter.greet(name).pipe(Effect.orDie));
+    }),
+  ),
+);
+
+/** Runs an operation of this plugin and one of another plugin's. */
+export const Delegate = Operation.make({
+  meta: { key: DXN.make('com.example.operation.hostTest.delegate'), name: 'Delegate' },
+  services: [Operation.Service],
+  input: Schema.Struct({ n: Schema.Number }),
+  output: Schema.Struct({ reply: Schema.Any, fibonacci: Schema.Any }),
+});
+
+const DelegateHandler = Delegate.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(function* ({ n }) {
+      const reply = yield* Operation.invoke(Reply, { n });
+      const fibonacci = yield* Operation.invoke(Fibonacci, { iterations: n });
+      return { reply, fibonacci };
+    }),
+  ),
+);
+
 /** A plugin with no UI that contributes one type, one operation and one skill. */
 export const TestPlugin = Plugin.define(Plugin.makeMeta({ key: DXN.make(TEST_PLUGIN_KEY), name: 'Host test' })).pipe(
   Plugin.addModule(AppCapability.schema([TestSchema.Person])),
   Plugin.addModule(
     Capability.inlineModule('TestOperations', { provides: [Capabilities.OperationHandler] }, () =>
       Effect.succeed(
-        Capability.contribute(Capabilities.OperationHandler, OperationHandlerSet.make(ReplyHandler, InspectHandler)),
+        Capability.contribute(
+          Capabilities.OperationHandler,
+          OperationHandlerSet.make(ReplyHandler, InspectHandler, GreetHandler, DelegateHandler),
+        ),
       ),
     ),
   ),

@@ -8,9 +8,19 @@ import { describe, test } from 'vitest';
 import { Fibonacci, Reply } from '@dxos/compute/testing';
 import { Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
+import type { PluginProtocol } from '@dxos/protocols';
 
 import * as PluginHost from './PluginHost.ts';
-import { Inspect, InspectEvent, TEST_PLUGIN_KEY, TestPlugin, TestSkill } from './testing/index.ts';
+import {
+  Delegate,
+  Greet,
+  Greeter,
+  Inspect,
+  InspectEvent,
+  TEST_PLUGIN_KEY,
+  TestPlugin,
+  TestSkill,
+} from './testing/index.ts';
 
 const SPACE_ID = 'B2N35FBQKXIOTC5XEOCRVORIYQZHM2IBM';
 
@@ -158,6 +168,67 @@ describe('PluginHost', () => {
         ok: false,
         error: { code: 'invalid-request', message: expect.stringContaining('conversation') },
       });
+    });
+  });
+
+  // Services only EDGE holds, and other plugins' operations (EDGE-PLUGINS F-5.7).
+  describe('host services', () => {
+    test.fails('a handler reaches a service EDGE serves, its methods and streams', async ({ expect }) => {
+      const calls: unknown[] = [];
+      const services: PluginProtocol.HostServices = {
+        descriptors: [{ key: Greeter.key, streams: ['names'] }],
+        host: {
+          call: async (service, method, args) => {
+            calls.push([service, method, ...args]);
+            return method === 'names'
+              ? { ok: true, value: ['Ada', 'Grace'] }
+              : { ok: true, value: `Hello, ${String(args[0])}` };
+          },
+        },
+      };
+      const result = await makeHost().invoke({ operationKey: String(Greet.meta.key), input: {} }, {}, { services });
+      expect(result).toEqual({ ok: true, output: ['Hello, Ada', 'Hello, Grace'] });
+      expect(calls).toEqual([
+        [Greeter.key, 'names'],
+        [Greeter.key, 'greet', 'Ada'],
+        [Greeter.key, 'greet', 'Grace'],
+      ]);
+    });
+
+    test.fails('a service failure fails the handler with its message', async ({ expect }) => {
+      const services: PluginProtocol.HostServices = {
+        descriptors: [{ key: Greeter.key, streams: ['names'] }],
+        host: { call: async () => ({ ok: false, error: { code: 'failed', message: 'The bot is offline.' } }) },
+      };
+      expect(
+        await makeHost().invoke({ operationKey: String(Greet.meta.key), input: {} }, {}, { services }),
+      ).toMatchObject({ ok: false, error: { message: expect.stringContaining('The bot is offline.') } });
+    });
+
+    test('a service EDGE does not serve is not found', async ({ expect }) => {
+      expect(await makeHost().invoke({ operationKey: String(Greet.meta.key), input: {} }, {})).toMatchObject({
+        ok: false,
+        error: { message: expect.stringContaining('Service not found') },
+      });
+    });
+
+    test.fails("runs its own operations in process and other plugins' through EDGE", async ({ expect }) => {
+      const invoked: unknown[] = [];
+      const operations: PluginProtocol.OperationHost = {
+        invoke: async (operationKey, input, options) => {
+          invoked.push({ operationKey, input, options });
+          return { ok: true, output: 55 };
+        },
+      };
+      const result = await makeHost().invoke(
+        { operationKey: String(Delegate.meta.key), input: { n: 10 } },
+        {},
+        { operations, pid: 'outer' },
+      );
+      expect(result).toEqual({ ok: true, output: { reply: { n: 10 }, fibonacci: 55 } });
+      expect(invoked).toEqual([
+        { operationKey: 'com.example.operation.fib', input: { iterations: 10 }, options: { parentPid: 'outer' } },
+      ]);
     });
   });
 });
