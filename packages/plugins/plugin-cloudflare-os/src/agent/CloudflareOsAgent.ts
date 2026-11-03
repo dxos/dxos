@@ -30,6 +30,9 @@ const TURN_TIMEOUT_MS = 10 * 60_000;
 /** How often a running turn is read; each read is one HTTP request. */
 const POLL_INTERVAL_MS = 1_500;
 
+/** How long one poll may take before it is abandoned and retried, so a stalled request cannot outlast the turn. */
+const POLL_TIMEOUT_MS = 15_000;
+
 /** The workspace chat a Composer chat continues, recorded on the chat after its first turn. */
 export const chatIdOf = (chat: Chat.Chat): number | undefined => {
   const key = Obj.getMeta(chat).keys.find(({ source }) => source === CHAT_KEY_SOURCE);
@@ -144,6 +147,10 @@ const runTurn = (
     while (finished === undefined && Date.now() < deadline) {
       yield* Effect.sleep(POLL_INTERVAL_MS);
       const result = yield* poll(account, workspace.workspaceId, chatId).pipe(
+        Effect.timeoutOrElse({
+          duration: POLL_TIMEOUT_MS,
+          orElse: () => Effect.fail(new CloudflareOsError({ message: 'The poll timed out.' })),
+        }),
         Effect.map(Option.some),
         Effect.catch((error) =>
           Effect.sync(() => {

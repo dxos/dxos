@@ -18,15 +18,14 @@ import { CloudflareOs } from '#types';
 export type Account = { url: string; token: string };
 
 /** The account a connection stores: its token's source is the deployment's hostname. */
-export const fromConnection = (
+export const fromConnection: (
   connection: Connection.Connection,
-): Effect.Effect<Account, CloudflareOsError, Database.Service> =>
-  Effect.gen(function* () {
-    const accessToken = yield* Database.load(Connection.getAccessToken(connection)).pipe(
-      Effect.mapError((cause) => new CloudflareOsError({ message: 'The connection has no credential.', cause })),
-    );
-    return { url: Client.urlFromHost(accessToken.source), token: accessToken.token };
-  });
+) => Effect.Effect<Account, CloudflareOsError, Database.Service> = Effect.fnUntraced(function* (connection) {
+  const accessToken = yield* Database.load(Connection.getAccessToken(connection)).pipe(
+    Effect.mapError((cause) => new CloudflareOsError({ message: 'The connection has no credential.', cause })),
+  );
+  return { url: Client.urlFromHost(accessToken.source), token: accessToken.token };
+});
 
 /** The account a connection ref points at. */
 export const fromConnectionRef = (
@@ -112,6 +111,9 @@ export const gadgetSubscriber = (
   });
 };
 
+/** How long a gadget listing may take; a dropped socket never sends `ready`. */
+const LIST_TIMEOUT_MS = 30_000;
+
 /** The gadgets an overseer lists, read through a subscription closed once the listing is complete. */
 export const listGadgets = (
   overseer: RpcStub<Protocol.Overseer>,
@@ -131,4 +133,9 @@ export const listGadgets = (
         );
         subscription.catch(reject);
       }),
+  ).pipe(
+    Effect.timeoutOrElse({
+      duration: LIST_TIMEOUT_MS,
+      orElse: () => Effect.fail(new CloudflareOsError({ message: 'Listing the workspace gadgets timed out.' })),
+    }),
   );
