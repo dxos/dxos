@@ -30,6 +30,7 @@ import {
 } from './hierarchy.ts';
 import { type TaskDescriptionProps } from './TaskDescription.tsx';
 import { useTaskListContext } from './TaskListContext.ts';
+import { TRACK } from './tracks.ts';
 import {
   TASK_TREE_ROOT_ID,
   type TaskGroup,
@@ -42,8 +43,8 @@ import {
 
 /**
  * The task list rendered as a Next `Tree`, so the machine owns disclosure, roving focus and the APG keymap. A row's
- * cells lay out on the Root's `columns` in DOM order: the disclosure (when the list can disclose), then the gutter,
- * status and title, then the trailing cells; the chips and the description are placed on the row's later lines.
+ * cells lay out on the Root's `columns`: the gutter, the disclosure (when the list can disclose), status and title, then
+ * the trailing cells; the chips and the description are placed on the row's later lines.
  *
  * `Shift+Arrow` and `Tab` restructuring reach the consumer's key handler before the machine's, which ignores modified
  * arrows anyway; a taken key keeps focus on the moved row as it remounts under its new path.
@@ -298,7 +299,7 @@ export const TaskTreeNode = ({
       if (header) {
         return (
           <Tree.Item node={node}>
-            <Tree.ItemIndicator />
+            <Tree.ItemIndicator classNames={TRACK.disclosure} />
             <TaskGroupHeading group={header} translationKey={translationKey} />
           </Tree.Item>
         );
@@ -309,7 +310,7 @@ export const TaskTreeNode = ({
         <Tree.Item node={node}>
           <Item
             node={node.item}
-            indicator={toggle ? <Tree.ItemIndicator /> : undefined}
+            indicator={toggle ? <Tree.ItemIndicator classNames={TRACK.disclosure} /> : undefined}
             ordinal={task && ordinals.get(task.id)}
             checked={!!task && !!checked?.has(task.id)}
             translationKey={translationKey}
@@ -376,7 +377,7 @@ export const TaskTreeNode = ({
 const TaskGroupHeading = ({ group, translationKey }: { group: TaskGroupHeader; translationKey: string }) => {
   const { t } = Hooks.useTranslation(translationKey);
   return (
-    <div className='col-[2/assignee] flex min-w-0 items-center gap-2' data-testid='taskList.group.header'>
+    <div className='col-[priority/assignee] flex min-w-0 items-center gap-2' data-testid='taskList.group.header'>
       {group.icon && <Icon.Icon icon={group.icon} size='md' classNames={group.iconClassNames} />}
       <span className='truncate font-medium'>{Theme.toLocalizedString(group.label, t)}</span>
       <span className='text-sm text-fg-muted' data-testid='taskList.group.count'>

@@ -1361,20 +1361,20 @@ TreeItemGroupLabel.displayName = 'Tree.ItemGroupLabel';
 // ItemIndicator
 //
 
-type TreeItemIndicatorProps = {
+type TreeItemIndicatorProps = Util.ThemedClassName<{
   /** The caret glyph; it turns a quarter while the branch is open. */
   icon?: string;
-};
+}>;
 
 /**
  * The disclosure cell: half a block wide and one block tall, holding the caret-only branch trigger on a branch (dimmed once an
  * open branch proves empty) and nothing on a leaf, so labels
  * align at every level.
  */
-const TreeItemIndicator = ({ icon = 'ph--caret-right--regular' }: TreeItemIndicatorProps) => {
+const TreeItemIndicator = ({ classNames, icon = 'ph--caret-right--regular' }: TreeItemIndicatorProps) => {
   const { node } = useTreeItemContext('Tree.ItemIndicator');
   return (
-    <Layout.Block classNames='dx-tree-item-indicator'>
+    <Layout.Block classNames={['dx-tree-item-indicator', classNames]}>
       {node.branch && (
         <TreeView.BranchTrigger className='dx-tree-branch-trigger' data-empty={node.empty ? '' : undefined}>
           <TreeView.BranchIndicator className='dx-tree-branch-indicator'>

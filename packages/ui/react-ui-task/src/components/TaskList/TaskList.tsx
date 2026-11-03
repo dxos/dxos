@@ -365,9 +365,9 @@ const MAX_ORDINAL = 99;
  * its field starts where their titles do.
  *
  * Every cell is placed by its track's name ({@link TRACK}), so a track exists only when its option is on and an absent
- * cell leaves its track empty. The first track is the tree's disclosure — at no width in a flat list — and goes unnamed:
- * the row wraps its columns in `[content-start] …`, and two bracketed names with no track between them invalidate the
- * template. The disclosure is the one cell not placed by name; it flows into that first track.
+ * cell leaves its track empty. The first track is the gutter, ahead of the disclosure so a hidden checkbox leaves no
+ * gap between the caret and the row's icons. It is always present (at no width when unused) and goes unnamed: the row
+ * wraps its columns in `[content-start] …`, and two bracketed names with no track between them invalidate the template.
  */
 const buildGridTemplate = ({
   toggle,
@@ -383,10 +383,10 @@ const buildGridTemplate = ({
   hasActions: boolean;
 }): string => {
   const candidates: (readonly [name: string | undefined, size: string] | false)[] = [
-    // The tree's disclosure cell and indent step are half a block, so a guide lands under its branch's chevron.
-    [undefined, toggle ? 'var(--dx-half-block-size)' : '0px'],
     // Fixed rather than `auto`, so the edit pane, which leaves it empty, keeps the rows' width for it.
-    gutter > 0 && ['gutter', `calc(${gutter} * var(--dx-block-size))`],
+    [undefined, gutter > 0 ? `calc(${gutter} * var(--dx-block-size))` : '0px'],
+    // Half a block, the tree's indent step.
+    ['disclosure', toggle ? 'var(--dx-half-block-size)' : '0px'],
     ['priority', 'var(--dx-block-size)'],
     ['status', 'var(--dx-block-size)'],
     ['title', 'minmax(0, 1fr)'],
@@ -538,7 +538,6 @@ const TaskListItem = ({
 
   return (
     <>
-      {/* The one cell not placed by name: it flows into the template's unnamed first track. */}
       {indicator}
       {showGutter && (
         <Layout.Flex center gap='xs' classNames={TRACK.gutter}>
