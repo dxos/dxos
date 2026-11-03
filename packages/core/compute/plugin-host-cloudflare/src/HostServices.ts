@@ -10,12 +10,13 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import * as Operation from '@dxos/compute/Operation';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 import { DXN, EntityId, type SpaceId } from '@dxos/keys';
 import type { PluginProtocol } from '@dxos/protocols';
 
 import * as Output from './Output.ts';
-import { mapHandler } from './RequestContext.ts';
+import * as RequestContext from './RequestContext.ts';
 
 //
 // What operation-service gives a handler beyond its function context (EDGE-PLUGINS F-5.7): services only EDGE holds,
@@ -103,7 +104,7 @@ const makeProxy = (descriptor: PluginProtocol.ServiceDescriptor, host: PluginPro
 export const withHostServices = (handler: Handler, services: PluginProtocol.HostServices | undefined): Handler =>
   services === undefined || services.descriptors.length === 0
     ? handler
-    : mapHandler(handler, (effect) =>
+    : RequestContext.mapHandler(handler, (effect) =>
         services.descriptors.reduce(
           (provided, descriptor) =>
             provided.pipe(
@@ -197,7 +198,7 @@ export const makeOperations = ({
     // Run to completion before the invocation returns: work left running after it would be dropped by workerd.
     schedule: (op, ...[input, options]) => run(op, input, options).pipe(Effect.asVoid),
     invokePromise: (op, ...[input, options]) =>
-      Effect.runPromise(run(op, input, options)).then(
+      EffectEx.runPromise(run(op, input, options)).then(
         (data) => ({ data }),
         (error: unknown) => ({ error: error instanceof Error ? error : new Error(String(error)) }),
       ),
@@ -207,7 +208,7 @@ export const makeOperations = ({
 
 /** Gives the handler {@link makeOperations}, in place of the function context's, which needs a deployed id. */
 export const withOperations = (handler: Handler, options: Omit<OperationsOptions, 'context'>): Handler =>
-  mapHandler(handler, (effect) =>
+  RequestContext.mapHandler(handler, (effect) =>
     Effect.flatMap(Effect.context<unknown>(), (context) =>
       effect.pipe(Effect.provideService(Operation.Service, makeOperations({ ...options, context }))),
     ),

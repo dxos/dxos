@@ -12,7 +12,7 @@ import * as Cancellation from '@dxos/compute/Cancellation';
 import type * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, Feed, Obj, type Entity } from '@dxos/echo';
+import { Database, type Entity, Feed, Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { messageOf } from '@dxos/errors';
 import { URI } from '@dxos/keys';
