@@ -4638,9 +4638,6 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../../common/node-std
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../protocols
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../../sdk/schema
@@ -22182,9 +22179,6 @@ importers:
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../../plugins/plugin-assistant
-      '@dxos/plugin-claude':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-claude
       '@dxos/plugin-explorer':
         specifier: workspace:*
         version: link:../../plugins/plugin-explorer
@@ -22285,6 +22279,9 @@ importers:
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../../plugins/plugin-chess
+      '@dxos/plugin-claude':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-claude
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugins/plugin-client
