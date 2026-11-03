@@ -337,6 +337,13 @@ feat F-9: Claude Code (cloud)
     then: |
       its settings list the project's repositories, which a cloud session
       checks out, and the user adds, removes and reorders them there
+
+  req F-9.7:
+    when: an agent is asked to give a project a repository, or to take one away
+    then: |
+      it adds or removes the repository in the project's repositories with
+      Update Project Repositories, from the Project Repositories skill; a
+      repository already listed keeps its place
 ```
 
 ## Acceptance
@@ -718,6 +725,25 @@ decision D-10: This plugin edits a project's repositories, the list plugin-proje
   why: The project's form no longer has a repositories field, and cloud sessions are what the list is for. The code folder's description already points at the repositories above it.
   rejected:
     - The editor in plugin-github, which would make plugin-github depend on plugin-projects for its settings surface while plugin-projects' stories depend on plugin-github.
+```
+
+```mdl
+decision D-11: Agents get an operation in this plugin that writes a project's repositories, and the GitHub skill points at it.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-9.7]
+```
+
+```mdl
+decision D-12: The operation is Update Project Repositories, which appends the repositories given in `add`, removes those in `remove`, and returns the list; with neither it only reads. A repository already listed keeps its place, compared by entity id. It is the one tool of the Project Repositories skill (`org.dxos.skill.claude.repositories`), which an agent can enable, and the GitHub skill names that skill by key. Fills in [D-11].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.7]
+  why: An agent rarely knows the whole list, so it edits by adding and removing rather than replacing. Naming the skill by key keeps plugin-github from importing this plugin. The Claude Agents skill is about managed agents, not a project's coding agents.
+  rejected:
+    - Replacing the whole list, which loses a repository the user added while the agent worked.
+    - Adding the tool to the GitHub skill, which would make plugin-github depend on this plugin.
 ```
 
 ---

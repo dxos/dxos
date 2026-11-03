@@ -41,7 +41,7 @@ export const make = (): Skill.Skill =>
         Never create the object by hand, since only an import fills its title, state and diff.
         Importing is idempotent: a pull request the space already holds is returned unchanged, so import before referencing one rather than searching first.
         Pass the returned pullRequest reference to the other tools, and use it wherever the pull request must be attached to another object, such as a task's artifacts.
-        The import also returns the pull request's repository as a repo reference; bind it to the chat to have a coding agent check it out, or ask the user to add it to the project's repositories.
+        The import also returns the pull request's repository as a repo reference; bind it to the chat to have a coding agent check it out, or add it to the project's repositories with the org.dxos.skill.claude.repositories skill.
         Read a pull request's live state, reviews and CI status with the GitHub MCP server's pull request tools before reporting whether it is open, merged or green; the stored object may be stale.
         Those tools come from the space's GitHub connection; if you cannot see them, the conversation has the connection's MCP server turned off.
         To sync a repository's files with the space (for example its .mdl specs, which become Spec objects), call ${Operation.toolName(GitHubOperation.EnableGitHubFileSync)} with the repository's org.dxos.type.repo object.
