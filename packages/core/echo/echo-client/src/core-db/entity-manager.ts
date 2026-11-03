@@ -328,6 +328,10 @@ export class EntityManager implements IDatabaseBinding {
     return this._linksAddedEvent;
   }
 
+  get lifetimeEnded(): ReadOnlyEvent<void> {
+    return this.#lifetimeEnded;
+  }
+
   // ── Lifecycle ────────────────────────────────────────────────────────────
 
   /**

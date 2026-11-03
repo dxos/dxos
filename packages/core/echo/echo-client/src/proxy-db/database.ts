@@ -473,6 +473,11 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._entityManager.linksAdded;
   }
 
+  /** Fires when a close ends this database's lifetime, so waiters settle instead of outliving the root handle. */
+  get lifetimeEnded() {
+    return this._entityManager.lifetimeEnded;
+  }
+
   // ── Resource lifecycle ──────────────────────────────────────────────────
 
   @synchronized
