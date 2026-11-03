@@ -19,12 +19,16 @@ const handler: Operation.WithHandler<typeof TaskOperation.CreateTask> = TaskOper
       taskSet: taskSetRef,
       title,
       description,
+      status,
       priority,
+      estimate,
       assignee,
+      delegate,
       parentTask,
       milestone,
     }) {
       yield* validateAssignee(assignee);
+      yield* validateAssignee(delegate);
       const taskSet = yield* Database.load(taskSetRef);
       const parent = parentTask ? yield* Database.load(parentTask) : undefined;
 
@@ -51,10 +55,12 @@ const handler: Operation.WithHandler<typeof TaskOperation.CreateTask> = TaskOper
       const task = yield* TaskSet.addPersisted(
         Task.make({
           title: title.trim(),
-          status: 'todo',
+          status: status ?? 'todo',
           description,
           priority,
+          estimate,
           assignee,
+          delegate,
           milestone,
         }),
       );

@@ -48,10 +48,29 @@ const shapeError = ({ task, create, assign, unassign, title, status }: TaskChang
 type Resolved = { change: TaskChange; task?: Task.Task };
 
 /**
+ * The edit that takes a task on or lets it go. Taking it on makes this agent its delegate, so a
+ * person who answers for it keeps it; on a task the agent made for itself (its own assignee) that
+ * writes nothing. Letting go clears whichever of the two this agent holds.
+ */
+const claim = (
+  task: Task.Task,
+  self: Actor.Actor,
+  { assigning, unassign }: { assigning: boolean; unassign?: boolean },
+): Pick<Task.Edit, 'assignee' | 'delegate'> => {
+  if (assigning) {
+    return { delegate: self };
+  }
+  if (unassign) {
+    return Task.sameActor(task.delegate, self) ? { delegate: null } : { assignee: null };
+  }
+  return {};
+};
+
+/**
  * Creates, edits, assigns and unassigns the conversation's tasks. Every change is checked before any
  * is applied, so a malformed batch writes nothing and the model can resend it whole.
  *
- * Assignment always moves both halves together — the chat's checklist and the task's assignee — so
+ * Assignment always moves both halves together — the chat's checklist and the task's worker — so
  * the checklist a conversation shows is the work its agent holds. Starting a task assigns it.
  */
 export default UpdateTasks.pipe(
@@ -113,11 +132,7 @@ export default UpdateTasks.pipe(
         const previousStatus = task.status;
         // Through `Task.update`, so the edit and its history entry land together, and a task someone
         // was named to review lands in `review` rather than closing on the model's `done`.
-        Task.update(task, {
-          title: title?.trim(),
-          status,
-          ...(assigning ? { assignee: self } : unassign ? { assignee: null } : {}),
-        });
+        Task.update(task, { title: title?.trim(), status, ...claim(task, self, { assigning, unassign }) });
         if (assigning) {
           Chat.assignTasks(chat, [Ref.make(task)]);
         } else if (unassign) {

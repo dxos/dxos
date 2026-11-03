@@ -4,7 +4,6 @@
 
 import React, {
   type ClipboardEvent,
-  type CSSProperties,
   type DragEvent,
   type KeyboardEvent,
   useCallback,
@@ -13,34 +12,26 @@ import React, {
   useState,
 } from 'react';
 
+import { Filter, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { MarkdownEditable, type MarkdownEditableController, type MarkdownEditableProps } from '@dxos/react-ui-markdown';
+import { type MarkdownEditableController, type MarkdownEditableProps } from '@dxos/react-ui-markdown';
 import * as Button from '@dxos/react-ui/Button';
-import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
-import * as Input from '@dxos/react-ui/Input';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Util from '@dxos/react-ui/Util';
-import { type Task } from '@dxos/types';
+import { Person, type Task } from '@dxos/types';
 import { submitOnModEnter } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
+import { type TaskDescriptionBehavior, TaskEditorForm, type TaskEditorProperties } from './TaskEditorFields.tsx';
 import { type TaskCreateHandler, type TaskCreateResult } from './TaskList.tsx';
 import { useTaskListContext } from './TaskListContext.ts';
-import {
-  TaskEstimateControl,
-  TaskEstimatePicker,
-  TaskPriorityIcon,
-  TaskPriorityPicker,
-  TaskStatusControl,
-} from './TaskRowCells.tsx';
-import { TRACK } from './tracks.ts';
 
 export type TaskListEditorProps = ComposableProps<{
   /** Placeholder for the title field when nothing is selected (the create case); translated by default. */
@@ -94,7 +85,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
     const { t } = Hooks.useTranslation(translationKey);
     const { className, ...rest } = Util.composableProps(props);
     const descriptionRef = useRef<MarkdownEditableController>(null);
-    const { tasks, selected, columns, showEstimates, flush, onTaskCreate, onTaskUpdate, onTaskSelect } =
+    const { tasks, selected, members, flush, onTaskCreate, onTaskUpdate, onTaskSelect } =
       useTaskListContext('TaskList.Editor');
 
     const task = useMemo(
@@ -110,9 +101,8 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
     // synchronously — a `setState` would still hold the previous render's text.
     const draftDescription = useRef('');
     const [draft, setDraft] = useState('');
-    // Set on the create row before the task exists, and sent with its draft.
-    const [draftPriority, setDraftPriority] = useState<Task.Priority>();
-    const [draftEstimate, setDraftEstimate] = useState<Task.Estimate>();
+    // Set on the create row's pills before the task exists, and sent with its draft.
+    const [draftProperties, setDraftProperties] = useState<TaskEditorProperties>({});
     // Held by the pane, not the host: there is no task to attach them to until the create lands.
     const [files, setFiles] = useState<readonly File[]>([]);
     const [dragOver, setDragOver] = useState(false);
@@ -167,8 +157,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
           const kept = new Set(result?.rejectedFiles ?? []);
           setFiles((files) => files.filter((file) => !sent.includes(file) || kept.has(file)));
           setDraft((draft) => (draft === sentTitle ? '' : draft));
-          setDraftPriority(undefined);
-          setDraftEstimate(undefined);
+          setDraftProperties({});
           if (draftDescription.current === sentDescription) {
             draftDescription.current = '';
             setCreateEpoch((epoch) => epoch + 1);
@@ -181,8 +170,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
             {
               title,
               ...(description.length > 0 && { description }),
-              ...(draftPriority && { priority: draftPriority }),
-              ...(draftEstimate && { estimate: draftEstimate }),
+              ...draftProperties,
             },
             sent.length > 0 ? sent : undefined,
           );
@@ -197,7 +185,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
           log.catch(error);
         });
       }
-    }, [draft, draftPriority, draftEstimate, files, task, current, onTaskCreate, onTaskUpdate]);
+    }, [draft, draftProperties, files, task, current, onTaskCreate, onTaskUpdate]);
 
     // Blur commits a rename but never a create: leaving the field is not a decision to add a task,
     // and half a title would become one — clicking the list, the thread, or anywhere else would
@@ -258,6 +246,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
         setCreateEpoch((epoch) => epoch + 1);
       }
       setDraft('');
+      setDraftProperties({});
       setFiles([]);
       onTaskSelect?.(undefined);
     }, [task, current, onTaskSelect]);
@@ -311,43 +300,89 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
       [handleFiles],
     );
 
+    // The title is held as a draft until Enter, Save or blur commits it. The description's editor commits on its own,
+    // into the task or, while creating, into the draft. A draft's cleared property is dropped rather than held as
+    // `null`, since a draft has nothing to clear.
+    const handleChange = useCallback(
+      ({ title, description, ...properties }: Task.Edit) => {
+        if (title !== undefined) {
+          setDraft(title ?? '');
+        }
+        if (description !== undefined) {
+          if (task && current) {
+            onTaskUpdate?.(task, { description });
+          } else {
+            draftDescription.current = description ?? '';
+          }
+        }
+        if (Object.keys(properties).length === 0) {
+          return;
+        }
+        if (task && current) {
+          onTaskUpdate?.(task, properties);
+        } else {
+          setDraftProperties((draftProperties) => {
+            const next: Record<string, unknown> = { ...draftProperties, ...properties };
+            for (const key of Object.keys(properties)) {
+              if (next[key] == null) {
+                delete next[key];
+              }
+            }
+            return next as TaskEditorProperties;
+          });
+        }
+      },
+      [task, current, onTaskUpdate],
+    );
+
+    // The space's contacts, for the assignee picker: read off the task being edited, or any task in the list while
+    // creating, since a draft has no database of its own.
+    const people = useCallback(() => {
+      const subject = task ?? tasks[0];
+      const db = subject && Obj.getDatabase(subject);
+      return db?.query(Filter.type(Person.Person)).runSync() ?? [];
+    }, [task, tasks]);
+
     // Nothing to create with and nothing to edit: the pane has no purpose.
     if (!onTaskCreate && !(current && onTaskUpdate)) {
       return null;
     }
 
-    // On the list's template the pane has the rows' columns: the ordinal gutter it leaves empty, the
-    // status column takes the icon, and the title column takes the field — which is what puts the
-    // caret where the rows' titles start. Off it, the pane keeps a template of its own.
     const hasDescription = !!(showDescription && (current ? onTaskUpdate : onTaskCreate));
     // Valid only with a title: a task cannot be created, or renamed, to nothing.
     const canSave = draft.trim().length > 0;
     // Something to throw away: an edit in progress, or a draft.
     const canCancel = !!current || canSave;
-    // Editing, the task's own controls; creating, the same pickers over the draft, so a task can be sized and ranked
-    // as it is added.
-    const editing = !!(task && current);
+    const properties: TaskEditorProperties = current
+      ? {
+          status: current.status ?? undefined,
+          priority: current.priority ?? undefined,
+          estimate: current.estimate ?? undefined,
+          assignee: current.assignee ?? undefined,
+        }
+      : draftProperties;
+    const description: TaskDescriptionBehavior | undefined = hasDescription
+      ? {
+          // Per task; creating, remounted empty after each create, since there it holds the draft itself.
+          editorKey: current?.id ?? `create-${createEpoch}`,
+          controllerRef: descriptionRef,
+          placeholder: descriptionPlaceholder ?? t('task-description.placeholder'),
+          extensions,
+          controlled: !!current,
+        }
+      : undefined;
 
     return (
-      // The pane's own grid on the list's template, so its cells sit in the rows' columns: the field where the titles
-      // are read, the pickers under the rows' estimate and priority.
       <div
         {...rest}
         className={mx(
-          // The gap between the lines is the grid's, not a margin on each cell: a margin has to be repeated on every
-          // cell that might start a line, and is missed by whichever one is added next.
-          'grid w-full min-w-0 shrink-0',
-          (hasDescription || (takesFiles && files.length > 0)) && 'gap-y-2',
+          'flex flex-col gap-2 w-full min-w-0 shrink-0',
           // The drop target is the pane itself, marked while files are held over it.
           dragOver && 'ring-2 ring-inset ring-accent-bg',
           // The tree's rows pad their ends by the same gap, so the pane's fields start where the rows' cells do.
           !flush && 'px-(--dx-gap-size)',
           className,
         )}
-        // `--dx-col` is reset the way `ScrollArea.Viewport` resets it: inside a host `Column` the variable says "the
-        // content track", and `Field.Root` hands it to the field it wraps — which in THIS grid names a different
-        // column, and put the title in the controls' track.
-        style={{ 'gridTemplateColumns': columns, '--dx-col': 'auto' } as CSSProperties}
         data-testid='taskList.edit'
         {...(takesFiles && {
           onDragEnterCapture: handleDragEnter,
@@ -358,147 +393,64 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
         })}
         ref={forwardedRef}
       >
-        {/* Each cell placed by its track's name, as the rows' are. In the DOM the description follows the title, though
-            the pickers sit beside it, so Tab runs from the title into the description before the trailing controls. */}
-        {editing ? (
-          // The row's own status control — the same glyph and menu, so status is set where the task is read.
-          <TaskStatusControl task={task} classNames={mx(TRACK.status, 'self-start')} onTaskUpdate={onTaskUpdate} />
-        ) : (
-          // Creating, there is no task to carry a status yet.
-          <span className={mx(TRACK.status, 'flex items-center justify-center h-(--dx-control) self-start')}>
-            <Icon.Icon icon='ph--plus--regular' tone='subtle' />
-          </span>
-        )}
-        {/* The field's root is the grid item, so it takes the placement. */}
-        <Field.Root classNames='row-start-1 col-start-[title] col-end-[assignee] min-w-0'>
-          <Input.Root
-            // An input clips its overflow rather than wrapping it, so a long title ends mid-word against the trailing
-            // controls with nothing to say it continues; the ellipsis says so.
-            classNames='grow text-ellipsis'
-            data-testid='taskList.edit.title'
+        <TaskEditorForm
+          // Per task: switching tasks replaces what the form holds rather than carrying an edit across.
+          key={current?.id ?? 'create'}
+          values={{ title: draft, description: current?.description, ...properties }}
+          members={members}
+          people={people}
+          title={{
             // A host may name the row ("Add a step"), but the default is the package's own string: an English literal
             // in the component is a string no translation can reach.
-            placeholder={current ? t('task-title.placeholder') : (placeholder ?? t('add-task.placeholder'))}
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            onKeyDown={handleTitleKeyDown}
-            onBlur={handleTitleBlur}
-            // Only when there is something valid to save. `false` rather than nothing, so the field keeps its frame (and
-            // its test id) either way.
-            end={
-              canSave && (
-                <SystemButton.Save
-                  variant='primary'
-                  data-testid='taskList.edit.save'
-                  // Out of the tab order: Enter in the field saves, and Tab goes on to the description.
-                  tabIndex={-1}
-                  onClick={handleSave}
-                  onMouseDown={(event) => event.preventDefault()}
-                />
-              )
-            }
-          />
-        </Field.Root>
-        {hasDescription && (
-          // A control frame, as the title's Input is: the well, and the focus ring while the editor has focus.
-          <Input.Frame
-            rows={2}
-            data-testid='taskList.edit.description'
-            classNames='row-start-2 col-[title/assignee] min-w-0'
-          >
-            {/* A description is markdown, so it is edited as markdown. `editing` is held open — the pane IS the editor,
-                so there is nothing to click into — and the key remounts it per task, since a field held open never
-                re-reads its subject. Creating, the field is uncontrolled: there is no task to read a value from, so it
-                holds the draft itself until the create collects it. */}
-            <MarkdownEditable
-              key={current?.id ?? `create-${createEpoch}`}
-              ref={descriptionRef}
-              // A long description scrolls within the field rather than growing the pane past the list it edits from:
-              // eight lines, with the scroller's line-height set to the lines' (CodeMirror's base theme gives it a
-              // smaller one) so `lh` measures a real line.
-              classNames='[&_.cm-scroller]:!leading-normal [&_.cm-scroller]:max-h-[8lh] [&_.cm-scroller]:overflow-y-auto'
-              editing
-              multiline
-              placeholder={descriptionPlaceholder ?? t('task-description.placeholder')}
-              extensions={extensions}
-              // Held open, so it must not pull focus: selecting a row by keyboard would otherwise land the reader in
-              // the description instead of the list.
-              autoFocus={false}
-              {...(current && { value: current.description ?? '' })}
-              onValueChange={(description) => {
-                if (task && current) {
-                  onTaskUpdate?.(task, { description });
-                } else {
-                  draftDescription.current = description;
-                }
-              }}
-            />
-          </Input.Frame>
-        )}
-        {showEstimates &&
-          (editing ? (
-            <TaskEstimateControl task={task} classNames={TRACK.estimate} />
-          ) : (
-            <TaskEstimatePicker
-              estimate={draftEstimate}
-              onChange={setDraftEstimate}
-              testId='taskList.edit.estimate'
-              classNames={TRACK.estimate}
-            />
-          ))}
-        {editing ? (
-          <TaskPriorityIcon task={task} classNames={TRACK.priority} />
-        ) : (
-          <TaskPriorityPicker
-            priority={draftPriority}
-            onChange={setDraftPriority}
-            testId='taskList.edit.priority'
-            classNames={TRACK.priority}
-          />
-        )}
-        {canCancel && (
-          // In the rows' menu column: the way out of the pane, there while it holds something to throw away.
-          <SystemButton.Cancel
-            variant='ghost'
-            classNames={TRACK.actions}
-            data-testid='taskList.edit.cancel'
-            onClick={handleCancel}
-            onMouseDown={(event) => event.preventDefault()}
-          />
-        )}
-
-        {takesFiles &&
-          files.length > 0 && (
-            // Under the description: what the task will be created with.
-            <div
-              className={mx(
-                'col-start-[title] -col-end-1 flex flex-wrap items-center gap-1 min-w-0',
-                hasDescription ? 'row-start-3' : 'row-start-2',
-              )}
-            >
-              {files.map((file, index) => (
-                <Tag.Tag
-                  key={`${file.name}-${index}`}
-                  hue='neutral'
-                  classNames='inline-flex items-center gap-1'
-                  data-testid='taskList.edit.file'
-                >
-                  <Icon.Icon icon='ph--paperclip--regular' size='xs' />
-                  <span data-testid='taskList.edit.file.name'>{file.name}</span>
-                  <Button.Root
-                    variant='ghost'
-                    size='sm'
-                    iconOnly
-                    icon='ph--x--regular'
-                    iconSize='xs'
-                    label={t('remove-file.label', { name: file.name })}
-                    classNames='p-0 min-h-0 h-auto'
-                    onClick={() => setFiles((files) => files.filter((_, position) => position !== index))}
-                  />
-                </Tag.Tag>
-              ))}
-            </div>
-          )}
+            placeholder: current ? t('task-title.placeholder') : (placeholder ?? t('add-task.placeholder')),
+            canSave,
+            onKeyDown: handleTitleKeyDown,
+            onBlur: handleTitleBlur,
+            onSave: handleSave,
+          }}
+          description={description}
+          end={
+            canCancel && (
+              // At the end of the pills: the way out of the pane, there while it holds something to throw away.
+              <SystemButton.Cancel
+                variant='ghost'
+                classNames='ms-auto'
+                data-testid='taskList.edit.cancel'
+                onClick={handleCancel}
+                onMouseDown={(event) => event.preventDefault()}
+              />
+            )
+          }
+          onChange={handleChange}
+        >
+          {takesFiles &&
+            files.length > 0 && (
+              // Under the description: what the task will be created with.
+              <div className='flex flex-wrap items-center gap-1 min-w-0'>
+                {files.map((file, index) => (
+                  <Tag.Tag
+                    key={`${file.name}-${index}`}
+                    hue='neutral'
+                    classNames='inline-flex items-center gap-1'
+                    data-testid='taskList.edit.file'
+                  >
+                    <Icon.Icon icon='ph--paperclip--regular' size='xs' />
+                    <span data-testid='taskList.edit.file.name'>{file.name}</span>
+                    <Button.Root
+                      variant='ghost'
+                      size='sm'
+                      iconOnly
+                      icon='ph--x--regular'
+                      iconSize='xs'
+                      label={t('remove-file.label', { name: file.name })}
+                      classNames='p-0 min-h-0 h-auto'
+                      onClick={() => setFiles((files) => files.filter((_, position) => position !== index))}
+                    />
+                  </Tag.Tag>
+                ))}
+              </div>
+            )}
+        </TaskEditorForm>
       </div>
     );
   },

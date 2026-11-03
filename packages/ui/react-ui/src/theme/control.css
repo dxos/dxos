@@ -819,6 +819,31 @@
     grid-column: 3;
     margin-inline-start: var(--dx-control-inset);
   }
+  /*
+   * Pill: a Button or Select trigger outlined and fully rounded, hugging its content, for a row of field values (a
+   * composer's status, priority, assignee). Without a value (Ark's `data-placeholder-shown` on a trigger) it reads muted.
+   */
+  :is(.dx-button, .dx-select-trigger)[data-pill] {
+    width: auto;
+    flex: none;
+    gap: var(--dx-control-inset);
+    padding-inline: var(--dx-gap-size);
+    border: 1px solid var(--color-separator);
+    border-radius: 9999px;
+    background: transparent;
+  }
+  :is(.dx-button, .dx-select-trigger)[data-pill]:hover:not(:disabled) {
+    background: var(--color-hover-surface);
+  }
+  :is(.dx-button, .dx-select-trigger)[data-pill][data-placeholder-shown] {
+    color: var(--color-fg-muted);
+  }
+  .dx-select-trigger[data-pill] > [data-part='value-text'] {
+    flex: none;
+  }
+  .dx-select-trigger[data-pill] > [data-part='indicator'] {
+    display: none;
+  }
   .dx-select-value-sizer {
     grid-column: 1 / 3;
     display: flex;

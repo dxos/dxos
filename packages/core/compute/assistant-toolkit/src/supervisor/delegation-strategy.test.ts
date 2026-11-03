@@ -200,7 +200,7 @@ describe('makeDelegationStrategy', () => {
         // DelegateTask promoted the work to a durable agent task on the chat's checklist.
         const tasks = yield* Chat.loadTasks(chat);
         expect(tasks).toHaveLength(1);
-        expect(tasks[0]).toMatchObject({ title: TASK_TITLE, assignee: { role: 'assistant' } });
+        expect(tasks[0]).toMatchObject({ title: TASK_TITLE, delegate: { role: 'assistant' } });
 
         // The post-turn reconcile spawned the sub-agent; its exit drives onComplete, which posts
         // the fold-back message to the conversation feed out of band.

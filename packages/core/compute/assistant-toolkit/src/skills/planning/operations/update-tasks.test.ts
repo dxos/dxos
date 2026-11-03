@@ -86,7 +86,7 @@ describe('UpdateTasks', () => {
   );
 
   it.effect(
-    'starting a task from elsewhere assigns it: onto the checklist and to the agent together',
+    'starting a task from elsewhere delegates it: onto the checklist and to the agent together',
     Effect.fnUntraced(
       function* ({ expect }) {
         const { chat, invoke } = yield* setupChat();
@@ -98,12 +98,12 @@ describe('UpdateTasks', () => {
 
         expect((yield* Chat.loadTasks(chat)).map((task) => task.id)).toEqual([subTask.id]);
         expect(subTask.status).toEqual('started');
-        expect(subTask.assignee?.role).toEqual('assistant');
+        expect(subTask.delegate?.role).toEqual('assistant');
         // A plain chat is its own session object.
-        expect(subTask.assignee?.subject?.target?.id).toEqual(chat.id);
-        // One log line per edit: the assignment rides the status change rather than adding an entry.
+        expect(subTask.delegate?.subject?.target?.id).toEqual(chat.id);
+        // One log line per edit: the delegation rides the status change rather than adding an entry.
         expect((subTask.history ?? []).filter(Task.isChangeEntry).map(({ description }) => description)).toEqual([
-          'Status changed from todo to started. Assigned to an agent.',
+          'Status changed from todo to started. Delegated to an agent.',
         ]);
       },
       Effect.provide(TestLayer),
@@ -112,7 +112,7 @@ describe('UpdateTasks', () => {
   );
 
   it.effect(
-    'assign and unassign move the checklist and the assignee together, never deleting the task',
+    'assign and unassign move the checklist and the delegate together, keeping the assignee and the task',
     Effect.fnUntraced(
       function* ({ expect }) {
         const { chat, invoke } = yield* setupChat();
@@ -123,7 +123,8 @@ describe('UpdateTasks', () => {
 
         yield* invoke([{ task: Ref.make(task), assign: true }]);
         expect(chat.tasks).toHaveLength(1);
-        expect(task.assignee?.subject?.target?.id).toEqual(chat.id);
+        expect(task.delegate?.subject?.target?.id).toEqual(chat.id);
+        expect(task.assignee?.name).toEqual('Alice');
         expect(task.status).toEqual('todo');
 
         // Assigning twice must not duplicate the checklist entry.
@@ -132,7 +133,8 @@ describe('UpdateTasks', () => {
 
         yield* invoke([{ task: Ref.make(task), unassign: true }]);
         expect(chat.tasks).toEqual([]);
-        expect(task.assignee).toBeUndefined();
+        expect(task.delegate).toBeUndefined();
+        expect(task.assignee?.name).toEqual('Alice');
         expect(Obj.isDeleted(task)).toBe(false);
       },
       Effect.provide(TestLayer),

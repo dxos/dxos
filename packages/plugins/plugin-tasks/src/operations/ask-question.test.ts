@@ -63,7 +63,7 @@ describe('ask-question', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('assigns the blocked task to the asking session and records the question as its', () =>
+  it.effect('delegates the blocked task to the asking session and records the question as its', () =>
     Effect.gen(function* () {
       const task = yield* setup;
 
@@ -78,8 +78,8 @@ describe('ask-question', () => {
       expect(RemoteSession.getSessionId(session)).toBe('session_ask');
       expect(session.title).toBe('Renewals');
       expect(task.status).toBe('blocked');
-      expect(task.assignee?.role).toBe('assistant');
-      expect(Task.refEntityId(task.assignee?.subject)).toBe(session.id);
+      expect(task.delegate?.role).toBe('assistant');
+      expect(Task.refEntityId(task.delegate?.subject)).toBe(session.id);
       // The asker is the session too, so the question names which run is waiting on the answer.
       const [pending] = Task.getPendingQuestions(task.history);
       expect(pending.id).toBe(questionId);
@@ -87,7 +87,7 @@ describe('ask-question', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('leaves the assignee alone when the question is refused', () =>
+  it.effect('leaves the delegate alone when the question is refused', () =>
     Effect.gen(function* () {
       const task = yield* setup;
       yield* askQuestion.handler({ task: Ref.make(task), question: 'Which domain?' });
@@ -101,7 +101,7 @@ describe('ask-question', () => {
       );
 
       expect(Exit.isFailure(exit)).toBe(true);
-      expect(task.assignee).toBeUndefined();
+      expect(task.delegate).toBeUndefined();
       expect(yield* Database.query(Filter.type(RemoteSession.RemoteSession)).run).toEqual([]);
     }).pipe(Effect.provide(TestLayer)),
   );

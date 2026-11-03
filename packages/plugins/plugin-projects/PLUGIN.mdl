@@ -46,7 +46,7 @@ feat F-4: A project's specs
              Overview tab is the nesting plugin's `ProjectSurface.LevelOverview` surface, and its Specs tab shows the
              level's own spec, or offers Add spec when it has none.
   req F-4.7: The project article's toolbar holds its tabs, then the tools of the tab shown: Create artifact on the
-             Overview; the spec dropdown, the view toggle and the Extensions menu on the Specs tab; Assign to agent and
+             Overview; the spec dropdown, the view toggle and the Extensions menu on the Specs tab; Delegate to agent and
              the Gantt toggle on the Tasks tab. It has no overflow menu and no button to start a session, which is the
              assistant companion's.
   req F-4.8: A spec offers its text, and each view a plugin contributes (`ProjectCapabilities.SpecView`) for a dialect
@@ -104,8 +104,8 @@ test QA-1: Build a plugin with an agent in the desktop app
       do: Click + on the space, choose Project, pick the "Composer Plugin" template, title it "World Clock" and click Create.
       capture: project
       expect: a "World Clock" project opens; its Tasks tab holds "Build the World Clock plugin" over four subtasks
-    - name: Assign the parent task to the agent
-      do: Open the project's Tasks tab, tick the parent task, click "Assign selected tasks to agent", then open the companion's Assistant tab.
+    - name: Delegate the parent task to the agent
+      do: Open the project's Tasks tab, tick the parent task, click "Delegate selected tasks to agent", then open the companion's Assistant tab.
       expect: the delegated chat holds the parent and its four subtasks and is working
     - name: Wait for the agent to offer the plugin
       do: Watch the subtasks tick off.
@@ -164,8 +164,8 @@ test QA-2: Build a plugin with an agent in the browser and install it from the p
       do: Click + on the space, choose Project, pick the "Composer Plugin" template, title it "World Clock" and click Create.
       capture: project
       expect: a "World Clock" project opens; its Tasks tab holds "Build the World Clock plugin" over four subtasks
-    - name: Assign the parent task to the agent
-      do: Open the project's Tasks tab, tick the parent task, click "Assign selected tasks to agent", then open the companion's Assistant tab.
+    - name: Delegate the parent task to the agent
+      do: Open the project's Tasks tab, tick the parent task, click "Delegate selected tasks to agent", then open the companion's Assistant tab.
       expect: the delegated chat holds the parent and its four subtasks and is working
     - name: Wait for the agent to publish the plugin
       do: Watch the subtasks tick off.
@@ -238,11 +238,11 @@ test QA-3: Read a project's tasks as details
 test QA-4: Plan a project and hand its tasks to an agent
   desc: |
     The demo path — create a project from the Default template, brief its agent, break the work into tasks, fill
-    one in, and select tasks for the agent. Walked by the autocue flow
+    one in, assign one from its row, let a coding session take one, and select tasks for the agent. Walked by the autocue flow
     `packages/plugins/plugin-projects/autocue/plan-a-project.mjs`; it stops short of delegating, so no model is
     needed.
   actors: human
-  status: passing            # 2026-10-09, recorded by autocue/plan-a-project.mjs
+  status: passing            # 2026-11-02, recorded by autocue/plan-a-project.mjs
   given:
     - an identity exists, on a fresh profile
     - space: the default space is open on its Home
@@ -257,16 +257,43 @@ test QA-4: Plan a project and hand its tasks to an agent
       expect: both fields keep what was typed
     - name: Break the work into tasks
       do: Open the Tasks tab and add "Service both roasters", "Order green beans" and "Hire a roastery assistant"
-        from the Add task row, pressing Enter after each.
-      expect: the three tasks list in the order added
+        from the Add task row, pressing Enter after each. Before adding the last, set its priority to Low from the
+        row's Priority pill.
+      expect: |
+        the three tasks list in the order added. Each row shows its priority beside its status, ahead of the title,
+        and ends in an assignee placeholder; "Hire a roastery assistant" shows Low, and the Priority pill reads unset
+        again once it is added
     - name: Fill in a task
       do: Click "Service both roasters", type a description, set its priority to High and its status to Started.
       expect: |
         the task opens in a "Task" tab beside the project, and its Activity records the priority and status
-        changes
+        changes. Its row in the list shows the title only, not the description
+    - name: Assign a task from its row
+      do: Point at "Order green beans", click the assignee placeholder at the end of its row, and pick yourself.
+      expect: |
+        the picker lists the people, then a separator and the agents. The row shows your avatar in place of the
+        placeholder, and the task does not open
+    - name: A coding session takes a task
+      do: |
+        From a coding session connected over MCP, claim "Hire a roastery assistant" with `tasks-update`, passing
+        status Started, `remoteSession` with the session's id, and the person `whoami` names as `assignee`.
+      invoke: |
+        org.dxos.operation.tasks.update {
+          task: <"Hire a roastery assistant">, status: "started",
+          assignee: { identityDid: $whoami.identityDid, name: $whoami.displayName },
+          remoteSession: { sessionId: "qa-4", title: "Hire a roastery assistant" }
+        }
+      expect: |
+        the row shows you as its assignee with the agent badge on your avatar, and its status is Started. Opening the
+        task shows one Assignee row naming you, delegated to Claude Code: the agent, not the session's title
+      note: Without `assignee` the claim is refused, since no person would answer for the task.
     - name: Select tasks for the agent
-      do: Tick "Order green beans" and "Hire a roastery assistant", then point at "Assign selected tasks to agent".
-      expect: the two rows are selected and the button is enabled
+      do: |
+        Point at "Order green beans" and tick it, then tick "Hire a roastery assistant", then point at "Delegate
+        selected tasks to agent".
+      expect: |
+        a row's checkbox shows only while the row is pointed at until one is ticked, then on every row. The two rows
+        are selected and the button is enabled
       note: Clicking it starts a delegated chat that needs a model; QA-1 and QA-2 walk that path.
 ```
 
@@ -1219,13 +1246,131 @@ decision D-104: The `SpecView`, `Level` and `LevelOverview` surface roles are ro
 ```
 
 ```mdl
-decision D-105: A project's two repository fields, `repo` and `repositories`, become one list of repositories.
+decision D-105: A task's assignee is the person who answers for it, and a separate delegate is the agent doing the work, as in Linear. Handing tasks to an agent sets the delegate and leaves the assignee.
+  date: 2026-11-02
+  by: user:wittjosiah
+  affects: [F-4.7, QA-1, QA-2, QA-4]
+```
+
+```mdl
+decision D-106: A coding session that picks up a task over MCP makes the person it works for the assignee and itself the delegate, and the project skill says so.
+  date: 2026-11-02
+  by: user:wittjosiah
+  affects: [QA-4]
+```
+
+```mdl
+decision D-107: The task row takes Linear as its model: priority beside status, an assignee control on every row, the estimate only when set, and selection checkboxes that show on hover.
+  date: 2026-11-02
+  by: user:wittjosiah
+  affects: [QA-4]
+```
+
+```mdl
+decision D-108: A session's claim names the person from `whoami` as `assignee`, and `tasks-update` refuses a claim that would leave no person as the task's assignee. Fills in [D-106].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-4]
+  why: The operation cannot read the identity an MCP grant was issued to, so the session has to say whom it works for.
+  rejected:
+    - Leaving the assignee empty and the session as delegate, which leaves nobody to review the work.
+```
+
+```mdl
+decision D-109: QA-4 assigns a task from its row's placeholder, has a coding session claim a task through `tasks-update`, and checks that selection checkboxes show on hover until one is ticked. "Assign to agent" is "Delegate to agent" throughout. Fills in [D-105] to [D-107].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.7, QA-1, QA-2, QA-4]
+  why: QA-4 walks a project's task list without a model, and both the row's assignee control and a session's claim work without one.
+```
+
+```mdl
+decision D-110: A task's assignee and its delegate are one picker, in the task row and in the task's properties: the people, then a separator and the agents. Picking an agent delegates the task to it and makes you the assignee.
+  date: 2026-11-02
+  by: user:wittjosiah
+  affects: [QA-4]
+```
+
+```mdl
+decision D-111: Picking a person in the assignee picker takes the task back from any agent, and No assignee clears both. An agent is listed by its name, with Default agent for the reader's default, and the task row's menu no longer offers delegation. Fills in [D-110].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-4]
+  why: The picker holds one answer to who has the task, so a person picked over an agent replaces it rather than sharing the task with it.
+  rejected:
+    - Keeping the delegate when a person is picked, which leaves an agent at work for someone who did not hand it the task.
+```
+
+```mdl
+decision D-112: QA-4 sets the last new task's priority from the Add task row's Priority pill before adding it, and expects the pill to read unset once the task is added.
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-4]
+  why: The Add task row's properties are pills on a schema form now, and no other step sets a property before the task exists.
+```
+
+```mdl
+decision D-113: A task delegated to an agent names the agent ("delegated to Claude"), not the title of the session or run doing the work.
+  date: 2026-11-02
+  by: user:wittjosiah
+  affects: [QA-4]
+```
+
+```mdl
+decision D-114: Rows in a task list do not show task descriptions; a description shows only in the task's detail view, as in Linear, so the list stays compact and easy to scan.
+  date: 2026-11-02
+  by: user:wittjosiah
+  affects: [QA-4]
+```
+
+```mdl
+decision D-115: The Add task row is one form to create a task: the title and description are fields of the same form as the task's other properties.
+  date: 2026-11-02
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-116: An agent is named by its harness's name, which for a coding session is "Claude Code". Fills in [D-113].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-4]
+  why: A session records the harness it runs in, not the model, and the model can change within a session.
+  rejected:
+    - The model's name, which a session does not record.
+```
+
+```mdl
+decision D-117: Show task descriptions stays a setting, off by default, for a reader who wants descriptions in rows. Fills in [D-114].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: A reader who turned the setting on keeps the rows they chose; everyone else gets title-only rows.
+  rejected:
+    - Removing the setting, which would take descriptions away from a reader who asked for them.
+```
+
+```mdl
+decision D-118: QA-4 expects the delegate to read "Claude Code", and a task given a description to keep a title-only row. Fills in [D-113], [D-114] and [D-116].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-4]
+  why: Fill in a task is the one step that gives a task a description, and A coding session takes a task the one that delegates.
+```
+
+```mdl
+decision D-119: A project's two repository fields, `repo` and `repositories`, become one list of repositories.
   date: 2026-11-03
   by: user:wittjosiah
 ```
 
 ```mdl
-decision D-106: The project's repositories are the `Repo.RepositoriesAnnotation` on it, an ordered list of repository refs defined beside `Repo`, and `Project` 0.8.0 has no repository field. The first repository takes over `repo`'s role: bare issue numbers resolve against it, and a cloud coding agent starts in it. plugin-claude renders the list in the project's settings. Fills in [D-105] and [D-45].
+decision D-120: The project's repositories are the `Repo.RepositoriesAnnotation` on it, an ordered list of repository refs defined beside `Repo`, and `Project` 0.8.0 has no repository field. The first repository takes over `repo`'s role: bare issue numbers resolve against it, and a cloud coding agent starts in it. plugin-claude renders the list in the project's settings. Fills in [D-119] and [D-45].
   date: 2026-11-03
   by: agent:claude-code
   for: user:wittjosiah
@@ -1237,7 +1382,7 @@ decision D-106: The project's repositories are the `Repo.RepositoriesAnnotation`
 ```
 
 ```mdl
-decision D-107: `Project` drops `session`, so delegating a task no longer seeds the chat's session config from its project. Fills in [D-105].
+decision D-121: `Project` drops `session`, so delegating a task no longer seeds the chat's session config from its project. Fills in [D-119].
   date: 2026-11-03
   by: agent:claude-code
   for: user:wittjosiah
@@ -1247,7 +1392,7 @@ decision D-107: `Project` drops `session`, so delegating a task no longer seeds 
 ```
 
 ```mdl
-decision D-108: The `Project` 0.7.0 migration moves `repo` and then `repositories` into the annotation, each repository once, and drops `session`. It runs after the 0.6.0 migration, and plugin-code lists both in that order before its spec migrations. Fills in [D-103] and [D-106].
+decision D-122: The `Project` 0.7.0 migration moves `repo` and then `repositories` into the annotation, each repository once, and drops `session`. It runs after the 0.6.0 migration, and plugin-code lists both in that order before its spec migrations. Fills in [D-103] and [D-120].
   date: 2026-11-03
   by: agent:claude-code
   for: user:wittjosiah
@@ -1255,35 +1400,35 @@ decision D-108: The `Project` 0.7.0 migration moves `repo` and then `repositorie
 ```
 
 ```mdl
-decision D-109: The project overview puts the most-used parts first: the name and description, then Notes, Artifacts, Milestones and Specs, then a Config section at the bottom. Artifacts stays a masonry but shows a limited number, with Show all once there are more; Show all should open a companion that lists every artifact, which is a to-do.
+decision D-123: The project overview puts the most-used parts first: the name and description, then Notes, Artifacts, Milestones and Specs, then a Config section at the bottom. Artifacts stays a masonry but shows a limited number, with Show all once there are more; Show all should open a companion that lists every artifact, which is a to-do.
   date: 2026-11-03
   by: user:wittjosiah
   affects: [F-5.2, F-5.3]
 ```
 
 ```mdl
-decision D-110: Config is a section like Milestones and Specs. Agent and Software are groups within it, each folded by default, and another plugin contributes Software, since the repositories come from an annotation.
+decision D-124: Config is a section like Milestones and Specs. Agent and Software are groups within it, each folded by default, and another plugin contributes Software, since the repositories come from an annotation.
   date: 2026-11-03
   by: user:wittjosiah
   affects: [F-5.5]
 ```
 
 ```mdl
-decision D-111: A plugin contributes a group as schema and data only, with no UI of its own: the form's existing fields render it.
+decision D-125: A plugin contributes a group as schema and data only, with no UI of its own: the form's existing fields render it.
   date: 2026-11-03
   by: user:wittjosiah
   affects: [F-5.6]
 ```
 
 ```mdl
-decision D-112: The project's name and description are edited in place, not behind an edit button.
+decision D-126: The project's name and description are edited in place, not behind an edit button.
   date: 2026-11-03
   by: user:wittjosiah
   affects: [F-5.1]
 ```
 
 ```mdl
-decision D-113: A group is a `ProjectCapabilities.ConfigGroup` (id, label, order, fields), and each field a key, a schema and a function from the project to a writable atom, with an optional `enabled` atom. The overview renders a group's fields as one nested form over a struct of their schemas and writes an edit through the field's atom; contributions with one id merge, and the project's own group is `agent`. This replaces the `ProjectSurface.Settings` surface. Fills in [D-110] and [D-111].
+decision D-127: A group is a `ProjectCapabilities.ConfigGroup` (id, label, order, fields), and each field a key, a schema and a function from the project to a writable atom, with an optional `enabled` atom. The overview renders a group's fields as one nested form over a struct of their schemas and writes an edit through the field's atom; contributions with one id merge, and the project's own group is `agent`. This replaces the `ProjectSurface.Settings` surface. Fills in [D-124] and [D-125].
   date: 2026-11-03
   by: agent:claude-code
   for: user:wittjosiah
@@ -1296,7 +1441,7 @@ decision D-113: A group is a `ProjectCapabilities.ConfigGroup` (id, label, order
 ```
 
 ```mdl
-decision D-114: The status sits beside the name in a four-column row, and neither shows a label. react-ui-form's field override gains `appearance`: `title` renders a text field in react-ui's new `title` input variant, and `plain` drops the input's well, as the description does. The Specs list heads its own section, and its list keeps "Specs" as its accessible name. Fills in [D-112].
+decision D-128: The status sits beside the name in a four-column row, and neither shows a label. react-ui-form's field override gains `appearance`: `title` renders a text field in react-ui's new `title` input variant, and `plain` drops the input's well, as the description does. The Specs list heads its own section, and its list keeps "Specs" as its accessible name. Fills in [D-126].
   date: 2026-11-03
   by: agent:claude-code
   for: user:wittjosiah
@@ -1305,7 +1450,7 @@ decision D-114: The status sits beside the name in a four-column row, and neithe
 ```
 
 ```mdl
-decision D-115: The overview shows six artifacts, and Show all shows the rest in place until the companion exists. Fills in [D-109].
+decision D-129: The overview shows six artifacts, and Show all shows the rest in place until the companion exists. Fills in [D-123].
   date: 2026-11-03
   by: agent:claude-code
   for: user:wittjosiah
@@ -1314,7 +1459,7 @@ decision D-115: The overview shows six artifacts, and Show all shows the rest in
 ```
 
 ```mdl
-decision D-116: A folded group's summary counts each list, quotes each text and skips what is empty. Fills in [D-110].
+decision D-130: A folded group's summary counts each list, quotes each text and skips what is empty. Fills in [D-124].
   date: 2026-11-03
   by: agent:claude-code
   for: user:wittjosiah
@@ -1323,7 +1468,7 @@ decision D-116: A folded group's summary counts each list, quotes each text and 
 ```
 
 ```mdl
-decision D-117: A milestone's progress counts the tasks of the level the overview shows, not every task in the project. Fills in [D-109].
+decision D-131: A milestone's progress counts the tasks of the level the overview shows, not every task in the project. Fills in [D-123].
   date: 2026-11-03
   by: agent:claude-code
   for: user:wittjosiah

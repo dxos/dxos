@@ -32,11 +32,11 @@ const handler: Operation.WithHandler<typeof TaskOperation.AskQuestion> = TaskOpe
         return yield* Effect.fail(new InvalidOperationInput({ message: 'The question is empty.' }));
       }
 
-      // After the refusals, so a refused call leaves the task's assignee as it found it.
+      // After the refusals, so a refused call leaves the task's delegate as it found it.
       let asker = actor;
       if (remoteSession) {
         asker = yield* assignToSession(remoteSession, actor, { defaultTitle: task.title });
-        Task.update(task, { assignee: asker }, { actor: asker });
+        Task.update(task, { delegate: asker }, { actor: asker });
       }
 
       const question = Task.ask(task, {

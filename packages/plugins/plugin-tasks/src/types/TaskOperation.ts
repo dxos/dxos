@@ -46,8 +46,12 @@ export const CreateTask = Operation.make({
     }),
     title: Schema.String,
     description: Schema.optional(Schema.String),
+    status: Schema.optional(Task.Status),
     priority: Schema.optional(Task.Priority),
+    estimate: Schema.optional(Task.Estimate),
     assignee: Schema.optional(Actor.Actor),
+    /** The agent doing the work for the assignee. */
+    delegate: Schema.optional(Actor.Actor),
     /** Parent task for a sub-task, which is appended to its `subtasks`; omit for a root of the set. */
     parentTask: Schema.optional(Ref.Ref(Task.Task)),
     /** Milestone to file the task under; omit for the backlog. Must belong to the same task set. */
@@ -79,11 +83,14 @@ export const UpdateTask = Operation.make({
     key: DXN.make('org.dxos.operation.tasks.update'),
     name: 'Update Task',
     description:
-      'Patch task fields: title, description, status, priority, estimate, assignee. Null clears a field. ' +
-      'Pass `remoteSession` with a harness session id to assign the task to that coding-agent session, ' +
-      'creating the session record in the space if it is not there yet. ' +
-      'A task with sub-tasks is one unit of work: assigning or starting any task in a tree ' +
-      'assigns (and starts, if not yet started) its root and every sub-task too.',
+      'Patch task fields: title, description, status, priority, estimate, assignee, delegate. Null clears a field. ' +
+      'The assignee answers for the task; the delegate is the agent doing the work for them. ' +
+      'Pass `remoteSession` with a harness session id to delegate the task to that coding-agent session, ' +
+      'creating the session record in the space if it is not there yet. A session works for a person: ' +
+      'when the task has no person as its assignee, also pass `assignee: { identityDid, name }` with the ' +
+      '`identityDid` and `displayName` that `whoami` returns. ' +
+      'A task with sub-tasks is one unit of work: delegating or starting any task in a tree ' +
+      'delegates (and starts, if not yet started) its root and every sub-task too.',
     icon: 'ph--pencil-simple--regular',
   },
   services: [Database.Service, Trace.TraceService],
@@ -97,15 +104,17 @@ export const UpdateTask = Operation.make({
     priority: Schema.optional(Schema.NullOr(Task.Priority)),
     estimate: Schema.optional(Schema.NullOr(Task.Estimate)),
     assignee: Schema.optional(Schema.NullOr(Actor.Actor)),
+    delegate: Schema.optional(Schema.NullOr(Actor.Actor)),
     /**
-     * Assign the task to a coding-agent session, by the harness session id — one call, rather than
+     * Delegate the task to a coding-agent session, by the harness session id — one call, rather than
      * looking the session object up first and composing the actor by hand.
      *
-     * An agent's actor is the object it IS, so the assignee it produces carries a `subject` ref to
-     * the session; a bare `{ role: 'assistant' }` would record that AN assistant owns the task but
+     * An agent's actor is the object it IS, so the delegate it produces carries a `subject` ref to
+     * the session; a bare `{ role: 'assistant' }` would record that AN assistant has the task but
      * not which run, and a session's own check-in finds its open tasks by that ref. The session is
      * created in the task's space when this id is not recorded there yet, so an agent can claim
-     * work on its first call.
+     * work on its first call. A task no person answers for is refused unless `assignee` names one:
+     * the handler cannot see whose grant the session holds, so the caller supplies it from `whoami`.
      */
     remoteSession: Schema.optional(RemoteSessionInput),
     /** Re-file under a milestone; `null` moves the task to the backlog. */
@@ -134,7 +143,7 @@ export const AskQuestion = Operation.make({
       'Ask the user a question you cannot answer yourself about one task, and block the task on it. ' +
       'The question is recorded in the task history, where the user answers it. Offer likely answers ' +
       'in `options`; the user may still type their own. Refused while the task already has an ' +
-      'unanswered question. Pass `remoteSession` with your harness session id to assign the blocked task ' +
+      'unanswered question. Pass `remoteSession` with your harness session id to delegate the blocked task ' +
       "to your session. Read the answer back later from the task's `history`: the entry with " +
       '`event: "answer"` whose `questionId` is the id this returns.',
     icon: 'ph--question--regular',
@@ -154,8 +163,8 @@ export const AskQuestion = Operation.make({
     /** Who is asking; recorded on the question and on the status change it causes. */
     actor: Schema.optional(Actor.Actor),
     /**
-     * Assigns the blocked task to the asking coding-agent session, as `UpdateTask` does, and makes
-     * that session the asker — a session's check-in lists its open tasks by the assignee ref.
+     * Delegates the blocked task to the asking coding-agent session, as `UpdateTask` does, and makes
+     * that session the asker — a session's check-in lists its open tasks by the delegate ref.
      */
     remoteSession: Schema.optional(RemoteSessionInput),
   }),
@@ -193,6 +202,27 @@ export const AnswerQuestion = Operation.make({
     /** False when the answer was blank, the question is unknown, or it was already answered. */
     accepted: Schema.Boolean,
   }),
+}).pipe(Operation.mutation('write'));
+
+/**
+ * Closes a task in `review` on a person's sign-off — the one write that may reach `done` past a
+ * delegate or named reviewers (see `Task.approve`).
+ */
+export const AcceptTask = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.tasks.accept'),
+    name: 'Accept Task',
+    description: 'Sign off on a finished task and close it.',
+    icon: 'ph--check-circle--regular',
+    // The worker is an agent; handing it the tool to approve its own work is the gate removed.
+    skipRegistry: true,
+  },
+  services: [Database.Service, Trace.TraceService],
+  input: Schema.Struct({
+    task: Ref.Ref(Task.Task),
+    actor: Schema.optional(Actor.Actor),
+  }),
+  output: Schema.Void,
 }).pipe(Operation.mutation('write'));
 
 export const TaskRestorePoint = Schema.Struct({
@@ -400,14 +430,14 @@ export const TaskCursor = Schema.String;
 /**
  * Reads a set's tasks in order, which a generic query cannot: order lives in the `tasks` and
  * `subtasks` lists (read in tree pre-order), and a task's effective milestone is inherited up the
- * parent chain rather than stored. Also filters by an assignee's DID, email or name.
+ * parent chain rather than stored. Also filters by an assignee's or delegate's DID, email or name.
  */
 export const ListTasks = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.tasks.list'),
     name: 'List Tasks',
     description:
-      "List tasks in a task set (or a project's task set), in set order. Filter by status, assignee, or milestone; page with `after`/`limit`.",
+      "List tasks in a task set (or a project's task set), in set order. Filter by status, assignee, delegate, or milestone; page with `after`/`limit`.",
     icon: 'ph--list-checks--regular',
   },
   services: [Database.Service],
@@ -420,6 +450,8 @@ export const ListTasks = Operation.make({
     status: Schema.optional(Task.Status),
     /** Matches the assignee by DID, email, or display name — whichever the actor carries. */
     assignee: Schema.optional(Schema.String),
+    /** Matches the delegate the same way. */
+    delegate: Schema.optional(Schema.String),
     /** Only tasks under this milestone (inherited by sub-tasks from their nearest ancestor). */
     milestone: Schema.optional(Ref.Ref(Milestone.Milestone)),
     /** Include sub-tasks; by default only root tasks of the set. */

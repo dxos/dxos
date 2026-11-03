@@ -21,7 +21,7 @@ export const validateAssignee = (
     : Effect.fail(
         new InvalidOperationInput({
           message:
-            'An assignee must be a contact (`contact`), a space member (`identityDid`), or an agent session ' +
+            'An assignee or delegate must be a contact (`contact`), a space member (`identityDid`), or an agent session ' +
             '(`subject`, or pass `remoteSession`); a name or email alone does not identify anyone.',
         }),
       );

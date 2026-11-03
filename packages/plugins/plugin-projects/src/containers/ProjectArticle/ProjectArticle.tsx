@@ -492,8 +492,8 @@ export const ProjectArticle = ({
                   data={{
                     subject: taskSet,
                     attendableId,
-                    // Unset means shown: settings saved before the preference existed hold no key.
-                    showDescription: settings.showTaskDescriptions ?? true,
+                    // Rows are titles only, as Linear's are; the description is the task's detail. Opt-in.
+                    showDescription: settings.showTaskDescriptions ?? false,
                     scope,
                     onTaskCreated: handleTaskCreated,
                   }}
@@ -778,6 +778,7 @@ const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined, scope?: readonly 
         // writes both fields — without tracking them the bar would keep offering rows already handed over.
         get(Obj.atomProperty(task, 'status'));
         get(Obj.atomProperty(task, 'assignee'));
+        get(Obj.atomProperty(task, 'delegate'));
         // Milestone progress counts the tasks filed under each milestone.
         get(Obj.atomProperty(task, 'milestone'));
       });

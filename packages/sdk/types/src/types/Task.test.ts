@@ -342,6 +342,62 @@ describe('completion', () => {
   );
 });
 
+describe('delegation', () => {
+  const rich = { name: 'Rich', role: 'user' as const };
+  const scout = { name: 'Scout', role: 'assistant' as const };
+
+  it.effect('keeps the assignee, and a delegated finish waits on them', () =>
+    Effect.gen(function* () {
+      const delegated = yield* Database.add(Task.make({ title: 'Draft launch email', status: 'todo', assignee: rich }));
+      const own = yield* Database.add(Task.make({ title: 'Read the brief', status: 'todo', assignee: scout }));
+      yield* Database.flush();
+
+      const entry = Task.setDelegate(delegated, scout);
+      Task.setStatus(delegated, 'done');
+      Task.setStatus(own, 'done');
+      yield* Database.flush();
+
+      expect(entry?.description).toEqual('Delegated to Scout.');
+      expect(delegated.assignee?.name).toEqual('Rich');
+      expect(Task.worker(delegated)?.name).toEqual('Scout');
+      expect(delegated.status).toEqual('review');
+      // An agent's own checklist item has no person to approve it.
+      expect(own.status).toEqual('done');
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('delegating to the assignee hands the work back', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(Task.make({ title: 'Draft launch email', assignee: rich, delegate: scout }));
+      yield* Database.flush();
+
+      const entry = Task.setDelegate(task, { ...rich });
+      yield* Database.flush();
+
+      expect(task.delegate).toBeUndefined();
+      expect(entry?.description).toEqual('Handed back from Scout.');
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('moves a delegation stored before `delegate` existed on its next write', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(
+        Task.make({ title: 'Draft launch email', status: 'started', assignee: scout, reviewers: [rich] }),
+      );
+      yield* Database.flush();
+      expect(Task.isAgentWorking(task)).toBe(true);
+
+      Task.update(task, { priority: 'high' });
+      yield* Database.flush();
+
+      expect(task.delegate?.name).toEqual('Scout');
+      expect(task.assignee?.name).toEqual('Rich');
+      expect(task.reviewers).toBeUndefined();
+      expect(Task.isAgentWorking(task)).toBe(true);
+    }).pipe(Effect.provide(testLayer())),
+  );
+});
+
 describe('mutations', () => {
   it.effect('records one entry per edit, naming what changed', () =>
     Effect.gen(function* () {

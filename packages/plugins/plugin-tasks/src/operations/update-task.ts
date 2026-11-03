@@ -25,19 +25,33 @@ const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOper
       priority,
       estimate,
       assignee,
+      delegate,
       remoteSession,
       milestone,
       parentTask,
     }) {
+      yield* validateAssignee(assignee);
       // A session supplies the subject itself, so only a bare actor is checked.
       if (!remoteSession) {
-        yield* validateAssignee(assignee);
+        yield* validateAssignee(delegate);
       }
       const task = yield* Database.load(taskRef);
+      // A coding session works for whoever holds the MCP grant, which this handler cannot see; the
+      // caller names them from `whoami` so the session never ends up answering for the task itself.
+      if (remoteSession && !assignee && (task.assignee === undefined || task.assignee.role === 'assistant')) {
+        return yield* Effect.fail(
+          new InvalidOperationInput({
+            message:
+              `"${task.title}" has no person as its assignee. Pass \`assignee: { identityDid, name }\` ` +
+              'with the identityDid and displayName that `whoami` returns: the session is the delegate, ' +
+              'working for them.',
+          }),
+        );
+      }
       // Resolved before the patch so the actor it produces is what `Task.update` writes, and so a
-      // session that does not exist yet is created rather than dropping the assignment.
-      const sessionAssignee = remoteSession
-        ? yield* assignToSession(remoteSession, assignee ?? undefined, { defaultTitle: title ?? task.title })
+      // session that does not exist yet is created rather than dropping the delegation.
+      const sessionDelegate = remoteSession
+        ? yield* assignToSession(remoteSession, delegate ?? undefined, { defaultTitle: title ?? task.title })
         : undefined;
       const taskSet =
         milestone !== undefined || parentTask !== undefined ? yield* TaskSet.findTaskSet(task) : undefined;
@@ -58,7 +72,15 @@ const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOper
       // Through `Task.edit`, so the change and the log entry that explains it land together and a
       // no-op patch records nothing. Milestone stays here: it is set membership, not a field edit.
       const previousStatus = task.status;
-      Task.update(task, { title, description, status, priority, estimate, assignee: sessionAssignee ?? assignee });
+      Task.update(task, {
+        title,
+        description,
+        status,
+        priority,
+        estimate,
+        assignee,
+        delegate: sessionDelegate ?? delegate,
+      });
       // The resolved status, not the requested one: a task with reviewers lands in `review`. This is
       // what cuts an agent session's timeline into per-task segments.
       if (task.status !== undefined && task.status !== previousStatus) {
@@ -88,7 +110,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOper
       }
 
       // After any re-parent, so the cascade reaches the tree the task now belongs to.
-      yield* cascadeClaim(task, { assignee: sessionAssignee ?? assignee ?? undefined, started: status === 'started' });
+      yield* cascadeClaim(task, { delegate: sessionDelegate ?? delegate ?? undefined, started: status === 'started' });
 
       return { task: task };
     }),
@@ -99,15 +121,16 @@ const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOper
 const UNSTARTED: ReadonlySet<Task.Status | undefined> = new Set([undefined, 'todo', 'backlog']);
 
 /**
- * A task with sub-tasks is one unit of work, so claiming any task in the tree — assigning it, or
+ * A task with sub-tasks is one unit of work, so claiming any task in the tree — delegating it, or
  * starting it — claims the root and every descendant with it; otherwise a sub-task can be picked up
- * by a second session working against the first.
+ * by a second session working against the first. Only the worker spreads: who answers for each task
+ * is that task's own.
  */
 const cascadeClaim = Effect.fnUntraced(function* (
   task: Task.Task,
-  { assignee, started }: { assignee: Actor.Actor | undefined; started: boolean },
+  { delegate, started }: { delegate: Actor.Actor | undefined; started: boolean },
 ) {
-  if (!assignee && !started) {
+  if (!delegate && !started) {
     return;
   }
   const tree = yield* Task.collectTree(task);
@@ -117,7 +140,7 @@ const cascadeClaim = Effect.fnUntraced(function* (
     }
     Task.update(member, {
       // A copy per task: ECHO refuses to store a record another object already owns.
-      ...(assignee ? { assignee: { ...assignee } } : {}),
+      ...(delegate ? { delegate: { ...delegate } } : {}),
       ...(started && UNSTARTED.has(member.status) ? { status: 'started' as const } : {}),
     });
   }

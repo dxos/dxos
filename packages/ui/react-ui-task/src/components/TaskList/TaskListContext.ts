@@ -10,6 +10,7 @@ import type { MenuItem } from '@dxos/react-ui-menu';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import { type Task } from '@dxos/types';
 
+import { type TaskMember } from '../../util/property-menus.ts';
 import { type TaskPlacement } from './hierarchy.ts';
 import { type TaskDescriptionProps } from './TaskDescription.tsx';
 import { type TaskCreateHandler } from './TaskList.tsx';
@@ -32,21 +33,21 @@ export type TaskListContextValue = {
   showDescription: boolean;
   /** Renderers for a row's description beyond its own — a host's link anchor, say. */
   descriptionComponents?: TaskDescriptionProps['components'];
-  /** Render each task's estimate beside the priority control. */
-  showEstimates: boolean;
   /** Render the questions in each task's history under its title. */
   hierarchical: boolean;
   /** Whether the leading gutter is rendered at all — it holds the ordinal or the checkbox. */
   showGutter: boolean;
   /** Render who holds each task; off collapses the assignee track. */
   showAssignees: boolean;
+  /** The space's members, offered by each row's assignee picker. */
+  members: readonly TaskMember[];
   /** Render each task's mnemonic in the leading column, beside its ordinal. */
   showMnemonics: boolean;
   /** Rows and the edit pane run to the host's edges, with no inline inset. */
   flush: boolean;
   /**
    * The column template, built once from the options so the tree's rows and the edit pane lay out on the same named
-   * tracks (`gutter`, `status`, `title`, `artifacts`, `assignee`, `estimate`, `priority`, `actions`).
+   * tracks (`gutter`, `priority`, `status`, `title`, `artifacts`, `assignee`, `actions`).
    */
   columns: string;
   selected?: string;
@@ -58,6 +59,7 @@ export type TaskListContextValue = {
   onTaskCreate?: TaskCreateHandler;
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
   getTaskActions?: (task: Task.Task) => MenuItem[];
+  getDelegateActions?: (task: Task.Task) => MenuItem[];
   /** Selects a task, or clears the selection with `undefined`; defined only when the list is selectable. */
   onTaskSelect?: (task: Task.Task | undefined, modifiers?: TaskSelectModifiers) => void;
   /** Toggles a row's membership of the checked set; defined only when the host wired checkboxes. */

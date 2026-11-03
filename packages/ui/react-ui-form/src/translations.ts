@@ -28,6 +28,7 @@ export const translations = [
         'boolean-input-true.value': 'Yes',
         'boolean-input-false.value': 'No',
         'indeterminate.placeholder': 'Mixed',
+        'select-none.label': 'None',
         'show-field.label': 'Show field',
         'hide-field.label': 'Hide field',
         'delete-field.label': 'Delete field',

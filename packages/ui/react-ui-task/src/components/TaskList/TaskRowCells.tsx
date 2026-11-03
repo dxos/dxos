@@ -16,19 +16,13 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
+import * as Typography from '@dxos/react-ui/Typography';
 import { Task } from '@dxos/types';
 import { getHashHue, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import {
-  UNSET_ICON,
-  estimateTextStyle,
-  priorityIcon,
-  priorityTextStyle,
-  statusIcon,
-  statusTextStyle,
-} from '../../util/status-icons.ts';
+import { UNSET_ICON, priorityIcon, priorityTextStyle, statusIcon, statusTextStyle } from '../../util/status-icons.ts';
 import { useTaskListContext } from './TaskListContext.ts';
 
 /**
@@ -227,72 +221,18 @@ export const TaskCheckbox = ({ task, checked, onCheckedChange, classNames }: Tas
 TaskCheckbox.displayName = 'TaskList.Checkbox';
 
 /**
- * Estimate as its own label rather than a glyph: the sizes are a vocabulary a reader already knows
- * (`XS`…`XL`), and two ordinal ramps side by side would be read as one. Rendered on every row so
- * setting an estimate never depends on discovering a hover affordance, and falling back to
- * {@link UNSET_ICON} when unset — the same dot the priority column shows, so a row with neither set
- * reads as two empty controls rather than a dash beside a dot.
+ * Estimate as its own label rather than a glyph: the sizes are a vocabulary a reader already knows (`XS`…`XL`), and two
+ * ordinal ramps side by side would be read as one. Rendered only when set, as Linear does, and read-only: an estimate is
+ * set from the task's properties, so the row spends no room on one it does not have.
  */
-export const TaskEstimateControl = ({ task, classNames }: { task: Task.Task; classNames?: string }) => {
-  const { onTaskUpdate } = useTaskListContext('TaskList.EstimateControl');
-  const [estimate] = useObject(task, 'estimate');
-  return (
-    <TaskEstimatePicker
-      estimate={estimate}
-      onChange={onTaskUpdate && ((estimate) => onTaskUpdate(task, { estimate: estimate ?? null }))}
-      testId='taskList.item.estimate'
-      classNames={classNames}
-    />
-  );
-};
+export const TaskEstimateLabel = ({ estimate }: { estimate?: Task.Estimate }) =>
+  estimate ? (
+    <Typography.Text asChild tone='muted' data-testid='taskList.item.estimate'>
+      <span>{estimate.toUpperCase()}</span>
+    </Typography.Text>
+  ) : null;
 
-export type TaskEstimatePickerProps = {
-  estimate?: Task.Estimate;
-  /** Omitted for a readonly label. */
-  onChange?: (estimate: Task.Estimate | undefined) => void;
-  testId?: string;
-  classNames?: string;
-};
-
-/** The estimate label and its menu over a bare value, for a row's task or a draft that has none yet. */
-export const TaskEstimatePicker = ({ estimate, onChange, testId, classNames }: TaskEstimatePickerProps) => {
-  const { t } = Hooks.useTranslation(translationKey);
-  const label = estimate?.toUpperCase() ?? <Icon.Icon icon={UNSET_ICON} classNames='text-neutral-500' />;
-
-  if (!onChange) {
-    return <Layout.Block classNames={mx(estimateTextStyle(estimate), classNames)}>{label}</Layout.Block>;
-  }
-
-  return (
-    <Layout.Block classNames={classNames}>
-      {/* Deferred: a list renders one of these per task, and the menu is opened for at most one. */}
-      <ActionMenu
-        deferUntilOpen
-        actions={() =>
-          [Task.NullOption, ...Task.EstimateOptions].map(({ id, title }) =>
-            createMenuAction(`estimate-${id}`, () => onChange(id === 'none' ? undefined : id), {
-              label: title,
-              checked: (estimate ?? 'none') === id,
-            }),
-          )
-        }
-      >
-        <Button.Root
-          variant='ghost'
-          iconOnly={estimate === undefined}
-          label={t('task-estimate.label')}
-          data-testid={testId}
-          classNames={mx('w-8 px-0 text-xs tabular-nums', estimateTextStyle(estimate))}
-          onClick={(event: MouseEvent) => event.stopPropagation()}
-        >
-          {label}
-        </Button.Root>
-      </ActionMenu>
-    </Layout.Block>
-  );
-};
-
-TaskEstimateControl.displayName = 'TaskList.EstimateControl';
+TaskEstimateLabel.displayName = 'TaskList.EstimateLabel';
 
 /**
  * Priority as a signal-strength glyph rather than a word: the four levels are ordinal, so a ramp

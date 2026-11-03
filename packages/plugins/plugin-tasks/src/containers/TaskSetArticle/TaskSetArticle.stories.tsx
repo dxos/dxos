@@ -122,7 +122,7 @@ const seedTaskSet = (space: Space) => {
   seeded = { space, taskSet: set, roasting };
 };
 
-const DefaultStory = () => {
+const DefaultStory = ({ showDescription }: { showDescription?: boolean }) => {
   const [space] = useSpaces();
   const taskSets = useQuery(space?.db, Filter.type(TaskSet.TaskSet));
   const taskSet = taskSets.find((entry) => entry.name === TASK_SET_NAME);
@@ -132,7 +132,7 @@ const DefaultStory = () => {
 
   return (
     <div className='dx-expand'>
-      <TaskSetArticle role='article' subject={taskSet} attendableId='story' />
+      <TaskSetArticle role='article' subject={taskSet} attendableId='story' showDescription={showDescription} />
     </div>
   );
 };
@@ -205,12 +205,13 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /**
- * A description renders with the extensions other plugins contribute: the row of the task whose
+ * A description, where a host shows them in rows, renders with the extensions other plugins contribute: the row of the task whose
  * description links a pull request shows it as an anchor chip, through the match plugin-github's
  * resolver contributes. Hovering the chip resolves it through that resolver, and the popover shows
  * the pull request's card.
  */
 export const DescriptionLinks: Story = {
+  args: { showDescription: true },
   play: async ({ canvasElement }) => {
     // One chip, in the row itself — a React markdown renderer, which sets `eid` as a property. The
     // foot pane is create-only now that the detail is its own surface, so a selected task no longer
@@ -238,6 +239,7 @@ export const DescriptionLinks: Story = {
  * rather than leaving a chip that does nothing.
  */
 export const DescriptionLinkUnavailable: Story = {
+  args: { showDescription: true },
   play: async ({ canvasElement }) => {
     const url = 'https://github.com/acme/private/pull/7';
     const chip = () =>
@@ -511,7 +513,10 @@ export const Behavior: Story = {
     // Unfiled tasks are not segregated into a backlog — they are rows like any other.
     await expect(canvas.findByText('Schedule cuppings', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
     await waitFor(() => expect(canvas.queryByText('Roasting')).toBeNull(), { timeout: 10_000 });
-    await waitFor(() => expect(canvas.queryByText('Backlog')).toBeNull(), { timeout: 10_000 });
+    // The create pane's status select lists `Backlog` among its options; a milestone would be a heading.
+    await waitFor(() => expect(canvas.queryByText('Backlog', { ignore: 'script, style, option' })).toBeNull(), {
+      timeout: 10_000,
+    });
 
     const context = seeded;
     if (!context) {
