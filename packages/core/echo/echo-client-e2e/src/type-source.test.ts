@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { type Database, DXN, Filter, JsonSchema, Obj, Query, Scope, Type } from '@dxos/echo';
+import { type Database, DXN, Filter, JsonSchema, Obj, Query, type QueryAST, Scope, Type } from '@dxos/echo';
 import { type TypeSource } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { PublicKey, type URI } from '@dxos/keys';
@@ -47,7 +47,7 @@ const setup = async () => {
 };
 
 /** The registrations of a typename; the registry asks the type sources for what it lacks. */
-const queryType = async (db: Database.Database, typename: string, scopes = [Scope.registry()]) => {
+const queryType = async (db: Database.Database, typename: string, scopes: QueryAST.Scope[] = [Scope.registry()]) => {
   const [type] = await db
     .query(Query.select(Filter.and(Filter.type(Type.Type), Filter.key(typename))).from(...scopes))
     .run();
