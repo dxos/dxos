@@ -8,10 +8,14 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 
+import { CloudflareOsError } from '#api';
 import { CloudflareOs, CloudflareOsOperation } from '#types';
 
 import { withRefDatabase } from './database.ts';
 import { refreshWorkspace } from './refresh.ts';
+
+/** How long one workspace's refresh may take, sign-in included. */
+const REFRESH_TIMEOUT_MS = 60_000;
 
 /** Refreshes every workspace in the space that the connection binds. */
 const handler: Operation.WithHandler<typeof CloudflareOsOperation.SyncWorkspaces> =
@@ -28,6 +32,10 @@ const handler: Operation.WithHandler<typeof CloudflareOsOperation.SyncWorkspaces
             workspaces,
             (workspace) =>
               refreshWorkspace(workspace).pipe(
+                Effect.timeoutOrElse({
+                  duration: REFRESH_TIMEOUT_MS,
+                  orElse: () => Effect.fail(new CloudflareOsError({ message: 'Refreshing the workspace timed out.' })),
+                }),
                 Effect.catch((error) => Effect.sync(() => log.warn('workspace refresh failed', { error }))),
               ),
             { discard: true },

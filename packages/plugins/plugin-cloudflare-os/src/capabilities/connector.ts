@@ -83,6 +83,7 @@ export const CloudflareOsConnector: ConnectorSpec.ConnectorEntry = {
   credentialForm: {
     schema: SignInForm,
     defaultValues: { url: Client.DEFAULT_URL, username: '', password: '' },
+    onValidate: ({ values }) => Effect.asVoid(normalizeUrl(values.url)),
     onSubmit,
   },
   testConnection,

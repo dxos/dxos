@@ -118,20 +118,15 @@ const LIST_TIMEOUT_MS = 30_000;
 /** The gadgets an overseer lists, read through a subscription closed once the listing is complete. */
 export const listGadgets = (
   overseer: RpcStub<Protocol.Overseer>,
-): Effect.Effect<CloudflareOs.Gadget[], CloudflareOsError> =>
-  Client.call(
+): Effect.Effect<CloudflareOs.Gadget[], CloudflareOsError> => {
+  // Released on every exit, including a timeout, and safe if the subscription resolves after it.
+  let release = (): void => {};
+  return Client.call(
     'Could not list the workspace gadgets.',
     () =>
       new Promise<CloudflareOs.Gadget[]>((resolve, reject) => {
-        const subscription = overseer.subscribeToWorkpieces(
-          gadgetSubscriber(
-            () => {},
-            (gadgets) => {
-              resolve(gadgets);
-              void subscription.then(Client.dispose, () => {});
-            },
-          ),
-        );
+        const subscription = overseer.subscribeToWorkpieces(gadgetSubscriber(() => {}, resolve));
+        release = () => void subscription.then(Client.dispose, () => {});
         subscription.catch(reject);
       }),
   ).pipe(
@@ -139,4 +134,6 @@ export const listGadgets = (
       duration: LIST_TIMEOUT_MS,
       orElse: () => Effect.fail(new CloudflareOsError({ message: 'Listing the workspace gadgets timed out.' })),
     }),
+    Effect.ensuring(Effect.sync(() => release())),
   );
+};
