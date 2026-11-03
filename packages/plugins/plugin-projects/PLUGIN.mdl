@@ -1623,3 +1623,21 @@ decision D-151: QA-1 expects the agent to leave its five tasks in `review`, as Q
   for: user:wittjosiah
   affects: [QA-1]
 ```
+
+```mdl
+decision D-152: `Task` 0.7.0 holds `delegate` in place of `reviewers`. The migration from 0.6.0 makes the reviewer of a task assigned to an agent its assignee, and the agent its delegate. Fills in [D-124].
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [Task]
+```
+
+```mdl
+decision D-153: The migration takes the first person among a task's reviewers, drops the reviewers of a task a person is assigned, and takes a 0.5.0 task straight to 0.7.0 with the same conversion. It runs before the 0.5.0 pass, so that pass finds every migrated task at 0.7.0. Fills in [D-152].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [Task]
+  why: The assignee of a delegated task signs it off ([D-124]), so a second person reviewing a person's own task has no field to go to.
+  rejected:
+    - Chaining 0.5.0 through a frozen 0.6.0 type, which would make the hierarchy and set passes check for two task versions.
+```
