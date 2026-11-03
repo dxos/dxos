@@ -636,6 +636,10 @@ feat F-3: Types are exposed
 
   req F-3.7: The DXN of every type a plugin contributes extends the plugin's key; PluginStore
     refuses an upload whose catalog holds a type outside it. TODO: not enforced yet.
+
+  req F-3.8: An isolate asks the type registry for a published type once: PluginHost caches each
+    record it resolves, bounded, for the isolate's lifetime, so later invocations needing it make no
+    registry call. An unknown type and a failed lookup are not cached.
 ```
 
 ```mdl
@@ -1402,4 +1406,16 @@ decision D-61: A service only EDGE holds reaches a bundle as a per-invocation `S
   rejected:
     - Typed bindings in `env` per service (BRAIN_SERVICE, DISCORD_AGENT) — the adapters would move from EDGE into the host, which would then import plugin-agent and plugin-discord, and `env` cannot carry the caller.
     - Provide a proxy for every service a handler declares — it would shadow the services the function context provides.
+```
+
+```mdl
+decision D-62: PluginHost caches resolved `TypeRecord`s per isolate in a least-recently-used map of 256 entries keyed by `typename@version`, holding settled records only; an unknown type or a failure is asked again next time, and concurrent first lookups in different requests each ask the registry.
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.8]
+  why: Each invocation builds a fresh EchoClient, so without an isolate cache every invocation fetched the same foreign type; a promise shared across requests is dropped by workerd (`no_handle_cross_request_promise_resolution`), so only values are shared.
+  rejected:
+    - Cache the in-flight promise — a request awaiting another request's promise hangs when the first request ends.
+    - Cache unknown types — a type published after the first miss would stay unknown for the isolate's lifetime.
 ```

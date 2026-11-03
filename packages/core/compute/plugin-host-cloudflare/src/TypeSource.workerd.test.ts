@@ -32,7 +32,7 @@ const makeRegistry = () => {
 
 // Each invocation builds its own type source; the isolate's cache outlives it (EDGE-PLUGINS F-3.8).
 describe('TypeSource', () => {
-  test.fails('two invocations resolving one type ask the registry once', async ({ expect }) => {
+  test('two invocations resolving one type ask the registry once', async ({ expect }) => {
     const { registry, requests } = makeRegistry();
     const cache = TypeSource.makeCache();
     for (let invocation = 0; invocation < 2; invocation++) {
@@ -55,7 +55,7 @@ describe('TypeSource', () => {
     expect(requests).toEqual(['org.example.type.unknown', 'org.example.type.unknown', PERSON, PERSON]);
   });
 
-  test.fails('holds a bounded number of types, dropping the least recently used', async ({ expect }) => {
+  test('holds a bounded number of types, dropping the least recently used', async ({ expect }) => {
     const cache = TypeSource.makeCache({ capacity: 2 });
     const record = (typename: string): PluginProtocol.TypeRecord => ({ typename, version: '0.1.0', jsonSchema: {} });
     cache.set('a', record('a'));
