@@ -22,7 +22,6 @@ export type SelectFieldOption = {
   iconHue?: string;
 };
 
-/** The pill's "None" item: an optional field can be cleared, which a Select otherwise has no way to do. */
 const NONE = '@dxos/react-ui-form/none';
 
 export type SelectFieldProps = FormFieldRendererProps & {
@@ -74,7 +73,6 @@ export const SelectField = ({
     <SelectControl
       items={items}
       value={value == null ? undefined : String(value)}
-      // A pill names its field while unset, as the label it has no room for.
       placeholder={pill ? label : (placeholder ?? t('select.placeholder'))}
       readonly={readonly}
       pill={pill}

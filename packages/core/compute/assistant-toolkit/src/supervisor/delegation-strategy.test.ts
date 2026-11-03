@@ -154,7 +154,6 @@ const addChecklist = (chat: Chat.Chat) =>
     );
     // Not begun.
     const queued = yield* Database.add(Task.make({ title: 'Send the notice', status: 'todo' }));
-    // On this checklist but worked by another agent, whose own run decides it.
     const elsewhere = yield* Database.add(
       Task.make({
         title: 'Book the venue',
@@ -320,7 +319,6 @@ describe('makeDelegationStrategy.onTurnFailed', () => {
         expect(queued.status).toBe('todo');
         expect(elsewhere.status).toBe('started');
 
-        // A plain chat has no agent of its own, which must not read as matching a worker with no subject.
         const plain = yield* Database.add(Chat.make({ feed: Ref.make(Feed.make()) }));
         yield* Database.flush();
         const checklist = yield* addChecklist(plain);
@@ -384,7 +382,6 @@ describe('isSubAgentTask', () => {
     expect(isSubAgentTask(Task.make({ title: 'unassigned' }))).toBe(false);
     expect(isSubAgentTask(Task.make({ title: 'person', assignee: { name: 'Alice' } }))).toBe(false);
     expect(isSubAgentTask(Task.make({ title: 'delegated', assignee: { role: 'assistant' } }))).toBe(true);
-    // An agent named by its identity is a concrete delegate, not a spawn request.
     expect(
       isSubAgentTask(
         Task.make({ title: 'named', delegate: { role: 'assistant', name: 'Claude', identityDid: 'did:key:claude' } }),

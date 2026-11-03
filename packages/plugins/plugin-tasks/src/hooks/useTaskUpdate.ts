@@ -12,17 +12,12 @@ import { type Task } from '@dxos/types';
 
 import { TaskOperation } from '#types';
 
-/** The part of the operation invoker a person's edit needs. */
 export type InvokeOperation = (
   op: Operation.Definition.Any,
   input: unknown,
   options?: { spaceId?: SpaceId },
 ) => Promise<{ error?: Error }>;
 
-/**
- * A person's edit. Their `done` is their sign-off, so it closes the task through `AcceptTask` rather than landing it in
- * `review` as an agent's `done` does, once the patch's other fields are written; a refused write signs nothing off.
- */
 export const applyPersonEdit = async (
   invoke: InvokeOperation,
   task: Task.Task,
@@ -41,7 +36,6 @@ export const applyPersonEdit = async (
   }
 };
 
-/** A person's edit from the task UI (see {@link applyPersonEdit}). */
 export const useTaskUpdate = (spaceId: SpaceId | undefined): ((task: Task.Task, patch: Task.Edit) => void) => {
   const { invokePromise } = Hooks.useOperationInvoker();
   return useCallback(

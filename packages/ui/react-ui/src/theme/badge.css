@@ -1,8 +1,3 @@
-/*
- * Badge: a mark half the size of an Avatar or Icon, over one of its corners and hanging a little past it. The ring is
- * drawn on the mark's child, so it follows that child's shape (a round or square avatar).
- */
-
 @layer dx-components {
   .dx-badge {
     position: relative;
@@ -19,7 +14,7 @@
   .dx-badge-mark > * {
     box-shadow: 0 0 0 2px var(--color-base-surface);
   }
-  .dx-badge-mark > .dx-icon {
+  .dx-badge .dx-badge-mark > .dx-icon.dx-icon {
     width: 100%;
     height: 100%;
     box-shadow: none;

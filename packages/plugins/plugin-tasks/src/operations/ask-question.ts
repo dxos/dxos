@@ -33,8 +33,6 @@ const handler: Operation.WithHandler<typeof TaskOperation.AskQuestion> = TaskOpe
         return yield* Effect.fail(new InvalidOperationInput({ message: 'The question is empty.' }));
       }
 
-      // A session's delegation is a claim: the task answers to its own person, else its parent's, and without one there
-      // is nobody to review its finish.
       const answering = remoteSession ? (Task.owner(task) ?? Task.owner(Task.getParentTask(task))) : undefined;
       if (remoteSession && !answering) {
         return yield* Effect.fail(
@@ -46,7 +44,6 @@ const handler: Operation.WithHandler<typeof TaskOperation.AskQuestion> = TaskOpe
         );
       }
 
-      // After the refusals, so a refused call leaves the task's delegate as it found it.
       let asker = actor;
       if (remoteSession) {
         asker = yield* assignToSession(remoteSession, actor, { defaultTitle: task.title });

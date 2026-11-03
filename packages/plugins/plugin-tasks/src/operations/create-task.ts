@@ -32,8 +32,6 @@ const handler: Operation.WithHandler<typeof TaskOperation.CreateTask> = TaskOper
       yield* validateDelegate(delegate);
       const taskSet = yield* Database.load(taskSetRef);
       const parent = parentTask ? yield* Database.load(parentTask) : undefined;
-      // A sub-task answers to the person its parent does, so its finish waits on them; an agent filing one it holds
-      // claims it, as `UpdateTask` does.
       const answering = Task.owner(parent);
       const holders = {
         assignee: delegate ? claimedAssignee(answering, assignee) : (assignee ?? (answering && { ...answering })),
@@ -66,7 +64,6 @@ const handler: Operation.WithHandler<typeof TaskOperation.CreateTask> = TaskOper
       const task = yield* TaskSet.addPersisted(
         Task.make({
           title: title.trim(),
-          // A task created finished waits on the person who answers for it, as an edit does.
           status: status === 'done' && Task.needsReview(holders) ? 'review' : (status ?? 'todo'),
           description,
           priority,

@@ -73,7 +73,6 @@ describe('ask-question', () => {
         title: 'Renew the domain',
         parentTask: Ref.make(parent),
       });
-      // Assigned after its step was filed, so the step has no person of its own.
       Obj.update(parent, (parent) => {
         parent.assignee = { name: 'Riley', identityDid: 'did:key:riley' };
       });
@@ -96,7 +95,6 @@ describe('ask-question', () => {
       const [pending] = Task.getPendingQuestions(task.history);
       expect(pending.id).toBe(questionId);
       expect(Task.refEntityId(pending.actor?.subject)).toBe(session.id);
-      // A claim like any other: the step answers to its parent's person, and the session holds the whole tree.
       expect(task.assignee?.name).toBe('Riley');
       expect(Task.refEntityId(parent.delegate?.subject)).toBe(session.id);
     }).pipe(Effect.provide(TestLayer)),

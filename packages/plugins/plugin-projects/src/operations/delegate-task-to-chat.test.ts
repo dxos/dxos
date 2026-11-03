@@ -149,15 +149,10 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     // owning checklist would re-parent it and drop it out of the project's task list.
     expect(Obj.getParent(task)?.id).toBe(taskSet.id);
 
-    // Started on delegation, not on completion: the row shows work is underway from the moment the
-    // session has it, and the chat's agent is who does it.
     expect(task.status).toBe('started');
     expect(task.delegate?.role).toBe('assistant');
-    // Held by that chat, named as the delegate's subject: a bare assistant role is the supervisor's
-    // spawn request, whose orphan sweep would fail a started task no sub-agent is running.
     expect(Task.refEntityId(task.delegate?.subject)).toBe(chat.id);
 
-    // The delegating identity owns the unowned task, so the agent's `done` lands in `review`.
     expect(task.assignee?.role).toBe('user');
   });
 
@@ -260,7 +255,6 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     // Unnamed: a chat holding several tasks would be claiming to be about whichever came first.
     expect(chat.name).toBeUndefined();
 
-    // Every delegated task is underway and delegated to the agent; the one left unchecked is untouched.
     expect(tasks.map((task) => task.status)).toEqual(['started', 'todo', 'started']);
     expect(tasks.map((task) => task.delegate?.role)).toEqual(['assistant', undefined, 'assistant']);
   });

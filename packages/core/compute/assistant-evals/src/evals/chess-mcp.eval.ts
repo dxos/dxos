@@ -324,7 +324,6 @@ const SCORERS = [
   Scorer.make({
     name: 'delegated-stages-in-review',
     description: 'Every stage the session was given is in review (or done) when it finishes.',
-    // `done` on a task a person answers for lands as `review`; either means the session finished the stage.
     // The denominator is the stages it was given, so renaming one away cannot raise the score.
     score: checklist.pipe(
       Effect.map(

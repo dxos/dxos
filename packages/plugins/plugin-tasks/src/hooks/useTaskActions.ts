@@ -27,7 +27,6 @@ const isRowAction = (action: TasksCapabilities.TaskAction) => !isDelegate(action
  */
 export const useTaskActions = (): ((task: Task.Task) => MenuItem[]) => useActionItems(isRowAction);
 
-/** The agents a task can be handed to, as the assignee picker's items after the people. */
 export const useDelegateActions = (): ((task: Task.Task) => MenuItem[]) => useActionItems(isDelegate);
 
 const useActionItems = (

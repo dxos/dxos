@@ -36,8 +36,7 @@ export const make = () =>
         that and stop — never start unrequested tasks on your own.
         A task that already exists elsewhere (a project's task, a sub-task of one you were given) is
         worked through its own ref — never recreate it with create. assign puts it on this checklist
-        with you working it; unassign takes it off, never deleting it. A person who answers for a task
-        stays its assignee, and a task you mark done goes to them for review.
+        with you working it; unassign takes it off, never deleting it.
       `,
     }),
   });

@@ -157,7 +157,6 @@ export type WorkResult = {
   pullRequests: Record<PullRequestKey, PullRequest.PullRequest>;
 };
 
-/** Pull requests, the task set, and the project that gathers them with the media. */
 export const Work: SampleSpace.Partial<WorkResult, MediaResult> = SampleSpace.partial('work', {
   schemas: [PullRequest.PullRequest, Task.Task, TaskSet.TaskSet, Outline.Outline, Repo.Repo, Project.Project],
   run: ({ images, videos }: MediaResult) =>

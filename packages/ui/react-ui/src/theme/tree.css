@@ -197,8 +197,7 @@
   }
 
   /* Row controls take the row's tracks; where the pointer can hover they show only on the row in play (hovered,
-     focused within, selected, or holding an open menu), so a list of rows does not read as a wall of buttons. Pinned
-     controls show on every row. */
+     focused within, selected, or holding an open menu), so a list of rows does not read as a wall of buttons. */
   .dx-tree-item-actions {
     display: contents;
   }

@@ -228,7 +228,6 @@ const SCORERS = [
   Scorer.make({
     name: 'delegated-tasks-back-in-review',
     description: 'Every task the session was given is in review (or done) when it finishes.',
-    // `done` on a task a person answers for lands as `review`; either means the session finished the task.
     score: ledger(({ delegated }) =>
       delegated.length > 0
         ? delegated.filter((candidate) => candidate.status === 'review' || candidate.status === 'done').length /

@@ -24,9 +24,6 @@ export default Capability.makeModule(
     const registry = yield* Capability.get(Capabilities.AtomRegistry);
     const module = (yield* Capability.CurrentModuleId) ?? ProjectsNamespace.key;
 
-    // Contributed here rather than returned, so the menus keep one order — the default agent, each
-    // named agent, then the rest — while agents come and go with the plugins that bring them.
-    // The delegations land in the assignee picker, after the people (see `DELEGATE_GROUP`).
     let contributed: TasksCapabilities.TaskAction[] = [];
     const withdraw = () => contributed.forEach((action) => manager.remove(TasksCapabilities.TaskAction, action));
     const sync = (agents: AssistantCapabilities.Agent[]) => {

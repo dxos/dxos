@@ -35,13 +35,10 @@ const ADD_TASK = `${PLANK} input[placeholder="Add task"]`;
 const TASK_ROW = `${PLANK} [data-testid="taskList.item"]`;
 const ADD_PRIORITY = `${PLANK} [data-testid="taskList.edit.properties"] [data-testid="priority"]`;
 
-/** The person the coding session works for. */
 const DISPLAY_NAME = 'Riley';
 
-/** The harness id the coding session claims its task under. */
 const SESSION_ID = 'qa-4';
 
-/** The selector for one task's row. */
 const taskRow = (title) => `${TASK_ROW}:has-text("${title}")`;
 
 /** Types as a person would, a character at a time. */
@@ -85,7 +82,6 @@ export const steps = [
         await notice.first().click();
       }
       await page.locator(`${PLANK}[data-attendable-id$="/home"]`).first().waitFor();
-      // A fresh identity has no name, and the coding session's claim names the person `whoami` returns.
       await page.evaluate(async (displayName) => {
         const { halo } = globalThis.dxos;
         if (!halo.identity.get()?.profile?.displayName) {
@@ -137,7 +133,6 @@ export const steps = [
       for (const [index, task] of TASKS.entries()) {
         await demo.type({ selector: `${ADD_TASK} >> nth=0`, value: task, label: 'Add task' });
         if (index === TASKS.length - 1) {
-          // The last one is set up in the row before it exists; a pick leaves focus on the pill, so back to the title.
           await demo.click({ selector: `${ADD_PRIORITY} >> nth=0`, label: 'Priority' });
           const low = '[role="option"]:has-text("Low")';
           await page.locator(low).first().waitFor({ state: 'visible', timeout: 5_000 });
@@ -166,7 +161,6 @@ export const steps = [
       await pickProperty(demo, page, 'priority', 'High');
       await pickProperty(demo, page, 'status', 'Started');
       await page.locator(`${COMPANION} :text("Priority set to high")`).first().waitFor({ timeout: 10_000 });
-      // Rows are titles only: the description belongs to the task's detail.
       if ((await page.locator(`${taskRow(TASKS[0])}:has-text("${TASK_DESCRIPTION}")`).count()) > 0) {
         throw new Error('The row shows the task description.');
       }
@@ -200,7 +194,6 @@ export const steps = [
     done: async ({ page }) =>
       (await page.locator(`${taskRow(TASKS[2])} [data-testid="taskList.item.delegate"]`).count()) > 0,
     run: async ({ demo, page }) => {
-      // What a coding session sends over MCP: the person `whoami` names as assignee, itself as `remoteSession`.
       const { spaceId, taskId, identityDid, displayName } = await page.evaluate(async (title) => {
         const { Filter, halo, spaces } = globalThis.dxos;
         const identity = halo.identity.get();

@@ -130,7 +130,6 @@ export const TaskProperties = ({
           }
         />
 
-        {/* One row for who holds the task: the person who answers for it, badged by name with any agent at work. */}
         <TaskProperty
           icon={assignee ? assigneeIcon : delegate ? delegateIcon : UNASSIGNED_ICON}
           label={

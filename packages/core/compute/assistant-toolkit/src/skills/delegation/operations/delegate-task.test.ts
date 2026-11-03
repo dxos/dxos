@@ -63,7 +63,6 @@ describe('DelegateTask', () => {
 
         yield* invokeDelegateTask({ title: 'Research widgets' }, chatFeed);
 
-        // The durable task lands on the chat's checklist, delegated to an agent.
         const chat = yield* Agent.loadChat(agent);
         invariant(chat, 'Agent chat not found.');
         const tasks = yield* Chat.loadTasks(chat);

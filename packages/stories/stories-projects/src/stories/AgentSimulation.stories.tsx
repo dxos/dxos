@@ -150,7 +150,6 @@ const seedContent = async () => {
   return context;
 };
 
-/** Picks "Default agent" from the assignee picker of the task titled `title`. */
 const delegateToAgent = async (canvas: ReturnType<typeof within>, title: string) => {
   const label = await canvas.findByText(title, undefined, { timeout: 10_000 });
   const row = label.closest('[data-testid="taskList.item"]');
@@ -202,11 +201,6 @@ const answerQuestion = async (canvasElement: HTMLElement, answer: string, delay:
   return true;
 };
 
-/**
- * Delegates the first top-level task to the agent, then follows it: each sub-task is opened in the
- * detail pane as the agent starts it, until every sub-task is finished and the delegated task is back
- * with its assignee. With `answer`, the question the agent blocks on is answered from that pane.
- */
 const makePlay =
   ({ answer, answerDelay = ANSWER_DELAY }: { answer?: string; answerDelay?: number } = {}): Story['play'] =>
   async ({ canvasElement }) => {
@@ -242,14 +236,11 @@ const makePlay =
         if (!answered && answer !== undefined) {
           answered = await answerQuestion(canvasElement, answer, answerDelay);
         }
-        // A person owns the delegated task, so the agent's `done` lands it in `review`.
         await expect(subtasks.every(AgentSimulator.isFinished) && root.status === 'review').toBe(true);
       },
       { timeout: 180_000, interval: 500 },
     );
 
-    // Every sub-task's history records the agent starting and finishing it; a finish on a task a person owns lands
-    // in review.
     for (const task of subtasks) {
       const log = (task.history ?? []).flatMap((entry) => (Task.isChangeEntry(entry) ? [entry.description ?? ''] : []));
       await expect(log.some((line) => /started/i.test(line))).toBe(true);

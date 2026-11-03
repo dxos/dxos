@@ -16,7 +16,6 @@ import { type TaskMember, TaskProperties } from './TaskProperties.tsx';
 
 const SESSION_TITLE = 'Show agent assignees by session name';
 
-/** The harness the session runs in, which names the agent. */
 const AGENT_NAME = 'Claude Code';
 
 /** A coding agent's actor: an assistant standing for its harness session rather than a person. */

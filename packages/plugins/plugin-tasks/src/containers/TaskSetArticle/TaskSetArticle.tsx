@@ -160,7 +160,6 @@ export const TaskSetArticle = ({
   // pane keeps rather than dropping.
   const handleCreate = useCallback<TaskCreateHandler>(
     async ({ status, ...props }, files = []) => {
-      // A person's Done is their sign-off: the task is created open and closed as an edit would close it.
       const finished = status === 'done';
       const { data, error } = await invokePromise(
         TaskOperation.CreateTask,

@@ -1766,7 +1766,6 @@ export const makeHistory = (input: HistoryInput) =>
 
       if (seed.agent !== 'triage') {
         for (const key of seed.tasks) {
-          // Binds the agent to this run's chat in whichever field it holds: delegated work, or its own task.
           Obj.update(tasks[key], (task) => {
             if (task.delegate) {
               task.delegate = agentActor(agent, chat);

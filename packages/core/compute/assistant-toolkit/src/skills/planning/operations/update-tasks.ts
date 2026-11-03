@@ -47,12 +47,6 @@ const shapeError = ({ task, create, assign, unassign, title, status }: TaskChang
 
 type Resolved = { change: TaskChange; task?: Task.Task };
 
-/**
- * The edit that takes a task on or lets it go. Taking it on makes this agent its delegate, so a
- * person who answers for it keeps it, and a step nobody answers for takes its parent's person. A task
- * the agent made for itself (its own assignee) stays its own, under a person's tree too; `Task.update` drops the
- * self-delegation. Letting go clears each of the two this agent holds.
- */
 const claim = (
   task: Task.Task,
   self: Actor.Actor,
@@ -64,7 +58,6 @@ const claim = (
     return { delegate: self, ...(answering ? { assignee: { ...answering } } : {}) };
   }
   if (unassign) {
-    // A sub-agent this conversation queued leaves with the checklist entry, as its own claim does.
     return {
       ...(Task.sameActor(task.delegate, self) || Task.isSubAgentRequest(task.delegate) ? { delegate: null } : {}),
       ...(Task.sameActor(task.assignee, self) ? { assignee: null } : {}),
@@ -137,8 +130,6 @@ export default UpdateTasks.pipe(
 
         const assigning = assign || status === 'started';
         const previousStatus = task.status;
-        // Through `Task.update`, so the edit and its history entry land together, and a task a person
-        // answers for lands in `review` rather than closing on the model's `done`.
         Task.update(task, { title: title?.trim(), status, ...claim(task, self, { assigning, unassign }) });
         if (assigning) {
           Chat.assignTasks(chat, [Ref.make(task)]);
@@ -146,7 +137,6 @@ export default UpdateTasks.pipe(
           Chat.unassignTasks(chat, [Ref.make(task)]);
         }
 
-        // The resolved status, not the requested one: a task a person answers for lands in `review`.
         if (task.status !== undefined && task.status !== previousStatus) {
           yield* Trace.write(Trace.TaskStatusChanged, {
             taskId: task.id,

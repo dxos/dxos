@@ -15,7 +15,6 @@ import * as Badge from './Badge.tsx';
 
 const CORNERS: Badge.Corner[] = ['top-start', 'top-end', 'bottom-start', 'bottom-end'];
 
-/** A person with an agent's square in each corner, then an icon with a smaller icon. */
 const DefaultStory = () => (
   <div className='flex items-center gap-4'>
     {CORNERS.map((corner) => (
@@ -48,7 +47,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-/** Each mark is half its root's size and centred past the corner it names. */
 export const Test: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

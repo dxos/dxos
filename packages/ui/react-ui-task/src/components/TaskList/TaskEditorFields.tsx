@@ -39,23 +39,18 @@ export type TaskEditorValues = {
   priority?: Task.Priority;
   estimate?: Task.Estimate;
   assignee?: Actor.Actor;
-  /** Not a field of its own: the assignee pill shows it, and picking a person takes the task back from it. */
   delegate?: Actor.Actor;
 };
 
-/** What the title field does beyond holding its value: Enter and Save commit it, and blur may. */
 export type TaskTitleBehavior = {
   placeholder: string;
-  /** Shows the Save button: there is a title to save. */
   canSave: boolean;
   onKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
   onBlur: () => void;
   onSave: () => void;
 };
 
-/** The description's editor, which the pane holds open and commits or reverts itself. */
 export type TaskDescriptionBehavior = {
-  /** Remounts the editor: per task, and empty again after a create. */
   editorKey: string;
   controllerRef: RefObject<MarkdownEditableController | null>;
   placeholder: string;
@@ -64,17 +59,12 @@ export type TaskDescriptionBehavior = {
 
 export type TaskEditorFormProps = PropsWithChildren<{
   values: TaskEditorValues;
-  /** Off for a list that hides who holds its tasks: the editor then offers no assignee either. */
   showAssignee?: boolean;
   members: readonly TaskMember[];
-  /** The space's contacts, offered by the assignee picker after the members. */
   people: readonly Person.Person[];
   title: TaskTitleBehavior;
-  /** Omitted to leave the description out of the form. */
   description?: TaskDescriptionBehavior;
-  /** After the pills, at the row's end. */
   end?: ReactNode;
-  /** Each change names the fields it set; an unset value is `null`. */
   onChange: (patch: Task.Edit) => void;
 }>;
 
@@ -82,11 +72,6 @@ const TASK_SCHEMA = Type.getSchema(Task.Task);
 
 const PROPERTY_FIELDS = ['status', 'priority', 'assignee', 'estimate'];
 
-/**
- * The task as one form over its schema: the title and description take the full width, and the other fields sit under
- * them as pills (the `pill` presentation, after Linear's composer), each naming its value or, while unset, its field.
- * `children` go between the two, for what the task is created with beyond its fields.
- */
 export const TaskEditorForm = ({
   children,
   values,
@@ -101,7 +86,6 @@ export const TaskEditorForm = ({
   const { t } = Hooks.useTranslation(translationKey);
   const fieldOverrides = useMemo<Record<string, FormFieldOverride>>(
     () => ({
-      // A task always has a status (unset reads as Todo), so its pill offers no "None".
       status: { required: true },
       priority: { label: t('task-priority.label'), icon: UNSET_ICON },
       assignee: { label: t('task-assignee.label') },
@@ -149,7 +133,6 @@ export const TaskEditorForm = ({
   );
 };
 
-/** What the editor's fields need beyond their value, which a field renderer is not given. */
 const TaskEditorContext = createContext<
   | (Pick<TaskEditorFormProps, 'members' | 'people' | 'title' | 'description'> & Pick<TaskEditorValues, 'delegate'>)
   | undefined
@@ -168,8 +151,6 @@ const TitleField = ({ type, getValue, onValueChange }: FormFieldRendererProps<st
   return (
     <Field.Root classNames='min-w-0'>
       <Input.Root
-        // An input clips its overflow rather than wrapping it, so a long title ends mid-word against the save button
-        // with nothing to say it continues; the ellipsis says so.
         classNames='grow text-ellipsis'
         data-testid='taskList.edit.title'
         placeholder={title.placeholder}
@@ -177,14 +158,11 @@ const TitleField = ({ type, getValue, onValueChange }: FormFieldRendererProps<st
         onChange={(event) => onValueChange(type, event.target.value)}
         onKeyDown={title.onKeyDown}
         onBlur={title.onBlur}
-        // Only when there is something valid to save. `false` rather than nothing, so the field keeps its frame (and
-        // its test id) either way.
         end={
           title.canSave && (
             <SystemButton.Save
               variant='primary'
               data-testid='taskList.edit.save'
-              // Out of the tab order: Enter in the field saves, and Tab goes on to the description.
               tabIndex={-1}
               onClick={title.onSave}
               onMouseDown={(event) => event.preventDefault()}
@@ -203,10 +181,7 @@ const DescriptionField = ({ type, getValue, onValueChange }: FormFieldRendererPr
   }
 
   return (
-    // A control frame, as the title's Input is: the well, and the focus ring while the editor has focus.
     <Input.Frame rows={2} data-testid='taskList.edit.description' classNames='min-w-0'>
-      {/* Held open, since the pane IS the editor and there is nothing to click into; a field held open never re-reads
-          its value, so `editorKey` remounts it. */}
       <MarkdownEditable
         key={description.editorKey}
         ref={description.controllerRef}
@@ -218,8 +193,6 @@ const DescriptionField = ({ type, getValue, onValueChange }: FormFieldRendererPr
         multiline
         placeholder={description.placeholder}
         extensions={description.extensions}
-        // Held open, so it must not pull focus: selecting a row by keyboard would otherwise land the reader in the
-        // description instead of the list.
         autoFocus={false}
         value={getValue() ?? ''}
         onValueChange={(next) => onValueChange(type, next)}
@@ -228,11 +201,6 @@ const DescriptionField = ({ type, getValue, onValueChange }: FormFieldRendererPr
   );
 };
 
-/**
- * The assignee as a pill. A Button rather than the form's select: the picker lists members, then contacts, each with
- * its own avatar, which a select's flat option list cannot. The pick is this field's value; the form adds taking the
- * task back from its delegate.
- */
 const AssigneePill = ({
   type,
   label,
@@ -260,7 +228,6 @@ const AssigneePill = ({
         })
       }
     >
-      {/* Who holds the task, as the row shows it: the person, else the agent working it nobody answers for. */}
       <Button.Root
         pill
         icon={assignee ? current.icon : delegate ? worker.icon : UNASSIGNED_ICON}

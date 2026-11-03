@@ -13,10 +13,6 @@ import { recipes } from '../../recipes.ts';
 
 type BadgeCorner = 'top-start' | 'top-end' | 'bottom-start' | 'bottom-end';
 
-//
-// Root
-//
-
 type BadgeRootProps = ThemedClassName<HTMLAttributes<HTMLSpanElement>>;
 
 /** Sizes to its child (an Avatar or an Icon) and anchors a `Mark` to one of its corners. */
@@ -25,10 +21,6 @@ const BadgeRoot = forwardRef<HTMLSpanElement, BadgeRootProps>(({ classNames, ...
 ));
 
 BadgeRoot.displayName = 'Badge.Root';
-
-//
-// Mark
-//
 
 type BadgeMarkProps = ThemedClassName<HTMLAttributes<HTMLSpanElement>> & {
   corner?: BadgeCorner;
