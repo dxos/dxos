@@ -209,7 +209,8 @@ export const steps = [
         },
         { spaceId, repository: REPOSITORY },
       );
-      await demo.click({ text: 'Checked out for coding agents that run in the cloud.', label: 'Repositories' });
+      await demo.click({ selector: '[data-testid="projectsPlugin.config.software.disclosure"]', label: 'Software' });
+      await demo.click({ text: 'Checked out for coding agents that run in the cloud', label: 'Repositories' });
       const option = `[data-scope="combobox"][role="option"]:has-text("${REPOSITORY.split('/')[1]}")`;
       await page.locator(option).first().waitFor({ timeout: 10_000 });
       await demo.click({ selector: option, label: REPOSITORY });

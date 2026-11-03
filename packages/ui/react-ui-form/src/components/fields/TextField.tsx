@@ -18,6 +18,7 @@ export const TextField = ({
   type,
   format,
   readonly,
+  label,
   placeholder,
   presentation,
   action,
@@ -29,7 +30,8 @@ export const TextField = ({
   onRevert,
 }: FormFieldRendererProps<string>) => {
   const value = getValue() ?? '';
-  if (presentationFor(presentation).isStatic) {
+  const { isStatic, showLabel } = presentationFor(presentation);
+  if (isStatic) {
     return <FormStaticValue value={value} format={format} />;
   }
 
@@ -51,6 +53,8 @@ export const TextField = ({
       autoFocus={autoFocus}
       disabled={!!readonly}
       placeholder={placeholder}
+      // A row that draws no label names its control itself.
+      aria-label={showLabel ? undefined : label || undefined}
       value={value}
       onBlur={onBlur}
       onChange={(event) => onValueChange(type, event.target.value)}

@@ -195,7 +195,7 @@ export const ArrayField = ({
 
   if (section) {
     return (
-      <FormFieldSet label={label} actions={addButton}>
+      <FormFieldSet label={label} actions={addButton} presentation='section'>
         {list}
       </FormFieldSet>
     );

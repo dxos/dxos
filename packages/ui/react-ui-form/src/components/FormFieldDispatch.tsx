@@ -203,6 +203,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
         hideLabel={override?.hideLabel}
         section={presentation === 'section'}
         {...props}
+        readonly={readonly || presentation === 'static'}
       />
     );
   }

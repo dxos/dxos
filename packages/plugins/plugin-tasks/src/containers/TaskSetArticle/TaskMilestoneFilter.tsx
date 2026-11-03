@@ -58,8 +58,8 @@ export const TaskMilestoneFilter = ({ milestones, value, onChange }: TaskMilesto
   return (
     <ActionMenu deferUntilOpen group={group} actions={actions}>
       <Button.Root
-        icon={current ? 'ph--flag-banner--fill' : 'ph--flag-banner--regular'}
-        iconClassNames={current ? 'text-accent-text' : undefined}
+        icon={value === undefined ? 'ph--flag-banner--regular' : 'ph--flag-banner--fill'}
+        iconClassNames={value === undefined ? undefined : 'text-accent-text'}
         iconOnly={!current}
         label={current?.name ?? t('filter-milestone.label')}
         data-testid='tasks.filter.milestone'

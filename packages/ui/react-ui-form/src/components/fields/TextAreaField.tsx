@@ -15,6 +15,7 @@ export const TextAreaField = ({
   type,
   format,
   readonly,
+  label,
   placeholder,
   presentation,
   jsonPath,
@@ -24,7 +25,8 @@ export const TextAreaField = ({
 }: FormFieldRendererProps<string>) => {
   const value = getValue() ?? '';
   const inPlace = presentation === 'title' || presentation === 'plain';
-  if (presentationFor(presentation).isStatic) {
+  const { isStatic, showLabel } = presentationFor(presentation);
+  if (isStatic) {
     return <FormStaticValue value={value} format={format} />;
   }
 
@@ -36,6 +38,8 @@ export const TextAreaField = ({
       data-testid={jsonPath}
       disabled={!!readonly}
       placeholder={placeholder}
+      // A row that draws no label names its control itself.
+      aria-label={showLabel ? undefined : label || undefined}
       value={value}
       onChange={(event) => onValueChange(type, event.target.value)}
       onBlur={onBlur}

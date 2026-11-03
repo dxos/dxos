@@ -322,7 +322,8 @@ export const TaskSetArticle = ({
       onClear={handleClearFilter}
       editorRef={filterEditorRef}
     >
-      {milestones.length > 0 && (
+      {/* Kept while a milestone is selected, so a selection whose milestone was removed can still be cleared. */}
+      {(milestones.length > 0 || milestone !== undefined) && (
         <TaskMilestoneFilter milestones={milestones} value={milestone} onChange={handleMilestoneChange} />
       )}
       <TaskSortMenu value={sort} onChange={handleSortChange} />
