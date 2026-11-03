@@ -155,6 +155,21 @@ describe('space plugin bundle on EDGE', { timeout: 180_000 }, () => {
     expect(outputOf(result)).toMatchObject({ id: expect.stringMatching(/^echo:/) });
   });
 
+  // The isolate outlives an invocation, and a published type does not change under its DXN (EDGE-PLUGINS F-3.8).
+  test.fails('two invocations needing one published type ask the registry once', async ({ expect }) => {
+    const asked = () => typeRegistry.requests.filter((typename) => typename === DOCUMENT_TYPENAME).length;
+    const before = asked();
+    for (const name of ['First', 'Second']) {
+      const result = await bundle.invoke({
+        operationKey: ADD_OBJECT,
+        spaceId,
+        input: { object: { '@type': DOCUMENT_TYPENAME, name } },
+      });
+      expect(outputOf(result)).toMatchObject({ id: expect.stringMatching(/^echo:/) });
+    }
+    expect(asked() - before).toBeLessThanOrEqual(1);
+  });
+
   test('a type no plugin publishes is still not found', async ({ expect }) => {
     const result = await bundle.invoke({
       operationKey: QUERY_OBJECTS,

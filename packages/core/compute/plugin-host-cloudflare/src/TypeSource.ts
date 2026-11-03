@@ -11,12 +11,25 @@ import { Entity, JsonSchema, Obj, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import type { PluginProtocol } from '@dxos/protocols';
 
+/** The published types an isolate has resolved, by `typename@version`. */
+export interface Cache {
+  get(key: string): PluginProtocol.TypeRecord | undefined;
+  set(key: string, record: PluginProtocol.TypeRecord): void;
+}
+
+export type CacheOptions = {
+  readonly capacity?: number;
+};
+
+// TODO(edge-plugins): Not implemented yet; every lookup reaches the registry.
+export const makeCache = (_options: CacheOptions = {}): Cache => ({ get: () => undefined, set: () => {} });
+
 /**
  * A type source backed by EDGE's registry of published types: a typename DXN the invocation has not registered is
  * looked up there and rebuilt from the JSON Schema the contributing bundle's catalog carries.
  */
 export const fromRegistry =
-  (registry: PluginProtocol.TypeRegistry): NonNullable<FunctionWrappingOptions['typeSource']> =>
+  (registry: PluginProtocol.TypeRegistry, _cache?: Cache): NonNullable<FunctionWrappingOptions['typeSource']> =>
   async (uri) => {
     if (!DXN.isDXN(uri)) {
       return undefined;
