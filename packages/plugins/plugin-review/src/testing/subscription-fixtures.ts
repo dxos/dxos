@@ -23,7 +23,6 @@ const TYPES = [AnchoredTo.AnchoredTo, Feed.Feed, Message.Message, Task.Task, Thr
 
 export type SentNotification = { recipientDid: string; message: Message.Message };
 
-/** Contributes the commenter's client and an inbox sender that records instead of relaying. */
 const makeHostPlugin = (client: Client, sender: MessengerCapabilities.Sender) =>
   Plugin.define(Plugin.makeMeta({ key: DXN.make('example.com.plugin.host'), name: 'Host' })).pipe(
     Plugin.addModule({
@@ -41,10 +40,6 @@ const makeHostPlugin = (client: Client, sender: MessengerCapabilities.Sender) =>
 
 export const preloadSubscriptionHarness = () => Harness.preload({ plugins: [ReviewPlugin.make()] });
 
-/**
- * Alice and Bob share a space holding a task with one comment thread; the harness runs the review
- * operations as Alice, and `sent` collects what her inbox sender was asked to deliver.
- */
 export const createSubscriptionHarness = async () => {
   const testBuilder = new TestBuilder();
   onTestFinished(() => testBuilder.destroy());
@@ -80,7 +75,6 @@ export const createSubscriptionHarness = async () => {
     Relation.make(AnchoredTo.AnchoredTo, { [Relation.Source]: thread, [Relation.Target]: subject }),
   );
 
-  /** Appends a comment as `did`, as `AddMessage` does once the thread is saved. */
   const comment = async (did: string, text: string) => {
     const message = Obj.make(Message.Message, {
       created: new Date().toISOString(),

@@ -117,7 +117,7 @@ export const AddMessage = Operation.make({
 
 /**
  * Sends a comment to the subject's subscribers, other than its author, through the notifications inbox.
- * Scheduled by AddMessage; does nothing when no inbox sender is loaded.
+ * Does nothing when no inbox sender is loaded.
  */
 export const SendNotifications = Operation.make({
   meta: {
@@ -146,7 +146,6 @@ export const SetSubscription = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     subject: Obj.Unknown,
-    // Required: the caller states the choice it wants rather than flipping whatever is current.
     subscribed: Schema.Boolean,
   }),
   output: Schema.Void,

@@ -85,7 +85,6 @@ const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = Comme
         },
       });
 
-      // A person who comments follows the object's comments from then on; an agent never does.
       if (sender.identityDid && message.sender.role !== 'assistant') {
         Subscription.add(subject, sender.identityDid);
       }

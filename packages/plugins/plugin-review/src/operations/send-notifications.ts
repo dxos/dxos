@@ -16,11 +16,9 @@ import { Message, Subscription, Thread } from '@dxos/types';
 
 import { CommentOperation } from '#types';
 
-/** Longest comment excerpt a notification carries. */
 const EXCERPT_LENGTH = 280;
 
-/** What a notification from an E2E space says in place of the title and the comment. */
-const POINTER_TEXT = 'New comment';
+const REDACTED_TEXT = 'New comment';
 
 const handler: Operation.WithHandler<typeof CommentOperation.SendNotifications> =
   CommentOperation.SendNotifications.pipe(
@@ -46,35 +44,30 @@ const handler: Operation.WithHandler<typeof CommentOperation.SendNotifications> 
           return;
         }
 
-        // A removed member keeps both their entry and a REMOVED row in the member list; the contact book
-        // may still know them through another space.
-        const members = new Set(
+        const currentMembers = new Set(
           space.members
             .get()
             .filter((member) => member.role !== SpaceMember_Role.REMOVED)
             .flatMap((member) => member.identity?.did ?? []),
         );
         const recipients = Subscription.getSubscribers(subject, 'comments').filter(
-          (did) => did !== identity.did && did !== comment.sender.identityDid && members.has(did),
+          (did) => did !== identity.did && did !== comment.sender.identityDid && currentMembers.has(did),
         );
         if (recipients.length === 0) {
           return;
         }
 
-        // The inbox relay reads envelopes, so it may carry only what EDGE can already read in the space.
-        const plaintext = contentCaptureAllowed(space.id);
+        const edgeCanRead = contentCaptureAllowed(space.id);
         // By code point, so the cut never splits a surrogate pair.
         const excerpt = Array.from(Message.extractText(comment)).slice(0, EXCERPT_LENGTH).join('');
-        const title = plaintext ? Obj.getLabel(subject) : undefined;
+        const title = edgeCanRead ? Obj.getLabel(subject) : undefined;
         const notification = Message.make({
           sender: { identityDid: identity.did, name: identity.profile?.displayName },
-          blocks: [{ _tag: 'text', text: plaintext ? excerpt : POINTER_TEXT }],
+          blocks: [{ _tag: 'text', text: edgeCanRead ? excerpt : REDACTED_TEXT }],
           attachments: [{ ref: Ref.make(subject), name: title }],
-          // Without a subject the inbox titles the tile with the text's first line.
           properties: title ? { subject: title } : undefined,
         });
 
-        // One recipient's failure is theirs alone; the comment is already posted.
         yield* Effect.forEach(
           recipients,
           (did) =>

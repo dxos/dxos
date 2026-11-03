@@ -8,16 +8,6 @@
  *
  * @mdl packages/plugins/plugin-review/PLUGIN.mdl test QA-3
  * @app composer-app `bundle-e2e` output, served by `vite preview` on 127.0.0.1:4173 (EDGE preview, for the inbox)
- *
- * A flow for `pair.mjs`: every step receives both peers. Built and served from `packages/apps/composer-app`:
- *
- *   VITE_DX_DISABLE_ANIMATIONS=true moon run composer-app:bundle-e2e
- *   pnpm exec vite preview --configLoader native --host 127.0.0.1 --port 4173 --strictPort
- *   node .agents/skills/autocue/scripts/pair.mjs \
- *     --flow packages/plugins/plugin-review/autocue/comment-notifications.mjs --out /tmp/pair
- *
- * Space, invitation and document setup follow `composer-app/autocue/two-peer-collaboration.mjs`. Keep the file
- * free of imports, since it is loaded from outside the workspace.
  */
 
 const SPACE = 'Project Phoenix';
@@ -27,7 +17,6 @@ const ALICE_COMMENT = 'Should this cover JMAP too?';
 const BOB_REPLY = 'Yes, both IMAP and JMAP.';
 const TIMEOUT = 60_000;
 
-/** The workspace segment of a pair-chain URL (`/w/<workspace>/…`). */
 const workspaceOf = (page) => {
   const [anchor, workspace] = new URL(page.url()).pathname.split('/').filter(Boolean);
   return anchor === 'w' ? workspace : undefined;
@@ -45,7 +34,6 @@ const waitFor = async (predicate, { timeout = TIMEOUT, what }) => {
 
 const currentWorkspace = (page) => page.getByTestId('navtree.workspace.visible');
 
-/** Expands a navtree row unless it is already open; a row with no children yet keeps its caret disabled. */
 const expandRow = async (peer, row) => {
   const toggle = row.locator('[data-part="branch-trigger"]').first();
   await toggle.waitFor({ state: 'attached', timeout: TIMEOUT });
@@ -60,7 +48,6 @@ const expandRow = async (peer, row) => {
 const textbox = (page) =>
   page.getByTestId('deck.plank').first().getByTestId('composer.markdownRoot').getByRole('textbox');
 
-/** A right-rail companion tab, by the companion id its trigger's id ends with. */
 const companionTab = (page, companion) => page.locator(`[id$="trigger-${companion}"]`).first();
 
 const badge = async (page) => Number((await companionTab(page, 'messenger').getAttribute('data-badge')) ?? 0);
@@ -71,7 +58,6 @@ const isSubscribed = async (page) => (await bell(page).getAttribute('aria-presse
 
 const notification = (page, text) => page.getByTestId('messenger.notification').filter({ hasText: text }).first();
 
-/** First-run chrome that would cover the content: the privacy notice and any open companion. */
 const clearChrome = async ({ page }) => {
   const notice = page.getByTestId('org.dxos.plugin.observability.notice');
   if (await notice.isVisible().catch(() => false)) {
@@ -87,7 +73,6 @@ const clearChrome = async ({ page }) => {
   await closeSidebar({ page });
 };
 
-/** Collapses the right sidebar; while it is open, a plank shows no companions. */
 const closeSidebar = async ({ page }) => {
   const sidebar = page.locator('[data-scope="main"][data-part="complementary-sidebar"]');
   if ((await sidebar.getAttribute('data-state').catch(() => null)) === 'expanded') {
@@ -101,7 +86,6 @@ const setDisplayName = (page, displayName) =>
     displayName,
   );
 
-/** Opens the document's Comments companion, unless it already shows. */
 const openComments = async (peer) => {
   if (
     await bell(peer.page)
@@ -111,7 +95,6 @@ const openComments = async (peer) => {
     return;
   }
   const tab = peer.page.getByTestId('deck.companion.tab.comments').filter({ visible: true }).first();
-  // A plank whose companion is already open shows the tabs; otherwise its heading offers to open one.
   const open = peer.page.getByTestId('plankHeading.companion').filter({ visible: true }).first();
   await tab.or(open).first().waitFor({ timeout: TIMEOUT });
   if (!(await tab.isVisible())) {
@@ -156,7 +139,6 @@ export const steps = [
         await form.waitFor({ state: 'detached', timeout: TIMEOUT });
       }
       await textbox(page).waitFor({ timeout: TIMEOUT });
-      // An unnamed document takes its title from its first line.
       await textbox(page).click();
       await page.keyboard.insertText(`# ${DOCUMENT}`);
       await page.keyboard.press('Enter');
@@ -208,7 +190,6 @@ export const steps = [
         },
       );
 
-      // Alice's deck still shows the members panel; bring the document back.
       await expandRow(alice, currentWorkspace(alice.page).getByTestId('spacePlugin.collectionsSection').first());
       await alice.click(currentWorkspace(alice.page).getByTestId('spacePlugin.object').first());
       await textbox(alice.page).waitFor({ timeout: TIMEOUT });

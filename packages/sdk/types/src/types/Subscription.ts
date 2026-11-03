@@ -29,10 +29,8 @@ export const Subscribers = Schema.Record(Schema.String, Entry);
 export type Subscribers = Schema.Schema.Type<typeof Subscribers>;
 
 /**
- * The people who hear about activity on an object, stored on the object itself so no object is created
- * per subscriber and deleting the object deletes them. Written only through the helpers below, which
- * change one key at a time so concurrent subscribers merge once the map exists. The first entry creates
- * the map with one whole-value write, so two first entries written before either syncs keep only one.
+ * The people who hear about activity on an object, stored on the object itself. Written only through the helpers
+ * below.
  */
 export const Subscription: Annotation.Annotation<Subscribers> = Annotation.make({
   id: 'org.dxos.annotation.subscription',
@@ -80,7 +78,6 @@ export const set = (obj: Obj.Unknown, did: string, kind: Kind, subscribed: boole
   }
 };
 
-/** Adds one entry; `Annotation.set` only for the first, since it replaces the whole map. */
 const write = (obj: Obj.Unknown, did: string, entry: Entry): void => {
   if (Option.isSome(Annotation.get(obj, Subscription))) {
     Annotation.update(obj, Subscription, (subscribers) => {
