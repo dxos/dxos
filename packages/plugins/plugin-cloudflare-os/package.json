@@ -114,6 +114,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
+    "@dxos/react-ui-menu": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "capnweb": "catalog:",
