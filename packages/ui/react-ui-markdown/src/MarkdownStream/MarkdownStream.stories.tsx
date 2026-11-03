@@ -2,21 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
-import { WidgetType } from '@codemirror/view';
+import { type EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import '@dxos/lit-ui';
 import { PublicKey } from '@dxos/keys';
 import { random } from '@dxos/random';
 import * as Button from '@dxos/react-ui/Button';
-import * as Field from '@dxos/react-ui/Field';
 import * as Input from '@dxos/react-ui/Input';
 import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Domino } from '@dxos/ui';
-import { type WidgetProps, type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
+import {
+  type PendingTextAnchor,
+  PendingTextStreamer,
+  type WidgetProps,
+  type XmlWidgetRegistry,
+  editorPendingTextSink,
+  getXmlTextChild,
+  pendingText,
+} from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { keyToFallback, trim } from '@dxos/util';
 
@@ -151,15 +158,115 @@ const DefaultStory = ({
           />
           <Button.Root icon='ph--trash--regular' iconOnly label='Reset' onClick={handleReset} />
           <Button.Root disabled={streaming} icon='ph--plus--regular' iconOnly label='Append' onClick={handleAppend} />
-          <Toolbar.Separator />
-          <Field.Root>
-            <Field.Label classNames='pr-1'>Debug</Field.Label>
-            <Input.Switch checked={debug} onCheckedChange={({ checked }) => setDebug(checked)} />
-          </Field.Root>
+          <Toolbar.Separator variant='gap' />
+          <Input.Switch label='Debug' checked={debug} onCheckedChange={({ checked }) => setDebug(checked)} />
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body>
         <MarkdownStream {...props} debug={debug} ref={setController} />
+      </Panel.Body>
+    </Panel.Root>
+  );
+};
+
+/**
+ * Streams a new paragraph, or a correction of a few words, into the middle of the document via the `pendingText`
+ * preview, since `typewriter` only paces appends at the end.
+ */
+const InsertStory = ({ initialContent, debug, ...props }: StoryArgs) => {
+  const [controller, setController] = useState<MarkdownStreamController | null>(null);
+  const [view, setView] = useState<EditorView | null>(null);
+  const [streamer, setStreamer] = useState<PendingTextStreamer | null>(null);
+
+  // MarkdownStream does not expose its view, which the pending-text sink dispatches to.
+  const extensions = useMemo(
+    () => [
+      pendingText(),
+      ViewPlugin.define((view) => {
+        queueMicrotask(() => setView(view));
+        return {};
+      }),
+    ],
+    [],
+  );
+
+  useEffect(() => {
+    if (initialContent) {
+      void controller?.setContent(initialContent);
+    }
+  }, [controller, initialContent]);
+
+  useEffect(() => () => streamer?.dispose(), [streamer]);
+
+  const stream = useCallback(
+    (anchor: PendingTextAnchor, text: string) => {
+      if (!view) {
+        return;
+      }
+
+      const next = new PendingTextStreamer(editorPendingTextSink(view), { mode: 'word', wordIntervalMs: 80 });
+      next.start(anchor);
+      next.push(text);
+      setStreamer(next);
+    },
+    [view],
+  );
+
+  const handleInsertParagraph = useCallback(() => {
+    if (!view) {
+      return;
+    }
+
+    // The first paragraph break past the middle of the document.
+    const { doc } = view.state;
+    let line = doc.lineAt(Math.floor(doc.length / 2));
+    while (line.length > 0 && line.number < doc.lines) {
+      line = doc.line(line.number + 1);
+    }
+    stream({ anchor: line.from, layout: 'paragraph' }, random.lorem.paragraph(5));
+  }, [view, stream]);
+
+  const handleInsertCorrection = useCallback(() => {
+    if (!view) {
+      return;
+    }
+
+    // A few words in the middle of the first prose line past the middle of the document.
+    const { doc } = view.state;
+    for (let number = doc.lineAt(Math.floor(doc.length / 2)).number; number <= doc.lines; number++) {
+      const line = doc.line(number);
+      const words = [...line.text.matchAll(/[A-Za-z]+/g)];
+      if (/^[A-Za-z]/.test(line.text) && words.length >= 8) {
+        const [first, last] = [words[3], words[5]];
+        const from = line.from + first.index;
+        stream({ anchor: from, to: line.from + last.index + last[0].length, layout: 'inline' }, random.lorem.words(4));
+        return;
+      }
+    }
+  }, [view, stream]);
+
+  return (
+    <Panel.Root data-hue={userHue}>
+      <Panel.Header>
+        <Toolbar.Root>
+          <Button.Root
+            disabled={!view}
+            icon='ph--paragraph--regular'
+            iconOnly
+            label='Insert paragraph'
+            onClick={handleInsertParagraph}
+          />
+          <Button.Root
+            disabled={!view}
+            icon='ph--pencil-simple-line--regular'
+            iconOnly
+            label='Insert correction'
+            onClick={handleInsertCorrection}
+          />
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body>
+        <MarkdownStream {...props} debug={debug} extensions={extensions} ref={setController} />
       </Panel.Body>
     </Panel.Root>
   );
@@ -208,5 +315,12 @@ export const Widgets: Story = {
       # React Widget
       <react-widget>${random.lorem.paragraph()}</react-widget>
     `,
+  },
+};
+
+export const Insert: Story = {
+  render: InsertStory,
+  args: {
+    initialContent: TEXT,
   },
 };
