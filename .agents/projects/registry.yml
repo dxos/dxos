@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: plugin-animator
+    status: active
+    user: burdon
+    host: burdon-mbp-2024
+    created: 2026-10-27
+    summary: 'Plugin-neutral 2D/3D animation: extract the react-ui-canvas engine (timeline, easing, clock, effect sandbox) into shared packages; plugin-animator owns Animation objects (shots over stage objects from other plugins), agent-written effects, deterministic export (WebCodecs in-app, EDGE for long renders) and a plugin-studio video provider.'
+    tasks: packages/plugins/plugin-animator/docs/TASKS.md
+    design: packages/plugins/plugin-animator/docs/DESIGN.md
+    prs: []
+    resume: 'Design approved and PLUGIN.mdl written; next: Phase 1, extract @dxos/animation from react-ui-canvas.'
   - name: hypercore-removal
     status: active
     user: dmaretskyi

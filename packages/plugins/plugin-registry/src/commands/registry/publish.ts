@@ -22,6 +22,7 @@ import { Context } from '@dxos/context';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { Config2, EdgeCallFailedError } from '@dxos/protocols';
 
+import * as BundleDescriber from '../../BundleDescriber.ts';
 import { RegistryCommandError } from './errors.ts';
 import { PublishError } from './errors.ts';
 import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './util.ts';
@@ -55,7 +56,8 @@ const sha256Base64 = async (bytes: Uint8Array): Promise<string> => {
  * `dx registry publish` — config-driven build + publish.
  *
  * Reads the build/publish orchestration from `dx.config.ts`, runs the declared build command,
- * reads the emitted `manifest.json`, hosts the bundle (default: upload the build
+ * reads the emitted `manifest.json`, runs the bundle's `describe()` on a local workerd as EDGE would (failing the
+ * publish when a module does not activate there), hosts the bundle (default: upload the build
  * output to the DXOS edge registry; override with `publish.assetBaseUrl` to point
  * at your own already-hosted directory), then writes the `plugin.profile` and
  * `plugin.release` records to the authenticated publisher's PDS. Release
@@ -89,6 +91,18 @@ export const publish = Command.make(
           'Authenticates as the logged-in identity, or with the API token in $DX_API_TOKEN.',
       ),
     ),
+    channel: Options.String('channel').pipe(
+      Options.withDescription(
+        'A channel EDGE moves to this version, like an npm dist-tag. `latest` moves on every version that is not a prerelease.',
+      ),
+      Options.optional,
+    ),
+    uploadOnly: Options.Boolean('upload-only').pipe(
+      Options.withDefault(false),
+      Options.withDescription(
+        'Upload the bundle and write no AT Protocol records: EDGE runs it, the registry does not list it to browsers.',
+      ),
+    ),
     edgeUrl: Options.String('edge-url').pipe(
       Options.withDescription(
         'Edge base URL for bundle upload (e.g. http://localhost:8787). Bypasses profile config; a public upload then skips auth (requires WORKER_ENV=dev on the server), a --private one never does.',
@@ -103,10 +117,10 @@ export const publish = Command.make(
         const path = yield* Path.Path;
         const dir = path.resolve(options.dir);
 
-        // Load + validate the build/publish orchestration from dx.config.ts. Imported here because the
-        // vite-plugin entry pulls in Babel, which every `dx` start would otherwise load.
+        // Load + validate the build/publish orchestration from dx.config.ts, through the subpath that carries no
+        // Vite or Babel, which the compiled `dx` cannot bundle.
         const { findDxConfigFile, loadDxConfig } = yield* Effect.promise(
-          () => import('@dxos/app-framework/vite-plugin'),
+          () => import('@dxos/app-framework/vite-plugin/config'),
         );
         const configFile = findDxConfigFile(dir);
         if (!configFile) {
@@ -117,6 +131,13 @@ export const publish = Command.make(
           catch: (error) =>
             new PublishError({ message: 'Failed to load dx.config.ts.', context: { dir }, cause: error }),
         });
+
+        const describer = yield* Effect.serviceOption(BundleDescriber.Service);
+        if (Option.isNone(describer)) {
+          return yield* Effect.fail(
+            new PublishError({ message: 'This host cannot run describe() on the bundle, which every publish needs.' }),
+          );
+        }
 
         // Build (unless skipped). Prepend the project's `node_modules/.bin` to PATH so
         // locally-installed tools (e.g. `vite`) resolve like they do in an npm script.
@@ -130,6 +151,8 @@ export const publish = Command.make(
           const exitCode = yield* spawner.exitCode(
             PlatformCommand.make('sh', ['-c', `export PATH="${binDir}:$PATH"; ${buildCommand}`], {
               cwd: dir,
+              env: { ...(yield* describer.value.buildEnv) },
+              extendEnv: true,
               stdout: 'inherit',
               stderr: 'inherit',
             }),
@@ -155,6 +178,10 @@ export const publish = Command.make(
         const version = manifest.version;
         const manifestHash = `sha256-${yield* Effect.promise(() => sha256Base64(new TextEncoder().encode(manifestRaw)))}`;
 
+        // Before anything is uploaded: a hosted version is immutable, so a bundle EDGE cannot run must not burn it.
+        yield* Console.log(`Describing ${outdir}`);
+        yield* Console.log(`Described: ${yield* describer.value.describe(outdir)}`);
+
         if (options.private) {
           const client = yield* ClientService;
           const token = Option.getOrUndefined(yield* Config.option(Config.String('DX_API_TOKEN')));
@@ -169,7 +196,11 @@ export const publish = Command.make(
           // An API token authenticates as the account that minted it, which is how a sandbox with no
           // identity of its own publishes for its user.
           const http = token ? new EdgeHttpClient(baseUrl, { apiKey: token }) : identityHttpClient(client, baseUrl);
-          const files = yield* readBundleFiles(outdir);
+          // The private route takes the bundle as JSON, each file base64-encoded.
+          const files = (yield* readBundleFiles(outdir)).map(({ path, content }) => ({
+            path,
+            content: Buffer.from(content).toString('base64'),
+          }));
           const { moduleUrl } = yield* Effect.tryPromise({
             try: () => http.uploadPrivatePluginBundle(Context.default(), { slug: key, version, files }),
             catch: (error) => new PublishError({ message: 'Private bundle upload failed.', cause: error }),
@@ -178,6 +209,21 @@ export const publish = Command.make(
           yield* Console.log(
             'Private:   listed in the registry only to the publishing identity; no AT Protocol records.',
           );
+          return;
+        }
+
+        const channel = Option.getOrUndefined(options.channel);
+        if (options.uploadOnly) {
+          const client = yield* ClientService;
+          const moduleUrl = yield* uploadToEdge({
+            client,
+            edgeUrl: Option.getOrUndefined(options.edgeUrl),
+            key,
+            version,
+            outdir,
+            channel,
+          });
+          yield* Console.log(`Uploaded:  ${moduleUrl}`);
           return;
         }
 
@@ -198,23 +244,14 @@ export const publish = Command.make(
           moduleUrl = new URL('manifest.json', ensureTrailingSlash(assetBaseUrl)).toString();
           yield* Console.log(`Self-hosted: ${moduleUrl}`);
         } else {
-          // Upload to the edge registry via the authenticated edge client (hub-identity VP).
-          // When --edge-url is provided we bypass the profile's edge config and post directly
-          // with auth: false — relies on WORKER_ENV=dev skipAuth on the server (local dev only).
-          const explicitEdgeUrl = Option.getOrUndefined(options.edgeUrl);
-          const apiKey = Option.getOrUndefined(yield* Config.option(Config.String('DX_HUB_API_KEY')));
-          if (explicitEdgeUrl) {
-            const http = new EdgeHttpClient(explicitEdgeUrl);
-            moduleUrl = yield* uploadBundleDirect({ http, key, version, outdir });
-          } else if (apiKey) {
-            // Headless callers (CI) hold no HALO identity, so the VP flow cannot run; the admin
-            // API key authenticates the upload instead.
-            const http = new EdgeHttpClient(client.edge.http.baseUrl, { apiKey });
-            moduleUrl = yield* uploadBundleDirect({ http, key, version, outdir });
-          } else {
-            const hasIdentity = !!client.halo.identity.get();
-            moduleUrl = yield* uploadBundle({ client, key, version, outdir, auth: hasIdentity });
-          }
+          moduleUrl = yield* uploadToEdge({
+            client,
+            edgeUrl: Option.getOrUndefined(options.edgeUrl),
+            key,
+            version,
+            outdir,
+            channel,
+          });
           yield* Console.log(`Uploaded:  ${moduleUrl}`);
         }
 
@@ -263,24 +300,56 @@ export const publish = Command.make(
     ),
 ).pipe(Command.withDescription('Build, host, and publish the plugin in the current directory to the registry.'));
 
-/** Every file under the build output, base64-encoded with a `/`-separated relative path. */
+/** Every file under the build output, with a `/`-separated relative path. */
 const readBundleFiles = (outdir: string) =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
 
     const entries = yield* fs.readDirectory(outdir, { recursive: true });
-    const files: { path: string; content: string }[] = [];
+    const files: { path: string; content: Uint8Array<ArrayBuffer> }[] = [];
     for (const entry of entries) {
       const full = path.join(outdir, entry);
       const info = yield* fs.stat(full);
       if (info.type !== 'File') {
         continue;
       }
-      const bytes = yield* fs.readFile(full);
-      files.push({ path: entry.split(path.sep).join('/'), content: Buffer.from(bytes).toString('base64') });
+      // Copied so the bytes own a plain `ArrayBuffer`, which is what a multipart `Blob` part takes.
+      const content = new Uint8Array(yield* fs.readFile(full));
+      files.push({ path: entry.split(path.sep).join('/'), content });
     }
     return files;
+  });
+
+/**
+ * Uploads to the edge registry: to `edgeUrl` without auth when given (local dev), with the admin API key in
+ * `DX_HUB_API_KEY` for headless callers (CI) that hold no HALO identity, otherwise as the profile's identity.
+ */
+const uploadToEdge = ({
+  client,
+  edgeUrl,
+  key,
+  version,
+  outdir,
+  channel,
+}: {
+  client: Client;
+  edgeUrl: string | undefined;
+  key: string;
+  version: string;
+  outdir: string;
+  channel: string | undefined;
+}) =>
+  Effect.gen(function* () {
+    const apiKey = Option.getOrUndefined(yield* Config.option(Config.String('DX_HUB_API_KEY')));
+    if (edgeUrl) {
+      return yield* uploadBundleDirect({ http: new EdgeHttpClient(edgeUrl), key, version, outdir, channel });
+    }
+    if (apiKey) {
+      const http = new EdgeHttpClient(client.edge.http.baseUrl, { apiKey });
+      return yield* uploadBundleDirect({ http, key, version, outdir, channel });
+    }
+    return yield* uploadBundle({ client, key, version, outdir, channel, auth: !!client.halo.identity.get() });
   });
 
 /**
@@ -295,43 +364,48 @@ const uploadBundle = ({
   key,
   version,
   outdir,
+  channel,
   auth = true,
 }: {
   client: Client;
   key: string;
   version: string;
   outdir: string;
+  channel?: string;
   auth?: boolean;
 }) =>
   Effect.gen(function* () {
     const files = yield* readBundleFiles(outdir);
 
     const { moduleUrl } = yield* Effect.tryPromise(() =>
-      client.edge.http.uploadPluginBundle(Context.default(), { slug: key, version, files }, { auth }),
+      client.edge.http.uploadPluginBundle(Context.default(), { slug: key, version, files, channel }, { auth }),
     );
     return moduleUrl;
   });
 
 /**
  * Upload using a standalone EdgeHttpClient (no DXOS profile required).
- * Auth is skipped — the server must have WORKER_ENV=dev to accept unauthenticated uploads.
+ * No identity is presented: the client's API key authenticates, or the server must have WORKER_ENV=dev to accept
+ * unauthenticated uploads.
  */
 const uploadBundleDirect = ({
   http,
   key,
   version,
   outdir,
+  channel,
 }: {
   http: EdgeHttpClient;
   key: string;
   version: string;
   outdir: string;
+  channel?: string;
 }) =>
   Effect.gen(function* () {
     const files = yield* readBundleFiles(outdir);
 
     const { moduleUrl } = yield* Effect.tryPromise({
-      try: () => http.uploadPluginBundle(Context.default(), { slug: key, version, files }, { auth: false }),
+      try: () => http.uploadPluginBundle(Context.default(), { slug: key, version, files, channel }, { auth: false }),
       // Keep EdgeCallFailedError intact for the conflict recovery below; type everything else.
       catch: (error) =>
         error instanceof EdgeCallFailedError

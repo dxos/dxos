@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 
 import { VoidInput, VoidOutput } from '@dxos/conductor';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
-import { DEFAULT_GRID, type Point, type Port, type Size } from '@dxos/react-ui-canvas/scene';
+import { DEFAULT_GRID, type Point, type Port, type Size } from '@dxos/scene';
 
 import { createAnchorId, parseAnchorId } from '../defs.ts';
 import { footerHeight, headerHeight } from './box-defs.ts';

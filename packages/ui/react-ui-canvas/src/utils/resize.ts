@@ -4,11 +4,12 @@
 
 //
 // Resize geometry as a pure function of the start frame, the handle and the pointer offset, so the
-// view only feeds it the drag and the projection receives one `resize` intent.
+// view only feeds it the drag and applies one `resizeTo` edit.
 //
 
+import { type Bounds, type Point, type Size } from '@dxos/scene';
+
 import { type Handle } from '../engine/index.ts';
-import { type Bounds, type Point, type Size } from '../model/index.ts';
 
 export type ResizeOptions = {
   minSize: Size;

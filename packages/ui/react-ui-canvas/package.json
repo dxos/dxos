@@ -18,10 +18,15 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./scene": {
-      "source": "./src/index.ts",
-      "types": "./dist/types/src/index.d.ts",
-      "import": "./dist/lib/index.mjs"
+    "./3d": {
+      "source": "./src/three/index.ts",
+      "types": "./dist/types/src/three/index.d.ts",
+      "import": "./dist/lib/3d.mjs"
+    },
+    "./io": {
+      "source": "./src/three/io/index.ts",
+      "types": "./dist/types/src/three/io/index.d.ts",
+      "import": "./dist/lib/io.mjs"
     },
     "./motion": {
       "source": "./src/generator/motion.ts",
@@ -37,6 +42,11 @@
       "source": "./src/headless.ts",
       "types": "./dist/types/src/headless.d.ts",
       "import": "./dist/lib/headless.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -46,30 +56,30 @@
   ],
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "catalog:",
+    "@babylonjs/core": "catalog:",
     "@codemirror/state": "catalog:",
     "@codemirror/view": "catalog:",
+    "@dxos/animation": "workspace:*",
     "@dxos/diagram": "workspace:*",
-    "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
+    "@dxos/react-ui-animation": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
-    "@dxos/react-ui-list": "workspace:*",
+    "@dxos/scene": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
-    "@dxos/ui-types": "workspace:*",
     "@effect/atom-react": "catalog:",
     "d3": "catalog:",
-    "esbuild-wasm": "catalog:"
+    "manifold-3d": "catalog:"
   },
   "devDependencies": {
-    "@dxos/log": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-syntax-highlighter": "workspace:*",
-    "@dxos/test-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@playwright/test": "catalog:",
+    "@dxos/ui-types": "workspace:*",
     "@storybook/react-vite": "catalog:",
+    "@testing-library/react": "catalog:",
     "@types/d3": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

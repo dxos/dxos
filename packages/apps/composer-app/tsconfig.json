@@ -127,6 +127,9 @@
       "path": "../../plugins/plugin-agent"
     },
     {
+      "path": "../../plugins/plugin-animator"
+    },
+    {
       "path": "../../plugins/plugin-assistant"
     },
     {
@@ -170,6 +173,9 @@
     },
     {
       "path": "../../plugins/plugin-cloudflare"
+    },
+    {
+      "path": "../../plugins/plugin-cloudflare-os"
     },
     {
       "path": "../../plugins/plugin-code"
@@ -398,9 +404,6 @@
     },
     {
       "path": "../../plugins/plugin-space"
-    },
-    {
-      "path": "../../plugins/plugin-spacetime"
     },
     {
       "path": "../../plugins/plugin-spotlight"

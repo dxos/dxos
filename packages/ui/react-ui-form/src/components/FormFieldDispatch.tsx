@@ -38,6 +38,7 @@ import {
   type SelectFieldOption,
   TextAreaField,
   TextField,
+  VectorField,
   getArrayPresentation,
 } from './fields/index.ts';
 import { FormFieldRow } from './FormField.tsx';
@@ -182,6 +183,10 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
   }
   if (resolution.kind === 'provided') {
     return resolution.element;
+  }
+  // A vector names its group and labels each axis itself, so it takes no field row.
+  if (resolution.kind === 'vector') {
+    return <VectorField {...fieldProps} />;
   }
   // An array of refs the form does not own (`FormCreateAnnotation` targets render inline per element) is a
   // RefArrayField: chips (`tag`) in a field row, or (`title`) rows under a header of their own.

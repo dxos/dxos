@@ -12,7 +12,7 @@ import * as Presentation from '@dxos/plugin-presenter/Presentation';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
 
 import { DIAGRAM_COMMANDS } from './compiled.ts';
-import { loadDiagramDrawings } from './diagrams.ts';
+import { canvasDrawingSchemas, loadDiagramDrawings } from './diagrams.ts';
 import { type Docs, makeDocs } from './docs.ts';
 import { makeEchoDeck } from './echo-deck.ts';
 import { makeEchoBenchmarks, makeEchoDesign } from './echo-design.ts';
@@ -36,8 +36,7 @@ export type Provides = {
 /** Composer and EDGE as nested canvas drawings, with the three documents that introduce them and a sheet of plugin metrics. Spec: `CONTENT.md`. */
 export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('architecture', {
   schemas: [
-    Drawing.Drawing,
-    Drawing.Canvas,
+    ...canvasDrawingSchemas,
     Markdown.Document,
     Presentation.Presentation,
     Presentation.Slide,

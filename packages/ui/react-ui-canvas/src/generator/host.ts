@@ -8,8 +8,10 @@
 // runs the same core in-process (a headless check; tests).
 //
 
-import { type NodeId, type View, isGeneratorNode } from '../model/index.ts';
-import { type GeneratorCompiler } from './compile.ts';
+import { type ModuleCompiler } from '@dxos/animation';
+import { type NodeId, isGeneratorNode } from '@dxos/scene';
+
+import { type RenderList2D } from '../model/index.ts';
 import { type CoreRequest, type CoreResponse, GeneratorCore, type GeneratorFrameNode } from './core.ts';
 import { type GeneratorFrame, type GeneratorSource } from './types.ts';
 
@@ -17,7 +19,7 @@ import { type GeneratorFrame, type GeneratorSource } from './types.ts';
 export type GeneratorFrames = { t: number; frames: Record<NodeId, GeneratorFrame> };
 
 export type GeneratorHostOptions = {
-  compile: GeneratorCompiler;
+  compile: ModuleCompiler;
   /** A worker running `generator/worker.ts`; without one, generators run in-process. */
   createWorker?: () => Worker;
   onFrames: (frames: GeneratorFrames) => void;
@@ -34,8 +36,8 @@ export class GeneratorHost {
   readonly #waiting = new Map<number, (response: CoreResponse) => void>();
   readonly #failing = new Map<number, (error: Error) => void>();
   readonly #compiled = new Map<string, Promise<string[] | undefined>>();
-  #scene: View | undefined;
-  #sentScene: View | undefined;
+  #scene: RenderList2D | undefined;
+  #sentScene: RenderList2D | undefined;
   #sources: Readonly<Record<string, GeneratorSource>> = {};
   #wanted: number | undefined;
   #busy = false;
@@ -77,8 +79,8 @@ export class GeneratorHost {
     }
   }
 
-  /** The scene (as stored, unsampled) and the generators its nodes reference. */
-  update(scene: View, sources: Readonly<Record<string, GeneratorSource>>): void {
+  /** The scene as drawn and the generators its nodes reference. */
+  update(scene: RenderList2D, sources: Readonly<Record<string, GeneratorSource>>): void {
     this.#scene = scene;
     this.#sources = sources;
   }

@@ -6,32 +6,33 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, test } from 'vitest';
 
-import { type Node, type NodeViewProps, createMemoryStore } from '@dxos/react-ui-canvas/scene';
+import { type NodeViewProps, type RenderList2D, staticLists } from '@dxos/react-ui-canvas';
+import { type Node } from '@dxos/scene';
 
 import { ComputeGraphController } from '../../graph/index.ts';
 import { ComputeContext, createComputeGraph } from '../../hooks/index.ts';
 import { computeNodeRegistry } from '../../registry.ts';
-import { viewFromCircuit } from '../../scene/scene.ts';
 import { createTemplateCircuit } from '../../testing/index.ts';
 
 /** The template circuit's GPT shape, rendered through its registry view against a controller over the circuit. */
 const setup = () => {
   const circuit = createTemplateCircuit();
   const model = createComputeGraph(circuit);
-  const scene = viewFromCircuit(circuit);
   const controller = new ComputeGraphController(
     { runPromiseExit: () => Promise.reject(new Error('The view test runs no graph.')) },
     model,
   );
-  const shape = Object.values(scene.nodes).find((node) => node.type === 'gpt');
-  if (!shape || !('node' in shape) || typeof shape.node !== 'string') {
+  const gpt = circuit.nodes.find((node) => node.type === 'gpt');
+  if (!gpt || typeof gpt.node !== 'string') {
     throw new Error('The circuit has no GPT shape with a compute node.');
   }
-  const View = computeNodeRegistry.gpt.component;
+  const shape: Node = { ...gpt, z: 'a' };
+  const scene: RenderList2D = { id: 'circuit', nodes: { [shape.id]: shape }, links: {} };
+  const NodeView = computeNodeRegistry.gpt.component;
   const props: NodeViewProps = {
-    node: shape as Node,
+    node: shape,
     scene,
-    store: createMemoryStore([scene]),
+    lists: staticLists([scene]),
     registry: computeNodeRegistry,
     zoom: 1,
     depth: 0,
@@ -41,10 +42,10 @@ const setup = () => {
   const render = () =>
     renderToStaticMarkup(
       <ComputeContext.Provider value={{ controller }}>
-        <View {...props} />
+        <NodeView {...props} />
       </ComputeContext.Provider>,
     );
-  return { model, computeId: shape.node, render };
+  return { model, computeId: gpt.node, render };
 };
 
 describe('compute node view', () => {

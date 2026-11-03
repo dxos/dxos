@@ -11,6 +11,8 @@
 // and its own layout, as candidates — so an unhinted diagram is never worse than the engine's.
 //
 
+import { Shape } from '@dxos/scene';
+
 import * as Appeal from './appeal.ts';
 import * as Dataflow from './dataflow.ts';
 import * as Diagnostics from './diagnostics.ts';
@@ -38,7 +40,7 @@ const FRAME_LABEL_H = GRID;
 /** Extra gutter where two frames face each other across a row gutter, so packages read as separate. */
 const FRAME_STACK_GAP = GRID * 2;
 
-const GROUP_COLORS: readonly Scene.Color[] = [
+const GROUP_COLORS: readonly Shape.Color[] = [
   'light-blue',
   'light-green',
   'yellow',
@@ -355,7 +357,7 @@ const facingSide = (hub: Rect | undefined, spokes: readonly (Rect | undefined)[]
 
 /** Routes every edge and bus over a placement and emits the scene. */
 /** A node's shapes in its box; the first is always the `box` every reader of the layout addresses. */
-const nodeElements = (diagram: Semantic.Diagram, node: Semantic.Node, size: Semantic.Size): Scene.Element[] =>
+const nodeElements = (diagram: Semantic.Diagram, node: Semantic.Node, size: Semantic.Size): Shape.Element[] =>
   diagram.kind === 'dataflow'
     ? Dataflow.nodeElements(diagram, node, size)
     : [
@@ -456,7 +458,7 @@ const draw = (
   // Scene: frames first so they paint under everything, then boxes, then one object of connectors.
   const commands: Scene.Command[] = [];
   const origin = diagram.origin;
-  const place = (rect: Rect): Scene.Point => ({ x: origin.x + rect.x, y: origin.y + rect.y });
+  const place = (rect: Rect): Shape.Point => ({ x: origin.x + rect.x, y: origin.y + rect.y });
   diagram.groups.forEach((group, index) => {
     const frame = frames.get(group.id);
     if (!frame) {
@@ -490,7 +492,7 @@ const draw = (
                   text: group.label,
                   weight: 's',
                   color: 'grey',
-                } satisfies Scene.Text,
+                } satisfies Shape.Text,
               ]
             : []),
         ],
@@ -523,9 +525,9 @@ const draw = (
   const orphaned = new Map(
     unbused.flatMap((bus) => (bus.label === undefined ? [] : [[bus.edges[0].id, bus.label] as const])),
   );
-  const elements: Scene.Element[] = [];
+  const elements: Shape.Element[] = [];
   const labels: Route.LabelRequest[] = [];
-  const relative = (point: Scene.Point): Scene.Point => ({ x: point.x, y: point.y });
+  const relative = (point: Shape.Point): Shape.Point => ({ x: point.x, y: point.y });
   for (const piece of routed) {
     const [busId, part] = piece.bus !== undefined ? piece.id.split('#') : [undefined, piece.id];
     const edge = edges.get(part);
@@ -535,7 +537,7 @@ const draw = (
       continue;
     }
     const style = edge ?? bus?.edges[0];
-    const markers = Scene.markersOf(style ?? {});
+    const markers = Shape.markersOf(style ?? {});
     const stroke = style?.stroke ? { stroke: style.stroke } : markers.dashed ? { stroke: 'dashed' as const } : {};
     const color = style?.color ? { color: style.color } : {};
     // A bus draws its arrowheads where the bus ends: on each spoke going out, on the trunk coming in.
@@ -888,7 +890,7 @@ const restyle = (diagram: Semantic.Diagram, commands: readonly Scene.Command[]):
     if (node && box?.kind === 'rect') {
       return { ...command, object: { ...command.object, elements: nodeElements(diagram, node, box) } };
     }
-    const elements = command.object.elements.map((element): Scene.Element => {
+    const elements = command.object.elements.map((element): Shape.Element => {
       const edge = command.object.id === Semantic.CONNECTORS ? edges.get(element.id.replace(/-path$/, '')) : undefined;
       if (edge && element.kind === 'arrow') {
         return {
