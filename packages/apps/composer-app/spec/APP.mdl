@@ -1154,7 +1154,7 @@ decision D-9: QA-17 covers loading a plugin from its `manifest.json`, the format
 ```
 
 ```mdl
-decision D-10: QA-17 is run by a person or its Playwright spec, not the QA agent.
+decision D-10: QA-17 uses a human actor because request inspection has no invocable operation.
   date: 2026-11-02
   by: agent:claude-code
   for: user:dmaretskyi
