@@ -66,10 +66,14 @@ feat F-4: A project's specs
 feat F-5: A project's overview
   req F-5.1: The overview opens on the project's name as its title, its status as a pill in the top right corner and
              its description below, each edited in place with no edit button. The name and description start at the
-             same left edge as the section headings.
-  req F-5.2: Below the header the sections are, in order: Notes, Artifacts, Milestones, Specs and Config.
+             same left edge as the section headings. The pill shows the status's capitalized name in its colour.
+  req F-5.2: Below the header the sections are, in order: Notes, Artifacts, Milestones, Specs and Config, with more
+             space between two sections than between the rows inside one. Every section's content starts and ends on
+             the same left and right edges as its heading.
   req F-5.3: Artifacts shows at most six, and Show all shows the rest.
   req F-5.4: Each milestone shows how many of its tasks are done out of those not cancelled.
+  req F-5.7: The Specs heading carries the add button on its own row, and each spec is a row directly under it at the
+             same level of nesting as a Config group.
   req F-5.5: Config holds folded groups, each showing a summary of what it holds until it is opened: first Agent (the
              instructions, skills and context), then the groups other plugins declare.
   req F-5.6: A plugin declares a group with `ProjectCapabilities.ConfigGroup`: its fields are each a schema and a
@@ -1509,4 +1513,63 @@ decision D-135: react-ui's Input and Textarea gain a `plain` variant with no wel
   why: The inset was what pushed the text right of the headings, and react-ui-form takes no classes of its own.
   rejected:
     - Insetting the section headings to match, which would misalign them with every other form.
+```
+
+```mdl
+decision D-136: Each project status has a colour, and its name is capitalized wherever the UI shows it.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.1]
+```
+
+```mdl
+decision D-137: The gap between two of the overview's sections is wide enough that Artifacts, Milestones, Specs and Config never read as cramped together.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.2]
+```
+
+```mdl
+decision D-138: The Specs add button sits on the Specs heading's row, so no gap opens between the heading and the specs, and the specs line up with the Config groups at the same level of nesting.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.7]
+```
+
+```mdl
+decision D-139: The overview keeps one consistent edge down its left side and its right side.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.2]
+```
+
+```mdl
+decision D-140: `Project`'s schema annotates its status with an option table, as `Task` does: Active in green, Paused in amber, Blocked in rose and Ended in neutral, each with an icon. The form's pill takes the title, icon and hue from it. Fills in [D-136].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.1]
+  why: The form already reads option titles and hues from the schema, so every picker and pill of the status agrees with no code in the plugin.
+  rejected:
+    - Translations for the names, which the form's select does not read, and which would leave the colours in plugin code.
+```
+
+```mdl
+decision D-141: A form section after another leaves three gaps above its heading, where rows inside a section leave one. A description edited in place is as tall as its text rather than three lines. Fills in [D-137].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.2]
+  why: The rule lives on the section heading, so every form with sections gets the same rhythm without spacing of its own.
+```
+
+```mdl
+decision D-142: react-ui-form's field override takes `appearance: 'section'` for an array, which renders the array as a section of its own with its label as the heading and its add button in the heading's actions. A form's array rows drop the list row's leading inset, so a row's fields start on the section's edge. Fills in [D-138] and [D-139].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.7]
+  why: Wrapping the list in another section left the list's own header row, add button and all, under the section's heading.
+  rejected:
+    - The add button in a section's actions, written by the plugin, which would duplicate how the form creates an owned object.
 ```

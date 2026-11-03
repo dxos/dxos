@@ -9,7 +9,7 @@ import { recipes } from '../../recipes.ts';
 import { composable, composableProps } from '../../util/slots.ts';
 import * as Fieldset from '../Fieldset/Fieldset.tsx';
 
-/** Fewest lines a textarea shows, so it never reads as a single-line Input. */
+/** Fewest lines a textarea shows, so it never reads as a single-line Input; a `plain` one is page text, sized to it. */
 const MIN_ROWS = 3;
 
 export type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
@@ -29,7 +29,7 @@ export const Textarea = composable<HTMLTextAreaElement, TextareaProps>(
         {...rest}
         disabled={fieldsetDisabled}
         // Auto-resize measures from `height: auto`, where `rows` sets the intrinsic height, so rows stay the minimum.
-        rows={Math.max(rows, MIN_ROWS)}
+        rows={variant === 'plain' ? rows : Math.max(rows, MIN_ROWS)}
         autoresize={autoResize}
         data-scope='textarea'
         data-part='root'

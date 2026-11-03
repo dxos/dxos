@@ -7,8 +7,9 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
+import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { ArchivableAnnotation } from '@dxos/schema';
-import { Outline, TaskSet } from '@dxos/types';
+import { Outline, type Task, TaskSet } from '@dxos/types';
 
 import * as Instructions from './Instructions.ts';
 import * as Routine from './Routine.ts';
@@ -18,6 +19,14 @@ import * as Spec from './Spec.ts';
 /** Work-stream lifecycle state; what done means lives on the task set's milestones. */
 export const ProjectStatus = Schema.Literals(['active', 'paused', 'blocked', 'ended']);
 export type ProjectStatus = Schema.Schema.Type<typeof ProjectStatus>;
+
+/** How each status reads wherever it is picked or shown: its title, and the hue and icon its pill takes. */
+export const ProjectStatusOptions: Task.Option<ProjectStatus>[] = [
+  { id: 'active', title: 'Active', color: 'green', icon: 'ph--play-circle--regular' },
+  { id: 'paused', title: 'Paused', color: 'amber', icon: 'ph--pause-circle--regular' },
+  { id: 'blocked', title: 'Blocked', color: 'rose', icon: 'ph--prohibit--regular' },
+  { id: 'ended', title: 'Ended', color: 'neutral', icon: 'ph--check-circle--regular' },
+];
 
 /**
  * A user-facing container for interactive, long-running work: instructions (skills + commands),
@@ -33,7 +42,15 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
     description: Schema.optional(Format.Text),
 
     /** Work-stream lifecycle state. */
-    status: Schema.optional(ProjectStatus),
+    status: Schema.optional(
+      ProjectStatus.pipe(
+        Format.FormatAnnotation.set(Format.TypeFormat.SingleSelect),
+        Schema.annotate({
+          title: 'Status',
+          [PropertyMetaAnnotationId]: { singleSelect: { options: ProjectStatusOptions } },
+        }),
+      ),
+    ),
 
     /** Owned agent instructions (created at the plugin layer; parented by `SetParent`). */
     instructions: Schema.optional(

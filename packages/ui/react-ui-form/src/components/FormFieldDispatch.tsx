@@ -194,7 +194,15 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
   const refArray =
     refProps?.isArray && Option.isNone(Annotation.FormCreateAnnotation.getFromAst(type)) ? refProps : undefined;
   if (resolution.kind === 'array' && !refArray) {
-    return <ArrayField fieldProps={fieldState} label={accessibleLabel} hideLabel={override?.hideLabel} {...props} />;
+    return (
+      <ArrayField
+        fieldProps={fieldState}
+        label={accessibleLabel}
+        hideLabel={override?.hideLabel}
+        section={override?.appearance === 'section'}
+        {...props}
+      />
+    );
   }
   const refArrayField = refArray && (
     <RefArrayField

@@ -24,6 +24,7 @@ export const TextAreaField = ({
   onBlur,
 }: FormFieldRendererProps<string>) => {
   const value = getValue() ?? '';
+  const inPlace = appearance === 'title' || appearance === 'plain';
   if (presentationFor(presentation).isStatic) {
     return <FormStaticValue value={value} format={format} />;
   }
@@ -31,7 +32,8 @@ export const TextAreaField = ({
   return (
     <Input.Textarea
       autoResize
-      variant={appearance ? 'plain' : 'default'}
+      variant={inPlace ? 'plain' : 'default'}
+      {...(inPlace && { rows: 1 })}
       data-testid={jsonPath}
       disabled={!!readonly}
       placeholder={placeholder}

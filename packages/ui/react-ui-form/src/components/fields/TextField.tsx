@@ -53,7 +53,7 @@ export const TextField = ({
         }
       }}
       data-testid={jsonPath}
-      {...(appearance && { variant: appearance })}
+      {...((appearance === 'title' || appearance === 'plain') && { variant: appearance })}
       {...(key && { variant: 'mono', spellCheck: false, autoCorrect: 'off', autoCapitalize: 'none' })}
     />
   );

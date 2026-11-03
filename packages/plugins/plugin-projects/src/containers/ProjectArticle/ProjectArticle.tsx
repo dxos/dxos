@@ -297,8 +297,8 @@ export const ProjectArticle = ({
       // A project always has a status, so its pill offers no "None".
       status: { required: true },
       description: { hideLabel: true, appearance: 'plain', placeholder: t('project-description.placeholder') },
-      // The section heading names the list.
-      specs: { hideLabel: true },
+      // The list is a section of its own, its add button on the heading's row.
+      specs: { appearance: 'section', label: t('specs.label') },
     }),
     [t],
   );
@@ -451,9 +451,7 @@ export const ProjectArticle = ({
                     </Form.FieldSet>
                   )}
 
-                  <Form.FieldSet label={t('specs.label')} data-testid='projectsPlugin.specs'>
-                    <Form.Fields include={['specs']} />
-                  </Form.FieldSet>
+                  <Form.Fields include={['specs']} />
 
                   <ConfigSection db={db} project={subject} instructions={instructions} />
                 </Form.Content>

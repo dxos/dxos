@@ -38,7 +38,7 @@ export type FormFieldOverride = {
   label?: string;
   /** Draw no label: the control names itself, or the section heading above it already does. */
   hideLabel?: boolean;
-  /** Read the control as page text rather than an input; see {@link FormFieldAppearance}. */
+  /** Read the field as part of the page rather than a form row; see {@link FormFieldAppearance}. */
   appearance?: FormFieldAppearance;
   description?: string;
   placeholder?: string;
@@ -61,10 +61,11 @@ export type FormFieldOverride = {
 };
 
 /**
- * How a text control reads when edited in place: `title` as the page's heading, `plain` as body text. Either drops the
- * input's well, so the value looks like the page it sits on until it is focused.
+ * How a field reads as part of a page. A text control edited in place reads as the page's heading (`title`) or as body
+ * text (`plain`), with no well until it is focused. An array reads as a `section` of its own: its label is the section
+ * heading, with the add button on the heading's row.
  */
-export type FormFieldAppearance = 'title' | 'plain';
+export type FormFieldAppearance = 'title' | 'plain' | 'section';
 
 /**
  * FormPresentation mode.

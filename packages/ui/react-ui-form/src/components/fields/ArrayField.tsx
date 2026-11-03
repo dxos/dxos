@@ -25,6 +25,7 @@ import { type FormFieldStateProps } from '#types';
 import { useFormValues } from '../../hooks/index.ts';
 import { getFormProperties } from '../../util/index.ts';
 import { FormFieldDispatch } from '../FormFieldDispatch.tsx';
+import { FormFieldSet } from '../FormFieldSet.tsx';
 import { type FormFieldDispatchProps } from '../resolve-field.ts';
 import { getDefaultValue } from './default-value.ts';
 
@@ -34,6 +35,8 @@ export type ArrayFieldProps = {
   label: string;
   /** Leave the header's text empty while the list keeps `label` as its name, for a host whose heading already says it. */
   hideLabel?: boolean;
+  /** The array as a section of its own (see `FormFieldAppearance`). */
+  section?: boolean;
   fieldProps: FormFieldStateProps;
 } & FormFieldDispatchProps;
 
@@ -47,6 +50,7 @@ export const ArrayField = ({
   path,
   label,
   hideLabel,
+  section,
   readonly,
   layout,
   fieldProps,
@@ -135,63 +139,76 @@ export const ArrayField = ({
     .filter(Boolean)
     .join(' ');
 
+  const addButton = editable && (
+    <Button.Root
+      iconOnly
+      variant='ghost'
+      icon='ph--plus--regular'
+      label={t('add-item.button')}
+      disabled={owned && (!createType || !onCreate)}
+      onClick={owned ? () => void handleCreate() : handleAdd}
+      data-testid={`${SchemaEx.createJsonPath(path ?? [])}.add`}
+    />
+  );
+  const list = (
+    <OrderedList.Root
+      items={items}
+      getId={(item) => item.id}
+      getLabel={(item) => `${label} ${item.index + 1}`}
+      columns={columns}
+      onMove={handleMove}
+      readonly={!editable}
+    >
+      {({ items }) => (
+        <OrderedList.Content gutter='inherit' gap='sm' aria-label={label}>
+          {items.map((item) => (
+            <OrderedList.Item key={item.id} id={item.id} canDrag={ordered && editable}>
+              {ordered && editable && <OrderedList.DragHandle />}
+              {/* A cell holding a nested group must be a template root, so the group's subgrid finds `content`. */}
+              <Layout.Container gutter='none'>
+                <FormFieldDispatch
+                  {...props}
+                  type={elementType}
+                  name={null}
+                  label={asObject || owned ? undefined : label}
+                  path={[...(path ?? []), item.index]}
+                  readonly={!editable}
+                  layout={asObject ? layout : 'inline'}
+                  refInline={owned || undefined}
+                  defaultOpen={owned ? createdRef.current.has(item.id) : undefined}
+                />
+              </Layout.Container>
+              {editable && (
+                <Button.Root
+                  iconOnly
+                  variant='ghost'
+                  icon='ph--x--regular'
+                  label={t('remove-item.button')}
+                  onClick={() => handleRemove(item.index)}
+                />
+              )}
+            </OrderedList.Item>
+          ))}
+        </OrderedList.Content>
+      )}
+    </OrderedList.Root>
+  );
+
+  if (section) {
+    return (
+      <FormFieldSet label={label} actions={addButton}>
+        {list}
+      </FormFieldSet>
+    );
+  }
+
   return (
     <>
       <Field.Header>
         <Typography.Text truncate>{hideLabel ? '' : label}</Typography.Text>
-        {editable && (
-          <Button.Root
-            iconOnly
-            variant='ghost'
-            icon='ph--plus--regular'
-            label={t('add-item.button')}
-            disabled={owned && (!createType || !onCreate)}
-            onClick={owned ? () => void handleCreate() : handleAdd}
-            data-testid={`${SchemaEx.createJsonPath(path ?? [])}.add`}
-          />
-        )}
+        {addButton}
       </Field.Header>
-      <OrderedList.Root
-        items={items}
-        getId={(item) => item.id}
-        getLabel={(item) => `${label} ${item.index + 1}`}
-        columns={columns}
-        onMove={handleMove}
-        readonly={!editable}
-      >
-        {({ items }) => (
-          <OrderedList.Content gutter='inherit' gap='sm' aria-label={label}>
-            {items.map((item) => (
-              <OrderedList.Item key={item.id} id={item.id} canDrag={ordered && editable}>
-                {ordered && editable && <OrderedList.DragHandle />}
-                {/* A cell holding a nested group must be a template root, so the group's subgrid finds `content`. */}
-                <Layout.Container gutter='none'>
-                  <FormFieldDispatch
-                    {...props}
-                    type={elementType}
-                    name={null}
-                    label={asObject || owned ? undefined : label}
-                    path={[...(path ?? []), item.index]}
-                    readonly={!editable}
-                    layout={asObject ? layout : 'inline'}
-                    refInline={owned || undefined}
-                    defaultOpen={owned ? createdRef.current.has(item.id) : undefined}
-                  />
-                </Layout.Container>
-                {editable && (
-                  <Button.Root
-                    iconOnly
-                    variant='ghost'
-                    icon='ph--x--regular'
-                    label={t('remove-item.button')}
-                    onClick={() => handleRemove(item.index)}
-                  />
-                )}
-              </OrderedList.Item>
-            ))}
-          </OrderedList.Content>
-        )}
-      </OrderedList.Root>
+      {list}
     </>
   );
 };
