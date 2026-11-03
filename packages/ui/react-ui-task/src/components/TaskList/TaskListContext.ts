@@ -35,6 +35,8 @@ export type TaskListContextValue = {
   descriptionComponents?: TaskDescriptionProps['components'];
   /** Render the questions in each task's history under its title. */
   hierarchical: boolean;
+  /** Whether the leading gutter is rendered at all — it holds the ordinal or the checkbox. */
+  showGutter: boolean;
   /** Render who holds each task; off collapses the assignee track. */
   showAssignees: boolean;
   members: readonly TaskMember[];
@@ -45,7 +47,7 @@ export type TaskListContextValue = {
   flush: boolean;
   /**
    * The column template, built once from the options so the tree's rows and the edit pane lay out on the same named
-   * tracks (`disclosure`, `priority`, `status`, `title`, `artifacts`, `assignee`, `actions`).
+   * tracks (`gutter`, `priority`, `status`, `title`, `artifacts`, `assignee`, `actions`).
    */
   columns: string;
   selected?: string;
