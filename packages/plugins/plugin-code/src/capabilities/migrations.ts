@@ -155,7 +155,7 @@ const getContainer = async (db: Database.Database, state: SpecsState, placement:
 };
 
 /**
- * `Feature` 0.2.0 → 0.4.0: features leave projects for specs. Each project's map becomes a spec the project owns, each
+ * `Feature` 0.2.0 → 0.5.0: features leave projects for specs. Each project's map becomes a spec the project owns, each
  * parent's subfeatures become the features of a spec the parent owns, and canvas positions move from the feature onto
  * its spec's layout. Its `specs` become foreign keys and its spec's document embeds it, as in
  * {@link featureSources}. The specs made so far are held per database in this migration's own closure.
@@ -182,7 +182,7 @@ export const makeFeatureSpecs = (): Migration.ObjectMigration => {
         position: from.position ? { x: from.position.x, y: from.position.y } : undefined,
       });
       const { name, description, requirements, status, code } = from;
-      return { name, description, requirements, status, code };
+      return { name, description, ...Feature.makeRequirementFields(requirements ?? []), status, code };
     },
     onMigration: async ({ before, object, db }) => {
       Obj.update(object, (object) => {
@@ -209,8 +209,9 @@ export const makeFeatureSpecs = (): Migration.ObjectMigration => {
 };
 
 /**
- * `Feature` 0.3.0 → 0.4.0: where a feature was read in from moves from `specs` to foreign keys, and its spec's document
- * embeds it, in place of the `feat` block it came from when the document still holds it, else at the end.
+ * `Feature` 0.3.0 → 0.5.0: where a feature was read in from moves from `specs` to foreign keys, and its spec's document
+ * embeds it, in place of the `feat` block it came from when the document still holds it, else at the end. Its
+ * requirements are stored by key, as in {@link featureRequirements}.
  */
 export const featureSources = Migration.define({
   from: LegacyFeature.FeatureV3,
@@ -218,7 +219,7 @@ export const featureSources = Migration.define({
   transform: async ({ name, description, requirements, status, spec, code }) => ({
     name,
     description,
-    requirements,
+    ...Feature.makeRequirementFields(requirements ?? []),
     status,
     spec: spec && Ref.fromURI(spec.uri),
     code,
@@ -232,6 +233,23 @@ export const featureSources = Migration.define({
       await SpecText.replaceBlock(container, object, Feature.getBlockId(object));
     }
   },
+});
+
+/**
+ * `Feature` 0.4.0 → 0.5.0: each requirement is stored under its key, by its spec id else its position where it has
+ * none, with the order held apart, so comments anchored into one find it however the list is edited.
+ */
+export const featureRequirements = Migration.define({
+  from: LegacyFeature.FeatureV4,
+  to: Feature.Feature,
+  transform: async ({ name, description, requirements, status, spec, code }) => ({
+    name,
+    description,
+    ...Feature.makeRequirementFields(requirements ?? []),
+    status,
+    spec: spec && Ref.fromURI(spec.uri),
+    code,
+  }),
 });
 
 /**
@@ -400,6 +418,7 @@ export default Capability.makeModule(
       specDocuments,
       // After the specs' own migrations, so a feature's container reads as a current spec.
       featureSources,
+      featureRequirements,
       Showcase.demonstratesMigration,
     ]);
   }),

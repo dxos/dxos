@@ -91,9 +91,7 @@ export default Capability.makeModule(
                   return;
                 }
 
-                // Fallback (non-editor objects): anchor to the current selection, or create an
-                // unanchored thread. Only derive a label from a real cursor anchor — the unanchored
-                // placeholder is not a cursor range the resolver could span.
+                // Fallback (non-editor objects): anchor to the current selection, or comment on the whole object.
                 const typename = Obj.getTypename(object);
                 const selection = viewState.get(Selection.aspect, objectUri);
                 const cursorAnchor =
@@ -103,7 +101,7 @@ export default Capability.makeModule(
                       ? config.anchorFromSelection(object, selection)
                       : getAnchor(selection);
                 yield* Operation.invoke(CommentOperation.Create, {
-                  anchor: cursorAnchor ?? Date.now().toString(),
+                  anchor: cursorAnchor,
                   name:
                     cursorAnchor && typename ? getAnchorResolver(typename)?.getText(object, cursorAnchor) : undefined,
                   subject: object,

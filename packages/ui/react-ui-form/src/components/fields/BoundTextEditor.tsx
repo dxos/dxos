@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { EditorState, type Extension } from '@codemirror/state';
+import { EditorState, type Extension, Prec } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
-import React, { useLayoutEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
@@ -18,6 +18,7 @@ import {
   createThemeExtensions,
   decorateMarkdown,
 } from '@dxos/ui-editor';
+import { getDeep } from '@dxos/util';
 
 /** A markdown field's minimum height in lines. */
 const ROWS = 6;
@@ -31,12 +32,17 @@ const fieldTheme = EditorView.theme({
   '& .cm-content .cm-code-inline': { whiteSpace: 'break-spaces', height: 'auto', overflow: 'visible' },
 });
 
-/** One line, like an input: typing or pasting a line break is refused, and Enter leaves the field. */
+/**
+ * One line, like an input: typing or pasting a line break is refused, and Enter leaves the field. The Enter binding
+ * outranks the standard keymap's, which would otherwise take the key and insert the refused line break.
+ */
 const singleLine: Extension = [
   EditorState.transactionFilter.of((tr) =>
-    tr.docChanged && (tr.isUserEvent('input') || tr.isUserEvent('move')) && tr.newDoc.lines > 1 ? [] : tr,
+    tr.docChanged && (tr.isUserEvent('input') || tr.isUserEvent('move')) && tr.newDoc.lines > tr.startState.doc.lines
+      ? []
+      : tr,
   ),
-  keymap.of([{ key: 'Enter', run: (view) => (view.contentDOM.blur(), true) }]),
+  Prec.high(keymap.of([{ key: 'Enter', run: (view) => (view.contentDOM.blur(), true) }])),
 ];
 
 export type BoundTextEditorProps = {
@@ -67,37 +73,37 @@ export const BoundTextEditor = ({
   const { object, path } = binding;
   // Callers pass a fresh path array each render; rebinding on its identity would rebuild the editor per keystroke.
   const pathKey = JSON.stringify(path);
-  // The editor splices into an existing string, so a missing one is created before it binds.
-  const [ready, setReady] = useState(() => typeof Obj.getValue(object, path) === 'string');
-  useLayoutEffect(() => {
-    if (!ready && !readonly) {
+  // The editor splices into an existing string. A missing one is created when the field takes focus, not when it is
+  // shown, so viewing an object never writes to it; the editor then rebinds to the new string, keeping the focus until
+  // the field is left, so a later rebuild does not take it back.
+  const [created, setCreated] = useState<string>();
+  // Read key by key, since `Obj.getValue`'s JSON path refuses record keys such as `F-1.1`.
+  const value = getDeep<unknown>(object, path);
+  const ready = typeof value === 'string';
+  const handleFocus = useCallback(() => {
+    if (!readonly && typeof getDeep(object, path) !== 'string') {
       Obj.update(object, (object) => Obj.setValue(object, path, ''));
-      setReady(true);
+      setCreated(pathKey);
     }
-  }, [ready, readonly, object, pathKey]);
+  }, [readonly, object, pathKey]);
 
   const themeMode = Hooks.useThemeMode();
   const bindingExtensions = useEditorExtensions(ready ? binding : undefined);
   const extensions = useMemo(
-    () =>
+    () => [
+      createBasicExtensions({ placeholder, readOnly: readonly, lineWrapping: true }),
+      createThemeExtensions({ syntaxHighlighting: markdown, themeMode }),
+      markdown ? [createMarkdownExtensions(), decorateMarkdown(), fieldTheme] : multiline ? fieldTheme : singleLine,
       ready
         ? [
-            createBasicExtensions({ placeholder, readOnly: readonly, lineWrapping: true }),
-            createThemeExtensions({ syntaxHighlighting: markdown, themeMode }),
-            markdown
-              ? [createMarkdownExtensions(), decorateMarkdown(), fieldTheme]
-              : multiline
-                ? fieldTheme
-                : singleLine,
             createDataExtensions({ id: Obj.getURI(object), text: Doc.createAccessor(object, [...path]) }),
+            EditorView.domEventHandlers({ blur: () => setCreated(undefined) }),
             ...bindingExtensions,
           ]
-        : [],
-    [ready, placeholder, readonly, markdown, multiline, themeMode, object, pathKey, bindingExtensions],
+        : EditorView.domEventHandlers({ focus: () => handleFocus() }),
+    ],
+    [ready, placeholder, readonly, markdown, multiline, themeMode, object, pathKey, bindingExtensions, handleFocus],
   );
-  if (!ready) {
-    return null;
-  }
 
   return (
     <Input.Frame
@@ -107,7 +113,11 @@ export const BoundTextEditor = ({
     >
       <Editor.Root>
         {/* Seeded with the string, so the editor holds it from its first frame rather than once the binding syncs. */}
-        <Editor.View extensions={extensions} initialValue={Obj.getValue(object, path)} autoFocus={autoFocus} />
+        <Editor.View
+          extensions={extensions}
+          initialValue={typeof value === 'string' ? value : ''}
+          autoFocus={autoFocus || created === pathKey}
+        />
       </Editor.Root>
     </Input.Frame>
   );

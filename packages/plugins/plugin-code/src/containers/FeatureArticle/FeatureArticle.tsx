@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
-import React, { type KeyboardEvent, useCallback, useEffect, useMemo } from 'react';
+import React, { type KeyboardEvent, useCallback, useMemo } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Project from '@dxos/compute/Project';
@@ -32,7 +32,6 @@ import {
 import { ObjectAddPicker } from '../../components/ObjectAddPicker/index.ts';
 import { useFeatureEditing, useFeatureGraph, useOpenFeatureTarget } from '../../hooks/index.ts';
 import { CodeNamespace } from '../../namespace.ts';
-import * as FeatureAnchor from '../../util/feature-anchor.ts';
 
 // The editable fields, picked from the schema on the AST as ProjectArticle does: `Type.getSchema` erases to
 // `Codec`, so the field types are re-attached here.
@@ -45,31 +44,9 @@ export const FeatureValues = Schema.make<Schema.Codec<FeatureValues, any>>(
 
 /** Requirements render as rows that wrap to their whole text rather than the generic list of nested forms. */
 const makeFieldMap = (feature: Feature.Feature): FormFieldMap => {
-  const RequirementsField: FormFieldRenderer = ({ label, getValue }) => (
+  const RequirementsField: FormFieldRenderer = ({ label }) => (
     <Form.Field label={label} standalone>
-      <RequirementEditor
-        feature={feature}
-        requirements={getValue() ?? []}
-        onAdd={() =>
-          Obj.update(feature, (feature) => {
-            const requirements = [...(feature.requirements ?? []), { key: Feature.makeRequirementKey(), text: '' }];
-            const blockId = Feature.getBlockId(feature);
-            // Numbered under the feature's block id, as the spec would number it.
-            (feature.requirements ??= []).push(
-              (blockId ? Feature.numberRequirements(blockId, requirements) : requirements).at(-1)!,
-            );
-          })
-        }
-        onRemove={(index) => {
-          const key = feature.requirements?.[index]?.key;
-          Obj.update(feature, (feature) => {
-            feature.requirements?.splice(index, 1);
-          });
-          if (key) {
-            void FeatureAnchor.clearRequirementAnchors(feature, key);
-          }
-        }}
-      />
+      <RequirementEditor feature={feature} />
     </Form.Field>
   );
   return { requirements: RequirementsField };
@@ -81,10 +58,6 @@ const makeFieldMap = (feature: Feature.Feature): FormFieldMap => {
  */
 export const useFeatureValues = (subject: Feature.Feature) => {
   const [snapshot, updateFeature] = useObject(subject);
-  // Comments anchor to requirements by key, so a feature made before keys existed gets them when opened.
-  useEffect(() => {
-    Feature.ensureRequirementKeys(subject);
-  }, [subject]);
   const fieldMap = useMemo(() => makeFieldMap(subject), [subject]);
   const values = useMemo<Partial<FeatureValues>>(
     () => ({

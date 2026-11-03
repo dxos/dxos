@@ -54,14 +54,9 @@ export const featureEmbedExtensions = (
         if (!Feature.instanceOf(original)) {
           return undefined;
         }
-        const { name, description, requirements, status } = original;
+        const { name, description, status } = original;
         const copy = db.add(
-          Feature.make({
-            name,
-            description,
-            status,
-            requirements: (requirements ?? []).map((requirement) => ({ ...requirement })),
-          }),
+          Feature.make({ name, description, status, requirements: Feature.getRequirements(original) }),
         );
         return Obj.getURI(copy);
       },

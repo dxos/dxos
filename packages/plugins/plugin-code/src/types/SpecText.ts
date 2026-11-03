@@ -183,7 +183,7 @@ export const number = async (spec: Spec.Spec): Promise<void> => {
   for (const feature of features) {
     const current = Feature.getBlockId(feature);
     const blockId = current ?? `F-${next++}`;
-    const requirements = feature.requirements ?? [];
+    const requirements = Feature.getRequirements(feature);
     const numbered = Feature.numberRequirements(blockId, requirements);
     const renumbered = numbered.some((requirement, index) => requirement.id !== requirements[index].id);
     if (!current || renumbered) {
@@ -191,9 +191,10 @@ export const number = async (spec: Spec.Spec): Promise<void> => {
         if (!current) {
           Feature.setSources(feature, [...Feature.getSources(feature), FeatureSpec.getSource('', blockId)]);
         }
-        if (renumbered) {
-          feature.requirements = numbered;
-        }
+        // Only the ids, so the records and the cursors into their text stay.
+        numbered.forEach(({ key, id }) => {
+          feature.requirements![key].id = id;
+        });
       });
     }
   }
@@ -233,10 +234,12 @@ export const expand = async (spec: Spec.Spec, { base }: ExpandOptions = {}): Pro
     owned.delete(id);
     const blockId = Feature.getBlockId(feature) ?? `F-${next++}`;
     const block = blocks.get(blockId);
+    const { name, description, status } = feature;
+    const fields = { name, description, status, requirements: Feature.getRequirements(feature) };
     const insert =
       fenced !== undefined && block
-        ? FeatureSpec.update(fenced.slice(block.from, block.to), feature)
-        : FeatureSpec.print(blockId, feature);
+        ? FeatureSpec.update(fenced.slice(block.from, block.to), fields)
+        : FeatureSpec.print(blockId, fields);
     return [{ from, to, insert }];
   });
   return FeatureEmbed.apply(text, changes);
@@ -328,7 +331,7 @@ export const take = async (spec: Spec.Spec, { path, text: file }: TakeOptions): 
       // stay anchored.
       const unkeyed = (list: readonly Feature.Requirement[]) => list.map(({ id, text }) => ({ id, text }));
       const requirementsChanged =
-        JSON.stringify(unkeyed(feature.requirements ?? [])) !== JSON.stringify(unkeyed(requirements));
+        JSON.stringify(unkeyed(Feature.getRequirements(feature))) !== JSON.stringify(unkeyed(requirements));
       if (
         feature.name !== name ||
         (feature.description ?? '') !== (description ?? '') ||

@@ -16076,6 +16076,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-client
       '@dxos/echo-doc':
         specifier: workspace:*
         version: link:../../core/echo/echo-doc
@@ -16176,9 +16179,6 @@ importers:
       '@dxos/compute-runtime':
         specifier: workspace:*
         version: link:../../core/compute/compute-runtime
-      '@dxos/echo-client':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-client
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client

@@ -134,7 +134,7 @@ export const useFeatureGraph = (
         const input: FeatureGraphInput = {
           features: features.filter(Feature.instanceOf).map((feature) => {
             const snapshot = get(Obj.atom(feature));
-            const { id, name, description, requirements, status, code } = snapshot;
+            const { id, name, description, status, code } = snapshot;
             // The feature this one breaks down: the owner of the spec that lists it.
             const container = FeatureMap.getContainer(feature);
             const parent = container && FeatureMap.getOwner(container);
@@ -142,7 +142,7 @@ export const useFeatureGraph = (
               id,
               name,
               description,
-              requirements,
+              requirements: Feature.getRequirements(snapshot),
               status,
               specs: Feature.getSources(snapshot),
               spec: container?.id,

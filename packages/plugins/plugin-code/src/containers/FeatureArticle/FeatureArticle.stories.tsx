@@ -4,13 +4,13 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React from 'react';
+import React, { useState } from 'react';
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Filter } from '@dxos/echo';
-import { useQuery } from '@dxos/echo-react';
+import { Filter, Obj } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { FeatureEditingPlugin, FeatureSeed } from '@dxos/plugin-code/testing';
@@ -20,6 +20,7 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { AttendableContainer } from '@dxos/react-ui-attention';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Theme from '@dxos/react-ui/Theme';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
 import { translations } from '#translations';
@@ -43,6 +44,94 @@ const DefaultStory = ({ role, attendableId, name = FEATURE_NAME }: StoryArgs) =>
     <AttendableContainer id={attendableId} classNames='contents'>
       <FeatureArticle role={role} subject={feature} attendableId={attendableId} />
     </AttendableContainer>
+  );
+};
+
+/** The article with what the feature's description holds beside it, so a story can tell whether viewing wrote it. */
+const DescriptionProbeStory = (args: StoryArgs) => {
+  const [space] = useSpaces();
+  const features = useQuery(space?.db, Filter.type(Feature.Feature));
+  const [description] = useObject(
+    features.find((feature) => feature.name === args.name),
+    'description',
+  );
+  return (
+    <>
+      <span data-testid='probe.description'>{typeof description}</span>
+      <DefaultStory {...args} />
+    </>
+  );
+};
+
+/** The description probe under a theme a control flips, which rebuilds every bound editor. */
+const ThemeToggleStory = (args: StoryArgs) => {
+  const { tx } = Theme.useThemeContext();
+  const [dark, setDark] = useState(false);
+  return (
+    <Theme.Provider tx={tx} themeMode={dark ? 'dark' : 'light'}>
+      <button
+        data-testid='probe.theme'
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={() => setDark((dark) => !dark)}
+      >
+        theme
+      </button>
+      <DescriptionProbeStory {...args} />
+    </Theme.Provider>
+  );
+};
+
+/** The article with controls that edit its requirements as a peer would, without taking the focus. */
+const PeerAppendStory = (args: StoryArgs) => {
+  const [space] = useSpaces();
+  const features = useQuery(space?.db, Filter.type(Feature.Feature));
+  const feature = features.find((feature) => feature.name === (args.name ?? FEATURE_NAME));
+  const [snapshot] = useObject(feature);
+  return (
+    <>
+      <output data-testid='probe.foreign.text' hidden>
+        {snapshot?.requirements?.['F-9.9']?.text}
+      </output>
+      <button
+        data-testid='probe.append'
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={() =>
+          feature &&
+          Feature.setRequirements(feature, [...Feature.getRequirements(feature), { text: 'Sync stops when offline.' }])
+        }
+      >
+        append
+      </button>
+      <button
+        data-testid='probe.multiline'
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={() =>
+          feature &&
+          Feature.setRequirements(
+            feature,
+            Feature.getRequirements(feature).map((requirement, index) =>
+              index === 0 ? { ...requirement, text: 'when: mail arrives\nthen: it shows' } : requirement,
+            ),
+          )
+        }
+      >
+        multiline
+      </button>
+      <button
+        data-testid='probe.foreign'
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={() =>
+          feature &&
+          Obj.update(feature, (feature) => {
+            feature.requirements!['F-9.9'] = { text: 'Written by another client.' };
+            feature.requirementOrder!.push('F-9.9');
+          })
+        }
+      >
+        foreign
+      </button>
+      <DefaultStory {...args} />
+    </>
   );
 };
 
@@ -197,5 +286,125 @@ export const SetKey: Story = {
     const link = await canvas.findByTestId('feature-card.link', undefined, { timeout: 5_000 });
     await expect(link.textContent).toMatch(/^dxn:org\.dxos\.plugin\.connector\.feature\.oauthTokens#[0-9A-Z]{6}$/);
     await waitFor(() => expect(canvas.queryByTestId('feature-article.set-key')).toBeNull());
+  },
+};
+
+/** Enter in a one-line field leaves it, as an input's would. */
+export const EnterLeavesField: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const name = await canvas.findByTestId('name', undefined, { timeout: 10_000 });
+    const content = name.querySelector<HTMLElement>('.cm-content')!;
+    await userEvent.click(content);
+    await waitFor(() => expect(name.contains(document.activeElement)).toBe(true));
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(name.contains(document.activeElement)).toBe(false));
+    await expect(name).toHaveTextContent(FEATURE_NAME);
+  },
+};
+
+/** A requirement added and left without text is removed when it loses focus. */
+export const EmptyRequirementRemoved: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByTestId('name', undefined, { timeout: 10_000 });
+    await waitFor(() => expect(canvas.getAllByTestId(/^requirement-editor\.\d+\.text$/)).toHaveLength(3));
+    await userEvent.click(canvas.getByTestId('requirement-editor.add'));
+    await waitFor(() => expect(canvas.getAllByTestId(/^requirement-editor\.\d+\.text$/)).toHaveLength(4));
+    const added = canvas.getByTestId('requirement-editor.3.text');
+    await waitFor(() => expect(added.contains(document.activeElement)).toBe(true));
+    await userEvent.click(canvas.getByTestId('name').querySelector<HTMLElement>('.cm-content')!);
+    await waitFor(() => expect(canvas.getAllByTestId(/^requirement-editor\.\d+\.text$/)).toHaveLength(3));
+  },
+};
+
+/** Viewing a feature without a description writes nothing; focusing the field creates it, and typing fills it. */
+export const ViewWritesNothing: Story = {
+  render: DescriptionProbeStory,
+  args: { name: 'IMAP' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const description = await canvas.findByTestId('description', undefined, { timeout: 10_000 });
+    await expect(canvas.getByTestId('probe.description')).toHaveTextContent('undefined');
+    await userEvent.click(description.querySelector<HTMLElement>('.cm-content')!);
+    await userEvent.keyboard('Polls');
+    await waitFor(() => expect(canvas.getByTestId('probe.description')).toHaveTextContent('string'));
+    await waitFor(() => expect(description).toHaveTextContent('Polls'));
+  },
+};
+
+/** A requirement a peer appends where a removed blank one was does not take the focus from the field being edited. */
+export const AppendKeepsFocus: Story = {
+  render: PeerAppendStory,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const name = await canvas.findByTestId('name', undefined, { timeout: 10_000 });
+    await waitFor(() => expect(canvas.getAllByTestId(/^requirement-editor\.\d+\.text$/)).toHaveLength(3));
+    await userEvent.click(canvas.getByTestId('requirement-editor.add'));
+    await waitFor(() =>
+      expect(canvas.getByTestId('requirement-editor.3.text').contains(document.activeElement)).toBe(true),
+    );
+    await userEvent.click(name.querySelector<HTMLElement>('.cm-content')!);
+    await waitFor(() => expect(canvas.getAllByTestId(/^requirement-editor\.\d+\.text$/)).toHaveLength(3));
+    await userEvent.click(canvas.getByTestId('probe.append'));
+    await waitFor(() => expect(canvas.getAllByTestId(/^requirement-editor\.\d+\.text$/)).toHaveLength(4));
+    // The new row's editor is built, so any focus it was going to take has been taken.
+    await waitFor(() =>
+      expect(canvas.getByTestId('requirement-editor.3.text').querySelector('.cm-content')).not.toBeNull(),
+    );
+    await expect(name.contains(document.activeElement)).toBe(true);
+  },
+};
+
+/** A requirement imported with a line in each of its fields takes typing like any other. */
+export const MultiLineRequirementEditable: Story = {
+  render: PeerAppendStory,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByTestId('name', undefined, { timeout: 10_000 });
+    await userEvent.click(canvas.getByTestId('probe.multiline'));
+    const row = canvas.getByTestId('requirement-editor.0.text');
+    await waitFor(() => expect(row).toHaveTextContent('then: it shows'));
+    await userEvent.click(row.querySelector<HTMLElement>('.cm-content')!);
+    await userEvent.keyboard('Z');
+    await waitFor(() => expect(row).toHaveTextContent('Z'));
+  },
+};
+
+/** A field created by focusing it does not take the focus back when a theme change rebuilds it. */
+export const RebuildKeepsFocus: Story = {
+  render: ThemeToggleStory,
+  args: { name: 'IMAP' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const name = await canvas.findByTestId('name', undefined, { timeout: 10_000 });
+    const description = canvas.getByTestId('description');
+    await userEvent.click(description.querySelector<HTMLElement>('.cm-content')!);
+    await waitFor(() => expect(canvas.getByTestId('probe.description')).toHaveTextContent('string'));
+    await waitFor(() => expect(description.contains(document.activeElement)).toBe(true));
+    await userEvent.click(name.querySelector<HTMLElement>('.cm-content')!);
+    await waitFor(() => expect(name.contains(document.activeElement)).toBe(true));
+    const before = description.querySelector('.cm-content');
+    await userEvent.click(canvas.getByTestId('probe.theme'));
+    // The description's editor is rebuilt, so any focus it was going to take has been taken.
+    await waitFor(() => expect(description.querySelector('.cm-content')).not.toBe(before));
+    await expect(description.contains(document.activeElement)).toBe(false);
+  },
+};
+
+/** A requirement another client stored under a key of its own takes typing into its record like any other. */
+export const ForeignKeyEditable: Story = {
+  render: PeerAppendStory,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByTestId('name', undefined, { timeout: 10_000 });
+    await userEvent.click(canvas.getByTestId('probe.foreign'));
+    await waitFor(() => expect(canvas.getAllByTestId(/^requirement-editor\.\d+\.text$/)).toHaveLength(4));
+    const row = canvas.getByTestId('requirement-editor.3.text');
+    await waitFor(() => expect(row).toHaveTextContent('Written by another client.'));
+    await userEvent.click(row.querySelector<HTMLElement>('.cm-content')!);
+    await userEvent.keyboard('Z');
+    // The record itself, not only the editor, takes the edit.
+    await waitFor(() => expect(canvas.getByTestId('probe.foreign.text').textContent).toContain('Z'));
   },
 };

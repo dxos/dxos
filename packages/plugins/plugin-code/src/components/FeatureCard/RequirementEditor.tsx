@@ -4,12 +4,13 @@
 
 import React, { useState } from 'react';
 
+import { useObject } from '@dxos/echo-react';
 import { BoundTextEditor } from '@dxos/react-ui-form';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { type Feature } from '#types';
+import { Feature } from '#types';
 
 import { CodeNamespace } from '../../namespace.ts';
 import * as FeatureAnchor from '../../util/feature-anchor.ts';
@@ -18,26 +19,36 @@ import { RequirementIcon, RequirementId, RowIcon } from './fields.tsx';
 export type RequirementEditorProps = {
   /** The live feature, whose requirement texts the rows edit in place. */
   feature: Feature.Feature;
-  /** Its requirements as rendered, so the rows follow edits from elsewhere. */
-  requirements: readonly Feature.Requirement[];
-  onAdd: () => void;
-  onRemove: (index: number) => void;
 };
 
 /**
  * A feature's requirements, each an editor bound to its text that wraps to the whole of it, with the spec id it came
  * from before it and a remove action after. Typing edits the requirement in place, so comments on it stay anchored;
- * comment marks reach the editors through `EditorExtensionsProvider`, by the requirement's hidden key.
+ * comment marks reach the editors through `EditorExtensionsProvider`, by the requirement's key. A requirement
+ * that loses focus without text is removed.
  */
-export const RequirementEditor = ({ feature, requirements, onAdd, onRemove }: RequirementEditorProps) => {
+export const RequirementEditor = ({ feature }: RequirementEditorProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
-  // The row just added takes focus, so a new requirement is written before anything else.
+  const [snapshot] = useObject(feature);
+  const requirements = snapshot ? Feature.getRequirements(snapshot) : [];
+  // Numbered under the feature's block id, as the spec would number it.
+  const onAdd = () =>
+    Feature.setRequirements(feature, [...Feature.getRequirements(feature), { text: '' }], {
+      blockId: Feature.getBlockId(feature),
+    });
+  const onRemove = (key: string) =>
+    Feature.setRequirements(
+      feature,
+      Feature.getRequirements(feature).filter((requirement) => requirement.key !== key),
+    );
+  // The row just added takes focus once, so a new requirement is written before anything else; a row that later
+  // mounts at that index, or is rebuilt there, leaves the focus where it is.
   const [focusIndex, setFocusIndex] = useState<number>();
   return (
     <Card.Root grid border={false} data-testid='requirement-editor'>
       {requirements.map((requirement, index) => (
         <Card.Row
-          key={requirement.key ?? index}
+          key={requirement.key}
           // The column's content clips overflow (for truncation), which would cut off the field's box.
           classNames='[&_.dx-card-row-content]:overflow-visible'
           leading={<RequirementIcon />}
@@ -46,21 +57,27 @@ export const RequirementEditor = ({ feature, requirements, onAdd, onRemove }: Re
               icon='ph--x--regular'
               label={t('requirement-editor.remove.label')}
               data-testid={`requirement-editor.${index}.remove`}
-              onClick={() => onRemove(index)}
+              onClick={() => onRemove(requirement.key)}
             />
           }
         >
           {/* The spec id leads the text, as it does in the read-only list; the field takes the rest of the row. */}
           <Layout.Flex gap='sm' classNames='items-baseline min-w-0'>
             {requirement.id && <RequirementId id={requirement.id} />}
-            <div className='grow min-w-0'>
+            {/* A requirement left without text is removed, as one cleared of its text is. */}
+            <div
+              className='grow min-w-0'
+              onFocus={() => setFocusIndex(undefined)}
+              onBlur={() => {
+                if (!feature.requirements?.[requirement.key]?.text.trim()) {
+                  onRemove(requirement.key);
+                }
+              }}
+            >
               <BoundTextEditor
                 binding={{
                   object: feature,
-                  path: ['requirements', index, 'text'],
-                  anchor: requirement.key
-                    ? FeatureAnchor.getPath({ field: 'requirement', key: requirement.key })
-                    : undefined,
+                  path: FeatureAnchor.getPath({ field: 'requirement', key: requirement.key }),
                 }}
                 placeholder={t('requirement-editor.text.label')}
                 autoFocus={index === focusIndex}

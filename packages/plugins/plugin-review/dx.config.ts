@@ -146,7 +146,7 @@ const config: Plugin.PluginConfig<ReviewPluginOptions> = Plugin.config<ReviewPlu
       mimeType: 'application/x-mdl',
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-      roles: [AppSurface.Article],
+      roles: [AppSurface.Article, AppSurface.CardMarks],
     }),
     Capability.lazyModule(
       'ReviewState',

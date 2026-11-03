@@ -98,7 +98,6 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     );
     return branch?.key;
   }, [markdownDoc, versionSelection]);
-  const activeBranch = reviewBranch ?? 'main';
 
   // A comment on the whole object: no anchor, which the editors' comment sync and anchor sorts already pass over. An
   // object edited in fields (a feature) comments on the text selected in one instead, since its editors leave Mod-'

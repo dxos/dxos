@@ -39,7 +39,7 @@ export default Capability.makeModule(
 
         // Anchors are cursors within whichever text the editor is bound to: the branch content in Branch view,
         // else main.
-        const text = branchText ?? doc?.content.target;
+        const text = branchText ?? doc?.content.peek();
         const target = doc && { subject: doc, accessor: text && Doc.createAccessor(text, ['content']) };
         return commentSync({ registry, stateAtom }, target, invokePromise, {
           reviewBranch,

@@ -48,7 +48,7 @@ const parseSegment = (segment: string): PathSegment => {
   return decodeURIComponent(segment.replace(/^(%5C|\\)/, ''));
 };
 
-/** A path in Automerge's ref syntax, relative to the target, e.g. `requirements/%7B%22key%22%3A%22k%22%7D/text`. */
+/** A path in Automerge's ref syntax, relative to the target, e.g. `requirements/k/text`. */
 export const formatPath = (path: readonly PathSegment[]): string => path.map(formatSegment).join('/');
 
 /** Serializes a span as an Automerge ref path ending in a cursor range, e.g. `name/[2@a1-7@a1]`. */

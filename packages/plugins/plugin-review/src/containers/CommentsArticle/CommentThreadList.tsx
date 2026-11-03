@@ -13,7 +13,7 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
-import { useQuery } from '@dxos/echo-react';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { useIdentity, useMembers } from '@dxos/halo-react';
 import { type Space, getSpace } from '@dxos/react-client/echo';
 import { type Mention, type MessageMetadata, type ObjectTileComponent } from '@dxos/react-ui-thread';
@@ -25,7 +25,7 @@ import { CommentThread, type CommentThreadProps } from '#components';
 import { useStatus } from '#hooks';
 import { AgentIdentity, CommentCapabilities, CommentOperation } from '#types';
 
-import { currentObjectId, getMessageMetadata } from '../../util/index.ts';
+import { currentObjectId, getMessageMetadata, isOrphaned } from '../../util/index.ts';
 
 /**
  * Per-thread wrapper supplying the space-derived agent activity indicator, so `CommentThread` itself
@@ -205,6 +205,13 @@ export const CommentThreadList = ({ subject, attendableId, anchors, reviewBranch
   const stateAtom = Hooks.useCapability(CommentCapabilities.State);
   const state = useAtomValue(stateAtom);
   const commentConfigs = Hooks.useCapabilities(AppCapabilities.CommentConfig);
+  // Read on every edit of the subject, so a thread whose field goes away reads as detached at once.
+  useObject(subject);
+  const anchorResolvers = Hooks.useCapabilities(AppCapabilities.AnchorResolver);
+  const getText = useMemo(() => {
+    const resolver = anchorResolvers.find(({ key }) => key === Obj.getTypename(subject));
+    return resolver && ((anchor: string) => resolver.getText(subject, anchor));
+  }, [anchorResolvers, subject]);
 
   // Membership, not attention: an attention gate closes in the window between a click recording
   // `state.current` and attention settling on the editor, dropping the just-set marker. Recomputing
@@ -382,6 +389,7 @@ export const CommentThreadList = ({ subject, attendableId, anchors, reviewBranch
             space={space}
             threadUri={threadId}
             anchor={anchor}
+            orphaned={isOrphaned(anchor.anchor, getText)}
             components={threadComponents}
             getMetadata={getMetadata}
             authorMetadata={authorMetadata}

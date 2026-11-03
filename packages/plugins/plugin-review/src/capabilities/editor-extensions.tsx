@@ -25,7 +25,7 @@ const CommentExtensionsProvider = ({ children }: PropsWithChildren) => {
   const stateAtom = Hooks.useOptionalCapability(CommentCapabilities.State);
   const configs = Hooks.useOptionalCapabilities(AppCapabilities.CommentConfig);
   const extensions = useCallback<EditorExtensionsFactory>(
-    ({ object, path, anchor, subject = object }) =>
+    ({ object, path, subject = object }) =>
       registry && stateAtom && findCommentConfig(configs, subject)?.comments === 'anchored'
         ? commentSync(
             { registry, stateAtom },
@@ -33,7 +33,7 @@ const CommentExtensionsProvider = ({ children }: PropsWithChildren) => {
               subject,
               accessor: Doc.createAccessor(object, [...path]),
               // A document's text is the whole of its subject, so its anchors carry no path, as in Markdown.
-              path: anchor ?? (subject === object ? path : undefined),
+              path: subject === object ? path : undefined,
             },
             invoker?.invokePromise,
           )
