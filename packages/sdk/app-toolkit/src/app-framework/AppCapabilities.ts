@@ -21,6 +21,7 @@ import * as Hook from '@dxos/compute/Hook';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import type { Database, Obj, Type } from '@dxos/echo';
+import { BaseError } from '@dxos/errors';
 import type * as Retention from '@dxos/graph/Retention';
 import { type Translator as Translator$ } from '@dxos/i18n';
 import { type URI } from '@dxos/keys';
@@ -383,6 +384,9 @@ export type ExportFile = Readonly<{
   content: string | Blob;
 }>;
 
+/** An object could not be rendered for printing or saving. */
+export class ExportError extends BaseError.extend('ExportError', 'The object could not be exported.') {}
+
 /**
  * Print and save contributed per typename by plugins whose objects can leave the app.
  * Contributing one adds Print and/or Save to the object's article menu (`ExportOperation`).
@@ -390,9 +394,9 @@ export type ExportFile = Readonly<{
 export type Exporter = Readonly<{
   id: string;
   /** The object as a file in its native format (e.g. `.md`, `.csv`). */
-  save?: (object: any) => Effect$.Effect<ExportFile, Error>;
+  save?: (object: any) => Effect$.Effect<ExportFile, ExportError>;
   /** The object as an HTML fragment, which the browser prints (or saves as PDF). */
-  print?: (object: any) => Effect$.Effect<string, Error>;
+  print?: (object: any) => Effect$.Effect<string, ExportError>;
 }>;
 
 /**

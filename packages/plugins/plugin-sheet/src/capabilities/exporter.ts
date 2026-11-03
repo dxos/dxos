@@ -15,9 +15,12 @@ import { Sheet, SheetCapabilities, SheetUtil } from '#types';
 
 import { SheetModel } from '../model/index.ts';
 
-const escapeCsvCell = (value: string): string => {
-  // Spreadsheet apps execute cells beginning with =, +, - or @ even when quoted, so prefix them to keep them inert.
-  const sanitized = /^\s*[=+\-@]/.test(value) ? `'${value}` : value;
+/** One CSV cell, quoted when needed and neutralized when a spreadsheet would run it as a formula. */
+export const escapeCsvCell = (value: string): string => {
+  // Spreadsheet apps execute cells beginning with =, +, - or @ even when quoted, so prefix them to keep them inert;
+  // a plain number (e.g. `-5`) cannot execute and must stay numeric.
+  const isNumber = /^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i.test(value.trim());
+  const sanitized = !isNumber && /^\s*[=+\-@]/.test(value) ? `'${value}` : value;
   return /[",\n\r]/.test(sanitized) ? `"${sanitized.replace(/"/g, '""')}"` : sanitized;
 };
 
@@ -29,17 +32,20 @@ export default Capability.makeModule(
     /** Computed cell text from A1 to the last non-empty cell, as the grid displays it. */
     const getRows = (sheet: Sheet.Sheet) =>
       Effect.acquireUseRelease(
-        Effect.tryPromise(async () => {
-          const space = getSpace(sheet);
-          if (!space) {
-            throw new Error('Sheet is not in a space.');
-          }
+        Effect.tryPromise({
+          try: async () => {
+            const space = getSpace(sheet);
+            if (!space) {
+              throw new Error('Sheet is not in a space.');
+            }
 
-          const graph = capabilities.get(SheetCapabilities.ComputeGraphRegistry).getOrCreateGraph(space);
-          await graph.open();
-          const model = new SheetModel(graph, sheet, { readonly: true });
-          await model.open();
-          return model;
+            const graph = capabilities.get(SheetCapabilities.ComputeGraphRegistry).getOrCreateGraph(space);
+            await graph.open();
+            const model = new SheetModel(graph, sheet, { readonly: true });
+            await model.open();
+            return model;
+          },
+          catch: AppCapabilities.ExportError.wrap(),
         }),
         (model) =>
           Effect.sync(() => {

@@ -47,6 +47,8 @@ export const printHtml = async (html: string, { title = '', style = '' }: { titl
   frame.style.height = '0';
   frame.style.border = '0';
   frame.style.visibility = 'hidden';
+  // No `allow-scripts`: the fragment is rendered markup only, so nothing in it may run with the app's origin.
+  frame.sandbox.add('allow-same-origin', 'allow-modals');
   frame.srcdoc = `<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(title)}</title><style>${PRINT_STYLE}${style}</style></head><body>${html}</body></html>`;
 
   await new Promise<void>((resolve) => {

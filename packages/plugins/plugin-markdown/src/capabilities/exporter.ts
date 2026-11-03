@@ -16,7 +16,10 @@ import { parseEmbedLabel } from '../components/PreviewComponent/parse-embed-labe
 import { findEmbeds, insertEmbeds, placeEmbeds, removeEmbeds } from './print-embeds.ts';
 
 const loadContent = (document: Markdown.Document) =>
-  Effect.tryPromise(() => document.content.load()).pipe(Effect.map((text) => text.content ?? ''));
+  Effect.tryPromise({
+    try: () => document.content.load(),
+    catch: AppCapabilities.ExportError.wrap(),
+  }).pipe(Effect.map((text) => text.content ?? ''));
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -75,9 +78,10 @@ export default Capability.makeModule(
           );
 
           // Loaded on demand so the parser stays out of the startup bundle.
-          const [{ micromark }, { gfm, gfmHtml }] = yield* Effect.tryPromise(() =>
-            Promise.all([import('micromark'), import('micromark-extension-gfm')]),
-          );
+          const [{ micromark }, { gfm, gfmHtml }] = yield* Effect.tryPromise({
+            try: () => Promise.all([import('micromark'), import('micromark-extension-gfm')]),
+            catch: AppCapabilities.ExportError.wrap(),
+          });
           // Raw HTML in the source stays escaped (micromark's default), so printing cannot run script.
           const html = micromark(placeEmbeds(content, embedded), { extensions: [gfm()], htmlExtensions: [gfmHtml()] });
           return insertEmbeds(html, embedded);

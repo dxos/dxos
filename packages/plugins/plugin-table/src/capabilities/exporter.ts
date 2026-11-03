@@ -14,18 +14,21 @@ import { type ExportColumn, exportRowsAsJson, getExportCellValue } from '../oper
 
 /** Every row the table's view selects, with its visible columns. */
 const getRows = (table: Table.Table) =>
-  Effect.tryPromise(async () => {
-    const db = Obj.getDatabase(table);
-    if (!db) {
-      throw new Error('Table is not in a database.');
-    }
+  Effect.tryPromise({
+    try: async () => {
+      const db = Obj.getDatabase(table);
+      if (!db) {
+        throw new Error('Table is not in a database.');
+      }
 
-    const view = await table.view.load();
-    const rows = await db.query(Query.fromAst(view.query.ast)).run();
-    const columns: ExportColumn[] = view.projection.fields
-      .filter((field) => field.visible !== false)
-      .map((field) => ({ path: field.path, title: String(field.path), referencePath: field.referencePath }));
-    return { rows: rows.filter(Obj.isObject), columns };
+      const view = await table.view.load();
+      const rows = await db.query(Query.fromAst(view.query.ast)).run();
+      const columns: ExportColumn[] = view.projection.fields
+        .filter((field) => field.visible !== false)
+        .map((field) => ({ path: field.path, title: String(field.path), referencePath: field.referencePath }));
+      return { rows: rows.filter(Obj.isObject), columns };
+    },
+    catch: AppCapabilities.ExportError.wrap(),
   });
 
 export default Capability.makeModule(
