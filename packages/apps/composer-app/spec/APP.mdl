@@ -479,7 +479,6 @@ test QA-5: First run and logout
     - composer-e2e:basic.spec.ts#Basic tests › create identity, space is created by default
     - composer-e2e:basic.spec.ts#Basic tests › create space, which is displayed in tree
     - composer-e2e:basic.spec.ts#Basic tests › logout
-    - composer-e2e:basic.spec.ts#Basic tests › recover identity
   given:
     - no identity exists — a first run, not a reset of an existing profile
   steps:
@@ -1160,4 +1159,12 @@ decision D-10: QA-17 uses a human actor because request inspection has no invoca
   for: user:dmaretskyi
   affects: [QA-17]
   why: Listing the requests made to the plugin's origin has no operation behind it, so the agent cannot run that step.
+```
+
+```mdl
+decision D-11: QA-5 lists no automated test for recovering an identity until `recover identity` runs again.
+  date: 2026-11-03
+  by: user:dmaretskyi
+  affects: [QA-5]
+  why: The test fails on main since 2026-11-02 and is skipped, so naming it would claim coverage it does not give.
 ```
