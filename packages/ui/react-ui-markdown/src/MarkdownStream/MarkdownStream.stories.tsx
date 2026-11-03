@@ -169,6 +169,12 @@ const DefaultStory = ({
   );
 };
 
+/** The selected range, which an insert replaces in place of the story's default target. */
+const selectedRange = (view: EditorView): { anchor: number; to: number } | undefined => {
+  const { from, to } = view.state.selection.main;
+  return from < to ? { anchor: from, to } : undefined;
+};
+
 /**
  * Streams a new paragraph, or a correction of a few words, into the middle of the document via the `pendingText`
  * preview, since `typewriter` only paces appends at the end.
@@ -217,17 +223,31 @@ const InsertStory = ({ initialContent, debug, ...props }: StoryArgs) => {
       return;
     }
 
+    const text = random.lorem.paragraph(5);
+    const selection = selectedRange(view);
+    if (selection) {
+      stream({ ...selection, layout: 'paragraph' }, text);
+      return;
+    }
+
     // The first paragraph break past the middle of the document.
     const { doc } = view.state;
     let line = doc.lineAt(Math.floor(doc.length / 2));
     while (line.length > 0 && line.number < doc.lines) {
       line = doc.line(line.number + 1);
     }
-    stream({ anchor: line.from, layout: 'paragraph' }, random.lorem.paragraph(5));
+    stream({ anchor: line.from, layout: 'paragraph' }, text);
   }, [view, stream]);
 
   const handleInsertCorrection = useCallback(() => {
     if (!view) {
+      return;
+    }
+
+    const text = random.lorem.words(4);
+    const selection = selectedRange(view);
+    if (selection) {
+      stream({ ...selection, layout: 'inline' }, text);
       return;
     }
 
@@ -239,7 +259,7 @@ const InsertStory = ({ initialContent, debug, ...props }: StoryArgs) => {
       if (/^[A-Za-z]/.test(line.text) && words.length >= 8) {
         const [first, last] = [words[3], words[5]];
         const from = line.from + first.index;
-        stream({ anchor: from, to: line.from + last.index + last[0].length, layout: 'inline' }, random.lorem.words(4));
+        stream({ anchor: from, to: line.from + last.index + last[0].length, layout: 'inline' }, text);
         return;
       }
     }

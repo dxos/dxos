@@ -278,6 +278,8 @@ class PendingTextWidget extends WidgetType {
 /** Strikes through the text a correction will replace. */
 const replacedMark = Decoration.mark({ class: 'cm-pending-text-replaced' });
 
+const replaced = ({ anchor, to }: PendingTextState) => (to > anchor ? [replacedMark.range(anchor, to)] : []);
+
 const pendingDecorations = EditorView.decorations.compute(['doc', pendingTextState], (state) => {
   const value = state.field(pendingTextState);
   if (!value || !hasContent(value)) {
@@ -290,16 +292,12 @@ const pendingDecorations = EditorView.decorations.compute(['doc', pendingTextSta
     const line = state.doc.lineAt(value.anchor);
     const { before } = paragraphBreaks(state, value.anchor, value.to);
     const spacing = { before: before.length > 0, after: line.length > 0 };
-    return Decoration.set([
-      Decoration.widget({ widget: new PendingTextWidget(value, spacing), block: true, side: -1 }).range(line.from),
-    ]);
+    const widget = Decoration.widget({ widget: new PendingTextWidget(value, spacing), block: true, side: -1 });
+    return Decoration.set([widget.range(line.from), ...replaced(value)], true);
   }
 
   const widget = Decoration.widget({ widget: new PendingTextWidget(value), side: 1 }).range(value.to);
-  return Decoration.set(
-    value.to > value.anchor ? [replacedMark.range(value.anchor, value.to), widget] : [widget],
-    true,
-  );
+  return Decoration.set([...replaced(value), widget], true);
 });
 
 /**

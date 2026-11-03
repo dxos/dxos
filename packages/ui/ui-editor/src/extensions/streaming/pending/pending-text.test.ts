@@ -90,6 +90,15 @@ describe('pendingText extension', () => {
     view.destroy();
   });
 
+  test('a paragraph commit replaces its range and stands apart from the text around it', ({ expect }) => {
+    const view = createView('one\ntwo three\nfour');
+    view.dispatch({ effects: setPendingAnchor.of({ anchor: 4, to: 13, layout: 'paragraph' }) });
+    view.dispatch({ effects: appendPendingText.of('new') });
+    expect(commitPending(view)).toBe(true);
+    expect(view.state.doc.toString()).toBe('one\n\nnew\n\nfour');
+    view.destroy();
+  });
+
   test('an inline commit replaces its range without adding newlines', ({ expect }) => {
     const view = createView('the quick fox');
     view.dispatch({ effects: setPendingAnchor.of({ anchor: 4, to: 9, layout: 'inline' }) });
