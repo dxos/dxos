@@ -2,45 +2,67 @@
 // Copyright 2026 DXOS.org
 //
 
+import { DETENT_PX, magnetTo, snapTo } from '@dxos/react-ui-canvas';
 import { type Viewport, meshProps } from '@dxos/react-ui-canvas/3d';
 import { boundsFromPoints } from '@dxos/react-ui-canvas/headless';
 import { type Scene } from '@dxos/scene';
 
 import { screenLength } from './gizmo.ts';
 
-/** A base swept on the ground: its centre (on the ground) and its extents along x and z. */
+/** A base swept on the work plane: its centre (on the plane) and its extents along x and z. */
 export type GroundBase = { center: Scene.Vec3; width: number; depth: number };
 
 /** The least size a dragged shape takes when snapping is off. */
 const FREE_MIN = 0.1;
 
-const snapTo = (value: number, step: number) => (step > 0 ? Math.round(value / step) * step : value);
-
 /**
- * The base a drag on the ground sweeps, as 2D sweeps a box (`boundsFromPoints`): its two corners snapped to `step`,
- * x and z on the ground standing in for 2D's x and y; undefined when it spans nothing.
+ * The base a drag on the ground sweeps, as 2D sweeps a box (`boundsFromPoints`), x and z on the ground standing in for
+ * 2D's x and y: the pressed corner on the grid, and the corner under the pointer held on a line within `hold` (world
+ * units along x and z) while the drag is under way, as a 2D move is, or on the grid when the drag lands (no `hold`);
+ * undefined when it spans nothing.
  */
-export const dragBase = (from: Scene.Vec3, to: Scene.Vec3, step: number): GroundBase | undefined => {
-  const box = boundsFromPoints(
-    { x: snapTo(from.x, step), y: snapTo(from.z, step) },
-    { x: snapTo(to.x, step), y: snapTo(to.z, step) },
-  );
+export const dragBase = (
+  from: Scene.Vec3,
+  to: Scene.Vec3,
+  step: number,
+  hold?: { x: number; z: number },
+): GroundBase | undefined => {
+  const start = { x: snapTo(from.x, step), y: snapTo(from.z, step) };
+  // A side the pointer has opened keeps a step when it lands, rather than closing under a base the drag has drawn.
+  const land = (value: number, origin: number) => {
+    const landed = snapTo(value, step);
+    return landed === origin && value !== origin ? origin + Math.sign(value - origin) * step : landed;
+  };
+  const end = hold
+    ? { x: magnetTo(to.x, step, hold.x), y: magnetTo(to.z, step, hold.z) }
+    : { x: land(to.x, start.x), y: land(to.z, start.y) };
+  const box = boundsFromPoints(start, end);
   if (box.width === 0 || box.height === 0) {
     return undefined;
   }
-  return { center: { x: box.x + box.width / 2, y: 0, z: box.y + box.height / 2 }, width: box.width, depth: box.height };
+  // The base lies on the plane the press was on: the ground, or a raised work plane.
+  return {
+    center: { x: box.x + box.width / 2, y: from.y, z: box.y + box.height / 2 },
+    width: box.width,
+    depth: box.height,
+  };
 };
 
-/** The height the pointer, `pixelsUp` above where the base was fixed, sets: in scene units, snapped, at least a step. */
+/**
+ * The height the pointer, `pixelsUp` above where the base was fixed, sets in scene units: held on a step it passes
+ * within the detent while the drag is under way, on one when it lands, and never below a step.
+ */
 export const dragHeight = (
   base: GroundBase,
   pixelsUp: number,
   camera: Scene.Camera3D,
   viewport: Viewport,
   step: number,
+  landing = false,
 ): number => {
   const perUnit = screenLength(camera, viewport, base.center, { x: 0, y: 1, z: 0 }) ?? 0;
-  const height = perUnit > 0 ? snapTo(pixelsUp / perUnit, step) : 0;
+  const free = perUnit > 0 ? pixelsUp / perUnit : 0;
+  const height = landing ? snapTo(free, step) : perUnit > 0 ? magnetTo(free, step, DETENT_PX / perUnit) : 0;
   return Math.max(step > 0 ? step : FREE_MIN, height);
 };
 
@@ -59,14 +81,14 @@ export const createdElement = (
     return {
       id,
       type: kind,
-      center: { ...base.center, y: diameter / 2 },
+      center: { ...base.center, y: base.center.y + diameter / 2 },
       scale: { x: diameter, y: diameter, z: diameter },
     };
   }
   return {
     id,
     type: kind,
-    center: { ...base.center, y: height / 2 },
+    center: { ...base.center, y: base.center.y + height / 2 },
     scale: { x: base.width, y: height, z: base.depth },
   };
 };
@@ -99,7 +121,7 @@ export const placedElement = (
 
 /**
  * An element placing `object` dragged out over `base`: with its aspect locked, scaled evenly to cover the base;
- * otherwise stretched to the base and `height`. It stands on the ground, as a created shape does.
+ * otherwise stretched to the base and `height`. It stands on the base, as a created shape does.
  */
 export const placedOnBase = (
   id: string,
@@ -114,14 +136,14 @@ export const placedOnBase = (
     return {
       id,
       object,
-      center: { ...base.center, y: (unit.y * factor) / 2 },
+      center: { ...base.center, y: base.center.y + (unit.y * factor) / 2 },
       scale: { x: factor, y: factor, z: factor },
     };
   }
   return {
     id,
     object,
-    center: { ...base.center, y: height / 2 },
+    center: { ...base.center, y: base.center.y + height / 2 },
     scale: { x: base.width / unit.x, y: height / unit.y, z: base.depth / unit.z },
   };
 };

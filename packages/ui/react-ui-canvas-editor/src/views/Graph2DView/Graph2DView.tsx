@@ -3,7 +3,15 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  type ComponentType,
+  type PropsWithChildren,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import {
   type Camera,
@@ -50,6 +58,8 @@ export type Graph2DViewProps = PropsWithChildren<{
   grid?: boolean;
   /** A new key frames the graph again (an asynchronous layout landing, say); edits never refit by themselves. */
   refitKey?: string | number;
+  /** Drawn in scene coordinates over the graph, with the canvas's services in reach; a stable component. */
+  Overlay?: ComponentType;
 }>;
 
 /**
@@ -69,6 +79,7 @@ export const Graph2DView = ({
   onSelectionChange,
   grid = false,
   refitKey,
+  Overlay,
   children,
 }: Graph2DViewProps) => {
   const positions = useMemo(() => positionsProp ?? {}, [positionsProp]);
@@ -103,8 +114,8 @@ export const Graph2DView = ({
 
   const editable = { link: !!onLink, delete: !!onDelete };
   const config = useMemo(
-    () => createConfig2D({ nodes, capabilities: { move: true, ...editable } }),
-    [nodes, editable.link, editable.delete],
+    () => createConfig2D({ nodes, capabilities: { move: true, ...editable }, Overlay }),
+    [nodes, editable.link, editable.delete, Overlay],
   );
 
   const [display, setDisplay] = useState<EditorDisplay>({ theme: 'flat', grid, snap: true, guides: true });

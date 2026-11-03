@@ -4,11 +4,11 @@
 #
 
 # Rebuilds a voiced echo3d video from the committed holds and the takes on R2; spends no ElevenLabs credits.
-# Usage (from anywhere): tools/autocue/showcase/echo3d/voice/build.sh fry|pro|saas45 [work dir, default temp/voice]
+# Usage (from anywhere): tools/autocue/showcase/echo3d/voice/build.sh fry|fry-short|pro|saas45 [work dir, default temp/voice]
 
 set -euo pipefail
 
-SET=${1:?usage: build.sh fry|pro|saas45 [work dir]}
+SET=${1:?usage: build.sh fry|fry-short|pro|saas45 [work dir]}
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(git -C "$HERE" rev-parse --show-toplevel)
 WORK=$(mkdir -p "${2:-$ROOT/temp/voice}" && cd "${2:-$ROOT/temp/voice}" && pwd)
@@ -33,18 +33,19 @@ ensure_server() {
 
 # Silent 60fps render paced by the holds; about four minutes of frames, so it takes a while.
 render() {
-  local set=$1
+  local set=$1 scenario=${2:-saas}
   [ -f "$WORK/echo3d-$set-video.mp4" ] && return
   ensure_server
   (cd "$ROOT" && node tools/autocue/showcase/echo3d/record.mjs --holds "$HERE/holds-$set.json" \
-    --out "$WORK/echo3d-$set-video.mp4")
+    --scenario "$scenario" --out "$WORK/echo3d-$set-video.mp4")
 }
 
 # The picture holds its last frame a little past the voice so the end card is not cut off.
+# A cut reuses another set's takes: only the slides in its holds file are voiced.
 voiced() {
-  local set=$1 pad=$2
-  render "$set"
-  python3 "$HERE/mix.py" "$WORK/takes/$set" "$HERE/holds-$set.json" "$WORK/echo3d-$set-video.mp4" \
+  local set=$1 pad=$2 takes=${3:-$1} scenario=${4:-saas}
+  render "$set" "$scenario"
+  python3 "$HERE/mix.py" "$WORK/takes/$takes" "$HERE/holds-$set.json" "$WORK/echo3d-$set-video.mp4" \
     "$WORK/echo3d-$set.m4a"
   ffmpeg -y -v error -i "$WORK/echo3d-$set-video.mp4" -i "$WORK/echo3d-$set.m4a" -map 0:v -map 1:a \
     -vf "tpad=stop_mode=clone:stop_duration=$pad" -c:v libx264 -preset slow -crf 12 -tune grain -pix_fmt yuv420p \
@@ -56,6 +57,7 @@ fetch_takes
 case "$SET" in
   fry) voiced fry 1.0 ;;
   pro) voiced pro 0.5 ;;
+  fry-short) voiced fry-short 1.0 fry saas-short ;;
   saas45)
     render fry
     python3 "$HERE/cut45.py" "$WORK/echo3d-fry-video.mp4" "$WORK/takes/saas45" "$WORK/SAAS-45.mp4"

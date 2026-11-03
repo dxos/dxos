@@ -87,7 +87,7 @@ describe('renderList', () => {
     const hub = list.items.find((item) => item.key === 'shell/hub');
     const s1 = list.items.find((item) => item.key === 'shell/team/s1');
     expect(hub?.center).toEqual({ x: 0, y: 0, z: 0 });
-    // The shell is 8 across, so its 80% holds a cluster about 6.6 across: s1 at x=3 lands well inside radius 4.
+    // The shell is 8 across, so its 80% holds a cluster about 6.5 across: s1 at x=3 lands well inside radius 4.
     expect(s1 && s1.center.x).toBeGreaterThan(0);
     expect(s1 && s1.center.x).toBeLessThan(3.2);
     expect(list.links.map((link) => link.key)).toContain('shell/l1');

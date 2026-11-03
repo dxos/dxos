@@ -35,10 +35,12 @@ directly. Regenerating makes real Anthropic calls and **requires the
 > `ANTHROPIC_API_KEY` in the shell breaks Claude Code, so the repo reads the key
 > from `DX_ANTHROPIC_API_KEY` everywhere (test layers and the `runIf` gates).
 
-Populate it from 1Password:
+Run the command under `op run`, which resolves the 1Password reference into that one process and
+exits non-zero when it cannot (never `eval` the output of `op inject`: the shell would parse the
+secret as code):
 
 ```bash
-pnpm -ws 1p-credentials   # exports DX_ANTHROPIC_API_KEY (op://eng-dev/com.anthropic.api/local/AGENTS_API_KEY)
+DX_ANTHROPIC_API_KEY=op://eng-dev/com.anthropic.api/local/AGENTS_API_KEY op run -- <command>
 ```
 
 or export it directly: `export DX_ANTHROPIC_API_KEY=sk-ant-...`.

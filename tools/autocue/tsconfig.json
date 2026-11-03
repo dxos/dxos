@@ -1,7 +1,8 @@
 {
   "extends": "../../tsconfig.base.json",
   "include": [
-    "src"
+    "src",
+    "showcase/echo3d/voice/*.json"
   ],
   "references": [
     {

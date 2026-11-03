@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type GizmoMode, type Viewport, project } from '@dxos/react-ui-canvas/3d';
+import { DETENT_PX, magnetTo, nearestStop, snapTo } from '@dxos/react-ui-canvas';
+import { type Box, type GizmoMode, SNAP, type Viewport, faceStops, project } from '@dxos/react-ui-canvas/3d';
 import { type LayoutIntent, type Resolved3D, type Scene } from '@dxos/scene';
 
 /** An element's transform in its layout's coordinates, as a gizmo leaves it. */
@@ -93,11 +94,23 @@ export type ExtrudeDrag = {
   viewport: Viewport;
   /** Where the face was picked, in world coordinates. */
   point: Scene.Vec3;
+  /** The world length the distance snaps to whole multiples of; zero or none leaves it free. */
+  step?: number;
+  /** The drag is ending: the distance lands on a whole step rather than following the pointer to one. */
+  landing?: boolean;
+  /** The solid's world extent along the normal, of which a push into it leaves a minor grid unit; none leaves it free. */
+  thickness?: number;
+  /** Other bodies, whose sides the pulled face is held flush against; with `side`, where the face is along its axis. */
+  boxes?: Readonly<Record<string, Box>>;
+  side?: number;
 };
 
 /**
  * The `extrude` a face drag makes: its distance is the world length the drag spans along the face's normal at the
- * picked point. Undefined for a drag shorter than a click's slop, or a normal seen end-on.
+ * picked point. With a `step` it is held flush on a side of another of `boxes` it passes within the detent, else on a
+ * step, as a 2D move is, and lands so; a push into the solid stops a minor grid unit short of its far side, snapping or
+ * not, so it never thins away; a landing short of half a step, a drag shorter than a click's slop, or a normal seen
+ * end-on makes none.
  */
 export const extrudeIntent = ({
   id,
@@ -107,6 +120,11 @@ export const extrudeIntent = ({
   camera,
   viewport,
   point,
+  step = 0,
+  landing = false,
+  thickness,
+  boxes,
+  side,
 }: ExtrudeDrag): LayoutIntent | undefined => {
   if (Math.abs(dragPixels) < EXTRUDE_SLOP) {
     return undefined;
@@ -116,5 +134,20 @@ export const extrudeIntent = ({
   if (pixels === undefined || pixels < 1e-3) {
     return undefined;
   }
-  return { kind: 'extrude', id, target, face, distance: round(dragPixels / pixels) };
+  const free = dragPixels / pixels;
+  // A face lined up with another body's side is what a person pulling it wants most, so that holds ahead of the grid.
+  const axis = face.x !== 0 ? 'x' : face.y !== 0 ? 'y' : 'z';
+  const sign = face[axis];
+  const flush =
+    step > 0 && boxes && side !== undefined
+      ? nearestStop(0, faceStops([side + free * sign], boxes, axis), DETENT_PX / pixels)
+      : undefined;
+  const held = flush
+    ? free + flush.delta * sign
+    : landing
+      ? snapTo(free, step)
+      : magnetTo(free, step, DETENT_PX / pixels);
+  const deepest = thickness === undefined ? -Infinity : Math.min(0, SNAP.move - thickness);
+  const distance = round(Math.max(deepest, held));
+  return distance === 0 ? undefined : { kind: 'extrude', id, target, face, distance };
 };

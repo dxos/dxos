@@ -104,6 +104,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     onCreate,
     resolveCreateEntry,
     refInline,
+    defaultOpen,
   } = props;
   const { t } = Hooks.useTranslation(translationKey);
   const { variant, form } = useFormContext(FormFieldDispatch.displayName);
@@ -236,7 +237,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
   }
 
   if (resolution.kind === 'ref' && resolution.inline) {
-    return <InlineRefField {...fieldProps} db={db} useType={useType} onCreate={onCreate} />;
+    return <InlineRefField {...fieldProps} db={db} useType={useType} onCreate={onCreate} defaultOpen={defaultOpen} />;
   }
 
   const control = renderControl(resolution);

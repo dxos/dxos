@@ -8,6 +8,7 @@ import { useThemeContext } from '@dxos/react-ui/Theme';
 import { type Scene, resolveLayout3D } from '@dxos/scene';
 
 import { type ThemeMode } from '../../model/index.ts';
+import { SNAP_HIGHLIGHT_CLASS } from '../../utils/index.ts';
 import { orbitBy, panBy, zoomBy } from '../camera.ts';
 import { loadManifold, manifoldGeometry } from '../manifold.ts';
 import { type GeometrySource, SceneRenderer3D } from '../renderer.ts';
@@ -96,6 +97,7 @@ export const useSceneRenderer = (
       mode,
       background: cssColorToHex(getComputedStyle(container).backgroundColor, '#f4f5f7'),
       selection: focusColor(container),
+      snap: snapColor(container),
     });
     setRenderer(next);
     const observer = new ResizeObserver(([entry]) => {
@@ -113,6 +115,7 @@ export const useSceneRenderer = (
   useLayoutEffect(() => {
     const container = containerRef.current;
     container && renderer?.setSelectionColor(focusColor(container));
+    container && renderer?.setSnapColor(snapColor(container));
   });
   return { renderer, size, mode };
 };
@@ -120,6 +123,17 @@ export const useSceneRenderer = (
 /** The theme's focus colour, which the 2D canvas draws its selection frame in, as a hex string. */
 const focusColor = (element: HTMLElement): string =>
   cssColorToHex(getComputedStyle(element).getPropertyValue('--color-focus').trim(), '#3b82f6');
+
+/** The colour `SNAP_HIGHLIGHT_CLASS` gives text in the view, as a hex string. */
+const snapColor = (element: HTMLElement): string => {
+  const probe = document.createElement('span');
+  probe.className = SNAP_HIGHLIGHT_CLASS;
+  probe.hidden = true;
+  element.appendChild(probe);
+  const color = getComputedStyle(probe).color;
+  probe.remove();
+  return cssColorToHex(color, '#f59e0b');
+};
 
 export type OrbitOptions = {
   /** Off where something else drives the camera. */

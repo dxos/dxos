@@ -912,6 +912,13 @@ const saasViews = [
   COMPANY_FILLS,
 ];
 
+// The shorter cut: the competitors stay top-down rather than tilting over, and the object's detail card and thread are
+// skipped, from the constellation straight to the documents it creates.
+const saasShortViews = saasViews
+  .filter((view) => view.id !== 'object-detail' && view.id !== 'object-thread')
+  .map((view) => (view.id === 'competitors' ? { ...view, camera: SCALE.camera, seconds: undefined } : view));
+
 export const scenarios = {
-  saas: { title: 'SaaS', views: saasViews },
+  'saas': { title: 'SaaS', views: saasViews },
+  'saas-short': { title: 'SaaS (short)', views: saasShortViews },
 };

@@ -8,7 +8,7 @@
  * into ffmpeg. A live screencast drops frames, so camera moves would judder; this cannot.
  *
  *   node record.mjs [--out echo3d.mp4] [--fps 60] [--url http://localhost:7420] [--width 1920] [--height 1080]
- *     [--from blank] [--to company-fills] [--supersample 1] [--holds holds.json]
+ *     [--from blank] [--to company-fills] [--supersample 1] [--holds holds.json] [--scenario saas]
  *
  * Each slide holds for HOLDS[id] seconds from the moment it is entered, then the next one starts; `--holds` names a
  * JSON file of `{ id: seconds }` that overrides them, so a voice-over can set its own pace. Sound is not
@@ -34,6 +34,8 @@ const { values } = parseArgs({
     // one-pixel lines (the lattice) and takes about four times as long.
     supersample: { type: 'string', default: '1' },
     holds: { type: 'string' },
+    // The scene set (views.js `scenarios`) the page plays.
+    scenario: { type: 'string', default: 'saas' },
   },
 });
 
@@ -121,7 +123,7 @@ await page.addInitScript(() => {
   });
 });
 page.on('pageerror', (error) => console.error('page error:', error.message));
-await page.goto(`${values.url}/#${values.from}`);
+await page.goto(`${values.url}/?s=${values.scenario}#${values.from}`);
 await page.waitForFunction(() => typeof window.__step === 'function' && document.fonts.status === 'loaded');
 // A couple of frames so the first scene is laid out before recording starts.
 await page.evaluate(() => window.__step(0));

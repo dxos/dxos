@@ -3,6 +3,7 @@
 //
 
 import { type Page } from '@playwright/test';
+import { createHash } from 'node:crypto';
 import { statSync } from 'node:fs';
 
 import { BASE_URL, defineScenario, invokeInPage, waitForReady } from '../perf/scenario.ts';
@@ -22,13 +23,47 @@ const ARCHIVE = process.env.DX_PERF_PROFILE_ARCHIVE;
  */
 let SPACE = process.env.DX_PERF_OBJECT_SPACE ?? '';
 
-/** How many of the collection's objects to open (`DX_PERF_OBJECTS`); each opens cold, then warm. */
-const OBJECTS = Number.parseInt(process.env.DX_PERF_OBJECTS ?? '', 10) || 8;
+/** A positive integer from the environment, or `fallback` when unset; anything else is an error, not a default. */
+const positiveInt = (name: string, fallback: number): number => {
+  const value = process.env[name];
+  if (value === undefined || value === '') {
+    return fallback;
+  }
+  if (!/^[1-9]\d*$/.test(value)) {
+    throw new Error(`${name} must be a positive integer, got ${JSON.stringify(value)}`);
+  }
+  return Number(value);
+};
+
+/** How many of the branch's objects to open (`DX_PERF_OBJECTS`); each opens once per pass. */
+const OBJECTS = positiveInt('DX_PERF_OBJECTS', 8);
+
+const DEFAULT_BRANCH = 'content/collections';
+
+/**
+ * The navtree branch, under `root/<space>/`, whose children the stages open (`DX_PERF_OBJECT_BRANCH`): the root
+ * collection by default; `ai/org.dxos.type.project` for the Projects section.
+ */
+const BRANCH = process.env.DX_PERF_OBJECT_BRANCH ?? DEFAULT_BRANCH;
+
+/** The branch as a series label: one holding an object or space id is named by a hash, so the id is never published. */
+const branchLabel = (branch: string): string =>
+  branch.split('/').some((segment) => /^[0-9A-Z]{26,}$/.test(segment))
+    ? createHash('sha256').update(branch).digest('hex').slice(0, 12)
+    : branch;
+
+/** Passes over the objects (`DX_PERF_OBJECT_PASSES`): `cold`, `warm`, then `warm3`, `warm4`… to show a trend. */
+const PASSES = Array.from({ length: positiveInt('DX_PERF_OBJECT_PASSES', 2) }, (_, index) =>
+  index === 0 ? 'cold' : index === 1 ? 'warm' : `warm${index + 1}`,
+);
+
+/** Each stage's open, and the settle after it, on top of the half hour `prepare`'s reindex may take. */
+const STAGE_MS = 10_000;
 
 /** The counters that move while the worker indexes. */
 const INDEX_COUNTERS = ['echo.indexPasses', 'echo.indexedObjects'];
 
-const collections = () => `root/${SPACE}/content/collections`;
+const collections = () => `root/${SPACE}/${BRANCH}`;
 const row = (id: string) => `[data-tree-row][data-object-id="${id}"]`;
 
 const switchTo = async (page: Page, workspace: string, timeout: number) => {
@@ -46,7 +81,7 @@ const switchTo = async (page: Page, workspace: string, timeout: number) => {
   }
 };
 
-/** The first `OBJECTS` direct children of the space's root collection, expanded in the navtree: the objects the stages open. */
+/** The first `OBJECTS` direct children of the branch, expanded in the navtree: the objects the stages open. */
 const objectRows = async (page: Page, timeout: number): Promise<string[]> => {
   const branch = page.locator(row(collections()));
   await branch.waitFor({ timeout });
@@ -64,7 +99,7 @@ const objectRows = async (page: Page, timeout: number): Promise<string[]> => {
   let ids = await page.evaluate(children, collections());
   while (ids.length < OBJECTS) {
     if (Date.now() > deadline) {
-      throw new Error(`the root collection shows ${ids.length} objects, fewer than DX_PERF_OBJECTS=${OBJECTS}`);
+      throw new Error(`${collections()} shows ${ids.length} objects, fewer than DX_PERF_OBJECTS=${OBJECTS}`);
     }
     await page.waitForTimeout(250);
     ids = await page.evaluate(children, collections());
@@ -94,10 +129,13 @@ defineScenario({
   flow: 'object-open',
   reproduces:
     "Opening an object from the navtree takes 70-450 ms and frames of 150-350 ms on the reporter's own profile, against a 40 ms target (2026-10-28 debug session).",
-  scale: ARCHIVE
-    ? `archive=${Math.round(statSync(ARCHIVE).size / 1e6)}MB,objects=${OBJECTS}`
-    : `${seedLabel(SEEDED_DOCUMENTS)},objects=${OBJECTS}`,
-  timeoutMs: 30 * 60_000,
+  // A non-default branch opens other objects, so it is a series of its own.
+  scale: [
+    ARCHIVE ? `archive=${Math.round(statSync(ARCHIVE).size / 1e6)}MB` : seedLabel(SEEDED_DOCUMENTS),
+    `objects=${OBJECTS}`,
+    ...(BRANCH === DEFAULT_BRANCH ? [] : [`branch=${branchLabel(BRANCH)}`]),
+  ].join(','),
+  timeoutMs: 30 * 60_000 + PASSES.length * OBJECTS * STAGE_MS,
   privateData: ARCHIVE !== undefined,
   // Seeded or imported in a browser of its own, so the measured one boots on the profile as a returning user does.
   persistentProfile: true,
@@ -124,12 +162,16 @@ defineScenario({
   },
   stages: async ({ page, stage, budget }) => {
     const ids = await objectRows(page, budget);
-    for (const pass of ['cold', 'warm']) {
+    for (const pass of PASSES) {
       for (const [index, id] of ids.entries()) {
-        await stage(`${pass}-${index + 1}`, async () => {
+        const ran = await stage(`${pass}-${index + 1}`, async () => {
           await page.locator(row(id)).click();
           await waitForPlank(page, id, budget);
         });
+        // Every stage after one `--until` skipped is skipped too.
+        if (!ran) {
+          return;
+        }
         // Between stages, so one open's trailing work does not land in the next stage.
         await page.waitForTimeout(1_500);
       }

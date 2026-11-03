@@ -20,7 +20,7 @@ npm skips the publish and only configures the trusted publisher.
 The agent does every step except the npm sign-in and the browser approvals, which belong to the user's npm
 account. A local agent cannot run the real publish itself: it is interactive, and the harness's permission check
 refuses it as publishing. So the agent checks, dry-runs, hands over **two commands**, follows the user's terminal,
-and verifies. In the cloud sandbox `--op` removes the user from the loop entirely (step 4).
+and verifies. With an operator's 1Password access, `--op` removes the user from the loop entirely (step 4).
 
 ### 1. Choose and check the packages
 
@@ -74,9 +74,10 @@ node scripts/publish-package.mjs @dxos/<a> @dxos/<b> --trust
 | Environment     | blank                                        |
 | Allowed actions | `npm publish` only — not `npm stage publish` |
 
-### 4. Unattended, in the cloud sandbox
+### 4. Unattended, with operator access
 
-Where `op` can read the `CI` vault (`OP_SERVICE_ACCOUNT_TOKEN` set), add `--op`: the run logs in as the
+Where `op` can read the `eng-ops` vault (a session with an operator's 1Password access; the agents' service account
+reads only `eng-dev`), add `--op`: the run logs in as the
 [npm bot account](#npm-bot-account), answers each 2FA prompt with a fresh TOTP code, and revokes the session token on
 exit, so the Bash tool runs it with no user step.
 
@@ -102,17 +103,17 @@ only if the PR also changes the package (`agents/instructions/changesets.md`).
 
 ## npm bot account
 
-The `npm-bot` npm account's credentials live in 1Password (`CI` vault, item `NPM bot`). Use the references, never
-the values (`1password` skill):
+The `npm-bot` npm account's credentials live in 1Password (`eng-ops` vault, record `com.npmjs`). Use the
+references, never the values (`1password` skill):
 
-| Field             | Reference                           |
-| ----------------- | ----------------------------------- |
-| Username          | `op://CI/NPM bot/username`          |
-| Password          | `op://CI/NPM bot/password`          |
-| One-time password | `op://CI/NPM bot/one-time password` |
+| Field             | Reference                             |
+| ----------------- | ------------------------------------- |
+| Username          | `op://eng-ops/com.npmjs/BOT_USERNAME` |
+| Password          | `op://eng-ops/com.npmjs/BOT_PASSWORD` |
+| One-time password | `op://eng-ops/com.npmjs/BOT_TOTP`     |
 
 A TOTP code lasts 30 seconds, so read it fresh for each npm command that asks for one (`--otp "$(op read -n
-'op://CI/NPM bot/one-time password?attribute=otp')"`), never once for a loop.
+'op://eng-ops/com.npmjs/BOT_TOTP?attribute=otp')"`), never once for a loop.
 
 ## Many packages
 

@@ -7,6 +7,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as AnimatorCapabilities from '@dxos/plugin-animator/AnimatorCapabilities';
 import * as AnimatorEvents from '@dxos/plugin-animator/AnimatorEvents';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
@@ -92,10 +93,11 @@ const config: Plugin.PluginConfig = Plugin.config({
       () => import('./src/capabilities/migrations.ts', { with: { type: 'module-url' } }),
     ),
     // Legacy scene drawings move onto `Canvas`es as each space loads, so no surface reads the legacy records.
+    // `SchemaRegistered` pulls the idle-gated type registration ahead of it: the spaces load first on a cold boot.
     Capability.lazyModule(
       'legacy-migration',
       {
-        requires: [ClientCapabilities.Client],
+        requires: [ClientCapabilities.Client, ClientCapabilities.SchemaRegistered],
         provides: [],
         activatesOn: ClientEvents.SpacesAvailable,
         environments: ['browser', 'node', 'tauri'],
@@ -119,7 +121,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       provides: [CanvasCapabilities.Settings],
     }),
     AppCapability.surface(() => import('./src/capabilities/react-surface.tsx', { with: { type: 'module-url' } }), {
-      roles: ['org.dxos.role.objectProperties'],
+      roles: [AppSurface.ObjectProperties],
     }),
     AppCapability.spaceTemplates(
       () => import('./src/capabilities/space-templates.ts', { with: { type: 'module-url' } }),

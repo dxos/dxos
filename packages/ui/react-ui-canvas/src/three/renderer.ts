@@ -11,6 +11,7 @@ import {
   type AbstractEngine,
   type AbstractMesh,
   ArcRotateCamera,
+  AxisDragGizmo,
   Camera,
   Color3,
   Color4,
@@ -37,6 +38,7 @@ import {
   type ShaderMaterial,
   ShadowGenerator,
   StandardMaterial,
+  TransformNode,
   UtilityLayerRenderer,
   Vector3,
   VertexData,
@@ -46,8 +48,10 @@ import { type Instance3D } from '@dxos/animation';
 import { type Scene as Model } from '@dxos/scene';
 
 import { NEU_PALETTE, type NeuPalette, type ThemeMode } from '../model/index.ts';
-import { groundPoint, orthoHalfHeight, toOrbit } from './camera.ts';
-import { GRID_MAJOR_EVERY, groundAxes, groundGrid } from './grid.ts';
+import { DETENT_PX, snapTo } from '../utils/index.ts';
+import { orthoHalfHeight, planePoint, toOrbit } from './camera.ts';
+import { type Box, type FaceRef, snapSides } from './faces.ts';
+import { AXIS_COLORS, GRID_MAJOR_EVERY, GRID_MINOR, groundAxes, groundGrid } from './grid.ts';
 import { meshData } from './io/index.ts';
 import {
   LATTICE_OPACITY,
@@ -61,12 +65,23 @@ import {
   setRim,
   setSurface,
 } from './materials.ts';
+import { creasedNormals } from './normals.ts';
+import { GROUND_PLANE, type WorkPlane } from './plane.ts';
 import { type RenderItem, type RenderList } from './render-list.ts';
 import { type MaterialSpec, type Theme3D, isNeuTheme, materialSpec, themeMode3D } from './style.ts';
 
 /** The outline of a selected item: the theme's focus blue. */
 /** The selection colour when the host gives none. */
 const DEFAULT_SELECTION = '#3b82f6';
+
+/** The colour of faces a move is flush with when the host gives none: the amber of `SNAP_HIGHLIGHT_CLASS`. */
+const DEFAULT_SNAP = '#f59e0b';
+
+/** The screen size of the marker on a point a drag is held on, in CSS pixels. */
+const SNAP_POINT_PX = 10;
+
+/** How far an axis guide runs each way: past anything in view. */
+const GUIDE_REACH = 1000;
 
 /** Whether a Neu item casts a contact shadow: a solid body, not a see-through shell or a composite's frame. */
 export const castsNeuShadow = (spec: MaterialSpec, item: Pick<RenderItem, 'frame'>): boolean =>
@@ -117,6 +132,8 @@ export type SceneRenderer3DOptions = {
   background: string;
   /** The selection colour (the theme's focus colour, as the 2D canvas's selection frame); a blue when unset. */
   selection?: string;
+  /** The colour of faces a move or extrusion is flush with, apart from the selection's (see `SNAP_HIGHLIGHT_CLASS`). */
+  snap?: string;
 } & (
   | { canvas: HTMLCanvasElement; engine?: undefined }
   /** An engine of the caller's, e.g. a `NullEngine` in a test. */
@@ -136,6 +153,13 @@ const pickTag = (mesh: AbstractMesh): { key: string; frame: boolean } | undefine
 };
 
 const vec3 = ({ x, y, z }: Vector3): Model.Vec3 => ({ x, y, z });
+
+/** Whether `key` is one of `keys`, a part nested in one, or a frame round one: what moves with them or wraps them. */
+const related = (key: string, keys: readonly string[]): boolean =>
+  keys.some((other) => other === key || key.startsWith(`${other}/`) || other.startsWith(`${key}/`));
+
+const sameVec = (left: Model.Vec3, right: Model.Vec3): boolean =>
+  left.x === right.x && left.y === right.y && left.z === right.z;
 
 export type GizmoMode = 'move' | 'rotate' | 'scale';
 
@@ -162,6 +186,10 @@ const worldTransform = (mesh: AbstractMesh): WorldTransform => {
 
 const radians = (degrees: number) => (degrees * Math.PI) / 180;
 
+/** A mesh's orientation as a quaternion, whichever of the two Babylon holds it in. */
+const turnOf = (mesh: AbstractMesh): Quaternion =>
+  mesh.rotationQuaternion?.clone() ?? Quaternion.FromEulerVector(mesh.rotation);
+
 const geometryIds = new WeakMap<MeshData, number>();
 let nextGeometryId = 1;
 
@@ -184,8 +212,8 @@ const OUTLINE_FRAMES = 3;
 /** The rendering group selection boxes draw in, after the scene with its depth cleared. */
 const OVERLAY_GROUP = 1;
 
-/** What the gizmos snap to with snapping on: the ground grid's minor unit, 15 degrees and a tenth of the size. */
-export const SNAP = { move: 1, rotate: 15, scale: 0.1 } as const;
+/** What the gizmos snap to with snapping on: the ground grid's minor spacing, 15 degrees and a tenth of the size. */
+export const SNAP = { move: GRID_MINOR, rotate: 15, scale: 0.1 } as const;
 
 /** The ground grid's half-width, in scene units. */
 const GRID_EXTENT = 20;
@@ -195,11 +223,33 @@ export class SceneRenderer3D {
   readonly #engine: AbstractEngine;
   #view?: Model.Camera3D;
   #gizmos?: GizmoManager;
-  #gizmoEnd?: (after: WorldTransform) => void;
+  #gizmoEnd?: (after: WorldTransform, group: Record<string, WorldTransform>) => void;
+  // The other selected items, which a gizmo drag carries along with the one it is on.
+  #group: string[] = [];
   // Babylon's default utility layer is one per process, on whichever scene was made last; a renderer keeps its own.
   #layers?: { normal: UtilityLayerRenderer; depth: UtilityLayerRenderer };
   #dragged = false;
+  // A gizmo drag under way: where the item started, where the pointer alone would have put it, and its box's low corner.
+  #drag?: {
+    position: Vector3;
+    rotation: Vector3;
+    turn: Quaternion;
+    scaling: Vector3;
+    free: Vector3;
+    last: Vector3;
+    corner: Vector3;
+    /** The far corner of the lead's box from its position, so both its sides along an axis can meet another's. */
+    extent: Vector3;
+    /** The boxes of the items not moving, which the lead's sides are held flush against. */
+    others: Record<string, Box>;
+    group: { mesh: AbstractMesh; position: Vector3; turn: Quaternion; scaling: Vector3 }[];
+  };
   readonly #observed = new WeakSet<object>();
+  // Whether a gizmo is on an item; it, or the face arrow, keeps the view drawing every frame so a drag shows.
+  #gizmoOn = false;
+  // The single-axis arrow on the face an extrusion pulls: a handle the host drags, so Babylon's drag on it is off.
+  #arrow?: { gizmo: AxisDragGizmo; node: TransformNode; direction: string };
+  #plane: WorkPlane = GROUND_PLANE;
   #looping = false;
   #settling = false;
   #snap = false;
@@ -224,6 +274,13 @@ export class SceneRenderer3D {
   /** The face under the pointer, tinted faintly and outlined round that side of its item's bounds. */
   #faceHover?: { key: string; normal: Model.Vec3 };
   #faceHoverMesh?: { fill: Mesh; line: LinesMesh; outline: Vector3[] };
+  #snapColor: string;
+  /** The faces of other items a move or extrusion is flush with, drawn in the snap colour. */
+  #snapFaces: { face: FaceRef; fill: Mesh; line: LinesMesh }[] = [];
+  /** The point a drag is held on, marked in the snap colour. */
+  #snapPoint?: { point: Model.Vec3; mesh: Mesh };
+  /** The world axis a drag is held to, drawn through where it was grabbed in that axis's colour. */
+  #axisGuide?: { origin: Model.Vec3; axis: 'x' | 'y' | 'z'; mesh: LinesMesh };
   /** A Neu theme's tones: the 2D Neu themes', so the two dimensions share a ground in each mode. */
   readonly #palette?: NeuPalette;
   /** A Neu theme's ground plane and the shadows the items cast on it. */
@@ -237,9 +294,11 @@ export class SceneRenderer3D {
     mode = 'light',
     background,
     selection = DEFAULT_SELECTION,
+    snap = DEFAULT_SNAP,
   }: SceneRenderer3DOptions) {
     this.#theme = theme;
     this.#selection = selection;
+    this.#snapColor = snap;
     const presentation = theme === 'presentation';
     const neuMode = themeMode3D(theme, mode);
     this.#palette = isNeuTheme(theme) ? NEU_PALETTE[neuMode] : undefined;
@@ -321,6 +380,19 @@ export class SceneRenderer3D {
     );
   }
 
+  /** The world size of the item `key` along the axis `direction` is nearest, from its world-aligned bounds. */
+  extent(key: string, direction: Model.Vec3): number | undefined {
+    const mesh = this.#items.get(key)?.surface;
+    if (!mesh) {
+      return undefined;
+    }
+    mesh.computeWorldMatrix(true);
+    const { minimumWorld, maximumWorld } = mesh.getBoundingInfo().boundingBox;
+    const size = maximumWorld.subtract(minimumWorld);
+    const [x, y, z] = [Math.abs(direction.x), Math.abs(direction.y), Math.abs(direction.z)];
+    return x >= y && x >= z ? size.x : y >= z ? size.y : size.z;
+  }
+
   /** The meshes that would cut into the selection outline's mask: none, whatever overlaps the selection. */
   get outlineOccluders(): string[] {
     return this.#scene.meshes
@@ -328,7 +400,7 @@ export class SceneRenderer3D {
       .map((mesh) => mesh.name);
   }
 
-  /** Turns gizmo snapping on (to the grid unit, 15 degrees and a tenth) or off. */
+  /** Turns gizmo snapping on (to the minor grid, 15 degrees and a tenth) or off. */
   setSnap(snap: boolean): void {
     this.#snap = snap;
     this.#applySnap();
@@ -403,13 +475,14 @@ export class SceneRenderer3D {
     return this.#grid?.isEnabled() ?? false;
   }
 
-  /** Shows or hides the ground grid: unit lines on the y = 0 plane, made the first time it shows. */
+  /** Shows or hides the grid, on the work plane, made the first time it shows. */
   setGrid(visible: boolean): void {
     if (visible === this.grid) {
       return;
     }
     if (visible && !this.#grid) {
       this.#grid = this.#createGrid();
+      this.#placeGrid();
     }
     this.#grid?.setEnabled(visible);
     this.#redraw();
@@ -461,12 +534,15 @@ export class SceneRenderer3D {
 
   /**
    * The item under a pixel (CSS pixels from the canvas's top left) and where the ray met it, else where it meets the
-   * ground. `through` looks past composites' frames to the parts inside them, as an editor drilled into one does.
+   * work plane. `through` looks past composites' frames to the parts inside them, as an editor drilled into one does.
    */
-  pick(screen: { x: number; y: number }, { through = false }: { through?: boolean } = {}): PickResult {
+  pick(
+    screen: { x: number; y: number },
+    { through = false, skip = [] }: { through?: boolean; skip?: readonly string[] } = {},
+  ): PickResult {
     const hit = this.#scene.pick(screen.x, screen.y, (mesh) => {
       const tag = pickTag(mesh);
-      return tag !== undefined && mesh.isEnabled() && !(through && tag.frame);
+      return tag !== undefined && mesh.isEnabled() && !(through && tag.frame) && !related(tag.key, skip);
     });
     const tag = hit?.hit && hit.pickedMesh ? pickTag(hit.pickedMesh) : undefined;
     if (tag && hit?.pickedPoint) {
@@ -478,7 +554,7 @@ export class SceneRenderer3D {
       width: this.#engine.getRenderWidth() * scaling,
       height: this.#engine.getRenderHeight() * scaling,
     };
-    const point = this.#view && groundPoint(this.#view, viewport, screen);
+    const point = this.#view && planePoint(this.#view, viewport, screen, this.#plane);
     return point ? { point } : {};
   }
 
@@ -494,31 +570,26 @@ export class SceneRenderer3D {
 
   /**
    * Puts Babylon's gizmo of `mode` on the item `key` (none when either is undefined), drawing every frame while it is
-   * on so a drag shows; `onEnd` gets the item's world transform when a drag ends. A `uniform` scale gizmo keeps only
-   * its even handle, for an item whose aspect is locked.
+   * on so a drag shows; a drag carries the `group` items along, each by the same move, turn or scale about its own
+   * centre, and `onEnd` gets the world transforms of the item and of the group when it ends. A `uniform` scale gizmo
+   * keeps only its even handle, for an item whose aspect is locked.
    */
   attachGizmo(
     key: string | undefined,
     mode: GizmoMode | undefined,
-    onEnd: (after: WorldTransform) => void,
-    { uniform = false }: { uniform?: boolean } = {},
+    onEnd: (after: WorldTransform, group: Record<string, WorldTransform>) => void,
+    { uniform = false, group = [] }: { uniform?: boolean; group?: string[] } = {},
   ): void {
     const mesh = key === undefined ? undefined : this.#items.get(key)?.surface;
     if (!mesh || !mode) {
       this.#gizmos?.attachToMesh(null);
       this.#gizmoEnd = undefined;
-      // Stopping the loop stops every function it runs, a settling one too.
-      this.#looping && this.#engine.stopRenderLoop();
-      this.#looping = false;
-      this.#settling = false;
+      this.#gizmoOn = false;
+      this.#updateLoop();
       return;
     }
-    this.#layers ??= {
-      normal: new UtilityLayerRenderer(this.#scene),
-      depth: new UtilityLayerRenderer(this.#scene),
-    };
-    this.#layers.depth.utilityLayerScene.autoClearDepthAndStencil = false;
-    const gizmos = this.#gizmos ?? new GizmoManager(this.#scene, undefined, this.#layers.normal, this.#layers.depth);
+    const layers = this.#utilityLayers();
+    const gizmos = this.#gizmos ?? new GizmoManager(this.#scene, undefined, layers.normal, layers.depth);
     this.#gizmos = gizmos;
     gizmos.usePointerToAttachGizmos = false;
     gizmos.positionGizmoEnabled = mode === 'move';
@@ -533,22 +604,314 @@ export class SceneRenderer3D {
     }
     this.#applySnap();
     this.#gizmoEnd = onEnd;
+    this.#group = group.filter((other) => other !== key);
     for (const gizmo of [gizmos.gizmos.positionGizmo, gizmos.gizmos.rotationGizmo, gizmos.gizmos.scaleGizmo]) {
       if (gizmo && !this.#observed.has(gizmo)) {
         this.#observed.add(gizmo);
         gizmo.onDragStartObservable.add(() => {
           this.#dragged = true;
+          const attached = gizmo.attachedMesh;
+          if (attached) {
+            attached.computeWorldMatrix(true);
+            const position = attached.position.clone();
+            this.#drag = {
+              position,
+              rotation: (attached.rotationQuaternion?.toEulerAngles() ?? attached.rotation).clone(),
+              turn: turnOf(attached),
+              scaling: attached.scaling.clone(),
+              free: position.clone(),
+              last: position.clone(),
+              corner: attached.getBoundingInfo().boundingBox.minimumWorld.subtract(position),
+              extent: attached.getBoundingInfo().boundingBox.maximumWorld.subtract(position),
+              others: this.itemBounds([
+                ...this.#group,
+                ...[...this.#items].flatMap(([key, { surface }]) => (surface === attached ? [key] : [])),
+              ]),
+              group: this.#group.flatMap((other) => {
+                const mesh = this.#items.get(other)?.surface;
+                return mesh
+                  ? [{ mesh, position: mesh.position.clone(), turn: turnOf(mesh), scaling: mesh.scaling.clone() }]
+                  : [];
+              }),
+            };
+          }
+        });
+        gizmo.onDragObservable.add(() => {
+          const attached = gizmo.attachedMesh;
+          if (attached && this.#drag) {
+            gizmo === gizmos.gizmos.positionGizmo && this.#moveTo(attached, false);
+            this.#follow(attached);
+          }
         });
         gizmo.onDragEndObservable.add(() => {
           const attached = gizmo.attachedMesh;
-          attached && this.#gizmoEnd?.(worldTransform(attached));
+          const group: Record<string, WorldTransform> = {};
+          if (attached && this.#drag) {
+            gizmo === gizmos.gizmos.positionGizmo ? this.#moveTo(attached, true) : this.#land(attached);
+            this.#follow(attached);
+            this.snapFaces([]);
+            for (const other of this.#group) {
+              const mesh = this.#items.get(other)?.surface;
+              mesh && (group[other] = worldTransform(mesh));
+            }
+          }
+          this.#drag = undefined;
+          attached && this.#gizmoEnd?.(worldTransform(attached), group);
         });
       }
     }
-    if (!this.#looping) {
+    this.#gizmoOn = true;
+    this.#updateLoop();
+  }
+
+  /**
+   * Shows the single-axis arrow of an extrusion at `point`, along the face's axis-aligned `normal` in that axis's colour,
+   * or hides it when `at` is undefined.
+   */
+  showFaceArrow(at?: { point: Model.Vec3; normal: Model.Vec3 }): void {
+    const direction = at && `${at.normal.x},${at.normal.y},${at.normal.z}`;
+    if (this.#arrow && this.#arrow.direction !== direction) {
+      this.#arrow.gizmo.dispose();
+      this.#arrow.node.dispose();
+      this.#arrow = undefined;
+    }
+    if (at && direction) {
+      if (!this.#arrow) {
+        const axis = at.normal.x !== 0 ? 'x' : at.normal.y !== 0 ? 'y' : 'z';
+        const node = new TransformNode('face-arrow', this.#scene);
+        const gizmo = new AxisDragGizmo(
+          new Vector3(at.normal.x, at.normal.y, at.normal.z),
+          Color3.FromHexString(AXIS_COLORS[axis]),
+          this.#utilityLayers().normal,
+        );
+        gizmo.updateGizmoRotationToMatchAttachedMesh = false;
+        gizmo.dragBehavior.enabled = false;
+        gizmo.attachedNode = node;
+        this.#arrow = { gizmo, node, direction };
+      }
+      this.#arrow.node.position.set(at.point.x, at.point.y, at.point.z);
+    }
+    this.#updateLoop();
+  }
+
+  /** Where the face arrow stands and the way it points; undefined when it is hidden. */
+  get faceArrow(): { point: Model.Vec3; normal: Model.Vec3 } | undefined {
+    const arrow = this.#arrow;
+    if (!arrow) {
+      return undefined;
+    }
+    const [x = 0, y = 0, z = 0] = arrow.direction.split(',').map(Number);
+    return { point: vec3(arrow.node.position), normal: { x, y, z } };
+  }
+
+  /** Whether a pixel (CSS pixels from the canvas's top left) is on a gizmo or the face arrow, which take its press. */
+  overGizmo(screen: { x: number; y: number }): boolean {
+    const layers = this.#layers;
+    return (
+      layers !== undefined &&
+      [layers.normal, layers.depth].some((layer) => layer.utilityLayerScene.pick(screen.x, screen.y)?.hit === true)
+    );
+  }
+
+  /** The middle of the side of item `key` that the axis-aligned `normal` points out of, in world coordinates. */
+  faceCenter(key: string, normal: Model.Vec3): Model.Vec3 | undefined {
+    const box = this.bounds(key);
+    if (!box) {
+      return undefined;
+    }
+    const middle = (axis: 'x' | 'y' | 'z') =>
+      normal[axis] > 0 ? box.max[axis] : normal[axis] < 0 ? box.min[axis] : (box.min[axis] + box.max[axis]) / 2;
+    return { x: middle('x'), y: middle('y'), z: middle('z') };
+  }
+
+  /** Item `key`'s world bounding box; undefined when it is not drawn. */
+  bounds(key: string): { min: Model.Vec3; max: Model.Vec3 } | undefined {
+    const mesh = this.#items.get(key)?.surface;
+    if (!mesh) {
+      return undefined;
+    }
+    mesh.computeWorldMatrix(true);
+    const { minimumWorld, maximumWorld } = mesh.getBoundingInfo().boundingBox;
+    return { min: vec3(minimumWorld), max: vec3(maximumWorld) };
+  }
+
+  /**
+   * The world bounds of every item drawn but those in `exclude` and the parts and frames nested with them, which move
+   * with them or wrap them: what a moving item's sides are held flush against.
+   */
+  itemBounds(exclude: readonly string[] = []): Record<string, Box> {
+    return Object.fromEntries(
+      [...this.#items.keys()].flatMap((key) => {
+        const box = related(key, exclude) ? undefined : this.bounds(key);
+        return box ? [[key, box]] : [];
+      }),
+    );
+  }
+
+  /** Shows the faces of other items a move or extrusion is flush with, in the snap colour; none clears them. */
+  snapFaces(faces: readonly FaceRef[]): void {
+    const same =
+      faces.length === this.#snapFaces.length &&
+      faces.every(({ key, normal }, index) => {
+        const shown = this.#snapFaces[index]?.face;
+        return shown?.key === key && sameVec(shown.normal, normal);
+      });
+    if (same) {
+      return;
+    }
+    this.#clearSnapFaces();
+    this.#snapFaces = faces.flatMap((face) => {
+      const bounds = this.#faceBounds(face.key, face.normal);
+      if (!bounds) {
+        return [];
+      }
+      const fill = this.#facePane(`snap-${face.key}`, bounds, face.normal, 0.3, this.#snapColor);
+      const line = CreateLines(
+        `snap-line-${face.key}`,
+        { points: [...bounds.corners, bounds.corners[0]] },
+        this.#scene,
+      );
+      line.color = Color3.FromHexString(this.#snapColor);
+      line.isPickable = false;
+      line.renderingGroupId = OVERLAY_GROUP;
+      return [{ face: { key: face.key, normal: { ...face.normal } }, fill, line }];
+    });
+    this.#view && this.#scene.render();
+  }
+
+  /** Marks the point a drag is held on in the snap colour; none clears it. */
+  snapPoint(point: Model.Vec3 | undefined): void {
+    if (point && this.#snapPoint && sameVec(point, this.#snapPoint.point)) {
+      return;
+    }
+    this.#snapPoint?.mesh.dispose();
+    this.#snapPoint = undefined;
+    if (point) {
+      // A fixed size on screen, however far the point is.
+      const pixels = this.#view ? this.#pixelsPerUnit(new Vector3(point.x, point.y, point.z), Vector3.Right()) : 0;
+      const diameter = pixels > 0 ? SNAP_POINT_PX / pixels : 0.1;
+      const mesh = CreateSphere('snap-point', { diameter, segments: 8 }, this.#scene);
+      mesh.position.set(point.x, point.y, point.z);
+      const material = new StandardMaterial('snap-point', this.#scene);
+      material.emissiveColor = Color3.FromHexString(this.#snapColor);
+      material.disableLighting = true;
+      mesh.material = material;
+      mesh.isPickable = false;
+      // Drawn over the bodies, so a point on a hidden corner still shows.
+      mesh.renderingGroupId = OVERLAY_GROUP;
+      this.#snapPoint = { point: { ...point }, mesh };
+    }
+    this.#view && this.#scene.render();
+  }
+
+  /** The point marked as held, if any. */
+  get snappedPoint(): Model.Vec3 | undefined {
+    return this.#snapPoint && { ...this.#snapPoint.point };
+  }
+
+  /** Draws the world `axis` through `origin` that a drag is held to, in that axis's colour; none clears it. */
+  showAxisGuide(guide: { origin: Model.Vec3; axis: 'x' | 'y' | 'z' } | undefined): void {
+    const shown = this.#axisGuide;
+    if (guide && shown && shown.axis === guide.axis && sameVec(shown.origin, guide.origin)) {
+      return;
+    }
+    shown?.mesh.dispose();
+    this.#axisGuide = undefined;
+    if (guide) {
+      const { origin, axis } = guide;
+      const reach = (sign: number) =>
+        new Vector3(
+          origin.x + (axis === 'x' ? sign * GUIDE_REACH : 0),
+          origin.y + (axis === 'y' ? sign * GUIDE_REACH : 0),
+          origin.z + (axis === 'z' ? sign * GUIDE_REACH : 0),
+        );
+      const mesh = CreateLines('axis-guide', { points: [reach(-1), reach(1)] }, this.#scene);
+      mesh.color = Color3.FromHexString(AXIS_COLORS[axis]);
+      mesh.isPickable = false;
+      mesh.renderingGroupId = OVERLAY_GROUP;
+      this.#axisGuide = { origin: { ...origin }, axis, mesh };
+    }
+    this.#view && this.#scene.render();
+  }
+
+  /** The axis a drag is held to, where it is drawn through and its colour; undefined when none is. */
+  get axisGuide(): { origin: Model.Vec3; axis: 'x' | 'y' | 'z'; color: string } | undefined {
+    const guide = this.#axisGuide;
+    return guide && { origin: { ...guide.origin }, axis: guide.axis, color: AXIS_COLORS[guide.axis] };
+  }
+
+  /** The faces shown as flush with a move, in the colour they are drawn in. */
+  get snapped(): (FaceRef & { color: string })[] {
+    return this.#snapFaces.map(({ face }) => ({ ...face, color: this.#snapColor }));
+  }
+
+  /** Changes the snap colour, e.g. when the theme does. */
+  setSnapColor(color: string): void {
+    if (color === this.#snapColor) {
+      return;
+    }
+    this.#snapColor = color;
+    const faces = this.#snapFaces.map(({ face }) => face);
+    this.#clearSnapFaces();
+    this.snapFaces(faces);
+    const point = this.#snapPoint?.point;
+    this.#snapPoint?.mesh.dispose();
+    this.#snapPoint = undefined;
+    point && this.snapPoint(point);
+  }
+
+  /** The plane the grid is drawn on and a pick off every item lands on. */
+  get plane(): WorkPlane {
+    return this.#plane;
+  }
+
+  /** Moves the work plane: the grid is drawn on it, and a pick off every item meets it. */
+  setPlane(plane: WorkPlane): void {
+    this.#plane = plane;
+    this.#placeGrid();
+    this.#redraw();
+  }
+
+  /** The gizmos' layers, made the first time a gizmo shows. */
+  #utilityLayers(): { normal: UtilityLayerRenderer; depth: UtilityLayerRenderer } {
+    this.#layers ??= {
+      normal: new UtilityLayerRenderer(this.#scene),
+      depth: new UtilityLayerRenderer(this.#scene),
+    };
+    this.#layers.depth.utilityLayerScene.autoClearDepthAndStencil = false;
+    return this.#layers;
+  }
+
+  /** Draws every frame while a gizmo or the face arrow shows, so a drag or a hover shows; otherwise only on change. */
+  #updateLoop(): void {
+    const wanted = this.#gizmoOn || this.#arrow !== undefined;
+    if (wanted && !this.#looping) {
       this.#looping = true;
       this.#engine.runRenderLoop(() => this.#scene.render());
+    } else if (!wanted && this.#looping) {
+      // Stopping the loop stops every function it runs, a settling one too.
+      this.#engine.stopRenderLoop();
+      this.#looping = false;
+      this.#settling = false;
+      // The loop's last frame still shows the gizmo or arrow just taken away, and a still view keeps it until it draws.
+      this.#redraw();
     }
+  }
+
+  /** Lays the grid on the work plane: its lines are drawn on y = 0, so they turn from +y to the plane's normal. */
+  #placeGrid(): void {
+    const grid = this.#grid;
+    if (!grid) {
+      return;
+    }
+    const { origin, normal } = this.#plane;
+    grid.position.set(origin.x, origin.y, origin.z);
+    grid.rotationQuaternion = new Quaternion();
+    Quaternion.FromUnitVectorsToRef(
+      Vector3.Up(),
+      new Vector3(normal.x, normal.y, normal.z).normalize(),
+      grid.rotationQuaternion,
+    );
   }
 
   /** Whether the scale gizmo offers its per-axis handles, as well as the even one. */
@@ -579,10 +942,16 @@ export class SceneRenderer3D {
 
   dispose(): void {
     this.#clearBoxes();
+    this.#clearSnapFaces();
+    this.#snapPoint?.mesh.dispose();
+    this.#snapPoint = undefined;
+    this.#axisGuide?.mesh.dispose();
+    this.#axisGuide = undefined;
     this.#faceSelection = undefined;
     this.#faceHover = undefined;
     this.#drawFace();
     this.#highlight.dispose();
+    this.showFaceArrow(undefined);
     this.#gizmos?.dispose();
     this.#layers?.normal.dispose();
     this.#layers?.depth.dispose();
@@ -601,12 +970,107 @@ export class SceneRenderer3D {
     this.#engine.dispose();
   }
 
+  // The gizmos move freely, as a 2D drag does: `#moveTo` holds a move near the grid and lands it, `#land` a turn or scale.
   #applySnap(): void {
-    const { move, rotate, scale } = this.gizmoSnap;
     const gizmos = this.#gizmos?.gizmos;
-    gizmos?.positionGizmo && (gizmos.positionGizmo.snapDistance = move);
-    gizmos?.rotationGizmo && (gizmos.rotationGizmo.snapDistance = (rotate * Math.PI) / 180);
-    gizmos?.scaleGizmo && (gizmos.scaleGizmo.snapDistance = scale);
+    gizmos?.positionGizmo && (gizmos.positionGizmo.snapDistance = 0);
+    gizmos?.rotationGizmo && (gizmos.rotationGizmo.snapDistance = 0);
+    gizmos?.scaleGizmo && (gizmos.scaleGizmo.snapDistance = 0);
+  }
+
+  /**
+   * Puts a mesh the move gizmo is dragging where the pointer has taken it, held flush on a side of another item or its
+   * box's low corner on a grid line that it passes within `DETENT_PX` of (`snapSides`), or landed so when `landing`; only
+   * the axes the drag moved along are held, and the sides it is flush with are shown.
+   */
+  #moveTo(mesh: AbstractMesh, landing: boolean): void {
+    const drag = this.#drag;
+    if (!drag) {
+      return;
+    }
+    // The gizmo moved the mesh on from where it was last put; the pointer alone would have moved it as far.
+    drag.free.addInPlace(mesh.position.subtract(drag.last));
+    const step = this.gizmoSnap.move;
+    const target = drag.free.clone();
+    const flush: FaceRef[] = [];
+    for (const axis of ['x', 'y', 'z'] as const) {
+      if (this.#snap && Math.abs(drag.free[axis] - drag.position[axis]) > 1e-6) {
+        const direction = new Vector3(axis === 'x' ? 1 : 0, axis === 'y' ? 1 : 0, axis === 'z' ? 1 : 0);
+        const pixels = this.#pixelsPerUnit(mesh.getAbsolutePosition(), direction);
+        const { delta, face } = snapSides({
+          sides: [drag.free[axis] + drag.corner[axis], drag.free[axis] + drag.extent[axis]],
+          axis,
+          boxes: drag.others,
+          step,
+          detent: pixels > 0 ? DETENT_PX / pixels : 0,
+          landing,
+        });
+        target[axis] += delta;
+        face && flush.push(face);
+      }
+    }
+    mesh.position.copyFrom(target);
+    // The gizmo adds its next step to the world matrix, which would otherwise still hold the unheld position.
+    mesh.computeWorldMatrix(true);
+    drag.last = target;
+    this.snapFaces(flush);
+  }
+
+  /** Carries the group along by the move, turn and scale the gizmo has given `lead` since the drag began. */
+  #follow(lead: AbstractMesh): void {
+    const drag = this.#drag;
+    if (!drag || drag.group.length === 0) {
+      return;
+    }
+    const moved = lead.position.subtract(drag.position);
+    const turned = turnOf(lead).multiply(Quaternion.Inverse(drag.turn));
+    const scaled = new Vector3(
+      lead.scaling.x / drag.scaling.x,
+      lead.scaling.y / drag.scaling.y,
+      lead.scaling.z / drag.scaling.z,
+    );
+    for (const { mesh, position, turn, scaling } of drag.group) {
+      mesh.position.copyFrom(position.add(moved));
+      mesh.rotationQuaternion = turned.multiply(turn);
+      mesh.scaling.copyFrom(scaling.multiply(scaled));
+      mesh.computeWorldMatrix(true);
+    }
+  }
+
+  /** Lands a turn or a scale the gizmo has ended on the step nearest it, for each component the drag changed. */
+  #land(mesh: AbstractMesh): void {
+    const drag = this.#drag;
+    const { rotate, scale } = this.gizmoSnap;
+    if (!drag) {
+      return;
+    }
+    const changed = (from: Vector3, to: Vector3, step: number) =>
+      new Vector3(
+        Math.abs(to.x - from.x) > 1e-6 ? snapTo(to.x, step) : to.x,
+        Math.abs(to.y - from.y) > 1e-6 ? snapTo(to.y, step) : to.y,
+        Math.abs(to.z - from.z) > 1e-6 ? snapTo(to.z, step) : to.z,
+      );
+    if (rotate > 0 && mesh.rotationQuaternion) {
+      const rotation = changed(drag.rotation, mesh.rotationQuaternion.toEulerAngles(), radians(rotate));
+      mesh.rotationQuaternion = Quaternion.FromEulerVector(rotation);
+    }
+    if (scale > 0) {
+      const scaling = changed(drag.scaling, mesh.scaling, scale);
+      // A size never lands on nothing.
+      mesh.scaling.set(Math.max(scaling.x, scale), Math.max(scaling.y, scale), Math.max(scaling.z, scale));
+    }
+    mesh.computeWorldMatrix(true);
+  }
+
+  /** The CSS pixels one unit along `direction` spans on screen at `point`. */
+  #pixelsPerUnit(point: Vector3, direction: Vector3): number {
+    const width = this.#engine.getRenderWidth();
+    const height = this.#engine.getRenderHeight();
+    const transform = this.#scene.getTransformMatrix();
+    const viewport = this.#camera.viewport.toGlobal(width, height);
+    const from = Vector3.Project(point, Matrix.IdentityReadOnly, transform, viewport);
+    const to = Vector3.Project(point.add(direction), Matrix.IdentityReadOnly, transform, viewport);
+    return Math.hypot(to.x - from.x, to.y - from.y) * this.#engine.getHardwareScalingLevel();
   }
 
   /**
@@ -750,12 +1214,13 @@ export class SceneRenderer3D {
     return { center, width, height, corners };
   }
 
-  /** A pane over a face's bounds in the selection colour, at `alpha`. */
+  /** A pane over a face's bounds in `color` (the selection's unless given), at `alpha`. */
   #facePane(
     name: string,
     bounds: { center: Vector3; width: number; height: number },
     normal: Model.Vec3,
     alpha: number,
+    color = this.#selection,
   ): Mesh {
     const mesh = CreatePlane(
       name,
@@ -770,7 +1235,7 @@ export class SceneRenderer3D {
           ? new Vector3(Math.PI / 2, 0, 0)
           : Vector3.Zero();
     const material = new StandardMaterial(name, this.#scene);
-    material.emissiveColor = Color3.FromHexString(this.#selection);
+    material.emissiveColor = Color3.FromHexString(color);
     material.disableLighting = true;
     material.alpha = alpha;
     mesh.material = material;
@@ -818,6 +1283,14 @@ export class SceneRenderer3D {
         this.#highlight.removeExcludedMesh(mesh);
       });
     }
+  }
+
+  #clearSnapFaces(): void {
+    this.#snapFaces.forEach(({ fill, line }) => {
+      fill.dispose();
+      line.dispose();
+    });
+    this.#snapFaces = [];
   }
 
   #clearBoxes(): void {
@@ -954,11 +1427,10 @@ export class SceneRenderer3D {
     const name = `item-${item.key}`;
     if (data) {
       const mesh = new Mesh(name, this.#scene);
+      const { positions, indices, normals } = creasedNormals(data);
       const vertices = new VertexData();
-      vertices.positions = data.positions;
-      vertices.indices = data.indices;
-      const normals: number[] = [];
-      VertexData.ComputeNormals(data.positions, data.indices, normals);
+      vertices.positions = positions;
+      vertices.indices = indices;
       vertices.normals = normals;
       vertices.applyToMesh(mesh);
       return mesh;

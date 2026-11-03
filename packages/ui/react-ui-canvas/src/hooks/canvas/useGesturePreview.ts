@@ -11,6 +11,7 @@ import { type RenderList2D } from '../../model/index.ts';
 import {
   type SceneEdit,
   createLink,
+  detentOf,
   duplicateSelection,
   hasVertices,
   insertLink,
@@ -23,7 +24,6 @@ import {
   updateElement,
 } from '../../utils/index.ts';
 import { type PointerMachine, PREVIEW_NODE_ID, isLinkDrawn } from './usePointerMachine.ts';
-import { detentOf } from './useSceneSnap.ts';
 
 /** The link drawn as a preview during a drag; it never reaches the model. */
 const PREVIEW_LINK_ID = 'preview-link';

@@ -8,6 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { trim } from '@dxos/util';
 
 import { ObservabilityNamespace } from './src/namespace.ts';
@@ -92,7 +93,14 @@ const config: Plugin.PluginConfig<ObservabilityOptions.ObservabilityPluginOption
         },
         () => import('./src/capabilities/state.ts', { with: { type: 'module-url' } }),
       ),
-      AppCapability.operationHandler(() => import('#operation-handler', { with: { type: 'module-url' } })),
+      AppCapability.operationHandler(
+        () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
+        { environments: ['browser', 'node', 'tauri'] },
+      ),
+      AppCapability.operationHandler(
+        () => import('./src/capabilities/operation-handler.workerd.ts', { with: { type: 'module-url' } }),
+        { name: 'OperationHandlerWorkerd', environments: ['workerd'] },
+      ),
       Capability.lazyModule(
         'PrivacyBanner',
         {
@@ -121,7 +129,7 @@ const config: Plugin.PluginConfig<ObservabilityOptions.ObservabilityPluginOption
         () => import('./src/capabilities/privacy-notice.ts', { with: { type: 'module-url' } }),
       ),
       AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'module-url' } }), {
-        roles: ['org.dxos.role.article'],
+        roles: [AppSurface.Article],
       }),
       AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
       // Unconditional `provides`: the body contributes nothing when `downloadLogs` is absent.

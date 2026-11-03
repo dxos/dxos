@@ -6,6 +6,8 @@ import { useMemo } from 'react';
 
 import { MAJOR_GRID_RATIO, type Point } from '@dxos/scene';
 
+import { DETENT_PX, detentOf } from '../../utils/index.ts';
+
 /**
  * Grid levels a fourfold apart, from a quarter of the minor grid to far past the major one, so the levels
  * on screen depend on the zoom alone: a child scene seen at a quarter scale draws the same lines as its
@@ -15,13 +17,6 @@ export const GRID_LEVELS = [1 / MAJOR_GRID_RATIO, 1, MAJOR_GRID_RATIO, MAJOR_GRI
 
 /** Screen px a cell must cover to be drawn, and the most lines a level may draw before it is dropped. */
 export const GRID_RANGE: [number, number] = [6, 2048];
-
-/** Screen px within which a moved shape is held on the line or cell it would snap to: a detent, not a jump. */
-export const DETENT_PX = 8;
-
-/** `value` held on `snapped` while within `detent` of it, otherwise left where it is. */
-export const detentOf = (value: number, snapped: number, detent: number): number =>
-  Math.abs(snapped - value) <= detent ? snapped : value;
 
 export type SceneSnap = {
   /** The finest level drawn, in scene units; control points land on it. */

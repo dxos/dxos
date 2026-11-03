@@ -3,7 +3,7 @@
 #
 
 # Generates one ElevenLabs take per slide from a speaking track.
-# Usage: python3 tts.py <SPEAKING-TRACK.md> <out dir> <voice id>
+# Usage: python3 tts.py <SPEAKING-TRACK.md> <out dir> <voice id> [speed, 0.7 to 1.2]
 # Writes <out dir>/<NN>-<slide id>.mp3; needs DX_ELEVENLABS_API_KEY. Each call spends ElevenLabs credits.
 
 import json
@@ -13,6 +13,7 @@ import sys
 import urllib.request
 
 track, out_dir, voice = sys.argv[1], sys.argv[2], sys.argv[3]
+speed = float(sys.argv[4]) if len(sys.argv) > 4 else None
 key = os.environ['DX_ELEVENLABS_API_KEY']
 api = 'https://api.elevenlabs.io/v1'
 
@@ -47,6 +48,7 @@ for index, (number, slide, spoken) in enumerate(slides):
         'model_id': 'eleven_multilingual_v2',
         'previous_text': slides[index - 1][2] if index else None,
         'next_text': slides[index + 1][2] if index + 1 < len(slides) else None,
+        **({'voice_settings': {'speed': speed}} if speed else {}),
     }
     audio = call(f'/text-to-speech/{voice}?output_format=mp3_44100_128', body)
     path = os.path.join(out_dir, f'{number:02d}-{slide}.mp3')

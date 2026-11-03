@@ -85,6 +85,23 @@ describe('extrudeIntent', () => {
     expect(intent?.kind === 'extrude' && intent.distance).toBeCloseTo(50 / screenStep, 2);
   });
 
+  test('pushing a face in leaves at least a minor grid unit of the solid, snapping or not', () => {
+    const push = (units: number, step: number, thickness: number, landing = false) => {
+      const intent = extrudeIntent({
+        ...{ id: 'e', target: 'box', normal: up, camera, viewport, point, step, landing, thickness },
+        dragPixels: units * screenStep,
+      });
+      return intent?.kind === 'extrude' ? intent.distance : undefined;
+    };
+    expect(push(-0.5, 0, 3)).toBeCloseTo(-0.5, 2);
+    expect(push(-2.8, 0, 3)).toBeCloseTo(-2.75, 2);
+    expect(push(-5, 0, 3)).toBeCloseTo(-2.75, 2);
+    expect(push(-5, 0.25, 3, true)).toBe(-2.75);
+    // A solid a minor unit thick has nothing to give, so a push in makes nothing.
+    expect(push(-0.5, 0, 0.25)).toBeUndefined();
+    expect(push(-3, 0.25, 0.25, true)).toBeUndefined();
+  });
+
   test('dragging against the normal gives a negative distance; a tilted normal snaps to its axis', () => {
     const intent = extrudeIntent({
       id: 'e',
@@ -97,6 +114,47 @@ describe('extrudeIntent', () => {
     });
     expect(intent).toMatchObject({ face: up });
     expect(intent?.kind === 'extrude' && intent.distance).toBeLessThan(0);
+  });
+
+  test('with a step, a landing drag ends on whole steps; under half a step makes no intent', () => {
+    const drag = (pixels: number) =>
+      extrudeIntent({
+        id: 'e',
+        target: 'box',
+        normal: up,
+        dragPixels: pixels,
+        camera,
+        viewport,
+        point,
+        step: 0.5,
+        landing: true,
+      });
+    const intent = drag(1.3 * screenStep);
+    expect(intent?.kind === 'extrude' && intent.distance).toBe(1.5);
+    expect(drag(-0.8 * screenStep)).toMatchObject({ distance: -1 });
+    expect(drag(0.2 * screenStep)).toBeUndefined();
+  });
+
+  test('with a step, a drag under way follows the pointer, held on a step it passes within the detent', () => {
+    const drag = (pixels: number) =>
+      extrudeIntent({ id: 'e', target: 'box', normal: up, dragPixels: pixels, camera, viewport, point, step: 1 });
+    expect(drag(1.3 * screenStep)).toMatchObject({ distance: 1.3 });
+    expect(drag(2 * screenStep - 4)).toMatchObject({ distance: 2 });
+  });
+
+  test("a face pulled near another body's side is held flush on it, ahead of the grid; a landing within the detent too", () => {
+    // The face is at y 0.5; a body above starts at y 1.6, which the face meets after 1.1.
+    const boxes = { above: { min: { x: -1, y: 1.6, z: -1 }, max: { x: 1, y: 2, z: 1 } } };
+    const pull = (units: number, landing = false) => {
+      const intent = extrudeIntent({
+        ...{ id: 'e', target: 'box', normal: up, camera, viewport, point, step: 0.25, landing, boxes, side: 0.5 },
+        dragPixels: units * screenStep,
+      });
+      return intent?.kind === 'extrude' ? intent.distance : undefined;
+    };
+    expect(pull(1.08)).toBeCloseTo(1.1, 3);
+    expect(pull(1.08, true)).toBeCloseTo(1.1, 3);
+    expect(pull(0.6, true)).toBe(0.5);
   });
 
   test('a drag too short to be one makes no intent', () => {

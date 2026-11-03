@@ -4,20 +4,24 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { AXIS_COLORS, GRID_MAJOR_EVERY, groundAxes, groundGrid } from './grid.ts';
+import { AXIS_COLORS, GRID_MAJOR_EVERY, GRID_MINOR, groundAxes, groundGrid } from './grid.ts';
 
 describe('groundGrid', () => {
   const grid = groundGrid({ extent: 8, majorEvery: GRID_MAJOR_EVERY });
 
-  test('every fourth line is a major line, as the 2D canvas grid', () => {
+  test('a major line on every unit, with three minor lines between, as the 2D canvas grid', () => {
     expect(GRID_MAJOR_EVERY).toBe(4);
-    const major = grid.lines.filter((line) => line.major).map((line) => line.offset);
-    expect(new Set(major)).toEqual(new Set([-8, -4, 0, 4, 8]));
+    expect(GRID_MINOR).toBe(0.25);
+    const major = grid.lines.filter((line) => line.axis === 'x' && line.major).map((line) => line.offset);
+    expect(major).toEqual([-8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8]);
+    const minor = grid.lines.filter((line) => line.axis === 'x' && !line.major).map((line) => line.offset);
+    expect(minor.slice(0, 3)).toEqual([-7.75, -7.5, -7.25]);
+    expect(minor).toHaveLength(16 * 3);
   });
 
   test('minor lines are fainter than major ones, and every line is faint', () => {
     const at = (offset: number) => grid.lines.find((line) => line.offset === offset && line.axis === 'x');
-    expect(at(1)?.alpha).toBeLessThan(at(0)?.alpha ?? 0);
+    expect(at(0.25)?.alpha).toBeLessThan(at(0)?.alpha ?? 0);
     for (const line of grid.lines) {
       expect(line.alpha).toBeGreaterThan(0);
       expect(line.alpha).toBeLessThanOrEqual(0.35);

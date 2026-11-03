@@ -68,7 +68,7 @@ describe('scene stage', () => {
   test('a 3D binding is plain data the effect worker can be sent', () => {
     const binding = sceneBinding(read('cluster'), { t: 0, values: {} });
     expect(structuredClone(binding)).toEqual(binding);
-    expect(binding.objects.hub).toMatchObject({ position: { x: 0, y: 0, z: 0 }, radius: 0.6 });
+    expect(binding.objects.hub).toMatchObject({ position: { x: 0, y: 0, z: 0 }, radius: 0.5 });
     expect(binding.links.map((link) => link.id)).toEqual(['l1', 'l2', 'l3', 'l4']);
   });
 });

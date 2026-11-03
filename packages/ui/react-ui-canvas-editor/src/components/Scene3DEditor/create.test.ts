@@ -25,11 +25,31 @@ describe('drag to create', () => {
     expect(dragBase({ x: 0, y: 0, z: 0 }, { x: 0.2, y: 0, z: 0 }, 1)).toBeUndefined();
   });
 
+  test('while the drag is under way the corner follows the pointer, held on a line it passes within the detent', () => {
+    const base = dragBase({ x: 0.2, y: 0, z: 0.1 }, { x: 2.9, y: 0, z: 1.8 }, 1, { x: 0.15, z: 0.15 });
+    expect(base).toEqual({ center: { x: 1.5, y: 0, z: 0.9 }, width: 3, depth: 1.8 });
+  });
+
+  test('a swept side that landing would close keeps one step, toward the pointer, so the drawn base never vanishes', () => {
+    expect(dragBase({ x: 0, y: 0, z: 0 }, { x: 2.8, y: 0, z: -0.3 }, 1)).toEqual({
+      center: { x: 1.5, y: 0, z: -0.5 },
+      width: 3,
+      depth: 1,
+    });
+  });
+
+  test('the raised height follows the pointer while the drag is under way and lands on a step', () => {
+    const base = { center: { x: 0, y: 0, z: 0 }, width: 2, depth: 2 };
+    const perUnit = VIEWPORT.height / 2 / (CAMERA.distance * Math.tan(CAMERA.fov / 2));
+    expect(dragHeight(base, 2.4 * perUnit, CAMERA, VIEWPORT, 1)).toBeCloseTo(2.4);
+    expect(dragHeight(base, 2.4 * perUnit, CAMERA, VIEWPORT, 1, true)).toBe(2);
+  });
+
   test('the pointer raised over the base sets the height, snapped, and never below one step', () => {
     const base = { center: { x: 0, y: 0, z: 0 }, width: 2, depth: 2 };
     const perUnit = VIEWPORT.height / 2 / (CAMERA.distance * Math.tan(CAMERA.fov / 2));
-    expect(dragHeight(base, 3 * perUnit, CAMERA, VIEWPORT, 1)).toBeCloseTo(3);
-    expect(dragHeight(base, -50, CAMERA, VIEWPORT, 1)).toBe(1);
+    expect(dragHeight(base, 3 * perUnit, CAMERA, VIEWPORT, 1, true)).toBeCloseTo(3);
+    expect(dragHeight(base, -50, CAMERA, VIEWPORT, 1, true)).toBe(1);
   });
 
   test('a box rests on the ground at its height; a sphere takes the base as its diameter', () => {
@@ -86,6 +106,20 @@ describe('drag to create', () => {
       center: { x: 1, y: 1, z: 1 },
       scale: { x: 3, y: 2, z: 4 },
     });
+  });
+
+  test('a base swept on a raised work plane lies on it, and what is made on it stands on it', () => {
+    const base = dragBase({ x: 0, y: 1, z: 0 }, { x: 2, y: 1, z: 1 }, 1);
+    expect(base?.center.y).toBe(1);
+    if (!base) {
+      return;
+    }
+    expect(createdElement('a', 'cube', base, 2).center?.y).toBe(2);
+    expect(createdElement('b', 'sphere', base, undefined).center?.y).toBe(2);
+    expect(placedOnBase('c', 'crate', undefined, base, 3).center?.y).toBe(2.5);
+    expect(placedOnBase('d', 'crate', { id: 'crate', type: 'cube', lockAspect: true }, base, undefined).center?.y).toBe(
+      2,
+    );
   });
 
   test('a sphere and an aspect-locked object size from the base alone; other shapes take a height too', () => {

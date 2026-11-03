@@ -25,6 +25,7 @@ Needs `ffmpeg`, `python3`, `node`, and Playwright's Chromium.
 | Takes, one a slide  | `tts.py`          | `<dir>/<NN>-<slide>.mp3`                   |
 | Retry one take      | `tts_one.py`      | one `.mp3`                                 |
 | Fit holds to takes  | `fit.py`          | a holds file                               |
+| Fit Saas2D holds    | `fit_saas2d.py`   | `holds-saas2d-{pro,fry}.json`              |
 | Silent render       | `../record.mjs`   | `echo3d-<set>-video.mp4`                   |
 | Voice track         | `mix.py`          | `<dir>/clean/*.wav`, `echo3d-<set>.m4a`    |
 | Check take edges    | `audit.py`        | a table; head and tail should be < −45 dB  |
@@ -52,6 +53,13 @@ names one.
 | fry    | Watson `jRVXPhztJiPV60oQlVMX`  | `SPEAKING-TRACK-FRY.md`          |
 | pro    | Samara X `19STyYD15bswVz51nqLf` | `SPEAKING-TRACK-PROFESSIONAL.md` |
 | saas45 | Watson                         | the lines below                  |
+| saas2d | Samara X, and Watson at 1.08x  | `SPEAKING-TRACK-SAAS2D.md`       |
+
+## Saas2D voice-over
+
+The 2D story (`saas2d`) plays the professional track cut to under two minutes. `fit_saas2d.py` sets each scene's hold
+from its take; `render-saas2d.mjs --holds holds-saas2d-<set>.json` renders the picture, and `mix.py <takes>
+holds-saas2d-<set>.json <video> <out.m4a> 0.2 company-fills:3.4` lays the voice under it.
 
 ## 45-second script
 
