@@ -5,3 +5,10 @@ tags:
   - ts-vite-build
   - ts-test
   - pack
+
+tasks:
+  # `dist/` imports the audio by package specifier rather than carrying it, so an edit under `assets/`
+  # must still re-hash the build and everything bundled from it.
+  build:
+    inputs:
+      - assets/**/*
