@@ -14,9 +14,35 @@ const REMOVED = '\uE000';
 
 const REMOVED_RUN = /(\n*)[ \t]*\uE000(?:\s*\uE000)*[ \t]*(\n*)/g;
 
+/** A fenced code block, from its opening fence to the matching close (or the end of the document). */
+const FENCE_PATTERN = /^ {0,3}(`{3,}|~{3,})[^\n]*$[\s\S]*?(?:^ {0,3}\1[`~]*[ \t]*$|(?![\s\S]))/gm;
+
+/** An inline code span: a backtick run closed by a run of the same length. */
+const CODE_SPAN_PATTERN = /(`+)(?!`)[\s\S]*?(?<!`)\1(?!`)/g;
+
+/** Offsets of the document's code, where embed syntax is an example to keep, not an embed. */
+const codeRanges = (content: string): [number, number][] => {
+  const fences = Array.from(content.matchAll(FENCE_PATTERN), (match): [number, number] => [
+    match.index,
+    match.index + match[0].length,
+  ]);
+  const inFence = (offset: number) => fences.some(([start, end]) => offset >= start && offset < end);
+  const spans = Array.from(content.matchAll(CODE_SPAN_PATTERN))
+    .filter((match) => !inFence(match.index))
+    .map((match): [number, number] => [match.index, match.index + match[0].length]);
+  return [...fences, ...spans];
+};
+
+/** The embed matches outside code, in order. */
+const matchEmbeds = (content: string) => {
+  const code = codeRanges(content);
+  return Array.from(content.matchAll(EMBED_PATTERN)).filter(
+    (match) => !code.some(([start, end]) => match.index >= start && match.index < end),
+  );
+};
+
 /** The object embeds in a document, in order. */
-export const findEmbeds = (content: string): Embed[] =>
-  Array.from(content.matchAll(EMBED_PATTERN), ([, label, eid]) => ({ label, eid }));
+export const findEmbeds = (content: string): Embed[] => matchEmbeds(content).map(([, label, eid]) => ({ label, eid }));
 
 /**
  * Replaces each object embed with the replacer's text, or removes it when the replacer returns `undefined`.
@@ -26,11 +52,14 @@ export const replaceEmbeds = (
   content: string,
   replacer: (embed: Embed, index: number) => string | undefined,
 ): string => {
-  let index = 0;
-  const marked = content.replace(
-    EMBED_PATTERN,
-    (_, label: string, eid: string) => replacer({ label, eid }, index++) ?? REMOVED,
-  );
+  let marked = '';
+  let offset = 0;
+  matchEmbeds(content).forEach((match, index) => {
+    const [text, label, eid] = match;
+    marked += content.slice(offset, match.index) + (replacer({ label, eid }, index) ?? REMOVED);
+    offset = match.index + text.length;
+  });
+  marked += content.slice(offset);
 
   // Collapsed per run of removed embeds, so adjacent ones leave one gap rather than one each.
   return marked.replace(REMOVED_RUN, (match, before: string, after: string, offset: number) => {
@@ -72,13 +101,11 @@ export const renderWithEmbeds = (
       continue;
     }
 
-    return rendered.reduce<string>(
-      // A function replacer, since a string one would expand `$` sequences in the embed's HTML.
-      (result, embed, index) =>
-        embed === undefined
-          ? result
-          : result.replace(`<p>${placeholder(index)}</p>`, () => embed).replace(placeholder(index), () => embed),
-      html,
+    // One pass over the rendered document, so text inside an inserted embed is never searched for placeholders.
+    // A function replacer, since a string one would expand `$` sequences in the embed's HTML.
+    return html.replace(
+      new RegExp(`<p>DXEMBED${nonce}N(\\d+)X</p>|DXEMBED${nonce}N(\\d+)X`, 'g'),
+      (_, paragraph?: string, inline?: string) => rendered[Number(paragraph ?? inline)] ?? '',
     );
   }
 };

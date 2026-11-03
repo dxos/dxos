@@ -34,4 +34,15 @@ describe('print-embeds', () => {
     const html = renderWithEmbeds(content, [undefined, '<b>y</b>'], micromark);
     expect(html).toEqual('<p>DXEMBED0N1X DXEMBED1N1X</p>\n<b>y</b>\n');
   });
+
+  test('an embed whose HTML holds a placeholder is inserted once', ({ expect }) => {
+    const html = renderWithEmbeds('![x](echo:/1)\n\n![y](echo:/2)', ['<i>DXEMBED0N1X</i>', '<b>y</b>'], micromark);
+    expect(html).toEqual('<i>DXEMBED0N1X</i>\n<b>y</b>\n');
+  });
+
+  test('embed syntax inside code is kept', ({ expect }) => {
+    const content = 'A `![x](echo:/1)`\n\n```md\n![y](echo:/2)\n```\n\n![z](echo:/3)\n\nB';
+    expect(findEmbeds(content)).toEqual([{ label: 'z', eid: 'echo:/3' }]);
+    expect(removeEmbeds(content)).toEqual('A `![x](echo:/1)`\n\n```md\n![y](echo:/2)\n```\n\nB');
+  });
 });
