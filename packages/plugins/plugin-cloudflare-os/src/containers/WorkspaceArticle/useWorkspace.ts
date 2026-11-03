@@ -16,6 +16,9 @@ import * as Account from '../../Account.ts';
 /** How long to wait before reopening a dropped session. */
 const RECONNECT_DELAY_MS = 2_000;
 
+/** How long the listing may take to reach `ready`; an open socket that stalls never reports a break. */
+const SNAPSHOT_TIMEOUT_MS = 30_000;
+
 export type WorkspaceSession = {
   gadgets: CloudflareOs.Gadget[];
   /** The selected gadget, or the first one when none is selected. */
@@ -68,10 +71,17 @@ export const useWorkspace = (workspace: CloudflareOs.Workspace, selected: number
         },
         (snapshot) => {
           ready = true;
+          clearTimeout(deadline);
           setGadgets(snapshot);
         },
       ),
     );
+    const deadline = setTimeout(() => {
+      if (!closed && !ready) {
+        log.warn('workspace listing stalled; reopening the session');
+        setGeneration((value) => value + 1);
+      }
+    }, SNAPSHOT_TIMEOUT_MS);
     // A dropped WebSocket ends the subscription silently, so reopen the session after a pause.
     let reconnect: ReturnType<typeof setTimeout> | undefined;
     api.onRpcBroken(() => {
@@ -88,6 +98,7 @@ export const useWorkspace = (workspace: CloudflareOs.Workspace, selected: number
     });
     return () => {
       closed = true;
+      clearTimeout(deadline);
       clearTimeout(reconnect);
       void subscription.then(Client.dispose, () => {});
       Client.dispose(stub);
