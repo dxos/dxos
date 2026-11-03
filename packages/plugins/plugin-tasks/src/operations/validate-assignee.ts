@@ -30,13 +30,15 @@ export const validateDelegate = (
   delegate: Actor.Actor | null | undefined,
   assignee?: Actor.Actor,
 ): Effect.Effect<void, InvalidOperationInput> =>
-  !delegate || delegate.role === 'assistant' || Task.sameActor(delegate, assignee)
-    ? validateAssignee(delegate)
-    : Effect.fail(
-        new InvalidOperationInput({
-          message: 'A delegate must be an agent (`role: "assistant"`); name a person as the `assignee` instead.',
-        }),
-      );
+  Task.isSubAgentRequest(delegate ?? undefined)
+    ? Effect.void
+    : !delegate || delegate.role === 'assistant' || Task.sameActor(delegate, assignee)
+      ? validateAssignee(delegate)
+      : Effect.fail(
+          new InvalidOperationInput({
+            message: 'A delegate must be an agent (`role: "assistant"`); name a person as the `assignee` instead.',
+          }),
+        );
 
 export const requireOwner = (
   title: string,

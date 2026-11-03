@@ -58,7 +58,10 @@ const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOper
       if (!remoteSession) {
         yield* validateDelegate(delegate, next.assignee);
       }
-      if (remoteSession || (next.delegate && (claimed !== undefined || delegate != null))) {
+      if (
+        remoteSession ||
+        (next.delegate && !Task.isSubAgentRequest(delegate ?? undefined) && (claimed !== undefined || delegate != null))
+      ) {
         yield* requireOwner(task.title, Task.owner(next));
       }
       const sessionDelegate = remoteSession

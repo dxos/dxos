@@ -350,6 +350,27 @@ describe('update-task', () => {
     ),
   );
 
+  it.effect('queues a task nobody answers for on a bare sub-agent request', () =>
+    Effect.gen(function* () {
+      const taskSet = yield* Database.add(TaskSet.make({}));
+      yield* Database.flush();
+      const { task } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Draft' });
+
+      yield* updateTask.handler({ task: Ref.make(task), delegate: { role: 'assistant' }, status: 'todo' });
+
+      expect(Task.isSubAgentRequest(task.delegate)).toBe(true);
+      expect(task.assignee).toBeUndefined();
+      expect(task.status).toBe('todo');
+    }).pipe(
+      Effect.provide(
+        Layer.provideMerge(
+          Trace.writerLayerNoop,
+          TestDatabaseLayer({ types: [Milestone.Milestone, Task.Task, TaskSet.TaskSet] }),
+        ),
+      ),
+    ),
+  );
+
   it.effect('clears an optional field with null', () =>
     Effect.gen(function* () {
       const taskSet = yield* Database.add(TaskSet.make({}));
