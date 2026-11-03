@@ -9,11 +9,13 @@ import * as Schedule from 'effect/Schedule';
 import { ClientService, layer as clientLayer } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { FeedTraceSink } from '@dxos/compute-runtime';
+import * as Routine from '@dxos/compute/Routine';
 import * as Trace from '@dxos/compute/Trace';
 import * as Trigger from '@dxos/compute/Trigger';
 import { ConfigService, configPreset } from '@dxos/config';
 import { Database, Feed, Filter, Obj, Order, Query } from '@dxos/echo';
 import { SpaceId } from '@dxos/keys';
+import { AccessToken, Connection, Cursor } from '@dxos/link';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { Message } from '@dxos/types';
@@ -27,39 +29,57 @@ export const previewClientLayer = clientLayer.pipe(
   Layer.provide(Layer.succeed(ConfigService, configPreset({ edge: 'preview' }))),
 );
 
+/** The types the canary reads and writes; registered once per client. */
+const TYPES = [
+  AccessToken.AccessToken,
+  Connection.Connection,
+  Cursor.Cursor,
+  Feed.Feed,
+  Mailbox.Mailbox,
+  Message.Message,
+  Routine.Routine,
+  Trace.Message,
+  Trigger.Trigger,
+];
+
 /**
- * The canary space, read through an in-process client signed in as the canary identity. Each sign-in
- * admits the process as a new device: no device key is kept between runs.
+ * Signs the in-process client in as the canary identity. Each sign-in admits the process as a new device:
+ * no device key is kept between runs.
  */
+export const recoverIdentity = Effect.fn('mail-canary.recoverIdentity')(function* (recoveryPhrase: string) {
+  const client = yield* ClientService;
+  yield* Effect.promise(() => client.addTypes(TYPES));
+  yield* Effect.tryPromise({
+    try: () => client.halo.recoverIdentity({ recoveryCode: recoveryPhrase }),
+    // The cause can carry the phrase, so it is not passed on.
+    catch: () => new CanaryError({ message: 'cannot recover the canary identity' }),
+  });
+  return client;
+});
+
+/** A space of the canary identity, read through the in-process client. */
 export class CanarySpace {
-  /** Recovers the canary identity and waits until its space has replicated. */
-  static open = Effect.fn('mail-canary.CanarySpace.open')(function* (spaceId: string, recoveryPhrase: string) {
+  /** Waits until a space of the signed-in identity has replicated; its spaces arrive over HALO after recovery. */
+  static open = Effect.fn('mail-canary.CanarySpace.open')(function* (spaceId: string) {
     if (!SpaceId.isValid(spaceId)) {
       return yield* new CanaryError({ message: `not a space id: ${spaceId}` });
     }
     const client = yield* ClientService;
-    yield* Effect.promise(() =>
-      client.addTypes([Mailbox.Mailbox, Message.Message, Trace.Message, Trigger.Trigger, Feed.Feed]),
-    );
-    yield* Effect.tryPromise({
-      try: () => client.halo.recoverIdentity({ recoveryCode: recoveryPhrase }),
-      // The cause can carry the phrase, so it is not passed on.
-      catch: () => new CanaryError({ message: 'cannot recover the canary identity' }),
-    });
-    // The identity's spaces arrive over HALO after recovery, not with it.
     const space = yield* Effect.suspend(() => {
       const space = client.spaces.get(spaceId);
       return space ? Effect.succeed(space) : new CanaryError({ message: `space ${spaceId} never appeared` });
     }).pipe(Effect.retry({ schedule: Schedule.spaced('1 second'), times: 120 }));
-    yield* Effect.tryPromise({
-      try: () => space.waitUntilReady(),
-      catch: (cause) => new CanaryError({ message: `space ${spaceId} is not ready: ${String(cause)}` }),
+    return yield* ready(space);
+  });
+
+  /** Creates a space owned by the signed-in identity. */
+  static create = Effect.fn('mail-canary.CanarySpace.create')(function* (name: string) {
+    const client = yield* ClientService;
+    const space = yield* Effect.tryPromise({
+      try: () => client.spaces.create({ name }),
+      catch: (cause) => new CanaryError({ message: `cannot create a space: ${String(cause)}` }),
     });
-    // EDGE replication is a per-device preference, off on a newly admitted device.
-    if (space.internal.data.edgeReplication !== EdgeReplicationSetting.ENABLED) {
-      yield* Effect.promise(() => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
-    }
-    return new CanarySpace(space);
+    return yield* ready(space);
   });
 
   readonly #space: Space;
@@ -72,14 +92,36 @@ export class CanarySpace {
     return this.#space.id;
   }
 
-  /** Waits until the documents match EDGE, then reads the snapshot (`readSnapshot` pulls the feeds itself). */
-  snapshot(): Effect.Effect<SpaceSnapshot, CanaryError> {
+  get space(): Space {
+    return this.#space;
+  }
+
+  /** Pushes local writes to EDGE and waits until the documents match. */
+  syncToEdge(): Effect.Effect<void, CanaryError> {
     return Effect.tryPromise({
       try: () => this.#space.internal.syncToEdge({ timeout: 300_000, onProgress: () => {} }),
       catch: (cause) => new CanaryError({ message: `space did not sync with EDGE: ${String(cause)}` }),
-    }).pipe(Effect.retry({ times: 2 }), Effect.andThen(readSnapshot()), Effect.provide(Database.layer(this.#space.db)));
+    }).pipe(Effect.retry({ times: 2 }));
+  }
+
+  /** Waits until the documents match EDGE, then reads the snapshot (`readSnapshot` pulls the feeds itself). */
+  snapshot(): Effect.Effect<SpaceSnapshot, CanaryError> {
+    return this.syncToEdge().pipe(Effect.andThen(readSnapshot()), Effect.provide(Database.layer(this.#space.db)));
   }
 }
+
+/** Waits until the space's database is open and turns on EDGE replication, off on a newly admitted device. */
+const ready = (space: Space): Effect.Effect<CanarySpace, CanaryError> =>
+  Effect.gen(function* () {
+    yield* Effect.tryPromise({
+      try: () => space.waitUntilReady(),
+      catch: (cause) => new CanaryError({ message: `space ${space.id} is not ready: ${String(cause)}` }),
+    });
+    if (space.internal.data.edgeReplication !== EdgeReplicationSetting.ENABLED) {
+      yield* Effect.promise(() => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
+    }
+    return new CanarySpace(space);
+  });
 
 /**
  * The mailbox's synced messages, the mail sync's invocations from every Execution Trace feed (racing
@@ -101,10 +143,8 @@ export const readSnapshot = Effect.fn('mail-canary.readSnapshot')(
       },
     );
 
+    // A space whose sync never ran has no Execution Trace feed yet: no invocations, which the checks judge.
     const traceFeeds = yield* Database.query(FeedTraceSink.query).run;
-    if (traceFeeds.length === 0) {
-      return yield* new CanaryError({ message: 'the space has no Execution Trace feed' });
-    }
     const traces = yield* Effect.forEach(traceFeeds, (traceFeed) =>
       pull(traceFeed).pipe(
         Effect.andThen(

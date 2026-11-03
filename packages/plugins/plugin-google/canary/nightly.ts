@@ -8,27 +8,35 @@ import * as Effect from 'effect/Effect';
 import * as MailSync from '@dxos/plugin-inbox/MailSync';
 
 import { splitMbox } from '../scripts/mbox.ts';
-import { type Report, type SeededMessage, type SpaceSnapshot, runChecks } from './checks.ts';
+import { type ExpectedMessage, type Report, type SpaceSnapshot, runChecks } from './checks.ts';
+import { type FullSyncReport } from './full-sync.ts';
 import { CanaryError, type CanaryMailbox, type MailboxError, SEED_LABEL } from './mailbox.ts';
 import { type CanarySpace } from './space.ts';
 
-/** Everything one nightly run produced; written to disk before the test asserts. */
+/** What stages 1 and 2 produced. */
 export type NightlyReport = Report & {
   readonly startedAt: string;
   readonly spaceId: string;
-  readonly seeded: number;
-  readonly poolSize: number;
-  /** Pool index of tonight's first copy; the next run starts where this one ended. */
-  readonly poolStart: number;
-  /** Minutes until every copy was in the mailbox feed; absent when they never all arrived. */
-  readonly syncMinutes?: number;
+  /** Stage 1: absent when the run did not seed. */
+  readonly seed?: {
+    readonly seeded: number;
+    readonly poolSize: number;
+    /** Pool index of tonight's first copy; the next run starts where this one ended. */
+    readonly poolStart: number;
+    /** Minutes until every copy was in the mailbox feed; absent when they never all arrived. */
+    readonly syncMinutes?: number;
+  };
+};
+
+/** Everything one nightly run produced; written to disk before the test asserts. */
+export type CanaryReport = NightlyReport & {
+  /** Stage 3: absent when the run skipped it. */
+  readonly fullSync?: FullSyncReport;
 };
 
 export type NightlyOptions = {
-  /** The Enron pool, one RFC 5322 message per entry, in a fixed order. */
-  readonly pool: readonly string[];
-  /** Pool messages to seed as new mail. */
-  readonly count: number;
+  /** Stage 1: seed `count` messages of the Enron pool (one RFC 5322 message per entry, in a fixed order). */
+  readonly seed?: { readonly pool: readonly string[]; readonly count: number };
   /** How long to wait for every copy to reach the mailbox feed. */
   readonly syncTimeout: Duration.Input;
   readonly pollInterval: Duration.Input;
@@ -48,8 +56,9 @@ const SEED_HEADER = 'X-Dx-Seed';
 const NEXT_HEADER = 'X-Dx-Seed-Next';
 
 /**
- * One nightly run. It inserts the next `count` pool messages as mail received now, waits for the space's own
- * sync to pick them up, then checks that every copy arrived intact and that no sync run in the window failed.
+ * Stages 1 and 2 against the canary space. Stage 1 inserts the next `count` pool messages as mail received now
+ * and waits for the space's own sync to pick them up; stage 2 checks that every copy arrived intact and that no
+ * sync run in the window failed.
  *
  * The pool stays out of Gmail: the sync takes every message added to the account, so mail parked there would
  * be synced the moment it landed rather than tonight.
@@ -63,15 +72,15 @@ export class Nightly {
     this.#space = space;
   }
 
-  run({ pool, count, syncTimeout, pollInterval, window }: NightlyOptions): Effect.Effect<NightlyReport, MailboxError> {
+  run({ seed, syncTimeout, pollInterval, window }: NightlyOptions): Effect.Effect<NightlyReport, MailboxError> {
     return Effect.gen({ self: this }, function* () {
       const startedAt = new Date();
-      const { start, seeded } = yield* this.seed(pool, count, startedAt);
+      const { start, seeded } = seed ? yield* this.seed(seed.pool, seed.count, startedAt) : { start: 0, seeded: [] };
 
       const deadline = startedAt.getTime() + Duration.toMillis(syncTimeout);
       let snapshot: SpaceSnapshot = yield* this.#space.snapshot();
       let syncMinutes: number | undefined;
-      while (true) {
+      while (seed) {
         const synced = new Set(snapshot.messages.map((message) => message.gmailId));
         if (seeded.every((message) => synced.has(message.gmailId))) {
           syncMinutes = Math.round((Date.now() - startedAt.getTime()) / 60_000);
@@ -85,15 +94,12 @@ export class Nightly {
       }
 
       const now = Date.now();
-      const report = runChecks(snapshot, seeded, { now, since: now - Duration.toMillis(window) });
+      const report = runChecks(snapshot, seed && seeded, { now, since: now - Duration.toMillis(window) });
       return {
         ...report,
         startedAt: startedAt.toISOString(),
         spaceId: this.#space.spaceId,
-        seeded: seeded.length,
-        poolSize: pool.length,
-        poolStart: start,
-        syncMinutes,
+        seed: seed && { seeded: seeded.length, poolSize: seed.pool.length, poolStart: start, syncMinutes },
       };
     });
   }
@@ -103,7 +109,7 @@ export class Nightly {
     pool: readonly string[],
     count: number,
     now: Date,
-  ): Effect.Effect<{ start: number; seeded: SeededMessage[] }, MailboxError> {
+  ): Effect.Effect<{ start: number; seeded: ExpectedMessage[] }, MailboxError> {
     return Effect.gen({ self: this }, function* () {
       if (!Number.isInteger(count) || count <= 0 || count > pool.length) {
         return yield* new CanaryError({ message: `cannot seed ${count} of a pool of ${pool.length}` });
@@ -174,32 +180,53 @@ export const parsePool = (mbox: string): string[] =>
   splitMbox(mbox).filter((message) => Buffer.byteLength(message, 'latin1') <= MAX_MESSAGE_BYTES);
 
 /** Flat properties for the `ci.mail-canary` PostHog event: no nesting, no message content. */
-export const toEventProperties = (report: NightlyReport): Record<string, string | number | boolean> => ({
-  ok: report.ok,
-  failedChecks: report.checks.flatMap((check) => (check.ok ? [] : [check.id])).join(','),
-  failureClasses: [...new Set(report.checks.flatMap((check) => check.failures.map((failure) => failure.class)))]
-    .sort()
-    .join(','),
-  seeded: report.seeded,
-  poolSize: report.poolSize,
-  poolStart: report.poolStart,
-  syncMinutes: report.syncMinutes ?? -1,
-  ...report.runs,
-});
+export const toEventProperties = (report: CanaryReport): Record<string, string | number | boolean> => {
+  const checks = [...report.checks, ...(report.fullSync?.checks ?? [])];
+  return {
+    ok: report.ok && (report.fullSync?.ok ?? true),
+    failedChecks: checks.flatMap((check) => (check.ok ? [] : [check.id])).join(','),
+    failureClasses: [...new Set(checks.flatMap((check) => check.failures.map((failure) => failure.class)))]
+      .sort()
+      .join(','),
+    seeded: report.seed?.seeded ?? 0,
+    poolSize: report.seed?.poolSize ?? 0,
+    poolStart: report.seed?.poolStart ?? -1,
+    syncMinutes: report.seed?.syncMinutes ?? -1,
+    ...report.runs,
+    fullSyncExpected: report.fullSync?.expected ?? -1,
+    fullSyncSynced: report.fullSync?.synced ?? -1,
+    fullSyncMinutes: report.fullSync?.syncMinutes ?? -1,
+    fullSyncInvocations: report.fullSync?.runs.invocations ?? -1,
+    fullSyncFailed: report.fullSync?.runs.failed ?? -1,
+  };
+};
 
-/** The report as Markdown for the job summary: the verdict, the checks, then up to 50 failures. */
-export const renderSummary = (report: NightlyReport): string => {
-  const failures = report.checks.flatMap((check) => check.failures.map((failure) => ({ check: check.id, ...failure })));
-  const arrived = report.syncMinutes === undefined ? 'never all arrived' : `all arrived in ${report.syncMinutes} min`;
+/** The report as Markdown for the job summary: the verdict, each stage, the checks, then up to 50 failures. */
+export const renderSummary = (report: CanaryReport): string => {
+  const { seed, fullSync } = report;
+  const checks = [...report.checks, ...(fullSync?.checks ?? [])];
+  const ok = report.ok && (fullSync?.ok ?? true);
+  const failures = checks.flatMap((check) => check.failures.map((failure) => ({ check: check.id, ...failure })));
+  const arrived = seed?.syncMinutes === undefined ? 'never all arrived' : `all arrived in ${seed.syncMinutes} min`;
+  const fullSynced = fullSync?.syncMinutes === undefined ? 'did not finish' : `finished in ${fullSync.syncMinutes} min`;
+  const runs = ({ runs, invocations, failed }: CanaryReport['runs']) =>
+    `${runs} sync runs (${invocations} invocations, ${failed} failed)`;
   return [
-    `## Mail canary: ${report.ok ? 'passed' : 'FAILED'}`,
+    `## Mail canary: ${ok ? 'passed' : 'FAILED'}`,
     '',
-    `Space \`${report.spaceId}\`, ${report.startedAt}: seeded ${report.seeded} from pool index ${report.poolStart} of ${report.poolSize}; the copies ${arrived}.`,
-    `Sync runs: ${report.runs.runs} (${report.runs.invocations} invocations, ${report.runs.failed} failed).`,
+    `Space \`${report.spaceId}\`, ${report.startedAt}.`,
+    '',
+    seed
+      ? `1. **Seed.** ${seed.seeded} messages from pool index ${seed.poolStart} of ${seed.poolSize}; the copies ${arrived}.`
+      : '1. **Seed.** Skipped.',
+    `2. **Monitor.** ${runs(report.runs)} in the window.`,
+    fullSync
+      ? `3. **Full sync.** Fresh space \`${fullSync.spaceId ?? 'none'}\` over ${fullSync.days} days: ${fullSync.synced} of ${fullSync.expected} Gmail messages synced; the sync ${fullSynced}; ${runs(fullSync.runs)}.`
+      : '3. **Full sync.** Skipped.',
     '',
     '| Check | Result | Failures |',
     '| --- | --- | --- |',
-    ...report.checks.map(
+    ...checks.map(
       (check) => `| ${check.id} ${check.name} | ${check.ok ? 'pass' : 'FAIL'} | ${check.failures.length} |`,
     ),
     ...(failures.length > 0 ? ['', '| Check | Class | Run or message | Detail |', '| --- | --- | --- | --- |'] : []),

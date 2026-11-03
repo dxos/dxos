@@ -57,7 +57,7 @@ export class CanaryMailbox {
   /** Signs in and fails unless the grant belongs to the canary account, so a mis-pointed grant never writes. */
   static connect = Effect.fn('mail-canary.CanaryMailbox.connect')(function* (credentials: GmailCredentials) {
     const context = yield* Effect.context<Requirements>().pipe(
-      Effect.provide(requirements(yield* accessToken(credentials))),
+      Effect.provide(requirements(yield* mintAccessToken(credentials))),
     );
     const api = yield* GoogleMailApi.pipe(Effect.provide(GoogleMailApi.Live), Effect.provide(context));
     const mailbox = new CanaryMailbox(api, (path, init) =>
@@ -158,8 +158,8 @@ const requirements = (token: string): Layer.Layer<Requirements> =>
     FetchHttpClient.layer,
   );
 
-/** Mints an access token; a dead grant fails with Google's `invalid_grant`, which the nightly reports as AUTH. */
-const accessToken = ({ clientId, clientSecret, refreshToken }: GmailCredentials) =>
+/** Mints an access token, good for an hour; a dead grant fails with Google's `invalid_grant`, reported as AUTH. */
+export const mintAccessToken = ({ clientId, clientSecret, refreshToken }: GmailCredentials) =>
   Effect.tryPromise({
     try: async () => {
       const response = await fetch('https://oauth2.googleapis.com/token', {

@@ -14,6 +14,10 @@ on:
         type: string
         description: 'Pool messages to seed as new mail'
         default: '100'
+      stages:
+        type: string
+        description: 'Stages to run besides the monitor: seed (1), full (3)'
+        default: 'seed,full'
 
 permissions:
   contents: read
@@ -32,7 +36,8 @@ concurrency:
 jobs:
   canary:
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    # Stage 2 waits up to 30 minutes and stage 3 up to 60.
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v5
         with:
@@ -43,6 +48,7 @@ jobs:
       # The pool lives in the encrypted `enron-pool` agents fixture, not in Gmail: the sync takes every message
       # added to the account, so mail parked there would sync before the night it is seeded.
       - name: Pull the Enron pool
+        if: contains(inputs.stages || 'seed,full', 'seed')
         env:
           AGE_KEY: ${{ secrets.MAIL_CANARY_FIXTURES_AGE_KEY }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -60,6 +66,7 @@ jobs:
           DX_CANARY_RECOVERY_PHRASE: ${{ secrets.MAIL_CANARY_RECOVERY_PHRASE }}
           DX_CANARY_SPACE_ID: ${{ vars.MAIL_CANARY_SPACE_ID }}
           DX_CANARY_SEED_COUNT: ${{ inputs.count || '100' }}
+          DX_CANARY_STAGES: ${{ inputs.stages || 'seed,full' }}
           DX_CANARY_REPORT_DIR: ${{ runner.temp }}/mail-canary
           GMAIL_CLIENT_ID: ${{ secrets.MAIL_CANARY_GMAIL_CLIENT_ID }}
           GMAIL_CLIENT_SECRET: ${{ secrets.MAIL_CANARY_GMAIL_CLIENT_SECRET }}

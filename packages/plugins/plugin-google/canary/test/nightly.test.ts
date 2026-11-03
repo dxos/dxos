@@ -108,17 +108,28 @@ describe('Nightly', () => {
   test('reports a copy still missing when the wait ends, however recently it was seeded', async ({ expect }) => {
     const report = await EffectEx.runPromise(
       new Nightly(fakeMailbox().mailbox, emptySpace).run({
-        pool: POOL,
-        count: 1,
+        seed: { pool: POOL, count: 1 },
         syncTimeout: Duration.millis(50),
         pollInterval: Duration.millis(10),
         window: Duration.hours(24),
       }),
     );
     expect(report.checks.find((check) => check.id === 'S1')?.failures).toEqual([
-      expect.objectContaining({ class: 'OFF', message: 'seeded message not synced' }),
+      expect.objectContaining({ class: 'OFF', message: 'Gmail message not synced' }),
     ]);
-    expect(report.syncMinutes).toBeUndefined();
+    expect(report.seed?.syncMinutes).toBeUndefined();
+  });
+
+  test('without seeding it checks only the sync runs', async ({ expect }) => {
+    const report = await EffectEx.runPromise(
+      new Nightly(fakeMailbox().mailbox, emptySpace).run({
+        syncTimeout: Duration.millis(50),
+        pollInterval: Duration.millis(10),
+        window: Duration.hours(24),
+      }),
+    );
+    expect(report.checks.map((check) => check.id)).toEqual(['S2']);
+    expect(report.seed).toBeUndefined();
   });
 });
 

@@ -9,7 +9,14 @@ import * as Trace from '@dxos/compute/Trace';
 
 import { GoogleOperation } from '#types';
 
-import { type Invocation, type SpaceSnapshot, classifyError, groupInvocations, runChecks } from '../checks.ts';
+import {
+  type Invocation,
+  type SpaceSnapshot,
+  checkMessages,
+  classifyError,
+  groupInvocations,
+  runChecks,
+} from '../checks.ts';
 
 const MINUTE = 60_000;
 const SINCE = Date.parse('2026-10-26T00:00:00Z');
@@ -98,6 +105,16 @@ describe('runChecks', () => {
     const wrong = { gmailId: 'g1', subject: 'Re: forecast', sender: 'someone.else@enron.com' };
     expect(failed({ ...healthy(), messages: [...healthy().messages, wrong] })).toEqual(['S1']);
     expect(failed({ ...healthy(), messages: [wrong, healthy().messages[1]] })).toEqual(['S1']);
+  });
+});
+
+describe('checkMessages', () => {
+  test('compares content only where Gmail gave it, and flags a duplicate', ({ expect }) => {
+    const snapshot = { ...healthy(), messages: [...healthy().messages, healthy().messages[1]] };
+    const result = checkMessages('F1', 'all synced', snapshot, [{ gmailId: 'g1' }, { gmailId: 'g2' }], false);
+    expect(result.failures).toEqual([
+      expect.objectContaining({ class: 'DATA', gmailId: 'g2', message: 'synced 2 times' }),
+    ]);
   });
 });
 
