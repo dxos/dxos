@@ -43,6 +43,7 @@ export const translations = [
       },
       [CodeNamespace.key]: {
         'plugin.name': 'Code',
+        'software-config.label': 'Software',
         'code-projects-section.label': 'Code Projects',
         'spec.label': 'Spec',
         'plugin-spec.label': 'Specification',

@@ -46,6 +46,9 @@ const config: Plugin.PluginConfig = Plugin.config({
     tags: ['beta'],
   },
   modules: [
+    AppCapability.exporter(() => import('./src/capabilities/exporter.ts', { with: { type: 'module-url' } }), {
+      activatesOn: TableEvents.Start,
+    }),
     AppCapability.commentConfig(
       () => import('./src/capabilities/comment-config.ts', { with: { type: 'module-url' } }),
       {

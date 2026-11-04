@@ -18,7 +18,7 @@ import listTasks from './list-tasks.ts';
 import updateTask from './update-task.ts';
 
 describe('list-tasks', () => {
-  it.effect('filters by status and assignee, and excludes sub-tasks by default', () =>
+  it.effect('filters by status, assignee and delegate, and excludes sub-tasks by default', () =>
     Effect.gen(function* () {
       const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
       yield* Database.flush();
@@ -43,6 +43,15 @@ describe('list-tasks', () => {
 
       const byAssignee = yield* listTasks.handler({ taskSet: Ref.make(taskSet), assignee: 'KAI@example.com' });
       expect(titles(byAssignee.tasks)).toEqual(['Open thing']);
+
+      yield* updateTask.handler({
+        task: Ref.make(open),
+        delegate: { role: 'assistant', name: 'Claude', identityDid: 'did:key:claude' },
+      });
+      const byDelegate = yield* listTasks.handler({ taskSet: Ref.make(taskSet), delegate: 'did:key:claude' });
+      expect(titles(byDelegate.tasks)).toEqual(['Open thing']);
+      const stillByAssignee = yield* listTasks.handler({ taskSet: Ref.make(taskSet), assignee: 'did:key:kai' });
+      expect(titles(stillByAssignee.tasks)).toEqual(['Open thing']);
     }).pipe(
       Effect.provide(
         Layer.provideMerge(

@@ -40,18 +40,37 @@ const shapeError = ({ task, create, assign, unassign, title, status }: TaskChang
     return '`assign` and `unassign` contradict each other';
   }
   if (unassign && (create || status === 'started')) {
-    return 'a task you create or start is assigned to you, so it cannot also be unassigned';
+    return 'a task you create or start is yours to work, so it cannot also be unassigned';
   }
   return undefined;
 };
 
 type Resolved = { change: TaskChange; task?: Task.Task };
 
+const claim = (
+  task: Task.Task,
+  self: Actor.Actor,
+  { assigning, unassign }: { assigning: boolean; unassign?: boolean },
+): Pick<Task.Edit, 'assignee' | 'delegate'> => {
+  if (assigning) {
+    const answering =
+      Task.owner(task) || Task.sameActor(task.assignee, self) ? undefined : Task.owner(Task.getParentTask(task));
+    return { delegate: self, ...(answering ? { assignee: { ...answering } } : {}) };
+  }
+  if (unassign) {
+    return {
+      ...(Task.sameActor(task.delegate, self) || Task.isSubAgentRequest(task.delegate) ? { delegate: null } : {}),
+      ...(Task.sameActor(task.assignee, self) ? { assignee: null } : {}),
+    };
+  }
+  return {};
+};
+
 /**
  * Creates, edits, assigns and unassigns the conversation's tasks. Every change is checked before any
  * is applied, so a malformed batch writes nothing and the model can resend it whole.
  *
- * Assignment always moves both halves together — the chat's checklist and the task's assignee — so
+ * Assignment always moves both halves together — the chat's checklist and the task's worker — so
  * the checklist a conversation shows is the work its agent holds. Starting a task assigns it.
  */
 export default UpdateTasks.pipe(
@@ -111,20 +130,13 @@ export default UpdateTasks.pipe(
 
         const assigning = assign || status === 'started';
         const previousStatus = task.status;
-        // Through `Task.update`, so the edit and its history entry land together, and a task someone
-        // was named to review lands in `review` rather than closing on the model's `done`.
-        Task.update(task, {
-          title: title?.trim(),
-          status,
-          ...(assigning ? { assignee: self } : unassign ? { assignee: null } : {}),
-        });
+        Task.update(task, { title: title?.trim(), status, ...claim(task, self, { assigning, unassign }) });
         if (assigning) {
           Chat.assignTasks(chat, [Ref.make(task)]);
         } else if (unassign) {
           Chat.unassignTasks(chat, [Ref.make(task)]);
         }
 
-        // The resolved status, not the requested one: a reviewed task lands in `review`.
         if (task.status !== undefined && task.status !== previousStatus) {
           yield* Trace.write(Trace.TaskStatusChanged, {
             taskId: task.id,

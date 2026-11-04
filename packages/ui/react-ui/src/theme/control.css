@@ -156,6 +156,18 @@
   .dx-input[data-variant='subdued'] {
     background: transparent;
   }
+  /* Text edited in place on a page: no well and no inset, so it lines up with the page's headings. */
+  .dx-input:is([data-variant='title'], [data-variant='plain']) {
+    background: transparent;
+    padding-inline: 0;
+  }
+  /* A page's title edited in place, at the title's size rather than the control's. */
+  .dx-input[data-variant='title'] {
+    height: auto;
+    font-size: var(--text-xl);
+    line-height: var(--text-xl--line-height);
+    font-weight: 500;
+  }
   /* Keys, ids and code; an adorned row's input inherits the font. */
   .dx-input[data-variant='mono'] {
     font-family: var(--font-mono, ui-monospace, monospace);
@@ -810,6 +822,27 @@
   .dx-select-trigger[data-fixed] > [data-part='indicator'] {
     grid-column: 3;
     margin-inline-start: var(--dx-control-inset);
+  }
+  :is(.dx-button, .dx-select-trigger)[data-pill] {
+    width: auto;
+    flex: none;
+    gap: var(--dx-control-inset);
+    padding-inline: var(--dx-gap-size);
+    border: 1px solid var(--color-separator);
+    border-radius: 9999px;
+    background: transparent;
+  }
+  :is(.dx-button, .dx-select-trigger)[data-pill]:hover:not(:disabled) {
+    background: var(--color-hover-surface);
+  }
+  :is(.dx-button, .dx-select-trigger)[data-pill][data-placeholder-shown] {
+    color: var(--color-fg-muted);
+  }
+  .dx-select-trigger[data-pill] > [data-part='value-text'] {
+    flex: none;
+  }
+  .dx-select-trigger[data-pill] > [data-part='indicator'] {
+    display: none;
   }
   .dx-select-value-sizer {
     grid-column: 1 / 3;

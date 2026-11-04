@@ -9,3 +9,9 @@ tags:
   - pack
   - storybook
   - ts-test-storybook
+
+tasks:
+  test:
+    deps:
+      # `edge-bundle.test.ts` loads this plugin's bundle, which vendors the host from its dist.
+      - plugin-host-cloudflare:build

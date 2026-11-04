@@ -13,21 +13,16 @@ type SessionProps = { sessionId: string; title?: string; repo?: string; branch?:
  * The actor for a coding-agent session, creating the session record when the space does not hold
  * one for that harness id yet.
  *
- * An agent's actor is the object it IS, so the assignee carries a `subject` ref to the session: a
- * bare `{ role: 'assistant' }` says an assistant owns the task but not WHICH run, and a session's
- * own check-in (`RecordSession`) lists its open tasks by matching that ref. Any fields the caller
- * passed in `assignee` are kept — the session decides the subject, not the rest of the actor.
- *
  * `defaultTitle` (the claimed task's title) names a session the caller left untitled, so a run
  * that picks up work over MCP is listed by what it is doing rather than by a bare harness id.
  */
 export const assignToSession: (
   session: SessionProps,
-  assignee: Actor.Actor | undefined,
+  delegate: Actor.Actor | undefined,
   options?: { defaultTitle?: string },
 ) => Effect.Effect<Actor.Actor, never, Database.Service> = Effect.fnUntraced(function* (
   { sessionId, ...sessionProps }: SessionProps,
-  assignee: Actor.Actor | undefined,
+  delegate: Actor.Actor | undefined,
   { defaultTitle }: { defaultTitle?: string } = {},
 ) {
   const title = sessionProps.title ?? defaultTitle;
@@ -59,5 +54,9 @@ export const assignToSession: (
     session.worktree ??= props.worktree;
   });
 
-  return { role: 'assistant' as const, ...assignee, subject: Ref.make(session) };
+  return {
+    ...(delegate?.role === 'assistant' ? delegate : {}),
+    role: 'assistant' as const,
+    subject: Ref.make(session),
+  };
 });
