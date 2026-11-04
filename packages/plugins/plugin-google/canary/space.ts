@@ -176,9 +176,9 @@ export class CanarySpace {
   }
 
   /**
-   * Deletes the space on EDGE, waits for the teardown, then tombstones it on this device. EDGE resets the space's
-   * documents, feeds, index, secrets and scheduler; resetting its credential chain drops the canary's membership, so a
-   * 403 on reading the space is the sign the teardown ran.
+   * Closes the space here first, since an open space keeps pushing its documents and feeds and writes it back after the
+   * teardown. Then deletes it on EDGE and waits for the 403 that shows EDGE reset its credential chain along with its
+   * data. The tombstone comes last: it reaches the identity's later devices, so a space EDGE kept stays a leftover.
    */
   delete(): Effect.Effect<void, CanaryError> {
     const path = `/data/space/${this.spaceId}`;
@@ -189,6 +189,10 @@ export class CanarySpace {
       });
     const tornDown = (error: CanaryError) => error.cause instanceof EdgeCallFailedError && error.cause.status === 403;
     return Effect.gen({ self: this }, function* () {
+      yield* Effect.tryPromise({
+        try: () => this.#space.close(),
+        catch: (cause) => new CanaryError({ message: `cannot close ${this.spaceId}: ${String(cause)}` }),
+      });
       yield* request('DELETE');
       yield* request('GET').pipe(
         Effect.flatMap(() => Effect.fail(new CanaryError({ message: `space ${this.spaceId} is still on EDGE` }))),
