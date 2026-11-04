@@ -1,0 +1,29 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": [
+      "@dxos/typings",
+      "node"
+    ]
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../../common/invariant"
+    },
+    {
+      "path": "../../../sdk/app-framework"
+    },
+    {
+      "path": "../../protocols"
+    },
+    {
+      "path": "../edge-compute"
+    },
+    {
+      "path": "../plugin-host-cloudflare"
+    }
+  ]
+}

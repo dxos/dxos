@@ -10,9 +10,15 @@ import * as Capability from '@dxos/app-framework/Capability';
 
 import { CodeNamespace } from '../namespace.ts';
 import type * as SettingsModule from './Settings.ts';
+import type * as StateModule from './State.ts';
 
 export const Settings = Capability.makeSingleton<Atom.Writable<SettingsModule.Settings>>()(
   `${CodeNamespace.key}.capability.settings`,
+);
+
+/** What the plugin keeps on this device alone, such as which spec sections are folded. */
+export const State = Capability.makeSingleton<Atom.Writable<StateModule.State>>()(
+  `${CodeNamespace.key}.capability.state`,
 );
 
 /**

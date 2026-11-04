@@ -119,6 +119,8 @@ export type RunProps<R = never> = {
   prompt: string | ContentBlock.Any[];
   /** Who the prompt is from, when not the session's reader (e.g. one of several people in a shared agent chat). */
   sender?: Message.Message['sender'];
+  /** Id the prompt's message takes: the queued message it stands for, so readers see one message, not two. */
+  promptId?: Message.Message['id'];
   // TODO(wittjosiah): Rename to systemPrompt.
   system?: string;
   history?: Message.Message[];
@@ -132,6 +134,7 @@ export type RunProps<R = never> = {
 export type BeginProps = {
   prompt: string | ContentBlock.Any[];
   sender?: Message.Message['sender'];
+  promptId?: Message.Message['id'];
   system?: string;
   /** The system prompt already formatted from `system` and the bindings, so it is not formatted twice. */
   systemPrompt?: string;
@@ -261,6 +264,7 @@ export class Request {
   begin = ({
     prompt,
     sender,
+    promptId,
     system,
     systemPrompt: formatted,
     history = [],
@@ -293,7 +297,7 @@ export class Request {
         }
       }
 
-      const userMessage = yield* formatUserPrompt({ prompt, history, sender });
+      const userMessage = yield* formatUserPrompt({ prompt, history, sender, promptId });
       // Also sent on the ephemeral channel, as the reply's blocks are: the feed shows the prompt only
       // once its index catches up, which can be after the reply has started streaming in.
       this.#announcement = userMessage;

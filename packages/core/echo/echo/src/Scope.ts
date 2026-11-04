@@ -61,9 +61,10 @@ export type FeedScopeOptions = {
   /**
    * Reads the feed as a walk along the path from the root branch to `branch`, in local order; select
    * with {@link Filter.feedCursor} to start after a local cursor and order with `Order.natural` for the
-   * direction. `forks` also gives the base item of each branch that forks at a block the walk gives.
+   * direction. `'all'` walks every branch in local order. `forks` also gives the base item of each
+   * branch that forks at a block the walk gives.
    */
-  walk?: { branch?: Feed.BranchId | null; forks?: boolean };
+  walk?: { branch?: Feed.BranchId | null | 'all'; forks?: boolean };
 };
 
 /**

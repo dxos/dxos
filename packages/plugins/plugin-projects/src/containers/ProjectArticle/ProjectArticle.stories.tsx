@@ -31,7 +31,7 @@ import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 import * as PreviewEvents from '@dxos/plugin-preview/PreviewEvents';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
-import { VideoPackagePlugin } from '@dxos/plugin-projects/testing';
+import { SoftwareConfigPlugin, VideoPackagePlugin } from '@dxos/plugin-projects/testing';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { translations as routineTranslations } from '@dxos/plugin-routine/translations';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
@@ -115,7 +115,7 @@ const createProject = (space: Space, storyGeneration: number) => {
   }
 
   // The project names its repository, which is what makes a `#nnn` reference in its documents
-  // resolve (plugin-github reads `project.repo`).
+  // resolve (plugin-github reads the project's first repository).
   const repo = space.db.add(Repo.make({ name: 'dxos', owner: 'dxos', url: 'https://github.com/dxos/dxos' }));
   const instructions = Instructions.make({
     [Obj.Parent]: project,
@@ -123,10 +123,10 @@ const createProject = (space: Space, storyGeneration: number) => {
   });
   const artifact = space.db.add(Text.make({ name: ARTIFACT_TITLE, content: 'Notes.' }));
   Obj.update(project, (project) => {
-    project.repo = Ref.make(repo);
     project.instructions = Ref.make(instructions);
     project.artifacts = [Ref.make(artifact)];
   });
+  Repo.setRepositories(project, [Ref.make(repo)]);
 
   const task = space.db.add(Task.make({ [Obj.Parent]: taskSet, title: TASK_TITLE, status: 'todo' }));
   // An exchange in the log, written by the verbs that write it in the app rather than by hand: the
@@ -244,6 +244,12 @@ const findPainted = async (canvas: ReturnType<typeof within>, text: string) => {
   );
 };
 
+const openConfigGroup = async (canvas: ReturnType<typeof within>, id: string) => {
+  await userEvent.click(
+    await canvas.findByTestId(`projectsPlugin.config.${id}.disclosure`, undefined, { timeout: 10_000 }),
+  );
+};
+
 /** Radix unmounts an inactive tab panel, so a story asserts a tab's content only while it is shown. */
 const showTab = async (canvas: ReturnType<typeof within>, tab: ProjectView.Tab) => {
   await userEvent.click(await canvas.findByTestId(`projectsPlugin.tab.${tab}`, undefined, { timeout: 10_000 }));
@@ -316,7 +322,7 @@ const meta = {
         // Provides `RemoteProcessManager`, which Assistant's `AgentService` spec now requires — the
         // spec is pruned without it, so delegating a task fails with "Chat not found".
         RoutinePlugin.make(),
-        // Contributes the `#123` decoration (`project.repo` is what it resolves against), the link
+        // Contributes the `#123` decoration, the link
         // chips, and the resolver behind a chip's hover card; PreviewPlugin owns the popover and the
         // fixture source answers the resolver without the network.
         GitHubPlugin.make(),
@@ -350,6 +356,7 @@ const meta = {
         StorybookPlugin.make({}),
         MockDeckOperationsPlugin(),
         // A second plugin's extension package, beside plugin-projects' Software one.
+        SoftwareConfigPlugin.make(),
         VideoPackagePlugin.make(),
       ],
       // Both start events at setup, so the markdown extensions and the link resolver are live before
@@ -631,7 +638,8 @@ export const Sections: Story = {
     // setup runs async, so allow more than testing-library's default 1s timeout.
     await expect(canvas.findByDisplayValue(PROJECT_NAME, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
 
-    // Instructions: the owned Instructions markdown editor mounts.
+    // Instructions: the owned Instructions markdown editor mounts once the folded Agent group opens.
+    await openConfigGroup(canvas, 'agent');
     await waitFor(() => expect(canvasElement.querySelector('.cm-editor')).toBeTruthy(), { timeout: 10_000 });
 
     // Artifacts: the section heading renders, and the seeded artifact's label resolves.
@@ -651,16 +659,27 @@ export const Sections: Story = {
   },
 };
 
-/** The contributed action's label, as written in `capabilities/task-action.ts`. */
-const TASK_ACTION_LABEL = 'Assign to agent';
+export const Config: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const { project } = await seedContent();
+
+    const software = await canvas.findByTestId('projectsPlugin.config.software', undefined, { timeout: 10_000 });
+    await expect(within(software).findByText('Repositories (1)')).resolves.toBeTruthy();
+
+    await openConfigGroup(canvas, 'software');
+    await userEvent.click(await within(software).findByLabelText('Delete', undefined, { timeout: 10_000 }));
+    await waitFor(() => expect(Repo.getRepositories(project)).toHaveLength(0), { timeout: 10_000 });
+  },
+};
+
+const TASK_ACTION_LABEL = 'Default agent';
 
 /** The copy action's label, as written in `capabilities/task-action.ts`. */
 const COPY_PROMPT_LABEL = 'Copy prompt';
 
 /**
- * The whole cross-plugin path in one gesture: plugin-projects contributes a `TaskAction`, the task
- * row shows it, and running it invokes the operation that opens a chat carrying the task.
- *
  * Asserted on the database rather than on any UI the chat might get, since the point is that the
  * contribution reached the row and the row reached the operation.
  */
@@ -673,16 +692,21 @@ export const TaskAction: Story = {
     await showTab(canvas, 'tasks');
     const title = await canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 });
 
-    // Scoped to this task's own row — every row carries a menu, so the seeded task has to be found
-    // through its title rather than by picking the first trigger on the page.
     const row = title.closest('[data-testid="taskList.item"]');
     await expect(row).toBeTruthy();
 
-    // Two actions on the row (the contributed one plus the list's own delete), so they collapse into
-    // the overflow menu rather than rendering as a bare button.
-    const trigger = await within(row as HTMLElement).findByTestId('taskList.item.actions', undefined, {
-      timeout: 10_000,
-    });
+    const trigger = await waitFor(
+      () => {
+        const control = (row as HTMLElement).querySelector<HTMLElement>(
+          '[data-testid="taskList.item.assignee"], [data-testid="taskList.item.assignee.unset"]',
+        );
+        if (!control) {
+          throw new Error('No assignee control on the row.');
+        }
+        return control;
+      },
+      { timeout: 10_000 },
+    );
     await userEvent.click(trigger);
 
     // Every item resolves to a label: a key rendered raw (`delete-task.label`) means the container
@@ -901,6 +925,25 @@ export const TaskLink: Story = {
   },
 };
 
+export const OpenMilestone: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const { space, taskSet } = await seedContent();
+    const milestone = space.db.add(Milestone.make({ [Obj.Parent]: taskSet, name: MILESTONE_NAME }));
+    Obj.update(taskSet, (taskSet) => {
+      taskSet.milestones.push(Ref.make(milestone));
+    });
+    const MILESTONE_TASK = 'Filed under the milestone';
+    addTask(space, taskSet, MILESTONE_TASK, milestone);
+
+    await userEvent.click(await canvas.findByTestId('projectsPlugin.milestone.open', undefined, { timeout: 10_000 }));
+    await expect(canvas.getByTestId('projectsPlugin.tab.tasks')).toHaveAttribute('aria-selected', 'true');
+    await expect(canvas.findByText(MILESTONE_TASK, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await waitFor(() => expect(canvas.queryByText(TASK_TITLE)).toBeNull(), { timeout: 10_000 });
+  },
+};
+
 /**
  * Every section stays live after its first paint. Each step below mutates the seeded objects the
  * way the operation verbs do and asserts the DOM follows — the failure this guards against is a
@@ -939,11 +982,14 @@ export const Updates: Story = {
     addTask(space, taskSet, MILESTONE_TASK, milestone);
     // Its task is only a row: the task list does not group by milestone, so no backlog split appears.
     await expect(canvas.findByText(MILESTONE_TASK, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    await waitFor(() => expect(canvas.queryByText('Backlog')).toBeNull(), { timeout: 10_000 });
+    await waitFor(() => expect(canvas.queryByText('Backlog', { ignore: 'script, style, option' })).toBeNull(), {
+      timeout: 10_000,
+    });
 
-    // The milestone renders in its own Overview section.
+    // The milestone renders in its own Overview section, with its progress counted from its tasks.
     await showTab(canvas, 'overview');
     await expect(canvas.findByText(MILESTONE_NAME, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
+    await expect(canvas.findByText('0/1', undefined, { timeout: 10_000 })).resolves.toBeTruthy();
 
     // A rename reaches the row, which holds its own subscription.
     Obj.update(milestone, (milestone) => {

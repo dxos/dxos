@@ -38,8 +38,8 @@ export const DelegateTasks = Operation.make({
     description: trim`
       Delegate one or more EXISTING tasks from the conversation's checklist to background
       sub-agents. Select tasks by their checklist ordinal (1-based number) or exact title.
-      Each selected task is assigned to an agent; the supervisor spawns one sub-agent per task
-      once the task's dependencies are done, and reports each result back to the conversation.
+      Each selected task is handed to an agent; the supervisor spawns one sub-agent per task
+      once the task's dependencies are done or in review, and reports each result back to the conversation.
     `,
     icon: 'ph--share-network--regular',
   },

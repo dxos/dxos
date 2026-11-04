@@ -67,7 +67,7 @@ describe('UpdateTasks skill', { tags: ['model-fixture'] }, () => {
         const tasks = yield* Chat.loadTasks(chat);
         expect(tasks.map((task) => task.id)).toEqual([existing.id]);
         expect(existing.status).toEqual('started');
-        expect(existing.assignee?.subject?.target?.id).toEqual(chat.id);
+        expect(existing.delegate?.subject?.target?.id).toEqual(chat.id);
         // No copy was made alongside it.
         const titled = yield* Database.query(Filter.type(Task.Task, { title: 'Renew the domain' })).run;
         expect(titled).toHaveLength(1);
@@ -95,7 +95,7 @@ describe('UpdateTasks skill', { tags: ['model-fixture'] }, () => {
 
         const tasks = yield* Chat.loadTasks(chat);
         expect(tasks.map((task) => task.title)).toEqual([kept.title]);
-        expect(dropped.assignee).toBeUndefined();
+        expect(dropped.delegate).toBeUndefined();
         // Unassigning leaves the task for whoever else holds it.
         expect(Obj.isDeleted(dropped)).toBe(false);
       },

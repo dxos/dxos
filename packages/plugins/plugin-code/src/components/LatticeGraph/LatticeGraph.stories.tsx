@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
-import { type GraphModel } from '@dxos/react-ui-canvas/scene';
+import { type GraphModel } from '@dxos/react-ui-canvas';
 import * as Card from '@dxos/react-ui/Card';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 

@@ -66,6 +66,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./BundleDescriber": {
+      "source": "./src/BundleDescriber.ts",
+      "types": "./dist/types/src/BundleDescriber.d.ts",
+      "import": "./dist/lib/ns/BundleDescriber.mjs"
+    },
     "./Operations": {
       "source": "./src/Operations.ts",
       "types": "./dist/types/src/Operations.d.ts",

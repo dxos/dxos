@@ -11,6 +11,7 @@ export default defineConfig({
     CanvasCapabilities: 'src/types/CanvasCapabilities.ts',
     CanvasOperation: 'src/types/CanvasOperation.ts',
     Generator: 'src/types/Generator.ts',
+    MeshPresets: 'src/samples/presets/MeshPresets.ts',
     Settings: 'src/types/Settings.ts',
     Architecture: 'src/samples/architecture/index.ts',
     containers: 'src/containers/index.ts',

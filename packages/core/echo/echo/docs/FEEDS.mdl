@@ -26,7 +26,7 @@ This document combines the previous design documents for feeds. The source docum
 | [private-threads.md](./feeds/private-threads.md)             | Four designs for hidden agent threads. It recommends a child feed for each thread.      | Analysis only                 |
 | [thread-channel-merge.md](./feeds/thread-channel-merge.md)   | `Thread` and `Channel` are one concept. It recommends one conversation type.            | Analysis only                 |
 | `plugin-review/docs/COMMENT-FEEDS.md`                        | Comment threads on a feed that the thread owns. The assistant replies in a hidden chat. | Stage 1 in #14206             |
-| `compute/trajectory` README and `LIGHT-THREADS.mdl` (#13782) | Chat feeds become a log of `Trajectory.Event`s. Threads are ids on events.              | Open PR                       |
+| `compute/docs/trajectory` README and `LIGHT-THREADS.mdl` (#13782) | Chat feeds become a log of `Trajectory.Event`s. Threads are ids on events.              | Open PR                       |
 
 ## Extensions
 
@@ -165,6 +165,9 @@ feat F-5: Walk
     that the reader asked for [D-42].
 
   req F-5.5: Local cursor. The walk is part of the API to query a feed by local cursor [D-43].
+
+  req F-5.6: Walk of all branches. A reader can walk every branch of a feed in local order, and resume
+    the walk after a local cursor. Thus a reader that folds every branch keeps one cursor [D-72], [D-73].
 ```
 
 Merge and close. Merges and branch cancel are out of scope of this design [D-50]. Forks come first, and
@@ -300,7 +303,7 @@ The table compares the trajectory design with the requirements:
 The concurrency model [F-4.2] and the cost model [F-1.2], [F-4.3] are the strongest parts. We recommend
 that the design keeps them.
 
-All the gaps have one cause: **the branch logic is in `@dxos/trajectory`, in the
+All the gaps have one cause: **the branch logic is in `@dxos/compute/Trajectory`, in the
 event payload. Thus ECHO cannot see it.** The index cannot filter by thread. Sync cannot select a thread.
 Retention cannot target a thread. Only agent chats can use it.
 
@@ -410,6 +413,8 @@ module Feed
     BranchId: Schema<BranchId>                                                     # opaque branded string; see type:BranchId.
     LocalCursor: Schema<LocalCursor>                                               # opaque branded string; see type:LocalCursor.
     append: (feed, items, { branch?: BranchId, parent? }) => Effect<void>         # continues `branch`, or the root branch when absent [D-63].
+    setBranch: (mutableItem, branch: BranchId) => void                            # puts an item on a branch before append, so one append can continue several branches [D-74].
+    branchKey: (branch: BranchId) => ForeignKey                                   # the same key, for an item made with it in its meta [D-76].
     fork: (feed, items, { at: Item | BlockId }) => Effect<BranchId>               # items[0] is the base block; the predecessor is `at` [D-39], [D-63].
     getBranch: (item) => BranchId | undefined                                     # undefined for a root item.
     isFork: (item) => boolean                                                     # true on a base block.
@@ -417,7 +422,7 @@ module Feed
     getPredecessor: (item) => BlockId | undefined                                 # the predecessor block; undefined for the first block.
     readBranch: (itemsInAppendOrder, branch?: BranchId) => { items, shallow }     # ancestors up to each fork point, then the branch.
     query: (feed, filter, { branches?: (BranchId | null)[] | 'all' }) => QueryResult   # no branches reads the root only [D-24].
-    walk: (feed, filter, { branch?, begin?, forks?, order?: 'asc' | 'desc', limit? }) => QueryResult  # a wrapper of the core walk query [D-58].
+    walk: (feed, filter, { branch?: BranchId | null | 'all', begin?, forks?, order?: 'asc' | 'desc', limit? }) => QueryResult  # a wrapper of the core walk query [D-58]; `'all'` walks every branch [D-73].
     getLocalCursor: (item) => LocalCursor | undefined                             # the walk resumes after this item.
     IndexingOptions: { enabled: boolean, mode?: 'all' | 'main' }                  # mode absent is 'main' [D-10].
     branches: Record<BranchId, { removed?, retention?, name? }>                   # not built; only branch policy, never membership or heads.
@@ -440,7 +445,7 @@ type LocalCursor
 module Scope
   desc: The feed scope with a branch filter or a walk.
   api:
-    feed: (uri, { branches?: (BranchId | null)[] | 'all', walk?: { branch?: BranchId | null, forks?: boolean } })  # `branches` pushes the branch filter into SQL, thus `limit` applies after it; `walk` reads the path to `branch` [D-57].
+    feed: (uri, { branches?: (BranchId | null)[] | 'all', walk?: { branch?: BranchId | null | 'all', forks?: boolean } })  # `branches` pushes the branch filter into SQL, thus `limit` applies after it; `walk` reads the path to `branch` [D-57].
 ```
 
 ```mdl
@@ -1287,6 +1292,54 @@ decision D-71: The questions of this spec use the changelog dialect: each is a `
   why: The question dialect of #14321 landed first; one question format keeps the decision log and the lint consistent across specs.
   rejected:
     - Keep `to:`, `status:` and `answer:` on the question beside `by:` — two ways to record one answer.
+```
+
+```mdl
+decision D-72: A walk can cover every branch of a feed, by an extension of the existing walk API, so that a reader resumes a read of all branches from one local cursor.
+  date: 2026-11-02
+  by: user:dmaretskyi
+  affects: [F-5.6]
+```
+
+```mdl
+decision D-73: The walk target `branch` takes `'all'` beside a branch id and `null`. A walk of all branches gives the blocks of the feed in local order, each item once at the place of its first block, and resolves a cursor by its block alone. Fills in [D-72].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.6, type:FeedScope]
+  why: '`all` mirrors the `branches` filter of the scope; local order is the order in which the store holds every block, so no path is needed and the fork points are already in it; the place of an item follows [D-69].'
+  rejected:
+    - A separate `Feed.walkAll` — a second API for one query, beside the scope that already names the target.
+    - "`Feed.heads` and one cursor per branch — a reader that folds every branch keeps more state, and a fold in one order across branches needs the local order anyway."
+```
+
+```mdl
+decision D-74: `Feed.setBranch` puts an item on a branch before an append, so one append can continue several branches. Fills in [D-63].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.2]
+  why: The host already reads the branch key of each block, and a writer that records one step across branches (a message on one branch and its consume on another) then writes it in one append.
+```
+
+```mdl
+decision D-75: A walk of all branches reads only the blocks after its cursor (before it, walking backward), so a page costs the blocks that it reads. Each item comes once, at the first of its blocks in what was read. An item that changes after the cursor comes again at its new block. Fills in [D-73].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.6]
+  why: The store keeps no item id beside a block, so to know whether an item started before the cursor a walk must read every block before it, and a reader that resumes after each change then pays for the whole feed on each read. A log of immutable items, such as a trajectory, never changes an item.
+  rejected:
+    - Read the whole feed on each page and drop the items that started before the cursor ([D-70] for a path walk) — one resumed read of a 1,000-turn chat took 1.9 s instead of tens of milliseconds.
+```
+
+```mdl
+decision D-76: `Feed.branchKey` gives the key that puts an item on a branch, so a writer makes the item with the key in its meta instead of opening a change with `Feed.setBranch` afterwards. Fills in [D-74].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.2]
+  why: A change on each new item cost about 110 µs; a writer that records every event of a turn on its branch paid it for every event.
 ```
 
 ## Appendix: Extension Definitions

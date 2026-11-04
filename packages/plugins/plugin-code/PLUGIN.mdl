@@ -15,10 +15,11 @@ plugin CodePlugin: Authors, reviews and syncs DEUS specs, and scaffolds the code
     - NavigationTargetResolver: resolves a github: key to the spec or file it names
     - OperationHandler: the plugin's operations (importSpec, listLocalSpecs, the Coder tools)
     - PluginAsset: this document, served as the plugin's own spec
+    - ProjectConfig: the Software group of a project's Config section, holding its repositories
     - ReactSurface: the spec article surface, and the code project's article and section surfaces
     - Schema: the Spec and CodeProject types
     - Settings: repos to sync and build settings
-    - SkillDefinition: the Coder skill
+    - SkillDefinition: the Coder, Feature Map and Project Repositories skills
     - SpecFileMapping: the GitHubCapabilities.FileMapping for `**/*.mdl`, so a GitHub file binding syncs specs (org.dxos.plugin.github.file-sync#F-6)
     - SpecSync: two-way sync of specs with files on disk (plugin-file-system's FileSystem)
     - Translations: the plugin's strings
@@ -496,6 +497,21 @@ op listLocalSpecs
   requires: [org.dxos.plugin.fileSystem#FileSystem]
 ```
 
+```mdl
+op updateProjectRepositories
+  key: org.dxos.operation.code.updateProjectRepositories
+  desc: |
+    Appends the repositories in `add` to a project's `Repo.RepositoriesAnnotation`, removes those in `remove`, and
+    returns the list; with neither, only reads it. A repository already listed keeps its place, compared by entity id.
+  input:
+    project: Ref<Project>
+    add?: Ref<Repo>[]
+    remove?: Ref<Repo>[]
+  output: { repositories: Ref<Repo>[] }
+  effects: [echo:read, echo:write]
+  requires: [Database]
+```
+
 ## Skills
 
 ```mdl
@@ -522,6 +538,18 @@ type CoderSkill
     # The introspect-mcp tools (list_packages, get_package, list_symbols,
     # find_symbol, get_symbol) come from the built-in DXOS Introspect MCP
     # server (org.dxos.mcp.introspect), off in a chat until turned on.
+    instructions: prose
+```
+
+```mdl
+type RepositoriesSkill
+  desc: |
+    Skill key `org.dxos.skill.code.repositories`, named Project Repositories, which an agent can enable. Reads and
+    edits the repositories a project's cloud coding agents check out.
+  fields:
+    key: org.dxos.skill.code.repositories
+    tools:
+      - op:updateProjectRepositories
     instructions: prose
 ```
 
@@ -922,9 +950,9 @@ feat F-20: Feature embeds in the editor
              the cursor in its section. A phrase before it names the feature, and the cursor goes to its description. A
              sentence before it (ending in `.`, `!` or `?`) becomes its description, and the cursor goes to its name,
              "New feature" until changed, as on an empty line.
-  req F-20.7: A section is inert until it has attention, so the cursor and scrolling pass through it. A click gives it
-             attention, its form then edits the feature's name, description, requirements and status in place, and
-             Escape returns the cursor to the text.
+  req F-20.7: A section is inert until it has attention, so the cursor and scrolling pass through it. Its fold toggle
+             is not: one click folds or unfolds it. A click anywhere else gives it attention, its form then edits the
+             feature's name, description, requirements and status in place, and Escape returns the cursor to the text.
   req F-20.10: A section shows everything the feature's `feat` block says: its block id, name, status, description and
               requirements, a structured requirement with each field on a line of its own. It also lists the features
               the feature depends on, which it can add and remove.
@@ -932,6 +960,12 @@ feat F-20: Feature embeds in the editor
               `ProjectCapabilities.SpecExtensions`, which this plugin contributes.
   req F-20.9: A feature's `section` surface is that form, so any document embedding the feature can edit it in place. Its
              card is the read-only version, shown on the map, the board and in search.
+  req F-20.11: A section is compact. Its header row reads a fold toggle, the block id, the name and, at its end, the
+              status. Under it are the description, the requirements, and a "Needs" row that picks the features it
+              depends on, never one that depends on it. Empty rows and the add and remove actions show only while the
+              section has attention. Folded, a section shows only its header row, with the block ids of the features
+              it needs and its requirement count. Each reader's device keeps which sections are folded; it is not
+              synced.
 ```
 
 ```mdl
@@ -980,6 +1014,16 @@ feat F-22: The feature map in a project
               and handled by `CodeOperationHandlerSet`. The Feature Map skill (`org.dxos.skill.code.featureMap`)
               declares them.
   req F-22.8: The feature map, its types and their migrations are present only while this plugin is enabled.
+```
+
+```mdl
+feat F-23: A project's repositories
+  req F-23.1: The Software group of a project's Config section lists the project's repositories, which a cloud
+              session checks out, and the user adds, removes and reorders them there. Other plugins fill the same group,
+              such as plugin-claude's code folder below the list.
+  req F-23.2: An agent asked to give a project a repository, or to take one away, adds or removes it with
+              op:updateProjectRepositories from the Project Repositories skill; a repository already listed keeps its
+              place.
 ```
 
 ## Acceptance
@@ -1297,7 +1341,7 @@ test QA-4: Grow a spec from prose
     autocue flow `spec-document` against the FeatureEmbeds story "Prose", whose spec "Mail" is three paragraphs
     of prose with no features.
   actors: human
-  covers: [F-19.3, F-19.6, F-20.1, F-20.2, F-20.3, F-20.6, F-20.7, F-20.10]
+  covers: [F-19.3, F-19.6, F-20.1, F-20.2, F-20.3, F-20.6, F-20.7, F-20.10, F-20.11]
   status: unverified
   given:
     - storybook serves plugin-code
@@ -1328,8 +1372,18 @@ test QA-4: Grow a spec from prose
       do: Click the "Search" section, click "Add requirement" in it, type "Results appear as you type." and press Enter.
       expect: the requirement shows its id, F-19.1
     - name: Depend on another feature
-      do: Click the "Instant inbox" section, click "Add dependency" in it and pick "Search".
-      expect: the section lists "Search" under "Depends on"
+      do: Click the "Instant inbox" section, open its "Needs" picker and pick "Search".
+      expect: the section's "Needs" row shows "Search"
+    - name: Turn the last paragraph into a feature
+      do: Put the cursor at the end of the paragraph "Later, maybe…", type " /feature", accept it, type "Snooze" and press Escape.
+      expect: a third section, "Snooze", below "Instant inbox"
+    - name: Need a second feature
+      do: Click the "Instant inbox" section, open its "Needs" picker and pick "Snooze".
+      expect: the section's "Needs" row shows "Search" and "Snooze"
+    - name: Fold the sections
+      do: In each section, click its fold chevron, without clicking the section first.
+      expect: one click folds each section to its header row; "Search" reads "1 requirement" and "Instant inbox" shows the
+        block ids of "Search" and "Snooze"
 ```
 
 ```mdl
@@ -1863,6 +1917,107 @@ decision D-54: QA-5 walks the FeatureLevel story "Default", whose project "Inbox
   why: The stories that hold features now live in this plugin.
 ```
 
+```mdl
+decision D-55: A feature holds one block of a file. When two blocks of a file name the same feature, the first keeps it and drops its other sources in that file, and each later block becomes a new feature.
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-21.1]
+  why: A feature migrated from 0.3.0 can record two blocks of one file. Both blocks mapped to it, the later one's fields overwrote the earlier one's, and export wrote only the first embed back, losing the other block's text.
+  rejected:
+    - Merging the two blocks into one feature, which loses one block's name and requirements on export.
+```
+
+```mdl
+decision D-56: The plugin's namespace is `code`: the feature operations are part of `CodeOperation`, their handlers part of `CodeOperationHandlerSet`, and the Feature Map skill's key is `org.dxos.skill.code.featureMap`. The skill stays separate from the coder skill.
+  date: 2026-11-02
+  by: user:wittjosiah
+  supersedes: D-51
+  affects: [F-22.7]
+```
+
+```mdl
+decision D-57: In `CodeOperation`, the feature operations whose names would be ambiguous beside the other code operations take `Feature` in their names (`CreateFeature`, `UpdateFeature`, `DeleteFeature`, `AddFeatureDependency`, `RemoveFeatureDependency`, `LinkFeatureTask`, `ImportSpecFeatures`, `ExportSpecFeatures`, `ImportFeatureLinks`), matching their keys. Their keys do not change. Fills in [D-56].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-22.7]
+  why: Each name now matches the last segment of its key, so `CodeOperation.CreateFeature` is `org.dxos.operation.code.createFeature`.
+```
+
+```mdl
+decision D-58: op:updateProjectRepositories, keyed `org.dxos.operation.code.updateProjectRepositories` (tool `code-update-project-repositories`), is a `CodeOperation` handled by `CodeOperationHandlerSet`, and the Project Repositories skill is `org.dxos.skill.code.repositories`. The module ProjectConfig declares the Software group with the repositories field. Fills in plugin-claude D-17.
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-23.1, F-23.2]
+  why: Keys in this plugin's domain match the feature operations ([D-50], [D-56]). No build has shipped the old keys, so no saved skill names them.
+  rejected:
+    - Adding the tool to the Coder skill, which is about authoring a plugin's source files.
+```
+
+```mdl
+decision D-59: A section embedded in a spec is compact and folds like an outline. Icons sit in a gutter column: the fold chevron on the header row, and under it each requirement's check, the `+` of "Add requirement" and the "Needs" row's arrow. The header row reads chevron, block id and name, with the name in the form's `title` presentation and the status as a `pill` at the row's end, as ProjectArticle draws them. The description has no label, uses the `plain` presentation and shows when it has text or the section has attention. Requirements have no label and no field well until focused; their remove and add actions show while the section has attention. Folded, only the header row shows, with the requirement count beside the status and the needed features as tags after the name. Which sections are folded is kept on the device, not synced.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-20.10, F-20.11, QA-4]
+  why: A user reported that a section with five requirements was about 550 px tall, so a screen held 1.5 features and the spec was unusable for them.
+```
+
+```mdl
+decision D-60: The compact section creates no new form components. It composes the existing `Form` presentations, fields and fieldsets, `ObjectMultiPicker`, react-ui `Card`, `Layout`, `Tag` and `Icon`, and `RequirementEditor`. A behaviour that composition cannot give is a gap to raise, fixed in the existing primitive only with the user's agreement. Fills in [D-59].
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-20.11]
+  why: Sections should look and behave like every other form in the app.
+  rejected:
+    - A new field renderer, a hand-built form, or a section-specific wrapper around the inputs.
+```
+
+```mdl
+decision D-61: react-ui-form's `MarkdownField` draws the `title` and `plain` presentations in place, with no well and one line that grows with its text, as `TextField` does. The description placeholder is one line. The "Needs" picker stays in place whatever has attention, so several features can be picked in a row. Fills in [D-60].
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-20.11]
+  why: A feature's description is markdown, and `MarkdownField` drew a six-line well for every presentation.
+```
+
+```mdl
+decision D-62: The "Needs" row is an `ObjectMultiPicker` over the feature's `DependsOn` targets, and each pick or removal runs `AddFeatureDependency` or `RemoveFeatureDependency`. Its options leave out the feature and every feature that depends on it, directly or through others. The fold state is `CodeCapabilities.State.collapsed`, keyed by feature id, in a local store under `org.dxos.plugin.code.state`. `RequirementEditor` renders a section of its host's grid card, so its icons share the host's rail. Fills in [D-59] and [D-61].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-20.11]
+  why: Dependencies are relations edited through operations, not a field of the feature, so the picker is mounted beside the form rather than through it. Leaving out the features that would close a cycle means the operation never has to refuse a pick.
+  rejected:
+    - Read-only tags while the section lacks attention, which replaced the picker as soon as attention moved and hid how to add another feature.
+```
+
+```mdl
+decision D-63: A folded section names the features it needs by block id (`F-2`), not by name. The ids sit with the requirement count at the end of the header row, spaced as the ids are from each other. Fills in [D-59].
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-20.11]
+  why: Names made a folded row long; block ids keep it compact.
+```
+
+```mdl
+decision D-64: The status at the end of the header row uses react-ui-form's `tag` presentation, which is what [D-59]'s `pill` is called since `pill` was renamed to `tag`. Fills in [D-59].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-20.11]
+  why: The presentation was renamed under this change; the look D-59 chose is the same.
+```
+
+```mdl
+decision D-65: A section's fold toggle stays live while the rest of the section is inert, so one click folds or unfolds a section that does not have attention. Amends [F-20.7].
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-20.7]
+  why: Folding took two clicks, one to give the section attention and one on the toggle.
+```
+
 ## Appendix: Extension Definitions
 
 Extension block types used in this document are defined below using
@@ -1938,32 +2093,4 @@ ext service
     ops?: OpMap
     errors?: ErrorMap
     note?: Prose
-```
-
-```mdl
-decision D-55: A feature holds one block of a file. When two blocks of a file name the same feature, the first keeps it and drops its other sources in that file, and each later block becomes a new feature.
-  date: 2026-11-02
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-21.1]
-  why: A feature migrated from 0.3.0 can record two blocks of one file. Both blocks mapped to it, the later one's fields overwrote the earlier one's, and export wrote only the first embed back, losing the other block's text.
-  rejected:
-    - Merging the two blocks into one feature, which loses one block's name and requirements on export.
-```
-
-```mdl
-decision D-56: The plugin's namespace is `code`: the feature operations are part of `CodeOperation`, their handlers part of `CodeOperationHandlerSet`, and the Feature Map skill's key is `org.dxos.skill.code.featureMap`. The skill stays separate from the coder skill.
-  date: 2026-11-02
-  by: user:wittjosiah
-  supersedes: D-51
-  affects: [F-22.7]
-```
-
-```mdl
-decision D-57: In `CodeOperation`, the feature operations whose names would be ambiguous beside the other code operations take `Feature` in their names (`CreateFeature`, `UpdateFeature`, `DeleteFeature`, `AddFeatureDependency`, `RemoveFeatureDependency`, `LinkFeatureTask`, `ImportSpecFeatures`, `ExportSpecFeatures`, `ImportFeatureLinks`), matching their keys. Their keys do not change. Fills in [D-56].
-  date: 2026-11-02
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-22.7]
-  why: Each name now matches the last segment of its key, so `CodeOperation.CreateFeature` is `org.dxos.operation.code.createFeature`.
 ```

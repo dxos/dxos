@@ -184,6 +184,16 @@ const config: Plugin.PluginConfig = Plugin.config({
       { provides: [ProjectCapabilities.Template], activatesOn: ProjectsEvents.Start },
       () => import('./src/capabilities/templates.ts', { with: { type: 'module-url' } }),
     ),
+    Capability.lazyModule(
+      'ProjectConfig',
+      { provides: [ProjectCapabilities.ConfigGroup], activatesOn: ProjectsEvents.Start },
+      () => import('./src/capabilities/project-config.ts', { with: { type: 'module-url' } }),
+    ),
+    Capability.lazyModule(
+      'State',
+      { provides: [CodeCapabilities.State], activatesOn: ActivationEvents.Startup },
+      () => import('./src/capabilities/state.ts', { with: { type: 'module-url' } }),
+    ),
     AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],
 });

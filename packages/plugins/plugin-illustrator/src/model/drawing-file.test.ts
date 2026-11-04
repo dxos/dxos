@@ -61,7 +61,7 @@ describe('.dx.svg', () => {
     expect(await db.query(Filter.id(first.id)).first()).toBe(first);
     expect(first.name).toBe('Request path');
     const imported = await first.canvas.load();
-    invariant(imported, 'The imported drawing resolves its canvas.');
+    invariant(Drawing.isCanvas(imported), 'The imported drawing resolves its canvas.');
     expect(imported.id).not.toBe(canvas.id);
     expect(imported.schema).toBe(SVG_SCHEMA);
     expect(

@@ -13,6 +13,7 @@ import {
   createCollectionExtensions,
   createCompanionExtensions,
   createDatabaseExtensions,
+  createExportExtensions,
   createSettingsExtensions,
   createSpaceExtensions,
 } from './extensions/index.ts';
@@ -25,6 +26,7 @@ export default Capability.makeModule(
       createDatabaseExtensions(),
       createCollectionExtensions({ shareableLinkOrigin }),
       createCompanionExtensions(),
+      createExportExtensions(),
     ]);
 
     return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions.flat());

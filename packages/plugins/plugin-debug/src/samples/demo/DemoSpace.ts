@@ -30,7 +30,7 @@ const partials = {
 /**
  * A demo space of boards to look at: sixteen chess games at every stage, from famous finished games to openings a few
  * moves in and endgame studies, a world map pinning every Cloudflare data centre, a voxel Minecraft creeper, and a voxel
- * town where three racing cars and a fire truck drive past houses and towers, and the same line-up as a spacetime scene.
+ * town where three racing cars and a fire truck drive past houses and towers, and the same line-up as a 3D canvas.
  */
 export const make = (): SampleSpace.Definition<typeof partials, void> =>
   SampleSpace.make({
@@ -47,9 +47,9 @@ export const make = (): SampleSpace.Definition<typeof partials, void> =>
         const { sculpture } = yield* partials.sculpture();
         const { town } = yield* partials.town();
         yield* SampleSpace.collection('Voxels', [Ref.make(sculpture), Ref.make(town)]);
-        // Spacetime scenes have no navtree section either, so the scene gets its own collection.
-        const { scene } = yield* partials.vehicles();
-        yield* SampleSpace.collection('Scenes', [Ref.make(scene)]);
+        // The line-up is a 3D canvas drawing, kept in a collection of its own beside the maps and voxel worlds.
+        const { drawing } = yield* partials.vehicles();
+        yield* SampleSpace.collection('Scenes', [Ref.make(drawing)]);
       }),
   });
 
@@ -57,6 +57,6 @@ export const makeTemplate = (): AppCapabilities.SpaceTemplate =>
   SampleSpace.makeTemplate({
     id: 'org.dxos.plugin-debug.template.demo',
     description:
-      'Sixteen chess games at every stage, from famous finished games to openings and endgame studies, a map of Cloudflare data centres, a voxel creeper, a voxel town and a spacetime scene of race cars and a fire truck.',
+      'Sixteen chess games at every stage, from famous finished games to openings and endgame studies, a map of Cloudflare data centres, a voxel creeper, a voxel town and a 3D canvas of race cars and a fire truck.',
     definition: make(),
   });
