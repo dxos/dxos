@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { EditorSelection } from '@codemirror/state';
+import { EditorSelection, EditorState, StateEffect } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
@@ -242,6 +242,179 @@ export const Keyboard: Story = {
     await waitFor(() => expect(document.activeElement).toBe(embed));
     await userEvent.keyboard('{ArrowLeft}');
     await waitFor(atBefore);
+  },
+};
+
+/** The section drawn for an embed, once the editor has drawn it. */
+const findEmbed = (canvasElement: HTMLElement, id: string) =>
+  waitFor(
+    () => {
+      const element = embeds(canvasElement).find((element) => element.dataset.feature === id);
+      invariant(element, 'Missing embed.');
+      return element;
+    },
+    { timeout: 5_000 },
+  );
+
+/** Selects a section as the arrows would: focused itself. */
+const select = async (element: HTMLElement) => {
+  element.focus();
+  await waitFor(() => expect(document.activeElement).toBe(element));
+};
+
+/** Whether the cursor is in the text rather than in an embed's hidden source. */
+const inText = (view: EditorView) => {
+  const { head } = view.state.selection.main;
+  return (
+    document.activeElement === view.contentDOM &&
+    FeatureEmbed.parse(view.state.doc.toString()).every(({ from, to }) => head < from || head > to)
+  );
+};
+
+/** Waits for the browser to draw `count` frames. */
+const frames = (count: number) =>
+  new Promise<void>((resolve) => {
+    const next = (left: number) => (left === 0 ? resolve() : requestAnimationFrame(() => next(left - 1)));
+    next(count);
+  });
+
+/** Removes the blank line between the first two sections, so they sit on adjacent lines. */
+const joinFirstTwo = (view: EditorView) => {
+  const [first, second] = FeatureEmbed.parse(view.state.doc.toString());
+  view.dispatch({ changes: { from: first.to, to: second.from, insert: '\n' } });
+  return FeatureEmbed.parse(view.state.doc.toString());
+};
+
+/**
+ * Leaving a selected section puts the cursor in text, past a section beside it or before one at the end; the arrows
+ * pass a section that cannot be selected to reach the next one that can.
+ */
+export const LeaveSelection: Story = {
+  play: async ({ canvasElement }) => {
+    const view = await findView(canvasElement);
+    await waitFor(() => expect(embedded(view)).toHaveLength(8), { timeout: 10_000 });
+    const [first, second] = joinFirstTwo(view);
+
+    await select(await findEmbed(canvasElement, first.id));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(inText(view)).toBe(true));
+    await expect(view.state.selection.main.head).toBe(second.to + 1);
+
+    // An embed of a feature that does not exist draws a notice, which takes no focus.
+    const missing = `${first.id.slice(0, -1)}${first.id.endsWith('A') ? 'B' : 'A'}`;
+    const source = view.state.sliceDoc(first.from, first.to).replace(first.id, missing);
+    view.dispatch({ changes: { from: second.from, insert: `${source}\n` } });
+    await select(await findEmbed(canvasElement, first.id));
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(document.activeElement?.getAttribute('data-feature')).toBe(second.id));
+    // Alt changes only Up and Down: with Left the selection goes back past the notice, as without it.
+    await userEvent.keyboard('{Alt>}{ArrowLeft}{/Alt}');
+    await waitFor(() => expect(document.activeElement?.getAttribute('data-feature')).toBe(first.id));
+
+    const last = FeatureEmbed.parse(view.state.doc.toString()).at(-1);
+    invariant(last, 'Missing embed.');
+    view.dispatch({
+      changes: { from: last.to, to: view.state.doc.length },
+      effects: EditorView.scrollIntoView(last.from),
+    });
+    const embed = await findEmbed(canvasElement, last.id);
+    await select(embed);
+    const before = { doc: view.state.doc.toString(), head: view.state.selection.main.head };
+    await userEvent.keyboard('{Alt>}{ArrowDown}{/Alt}');
+    await frames(10);
+    await expect({ doc: view.state.doc.toString(), head: view.state.selection.main.head }).toEqual(before);
+    await expect(document.activeElement).toBe(embed);
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(inText(view)).toBe(true));
+  },
+};
+
+/**
+ * Backspace on a selected section removes it with the line break before it, and leaves the cursor in text; a section
+ * with text before it on its line is left at its edge, and removes only itself.
+ */
+export const DeleteSelection: Story = {
+  play: async ({ canvasElement }) => {
+    const view = await findView(canvasElement);
+    await waitFor(() => expect(embedded(view)).toHaveLength(8), { timeout: 10_000 });
+    const [, second, third] = joinFirstTwo(view);
+
+    await select(await findEmbed(canvasElement, second.id));
+    await userEvent.keyboard('{Backspace}');
+    await waitFor(() => expect(embedded(view)).not.toContain(second.id), { timeout: 5_000 });
+    await waitFor(() => expect(inText(view)).toBe(true));
+
+    const at = FeatureEmbed.parse(view.state.doc.toString()).find(({ id }) => id === third.id);
+    invariant(at, 'Missing embed.');
+    view.dispatch({ changes: { from: at.from, insert: 'Note: ' } });
+    const beside = await findEmbed(canvasElement, third.id);
+    await select(beside);
+    await userEvent.keyboard('{ArrowLeft}');
+    await waitFor(() => expect(document.activeElement).toBe(view.contentDOM));
+    await expect(view.state.selection.main.head).toBe(at.from + 'Note: '.length);
+    await select(beside);
+    await userEvent.keyboard('{Backspace}');
+    await waitFor(() => expect(embedded(view)).not.toContain(third.id), { timeout: 5_000 });
+    await expect(view.state.doc.lineAt(at.from).text).toBe('Note: ');
+  },
+};
+
+/**
+ * Undo on a selected section undoes its move, and the section stays selected; with nothing to redo it stays selected
+ * too. Undoing a delete in the text brings the section back with the cursor still in text.
+ */
+export const UndoMove: Story = {
+  play: async ({ canvasElement }) => {
+    const view = await findView(canvasElement);
+    await waitFor(() => expect(embedded(view)).toHaveLength(8), { timeout: 10_000 });
+    const [first] = FeatureEmbed.parse(view.state.doc.toString());
+    const original = view.state.doc.toString();
+    const selected = () => document.activeElement?.getAttribute('data-feature');
+
+    await select(await findEmbed(canvasElement, first.id));
+    await userEvent.keyboard('{Control>}y{/Control}');
+    await frames(10);
+    await expect(selected()).toBe(first.id);
+
+    await userEvent.keyboard('{Alt>}{ArrowDown}{/Alt}');
+    await waitFor(() => expect(view.state.doc.toString()).not.toBe(original));
+    await userEvent.keyboard('{Control>}z{/Control}');
+    await waitFor(() => expect(view.state.doc.toString()).toBe(original));
+    await waitFor(() => expect(selected()).toBe(first.id));
+
+    await userEvent.keyboard('{Alt>}{ArrowDown}{/Alt}');
+    await waitFor(() => expect(view.state.doc.toString()).not.toBe(original));
+    await waitFor(() => expect(selected()).toBe(first.id));
+    await userEvent.keyboard('{Backspace}');
+    await waitFor(() => expect(embedded(view)).not.toContain(first.id), { timeout: 5_000 });
+    // The editor's own undo is on Mod, which is Cmd on macOS.
+    const mod = /Mac/.test(navigator.platform) ? 'Meta' : 'Control';
+    await userEvent.keyboard(`{${mod}>}z{/${mod}}`);
+    await waitFor(() => expect(embedded(view)).toContain(first.id), { timeout: 5_000 });
+    await waitFor(() => expect(inText(view)).toBe(true));
+  },
+};
+
+/** A selected section in a read-only document neither moves nor deletes, and stays selected. */
+export const ReadOnlySelection: Story = {
+  play: async ({ canvasElement }) => {
+    const view = await findView(canvasElement);
+    await waitFor(() => expect(embedded(view)).toHaveLength(8), { timeout: 10_000 });
+    const [first] = FeatureEmbed.parse(view.state.doc.toString());
+    view.dispatch({ effects: StateEffect.appendConfig.of(EditorState.readOnly.of(true)) });
+    await expect(view.state.readOnly).toBe(true);
+    const original = view.state.doc.toString();
+
+    const embed = await findEmbed(canvasElement, first.id);
+    await select(embed);
+    await userEvent.keyboard('{Alt>}{ArrowDown}{/Alt}');
+    await userEvent.keyboard('{Backspace}');
+    await frames(10);
+    await expect(view.state.doc.toString()).toBe(original);
+    await expect(document.activeElement).toBe(embed);
+    // The section still answered its keys: Escape leaves it.
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(inText(view)).toBe(true));
   },
 };
 

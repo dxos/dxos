@@ -99,9 +99,9 @@ const FOCUSABLE = 'input, textarea, select, [contenteditable="true"], button, [t
 
 /**
  * Registry-backed block widget for URL-scheme preview slots (the `image` widget of `objectLinks()`).
- * The embed is an attendable nested under the editor: inert until clicked, so the wheel and keys
- * reach the document; attended, its surface takes input, nothing leaks out, and Escape returns
- * focus to the editor.
+ * The embed is an attendable nested under the editor: inert until attended, so the wheel reaches the
+ * document. A click or the arrows select it; attended, its surface takes input and nothing leaks out,
+ * and Escape steps back out to the selection and then to the text.
  */
 export const PreviewComponent = ({
   id,

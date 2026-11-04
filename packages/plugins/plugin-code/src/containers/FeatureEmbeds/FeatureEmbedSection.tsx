@@ -36,7 +36,8 @@ export type FeatureEmbedSectionProps = ObjectLinkProps & {
 
 /**
  * A feature embedded in a spec document, drawn as its editable section. Like any section embed it is inert until
- * attended, so the cursor and the wheel pass through it; a click or Escape moves attention in or back to the text.
+ * attended, so the wheel passes through it; a click or the arrows select it, and Enter and Escape move into its form
+ * and back out.
  */
 export const FeatureEmbedSection = ({ eid, label, view, db, attendableId, claimFocus }: FeatureEmbedSectionProps) => {
   const { t } = UiHooks.useTranslation(CodeNamespace.key);

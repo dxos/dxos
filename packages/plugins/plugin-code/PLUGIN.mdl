@@ -950,13 +950,15 @@ feat F-20: Feature embeds in the editor
              the cursor in its section. A phrase before it names the feature, and the cursor goes to its description. A
              sentence before it (ending in `.`, `!` or `?`) becomes its description, and the cursor goes to its name,
              "New feature" until changed, as on an empty line.
-  req F-20.7: A section is inert until it has attention, so the cursor and scrolling pass through it. Its fold toggle
+  req F-20.7: A section is inert until it has attention, so scrolling passes through it. Its fold toggle
              is not: one click folds or unfolds it. A click anywhere else gives it attention, and its form then edits
              the feature's name, description, requirements and status in place. Arrowing through the text stops on a
-             section rather than skipping it: selected, it has attention and a focus ring. Enter then edits its name,
-             the arrows move on to the text on either side, Alt with Up or Down moves it as a line, and Backspace
+             section rather than skipping it, and passes the notice of a missing feature. A selected section has
+             attention and a focus ring. Enter then edits its name, the arrows move on to the next section or the text
+             on either side, Alt with Up or Down moves it as a line, undo undoes the move, and Backspace or Delete
              deletes it. Escape in a field selects the section again, and Escape on a selected section returns the
-             cursor to the line after it.
+             cursor to the text after it, or before it when none follows. In a read-only document a selected section
+             neither moves nor deletes.
   req F-20.10: A section shows everything the feature's `feat` block says: its block id, name, status, description and
               requirements, a structured requirement with each field on a line of its own. It also lists the features
               the feature depends on, which it can add and remove.
@@ -1463,7 +1465,7 @@ test QA-6: Arrow through a spec's features
     flow `embed-keyboard` against the FeatureEmbeds story "Sample".
   actors: human
   covers: [F-20.7]
-  status: unverified
+  status: passing            # 2026-11-04, recorded by autocue/embed-keyboard.mjs
   given:
     - storybook serves plugin-code
     - the spec "Inbox and agents" embeds its features under the heading "Features", Accounts first, with a blank line
@@ -2061,6 +2063,16 @@ decision D-66: Arrowing through a spec stops on each section instead of skipping
   by: user:wittjosiah
   affects: [F-20.7]
   why: A section could be reached only with the mouse; the cursor skipped it.
+```
+
+```mdl
+decision D-67: Replaces the part of [D-66] where the arrows go only to the text. Undo and redo on a selected section act on the document, and the section stays selected while it is still there. From a selected section, an arrow selects the next section on its side or puts the cursor in the text there, and does nothing when there is neither; Escape puts the cursor in the text after it, or before it when none follows; Backspace or Delete removes it and puts the cursor in the text before it, or after it when none precedes. The arrows pass a block that cannot be selected, such as a missing feature's notice. In a read-only document a selected section neither moves nor deletes.
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-20.7]
+  supersedes: D-66
+  why: D-66 left open what undo, Escape, a delete and a move do with the selection and the cursor, and an arrow beside another section stops on it as an arrow from the text does.
 ```
 
 ## Appendix: Extension Definitions
