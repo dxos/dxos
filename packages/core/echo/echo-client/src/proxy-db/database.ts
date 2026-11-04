@@ -833,7 +833,13 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     opts: { at: Entity.Unknown | Entity.Snapshot | Feed.BlockId },
   ): Promise<Feed.BranchId> {
     const handle = this.#getFeedHandle(feed);
-    const at = typeof opts.at === 'string' ? opts.at : handle.blockIdOf(opts.at);
+    const point = opts.at;
+    let at = typeof point === 'string' ? point : handle.blockIdOf(point);
+    if (at === undefined && typeof point !== 'string' && handle.hasPendingWrites()) {
+      // A walk returns items appended with `db.add(…, { to: feed })` before their send names their block.
+      await handle.waitForPendingWrites();
+      at = handle.blockIdOf(point);
+    }
     invariant(at !== undefined, 'fork: the fork point has no block yet; flush it first');
     const branch = Feed.BranchId.make(await handle.fork(base, at));
     this.#emitFeedAppend(feed, [base], undefined);
