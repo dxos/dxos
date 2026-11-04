@@ -11,7 +11,7 @@ import { objectEmbedFocus } from '@dxos/ui-editor';
 
 import { Feature, SpecText } from '#types';
 
-import { featureEmbeds } from '../../components/FeatureEmbeds/feature-embeds.ts';
+import { featureEmbeds } from './feature-embeds.ts';
 
 /** The fields of a new feature's section `/feature` puts the cursor in; the description is the form's only contenteditable. */
 const FIELDS = {

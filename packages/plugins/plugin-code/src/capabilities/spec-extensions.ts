@@ -9,8 +9,8 @@ import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities'
 
 import { FeatureMap } from '#types';
 
-import { featureEmbedExtensions } from '../containers/FeatureEmbeds/feature-embed-extensions.ts';
-import { softwareCommands } from '../containers/FeatureEmbeds/software-commands.ts';
+import { featureEmbedExtensions } from '../extensions/feature-embed-extensions.ts';
+import { softwareCommands } from '../extensions/software-commands.ts';
 import { CodeNamespace } from '../namespace.ts';
 
 /**

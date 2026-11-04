@@ -100,7 +100,7 @@ const featureOf = (element: Element | null | undefined) =>
 const embedded = (view: EditorView) => FeatureEmbed.parse(view.state.doc.toString()).map(({ id }) => id);
 
 const meta = {
-  title: 'plugins/plugin-code/containers/FeatureEmbeds',
+  title: 'plugins/plugin-code/extensions/feature-embeds',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
