@@ -13,7 +13,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Event, timeoutUnlessProgress } from '@dxos/async';
-import { Client, ClientService, fromClient } from '@dxos/client';
+import { Client, ClientInitialization, fromClient } from '@dxos/client';
 import { INITIALIZE_TIMEOUT } from '@dxos/client-protocol';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
@@ -40,7 +40,6 @@ export default Capability.makeModule(
     onClientInitializationError,
     onSpacesAvailable,
     initializeTimeout = INITIALIZE_TIMEOUT,
-    awaitInitialization = false,
     ...options
   }: ClientCapabilityOptions) {
     const capabilityManager = yield* Capability.Service;
@@ -200,9 +199,12 @@ export default Capability.makeModule(
 
     log('client capability ready (initialization in flight)');
 
-    const clientServiceLayer = awaitInitialization
-      ? Layer.effect(ClientService, Deferred.await(initialized).pipe(Effect.as(client)))
-      : fromClient(client);
+    // `ClientService` hands over the client before it has initialized, so a host never waits for it
+    // up front; an imperative host (the CLI) waits on `ClientInitialization` only for work that needs it.
+    const clientServiceLayer = Layer.merge(
+      fromClient(client),
+      Layer.succeed(ClientInitialization, Deferred.await(initialized)),
+    );
 
     return [
       // TODO(wittjosiah): Try to remove and prefer layer?

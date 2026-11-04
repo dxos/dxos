@@ -74,11 +74,9 @@ export const getPlugins = ({ config, namespace, observability }: PluginConfig): 
     // Declared in Projects' `dependsOn`; the manager refuses to resolve Projects without it.
     AssistantPlugin.make(),
     ChessPlugin.make(),
-    // Commands are imperative and run straight through, so the service must hand them a client
-    // that is already initialized rather than one whose `halo` getter still throws.
     // `File` and `Blob` are FilePlugin's types, and FilePlugin is not loaded here (it is mostly UI);
     // without them `file.createFromUpload` from `dx mcp serve` fails with `Schema not registered`.
-    ClientPlugin.make({ config, awaitInitialization: true, types: [File.File, Blob.Blob] }),
+    ClientPlugin.make({ config, types: [File.File, Blob.Blob] }),
     ConnectorPlugin.make(),
     IllustratorPlugin.make(),
     InboxPlugin.make(),

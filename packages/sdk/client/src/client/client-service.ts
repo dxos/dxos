@@ -5,6 +5,7 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 
 import { ConfigService } from '@dxos/config';
 
@@ -16,6 +17,25 @@ import { Client } from './client.ts';
 export class ClientService extends Context.Service<ClientService, Client>()('ClientService') {}
 
 export const fromClient = (client: Client) => Layer.succeed(ClientService, client);
+
+/**
+ * Waits until the host's client has initialized, failing with the cause that stopped it.
+ *
+ * A host may provide `ClientService` before its client has initialized, so work that never uses the
+ * client does not wait for it; work that does resolves the client with {@link initializedClient}.
+ */
+export class ClientInitialization extends Context.Service<ClientInitialization, Effect.Effect<void, Error>>()(
+  'ClientInitialization',
+) {}
+
+/** The host's client once it has initialized; without a {@link ClientInitialization} it is handed over as is. */
+export const initializedClient: Effect.Effect<Client, Error, ClientService> = Effect.gen(function* () {
+  const initialization = yield* Effect.serviceOption(ClientInitialization);
+  if (Option.isSome(initialization)) {
+    yield* initialization.value;
+  }
+  return yield* ClientService;
+});
 
 export const layer = Layer.effect(
   ClientService,
