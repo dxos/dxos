@@ -59,6 +59,9 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.appGraphBuilder(
       () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'module-url' } }),
     ),
+    AppCapability.exporter(() => import('./src/capabilities/exporter.ts', { with: { type: 'module-url' } }), {
+      activatesOn: SheetEvents.Start,
+    }),
     AppCapability.commentConfig(
       () => import('./src/capabilities/comment-config.ts', { with: { type: 'module-url' } }),
       {
