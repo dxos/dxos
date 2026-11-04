@@ -137,7 +137,7 @@ export class FullSync {
     startedAt: Date,
   ) {
     return Effect.gen({ self: this }, function* () {
-      const accessToken = yield* connect(yield* mintAccessToken(this.#credentials), days).pipe(
+      const { accessToken, cursor } = yield* connect(yield* mintAccessToken(this.#credentials), days).pipe(
         Effect.provide(Database.layer(space.space.db)),
       );
       yield* space.syncToEdge();
@@ -162,7 +162,7 @@ export class FullSync {
           expected: expected.length,
           synced: snapshot.messages.length,
         });
-        backfilled = yield* reachedHorizon(days).pipe(Effect.provide(Database.layer(space.space.db)));
+        backfilled = reachedHorizon(cursor, days);
         const synced = new Set(snapshot.messages.map((message) => message.gmailId));
         if (backfilled && expected.every((message) => synced.has(message.gmailId))) {
           syncSeconds = Math.round((Date.now() - startedAt.getTime()) / 1000);
@@ -226,17 +226,17 @@ const connect = (token: string, days: number) =>
       return yield* new CanaryError({ message: 'the sync routine has no trigger' });
     }
     yield* Database.flush();
-    return accessToken;
+    return { accessToken, cursor };
   });
 
-/** Whether the binding's backward walk has reached the horizon: `min` is clamped to it once the walk is done. */
-const reachedHorizon = (days: number) =>
-  Effect.gen(function* () {
-    const cursors = (yield* Database.query(Filter.type(Cursor.Cursor)).run).filter(Cursor.isExternal);
-    const horizon = Cursor.resolveHorizon({ now: new Date(), syncBackDays: days }).getTime();
-    const minKey = cursors.length === 1 ? Cursor.parseKey(cursors[0].min) : 0;
-    return minKey > 0 && minKey <= horizon;
-  });
+/**
+ * Whether the binding's backward walk has reached the horizon: `min` is clamped to it once the walk is done. Read off
+ * the object itself, which EDGE's writes reach by replication; a query over the space can wait on its index.
+ */
+const reachedHorizon = (cursor: Cursor.Cursor, days: number): boolean => {
+  const minKey = Cursor.parseKey(cursor.min);
+  return minKey > 0 && minKey <= Cursor.resolveHorizon({ now: new Date(), syncBackDays: days }).getTime();
+};
 
 /**
  * Takes the space out of use before deleting it: disables its triggers and blanks its token, so EDGE stops syncing
@@ -262,7 +262,12 @@ const remove = (space: CanarySpace): Effect.Effect<void, CanaryError> =>
       try: () => space.space.delete(),
       catch: (cause) => new CanaryError({ message: `cannot delete space ${space.spaceId}: ${String(cause)}` }),
     });
-  });
+  }).pipe(
+    Effect.timeoutOrElse({
+      duration: '10 minutes',
+      orElse: () => Effect.fail(new CanaryError({ message: `space ${space.spaceId} not deleted within 10 minutes` })),
+    }),
+  );
 
 /** Deletes every space a killed run left behind, so leftovers never pile up or keep syncing. */
 const removeLeftovers = () =>
