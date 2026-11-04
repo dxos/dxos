@@ -54,12 +54,9 @@ describe('agent plugin bundle on EDGE', { timeout: 180_000 }, () => {
   // `Instructions`, `Agent` and `Chat` are plugin-assistant's and core types, which the agent bundle does not register
   // (D-41); the operation declares them in `types`, so the host registers them before the handler runs.
   test('creates an agent, writing the types it declares but does not own', async ({ expect }) => {
-    // TODO(edge-plugins): The host returns the handler's output as Workers RPC clones it, which cannot clone the `Ref`
-    //   this operation returns; operation-service passes it through `snapshotEntities` first. The objects are written
-    //   before the output is returned, so the space is checked instead.
-    await expect(bundle.invoke({ operationKey: CREATE_AGENT, spaceId, input: { name: 'Scout' } })).rejects.toThrow(
-      /DataCloneError/,
-    );
+    // The host encodes the output, so the returned agent ref crosses Workers RPC as `{ '/': uri }` (D-66).
+    const result = await bundle.invoke({ operationKey: CREATE_AGENT, spaceId, input: { name: 'Scout' } });
+    expect(result).toMatchObject({ ok: true, output: { agent: { '/': expect.stringMatching(/^echo:/) } } });
 
     expect(dataPlane.typenames()).toEqual(
       expect.arrayContaining([Instructions.Instructions, Agent.Agent, Chat.Chat].map((type) => Type.getTypename(type))),
