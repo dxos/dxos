@@ -248,8 +248,6 @@
     "react-drag-drop-files": "catalog:"
   },
   "devDependencies": {
-    "@automerge/automerge": "catalog:",
-    "@automerge/automerge-repo": "catalog:",
     "@dxos/agent-runtime": "workspace:*",
     "@dxos/extractor-lib": "workspace:*",
     "@dxos/plugin-builder": "workspace:*",
