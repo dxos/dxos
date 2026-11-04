@@ -16,7 +16,7 @@ types and channels in D1, and refuses activation failures, key conflicts and cha
 `dxn:` key to the bundle's Dynamic Worker, with a fallback to operation-service. Types another plugin publishes resolve
 through `TYPE_REGISTRY` and ECHO type sources. Each of these has tests in workerd or on the edge stack.
 
-Of 80 items: 39 done, 2 untested, 21 partial, 2 diverged, 16 missing. Findings:
+Of 80 items: 39 done, 4 untested, 19 partial, 2 diverged, 16 missing. Findings:
 
 - **Discovery still reads operation-service.** MCP `queryOperations`, `loadSkill` and the agents' skill list read
   operation-service's KV catalog, not bundle catalogs (F-4.2, F-5.1, F-6.8). operation-service also still serves 25 keys
@@ -179,10 +179,10 @@ verdict invokeOperation: dxn: targets are routed to bundles in plugins routing; 
 
 ```mdl
 verdict F-1.1: dx registry publish runs the build and uploads the one bundle under one R2 prefix.
-  status: partial
+  status: untested
   evidence: [github:dxos/dxos/packages/plugins/plugin-registry/src/commands/registry/publish.ts#publish]
   tests: [github:dxos/edge/packages/services/edge/test/plugin-store.node.test.ts]
-  note: Its only end-to-end test is the edge dx CLI suite, which CI skips because no `dx` is installed. See publishPlugin.
+  note: Works; the e2e test (T-15) is skipped in CI because edge does not declare `@dxos/cli`, so no `dx` binary is installed.
 ```
 
 ```mdl
@@ -601,12 +601,12 @@ verdict T-14: Eight tests on the edge stack cover every then-clause with a hand-
 ```
 
 ```mdl
-verdict T-15: The test exists but CI skips it.
-  status: partial
+verdict T-15: Works; the e2e test is skipped in CI because no `dx` binary is installed.
+  status: untested
   tests: [github:dxos/edge/packages/services/edge/test/plugin-store.node.test.ts]
   note: |
-    `describe.skipIf(!existsSync(DX_CLI))`: edge does not depend on `@dxos/cli`, and no workflow sets `DX_CLI`. On
-    main, `--upload-only` also needs the ECHO client to initialize; dxos/dxos#14393 (open) removes that.
+    `describe.skipIf(!existsSync(DX_CLI))`: edge does not declare `@dxos/cli`, and no workflow sets `DX_CLI`. Adding it
+    to edge needs a dxos pin that includes dxos/dxos#14393, which lets `--upload-only` run without the ECHO client.
 ```
 
 ```mdl
