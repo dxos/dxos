@@ -1,0 +1,641 @@
+---
+spec: github:dxos/dxos/packages/sdk/app-framework/docs/EDGE-PLUGINS.mdl
+commit: fe337619ca82914f78ea00dbecb7b4726ff4d93e
+date: 2026-11-04
+by: agent:claude-code
+---
+
+# Review: EdgePlugins
+
+Reviewed against dxos `main` (fe33761, with #14334 and #14389) and dxos/edge#1426 (`claude/edge-plugin-releases` at
+6b89e06). Code that is only on open PRs (dxos/dxos#14396 host gaps, #14395 bundle fixes, #14393 CLI) counts as not done.
+
+The publish-and-run path is solid. `composerPlugin` builds one bundle with `vendor/`. `check-edge-release` loads every
+`edge-release` bundle alone in workerd. registry-service describes each upload in Worker Loader, indexes operations,
+types and channels in D1, and refuses activation failures, key conflicts and changed versions. compute-service routes a
+`dxn:` key to the bundle's Dynamic Worker, with a fallback to operation-service. Types another plugin publishes resolve
+through `TYPE_REGISTRY` and ECHO type sources. Each of these has tests in workerd or on the edge stack.
+
+Of 80 items: 39 done, 2 untested, 21 partial, 2 diverged, 16 missing. Findings:
+
+- **Discovery still reads operation-service.** MCP `queryOperations`, `loadSkill` and the agents' skill list read
+  operation-service's KV catalog, not bundle catalogs (F-4.2, F-5.1, F-6.8). operation-service also still serves 25 keys
+  that no bundle implements (F-6.7).
+- **Versions: half done.** Channels and revocation work in the store. But compute-service always resolves on `latest`
+  (`channelOf` is a TODO), a `dxn:<key>@<version>` target is not honoured, and `dx` has no `channel set` command
+  (F-2.2, F-2.3, F-2.6, F-2.7, SpacePluginChannel).
+- **The host contract is behind the target.** `InvocationScope` carries only the access token service. Output is not
+  encoded as ECHO JSON (T-7 is `test.fails`). Nested `Operation.invoke` fails in a bundle. edge#1426 calls
+  `protocolVersion()`, which main's entrypoint does not export. dxos/dxos#14396 closes these (P2, P3, P4, P10) but is
+  open. Durable facets (F-8, PluginSupervisor) and release publishing from dxos CI (F-9) have not started.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict PluginBundle: Stored as R2 files under modules/<key>/<version>/ plus a D1 row with hash, owner and catalog.
+  status: done
+  evidence: [github:dxos/edge/packages/sdk/edge-protocol/src/services/PluginStoreService.ts#IndexedBundle, github:dxos/edge/packages/services/registry-service/src/plugin-store/PluginStore.ts#PluginStore.upload]
+  tests: [github:dxos/edge/packages/services/registry-service/test/plugin-store.workerd.test.ts]
+```
+
+```mdl
+verdict VendorMap: vendor/manifest.json with specifiers and conditions, written by the build and read by the checker and loader.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/plugin-builder/src/PluginBundle.ts#VendorMap, github:dxos/dxos/packages/sdk/app-framework/src/vite-plugin/composer/vendor.ts#buildVendor, github:dxos/dxos/packages/core/compute/edge-compute/src/plugin-loader/PluginLoader.ts#readVendor]
+  tests: [github:dxos/dxos/packages/core/compute/plugin-builder/src/PluginBundle.test.ts, github:dxos/dxos/packages/core/compute/edge-compute/src/plugin-loader/PluginLoader.test.ts]
+```
+
+```mdl
+verdict PluginCatalog: PluginProtocol.Catalog lists operations, skills and types, plus the plugin and activation failures.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/protocols/src/PluginProtocol.ts#Catalog, github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/PluginCatalog.ts#make]
+  tests: [github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/PluginHost.workerd.test.ts]
+```
+
+```mdl
+verdict OperationRoute: Operation key, plugin key, version and hash, plus the Worker Loader id.
+  status: done
+  evidence: [github:dxos/edge/packages/sdk/edge-protocol/src/services/PluginStoreService.ts#OperationRoute, github:dxos/edge/packages/services/registry-service/src/plugin-store/PluginStore.ts#PluginStore.resolveOperation]
+  tests: [github:dxos/edge/packages/services/registry-service/test/plugin-store.workerd.test.ts, github:dxos/edge/packages/services/registry-service/test/plugin-store-multipart.workerd.test.ts]
+```
+
+```mdl
+verdict Channel: A PluginChannel row per plugin key and channel; publishing moves latest or the named channel.
+  status: done
+  evidence: [github:dxos/edge/packages/services/registry-service/src/plugin-store/PluginStore.ts#PluginStore.setChannel]
+  tests: [github:dxos/edge/packages/services/registry-service/test/plugin-store.workerd.test.ts, github:dxos/edge/packages/services/edge/test/plugin-store.node.test.ts]
+```
+
+```mdl
+verdict SpacePluginChannel: No space annotation; compute-service resolves every invocation on latest.
+  status: missing
+  evidence: [github:dxos/edge/packages/services/compute-service/src/plugins/plugin-router.ts#channelOf]
+  note: `channelOf` returns `latest` for every space, with a TODO to read the `Properties` annotation once dxos defines it. Nothing in dxos defines the annotation.
+```
+
+```mdl
+verdict InvocationScope: On main the scope carries only accessTokenService, and the space travels in InvokeRequest.spaceId.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/protocols/src/PluginProtocol.ts#InvocationScope, github:dxos/edge/packages/services/compute-service/src/plugins/invocation-scope.ts#invocationScope]
+  tests: [github:dxos/edge/packages/services/edge/test/plugin-store.node.test.ts]
+  note: |
+    caller, traceSink, cancellation and a nested invoke are missing on main. dxos/dxos#14396 (P3, P4, open) adds the
+    request context and host services to the scope. edge#1426 already builds the matching scope in compute-service.
+```
+
+```mdl
+verdict PluginBuilder: composerPlugin emits the flat bundle, manifest.json and vendor/; DX_PLUGIN_HOST_ENTRY vendors the host.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/app-framework/src/vite-plugin/composer/index.ts#composerPlugin, github:dxos/dxos/packages/sdk/app-framework/src/vite-plugin/composer/vendor.ts#buildVendor, github:dxos/dxos/packages/core/compute/plugin-builder/src/build-bundle.ts#buildBundle]
+  tests: [github:dxos/dxos/packages/sdk/app-framework/src/vite-plugin/composer/index.test.ts, github:dxos/dxos/packages/core/compute/plugin-builder/src/PluginBundle.test.ts]
+  note: An unresolvable bare import fails the vendor build ("Cannot resolve …"), and `check-bundle` reports an unvendored one. No error is named UnvendoredImport. The build does not write the catalog yet, as the spec's TODO says.
+```
+
+```mdl
+verdict PluginStore: Upload (JSON and multipart), describe on upload, D1 index, channels, revoke, query and resolveType.
+  status: done
+  evidence: [github:dxos/edge/packages/services/registry-service/src/plugin-store/PluginStore.ts#PluginStore, github:dxos/edge/packages/services/registry-service/src/plugin-store/describe.ts#describeBundle, github:dxos/edge/packages/services/registry-service/src/plugin-store/routes.ts#makePluginIndexRoutes]
+  tests: [github:dxos/edge/packages/services/registry-service/test/plugin-store.workerd.test.ts, github:dxos/edge/packages/services/registry-service/test/plugin-store-multipart.workerd.test.ts, github:dxos/edge/packages/services/registry-service/test/plugin-type.workerd.test.ts]
+  walkthrough:
+    - The upload routes stream or decode the bundle and pass it to the store. github:dxos/edge/packages/services/registry-service/src/plugin-store/routes.ts#makePluginIndexRoutes
+    - The store describes the bundle in Worker Loader and refuses failures, conflicts and changed versions. github:dxos/edge/packages/services/registry-service/src/plugin-store/describe.ts#describeBundle
+    - It writes the files to R2 and the bundle, operations, types and channels to D1. github:dxos/edge/packages/services/registry-service/src/plugin-store/PluginStore.ts#PluginStore.upload
+```
+
+```mdl
+verdict PluginLoader: The rewrite, main module and LOADER.get by hash work; tails, PluginLoadError and plugin-named props do not.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/compute/edge-compute/src/plugin-loader/PluginLoader.ts#workerCode, github:dxos/edge/packages/services/compute-service/src/plugins/plugin-router.ts#bundleEntrypoint]
+  tests: [github:dxos/dxos/packages/core/compute/edge-compute/src/plugin-loader/PluginLoader.test.ts, github:dxos/edge/packages/services/edge/test/plugin-store.node.test.ts]
+  walkthrough:
+    - The dxos loader rewrites bare imports through vendor/, prunes unreachable vendored files and generates the main module. github:dxos/dxos/packages/core/compute/edge-compute/src/plugin-loader/PluginLoader.ts#workerCode
+    - compute-service calls LOADER.get with `plugin:<hash>` and binds only space-agnostic services in env. github:dxos/edge/packages/services/compute-service/src/plugins/plugin-router.ts#bundleEntrypoint
+  note: |
+    The WorkerCode has no `tails`, so a bundle's logs do not reach FunctionsLoggerEntrypoint. The loopback entrypoints
+    get empty props, not the plugin's name. A load failure surfaces as the raw Worker Loader error, not as a
+    PluginLoadError.
+```
+
+```mdl
+verdict PluginEntrypoint: describe and invoke are served with failures as data; edge#1426 also calls protocolVersion, which main lacks.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/PluginHost.ts#make, github:dxos/dxos/packages/core/compute/edge-compute/src/plugin-loader/PluginLoader.ts#workerCode, github:dxos/dxos/packages/core/protocols/src/PluginProtocol.ts#Entrypoint]
+  tests: [github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/PluginHost.workerd.test.ts]
+  note: |
+    edge#1426's router calls `protocolVersion()` before every invoke. The main module that main's PluginLoader generates
+    exports only `describe` and `invoke`. The protocol version is in dxos/dxos#14396 (P10, open), so a bundle built
+    from main does not run under edge#1426.
+```
+
+```mdl
+verdict PluginRouter: Resolves a key on latest from the D1 index, with an operation-service fallback; versions and space channels are not routed.
+  status: partial
+  evidence: [github:dxos/edge/packages/services/compute-service/src/plugins/plugin-router.ts#routeOperation, github:dxos/edge/packages/services/compute-service/src/plugins/plugin-router.ts#routedOperationService]
+  tests: [github:dxos/edge/packages/services/edge/test/plugin-store.node.test.ts]
+  note: `routeOperation` strips a DXN to its name and always uses `latest`. An explicit `@<version>` is dropped, and the space's channel is never read.
+```
+
+```mdl
+verdict PluginSupervisor: Not started.
+  status: missing
+  note: There is no Durable Object facet host for plugins in edge#1426 or dxos. Searched compute-service `src/plugins` and `plugin-host-cloudflare`.
+```
+
+```mdl
+verdict publishPlugin: dx registry publish builds, describes locally and uploads multipart with --private and --channel; the spec still marks it unimplemented.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-registry/src/commands/registry/publish.ts#publish, github:dxos/dxos/packages/devtools/cli/src/util/bundle-describer.ts#bundleDescriberLayer]
+  tests: [github:dxos/dxos/packages/core/mesh/edge-client/src/edge-http-client.test.ts, github:dxos/edge/packages/services/edge/test/plugin-store.node.test.ts]
+  note: |
+    The only end-to-end test (edge `plugin-store.node.test.ts`, the dx CLI suite) is skipped unless `DX_CLI` names a
+    `dx`, and edge does not install one. On main, `--upload-only --edge-url` still waits for the ECHO client to
+    initialize; dxos/dxos#14393 (open) removes that wait. The spec's `status: unimplemented` is out of date.
+```
+
+```mdl
+verdict queryPlugins: GET /registry/edge/plugins filters by operation key, typename, skill key and text; no operation exposes it.
+  status: partial
+  evidence: [github:dxos/edge/packages/services/registry-service/src/plugin-store/PluginStore.ts#PluginStore.query, github:dxos/edge/packages/services/registry-service/src/plugin-store/routes.ts#makePluginIndexRoutes]
+  tests: [github:dxos/edge/packages/services/edge/test/plugin-store.node.test.ts]
+  note: The route is `/registry/edge/plugins`, not `/registry/plugins`, which still serves the AT Protocol listing. It has no `pluginKey` filter. plugin-registry's `QueryPlugins` lists the local plugin manager, not the EDGE index.
+```
+
+```mdl
+verdict invokeOperation: dxn: targets are routed to bundles in plugins routing; the version input and PluginLoadError are not implemented.
+  status: partial
+  evidence: [github:dxos/edge/packages/services/compute-service/src/plugins/plugin-router.ts#invokeInBundle, github:dxos/edge/packages/services/compute-service/src/plugins/plugin-router.ts#operationService]
+  tests: [github:dxos/edge/packages/services/edge/test/plugin-store.node.test.ts]
+  walkthrough:
+    - The SDK's operation service routes invokeOperation by OPERATION_ROUTING. github:dxos/edge/packages/services/compute-service/src/plugins/plugin-router.ts#routedOperationService
+    - In plugins routing the store resolves the key, and the bundle's entrypoint runs it with the invocation scope. github:dxos/edge/packages/services/compute-service/src/plugins/plugin-router.ts#invokeInBundle
+  note: Plugins routing is opt-in (`OPERATION_ROUTING=plugins`). The default still calls operation-service.
+```
+
+```mdl
+verdict F-1.1: dx registry publish runs the build and uploads the one bundle under one R2 prefix.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-registry/src/commands/registry/publish.ts#publish]
+  tests: [github:dxos/edge/packages/services/edge/test/plugin-store.node.test.ts]
+  note: Its only end-to-end test is the edge dx CLI suite, which CI skips because no `dx` is installed. See publishPlugin.
+```
+
+```mdl
+verdict F-1.2: One bundle for every runtime; environments decide at load.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/app-framework/src/vite-plugin/composer/index.ts#composerPlugin, github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/PluginHost.ts#fromManifest]
+  tests: [github:dxos/dxos/packages/core/compute/edge-compute/src/plugin-loader/PluginLoader.test.ts, github:dxos/dxos/packages/sdk/app-framework/src/vite-plugin/composer/index.test.ts]
+```
+
+```mdl
+verdict F-1.3: The registry describes each upload in a fresh isolate and refuses activation failures.
+  status: done
+  evidence: [github:dxos/edge/packages/services/registry-service/src/plugin-store/describe.ts#describeBundle, github:dxos/edge/packages/services/registry-service/src/plugin-store/PluginStore.ts#PluginStore.upload]
+  tests: [github:dxos/edge/packages/services/registry-service/test/plugin-store.workerd.test.ts]
+```
+
+```mdl
+verdict F-1.4: The bundle loads from its modules map alone after the rewrite.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/edge-compute/src/plugin-loader/PluginLoader.ts#rewriteImports, github:dxos/dxos/packages/core/compute/plugin-builder/src/PluginBundle.ts#check]
+  tests: [github:dxos/dxos/packages/core/compute/edge-compute/src/plugin-loader/PluginLoader.test.ts, github:dxos/dxos/packages/core/compute/plugin-builder/src/PluginBundle.test.ts]
+```
+
+```mdl
+verdict F-1.5: An unvendored import fails the build or the bundle check before upload.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/app-framework/src/vite-plugin/composer/vendor.ts#buildVendor, github:dxos/dxos/packages/core/compute/plugin-builder/src/PluginBundle.ts#check]
+  tests: [github:dxos/dxos/packages/core/compute/plugin-builder/src/PluginBundle.test.ts]
+  note: The error is not named UnvendoredImport.
+```
+
+```mdl
+verdict F-1.6: The first upload of a key sets its owner; later uploads must match it.
+  status: done
+  evidence: [github:dxos/edge/packages/services/registry-service/src/plugin-store/PluginStore.ts#PluginStore.upload]
+  tests: [github:dxos/edge/packages/services/registry-service/test/plugin-store.workerd.test.ts, github:dxos/edge/packages/services/registry-service/test/private-plugins.workerd.test.ts]
+```
+
+```mdl
+verdict F-2.1: Another hash under an uploaded version fails with VersionExists; the same hash is a no-op.
+  status: done
+  evidence: [github:dxos/edge/packages/services/registry-service/src/plugin-store/PluginStore.ts#VersionExistsError, github:dxos/edge/packages/services/registry-service/src/plugin-store/PluginStore.ts#PluginStore.upload]
+  tests: [github:dxos/edge/packages/services/registry-service/test/plugin-store.workerd.test.ts, github:dxos/edge/packages/services/registry-service/test/plugin-store-multipart.workerd.test.ts]
+```
+
+```mdl
+verdict F-2.2: The store falls back from a missing channel to latest, but compute-service never resolves the space's channel.
+  status: partial
+  evidence: [github:dxos/edge/packages/services/registry-service/src/plugin-store/PluginStore.ts#PluginStore.current, github:dxos/edge/packages/services/compute-service/src/plugins/plugin-router.ts#channelOf]
+  tests: [github:dxos/edge/packages/services/registry-service/test/plugin-store.workerd.test.ts]
+  note: Every invocation runs `latest`. See SpacePluginChannel.
+```
+
+```mdl
+verdict F-2.3: A dxn:<key>@<version> target is not routed to that version.
+  status: missing
+  evidence: [github:dxos/edge/packages/services/compute-service/src/plugins/plugin-router.ts#routeOperation]
+  note: `operationKeyName` reduces the DXN to its name, and `resolveOperation` takes only a channel.
+```
+
+```mdl
+verdict F-2.4: A revoked version is never routed; channels on it fall back to latest.
+  status: done
+  evidence: [github:dxos/edge/packages/services/registry-service/src/plugin-store/PluginStore.ts#PluginStore.revoke]
+  tests: [github:dxos/edge/packages/services/registry-service/test/plugin-store.workerd.test.ts, github:dxos/edge/packages/services/edge/test/plugin-store.node.test.ts]
+```
+
+```mdl
+verdict F-2.5: The Worker Loader id is plugin:<bundle hash>.
+  status: done
+  evidence: [github:dxos/edge/packages/services/registry-service/src/plugin-store/PluginStore.ts#PluginStore.resolveOperation, github:dxos/edge/packages/services/compute-service/src/plugins/plugin-router.ts#bundleEntrypoint]
+  tests: [github:dxos/edge/packages/services/edge/test/plugin-store.node.test.ts]
+```
+
+```mdl
+verdict F-2.6: Publishing moves latest or the named channel, and the owner moves a channel over HTTP; there is no dx channel set.
+  status: partial
+  evidence: [github:dxos/edge/packages/services/registry-service/src/plugin-store/PluginStore.ts#PluginStore.setChannel, github:dxos/dxos/packages/plugins/plugin-registry/src/commands/registry/publish.ts#publish]
+  tests: [github:dxos/edge/packages/services/registry-service/test/plugin-store.workerd.test.ts, github:dxos/edge/packages/services/edge/test/plugin-store.node.test.ts]
+  note: Channels move through `PUT /registry/edge/plugins/<key>/channels/<channel>`. plugin-registry's `registry` commands have no `channel set`.
+```
+
+```mdl
+verdict F-2.7: No space annotation selects a channel.
+  status: missing
+  evidence: [github:dxos/edge/packages/services/compute-service/src/plugins/plugin-router.ts#channelOf]
+  note: See SpacePluginChannel.
+```
+
+```mdl
+verdict F-3.1: The catalog lists each workerd Schema contribution with its JSON Schema.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/PluginCatalog.ts#make]
+  tests: [github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/PluginHost.workerd.test.ts]
+```
+
+```mdl
+verdict F-3.2: The host registers the activated plugin's types with every space-scoped invocation.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/PluginHost.ts#make, github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/PluginActivation.ts#activate]
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/edge-bundle.test.ts]
+```
+
+```mdl
+verdict F-3.3: PluginStore.query filters by typename, but no test queries by typename.
+  status: untested
+  evidence: [github:dxos/edge/packages/services/registry-service/src/plugin-store/PluginStore.ts#PluginStore.query]
+  note: The tests query only by operation key.
+```
+
+```mdl
+verdict F-3.4: wrapFunctionHandler registers the operation's own types before it runs; no EDGE test declares one.
+  status: untested
+  evidence: [github:dxos/dxos/packages/core/compute/compute-runtime/src/protocol.ts#wrapFunctionHandler]
+  note: Covered for operation-service by the shared runtime, not by a bundle test.
+```
+
+```mdl
+verdict F-3.5: Unregistered types resolve by DXN from TYPE_REGISTRY through an ECHO type source.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo-client/src/hypergraph.ts#HypergraphImpl.registerTypeSource, github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/TypeSource.ts#fromRegistry, github:dxos/edge/packages/services/compute-service/src/entrypoint/type-registry.ts#TypeRegistryEntrypoint]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/type-source.test.ts, github:dxos/dxos/packages/plugins/plugin-space/src/edge-bundle.test.ts, github:dxos/edge/packages/services/edge/test/plugin-store.node.test.ts]
+  walkthrough:
+    - compute-service binds TYPE_REGISTRY, which calls PluginStore.resolveType. github:dxos/edge/packages/services/compute-service/src/entrypoint/type-registry.ts#TypeRegistryEntrypoint
+    - The host turns it into a type source that rebuilds the TypeRecord as a static type. github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/TypeSource.ts#fromRegistry
+    - The hypergraph asks the source for a key the registry lacks and registers the answer. github:dxos/dxos/packages/core/echo/echo-client/src/hypergraph.ts#HypergraphImpl.registerTypeSource
+```
+
+```mdl
+verdict F-3.6: resolveType returns the earliest-uploaded unrevoked bundle's type.
+  status: done
+  evidence: [github:dxos/edge/packages/services/registry-service/src/plugin-store/PluginStore.ts#PluginStore.resolveType]
+  tests: [github:dxos/edge/packages/services/registry-service/test/plugin-type.workerd.test.ts]
+```
+
+```mdl
+verdict F-3.7: Not enforced; the spec says so.
+  status: missing
+  evidence: [github:dxos/edge/packages/services/registry-service/src/plugin-store/PluginStore.ts#PluginStore.upload]
+  note: The upload checks operation-key conflicts, not whether a type's DXN extends the plugin key.
+```
+
+```mdl
+verdict F-4.1: The catalog lists each skill with its instructions and tool keys.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/PluginCatalog.ts#make]
+  tests: [github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/PluginHost.workerd.test.ts]
+```
+
+```mdl
+verdict F-4.2: loadSkill and the agents' skills still come from operation-service.
+  status: missing
+  evidence: [github:dxos/edge/packages/services/compute-service/src/plugins/plugin-router.ts#routedOperationService]
+  note: `listSkills` goes to operation-service and its KV catalog. Bundle catalogs are indexed, but nothing reads their skills.
+```
+
+```mdl
+verdict F-5.1: queryOperations lists operation-service's catalog, not bundle catalogs.
+  status: missing
+  evidence: [github:dxos/edge/packages/services/compute-service/src/plugins/plugin-router.ts#routedOperationService]
+  note: mcp-space-service's gateway calls `operationService().listOperations()`, which reads operation-service's KV catalog.
+```
+
+```mdl
+verdict F-5.2: A key a bundle implements runs in its Dynamic Worker in the given space; ECHO output is not encoded.
+  status: partial
+  evidence: [github:dxos/edge/packages/services/compute-service/src/plugins/plugin-router.ts#invokeInBundle, github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/PluginHost.ts#make]
+  tests: [github:dxos/edge/packages/services/edge/test/plugin-store.node.test.ts, github:dxos/edge/packages/services/edge/test/plugin-seed.node.test.ts, github:dxos/dxos/packages/plugins/plugin-space/src/edge-bundle.test.ts]
+  note: |
+    The host returns the handler's output as Workers RPC clones it, which drops a live ECHO object. T-7's test is
+    `test.fails` for this on main. dxos/dxos#14396 (P2, open) encodes output as operation-service does. Only in plugins
+    routing (`OPERATION_ROUTING=plugins`).
+```
+
+```mdl
+verdict F-5.3: A nested Operation.invoke in a bundle has no operation service on main.
+  status: missing
+  evidence: [github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/PluginHost.ts#make, github:dxos/edge/packages/services/compute-service/src/plugins/invocation-scope.ts#invocationScope]
+  note: |
+    Main's host builds the context without a functions service, so `Operation.invoke` dies (edge's
+    operation-fallbacks plan lists the affected operations). edge#1426 passes an `invoke` back to compute-service in the
+    scope. The dxos half, `scope.operations`, is in dxos/dxos#14396 (P4, open).
+```
+
+```mdl
+verdict F-5.4: An operation key another plugin key owns fails with KeyConflict.
+  status: done
+  evidence: [github:dxos/edge/packages/services/registry-service/src/plugin-store/PluginStore.ts#KeyConflictError, github:dxos/edge/packages/services/registry-service/src/plugin-store/PluginStore.ts#PluginStore.upload]
+  tests: [github:dxos/edge/packages/services/registry-service/test/plugin-store.workerd.test.ts, github:dxos/edge/packages/services/edge/test/plugin-store.node.test.ts]
+```
+
+```mdl
+verdict F-6.1: The route comes from D1 without starting an isolate.
+  status: done
+  evidence: [github:dxos/edge/packages/services/registry-service/src/plugin-store/PluginStore.ts#PluginStore.resolveOperation, github:dxos/edge/packages/services/compute-service/src/plugins/plugin-router.ts#routeOperation]
+  tests: [github:dxos/edge/packages/services/registry-service/test/plugin-store.workerd.test.ts]
+```
+
+```mdl
+verdict F-6.2: LOADER.get(plugin:<hash>) with space-agnostic env; the scope is an RPC argument.
+  status: done
+  evidence: [github:dxos/edge/packages/services/compute-service/src/plugins/plugin-router.ts#bundleEntrypoint, github:dxos/edge/packages/services/compute-service/src/plugins/invocation-scope.ts#invocationScope]
+  tests: [github:dxos/edge/packages/services/edge/test/plugin-store.node.test.ts]
+```
+
+```mdl
+verdict F-6.3: An operation's failure is typed, but a bundle that fails to load surfaces the raw error.
+  status: partial
+  evidence: [github:dxos/edge/packages/services/compute-service/src/plugins/plugin-router.ts#invokeInBundle, github:dxos/edge/packages/services/compute-service/src/plugins/plugin-router.ts#PluginInvocationError]
+  tests: [github:dxos/edge/packages/services/edge/test/plugin-store.node.test.ts]
+  note: No PluginLoadError names the plugin version. A load or activation failure propagates from `protocolVersion()` or `invoke()` as Worker Loader reports it. Isolation per bundle holds because each bundle has its own loader id.
+```
+
+```mdl
+verdict F-6.4: Every platform operation call site in compute-service goes through the routed operation service.
+  status: done
+  evidence: [github:dxos/edge/packages/services/compute-service/src/plugins/plugin-router.ts#operationService, github:dxos/edge/packages/services/compute-service/src/plugins/plugin-router.ts#invokePlatformOperation]
+  tests: [github:dxos/edge/packages/services/edge/test/agent.node.test.ts, github:dxos/edge/packages/services/edge/test/functions.node.test.ts]
+  note: Exercised in plugins routing only by `plugins-mode.yml`, which is advisory. See T-19.
+```
+
+```mdl
+verdict F-6.5: Spans carry the plugin key and version; the Dynamic Worker's logs are not routed to the functions logger.
+  status: partial
+  evidence: [github:dxos/edge/packages/services/compute-service/src/plugins/plugin-router.ts#invokeInBundle, github:dxos/edge/packages/services/compute-service/src/plugins/plugin-router.ts#bundleEntrypoint]
+  note: '`invokeInBundle` sets `dx.plugin.key` and `dx.plugin.version` on the active span. The WorkerCode has no `tails`. No test checks either.'
+```
+
+```mdl
+verdict F-6.6: In plugins routing, a key no bundle implements falls back to operation-service, and the fallback is logged.
+  status: done
+  evidence: [github:dxos/edge/packages/services/compute-service/src/plugins/plugin-router.ts#routedOperationService]
+  tests: [github:dxos/edge/packages/services/edge/test/plugin-store.node.test.ts, github:dxos/edge/packages/services/edge/test/operation-fallbacks.node.test.ts]
+```
+
+```mdl
+verdict F-6.7: operation-service still runs and serves 25 keys no bundle implements.
+  status: missing
+  evidence: [github:dxos/edge/packages/services/compute-service/src/plugins/plugin-router.ts#routedOperationService]
+  tests: [github:dxos/edge/packages/services/edge/test/operation-fallbacks.node.test.ts]
+  note: The fallback inventory (`operation-fallbacks.json`, edge's plan of 2026-11-03) lists the keys. Plugins routing is not the default.
+```
+
+```mdl
+verdict F-6.8: The KV operation catalog is still operation-service's.
+  status: missing
+  evidence: [github:dxos/edge/packages/services/compute-service/src/plugins/plugin-router.ts#operationService]
+  note: Upload and revoke update D1 only. Searched registry-service `plugin-store` for a KV write.
+```
+
+```mdl
+verdict F-8.1: Not started.
+  status: missing
+  note: See PluginSupervisor.
+```
+
+```mdl
+verdict F-8.2: Not started.
+  status: missing
+  note: See PluginSupervisor.
+```
+
+```mdl
+verdict F-8.3: Not started.
+  status: missing
+  note: See PluginSupervisor.
+```
+
+```mdl
+verdict F-9.1: dxos CI checks the edge-release bundles but publishes none.
+  status: missing
+  evidence: [github:dxos/dxos/.moon/tasks/tag-edge-release.yml]
+  note: '`check-edge-release` runs in `Check`. No workflow runs `dx registry publish`, and `pkg-pr-new.yml` ships no `dist/plugin`. edge seeds bundles only locally and in `plugins-mode.yml`.'
+```
+
+```mdl
+verdict F-9.2: No release workflow exists.
+  status: missing
+  note: See F-9.1.
+```
+
+```mdl
+verdict F-10.1: The manifest is served at the spec's path; the catalog is at /registry/edge/plugins/:key/:version, as part of the bundle record.
+  status: diverged
+  evidence: [github:dxos/edge/packages/services/registry-service/src/plugin-store/routes.ts#makePluginIndexRoutes]
+  tests: [github:dxos/edge/packages/services/edge/test/plugin-store.node.test.ts]
+  note: There is no `/registry/plugins/:key/:version/catalog`. `GET /registry/edge/plugins/:key/:version` returns the indexed bundle, which carries the catalog.
+```
+
+```mdl
+verdict F-10.2: The registry filters bundles by text, operation key, typename and skill key; there is no queryPlugins operation.
+  status: partial
+  evidence: [github:dxos/edge/packages/services/registry-service/src/plugin-store/PluginStore.ts#PluginStore.query]
+  tests: [github:dxos/edge/packages/services/edge/test/plugin-store.node.test.ts]
+  note: See queryPlugins.
+```
+
+```mdl
+verdict F-10.3: Private plugins are listed only to their owner and never indexed; sharing with space members is missing.
+  status: partial
+  evidence: [github:dxos/edge/packages/services/registry-service/src/private-plugins.ts]
+  tests: [github:dxos/edge/packages/services/registry-service/test/private-plugins.workerd.test.ts]
+  note: Private uploads use their own route and never reach PluginStore. Nothing grants a space's members access.
+```
+
+```mdl
+verdict F-12.1: check-edge-release loads every edge-release bundle alone in workerd and fails on import, activation or empty contributions.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/plugin-builder/src/verify-bundle.ts#verifyBundle, github:dxos/dxos/packages/core/compute/plugin-builder/src/load-bundle.ts#loadBundle, github:dxos/dxos/.moon/tasks/tag-edge-release.yml]
+  tests: [github:dxos/dxos/packages/core/compute/plugin-builder/src/PluginBundle.test.ts, github:dxos/dxos/.github/workflows/check.yml]
+  note: The memory and load-time budget is in dxos/dxos#14395 (open).
+```
+
+```mdl
+verdict F-12.2: The host is tested in workerd for describe, invoke, single activation and errors as data.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/PluginHost.ts#make]
+  tests: [github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/PluginHost.workerd.test.ts]
+```
+
+```mdl
+verdict F-12.3: The edge stack publishes, routes and invokes bundles in a space, with channels and revocation; T-2 and the T-3 pin are not tested.
+  status: partial
+  evidence: [github:dxos/edge/packages/services/compute-service/src/plugins/plugin-router.ts#invokeInBundle]
+  tests: [github:dxos/edge/packages/services/edge/test/plugin-store.node.test.ts, github:dxos/edge/packages/services/edge/test/plugin-seed.node.test.ts]
+  note: See T-1 to T-4.
+```
+
+```mdl
+verdict T-1: The dx publish and the seeded markdown.create run in separate tests, and queryOperations does not list bundles.
+  status: partial
+  tests: [github:dxos/edge/packages/services/edge/test/plugin-store.node.test.ts, github:dxos/edge/packages/services/edge/test/plugin-seed.node.test.ts]
+  note: plugin-markdown is never published with `dx` in a test; T-15 publishes edge's sample plugin, and CI skips it. T-16 runs `markdown.create` from a seeded bundle. F-5.1 is missing.
+```
+
+```mdl
+verdict T-2: No test invokes one bundle in two spaces.
+  status: missing
+  note: The loader id is the hash and env holds no space (F-2.5, F-6.2), but no test checks the shared isolate or per-space isolation.
+```
+
+```mdl
+verdict T-3: New releases run after publish; invoking an older version by name is not supported.
+  status: partial
+  tests: [github:dxos/edge/packages/services/edge/test/plugin-store.node.test.ts]
+  note: The channel test covers the first then-clause. The second needs F-2.3.
+```
+
+```mdl
+verdict T-4: A key another plugin owns is refused.
+  status: done
+  tests: [github:dxos/edge/packages/services/registry-service/test/plugin-store.workerd.test.ts, github:dxos/edge/packages/services/edge/test/plugin-store.node.test.ts]
+```
+
+```mdl
+verdict T-5: The Check workflow runs check-edge-release on every edge-release package.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/plugin-builder/src/bin/check-release.ts, github:dxos/dxos/packages/core/compute/plugin-builder/src/verify-bundle.ts#verifyBundle]
+  tests: [github:dxos/dxos/.github/workflows/check.yml, github:dxos/dxos/packages/core/compute/plugin-builder/src/PluginBundle.test.ts]
+```
+
+```mdl
+verdict T-6: All four cases pass against the real space bundle.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/edge-bundle.test.ts]
+```
+
+```mdl
+verdict T-7: The test exists as test.fails; main does not encode the output.
+  status: diverged
+  tests: [github:dxos/dxos/packages/plugins/plugin-space/src/edge-bundle.test.ts]
+  note: The test asserts this scenario and is expected to fail. dxos/dxos#14396 (P2, open) encodes the output and flips it.
+```
+
+```mdl
+verdict T-8: All four cases pass in workerd.
+  status: done
+  tests: [github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/PluginHost.workerd.test.ts]
+```
+
+```mdl
+verdict T-9: All eleven cases pass.
+  status: done
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/type-source.test.ts]
+```
+
+```mdl
+verdict T-10: Both upload routes are tested, including staging, cleanup and the browser-only case.
+  status: done
+  tests: [github:dxos/edge/packages/services/registry-service/test/plugin-store.workerd.test.ts, github:dxos/edge/packages/services/registry-service/test/plugin-store-multipart.workerd.test.ts]
+```
+
+```mdl
+verdict T-11: Activation failures, foreign coordinates, key conflicts, changed versions and other owners are refused.
+  status: done
+  tests: [github:dxos/edge/packages/services/registry-service/test/plugin-store.workerd.test.ts]
+  note: The test titled "describes another plugin" asserts the activation failure and the coordinates. It does not assert the other-plugin case, which the store checks.
+```
+
+```mdl
+verdict T-12: The channel test covers every then-clause.
+  status: done
+  tests: [github:dxos/edge/packages/services/registry-service/test/plugin-store.workerd.test.ts]
+```
+
+```mdl
+verdict T-13: The type registry and the listing tests cover every then-clause.
+  status: done
+  tests: [github:dxos/edge/packages/services/registry-service/test/plugin-type.workerd.test.ts, github:dxos/edge/packages/services/registry-service/test/plugin-store.workerd.test.ts]
+```
+
+```mdl
+verdict T-14: Eight tests on the edge stack cover every then-clause with a hand-written bundle.
+  status: done
+  tests: [github:dxos/edge/packages/services/edge/test/plugin-store.node.test.ts]
+```
+
+```mdl
+verdict T-15: The test exists but CI skips it.
+  status: partial
+  tests: [github:dxos/edge/packages/services/edge/test/plugin-store.node.test.ts]
+  note: |
+    `describe.skipIf(!existsSync(DX_CLI))`: edge does not depend on `@dxos/cli`, and no workflow sets `DX_CLI`. On
+    main, `--upload-only` also needs the ECHO client to initialize; dxos/dxos#14393 (open) removes that.
+```
+
+```mdl
+verdict T-16: Runs in plugins-mode.yml, where the first-party bundles are built; skipped in Check.
+  status: done
+  tests: [github:dxos/edge/packages/services/edge/test/plugin-seed.node.test.ts]
+  note: '`plugins-mode.yml` is advisory (`continue-on-error`).'
+```
+
+```mdl
+verdict T-17: Runs in plugins-mode.yml; skipped in Check.
+  status: done
+  tests: [github:dxos/edge/packages/services/edge/test/operation-fallbacks.node.test.ts]
+  note: The inventory holds 25 keys today; see F-6.7.
+```
+
+```mdl
+verdict T-18: Passes with operation-service; fails in plugins routing, by design until resolved.
+  status: partial
+  tests: [github:dxos/edge/packages/services/edge/test/plugin-isolation.node.test.ts]
+  note: A bundle runs alone ([D-41]), so plugin-space's bundle does not see plugin-inbox's identity rule. The plan proposes that plugin-space contribute the rule itself.
+```
+
+```mdl
+verdict T-19: The suites run in plugins routing; some tests fail.
+  status: partial
+  tests: [github:dxos/edge/packages/services/edge/test/discord-agent.node.test.ts, github:dxos/edge/packages/services/edge/test/brain.node.test.ts, github:dxos/edge/packages/services/edge/test/brain-admin.node.test.ts, github:dxos/edge/packages/services/edge/test/agent.node.test.ts, github:dxos/edge/packages/services/edge/test/functions.node.test.ts, github:dxos/edge/packages/services/edge/test/mcp-space-service.node.test.ts, github:dxos/edge/packages/services/edge/test/agent-sessions.node.test.ts]
+  note: |
+    edge's operation-fallbacks plan records the first full run: mcp-space-service (nested `Operation.invoke`, output
+    encoding, a missing type, `runScript`), discord-agent and agent-sessions (uncarried `idSeed` and `conversation`)
+    fail. #1461 in edge#1426 and dxos/dxos#14396 target most of them. No run on the merged branch is recorded.
+```
