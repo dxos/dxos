@@ -36,11 +36,17 @@
     overflow: visible;
   }
 
-  /* Mark: accent by default; agent work in amber. On the attended fill everything takes the accent foreground. */
+  /*
+   * Mark: accent by default. The agent star is the text colour while it works and amber once its finished turn is
+   * unread; viewers at work are amber. On the attended fill everything takes the accent foreground.
+   */
   .dx-attention-glyph [data-part='mark'] {
     fill: currentColor;
   }
-  .dx-attention-glyph:not([data-fill='attended']):is([data-mark='agent'], [data-mark='viewers-working'])
+  .dx-attention-glyph:not([data-fill='attended'])[data-mark='agent'] [data-part='mark'] {
+    fill: var(--color-fg);
+  }
+  .dx-attention-glyph:not([data-fill='attended']):is([data-mark='agent-done'], [data-mark='viewers-working'])
     [data-part='mark'] {
     fill: var(--color-amber-bg);
   }
@@ -72,15 +78,12 @@
     stroke: var(--color-accent-fg);
   }
 
-  /* Corner: a dot just outside the square's top-right corner, or the agent star once its turn finished unread. */
+  /* Corner: a dot just outside the square's top-right corner. */
   .dx-attention-glyph[data-corner='asked'] [data-part='corner'] {
     fill: var(--color-amber-bg);
   }
   .dx-attention-glyph[data-corner='mention'] [data-part='corner'] {
     fill: var(--color-rose-bg);
-  }
-  .dx-attention-glyph[data-corner='agent-done'] [data-part='corner'] {
-    fill: var(--color-amber-bg);
   }
   .dx-attention-glyph[data-corner='changed'] [data-part='corner'] {
     fill: var(--color-accent-bg);

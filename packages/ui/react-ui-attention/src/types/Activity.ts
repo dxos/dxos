@@ -16,9 +16,9 @@ export const Slots: readonly Slot[] = ['fill', 'mark', 'edge', 'corner'];
 /** Every slot's treatments, highest precedence first: when several are requested for one slot, the first wins. */
 export const Treatments = {
   fill: ['attended', 'contains-attended', 'busy'],
-  mark: ['agent', 'typing', 'viewers-working', 'viewers', 'viewer'],
+  mark: ['agent', 'agent-done', 'typing', 'viewers-working', 'viewers', 'viewer'],
   edge: ['failed', 'following', 'call', 'working', 'scheduled'],
-  corner: ['asked', 'mention', 'agent-done', 'changed', 'read-only'],
+  corner: ['asked', 'mention', 'changed', 'read-only'],
 } as const satisfies Record<Slot, readonly string[]>;
 
 export type FillTreatment = (typeof Treatments.fill)[number];

@@ -31,6 +31,7 @@ const LABELS: Record<Activity.Treatment, string> = {
   'viewers': 'Several viewers',
   'viewer': 'One viewer',
   'agent': 'Agent working',
+  'agent-done': 'Agent finished, unread',
   'failed': 'Failed',
   'following': 'Following someone',
   'call': 'Live call',
@@ -38,7 +39,6 @@ const LABELS: Record<Activity.Treatment, string> = {
   'scheduled': 'Scheduled soon',
   'asked': 'Agent asked you',
   'mention': 'Mention or reply',
-  'agent-done': 'Agent finished, unread',
   'changed': 'Changed since seen',
   'read-only': 'Read-only',
 };
@@ -160,7 +160,7 @@ const COMBINATIONS: { icon: string; label: string; caption: string; treatments: 
     icon: 'ph--file-text--regular',
     label: 'Launch plan',
     caption: 'Companion finished, unread',
-    treatments: ['viewers', 'agent-done'],
+    treatments: ['agent-done'],
   },
   {
     icon: 'ph--sparkle--regular',
@@ -261,29 +261,40 @@ const MotionStory = () => (
 // Agent session.
 //
 
-const AGENT_STATES: { title: string; treatments: Activity.Treatment[] }[] = [
-  { title: 'Idle, one viewer', treatments: ['viewer'] },
-  { title: 'Agent working', treatments: ['viewer', 'agent'] },
-  { title: 'Finished, unread', treatments: ['viewer', 'agent-done'] },
-  { title: 'Read', treatments: ['viewer'] },
+/** Opening a chat reads its finished turn, so only a chat nobody has open stays unread. */
+const AGENT_VIEWERS: { title: string; treatments: Activity.Treatment[] }[] = [
+  { title: 'Nobody', treatments: [] },
+  { title: 'Someone else', treatments: ['viewer'] },
+  { title: 'You', treatments: ['attended'] },
+];
+
+const AGENT_STATES: { title: string; treatments: (open: boolean) => Activity.Treatment[] }[] = [
+  { title: 'Idle', treatments: () => [] },
+  { title: 'Agent working', treatments: () => ['agent'] },
+  { title: 'Turn finished', treatments: (open) => (open ? [] : ['agent-done']) },
 ];
 
 const AgentSessionStory = () => (
-  <Section title='An agent session: the star replaces presence while it works, then marks the corner until read'>
-    <div className='grid grid-cols-[8rem_repeat(4,minmax(0,1fr))] items-center gap-x-3 gap-y-2 text-sm'>
-      <span />
+  <Section title='An agent session: the star pulses while it works, then turns amber until anyone opens the chat'>
+    <div className='grid grid-cols-[8rem_repeat(3,minmax(0,1fr))] items-center gap-x-3 gap-y-2 text-sm'>
+      <span className='text-description'>Open by</span>
       {AGENT_STATES.map(({ title }) => (
         <span key={title} className='text-description'>
           {title}
         </span>
       ))}
-      <span className='text-description'>Elsewhere</span>
-      {AGENT_STATES.map(({ title, treatments }) => (
-        <Row key={title} icon='ph--sparkle--regular' label='Trip ideas' treatments={treatments} />
-      ))}
-      <span className='text-description'>Open</span>
-      {AGENT_STATES.map(({ title, treatments }) => (
-        <Row key={title} icon='ph--sparkle--regular' label='Trip ideas' treatments={['attended', ...treatments]} />
+      {AGENT_VIEWERS.map((viewers) => (
+        <React.Fragment key={viewers.title}>
+          <span className='text-description'>{viewers.title}</span>
+          {AGENT_STATES.map((state) => (
+            <Row
+              key={state.title}
+              icon='ph--sparkle--regular'
+              label='Trip ideas'
+              treatments={[...viewers.treatments, ...state.treatments(viewers.treatments.length > 0)]}
+            />
+          ))}
+        </React.Fragment>
       ))}
     </div>
   </Section>
