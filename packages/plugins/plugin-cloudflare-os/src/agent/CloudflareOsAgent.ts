@@ -155,7 +155,15 @@ const runTurn: (
     const activeChatId = yield* Effect.uninterruptible(
       (existing === undefined
         ? Client.call('Could not start a workspace chat.', () =>
-            Client.withDeadline(batchOverseer(account, workspace.workspaceId).newChat(text, model), START_TIMEOUT_MS),
+            Client.withDeadline(
+              batchOverseer(account, workspace.workspaceId).newChat(text, model),
+              START_TIMEOUT_MS,
+              // A chat that starts after the deadline belongs to a failed turn, so its agent is stopped.
+              (lateChatId) =>
+                void Promise.resolve(batchOverseer(account, workspace.workspaceId).stopAgent(lateChatId)).catch(
+                  () => {},
+                ),
+            ),
           )
         : Client.call('Could not send the message.', () =>
             Client.withDeadline(
@@ -169,6 +177,8 @@ const runTurn: (
             chatId = id;
           }),
         ),
+        // A failed send may still have reached the agent; `chatId` already names the existing chat here.
+        Effect.tapError(() => stopAgent),
       ),
     );
     if (existing === undefined) {
