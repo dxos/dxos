@@ -188,6 +188,35 @@ describe('SceneHandler', () => {
     const layers = sortByZ(Object.values(root.layers ?? {})).map((layer) => layer.id);
     expect(layers).toEqual([BACKDROP_LAYER.id, DEFAULT_LAYER.id]);
   });
+
+  test('a title reads back as small text in its box, and folds into the box again', ({ expect }) => {
+    const content: ContentMap = {};
+    seedContent(content);
+    const group = {
+      id: 'group',
+      origin: { x: 0, y: 0 },
+      elements: [
+        { kind: 'rect' as const, id: 'frame', x: 0, y: 0, w: 800, h: 400 },
+        { kind: 'text' as const, id: 'label', x: 16, y: 8, text: 'Group', weight: 's' as const },
+      ],
+    };
+    applyCommands(content, [{ op: 'upsert-object', object: group }], SceneHandler);
+
+    const [object] = SceneHandler.read(content).scene.objects;
+    const [box, title] = object.elements;
+    expect(box.kind === 'rect' && box.text).toBeUndefined();
+    expect(title.kind === 'text' && [title.x, title.y, title.text, title.weight]).toEqual([8, 8, 'Group', 's']);
+
+    const again: ContentMap = {};
+    seedContent(again);
+    applyCommands(again, [{ op: 'upsert-object', object }], SceneHandler);
+    const node = readViews(again)[ROOT_VIEW_ID].nodes[elementId('group', 'frame')];
+    expect(isRectNode(node) && [node.label, node.style?.alignHorizontal, node.style?.alignVertical]).toEqual([
+      'Group',
+      'left',
+      'top',
+    ]);
+  });
 });
 
 const ARCHITECTURE = `

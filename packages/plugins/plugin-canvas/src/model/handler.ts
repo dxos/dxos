@@ -95,6 +95,12 @@ const styleOf = (element: { color?: Shape.Color; fill?: Shape.Fill; stroke?: Sha
 /** The size of a box's title (a group's name), the layout's small text. */
 const TITLE_FONT_SIZE = 14;
 
+/** A title's inset from its box's corner, the on-screen label's padding. */
+const TITLE_INSET = 8;
+
+/** Whether a node's label reads as a title, from the top-left corner of its box. */
+const isTitled = ({ style }: Node): boolean => style?.alignHorizontal === 'left' && style.alignVertical === 'top';
+
 /** Px per character and line height of a small label, for sizing its box to its text (a note's default is a page). */
 const LABEL_CHAR = 7;
 const LABEL_HEIGHT = 20;
@@ -502,6 +508,20 @@ export const SceneHandler: ContentHandler = {
             elements.push({ kind: 'text', id: element, x: local.x, y: local.y, w: local.w, text });
           } else if (record.dsl?.portal !== undefined) {
             elements.push({ kind: 'portal', id: element, ...local, ref: record.dsl.portal, ...(text ? { text } : {}) });
+          } else if (text && !isEllipseNode(node) && isTitled(node)) {
+            // A box's text is always centred, so a title is its own small text, which `upsert` folds back into the box.
+            elements.push(
+              { kind: 'rect', id: element, ...local },
+              {
+                kind: 'text',
+                id: `${element}-title`,
+                x: local.x + TITLE_INSET,
+                y: local.y + TITLE_INSET,
+                w: Math.max(local.w - 2 * TITLE_INSET, 0),
+                text,
+                weight: 's',
+              },
+            );
           } else {
             elements.push({
               kind: isEllipseNode(node) ? 'ellipse' : 'rect',
