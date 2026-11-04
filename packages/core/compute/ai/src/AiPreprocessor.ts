@@ -895,17 +895,12 @@ const groupAssistantMessages: (messages: readonly Message.Message[]) => readonly
   Array.map(mergeMessages),
 );
 
-/**
- * Marks the cache breakpoints: the last message, and a leading system message so a request whose
- * history matches no cached prefix (a new conversation, or more new blocks than the provider looks
- * back over) still reads the system prompt from cache.
- */
 const setCacheControl: (cacheControl: CacheControl) => (prompt: Prompt.Prompt) => Prompt.Prompt =
   (cacheControl) => (prompt) => {
     if (cacheControl === 'ephemeral') {
       return Prompt.fromMessages(
         prompt.content.map((message, index) =>
-          index !== prompt.content.length - 1 && !(index === 0 && message.role === 'system')
+          index !== prompt.content.length - 1
             ? message
             : {
                 ...message,
