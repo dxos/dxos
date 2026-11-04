@@ -72,6 +72,15 @@ export type ClientPluginOptions = ClientOptions & {
   initializeTimeout?: number;
 
   /**
+   * Start `client.initialize()` only when something first resolves `ClientService.client`, rather than
+   * on activation. For imperative hosts (the CLI), so a command that never uses the client neither
+   * waits for its initialization nor fails with it. The app leaves it off: it always uses the client.
+   *
+   * @default false
+   */
+  initializeOnUse?: boolean;
+
+  /**
    * Called when spaces are ready.
    * Plugin context is provided so capabilities are accessible.
    */

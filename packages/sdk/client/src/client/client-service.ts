@@ -5,37 +5,32 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Option from 'effect/Option';
 
 import { ConfigService } from '@dxos/config';
 
 import { Client } from './client.ts';
 // import { CommandConfig } from './command-config';
 
+/** The host's client, behind an effect so a host can initialize it only once something uses it. */
+export interface ClientHandle {
+  /** The initialized client. A failed initialization is a defect carrying its cause. */
+  readonly client: Effect.Effect<Client>;
+}
+
 // TODO(wittjosiah): Factor out.
-// TODO(dmaretskyi): For CLI its better to make this lazy to not load client in commands that do not require it.
-export class ClientService extends Context.Service<ClientService, Client>()('ClientService') {}
+export class ClientService extends Context.Service<ClientService, ClientHandle>()('ClientService') {
+  /**
+   * The initialized client. On a host that initializes lazily (the CLI), resolving it is what starts
+   * initialization, so work that never resolves it never waits for the client or fails with it.
+   */
+  static readonly client: Effect.Effect<Client, never, ClientService> = Effect.flatMap(
+    ClientService,
+    (handle) => handle.client,
+  );
+}
 
-export const fromClient = (client: Client) => Layer.succeed(ClientService, client);
-
-/**
- * Waits until the host's client has initialized, failing with the cause that stopped it.
- *
- * A host may provide `ClientService` before its client has initialized, so work that never uses the
- * client does not wait for it; work that does resolves the client with {@link initializedClient}.
- */
-export class ClientInitialization extends Context.Service<ClientInitialization, Effect.Effect<void, Error>>()(
-  'ClientInitialization',
-) {}
-
-/** The host's client once it has initialized; without a {@link ClientInitialization} it is handed over as is. */
-export const initializedClient: Effect.Effect<Client, Error, ClientService> = Effect.gen(function* () {
-  const initialization = yield* Effect.serviceOption(ClientInitialization);
-  if (Option.isSome(initialization)) {
-    yield* initialization.value;
-  }
-  return yield* ClientService;
-});
+/** Hands over `client` as it is; a caller that needs it initialized initializes it first. */
+export const fromClient = (client: Client) => Layer.succeed(ClientService, { client: Effect.succeed(client) });
 
 export const layer = Layer.effect(
   ClientService,
@@ -80,6 +75,6 @@ export const layer = Layer.effect(
       }),
     );
 
-    return client;
+    return ClientService.of({ client: Effect.succeed(client) });
   }),
 );

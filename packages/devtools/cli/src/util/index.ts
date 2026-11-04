@@ -4,7 +4,6 @@
 
 export * from './skills.ts';
 export * from './bundle-describer.ts';
-export * from './client-gate.ts';
 export * from './log-buffer.ts';
 export * from './multiline-prompt.ts';
 export * from './runtime.ts';

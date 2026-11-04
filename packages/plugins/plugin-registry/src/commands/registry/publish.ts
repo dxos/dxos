@@ -16,8 +16,7 @@ import * as PlatformCommand from 'effect/process/ChildProcess';
 import * as ChildProcessSpawner from 'effect/process/ChildProcessSpawner';
 import * as Schema from 'effect/Schema';
 
-import { ClientFree } from '@dxos/cli-util';
-import { type Client, initializedClient } from '@dxos/client';
+import { type Client, ClientService } from '@dxos/client';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { Context } from '@dxos/context';
 import { EdgeHttpClient } from '@dxos/edge-client';
@@ -184,7 +183,7 @@ export const publish = Command.make(
         yield* Console.log(`Described: ${yield* describer.value.describe(outdir)}`);
 
         if (options.private) {
-          const client = yield* initializedClient;
+          const client = yield* ClientService.client;
           const token = Option.getOrUndefined(yield* Config.option(Config.String('DX_API_TOKEN')));
           const baseUrl = Option.getOrUndefined(options.edgeUrl) ?? client.edge.http.baseUrl;
           if (!token && !client.halo.identity.get()) {
@@ -229,7 +228,7 @@ export const publish = Command.make(
         // Authenticate for the record writes BEFORE uploading: hosted bundles are immutable once
         // uploaded, so a publish whose PDS session cannot authenticate must fail before it burns
         // the version with an orphaned upload.
-        const client = yield* initializedClient;
+        const client = yield* ClientService.client;
         const session = yield* resolveSession({
           handle: Option.getOrUndefined(options.handle),
           appPassword: Option.getOrUndefined(options.appPassword),
@@ -296,11 +295,7 @@ export const publish = Command.make(
       }),
       Effect.provide(FetchHttpClient.layer),
     ),
-).pipe(
-  Command.withDescription('Build, host, and publish the plugin in the current directory to the registry.'),
-  // `--upload-only --edge-url` needs no client, so the client is waited for only on the paths that use it.
-  Command.annotate(ClientFree, true),
-);
+).pipe(Command.withDescription('Build, host, and publish the plugin in the current directory to the registry.'));
 
 /** Every file under the build output, with a `/`-separated relative path. */
 const readBundleFiles = (outdir: string) =>
@@ -345,7 +340,7 @@ const uploadToEdge = ({
     if (edgeUrl) {
       return yield* uploadBundleDirect({ http: new EdgeHttpClient(edgeUrl), key, version, outdir, channel });
     }
-    const client = yield* initializedClient;
+    const client = yield* ClientService.client;
     const apiKey = Option.getOrUndefined(yield* Config.option(Config.String('DX_HUB_API_KEY')));
     if (apiKey) {
       const http = new EdgeHttpClient(client.edge.http.baseUrl, { apiKey });

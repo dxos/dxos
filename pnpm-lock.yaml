@@ -7571,9 +7571,6 @@ importers:
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
-      '@effect/platform-node':
-        specifier: 'catalog:'
-        version: 4.0.4(effect@4.0.4)
       '@opentui/core-darwin-arm64':
         specifier: 'catalog:'
         version: 0.1.61

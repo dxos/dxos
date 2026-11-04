@@ -12,7 +12,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, test, vi } from 'vitest';
 
-import { Client, ClientInitialization, ClientService } from '@dxos/client';
+import { ClientService } from '@dxos/client';
 
 import * as BundleDescriber from '../../BundleDescriber.ts';
 import { publish } from './publish.ts';
@@ -24,7 +24,6 @@ const MODULE_URL = `${EDGE_URL}/registry/modules/org.example.plugin/1.0.0/manife
 
 describe('registry publish', () => {
   let dir: string;
-  let client: Client;
 
   beforeEach(() => {
     dir = fs.mkdtempSync(path.join(os.tmpdir(), 'dx-publish-'));
@@ -37,17 +36,14 @@ describe('registry publish', () => {
       path.join(dir, 'dist', 'manifest.json'),
       JSON.stringify({ key: 'org.example.plugin', name: 'Example', version: '1.0.0' }),
     );
-    // Never initialized: the `--edge-url` upload must not touch it.
-    client = new Client();
   });
 
-  afterEach(async () => {
+  afterEach(() => {
     vi.unstubAllGlobals();
-    await client.destroy();
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
-  test('--upload-only --edge-url uploads without waiting for or resolving the client', async ({ expect }) => {
+  test('--upload-only --edge-url uploads without resolving the client', async ({ expect }) => {
     const fetchMock = vi.fn(
       async (_input: unknown, _init?: RequestInit) =>
         new Response(JSON.stringify({ success: true, data: { moduleUrl: MODULE_URL } }), {
@@ -57,10 +53,12 @@ describe('registry publish', () => {
     );
     vi.stubGlobal('fetch', fetchMock);
 
-    let initializationAwaited = false;
-    const initialization = Effect.suspend(() => {
-      initializationAwaited = true;
-      return Effect.fail(new InitFailed());
+    let clientResolved = false;
+    const handle = ClientService.of({
+      client: Effect.suspend(() => {
+        clientResolved = true;
+        return Effect.die(new InitFailed());
+      }),
     });
 
     const describer = BundleDescriber.Service.of({
@@ -80,14 +78,13 @@ describe('registry publish', () => {
         Layer.mergeAll(
           NodeServices.layer,
           Layer.succeed(BundleDescriber.Service, describer),
-          Layer.succeed(ClientService, client),
-          Layer.succeed(ClientInitialization, initialization),
+          Layer.succeed(ClientService, handle),
         ),
       ),
       Effect.runPromise,
     );
 
-    expect(initializationAwaited).toBe(false);
+    expect(clientResolved).toBe(false);
     const upload = fetchMock.mock.calls.find(([input]) => String(input).startsWith(`${EDGE_URL}/registry/upload`));
     expect(upload).toBeDefined();
   });

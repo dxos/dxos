@@ -13,7 +13,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Event, timeoutUnlessProgress } from '@dxos/async';
-import { Client, ClientInitialization, fromClient } from '@dxos/client';
+import { Client, ClientService } from '@dxos/client';
 import { INITIALIZE_TIMEOUT } from '@dxos/client-protocol';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
@@ -40,6 +40,7 @@ export default Capability.makeModule(
     onClientInitializationError,
     onSpacesAvailable,
     initializeTimeout = INITIALIZE_TIMEOUT,
+    initializeOnUse = false,
     ...options
   }: ClientCapabilityOptions) {
     const capabilityManager = yield* Capability.Service;
@@ -56,6 +57,11 @@ export default Capability.makeModule(
     // Settled by the forked initialization below, so a consumer that awaits the client sees the
     // failure that stopped it rather than waiting out a timeout of its own.
     const initialized = yield* Deferred.make<void, ClientInitError>();
+    // Completed by the first `ClientService.client` when initialization waits for a use.
+    const used = yield* Deferred.make<void>();
+    if (!initializeOnUse) {
+      yield* Deferred.succeed(used, undefined);
+    }
 
     let subscription: { unsubscribe: () => void } | undefined;
     let removeUnloadGuard: (() => void) | undefined;
@@ -81,6 +87,7 @@ export default Capability.makeModule(
     // `client.waitUntilInitialized()`. Everything touching `client.halo`/`client.services`/
     // `client.spaces` (initialized-only getters) lives in this continuation.
     yield* Effect.gen(function* () {
+      yield* Deferred.await(used);
       // Bounded so a handshake that never completes becomes a failure the app can surface,
       // rather than leaving every suspended consumer waiting on a promise that never settles.
       yield* Effect.tryPromise({
@@ -199,12 +206,15 @@ export default Capability.makeModule(
 
     log('client capability ready (initialization in flight)');
 
-    // `ClientService` hands over the client before it has initialized, so a host never waits for it
-    // up front; an imperative host (the CLI) waits on `ClientInitialization` only for work that needs it.
-    const clientServiceLayer = Layer.merge(
-      fromClient(client),
-      Layer.succeed(ClientInitialization, Deferred.await(initialized)),
-    );
+    // Waiting happens where the client is used, not where the layer is built, so a host's startup never
+    // blocks on (or fails with) a client that the work it runs may never touch.
+    const clientServiceLayer = Layer.succeed(ClientService, {
+      client: Deferred.succeed(used, undefined).pipe(
+        Effect.andThen(Deferred.await(initialized)),
+        Effect.orDie,
+        Effect.as(client),
+      ),
+    });
 
     return [
       // TODO(wittjosiah): Try to remove and prefer layer?

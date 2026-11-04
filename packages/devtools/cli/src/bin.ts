@@ -7,6 +7,7 @@
 import * as BunRuntime from '@effect/platform-bun/BunRuntime';
 import * as BunServices from '@effect/platform-bun/BunServices';
 import * as Cause from 'effect/Cause';
+import * as Command from 'effect/cli/Command';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
@@ -20,7 +21,7 @@ import * as Cli from '@dxos/app-framework/Cli';
 import * as AppMigrations from '@dxos/app-toolkit/AppMigrations';
 import { unrefTimeout } from '@dxos/async';
 import { CommandConfig } from '@dxos/cli-util';
-import { ClientService, ConfigService, DXOS_VERSION, fromConfig } from '@dxos/client';
+import { ConfigService, DXOS_VERSION, fromConfig } from '@dxos/client';
 import { DEFAULT_PROFILE, DXEnv } from '@dxos/client-protocol';
 import { JsonOutput, deus } from '@dxos/deus/cli';
 import { LogLevel, LogProcessorType, levels, log } from '@dxos/log';
@@ -52,7 +53,7 @@ import {
   initializeObservability,
   observabilityNamespace,
 } from './observability.ts';
-import { bundleDescriberLayer, installStderrFilter, registerSharedScope, runWithClientGate } from './util/index.ts';
+import { bundleDescriberLayer, installStderrFilter, registerSharedScope } from './util/index.ts';
 
 // Filter background `warnAfterTimeout` chatter out of stderr for the lifetime
 // of the process. The warnings come from eager space initialisation in
@@ -212,9 +213,16 @@ const program = Effect.gen(function* () {
     // match by key, so `add --dev` only overrides a builtin if its plugin precedes that builtin.
     plugins: [
       ...installed,
-      ...getPlugins({ config, namespace, observability: () => Promise.resolve(observabilityInstance) }).filter(
-        (plugin) => !overridden.has(plugin.meta.profile.key),
-      ),
+      ...getPlugins({
+        config,
+        namespace,
+        observability: () => Promise.resolve(observabilityInstance),
+        // Only a command that uses the client initializes it, so the session is attributed then.
+        identify: (client) =>
+          identifySession(observabilityInstance, client, namespace, installationId).catch((error) =>
+            log('session identification failed', { error }),
+          ),
+      }).filter((plugin) => !overridden.has(plugin.meta.profile.key)),
     ],
     enabled,
     core: getCore(),
@@ -238,20 +246,6 @@ const program = Effect.gen(function* () {
   const manager = yield* Capability.get(Capabilities.PluginManager).pipe(Effect.provide(layer));
   yield* manager.activate(ActivationEvents.Idle);
 
-  // Attributes the session to the identity once a command has waited for the client, rather than
-  // holding every command at startup on a client it may never use.
-  const identify = yield* Effect.cached(
-    Effect.gen(function* () {
-      const client = yield* ClientService;
-      yield* Effect.tryPromise(() => identifySession(observabilityInstance, client, namespace, installationId));
-    }).pipe(
-      Effect.catch((error) => Effect.sync(() => log('session identification failed', { error }))),
-      Effect.provide(layer),
-    ),
-  );
-  // Only a command that uses the client waits for it, and a failed initialization fails just those.
-  const run = runWithClientGate(command, CLI_CONFIG, identify);
-
   // Register in-process dispatcher so `repl` can reuse the already-built
   // command tree and plugin layer instead of spawning a child `dx` process
   // per command. See src/dispatcher.ts.
@@ -259,12 +253,18 @@ const program = Effect.gen(function* () {
   // applied at the outer `program` scope — `Command.run`'s inferred
   // `Requirements` channel becomes overly restrictive even when the layer
   // provides everything.
-  setDispatcher((argv) => run(argv).pipe(Effect.provide(layer)) as Effect.Effect<void, unknown, never>);
+  setDispatcher(
+    (argv) =>
+      Command.runWith(command, CLI_CONFIG)(argv).pipe(Effect.provide(layer)) as Effect.Effect<void, unknown, never>,
+  );
 
   const startedAt = Date.now();
   // `runWith` takes the ARGUMENTS, not the raw argv — passing `process.argv` makes the interpreter
   // path the first token, which parses as an unknown subcommand.
-  return yield* run(argv).pipe(
+  return yield* Command.runWith(
+    command,
+    CLI_CONFIG,
+  )(argv).pipe(
     Effect.provide(layer),
     Effect.onExit((exit) =>
       Effect.sync(() =>

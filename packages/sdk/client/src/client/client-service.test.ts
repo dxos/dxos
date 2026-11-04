@@ -17,7 +17,7 @@ const TestLayer = Function.pipe(layer, Layer.provideMerge(layerMemory));
 describe('ClientService', () => {
   it('should initialize', { timeout: 10_000 }, async () => {
     const program = Effect.gen(function* () {
-      const client = yield* ClientService;
+      const client = yield* ClientService.client;
       return client;
     }).pipe(Effect.provide(TestLayer));
     const client = await EffectEx.runAndForwardErrors(program);
@@ -26,7 +26,7 @@ describe('ClientService', () => {
 
   it('can create identity', async () => {
     const program = Effect.gen(function* () {
-      const client = yield* ClientService;
+      const client = yield* ClientService.client;
       const identity = yield* Effect.tryPromise(() => client.halo.createIdentity());
       return identity;
     }).pipe(Effect.provide(TestLayer));
