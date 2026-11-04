@@ -26,14 +26,18 @@ const transientPlaceholders = Facet.define<ViewPlugin<{ readonly visible: boolea
 /**
  * Shows `content` while the document is empty, unless a {@link placeholder} hint is showing in its place.
  */
-export const emptyPlaceholder = (content: string): Extension => [
-  EditorView.decorations.of((view) =>
-    view.state.doc.length > 0 || view.state.facet(transientPlaceholders).some((plugin) => view.plugin(plugin)?.visible)
-      ? Decoration.none
-      : Decoration.set(placeholderWidget(content).range(0)),
-  ),
-  EditorView.contentAttributes.of({ 'aria-placeholder': content }),
-];
+export const emptyPlaceholder = (content: string): Extension => {
+  const hintVisible = (view: EditorView) =>
+    view.state.facet(transientPlaceholders).some((plugin) => view.plugin(plugin)?.visible);
+  return [
+    EditorView.decorations.of((view) =>
+      view.state.doc.length > 0 || hintVisible(view)
+        ? Decoration.none
+        : Decoration.set(placeholderWidget(content).range(0)),
+    ),
+    EditorView.contentAttributes.of((view) => (hintVisible(view) ? null : { 'aria-placeholder': content })),
+  ];
+};
 
 export type PlaceholderOptions = {
   content: Content;
@@ -119,7 +123,11 @@ export const placeholder = ({ content, delay = 3_000, focusOnly = false }: Place
   return [
     plugin,
     transientPlaceholders.of(plugin),
-    typeof content === 'string' ? EditorView.contentAttributes.of({ 'aria-placeholder': content }) : [],
+    typeof content === 'string'
+      ? EditorView.contentAttributes.of((view) =>
+          view.plugin(plugin)?.visible ? { 'aria-placeholder': content } : null,
+        )
+      : [],
   ];
 };
 
@@ -128,8 +136,9 @@ export class PlaceholderWidget extends WidgetType {
     super();
   }
 
+  // Only text is known to render the same; an element or callback may render differently each time.
   override eq(other: PlaceholderWidget) {
-    return other.content === this.content;
+    return typeof this.content === 'string' && other.content === this.content;
   }
 
   toDOM(view: EditorView) {

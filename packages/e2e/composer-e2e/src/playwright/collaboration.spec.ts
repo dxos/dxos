@@ -89,39 +89,28 @@ test.describe('Collaboration tests', () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
 
-    // Focus on host's textbox and wait for it to be ready.
     const hostPlank = host.deck.plank();
-    const hostTextbox = Markdown.getMarkdownTextboxWithLocator(hostPlank.locator);
-    await hostTextbox.waitFor();
-    // TODO(thure): Autofocus not working for solo mode when creating a new document.
-    await hostTextbox.focus();
-
+    await Markdown.waitForMarkdownTextboxWithLocator(hostPlank.locator);
     await perfomInvitation(host, guest);
+
+    // The host's cursor is set before the guest opens the document, so the guest must receive it late.
+    // TODO(thure): Autofocus not working for solo mode when creating a new document.
+    await Markdown.getMarkdownTextboxWithLocator(hostPlank.locator).focus();
 
     await guest.waitForSpaceReady();
     await guest.expandSection('spacePlugin.collectionsSection');
     await expect(guest.getObjectLinks()).toHaveCount(1);
     await navigateToNewDocument(guest);
 
-    // Find the plank in the guest.
     const guestPlank = guest.deck.plank();
     await Markdown.waitForMarkdownTextboxWithLocator(guestPlank.locator);
     await Markdown.getMarkdownTextboxWithLocator(guestPlank.locator).blur();
 
-    await Promise.all([
-      expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator)).toHaveCount(0),
-      expect(Markdown.getCollaboratorCursorsWithLocator(guestPlank.locator)).toHaveCount(0),
-    ]);
+    await expect(Markdown.getCollaboratorNamesWithLocator(guestPlank.locator).first()).toHaveText(/.+/);
+    await expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator)).toHaveCount(0);
 
-    await Promise.all([
-      Markdown.getMarkdownTextboxWithLocator(hostPlank.locator).focus(),
-      Markdown.getMarkdownTextboxWithLocator(guestPlank.locator).focus(),
-    ]);
-
-    await Promise.all([
-      expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator).first()).toHaveText(/.+/),
-      expect(Markdown.getCollaboratorCursorsWithLocator(guestPlank.locator).first()).toHaveText(/.+/),
-    ]);
+    await Markdown.getMarkdownTextboxWithLocator(guestPlank.locator).focus();
+    await expect(Markdown.getCollaboratorNamesWithLocator(hostPlank.locator).first()).toHaveText(/.+/);
   });
 
   test("host and guest can see each others' changes in same document", { tag: ['@QA-8'] }, async () => {

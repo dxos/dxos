@@ -32,9 +32,11 @@ describe('placeholder', () => {
       placeholder({ content: 'Press / for commands', delay: 0 }),
     ]);
     expect(placeholders(view)).to.deep.eq(['Enter text']);
+    expect(view.contentDOM.getAttribute('aria-placeholder')).to.eq('Enter text');
 
     view.dispatch({ selection: EditorSelection.cursor(0) });
     await expect.poll(() => placeholders(view)).to.deep.eq(['Press / for commands']);
+    expect(view.contentDOM.getAttribute('aria-placeholder')).to.eq('Press / for commands');
 
     view.dispatch({ changes: { from: 0, insert: 'a' } });
     expect(placeholders(view)).to.deep.eq([]);
