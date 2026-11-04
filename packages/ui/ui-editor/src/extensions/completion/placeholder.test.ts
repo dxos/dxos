@@ -8,15 +8,6 @@ import { describe, onTestFinished, test } from 'vitest';
 
 import { emptyPlaceholder, placeholder } from './placeholder.ts';
 
-const createView = (extensions: Extension): EditorView => {
-  const view = new EditorView({ state: EditorState.create({ extensions }), parent: document.body });
-  onTestFinished(() => view.destroy());
-  return view;
-};
-
-const placeholders = (view: EditorView): string[] =>
-  [...view.contentDOM.querySelectorAll('.cm-placeholder')].map((el) => el.textContent ?? '');
-
 class CaretWidget extends WidgetType {
   toDOM() {
     const span = document.createElement('span');
@@ -69,3 +60,12 @@ describe('placeholder', () => {
     expect(caret && text && caret.compareDocumentPosition(text) & Node.DOCUMENT_POSITION_FOLLOWING).to.be.ok;
   });
 });
+
+const createView = (extensions: Extension): EditorView => {
+  const view = new EditorView({ state: EditorState.create({ extensions }), parent: document.body });
+  onTestFinished(() => view.destroy());
+  return view;
+};
+
+const placeholders = (view: EditorView): string[] =>
+  [...view.contentDOM.querySelectorAll('.cm-placeholder')].map((el) => el.textContent ?? '');
