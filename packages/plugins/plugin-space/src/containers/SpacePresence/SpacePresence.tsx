@@ -2,17 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type ComponentProps, forwardRef, useEffect, useState } from 'react';
+import React, { type ComponentProps, type ReactNode, forwardRef, useEffect, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { generateName } from '@dxos/display-name';
 import { type Key } from '@dxos/echo';
 import { type Space } from '@dxos/halo';
 import { useIdentity, useMembers } from '@dxos/halo-react';
 import { type EID } from '@dxos/keys';
 import { AttentionGlyph, type AttentionGlyphProps, useAttention } from '@dxos/react-ui-attention';
-import { Listbox } from '@dxos/react-ui-list';
 import * as Avatar from '@dxos/react-ui/Avatar';
+import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Popover from '@dxos/react-ui/Popover';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
@@ -22,7 +23,8 @@ import { hexToFallback } from '@dxos/util';
 import { SpaceCapabilities, SpaceSchema } from '#types';
 
 import { SpaceNamespace } from '../../namespace.ts';
-import { PRESENCE_EXPIRY } from '../../util/index.ts';
+import { PEOPLE_COMPANION_ID, PRESENCE_EXPIRY } from '../../util/index.ts';
+import { PeerActions } from './PeerActions.tsx';
 
 const REFRESH_INTERVAL = 5000;
 
@@ -33,7 +35,7 @@ const byIdentityKey = (a: Space.Member, b: Space.Member) => (a.identityKey ?? ''
 
 const isActive = (viewer: SpaceSchema.ObjectViewerProps, now: number) => now - viewer.lastSeen < PRESENCE_EXPIRY;
 
-const useNow = () => {
+export const useNow = () => {
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     const interval = setInterval(() => setNow(Date.now()), REFRESH_INTERVAL);
@@ -73,7 +75,35 @@ export const SpacePresence = ({ spaceId, presenceKey }: SpacePresenceProps) => {
     })
     .toSorted(byIdentityKey);
 
-  return <FullPresence members={members} />;
+  return (
+    <FullPresence
+      members={members}
+      renderActions={(member) =>
+        spaceId && member.identityKey ? <PeerActions spaceId={spaceId} identityKey={member.identityKey} /> : null
+      }
+      footer={<SeeEveryoneButton />}
+    />
+  );
+};
+
+/** Opens the People companion, which lists everyone in the space. */
+const SeeEveryoneButton = () => {
+  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
+  return (
+    <Popover.CloseTrigger asChild>
+      <Button.Root
+        variant='ghost'
+        icon='ph--users--regular'
+        label={t('presence-see-everyone.label')}
+        classNames='w-full justify-start mt-1'
+        data-testid='spacePlugin.presence.seeEveryone'
+        onClick={() =>
+          void invokePromise(LayoutOperation.UpdateComplementary, { subject: PEOPLE_COMPANION_ID, state: 'expanded' })
+        }
+      />
+    </Popover.CloseTrigger>
+  );
 };
 
 export type Member = Space.Member & {
@@ -90,76 +120,104 @@ export type MemberPresenceProps = Util.ThemedClassName<{
   size?: AvatarSize;
   members?: Member[];
   showCount?: boolean;
-  onMemberClick?: (member: Member) => void;
+  /** Controls shown on a member's row in the list, e.g. their graph actions. */
+  renderActions?: (member: Member) => ReactNode;
+  /** Content under the list, e.g. a link to everyone in the space. */
+  footer?: ReactNode;
 }>;
 
+/** Avatars of the members on an object; clicking any opens the full list, with the clicked member's row highlighted. */
 export const FullPresence = (props: MemberPresenceProps) => {
-  const { size = 'md', onMemberClick } = props;
+  const { size = 'md', renderActions, footer } = props;
   const members = UiHooks.useDefaultValue(props.members, () => []);
+  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
+  const [open, setOpen] = useState(false);
+  const [highlighted, setHighlighted] = useState<string>();
+  const openList = (identityKey?: string) => {
+    setHighlighted(identityKey);
+    setOpen(true);
+  };
 
   if (members.length === 0) {
     return null;
   }
 
   return (
-    <div className='dx-avatar-group' data-testid='spacePlugin.presence'>
-      {members.slice(0, 3).map((member, i) => (
-        <Tooltip.Trigger
-          key={member.identityKey}
-          side='bottom'
-          content={getName(member)}
-          className='grid focus:outline-hidden'
-        >
-          <PresenceAvatar
-            member={member}
-            match={member.currentlyAttended} // TODO(Zan): Match always true now we're showing 'members viewing current object'.
-            index={members.length - i}
-            onClick={() => onMemberClick?.(member)}
-            size={size}
-          />
-        </Tooltip.Trigger>
-      ))}
-
-      {members.length > 3 && (
-        <Popover.Root positioning={{ placement: 'bottom' }}>
-          <Popover.Trigger className='grid focus:outline-hidden'>
-            {/* TODO(wittjosiah): Make text fit. */}
+    <Popover.Root open={open} onOpenChange={({ open }) => setOpen(open)} positioning={{ placement: 'bottom-end' }}>
+      <Popover.Anchor asChild>
+        <div className='dx-avatar-group' data-testid='spacePlugin.presence'>
+          {members.slice(0, 3).map((member, i) => (
+            <Tooltip.Trigger
+              key={member.identityKey}
+              side='bottom'
+              content={getName(member)}
+              className='grid focus:outline-hidden'
+            >
+              <PresenceAvatar
+                member={member}
+                match={member.currentlyAttended}
+                index={members.length - i}
+                onClick={() => openList(member.identityKey)}
+                size={size}
+              />
+            </Tooltip.Trigger>
+          ))}
+          {members.length > 3 && (
             <Avatar.Root
               status='inactive'
               style={{ zIndex: members.length - 4 }}
               fallback={`+${members.length - 3}`}
               size={size}
+              onClick={() => openList()}
             />
-          </Popover.Trigger>
-          <Popover.Content>
-            <Popover.Body classNames='max-h-56'>
-              <Listbox.Root
-                items={members.map((member) => ({ value: member.identityKey ?? '', label: member.identityKey ?? '' }))}
-              >
-                <Listbox.Viewport>
-                  <Listbox.Content aria-label='members'>
-                    {members.map((member) => (
-                      <Listbox.Item
-                        key={member.identityKey}
-                        id={member.identityKey ?? ''}
-                        classNames='flex gap-2 items-center cursor-pointer mb-2'
-                        onClick={() => onMemberClick?.(member)}
-                        data-testid='identity-list-item'
-                      >
-                        {/* TODO(Zan): Match always true now we're showing 'members viewing current object'. */}
-                        <PresenceAvatar member={member} size={size} showName match={member.currentlyAttended} />
-                      </Listbox.Item>
-                    ))}
-                  </Listbox.Content>
-                </Listbox.Viewport>
-              </Listbox.Root>
-            </Popover.Body>
-          </Popover.Content>
-        </Popover.Root>
-      )}
-    </div>
+          )}
+        </div>
+      </Popover.Anchor>
+      <Popover.Content>
+        <Popover.Body classNames='max-h-80 w-64'>
+          <PresenceList
+            heading={t('presence-in-object.heading', { count: members.length })}
+            members={members}
+            highlighted={highlighted}
+            renderActions={renderActions}
+          />
+          {footer}
+        </Popover.Body>
+      </Popover.Content>
+    </Popover.Root>
   );
 };
+
+export type PresenceListProps = {
+  heading?: string;
+  members: Member[];
+  highlighted?: string;
+  /** Subtitle under a member's name, e.g. where they are. */
+  renderDetail?: (member: Member) => ReactNode;
+  renderActions?: (member: Member) => ReactNode;
+};
+
+export const PresenceList = ({ heading, members, highlighted, renderDetail, renderActions }: PresenceListProps) => (
+  <div role='list' aria-label={heading} className='flex flex-col'>
+    {heading && <div className='px-2 py-1 text-xs text-description'>{heading}</div>}
+    {members.map((member) => (
+      <div
+        key={member.identityKey}
+        role='listitem'
+        data-testid='spacePlugin.presence.row'
+        data-highlighted={member.identityKey === highlighted ? '' : undefined}
+        className='flex items-center gap-2 px-2 py-1 rounded-sm data-[highlighted]:bg-current-surface'
+      >
+        <PresenceAvatar member={member} size='sm' match={member.currentlyAttended} />
+        <div className='flex flex-col min-w-0 grow'>
+          <span className='text-sm truncate'>{getName(member)}</span>
+          {renderDetail && <span className='text-xs text-description truncate'>{renderDetail(member)}</span>}
+        </div>
+        {renderActions?.(member)}
+      </div>
+    ))}
+  </div>
+);
 
 type PresenceAvatarProps = {
   member: Space.Member;

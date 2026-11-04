@@ -238,6 +238,14 @@ export const commentConfig: Maker<typeof AppCapabilities.CommentConfig> = Capabi
   { environments: ['browser', 'node', 'tauri', 'workerd'] },
 );
 
+/** Module maker contributing a locator, which reveals anchors in a type's views. */
+export const locator: Maker<typeof AppCapabilities.Locator> = Capability$.moduleMaker(
+  'Locator',
+  AppCapabilities.Locator,
+  // Browser-only: revealing scrolls and focuses a rendered view.
+  { environments: ['browser', 'tauri'] },
+);
+
 /** Module maker contributing an object exporter (print / save). */
 export const exporter: Maker<typeof AppCapabilities.Exporter> = Capability$.moduleMaker(
   'Exporter',

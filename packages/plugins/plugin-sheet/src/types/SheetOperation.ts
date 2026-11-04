@@ -60,8 +60,8 @@ export const ScrollToAnchor = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     subject: Schema.String.annotate({ description: 'Attendable ID of the sheet.' }),
-    cursor: Schema.String.annotate({ description: 'Cell range coordinates.' }),
-    id: Schema.optional(Schema.Any.annotate({ description: 'Active refs for highlighting.' })),
+    anchor: Schema.String.annotate({ description: 'Cell range coordinates.' }),
+    thread: Schema.optional(Schema.Any.annotate({ description: 'Active refs for highlighting.' })),
   }),
   output: Schema.Void,
 });

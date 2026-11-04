@@ -26,14 +26,19 @@ import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabili
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { unpackJson } from '@dxos/protocols/buf';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { ViewLocation } from '@dxos/react-ui-attention/types';
 
 import { SpaceCapabilities } from '#types';
 
 import { migrateToSettingsSpace } from '../migrations/settings-space.ts';
 import {
+  LOCATION_BROADCAST_INTERVAL,
   PRESENCE_BROADCAST_INTERVAL,
+  applyViewingMessage,
+  getPresenceKeyFromPath,
   groupPresenceChangesBySpace,
   groupPresenceKeysBySpace,
+  parseViewingMessage,
 } from '../util/presence.ts';
 import { catchNonInterrupt, resolveSettingsSpace, runSettingsSpaceHealing } from '../util/settings-space.ts';
 
@@ -98,6 +103,7 @@ export default Capability.makeModule(
     const registry = yield* Capabilities.AtomRegistry;
     const layoutAtom = yield* AppCapabilities.Layout;
     const attention = yield* AttentionCapabilities.Attention;
+    const viewState = yield* AttentionCapabilities.ViewState;
     const stateAtom = yield* SpaceCapabilities.State;
     const ephemeralAtom = yield* SpaceCapabilities.EphemeralState;
     const client = yield* ClientCapabilities.Client;
@@ -198,6 +204,17 @@ export default Capability.makeModule(
     });
     subscriptions.add(() => spaceNamesSub.unsubscribe());
 
+    // Only the defined fields: the payload is packed as a protobuf Struct, which has no undefined.
+    const getLocations = (keys: readonly string[]) =>
+      Object.fromEntries(
+        keys.flatMap((key) => {
+          const { selection, viewport } = viewState.get(ViewLocation.aspect, key);
+          return selection || viewport
+            ? [[key, { ...(selection && { selection }), ...(viewport && { viewport }) }]]
+            : [];
+        }),
+      );
+
     // Broadcast active node to other peers in the space - subscribe to both layout and attention.
     let broadcastCleanup: (() => void) | undefined;
     let previousActive: readonly string[] = [];
@@ -220,12 +237,14 @@ export default Capability.makeModule(
 
           for (const space of spaces) {
             const { added, removed } = changesBySpace.get(space.id) ?? { added: [], removed: [] };
+            const attended = attendedBySpace.get(space.id) ?? [];
             void space
               .postMessage('viewing', {
                 identityKey: identity.identityKey ?? '',
-                attended: attendedBySpace.get(space.id) ?? [],
+                attended,
                 added,
                 removed,
+                locations: getLocations(attended),
               })
               // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
               .catch((err) => {
@@ -240,7 +259,25 @@ export default Capability.makeModule(
       send();
       // Send at interval to allow peers to expire entries if they become disconnected.
       const interval = setInterval(() => send(), PRESENCE_BROADCAST_INTERVAL);
-      broadcastCleanup = () => clearInterval(interval);
+
+      // Moving or scrolling in an attended object re-sends, at most once per interval.
+      let locationTimer: ReturnType<typeof setTimeout> | undefined;
+      const scheduleSend = () => {
+        locationTimer ??= setTimeout(() => {
+          locationTimer = undefined;
+          send();
+        }, LOCATION_BROADCAST_INTERVAL);
+      };
+      const locationSubscriptions = [...current].flatMap((path) => {
+        const key = getPresenceKeyFromPath(path);
+        return key ? [viewState.subscribe(ViewLocation.aspect, key, scheduleSend)] : [];
+      });
+
+      broadcastCleanup = () => {
+        clearInterval(interval);
+        clearTimeout(locationTimer);
+        locationSubscriptions.forEach((unsubscribe) => unsubscribe());
+      };
     };
 
     // Subscribe to layout changes for broadcast.
@@ -260,40 +297,16 @@ export default Capability.makeModule(
           space.listen('viewing', (message) => {
             // The gossip payload travels as a `google.protobuf.Struct` packed in an `Any`, so it
             // arrives as opaque JSON that has to be narrowed rather than destructured as typed.
-            const payload = unpackJson(message.payload) ?? {};
-            const { added, removed } = payload;
-            const attended = new Set(Array.isArray(payload.attended) ? payload.attended : []);
-
-            const identityKey =
-              typeof payload.identityKey === 'string' ? PublicKey.safeFrom(payload.identityKey) : undefined;
+            const viewing = parseViewingMessage(unpackJson(message.payload) ?? {});
+            const identityKey = viewing && PublicKey.safeFrom(viewing.identityKey);
             const currentIdentity = Option.getOrUndefined(haloIdentity.getSnapshot());
-            if (
-              identityKey &&
-              currentIdentity?.identityKey !== identityKey.toHex() &&
-              Array.isArray(added) &&
-              Array.isArray(removed)
-            ) {
+            if (viewing && identityKey && currentIdentity?.identityKey !== identityKey.toHex()) {
               const peer = identityKey.toHex();
               const lastSeen = Date.now();
-              registry.update(ephemeralAtom, (ephemeral) => {
-                const viewersByObject = { ...ephemeral.viewersByObject };
-                for (const key of added) {
-                  if (typeof key === 'string') {
-                    viewersByObject[key] = {
-                      ...viewersByObject[key],
-                      [peer]: { lastSeen, currentlyAttended: attended.has(key) },
-                    };
-                  }
-                }
-                for (const key of removed) {
-                  if (typeof key === 'string' && viewersByObject[key]?.[peer]) {
-                    const { [peer]: _, ...rest } = viewersByObject[key];
-                    viewersByObject[key] = rest;
-                  }
-                }
-
-                return { ...ephemeral, viewersByObject };
-              });
+              registry.update(ephemeralAtom, (ephemeral) => ({
+                ...ephemeral,
+                viewersByObject: applyViewingMessage(ephemeral.viewersByObject, peer, viewing, lastSeen),
+              }));
             }
           }),
         );

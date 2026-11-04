@@ -27,6 +27,7 @@ import {
   InlineSyncStatus,
   JoinDialog,
   ObjectFormDialog,
+  PeopleCompanion,
   RecordArticle,
   RelatedArticle,
   RenamePopover,
@@ -49,6 +50,7 @@ import { SpaceNamespace } from '../namespace.ts';
 import { getTypeInputOptions } from '../types/SpaceForm.ts';
 import { HueAnnotationId, IconAnnotationId, SPACE_HOME_NODE_TYPE } from '../types/SpaceSchema.ts';
 import { SpaceHomeContent } from '../types/SpaceSurface.ts';
+import { PEOPLE_COMPANION_ID } from '../util/index.ts';
 import { makeCreateInvitationUrl } from './helpers.ts';
 import { HueField, IconField, TypenameField } from './SpaceFormFields.tsx';
 import {
@@ -252,6 +254,11 @@ export default Capability.makeModule(
         filter: AppSurface.subject(AppSurface.NavtreeItemEnd, isSpace),
         component: InlineSyncStatus,
         props: ({ data: { subject, open } }) => ({ space: subject, open }),
+      }),
+      Surface.create({
+        id: 'peopleCompanion',
+        filter: Surface.makeFilter(AppSurface.deckCompanion(PEOPLE_COMPANION_ID)),
+        component: PeopleCompanion,
       }),
       Surface.create({
         id: 'navbarPresence',

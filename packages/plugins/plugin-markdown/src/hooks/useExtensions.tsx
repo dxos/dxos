@@ -12,7 +12,7 @@ import { Doc } from '@dxos/echo-doc';
 import { type Identity } from '@dxos/halo';
 import { EID } from '@dxos/keys';
 import { getSpace } from '@dxos/react-client/echo';
-import { Selection, ViewState } from '@dxos/react-ui-attention/types';
+import { Selection, ViewLocation, ViewState } from '@dxos/react-ui-attention/types';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import { Text } from '@dxos/schema';
 import { Domino } from '@dxos/ui';
@@ -29,6 +29,7 @@ import {
   createDataExtensions,
   decorateMarkdown,
   documentId,
+  editorLocation,
   folding,
   formattingKeymap,
   listener,
@@ -196,6 +197,7 @@ const createBaseExtensions = ({
 }: Omit<ExtensionsOptions, 'content'> & { space?: Space }): Extension[] => {
   const extensions: Extension[] = [
     viewState && selectionChange(viewState),
+    viewState && editorLocation((id, location) => viewState.set(ViewLocation.aspect, id, location)),
     settings?.editorInputMode && InputModeExtensions[settings.editorInputMode],
     settings?.folding && !compact && platform !== 'mobile' && folding(),
   ].filter(isTruthy);

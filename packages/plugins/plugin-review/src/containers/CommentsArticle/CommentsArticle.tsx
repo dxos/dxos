@@ -185,6 +185,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   const { set: setCommentsView } = useViewStateActions(commentsViewAspect, subjectId);
 
   const commentConfigs = Hooks.useCapabilities(AppCapabilities.CommentConfig);
+  const locators = Hooks.useCapabilities(AppCapabilities.Locator);
   // An object whose comments are not anchored to a span (a drawing) has no text to select, so its empty state points
   // only to the toolbar's whole-object comment.
   const unanchored = findCommentConfig(commentConfigs, subject)?.comments === 'unanchored';
@@ -303,16 +304,16 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
       // This is what tells the editor which thread is current, so skipping it leaves the previous
       // comment highlighted while the app selection moves on.
       const typename = Obj.getTypename(subject);
-      const commentConfig = commentConfigs.find(({ id }) => id === typename);
-      if (commentConfig?.scrollToAnchor) {
-        void invokePromise(commentConfig.scrollToAnchor, {
+      const locator = locators.find(({ id }) => id === typename);
+      if (locator) {
+        void invokePromise(locator.reveal, {
           subject: attendableId ?? subjectId,
-          cursor: anchor.anchor,
-          id: Ref.make(thread),
+          anchor: anchor.anchor,
+          thread: Ref.make(thread),
         });
       }
     },
-    [handleAttend, invokePromise, attendableId, subjectId, subject, commentConfigs],
+    [handleAttend, invokePromise, attendableId, subjectId, subject, locators],
   );
 
   const handleComment = useCallback(
@@ -450,8 +451,8 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
       if (!mainText) {
         return;
       }
-      const cursor = toCursorRange(Doc.createAccessor(mainText, ['content']), group.from, group.to);
-      void invokePromise(MarkdownOperation.ScrollToAnchor, { subject: attendableId ?? subjectId, cursor });
+      const anchor = toCursorRange(Doc.createAccessor(mainText, ['content']), group.from, group.to);
+      void invokePromise(MarkdownOperation.ScrollToAnchor, { subject: attendableId ?? subjectId, anchor });
     },
     [mainText, invokePromise, attendableId, subjectId, setReviewView],
   );

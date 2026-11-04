@@ -28,6 +28,17 @@ export const SPACE_TYPE = 'org.dxos.type.space';
  */
 export const SPACE_HOME_NODE_TYPE = 'org.dxos.space.home';
 
+/** Type of a peer's hidden graph node; plugins contribute actions on a peer (jump to them, go to their object) here. */
+export const PEER_NODE_TYPE = 'org.dxos.space.peer';
+
+/** Data of a {@link PEER_NODE_TYPE} node. */
+export const PeerNodeData = Schema.Struct({
+  spaceId: Schema.String,
+  identityKey: Schema.String,
+});
+
+export type PeerNodeData = Schema.Schema.Type<typeof PeerNodeData>;
+
 /** Type for the per-space virtual "Settings" section. Single source of truth is `AppNodeMatcher.SETTINGS_SECTION_TYPE`. */
 export const SETTINGS_SECTION_TYPE = AppNodeMatcher.SETTINGS_SECTION_TYPE;
 
@@ -83,6 +94,14 @@ export type SpacePluginOptions = {
 export type ObjectViewerProps = {
   lastSeen: number;
   currentlyAttended: boolean;
+  /** Where the peer is in the object, while they attend it; see `ViewLocation` in react-ui-attention. */
+  location?: PeerLocation;
+};
+
+/** A peer's caret and top of view in an object, as anchors in the object type's own format. */
+export type PeerLocation = {
+  selection?: string;
+  viewport?: string;
 };
 
 export type ObjectId = string;

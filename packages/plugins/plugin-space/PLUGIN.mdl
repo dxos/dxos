@@ -540,6 +540,12 @@ feat F-8: Presence and Sync Status
   req F-8.5: SpacePresence shows peers in an order that is the same on every client for a given set of peers and changes only when the set changes.
   req F-8.6: A viewer whose heartbeat has lapsed for two broadcast intervals drops out of both presence indicators.
   req F-8.7: A space's navtree row counts the peers viewing the space itself, alongside its sync status.
+  req F-8.8: Each peer in a space has a hidden app-graph node whose actions act on that peer: Jump when the object the peer views is open in the deck, Go to otherwise.
+  req F-8.9: Jump reveals the peer's selection, or the top of their viewport when they have none, moving the caret and taking focus.
+  req F-8.10: Clicking an avatar in SpacePresence opens the list of the object's viewers with that peer's row highlighted; the list ends with a button that opens the People companion.
+  req F-8.11: The People deck companion lists every online peer in the space, grouped by the object they view, with the same actions.
+  req F-8.12: A peer on several devices shows as one row, located by the device seen most recently.
+  req F-8.13: The viewing message carries each attended object's location; it is sent with the heartbeat and at most once per second when a location changes.
 ```
 
 ## Acceptance
@@ -693,6 +699,32 @@ test QA-2: Register a schema and add a typed relation
       expect: the space still opens cleanly and the registered schemas remain listed
 ```
 
+```mdl
+test QA-3: Act on a peer from their avatar
+  desc: A peer's avatar opens the object's viewers, Jump reveals what they are looking at, and the People companion lists everyone in the space.
+  actors: human
+  covers: [F-8.8, F-8.9, F-8.10, F-8.11]
+  status: unverified
+  automated:
+    - composer-e2e:collaboration.spec.ts#Collaboration tests › a peer's avatar opens the viewers list and jumps to their selection
+  given:
+    - host: a booted app with a space containing one document, shared with a guest
+    - guest: a second browser profile with its own identity, a member of that space
+  steps:
+    - name: Both open the document
+      do: Open the same document on both peers, and type a line on the guest.
+      expect: the host's plank header shows the guest's avatar
+    - name: Open the viewers list
+      do: On the host, click the guest's avatar.
+      expect: a list of the document's viewers opens with the guest's row highlighted, and a Jump action on it
+    - name: Jump to the guest
+      do: Click Jump on the guest's row.
+      expect: the host's editor takes focus with its caret at the guest's selection
+    - name: See everyone
+      do: Open the viewers list again and click "See everyone in this space".
+      expect: the People companion opens in the complementary sidebar and lists the guest under the document
+```
+
 ---
 
 ## Changelog
@@ -762,6 +794,56 @@ decision D-7: When the deck switches workspace, the planks that left `active` ar
   affects: [F-8.3]
   why: The new workspace's layout lists none of the old planks, so peers in the old space kept the viewer until its heartbeat lapsed.
   rejected: Treat an empty heartbeat as clearing the peer; heartbeats are not complete updates, so an empty one cannot be told from a partial one.
+```
+
+```mdl
+decision D-8: Peers get Go to and Jump actions in the app graph; Jump moves the caret and takes focus, as revealing a comment does.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-8.8, F-8.9]
+```
+
+```mdl
+decision D-9: Clicking an avatar opens the member list with its row highlighted. The list shows only that object's viewers and ends with a "See everyone in this space" button that opens a People companion in the complementary sidebar listing everyone in the space.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-8.10, F-8.11, SpacePresence]
+```
+
+```mdl
+decision D-10: A peer on several devices shows as one row, using the latest device. The navtree presence indicators stay as they are.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-8.12, F-8.7]
+```
+
+```mdl
+decision D-11: Each peer is a hidden graph node under its space, `peer-<identityKey>`, so actions can depend on what the peer views. Fills in [D-8].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.8]
+  why: Actions differ per object type and per whether the object is open, so a fixed per-member menu cannot express them.
+  rejected: One static action set per member, chosen in the component.
+```
+
+```mdl
+decision D-12: Jump is offered only when the peer's object is open in the deck and its type contributes a `Locator`; Go to only when it is not open. Fills in [D-8].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.8, F-8.9]
+  why: Offering both on an open object duplicates one outcome; Go to cannot reveal yet because the target opens after the action returns.
+```
+
+```mdl
+decision D-13: Locations ride the existing `viewing` message, sent with the heartbeat and throttled to one per second on change. Fills in [D-8].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.13]
+  why: Jump needs only a recent location; the faster rate belongs to following, which raises it only while someone follows.
+  rejected: A separate location message; two messages per peer would need their own expiry.
 ```
 
 ## Appendix: Extension Definitions

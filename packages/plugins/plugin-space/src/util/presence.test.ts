@@ -7,7 +7,13 @@ import { describe, test } from 'vitest';
 import { Key } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
-import { getPresenceKeyFromPath, groupPresenceChangesBySpace, groupPresenceKeysBySpace } from './presence.ts';
+import {
+  applyViewingMessage,
+  getPresenceKeyFromPath,
+  groupPresenceChangesBySpace,
+  groupPresenceKeysBySpace,
+  parseViewingMessage,
+} from './presence.ts';
 
 const spaceId = Key.SpaceId.random();
 const otherSpaceId = Key.SpaceId.random();
@@ -61,5 +67,51 @@ describe('groupPresenceChangesBySpace', () => {
         removed: [EID.make({ spaceId, entityId: childId })],
       },
     });
+  });
+});
+
+describe('parseViewingMessage', () => {
+  test('keeps well-formed locations and drops the rest', ({ expect }) => {
+    const key = EID.make({ spaceId, entityId: objectId });
+    const other = EID.make({ spaceId, entityId: childId });
+    expect(
+      parseViewingMessage({
+        identityKey: 'peer',
+        added: [key, 7],
+        removed: [],
+        attended: [key],
+        locations: { [key]: { selection: 'a:b', viewport: 3 }, [other]: {} },
+      }),
+    ).toEqual({
+      identityKey: 'peer',
+      added: [key],
+      removed: [],
+      attended: [key],
+      locations: { [key]: { selection: 'a:b' } },
+    });
+  });
+
+  test('rejects a message without an identity or deltas', ({ expect }) => {
+    expect(parseViewingMessage({ added: [], removed: [] })).toBeUndefined();
+    expect(parseViewingMessage({ identityKey: 'peer' })).toBeUndefined();
+  });
+});
+
+describe('applyViewingMessage', () => {
+  const key = EID.make({ spaceId, entityId: objectId });
+  const message = { identityKey: 'peer', added: [key], removed: [], attended: [key], locations: {} };
+
+  test('records the location of an attended object and clears it once the peer moves on', ({ expect }) => {
+    const located = applyViewingMessage({}, 'peer', { ...message, locations: { [key]: { selection: 'a:a' } } }, 1);
+    expect(located[key].peer).toEqual({ lastSeen: 1, currentlyAttended: true, location: { selection: 'a:a' } });
+    expect(applyViewingMessage(located, 'peer', { ...message, attended: [] }, 2)[key].peer).toEqual({
+      lastSeen: 2,
+      currentlyAttended: false,
+    });
+  });
+
+  test('removes the peer from objects it closed', ({ expect }) => {
+    const viewers = applyViewingMessage({}, 'peer', message, 1);
+    expect(applyViewingMessage(viewers, 'peer', { ...message, added: [], removed: [key] }, 2)[key]).toEqual({});
   });
 });

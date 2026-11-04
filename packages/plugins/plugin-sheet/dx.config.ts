@@ -62,6 +62,9 @@ const config: Plugin.PluginConfig = Plugin.config({
     AppCapability.exporter(() => import('./src/capabilities/exporter.ts', { with: { type: 'module-url' } }), {
       activatesOn: SheetEvents.Start,
     }),
+    AppCapability.locator(() => import('./src/capabilities/locator.ts', { with: { type: 'module-url' } }), {
+      activatesOn: SheetEvents.Start,
+    }),
     AppCapability.commentConfig(
       () => import('./src/capabilities/comment-config.ts', { with: { type: 'module-url' } }),
       {
