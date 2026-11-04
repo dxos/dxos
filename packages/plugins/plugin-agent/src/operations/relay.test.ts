@@ -8,6 +8,7 @@ import * as Layer from 'effect/Layer';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Capability from '@dxos/app-framework/Capability';
+import { TrajectoryStore } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
@@ -96,11 +97,7 @@ const resolve = (name: string, handle?: string) =>
 const hoursUntil = (iso: string) => (Date.parse(iso) - Date.now()) / 3_600_000;
 
 const chatMessages = (chat: Chat.Chat) =>
-  Effect.gen(function* () {
-    const feed = yield* Database.load(chat.feed);
-    const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
-    return messages.filter((message) => Obj.instanceOf(Message.Message, message));
-  });
+  Database.load(chat.feed).pipe(Effect.flatMap((feed) => TrajectoryStore.messages(feed)));
 
 /** A channel thread's chat, named as EDGE names the conversation an agent turn runs in. */
 const conversationIn = (agentRef: Ref.Ref<Agent.Agent>, channel: Channel.Channel, thread: string) =>
