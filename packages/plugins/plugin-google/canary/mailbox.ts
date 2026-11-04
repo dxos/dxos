@@ -5,7 +5,9 @@
 import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as FetchHttpClient from 'effect/http/FetchHttpClient';
-import type * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
+import * as HttpClientResponse from 'effect/http/HttpClientResponse';
 import * as Layer from 'effect/Layer';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
@@ -21,7 +23,10 @@ import { GoogleApiError } from '../src/errors.ts';
 import { LIVE_GMAIL_ACCOUNT } from '../src/testing/live-credentials.ts';
 
 /** A failure of the canary's own making: bad settings, a wrong account, a space it cannot read. */
-export class CanaryError extends Data.TaggedError('CanaryError')<{ readonly message: string }> {}
+export class CanaryError extends Data.TaggedError('CanaryError')<{
+  readonly message: string;
+  readonly cause?: unknown;
+}> {}
 
 /** The test account's own grant (`gmail.modify`); the canary runs outside EDGE, so not the kms token. */
 export type GmailCredentials = {
@@ -30,16 +35,18 @@ export type GmailCredentials = {
   readonly refreshToken: string;
 };
 
-/** The only mailbox the canary may write to. */
-export const CANARY_ACCOUNT = LIVE_GMAIL_ACCOUNT;
-
 /** The only label the canary puts on the test account's mail: every seeded copy carries it. */
 export const SEED_LABEL = 'enron-seed';
 
-export const credentialsFromEnv = (env = process.env): GmailCredentials | undefined =>
-  env.GMAIL_CLIENT_ID && env.GMAIL_CLIENT_SECRET && env.GMAIL_REFRESH_TOKEN
-    ? { clientId: env.GMAIL_CLIENT_ID, clientSecret: env.GMAIL_CLIENT_SECRET, refreshToken: env.GMAIL_REFRESH_TOKEN }
-    : undefined;
+/** The grant from `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET` and `GMAIL_REFRESH_TOKEN`, when all three are set. */
+export const credentialsFromEnv = (): GmailCredentials | undefined => {
+  const {
+    GMAIL_CLIENT_ID: clientId,
+    GMAIL_CLIENT_SECRET: clientSecret,
+    GMAIL_REFRESH_TOKEN: refreshToken,
+  } = process.env;
+  return clientId && clientSecret && refreshToken ? { clientId, clientSecret, refreshToken } : undefined;
+};
 
 export type MailboxError = GoogleMailApiError | CanaryError;
 
@@ -50,8 +57,8 @@ const API = 'https://gmail.googleapis.com/gmail/v1/users/me';
 const Ref = Schema.Struct({ id: Schema.String });
 
 /**
- * The test account's mailbox over plugin-google's Gmail client. It adds only what the canary needs:
- * RFC 5322 text in and out, labels by name, searches paged to the end, and retries on Gmail's quota.
+ * The test account's mailbox over plugin-google's Gmail client, adding what the canary needs: RFC 5322 text in,
+ * labels by name, searches paged to the end, and retries on Gmail's quota.
  */
 export class CanaryMailbox {
   /** Signs in and fails unless the grant belongs to the canary account, so a mis-pointed grant never writes. */
@@ -64,8 +71,8 @@ export class CanaryMailbox {
       makeGoogleApiRequest(`${API}${path}`, init).pipe(Effect.provide(context)),
     );
     const { emailAddress } = yield* retrying(api.getProfile('me'));
-    if (emailAddress?.toLowerCase() !== CANARY_ACCOUNT) {
-      return yield* new CanaryError({ message: `the grant belongs to ${emailAddress}, not ${CANARY_ACCOUNT}` });
+    if (emailAddress?.toLowerCase() !== LIVE_GMAIL_ACCOUNT) {
+      return yield* new CanaryError({ message: `the grant belongs to ${emailAddress}, not ${LIVE_GMAIL_ACCOUNT}` });
     }
     return mailbox;
   });
@@ -93,23 +100,28 @@ export class CanaryMailbox {
   }
 
   /** The named headers, keyed by the names asked for: header names are case-insensitive. */
-  getHeaders(id: string, names: readonly string[]) {
+  getHeaders(id: string, names: readonly string[]): Effect.Effect<Record<string, string>, MailboxError> {
     return retrying(this.#api.getMessage('me', id)).pipe(
-      Effect.map((message) => ({
-        internalDate: Number(message.internalDate),
-        headers: Object.fromEntries(
+      Effect.map((message) =>
+        Object.fromEntries(
           names.flatMap((name) => {
             const header = message.payload.headers.find((header) => header.name.toLowerCase() === name.toLowerCase());
             return header ? [[name, header.value]] : [];
           }),
         ),
-      })),
+      ),
     );
   }
 
   /** Puts a message in the mailbox as if delivered now, without sending it. */
   insert(message: string, labelIds: readonly string[]): Effect.Effect<string, MailboxError> {
-    return this.#write('/messages?internalDateSource=receivedTime', message, labelIds);
+    const body = JSON.stringify({ raw: encode(message), labelIds });
+    return this.#call('/messages?internalDateSource=receivedTime', { method: 'POST', body });
+  }
+
+  /** Moves a message to the trash, which the sync's `'all'` scope leaves out and Gmail empties after 30 days. */
+  trash(id: string): Effect.Effect<void, MailboxError> {
+    return retrying(this.#api.trashMessage('me', id)).pipe(Effect.asVoid);
   }
 
   /** The id of a user label, created when it does not exist yet. */
@@ -117,18 +129,15 @@ export class CanaryMailbox {
     return Effect.gen({ self: this }, function* () {
       const { labels } = yield* retrying(this.#api.listLabels('me'));
       const existing = labels.find((label) => label.name === name);
-      return existing?.id ?? (yield* this.#call(Ref, '/labels', { method: 'POST', body: JSON.stringify({ name }) })).id;
+      return existing?.id ?? (yield* this.#call('/labels', { method: 'POST', body: JSON.stringify({ name }) }));
     });
   }
 
-  #write(path: string, message: string, labelIds: readonly string[]) {
-    const body = JSON.stringify({ raw: encode(message), labelIds });
-    return this.#call(Ref, path, { method: 'POST', body }).pipe(Effect.map(({ id }) => id));
-  }
-
-  #call<S extends Schema.Top>(schema: S, path: string, init?: { method?: string; body?: string }) {
+  /** A write answered with the new object's id. */
+  #call(path: string, init: { method: string; body: string }): Effect.Effect<string, MailboxError> {
     return retrying(this.#request(path, init)).pipe(
-      Effect.flatMap((body) => Schema.decodeUnknownEffect(schema)(body)),
+      Effect.flatMap((body) => Schema.decodeUnknownEffect(Ref)(body)),
+      Effect.map(({ id }) => id),
       Effect.mapError((error) =>
         Schema.isSchemaError(error)
           ? new CanaryError({ message: `unexpected Gmail response: ${error.message}` })
@@ -158,27 +167,33 @@ const requirements = (token: string): Layer.Layer<Requirements> =>
     FetchHttpClient.layer,
   );
 
+const TokenResponse = Schema.Struct({ access_token: Schema.String });
+
 /** Mints an access token, good for an hour; a dead grant fails with Google's `invalid_grant`, reported as AUTH. */
-export const mintAccessToken = ({ clientId, clientSecret, refreshToken }: GmailCredentials) =>
-  Effect.tryPromise({
-    try: async () => {
-      const response = await fetch('https://oauth2.googleapis.com/token', {
-        method: 'POST',
-        body: new URLSearchParams({
+export const mintAccessToken = ({
+  clientId,
+  clientSecret,
+  refreshToken,
+}: GmailCredentials): Effect.Effect<string, CanaryError> =>
+  Effect.gen(function* () {
+    const response = yield* HttpClient.execute(
+      HttpClientRequest.post('https://oauth2.googleapis.com/token').pipe(
+        HttpClientRequest.bodyUrlParams({
           client_id: clientId,
           client_secret: clientSecret,
           refresh_token: refreshToken,
           grant_type: 'refresh_token',
         }),
-      });
-      const text = await response.text();
-      if (!response.ok) {
-        throw new Error(`${response.status}: ${text.slice(0, 300)}`);
-      }
-      return Schema.decodeUnknownSync(Schema.Struct({ access_token: Schema.String }))(JSON.parse(text)).access_token;
-    },
-    catch: (cause) => new CanaryError({ message: `cannot mint a Gmail access token: ${String(cause)}` }),
-  });
+      ),
+    );
+    if (response.status !== 200) {
+      return yield* new CanaryError({ message: `${response.status}: ${(yield* response.text).slice(0, 300)}` });
+    }
+    return (yield* HttpClientResponse.schemaBodyJson(TokenResponse)(response)).access_token;
+  }).pipe(
+    Effect.provide(FetchHttpClient.layer),
+    Effect.mapError((cause) => new CanaryError({ message: `cannot mint a Gmail access token: ${cause.message}` })),
+  );
 
 // The pool is read as Latin-1, which round-trips every byte, so an 8-bit body reaches Gmail unchanged.
 const encode = (message: string): string => Buffer.from(message, 'latin1').toString('base64url');

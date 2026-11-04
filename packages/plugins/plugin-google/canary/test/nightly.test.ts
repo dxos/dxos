@@ -8,6 +8,7 @@ import * as Exit from 'effect/Exit';
 import { describe, test } from 'vitest';
 
 import * as EffectEx from '@dxos/effect/EffectEx';
+import { SpaceId } from '@dxos/keys';
 
 import { Nightly, type NightlyMailbox, makeSeedCopy, parsePool } from '../nightly.ts';
 
@@ -25,12 +26,17 @@ const POOL_MESSAGE = [
   'Date: this line is body text, not a header.',
 ].join('\r\n');
 
-/** A mailbox whose newest earlier copy names `next` as the cursor (none when unset), recording each insert. */
-const fakeMailbox = ({ next }: { next?: string } = {}) => {
+/**
+ * A mailbox whose newest earlier copy names `next` as the cursor (none when unset) and that holds `expired` copies past
+ * retention, recording each insert and trash.
+ */
+const fakeMailbox = ({ next, expired = [] }: { next?: string; expired?: string[] } = {}) => {
   const inserted: string[] = [];
+  const trashed: string[] = [];
   const mailbox: NightlyMailbox = {
     ensureLabel: (name) => Effect.succeed(`label-${name}`),
-    listIds: () => Effect.succeed(next === undefined ? [] : ['earlier-copy']),
+    listIds: (query) =>
+      Effect.succeed(query.includes('older_than:') ? expired : next === undefined ? [] : ['earlier-copy']),
     insert: (message, labels) =>
       Effect.sync(() => {
         const header = (name: string) => message.match(new RegExp(`^${name}: (.*)$`, 'm'))?.[1];
@@ -38,21 +44,27 @@ const fakeMailbox = ({ next }: { next?: string } = {}) => {
         return `copy-${inserted.length}`;
       }),
     getHeaders: (id, names) =>
-      Effect.succeed({
-        internalDate: 0,
-        headers:
-          id === 'earlier-copy'
-            ? Object.fromEntries(names.map((name) => [name, next ?? '']))
-            : { Subject: 'Re: forecast', From: 'Phillip Allen <phillip.allen@enron.com>' },
-      }),
+      Effect.succeed(
+        id === 'earlier-copy'
+          ? Object.fromEntries(names.map((name) => [name, next ?? '']))
+          : { Subject: 'Re: forecast', From: 'Phillip Allen <phillip.allen@enron.com>' },
+      ),
+    trash: (id) => Effect.sync(() => void trashed.push(id)),
   };
-  return { mailbox, inserted };
+  return { mailbox, inserted, trashed };
 };
 
 const POOL = Array.from({ length: 5 }, () => POOL_MESSAGE);
+const seed = (count: number) => ({ pool: POOL, count, retainDays: 30 });
+const waits = {
+  syncTimeout: Duration.millis(50),
+  pollInterval: Duration.millis(10),
+  window: Duration.hours(24),
+  hungAfter: Duration.minutes(10),
+};
 
 const emptySpace = {
-  spaceId: 'space',
+  spaceId: SpaceId.random(),
   snapshot: () => Effect.succeed({ invocations: [], messages: [], triggers: [] }),
   runSync: () => Effect.void,
 };
@@ -71,9 +83,10 @@ describe('makeSeedCopy', () => {
 
 describe('Nightly', () => {
   test('the first run seeds from the start of the pool', async ({ expect }) => {
-    const { mailbox, inserted } = fakeMailbox();
-    const { start, seeded } = await EffectEx.runPromise(new Nightly(mailbox, emptySpace).seed(POOL, 2, NOW));
+    const { mailbox, inserted, trashed } = fakeMailbox();
+    const { start, seeded } = await EffectEx.runPromise(new Nightly(mailbox, emptySpace).seed(seed(2), NOW));
     expect(start).toBe(0);
+    expect(trashed).toEqual([]);
     expect(inserted.sort()).toEqual(['0>2 INBOX,label-enron-seed', '1>2 INBOX,label-enron-seed']);
     expect(seeded).toEqual([
       expect.objectContaining({ subject: 'Re: forecast', sender: 'phillip.allen@enron.com' }),
@@ -83,15 +96,22 @@ describe('Nightly', () => {
 
   test('a later run continues from the cursor and wraps at the end of the pool', async ({ expect }) => {
     const { mailbox, inserted } = fakeMailbox({ next: '4' });
-    const { start } = await EffectEx.runPromise(new Nightly(mailbox, emptySpace).seed(POOL, 3, NOW));
+    const { start } = await EffectEx.runPromise(new Nightly(mailbox, emptySpace).seed(seed(3), NOW));
     expect(start).toBe(4);
     expect(inserted.map((call) => call.split(' ')[0]).sort()).toEqual(['0>2', '1>2', '4>2']);
+  });
+
+  test('trashes the copies past retention before seeding', async ({ expect }) => {
+    const { mailbox, inserted, trashed } = fakeMailbox({ expired: ['old-1', 'old-2'] });
+    await EffectEx.runPromise(new Nightly(mailbox, emptySpace).seed(seed(1), NOW));
+    expect(trashed.sort()).toEqual(['old-1', 'old-2']);
+    expect(inserted).toHaveLength(1);
   });
 
   test('a cursor the pool cannot hold restarts at 0', async ({ expect }) => {
     for (const next of ['9', 'junk', '-1']) {
       const { start } = await EffectEx.runPromise(
-        new Nightly(fakeMailbox({ next }).mailbox, emptySpace).seed(POOL, 1, NOW),
+        new Nightly(fakeMailbox({ next }).mailbox, emptySpace).seed(seed(1), NOW),
       );
       expect(start).toBe(0);
     }
@@ -100,7 +120,7 @@ describe('Nightly', () => {
   test('refuses a bad count or a short pool before writing anything', async ({ expect }) => {
     for (const count of [0, Number.NaN, 6]) {
       const { mailbox, inserted } = fakeMailbox();
-      const exit = await EffectEx.runPromise(new Nightly(mailbox, emptySpace).seed(POOL, count, NOW).pipe(Effect.exit));
+      const exit = await EffectEx.runPromise(new Nightly(mailbox, emptySpace).seed(seed(count), NOW).pipe(Effect.exit));
       expect(Exit.isFailure(exit)).toBe(true);
       expect(inserted).toEqual([]);
     }
@@ -108,12 +128,7 @@ describe('Nightly', () => {
 
   test('reports a copy still missing when the wait ends, however recently it was seeded', async ({ expect }) => {
     const report = await EffectEx.runPromise(
-      new Nightly(fakeMailbox().mailbox, emptySpace).run({
-        seed: { pool: POOL, count: 1 },
-        syncTimeout: Duration.millis(50),
-        pollInterval: Duration.millis(10),
-        window: Duration.hours(24),
-      }),
+      new Nightly(fakeMailbox().mailbox, emptySpace).run({ seed: seed(1), ...waits }),
     );
     expect(report.checks.find((check) => check.id === 'S1')?.failures).toEqual([
       expect.objectContaining({ class: 'OFF', message: 'Gmail message not synced' }),
@@ -122,13 +137,7 @@ describe('Nightly', () => {
   });
 
   test('without seeding it checks only the sync runs', async ({ expect }) => {
-    const report = await EffectEx.runPromise(
-      new Nightly(fakeMailbox().mailbox, emptySpace).run({
-        syncTimeout: Duration.millis(50),
-        pollInterval: Duration.millis(10),
-        window: Duration.hours(24),
-      }),
-    );
+    const report = await EffectEx.runPromise(new Nightly(fakeMailbox().mailbox, emptySpace).run(waits));
     expect(report.checks.map((check) => check.id)).toEqual(['S2']);
     expect(report.seed).toBeUndefined();
   });

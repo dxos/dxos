@@ -27,8 +27,8 @@ jobs:
   canary:
     if: github.event_name != 'pull_request' || github.event.label.name == 'mail-canary'
     runs-on: ubuntu-24.04
-    # Room for the waits `canary.yml` sets for stages 2 and 3.
-    timeout-minutes: 120
+    # A backstop: setup plus the `mail-canary` moon task's timeout, which sits above `runTimeoutMinutes` in canary.yml.
+    timeout-minutes: 150
     # Two runs at once would read the same cursor and judge each other's copies. Set on the job, so a PR labelled
     # with anything else never queues behind a run.
     concurrency:
@@ -53,9 +53,9 @@ jobs:
         run: |
           sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends age
           KEY_FILE="$RUNNER_TEMP/fixtures.key"
+          trap 'rm -f "$KEY_FILE"' EXIT
           (umask 077 && printf '%s\n' "$AGE_KEY" > "$KEY_FILE")
           DX_FIXTURES_AGE_KEY="$KEY_FILE" node tools/fixtures/bin/fixtures.mjs pull enron-pool --scope agents
-          rm -f "$KEY_FILE"
 
       # Settings live in packages/plugins/plugin-google/canary/canary.yml; only credentials come from here.
       - name: Run canary

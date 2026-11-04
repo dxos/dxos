@@ -11,8 +11,8 @@ import { GoogleOperation } from '#types';
 
 type InvocationEnd = Trace.PayloadType<typeof Trace.OperationEnd> & { readonly timestamp: number };
 
-/** One mail sync invocation: the start and end events sharing a `pid`; `runId` groups `runAgain` continuations. */
-export type Invocation = { pid: string; runId: string; startedAt?: number; end?: InvocationEnd };
+/** One mail sync invocation: the start and end events sharing a `pid`. */
+export type Invocation = { pid: string; startedAt?: number; end?: InvocationEnd };
 
 /** What the canary reads from the space in one pass. */
 export type SpaceSnapshot = {
@@ -42,15 +42,14 @@ export type FailureClass =
 export type Failure = { class: FailureClass; message: string; pid?: string; gmailId?: string };
 export type CheckResult = { id: string; name: string; ok: boolean; failures: Failure[] };
 
+/** A stage's checks and, when it read the space's sync runs, their counts. */
 export type Report = {
-  readonly ok: boolean;
   readonly checks: CheckResult[];
-  readonly runs: RunStats;
+  readonly runs?: RunStats;
 };
 
-const MINUTE = 60_000;
-// An invocation may stay open this long before it counts as killed.
-const CLOSURE_GRACE_MS = 10 * MINUTE;
+/** The sync runs a check judged: since `since`, at `now`, with `hungAfter` ms the longest one may stay open. */
+export type RunWindow = { readonly now: number; readonly since: number; readonly hungAfter: number };
 
 const SYNC_KEY = GoogleOperation.GoogleMailSync.meta.key;
 const isOperationEnd = Schema.is(Trace.OperationEnd.schema);
@@ -64,7 +63,7 @@ export const groupInvocations = (messages: readonly Trace.MessageData[]): Invoca
       continue;
     }
     const entry = () => {
-      const invocation = invocations.get(pid) ?? { pid, runId: meta.runId ?? pid };
+      const invocation = invocations.get(pid) ?? { pid };
       invocations.set(pid, invocation);
       return invocation;
     };
@@ -98,23 +97,23 @@ export const classifyError = (error = '', errorCode = ''): FailureClass =>
   ERROR_CLASSES.find(([pattern]) => pattern.test(`${errorCode} ${error}`))?.[1] ?? 'UNKNOWN';
 
 /** Counts of the mail sync's invocations in a window. */
-export type RunStats = { runs: number; invocations: number; succeeded: number; yielded: number; failed: number };
+export type RunStats = { invocations: number; failed: number };
 
 /**
- * Every invocation since `since` ended, and none failed; a `runAgain` yield is a continuation, not a failure.
+ * Every invocation in the window ended, and none failed; a `runAgain` yield is a continuation, not a failure.
  * `troubled` says whether any run failed or hung, which names the likeliest cause of a missing message.
  */
 export const checkRuns = (
   id: string,
   invocations: readonly Invocation[],
-  { now, since }: { now: number; since: number },
+  { now, since, hungAfter }: RunWindow,
 ): { check: CheckResult; runs: RunStats; troubled: boolean } => {
   const inWindow = invocations.filter((invocation) => startOf(invocation) >= since);
   const ended = inWindow.flatMap((invocation) => (invocation.end ? [{ ...invocation, end: invocation.end }] : []));
   const isRunAgain = (end: InvocationEnd) => end.errorCode === Process.RUN_AGAIN_ERROR_CODE;
   const failed = ended.filter(({ end }) => end.outcome === 'failure' && !isRunAgain(end));
   const hung: Failure[] = inWindow
-    .filter(({ startedAt, end }) => startedAt !== undefined && !end && now - startedAt > CLOSURE_GRACE_MS)
+    .filter(({ startedAt, end }) => startedAt !== undefined && !end && now - startedAt > hungAfter)
     .map(({ pid }) => ({ class: 'KILL', pid, message: 'invocation started but never ended' }));
   const failures: Failure[] = failed.map(({ pid, end }) => ({
     class: classifyError(end.error, end.errorCode),
@@ -123,13 +122,7 @@ export const checkRuns = (
   }));
   return {
     check: check(id, 'No sync failures', [...hung, ...failures]),
-    runs: {
-      runs: new Set(inWindow.map(({ runId }) => runId)).size,
-      invocations: inWindow.length,
-      succeeded: ended.filter(({ end }) => end.outcome === 'success').length,
-      yielded: ended.filter(({ end }) => isRunAgain(end)).length,
-      failed: failed.length,
-    },
+    runs: { invocations: inWindow.length, failed: failed.length },
     troubled: failed.length > 0 || hung.length > 0,
   };
 };
@@ -171,28 +164,24 @@ export const checkMessages = (
 };
 
 /**
- * The monitor's checks over the space's sync runs since `since` and, when it seeded tonight, its copies. It runs
- * once the wait for the copies is over, so a copy still absent is missing however recently it was seeded.
- *
- * - S1, every seeded copy synced: each is in the mailbox feed once, with Gmail's subject and sender.
- * - S2, no sync failures: every invocation in the window ended, and none failed.
+ * The monitor's checks, run once the wait for the copies is over: S1, every seeded copy synced once and intact
+ * (only when it seeded); S2, no sync run in the window failed or hung.
  */
 export const runChecks = (
   snapshot: SpaceSnapshot,
   seeded: readonly ExpectedMessage[] | undefined,
-  window: { now: number; since: number },
+  window: RunWindow,
 ): Report => {
   const { check: runs, runs: stats, troubled } = checkRuns('S2', snapshot.invocations, window);
-  const checks = [
-    ...(seeded ? [checkMessages('S1', 'Every seeded message synced', snapshot, seeded, troubled)] : []),
-    runs,
-  ];
-  return { ok: checks.every(({ ok }) => ok), checks, runs: stats };
+  return {
+    checks: [...(seeded ? [checkMessages('S1', 'Every seeded message synced', snapshot, seeded, troubled)] : []), runs],
+    runs: stats,
+  };
 };
 
 const startOf = (invocation: Invocation): number => invocation.startedAt ?? invocation.end?.timestamp ?? 0;
 
-const check = (id: string, name: string, failures: Failure[]): CheckResult => ({
+export const check = (id: string, name: string, failures: Failure[]): CheckResult => ({
   id,
   name,
   ok: failures.length === 0,

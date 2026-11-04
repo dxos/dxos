@@ -72,7 +72,7 @@ describe('readSnapshot', () => {
 
     expect(snapshot.messages).toEqual([{ gmailId: 'g1', subject: 'Re: forecast', sender: 'phillip.allen@enron.com' }]);
     expect(snapshot.invocations).toEqual([
-      { pid: 'run-1', runId: 'run-1', startedAt: 10, end: { key: KEY, outcome: 'success', timestamp: 20 } },
+      { pid: 'run-1', startedAt: 10, end: { key: KEY, outcome: 'success', timestamp: 20 } },
     ]);
     expect(snapshot.triggers).toEqual([{ id: expect.any(String), enabled: true }]);
   });

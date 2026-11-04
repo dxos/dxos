@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schedule from 'effect/Schedule';
@@ -15,10 +16,11 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { ConfigService, configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Database, Feed, Filter, Obj, Order, Query } from '@dxos/echo';
-import { SpaceId } from '@dxos/keys';
+import { type SpaceId } from '@dxos/keys';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
+import { EdgeCallFailedError } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { Message } from '@dxos/types';
 
@@ -31,10 +33,17 @@ export const previewClientLayer = clientLayer.pipe(
   Layer.provide(Layer.succeed(ConfigService, configPreset({ edge: 'preview' }))),
 );
 
-/** The longest a space may take to open or a feed to pull, so a stuck replication fails the run instead of hanging it. */
-const SPACE_TIMEOUT = '5 minutes';
-/** A new device downloads the whole space before its first read; past this, replication is what is broken. */
-const SNAPSHOT_TIMEOUT = '15 minutes';
+/** How long the canary waits on EDGE before failing a step with a reason instead of hanging the run. */
+export type EdgeWaits = {
+  /** For a space to replicate and open. */
+  readonly open: Duration.Duration;
+  /** For one read of the space: documents matched with EDGE, then its feeds pulled. */
+  readonly read: Duration.Duration;
+  /** For EDGE to register a sync trigger it can run at once. */
+  readonly trigger: Duration.Duration;
+  /** For EDGE to tear a deleted space down. */
+  readonly delete: Duration.Duration;
+};
 
 /** The types the canary reads and writes; registered once per client. */
 const TYPES = [
@@ -49,10 +58,7 @@ const TYPES = [
   Trigger.Trigger,
 ];
 
-/**
- * Signs the in-process client in as the canary identity. Each sign-in admits the process as a new device:
- * no device key is kept between runs.
- */
+/** Signs the in-process client in as the canary identity; each run is a new device, keeping no device key. */
 export const recoverIdentity = Effect.fn('mail-canary.recoverIdentity')(function* (recoveryPhrase: string) {
   const client = yield* ClientService;
   yield* Effect.promise(() => client.addTypes(TYPES));
@@ -61,43 +67,41 @@ export const recoverIdentity = Effect.fn('mail-canary.recoverIdentity')(function
     // The cause can carry the phrase, so it is not passed on.
     catch: () => new CanaryError({ message: 'cannot recover the canary identity' }),
   });
-  return client;
 });
 
 /** A space of the canary identity, read through the in-process client. */
 export class CanarySpace {
   /** Waits until a space of the signed-in identity has replicated; its spaces arrive over HALO after recovery. */
-  static open = Effect.fn('mail-canary.CanarySpace.open')(function* (spaceId: string) {
-    if (!SpaceId.isValid(spaceId)) {
-      return yield* new CanaryError({ message: `not a space id: ${spaceId}` });
-    }
+  static open = Effect.fn('mail-canary.CanarySpace.open')(function* (spaceId: SpaceId, waits: EdgeWaits) {
     const client = yield* ClientService;
     const space = yield* Effect.suspend(() => {
       const space = client.spaces.get(spaceId);
       return space ? Effect.succeed(space) : new CanaryError({ message: `space ${spaceId} never appeared` });
-    }).pipe(Effect.retry({ schedule: Schedule.spaced('1 second'), times: 120 }));
-    return yield* ready(client, space);
+    }).pipe(Effect.retry({ schedule: Schedule.spaced('1 second') }), timeout(waits.open, `space ${spaceId} to appear`));
+    return yield* new CanarySpace(client, space, waits).#ready();
   });
 
   /** Creates a space owned by the signed-in identity. */
-  static create = Effect.fn('mail-canary.CanarySpace.create')(function* (name: string) {
+  static create = Effect.fn('mail-canary.CanarySpace.create')(function* (name: string, waits: EdgeWaits) {
     const client = yield* ClientService;
     const space = yield* Effect.tryPromise({
       try: () => client.spaces.create({ name }),
       catch: (cause) => new CanaryError({ message: `cannot create a space: ${String(cause)}` }),
     });
-    return yield* ready(client, space);
+    return yield* new CanarySpace(client, space, waits).#ready();
   });
 
   readonly #client: Client;
   readonly #space: Space;
+  readonly #waits: EdgeWaits;
 
-  constructor(client: Client, space: Space) {
+  constructor(client: Client, space: Space, waits: EdgeWaits) {
     this.#client = client;
     this.#space = space;
+    this.#waits = waits;
   }
 
-  get spaceId(): string {
+  get spaceId(): SpaceId {
     return this.#space.id;
   }
 
@@ -105,17 +109,32 @@ export class CanarySpace {
     return this.#space;
   }
 
+  /** Waits until the space's database is open and turns on EDGE replication, off on a newly admitted device. */
+  #ready(): Effect.Effect<CanarySpace, CanaryError> {
+    return Effect.tryPromise({
+      try: async () => {
+        await this.#space.waitUntilReady();
+        if (this.#space.internal.data.edgeReplication !== EdgeReplicationSetting.ENABLED) {
+          await this.#space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
+        }
+        return this;
+      },
+      catch: (cause) => new CanaryError({ message: `space ${this.spaceId} is not ready: ${String(cause)}` }),
+    }).pipe(timeout(this.#waits.open, `space ${this.spaceId} to open`));
+  }
+
   /** Pushes local writes to EDGE and waits until the documents match. */
   syncToEdge(): Effect.Effect<void, CanaryError> {
     return Effect.tryPromise({
-      try: () => this.#space.internal.syncToEdge({ timeout: 300_000, onProgress: () => {} }),
+      try: () =>
+        this.#space.internal.syncToEdge({ timeout: Duration.toMillis(this.#waits.read), onProgress: () => {} }),
       catch: (cause) => new CanaryError({ message: `space did not sync with EDGE: ${String(cause)}` }),
-    }).pipe(Effect.retry({ times: 2 }));
+    });
   }
 
   /**
-   * Asks EDGE to run the space's enabled remote timer triggers now rather than at their next cron tick, once EDGE
-   * has registered them. Gives up with a warning after three minutes, leaving the cron to fire.
+   * Asks EDGE to run the space's enabled remote timer triggers now rather than at their next cron tick, once EDGE has
+   * registered them; when EDGE has not by the trigger wait, the cron still fires.
    */
   runSync(): Effect.Effect<void> {
     return Effect.gen({ self: this }, function* () {
@@ -123,25 +142,28 @@ export class CanarySpace {
         .filter((trigger) => trigger.remote === true && trigger.enabled === true && trigger.spec?.kind === 'timer')
         .map((trigger) => trigger.id);
       const http = this.#client.edge.http;
-      yield* Effect.tryPromise(async () => {
-        const { triggers } = await http.getSpaceTriggers(Context.default(), this.#space.id);
-        const registered = new Set(triggers.flatMap((trigger) => (trigger.registered ? [trigger.triggerId] : [])));
-        const pending = triggerIds.filter((triggerId) => !registered.has(triggerId));
-        if (triggerIds.length === 0 || pending.length > 0) {
-          throw new Error(`sync triggers not registered on EDGE: ${pending.join(', ') || 'none in the space'}`);
-        }
-        for (const triggerId of triggerIds) {
-          await http.forceRunCronTrigger(Context.default(), this.#space.id, triggerId);
-        }
-      }).pipe(
-        Effect.retry({ schedule: Schedule.spaced('10 seconds'), times: 18 }),
-        Effect.catch((error) =>
-          Effect.sync(() =>
-            log.warn('cannot start the sync now; waiting for its cron', { spaceId: this.#space.id, error }),
-          ),
+      const registered = Effect.tryPromise(() => http.getSpaceTriggers(Context.default(), this.spaceId)).pipe(
+        Effect.flatMap(({ triggers }) =>
+          triggerIds.length > 0 &&
+          triggerIds.every((id) => triggers.some((trigger) => trigger.triggerId === id && trigger.registered))
+            ? Effect.void
+            : Effect.fail(new CanaryError({ message: 'sync triggers not registered on EDGE yet' })),
         ),
+        Effect.retry({ schedule: Schedule.spaced('10 seconds') }),
+        timeout(this.#waits.trigger, 'EDGE to register the sync trigger'),
       );
-    }).pipe(Effect.provide(Database.layer(this.#space.db)));
+      yield* registered;
+      yield* Effect.forEach(triggerIds, (triggerId) =>
+        Effect.tryPromise(() => http.forceRunCronTrigger(Context.default(), this.spaceId, triggerId)),
+      );
+    }).pipe(
+      Effect.provide(Database.layer(this.#space.db)),
+      Effect.catch((error) =>
+        Effect.sync(() =>
+          log.warn('cannot start the sync now; waiting for its cron', { spaceId: this.spaceId, error }),
+        ),
+      ),
+    );
   }
 
   /** Waits until the documents match EDGE, then reads the snapshot (`readSnapshot` pulls the feeds itself). */
@@ -149,37 +171,50 @@ export class CanarySpace {
     return this.syncToEdge().pipe(
       Effect.andThen(readSnapshot()),
       Effect.provide(Database.layer(this.#space.db)),
-      Effect.timeoutOrElse({
-        duration: SNAPSHOT_TIMEOUT,
-        orElse: () =>
-          Effect.fail(new CanaryError({ message: `space ${this.spaceId} unreadable after ${SNAPSHOT_TIMEOUT}` })),
-      }),
+      timeout(this.#waits.read, `a read of space ${this.spaceId}`),
     );
+  }
+
+  /**
+   * Deletes the space on EDGE, waits for the teardown, then tombstones it on this device. EDGE resets the space's
+   * documents, feeds, index, secrets and scheduler; resetting its credential chain drops the canary's membership, so a
+   * 403 on reading the space is the sign the teardown ran.
+   */
+  delete(): Effect.Effect<void, CanaryError> {
+    const path = `/data/space/${this.spaceId}`;
+    const request = (method: 'GET' | 'DELETE') =>
+      Effect.tryPromise({
+        try: () => this.#client.edge.http.request(Context.default(), path, { method }),
+        catch: (cause) => new CanaryError({ message: `EDGE ${method} ${path}: ${String(cause)}`, cause }),
+      });
+    const tornDown = (error: CanaryError) => error.cause instanceof EdgeCallFailedError && error.cause.status === 403;
+    return Effect.gen({ self: this }, function* () {
+      yield* request('DELETE');
+      yield* request('GET').pipe(
+        Effect.flatMap(() => Effect.fail(new CanaryError({ message: `space ${this.spaceId} is still on EDGE` }))),
+        Effect.catchIf(tornDown, () => Effect.void),
+        Effect.retry({ schedule: Schedule.spaced('15 seconds') }),
+        timeout(this.#waits.delete, `EDGE to tear space ${this.spaceId} down`),
+      );
+      yield* Effect.tryPromise({
+        try: () => this.#space.delete(),
+        catch: (cause) => new CanaryError({ message: `cannot tombstone ${this.spaceId}: ${String(cause)}` }),
+      });
+    });
   }
 }
 
-/** Waits until the space's database is open and turns on EDGE replication, off on a newly admitted device. */
-const ready = (client: Client, space: Space): Effect.Effect<CanarySpace, CanaryError> =>
-  Effect.gen(function* () {
-    yield* Effect.tryPromise({
-      try: () => space.waitUntilReady(),
-      catch: (cause) => new CanaryError({ message: `space ${space.id} is not ready: ${String(cause)}` }),
-    }).pipe(
-      Effect.timeoutOrElse({
-        duration: SPACE_TIMEOUT,
-        orElse: () => Effect.fail(new CanaryError({ message: `space ${space.id} not ready after ${SPACE_TIMEOUT}` })),
-      }),
-    );
-    if (space.internal.data.edgeReplication !== EdgeReplicationSetting.ENABLED) {
-      yield* Effect.promise(() => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
-    }
-    return new CanarySpace(client, space);
+/** Fails with a reason once `duration` has passed. */
+const timeout = (duration: Duration.Duration, what: string) =>
+  Effect.timeoutOrElse({
+    duration,
+    orElse: () =>
+      Effect.fail(new CanaryError({ message: `gave up waiting for ${what} after ${Duration.format(duration)}` })),
   });
 
 /**
- * The mailbox's synced messages, the mail sync's invocations from every Execution Trace feed (racing
- * writers can create a second), and the remote timer triggers. Feeds replicate apart from the documents,
- * so each is pulled before it is read.
+ * The mailbox's synced messages, the mail sync's invocations from every Execution Trace feed (racing writers can
+ * create a second), and the remote timer triggers. Feeds replicate apart from the documents, so each is pulled first.
  */
 export const readSnapshot = Effect.fn('mail-canary.readSnapshot')(
   function* () {
@@ -218,9 +253,5 @@ export const readSnapshot = Effect.fn('mail-canary.readSnapshot')(
 const pull = (feed: Feed.Feed) =>
   Database.Service.pipe(
     Effect.flatMap(({ db }) => Effect.tryPromise(() => db.syncFeed(feed, { shouldPush: false }))),
-    Effect.timeoutOrElse({
-      duration: SPACE_TIMEOUT,
-      orElse: () => Effect.fail(new CanaryError({ message: `feed ${feed.id} did not sync in ${SPACE_TIMEOUT}` })),
-    }),
     Effect.retry({ times: 2 }),
   );

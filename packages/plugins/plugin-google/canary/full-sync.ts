@@ -2,13 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Clock from 'effect/Clock';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+import * as Option from 'effect/Option';
 import * as Result from 'effect/Result';
 
 import { ClientService } from '@dxos/client';
 import * as Trigger from '@dxos/compute/Trigger';
-import { Database, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as Binding from '@dxos/plugin-connector/Binding';
@@ -18,41 +21,36 @@ import * as MailSync from '@dxos/plugin-inbox/MailSync';
 import { GoogleOperation } from '#types';
 
 import { GMAIL_CONNECTOR_ID, GOOGLE_INTEGRATION_SOURCE } from '../src/constants.ts';
+import { ALL_MAIL_SCOPE } from '../src/operations/mail/sync/fetch.ts';
+import { LIVE_GMAIL_ACCOUNT } from '../src/testing/live-credentials.ts';
 import {
   type CheckResult,
   type ExpectedMessage,
   type Failure,
   type RunStats,
   type SpaceSnapshot,
+  check,
   checkMessages,
   checkRuns,
 } from './checks.ts';
-import {
-  CANARY_ACCOUNT,
-  CanaryError,
-  type CanaryMailbox,
-  type GmailCredentials,
-  type MailboxError,
-  mintAccessToken,
-} from './mailbox.ts';
-import { CanarySpace } from './space.ts';
+import { type CanaryMailbox, type GmailCredentials, type MailboxError, mintAccessToken } from './mailbox.ts';
+import { CanarySpace, type EdgeWaits } from './space.ts';
 
-/** The name of the throwaway space; a run removes any it finds left over from a run that died. */
+/** The name of the throwaway space; a run deletes any it finds left over from a run that died. */
 export const FULL_SYNC_SPACE_NAME = 'Mail canary full sync';
 
 const DAY_MS = 24 * 60 * 60_000;
 
 /** What stage 3 produced: one fresh space synced from scratch, checked, and deleted. */
 export type FullSyncReport = {
-  readonly ok: boolean;
   readonly checks: CheckResult[];
-  readonly runs: RunStats;
-  readonly spaceId?: string;
   readonly days: number;
   /** Gmail messages inside the window when the stage started. */
   readonly expected: number;
+  readonly spaceId?: string;
+  readonly runs?: RunStats;
   /** Messages in the fresh space's mailbox feed when the wait ended. */
-  readonly synced: number;
+  readonly synced?: number;
   /** Seconds until every expected message had synced and the backfill had reached the horizon. */
   readonly syncSeconds?: number;
 };
@@ -60,22 +58,22 @@ export type FullSyncReport = {
 export type FullSyncOptions = {
   /** How far back the fresh binding syncs, as its `syncBackDays`. */
   readonly days: number;
-  readonly syncTimeout: Duration.Input;
-  readonly pollInterval: Duration.Input;
+  readonly syncTimeout: Duration.Duration;
+  readonly pollInterval: Duration.Duration;
   /** How often the space's access token is replaced; under the hour a Google access token lasts. */
-  readonly tokenRefresh: Duration.Input;
+  readonly tokenRefresh: Duration.Duration;
+  /** How long a sync invocation may stay open before it counts as hung. */
+  readonly hungAfter: Duration.Duration;
+  readonly waits: EdgeWaits;
 };
 
 /** The Gmail calls stage 3 makes: it only reads the mailbox. */
 export type FullSyncMailbox = Pick<CanaryMailbox, 'listIds'>;
 
 /**
- * Stage 3. Creates a space, binds it to the canary account with a `days`-long sync horizon and the product's own
- * remote sync routine, waits for EDGE to sync it from scratch, checks it against Gmail, and deletes the space.
- *
- * The space gets a plain access token minted from the canary's own grant rather than a kms-held one: kms-service
- * registers a refresh token only from an OAuth consent in a browser. The token is replaced while the stage waits,
- * since a Google access token lasts an hour.
+ * Stage 3: bind a new space to the canary account with the product's own remote sync routine, let EDGE sync it from
+ * scratch, check it against Gmail, and delete it on EDGE. The space gets a plain access token minted from the canary's
+ * grant, since kms-service registers a refresh token only from a browser consent.
  */
 export class FullSync {
   readonly #mailbox: FullSyncMailbox;
@@ -88,93 +86,93 @@ export class FullSync {
 
   run(options: FullSyncOptions): Effect.Effect<FullSyncReport, MailboxError, ClientService> {
     return Effect.gen({ self: this }, function* () {
-      const startedAt = new Date();
-      yield* removeLeftovers();
+      const startedAt = new Date(yield* Clock.currentTimeMillis);
+      const leftovers = yield* removeLeftovers(options.waits);
       const expected = yield* this.expected(options.days, startedAt);
-      const space = yield* CanarySpace.create(FULL_SYNC_SPACE_NAME);
-      const synced = yield* this.#sync(space, expected, options, startedAt).pipe(Effect.result);
-      const removed = yield* remove(space).pipe(Effect.result);
-      const removal = check('F4', 'Fresh space deleted', [
-        ...(Result.isFailure(removed) ? [{ class: 'SETUP' as const, message: removed.failure.message }] : []),
-      ]);
-      if (Result.isFailure(synced)) {
-        const failed = check('F1', 'Every Gmail message of the window synced', [
-          { class: 'SETUP', message: synced.failure.message },
+      const space = yield* CanarySpace.create(FULL_SYNC_SPACE_NAME, options.waits);
+      return yield* Effect.gen({ self: this }, function* () {
+        const synced = yield* this.#sync(space, expected, options, startedAt).pipe(Effect.result);
+        const removed = yield* space.delete().pipe(Effect.result);
+        const removal = check('F4', 'Fresh space deleted on EDGE', [
+          ...leftovers,
+          ...(Result.isFailure(removed) ? [{ class: 'SETUP' as const, message: removed.failure.message }] : []),
         ]);
-        return report({
-          checks: [failed, removal],
-          spaceId: space.spaceId,
-          days: options.days,
-          expected: expected.length,
-        });
-      }
-      return report({
-        ...synced.success,
-        checks: [...synced.success.checks, removal],
-        spaceId: space.spaceId,
-        days: options.days,
-        expected: expected.length,
-      });
+        const base = { days: options.days, expected: expected.length, spaceId: space.spaceId };
+        return Result.isSuccess(synced)
+          ? { ...base, ...synced.success, checks: [...synced.success.checks, removal] }
+          : {
+              ...base,
+              checks: [
+                check('F1', 'Every Gmail message of the window synced', [
+                  { class: 'SETUP', message: synced.failure.message },
+                ]),
+                removal,
+              ],
+            };
+      }).pipe(
+        // The success path deletes the space itself to report how it went; any other exit still must not leak it.
+        Effect.onExit((exit) => (Exit.isSuccess(exit) ? Effect.void : space.delete().pipe(Effect.ignore))),
+      );
     });
   }
 
   /**
-   * The Gmail messages a sync over the last `days` must bring in, newest first, listed with the sync's own scope.
-   * The window starts two days inside the horizon, since Gmail's `after:` is day-granular in the account's zone.
+   * The Gmail messages a sync over the last `days` must bring in, listed with the sync's own scope, starting two days
+   * inside the horizon since Gmail's `after:` is day-granular in the account's zone.
    */
   expected(days: number, now: Date): Effect.Effect<ExpectedMessage[], MailboxError> {
     const after = new Date(now.getTime() - (days - 2) * DAY_MS);
     const date = `${after.getUTCFullYear()}/${after.getUTCMonth() + 1}/${after.getUTCDate()}`;
     return this.#mailbox
-      .listIds(`in:anywhere -in:spam -in:trash -in:drafts -in:chats after:${date}`)
+      .listIds(`${ALL_MAIL_SCOPE} after:${date}`)
       .pipe(Effect.map((ids) => ids.map((gmailId) => ({ gmailId }))));
   }
 
   #sync(
     space: CanarySpace,
     expected: readonly ExpectedMessage[],
-    { days, syncTimeout, pollInterval, tokenRefresh }: FullSyncOptions,
+    { days, syncTimeout, pollInterval, tokenRefresh, hungAfter }: FullSyncOptions,
     startedAt: Date,
   ) {
     return Effect.gen({ self: this }, function* () {
-      const { accessToken, cursor } = yield* connect(yield* mintAccessToken(this.#credentials), days).pipe(
-        Effect.provide(Database.layer(space.space.db)),
-      );
+      const token = yield* mintAccessToken(this.#credentials);
+      let mintedAt = yield* Clock.currentTimeMillis;
+      const { accessToken, cursor } = yield* connect(token, days).pipe(Effect.provide(Database.layer(space.space.db)));
       yield* space.syncToEdge();
       yield* space.runSync();
 
       const deadline = startedAt.getTime() + Duration.toMillis(syncTimeout);
-      let mintedAt = Date.now();
       let snapshot: SpaceSnapshot;
       let backfilled: boolean;
       let syncSeconds: number | undefined;
       while (true) {
-        if (Date.now() - mintedAt >= Duration.toMillis(tokenRefresh)) {
-          const token = yield* mintAccessToken(this.#credentials);
+        if ((yield* Clock.currentTimeMillis) - mintedAt >= Duration.toMillis(tokenRefresh)) {
+          const fresh = yield* mintAccessToken(this.#credentials);
+          mintedAt = yield* Clock.currentTimeMillis;
           Obj.update(accessToken, (accessToken) => {
-            accessToken.token = token;
+            accessToken.token = fresh;
           });
-          mintedAt = Date.now();
         }
         snapshot = yield* space.snapshot();
-        log.info('stage 3: waiting', {
-          spaceId: space.spaceId,
-          expected: expected.length,
-          synced: snapshot.messages.length,
-        });
         backfilled = reachedHorizon(cursor, days);
+        log.info('stage 3: waiting', { expected: expected.length, synced: snapshot.messages.length, backfilled });
         const synced = new Set(snapshot.messages.map((message) => message.gmailId));
+        const now = yield* Clock.currentTimeMillis;
         if (backfilled && expected.every((message) => synced.has(message.gmailId))) {
-          syncSeconds = Math.round((Date.now() - startedAt.getTime()) / 1000);
+          syncSeconds = Math.round((now - startedAt.getTime()) / 1000);
           break;
         }
-        if (Date.now() >= deadline) {
+        if (now >= deadline) {
           break;
         }
         yield* Effect.sleep(pollInterval);
       }
 
-      const runs = checkRuns('F2', snapshot.invocations, { now: Date.now(), since: startedAt.getTime() });
+      const runs = checkRuns('F2', snapshot.invocations, {
+        now: yield* Clock.currentTimeMillis,
+        since: startedAt.getTime(),
+        hungAfter: Duration.toMillis(hungAfter),
+      });
       const backfill: Failure[] = backfilled
         ? []
         : [
@@ -198,23 +196,27 @@ export class FullSync {
 }
 
 /**
- * Binds a new mailbox to the canary account as Composer does when a user adds Gmail: an access token, its
- * connection, a binding with the sync horizon, and the connector's remote sync routine.
+ * Binds a new mailbox to the canary account as Composer does when a user adds Gmail: an access token, its connection,
+ * a binding with the sync horizon, and the connector's remote sync routine.
  */
 const connect = (token: string, days: number) =>
   Effect.gen(function* () {
     const accessToken = yield* Database.add(
-      AccessToken.make({ source: GOOGLE_INTEGRATION_SOURCE, account: CANARY_ACCOUNT, token }),
+      AccessToken.make({ source: GOOGLE_INTEGRATION_SOURCE, account: LIVE_GMAIL_ACCOUNT, token }),
     );
     const connection = yield* Database.add(
-      Connection.make({ name: CANARY_ACCOUNT, connectorId: GMAIL_CONNECTOR_ID, accessToken: Ref.make(accessToken) }),
+      Connection.make({
+        name: LIVE_GMAIL_ACCOUNT,
+        connectorId: GMAIL_CONNECTOR_ID,
+        accessToken: Ref.make(accessToken),
+      }),
     );
-    const mailbox = yield* Database.add(Mailbox.make({ name: CANARY_ACCOUNT }));
+    const mailbox = yield* Database.add(Mailbox.make({ name: LIVE_GMAIL_ACCOUNT }));
     const cursor = yield* Binding.bind({ connection, connector: undefined, target: Ref.make(mailbox) });
     Obj.update(cursor, (cursor) => {
       cursor.spec.options = { syncBackDays: days };
     });
-    const routine = yield* Database.add(
+    yield* Database.add(
       Binding.scaffoldRoutine({
         connection,
         operation: GoogleOperation.GoogleMailSync,
@@ -222,88 +224,38 @@ const connect = (token: string, days: number) =>
         remote: MailSync.MAIL_REMOTE_SYNC,
       }),
     );
-    if (!routine.triggers[0]?.target) {
-      return yield* new CanaryError({ message: 'the sync routine has no trigger' });
-    }
     yield* Database.flush();
     return { accessToken, cursor };
   });
 
-/**
- * Whether the binding's backward walk has reached the horizon: `min` is clamped to it once the walk is done. Read off
- * the object itself, which EDGE's writes reach by replication; a query over the space can wait on its index.
- */
+/** Whether the binding's backward walk has reached the horizon: `min` is clamped to it once the walk is done. */
 const reachedHorizon = (cursor: Cursor.Cursor, days: number): boolean => {
   const minKey = Cursor.parseKey(cursor.min);
   return minKey > 0 && minKey <= Cursor.resolveHorizon({ now: new Date(), syncBackDays: days }).getTime();
 };
 
-/**
- * Takes the space out of use before deleting it: disables its triggers and blanks its token, so EDGE stops syncing
- * it even if the deletion never reaches EDGE.
- */
-const remove = (space: CanarySpace): Effect.Effect<void, CanaryError> =>
-  Effect.gen(function* () {
-    yield* Effect.gen(function* () {
-      for (const trigger of yield* Database.query(Filter.type(Trigger.Trigger)).run) {
-        Obj.update(trigger, (trigger) => {
-          trigger.enabled = false;
-        });
-      }
-      for (const accessToken of yield* Database.query(Filter.type(AccessToken.AccessToken)).run) {
-        Obj.update(accessToken, (accessToken) => {
-          accessToken.token = '';
-        });
-      }
-      yield* Database.flush();
-    }).pipe(Effect.provide(Database.layer(space.space.db)));
-    yield* space.syncToEdge();
-    yield* Effect.tryPromise({
-      try: () => space.space.delete(),
-      catch: (cause) => new CanaryError({ message: `cannot delete space ${space.spaceId}: ${String(cause)}` }),
-    });
-  }).pipe(
-    Effect.timeoutOrElse({
-      duration: '10 minutes',
-      orElse: () => Effect.fail(new CanaryError({ message: `space ${space.spaceId} not deleted within 10 minutes` })),
-    }),
-  );
-
-/** Deletes every space a killed run left behind, so leftovers never pile up or keep syncing. */
-const removeLeftovers = () =>
+/** Deletes the spaces a killed run left behind; a leftover that cannot be deleted is reported, since it keeps syncing. */
+const removeLeftovers = (waits: EdgeWaits): Effect.Effect<Failure[], never, ClientService> =>
   Effect.gen(function* () {
     const client = yield* ClientService;
-    // Every space opens at once: one by one, each that never opens would hold the run for its whole timeout.
-    yield* Effect.forEach(
+    const failures = yield* Effect.forEach(
       client.spaces.get(),
       (space) =>
-        Effect.tryPromise(() => space.waitUntilReady()).pipe(
-          Effect.timeout('2 minutes'),
-          Effect.flatMap(() =>
-            space.properties.name === FULL_SYNC_SPACE_NAME ? remove(new CanarySpace(client, space)) : Effect.void,
-          ),
-          Effect.ignore,
-        ),
-      { concurrency: 'unbounded', discard: true },
+        Effect.gen(function* () {
+          // A space that never opens cannot be named, so it is not taken for a leftover.
+          const opened = yield* Effect.tryPromise(() => space.waitUntilReady()).pipe(
+            Effect.timeoutOption(waits.open),
+            Effect.orElseSucceed(() => Option.none()),
+          );
+          if (Option.isNone(opened) || space.properties.name !== FULL_SYNC_SPACE_NAME) {
+            return [];
+          }
+          const removed = yield* new CanarySpace(client, space, waits).delete().pipe(Effect.result);
+          return Result.isFailure(removed)
+            ? [{ class: 'SETUP' as const, message: `leftover ${space.id}: ${removed.failure.message}` }]
+            : [];
+        }),
+      { concurrency: 'unbounded' },
     );
+    return failures.flat();
   });
-
-const check = (id: string, name: string, failures: Failure[]): CheckResult => ({
-  id,
-  name,
-  ok: failures.length === 0,
-  failures,
-});
-
-const report = ({
-  checks,
-  runs = { runs: 0, invocations: 0, succeeded: 0, yielded: 0, failed: 0 },
-  synced = 0,
-  ...rest
-}: Omit<FullSyncReport, 'ok' | 'runs' | 'synced'> & { runs?: RunStats; synced?: number }): FullSyncReport => ({
-  ...rest,
-  ok: checks.every(({ ok }) => ok),
-  checks,
-  runs,
-  synced,
-});

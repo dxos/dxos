@@ -26,7 +26,7 @@ describe('CanaryMailbox', () => {
   test('pages a search to the end and keys headers by the names asked for', async ({ expect }) => {
     const box = await EffectEx.runPromise(mailbox());
     expect(new Set(await EffectEx.runPromise(box.listIds(''))).size).toBe(1_200);
-    const { headers } = await EffectEx.runPromise(box.getHeaders(dataset.messages[0].id, ['subject', 'X-Absent']));
+    const headers = await EffectEx.runPromise(box.getHeaders(dataset.messages[0].id, ['subject', 'X-Absent']));
     expect(Object.keys(headers)).toEqual(['subject']);
   });
 

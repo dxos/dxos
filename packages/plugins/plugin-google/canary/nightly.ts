@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Clock from 'effect/Clock';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 
@@ -35,18 +36,27 @@ export type CanaryReport = NightlyReport & {
   readonly fullSync?: FullSyncReport;
 };
 
+/** Stage 1's work: `count` messages of the Enron pool (one RFC 5322 message per entry, in a fixed order). */
+export type SeedOptions = {
+  readonly pool: readonly string[];
+  readonly count: number;
+  /** Seeded copies older than this many days are trashed first, so the mail stage 3 checks stays bounded. */
+  readonly retainDays: number;
+};
+
 export type NightlyOptions = {
-  /** Stage 1: seed `count` messages of the Enron pool (one RFC 5322 message per entry, in a fixed order). */
-  readonly seed?: { readonly pool: readonly string[]; readonly count: number };
+  readonly seed?: SeedOptions;
   /** How long to wait for every copy to reach the mailbox feed. */
-  readonly syncTimeout: Duration.Input;
-  readonly pollInterval: Duration.Input;
+  readonly syncTimeout: Duration.Duration;
+  readonly pollInterval: Duration.Duration;
   /** How far back the sync failure check looks. */
-  readonly window: Duration.Input;
+  readonly window: Duration.Duration;
+  /** How long a sync invocation may stay open before it counts as hung. */
+  readonly hungAfter: Duration.Duration;
 };
 
 /** The Gmail calls a run makes. */
-export type NightlyMailbox = Pick<CanaryMailbox, 'ensureLabel' | 'listIds' | 'insert' | 'getHeaders'>;
+export type NightlyMailbox = Pick<CanaryMailbox, 'ensureLabel' | 'listIds' | 'insert' | 'getHeaders' | 'trash'>;
 
 // Gmail allows 250 quota units per user per second; an insert costs 25.
 const WRITE_CONCURRENCY = 4;
@@ -57,12 +67,9 @@ const SEED_HEADER = 'X-Dx-Seed';
 const NEXT_HEADER = 'X-Dx-Seed-Next';
 
 /**
- * Stages 1 and 2 against the canary space. Stage 1 inserts the next `count` pool messages as mail received now
- * and waits for the space's own sync to pick them up; stage 2 checks that every copy arrived intact and that no
- * sync run in the window failed.
- *
- * The pool stays out of Gmail: the sync takes every message added to the account, so mail parked there would
- * be synced the moment it landed rather than tonight.
+ * Stages 1 and 2 against the canary space: seed the next pool messages as mail received now, then wait for the space's
+ * own sync and check the copies and the window's sync runs. The pool stays out of Gmail, since the sync takes every
+ * message added to the account.
  */
 export class Nightly {
   readonly #mailbox: NightlyMailbox;
@@ -73,10 +80,16 @@ export class Nightly {
     this.#space = space;
   }
 
-  run({ seed, syncTimeout, pollInterval, window }: NightlyOptions): Effect.Effect<NightlyReport, MailboxError> {
+  run({
+    seed,
+    syncTimeout,
+    pollInterval,
+    window,
+    hungAfter,
+  }: NightlyOptions): Effect.Effect<NightlyReport, MailboxError> {
     return Effect.gen({ self: this }, function* () {
-      const startedAt = new Date();
-      const { start, seeded } = seed ? yield* this.seed(seed.pool, seed.count, startedAt) : { start: 0, seeded: [] };
+      const startedAt = new Date(yield* Clock.currentTimeMillis);
+      const { start, seeded } = seed ? yield* this.seed(seed, startedAt) : { start: 0, seeded: [] };
       if (seed) {
         log.info('stage 1: seeded', { count: seeded.length, poolStart: start });
         // The cron would pick the copies up within ten minutes; starting the sync now spares the wait.
@@ -89,19 +102,24 @@ export class Nightly {
       while (seed) {
         const synced = new Set(snapshot.messages.map((message) => message.gmailId));
         log.info('stage 2: waiting', { synced: seeded.filter(({ gmailId }) => synced.has(gmailId)).length });
+        const now = yield* Clock.currentTimeMillis;
         if (seeded.every((message) => synced.has(message.gmailId))) {
-          syncSeconds = Math.round((Date.now() - startedAt.getTime()) / 1000);
+          syncSeconds = Math.round((now - startedAt.getTime()) / 1000);
           break;
         }
-        if (Date.now() >= deadline) {
+        if (now >= deadline) {
           break;
         }
         yield* Effect.sleep(pollInterval);
         snapshot = yield* this.#space.snapshot();
       }
 
-      const now = Date.now();
-      const report = runChecks(snapshot, seed && seeded, { now, since: now - Duration.toMillis(window) });
+      const now = yield* Clock.currentTimeMillis;
+      const report = runChecks(snapshot, seed && seeded, {
+        now,
+        since: now - Duration.toMillis(window),
+        hungAfter: Duration.toMillis(hungAfter),
+      });
       return {
         ...report,
         startedAt: startedAt.toISOString(),
@@ -111,10 +129,9 @@ export class Nightly {
     });
   }
 
-  /** Inserts the `count` pool messages after the last run's into the inbox as mail received `now`. */
+  /** Trashes copies past retention, then inserts the `count` pool messages after the last run's as mail received `now`. */
   seed(
-    pool: readonly string[],
-    count: number,
+    { pool, count, retainDays }: SeedOptions,
     now: Date,
   ): Effect.Effect<{ start: number; seeded: ExpectedMessage[] }, MailboxError> {
     return Effect.gen({ self: this }, function* () {
@@ -122,6 +139,8 @@ export class Nightly {
         return yield* new CanaryError({ message: `cannot seed ${count} of a pool of ${pool.length}` });
       }
       const label = yield* this.#mailbox.ensureLabel(SEED_LABEL);
+      const expired = yield* this.#mailbox.listIds(`label:${SEED_LABEL} older_than:${retainDays}d`);
+      yield* Effect.forEach(expired, (id) => this.#mailbox.trash(id), { concurrency: WRITE_CONCURRENCY });
       const start = yield* this.#cursor(pool.length);
       const next = (start + count) % pool.length;
       const seeded = yield* Effect.forEach(
@@ -129,7 +148,7 @@ export class Nightly {
         (index) =>
           Effect.gen({ self: this }, function* () {
             const id = yield* this.#mailbox.insert(makeSeedCopy(pool[index], { index, next, now }), ['INBOX', label]);
-            const { headers } = yield* this.#mailbox.getHeaders(id, ['Subject', 'From']);
+            const headers = yield* this.#mailbox.getHeaders(id, ['Subject', 'From']);
             return {
               gmailId: id,
               subject: headers.Subject,
@@ -149,7 +168,7 @@ export class Nightly {
       if (!newest) {
         return 0;
       }
-      const { headers } = yield* this.#mailbox.getHeaders(newest, [NEXT_HEADER]);
+      const headers = yield* this.#mailbox.getHeaders(newest, [NEXT_HEADER]);
       const next = Number(headers[NEXT_HEADER]);
       return Number.isInteger(next) && next >= 0 && next < poolSize ? next : 0;
     });
@@ -206,8 +225,8 @@ export const renderEvents = (report: CanaryReport, at: string) => {
       properties: {
         ok: failures.length === 0,
         failures: failures.length,
-        syncFailures: report.checks.find(({ id }) => id === 'S2')?.failures.length,
-        invocations: report.runs.invocations,
+        invocations: report.runs?.invocations,
+        syncFailures: report.runs && report.checks.find(({ id }) => id === 'S2')?.failures.length,
         seeded: report.seed?.seeded,
         syncSeconds: report.seed?.syncSeconds,
         fullSyncExpected: report.fullSync?.expected,
@@ -234,8 +253,8 @@ export const renderSummary = (report: CanaryReport): string => {
     `## Mail canary: ${failures.length === 0 ? 'passed' : 'FAILED'}`,
     '',
     `- Seed: ${seed ? `${seed.seeded} messages from pool index ${seed.poolStart}; syncing them ${took(seed.syncSeconds)}` : 'skipped'}.`,
-    `- Monitor: ${report.runs.invocations} sync invocations in the window, ${report.runs.failed} failed.`,
-    `- Full sync: ${fullSync ? `${fullSync.synced} of ${fullSync.expected} messages; it ${took(fullSync.syncSeconds)}` : 'skipped'}.`,
+    `- Monitor: ${report.runs ? `${report.runs.invocations} sync invocations in the window, ${report.runs.failed} failed` : 'could not read the space'}.`,
+    `- Full sync: ${fullSync ? `${fullSync.synced ?? 0} of ${fullSync.expected} messages; it ${took(fullSync.syncSeconds)}` : 'skipped'}.`,
     '',
     '| Check | Result | Failures |',
     '| --- | --- | --- |',

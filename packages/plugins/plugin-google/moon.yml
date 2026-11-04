@@ -19,3 +19,5 @@ tasks:
       LOG_FILTER: warn,plugin-google/canary:info
     options:
       cache: false
+      # A backstop above `runTimeoutMinutes` in canary/canary.yml; `test` would stop the run after 10 minutes.
+      timeout: 7800

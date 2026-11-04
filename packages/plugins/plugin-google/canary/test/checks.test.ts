@@ -22,6 +22,7 @@ const MINUTE = 60_000;
 const SINCE = Date.parse('2026-10-26T00:00:00Z');
 const NOW = SINCE + 60 * MINUTE;
 const KEY = GoogleOperation.GoogleMailSync.meta.key;
+const WINDOW = { now: NOW, since: SINCE, hungAfter: 10 * MINUTE };
 
 /** An invocation every ten minutes across the window, each ending a minute later. */
 const invocations = (end: Partial<NonNullable<Invocation['end']>> = {}, pid = 'run-2'): Invocation[] =>
@@ -30,7 +31,6 @@ const invocations = (end: Partial<NonNullable<Invocation['end']>> = {}, pid = 'r
     const outcome = { key: KEY, outcome: 'success' as const, timestamp: startedAt + MINUTE };
     return {
       pid: `run-${index}`,
-      runId: `run-${index}`,
       startedAt,
       end: `run-${index}` === pid ? { ...outcome, ...end } : outcome,
     };
@@ -51,13 +51,16 @@ const healthy = (): SpaceSnapshot => ({
 });
 
 const failed = (snapshot: SpaceSnapshot) =>
-  runChecks(snapshot, seeded, { now: NOW, since: SINCE }).checks.flatMap((check) => (check.ok ? [] : [check.id]));
+  runChecks(snapshot, seeded, WINDOW).checks.flatMap((check) => (check.ok ? [] : [check.id]));
 
 describe('runChecks', () => {
   test('passes a healthy window', ({ expect }) => {
-    const report = runChecks(healthy(), seeded, { now: NOW, since: SINCE });
-    expect(report.ok).toBe(true);
-    expect(report.runs).toEqual({ runs: 6, invocations: 6, succeeded: 6, yielded: 0, failed: 0 });
+    const report = runChecks(healthy(), seeded, WINDOW);
+    expect(report.checks.map((check) => [check.id, check.ok])).toEqual([
+      ['S1', true],
+      ['S2', true],
+    ]);
+    expect(report.runs).toEqual({ invocations: 6, failed: 0 });
   });
 
   test('a run-again yield is not a failure, a failed invocation is classified', ({ expect }) => {
@@ -66,22 +69,18 @@ describe('runChecks', () => {
     const report = runChecks(
       { ...healthy(), invocations: invocations({ outcome: 'failure', error: 'RepoClosedError' }) },
       seeded,
-      {
-        now: NOW,
-        since: SINCE,
-      },
+      WINDOW,
     );
     expect(report.checks[1].failures).toEqual([expect.objectContaining({ class: 'REPO_CLOSED', pid: 'run-2' })]);
   });
 
-  test('an invocation that never ends fails S2; one before the window does not count', ({ expect }) => {
-    const open = invocations().map((invocation) =>
-      invocation.pid === 'run-1' ? { ...invocation, end: undefined } : invocation,
-    );
-    expect(failed({ ...healthy(), invocations: open })).toEqual(['S2']);
+  test('an invocation open past hungAfter fails S2; one still running or before the window does not', ({ expect }) => {
+    const open = (pid: string) =>
+      invocations().map((invocation) => (invocation.pid === pid ? { ...invocation, end: undefined } : invocation));
+    expect(failed({ ...healthy(), invocations: open('run-1') })).toEqual(['S2']);
+    expect(failed({ ...healthy(), invocations: open('run-5') })).toEqual([]);
     const old = {
       pid: 'old',
-      runId: 'old',
       startedAt: SINCE - MINUTE,
       end: { key: KEY, outcome: 'failure' as const, timestamp: SINCE },
     };
@@ -90,8 +89,7 @@ describe('runChecks', () => {
 
   test('missing mail is OFF with no enabled trigger, STALL when runs failed, DATA otherwise', ({ expect }) => {
     const missing = { ...healthy(), messages: [healthy().messages[0]] };
-    const arrival = (snapshot: SpaceSnapshot) =>
-      runChecks(snapshot, seeded, { now: NOW, since: SINCE }).checks[0].failures;
+    const arrival = (snapshot: SpaceSnapshot) => runChecks(snapshot, seeded, WINDOW).checks[0].failures;
     expect(arrival(missing)).toEqual([expect.objectContaining({ class: 'DATA', gmailId: 'g2' })]);
     expect(arrival({ ...missing, invocations: invocations({ outcome: 'failure', error: 'boom' }) })).toEqual([
       expect.objectContaining({ class: 'STALL', gmailId: 'g2' }),
@@ -131,7 +129,7 @@ describe('groupInvocations', () => {
         message('b', Trace.OperationStart.key, 2, { key: 'dxn:org.dxos.operation.other' }),
         message('a', Trace.OperationEnd.key, 3, { key: KEY, outcome: 'success' }),
       ]),
-    ).toEqual([{ pid: 'a', runId: 'a', startedAt: 1, end: { key: KEY, outcome: 'success', timestamp: 3 } }]);
+    ).toEqual([{ pid: 'a', startedAt: 1, end: { key: KEY, outcome: 'success', timestamp: 3 } }]);
   });
 });
 
