@@ -27,7 +27,7 @@ type AttentionName = 'attended' | 'contains-attended';
 
 type Example = {
   readonly label: string;
-  /** What produces it in the app today; examples without one only show what a treatment can describe. */
+  /** What produces it in the app; examples without one only show what a treatment can describe. */
   readonly source?: string;
   readonly treatment: Activity.Treatment;
 };

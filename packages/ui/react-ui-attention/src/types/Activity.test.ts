@@ -47,9 +47,7 @@ describe('Activity.resolve', () => {
   });
 
   test('a still winner passes motion to the next slot', ({ expect }) => {
-    // A mention is still, so motion falls through the corner to the agent star.
     expect(Activity.resolve([mention, agent])).toMatchObject({ corner: mention, moving: 'mark' });
-    // The unread star outranks nothing that moves, so the busy fill does.
     expect(Activity.resolve([unread, busy])).toMatchObject({ mark: unread, moving: 'fill' });
   });
 });

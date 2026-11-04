@@ -47,7 +47,6 @@ export default Capability.makeModule(
     const atomRegistry = yield* Capabilities.AtomRegistry;
     const openChatsAtom = yield* AssistantCapabilities.OpenChats;
 
-    // Optional: a host without plugin-progress loses the indicator, not the plugin.
     const progressOption = yield* Capability.getOption(AppCapabilities.ProgressRegistry);
     if (Option.isNone(progressOption)) {
       return [];
@@ -78,7 +77,7 @@ export default Capability.makeModule(
         : undefined;
     };
 
-    // Each busy chat's subject, once its chat has loaded; `null` when it has none.
+    // Each busy chat's subject; `null` while it resolves or when it has none.
     const subjects = new Map<string, string | null>();
     const resolveSubject = (uri: string) => {
       const eid = EID.tryParse(uri);
@@ -100,7 +99,6 @@ export default Capability.makeModule(
     // Each space's chats with an unread turn.
     const unread = new Map<SpaceId, readonly Chat.Chat[]>();
 
-    // Every monitor this module holds, by key, with what it shows.
     type Shown = { label: string; done: boolean };
     const monitors = new Map<string, Shown & { handle: AppCapabilities.ProgressMonitor }>();
 

@@ -48,9 +48,7 @@ const Mark = ({ icon }: { icon: string }) => {
 };
 
 /**
- * A small square marking an item's attention state and the activity on it. Activity draws in four slots: the fill,
- * a mark inside, the square's edge and a dot at its corner. The state is the glyph's own attributes, so it needs no
- * host markup.
+ * A small square marking an item's attention state and the activity on it, one treatment per slot (see `Activity.Slot`).
  */
 export const AttentionGlyph = forwardRef<HTMLSpanElement, AttentionGlyphProps>(
   ({ classNames, style, attended, containsAttended, treatments, ...props }, forwardedRef) => {
