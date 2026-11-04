@@ -453,7 +453,7 @@ export const steps = [
       await openProjectTab(demo, page, 'document');
       await page.waitForTimeout(BEAT * 2);
       // Down to the milestones and the DST scenario, the part a reader checks the build against.
-      for (const heading of ['milestone M-1', 'scenario T-2']) {
+      for (const heading of ['M-1: Core poll', 'scenario T-2']) {
         await scrollDocumentTo(page, heading);
         await page.waitForTimeout(BEAT * 2);
       }
@@ -502,6 +502,8 @@ export const steps = [
       await demo.caption({
         value: 'The agent builds, deploys and checks M-1',
         subtitle: 'In a sandbox, fast-forwarded',
+        // The Gantt chart fills the foot of the plank, where a caption would sit.
+        position: 'top',
       });
       await watchMilestone(demo, page, M1, 90);
       await demo.caption({ value: 'M-1 checked on the live Worker: three features operational' });
@@ -530,6 +532,7 @@ export const steps = [
       await demo.caption({
         value: 'Three invitees, three zones, two clock changes',
         subtitle: 'Checked against the scenario on the live Worker',
+        position: 'top',
       });
       await watchMilestone(demo, page, M2, 90);
       await demo.caption({ value: 'M-2 checked: five features operational' });
@@ -622,7 +625,11 @@ export const steps = [
       await demo.caption({ value: 'Hand the fix to the agent' });
       const fix = (await snapshot(page)).tasks.filter((task) => !task.assigned).map((task) => task.title);
       await delegate(demo, page, fix);
-      await demo.caption({ value: 'It changes the code, redeploys and checks again', subtitle: 'Fast-forwarded' });
+      await demo.caption({
+        value: 'It changes the code, redeploys and checks again',
+        subtitle: 'Fast-forwarded',
+        position: 'top',
+      });
       await openProjectTab(demo, page, 'features');
       await waitFor(
         demo,
