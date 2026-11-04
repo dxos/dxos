@@ -71,7 +71,8 @@ export const delegate = Command.make(
           {
             clientId,
             codeChallenge,
-            next: 'Call the MCP tool delegateToCli with { clientId, codeChallenge }, then run `dx mcp delegate --code <code>`.',
+            // Names the server, since the pending verifier is filed under it and the environment may name another.
+            next: `Call the MCP tool delegateToCli with { clientId, codeChallenge }, then run \`dx mcp delegate --url ${base} --code <code>\`.`,
           },
           null,
           2,

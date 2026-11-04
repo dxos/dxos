@@ -144,8 +144,8 @@ export const authorize = async ({
   };
 };
 
-/** Strips a trailing `/mcp` so the OAuth endpoints resolve against the server's origin. */
-export const serverBase = (serverUrl: string): string => serverUrl.replace(/\/(mcp)?$/, '');
+/** Strips trailing slashes and a trailing `/mcp` so the OAuth endpoints resolve against the server's origin. */
+export const serverBase = (serverUrl: string): string => serverUrl.replace(/\/+$/, '').replace(/\/mcp$/, '');
 
 /** RFC 7591 dynamic registration of a public client; returns its id. */
 export const registerClient = async (base: string): Promise<string> => {

@@ -5,10 +5,10 @@
 // Uploads the `cli:bundle` binaries, their checksums, `latest.json` and `install.sh` to the
 // agent-artifacts R2 bucket, so a sandbox installs `dx` with one curl and no npm.
 //
-//   bun ./scripts/publish-r2.ts [--release] [--no-latest]
+//   bun ./scripts/publish-r2.ts [--release]
 //
-// --release publishes under the package version alone; otherwise the commit is appended.
-// --no-latest leaves cli/latest.json and cli/install.sh as they are (snapshots).
+// --release publishes under the package version alone, skips a version already published, and moves
+// cli/latest.json and cli/install.sh. Without it the commit is appended and latest is left alone.
 //
 // Needs R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY (see the hosting-artifacts skill).
 
@@ -33,11 +33,19 @@ const upload = async (file: string, key: string, type: string) => {
 };
 
 // Outside a release the commit is part of the version: one package version is built from many commits.
+const release = process.argv.includes('--release');
 const { version: packageVersion } = await Bun.file('package.json').json();
-const version = process.argv.includes('--release')
+const version = release
   ? packageVersion
   : `${packageVersion}-${(await Bun.$`git rev-parse --short HEAD`.text()).trim()}`;
-const skipLatest = process.argv.includes('--no-latest');
+
+// A release key is immutable: npm skips a version it already has, so overwriting it here would make
+// the same version mean different binaries on npm and R2.
+const publicBase = process.env.R2_PUBLIC_BASE || 'https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev';
+if (release && (await fetch(`${publicBase}/cli/${version}/SHA256SUMS`, { method: 'HEAD' })).ok) {
+  console.log(`[publish-r2] dx ${version} is already published; leaving it as it is.`);
+  process.exit(0);
+}
 
 const files: Record<string, { key: string; sha256: string }> = {};
 const sums: string[] = [];
@@ -66,7 +74,7 @@ await upload(sumsFile, `cli/${version}/SHA256SUMS`, 'text/plain');
 // The installer is versioned with the binaries it fetches, so an old version stays installable.
 await upload('scripts/install.sh', `cli/${version}/install.sh`, 'text/plain');
 
-if (!skipLatest) {
+if (release) {
   // One line, because install.sh reads the version with sed rather than requiring jq.
   const latestFile = join(staging, 'latest.json');
   await writeFile(latestFile, JSON.stringify({ version, files }));

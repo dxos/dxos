@@ -178,7 +178,7 @@ jobs:
       # A snapshot is uploaded under its commit and never becomes `latest`.
       - name: Upload the CLI to R2 (@next snapshot)
         if: github.event_name == 'workflow_dispatch'
-        run: moon run cli:publish-r2 -- --no-latest
+        run: moon run cli:publish-r2
         env:
           NODE_ENV: production
           DX_CLI_POSTHOG_API_KEY: ${{ secrets.DX_CLI_POSTHOG_API_KEY }}

@@ -35,6 +35,14 @@ describe('requireSession', () => {
     expect(session.serverUrl).toBe('https://example.test');
   });
 
+  test('a trailing /mcp/ is stripped too', async ({ expect }) => {
+    process.env[API_TOKEN_ENV] = TOKEN;
+    const session = await EffectEx.runPromise(
+      requireSession('no-such-profile', Option.some('https://example.test/mcp/')),
+    );
+    expect(session.serverUrl).toBe('https://example.test');
+  });
+
   test('a value that is not a dx-api01 token is refused', async ({ expect }) => {
     process.env[API_TOKEN_ENV] = 'sk-not-ours';
     const error = await EffectEx.runPromise(Effect.flip(requireSession('no-such-profile', Option.none())));
