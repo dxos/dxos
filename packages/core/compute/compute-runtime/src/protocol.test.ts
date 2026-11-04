@@ -418,6 +418,31 @@ describe('object references in the input', () => {
     });
     expect(result).toEqual({ title: 'Referenced' });
   });
+
+  test('passes a reference envelope through as data where the schema takes Unknown', async ({ expect }) => {
+    const EchoesData = Operation.make({
+      meta: { key: DXN.make('com.example.operation.echoesData'), name: 'Echoes Data' },
+      services: [Database.Service],
+      input: Schema.Struct({ payload: Schema.Unknown }),
+      output: Schema.Struct({ payload: Schema.Unknown }),
+    }).pipe(
+      Operation.withHandler(
+        Effect.fnUntraced(function* ({ payload }) {
+          return { payload };
+        }),
+      ),
+    );
+
+    const { peer, services } = await openPeer();
+    const db = await peer.createDatabase();
+    const envelope = { '/': `echo://${db.spaceId}/01J00000000000000000000000` };
+
+    const result = await wrapFunctionHandler(EchoesData, { resolveObjectReferences: true }).handler({
+      data: { payload: envelope },
+      context: { services, spaceId: db.spaceId, spaceKey: db.spaceKey.toHex(), spaceRootUrl: db.rootUrl },
+    });
+    expect(result).toEqual({ payload: envelope });
+  });
 });
 
 const openPeer = async () => {

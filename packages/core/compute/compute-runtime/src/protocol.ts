@@ -20,7 +20,7 @@ import * as Trace from '@dxos/compute/Trace';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, Hypergraph, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
 import { type DatabaseImpl, EchoClient, type TypeSource, makeRegistry } from '@dxos/echo-client';
-import { refFromEncodedReference } from '@dxos/echo/internal';
+import { TypeAnnotationId, refFromEncodedReference } from '@dxos/echo/internal';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { messageOf } from '@dxos/errors';
@@ -132,7 +132,7 @@ export const wrapFunctionHandler = (
         // Ref fields are decoded above, so an envelope still left in a top-level field is one that takes an object.
         const dataWithDecodedRefs =
           opts.resolveObjectReferences && funcContext.db && !SchemaAST.isAnyKeyword(func.input.ast)
-            ? await loadObjectReferences(decoded, funcContext.db)
+            ? await loadObjectReferences(func.input.ast, decoded, funcContext.db)
             : decoded;
 
         // Validated after ref hydration: the type side of a `Ref` field admits only a `Ref`
@@ -498,23 +498,43 @@ const unavailableOperationServiceLayer = Layer.succeed(Operation.Service, {
 } as Operation.OperationService);
 
 /**
- * Replaces each top-level field holding a reference envelope with the object it names, loaded from `db`. Only direct
- * fields: an envelope nested deeper (a draft's ref property) is a ref the handler resolves itself.
+ * Replaces each top-level field holding a reference envelope with the object it names, loaded from `db`, where the
+ * input schema takes an ECHO entity for that field (D-71). Only direct fields: an envelope nested deeper (a draft's ref
+ * property) is a ref the handler resolves itself, and one in an `Unknown` field is data the caller sent as is.
  */
-const loadObjectReferences = async (value: unknown, db: DatabaseImpl): Promise<unknown> => {
-  if (value === null || typeof value !== 'object' || Object.getPrototypeOf(value) !== Object.prototype) {
+const loadObjectReferences = async (ast: SchemaAST.AST, value: unknown, db: DatabaseImpl): Promise<unknown> => {
+  if (
+    ast._tag !== 'Objects' ||
+    value === null ||
+    typeof value !== 'object' ||
+    Object.getPrototypeOf(value) !== Object.prototype
+  ) {
     return value;
   }
+  const entityFields = new Set(
+    SchemaAST.getPropertySignatures(ast)
+      .filter((prop) => takesEntity(prop.type))
+      .map((prop) => prop.name.toString()),
+  );
   const resolver = db.graph.createRefResolver({ context: { space: db.spaceId } });
   return Object.fromEntries(
     await Promise.all(
       Object.entries(value).map(
         async ([key, entry]) =>
-          [key, isEncodedReference(entry) ? await refFromEncodedReference(entry, resolver).load() : entry] as const,
+          [
+            key,
+            entityFields.has(key) && isEncodedReference(entry)
+              ? await refFromEncodedReference(entry, resolver).load()
+              : entry,
+          ] as const,
       ),
     ),
   );
 };
+
+/** Whether a field's schema is an ECHO entity type, or a union with one (`Obj.Unknown | ObjectDraft`). */
+const takesEntity = (ast: SchemaAST.AST): boolean =>
+  SchemaAST.getAnnotation(ast, TypeAnnotationId) !== undefined || (ast._tag === 'Union' && ast.types.some(takesEntity));
 
 /** The wire form of a reference, `{ '/': <uri> }`. */
 const isEncodedReference = (value: unknown): value is Parameters<typeof refFromEncodedReference>[0] =>
