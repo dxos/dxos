@@ -761,7 +761,7 @@ scenario T-4: Operation key conflict
 
 ### Tested flows
 
-Each scenario below is run by a test that exists today ([D-59]). The table names the test by package, file and
+Each scenario below is run by a test that exists today ([D-59]), except T-20 and T-21, which are planned ([D-65]). The table names the test by package, file and
 `describe` › test title; the edge tests live in the dxos/edge repository. A scenario states the behaviour this spec
 requires; where the test expects the opposite today, the table says so ([D-62]).
 
@@ -1607,7 +1607,7 @@ decision D-64: Calling another plugin's operation and using another plugin's typ
 ```
 
 ```mdl
-decision D-65: T-20 publishes B first and A between its two invokes; T-13's dropped types come from the store's owner overwrite (`replace: true`), not a publish; T-20 and T-21 are marked planned until their test exists. Fills in [D-64].
+decision D-65: T-20 publishes B first and A between its two invokes; T-13's dropped types come from the store's owner overwrite (`replace: true`), not a publish; T-20 and T-21 are marked planned until their test exists, an exception to [D-59]. Fills in [D-64].
   date: 2026-11-04
   by: agent:claude-code
   for: user:dmaretskyi
