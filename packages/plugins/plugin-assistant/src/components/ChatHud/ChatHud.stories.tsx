@@ -60,6 +60,9 @@ const fakeAiServiceMiddleware = () => {
   return (upstream: AiService.Service): AiService.Service => ({ ...upstream, languageModel: () => layer });
 };
 
+/** Sets the width shared by the threads and the prompt. */
+const CHAT_HUD_WIDTH = '[--chat-hud-width:25vw]';
+
 type ThreadColumnProps = {
   chat: AssistantChat.Chat;
   db: Database.Database;
@@ -86,13 +89,13 @@ const ThreadColumn = ({ chat, db, runtime, registry, settings, current, footer, 
   const columnRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (current) {
-      columnRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+      columnRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
   }, [current]);
 
   return (
     <Chat.Root chat={chat} db={db} chatModel={chatModel} onSubmit={handleSubmit}>
-      <Panel.Root classNames='w-[min(32rem,100cqw)] snap-start border-e border-separator' asChild>
+      <Panel.Root classNames='w-(--chat-hud-width) snap-center border-e first:border-s border-separator' asChild>
         <div
           data-testid='chat-hud.thread'
           aria-current={current ? 'true' : undefined}
@@ -111,7 +114,7 @@ const ThreadColumn = ({ chat, db, runtime, registry, settings, current, footer, 
       </Panel.Root>
       {footer &&
         createPortal(
-          <div className={current ? 'flex flex-col gap-1 w-full max-w-[40rem] mx-auto p-1' : 'hidden'}>
+          <div className={current ? 'flex flex-col gap-1 w-(--chat-hud-width) mx-auto py-1' : 'hidden'}>
             <Chat.Activity />
             <Chat.Prompt {...chatProps} outline autoFocus={current} preset={preset?.id} />
             <ThreadPromptFocus current={current} />
@@ -205,14 +208,15 @@ const DefaultStory = () => {
   }
 
   return (
-    <Panel.Root>
+    <Panel.Root classNames={CHAT_HUD_WIDTH}>
       <Panel.Header>
         <ActionToolbar {...menuActions} attendableId={current.id} alwaysActive />
       </Panel.Header>
       <Panel.Body asChild>
         <ScrollArea.Root orientation='horizontal' snap>
           <ScrollArea.Viewport>
-            <div className='flex w-max h-full'>
+            {/* Half the frame less half a thread each side, so even the first and last thread can reach the center. */}
+            <div className='flex w-max h-full px-[calc(50cqw-var(--chat-hud-width)/2)]'>
               {threads.map((chat) => (
                 <ThreadColumn
                   key={chat.id}
