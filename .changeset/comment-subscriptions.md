@@ -1,5 +1,4 @@
 ---
-'@dxos/app-toolkit': minor
 '@dxos/plugin-review': minor
 '@dxos/types': minor
 ---
