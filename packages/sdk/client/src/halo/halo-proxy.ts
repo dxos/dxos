@@ -329,17 +329,13 @@ export class HaloProxy implements Halo {
     deviceProfile?: DeviceProfileDocument,
   ): Promise<Identity> {
     invariant(!this.identity.get(), 'Identity already exists');
-    const deviceProfileWithDefaults = create(DeviceProfileDocumentSchema, {
-      ...deviceProfile,
-      label: deviceProfile?.label ?? 'initial identity device',
-    });
     const identity = await runServiceCall(
       this._runtime,
       this._serviceProvider.rpc,
       'IdentityService.createIdentity',
       {
         profile: profile,
-        deviceProfile: deviceProfileWithDefaults,
+        deviceProfile: deviceProfile ?? create(DeviceProfileDocumentSchema, {}),
       },
       { timeout: RPC_TIMEOUT },
     );
@@ -428,11 +424,7 @@ export class HaloProxy implements Halo {
       throw new ApiError({ message: 'Client not open.' });
     }
 
-    const deviceProfileWithDefaults = create(DeviceProfileDocumentSchema, {
-      ...deviceProfile,
-      label: deviceProfile?.label ?? 'additional device',
-    });
-    return this._invitationProxy!.join(invitation, deviceProfileWithDefaults);
+    return this._invitationProxy!.join(invitation, deviceProfile ?? create(DeviceProfileDocumentSchema, {}));
   }
 
   /**

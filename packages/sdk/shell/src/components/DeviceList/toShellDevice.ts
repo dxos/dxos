@@ -3,7 +3,13 @@
 //
 
 import { requirePublicKey } from '@dxos/protocols/buf';
-import { type Device as ClientDevice, Device_PresenceState, DeviceKind, DeviceType } from '@dxos/react-client/halo';
+import {
+  type Device as ClientDevice,
+  Device_PresenceState,
+  DeviceKind,
+  DeviceType,
+  getDeviceLabel,
+} from '@dxos/react-client/halo';
 
 import { type ShellDevice } from './DeviceListProps.ts';
 
@@ -29,7 +35,7 @@ const PRESENCE: Record<Device_PresenceState, ShellDevice['presence']> = {
 export const toShellDevice = (device: ClientDevice): ShellDevice => ({
   key: requirePublicKey(device.deviceKey).toHex(),
   kind: device.profile?.type !== undefined ? KINDS[device.profile.type] : undefined,
-  label: device.profile?.label,
+  label: getDeviceLabel(device.profile),
   os: device.profile?.os,
   platform: device.profile?.platform,
   current: device.kind === DeviceKind.CURRENT,
