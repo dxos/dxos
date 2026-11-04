@@ -28,7 +28,7 @@ jobs:
     if: github.event_name != 'pull_request' || github.event.label.name == 'mail-canary'
     runs-on: ubuntu-24.04
     # A backstop: setup plus the `mail-canary` moon task's timeout, which sits above `runTimeoutMinutes` in canary.yml.
-    timeout-minutes: 90
+    timeout-minutes: 80
     # Two runs at once would read the same cursor and judge each other's copies. Set on the job, so a PR labelled
     # with anything else never queues behind a run.
     concurrency:

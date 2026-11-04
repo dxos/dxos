@@ -13,6 +13,8 @@ tasks:
     extends: test
     args:
       - canary/test/canary.test.ts
+      # Streams the logs as they happen, so a run that times out or is cancelled still shows how far it got.
+      - --disableConsoleIntercept
     env:
       VITEST_TAGS_FILTER: sync-e2e
       # Identity recovery logs its device credential at info, and the job log is public: info only from the canary.
@@ -20,4 +22,4 @@ tasks:
     options:
       cache: false
       # A backstop above `runTimeoutMinutes` in canary/canary.yml; `test` would stop the run after 10 minutes.
-      timeout: 4500
+      timeout: 3900
