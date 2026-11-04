@@ -41,7 +41,8 @@ Use `Effect.exit` around `Operation.invoke`, and `Effect.result` around `Databas
 - Passing an id or URI string where a `Ref<typename>` is expected.
 - Loading a ref as `yield* ref.load` or `yield* Database.get(ref)`: neither exists, and the failure
   reads as `is not iterable`. Use `yield* Database.load(ref)`.
-- Resolving a DXN the system prompt does not list.
+- Resolving a DXN the system prompt does not list, or an object id as one (`dxn:echo:///…`): `Database.resolve`
+  takes type and operation DXNs. Load an object by id with `Filter.id` (`queries.md`).
 - Guessing the shape of a value: print it first, since `print` shows its real fields (`printing.md`).
 - Printing an object with `JSON.stringify`: it hides the object's relations and referrers. Print the
   object itself.

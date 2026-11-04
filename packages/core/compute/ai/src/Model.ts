@@ -113,18 +113,20 @@ const localModelsFor = (provider: DXN.DXN, backend: (model: (typeof LOCAL_MODELS
 // binds the catalog entry itself rather than restating its DXN as a string.
 //
 
+// Adaptive thinking spends the same `maxTokens` as the reply, so a thinking model's ceiling leaves room for both: a turn
+// that runs out mid-thought ends with no tool call and its reasoning is lost.
 export const claudeOpus5: Model = make('com.anthropic.model.claude-opus-5.default', {
   provider: Provider.edge.id,
   backend: 'claude-opus-5',
   label: 'Claude Opus 5',
-  characteristics: { maxTokens: 16_384, thinking: true, tools: true },
+  characteristics: { maxTokens: 64_000, thinking: true, tools: true },
 });
 
 export const claudeSonnet5: Model = make('com.anthropic.model.claude-sonnet-5.default', {
   provider: Provider.edge.id,
   backend: 'claude-sonnet-5',
   label: 'Claude Sonnet 5',
-  characteristics: { maxTokens: 16_384, thinking: true, tools: true },
+  characteristics: { maxTokens: 64_000, thinking: true, tools: true },
 });
 
 export const claudeHaiku45: Model = make('com.anthropic.model.claude-haiku-4-5.default', {
