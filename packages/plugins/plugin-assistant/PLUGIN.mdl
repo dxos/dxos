@@ -739,13 +739,21 @@ decision D-19: A running agent shows on the navtree as the agent star in the att
 ```
 
 ```mdl
-decision D-20: Each turn is a progress monitor keyed `<uri>#agent` on the chat and on a companion chat's subject, read from the process tree; plugin-space's glyph draws running progress as the star. Fills in [D-19].
+decision D-20: An agent turn reports its progress as trace status updates from the runtime it runs on, not through a capability of its own, so a turn in a cloud session shows as well.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [QA-5]
+```
+
+```mdl
+decision D-21: Each turn sends a status update keyed `<uri>#agent` on the chat and on a companion chat's subject when it starts, every 30 seconds while it runs, and with its outcome when it ends; the progress trace sink makes it a monitor, and plugin-space's glyph draws running progress as the star. Both agents (the assistant and Claude Code) wrap their turns in the same helper. Fills in [D-19] and [D-20].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
   affects: [QA-5]
-  why: Busy state comes from the process tree, not the chat's view model, so it holds while the chat is closed and you work elsewhere. The star says an agent is on it, where an outline only says something is busy, and it leads into the amber star a finished, unread turn gets. One treatment on both rows keeps it consistent.
+  why: A turn's own trace reaches the progress registry wherever it runs (the local sink, or swarm broadcasts from EDGE), so nothing in the app has to watch for agents. The sink fails a meter that hears nothing for 90 seconds, which a long model call can outlast, hence the heartbeat. The star says an agent is on it, where an outline only says something is busy, and it leads into the amber star a finished, unread turn gets. One treatment on both rows keeps it consistent.
   rejected:
+    - Project busy chats from the process tree in plugin-assistant: a second source beside the trace for the same signal, tied to the app watching processes.
     - A still amber outline on the edge: it kept presence visible but read as generic busy work and had no natural finished state.
     - The star on chats and the outline on companion subjects: kept a document's viewers visible, at the cost of two symbols for one thing.
     - An `ActivitySource` capability the glyph merges: a second channel beside the progress registry for the same signal.
