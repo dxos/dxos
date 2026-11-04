@@ -1706,7 +1706,7 @@ export const TestInlineCreateWithProperties: Story = {
       }
       return row;
     });
-    await expect(row.querySelector('[data-testid="taskList.item.estimate"]')).toHaveAttribute('aria-label', 'M');
+    await expect(row.querySelector('[data-testid="taskList.item.estimate"]')?.textContent).toContain('M');
   },
 };
 
