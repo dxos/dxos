@@ -264,7 +264,7 @@ feat F-8: Claude Code on this computer
 
   req F-8.1:
     when: the plugin is enabled in the desktop app and `claude` is installed
-    then: Claude Code is a registered agent, and a task's menu offers "Assign to Claude Code"
+    then: Claude Code is a registered agent, and a task's assignee picker offers "Claude Code"
 
   req F-8.2:
     when: the plugin is enabled outside the desktop app, or `claude` is not found
@@ -298,7 +298,7 @@ feat F-9: Claude Code (cloud)
     when: the plugin is enabled
     then: |
       Claude Code is offered on EDGE in a chat's agent picker and as
-      "Assign to Claude Code (EDGE)" in a task's menu, and runs Claude Code in
+      "Claude Code (EDGE)" in a task's assignee picker, and runs Claude Code in
       an EDGE sandbox rather than on this computer
 
   req F-9.2:
@@ -448,7 +448,7 @@ test QA-2: Assign a project task to Claude Code
     flow `packages/plugins/plugin-claude/autocue/claude-code-task.mjs`.
   actors: human
   covers: [F-8.1, F-8.3, F-8.4]
-  status: verified
+  status: unverified        # 2026-11-02, the assignee picker now reads "Claude Code"; re-run its flow
   given:
     - Composer is the desktop app (for autocue, the test build from
       `moon run composer-app:tauri-build-test`)
@@ -471,7 +471,7 @@ test QA-2: Assign a project task to Claude Code
         --shout, print the greeting in capitals. Document the flag in the README."
       expect: the task is listed
     - name: Assign the task to Claude Code
-      do: Open the task's menu and choose "Assign to Claude Code".
+      do: Open the task's assignee picker and choose "Claude Code".
       expect: the task is started, and the project's chat holds the task brief as a context panel
     - name: Watch Claude work, allowing what it asks to run
       do: Open the Assistant companion and answer any permission card with Yes.
@@ -560,7 +560,7 @@ test QA-5: A project task on Claude Code (cloud) opens a pull request
     autocue flow `packages/plugins/plugin-claude/autocue/claude-code-cloud-task.mjs`.
   actors: human
   covers: [F-9.1, F-9.2, F-9.3]
-  status: unverified        # 2026-10-21, the task menu now reads "Assign to Claude Code (EDGE)"; re-run its flow
+  status: unverified        # 2026-11-02, the assignee picker now reads "Claude Code (EDGE)"; re-run its flow
   given:
     - as QA-4
   steps:
@@ -576,7 +576,7 @@ test QA-5: A project task on Claude Code (cloud) opens a pull request
         pushed, with a draft pull request opened by `gh pr create --draft`.
       expect: the task is listed
     - name: Assign the task to Claude Code (cloud)
-      do: Open the task's menu and choose "Assign to Claude Code (EDGE)".
+      do: Open the task's assignee picker and choose "Claude Code (EDGE)".
       expect: the task is started and the project's chat opens on Claude Code (cloud)
     - name: Watch it open the pull request
       do: Open the Assistant companion.
@@ -702,6 +702,14 @@ decision D-9: The EDGE sandbox runs the agent in the first repository it checked
 ```
 
 ---
+
+```mdl
+decision D-10: Claude Code is offered as "Claude Code" and "Claude Code (EDGE)" in a task's assignee picker, where plugin-projects now lists agents, instead of as "Assign to …" in the task's menu; F-8.1, F-9.1, QA-2 and QA-5 say so.
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: dxos/dxos#14378 moved delegation from a task's menu into its assignee picker, so the old entries no longer exist.
+```
 
 ## Appendix: Extension Definitions
 

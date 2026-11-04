@@ -44,7 +44,15 @@ import { Task, TaskSet } from '@dxos/types';
 import { meta } from '#meta';
 import { TaskOperation, TasksCapabilities, TaskSetView } from '#types';
 
-import { useDescriptionComponents, useMarkdownExtensions, useTaskActions } from '../../hooks/index.ts';
+import {
+  useDelegateActions,
+  useDescriptionComponents,
+  useMarkdownExtensions,
+  useTaskActions,
+  useTaskErrorToast,
+  useTaskMembers,
+  useTaskUpdate,
+} from '../../hooks/index.ts';
 import {
   ALL_STATUSES,
   STATUS_TERMS,
@@ -78,7 +86,7 @@ export const TaskSetArticle = ({
   role,
   attendableId,
   subject: taskSet,
-  showDescription = true,
+  showDescription = false,
   scope,
   onTaskCreated,
 }: TaskSetArticleProps) => {
@@ -144,6 +152,8 @@ export const TaskSetArticle = ({
   const handleClearFilter = useCallback(() => setFilterText(''), [setFilterText]);
   const { checked, onTaskCheck } = useCheckedTasks(taskSet);
 
+  const handleUpdate = useTaskUpdate(spaceId);
+  const showError = useTaskErrorToast();
   const { invokePromise } = Hooks.useOperationInvoker();
   // Files dropped on the create pane attach once the task exists: the create answers with the new
   // task's id, and the live object is in the working set by then, since this client wrote it.
@@ -151,19 +161,27 @@ export const TaskSetArticle = ({
   // Reports a failed create, so the pane keeps the draft, and the files left unattached, which the
   // pane keeps rather than dropping.
   const handleCreate = useCallback<TaskCreateHandler>(
-    async (props, files = []) => {
+    async ({ status, ...props }, files = []) => {
+      const finished = status === 'done';
       const { data, error } = await invokePromise(
         TaskOperation.CreateTask,
-        { taskSet: Ref.make(taskSet), ...props },
+        { taskSet: Ref.make(taskSet), ...props, status: finished ? undefined : status },
         { spaceId },
       );
       if (error || !data) {
         return { error: error ?? new Error('Task was not created.') };
       }
-      if (files.length === 0 && !onTaskCreated) {
+      if (files.length === 0 && !onTaskCreated && !finished) {
         return;
       }
       const [task] = db?.query(Filter.and(Filter.type(Task.Task), Filter.id(data.task.id))).runSync() ?? [];
+      if (finished) {
+        if (task) {
+          await handleUpdate(task, { status });
+        } else {
+          showError(new Error('The new task was not found to sign off.'));
+        }
+      }
       if (task && onTaskCreated) {
         await onTaskCreated(task);
       }
@@ -181,14 +199,10 @@ export const TaskSetArticle = ({
       }
       return { rejectedFiles };
     },
-    [invokePromise, taskSet, spaceId, attachFile, db, onTaskCreated],
+    [invokePromise, handleUpdate, showError, taskSet, spaceId, attachFile, db, onTaskCreated],
   );
 
-  const handleUpdate = Hooks.useOperation(
-    TaskOperation.UpdateTask,
-    (task: Task.Task, props: Task.Edit) => ({ task: Ref.make(task), ...props }),
-    { spaceId },
-  );
+  const members = useTaskMembers(spaceId);
 
   const handleDelete = Hooks.useOperation(TaskOperation.DeleteTask, (task: Task.Task) => ({ task: Ref.make(task) }), {
     spaceId,
@@ -233,6 +247,7 @@ export const TaskSetArticle = ({
   // Delete is one item among the contributed ones, so a row has a single trailing affordance
   // whatever any plugin adds to it.
   const contributed = useTaskActions();
+  const getDelegateActions = useDelegateActions();
   const getTaskActions = useCallback(
     (task: Task.Task) => [
       createMenuAction(`add-sub-task-${task.id}`, () => handleAddSubTask(task), {
@@ -315,12 +330,14 @@ export const TaskSetArticle = ({
       hierarchical
       selectable
       showDescription={showDescription}
-      showEstimates
+      members={members}
+      db={db}
       descriptionComponents={descriptionComponents}
       checked={checked}
       collapsed={collapsed}
       selected={currentId}
       getTaskActions={getTaskActions}
+      getDelegateActions={getDelegateActions}
       onTaskCheck={onTaskCheck}
       onCollapsedChange={setCollapsed}
       onTaskCreate={handleCreate}

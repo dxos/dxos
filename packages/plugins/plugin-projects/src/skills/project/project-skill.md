@@ -136,15 +136,25 @@ a value that already starts with `echo:`; that produces `echo:///echo://…`, wh
   Task `status` is `backlog`|`todo`|`started`|`review`|`blocked`|`done`|`failed`|`cancelled`|`duplicate`. Every project owns a task set
   from creation, so `projects-get` showing none means something is wrong — say so rather than
   recording tasks somewhere else, and do **not** claim a task was recorded.
-- **Assignee** — a task's `assignee` is an actor, not a label. For a person, name them
-  (`contact` ref, `identityDid`, `email`); for a non-person — an agent session, a service, a bot —
-  set `subject` to a ref to the object that actor _is_. Assigning work to **yourself** means
+- **Assignee and delegate** — a task's `assignee` is who answers for it (normally a person);
+  its `delegate` is the agent doing the work for them. Both are actors, not labels. For a person,
+  name them (`contact` ref, `identityDid`, `email`); for a non-person — an agent session, a
+  service, a bot — set `subject` to a ref to the object that actor _is_. Taking work on
+  **yourself** means setting the `delegate` (never overwriting a person's `assignee`) to
   `{"role": "assistant", "subject": {"/": "echo:///<session-object-id>"}}`, where the id is the `id`
   of the session OBJECT, not the harness session id it is filed under: find your own session with
   `tasks-list-sessions { sessionId: "<the harness session id>" }` and use the object it returns.
-  A bare `{"role": "assistant"}` with a name string is wrong — it records that _an_ assistant owns
+  A bare `{"role": "assistant"}` with a name string is wrong — it records that _an_ assistant has
   the task, not _which_ run, so nobody can tell later who was actually working it. When no session
-  object exists for this run, say so rather than inventing a name.
+  object exists for this run, say so rather than inventing a name. A delegated task you finish
+  lands in `review`: the assignee closes it, not you.
+- **You are never the assignee of a project task.** Over MCP you work for the person whose grant
+  the session holds, and `whoami` names them. When you take a task that no person answers for (none
+  on the task or its parent, or an agent left there by an older claim), pass
+  `assignee: {"identityDid": "<whoami identityDid>", "name": "<whoami displayName>"}` in the same
+  `tasks-update` call that sets you as the delegate. `tasks-update` refuses a `remoteSession` claim
+  that would leave no person answering for the task. A step answers to its own person, else its
+  parent's: a claim keeps that person and ignores the `assignee` you pass.
 - **Outline** — the free-text scratch surface (`tasks-get-outline`/`tasks-update-outline`). Keep a line
   starting `Resume:` holding the single next action, and a `Design: {"/": "echo:///<doc-id>"}` line
   pointing at the design document.
@@ -182,9 +192,10 @@ guessing: an assumption the ledger then carries as fact costs more than the roun
   files the question in the task's `history` and sets the task to `blocked`. Put what you are
   stuck on in `context`, offer the likely answers in `options` (`{ title, description? }` — the
   user may still type their own, so never phrase the list as exhaustive, and never pick an answer
-  yourself), and pass your own actor as `actor` (see "Assignee" above). A coding-agent session
+  yourself), and pass your own actor as `actor` (see "Assignee and delegate" above). A coding-agent session
   passes `remoteSession: { "sessionId": "<the harness session id>" }` instead: the blocked task is
-  assigned to that session and the question is recorded as asked by it, as `tasks-update` does.
+  delegated to that session and the question is recorded as asked by it, as `tasks-update` does. It
+  is refused on a task no person answers for: claim the task with `tasks-update` first.
   It returns the question's `questionId`.
 - One open question per task: a second call while the first is unanswered is refused. Ask
   everything you need in one question.
@@ -241,10 +252,11 @@ invisible to the space unless it reports itself. Keep a session object for your 
   long wait): `tasks-record-session { sessionId, spaceId, title?, summary, repo?, branch?, worktree? }`,
   where `sessionId` is your harness's session id and `summary` is one sentence on where the work
   stands. The first call creates the session; later calls update it and stamp the check-in time.
-- The result lists the open tasks assigned to this session. Read it: it is the cheapest point to
+- The result lists the open tasks delegated to this session. Read it: it is the cheapest point to
   notice you have drifted from what you were asked to do.
-- To assign a task to yourself, find the session object with `tasks-list-sessions { sessionId }`
-  and use it as the assignee's `subject` (see "Assignee").
+- To take a task on yourself, pass `remoteSession` on `tasks-update`, or find the session object
+  with `tasks-list-sessions { sessionId }` and use it as the delegate's `subject` (see "Assignee and
+  delegate"). Add `assignee` from `whoami` when the task has no person as its assignee.
 - **Name the session after the work once you pick up a task.** Pass `title` — the task's title,
   or the root task's when you claim a tree — on `tasks-record-session` and in `remoteSession` on
   `tasks-update`, so Composer lists the run by what it is doing rather than by a bare harness id. A

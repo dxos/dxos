@@ -3,9 +3,11 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Schema from 'effect/Schema';
 import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
@@ -130,6 +132,74 @@ export const Submit: Story = {
   play: async ({ canvasElement }) => {
     const button = await within(canvasElement).findByRole('button', { name: 'Send' });
     await expect(button.querySelector('svg[data-spin]')).not.toBeNull();
+  },
+};
+
+const TicketSchema = Schema.Struct({
+  state: Schema.optional(
+    Schema.Literals(['open', 'closed']).annotate({
+      title: 'State',
+      [PropertyMetaAnnotationId]: {
+        singleSelect: {
+          options: [
+            { id: 'open', title: 'Open', color: 'sky', icon: 'ph--circle-dashed--regular' },
+            { id: 'closed', title: 'Closed', color: 'green', icon: 'ph--check-circle--regular' },
+          ],
+        },
+      },
+    }),
+  ),
+  size: Schema.optional(Schema.Literals(['s', 'm', 'l']).annotate({ title: 'Size' })),
+});
+
+type TicketValues = Schema.Schema.Type<typeof TicketSchema>;
+
+const PILL_OVERRIDES = { state: { required: true }, size: { icon: 'ph--ruler--regular' } };
+
+const PillStory = () => {
+  const [values, setValues] = useState<TicketValues>({ state: 'open' });
+  return (
+    <NextJsonLayout data={values}>
+      <Form.Root
+        schema={TicketSchema}
+        values={values}
+        layout='pill'
+        fieldOverrides={PILL_OVERRIDES}
+        onValuesChanged={(next) => setValues(next)}
+      >
+        <Layout.Flex wrap align='center' gap='xs'>
+          <Form.Fields />
+        </Layout.Flex>
+      </Form.Root>
+    </NextJsonLayout>
+  );
+};
+
+export const Pill: Story = {
+  render: () => <PillStory />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
+    const state = canvas.getByTestId('state');
+    const size = canvas.getByTestId('size');
+
+    await expect(state.textContent).toContain('Open');
+    await expect(state.querySelector('svg')).not.toBeNull();
+    await expect(size.textContent).toContain('Size');
+    await expect(size).toHaveAttribute('data-placeholder-shown');
+    await expect(size.querySelector('svg')).not.toBeNull();
+
+    await userEvent.click(state);
+    await userEvent.click(await body.findByRole('option', { name: 'Closed' }));
+    await expect(body.queryByRole('option', { name: 'None' })).toBeNull();
+    await waitFor(async () => expect(readValues(canvasElement).state).toEqual('closed'));
+
+    await userEvent.click(size);
+    await userEvent.click(await body.findByRole('option', { name: 'm' }));
+    await waitFor(async () => expect(readValues(canvasElement).size).toEqual('m'));
+    await userEvent.click(size);
+    await userEvent.click(await body.findByRole('option', { name: 'None' }));
+    await waitFor(async () => expect(readValues(canvasElement).size).toBeUndefined());
   },
 };
 

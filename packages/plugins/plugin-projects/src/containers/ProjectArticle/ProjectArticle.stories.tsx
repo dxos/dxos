@@ -651,16 +651,12 @@ export const Sections: Story = {
   },
 };
 
-/** The contributed action's label, as written in `capabilities/task-action.ts`. */
-const TASK_ACTION_LABEL = 'Assign to agent';
+const TASK_ACTION_LABEL = 'Default agent';
 
 /** The copy action's label, as written in `capabilities/task-action.ts`. */
 const COPY_PROMPT_LABEL = 'Copy prompt';
 
 /**
- * The whole cross-plugin path in one gesture: plugin-projects contributes a `TaskAction`, the task
- * row shows it, and running it invokes the operation that opens a chat carrying the task.
- *
  * Asserted on the database rather than on any UI the chat might get, since the point is that the
  * contribution reached the row and the row reached the operation.
  */
@@ -673,16 +669,21 @@ export const TaskAction: Story = {
     await showTab(canvas, 'tasks');
     const title = await canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 });
 
-    // Scoped to this task's own row — every row carries a menu, so the seeded task has to be found
-    // through its title rather than by picking the first trigger on the page.
     const row = title.closest('[data-testid="taskList.item"]');
     await expect(row).toBeTruthy();
 
-    // Two actions on the row (the contributed one plus the list's own delete), so they collapse into
-    // the overflow menu rather than rendering as a bare button.
-    const trigger = await within(row as HTMLElement).findByTestId('taskList.item.actions', undefined, {
-      timeout: 10_000,
-    });
+    const trigger = await waitFor(
+      () => {
+        const control = (row as HTMLElement).querySelector<HTMLElement>(
+          '[data-testid="taskList.item.assignee"], [data-testid="taskList.item.assignee.unset"]',
+        );
+        if (!control) {
+          throw new Error('No assignee control on the row.');
+        }
+        return control;
+      },
+      { timeout: 10_000 },
+    );
     await userEvent.click(trigger);
 
     // Every item resolves to a label: a key rendered raw (`delete-task.label`) means the container
@@ -939,7 +940,9 @@ export const Updates: Story = {
     addTask(space, taskSet, MILESTONE_TASK, milestone);
     // Its task is only a row: the task list does not group by milestone, so no backlog split appears.
     await expect(canvas.findByText(MILESTONE_TASK, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    await waitFor(() => expect(canvas.queryByText('Backlog')).toBeNull(), { timeout: 10_000 });
+    await waitFor(() => expect(canvas.queryByText('Backlog', { ignore: 'script, style, option' })).toBeNull(), {
+      timeout: 10_000,
+    });
 
     // The milestone renders in its own Overview section.
     await showTab(canvas, 'overview');

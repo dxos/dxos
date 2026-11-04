@@ -4,38 +4,37 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
-import React, { type PropsWithChildren, useCallback, useMemo, useRef, useState } from 'react';
+import React, { type MouseEvent, type PropsWithChildren, useCallback, useMemo, useRef, useState } from 'react';
 
-import { Tag as EchoTag, Filter, Obj } from '@dxos/echo';
+import { type Database, Tag as EchoTag, Filter, Obj } from '@dxos/echo';
 import { useLabel, useObject, useQuery } from '@dxos/echo-react';
 import { Tree } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuAction, type MenuItem, executeMenuAction, fallbackIcon } from '@dxos/react-ui-menu';
+import * as Avatar from '@dxos/react-ui/Avatar';
+import * as Badge from '@dxos/react-ui/Badge';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Theme from '@dxos/react-ui/Theme';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 import * as Util from '@dxos/react-ui/Util';
-import { type Actor, PullRequest, Task } from '@dxos/types';
+import { type Actor, Person, PullRequest, Task } from '@dxos/types';
 import { mx, toHue } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
 import { useAssigneeDisplay } from '../../hooks/index.ts';
+import { UNASSIGNED_ICON } from '../../util/assignee.ts';
+import { type TaskMember, assigneeMenuActions } from '../../util/property-menus.ts';
 import { STATUS_ORDER } from '../../util/status-icons.ts';
 import { type TaskPlacement } from './hierarchy.ts';
 import { TaskDescription, type TaskDescriptionProps } from './TaskDescription.tsx';
 import { TaskListProvider, useTaskListContext } from './TaskListContext.ts';
 import { TaskListEditor, type TaskListEditorProps } from './TaskListEditor.tsx';
-import {
-  TaskCheckbox,
-  TaskEstimateControl,
-  TaskMnemonic,
-  TaskPriorityIcon,
-  TaskStatusControl,
-} from './TaskRowCells.tsx';
+import { TaskCheckbox, TaskEstimateLabel, TaskMnemonic, TaskPriorityIcon, TaskStatusControl } from './TaskRowCells.tsx';
 import { type TaskItemProps, type TaskSelectModifiers, TaskTreeNode } from './TaskTreeNode.tsx';
 import { TRACK } from './tracks.ts';
 import {
@@ -49,6 +48,8 @@ import { usePreviewAnchor } from './usePreviewAnchor.ts';
 
 /** Shared empty set, so a list with nothing in flight does not allocate one per render. */
 const EMPTY_IDS: ReadonlySet<string> = new Set<string>();
+
+const EMPTY_MEMBERS: readonly TaskMember[] = [];
 
 /** Shared empty map, for a tree rendered without the ordinal gutter. */
 const EMPTY_ORDINALS: ReadonlyMap<string, number> = new Map<string, number>();
@@ -117,10 +118,12 @@ type TaskListRootProps = PropsWithChildren<{
   showGroupLabels?: boolean;
   /** Number rows 1..N down the list as rendered, so tasks can be referenced by ordinal. */
   showOrdinals?: boolean;
-  /** Render each task's estimate beside the priority control. Off by default. */
-  showEstimates?: boolean;
   /** Render who holds each task; off collapses the assignee track. On by default. */
   showAssignees?: boolean;
+  /** The space's members, offered by each row's assignee picker beside the space's contacts. */
+  members?: readonly TaskMember[];
+  /** The space whose contacts the assignee pickers offer; the first task's when omitted, so an empty list has none. */
+  db?: Database.Database;
   /** Render each task's mnemonic before its title. On by default. */
   showMnemonics?: boolean;
   /** Rows and the edit pane run to the host's edges, with no inline inset (a list inside a framed host). */
@@ -142,6 +145,8 @@ type TaskListRootProps = PropsWithChildren<{
    * nothing — so delete is an ordinary contributed action rather than a special case of its own.
    */
   getTaskActions?: (task: Task.Task) => MenuItem[];
+  /** The agents a row's assignee picker can hand the task to, listed after the people. */
+  getDelegateActions?: (task: Task.Task) => MenuItem[];
   /**
    * Enables `Create`; called with a draft carrying at least the trimmed title, and the files dropped
    * on the create pane (`Editor`'s `acceptFiles`) for the host to store and attach once it exists.
@@ -195,8 +200,9 @@ const TaskListRoot = ({
   showOrdinals = false,
   showDescription = false,
   descriptionComponents,
-  showEstimates = false,
   showAssignees = true,
+  members = EMPTY_MEMBERS,
+  db: dbProp,
   showMnemonics = true,
   flush = false,
   hierarchical = false,
@@ -205,6 +211,7 @@ const TaskListRoot = ({
   selectable: selectableProp,
   checked = EMPTY_IDS,
   getTaskActions,
+  getDelegateActions,
   onTaskCreate,
   onTaskUpdate,
   onTaskSelect,
@@ -267,12 +274,14 @@ const TaskListRoot = ({
         toggle: hierarchical || !!groups,
         // The checkbox, and the one button that shows the number and copies the reference.
         gutter: (onTaskCheck ? 1 : 0) + (showOrdinals || showMnemonics ? 1 : 0),
-        showEstimates,
         showAssignees,
         hasActions,
       }),
-    [hierarchical, groups, showOrdinals, onTaskCheck, showMnemonics, showEstimates, showAssignees, hasActions],
+    [hierarchical, groups, showOrdinals, onTaskCheck, showMnemonics, showAssignees, hasActions],
   );
+
+  const db = dbProp ?? (tasks[0] && Obj.getDatabase(tasks[0]));
+  const people = useQuery(showAssignees && (onTaskUpdate || onTaskCreate) ? db : undefined, Filter.type(Person.Person));
 
   return (
     <TaskListProvider
@@ -286,16 +295,18 @@ const TaskListRoot = ({
       showOrdinals={showOrdinals}
       showDescription={showDescription}
       descriptionComponents={descriptionComponents}
-      showEstimates={showEstimates}
       hierarchical={hierarchical}
       showGutter={showGutter}
       showAssignees={showAssignees}
+      members={members}
+      people={people}
       showMnemonics={showMnemonics}
       flush={flush}
       isCollapsed={isCollapsed}
       selected={selected}
       checked={checked}
       getTaskActions={getTaskActions}
+      getDelegateActions={getDelegateActions}
       onCollapseToggle={onCollapseToggle}
       onTaskCreate={onTaskCreate}
       onTaskUpdate={onTaskUpdate}
@@ -361,7 +372,6 @@ const MAX_ORDINAL = 99;
 const buildGridTemplate = ({
   toggle,
   gutter,
-  showEstimates,
   showAssignees,
   hasActions,
 }: {
@@ -369,7 +379,6 @@ const buildGridTemplate = ({
   toggle: boolean;
   /** How many blocks the leading column holds: the ordinal (or the checkbox) and the mnemonic, each a block. */
   gutter: number;
-  showEstimates: boolean;
   showAssignees: boolean;
   hasActions: boolean;
 }): string => {
@@ -378,14 +387,12 @@ const buildGridTemplate = ({
     [undefined, toggle ? 'var(--dx-half-block-size)' : '0px'],
     // Fixed rather than `auto`, so the edit pane, which leaves it empty, keeps the rows' width for it.
     gutter > 0 && ['gutter', `calc(${gutter} * var(--dx-block-size))`],
+    ['priority', 'var(--dx-block-size)'],
     ['status', 'var(--dx-block-size)'],
     ['title', 'minmax(0, 1fr)'],
-    // Sized by its content: a row with no pull request holds no width for one.
     ['artifacts', 'auto'],
     // Kept, at no width, when hidden: the description spans `title / assignee` and so needs the line.
     ['assignee', showAssignees ? 'var(--dx-block-size)' : '0px'],
-    showEstimates && ['estimate', 'var(--dx-block-size)'],
-    ['priority', 'var(--dx-block-size)'],
     hasActions && ['actions', 'var(--dx-block-size)'],
   ];
   return candidates
@@ -515,7 +522,7 @@ const TaskListItem = ({
   onTaskUpdate,
 }: TaskItemProps) => {
   const { t } = Hooks.useTranslation(itemTranslationKey);
-  const { showGutter, showMnemonics, showAssignees, showEstimates } = useTaskListContext('TaskList.Item');
+  const { showGutter, showMnemonics, showAssignees } = useTaskListContext('TaskList.Item');
   const task = node.task;
   // Subscribed per row: the model is rebuilt from the task array, whose identity a property edit does not change, so
   // a rename made anywhere else would leave the row showing its old title. Read through the snapshot; the controls
@@ -527,6 +534,7 @@ const TaskListItem = ({
   }
 
   const description = showDescription ? current.description?.trim() || undefined : undefined;
+  const { assignee, delegate } = current;
 
   return (
     <>
@@ -543,6 +551,7 @@ const TaskListItem = ({
           )}
         </Layout.Flex>
       )}
+      <TaskPriorityIcon task={task} classNames={TRACK.priority} />
       <TaskStatusControl task={task} onTaskUpdate={onTaskUpdate} classNames={TRACK.status} />
       {/* Inset as the editor's fields are, so a title reads at the x the field below types it. The placeholder is
           drawn by CSS so the element's text stays the title itself. */}
@@ -566,14 +575,13 @@ const TaskListItem = ({
         data-testid='taskList.item.artifacts'
       >
         <TaskListItemArtifacts task={task} filter={(artifact) => PullRequest.instanceOf(artifact)} />
+        <TaskEstimateLabel estimate={current.estimate} />
       </Layout.Flex>
-      {showAssignees && current.assignee && (
+      {showAssignees && (
         <Layout.Grid center classNames={TRACK.assignee}>
-          <TaskListAssignee assignee={current.assignee} iconOnly />
+          <TaskListAssigneeControl task={task} assignee={assignee} delegate={delegate} />
         </Layout.Grid>
       )}
-      {showEstimates && <TaskEstimateControl task={task} classNames={TRACK.estimate} />}
-      <TaskPriorityIcon task={task} classNames={TRACK.priority} />
       <TaskListItemActions task={task} classNames={TRACK.actions} />
 
       {/* The row's second line, under the title and inset as it is; it takes no height when the task has no chips. */}
@@ -797,21 +805,27 @@ const pullRequestStateStyle: Record<PullRequest.State, string> = {
   draft: 'text-fg-muted',
 };
 
-//
-// Assignee — actor-aware chip, named and marked by `useAssigneeDisplay` so it agrees with the
-// properties row.
-//
-
 type TaskListAssigneeProps = {
-  assignee: Actor.Actor;
+  assignee?: Actor.Actor;
+  delegate?: Actor.Actor;
   /** Shows the glyph alone, naming the assignee on hover — for a row where the name crowds the title. */
   iconOnly?: boolean;
+  /** Takes the glyph's click (a menu trigger), so a session's card opens on hover alone. */
+  onClick?: (event: MouseEvent) => void;
 };
 
-const TaskListAssignee = Util.composable<HTMLSpanElement, TaskListAssigneeProps>(
-  ({ assignee, iconOnly }, _forwardedRef) => {
-    const { label, icon, agent, session: harness } = useAssigneeDisplay(assignee);
-    const [session] = useObject(assignee.subject);
+const TaskListAssignee = Util.composable<HTMLButtonElement, TaskListAssigneeProps>(
+  ({ assignee, delegate, iconOnly, ...props }, forwardedRef) => {
+    const { t } = Hooks.useTranslation(translationKey);
+    const owner = useAssigneeDisplay(assignee);
+    const worker = useAssigneeDisplay(delegate);
+    const badged = assignee !== undefined && delegate !== undefined;
+    const { icon, agent } = assignee ? owner : worker;
+    const label = badged
+      ? t('delegated.label', { assignee: owner.label ?? '', delegate: worker.label ?? '' })
+      : (assignee ? owner : worker).label;
+    const harness = delegate ? worker.session : owner.session;
+    const [session] = useObject((delegate ?? assignee)?.subject);
     const anchor = usePreviewAnchor({
       eid: session && Obj.getURI(session).toString(),
       label: label ?? '',
@@ -826,19 +840,48 @@ const TaskListAssignee = Util.composable<HTMLSpanElement, TaskListAssigneeProps>
 
     const hue = agent ? 'purple' : 'indigo';
 
-    // Icon-only, a square button in the row's controls; its tooltip names the assignee, unless a session shows its card
-    // on hover, which already names the run and a tooltip would stack on.
     if (iconOnly && label) {
-      return (
+      const trigger = props.onClick !== undefined;
+      const button = (
         <Button.Root
-          iconOnly
-          icon={icon}
-          hue={hue}
-          label={label}
-          showTooltip={!session}
+          variant='ghost'
+          compact
           data-testid='taskList.item.assignee'
-          {...(session && anchor)}
-        />
+          classNames='justify-center min-w-(--dx-control-size)'
+          {...(session &&
+            (trigger
+              ? {
+                  onPointerEnter: anchor.onPointerEnter,
+                  onPointerLeave: anchor.onPointerLeave,
+                  onBlur: anchor.onBlur,
+                }
+              : anchor))}
+          {...props}
+          ref={forwardedRef}
+        >
+          <Badge.Root>
+            <Avatar.Root
+              size='xs'
+              variant={agent ? 'square' : 'circle'}
+              hue={hue}
+              icon={agent ? icon : undefined}
+              fallback={(assignee ? owner : worker).label}
+              label={label}
+            />
+            {badged && (
+              <Badge.Mark data-testid='taskList.item.delegate'>
+                <Avatar.Root fill variant='square' hue='purple' icon={worker.icon} aria-hidden />
+              </Badge.Mark>
+            )}
+          </Badge.Root>
+        </Button.Root>
+      );
+      return session ? (
+        button
+      ) : (
+        <Tooltip.Trigger asChild content={label}>
+          {button}
+        </Tooltip.Trigger>
       );
     }
 
@@ -859,6 +902,60 @@ const TaskListAssignee = Util.composable<HTMLSpanElement, TaskListAssigneeProps>
 
 TaskListAssignee.displayName = 'TaskList.Assignee';
 
+const TaskListAssigneeControl = ({
+  task,
+  assignee,
+  delegate,
+}: {
+  task: Task.Task;
+  assignee?: Actor.Actor;
+  delegate?: Actor.Actor;
+}) => {
+  const { t } = Hooks.useTranslation(translationKey);
+  const { members, people, onTaskUpdate, getDelegateActions } = useTaskListContext('TaskList.AssigneeControl');
+  const current = useAssigneeDisplay(assignee);
+  const worker = useAssigneeDisplay(delegate);
+  if (!onTaskUpdate) {
+    return assignee || delegate ? <TaskListAssignee assignee={assignee} delegate={delegate} iconOnly /> : null;
+  }
+
+  return (
+    <ActionMenu
+      deferUntilOpen
+      actions={() =>
+        assigneeMenuActions({
+          assignee,
+          current,
+          delegate: delegate && worker,
+          members,
+          people,
+          agents: getDelegateActions?.(task),
+          onChange: (patch) => onTaskUpdate(task, patch),
+          t,
+        })
+      }
+    >
+      {assignee || delegate ? (
+        <TaskListAssignee
+          assignee={assignee}
+          delegate={delegate}
+          iconOnly
+          onClick={(event: MouseEvent) => event.stopPropagation()}
+        />
+      ) : (
+        <Button.Root
+          variant='ghost'
+          iconOnly
+          icon={UNASSIGNED_ICON}
+          iconClassNames='text-fg-muted'
+          label={t('set-assignee.label')}
+          data-testid='taskList.item.assignee.unset'
+          onClick={(event) => event.stopPropagation()}
+        />
+      )}
+    </ActionMenu>
+  );
+};
 //
 // TaskList
 //

@@ -469,8 +469,7 @@ export const ProjectArticle = ({
                   data={{
                     subject: taskSet,
                     attendableId,
-                    // Unset means shown: settings saved before the preference existed hold no key.
-                    showDescription: settings.showTaskDescriptions ?? true,
+                    showDescription: settings.showTaskDescriptions ?? false,
                     scope,
                     onTaskCreated: handleTaskCreated,
                   }}
@@ -729,10 +728,9 @@ const useCheckedTasks = (taskSet: TaskSet.TaskSet | undefined, scope?: readonly 
       const tasks: readonly Task.Task[] = get(query.atom);
       tasks.forEach((task) => {
         get(Obj.atomProperty(task, 'subtasks'));
-        // The delegate action arms on whether the agent already holds a checked row, and delegation
-        // writes both fields — without tracking them the bar would keep offering rows already handed over.
         get(Obj.atomProperty(task, 'status'));
         get(Obj.atomProperty(task, 'assignee'));
+        get(Obj.atomProperty(task, 'delegate'));
       });
       return Task.orderTree(tasks, get(Obj.atomProperty(taskSet, 'tasks')) ?? []);
     });

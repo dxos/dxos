@@ -79,6 +79,12 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         const tasks = descendants.filter((task) => !Task.isAgentWorking(task));
         invariant(tasks.length > 0, 'Expected at least one task not already delegated.');
 
+        const delegator = yield* currentActor;
+        invariant(
+          delegator || tasks.every((task) => Task.owner(task) ?? Task.owner(Task.getParentTask(task))),
+          'Expected a person to answer for every delegated task.',
+        );
+
         // The chat is filed under the tasks' project, so it lands in that project's navtree rather
         // than loose in the space. Walked from the tasks rather than taken as input: the list the
         // action runs from knows the tasks and nothing else.
@@ -134,24 +140,17 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         // not run that plugin.
         db.add(chat);
 
-        // Whoever delegated the work reviews it, so a finished task comes back to them rather than
-        // closing itself. `reviewers` being non-empty is what sends the task to `review`.
-        const reviewer = yield* currentActor;
-
-        // `started` on delegation, not on completion: the row shows work is underway from the moment
-        // the session has it.
         for (const task of tasks) {
-          Task.setStatus(task, 'started', { actor: reviewer });
-          Obj.update(task, (task) => {
-            // The chat's agent holds the work now, so the row says so rather than keeping whoever
-            // had it before. Named by the chat, as the planning tool's self-assignment is: a bare
-            // role is the supervisor's request to spawn a sub-agent, and its orphan sweep fails a
-            // started one no sub-agent is running.
-            task.assignee = { role: 'assistant', subject: Ref.make(chat) };
-            if (reviewer) {
-              task.reviewers = [reviewer];
-            }
-          });
+          const answering = Task.owner(Task.getParentTask(task)) ?? delegator;
+          Task.update(
+            task,
+            {
+              status: 'started',
+              delegate: { role: 'assistant', subject: Ref.make(chat) },
+              ...(!Task.owner(task) && answering ? { assignee: { ...answering } } : {}),
+            },
+            { actor: delegator },
+          );
         }
 
         // What a task was made from (an email, a document) is context the agent works from, and the
@@ -293,7 +292,6 @@ const resolveHarness = Effect.fnUntraced(function* (requested: string | undefine
   return agent && registry.value.get(agent.availability).available ? agent.id : SessionConfig.COMPOSER_HARNESS;
 });
 
-/** The delegating identity as an actor, for the reviewer field. */
 const currentActor = Effect.gen(function* () {
   const client = yield* Capability.get(ClientCapabilities.Client);
   const identity = client.halo.identity.get();

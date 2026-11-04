@@ -78,7 +78,7 @@ export const Settings = Schema.Struct({
     Schema.String.annotate({
       title: 'Default agent',
       description:
-        'Agent that one-click "Assign to agent" hands tasks to, by id: composer, or another installed agent such as claude-code. Falls back to Composer where that agent is unavailable.',
+        'Agent that "Default agent" in a task\'s assignee picker hands the task to, by id: composer, or another installed agent such as claude-code. Falls back to Composer where that agent is unavailable.',
     }),
   ),
   reportStruggles: Schema.optional(
