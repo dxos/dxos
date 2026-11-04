@@ -2001,6 +2001,15 @@ decision D-63: A folded section names the features it needs by block id (`F-2`),
   why: Names made a folded row long; block ids keep it compact.
 ```
 
+```mdl
+decision D-64: The status at the end of the header row uses react-ui-form's `tag` presentation, which is what [D-59]'s `pill` is called since `pill` was renamed to `tag`. Fills in [D-59].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-20.11]
+  why: The presentation was renamed under this change; the look D-59 chose is the same.
+```
+
 ## Appendix: Extension Definitions
 
 Extension block types used in this document are defined below using
