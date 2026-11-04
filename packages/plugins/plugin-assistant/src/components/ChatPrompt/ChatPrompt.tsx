@@ -387,7 +387,7 @@ export const ChatPrompt = ({
           onDismiss={() => setFailed([])}
         />
 
-        <Layout.Flex gap='sm' classNames='p-2'>
+        <Layout.Flex gap='sm' classNames='py-2 ps-1.5 pe-2'>
           <ChatStatusIndicator classNames='p-1' preset={preset} error={error} processing={streaming} />
           <ChatEditor
             ref={editorRef}
@@ -405,7 +405,7 @@ export const ChatPrompt = ({
         {db && settings && (
           <>
             <ChatActions
-              classNames='p-1.5'
+              classNames='px-1 py-1.5'
               attendableId={attendableId}
               customActions={customActions}
               processing={active}
