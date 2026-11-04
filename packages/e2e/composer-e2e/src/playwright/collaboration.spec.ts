@@ -121,7 +121,7 @@ test.describe('Collaboration tests', () => {
     await expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator).first()).toBeVisible();
   });
 
-  test("host and guest can see each others' cursors in a project's outline", { tag: ['@QA-9'] }, async () => {
+  test("host and guest can see each others' cursors in a project's outline", { tag: ['@projects:QA-9'] }, async () => {
     await host.createSpace();
     await host.createObject({ type: 'Project', name: PROJECT_NAME });
 
