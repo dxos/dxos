@@ -131,7 +131,7 @@ export const seedSession = (chat: Chat, session: SessionConfig.SessionConfig | u
   });
 };
 
-/** Records that a turn finished; the agent calls this as each turn ends. */
+/** Flags the chat's latest turn as unseen. */
 export const markUnread = (chat: Chat): void => {
   if (!chat.unread) {
     Obj.update(chat, (chat) => {

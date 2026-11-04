@@ -783,9 +783,9 @@ decision D-20: A turn that finishes while nobody has its chat open leaves a stil
   date: 2026-11-03
   by: user:wittjosiah
   affects: [QA-6]
-  why: The working star disappears when the turn ends, so without an unread mark a reply that arrived while you worked elsewhere leaves no trace in the navtree. Kept on the chat, the mark survives a reload and reaches every member. Because anyone viewing the chat reads it, the amber star and presence never need the mark at once. White while working and amber when unread tell the two apart without motion.
+  why: The working star disappears when the turn ends, so without an unread mark a reply that arrived while you worked elsewhere leaves no trace in the navtree. Kept on the chat, the mark survives a reload and reaches every member. Because anyone viewing the chat reads it, the amber star and presence never need the mark at once. Text-coloured while working and amber when unread tell the two apart without motion.
   rejected:
-    - The star in the glyph's corner: it took the corner from mentions and changes when the mark is free whenever the star is shown.
+    - The star in the glyph's corner: it took the corner from mentions and changes, though the mark is always free while the star shows.
     - An amber dot in the corner: it looks like the mention and changed-since-seen dots; the star names who finished.
     - Read state per client, in memory: a reload forgot it, and one member reading a reply left it unread for everyone else.
     - Marking every finished turn and letting the open view clear it: the star flashed on the open chat's row, and on other members' rows until the clear synced.

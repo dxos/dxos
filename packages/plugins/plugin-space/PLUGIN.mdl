@@ -540,7 +540,7 @@ feat F-8: Presence and Sync Status
   req F-8.5: SpacePresence shows peers in an order that is the same on every client for a given set of peers and changes only when the set changes.
   req F-8.6: A viewer whose heartbeat has lapsed for two broadcast intervals drops out of both presence indicators.
   req F-8.7: A space's navtree row counts the peers viewing the space itself.
-  req F-8.8: An object's navtree row shows the progress monitors keyed to it (`<object uri>#<suffix>`): a pulsing star while one runs, over presence; a still amber star when one has finished but is still registered, which a producer does for work nobody has seen yet; and a red edge when one fails. Each monitor's label is a line of the row's tooltip.
+  req F-8.8: An object's navtree row shows the progress monitors keyed to it (`<object uri>#<suffix>`): a pulsing star while one runs, over presence; a still amber star when one is done but still registered (finished work nobody has seen yet); and a red edge when one fails. Each monitor's label is a line of the row's tooltip.
 ```
 
 ## Acceptance

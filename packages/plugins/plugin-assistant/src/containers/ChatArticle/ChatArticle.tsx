@@ -49,14 +49,14 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
     const atomRegistry = Hooks.useCapability(Capabilities.AtomRegistry);
     const stateAtom = Hooks.useCapability(AssistantCapabilities.State);
-    // An open chat is read, for everyone in the space: so is a turn that finishes while it is open.
+    // An open chat reads its unread turn for the whole space.
     const [unread] = useObject(chat, 'unread');
     useEffect(() => {
       if (chat && unread) {
         Chat.markRead(chat);
       }
     }, [chat, unread]);
-    // A turn that ends while the chat is open here is read here, so the agent does not mark it unread.
+    // Counts this view in `OpenChats`, so a turn that ends here is not marked unread.
     const openChatsAtom = Hooks.useCapability(AssistantCapabilities.OpenChats);
     const openUri = chat && Obj.getDatabase(chat) ? Obj.getURI(chat, { prefer: 'absolute' }).toString() : undefined;
     useEffect(() => {

@@ -37,8 +37,8 @@ const agentProgressKey = (uri: string) => `${uri}#agent`;
 /**
  * Reports each agent turn to the progress registry, on its chat and, for a companion chat, on the object it accompanies.
  * Turns come from the process tree, which also lists remote runtimes' processes, so a turn shows wherever it runs and
- * ends when its process does. A finished turn nobody has read stays as a done monitor until the chat is opened; read
- * state comes from `Chat.unread`, which the space shares, and a chat open here shows none.
+ * ends when its process does. An unread turn (`Chat.unread`) stays as a done monitor, except on a peer with the chat
+ * open.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -96,7 +96,6 @@ export default Capability.makeModule(
         .catch((error) => log.warn('companion subject did not resolve', { uri, error }));
     };
 
-    // Each space's chats with an unread turn.
     const unread = new Map<SpaceId, readonly Chat.Chat[]>();
 
     type Shown = { label: string; done: boolean };

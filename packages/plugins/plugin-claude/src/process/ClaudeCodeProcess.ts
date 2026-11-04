@@ -176,8 +176,7 @@ export const make = (options: Options): AgentProcessDefinition =>
                   status: Exit.isSuccess(exit) ? 'success' : Exit.hasInterrupts(exit) ? 'interrupted' : 'error',
                   error: Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined,
                 });
-                // A stopped turn was stopped by someone watching it; any other end is news to the space,
-                // unless someone here is reading it as it ends.
+                // An interrupted turn was stopped, not finished, so it leaves nothing unread.
                 if (!Exit.hasInterrupts(exit) && !options.isChatOpen?.(chat)) {
                   Chat.markUnread(chat);
                 }
