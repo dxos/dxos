@@ -39,12 +39,20 @@ import {
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
-import { Task, TaskSet } from '@dxos/types';
+import { type Milestone, Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
 import { TaskOperation, TasksCapabilities, TaskSetView } from '#types';
 
-import { useDescriptionComponents, useMarkdownExtensions, useTaskActions } from '../../hooks/index.ts';
+import {
+  useDelegateActions,
+  useDescriptionComponents,
+  useMarkdownExtensions,
+  useTaskActions,
+  useTaskErrorToast,
+  useTaskMembers,
+  useTaskUpdate,
+} from '../../hooks/index.ts';
 import {
   ALL_STATUSES,
   STATUS_TERMS,
@@ -56,6 +64,7 @@ import {
 } from '../../util/index.ts';
 import { useAttachFile } from '../TaskArticle/TaskAttachments.tsx';
 import { TaskFilter } from './TaskFilter.tsx';
+import { TaskMilestoneFilter } from './TaskMilestoneFilter.tsx';
 import { TaskGroupMenu, TaskSortMenu } from './TaskViewOptions.tsx';
 
 export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet> & {
@@ -78,7 +87,7 @@ export const TaskSetArticle = ({
   role,
   attendableId,
   subject: taskSet,
-  showDescription = true,
+  showDescription = false,
   scope,
   onTaskCreated,
 }: TaskSetArticleProps) => {
@@ -111,7 +120,7 @@ export const TaskSetArticle = ({
     return new QueryBuilder(tags).build(text).filter ?? Filter.nothing();
   }, [rest, tags]);
   // Order and grouping persist beside the query, per device and per set, for the same reason.
-  const { sort = TaskSetView.DEFAULT_SORT, group = 'none' } = useViewState(TaskSetView.aspect, taskSet.id);
+  const { sort = TaskSetView.DEFAULT_SORT, group = 'none', milestone } = useViewState(TaskSetView.aspect, taskSet.id);
   const { update: updateView } = useViewStateActions(TaskSetView.aspect, taskSet.id);
   const handleSortChange = useCallback(
     (sort: TaskSetView.Sort) => updateView((view) => ({ ...view, sort })),
@@ -121,9 +130,15 @@ export const TaskSetArticle = ({
     (group: TaskSetView.GroupField) => updateView((view) => ({ ...view, group })),
     [updateView],
   );
+  const handleMilestoneChange = useCallback(
+    (milestone: string | undefined) => updateView((view) => ({ ...view, milestone })),
+    [updateView],
+  );
+  const milestones = useMilestones(taskSet);
   const { tasks, groups } = useArrangedTasks(taskSet, allTasks, {
     filter,
     statuses,
+    milestone,
     sort,
     group,
     ns: meta.profile.key,
@@ -144,6 +159,8 @@ export const TaskSetArticle = ({
   const handleClearFilter = useCallback(() => setFilterText(''), [setFilterText]);
   const { checked, onTaskCheck } = useCheckedTasks(taskSet);
 
+  const handleUpdate = useTaskUpdate(spaceId);
+  const showError = useTaskErrorToast();
   const { invokePromise } = Hooks.useOperationInvoker();
   // Files dropped on the create pane attach once the task exists: the create answers with the new
   // task's id, and the live object is in the working set by then, since this client wrote it.
@@ -151,19 +168,27 @@ export const TaskSetArticle = ({
   // Reports a failed create, so the pane keeps the draft, and the files left unattached, which the
   // pane keeps rather than dropping.
   const handleCreate = useCallback<TaskCreateHandler>(
-    async (props, files = []) => {
+    async ({ status, ...props }, files = []) => {
+      const finished = status === 'done';
       const { data, error } = await invokePromise(
         TaskOperation.CreateTask,
-        { taskSet: Ref.make(taskSet), ...props },
+        { taskSet: Ref.make(taskSet), ...props, status: finished ? undefined : status },
         { spaceId },
       );
       if (error || !data) {
         return { error: error ?? new Error('Task was not created.') };
       }
-      if (files.length === 0 && !onTaskCreated) {
+      if (files.length === 0 && !onTaskCreated && !finished) {
         return;
       }
       const [task] = db?.query(Filter.and(Filter.type(Task.Task), Filter.id(data.task.id))).runSync() ?? [];
+      if (finished) {
+        if (task) {
+          await handleUpdate(task, { status });
+        } else {
+          showError(new Error('The new task was not found to sign off.'));
+        }
+      }
       if (task && onTaskCreated) {
         await onTaskCreated(task);
       }
@@ -181,14 +206,10 @@ export const TaskSetArticle = ({
       }
       return { rejectedFiles };
     },
-    [invokePromise, taskSet, spaceId, attachFile, db, onTaskCreated],
+    [invokePromise, handleUpdate, showError, taskSet, spaceId, attachFile, db, onTaskCreated],
   );
 
-  const handleUpdate = Hooks.useOperation(
-    TaskOperation.UpdateTask,
-    (task: Task.Task, props: Task.Edit) => ({ task: Ref.make(task), ...props }),
-    { spaceId },
-  );
+  const members = useTaskMembers(spaceId);
 
   const handleDelete = Hooks.useOperation(TaskOperation.DeleteTask, (task: Task.Task) => ({ task: Ref.make(task) }), {
     spaceId,
@@ -233,6 +254,7 @@ export const TaskSetArticle = ({
   // Delete is one item among the contributed ones, so a row has a single trailing affordance
   // whatever any plugin adds to it.
   const contributed = useTaskActions();
+  const getDelegateActions = useDelegateActions();
   const getTaskActions = useCallback(
     (task: Task.Task) => [
       createMenuAction(`add-sub-task-${task.id}`, () => handleAddSubTask(task), {
@@ -300,6 +322,10 @@ export const TaskSetArticle = ({
       onClear={handleClearFilter}
       editorRef={filterEditorRef}
     >
+      {/* Kept while a milestone is selected, so a selection whose milestone was removed can still be cleared. */}
+      {(milestones.length > 0 || milestone !== undefined) && (
+        <TaskMilestoneFilter milestones={milestones} value={milestone} onChange={handleMilestoneChange} />
+      )}
       <TaskSortMenu value={sort} onChange={handleSortChange} />
       <TaskGroupMenu value={group} onChange={handleGroupChange} />
     </TaskFilter>
@@ -315,12 +341,14 @@ export const TaskSetArticle = ({
       hierarchical
       selectable
       showDescription={showDescription}
-      showEstimates
+      members={members}
+      db={db}
       descriptionComponents={descriptionComponents}
       checked={checked}
       collapsed={collapsed}
       selected={currentId}
       getTaskActions={getTaskActions}
+      getDelegateActions={getDelegateActions}
       onTaskCheck={onTaskCheck}
       onCollapsedChange={setCollapsed}
       onTaskCreate={handleCreate}
@@ -460,6 +488,7 @@ const useTasks = (taskSet: TaskSet.TaskSet): readonly Task.Task[] => {
 type ArrangeOptions = {
   filter: Filter.Any | undefined;
   statuses: readonly Task.Status[] | undefined;
+  milestone: string | undefined;
   sort: TaskSetView.Sort;
   group: TaskSetView.GroupField;
   /** Namespace of the group labels for tasks with no value. */
@@ -474,7 +503,7 @@ type ArrangeOptions = {
 const useArrangedTasks = (
   taskSet: TaskSet.TaskSet,
   tasks: readonly Task.Task[],
-  { filter, statuses, sort, group, ns }: ArrangeOptions,
+  { filter, statuses, milestone, sort, group, ns }: ArrangeOptions,
 ): { tasks: readonly Task.Task[]; groups?: TaskGroup[] } => {
   // A set, so the match is a lookup per task rather than a scan of the status list, and one the
   // atom below can depend on by identity.
@@ -488,7 +517,7 @@ const useArrangedTasks = (
         // (`status:`, `priority:`) or the task's tags, and a property-level subscription would miss
         // every term but the ones listed here.
         tasks.forEach((task) => get(Obj.atom(task)));
-        const sorted = sortTasks(filterTasks(tasks, { filter, statuses: statusSet }), sort);
+        const sorted = sortTasks(filterTasks(tasks, { filter, statuses: statusSet, milestone }), sort);
         if (group === 'none') {
           return { tasks: sorted };
         }
@@ -497,9 +526,21 @@ const useArrangedTasks = (
         const milestones = group === 'milestone' ? TaskSet.resolveMilestones(taskSet) : [];
         return { tasks: sorted, groups: groupTasks(sorted, group, { milestones, ns }) };
       }),
-    [taskSet, tasks, filter, statusSet, sort, group, ns],
+    [taskSet, tasks, filter, statusSet, milestone, sort, group, ns],
   );
 
+  return useAtomValue(atom);
+};
+
+const useMilestones = (taskSet: TaskSet.TaskSet): readonly Milestone.Milestone[] => {
+  const atom = useMemo(
+    () =>
+      Atom.make((get) => {
+        get(Obj.atomProperty(taskSet, 'milestones'));
+        return TaskSet.resolveMilestones(taskSet);
+      }),
+    [taskSet],
+  );
   return useAtomValue(atom);
 };
 

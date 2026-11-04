@@ -81,8 +81,8 @@ export const DelegateTaskToChat = Operation.make({
  * addresses (task, task set, project, space), and what the project is about, so a session started
  * from it can reach the live objects rather than work from a transcription.
  *
- * The prompt tells the agent to assign itself to the task first, which is what makes the handoff
- * visible in the app: the row shows `started` and an assistant assignee the moment the agent picks
+ * The prompt tells the agent to take the task on first, which is what makes the handoff visible in
+ * the app: the row shows `started` and the agent as its delegate the moment the agent picks
  * it up, exactly as an in-app delegation does.
  */
 export const CopyTaskPrompt = Operation.make({

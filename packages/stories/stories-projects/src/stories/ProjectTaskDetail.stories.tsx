@@ -52,9 +52,9 @@ const seedProject = async ({ space }: { space: Space }) => {
     text: 'You are an assistant focused on this project.',
   });
   Obj.update(project, (project) => {
-    project.repo = Ref.make(repo);
     project.instructions = Ref.make(instructions);
   });
+  Repo.setRepositories(project, [Ref.make(repo)]);
 
   const task = TaskSet.addTask(space.db, taskSet, TASK_TITLE);
   // Written by the verbs that write it in the app, so the pair is joined as the pane expects.

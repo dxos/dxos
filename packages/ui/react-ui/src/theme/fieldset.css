@@ -93,6 +93,10 @@
     line-height: var(--text-lg--line-height);
     color: var(--color-fg);
   }
+  /* Sections stand apart: each after the first leaves a wider gap above its heading than the rows inside it. */
+  .dx-fieldset:has(> .dx-fieldset-legend[data-variant='section']):not(:first-child) {
+    margin-block-start: calc(var(--dx-gap-size) * 3);
+  }
   /* The section's subtitle reads at the body size in the description colour, as a settings row's description does. */
   .dx-fieldset-legend[data-variant='section'] + .dx-field-helper {
     font-size: var(--text-base);

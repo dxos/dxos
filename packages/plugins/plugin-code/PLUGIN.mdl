@@ -15,10 +15,11 @@ plugin CodePlugin: Authors, reviews and syncs DEUS specs, and scaffolds the code
     - NavigationTargetResolver: resolves a github: key to the spec or file it names
     - OperationHandler: the plugin's operations (importSpec, listLocalSpecs, the Coder tools)
     - PluginAsset: this document, served as the plugin's own spec
+    - ProjectConfig: the Software group of a project's Config section, holding its repositories
     - ReactSurface: the spec article surface, and the code project's article and section surfaces
     - Schema: the Spec and CodeProject types
     - Settings: repos to sync and build settings
-    - SkillDefinition: the Coder skill
+    - SkillDefinition: the Coder, Feature Map and Project Repositories skills
     - SpecFileMapping: the GitHubCapabilities.FileMapping for `**/*.mdl`, so a GitHub file binding syncs specs (org.dxos.plugin.github.file-sync#F-6)
     - SpecSync: two-way sync of specs with files on disk (plugin-file-system's FileSystem)
     - Translations: the plugin's strings
@@ -496,6 +497,21 @@ op listLocalSpecs
   requires: [org.dxos.plugin.fileSystem#FileSystem]
 ```
 
+```mdl
+op updateProjectRepositories
+  key: org.dxos.operation.code.updateProjectRepositories
+  desc: |
+    Appends the repositories in `add` to a project's `Repo.RepositoriesAnnotation`, removes those in `remove`, and
+    returns the list; with neither, only reads it. A repository already listed keeps its place, compared by entity id.
+  input:
+    project: Ref<Project>
+    add?: Ref<Repo>[]
+    remove?: Ref<Repo>[]
+  output: { repositories: Ref<Repo>[] }
+  effects: [echo:read, echo:write]
+  requires: [Database]
+```
+
 ## Skills
 
 ```mdl
@@ -522,6 +538,18 @@ type CoderSkill
     # The introspect-mcp tools (list_packages, get_package, list_symbols,
     # find_symbol, get_symbol) come from the built-in DXOS Introspect MCP
     # server (org.dxos.mcp.introspect), off in a chat until turned on.
+    instructions: prose
+```
+
+```mdl
+type RepositoriesSkill
+  desc: |
+    Skill key `org.dxos.skill.code.repositories`, named Project Repositories, which an agent can enable. Reads and
+    edits the repositories a project's cloud coding agents check out.
+  fields:
+    key: org.dxos.skill.code.repositories
+    tools:
+      - op:updateProjectRepositories
     instructions: prose
 ```
 
@@ -980,6 +1008,16 @@ feat F-22: The feature map in a project
               and handled by `CodeOperationHandlerSet`. The Feature Map skill (`org.dxos.skill.code.featureMap`)
               declares them.
   req F-22.8: The feature map, its types and their migrations are present only while this plugin is enabled.
+```
+
+```mdl
+feat F-23: A project's repositories
+  req F-23.1: The Software group of a project's Config section lists the project's repositories, which a cloud
+              session checks out, and the user adds, removes and reorders them there. Other plugins fill the same group,
+              such as plugin-claude's code folder below the list.
+  req F-23.2: An agent asked to give a project a repository, or to take one away, adds or removes it with
+              op:updateProjectRepositories from the Project Repositories skill; a repository already listed keeps its
+              place.
 ```
 
 ## Acceptance
@@ -1863,6 +1901,45 @@ decision D-54: QA-5 walks the FeatureLevel story "Default", whose project "Inbox
   why: The stories that hold features now live in this plugin.
 ```
 
+```mdl
+decision D-55: A feature holds one block of a file. When two blocks of a file name the same feature, the first keeps it and drops its other sources in that file, and each later block becomes a new feature.
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-21.1]
+  why: A feature migrated from 0.3.0 can record two blocks of one file. Both blocks mapped to it, the later one's fields overwrote the earlier one's, and export wrote only the first embed back, losing the other block's text.
+  rejected:
+    - Merging the two blocks into one feature, which loses one block's name and requirements on export.
+```
+
+```mdl
+decision D-56: The plugin's namespace is `code`: the feature operations are part of `CodeOperation`, their handlers part of `CodeOperationHandlerSet`, and the Feature Map skill's key is `org.dxos.skill.code.featureMap`. The skill stays separate from the coder skill.
+  date: 2026-11-02
+  by: user:wittjosiah
+  supersedes: D-51
+  affects: [F-22.7]
+```
+
+```mdl
+decision D-57: In `CodeOperation`, the feature operations whose names would be ambiguous beside the other code operations take `Feature` in their names (`CreateFeature`, `UpdateFeature`, `DeleteFeature`, `AddFeatureDependency`, `RemoveFeatureDependency`, `LinkFeatureTask`, `ImportSpecFeatures`, `ExportSpecFeatures`, `ImportFeatureLinks`), matching their keys. Their keys do not change. Fills in [D-56].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-22.7]
+  why: Each name now matches the last segment of its key, so `CodeOperation.CreateFeature` is `org.dxos.operation.code.createFeature`.
+```
+
+```mdl
+decision D-58: op:updateProjectRepositories, keyed `org.dxos.operation.code.updateProjectRepositories` (tool `code-update-project-repositories`), is a `CodeOperation` handled by `CodeOperationHandlerSet`, and the Project Repositories skill is `org.dxos.skill.code.repositories`. The module ProjectConfig declares the Software group with the repositories field. Fills in plugin-claude D-17.
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-23.1, F-23.2]
+  why: Keys in this plugin's domain match the feature operations ([D-50], [D-56]). No build has shipped the old keys, so no saved skill names them.
+  rejected:
+    - Adding the tool to the Coder skill, which is about authoring a plugin's source files.
+```
+
 ## Appendix: Extension Definitions
 
 Extension block types used in this document are defined below using
@@ -1938,32 +2015,4 @@ ext service
     ops?: OpMap
     errors?: ErrorMap
     note?: Prose
-```
-
-```mdl
-decision D-55: A feature holds one block of a file. When two blocks of a file name the same feature, the first keeps it and drops its other sources in that file, and each later block becomes a new feature.
-  date: 2026-11-02
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-21.1]
-  why: A feature migrated from 0.3.0 can record two blocks of one file. Both blocks mapped to it, the later one's fields overwrote the earlier one's, and export wrote only the first embed back, losing the other block's text.
-  rejected:
-    - Merging the two blocks into one feature, which loses one block's name and requirements on export.
-```
-
-```mdl
-decision D-56: The plugin's namespace is `code`: the feature operations are part of `CodeOperation`, their handlers part of `CodeOperationHandlerSet`, and the Feature Map skill's key is `org.dxos.skill.code.featureMap`. The skill stays separate from the coder skill.
-  date: 2026-11-02
-  by: user:wittjosiah
-  supersedes: D-51
-  affects: [F-22.7]
-```
-
-```mdl
-decision D-57: In `CodeOperation`, the feature operations whose names would be ambiguous beside the other code operations take `Feature` in their names (`CreateFeature`, `UpdateFeature`, `DeleteFeature`, `AddFeatureDependency`, `RemoveFeatureDependency`, `LinkFeatureTask`, `ImportSpecFeatures`, `ExportSpecFeatures`, `ImportFeatureLinks`), matching their keys. Their keys do not change. Fills in [D-56].
-  date: 2026-11-02
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-22.7]
-  why: Each name now matches the last segment of its key, so `CodeOperation.CreateFeature` is `org.dxos.operation.code.createFeature`.
 ```

@@ -405,10 +405,11 @@ export const specDocuments = Migration.define({
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // In dependency order, so one pass takes a space from any earlier version to the current one. plugin-projects
-    // contributes the project's own step too; the runner keeps one of the two, so it runs first whichever plugin's list
+    // contributes the project's own steps too; the runner keeps one of each, so they run first whichever plugin's list
     // comes first.
     return Capability.contribute(ClientCapabilities.Migration, [
       LegacyProject.projectSpecs,
+      LegacyProject.projectRepositories,
       featureSubfeatures,
       makeFeatureSpecs(),
       documentRename,

@@ -10,12 +10,6 @@ import type * as Spec from '@dxos/compute/Spec';
 import type { Obj } from '@dxos/echo';
 import type { Task } from '@dxos/types';
 
-/**
- * Settings other plugins add to a project's overview, such as where its code lives on this device;
- * rendered inside the overview's form, so a contribution can use `Form.FieldSet`.
- */
-export const Settings: Role.Role<{ project: Project.Project }> = Role.make('org.dxos.plugin.projects.role.settings');
-
 /** A spec's own view beside its text, which another plugin contributes for the specs using its dialects. */
 export type SpecViewData = {
   subject: Spec.Spec;

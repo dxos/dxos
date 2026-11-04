@@ -315,6 +315,7 @@ describe('feature migrations', () => {
     const { db, graph } = await builder.createDatabase({ types: [Text.Text] });
     graph.registry.add([
       LegacyProject.ProjectV6,
+      LegacyProject.ProjectV7,
       LegacySpec.Spec,
       LegacySpec.SpecV2,
       LegacySpec.Document,
@@ -333,7 +334,12 @@ describe('feature migrations', () => {
     );
     Obj.setParent(sync, legacy);
     await db.flush();
-    await db.runMigrations([LegacyProject.projectSpecs, makeSpecOwners(), makeSpecContent()]);
+    await db.runMigrations([
+      LegacyProject.projectSpecs,
+      LegacyProject.projectRepositories,
+      makeSpecOwners(),
+      makeSpecContent(),
+    ]);
 
     const [migrated] = await db.query(Filter.type(Project.Project)).run();
     const [spec] = await db.query(Filter.type(Spec.Spec)).run();
