@@ -49,8 +49,10 @@ export type FullSyncReport = {
   readonly expected: number;
   readonly spaceId?: string;
   readonly runs?: RunStats;
-  /** Messages in the fresh space's mailbox feed when the wait ended. */
+  /** Expected messages in the fresh space's mailbox feed exactly once when the wait ended. */
   readonly synced?: number;
+  /** Expected messages missing from the feed or in it more than once; `synced + failed` is `expected`. */
+  readonly failed?: number;
   /** Seconds until every expected message had synced and the backfill had reached the horizon. */
   readonly syncSeconds?: number;
 };
@@ -181,14 +183,19 @@ export class FullSync {
               message: `the binding's backfill never reached its ${days}-day horizon`,
             },
           ];
+      // The expected messages carry no content to compare, so each F1 failure is one message missing or duplicated.
+      const messages = checkMessages(
+        'F1',
+        'Every Gmail message of the window synced',
+        snapshot,
+        expected,
+        runs.troubled,
+      );
       return {
-        checks: [
-          checkMessages('F1', 'Every Gmail message of the window synced', snapshot, expected, runs.troubled),
-          runs.check,
-          check('F3', 'Backfill reached the horizon', backfill),
-        ],
+        checks: [messages, runs.check, check('F3', 'Backfill reached the horizon', backfill)],
         runs: runs.runs,
-        synced: snapshot.messages.length,
+        synced: expected.length - messages.failures.length,
+        failed: messages.failures.length,
         syncSeconds,
       };
     });

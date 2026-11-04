@@ -10,7 +10,16 @@ import { describe, test } from 'vitest';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { SpaceId } from '@dxos/keys';
 
-import { Nightly, type NightlyMailbox, makeSeedCopy, parsePool } from '../nightly.ts';
+import { check } from '../checks.ts';
+import {
+  type CanaryReport,
+  Nightly,
+  type NightlyMailbox,
+  makeSeedCopy,
+  parsePool,
+  renderEvents,
+  renderSummary,
+} from '../nightly.ts';
 
 const NOW = new Date('2026-10-26T06:00:00Z');
 
@@ -140,6 +149,53 @@ describe('Nightly', () => {
     const report = await EffectEx.runPromise(new Nightly(fakeMailbox().mailbox, emptySpace).run(waits));
     expect(report.checks.map((check) => check.id)).toEqual(['S2']);
     expect(report.seed).toBeUndefined();
+  });
+});
+
+describe('renderEvents', () => {
+  const missing = { class: 'STALL' as const, message: 'Gmail message not synced', gmailId: 'g9' };
+  const report = (fullSync?: CanaryReport['fullSync']): CanaryReport => ({
+    startedAt: NOW.toISOString(),
+    spaceId: 'space',
+    checks: [check('S2', 'No sync failures', [])],
+    runs: { invocations: 6, failed: 0 },
+    fullSync,
+  });
+
+  test('carries how many of the full sync messages synced and failed', ({ expect }) => {
+    const [run, failure] = renderEvents(
+      report({
+        days: 730,
+        expected: 3,
+        synced: 2,
+        failed: 1,
+        checks: [check('F1', 'Every Gmail message of the window synced', [missing])],
+      }),
+      NOW.toISOString(),
+    );
+    expect(run.properties).toMatchObject({
+      ok: false,
+      fullSyncOk: false,
+      fullSyncExpected: 3,
+      fullSyncSynced: 2,
+      fullSyncFailed: 1,
+    });
+    expect(failure.properties).toMatchObject({ check: 'F1', class: 'STALL', gmailId: 'g9' });
+  });
+
+  test('sends no full sync counts when the stage could not run, and none when it was skipped', ({ expect }) => {
+    const couldNotRun = report({
+      days: 730,
+      expected: 0,
+      checks: [check('F1', 'Every Gmail message of the window synced', [{ class: 'SETUP', message: 'boom' }])],
+    });
+    expect(renderEvents(couldNotRun, NOW.toISOString())[0].properties).toMatchObject({
+      fullSyncOk: false,
+      fullSyncSynced: undefined,
+      fullSyncFailed: undefined,
+    });
+    expect(renderSummary(couldNotRun)).toContain('- Full sync: could not run.');
+    expect(renderEvents(report(), NOW.toISOString())[0].properties).toMatchObject({ fullSyncOk: undefined });
   });
 });
 
