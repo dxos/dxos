@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+export * from './trajectory/index.ts';
 export * from './types/index.ts';
 
 export * as AgentIdentity from './AgentIdentity.ts';

@@ -46,7 +46,9 @@ export const FeatureValues = Schema.make<Schema.Codec<FeatureValues, any>>(
 const makeFieldMap = (feature: Feature.Feature): FormFieldMap => {
   const RequirementsField: FormFieldRenderer = ({ label }) => (
     <Form.Field label={label} standalone>
-      <RequirementEditor feature={feature} />
+      <Card.Root grid border={false}>
+        <RequirementEditor feature={feature} />
+      </Card.Root>
     </Form.Field>
   );
   return { requirements: RequirementsField };

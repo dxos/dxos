@@ -40,6 +40,7 @@ export const TextAreaField = ({
         multiline
         placeholder={placeholder}
         readonly={!!readonly}
+        {...(inPlace && { variant: 'plain' })}
         testId={jsonPath}
       />
     );

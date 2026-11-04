@@ -53,6 +53,8 @@ export type BoundTextEditorProps = {
   multiline?: boolean;
   placeholder?: string;
   readonly?: boolean;
+  /** `title` and `plain` edit in place: no well, and one line until the text grows. */
+  variant?: 'default' | 'plain' | 'title';
   autoFocus?: boolean;
   testId?: string;
 };
@@ -67,6 +69,7 @@ export const BoundTextEditor = ({
   multiline,
   placeholder,
   readonly,
+  variant,
   autoFocus,
   testId,
 }: BoundTextEditorProps) => {
@@ -105,9 +108,11 @@ export const BoundTextEditor = ({
     [ready, placeholder, readonly, markdown, multiline, themeMode, object, pathKey, bindingExtensions, handleFocus],
   );
 
+  const inPlace = variant === 'title' || variant === 'plain';
   return (
     <Input.Frame
-      rows={markdown ? ROWS : multiline ? TEXT_AREA_ROWS : undefined}
+      rows={markdown || multiline ? (inPlace ? 1 : markdown ? ROWS : TEXT_AREA_ROWS) : undefined}
+      variant={variant}
       disabled={readonly}
       data-testid={testId}
     >

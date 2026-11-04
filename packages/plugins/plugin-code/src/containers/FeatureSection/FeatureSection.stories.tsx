@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
-import { expect, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter } from '@dxos/echo';
@@ -27,9 +27,9 @@ import { FeatureSection } from './FeatureSection.tsx';
 
 const FEATURE_NAME = 'Provider sync';
 
-type StoryArgs = { attendableId: string };
+type StoryArgs = { attendableId: string; attended: boolean };
 
-const DefaultStory = ({ attendableId }: StoryArgs) => {
+const DefaultStory = ({ attendableId, attended }: StoryArgs) => {
   const [space] = useSpaces();
   const features = useQuery(space?.db, Filter.type(Feature.Feature));
   const feature = features.find((feature) => feature.name === FEATURE_NAME);
@@ -39,7 +39,7 @@ const DefaultStory = ({ attendableId }: StoryArgs) => {
 
   return (
     <AttendableContainer id={attendableId} classNames='contents'>
-      <FeatureSection subject={feature} attendableId={attendableId} />
+      <FeatureSection subject={feature} attended={attended} />
     </AttendableContainer>
   );
 };
@@ -74,22 +74,57 @@ const meta = {
     controls: { disable: true },
     translations: [...translations, ...reactUiTranslations, ...formTranslations],
   },
-  args: { attendableId: 'test' },
+  args: { attendableId: 'test', attended: true },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** The block id, the form over the feature's fields and requirements, and the features it depends on. */
+/** Device state outlives a story, so each story sets the fold it needs. */
+const setCollapsed = async (canvasElement: HTMLElement, collapsed: boolean) => {
+  const toggle = await within(canvasElement).findByTestId('feature-section.collapse', undefined, { timeout: 10_000 });
+  if ((toggle.getAttribute('aria-expanded') === 'true') === collapsed) {
+    await userEvent.click(toggle);
+  }
+  await waitFor(() => expect(toggle.getAttribute('aria-expanded')).toBe(String(!collapsed)));
+};
+
+/** Attended: the header row, description, requirements and the features it needs. */
 export const Default: Story = {
   play: async ({ canvasElement }) => {
+    await setCollapsed(canvasElement, false);
     const canvas = within(canvasElement);
     await expect(await canvas.findByTestId('name', undefined, { timeout: 10_000 })).toHaveTextContent(FEATURE_NAME);
     await expect(canvas.getByTestId('feature-section.block-id').textContent).toMatch(/F-3/);
+    await expect(canvas.getAllByTestId(/^requirement-editor\.\d+\.text$/)).toHaveLength(3);
+    await expect(canvas.getByTestId('requirement-editor.add')).toBeInTheDocument();
     const dependencies = within(
       await canvas.findByTestId('feature-section.dependencies', undefined, { timeout: 10_000 }),
     );
     await expect(await dependencies.findByText('OAuth tokens')).toBeInTheDocument();
+  },
+};
+
+/** Not attended, as an embed reads in the document: no add actions, and rows hide while they are empty. */
+export const Unattended: Story = {
+  args: { attended: false },
+  play: async ({ canvasElement }) => {
+    await setCollapsed(canvasElement, false);
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByTestId('name', undefined, { timeout: 10_000 })).toHaveTextContent(FEATURE_NAME);
+    await expect(canvas.queryByTestId('requirement-editor.add')).toBeNull();
+    await expect(canvas.queryByTestId('requirement-editor.0.remove')).toBeNull();
+  },
+};
+
+/** Folded to its header row: the block ids of the features it needs and the requirement count, beside the status. */
+export const Collapsed: Story = {
+  play: async ({ canvasElement }) => {
+    await setCollapsed(canvasElement, true);
+    const canvas = within(canvasElement);
+    await expect(canvas.queryByTestId('requirement-editor')).toBeNull();
+    await expect(canvas.getByTestId('feature-section.requirement-count').textContent).toBe('3 requirements');
+    await expect(canvas.getByTestId('feature-section.dependency').textContent).toBe('F-2');
   },
 };

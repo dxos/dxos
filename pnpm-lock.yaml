@@ -4385,6 +4385,9 @@ importers:
       '@anthropic-ai/sdk':
         specifier: 'catalog:'
         version: 0.117.1(zod@4.6.7)
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../assistant
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo
@@ -4653,12 +4656,12 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../../common/node-std
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../protocols
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../../sdk/schema
+      '@dxos/sql-sqlite':
+        specifier: workspace:*
+        version: link:../../../common/sql-sqlite
       '@dxos/types':
         specifier: workspace:*
         version: link:../../../sdk/types
@@ -22443,6 +22446,9 @@ importers:
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter
+      '@dxos/react-ui-trace':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-trace
       '@dxos/sql-sqlite':
         specifier: workspace:*
         version: link:../../common/sql-sqlite
@@ -22501,6 +22507,9 @@ importers:
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../../plugins/plugin-chess
+      '@dxos/plugin-claude':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-claude
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugins/plugin-client
@@ -22697,6 +22706,9 @@ importers:
       '@dxos/agent-runtime':
         specifier: workspace:*
         version: link:../../core/compute/agent-runtime
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../../core/compute/assistant
       '@dxos/assistant-toolkit':
         specifier: workspace:*
         version: link:../../core/compute/assistant-toolkit

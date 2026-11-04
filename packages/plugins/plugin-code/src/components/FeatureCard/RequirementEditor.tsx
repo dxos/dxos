@@ -19,15 +19,20 @@ import { RequirementIcon, RequirementId, RowIcon } from './fields.tsx';
 export type RequirementEditorProps = {
   /** The live feature, whose requirement texts the rows edit in place. */
   feature: Feature.Feature;
+  /** `plain` rows read as text until a row is focused. */
+  variant?: 'default' | 'plain';
+  /** Whether the remove and add actions show; the rows stay editable either way. */
+  actions?: boolean;
+  inert?: boolean;
 };
 
 /**
  * A feature's requirements, each an editor bound to its text that wraps to the whole of it, with the spec id it came
  * from before it and a remove action after. Typing edits the requirement in place, so comments on it stay anchored;
  * comment marks reach the editors through `EditorExtensionsProvider`, by the requirement's key. A requirement
- * that loses focus without text is removed.
+ * that loses focus without text is removed. Render it inside a grid `Card.Root`; its icons sit in that card's rail.
  */
-export const RequirementEditor = ({ feature }: RequirementEditorProps) => {
+export const RequirementEditor = ({ feature, variant, actions = true, inert }: RequirementEditorProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
   const [snapshot] = useObject(feature);
   const requirements = snapshot ? Feature.getRequirements(snapshot) : [];
@@ -45,7 +50,7 @@ export const RequirementEditor = ({ feature }: RequirementEditorProps) => {
   // mounts at that index, or is rebuilt there, leaves the focus where it is.
   const [focusIndex, setFocusIndex] = useState<number>();
   return (
-    <Card.Root grid border={false} data-testid='requirement-editor'>
+    <Card.Section inert={inert} data-testid='requirement-editor'>
       {requirements.map((requirement, index) => (
         <Card.Row
           key={requirement.key}
@@ -53,12 +58,14 @@ export const RequirementEditor = ({ feature }: RequirementEditorProps) => {
           classNames='[&_.dx-card-row-content]:overflow-visible'
           leading={<RequirementIcon />}
           trailing={
-            <Card.Action
-              icon='ph--x--regular'
-              label={t('requirement-editor.remove.label')}
-              data-testid={`requirement-editor.${index}.remove`}
-              onClick={() => onRemove(requirement.key)}
-            />
+            actions ? (
+              <Card.Action
+                icon='ph--x--regular'
+                label={t('requirement-editor.remove.label')}
+                data-testid={`requirement-editor.${index}.remove`}
+                onClick={() => onRemove(requirement.key)}
+              />
+            ) : undefined
           }
         >
           {/* The spec id leads the text, as it does in the read-only list; the field takes the rest of the row. */}
@@ -80,6 +87,7 @@ export const RequirementEditor = ({ feature }: RequirementEditorProps) => {
                   path: FeatureAnchor.getPath({ field: 'requirement', key: requirement.key }),
                 }}
                 placeholder={t('requirement-editor.text.label')}
+                variant={variant}
                 autoFocus={index === focusIndex}
                 testId={`requirement-editor.${index}.text`}
               />
@@ -87,16 +95,18 @@ export const RequirementEditor = ({ feature }: RequirementEditorProps) => {
           </Layout.Flex>
         </Card.Row>
       ))}
-      <Card.Row
-        leading={<RowIcon icon='ph--plus--regular' />}
-        data-testid='requirement-editor.add'
-        onClick={() => {
-          setFocusIndex(requirements.length);
-          onAdd();
-        }}
-      >
-        <Card.Text variant='muted'>{t('requirement-editor.add.label')}</Card.Text>
-      </Card.Row>
-    </Card.Root>
+      {actions && (
+        <Card.Row
+          leading={<RowIcon icon='ph--plus--regular' />}
+          data-testid='requirement-editor.add'
+          onClick={() => {
+            setFocusIndex(requirements.length);
+            onAdd();
+          }}
+        >
+          <Card.Text variant='muted'>{t('requirement-editor.add.label')}</Card.Text>
+        </Card.Row>
+      )}
+    </Card.Section>
   );
 };

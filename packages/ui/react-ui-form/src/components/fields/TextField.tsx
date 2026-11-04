@@ -51,7 +51,13 @@ export const TextField = ({
   }
   if (object && path) {
     return (
-      <BoundTextEditor binding={{ object, path }} placeholder={placeholder} readonly={!!readonly} testId={jsonPath} />
+      <BoundTextEditor
+        binding={{ object, path }}
+        placeholder={placeholder}
+        readonly={!!readonly}
+        {...((presentation === 'title' || presentation === 'plain') && { variant: presentation })}
+        testId={jsonPath}
+      />
     );
   }
 

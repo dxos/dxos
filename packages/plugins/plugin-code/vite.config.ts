@@ -32,6 +32,7 @@ export default defineConfig({
     SpecText: 'src/types/SpecText.ts',
     Settings: 'src/types/Settings.ts',
     SourceFile: 'src/types/SourceFile.ts',
+    State: 'src/types/State.ts',
     types: 'src/types/index.ts',
   },
   jsx: 'react',

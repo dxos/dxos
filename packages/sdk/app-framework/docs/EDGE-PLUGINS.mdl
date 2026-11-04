@@ -251,6 +251,10 @@ An invocation of `org.dxos.operation.markdown.create` in space `S` flows:
 uses org.dxos.echo: Plugin types are ECHO schemas, and handlers read and write a space through its Database.
 ```
 
+```mdl
+uses org.dxos.app.composer: Its QA-17 is the browser half of loading a published bundle by its manifest.
+```
+
 ## Extensions
 
 | Term       | URI                          |
@@ -753,6 +757,235 @@ scenario T-4: Operation key conflict
   then:
     - the upload fails with KeyConflict
     - the operation index is unchanged
+```
+
+### Tested flows
+
+Each scenario below is run by a test that exists today ([D-59]), except T-20 and T-21, which are planned ([D-65]). The table names the test by package, file and
+`describe` › test title; the edge tests live in the dxos/edge repository. A scenario states the behaviour this spec
+requires; where the test expects the opposite today, the table says so ([D-62]).
+
+| Scenario | Repository | Test                                                                                                                                      | Note                                                                                       |
+| -------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| T-5      | dxos       | `check-edge-release` (`plugin-builder` `check-release`), the "Check EDGE plugin releases" step of the `Check` workflow                    | Runs for every package tagged `edge-release`.                                              |
+| T-6      | dxos       | `plugin-space` `edge-bundle.test.ts` › space plugin bundle on EDGE: the first four tests                                                  |                                                                                            |
+| T-7      | dxos       | `plugin-space` `edge-bundle.test.ts` › space plugin bundle on EDGE › returns an ECHO object in its JSON form, with its `@uri`              | `test.fails`: the host returns the RPC clone of the output, which drops the ECHO object.   |
+| T-8      | dxos       | `plugin-host-cloudflare` `PluginHost.workerd.test.ts` › PluginHost (4 tests)                                                              |                                                                                            |
+| T-9      | dxos       | `echo-client-e2e` `type-source.test.ts` › type sources (11 tests)                                                                         |                                                                                            |
+| T-10     | edge       | `registry-service` `plugin-store.workerd.test.ts` › plugin store; `plugin-store-multipart.workerd.test.ts` › plugin store: multipart upload |                                                                                            |
+| T-11     | edge       | `registry-service` `plugin-store.workerd.test.ts` › plugin store: the immutability, ownership and refusal tests                           |                                                                                            |
+| T-12     | edge       | `registry-service` `plugin-store.workerd.test.ts` › plugin store › channels are dist-tags: prereleases skip `latest`, a space channel falls back to it |                                                                               |
+| T-13     | edge       | `registry-service` `plugin-type.workerd.test.ts` › type registry (6 tests); `plugin-store.workerd.test.ts` › plugin store › lists every plugin key with its channels and versions, revoked ones included |                     |
+| T-14     | edge       | `edge` `plugin-store.node.test.ts` › EDGE plugins (8 tests)                                                                               |                                                                                            |
+| T-15     | edge       | `edge` `plugin-store.node.test.ts` › EDGE plugins: a plugin published with the dx CLI › serves its operation once published               | Skipped unless a `dx` binary is installed or named by `DX_CLI`.                            |
+| T-16     | edge       | `edge` `plugin-seed.node.test.ts` › first-party plugins seeded into the registry (2 tests)                                                | Skipped unless first-party bundles are available; `plugins-mode.yml` provides them.        |
+| T-17     | edge       | `edge` `operation-fallbacks.node.test.ts` › operations without a bundle in plugins mode (2 tests)                                         | Same condition as T-16.                                                                    |
+| T-18     | edge       | `edge` `plugin-isolation.node.test.ts` › operations that read another plugin’s capabilities                                               | Passes with operation-service; fails in plugins routing by [D-41] until the case is resolved. |
+| T-19     | edge       | `plugins-mode.yml`: the edge suite with `DX_TEST_OPERATION_ROUTING=plugins`                                                               | Advisory; per-test failures are recorded in edge's operation-fallbacks plan.               |
+| T-20     | edge       | `edge` `plugin-cross.node.test.ts` › two plugins published with the dx CLI › B invokes A's operation                                      | Planned: not in edge yet. Will need a `dx` binary, as T-15 does.                           |
+| T-21     | edge       | `edge` `plugin-cross.node.test.ts` › two plugins published with the dx CLI › B uses A's type                                              | Planned: not in edge yet. Will need a `dx` binary, as T-15 does.                           |
+
+The browser half of loading a bundle, Composer building a remote plugin from its `manifest.json` and importing a module
+body only when the module activates, is Composer's QA flow `org.dxos.app.composer#QA-17` ([D-61]).
+
+```mdl
+scenario T-5: Every plugin tagged edge-release loads alone in workerd
+  given: a plugin package tagged `edge-release`
+  when: CI runs `check-edge-release` for it
+  then:
+    - its one bundle is built with `composerPlugin`, with `PluginHost` added to `vendor/`, as `dx registry publish` builds it
+    - every bare import that a workerd module reaches is vendored, and every relative import and manifest URL names a file of the bundle
+    - its workerd modules import in workerd through Worker Loader, with no other plugin loaded, as PluginLoader loads them
+    - `describe()` lists no activation failure, and at least one operation, skill or type
+    - otherwise the check fails and names the file and the cause
+  tags: [dxos, ci, workerd]
+```
+
+```mdl
+scenario T-6: A bundle runs space operations on its own types and on another plugin's
+  given:
+    - plugin-space's bundle, built as `check-edge-release` builds it and loaded alone in workerd
+    - a space served from memory in place of db-service, and a TYPE_REGISTRY that holds plugin-markdown's document type
+  when: `space.addObject` and `space.queryObjects` are invoked through the bundle's entrypoint
+  then:
+    - addObject of `org.dxos.type.collection`, a type the bundle declares, returns the new object's `echo:` id
+    - queryObjects of `org.dxos.type.document`, a type only plugin-markdown declares, asks TYPE_REGISTRY for it and answers with no results
+    - addObject of a document creates it with the type TYPE_REGISTRY returned
+    - queryObjects of a typename no plugin publishes fails with "Schema not found"
+  tags: [dxos, workerd]
+```
+
+```mdl
+scenario T-7: A bundle returns an ECHO object in its JSON form
+  given: plugin-space's bundle, as in T-6
+  when: `space.addObject` creates a collection
+  then: the output holds the object as operation-service returns it, with its `@uri`, its `@type` and its fields
+  tags: [dxos, workerd]
+```
+
+```mdl
+scenario T-8: The host describes its plugin and returns failures as data
+  given: `PluginHost` running a test plugin that contributes a type, a skill and operations, in workerd
+  when: EDGE calls `describe()` and `invoke()`
+  then:
+    - describe lists the plugin, the type with its JSON Schema, the skill with its tool, the operations, and no failures
+    - invoke runs an operation of the plugin by its DXN key and by its bare key
+    - the plugin activates once, however many calls arrive at the same time
+    - an unknown key returns `operation-not-found`, and an invalid space id or a space without the data bindings returns `invalid-request`; neither throws
+  tags: [dxos, workerd]
+```
+
+```mdl
+scenario T-9: A type the registry lacks resolves from a type source
+  given: an ECHO database whose registry lacks a type, and a type source that knows it
+  when: a registry query by key, or the load of an object of that type, needs the type
+  then:
+    - the type resolves from the source, is registered, and creates objects
+    - the source is not asked for a type the registry holds, for a query outside the registry, or for a registry query for something other than types
+    - an unknown type, a failing source and a source that stalls past its timeout each read as a missing type
+    - a reactive query updates once the source answers; with no source, or once the source is unregistered, the type is missing
+  tags: [dxos]
+```
+
+```mdl
+scenario T-10: The store takes a bundle as JSON or as streamed multipart
+  given: registry-service with the plugin store bound
+  when: a bundle whose `vendor/` carries the host is uploaded through `/upload` or through `/upload/multipart`, one part per file
+  then:
+    - its files are written under `modules/<key>/<version>/`, where `GET /modules` serves them, its catalog is indexed and `latest` moves to it
+    - a 40 MB stylesheet streams into R2 as a multipart upload and is served back whole
+    - the same files hash alike by either route, so uploading them again is a no-op
+    - a refused or truncated multipart upload deletes what it wrote
+    - a bundle without the host is stored for browsers and never indexed
+  tags: [edge, workerd]
+```
+
+```mdl
+scenario T-11: The store refuses a bundle it cannot index
+  given: registry-service with the plugin store bound
+  when: a bundle is uploaded
+  then:
+    - the store loads it through Worker Loader and calls `describe()`; a bundle that lists an activation failure, describes another plugin or names other coordinates than its manifest is refused
+    - an operation key that another plugin key owns fails with KeyConflict
+    - other files under an uploaded version fail with VersionExists, and the same files only move channels
+    - a plugin key accepts uploads only from its first uploader
+  tags: [edge, workerd]
+```
+
+```mdl
+scenario T-12: Channels are dist-tags and revoking falls back to latest
+  given: a plugin key with release 1.0.0 and prerelease 1.1.0-beta.1 on `next`
+  when: operations are resolved on `latest`, `next` and `dev`, a channel is moved, and a version is revoked
+  then:
+    - `latest` stays on 1.0.0, since a prerelease moves only the channel its upload names
+    - `dev`, which points at no version, resolves to `latest`
+    - the owner moves `dev` to 1.1.0-beta.1 through `PUT /edge/plugins/<key>/channels/dev`; anyone else gets 403
+    - once 1.1.0-beta.1 is revoked, `next` resolves to `latest`
+  tags: [edge, workerd]
+```
+
+```mdl
+scenario T-13: The store resolves types and lists plugins
+  given: bundles uploaded to the plugin store, some contributing the same typename
+  when: resolveType and listPlugins are called
+  then:
+    - resolveType returns the type of the earliest-uploaded bundle that contributes it, and matches the version when one is given
+    - a revoked bundle is skipped, and a version replaced with `replace: true` (the store's owner overwrite, not a publish) drops the types it no longer lists
+    - an unknown typename resolves to undefined
+    - listPlugins lists every plugin key with its channels and versions, revoked versions included, and a revoked version keeps its catalog
+  tags: [edge, workerd]
+```
+
+```mdl
+scenario T-14: EDGE routes an uploaded bundle's operation to a Dynamic Worker
+  given: the edge test stack with operations routed to plugins and no seeded bundles
+  when: a bundle in the bundle format is uploaded through edge's `/registry/upload` and its operation key is invoked as a `dxn:` target
+  then:
+    - the registry lists the bundle by operation key, and browsers read its manifest from `GET /modules`
+    - compute-service runs the operation in the bundle's Dynamic Worker, with DATA_SERVICE, QUEUE_SERVICE, FUNCTIONS_AI_SERVICE and TYPE_REGISTRY bound
+    - an invocation in a space gives the bundle the space id and an access token service
+    - a type another bundle publishes resolves through TYPE_REGISTRY, and an unpublished one does not
+    - a multipart upload with a 12 MB stylesheet runs the same way
+    - a prerelease on `next` leaves `latest` in place, a new release moves it, the owner moves it back, and a revoked version is never loaded again
+    - the operation's own error reaches the caller
+    - other files under an uploaded version, and an operation key another plugin owns, answer 409
+    - a key no bundle implements is served by operation-service
+  tags: [edge]
+```
+
+```mdl
+scenario T-15: A plugin published with dx runs without operation-service
+  given: edge's sample plugin, never published, and a stack without operation-service
+  when: `dx registry publish --upload-only --edge-url <stack>` publishes it
+  then:
+    - before the publish, invoking its operation fails
+    - after it, `org.dxos.operation.edgeSample.reply` answers from the bundle
+  tags: [edge]
+```
+
+```mdl
+scenario T-16: A seeded first-party bundle creates a document
+  given: the first-party bundles built from dxos and seeded into the registry, on a stack without operation-service
+  when: `org.dxos.operation.markdown.create` is invoked in a space
+  then:
+    - every bundle the store accepts is indexed, and seeding again uploads nothing
+    - plugin-markdown's bundle creates the document and returns its id
+  tags: [edge]
+```
+
+```mdl
+scenario T-17: Every operation that falls back to operation-service is inventoried
+  given: the first-party bundles seeded into the registry, with operations routed to plugins
+  when: the keys operation-service serves are compared with the keys the registry routes
+  then:
+    - every key no bundle implements is in the fallback inventory, with its owner and proposed resolution
+    - every key in the inventory still falls back, so a key that gains a bundle leaves the inventory
+  tags: [edge]
+```
+
+```mdl
+scenario T-18: An operation that reads another plugin's capability answers alike in both routings
+  given: three Persons in a space, two of them with emails that differ only in case
+  when: `space.findDuplicates` runs on Person
+  then: it returns one group of those two, by the identity rule plugin-inbox contributes, whether operation-service or plugin-space's bundle runs it
+  tags: [edge]
+```
+
+```mdl
+scenario T-19: The agent and MCP suites pass with operations routed to bundles
+  given: the edge suite with `DX_TEST_OPERATION_ROUTING=plugins` and the first-party bundles seeded into the registry
+  when: the discord-agent, brain, brain-admin, agent, functions, mcp-space-service and agent-sessions suites run
+  then:
+    - each test passes as it does with operation-service
+    - each operation that falls back to operation-service is reported with its reason
+  tags: [edge, ci]
+```
+
+```mdl
+scenario T-20: A published plugin invokes another published plugin's operation
+  given:
+    - edge's sample plugins A (`edge-sample-notes`) and B (`edge-sample-notebook`), on a stack without operation-service, with only B published so far (`dx registry publish --upload-only --edge-url <stack>`)
+    - A implements `org.dxos.operation.edgeSample.createNote`, which adds an `org.dxos.type.edgeSample.note` to the space and returns its id
+    - B implements `org.dxos.operation.edgeSample.addNoteVia`, which calls A's operation with `Operation.invoke` and returns its output
+  when: `org.dxos.operation.edgeSample.addNoteVia` is invoked in a space, then A is published the same way and it is invoked again
+  then:
+    - the first invoke fails with A's operation key in the error
+    - after A is published, A's bundle runs the nested invoke, and B returns A's output
+    - the note exists in the space, and the caller reads it as a live object of its database
+  tags: [edge]
+```
+
+```mdl
+scenario T-21: A published plugin uses a type another published plugin owns
+  given:
+    - plugins A and B as in T-20, both published, with a note A created in a space
+    - B does not import A and declares no `org.dxos.type.edgeSample.note`
+    - B implements `org.dxos.operation.edgeSample.listNotes`, which queries `Filter.and(Filter.type(Type.Type), Filter.key('org.dxos.type.edgeSample.note'))` from `Scope.registry()` and then the space's objects of the type it resolves
+  when: `org.dxos.operation.edgeSample.listNotes` is invoked in the space
+  then:
+    - the type resolves from A's published TypeRecord through `TYPE_REGISTRY` ([D-47])
+    - B returns the note A created, with its fields
+  tags: [edge]
 ```
 
 ## Versions
@@ -1317,4 +1550,67 @@ decision D-58: A query over `Scope.registry()` that selects type entities (`Filt
   for: user:dmaretskyi
   affects: [F-3.5]
   why: Limiting it to queries for types keeps operation and skill lookups from reaching the type registry.
+```
+
+```mdl
+decision D-59: The spec includes the end-to-end flows and scenarios that existing tests run.
+  date: 2026-11-04
+  by: user:dmaretskyi
+  affects: [F-12]
+```
+
+```mdl
+decision D-60: Each tested flow is a `scenario` (T-5 to T-21), and one table names the test that runs it by package, file and test title, with the repository it lives in. Fills in [D-59].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [T-5, T-6, T-7, T-8, T-9, T-10, T-11, T-12, T-13, T-14, T-15, T-16, T-17, T-18, T-19]
+  why: These flows are vitest, workerd and CI checks, and half of them are in dxos/edge. A scenario is the criterion such a test is written against; a QA `test` is a script of operations against the running app.
+  rejected:
+    - QA `test` blocks with `automated:` naming the tests — `automated:` names composer-e2e Playwright specs as `<package>:<file>#<title>` and has no form for a vitest test or another repository.
+```
+
+```mdl
+decision D-61: The browser half of loading a bundle by its manifest is Composer's QA-17, which the spec refers to as `org.dxos.app.composer#QA-17` and does not restate. Fills in [D-59].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: The app spec owns that flow and its Playwright binding; a second copy here would drift from it.
+```
+
+```mdl
+decision D-62: A scenario states the behaviour the spec requires even where its test expects the opposite today, and the table says so: T-7, whose test is `test.fails` until the host encodes ECHO output, and T-18, which fails with operations routed to plugins because a bundle runs alone ([D-41]). Fills in [D-59].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [T-7, T-18]
+  why: The scenario is what the test turns into once the gap closes; a scenario that described the current failure would have to be rewritten by the fix.
+```
+
+```mdl
+decision D-63: The plugins-routing run of the agent and MCP suites is one scenario (T-19) whose criterion is that every test passes as it does with operation-service; per-test failures are not part of the spec. Fills in [D-59].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [T-19]
+  why: The seven suites share one condition and one pass criterion, and their failures change with every run.
+```
+
+```mdl
+decision D-64: Calling another plugin's operation and using another plugin's type are tested with two sample plugins edge owns and publishes with `dx` (T-20, T-21), not with first-party plugins.
+  date: 2026-11-04
+  by: user:dmaretskyi
+  affects: [T-20, T-21]
+  why: Both plugins are published the way a third party would publish them, and neither depends on a first-party bundle being built or on operation-service.
+  rejected:
+    - Only first-party plugins (T-6, T-18): those exercise the dxos build and seeding as well, and cannot show that two independently published bundles interoperate.
+```
+
+```mdl
+decision D-65: T-20 publishes B first and A between its two invokes; T-13's dropped types come from the store's owner overwrite (`replace: true`), not a publish; T-20 and T-21 are marked planned until their test exists, an exception to [D-59]. Fills in [D-64].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [T-13, T-20, T-21]
+  why: As first written, T-20 published both plugins yet expected a failure before A was published, and T-13 implied a published version can change, which F-2.1 forbids.
 ```

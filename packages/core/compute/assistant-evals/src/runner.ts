@@ -19,7 +19,7 @@ import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { type TestHarness } from '@dxos/app-framework/testing';
-import { AiContext } from '@dxos/assistant';
+import { AiContext, TrajectoryStore } from '@dxos/assistant';
 import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
 import * as Chat from '@dxos/assistant/Chat';
 import { Config } from '@dxos/client';
@@ -31,7 +31,7 @@ import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import type * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { EDGE_URLS } from '@dxos/config';
-import { Database, Feed, Filter, Obj, Ref, Registry, Tag, type Type } from '@dxos/echo';
+import { Database, Feed, Obj, Ref, Registry, Tag, type Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, type SpaceId } from '@dxos/keys';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
@@ -256,7 +256,7 @@ const runAgentSession = <I>(
           // process, and waiting on the old one would return at once.
           yield* (yield* AgentService.getSession(agent.chat)).submitPrompt(text);
           yield* (yield* AgentService.getSession(agent.chat)).waitForCompletion();
-          const messages = yield* Feed.query(agent.feed, Filter.type(Message.Message)).run;
+          const messages = yield* TrajectoryStore.messages(agent.feed);
           const reply = messages
             .slice(seen)
             .filter((message) => message.sender.role === 'assistant')

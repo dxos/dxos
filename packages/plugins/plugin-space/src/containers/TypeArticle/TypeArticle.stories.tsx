@@ -16,7 +16,6 @@ import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Annotation, Collection, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { organizationIdentitySpec, personIdentitySpec } from '@dxos/extractor-lib';
-import { PublicKey } from '@dxos/keys';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
@@ -25,7 +24,6 @@ import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { CardAnnotation } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
-import { ComplexMap } from '@dxos/util';
 
 import { SpaceOperationHandlerSet } from '#operations';
 import { translations } from '#translations';
@@ -153,7 +151,6 @@ const ephemeralState = () =>
     sdkMigrationRunning: {},
     navigableCollections: false,
     viewersByObject: {},
-    viewersByIdentity: new ComplexMap<PublicKey, Set<string>>(PublicKey.hash),
     mergePreview: undefined,
     lastMergeAt: undefined,
   }).pipe(Atom.keepAlive);

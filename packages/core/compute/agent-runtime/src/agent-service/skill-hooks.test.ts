@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
+import { TrajectoryStore } from '@dxos/assistant';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { ProcessManager } from '@dxos/compute-runtime';
 import * as Hook from '@dxos/compute/Hook';
@@ -15,7 +16,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, Feed, Filter, Obj } from '@dxos/echo';
+import { Database, Feed, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { Message } from '@dxos/types';
@@ -199,8 +200,7 @@ describe('end-request hooks', () => {
 
         // The follow-up ran a second turn, whose end fired the hook again; that one asked for nothing.
         expect(hookLog.events).toEqual(['follow-up', 'follow-up']);
-        // The feed holds a prompt twice, as the queue entry and as the turn's message; both count the same.
-        const messages = yield* Feed.query(session.feed, Filter.type(Message.Message)).run;
+        const messages = yield* TrajectoryStore.messages(session.feed);
         const count = (text: string) => messages.filter((message) => Message.extractText(message) === text).length;
         expect(count(FOLLOW_UP)).toBe(count('Hello.'));
         const followUp = messages.find((message) => Message.extractText(message) === FOLLOW_UP);
