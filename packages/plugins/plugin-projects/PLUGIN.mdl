@@ -60,6 +60,8 @@ feat F-4: A project's specs
   req F-4.11: The project's overview is one form over the `Project` schema, in which the specs are a list the project
               owns: each spec is a row folded under its name that unfolds to edit its name and description in place,
               and the list's `+` creates a spec, its row open for the name.
+  req F-4.12: A spec's text, and each feature section embedded in it, shows the carets of the other peers editing it,
+              each with the peer's name.
 ```
 
 ```mdl
@@ -82,6 +84,8 @@ feat F-5: A project's overview
              plugin's own. Groups with the same id merge, their fields sorted by each field's order, and a field
              whose `enabled` atom is false is hidden. A field may carry an action, a button at the end of its control
              that sets its value.
+  req F-5.8: The overview's Notes and the agent's instructions show the carets of the other peers editing them, each
+             with the peer's name.
 ```
 
 ## QA
@@ -325,6 +329,34 @@ test QA-5: Showcase clip
     - name: Send it to the agent
       do: Tick the first task and click Send to agent.
       expect: the Gantt panel opens
+```
+
+```mdl
+test QA-9: Two peers edit a project's notes
+  desc: |
+    Two peers in one space open the same project, and each sees the other's caret in the overview's Notes, with the
+    other's name. The host's caret is set before the guest opens the project, so this checks that it reaches a late
+    joiner.
+  actors: human
+  status: unverified
+  automated:
+    - composer-e2e:collaboration.spec.ts#Collaboration tests › host and guest can see each others' cursors in a project's outline
+  given:
+    - host: a booted app with an identity and a space holding a "Launch plan" project
+    - guest: a second browser profile with its own identity
+  steps:
+    - name: Invite the guest
+      do: On the host, share the space and redeem the invitation on the guest.
+      expect: the guest's nav tree lists the space and "Launch plan" in it
+    - name: Focus the notes on the host
+      do: Open "Launch plan" on the host and put the cursor in its Notes.
+      expect: the host's Notes shows no other caret
+    - name: Open the project on the guest
+      do: Open "Launch plan" on the guest, leaving its Notes unfocused.
+      expect: the guest's Notes shows the host's caret with the host's name
+    - name: Focus the notes on the guest
+      do: Put the cursor in the guest's Notes.
+      expect: the host's Notes shows the guest's caret with the guest's name
 ```
 
 ## Changelog
@@ -1950,4 +1982,31 @@ decision D-186: `Project.status` stays optional, so a project made without one, 
   why: A default status would need a schema change and a migration for every existing project, and an empty pill already reads as unset.
   rejected:
     - Defaulting `status` to `active` in `Project.make` and the migration, which writes a status to every project nobody chose one for.
+```
+
+```mdl
+decision D-187: Every CodeMirror editor in a project that edits shared text shows the other peers' carets. A plain string field shows them too, edited in place through an accessor on the live object, with no `Text` object or schema change.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-4.12, F-5.8]
+```
+
+```mdl
+decision D-188: The editors with carets are a spec's text, the feature sections embedded in it (the feature's description), the overview's Notes and the agent's instructions. The project's description is a plain text area, not a CodeMirror editor, so it shows no carets. Fills in [D-187].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.12, F-5.8]
+  why: These are the CodeMirror editors a project's views mount over shared text. A task's description is left out because it commits through `UpdateTask` on blur to write the task's history, which editing in place would bypass.
+  rejected:
+    - Turning the project's description into a markdown editor so it carries carets, which changes how the field looks and behaves.
+```
+
+```mdl
+decision D-189: QA-9 checks carets in the overview's Notes between two peers, the host's caret set before the guest opens the project, automated by a collaboration e2e spec. Fills in [D-187].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-9, F-5.8]
+  why: Notes is on the Overview of a project just made from the Default template, so the test needs no setup beyond creating it, and the late joiner is the case that failed before the awareness fix.
 ```

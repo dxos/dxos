@@ -12,7 +12,9 @@ import * as Project from '@dxos/compute/Project';
 import { DXN, Filter, Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
-import { Form, type FormFieldMap, type FormFieldRenderer } from '@dxos/react-ui-form';
+import { useIdentity } from '@dxos/halo-react';
+import { getSpace } from '@dxos/react-client/echo';
+import { Form, type FormCollaboration, type FormFieldMap, type FormFieldRenderer } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -51,9 +53,18 @@ const RequirementsField: FormFieldRenderer = ({ type, label, getValue, onValueCh
 
 export const FEATURE_FIELD_MAP: FormFieldMap = { requirements: RequirementsField };
 
-/** The form values of a feature, bound to the live object so an edit elsewhere reaches an open form. */
+/**
+ * The form values of a feature, bound to the live object so an edit elsewhere reaches an open form; its description is
+ * edited in place, with the other peers' carets.
+ */
 export const useFeatureValues = (subject: Feature.Feature) => {
   const [snapshot, updateFeature] = useObject(subject);
+  const identity = useIdentity();
+  const space = getSpace(subject);
+  const collaboration = useMemo<FormCollaboration>(
+    () => ({ subject, messenger: space, identity }),
+    [subject, space, identity],
+  );
   const values = useMemo<Partial<FeatureValues>>(
     () => ({
       name: snapshot?.name,
@@ -70,7 +81,10 @@ export const useFeatureValues = (subject: Feature.Feature) => {
         if (values.name !== undefined) {
           feature.name = values.name;
         }
-        feature.description = values.description;
+        // Reassigning the same string would replace the text the description's editor is bound to.
+        if (values.description !== feature.description) {
+          feature.description = values.description;
+        }
         if (values.status !== undefined) {
           feature.status = values.status;
         }
@@ -82,7 +96,7 @@ export const useFeatureValues = (subject: Feature.Feature) => {
     [subject, updateFeature],
   );
 
-  return { values, onValuesChanged, updateFeature };
+  return { values, collaboration, onValuesChanged, updateFeature };
 };
 
 export type FeatureDetailProps = {
@@ -99,7 +113,7 @@ export type FeatureDetailProps = {
  */
 export const FeatureDetail = ({ feature: subject, attendableId, onSelectSubfeature }: FeatureDetailProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
-  const { values, onValuesChanged, updateFeature } = useFeatureValues(subject);
+  const { values, collaboration, onValuesChanged, updateFeature } = useFeatureValues(subject);
   const db = Obj.getDatabase(subject);
   const graph = useFeatureGraph(db, [subject.id], { neighbours: true });
   const feature = graph.lookup(subject.id);
@@ -162,6 +176,7 @@ export const FeatureDetail = ({ feature: subject, attendableId, onSelectSubfeatu
       schema={FeatureValues}
       values={values}
       fieldMap={FEATURE_FIELD_MAP}
+      collaboration={collaboration}
       onValuesChanged={onValuesChanged}
     >
       <Form.Viewport scroll>

@@ -8,6 +8,7 @@ import React, { useMemo } from 'react';
 
 import { type Database, Obj, Ref } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { Editor, useBasicMarkdownExtensions } from '@dxos/react-ui-editor';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -39,17 +40,19 @@ const fieldTheme = EditorView.theme({
 /**
  * A markdown value in a CodeMirror editor framed by a multi-line `ControlFrame`. The value is either a string
  * (`Format.TypeFormat.Markdown`), edited as plain text, or a `Ref<Text>`, edited in place through its document; an empty
- * ref offers a button that creates the Text.
+ * ref offers a button that creates the Text. With the form's `collaboration` subject, a string is edited in place too.
  */
 export const MarkdownField = ({
   type,
   readonly,
   placeholder,
   presentation,
+  jsonPath,
   db,
   getValue,
   onValueChange,
 }: FormFieldRendererProps) => {
+  const { collaboration } = useFormContext('MarkdownField');
   const value: unknown = getValue();
   const isStatic = presentationFor(presentation).isStatic;
   if (Ref.isRefType(type)) {
@@ -68,8 +71,17 @@ export const MarkdownField = ({
   }
 
   const text = typeof value === 'string' ? value : '';
-  return isStatic ? (
-    <Typography.Text>{text}</Typography.Text>
+  if (isStatic) {
+    return <Typography.Text>{text}</Typography.Text>;
+  }
+
+  return collaboration?.subject && jsonPath && SchemaEx.isJsonPath(jsonPath) ? (
+    <LiveStringMarkdownEditor
+      subject={collaboration.subject}
+      jsonPath={jsonPath}
+      placeholder={placeholder}
+      readonly={!!readonly}
+    />
   ) : (
     <StringMarkdownEditor
       value={text}
@@ -101,6 +113,21 @@ const StringMarkdownEditor = ({ value, placeholder, readonly, onChange }: String
   );
 };
 
+type LiveStringMarkdownEditorProps = {
+  subject: Obj.Unknown;
+  jsonPath: SchemaEx.JsonPath;
+  placeholder?: string;
+  readonly?: boolean;
+};
+
+/** A string the editor writes straight into the object's document, so peers editing it see each other's carets. */
+const LiveStringMarkdownEditor = ({ subject, jsonPath, placeholder, readonly }: LiveStringMarkdownEditorProps) => {
+  const text = useMemo(() => Doc.createAccessor(subject, SchemaEx.splitJsonPath(jsonPath)), [subject, jsonPath]);
+  return (
+    <BoundMarkdownEditor id={`${subject.id}.${jsonPath}`} text={text} placeholder={placeholder} readonly={readonly} />
+  );
+};
+
 /** A `Ref<Text>`'s content, resolved, as read-only text. */
 const RefStaticText = ({ reference }: { reference: Ref.Unknown }) => {
   const target = useAtomValue(useMemo(() => reference.atom, [reference]));
@@ -116,21 +143,33 @@ type RefMarkdownEditorProps = {
 
 const RefMarkdownEditor = ({ reference, placeholder, readonly }: RefMarkdownEditorProps) => {
   const target = useAtomValue(useMemo(() => reference.atom, [reference]));
-  const text = Obj.instanceOf(Text.Text, target) ? target : undefined;
-  const dataExtensions = useMemo(
-    () => (text ? [createDataExtensions({ id: reference.uri, text: Doc.createAccessor(text, ['content']) })] : []),
-    [text, reference],
+  const text = useMemo(
+    () => (Obj.instanceOf(Text.Text, target) ? Doc.createAccessor(target, ['content']) : undefined),
+    [target],
   );
-  const { markdownExtensions } = useFormContext('MarkdownField');
+  return text ? (
+    <BoundMarkdownEditor id={reference.uri} text={text} placeholder={placeholder} readonly={readonly} />
+  ) : null;
+};
+
+type BoundMarkdownEditorProps = {
+  /** Names the awareness channel, so every editor of the same text shares one. */
+  id: string;
+  text: Doc.Accessor;
+  placeholder?: string;
+  readonly?: boolean;
+};
+
+/** An editor synced with an Automerge string, showing the carets of peers in the form's `collaboration`. */
+const BoundMarkdownEditor = ({ id, text, placeholder, readonly }: BoundMarkdownEditorProps) => {
+  const { markdownExtensions, collaboration } = useFormContext('MarkdownField');
+  const messenger = collaboration?.messenger;
+  const identity = collaboration?.identity;
   const fieldExtensions = useMemo(
-    () => [fieldTheme, ...dataExtensions, ...(markdownExtensions ?? [])],
-    [dataExtensions, markdownExtensions],
+    () => [fieldTheme, createDataExtensions({ id, text, messenger, identity }), ...(markdownExtensions ?? [])],
+    [id, text, messenger, identity, markdownExtensions],
   );
   const extensions = useBasicMarkdownExtensions({ placeholder, readonly, extensions: fieldExtensions });
-  if (!text) {
-    return null;
-  }
-
   return (
     <Input.Frame rows={ROWS} disabled={readonly}>
       <Editor.Root>

@@ -15,7 +15,9 @@ import { type Database } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
+import { useIdentity } from '@dxos/halo-react';
 import * as InstructionsEditor from '@dxos/plugin-routine/InstructionsEditor';
+import { getSpace } from '@dxos/react-client/echo';
 import { Form, type FormFieldOverride, type FormUpdateMeta, useCreateObject } from '@dxos/react-ui-form';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Theme from '@dxos/react-ui/Theme';
@@ -42,6 +44,9 @@ export const ConfigSection = ({ db, project, instructions }: ConfigSectionProps)
     [t('skills.label'), skills],
     [t('context.label'), objects],
   ]);
+  const identity = useIdentity();
+  const space = getSpace(project);
+  const collaboration = useMemo(() => ({ messenger: space, identity }), [space, identity]);
 
   return (
     <Form.FieldSet label={t('config.label')} data-testid='projectsPlugin.config'>
@@ -50,7 +55,9 @@ export const ConfigSection = ({ db, project, instructions }: ConfigSectionProps)
         label={t('agent-config.label')}
         summary={agentSummary}
       >
-        {instructions && <InstructionsEditor.InstructionsEditor db={db} instructions={instructions} />}
+        {instructions && (
+          <InstructionsEditor.InstructionsEditor db={db} instructions={instructions} collaboration={collaboration} />
+        )}
         {/* Standing context (inputs bound into every project session), kept apart from Artifacts (outputs the project owns). */}
         {instructions && (
           <Form.FieldSet label={t('context.label')}>

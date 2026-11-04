@@ -31,6 +31,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Util from '@dxos/react-ui/Util';
 import { type Text } from '@dxos/schema';
 import {
+  type DataExtensionsPresence,
   createBasicExtensions,
   createDataExtensions,
   createMarkdownExtensions,
@@ -99,6 +100,7 @@ type OutlineContextValue = {
   resolveLinkLabel?: (url: string) => string | undefined;
   /** Editor extensions contributed by the host (e.g. a plugin's reference decoration). */
   extensions?: Extension[];
+  presence?: DataExtensionsPresence;
   /** Mutable ref populated by Content so Root can expose the view via the controller. */
   viewRef: RefObject<EditorView | null | undefined>;
 };
@@ -134,6 +136,8 @@ type OutlineRootProps = PropsWithChildren<
      * links); a host adds what only it knows about — e.g. plugin-github decorating `#123`.
      */
     extensions?: Extension[];
+    /** The space and identity that show other peers' carets. */
+    presence?: DataExtensionsPresence;
   } & Pick<UseTextEditorProps, 'autoFocus'>
 >;
 
@@ -152,6 +156,7 @@ const OutlineRoot = forwardRef<OutlineController, OutlineRootProps>(
       onSelectLink,
       resolveLinkLabel,
       extensions,
+      presence,
     },
     forwardedRef,
   ) => {
@@ -184,6 +189,7 @@ const OutlineRoot = forwardRef<OutlineController, OutlineRootProps>(
         onSelectLink={onSelectLink}
         resolveLinkLabel={resolveLinkLabel}
         extensions={extensions}
+        presence={presence}
         viewRef={viewRef}
       >
         {children}
@@ -215,6 +221,7 @@ const OutlineContent = Util.composable<HTMLDivElement, OutlineContentProps>((pro
     onSelectLink,
     resolveLinkLabel,
     extensions,
+    presence,
     viewRef,
   } = useOutlineContext(OUTLINE_CONTENT_NAME);
   const { t } = Hooks.useTranslation(TasksNamespace.key);
@@ -227,7 +234,7 @@ const OutlineContent = Util.composable<HTMLDivElement, OutlineContentProps>((pro
       selection: EditorSelection.cursor(text.content.length),
       initialValue: text.content,
       extensions: [
-        createDataExtensions({ id, text: Doc.createAccessor(text, ['content']) }),
+        createDataExtensions({ id, text: Doc.createAccessor(text, ['content']), ...presence }),
         createBasicExtensions({ readOnly: !!readonly, search: true }),
         createMarkdownExtensions(),
         createThemeExtensions({
@@ -249,7 +256,7 @@ const OutlineContent = Util.composable<HTMLDivElement, OutlineContentProps>((pro
         extensions ?? [],
       ],
     }),
-    [id, text, autoFocus, themeMode, readonly, extensions],
+    [id, text, autoFocus, themeMode, readonly, extensions, presence],
   );
 
   // Publish view to Root so the controller can access it.

@@ -10,8 +10,9 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
+import { useIdentity } from '@dxos/halo-react';
 import { URI } from '@dxos/keys';
-import { useQuery } from '@dxos/react-client/echo';
+import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -46,6 +47,9 @@ export const OutlineArticle = ({
 }: OutlineArticleProps) => {
   const { t } = Hooks.useTranslation(TasksNamespace.key);
   const db = Obj.getDatabase(outline);
+  const identity = useIdentity();
+  const space = getSpace(outline);
+  const presence = useMemo(() => ({ messenger: space, identity }), [space, identity]);
 
   // Link the user navigated into; the back button clears it to return to the outline.
   const [selected, setSelected] = useState<URI.URI>();
@@ -167,6 +171,7 @@ export const OutlineArticle = ({
           onSelectLink={handleSelectLink}
           resolveLinkLabel={resolveLinkLabel}
           extensions={extensions}
+          presence={presence}
         >
           <Panel.Root role={role}>
             <Show.Show when={toolbar}>

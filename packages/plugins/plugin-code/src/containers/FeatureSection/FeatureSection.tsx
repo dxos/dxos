@@ -32,7 +32,7 @@ export type FeatureSectionProps = {
  */
 export const FeatureSection = ({ subject, attendableId }: FeatureSectionProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
-  const { values, onValuesChanged } = useFeatureValues(subject);
+  const { values, collaboration, onValuesChanged } = useFeatureValues(subject);
   // Read through the object, so a block id set by an import shows without a remount.
   const [snapshot] = useObject(subject);
   const blockId = snapshot && Feature.getBlockId(snapshot);
@@ -48,6 +48,7 @@ export const FeatureSection = ({ subject, attendableId }: FeatureSectionProps) =
       schema={FeatureValues}
       values={values}
       fieldMap={FEATURE_FIELD_MAP}
+      collaboration={collaboration}
       onValuesChanged={onValuesChanged}
     >
       <div className='p-2'>

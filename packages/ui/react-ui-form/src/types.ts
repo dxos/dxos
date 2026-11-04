@@ -9,6 +9,7 @@ import { type Database, type Entity, type Format, type Obj, type Type } from '@d
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { type URI } from '@dxos/keys';
 import { type ProjectionModel } from '@dxos/schema';
+import { type DataExtensionsPresence } from '@dxos/ui-editor';
 import { type Palette } from '@dxos/ui-types';
 
 //
@@ -234,6 +235,14 @@ export type RefFieldDataProps = {
    * typename the existing fallback behaviour is preserved.
    */
   resolveCreateEntry?: (typename: string) => CreateEntryOverride | undefined;
+};
+
+/**
+ * Live editing for a form's markdown fields: each shows the other peers' carets. A string field edits `subject` in place
+ * at its own path, so `subject` must be the live object the form's values mirror.
+ */
+export type FormCollaboration = DataExtensionsPresence & {
+  subject?: Obj.Unknown;
 };
 
 /**

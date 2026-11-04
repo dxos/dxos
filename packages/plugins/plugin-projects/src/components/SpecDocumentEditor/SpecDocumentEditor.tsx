@@ -9,6 +9,8 @@ import { createPortal } from 'react-dom';
 import type * as Spec from '@dxos/compute/Spec';
 import { Doc } from '@dxos/echo-doc';
 import { useResolveRef } from '@dxos/echo-react';
+import { useIdentity } from '@dxos/halo-react';
+import { getSpace } from '@dxos/react-client/echo';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Util from '@dxos/react-ui/Util';
@@ -29,6 +31,8 @@ export const SpecDocumentEditor = Util.composable<HTMLDivElement, SpecDocumentEd
     const [widgets, setWidgets] = useState<WidgetState[]>([]);
     // The live text rather than a snapshot, so an edit does not rebuild the editor; it initializes once the ref resolves.
     const text = useResolveRef(spec.content);
+    const identity = useIdentity();
+    const space = getSpace(spec);
     const { parentRef } = useTextEditor(() => {
       if (!text) {
         return {};
@@ -40,13 +44,13 @@ export const SpecDocumentEditor = Util.composable<HTMLDivElement, SpecDocumentEd
           createMdlExtensions({
             themeMode,
             lineWrapping: true,
-            data: { id: spec.id, text: Doc.createAccessor(text, ['content']) },
+            data: { id: spec.id, text: Doc.createAccessor(text, ['content']), messenger: space, identity },
           }),
           widgetHost({ setWidgets }),
           extensions ?? [],
         ],
       };
-    }, [themeMode, spec, text, extensions]);
+    }, [themeMode, spec, text, extensions, space, identity]);
 
     return (
       <div

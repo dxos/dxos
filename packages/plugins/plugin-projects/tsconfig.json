@@ -73,6 +73,9 @@
       "path": "../../core/echo/echo-react"
     },
     {
+      "path": "../../core/halo/halo-react"
+    },
+    {
       "path": "../../reflect/deus"
     },
     {

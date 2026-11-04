@@ -10,7 +10,7 @@ import * as SchemaAST from '@dxos/effect/SchemaAST';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { createContext } from '@dxos/react-hooks';
 
-import { type FieldContext, type FormFieldStateProps } from '#types';
+import { type FieldContext, type FormCollaboration, type FormFieldStateProps } from '#types';
 
 import { type FormHandler } from './useFormHandler.ts';
 
@@ -37,6 +37,9 @@ export type FormContextValue<T extends AnyProperties = any> = {
 
   /** Editor extensions for the form's markdown fields, beyond their own (what a host's plugins contribute). */
   markdownExtensions?: Extension[];
+
+  /** Live editing for the form's markdown fields (see {@link FormCollaboration}). */
+  collaboration?: FormCollaboration;
 } & FieldContext;
 
 export const [FormContextProvider, useFormContext] = createContext<FormContextValue>('Form');
