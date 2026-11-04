@@ -574,7 +574,6 @@ const DefaultStory = ({
   showOrdinals?: boolean;
   showDescription?: boolean;
   columns?: readonly TaskColumn[];
-  /** Lay the create row out on one line, as the chat prompt does. */
   inline?: boolean;
   /** Let the create pane take dropped files, recording what each create was handed. */
   acceptFiles?: boolean;
@@ -784,7 +783,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-/** The chat prompt's checklist: status ahead of the title, priority and estimate after it, and a one-line create row. */
 export const Chat: Story = {
   args: {
     showGroupLabels: false,
@@ -1676,7 +1674,6 @@ export const TestCreateWithProperties: Story = {
   },
 };
 
-/** The one-line create row sets each field from the rows' own glyph, named by its value. */
 export const TestInlineCreateWithProperties: Story = {
   args: { ...Chat.args },
   play: async ({ canvasElement }) => {

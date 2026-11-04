@@ -278,7 +278,6 @@ const TaskListRoot = ({
   const showGutter = showOrdinals || showMnemonics || !!onTaskCheck;
   // The menu column takes the rows' actions, and the edit pane's cancel in an editable list.
   const hasActions = !!getTaskActions || !!onTaskCreate || !!onTaskUpdate;
-  // The gutter and the actions take a track only when they have something to hold.
   const gutter = (onTaskCheck ? 1 : 0) + (showOrdinals || showMnemonics ? 1 : 0);
   const cells = useMemo(
     () => columnsProp.filter((column) => (column !== 'gutter' || gutter > 0) && (column !== 'actions' || hasActions)),
@@ -400,12 +399,10 @@ const buildGridTemplate = ({
       case 'artifacts':
         return 'auto';
       default:
-        // Fixed, so the create row, which lays out in a grid of its own, keeps the rows' widths.
         return 'var(--dx-block-size)';
     }
   };
 
-  // The tree's disclosure cell and indent step are half a block, so a guide lands under its branch's chevron.
   return [toggle ? 'var(--dx-half-block-size)' : '0px', ...cells.map((cell) => `[${cell}] ${size(cell)}`)].join(' ');
 };
 
@@ -544,7 +541,6 @@ const TaskListItem = ({
   const description = showDescription ? current.description?.trim() || undefined : undefined;
   const { assignee, delegate } = current;
 
-  // In the columns' order, so Tab crosses the row as it reads.
   const cell = (column: TaskColumn) => {
     switch (column) {
       case 'gutter':
@@ -552,9 +548,6 @@ const TaskListItem = ({
           showGutter && (
             <Layout.Flex key={column} center gap='xs' classNames={TRACK.gutter}>
               {onTaskCheck && <TaskCheckbox task={task} checked={checked} onCheckedChange={onTaskCheck} />}
-              {/* One button for the number and the reference it copies. Not beside a checkbox: a number beside a box
-                  reads as two ways to act on the row. The live task, not the snapshot: only the live object knows its
-                  space, which the copied URI names. */}
               {(showMnemonics || ordinal !== undefined) && (
                 <TaskMnemonic task={task} ordinal={onTaskCheck ? undefined : ordinal} />
               )}
@@ -566,8 +559,6 @@ const TaskListItem = ({
       case 'status':
         return <TaskStatusControl key={column} task={task} onTaskUpdate={onTaskUpdate} classNames={TRACK.status} />;
       case 'title':
-        // Inset as the create row's field is, so a title reads at the x the field types it. The placeholder is drawn by
-        // CSS so the element's text stays the title itself.
         return (
           <span
             key={column}
@@ -583,8 +574,6 @@ const TaskListItem = ({
           </span>
         );
       case 'artifacts':
-        // On the title line, beside who has the task: the pull request is what the row is scanned for once work is
-        // under way, and on a line of its own it pushed the description down.
         return (
           <Layout.Flex
             key={column}
@@ -628,7 +617,6 @@ const TaskListItem = ({
       {/* Under the title and the chips, clearing the gutter and the status control so it does not read as the row
           above's, and stopping short of the trailing controls. What the task says, and nothing the log recorded. */}
       {description && (
-        // A margin, not padding: the description's box is the clamp, three lines tall.
         <div
           className='row-start-3 min-w-0 px-(--dx-gap-size) mb-1'
           style={{ gridColumn: spanFromTitle(cells, ['artifacts', 'estimate']) }}

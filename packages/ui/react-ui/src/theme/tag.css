@@ -35,7 +35,6 @@
     background: var(--dx-hue-bg);
     color: var(--dx-hue-fg);
   }
-  /* Outline: no fill, the hue's border as a ring and its text colour, for a tag that sits among a form's fields. */
   .dx-tag[data-variant='outline'] {
     background: transparent;
     color: var(--dx-hue-text);

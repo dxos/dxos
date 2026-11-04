@@ -64,15 +64,12 @@ export type TaskDescriptionBehavior = {
 
 export type TaskEditorFormProps = PropsWithChildren<{
   values: TaskEditorValues;
-  /** The list's cells, in order. */
   cells: readonly TaskColumn[];
-  /** One line, each field as a glyph tag in the track its column has in the rows; otherwise the fields stack. */
   inline?: boolean;
   members: readonly TaskMember[];
   people: readonly Person.Person[];
   title: TaskTitleBehavior;
   description?: TaskDescriptionBehavior;
-  /** In the actions track: the way out of the row. */
   end?: ReactNode;
   onChange: (patch: Task.Edit) => void;
 }>;
@@ -134,8 +131,6 @@ export const TaskEditorForm = ({
       >
         {inline ? (
           <>
-            {/* In the columns' order, so Tab crosses the row as it reads; the gutter and the artifacts stay empty. The
-                description follows the title in the DOM, though it sits below, so Tab runs from the title into it. */}
             {cells.map((cell) =>
               cell === 'title' ? (
                 <Fragment key={cell}>
@@ -269,7 +264,6 @@ const EstimateGlyph = ({
   <TaskField field='estimate' value={getValue()} onChange={(value) => onValueChange(type, value)} testId={jsonPath} />
 );
 
-/** Who has the task: a labelled tag, or inline the rows' bare glyph, since the assignee track is one block wide. */
 const AssigneeTag = ({
   type,
   label,
@@ -321,5 +315,4 @@ AssigneeTag.displayName = 'TaskList.AssigneeTag';
 
 const FIELD_MAP = { assignee: AssigneeTag, description: DescriptionField, title: TitleField };
 
-/** Status, priority and estimate as the rows' own glyphs, in the tracks the rows show them in. */
 const INLINE_FIELD_MAP = { ...FIELD_MAP, estimate: EstimateGlyph, priority: PriorityGlyph, status: StatusGlyph };

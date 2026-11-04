@@ -910,7 +910,6 @@ const CHAT_TASK_LIST_NAME = 'Chat.TaskList';
 /** Rows the chat's checklist shows before it scrolls. */
 const CHAT_TASK_ROWS = 4;
 
-/** Status ahead of the title and its size after it, so the add row reads as one line under the same columns. */
 const CHAT_TASK_COLUMNS: readonly TaskColumn[] = ['gutter', 'status', 'title', 'priority', 'estimate', 'actions'];
 
 const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {

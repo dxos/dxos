@@ -32,11 +32,7 @@ export const TRACK = {
   actions: 'row-start-1 col-[actions]',
 } as const;
 
-/**
- * A `grid-column` from the title's track to the first cell after it that is not one of `under`, so a field (the title
- * input) or a line below the title (the description) runs under those cells and stops at the next control.
- */
-export const spanFromTitle = (cells: readonly TaskColumn[], under: readonly TaskColumn[]): string => {
-  const end = cells.slice(cells.indexOf('title') + 1).find((cell) => !under.includes(cell));
+export const spanFromTitle = (cells: readonly TaskColumn[], spanning: readonly TaskColumn[]): string => {
+  const end = cells.slice(cells.indexOf('title') + 1).find((cell) => !spanning.includes(cell));
   return end ? `title / ${end}` : 'title / -1';
 };

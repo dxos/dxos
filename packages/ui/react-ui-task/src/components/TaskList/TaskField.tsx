@@ -34,17 +34,12 @@ export type TaskFieldProps = TaskFieldValue & {
   classNames?: string;
 };
 
-/** `named` when the glyph is the value's own text, so it needs no hidden label. */
-type FieldFace = { glyph: ReactNode; label: string; named: boolean; actions: () => MenuAction[] };
+type FieldFace = { glyph: ReactNode; label: string; glyphIsLabel: boolean; actions: () => MenuAction[] };
 
-/**
- * One property cell: status, priority or estimate, read and set as a bare glyph one block wide. A list row and an
- * inline create row both render it, so the value reads the same and sits in the same track in either.
- */
 export const TaskField = ({ testId, classNames, ...props }: TaskFieldProps) => {
   const { t } = Hooks.useTranslation(translationKey);
-  const { glyph, label, named, actions } = fieldFace(props, t);
-  const hidden = !named && <span className='sr-only'>{label}</span>;
+  const { glyph, label, glyphIsLabel, actions } = fieldFace(props, t);
+  const hidden = !glyphIsLabel && <span className='sr-only'>{label}</span>;
 
   if (!props.onChange) {
     return (
@@ -57,15 +52,13 @@ export const TaskField = ({ testId, classNames, ...props }: TaskFieldProps) => {
 
   return (
     <Layout.Block classNames={classNames}>
-      {/* Deferred: a list renders one of these per task, and the menu is opened for at most one. */}
       <ActionMenu deferUntilOpen actions={actions}>
         <Button.Root
           variant='ghost'
           label={label}
           data-testid={testId}
           classNames='w-(--dx-block-size) px-0 justify-center text-xs tabular-nums'
-          // The row is the selection target; opening the menu must not also select it.
-          onClick={(event: MouseEvent) => event.stopPropagation()}
+          onClick={keepRowSelection}
         >
           {glyph}
           {hidden}
@@ -76,6 +69,8 @@ export const TaskField = ({ testId, classNames, ...props }: TaskFieldProps) => {
 };
 
 TaskField.displayName = 'TaskList.Field';
+
+const keepRowSelection = (event: MouseEvent) => event.stopPropagation();
 
 const fieldFace = (props: TaskFieldValue, t: (key: string) => string): FieldFace => {
   switch (props.field) {
@@ -88,7 +83,7 @@ const fieldFace = (props: TaskFieldValue, t: (key: string) => string): FieldFace
           <Icon.Icon icon={statusIcon(value)} classNames={statusTextStyle(value)} />
         ),
         label: t(`status-${value}.label`),
-        named: false,
+        glyphIsLabel: false,
         actions: () =>
           Task.StatusOptions.map(({ id }) =>
             createMenuAction(`status-${id}`, () => onChange?.(id), {
@@ -106,12 +101,11 @@ const fieldFace = (props: TaskFieldValue, t: (key: string) => string): FieldFace
       return {
         glyph: <Icon.Icon icon={priorityIcon(value)} classNames={priorityTextStyle(value)} />,
         label: value ? t(`priority-${value}.label`) : t('task-priority.label'),
-        named: false,
+        glyphIsLabel: false,
         actions: () =>
           [Task.NullOption, ...Task.PriorityOptions].map(({ id, icon }) =>
             createMenuAction(`priority-${id}`, () => onChange?.(id === 'none' ? undefined : id), {
               label: t(`priority-${id}.label`),
-              // `None` takes the row's unset glyph, so every option has an icon and the labels align.
               icon: icon ?? UNSET_ICON,
               iconClassNames: priorityTextStyle(id),
               checked: (value ?? 'none') === id,
@@ -123,14 +117,13 @@ const fieldFace = (props: TaskFieldValue, t: (key: string) => string): FieldFace
     case 'estimate': {
       const { value, onChange } = props;
       return {
-        // The size is its own label: `XS`…`XL` is a vocabulary a reader already knows.
         glyph: value ? (
           <span className={mx(estimateTextStyle(value))}>{value.toUpperCase()}</span>
         ) : (
           <Icon.Icon icon={ESTIMATE_ICON} classNames='text-neutral-500' />
         ),
         label: value ? value.toUpperCase() : t('task-estimate.label'),
-        named: !!value,
+        glyphIsLabel: !!value,
         actions: () =>
           [Task.NullOption, ...Task.EstimateOptions].map(({ id, title }) =>
             createMenuAction(`estimate-${id}`, () => onChange?.(id === 'none' ? undefined : id), {

@@ -38,9 +38,7 @@ export type TaskListContextValue = {
   hierarchical: boolean;
   /** Whether the leading gutter is rendered at all — it holds the ordinal or the checkbox. */
   showGutter: boolean;
-  /** The title line's cells, in order, less any with nothing to hold (a gutter with no ordinal, mnemonic or checkbox). */
   cells: readonly TaskColumn[];
-  /** Whether the list has an assignee column, and so offers people to assign. */
   showAssignees: boolean;
   members: readonly TaskMember[];
   people: readonly Person.Person[];
@@ -48,10 +46,6 @@ export type TaskListContextValue = {
   showMnemonics: boolean;
   /** Rows and the edit pane run to the host's edges, with no inline inset. */
   flush: boolean;
-  /**
-   * The column template, built once from `cells` so the tree's rows and the edit pane lay out on the same named
-   * tracks.
-   */
   columns: string;
   selected?: string;
   /** Ids of the checked rows — the set an action acts on, distinct from the current row. */

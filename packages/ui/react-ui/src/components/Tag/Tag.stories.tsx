@@ -62,7 +62,6 @@ const InteractiveTags = ({ size }: { size?: Size }) => {
   );
 };
 
-/** A row of tags centred in a block row, clickable and deletable tags, then every valence and hue, filled and outlined. */
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
     <Container layout='row' data-testid={`row-${size}`}>
@@ -137,7 +136,6 @@ export const Test: Story = {
     await expect(background('neutral')).not.toBe(background('red'));
     await expect(byTestId(canvasElement, 'hue-red-md')).toHaveAttribute('data-hue', 'red');
 
-    // An outline tag has no fill; its ring and text follow its hue.
     const outline = getComputedStyle(byTestId(canvasElement, 'outline-red-md'));
     await expect(outline.backgroundColor).toBe('rgba(0, 0, 0, 0)');
     await expect(outline.boxShadow).not.toBe(getComputedStyle(byTestId(canvasElement, 'outline-neutral-md')).boxShadow);

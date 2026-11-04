@@ -49,7 +49,6 @@ export type TaskStatusControlProps = {
 const useAgentWorking = (task: Task.Task): boolean =>
   useAtomValue(useMemo(() => Atom.make((get) => Task.isAgentWorking(get(Obj.atom(task)))), [task]));
 
-/** The status glyph, which is also the control that completes the task. */
 export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: TaskStatusControlProps) => {
   const [status] = useObject(task, 'status');
   const agentWorking = useAgentWorking(task);
@@ -167,7 +166,6 @@ export const TaskCheckbox = ({ task, checked, onCheckedChange, classNames }: Tas
 
 TaskCheckbox.displayName = 'TaskList.Checkbox';
 
-/** Priority as a signal-strength glyph: the four levels are ordinal, so a ramp reads at a glance. */
 export const TaskPriorityControl = ({ task, classNames }: { task: Task.Task; classNames?: string }) => {
   const { onTaskUpdate } = useTaskListContext('TaskList.PriorityControl');
   const [priority] = useObject(task, 'priority');
@@ -200,7 +198,6 @@ export const TaskEstimateControl = ({ task, classNames }: { task: Task.Task; cla
 
 TaskEstimateControl.displayName = 'TaskList.EstimateControl';
 
-/** The estimate as muted text, for a list with no estimate column. */
 export const TaskEstimateLabel = ({ estimate }: { estimate?: Task.Estimate }) =>
   estimate ? (
     <Typography.Text asChild tone='muted' data-testid='taskList.item.estimate'>
