@@ -31,6 +31,11 @@ export const previewClientLayer = clientLayer.pipe(
   Layer.provide(Layer.succeed(ConfigService, configPreset({ edge: 'preview' }))),
 );
 
+/** The longest a space may take to open or a feed to pull, so a stuck replication fails the run instead of hanging it. */
+const SPACE_TIMEOUT = '5 minutes';
+/** A new device downloads the whole space before its first read; past this, replication is what is broken. */
+const SNAPSHOT_TIMEOUT = '15 minutes';
+
 /** The types the canary reads and writes; registered once per client. */
 const TYPES = [
   AccessToken.AccessToken,
@@ -141,7 +146,15 @@ export class CanarySpace {
 
   /** Waits until the documents match EDGE, then reads the snapshot (`readSnapshot` pulls the feeds itself). */
   snapshot(): Effect.Effect<SpaceSnapshot, CanaryError> {
-    return this.syncToEdge().pipe(Effect.andThen(readSnapshot()), Effect.provide(Database.layer(this.#space.db)));
+    return this.syncToEdge().pipe(
+      Effect.andThen(readSnapshot()),
+      Effect.provide(Database.layer(this.#space.db)),
+      Effect.timeoutOrElse({
+        duration: SNAPSHOT_TIMEOUT,
+        orElse: () =>
+          Effect.fail(new CanaryError({ message: `space ${this.spaceId} unreadable after ${SNAPSHOT_TIMEOUT}` })),
+      }),
+    );
   }
 }
 
@@ -151,7 +164,12 @@ const ready = (client: Client, space: Space): Effect.Effect<CanarySpace, CanaryE
     yield* Effect.tryPromise({
       try: () => space.waitUntilReady(),
       catch: (cause) => new CanaryError({ message: `space ${space.id} is not ready: ${String(cause)}` }),
-    });
+    }).pipe(
+      Effect.timeoutOrElse({
+        duration: SPACE_TIMEOUT,
+        orElse: () => Effect.fail(new CanaryError({ message: `space ${space.id} not ready after ${SPACE_TIMEOUT}` })),
+      }),
+    );
     if (space.internal.data.edgeReplication !== EdgeReplicationSetting.ENABLED) {
       yield* Effect.promise(() => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
     }
@@ -200,5 +218,9 @@ export const readSnapshot = Effect.fn('mail-canary.readSnapshot')(
 const pull = (feed: Feed.Feed) =>
   Database.Service.pipe(
     Effect.flatMap(({ db }) => Effect.tryPromise(() => db.syncFeed(feed, { shouldPush: false }))),
+    Effect.timeoutOrElse({
+      duration: SPACE_TIMEOUT,
+      orElse: () => Effect.fail(new CanaryError({ message: `feed ${feed.id} did not sync in ${SPACE_TIMEOUT}` })),
+    }),
     Effect.retry({ times: 2 }),
   );

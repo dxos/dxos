@@ -5,6 +5,7 @@
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 
+import { log } from '@dxos/log';
 import * as MailSync from '@dxos/plugin-inbox/MailSync';
 
 import { splitMbox } from '../scripts/mbox.ts';
@@ -77,6 +78,7 @@ export class Nightly {
       const startedAt = new Date();
       const { start, seeded } = seed ? yield* this.seed(seed.pool, seed.count, startedAt) : { start: 0, seeded: [] };
       if (seed) {
+        log.info('stage 1: seeded', { count: seeded.length, poolStart: start });
         // The cron would pick the copies up within ten minutes; starting the sync now spares the wait.
         yield* this.#space.runSync();
       }
@@ -86,6 +88,7 @@ export class Nightly {
       let syncSeconds: number | undefined;
       while (seed) {
         const synced = new Set(snapshot.messages.map((message) => message.gmailId));
+        log.info('stage 2: waiting', { synced: seeded.filter(({ gmailId }) => synced.has(gmailId)).length });
         if (seeded.every((message) => synced.has(message.gmailId))) {
           syncSeconds = Math.round((Date.now() - startedAt.getTime()) / 1000);
           break;

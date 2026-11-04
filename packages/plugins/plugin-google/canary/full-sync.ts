@@ -10,6 +10,7 @@ import { ClientService } from '@dxos/client';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
+import { log } from '@dxos/log';
 import * as Binding from '@dxos/plugin-connector/Binding';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as MailSync from '@dxos/plugin-inbox/MailSync';
@@ -156,6 +157,11 @@ export class FullSync {
           mintedAt = Date.now();
         }
         snapshot = yield* space.snapshot();
+        log.info('stage 3: waiting', {
+          spaceId: space.spaceId,
+          expected: expected.length,
+          synced: snapshot.messages.length,
+        });
         backfilled = yield* reachedHorizon(days).pipe(Effect.provide(Database.layer(space.space.db)));
         const synced = new Set(snapshot.messages.map((message) => message.gmailId));
         if (backfilled && expected.every((message) => synced.has(message.gmailId))) {
@@ -262,15 +268,19 @@ const remove = (space: CanarySpace): Effect.Effect<void, CanaryError> =>
 const removeLeftovers = () =>
   Effect.gen(function* () {
     const client = yield* ClientService;
-    for (const space of client.spaces.get()) {
-      const ready = yield* Effect.tryPromise(() => space.waitUntilReady()).pipe(
-        Effect.timeout('1 minute'),
-        Effect.result,
-      );
-      if (Result.isSuccess(ready) && space.properties.name === FULL_SYNC_SPACE_NAME) {
-        yield* remove(new CanarySpace(client, space)).pipe(Effect.ignore);
-      }
-    }
+    // Every space opens at once: one by one, each that never opens would hold the run for its whole timeout.
+    yield* Effect.forEach(
+      client.spaces.get(),
+      (space) =>
+        Effect.tryPromise(() => space.waitUntilReady()).pipe(
+          Effect.timeout('2 minutes'),
+          Effect.flatMap(() =>
+            space.properties.name === FULL_SYNC_SPACE_NAME ? remove(new CanarySpace(client, space)) : Effect.void,
+          ),
+          Effect.ignore,
+        ),
+      { concurrency: 'unbounded', discard: true },
+    );
   });
 
 const check = (id: string, name: string, failures: Failure[]): CheckResult => ({

@@ -16,7 +16,7 @@ import { fixturePath } from '@dxos/fixtures';
 
 import { FullSync } from '../full-sync.ts';
 import { CanaryMailbox, credentialsFromEnv } from '../mailbox.ts';
-import { type CanaryReport, Nightly, parsePool, renderEvents, renderSummary } from '../nightly.ts';
+import { type CanaryReport, Nightly, type NightlyReport, parsePool, renderEvents, renderSummary } from '../nightly.ts';
 import { CanarySpace, previewClientLayer, recoverIdentity } from '../space.ts';
 
 const Config = Schema.Struct({
@@ -64,12 +64,33 @@ describe(
           Effect.gen(function* () {
             const mailbox = yield* CanaryMailbox.connect(credentials);
             yield* recoverIdentity(phrase);
-            const report = yield* new Nightly(mailbox, yield* CanarySpace.open(config.spaceId)).run({
-              seed: pool ? { pool: parsePool(readFileSync(pool, 'latin1')), count: config.seed.count } : undefined,
-              syncTimeout: Duration.minutes(config.monitor.timeoutMinutes),
-              pollInterval: Duration.seconds(config.monitor.pollSeconds),
-              window: Duration.hours(config.monitor.windowHours),
+            // A stage that cannot run is reported as its check failing, so the next stage still runs.
+            const setup = (id: string, name: string, message: string) => ({
+              id,
+              name,
+              ok: false,
+              failures: [{ class: 'SETUP' as const, message }],
             });
+            const monitored = yield* CanarySpace.open(config.spaceId).pipe(
+              Effect.flatMap((space) =>
+                new Nightly(mailbox, space).run({
+                  seed: pool ? { pool: parsePool(readFileSync(pool, 'latin1')), count: config.seed.count } : undefined,
+                  syncTimeout: Duration.minutes(config.monitor.timeoutMinutes),
+                  pollInterval: Duration.seconds(config.monitor.pollSeconds),
+                  window: Duration.hours(config.monitor.windowHours),
+                }),
+              ),
+              Effect.result,
+            );
+            const report: NightlyReport = Result.isSuccess(monitored)
+              ? monitored.success
+              : {
+                  ok: false,
+                  startedAt: new Date().toISOString(),
+                  spaceId: config.spaceId,
+                  runs: { runs: 0, invocations: 0, succeeded: 0, yielded: 0, failed: 0 },
+                  checks: [setup('S2', 'No sync failures', monitored.failure.message)],
+                };
             const fullSync = config.fullSync.enabled
               ? yield* new FullSync(mailbox, credentials).run({
                   days: config.fullSync.days,
@@ -80,14 +101,7 @@ describe(
               : undefined;
             const noPool =
               config.seed.count > 0 && !pool
-                ? [
-                    {
-                      id: 'S1',
-                      name: 'Every seeded message synced',
-                      ok: false,
-                      failures: [{ class: 'SETUP' as const, message: 'the enron-pool fixture was not pulled' }],
-                    },
-                  ]
+                ? [setup('S1', 'Every seeded message synced', 'the enron-pool fixture was not pulled')]
                 : [];
             return { ...report, checks: [...noPool, ...report.checks], fullSync } satisfies CanaryReport;
           }).pipe(Effect.provide(previewClientLayer), Effect.result),
