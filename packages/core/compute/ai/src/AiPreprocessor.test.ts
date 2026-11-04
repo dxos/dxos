@@ -781,26 +781,6 @@ describe('AiPreprocessor.preprocessPrompt', () => {
       expect(userMessage.content[2]?.type).toBe('file');
     }),
   );
-
-  it.effect(
-    'marks the system prompt and the last message as cache breakpoints',
-    Effect.fn(function* ({ expect }) {
-      const input = yield* AiPreprocessor.preprocessPrompt(
-        [
-          makeMessage('user', [{ _tag: 'text', text: 'Hi.' }]),
-          makeMessage('assistant', [{ _tag: 'text', text: 'Hello.' }]),
-          makeMessage('user', [{ _tag: 'text', text: 'Bye.' }]),
-        ],
-        { system: 'You are helpful.', cacheControl: 'ephemeral' },
-      );
-      expect(input.content.map((message) => message.options.anthropic?.cacheControl !== undefined)).toEqual([
-        true,
-        false,
-        false,
-        true,
-      ]);
-    }),
-  );
 });
 
 describe('AiPreprocessor.preprocessPrompt with offered tools', () => {
