@@ -191,12 +191,14 @@ export const steps = [
       const section = `${SECTION} >> nth=1`;
       await caption(demo, 9, 'A section also holds what its feature depends on');
       await demo.click({ selector: section, label: 'Instant inbox' });
+      // The picker's caret opens its search popup; the picker stays open for further picks.
       await demo.click({
-        selector: `${section} >> [data-testid="feature-section.add-dependency"]`,
-        label: 'Add dependency',
+        selector: `${section} >> [data-testid="feature-section.dependency-picker"] >> [data-part="trigger"]`,
+        label: 'Add a feature this needs',
       });
       await page.keyboard.type('Search', { delay: 140 });
       await demo.click({ selector: '[role="option"]:has-text("Search")', label: 'Search' });
+      await demo.press({ key: 'Escape' });
       await page
         .locator(`${section} >> [data-testid="feature-section.dependencies"]:has-text("Search")`)
         .waitFor({ state: 'visible', timeout: 5_000 });

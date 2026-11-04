@@ -960,6 +960,11 @@ feat F-20: Feature embeds in the editor
               `ProjectCapabilities.SpecExtensions`, which this plugin contributes.
   req F-20.9: A feature's `section` surface is that form, so any document embedding the feature can edit it in place. Its
              card is the read-only version, shown on the map, the board and in search.
+  req F-20.11: A section is compact. Its header row reads a fold toggle, the block id, the name and, at its end, the
+              status. Under it are the description, the requirements, and a "Needs" row that picks the features it
+              depends on, never one that depends on it. Empty rows and the add and remove actions show only while the
+              section has attention. Folded, a section shows only its header row, with its requirement count and the
+              features it needs. Each reader's device keeps which sections are folded; it is not synced.
 ```
 
 ```mdl
@@ -1335,7 +1340,7 @@ test QA-4: Grow a spec from prose
     autocue flow `spec-document` against the FeatureEmbeds story "Prose", whose spec "Mail" is three paragraphs
     of prose with no features.
   actors: human
-  covers: [F-19.3, F-19.6, F-20.1, F-20.2, F-20.3, F-20.6, F-20.7, F-20.10]
+  covers: [F-19.3, F-19.6, F-20.1, F-20.2, F-20.3, F-20.6, F-20.7, F-20.10, F-20.11]
   status: unverified
   given:
     - storybook serves plugin-code
@@ -1366,8 +1371,8 @@ test QA-4: Grow a spec from prose
       do: Click the "Search" section, click "Add requirement" in it, type "Results appear as you type." and press Enter.
       expect: the requirement shows its id, F-19.1
     - name: Depend on another feature
-      do: Click the "Instant inbox" section, click "Add dependency" in it and pick "Search".
-      expect: the section lists "Search" under "Depends on"
+      do: Click the "Instant inbox" section, open its "Needs" picker and pick "Search".
+      expect: the section's "Needs" row shows "Search"
 ```
 
 ```mdl
@@ -1938,6 +1943,43 @@ decision D-58: op:updateProjectRepositories, keyed `org.dxos.operation.code.upda
   why: Keys in this plugin's domain match the feature operations ([D-50], [D-56]). No build has shipped the old keys, so no saved skill names them.
   rejected:
     - Adding the tool to the Coder skill, which is about authoring a plugin's source files.
+```
+
+```mdl
+decision D-59: A section embedded in a spec is compact and folds like an outline. Icons sit in a gutter column: the fold chevron on the header row, and under it each requirement's check, the `+` of "Add requirement" and the "Needs" row's arrow. The header row reads chevron, block id and name, with the name in the form's `title` presentation and the status as a `pill` at the row's end, as ProjectArticle draws them. The description has no label, uses the `plain` presentation and shows when it has text or the section has attention. Requirements have no label and no field well until focused; their remove and add actions show while the section has attention. Folded, only the header row shows, with the requirement count beside the status and the needed features as tags after the name. Which sections are folded is kept on the device, not synced.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-20.10, F-20.11, QA-4]
+  why: A user reported that a section with five requirements was about 550 px tall, so a screen held 1.5 features and the spec was unusable for them.
+```
+
+```mdl
+decision D-60: The compact section creates no new form components. It composes the existing `Form` presentations, fields and fieldsets, `ObjectMultiPicker`, react-ui `Card`, `Layout`, `Tag` and `Icon`, and `RequirementEditor`. A behaviour that composition cannot give is a gap to raise, fixed in the existing primitive only with the user's agreement. Fills in [D-59].
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-20.11]
+  why: Sections should look and behave like every other form in the app.
+  rejected:
+    - A new field renderer, a hand-built form, or a section-specific wrapper around the inputs.
+```
+
+```mdl
+decision D-61: react-ui-form's `MarkdownField` draws the `title` and `plain` presentations in place, with no well and one line that grows with its text, as `TextField` does. The description placeholder is one line. The "Needs" picker stays in place whatever has attention, so several features can be picked in a row. Fills in [D-60].
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-20.11]
+  why: A feature's description is markdown, and `MarkdownField` drew a six-line well for every presentation.
+```
+
+```mdl
+decision D-62: The "Needs" row is an `ObjectMultiPicker` over the feature's `DependsOn` targets, and each pick or removal runs `AddFeatureDependency` or `RemoveFeatureDependency`. Its options leave out the feature and every feature that depends on it, directly or through others. The fold state is `CodeCapabilities.State.collapsed`, keyed by feature id, in a local store under `org.dxos.plugin.code.state`. `RequirementEditor` renders a section of its host's grid card, so its icons share the host's rail. Fills in [D-59] and [D-61].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-20.11]
+  why: Dependencies are relations edited through operations, not a field of the feature, so the picker is mounted beside the form rather than through it. Leaving out the features that would close a cycle means the operation never has to refuse a pick.
+  rejected:
+    - Read-only tags while the section lacks attention, which replaced the picker as soon as attention moved and hid how to add another feature.
 ```
 
 ## Appendix: Extension Definitions

@@ -54,18 +54,22 @@ export const FeatureEmbedSection = ({ eid, label, view, db, attendableId, claimF
     }
   }, [feature, claimFocus]);
 
-  // Inert until attended, so the field can take focus only once attention has followed the container's.
+  // Inert until attended, so the field can take focus only once attention has followed the container's. A frame later,
+  // since an empty description mounts with attention and its editor is rebuilt within that commit.
   useEffect(() => {
     const field = focusing.current;
     if (!hasAttention || !field) {
       return;
     }
-    focusing.current = undefined;
-    // The description is rich text, the only editable element in the form.
-    const selector = field === 'name' ? 'input[data-testid="name"]' : '[contenteditable="true"]';
-    const element = containerRef.current?.querySelector<HTMLElement>(selector);
-    element?.focus();
-    element instanceof HTMLInputElement && element.select();
+    const frame = requestAnimationFrame(() => {
+      focusing.current = undefined;
+      // The description is rich text, the only editable element in the form.
+      const selector = field === 'name' ? 'input[data-testid="name"]' : '[contenteditable="true"]';
+      const element = containerRef.current?.querySelector<HTMLElement>(selector);
+      element?.focus();
+      element instanceof HTMLInputElement && element.select();
+    });
+    return () => cancelAnimationFrame(frame);
   }, [hasAttention]);
 
   const handleMouseDown = useCallback(
@@ -116,7 +120,7 @@ export const FeatureEmbedSection = ({ eid, label, view, db, attendableId, claimF
         className={`border rounded-md ${hasAttention ? 'border-focus-ring-subtle' : 'border-separator-subtle'}`}
         inert={hasAttention ? undefined : true}
       >
-        <FeatureSection subject={feature} attendableId={embedId} />
+        <FeatureSection subject={feature} attended={hasAttention} />
       </div>
     </div>
   );

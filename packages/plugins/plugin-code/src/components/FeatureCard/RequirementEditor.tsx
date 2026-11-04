@@ -19,6 +19,8 @@ type CommitFieldProps = {
   label: string;
   testId: string;
   autoFocus?: boolean;
+  /** `plain` draws no well until the field is focused. */
+  variant?: 'default' | 'plain';
   onCommit: (value: string) => void;
 };
 
@@ -26,7 +28,7 @@ type CommitFieldProps = {
  * A wrapping field committed when it loses focus (Enter does that; Shift+Enter breaks the line). Uncontrolled, so a
  * newer value from another peer replaces the text only while the reader has not changed it.
  */
-const CommitField = ({ value, label, testId, autoFocus, onCommit }: CommitFieldProps) => {
+const CommitField = ({ value, label, testId, autoFocus, variant, onCommit }: CommitFieldProps) => {
   const fieldRef = useRef<HTMLTextAreaElement>(null);
   const shownRef = useRef(value);
   useEffect(() => {
@@ -60,6 +62,7 @@ const CommitField = ({ value, label, testId, autoFocus, onCommit }: CommitFieldP
     <Input.Textarea
       ref={fieldRef}
       defaultValue={value}
+      variant={variant}
       aria-label={label}
       data-testid={testId}
       onBlur={handleBlur}
@@ -71,22 +74,26 @@ const CommitField = ({ value, label, testId, autoFocus, onCommit }: CommitFieldP
 
 export type RequirementEditorProps = {
   requirements: readonly Feature.Requirement[];
+  /** `plain` rows read as text until a row is focused. */
+  variant?: 'default' | 'plain';
+  /** Whether the remove and add actions show; the rows stay editable either way. */
+  actions?: boolean;
   onChange: (requirements: Feature.Requirement[]) => void;
 };
 
 /**
  * A feature's requirements, each a field that wraps to its whole text, with the spec id it came from before it and a
  * remove action after. Every edit hands back the whole list, since requirements are records inside their feature; a
- * requirement cleared of its text is removed.
+ * requirement cleared of its text is removed. A section of its host's grid card, so its icons sit in the host's rail.
  */
-export const RequirementEditor = ({ requirements, onChange }: RequirementEditorProps) => {
+export const RequirementEditor = ({ requirements, variant, actions = true, onChange }: RequirementEditorProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
   // The row just added takes focus, so a new requirement is written before anything else.
   const [focusIndex, setFocusIndex] = useState<number>();
   const copy = () => requirements.map((requirement) => ({ ...requirement }));
   const remove = (index: number) => copy().filter((_, candidate) => candidate !== index);
   return (
-    <Card.Root grid border={false} data-testid='requirement-editor'>
+    <Card.Section data-testid='requirement-editor'>
       {requirements.map((requirement, index) => (
         <Card.Row
           key={index}
@@ -94,12 +101,14 @@ export const RequirementEditor = ({ requirements, onChange }: RequirementEditorP
           classNames='[&_.dx-card-row-content]:overflow-visible'
           leading={<RequirementIcon />}
           trailing={
-            <Card.Action
-              icon='ph--x--regular'
-              label={t('requirement-editor.remove.label')}
-              data-testid={`requirement-editor.${index}.remove`}
-              onClick={() => onChange(remove(index))}
-            />
+            actions ? (
+              <Card.Action
+                icon='ph--x--regular'
+                label={t('requirement-editor.remove.label')}
+                data-testid={`requirement-editor.${index}.remove`}
+                onClick={() => onChange(remove(index))}
+              />
+            ) : undefined
           }
         >
           {/* The spec id leads the text, as it does in the read-only list; the field takes the rest of the row. */}
@@ -111,6 +120,7 @@ export const RequirementEditor = ({ requirements, onChange }: RequirementEditorP
                 label={t('requirement-editor.text.label')}
                 testId={`requirement-editor.${index}.text`}
                 autoFocus={index === focusIndex}
+                variant={variant}
                 onCommit={(text) =>
                   onChange(
                     text
@@ -125,16 +135,18 @@ export const RequirementEditor = ({ requirements, onChange }: RequirementEditorP
           </Layout.Flex>
         </Card.Row>
       ))}
-      <Card.Row
-        leading={<RowIcon icon='ph--plus--regular' />}
-        data-testid='requirement-editor.add'
-        onClick={() => {
-          setFocusIndex(requirements.length);
-          onChange([...copy(), { text: '' }]);
-        }}
-      >
-        <Card.Text variant='muted'>{t('requirement-editor.add.label')}</Card.Text>
-      </Card.Row>
-    </Card.Root>
+      {actions && (
+        <Card.Row
+          leading={<RowIcon icon='ph--plus--regular' />}
+          data-testid='requirement-editor.add'
+          onClick={() => {
+            setFocusIndex(requirements.length);
+            onChange([...copy(), { text: '' }]);
+          }}
+        >
+          <Card.Text variant='muted'>{t('requirement-editor.add.label')}</Card.Text>
+        </Card.Row>
+      )}
+    </Card.Section>
   );
 };
