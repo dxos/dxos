@@ -249,8 +249,8 @@ export const makeOperations = ({
       handler === undefined
         ? // With a database the entities and refs are restored, so the output is checked against the type side.
           remote(op, input, options).pipe(
-            Effect.flatMap(
-              Schema.decodeUnknownEffect(databaseOf() === undefined ? op.output : Schema.toType(op.output)),
+            Effect.flatMap((output) =>
+              databaseOf() === undefined ? Schema.decodeUnknownEffect(op.output)(output) : checkOutput(op, output),
             ),
           )
         : // The handler's own nested operations go through this service too.
@@ -259,7 +259,7 @@ export const makeOperations = ({
             return Effect.runPromiseExitWith(Context.add(context, Operation.Service, service))(handler.handler(input));
           }).pipe(
             Effect.flatMap((exit) => exit),
-            Effect.flatMap(Schema.decodeUnknownEffect(Schema.toType(op.output))),
+            Effect.flatMap((output) => checkOutput(op, output)),
           )
     ).pipe(Effect.orDie);
   };
@@ -294,6 +294,15 @@ export const withOperations = (handler: Handler, options: Omit<OperationsOptions
       effect.pipe(Effect.provideService(Operation.Service, makeOperations({ ...options, context }))),
     ),
   );
+
+/**
+ * The output checked against the operation's type side and returned as it is: decoding would rebuild a struct around
+ * every field, so a live object would come back as a plain copy that `Obj.instanceOf` rejects.
+ */
+const checkOutput = <I, O>(op: Operation.Definition<I, O>, output: unknown) => {
+  const type = Schema.toType(op.output);
+  return Schema.is(type)(output) ? Effect.succeed(output) : Schema.decodeUnknownEffect(type)(output);
+};
 
 /** TEST-ONLY. FNV-1a of an id, as operation-service derives a nested invocation's seed. */
 const childSeed = (id: string): number => {

@@ -247,7 +247,7 @@ describe('PluginHost', () => {
     });
 
     // In process the callee's output is the caller's own object, as operation-service returns it.
-    test.fails('an in-process call returns a live object', async ({ expect }) => {
+    test('an in-process call returns a live object', async ({ expect }) => {
       expect(await makeHost().invoke({ operationKey: String(Adopt.meta.key), input: {} }, {})).toEqual({
         ok: true,
         output: { live: true },
