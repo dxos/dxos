@@ -202,7 +202,7 @@ export const FoldUnattended: Story = {
 };
 
 /**
- * Arrowing through the text stops on each section rather than skipping it: selected, it rings; Enter edits its name,
+ * Arrowing through the text stops on each section: selected, it rings; Enter edits its name,
  * Escape selects it again, and the arrows move on to the text on either side.
  */
 export const Keyboard: Story = {
@@ -412,7 +412,6 @@ export const ReadOnlySelection: Story = {
     await frames(10);
     await expect(view.state.doc.toString()).toBe(original);
     await expect(document.activeElement).toBe(embed);
-    // The section still answered its keys: Escape leaves it.
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(inText(view)).toBe(true));
   },

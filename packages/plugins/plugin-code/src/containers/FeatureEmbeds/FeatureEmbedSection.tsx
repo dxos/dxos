@@ -19,10 +19,6 @@ import { FeatureSection } from '../FeatureSection/index.ts';
 
 const isId = Schema.is(Obj.ID);
 
-/** Selected from the keyboard (focused itself, not a field inside it), the section rings like a focused control. */
-const EMBED_SELECTED_RING =
-  'group-focus-visible/embed:border-(--dx-focus-ring-color) group-focus-visible/embed:outline group-focus-visible/embed:outline-(--dx-focus-ring-color)';
-
 /** The field of a new feature's section the cursor goes to. */
 export type FeatureEmbedField = 'name' | 'description';
 
@@ -88,8 +84,7 @@ export const FeatureEmbedSection = ({ eid, label, view, db, attendableId, claimF
     [hasAttention],
   );
 
-  // While attended, keys stay in the form. Focused itself, the section is selected: Enter edits its name, and the rest
-  // are the editor's keys for a selected block. From a field, Escape selects the section again.
+  // While attended, keys stay in the section rather than reaching the editor.
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
       if (!hasAttention) {
@@ -136,23 +131,20 @@ export const FeatureEmbedSection = ({ eid, label, view, db, attendableId, claimF
   }
 
   return (
-    <div
-      ref={containerRef}
-      tabIndex={0}
-      className='group/embed py-1 outline-hidden whitespace-normal'
-      data-testid='feature-embed'
-      data-feature={feature.id}
-      {...attentionAttributes}
-      onMouseDown={handleMouseDown}
-      onKeyDown={handleKeyDown}
-      onKeyUp={(event) => hasAttention && event.stopPropagation()}
-    >
+    <div className='py-1 whitespace-normal'>
       <div
+        ref={containerRef}
+        tabIndex={0}
         className={mx(
-          'border rounded-md overflow-hidden',
+          'dx-focus-item border rounded-md overflow-hidden',
           hasAttention ? 'border-focus-ring-subtle' : 'border-separator-subtle',
-          EMBED_SELECTED_RING,
         )}
+        data-testid='feature-embed'
+        data-feature={feature.id}
+        {...attentionAttributes}
+        onMouseDown={handleMouseDown}
+        onKeyDown={handleKeyDown}
+        onKeyUp={(event) => hasAttention && event.stopPropagation()}
       >
         <FeatureSection subject={feature} attended={hasAttention} />
       </div>

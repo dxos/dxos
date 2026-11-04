@@ -690,11 +690,11 @@ const keyHandlers = Prec.highest(
   ]),
 );
 
-/** The element of a widget root that takes focus: its first tabbable one. */
+/** The element a widget marks as its focus stop with `tabindex="0"`. */
 const focusTarget = (root: Element): HTMLElement | undefined =>
   root.querySelector<HTMLElement>('[tabindex="0"]') ?? undefined;
 
-/** The block widget whose range is `[from, to]`, if it renders an element that takes focus. */
+/** The focus target of the first block widget drawn within `[from, to]`. */
 const focusableBlock = (view: EditorView, from: number, to: number): HTMLElement | undefined => {
   for (const root of view.contentDOM.querySelectorAll<HTMLElement>(`[${WIDGET_ROOT_ATTRIBUTE}]`)) {
     const pos = view.posAtDOM(root);
@@ -704,7 +704,7 @@ const focusableBlock = (view: EditorView, from: number, to: number): HTMLElement
   }
 };
 
-/** Takes focus for a block widget, or declines it. */
+/** The element to focus for a block widget, or undefined when it takes none. */
 type FocusBlock = (block: Range) => HTMLElement | undefined;
 
 const focusBlockIn =
@@ -763,9 +763,9 @@ const stopPast = (
 };
 
 /**
- * Arrowing from the line next to a block widget that takes focus moves focus onto it, rather than past it: up and down
- * from that line's last (first) visual line, right from its end and left from its start. Blocks that take no focus are
- * passed on the way. The widget leads back out with `handleBlockWidgetKey`.
+ * Arrowing off a text line onto a block widget that takes focus focuses it: up or down from the line's edge visual
+ * line, right from its end, left from its start. Blocks that take no focus are passed. `handleBlockWidgetKey` leads
+ * back out.
  */
 const enterBlock =
   (forward: boolean, vertical: boolean) =>
@@ -800,10 +800,7 @@ const blockFocusKeys = Prec.high(
   ]),
 );
 
-/**
- * Focuses the block widget `id` once the editor has drawn it, which can take a few frames after a change; the editor
- * takes focus if it does not appear.
- */
+/** Focuses block widget `id` once its content mounts, or the editor when it does not. */
 const refocusBlock = (view: EditorView, id: string, frames = 5) => {
   const root = view.contentDOM.querySelector(`[${WIDGET_ROOT_ATTRIBUTE}="${CSS.escape(id)}"]`);
   const element = root ? focusTarget(root) : undefined;
@@ -827,7 +824,6 @@ const blockRangeOf = (view: EditorView, root: Element): Range | undefined => {
   );
 };
 
-/** Puts the cursor at `anchor` and focuses the editor. */
 const focusText = (view: EditorView, anchor: number) => {
   view.dispatch({ selection: { anchor }, scrollIntoView: true });
   view.focus();

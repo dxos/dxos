@@ -90,10 +90,6 @@ export type PreviewComponentProps = WidgetProps<
   } & LinkWidgetState
 >;
 
-/** Selected from the keyboard (focused itself, not a field inside it), an embed rings like a focused control. */
-const EMBED_SELECTED_RING =
-  'group-focus-visible/embed:border-(--dx-focus-ring-color) group-focus-visible/embed:outline group-focus-visible/embed:outline-(--dx-focus-ring-color)';
-
 /** What Enter on a selected embed moves focus to: the first element inside its surface that takes input. */
 const FOCUSABLE = 'input, textarea, select, [contenteditable="true"], button, [tabindex]:not([tabindex="-1"])';
 
@@ -286,10 +282,9 @@ export const PreviewComponent = ({
     [hasAttention],
   );
 
-  // While attended, keys stay inside the embed (an editor shortcut must not fire from a sketch). Focused itself, the
-  // embed is selected: Enter moves focus into its surface, and the rest are the editor's keys for a selected block.
-  // Escape is layered: a surface that consumes it (`preventDefault`, e.g. a task list clearing its selection) keeps
-  // that press, and the next one selects the embed again.
+  // While attended, keys stay inside the embed (an editor shortcut must not fire from a sketch). Escape is layered: a
+  // surface that consumes it (`preventDefault`, e.g. a task list clearing its selection) keeps that press, and the next
+  // one selects the embed again.
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
       if (!hasAttention) {
@@ -387,7 +382,7 @@ export const PreviewComponent = ({
     if (mode === 'section') {
       return (
         <div
-          className='group/embed relative grid scroll-mt-16 outline-hidden whitespace-normal'
+          className='group/embed dx-focus-item relative grid scroll-mt-16 rounded-md whitespace-normal'
           style={sizeStyle(size, 'vertical')}
           {...frameProps}
           {...resizeAttributes}
@@ -406,7 +401,6 @@ export const PreviewComponent = ({
               hasAttention
                 ? 'border-focus-ring-subtle'
                 : 'border-transparent group-hover/embed:border-separator-subtle transition-colors',
-              EMBED_SELECTED_RING,
             )}
             inert={hasAttention ? undefined : true}
           >
@@ -450,10 +444,10 @@ export const PreviewComponent = ({
     // Card preview.
     if (mode === 'card') {
       return (
-        <div className='group/embed outline-hidden whitespace-normal' {...frameProps} ref={cardRef}>
+        <div className='dx-focus-item rounded-md whitespace-normal' {...frameProps} ref={cardRef}>
           {/* `Card.Root` does not pass `inert` through, so the gate sits on a box around it. */}
           <div inert={hasAttention ? undefined : true}>
-            <Card.Root grid classNames={mx(hasAttention && 'border-focus-ring-subtle', EMBED_SELECTED_RING)}>
+            <Card.Root grid classNames={hasAttention && 'border-focus-ring-subtle'}>
               <Card.Header>
                 <Layout.Block />
                 <Card.Title>{objectLabel}</Card.Title>

@@ -5,7 +5,7 @@
 /**
  * A spec read with the keyboard alone. Arrowing through the text stops on each feature's section, which is then
  * selected and ringed; Enter edits its name and Escape selects it again. The arrows go on to the text or the next
- * section, Alt with an arrow moves a selected section, and Escape returns to the text after it.
+ * section, Alt with Up or Down moves a selected section, and Escape returns to the text after it.
  *
  * @mdl packages/plugins/plugin-code/PLUGIN.mdl test QA-6
  * @app storybook-react, narrowed to plugin-code, on :9009
