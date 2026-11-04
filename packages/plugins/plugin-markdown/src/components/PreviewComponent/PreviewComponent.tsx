@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type KeyboardEvent, type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Hooks from '@dxos/app-framework/Hooks';
@@ -15,18 +15,13 @@ import { useObject, useResolveRef } from '@dxos/echo-react';
 import { URI } from '@dxos/keys';
 import { Attention, useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
+import { Editor } from '@dxos/react-ui-editor';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
-import {
-  type LinkWidgetState,
-  type WidgetProps,
-  handleBlockWidgetKey,
-  releaseBlockHeight,
-  setLinkWidgetState,
-} from '@dxos/ui-editor';
+import { type LinkWidgetState, type WidgetProps, releaseBlockHeight, setLinkWidgetState } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
@@ -89,10 +84,6 @@ export type PreviewComponentProps = WidgetProps<
     isSurfaceAvailable?: ReturnType<typeof Surface.useIsAvailable>;
   } & LinkWidgetState
 >;
-
-/** What Enter on a selected embed moves focus to: the first enabled element inside its surface that takes input. */
-const FOCUSABLE =
-  ':is(input, textarea, select, button):not(:disabled), [contenteditable="true"], [tabindex]:not([tabindex="-1"])';
 
 /**
  * Registry-backed block widget for URL-scheme preview slots (the `image` widget of `objectLinks()`).
@@ -272,75 +263,12 @@ export const PreviewComponent = ({
     [view, range, eid, remSize],
   );
 
-  // Focus lands on the container itself: the surface is inert until attended, so the click cannot
-  // reach anything focusable inside it. Attention follows from the focus event.
-  const handleMouseDown = useCallback(
-    (event: MouseEvent<HTMLDivElement>) => {
-      if (!hasAttention && event.currentTarget === event.target) {
-        event.currentTarget.focus();
-      }
-    },
-    [hasAttention],
-  );
-
-  // While attended, keys stay inside the embed (an editor shortcut must not fire from a sketch). Escape is layered: a
-  // surface that consumes it (`preventDefault`, e.g. a task list clearing its selection) keeps that press, and the next
-  // one selects the embed again.
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLDivElement>) => {
-      if (!hasAttention) {
-        return;
-      }
-      event.stopPropagation();
-      const container = event.currentTarget;
-      if (event.defaultPrevented || !view) {
-        return;
-      }
-      if (event.target !== container) {
-        if (event.key === 'Escape') {
-          event.preventDefault();
-          container.focus();
-        }
-        return;
-      }
-      switch (event.key) {
-        case 'Enter': {
-          const first = container.querySelector<HTMLElement>(FOCUSABLE);
-          if (first) {
-            event.preventDefault();
-            first.focus();
-          }
-          break;
-        }
-        default: {
-          if (handleBlockWidgetKey(view, container, event)) {
-            event.preventDefault();
-          }
-        }
-      }
-    },
-    [hasAttention, view],
-  );
-
-  const handleKeyUp = useCallback(
-    (event: KeyboardEvent<HTMLDivElement>) => {
-      if (hasAttention) {
-        event.stopPropagation();
-      }
-    },
-    [hasAttention],
-  );
-
-  // Shared by both previews: the container takes focus for the embed and hosts the attention id.
-  // Both frames reset `white-space`: the editor's `break-spaces` would otherwise reach the surface and
-  // lay out template whitespace as line breaks (a sheet's cell text drops out of its cell).
+  // Shared by both previews: the editor's frame selects the embed and hosts the attention id.
   const frameProps = {
-    'tabIndex': 0,
+    'view': view,
+    'attended': hasAttention,
     'data-testid': 'markdown.embed',
     ...attentionAttributes,
-    'onMouseDown': handleMouseDown,
-    'onKeyDown': handleKeyDown,
-    'onKeyUp': handleKeyUp,
   };
 
   const handleOpen = useCallback(
@@ -382,8 +310,8 @@ export const PreviewComponent = ({
     // Section preview.
     if (mode === 'section') {
       return (
-        <div
-          className='group/embed dx-focus-item relative grid scroll-mt-16 rounded-md whitespace-normal'
+        <Editor.BlockFrame
+          classNames='group/embed relative grid scroll-mt-16'
           style={sizeStyle(size, 'vertical')}
           {...frameProps}
           {...resizeAttributes}
@@ -438,14 +366,14 @@ export const PreviewComponent = ({
             size={size}
             onSizeChange={handleResize}
           />
-        </div>
+        </Editor.BlockFrame>
       );
     }
 
     // Card preview.
     if (mode === 'card') {
       return (
-        <div className='dx-focus-item rounded-md whitespace-normal' {...frameProps} ref={cardRef}>
+        <Editor.BlockFrame {...frameProps} ref={cardRef}>
           {/* `Card.Root` does not pass `inert` through, so the gate sits on a box around it. */}
           <div inert={hasAttention ? undefined : true}>
             <Card.Root grid classNames={hasAttention && 'border-focus-ring-subtle'}>
@@ -458,7 +386,7 @@ export const PreviewComponent = ({
               </Card.Body>
             </Card.Root>
           </div>
-        </div>
+        </Editor.BlockFrame>
       );
     }
   }
