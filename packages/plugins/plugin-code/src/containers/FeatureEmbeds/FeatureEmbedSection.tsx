@@ -70,7 +70,7 @@ export const FeatureEmbedSection = ({ eid, label, view, db, attendableId, claimF
       element instanceof HTMLInputElement && element.select();
     });
     return () => cancelAnimationFrame(frame);
-  }, [hasAttention]);
+  }, [hasAttention, feature]);
 
   const handleMouseDown = useCallback(
     (event: MouseEvent<HTMLDivElement>) => {
