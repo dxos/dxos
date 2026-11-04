@@ -747,11 +747,12 @@ export const FeedScope = Schema.TaggedStruct('feed', {
   /**
    * Reads the feed as a walk along the path from the root branch to `branch` (`null` or absent: the root
    * branch, or on a backward walk the branch of the cursor), in local order, each item once at its latest
-   * block on the path. `forks` also gives the base item of each branch that forks at a block the walk gives.
+   * block on the path. `'all'` walks every branch of the feed in local order. `forks` also gives the base
+   * item of each branch that forks at a block the walk gives.
    */
   walk: Schema.optional(
     Schema.Struct({
-      branch: Schema.optional(Schema.NullOr(Schema.String)),
+      branch: Schema.optional(Schema.Union([Schema.Literal('all'), Schema.NullOr(Schema.String)])),
       forks: Schema.optional(Schema.Boolean),
     }),
   ),

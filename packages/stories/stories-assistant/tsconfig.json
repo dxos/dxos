@@ -86,6 +86,9 @@
       "path": "../../plugins/plugin-chess"
     },
     {
+      "path": "../../plugins/plugin-claude"
+    },
+    {
       "path": "../../plugins/plugin-client"
     },
     {
@@ -216,6 +219,9 @@
     },
     {
       "path": "../../ui/react-ui-table"
+    },
+    {
+      "path": "../../ui/react-ui-trace"
     },
     {
       "path": "../../ui/ui-editor"

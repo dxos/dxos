@@ -10,6 +10,8 @@
   .dx-tag {
     --dx-hue-bg: var(--color-neutral-surface);
     --dx-hue-fg: var(--color-neutral-fg);
+    --dx-hue-border: var(--color-neutral-border);
+    --dx-hue-text: var(--color-neutral-text);
     box-sizing: border-box;
     display: inline-flex;
     align-items: center;
@@ -32,6 +34,15 @@
     align-self: center;
     background: var(--dx-hue-bg);
     color: var(--dx-hue-fg);
+  }
+  .dx-tag[data-variant='outline'] {
+    background: transparent;
+    color: var(--dx-hue-text);
+    box-shadow: inset 0 0 0 1px var(--dx-hue-border);
+  }
+  .dx-tag-clickable[data-variant='outline']:hover:not(:disabled) {
+    background: var(--color-hover-surface);
+    filter: none;
   }
   .dx-tag .dx-icon {
     width: calc(var(--dx-icon-size) * 0.75);
@@ -144,102 +155,136 @@
   .dx-tag.dx-tag-red {
     --dx-hue-bg: var(--color-red-surface);
     --dx-hue-fg: var(--color-red-fg);
+    --dx-hue-border: var(--color-red-border);
+    --dx-hue-text: var(--color-red-text);
     --dx-hue-fill: var(--color-red-bg);
   }
   :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='orange'],
   .dx-tag.dx-tag-orange {
     --dx-hue-bg: var(--color-orange-surface);
     --dx-hue-fg: var(--color-orange-fg);
+    --dx-hue-border: var(--color-orange-border);
+    --dx-hue-text: var(--color-orange-text);
     --dx-hue-fill: var(--color-orange-bg);
   }
   :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='amber'],
   .dx-tag.dx-tag-amber {
     --dx-hue-bg: var(--color-amber-surface);
     --dx-hue-fg: var(--color-amber-fg);
+    --dx-hue-border: var(--color-amber-border);
+    --dx-hue-text: var(--color-amber-text);
     --dx-hue-fill: var(--color-amber-bg);
   }
   :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='yellow'],
   .dx-tag.dx-tag-yellow {
     --dx-hue-bg: var(--color-yellow-surface);
     --dx-hue-fg: var(--color-yellow-fg);
+    --dx-hue-border: var(--color-yellow-border);
+    --dx-hue-text: var(--color-yellow-text);
     --dx-hue-fill: var(--color-yellow-bg);
   }
   :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='lime'],
   .dx-tag.dx-tag-lime {
     --dx-hue-bg: var(--color-lime-surface);
     --dx-hue-fg: var(--color-lime-fg);
+    --dx-hue-border: var(--color-lime-border);
+    --dx-hue-text: var(--color-lime-text);
     --dx-hue-fill: var(--color-lime-bg);
   }
   :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='green'],
   .dx-tag.dx-tag-green {
     --dx-hue-bg: var(--color-green-surface);
     --dx-hue-fg: var(--color-green-fg);
+    --dx-hue-border: var(--color-green-border);
+    --dx-hue-text: var(--color-green-text);
     --dx-hue-fill: var(--color-green-bg);
   }
   :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='emerald'],
   .dx-tag.dx-tag-emerald {
     --dx-hue-bg: var(--color-emerald-surface);
     --dx-hue-fg: var(--color-emerald-fg);
+    --dx-hue-border: var(--color-emerald-border);
+    --dx-hue-text: var(--color-emerald-text);
     --dx-hue-fill: var(--color-emerald-bg);
   }
   :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='teal'],
   .dx-tag.dx-tag-teal {
     --dx-hue-bg: var(--color-teal-surface);
     --dx-hue-fg: var(--color-teal-fg);
+    --dx-hue-border: var(--color-teal-border);
+    --dx-hue-text: var(--color-teal-text);
     --dx-hue-fill: var(--color-teal-bg);
   }
   :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='cyan'],
   .dx-tag.dx-tag-cyan {
     --dx-hue-bg: var(--color-cyan-surface);
     --dx-hue-fg: var(--color-cyan-fg);
+    --dx-hue-border: var(--color-cyan-border);
+    --dx-hue-text: var(--color-cyan-text);
     --dx-hue-fill: var(--color-cyan-bg);
   }
   :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='sky'],
   .dx-tag.dx-tag-sky {
     --dx-hue-bg: var(--color-sky-surface);
     --dx-hue-fg: var(--color-sky-fg);
+    --dx-hue-border: var(--color-sky-border);
+    --dx-hue-text: var(--color-sky-text);
     --dx-hue-fill: var(--color-sky-bg);
   }
   :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='blue'],
   .dx-tag.dx-tag-blue {
     --dx-hue-bg: var(--color-blue-surface);
     --dx-hue-fg: var(--color-blue-fg);
+    --dx-hue-border: var(--color-blue-border);
+    --dx-hue-text: var(--color-blue-text);
     --dx-hue-fill: var(--color-blue-bg);
   }
   :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='indigo'],
   .dx-tag.dx-tag-indigo {
     --dx-hue-bg: var(--color-indigo-surface);
     --dx-hue-fg: var(--color-indigo-fg);
+    --dx-hue-border: var(--color-indigo-border);
+    --dx-hue-text: var(--color-indigo-text);
     --dx-hue-fill: var(--color-indigo-bg);
   }
   :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='violet'],
   .dx-tag.dx-tag-violet {
     --dx-hue-bg: var(--color-violet-surface);
     --dx-hue-fg: var(--color-violet-fg);
+    --dx-hue-border: var(--color-violet-border);
+    --dx-hue-text: var(--color-violet-text);
     --dx-hue-fill: var(--color-violet-bg);
   }
   :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='purple'],
   .dx-tag.dx-tag-purple {
     --dx-hue-bg: var(--color-purple-surface);
     --dx-hue-fg: var(--color-purple-fg);
+    --dx-hue-border: var(--color-purple-border);
+    --dx-hue-text: var(--color-purple-text);
     --dx-hue-fill: var(--color-purple-bg);
   }
   :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='fuchsia'],
   .dx-tag.dx-tag-fuchsia {
     --dx-hue-bg: var(--color-fuchsia-surface);
     --dx-hue-fg: var(--color-fuchsia-fg);
+    --dx-hue-border: var(--color-fuchsia-border);
+    --dx-hue-text: var(--color-fuchsia-text);
     --dx-hue-fill: var(--color-fuchsia-bg);
   }
   :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='pink'],
   .dx-tag.dx-tag-pink {
     --dx-hue-bg: var(--color-pink-surface);
     --dx-hue-fg: var(--color-pink-fg);
+    --dx-hue-border: var(--color-pink-border);
+    --dx-hue-text: var(--color-pink-text);
     --dx-hue-fill: var(--color-pink-bg);
   }
   :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='rose'],
   .dx-tag.dx-tag-rose {
     --dx-hue-bg: var(--color-rose-surface);
     --dx-hue-fg: var(--color-rose-fg);
+    --dx-hue-border: var(--color-rose-border);
+    --dx-hue-text: var(--color-rose-text);
     --dx-hue-fill: var(--color-rose-bg);
   }
   /* Valences reuse the hues the current `Tag` maps them to. */
@@ -247,24 +292,32 @@
   .dx-tag.dx-tag-info {
     --dx-hue-bg: var(--color-cyan-surface);
     --dx-hue-fg: var(--color-cyan-fg);
+    --dx-hue-border: var(--color-cyan-border);
+    --dx-hue-text: var(--color-cyan-text);
     --dx-hue-fill: var(--color-cyan-bg);
   }
   :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='success'],
   .dx-tag.dx-tag-success {
     --dx-hue-bg: var(--color-emerald-surface);
     --dx-hue-fg: var(--color-emerald-fg);
+    --dx-hue-border: var(--color-emerald-border);
+    --dx-hue-text: var(--color-emerald-text);
     --dx-hue-fill: var(--color-emerald-bg);
   }
   :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='warning'],
   .dx-tag.dx-tag-warning {
     --dx-hue-bg: var(--color-amber-surface);
     --dx-hue-fg: var(--color-amber-fg);
+    --dx-hue-border: var(--color-amber-border);
+    --dx-hue-text: var(--color-amber-text);
     --dx-hue-fill: var(--color-amber-bg);
   }
   :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='error'],
   .dx-tag.dx-tag-error {
     --dx-hue-bg: var(--color-rose-surface);
     --dx-hue-fg: var(--color-rose-fg);
+    --dx-hue-border: var(--color-rose-border);
+    --dx-hue-text: var(--color-rose-text);
     --dx-hue-fill: var(--color-rose-bg);
   }
 

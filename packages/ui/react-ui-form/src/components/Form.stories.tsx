@@ -191,17 +191,17 @@ const TicketSchema = Schema.Struct({
 
 type TicketValues = Schema.Schema.Type<typeof TicketSchema>;
 
-const PILL_OVERRIDES = { state: { required: true }, size: { icon: 'ph--ruler--regular' } };
+const TAG_OVERRIDES = { state: { required: true }, size: { icon: 'ph--ruler--regular' } };
 
-const PillStory = () => {
+const TagStory = () => {
   const [values, setValues] = useState<TicketValues>({ state: 'open' });
   return (
     <NextJsonLayout data={values}>
       <Form.Root
         schema={TicketSchema}
         values={values}
-        layout='pill'
-        fieldOverrides={PILL_OVERRIDES}
+        layout='tag'
+        fieldOverrides={TAG_OVERRIDES}
         onValuesChanged={(next) => setValues(next)}
       >
         <Layout.Flex wrap align='center' gap='xs'>
@@ -212,8 +212,8 @@ const PillStory = () => {
   );
 };
 
-export const Pill: Story = {
-  render: () => <PillStory />,
+export const Tag: Story = {
+  render: () => <TagStory />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const body = within(canvasElement.ownerDocument.body);

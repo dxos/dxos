@@ -3,6 +3,7 @@
 //
 
 import React, {
+  Fragment,
   type KeyboardEvent,
   type PropsWithChildren,
   type ReactNode,
@@ -20,9 +21,11 @@ import { ActionMenu } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
 import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Tag from '@dxos/react-ui/Tag';
 import { type Actor, type Person, Task } from '@dxos/types';
 
 import { translationKey } from '#translations';
@@ -31,6 +34,8 @@ import { useAssigneeDisplay } from '../../hooks/index.ts';
 import { UNASSIGNED_ICON } from '../../util/assignee.ts';
 import { type TaskMember, assigneeMenuActions, pickAssignee } from '../../util/property-menus.ts';
 import { ESTIMATE_ICON, UNSET_ICON } from '../../util/status-icons.ts';
+import { TaskField } from './TaskField.tsx';
+import { type TaskColumn, TRACK, spanFromTitle } from './tracks.ts';
 
 export type TaskEditorValues = {
   title: string;
@@ -59,7 +64,8 @@ export type TaskDescriptionBehavior = {
 
 export type TaskEditorFormProps = PropsWithChildren<{
   values: TaskEditorValues;
-  showAssignee?: boolean;
+  cells: readonly TaskColumn[];
+  inline?: boolean;
   members: readonly TaskMember[];
   people: readonly Person.Person[];
   title: TaskTitleBehavior;
@@ -70,12 +76,13 @@ export type TaskEditorFormProps = PropsWithChildren<{
 
 const TASK_SCHEMA = Type.getSchema(Task.Task);
 
-const PROPERTY_FIELDS = ['status', 'priority', 'assignee', 'estimate'];
+const PROPERTY_FIELDS: readonly TaskColumn[] = ['status', 'priority', 'assignee', 'estimate'];
 
 export const TaskEditorForm = ({
   children,
   values,
-  showAssignee = true,
+  cells,
+  inline = false,
   members,
   people,
   title,
@@ -86,21 +93,21 @@ export const TaskEditorForm = ({
   const { t } = Hooks.useTranslation(translationKey);
   const fieldOverrides = useMemo<Record<string, FormFieldOverride>>(
     () => ({
-      status: { required: true },
-      priority: { label: t('task-priority.label'), icon: UNSET_ICON },
       assignee: { label: t('task-assignee.label') },
       estimate: { label: t('task-estimate.label'), icon: ESTIMATE_ICON },
+      priority: { label: t('task-priority.label'), icon: UNSET_ICON },
+      status: { required: true },
     }),
     [t],
   );
   const context = useMemo(
-    () => ({ members, people, title, description, delegate: values.delegate }),
-    [members, people, title, description, values.delegate],
+    () => ({ inline, members, people, title, description, delegate: values.delegate }),
+    [inline, members, people, title, description, values.delegate],
   );
   const textFields = useMemo(() => (description ? ['title', 'description'] : ['title']), [description]);
   const propertyFields = useMemo(
-    () => (showAssignee ? PROPERTY_FIELDS : PROPERTY_FIELDS.filter((field) => field !== 'assignee')),
-    [showAssignee],
+    () => PROPERTY_FIELDS.filter((field) => field !== 'assignee' || cells.includes('assignee')),
+    [cells],
   );
 
   const handleValuesChanged = useCallback(
@@ -119,22 +126,56 @@ export const TaskEditorForm = ({
         schema={TASK_SCHEMA}
         values={{ ...values, status: values.status ?? 'todo' }}
         fieldOverrides={fieldOverrides}
-        fieldMap={FIELD_MAP}
+        fieldMap={inline ? INLINE_FIELD_MAP : FIELD_MAP}
         onValuesChanged={handleValuesChanged}
       >
-        <Form.Fields include={textFields} sort={textFields} />
-        {children}
-        <Layout.Flex wrap align='center' gap='xs' classNames='min-w-0' data-testid='taskList.edit.properties'>
-          <Form.Fields include={propertyFields} sort={propertyFields} layout='pill' />
-          {end}
-        </Layout.Flex>
+        {inline ? (
+          <>
+            {cells.map((cell) =>
+              cell === 'title' ? (
+                <Fragment key={cell}>
+                  <div className='row-start-1 min-w-0' style={{ gridColumn: spanFromTitle(cells, ['artifacts']) }}>
+                    <Form.Fields include={['title']} />
+                  </div>
+                  {description && (
+                    <div
+                      className='row-start-2 min-w-0'
+                      style={{ gridColumn: spanFromTitle(cells, ['artifacts', 'estimate']) }}
+                    >
+                      <Form.Fields include={['description']} />
+                    </div>
+                  )}
+                </Fragment>
+              ) : PROPERTY_FIELDS.includes(cell) ? (
+                <div key={cell} className={TRACK[cell]}>
+                  <Form.Fields include={[cell]} layout='tag' />
+                </div>
+              ) : cell === 'actions' && end ? (
+                <div key={cell} className={TRACK.actions}>
+                  {end}
+                </div>
+              ) : null,
+            )}
+            {children}
+          </>
+        ) : (
+          <>
+            <Form.Fields include={textFields} sort={textFields} />
+            {children}
+            <Layout.Flex wrap align='center' gap='xs' classNames='min-w-0' data-testid='taskList.edit.properties'>
+              <Form.Fields include={propertyFields} sort={propertyFields} layout='tag' />
+              {end}
+            </Layout.Flex>
+          </>
+        )}
       </Form.Root>
     </TaskEditorContext.Provider>
   );
 };
 
 const TaskEditorContext = createContext<
-  | (Pick<TaskEditorFormProps, 'members' | 'people' | 'title' | 'description'> & Pick<TaskEditorValues, 'delegate'>)
+  | (Pick<TaskEditorFormProps, 'inline' | 'members' | 'people' | 'title' | 'description'> &
+      Pick<TaskEditorValues, 'delegate'>)
   | undefined
 >(undefined);
 
@@ -201,7 +242,29 @@ const DescriptionField = ({ type, getValue, onValueChange }: FormFieldRendererPr
   );
 };
 
-const AssigneePill = ({
+const StatusGlyph = ({ type, jsonPath, getValue, onValueChange }: FormFieldRendererProps<Task.Status | undefined>) => (
+  <TaskField field='status' value={getValue()} onChange={(value) => onValueChange(type, value)} testId={jsonPath} />
+);
+
+const PriorityGlyph = ({
+  type,
+  jsonPath,
+  getValue,
+  onValueChange,
+}: FormFieldRendererProps<Task.Priority | undefined>) => (
+  <TaskField field='priority' value={getValue()} onChange={(value) => onValueChange(type, value)} testId={jsonPath} />
+);
+
+const EstimateGlyph = ({
+  type,
+  jsonPath,
+  getValue,
+  onValueChange,
+}: FormFieldRendererProps<Task.Estimate | undefined>) => (
+  <TaskField field='estimate' value={getValue()} onChange={(value) => onValueChange(type, value)} testId={jsonPath} />
+);
+
+const AssigneeTag = ({
   type,
   label,
   jsonPath,
@@ -209,11 +272,13 @@ const AssigneePill = ({
   onValueChange,
 }: FormFieldRendererProps<Actor.Actor | undefined>) => {
   const { t } = Hooks.useTranslation(translationKey);
-  const { members, people, delegate } = useTaskEditorContext();
+  const { inline, members, people, delegate } = useTaskEditorContext();
   const assignee = getValue();
   const current = useAssigneeDisplay(assignee);
   const worker = useAssigneeDisplay(delegate);
-  return (
+  const name = (assignee ? current.label : delegate && worker.label) || label;
+  const icon = assignee ? current.icon : delegate ? worker.icon : UNASSIGNED_ICON;
+  const tag = (
     <ActionMenu
       deferUntilOpen
       actions={() =>
@@ -228,15 +293,26 @@ const AssigneePill = ({
         })
       }
     >
-      <Button.Root
-        pill
-        icon={assignee ? current.icon : delegate ? worker.icon : UNASSIGNED_ICON}
-        label={(assignee ? current.label : delegate && worker.label) || label}
-        data-placeholder-shown={assignee || delegate ? undefined : ''}
-        data-testid={jsonPath}
-      />
+      {inline ? (
+        <Button.Root variant='ghost' icon={icon} iconOnly label={name} data-testid={jsonPath} />
+      ) : (
+        <Tag.Tag
+          variant='outline'
+          data-placeholder-shown={assignee || delegate ? undefined : ''}
+          data-testid={jsonPath}
+        >
+          <Icon.Icon icon={icon} />
+          {name}
+        </Tag.Tag>
+      )}
     </ActionMenu>
   );
+
+  return inline ? <Layout.Block>{tag}</Layout.Block> : tag;
 };
 
-const FIELD_MAP = { assignee: AssigneePill, description: DescriptionField, title: TitleField };
+AssigneeTag.displayName = 'TaskList.AssigneeTag';
+
+const FIELD_MAP = { assignee: AssigneeTag, description: DescriptionField, title: TitleField };
+
+const INLINE_FIELD_MAP = { ...FIELD_MAP, estimate: EstimateGlyph, priority: PriorityGlyph, status: StatusGlyph };
