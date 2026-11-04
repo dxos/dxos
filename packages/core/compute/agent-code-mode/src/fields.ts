@@ -5,7 +5,7 @@
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { type Database, Ref, Type } from '@dxos/echo';
+import { Ref, type Registry, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
 import type { SandboxField, SandboxType } from './Dialect.ts';
@@ -15,25 +15,47 @@ import type { SandboxField, SandboxType } from './Dialect.ts';
  * told it may resolve. Read from the registry the code will run against, so a sandbox that could not
  * rebuild a type does not list it.
  */
-export const describeTypes = (db: Database.Database): SandboxType[] =>
-  db.registry
+export const describeTypes = (registry: Registry.Registry): SandboxType[] => {
+  const types = registry
     .list()
     .filter((entity) => Type.isType(entity) && (Type.isObject(entity) || Type.isRelation(entity)))
     .flatMap((type) => {
       const typename = Type.getTypename(type) ?? '';
-      return typename.length > 0
-        ? [
-            {
-              typename,
-              dxn: String(DXN.make(typename, Type.getVersion(type))),
-              kind: Type.isRelation(type) ? ('relation' as const) : ('object' as const),
-              // The same `fields` record the bound type carries, which is what the model would
-              // otherwise go looking for.
-              fields: describeFields(('fields' in type && type.fields) || {}),
-            },
-          ]
-        : [];
+      return typename.length > 0 ? [{ type, typename, version: Type.getVersion(type) }] : [];
     });
+
+  // The first entry at the highest version of each typename; a registry can hold one DXN twice.
+  const newest = new Map<string, (typeof types)[number]>();
+  for (const entry of types) {
+    const current = newest.get(entry.typename);
+    if (current === undefined || compareVersions(entry.version, current.version) > 0) {
+      newest.set(entry.typename, entry);
+    }
+  }
+
+  return types.map((entry) => ({
+    typename: entry.typename,
+    dxn: String(DXN.make(entry.typename, entry.version)),
+    kind: Type.isRelation(entry.type) ? ('relation' as const) : ('object' as const),
+    latest: newest.get(entry.typename) === entry,
+    // The same `fields` record the bound type carries, which is what the model would otherwise go
+    // looking for.
+    fields: describeFields(('fields' in entry.type && entry.type.fields) || {}),
+  }));
+};
+
+/** Orders two `major.minor.patch` versions, ignoring any pre-release suffix. */
+const compareVersions = (a: string, b: string): number => {
+  const parse = (version: string) => version.split('-')[0].split('.').map(Number);
+  const [left, right] = [parse(a), parse(b)];
+  for (let index = 0; index < Math.max(left.length, right.length); index++) {
+    const delta = (left[index] ?? 0) - (right[index] ?? 0);
+    if (delta !== 0) {
+      return delta;
+    }
+  }
+  return 0;
+};
 
 /** How deep a label follows arrays and recursive schemas before settling for `object`. */
 const MAX_DEPTH = 3;
@@ -46,6 +68,7 @@ export const describeFields = (fields: Schema.Struct.Fields): SandboxField[] =>
   Object.entries(fields).map(([name, field]) => ({
     name,
     type: labelOf(field.ast, 0),
+    summary: labelOf(field.ast, 0, true),
     optional: SchemaAST.isOptional(field.ast),
   }));
 
@@ -74,11 +97,22 @@ export const describeInput = (schema: Schema.Top): string => {
  * A reference is checked first: it is a declaration whose encoded side is a struct, so read
  * structurally it would claim to be a plain object — which is exactly the mistake that sends a
  * model looking for the reference format by trial and error.
+ *
+ * A struct, or a union of them, carrying an `identifier` annotation (a JSON Schema, a query AST) is
+ * labelled by that name rather than expanded. `collapse` labels every other struct `object`.
  */
-export const labelOf = (ast: SchemaAST.AST, depth: number): string => {
+export const labelOf = (ast: SchemaAST.AST, depth: number, collapse = false): string => {
   const target = Ref.getReferenceTarget(ast);
   if (target !== undefined) {
     return `Ref<${DXN.isDXN(target) ? DXN.getName(target) : String(target)}>`;
+  }
+  // Only where a struct would be expanded: a named enum still lists its literals.
+  const identifier =
+    SchemaAST.isObjects(ast) || (SchemaAST.isUnion(ast) && ast.types.some(SchemaAST.isObjects))
+      ? SchemaAST.resolveIdentifier(ast)
+      : undefined;
+  if (identifier !== undefined) {
+    return identifier;
   }
   if (depth > MAX_DEPTH) {
     return 'object';
@@ -100,7 +134,9 @@ export const labelOf = (ast: SchemaAST.AST, depth: number): string => {
   }
   if (SchemaAST.isUnion(ast)) {
     // The `undefined` member is how an optional field is spelled; optionality is reported separately.
-    const members = ast.types.filter((type) => !SchemaAST.isUndefined(type)).map((type) => labelOf(type, depth));
+    const members = ast.types
+      .filter((type) => !SchemaAST.isUndefined(type))
+      .map((type) => labelOf(type, depth, collapse));
     return [...new Set(members)].join(' | ') || 'undefined';
   }
   if (SchemaAST.isArrays(ast)) {
@@ -108,12 +144,12 @@ export const labelOf = (ast: SchemaAST.AST, depth: number): string => {
     if (item === undefined) {
       return 'unknown[]';
     }
-    const label = labelOf(item, depth + 1);
+    const label = labelOf(item, depth + 1, collapse);
     return label.includes(' | ') ? `(${label})[]` : `${label}[]`;
   }
   if (SchemaAST.isObjects(ast)) {
-    // A record or open struct (`Obj.Unknown`) has no closed field list to state.
-    if (ast.propertySignatures.length === 0 || ast.indexSignatures.length > 0) {
+    // A record or open struct (`Obj.Unknown`) has no closed field list to state; a collapsed one states none.
+    if (collapse || ast.propertySignatures.length === 0 || ast.indexSignatures.length > 0) {
       return 'object';
     }
     const fields = ast.propertySignatures.map(
@@ -123,7 +159,7 @@ export const labelOf = (ast: SchemaAST.AST, depth: number): string => {
     return `{ ${fields.join(', ')} }`;
   }
   if (SchemaAST.isSuspend(ast)) {
-    return labelOf(ast.thunk(), depth + 1);
+    return labelOf(ast.thunk(), depth + 1, collapse);
   }
   return 'unknown';
 };

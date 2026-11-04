@@ -33,6 +33,8 @@ export type SandboxField = {
   readonly name: string;
   /** TypeScript-like label, e.g. `string`, `"open" | "done"`, `Ref<org.dxos.type.text>`. */
   readonly type: string;
+  /** `type` with every nested struct labelled `object`, for a listing of one line per type. */
+  readonly summary: string;
   readonly optional: boolean;
 };
 
@@ -43,6 +45,8 @@ export type SandboxType = {
   readonly dxn: string;
   /** A relation is an edge between two objects, made with `Relation.make` rather than `Obj.make`. */
   readonly kind: 'object' | 'relation';
+  /** Whether this is the newest registered version of its typename (and the first registered at that version). */
+  readonly latest: boolean;
   /**
    * Fields with their types, so the model never has to introspect a schema to find out what it may
    * write — least of all that a field holds a reference, which a name alone does not say.
@@ -111,10 +115,53 @@ export const renderTypes = (
       do not introspect it further. A \`Ref<typename>\` field holds a reference to another object, not
       the object or its id.
 
-      ${types.map((type) => `- \`${name(type)}\`${type.kind === 'relation' ? ' (relation)' : ''} — ${type.fields.map(renderField).join(', ')}`).join('\n')}
+      ${types
+        .map((type) =>
+          renderType(
+            type,
+            name(type),
+            type.fields.map((field) => renderField(field)),
+          ),
+        )
+        .join('\n')}
     `;
 
-const renderField = ({ name, type, optional }: SandboxField): string => `${name}${optional ? '?' : ''}: ${type}`;
+/**
+ * The types section for a prompt that also carries the full list as a doc: the newest version of each
+ * type, one line each, nested values collapsed. `catalog` names where the full list is.
+ */
+export const renderTypeSummary = (
+  types: readonly SandboxType[],
+  name: (type: SandboxType) => string,
+  catalog: string,
+): string =>
+  types.length === 0
+    ? '### Types\n\nNo types are registered.'
+    : trim`
+      ### Types
+
+      The newest version of each registered type and its top-level fields (\`?\` marks an optional
+      field). A \`Ref<typename>\` field holds a reference to another object, not the object or its id.
+      \`object\` is a nested value and a bare name such as \`jsonSchema\` is a named schema: read
+      ${catalog} for their shape, and for older versions, before writing one.
+
+      ${types
+        .filter(({ latest }) => latest)
+        .map((type) =>
+          renderType(
+            type,
+            name(type),
+            type.fields.map((field) => renderField(field, field.summary)),
+          ),
+        )
+        .join('\n')}
+    `;
+
+const renderType = (type: SandboxType, name: string, fields: readonly string[]): string =>
+  `- \`${name}\`${type.kind === 'relation' ? ' (relation)' : ''} — ${fields.join(', ')}`;
+
+const renderField = (field: SandboxField, label = field.type): string =>
+  `${field.name}${field.optional ? '?' : ''}: ${label}`;
 
 /**
  * One operation's line in the API reference, `call` rendering the dialect's own call syntax.
