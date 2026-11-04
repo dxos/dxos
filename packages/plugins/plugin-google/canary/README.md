@@ -87,15 +87,15 @@ Everything below exists for preview already. Repeat a step only to rebuild or re
    step environment variables; it never reads 1Password. Copy each value from 1Password once, and again when it
    changes:
 
-   | Secret                                                           | Value                                                     |
-   | ---------------------------------------------------------------- | --------------------------------------------------------- |
-   | `MAIL_CANARY_RECOVERY_PHRASE`                                    | the canary identity's recovery phrase (step 3)            |
-   | `MAIL_CANARY_GMAIL_CLIENT_ID`, `MAIL_CANARY_GMAIL_CLIENT_SECRET` | the EDGE dev OAuth client (step 2)                        |
-   | `MAIL_CANARY_GMAIL_REFRESH_TOKEN`                                | the grant from step 2                                     |
-   | `MAIL_CANARY_FIXTURES_AGE_KEY`                                   | the agents key that decrypts the pool (step 4)            |
-   | `MAIL_CANARY_R2_TOKEN`                                           | a Cloudflare API token that can only read `test-fixtures` |
+   | Secret                                                           | Value                                          |
+   | ---------------------------------------------------------------- | ---------------------------------------------- |
+   | `MAIL_CANARY_RECOVERY_PHRASE`                                    | the canary identity's recovery phrase (step 3) |
+   | `MAIL_CANARY_GMAIL_CLIENT_ID`, `MAIL_CANARY_GMAIL_CLIENT_SECRET` | the EDGE dev OAuth client (step 2)             |
+   | `MAIL_CANARY_GMAIL_REFRESH_TOKEN`                                | the grant from step 2                          |
+   | `MAIL_CANARY_FIXTURES_AGE_KEY`                                   | the agents key that decrypts the pool (step 4) |
 
-   `CLOUDFLARE_ACCOUNT_ID`, `COMPOSER_APP_PROD_POSTHOG_API_KEY` and the `MOON_CACHE_*` secrets are shared with other
-   workflows and exist already. Without the canary secrets the run step fails at once, naming the missing variables.
+   `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN` (the pool pull's R2 read; only that step sees it),
+   `COMPOSER_APP_PROD_POSTHOG_API_KEY` and the `MOON_CACHE_*` secrets are shared with other workflows and exist
+   already. Without the canary secrets the run step fails at once, naming the missing variables.
 6. **Dashboard.** [Mail canary (nightly)](https://eu.posthog.com/project/126171/dashboard/1084272) in PostHog's
    Composer project reads the `ci.mail-canary` events. Nothing to set up beyond the PostHog key above.
