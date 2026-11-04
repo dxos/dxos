@@ -42,6 +42,7 @@
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
+    "@dxos/assistant": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/echo": "workspace:*",

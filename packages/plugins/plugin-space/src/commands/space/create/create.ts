@@ -16,7 +16,7 @@ import { Obj } from '@dxos/echo';
 
 export const handler = Effect.fn(function* ({ name }: { name: Option.Option<string> }) {
   const { json } = yield* CommandConfig;
-  const client = yield* ClientService;
+  const client = yield* ClientService.client;
 
   const space = yield* Effect.tryPromise(() => client.spaces.create());
   yield* Effect.tryPromise(() => space.waitUntilReady());
