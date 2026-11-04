@@ -996,7 +996,8 @@ const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
       onTaskUpdate={handleUpdate}
       getTaskActions={getTaskActions}
     >
-      <div {...Util.composableProps(props, { classNames: 'flex flex-col dx-grow' })} ref={forwardedRef}>
+      {/* The inset matches the prompt toolbar's, so the status column lines up with the prompt's buttons. */}
+      <div {...Util.composableProps(props, { classNames: 'flex flex-col dx-grow ps-1.5' })} ref={forwardedRef}>
         {/* Sized to its rows up to four tasks; only a longer list scrolls, never showing a partial row. */}
         <TaskList.Viewport rows={CHAT_TASK_ROWS}>
           <TaskList.Content />
