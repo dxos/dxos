@@ -66,9 +66,9 @@ feat F-4: A project's specs
 
 ```mdl
 feat F-5: A project's overview
-  req F-5.1: The overview opens on the project's name as its title, its status as a pill in the top right corner and
+  req F-5.1: The overview opens on the project's name as its title, its status as a tag in the top right corner and
              its description below, each edited in place with no edit button. The name and description start at the
-             same left edge as the section headings. The pill shows the status's capitalized name in its colour.
+             same left edge as the section headings. The tag shows the status's capitalized name and its icon in its colour.
   req F-5.2: Below the header the sections are, in order: Notes, Artifacts, Milestones, Specs and Config, with more
              space between two sections than between the rows inside one. Every section's content starts and ends on
              the same left and right edges as its heading.
@@ -270,10 +270,10 @@ test QA-4: Plan a project and hand its tasks to an agent
     - name: Break the work into tasks
       do: Open the Tasks tab and add "Service both roasters", "Order green beans" and "Hire a roastery assistant"
         from the Add task row, pressing Enter after each. Before adding the last, set its priority to Low from the
-        row's Priority pill.
+        row's Priority tag.
       expect: |
         the three tasks list in the order added. Each row shows its priority beside its status, ahead of the title,
-        and ends in an assignee placeholder; "Hire a roastery assistant" shows Low, and the Priority pill reads unset
+        and ends in an assignee placeholder; "Hire a roastery assistant" shows Low, and the Priority tag reads unset
         again once it is added
     - name: Fill in a task
       do: Click "Service both roasters", type a description, set its priority to High and its status to Started.
@@ -1985,14 +1985,100 @@ decision D-186: `Project.status` stays optional, so a project made without one, 
 ```
 
 ```mdl
-decision D-187: Every CodeMirror editor in a project that edits shared text shows the other peers' carets. A plain string field shows them too, edited in place through an accessor on the live object, with no `Text` object or schema change.
+decision D-187: The form's pill presentation renders as react-ui's `Tag`, so the Add task row's properties and the overview's status look the same as a task row's tags, with no visual style of their own.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-5.1]
+```
+
+```mdl
+decision D-188: The presentation is renamed `tag`. The tag stays neutral and shows the chosen option's icon in its hue, and an unset field shows its label and glyph in the tag's usual colour. Fills in [D-187].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.1]
+  why: A task row's own tags are neutral unless the tag has a hue of its own, and the icon already carries the option's colour; the unset glyph tells an unset field apart without a muted style the tag does not have.
+  rejected:
+    - Hueing the whole tag with the option's colour, which turns the Add task row into a row of coloured blocks.
+    - Keeping the name `pill` for a presentation that no longer draws one.
+```
+
+```mdl
+decision D-189: The task list's create row is one line laid out on the list's own columns, each field in the track where the rows show it, and a list row and the create row are the same components in the chat's list and the project's list, configured by props.
+  date: 2026-11-04
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-190: `TaskList.Root` takes the title line's cells as one ordered `columns` list, which the rows and the create row both lay out on. Status, priority and estimate are one field component, a bare glyph in a list row and a `Tag` in the create row, one block wide in either; the create row leads with the status field. The project list keeps priority and status ahead of the title, with the estimate in a track of its own; the chat's list puts status ahead of the title and priority and estimate after it. Fills in [D-189].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: A fixed track is what lines the create row up with the rows, since the create row sits outside the scrolling tree in a grid of its own; tags in every row would fill a long list with chips.
+  rejected:
+    - Tags in the list rows too, which turns a list of hundreds of rows into a grid of filled chips.
+    - Labelled tags in the create row, whose varying widths cannot sit in the rows' tracks.
+```
+
+```mdl
+decision D-191: Approve [D-190].
+  date: 2026-11-04
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-192: Only the chat prompt's create row is one line on its list's columns. The project task list's create row keeps its stacked layout (title, description, then the property tags), with the tags restyled as `Tag`s by [D-187], and its rows are unchanged. Corrects [D-189].
+  date: 2026-11-04
+  by: user:wittjosiah
+  supersedes: D-189
+```
+
+```mdl
+decision D-193: `TaskList.Editor` lays the create row on the list's columns only when it is `inline`, which the chat passes; otherwise it stacks the title and description above labelled tags. `DEFAULT_COLUMNS` has no estimate column, so the project list shows a set estimate as muted text beside its artifacts, and a list that names an estimate column, as the chat's does, shows the estimate field there instead. Fills in [D-192].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-190
+  why: One prop keeps the rows and the create row the same components in both hosts while leaving the project list's look as it was.
+```
+
+```mdl
+decision D-194: The property tags in a task create row and the project overview's status are outlined rather than filled, so they do not stand out in dark mode.
+  date: 2026-11-04
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-195: react-ui's `Tag` takes `variant: 'outline'`, which draws the tag's hue as a ring in its border colour and text in its text colour, on no fill; a `Select` trigger rendered as a tag and the stacked create row's assignee tag use it. Fills in [D-194].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: A variant of the one component keeps a single tag style with two weights, and following the hue keeps it usable for a hued tag.
+  rejected:
+    - Recolouring the neutral hue's surface, which would change every neutral tag and callout in the app.
+```
+
+```mdl
+decision D-196: An inline create row shows status, priority, estimate and assignee as the list rows' own bare glyphs, not as tags, so it reads as one more row of the list.
+  date: 2026-11-04
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-197: A task's estimate with no value shows the estimate's ruler glyph, not the asterisk unset priority shows, so the two empty cells read apart.
+  date: 2026-11-04
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-198: Every CodeMirror editor in a project that edits shared text shows the other peers' carets. A plain string field shows them too, edited in place through an accessor on the live object, with no `Text` object or schema change.
   date: 2026-11-04
   by: user:wittjosiah
   affects: [F-4.12, F-5.8]
 ```
 
 ```mdl
-decision D-188: The editors with carets are a spec's text, the feature sections embedded in it (the feature's description), the overview's Notes and the agent's instructions. The project's description is a plain text area, not a CodeMirror editor, so it shows no carets. Fills in [D-187].
+decision D-199: The editors with carets are a spec's text, the feature sections embedded in it (the feature's description), the overview's Notes and the agent's instructions. The project's description is a plain text area, not a CodeMirror editor, so it shows no carets. Fills in [D-198].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
@@ -2003,7 +2089,7 @@ decision D-188: The editors with carets are a spec's text, the feature sections 
 ```
 
 ```mdl
-decision D-189: QA-9 checks carets in the overview's Notes between two peers, the host's caret set before the guest opens the project, automated by a collaboration e2e spec. Fills in [D-187].
+decision D-200: QA-9 checks carets in the overview's Notes between two peers, the host's caret set before the guest opens the project, automated by a collaboration e2e spec. Fills in [D-198].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah

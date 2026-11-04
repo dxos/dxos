@@ -114,7 +114,11 @@ export const formatUserPrompt = ({
   prompt,
   history = [],
   sender,
-}: Pick<AiRequest.RunProps, 'prompt' | 'history' | 'sender'>): Effect.Effect<Message.Message, AiRequest.RunError> =>
+  promptId,
+}: Pick<AiRequest.RunProps, 'prompt' | 'history' | 'sender' | 'promptId'>): Effect.Effect<
+  Message.Message,
+  AiRequest.RunError
+> =>
   Effect.gen(function* () {
     const blocks: ContentBlock.Any[] = [];
 
@@ -147,6 +151,7 @@ export const formatUserPrompt = ({
     }
 
     return Obj.make(Message.Message, {
+      id: promptId,
       created: new Date().toISOString(),
       // A named sender is what lets the model tell speakers apart (see `AiPreprocessor`).
       sender: { ...sender, role: 'user' },

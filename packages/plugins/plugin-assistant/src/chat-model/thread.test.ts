@@ -5,13 +5,13 @@
 import * as Array from 'effect/Array';
 import { describe, test } from 'vitest';
 
-import { Alarm, ConsumedAnnotation, InFlightAnnotation, QueuedAnnotation } from '@dxos/assistant';
+import { Legacy } from '@dxos/assistant';
 import { Annotation, Feed, Obj } from '@dxos/echo';
 import { getDelivery } from '@dxos/react-ui-assistant/types';
 import { ContentBlock, Message } from '@dxos/types';
 
 import { type OutboxEntry } from './outbox.ts';
-import { byAppendOrder, collapseToolRuns, projectAlarms, projectThread, resolveRewind } from './thread.ts';
+import { byAppendOrder, collapseToolRuns, projectThread, resolveRewind } from './thread.ts';
 
 describe('byAppendOrder', () => {
   test('orders by feed position when it discriminates', ({ expect }) => {
@@ -192,10 +192,10 @@ describe('queue projection', () => {
     expect(text(messages)).toEqual(['running', 'waiting']);
   });
 
-  test('waiting entries are ordered by append order', ({ expect }) => {
-    const second = queued(positioned(message('second'), 2));
-    const first = queued(positioned(message('first'), 1));
-    expect(text(projectThread({ feedMessages: [second, first] }).messages)).toEqual(['first', 'second']);
+  test('waiting entries keep the order the feed gives them', ({ expect }) => {
+    const first = queued(message('first'));
+    const second = queued(message('second'));
+    expect(text(projectThread({ feedMessages: [first, second] }).messages)).toEqual(['first', 'second']);
   });
 
   // A rewind truncates the thread; the queue is work that has not run, so it is unaffected.
@@ -374,22 +374,6 @@ describe('optimistic prompts', () => {
   });
 });
 
-describe('projectAlarms', () => {
-  test('pending alarms are ordered by wake time', ({ expect }) => {
-    const later = Alarm.make({ wakeAt: 2_000 });
-    const sooner = Alarm.make({ wakeAt: 1_000 });
-    const alarms = projectAlarms({ feedAlarms: [later, sooner] });
-    expect(alarms.map((alarm) => alarm.wakeAt)).toEqual([1_000, 2_000]);
-  });
-
-  test('an alarm the agent has consumed is no longer pending', ({ expect }) => {
-    const fired = consumed(Alarm.make({ wakeAt: 1_000 }));
-    const pending = Alarm.make({ wakeAt: 2_000 });
-    const alarms = projectAlarms({ feedAlarms: [fired, pending] });
-    expect(alarms.map((alarm) => alarm.id)).toEqual([pending.id]);
-  });
-});
-
 describe('resolveRewind', () => {
   test('returns the discard point and the prompt text to restore', ({ expect }) => {
     const prompt = message('what is a feed?');
@@ -420,6 +404,22 @@ describe('collapseToolRuns', () => {
     expect(collapsed[1].blocks.map((block) => block._tag)).toEqual(['toolCall', 'toolResult', 'toolCall']);
     expect(collapsed[1].id).toBe(first.id);
     expect(text([collapsed[2]])).toEqual(['answer']);
+  });
+
+  test('a run never spans two lanes, and a result joins only a call in its own lane', ({ expect }) => {
+    // Lanes A and B ran side by side, so their tool messages interleave in the feed.
+    const callA = toolCall('tc-a');
+    const callB = toolCall('tc-b');
+    const resultA = toolResult('tc-a');
+    const laneOf = new Map([
+      [callA.id, 'a'],
+      [callB.id, 'b'],
+      [resultA.id, 'a'],
+    ]);
+    const collapsed = collapseToolRuns([callA, callB, resultA], laneOf);
+    expect(collapsed.map((entry) => entry.id)).toEqual([callA.id, callB.id]);
+    expect(collapsed[0].blocks.map((block) => block._tag)).toEqual(['toolCall', 'toolResult']);
+    expect(collapsed[1].blocks.map((block) => block._tag)).toEqual(['toolCall']);
   });
 
   test('a lone tool message is passed through unchanged', ({ expect }) => {
@@ -575,17 +575,17 @@ const positioned = (message: Message.Message, position: number) => {
 };
 
 const queued = (message: Message.Message) => {
-  Obj.update(message, (message) => Annotation.set(message, QueuedAnnotation, true));
+  Obj.update(message, (message) => Annotation.set(message, Legacy.QueuedAnnotation, true));
   return message;
 };
 
 const inFlight = <T extends Obj.Unknown>(item: T): T => {
-  Obj.update(item, (item) => Annotation.set(item, InFlightAnnotation, true));
+  Obj.update(item, (item) => Annotation.set(item, Legacy.InFlightAnnotation, true));
   return item;
 };
 
 const consumed = <T extends Obj.Unknown>(item: T): T => {
-  Obj.update(item, (item) => Annotation.set(item, ConsumedAnnotation, true));
+  Obj.update(item, (item) => Annotation.set(item, Legacy.ConsumedAnnotation, true));
   return item;
 };
 

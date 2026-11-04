@@ -28,6 +28,13 @@ export const ChatView = Schema.Union([
 ]);
 export type ChatView = Schema.Schema.Type<typeof ChatView>;
 
+/** A fork shown at the answer it forks at. */
+export type ForkMarker = {
+  readonly id: string;
+  /** The fork's purpose, or a fallback the host chooses. */
+  readonly label: string;
+};
+
 /**
  * What the thread reports outward. Deliberately the same shapes the assistant plugin's event bus
  * speaks, so a host can pipe these straight through.
@@ -37,6 +44,10 @@ export type ChatThreadEvent =
   | { type: 'submit'; text: string }
   /** Soft-fork the thread from the given message (the prompt toolbar's rewind). */
   | { type: 'rewind'; id: string }
+  /** Fork the conversation at the given answer: a thread of its own that stays apart from main. */
+  | { type: 'fork'; id: string }
+  /** Open a fork, from its marker at the answer it forks at. */
+  | { type: 'open-fork'; thread: string }
   /** Withdraw a prompt the agent has not taken up (its delivery row's remove). */
   | { type: 'remove-prompt'; id: string }
   /** A person chose one of a request block's options (allow or refuse an agent's tool call). */
@@ -76,3 +87,33 @@ export const getDelivery = (message: object): DeliveryStatus | undefined =>
 /** A row the agent has not taken up yet: it cannot be rewound to, and it can still be removed. */
 export const isUnread = (status: DeliveryStatus | undefined): boolean =>
   status === 'sent' || status === 'delivered' || status === 'failed';
+
+/**
+ * A lane of a chat that runs several requests at once (light threads): what the thread needs to show a message's lane.
+ * A lane that never ran beside another is not given one, so a plain chat looks as it always has.
+ */
+export type ThreadLane = {
+  readonly id: string;
+  /** Gutter colour (a theme hue). */
+  readonly hue: string;
+  readonly title?: string;
+  /** Who runs the lane, when it is not the default agent. */
+  readonly owner?: string;
+  readonly status: 'running' | 'waiting' | 'done' | 'failed';
+  /** The lane this one waits for. */
+  readonly waitingOn?: { readonly hue: string; readonly title?: string };
+  /** ISO time the lane opened. */
+  readonly started: string;
+  /** Id of the lane's first message: the row that carries its header. */
+  readonly first?: string;
+};
+
+/** One line of a lane shown compactly: a background lane's tail, or a finished lane's last answer. */
+export type LaneLine = { readonly role: string; readonly name?: string; readonly text: string };
+
+/** The data a `<lane>` row (a lane working in the background) carries. */
+export type LaneCardData = { readonly lane: ThreadLane; readonly lines: readonly LaneLine[] };
+
+/** The text of a row standing for a lane working in the background, which renders as its card. */
+export const laneTag = (data: LaneCardData): string =>
+  `<lane>${JSON.stringify(data).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</lane>`;

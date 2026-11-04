@@ -18,7 +18,7 @@ import * as ProjectSurface from '@dxos/plugin-projects/ProjectSurface';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { trim } from '@dxos/util';
 
-import { CodeNamespace } from './src/namespace.ts';
+import { CODE_HUE, CodeNamespace } from './src/namespace.ts';
 import * as CodeCapabilities from './src/types/CodeCapabilities.ts';
 import * as CodeEvents from './src/types/CodeEvents.ts';
 
@@ -63,7 +63,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       activated in a subsequent phase.
     `,
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-code',
-    icon: { key: 'ph--code--regular', hue: 'indigo' },
+    icon: { key: 'ph--code--regular', hue: CODE_HUE },
     spec: 'PLUGIN.mdl',
     tags: ['labs'],
     // Projects owns specs and the plain editor of their text; this plugin's spec page builds on that.
@@ -188,6 +188,11 @@ const config: Plugin.PluginConfig = Plugin.config({
       'ProjectConfig',
       { provides: [ProjectCapabilities.ConfigGroup], activatesOn: ProjectsEvents.Start },
       () => import('./src/capabilities/project-config.ts', { with: { type: 'module-url' } }),
+    ),
+    Capability.lazyModule(
+      'State',
+      { provides: [CodeCapabilities.State], activatesOn: ActivationEvents.Startup },
+      () => import('./src/capabilities/state.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'module-url' } })),
   ],

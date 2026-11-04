@@ -47,7 +47,12 @@ export const FeatureValues = Schema.make<Schema.Codec<FeatureValues, any>>(
 /** Requirements render as rows that wrap to their whole text rather than the generic list of nested forms. */
 const RequirementsField: FormFieldRenderer = ({ type, label, getValue, onValueChange }) => (
   <Form.Field label={label} standalone>
-    <RequirementEditor requirements={getValue() ?? []} onChange={(requirements) => onValueChange(type, requirements)} />
+    <Card.Root grid border={false}>
+      <RequirementEditor
+        requirements={getValue() ?? []}
+        onChange={(requirements) => onValueChange(type, requirements)}
+      />
+    </Card.Root>
   </Form.Field>
 );
 

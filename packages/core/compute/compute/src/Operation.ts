@@ -468,6 +468,9 @@ export interface DurableDefinition<_Input, _Output, _Requirements = never, _Rpcs
 
   readonly services: readonly Context.Key<any, any>[];
 
+  /** See {@link DurableProps.optionalServices}. */
+  readonly optionalServices?: readonly Context.Key<any, any>[];
+
   /**
    * Codecs for the process's inputs and outputs, from {@link DurableProps}. Exposed on the
    * interface so a caller that moves a value across a boundary (a remote runtime) can encode it
@@ -586,6 +589,12 @@ export interface DurableProps {
   readonly input: Schema.Codec<any, any>;
   readonly output: Schema.Codec<any, any>;
   readonly services: readonly Context.Key<any, any>[];
+
+  /**
+   * Services the process uses when the runtime has them: it gets each one that resolves and runs without the rest,
+   * so the handler reads them with `Effect.serviceOption`.
+   */
+  readonly optionalServices?: readonly Context.Key<any, any>[];
   readonly rpcs?: RpcGroup.RpcGroup<any>;
 
   /**

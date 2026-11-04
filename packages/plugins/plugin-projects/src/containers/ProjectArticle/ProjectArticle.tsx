@@ -413,7 +413,7 @@ export const ProjectArticle = ({
                     <Layout.Flex column grow>
                       <Form.Fields include={['name']} />
                     </Layout.Flex>
-                    <Form.Fields include={['status']} layout='pill' />
+                    <Form.Fields include={['status']} layout='tag' />
                   </Layout.Flex>
                   <Form.Fields include={['description']} />
 

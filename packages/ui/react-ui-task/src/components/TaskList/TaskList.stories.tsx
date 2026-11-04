@@ -24,6 +24,7 @@ import { translations } from '#translations';
 import { type TaskMember } from '../../util/property-menus.ts';
 import { type TaskPlacement } from './hierarchy.ts';
 import { type TaskCreateHandler, TaskList } from './TaskList.tsx';
+import { DEFAULT_COLUMNS, type TaskColumn } from './tracks.ts';
 
 random.seed(1);
 
@@ -549,7 +550,8 @@ const DefaultStory = ({
   showGroupLabels,
   showOrdinals,
   showDescription = true,
-  showAssignees,
+  columns,
+  inline = false,
   acceptFiles = false,
   members,
   agents = false,
@@ -571,7 +573,8 @@ const DefaultStory = ({
   showGroupLabels?: boolean;
   showOrdinals?: boolean;
   showDescription?: boolean;
-  showAssignees?: boolean;
+  columns?: readonly TaskColumn[];
+  inline?: boolean;
   /** Let the create pane take dropped files, recording what each create was handed. */
   acceptFiles?: boolean;
   members?: readonly TaskMember[];
@@ -680,7 +683,7 @@ const DefaultStory = ({
       showGroupLabels={showGroupLabels}
       showOrdinals={showOrdinals}
       showDescription={showDescription}
-      showAssignees={showAssignees}
+      columns={columns}
       members={members}
       getTaskActions={readonly ? undefined : getTaskActions}
       getDelegateActions={readonly || !agents ? undefined : getDelegateActions}
@@ -699,6 +702,7 @@ const DefaultStory = ({
           <TaskList.Editor
             showDescription={showDescription}
             acceptFiles={acceptFiles}
+            inline={inline}
             classNames='bg-input-surface border border-separator rounded-md p-2'
           />
           {acceptFiles && <p data-testid='story.attached'>{attached.join(', ')}</p>}
@@ -778,6 +782,16 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const Chat: Story = {
+  args: {
+    showGroupLabels: false,
+    showOrdinals: true,
+    showDescription: false,
+    columns: ['gutter', 'status', 'title', 'priority', 'estimate', 'actions'],
+    inline: true,
+  },
+};
 
 /** No description line, as the chat's checklist shows it: the add row is exactly one task row tall. */
 export const WithoutDescription: Story = {
@@ -1315,7 +1329,7 @@ export const TestEditorHandsBackFromAgent: Story = {
 export const TestEditorWithoutAssignees: Story = {
   args: {
     showGroupLabels: false,
-    showAssignees: false,
+    columns: DEFAULT_COLUMNS.filter((column) => column !== 'assignee'),
   },
   play: async ({ canvasElement }) => {
     const pill = (field: string) =>
@@ -1657,6 +1671,40 @@ export const TestCreateWithProperties: Story = {
     await expect(row.querySelector('[data-testid="taskList.item.assignee"]')).toBeTruthy();
     await expect(row.querySelector('[data-testid="taskList.item.estimate"]')?.textContent).toEqual('M');
     await waitFor(async () => expect(pill('priority').textContent).toContain('Priority'));
+  },
+};
+
+export const TestInlineCreateWithProperties: Story = {
+  args: { ...Chat.args },
+  play: async ({ canvasElement }) => {
+    const pane = found(canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]'), 'Create pane');
+    const glyph = (field: string) =>
+      found(pane.querySelector<HTMLElement>(`[data-testid="${field}"]`), `${field} glyph`);
+    const title = () =>
+      found(pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input'), 'Title input');
+    const body = within(document.body);
+
+    await userEvent.click(title());
+    await userEvent.keyboard('Order green beans');
+    await userEvent.click(glyph('priority'));
+    await userEvent.click(await within(await body.findByRole('menu')).findByText('High'));
+    await userEvent.click(glyph('estimate'));
+    await userEvent.click(await within(await body.findByRole('menu')).findByText('M'));
+    await waitFor(async () => expect(glyph('priority').textContent).toContain('High'));
+    await expect(glyph('estimate').textContent).toEqual('M');
+
+    await userEvent.click(title());
+    await userEvent.keyboard('{Enter}');
+    const row = await waitFor(() => {
+      const row = [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')].find((row) =>
+        row.textContent?.includes('Order green beans'),
+      );
+      if (!row) {
+        throw new Error('The created task is not listed yet.');
+      }
+      return row;
+    });
+    await expect(row.querySelector('[data-testid="taskList.item.estimate"]')?.textContent).toContain('M');
   },
 };
 

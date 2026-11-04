@@ -6,7 +6,8 @@
  * A spec starts as prose and takes structure a paragraph at a time: `/feature` at the end of a paragraph makes it the
  * description of a new feature, drawn in place as the feature's editable section. The section moves like a line, and
  * Backspace deletes it, and its feature, until undo brings both back. Each feature, and each requirement added to it,
- * is numbered as its `feat` block will be. A section also lists the features its feature depends on, and adds one.
+ * is numbered as its `feat` block will be. A section's "Needs" picker adds the features it depends on, one pick after
+ * another, and a section folds to its header row, which then shows the ids of what it needs and its requirement count.
  *
  * @mdl packages/plugins/plugin-code/PLUGIN.mdl test QA-4
  * @app storybook-react, narrowed to plugin-code, on :9009
@@ -191,18 +192,80 @@ export const steps = [
       const section = `${SECTION} >> nth=1`;
       await caption(demo, 9, 'A section also holds what its feature depends on');
       await demo.click({ selector: section, label: 'Instant inbox' });
+      // The picker stays open after a pick until Escape.
       await demo.click({
-        selector: `${section} >> [data-testid="feature-section.add-dependency"]`,
-        label: 'Add dependency',
+        selector: `${section} >> [data-testid="feature-section.dependency-picker"] >> [data-part="trigger"]`,
+        label: 'Add a feature this needs',
       });
       await page.keyboard.type('Search', { delay: 140 });
       await demo.click({ selector: '[role="option"]:has-text("Search")', label: 'Search' });
+      await demo.press({ key: 'Escape' });
       await page
         .locator(`${section} >> [data-testid="feature-section.dependencies"]:has-text("Search")`)
         .waitFor({ state: 'visible', timeout: 5_000 });
-      // The document ends here, so the row cannot scroll above the caption banner; clear it instead.
-      await demo.clearCaption();
-      await demo.sleep({ ms: 6_000 });
+      await demo.sleep({ ms: LOOK });
+    },
+  },
+  {
+    name: 'Turn the last paragraph into a feature',
+    run: async ({ demo, page }) => {
+      await caption(demo, 10, 'The last paragraph becomes "Snooze"');
+      await makeFeature(demo, page, 'Later, maybe');
+      await nameFeature(demo, page, 'Snooze');
+      await waitForNames(page, ['Search', 'Instant inbox', 'Snooze']);
+      await demo.sleep({ ms: LOOK });
+    },
+  },
+  {
+    name: 'Need a second feature',
+    run: async ({ demo, page }) => {
+      const section = `${SECTION} >> nth=1`;
+      await caption(demo, 11, 'Open the picker again to need a second feature');
+      await demo.click({ selector: section, label: 'Instant inbox' });
+      await demo.click({
+        selector: `${section} >> [data-testid="feature-section.dependency-picker"] >> [data-part="trigger"]`,
+        label: 'Add a feature this needs',
+      });
+      // The search keeps the last pick's query; select it so typing replaces it.
+      await page.keyboard.press('ControlOrMeta+a');
+      await page.keyboard.type('Snooze', { delay: 140 });
+      await demo.click({ selector: '[role="option"]:has-text("Snooze")', label: 'Snooze' });
+      await demo.press({ key: 'Escape' });
+      await page
+        .locator(`${section} >> [data-testid="feature-section.dependencies"]:has-text("Snooze")`)
+        .waitFor({ state: 'visible', timeout: 5_000 });
+      await demo.sleep({ ms: LOOK });
+    },
+  },
+  {
+    name: 'Fold the sections',
+    run: async ({ demo, page }) => {
+      await caption(demo, 12, 'Each section folds to its header row');
+      for (const [index, name] of ['Search', 'Instant inbox', 'Snooze'].entries()) {
+        await demo.click({
+          selector: `${SECTION} >> nth=${index} >> [data-testid="feature-section.collapse"]`,
+          label: `Fold ${name}`,
+        });
+        await demo.sleep({ ms: 800 });
+      }
+      await page
+        .locator(`${SECTION} >> nth=0 >> [data-testid="feature-section.requirement-count"]:has-text("1 requirement")`)
+        .waitFor({ state: 'visible', timeout: 5_000 });
+      await page
+        .locator(`${SECTION} >> nth=1 >> [data-testid="feature-section.dependency"]`)
+        .nth(1)
+        .waitFor({ state: 'visible', timeout: 5_000 });
+      await caption(demo, 12, 'Folded: what it needs, by id, and its requirement count');
+      await demo.sleep({ ms: LOOK });
+    },
+  },
+  {
+    name: 'The folded spec',
+    narration:
+      'Folding is kept on this device only: the spec and its features sync through ECHO, and each reader folds what they like.',
+    run: async ({ demo }) => {
+      await demo.caption({ value: 'Folds are kept on this device; the spec itself syncs', subtitle: SUBTITLE });
+      await demo.sleep({ ms: 10_000 });
     },
   },
 ];

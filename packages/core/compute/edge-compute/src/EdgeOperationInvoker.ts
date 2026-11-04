@@ -58,7 +58,7 @@ export const layer = (spaceId?: SpaceId): Layer.Layer<RemoteOperationInvoker.Ser
   Layer.effect(
     RemoteOperationInvoker.Service,
     Effect.gen(function* () {
-      const client = yield* ClientService;
+      const client = yield* ClientService.client;
       return make(cachedEdgeClient(client), spaceId);
     }),
   );

@@ -102,28 +102,28 @@ export const chatLayer = ({
     Layer.provideMerge(credentialsLayerFromDatabase()),
     // Resolves server-custodied tokens through EDGE; the client is only touched when one is hit.
     Layer.provideMerge(
-      Layer.unwrap(Effect.map(ClientService, (client) => accessTokenResolverFromEdge(() => client.edge.http))),
+      Layer.unwrap(Effect.map(ClientService.client, (client) => accessTokenResolverFromEdge(() => client.edge.http))),
     ),
     Layer.provideMerge(spaceLayer(spaceId, true)),
     // The cross-space graph, beside the one space `spaceLayer` resolves: an operation that has to
     // FIND its space (a session report, whose hook payload cannot name one) declares this instead
     // of the database, and without it the call fails with "Service not found".
-    Layer.provideMerge(Layer.unwrap(Effect.map(ClientService, (client) => Hypergraph.layer(client.graph)))),
+    Layer.provideMerge(Layer.unwrap(Effect.map(ClientService.client, (client) => Hypergraph.layer(client.graph)))),
     // What plugin operations declare in place of the client (e.g. the script skill's deploy and invoke).
     Layer.provideMerge(
-      Layer.unwrap(Effect.map(ClientService, (client) => Layer.succeed(ConfigService, client.config))),
+      Layer.unwrap(Effect.map(ClientService.client, (client) => Layer.succeed(ConfigService, client.config))),
     ),
     // Only with an EDGE URL, since `client.edge` throws without one and non-EDGE providers must still start.
     Layer.provideMerge(
       Layer.unwrap(
-        Effect.map(ClientService, (client) =>
+        Effect.map(ClientService.client, (client) =>
           client.config.get('runtime.services.edge.url')
             ? Layer.succeed(EdgeHttpClientService, client.edge.http)
             : Layer.empty,
         ),
       ),
     ),
-    Layer.provideMerge(Layer.unwrap(Effect.map(ClientService, (client) => layerIdentity(client)))),
+    Layer.provideMerge(Layer.unwrap(Effect.map(ClientService.client, (client) => layerIdentity(client)))),
     Layer.provideMerge(Trace.writerLayerNoop),
   );
 };

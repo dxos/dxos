@@ -10,6 +10,8 @@ tasks:
     deps:
       # The bundle is built from source; dependencies' `dist` provide their types and the shared packages.
       - ^:build
+      # The bundle resolves the package's own `#` imports to its `dist`, which must be complete before it builds.
+      - build
       - plugin-builder:build
       - plugin-host-cloudflare:build
     inputs:
