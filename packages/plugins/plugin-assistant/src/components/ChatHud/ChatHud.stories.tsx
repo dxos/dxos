@@ -140,11 +140,14 @@ type AddThreadProps = {
   onAdd: (side: 'start' | 'end') => void;
 };
 
-/** Sits in the strip's padding beside the columns: zero width, so it does not shift a centered thread. */
+/** Overflows a zero-width box into the strip's padding, since any width here would make a lone thread scroll. */
 const AddThread = ({ side, onAdd }: AddThreadProps) => (
-  <div className={['flex items-center w-0', side === 'start' ? 'justify-end pe-2' : 'ps-2'].join(' ')}>
+  <div className={['flex items-center w-0', side === 'start' && 'justify-end'].filter(Boolean).join(' ')}>
     <Button.Root
-      classNames='shrink-0 opacity-10 transition-opacity hover:opacity-100 focus-visible:opacity-100'
+      classNames={[
+        'shrink-0 opacity-10 transition-opacity hover:opacity-100 focus-visible:opacity-100',
+        side === 'start' ? 'me-2' : 'ms-2',
+      ]}
       icon='ph--plus--regular'
       iconOnly
       showTooltip={false}
@@ -195,6 +198,13 @@ const DefaultStory = () => {
   lastIndexRef.current = index;
   const current = threads[index];
 
+  // Where a move we started is headed: adding a thread re-snaps the strip, and that scroll must not select anything.
+  const moveTargetRef = useRef<string | undefined>(undefined);
+  const moveTo = useCallback((id: string) => {
+    moveTargetRef.current = id;
+    setCurrentId(id);
+  }, []);
+
   // On `scrollend` rather than `scroll`: selecting mid-flight would re-center on every thread a long scroll passes.
   const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -210,12 +220,28 @@ const DefaultStory = () => {
       };
       const columns = Array.from(stripRef.current?.querySelectorAll<HTMLElement>('[data-thread-id]') ?? []);
       const [nearest] = columns.toSorted((a, b) => distanceFromCenter(a) - distanceFromCenter(b));
-      if (nearest?.dataset.threadId) {
-        setCurrentId(nearest.dataset.threadId);
+      const id = nearest?.dataset.threadId;
+      if (moveTargetRef.current) {
+        if (id === moveTargetRef.current) {
+          moveTargetRef.current = undefined;
+        }
+      } else if (id) {
+        setCurrentId(id);
       }
     };
+    // The reader taking over abandons any move in flight.
+    const handleTakeOver = () => {
+      moveTargetRef.current = undefined;
+    };
+    const frame = viewport.parentElement;
+    frame?.addEventListener('wheel', handleTakeOver, { passive: true });
+    frame?.addEventListener('pointerdown', handleTakeOver);
     viewport.addEventListener('scrollend', handleScrollEnd);
-    return () => viewport.removeEventListener('scrollend', handleScrollEnd);
+    return () => {
+      viewport.removeEventListener('scrollend', handleScrollEnd);
+      frame?.removeEventListener('wheel', handleTakeOver);
+      frame?.removeEventListener('pointerdown', handleTakeOver);
+    };
   }, [viewport]);
 
   const handleNew = useCallback(
@@ -226,13 +252,22 @@ const DefaultStory = () => {
         if (side === 'start') {
           setPrepended((ids) => [...ids, chat.id]);
         }
-        setCurrentId(chat.id);
+        moveTo(chat.id);
       }
     },
-    [db, threads.length],
+    [db, threads.length, moveTo],
   );
 
-  const handleSelect = useCallback((chat: AssistantChat.Chat) => setCurrentId(chat.id), []);
+  // Selecting the current thread moves nothing, so no `scrollend` would ever clear the target.
+  const currentThreadId = current?.id;
+  const handleSelect = useCallback(
+    (chat: AssistantChat.Chat) => {
+      if (chat.id !== currentThreadId) {
+        moveTo(chat.id);
+      }
+    },
+    [currentThreadId, moveTo],
+  );
 
   const previous = threads[index - 1];
   const next = threads[index + 1];
@@ -257,7 +292,7 @@ const DefaultStory = () => {
             disabled: !previous,
             testId: 'chat-hud.previous',
           },
-          () => previous && setCurrentId(previous.id),
+          () => previous && moveTo(previous.id),
         )
         .action(
           'next',
@@ -267,10 +302,10 @@ const DefaultStory = () => {
             disabled: !next,
             testId: 'chat-hud.next',
           },
-          () => next && setCurrentId(next.id),
+          () => next && moveTo(next.id),
         )
         .build(),
-    [handleNew, previous?.id, next?.id],
+    [handleNew, moveTo, previous?.id, next?.id],
   );
 
   if (!db || !current) {
