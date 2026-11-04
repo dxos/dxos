@@ -45,6 +45,8 @@ const COLUMN_SELECTOR = '[data-column-id]';
 const INTERACTIVE_SELECTOR = 'a, button, input, textarea, summary, [role="button"], [contenteditable="true"]';
 // How far a press may travel and still be a click; further than this it was selecting text.
 const CLICK_SLOP = 4;
+// How quickly the strip closes on the column it is heading for: the distance left shrinks by 63% in this time.
+const SCROLL_TIME_CONSTANT = 90;
 
 type ChatPlaneSide = 'start' | 'end';
 
@@ -57,6 +59,8 @@ type ChatPlaneContextValue = {
   navigation: UseListNavigationReturn;
   selection: UseListSelectionReturn;
   select: (id: string) => void;
+  scrollToColumn: (column: HTMLElement) => void;
+  scrolling: boolean;
   dragging: boolean;
   onAdd?: (side: ChatPlaneSide) => void;
   onMove?: (id: string, index: number) => void;
@@ -144,13 +148,63 @@ const ChatPlaneRoot = ({ classNames, value, onValueChange, onAdd, onMove, childr
   const draggingRef = useRef(dragging);
   draggingRef.current = dragging;
 
+  // One animation that only ever changes its target: a browser smooth scroll restarts from rest when it is called again,
+  // so each key press would stall the strip. Snapping would also pull every frame back to a column.
+  const [scrolling, setScrolling] = useState(false);
+  const scrollFrameRef = useRef<number | undefined>(undefined);
+  const scrollColumnRef = useRef<HTMLElement | undefined>(undefined);
+  const stopScroll = useCallback(() => {
+    if (scrollFrameRef.current !== undefined) {
+      cancelAnimationFrame(scrollFrameRef.current);
+      scrollFrameRef.current = undefined;
+      setScrolling(false);
+    }
+  }, []);
+  useEffect(() => stopScroll, [stopScroll]);
+  const scrollToColumn = useCallback(
+    (column: HTMLElement) => {
+      scrollColumnRef.current = column;
+      if (!viewport || scrollFrameRef.current !== undefined) {
+        return;
+      }
+      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      let previous = performance.now();
+      // Kept apart from `scrollLeft`, which rounds to whole pixels and would stop short once a frame's step is under one.
+      let position = viewport.scrollLeft;
+      const step = (now: number) => {
+        const target = scrollColumnRef.current;
+        if (!target?.isConnected || draggingRef.current) {
+          stopScroll();
+          return;
+        }
+        const frame = viewport.getBoundingClientRect();
+        const rect = target.getBoundingClientRect();
+        const destination = viewport.scrollLeft + rect.left + rect.width / 2 - (frame.left + frame.width / 2);
+        const elapsed = now - previous;
+        previous = now;
+        if (reduced || Math.abs(destination - position) < 1) {
+          viewport.scrollLeft = destination;
+          moveTargetRef.current = undefined;
+          stopScroll();
+          return;
+        }
+        position += (destination - position) * (1 - Math.exp(-elapsed / SCROLL_TIME_CONSTANT));
+        viewport.scrollLeft = position;
+        scrollFrameRef.current = requestAnimationFrame(step);
+      };
+      setScrolling(true);
+      scrollFrameRef.current = requestAnimationFrame(step);
+    },
+    [viewport, stopScroll],
+  );
+
   // On `scrollend` rather than `scroll`: selecting mid-flight would re-center on every column a long scroll passes.
   useEffect(() => {
     if (!viewport) {
       return;
     }
     const handleScrollEnd = () => {
-      if (draggingRef.current) {
+      if (draggingRef.current || scrollFrameRef.current !== undefined) {
         return;
       }
       const { left, width } = viewport.getBoundingClientRect();
@@ -177,6 +231,7 @@ const ChatPlaneRoot = ({ classNames, value, onValueChange, onAdd, onMove, childr
     // The reader taking over abandons any move in flight.
     const handleTakeOver = () => {
       moveTargetRef.current = undefined;
+      stopScroll();
     };
     const frame = viewport.parentElement;
     frame?.addEventListener('wheel', handleTakeOver, { passive: true });
@@ -187,7 +242,7 @@ const ChatPlaneRoot = ({ classNames, value, onValueChange, onAdd, onMove, childr
       frame?.removeEventListener('wheel', handleTakeOver);
       frame?.removeEventListener('pointerdown', handleTakeOver);
     };
-  }, [viewport, report]);
+  }, [viewport, report, stopScroll]);
 
   const navigation = useListNavigation({ mode: 'listbox', axis: 'horizontal' });
   const selection = useListSelection({
@@ -210,6 +265,8 @@ const ChatPlaneRoot = ({ classNames, value, onValueChange, onAdd, onMove, childr
       navigation={navigation}
       selection={selection}
       select={select}
+      scrollToColumn={scrollToColumn}
+      scrolling={scrolling}
       dragging={dragging}
       onAdd={onAdd}
       onMove={onMove}
@@ -232,7 +289,7 @@ type ChatPlaneViewportProps = PropsWithChildren;
 
 /** The scrolling strip, and the footer the selected column's prompt floats in. */
 const ChatPlaneViewport = ({ children }: ChatPlaneViewportProps) => {
-  const { setFooter, viewport, setViewport, selection, select, dragging, onMove } =
+  const { setFooter, viewport, setViewport, selection, select, scrolling, dragging, onMove } =
     useChatPlaneContext('ChatPlane.Viewport');
   const stripRef = useRef<HTMLDivElement>(null);
 
@@ -303,7 +360,7 @@ const ChatPlaneViewport = ({ children }: ChatPlaneViewportProps) => {
         itemProps={itemProps}
       >
         {/* The dragged column stops being a snap point, and the strip would jump to its neighbor under the pointer. */}
-        <ScrollArea.Root orientation='horizontal' snap={!dragging} scrollbars={false}>
+        <ScrollArea.Root orientation='horizontal' snap={!dragging && !scrolling} scrollbars={false}>
           <ScrollArea.Viewport ref={setViewport}>
             {/* Half the frame less half a column each side, so even the first and last column can reach the center. */}
             <div
@@ -426,16 +483,18 @@ type ChatPlaneColumnProps = PropsWithChildren<{
  */
 const ChatPlaneColumn = ({ value, children }: ChatPlaneColumnProps) => {
   const { event } = useChatContext('ChatPlane.Column');
-  const { value: selected, dragging } = useChatPlaneContext('ChatPlane.Column');
+  const { value: selected, dragging, scrollToColumn } = useChatPlaneContext('ChatPlane.Column');
   const current = value === selected;
   const columnRef = useRef<HTMLDivElement>(null);
 
   // Also once a drag ends: the column may have landed anywhere, and the drag may have scrolled the strip.
   useEffect(() => {
     if (current && !dragging) {
-      columnRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      if (columnRef.current) {
+        scrollToColumn(columnRef.current);
+      }
     }
-  }, [current, dragging]);
+  }, [current, dragging, scrollToColumn]);
 
   // Moving to a thread puts the cursor in its prompt, unless the reader stepped onto this column to keep moving.
   // Also once a drag ends, since a native drag takes focus from the prompt.
