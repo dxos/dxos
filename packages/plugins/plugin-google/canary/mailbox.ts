@@ -119,11 +119,6 @@ export class CanaryMailbox {
     return this.#call('/messages?internalDateSource=receivedTime', { method: 'POST', body });
   }
 
-  /** Moves a message to the trash, which the sync's `'all'` scope leaves out and Gmail empties after 30 days. */
-  trash(id: string): Effect.Effect<void, MailboxError> {
-    return retrying(this.#api.trashMessage('me', id)).pipe(Effect.asVoid);
-  }
-
   /** The id of a user label, created when it does not exist yet. */
   ensureLabel(name: string): Effect.Effect<string, MailboxError> {
     return Effect.gen({ self: this }, function* () {

@@ -9,8 +9,6 @@ runTimeoutMinutes: 110
 # Stage 1: insert this many Enron pool messages into the inbox as new mail; 0 skips the stage.
 seed:
   count: 100
-  # Seeded copies older than this are trashed first, so the mail stage 3 checks stays bounded.
-  retainDays: 30
 
 # Stage 2: wait for the canary space to sync the seeded mail, then check every sync run of the window.
 monitor:

@@ -35,17 +35,12 @@ const POOL_MESSAGE = [
   'Date: this line is body text, not a header.',
 ].join('\r\n');
 
-/**
- * A mailbox whose newest earlier copy names `next` as the cursor (none when unset) and that holds `expired` copies past
- * retention, recording each insert and trash.
- */
-const fakeMailbox = ({ next, expired = [] }: { next?: string; expired?: string[] } = {}) => {
+/** A mailbox whose newest earlier copy names `next` as the cursor (none when unset), recording each insert. */
+const fakeMailbox = ({ next }: { next?: string } = {}) => {
   const inserted: string[] = [];
-  const trashed: string[] = [];
   const mailbox: NightlyMailbox = {
     ensureLabel: (name) => Effect.succeed(`label-${name}`),
-    listIds: (query) =>
-      Effect.succeed(query.includes('older_than:') ? expired : next === undefined ? [] : ['earlier-copy']),
+    listIds: () => Effect.succeed(next === undefined ? [] : ['earlier-copy']),
     insert: (message, labels) =>
       Effect.sync(() => {
         const header = (name: string) => message.match(new RegExp(`^${name}: (.*)$`, 'm'))?.[1];
@@ -58,13 +53,12 @@ const fakeMailbox = ({ next, expired = [] }: { next?: string; expired?: string[]
           ? Object.fromEntries(names.map((name) => [name, next ?? '']))
           : { Subject: 'Re: forecast', From: 'Phillip Allen <phillip.allen@enron.com>' },
       ),
-    trash: (id) => Effect.sync(() => void trashed.push(id)),
   };
-  return { mailbox, inserted, trashed };
+  return { mailbox, inserted };
 };
 
 const POOL = Array.from({ length: 5 }, () => POOL_MESSAGE);
-const seed = (count: number) => ({ pool: POOL, count, retainDays: 30 });
+const seed = (count: number) => ({ pool: POOL, count });
 const waits = {
   syncTimeout: Duration.millis(50),
   pollInterval: Duration.millis(10),
@@ -92,10 +86,9 @@ describe('makeSeedCopy', () => {
 
 describe('Nightly', () => {
   test('the first run seeds from the start of the pool', async ({ expect }) => {
-    const { mailbox, inserted, trashed } = fakeMailbox();
+    const { mailbox, inserted } = fakeMailbox();
     const { start, seeded } = await EffectEx.runPromise(new Nightly(mailbox, emptySpace).seed(seed(2), NOW));
     expect(start).toBe(0);
-    expect(trashed).toEqual([]);
     expect(inserted.sort()).toEqual(['0>2 INBOX,label-enron-seed', '1>2 INBOX,label-enron-seed']);
     expect(seeded).toEqual([
       expect.objectContaining({ subject: 'Re: forecast', sender: 'phillip.allen@enron.com' }),
@@ -108,13 +101,6 @@ describe('Nightly', () => {
     const { start } = await EffectEx.runPromise(new Nightly(mailbox, emptySpace).seed(seed(3), NOW));
     expect(start).toBe(4);
     expect(inserted.map((call) => call.split(' ')[0]).sort()).toEqual(['0>2', '1>2', '4>2']);
-  });
-
-  test('trashes the copies past retention before seeding', async ({ expect }) => {
-    const { mailbox, inserted, trashed } = fakeMailbox({ expired: ['old-1', 'old-2'] });
-    await EffectEx.runPromise(new Nightly(mailbox, emptySpace).seed(seed(1), NOW));
-    expect(trashed.sort()).toEqual(['old-1', 'old-2']);
-    expect(inserted).toHaveLength(1);
   });
 
   test('a cursor the pool cannot hold restarts at 0', async ({ expect }) => {

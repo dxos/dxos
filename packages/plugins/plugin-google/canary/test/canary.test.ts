@@ -24,7 +24,7 @@ import { CanarySpace, previewClientLayer, recoverIdentity } from '../space.ts';
 const Config = Schema.Struct({
   spaceId: SpaceId,
   runTimeoutMinutes: Schema.Number,
-  seed: Schema.Struct({ count: Schema.Int, retainDays: Schema.Int }),
+  seed: Schema.Struct({ count: Schema.Int }),
   monitor: Schema.Struct({
     timeoutMinutes: Schema.Number,
     pollSeconds: Schema.Number,

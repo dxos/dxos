@@ -9,12 +9,12 @@ fails where users' sync fails. Design: the [Mail Sync Canary spec](https://claud
 `.github/workflows/mail-canary-nightly.yml` pulls the pool and runs `moon run plugin-google:mail-canary`
 (`test/canary.test.ts`). Every setting is in [`canary.yml`](./canary.yml); the workflow passes only credentials.
 
-1. **Seed.** Trashes seeded copies older than `seed.retainDays`, so the mail stage 3 checks stays bounded. Then it
-   inserts the next `seed.count` messages of the Enron pool into the inbox as mail received now (label `enron-seed`)
-   and asks EDGE to run the canary space's sync trigger at once. The pool is the encrypted `enron-pool` agents
-   fixture (10,000 messages), never Gmail: the sync takes every message added to the account. Each copy carries
-   `X-Dx-Seed` (its pool index) and `X-Dx-Seed-Next` (where the next run starts), so a missed night costs nothing
-   and the pool wraps after 10,000 / `seed.count` nights.
+1. **Seed.** Inserts the next `seed.count` messages of the Enron pool into the inbox as mail received now (label
+   `enron-seed`) and asks EDGE to run the canary space's sync trigger at once. Copies are never removed, so the mailbox,
+   and the mail stage 3 syncs, grow by `seed.count` every night. The pool is the encrypted `enron-pool` agents fixture
+   (10,000 messages), never Gmail: the sync takes every message added to the account. Each copy carries `X-Dx-Seed`
+   (its pool index) and `X-Dx-Seed-Next` (where the next run starts), so a missed night costs nothing and the pool
+   wraps after 10,000 / `seed.count` nights.
 2. **Monitor.** Waits for the canary space to sync the copies, then checks them and every sync run of the window.
 3. **Full sync.** Creates a fresh space, binds it to the account with a `fullSync.days` horizon and the connector's
    remote sync routine, starts it, and checks the result against Gmail. kms-service registers a refresh token only

@@ -40,8 +40,6 @@ export type CanaryReport = NightlyReport & {
 export type SeedOptions = {
   readonly pool: readonly string[];
   readonly count: number;
-  /** Seeded copies older than this many days are trashed first, so the mail stage 3 checks stays bounded. */
-  readonly retainDays: number;
 };
 
 export type NightlyOptions = {
@@ -56,7 +54,7 @@ export type NightlyOptions = {
 };
 
 /** The Gmail calls a run makes. */
-export type NightlyMailbox = Pick<CanaryMailbox, 'ensureLabel' | 'listIds' | 'insert' | 'getHeaders' | 'trash'>;
+export type NightlyMailbox = Pick<CanaryMailbox, 'ensureLabel' | 'listIds' | 'insert' | 'getHeaders'>;
 
 // Gmail allows 250 quota units per user per second; an insert costs 25.
 const WRITE_CONCURRENCY = 4;
@@ -129,9 +127,9 @@ export class Nightly {
     });
   }
 
-  /** Trashes copies past retention, then inserts the `count` pool messages after the last run's as mail received `now`. */
+  /** Inserts the `count` pool messages after the last run's as mail received `now`. */
   seed(
-    { pool, count, retainDays }: SeedOptions,
+    { pool, count }: SeedOptions,
     now: Date,
   ): Effect.Effect<{ start: number; seeded: ExpectedMessage[] }, MailboxError> {
     return Effect.gen({ self: this }, function* () {
@@ -139,8 +137,6 @@ export class Nightly {
         return yield* new CanaryError({ message: `cannot seed ${count} of a pool of ${pool.length}` });
       }
       const label = yield* this.#mailbox.ensureLabel(SEED_LABEL);
-      const expired = yield* this.#mailbox.listIds(`label:${SEED_LABEL} older_than:${retainDays}d`);
-      yield* Effect.forEach(expired, (id) => this.#mailbox.trash(id), { concurrency: WRITE_CONCURRENCY });
       const start = yield* this.#cursor(pool.length);
       const next = (start + count) % pool.length;
       const seeded = yield* Effect.forEach(
