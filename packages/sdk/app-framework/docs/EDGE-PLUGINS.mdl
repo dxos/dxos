@@ -834,7 +834,7 @@ requires; where the test expects the opposite today, the table says so ([D-62]).
 | -------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
 | T-5      | dxos       | `check-edge-release` (`plugin-builder` `check-release`), the "Check EDGE plugin releases" step of the `Check` workflow                    | Runs for every package tagged `edge-release`.                                              |
 | T-6      | dxos       | `plugin-space` `edge-bundle.test.ts` › space plugin bundle on EDGE: the first four tests                                                  |                                                                                            |
-| T-7      | dxos       | `plugin-space` `edge-bundle.test.ts` › space plugin bundle on EDGE › returns an ECHO object in its JSON form, with its `@uri`              | `test.fails`: the host returns the RPC clone of the output, which drops the ECHO object.   |
+| T-7      | dxos       | `plugin-space` `edge-bundle.test.ts` › space plugin bundle on EDGE › returns an ECHO object in its JSON form, with its `@uri`              | Passes: the host returns the object's JSON form, with its `@uri` ([D-66]).               |
 | T-8      | dxos       | `plugin-host-cloudflare` `PluginHost.workerd.test.ts` › PluginHost (4 tests)                                                              |                                                                                            |
 | T-9      | dxos       | `echo-client-e2e` `type-source.test.ts` › type sources (11 tests)                                                                         |                                                                                            |
 | T-10     | edge       | `registry-service` `plugin-store.workerd.test.ts` › plugin store; `plugin-store-multipart.workerd.test.ts` › plugin store: multipart upload |                                                                                            |
@@ -1681,11 +1681,11 @@ decision D-65: T-20 publishes B first and A between its two invokes; T-13's drop
 ```
 
 ```mdl
-decision D-66: PluginHost encodes a handler's output before returning it over Workers RPC: live ECHO entities become their JSON form and refs `{ '/': uri }`, by the same walk as operation-service's `snapshotEntities`; plain objects and arrays are walked, any other class instance is returned as is.
+decision D-66: PluginHost encodes a handler's output before returning it over Workers RPC: live ECHO entities become their JSON form and refs `{ '/': uri }`, by the same walk as operation-service's `snapshotEntities`; plain objects and arrays are walked, any other class instance is returned as is. Fills in [D-34].
   date: 2026-11-03
   by: agent:claude-code
   for: user:dmaretskyi
-  affects: [F-5.5, PluginEntrypoint]
+  affects: [F-5.5, PluginEntrypoint, T-7]
   why: Structured clone copies none of a live entity's properties and cannot clone a `Ref`, so `space.addObject` returned `{ id }` without its object; the router cannot recover what the clone dropped, so the host has to encode.
   rejected:
     - Encode in compute-service's router — the entity is already gone by the time the result crosses the RPC boundary.
@@ -1716,7 +1716,7 @@ decision D-68: A service only EDGE holds reaches a bundle as a per-invocation `S
 ```
 
 ```mdl
-decision D-69: PluginHost caches resolved `TypeRecord`s per isolate in a least-recently-used map of 256 entries keyed by `typename@version`, holding settled records only; an unknown type or a failure is asked again next time, and concurrent first lookups in different requests each ask the registry.
+decision D-69: PluginHost caches resolved `TypeRecord`s per isolate in a least-recently-used map of 256 entries keyed by `typename@version`, holding settled records only; an unknown type or a failure is asked again next time, and concurrent first lookups in different requests each ask the registry. Fills in [D-52].
   date: 2026-11-03
   by: agent:claude-code
   for: user:dmaretskyi
@@ -1728,7 +1728,7 @@ decision D-69: PluginHost caches resolved `TypeRecord`s per isolate in a least-r
 ```
 
 ```mdl
-decision D-70: The plugin protocol has a version (`PluginProtocol.PROTOCOL_VERSION`, now 2; 1 is every host before it). The loader's generated main module, which is EDGE's code rather than the bundle's, reports the vendored host's `PROTOCOL_VERSION` (1 when absent) without activating the plugin; the router sends a host only the scope fields its version reads and falls back to operation-service for a version newer than it serves. The catalog records the version for the registry.
+decision D-70: The plugin protocol has a version (`PluginProtocol.PROTOCOL_VERSION`, now 2; 1 is every host before it). The loader's generated main module, which is EDGE's code rather than the bundle's, reports the vendored host's `PROTOCOL_VERSION` (1 when absent) without activating the plugin; the router sends a host only the scope fields its version reads and falls back to operation-service for a version newer than it serves. The catalog records the version for the registry. Fills in [D-34].
   date: 2026-11-03
   by: agent:claude-code
   for: user:dmaretskyi
@@ -1740,7 +1740,7 @@ decision D-70: The plugin protocol has a version (`PluginProtocol.PROTOCOL_VERSI
 ```
 
 ```mdl
-decision D-71: A nested call to another plugin's operation passes ECHO objects by reference, as operation-service's in-process call passes them live: the caller's host adds any object in the input it has not saved to the invocation's database (cascading the graph the object heads), flushes, and sends `{ '/': uri }`; the callee's host loads a reference left where the input schema takes an object (`resolveObjectReferences`), and the caller's host loads every entity in the output back from its database. `space.addObject` and `space.addRelation` also accept a draft typed by versioned DXN.
+decision D-71: A nested call to another plugin's operation passes ECHO objects by reference, as operation-service's in-process call passes them live: the caller's host adds any object in the input it has not saved to the invocation's database (cascading the graph the object heads), flushes, and sends `{ '/': uri }`; the callee's host loads a reference left where the input schema takes an object (`resolveObjectReferences`), and the caller's host loads every entity in the output back from its database. `space.addObject` and `space.addRelation` also accept a draft typed by versioned DXN. Fills in [D-68].
   date: 2026-11-03
   by: agent:claude-code
   for: user:dmaretskyi
@@ -1751,7 +1751,7 @@ decision D-71: A nested call to another plugin's operation passes ECHO objects b
 ```
 
 ```mdl
-decision D-72: A failure carries the handler's error as `ErrorCodec` encodes it (`Failure.encoded`, version 2), and EDGE rethrows `ErrorCodec.decode` of it, as it rethrows operation-service's errors; a nested call rethrows it too. A failure without it raises `PluginInvocationError`, as before.
+decision D-72: A failure carries the handler's error as `ErrorCodec` encodes it (`Failure.encoded`, version 2), and EDGE rethrows `ErrorCodec.decode` of it, as it rethrows operation-service's errors; a nested call rethrows it too. A failure without it raises `PluginInvocationError`, as before. Fills in [D-34].
   date: 2026-11-03
   by: agent:claude-code
   for: user:dmaretskyi
@@ -1760,7 +1760,7 @@ decision D-72: A failure carries the handler's error as `ErrorCodec` encodes it 
 ```
 
 ```mdl
-decision D-73: TEST-ONLY. An in-process nested call pins a child seed drawn from its caller's stream and mints its pid, as operation-service does for every nested call; an agent's tool call carries a test seed from its chat and a per-process call count (`testIdSeed(spaceId, 'tool', conversation, index)`), on both routings.
+decision D-73: TEST-ONLY. An in-process nested call pins a child seed drawn from its caller's stream and mints its pid, as operation-service does for every nested call; an agent's tool call carries a test seed from its chat and a per-process call count (`testIdSeed(spaceId, 'tool', conversation, index)`), on both routings. Fills in [D-67].
   date: 2026-11-04
   by: agent:claude-code
   for: user:dmaretskyi
