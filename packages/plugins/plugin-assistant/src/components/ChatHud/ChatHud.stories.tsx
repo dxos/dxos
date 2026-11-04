@@ -23,9 +23,10 @@ import { ScriptedLanguageModel, SERVICES_CONFIG } from '@dxos/ai/testing';
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { TrajectoryStore } from '@dxos/assistant';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import * as AssistantChat from '@dxos/assistant/Chat';
-import { type Database, Feed, Filter, Ref, type Registry } from '@dxos/echo';
+import { Database, Feed, Filter, Ref, type Registry } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
@@ -58,6 +59,10 @@ import { Chat, useChatContext } from '../Chat/index.ts';
 type StoryArgs = {
   /** Answers from a scripted model rather than the hosted service, so the story runs offline. */
   fake?: boolean;
+  /** One exchange per thread to start with; without it the story starts with one empty thread. */
+  seed?: readonly { prompt: string; reply: string }[];
+  /** Position of the thread selected at the start. */
+  selected?: number;
 };
 
 /**
@@ -146,7 +151,10 @@ const ThreadCell = ({ threadId, current, footer, itemProps, rowProps, renderProm
 
   return (
     <>
-      <Panel.Root classNames='w-(--chat-hud-width) snap-center dx-focus-ring' asChild>
+      <Panel.Root
+        classNames={['w-(--chat-hud-width) snap-center dx-focus-ring transition-opacity', !current && 'opacity-50']}
+        asChild
+      >
         <div
           {...itemProps}
           {...rowProps}
@@ -235,7 +243,7 @@ const AddThread = ({ side, onAdd }: AddThreadProps) => (
   </div>
 );
 
-const DefaultStory = () => {
+const DefaultStory = ({ selected = 0 }: StoryArgs) => {
   const [space] = useSpaces();
   const db = space?.db;
   const chats = useQuery(db, Filter.type(AssistantChat.Chat));
@@ -266,10 +274,14 @@ const DefaultStory = () => {
   }, [chats, prepended]);
   const [currentId, setCurrentId] = useState<string>();
   // A thread just created is not in the query yet, so an unknown id holds the position until it arrives.
-  const lastIndexRef = useRef(0);
+  const lastIndexRef = useRef(selected);
   const found = threads.findIndex(({ id }) => id === currentId);
   const index = found === -1 ? Math.max(Math.min(lastIndexRef.current, threads.length - 1), 0) : found;
-  lastIndexRef.current = index;
+  // Only a thread that was found moves the position: threads arrive in stages, and clamping to the first of them
+  // would lose the one selected at the start.
+  if (found !== -1) {
+    lastIndexRef.current = found;
+  }
   const current = threads[index];
 
   // Where a move we started is headed: adding a thread re-snaps the strip, and that scroll must not select anything.
@@ -434,7 +446,7 @@ const meta = {
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
-    withPluginManager<StoryArgs>(({ args: { fake } }) => ({
+    withPluginManager<StoryArgs>(({ args: { fake, seed } }) => ({
       plugins: [
         ...CorePlugins.make(),
         ClientPlugin.make({
@@ -445,8 +457,14 @@ const meta = {
               yield* initializeIdentity(client);
               const [space] = client.spaces.get();
               yield* Effect.promise(() => space.waitUntilReady());
-              const feed = space.db.add(Feed.make());
-              space.db.add(AssistantChat.make({ name: 'Thread 1', feed: Ref.make(feed) }));
+              const exchanges = seed ?? [undefined];
+              for (const [index, exchange] of exchanges.entries()) {
+                const feed = space.db.add(Feed.make());
+                space.db.add(AssistantChat.make({ name: `Thread ${index + 1}`, feed: Ref.make(feed) }));
+                if (exchange) {
+                  yield* TrajectoryStore.appendExchange(feed, exchange).pipe(Effect.provide(Database.layer(space.db)));
+                }
+              }
               yield* Effect.promise(() => space.db.flush({ indexes: true }));
             }),
         }),
@@ -474,4 +492,18 @@ export const RealModel: Story = {
 /** Talks to a scripted model: offline, and every reply is predictable. */
 export const FakeModel: Story = {
   args: { fake: true },
+};
+
+/** Starts on the second of four threads that already hold a conversation; replies come from the scripted model. */
+export const FourThreads: Story = {
+  args: {
+    fake: true,
+    selected: 1,
+    seed: [
+      { prompt: 'What is the capital of Australia?', reply: 'Canberra.' },
+      { prompt: 'What is 17 × 23?', reply: 'The answer is 391.' },
+      { prompt: 'Name a prime number above 100.', reply: 'For example, 101.' },
+      { prompt: 'How many sides does a hexagon have?', reply: 'Six.' },
+    ],
+  },
 };
