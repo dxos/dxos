@@ -37,17 +37,10 @@ export type Entry = {
 };
 
 /** Treatments that animate; at most one of them moves at a time. */
-const ANIMATED: ReadonlySet<Treatment> = new Set<Treatment>([
-  'busy',
-  'typing',
-  'viewers-working',
-  'agent',
-  'working',
-  'asked',
-]);
+const ANIMATED: ReadonlySet<Treatment> = new Set<Treatment>(['busy', 'typing', 'viewers-working', 'agent', 'asked']);
 
-/** Which slot keeps its motion when several animate: what asks for you first, then ongoing work, then who is there. */
-const MOTION_ORDER: readonly Slot[] = ['corner', 'edge', 'mark', 'fill'];
+/** Which slot keeps its motion when several animate: what asks for you first, then who is there. The edge never moves. */
+const MOTION_ORDER: readonly Slot[] = ['corner', 'mark', 'fill'];
 
 /** What the glyph draws: the winning treatment per slot, and the one slot whose treatment animates. */
 export type Resolved = {

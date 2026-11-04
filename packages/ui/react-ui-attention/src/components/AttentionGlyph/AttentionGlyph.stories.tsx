@@ -218,33 +218,33 @@ const MOTIONS: { caption: string; label: string; icon: string; treatments: Activ
     treatments: ['attended', 'typing', 'following', 'changed'],
   },
   {
-    caption: 'Asked you moves; the working edge holds its outline',
+    caption: 'Asked you moves; the sparkle holds still',
     icon: 'ph--sparkle--regular',
     label: 'Chat: book travel',
     treatments: ['agent', 'working', 'asked'],
   },
   {
-    caption: 'Runner moves; typing dots hold still',
+    caption: 'The edge never moves, so typing does',
     icon: 'ph--file-text--regular',
     label: 'Launch plan',
     treatments: ['typing', 'working'],
   },
   {
-    caption: 'Runner moves; busy dots hold still',
+    caption: 'Busy dots move inside a working edge',
     icon: 'ph--file-text--regular',
     label: 'Launch plan',
     treatments: ['viewers-working', 'working'],
   },
   {
-    caption: 'A failed edge is still, so the mark moves',
+    caption: 'A still mark lets the busy fill move',
     icon: 'ph--robot--regular',
     label: 'Triage agent',
-    treatments: ['failed', 'working', 'typing'],
+    treatments: ['busy', 'viewer', 'failed'],
   },
 ];
 
 const MotionStory = () => (
-  <Section title='One thing moves: corner, then edge, then mark, then fill'>
+  <Section title='One thing moves: corner, then mark, then fill; the edge stays still'>
     <div className='grid grid-cols-[1fr_16rem] items-center gap-x-4 gap-y-2 text-sm'>
       {MOTIONS.map(({ caption, label, icon, treatments }) => (
         <React.Fragment key={caption}>

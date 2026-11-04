@@ -45,10 +45,7 @@
     fill: var(--color-amber-bg);
   }
 
-  /*
-   * Edge: an outline for a steady state, dashed for work that is due; work under way runs a short segment round the
-   * edge while it is the glyph's one motion, and holds the full outline otherwise.
-   */
+  /* Edge: an outline for a steady state or work under way, dashed for work that is due. It never animates. */
   .dx-attention-glyph [data-part='edge'] {
     stroke-width: 1;
     stroke-linecap: round;
@@ -106,10 +103,6 @@
     .dx-attention-glyph[data-moving='mark'][data-mark='typing'] [data-part='mark'] > circle:nth-child(3) {
       animation-delay: 0.4s;
     }
-    .dx-attention-glyph[data-moving='edge'] [data-part='edge'] {
-      stroke-dasharray: 10 38;
-      animation: dx-attention-glyph-run 1.6s linear infinite;
-    }
     .dx-attention-glyph[data-moving='corner'] [data-part='corner'] {
       animation: dx-attention-glyph-pulse 1.4s ease-in-out infinite;
     }
@@ -122,11 +115,6 @@
     }
     50% {
       opacity: 1;
-    }
-  }
-  @keyframes dx-attention-glyph-run {
-    to {
-      stroke-dashoffset: -48;
     }
   }
   @keyframes dx-attention-glyph-busy {

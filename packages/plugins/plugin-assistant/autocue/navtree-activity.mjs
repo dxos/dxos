@@ -4,7 +4,7 @@
 
 /**
  * A working agent marks its chat's navtree row, and a companion chat marks its subject's row, with the attention
- * glyph's running edge; both stay while you look elsewhere and clear when the turn ends.
+ * glyph's amber working edge; both stay while you look elsewhere and clear when the turn ends.
  *
  * @mdl packages/plugins/plugin-assistant/PLUGIN.mdl test QA-5
  * @app composer-app via `DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true moon run composer-app:serve -- --port 4173`
@@ -121,7 +121,7 @@ export const steps = [
         'Write a three-day Lisbon itinerary, about 400 words, with one place to eat each day.',
       );
       await page.locator(working(CHAT)).waitFor({ timeout: 30_000 });
-      await caption(demo, "While the agent works, the chat's glyph runs an edge round its square");
+      await caption(demo, "While the agent works, the chat's glyph gets an amber outline");
       await demo.hover({ selector: glyph(CHAT), label: CHAT });
       await demo.sleep({ ms: 2_500 });
     },

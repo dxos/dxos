@@ -548,7 +548,7 @@ test QA-4: A chat's MCP servers come from connections and built-in servers
 test QA-5: A working agent marks its chat and its companion's subject in the navtree
   desc: |
     While an agent process runs for a chat, the chat's navtree row draws the working edge on its
-    attention glyph: a short amber segment that runs round the square. A companion chat marks the
+    attention glyph: a still amber outline round the square. A companion chat marks the
     object it is a companion to instead, so a document shows that the assistant is working on it.
     The edge stays while you look at something else and clears when the turn ends.
   actors: human
