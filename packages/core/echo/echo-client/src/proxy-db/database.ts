@@ -835,7 +835,9 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     const handle = this.#getFeedHandle(feed);
     const point = opts.at;
     let at = typeof point === 'string' ? point : handle.blockIdOf(point);
-    if (at === undefined && typeof point !== 'string' && handle.hasPendingWrites()) {
+    // Only a live item waits: a snapshot names no block of its own, so after the send it would resolve to whatever
+    // block now holds the object, a later state than the one the snapshot saw.
+    if (at === undefined && typeof point !== 'string' && !Entity.isSnapshot(point) && handle.hasPendingWrites()) {
       // A walk returns items appended with `db.add(…, { to: feed })` before their send names their block.
       await handle.waitForPendingWrites();
       at = handle.blockIdOf(point);
