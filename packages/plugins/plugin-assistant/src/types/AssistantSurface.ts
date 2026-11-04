@@ -35,4 +35,4 @@ export const ChatDetails: Role.Role<{
  * Role token for a lane of a chat shown as a card. Lanes are derived from the feed rather than stored, so this carries
  * the lane itself and not an object; a plugin replaces the card by contributing a surface on this role.
  */
-export const LaneCard: Role.Role<ThreadCardProps> = Role.make('org.dxos.plugin.assistant.role.laneCard');
+export const ThreadCard: Role.Role<ThreadCardProps> = Role.make('org.dxos.plugin.assistant.role.threadCard');

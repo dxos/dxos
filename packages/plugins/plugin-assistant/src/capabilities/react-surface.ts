@@ -27,13 +27,13 @@ import {
   ChatCompanion,
   ChatDialog,
   IntegrationPrompt,
-  LaneCard,
   ObjectCardSurface,
   PluginPrompt,
   PluginUrlPrompt,
   QuestionSurface,
   SpaceAssistantSettings,
   SpaceHomePrompt,
+  ThreadCard,
 } from '#containers';
 import { AssistantSurface } from '#types';
 
@@ -198,9 +198,9 @@ export default Capability.makeModule(() =>
         props: ({ role, data: { subject } }) => ({ role, subject }),
       }),
       Surface.create({
-        id: 'laneCard',
-        filter: Surface.makeFilter(AssistantSurface.LaneCard),
-        component: LaneCard,
+        id: 'threadCard',
+        filter: Surface.makeFilter(AssistantSurface.ThreadCard),
+        component: ThreadCard,
         props: ({ data }) => data,
       }),
       Surface.create({

@@ -23,7 +23,7 @@ import { AssistantSurface } from '#types';
 
 import { arrangeLanes } from '../../chat-model/lanes.ts';
 import { LaneSurfaceWidget } from '../../components/Chat/LaneSurfaceWidget.tsx';
-import { LaneCard, type LaneCardProps } from './LaneCard.tsx';
+import { ThreadCard, type ThreadCardProps } from './ThreadCard.tsx';
 
 const registry = { lane: { ...assistantRegistry.lane, Component: LaneSurfaceWidget } };
 
@@ -84,10 +84,10 @@ const ChatWithCardsStory = () => {
   );
 };
 
-const replacement = ({ lane }: LaneCardProps) => <div data-testid='story.replaced-card'>{lane.title}</div>;
+const replacement = ({ lane }: ThreadCardProps) => <div data-testid='story.replaced-card'>{lane.title}</div>;
 
 const meta = {
-  title: 'plugins/plugin-assistant/containers/LaneCard',
+  title: 'plugins/plugin-assistant/containers/ThreadCard',
   render: () => <DefaultStory />,
   decorators: [withLayout({ layout: 'column', classNames: 'w-[50rem]' }), withTheme()],
   parameters: { layout: 'fullscreen', translations: assistantTranslations },
@@ -97,23 +97,23 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const surface = (component: typeof LaneCard | typeof replacement) =>
+const surface = (component: typeof ThreadCard | typeof replacement) =>
   Capability.contribute(Capabilities.ReactSurface, [
     Surface.create({
-      id: 'story.laneCard',
-      filter: Surface.makeFilter(AssistantSurface.LaneCard),
+      id: 'story.threadCard',
+      filter: Surface.makeFilter(AssistantSurface.ThreadCard),
       component,
       props: ({ data }) => data,
     }),
   ]);
 
 export const Default: Story = {
-  decorators: [withPluginManager({ capabilities: [surface(LaneCard)] })],
+  decorators: [withPluginManager({ capabilities: [surface(ThreadCard)] })],
 };
 
 export const ChatWithCards: Story = {
   render: () => <ChatWithCardsStory />,
-  decorators: [withPluginManager({ capabilities: [surface(LaneCard)] })],
+  decorators: [withPluginManager({ capabilities: [surface(ThreadCard)] })],
   play: async ({ canvasElement }) => {
     await waitFor(() =>
       expect(canvasElement.querySelectorAll('[data-testid="chat.lane-card"]').length).toBeGreaterThan(0),
