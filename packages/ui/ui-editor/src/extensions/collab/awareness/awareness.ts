@@ -5,6 +5,7 @@
 import {
   Annotation,
   type Extension,
+  Prec,
   type Range,
   RangeSet,
   StateEffect,
@@ -64,11 +65,16 @@ export type AwarenessState = {
  * Extension provides presence information about other peers.
  */
 export const awareness = (provider = dummyProvider): Extension => {
+  const remoteSelections = ViewPlugin.fromClass(RemoteSelectionsDecorator, {
+    decorations: (value) => value.decorations,
+  });
+
   return [
     awarenessProvider.of(provider),
-    ViewPlugin.fromClass(RemoteSelectionsDecorator, {
-      decorations: (value) => value.decorations,
-    }),
+    remoteSelections,
+    // Last of the update listeners: the automerge extension writes a local edit to the document from its own
+    // listener, and a caret encoded before that would name the character after the one it sits at.
+    Prec.lowest(EditorView.updateListener.of((update) => update.view.plugin(remoteSelections)?.publish(update))),
     hoveredCaret,
     styles,
   ];
@@ -123,11 +129,11 @@ export class RemoteSelectionsDecorator implements PluginValue {
   }
 
   update(update: ViewUpdate): void {
-    this._updateLocalSelection(update);
     this._updateRemoteSelections(update.view);
   }
 
-  private _updateLocalSelection({ view, focusChanged, transactions }: ViewUpdate): void {
+  /** Sends the local selection to the other peers. */
+  publish({ view, focusChanged, transactions }: ViewUpdate): void {
     const hasFocus = view.hasFocus && view.dom.ownerDocument.hasFocus();
     const { anchor = undefined, head = undefined } = hasFocus ? view.state.selection.main : {};
     // Edits applied from other peers are marked remote; any other edit or selection is the local user's.
