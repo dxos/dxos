@@ -1373,6 +1373,16 @@ test QA-4: Grow a spec from prose
     - name: Depend on another feature
       do: Click the "Instant inbox" section, open its "Needs" picker and pick "Search".
       expect: the section's "Needs" row shows "Search"
+    - name: Turn the last paragraph into a feature
+      do: Put the cursor at the end of the paragraph "Later, maybe…", type " /feature", accept it, type "Snooze" and press Escape.
+      expect: a third section, "Snooze", below "Instant inbox"
+    - name: Need a second feature
+      do: Click the "Instant inbox" section, open its "Needs" picker and pick "Snooze".
+      expect: the section's "Needs" row shows "Search" and "Snooze"
+    - name: Fold the sections
+      do: In each section, click its fold chevron.
+      expect: each section shows only its header row; "Search" reads "1 requirement" and "Instant inbox" names
+        "Search" and "Snooze"
 ```
 
 ```mdl
