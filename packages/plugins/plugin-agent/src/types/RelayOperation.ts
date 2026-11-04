@@ -11,7 +11,7 @@ import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Format, Obj, Ref } from '@dxos/echo';
-import { Channel, Task } from '@dxos/types';
+import { Channel, Task, TaskSet } from '@dxos/types';
 
 import * as AgentChannels from './AgentChannels.ts';
 import * as BrainService from './BrainService.ts';
@@ -27,6 +27,7 @@ export const CreateRelay = Operation.make({
     icon: 'ph--arrows-left-right--regular',
   },
   services: [Database.Service],
+  types: [TaskSet.TaskSet, Task.Task],
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent that carries the message.' }),
     recipient: Ref.Ref(Obj.Unknown).annotate({ description: 'The person or organization to tell (resolve first).' }),
