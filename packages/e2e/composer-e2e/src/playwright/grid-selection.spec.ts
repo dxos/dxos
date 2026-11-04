@@ -98,9 +98,7 @@ test.describe('Grid selections', () => {
     await expect(Grid.remoteSelections(hostSheet)).toHaveCount(0);
   });
 
-  // TODO(wittjosiah): A guest's navtree lists no tables under their type in the database, and a link to one falls back
-  //   to Home, so the guest cannot open the table. Main does the same; unskip once a guest can open a table.
-  test.skip('a table selection stays on its row when the other client sorts', { tag: ['@table:QA-4'] }, async () => {
+  test('a table selection stays on its row when the other client sorts', { tag: ['@table:QA-4'] }, async () => {
     await host.createSpace();
     await host.createObject({ type: 'Table', name: 'Tasks', typename: 'org.dxos.type.task' });
 

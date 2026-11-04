@@ -364,7 +364,9 @@ test QA-4: A collaborator's selection follows its row
   desc: Two members open the same table; the host's selected cell stays on its row when the guest sorts.
   actors: human
   covers: [F-3.1, F-7.1]
-  status: blocked
+  status: unverified
+  automated:
+    - composer-e2e:grid-selection.spec.ts#Grid selections › a table selection stays on its row when the other client sorts
   given:
     - two identities, host and guest, in two browsers
     - space: a space of the host's with a Table "Tasks" over the Task type whose rows read Bob then Alice, shared with the guest
@@ -372,9 +374,6 @@ test QA-4: A collaborator's selection follows its row
     - name: Both open the table
       do: As host and as guest, open "Tasks".
       expect: both see Bob in row 1 and Alice in row 2
-      blocked: |
-        A guest's navtree lists no tables under their type in the database, and a link to one falls back to Home, so
-        the guest cannot open the table. The e2e (`grid-selection.spec.ts`, tagged `@table:QA-4`) is skipped until it can.
     - name: The host selects Alice
       do: As host, click Alice's cell.
       expect: the guest sees that cell outlined in the host's colour, with the host's name
