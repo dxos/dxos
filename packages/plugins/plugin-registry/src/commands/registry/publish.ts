@@ -183,7 +183,7 @@ export const publish = Command.make(
         yield* Console.log(`Described: ${yield* describer.value.describe(outdir)}`);
 
         if (options.private) {
-          const client = yield* ClientService;
+          const client = yield* ClientService.client;
           const token = Option.getOrUndefined(yield* Config.option(Config.String('DX_API_TOKEN')));
           const baseUrl = Option.getOrUndefined(options.edgeUrl) ?? client.edge.http.baseUrl;
           if (!token && !client.halo.identity.get()) {
@@ -214,9 +214,7 @@ export const publish = Command.make(
 
         const channel = Option.getOrUndefined(options.channel);
         if (options.uploadOnly) {
-          const client = yield* ClientService;
           const moduleUrl = yield* uploadToEdge({
-            client,
             edgeUrl: Option.getOrUndefined(options.edgeUrl),
             key,
             version,
@@ -230,7 +228,7 @@ export const publish = Command.make(
         // Authenticate for the record writes BEFORE uploading: hosted bundles are immutable once
         // uploaded, so a publish whose PDS session cannot authenticate must fail before it burns
         // the version with an orphaned upload.
-        const client = yield* ClientService;
+        const client = yield* ClientService.client;
         const session = yield* resolveSession({
           handle: Option.getOrUndefined(options.handle),
           appPassword: Option.getOrUndefined(options.appPassword),
@@ -245,7 +243,6 @@ export const publish = Command.make(
           yield* Console.log(`Self-hosted: ${moduleUrl}`);
         } else {
           moduleUrl = yield* uploadToEdge({
-            client,
             edgeUrl: Option.getOrUndefined(options.edgeUrl),
             key,
             version,
@@ -324,16 +321,15 @@ const readBundleFiles = (outdir: string) =>
 /**
  * Uploads to the edge registry: to `edgeUrl` without auth when given (local dev), with the admin API key in
  * `DX_HUB_API_KEY` for headless callers (CI) that hold no HALO identity, otherwise as the profile's identity.
+ * The client is resolved only after the `edgeUrl` branch, which must work on a host whose client cannot initialize.
  */
 const uploadToEdge = ({
-  client,
   edgeUrl,
   key,
   version,
   outdir,
   channel,
 }: {
-  client: Client;
   edgeUrl: string | undefined;
   key: string;
   version: string;
@@ -341,10 +337,11 @@ const uploadToEdge = ({
   channel: string | undefined;
 }) =>
   Effect.gen(function* () {
-    const apiKey = Option.getOrUndefined(yield* Config.option(Config.String('DX_HUB_API_KEY')));
     if (edgeUrl) {
       return yield* uploadBundleDirect({ http: new EdgeHttpClient(edgeUrl), key, version, outdir, channel });
     }
+    const client = yield* ClientService.client;
+    const apiKey = Option.getOrUndefined(yield* Config.option(Config.String('DX_HUB_API_KEY')));
     if (apiKey) {
       const http = new EdgeHttpClient(client.edge.http.baseUrl, { apiKey });
       return yield* uploadBundleDirect({ http, key, version, outdir, channel });

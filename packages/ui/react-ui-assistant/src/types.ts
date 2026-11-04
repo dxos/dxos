@@ -28,6 +28,13 @@ export const ChatView = Schema.Union([
 ]);
 export type ChatView = Schema.Schema.Type<typeof ChatView>;
 
+/** A fork shown at the answer it forks at. */
+export type ForkMarker = {
+  readonly id: string;
+  /** The fork's purpose, or a fallback the host chooses. */
+  readonly label: string;
+};
+
 /**
  * What the thread reports outward. Deliberately the same shapes the assistant plugin's event bus
  * speaks, so a host can pipe these straight through.
@@ -37,6 +44,10 @@ export type ChatThreadEvent =
   | { type: 'submit'; text: string }
   /** Soft-fork the thread from the given message (the prompt toolbar's rewind). */
   | { type: 'rewind'; id: string }
+  /** Fork the conversation at the given answer: a thread of its own that stays apart from main. */
+  | { type: 'fork'; id: string }
+  /** Open a fork, from its marker at the answer it forks at. */
+  | { type: 'open-fork'; thread: string }
   /** Withdraw a prompt the agent has not taken up (its delivery row's remove). */
   | { type: 'remove-prompt'; id: string }
   /** A person chose one of a request block's options (allow or refuse an agent's tool call). */

@@ -109,96 +109,103 @@ const runCodeModeTurn = ({
     // model's effects, and `Operation.invoke` resolves its handler through `Operation.Service`.
     const runtime = yield* Effect.context<Database.Service | Operation.Service>();
 
-    const history = yield* Effect.promise(() => session.getHistory());
+    // A turn in a thread (a light thread or a fork) sees that thread's prompt, not main's.
+    const history =
+      params.thread === undefined
+        ? yield* Effect.promise(() => session.getHistory())
+        : yield* TrajectoryStore.history(feed, params.thread);
     // The turn records the prompt itself (consuming a queued one), so the request's copy of it is not appended again.
     const prompt = Message.make({
       sender: { role: 'user', ...params.sender },
       blocks: typeof params.prompt === 'string' ? [{ _tag: 'text', text: params.prompt }] : [...params.prompt],
     });
     const promptId = params.source && 'message' in params.source ? params.source.message : prompt.id;
-    return yield* TrajectoryStore.turn(feed, { prompt, source: params.source, model: params.model }, (append) =>
-      Effect.gen(function* () {
-        // Rebound each turn below, since a skill enabled mid-request changes what the operations are.
-        let labelCall = labelEvalCall([]);
-        const request = new AiRequest.Request({
-          onOutput: (message) =>
-            message.id === promptId
-              ? Effect.void
-              : append([labelEvalCalls(message, labelCall)]).pipe(Effect.provide(runtime)),
-        });
+    return yield* TrajectoryStore.turn(
+      feed,
+      { prompt, source: params.source, model: params.model, thread: params.thread },
+      (append) =>
+        Effect.gen(function* () {
+          // Rebound each turn below, since a skill enabled mid-request changes what the operations are.
+          let labelCall = labelEvalCall([]);
+          const request = new AiRequest.Request({
+            onOutput: (message) =>
+              message.id === promptId
+                ? Effect.void
+                : append([labelEvalCalls(message, labelCall)]).pipe(Effect.provide(runtime)),
+          });
 
-        yield* request.begin({
-          history,
-          skills: session.context.getSkills(),
-          objects: session.context.getObjects(),
-          instructions,
-          prompt: params.prompt,
-          promptId,
-          sender: params.sender,
-          system: params.system,
-        });
+          yield* request.begin({
+            history,
+            skills: session.context.getSkills(),
+            objects: session.context.getObjects(),
+            instructions,
+            prompt: params.prompt,
+            promptId,
+            sender: params.sender,
+            system: params.system,
+          });
 
-        const maxTurns = options.maxTurns ?? Number.POSITIVE_INFINITY;
-        // Each iteration is scoped so the MCP connections it opens close before the next opens its own.
-        const runIteration = (turn: number) =>
-          Effect.gen(function* () {
-            yield* Effect.promise(() => session.context.sync());
-            const skills = session.context.getSkills();
-            // An MCP tool has no operation behind it, so it reaches the code as a call the dialect binds by name.
-            const mcps = yield* AiSession.connectMcpServers(
-              params.mcpServers ? yield* AiSession.readMcpServers(params.mcpServers) : [],
-            );
-            const operations = yield* projectOperations(skills, mcps);
-            labelCall = labelEvalCall(operations);
-            const toolkit = makeEvalToolkit({
-              dialect,
-              sandbox,
-              runtime,
-              operations,
-              skills: skills.flatMap((skill) => Obj.getMeta(skill).key ?? []),
-              maxOutput: options.maxOutput,
-              timeout: options.timeout,
-            });
-            const system = yield* formatSystemPrompt({
-              system: [
-                dialect.instructions({ operations, types: yield* registeredTypes }),
-                options.system,
-                params.system,
-              ]
-                .filter(isPresent)
-                .join('\n\n'),
-              skills,
-              objects: session.context.getObjects(),
-              instructions,
-            }).pipe(Effect.orDie);
-
-            const { done, finishReason } = yield* request.runAgentTurn({
-              system,
-              toolkit,
-            });
-            if (done) {
-              return 'done' as const;
-            }
-            // Checked before the pause branch below: a provider that keeps pausing would otherwise
-            // re-issue the request forever, since a paused turn skips the rest of the loop.
-            if (turn + 1 >= maxTurns) {
-              yield* request.submitNotice(
-                `Stopped after ${maxTurns} turns without a final answer. Report what you established and what is left.`,
+          const maxTurns = options.maxTurns ?? Number.POSITIVE_INFINITY;
+          // Each iteration is scoped so the MCP connections it opens close before the next opens its own.
+          const runIteration = (turn: number) =>
+            Effect.gen(function* () {
+              yield* Effect.promise(() => session.context.sync());
+              const skills = session.context.getSkills();
+              // An MCP tool has no operation behind it, so it reaches the code as a call the dialect binds by name.
+              const mcps = yield* AiSession.connectMcpServers(
+                params.mcpServers ? yield* AiSession.readMcpServers(params.mcpServers) : [],
               );
-              return 'done' as const;
-            }
-            // A paused server-tool turn resumes with another request and no local tool execution.
-            if (finishReason === 'pause') {
+              const operations = yield* projectOperations(skills, mcps);
+              labelCall = labelEvalCall(operations);
+              const toolkit = makeEvalToolkit({
+                dialect,
+                sandbox,
+                runtime,
+                operations,
+                skills: skills.flatMap((skill) => Obj.getMeta(skill).key ?? []),
+                maxOutput: options.maxOutput,
+                timeout: options.timeout,
+              });
+              const system = yield* formatSystemPrompt({
+                system: [
+                  dialect.instructions({ operations, types: yield* registeredTypes }),
+                  options.system,
+                  params.system,
+                ]
+                  .filter(isPresent)
+                  .join('\n\n'),
+                skills,
+                objects: session.context.getObjects(),
+                instructions,
+              }).pipe(Effect.orDie);
+
+              const { done, finishReason } = yield* request.runAgentTurn({
+                system,
+                toolkit,
+              });
+              if (done) {
+                return 'done' as const;
+              }
+              // Checked before the pause branch below: a provider that keeps pausing would otherwise
+              // re-issue the request forever, since a paused turn skips the rest of the loop.
+              if (turn + 1 >= maxTurns) {
+                yield* request.submitNotice(
+                  `Stopped after ${maxTurns} turns without a final answer. Report what you established and what is left.`,
+                );
+                return 'done' as const;
+              }
+              // A paused server-tool turn resumes with another request and no local tool execution.
+              if (finishReason === 'pause') {
+                return 'continue' as const;
+              }
+              yield* request.runTools({ toolkit });
               return 'continue' as const;
-            }
-            yield* request.runTools({ toolkit });
-            return 'continue' as const;
-          }).pipe(Effect.scoped);
+            }).pipe(Effect.scoped);
 
-        for (let turn = 0; (yield* runIteration(turn)) !== 'done'; turn++) {}
+          for (let turn = 0; (yield* runIteration(turn)) !== 'done'; turn++) {}
 
-        return [...request.pending];
-      }),
+          return [...request.pending];
+        }),
     );
   }).pipe(
     // What `AiSession.createRequest` provides around its own turn: an operation invoked from the

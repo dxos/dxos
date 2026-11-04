@@ -4,11 +4,10 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
-import React, { type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { type MouseEvent, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
 import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -16,19 +15,13 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
+import * as Typography from '@dxos/react-ui/Typography';
 import { Task } from '@dxos/types';
 import { getHashHue, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import {
-  ESTIMATE_UNSET_ICON,
-  estimateTextStyle,
-  priorityIcon,
-  priorityTextStyle,
-  statusIcon,
-  statusTextStyle,
-} from '../../util/status-icons.ts';
+import { TaskField } from './TaskField.tsx';
 import { useTaskListContext } from './TaskListContext.ts';
 
 /**
@@ -53,74 +46,21 @@ export type TaskStatusControlProps = {
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
 };
 
-/** The status glyph, which is also the control that completes the task. */
 const useAgentWorking = (task: Task.Task): boolean =>
   useAtomValue(useMemo(() => Atom.make((get) => Task.isAgentWorking(get(Obj.atom(task)))), [task]));
 
 export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: TaskStatusControlProps) => {
-  const { t } = Hooks.useTranslation(translationKey);
-  const [storedStatus] = useObject(task, 'status');
-  const status = storedStatus ?? 'todo';
+  const [status] = useObject(task, 'status');
   const agentWorking = useAgentWorking(task);
-  const working = active ?? agentWorking;
-  const { icon, classNames: iconClassNames } = working
-    ? { icon: 'ph--spinner--regular', classNames: 'text-info-text animate-spin' }
-    : { icon: statusIcon(status), classNames: statusTextStyle(status) };
-
-  // Sourced from the schema's own option table, so the picker offers exactly what the field accepts
-  // and carries the same hue the form's select paints it with. A thunk, so a row that is never
-  // opened builds neither the options nor their labels.
-  const actions = useCallback(
-    () =>
-      Task.StatusOptions.map(({ id }) =>
-        createMenuAction(`status-${id}`, () => onTaskUpdate?.(task, { status: id }), {
-          label: t(`status-${id}.label`),
-          icon: statusIcon(id),
-          iconClassNames: statusTextStyle(id),
-          checked: status === id,
-        }),
-      ),
-    [onTaskUpdate, task, status, t],
-  );
-
-  if (!onTaskUpdate) {
-    // `IconBlock square` rather than a bare span: the glyph must hold the same square an
-    // `IconButton iconOnly` occupies, or the readonly list's status column collapses to the glyph's
-    // own width and stops lining up with the editable list's.
-    return (
-      <Layout.Block aria-hidden={false} data-testid='taskList.item.status' classNames={classNames}>
-        <Icon.Icon icon={icon} classNames={iconClassNames} />
-        <span className='sr-only'>{t(`status-${status}.label`)}</span>
-      </Layout.Block>
-    );
-  }
-
-  // The button is the trigger, not the block: the button stops the click so the row is not selected
-  // too, and a trigger above it would never receive it. The block still gives every control in the
-  // row one rail-item square.
-  const trigger = (
-    <Button.Root
-      data-testid='taskList.item.status'
-      // The hue goes on the icon, not the button: the row dims icons through `--icons-color`,
-      // which the `Icon` root reads, so a colour set on the button is overridden at rest and
-      // only reappears once selection invalidates the variable.
-      iconClassNames={iconClassNames}
-      variant='ghost'
-      icon={icon}
-      iconOnly
-      label={t('task-status.label')}
-      // The row is the selection target; opening the menu must not also select it.
-      onClick={(event) => event.stopPropagation()}
-    />
-  );
-
   return (
-    <Layout.Block classNames={classNames}>
-      {/* Deferred: a list renders one of these per task, and the menu is opened for at most one. */}
-      <ActionMenu deferUntilOpen actions={actions}>
-        {trigger}
-      </ActionMenu>
-    </Layout.Block>
+    <TaskField
+      field='status'
+      value={status ?? undefined}
+      working={active ?? agentWorking}
+      onChange={onTaskUpdate && ((status) => onTaskUpdate(task, { status }))}
+      testId='taskList.item.status'
+      classNames={classNames}
+    />
   );
 };
 
@@ -226,13 +166,29 @@ export const TaskCheckbox = ({ task, checked, onCheckedChange, classNames }: Tas
 
 TaskCheckbox.displayName = 'TaskList.Checkbox';
 
-/** The row's estimate, editable in place as its priority is, so sizing a task never means opening it. */
+export const TaskPriorityControl = ({ task, classNames }: { task: Task.Task; classNames?: string }) => {
+  const { onTaskUpdate } = useTaskListContext('TaskList.PriorityControl');
+  const [priority] = useObject(task, 'priority');
+  return (
+    <TaskField
+      field='priority'
+      value={priority ?? undefined}
+      onChange={onTaskUpdate && ((priority) => onTaskUpdate(task, { priority: priority ?? null }))}
+      testId='taskList.item.priority'
+      classNames={classNames}
+    />
+  );
+};
+
+TaskPriorityControl.displayName = 'TaskList.PriorityControl';
+
 export const TaskEstimateControl = ({ task, classNames }: { task: Task.Task; classNames?: string }) => {
   const { onTaskUpdate } = useTaskListContext('TaskList.EstimateControl');
   const [estimate] = useObject(task, 'estimate');
   return (
-    <TaskEstimatePicker
-      estimate={estimate ?? undefined}
+    <TaskField
+      field='estimate'
+      value={estimate ?? undefined}
       onChange={onTaskUpdate && ((estimate) => onTaskUpdate(task, { estimate: estimate ?? null }))}
       testId='taskList.item.estimate'
       classNames={classNames}
@@ -242,134 +198,11 @@ export const TaskEstimateControl = ({ task, classNames }: { task: Task.Task; cla
 
 TaskEstimateControl.displayName = 'TaskList.EstimateControl';
 
-export type TaskEstimatePickerProps = {
-  estimate?: Task.Estimate;
-  /** Omitted for a readonly label. */
-  onChange?: (estimate: Task.Estimate | undefined) => void;
-  testId?: string;
-  classNames?: string;
-};
+export const TaskEstimateLabel = ({ estimate }: { estimate?: Task.Estimate }) =>
+  estimate ? (
+    <Typography.Text asChild tone='muted' data-testid='taskList.item.estimate'>
+      <span>{estimate.toUpperCase()}</span>
+    </Typography.Text>
+  ) : null;
 
-/** The estimate label and its menu over a bare value, for a task or a draft that has none yet. */
-export const TaskEstimatePicker = ({ estimate, onChange, testId, classNames }: TaskEstimatePickerProps) => {
-  const { t } = Hooks.useTranslation(translationKey);
-  const label = estimate?.toUpperCase() ?? <Icon.Icon icon={ESTIMATE_UNSET_ICON} classNames='text-neutral-500' />;
-
-  if (!onChange) {
-    return (
-      <Layout.Block
-        aria-hidden={false}
-        data-testid={testId}
-        classNames={mx('text-sm', estimateTextStyle(estimate), classNames)}
-      >
-        {label}
-      </Layout.Block>
-    );
-  }
-
-  return (
-    <Layout.Block classNames={classNames}>
-      <ActionMenu
-        deferUntilOpen
-        actions={() =>
-          [Task.NullOption, ...Task.EstimateOptions].map(({ id, title }) =>
-            createMenuAction(`estimate-${id}`, () => onChange(id === 'none' ? undefined : id), {
-              label: title,
-              checked: (estimate ?? 'none') === id,
-            }),
-          )
-        }
-      >
-        <Button.Root
-          variant='ghost'
-          iconOnly
-          label={t('task-estimate.label')}
-          data-testid={testId}
-          classNames={mx('text-sm tabular-nums', estimateTextStyle(estimate))}
-          onClick={(event: MouseEvent) => event.stopPropagation()}
-        >
-          {label}
-        </Button.Root>
-      </ActionMenu>
-    </Layout.Block>
-  );
-};
-
-TaskEstimatePicker.displayName = 'TaskList.EstimatePicker';
-
-/**
- * Priority as a signal-strength glyph rather than a word: the four levels are ordinal, so a ramp
- * reads at a glance where four differently-worded tags do not. `urgent` breaks the ramp deliberately
- * — it is a different kind of statement from "how much", and a filled mark carries that.
- *
- * The glyph is also the control: it opens a menu to set the level. It renders on every row —
- * including one with no priority, which shows the neutral placeholder — so setting a priority never
- * depends on discovering a hover affordance.
- */
-export const TaskPriorityIcon = ({ task, classNames }: { task: Task.Task; classNames?: string }) => {
-  const { onTaskUpdate } = useTaskListContext('TaskList.PriorityIcon');
-  const [priority] = useObject(task, 'priority');
-  return (
-    <TaskPriorityPicker
-      priority={priority ?? undefined}
-      onChange={onTaskUpdate && ((priority) => onTaskUpdate(task, { priority: priority ?? null }))}
-      testId='taskList.item.priority'
-      classNames={classNames}
-    />
-  );
-};
-
-export type TaskPriorityPickerProps = {
-  priority?: Task.Priority;
-  /** Omitted for a readonly glyph. */
-  onChange?: (priority: Task.Priority | undefined) => void;
-  testId?: string;
-  classNames?: string;
-};
-
-/** The priority glyph and its menu over a bare value, for a row's task or a draft that has none yet. */
-export const TaskPriorityPicker = ({ priority, onChange, testId, classNames }: TaskPriorityPickerProps) => {
-  const { t } = Hooks.useTranslation(translationKey);
-  const icon = priorityIcon(priority);
-  const styles = priorityTextStyle(priority);
-
-  if (!onChange) {
-    // Falls back to the placeholder rather than rendering nothing: a readonly row still says "no priority"
-    // in the same column its neighbours use, so the list reads as one column and not a ragged one.
-    return (
-      <Layout.Block classNames={classNames}>
-        <Icon.Icon icon={icon} classNames={mx(styles)} />
-      </Layout.Block>
-    );
-  }
-
-  return (
-    <Layout.Block classNames={classNames}>
-      {/* Deferred: a list renders one of these per task, and the menu is opened for at most one. */}
-      <ActionMenu
-        deferUntilOpen
-        actions={() =>
-          [Task.NullOption, ...Task.PriorityOptions].map(({ id, icon: optionIcon }) =>
-            createMenuAction(`priority-${id}`, () => onChange(id === 'none' ? undefined : id), {
-              label: t(`priority-${id}.label`),
-              // `None` takes the row's unset glyph, so every option has an icon and the labels align.
-              icon: optionIcon ?? priorityIcon(undefined),
-              iconClassNames: priorityTextStyle(id),
-              checked: (priority ?? 'none') === id,
-            }),
-          )
-        }
-      >
-        <Button.Root
-          variant='ghost'
-          icon={icon}
-          iconOnly
-          label={t('task-priority.label')}
-          data-testid={testId}
-          iconClassNames={styles}
-          onClick={(event) => event.stopPropagation()}
-        />
-      </ActionMenu>
-    </Layout.Block>
-  );
-};
+TaskEstimateLabel.displayName = 'TaskList.EstimateLabel';

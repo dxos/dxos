@@ -181,6 +181,23 @@ export const Default: Story = {
   },
 };
 
+/** A section without attention is inert but for its fold toggle, which folds and unfolds it in one click. */
+export const FoldUnattended: Story = {
+  play: async ({ canvasElement }) => {
+    const view = await findView(canvasElement);
+    await waitFor(() => expect(embedded(view)).toHaveLength(8), { timeout: 10_000 });
+    const embed = await waitFor(() => embeds(canvasElement)[1], { timeout: 10_000 });
+    const toggle = within(embed).getByTestId('feature-section.collapse');
+    await expect(within(embed).getByTestId('name').closest('[inert]')).not.toBeNull();
+    await expect(toggle.closest('[inert]')).toBeNull();
+
+    await userEvent.click(toggle);
+    await waitFor(() => expect(toggle.getAttribute('aria-expanded')).toBe('false'), { timeout: 5_000 });
+    await userEvent.click(toggle);
+    await waitFor(() => expect(toggle.getAttribute('aria-expanded')).toBe('true'), { timeout: 5_000 });
+  },
+};
+
 /** `/feature` after a phrase makes a feature named by it, embedded where the line was, with its description to write. */
 export const SlashFeature: Story = {
   play: async ({ canvasElement }) => {

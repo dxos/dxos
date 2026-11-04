@@ -33,7 +33,7 @@ const COMPANION = '[data-testid="deck.companion"]';
 const INSTRUCTIONS = `${PLANK} .cm-content[aria-placeholder="Describe what the agent should do in each session."]`;
 const ADD_TASK = `${PLANK} input[placeholder="Add task"]`;
 const TASK_ROW = `${PLANK} [data-testid="taskList.item"]`;
-const ADD_PRIORITY = `${PLANK} [data-testid="taskList.edit.priority"]`;
+const ADD_PRIORITY = `${PLANK} [data-testid="taskList.edit.properties"] [data-testid="priority"]`;
 
 const DISPLAY_NAME = 'Riley';
 

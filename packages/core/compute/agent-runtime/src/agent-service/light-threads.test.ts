@@ -151,6 +151,29 @@ const itemTexts = (view: Reducer.ThreadView, lane: Trajectory.EventId) =>
     .map((item) => Message.extractText(Message.make({ sender: { role: 'user' }, blocks: [...item.blocks] })))
     .filter((value) => value.length > 0);
 
+/** Requests the fork test's model saw, in call order. */
+const forkRequests: ScriptedLanguageModel.ScriptedRequest[] = [];
+
+/** Answers the newest prompt: a colour, an animal or a shape. */
+const forkScript = (request: ScriptedLanguageModel.ScriptedRequest) => {
+  forkRequests.push(request);
+  const last = JSON.stringify(request.prompt.content.filter((message) => message.role === 'user').at(-1));
+  return { parts: [text(last.includes('colour') ? 'Blue.' : last.includes('animal') ? 'Cat.' : 'Square.')] };
+};
+
+const forkLayer = (threading: boolean) =>
+  AssistantTestLayer({
+    types: [Alarm.Alarm],
+    agent: threading ? { threading: () => ({ limit: 3 }) } : {},
+    aiService: scriptedAiService(forkScript),
+  });
+
+const hasText = (view: Reducer.ThreadView, value: string) =>
+  view.items.some((item) => item.blocks.some((block) => block._tag === 'text' && block.text === value));
+
+const historyTexts = (messages: readonly Message.Message[]) =>
+  messages.map((message) => Message.extractText(message)).filter((value) => value.length > 0);
+
 describe('light threads (scripted)', () => {
   it.effect(
     'a prompt sent while a turn runs is answered in a light thread before that turn ends',
@@ -389,4 +412,71 @@ describe('light threads (scripted)', () => {
     ),
     { timeout: 30_000 },
   );
+
+  for (const threading of [true, false]) {
+    it.effect(
+      `a fork at a past answer sees main up to it, runs its own prompts and stays apart until merged (threads ${threading ? 'on' : 'off'})`,
+      Effect.fnUntraced(
+        function* (_) {
+          forkRequests.length = 0;
+          const session = yield* AgentService.createSession();
+          yield* session.submitPrompt('Name a colour.');
+          yield* waitFor(session.feed, (view) => hasText(view, 'Blue.'));
+          yield* session.submitPrompt('Name an animal.');
+          yield* waitFor(session.feed, (view) => hasText(view, 'Cat.'));
+
+          const before = yield* read(session.feed, Reducer.thread);
+          const blue = before.items.find((item) =>
+            item.blocks.some((block) => block._tag === 'text' && block.text === 'Blue.'),
+          );
+          if (blue === undefined) {
+            return yield* Effect.die(new Error('the first answer is missing'));
+          }
+          const fork = yield* TrajectoryStore.forkThread(session.feed, { from: blue.id, purpose: 'Shapes' });
+          yield* session.submitPrompt('Name a shape.', { thread: fork });
+          yield* waitFor(
+            session.feed,
+            (view) => view.lanes.find((lane) => lane.id === fork)?.status === 'done' && hasText(view, 'Square.'),
+          );
+          yield* session.waitForCompletion();
+
+          // The fork saw main up to the answer it forks at, and nothing after it.
+          const forked = JSON.stringify(forkRequests.at(-1)?.prompt.content);
+          expect(forked).toContain('Name a colour.');
+          expect(forked).toContain('Blue.');
+          expect(forked).not.toContain('Name an animal.');
+          expect(forked).toContain('Name a shape.');
+
+          // The fork rests between prompts, and nothing of it is on main.
+          const view = yield* read(session.feed, Reducer.thread);
+          const lane = view.lanes.find((lane) => lane.id === fork);
+          expect([lane?.kind, lane?.status, lane?.purpose]).toEqual(['fork', 'done', 'Shapes']);
+          expect(itemTexts(view, fork)).toEqual(['Name a shape.', 'Square.']);
+          expect(historyTexts(yield* TrajectoryStore.history(session.feed))).toEqual([
+            'Name a colour.',
+            'Blue.',
+            'Name an animal.',
+            'Cat.',
+          ]);
+
+          // A person merges it: main gets the fork's conclusion, not its work.
+          yield* TrajectoryStore.mergeFork(session.feed, fork);
+          const merged = historyTexts(yield* TrajectoryStore.history(session.feed));
+          expect(merged.slice(0, 4)).toEqual(['Name a colour.', 'Blue.', 'Name an animal.', 'Cat.']);
+          expect(merged.at(-1)).toContain('Square.');
+          expect(merged).not.toContain('Name a shape.');
+          // The chat shows the merge on main as one message, the fork's conclusion.
+          const shown = yield* read(session.feed, Reducer.thread);
+          const conclusion = shown.items.at(-1);
+          expect([
+            conclusion?.lane,
+            conclusion?.blocks.some((block) => block._tag === 'text' && block.text.includes('Square.')),
+          ]).toEqual([undefined, true]);
+        },
+        Effect.provide(forkLayer(threading)),
+        TestHelpers.provideTestContext,
+      ),
+      { timeout: 30_000 },
+    );
+  }
 });

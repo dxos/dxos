@@ -31,7 +31,7 @@ export const list = Command.make(
     const dbFunctions = yield* Database.query(Filter.type(Operation.PersistentOperation)).run;
     const functions = remote
       ? yield* Effect.gen(function* () {
-          const client = yield* ClientService;
+          const client = yield* ClientService.client;
           return yield* Effect.promise(() => getDeployedFunctions(Context.default(), client, true));
         })
       : dbFunctions;

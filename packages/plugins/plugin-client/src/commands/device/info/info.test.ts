@@ -15,7 +15,7 @@ import { handler } from './info.ts';
 describe('device info', () => {
   it('should show device info', () =>
     Effect.gen(function* () {
-      const client = yield* ClientService;
+      const client = yield* ClientService.client;
       yield* Effect.tryPromise(() => client.halo.createIdentity());
       yield* handler();
       const logger = yield* TestConsole.TestConsole;

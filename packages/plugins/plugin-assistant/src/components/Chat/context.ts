@@ -6,6 +6,7 @@ import { type Alarm } from '@dxos/assistant';
 import type * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
 import type * as Chat from '@dxos/assistant/Chat';
 import { type Event } from '@dxos/async';
+import type * as Reducer from '@dxos/compute/Reducer';
 import { type Database } from '@dxos/echo';
 import { createContext } from '@dxos/react-hooks';
 import { type ChatThreadController, type ThreadLane } from '@dxos/react-ui-assistant';
@@ -59,6 +60,8 @@ export type ChatThreadContextValue = {
   tail: number;
   /** The lane of each row shown in a lane's gutter, when the chat ran several requests at once. */
   lanes?: ReadonlyMap<string, ThreadLane>;
+  /** The chat's forks, shown as markers at the messages they fork at. */
+  forks?: readonly Reducer.Lane[];
   /** Alarms still waiting to fire, earliest first. */
   alarms: Alarm.Alarm[];
   /** Alarms that have woken the agent since the last user prompt. */

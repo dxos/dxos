@@ -24,6 +24,7 @@ import { translations } from '#translations';
 import { type TaskMember } from '../../util/property-menus.ts';
 import { type TaskPlacement } from './hierarchy.ts';
 import { type TaskCreateHandler, TaskList } from './TaskList.tsx';
+import { DEFAULT_COLUMNS, type TaskColumn } from './tracks.ts';
 
 random.seed(1);
 
@@ -549,7 +550,8 @@ const DefaultStory = ({
   showGroupLabels,
   showOrdinals,
   showDescription = true,
-  showAssignees,
+  columns,
+  inline = false,
   acceptFiles = false,
   members,
   agents = false,
@@ -571,7 +573,8 @@ const DefaultStory = ({
   showGroupLabels?: boolean;
   showOrdinals?: boolean;
   showDescription?: boolean;
-  showAssignees?: boolean;
+  columns?: readonly TaskColumn[];
+  inline?: boolean;
   /** Let the create pane take dropped files, recording what each create was handed. */
   acceptFiles?: boolean;
   members?: readonly TaskMember[];
@@ -680,7 +683,7 @@ const DefaultStory = ({
       showGroupLabels={showGroupLabels}
       showOrdinals={showOrdinals}
       showDescription={showDescription}
-      showAssignees={showAssignees}
+      columns={columns}
       members={members}
       getTaskActions={readonly ? undefined : getTaskActions}
       getDelegateActions={readonly || !agents ? undefined : getDelegateActions}
@@ -699,6 +702,7 @@ const DefaultStory = ({
           <TaskList.Editor
             showDescription={showDescription}
             acceptFiles={acceptFiles}
+            inline={inline}
             classNames='bg-input-surface border border-separator rounded-md p-2'
           />
           {acceptFiles && <p data-testid='story.attached'>{attached.join(', ')}</p>}
@@ -778,6 +782,16 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const Chat: Story = {
+  args: {
+    showGroupLabels: false,
+    showOrdinals: true,
+    showDescription: false,
+    columns: ['gutter', 'status', 'title', 'priority', 'estimate', 'actions'],
+    inline: true,
+  },
+};
 
 /** No description line, as the chat's checklist shows it: the add row is exactly one task row tall. */
 export const WithoutDescription: Story = {
@@ -1278,6 +1292,107 @@ export const TestDelegateFromAssignee: Story = {
   },
 };
 
+export const TestEditorHandsBackFromAgent: Story = {
+  args: {
+    showGroupLabels: false,
+    members: [{ did: 'did:key:riley', name: 'Riley' }],
+  },
+  play: async ({ canvasElement }) => {
+    const body = within(document.body);
+    const row = await waitFor(() => {
+      const row = [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')].find((row) =>
+        row.querySelector('[data-testid="taskList.item.delegate"]'),
+      );
+      if (!row) {
+        throw new Error('No delegated task is listed.');
+      }
+      return row;
+    });
+
+    await userEvent.click(row);
+    const pill = await waitFor(() => {
+      const pill = canvasElement.querySelector<HTMLElement>(
+        '[data-testid="taskList.edit.properties"] [data-testid="assignee"]',
+      );
+      if (!pill?.textContent?.includes('Rich')) {
+        throw new Error('The editor is not editing the delegated task.');
+      }
+      return pill;
+    });
+    await userEvent.click(pill);
+    await expect(await body.findByTestId('taskList.assignee.delegate')).toBeTruthy();
+    await userEvent.click(await body.findByTestId('taskList.assignee.member'));
+    await waitFor(async () => expect(row.querySelector('[data-testid="taskList.item.delegate"]')).toBeNull());
+  },
+};
+
+export const TestEditorWithoutAssignees: Story = {
+  args: {
+    showGroupLabels: false,
+    columns: DEFAULT_COLUMNS.filter((column) => column !== 'assignee'),
+  },
+  play: async ({ canvasElement }) => {
+    const pill = (field: string) =>
+      canvasElement.querySelector(`[data-testid="taskList.edit.properties"] [data-testid="${field}"]`);
+    await waitFor(async () => expect(pill('status')).toBeTruthy());
+    await expect(pill('assignee')).toBeNull();
+  },
+};
+
+export const TestEditDelegateOnly: Story = {
+  args: {
+    showGroupLabels: false,
+    seed: () => [
+      Task.make({ title: 'Draft notes', status: 'started', delegate: { role: 'assistant', name: 'Scout' } }),
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const row = await waitFor(() => {
+      const row = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.item"]');
+      if (!row) {
+        throw new Error('The task is not listed yet.');
+      }
+      return row;
+    });
+    await userEvent.click(row);
+    const title = found(
+      canvasElement.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input'),
+      'Title input',
+    );
+    await waitFor(async () => expect(title.value).toEqual('Draft notes'));
+    const pill = canvasElement.querySelector<HTMLElement>(
+      '[data-testid="taskList.edit.properties"] [data-testid="assignee"]',
+    );
+    await expect(pill?.textContent).toContain('Scout');
+  },
+};
+
+export const TestEditUnsetStatus: Story = {
+  args: {
+    showGroupLabels: false,
+    seed: () => [Task.make({ title: 'Sort the pantry' })],
+  },
+  play: async ({ canvasElement }) => {
+    const row = await waitFor(() => {
+      const row = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.item"]');
+      if (!row) {
+        throw new Error('The task is not listed yet.');
+      }
+      return row;
+    });
+    await userEvent.click(row);
+    const title = found(
+      canvasElement.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input'),
+      'Title input',
+    );
+    await waitFor(async () => expect(title.value).toEqual('Sort the pantry'));
+    const status = canvasElement.querySelector<HTMLElement>(
+      '[data-testid="taskList.edit.properties"] [data-testid="status"]',
+    );
+    await expect(status?.textContent).toContain('Todo');
+  },
+};
+
 /**
  * Checking is selection, not a status write, and it is not the current row either: the box toggles
  * independently of which row the reader is on, and leaves the task's status alone.
@@ -1518,20 +1633,29 @@ export const TestCreateFailureKeepsDraft: Story = {
 export const TestCreateWithProperties: Story = {
   args: {
     showGroupLabels: false,
+    members: [{ did: 'did:key:riley', name: 'Riley' }],
   },
   play: async ({ canvasElement }) => {
     const pane = found(canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]'), 'Create pane');
-    const picker = (field: string) =>
-      found(pane.querySelector<HTMLElement>(`[data-testid="taskList.edit.${field}"]`), `${field} picker`);
+    const pill = (field: string) =>
+      found(
+        pane.querySelector<HTMLElement>(`[data-testid="taskList.edit.properties"] [data-testid="${field}"]`),
+        `${field} pill`,
+      );
     const title = () =>
       found(pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input'), 'Title input');
     const body = within(document.body);
 
     await userEvent.click(title());
     await userEvent.keyboard('Order green beans');
-    await userEvent.click(picker('estimate'));
-    await userEvent.click(await body.findByRole('menuitemradio', { name: /^M$/ }));
-    await waitFor(async () => expect(picker('estimate').textContent).toEqual('M'));
+    await userEvent.click(pill('priority'));
+    await userEvent.click(await body.findByRole('option', { name: /High/ }));
+    await userEvent.click(pill('assignee'));
+    await userEvent.click(await body.findByText('Riley'));
+    await userEvent.click(pill('estimate'));
+    await userEvent.click(await body.findByRole('option', { name: /^M$/ }));
+    await waitFor(async () => expect(pill('priority').textContent).toContain('High'));
+    await expect(pill('assignee').textContent).toContain('Riley');
 
     await userEvent.click(title());
     await userEvent.keyboard('{Enter}');
@@ -1544,8 +1668,43 @@ export const TestCreateWithProperties: Story = {
       }
       return row;
     });
+    await expect(row.querySelector('[data-testid="taskList.item.assignee"]')).toBeTruthy();
     await expect(row.querySelector('[data-testid="taskList.item.estimate"]')?.textContent).toEqual('M');
-    await waitFor(async () => expect(picker('estimate').textContent).toEqual(''));
+    await waitFor(async () => expect(pill('priority').textContent).toContain('Priority'));
+  },
+};
+
+export const TestInlineCreateWithProperties: Story = {
+  args: { ...Chat.args },
+  play: async ({ canvasElement }) => {
+    const pane = found(canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]'), 'Create pane');
+    const glyph = (field: string) =>
+      found(pane.querySelector<HTMLElement>(`[data-testid="${field}"]`), `${field} glyph`);
+    const title = () =>
+      found(pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input'), 'Title input');
+    const body = within(document.body);
+
+    await userEvent.click(title());
+    await userEvent.keyboard('Order green beans');
+    await userEvent.click(glyph('priority'));
+    await userEvent.click(await within(await body.findByRole('menu')).findByText('High'));
+    await userEvent.click(glyph('estimate'));
+    await userEvent.click(await within(await body.findByRole('menu')).findByText('M'));
+    await waitFor(async () => expect(glyph('priority').textContent).toContain('High'));
+    await expect(glyph('estimate').textContent).toEqual('M');
+
+    await userEvent.click(title());
+    await userEvent.keyboard('{Enter}');
+    const row = await waitFor(() => {
+      const row = [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')].find((row) =>
+        row.textContent?.includes('Order green beans'),
+      );
+      if (!row) {
+        throw new Error('The created task is not listed yet.');
+      }
+      return row;
+    });
+    await expect(row.querySelector('[data-testid="taskList.item.estimate"]')?.textContent).toContain('M');
   },
 };
 

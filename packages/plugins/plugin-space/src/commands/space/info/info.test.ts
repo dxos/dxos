@@ -15,7 +15,7 @@ import { handler } from './info.ts';
 describe('space info', () => {
   it('should show space info', () =>
     Effect.gen(function* () {
-      const client = yield* ClientService;
+      const client = yield* ClientService.client;
       yield* Effect.tryPromise(() => client.halo.createIdentity());
       const space = yield* Effect.tryPromise(() => client.spaces.create());
       yield* Effect.tryPromise(() => space.waitUntilReady());

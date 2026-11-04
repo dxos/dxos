@@ -52,13 +52,15 @@ export const MarkdownField = ({
 }: FormFieldRendererProps) => {
   const value: unknown = getValue();
   const isStatic = presentationFor(presentation).isStatic;
+  // Edited in place, as a TextField's title and plain text are: no well, and one line until the text grows.
+  const variant = presentation === 'title' || presentation === 'plain' ? presentation : undefined;
   if (Ref.isRefType(type)) {
     const reference = Ref.isRef(value) ? value : undefined;
     if (reference) {
       return isStatic ? (
         <RefStaticText reference={reference} />
       ) : (
-        <RefMarkdownEditor reference={reference} placeholder={placeholder} readonly={!!readonly} />
+        <RefMarkdownEditor reference={reference} placeholder={placeholder} readonly={!!readonly} variant={variant} />
       );
     }
 
@@ -75,25 +77,29 @@ export const MarkdownField = ({
       value={text}
       placeholder={placeholder}
       readonly={!!readonly}
+      variant={variant}
       onChange={(next) => onValueChange(type, next)}
     />
   );
 };
 
+type InPlaceVariant = 'title' | 'plain';
+
 type StringMarkdownEditorProps = {
   value: string;
   placeholder?: string;
   readonly?: boolean;
+  variant?: InPlaceVariant;
   onChange: (value: string) => void;
 };
 
-const StringMarkdownEditor = ({ value, placeholder, readonly, onChange }: StringMarkdownEditorProps) => {
+const StringMarkdownEditor = ({ value, placeholder, readonly, variant, onChange }: StringMarkdownEditorProps) => {
   const { markdownExtensions } = useFormContext('MarkdownField');
   // Memoised: a new list each render would reconfigure the editor on every keystroke and drop its focus.
   const fieldExtensions = useMemo(() => [fieldTheme, ...(markdownExtensions ?? [])], [markdownExtensions]);
   const extensions = useBasicMarkdownExtensions({ placeholder, readonly, extensions: fieldExtensions });
   return (
-    <Input.Frame rows={ROWS} disabled={readonly}>
+    <Input.Frame rows={variant ? 1 : ROWS} variant={variant} disabled={readonly}>
       <Editor.Root>
         <Editor.View extensions={extensions} value={value} onChange={readonly ? undefined : onChange} />
       </Editor.Root>
@@ -112,9 +118,10 @@ type RefMarkdownEditorProps = {
   reference: Ref.Unknown;
   placeholder?: string;
   readonly?: boolean;
+  variant?: InPlaceVariant;
 };
 
-const RefMarkdownEditor = ({ reference, placeholder, readonly }: RefMarkdownEditorProps) => {
+const RefMarkdownEditor = ({ reference, placeholder, readonly, variant }: RefMarkdownEditorProps) => {
   const target = useAtomValue(useMemo(() => reference.atom, [reference]));
   const text = Obj.instanceOf(Text.Text, target) ? target : undefined;
   const dataExtensions = useMemo(
@@ -132,7 +139,7 @@ const RefMarkdownEditor = ({ reference, placeholder, readonly }: RefMarkdownEdit
   }
 
   return (
-    <Input.Frame rows={ROWS} disabled={readonly}>
+    <Input.Frame rows={variant ? 1 : ROWS} variant={variant} disabled={readonly}>
       <Editor.Root>
         <Editor.View extensions={extensions} />
       </Editor.Root>

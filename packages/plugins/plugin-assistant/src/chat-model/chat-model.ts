@@ -35,6 +35,7 @@ import type * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Skill from '@dxos/compute/Skill';
 import type * as SqlService from '@dxos/compute/SqlService';
 import * as Trace from '@dxos/compute/Trace';
+import type * as Trajectory from '@dxos/compute/Trajectory';
 import { Database, Feed, Filter, Obj, Order, Query, Ref, type Registry, Scope } from '@dxos/echo';
 import { UsageQuotaExceededError } from '@dxos/edge-client';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -53,7 +54,13 @@ import { Outbox, type OutboxEntry, PromptCancelledError } from './outbox.ts';
 import { providerForModel } from './presets.ts';
 import { type ChatRequestContext, createPromptContent } from './prompt.ts';
 import { EMPTY_THREAD, type ThreadProjection, projectThread } from './thread.ts';
-import { EMPTY_VIEW, type TrajectoryView, loadViewBase, makeCachedTrajectoryView } from './trajectory-view.ts';
+import {
+  EMPTY_VIEW,
+  type TrajectoryView,
+  loadViewBase,
+  makeCachedTrajectoryView,
+  selectThread,
+} from './trajectory-view.ts';
 
 /**
  * Space-scoped services materialised by the layer passed into
@@ -95,6 +102,8 @@ export type ChatModelOptions = {
    * Without it, or when it does not resolve, the chat keeps checkpoints only for this process.
    */
   sqlLayer?: Layer.Layer<SqlService.SqlService, ServiceResolver.ServiceNotAvailableError>;
+  /** The fork this model shows and sends into: main up to the fork point, then the fork. Main when absent. */
+  thread?: Trajectory.ThreadId;
 };
 
 const defaultOptions: Partial<ChatModelOptions> = {
@@ -312,6 +321,8 @@ export class ChatModel {
 
   /** The feed's messages, live: what the outbox and the streamed turn are reconciled against. */
   readonly #feedMessages: Atom.Atom<readonly Message.Message[]>;
+  /** The trajectory as this model shows it: main, or one fork. */
+  readonly #selected: Atom.Atom<TrajectoryView>;
 
   /** The feed folded into what the chat renders besides the thread: pending alarms and self-wakes. */
   public readonly trajectory: Atom.Atom<TrajectoryView>;
@@ -387,9 +398,10 @@ export class ChatModel {
               ).atom,
           })
         : Atom.make(EMPTY_VIEW);
-    this.#feedMessages = Atom.make((get) => get(this.trajectory).messages);
+    this.#selected = Atom.make((get) => selectThread(get(this.trajectory), this._options.thread));
+    this.#feedMessages = Atom.make((get) => get(this.#selected).messages);
     this.thread = Atom.make((get) => {
-      const view = get(this.trajectory);
+      const view = get(this.#selected);
       const projection = projectThread({
         feedMessages: get(this.#feedMessages),
         pendingMessages: get(this.messages),
@@ -549,7 +561,7 @@ export class ChatModel {
         yield* this.#forkEphemeralCollector(session, { replay: false });
 
         log('chat model submitting prompt', { length: requestProp.message.length });
-        yield* session.submitPrompt(createPromptContent(requestProp), { sender: this._options.sender });
+        yield* session.submitPrompt(createPromptContent(requestProp), this.#submitOptions);
         markWork('chat.prompt-submitted');
         submission?.resolve();
         log('chat model submitPrompt returned, waiting for agent', {});
@@ -619,7 +631,7 @@ export class ChatModel {
     await this._runtime.runPromise(
       Effect.gen({ self: this }, function* () {
         const session = yield* this.#getSession();
-        yield* session.submitPrompt(createPromptContent(requestProp), { sender: this._options.sender });
+        yield* session.submitPrompt(createPromptContent(requestProp), this.#submitOptions);
         markWork('chat.prompt-submitted');
         // A chat whose first turn started elsewhere (a delegated agent) is first typed into here.
         yield* this.#nameAfter(requestProp);
@@ -712,6 +724,14 @@ export class ChatModel {
    * Resolves the agent session for this chat, reusing the process a previous mount left running and
    * spawning one only when there is none.
    */
+  /** Who a prompt is from, and the fork it goes into when this model shows one. */
+  get #submitOptions(): AgentService.SubmitPromptOptions {
+    return {
+      ...(this._options.sender ? { sender: this._options.sender } : {}),
+      ...(this._options.thread ? { thread: this._options.thread } : {}),
+    };
+  }
+
   #getSession(): Effect.Effect<AgentService.Session, never, AgentService.AgentService | Database.Service> {
     return Effect.gen({ self: this }, function* () {
       const chat = this._options.chat?.target;

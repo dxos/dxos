@@ -28,6 +28,8 @@ export type TrajectoryView = {
   readonly lanes: readonly Reducer.Lane[];
   /** The lane of each message that belongs to one, by message id. */
   readonly laneOf: ReadonlyMap<string, string>;
+  /** Every fork of the chat, which main shows as a marker at the message it forks at. */
+  readonly forks: readonly Reducer.Lane[];
 };
 
 export const EMPTY_VIEW: TrajectoryView = {
@@ -37,6 +39,41 @@ export const EMPTY_VIEW: TrajectoryView = {
   discarded: [],
   lanes: [],
   laneOf: new Map(),
+  forks: [],
+};
+
+/**
+ * The view of one thread of the chat. Main (no `thread`) leaves out every fork, which never joins main on its own; a
+ * fork shows main up to the message it forks at, then its own messages. Lanes are those of the selection.
+ */
+export const selectThread = (view: TrajectoryView, thread?: Trajectory.ThreadId): TrajectoryView => {
+  // A fork merged whole is part of main now; any other fork stays out of it.
+  const forks = new Set(
+    view.lanes.filter((lane) => lane.kind === 'fork' && lane.merged !== 'raw').map((lane) => lane.id),
+  );
+  if (forks.size === 0 && thread === undefined) {
+    return view;
+  }
+  const onMain = (message: Message.Message) => {
+    const lane = view.laneOf.get(message.id);
+    return lane === undefined || !forks.has(Trajectory.ThreadId.make(lane));
+  };
+  const fork = thread === undefined ? undefined : view.lanes.find((lane) => lane.id === thread);
+  if (fork === undefined) {
+    return {
+      ...view,
+      messages: view.messages.filter(onMain),
+      lanes: view.lanes.filter((lane) => !forks.has(lane.id)),
+    };
+  }
+  const forkPoint = view.messages.findIndex((message) => message.id === fork.from);
+  return {
+    ...view,
+    messages: view.messages.filter(
+      (message, index) => (onMain(message) && index <= forkPoint) || view.laneOf.get(message.id) === fork.id,
+    ),
+    lanes: view.lanes.filter((lane) => lane.id === fork.id),
+  };
 };
 
 /** Where a view starts: checkpoints of both reducers taken at the same item, and that item's local cursor. */
@@ -155,6 +192,7 @@ const viewOf = (source: (get: Atom.AtomContext) => Source | undefined): Atom.Ato
         .map((alarm) => alarmView(alarm, alarmViews)),
       selfWakes: last.session.state.selfWakes,
       lanes: last.thread.state.lanes,
+      forks: last.thread.state.lanes.filter((lane) => lane.kind === 'fork'),
       laneOf: new Map(last.thread.state.items.flatMap((item) => (item.lane ? [[item.id, item.lane]] : []))),
     };
   });

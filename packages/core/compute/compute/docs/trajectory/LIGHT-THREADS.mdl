@@ -40,8 +40,10 @@ type ThreadOpen
   desc: |
     Opens a thread: the base of a new branch of the feed, whose id is the thread's id, and every event written in
     the thread continues that branch [D-32]. A light thread forks main at `from.event` and starts with a snapshot of
-    each thread in `siblings`: its entries up to `from.event`, rendered as one transcript entry. The event's
-    `sender` is the thread's owner (role `assistant`, plus `subject`/`name` for the agent).
+    each thread in `siblings`: its entries up to `from.event`, rendered as one transcript entry. A fork opens at any
+    past event of main named by `from.event`, and its prompt is main up to that event, then its own entries [D-35].
+    The event's `sender` is the thread's owner (role `assistant`, plus `subject`/`name` for the agent). Whether and
+    when a thread merges is not recorded here: the session engine decides [D-34].
   fields:
     mode: fork | fresh | light
     from?: ThreadOrigin          # where the thread branches from; required for `light`
@@ -88,7 +90,7 @@ type ThreadLane
     threads belong to the lane of their top-level ancestor.
   fields:
     id: EventId
-    kind: light | turn
+    kind: light | fresh | fork | turn
     status: running | waiting | done | failed
     opened: number               # fold position of the opener; lanes are ordered by it
     purpose?: string
@@ -96,6 +98,7 @@ type ThreadLane
     waitingOn?: EventId
     overlapped?: boolean         # another lane ran while this one did
     backgrounded?: boolean       # a newer lane of the same owner opened while this one ran
+    from?: EventId               # a fork's fork point: the message of main it forks at [D-37]
 ```
 
 ## Features
@@ -199,6 +202,53 @@ feat F-5: Settings
     when: the assistant settings are shown
     then: **Parallel threads** (off by default) turns light threads on for agents started after the change, and
       **Parallel thread limit** sets how many run at once
+```
+
+```mdl
+feat F-9: Forks
+
+  req F-9.1:
+    when: a person forks the conversation at a past message of main
+    then: the writer opens a thread (`threadOpen` mode `fork`, `from.event` the message) on a branch of its own; its
+      prompt is main up to that message, then its own entries
+
+  req F-9.2:
+    when: a person sends a prompt in a fork
+    then: the prompt is queued on the fork's branch, and the scheduler runs its turn in the fork; the turn merges
+      into the fork when it ends
+
+  req F-9.3:
+    when: a fork is open
+    then: it is not one of the running threads: a light thread neither lists it in `siblings` nor snapshots it, and
+      no status line names it
+
+  req F-9.4:
+    when: a turn in a fork ends
+    then: the fork stays open and separate from main; nothing of it joins main until a person merges it
+
+  req F-9.5:
+    when: a person merges a fork into main
+    then: the writer appends `threadMerge` on the fork's branch: by default `summary`, holding the fork's final
+      answer; `raw` when the person asks for the whole fork
+
+  req F-9.6:
+    when: the chat shows main
+    then: a fork's messages are not in it; a marker at the message it forks from names the fork and opens it
+```
+
+```mdl
+feat F-10: Merge policy
+
+  req F-10.1:
+    when: a thread's last turn ends
+    then: the session engine merges it into main when its policy is `auto` and leaves it open when it is `manual`;
+      only `auto` threads count as running for snapshots and status lines
+
+  req F-10.2:
+    when: a session starts
+    then: each thread mode has a default policy (`light` and `fresh`: `auto`; `fork`: `manual`), which the session
+      configuration can override; a `manual` thread can still be merged by hand, and the events do not change with
+      the policy
 ```
 
 ```mdl
@@ -312,6 +362,16 @@ scenario T-6: Delegation
     - main holds each subagent's final answer, not its work, and the turn answers from them
 ```
 
+```mdl
+scenario T-7: A fork stays apart
+  given: a conversation of three exchanges on main
+  when: the person forks at the first answer and asks a different question in the fork
+  then:
+    - the fork's prompt holds main up to the first answer, then the fork's own prompt
+    - main does not change, and its view shows a marker where the fork starts
+    - a later prompt on main sees nothing of the fork until the person merges it, and then sees its final answer
+```
+
 ## QA
 
 ```mdl
@@ -414,6 +474,32 @@ test QA-4: Three subagents compare savings plans
     - name: Watch the comparison arrive
       do: Wait for the subagents to finish.
       expect: the agent's comparison table shows each plan's balance after 10, 20 and 30 years
+```
+
+```mdl
+test QA-5: Fork a chat at an earlier answer
+  desc: A person forks a live Composer chat at its first answer, asks something else there, and merges the fork back.
+  actors: human
+  covers: [F-9.1, F-9.2, F-9.4, F-9.5, F-9.6, T-7]
+  status: draft
+  given:
+    - a Composer chat on the Composer agent
+  steps:
+    - name: Ask two questions on main
+      do: Send "Pick one colour. Reply with the colour only.", then "Pick one animal. Reply with the animal only."
+      expect: two answers on main
+    - name: Fork at the first answer
+      do: Hover the first answer and click its fork button.
+      expect: the chat shows the fork bar and holds only the first question and answer
+    - name: Ask in the fork
+      do: Send "Pick one shape. Reply with the shape only."
+      expect: the fork answers with a shape, and still shows nothing of the animal question
+    - name: Back to main
+      do: Click Back to main.
+      expect: main shows both exchanges and no shape; a fork marker sits under the first answer
+    - name: Merge the fork
+      do: Click the fork marker, then Merge into main.
+      expect: the chat is back on main, and its last message is the fork's conclusion naming the shape
 ```
 
 ## Changelog
@@ -772,4 +858,76 @@ decision D-32: A thread's opener (`turnBegin`, `threadOpen`) is the base of its 
   rejected:
     - The fork point as what the thread saw — an event merged from a sibling branch after the parent's last event would drop out of a turn's view.
     - Keep a thread id on each event beside the branch — two records of one fact that can disagree.
+```
+
+```mdl
+decision D-33: A conversation has three kinds of thread. On one conversation shared by several devices, each device's turn starts a new thread (or not, when it is the same device) and merges as soon as it completes. Light threads, several of which can run on one device, also merge after they complete, but when they merge may vary. A fork splits the conversation and stays split unless the person merges it explicitly.
+  date: 2026-11-04
+  by: user:dmaretskyi
+  affects: [ThreadOpen, F-9, F-10]
+```
+
+```mdl
+decision D-34: The data model supports every kind of thread; when a thread merges is decided by the session engine's code, or exposed as configuration of the conversation or session engine. Fills in [D-33].
+  date: 2026-11-04
+  by: user:dmaretskyi
+  affects: [ThreadOpen, F-10]
+```
+
+```mdl
+decision D-35: Build forks as suggested in review: a person starts a fork at a past message; a prompt can be sent into a fork and runs there; a fork is not counted among the running threads and is not snapshotted into later light threads; a fork's turns merge into the fork, never into main, and the fork stays separate from main. The distinction between light threads and forks decides each of these.
+  date: 2026-11-04
+  by: user:dmaretskyi
+  affects: [ThreadOpen, F-9.1, F-9.2, F-9.3, F-9.4]
+  source: https://github.com/dxos/dxos/pull/13782#discussion_r4462838524
+```
+
+```mdl
+decision D-36: The merge policy is `auto` or `manual` per thread mode, held by the session engine: `light` and `fresh` default to `auto`, `fork` to `manual`, and the session configuration can override a default. The engine merges only `auto` threads when their last turn ends and treats only `auto` threads as running; the prompt reducer records each thread's mode so the engine can tell. Fills in [D-34] and [D-35].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-10.1, F-10.2, F-9.3, F-9.4]
+  why: The policy is behaviour, so it lives where behaviour lives; the events stay the same whatever the policy is, which is what [D-34] asks of the data model.
+  rejected:
+    - A `merge` field on `threadOpen` — it would put engine behaviour into the data, so changing a policy would mean a different event history.
+```
+
+```mdl
+decision D-37: The main view leaves out a fork's messages and shows a marker at the message the fork starts from; the fork opens in a view of its own, which holds main up to the fork point and then the fork, and a prompt sent there goes into the fork. Fills in [D-35].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.6, ThreadLane]
+  why: A fork never joins main on its own, so showing its messages in main would show the reader what the model on main never sees.
+```
+
+```mdl
+decision D-38: A person's merge of a fork is a `summary` merge holding the fork's final answer by default, and a `raw` merge of the whole fork on request. Fills in [D-33].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.5]
+  why: A fork can run long; its conclusion is what main needs, and a subagent's merge already takes this shape, so the reducers need nothing new.
+  rejected:
+    - Raw by default — a long fork would fill main's prompt with work main did not ask for.
+```
+
+```mdl
+decision D-39: Every agent turn still forks a branch of its own, including a turn on the device that wrote main's last event; continuing main in that case waits until the engine can tell which device wrote main's last event and a turn written on main keeps its lane in the view. Fills in [D-33].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [ThreadOpen]
+  why: A turn on its own branch is what tells the view and the scheduler that it runs and what it wrote; a turn on main would need its messages tied to it by position, beside people's prompts that land on main from other devices.
+  rejected:
+    - Continue main whenever no other turn runs — the lanes, the light-thread trigger and every turn producer assume a turn has a branch, so it is a change of its own.
+```
+
+```mdl
+decision D-40: `test QA-5` walks forks in a live Composer chat: fork at the first answer, ask in the fork, go back to main, then merge. Fills in [D-37] and [D-38].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9]
 ```
