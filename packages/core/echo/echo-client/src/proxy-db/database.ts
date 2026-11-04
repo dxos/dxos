@@ -762,7 +762,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
           const registered =
             typename && version ? this.graph.registry.getByURI(`dxn:${typename}:${version}`) : undefined;
           const inRegistry = registered != null && Type.isType(registered);
-          if (!inRegistry && !this.graph._registerAddedType(typeEntity)) {
+          if (!inRegistry) {
             throw createSchemaNotRegisteredError(typeEntity);
           }
         }

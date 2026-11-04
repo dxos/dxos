@@ -10,6 +10,9 @@ import * as Agent from '@dxos/assistant/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Obj, Ref } from '@dxos/echo';
 import { RDF, predicateSection } from '@dxos/pipeline-rdf';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import { Text } from '@dxos/schema';
+import { Organization, Person } from '@dxos/types';
 
 import * as BrainService from './BrainService.ts';
 import * as Goal from './Goal.ts';
@@ -35,6 +38,7 @@ export const ResolveEntity = Operation.make({
     icon: 'ph--user-focus--regular',
   },
   services: [Database.Service],
+  types: [Person.Person, Organization.Organization],
   input: Schema.Struct({
     name: Schema.optional(Schema.String.annotate({ description: 'Full name of the person or organization.' })),
     handles: Schema.optional(
@@ -218,6 +222,7 @@ export const UpdateProfile = Operation.make({
     icon: 'ph--identification-card--regular',
   },
   services: [Database.Service, BrainService.BrainService],
+  types: [Markdown.Document, Text.Text],
   input: Schema.Struct({
     subject: Ref.Ref(Obj.Unknown).annotate({ description: 'The person or organization.' }),
   }),

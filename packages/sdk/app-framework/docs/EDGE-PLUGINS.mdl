@@ -1320,10 +1320,9 @@ decision D-58: A query over `Scope.registry()` that selects type entities (`Filt
 ```
 
 ```mdl
-decision D-59: `db.add` of an object whose static type the database's registry lacks registers that type when the hypergraph has a type source, and fails with `Schema not registered` when it has none. The type source is not asked: the object carries its schema, which the bundle imports from the contributing plugin's package. Fills in [D-41] and [D-52].
+decision D-59: An operation that writes a type its plugin does not contribute lists that type in `Operation.make({ types })`, which the host registers before the handler runs; `db.add` of an unregistered type fails with `Schema not registered`, with or without a type source. plugin-agent's `agent.create`, which writes plugin-assistant's `Instructions`, `Agent` and `Chat`, is the first case. Fills in [D-41] and [D-46].
   date: 2026-11-04
-  by: agent:claude-code
-  for: user:dmaretskyi
-  affects: [F-3.5]
-  why: `db.add` is synchronous and a type source is async, so resolving the typename through the sources cannot happen in it; a registered type source already declares that the invocation's registry holds only its own bundle's types, so it is the signal that an unknown static type is another plugin's and not a missing registration.
+  by: user:dmaretskyi
+  affects: [F-3.4]
+  why: The operation states what it writes where it is defined, and `db.add` stays synchronous and independent of the type registry. Rejected: registering an added object's own static type in `db.add` whenever a type source is installed, which hides a missing declaration in every plugin running on EDGE.
 ```

@@ -597,20 +597,6 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   }
 
   /**
-   * Registers the static type of an object being added that the registry lacks, but only once a type source is
-   * registered: such a process holds only its own types, while the object carries the schema another plugin publishes.
-   * Without a source an unregistered type is a missing registration, which `db.add` reports.
-   * @returns Whether the type is now registered.
-   */
-  _registerAddedType(type: Type.AnyEntity): boolean {
-    if (this.#typeSources.length === 0) {
-      return false;
-    }
-    this._registry.add([type]);
-    return true;
-  }
-
-  /**
    * Asks each registered source, in order, for a typename DXN the registry does not hold; the first answer is added to
    * the registry so the next lookup is synchronous.
    */
