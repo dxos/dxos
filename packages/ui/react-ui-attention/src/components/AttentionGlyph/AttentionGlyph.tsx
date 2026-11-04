@@ -28,8 +28,12 @@ const DEFAULT_FILL_OPACITY = 0.25;
 /** A hue's saturated fill shade, which reads on both themes at the glyph's size. */
 const solid = (hue: Hue) => `var(--color-${hue}-bg)`;
 
-const Mark = ({ icon }: { icon: string }) => {
+const IconMark = ({ icon }: { icon: string }) => {
   const href = useIconHref(icon);
+  return <use data-part='mark' href={href} x='2' y='2' width='8' height='8' />;
+};
+
+const Mark = ({ icon }: { icon: string }) => {
   switch (icon) {
     case 'dot':
       return <circle data-part='mark' cx='6' cy='6' r='2.5' />;
@@ -43,7 +47,7 @@ const Mark = ({ icon }: { icon: string }) => {
     case 'star':
       return <path data-part='mark' d={STAR_PATH} />;
     default:
-      return <use data-part='mark' href={href} x='2' y='2' width='8' height='8' />;
+      return <IconMark icon={icon} />;
   }
 };
 
