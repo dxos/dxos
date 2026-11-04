@@ -83,6 +83,9 @@
       "path": "../../plugins/plugin-board"
     },
     {
+      "path": "../../plugins/plugin-canvas"
+    },
+    {
       "path": "../../plugins/plugin-chess"
     },
     {
