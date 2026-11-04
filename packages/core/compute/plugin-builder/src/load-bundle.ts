@@ -14,6 +14,8 @@ export type ImportFailure = { readonly path: string; readonly message: string };
 
 /** A plugin bundle loaded into workerd through Worker Loader, as EDGE loads it, driven from Node. */
 export interface LoadedBundle extends AsyncDisposable {
+  /** Bytes of the modules Worker Loader is given (scripts and wasm, after `vendor/` is pruned), which the isolate holds. */
+  readonly moduleBytes: number;
   /** Activates the plugin with the vendored host and returns what it contributes. */
   describe(): Promise<PluginProtocol.Catalog>;
   /** Imports each path of the bundle once and reports the ones that throw. */
@@ -192,7 +194,13 @@ export const loadBundle = async (
       `The bundle has no ${PluginBundle.VENDOR_MANIFEST_FILE}: ${problems.map(({ message }) => message).join('; ')}`,
     );
   }
-  const { files: modules, mainModule, main } = await PluginLoader.workerCode(files);
+  const workerCode = await PluginLoader.workerCode(files);
+  const { files: modules, mainModule, main } = workerCode;
+  const moduleBytes = Object.values(PluginLoader.toLoaderModules(workerCode)).reduce(
+    (total, module) =>
+      total + ('js' in module ? new TextEncoder().encode(module.js).byteLength : module.wasm.byteLength),
+    0,
+  );
   const miniflare = new Miniflare({
     name: LOADER_HOST_NAME,
     modules: true,
@@ -245,6 +253,7 @@ export const loadBundle = async (
   };
 
   return {
+    moduleBytes,
     describe: async () => {
       const { result }: { result: PluginProtocol.Catalog } = JSON.parse(await call('describe'));
       return result;
