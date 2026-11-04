@@ -10,7 +10,8 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import type * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import type * as Skill from '@dxos/compute/Skill';
-import { Filter, Obj, Query, Ref } from '@dxos/echo';
+import * as Trajectory from '@dxos/compute/Trajectory';
+import { Feed, Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { EID, type SpaceId } from '@dxos/keys';
 import * as ThreadOperation from '@dxos/plugin-thread/ThreadOperation';
@@ -259,18 +260,27 @@ const ConversationTile = ({ chat, onSelect, onDelete }: ConversationTileProps) =
   const [name] = useObject(chat, 'name');
   const [feedRef] = useObject(chat, 'feed');
   const feed = useResolveRef(feedRef);
+  // Trajectory events and the legacy messages an older chat still holds; either carries the time it was written.
+  // Every branch: the agent's turns are written on branches of their own.
+  const feedUri = feed && Feed.getFeedUri(feed);
   const query = useMemo(
-    () => (feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing())),
-    [feed],
+    () =>
+      feedUri
+        ? Query.select(Filter.or(Filter.type(Trajectory.Event), Filter.type(Message.Message))).from(
+            Scope.feed(feedUri.toString(), { walk: { branch: 'all' } }),
+          )
+        : Query.select(Filter.nothing()),
+    [feedUri?.toString()],
   );
-  const messages = useQuery(Obj.getDatabase(chat), query);
+  const items = useQuery(Obj.getDatabase(chat), query);
   const lastActivity = useMemo(
     () =>
-      messages.reduce<string | undefined>(
-        (latest, message) => (latest === undefined || message.created > latest ? message.created : latest),
-        undefined,
-      ),
-    [messages],
+      items.reduce<string | undefined>((latest, item) => {
+        const created =
+          Obj.instanceOf(Trajectory.Event, item) || Obj.instanceOf(Message.Message, item) ? item.created : undefined;
+        return created !== undefined && (latest === undefined || created > latest) ? created : latest;
+      }, undefined),
+    [items],
   );
 
   return (

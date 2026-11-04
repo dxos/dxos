@@ -50,6 +50,7 @@
   },
   "devDependencies": {
     "@dxos/agent-runtime": "workspace:*",
+    "@dxos/assistant": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/fixtures": "workspace:*",

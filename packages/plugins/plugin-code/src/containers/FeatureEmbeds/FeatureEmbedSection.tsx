@@ -54,23 +54,28 @@ export const FeatureEmbedSection = ({ eid, label, view, db, attendableId, claimF
     }
   }, [feature, claimFocus]);
 
-  // Inert until attended, so the field can take focus only once attention has followed the container's.
+  // Inert until attended, so the field can take focus only once attention has followed the container's; a frame later,
+  // since an empty description mounts only once attended.
   useEffect(() => {
     const field = focusing.current;
     if (!hasAttention || !field) {
       return;
     }
-    focusing.current = undefined;
-    // The description is rich text, the only editable element in the form.
-    const selector = field === 'name' ? 'input[data-testid="name"]' : '[contenteditable="true"]';
-    const element = containerRef.current?.querySelector<HTMLElement>(selector);
-    element?.focus();
-    element instanceof HTMLInputElement && element.select();
-  }, [hasAttention]);
+    const frame = requestAnimationFrame(() => {
+      focusing.current = undefined;
+      // The description is the form's only contenteditable.
+      const selector = field === 'name' ? 'input[data-testid="name"]' : '[contenteditable="true"]';
+      const element = containerRef.current?.querySelector<HTMLElement>(selector);
+      element?.focus();
+      element instanceof HTMLInputElement && element.select();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [hasAttention, feature]);
 
   const handleMouseDown = useCallback(
     (event: MouseEvent<HTMLDivElement>) => {
-      if (!hasAttention && event.currentTarget === event.target) {
+      // The fold toggle works without attention; a click anywhere else gives the section attention.
+      if (!hasAttention && !(event.target instanceof Element && event.target.closest('button'))) {
         event.currentTarget.focus();
       }
     },
@@ -113,10 +118,9 @@ export const FeatureEmbedSection = ({ eid, label, view, db, attendableId, claimF
       onKeyUp={(event) => hasAttention && event.stopPropagation()}
     >
       <div
-        className={`border rounded-md ${hasAttention ? 'border-focus-ring-subtle' : 'border-separator-subtle'}`}
-        inert={hasAttention ? undefined : true}
+        className={`border rounded-md overflow-hidden ${hasAttention ? 'border-focus-ring-subtle' : 'border-separator-subtle'}`}
       >
-        <FeatureSection subject={feature} attendableId={embedId} />
+        <FeatureSection subject={feature} attended={hasAttention} />
       </div>
     </div>
   );

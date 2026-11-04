@@ -2,18 +2,25 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { forwardRef, useCallback, useEffect, useMemo, useRef } from 'react';
+import * as Effect from 'effect/Effect';
+import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { TrajectoryStore } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
-import { Obj } from '@dxos/echo';
+import * as Trajectory from '@dxos/compute/Trajectory';
+import { Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { useIdentity } from '@dxos/halo-react';
+import { log } from '@dxos/log';
 import * as ClientOperation from '@dxos/plugin-client/ClientOperation';
 import { useRegistry } from '@dxos/react-client/echo';
 import { type ChatView } from '@dxos/react-ui-assistant';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import { Merge } from '@dxos/util';
@@ -21,6 +28,8 @@ import { Merge } from '@dxos/util';
 import { Chat as ChatComponent, type ChatRootProps } from '#components';
 import { useChatModel, useChatServices, usePlatform, usePresets, usePromptActions, useSelectionContext } from '#hooks';
 import { AssistantCapabilities } from '#types';
+
+import { AssistantNamespace } from '../../namespace.ts';
 
 export type ChatArticleProps = Merge<
   Omit<AppSurface.ObjectSectionProps<Chat.Chat>, 'subject'> & {
@@ -81,7 +90,30 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
           : undefined,
       [identity?.did, identity?.displayName],
     );
-    const chatModel = useChatModel({ db, chat, preset, runtime, registry, settings, sender });
+    // The fork shown in place of main, when the reader opened one.
+    const [thread, setThread] = useState<Trajectory.ThreadId>();
+    useEffect(() => setThread(undefined), [chat?.id]);
+    const chatModel = useChatModel({ db, chat, preset, runtime, registry, settings, sender, thread });
+    const [feedSnapshot] = useObject(chat?.feed);
+    const handleEvent = useCallback<NonNullable<ChatRootProps['onEvent']>>(
+      (event) => {
+        if (event.type === 'open-fork') {
+          setThread(Trajectory.ThreadId.make(event.thread));
+        }
+        onEvent?.(event);
+      },
+      [onEvent],
+    );
+    const handleMergeFork = useCallback(() => {
+      const feed = Obj.getReactiveOrUndefined(feedSnapshot);
+      if (!feed || !db || thread === undefined) {
+        return;
+      }
+      void EffectEx.runPromise(TrajectoryStore.mergeFork(feed, thread).pipe(Effect.provide(Database.layer(db))))
+        .then(() => setThread(undefined))
+        .catch((err: unknown) => log.catch(err));
+    }, [feedSnapshot, db, thread]);
+    const { t } = UiHooks.useTranslation(AssistantNamespace.key);
     const getContext = useSelectionContext(companionTo);
 
     const [chatViewType] = useObject(chat, 'viewType');
@@ -128,7 +160,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
         chatModel={chatModel}
         debug={debug}
         getContext={getContext}
-        onEvent={onEvent}
+        onEvent={handleEvent}
         onSubmit={onSubmit}
       >
         <Panel.Root role={role} ref={forwardedRef}>
@@ -140,6 +172,31 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
               <Layout.Flex classNames='dx-expand relative'>
                 {/* Thread outline (Table of Contents). */}
                 {!mobile && <ChatComponent.Outline classNames='absolute left-0 top-1/2 -translate-y-1/2 z-10' />}
+
+                {thread !== undefined && (
+                  <div
+                    className='absolute top-0 left-0 right-0 z-10 dx-document flex items-center gap-2 px-3 py-1 bg-base-surface'
+                    data-testid='assistant.fork-bar'
+                  >
+                    <Button.Root
+                      icon='ph--arrow-left--regular'
+                      label={t('fork-back.label')}
+                      variant='ghost'
+                      size='sm'
+                      data-testid='assistant.fork-back'
+                      onClick={() => setThread(undefined)}
+                    />
+                    <span className='grow truncate text-sm text-fg-muted'>{t('fork-bar.label')}</span>
+                    <Button.Root
+                      icon='ph--git-merge--regular'
+                      label={t('fork-merge.label')}
+                      variant='ghost'
+                      size='sm'
+                      data-testid='assistant.fork-merge'
+                      onClick={handleMergeFork}
+                    />
+                  </div>
+                )}
 
                 {/* Main thread. */}
                 <ChatComponent.Thread viewType={viewType} tailLines={4} onViewUsage={handleViewUsage} />

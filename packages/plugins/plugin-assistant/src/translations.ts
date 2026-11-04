@@ -148,6 +148,10 @@ export const translations: Theme.Resource[] = [
         'stats.label': 'Stats',
         'summary.label': 'Summary',
         'rewind.label': 'Rewind to here',
+        'fork.label': 'Fork',
+        'fork-back.label': 'Back to main',
+        'fork-bar.label': 'A fork of this chat: what you send here stays out of the main conversation.',
+        'fork-merge.label': 'Merge into main',
         'thinking.label': 'Thinking',
 
         'connect.label': 'Connect',

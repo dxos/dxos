@@ -13,7 +13,7 @@ import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 
 import { AiService, OpaqueToolkit, Provider } from '@dxos/ai';
 import { type AiServicePreset, TestAiService } from '@dxos/ai/testing';
-import { Alarm, Harness } from '@dxos/assistant';
+import { Harness, TrajectoryStore } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import {
   FeedTraceSink,
@@ -300,7 +300,7 @@ export const AssistantTestBaseLayer = ({
     Chat.Chat,
     Trigger.Trigger,
     Tag.Tag,
-    Alarm.Alarm,
+    ...TrajectoryStore.types,
   );
   types = Array.dedupeWith(types, (a, b) => Type.getTypename(a) === Type.getTypename(b));
 

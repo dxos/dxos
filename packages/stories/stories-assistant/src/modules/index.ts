@@ -17,6 +17,7 @@ import { ProjectModule } from './ProjectModule.tsx';
 import { ResearchInputModule } from './ResearchInputModule.tsx';
 import { ResearchOutputModule } from './ResearchOutputModule.tsx';
 import { TasksModule } from './TasksModule.tsx';
+import { TrajectoryGraphModule } from './TrajectoryGraphModule.tsx';
 
 /**
  * Custom roles for story panels that are NOT bound to a story-created object — the harness chat and
@@ -39,6 +40,7 @@ export const StoryRole = {
   ResearchInput: Role.make<Record<string, unknown>>('org.dxos.storybook.role.researchInput'),
   ResearchOutput: Role.make<Record<string, unknown>>('org.dxos.storybook.role.researchOutput'),
   Tasks: Role.make<Record<string, unknown>>('org.dxos.storybook.role.tasks'),
+  TrajectoryGraph: Role.make<Record<string, unknown>>('org.dxos.storybook.role.trajectoryGraph'),
 };
 
 /**
@@ -103,6 +105,11 @@ export const moduleSurfaces: Surface.Definition[] = [
     id: 'role.tasks',
     filter: Surface.makeFilter(StoryRole.Tasks),
     component: TasksModule,
+  }),
+  Surface.create({
+    id: 'role.trajectoryGraph',
+    filter: Surface.makeFilter(StoryRole.TrajectoryGraph),
+    component: TrajectoryGraphModule,
   }),
 ];
 
