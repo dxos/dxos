@@ -108,25 +108,27 @@ describe('mail canary', { tags: ['sync-e2e'], timeout: testTimeout, retry: 0 }, 
               spaceId: config.spaceId,
               checks: [couldNotRun('S2', 'No sync failures', monitored.failure.message)],
             };
+        // Stage 3 signs in again: the first mailbox's access token, good for an hour, can lapse during stage 2.
         const fullSync = config.fullSync.enabled
-          ? yield* new FullSync(mailbox, credentials)
-              .run({
-                days: config.fullSync.days,
-                syncTimeout: Duration.minutes(config.fullSync.timeoutMinutes),
-                pollInterval: Duration.seconds(config.fullSync.pollSeconds),
-                tokenRefresh: Duration.minutes(config.fullSync.tokenRefreshMinutes),
-                hungAfter,
-                waits,
-              })
-              .pipe(
-                Effect.catch((error) =>
-                  Effect.succeed({
-                    days: config.fullSync.days,
-                    expected: 0,
-                    checks: [couldNotRun('F1', 'Every Gmail message of the window synced', error.message)],
-                  }),
-                ),
-              )
+          ? yield* CanaryMailbox.connect(credentials).pipe(
+              Effect.flatMap((fresh) =>
+                new FullSync(fresh, credentials).run({
+                  days: config.fullSync.days,
+                  syncTimeout: Duration.minutes(config.fullSync.timeoutMinutes),
+                  pollInterval: Duration.seconds(config.fullSync.pollSeconds),
+                  tokenRefresh: Duration.minutes(config.fullSync.tokenRefreshMinutes),
+                  hungAfter,
+                  waits,
+                }),
+              ),
+              Effect.catch((error) =>
+                Effect.succeed({
+                  days: config.fullSync.days,
+                  expected: 0,
+                  checks: [couldNotRun('F1', 'Every Gmail message of the window synced', error.message)],
+                }),
+              ),
+            )
           : undefined;
         const noPool =
           config.seed.count > 0 && !pool
