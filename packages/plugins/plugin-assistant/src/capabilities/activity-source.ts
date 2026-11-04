@@ -12,6 +12,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Process from '@dxos/compute/Process';
 import { Annotation, Obj } from '@dxos/echo';
+import { EID } from '@dxos/keys';
 import { type Activity } from '@dxos/react-ui-attention/types';
 
 import { AssistantNamespace } from '../namespace.ts';
@@ -69,10 +70,16 @@ export default Capability.makeModule(
             return busy.has(uri) ? [chatWorking] : [];
           }
 
+          // A companion ref is local to the subject's space; process targets carry the space.
+          const spaceId = EID.getSpaceId(EID.parse(uri));
           const companions = get(Annotation.atom(object, Chat.CompanionChatAnnotation)).pipe(
             Option.getOrElse(() => []),
           );
-          return companions.some((ref) => busy.has(String(ref.uri))) ? [companionWorking] : [];
+          return companions.some((ref) =>
+            busy.has(String(EID.make({ spaceId, entityId: EID.getEntityId(EID.parse(ref.uri)) }))),
+          )
+            ? [companionWorking]
+            : [];
         }),
     });
   }),
