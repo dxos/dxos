@@ -149,10 +149,37 @@ describe('toOverview', () => {
     expect(byBranch(planB.thread)[0].parents).toEqual([doneA.id]);
     expect(byBranch(light.thread)[0].parents).toEqual([header.id]);
     expect(byBranch(QUEUE)[0].parents).toEqual([header.id]);
-    // Only the work in progress shimmers.
+    // Work in progress and work still to come shimmer; a thread that waits does not.
     expect(commits.filter((commit) => commit.tags?.includes('effect:shimmer')).map((commit) => commit.branch)).toEqual([
       turn.thread,
       planB.thread,
+      planC.thread,
+      QUEUE,
+    ]);
+  });
+
+  test('a light thread opened for a prompt it has not consumed yet takes the prompt off the queue', ({ expect }) => {
+    const busy = say('Research the factorials of 5 to 9.', user);
+    const turn = opener({ _tag: 'turnBegin', from: { event: busy.id } });
+    const long = 'Meanwhile, research the factorials of 5 to 9 and summarise them in one short paragraph for me.';
+    const quick = say(long, user);
+    const later = say('What is 17 × 23?', user);
+    // The runtime's purpose is the prompt's text, cut at 80 characters.
+    const light = opener({
+      _tag: 'threadOpen',
+      mode: 'light',
+      purpose: `${long.slice(0, 79)}…`,
+      from: { event: later.id },
+    });
+    const other = opener({ _tag: 'threadOpen', mode: 'light', purpose: 'What is 17 × 23?', from: { event: later.id } });
+    const commits = toOverview(
+      view([busy, turn.event, consume(busy, turn.thread), quick, later, light.event, other.event]),
+    );
+    expect(rows(commits)).toEqual([
+      [TRUNK, '0 done · 3 running'],
+      [turn.thread, 'Research the factorials of 5 to 9.'],
+      [light.thread, 'Meanwhile, research the factorials of 5 to 9 and summar…'],
+      [other.thread, 'What is 17 × 23?'],
     ]);
   });
 

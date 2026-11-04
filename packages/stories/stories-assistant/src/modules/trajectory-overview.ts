@@ -16,7 +16,7 @@ export const QUEUE = 'queued';
 /** The tool a turn delegates a subagent with; its result names the subagent's thread. */
 const THREAD_DELEGATE = 'thread_delegate';
 
-/** The `Timeline` tag that shimmers a row, which marks the work in progress. */
+/** The `Timeline` tag that shimmers a row, which marks work in progress or still to come. */
 const SHIMMER = 'effect:shimmer';
 
 export type OverviewOptions = {
@@ -83,7 +83,10 @@ export const toOverview = (view: Reducer.ThreadView, { history = 5, session }: O
   };
   const finished = view.lanes.filter((lane) => !isOpen(lane) && !nested(lane));
   const running = view.lanes.filter((lane) => isOpen(lane) && !nested(lane));
-  const queued = view.items.filter((item) => item.status === 'queued' && item.thread === undefined);
+  const queued = unclaimed(
+    view.items.filter((item) => item.status === 'queued' && item.thread === undefined),
+    running.filter((lane) => lane.kind === 'light' && tasksOf(lane).length === 0),
+  );
   const shown = finished.slice(Math.max(0, finished.length - history));
   const earlier = finished.length - shown.length;
 
@@ -124,7 +127,7 @@ export const toOverview = (view: Reducer.ThreadView, { history = 5, session }: O
         timestamp: new Date(task.created),
         icon: status?.icon ?? 'ph--check--regular',
         message: `${index === 0 ? owner : ''}${task.title}${status?.note ?? ''}`,
-        ...(status?.working ? { tags: [SHIMMER] } : {}),
+        ...(status?.shimmer ? { tags: [SHIMMER] } : {}),
       });
     });
     for (const item of notStarted ? [] : pending) {
@@ -182,6 +185,29 @@ const delegators = (view: Reducer.ThreadView, lanes: ReadonlyMap<Trajectory.Thre
   return result;
 };
 
+/**
+ * The queued prompts no light thread has opened for yet. The runtime opens a prompt's light thread before the thread's
+ * turn consumes the prompt, so for a moment the prompt is both queued and a thread; the thread view links the two only
+ * by the thread's purpose, which the runtime makes from the prompt's text. Each such thread claims the oldest prompt
+ * its purpose names.
+ */
+const unclaimed = (queued: readonly Reducer.ThreadItem[], opened: readonly Reducer.Lane[]): Reducer.ThreadItem[] => {
+  const rest = [...queued];
+  for (const lane of opened) {
+    const index = rest.findIndex((item) => names(lane.purpose, textOf(item.blocks)));
+    if (index !== -1) {
+      rest.splice(index, 1);
+    }
+  }
+  return rest;
+};
+
+/** Whether a purpose is the text, or the text cut short with an ellipsis. */
+const names = (purpose: string | undefined, text: string): boolean =>
+  purpose !== undefined &&
+  text.length > 0 &&
+  (purpose === text || (purpose.endsWith('…') && text.startsWith(purpose.slice(0, -1))));
+
 const queuedCommit = (item: Reducer.ThreadItem, branch: string, parent: string): Commit => ({
   id: `queued:${item.id}`,
   branch,
@@ -189,6 +215,7 @@ const queuedCommit = (item: Reducer.ThreadItem, branch: string, parent: string):
   timestamp: new Date(item.created),
   icon: 'ph--clock--regular',
   message: clip(textOf(item.blocks)),
+  tags: [SHIMMER],
 });
 
 const finishedCommit = (lane: Reducer.Lane, title: string, branch: string, parent: string): Commit => ({
@@ -202,7 +229,7 @@ const finishedCommit = (lane: Reducer.Lane, title: string, branch: string, paren
   message: lane.kind === 'fresh' ? `subagent: ${title}` : lane.kind === 'fork' ? `fork: ${title}` : title,
 });
 
-type Status = { readonly icon: string; readonly note: string; readonly working: boolean };
+type Status = { readonly icon: string; readonly note: string; readonly shimmer: boolean };
 
 const statusOf = (
   lane: Reducer.Lane,
@@ -211,23 +238,23 @@ const statusOf = (
   titleOf: (lane: Reducer.Lane) => string,
 ): Status => {
   if (notStarted) {
-    return { icon: 'ph--clock--regular', note: ' · queued', working: false };
+    return { icon: 'ph--clock--regular', note: ' · queued', shimmer: true };
   }
   if (!isRunning(lane)) {
-    return { icon: 'ph--git-fork--regular', note: ' · open fork', working: false };
+    return { icon: 'ph--git-fork--regular', note: ' · open fork', shimmer: false };
   }
   if (lane.status === 'waiting') {
     const on = lane.waitingOn === undefined ? undefined : lanes.get(lane.waitingOn);
     return {
       icon: 'ph--hourglass--regular',
       note: on === undefined ? ' · waiting' : ` · waiting for ${titleOf(on)}`,
-      working: false,
+      shimmer: false,
     };
   }
   return {
     icon: lane.kind === 'fresh' ? 'ph--robot--regular' : 'ph--spinner-gap--regular',
     note: '',
-    working: true,
+    shimmer: true,
   };
 };
 
