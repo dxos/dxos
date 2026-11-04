@@ -254,7 +254,7 @@ export const steps = [
         .locator(`${SECTION} >> nth=1 >> [data-testid="feature-section.dependency"]`)
         .nth(1)
         .waitFor({ state: 'visible', timeout: 5_000 });
-      await caption(demo, 12, 'Folded: the ids of the features it needs, and its requirement count');
+      await caption(demo, 12, 'Folded: what it needs, by id, and its requirement count');
       await demo.sleep({ ms: LOOK });
     },
   },
