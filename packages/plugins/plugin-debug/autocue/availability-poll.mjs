@@ -359,8 +359,9 @@ const openShowcase = async (demo, page, feature) => {
     throw new Error('the agent made no showcase');
   }
   await openFeature(demo, page, feature);
-  // The card's sections re-render as its tasks and showcases load, so the row is found again for the click.
-  const row = `${COMPANION} :text-is("${name}") >> nth=0`;
+  // The card's sections re-render as its tasks and showcases load, so the row is found again for the click. A showcase
+  // may share its milestone's name, which a task row also shows; Showcases is the last section that lists names.
+  const row = `${COMPANION} :text-is("${name}") >> nth=-1`;
   await page.locator(row).waitFor({ state: 'visible', timeout: 15_000 });
   await page.waitForTimeout(BEAT);
   await demo.click({ selector: row, label: name });

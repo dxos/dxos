@@ -62,7 +62,8 @@ assign in one is there in the next.
 - Time zone math uses \`Intl.DateTimeFormat\` with \`timeZone\`, which the Workers runtime ships in full. Compute every \
 offset on the slot's own date and hour, never once per poll; the spec's F-5 and T-2 say exactly what that means.
 - Work one task at a time, and end each deployed: in one command, write that feature's code, deploy, \`curl\` the \
-requirements it adds, and commit. Then set its feature to \`prototype\` and the task to \`review\` before starting the next.
+requirements it adds, and commit. Then set its feature to \`prototype\` and the task to \`review\` before starting the next. \
+Never write a later task's code early: F-1's deploy serves only what F-1 requires.
 - \`Check M-n\` runs the milestone's scenario against the live URL in one command, a Node script with \`fetch\`, and \
 prints a table of expected against actual for every count, slot start and best slot the scenario states. When it all \
 matches, set the milestone's features to \`operational\` and make one showcase for them whose content is a heading, \
