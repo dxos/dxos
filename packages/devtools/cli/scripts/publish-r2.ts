@@ -44,16 +44,33 @@ const version = release
 // means the version's files are complete; a retry then only finishes promoting it.
 const publicBase = process.env.R2_PUBLIC_BASE || 'https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev';
 const sumsUrl = `${publicBase}/cli/${version}/SHA256SUMS`;
-const published = release && (await fetch(sumsUrl, { method: 'HEAD' })).ok;
+const probe = release ? await fetch(sumsUrl, { method: 'HEAD' }) : undefined;
+// Only a 404 means unpublished: guessing on a 5xx could overwrite a release.
+if (probe && !probe.ok && probe.status !== 404) {
+  throw new Error(`Checking ${sumsUrl} failed (${probe.status}).`);
+}
+const published = probe?.ok ?? false;
 
 const files: Record<string, { key: string; sha256: string }> = {};
 const staging = await mkdtemp(join(tmpdir(), 'dx-publish-'));
 
 if (published) {
   console.log(`[publish-r2] dx ${version} is already published; leaving its files as they are.`);
-  for (const line of (await (await fetch(sumsUrl)).text()).trim().split('\n')) {
-    const [sha256, name] = line.split(/\s+/);
-    files[name.replace(/^dx-/, '').replace(/\.exe$/, '')] = { key: `cli/${version}/${name}`, sha256 };
+  const response = await fetch(sumsUrl);
+  if (!response.ok) {
+    throw new Error(`Reading ${sumsUrl} failed (${response.status}).`);
+  }
+  for (const line of (await response.text()).trim().split('\n')) {
+    const match = line.match(/^([0-9a-f]{64})\s+(dx-([a-z0-9]+-[a-z0-9]+)(?:\.exe)?)$/);
+    if (!match) {
+      throw new Error(`Unexpected line in ${sumsUrl}: ${line}`);
+    }
+    const [, sha256, name, target] = match;
+    files[target] = { key: `cli/${version}/${name}`, sha256 };
+  }
+  const missing = TARGETS.filter((target) => !files[target]);
+  if (missing.length > 0) {
+    throw new Error(`${sumsUrl} has no checksum for ${missing.join(', ')}.`);
   }
 } else {
   const sums: string[] = [];
