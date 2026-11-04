@@ -29,7 +29,7 @@ const READ = 3_000;
 /** Time to look at what a gesture changed. */
 const LOOK = 3_000;
 
-const SECTION = '[data-testid="feature-embed"]';
+const SECTION = '[data-testid="markdown.embed"]';
 
 const caption = (demo, step, text) => demo.caption({ value: `Step ${step} — ${text}`, subtitle: SUBTITLE, hold: READ });
 
@@ -240,6 +240,8 @@ export const steps = [
     run: async ({ demo, page }) => {
       await caption(demo, 12, 'Each section folds to its header row');
       for (const [index, name] of ['Search', 'Instant inbox', 'Snooze'].entries()) {
+        // A section takes clicks only once selected.
+        await demo.click({ selector: `${SECTION} >> nth=${index}`, label: `Select ${name}` });
         await demo.click({
           selector: `${SECTION} >> nth=${index} >> [data-testid="feature-section.collapse"]`,
           label: `Fold ${name}`,

@@ -5,13 +5,27 @@
 import { type Extension } from '@codemirror/state';
 import React from 'react';
 
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as Spec from '@dxos/compute/Spec';
 import { Filter, Obj } from '@dxos/echo';
+import { log } from '@dxos/log';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 
 import { Feature, SpecText } from '#types';
 
 import { featureEmbeds } from '../../components/FeatureEmbeds/feature-embeds.ts';
-import { type FeatureEmbedField, FeatureEmbedSection } from './FeatureEmbedSection.tsx';
+
+/** The fields of a new feature's section `/feature` puts the cursor in; the description is the form's only contenteditable. */
+const FIELDS = {
+  name: 'input[data-testid="name"]',
+  description: '[contenteditable="true"]',
+};
+
+/** A feature embed is the editor's object embed, which draws the feature's section surface. */
+const FeatureEmbed = (props: MarkdownCapabilities.ObjectEmbedProps) => {
+  const ObjectEmbed = Hooks.useOptionalCapability(MarkdownCapabilities.ObjectEmbed);
+  return ObjectEmbed ? <ObjectEmbed {...props} /> : null;
+};
 
 export type FeatureEmbedExtensionsOptions = {
   attendableId?: string;
@@ -33,8 +47,8 @@ export const featureEmbedExtensions = (
     return [];
   }
   // The feature `/feature` made last and the field to fill in next, until its section mounts and takes the cursor.
-  let created: { id: string; field: FeatureEmbedField } | undefined;
-  const claimFocus = (id: string): FeatureEmbedField | undefined => {
+  let created: { id: string; field: string } | undefined;
+  const claimFocus = (id: string): string | undefined => {
     if (created?.id !== id) {
       return undefined;
     }
@@ -45,10 +59,10 @@ export const featureEmbedExtensions = (
 
   return [
     featureEmbeds({
-      Component: (props) => (
-        <FeatureEmbedSection {...props} db={db} attendableId={attendableId} claimFocus={claimFocus} />
-      ),
-      onChange: ({ removed }) => void SpecText.sync(spec, { removed }),
+      Component: (props) => <FeatureEmbed {...props} db={db} attendableId={attendableId} claimFocus={claimFocus} />,
+      // A pass can outlive its database, as when the editor closes mid-pass.
+      onChange: ({ removed }) =>
+        void SpecText.sync(spec, { removed }).catch((error) => log.warn('spec text sync failed', { error })),
       onCopy: (id) => {
         const [original] = db.query(Filter.id(id)).runSync();
         if (!Feature.instanceOf(original)) {
@@ -75,7 +89,7 @@ export const featureEmbedExtensions = (
             status: 'planned',
           }),
         );
-        created = { id: feature.id, field: prose || !text ? 'name' : 'description' };
+        created = { id: feature.id, field: prose || !text ? FIELDS.name : FIELDS.description };
         return SpecText.makeEmbed(feature);
       },
     }),

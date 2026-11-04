@@ -71,7 +71,10 @@ const DefaultStory = () => {
         id='embed'
         db={space.db}
         eid={`echo:/${doc.id}`}
+        url={`echo:/${doc.id}`}
         label='embedded'
+        block
+        suggest={false}
       />
     </div>
   );

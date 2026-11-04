@@ -30,7 +30,7 @@ const LOOK = 2_500;
 /** Time between presses of the same key, so each stop can be seen. */
 const STEP = 1_200;
 
-const SECTION = '[data-testid="feature-embed"]';
+const SECTION = '[data-testid="markdown.embed"]';
 
 const caption = (demo, step, text) => demo.caption({ value: `Step ${step} — ${text}`, subtitle: SUBTITLE, hold: READ });
 

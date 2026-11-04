@@ -10,7 +10,7 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type Database, Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import { URI } from '@dxos/keys';
 import { Attention, useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
@@ -21,9 +21,11 @@ import * as Card from '@dxos/react-ui/Card';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
-import { type LinkWidgetState, type WidgetProps, releaseBlockHeight, setLinkWidgetState } from '@dxos/ui-editor';
+import { type LinkWidgetState, releaseBlockHeight, setLinkWidgetState } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
+
+import { MarkdownCapabilities } from '#types';
 
 import { MarkdownNamespace } from '../../namespace.ts';
 import { parseEmbedLabel } from './parse-embed-label.ts';
@@ -68,22 +70,11 @@ const floatingClassNames = (position: string) =>
     position,
   );
 
-export type PreviewComponentProps = WidgetProps<
-  {
-    /** The widget id, for reporting the target's state back to the editor. */
-    id: string;
-    db?: Database.Database;
-    /** The containing editor's attendable id; the embed nests under it as `<attendableId>/<object id>`. */
-    attendableId?: string;
-    eid: string;
-    label: string;
-    block?: boolean;
-    suggest?: boolean;
-    onOpen?: (eid: URI.URI) => void;
-    /** Checks whether the linked object has a contributed surface for a role; defaults to `Surface.useIsAvailable()`. */
-    isSurfaceAvailable?: ReturnType<typeof Surface.useIsAvailable>;
-  } & LinkWidgetState
->;
+export type PreviewComponentProps = MarkdownCapabilities.ObjectEmbedProps & {
+  onOpen?: (eid: URI.URI) => void;
+  /** Checks whether the linked object has a contributed surface for a role; defaults to `Surface.useIsAvailable()`. */
+  isSurfaceAvailable?: ReturnType<typeof Surface.useIsAvailable>;
+};
 
 /**
  * Registry-backed block widget for URL-scheme preview slots (the `image` widget of `objectLinks()`).
@@ -101,6 +92,7 @@ export const PreviewComponent = ({
   range,
   unresolved,
   intrinsic,
+  claimFocus,
   onOpen,
   isSurfaceAvailable: isSurfaceAvailableProp,
 }: PreviewComponentProps) => {
@@ -177,6 +169,30 @@ export const PreviewComponent = ({
       : isSurfaceAvailable({ type: AppSurface.CardContent, data })
         ? 'card'
         : undefined;
+
+  // The element `claimFocus` names, until attention has followed the frame's focus and lifted the inert gate.
+  const claimed = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    const selector = mode && object && claimFocus?.(object.id);
+    if (selector) {
+      claimed.current = selector;
+      (containerRef.current ?? cardRef.current)?.focus();
+    }
+  }, [object, claimFocus, mode]);
+  useEffect(() => {
+    const selector = claimed.current;
+    if (!hasAttention || !selector) {
+      return;
+    }
+    // A frame later: a surface may mount the element only once attended.
+    const frame = requestAnimationFrame(() => {
+      claimed.current = undefined;
+      const element = (containerRef.current ?? cardRef.current)?.querySelector<HTMLElement>(selector);
+      element?.focus();
+      element instanceof HTMLInputElement && element.select();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [hasAttention]);
 
   // Report the target's state to the editor, which rebuilds this link's decoration: an unresolved
   // target puts the source back (editable) with the error inline, and a card drops the reserved
