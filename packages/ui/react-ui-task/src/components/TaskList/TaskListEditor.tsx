@@ -59,6 +59,11 @@ export type TaskListEditorProps = ComposableProps<{
    * and then handed to `onTaskCreate` with it. A host sets this only when it can store a file.
    */
   acceptFiles?: boolean;
+  /**
+   * One line on the list's own columns, each field under the column it edits, as the chat prompt's add row. Otherwise
+   * the title and description stack above a row of labelled tags.
+   */
+  inline?: boolean;
 }>;
 
 /**
@@ -80,6 +85,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
       descriptionExtensions,
       createOnly = false,
       acceptFiles = false,
+      inline = false,
       ...props
     },
     forwardedRef,
@@ -356,9 +362,9 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
       <div
         {...rest}
         className={mx(
-          // The rows' own template, so each field sits under the column it edits. The gap between the lines is the
-          // grid's, not a margin on each cell.
-          'grid gap-y-2 w-full min-w-0 shrink-0',
+          // Inline, the rows' own template, so each field sits under the column it edits.
+          inline ? 'grid gap-y-2' : 'flex flex-col gap-2',
+          'w-full min-w-0 shrink-0',
           // The drop target is the pane itself, marked while files are held over it.
           dragOver && 'ring-2 ring-inset ring-accent-bg',
           // The tree's rows pad their ends by the same gap, so the pane's fields start where the rows' cells do.
@@ -367,7 +373,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
         )}
         // `--dx-col` is reset the way `ScrollArea.Viewport` resets it: inside a host `Column` the variable names the
         // content track, and `Field.Root` hands it to the field it wraps, which in this grid is a different column.
-        style={{ 'gridTemplateColumns': columns, '--dx-col': 'auto' } as CSSProperties}
+        style={inline ? ({ 'gridTemplateColumns': columns, '--dx-col': 'auto' } as CSSProperties) : undefined}
         data-testid='taskList.edit'
         {...(takesFiles && {
           onDragEnterCapture: handleDragEnter,
@@ -382,6 +388,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
           key={current?.id ?? 'create'}
           values={values}
           cells={cells}
+          inline={inline}
           members={members}
           people={people}
           title={{
@@ -398,6 +405,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
             canCancel && (
               <SystemButton.Cancel
                 variant='ghost'
+                classNames={inline ? undefined : 'ms-auto'}
                 data-testid='taskList.edit.cancel'
                 onClick={handleCancel}
                 onMouseDown={(event) => event.preventDefault()}
@@ -409,7 +417,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
           {takesFiles && files.length > 0 && (
             <div
               className='flex flex-wrap items-center gap-1 min-w-0'
-              style={{ gridColumn: spanFromTitle(cells, ['artifacts', 'estimate']) }}
+              style={inline ? { gridColumn: spanFromTitle(cells, ['artifacts', 'estimate']) } : undefined}
             >
               {files.map((file, index) => (
                 <Tag.Tag

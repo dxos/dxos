@@ -366,15 +366,14 @@ export const TaskSetArticle = ({
             <TaskList.Content />
           </TaskList.Viewport>
         </Panel.Body>
-        {/* Framed as the chat prompt is, in a bordered box of its own surface. The inset is the rows' own, less the
-            border, and the box adds none, so the create row's fields sit under the rows' columns. */}
-        <Panel.Footer classNames='py-2 px-[calc(var(--dx-gap-size)_-_1px)] dx-grow bg-base-surface'>
+        {/* Framed as the chat prompt is: inset from the panel's edges, in a bordered box of its own surface. */}
+        <Panel.Footer classNames='p-2 dx-grow bg-base-surface'>
           <TaskList.Editor
             createOnly
             showDescription
             acceptFiles={!!attachFile}
             descriptionExtensions={descriptionExtensions}
-            classNames='py-2 px-0 dx-group-surface border border-separator-subtle rounded-sm'
+            classNames='py-2 dx-group-surface border border-separator-subtle rounded-sm'
             placeholder={t('task-create.placeholder')}
           />
         </Panel.Footer>

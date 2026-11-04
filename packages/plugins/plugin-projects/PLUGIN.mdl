@@ -1993,3 +1993,19 @@ decision D-191: Approve [D-190].
   date: 2026-11-04
   by: user:wittjosiah
 ```
+
+```mdl
+decision D-192: Only the chat prompt's create row is one line on its list's columns. The project task list's create row keeps its stacked layout (title, description, then the property tags), with the tags restyled as `Tag`s by [D-187], and its rows are unchanged. Corrects [D-189].
+  date: 2026-11-04
+  by: user:wittjosiah
+  supersedes: D-189
+```
+
+```mdl
+decision D-193: `TaskList.Editor` lays the create row on the list's columns only when it is `inline`, which the chat passes; otherwise it stacks the title and description above labelled tags. `DEFAULT_COLUMNS` has no estimate column, so the project list shows a set estimate as muted text beside its artifacts, and a list that names an estimate column, as the chat's does, shows the estimate field there instead. Fills in [D-192].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-190
+  why: One prop keeps the rows and the create row the same components in both hosts while leaving the project list's look as it was.
+```

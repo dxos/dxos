@@ -37,6 +37,7 @@ import { TaskListEditor, type TaskListEditorProps } from './TaskListEditor.tsx';
 import {
   TaskCheckbox,
   TaskEstimateControl,
+  TaskEstimateLabel,
   TaskMnemonic,
   TaskPriorityControl,
   TaskStatusControl,
@@ -593,6 +594,7 @@ const TaskListItem = ({
             data-testid='taskList.item.artifacts'
           >
             <TaskListItemArtifacts task={task} filter={(artifact) => PullRequest.instanceOf(artifact)} />
+            {!cells.includes('estimate') && <TaskEstimateLabel estimate={current.estimate} />}
           </Layout.Flex>
         );
       case 'estimate':

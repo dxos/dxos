@@ -1009,7 +1009,7 @@ const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
             happened, so the answer is given here rather than in a pane the reader has to open. */}
         <ChatTaskQuestions tasks={tasks} />
         {/* Only creates: a task is changed through its own row controls, not by selecting it into the strip. */}
-        <TaskList.Editor createOnly />
+        <TaskList.Editor createOnly inline />
       </div>
     </TaskList.Root>
   );

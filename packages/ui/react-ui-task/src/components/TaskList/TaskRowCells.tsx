@@ -15,6 +15,7 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
+import * as Typography from '@dxos/react-ui/Typography';
 import { Task } from '@dxos/types';
 import { getHashHue, mx } from '@dxos/ui-theme';
 
@@ -198,3 +199,13 @@ export const TaskEstimateControl = ({ task, classNames }: { task: Task.Task; cla
 };
 
 TaskEstimateControl.displayName = 'TaskList.EstimateControl';
+
+/** The estimate as muted text, for a list with no estimate column. */
+export const TaskEstimateLabel = ({ estimate }: { estimate?: Task.Estimate }) =>
+  estimate ? (
+    <Typography.Text asChild tone='muted' data-testid='taskList.item.estimate'>
+      <span>{estimate.toUpperCase()}</span>
+    </Typography.Text>
+  ) : null;
+
+TaskEstimateLabel.displayName = 'TaskList.EstimateLabel';

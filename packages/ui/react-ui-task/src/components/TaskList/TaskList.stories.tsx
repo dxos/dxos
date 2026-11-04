@@ -551,6 +551,7 @@ const DefaultStory = ({
   showOrdinals,
   showDescription = true,
   columns,
+  inline = false,
   acceptFiles = false,
   members,
   agents = false,
@@ -573,6 +574,8 @@ const DefaultStory = ({
   showOrdinals?: boolean;
   showDescription?: boolean;
   columns?: readonly TaskColumn[];
+  /** Lay the create row out on one line, as the chat prompt does. */
+  inline?: boolean;
   /** Let the create pane take dropped files, recording what each create was handed. */
   acceptFiles?: boolean;
   members?: readonly TaskMember[];
@@ -696,11 +699,12 @@ const DefaultStory = ({
         <TaskList.Viewport>
           <TaskList.Content />
         </TaskList.Viewport>
-        <Layout.Flex column classNames='py-2 px-[calc(var(--dx-gap-size)_-_1px)]'>
+        <Layout.Flex classNames='p-trim-md'>
           <TaskList.Editor
             showDescription={showDescription}
             acceptFiles={acceptFiles}
-            classNames='bg-input-surface border border-separator rounded-md py-2 px-0'
+            inline={inline}
+            classNames='bg-input-surface border border-separator rounded-md p-2'
           />
           {acceptFiles && <p data-testid='story.attached'>{attached.join(', ')}</p>}
         </Layout.Flex>
@@ -780,13 +784,14 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-/** The chat prompt's checklist: status ahead of the title, priority and estimate after it, and the create row on the same columns. */
+/** The chat prompt's checklist: status ahead of the title, priority and estimate after it, and a one-line create row. */
 export const Chat: Story = {
   args: {
     showGroupLabels: false,
     showOrdinals: true,
     showDescription: false,
     columns: ['gutter', 'status', 'title', 'priority', 'estimate', 'actions'],
+    inline: true,
   },
 };
 
@@ -1308,8 +1313,10 @@ export const TestEditorHandsBackFromAgent: Story = {
 
     await userEvent.click(row);
     const pill = await waitFor(() => {
-      const pill = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"] [data-testid="assignee"]');
-      if (!pill?.getAttribute('aria-label')?.includes('Rich')) {
+      const pill = canvasElement.querySelector<HTMLElement>(
+        '[data-testid="taskList.edit.properties"] [data-testid="assignee"]',
+      );
+      if (!pill?.textContent?.includes('Rich')) {
         throw new Error('The editor is not editing the delegated task.');
       }
       return pill;
@@ -1328,7 +1335,7 @@ export const TestEditorWithoutAssignees: Story = {
   },
   play: async ({ canvasElement }) => {
     const pill = (field: string) =>
-      canvasElement.querySelector(`[data-testid="taskList.edit"] [data-testid="${field}"]`);
+      canvasElement.querySelector(`[data-testid="taskList.edit.properties"] [data-testid="${field}"]`);
     await waitFor(async () => expect(pill('status')).toBeTruthy());
     await expect(pill('assignee')).toBeNull();
   },
@@ -1355,8 +1362,10 @@ export const TestEditDelegateOnly: Story = {
       'Title input',
     );
     await waitFor(async () => expect(title.value).toEqual('Draft notes'));
-    const pill = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"] [data-testid="assignee"]');
-    await expect(pill?.getAttribute('aria-label')).toContain('Scout');
+    const pill = canvasElement.querySelector<HTMLElement>(
+      '[data-testid="taskList.edit.properties"] [data-testid="assignee"]',
+    );
+    await expect(pill?.textContent).toContain('Scout');
   },
 };
 
@@ -1379,8 +1388,10 @@ export const TestEditUnsetStatus: Story = {
       'Title input',
     );
     await waitFor(async () => expect(title.value).toEqual('Sort the pantry'));
-    const status = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"] [data-testid="status"]');
-    await expect(status?.getAttribute('aria-label')).toEqual('To Do');
+    const status = canvasElement.querySelector<HTMLElement>(
+      '[data-testid="taskList.edit.properties"] [data-testid="status"]',
+    );
+    await expect(status?.textContent).toContain('Todo');
   },
 };
 
@@ -1629,7 +1640,10 @@ export const TestCreateWithProperties: Story = {
   play: async ({ canvasElement }) => {
     const pane = found(canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]'), 'Create pane');
     const pill = (field: string) =>
-      found(pane.querySelector<HTMLElement>(`[data-testid="taskList.edit"] [data-testid="${field}"]`), `${field} pill`);
+      found(
+        pane.querySelector<HTMLElement>(`[data-testid="taskList.edit.properties"] [data-testid="${field}"]`),
+        `${field} pill`,
+      );
     const title = () =>
       found(pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input'), 'Title input');
     const body = within(document.body);
@@ -1637,13 +1651,13 @@ export const TestCreateWithProperties: Story = {
     await userEvent.click(title());
     await userEvent.keyboard('Order green beans');
     await userEvent.click(pill('priority'));
-    await userEvent.click(await within(await body.findByRole('menu')).findByText('High'));
+    await userEvent.click(await body.findByRole('option', { name: /High/ }));
     await userEvent.click(pill('assignee'));
     await userEvent.click(await body.findByText('Riley'));
     await userEvent.click(pill('estimate'));
-    await userEvent.click(await within(await body.findByRole('menu')).findByText('M'));
-    await waitFor(async () => expect(pill('priority')).toHaveAttribute('aria-label', 'High'));
-    await expect(pill('assignee')).toHaveAttribute('aria-label', 'Riley');
+    await userEvent.click(await body.findByRole('option', { name: /^M$/ }));
+    await waitFor(async () => expect(pill('priority').textContent).toContain('High'));
+    await expect(pill('assignee').textContent).toContain('Riley');
 
     await userEvent.click(title());
     await userEvent.keyboard('{Enter}');
@@ -1658,7 +1672,41 @@ export const TestCreateWithProperties: Story = {
     });
     await expect(row.querySelector('[data-testid="taskList.item.assignee"]')).toBeTruthy();
     await expect(row.querySelector('[data-testid="taskList.item.estimate"]')?.textContent).toEqual('M');
-    await waitFor(async () => expect(pill('priority')).toHaveAttribute('aria-label', 'Priority'));
+    await waitFor(async () => expect(pill('priority').textContent).toContain('Priority'));
+  },
+};
+
+/** The one-line create row sets each field from its glyph tag, named by its value. */
+export const TestInlineCreateWithProperties: Story = {
+  args: { ...Chat.args },
+  play: async ({ canvasElement }) => {
+    const pane = found(canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]'), 'Create pane');
+    const tag = (field: string) => found(pane.querySelector<HTMLElement>(`[data-testid="${field}"]`), `${field} tag`);
+    const title = () =>
+      found(pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input'), 'Title input');
+    const body = within(document.body);
+
+    await userEvent.click(title());
+    await userEvent.keyboard('Order green beans');
+    await userEvent.click(tag('priority'));
+    await userEvent.click(await within(await body.findByRole('menu')).findByText('High'));
+    await userEvent.click(tag('estimate'));
+    await userEvent.click(await within(await body.findByRole('menu')).findByText('M'));
+    await waitFor(async () => expect(tag('priority')).toHaveAttribute('aria-label', 'High'));
+    await expect(tag('estimate')).toHaveAttribute('aria-label', 'M');
+
+    await userEvent.click(title());
+    await userEvent.keyboard('{Enter}');
+    const row = await waitFor(() => {
+      const row = [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')].find((row) =>
+        row.textContent?.includes('Order green beans'),
+      );
+      if (!row) {
+        throw new Error('The created task is not listed yet.');
+      }
+      return row;
+    });
+    await expect(row.querySelector('[data-testid="taskList.item.estimate"]')).toHaveAttribute('aria-label', 'M');
   },
 };
 
