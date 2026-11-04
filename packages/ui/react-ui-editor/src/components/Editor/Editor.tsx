@@ -239,7 +239,7 @@ const EDITOR_BLOCK_FRAME_NAME = 'Editor.BlockFrame';
 const FOCUSABLE = 'input, textarea, select, [contenteditable="true"], button, [tabindex]:not([tabindex="-1"])';
 
 type EditorBlockFrameProps = Util.ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
-  view?: CodeMirrorView;
+  view?: CodeMirrorView | null;
   /** Whether the block has attention; until it does, its keys reach the editor. */
   attended: boolean;
   /** The element Enter on the selected block focuses. */
