@@ -321,7 +321,7 @@ export type PresenceItemsProps = {
 };
 
 /**
- * A member's Listbox row: avatar, name, how many sessions, then their actions. With `showSessions` a row per session
+ * A member's Listbox row: avatar, name, then their actions. With `showSessions` a row per session
  * follows it, with whether the session moved lately and its device; the actions move to those rows. The member's rows
  * hover and highlight as one.
  */
@@ -338,14 +338,7 @@ export const PresenceItems = ({ member, showSessions, renderActions }: PresenceI
         <Listbox.ItemIcon>
           <PresenceAvatar member={member} size='sm' />
         </Listbox.ItemIcon>
-        <Listbox.ItemText classNames='flex items-baseline gap-2'>
-          <span className='truncate'>{getName(member)}</span>
-          {member.sessions.length > 1 && (
-            <span className='shrink-0 text-sm text-fg-subtle'>
-              {t('presence-sessions.label', { count: member.sessions.length })}
-            </span>
-          )}
-        </Listbox.ItemText>
+        <Listbox.ItemText>{getName(member)}</Listbox.ItemText>
         {!showSessions && renderActions?.(member, member.defaultSessionId)}
       </Listbox.Item>
       {showSessions &&

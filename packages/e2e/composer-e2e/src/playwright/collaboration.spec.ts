@@ -317,9 +317,8 @@ test.describe('Collaboration tests', () => {
       const row = host.page.getByTestId('spacePlugin.presence.row');
       const sessions = host.page.getByTestId('spacePlugin.presence.session');
       await expect(row).toHaveCount(1);
-      await expect(row).toContainText('2 sessions', { timeout: 45_000 });
       await host.page.getByTestId('spacePlugin.presence.showSessions').click();
-      await expect(sessions).toHaveCount(2);
+      await expect(sessions).toHaveCount(2, { timeout: 45_000 });
       // Listed, the actions move from the person's row to their sessions' rows.
       await expect(row).toHaveCount(1);
       await expect(row.getByTestId('spacePlugin.presence.jump')).toHaveCount(0);

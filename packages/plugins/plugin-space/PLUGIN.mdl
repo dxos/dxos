@@ -561,7 +561,7 @@ feat F-8: Presence and Sync Status
   req F-8.11: The Members deck companion lists every online peer in the space, grouped by the object they view, with the same actions; an Invite members action at the end of its toolbar opens the space's members settings. It sits third in the complementary rail, after Notifications.
   req F-8.17: A presence row's avatar sits inside the row's hover and highlight. A person's row and their session rows hover and highlight together, as one block.
   req F-8.14: In a locked space the Members companion shows only a placeholder saying the space is private, since it has no other members and no members settings.
-  req F-8.12: A peer with several sessions (tabs or devices) on an object shows as one row with their session count, whose actions act on the session whose anchor moved most recently. A toggle in the viewers list's header and in the Members companion's toolbar lists each peer's sessions under their row, each named by its device and with its own actions; the peer's row then carries none. A peer is never listed twice. Both lists share the toggle's state, kept per device.
+  req F-8.12: A peer with several sessions (tabs or devices) on an object shows as one row, whose actions act on the session whose anchor moved most recently. A toggle in the viewers list's header and in the Members companion's toolbar lists each peer's sessions under their row, each named by its device and with its own actions; the peer's row then carries none. A peer is never listed twice. Both lists share the toggle's state, kept per device.
   req F-8.13: The viewing message carries the sender's session id, its device and each attended object's location; it is sent with the heartbeat and at most once per second when a location changes.
   req F-8.15: A session row's dot shows whether its anchor moved in the last minute (active) or not (idle); the row states nothing else about the session.
   req F-8.16: A session row names its device by the label someone gave it, else by what it runs ("Chrome on macOS", "Composer on iOS"); sessions on one device are numbered. A placeholder label the SDK once wrote is no label.
@@ -764,7 +764,7 @@ test QA-4: Tell a peer's sessions apart
       expect: the host's plank header shows one avatar for the guest
     - name: Open the viewers list
       do: On the host, click the guest's avatar.
-      expect: the guest's row says 2 sessions and carries a Jump action
+      expect: the guest's row carries a Jump action
     - name: Show each session
       do: Click the sessions toggle in the list's header.
       expect: a row per session appears under the guest's row, each named by its device with a dot and a Jump action, and the guest's own row no longer carries Jump
@@ -1172,4 +1172,11 @@ decision D-38: The plank header's avatars expand the graph nodes of their peers 
   affects: [F-8.10]
   why: Peer and session nodes are hidden, so nothing else expands them, and expanding a node builds its actions asynchronously.
   rejected: Reserve the Jump's space in the row while its actions load.
+```
+
+```mdl
+decision D-39: A person's row does not show how many sessions they have.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-8.12]
 ```
