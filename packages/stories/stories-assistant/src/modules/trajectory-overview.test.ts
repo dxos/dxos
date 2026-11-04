@@ -38,6 +38,7 @@ const delegated = (subagentThread: Trajectory.ThreadId, thread: Trajectory.Threa
           toolCallId: subagentThread,
           name: 'thread_delegate',
           result: `Started subagent thread ${subagentThread}.`,
+          providerExecuted: false,
         },
       ],
     },
