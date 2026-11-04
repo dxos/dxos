@@ -9,7 +9,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { TrajectoryStore } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import type * as Chat from '@dxos/assistant/Chat';
 import * as Trajectory from '@dxos/compute/Trajectory';
 import { Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -26,7 +26,15 @@ import * as Panel from '@dxos/react-ui/Panel';
 import { Merge } from '@dxos/util';
 
 import { Chat as ChatComponent, type ChatRootProps } from '#components';
-import { useChatModel, useChatServices, usePlatform, usePresets, usePromptActions, useSelectionContext } from '#hooks';
+import {
+  useChatModel,
+  useChatServices,
+  useMarkSeen,
+  usePlatform,
+  usePresets,
+  usePromptActions,
+  useSelectionContext,
+} from '#hooks';
 import { AssistantCapabilities } from '#types';
 
 import { AssistantNamespace } from '../../namespace.ts';
@@ -63,19 +71,12 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
           : undefined,
       [identity?.did, identity?.displayName],
     );
-    // An open view keeps the member's read position at the latest turn, which reads it for the whole space.
-    const [turns] = useObject(chat, 'turns');
-    const did = identity?.did;
-    useEffect(() => {
-      if (chat && did && turns) {
-        Chat.markSeen(chat, did);
-      }
-    }, [chat, did, turns]);
     // The fork shown in place of main, when the reader opened one.
     const [thread, setThread] = useState<Trajectory.ThreadId>();
     useEffect(() => setThread(undefined), [chat?.id]);
     const chatModel = useChatModel({ db, chat, preset, runtime, registry, settings, sender, thread });
     const [feedSnapshot] = useObject(chat?.feed);
+    useMarkSeen(feedSnapshot);
     const handleEvent = useCallback<NonNullable<ChatRootProps['onEvent']>>(
       (event) => {
         if (event.type === 'open-fork') {

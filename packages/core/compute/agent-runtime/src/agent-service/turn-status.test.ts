@@ -56,8 +56,6 @@ describe('withTurnStatus', () => {
         'Assistant is working',
         Trace.StatusCancelled,
       ]);
-      // The failed turn finished and counts as one to read; the stopped one does not.
-      expect(chat.turns).toBe(1);
     }).pipe(Effect.provide(layer));
   });
 

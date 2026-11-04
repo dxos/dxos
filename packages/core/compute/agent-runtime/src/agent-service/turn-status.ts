@@ -22,8 +22,7 @@ const HEARTBEAT = Duration.seconds(30);
 /**
  * Reports a turn as status updates on its chat and, for a companion chat, on the object it accompanies: running
  * while the turn runs, then ended with its outcome. Any runtime's trace reaches the progress registry, so the turn
- * shows wherever it runs. A turn that ends without being stopped moves the chat's read position
- * ({@link Chat.recordTurn}), which leaves it unread until a member's open view catches up.
+ * shows wherever it runs.
  */
 export const withTurnStatus =
   (chat: Chat.Chat) =>
@@ -50,13 +49,6 @@ export const withTurnStatus =
       return yield* turn.pipe(
         Effect.onExit((exit) =>
           Fiber.interrupt(heartbeat).pipe(
-            Effect.andThen(
-              Effect.sync(() => {
-                if (!Exit.hasInterrupts(exit)) {
-                  Chat.recordTurn(chat);
-                }
-              }),
-            ),
             Effect.andThen(
               report(
                 Exit.isSuccess(exit)

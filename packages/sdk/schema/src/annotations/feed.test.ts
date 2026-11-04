@@ -3,12 +3,14 @@
 //
 
 import * as Schema from 'effect/Schema';
-import { describe, test } from 'vitest';
+import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Feed, Obj, Ref, Type } from '@dxos/echo';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { TestSchema } from '@dxos/echo/testing';
 import { DXN } from '@dxos/keys';
 
-import { FeedAnnotation, getFeedRef, isFeedOwnerSchema } from './feed.ts';
+import { FeedAnnotation, getFeedRef, getSeen, isFeedOwnerSchema, markSeen, trackSeen, unseenQuery } from './feed.ts';
 
 /** Holds its feed under `feed`, like `Mailbox` and `Calendar`. */
 class Mailbox extends Type.makeObject<Mailbox>(DXN.make('com.example.type.mailbox', '0.1.0'))(
@@ -39,5 +41,43 @@ describe('FeedAnnotation', () => {
 
   test('getFeedRef returns undefined for an unannotated type', ({ expect }) => {
     expect(getFeedRef(Obj.make(Contact, { name: 'Alice' }))).toBeUndefined();
+  });
+});
+
+describe('SeenAnnotation', () => {
+  let builder: EchoTestBuilder;
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  test('items after the seen cursor are unseen until a view marks the newest', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person], assignQueuePositions: true });
+    const db = await peer.createDatabase();
+    const feed = db.add(Feed.make());
+    await db.appendToFeed(feed, [
+      Obj.make(TestSchema.Person, { name: 'a' }),
+      Obj.make(TestSchema.Person, { name: 'b' }),
+    ]);
+    await db.flush();
+    const unseen = async () => db.query(unseenQuery(feed, getSeen(feed)!)).run();
+
+    // Nobody has opened the feed, so nothing is tracked; opening it starts from the beginning.
+    expect(getSeen(feed)).toBeUndefined();
+    trackSeen(feed);
+    expect((await unseen()).map((person) => (person as TestSchema.Person).name)).toEqual(['a', 'b']);
+
+    markSeen(feed, (await unseen()).at(-1)!);
+    expect(await unseen()).toHaveLength(0);
+
+    await db.appendToFeed(feed, [Obj.make(TestSchema.Person, { name: 'c' })]);
+    await db.flush();
+    expect((await unseen()).map((person) => (person as TestSchema.Person).name)).toEqual(['c']);
+
+    // Tracking again keeps the cursor where the view left it.
+    trackSeen(feed);
+    expect(await unseen()).toHaveLength(1);
   });
 });

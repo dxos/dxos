@@ -205,7 +205,7 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
         'ChatUnread',
         {
           // ProgressRegistry is read optionally in the body: a host without plugin-progress loses the indicator.
-          requires: [ClientCapabilities.Client],
+          requires: [ClientCapabilities.Client, Capabilities.AtomRegistry],
           provides: [],
           activatesOn: AssistantEvents.Start,
           environments: ['browser', 'tauri'],

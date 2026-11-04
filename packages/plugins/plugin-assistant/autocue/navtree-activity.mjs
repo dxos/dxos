@@ -158,7 +158,7 @@ export const steps = [
     name: 'Unread survives a reload',
     run: async ({ demo, page }) => {
       await page.mouse.move(700, 400);
-      await caption(demo, 'Unread is kept on the chat, so it survives a reload and every member sees it');
+      await caption(demo, 'The space keeps how far its members have read, so unread survives a reload');
       await page.reload();
       await expand(page, 'Collections');
       await expand(page, 'Sessions');

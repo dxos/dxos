@@ -61,16 +61,6 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
      * parented to it explicitly; see {@link addTask}.
      */
     tasks: Schema.Array(Ref.Ref(Task.Task)).pipe(Annotation.FormInputAnnotation.set(false)),
-
-    /**
-     * How many turns the agent has finished, as a read position; see {@link recordTurn}.
-     */
-    turns: Schema.Number.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
-
-    /**
-     * The read position each member's open view has reached, by identity DID; see {@link markSeen}.
-     */
-    seen: Schema.Record(Schema.String, Schema.Number).pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({
@@ -144,26 +134,6 @@ export const seedSession = (chat: Chat, session: SessionConfig.SessionConfig | u
     chat.session = { ...session };
   });
 };
-
-/** Moves the chat's read position past a turn the agent finished. */
-export const recordTurn = (chat: Chat): void => {
-  Obj.update(chat, (chat) => {
-    chat.turns = (chat.turns ?? 0) + 1;
-  });
-};
-
-/** Records that a member has seen every turn so far; writes only when the member's position moves. */
-export const markSeen = (chat: Chat, member: string): void => {
-  const turns = chat.turns ?? 0;
-  if ((chat.seen?.[member] ?? 0) < turns) {
-    Obj.update(chat, (chat) => {
-      chat.seen = { ...chat.seen, [member]: turns };
-    });
-  }
-};
-
-/** Whether the chat has a finished turn that no member has seen. */
-export const isUnread = (chat: Chat): boolean => (chat.turns ?? 0) > Math.max(0, ...Object.values(chat.seen ?? {}));
 
 /** Creates a task the chat owns and appends it to the checklist. */
 export const addTask = (

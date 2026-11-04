@@ -11,7 +11,6 @@ import { expect } from 'vitest';
 
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { Alarm, SessionStore, TrajectoryStore } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
 import { ProcessManager } from '@dxos/compute-runtime';
 import * as ComputeAgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
@@ -213,27 +212,6 @@ describe('AgentProcess input queue (scripted)', () => {
 
         // The prompt reached the model once, where the turn consumed it.
         expect(promptTexts(messages).filter((text) => text === 'What is a feed?')).toHaveLength(1);
-      },
-      Effect.provide(replyLayer()),
-      TestHelpers.provideTestContext,
-    ),
-    { timeout: 30_000 },
-  );
-
-  it.effect(
-    'a finished turn moves the chat past what anyone has seen',
-    Effect.fnUntraced(
-      function* (_) {
-        const session = yield* AgentService.createSession();
-        const chat = session.chat;
-        if (!Obj.instanceOf(Chat.Chat, chat)) {
-          expect.fail('session has no chat');
-        }
-        expect(Chat.isUnread(chat)).toBe(false);
-        yield* session.submitPrompt('What is a feed?');
-        yield* session.waitForCompletion();
-        expect(chat.turns).toBe(1);
-        expect(Chat.isUnread(chat)).toBe(true);
       },
       Effect.provide(replyLayer()),
       TestHelpers.provideTestContext,
