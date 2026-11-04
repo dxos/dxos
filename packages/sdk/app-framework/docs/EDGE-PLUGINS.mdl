@@ -246,7 +246,7 @@ call to the invocation's space, caller and reply origin.
 | `DiscordSource.Endpoint`                 | dev EDGEs only (`DISCORD_API_URL`)           | TODO: not carried                                        |
 | Blob backends                            | `BLOB_SERVICE`                               | TODO: inline storage only; compute-runtime's context has no backend option |
 | OTEL tracer for Effect spans             | `withOtelTracer`                             | not carried; logs and the trace sink only                |
-| Live objects in a nested call's input   | kept: the callee runs in process             | passed by reference: added and flushed by the caller, loaded by the callee, loaded back from the output ([D-64]) |
+| Live objects in a nested call's input   | kept: the callee runs in process             | passed by reference: added and flushed by the caller, loaded by the callee, loaded back from the output ([D-64]); TODO: only a top-level field is loaded, so an array of objects (`space.setArchived`) is refused |
 
 ### EDGE and Cloudflare
 
@@ -341,7 +341,7 @@ type PluginCatalog
     operations: PersistentOperation[]   # key, name, description, inputSchema, outputSchema, services
     skills: SkillRecord[]               # key, name, description, instructions, tools
     types: TypeRecord[]                 # typename, version, JSON Schema of each AppCapabilities.Schema entry
-    protocolVersion: number             # the PROTOCOL_VERSION of the host that produced the catalog
+    protocolVersion?: number            # the PROTOCOL_VERSION of the host that produced it; absent before versioning
 ```
 
 ```mdl
