@@ -1,0 +1,23 @@
+# Mail canary settings (README). Every tunable lives here; the workflow passes only credentials.
+
+# The canary space on preview EDGE, owned by the canary identity.
+spaceId: BPHV54FP4JB3TVSTCBZE3OFYGSCOGICBD
+
+# Stage 1: insert this many Enron pool messages into the inbox as new mail; 0 skips the stage.
+seed:
+  count: 100
+
+# Stage 2: wait for the canary space to sync the seeded mail, then check every sync run of the window.
+monitor:
+  timeoutMinutes: 30
+  pollSeconds: 60
+  windowHours: 24
+
+# Stage 3: sync a fresh space from scratch, check it against Gmail, delete it; `enabled: false` skips the stage.
+fullSync:
+  enabled: true
+  days: 730
+  timeoutMinutes: 60
+  pollSeconds: 60
+  # A Google access token lasts an hour.
+  tokenRefreshMinutes: 30

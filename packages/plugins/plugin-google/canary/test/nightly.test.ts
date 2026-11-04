@@ -54,6 +54,7 @@ const POOL = Array.from({ length: 5 }, () => POOL_MESSAGE);
 const emptySpace = {
   spaceId: 'space',
   snapshot: () => Effect.succeed({ invocations: [], messages: [], triggers: [] }),
+  runSync: () => Effect.void,
 };
 
 describe('makeSeedCopy', () => {
@@ -117,7 +118,7 @@ describe('Nightly', () => {
     expect(report.checks.find((check) => check.id === 'S1')?.failures).toEqual([
       expect.objectContaining({ class: 'OFF', message: 'Gmail message not synced' }),
     ]);
-    expect(report.seed?.syncMinutes).toBeUndefined();
+    expect(report.seed?.syncSeconds).toBeUndefined();
   });
 
   test('without seeding it checks only the sync runs', async ({ expect }) => {

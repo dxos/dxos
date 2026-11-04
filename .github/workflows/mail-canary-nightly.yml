@@ -9,15 +9,10 @@ on:
     # 03:17 UTC: after `EDGE nightly` (02:00), off the hour so it is not queued behind other crons.
     - cron: '17 3 * * *'
   workflow_dispatch:
-    inputs:
-      count:
-        type: string
-        description: 'Pool messages to seed as new mail'
-        default: '100'
-      stages:
-        type: string
-        description: 'Stages to run besides the monitor: seed (1), full (3)'
-        default: 'seed,full'
+  # Adding the `mail-canary` label to a PR runs the canary from that PR's code: `workflow_dispatch` reaches a
+  # workflow only once it is on the default branch.
+  pull_request:
+    types: [labeled]
 
 permissions:
   contents: read
@@ -28,16 +23,17 @@ env:
   MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
   MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
 
-# Two runs at once would read the same cursor and judge each other's copies.
-concurrency:
-  group: ${{ github.workflow }}
-  cancel-in-progress: false
-
 jobs:
   canary:
+    if: github.event_name != 'pull_request' || github.event.label.name == 'mail-canary'
     runs-on: ubuntu-24.04
-    # Stage 2 waits up to 30 minutes and stage 3 up to 60.
+    # Room for the waits `canary.yml` sets for stages 2 and 3.
     timeout-minutes: 120
+    # Two runs at once would read the same cursor and judge each other's copies. Set on the job, so a PR labelled
+    # with anything else never queues behind a run.
+    concurrency:
+      group: ${{ github.workflow }}
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v5
         with:
@@ -47,8 +43,9 @@ jobs:
 
       # The pool lives in the encrypted `enron-pool` agents fixture, not in Gmail: the sync takes every message
       # added to the account, so mail parked there would sync before the night it is seeded.
+      # A failed pull still runs stages 2 and 3; the canary reports the missing pool as an S1 failure.
       - name: Pull the Enron pool
-        if: contains(inputs.stages || 'seed,full', 'seed')
+        continue-on-error: true
         env:
           AGE_KEY: ${{ secrets.MAIL_CANARY_FIXTURES_AGE_KEY }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -59,15 +56,11 @@ jobs:
           (umask 077 && printf '%s\n' "$AGE_KEY" > "$KEY_FILE")
           DX_FIXTURES_AGE_KEY="$KEY_FILE" node tools/fixtures/bin/fixtures.mjs pull enron-pool --scope agents
           rm -f "$KEY_FILE"
-          echo "DX_CANARY_POOL=$(ls testing/fixtures/enron-pool-*.mbox | sort | tail -1)" >> "$GITHUB_ENV"
 
+      # Settings live in packages/plugins/plugin-google/canary/canary.yml; only credentials come from here.
       - name: Run canary
         env:
           DX_CANARY_RECOVERY_PHRASE: ${{ secrets.MAIL_CANARY_RECOVERY_PHRASE }}
-          DX_CANARY_SPACE_ID: ${{ vars.MAIL_CANARY_SPACE_ID }}
-          DX_CANARY_SEED_COUNT: ${{ inputs.count || '100' }}
-          DX_CANARY_STAGES: ${{ inputs.stages || 'seed,full' }}
-          DX_CANARY_REPORT_DIR: ${{ runner.temp }}/mail-canary
           GMAIL_CLIENT_ID: ${{ secrets.MAIL_CANARY_GMAIL_CLIENT_ID }}
           GMAIL_CLIENT_SECRET: ${{ secrets.MAIL_CANARY_GMAIL_CLIENT_SECRET }}
           GMAIL_REFRESH_TOKEN: ${{ secrets.MAIL_CANARY_GMAIL_REFRESH_TOKEN }}
@@ -75,17 +68,17 @@ jobs:
 
       - name: Report
         if: always()
-        run: cat "${{ runner.temp }}/mail-canary/summary.md" >> "$GITHUB_STEP_SUMMARY" || true
+        run: cat packages/plugins/plugin-google/canary/out/summary.md >> "$GITHUB_STEP_SUMMARY" || true
 
       - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: mail-canary-report
-          path: ${{ runner.temp }}/mail-canary
+          path: packages/plugins/plugin-google/canary/out
           retention-days: 14
           if-no-files-found: ignore
 
-      # One event per run, so PostHog can alert on a failed night and on a night with no event at all.
+      # One run event and one event per failure (`renderEvents`), for the Mail canary dashboard in PostHog.
       - name: Record the run
         if: always()
         continue-on-error: true
@@ -93,9 +86,9 @@ jobs:
         env:
           DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
         run: |
-          SUMMARY="${{ runner.temp }}/mail-canary/summary.json"
-          if [ ! -f "$SUMMARY" ]; then
-            mkdir -p "$(dirname "$SUMMARY")"
-            echo '{"ok":false,"failedChecks":"NO_REPORT"}' > "$SUMMARY"
+          EVENTS=packages/plugins/plugin-google/canary/out/events.ndjson
+          if [ ! -f "$EVENTS" ]; then
+            mkdir -p "$(dirname "$EVENTS")"
+            echo '{"event":"ci.mail-canary","properties":{"ok":false,"failures":1}}' > "$EVENTS"
           fi
-          node scripts/ci-event.mjs --event ci.mail-canary --timestamp now --properties "$SUMMARY"
+          node scripts/ci-event.mjs --batch "$EVENTS"

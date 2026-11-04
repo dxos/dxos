@@ -6,16 +6,18 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schedule from 'effect/Schedule';
 
-import { ClientService, layer as clientLayer } from '@dxos/client';
+import { type Client, ClientService, layer as clientLayer } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { FeedTraceSink } from '@dxos/compute-runtime';
 import * as Routine from '@dxos/compute/Routine';
 import * as Trace from '@dxos/compute/Trace';
 import * as Trigger from '@dxos/compute/Trigger';
 import { ConfigService, configPreset } from '@dxos/config';
+import { Context } from '@dxos/context';
 import { Database, Feed, Filter, Obj, Order, Query } from '@dxos/echo';
 import { SpaceId } from '@dxos/keys';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
+import { log } from '@dxos/log';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { Message } from '@dxos/types';
@@ -69,7 +71,7 @@ export class CanarySpace {
       const space = client.spaces.get(spaceId);
       return space ? Effect.succeed(space) : new CanaryError({ message: `space ${spaceId} never appeared` });
     }).pipe(Effect.retry({ schedule: Schedule.spaced('1 second'), times: 120 }));
-    return yield* ready(space);
+    return yield* ready(client, space);
   });
 
   /** Creates a space owned by the signed-in identity. */
@@ -79,12 +81,14 @@ export class CanarySpace {
       try: () => client.spaces.create({ name }),
       catch: (cause) => new CanaryError({ message: `cannot create a space: ${String(cause)}` }),
     });
-    return yield* ready(space);
+    return yield* ready(client, space);
   });
 
+  readonly #client: Client;
   readonly #space: Space;
 
-  constructor(space: Space) {
+  constructor(client: Client, space: Space) {
+    this.#client = client;
     this.#space = space;
   }
 
@@ -104,6 +108,37 @@ export class CanarySpace {
     }).pipe(Effect.retry({ times: 2 }));
   }
 
+  /**
+   * Asks EDGE to run the space's enabled remote timer triggers now rather than at their next cron tick, once EDGE
+   * has registered them. Gives up with a warning after three minutes, leaving the cron to fire.
+   */
+  runSync(): Effect.Effect<void> {
+    return Effect.gen({ self: this }, function* () {
+      const triggerIds = (yield* Database.query(Filter.type(Trigger.Trigger)).run)
+        .filter((trigger) => trigger.remote === true && trigger.enabled === true && trigger.spec?.kind === 'timer')
+        .map((trigger) => trigger.id);
+      const http = this.#client.edge.http;
+      yield* Effect.tryPromise(async () => {
+        const { triggers } = await http.getSpaceTriggers(Context.default(), this.#space.id);
+        const registered = new Set(triggers.flatMap((trigger) => (trigger.registered ? [trigger.triggerId] : [])));
+        const pending = triggerIds.filter((triggerId) => !registered.has(triggerId));
+        if (triggerIds.length === 0 || pending.length > 0) {
+          throw new Error(`sync triggers not registered on EDGE: ${pending.join(', ') || 'none in the space'}`);
+        }
+        for (const triggerId of triggerIds) {
+          await http.forceRunCronTrigger(Context.default(), this.#space.id, triggerId);
+        }
+      }).pipe(
+        Effect.retry({ schedule: Schedule.spaced('10 seconds'), times: 18 }),
+        Effect.catch((error) =>
+          Effect.sync(() =>
+            log.warn('cannot start the sync now; waiting for its cron', { spaceId: this.#space.id, error }),
+          ),
+        ),
+      );
+    }).pipe(Effect.provide(Database.layer(this.#space.db)));
+  }
+
   /** Waits until the documents match EDGE, then reads the snapshot (`readSnapshot` pulls the feeds itself). */
   snapshot(): Effect.Effect<SpaceSnapshot, CanaryError> {
     return this.syncToEdge().pipe(Effect.andThen(readSnapshot()), Effect.provide(Database.layer(this.#space.db)));
@@ -111,7 +146,7 @@ export class CanarySpace {
 }
 
 /** Waits until the space's database is open and turns on EDGE replication, off on a newly admitted device. */
-const ready = (space: Space): Effect.Effect<CanarySpace, CanaryError> =>
+const ready = (client: Client, space: Space): Effect.Effect<CanarySpace, CanaryError> =>
   Effect.gen(function* () {
     yield* Effect.tryPromise({
       try: () => space.waitUntilReady(),
@@ -120,7 +155,7 @@ const ready = (space: Space): Effect.Effect<CanarySpace, CanaryError> =>
     if (space.internal.data.edgeReplication !== EdgeReplicationSetting.ENABLED) {
       yield* Effect.promise(() => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
     }
-    return new CanarySpace(space);
+    return new CanarySpace(client, space);
   });
 
 /**

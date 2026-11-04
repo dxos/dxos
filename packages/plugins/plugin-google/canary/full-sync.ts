@@ -5,11 +5,9 @@
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Result from 'effect/Result';
-import * as Schedule from 'effect/Schedule';
 
 import { ClientService } from '@dxos/client';
 import * as Trigger from '@dxos/compute/Trigger';
-import { Context } from '@dxos/context';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import * as Binding from '@dxos/plugin-connector/Binding';
@@ -54,8 +52,8 @@ export type FullSyncReport = {
   readonly expected: number;
   /** Messages in the fresh space's mailbox feed when the wait ended. */
   readonly synced: number;
-  /** Minutes until every expected message had synced and the backfill had reached the horizon. */
-  readonly syncMinutes?: number;
+  /** Seconds until every expected message had synced and the backfill had reached the horizon. */
+  readonly syncSeconds?: number;
 };
 
 export type FullSyncOptions = {
@@ -65,12 +63,10 @@ export type FullSyncOptions = {
   readonly pollInterval: Duration.Input;
   /** How often the space's access token is replaced; under the hour a Google access token lasts. */
   readonly tokenRefresh: Duration.Input;
-  /** Expected messages whose subject and sender are compared too; the rest are checked for presence. */
-  readonly sample: number;
 };
 
 /** The Gmail calls stage 3 makes: it only reads the mailbox. */
-export type FullSyncMailbox = Pick<CanaryMailbox, 'listIds' | 'getHeaders'>;
+export type FullSyncMailbox = Pick<CanaryMailbox, 'listIds'>;
 
 /**
  * Stage 3. Creates a space, binds it to the canary account with a `days`-long sync horizon and the product's own
@@ -93,7 +89,7 @@ export class FullSync {
     return Effect.gen({ self: this }, function* () {
       const startedAt = new Date();
       yield* removeLeftovers();
-      const expected = yield* this.expected(options.days, options.sample, startedAt);
+      const expected = yield* this.expected(options.days, startedAt);
       const space = yield* CanarySpace.create(FULL_SYNC_SPACE_NAME);
       const synced = yield* this.#sync(space, expected, options, startedAt).pipe(Effect.result);
       const removed = yield* remove(space).pipe(Effect.result);
@@ -124,27 +120,13 @@ export class FullSync {
   /**
    * The Gmail messages a sync over the last `days` must bring in, newest first, listed with the sync's own scope.
    * The window starts two days inside the horizon, since Gmail's `after:` is day-granular in the account's zone.
-   * The first `sample` carry their subject and sender, so their content is compared too.
    */
-  expected(days: number, sample: number, now: Date): Effect.Effect<ExpectedMessage[], MailboxError> {
-    return Effect.gen({ self: this }, function* () {
-      const after = new Date(now.getTime() - (days - 2) * DAY_MS);
-      const date = `${after.getUTCFullYear()}/${after.getUTCMonth() + 1}/${after.getUTCDate()}`;
-      const ids = yield* this.#mailbox.listIds(`in:anywhere -in:spam -in:trash -in:drafts -in:chats after:${date}`);
-      const sampled = yield* Effect.forEach(
-        ids.slice(0, sample),
-        (gmailId) =>
-          this.#mailbox.getHeaders(gmailId, ['Subject', 'From']).pipe(
-            Effect.map(({ headers }) => ({
-              gmailId,
-              subject: headers.Subject,
-              sender: headers.From && MailSync.parseFromHeader(headers.From)?.email,
-            })),
-          ),
-        { concurrency: 4 },
-      );
-      return [...sampled, ...ids.slice(sample).map((gmailId) => ({ gmailId }))];
-    });
+  expected(days: number, now: Date): Effect.Effect<ExpectedMessage[], MailboxError> {
+    const after = new Date(now.getTime() - (days - 2) * DAY_MS);
+    const date = `${after.getUTCFullYear()}/${after.getUTCMonth() + 1}/${after.getUTCDate()}`;
+    return this.#mailbox
+      .listIds(`in:anywhere -in:spam -in:trash -in:drafts -in:chats after:${date}`)
+      .pipe(Effect.map((ids) => ids.map((gmailId) => ({ gmailId }))));
   }
 
   #sync(
@@ -154,18 +136,17 @@ export class FullSync {
     startedAt: Date,
   ) {
     return Effect.gen({ self: this }, function* () {
-      const { accessToken, triggerId } = yield* connect(yield* mintAccessToken(this.#credentials), days).pipe(
+      const accessToken = yield* connect(yield* mintAccessToken(this.#credentials), days).pipe(
         Effect.provide(Database.layer(space.space.db)),
       );
       yield* space.syncToEdge();
-      // The routine's cron fires within ten minutes anyway; asking EDGE to run it now only saves the wait.
-      yield* forceRun(space, triggerId);
+      yield* space.runSync();
 
       const deadline = startedAt.getTime() + Duration.toMillis(syncTimeout);
       let mintedAt = Date.now();
       let snapshot: SpaceSnapshot;
       let backfilled: boolean;
-      let syncMinutes: number | undefined;
+      let syncSeconds: number | undefined;
       while (true) {
         if (Date.now() - mintedAt >= Duration.toMillis(tokenRefresh)) {
           const token = yield* mintAccessToken(this.#credentials);
@@ -178,7 +159,7 @@ export class FullSync {
         backfilled = yield* reachedHorizon(days).pipe(Effect.provide(Database.layer(space.space.db)));
         const synced = new Set(snapshot.messages.map((message) => message.gmailId));
         if (backfilled && expected.every((message) => synced.has(message.gmailId))) {
-          syncMinutes = Math.round((Date.now() - startedAt.getTime()) / 60_000);
+          syncSeconds = Math.round((Date.now() - startedAt.getTime()) / 1000);
           break;
         }
         if (Date.now() >= deadline) {
@@ -204,7 +185,7 @@ export class FullSync {
         ],
         runs: runs.runs,
         synced: snapshot.messages.length,
-        syncMinutes,
+        syncSeconds,
       };
     });
   }
@@ -235,25 +216,11 @@ const connect = (token: string, days: number) =>
         remote: MailSync.MAIL_REMOTE_SYNC,
       }),
     );
-    const trigger = routine.triggers[0]?.target;
-    if (!trigger) {
+    if (!routine.triggers[0]?.target) {
       return yield* new CanaryError({ message: 'the sync routine has no trigger' });
     }
     yield* Database.flush();
-    return { accessToken, triggerId: trigger.id };
-  });
-
-/** Starts the sync trigger on EDGE once EDGE has registered it; gives up quietly, leaving the cron to fire. */
-const forceRun = (space: CanarySpace, triggerId: string) =>
-  Effect.gen(function* () {
-    const client = yield* ClientService;
-    yield* Effect.tryPromise(async () => {
-      const { triggers } = await client.edge.http.getSpaceTriggers(Context.default(), space.space.id);
-      if (!triggers.some((trigger) => trigger.triggerId === triggerId && trigger.registered)) {
-        throw new Error('the sync trigger is not registered on EDGE yet');
-      }
-      await client.edge.http.forceRunCronTrigger(Context.default(), space.space.id, triggerId);
-    }).pipe(Effect.retry({ schedule: Schedule.spaced('10 seconds'), times: 18 }), Effect.ignore);
+    return accessToken;
   });
 
 /** Whether the binding's backward walk has reached the horizon: `min` is clamped to it once the walk is done. */
@@ -301,7 +268,7 @@ const removeLeftovers = () =>
         Effect.result,
       );
       if (Result.isSuccess(ready) && space.properties.name === FULL_SYNC_SPACE_NAME) {
-        yield* remove(new CanarySpace(space)).pipe(Effect.ignore);
+        yield* remove(new CanarySpace(client, space)).pipe(Effect.ignore);
       }
     }
   });

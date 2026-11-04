@@ -23,8 +23,8 @@ export type NightlyReport = Report & {
     readonly poolSize: number;
     /** Pool index of tonight's first copy; the next run starts where this one ended. */
     readonly poolStart: number;
-    /** Minutes until every copy was in the mailbox feed; absent when they never all arrived. */
-    readonly syncMinutes?: number;
+    /** Seconds until every copy was in the mailbox feed; absent when they never all arrived. */
+    readonly syncSeconds?: number;
   };
 };
 
@@ -65,9 +65,9 @@ const NEXT_HEADER = 'X-Dx-Seed-Next';
  */
 export class Nightly {
   readonly #mailbox: NightlyMailbox;
-  readonly #space: Pick<CanarySpace, 'spaceId' | 'snapshot'>;
+  readonly #space: Pick<CanarySpace, 'spaceId' | 'snapshot' | 'runSync'>;
 
-  constructor(mailbox: NightlyMailbox, space: Pick<CanarySpace, 'spaceId' | 'snapshot'>) {
+  constructor(mailbox: NightlyMailbox, space: Pick<CanarySpace, 'spaceId' | 'snapshot' | 'runSync'>) {
     this.#mailbox = mailbox;
     this.#space = space;
   }
@@ -76,14 +76,18 @@ export class Nightly {
     return Effect.gen({ self: this }, function* () {
       const startedAt = new Date();
       const { start, seeded } = seed ? yield* this.seed(seed.pool, seed.count, startedAt) : { start: 0, seeded: [] };
+      if (seed) {
+        // The cron would pick the copies up within ten minutes; starting the sync now spares the wait.
+        yield* this.#space.runSync();
+      }
 
       const deadline = startedAt.getTime() + Duration.toMillis(syncTimeout);
       let snapshot: SpaceSnapshot = yield* this.#space.snapshot();
-      let syncMinutes: number | undefined;
+      let syncSeconds: number | undefined;
       while (seed) {
         const synced = new Set(snapshot.messages.map((message) => message.gmailId));
         if (seeded.every((message) => synced.has(message.gmailId))) {
-          syncMinutes = Math.round((Date.now() - startedAt.getTime()) / 60_000);
+          syncSeconds = Math.round((Date.now() - startedAt.getTime()) / 1000);
           break;
         }
         if (Date.now() >= deadline) {
@@ -99,7 +103,7 @@ export class Nightly {
         ...report,
         startedAt: startedAt.toISOString(),
         spaceId: this.#space.spaceId,
-        seed: seed && { seeded: seeded.length, poolSize: seed.pool.length, poolStart: start, syncMinutes },
+        seed: seed && { seeded: seeded.length, poolSize: seed.pool.length, poolStart: start, syncSeconds },
       };
     });
   }
@@ -179,62 +183,68 @@ const MAX_MESSAGE_BYTES = 3_500_000;
 export const parsePool = (mbox: string): string[] =>
   splitMbox(mbox).filter((message) => Buffer.byteLength(message, 'latin1') <= MAX_MESSAGE_BYTES);
 
-/** Flat properties for the `ci.mail-canary` PostHog event: no nesting, no message content. */
-export const toEventProperties = (report: CanaryReport): Record<string, string | number | boolean> => {
-  const checks = [...report.checks, ...(report.fullSync?.checks ?? [])];
-  return {
-    ok: report.ok && (report.fullSync?.ok ?? true),
-    failedChecks: checks.flatMap((check) => (check.ok ? [] : [check.id])).join(','),
-    failureClasses: [...new Set(checks.flatMap((check) => check.failures.map((failure) => failure.class)))]
-      .sort()
-      .join(','),
-    seeded: report.seed?.seeded ?? 0,
-    poolSize: report.seed?.poolSize ?? 0,
-    poolStart: report.seed?.poolStart ?? -1,
-    syncMinutes: report.seed?.syncMinutes ?? -1,
-    ...report.runs,
-    fullSyncExpected: report.fullSync?.expected ?? -1,
-    fullSyncSynced: report.fullSync?.synced ?? -1,
-    fullSyncMinutes: report.fullSync?.syncMinutes ?? -1,
-    fullSyncInvocations: report.fullSync?.runs.invocations ?? -1,
-    fullSyncFailed: report.fullSync?.runs.failed ?? -1,
-  };
+/** Every failure of the run, labelled with its check. */
+const allFailures = (report: CanaryReport) =>
+  [...report.checks, ...(report.fullSync?.checks ?? [])].flatMap(({ id, failures }) =>
+    failures.map((failure) => ({ check: id, ...failure })),
+  );
+
+/**
+ * The run as the events `scripts/ci-event.mjs --batch` posts: one `ci.mail-canary` per run and one
+ * `ci.mail-canary.failure` per failure, without message content. Undefined fields are dropped by
+ * `JSON.stringify`, so a skipped stage sends no property rather than a zero an average would absorb.
+ */
+export const renderEvents = (report: CanaryReport, at: string) => {
+  const failures = allFailures(report);
+  return [
+    {
+      event: 'ci.mail-canary',
+      timestamp: at,
+      properties: {
+        ok: failures.length === 0,
+        failures: failures.length,
+        syncFailures: report.checks.find(({ id }) => id === 'S2')?.failures.length,
+        invocations: report.runs.invocations,
+        seeded: report.seed?.seeded,
+        syncSeconds: report.seed?.syncSeconds,
+        fullSyncExpected: report.fullSync?.expected,
+        fullSyncSynced: report.fullSync?.synced,
+        fullSyncSeconds: report.fullSync?.syncSeconds,
+      },
+    },
+    ...failures.slice(0, 100).map(({ check, class: failureClass, message, pid, gmailId }, index) => ({
+      event: 'ci.mail-canary.failure',
+      timestamp: at,
+      // The failures of one run share its commit, and so would share a dedup uuid without this.
+      dedup: `failure-${index}`,
+      properties: { check, class: failureClass, message: message.slice(0, 300), pid, gmailId },
+    })),
+  ];
 };
 
-/** The report as Markdown for the job summary: the verdict, each stage, the checks, then up to 50 failures. */
+/** The report as Markdown for the job summary: the verdict, the checks, then up to 50 failures. */
 export const renderSummary = (report: CanaryReport): string => {
+  const failures = allFailures(report);
+  const took = (seconds?: number) => (seconds === undefined ? 'never finished' : `took ${seconds} s`);
   const { seed, fullSync } = report;
-  const checks = [...report.checks, ...(fullSync?.checks ?? [])];
-  const ok = report.ok && (fullSync?.ok ?? true);
-  const failures = checks.flatMap((check) => check.failures.map((failure) => ({ check: check.id, ...failure })));
-  const arrived = seed?.syncMinutes === undefined ? 'never all arrived' : `all arrived in ${seed.syncMinutes} min`;
-  const fullSynced = fullSync?.syncMinutes === undefined ? 'did not finish' : `finished in ${fullSync.syncMinutes} min`;
-  const runs = ({ runs, invocations, failed }: CanaryReport['runs']) =>
-    `${runs} sync runs (${invocations} invocations, ${failed} failed)`;
   return [
-    `## Mail canary: ${ok ? 'passed' : 'FAILED'}`,
+    `## Mail canary: ${failures.length === 0 ? 'passed' : 'FAILED'}`,
     '',
-    `Space \`${report.spaceId}\`, ${report.startedAt}.`,
-    '',
-    seed
-      ? `1. **Seed.** ${seed.seeded} messages from pool index ${seed.poolStart} of ${seed.poolSize}; the copies ${arrived}.`
-      : '1. **Seed.** Skipped.',
-    `2. **Monitor.** ${runs(report.runs)} in the window.`,
-    fullSync
-      ? `3. **Full sync.** Fresh space \`${fullSync.spaceId ?? 'none'}\` over ${fullSync.days} days: ${fullSync.synced} of ${fullSync.expected} Gmail messages synced; the sync ${fullSynced}; ${runs(fullSync.runs)}.`
-      : '3. **Full sync.** Skipped.',
+    `- Seed: ${seed ? `${seed.seeded} messages from pool index ${seed.poolStart}; syncing them ${took(seed.syncSeconds)}` : 'skipped'}.`,
+    `- Monitor: ${report.runs.invocations} sync invocations in the window, ${report.runs.failed} failed.`,
+    `- Full sync: ${fullSync ? `${fullSync.synced} of ${fullSync.expected} messages; it ${took(fullSync.syncSeconds)}` : 'skipped'}.`,
     '',
     '| Check | Result | Failures |',
     '| --- | --- | --- |',
-    ...checks.map(
+    ...[...report.checks, ...(fullSync?.checks ?? [])].map(
       (check) => `| ${check.id} ${check.name} | ${check.ok ? 'pass' : 'FAIL'} | ${check.failures.length} |`,
     ),
-    ...(failures.length > 0 ? ['', '| Check | Class | Run or message | Detail |', '| --- | --- | --- | --- |'] : []),
+    '',
     ...failures
       .slice(0, 50)
       .map(
         (failure) =>
-          `| ${failure.check} | ${failure.class} | ${failure.pid ?? failure.gmailId ?? ''} | ${failure.message.replace(/\s+/g, ' ').slice(0, 300).replaceAll('|', '\\|')} |`,
+          `- ${failure.check} ${failure.class} ${failure.pid ?? failure.gmailId ?? ''}: ${failure.message.replace(/\s+/g, ' ').slice(0, 300)}`,
       ),
     '',
   ].join('\n');
