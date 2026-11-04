@@ -448,7 +448,13 @@ export const ProjectArticle = ({
                       )
                     }
                   >
-                    <ObjectGallery objects={shownArtifacts} onOpen={handleOpen} onDelete={handleDeleteArtifact} />
+                    {artifacts.length > 0 ? (
+                      <ObjectGallery objects={shownArtifacts} onOpen={handleOpen} onDelete={handleDeleteArtifact} />
+                    ) : (
+                      <Typography.Text tone='muted' data-testid='projectsPlugin.artifacts.empty'>
+                        {t('artifacts-empty.message')}
+                      </Typography.Text>
+                    )}
                   </Form.FieldSet>
 
                   {milestoneRefs.length > 0 && (

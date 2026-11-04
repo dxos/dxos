@@ -228,7 +228,11 @@ const OutlineContent = Util.composable<HTMLDivElement, OutlineContentProps>((pro
       initialValue: text.content,
       extensions: [
         createDataExtensions({ id, text: Doc.createAccessor(text, ['content']) }),
-        createBasicExtensions({ readOnly: !!readonly, search: true }),
+        createBasicExtensions({
+          readOnly: !!readonly,
+          search: true,
+          placeholder: readonly ? undefined : t('outline.placeholder'),
+        }),
         createMarkdownExtensions(),
         createThemeExtensions({
           themeMode,
