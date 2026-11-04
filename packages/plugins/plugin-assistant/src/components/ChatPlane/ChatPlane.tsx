@@ -272,7 +272,7 @@ const ChatPlaneRoot = ({ classNames, value, onValueChange, onAdd, onMove, childr
       onMove={onMove}
     >
       {/* The height of a one-line prompt and its margin: a taller prompt floats over the columns rather than resizing them. */}
-      <Panel.Root classNames={['[--chat-plane-width:32vw] [--chat-plane-prompt-height:7.125rem]', classNames]}>
+      <Panel.Root classNames={['[--chat-plane-width:32vw] [--chat-plane-prompt-height:8rem]', classNames]}>
         {children}
       </Panel.Root>
     </ChatPlaneProvider>
