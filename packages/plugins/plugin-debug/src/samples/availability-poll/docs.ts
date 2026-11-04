@@ -5,10 +5,12 @@
 import * as Effect from 'effect/Effect';
 
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
+import { type ContentMap } from '@dxos/diagram';
 import { Database, EID, type Obj } from '@dxos/echo';
-import * as Architecture from '@dxos/plugin-canvas/Architecture';
-import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import * as Tldraw from '@dxos/plugin-tldraw/Tldraw';
+import * as TldrawModel from '@dxos/plugin-tldraw/TldrawModel';
 
 import { DIAGRAM_COMMANDS, DIAGRAM_NAMES, type DiagramKey } from './diagrams.ts';
 
@@ -143,12 +145,16 @@ export type DocsResult = {
 
 /** The three design documents and the two drawings they embed. Spec: `CONTENT.md` § Design. */
 export const DocsPartial: SampleSpace.Partial<DocsResult> = SampleSpace.partial('docs', {
-  schemas: [Markdown.Document, ...Architecture.canvasDrawingSchemas],
+  schemas: [Markdown.Document, Drawing.Drawing, Drawing.Canvas],
   run: () =>
     Effect.gen(function* () {
       const { db } = yield* Database.Service;
-      const drawing = (key: DiagramKey) =>
-        Architecture.addCanvasDrawing(db, { name: DIAGRAM_NAMES[key], commands: DIAGRAM_COMMANDS[key] });
+      const drawing = (key: DiagramKey) => {
+        const content: ContentMap = {};
+        TldrawModel.applyCommands(content, DIAGRAM_COMMANDS[key]);
+        const canvas = Drawing.makeCanvas({ schema: Tldraw.TLDRAW_SCHEMA, content });
+        return db.add(Drawing.make({ name: DIAGRAM_NAMES[key], canvas }));
+      };
       const drawings = { poll: drawing('poll'), flights: drawing('flights') };
       const doc = (name: string, content: string) => Database.add(Markdown.make({ name, content }));
       const docs = {

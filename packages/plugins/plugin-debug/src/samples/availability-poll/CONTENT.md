@@ -46,7 +46,7 @@ A reader has a finished spec for a When2meet-style poll that runs as a Cloudflar
   - `zones` "Time zones and DST": why slots are stored as UTC instants, how a slot plan becomes instants with `Intl` on each slot's own date, the skipped and repeated local hour, and T-2 worked as a table.
   - `durable` "One Durable Object per poll": `newUniqueId` as the poll id, one storage key per poll, the page polling every few seconds, and what a temporary account's hour means for a demo; embeds the `poll` drawing.
   - `duffel` "Flight search with Duffel": offer requests, test mode, the token as a Worker secret, the limits as request parameters and filters, caching and offer expiry; embeds the `flights` drawing.
-- 2 `Drawing.Drawing`, each a canvas built with `Architecture.addCanvasDrawing` from a `.dx` source compiled ahead of time:
+- 2 `Drawing.Drawing`, each a tldraw canvas (`TLDRAW_SCHEMA`) drawn with `TldrawModel.applyCommands` from a `.dx` source compiled ahead of time:
   - `poll` "Poll architecture": the invitee's browser, the Worker's page and API, and one Durable Object per poll.
   - `flights` "Flight options architecture": the same, plus the Duffel API and the Worker secret.
 - 1 collection "Design" at the root holding the 3 documents and the 2 drawings.
@@ -64,6 +64,7 @@ A reader has a finished spec for a When2meet-style poll that runs as a Cloudflar
 ## Checks
 
 - Exactly 1 project, 1 instructions, 1 task set, 0 milestones, 0 tasks, 10 features (6 and 4 subfeatures), 2 specs, 3 documents and 2 drawings.
+- The 2 drawings are tldraw canvases; the space holds no canvas scene objects.
 - Every persisted typename is declared by a partial.
 - The project owns the poll spec, which holds the six features in spec order, all `planned`, citing F-1 to F-6 of `availability-poll/SPEC.mdl`.
 - "Flight options" owns the flights spec, which holds its four subfeatures citing F-1 to F-4 of `availability-poll/FLIGHTS.mdl`.

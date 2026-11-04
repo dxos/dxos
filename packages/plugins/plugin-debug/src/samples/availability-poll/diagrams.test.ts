@@ -9,9 +9,8 @@ import { describe, test } from 'vitest';
 
 import { Dsl } from '@dxos/diagram';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import * as Architecture from '@dxos/plugin-canvas/Architecture';
 
-import { DIAGRAM_SOURCES } from './diagrams.ts';
+import { CompiledDiagrams, DIAGRAM_SOURCES } from './diagrams.ts';
 import compiled from './diagrams/compiled.json?raw';
 
 describe('Availability Poll diagrams', () => {
@@ -21,9 +20,7 @@ describe('Availability Poll diagrams', () => {
     for (const [id, source] of Object.entries(DIAGRAM_SOURCES)) {
       commands[id] = (await EffectEx.runPromise(Dsl.compile(source))).commands;
     }
-    const encoded = Schema.encodeSync(Architecture.CompiledDiagrams)(
-      Schema.decodeUnknownSync(Architecture.CompiledDiagrams)(commands),
-    );
+    const encoded = Schema.encodeSync(CompiledDiagrams)(Schema.decodeUnknownSync(CompiledDiagrams)(commands));
     if (process.env.DX_UPDATE_DIAGRAMS) {
       writeFileSync(join(import.meta.dirname, 'diagrams', 'compiled.json'), `${JSON.stringify(encoded)}\n`);
       return;
