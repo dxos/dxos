@@ -132,17 +132,16 @@ export const login: (credentials: {
 }, Effect.scoped);
 
 /** An authenticated session for a stored session token, closed with the scope. */
-export const authenticate = ({
-  url,
-  token,
-}: {
+export const authenticate: (account: {
   url: string;
   token: string;
-}): Effect.Effect<RpcStub<Protocol.AuthenticatedApi>, CloudflareOsError, Scope.Scope> =>
-  Effect.gen(function* () {
-    const api = yield* session(url);
-    const user = api.authenticate(token);
-    // Pipelined: the call above resolves only once the server accepts the token, which this awaits.
-    yield* call('Cloudflare OS rejected the session token. Reconnect the account.', () => user.listWorkspaces());
-    return user;
-  });
+}) => Effect.Effect<RpcStub<Protocol.AuthenticatedApi>, CloudflareOsError, Scope.Scope> = Effect.fnUntraced(function* ({
+  url,
+  token,
+}) {
+  const api = yield* session(url);
+  const user = api.authenticate(token);
+  // Pipelined: the call above resolves only once the server accepts the token, which this awaits.
+  yield* call('Cloudflare OS rejected the session token. Reconnect the account.', () => user.listWorkspaces());
+  return user;
+});
