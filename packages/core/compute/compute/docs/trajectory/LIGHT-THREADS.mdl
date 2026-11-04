@@ -98,6 +98,7 @@ type ThreadLane
     waitingOn?: EventId
     overlapped?: boolean         # another lane ran while this one did
     backgrounded?: boolean       # a newer lane of the same owner opened while this one ran
+    from?: EventId               # a fork's fork point: the message of main it forks at [D-37]
 ```
 
 ## Features

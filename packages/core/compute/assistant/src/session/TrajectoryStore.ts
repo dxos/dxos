@@ -7,11 +7,13 @@
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as HashMap from 'effect/HashMap';
+import * as Option from 'effect/Option';
 
 import * as Reducer from '@dxos/compute/Reducer';
 import * as Trajectory from '@dxos/compute/Trajectory';
 import * as Transcript from '@dxos/compute/Transcript';
-import { type Database, Feed, type Obj } from '@dxos/echo';
+import { type Database, Feed, Filter, type Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
 import * as Legacy from './Legacy.ts';
@@ -98,10 +100,11 @@ export const load = <S>(
 export const history = Effect.fnUntraced(function* (
   feed: Feed.Feed,
   thread?: Trajectory.ThreadId,
+  { policy = DEFAULT_THREAD_POLICY }: { policy?: ThreadPolicy } = {},
 ): Effect.fn.Return<Message.Message[], never, Database.Service> {
   const { state } = yield* load(feed, Reducer.prompt);
   const origin = state.origin ? yield* originHistory(state.origin) : [];
-  const status = thread === undefined ? undefined : siblingStatus(state, thread);
+  const status = thread === undefined ? undefined : siblingStatus(state, thread, policy);
   return [...origin, ...Reducer.promptFor(state, thread).map(toMessage), ...(status ? [status] : [])];
 });
 
@@ -111,22 +114,47 @@ const laneOf = (state: Reducer.PromptState, thread: Trajectory.ThreadId): Trajec
   return parent === undefined ? thread : laneOf(state, parent);
 };
 
-/** Threads and main turns running beside each other: open buffers with no parent. */
-const runningLanes = (state: Reducer.PromptState): Trajectory.ThreadId[] =>
+/**
+ * When a thread joins main: `auto` as soon as its last turn ends, `manual` only when a person merges it. Behaviour of
+ * the session engine, never recorded in the feed, so a policy can change without changing the history.
+ */
+export type MergePolicy = 'auto' | 'manual';
+
+/** The merge policy of each thread mode. */
+export type ThreadPolicy = Readonly<Record<Trajectory.ThreadMode, MergePolicy>>;
+
+/** Light threads and subagents join main when they complete; a fork stays apart until a person merges it. */
+export const DEFAULT_THREAD_POLICY: ThreadPolicy = { light: 'auto', fresh: 'auto', fork: 'manual' };
+
+/** A thread's merge policy; a turn, which has no mode, always merges when it ends. */
+export const mergePolicyOf = (policy: ThreadPolicy, mode: Trajectory.ThreadMode | undefined): MergePolicy =>
+  mode === undefined ? 'auto' : policy[mode];
+
+/**
+ * Threads and main turns running beside each other: open buffers with no parent, leaving out threads that wait for a
+ * person to merge them (a fork), which are not running even while open.
+ */
+const runningLanes = (state: Reducer.PromptState, policy: ThreadPolicy): Trajectory.ThreadId[] =>
   Object.entries(state.threads)
-    .filter(([, buffer]) => buffer.parent === undefined && !buffer.closed)
+    .filter(
+      ([, buffer]) => buffer.parent === undefined && !buffer.closed && mergePolicyOf(policy, buffer.mode) === 'auto',
+    )
     .map(([id]) => Trajectory.ThreadId.make(id));
 
 /**
  * The latest state of every other lane, after the history of a turn in a light thread, so it knows what changed since
  * its snapshot without the snapshot moving (which would cost the prompt cache).
  */
-const siblingStatus = (state: Reducer.PromptState, thread: Trajectory.ThreadId): Message.Message | undefined => {
+const siblingStatus = (
+  state: Reducer.PromptState,
+  thread: Trajectory.ThreadId,
+  policy: ThreadPolicy,
+): Message.Message | undefined => {
   const own = laneOf(state, thread);
   if (state.threads[own]?.entries.some((entry) => entry.ephemeral) !== true) {
     return undefined;
   }
-  const others = runningLanes(state).filter((id) => id !== own);
+  const others = runningLanes(state, policy).filter((id) => id !== own);
   if (others.length === 0) {
     return undefined;
   }
@@ -171,7 +199,11 @@ const openThread = Effect.fnUntraced(function* (
  */
 export const openLightThread = Effect.fnUntraced(function* (
   feed: Feed.Feed,
-  { purpose, owner }: { purpose?: string; owner?: Trajectory.Sender } = {},
+  {
+    purpose,
+    owner,
+    policy = DEFAULT_THREAD_POLICY,
+  }: { purpose?: string; owner?: Trajectory.Sender; policy?: ThreadPolicy } = {},
 ): Effect.fn.Return<Trajectory.ThreadId, never, Database.Service> {
   const { state, head } = yield* load(feed, Reducer.prompt);
   const open = Trajectory.make({
@@ -180,11 +212,68 @@ export const openLightThread = Effect.fnUntraced(function* (
       mode: 'light',
       ...(head !== undefined ? { from: { event: head } } : {}),
       ...(purpose !== undefined ? { purpose } : {}),
-      siblings: runningLanes(state),
+      siblings: runningLanes(state, policy),
     },
     sender: owner ?? { role: 'assistant' },
   });
   return yield* openThread(feed, undefined, open);
+});
+
+/**
+ * Forks the conversation at a past event of main: a thread that sees main up to `from` and then only its own work,
+ * and that stays apart from main until a person merges it ({@link mergeFork}). Prompts go into it with the thread
+ * named on the queued message.
+ */
+export const forkThread = Effect.fnUntraced(function* (
+  feed: Feed.Feed,
+  { from, purpose, owner }: { from: Trajectory.EventId; purpose?: string; owner?: Trajectory.Sender },
+): Effect.fn.Return<Trajectory.ThreadId, never, Database.Service> {
+  const { state } = yield* load(feed, Reducer.prompt);
+  // The fork sees main as it stood once `from` was in it (the reducer works that out from `from`).
+  const entry = state.entries.find((entry) => entry.source.includes(from));
+  if (entry === undefined) {
+    return yield* Effect.die(new Error(`Event ${from} is not on main, so nothing can fork from it.`));
+  }
+  // The branch attaches to main's own last event at or before that point, which a walk of the fork can reach.
+  const mainEvents = yield* Feed.walk(feed, Filter.type(Trajectory.Event), { branch: null, order: 'desc' }).run;
+  const at = mainEvents.find((event) =>
+    Option.match(HashMap.get(state.positions, event.id), {
+      onNone: () => false,
+      onSome: (position) => position <= entry.at,
+    }),
+  );
+  if (at === undefined) {
+    return yield* Effect.die(new Error(`Main has no event to fork ${from} from.`));
+  }
+  const open = Trajectory.make({
+    payload: {
+      _tag: 'threadOpen',
+      mode: 'fork',
+      from: { event: from },
+      ...(purpose !== undefined ? { purpose } : {}),
+    },
+    sender: owner ?? { role: 'assistant' },
+  });
+  return yield* Feed.fork(feed, [open], { at });
+});
+
+/**
+ * The fork a queued prompt was sent into, while that fork is open; none for a prompt on main. Its turn runs in the
+ * fork and joins the fork, not main.
+ */
+export const forkOf = Effect.fnUntraced(function* (
+  feed: Feed.Feed,
+  message: Trajectory.EventId,
+): Effect.fn.Return<Trajectory.ThreadId | undefined, never, Database.Service> {
+  const { state: view } = yield* load(feed, Reducer.thread);
+  const item = view.items.find((item) => item.id === message && item.status === 'queued');
+  const lane = item?.thread === undefined ? undefined : view.lanes.find((lane) => lane.id === item.thread);
+  if (lane?.kind !== 'fork') {
+    return undefined;
+  }
+  const { state } = yield* load(feed, Reducer.prompt);
+  const buffer = state.threads[lane.id];
+  return buffer !== undefined && !buffer.closed ? lane.id : undefined;
 });
 
 /** Who a delegated subagent's lane names as its owner. */
@@ -243,9 +332,14 @@ export const mergeThread = Effect.fnUntraced(function* (
   feed: Feed.Feed,
   thread: Trajectory.ThreadId,
   sender: Trajectory.Sender = { role: 'assistant' },
+  { policy = DEFAULT_THREAD_POLICY }: { policy?: ThreadPolicy } = {},
 ): Effect.fn.Return<void, never, Database.Service> {
   const { state: view } = yield* load(feed, Reducer.thread);
   const lane = view.lanes.find((lane) => lane.id === thread);
+  // A thread a person merges (a fork) stays open when its turn ends.
+  if (lane !== undefined && lane.kind !== 'turn' && mergePolicyOf(policy, lane.kind) === 'manual') {
+    return;
+  }
   // Written on the thread's own branch, which ends it there.
   if (lane?.kind !== 'fresh') {
     yield* append(feed, [Trajectory.make({ payload: { _tag: 'threadMerge', mode: 'raw' }, sender, thread })]);
@@ -255,6 +349,34 @@ export const mergeThread = Effect.fnUntraced(function* (
   yield* append(feed, [
     Trajectory.make({
       payload: { _tag: 'threadMerge', mode: 'summary', summary: [{ _tag: 'text', text: summary }] },
+      sender,
+      thread,
+    }),
+  ]);
+});
+
+/**
+ * A person merges a fork into main: by default a summary holding the fork's final answer, or the whole fork (`raw`).
+ */
+export const mergeFork = Effect.fnUntraced(function* (
+  feed: Feed.Feed,
+  thread: Trajectory.ThreadId,
+  {
+    mode = 'summary',
+    sender = { role: 'user' },
+  }: { mode?: Trajectory.ThreadMerge['mode']; sender?: Trajectory.Sender } = {},
+): Effect.fn.Return<void, never, Database.Service> {
+  if (mode === 'raw') {
+    yield* append(feed, [Trajectory.make({ payload: { _tag: 'threadMerge', mode: 'raw' }, sender, thread })]);
+    return;
+  }
+  const { state: view } = yield* load(feed, Reducer.thread);
+  const lane = view.lanes.find((lane) => lane.id === thread);
+  const answer = finalAnswer(view, thread);
+  const text = lane?.purpose ? `Fork "${lane.purpose}" concluded:\n\n${answer}` : answer;
+  yield* append(feed, [
+    Trajectory.make({
+      payload: { _tag: 'threadMerge', mode: 'summary', summary: [{ _tag: 'text', text }] },
       sender,
       thread,
     }),

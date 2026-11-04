@@ -9,10 +9,10 @@ import { describe, test, vi } from 'vitest';
 import { Alarm, Legacy } from '@dxos/assistant';
 import * as Reducer from '@dxos/compute/Reducer';
 import * as Trajectory from '@dxos/compute/Trajectory';
-import { type Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
-import { type ViewBase, makeCachedTrajectoryView, makeTrajectoryView } from './trajectory-view.ts';
+import { type ViewBase, makeCachedTrajectoryView, makeTrajectoryView, selectThread } from './trajectory-view.ts';
 
 const say = (text: string, role: Trajectory.Role = 'assistant', thread?: Trajectory.ThreadId) =>
   Trajectory.make({ payload: { _tag: 'message', blocks: [{ _tag: 'text', text }] }, sender: { role }, thread });
@@ -116,5 +116,29 @@ describe('makeCachedTrajectoryView', () => {
     expect(registry.get(view).selfWakes).toBe(0);
     expect(followed).toBe(1);
     unmount();
+  });
+});
+
+describe('selectThread', () => {
+  test('main leaves out a fork, which shows main up to its fork point and then its own messages', ({ expect }) => {
+    const { read, set } = setup();
+    const colour = say('Name a colour.');
+    const blue = say('Blue.');
+    const id = Obj.ID.random();
+    const fork = Trajectory.ThreadId.make(id);
+    const open = Trajectory.make({
+      id,
+      payload: { _tag: 'threadOpen', mode: 'fork', from: { event: blue.id }, purpose: 'Shapes' },
+      sender: { role: 'assistant' },
+      thread: fork,
+    });
+    set([colour, blue, say('Name an animal.'), say('Cat.'), open, say('Square.', 'assistant', fork)]);
+
+    const view = read();
+    expect(view.forks.map((lane) => [lane.id, lane.from, lane.purpose])).toEqual([[fork, blue.id, 'Shapes']]);
+    const main = selectThread(view);
+    expect(texts(main.messages)).toEqual(['Name a colour.', 'Blue.', 'Name an animal.', 'Cat.']);
+    expect(main.lanes.some((lane) => lane.kind === 'fork')).toBe(false);
+    expect(texts(selectThread(view, fork).messages)).toEqual(['Name a colour.', 'Blue.', 'Square.']);
   });
 });

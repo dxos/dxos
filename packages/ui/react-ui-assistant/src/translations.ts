@@ -27,6 +27,7 @@ export const translations = [
         'lane.collapse': 'Show less',
         'just-now.label': 'just now',
         'rewind.label': 'Rewind to this prompt',
+        'fork.label': 'Fork the conversation here',
         'summary.label': 'Summary',
         'request.answered.label': 'Answered: {{option}}',
         'request.cancelled.label': 'No longer waiting',

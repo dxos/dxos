@@ -40,7 +40,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as SqlService from '@dxos/compute/SqlService';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
-import type * as Trajectory from '@dxos/compute/Trajectory';
+import * as Trajectory from '@dxos/compute/Trajectory';
 import { Annotation, Database, Feed, Filter, Obj, Ref, Registry } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -140,10 +140,16 @@ export const AgentInput = Schema.Union([
     sender: Schema.optional(AgentInputSender),
     /** Foreign identity and other source metadata copied onto the message (e.g. `{ discord: { userId } }`). */
     properties: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
+    /** The fork the prompt goes into; main when absent. */
+    thread: Schema.optional(Trajectory.ThreadId),
   }),
 ]);
 
 export type AgentInput = Schema.Schema.Type<typeof AgentInput>;
+
+/** The fork an input is sent into, when it names one. */
+export const inputThread = (input: AgentInput): Trajectory.ThreadId | undefined =>
+  typeof input === 'object' && 'prompt' in input ? input.thread : undefined;
 
 /** Builds the feed message for an input; the sender defaults to the plain user role. */
 export const makeInputMessage = (input: AgentInput): Message.Message => {
@@ -259,6 +265,10 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         });
         const sessionStore = new SessionStore();
         const threading = options.threading?.();
+        const threadPolicy: TrajectoryStore.ThreadPolicy = {
+          ...TrajectoryStore.DEFAULT_THREAD_POLICY,
+          ...threading?.policy,
+        };
         // Agents sharing the chat, each with its own producer; built up front so their teardown joins the process scope.
         const tenants = new Map<string, { producer: TurnProducer; model?: DXN.DXN }>();
         for (const tenant of threading?.tenants ?? []) {
@@ -665,7 +675,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
             const message = makeInputMessage(input);
             // Recorded before the write, which yields: a completion check running meanwhile must see the prompt as owed.
             unseenWriteIds.add(message.id);
-            yield* sessionStore.enqueueMessage(feed, message);
+            yield* sessionStore.enqueueMessage(feed, message, inputThread(input));
             markWork('agent.prompt-queued');
             Queue.offerUnsafe(wake, undefined);
             yield* ctx.setAlarm(0);
@@ -765,10 +775,12 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                             : undefined);
                         return TrajectoryStore.openLightThread(feed, {
                           purpose: purposeOf(pending),
+                          policy: threadPolicy,
                           ...(owner !== undefined ? { owner: { role: 'assistant', name: owner } } : {}),
                         });
                       },
-                      merge: (thread) => TrajectoryStore.mergeThread(feed, thread),
+                      merge: (thread) => TrajectoryStore.mergeThread(feed, thread, undefined, { policy: threadPolicy }),
+                      forked: (pending) => TrajectoryStore.forkOf(feed, pending.id),
                       interrupted: (pending) => TrajectoryStore.interruptedThread(feed, pending.id),
                       delegated: (pending) =>
                         Effect.map(TrajectoryStore.delegatedThread(feed, pending.id), (thread) => {
@@ -860,7 +872,12 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 yield* Trace.emitRequestPhase('preparing');
               }
 
-              yield* executeTurn({ prompt, dequeued });
+              // A prompt sent into a fork runs there, with parallel threads on or off.
+              const fork =
+                dequeued !== undefined && Obj.instanceOf(Message.Message, dequeued)
+                  ? yield* TrajectoryStore.forkOf(feed, dequeued.id)
+                  : undefined;
+              yield* executeTurn({ prompt, dequeued, ...(fork !== undefined ? { thread: fork } : {}) });
               const after = yield* sessionStore.loadPending(feed);
 
               // Reconcile outstanding work into linked child processes (supervisor behaviour). The

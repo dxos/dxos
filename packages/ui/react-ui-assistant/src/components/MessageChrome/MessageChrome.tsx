@@ -18,7 +18,7 @@ import { getStyles, mx } from '@dxos/ui-theme';
 import { stringToFallback } from '@dxos/util';
 
 import { translationKey } from '../../translations.ts';
-import { type DeliveryStatus, type ThreadLane, getDelivery, isUnread } from '../../types.ts';
+import { type DeliveryStatus, type ForkMarker, type ThreadLane, getDelivery, isUnread } from '../../types.ts';
 import { LaneHeader } from '../../widgets/index.ts';
 
 //
@@ -30,6 +30,12 @@ const MESSAGE_CHROME_NAME = 'MessageChrome';
 type MessageChromeContextValue = {
   /** Soft-fork the thread from the given prompt; the rewind button renders only when present. */
   onRewind?: (id: string) => void;
+  /** Fork the conversation at the given answer; the fork button renders only when present. */
+  onFork?: (id: string) => void;
+  /** The forks that start at a message, shown under it; main leaves their messages out. */
+  getForks?: (message: Message.Message) => readonly ForkMarker[] | undefined;
+  /** Opens a fork from its marker. */
+  onOpenFork?: (thread: string) => void;
   /** While an answer is streaming the toolbars stay hidden — still in flow, never revealed. */
   streaming?: boolean;
   /** Show synthetic context panels (off in the summary view). */
@@ -150,11 +156,24 @@ export const PromptToolbar = memo(({ classNames, message }: MessageToolbarProps)
 
 PromptToolbar.displayName = 'PromptToolbar';
 
-/** The controls under an answer: copy, and when the answer finished. */
+/** The controls under an answer: copy, fork from here, and when the answer finished. */
 export const AssistantToolbar = memo(({ classNames, message }: MessageToolbarProps) => {
+  const { t } = Hooks.useTranslation(translationKey);
+  const { onFork } = useMessageChromeContext('AssistantToolbar');
   return (
     <div role='toolbar' className={mx('flex items-center gap-1 text-xs text-fg-muted', classNames)}>
       <CopyButton message={message} />
+      {onFork && (
+        <Button.Root
+          icon='ph--git-fork--regular'
+          iconOnly
+          label={t('fork.label')}
+          variant='ghost'
+          size='sm'
+          data-testid='chat.fork'
+          onClick={() => onFork(message.id)}
+        />
+      )}
       <Time message={message} />
       <MessageId message={message} />
       {/* Pushed to the far end: the cost of the turn is a footnote, not a control. */}
@@ -369,7 +388,9 @@ const hasToolbar = (message: Message.Message): boolean =>
  * bubble's edge.
  */
 export const MessageChrome = ({ message, selected, children }: MessageChromeProps) => {
-  const { streaming, userHue, showAuthors, getLane } = useMessageChromeContext(MESSAGE_CHROME_NAME);
+  const { streaming, userHue, showAuthors, getLane, getForks, onOpenFork } =
+    useMessageChromeContext(MESSAGE_CHROME_NAME);
+  const forks = getForks?.(message);
   const prompt = isPrompt(message);
   const delivery = prompt ? getDelivery(message) : undefined;
   const author = useAuthor(message.sender);
@@ -432,6 +453,21 @@ export const MessageChrome = ({ message, selected, children }: MessageChromeProp
         <div className='min-w-0'>
           {children}
           {hasToolbar(message) && <AssistantToolbar classNames={reveal} message={message} />}
+        </div>
+      )}
+      {forks && forks.length > 0 && (
+        <div className='flex flex-wrap gap-1 pt-1' data-testid='chat.forks'>
+          {forks.map((fork) => (
+            <Button.Root
+              key={fork.id}
+              icon='ph--git-fork--regular'
+              label={fork.label}
+              variant='ghost'
+              size='sm'
+              data-testid='chat.fork-marker'
+              onClick={() => onOpenFork?.(fork.id)}
+            />
+          ))}
         </div>
       )}
     </Row>

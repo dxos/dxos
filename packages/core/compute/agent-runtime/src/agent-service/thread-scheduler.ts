@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Queue from 'effect/Queue';
 
+import { type TrajectoryStore } from '@dxos/assistant';
 import type * as Trajectory from '@dxos/compute/Trajectory';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -42,6 +43,8 @@ export type ThreadingOptions = {
   readonly tenants?: readonly Tenant[];
   /** Owner the process's own lanes show when it shares the chat with tenants. */
   readonly owner?: string;
+  /** When each kind of thread joins main; `TrajectoryStore.DEFAULT_THREAD_POLICY` for the modes it leaves out. */
+  readonly policy?: Partial<TrajectoryStore.ThreadPolicy>;
 };
 
 /** The tenant a prompt addresses with a leading `@<name>`; none means the process's own agent. */
@@ -64,8 +67,10 @@ export type LaneRunner<R> = {
   readonly run: (message: Message.Message, thread: Trajectory.ThreadId | undefined) => Effect.Effect<void, never, R>;
   /** Opens a light thread for `message`. */
   readonly open: (message: Message.Message) => Effect.Effect<Trajectory.ThreadId, never, R>;
-  /** Joins a light thread whose work is done to main. */
+  /** Joins a thread whose work is done to main, when its merge policy is `auto`; a fork stays open. */
   readonly merge: (thread: Trajectory.ThreadId) => Effect.Effect<void, never, R>;
+  /** The fork `message` was sent into, which runs it; none for a prompt on main. */
+  readonly forked: (message: Message.Message) => Effect.Effect<Trajectory.ThreadId | undefined, never, R>;
   /** The light thread of a turn that answered `message` and died mid-way, so its redelivery runs there again. */
   readonly interrupted: (message: Message.Message) => Effect.Effect<Trajectory.ThreadId | undefined, never, R>;
   /** The subagent thread `message` was delegated to, which runs it; none for a person's prompt. */
@@ -79,9 +84,9 @@ type Finished = { readonly id: string; readonly thread?: Trajectory.ThreadId; re
 /**
  * Runs queued prompts in parallel lanes until the queue is drained and every lane has ended: the first prompt runs on
  * main, and a prompt that arrives while lanes run opens a light thread, up to `limit` of them; the rest wait in order.
- * A task delegated to a subagent runs in the thread it was delegated to, up to `limit` subagents besides. A thread
- * merges into main as soon as its turn ends. `wake` signals a new prompt; a lane that fails fails the
- * run once the others have ended.
+ * A task delegated to a subagent runs in the thread it was delegated to, up to `limit` subagents besides, and a prompt
+ * sent into a fork runs in the fork, one at a time. When a thread's turn ends the runner merges it into main if its
+ * merge policy says so. `wake` signals a new prompt; a lane that fails fails the run once the others have ended.
  */
 export const runLanes = <R>(
   runner: LaneRunner<R>,
@@ -94,6 +99,8 @@ export const runLanes = <R>(
     const begun = new Set<string>();
     // Threads of delegated subagents now running, up to `limit` of their own.
     const subagents = new Set<Trajectory.ThreadId>();
+    // Forks with a turn running; they count against no limit.
+    const forks = new Set<Trajectory.ThreadId>();
     const pendingById = new Map<string, Message.Message>();
 
     // A light thread snapshots the lanes running when it opens, so a lane started a moment ago (a burst of queued
@@ -139,6 +146,7 @@ export const runLanes = <R>(
         log('lane end', { message: id, thread, success: Exit.isSuccess(exit) });
         if (thread !== undefined) {
           subagents.delete(thread);
+          forks.delete(thread);
           yield* runner.merge(thread);
         }
         if (Exit.isFailure(exit) && !Cause.hasInterruptsOnly(exit.cause)) {
@@ -152,11 +160,19 @@ export const runLanes = <R>(
         for (const message of queue) {
           const resumed = yield* runner.interrupted(message);
           const subagent = resumed === undefined ? yield* runner.delegated(message) : undefined;
+          const fork = resumed === undefined && subagent === undefined ? yield* runner.forked(message) : undefined;
           const lights = [...running.values()].filter(
-            (thread) => thread !== undefined && !subagents.has(thread),
+            (thread) => thread !== undefined && !subagents.has(thread) && !forks.has(thread),
           ).length;
           if (resumed !== undefined) {
             yield* start(message, resumed);
+          } else if (fork !== undefined) {
+            // A fork runs its prompts one at a time, beside everything else and against no limit: a person opened it.
+            if ([...running.values()].includes(fork)) {
+              continue;
+            }
+            forks.add(fork);
+            yield* start(message, fork);
           } else if (subagent !== undefined) {
             // Its thread is already open; subagents run beside the light threads, which they do not count against.
             if (subagents.size >= limit) {
@@ -164,7 +180,11 @@ export const runLanes = <R>(
             }
             subagents.add(subagent);
             yield* start(message, subagent);
-          } else if (running.size === 0 && tenants.length === 0) {
+          } else if (
+            // A running fork is apart from main, so a prompt on main still runs on main beside it.
+            [...running.values()].every((thread) => thread !== undefined && forks.has(thread)) &&
+            tenants.length === 0
+          ) {
             yield* start(message, undefined);
           } else if (lights < limit) {
             yield* awaitStarted;
