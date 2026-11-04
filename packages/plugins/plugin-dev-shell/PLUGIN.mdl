@@ -140,7 +140,7 @@ test QA-2: Build a plugin with an agent from the Composer Plugin project templat
         one parent task, "Build the World Clock plugin", with four subtasks under it, all to do — read the
         guide, write the plugin, typecheck and check the dev server, offer it
     - name: Select the parent task and assign it to the agent
-      do: Tick the parent task's checkbox, then click "Assign selected tasks to agent".
+      do: Tick the parent task's checkbox, then click "Delegate selected tasks to agent".
       expect: |
         the project's pipeline chart appears and a chat named "Build the World Clock plugin" holds the parent
         and its four subtasks
@@ -244,4 +244,12 @@ decision D-4: The `/api/dev-shell/exec` route runs its scripts in a long-lived r
   for: user:dmaretskyi
   affects: [DevShellVitePlugin]
   why: On macOS `posix_spawn` rejects descriptors at or above `OPEN_MAX` (10240), and a Composer dev server watching the monorepo holds about 24k, so every script the Vite process spawned itself failed with `EBADF`.
+```
+
+```mdl
+decision D-5: The World Clock QA step names the projects toolbar button by its current label, "Delegate selected tasks to agent", as `org.dxos.plugin.projects` now titles it.
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: The step is read verbatim by people and by `composer-qa`; the button it named no longer exists.
 ```

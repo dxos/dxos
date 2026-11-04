@@ -708,3 +708,28 @@ export const ImportFeatureLinks = Operation.make({
     ),
   }),
 }).pipe(Operation.mutation('write'));
+
+/** Edits the project's `Repo.RepositoriesAnnotation`, which no generic object write reaches. */
+export const UpdateProjectRepositories = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.code.updateProjectRepositories'),
+    name: 'Update Project Repositories',
+    description:
+      "Add repositories to a project's repositories or remove them, and return the list. A cloud coding agent " +
+      'checks the list out and works in the first one. With neither `add` nor `remove`, returns the list unchanged.',
+    icon: 'ph--git-branch--regular',
+  },
+  input: Schema.Struct({
+    project: Ref.Ref(Project.Project).annotate({ description: 'The project (its reference is in the chat context).' }),
+    add: Schema.optional(
+      Schema.Array(Ref.Ref(Repo.Repo)).annotate({
+        description: 'Repositories to append, in order; one already listed keeps its place.',
+      }),
+    ),
+    remove: Schema.optional(Schema.Array(Ref.Ref(Repo.Repo)).annotate({ description: 'Repositories to remove.' })),
+  }),
+  output: Schema.Struct({
+    repositories: Schema.Array(Ref.Ref(Repo.Repo)).annotate({ description: "The project's repositories, in order." }),
+  }),
+  services: [Database.Service],
+}).pipe(Operation.mutation('write'));

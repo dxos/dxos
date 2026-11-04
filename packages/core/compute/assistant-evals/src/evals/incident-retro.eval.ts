@@ -38,7 +38,7 @@ import { getDefaultSkills } from '../skills.ts';
 // every time that matters, four people's notes that carry the process failures and two claims the
 // log contradicts, and four `todo` tasks. The run reproduces what `DelegateTaskToChat` does to a
 // chat — the tasks on its checklist, the chat filed under the project, each task started with the
-// assistant as assignee and a reviewer set — then hands it the delegation prompt.
+// assistant as delegate and the reader answering for it — then hands it the delegation prompt.
 //
 // The technical cause is table stakes. What is scored is whether the retro recommends what the log
 // supports (a page routed to someone who left the team, a renewal reminder on a departed colleague's
@@ -153,8 +153,8 @@ const taskLedger = Scorer.shared(
       Database.load(ref).pipe(Effect.orElseSucceed(() => undefined)),
     )).filter((candidate): candidate is Task.Task => !!candidate);
     return {
-      delegated: tasks.filter((candidate) => candidate.assignee?.role === 'assistant'),
-      created: tasks.filter((candidate) => candidate.assignee?.role !== 'assistant'),
+      delegated: tasks.filter((candidate) => Task.worker(candidate)?.role === 'assistant'),
+      created: tasks.filter((candidate) => Task.worker(candidate)?.role !== 'assistant'),
     };
   }),
 );
@@ -228,7 +228,6 @@ const SCORERS = [
   Scorer.make({
     name: 'delegated-tasks-back-in-review',
     description: 'Every task the session was given is in review (or done) when it finishes.',
-    // `done` past a named reviewer lands as `review`; either means the session finished the task.
     score: ledger(({ delegated }) =>
       delegated.length > 0
         ? delegated.filter((candidate) => candidate.status === 'review' || candidate.status === 'done').length /
@@ -288,8 +287,8 @@ const task = createEvalRunner({
       for (const task of tasks) {
         Task.setStatus(task, 'started', { actor: REVIEWER });
         Obj.update(task, (task) => {
-          task.assignee = { role: 'assistant' };
-          task.reviewers = [REVIEWER];
+          task.assignee = { ...REVIEWER };
+          task.delegate = { role: 'assistant' };
         });
       }
       yield* Database.flush();

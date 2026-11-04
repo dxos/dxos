@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, type Obj, type Ref } from '@dxos/echo';
-import { Task, TaskSet } from '@dxos/types';
+import { type Actor, Task, TaskSet } from '@dxos/types';
 
 import { TaskOperation } from '#types';
 
@@ -22,6 +22,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.ListTasks> = TaskOpera
       project,
       status,
       assignee,
+      delegate,
       milestone,
       includeSubtasks,
       after,
@@ -62,7 +63,8 @@ const handler: Operation.WithHandler<typeof TaskOperation.ListTasks> = TaskOpera
       const filtered = scoped.filter(
         (task) =>
           (status === undefined || (task.status ?? 'todo') === status) &&
-          (assignee === undefined || matchesAssignee(task, assignee)) &&
+          (assignee === undefined || matchesActor(task.assignee, assignee)) &&
+          (delegate === undefined || matchesActor(task.delegate, delegate)) &&
           (milestoneId === undefined || milestoneIds?.get(task.id) === milestoneId),
       );
 
@@ -80,12 +82,11 @@ const handler: Operation.WithHandler<typeof TaskOperation.ListTasks> = TaskOpera
 );
 
 /** Matches whichever identifier the actor carries — DID, email, or display name (case-insensitive). */
-const matchesAssignee = (task: Task.Task, assignee: string): boolean => {
-  const actor = task.assignee;
+const matchesActor = (actor: Actor.Actor | undefined, query: string): boolean => {
   if (!actor) {
     return false;
   }
-  const needle = assignee.toLowerCase();
+  const needle = query.toLowerCase();
   return [actor.identityDid, actor.email, actor.name].some((value) => value?.toLowerCase() === needle);
 };
 

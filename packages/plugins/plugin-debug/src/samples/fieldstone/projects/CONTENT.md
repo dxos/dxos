@@ -31,9 +31,10 @@ project Gantt and the trace panel draw.
 - 50 `Task`s across the 4 sets, created from −60d onward.
 - Status mix: 20 `done`, 5 `review`, 8 `started`, 3 `blocked`, 2 `failed`, 10 `todo` or `backlog`,
   2 `cancelled`.
-- 35 are assigned to an agent: `assignee` is an Actor with the agent's `identityDid`, and
-  `subject` set to its chat once one exists. The rest go to people, with `contact: Ref<Person>`.
-- Agent tasks in `review` or `done` have a human in `reviewers`.
+- 35 are worked by an agent: an Actor with the agent's `identityDid`, and `subject` set to its
+  chat once one exists. A task a person signs off is delegated: the person is the `assignee` and
+  the agent the `delegate`. An agent's own task has the agent as `assignee`. The rest go to people,
+  with `contact: Ref<Person>`.
 - Every task has a `priority` and an `estimate`. Some have `subtasks`. `dependsOn` chains of 3 to 5
   tasks give the Gantt real dependencies.
 - `history` records each status change with its date and actor. Two tasks carry a `question` from

@@ -77,18 +77,21 @@ const objectId = (uri: string | undefined): string | undefined => uri?.split('/'
 /** Statuses that mean the work is over; a reminder listing them would be noise. */
 const CLOSED: ReadonlySet<string> = new Set(['done', 'duplicate', 'cancelled', 'failed']);
 
+const isOpen = (task: Task.Task): boolean =>
+  !CLOSED.has(task.status ?? '') && !(task.status === 'review' && Task.needsReview(task));
+
 /**
- * The open tasks whose assignee stands for this session.
+ * The open tasks this session is working (see `Task.worker`).
  *
- * Filtered in memory rather than in the query: `assignee` is an inline actor, not a relation, so
+ * Filtered in memory rather than in the query: the worker is an inline actor, not a relation, so
  * there is no edge to select on — the subject ref is a field of a struct on the task.
  */
 const assignedTasks = (graph: Hypergraph.Hypergraph, session: RemoteSession.RemoteSession) =>
   Effect.promise(() => graph.query(Query.select(Filter.type(Task.Task)).from('all-accessible-spaces')).run()).pipe(
     Effect.map((result) =>
       [...result]
-        .filter((task) => objectId(task.assignee?.subject?.uri) === objectId(Obj.getURI(session)))
-        .filter((task) => !CLOSED.has(task.status ?? ''))
+        .filter((task) => objectId(Task.worker(task)?.subject?.uri) === objectId(Obj.getURI(session)))
+        .filter(isOpen)
         .map((task) => {
           // Containment, not a lookup: `TaskSet.tasks` and `Project.taskSet` both set parent, so the
           // project is two hops up from any task filed in one.
