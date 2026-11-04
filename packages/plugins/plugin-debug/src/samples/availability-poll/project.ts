@@ -63,12 +63,15 @@ assign in one is there in the next.
 offset on the slot's own date and hour, never once per poll; the spec's F-5 and T-2 say exactly what that means.
 - Check your work on the Worker running locally, never on the deployed one. In the first task, once \
 \`wrangler.jsonc\` exists, serve it with ExposePort \`{ sandbox, port: 8787, command: 'wrangler dev --ip 0.0.0.0 \
---port 8787', cwd: '/workspace/poll' }\`. It reloads when a file changes, so later tasks only edit files; its URL is \
-the preview, and from the sandbox the same Worker answers at \`http://localhost:8787\`.
-- Work one task at a time: in one command, write that feature's code, \`curl\` the requirements it adds on \
-\`localhost:8787\`, and commit. Then set its feature to \`prototype\` and the task to \`review\` before starting the \
-next. Never write a later task's code early: F-1 serves only what F-1 requires.
-- \`Check M-n\` runs the milestone's scenario on \`localhost:8787\` in one command, a Node script with \`fetch\`, and \
+--port 8787', cwd: '/workspace/poll' }\`. Its URL is the preview, and from the sandbox the same Worker answers at \
+\`http://localhost:8787\`. A reload after an edit can leave it hanging, so after changing files call ExposePort again \
+with the same input: it restarts the server on the same URL. Give every \`curl\` \`-m 10 --retry 5 \
+--retry-connrefused\`, so a hung request fails at once and a restarting server is waited for.
+- Work one task at a time: write that feature's code, restart the server, then in one command \`curl\` the \
+requirements it adds on \`localhost:8787\` and commit. Then set its feature to \`prototype\` and the task to \
+\`review\` before starting the next. Never write a later task's code early: F-1 serves only what F-1 requires.
+- \`Check M-n\` runs the milestone's scenario on \`localhost:8787\` in one command, a Node script whose every \`fetch\` \
+has \`signal: AbortSignal.timeout(10_000)\`, and \
 prints a table of expected against actual for every count, slot start and best slot the scenario states. When it all \
 matches, deploy, set the milestone's features to \`operational\`, and set the task's description to two lines, \
 \`Preview: <preview URL>\` and \`Worker: <Worker URL>\`. Make no showcase: the preview is how this project shows its \
