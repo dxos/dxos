@@ -304,6 +304,31 @@ feat F-8: Delegate to subagents in background threads
       background
 ```
 
+```mdl
+feat F-11: See what the agent is doing at a glance
+
+  req F-11.1:
+    when: a reader opens the overview of a chat
+    then: a git graph shows the work, not the messages: the trunk lists the tasks the agent finished (a lane's
+      purpose, or the request it answered), the latest few of them, and counts the rest; no message or tool call
+      shows
+
+  req F-11.2:
+    when: lanes are running or waiting
+    then: each is a branch off the trunk with the requests it took on, the current one marked working, waiting (and
+      for which lane) or queued; a subagent branches off the lane that delegated it, and once it finishes it collapses
+      into one commit on that lane
+
+  req F-11.4:
+    when: a fork is open, between its turns or running one
+    then: it stays a branch, marked an open fork while it rests, with the prompts queued in it; it collapses into one
+      commit on the trunk only once a person merges it (F-9.5)
+
+  req F-11.3:
+    when: prompts are queued and no lane has taken them yet
+    then: they show on a branch of their own after the running lanes, oldest first, as what the agent will do next
+```
+
 ## Scenarios
 
 ```mdl
@@ -474,6 +499,33 @@ test QA-4: Three subagents compare savings plans
     - name: Watch the comparison arrive
       do: Wait for the subagents to finish.
       expect: the agent's comparison table shows each plan's balance after 10, 20 and 30 years
+```
+
+```mdl
+test QA-5: The overview follows threads, subagents and queued prompts
+  desc: The scripted story `stories-assistant/AgentOverview` (Demo), the chat beside its overview graph.
+  actors: human
+  covers: [F-11.1, F-11.2, F-11.3, F-8.1, F-1.1]
+  status: draft
+  given:
+    - the story `stories/stories-assistant/AgentOverview` Demo, with Parallel threads on and a limit of two
+  steps:
+    - name: Ask for a comparison
+      do: Send "Compare three savings plans for $10,000 at 4%, 6% and 8% a year over 30 years."
+      expect: the comparison is a branch; two subagents branch off it and the third shows as queued
+    - name: Start a long task beside it
+      do: Send "Meanwhile, research the factorials of 5 to 9 and summarise them."
+      expect: the research is a second branch, working
+    - name: Ask for something that depends on it
+      do: Send "When the research is done, translate its summary into French."
+      expect: a third branch says it is waiting for the research
+    - name: Queue two more prompts
+      do: Send "What is 17 × 23?", then "And what is the capital of Australia?"
+      expect: both wait on the queued branch, since two threads already run
+    - name: Watch the work finish
+      do: Wait for every thread to end.
+      expect: finished subagents collapse into their lane, then each finished lane into one commit on the trunk, and
+        the queued prompts run as threads free up; at the end only the trunk remains
 ```
 
 ## Changelog
@@ -896,4 +948,22 @@ decision D-39: Every agent turn still forks a branch of its own, including a tur
   why: A turn on its own branch is what tells the view and the scheduler that it runs and what it wrote; a turn on main would need its messages tied to it by position, beside people's prompts that land on main from other devices.
   rejected:
     - Continue main whenever no other turn runs — the lanes, the light-thread trigger and every turn producer assume a turn has a branch, so it is a change of its own.
+```
+
+```mdl
+decision D-40: The overview graph draws tasks, not events: a finished lane is one commit on the trunk, a running lane
+  a branch listing the requests it took on, a subagent a branch off the lane that delegated it, and queued prompts a
+  branch of their own. A task is a lane's purpose or a request it consumed; messages, turns and tool calls never show.
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-11, F-11.4]
+  why: The reader asked to see at a glance what the agent did, what runs in parallel and what it will do; the event
+    graph answers that only after reading every commit.
+  rejected:
+    - A todo list the agent keeps; the trajectory records none, so it would need a new event and a tool the model
+      may not call.
+    - Every turn as a commit; a lane that waits and resumes runs several turns, which tell the reader nothing new.
+    - A fork that rests as finished; the thread view marks it done between turns, yet it stays apart from main until a
+      person merges it, so the overview reads the session state's thread statuses to keep it open.
 ```
