@@ -7,6 +7,7 @@
 '@dxos/plugin-sheet': patch
 '@dxos/plugin-space': patch
 '@dxos/react-client': patch
+'@dxos/react-ui': patch
 '@dxos/react-ui-attention': patch
 '@dxos/shell': patch
 '@dxos/ui-editor': patch

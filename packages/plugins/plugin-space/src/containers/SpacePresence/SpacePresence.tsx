@@ -30,9 +30,11 @@ import {
   type PeerSession,
   countViewers,
   getFreshSessions,
+  getPeerNodeId,
+  getSessionNodeId,
   isMoving,
 } from '../../util/index.ts';
-import { PeerActions } from './PeerActions.tsx';
+import { PeerActions, useExpandPeerNodes } from './PeerActions.tsx';
 
 const REFRESH_INTERVAL = 5000;
 
@@ -76,12 +78,21 @@ export const SpacePresence = ({ spaceId, presenceKey }: SpacePresenceProps) => {
   const spaceMembers = useMembers(spaceId);
   const now = useNow();
   const [showSessions, setShowSessions] = useShowSessions();
+  const viewers = (presenceKey && ephemeral?.viewersByObject[presenceKey]) || {};
+  // Ready before the list opens, so its rows' actions do not appear after it.
+  useExpandPeerNodes(
+    spaceId
+      ? Object.entries(viewers).flatMap(([identityKey, sessions]) => [
+          getPeerNodeId(spaceId, identityKey),
+          ...Object.keys(sessions).map((sessionId) => getSessionNodeId(spaceId, identityKey, sessionId)),
+        ])
+      : [],
+  );
 
   if (!identity || !ephemeral || !presenceKey) {
     return null;
   }
 
-  const viewers = ephemeral.viewersByObject[presenceKey] ?? {};
   const members = spaceMembers
     .flatMap((member) => {
       const sessions = getFreshSessions(member.identityKey ? viewers[member.identityKey] : undefined, now);
@@ -311,12 +322,17 @@ export type PresenceItemsProps = {
 
 /**
  * A member's Listbox row: avatar, name, how many sessions, then their actions. With `showSessions` a row per session
- * follows it, with whether the session moved lately and its device; the actions move to those rows.
+ * follows it, with whether the session moved lately and its device; the actions move to those rows. The member's rows
+ * hover and highlight as one.
  */
 export const PresenceItems = ({ member, showSessions, renderActions }: PresenceItemsProps) => {
   const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   return (
-    <>
+    <div
+      role='group'
+      aria-label={getName(member)}
+      className='rounded-sm [&:is(:hover,:has([data-highlighted]))]:bg-hover-surface-subtle [&>.dx-row]:bg-transparent'
+    >
       <Listbox.Item id={member.rowId} data-testid='spacePlugin.presence.row'>
         {/* Smaller than the row, so the row's hover and highlight frame it. */}
         <Listbox.ItemIcon>
@@ -355,7 +371,7 @@ export const PresenceItems = ({ member, showSessions, renderActions }: PresenceI
             </Listbox.Item>
           );
         })}
-    </>
+    </div>
   );
 };
 

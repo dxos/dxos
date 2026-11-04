@@ -16,6 +16,22 @@ import * as Theme from '@dxos/react-ui/Theme';
 import { SpaceNamespace } from '../../namespace.ts';
 import { getPeerNodeId, getSessionNodeId } from '../../util/index.ts';
 
+/** Expands peers' (or their sessions') hidden graph nodes and their actions, which nothing else expands. */
+export const useExpandPeerNodes = (nodeIds: readonly string[]) => {
+  const { graph } = ToolkitHooks.useAppGraph();
+  // Keyed by the ids' contents, so a caller can pass a fresh array each render.
+  const key = nodeIds.join(' ');
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      for (const nodeId of key ? key.split(' ') : []) {
+        AppGraph.expandPath(graph, nodeId);
+        AppGraph.expandSync(graph, nodeId, 'action');
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [graph, key]);
+};
+
 export type PeerActionsProps = {
   spaceId: string;
   identityKey: string;
@@ -29,15 +45,7 @@ export const PeerActions = ({ spaceId, identityKey, sessionId }: PeerActionsProp
   const { graph } = ToolkitHooks.useAppGraph();
   const runAction = GraphHooks.useActionRunner();
   const nodeId = sessionId ? getSessionNodeId(spaceId, identityKey, sessionId) : getPeerNodeId(spaceId, identityKey);
-
-  // A peer's node is hidden, so nothing else expands it or its actions.
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => {
-      AppGraph.expandPath(graph, nodeId);
-      AppGraph.expandSync(graph, nodeId, 'action');
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [graph, nodeId]);
+  useExpandPeerNodes(useMemo(() => [nodeId], [nodeId]));
 
   const actions = useAtomValue(useMemo(() => graph.actions(nodeId), [graph, nodeId]));
 
