@@ -182,8 +182,8 @@ const openProjectTab = async (demo, page, tab) => {
 /** Brings the project's plank up, at the project's own level, with its tabs showing. */
 const showProjectTabs = async (demo, page, selector) => {
   // A feature's level or an artifact opened from the project sits under the project's breadcrumb, whose first link is
-  // the project; the sidebar row does not navigate back.
-  const crumb = `[data-testid="deck.plank"] nav[aria-label="Navigation history"] button[data-part="link"]`;
+  // the project; the sidebar row does not navigate back. Other planks, such as Home, have breadcrumbs too.
+  const crumb = `[data-testid="deck.plank"] nav[aria-label="Navigation history"] button[data-part="link"]:text-is("${PROJECT}")`;
   if (await visible(page.locator(crumb), 1_000)) {
     await demo.click({ selector: `${crumb} >> nth=0`, label: PROJECT });
   } else if (!(await visible(page.locator(selector), 2_000))) {
