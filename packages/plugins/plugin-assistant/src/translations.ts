@@ -84,8 +84,6 @@ export const translations: Theme.Resource[] = [
       },
       // TODO(burdon): Reconcile with react-ui-chat.
       [AssistantNamespace.key]: {
-        'activity.chat-working.label': 'Assistant is working',
-        'activity.companion-working.label': 'Assistant is working on this',
         'delete-task.label': 'Delete task',
         'execute-task.label': 'Execute task',
         'execute-task.prompt': 'Implement task #{{ordinal}}',

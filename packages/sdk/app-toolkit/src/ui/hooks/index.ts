@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './useActivity.ts';
 export * from './useAppGraph.ts';
 export * from './useDetailNavigation.ts';
 export * from './useActiveSpace.ts';

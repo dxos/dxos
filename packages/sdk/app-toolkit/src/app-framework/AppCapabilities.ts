@@ -27,7 +27,7 @@ import { type Translator as Translator$ } from '@dxos/i18n';
 import { type URI } from '@dxos/keys';
 import type { Connection } from '@dxos/link';
 import { Progress } from '@dxos/progress';
-import type { Activity, Selection } from '@dxos/react-ui-attention/types';
+import type { Selection } from '@dxos/react-ui-attention/types';
 import type { AnchoredTo, Message, Thread } from '@dxos/types';
 import * as Position from '@dxos/util/Position';
 
@@ -420,26 +420,6 @@ export type CommentConfig = Readonly<{
  * @category Capability
  */
 export const CommentConfig = Capability$.make<CommentConfig>()('org.dxos.app-framework.capability.commentConfig');
-
-/** What an {@link ActivitySource} is asked about: an object by URI, and the object itself when the caller holds it. */
-export type ActivityTarget = Readonly<{
-  uri: string;
-  object?: Obj.Unknown;
-}>;
-
-/**
- * Reports what is happening on objects (who is viewing, an agent working on it, ...) for the attention glyph and its
- * tooltip. The glyph merges every source's entries and keeps one treatment per slot.
- */
-export type ActivitySource = Readonly<{
-  id: string;
-  activity: (target: ActivityTarget) => Atom.Atom<readonly Activity.Entry[]>;
-}>;
-
-/**
- * @category Capability
- */
-export const ActivitySource = Capability$.make<ActivitySource>()('org.dxos.app-framework.capability.activitySource');
 
 /**
  * Runs one agent turn on a comment thread, after the triggering `message` is already in the thread's feed.

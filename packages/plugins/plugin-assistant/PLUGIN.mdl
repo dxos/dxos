@@ -732,7 +732,7 @@ decision D-18: Code mode is the default turn engine; the setting becomes `disabl
 ```
 
 ```mdl
-decision D-19: A running agent shows on the navtree as the agent star in the attention glyph's mark, in place of presence, on its chat's row and, for a companion chat, on the row of the object it is a companion to. The plugin contributes it as an `ActivitySource`; the glyph decides how it draws beside other activity.
+decision D-19: A running agent shows on the navtree as the agent star in the attention glyph's mark, in place of presence, on its chat's row and, for a companion chat, on the row of the object it is a companion to. The plugin reports each turn to the progress registry as a monitor keyed `<uri>#agent` on both objects; plugin-space's glyph draws running progress as the star.
   date: 2026-11-03
   by: user:wittjosiah
   affects: [QA-5]
@@ -740,6 +740,7 @@ decision D-19: A running agent shows on the navtree as the agent star in the att
   rejected:
     - A still amber outline on the edge: it kept presence visible but read as generic busy work and had no natural finished state.
     - The star on chats and the outline on companion subjects: kept a document's viewers visible, at the cost of two symbols for one thing.
+    - An `ActivitySource` capability the glyph merges: a second channel beside the progress registry for the same signal.
 ```
 
 ---
