@@ -85,8 +85,6 @@ class TestNetwork {
 
 const CHANNEL = 'awareness.test';
 
-const peerIds = (provider: SpaceAwarenessProvider) => provider.getRemoteStates().map((state) => state.peerId);
-
 describe('SpaceAwarenessProvider', () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -444,3 +442,5 @@ describe('SpaceAwarenessProvider', () => {
     expect(peerIds(guest)).toEqual(['host']);
   });
 });
+
+const peerIds = (provider: SpaceAwarenessProvider) => provider.getRemoteStates().map((state) => state.peerId);

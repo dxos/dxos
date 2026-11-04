@@ -72,27 +72,6 @@ describe('Automerge', () => {
     expect(editor.textContent).toBe('hello world!');
   });
 
-  // Records whether each transaction awareness weighs as a move (a doc change or a selection) is marked remote.
-  const createRecordedView = (obj: TestType) => {
-    const accessor = Doc.createAccessor(obj, ['text']);
-    const remote: boolean[] = [];
-    const view = new EditorView({
-      state: EditorState.create({
-        extensions: [
-          automerge(accessor),
-          EditorView.updateListener.of(({ transactions }) => {
-            for (const tr of transactions.filter((tr) => tr.docChanged || tr.selection !== undefined)) {
-              remote.push(!!tr.annotation(Transaction.remote));
-            }
-          }),
-        ],
-      }),
-      parent: document.body,
-    });
-    onTestFinished(() => view.destroy());
-    return { accessor, view, remote };
-  };
-
   test('edits from the document are marked remote', ({ expect }) => {
     const { accessor, view, remote } = createRecordedView(Obj.make(TestType, { text: '' }));
     new Generator(accessor).update('hello');
@@ -106,3 +85,24 @@ describe('Automerge', () => {
     expect(remote).toEqual([true]);
   });
 });
+
+// Records whether each transaction awareness weighs as a move (a doc change or a selection) is marked remote.
+const createRecordedView = (obj: TestType) => {
+  const accessor = Doc.createAccessor(obj, ['text']);
+  const remote: boolean[] = [];
+  const view = new EditorView({
+    state: EditorState.create({
+      extensions: [
+        automerge(accessor),
+        EditorView.updateListener.of(({ transactions }) => {
+          for (const tr of transactions.filter((tr) => tr.docChanged || tr.selection !== undefined)) {
+            remote.push(!!tr.annotation(Transaction.remote));
+          }
+        }),
+      ],
+    }),
+    parent: document.body,
+  });
+  onTestFinished(() => view.destroy());
+  return { accessor, view, remote };
+};

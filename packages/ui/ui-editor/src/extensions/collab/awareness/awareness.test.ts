@@ -10,28 +10,6 @@ import { Event } from '@dxos/async';
 
 import { type AwarenessProvider, type AwarenessUpdateOptions, awareness } from './awareness.ts';
 
-const createView = () => {
-  const moves: (boolean | undefined)[] = [];
-  const provider: AwarenessProvider = {
-    remoteStateChange: new Event(),
-    open: () => {},
-    close: () => {},
-    getRemoteStates: () => [],
-    update: (_position, options?: AwarenessUpdateOptions) => {
-      moves.push(options?.moved);
-    },
-  };
-  const view = new EditorView({
-    state: EditorState.create({ doc: 'abc', extensions: [awareness(provider)] }),
-    parent: document.body,
-  });
-  onTestFinished(() => view.destroy());
-  view.focus();
-  view.dispatch({ selection: EditorSelection.cursor(0), userEvent: 'select' });
-  moves.length = 0;
-  return { view, moves };
-};
-
 describe('awareness', () => {
   test('a remote edit that shifts the caret is not a move', ({ expect }) => {
     const { view, moves } = createView();
@@ -62,3 +40,25 @@ describe('awareness', () => {
     expect(moves).toEqual([true, true]);
   });
 });
+
+const createView = () => {
+  const moves: (boolean | undefined)[] = [];
+  const provider: AwarenessProvider = {
+    remoteStateChange: new Event(),
+    open: () => {},
+    close: () => {},
+    getRemoteStates: () => [],
+    update: (_position, options?: AwarenessUpdateOptions) => {
+      moves.push(options?.moved);
+    },
+  };
+  const view = new EditorView({
+    state: EditorState.create({ doc: 'abc', extensions: [awareness(provider)] }),
+    parent: document.body,
+  });
+  onTestFinished(() => view.destroy());
+  view.focus();
+  view.dispatch({ selection: EditorSelection.cursor(0), userEvent: 'select' });
+  moves.length = 0;
+  return { view, moves };
+};
