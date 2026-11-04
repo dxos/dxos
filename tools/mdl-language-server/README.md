@@ -12,7 +12,7 @@ reports.
 | Diagnostics      | The deus lint (block types, decision attribution, nested headers, `mdl/ref` and `mdl/uses` against the workspace's spec index), `github:` keys whose file or symbol is not in the checkout, and in a `.review.mdl`, verdicts with no known status or for an item the spec does not declare. |
 | Completion       | Block types on a fence's header line (core types plus the `## Extensions` table), field names in a block body, spec ids after `uses`, a spec's items after `<id>#`, and verdict ids and statuses in a review. |
 | Go to definition | A `github:` key opens the file at the symbol, `<spec id>#<item>` and `uses`/`dependsOn` ids open the other spec at the item, and an item id (`[F-1.2]`, `affects: [F-1]`) jumps to its declaration. In a review, a verdict id opens the item in the spec. |
-| Document links   | The same keys and references, plus relative markdown links; a key into another repository links to GitHub.                                                                                             |
+| Document links   | The same keys and references, plus relative markdown links; a key into a repository no open folder checks out links to GitHub.                                                                                             |
 | Hover            | A key shows the declaration it names (the viewer's snippet card), a spec reference the other spec's block, and a reviewed item's line its verdict, note, walkthrough and the code and tests it cites.    |
 | Code lenses      | The review's chips above each reviewed item: status, `</> symbol` code and test chips that open the code, and `no code` / `tested` / `not tested`. Lenses run the client command `mdl.open(uri, line)`. |
 | Inlay hints      | The same chips at the end of the declaration line, with each code chip linked to its file.                                                                                                            |
@@ -22,8 +22,10 @@ The review is the `<SPEC>.review.mdl` beside the spec (see the `spec-review` ski
 custom request `mdl/verdictLines` (`{ uri }` → `{ line, status }[]`), which the VS Code client uses to colour the
 margin, and sends `mdl/reviewChanged` when a review changes.
 
-The workspace root is the editor's workspace folder. The server indexes every `.mdl` file git knows there (or every
-one under it, outside git), and reads `remote.origin.url` to tell which `github:` keys name local files.
+Each workspace folder is one checkout. The server indexes every `.mdl` file git knows there (or every one under it,
+outside git), and reads `remote.origin.url` to tell which `github:` keys name its files. Every folder is scanned at
+startup and sees the others, so with `dxos` and `edge` open in one window a `github:dxos/edge/...` key in a dxos spec
+opens the file in the edge folder; only a key no open folder holds falls back to GitHub.
 
 ## Build and run
 

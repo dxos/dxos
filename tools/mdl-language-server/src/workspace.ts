@@ -22,6 +22,8 @@ export interface Workspace {
   readonly root: string;
   readonly repo?: Repo;
   readonly index: SpecIndex;
+  /** The other checkouts open in the editor, consulted for a key that names one of their repositories. */
+  readonly peers?: readonly Workspace[];
   read(path: string): string | undefined;
 }
 
@@ -42,6 +44,7 @@ export const uriOfPath = (workspace: Workspace, path: string): string =>
 export class MemoryWorkspace implements Workspace {
   readonly files: Map<string, string>;
   index: SpecIndex;
+  peers: readonly Workspace[] = [];
 
   constructor(
     files: Record<string, string>,
@@ -124,6 +127,7 @@ const detectRepo = (root: string): Repo | undefined => {
  */
 export class DiskWorkspace implements Workspace {
   readonly repo: Repo | undefined;
+  peers: readonly Workspace[] = [];
   readonly #open = new Map<string, string>();
   readonly #specs = new Map<string, string>();
   #index: SpecIndex | undefined;

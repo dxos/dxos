@@ -111,6 +111,18 @@ describe('links and definitions', () => {
     ]);
   });
 
+  test('a key to a repository open beside this one links to its checkout', ({ expect }) => {
+    const workspace = new MemoryWorkspace(FILES);
+    workspace.peers = [
+      new MemoryWorkspace({ 'src/main.ts': 'export const run = () => {};\n' }, '/edge', {
+        owner: 'dxos',
+        repo: 'edge',
+      }),
+    ];
+    const document = toDocument('x.mdl', 'See github:dxos/edge/src/main.ts#run.\n');
+    expect(documentLinks(workspace, document).map(({ target }) => target)).toEqual(['file:///edge/src/main.ts#L1']);
+  });
+
   test('goes to keys, spec references and item ids', ({ expect }) => {
     const { workspace, document, at } = setup();
     expect(definition(workspace, document, at('a.ts#openThing'))).toEqual({

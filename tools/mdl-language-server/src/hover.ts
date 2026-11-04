@@ -5,7 +5,7 @@
 import { parseBlockHeaders } from '@dxos/deus/parse';
 import { type SourceKey, type Verdict, declarationSnippet, parseSourceKey, walkthroughOf } from '@dxos/deus/review';
 
-import { type Target, keyTarget } from './resolve.ts';
+import { type Target, checkoutOf, keyTarget } from './resolve.ts';
 import { STATUS_LABEL } from './review.ts';
 import { type Workspace } from './workspace.ts';
 
@@ -61,7 +61,7 @@ const blockExcerpt = (text: string, item: string): string | undefined => {
 
 /**
  * The hover card of a `github:` key: the file name (a link) above the highlighted declaration the key names, as the
- * spec viewer's snippet card shows it. A key outside the checkout links to GitHub.
+ * spec viewer's snippet card shows it. A key outside every open checkout links to GitHub.
  */
 export const keyCard = (workspace: Workspace, key: SourceKey): string => {
   const target = keyTarget(workspace, key);
@@ -69,7 +69,7 @@ export const keyCard = (workspace: Workspace, key: SourceKey): string => {
   if (target.kind === 'url') {
     return `${title}\n\nNot in this checkout.`;
   }
-  const text = workspace.read(key.path) ?? '';
+  const text = checkoutOf(workspace, key)?.read(key.path) ?? '';
   if (key.path.endsWith('.mdl')) {
     const excerpt = key.fragment ? blockExcerpt(text, key.fragment) : undefined;
     return excerpt ? `${title}\n\n${excerpt}` : `${title}\n\n${key.fragment ? 'Item not found.' : ''}`.trimEnd();
