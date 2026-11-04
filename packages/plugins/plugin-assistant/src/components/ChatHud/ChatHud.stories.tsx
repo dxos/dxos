@@ -26,6 +26,7 @@ import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { Config } from '@dxos/react-client';
 import { useRegistry, useSpaces } from '@dxos/react-client/echo';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Button from '@dxos/react-ui/Button';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -61,7 +62,7 @@ const fakeAiServiceMiddleware = () => {
 };
 
 /** Sets the width shared by the threads and the prompt. */
-const CHAT_HUD_WIDTH = '[--chat-hud-width:25vw]';
+const CHAT_HUD_WIDTH = '[--chat-hud-width:32vw]';
 
 type ThreadColumnProps = {
   chat: AssistantChat.Chat;
@@ -95,16 +96,14 @@ const ThreadColumn = ({ chat, db, runtime, registry, settings, current, footer, 
 
   return (
     <Chat.Root chat={chat} db={db} chatModel={chatModel} onSubmit={handleSubmit}>
-      <Panel.Root classNames='w-(--chat-hud-width) snap-center border-e first:border-s border-separator' asChild>
+      <Panel.Root classNames='w-(--chat-hud-width) snap-center' asChild>
         <div
           data-testid='chat-hud.thread'
+          data-thread-id={chat.id}
           aria-current={current ? 'true' : undefined}
           onClick={() => onSelect(chat)}
           ref={columnRef}
         >
-          <Panel.Header classNames={['px-2 py-1 truncate', current ? 'bg-attention-surface' : 'text-fg-subtle']}>
-            {chat.name}
-          </Panel.Header>
           <Panel.Body asChild>
             <Chat.Content>
               <Chat.Thread />
@@ -114,7 +113,7 @@ const ThreadColumn = ({ chat, db, runtime, registry, settings, current, footer, 
       </Panel.Root>
       {footer &&
         createPortal(
-          <div className={current ? 'flex flex-col gap-1 w-(--chat-hud-width) mx-auto py-1' : 'hidden'}>
+          <div className={current ? 'flex flex-col gap-1 w-(--chat-hud-width) mx-auto pointer-events-auto' : 'hidden'}>
             <Chat.Activity />
             <Chat.Prompt {...chatProps} outline autoFocus={current} preset={preset?.id} />
             <ThreadPromptFocus current={current} />
@@ -136,6 +135,29 @@ const ThreadPromptFocus = ({ current }: { current: boolean }) => {
   return null;
 };
 
+type AddThreadProps = {
+  side: 'start' | 'end';
+  onAdd: (side: 'start' | 'end') => void;
+};
+
+/** Sits in the strip's padding beside the columns: zero width, so it does not shift a centered thread. */
+const AddThread = ({ side, onAdd }: AddThreadProps) => (
+  <div className={['flex items-center w-0', side === 'start' ? 'justify-end pe-2' : 'ps-2'].join(' ')}>
+    <Button.Root
+      classNames='shrink-0 opacity-10 transition-opacity hover:opacity-100 focus-visible:opacity-100'
+      icon='ph--plus--regular'
+      iconOnly
+      showTooltip={false}
+      size='xl'
+      iconSize='xl'
+      label={side === 'start' ? 'Add thread on the left' : 'Add thread on the right'}
+      variant='ghost'
+      data-testid={`chat-hud.add-${side}`}
+      onClick={() => onAdd(side)}
+    />
+  </div>
+);
+
 const DefaultStory = () => {
   const [space] = useSpaces();
   const db = space?.db;
@@ -145,22 +167,70 @@ const DefaultStory = () => {
   const runtime = useChatServices({ id: db?.spaceId });
   const [footer, setFooter] = useState<HTMLDivElement | null>(null);
 
-  // Ids are time-ordered, so a new thread lands at the end of the strip.
-  const threads = useMemo(() => chats.toSorted((a, b) => a.id.localeCompare(b.id)), [chats]);
+  // The prompt floats over the strip and grows with its text, so the threads track its height to end above it.
+  const stripRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!footer) {
+      return;
+    }
+    const observer = new ResizeObserver(() => {
+      stripRef.current?.style.setProperty('--chat-hud-footer-height', `${footer.offsetHeight}px`);
+    });
+    observer.observe(footer);
+    return () => observer.disconnect();
+  }, [footer]);
+
+  // Ids are time-ordered, so a thread lands at the end of the strip unless it was added on the left.
+  const [prepended, setPrepended] = useState<readonly string[]>([]);
+  const threads = useMemo(() => {
+    const sorted = chats.toSorted((a, b) => a.id.localeCompare(b.id));
+    const isPrepended = ({ id }: AssistantChat.Chat) => prepended.includes(id);
+    return [...sorted.filter(isPrepended).toReversed(), ...sorted.filter((chat) => !isPrepended(chat))];
+  }, [chats, prepended]);
   const [currentId, setCurrentId] = useState<string>();
-  const index = Math.max(
-    threads.findIndex(({ id }) => id === currentId),
-    0,
-  );
+  // A thread just created is not in the query yet, so an unknown id holds the position until it arrives.
+  const lastIndexRef = useRef(0);
+  const found = threads.findIndex(({ id }) => id === currentId);
+  const index = found === -1 ? Math.max(Math.min(lastIndexRef.current, threads.length - 1), 0) : found;
+  lastIndexRef.current = index;
   const current = threads[index];
 
-  const handleNew = useCallback(() => {
-    if (db) {
-      const feed = db.add(Feed.make());
-      const chat = db.add(AssistantChat.make({ name: `Thread ${threads.length + 1}`, feed: Ref.make(feed) }));
-      setCurrentId(chat.id);
+  // On `scrollend` rather than `scroll`: selecting mid-flight would re-center on every thread a long scroll passes.
+  const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!viewport) {
+      return;
     }
-  }, [db, threads.length]);
+    const handleScrollEnd = () => {
+      const { left, width } = viewport.getBoundingClientRect();
+      const center = left + width / 2;
+      const distanceFromCenter = (column: HTMLElement) => {
+        const rect = column.getBoundingClientRect();
+        return Math.abs(rect.left + rect.width / 2 - center);
+      };
+      const columns = Array.from(stripRef.current?.querySelectorAll<HTMLElement>('[data-thread-id]') ?? []);
+      const [nearest] = columns.toSorted((a, b) => distanceFromCenter(a) - distanceFromCenter(b));
+      if (nearest?.dataset.threadId) {
+        setCurrentId(nearest.dataset.threadId);
+      }
+    };
+    viewport.addEventListener('scrollend', handleScrollEnd);
+    return () => viewport.removeEventListener('scrollend', handleScrollEnd);
+  }, [viewport]);
+
+  const handleNew = useCallback(
+    (side: 'start' | 'end' = 'end') => {
+      if (db) {
+        const feed = db.add(Feed.make());
+        const chat = db.add(AssistantChat.make({ name: `Thread ${threads.length + 1}`, feed: Ref.make(feed) }));
+        if (side === 'start') {
+          setPrepended((ids) => [...ids, chat.id]);
+        }
+        setCurrentId(chat.id);
+      }
+    },
+    [db, threads.length],
+  );
 
   const handleSelect = useCallback((chat: AssistantChat.Chat) => setCurrentId(chat.id), []);
 
@@ -177,7 +247,7 @@ const DefaultStory = () => {
             icon: 'ph--plus--regular',
             testId: 'chat-hud.new',
           },
-          handleNew,
+          () => handleNew(),
         )
         .action(
           'previous',
@@ -214,9 +284,13 @@ const DefaultStory = () => {
       </Panel.Header>
       <Panel.Body asChild>
         <ScrollArea.Root orientation='horizontal' snap>
-          <ScrollArea.Viewport>
+          <ScrollArea.Viewport ref={setViewport}>
             {/* Half the frame less half a thread each side, so even the first and last thread can reach the center. */}
-            <div className='flex w-max h-full px-[calc(50cqw-var(--chat-hud-width)/2)]'>
+            <div
+              className='flex w-max h-full px-[calc(50cqw-var(--chat-hud-width)/2)] pb-(--chat-hud-footer-height)'
+              ref={stripRef}
+            >
+              <AddThread side='start' onAdd={handleNew} />
               {threads.map((chat) => (
                 <ThreadColumn
                   key={chat.id}
@@ -230,11 +304,13 @@ const DefaultStory = () => {
                   onSelect={handleSelect}
                 />
               ))}
+              <AddThread side='end' onAdd={handleNew} />
             </div>
           </ScrollArea.Viewport>
+          {/* The gap below the prompt leaves the scrollbar visible at the bottom of the page. */}
+          <div className='absolute inset-x-0 bottom-0 z-10 py-3 pointer-events-none' ref={setFooter} />
         </ScrollArea.Root>
       </Panel.Body>
-      <Panel.Footer ref={setFooter} />
     </Panel.Root>
   );
 };
