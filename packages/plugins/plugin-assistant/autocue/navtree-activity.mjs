@@ -198,7 +198,8 @@ export const steps = [
     run: async ({ demo, page }) => {
       await demo.click({ selector: heading(CHAT), label: CHAT });
       await page.locator(PROMPT).first().waitFor({ state: 'visible', timeout: 15_000 });
-      await page.locator(unread(CHAT)).waitFor({ state: 'detached', timeout: 5_000 });
+      // The companion's prompt is already visible, so allow for the chat's own view mounting.
+      await page.locator(unread(CHAT)).waitFor({ state: 'detached', timeout: 15_000 });
       await caption(demo, 'Opening the chat reads it; the document still shows its companion at work');
       await page.locator(working(DOCUMENT)).waitFor({ timeout: 5_000 });
       await inspect(demo, page, DOCUMENT, 'Assistant is working on this');
