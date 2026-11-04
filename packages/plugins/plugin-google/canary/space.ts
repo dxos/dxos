@@ -170,6 +170,8 @@ export class CanarySpace {
   snapshot(): Effect.Effect<SpaceSnapshot, CanaryError> {
     return this.syncToEdge().pipe(
       Effect.andThen(readSnapshot()),
+      // On a new device `syncToEdge` can resolve before EDGE reports its documents, so a missing mailbox is read again.
+      Effect.retry({ while: (error) => error.message === NO_MAILBOX, schedule: Schedule.spaced('10 seconds') }),
       Effect.provide(Database.layer(this.#space.db)),
       timeout(this.#waits.read, `a read of space ${this.spaceId}`),
     );
@@ -217,6 +219,8 @@ const timeout = (duration: Duration.Duration, what: string) =>
       Effect.fail(new CanaryError({ message: `gave up waiting for ${what} after ${Duration.format(duration)}` })),
   });
 
+const NO_MAILBOX = 'the space has no mailbox';
+
 /**
  * The mailbox's synced messages, the mail sync's invocations from every Execution Trace feed (racing writers can
  * create a second), and the remote timer triggers. Feeds replicate apart from the documents, so each is pulled first.
@@ -225,7 +229,7 @@ export const readSnapshot = Effect.fn('mail-canary.readSnapshot')(
   function* () {
     const [mailbox] = yield* Database.query(Filter.type(Mailbox.Mailbox)).run;
     if (!mailbox) {
-      return yield* new CanaryError({ message: 'the space has no mailbox' });
+      return yield* new CanaryError({ message: NO_MAILBOX });
     }
     const feed = yield* Database.load(mailbox.feed);
     yield* pull(feed);
