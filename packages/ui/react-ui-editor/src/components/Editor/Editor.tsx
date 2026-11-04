@@ -242,6 +242,7 @@ const ENTER_TARGETS = [
 ];
 
 type EditorBlockFrameProps = Util.ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
+  /** The editor the block is in, for the keys that act on its document; Enter and Escape need none. */
   view?: CodeMirrorView | null;
   /** Whether the block has attention; until it does, its keys reach the editor. */
   attended: boolean;
@@ -271,7 +272,7 @@ const EditorBlockFrame = forwardRef<HTMLDivElement, EditorBlockFrameProps>(
         }
         event.stopPropagation();
         const frame = event.currentTarget;
-        if (event.defaultPrevented || !view) {
+        if (event.defaultPrevented) {
           return;
         }
         if (event.target !== frame) {
@@ -288,7 +289,7 @@ const EditorBlockFrame = forwardRef<HTMLDivElement, EditorBlockFrameProps>(
             target.focus();
             target instanceof HTMLInputElement && target.select();
           }
-        } else if (handleBlockWidgetKey(view, frame, event)) {
+        } else if (view && handleBlockWidgetKey(view, frame, event)) {
           event.preventDefault();
         }
       },

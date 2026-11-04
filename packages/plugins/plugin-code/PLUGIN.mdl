@@ -7,7 +7,7 @@ version: 0.1.0
 ```mdl
 plugin CodePlugin: Authors, reviews and syncs DEUS specs, and scaffolds the code they describe.
   id: org.dxos.plugin.code
-  dependsOn: [org.dxos.plugin.projects]
+  dependsOn: [org.dxos.plugin.markdown, org.dxos.plugin.projects]
   modules:
     - AppGraphBuilder: graph nodes for specs and code projects
     - BuildRunState: the state of the running build agent, from CodeEvents.Start
@@ -2076,7 +2076,7 @@ decision D-67: Replaces the part of [D-66] where the arrows go only to the text.
 ```
 
 ```mdl
-decision D-68: A feature embed in a spec is the editor's object embed, plugin-markdown's, the one a Markdown document draws; inside it is the feature's `section` surface. The section reads its attention from the embed. Like any embed it is inert until selected, its fold toggle too, so folding a section that is not selected takes a click to select it first; it shows its label and open button on hover and resizes from its bottom edge; a missing feature is its source text marked not found. plugin-markdown contributes the embed as `MarkdownCapabilities.ObjectEmbed`. Amends [F-20.7] and [D-65].
+decision D-68: A feature embed in a spec is the editor's object embed, plugin-markdown's, the one a Markdown document draws; inside it is the feature's `section` surface. The section reads its attention from the embed. Like any embed it is inert until selected, its fold toggle too, so folding a section that is not selected takes a click to select it first; it shows its label and open button on hover and resizes from its bottom edge; a missing feature is its source text marked not found. plugin-markdown contributes the embed as `MarkdownCapabilities.ObjectEmbed`, so CodePlugin depends on it. Amends [F-20.7] and [D-65].
   date: 2026-11-04
   by: user:wittjosiah
   affects: [F-20.7]
