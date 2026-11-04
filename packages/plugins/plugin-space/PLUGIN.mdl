@@ -766,10 +766,11 @@ decision D-7: When the deck switches workspace, the planks that left `active` ar
 ```
 
 ```mdl
-decision D-8: The navtree presence surface claims space rows, which no longer carry a sync-status glyph. Supersedes [D-6].
+decision D-8: The navtree presence surface claims space rows, which no longer carry a sync-status glyph.
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
+  supersedes: D-6
   affects: [F-8.7, SpacePresence]
   why: Sync status moved to the status bar, so nothing on a space row is lost when presence takes it, and space rows draw the same glyph, with the same treatments, as object rows.
 ```

@@ -767,9 +767,17 @@ decision D-18: Code mode is the default turn engine; the setting becomes `disabl
 ```
 
 ```mdl
-decision D-19: A running agent shows on the navtree as the agent star in the attention glyph's mark, in place of presence, on its chat's row and, for a companion chat, on the row of the object it is a companion to. The plugin reports each turn to the progress registry as a monitor keyed `<uri>#agent` on both objects; plugin-space's glyph draws running progress as the star.
+decision D-19: A running agent shows on the navtree as the agent star in the attention glyph's mark, in place of presence, on its chat's row and, for a companion chat, on the row of the object it is a companion to. It reaches the glyph through the progress registry.
   date: 2026-11-03
   by: user:wittjosiah
+  affects: [QA-5]
+```
+
+```mdl
+decision D-20: Each turn is a progress monitor keyed `<uri>#agent` on the chat and on a companion chat's subject, read from the process tree; plugin-space's glyph draws running progress as the star. Fills in [D-19].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
   affects: [QA-5]
   why: Busy state comes from the process tree, not the chat's view model, so it holds while the chat is closed and you work elsewhere. The star says an agent is on it, where an outline only says something is busy, and it leads into the amber star a finished, unread turn gets. One treatment on both rows keeps it consistent.
   rejected:
