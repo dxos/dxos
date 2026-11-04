@@ -23,7 +23,6 @@ import { translationKey } from '#translations';
 
 import {
   ESTIMATE_UNSET_ICON,
-  UNSET_ICON,
   estimateTextStyle,
   priorityIcon,
   priorityTextStyle,
