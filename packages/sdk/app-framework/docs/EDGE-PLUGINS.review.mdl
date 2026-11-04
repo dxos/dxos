@@ -17,7 +17,7 @@ types and channels in D1, and refuses activation failures, key conflicts and cha
 `dxn:` key to the bundle's Dynamic Worker, with a fallback to operation-service. Types another plugin publishes resolve
 through `TYPE_REGISTRY` and ECHO type sources. Each of these has tests in workerd or on the edge stack.
 
-Of 87 items: 45 done, 3 untested, 19 partial, 3 diverged, 17 missing. Findings:
+Of 87 items: 43 done, 3 untested, 21 partial, 3 diverged, 17 missing. Findings:
 
 - **Discovery still reads operation-service.** MCP `queryOperations`, `loadSkill` and the agents' skill list read
   operation-service's KV catalog, not bundle catalogs (F-4.2, F-5.1, F-6.8). operation-service also still serves 25 keys
@@ -80,13 +80,13 @@ verdict SpacePluginChannel: No space annotation; compute-service resolves every 
 ```
 
 ```mdl
-verdict InvocationScope: The scope carries the request context, the host services and other plugins' operations.
-  status: done
+verdict InvocationScope: The scope carries the request context, the host services and other plugins' operations, but not the space.
+  status: partial
   evidence: [github:dxos/dxos/packages/core/protocols/src/PluginProtocol.ts#InvocationScope, github:dxos/edge/packages/services/compute-service/src/plugins/invocation-scope.ts#invocationScope]
   tests: [github:dxos/edge/packages/services/edge/test/plugin-store.node.test.ts]
   note: |
     dxos/dxos#14411 (P3, P4) added the request context and host services; edge#1426 builds the matching scope in
-    compute-service.
+    compute-service. The space still travels in `InvokeRequest.spaceId`, not `scope.spaceId` as the target has it.
 ```
 
 ```mdl
@@ -352,13 +352,13 @@ verdict F-5.1: queryOperations lists operation-service's catalog, not bundle cat
 ```
 
 ```mdl
-verdict F-5.2: A key a bundle implements runs in its Dynamic Worker in the given space, and ECHO output is encoded.
-  status: done
+verdict F-5.2: A key a bundle implements runs in its Dynamic Worker in the given space, with ECHO output encoded, only in plugins routing.
+  status: partial
   evidence: [github:dxos/edge/packages/services/compute-service/src/plugins/plugin-router.ts#invokeInBundle, github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/PluginHost.ts#make]
   tests: [github:dxos/edge/packages/services/edge/test/plugin-store.node.test.ts, github:dxos/edge/packages/services/edge/test/plugin-seed.node.test.ts, github:dxos/dxos/packages/plugins/plugin-space/src/edge-bundle.test.ts]
   note: |
     dxos/dxos#14411 (P2) encodes output as operation-service does, so a live ECHO object survives Workers RPC (T-7).
-    Only in plugins routing (`OPERATION_ROUTING=plugins`).
+    Only in plugins routing (`OPERATION_ROUTING=plugins`); the default still sends every key to operation-service.
 ```
 
 ```mdl
