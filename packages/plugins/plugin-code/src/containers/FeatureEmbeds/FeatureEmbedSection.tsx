@@ -117,7 +117,7 @@ export const FeatureEmbedSection = ({ eid, label, view, db, attendableId, claimF
       onKeyUp={(event) => hasAttention && event.stopPropagation()}
     >
       <div
-        className={`border rounded-md ${hasAttention ? 'border-focus-ring-subtle' : 'border-separator-subtle'}`}
+        className={`border rounded-md overflow-hidden ${hasAttention ? 'border-focus-ring-subtle' : 'border-separator-subtle'}`}
         inert={hasAttention ? undefined : true}
       >
         <FeatureSection subject={feature} attended={hasAttention} />
