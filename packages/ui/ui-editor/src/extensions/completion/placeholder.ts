@@ -3,13 +3,37 @@
 // Based on https://github.com/codemirror/view/blob/main/src/placeholder.ts
 //
 
-import { type Extension } from '@codemirror/state';
+import { type Extension, Facet } from '@codemirror/state';
 import { Decoration, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 
 import { clientRectsFor, flattenRect } from '../../util/index.ts';
 import { isBusy } from '../state/busy.ts';
 
 type Content = string | HTMLElement | ((view: EditorView) => HTMLElement);
+
+/**
+ * Placeholder text is not in the document, so a caret at its position belongs before it: the widget sorts after
+ * the other widgets there, including a remote peer's caret.
+ */
+const PLACEHOLDER_SIDE = 2;
+
+export const placeholderWidget = (content: Content) =>
+  Decoration.widget({ widget: new PlaceholderWidget(content), side: PLACEHOLDER_SIDE });
+
+/** The transient placeholders configured on an editor; the empty-document placeholder gives way while one shows. */
+const transientPlaceholders = Facet.define<ViewPlugin<{ readonly visible: boolean }>>();
+
+/**
+ * Shows `content` while the document is empty, unless a {@link placeholder} hint is showing in its place.
+ */
+export const emptyPlaceholder = (content: string): Extension => [
+  EditorView.decorations.of((view) =>
+    view.state.doc.length > 0 || view.state.facet(transientPlaceholders).some((plugin) => view.plugin(plugin)?.visible)
+      ? Decoration.none
+      : Decoration.set(placeholderWidget(content).range(0)),
+  ),
+  EditorView.contentAttributes.of({ 'aria-placeholder': content }),
+];
 
 export type PlaceholderOptions = {
   content: Content;
@@ -27,6 +51,10 @@ export const placeholder = ({ content, delay = 3_000, focusOnly = false }: Place
     class {
       _timeout: ReturnType<typeof setTimeout> | undefined;
       _decorations = Decoration.none;
+
+      get visible() {
+        return this._decorations !== Decoration.none;
+      }
 
       update(update: ViewUpdate) {
         // A busy-state toggle (e.g. transcription starting) carries no doc/selection/focus change,
@@ -70,12 +98,7 @@ export const placeholder = ({ content, delay = 3_000, focusOnly = false }: Place
         const lineStart = activeLine.from;
         const view = update.view;
         this._timeout = setTimeout(() => {
-          this._decorations = Decoration.set([
-            Decoration.widget({
-              widget: new PlaceholderWidget(content),
-              side: 1,
-            }).range(lineStart),
-          ]);
+          this._decorations = Decoration.set([placeholderWidget(content).range(lineStart)]);
           view.update([]);
         }, delay);
       }
@@ -93,14 +116,20 @@ export const placeholder = ({ content, delay = 3_000, focusOnly = false }: Place
     },
   );
 
-  return typeof content === 'string'
-    ? [plugin, EditorView.contentAttributes.of({ 'aria-placeholder': content })]
-    : plugin;
+  return [
+    plugin,
+    transientPlaceholders.of(plugin),
+    typeof content === 'string' ? EditorView.contentAttributes.of({ 'aria-placeholder': content }) : [],
+  ];
 };
 
 export class PlaceholderWidget extends WidgetType {
   constructor(readonly content: Content) {
     super();
+  }
+
+  override eq(other: PlaceholderWidget) {
+    return other.content === this.content;
   }
 
   toDOM(view: EditorView) {
