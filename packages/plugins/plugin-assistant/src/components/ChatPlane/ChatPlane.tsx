@@ -13,6 +13,7 @@ import React, {
   useCallback,
   useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -227,19 +228,30 @@ const ChatPlaneViewport = ({ children }: ChatPlaneViewportProps) => {
     useChatPlaneContext('ChatPlane.Viewport');
   const stripRef = useRef<HTMLDivElement>(null);
 
-  // The dragged column stays on the strip's axis by taking only the pointer's x.
+  // The dragged column stays on the strip's axis by taking only the pointer's x, less where it was grabbed.
   const pointerXRef = useRef<number | undefined>(undefined);
+  const grabOffsetRef = useRef<number | undefined>(undefined);
   const updateDragPosition = useCallback(() => {
     const strip = stripRef.current;
     if (strip && pointerXRef.current !== undefined) {
-      const x = pointerXRef.current - strip.getBoundingClientRect().left;
+      const x = pointerXRef.current - (grabOffsetRef.current ?? 0) - strip.getBoundingClientRect().left;
       strip.style.setProperty('--chat-plane-drag-x', `${x}px`);
     }
   }, []);
+  // The column floats before the first drag event reports a pointer, so it starts from where it was.
+  const dragBounds = useDndRootContext('ChatPlane.Viewport').dragging?.source.data.bounds;
+  useLayoutEffect(() => {
+    const strip = stripRef.current;
+    if (strip && dragBounds) {
+      const x = dragBounds.left + dragBounds.width / 2 - strip.getBoundingClientRect().left;
+      strip.style.setProperty('--chat-plane-drag-x', `${x}px`);
+    }
+  }, [dragBounds]);
   // An autoscroll moves the strip under a still pointer, which reports nothing.
   useEffect(() => {
     if (!viewport || !dragging) {
       pointerXRef.current = undefined;
+      grabOffsetRef.current = undefined;
       return;
     }
     viewport.addEventListener('scroll', updateDragPosition, { passive: true });
@@ -264,7 +276,10 @@ const ChatPlaneViewport = ({ children }: ChatPlaneViewportProps) => {
     () => ({
       id: containerId,
       canDrop: ({ source }) => source.containerId === containerId,
-      onDrag: ({ position: { x } }) => {
+      onDrag: ({ source: { bounds }, position: { x } }) => {
+        if (grabOffsetRef.current === undefined && bounds) {
+          grabOffsetRef.current = x - (bounds.left + bounds.width / 2);
+        }
         pointerXRef.current = x;
         updateDragPosition();
       },
