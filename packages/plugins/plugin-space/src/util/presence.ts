@@ -78,8 +78,7 @@ export const getPresenceKeyFromSpace = (spaceId: Key.SpaceId): EID.EID => EID.ma
 export type ViewingMessage = {
   identityKey: string;
   sessionId?: string;
-  /** Name of the device the session runs on. */
-  device?: string;
+  device?: SpaceSchema.SessionDevice;
   added: string[];
   removed: string[];
   attended: string[];
@@ -100,9 +99,29 @@ const parseLocation = (value: unknown): SpaceSchema.PeerLocation | undefined => 
   return location.selection || location.viewport ? location : undefined;
 };
 
+const DEVICE_KINDS: ReadonlySet<string> = new Set(['browser', 'native', 'mobile', 'agent', 'unknown']);
+
+const isDeviceKind = (value: unknown): value is NonNullable<SpaceSchema.SessionDevice['kind']> =>
+  isString(value) && DEVICE_KINDS.has(value);
+
+const parseDevice = (value: unknown): SpaceSchema.SessionDevice | undefined => {
+  if (typeof value !== 'object' || value === null) {
+    return undefined;
+  }
+  const { label, platform, os, kind } = value as Record<string, unknown>;
+  const device = {
+    ...(isString(label) && { label }),
+    ...(isString(platform) && { platform }),
+    ...(isString(os) && { os }),
+    ...(isDeviceKind(kind) && { kind }),
+  };
+  return Object.keys(device).length > 0 ? device : undefined;
+};
+
 /** Narrows a gossip payload, which arrives as opaque JSON, to a {@link ViewingMessage}. */
 export const parseViewingMessage = (payload: Record<string, unknown>): ViewingMessage | undefined => {
-  const { identityKey, sessionId, device, added, removed, attended, locations } = payload;
+  const { identityKey, sessionId, added, removed, attended, locations } = payload;
+  const device = parseDevice(payload.device);
   if (!isString(identityKey) || !Array.isArray(added) || !Array.isArray(removed)) {
     return undefined;
   }
@@ -118,7 +137,7 @@ export const parseViewingMessage = (payload: Record<string, unknown>): ViewingMe
   return {
     identityKey,
     ...(isString(sessionId) && { sessionId }),
-    ...(isString(device) && { device }),
+    ...(device && { device }),
     added: added.filter(isString),
     removed: removed.filter(isString),
     attended: Array.isArray(attended) ? attended.filter(isString) : [],

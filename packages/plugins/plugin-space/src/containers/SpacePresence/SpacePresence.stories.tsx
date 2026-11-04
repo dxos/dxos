@@ -18,9 +18,23 @@ const viewers = (n: number, currentlyAttended = true): Member[] =>
     const now = Date.now();
     // Every third viewer has the object open on a second device, which went idle a while ago.
     const sessions = [
-      { sessionId: 'a', lastSeen: now, movedAt: now, currentlyAttended, device: 'Chrome · macOS' },
+      {
+        sessionId: 'a',
+        lastSeen: now,
+        movedAt: now,
+        currentlyAttended,
+        device: { platform: 'Chrome', os: 'macOS', kind: 'browser' as const },
+      },
       ...(i % 3 === 0
-        ? [{ sessionId: 'b', lastSeen: now, movedAt: now - 5 * 60_000, currentlyAttended, device: 'Safari · iOS' }]
+        ? [
+            {
+              sessionId: 'b',
+              lastSeen: now,
+              movedAt: now - 5 * 60_000,
+              currentlyAttended,
+              device: { platform: 'App', os: 'iOS', kind: 'mobile' as const },
+            },
+          ]
         : []),
     ];
     return {

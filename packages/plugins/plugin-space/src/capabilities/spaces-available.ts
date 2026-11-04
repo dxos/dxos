@@ -16,6 +16,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { SubscriptionList } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space, SpaceState } from '@dxos/client/echo';
+import { DeviceType, getDeviceLabel } from '@dxos/client/halo';
 import { Annotation, Collection, Obj, Type } from '@dxos/echo';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -28,7 +29,7 @@ import { unpackJson } from '@dxos/protocols/buf';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { ViewLocation } from '@dxos/react-ui-attention/types';
 
-import { SpaceCapabilities } from '#types';
+import { SpaceCapabilities, type SpaceSchema } from '#types';
 
 import { migrateToSettingsSpace } from '../migrations/settings-space.ts';
 import {
@@ -41,6 +42,15 @@ import {
   parseViewingMessage,
 } from '../util/presence.ts';
 import { catchNonInterrupt, resolveSettingsSpace, runSettingsSpaceHealing } from '../util/settings-space.ts';
+
+const DEVICE_KINDS: Record<DeviceType, SpaceSchema.SessionDevice['kind']> = {
+  [DeviceType.UNKNOWN]: 'unknown',
+  [DeviceType.BROWSER]: 'browser',
+  [DeviceType.NATIVE]: 'native',
+  [DeviceType.MOBILE]: 'mobile',
+  [DeviceType.AGENT]: 'agent',
+  [DeviceType.AGENT_MANAGED]: 'agent',
+};
 
 /**
  * Resolve the designated default space, migrating a legacy profile into the settings space until
@@ -217,9 +227,19 @@ export default Capability.makeModule(
 
     // One session per running app, so peers tell this tab apart from the same identity's others.
     const sessionId = PublicKey.random().toHex();
-    const getDeviceName = () => {
+    const getDevice = (): SpaceSchema.SessionDevice | undefined => {
       const profile = client.halo.device?.profile;
-      return profile?.label || [profile?.platform, profile?.os].filter(Boolean).join(' · ') || undefined;
+      if (!profile) {
+        return undefined;
+      }
+      const label = getDeviceLabel(profile);
+      const kind = profile.type !== undefined ? DEVICE_KINDS[profile.type] : undefined;
+      return {
+        ...(label && { label }),
+        ...(profile.platform && { platform: profile.platform }),
+        ...(profile.os && { os: profile.os }),
+        ...(kind && { kind }),
+      };
     };
 
     // Broadcast active node to other peers in the space - subscribe to both layout and attention.
@@ -239,7 +259,7 @@ export default Capability.makeModule(
         const spaces = client.spaces.get();
         const identity = Option.getOrUndefined(haloIdentity.getSnapshot());
         if (identity) {
-          const device = getDeviceName();
+          const device = getDevice();
           const attendedBySpace = groupPresenceKeysBySpace([...current]);
           const changesBySpace = groupPresenceChangesBySpace(active, inactive);
 

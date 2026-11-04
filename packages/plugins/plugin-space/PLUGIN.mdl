@@ -50,7 +50,17 @@ type ObjectViewerProps
     movedAt: number             # when the session opened the object, came back to it, or moved its anchor there
     currentlyAttended: boolean  # true if the session is currently viewing this object
     location?: PeerLocation     # the session's selection and top of view, while it attends the object
-    device?: string             # name of the device the session runs on
+    device?: SessionDevice      # the device the session runs on
+```
+
+```mdl
+type SessionDevice
+  desc: The device a session runs on, from its HALO device profile; the receiver names it.
+  fields:
+    label?: string              # a label someone gave the device
+    platform?: string           # the browser, or App for the native and mobile apps
+    os?: string
+    kind?: browser | native | mobile | agent | unknown
 ```
 
 ```mdl
@@ -550,8 +560,9 @@ feat F-8: Presence and Sync Status
   req F-8.11: The Members deck companion lists every online peer in the space, grouped by the object they view, with the same actions; an Invite members action at the end of its toolbar opens the space's members settings. It sits third in the complementary rail, after Notifications.
   req F-8.14: In a locked space the Members companion shows only a placeholder saying the space is private, since it has no other members and no members settings.
   req F-8.12: A peer with several sessions (tabs or devices) on an object shows as one row that expands into a row per session, named by its device. Expanded, only the session rows carry actions; collapsed, the peer's row does, acting on the session whose anchor moved most recently.
-  req F-8.13: The viewing message carries the sender's session id, its device name and each attended object's location; it is sent with the heartbeat and at most once per second when a location changes.
+  req F-8.13: The viewing message carries the sender's session id, its device and each attended object's location; it is sent with the heartbeat and at most once per second when a location changes.
   req F-8.15: A session row's dot shows whether its anchor moved in the last minute (active) or not (idle); the row states nothing else about the session.
+  req F-8.16: A session row names its device by the label someone gave it, else by what it runs ("Chrome on macOS", "Composer on iOS"), with an icon for its kind; sessions on one device are numbered. A placeholder label the SDK once wrote is no label.
 ```
 
 ## Acceptance
@@ -974,6 +985,49 @@ decision D-24: Sessions on the same device are numbered after its name, the sess
   affects: [F-8.10, F-8.11, F-8.12]
   why: Two tabs on one device carry the same name. The count beside the name truncated next to Jump in a 20rem popover. The trailing caret is how Listbox rows collapse elsewhere.
   rejected: A leading caret before the avatar, as first mocked.
+```
+
+```mdl
+decision D-25: On a peer's row the session count follows the name as plain text, not a tag, and the caret is a separate control fixed at the row's end. Expanding the row moves nothing on it; only its Jump goes away.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-8.12]
+```
+
+```mdl
+decision D-26: Devices get proper names in the UI. The SDK stops writing a placeholder device label, and every place that names a device treats that placeholder as no label.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-8.16]
+```
+
+```mdl
+decision D-27: Two sessions on the same device each get their own row.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-8.12, F-8.16]
+```
+
+```mdl
+decision D-28: Session rows sit under the peer's name: the dot in the cell under the avatar, then a device icon for its kind and the device's name, then Jump at the row's end, in line with single-session rows' Jump. The popover takes the Members companion's size (`md`) and its 24rem maximum width. Rows on one device are numbered after its name. The Members companion lists a peer under each object one of their sessions attends, with only those sessions, and its collapsed row acts on the most recently moved of them. Fills in [D-25] and [D-27].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-24
+  affects: [F-8.10, F-8.11, F-8.12, F-8.16]
+  why: At the plank header's `lg` size, Jump and a trailing dot left device names too little room to show their numbers; the cell under the avatar was empty.
+  rejected: Keep the count on a description line under the name; keep the dot beside Jump.
+```
+
+```mdl
+decision D-29: Each running app picks a random session id and sends it, with its device as label, platform, OS and kind, in every `viewing` message; a message without a session id counts as one session keyed by the identity. A shared `getDeviceLabel` in the client SDK drops the placeholders `initial identity device` and `additional device`, for the presence sender, the devices settings and the device CLI alike. The receiver names a device by its label, else "Composer on <os>" for the native and mobile apps, else "<platform> on <os>". Fills in [D-26].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-21
+  affects: [F-8.13, F-8.16, SessionDevice]
+  why: Devices already written with a placeholder keep it in their HALO credentials, so readers must ignore it as well as the SDK no longer writing it. Sending the parts lets the receiver localize the name and pick the icon.
+  rejected: Send a preformatted name string; rename existing devices with a new profile credential.
 ```
 
 ## Appendix: Extension Definitions

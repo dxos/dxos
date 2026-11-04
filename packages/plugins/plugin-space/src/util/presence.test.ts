@@ -79,7 +79,7 @@ describe('parseViewingMessage', () => {
       parseViewingMessage({
         identityKey: 'peer',
         sessionId: 's1',
-        device: 7,
+        device: { platform: 'Chrome', kind: 'toaster', os: 7 },
         added: [key, 7],
         removed: [],
         attended: [key],
@@ -88,6 +88,7 @@ describe('parseViewingMessage', () => {
     ).toEqual({
       identityKey: 'peer',
       sessionId: 's1',
+      device: { platform: 'Chrome' },
       added: [key],
       removed: [],
       attended: [key],

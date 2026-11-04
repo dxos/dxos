@@ -99,10 +99,19 @@ export type ObjectViewerProps = {
   /** When the session last opened the object, came back to it, or moved its anchor there. */
   movedAt: number;
   currentlyAttended: boolean;
-  /** Name of the device the session runs on. */
-  device?: string;
+  device?: SessionDevice;
   /** Where the peer is in the object, while they attend it; see `ViewLocation` in react-ui-attention. */
   location?: PeerLocation;
+};
+
+/** The device a session runs on, from its HALO device profile; the receiver names it. */
+export type SessionDevice = {
+  /** A label someone gave the device. */
+  label?: string;
+  /** The browser, or `App` for the native and mobile apps. */
+  platform?: string;
+  os?: string;
+  kind?: 'browser' | 'native' | 'mobile' | 'agent' | 'unknown';
 };
 
 /** A peer's caret and top of view in an object, as anchors in the object type's own format. */

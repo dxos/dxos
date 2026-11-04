@@ -120,7 +120,10 @@ export const MembersCompanion = () => {
           <ScrollArea.Root>
             <ScrollArea.Viewport asChild>
               <Layout.Container padBlock>
-                <Listbox.Root items={getPresenceOptions(listed, expanded)} data-testid='spacePlugin.membersCompanion'>
+                <Listbox.Root
+                  items={getPresenceOptions(listed, expanded, t)}
+                  data-testid='spacePlugin.membersCompanion'
+                >
                   <Listbox.Content aria-label={t('members-companion.label')}>
                     {space &&
                       [...groups.entries()].map(([key, group]) => (
