@@ -8,6 +8,7 @@
 // host renders portals from, widget state and context effects, and bookmark navigation. What is
 // matched is a matcher's business: `xmlTags` claims XML elements, `objectLinks` object links.
 
+import { moveLineDown, moveLineUp } from '@codemirror/commands';
 import { ensureSyntaxTree, syntaxTree } from '@codemirror/language';
 import {
   type EditorState,
@@ -35,7 +36,7 @@ import { log } from '@dxos/log';
 import { type Range } from '../../types/index.ts';
 import { decorationSetToArray } from '../../util/index.ts';
 import { crawlerLineEffect } from '../streaming/index.ts';
-import { StubWidget, type WidgetNotifier } from './stub.ts';
+import { StubWidget, WIDGET_ROOT_ATTRIBUTE, type WidgetNotifier } from './stub.ts';
 
 //
 // Types
@@ -689,6 +690,164 @@ const keyHandlers = Prec.highest(
   ]),
 );
 
+/** The block widget whose range is `[from, to]`, if it renders an element that takes focus: its first tabbable one. */
+const focusableBlock = (view: EditorView, from: number, to: number): HTMLElement | undefined => {
+  for (const root of view.contentDOM.querySelectorAll<HTMLElement>(`[${WIDGET_ROOT_ATTRIBUTE}]`)) {
+    const pos = view.posAtDOM(root);
+    if (pos >= from && pos <= to) {
+      return root.querySelector<HTMLElement>('[tabindex="0"]') ?? undefined;
+    }
+  }
+};
+
+/** The block widget on the line next to `line` (after it when `forward`), if it takes focus. */
+const adjacentBlock = (view: EditorView, line: { from: number; to: number }, forward: boolean) => {
+  const { decorations } = view.state.field(widgetDecorationsField);
+  const range = decorationSetToArray(decorations).find(
+    (range) => range.value.spec.block && (forward ? range.from === line.to + 1 : range.to === line.from - 1),
+  );
+  const element = range && focusableBlock(view, range.from, range.to);
+  return element && { element, from: range.from, to: range.to };
+};
+
+/**
+ * Arrowing from the line next to a block widget that takes focus moves focus onto it, rather than past it: up and down
+ * from that line's last (first) visual line, right from its end and left from its start. The widget leads back out
+ * with `handleBlockWidgetKey`.
+ */
+const enterBlock =
+  (forward: boolean, vertical: boolean) =>
+  (view: EditorView): boolean => {
+    const { main } = view.state.selection;
+    if (!main.empty) {
+      return false;
+    }
+    const line = view.state.doc.lineAt(main.head);
+    if (vertical) {
+      // Within a wrapped line the caret moves as usual.
+      if (view.state.doc.lineAt(view.moveVertically(main, forward).head).number === line.number) {
+        return false;
+      }
+    } else if (main.head !== (forward ? line.to : line.from)) {
+      return false;
+    }
+    const block = adjacentBlock(view, line, forward);
+    if (!block) {
+      return false;
+    }
+    block.element.focus();
+    return true;
+  };
+
+const blockFocusKeys = Prec.high(
+  keymap.of([
+    { key: 'ArrowDown', run: enterBlock(true, true) },
+    { key: 'ArrowUp', run: enterBlock(false, true) },
+    { key: 'ArrowRight', run: enterBlock(true, false) },
+    { key: 'ArrowLeft', run: enterBlock(false, false) },
+  ]),
+);
+
+/** Focuses the block at `pos` once the editor has redrawn it, which can take a few frames after a change. */
+const refocusBlock = (view: EditorView, pos: number, frames = 5) => {
+  const line = view.state.doc.lineAt(Math.min(pos, view.state.doc.length));
+  const element = focusableBlock(view, line.from, line.to);
+  element?.focus();
+  if (frames > 0 && (!element || document.activeElement !== element)) {
+    requestAnimationFrame(() => refocusBlock(view, pos, frames - 1));
+  }
+};
+
+/** The range of the block widget an element is rendered inside. */
+const blockRangeOf = (view: EditorView, element: Element): { from: number; to: number } | undefined => {
+  const root = element.closest(`[${WIDGET_ROOT_ATTRIBUTE}]`);
+  if (!root) {
+    return undefined;
+  }
+  const pos = view.posAtDOM(root);
+  const { decorations } = view.state.field(widgetDecorationsField);
+  return decorationSetToArray(decorations).find(
+    (range) => range.value.spec.block && pos >= range.from && pos <= range.to,
+  );
+};
+
+/**
+ * Returns the cursor to the text on one side of a block widget: the end of the line before it or the start of the line
+ * after it. With `intoBlock`, the next block on that side takes focus instead if it can. False when there is no line on
+ * that side.
+ */
+const leaveBlock = (
+  view: EditorView,
+  range: { from: number; to: number },
+  forward: boolean,
+  intoBlock = true,
+): boolean => {
+  const next = intoBlock && adjacentBlock(view, range, forward);
+  if (next) {
+    next.element.focus();
+    return true;
+  }
+  const { doc } = view.state;
+  if (forward ? range.to >= doc.length : range.from === 0) {
+    return false;
+  }
+  const line = doc.lineAt(forward ? range.to + 1 : range.from - 1);
+  view.dispatch({ selection: { anchor: forward ? line.from : line.to }, scrollIntoView: true });
+  view.focus();
+  return true;
+};
+
+export type BlockWidgetKey = Pick<KeyboardEvent, 'key' | 'altKey' | 'ctrlKey' | 'metaKey' | 'shiftKey'>;
+
+/**
+ * The keys of a block widget whose own element has focus, so it is selected as a whole: the arrows return to the text
+ * on their side and Escape to the line after it, Alt with Up or Down moves it as a line, and Backspace or Delete
+ * removes it. True when the key was handled.
+ */
+export const handleBlockWidgetKey = (view: EditorView, element: Element, event: BlockWidgetKey): boolean => {
+  const range = blockRangeOf(view, element);
+  if (!range || event.ctrlKey || event.metaKey || event.shiftKey) {
+    return false;
+  }
+  switch (event.key) {
+    case 'ArrowLeft':
+    case 'ArrowRight': {
+      if (!event.altKey) {
+        leaveBlock(view, range, event.key === 'ArrowRight');
+      }
+      return !event.altKey;
+    }
+    case 'ArrowUp':
+    case 'ArrowDown': {
+      const forward = event.key === 'ArrowDown';
+      if (!event.altKey) {
+        leaveBlock(view, range, forward);
+        return true;
+      }
+      view.dispatch({ selection: { anchor: range.from } });
+      (forward ? moveLineDown : moveLineUp)(view);
+      refocusBlock(view, view.state.selection.main.head);
+      return true;
+    }
+    case 'Escape': {
+      if (!leaveBlock(view, range, true, false)) {
+        view.focus();
+      }
+      return true;
+    }
+    case 'Backspace':
+    case 'Delete': {
+      const { doc } = view.state;
+      const from = range.from > 0 ? range.from - 1 : range.from;
+      const to = range.from > 0 || range.to >= doc.length ? range.to : range.to + 1;
+      view.dispatch({ changes: { from, to }, selection: { anchor: from }, userEvent: 'delete', scrollIntoView: true });
+      view.focus();
+      return true;
+    }
+  }
+  return false;
+};
+
 /**
  * Effect processing plugin for navigation.
  * Handles navigation up/down effects.
@@ -802,5 +961,6 @@ export const widgetsCore: Extension = [
   parseProgressPlugin,
   navigationEffectPlugin,
   keyHandlers,
+  blockFocusKeys,
   scrollJumpMonitor,
 ];

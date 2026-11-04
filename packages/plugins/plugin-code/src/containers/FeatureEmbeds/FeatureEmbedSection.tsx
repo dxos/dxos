@@ -9,7 +9,8 @@ import { type Database, Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import * as UiHooks from '@dxos/react-ui/Hooks';
-import { type ObjectLinkProps } from '@dxos/ui-editor';
+import { type ObjectLinkProps, handleBlockWidgetKey } from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
 
 import { Feature, FeatureEmbed } from '#types';
 
@@ -17,6 +18,10 @@ import { CodeNamespace } from '../../namespace.ts';
 import { FeatureSection } from '../FeatureSection/index.ts';
 
 const isId = Schema.is(Obj.ID);
+
+/** Selected from the keyboard (focused itself, not a field inside it), the section rings like a focused control. */
+const EMBED_SELECTED_RING =
+  'group-focus-visible/embed:border-(--dx-focus-ring-color) group-focus-visible/embed:outline group-focus-visible/embed:outline-(--dx-focus-ring-color)';
 
 /** The field of a new feature's section the cursor goes to. */
 export type FeatureEmbedField = 'name' | 'description';
@@ -82,16 +87,40 @@ export const FeatureEmbedSection = ({ eid, label, view, db, attendableId, claimF
     [hasAttention],
   );
 
-  // While attended, keys stay in the form; Escape hands attention back to the text.
+  // While attended, keys stay in the form. Focused itself, the section is selected: Enter edits its name, and the rest
+  // are the editor's keys for a selected block. From a field, Escape selects the section again.
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
       if (!hasAttention) {
         return;
       }
       event.stopPropagation();
-      if (event.key === 'Escape' && !event.defaultPrevented && view) {
-        event.preventDefault();
-        view.focus();
+      const container = event.currentTarget;
+      if (event.defaultPrevented || !view) {
+        return;
+      }
+      if (event.target !== container) {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          container.focus();
+        }
+        return;
+      }
+      switch (event.key) {
+        case 'Enter': {
+          const name = container.querySelector<HTMLInputElement>('input[data-testid="name"]');
+          if (name) {
+            event.preventDefault();
+            name.focus();
+            name.select();
+          }
+          break;
+        }
+        default: {
+          if (handleBlockWidgetKey(view, container, event)) {
+            event.preventDefault();
+          }
+        }
       }
     },
     [hasAttention, view],
@@ -109,7 +138,7 @@ export const FeatureEmbedSection = ({ eid, label, view, db, attendableId, claimF
     <div
       ref={containerRef}
       tabIndex={0}
-      className='py-1 outline-hidden whitespace-normal'
+      className='group/embed py-1 outline-hidden whitespace-normal'
       data-testid='feature-embed'
       data-feature={feature.id}
       {...attentionAttributes}
@@ -118,7 +147,11 @@ export const FeatureEmbedSection = ({ eid, label, view, db, attendableId, claimF
       onKeyUp={(event) => hasAttention && event.stopPropagation()}
     >
       <div
-        className={`border rounded-md overflow-hidden ${hasAttention ? 'border-focus-ring-subtle' : 'border-separator-subtle'}`}
+        className={mx(
+          'border rounded-md overflow-hidden',
+          hasAttention ? 'border-focus-ring-subtle' : 'border-separator-subtle',
+          EMBED_SELECTED_RING,
+        )}
       >
         <FeatureSection subject={feature} attended={hasAttention} />
       </div>

@@ -181,6 +181,9 @@ export const Default: Story = {
   },
 };
 
+/** The seeded spec with no play of its own; QA-6 walks it with the keyboard. */
+export const Sample: Story = {};
+
 /** A section without attention is inert but for its fold toggle, which folds and unfolds it in one click. */
 export const FoldUnattended: Story = {
   play: async ({ canvasElement }) => {
@@ -195,6 +198,50 @@ export const FoldUnattended: Story = {
     await waitFor(() => expect(toggle.getAttribute('aria-expanded')).toBe('false'), { timeout: 5_000 });
     await userEvent.click(toggle);
     await waitFor(() => expect(toggle.getAttribute('aria-expanded')).toBe('true'), { timeout: 5_000 });
+  },
+};
+
+/**
+ * Arrowing through the text stops on each section rather than skipping it: selected, it rings; Enter edits its name,
+ * Escape selects it again, and the arrows move on to the text on either side.
+ */
+export const Keyboard: Story = {
+  play: async ({ canvasElement }) => {
+    const view = await findView(canvasElement);
+    await waitFor(() => expect(embedded(view)).toHaveLength(8), { timeout: 10_000 });
+    const { doc } = view.state;
+    const [first] = FeatureEmbed.parse(doc.toString());
+    const before = doc.line(doc.lineAt(first.from).number - 1);
+    const embed = await waitFor(
+      () => {
+        const element = embeds(canvasElement).find((element) => element.dataset.feature === first.id);
+        invariant(element, 'Missing embed.');
+        return element;
+      },
+      { timeout: 5_000 },
+    );
+    const atBefore = async () => {
+      await expect(document.activeElement).toBe(view.contentDOM);
+      await expect(view.state.selection.main.head).toBe(before.to);
+    };
+
+    view.dispatch({ selection: EditorSelection.cursor(before.to) });
+    view.focus();
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(document.activeElement).toBe(embed));
+    await expect(embed.matches(':focus-visible')).toBe(true);
+
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(document.activeElement?.getAttribute('data-testid')).toBe('name'));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(document.activeElement).toBe(embed));
+
+    await userEvent.keyboard('{ArrowUp}');
+    await waitFor(atBefore);
+    await userEvent.keyboard('{ArrowRight}');
+    await waitFor(() => expect(document.activeElement).toBe(embed));
+    await userEvent.keyboard('{ArrowLeft}');
+    await waitFor(atBefore);
   },
 };
 
@@ -280,8 +327,8 @@ export const FromProse: Story = {
     await waitFor(() => expect(names()).toEqual(['Instant inbox', 'Search']), { timeout: 5_000 });
     await expect(held()[1].peek()?.description).toBe('Search finds any message by a word in it, attachments included.');
 
-    // Escape left the cursor on the Search embed's line; moving it up past the blank line and the other embed moves
-    // the feature up.
+    // Escape from the name selected the Search section; moving it up past the blank line and the other embed moves the
+    // feature up.
     await userEvent.keyboard('{Alt>}{ArrowUp}{ArrowUp}{/Alt}');
     await waitFor(() => expect(names()).toEqual(['Search', 'Instant inbox']), { timeout: 5_000 });
     await expect(view.state.doc.toString()).toContain('Later, maybe: snooze, and sending at a set time.');

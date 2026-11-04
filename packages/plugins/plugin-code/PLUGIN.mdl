@@ -951,8 +951,12 @@ feat F-20: Feature embeds in the editor
              sentence before it (ending in `.`, `!` or `?`) becomes its description, and the cursor goes to its name,
              "New feature" until changed, as on an empty line.
   req F-20.7: A section is inert until it has attention, so the cursor and scrolling pass through it. Its fold toggle
-             is not: one click folds or unfolds it. A click anywhere else gives it attention, its form then edits the
-             feature's name, description, requirements and status in place, and Escape returns the cursor to the text.
+             is not: one click folds or unfolds it. A click anywhere else gives it attention, and its form then edits
+             the feature's name, description, requirements and status in place. Arrowing through the text stops on a
+             section rather than skipping it: selected, it has attention and a focus ring. Enter then edits its name,
+             the arrows move on to the text on either side, Alt with Up or Down moves it as a line, and Backspace
+             deletes it. Escape in a field selects the section again, and Escape on a selected section returns the
+             cursor to the line after it.
   req F-20.10: A section shows everything the feature's `feat` block says: its block id, name, status, description and
               requirements, a structured requirement with each field on a line of its own. It also lists the features
               the feature depends on, which it can add and remove.
@@ -1355,15 +1359,15 @@ test QA-4: Grow a spec from prose
       expect: the paragraph becomes a feature's section, whose description is the paragraph, with the cursor in its name
     - name: Name it
       do: Type "Search" and press Escape.
-      expect: the section is named "Search" with block id F-19, and the cursor is back in the text, after the section
+      expect: the section is named "Search" with block id F-19, and is selected, ringed in the focus colour
     - name: Turn another paragraph into a feature
       do: Put the cursor at the end of the paragraph "Mail should feel instant…", type " /feature", accept it, type "Instant inbox" and press Escape.
-      expect: a second section, "Instant inbox" with block id F-20, above "Search", with the cursor after it; the last paragraph is still prose
+      expect: a second section, "Instant inbox" with block id F-20, above "Search", and selected; the last paragraph is still prose
     - name: Reorder by moving the embed
       do: Press Alt+Down twice.
       expect: the "Instant inbox" section sits below "Search", the spec lists Search first, and each keeps its block id
     - name: Delete a feature by deleting its embed
-      do: With the cursor still after the "Instant inbox" section, press Backspace.
+      do: With the "Instant inbox" section still selected, press Backspace.
       expect: the section is gone and the spec holds only Search
     - name: Undo restores it
       do: Press Cmd+Z.
@@ -1449,6 +1453,39 @@ test QA-5: Switch between a project's specs
     - name: Add a feature on the canvas
       do: Point at an empty cell, click the `+` that shows there, then New feature.
       expect: a tenth card, "New feature", appears in that cell
+```
+
+```mdl
+test QA-6: Arrow through a spec's features
+  desc: |
+    A spec read with the keyboard alone: the cursor arrows through the text and stops on each feature's section on the
+    way, rather than skipping it, so a section can be opened, edited and left without the mouse. Walked by the autocue
+    flow `embed-keyboard` against the FeatureEmbeds story "Sample".
+  actors: human
+  covers: [F-20.7]
+  status: unverified
+  given:
+    - storybook serves plugin-code
+    - the spec "Inbox and agents" embeds its features under the heading "Features", Accounts first, with a blank line
+      between each
+  steps:
+    - name: Arrow onto a section
+      do: Put the cursor at the end of the heading "Features" and press Down twice.
+      expect: the first press moves to the blank line; the second selects the Accounts section, ringed in the focus
+        colour, and the cursor is gone from the text
+    - name: Edit it
+      do: Press Enter, then Right, type " (all providers)" and press Escape.
+      expect: Enter selects the section's name, the name takes the text, and Escape selects the section again
+    - name: Arrow on through the spec
+      do: Press Down until the "Provider sync" section is selected, then Up until Accounts is selected again.
+      expect: each press selects the next section or moves to the next line of text, in document order, and no
+        section is skipped
+    - name: Move a section
+      do: Press Alt+Down twice.
+      expect: the section moves down a line at a time, below the section after it, and stays selected
+    - name: Leave with Escape
+      do: Press Escape.
+      expect: the cursor is in the text on the line after the section
 ```
 
 ## Changelog
@@ -2016,6 +2053,14 @@ decision D-65: A section's fold toggle stays live while the rest of the section 
   by: user:wittjosiah
   affects: [F-20.7]
   why: Folding took two clicks, one to give the section attention and one on the toggle.
+```
+
+```mdl
+decision D-66: Arrowing through a spec stops on each section instead of skipping it. A section the arrows reach has focus itself, so it is selected: it has attention and a focus ring. Enter goes into it, Escape in a field comes back out to the selection, and the arrows go on to the text on either side. Alt with Up or Down and Backspace act on the selected section as they would on a line. The stop belongs to the editor's block widgets, so object embeds in a Markdown document stop the same way. Amends [F-20.7] and [D-65].
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-20.7]
+  why: A section could be reached only with the mouse; the cursor skipped it.
 ```
 
 ## Appendix: Extension Definitions

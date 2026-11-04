@@ -69,15 +69,13 @@ const makeFeature = async (demo, page, paragraph) => {
   });
 };
 
-/** Types the new feature's name into its focused name field, then returns to the text. */
+/** Types the new feature's name into its focused name field, then selects its section. */
 const nameFeature = async (demo, page, name) => {
   await demo.keys({ key: name });
   await page.keyboard.type(name, { delay: 140 });
   await demo.sleep({ ms: 1_500 });
   await demo.press({ key: 'Escape' });
-  await page.waitForFunction(() => document.activeElement?.classList.contains('cm-content'), undefined, {
-    timeout: 5_000,
-  });
+  await page.waitForFunction((selector) => document.activeElement?.matches(selector), SECTION, { timeout: 5_000 });
 };
 
 export const steps = [
@@ -115,7 +113,7 @@ export const steps = [
   {
     name: 'Name it',
     run: async ({ demo, page }) => {
-      await caption(demo, 3, 'Type its name, then press Escape to go back to the text');
+      await caption(demo, 3, 'Type its name, then press Escape to select the section');
       await nameFeature(demo, page, 'Search');
       await waitForNames(page, ['Search']);
       await waitForBlockIds(page, ['F-1']);
@@ -150,7 +148,7 @@ export const steps = [
   {
     name: 'Delete a feature by deleting its embed',
     run: async ({ demo, page }) => {
-      await caption(demo, 6, 'With the cursor after "Instant inbox", press Backspace');
+      await caption(demo, 6, 'With the "Instant inbox" section still selected, press Backspace');
       await demo.press({ key: 'Backspace' });
       await waitForNames(page, ['Search']);
       await demo.sleep({ ms: LOOK });
