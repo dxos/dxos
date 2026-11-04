@@ -9,7 +9,7 @@ import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { useIdentity, useMembers } from '@dxos/halo-react';
-import { type EID } from '@dxos/keys';
+import { EID } from '@dxos/keys';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { Listbox } from '@dxos/react-ui-list';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -22,9 +22,9 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { SpaceCapabilities, SpaceOperation } from '#types';
 
 import { SpaceNamespace } from '../../namespace.ts';
-import { getPeerFocus } from '../../util/index.ts';
+import { getFreshSessions } from '../../util/index.ts';
 import { PeerActions } from '../SpacePresence/PeerActions.tsx';
-import { type Member, PresenceItem, getPresenceOptions, useNow } from '../SpacePresence/SpacePresence.tsx';
+import { type Member, PresenceItem, getPresenceOptions, toggle, useNow } from '../SpacePresence/SpacePresence.tsx';
 
 /** Everyone in the active space, grouped by the object they attend. */
 export const MembersCompanion = () => {
@@ -35,26 +35,45 @@ export const MembersCompanion = () => {
   const identity = useIdentity();
   const members = useMembers(space?.id);
   const now = useNow();
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
 
+  // A member is listed under each object one of their sessions attends, with the sessions attending it.
   const groups = useMemo(() => {
     const byObject = new Map<EID.EID, Member[]>();
     if (!space || !ephemeral) {
       return byObject;
     }
-    for (const member of members) {
-      if (!member.online || !member.identityKey || member.identityKey === identity?.identityKey) {
+    for (const [key, viewers] of Object.entries(ephemeral.viewersByObject)) {
+      const eid = EID.tryParse(key);
+      if (!eid || EID.getSpaceId(eid) !== space.id) {
         continue;
       }
-      const focus = getPeerFocus(ephemeral.viewersByObject, space.id, member.identityKey, now);
-      if (focus) {
-        const lastSeen = ephemeral.viewersByObject[focus.key]?.[member.identityKey]?.lastSeen ?? now;
-        byObject.set(focus.key, [...(byObject.get(focus.key) ?? []), { ...member, lastSeen, currentlyAttended: true }]);
+      for (const member of members) {
+        if (!member.online || !member.identityKey || member.identityKey === identity?.identityKey) {
+          continue;
+        }
+        const sessions = getFreshSessions(viewers[member.identityKey], now).filter(
+          (session) => session.currentlyAttended,
+        );
+        if (sessions.length > 0) {
+          byObject.set(eid, [
+            ...(byObject.get(eid) ?? []),
+            {
+              ...member,
+              rowId: `${eid}/${member.identityKey}`,
+              sessions,
+              now,
+              defaultSessionId: sessions[0].sessionId,
+            },
+          ]);
+        }
       }
     }
     return byObject;
   }, [space, ephemeral, members, identity?.identityKey, now]);
 
-  const online = useMemo(() => [...groups.values()].flat(), [groups]);
+  const listed = useMemo(() => [...groups.values()].flat(), [groups]);
+  const online = useMemo(() => new Set(listed.map((member) => member.identityKey)).size, [listed]);
 
   // A private space is locked at genesis, so it never has other members and has no members settings.
   const locked = space?.membershipPolicy === MembershipPolicy.LOCKED;
@@ -64,7 +83,7 @@ export const MembersCompanion = () => {
       locked || !space
         ? MenuBuilder.make().build()
         : MenuBuilder.make()
-            .text('online', { label: ['members-online.heading', { ns: SpaceNamespace.key, count: online.length }] })
+            .text('online', { label: ['members-online.heading', { ns: SpaceNamespace.key, count: online }] })
             .action(
               'invite',
               {
@@ -76,7 +95,7 @@ export const MembersCompanion = () => {
               () => void invokePromise(SpaceOperation.OpenMembers, { space }),
             )
             .build(),
-    [locked, space, online.length, invokePromise],
+    [locked, space, online, invokePromise],
   );
 
   return (
@@ -101,11 +120,18 @@ export const MembersCompanion = () => {
           <ScrollArea.Root>
             <ScrollArea.Viewport asChild>
               <Layout.Container padBlock>
-                <Listbox.Root items={getPresenceOptions(online)} data-testid='spacePlugin.membersCompanion'>
+                <Listbox.Root items={getPresenceOptions(listed, expanded)} data-testid='spacePlugin.membersCompanion'>
                   <Listbox.Content aria-label={t('members-companion.label')}>
                     {space &&
                       [...groups.entries()].map(([key, group]) => (
-                        <ObjectGroup key={key} space={space} objectKey={key} members={group} />
+                        <ObjectGroup
+                          key={key}
+                          space={space}
+                          objectKey={key}
+                          members={group}
+                          expanded={expanded}
+                          onExpandedChange={setExpanded}
+                        />
                       ))}
                   </Listbox.Content>
                   <Listbox.Empty icon='ph--users--regular'>{t('members-empty.message')}</Listbox.Empty>
@@ -123,10 +149,12 @@ type ObjectGroupProps = {
   space: Space;
   objectKey: EID.EID;
   members: Member[];
+  expanded: ReadonlySet<string>;
+  onExpandedChange: (expanded: ReadonlySet<string>) => void;
 };
 
 /** The members attending one object, under the object's label. */
-const ObjectGroup = ({ space, objectKey, members }: ObjectGroupProps) => {
+const ObjectGroup = ({ space, objectKey, members, expanded, onExpandedChange }: ObjectGroupProps) => {
   const [label, setLabel] = useState<string>();
   useEffect(() => {
     let cancelled = false;
@@ -149,10 +177,14 @@ const ObjectGroup = ({ space, objectKey, members }: ObjectGroupProps) => {
       <Listbox.ItemGroupLabel>{label}</Listbox.ItemGroupLabel>
       {members.map((member) => (
         <PresenceItem
-          key={member.identityKey}
+          key={member.rowId}
           member={member}
-          renderActions={(member) =>
-            member.identityKey ? <PeerActions spaceId={space.id} identityKey={member.identityKey} /> : null
+          open={expanded.has(member.rowId)}
+          onOpenChange={(open) => onExpandedChange(toggle(expanded, member.rowId, open))}
+          renderActions={(member, sessionId) =>
+            member.identityKey ? (
+              <PeerActions spaceId={space.id} identityKey={member.identityKey} sessionId={sessionId} />
+            ) : null
           }
         />
       ))}

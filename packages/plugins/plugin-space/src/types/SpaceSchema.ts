@@ -35,6 +35,8 @@ export const PEER_NODE_TYPE = 'org.dxos.space.peer';
 export const PeerNodeData = Schema.Struct({
   spaceId: Schema.String,
   identityKey: Schema.String,
+  /** Set on a session's node under its peer's; the peer's own node acts on its most recently moved session. */
+  sessionId: Schema.optional(Schema.String),
 });
 
 export type PeerNodeData = Schema.Schema.Type<typeof PeerNodeData>;
@@ -91,9 +93,14 @@ export type SpacePluginOptions = {
   observability?: boolean;
 };
 
+/** One session's view of an object: a tab or app instance of a peer. */
 export type ObjectViewerProps = {
   lastSeen: number;
+  /** When the session last opened the object, came back to it, or moved its anchor there. */
+  movedAt: number;
   currentlyAttended: boolean;
+  /** Name of the device the session runs on. */
+  device?: string;
   /** Where the peer is in the object, while they attend it; see `ViewLocation` in react-ui-attention. */
   location?: PeerLocation;
 };
@@ -110,7 +117,7 @@ export type PluginState = {
   /**
    * Which objects are currently being viewed by which peers.
    */
-  viewersByObject: Record<ObjectId, Record<string, ObjectViewerProps>>;
+  viewersByObject: Record<ObjectId, Record<string, Record<string, ObjectViewerProps>>>;
 
   /**
    * Cached space names, used when spaces are closed or loading.

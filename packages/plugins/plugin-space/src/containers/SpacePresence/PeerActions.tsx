@@ -14,19 +14,21 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Theme from '@dxos/react-ui/Theme';
 
 import { SpaceNamespace } from '../../namespace.ts';
-import { getPeerNodeId } from '../../util/index.ts';
+import { getPeerNodeId, getSessionNodeId } from '../../util/index.ts';
 
 export type PeerActionsProps = {
   spaceId: string;
   identityKey: string;
+  /** Acts on this session of the peer rather than their most recently moved one. */
+  sessionId?: string;
 };
 
-/** The actions contributed on a peer's graph node, as icon buttons. */
-export const PeerActions = ({ spaceId, identityKey }: PeerActionsProps) => {
+/** The actions contributed on a peer's (or one of their session's) graph node, as buttons. */
+export const PeerActions = ({ spaceId, identityKey, sessionId }: PeerActionsProps) => {
   const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const { graph } = ToolkitHooks.useAppGraph();
   const runAction = GraphHooks.useActionRunner();
-  const nodeId = getPeerNodeId(spaceId, identityKey);
+  const nodeId = sessionId ? getSessionNodeId(spaceId, identityKey, sessionId) : getPeerNodeId(spaceId, identityKey);
 
   // A peer's node is hidden, so nothing else expands it or its actions.
   useEffect(() => {

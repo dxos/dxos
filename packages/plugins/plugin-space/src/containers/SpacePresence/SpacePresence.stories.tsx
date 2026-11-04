@@ -13,14 +13,26 @@ import { translations } from '#translations';
 import { FullPresence, type Member, type MemberPresenceProps, SmallPresence } from './SpacePresence.tsx';
 
 const viewers = (n: number, currentlyAttended = true): Member[] =>
-  Array.from({ length: n }, () => ({
-    role: 'admin',
-    did: IdentityDid.random(),
-    identityKey: PublicKey.random().toHex(),
-    online: true,
-    lastSeen: Date.now(),
-    currentlyAttended,
-  }));
+  Array.from({ length: n }, (_, i) => {
+    const identityKey = PublicKey.random().toHex();
+    const now = Date.now();
+    // Every third viewer has the object open on a second device, which went idle a while ago.
+    const sessions = [
+      { sessionId: 'a', lastSeen: now, movedAt: now, currentlyAttended, device: 'Chrome · macOS' },
+      ...(i % 3 === 0
+        ? [{ sessionId: 'b', lastSeen: now, movedAt: now - 5 * 60_000, currentlyAttended, device: 'Safari · iOS' }]
+        : []),
+    ];
+    return {
+      role: 'admin',
+      did: IdentityDid.random(),
+      identityKey,
+      online: true,
+      rowId: identityKey,
+      sessions,
+      now,
+    };
+  });
 
 const meta = {
   title: 'plugins/plugin-space/containers/SpacePresence',

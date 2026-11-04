@@ -215,6 +215,13 @@ export default Capability.makeModule(
         }),
       );
 
+    // One session per running app, so peers tell this tab apart from the same identity's others.
+    const sessionId = PublicKey.random().toHex();
+    const getDeviceName = () => {
+      const profile = client.halo.device?.profile;
+      return profile?.label || [profile?.platform, profile?.os].filter(Boolean).join(' · ') || undefined;
+    };
+
     // Broadcast active node to other peers in the space - subscribe to both layout and attention.
     let broadcastCleanup: (() => void) | undefined;
     let previousActive: readonly string[] = [];
@@ -232,6 +239,7 @@ export default Capability.makeModule(
         const spaces = client.spaces.get();
         const identity = Option.getOrUndefined(haloIdentity.getSnapshot());
         if (identity) {
+          const device = getDeviceName();
           const attendedBySpace = groupPresenceKeysBySpace([...current]);
           const changesBySpace = groupPresenceChangesBySpace(active, inactive);
 
@@ -241,6 +249,8 @@ export default Capability.makeModule(
             void space
               .postMessage('viewing', {
                 identityKey: identity.identityKey ?? '',
+                sessionId,
+                ...(device && { device }),
                 attended,
                 added,
                 removed,

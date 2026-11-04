@@ -44,15 +44,19 @@ type SpacePluginOptions
 
 ```mdl
 type ObjectViewerProps
+  desc: One session's view of an object; a session is a tab or app instance of a peer.
   fields:
     lastSeen: number            # unix timestamp of last observation
-    currentlyAttended: boolean  # true if the peer is currently viewing this object
+    movedAt: number             # when the session opened the object, came back to it, or moved its anchor there
+    currentlyAttended: boolean  # true if the session is currently viewing this object
+    location?: PeerLocation     # the session's selection and top of view, while it attends the object
+    device?: string             # name of the device the session runs on
 ```
 
 ```mdl
 type PluginState
   fields:
-    viewersByObject: Record<EID, Record<IdentityKeyHex, ObjectViewerProps>>
+    viewersByObject: Record<EID, Record<IdentityKeyHex, Record<SessionId, ObjectViewerProps>>>
     spaceNames: Record<string, string>  # cached names for closed/loading spaces
     sdkMigrationRunning: Record<string, boolean>
     navigableCollections: boolean
@@ -545,8 +549,9 @@ feat F-8: Presence and Sync Status
   req F-8.10: Clicking an avatar in SpacePresence opens the list of the object's viewers with that peer's row highlighted; a button at the end of its header opens the Members companion. Rows are Listbox rows whose actions are labelled buttons.
   req F-8.11: The Members deck companion lists every online peer in the space, grouped by the object they view, with the same actions; an Invite members action at the end of its toolbar opens the space's members settings. It sits third in the complementary rail, after Notifications.
   req F-8.14: In a locked space the Members companion shows only a placeholder saying the space is private, since it has no other members and no members settings.
-  req F-8.12: A peer on several devices shows as one row, located by the device seen most recently.
-  req F-8.13: The viewing message carries each attended object's location; it is sent with the heartbeat and at most once per second when a location changes.
+  req F-8.12: A peer with several sessions (tabs or devices) on an object shows as one row that expands into a row per session, named by its device. Expanded, only the session rows carry actions; collapsed, the peer's row does, acting on the session whose anchor moved most recently.
+  req F-8.13: The viewing message carries the sender's session id, its device name and each attended object's location; it is sent with the heartbeat and at most once per second when a location changes.
+  req F-8.15: A session row's dot shows whether its anchor moved in the last minute (active) or not (idle); the row states nothing else about the session.
 ```
 
 ## Acceptance
@@ -729,6 +734,32 @@ test QA-3: Act on a peer from their avatar
       expect: the space's members settings open
 ```
 
+```mdl
+test QA-4: Tell a peer's sessions apart
+  desc: A peer with the object open in two tabs shows as one row that expands into a row per session, each with its own Jump.
+  actors: human
+  covers: [F-8.12, F-8.15]
+  status: unverified
+  automated:
+    - composer-e2e:collaboration.spec.ts#Collaboration tests › a peer's sessions list under their row, each with its own Jump
+  given:
+    - host: a booted app with a space containing one document, shared with a guest
+    - guest: a second browser profile with its own identity, a member of that space
+  steps:
+    - name: Open the document twice
+      do: Open the document on the host, and in two tabs of the guest's.
+      expect: the host's plank header shows one avatar for the guest
+    - name: Open the viewers list
+      do: On the host, click the guest's avatar.
+      expect: the guest's row says 2 sessions and carries a Jump action
+    - name: Expand the sessions
+      do: Click the caret at the end of the guest's row.
+      expect: a row per session appears under it, each named by its device with a dot and a Jump action, and the guest's own row no longer carries Jump
+    - name: Jump to a session
+      do: Click Jump on the first session's row.
+      expect: the host's editor takes focus
+```
+
 ---
 
 ## Changelog
@@ -882,6 +913,67 @@ decision D-17: The popover opens the companion from a button at the end of its h
   affects: [F-8.10, F-8.11]
   why: A full-width footer label overflowed the popover; the header's trailing slot is where a popover's own controls go. Explicit positions keep the rail order from depending on plugin load order.
   rejected: Keep the footer button and widen the popover to fit it.
+```
+
+```mdl
+decision D-18: Viewers are tracked per session (a tab or app instance), not per identity. A peer with several sessions on an object is one row that expands, behind a disclosure, into a row per session naming its device.
+  date: 2026-11-04
+  by: user:wittjosiah
+  supersedes: D-10
+  affects: [F-8.12, ObjectViewerProps, PluginState]
+```
+
+```mdl
+decision D-19: Expanded, only the session rows carry actions. Collapsed, the peer's row carries them, acting on the peer's default session.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-8.12]
+```
+
+```mdl
+decision D-20: The default session is the one whose anchor (selection or viewport) changed most recently, from typing, scrolling or any other move. A session is active while its anchor changed recently and idle otherwise, shown by a dot alone with no text; editing is not told apart from viewing.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-8.12, F-8.15]
+```
+
+```mdl
+decision D-21: Each running app picks a random session id and sends it, with its device name, in every `viewing` message. The name is the HALO device profile's label, else its platform and OS, matching the devices settings. A message without a session id counts as one session keyed by the identity. Fills in [D-18].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.13, ObjectViewerProps]
+  why: A peer cannot read another identity's device profiles, so the sender names its own device. Keying old clients by identity keeps them listed as one session.
+  rejected: Look the device up by the gossip envelope's peer id, which only works for one's own devices.
+```
+
+```mdl
+decision D-22: Receivers derive when a session moved by comparing each message's location with the one before; opening an object or coming back to it counts as a move. Active means moved within the last 60 s. Fills in [D-20].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.15, ObjectViewerProps]
+  why: Locations already travel on change, so the receiver sees every move without a new field, and its own clock judges the window, so clock skew between devices does not matter.
+  rejected: A sender-side `idleFor` field counting seconds since the last input.
+```
+
+```mdl
+decision D-23: Each session is a hidden graph node, `session-<sessionId>`, under its peer's node and carries the same Jump and Go to actions for that session. Fills in [D-19].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.8, F-8.12]
+  why: Keeps the actions in the app graph, as [D-11] does for peers, so a session's Jump depends on what that session views.
+```
+
+```mdl
+decision D-24: Sessions on the same device are numbered after its name, the session count sits on a description line under the peer's name, and the caret is the row's trailing Collapsible trigger. The popover takes its 24rem maximum width. The Members companion lists a peer under each object one of their sessions attends, with only those sessions, and its collapsed row acts on the most recently moved of them. Fills in [D-18].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.10, F-8.11, F-8.12]
+  why: Two tabs on one device carry the same name. The count beside the name truncated next to Jump in a 20rem popover. The trailing caret is how Listbox rows collapse elsewhere.
+  rejected: A leading caret before the avatar, as first mocked.
 ```
 
 ## Appendix: Extension Definitions

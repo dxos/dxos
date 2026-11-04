@@ -26,7 +26,9 @@ import { SpaceNamespace } from '../../../namespace.ts';
 import {
   MEMBERS_COMPANION_ID,
   PEER_SEGMENT_PREFIX,
+  SESSION_SEGMENT_PREFIX,
   getPeerFocus,
+  getPeerSessionIds,
   getPresenceKeyFromPath,
   getSpacePeers,
 } from '../../../util/presence.ts';
@@ -36,7 +38,13 @@ const GO_TO_LABEL: Label = ['presence-go-to.label', { ns: SpaceNamespace.key }];
 
 const isPeerNodeData = Schema.is(SpaceSchema.PeerNodeData);
 
-/** The Members deck companion, and a hidden node per peer in a space carrying the actions on that peer. */
+const matchPeerNode = (node: AppGraphNode.Node) =>
+  node.type === SpaceSchema.PEER_NODE_TYPE && isPeerNodeData(node.data) ? Option.some(node.data) : Option.none();
+
+/**
+ * The Members deck companion, and a hidden node per peer in a space carrying the actions on that peer, with one under it
+ * per session of theirs carrying the same actions on that session.
+ */
 export const createPeerExtensions = Effect.fnUntraced(function* () {
   const capabilities = yield* Capability.Service;
   const ephemeralCapAtom = yield* Capability.atom(SpaceCapabilities.EphemeralState);
@@ -84,12 +92,35 @@ export const createPeerExtensions = Effect.fnUntraced(function* () {
       },
     }),
 
-    // Jump when the peer's object is open in this deck; otherwise Go to opens it.
+    AppGraphBuilder.createExtension({
+      id: 'peerSessions',
+      match: (node) => matchPeerNode(node).pipe(Option.filter(({ sessionId }) => sessionId === undefined)),
+      connector: ({ spaceId, identityKey }, get) => {
+        const [ephemeralAtom] = get(ephemeralCapAtom);
+        if (!ephemeralAtom) {
+          return Effect.succeed([]);
+        }
+
+        const sessionIds = getPeerSessionIds(get(ephemeralAtom).viewersByObject, spaceId, identityKey, Date.now());
+        return Effect.succeed(
+          sessionIds.map(
+            (sessionId) =>
+              ({
+                id: `${SESSION_SEGMENT_PREFIX}${sessionId}`,
+                type: SpaceSchema.PEER_NODE_TYPE,
+                data: { spaceId, identityKey, sessionId },
+                properties: { label: sessionId, disposition: 'hidden' },
+              }) satisfies AppGraphNode.NodeArg<SpaceSchema.PeerNodeData>,
+          ),
+        );
+      },
+    }),
+
+    // Jump when the session's object is open in this deck; otherwise Go to opens it.
     AppGraphBuilder.createExtension({
       id: 'peerActions',
-      match: (node) =>
-        node.type === SpaceSchema.PEER_NODE_TYPE && isPeerNodeData(node.data) ? Option.some(node.data) : Option.none(),
-      actions: ({ spaceId, identityKey }, get) => {
+      match: matchPeerNode,
+      actions: ({ spaceId, identityKey, sessionId }, get) => {
         const [ephemeralAtom] = get(ephemeralCapAtom);
         const [layoutAtom] = get(layoutCapAtom);
         const [appGraph] = get(capabilities.atom(AppCapabilities.AppGraph));
@@ -97,7 +128,7 @@ export const createPeerExtensions = Effect.fnUntraced(function* () {
           return Effect.succeed([]);
         }
 
-        const focus = getPeerFocus(get(ephemeralAtom).viewersByObject, spaceId, identityKey, Date.now());
+        const focus = getPeerFocus(get(ephemeralAtom).viewersByObject, spaceId, identityKey, Date.now(), sessionId);
         if (!focus) {
           return Effect.succeed([]);
         }

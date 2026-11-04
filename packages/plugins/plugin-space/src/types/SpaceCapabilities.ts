@@ -55,8 +55,8 @@ export type MergePreview = {
 export type SpaceEphemeralState = {
   sdkMigrationRunning: Record<string, boolean>;
   navigableCollections: boolean;
-  /** Peers viewing each object, keyed by the object's EID and then by the peer's hex identity key. */
-  viewersByObject: Record<string, Record<string, SpaceSchema.ObjectViewerProps>>;
+  /** Sessions viewing each object, keyed by the object's EID, the peer's hex identity key, then the session id. */
+  viewersByObject: Record<string, Record<string, Record<string, SpaceSchema.ObjectViewerProps>>>;
   mergePreview: MergePreview | undefined;
   /** Bumped when a merge commits, so an open duplicates review knows to rescan. */
   lastMergeAt: number | undefined;
