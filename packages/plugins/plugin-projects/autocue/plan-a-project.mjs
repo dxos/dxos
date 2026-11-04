@@ -3,7 +3,8 @@
 //
 
 /**
- * Create a project, brief its agent, break the work into tasks, fill one in, and select tasks for the agent.
+ * Create a project, brief its agent, break the work into tasks, fill one in, assign one from its row, let a coding
+ * session take one, and select tasks for the agent.
  *
  * @mdl packages/plugins/plugin-projects/PLUGIN.mdl test QA-4
  * @app composer-app bundled dev build, served by `vite preview` on :4173
@@ -32,6 +33,13 @@ const COMPANION = '[data-testid="deck.companion"]';
 const INSTRUCTIONS = `${PLANK} .cm-content[aria-placeholder="Describe what the agent should do in each session."]`;
 const ADD_TASK = `${PLANK} input[placeholder="Add task"]`;
 const TASK_ROW = `${PLANK} [data-testid="taskList.item"]`;
+const ADD_PRIORITY = `${PLANK} [data-testid="taskList.edit.properties"] [data-testid="priority"]`;
+
+const DISPLAY_NAME = 'Riley';
+
+const SESSION_ID = 'qa-4';
+
+const taskRow = (title) => `${TASK_ROW}:has-text("${title}")`;
 
 /** Types as a person would, a character at a time. */
 const typeSlowly = (page, text, delay = 60) => page.keyboard.type(text, { delay });
@@ -74,6 +82,12 @@ export const steps = [
         await notice.first().click();
       }
       await page.locator(`${PLANK}[data-attendable-id$="/home"]`).first().waitFor();
+      await page.evaluate(async (displayName) => {
+        const { halo } = globalThis.dxos;
+        if (!halo.identity.get()?.profile?.displayName) {
+          await halo.updateProfile({ ...halo.identity.get()?.profile, displayName });
+        }
+      }, DISPLAY_NAME);
       const close = page.locator('role=button[name="Close companion"]').first();
       if (await close.isVisible().catch(() => false)) {
         await close.click();
@@ -118,6 +132,13 @@ export const steps = [
       await page.locator(ADD_TASK).first().waitFor({ state: 'visible', timeout: 10_000 });
       for (const [index, task] of TASKS.entries()) {
         await demo.type({ selector: `${ADD_TASK} >> nth=0`, value: task, label: 'Add task' });
+        if (index === TASKS.length - 1) {
+          await demo.click({ selector: `${ADD_PRIORITY} >> nth=0`, label: 'Priority' });
+          const low = '[role="option"]:has-text("Low")';
+          await page.locator(low).first().waitFor({ state: 'visible', timeout: 5_000 });
+          await demo.click({ selector: `${low} >> nth=0`, label: 'Low' });
+          await demo.click({ selector: `${ADD_TASK} >> nth=0`, label: 'Add task', hud: false });
+        }
         await demo.press({ key: 'Enter', hud: false });
         await page.locator(TASK_ROW).nth(index).waitFor({ state: 'visible', timeout: 10_000 });
       }
@@ -140,6 +161,86 @@ export const steps = [
       await pickProperty(demo, page, 'priority', 'High');
       await pickProperty(demo, page, 'status', 'Started');
       await page.locator(`${COMPANION} :text("Priority set to high")`).first().waitFor({ timeout: 10_000 });
+      if ((await page.locator(`${taskRow(TASKS[0])}:has-text("${TASK_DESCRIPTION}")`).count()) > 0) {
+        throw new Error('The row shows the task description.');
+      }
+      await page.waitForTimeout(BEAT * 2);
+    },
+  },
+  {
+    name: 'Assign a task from its row',
+    narration: 'Assign a task straight from its row.',
+    done: async ({ page }) =>
+      (await page.locator(`${taskRow(TASKS[1])} [data-testid="taskList.item.assignee"]`).count()) > 0,
+    run: async ({ demo, page }) => {
+      await demo.hover({ selector: `${taskRow(TASKS[1])} >> [data-testid="taskList.item.title"]`, label: TASKS[1] });
+      await demo.click({
+        selector: `${taskRow(TASKS[1])} >> [data-testid="taskList.item.assignee.unset"]`,
+        label: 'Assignee',
+      });
+      const member = '[data-testid="taskList.assignee.member"]';
+      await page.locator(member).first().waitFor({ state: 'visible', timeout: 5_000 });
+      await demo.click({ selector: `${member} >> nth=0`, label: 'Me' });
+      await page
+        .locator(`${taskRow(TASKS[1])} [data-testid="taskList.item.assignee"]`)
+        .first()
+        .waitFor({ state: 'visible', timeout: 10_000 });
+      await page.waitForTimeout(BEAT);
+    },
+  },
+  {
+    name: 'A coding session takes a task',
+    narration: 'A coding session that takes a task over MCP works as your delegate, and you stay the assignee.',
+    done: async ({ page }) =>
+      (await page.locator(`${taskRow(TASKS[2])} [data-testid="taskList.item.delegate"]`).count()) > 0,
+    run: async ({ demo, page }) => {
+      const { spaceId, taskId, identityDid, displayName } = await page.evaluate(async (title) => {
+        const { Filter, halo, spaces } = globalThis.dxos;
+        const identity = halo.identity.get();
+        for (const space of spaces()) {
+          const [task] = await space.db.query(Filter.props({ title })).run();
+          if (task) {
+            return {
+              spaceId: space.id,
+              taskId: task.id,
+              identityDid: identity.did,
+              displayName: identity.profile?.displayName,
+            };
+          }
+        }
+        throw new Error(`No task titled ${title}`);
+      }, TASKS[2]);
+      await page.evaluate(
+        async ({ spaceId, taskId, identityDid, displayName, sessionId, title }) => {
+          const { Ref, spaces } = globalThis.dxos;
+          const space = spaces().find((candidate) => candidate.id === spaceId);
+          const task = await space.db.getObjectById(taskId);
+          await globalThis.composer.invoke(
+            'org.dxos.operation.tasks.update',
+            {
+              task: Ref.make(task),
+              status: 'started',
+              assignee: { identityDid, ...(displayName ? { name: displayName } : {}) },
+              remoteSession: { sessionId, title },
+            },
+            { spaceId },
+          );
+        },
+        { spaceId, taskId, identityDid, displayName, sessionId: SESSION_ID, title: TASKS[2] },
+      );
+      await page
+        .locator(`${taskRow(TASKS[2])} [data-testid="taskList.item.delegate"]`)
+        .first()
+        .waitFor({ state: 'visible', timeout: 10_000 });
+      await page.waitForTimeout(BEAT);
+      await demo.click({
+        selector: `${taskRow(TASKS[2])} >> [data-testid="taskList.item.title"]`,
+        label: TASKS[2],
+      });
+      await page
+        .locator(`${COMPANION} [data-testid="taskList.property.assignee"]`, { hasText: 'delegated to Claude Code' })
+        .first()
+        .waitFor({ state: 'visible', timeout: 10_000 });
       await page.waitForTimeout(BEAT * 2);
     },
   },
@@ -149,7 +250,7 @@ export const steps = [
     run: async ({ demo, page }) => {
       for (const task of TASKS.slice(1)) {
         await demo.click({
-          selector: `${TASK_ROW}:has-text("${task}") >> [data-testid="taskList.item.checkbox"]`,
+          selector: `${taskRow(task)} >> [data-testid="taskList.item.checkbox"]`,
           label: 'Select task',
         });
       }
@@ -157,7 +258,7 @@ export const steps = [
       await page.waitForFunction((selector) => document.querySelector(selector)?.disabled === false, delegate, {
         timeout: 10_000,
       });
-      await demo.hover({ selector: delegate, label: 'Assign selected tasks to agent' });
+      await demo.hover({ selector: delegate, label: 'Delegate selected tasks to agent' });
       await page.waitForTimeout(BEAT * 2);
     },
   },
