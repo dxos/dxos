@@ -106,11 +106,17 @@ test.describe('Collaboration tests', () => {
     await Markdown.waitForMarkdownTextboxWithLocator(guestPlank.locator);
     await Markdown.getMarkdownTextboxWithLocator(guestPlank.locator).blur();
 
-    await expect(Markdown.getCollaboratorNamesWithLocator(guestPlank.locator).first()).toHaveText(/.+/);
+    // A query sent before the peers' connection forms is lost, so the host's state may only arrive
+    // with its 15 s re-announce.
+    await expect(Markdown.getCollaboratorNamesWithLocator(guestPlank.locator).first()).toHaveText(/.+/, {
+      timeout: 20_000,
+    });
+    await expect(Markdown.getCollaboratorCursorsWithLocator(guestPlank.locator).first()).toBeVisible();
     await expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator)).toHaveCount(0);
 
     await Markdown.getMarkdownTextboxWithLocator(guestPlank.locator).focus();
     await expect(Markdown.getCollaboratorNamesWithLocator(hostPlank.locator).first()).toHaveText(/.+/);
+    await expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator).first()).toBeVisible();
   });
 
   test("host and guest can see each others' changes in same document", { tag: ['@QA-8'] }, async () => {

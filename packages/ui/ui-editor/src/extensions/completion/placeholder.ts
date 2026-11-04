@@ -20,22 +20,27 @@ const PLACEHOLDER_SIDE = 2;
 export const placeholderWidget = (content: Content) =>
   Decoration.widget({ widget: new PlaceholderWidget(content), side: PLACEHOLDER_SIDE });
 
-/** The transient placeholders configured on an editor; the empty-document placeholder gives way while one shows. */
-const transientPlaceholders = Facet.define<ViewPlugin<{ readonly visible: boolean }>>();
+/**
+ * The transient placeholders configured on an editor; the empty-document placeholder gives way while one shows.
+ * `label` is the hint's `aria-placeholder`; a hint without one leaves the empty placeholder's in place.
+ */
+const transientPlaceholders = Facet.define<{ plugin: ViewPlugin<{ readonly visible: boolean }>; label?: string }>();
 
 /**
  * Shows `content` while the document is empty, unless a {@link placeholder} hint is showing in its place.
  */
 export const emptyPlaceholder = (content: string): Extension => {
-  const hintVisible = (view: EditorView) =>
-    view.state.facet(transientPlaceholders).some((plugin) => view.plugin(plugin)?.visible);
+  const hintVisible = (view: EditorView, labelled = false) =>
+    view.state
+      .facet(transientPlaceholders)
+      .some(({ plugin, label }) => (!labelled || label !== undefined) && view.plugin(plugin)?.visible);
   return [
     EditorView.decorations.of((view) =>
       view.state.doc.length > 0 || hintVisible(view)
         ? Decoration.none
         : Decoration.set(placeholderWidget(content).range(0)),
     ),
-    EditorView.contentAttributes.of((view) => (hintVisible(view) ? null : { 'aria-placeholder': content })),
+    EditorView.contentAttributes.of((view) => (hintVisible(view, true) ? null : { 'aria-placeholder': content })),
   ];
 };
 
@@ -122,7 +127,7 @@ export const placeholder = ({ content, delay = 3_000, focusOnly = false }: Place
 
   return [
     plugin,
-    transientPlaceholders.of(plugin),
+    transientPlaceholders.of({ plugin, label: typeof content === 'string' ? content : undefined }),
     typeof content === 'string'
       ? EditorView.contentAttributes.of((view) =>
           view.plugin(plugin)?.visible ? { 'aria-placeholder': content } : null,

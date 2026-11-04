@@ -42,6 +42,16 @@ describe('placeholder', () => {
     expect(placeholders(view)).to.deep.eq([]);
   });
 
+  test('a hint without text keeps the empty placeholder accessible', async ({ expect }) => {
+    const hint = document.createElement('span');
+    hint.textContent = 'Press / for commands';
+    const view = createView([emptyPlaceholder('Enter text'), placeholder({ content: hint, delay: 0 })]);
+
+    view.dispatch({ selection: EditorSelection.cursor(0) });
+    await expect.poll(() => placeholders(view)).to.deep.eq(['Press / for commands']);
+    expect(view.contentDOM.getAttribute('aria-placeholder')).to.eq('Enter text');
+  });
+
   test('a widget at the placeholder position draws before it', ({ expect }) => {
     const view = createView([
       emptyPlaceholder('Enter text'),
