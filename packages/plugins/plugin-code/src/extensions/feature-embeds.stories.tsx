@@ -100,7 +100,7 @@ const featureOf = (element: Element | null | undefined) =>
 const embedded = (view: EditorView) => FeatureEmbed.parse(view.state.doc.toString()).map(({ id }) => id);
 
 const meta = {
-  title: 'plugins/plugin-code/containers/FeatureEmbeds',
+  title: 'plugins/plugin-code/extensions/feature-embeds',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
@@ -325,6 +325,8 @@ export const LeaveSelection: Story = {
     await userEvent.keyboard('{ArrowDown}');
     await waitFor(() => expect(document.activeElement).toBe(view.contentDOM));
     await expect(view.state.doc.lineAt(view.state.selection.main.head).text).toContain(missing);
+    // The source can wrap, and Down from an upper row stays in it: arrow on from its end.
+    view.dispatch({ selection: EditorSelection.cursor(view.state.doc.lineAt(view.state.selection.main.head).to) });
     await userEvent.keyboard('{ArrowDown}');
     await waitFor(() => expect(featureOf(document.activeElement)).toBe(second.id));
     // Alt changes only Up and Down: with Left the selection goes back to the text, as without it.

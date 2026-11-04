@@ -38,7 +38,7 @@ export const invoke = Command.make(
   },
   Effect.fn(function* ({ key, data, cpuTimeLimit, subrequestsLimit }) {
     const { json } = yield* CommandConfig;
-    const client = yield* ClientService;
+    const client = yield* ClientService.client;
 
     // Produce normalized in-memory FunctionType objects for display.
     const fns = yield* Effect.promise(() => getDeployedFunctions(Context.default(), client));

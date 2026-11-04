@@ -2,10 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
 import { describe, test } from 'vitest';
 
 import { loadBundle } from './load-bundle.ts';
 import * as PluginBundle from './PluginBundle.ts';
+import { DEFAULT_BUDGET, verifyBundle } from './verify-bundle.ts';
 
 const tag = (identifier: string) => ({ identifier, arity: 'one' });
 
@@ -158,5 +162,38 @@ describe('PluginBundle', () => {
     const failures = await throwing.importModules(['schema.mjs']);
     expect(failures.map(({ path }) => path)).toEqual(['schema.mjs']);
     expect(failures[0].message).toContain('boom');
+  });
+
+  test("only scripts and wasm count toward the bundle's module bytes", { timeout: 60_000 }, async ({ expect }) => {
+    const megabyte = 'x'.repeat(1024 * 1024);
+    await using lean = await loadBundle(makeBundle({ 'assets/font.woff2': megabyte }));
+    expect(lean.moduleBytes).toBeLessThan(64 * 1024);
+
+    await using heavy = await loadBundle(
+      makeBundle({ 'vendor/chunk-vendor.mjs': `export const base = 'base'; export const padding = '${megabyte}';` }),
+    );
+    expect(heavy.moduleBytes).toBeGreaterThan(1024 * 1024);
+  });
+
+  test('a bundle over its budget fails verification', { timeout: 60_000 }, async ({ expect }) => {
+    const dir = await mkdtemp(join(tmpdir(), 'plugin-bundle-'));
+    try {
+      for (const [path, content] of Object.entries(makeBundle())) {
+        await mkdir(dirname(join(dir, path)), { recursive: true });
+        await writeFile(join(dir, path), content);
+      }
+      expect((await verifyBundle(dir)).problems).toEqual([]);
+      expect((await verifyBundle(dir, { budget: { ...DEFAULT_BUDGET, moduleBytes: 16 } })).problems).toEqual([
+        { path: 'vendor/', message: expect.stringMatching(/of modules, over the 0\.0 MB budget$/) },
+      ]);
+      expect((await verifyBundle(dir, { budget: { ...DEFAULT_BUDGET, activationMs: 0 } })).problems).toEqual([
+        {
+          path: 'manifest.json',
+          message: expect.stringMatching(/^loads and imports in \d+ ms, over the 0 ms budget$/),
+        },
+      ]);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
   });
 });

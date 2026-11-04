@@ -10,7 +10,7 @@ import * as Skill from '@dxos/compute/Skill';
 import { Obj, Type } from '@dxos/echo';
 import * as JsonSchema from '@dxos/echo/JsonSchema';
 import { log } from '@dxos/log';
-import { type PluginProtocol } from '@dxos/protocols';
+import { PluginProtocol } from '@dxos/protocols';
 
 import type * as PluginActivation from './PluginActivation.ts';
 
@@ -29,6 +29,7 @@ export const make = (activation: PluginActivation.Activation): PluginProtocol.Ca
     jsonSchema: JsonSchema.toJsonSchema(type),
   })),
   failures: activation.failures.map(({ id, phase, reason, error }) => ({ id, phase, reason, message: error.message })),
+  protocolVersion: PluginProtocol.PROTOCOL_VERSION,
 });
 
 const toPluginRecord = (plugin: Plugin.Plugin): PluginProtocol.PluginRecord => ({

@@ -7,6 +7,7 @@ import { describe, test } from 'vitest';
 import { activateHeadlessPlugins } from '@dxos/app-toolkit/testing';
 import { Type } from '@dxos/echo';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 
@@ -19,8 +20,9 @@ describe('CodePlugin in workerd', () => {
     const { failures, operationKeys, typenames } = await activateHeadlessPlugins([
       CodePlugin.make(),
       // Declared plugin dependencies, and theirs; the manager refuses to load the plugin without them.
-      ProjectsPlugin.make(),
       AssistantPlugin.make(),
+      MarkdownPlugin.make(),
+      ProjectsPlugin.make(),
       TasksPlugin.make(),
     ]);
     expect(failures).toEqual([]);

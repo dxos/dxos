@@ -12,14 +12,14 @@
  *
  *   DX_STORIES=plugins/plugin-code VITE_DX_DISABLE_ANIMATIONS=true moon run storybook-react:serve-nodeps
  *   node .agents/skills/autocue/scripts/driver.mjs --port 7333 --out /tmp/demo \
- *     --url 'http://localhost:9009/iframe.html?id=plugins-plugin-code-containers-featureembeds--sample&viewMode=story'
+ *     --url 'http://localhost:9009/iframe.html?id=plugins-plugin-code-extensions-feature-embeds--sample&viewMode=story'
  *   node .agents/skills/autocue/scripts/trim-static.mjs --in /tmp/demo/demo.webm --out /tmp/demo/demo-trimmed.webm \
  *     --duration off --max-static 3 --caption-hold 4
  */
 
 const STORYBOOK = 'http://localhost:9009';
 const SUBTITLE = 'from plugin-code/PLUGIN.mdl QA-6';
-const STORY = `${STORYBOOK}/iframe.html?id=plugins-plugin-code-containers-featureembeds--sample&viewMode=story`;
+const STORY = `${STORYBOOK}/iframe.html?id=plugins-plugin-code-extensions-feature-embeds--sample&viewMode=story`;
 
 /** Time to read a caption before the gesture it describes. */
 const READ = 3_000;

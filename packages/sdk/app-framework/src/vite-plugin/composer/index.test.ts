@@ -41,4 +41,31 @@ describe('composerPlugin', () => {
     expect(manifest.key).toBe('org.example.plugin.hello');
     expect(manifest.assets).toContain('index.mjs');
   });
+
+  test('a chunk that declares its own `Map` still loads', async ({ expect }) => {
+    // Under the package's `node_modules`, so the externals the shim imports (`react`, …) resolve when the bundle runs.
+    const packageRoot = mkdtempSync(join(import.meta.dirname, '../../../node_modules/.dx-'));
+    try {
+      mkdirSync(join(packageRoot, 'src'));
+      writeFileSync(
+        join(packageRoot, 'dx.config.mjs'),
+        `export default { plugin: { key: 'org.example.plugin.map', name: 'Map' } };\n`,
+      );
+      writeFileSync(
+        join(packageRoot, 'src', 'plugin.ts'),
+        `export class Map { readonly kind = 'map'; }\nexport default new Map().kind;\n`,
+      );
+      await build({
+        root: packageRoot,
+        configFile: false,
+        logLevel: 'silent',
+        plugins: composerPlugin({ entry: 'src/plugin.ts', vendor: false }),
+      });
+
+      const { default: kind } = await import(/* @vite-ignore */ join(packageRoot, 'dist', 'index.mjs'));
+      expect(kind).toBe('map');
+    } finally {
+      rmSync(packageRoot, { recursive: true, force: true });
+    }
+  });
 });

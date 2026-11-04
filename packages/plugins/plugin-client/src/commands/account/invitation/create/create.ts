@@ -17,7 +17,7 @@ import { CommandError } from '../../../errors.ts';
 
 export const handler = Effect.fn(function* () {
   const { json } = yield* CommandConfig;
-  const client = yield* ClientService;
+  const client = yield* ClientService.client;
   // `client.initialize()` is forked off startup, and `client.halo` throws until it lands.
   yield* Effect.tryPromise(() => client.waitUntilInitialized());
   invariant(client.halo.identity.get(), 'Not logged in. Run `dx account login` first.');

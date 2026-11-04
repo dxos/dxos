@@ -18,7 +18,7 @@ import * as ProjectSurface from '@dxos/plugin-projects/ProjectSurface';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { trim } from '@dxos/util';
 
-import { CodeNamespace } from './src/namespace.ts';
+import { CODE_HUE, CodeNamespace } from './src/namespace.ts';
 import * as CodeCapabilities from './src/types/CodeCapabilities.ts';
 import * as CodeEvents from './src/types/CodeEvents.ts';
 
@@ -63,11 +63,11 @@ const config: Plugin.PluginConfig = Plugin.config({
       activated in a subsequent phase.
     `,
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-code',
-    icon: { key: 'ph--code--regular', hue: 'indigo' },
+    icon: { key: 'ph--code--regular', hue: CODE_HUE },
     spec: 'PLUGIN.mdl',
     tags: ['labs'],
-    // Projects owns specs and the plain editor of their text; this plugin's spec page builds on that.
-    dependsOn: ['org.dxos.plugin.projects'],
+    // Markdown draws a spec's feature sections; projects owns specs and the plain editor of their text, which the spec page builds on.
+    dependsOn: ['org.dxos.plugin.markdown', 'org.dxos.plugin.projects'],
   },
   modules: [
     // Eager, as every migration provider is: a migration missing when a space opens is a data hazard.
