@@ -129,6 +129,8 @@ export interface Options {
   mcpEndpoint?: McpEndpointOf;
   /** Lifecycle hooks the agent process can run (see `AgentProcessOptions.hooks`). */
   hooks?: () => readonly Hook.Definition[];
+  /** Whether a view on this peer has the chat open (see `AgentProcessOptions.isChatOpen`). */
+  isChatOpen?: (chat: Chat.Chat) => boolean;
 }
 
 /**
@@ -211,6 +213,7 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
           resident: opts?.resident,
           mcpEndpoint: opts?.mcpEndpoint,
           hooks: opts?.hooks,
+          isChatOpen: opts?.isChatOpen,
         });
 
       /**

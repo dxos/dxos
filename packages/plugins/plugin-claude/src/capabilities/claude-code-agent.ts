@@ -44,6 +44,7 @@ export default Capability.makeModule(
           ...options,
           mcpEndpoint: (connection) =>
             ConnectorSpec.mcpEndpoint(manager.getAll(ConnectorSpec.Connector).flat(), connection),
+          isChatOpen: AssistantCapabilities.isChatOpen(manager),
         }),
       ),
     ];

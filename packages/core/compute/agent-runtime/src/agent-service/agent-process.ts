@@ -102,6 +102,12 @@ export interface AgentProcessOptions {
    * instructions' {@link Hook.SettingsAnnotation}, resolved when the request begins.
    */
   hooks?: () => readonly Hook.Definition[];
+
+  /**
+   * Whether a view on this peer has the chat open. A turn that ends there has been read, so it is not marked unread;
+   * a host without views (EDGE) leaves this unset and every finished turn is.
+   */
+  isChatOpen?: (chat: Chat.Chat) => boolean;
 }
 
 export const AGENT_PROCESS_KEY = 'org.dxos.testing.process.agent';
@@ -698,8 +704,9 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                         status: Exit.isSuccess(exit) ? 'success' : Exit.hasInterrupts(exit) ? 'interrupted' : 'error',
                         error: Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined,
                       });
-                      // A stopped turn was stopped by someone watching it; any other end is news to the space.
-                      if (!Exit.hasInterrupts(exit)) {
+                      // A stopped turn was stopped by someone watching it; any other end is news to the space,
+                      // unless someone here is reading it as it ends.
+                      if (!Exit.hasInterrupts(exit) && !options.isChatOpen?.(chat)) {
                         Chat.markUnread(chat);
                       }
                       // The failure ends the process below, skipping the reconcile, so the strategy

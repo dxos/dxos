@@ -74,10 +74,11 @@ const GateSkill = Skill.make({
  * Every turn is a single text reply, so turn count is what the assertions read. The script is drawn
  * from once per model call, so it carries more turns than any test here needs.
  */
-const replyLayer = () =>
+const replyLayer = (agent?: AgentService.Options) =>
   AssistantTestLayer({
     types: [Alarm.Alarm],
     aiService: scriptedAiService(Array.from({ length: 12 }, () => ({ parts: [text('Acknowledged.')] }))),
+    agent,
   });
 
 /** First turn parks in the gated tool; later turns reply plainly. */
@@ -219,6 +220,21 @@ describe('AgentProcess input queue (scripted)', () => {
         expect(unread()).toBe(true);
       },
       Effect.provide(replyLayer()),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 30_000 },
+  );
+
+  it.effect(
+    'a turn that ends while the chat is open stays read',
+    Effect.fnUntraced(
+      function* (_) {
+        const session = yield* AgentService.createSession();
+        yield* session.submitPrompt('What is a feed?');
+        yield* session.waitForCompletion();
+        expect(Obj.instanceOf(Chat.Chat, session.chat) && session.chat.unread).toBeFalsy();
+      },
+      Effect.provide(replyLayer({ isChatOpen: () => true })),
       TestHelpers.provideTestContext,
     ),
     { timeout: 30_000 },

@@ -52,6 +52,8 @@ export type Options = Omit<AcpAgent.AgentOptions, 'connect'> & {
   command?: Command;
   /** The MCP server a connection exposes; see `AgentProcessOptions.mcpEndpoint`. */
   mcpEndpoint?: McpEndpointOf;
+  /** Whether a view on this peer has the chat open; see `AgentProcessOptions.isChatOpen`. */
+  isChatOpen?: (chat: Chat.Chat) => boolean;
 };
 
 /**
@@ -168,8 +170,9 @@ export const make = (options: Options): AgentProcessDefinition =>
                   status: Exit.isSuccess(exit) ? 'success' : Exit.hasInterrupts(exit) ? 'interrupted' : 'error',
                   error: Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined,
                 });
-                // A stopped turn was stopped by someone watching it; any other end is news to the space.
-                if (!Exit.hasInterrupts(exit)) {
+                // A stopped turn was stopped by someone watching it; any other end is news to the space,
+                // unless someone here is reading it as it ends.
+                if (!Exit.hasInterrupts(exit) && !options.isChatOpen?.(chat)) {
                   Chat.markUnread(chat);
                 }
               }),

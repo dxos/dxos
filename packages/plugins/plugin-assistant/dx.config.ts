@@ -138,6 +138,7 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
             AssistantCapabilities.State,
             AssistantCapabilities.CompanionChatCache,
             AssistantCapabilities.HomeSuggestionsCache,
+            AssistantCapabilities.OpenChats,
           ],
           activatesOn: AssistantEvents.Start,
         },
@@ -205,7 +206,12 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
         'AgentProgress',
         {
           // ProgressRegistry is read optionally in the body: a host without plugin-progress loses the indicator.
-          requires: [Capabilities.AtomRegistry, Capabilities.ProcessManager, ClientCapabilities.Client],
+          requires: [
+            AssistantCapabilities.OpenChats,
+            Capabilities.AtomRegistry,
+            Capabilities.ProcessManager,
+            ClientCapabilities.Client,
+          ],
           provides: [],
           activatesOn: AssistantEvents.Start,
           environments: ['browser', 'tauri'],

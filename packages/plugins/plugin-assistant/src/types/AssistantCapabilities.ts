@@ -10,12 +10,14 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
 import type { AgentProcessDefinition, MakeTurnProducer } from '@dxos/agent-runtime';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import type { AiContext } from '@dxos/assistant';
 import type * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
 import type * as Chat from '@dxos/assistant/Chat';
 import type * as Instructions from '@dxos/compute/Instructions';
-import { type Database, type Obj, type Ref, type Registry } from '@dxos/echo';
+import { type Database, Obj, type Ref, type Registry } from '@dxos/echo';
 import { type Message } from '@dxos/types';
 
 import { AssistantNamespace } from '../namespace.ts';
@@ -42,6 +44,24 @@ export type AssistantState = Schema.Schema.Type<typeof StateSchema>;
 export const State = Capability.makeSingleton<Atom.Writable<AssistantState>>()(
   `${AssistantNamespace.key}.capability.state`,
 );
+
+/** How many views on this peer have each chat open, by absolute URI: a turn that ends in an open chat is already read. */
+export const OpenChats = Capability.makeSingleton<Atom.Writable<ReadonlyMap<string, number>>>()(
+  `${AssistantNamespace.key}.capability.openChats`,
+);
+
+/** An agent host's `isChatOpen`, read from {@link OpenChats} on each call; false on a host that renders no chats. */
+export const isChatOpen =
+  (manager: CapabilityManager.CapabilityManager) =>
+  (chat: Chat.Chat): boolean => {
+    const [registry] = manager.getAll(Capabilities.AtomRegistry);
+    const [openChats] = manager.getAll(OpenChats);
+    return (
+      registry !== undefined &&
+      openChats !== undefined &&
+      registry.get(openChats).has(Obj.getURI(chat, { prefer: 'absolute' }).toString())
+    );
+  };
 
 /** Session-scoped cache of transient (not yet persisted) companion chats keyed by companion DXN string. */
 export const CompanionChatCache = Capability.makeSingleton<Atom.Writable<Record<string, Obj.Unknown | undefined>>>()(

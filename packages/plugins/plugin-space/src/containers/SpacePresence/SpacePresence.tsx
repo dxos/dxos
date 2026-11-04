@@ -238,6 +238,8 @@ const ONE_VIEWER: Activity.Treatment = { slot: 'mark', icon: 'dot', hue: 'primar
 const SEVERAL_VIEWERS: Activity.Treatment = { slot: 'mark', icon: 'dots', hue: 'primary', priority: 10 };
 /** Work under way on the object, over presence. */
 const WORKING: Activity.Treatment = { slot: 'mark', icon: 'star', priority: 30, animate: true };
+/** Work that finished and stays registered until someone sees it: still, amber, under work under way. */
+const FINISHED: Activity.Treatment = { slot: 'mark', icon: 'star', hue: 'amber', priority: 20 };
 const FAILED: Activity.Treatment = { slot: 'edge', hue: 'error', priority: 40 };
 
 /** How a progress monitor on the object shows: its label as a tooltip line, and its status as a treatment. */
@@ -247,10 +249,10 @@ const toActivity = (monitor: Progress.TaskProgress): Activity.Entry[] => {
     case 'pending':
     case 'running':
       return [{ source: monitor.name, label, treatment: WORKING }];
+    case 'done':
+      return [{ source: monitor.name, label, treatment: FINISHED }];
     case 'error':
       return [{ source: monitor.name, label: monitor.error ? `${label}: ${monitor.error}` : label, treatment: FAILED }];
-    default:
-      return [];
   }
 };
 

@@ -46,6 +46,7 @@ const makeAgentServiceSpec = (codeModeTurnProducer: AssistantOptions.AssistantPl
             makeTurnProducer: (options) => resolveTurnProducer(manager, codeMode)(options),
             processes: () => manager.getAll(AssistantCapabilities.AgentProcess),
             hooks: () => manager.getAll(AppCapabilities.HookDefinition),
+            isChatOpen: AssistantCapabilities.isChatOpen(manager),
             mcpEndpoint: (connection) =>
               ConnectorSpec.mcpEndpoint(manager.getAll(ConnectorSpec.Connector).flat(), connection),
           });

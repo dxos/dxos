@@ -779,7 +779,7 @@ decision D-19: A running agent shows on the navtree as the agent star in the att
 ```
 
 ```mdl
-decision D-20: A turn that finishes while nobody has its chat open leaves a still amber agent star in the glyph's mark until anyone opens the chat. The agent sets `Chat.unread` as each turn ends; an open chat view, in a plank or as a companion, clears it for the whole space.
+decision D-20: A turn that finishes while nobody has its chat open leaves a still amber agent star in the glyph's mark until anyone opens the chat. The agent sets `Chat.unread` as each turn ends, unless a view on the peer running it has the chat open; an open chat view, in a plank or as a companion, clears it for the whole space. The plugin reports an unread chat to the progress registry as a done monitor on `<uri>#agent`, on both rows, and reports none on a peer that has the chat open.
   date: 2026-11-03
   by: user:wittjosiah
   affects: [QA-6]
@@ -788,6 +788,7 @@ decision D-20: A turn that finishes while nobody has its chat open leaves a stil
     - The star in the glyph's corner: it took the corner from mentions and changes when the mark is free whenever the star is shown.
     - An amber dot in the corner: it looks like the mention and changed-since-seen dots; the star names who finished.
     - Read state per client, in memory: a reload forgot it, and one member reading a reply left it unread for everyone else.
+    - Marking every finished turn and letting the open view clear it: the star flashed on the open chat's row, and on other members' rows until the clear synced.
 ```
 
 ---

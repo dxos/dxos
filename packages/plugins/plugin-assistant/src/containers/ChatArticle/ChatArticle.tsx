@@ -47,6 +47,26 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
         Chat.markRead(chat);
       }
     }, [chat, unread]);
+    // A turn that ends while the chat is open here is read here, so the agent does not mark it unread.
+    const openChatsAtom = Hooks.useCapability(AssistantCapabilities.OpenChats);
+    const openUri = chat && Obj.getDatabase(chat) ? Obj.getURI(chat, { prefer: 'absolute' }).toString() : undefined;
+    useEffect(() => {
+      if (!openUri) {
+        return;
+      }
+      const count = (delta: number) => {
+        const open = new Map(atomRegistry.get(openChatsAtom));
+        const next = (open.get(openUri) ?? 0) + delta;
+        if (next > 0) {
+          open.set(openUri, next);
+        } else {
+          open.delete(openUri);
+        }
+        atomRegistry.set(openChatsAtom, open);
+      };
+      count(1);
+      return () => count(-1);
+    }, [atomRegistry, openChatsAtom, openUri]);
     // Transient (pre-submit) chats have no database; fall back to the companion's.
     const db = (chat && Obj.getDatabase(chat)) ?? (companionTo && Obj.getDatabase(companionTo));
     const runtime = useChatServices({ id: db?.spaceId });
