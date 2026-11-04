@@ -43,6 +43,16 @@ export const State = Capability.makeSingleton<Atom.Writable<AssistantState>>()(
   `${AssistantNamespace.key}.capability.state`,
 );
 
+/** Which chats have a finished turn nobody has seen yet; an open view of a chat counts as seeing it. */
+export type ChatReads = {
+  /** URIs of chats whose latest turn finished while no view of them was open. */
+  readonly unread: Atom.Atom<ReadonlySet<string>>;
+  /** Registers an open view of the chat, which reads it; call the returned function when the view closes. */
+  readonly open: (uri: string) => () => void;
+};
+
+export const ChatReads = Capability.makeSingleton<ChatReads>()(`${AssistantNamespace.key}.capability.chatReads`);
+
 /** Session-scoped cache of transient (not yet persisted) companion chats keyed by companion DXN string. */
 export const CompanionChatCache = Capability.makeSingleton<Atom.Writable<Record<string, Obj.Unknown | undefined>>>()(
   `${AssistantNamespace.key}.capability.companionChatCache`,

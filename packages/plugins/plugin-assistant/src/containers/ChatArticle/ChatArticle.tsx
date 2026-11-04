@@ -40,6 +40,10 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
     const atomRegistry = Hooks.useCapability(Capabilities.AtomRegistry);
     const stateAtom = Hooks.useCapability(AssistantCapabilities.State);
+    // A chat on screen is read: a turn that finishes while this view is mounted leaves no unread mark.
+    const [chatReads] = Hooks.useCapabilities(AssistantCapabilities.ChatReads);
+    const chatUri = chat && Obj.getDatabase(chat) ? String(Obj.getURI(chat)) : undefined;
+    useEffect(() => (chatUri ? chatReads?.open(chatUri) : undefined), [chatReads, chatUri]);
     // Transient (pre-submit) chats have no database; fall back to the companion's.
     const db = (chat && Obj.getDatabase(chat)) ?? (companionTo && Obj.getDatabase(companionTo));
     const runtime = useChatServices({ id: db?.spaceId });

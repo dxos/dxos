@@ -204,8 +204,8 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
       Capability.lazyModule(
         'ActivitySource',
         {
-          requires: [Capabilities.ProcessManager],
-          provides: [AppCapabilities.ActivitySource],
+          requires: [Capabilities.AtomRegistry, Capabilities.ProcessManager],
+          provides: [AppCapabilities.ActivitySource, AssistantCapabilities.ChatReads],
           activatesOn: AssistantEvents.Start,
           environments: ['browser', 'tauri'],
         },

@@ -3,15 +3,16 @@
 //
 
 /**
- * A working agent marks its chat's navtree row, and a companion chat marks its subject's row, with the attention
- * agent star in place of presence; both stay while you look elsewhere and clear when the turn ends.
+ * A working agent marks its chat's navtree row, and a companion chat marks its subject's row, with the agent star in
+ * place of presence; both stay while you look elsewhere. A turn that finishes unseen moves the star to the corner
+ * until the chat is opened.
  *
- * @mdl packages/plugins/plugin-assistant/PLUGIN.mdl test QA-5
+ * @mdl packages/plugins/plugin-assistant/PLUGIN.mdl test QA-5, QA-6
  * @app composer-app via `DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true moon run composer-app:serve -- --port 4173`
  * @driver `--width 1280 --height 800`
  */
 
-const SUBTITLE = 'plugin-assistant/PLUGIN.mdl · QA-5';
+const SUBTITLE = 'plugin-assistant/PLUGIN.mdl · QA-5, QA-6';
 const CHAT = 'Trip ideas';
 const DOCUMENT = 'Launch plan';
 const PROMPT = '[data-testid="assistant.prompt"] .cm-content';
@@ -23,6 +24,7 @@ const row = (label) =>
 const heading = (label) => `${row(label)} [data-testid="treeItem.heading"]`;
 const glyph = (label) => `${row(label)} .dx-attention-glyph`;
 const working = (label) => `${glyph(label)}[data-mark="agent"]`;
+const unread = (label) => `${glyph(label)}[data-corner="agent-done"]`;
 
 const caption = async (demo, value, position) => {
   await demo.caption({ value, subtitle: SUBTITLE, position });
@@ -136,9 +138,12 @@ export const steps = [
       await demo.hover({ selector: glyph(CHAT), label: CHAT });
       await page.getByText('Assistant is working', { exact: true }).first().waitFor({ timeout: 5_000 });
       await demo.sleep({ ms: 3_000 });
-      await caption(demo, 'The star clears when the reply is done');
       await awaitIdle(demo, page, CHAT);
-      await demo.sleep({ ms: 2_000 });
+      await page.locator(unread(CHAT)).waitFor({ timeout: 5_000 });
+      await caption(demo, 'It finished while you were away: the star moves to the corner until you read it');
+      await demo.hover({ selector: glyph(CHAT), label: CHAT });
+      await page.getByText('New reply from the assistant', { exact: true }).first().waitFor({ timeout: 5_000 });
+      await demo.sleep({ ms: 3_000 });
     },
   },
   {
@@ -172,21 +177,42 @@ export const steps = [
     run: async ({ demo, page }) => {
       await demo.click({ selector: heading(CHAT), label: CHAT });
       await page.locator(PROMPT).first().waitFor({ state: 'visible', timeout: 15_000 });
-      await caption(demo, 'Back in the chat, the document still shows its companion at work');
+      await page.locator(unread(CHAT)).waitFor({ state: 'detached', timeout: 5_000 });
+      await caption(demo, 'Opening the chat reads it; the document still shows its companion at work');
       await page.locator(working(DOCUMENT)).waitFor({ timeout: 5_000 });
       await demo.hover({ selector: glyph(DOCUMENT), label: DOCUMENT });
       await page.getByText('Assistant is working on this', { exact: true }).first().waitFor({ timeout: 5_000 });
       await demo.sleep({ ms: 3_000 });
       await awaitIdle(demo, page, DOCUMENT);
+      await page.locator(unread(DOCUMENT)).waitFor({ timeout: 5_000 });
+      await caption(demo, 'The companion finished unseen, so the document gets the corner star');
+      await demo.hover({ selector: glyph(DOCUMENT), label: DOCUMENT });
+      await page.getByText('The assistant finished work on this', { exact: true }).first().waitFor({ timeout: 5_000 });
+      await demo.sleep({ ms: 3_000 });
     },
   },
   {
-    name: 'Both rows are idle again',
+    name: 'Opening the companion reads it',
     narration:
-      'Busy state comes from the agent processes themselves, so the navtree shows work in progress wherever you are in the space.',
+      'Busy state comes from the agent processes themselves, so the navtree shows work in progress, and work you have not seen, wherever you are in the space.',
     run: async ({ demo, page }) => {
+      await demo.click({ selector: heading(DOCUMENT), label: DOCUMENT });
+      if (
+        !(await page
+          .locator('[data-testid="deck.companion"]')
+          .first()
+          .isVisible()
+          .catch(() => false))
+      ) {
+        await demo.click({
+          selector: '[data-testid="deck.plank"] [data-testid="plankHeading.companion"] >> nth=0',
+          label: 'Companion',
+        });
+      }
+      await page.locator(COMPANION_PROMPT).first().waitFor({ state: 'visible', timeout: 15_000 });
+      await page.locator(unread(DOCUMENT)).waitFor({ state: 'detached', timeout: 10_000 });
       await page.mouse.move(700, 400);
-      await caption(demo, 'Both turns are done, and both rows are quiet');
+      await caption(demo, 'Opening its companion reads the reply, and both rows are quiet');
       await demo.sleep({ ms: 8_000 });
     },
   },

@@ -15,7 +15,10 @@ import { Annotation, Obj } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { type Activity } from '@dxos/react-ui-attention/types';
 
+import { AssistantCapabilities } from '#types';
+
 import { AssistantNamespace } from '../namespace.ts';
+import { makeChatReads } from './chat-reads.ts';
 
 /** A turn is under way: starting on a remote runtime, running, or waiting on a child process or an alarm. */
 const BUSY_STATES: ReadonlySet<Process.State> = new Set([
@@ -36,16 +39,30 @@ const companionWorking: Activity.Entry = {
   treatment: 'agent',
 };
 
+const chatUnread: Activity.Entry = {
+  source: 'assistant',
+  label: ['activity.chat-unread.label', { ns: AssistantNamespace.key }],
+  treatment: 'agent-done',
+};
+
+const companionUnread: Activity.Entry = {
+  source: 'assistant',
+  label: ['activity.companion-unread.label', { ns: AssistantNamespace.key }],
+  treatment: 'agent-done',
+};
+
 /**
  * Puts the agent star on a chat while its agent runs a turn, and on the object a companion chat accompanies while that
- * chat does. The process tree is the source because a session outlives the chat view that started it.
+ * chat does; once the turn finishes unseen, the star moves to the corner until the chat is opened. The process tree is
+ * the source because a session outlives the chat view that started it.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    const registry = yield* Capabilities.AtomRegistry;
     const processManager = yield* Capabilities.ProcessManager;
 
     // The URIs busy processes were spawned against; an agent's target is its chat.
-    const busyTargets = Atom.make(
+    const busyTargets = Atom.make<ReadonlySet<string>>(
       (get) =>
         new Set(
           get(processManager.processTreeAtom)
@@ -57,30 +74,37 @@ export default Capability.makeModule(
         ),
     );
 
-    return Capability.contribute(AppCapabilities.ActivitySource, {
-      id: AssistantNamespace.key,
-      activity: ({ uri, object }) =>
-        Atom.make((get): readonly Activity.Entry[] => {
-          if (!object) {
-            return [];
-          }
+    const { reads, dispose } = makeChatReads(registry, busyTargets);
+    yield* Effect.addFinalizer(() => Effect.sync(dispose));
 
-          const busy = get(busyTargets);
-          if (Obj.instanceOf(Chat.Chat, object)) {
-            return busy.has(uri) ? [chatWorking] : [];
-          }
+    return [
+      Capability.contribute(AssistantCapabilities.ChatReads, reads),
+      Capability.contribute(AppCapabilities.ActivitySource, {
+        id: AssistantNamespace.key,
+        activity: ({ uri, object }) =>
+          Atom.make((get): readonly Activity.Entry[] => {
+            if (!object) {
+              return [];
+            }
 
-          // A companion ref is local to the subject's space; process targets carry the space.
-          const spaceId = EID.getSpaceId(EID.parse(uri));
-          const companions = get(Annotation.atom(object, Chat.CompanionChatAnnotation)).pipe(
-            Option.getOrElse(() => []),
-          );
-          return companions.some((ref) =>
-            busy.has(String(EID.make({ spaceId, entityId: EID.getEntityId(EID.parse(ref.uri)) }))),
-          )
-            ? [companionWorking]
-            : [];
-        }),
-    });
+            const busy = get(busyTargets);
+            const unread = get(reads.unread);
+            if (Obj.instanceOf(Chat.Chat, object)) {
+              return busy.has(uri) ? [chatWorking] : unread.has(uri) ? [chatUnread] : [];
+            }
+
+            // A companion ref is local to the subject's space; process targets carry the space.
+            const spaceId = EID.getSpaceId(EID.parse(uri));
+            const companions = get(Annotation.atom(object, Chat.CompanionChatAnnotation))
+              .pipe(Option.getOrElse(() => []))
+              .map((ref) => String(EID.make({ spaceId, entityId: EID.getEntityId(EID.parse(ref.uri)) })));
+            return companions.some((companion) => busy.has(companion))
+              ? [companionWorking]
+              : companions.some((companion) => unread.has(companion))
+                ? [companionUnread]
+                : [];
+          }),
+      }),
+    ];
   }),
 );

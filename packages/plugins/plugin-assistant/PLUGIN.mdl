@@ -575,6 +575,38 @@ test QA-5: A working agent marks its chat and its companion's subject in the nav
         the star clears when the reply finishes
 ```
 
+```mdl
+test QA-6: A turn that finishes unseen leaves a corner star until the chat is opened
+  desc: |
+    When an agent's turn ends while no view of its chat is open, the agent star moves from the
+    glyph's mark to its corner, on the chat's row and, for a companion chat, on its subject's row.
+    Opening the chat, in its own plank or as the companion, reads it and clears the star. A turn
+    that ends while the chat is open leaves nothing behind. Read state lives in memory, so a reload
+    clears it.
+  actors: human
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - chat: a chat "Trip ideas" in the space
+    - subject: a document "Launch plan" in the space
+  steps:
+    - name: A chat that finishes unseen is unread
+      do: Send "Trip ideas" a prompt, open "Launch plan" before the reply finishes, and wait for it.
+      expect: the chat's row shows the corner star; its tooltip reads "New reply from the assistant"
+    - name: Opening the chat reads it
+      do: Open "Trip ideas" from the navtree.
+      expect: the corner star clears from the chat's row
+    - name: A companion that finishes unseen marks its subject
+      do: Send a prompt from "Launch plan"'s Assistant companion, open "Trip ideas", and wait for the
+        reply.
+      expect: the document's row shows the corner star; its tooltip reads "The assistant finished work
+        on this"
+    - name: Opening the companion reads it
+      do: Open "Launch plan" with its Assistant companion showing.
+      expect: the corner star clears from the document's row
+```
+
 
 ## Changelog
 
@@ -739,6 +771,17 @@ decision D-19: A running agent shows on the navtree as the agent star in the att
   rejected:
     - A still amber outline on the edge: it kept presence visible but read as generic busy work and had no natural finished state.
     - The star on chats and the outline on companion subjects: kept a document's viewers visible, at the cost of two symbols for one thing.
+```
+
+```mdl
+decision D-20: A turn that finishes while no view of its chat is open leaves the agent star in the glyph's corner until the chat is opened; an open chat view, in a plank or as a companion, counts as reading it. Read state is held in memory for now.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [QA-6]
+  why: The working star disappears when the turn ends, so without an unread mark a reply that arrived while you worked elsewhere leaves no trace in the navtree.
+  rejected:
+    - An amber dot in the corner: it looks like the mention and changed-since-seen dots; the star names who finished.
+    - Keeping the star in the mark, still, until read: a finished chat and a working one then differ only by motion.
 ```
 
 ---
