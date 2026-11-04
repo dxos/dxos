@@ -235,16 +235,16 @@ EditorBlocks.displayName = EDITOR_BLOCKS_NAME;
 
 const EDITOR_BLOCK_FRAME_NAME = 'Editor.BlockFrame';
 
-/** What Enter on a selected block focuses when the block names nothing: the first enabled element inside it that takes input. */
-const FOCUSABLE =
-  ':is(input, textarea, select, button):not(:disabled), [contenteditable="true"], [tabindex]:not([tabindex="-1"])';
+/** What Enter on a selected block focuses: its first enabled field, or else its first control. */
+const ENTER_TARGETS = [
+  ':is(input, textarea, select):not(:disabled), [contenteditable="true"]',
+  'button:not(:disabled), [tabindex]:not([tabindex="-1"])',
+];
 
 type EditorBlockFrameProps = Util.ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
   view?: CodeMirrorView | null;
   /** Whether the block has attention; until it does, its keys reach the editor. */
   attended: boolean;
-  /** The element Enter on the selected block focuses. */
-  enterTarget?: string;
 };
 
 /**
@@ -254,7 +254,7 @@ type EditorBlockFrameProps = Util.ThemedClassName<ComponentPropsWithoutRef<'div'
  * anything but a button selects it.
  */
 const EditorBlockFrame = forwardRef<HTMLDivElement, EditorBlockFrameProps>(
-  ({ classNames, children, view, attended, enterTarget = FOCUSABLE, ...props }, forwardedRef) => {
+  ({ classNames, children, view, attended, ...props }, forwardedRef) => {
     const handleMouseDown = useCallback(
       (event: MouseEvent<HTMLDivElement>) => {
         if (!attended && !(event.target instanceof Element && event.target.closest('button'))) {
@@ -282,7 +282,7 @@ const EditorBlockFrame = forwardRef<HTMLDivElement, EditorBlockFrameProps>(
           return;
         }
         if (event.key === 'Enter') {
-          const target = frame.querySelector<HTMLElement>(enterTarget);
+          const target = ENTER_TARGETS.map((selector) => frame.querySelector<HTMLElement>(selector)).find(Boolean);
           if (target) {
             event.preventDefault();
             target.focus();
@@ -292,7 +292,7 @@ const EditorBlockFrame = forwardRef<HTMLDivElement, EditorBlockFrameProps>(
           event.preventDefault();
         }
       },
-      [attended, view, enterTarget],
+      [attended, view],
     );
 
     const handleKeyUp = useCallback(

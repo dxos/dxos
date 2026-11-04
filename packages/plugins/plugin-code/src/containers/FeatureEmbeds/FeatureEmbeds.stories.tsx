@@ -19,6 +19,7 @@ import { invariant } from '@dxos/invariant';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { FeatureEditingPlugin, FeatureSeed } from '@dxos/plugin-code/testing';
+import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import { translations as projectsTranslations } from '@dxos/plugin-projects/translations';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
@@ -89,7 +90,11 @@ const findView = async (canvasElement: HTMLElement) =>
   );
 
 /** The embeds drawn; only those in the viewport are. */
-const embeds = (canvasElement: HTMLElement) => within(canvasElement).queryAllByTestId('feature-embed');
+const embeds = (canvasElement: HTMLElement) => within(canvasElement).queryAllByTestId('markdown.embed');
+
+/** The feature an embed draws: the last part of its attendable id. */
+const featureOf = (element: Element | null | undefined) =>
+  element?.getAttribute('data-attendable-id')?.split('/').at(-1);
 
 /** The features the text embeds, in order. */
 const embedded = (view: EditorView) => FeatureEmbed.parse(view.state.doc.toString()).map(({ id }) => id);
@@ -117,6 +122,8 @@ const meta = {
             }),
         }),
         StorybookPlugin.make({}),
+        // Draws the feature embeds.
+        MarkdownPlugin.make(),
         // Renders a spec's section, its document editor, with the editing the feature package gives it.
         ProjectsPlugin.make(),
         // plugin-projects' declared dependencies.
@@ -168,12 +175,12 @@ export const Default: Story = {
     await waitFor(() => expect(embedded(view)).toHaveLength(8), { timeout: 10_000 });
     const first = await waitFor(() => embeds(canvasElement)[0], { timeout: 10_000 });
     const feature = held()
-      .find((ref) => ref.peek()?.id === first.dataset.feature)
+      .find((ref) => ref.peek()?.id === featureOf(first))
       ?.peek();
     invariant(feature, 'Missing feature.');
 
     await userEvent.click(first);
-    const name = within(first).getByTestId<HTMLInputElement>('name');
+    const name = await within(first).findByTestId<HTMLInputElement>('name');
     await waitFor(() => expect(name.closest('[inert]')).toBeNull(), { timeout: 5_000 });
     await userEvent.clear(name);
     await userEvent.type(name, 'Renamed');
@@ -184,16 +191,19 @@ export const Default: Story = {
 /** The seeded spec with no play of its own; QA-6 walks it with the keyboard. */
 export const Sample: Story = {};
 
-/** A section without attention is inert but for its fold toggle, which folds and unfolds it in one click. */
-export const FoldUnattended: Story = {
+/** A section without attention is inert, its fold toggle too: a click selects it, and then the toggle folds it. */
+export const FoldSelected: Story = {
   play: async ({ canvasElement }) => {
     const view = await findView(canvasElement);
     await waitFor(() => expect(embedded(view)).toHaveLength(8), { timeout: 10_000 });
     const embed = await waitFor(() => embeds(canvasElement)[1], { timeout: 10_000 });
     const toggle = within(embed).getByTestId('feature-section.collapse');
-    await expect(within(embed).getByTestId('name').closest('[inert]')).not.toBeNull();
-    await expect(toggle.closest('[inert]')).toBeNull();
+    await expect(toggle.closest('[inert]')).not.toBeNull();
 
+    await userEvent.click(embed);
+    await waitFor(() => expect(document.activeElement).toBe(embed));
+    await waitFor(() => expect(toggle.closest('[inert]')).toBeNull(), { timeout: 5_000 });
+    await expect(toggle.getAttribute('aria-expanded')).toBe('true');
     await userEvent.click(toggle);
     await waitFor(() => expect(toggle.getAttribute('aria-expanded')).toBe('false'), { timeout: 5_000 });
     await userEvent.click(toggle);
@@ -214,7 +224,7 @@ export const Keyboard: Story = {
     const before = doc.line(doc.lineAt(first.from).number - 1);
     const embed = await waitFor(
       () => {
-        const element = embeds(canvasElement).find((element) => element.dataset.feature === first.id);
+        const element = embeds(canvasElement).find((element) => featureOf(element) === first.id);
         invariant(element, 'Missing embed.');
         return element;
       },
@@ -249,7 +259,7 @@ export const Keyboard: Story = {
 const findEmbed = (canvasElement: HTMLElement, id: string) =>
   waitFor(
     () => {
-      const element = embeds(canvasElement).find((element) => element.dataset.feature === id);
+      const element = embeds(canvasElement).find((element) => featureOf(element) === id);
       invariant(element, 'Missing embed.');
       return element;
     },
@@ -286,8 +296,8 @@ const joinFirstTwo = (view: EditorView) => {
 };
 
 /**
- * Leaving a selected section puts the cursor in text, past a section beside it or before one at the end; the arrows
- * pass a section that cannot be selected to reach the next one that can.
+ * Leaving a selected section puts the cursor in text, past a section beside it or before one at the end; the embed of
+ * a missing feature is its source, which the arrows reach as text.
  */
 export const LeaveSelection: Story = {
   play: async ({ canvasElement }) => {
@@ -300,16 +310,26 @@ export const LeaveSelection: Story = {
     await waitFor(() => expect(inText(view)).toBe(true));
     await expect(view.state.selection.main.head).toBe(second.to + 1);
 
-    // An embed of a feature that does not exist draws a notice, which takes no focus.
     const missing = `${first.id.slice(0, -1)}${first.id.endsWith('A') ? 'B' : 'A'}`;
     const source = view.state.sliceDoc(first.from, first.to).replace(first.id, missing);
     view.dispatch({ changes: { from: second.from, insert: `${source}\n` } });
+    // The embed is a block until the lookup settles, and then its source.
+    await waitFor(
+      () =>
+        expect(
+          [...view.contentDOM.querySelectorAll('.cm-line')].some((line) => line.textContent?.includes(missing)),
+        ).toBe(true),
+      { timeout: 5_000 },
+    );
     await select(await findEmbed(canvasElement, first.id));
     await userEvent.keyboard('{ArrowDown}');
-    await waitFor(() => expect(document.activeElement?.getAttribute('data-feature')).toBe(second.id));
-    // Alt changes only Up and Down: with Left the selection goes back past the notice, as without it.
+    await waitFor(() => expect(document.activeElement).toBe(view.contentDOM));
+    await expect(view.state.doc.lineAt(view.state.selection.main.head).text).toContain(missing);
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(featureOf(document.activeElement)).toBe(second.id));
+    // Alt changes only Up and Down: with Left the selection goes back to the text, as without it.
     await userEvent.keyboard('{Alt>}{ArrowLeft}{/Alt}');
-    await waitFor(() => expect(document.activeElement?.getAttribute('data-feature')).toBe(first.id));
+    await waitFor(() => expect(document.activeElement).toBe(view.contentDOM));
 
     const last = FeatureEmbed.parse(view.state.doc.toString()).at(-1);
     invariant(last, 'Missing embed.');
@@ -369,7 +389,7 @@ export const UndoMove: Story = {
     await waitFor(() => expect(embedded(view)).toHaveLength(8), { timeout: 10_000 });
     const [first] = FeatureEmbed.parse(view.state.doc.toString());
     const original = view.state.doc.toString();
-    const selected = () => document.activeElement?.getAttribute('data-feature');
+    const selected = () => featureOf(document.activeElement);
 
     await select(await findEmbed(canvasElement, first.id));
     await userEvent.keyboard('{Control>}y{/Control}');
@@ -431,14 +451,14 @@ export const SlashFeature: Story = {
     const id = embedded(view)[8];
     const embed = await waitFor(
       () => {
-        const element = embeds(canvasElement).find((element) => element.dataset.feature === id);
+        const element = embeds(canvasElement).find((element) => featureOf(element) === id);
         invariant(element, 'Missing embed.');
         return element;
       },
       { timeout: 5_000 },
     );
     await expect(within(embed).getByTestId<HTMLInputElement>('name').value).toBe('Undo send');
-    await waitFor(() => expect(document.activeElement?.closest('[data-testid="feature-embed"]')).toBe(embed), {
+    await waitFor(() => expect(document.activeElement?.closest('[data-testid="markdown.embed"]')).toBe(embed), {
       timeout: 5_000,
     });
     await expect(document.activeElement?.getAttribute('contenteditable')).toBe('true');
