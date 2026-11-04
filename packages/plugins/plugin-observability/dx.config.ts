@@ -43,9 +43,9 @@ const config: Plugin.PluginConfig<ObservabilityOptions.ObservabilityPluginOption
             ObservabilityCapabilities.State,
           ],
           provides: [],
-          // Reads `client.services` (initialized-only) to wire metrics providers, so it needs the
-          // forked client initialization to have completed.
-          activatesOn: ObservabilityCapabilities.ClientInitialized,
+          // Wires metrics providers that call the client services at activation, so it waits for them to
+          // answer rather than holding the client-initialized wave open behind a boot-cached client's worker.
+          activatesOn: ObservabilityCapabilities.ClientServicesReady,
         },
         () => import('./src/capabilities/client-ready.ts', { with: { type: 'module-url' } }),
       ),
