@@ -86,8 +86,11 @@ export const delegate = Command.make(
       catch: (cause) =>
         new McpDelegateError({ message: `No pending delegation for ${base}; run \`dx mcp delegate\` first.`, cause }),
     }).pipe(
-      Effect.flatMap((raw) => Schema.decodeUnknownEffect(Schema.fromJsonString(PendingDelegation))(raw)),
-      Effect.mapError((cause) => new McpDelegateError({ message: 'Pending delegation is unreadable.', cause })),
+      Effect.flatMap((raw) =>
+        Schema.decodeUnknownEffect(Schema.fromJsonString(PendingDelegation))(raw).pipe(
+          Effect.mapError((cause) => new McpDelegateError({ message: 'Pending delegation is unreadable.', cause })),
+        ),
+      ),
     );
 
     const tokens = yield* Effect.tryPromise({

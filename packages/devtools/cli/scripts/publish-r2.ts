@@ -40,39 +40,47 @@ const version = release
   : `${packageVersion}-${(await Bun.$`git rev-parse --short HEAD`.text()).trim()}`;
 
 // A release key is immutable: npm skips a version it already has, so overwriting it here would make
-// the same version mean different binaries on npm and R2.
+// the same version mean different binaries on npm and R2. SHA256SUMS is written last, so its presence
+// means the version's files are complete; a retry then only finishes promoting it.
 const publicBase = process.env.R2_PUBLIC_BASE || 'https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev';
-if (release && (await fetch(`${publicBase}/cli/${version}/SHA256SUMS`, { method: 'HEAD' })).ok) {
-  console.log(`[publish-r2] dx ${version} is already published; leaving it as it is.`);
-  process.exit(0);
-}
+const sumsUrl = `${publicBase}/cli/${version}/SHA256SUMS`;
+const published = release && (await fetch(sumsUrl, { method: 'HEAD' })).ok;
 
 const files: Record<string, { key: string; sha256: string }> = {};
-const sums: string[] = [];
-for (const target of TARGETS) {
-  const ext = target.startsWith('win32') ? '.exe' : '';
-  const binary = join('dist', `cli-${target}`, `dx${ext}`);
-  if (!existsSync(binary)) {
-    throw new Error(`Missing ${binary}; run \`moon run cli:bundle\` first.`);
-  }
-  const name = `dx-${target}${ext}`;
-  const key = `cli/${version}/${name}`;
-  const sha256 = createHash('sha256')
-    .update(await readFile(binary))
-    .digest('hex');
-  console.log(`[publish-r2] ${key}`);
-  await upload(binary, key, 'application/octet-stream');
-  files[target] = { key, sha256 };
-  sums.push(`${sha256}  ${name}`);
-}
-
 const staging = await mkdtemp(join(tmpdir(), 'dx-publish-'));
-const sumsFile = join(staging, 'SHA256SUMS.txt');
-await writeFile(sumsFile, `${sums.join('\n')}\n`);
-await upload(sumsFile, `cli/${version}/SHA256SUMS`, 'text/plain');
 
-// The installer is versioned with the binaries it fetches, so an old version stays installable.
-await upload('scripts/install.sh', `cli/${version}/install.sh`, 'text/plain');
+if (published) {
+  console.log(`[publish-r2] dx ${version} is already published; leaving its files as they are.`);
+  for (const line of (await (await fetch(sumsUrl)).text()).trim().split('\n')) {
+    const [sha256, name] = line.split(/\s+/);
+    files[name.replace(/^dx-/, '').replace(/\.exe$/, '')] = { key: `cli/${version}/${name}`, sha256 };
+  }
+} else {
+  const sums: string[] = [];
+  for (const target of TARGETS) {
+    const ext = target.startsWith('win32') ? '.exe' : '';
+    const binary = join('dist', `cli-${target}`, `dx${ext}`);
+    if (!existsSync(binary)) {
+      throw new Error(`Missing ${binary}; run \`moon run cli:bundle\` first.`);
+    }
+    const name = `dx-${target}${ext}`;
+    const key = `cli/${version}/${name}`;
+    const sha256 = createHash('sha256')
+      .update(await readFile(binary))
+      .digest('hex');
+    console.log(`[publish-r2] ${key}`);
+    await upload(binary, key, 'application/octet-stream');
+    files[target] = { key, sha256 };
+    sums.push(`${sha256}  ${name}`);
+  }
+
+  // The installer is versioned with the binaries it fetches, so an old version stays installable.
+  await upload('scripts/install.sh', `cli/${version}/install.sh`, 'text/plain');
+
+  const sumsFile = join(staging, 'SHA256SUMS.txt');
+  await writeFile(sumsFile, `${sums.join('\n')}\n`);
+  await upload(sumsFile, `cli/${version}/SHA256SUMS`, 'text/plain');
+}
 
 if (release) {
   // One line, because install.sh reads the version with sed rather than requiring jq.

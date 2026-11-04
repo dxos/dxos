@@ -48,8 +48,8 @@ export const SERVER_INSTRUCTIONS = trim`
 
   For bulk data (big queries, scripts, blobs) use the dx CLI so results go to files, not your
   context: install it with curl -fsSL https://pub-39066a86073446d7b77b1c157b660bb5.r2.dev/cli/install.sh | sh,
-  run dx mcp delegate, pass its output to delegateToCli (when listed), run the command it returns,
-  then dx mcp call <tool> --input <json>.
+  run dx mcp delegate --url <this server>, pass its output to delegateToCli (when listed), run the
+  command it returns, then dx mcp call <tool> --input <json>.
 `;
 
 export type PassOptions = {
