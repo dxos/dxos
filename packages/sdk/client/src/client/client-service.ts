@@ -9,7 +9,6 @@ import * as Layer from 'effect/Layer';
 import { ConfigService } from '@dxos/config';
 
 import { Client } from './client.ts';
-// import { CommandConfig } from './command-config';
 
 /** The host's client, behind an effect so a host can initialize it only once something uses it. */
 export interface ClientHandle {
@@ -27,54 +26,57 @@ export class ClientService extends Context.Service<ClientService, ClientHandle>(
     ClientService,
     (handle) => handle.client,
   );
+
+  /** {@link layer}: initializes the client while the layer is built. */
+  static get layer() {
+    return layer;
+  }
+
+  /** {@link layerLazy}: initializes the client on its first use. */
+  static get layerLazy() {
+    return layerLazy;
+  }
 }
 
 /** Hands over `client` as it is; a caller that needs it initialized initializes it first. */
 export const fromClient = (client: Client) => Layer.succeed(ClientService, { client: Effect.succeed(client) });
 
+/** Destroys `client` when the layer's scope closes, bounded so a hung teardown cannot block exit. */
+const destroyOnClose = (client: Client) =>
+  Effect.addFinalizer(() =>
+    Effect.interruptible(
+      Effect.raceAll([
+        // TODO(burdon): Sometimes hangs even after logging OK (a Cloudflare socket, seen via `lsof -i`).
+        Effect.tryPromise(() => client.destroy()).pipe(Effect.orDie),
+        Effect.sleep(5_000).pipe(Effect.andThen(Effect.die(new Error('Client did not shutdown in time.')))),
+      ]),
+    ),
+  );
+
+/** Creates the client from `ConfigService` and initializes it while the layer is built. */
 export const layer = Layer.effect(
   ClientService,
   Effect.gen(function* () {
     // TODO(wittjosiah): Use effect config instead?
-    // const verbose = yield* CommandConfig.isVerbose;
     const config = yield* ConfigService;
     const client = new Client({ config });
     yield* Effect.tryPromise(() => client.initialize());
-    yield* Effect.addFinalizer(() =>
-      Effect.gen(function* () {
-        // if (verbose) {
-        //   yield* Effect.log('Shutting down...');
-        // }
-
-        // Make the finalizer effect interruptible.
-        yield* Effect.interruptible(
-          Effect.raceAll([
-            // Effect.repeat(Console.log('action...'), Schedule.fixed('1 second')),
-
-            // Try to cleanly exit.
-            // TODO(burdon): Sometimes hangs evem after logging OK.
-            // Cloudflare socket? (detected via `lsof -i`)
-            // 192.168.1.150:56747 -> 172.67.201.139:443
-            Effect.tryPromise(() => client.destroy()).pipe(
-              // Effect.tap(() => {
-              //   if (verbose) {
-              //     return Effect.log('OK');
-              //   }
-              // }),
-              Effect.orDie,
-            ),
-
-            // Timeout.
-            Effect.gen(function* () {
-              yield* Effect.sleep(5_000);
-
-              return yield* Effect.die(new Error('Client did not shutdown in time.'));
-            }).pipe(Effect.orDie),
-          ]),
-        );
-      }),
-    );
-
+    yield* destroyOnClose(client);
     return ClientService.of({ client: Effect.succeed(client) });
+  }),
+);
+
+/**
+ * Creates the client from `ConfigService` but initializes it only on the first `ClientService.client`,
+ * once however many fibers ask concurrently, so work that never uses the client never waits for it.
+ */
+export const layerLazy = Layer.effect(
+  ClientService,
+  Effect.gen(function* () {
+    const config = yield* ConfigService;
+    const client = new Client({ config });
+    yield* destroyOnClose(client);
+    const initialized = yield* Effect.cached(Effect.tryPromise(() => client.initialize()).pipe(Effect.orDie));
+    return ClientService.of({ client: initialized.pipe(Effect.as(client)) });
   }),
 );

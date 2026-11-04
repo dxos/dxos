@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 import { layerMemory } from '@dxos/config';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { ClientService, layer } from './client-service.ts';
+import { ClientService, layer, layerLazy } from './client-service.ts';
 
 const TestLayer = Function.pipe(layer, Layer.provideMerge(layerMemory));
 
@@ -32,5 +32,24 @@ describe('ClientService', () => {
     }).pipe(Effect.provide(TestLayer));
     const identity = await EffectEx.runAndForwardErrors(program);
     expect(identity).toBeDefined();
+  });
+
+  it('layerLazy initializes the client only on first use, once', { timeout: 10_000 }, async () => {
+    const program = Effect.gen(function* () {
+      const handle = yield* ClientService;
+      const [first, second] = yield* Effect.all([handle.client, handle.client], { concurrency: 'unbounded' });
+      // Checked inside the scope: closing it destroys the client.
+      expect(first).toBe(second);
+      expect(first.initialized).toBe(true);
+    }).pipe(Effect.provide(Function.pipe(layerLazy, Layer.provideMerge(layerMemory))));
+    await EffectEx.runAndForwardErrors(program);
+  });
+
+  it('layerLazy does not initialize a client nothing uses', async () => {
+    const program = Effect.gen(function* () {
+      yield* ClientService;
+      return 'done';
+    }).pipe(Effect.provide(Function.pipe(layerLazy, Layer.provideMerge(layerMemory))));
+    expect(await EffectEx.runAndForwardErrors(program)).toBe('done');
   });
 });
