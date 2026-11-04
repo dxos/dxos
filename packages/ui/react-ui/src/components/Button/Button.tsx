@@ -36,8 +36,6 @@ export type ButtonVariantProps = {
   compact?: boolean;
   /** A trailing caret marking a button that opens a menu. */
   caretDown?: boolean;
-  /** An outlined, fully rounded shape that hugs its content, as a Select trigger's `pill` does (a row of field values). */
-  pill?: boolean;
   /** `start` packs icon and label at the start (a full-width menu-like button) instead of centring them. */
   align?: 'center' | 'start';
   /** Spins the leading icon, as a busy indicator. */
@@ -92,7 +90,6 @@ export const Button = composable<HTMLButtonElement, ButtonProps>(
       hue,
       compact,
       caretDown,
-      pill,
       align,
       spin,
       size,
@@ -135,7 +132,6 @@ export const Button = composable<HTMLButtonElement, ButtonProps>(
         data-hue={hue}
         data-compact={compact ? '' : undefined}
         data-caret={caretDown ? '' : undefined}
-        data-pill={pill ? '' : undefined}
         data-align={align === 'start' ? align : undefined}
         className={className}
         ref={forwardedRef}

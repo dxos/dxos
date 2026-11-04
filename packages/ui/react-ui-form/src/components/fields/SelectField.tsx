@@ -47,10 +47,10 @@ export const SelectField = ({
   onBlur,
 }: SelectFieldProps) => {
   const { t } = Hooks.useTranslation(translationKey);
-  const pill = presentation === 'pill';
+  const tag = presentation === 'tag';
   const items = useMemo<Select.Option[]>(
     () => [
-      ...(pill && !required ? [{ value: NONE, label: t('select-none.label'), icon }] : []),
+      ...(tag && !required ? [{ value: NONE, label: t('select-none.label'), icon }] : []),
       ...options.map(({ value, label, icon, iconHue }) => ({
         value: String(value),
         label: label ?? String(value),
@@ -58,7 +58,7 @@ export const SelectField = ({
         iconHue: hues.find((hue) => hue === iconHue),
       })),
     ],
-    [options, pill, required, icon, t],
+    [options, tag, required, icon, t],
   );
   const value = getValue();
   if (presentationFor(presentation).isStatic) {
@@ -73,9 +73,9 @@ export const SelectField = ({
     <SelectControl
       items={items}
       value={value == null ? undefined : String(value)}
-      placeholder={pill ? label : (placeholder ?? t('select.placeholder'))}
+      placeholder={tag ? label : (placeholder ?? t('select.placeholder'))}
       readonly={readonly}
-      pill={pill}
+      tag={tag}
       icon={icon}
       testId={jsonPath}
       onValueChange={(next) => {
@@ -94,8 +94,8 @@ type SelectControlProps = {
   readonly?: boolean;
   /** Options are still loading: the trigger shows a spinner and is `aria-busy`. */
   loading?: boolean;
-  /** The trigger as a pill (see `Select.Trigger`'s `pill`). */
-  pill?: boolean;
+  /** The trigger as a `Tag` (see `Select.Trigger`'s `tag`). */
+  tag?: boolean;
   /** The field's glyph, where the chosen option has none. */
   icon?: string;
   testId?: string;
@@ -109,7 +109,7 @@ export const SelectControl = ({
   placeholder,
   readonly,
   loading,
-  pill,
+  tag,
   icon,
   testId,
   onValueChange,
@@ -120,7 +120,7 @@ export const SelectControl = ({
     disabled={!!readonly}
     onValueChange={({ value: [next] }) => onValueChange(next)}
   >
-    <Select.Trigger placeholder={placeholder} loading={loading} pill={pill} icon={icon} data-testid={testId} />
+    <Select.Trigger placeholder={placeholder} loading={loading} tag={tag} icon={icon} data-testid={testId} />
     <Select.Content>
       {items.map((item) => (
         <Select.Item key={item.value} item={item} />
