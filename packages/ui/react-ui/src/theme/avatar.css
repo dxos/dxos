@@ -88,8 +88,9 @@
   .dx-avatar[data-status='inactive'] {
     --dx-avatar-ring: var(--color-neutral-border);
   }
+  /* The attention glyph's attended fill, so a peer attending an object reads the same as your own attention. */
   .dx-avatar[data-status='current'] {
-    --dx-avatar-ring: var(--color-focus);
+    --dx-avatar-ring: var(--color-accent-bg);
   }
   .dx-avatar[data-status='internal'] {
     --dx-avatar-ring: var(--color-separator);

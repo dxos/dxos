@@ -168,7 +168,8 @@ type PresenceAvatarProps = {
 
 const PresenceAvatar = forwardRef<HTMLDivElement, PresenceAvatarProps>(
   ({ member, showName, match, index, onClick, size }, forwardedRef) => {
-    const status = match ? 'current' : 'active';
+    // Not `active`: its green means "online" on the account avatar, and every peer shown here is online.
+    const status = match ? 'current' : 'inactive';
     const fallbackValue = hexToFallback(member.identityKey ?? '0');
     const name = getName(member);
     const nameId = UiHooks.useId('presence-name');
