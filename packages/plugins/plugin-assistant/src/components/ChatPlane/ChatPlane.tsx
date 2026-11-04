@@ -214,7 +214,10 @@ const ChatPlaneRoot = ({ classNames, value, onValueChange, onAdd, onMove, childr
       onAdd={onAdd}
       onMove={onMove}
     >
-      <Panel.Root classNames={['[--chat-plane-width:32vw]', classNames]}>{children}</Panel.Root>
+      {/* The height of a one-line prompt and its margin: a taller prompt floats over the columns rather than resizing them. */}
+      <Panel.Root classNames={['[--chat-plane-width:32vw] [--chat-plane-prompt-height:7.125rem]', classNames]}>
+        {children}
+      </Panel.Root>
     </ChatPlaneProvider>
   );
 };
@@ -303,7 +306,10 @@ const ChatPlaneViewport = ({ children }: ChatPlaneViewportProps) => {
         <ScrollArea.Root orientation='horizontal' snap={!dragging} scrollbars={false}>
           <ScrollArea.Viewport ref={setViewport}>
             {/* Half the frame less half a column each side, so even the first and last column can reach the center. */}
-            <div className='relative flex w-max h-full px-[calc(50cqw-var(--chat-plane-width)/2)] pt-2' ref={stripRef}>
+            <div
+              className='relative flex w-max h-full px-[calc(50cqw-var(--chat-plane-width)/2)] pt-2 pb-(--chat-plane-prompt-height)'
+              ref={stripRef}
+            >
               <ChatPlaneActiveLocation locationRef={activeLocationRef} />
               {children}
             </div>
@@ -525,7 +531,7 @@ const ChatPlaneCell = ({ menu, children }: ChatPlaneCellProps) => {
         // Floats over the gap the stack reserves.
         'data-[mosaic-tile-state=dragging]:absolute data-[mosaic-tile-state=dragging]:z-10',
         'data-[mosaic-tile-state=dragging]:h-auto',
-        'data-[mosaic-tile-state=dragging]:top-2 data-[mosaic-tile-state=dragging]:bottom-0',
+        'data-[mosaic-tile-state=dragging]:top-2 data-[mosaic-tile-state=dragging]:bottom-(--chat-plane-prompt-height)',
         'data-[mosaic-tile-state=dragging]:left-(--chat-plane-drag-x) data-[mosaic-tile-state=dragging]:-translate-x-1/2',
         'data-[mosaic-tile-state=dragging]:pointer-events-none data-[mosaic-tile-state=dragging]:opacity-100',
         'data-[mosaic-tile-state=dragging]:bg-base-surface data-[mosaic-tile-state=dragging]:shadow-lg',
