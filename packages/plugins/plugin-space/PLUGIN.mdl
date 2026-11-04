@@ -19,6 +19,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.1`          |
 | `test`      | `org.dxos.mdl.test@1.0`        |
+| `decision`  | `org.dxos.mdl.decision@1.0`    |
 
 ## Types
 
@@ -51,8 +52,7 @@ type ObjectViewerProps
 ```mdl
 type PluginState
   fields:
-    viewersByObject: Record<ObjectId, Map<PublicKey, ObjectViewerProps>>
-    viewersByIdentity: Map<PublicKey, Set<ObjectId>>
+    viewersByObject: Record<EID, Record<IdentityKeyHex, ObjectViewerProps>>
     spaceNames: Record<string, string>  # cached names for closed/loading spaces
     sdkMigrationRunning: Record<string, boolean>
     navigableCollections: boolean
@@ -186,7 +186,8 @@ component ViewEditor
 component SpacePresence
   desc: Avatar cluster indicating which peers are currently attending the active object/space.
   props:
-    space: Space
+    spaceId?: SpaceId
+    presenceKey?: EID   # the object's EID, or the space's own EID for a space-level view
 ```
 
 ```mdl
@@ -534,7 +535,11 @@ feat F-8: Presence and Sync Status
   req F-8.2: SyncStatus reflects CRDT sync health; unsynchronised changes are indicated visually.
   req F-8.3:
     when: a peer starts or stops attending an object
-    then: viewersByObject and viewersByIdentity maps are updated in ephemeral plugin state
+    then: viewersByObject is updated in ephemeral plugin state
+  req F-8.4: Peers report and look up presence by object EID. A graph path resolves to its innermost object, or to the space's own EID when it names no object.
+  req F-8.5: SpacePresence shows peers in an order that is the same on every client for a given set of peers and changes only when the set changes.
+  req F-8.6: A viewer whose heartbeat has lapsed for two broadcast intervals drops out of both presence indicators.
+  req F-8.7: A space's navtree row counts the peers viewing the space itself.
 ```
 
 ## Acceptance
@@ -689,6 +694,84 @@ test QA-2: Register a schema and add a typed relation
 ```
 
 ---
+
+## Changelog
+
+```mdl
+decision D-1: SpacePresence shows peers in a stable order, the same for any given set of peers, that changes only when the set changes.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [SpacePresence, F-8.5]
+```
+
+```mdl
+decision D-2: Peers are ordered by hex identity key. Fills in [D-1].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [SpacePresence, F-8.5]
+  why: The identity key is the same on every client and does not change while a peer stays, so the order moves only when the set does.
+  rejected:
+    - Ordering by last-seen time, which every heartbeat refreshes and so reshuffles the avatars each interval.
+```
+
+```mdl
+decision D-3: Presence is keyed by object EID rather than graph path, with a path resolving to its innermost object or to its space.
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.4, SpacePresence, PluginState]
+  why: The sender holds graph paths and the receivers hold objects; the EID is what both resolve to. Graph paths alone matched neither receiver.
+  rejected:
+    - Keying by graph path, which the plank header cannot derive from the object it renders.
+```
+
+```mdl
+decision D-4: A viewer expires after two missed heartbeats in both the navtree and plank-header indicators.
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.6]
+  why: An expiry equal to the broadcast interval let a viewer flicker out between heartbeats, and the avatars applied no expiry at all.
+```
+
+```mdl
+decision D-5: Remove `viewersByIdentity` from the ephemeral state.
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [PluginState, F-8.3]
+  why: Nothing read it.
+```
+
+```mdl
+decision D-6: A space's navtree row shows how many peers view the space, as the navbar already does.
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.7, SpacePresence]
+  why: Space rows render the sync-status glyph, which took no presence, so a space with viewers always showed none.
+  rejected: Let the presence surface claim space rows; the navtree renders one end surface per row, so the sync status would be lost.
+```
+
+```mdl
+decision D-7: When the deck switches workspace, the planks that left `active` are reported as removed.
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.3]
+  why: The new workspace's layout lists none of the old planks, so peers in the old space kept the viewer until its heartbeat lapsed.
+  rejected: Treat an empty heartbeat as clearing the peer; heartbeats are not complete updates, so an empty one cannot be told from a partial one.
+```
+
+```mdl
+decision D-8: The navtree presence surface claims space rows, which no longer carry a sync-status glyph. Supersedes [D-6].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.7, SpacePresence]
+  why: Sync status moved to the status bar, so nothing on a space row is lost when presence takes it, and space rows draw the same glyph, with the same treatments, as object rows.
+```
 
 ## Appendix: Extension Definitions
 

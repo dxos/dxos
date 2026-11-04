@@ -233,9 +233,12 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'navtreePresence',
-        filter: AppSurface.subject(AppSurface.NavtreeItemEnd, Obj.isObject),
+        filter: AppSurface.subject(
+          AppSurface.NavtreeItemEnd,
+          (value): value is Space | Obj.Unknown => isSpace(value) || Obj.isObject(value),
+        ),
         component: NavtreePresenceSurface,
-        props: ({ data: { id, open, subject } }) => ({ id, open, subject }),
+        props: ({ data: { id, subject, open } }) => ({ id, subject, open }),
       }),
       // TODO(wittjosiah): Attention glyph for non-echo items should be handled elsewhere.
       Surface.create({
