@@ -7,10 +7,10 @@ import React, { useCallback, useState } from 'react';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
-import { useObject } from '@dxos/echo-react';
-import * as Button from '@dxos/react-ui/Button';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { useTranslation } from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
+import * as Status from '@dxos/react-ui/Status';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
@@ -23,13 +23,11 @@ import { useWorkspace } from './useWorkspace.ts';
 export type WorkspaceArticleProps = AppSurface.ObjectArticleProps<CloudflareOs.Workspace>;
 
 /** The bound workspace: its gadgets as tabs, and the picked gadget running in its sandbox. */
-export const WorkspaceArticle = ({ role, subject }: WorkspaceArticleProps) => {
+export const WorkspaceArticle = ({ role, subject, attendableId }: WorkspaceArticleProps) => {
   const { t } = useTranslation(CloudflareOsNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
-  const [workspace] = useObject(subject);
   const [selected, setSelected] = useState<number>();
-  const { gadgets, error, jsCode, connect } = useWorkspace(subject, selected ?? workspace.gadgets?.[0]?.id);
-  const gadgetId = selected ?? gadgets[0]?.id;
+  const { gadgets, gadgetId, error, jsCode, connect } = useWorkspace(subject, selected);
   const gadget = gadgets.find(({ id }) => id === gadgetId);
 
   const handleRefresh = useCallback(() => {
@@ -40,10 +38,27 @@ export const WorkspaceArticle = ({ role, subject }: WorkspaceArticleProps) => {
     );
   }, [invokePromise, subject]);
 
+  const menuActions = useMenuBuilder(
+    () =>
+      MenuBuilder.make()
+        .action(
+          'refresh',
+          {
+            label: ['refresh.label', { ns: CloudflareOsNamespace.key }],
+            icon: 'ph--arrows-clockwise--regular',
+            disposition: 'toolbar',
+            testId: 'cloudflare-os.refresh',
+          },
+          () => handleRefresh(),
+        )
+        .build(),
+    [handleRefresh],
+  );
+
   return (
     <Panel.Root role={role}>
-      <Panel.Header classNames='dx-expand'>
-        <Toolbar.Root>
+      <Panel.Header classNames='dx-expand flex'>
+        <Toolbar.Root classNames='grow'>
           <Toolbar.ToggleGroup
             type='single'
             value={gadgetId === undefined ? '' : String(gadgetId)}
@@ -58,19 +73,16 @@ export const WorkspaceArticle = ({ role, subject }: WorkspaceArticleProps) => {
               />
             ))}
           </Toolbar.ToggleGroup>
-          <div className='grow' />
-          <Button.Root variant='ghost' onClick={handleRefresh} data-testid='cloudflare-os.refresh'>
-            {t('refresh.label')}
-          </Button.Root>
         </Toolbar.Root>
+        <ActionToolbar {...menuActions} attendableId={attendableId} />
       </Panel.Header>
       <Panel.Body classNames='flex flex-col'>
         {error ? (
-          <p className='p-4 text-description'>{error}</p>
+          <Status.Empty icon='ph--warning--regular'>{error}</Status.Empty>
         ) : gadget === undefined ? (
-          <p className='p-4 text-description'>{t('no-gadgets.message')}</p>
+          <Status.Empty icon='ph--cloud--regular'>{t('no-gadgets.message')}</Status.Empty>
         ) : jsCode === null ? (
-          <p className='p-4 text-description'>{t('no-gadget-ui.message')}</p>
+          <Status.Empty>{t('no-gadget-ui.message')}</Status.Empty>
         ) : jsCode === undefined ? null : (
           <GadgetFrame key={gadget.id} jsCode={jsCode} title={gadget.title} onConnect={connect} />
         )}

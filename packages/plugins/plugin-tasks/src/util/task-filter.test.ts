@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { Obj, Ref, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import { Task } from '@dxos/types';
+import { Milestone, Task } from '@dxos/types';
 
 import { filterTasks, withinScope } from './task-filter.ts';
 
@@ -155,6 +155,18 @@ describe('filterTasks', () => {
     const child = makeTask({ title: 'Child', status: 'started', parent: absent });
     const kept = filterTasks([child], { statuses: new Set<Task.Status>(['started']) });
     expect(kept.map(({ title }) => title)).to.deep.eq(['Child']);
+  });
+
+  test('a milestone keeps the tasks under it, inherited, and the ancestors of a match', ({ expect }) => {
+    const beta = Milestone.make({ name: 'Beta' });
+    const launch = Milestone.make({ name: 'Launch' });
+    const parent = makeTask({ title: 'Parent' });
+    const scheduled = makeTask({ title: 'Scheduled', milestone: Ref.make(beta), parent });
+    const inherited = makeTask({ title: 'Inherited', parent: scheduled });
+    const other = makeTask({ title: 'Other', milestone: Ref.make(launch) });
+    const backlog = makeTask({ title: 'Backlog' });
+    const kept = filterTasks([parent, scheduled, inherited, other, backlog], { milestone: beta.id });
+    expect(kept.map(({ title }) => title)).to.deep.eq(['Parent', 'Scheduled', 'Inherited']);
   });
 });
 

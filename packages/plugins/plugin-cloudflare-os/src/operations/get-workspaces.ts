@@ -22,7 +22,7 @@ const handler: Operation.WithHandler<typeof CloudflareOsOperation.GetWorkspaces>
           const user = yield* Account.open(account);
           const workspaces = yield* Client.call('Could not list the workspaces.', () => user.listWorkspaces());
           const existing = [...workspaces]
-            .sort((left, right) => String(right.lastActive ?? '').localeCompare(String(left.lastActive ?? '')))
+            .sort((left, right) => (right.lastActive?.getTime() ?? 0) - (left.lastActive?.getTime() ?? 0))
             .map((workspace) => ({ id: workspace.id, name: workspace.title || workspace.id }));
           return {
             targets: [

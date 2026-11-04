@@ -45,12 +45,13 @@ export const ProjectPartial: SampleSpace.Partial<ProjectResult, ProjectInput> = 
           description:
             'Make two field devices editing the same note converge without a manual step, in time for the Northwind survey.',
           status: 'active',
-          repo: Ref.make(repo),
           taskSet: Ref.make(tasks.taskSet),
           outline: Ref.make(docs.outline),
           artifacts: [Ref.make(docs.spec), Ref.make(docs.architecture), Ref.make(docs.decisions)],
         }),
       );
+
+      Repo.setRepositories(project, [Ref.make(repo)]);
 
       return { project, repo };
     }),

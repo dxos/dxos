@@ -9,11 +9,10 @@
  */
 export const TRACK = {
   gutter: 'row-start-1 col-[gutter]',
+  priority: 'row-start-1 col-[priority]',
   status: 'row-start-1 col-[status]',
   title: 'row-start-1 col-[title]',
   artifacts: 'row-start-1 col-[artifacts]',
   assignee: 'row-start-1 col-[assignee]',
-  estimate: 'row-start-1 col-[estimate]',
-  priority: 'row-start-1 col-[priority]',
   actions: 'row-start-1 col-[actions]',
 } as const;

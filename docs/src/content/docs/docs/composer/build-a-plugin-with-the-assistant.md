@@ -25,7 +25,7 @@ The project's **Tasks** tab holds one task, **Build the World Clock plugin**, wi
 
 ## 3. Hand it to the assistant
 
-1. On the **Tasks** tab, tick **Build the World Clock plugin** and click **Assign selected tasks to agent**.
+1. On the **Tasks** tab, tick **Build the World Clock plugin** and click **Delegate selected tasks to agent**.
 2. Open the **Assistant** tab beside the project to watch it work.
 
 It ticks off the steps as it goes, which takes 10 to 25 minutes.

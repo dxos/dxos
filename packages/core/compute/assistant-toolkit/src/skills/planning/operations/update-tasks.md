@@ -30,11 +30,13 @@ Each change contains:
 - task (ref, optional): the existing task to change. Required unless `create` is set.
 - create (boolean, optional): make a new task on this checklist, assigned to you. Requires `title`.
 - title (string, optional): the new task's title, or a rename of an existing task.
-- status (string, optional): `todo` | `started` | `done`. `started` also assigns the task to you.
-- assign (boolean, optional): put an existing task on this checklist and make you its assignee.
-- unassign (boolean, optional): take a task off this checklist and clear its assignee. It is never deleted.
+- status (string, optional): `todo` | `started` | `done`. `started` also makes you the agent working the task.
+- assign (boolean, optional): put an existing task on this checklist with you working it.
+- unassign (boolean, optional): take a task off this checklist and stop working it. It is never deleted.
 
 Status meanings: `todo` means not yet started, `started` means currently being worked on, `done` means completed successfully (rendered as a checked item).
+A person who answers for a task stays its assignee while you work it. When you mark it `done` it goes to
+them for review, and they close it.
 
 If any change is malformed or names something that is not a task, nothing is applied and the error
 lists what to fix; resend the whole batch.
@@ -72,7 +74,7 @@ Finishes the research and moves on:
 1. {task: "echo://.../01AAA", status: "done"}
 2. {task: "echo://.../01BBB", status: "started"}
 </assistant_action>
-<reasoning>Existing tasks are addressed by ref; starting the next one assigns it.</reasoning>
+<reasoning>Existing tasks are addressed by ref; starting the next one makes you the agent working it.</reasoning>
 </example>
 
 <example type="delegated_task">
@@ -81,7 +83,7 @@ Finishes the research and moves on:
 Starts the existing sub-task rather than creating a copy of it:
 1. {task: "echo://.../01CCC", status: "started"}
 </assistant_action>
-<reasoning>Starting an existing task puts it on this checklist and assigns it to you; `create` would duplicate it.</reasoning>
+<reasoning>Starting an existing task puts it on this checklist with you working it; `create` would duplicate it.</reasoning>
 </example>
 
 <example type="multiple_deliverables">
