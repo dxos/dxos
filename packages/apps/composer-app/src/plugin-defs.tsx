@@ -24,6 +24,7 @@ import * as ChessComPlugin from '@dxos/plugin-chess-com/ChessComPlugin';
 import * as ChessPlugin from '@dxos/plugin-chess/ChessPlugin';
 import * as ClaudePlugin from '@dxos/plugin-claude/ClaudePlugin';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as CloudflareOsPlugin from '@dxos/plugin-cloudflare-os/CloudflareOsPlugin';
 import * as CloudflarePlugin from '@dxos/plugin-cloudflare/CloudflarePlugin';
 import * as CodeGraphPlugin from '@dxos/plugin-code-graph/CodeGraphPlugin';
 import * as CodePlugin from '@dxos/plugin-code/CodePlugin';
@@ -154,6 +155,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       BloggerPlugin.meta.profile.key,
       BookmarksPlugin.meta.profile.key,
       CallsPlugin.meta.profile.key,
+      CloudflareOsPlugin.meta.profile.key,
       CodePlugin.meta.profile.key,
       CodeGraphPlugin.meta.profile.key,
       CommercePlugin.meta.profile.key,
@@ -274,6 +276,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     ChessComPlugin.make(),
     ClaudePlugin.make(),
     CloudflarePlugin.make(),
+    CloudflareOsPlugin.make(),
     CodePlugin.make(),
     // Reads code-index through a `vite dev` route (see its vite plugin below in vite.config.ts); inert in a build.
     CodeGraphPlugin.make(),

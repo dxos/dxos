@@ -6,3 +6,8 @@ tags:
   - ts-test-storybook
   - pack
   - storybook
+
+tasks:
+  build:
+    inputs:
+      - data/**/*

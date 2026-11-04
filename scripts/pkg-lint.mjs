@@ -20,7 +20,7 @@ const HIDE_SEVERITIES = ['conventional'];
 // vite-only constructs (`?raw`, `?url`), so they are consumed from `dist` in every runtime.
 // The import-map plugin in `@dxos/app-framework/vite-plugin` drops the same shapes
 // (`BUILD_TOOL_SUBPATH`) from the browser import map.
-const BUILD_TOOL_EXPORT = /^\.\/(vite|esbuild|rollup)-plugin$/;
+const BUILD_TOOL_EXPORT = /^\.\/(vite|esbuild|rollup)-plugin(\/[\w-]+)?$/;
 
 // `./plugin` is overloaded: every `@dxos/plugin-*` package exports its Composer plugin there, which
 // is browser code and needs `source`. Only a package that also declares a bundler plugin — the

@@ -82,9 +82,12 @@ export default handler;
  * The registry is still consulted to reject a typename nothing declares, and to add the `echo:` id
  * of every registration persisted in the space, since objects of such a type carry that id instead.
  */
+/** Every registration of a typename: persisted in the space, code-shipped here, or published by another plugin. */
+const typesNamed = (typename: string) =>
+  Query.select(Filter.and(Filter.type(Type.Type), Filter.key(typename))).from(Scope.space(), Scope.registry());
+
 const typeFilter = Effect.fnUntraced(function* (typename: string) {
-  const types = yield* Database.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry())).run;
-  const declared = types.filter((type) => Type.getTypename(type) === typename);
+  const declared = yield* Database.query(typesNamed(typename)).run;
   if (declared.length === 0) {
     return yield* Effect.fail(new SpaceOperationError({ message: `Schema not found: ${typename}` }));
   }
