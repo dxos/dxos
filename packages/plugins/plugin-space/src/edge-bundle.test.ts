@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Automerge from '@automerge/automerge';
-import { generateAutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
 import * as Schema from 'effect/Schema';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -12,10 +10,8 @@ import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
 import { DXN, JsonSchema, Type } from '@dxos/echo';
-import { SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
-import { PublicKey } from '@dxos/keys';
-import { type DataPlane, type LoadedBundle, PluginBundle, buildBundle, loadBundle } from '@dxos/plugin-builder';
-import { type EdgeFunctionEnv, PluginProtocol } from '@dxos/protocols';
+import { type LoadedBundle, MemoryDataPlane, PluginBundle, buildBundle, loadBundle } from '@dxos/plugin-builder';
+import { PluginProtocol } from '@dxos/protocols';
 
 // The space plugin's bundle, built from source the way `check-edge-release` builds it, run alone as EDGE runs it
 // (EDGE-PLUGINS D-41), against a space served from memory in place of EDGE's db-service.
@@ -30,8 +26,6 @@ const COLLECTION_TYPENAME = 'org.dxos.type.collection';
 
 const QUERY_OBJECTS = 'org.dxos.operation.space.queryObjects';
 const ADD_OBJECT = 'org.dxos.operation.space.addObject';
-
-type Document = Automerge.Doc<Record<string, unknown>>;
 
 const DOCUMENT_VERSION = '0.1.0';
 
@@ -157,54 +151,6 @@ class MemoryTypeRegistry implements PluginProtocol.TypeRegistry {
     return typename === DOCUMENT_TYPENAME
       ? { typename, version: DOCUMENT_VERSION, jsonSchema: JsonSchema.toJsonSchema(PublishedDocument) }
       : undefined;
-  }
-}
-
-/** EDGE's `DATA_SERVICE` over Automerge documents held in memory; one space, with an empty directory. */
-class MemoryDataPlane implements DataPlane {
-  readonly #spaces = new Map<string, EdgeFunctionEnv.SpaceMeta>();
-  readonly #documents = new Map<string, Document>();
-
-  async createSpace(): Promise<string> {
-    const spaceKey = PublicKey.random();
-    const spaceId = await createIdFromSpaceKey(spaceKey);
-    const rootDocumentId = this.#create({
-      version: SpaceDocVersion.CURRENT,
-      access: { spaceId, spaceKey: spaceKey.toHex() },
-      objects: {},
-      links: {},
-    });
-    this.#spaces.set(spaceId, { spaceKey: spaceKey.toHex(), rootDocumentId });
-    return spaceId;
-  }
-
-  async getSpaceMeta(spaceId: string): Promise<EdgeFunctionEnv.SpaceMeta | undefined> {
-    return this.#spaces.get(spaceId);
-  }
-
-  async getDocuments(_spaceId: string, documentIds: string[]): Promise<EdgeFunctionEnv.RawDocument[]> {
-    return documentIds.flatMap((documentId) => {
-      const document = this.#documents.get(documentId);
-      return document === undefined ? [] : [{ documentId, data: Automerge.save(document) }];
-    });
-  }
-
-  async createDocument(_spaceId: string, initialValue?: Record<string, unknown>): Promise<{ documentId: string }> {
-    return { documentId: this.#create(initialValue ?? {}) };
-  }
-
-  async changeDocument(_spaceId: string, documentId: string, changes: Uint8Array): Promise<void> {
-    const document = this.#documents.get(documentId);
-    if (document === undefined) {
-      throw new Error(`Document not found: ${documentId}`);
-    }
-    this.#documents.set(documentId, Automerge.loadIncremental(document, changes));
-  }
-
-  #create(initialValue: Record<string, unknown>): string {
-    const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
-    this.#documents.set(documentId, Automerge.from(initialValue));
-    return documentId;
   }
 }
 

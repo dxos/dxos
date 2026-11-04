@@ -5925,15 +5925,27 @@ importers:
 
   packages/core/compute/plugin-builder:
     dependencies:
+      '@automerge/automerge':
+        specifier: 3.5.0
+        version: 3.5.0
+      '@automerge/automerge-repo':
+        specifier: 'catalog:'
+        version: 2.6.0-subduction.49(patch_hash=7ca7d5e941ce5c8776770b8a73c0484c54eba5e937ae2d6284746b01ccf6a443)
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../../echo/echo-protocol
       '@dxos/edge-compute':
         specifier: workspace:*
         version: link:../edge-compute
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
       '@dxos/plugin-host-cloudflare':
         specifier: workspace:*
         version: link:../plugin-host-cloudflare
@@ -16395,6 +16407,9 @@ importers:
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
+      '@dxos/plugin-builder':
+        specifier: workspace:*
+        version: link:../../core/compute/plugin-builder
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -16407,6 +16422,9 @@ importers:
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema

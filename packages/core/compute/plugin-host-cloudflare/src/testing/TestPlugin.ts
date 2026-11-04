@@ -18,6 +18,7 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
 import { Fibonacci, Reply, ReplyHandler } from '@dxos/compute/testing';
 import * as Trace from '@dxos/compute/Trace';
+import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { BaseError } from '@dxos/errors';
 import { DXN, EntityId } from '@dxos/keys';
@@ -149,6 +150,34 @@ const FollowupHandler = Followup.pipe(
   ),
 );
 
+/** Makes a person, as an operation that returns an ECHO object does. */
+export const MakePerson = Operation.make({
+  meta: { key: DXN.make('com.example.operation.hostTest.makePerson'), name: 'Make person' },
+  input: Schema.Struct({ name: Schema.String }),
+  output: Schema.Struct({ person: Obj.Unknown }),
+});
+
+const MakePersonHandler = MakePerson.pipe(
+  Operation.withHandler(({ name }) => Effect.succeed({ person: Obj.make(TestSchema.Person, { name }) })),
+);
+
+/** Runs {@link MakePerson} in process and reports whether the person came back as a live object. */
+export const Adopt = Operation.make({
+  meta: { key: DXN.make('com.example.operation.hostTest.adopt'), name: 'Adopt' },
+  services: [Operation.Service],
+  input: Schema.Struct({}),
+  output: Schema.Struct({ live: Schema.Boolean }),
+});
+
+const AdoptHandler = Adopt.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(function* () {
+      const { person } = yield* Operation.invoke(MakePerson, { name: 'Ada' });
+      return { live: Obj.instanceOf(TestSchema.Person, person) };
+    }),
+  ),
+);
+
 /** The typed error {@link Fails} raises. */
 export class TestFailure extends BaseError.extend('TestFailure', 'The test operation failed.') {}
 
@@ -178,6 +207,8 @@ export const TestPlugin = Plugin.define(Plugin.makeMeta({ key: DXN.make(TEST_PLU
             DelegateHandler,
             NestHandler,
             FollowupHandler,
+            MakePersonHandler,
+            AdoptHandler,
             FailsHandler,
           ),
         ),

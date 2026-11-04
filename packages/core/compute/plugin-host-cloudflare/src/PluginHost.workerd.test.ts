@@ -13,6 +13,7 @@ import { ErrorCodec, PluginProtocol } from '@dxos/protocols';
 
 import * as PluginHost from './PluginHost.ts';
 import {
+  Adopt,
   Delegate,
   Fails,
   Followup,
@@ -242,6 +243,14 @@ describe('PluginHost', () => {
       expect(await host.invoke({ operationKey: String(Followup.meta.key), input: {} }, {})).toEqual({
         ok: true,
         output: { done: true },
+      });
+    });
+
+    // In process the callee's output is the caller's own object, as operation-service returns it.
+    test.fails('an in-process call returns a live object', async ({ expect }) => {
+      expect(await makeHost().invoke({ operationKey: String(Adopt.meta.key), input: {} }, {})).toEqual({
+        ok: true,
+        output: { live: true },
       });
     });
 
