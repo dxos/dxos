@@ -268,10 +268,10 @@ export const TaskEstimatePicker = ({ estimate, onChange, testId, classNames }: T
       >
         <Button.Root
           variant='ghost'
-          iconOnly={estimate === undefined}
+          iconOnly
           label={t('task-estimate.label')}
           data-testid={testId}
-          classNames={mx('w-8 px-0 text-sm tabular-nums', estimateTextStyle(estimate))}
+          classNames={mx('text-sm tabular-nums', estimateTextStyle(estimate))}
           onClick={(event: MouseEvent) => event.stopPropagation()}
         >
           {label}
