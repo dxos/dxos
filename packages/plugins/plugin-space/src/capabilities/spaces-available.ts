@@ -26,12 +26,11 @@ import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabili
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { unpackJson } from '@dxos/protocols/buf';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
-import { isNonNullable } from '@dxos/util';
 
 import { SpaceCapabilities } from '#types';
 
 import { migrateToSettingsSpace } from '../migrations/settings-space.ts';
-import { PRESENCE_BROADCAST_INTERVAL, getPresenceKeyFromPath, groupPresenceKeysBySpace } from '../util/presence.ts';
+import { PRESENCE_BROADCAST_INTERVAL, groupPresenceKeysBySpace } from '../util/presence.ts';
 import { catchNonInterrupt, resolveSettingsSpace, runSettingsSpaceHealing } from '../util/settings-space.ts';
 
 /**
@@ -209,7 +208,8 @@ export default Capability.makeModule(
         const spaces = client.spaces.get();
         const identity = Option.getOrUndefined(haloIdentity.getSnapshot());
         if (identity) {
-          const attended = [...current].map(getPresenceKeyFromPath).filter(isNonNullable);
+          // Per space, so one space's members never learn what this peer attends in another.
+          const attendedBySpace = groupPresenceKeysBySpace([...current]);
           const addedBySpace = groupPresenceKeysBySpace(active);
           const removedBySpace = groupPresenceKeysBySpace(inactive);
 
@@ -218,7 +218,7 @@ export default Capability.makeModule(
             void space
               .postMessage('viewing', {
                 identityKey: identity.identityKey ?? '',
-                attended,
+                attended: attendedBySpace.get(space.id) ?? [],
                 added: addedBySpace.get(space.id) ?? [],
                 removed: removedBySpace.get(space.id) ?? [],
               })
