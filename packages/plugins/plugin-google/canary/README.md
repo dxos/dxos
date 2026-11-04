@@ -45,20 +45,57 @@ The run writes `out/summary.md`, `out/report.json` and `out/events.ndjson`; the 
 (`ci.mail-canary` per run, `ci.mail-canary.failure` per failure) to PostHog, where the Mail canary dashboard reads
 them.
 
-**Starting a run by hand.** On `main`, run the workflow from the Actions tab. To run a PR's own code, add the
-`mail-canary` label to the PR; remove and add it again for another run.
+## Running it
 
-## Setup (once)
+- **Nightly:** 03:17 UTC, from `main`.
+- **By hand on `main`:** run the "Mail canary nightly" workflow from the Actions tab.
+- **From a PR's code:** add the `mail-canary` label to the PR. Remove it and add it again for another run.
+- **Locally,** from `packages/plugins/plugin-google`. A local run writes to the same mailbox and canary space as the
+  nightly job, so do not start one while the nightly job runs:
 
-1. **Space.** With the `dx` CLI on a `preview` profile: `dx account signup --method email <code>
-   test@braneframe.com`, `dx space create --name "Mail canary"`, then `dx halo seed` for the recovery phrase. In
-   Composer, sign in as the test account and add a Gmail connection with the defaults. Put the space id in
-   `canary.yml`.
-2. **CI secrets.** `MAIL_CANARY_RECOVERY_PHRASE`; `MAIL_CANARY_GMAIL_{CLIENT_ID,CLIENT_SECRET,REFRESH_TOKEN}` (the
-   `gmail.modify` grant of the EDGE dev OAuth client, in 1Password `eng-dev/network.dxos.mail-canary` and
-   `eng-dev/com.google`); `MAIL_CANARY_FIXTURES_AGE_KEY` (the agents key, `eng-dev/network.dxos.fixtures`),
-   `MAIL_CANARY_R2_TOKEN` (R2 read on `test-fixtures` only) and `CLOUDFLARE_ACCOUNT_ID`.
+  ```bash
+  # The pool is encrypted to the agents key, so the pull needs that key, not your own.
+  DX_FIXTURES_AGE_KEY=<agents key file or op:// reference> moon run fixtures:pull -- enron-pool --scope agents
+  op run --env-file canary/canary.env.tpl -- moon run plugin-google:mail-canary
+  ```
 
-Locally: `op run --env-file canary/canary.env.tpl -- moon run plugin-google:mail-canary` from
-`packages/plugins/plugin-google`. A grant that stops working
-shows as class `AUTH`; mint a new refresh token with the same client and scope.
+## Setup
+
+Everything below exists for preview already. Repeat a step only to rebuild or replace that part.
+
+1. **Gmail account.** `test@braneframe.com`, a Google Workspace account. The canary refuses to write with a grant
+   for any other account.
+2. **Gmail grant.** A refresh token for the EDGE dev OAuth client with the scope
+   `https://www.googleapis.com/auth/gmail.modify` and offline access. Sign in to Google as the test account and
+   authorize that client, for example in the [OAuth Playground](https://developers.google.com/oauthplayground/)
+   with "Use your own OAuth credentials". The current token was minted on 27 October 2026 and still works, so this
+   client does not expire tokens after 7 days. A token that stops working shows as class `AUTH`; mint a new one with
+   the same client and scope.
+3. **Canary identity and space.** With the `dx` CLI on a `preview` profile, run
+   `dx account signup --method email <code> test@braneframe.com`, then `dx space create --name "Mail canary"`, then
+   `dx halo seed` to get the recovery phrase. In Composer, sign in as that identity, open the space and add a Gmail
+   connection for the test account with the defaults. That browser consent is what registers the refresh token in
+   kms-service, which stage 2 depends on. Put the space id in `canary.yml` as `spaceId`.
+4. **Enron pool.** The `enron-pool` agents fixture in the private `test-fixtures` R2 bucket
+   (`agents/enron-pool-20261104-185144.mbox.age`, 39 MB). It is encrypted to the agents key only. It holds 10,000
+   distinct messages from three mailboxes of the public CMU Enron corpus (`dasovich-j`, `kaminski-v`, `kean-s`):
+   duplicates and messages with an empty body removed, sampled evenly over time. It was built by
+   `scripts/mail-canary/01-build-pool.mjs`, which is in git history before commit `85ca8e79`. To replace it, push
+   an mbox with every message under 3.5 MB:
+   `moon run fixtures:push -- <file>.mbox --name enron-pool --scope agents`. The next run uses the newest version.
+5. **GitHub secrets** (repository settings, Secrets and variables, Actions). The workflow reads only these, as
+   step environment variables; it never reads 1Password. Copy each value from 1Password once, and again when it
+   changes:
+
+   | Secret                                                           | Value                                                     |
+   | ---------------------------------------------------------------- | --------------------------------------------------------- |
+   | `MAIL_CANARY_RECOVERY_PHRASE`                                    | the canary identity's recovery phrase (step 3)            |
+   | `MAIL_CANARY_GMAIL_CLIENT_ID`, `MAIL_CANARY_GMAIL_CLIENT_SECRET` | the EDGE dev OAuth client (step 2)                        |
+   | `MAIL_CANARY_GMAIL_REFRESH_TOKEN`                                | the grant from step 2                                     |
+   | `MAIL_CANARY_FIXTURES_AGE_KEY`                                   | the agents key that decrypts the pool (step 4)            |
+   | `MAIL_CANARY_R2_TOKEN`                                           | a Cloudflare API token that can only read `test-fixtures` |
+
+   `CLOUDFLARE_ACCOUNT_ID`, `COMPOSER_APP_PROD_POSTHOG_API_KEY` and the `MOON_CACHE_*` secrets are shared with other
+   workflows and exist already. Without the canary secrets the run step fails at once, naming the missing variables.
+6. **Dashboard.** [Mail canary (nightly)](https://eu.posthog.com/project/126171/dashboard/1084272) in PostHog's
+   Composer project reads the `ci.mail-canary` events. Nothing to set up beyond the PostHog key above.
