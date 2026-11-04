@@ -129,6 +129,42 @@ describe('type sources', () => {
     expect(typename).toBe(TYPENAME);
   });
 
+  test('an object whose static type only a source publishes is added and registers its type', async ({ expect }) => {
+    const { db } = await setup();
+    const registry = makeMockRegistry();
+    db.graph.registerTypeSource(registry.source);
+
+    // The bundle imports another plugin's type but never registers it, as plugin-agent does plugin-assistant's.
+    expect(db.graph.registry.getByURI(DXN.make(TYPENAME, VERSION))).toBeUndefined();
+    const object = db.add(Obj.make(Remote, { title: 'Written across plugins' }));
+    expect(Obj.getTypename(object)).toBe(TYPENAME);
+    expect(db.graph.registry.getByURI(DXN.make(TYPENAME, VERSION))).toBe(Remote);
+
+    const [found] = await db.query(Filter.type(Remote)).run();
+    expect(found?.title).toBe('Written across plugins');
+    // The object carries its schema, so the add needs no round trip to the source.
+    expect(registry.requests).toHaveLength(0);
+  });
+
+  test('an object of the imported type is added after the source answered for its typename', async ({ expect }) => {
+    const { db } = await setup();
+    db.graph.registerTypeSource(makeMockRegistry().source);
+
+    // On EDGE the source rebuilds the type from its JSON Schema, so the registry holds a different instance.
+    const resolved = await queryType(db, TYPENAME);
+    expect(resolved).toBeDefined();
+    expect(resolved).not.toBe(Remote);
+    const object = db.add(Obj.make(Remote, { title: 'Imported type' }));
+    expect(Obj.getTypename(object)).toBe(TYPENAME);
+  });
+
+  test('without a source, adding an object of an unregistered type still throws', async ({ expect }) => {
+    const { db } = await setup();
+
+    expect(() => db.add(Obj.make(Remote, { title: 'Unregistered' }))).toThrow(/Schema not registered/);
+    expect(db.graph.registry.getByURI(DXN.make(TYPENAME, VERSION))).toBeUndefined();
+  });
+
   test('loading an object of an unregistered type resolves its schema from the source', async ({ expect }) => {
     const { db } = await setup();
     db.graph.registerTypeSource(makeMockRegistry().source);
