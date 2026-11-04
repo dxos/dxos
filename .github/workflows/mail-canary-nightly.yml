@@ -80,8 +80,9 @@ jobs:
           if-no-files-found: ignore
 
       # One run event and one event per failure (`renderEvents`), for the Mail canary dashboard in PostHog.
+      # A cancelled run is not a canary failure, so it records nothing.
       - name: Record the run
-        if: always()
+        if: ${{ !cancelled() }}
         continue-on-error: true
         timeout-minutes: 2
         env:
