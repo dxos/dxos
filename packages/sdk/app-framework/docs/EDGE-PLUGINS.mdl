@@ -1459,3 +1459,12 @@ decision D-65: A failure carries the handler's error as `ErrorCodec` encodes it 
   affects: [F-5.2, PluginEntrypoint]
   why: A tool error's text reached the agent wrapped as `PluginInvocationError: …` on the plugin path, so the same turn read differently on the two routings and its recorded conversation no longer matched.
 ```
+
+```mdl
+decision D-66: TEST-ONLY. An in-process nested call pins a child seed drawn from its caller's stream and mints its pid, as operation-service does for every nested call; an agent's tool call carries a test seed from its chat and a per-process call count (`testIdSeed(spaceId, 'tool', conversation, index)`), on both routings.
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.6]
+  why: An unseeded tool call took its ids from whatever seed the serving isolate was last given. That state lives in operation-service's isolate and no plugin bundle has it, so ids no longer depend on leftover generator state in another isolate. The process pid is minted unseeded, so the chat names the stream instead.
+```
