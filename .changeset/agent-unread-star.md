@@ -3,4 +3,4 @@
 '@dxos/agent-runtime': minor
 ---
 
-`Chat` has an `unread` flag (`Chat.setUnread`): the agent sets it as a turn ends, and an open chat view clears it for the whole space. The agent service's `isChatOpen` option skips the mark when a view on the same peer has the chat open. In the navtree, an unread chat and a companion chat's subject show a still amber agent star until anyone opens the chat; the flag lives on the chat, so it survives a reload.
+`Chat` records read positions: `turns`, the count of turns the agent has finished, and `seen`, the position each member's open view has reached, by identity DID. `Chat.recordTurn`, `Chat.markSeen` and `Chat.isUnread` read and write them; a chat is unread while its latest turn is past every member's position. `withTurnStatus` records each turn that ends without being stopped, so it works the same wherever the turn runs. In the navtree, an unread chat and a companion chat's subject show a still amber agent star until anyone opens the chat.

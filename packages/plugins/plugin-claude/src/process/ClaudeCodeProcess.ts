@@ -21,6 +21,7 @@ import {
   loadMcpServers,
   makeInputMessage,
   mcpServerTypes,
+  withTurnStatus,
 } from '@dxos/agent-runtime';
 import { Alarm, HarnessControl, type PendingState, SessionStore, TrajectoryStore } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
@@ -53,8 +54,6 @@ export type Options = Omit<AcpAgent.AgentOptions, 'connect'> & {
   command?: Command;
   /** The MCP server a connection exposes; see `AgentProcessOptions.mcpEndpoint`. */
   mcpEndpoint?: McpEndpointOf;
-  /** Whether a view on this peer has the chat open; see `AgentProcessOptions.isChatOpen`. */
-  isChatOpen?: (chat: Chat.Chat) => boolean;
 };
 
 /**
@@ -170,16 +169,11 @@ export const make = (options: Options): AgentProcessDefinition =>
           yield* Trace.write(Trace.AgentRequestBegin, {});
           const mcpServers = loadMcpServers({ feed, endpointOf: options.mcpEndpoint }).pipe(Effect.provide(mcpContext));
           yield* AcpAgent.runTurn(agent, { chat, feed }, { prompt: [...prompt], source, mcpServers }).pipe(
+            withTurnStatus(chat),
             Effect.onExit((exit) =>
-              Effect.gen(function* () {
-                yield* Trace.write(Trace.AgentRequestEnd, {
-                  status: Exit.isSuccess(exit) ? 'success' : Exit.hasInterrupts(exit) ? 'interrupted' : 'error',
-                  error: Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined,
-                });
-                // An interrupted turn was stopped, not finished, so it leaves nothing unread.
-                if (!Exit.hasInterrupts(exit) && !options.isChatOpen?.(chat)) {
-                  Chat.setUnread(chat, true);
-                }
+              Trace.write(Trace.AgentRequestEnd, {
+                status: Exit.isSuccess(exit) ? 'success' : Exit.hasInterrupts(exit) ? 'interrupted' : 'error',
+                error: Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined,
               }),
             ),
           );

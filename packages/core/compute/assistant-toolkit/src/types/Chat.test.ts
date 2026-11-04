@@ -58,9 +58,10 @@ describe('Chat', () => {
           'instructions',
           'name',
           'remote',
+          'seen',
           'session',
           'tasks',
-          'unread',
+          'turns',
           'viewType',
         ]);
       },
@@ -92,6 +93,30 @@ describe('Chat', () => {
         });
         yield* Database.flush();
         expect(chat.session?.model).toBeUndefined();
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'a finished turn is unread until any member has seen it',
+    Effect.fnUntraced(
+      function* (_) {
+        const chat = yield* makeChat;
+        expect(Chat.isUnread(chat)).toBe(false);
+
+        Chat.recordTurn(chat);
+        expect(Chat.isUnread(chat)).toBe(true);
+
+        Chat.markSeen(chat, 'did:alice');
+        expect(Chat.isUnread(chat)).toBe(false);
+
+        // Alice's view stopped at the first turn; Bob seeing the second reads it for everyone.
+        Chat.recordTurn(chat);
+        Chat.markSeen(chat, 'did:bob');
+        expect(chat.seen).toEqual({ 'did:alice': 1, 'did:bob': 2 });
+        expect(Chat.isUnread(chat)).toBe(false);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

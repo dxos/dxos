@@ -61,7 +61,6 @@ const makeAgentServiceSpec = (codeModeTurnProducer: AssistantOptions.AssistantPl
               return { limit: values.parallelThreadLimit, ...(tenants.length > 0 ? { tenants } : {}) };
             },
             hooks: () => manager.getAll(AppCapabilities.HookDefinition),
-            isChatOpen: AssistantCapabilities.isChatOpen(manager),
             mcpEndpoint: (connection) =>
               ConnectorSpec.mcpEndpoint(manager.getAll(ConnectorSpec.Connector).flat(), connection),
           });

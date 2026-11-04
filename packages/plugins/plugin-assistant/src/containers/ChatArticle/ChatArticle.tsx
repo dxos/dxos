@@ -49,33 +49,6 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
     const atomRegistry = Hooks.useCapability(Capabilities.AtomRegistry);
     const stateAtom = Hooks.useCapability(AssistantCapabilities.State);
-    // An open chat reads its unread turn for the whole space.
-    const [unread] = useObject(chat, 'unread');
-    useEffect(() => {
-      if (chat && unread) {
-        Chat.setUnread(chat, false);
-      }
-    }, [chat, unread]);
-    // Counts this view in `OpenChats`, so a turn that ends here is not marked unread.
-    const openChatsAtom = Hooks.useCapability(AssistantCapabilities.OpenChats);
-    const openUri = chat && Obj.getDatabase(chat) ? Obj.getURI(chat, { prefer: 'absolute' }).toString() : undefined;
-    useEffect(() => {
-      if (!openUri) {
-        return;
-      }
-      const count = (delta: number) => {
-        const open = new Map(atomRegistry.get(openChatsAtom));
-        const next = (open.get(openUri) ?? 0) + delta;
-        if (next > 0) {
-          open.set(openUri, next);
-        } else {
-          open.delete(openUri);
-        }
-        atomRegistry.set(openChatsAtom, open);
-      };
-      count(1);
-      return () => count(-1);
-    }, [atomRegistry, openChatsAtom, openUri]);
     // Transient (pre-submit) chats have no database; fall back to the companion's.
     const db = (chat && Obj.getDatabase(chat)) ?? (companionTo && Obj.getDatabase(companionTo));
     const runtime = useChatServices({ id: db?.spaceId });
@@ -90,6 +63,14 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
           : undefined,
       [identity?.did, identity?.displayName],
     );
+    // An open view keeps the member's read position at the latest turn, which reads it for the whole space.
+    const [turns] = useObject(chat, 'turns');
+    const did = identity?.did;
+    useEffect(() => {
+      if (chat && did && turns) {
+        Chat.markSeen(chat, did);
+      }
+    }, [chat, did, turns]);
     // The fork shown in place of main, when the reader opened one.
     const [thread, setThread] = useState<Trajectory.ThreadId>();
     useEffect(() => setThread(undefined), [chat?.id]);

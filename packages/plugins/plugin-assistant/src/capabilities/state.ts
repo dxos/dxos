@@ -27,7 +27,6 @@ export default Capability.makeModule(() =>
     });
 
     const companionChatCacheAtom = Atom.make<Record<string, Obj.Unknown | undefined>>({}).pipe(Atom.keepAlive);
-    const openChatsAtom = Atom.make<ReadonlyMap<string, number>>(new Map()).pipe(Atom.keepAlive);
 
     const homeSuggestionsCacheAtom = KvsStore.make({
       key: `${AssistantNamespace.key}.home-suggestions`,
@@ -38,7 +37,6 @@ export default Capability.makeModule(() =>
     return [
       Capability.contribute(AssistantCapabilities.State, stateAtom),
       Capability.contribute(AssistantCapabilities.CompanionChatCache, companionChatCacheAtom),
-      Capability.contribute(AssistantCapabilities.OpenChats, openChatsAtom),
       Capability.contribute(AssistantCapabilities.HomeSuggestionsCache, homeSuggestionsCacheAtom),
     ];
   }),

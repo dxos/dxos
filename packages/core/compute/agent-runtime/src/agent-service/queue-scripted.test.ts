@@ -75,11 +75,10 @@ const GateSkill = Skill.make({
  * Every turn is a single text reply, so turn count is what the assertions read. The script is drawn
  * from once per model call, so it carries more turns than any test here needs.
  */
-const replyLayer = (agent?: AgentService.Options) =>
+const replyLayer = () =>
   AssistantTestLayer({
     types: [Alarm.Alarm],
     aiService: scriptedAiService(Array.from({ length: 12 }, () => ({ parts: [text('Acknowledged.')] }))),
-    agent,
   });
 
 /** First turn parks in the gated tool; later turns reply plainly. */
@@ -222,32 +221,21 @@ describe('AgentProcess input queue (scripted)', () => {
   );
 
   it.effect(
-    'a finished turn leaves the chat unread',
+    'a finished turn moves the chat past what anyone has seen',
     Effect.fnUntraced(
       function* (_) {
         const session = yield* AgentService.createSession();
-        const unread = () => Obj.instanceOf(Chat.Chat, session.chat) && session.chat.unread === true;
-        expect(unread()).toBe(false);
+        const chat = session.chat;
+        if (!Obj.instanceOf(Chat.Chat, chat)) {
+          expect.fail('session has no chat');
+        }
+        expect(Chat.isUnread(chat)).toBe(false);
         yield* session.submitPrompt('What is a feed?');
         yield* session.waitForCompletion();
-        expect(unread()).toBe(true);
+        expect(chat.turns).toBe(1);
+        expect(Chat.isUnread(chat)).toBe(true);
       },
       Effect.provide(replyLayer()),
-      TestHelpers.provideTestContext,
-    ),
-    { timeout: 30_000 },
-  );
-
-  it.effect(
-    'a turn that ends while the chat is open stays read',
-    Effect.fnUntraced(
-      function* (_) {
-        const session = yield* AgentService.createSession();
-        yield* session.submitPrompt('What is a feed?');
-        yield* session.waitForCompletion();
-        expect(Obj.instanceOf(Chat.Chat, session.chat) && session.chat.unread).toBeFalsy();
-      },
-      Effect.provide(replyLayer({ isChatOpen: () => true })),
       TestHelpers.provideTestContext,
     ),
     { timeout: 30_000 },

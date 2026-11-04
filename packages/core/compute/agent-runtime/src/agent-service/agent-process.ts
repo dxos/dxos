@@ -52,6 +52,7 @@ import { type DelegationStrategy } from './delegation-strategy.ts';
 import { type McpEndpointOf, loadMcpServers } from './mcp-servers.ts';
 import { type ThreadingOptions, runLanes, tenantOf } from './thread-scheduler.ts';
 import { type MakeTurnProducer, type TurnProducer, makeAiSessionTurnProducer } from './turn-producer.ts';
+import { withTurnStatus } from './turn-status.ts';
 
 export interface AgentProcessOptions {
   // TODO(burdon): Instructions?
@@ -114,12 +115,6 @@ export interface AgentProcessOptions {
    * instructions' {@link Hook.SettingsAnnotation}, resolved when the request begins.
    */
   hooks?: () => readonly Hook.Definition[];
-
-  /**
-   * Whether a view on this peer has the chat open; a turn that ends there is not marked unread.
-   * Hosts without views (EDGE) leave it unset.
-   */
-  isChatOpen?: (chat: Chat.Chat) => boolean;
 }
 
 export const AGENT_PROCESS_KEY = 'org.dxos.testing.process.agent';
@@ -610,16 +605,13 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               delegation,
             })
             .pipe(
+              withTurnStatus(chat),
               Effect.onExit((exit) =>
                 Effect.gen(function* () {
                   yield* Trace.write(Trace.AgentRequestEnd, {
                     status: Exit.isSuccess(exit) ? 'success' : Exit.hasInterrupts(exit) ? 'interrupted' : 'error',
                     error: Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined,
                   });
-                  // An interrupted turn was stopped, not finished, so it leaves nothing unread.
-                  if (!Exit.hasInterrupts(exit) && !options.isChatOpen?.(chat)) {
-                    Chat.setUnread(chat, true);
-                  }
                   // The failure ends the process below, skipping the reconcile, so the strategy
                   // hears of it here or not at all. A stop the reader asked for is not a failure.
                   const onTurnFailed = Option.isSome(strategy) ? strategy.value.onTurnFailed : undefined;

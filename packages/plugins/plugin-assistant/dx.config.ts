@@ -138,7 +138,6 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
             AssistantCapabilities.State,
             AssistantCapabilities.CompanionChatCache,
             AssistantCapabilities.HomeSuggestionsCache,
-            AssistantCapabilities.OpenChats,
           ],
           activatesOn: AssistantEvents.Start,
         },
@@ -203,20 +202,15 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
         () => import('./src/capabilities/toolkit.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
-        'AgentProgress',
+        'ChatUnread',
         {
           // ProgressRegistry is read optionally in the body: a host without plugin-progress loses the indicator.
-          requires: [
-            AssistantCapabilities.OpenChats,
-            Capabilities.AtomRegistry,
-            Capabilities.ProcessManager,
-            ClientCapabilities.Client,
-          ],
+          requires: [ClientCapabilities.Client],
           provides: [],
           activatesOn: AssistantEvents.Start,
           environments: ['browser', 'tauri'],
         },
-        () => import('./src/capabilities/agent-progress.ts', { with: { type: 'module-url' } }),
+        () => import('./src/capabilities/chat-unread.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
         'AgentHydrator',

@@ -8,13 +8,13 @@ import { EID } from '@dxos/keys';
 import type * as AppCapabilities from './AppCapabilities.ts';
 
 /** Terminal status message — reducer calls `done()` then `remove()` on the keyed monitor. */
-export const STATUS_COMPLETE = 'progress.complete';
+export const STATUS_COMPLETE = Trace.StatusComplete;
 
 /** Terminal status message — reducer calls `fail()` and leaves the monitor visible. */
-export const STATUS_FAILED = 'Sync failed';
+export const STATUS_FAILED = Trace.StatusFailed;
 
 /** Terminal status message — reducer calls `note()` then `remove()`. */
-export const STATUS_CANCELLED = 'Cancelled';
+export const STATUS_CANCELLED = Trace.StatusCancelled;
 
 /**
  * Reason shown when a run stops reporting. Deliberately not "failed": the run may well have finished
