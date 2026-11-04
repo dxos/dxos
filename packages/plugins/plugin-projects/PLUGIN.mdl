@@ -2031,3 +2031,9 @@ decision D-196: An inline create row shows status, priority, estimate and assign
   date: 2026-11-04
   by: user:wittjosiah
 ```
+
+```mdl
+decision D-197: A task's estimate with no value shows the estimate's ruler glyph, not the asterisk unset priority shows, so the two empty cells read apart.
+  date: 2026-11-04
+  by: user:wittjosiah
+```

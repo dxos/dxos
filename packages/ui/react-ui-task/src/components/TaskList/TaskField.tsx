@@ -15,6 +15,7 @@ import { mx } from '@dxos/ui-theme';
 import { translationKey } from '#translations';
 
 import {
+  ESTIMATE_ICON,
   UNSET_ICON,
   estimateTextStyle,
   priorityIcon,
@@ -126,7 +127,7 @@ const fieldFace = (props: TaskFieldValue, t: (key: string) => string): FieldFace
         glyph: value ? (
           <span className={mx(estimateTextStyle(value))}>{value.toUpperCase()}</span>
         ) : (
-          <Icon.Icon icon={UNSET_ICON} classNames='text-neutral-500' />
+          <Icon.Icon icon={ESTIMATE_ICON} classNames='text-neutral-500' />
         ),
         label: value ? value.toUpperCase() : t('task-estimate.label'),
         named: !!value,
