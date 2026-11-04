@@ -988,8 +988,7 @@ const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
     <TaskList.Root
       tasks={tasks}
       showGroupLabels={false}
-      showOrdinals
-      // The prompt frames the list, and its rows are too narrow for who holds a task or its mnemonic.
+      // The prompt frames the list, and its rows are too narrow for who holds a task or its reference.
       flush
       showAssignees={false}
       showMnemonics={false}
