@@ -12,12 +12,14 @@ import { type Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
+  type AwarenessProvider,
   DxEditRequest,
   type DxGridAxisMeta,
   type DxGridElement,
   type DxGridPlane,
   type DxGridPlaneRange,
   Grid,
+  type GridAddressing,
   type GridContentProps,
   closestCell,
   gridSeparatorBlockEnd,
@@ -54,6 +56,8 @@ export type TableContentProps = {
   // TODO(burdon): Factor out attention.
   ignoreAttention?: boolean;
   attendableId?: string;
+  /** Shares each user's cell selection with the table's other viewers. */
+  awareness?: AwarenessProvider;
   onCreate?: OnCreateHandler;
   onRowClick?: (row: any) => void;
   testId?: string;
@@ -61,7 +65,7 @@ export type TableContentProps = {
 
 export const TableContent = Util.composable<HTMLDivElement, TableContentProps>(
   (
-    { schema, model, presentation, ignoreAttention, attendableId, onCreate, onRowClick, testId, ...props },
+    { schema, model, presentation, ignoreAttention, attendableId, awareness, onCreate, onRowClick, testId, ...props },
     forwardedRef,
   ) => {
     const registry = useContext(RegistryContext);
@@ -77,6 +81,37 @@ export const TableContent = Util.composable<HTMLDivElement, TableContentProps>(
     const columnCount = Object.keys(columnMeta.grid).length || model?.projection.getFields().length || 0;
 
     const draftRowCount = model?.getDraftRowCount() ?? 0;
+
+    // Cells are named by field and row object, so a selection stays on its record through sorting and filtering.
+    const addressing = useMemo<GridAddressing | undefined>(() => {
+      if (!model) {
+        return undefined;
+      }
+
+      // `rows` is read from the model, where it is typed; the subscription above is what re-runs this.
+      const fields = model.projection.getFields();
+      const sortedRows = model.getRows();
+      const rowIndex = new Map(sortedRows.map((row, index) => [row.id, index]));
+      return {
+        toId: (position) => {
+          const field = fields[model.getFieldIndex(position.plane, position.col) ?? -1];
+          const row =
+            position.plane === 'grid' || position.plane === 'frozenColsStart' ? sortedRows[position.row] : undefined;
+          return field && row ? { col: field.id, row: row.id } : undefined;
+        },
+        toPosition: ({ col, row }) => {
+          const fieldIndex = fields.findIndex((field) => field.id === col);
+          const index = rowIndex.get(row);
+          if (fieldIndex < 0 || index === undefined) {
+            return undefined;
+          }
+
+          return fieldIndex < model.pinColumns
+            ? { plane: 'frozenColsStart', col: model.selectionColumns + fieldIndex, row: index }
+            : { plane: 'grid', col: fieldIndex - model.pinColumns, row: index };
+        },
+      };
+    }, [model, rows, columnMeta]);
 
     const frozen = useMemo(() => {
       const noActionColumn =
@@ -392,7 +427,7 @@ export const TableContent = Util.composable<HTMLDivElement, TableContentProps>(
 
     return (
       <div {...Util.composableProps(props, { classNames: 'dx-expand relative' })} ref={forwardedRef}>
-        <Grid.Root id={model.id ?? 'table-grid'}>
+        <Grid.Root id={model.id ?? 'table-grid'} awareness={awareness}>
           <TableValueEditor
             model={model}
             modals={modals}
@@ -410,6 +445,7 @@ export const TableContent = Util.composable<HTMLDivElement, TableContentProps>(
             limitRows={rows.length}
             limitColumns={columnCount}
             overscroll='trap'
+            addressing={addressing}
             onAxisResize={handleAxisResize}
             onClick={handleGridClick}
             onKeyDownCapture={handleKeyDown}

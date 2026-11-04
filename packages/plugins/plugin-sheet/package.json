@@ -157,6 +157,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-doc": "workspace:*",
     "@dxos/echo-react": "workspace:*",
+    "@dxos/halo-react": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/lit-grid": "workspace:*",

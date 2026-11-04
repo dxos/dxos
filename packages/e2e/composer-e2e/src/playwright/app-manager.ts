@@ -90,6 +90,7 @@ const OBJECT_TYPENAMES: Record<string, string> = {
   Document: 'org.dxos.type.document',
   Mailbox: 'org.dxos.type.mailbox',
   Project: 'org.dxos.type.project',
+  Sheet: 'org.dxos.type.sheet',
   Table: 'org.dxos.type.table',
 };
 
@@ -672,7 +673,7 @@ export class AppManager {
     await this.#expandRow(this.getObjectLinks().nth(nth), timeout);
   }
 
-  async expandSection(testId: string, timeout = 15_000): Promise<void> {
+  async expandSection(testId: string | RegExp, timeout = 15_000): Promise<void> {
     const section = this.currentWorkspace.getByTestId(testId).first();
     await section.waitFor({ state: 'attached', timeout });
     await this.#expandRow(section, timeout);

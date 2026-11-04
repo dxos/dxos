@@ -34,11 +34,13 @@ import {
   type DxGridPlane,
   type DxGridPlaneCellIndex,
   type DxGridPlaneCells,
+  type DxGridPlanePosition,
   type DxGridPlaneRange,
   type DxGridPlaneRecord,
   type DxGridPointer,
   type DxGridPosition,
   type DxGridRange,
+  type DxGridRemoteSelection,
   type DxGridSelectionProps,
   separator,
 } from './types.ts';
@@ -122,6 +124,9 @@ export class DxGrid extends LitElement {
 
   @property({ type: String })
   activeRefs = '';
+
+  @property({ type: Array })
+  remoteSelections: DxGridRemoteSelection[] = [];
 
   @property({ type: String })
   focusIndicatorVariant: DxGridFocusIndicatorVariant = 'sheet';
@@ -1263,6 +1268,7 @@ export class DxGrid extends LitElement {
                 return this.renderCell(c, r, plane, selection, c0, r);
               });
             })}
+            ${this.renderRemoteSelections(plane, { col: this.visColMin, row: 0 }, { col: visibleCols, row: rows! })}
           </div>
         </div>`
       : null;
@@ -1298,6 +1304,7 @@ export class DxGrid extends LitElement {
                 return this.renderCell(c, r, plane, selection, c, r0);
               });
             })}
+            ${this.renderRemoteSelections(plane, { col: 0, row: this.visRowMin }, { col: cols!, row: visibleRows })}
           </div>
         </div>`
       : null;
@@ -1333,9 +1340,48 @@ export class DxGrid extends LitElement {
                 return this.renderCell(c, r, 'grid', selection, c0, r0);
               });
             })}
+            ${this.renderRemoteSelections(
+              'grid',
+              { col: this.visColMin, row: this.visRowMin },
+              { col: visibleCols, row: visibleRows },
+            )}
           </div>
         </div>`
       : null;
+  }
+
+  /**
+   * Draws each remote selection in `plane`, clipped to the rendered cells, which start at `first` and span `count`.
+   */
+  private renderRemoteSelections(plane: DxGridPlane, first: DxGridPlanePosition, count: DxGridPlanePosition) {
+    return this.remoteSelections
+      .filter(({ start }) => start.plane === plane)
+      .map(({ id, label, color, textColor, start, end }) => {
+        const { colMin, colMax, rowMin, rowMax } = selectionProps(start, end);
+        const c0 = Math.max(colMin, first.col);
+        const c1 = Math.min(colMax, first.col + count.col - 1);
+        const r0 = Math.max(rowMin, first.row);
+        const r1 = Math.min(rowMax, first.row + count.row - 1);
+        if (c0 > c1 || r0 > r1) {
+          return null;
+        }
+
+        return html`<div
+          role="none"
+          class="dx-grid__remote-selection"
+          data-peer=${id}
+          data-testid="dx-grid.remote-selection"
+          data-label-position=${r0 === first.row ? 'below' : 'above'}
+          style=${styleMap({
+            'grid-column': `${c0 - first.col + 1} / ${c1 - first.col + 2}`,
+            'grid-row': `${r0 - first.row + 1} / ${r1 - first.row + 2}`,
+            '--dx-grid-remote-selection-color': color,
+            '--dx-grid-remote-selection-text': textColor,
+          })}
+        >
+          <span role="none" class="dx-grid__remote-selection__label">${label}</span>
+        </div>`;
+      });
   }
 
   private cellReadonly(col: number, row: number, plane: DxGridPlane): boolean {

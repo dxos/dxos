@@ -2,20 +2,26 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type EventName, createComponent } from '@lit/react';
 import React, {
   type ComponentProps,
   type PropsWithChildren,
   forwardRef,
   useCallback,
+  useContext,
   useEffect,
+  useMemo,
   useState,
 } from 'react';
 
 import '@dxos/lit-grid/dx-grid.pcss';
 import { type DxAxisResize, type DxEditRequest, type DxGridCellsSelect, DxGrid as NaturalDxGrid } from '@dxos/lit-grid';
 import { useControllableState } from '@dxos/react-hooks';
+import { type AwarenessProvider } from '@dxos/ui-editor';
 
+import { type GridAddressing, GridSelectionModel, bindAwareness, toSelection } from '../selection/index.ts';
 import { GRID_NAME, GridProvider, useGridContext } from './GridContext.ts';
 
 type DxGridElement = NaturalDxGrid;
@@ -52,6 +58,7 @@ export type GridContextValue = {
   setEditing: (nextEditing: GridEditing) => void;
   editBox: GridEditBox;
   setEditBox: (nextEditBox: GridEditBox) => void;
+  selection: GridSelectionModel;
 };
 
 type GridRootProps = PropsWithChildren<
@@ -61,19 +68,42 @@ type GridRootProps = PropsWithChildren<
     editing: GridEditing;
     defaultEditing: GridEditing;
     onEditingChange: (nextEditing: GridEditing) => void;
+    /** Shares the local selection with collaborators and shows theirs. */
+    awareness: AwarenessProvider;
   }>
 >;
 
 // TODO(burdon): Make headless.
-const GridRoot = ({ children, id, editing: propsEditing, defaultEditing, onEditingChange }: GridRootProps) => {
+const GridRoot = ({
+  children,
+  id,
+  editing: propsEditing,
+  defaultEditing,
+  onEditingChange,
+  awareness,
+}: GridRootProps) => {
   const [editing = null, setEditing] = useControllableState({
     prop: propsEditing,
     defaultProp: defaultEditing,
     onChange: onEditingChange,
   });
   const [editBox, setEditBox] = useState<GridEditBox>(initialBox);
+  const registry = useContext(RegistryContext);
+  const selection = useMemo(() => new GridSelectionModel(registry), [registry]);
+  useEffect(
+    () => (awareness ? bindAwareness(registry, selection, awareness) : undefined),
+    [registry, selection, awareness],
+  );
+
   return (
-    <GridProvider id={id} editing={editing} setEditing={setEditing} editBox={editBox} setEditBox={setEditBox}>
+    <GridProvider
+      id={id}
+      editing={editing}
+      setEditing={setEditing}
+      editBox={editBox}
+      setEditBox={setEditBox}
+      selection={selection}
+    >
       <div className='dx-grid-host' style={{ display: 'contents' }}>
         {children}
       </div>
@@ -85,13 +115,18 @@ GridRoot.displayName = GRID_NAME;
 
 const GRID_CONTENT_NAME = 'GridContent';
 
-type GridContentProps = Omit<ComponentProps<typeof DxGrid>, 'onEdit'> & {
+type GridContentProps = Omit<ComponentProps<typeof DxGrid>, 'onEdit' | 'remoteSelections'> & {
   getCells?: NaturalDxGrid['getCells'];
   activeRefs?: string;
+  /**
+   * Names the grid's cells by row and column identity. Without it the grid neither records the local selection in the
+   * shared model nor shows collaborators' selections, since a visual index is not stable across their views.
+   */
+  addressing?: GridAddressing;
 };
 
-const GridContent = forwardRef<NaturalDxGrid, GridContentProps>((props, forwardedRef) => {
-  const { id, editing, setEditBox, setEditing } = useGridContext(GRID_CONTENT_NAME);
+const GridContent = forwardRef<NaturalDxGrid, GridContentProps>(({ addressing, onSelect, ...props }, forwardedRef) => {
+  const { id, editing, setEditBox, setEditing, selection } = useGridContext(GRID_CONTENT_NAME);
   const [dxGrid, setDxGridInternal] = useState<NaturalDxGrid | null>(null);
 
   // NOTE(thure): using `useState` instead of `useRef` works with refs provided by `@lit/react` and gives us
@@ -122,7 +157,34 @@ const GridContent = forwardRef<NaturalDxGrid, GridContentProps>((props, forwarde
     setEditing({ index: event.cellIndex, cellElement: event.cellElement, initialContent: event.initialContent });
   }, []);
 
-  return <DxGrid {...props} gridId={id} mode={editing ? 'edit' : 'browse'} onEdit={handleEdit} ref={setDxGrid} />;
+  const handleSelect = useCallback(
+    (event: DxGridCellsSelect) => {
+      // While editing, a selection picks a range for the formula, not the user's selection.
+      if (!editing && addressing) {
+        selection.select(toSelection(addressing, event.range));
+      }
+      onSelect?.(event);
+    },
+    [editing, addressing, selection, onSelect],
+  );
+
+  const peers = useAtomValue(selection.peers);
+  const remoteSelections = useMemo(
+    () => (addressing ? selection.resolvePeers(addressing, peers) : []),
+    [selection, addressing, peers],
+  );
+
+  return (
+    <DxGrid
+      {...props}
+      gridId={id}
+      mode={editing ? 'edit' : 'browse'}
+      remoteSelections={remoteSelections}
+      onEdit={handleEdit}
+      onSelect={handleSelect}
+      ref={setDxGrid}
+    />
+  );
 });
 
 GridContent.displayName = GRID_CONTENT_NAME;
@@ -158,4 +220,5 @@ export type {
   DxGridPlaneRange,
   DxGridPosition,
   DxGridRange,
+  DxGridRemoteSelection,
 } from '@dxos/lit-grid';

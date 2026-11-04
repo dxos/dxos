@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type PropsWithChildren, useCallback, useState } from 'react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import React, { type PropsWithChildren, useMemo, useState } from 'react';
 
 import {
   type CellAddress,
@@ -10,7 +11,16 @@ import {
   type CompleteCellRange,
   type ComputeGraph,
 } from '@dxos/compute-hyperformula';
-import { Grid, type GridContentProps, type GridEditing, useGridContext } from '@dxos/react-ui-grid';
+import { useObject } from '@dxos/echo-react';
+import {
+  type AwarenessProvider,
+  Grid,
+  type GridAddressing,
+  type GridContentProps,
+  type GridEditing,
+  toRange,
+  useGridContext,
+} from '@dxos/react-ui-grid';
 
 import { Sheet } from '#types';
 
@@ -22,12 +32,10 @@ export type SheetContextValue = {
   attendableId: string;
   model: SheetModel;
 
-  // Cursor state.
-  // TODO(burdon): Cursor and range should use indices.
+  // Cursor state, read from the grid's shared selection: the focused cell, and the range when it spans several.
+  addressing: GridAddressing;
   cursor?: CellAddress;
-  setCursor: (cell: CellAddress | undefined) => void;
   range?: CellRange;
-  setRange: (range: CellRange | undefined) => void;
   cursorFallbackRange?: CompleteCellRange;
 
   // Editing state (undefined if not editing).
@@ -52,6 +60,7 @@ export type SheetRootProps = {
   attendableId: string;
   readonly?: boolean;
   ignoreAttention?: boolean;
+  awareness?: AwarenessProvider;
 } & Pick<SheetContextValue, 'onInfo'>;
 
 export const SheetRoot = ({
@@ -61,6 +70,7 @@ export const SheetRoot = ({
   attendableId,
   readonly,
   ignoreAttention,
+  awareness,
   onInfo,
 }: PropsWithChildren<SheetRootProps>) => {
   const model = useSheetModel(graph, sheet, { readonly });
@@ -69,7 +79,7 @@ export const SheetRoot = ({
   }
 
   return (
-    <Grid.Root id={attendableId}>
+    <Grid.Root id={attendableId} awareness={awareness}>
       <SheetProviderImpl model={model} attendableId={attendableId} onInfo={onInfo} ignoreAttention={ignoreAttention}>
         {children}
       </SheetProviderImpl>
@@ -84,31 +94,30 @@ const SheetProviderImpl = ({
   model,
   onInfo,
 }: PropsWithChildren<Pick<SheetContextValue, 'attendableId' | 'ignoreAttention' | 'model' | 'onInfo'>>) => {
-  const { id, editing, setEditing } = useGridContext('SheetProvider');
-
-  const [cursor, setCursorInternal] = useState<CellAddress>();
-  const [range, setRangeInternal] = useState<CellRange>();
-  const [cursorFallbackRange, setCursorFallbackRange] = useState<CompleteCellRange>();
+  const { id, editing, setEditing, selection } = useGridContext('SheetProvider');
   const [activeRefs, setActiveRefs] = useState<GridContentProps['activeRefs']>('');
 
-  const setCursor = useCallback(
-    (nextCursor?: CellAddress) => {
-      setCursorInternal(nextCursor);
-      setCursorFallbackRange(
-        range?.to ? (range as CompleteCellRange) : nextCursor ? { from: nextCursor!, to: nextCursor! } : undefined,
-      );
-    },
-    [range],
-  );
-  const setRange = useCallback(
-    (nextRange?: CellRange) => {
-      setRangeInternal(nextRange);
-      setCursorFallbackRange(
-        nextRange?.to ? (nextRange as CompleteCellRange) : cursor ? { from: cursor!, to: cursor! } : undefined,
-      );
-    },
-    [cursor],
-  );
+  // Cells are named by the sheet's row and column ids, so a selection stays on its cells as rows and columns move.
+  const [rows] = useObject(model.sheet, 'rows');
+  const [columns] = useObject(model.sheet, 'columns');
+  const addressing = useMemo(() => createAddressing(rows ?? [], columns ?? []), [rows, columns]);
+
+  const local = useAtomValue(selection.local);
+  const { cursor, range, cursorFallbackRange } = useMemo(() => {
+    const localRange = local && toRange(addressing, local);
+    if (!localRange) {
+      return {};
+    }
+
+    const { start, end } = localRange;
+    const from = { col: Math.min(start.col, end.col), row: Math.min(start.row, end.row) };
+    const to = { col: Math.max(start.col, end.col), row: Math.max(start.row, end.row) };
+    return {
+      cursor: { col: start.col, row: start.row },
+      range: from.col !== to.col || from.row !== to.row ? { from, to } : undefined,
+      cursorFallbackRange: { from, to },
+    };
+  }, [addressing, local]);
 
   return (
     <SheetContext.Provider
@@ -118,10 +127,9 @@ const SheetProviderImpl = ({
         model,
         editing,
         setEditing,
+        addressing,
         cursor,
-        setCursor,
         range,
-        setRange,
         cursorFallbackRange,
         activeRefs,
         setActiveRefs,
@@ -133,4 +141,18 @@ const SheetProviderImpl = ({
       {children}
     </SheetContext.Provider>
   );
+};
+
+const createAddressing = (rows: readonly string[], columns: readonly string[]): GridAddressing => {
+  const rowIndex = new Map(rows.map((id, index) => [id, index]));
+  const columnIndex = new Map(columns.map((id, index) => [id, index]));
+  return {
+    toId: ({ plane, col, row }) =>
+      plane === 'grid' && columns[col] && rows[row] ? { col: columns[col], row: rows[row] } : undefined,
+    toPosition: ({ col, row }) => {
+      const colIndex = columnIndex.get(col);
+      const index = rowIndex.get(row);
+      return colIndex === undefined || index === undefined ? undefined : { plane: 'grid', col: colIndex, row: index };
+    },
+  };
 };

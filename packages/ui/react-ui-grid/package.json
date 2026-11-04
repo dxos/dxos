@@ -32,15 +32,19 @@
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
+    "@effect/atom-react": "catalog:",
     "@lit/react": "catalog:"
   },
   "devDependencies": {
+    "@bufbuild/protobuf": "catalog:",
+    "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "vite": "catalog:"
@@ -48,6 +52,8 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
     "@dxos/ui-theme": "workspace:^",
+    "@effect/atom-react": "catalog:",
+    "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },
