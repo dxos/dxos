@@ -787,9 +787,17 @@ decision D-20: Each turn is a progress monitor keyed `<uri>#agent` on the chat a
 ```
 
 ```mdl
-decision D-20: A turn that finishes while nobody has its chat open leaves a still amber agent star in the glyph's mark until anyone opens the chat. The agent sets `Chat.unread` as each turn ends, unless a view on the peer running it has the chat open; an open chat view, in a plank or as a companion, clears it for the whole space. The plugin reports an unread chat to the progress registry as a done monitor on `<uri>#agent`, on both rows, and reports none on a peer that has the chat open.
+decision D-21: A turn that finishes while nobody has its chat open leaves a still amber agent star in the glyph's mark until anyone opens the chat. A chat open here never shows it, and a turn that ends while a view here has the chat open is not marked unread.
   date: 2026-11-03
   by: user:wittjosiah
+  affects: [QA-6]
+```
+
+```mdl
+decision D-22: The agent sets `Chat.unread` as each turn ends, unless a view on the peer running it has the chat open; an open chat view, in a plank or as a companion, clears it for the whole space. The plugin reports an unread chat to the progress registry as a done monitor on `<uri>#agent`, on both rows, and reports none on a peer that has the chat open. Fills in [D-21].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
   affects: [QA-6]
   why: The working star disappears when the turn ends, so without an unread mark a reply that arrived while you worked elsewhere leaves no trace in the navtree. Kept on the chat, the mark survives a reload and reaches every member. Because anyone viewing the chat reads it, the amber star and presence never need the mark at once. Text-coloured while working and amber when unread tell the two apart without motion.
   rejected:
