@@ -348,17 +348,28 @@ const watchMilestone = async (demo, page, milestone, minutes) => {
   await page.waitForTimeout(BEAT);
 };
 
-/** Opens the newest showcase from the feature's card: the URL the agent deployed and the checks it ran there. */
+/**
+ * Opens the newest showcase from the feature's card and presents its slide full screen, uncaptioned: the URL the agent
+ * deployed and the checks it ran there. The Worker itself is not opened, since a temporary account's Worker can answer
+ * a browser with a bot challenge.
+ */
 const openShowcase = async (demo, page, feature) => {
   const name = (await snapshot(page)).showcases.at(-1);
   if (!name) {
     throw new Error('the agent made no showcase');
   }
   await openFeature(demo, page, feature);
+  // The card's sections re-render as its tasks and showcases load, so the row is found again for the click.
   const row = `${COMPANION} :text-is("${name}") >> nth=0`;
-  await page.locator(row).scrollIntoViewIfNeeded({ timeout: 15_000 });
+  await page.locator(row).waitFor({ state: 'visible', timeout: 15_000 });
+  await page.waitForTimeout(BEAT);
   await demo.click({ selector: row, label: name });
+  await page.waitForTimeout(BEAT * 2);
+  await demo.clearCaption();
+  await demo.click({ selector: '[data-testid="presenter.play"] >> nth=0', label: 'Present' });
   await page.waitForTimeout(BEAT * 4);
+  await page.keyboard.press('Escape');
+  await page.locator('[data-testid="presenter.play"]').first().waitFor({ state: 'visible', timeout: 10_000 });
 };
 
 /** A person signs off each of the milestone's tasks in review, from its status control on the Tasks tab. */
@@ -369,7 +380,7 @@ const acceptMilestone = async (demo, page, milestone) => {
     .map((task) => task.title);
   for (const title of titles) {
     await demo.click({ selector: `${taskRow(title)} >> [data-testid="taskList.item.status"]`, label: title });
-    await demo.click({ selector: 'role=menuitem[name="Done"]', label: 'Done' });
+    await demo.click({ selector: 'role=menuitemradio[name="Done"]', label: 'Done' });
   }
   await page.waitForFunction(
     async ({ key, titles }) => {

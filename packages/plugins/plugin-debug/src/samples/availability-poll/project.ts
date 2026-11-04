@@ -52,20 +52,26 @@ Keep it in git there; do not create or attach a repository.
 - The code is plain JavaScript modules: \`worker.js\` (the fetch handler and the \`Poll\` Durable Object, created with \
 \`newUniqueId()\`, its state one storage key) and \`page.js\` (the pages as HTML strings with their own script). \
 \`wrangler.jsonc\` binds \`Poll\` and declares it in a migration with \`new_sqlite_classes\`, which a temporary account \
-requires. Write a file whole, as base64 decoded in the sandbox: \
-\`echo \${Buffer.from(text).toString('base64')} | base64 -d > worker.js\`.
+requires. M-2 adds \`zones.js\` for the time zone math, so its features add a file and touch the others only by \
+small edits.
+- Write a new file whole, as base64 decoded in the sandbox: \
+\`echo \${Buffer.from(text).toString('base64')} | base64 -d > worker.js\`. Change a file you already wrote with a short \
+\`node -e\` script in the sandbox that replaces exact strings in it, found with \`grep -n\`, so a change costs only the \
+lines it touches. Never print or rewrite a whole file you already wrote. Each call is a fresh program: nothing you \
+assign in one is there in the next.
 - Time zone math uses \`Intl.DateTimeFormat\` with \`timeZone\`, which the Workers runtime ships in full. Compute every \
 offset on the slot's own date and hour, never once per poll; the spec's F-5 and T-2 say exactly what that means.
-- A feature task ends deployed: in one command, write its code, deploy, \`curl\` the requirements it adds, and commit. \
-Then set its feature to \`prototype\` and the task to \`review\`.
+- Work one task at a time, and end each deployed: in one command, write that feature's code, deploy, \`curl\` the \
+requirements it adds, and commit. Then set its feature to \`prototype\` and the task to \`review\` before starting the next.
 - \`Check M-n\` runs the milestone's scenario against the live URL in one command, a Node script with \`fetch\`, and \
 prints a table of expected against actual for every count, slot start and best slot the scenario states. When it all \
-matches, set the milestone's features to \`operational\` and make one showcase for them: the Worker URL and the table.
+matches, set the milestone's features to \`operational\` and make one showcase for them whose content is a heading, \
+the Worker URL and that table, nothing else, so it fits on one slide.
 
 Deploying. \`cd /workspace/poll && wrangler deploy --temporary\` mints a temporary account and prints the Worker URL and \
 a claim URL. The claim URL is a bearer credential for the account: give it to me directly and file it nowhere. \
-Redeploy from the same sandbox to keep the account and the URL; the account expires after about an hour, and if it \
-has, deploy again and use the new URL.
+Redeploy from the same sandbox to keep the account and the URL, which the redeploy prints again; the account expires \
+after about an hour, and if it has, deploy again and use the new URL.
 
 Changes. When I change a feature's requirements and ask you to revalidate, run the affected scenario against the live \
 Worker under the changed requirement before touching any code. If it fails, set the feature to \`failing\`, update every \
