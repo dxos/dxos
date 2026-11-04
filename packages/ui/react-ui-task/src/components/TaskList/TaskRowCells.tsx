@@ -22,7 +22,14 @@ import { getHashHue, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { UNSET_ICON, priorityIcon, priorityTextStyle, statusIcon, statusTextStyle } from '../../util/status-icons.ts';
+import {
+  UNSET_ICON,
+  estimateTextStyle,
+  priorityIcon,
+  priorityTextStyle,
+  statusIcon,
+  statusTextStyle,
+} from '../../util/status-icons.ts';
 import { useTaskListContext } from './TaskListContext.ts';
 
 /**
@@ -228,6 +235,53 @@ export const TaskEstimateLabel = ({ estimate }: { estimate?: Task.Estimate }) =>
   ) : null;
 
 TaskEstimateLabel.displayName = 'TaskList.EstimateLabel';
+
+export type TaskEstimatePickerProps = {
+  estimate?: Task.Estimate;
+  /** Omitted for a readonly label. */
+  onChange?: (estimate: Task.Estimate | undefined) => void;
+  testId?: string;
+  classNames?: string;
+};
+
+/** The estimate label and its menu over a bare value, for a task or a draft that has none yet. */
+export const TaskEstimatePicker = ({ estimate, onChange, testId, classNames }: TaskEstimatePickerProps) => {
+  const { t } = Hooks.useTranslation(translationKey);
+  const label = estimate?.toUpperCase() ?? <Icon.Icon icon={UNSET_ICON} classNames='text-neutral-500' />;
+
+  if (!onChange) {
+    return <Layout.Block classNames={mx(estimateTextStyle(estimate), classNames)}>{label}</Layout.Block>;
+  }
+
+  return (
+    <Layout.Block classNames={classNames}>
+      <ActionMenu
+        deferUntilOpen
+        actions={() =>
+          [Task.NullOption, ...Task.EstimateOptions].map(({ id, title }) =>
+            createMenuAction(`estimate-${id}`, () => onChange(id === 'none' ? undefined : id), {
+              label: title,
+              checked: (estimate ?? 'none') === id,
+            }),
+          )
+        }
+      >
+        <Button.Root
+          variant='ghost'
+          iconOnly={estimate === undefined}
+          label={t('task-estimate.label')}
+          data-testid={testId}
+          classNames={mx('w-8 px-0 text-xs tabular-nums', estimateTextStyle(estimate))}
+          onClick={(event: MouseEvent) => event.stopPropagation()}
+        >
+          {label}
+        </Button.Root>
+      </ActionMenu>
+    </Layout.Block>
+  );
+};
+
+TaskEstimatePicker.displayName = 'TaskList.EstimatePicker';
 
 /**
  * Priority as a signal-strength glyph rather than a word: the four levels are ordinal, so a ramp

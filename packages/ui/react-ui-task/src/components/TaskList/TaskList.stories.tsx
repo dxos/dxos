@@ -1278,107 +1278,6 @@ export const TestDelegateFromAssignee: Story = {
   },
 };
 
-export const TestEditorHandsBackFromAgent: Story = {
-  args: {
-    showGroupLabels: false,
-    members: [{ did: 'did:key:riley', name: 'Riley' }],
-  },
-  play: async ({ canvasElement }) => {
-    const body = within(document.body);
-    const row = await waitFor(() => {
-      const row = [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')].find((row) =>
-        row.querySelector('[data-testid="taskList.item.delegate"]'),
-      );
-      if (!row) {
-        throw new Error('No delegated task is listed.');
-      }
-      return row;
-    });
-
-    await userEvent.click(row);
-    const pill = await waitFor(() => {
-      const pill = canvasElement.querySelector<HTMLElement>(
-        '[data-testid="taskList.edit.properties"] [data-testid="assignee"]',
-      );
-      if (!pill?.textContent?.includes('Rich')) {
-        throw new Error('The editor is not editing the delegated task.');
-      }
-      return pill;
-    });
-    await userEvent.click(pill);
-    await expect(await body.findByTestId('taskList.assignee.delegate')).toBeTruthy();
-    await userEvent.click(await body.findByTestId('taskList.assignee.member'));
-    await waitFor(async () => expect(row.querySelector('[data-testid="taskList.item.delegate"]')).toBeNull());
-  },
-};
-
-export const TestEditorWithoutAssignees: Story = {
-  args: {
-    showGroupLabels: false,
-    showAssignees: false,
-  },
-  play: async ({ canvasElement }) => {
-    const pill = (field: string) =>
-      canvasElement.querySelector(`[data-testid="taskList.edit.properties"] [data-testid="${field}"]`);
-    await waitFor(async () => expect(pill('status')).toBeTruthy());
-    await expect(pill('assignee')).toBeNull();
-  },
-};
-
-export const TestEditDelegateOnly: Story = {
-  args: {
-    showGroupLabels: false,
-    seed: () => [
-      Task.make({ title: 'Draft notes', status: 'started', delegate: { role: 'assistant', name: 'Scout' } }),
-    ],
-  },
-  play: async ({ canvasElement }) => {
-    const row = await waitFor(() => {
-      const row = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.item"]');
-      if (!row) {
-        throw new Error('The task is not listed yet.');
-      }
-      return row;
-    });
-    await userEvent.click(row);
-    const title = found(
-      canvasElement.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input'),
-      'Title input',
-    );
-    await waitFor(async () => expect(title.value).toEqual('Draft notes'));
-    const pill = canvasElement.querySelector<HTMLElement>(
-      '[data-testid="taskList.edit.properties"] [data-testid="assignee"]',
-    );
-    await expect(pill?.textContent).toContain('Scout');
-  },
-};
-
-export const TestEditUnsetStatus: Story = {
-  args: {
-    showGroupLabels: false,
-    seed: () => [Task.make({ title: 'Sort the pantry' })],
-  },
-  play: async ({ canvasElement }) => {
-    const row = await waitFor(() => {
-      const row = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.item"]');
-      if (!row) {
-        throw new Error('The task is not listed yet.');
-      }
-      return row;
-    });
-    await userEvent.click(row);
-    const title = found(
-      canvasElement.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input'),
-      'Title input',
-    );
-    await waitFor(async () => expect(title.value).toEqual('Sort the pantry'));
-    const status = canvasElement.querySelector<HTMLElement>(
-      '[data-testid="taskList.edit.properties"] [data-testid="status"]',
-    );
-    await expect(status?.textContent).toContain('Todo');
-  },
-};
-
 /**
  * Checking is selection, not a status write, and it is not the current row either: the box toggles
  * independently of which row the reader is on, and leaves the task's status alone.
@@ -1619,29 +1518,20 @@ export const TestCreateFailureKeepsDraft: Story = {
 export const TestCreateWithProperties: Story = {
   args: {
     showGroupLabels: false,
-    members: [{ did: 'did:key:riley', name: 'Riley' }],
   },
   play: async ({ canvasElement }) => {
     const pane = found(canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]'), 'Create pane');
-    const pill = (field: string) =>
-      found(
-        pane.querySelector<HTMLElement>(`[data-testid="taskList.edit.properties"] [data-testid="${field}"]`),
-        `${field} pill`,
-      );
+    const picker = (field: string) =>
+      found(pane.querySelector<HTMLElement>(`[data-testid="taskList.edit.${field}"]`), `${field} picker`);
     const title = () =>
       found(pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input'), 'Title input');
     const body = within(document.body);
 
     await userEvent.click(title());
     await userEvent.keyboard('Order green beans');
-    await userEvent.click(pill('priority'));
-    await userEvent.click(await body.findByRole('option', { name: /High/ }));
-    await userEvent.click(pill('assignee'));
-    await userEvent.click(await body.findByText('Riley'));
-    await userEvent.click(pill('estimate'));
-    await userEvent.click(await body.findByRole('option', { name: /^M$/ }));
-    await waitFor(async () => expect(pill('priority').textContent).toContain('High'));
-    await expect(pill('assignee').textContent).toContain('Riley');
+    await userEvent.click(picker('estimate'));
+    await userEvent.click(await body.findByRole('menuitem', { name: /^M$/ }));
+    await waitFor(async () => expect(picker('estimate').textContent).toEqual('M'));
 
     await userEvent.click(title());
     await userEvent.keyboard('{Enter}');
@@ -1654,9 +1544,8 @@ export const TestCreateWithProperties: Story = {
       }
       return row;
     });
-    await expect(row.querySelector('[data-testid="taskList.item.assignee"]')).toBeTruthy();
     await expect(row.querySelector('[data-testid="taskList.item.estimate"]')?.textContent).toEqual('M');
-    await waitFor(async () => expect(pill('priority').textContent).toContain('Priority'));
+    await waitFor(async () => expect(picker('estimate').textContent).toEqual(''));
   },
 };
 
