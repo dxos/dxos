@@ -115,6 +115,23 @@ const DelegateHandler = Delegate.pipe(
   ),
 );
 
+/** Runs {@link Inspect} in process, then mints an id of its own. */
+export const Nest = Operation.make({
+  meta: { key: DXN.make('com.example.operation.hostTest.nest'), name: 'Nest' },
+  services: [Operation.Service],
+  input: Schema.Struct({}),
+  output: Schema.Struct({ inner: Schema.String, after: Schema.String }),
+});
+
+const NestHandler = Nest.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(function* () {
+      const { id } = yield* Operation.invoke(Inspect, {});
+      return { inner: id, after: EntityId.random() };
+    }),
+  ),
+);
+
 /** The typed error {@link Fails} raises. */
 export class TestFailure extends BaseError.extend('TestFailure', 'The test operation failed.') {}
 
@@ -137,7 +154,14 @@ export const TestPlugin = Plugin.define(Plugin.makeMeta({ key: DXN.make(TEST_PLU
       Effect.succeed(
         Capability.contribute(
           Capabilities.OperationHandler,
-          OperationHandlerSet.make(ReplyHandler, InspectHandler, GreetHandler, DelegateHandler, FailsHandler),
+          OperationHandlerSet.make(
+            ReplyHandler,
+            InspectHandler,
+            GreetHandler,
+            DelegateHandler,
+            NestHandler,
+            FailsHandler,
+          ),
         ),
       ),
     ),

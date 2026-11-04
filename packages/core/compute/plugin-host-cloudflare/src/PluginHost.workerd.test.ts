@@ -8,6 +8,7 @@ import { describe, test } from 'vitest';
 import { Fibonacci, Reply } from '@dxos/compute/testing';
 import { Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
+import { EntityId } from '@dxos/keys';
 import { ErrorCodec, PluginProtocol } from '@dxos/protocols';
 
 import * as PluginHost from './PluginHost.ts';
@@ -18,6 +19,7 @@ import {
   Greeter,
   Inspect,
   InspectEvent,
+  Nest,
   TEST_PLUGIN_KEY,
   TestFailure,
   TestPlugin,
@@ -25,6 +27,16 @@ import {
 } from './testing/index.ts';
 
 const SPACE_ID = 'B2N35FBQKXIOTC5XEOCRVORIYQZHM2IBM';
+
+/** FNV-1a of an id, as operation-service derives a nested invocation's seed. */
+const fnv1a = (id: string): number => {
+  let hash = 2166136261;
+  for (let index = 0; index < id.length; index++) {
+    hash ^= id.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+};
 
 /** The part of a `Trace.Message` JSON the tests read. */
 const SinkMessage = Schema.Struct({
@@ -170,6 +182,21 @@ describe('PluginHost', () => {
       const [first, second] = [await invoke(), await invoke()];
       expect(first).toMatchObject({ ok: true });
       expect(first).toEqual(second);
+    });
+
+    // operation-service derives a nested invocation's seed from the parent's stream, and the parent continues on it.
+    test.fails('an in-process nested operation draws its ids as operation-service does', async ({ expect }) => {
+      const host = makeHost();
+      const idSeed = { time: 1_700_000_000_000, seed: 7 };
+      const nested = await host.invoke({ operationKey: String(Nest.meta.key), input: {} }, {}, { idSeed });
+
+      // The parent mints its pid, then draws the child's seed; the child mints its pid, then the id it returns.
+      EntityId.dangerouslySetSeed(idSeed.time, idSeed.seed);
+      EntityId.random();
+      const childSeed = { time: idSeed.time, seed: fnv1a(EntityId.random()) };
+      EntityId.dangerouslySetSeed(childSeed.time, childSeed.seed);
+      const [, inner, after] = [EntityId.random(), EntityId.random(), EntityId.random()];
+      expect(nested).toEqual({ ok: true, output: { inner, after } });
     });
 
     test('a conversation needs a space, whose database holds it', async ({ expect }) => {
