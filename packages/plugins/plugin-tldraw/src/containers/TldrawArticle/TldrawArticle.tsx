@@ -61,6 +61,8 @@ export const TldrawArticle = ({
       // isTauri allowance (always-on UI) applies only to the full article/slide roles.
       // TODO(wittjosiah): Ensure attention works as expected on the mobile app.
       hideUi={section ? !hasAttention : !hasAttention && !isTauri()}
+      // Attention comes with selection: arrowing onto an embed must leave the arrows to the document.
+      focusContainer={!section}
       onThreadCreate={handleThreadCreate}
       selection={selection}
       onSelectionChange={onSelectionChange}

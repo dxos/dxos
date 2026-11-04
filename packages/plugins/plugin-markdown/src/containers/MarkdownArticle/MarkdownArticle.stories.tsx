@@ -345,6 +345,52 @@ export const EmbedKeyboard: Story = {
   },
 };
 
+/**
+ * Arrowing onto a sketch leaves focus on the embed, so the arrows keep moving through the document.
+ * Enter and a click on the canvas each take focus into the sketch.
+ */
+export const EmbedKeyboardSketch: Story = {
+  args: WithObjects.args,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const embed = await waitFor(
+      () => {
+        const sketch = canvas.getAllByTestId('markdown.embed').find((embed) => embed.querySelector('.tl-container'));
+        invariant(sketch, 'Missing sketch embed.');
+        return sketch;
+      },
+      { timeout: 15_000 },
+    );
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
+    const editor = canvasElement.querySelector<HTMLElement>('.cm-editor');
+    const view = editor && EditorView.findFromDOM(editor);
+    invariant(view, 'Missing editor.');
+    view.dispatch({ selection: { anchor: view.state.doc.toString().indexOf('This is object #3') } });
+    view.focus();
+    await userEvent.keyboard('{ArrowDown}{ArrowDown}');
+    await waitFor(() => expect(document.activeElement).toBe(embed));
+    // The sketch takes attention with the selection; it must not take focus with it.
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    await expect(document.activeElement).toBe(embed);
+    // Still focused as far as tldraw is concerned: the wheel pans the sketch.
+    const sketch = embed.querySelector<HTMLElement>('.tl-container');
+    invariant(sketch, 'Missing sketch.');
+    await expect(sketch).toHaveClass('tl-container__focused');
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(sketch.contains(document.activeElement)).toBe(true));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(document.activeElement).toBe(embed));
+    const tlCanvas = sketch.querySelector<HTMLElement>('.tl-canvas');
+    invariant(tlCanvas, 'Missing sketch canvas.');
+    await userEvent.click(tlCanvas);
+    await waitFor(() => expect(sketch.contains(document.activeElement)).toBe(true));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(document.activeElement).toBe(embed));
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(() => expect(document.activeElement).not.toBe(embed));
+  },
+};
+
 /** The document's Text was deleted: a message stands in for the editor. */
 export const ContentDeleted: Story = {
   args: {

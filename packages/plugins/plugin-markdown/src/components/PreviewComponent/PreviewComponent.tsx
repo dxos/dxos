@@ -90,8 +90,9 @@ export type PreviewComponentProps = WidgetProps<
   } & LinkWidgetState
 >;
 
-/** What Enter on a selected embed moves focus to: the first element inside its surface that takes input. */
-const FOCUSABLE = 'input, textarea, select, [contenteditable="true"], button, [tabindex]:not([tabindex="-1"])';
+/** What Enter on a selected embed moves focus to: the first enabled element inside its surface that takes input. */
+const FOCUSABLE =
+  ':is(input, textarea, select, button):not(:disabled), [contenteditable="true"], [tabindex]:not([tabindex="-1"])';
 
 /**
  * Registry-backed block widget for URL-scheme preview slots (the `image` widget of `objectLinks()`).
