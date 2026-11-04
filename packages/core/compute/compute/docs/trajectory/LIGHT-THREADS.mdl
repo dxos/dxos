@@ -476,6 +476,32 @@ test QA-4: Three subagents compare savings plans
       expect: the agent's comparison table shows each plan's balance after 10, 20 and 30 years
 ```
 
+```mdl
+test QA-5: Fork a chat at an earlier answer
+  desc: A person forks a live Composer chat at its first answer, asks something else there, and merges the fork back.
+  actors: human
+  covers: [F-9.1, F-9.2, F-9.4, F-9.5, F-9.6, T-7]
+  status: draft
+  given:
+    - a Composer chat on the Composer agent
+  steps:
+    - name: Ask two questions on main
+      do: Send "Pick one colour. Reply with the colour only.", then "Pick one animal. Reply with the animal only."
+      expect: two answers on main
+    - name: Fork at the first answer
+      do: Hover the first answer and click its fork button.
+      expect: the chat shows the fork bar and holds only the first question and answer
+    - name: Ask in the fork
+      do: Send "Pick one shape. Reply with the shape only."
+      expect: the fork answers with a shape, and still shows nothing of the animal question
+    - name: Back to main
+      do: Click Back to main.
+      expect: main shows both exchanges and no shape; a fork marker sits under the first answer
+    - name: Merge the fork
+      do: Click the fork marker, then Merge into main.
+      expect: the chat is back on main, and its last message is the fork's conclusion naming the shape
+```
+
 ## Changelog
 
 ```mdl
@@ -896,4 +922,12 @@ decision D-39: Every agent turn still forks a branch of its own, including a tur
   why: A turn on its own branch is what tells the view and the scheduler that it runs and what it wrote; a turn on main would need its messages tied to it by position, beside people's prompts that land on main from other devices.
   rejected:
     - Continue main whenever no other turn runs — the lanes, the light-thread trigger and every turn producer assume a turn has a branch, so it is a change of its own.
+```
+
+```mdl
+decision D-40: `test QA-5` walks forks in a live Composer chat: fork at the first answer, ask in the fork, go back to main, then merge. Fills in [D-37] and [D-38].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9]
 ```
