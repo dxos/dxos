@@ -313,9 +313,11 @@ feat F-9: Claude Code (cloud)
   req F-9.3:
     when: the chat belongs to a project with repositories
     then: |
-      the sandbox checks them out before the agent's first turn, and the agent
-      works in the first one, with the others as additional directories, so it
-      reads the CLAUDE.md, skills and settings of every one of them
+      the sandbox checks them out before the agent's first turn, in the
+      project's order and then the repositories bound to the chat, each once;
+      the agent works in the first one, with the others as additional
+      directories, so it reads the CLAUDE.md, skills and settings of every one
+      of them
 
   req F-9.4:
     when: a chat is switched to Claude Code (cloud) before its first message
@@ -329,6 +331,13 @@ feat F-9: Claude Code (cloud)
       Bypass permissions), each defaulting to Claude Code's default and the
       plugin's permission setting; the choices are fixed once the chat has
       started, and EDGE reports the mode and model the agent actually runs with
+
+  req F-9.6:
+    when: a project's overview is open where an agent host exists
+    then: |
+      the Software group of its Config section holds the project's code
+      folder on this device, below the project's repositories, as a path the
+      user types or, in the desktop app, chooses with the folder picker
 ```
 
 ## Acceptance
@@ -461,10 +470,10 @@ test QA-2: Assign a project task to Claude Code
       expect: Claude is enabled, and the Code plugin with it
     - name: Create a project
       do: Click + on the space, choose Project, name it "Greeter" and save.
-      expect: the project opens on its Overview, which has a "Code folder on this device" section
-    - name: Choose the project's code folder
-      do: Click "Choose folder…" and pick the repository.
-      expect: the folder's path replaces "Not set"
+      expect: the project opens on its Overview, whose Config section has a Software group
+    - name: Set the project's code folder
+      do: Open Software under Config and type the repository's path into "Code folder on this device".
+      expect: the field shows the path, and Software's summary names it while folded
     - name: Add a task
       do: |
         Open Tasks and add "Add a --shout flag to greet.js", described as "With
@@ -711,6 +720,83 @@ decision D-10: Claude Code is offered as "Claude Code" and "Claude Code (EDGE)" 
   why: dxos/dxos#14378 moved delegation from a task's menu into its assignee picker, so the old entries no longer exist.
 ```
 
+```mdl
+decision D-11: This plugin edits a project's repositories, the list plugin-projects keeps as the `Repo.RepositoriesAnnotation`, in the project's settings above the code folder. A cloud session checks out the project's repositories in their order, then the repositories bound to the chat, each once.
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.3, F-9.6]
+  why: The project's form no longer has a repositories field, and cloud sessions are what the list is for. The code folder's description already points at the repositories above it.
+  rejected:
+    - The editor in plugin-github, which would make plugin-github depend on plugin-projects for its settings surface while plugin-projects' stories depend on plugin-github.
+```
+
+```mdl
+decision D-12: Agents get an operation in this plugin that writes a project's repositories, and the GitHub skill points at it.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-9.7]
+```
+
+```mdl
+decision D-13: The operation is Update Project Repositories, which appends the repositories given in `add`, removes those in `remove`, and returns the list; with neither it only reads. A repository already listed keeps its place, compared by entity id. It is the one tool of the Project Repositories skill (`org.dxos.skill.claude.repositories`), which an agent can enable, and the GitHub skill names that skill by key. Fills in [D-12].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.7]
+  why: An agent rarely knows the whole list, so it edits by adding and removing rather than replacing. Naming the skill by key keeps plugin-github from importing this plugin. The Claude Agents skill is about managed agents, not a project's coding agents.
+  rejected:
+    - Replacing the whole list, which loses a repository the user added while the agent worked.
+    - Adding the tool to the GitHub skill, which would make plugin-github depend on this plugin.
+```
+
+```mdl
+decision D-14: The repositories and the code folder are the Software group of the project overview's Config section, declared as `ProjectCapabilities.ConfigGroup` fields: the repositories as the project's annotation, the code folder as this plugin's local state, shown only where an agent host exists. The folder is a typed path, and the desktop app's folder picker goes. Refines where [D-11] put the list.
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.6]
+  why: plugin-projects D-160 asks for groups as schema and data with no UI of a plugin's own, and the form has no folder picker. Both fields come from this plugin, so it declares the group.
+  rejected:
+    - plugin-code declaring Software, which owns neither field.
+    - Keeping the folder picker as a custom field, which plugin-projects D-160 rules out.
+```
+
+```mdl
+decision D-15: The desktop app keeps its folder picker for the code folder in the Software group, for compatibility. Reverses the part of [D-14] that drops the picker.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-9.6]
+```
+
+```mdl
+decision D-16: The code folder field carries a field action, shown only in the desktop app, that opens the system's directory dialog at the current folder and returns the chosen path; a cancelled or failed dialog keeps the current value. The path stays editable as text. Fills in [D-15].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.6]
+  why: A field action is data the overview's form renders, so the group keeps to plugin-projects D-160. The web app has no directory dialog, so there the folder stays a typed path.
+  rejected:
+    - Replacing the text control with the picker, which leaves the web app and a pasted path with no way in.
+```
+
+```mdl
+decision D-17: The repositories operation, its skill and the Software group's repositories field belong in plugin-code, where a project's software extensions are. This plugin keeps the code folder in that group, below the repositories, and depends on plugin-code, so enabling Claude enables Code.
+  date: 2026-11-03
+  by: user:wittjosiah
+  supersedes: D-12
+  affects: [F-9.6, F-9.7]
+```
+
+```mdl
+decision D-18: The dependency is the `dependsOn` this plugin already declares on plugin-code, which the plugin manager enables first. The code folder field sorts after the repositories by its field order, and F-9.7 moves to plugin-code as its F-23.2. Fills in [D-17]; replaces where [D-13] and [D-14] put the operation, the skill and the repositories field.
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.6, F-9.7]
+  why: Fields from two plugins in one group keep plugin load order, which puts this plugin's ahead of plugin-code's.
+```
+
 ## Appendix: Extension Definitions
 
 ```mdl
@@ -744,3 +830,4 @@ ext scenario
     then: Step | Step[]
     tags?: TagList
 ```
+

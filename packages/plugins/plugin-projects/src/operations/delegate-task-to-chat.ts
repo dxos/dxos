@@ -119,7 +119,6 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         // chat under the project rather than the space root.
         if (project) {
           Chat.linkCompanion({ chat, subject: project });
-          Chat.seedSession(chat, project.session);
           // The project's instructions say how its tasks are worked; the binding below brings their skills
           // and context, but only the chat's own `instructions` ref reaches the system prompt.
           if (project.instructions) {

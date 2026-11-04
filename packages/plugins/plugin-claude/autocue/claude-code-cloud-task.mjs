@@ -209,7 +209,8 @@ export const steps = [
         },
         { spaceId, repository: REPOSITORY },
       );
-      await demo.click({ text: 'Checked out for coding agents that run in the cloud.', label: 'Repositories' });
+      await demo.click({ selector: '[data-testid="projectsPlugin.config.software.disclosure"]', label: 'Software' });
+      await demo.click({ text: 'Checked out for coding agents that run in the cloud', label: 'Repositories' });
       const option = `[data-scope="combobox"][role="option"]:has-text("${REPOSITORY.split('/')[1]}")`;
       await page.locator(option).first().waitFor({ timeout: 10_000 });
       await demo.click({ selector: option, label: REPOSITORY });
@@ -221,7 +222,9 @@ export const steps = [
             .spaces(spaceId)
             .db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.project')))
             .run();
-          return (projects.findLast((project) => project.name === title)?.repositories ?? []).length;
+          const project = projects.findLast((project) => project.name === title);
+          return (project ? (dxos.Obj.getMeta(project).annotations['org.dxos.annotation.repositories'] ?? []) : [])
+            .length;
         },
         { spaceId, title: PROJECT_TITLE },
       );

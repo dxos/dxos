@@ -62,6 +62,28 @@ feat F-4: A project's specs
               and the list's `+` creates a spec, its row open for the name.
 ```
 
+```mdl
+feat F-5: A project's overview
+  req F-5.1: The overview opens on the project's name as its title, its status as a pill in the top right corner and
+             its description below, each edited in place with no edit button. The name and description start at the
+             same left edge as the section headings. The pill shows the status's capitalized name in its colour.
+  req F-5.2: Below the header the sections are, in order: Notes, Artifacts, Milestones, Specs and Config, with more
+             space between two sections than between the rows inside one. Every section's content starts and ends on
+             the same left and right edges as its heading.
+  req F-5.3: Artifacts shows at most six, and Show all shows the rest.
+  req F-5.4: Each milestone shows how many of its tasks are done out of those not cancelled, and opens the Tasks tab
+             filtered to the tasks under it.
+  req F-5.7: The Specs heading carries the add button on its own row, and each spec is a row directly under it at the
+             same level of nesting as a Config group.
+  req F-5.5: Config holds folded groups, each showing a summary of what it holds until it is opened: first Agent (the
+             instructions, skills and context), then the groups other plugins declare.
+  req F-5.6: A plugin declares a group with `ProjectCapabilities.ConfigGroup`: its fields are each a schema and a
+             writable atom holding the project's value, which the overview's form renders and writes with no UI of the
+             plugin's own. Groups with the same id merge, their fields sorted by each field's order, and a field
+             whose `enabled` atom is false is hidden. A field may carry an action, a button at the end of its control
+             that sets its value.
+```
+
 ## QA
 
 Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an invocable
@@ -1642,4 +1664,290 @@ decision D-153: The migration takes the first person among a task's reviewers, d
   why: The assignee of a delegated task signs it off ([D-124]), so a second person reviewing a person's own task has no field to go to.
   rejected:
     - Chaining 0.5.0 through a frozen 0.6.0 type, which would make the hierarchy and set passes check for two task versions.
+
+decision D-154: A project's two repository fields, `repo` and `repositories`, become one list of repositories.
+  date: 2026-11-03
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-155: The project's repositories are the `Repo.RepositoriesAnnotation` on it, an ordered list of repository refs defined beside `Repo`, and `Project` 0.8.0 has no repository field. The first repository takes over `repo`'s role: bare issue numbers resolve against it, and a cloud coding agent starts in it. plugin-claude renders the list in the project's settings. Fills in [D-154] and [D-45].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: This plugin is on by default and must migrate every project, so it writes the annotation and has to import it. plugin-github and plugin-claude are not on by default, and either one importing the other's annotation would make one depend on the other.
+  rejected:
+    - The annotation in plugin-github, which syncs repositories and resolves issue numbers. A space without plugin-github would keep its projects at 0.7.0, and plugin-claude would depend on plugin-github to check repositories out.
+    - The annotation in plugin-claude, which checks repositories out. plugin-github would depend on plugin-claude to resolve an issue number.
+    - Keeping one `repositories` field on `Project`, which leaves a coding concept in the type every project has.
+```
+
+```mdl
+decision D-156: `Project` drops `session`, so delegating a task no longer seeds the chat's session config from its project. Fills in [D-154].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: Nothing in the app wrote the field, and delegating a task was its only reader.
+  rejected:
+    - An annotation plugin-assistant owns for a per-project session default. It waits until a person wants that default and decides where it is edited.
+```
+
+```mdl
+decision D-157: The `Project` 0.7.0 migration moves `repo` and then `repositories` into the annotation, each repository once, and drops `session`. It runs after the 0.6.0 migration, and plugin-code lists both in that order before its spec migrations. Fills in [D-103] and [D-155].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: `repo` was the repository a project named first, and plugin-code's spec migrations recognize a spec's owner only as a current `Project`.
+```
+
+```mdl
+decision D-158: The project overview puts the most-used parts first: the name and description, then Notes, Artifacts, Milestones and Specs, then a Config section at the bottom. Artifacts stays a masonry but shows a limited number, with Show all once there are more; Show all should open a companion that lists every artifact, which is a to-do.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.2, F-5.3]
+```
+
+```mdl
+decision D-159: Config is a section like Milestones and Specs. Agent and Software are groups within it, each folded by default, and another plugin contributes Software, since the repositories come from an annotation.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.5]
+```
+
+```mdl
+decision D-160: A plugin contributes a group as schema and data only, with no UI of its own: the form's existing fields render it.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.6]
+```
+
+```mdl
+decision D-161: The project's name and description are edited in place, not behind an edit button.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.1]
+```
+
+```mdl
+decision D-162: A group is a `ProjectCapabilities.ConfigGroup` (id, label, order, fields), and each field a key, a schema and a function from the project to a writable atom, with an optional `enabled` atom. The overview renders a group's fields as one nested form over a struct of their schemas and writes an edit through the field's atom; contributions with one id merge, and the project's own group is `agent`. This replaces the `ProjectSurface.Settings` surface. Fills in [D-159] and [D-160].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.5, F-5.6]
+  why: A writable atom hides where a value lives, so an annotation on the project and state kept on one device are the same kind of field, and the form needs no knowledge of either.
+  rejected:
+    - A surface per group, which needs the contributor's own UI and lets only one plugin fill a group.
+    - A capability declaring the group and surfaces filling it, which still needs the contributor's own UI.
+    - Fields that name an annotation, which cannot hold a value kept on one device, such as a code folder.
+```
+
+```mdl
+decision D-163: The status sits beside the name in a four-column row, and neither shows a label. react-ui-form's field override gains `appearance`: `title` renders a text field in react-ui's new `title` input variant, and `plain` drops the input's well, as the description does. The Specs list heads its own section, and its list keeps "Specs" as its accessible name. Fills in [D-161].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.1]
+  why: The override says how one use of a field reads, which the schema cannot, and react-ui-form takes no classes of its own.
+```
+
+```mdl
+decision D-164: The overview shows six artifacts, and Show all shows the rest in place until the companion exists. Fills in [D-158].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.3]
+  why: Six fills two rows of the masonry at a plank's usual width.
+```
+
+```mdl
+decision D-165: A folded group's summary counts each list, quotes each text and skips what is empty. Fills in [D-159].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.5]
+  why: The counts are what tell a reader whether a group is worth opening.
+```
+
+```mdl
+decision D-166: A milestone's progress counts the tasks of the level the overview shows, not every task in the project. Fills in [D-158].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.4]
+  why: The overview already narrows to its level, and its Tasks tab lists the same tasks.
+```
+
+```mdl
+decision D-167: The project's status is shown as a pill in the top right corner of the overview, using the form's pill presentation.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.1]
+```
+
+```mdl
+decision D-168: The project's name and description line up with the headings of the overview's sections (Notes, Artifacts, Specs).
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.1]
+```
+
+```mdl
+decision D-169: The status pill is required, so it offers no "None", and it sits at the end of the name's row. Supersedes the four-column row of [D-163]. Fills in [D-167].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.1]
+  why: A project always has a status, and the name takes the rest of the row so a long name never pushes the pill.
+```
+
+```mdl
+decision D-170: react-ui's Input and Textarea gain a `plain` variant with no well and no inline inset, and `title` drops the inset too; the form's `plain` and `title` appearances use them. Fills in [D-168].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.1]
+  why: The inset was what pushed the text right of the headings, and react-ui-form takes no classes of its own.
+  rejected:
+    - Insetting the section headings to match, which would misalign them with every other form.
+```
+
+```mdl
+decision D-171: Each project status has a colour, and its name is capitalized wherever the UI shows it.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.1]
+```
+
+```mdl
+decision D-172: The gap between two of the overview's sections is wide enough that Artifacts, Milestones, Specs and Config never read as cramped together.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.2]
+```
+
+```mdl
+decision D-173: The Specs add button sits on the Specs heading's row, so no gap opens between the heading and the specs, and the specs line up with the Config groups at the same level of nesting.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.7]
+```
+
+```mdl
+decision D-174: The overview keeps one consistent edge down its left side and its right side.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.2]
+```
+
+```mdl
+decision D-175: `Project`'s schema annotates its status with an option table, as `Task` does: Active in green, Paused in amber, Blocked in rose and Ended in neutral, each with an icon. The form's pill takes the title, icon and hue from it. Fills in [D-171].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.1]
+  why: The form already reads option titles and hues from the schema, so every picker and pill of the status agrees with no code in the plugin.
+  rejected:
+    - Translations for the names, which the form's select does not read, and which would leave the colours in plugin code.
+```
+
+```mdl
+decision D-176: A form section after another leaves three gaps above its heading, where rows inside a section leave one. A description edited in place is as tall as its text rather than three lines. Fills in [D-172].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.2]
+  why: The rule lives on the section heading, so every form with sections gets the same rhythm without spacing of its own.
+```
+
+```mdl
+decision D-177: react-ui-form's field override takes `appearance: 'section'` for an array, which renders the array as a section of its own with its label as the heading and its add button in the heading's actions. A form's array rows drop the list row's leading inset, so a row's fields start on the section's edge. Fills in [D-173] and [D-174].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.7]
+  why: Wrapping the list in another section left the list's own header row, add button and all, under the section's heading.
+  rejected:
+    - The add button in a section's actions, written by the plugin, which would duplicate how the form creates an owned object.
+```
+
+```mdl
+decision D-178: The overview's Notes section shows no description; once the notes have content it only takes up space.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.2]
+```
+
+```mdl
+decision D-179: Opening a milestone from the overview shows the Tasks tab filtered to that milestone's tasks.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.4]
+```
+
+```mdl
+decision D-180: A milestone row ends in an open button, on the right edge where a spec row's buttons sit, and the filter is the task list's own milestone filter (its per-device view state), which keeps a task by its effective milestone and keeps the ancestors of a match. Fills in [D-179].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.4]
+  why: A button on the row's right edge keeps the name on the headings' left edge, and react-ui exports no in-app link. The effective milestone is the one the row's progress counts, so the filtered list holds the tasks the count names. A filter the task list owns can be changed or cleared from its own toolbar.
+  rejected:
+    - The whole row as a ghost button, whose inset moves the row off the headings' left edge.
+    - A `milestone:` term in the list's query, since a query value cannot name a milestone by reference and a milestone's name can hold spaces.
+    - Grouping the list by milestone, which shows every milestone rather than the one opened.
+```
+
+```mdl
+decision D-181: A config field may carry an action: a label, an icon and a function from the field's value to its new value. The form renders it as a button at the end of the field's text control and writes the value it returns, so a plugin keeps a picker, such as plugin-claude's folder picker, without UI of its own. Fills in [D-160].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.6]
+  why: An action is data the form renders, so [D-160] holds. The function returns a value and leaves the write to the form, so the field's atom stays the one write path.
+  rejected:
+    - A custom field component from the plugin, which [D-160] rules out.
+    - A function that writes the atom itself, which gives the field a second write path.
+```
+
+```mdl
+decision D-182: A config field has an `order`, and a group's fields sort by it, those with equal orders keeping contribution order. Fills in [D-159].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.6]
+  why: Contribution order follows plugin load order, which would put plugin-claude's code folder above plugin-code's repositories in Software.
+```
+
+```mdl
+decision D-183: react-ui-form's field `appearance` folds into its presentation. `title`, `plain` and `section` are presentations, a field override takes a `presentation` of its own in place of the form's layout, and `title` and `plain` hide the field's label, so the overview's name and description no longer hide theirs separately. Replaces the `appearance` of [D-163], [D-170] and [D-177].
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.1]
+```
+
+```mdl
+decision D-184: An override's presentation applies to its field alone, so an object's or an array's nested fields keep the form's layout. `section` on a field other than an array shows it as `compact`. Fills in [D-183].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.1]
+  why: An array shown as a section holds rows that are ordinary fields, and a section has no meaning for a scalar, whose label and control `compact` already show.
+```
+
+```mdl
+decision D-185: plugin-code, not plugin-claude, renders a project's repositories, in the overview's Software group, and plugin-claude adds only the code folder there. Replaces the plugin-claude rendering of [D-155].
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.6]
+```
+
+```mdl
+decision D-186: `Project.status` stays optional, so a project made without one, or migrated without one, shows an empty pill until a status is picked. The pill offers no "None", so a status once picked is never cleared. Corrects the rationale of [D-169].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.1]
+  why: A default status would need a schema change and a migration for every existing project, and an empty pill already reads as unset.
+  rejected:
+    - Defaulting `status` to `active` in `Project.make` and the migration, which writes a status to every project nobody chose one for.
 ```

@@ -21,12 +21,13 @@ export type FormFieldPresentation = {
 /**
  * Derive the {@link FormFieldPresentation} for a layout.
  * - `static` renders read-only plain DOM.
- * - `inline` and `pill` drop the label (the control stands alone, e.g. an array row, or a pill naming its field).
+ * - `inline`, `pill`, `title` and `plain` drop the label (the control stands alone, e.g. an array row, a pill naming
+ *   its field, or a heading edited in place).
  * - `full` adds the inline error block.
  */
 export const presentationFor = (layout?: FormPresentation): FormFieldPresentation => ({
   layout,
   isStatic: layout === 'static',
-  showLabel: layout !== 'inline' && layout !== 'pill',
+  showLabel: layout !== 'inline' && layout !== 'pill' && layout !== 'title' && layout !== 'plain',
   showError: layout === 'full',
 });

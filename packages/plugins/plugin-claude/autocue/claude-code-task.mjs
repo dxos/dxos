@@ -22,7 +22,6 @@ import { join } from 'node:path';
  * the driver's environment to another mode (`default` asks before every edit and command) and the take opens by
  * choosing it in the Code plugin's settings.
  *
- * The native folder picker cannot be driven, so the flow writes the demo repository where the picker's choice goes.
  * Step 1 rebuilds that repository, so every take starts from the same commit; `--fresh on` clears the worktrees
  * earlier takes left in the test build's data folder.
  */
@@ -235,33 +234,18 @@ export const steps = [
     },
   },
   {
-    name: "Choose the project's code folder on this computer",
+    name: "Set the project's code folder on this computer",
     run: async ({ demo, page }) => {
       await demo.caption({
-        value: "Choose the project's code folder",
+        value: "Set the project's code folder",
         subtitle: 'Kept on this device only; each delegated task gets its own git worktree of it',
       });
-      // Stands in for the native picker, which nothing can drive: its choice goes where the picker's would, the
-      // plugin's local state.
-      await demo.hover({ selector: 'button:has-text("Choose folder")' });
-      await page.evaluate(
-        async ({ title, folder }) => {
-          const spaceId = document.querySelector('[data-testid="spacePlugin.space"]').dataset.value.split('/').pop();
-          const projects = await dxos
-            .spaces(spaceId)
-            .db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.project')))
-            .run();
-          const project = projects.findLast((project) => project.name === title);
-          const { manager } = composer;
-          const [state] = manager.capabilities.getAll({ identifier: 'org.dxos.plugin.code.capability.state' });
-          manager.registry.update(state, ({ repositories = {}, ...rest }) => ({
-            ...rest,
-            repositories: { ...repositories, [project.id]: folder },
-          }));
-        },
-        { title: PROJECT_TITLE, folder: REPOSITORY },
-      );
-      await page.locator('[data-testid="deck.plank"]').getByText(REPOSITORY).first().waitFor();
+      const software = '[data-testid="projectsPlugin.config.software"]';
+      await demo.click({ selector: `${software} button[aria-label="Software"]`, label: 'Software' });
+      const folder = `${software} input[data-testid="folder"]`;
+      await demo.click({ selector: folder, label: 'Code folder on this device' });
+      await page.locator(folder).first().fill(REPOSITORY);
+      await page.locator(folder).first().press('Enter');
       await page.waitForTimeout(LINGER);
     },
   },

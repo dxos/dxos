@@ -68,6 +68,8 @@ export const translations = [
         'filter-status.label': 'Filter by status',
         'filter-status-all.label': 'Show all statuses',
         'filter-status-none.label': 'Hide all statuses',
+        'filter-milestone.label': 'Filter by milestone',
+        'filter-milestone-all.label': 'Show all milestones',
         'sort.label': 'Order by',
         'sort-manual.label': 'Manual',
         'sort-status.label': 'Status',
