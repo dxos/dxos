@@ -1777,3 +1777,11 @@ decision D-74: A Dynamic Worker is given only the files the `workerd` modules, t
   affects: [F-1.4, F-6.3]
   why: The isolate holds every module it is given; shipping browser-only bodies put presenter's 49 MB of UI code against the isolate's 128 MB heap and the 20 s activation limit.
 ```
+
+```mdl
+decision D-75: An operation that writes a type its plugin does not contribute lists that type in `Operation.make({ types })`, which the host registers before the handler runs; `db.add` of an unregistered type fails with `Schema not registered`, with or without a type source. plugin-agent's `agent.create`, which writes plugin-assistant's `Instructions`, `Agent` and `Chat`, is the first case. Fills in [D-41] and [D-46].
+  date: 2026-11-04
+  by: user:dmaretskyi
+  affects: [F-3.4]
+  why: The operation states what it writes where it is defined, and `db.add` stays synchronous and independent of the type registry. Rejected: registering an added object's own static type in `db.add` whenever a type source is installed, which hides a missing declaration in every plugin running on EDGE.
+```

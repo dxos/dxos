@@ -71,6 +71,7 @@ export default {
  *
  * With a data plane its `DataService` entrypoint is the bundle's `DATA_SERVICE`, relaying each call to Node as JSON with
  * bytes in base64; it answers every query with no rows, since the data plane keeps no index.
+ * Its `QueueService` is the bundle's `QUEUE_SERVICE`, holding feeds in memory.
  */
 const LOADER_HOST = `
 import { RpcTarget, WorkerEntrypoint } from 'cloudflare:workers';
@@ -96,6 +97,30 @@ export class DataService extends WorkerEntrypoint {
   createDocument(_ctx, spaceId, initialValue) { return relay(this.env, 'createDocument', [spaceId, initialValue]); }
   changeDocument(_ctx, spaceId, documentId, changes) { return relay(this.env, 'changeDocument', [spaceId, documentId, changes]); }
   execQuery(_ctx, _request) { return { results: [], objects: [] }; }
+}
+
+// The feeds an invocation appends to (an agent's chat feed, say), kept for the host's lifetime; EDGE's queue service
+// orders and indexes them, which no bundle test relies on.
+const feeds = new Map();
+const feedKey = (spaceId, feedId) => spaceId + '/' + feedId;
+
+export class QueueService extends WorkerEntrypoint {
+  queryQueue(_ctx, { query }) {
+    const keys = (query.feedIds ?? []).map((feedId) => feedKey(query.spaceId, feedId));
+    const objects = keys.flatMap((key) => feeds.get(key) ?? []);
+    return { objects: query.reverse ? objects.reverse() : objects, nextCursor: '', prevCursor: '' };
+  }
+  insertIntoQueue(_ctx, { spaceId, feedId, objects }) {
+    const key = feedKey(spaceId, feedId);
+    feeds.set(key, [...(feeds.get(key) ?? []), ...(objects ?? [])]);
+    return {};
+  }
+  deleteFromQueue(_ctx, { spaceId, feedId, objectIds }) {
+    const key = feedKey(spaceId, feedId);
+    const removed = new Set(objectIds ?? []);
+    feeds.set(key, (feeds.get(key) ?? []).filter((object) => !removed.has(JSON.parse(object).id)));
+    return {};
+  }
 }
 
 export class TypeRegistry extends WorkerEntrypoint {
@@ -213,7 +238,7 @@ export const loadBundle = async (
         ? {
             DATA_PLANE: (request: Request) => serveDataPlane(dataPlane, request),
             DATA_SERVICE: { name: LOADER_HOST_NAME, entrypoint: 'DataService' },
-            QUEUE_SERVICE: { name: LOADER_HOST_NAME, entrypoint: 'Unavailable' },
+            QUEUE_SERVICE: { name: LOADER_HOST_NAME, entrypoint: 'QueueService' },
             FUNCTIONS_AI_SERVICE: { name: LOADER_HOST_NAME, entrypoint: 'Unavailable' },
           }
         : {}),
