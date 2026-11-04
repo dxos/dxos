@@ -206,7 +206,7 @@ const delegate = async (demo, page, titles) => {
   for (const title of titles) {
     await demo.click({ selector: `${taskRow(title)} >> [data-testid="taskList.item.checkbox"]`, label: title });
   }
-  await demo.click({ selector: '[data-testid="projectsPlugin.delegateTasks"]', label: 'Assign to agent' });
+  await demo.click({ selector: '[data-testid="projectsPlugin.delegateTasks"]', label: 'Delegate to agent' });
   await page.getByTestId('projectsPlugin.pipeline.chart').first().waitFor({ state: 'visible', timeout: 30_000 });
 };
 

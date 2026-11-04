@@ -6,10 +6,8 @@ import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { generateName } from '@dxos/display-name';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { useMembers } from '@dxos/halo-react';
 import { Form, useFormContext, useSubmitOnEnter } from '@dxos/react-ui-form';
 import { ActionMenu } from '@dxos/react-ui-menu';
 import { TaskHistory, TaskProperties, TaskQuestion, TaskTags } from '@dxos/react-ui-task';
@@ -24,7 +22,13 @@ import { Task } from '@dxos/types';
 
 import { TaskOperation } from '#types';
 
-import { useMarkdownExtensions, useTaskActions } from '../../hooks/index.ts';
+import {
+  useDelegateActions,
+  useMarkdownExtensions,
+  useTaskActions,
+  useTaskMembers,
+  useTaskUpdate,
+} from '../../hooks/index.ts';
 import { TasksNamespace } from '../../namespace.ts';
 import { TaskArtifacts } from './TaskArtifacts.tsx';
 import { TaskAttachmentDropZone, TaskAttachments, useAttachFiles } from './TaskAttachments.tsx';
@@ -51,11 +55,7 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
   const spaceId = Obj.getDatabase(task)?.spaceId;
   const descriptionExtensions = useMarkdownExtensions(task);
 
-  const handleUpdate = Hooks.useOperation(
-    TaskOperation.UpdateTask,
-    (task: Task.Task, props: Task.Edit) => ({ task: Ref.make(task), ...props }),
-    { spaceId },
-  );
+  const handleUpdate = useTaskUpdate(spaceId);
   const { onFiles: handleAttach, pending: pendingAttachments } = useAttachFiles(task);
 
   // The task as plain values for the form; the article's other parts read the live task.
@@ -72,7 +72,7 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
         patch.description = values.description;
       }
       if (Object.keys(patch).length > 0) {
-        handleUpdate(task, patch);
+        void handleUpdate(task, patch);
       }
     },
     [task, handleUpdate],
@@ -88,23 +88,9 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
   // The property, not the whole task: subscribing to the object itself would hand the article a
   // snapshot in place of the live task.
   const [history] = useObject(task, 'history');
-  // Everyone in the space, the owner included, as assignees the picker can offer by identity.
-  const spaceMembers = useMembers(Obj.getDatabase(task)?.spaceId);
-  const members = useMemo(
-    () =>
-      spaceMembers.flatMap((member) =>
-        member.did
-          ? [
-              {
-                did: member.did,
-                // A member with no profile name gets the generated one the rest of the app shows for it.
-                name: member.displayName ?? (member.identityKey ? generateName(member.identityKey) : undefined),
-              },
-            ]
-          : [],
-      ),
-    [spaceMembers],
-  );
+  const members = useTaskMembers(spaceId);
+  const getDelegateActions = useDelegateActions();
+  const delegateActions = useMemo(() => getDelegateActions(task), [getDelegateActions, task]);
 
   // Open questions only: an answered one is a line in the activity below.
   const openQuestions = useMemo(() => Task.getQuestions(history ?? []).filter(({ answer }) => !answer), [history]);
@@ -153,7 +139,12 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
                 {/* The task's own fields, under what it says: they are properties of the task, so
                   they read after the description rather than as chrome above it — and with the
                   room a pane has, each says what its glyph means. */}
-                <TaskProperties task={task} members={members} onTaskUpdate={handleUpdate} />
+                <TaskProperties
+                  task={task}
+                  members={members}
+                  delegateActions={delegateActions}
+                  onTaskUpdate={handleUpdate}
+                />
 
                 {/* Headed like the sections around it, and only when something is waiting: a
                   standing "Questions" label over nothing says the pane expects them, when what a

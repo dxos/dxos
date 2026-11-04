@@ -16,6 +16,8 @@ import { type TaskMember, TaskProperties } from './TaskProperties.tsx';
 
 const SESSION_TITLE = 'Show agent assignees by session name';
 
+const AGENT_NAME = 'Claude Code';
+
 /** A coding agent's actor: an assistant standing for its harness session rather than a person. */
 const makeAgent = (): Actor.Actor => {
   const session = RemoteSession.make({
@@ -65,7 +67,7 @@ export const Default: Story = {
 
 /**
  * A task a coding agent has picked up: the assignee is its session, so both the pill and the property
- * row name the session and carry the harness's mark — never a bare "Agent" — and the picker lists the
+ * row name the agent by its harness, not the session's title, and carry the harness's mark; the picker lists the
  * agent as the checked entry, so the reader can see who holds the task before switching it away.
  */
 export const TestAgentAssignee: Story = {
@@ -75,8 +77,8 @@ export const TestAgentAssignee: Story = {
   },
   play: async ({ canvasElement }) => {
     const property = () => canvasElement.querySelector<HTMLElement>('[data-testid="taskList.property.assignee"]');
-    await waitFor(() => expect(property()).toHaveTextContent(SESSION_TITLE), { timeout: 10_000 });
-    await expect(property()).not.toHaveTextContent('Agent');
+    await waitFor(() => expect(property()).toHaveTextContent(AGENT_NAME), { timeout: 10_000 });
+    await expect(property()).not.toHaveTextContent(SESSION_TITLE);
     // Awaited: the icon's `href` is set once the registry has fetched the glyph.
     await waitFor(() => expect(property()?.querySelector('svg use')?.getAttribute('href')).toContain('anthropic'));
 
@@ -88,7 +90,7 @@ export const TestAgentAssignee: Story = {
     const agentItem = () => document.querySelector<HTMLElement>('[data-testid="taskList.assignee.current"]');
     await waitFor(() => expect(agentItem()).toBeTruthy(), { timeout: 10_000 });
     await expect(agentItem()).toHaveAttribute('aria-checked', 'true');
-    await expect(agentItem()).toHaveTextContent(SESSION_TITLE);
+    await expect(agentItem()).toHaveTextContent(AGENT_NAME);
   },
 };
 

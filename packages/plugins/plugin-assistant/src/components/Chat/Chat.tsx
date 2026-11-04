@@ -35,7 +35,7 @@ import {
   useFeedModel,
 } from '@dxos/react-ui-feed';
 import { ActionToolbar, type ActionToolbarProps, createMenuAction } from '@dxos/react-ui-menu';
-import { TaskList, TaskQuestion } from '@dxos/react-ui-task';
+import { type TaskColumn, TaskList, TaskQuestion } from '@dxos/react-ui-task';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Toast from '@dxos/react-ui/Toast';
@@ -910,6 +910,8 @@ const CHAT_TASK_LIST_NAME = 'Chat.TaskList';
 /** Rows the chat's checklist shows before it scrolls. */
 const CHAT_TASK_ROWS = 4;
 
+const CHAT_TASK_COLUMNS: readonly TaskColumn[] = ['gutter', 'status', 'title', 'priority', 'estimate', 'actions'];
+
 const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
   const { chat, event } = useChatContext(CHAT_TASK_LIST_NAME);
   const { t } = UiHooks.useTranslation(AssistantNamespace.key);
@@ -945,7 +947,7 @@ const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
   );
 
   const handleUpdate = useCallback((task: Task.Task, patch: Task.Edit) => {
-    Task.update(task, patch);
+    Task.update(task, patch, { approve: true });
   }, []);
 
   // Execution is a prompt, not a direct write: the agent owns the task's lifecycle (assignment,
@@ -988,10 +990,9 @@ const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
       tasks={tasks}
       showGroupLabels={false}
       showOrdinals
-      showEstimates
       // The prompt frames the list, and its rows are too narrow for who holds a task or its mnemonic.
       flush
-      showAssignees={false}
+      columns={CHAT_TASK_COLUMNS}
       showMnemonics={false}
       onTaskCreate={handleCreate}
       onTaskUpdate={handleUpdate}
@@ -1007,7 +1008,7 @@ const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
             happened, so the answer is given here rather than in a pane the reader has to open. */}
         <ChatTaskQuestions tasks={tasks} />
         {/* Only creates: a task is changed through its own row controls, not by selecting it into the strip. */}
-        <TaskList.Editor createOnly />
+        <TaskList.Editor createOnly inline />
       </div>
     </TaskList.Root>
   );

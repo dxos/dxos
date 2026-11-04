@@ -61,7 +61,7 @@ describe('projects plugin bundle on EDGE', { timeout: 300_000 }, () => {
   });
 
   // `projects.create` adds its graph through `space.addObject` in the space plugin's bundle, and needs the project back
-  // as a live object of its own database, as the in-process call returns it (EDGE-PLUGINS D-64).
+  // as a live object of its own database, as the in-process call returns it (EDGE-PLUGINS D-71).
   test('creates a project through the space plugin in another bundle', async ({ expect }) => {
     const result = await projects.invoke({ operationKey: CREATE_PROJECT, spaceId, input: { name: 'Launch' } });
     expect(result.ok ? result.output : result.error.message).toMatchObject({

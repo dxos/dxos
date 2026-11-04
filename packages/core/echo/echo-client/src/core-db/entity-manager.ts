@@ -328,6 +328,15 @@ export class EntityManager implements IDatabaseBinding {
     return this._linksAddedEvent;
   }
 
+  get lifetimeEnded(): ReadOnlyEvent<void> {
+    return this.#lifetimeEnded;
+  }
+
+  /** Whether a close has begun, so the working set and the space root handle are no longer readable. */
+  get isClosing(): boolean {
+    return this.#closing;
+  }
+
   // ── Lifecycle ────────────────────────────────────────────────────────────
 
   /**

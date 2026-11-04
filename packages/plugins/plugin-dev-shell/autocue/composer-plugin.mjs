@@ -484,7 +484,7 @@ export const steps = [
       });
       await demo.click({
         selector: '[data-testid="projectsPlugin.delegateTasks"]',
-        label: 'Assign selected tasks to agent',
+        label: 'Delegate selected tasks to agent',
       });
     },
   },

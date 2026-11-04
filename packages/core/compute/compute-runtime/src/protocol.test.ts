@@ -388,7 +388,7 @@ const scheduleWith = async (
  * the EDGE bindings — so the runtime builds its own client and graph exactly as the worker does.
  */
 // A bundle's nested call to another plugin's operation sends the objects in its input as references (EDGE-PLUGINS
-// D-64); where the operation's schema takes a live object, the callee loads it.
+// D-71); where the operation's schema takes a live object, the callee loads it.
 describe('object references in the input', () => {
   const Note = Type.makeObject(DXN.make('com.example.type.note', '0.1.0'))(Schema.Struct({ title: Schema.String }));
 

@@ -17,7 +17,7 @@ export default Capability.makeModule(() =>
     const settingsAtom = KvsStore.make({
       key: ProjectsNamespace.key,
       schema: Settings.Settings,
-      defaultValue: () => ({ showTaskDescriptions: true }),
+      defaultValue: () => ({ showTaskDescriptions: false }),
     });
 
     return [

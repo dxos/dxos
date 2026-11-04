@@ -119,7 +119,7 @@ describe('space plugin bundle on EDGE', { timeout: 180_000 }, () => {
     expect(outputOf(result)).toMatchObject({ failed: expect.stringContaining('Schema not found') });
   });
 
-  // Workers RPC clones none of a live object's properties, so the host returns its JSON form (EDGE-PLUGINS D-59).
+  // Workers RPC clones none of a live object's properties, so the host returns its JSON form (EDGE-PLUGINS D-66).
   test('returns an ECHO object in its JSON form, with its `@uri`', async ({ expect }) => {
     const result = await bundle.invoke({
       operationKey: ADD_OBJECT,
