@@ -387,12 +387,13 @@ const buildGridTemplate = ({
     [undefined, toggle ? 'var(--dx-half-block-size)' : '0px'],
     // Fixed rather than `auto`, so the edit pane, which leaves it empty, keeps the rows' width for it.
     gutter > 0 && ['gutter', `calc(${gutter} * var(--dx-block-size))`],
-    ['priority', 'var(--dx-block-size)'],
     ['status', 'var(--dx-block-size)'],
     ['title', 'minmax(0, 1fr)'],
     ['artifacts', 'auto'],
     // Kept, at no width, when hidden: the description spans `title / assignee` and so needs the line.
     ['assignee', showAssignees ? 'var(--dx-block-size)' : '0px'],
+    ['priority', 'var(--dx-block-size)'],
+    ['estimate', 'var(--dx-block-size)'],
     hasActions && ['actions', 'var(--dx-block-size)'],
   ];
   return candidates
@@ -551,7 +552,6 @@ const TaskListItem = ({
           )}
         </Layout.Flex>
       )}
-      <TaskPriorityIcon task={task} classNames={TRACK.priority} />
       <TaskStatusControl task={task} onTaskUpdate={onTaskUpdate} classNames={TRACK.status} />
       {/* Inset as the editor's fields are, so a title reads at the x the field below types it. The placeholder is
           drawn by CSS so the element's text stays the title itself. */}
@@ -575,13 +575,16 @@ const TaskListItem = ({
         data-testid='taskList.item.artifacts'
       >
         <TaskListItemArtifacts task={task} filter={(artifact) => PullRequest.instanceOf(artifact)} />
-        <TaskEstimateLabel estimate={current.estimate} />
       </Layout.Flex>
       {showAssignees && (
         <Layout.Grid center classNames={TRACK.assignee}>
           <TaskListAssigneeControl task={task} assignee={assignee} delegate={delegate} />
         </Layout.Grid>
       )}
+      <TaskPriorityIcon task={task} classNames={TRACK.priority} />
+      <Layout.Grid center classNames={TRACK.estimate}>
+        <TaskEstimateLabel estimate={current.estimate} />
+      </Layout.Grid>
       <TaskListItemActions task={task} classNames={TRACK.actions} />
 
       {/* The row's second line, under the title and inset as it is; it takes no height when the task has no chips. */}

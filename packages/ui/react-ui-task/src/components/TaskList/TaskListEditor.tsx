@@ -324,7 +324,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
 
     return (
       // The pane's own grid on the list's template, so its cells sit in the rows' columns: the field where the titles
-      // are read, the priority under the rows', and the estimate at the end of the title.
+      // are read, the pickers under the rows' priority and estimate.
       <div
         {...rest}
         className={mx(
@@ -364,7 +364,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
           </span>
         )}
         {/* The field's root is the grid item, so it takes the placement. */}
-        <Field.Root classNames='row-start-1 col-start-[title] col-end-[artifacts] min-w-0'>
+        <Field.Root classNames='row-start-1 col-start-[title] col-end-[assignee] min-w-0'>
           <Input.Root
             // An input clips its overflow rather than wrapping it, so a long title ends mid-word against the trailing
             // controls with nothing to say it continues; the ellipsis says so.
@@ -429,16 +429,6 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
             />
           </Input.Frame>
         )}
-        <TaskEstimatePicker
-          estimate={editing ? current.estimate : draftEstimate}
-          onChange={
-            editing
-              ? onTaskUpdate && ((estimate) => onTaskUpdate(task, { estimate: estimate ?? null }))
-              : setDraftEstimate
-          }
-          testId='taskList.edit.estimate'
-          classNames={TRACK.artifacts}
-        />
         {editing ? (
           <TaskPriorityIcon task={task} classNames={TRACK.priority} />
         ) : (
@@ -449,6 +439,16 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
             classNames={TRACK.priority}
           />
         )}
+        <TaskEstimatePicker
+          estimate={editing ? current.estimate : draftEstimate}
+          onChange={
+            editing
+              ? onTaskUpdate && ((estimate) => onTaskUpdate(task, { estimate: estimate ?? null }))
+              : setDraftEstimate
+          }
+          testId='taskList.edit.estimate'
+          classNames={TRACK.estimate}
+        />
         {canCancel && (
           // In the rows' menu column: the way out of the pane, there while it holds something to throw away.
           <SystemButton.Cancel

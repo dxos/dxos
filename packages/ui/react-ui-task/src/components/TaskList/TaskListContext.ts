@@ -47,7 +47,7 @@ export type TaskListContextValue = {
   flush: boolean;
   /**
    * The column template, built once from the options so the tree's rows and the edit pane lay out on the same named
-   * tracks (`gutter`, `priority`, `status`, `title`, `artifacts`, `assignee`, `actions`).
+   * tracks (`gutter`, `status`, `title`, `artifacts`, `assignee`, `priority`, `estimate`, `actions`).
    */
   columns: string;
   selected?: string;
