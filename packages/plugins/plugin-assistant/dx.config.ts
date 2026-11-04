@@ -202,14 +202,15 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
         () => import('./src/capabilities/toolkit.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
-        'ActivitySource',
+        'AgentProgress',
         {
-          requires: [Capabilities.ProcessManager],
-          provides: [AppCapabilities.ActivitySource],
+          // ProgressRegistry is read optionally in the body: a host without plugin-progress loses the indicator.
+          requires: [Capabilities.AtomRegistry, Capabilities.ProcessManager, ClientCapabilities.Client],
+          provides: [],
           activatesOn: AssistantEvents.Start,
           environments: ['browser', 'tauri'],
         },
-        () => import('./src/capabilities/activity-source.ts', { with: { type: 'module-url' } }),
+        () => import('./src/capabilities/agent-progress.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
         'AgentHydrator',
