@@ -81,7 +81,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Folds or unfolds the section; the state outlives the story, since it is kept on the device. */
+/** Device state outlives a story, so each story sets the fold it needs. */
 const setCollapsed = async (canvasElement: HTMLElement, collapsed: boolean) => {
   const toggle = await within(canvasElement).findByTestId('feature-section.collapse', undefined, { timeout: 10_000 });
   if ((toggle.getAttribute('aria-expanded') === 'true') === collapsed) {
@@ -90,7 +90,7 @@ const setCollapsed = async (canvasElement: HTMLElement, collapsed: boolean) => {
   await waitFor(() => expect(toggle.getAttribute('aria-expanded')).toBe(String(!collapsed)));
 };
 
-/** Attended: the header row (block id, name, status), the description, requirements and the features it needs. */
+/** Attended: the header row, description, requirements and the features it needs. */
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     await setCollapsed(canvasElement, false);

@@ -30,11 +30,8 @@ export type FeatureSectionProps = {
 };
 
 /**
- * What a feature's spec block says, edited in place where the feature is embedded: a header row of its block id, name
- * and status, then its description, requirements and the features it needs. Icons sit in the card's start rail, so
- * every text starts at one edge. Folded, only the header row shows, with the block ids of the features it needs and
- * the requirement count. Its card is the read-only version; the rest of how it relates (dependents, tasks, showcases) is in its
- * article and the companion.
+ * A feature's spec block, edited in place where the feature is embedded; folded, only its header row shows. Its card
+ * is the read-only version; dependents, tasks and showcases are in its article and the companion.
  */
 export const FeatureSection = ({ subject, attended = true }: FeatureSectionProps) => {
   const { t } = UiHooks.useTranslation(CodeNamespace.key);
@@ -162,7 +159,6 @@ export const FeatureSection = ({ subject, attended = true }: FeatureSectionProps
   );
 };
 
-/** Whether the feature's section is folded; kept on this device, since one reader folding a section is not an edit. */
 const useCollapsed = (id: string) => {
   const [state, updateState] = Hooks.useAtomCapabilityState(CodeCapabilities.State);
   const collapsed = state.collapsed?.[id] ?? false;
@@ -178,9 +174,8 @@ const useCollapsed = (id: string) => {
 };
 
 /**
- * The features the picker offers: every feature this one may depend on, which excludes itself and the features that
- * depend on it directly or through others, so no pick closes a cycle. Queried only while attended, as the picker only
- * opens then; until then the options are the current dependencies, which name the chips.
+ * Every feature this one may depend on without closing a cycle, plus its current dependencies, which name the chips.
+ * Queried only while attended, since the picker opens only then.
  */
 const useDependencyOptions = (
   db: Database.Database | undefined,

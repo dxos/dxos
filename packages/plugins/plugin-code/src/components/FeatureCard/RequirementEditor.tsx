@@ -19,7 +19,6 @@ type CommitFieldProps = {
   label: string;
   testId: string;
   autoFocus?: boolean;
-  /** `plain` draws no well until the field is focused. */
   variant?: 'default' | 'plain';
   onCommit: (value: string) => void;
 };
@@ -84,7 +83,7 @@ export type RequirementEditorProps = {
 /**
  * A feature's requirements, each a field that wraps to its whole text, with the spec id it came from before it and a
  * remove action after. Every edit hands back the whole list, since requirements are records inside their feature; a
- * requirement cleared of its text is removed. A section of its host's grid card, so its icons sit in the host's rail.
+ * requirement cleared of its text is removed. Render it inside a grid `Card.Root`; its icons sit in that card's rail.
  */
 export const RequirementEditor = ({ requirements, variant, actions = true, onChange }: RequirementEditorProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);

@@ -39,10 +39,7 @@ const Surfaces = Capability.inlineModule('FeatureEditingSurfaces', { provides: [
   FeatureSurface(),
 );
 
-/**
- * Contributes the plugin's feature stack alone (its operation handlers, spec editing, surfaces and device state), so stories can edit
- * features without the whole plugin.
- */
+/** Contributes the plugin's feature stack alone, so stories can edit features without the whole plugin. */
 export const make = Plugin.define(
   Plugin.makeMeta({
     key: DXN.make('org.dxos.plugin.code.testing.featureEditing'),

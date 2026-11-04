@@ -9,7 +9,7 @@ import * as Struct from 'effect/Struct';
 
 /** What the plugin keeps on this device: persisted locally and never synced, unlike its settings. */
 export const State = Schema.Struct({
-  /** The features whose spec sections are folded to their header row, by feature id. */
+  /** Folded spec sections, by feature id; a fold is one reader's view, not an edit. */
   collapsed: Schema.optional(Schema.Record(Schema.String, Schema.Boolean)),
 }).mapFields(Struct.map(Schema.mutableKey));
 

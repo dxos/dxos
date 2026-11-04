@@ -54,8 +54,8 @@ export const FeatureEmbedSection = ({ eid, label, view, db, attendableId, claimF
     }
   }, [feature, claimFocus]);
 
-  // Inert until attended, so the field can take focus only once attention has followed the container's. A frame later,
-  // since an empty description mounts with attention and its editor is rebuilt within that commit.
+  // Inert until attended, so the field can take focus only once attention has followed the container's; a frame later,
+  // since an empty description mounts only once attended.
   useEffect(() => {
     const field = focusing.current;
     if (!hasAttention || !field) {
@@ -63,7 +63,7 @@ export const FeatureEmbedSection = ({ eid, label, view, db, attendableId, claimF
     }
     const frame = requestAnimationFrame(() => {
       focusing.current = undefined;
-      // The description is rich text, the only editable element in the form.
+      // The description is the form's only contenteditable.
       const selector = field === 'name' ? 'input[data-testid="name"]' : '[contenteditable="true"]';
       const element = containerRef.current?.querySelector<HTMLElement>(selector);
       element?.focus();

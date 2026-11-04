@@ -192,7 +192,7 @@ export const steps = [
       const section = `${SECTION} >> nth=1`;
       await caption(demo, 9, 'A section also holds what its feature depends on');
       await demo.click({ selector: section, label: 'Instant inbox' });
-      // The picker's caret opens its search popup; the picker stays open for further picks.
+      // The picker stays open after a pick until Escape.
       await demo.click({
         selector: `${section} >> [data-testid="feature-section.dependency-picker"] >> [data-part="trigger"]`,
         label: 'Add a feature this needs',
