@@ -585,6 +585,8 @@ type ChatThreadProps = Util.ThemedClassName<{
   userHue?: string;
   /** Invoked from the over-quota error toast to open the usage dashboard. */
   onViewUsage?: () => void;
+  /** Shows each block's estimated token count beside it. */
+  showTokens?: boolean;
 }>;
 
 /**
@@ -600,7 +602,14 @@ const useInPlaceUpdates = (model: FeedModel, messages: readonly Message.Message[
   }, [model, messages]);
 };
 
-const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onViewUsage }: ChatThreadProps) => {
+const ChatThread = ({
+  classNames,
+  viewType,
+  tailLines,
+  userHue: userHueProp,
+  onViewUsage,
+  showTokens,
+}: ChatThreadProps) => {
   const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   const { chat, db, debug, event, chatModel, setController, setVisibleRange } = useChatContext(CHAT_THREAD_NAME);
   const { messages, tail, lanes, forks } = useChatThreadContext(CHAT_THREAD_NAME);
@@ -738,6 +747,7 @@ const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onV
         // Forking needs the trajectory the Composer harness writes; an external agent keeps its own.
         fork={SessionConfig.harnessOf(chat?.session) === SessionConfig.COMPOSER_HARNESS}
         getForks={getForks}
+        showTokens={showTokens}
         onEvent={handleEvent}
         onRangeChange={setVisibleRange}
         controllerRef={handleControllerRef}

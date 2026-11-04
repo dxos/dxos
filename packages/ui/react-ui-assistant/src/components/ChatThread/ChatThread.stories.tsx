@@ -43,6 +43,7 @@ type StoryArgs = {
   calls?: number;
   /** 1-based call that fails. */
   failAt?: number;
+  showTokens?: boolean;
 };
 
 const DefaultStory = ({
@@ -53,6 +54,7 @@ const DefaultStory = ({
   chunkDelay = 120,
   calls = 1,
   failAt,
+  showTokens,
 }: StoryArgs) => {
   const definition = useMemo(() => createScenario({ scenario: 'assistant', count }), [count]);
   const model = useMemo(() => new FeedModel({ messages: definition.messages, stops: 'prompt' }), [definition]);
@@ -137,7 +139,13 @@ const DefaultStory = ({
 
   return (
     <DebugProvider>
-      <ChatThread.Root model={model} viewType={viewType} onEvent={handleEvent} controllerRef={controller}>
+      <ChatThread.Root
+        model={model}
+        viewType={viewType}
+        showTokens={showTokens}
+        onEvent={handleEvent}
+        controllerRef={controller}
+      >
         <Panel.Root>
           <Panel.Header>
             <Toolbar.Root>
@@ -310,6 +318,7 @@ const meta: Meta<StoryArgs> = {
   argTypes: {
     viewType: { control: 'select', options: ['normal', 'summary', 'thinking', 'debug'] },
     debug: { control: 'boolean' },
+    showTokens: { control: 'boolean' },
   },
   args: {
     count: 30,
@@ -354,6 +363,11 @@ export const DebugView: Story = {
  */
 export const ToolRun: Story = {
   args: { chunkDelay: 40, calls: 3, failAt: 2, count: 4 },
+};
+
+/** Each block's estimated token count, in the gutter beside it (the `showTokens` setting). */
+export const Tokens: Story = {
+  args: { viewType: 'normal', showTokens: true, debug: false, calls: 3, count: 8 },
 };
 
 /**

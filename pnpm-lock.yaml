@@ -23735,6 +23735,9 @@ importers:
       effect:
         specifier: 4.0.4
         version: 4.0.4
+      tokenx:
+        specifier: ^1.3.0
+        version: 1.3.0
     devDependencies:
       '@dxos/effect':
         specifier: workspace:*

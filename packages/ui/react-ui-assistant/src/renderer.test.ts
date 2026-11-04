@@ -189,7 +189,26 @@ describe('createRenderer', () => {
 
     expect(text).toBe('');
   });
+
+  test('token labels precede each answer block only when enabled', ({ expect }) => {
+    const blocks: ContentBlock.Any[] = [
+      { _tag: 'text', text: 'Looking it up.' },
+      { _tag: 'toolCall', toolCallId: '1', name: 'search', input: '{"query":"mdl spec"}', providerExecuted: false },
+      { _tag: 'toolResult', toolCallId: '1', name: 'search', providerExecuted: false, result: 'found three files' },
+      { _tag: 'text', text: 'Done.' },
+    ];
+    const labelled = markdown(createRenderer('normal', { showTokens: true })(message(blocks)));
+    expect(labelled.match(/<tokens>\d+<\/tokens>/g)).toHaveLength(3);
+    expect(labelled.indexOf('<tokens>')).toBeLessThan(labelled.indexOf('Looking'));
+
+    expect(markdown(createRenderer('normal')(message(blocks)))).not.toContain('<tokens>');
+    expect(markdown(createRenderer('debug', { showTokens: true })(message(blocks)))).not.toContain('<tokens>');
+    expect(renderUserTokens(userMessage([ContentBlock.Text.make({ text: 'hello' })]))).not.toContain('<tokens>');
+  });
 });
+
+const renderUserTokens = (message: Message.Message): string =>
+  markdown(createRenderer('normal', { showTokens: true })(message));
 
 const message = (blocks: NonNullable<Parameters<typeof Message.make>[0]['blocks']>) =>
   Message.make({ created: new Date(0).toISOString(), sender: 'assistant', blocks });

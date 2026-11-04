@@ -17,9 +17,10 @@ import { type Actor, type ContentBlock, Message } from '@dxos/types';
 import { getStyles, mx } from '@dxos/ui-theme';
 import { stringToFallback } from '@dxos/util';
 
+import { estimateTokens, formatTokens } from '../../tokens.ts';
 import { translationKey } from '../../translations.ts';
 import { type DeliveryStatus, type ForkMarker, type ThreadLane, getDelivery, isUnread } from '../../types.ts';
-import { LaneHeader } from '../../widgets/index.ts';
+import { LaneHeader, TOKENS_GUTTER } from '../../widgets/index.ts';
 
 //
 // Context
@@ -52,6 +53,8 @@ type MessageChromeContextValue = {
   getAuthor?: (sender: Actor.Actor) => MessageAuthor | undefined;
   /** The lane a message belongs to, when the chat ran several at once; its gutter wears the lane's colour. */
   getLane?: (message: Message.Message) => ThreadLane | undefined;
+  /** Reserve a gutter beside each block for its estimated token count. */
+  showTokens?: boolean;
 };
 
 /** How a prompt's author is shown. */
@@ -183,9 +186,6 @@ export const AssistantToolbar = memo(({ classNames, message }: MessageToolbarPro
 });
 
 AssistantToolbar.displayName = 'AssistantToolbar';
-
-/** Thousands abbreviated to one decimal, so the count stays one glance wide as a turn grows. */
-const formatTokens = (tokens: number): string => (tokens >= 1_000 ? `${(tokens / 1_000).toFixed(1)}k` : String(tokens));
 
 /**
  * What the turn cost, beside what it produced — the toolbar is where a reader looks for a message's
@@ -388,7 +388,7 @@ const hasToolbar = (message: Message.Message): boolean =>
  * bubble's edge.
  */
 export const MessageChrome = ({ message, selected, children }: MessageChromeProps) => {
-  const { streaming, userHue, showAuthors, getLane, getForks, onOpenFork } =
+  const { streaming, userHue, showAuthors, getLane, getForks, onOpenFork, showTokens } =
     useMessageChromeContext(MESSAGE_CHROME_NAME);
   const forks = getForks?.(message);
   const prompt = isPrompt(message);
@@ -410,7 +410,8 @@ export const MessageChrome = ({ message, selected, children }: MessageChromeProp
     >
       {lane?.first === message.id && <LaneHeader lane={lane} classNames='pb-2' />}
       {prompt ? (
-        <div className='min-w-0 flex flex-col items-end'>
+        <div className={mx('relative min-w-0 flex flex-col items-end', showTokens && TOKENS_GUTTER)}>
+          {showTokens && <PromptTokens message={message} />}
           <div className='max-w-[70%] min-w-0'>
             <SyntheticContext message={message} />
             {showAuthor && !author.self && author.name && (
@@ -450,7 +451,8 @@ export const MessageChrome = ({ message, selected, children }: MessageChromeProp
           </div>
         </div>
       ) : (
-        <div className='min-w-0'>
+        // The answer's labels are widgets inside its editor, so the gutter is the editor's own padding.
+        <div className={mx('min-w-0', showTokens && '[&_.cm-content]:pe-14!')}>
           {children}
           {hasToolbar(message) && <AssistantToolbar classNames={reveal} message={message} />}
         </div>
@@ -475,3 +477,17 @@ export const MessageChrome = ({ message, selected, children }: MessageChromeProp
 };
 
 MessageChrome.displayName = MESSAGE_CHROME_NAME;
+
+/** A prompt's estimated token count, level with the top of its bubble in the gutter the answers share. */
+const PromptTokens = ({ message }: { message: Message.Message }) => {
+  const tokens = estimateTokens(message.blocks);
+  return tokens > 0 ? (
+    <span
+      className='absolute top-2 end-0 w-12 text-end text-xs leading-6 text-fg-subtle tabular-nums select-none'
+      data-testid='assistant.tokens'
+      aria-hidden
+    >
+      {formatTokens(tokens)}
+    </span>
+  ) : null;
+};
