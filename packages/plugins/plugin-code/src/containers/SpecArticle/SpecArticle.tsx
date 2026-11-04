@@ -224,10 +224,11 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
 
     return (
       <Editor.Root extensions={extensions} widgets={widgets}>
-        <Editor.Blocks />
         <Panel.Root role={role} ref={forwardedRef}>
           <Panel.Header>{!readOnly && <Editor.Toolbar role={role} attendableId={attendableId} />}</Panel.Header>
           <Panel.Body>
+            {/* Inside the body: a portal anchor beside the panel would be a row of the host's grid. */}
+            <Editor.Blocks />
             {panel ? (
               <Splitter.Root
                 ref={splitRef}
