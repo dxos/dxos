@@ -48,7 +48,7 @@ export const handler = Effect.fn(function* ({
   delay: number;
 }) {
   const { json } = yield* CommandConfig;
-  const client = yield* ClientService;
+  const client = yield* ClientService.client;
   let credentials: Credential[];
 
   if (Option.isSome(spaceId)) {

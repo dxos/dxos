@@ -13,7 +13,7 @@ import { Context } from '@dxos/context';
 
 export const getStatus = () =>
   Effect.gen(function* () {
-    const client = yield* ClientService;
+    const client = yield* ClientService.client;
     const identity = createEdgeIdentity(client);
     client.edge.http.setIdentity(identity);
     const status = yield* Effect.tryPromise(() => client.edge.http.getStatus(Context.default()));
