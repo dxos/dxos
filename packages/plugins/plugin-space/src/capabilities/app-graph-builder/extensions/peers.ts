@@ -24,8 +24,8 @@ import { SpaceCapabilities, SpaceSchema } from '#types';
 
 import { SpaceNamespace } from '../../../namespace.ts';
 import {
-  PEER_SEGMENT_PREFIX,
   MEMBERS_COMPANION_ID,
+  PEER_SEGMENT_PREFIX,
   getPeerFocus,
   getPresenceKeyFromPath,
   getSpacePeers,
