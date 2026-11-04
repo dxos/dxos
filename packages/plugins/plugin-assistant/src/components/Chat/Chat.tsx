@@ -28,6 +28,7 @@ import {
   type ChatView,
   type ForkMarker,
   ChatThread as NaturalChatThread,
+  assistantRegistry,
 } from '@dxos/react-ui-assistant';
 import {
   type FeedModel,
@@ -73,6 +74,7 @@ import {
   useChatThreadContext,
 } from './context.ts';
 import { type ChatDrawer, type ChatEvent } from './events.ts';
+import { LaneSurfaceWidget } from './LaneSurfaceWidget.tsx';
 import { objectCardWidget } from './ObjectCardWidget.tsx';
 import { SurfaceWidget } from './SurfaceWidget.tsx';
 
@@ -569,11 +571,15 @@ const buildMarkers = (messages: Message.Message[]): OutlineMarker[] => {
 
 const CHAT_THREAD_NAME = 'Chat.Thread';
 
-/** The plugin's `surface` widget layered over the package registry: it can dispatch a Surface. */
+/** The plugin's `surface` and `lane` widgets layered over the package registry: they can dispatch a Surface. */
 const chatRegistry = {
   surface: {
     block: true,
     Component: SurfaceWidget,
+  },
+  lane: {
+    ...assistantRegistry.lane,
+    Component: LaneSurfaceWidget,
   },
 } as const;
 

@@ -6,6 +6,7 @@ import * as Role from '@dxos/app-framework/Role';
 import { type AiContext } from '@dxos/assistant';
 import type * as Chat from '@dxos/assistant/Chat';
 import { type Database } from '@dxos/echo';
+import { type ThreadCardProps } from '@dxos/react-ui-assistant';
 
 /**
  * Role token for surfaces an agent requests inline in the conversation via the `<surface>` content
@@ -29,3 +30,9 @@ export const ChatDetails: Role.Role<{
   db?: Database.Database;
   context?: AiContext.Binder;
 }> = Role.make('org.dxos.plugin.assistant.role.chatDetails');
+
+/**
+ * Role token for a lane of a chat shown as a card. Lanes are derived from the feed rather than stored, so this carries
+ * the lane itself and not an object; a plugin replaces the card by contributing a surface on this role.
+ */
+export const LaneCard: Role.Role<ThreadCardProps> = Role.make('org.dxos.plugin.assistant.role.laneCard');

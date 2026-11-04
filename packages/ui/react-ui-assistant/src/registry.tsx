@@ -4,9 +4,9 @@
 
 import { type WidgetProps, type XmlWidgetRegistry, getXmlInnerText, getXmlTextChild } from '@dxos/ui-editor';
 
+import { LANE_CARD_HEIGHT } from './components/ThreadCard/index.ts';
 import {
   FallbackWidget,
-  LANE_CARD_HEIGHT,
   LaneCardWidget,
   ReasoningWidget,
   ReferenceWidget,

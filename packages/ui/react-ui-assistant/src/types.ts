@@ -117,3 +117,16 @@ export type LaneCardData = { readonly lane: ThreadLane; readonly lines: readonly
 /** The text of a row standing for a lane working in the background, which renders as its card. */
 export const laneTag = (data: LaneCardData): string =>
   `<lane>${JSON.stringify(data).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</lane>`;
+
+/** The data of a `<lane>` row from its text; `undefined` for a malformed row. */
+export const parseLaneCard = (text: string | null | undefined): LaneCardData | undefined => {
+  if (!text) {
+    return undefined;
+  }
+  try {
+    const value: LaneCardData = JSON.parse(text);
+    return value;
+  } catch {
+    return undefined;
+  }
+};
