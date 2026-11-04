@@ -890,7 +890,7 @@ scenario T-13: The store resolves types and lists plugins
   when: resolveType and listPlugins are called
   then:
     - resolveType returns the type of the earliest-uploaded bundle that contributes it, and matches the version when one is given
-    - a revoked bundle is skipped, and a re-uploaded version drops the types it no longer lists
+    - a revoked bundle is skipped, and a version replaced with `replace: true` (the store's owner overwrite, not a publish) drops the types it no longer lists
     - an unknown typename resolves to undefined
     - listPlugins lists every plugin key with its channels and versions, revoked versions included, and a revoked version keeps its catalog
   tags: [edge, workerd]
@@ -964,21 +964,21 @@ scenario T-19: The agent and MCP suites pass with operations routed to bundles
 ```mdl
 scenario T-20: A published plugin invokes another published plugin's operation
   given:
-    - edge's sample plugins A (`edge-sample-notes`) and B (`edge-sample-notebook`), both published with `dx registry publish --upload-only --edge-url <stack>`, on a stack without operation-service
+    - edge's sample plugins A (`edge-sample-notes`) and B (`edge-sample-notebook`), on a stack without operation-service, with only B published so far (`dx registry publish --upload-only --edge-url <stack>`)
     - A implements `org.dxos.operation.edgeSample.createNote`, which adds an `org.dxos.type.edgeSample.note` to the space and returns its id
     - B implements `org.dxos.operation.edgeSample.addNoteVia`, which calls A's operation with `Operation.invoke` and returns its output
-  when: `org.dxos.operation.edgeSample.addNoteVia` is invoked in a space
+  when: `org.dxos.operation.edgeSample.addNoteVia` is invoked in a space, then A is published the same way and it is invoked again
   then:
-    - A's bundle runs the nested invoke, and B returns A's output
+    - the first invoke fails with A's operation key in the error
+    - after A is published, A's bundle runs the nested invoke, and B returns A's output
     - the note exists in the space, and the caller reads it as a live object of its database
-    - before A is published, the same invoke fails with A's operation key in the error
   tags: [edge]
 ```
 
 ```mdl
 scenario T-21: A published plugin uses a type another published plugin owns
   given:
-    - plugins A and B as in T-20, with a note A created in a space
+    - plugins A and B as in T-20, both published, with a note A created in a space
     - B does not import A and declares no `org.dxos.type.edgeSample.note`
     - B implements `org.dxos.operation.edgeSample.listNotes`, which queries `Filter.and(Filter.type(Type.Type), Filter.key('org.dxos.type.edgeSample.note'))` from `Scope.registry()` and then the space's objects of the type it resolves
   when: `org.dxos.operation.edgeSample.listNotes` is invoked in the space
