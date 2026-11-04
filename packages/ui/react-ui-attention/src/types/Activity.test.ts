@@ -17,6 +17,10 @@ describe('Activity.resolve', () => {
     ).toEqual({ fill: 'attended', mark: 'viewers', edge: 'failed', corner: 'mention', moving: undefined });
   });
 
+  test('an agent at work takes the mark from presence', ({ expect }) => {
+    expect(Activity.resolve(['viewers', 'typing', 'agent'])).toMatchObject({ mark: 'agent', moving: 'mark' });
+  });
+
   test('only the first animated slot in motion order moves', ({ expect }) => {
     expect(Activity.resolve(['typing', 'working']).moving).toBe('mark');
     expect(Activity.resolve(['typing', 'working', 'asked']).moving).toBe('corner');
@@ -24,8 +28,10 @@ describe('Activity.resolve', () => {
     expect(Activity.resolve(['busy']).moving).toBe('fill');
   });
 
-  test('a still winner keeps a lower slot moving', ({ expect }) => {
-    // One viewer outranks the agent sparkle in the mark and is still, so motion falls through to the busy fill.
-    expect(Activity.resolve(['busy', 'viewer', 'agent'])).toMatchObject({ mark: 'viewer', moving: 'fill' });
+  test('a still slot passes motion to the next', ({ expect }) => {
+    // A mention is still, so motion falls through the corner to the agent star.
+    expect(Activity.resolve(['mention', 'agent'])).toMatchObject({ corner: 'mention', moving: 'mark' });
+    // The attended fill outranks busy and is still, so nothing moves.
+    expect(Activity.resolve(['attended', 'busy']).moving).toBeUndefined();
   });
 });

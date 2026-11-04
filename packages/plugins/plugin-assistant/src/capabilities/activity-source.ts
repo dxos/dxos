@@ -27,18 +27,18 @@ const BUSY_STATES: ReadonlySet<Process.State> = new Set([
 const chatWorking: Activity.Entry = {
   source: 'assistant',
   label: ['activity.chat-working.label', { ns: AssistantNamespace.key }],
-  treatment: 'working',
+  treatment: 'agent',
 };
 
 const companionWorking: Activity.Entry = {
   source: 'assistant',
   label: ['activity.companion-working.label', { ns: AssistantNamespace.key }],
-  treatment: 'working',
+  treatment: 'agent',
 };
 
 /**
- * Marks a chat while its agent runs a turn, and the object a companion chat accompanies while that chat does. The
- * process tree is the source because a session outlives the chat view that started it.
+ * Puts the agent star on a chat while its agent runs a turn, and on the object a companion chat accompanies while that
+ * chat does. The process tree is the source because a session outlives the chat view that started it.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

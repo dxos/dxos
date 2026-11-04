@@ -4,7 +4,7 @@
 
 /**
  * A working agent marks its chat's navtree row, and a companion chat marks its subject's row, with the attention
- * glyph's amber working edge; both stay while you look elsewhere and clear when the turn ends.
+ * agent star in place of presence; both stay while you look elsewhere and clear when the turn ends.
  *
  * @mdl packages/plugins/plugin-assistant/PLUGIN.mdl test QA-5
  * @app composer-app via `DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true moon run composer-app:serve -- --port 4173`
@@ -22,7 +22,7 @@ const row = (label) =>
   `[data-testid="deck.sidebar"] [role="treeitem"]:not([aria-expanded]):has([data-testid="treeItem.heading"]:text-is("${label}"))`;
 const heading = (label) => `${row(label)} [data-testid="treeItem.heading"]`;
 const glyph = (label) => `${row(label)} .dx-attention-glyph`;
-const working = (label) => `${glyph(label)}[data-edge="working"]`;
+const working = (label) => `${glyph(label)}[data-mark="agent"]`;
 
 const caption = async (demo, value, position) => {
   await demo.caption({ value, subtitle: SUBTITLE, position });
@@ -47,7 +47,7 @@ const expand = async (page, label) => {
   }
 };
 
-/** Waits out the rest of the agent's turn at speed, until the row's edge clears. */
+/** Waits out the rest of the agent's turn at speed, until the row's star clears. */
 const awaitIdle = async (demo, page, label) => {
   await demo.speed({ factor: 8 });
   await page.locator(working(label)).waitFor({ state: 'detached', timeout: TURN_TIMEOUT });
@@ -108,7 +108,7 @@ export const steps = [
     },
   },
   {
-    name: "The chat's row shows the working edge",
+    name: "The chat's row shows the agent star",
     run: async ({ demo, page }) => {
       await page.mouse.move(700, 400);
       await demo.cut();
@@ -121,13 +121,13 @@ export const steps = [
         'Write a three-day Lisbon itinerary, about 400 words, with one place to eat each day.',
       );
       await page.locator(working(CHAT)).waitFor({ timeout: 30_000 });
-      await caption(demo, "While the agent works, the chat's glyph gets an amber outline");
+      await caption(demo, "While the agent works, the chat's glyph shows the agent star");
       await demo.hover({ selector: glyph(CHAT), label: CHAT });
       await demo.sleep({ ms: 2_500 });
     },
   },
   {
-    name: 'The edge stays while you look elsewhere',
+    name: 'The star stays while you look elsewhere',
     run: async ({ demo, page }) => {
       await demo.click({ selector: heading(DOCUMENT), label: DOCUMENT });
       await page.locator('[data-testid="deck.plank"]').first().waitFor({ state: 'visible', timeout: 15_000 });
@@ -136,13 +136,13 @@ export const steps = [
       await demo.hover({ selector: glyph(CHAT), label: CHAT });
       await page.getByText('Assistant is working', { exact: true }).first().waitFor({ timeout: 5_000 });
       await demo.sleep({ ms: 3_000 });
-      await caption(demo, 'The edge clears when the reply is done');
+      await caption(demo, 'The star clears when the reply is done');
       await awaitIdle(demo, page, CHAT);
       await demo.sleep({ ms: 2_000 });
     },
   },
   {
-    name: "The companion's subject shows the working edge",
+    name: "The companion's subject shows the agent star",
     run: async ({ demo, page }) => {
       await page.mouse.move(700, 400);
       await caption(demo, "A companion chat works on its document, so the document's row shows it", 'top');
@@ -168,7 +168,7 @@ export const steps = [
     },
   },
   {
-    name: 'The subject keeps the edge while you look elsewhere',
+    name: 'The subject keeps the star while you look elsewhere',
     run: async ({ demo, page }) => {
       await demo.click({ selector: heading(CHAT), label: CHAT });
       await page.locator(PROMPT).first().waitFor({ state: 'visible', timeout: 15_000 });

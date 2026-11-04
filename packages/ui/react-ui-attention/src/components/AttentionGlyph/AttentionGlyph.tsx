@@ -21,6 +21,8 @@ export type AttentionGlyphProps = ThemedClassName<Omit<ComponentPropsWithoutRef<
 const VIEWERS_PATH =
   'M6.75 8.27311C7.38815 7.72296 7.79212 6.90866 7.79212 6C7.79212 5.09134 7.38815 4.27704 6.75 3.72689C7.06722 3.58122 7.42019 3.5 7.79212 3.5C9.17283 3.5 10.2921 4.61929 10.2921 6C10.2921 7.38071 9.17283 8.5 7.79212 8.5C7.42019 8.5 7.06723 8.41878 6.75 8.27311Z';
 const AGENT_PATH = 'M6 2.2l1 2.8 2.8 1-2.8 1-1 2.8-1-2.8-2.8-1 2.8-1z';
+/** The agent star, shrunk and centred where the corner dot sits. */
+const CORNER_STAR = 'translate(12.25 -0.25) scale(0.85) translate(-6 -6)';
 
 const Mark = ({ mark }: { mark: Activity.MarkTreatment }) => {
   switch (mark) {
@@ -81,7 +83,11 @@ export const AttentionGlyph = forwardRef<HTMLSpanElement, AttentionGlyphProps>(
           <svg viewBox='0 0 12 12' fill='none' aria-hidden data-scope='attention-glyph' data-part='overlay'>
             {edge && <rect data-part='edge' x='0.5' y='0.5' width='11' height='11' rx='1.75' pathLength='48' />}
             {mark && <Mark mark={mark} />}
-            {corner && <circle data-part='corner' cx='12.25' cy='-0.25' r='2.5' />}
+            {corner === 'agent-done' ? (
+              <path data-part='corner' d={AGENT_PATH} transform={CORNER_STAR} />
+            ) : (
+              corner && <circle data-part='corner' cx='12.25' cy='-0.25' r='2.5' />
+            )}
           </svg>
         )}
       </span>

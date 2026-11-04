@@ -1,8 +1,8 @@
 /*
  * AttentionGlyph: a rounded square three quarters of the icon size (12px at md). Its fill shows attention (tinted when
  * it contains the attended item, filled with the accent when attended) or, failing that, busy work. Activity draws in
- * three more slots over it: a mark inside (who or what is there), the square's edge (ongoing or steady state) and a dot
- * at its corner (something wants you). Only the slot named by `data-moving` animates.
+ * three more slots over it: a mark inside (who or what is there, an agent first), the square's edge (ongoing or steady
+ * state) and a dot at its corner (something wants you). Only the slot named by `data-moving` animates.
  */
 
 @layer dx-components {
@@ -72,12 +72,15 @@
     stroke: var(--color-accent-fg);
   }
 
-  /* Corner: a dot just outside the square's top-right corner. */
+  /* Corner: a dot just outside the square's top-right corner, or the agent star once its turn finished unread. */
   .dx-attention-glyph[data-corner='asked'] [data-part='corner'] {
     fill: var(--color-amber-bg);
   }
   .dx-attention-glyph[data-corner='mention'] [data-part='corner'] {
     fill: var(--color-rose-bg);
+  }
+  .dx-attention-glyph[data-corner='agent-done'] [data-part='corner'] {
+    fill: var(--color-amber-bg);
   }
   .dx-attention-glyph[data-corner='changed'] [data-part='corner'] {
     fill: var(--color-accent-bg);

@@ -30,7 +30,7 @@ const LABELS: Record<Activity.Treatment, string> = {
   'viewers-working': 'Viewers, working',
   'viewers': 'Several viewers',
   'viewer': 'One viewer',
-  'agent': 'Agent, no viewers',
+  'agent': 'Agent working',
   'failed': 'Failed',
   'following': 'Following someone',
   'call': 'Live call',
@@ -38,6 +38,7 @@ const LABELS: Record<Activity.Treatment, string> = {
   'scheduled': 'Scheduled soon',
   'asked': 'Agent asked you',
   'mention': 'Mention or reply',
+  'agent-done': 'Agent finished, unread',
   'changed': 'Changed since seen',
   'read-only': 'Read-only',
 };
@@ -153,13 +154,13 @@ const COMBINATIONS: { icon: string; label: string; caption: string; treatments: 
     icon: 'ph--sparkle--regular',
     label: 'Chat: summarise launch',
     caption: 'Assistant working',
-    treatments: ['working'],
+    treatments: ['agent'],
   },
   {
     icon: 'ph--file-text--regular',
     label: 'Launch plan',
-    caption: 'Companion working, viewers',
-    treatments: ['viewers', 'working'],
+    caption: 'Companion finished, unread',
+    treatments: ['viewers', 'agent-done'],
   },
   {
     icon: 'ph--sparkle--regular',
@@ -256,12 +257,45 @@ const MotionStory = () => (
   </Section>
 );
 
+//
+// Agent session.
+//
+
+const AGENT_STATES: { title: string; treatments: Activity.Treatment[] }[] = [
+  { title: 'Idle, one viewer', treatments: ['viewer'] },
+  { title: 'Agent working', treatments: ['viewer', 'agent'] },
+  { title: 'Finished, unread', treatments: ['viewer', 'agent-done'] },
+  { title: 'Read', treatments: ['viewer'] },
+];
+
+const AgentSessionStory = () => (
+  <Section title='An agent session: the star replaces presence while it works, then marks the corner until read'>
+    <div className='grid grid-cols-[8rem_repeat(4,minmax(0,1fr))] items-center gap-x-3 gap-y-2 text-sm'>
+      <span />
+      {AGENT_STATES.map(({ title }) => (
+        <span key={title} className='text-description'>
+          {title}
+        </span>
+      ))}
+      <span className='text-description'>Elsewhere</span>
+      {AGENT_STATES.map(({ title, treatments }) => (
+        <Row key={title} icon='ph--sparkle--regular' label='Trip ideas' treatments={treatments} />
+      ))}
+      <span className='text-description'>Open</span>
+      {AGENT_STATES.map(({ title, treatments }) => (
+        <Row key={title} icon='ph--sparkle--regular' label='Trip ideas' treatments={['attended', ...treatments]} />
+      ))}
+    </div>
+  </Section>
+);
+
 const AllStory = () => (
   <div className='flex flex-col gap-8 p-4'>
     <VocabularyStory />
     <ResolutionStory />
     <CombinationsStory />
     <MotionStory />
+    <AgentSessionStory />
   </div>
 );
 
@@ -323,6 +357,18 @@ export const Combinations: Story = {
       <CombinationsStory />
     </div>
   ),
+};
+
+export const AgentStar: StoryObj<SizeArgs> = {
+  render: () => (
+    <div className='p-4'>
+      <AgentSessionStory />
+    </div>
+  ),
+  decorators: [withSizes()],
+  args: { size: 'xl' },
+  argTypes: SIZE_ARG_TYPES,
+  parameters: { layout: 'fullscreen' },
 };
 
 export const Motion: Story = {
