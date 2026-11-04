@@ -256,6 +256,9 @@ feat F-5: Collaborative Editing
     then: the local grid re-renders with the updated value without full reload
 
   req F-5.3: ComputeGraphRegistry manages per-space HyperFormula instances so all peers share the same formula graph.
+  req F-5.4:
+    when: another member selects a cell or range in a sheet the reader has open
+    then: the reader sees that range outlined in the member's hue with their name, until the member selects elsewhere or closes the sheet
 ```
 
 ```mdl
@@ -488,6 +491,32 @@ test QA-4: Showcase clip
       expect: the formulas compute as each row is entered
 ```
 
+```mdl
+test QA-5: See a collaborator's selection
+  desc: Two members open the same sheet; each sees the other's selected range, and it goes when the other closes the sheet.
+  actors: human
+  covers: [F-5.4]
+  status: unverified
+  automated:
+    - composer-e2e:grid-selection.spec.ts#Grid selections › host and guest see each other's sheet selections until one leaves
+  given:
+    - two identities, host and guest, in two browsers
+    - space: a space of the host's with a Sheet in it, shared with the guest
+  steps:
+    - name: Both open the sheet
+      do: As host and as guest, open the sheet.
+      expect: both see the same empty grid
+    - name: The host selects a range
+      do: As host, click A2 and shift-click B3.
+      expect: the guest sees A2:B3 outlined in the host's colour, with the host's name above it
+    - name: The guest selects a cell
+      do: As guest, click B5.
+      expect: the host sees B5 outlined in the guest's colour, with the guest's name
+    - name: The guest leaves
+      do: As guest, close the sheet's plank.
+      expect: the guest's outline disappears from the host's grid
+```
+
 ## Changelog
 
 ```mdl
@@ -510,6 +539,17 @@ decision D-2: Anchors stored before [D-1], in A1 notation or `col,row,col,row`, 
   why: Anchors live on `AnchoredTo` relations the sheet does not own, so a sheet migration cannot reach them, and their position is all they ever recorded.
   rejected:
     - Rewrite legacy anchors to index ranges when the sheet opens: a read would write to every peer's copy of the comments.
+```
+
+```mdl
+decision D-3: Collaborators' selections are published by cell id over the object's `awareness.<id>` channel, the one Markdown cursors use, and drawn in each member's hue with their name.
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.4]
+  why: Ids keep a selection on its cells when a peer inserts or moves rows, and one channel per object means a member's cursor looks the same in every editor.
+  rejected:
+    - Publish A1 positions: they point at whatever cell moved into place on the other side.
 ```
 
 ---

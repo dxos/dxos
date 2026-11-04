@@ -64,7 +64,7 @@ test.describe('Grid selections', () => {
     }
   });
 
-  test("host and guest see each other's sheet selections until one leaves", async () => {
+  test("host and guest see each other's sheet selections until one leaves", { tag: ['@sheet:QA-5'] }, async () => {
     await host.createSpace();
     await host.createObject({ type: 'Sheet' });
     await shareAndOpen(host, guest, openSheet);
@@ -98,7 +98,7 @@ test.describe('Grid selections', () => {
     await expect(Grid.remoteSelections(hostSheet)).toHaveCount(0);
   });
 
-  test('a table selection stays on its row when the other client sorts', async () => {
+  test('a table selection stays on its row when the other client sorts', { tag: ['@table:QA-4'] }, async () => {
     await host.createSpace();
     await host.createObject({ type: 'Table', name: 'People' });
 

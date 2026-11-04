@@ -199,6 +199,14 @@ feat F-6: AI / Skill
     then: agent can create tables with sorted columns via op:create
 ```
 
+```mdl
+feat F-7: Collaboration
+
+  req F-7.1:
+    when: another member selects a cell in a table the reader has open
+    then: the reader sees that cell outlined in the member's hue with their name, on the same row and field even when the reader's sort or filter puts it elsewhere
+```
+
 ## Acceptance
 
 ```mdl
@@ -349,6 +357,42 @@ test QA-3: Showcase clip
     - name: Work in it
       do: Click across it as the clip gesture does.
       expect: the object responds to each click
+```
+
+```mdl
+test QA-4: A collaborator's selection follows its row
+  desc: Two members open the same table; the host's selected cell stays on its row when the guest sorts.
+  actors: human
+  covers: [F-3.1, F-7.1]
+  status: unverified
+  automated:
+    - composer-e2e:grid-selection.spec.ts#Grid selections › a table selection stays on its row when the other client sorts
+  given:
+    - two identities, host and guest, in two browsers
+    - space: a space of the host's with a Table "People" whose rows read Bob then Alice, shared with the guest
+  steps:
+    - name: Both open the table
+      do: As host and as guest, open "People".
+      expect: both see Bob in row 1 and Alice in row 2
+    - name: The host selects Alice
+      do: As host, click Alice's cell.
+      expect: the guest sees that cell outlined in the host's colour, with the host's name
+    - name: The guest sorts
+      do: As guest, open the first column's menu and choose Sort Ascending.
+      expect: Alice moves to row 1 on the guest, and the host's outline moves with her
+```
+
+## Changelog
+
+```mdl
+decision D-1: Collaborators' cell selections are published as field id and row object id over the object's `awareness.<id>` channel, the one Markdown cursors use, and drawn in each member's hue with their name.
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-7.1]
+  why: Each client sorts and filters its own view, so a row index names a different row on each side; the object id does not.
+  rejected:
+    - Publish visual row and column indexes: a peer's sort would move the outline onto another row.
 ```
 
 ## Appendix: Extension Definitions
