@@ -284,7 +284,7 @@ test.describe('Collaboration tests', () => {
   });
 
   test(
-    "the sessions toggle lists a row per peer's session, each with its own Jump",
+    "the sessions toggle lists a peer's sessions under their row, each with its own Jump",
     { tag: ['@space:QA-4'] },
     async () => {
       test.setTimeout(150_000);
@@ -320,7 +320,9 @@ test.describe('Collaboration tests', () => {
       await expect(row).toContainText('2 sessions', { timeout: 45_000 });
       await host.page.getByTestId('spacePlugin.presence.showSessions').click();
       await expect(sessions).toHaveCount(2);
-      await expect(row).toHaveCount(0);
+      // Listed, the actions move from the person's row to their sessions' rows.
+      await expect(row).toHaveCount(1);
+      await expect(row.getByTestId('spacePlugin.presence.jump')).toHaveCount(0);
 
       await sessions.first().getByTestId('spacePlugin.presence.jump').click({ timeout: 30_000 });
       await expect(hostTextbox).toBeFocused();

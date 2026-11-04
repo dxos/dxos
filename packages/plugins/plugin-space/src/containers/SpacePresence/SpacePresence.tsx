@@ -187,9 +187,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
   const [open, setOpen] = useState(false);
   const [highlighted, setHighlighted] = useState<string>();
   const openList = (member?: Member) => {
-    setHighlighted(
-      member && (showSessions ? getSessionRowId(member, getSessionRows(member, t)[0].session) : member.rowId),
-    );
+    setHighlighted(member?.rowId);
     setOpen(true);
   };
 
@@ -295,16 +293,14 @@ const getSessionRows = (member: Member, t: Translate): SessionRow[] => {
     );
 };
 
-/** Listbox options for members' rows, or their sessions' rows. */
+/** Listbox options for members' rows, each followed by its sessions' rows with `showSessions`. */
 export const getPresenceOptions = (members: Member[], showSessions: boolean | undefined, t: Translate) =>
-  members.flatMap((member) =>
-    showSessions
-      ? getSessionRows(member, t).map(({ session, name }) => ({
-          value: getSessionRowId(member, session),
-          label: `${getName(member)} ${name}`,
-        }))
-      : [{ value: member.rowId, label: getName(member) }],
-  );
+  members.flatMap((member) => [
+    { value: member.rowId, label: getName(member) },
+    ...(showSessions
+      ? getSessionRows(member, t).map(({ session, name }) => ({ value: getSessionRowId(member, session), label: name }))
+      : []),
+  ]);
 
 export type PresenceItemsProps = {
   member: Member;
@@ -314,13 +310,13 @@ export type PresenceItemsProps = {
 };
 
 /**
- * A member's Listbox row (avatar, name, how many sessions, then their actions), or with `showSessions` a row per
- * session naming the member, whether the session moved lately, and its device.
+ * A member's Listbox row: avatar, name, how many sessions, then their actions. With `showSessions` a row per session
+ * follows it, with whether the session moved lately and its device; the actions move to those rows.
  */
 export const PresenceItems = ({ member, showSessions, renderActions }: PresenceItemsProps) => {
   const { t } = UiHooks.useTranslation(SpaceNamespace.key);
-  if (!showSessions) {
-    return (
+  return (
+    <>
       <Listbox.Item id={member.rowId} data-testid='spacePlugin.presence.row'>
         {/* Smaller than the row, so the row's hover and highlight frame it. */}
         <Listbox.ItemIcon>
@@ -334,39 +330,33 @@ export const PresenceItems = ({ member, showSessions, renderActions }: PresenceI
             </span>
           )}
         </Listbox.ItemText>
-        {renderActions?.(member, member.defaultSessionId)}
+        {!showSessions && renderActions?.(member, member.defaultSessionId)}
       </Listbox.Item>
-    );
-  }
-
-  return getSessionRows(member, t).map(({ session, name }) => {
-    const active = isMoving(session, member.now);
-    return (
-      <Listbox.Item
-        key={session.sessionId}
-        id={getSessionRowId(member, session)}
-        data-testid='spacePlugin.presence.session'
-      >
-        {/* Two lines tall, so the larger avatar still sits inside the row's hover and highlight. */}
-        <Listbox.ItemIcon>
-          <PresenceAvatar member={member} size='md' />
-        </Listbox.ItemIcon>
-        <Listbox.ItemText classNames='flex flex-col'>
-          <span className='truncate'>{getName(member)}</span>
-          <span className='flex items-center gap-1.5 text-sm text-fg-subtle'>
-            <span
-              role='img'
-              aria-label={t(active ? 'presence-active.label' : 'presence-idle.label')}
-              data-active={active ? '' : undefined}
-              className='size-2 shrink-0 rounded-full bg-neutral-border data-[active]:bg-success-text'
-            />
-            <span className='truncate'>{name}</span>
-          </span>
-        </Listbox.ItemText>
-        {renderActions?.(member, session.sessionId)}
-      </Listbox.Item>
-    );
-  });
+      {showSessions &&
+        getSessionRows(member, t).map(({ session, name }) => {
+          const active = isMoving(session, member.now);
+          return (
+            <Listbox.Item
+              key={session.sessionId}
+              id={getSessionRowId(member, session)}
+              data-testid='spacePlugin.presence.session'
+            >
+              {/* The dot sits under the avatar, so the device lines up with the member's name. */}
+              <Listbox.ItemIcon>
+                <span
+                  role='img'
+                  aria-label={t(active ? 'presence-active.label' : 'presence-idle.label')}
+                  data-active={active ? '' : undefined}
+                  className='size-2 rounded-full bg-neutral-border data-[active]:bg-success-text'
+                />
+              </Listbox.ItemIcon>
+              <Listbox.ItemText classNames='ps-2'>{name}</Listbox.ItemText>
+              {renderActions?.(member, session.sessionId)}
+            </Listbox.Item>
+          );
+        })}
+    </>
+  );
 };
 
 type PresenceAvatarProps = {
