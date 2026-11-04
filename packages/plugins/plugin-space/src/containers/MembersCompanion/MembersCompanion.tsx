@@ -10,9 +10,12 @@ import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { useIdentity, useMembers } from '@dxos/halo-react';
 import { type EID } from '@dxos/keys';
+import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
 
-import { SpaceCapabilities } from '#types';
+import { SpaceCapabilities, SpaceOperation } from '#types';
 
 import { SpaceNamespace } from '../../namespace.ts';
 import { getPeerFocus } from '../../util/index.ts';
@@ -20,8 +23,9 @@ import { PeerActions } from '../SpacePresence/PeerActions.tsx';
 import { type Member, PresenceList, useNow } from '../SpacePresence/SpacePresence.tsx';
 
 /** Everyone in the active space, grouped by the object they attend. */
-export const PeopleCompanion = () => {
+export const MembersCompanion = () => {
   const { t } = UiHooks.useTranslation(SpaceNamespace.key);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const space = ToolkitHooks.useActiveSpace();
   const ephemeral = Hooks.useAtomCapability(SpaceCapabilities.EphemeralState);
   const identity = useIdentity();
@@ -48,14 +52,38 @@ export const PeopleCompanion = () => {
 
   const count = [...groups.values()].reduce((total, group) => total + group.length, 0);
 
+  // A private space is locked at genesis, so it never has other members and has no members settings.
+  if (space?.membershipPolicy === MembershipPolicy.LOCKED) {
+    return (
+      <div
+        role='status'
+        className='flex flex-col items-center gap-2 p-4 text-center text-sm text-description'
+        data-testid='spacePlugin.membersCompanion.private'
+      >
+        <Icon.Icon icon='ph--lock-simple--regular' size='lg' tone='subtle' />
+        <p>{t('members-private.message')}</p>
+      </div>
+    );
+  }
+
   return (
-    <div className='flex flex-col gap-2 p-2 overflow-y-auto' data-testid='spacePlugin.people'>
-      <div className='px-2 text-sm'>{t('people-online.heading', { count })}</div>
-      {count === 0 && <div className='px-2 text-sm text-description'>{t('people-empty.message')}</div>}
+    <div className='flex flex-col gap-2 p-2 overflow-y-auto' data-testid='spacePlugin.membersCompanion'>
+      <div className='px-2 text-sm'>{t('members-online.heading', { count })}</div>
+      {count === 0 && <div className='px-2 text-sm text-description'>{t('members-empty.message')}</div>}
       {space &&
         [...groups.entries()].map(([key, group]) => (
           <ObjectGroup key={key} space={space} objectKey={key} members={group} />
         ))}
+      {space && (
+        <Button.Root
+          variant='ghost'
+          icon='ph--user-plus--regular'
+          label={t('members-invite.label')}
+          classNames='w-full justify-start'
+          data-testid='spacePlugin.membersCompanion.invite'
+          onClick={() => void invokePromise(SpaceOperation.OpenMembers, { space })}
+        />
+      )}
     </div>
   );
 };

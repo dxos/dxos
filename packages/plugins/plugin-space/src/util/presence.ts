@@ -137,7 +137,7 @@ export const applyViewingMessage = (
 };
 
 /** Id of the deck companion listing everyone in the active space. */
-export const PEOPLE_COMPANION_ID = 'people';
+export const MEMBERS_COMPANION_ID = 'members';
 
 /** Segment prefix of a peer's node under its space node. */
 export const PEER_SEGMENT_PREFIX = 'peer-';

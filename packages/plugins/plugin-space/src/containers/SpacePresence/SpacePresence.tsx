@@ -23,7 +23,7 @@ import { hexToFallback } from '@dxos/util';
 import { SpaceCapabilities, SpaceSchema } from '#types';
 
 import { SpaceNamespace } from '../../namespace.ts';
-import { PEOPLE_COMPANION_ID, PRESENCE_EXPIRY } from '../../util/index.ts';
+import { MEMBERS_COMPANION_ID, PRESENCE_EXPIRY } from '../../util/index.ts';
 import { PeerActions } from './PeerActions.tsx';
 
 const REFRESH_INTERVAL = 5000;
@@ -86,7 +86,7 @@ export const SpacePresence = ({ spaceId, presenceKey }: SpacePresenceProps) => {
   );
 };
 
-/** Opens the People companion, which lists everyone in the space. */
+/** Opens the Members companion, which lists everyone in the space. */
 const SeeEveryoneButton = () => {
   const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
@@ -99,7 +99,7 @@ const SeeEveryoneButton = () => {
         classNames='w-full justify-start mt-1'
         data-testid='spacePlugin.presence.seeEveryone'
         onClick={() =>
-          void invokePromise(LayoutOperation.UpdateComplementary, { subject: PEOPLE_COMPANION_ID, state: 'expanded' })
+          void invokePromise(LayoutOperation.UpdateComplementary, { subject: MEMBERS_COMPANION_ID, state: 'expanded' })
         }
       />
     </Popover.CloseTrigger>

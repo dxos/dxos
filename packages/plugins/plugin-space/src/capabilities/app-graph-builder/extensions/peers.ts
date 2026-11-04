@@ -25,7 +25,7 @@ import { SpaceCapabilities, SpaceSchema } from '#types';
 import { SpaceNamespace } from '../../../namespace.ts';
 import {
   PEER_SEGMENT_PREFIX,
-  PEOPLE_COMPANION_ID,
+  MEMBERS_COMPANION_ID,
   getPeerFocus,
   getPresenceKeyFromPath,
   getSpacePeers,
@@ -36,7 +36,7 @@ const GO_TO_LABEL: Label = ['presence-go-to.label', { ns: SpaceNamespace.key }];
 
 const isPeerNodeData = Schema.is(SpaceSchema.PeerNodeData);
 
-/** The People deck companion, and a hidden node per peer in a space carrying the actions on that peer. */
+/** The Members deck companion, and a hidden node per peer in a space carrying the actions on that peer. */
 export const createPeerExtensions = Effect.fnUntraced(function* () {
   const capabilities = yield* Capability.Service;
   const ephemeralCapAtom = yield* Capability.atom(SpaceCapabilities.EphemeralState);
@@ -44,14 +44,14 @@ export const createPeerExtensions = Effect.fnUntraced(function* () {
 
   return yield* Effect.all([
     AppGraphBuilder.createExtension({
-      id: 'peopleCompanion',
+      id: 'membersCompanion',
       relation: AppNode.companion,
       match: GraphNodeMatcher.whenRoot,
       connector: () =>
         Effect.succeed([
           AppNode.makeDeckCompanion({
-            id: PEOPLE_COMPANION_ID,
-            label: ['people-companion.label', { ns: SpaceNamespace.key }],
+            id: MEMBERS_COMPANION_ID,
+            label: ['members-companion.label', { ns: SpaceNamespace.key }],
             icon: 'ph--users--regular',
             data: null,
           }),

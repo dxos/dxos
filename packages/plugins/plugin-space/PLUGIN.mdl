@@ -542,8 +542,9 @@ feat F-8: Presence and Sync Status
   req F-8.7: A space's navtree row counts the peers viewing the space itself, alongside its sync status.
   req F-8.8: Each peer in a space has a hidden app-graph node whose actions act on that peer: Jump when the object the peer views is open in the deck, Go to otherwise.
   req F-8.9: Jump reveals the peer's selection, or the top of their viewport when they have none, moving the caret and taking focus.
-  req F-8.10: Clicking an avatar in SpacePresence opens the list of the object's viewers with that peer's row highlighted; the list ends with a button that opens the People companion.
-  req F-8.11: The People deck companion lists every online peer in the space, grouped by the object they view, with the same actions.
+  req F-8.10: Clicking an avatar in SpacePresence opens the list of the object's viewers with that peer's row highlighted; the list ends with a button that opens the Members companion.
+  req F-8.11: The Members deck companion lists every online peer in the space, grouped by the object they view, with the same actions, and ends with a link to the space's members settings to invite more.
+  req F-8.14: In a locked space the Members companion shows only a placeholder saying the space is private, since it has no other members and no members settings.
   req F-8.12: A peer on several devices shows as one row, located by the device seen most recently.
   req F-8.13: The viewing message carries each attended object's location; it is sent with the heartbeat and at most once per second when a location changes.
 ```
@@ -701,7 +702,7 @@ test QA-2: Register a schema and add a typed relation
 
 ```mdl
 test QA-3: Act on a peer from their avatar
-  desc: A peer's avatar opens the object's viewers, Jump reveals what they are looking at, and the People companion lists everyone in the space.
+  desc: A peer's avatar opens the object's viewers, Jump reveals what they are looking at, and the Members companion lists everyone in the space.
   actors: human
   covers: [F-8.8, F-8.9, F-8.10, F-8.11]
   status: unverified
@@ -722,7 +723,10 @@ test QA-3: Act on a peer from their avatar
       expect: the host's editor takes focus with its caret at the guest's selection
     - name: See everyone
       do: Open the viewers list again and click "See everyone in this space".
-      expect: the People companion opens in the complementary sidebar and lists the guest under the document
+      expect: the Members companion opens in the complementary sidebar and lists the guest under the document
+    - name: Invite more
+      do: Click "Invite members" in the Members companion.
+      expect: the space's members settings open
 ```
 
 ---
@@ -844,6 +848,23 @@ decision D-13: Locations ride the existing `viewing` message, sent with the hear
   affects: [F-8.13]
   why: Jump needs only a recent location; the faster rate belongs to following, which raises it only while someone follows.
   rejected: A separate location message; two messages per peer would need their own expiry.
+```
+
+```mdl
+decision D-14: The companion is named Members, matching the members settings, and links to the members settings to invite more people. In a locked space it shows a placeholder, since there are no other members and no members settings.
+  date: 2026-11-04
+  by: user:wittjosiah
+  supersedes: D-9
+  affects: [F-8.10, F-8.11, F-8.14]
+```
+
+```mdl
+decision D-15: The invite link opens the members settings through `SpaceOperation.OpenMembers` and shows even when no one else is online; the locked placeholder replaces the whole list. Fills in [D-14].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.11, F-8.14]
+  why: An empty space is when inviting matters most; a locked space can list no one but you.
 ```
 
 ## Appendix: Extension Definitions

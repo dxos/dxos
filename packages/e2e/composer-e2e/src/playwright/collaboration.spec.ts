@@ -278,5 +278,8 @@ test.describe('Collaboration tests', () => {
     await expect(sidebar.getByTestId('spacePlugin.presence.row')).toHaveCount(1, { timeout: 30_000 });
     // The popover closed, so the companion's row is the only one left.
     await expect(row).toHaveCount(1);
+
+    await sidebar.getByTestId('spacePlugin.membersCompanion.invite').click();
+    await expect(host.page.getByTestId('membersContainer.createInvitation.more')).toBeVisible({ timeout: 15_000 });
   });
 });
