@@ -193,7 +193,10 @@ export const number = async (spec: Spec.Spec): Promise<void> => {
         }
         // Only the ids, so the records and the cursors into their text stay.
         numbered.forEach(({ key, id }) => {
-          feature.requirements![key].id = id;
+          const record = feature.requirements?.[key];
+          if (record) {
+            record.id = id;
+          }
         });
       });
     }

@@ -79,7 +79,7 @@ export default Capability.makeModule(() =>
         key,
         sort: (anchorA: AnchoredTo.AnchoredTo, anchorB: AnchoredTo.AnchoredTo) => {
           const object = Relation.getTarget(anchorA);
-          if (!isSubject(object) || object !== Relation.getTarget(anchorB)) {
+          if (!isSubject(object) || object.id !== Relation.getTarget(anchorB).id) {
             return 0;
           }
           const [orderA, startA] = getPosition(object, anchorA.anchor);

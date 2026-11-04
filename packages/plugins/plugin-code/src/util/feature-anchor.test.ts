@@ -74,8 +74,10 @@ describe('feature-anchor', () => {
   test('a requirement another writer adds has a key its comments anchor to', async ({ expect }) => {
     const { feature, anchor } = await setup();
     Obj.update(feature, (feature) => {
-      feature.requirements!.k2 = { text: 'Sync stops when offline.' };
-      feature.requirementOrder!.push('k2');
+      if (feature.requirements && feature.requirementOrder) {
+        feature.requirements.k2 = { text: 'Sync stops when offline.' };
+        feature.requirementOrder.push('k2');
+      }
     });
     const [added] = Feature.getRequirements(feature).slice(-1);
     expect(FeatureAnchor.getText(feature, anchor({ field: 'requirement', key: added.key }, 5, 10))).toBe('stops');

@@ -215,7 +215,10 @@ export const EditInCompanion: Story = {
     // The name is an editor bound to the feature, so each keystroke reaches the card without a commit.
     const name = await (await companion()).findByTestId('name', undefined, { timeout: 5_000 });
     await expect(name).toHaveTextContent('Smart triage');
-    const content = name.querySelector<HTMLElement>('.cm-content')!;
+    const content = name.querySelector<HTMLElement>('.cm-content');
+    if (!content) {
+      throw new Error('The name editor has no content element.');
+    }
     await userEvent.click(content);
     await userEvent.type(content, '{End} 2');
     await expect(await within(node).findByText('Smart triage 2', undefined, { timeout: 5_000 })).toBeInTheDocument();

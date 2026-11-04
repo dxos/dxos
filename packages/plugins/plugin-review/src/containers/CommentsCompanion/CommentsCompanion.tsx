@@ -50,7 +50,9 @@ export const CommentsCompanion = ({ attendableId, data }: CommentsCompanionProps
         if (resolved.length === 0) {
           return undefined;
         }
-        const targets = [...new Set(resolved.flatMap(({ targets }) => targets))];
+        const targets = [
+          ...new Map(resolved.flatMap(({ targets }) => targets).map((target) => [target.id, target])).values(),
+        ];
         return { subject: resolved[0].subject, targets };
       }),
     [scopes, data],
@@ -193,7 +195,7 @@ const TargetComments = ({ target, subject, attendableId, showResolvedThreads }: 
   const typename = Obj.getTypename(target);
   const type = typename ? t('typename.label', { ns: typename, defaultValue: '' }) : '';
   const name = snapshot ? Obj.getLabel(snapshot) : undefined;
-  const sameName = target === subject || !name || name === (subjectSnapshot && Obj.getLabel(subjectSnapshot));
+  const sameName = target.id === subject.id || !name || name === (subjectSnapshot && Obj.getLabel(subjectSnapshot));
   const heading = !type ? name : sameName ? type : `${type} · ${name}`;
 
   return (

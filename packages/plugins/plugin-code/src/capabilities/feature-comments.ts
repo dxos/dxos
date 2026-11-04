@@ -49,7 +49,7 @@ export default Capability.makeModule(() =>
       key: typename,
       sort: (anchorA: AnchoredTo.AnchoredTo, anchorB: AnchoredTo.AnchoredTo) => {
         const feature = Relation.getTarget(anchorA);
-        return Feature.instanceOf(feature) && feature === Relation.getTarget(anchorB)
+        return Feature.instanceOf(feature) && feature.id === Relation.getTarget(anchorB).id
           ? FeatureAnchor.compare(feature, anchorA.anchor, anchorB.anchor)
           : 0;
       },
