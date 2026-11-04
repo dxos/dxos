@@ -118,7 +118,7 @@ export default Capability.makeModule(() =>
         id: 'feature.section',
         filter: AppSurface.object(AppSurface.Section, Feature.Feature),
         component: FeatureSection,
-        props: ({ data: { subject } }) => ({ subject }),
+        props: ({ data: { subject, attendableId } }) => ({ subject, attendableId }),
       }),
       Surface.create({
         id: 'feature.card',
