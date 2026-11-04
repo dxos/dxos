@@ -782,8 +782,8 @@ requires; where the test expects the opposite today, the table says so ([D-62]).
 | T-17     | edge       | `edge` `operation-fallbacks.node.test.ts` › operations without a bundle in plugins mode (2 tests)                                         | Same condition as T-16.                                                                    |
 | T-18     | edge       | `edge` `plugin-isolation.node.test.ts` › operations that read another plugin’s capabilities                                               | Passes with operation-service; fails in plugins routing by [D-41] until the case is resolved. |
 | T-19     | edge       | `plugins-mode.yml`: the edge suite with `DX_TEST_OPERATION_ROUTING=plugins`                                                               | Advisory; per-test failures are recorded in edge's operation-fallbacks plan.               |
-| T-20     | edge       | `edge` `plugin-cross.node.test.ts` › two plugins published with the dx CLI › B invokes A's operation                                      | Same condition as T-15.                                                                    |
-| T-21     | edge       | `edge` `plugin-cross.node.test.ts` › two plugins published with the dx CLI › B uses A's type                                              | Same condition as T-15.                                                                    |
+| T-20     | edge       | `edge` `plugin-cross.node.test.ts` › two plugins published with the dx CLI › B invokes A's operation                                      | Planned: not in edge yet. Will need a `dx` binary, as T-15 does.                           |
+| T-21     | edge       | `edge` `plugin-cross.node.test.ts` › two plugins published with the dx CLI › B uses A's type                                              | Planned: not in edge yet. Will need a `dx` binary, as T-15 does.                           |
 
 The browser half of loading a bundle, Composer building a remote plugin from its `manifest.json` and importing a module
 body only when the module activates, is Composer's QA flow `org.dxos.app.composer#QA-17` ([D-61]).
@@ -1604,4 +1604,13 @@ decision D-64: Calling another plugin's operation and using another plugin's typ
   why: Both plugins are published the way a third party would publish them, and neither depends on a first-party bundle being built or on operation-service.
   rejected:
     - Only first-party plugins (T-6, T-18): those exercise the dxos build and seeding as well, and cannot show that two independently published bundles interoperate.
+```
+
+```mdl
+decision D-65: T-20 publishes B first and A between its two invokes; T-13's dropped types come from the store's owner overwrite (`replace: true`), not a publish; T-20 and T-21 are marked planned until their test exists. Fills in [D-64].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [T-13, T-20, T-21]
+  why: As first written, T-20 published both plugins yet expected a failure before A was published, and T-13 implied a published version can change, which F-2.1 forbids.
 ```
