@@ -613,6 +613,7 @@ test QA-8: Two peers in one space
     - composer-e2e:collaboration.spec.ts#Collaboration tests › guest joins host's space
     - composer-e2e:collaboration.spec.ts#Collaboration tests › host and guest can see each others' cursors when same document is in focus
     - composer-e2e:collaboration.spec.ts#Collaboration tests › host and guest can see each others' changes in same document
+    - composer-e2e:collaboration.spec.ts#Collaboration tests › peers can see each others presence
   given:
     - host: a booted app with an identity and a space containing one document
     - guest: a SECOND browser profile with its own, different identity
@@ -623,6 +624,9 @@ test QA-8: Two peers in one space
     - name: Both open the document
       do: Open the same document on both peers.
       expect: each peer's editor shows the same text
+    - name: See each other
+      do: Keep the document open on both peers.
+      expect: each peer's plank header shows the other peer's avatar, marked as currently viewing
     - name: Focus the document on both peers
       do: Put the cursor in the document's editor on the host and on the guest.
       expect: |
@@ -1176,7 +1180,23 @@ decision D-11: QA-5 lists no automated test for recovering an identity until `re
 ```
 
 ```mdl
-decision D-12: QA-8 checks that each peer sees the other's cursor once both focus the document, automated by the collaboration cursor e2e spec.
+decision D-12: Each peer sees which other members are viewing the same object.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [QA-8]
+```
+
+```mdl
+decision D-13: QA-8 checks presence with a step where each peer's plank header shows the other's avatar as currently viewing, automated by the presence e2e spec. Fills in [D-12].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-8]
+  why: QA-8 already brings two peers onto one document, which is the state presence needs.
+```
+
+```mdl
+decision D-14: QA-8 checks that each peer sees the other's cursor once both focus the document, automated by the collaboration cursor e2e spec.
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah

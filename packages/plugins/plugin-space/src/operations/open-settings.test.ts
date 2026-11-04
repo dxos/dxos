@@ -15,12 +15,10 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { DXN } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { PublicKey } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Harness from '@dxos/plugin-testing/Harness';
-import { ComplexMap } from '@dxos/util';
 
 import * as SpacePlugin from '#meta';
 import { SpaceCapabilities, SpaceOperation } from '#types';
@@ -88,7 +86,6 @@ const ephemeralState = () =>
     sdkMigrationRunning: {},
     navigableCollections: false,
     viewersByObject: {},
-    viewersByIdentity: new ComplexMap<PublicKey, Set<string>>(PublicKey.hash),
     mergePreview: undefined,
     lastMergeAt: undefined,
   }).pipe(Atom.keepAlive);
