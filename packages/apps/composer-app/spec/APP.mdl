@@ -611,6 +611,7 @@ test QA-8: Two peers in one space
   status: unverified        # 2026-09-20, written from composer-e2e/src/playwright/collaboration.spec.ts
   automated:
     - composer-e2e:collaboration.spec.ts#Collaboration tests › guest joins host's space
+    - composer-e2e:collaboration.spec.ts#Collaboration tests › host and guest can see each others' cursors when same document is in focus
     - composer-e2e:collaboration.spec.ts#Collaboration tests › host and guest can see each others' changes in same document
   given:
     - host: a booted app with an identity and a space containing one document
@@ -622,6 +623,11 @@ test QA-8: Two peers in one space
     - name: Both open the document
       do: Open the same document on both peers.
       expect: each peer's editor shows the same text
+    - name: Focus the document on both peers
+      do: Put the cursor in the document's editor on the host and on the guest.
+      expect: |
+        each peer's editor shows the other's cursor with the other's name. The guest opened the
+        document after the host's last cursor move, so this checks that state reaches a late joiner.
     - name: Type on the host
       do: Type into the document on the host.
       expect: the guest's editor shows the host's text without a reload
@@ -1167,4 +1173,13 @@ decision D-11: QA-5 lists no automated test for recovering an identity until `re
   by: user:dmaretskyi
   affects: [QA-5]
   why: The test fails on main since 2026-11-02 and is skipped, so naming it would claim coverage it does not give.
+```
+
+```mdl
+decision D-12: QA-8 checks that each peer sees the other's cursor once both focus the document, automated by the collaboration cursor e2e spec.
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-8]
+  why: The cursor spec is enabled again now that awareness state reaches a peer that joins after the last cursor move.
 ```
