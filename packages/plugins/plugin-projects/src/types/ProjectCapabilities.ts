@@ -7,12 +7,14 @@
 import type { Extension } from '@codemirror/state';
 import type * as Effect from 'effect/Effect';
 import type * as Atom from 'effect/reactivity/Atom';
+import type * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import type * as Translations from '@dxos/app-toolkit/Translations';
 import * as Project from '@dxos/compute/Project';
 import type * as Spec from '@dxos/compute/Spec';
 import type { Database, Obj } from '@dxos/echo';
+import type { FormFieldAction } from '@dxos/react-ui-form';
 
 import { ProjectsNamespace } from '../namespace.ts';
 
@@ -115,3 +117,31 @@ export type SpecView = {
 };
 
 export const SpecView = Capability.make<SpecView>()(`${ProjectsNamespace.key}.capability.specView`);
+
+/** One setting in a {@link ConfigGroup}; `value` is a writable atom so the form never knows where it is stored. */
+export type ConfigField = {
+  /** Unique within the group. */
+  key: string;
+  /** Its `title` and `description` annotations label the field. */
+  schema: Schema.Top;
+  value: (project: Project.Project) => Atom.Writable<any, any>;
+  /** Hides the field while false; absent means always shown. */
+  enabled?: Atom.Atom<boolean>;
+  action?: FormFieldAction;
+  /** Sort key within the group, lowest first. */
+  order?: number;
+};
+
+/** A group of settings in a project's Config section; contributions with the same `id` merge into one group. */
+export type ConfigGroup = {
+  id: string;
+  label: Translations.Label;
+  /** Groups sort by it, lowest first. */
+  order?: number;
+  fields: readonly ConfigField[];
+};
+
+export const ConfigGroup = Capability.make<ConfigGroup>()(`${ProjectsNamespace.key}.capability.configGroup`);
+
+/** Contributing a group with this id adds its fields to the project's own Agent group. */
+export const AgentConfigGroupId = 'agent';

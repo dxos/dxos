@@ -16,7 +16,19 @@ import { type EdgeFunctionEnv } from './edge/index.ts';
  * The bindings EDGE gives a bundle's isolate. They are the same for every space and caller, so one isolate serves them
  * all; each is optional, since an invocation outside a space, or a test, runs without them.
  */
-export type Env = Partial<Pick<EdgeFunctionEnv.Env, 'DATA_SERVICE' | 'QUEUE_SERVICE' | 'FUNCTIONS_AI_SERVICE'>>;
+export type Env = Partial<Pick<EdgeFunctionEnv.Env, 'DATA_SERVICE' | 'QUEUE_SERVICE' | 'FUNCTIONS_AI_SERVICE'>> & {
+  /** EDGE's registry of the types every published plugin contributes; resolves a type the bundle does not hold. */
+  readonly TYPE_REGISTRY?: TypeRegistry;
+};
+
+/** EDGE's registry of published types, keyed by DXN. */
+export interface TypeRegistry {
+  /**
+   * The type with this typename, from the first published bundle that contributes it; `version` narrows it to that
+   * version. Undefined when no published bundle contributes it.
+   */
+  resolveType(typename: string, version?: string): Promise<TypeRecord | undefined>;
+}
 
 /** One invocation of an operation the bundle's primary plugin handles. */
 export type InvokeRequest = {

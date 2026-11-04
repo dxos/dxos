@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
 import { type EntityStructure } from '@dxos/echo-protocol';
+import { invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, URI } from '@dxos/keys';
 
 import * as Obj from '../../Obj.ts';
@@ -15,7 +16,7 @@ import { TestSchema } from '../../testing/index.ts';
 import * as Type from '../../Type.ts';
 import { getTypename, getTypeURI } from '../Annotation/index.ts';
 import { getMetaChecked } from '../common/api/index.ts';
-import { makeDecodedEntityLive } from '../common/proxy/index.ts';
+import { getProxyTarget, makeDecodedEntityLive } from '../common/proxy/index.ts';
 import { type AnyEntity, ATTR_TYPE, EntityKind, KindId, TypeId, getSchema } from '../common/types/index.ts';
 import { ATTR_DELETED, MetaId } from '../common/types/model-symbols.ts';
 import { RelationSourceId, RelationTargetId, getObjectEchoUri } from '../Entity/index.ts';
@@ -179,6 +180,23 @@ describe('Object JSON serializer', () => {
   });
 
   describe('live decode', () => {
+    test('nested records share the prototype of nested records made in memory', async () => {
+      const made = Obj.make(TestSchema.Example, { nested: { field: 'a' } });
+      const refResolver = new StaticRefResolver().addSchema(TestSchema.Example);
+      const live = await decodeLive(objectToJSON(made), { refResolver });
+      invariant(Obj.instanceOf(TestSchema.Example)(live));
+      invariant(made.nested && live.nested);
+      expect(Object.getPrototypeOf(getProxyTarget<object>(live.nested))).toBe(
+        Object.getPrototypeOf(getProxyTarget<object>(made.nested)),
+      );
+
+      Obj.update(live, (live) => {
+        invariant(live.nested);
+        live.nested.field = 'b';
+      });
+      expect(live.nested.field).toBe('b');
+    });
+
     test('decodes as a live proxy, not a plain snapshot', async () => {
       const contact = Obj.make(TestSchema.Person, { name: 'Alice' });
       const contactJson = objectToJSON(contact);

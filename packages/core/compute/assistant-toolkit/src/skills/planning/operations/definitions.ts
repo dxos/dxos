@@ -31,16 +31,16 @@ const TaskChange = Schema.Struct({
     description: 'Create a new task on this checklist, assigned to you. Requires `title`; omit `task`.',
   }).pipe(Schema.optional),
   assign: Schema.Boolean.annotate({
-    description: 'Put the task on this checklist and make you its assignee.',
+    description: 'Put the task on this checklist with you working it. A person who answers for it stays its assignee.',
   }).pipe(Schema.optional),
   unassign: Schema.Boolean.annotate({
-    description: 'Take the task off this checklist and clear its assignee. Never deletes the task.',
+    description: 'Take the task off this checklist and stop working it. Never deletes the task.',
   }).pipe(Schema.optional),
   title: Schema.String.annotate({ description: 'The new task title, or a rename of an existing task.' }).pipe(
     Schema.optional,
   ),
   status: Schema.Literals(['todo', 'started', 'done'])
-    .annotate({ description: '`started` also assigns the task to you.' })
+    .annotate({ description: '`started` also makes you the agent working it.' })
     .pipe(Schema.optional),
 });
 

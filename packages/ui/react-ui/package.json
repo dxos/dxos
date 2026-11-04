@@ -42,6 +42,11 @@
       "types": "./dist/types/src/components/Avatar/Avatar.d.ts",
       "import": "./dist/lib/Avatar.mjs"
     },
+    "./Badge": {
+      "source": "./src/components/Badge/Badge.tsx",
+      "types": "./dist/types/src/components/Badge/Badge.d.ts",
+      "import": "./dist/lib/Badge.mjs"
+    },
     "./Banner": {
       "source": "./src/components/Banner/Banner.tsx",
       "types": "./dist/types/src/components/Banner/Banner.d.ts",

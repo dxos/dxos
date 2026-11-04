@@ -175,8 +175,11 @@ export const steps = [
     narration: 'Assign the task to the agent: the assistant opens beside the inbox and starts on it.',
     run: async ({ demo, page }) => {
       await demo.hover({ selector: `${TASK} >> nth=0`, label: 'Task' });
-      await demo.click({ selector: `${TASK} button[aria-label="Task actions"] >> nth=0`, label: 'More' });
-      await demo.click({ selector: '[role="menuitem"]:has-text("Assign to agent")', label: 'Assign to agent' });
+      await demo.click({
+        selector: `${TASK} :is([data-testid="taskList.item.assignee"], [data-testid="taskList.item.assignee.unset"]) >> nth=0`,
+        label: 'Assignee',
+      });
+      await demo.click({ selector: '[role="menuitem"]:has-text("Default agent")', label: 'Default agent' });
       await page.locator(`${COMPANION} [data-testid="assistant.prompt"]`).first().waitFor({ timeout: 30_000 });
       await caption(demo, 'The agent drafts a reply');
     },

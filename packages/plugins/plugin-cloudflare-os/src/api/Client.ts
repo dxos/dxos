@@ -56,6 +56,36 @@ export const hashPassword = (username: string, password: string): Effect.Effect<
 export const call = <T>(message: string, run: () => PromiseLike<T>): Effect.Effect<T, CloudflareOsError> =>
   Effect.tryPromise({ try: () => Promise.resolve(run()), catch: (cause) => new CloudflareOsError({ message, cause }) });
 
+/**
+ * Settles with `promise`, or rejects once `timeoutMs` passes; for a request that must finish even while its
+ * effect is uninterruptible, where an Effect timeout could not cut it short.
+ */
+export const withDeadline = <T>(
+  promise: PromiseLike<T>,
+  timeoutMs: number,
+  onLate?: (value: T) => void,
+): Promise<T> => {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let expiredAt = false;
+  const expired = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      expiredAt = true;
+      reject(new Error(`No answer within ${timeoutMs} ms.`));
+    }, timeoutMs);
+  });
+  const settled = Promise.resolve(promise);
+  // An answer that arrives after the deadline still happened remotely, so the caller can undo it.
+  settled.then(
+    (value) => {
+      if (expiredAt) {
+        onLate?.(value);
+      }
+    },
+    () => {},
+  );
+  return Promise.race([settled, expired]).finally(() => clearTimeout(timer));
+};
+
 /** Disposes an RPC stub; a stub whose session already closed has nothing left to release. */
 export const dispose = (stub: { [Symbol.dispose](): void }): void => {
   try {
@@ -87,37 +117,31 @@ export const session = (url: string): Effect.Effect<RpcStub<Protocol.PublicApi>,
   );
 
 /** Signs in with a username and password, returning the session token `authenticate()` takes later. */
-export const login = ({
-  url,
-  username,
-  password,
-}: {
+export const login: (credentials: {
   url: string;
   username: string;
   password: string;
-}): Effect.Effect<string, CloudflareOsError> =>
-  Effect.gen(function* () {
-    const api = yield* session(url);
-    const passwordHash = yield* hashPassword(username, password);
-    const token = yield* call('Cloudflare OS refused the sign-in.', () => api.login(username, passwordHash));
-    if (!token) {
-      return yield* Effect.fail(new CloudflareOsError({ message: 'Wrong username or password.' }));
-    }
-    return token;
-  }).pipe(Effect.scoped);
+}) => Effect.Effect<string, CloudflareOsError> = Effect.fnUntraced(function* ({ url, username, password }) {
+  const api = yield* session(url);
+  const passwordHash = yield* hashPassword(username, password);
+  const token = yield* call('Cloudflare OS refused the sign-in.', () => api.login(username, passwordHash));
+  if (!token) {
+    return yield* Effect.fail(new CloudflareOsError({ message: 'Wrong username or password.' }));
+  }
+  return token;
+}, Effect.scoped);
 
 /** An authenticated session for a stored session token, closed with the scope. */
-export const authenticate = ({
-  url,
-  token,
-}: {
+export const authenticate: (account: {
   url: string;
   token: string;
-}): Effect.Effect<RpcStub<Protocol.AuthenticatedApi>, CloudflareOsError, Scope.Scope> =>
-  Effect.gen(function* () {
-    const api = yield* session(url);
-    const user = api.authenticate(token);
-    // Pipelined: the call above resolves only once the server accepts the token, which this awaits.
-    yield* call('Cloudflare OS rejected the session token. Reconnect the account.', () => user.listWorkspaces());
-    return user;
-  });
+}) => Effect.Effect<RpcStub<Protocol.AuthenticatedApi>, CloudflareOsError, Scope.Scope> = Effect.fnUntraced(function* ({
+  url,
+  token,
+}) {
+  const api = yield* session(url);
+  const user = api.authenticate(token);
+  // Pipelined: the call above resolves only once the server accepts the token, which this awaits.
+  yield* call('Cloudflare OS rejected the session token. Reconnect the account.', () => user.listWorkspaces());
+  return user;
+});

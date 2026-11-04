@@ -10,7 +10,8 @@ import { SessionConfig } from '@dxos/ai';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import * as Routine from '@dxos/compute/Routine';
-import { DXN, Format, Migration, Obj, Ref, Type } from '@dxos/echo';
+import * as Spec from '@dxos/compute/Spec';
+import { DXN, Format, Migration, Obj, Ref, Type, type URI } from '@dxos/echo';
 import { Outline, Repo, TaskSet } from '@dxos/types';
 
 /**
@@ -34,15 +35,64 @@ export class ProjectV6 extends Type.makeObject<ProjectV6>(DXN.make('org.dxos.typ
   }),
 ) {}
 
+/** The 0.7.0 `Project`, kept only so `projectRepositories` can read existing data. */
+export class ProjectV7 extends Type.makeObject<ProjectV7>(DXN.make('org.dxos.type.project', '0.7.0'))(
+  Schema.Struct({
+    name: Schema.optional(Schema.String),
+    description: Schema.optional(Format.Text),
+    status: Schema.optional(Project.ProjectStatus),
+    instructions: Schema.optional(Ref.Ref(Instructions.Instructions)),
+    artifacts: Schema.Array(Ref.Ref(Obj.Unknown)),
+    routines: Schema.Array(Ref.Ref(Routine.Routine)),
+    outline: Schema.optional(Ref.Ref(Outline.Outline)),
+    specs: Schema.Array(Ref.Ref(Spec.Spec)),
+    taskSet: Schema.optional(Ref.Ref(TaskSet.TaskSet)),
+    repo: Schema.optional(Ref.Ref(Repo.Repo)),
+    repositories: Schema.optional(Schema.Array(Ref.Ref(Repo.Repo))),
+    session: Schema.optional(SessionConfig.SessionConfig),
+  }),
+) {}
+
 /**
  * `Project` 0.6.0 → 0.7.0: a project owns a list of specs (`specs`) where it owned at most one (`spec`). Runs before any
  * migration of the specs a project owns, so each finds the project's specs where 0.7.0 keeps them.
  */
 export const projectSpecs = Migration.define({
   from: ProjectV6,
-  to: Project.Project,
+  to: ProjectV7,
   transform: async ({ spec, ...rest }) => ({
     ...rest,
     specs: spec ? [Ref.fromURI(spec.uri)] : [],
   }),
 });
+
+/** `Project` 0.7.0 → 0.8.0: `repo` and `repositories` move to `Repo.RepositoriesAnnotation`; `session` is dropped. */
+const makeProjectRepositories = (): Migration.ObjectMigration => {
+  // Each project's repository URIs, read in the transform while its refs are still live.
+  const repositories = new Map<string, URI.URI[]>();
+  return Migration.define({
+    from: ProjectV7,
+    to: Project.Project,
+    transform: async ({ id, repo, repositories: list, session: _session, ...rest }) => {
+      const uris = [...(repo ? [repo] : []), ...(list ?? [])].map((ref) => ref.uri);
+      repositories.set(
+        id,
+        uris.filter((uri, index) => uris.indexOf(uri) === index),
+      );
+      return rest;
+    },
+    onMigration: async ({ object }) => {
+      // Written here rather than in the transform, which cannot carry refs in meta.
+      const uris = repositories.get(object.id) ?? [];
+      repositories.delete(object.id);
+      if (uris.length > 0) {
+        Repo.setRepositories(
+          object,
+          uris.map((uri) => Ref.fromURI(uri)),
+        );
+      }
+    },
+  });
+};
+
+export const projectRepositories = makeProjectRepositories();

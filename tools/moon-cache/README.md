@@ -39,6 +39,13 @@ bazel-remote has no delete. To replace a bad entry, re-run the task with `--forc
 action-cache entry for the same hash. To drop an entry outright, an operator deletes its file under
 the server's `ac/` directory on the droplet.
 
+A manifest in the local shared cache is not replaced this way: in a worktree, `--force` logs the new
+file count but the existing manifest stays, so the next cache hit restores the bad entry. A manifest
+reading `"files":[]` for a task with declared outputs deletes those outputs on every hit. Remove it
+from `manifests/<first two hash characters>/<rest of hash>` under the shared cache directory, and the
+next run rebuilds it. moon only checks that a directory output exists, so a task that clears its
+output directory first must swap the finished directory in rather than fill it in place.
+
 Check it is actually working — moon **never fails** on a broken cache, it just quietly rebuilds:
 
 ```bash
@@ -193,6 +200,11 @@ MOON_CACHE_SHARED_WORKTREE_CACHE=false MOON_EXPERIMENT_CAS_OUTPUTS_CACHE=false m
    queueing is inside `bazel-remote` rather than under it. Hydration is what CI waits on, so this
    is a lower priority than it looks. Pinning it down needs `--profile_address` on the unit, which
    needs a restart; add it the next time one is spent.
+9. **Blobs cross the wire as zstd, not only on disk.** `remote.cache.compression: 'zstd'` in
+   `.moon/workspace.yml` matches the server's `--storage_mode zstd`. Dropping it multiplies the
+   droplet's billed egress by about the server's storage ratio, 3.1× across the whole cache (one
+   small build chain measured 5.5× on download). If the server ever stops advertising zstd, moon
+   logs one warning ending "falling back to no compression" and carries on uncompressed.
 
 ## The server
 

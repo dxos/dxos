@@ -976,7 +976,7 @@ const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
   );
 
   const handleUpdate = useCallback((task: Task.Task, patch: Task.Edit) => {
-    Task.update(task, patch);
+    Task.update(task, patch, { approve: true });
   }, []);
 
   // Execution is a prompt, not a direct write: the agent owns the task's lifecycle (assignment,
@@ -1019,7 +1019,6 @@ const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
       tasks={tasks}
       showGroupLabels={false}
       showOrdinals
-      showEstimates
       // The prompt frames the list, and its rows are too narrow for who holds a task or its mnemonic.
       flush
       showAssignees={false}

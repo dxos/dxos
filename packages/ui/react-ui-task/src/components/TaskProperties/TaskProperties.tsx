@@ -4,9 +4,9 @@
 
 import React, { type ReactNode } from 'react';
 
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { ActionMenu, type MenuAction, createMenuAction } from '@dxos/react-ui-menu';
+import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -19,9 +19,16 @@ import { mx } from '@dxos/ui-theme';
 import { translationKey } from '#translations';
 
 import { useAssigneeDisplay } from '../../hooks/index.ts';
-import { PERSON_ICON, shortDid } from '../../util/assignee.ts';
+import { UNASSIGNED_ICON } from '../../util/assignee.ts';
 import {
-  UNSET_ICON,
+  type TaskMember,
+  assigneeMenuActions,
+  estimateMenuActions,
+  priorityMenuActions,
+  statusMenuActions,
+} from '../../util/property-menus.ts';
+import {
+  ESTIMATE_ICON,
   estimateTextStyle,
   priorityIcon,
   priorityTextStyle,
@@ -31,11 +38,7 @@ import {
 import { TASK_GRID, TASK_GRID_ICON } from '../task-grid.ts';
 import { TaskMnemonic } from '../TaskList/TaskRowCells.tsx';
 
-/** The glyph for an estimate, which the list renders as letters and has none of its own. */
-const ESTIMATE_ICON = 'ph--ruler--regular';
-
-/** A member of the task's space, offered as an assignee by identity. */
-export type TaskMember = { did: string; name?: string };
+export type { TaskMember };
 
 export type TaskPropertiesProps = Util.ThemedClassName<{
   task: Task.Task;
@@ -44,6 +47,8 @@ export type TaskPropertiesProps = Util.ThemedClassName<{
    * HALO, which this package does not depend on.
    */
   members?: readonly TaskMember[];
+  /** The agents the assignee picker can hand the task to, listed after the people. */
+  delegateActions?: MenuItem[];
   /** Absent renders the properties read-only, as the list's readonly cells do. */
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
 }>;
@@ -57,16 +62,24 @@ export type TaskPropertiesProps = Util.ThemedClassName<{
  * task and the room to say what the glyph means — and an unset field can then invite the value
  * ("Set estimate") instead of showing a dot that reads as a value of its own.
  */
-export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }: TaskPropertiesProps) => {
+export const TaskProperties = ({
+  task,
+  members = [],
+  delegateActions,
+  onTaskUpdate,
+  classNames,
+}: TaskPropertiesProps) => {
   const { t } = Hooks.useTranslation(translationKey);
   const [storedStatus] = useObject(task, 'status');
   const [storedPriority] = useObject(task, 'priority');
   const [storedEstimate] = useObject(task, 'estimate');
   const [storedAssignee] = useObject(task, 'assignee');
+  const [storedDelegate] = useObject(task, 'delegate');
   const status = storedStatus ?? 'todo';
   const priority = storedPriority ?? undefined;
   const estimate = storedEstimate ?? undefined;
   const assignee = storedAssignee ?? undefined;
+  const delegate = storedDelegate ?? undefined;
 
   // The people the space knows, for the picker. Queried rather than read off refs: a contact's
   // target is not in memory on a cold load, and the picker must offer everyone, not only whoever
@@ -74,6 +87,7 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
   const db = Obj.getDatabase(task);
   const people = useQuery(onTaskUpdate ? db : undefined, Filter.type(Person.Person));
   const { label: assigneeLabel, icon: assigneeIcon } = useAssigneeDisplay(assignee);
+  const { label: delegateLabel, icon: delegateIcon } = useAssigneeDisplay(delegate);
   const { createdAt } = Obj.getMeta(task);
 
   return (
@@ -112,73 +126,32 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
           testId='taskList.property.status'
           actions={
             onTaskUpdate &&
-            (() =>
-              Task.StatusOptions.map(({ id }) =>
-                createMenuAction(`status-${id}`, () => onTaskUpdate(task, { status: id }), {
-                  label: t(`status-${id}.label`),
-                  icon: statusIcon(id),
-                  iconClassNames: statusTextStyle(id),
-                  checked: status === id,
-                }),
-              ))
+            (() => statusMenuActions({ status, onChange: (status) => onTaskUpdate(task, { status }), t }))
           }
         />
 
         <TaskProperty
-          icon={assignee ? assigneeIcon : UNSET_ICON}
-          label={assigneeLabel ?? t('set-assignee.label')}
-          unset={!assignee}
+          icon={assignee ? assigneeIcon : delegate ? delegateIcon : UNASSIGNED_ICON}
+          label={
+            assignee && delegate
+              ? t('delegated.label', { assignee: assigneeLabel ?? '', delegate: delegateLabel ?? '' })
+              : ((assignee ? assigneeLabel : delegateLabel) ?? t('set-assignee.label'))
+          }
+          unset={!assignee && !delegate}
           testId='taskList.property.assignee'
           actions={
             onTaskUpdate &&
-            (() => [
-              createMenuAction('assignee-none', () => onTaskUpdate(task, { assignee: null }), {
-                label: t('assignee-none.label'),
-                // The unset glyph, as the priority picker's `None` takes, so every option's label aligns.
-                icon: UNSET_ICON,
-                checked: !assignee,
-              }),
-              // An assignee the people list cannot show — an agent, or an actor with no contact — is
-              // listed as itself, so the picker says who holds the task before it is switched away.
-              ...(assignee &&
-              !assignee.contact &&
-              !members.some((member) => member.did === assignee.identityDid) &&
-              assigneeLabel
-                ? [
-                    createMenuAction('assignee-current', () => {}, {
-                      label: assigneeLabel,
-                      icon: assigneeIcon,
-                      checked: true,
-                      testId: 'taskList.assignee.current',
-                    }),
-                  ]
-                : []),
-              // The space's members first — the people who can actually pick the task up — then its
-              // contacts. Both are what the field accepts, as the status and priority pickers offer.
-              ...members.map((member) =>
-                createMenuAction(
-                  `assignee-member-${member.did}`,
-                  () => onTaskUpdate(task, { assignee: { identityDid: member.did, name: member.name } }),
-                  {
-                    label: member.name ?? shortDid(member.did),
-                    icon: PERSON_ICON,
-                    checked: assignee?.identityDid === member.did,
-                    testId: 'taskList.assignee.member',
-                  },
-                ),
-              ),
-              ...people.map((person) =>
-                createMenuAction(
-                  `assignee-${person.id}`,
-                  () => onTaskUpdate(task, { assignee: { contact: Ref.make(person) } }),
-                  {
-                    label: Obj.getLabel(person) ?? person.id,
-                    icon: PERSON_ICON,
-                    checked: Task.refEntityId(assignee?.contact) === person.id,
-                  },
-                ),
-              ),
-            ])
+            (() =>
+              assigneeMenuActions({
+                assignee,
+                current: { label: assigneeLabel, icon: assigneeIcon },
+                delegate: delegate && { label: delegateLabel, icon: delegateIcon },
+                members,
+                people,
+                agents: delegateActions,
+                onChange: (patch) => onTaskUpdate(task, patch),
+                t,
+              }))
           }
         />
 
@@ -190,34 +163,19 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
           testId='taskList.property.priority'
           actions={
             onTaskUpdate &&
-            (() =>
-              [Task.NullOption, ...Task.PriorityOptions].map(({ id, icon }) =>
-                createMenuAction(`priority-${id}`, () => onTaskUpdate(task, { priority: id === 'none' ? null : id }), {
-                  label: t(`priority-${id}.label`),
-                  // `None` takes the unset glyph, so every option has an icon and the labels align.
-                  icon: icon ?? UNSET_ICON,
-                  iconClassNames: priorityTextStyle(id),
-                  checked: (priority ?? 'none') === id,
-                }),
-              ))
+            (() => priorityMenuActions({ priority, onChange: (priority) => onTaskUpdate(task, { priority }), t }))
           }
         />
 
         <TaskProperty
-          icon={estimate ? ESTIMATE_ICON : UNSET_ICON}
+          icon={ESTIMATE_ICON}
           iconClassNames={estimateTextStyle(estimate)}
           label={estimate ? estimate.toUpperCase() : t('set-estimate.label')}
           unset={!estimate}
           testId='taskList.property.estimate'
           actions={
             onTaskUpdate &&
-            (() =>
-              [Task.NullOption, ...Task.EstimateOptions].map(({ id, title }) =>
-                createMenuAction(`estimate-${id}`, () => onTaskUpdate(task, { estimate: id === 'none' ? null : id }), {
-                  label: title,
-                  checked: (estimate ?? 'none') === id,
-                }),
-              ))
+            (() => estimateMenuActions({ estimate, onChange: (estimate) => onTaskUpdate(task, { estimate }) }))
           }
         />
       </section>
@@ -235,7 +193,7 @@ type TaskPropertyProps = {
   unset?: boolean;
   testId: string;
   /** Absent renders the row as text — the readonly case, and the row is then not a button. */
-  actions?: () => MenuAction[];
+  actions?: () => MenuItem[];
 };
 
 const TaskProperty = ({ icon, iconClassNames, label, unset, testId, actions }: TaskPropertyProps) => {

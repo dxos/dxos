@@ -63,22 +63,9 @@ const extractArtifactIds = (value: unknown): string[] => {
   return ids.filter((id): id is string => typeof id === 'string');
 };
 
-/**
- * A task handed to a sub-agent by the delegation verbs, which assign `{ role: 'assistant' }` and
- * nothing else. An assistant assignee carrying a `subject` names a concrete session that owns the
- * task — the conversation's own agent starting it from the planning tool, or a remote session —
- * so it is that session's work, not a spawn request for the supervisor.
- */
-export const isSubAgentTask = (task: Task.Task): boolean =>
-  task.assignee?.role === 'assistant' && task.assignee.subject === undefined;
+/** A task handed to a sub-agent by the delegation verbs (see `Task.isSubAgentRequest`). */
+export const isSubAgentTask = (task: Task.Task): boolean => Task.isSubAgentRequest(Task.worker(task));
 
-/**
- * The durable agent tasks awaiting a sub-agent for this conversation: queued (`todo`) tasks of
- * the chat's checklist whose assignee is an agent, all of whose dependencies are done. Ordinary
- * (unassigned) tasks are never spawned — delegation happens only through the delegation verbs.
- * `started` always means a live process (set at spawn), so a started agent task with no process
- * is an orphan — {@link sweepOrphanedTasks}.
- */
 const findPendingTasks = (
   chat: Chat.Chat,
   activeIds: ReadonlySet<string>,
@@ -120,14 +107,14 @@ const sweepOrphanedTasks = (
     yield* Database.flush();
   });
 
-/**
- * Fails the tasks the conversation's own agent holds when its turn fails — a model error ends the
- * process before any reconcile, so a task left `started` would read as underway indefinitely.
- * Sub-agent tasks are left to their own process's exit, which may still succeed.
- */
 const failHeldTasks = (chat: Chat.Chat, cause: Cause.Cause<unknown>): Effect.Effect<void, never, Database.Service> =>
   Effect.gen(function* () {
-    const held = (yield* Chat.loadTasks(chat)).filter((task) => Task.isAgentWorking(task) && !isSubAgentTask(task));
+    const agent = yield* Agent.loadForChat(chat);
+    const selves = new Set(agent ? [chat.id, agent.id] : [chat.id]);
+    const held = (yield* Chat.loadTasks(chat)).filter((task) => {
+      const worker = Task.refEntityId(Task.worker(task)?.subject);
+      return Task.isAgentWorking(task) && worker !== undefined && selves.has(worker);
+    });
     if (held.length === 0) {
       return;
     }
@@ -148,7 +135,7 @@ const failHeldTasks = (chat: Chat.Chat, cause: Cause.Cause<unknown>): Effect.Eff
 
 /**
  * Supervisor behaviour for the conversational agent: after each turn, every queued agent task
- * whose dependencies are done is run by a sub-agent (a synthesized minimal `Routine` executed via
+ * whose dependencies are finished is run by a sub-agent (a synthesized minimal `Routine` executed via
  * `RunInstructions`), marked started at spawn; on exit the task is marked done/failed and a
  * templated message is posted back to the conversation, whose turn re-runs this reconcile — so a
  * batch of delegated tasks drains in dependency order without further prompting.
@@ -229,9 +216,7 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
       const tasks = yield* Database.query(Query.select(Filter.id(id))).run.pipe(Effect.orElseSucceed(() => []));
       const task = tasks.find((candidate): candidate is Task.Task => Obj.instanceOf(Task.Task, candidate));
       if (task) {
-        Obj.update(task, (task) => {
-          task.status = Exit.isSuccess(exit) ? 'done' : 'failed';
-        });
+        Task.setStatus(task, Exit.isSuccess(exit) ? 'done' : 'failed');
         title = task.title;
       }
 

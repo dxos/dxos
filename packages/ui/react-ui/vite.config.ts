@@ -9,6 +9,7 @@ export default defineConfig({
     Accordion: 'src/components/Accordion/Accordion.tsx',
     AlertDialog: 'src/components/AlertDialog/AlertDialog.tsx',
     Avatar: 'src/components/Avatar/Avatar.tsx',
+    Badge: 'src/components/Badge/Badge.tsx',
     Banner: 'src/components/Banner/Banner.tsx',
     Breadcrumb: 'src/components/Breadcrumb/Breadcrumb.tsx',
     Button: 'src/namespaces/Button.ts',
