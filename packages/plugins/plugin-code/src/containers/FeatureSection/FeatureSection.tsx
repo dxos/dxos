@@ -25,7 +25,10 @@ const entityId = (uri: string) => EID.getEntityId(EID.parse(uri)) ?? uri;
 
 export type FeatureSectionProps = {
   subject: Feature.Feature;
-  /** Whether the host gives the section attention; until it does, empty fields and the add actions hide. */
+  /**
+   * Whether the host gives the section attention; until it does, all but the fold toggle is inert, and empty fields
+   * and the add actions hide.
+   */
   attended?: boolean;
 };
 
@@ -47,6 +50,7 @@ export const FeatureSection = ({ subject, attended = true }: FeatureSectionProps
   const [collapsed, setCollapsed] = useCollapsed(subject.id);
   const options = useDependencyOptions(db, subject.id, dependsOn, graph.lookup, attended);
   const requirements = values.requirements ?? [];
+  const inert = attended ? undefined : true;
 
   const fieldOverrides = useMemo<Record<string, FormFieldOverride>>(
     () => ({
@@ -93,40 +97,44 @@ export const FeatureSection = ({ subject, attended = true }: FeatureSectionProps
                 />
               }
               trailing={
-                <Layout.Flex align='center' gap='sm'>
-                  {collapsed &&
-                    dependsOn.map((id) => {
-                      const dependency = graph.lookup(id);
-                      return (
-                        <Tag.Tag key={id} title={dependency?.name} data-testid='feature-section.dependency'>
-                          {dependency?.blockId ?? dependency?.name ?? id}
-                        </Tag.Tag>
-                      );
-                    })}
-                  {collapsed && requirements.length > 0 && (
-                    <Card.Text variant='muted' data-testid='feature-section.requirement-count'>
-                      {t('feature-section.requirement-count.label', { count: requirements.length })}
-                    </Card.Text>
-                  )}
-                  <Form.Fields include={['status']} layout='tag' />
+                <Layout.Flex asChild align='center' gap='sm'>
+                  <div inert={inert}>
+                    {collapsed &&
+                      dependsOn.map((id) => {
+                        const dependency = graph.lookup(id);
+                        return (
+                          <Tag.Tag key={id} title={dependency?.name} data-testid='feature-section.dependency'>
+                            {dependency?.blockId ?? dependency?.name ?? id}
+                          </Tag.Tag>
+                        );
+                      })}
+                    {collapsed && requirements.length > 0 && (
+                      <Card.Text variant='muted' data-testid='feature-section.requirement-count'>
+                        {t('feature-section.requirement-count.label', { count: requirements.length })}
+                      </Card.Text>
+                    )}
+                    <Form.Fields include={['status']} layout='tag' />
+                  </div>
                 </Layout.Flex>
               }
             >
-              <Layout.Flex align='center' gap='sm'>
-                {blockId && (
-                  <span data-testid='feature-section.block-id'>
-                    <RequirementId id={blockId} />
-                  </span>
-                )}
-                <Layout.Flex column grow>
-                  <Form.Fields include={['name']} />
-                </Layout.Flex>
+              <Layout.Flex asChild align='center' gap='sm'>
+                <div inert={inert}>
+                  {blockId && (
+                    <span data-testid='feature-section.block-id'>
+                      <RequirementId id={blockId} />
+                    </span>
+                  )}
+                  <Layout.Flex column grow>
+                    <Form.Fields include={['name']} />
+                  </Layout.Flex>
+                </div>
               </Layout.Flex>
             </Card.Row>
             {!collapsed && (
               <>
                 {(attended || values.description) && (
-                  <Card.Row>
+                  <Card.Row inert={inert}>
                     <Form.Fields include={['description']} />
                   </Card.Row>
                 )}
@@ -134,11 +142,13 @@ export const FeatureSection = ({ subject, attended = true }: FeatureSectionProps
                   requirements={requirements}
                   variant='plain'
                   actions={attended}
+                  inert={inert}
                   onChange={(requirements) => onValuesChanged({ ...values, requirements })}
                 />
                 {(attended || dependsOn.length > 0) && (
                   <Card.Row
                     leading={<RowIcon icon='ph--arrow-right--regular' />}
+                    inert={inert}
                     data-testid='feature-section.dependencies'
                   >
                     <ObjectMultiPicker

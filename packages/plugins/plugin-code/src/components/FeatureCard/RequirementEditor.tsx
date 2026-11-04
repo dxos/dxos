@@ -77,6 +77,7 @@ export type RequirementEditorProps = {
   variant?: 'default' | 'plain';
   /** Whether the remove and add actions show; the rows stay editable either way. */
   actions?: boolean;
+  inert?: boolean;
   onChange: (requirements: Feature.Requirement[]) => void;
 };
 
@@ -85,14 +86,20 @@ export type RequirementEditorProps = {
  * remove action after. Every edit hands back the whole list, since requirements are records inside their feature; a
  * requirement cleared of its text is removed. Render it inside a grid `Card.Root`; its icons sit in that card's rail.
  */
-export const RequirementEditor = ({ requirements, variant, actions = true, onChange }: RequirementEditorProps) => {
+export const RequirementEditor = ({
+  requirements,
+  variant,
+  actions = true,
+  inert,
+  onChange,
+}: RequirementEditorProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
   // The row just added takes focus, so a new requirement is written before anything else.
   const [focusIndex, setFocusIndex] = useState<number>();
   const copy = () => requirements.map((requirement) => ({ ...requirement }));
   const remove = (index: number) => copy().filter((_, candidate) => candidate !== index);
   return (
-    <Card.Section data-testid='requirement-editor'>
+    <Card.Section inert={inert} data-testid='requirement-editor'>
       {requirements.map((requirement, index) => (
         <Card.Row
           key={index}

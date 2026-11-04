@@ -74,7 +74,8 @@ export const FeatureEmbedSection = ({ eid, label, view, db, attendableId, claimF
 
   const handleMouseDown = useCallback(
     (event: MouseEvent<HTMLDivElement>) => {
-      if (!hasAttention && event.currentTarget === event.target) {
+      // The fold toggle works without attention; a click anywhere else gives the section attention.
+      if (!hasAttention && !(event.target instanceof Element && event.target.closest('button'))) {
         event.currentTarget.focus();
       }
     },
@@ -118,7 +119,6 @@ export const FeatureEmbedSection = ({ eid, label, view, db, attendableId, claimF
     >
       <div
         className={`border rounded-md overflow-hidden ${hasAttention ? 'border-focus-ring-subtle' : 'border-separator-subtle'}`}
-        inert={hasAttention ? undefined : true}
       >
         <FeatureSection subject={feature} attended={hasAttention} />
       </div>

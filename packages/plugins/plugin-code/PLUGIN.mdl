@@ -950,9 +950,9 @@ feat F-20: Feature embeds in the editor
              the cursor in its section. A phrase before it names the feature, and the cursor goes to its description. A
              sentence before it (ending in `.`, `!` or `?`) becomes its description, and the cursor goes to its name,
              "New feature" until changed, as on an empty line.
-  req F-20.7: A section is inert until it has attention, so the cursor and scrolling pass through it. A click gives it
-             attention, its form then edits the feature's name, description, requirements and status in place, and
-             Escape returns the cursor to the text.
+  req F-20.7: A section is inert until it has attention, so the cursor and scrolling pass through it. Its fold toggle
+             is not: one click folds or unfolds it. A click anywhere else gives it attention, its form then edits the
+             feature's name, description, requirements and status in place, and Escape returns the cursor to the text.
   req F-20.10: A section shows everything the feature's `feat` block says: its block id, name, status, description and
               requirements, a structured requirement with each field on a line of its own. It also lists the features
               the feature depends on, which it can add and remove.
@@ -1381,8 +1381,8 @@ test QA-4: Grow a spec from prose
       do: Click the "Instant inbox" section, open its "Needs" picker and pick "Snooze".
       expect: the section's "Needs" row shows "Search" and "Snooze"
     - name: Fold the sections
-      do: In each section, click its fold chevron.
-      expect: each section shows only its header row; "Search" reads "1 requirement" and "Instant inbox" shows the
+      do: In each section, click its fold chevron, without clicking the section first.
+      expect: one click folds each section to its header row; "Search" reads "1 requirement" and "Instant inbox" shows the
         block ids of "Search" and "Snooze"
 ```
 
@@ -2008,6 +2008,14 @@ decision D-64: The status at the end of the header row uses react-ui-form's `tag
   for: user:wittjosiah
   affects: [F-20.11]
   why: The presentation was renamed under this change; the look D-59 chose is the same.
+```
+
+```mdl
+decision D-65: A section's fold toggle stays live while the rest of the section is inert, so one click folds or unfolds a section that does not have attention. Amends [F-20.7].
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-20.7]
+  why: Folding took two clicks, one to give the section attention and one on the toggle.
 ```
 
 ## Appendix: Extension Definitions

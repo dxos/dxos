@@ -242,9 +242,10 @@ export const steps = [
     run: async ({ demo, page }) => {
       await caption(demo, 12, 'Each section folds to its header row');
       for (const [index, name] of ['Search', 'Instant inbox', 'Snooze'].entries()) {
-        const section = `${SECTION} >> nth=${index}`;
-        await demo.click({ selector: section, label: name });
-        await demo.click({ selector: `${section} >> [data-testid="feature-section.collapse"]`, label: 'Fold' });
+        await demo.click({
+          selector: `${SECTION} >> nth=${index} >> [data-testid="feature-section.collapse"]`,
+          label: `Fold ${name}`,
+        });
         await demo.sleep({ ms: 800 });
       }
       await page
