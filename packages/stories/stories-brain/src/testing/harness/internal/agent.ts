@@ -11,8 +11,9 @@ import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
+import { TrajectoryStore } from '@dxos/assistant';
 import * as ChatContextSkill from '@dxos/assistant-toolkit/ChatContextSkill';
-import { Database, Feed, Filter } from '@dxos/echo';
+import { Database, Feed } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestContextService } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';
@@ -123,7 +124,7 @@ export const runAgentEval = async (config: AgentEvalConfig, testContext: TestCon
 
     // The conversation (prompt + tool calls + assistant replies) lands on the session feed. Omit the
     // user's prompt turn so the response is just the agent's answer.
-    const transcript = yield* Feed.query(agent.feed, Filter.type(Message.Message)).run;
+    const transcript = yield* TrajectoryStore.messages(agent.feed);
     const response = transcript
       .filter((message) => message.sender.role !== 'user')
       .map(Message.extractText)

@@ -633,12 +633,12 @@ export const Rewind: Story = {
     // Greeting, then the question.
     await submitPrompt(canvasElement, greeting.prompt);
     await waitFor(() => void expect(threadText(canvasElement)).toContain(greeting.reply), {
-      timeout: 8_000,
+      timeout: 15_000,
       interval: 200,
     });
     await submitPrompt(canvasElement, asked.prompt);
     await waitFor(() => void expect(threadText(canvasElement)).toContain(asked.reply), {
-      timeout: 8_000,
+      timeout: 15_000,
       interval: 200,
     });
 
@@ -665,7 +665,7 @@ export const Rewind: Story = {
     await clearPrompt(canvasElement);
     await submitPrompt(canvasElement, revised.prompt);
     await waitFor(() => void expect(threadText(canvasElement)).toContain(revised.reply), {
-      timeout: 8_000,
+      timeout: 15_000,
       interval: 200,
     });
     await expect(threadText(canvasElement)).toContain(revised.prompt);

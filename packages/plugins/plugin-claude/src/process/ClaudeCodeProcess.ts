@@ -22,12 +22,13 @@ import {
   makeInputMessage,
   mcpServerTypes,
 } from '@dxos/agent-runtime';
-import { Alarm, HarnessControl, type PendingState, SessionStore } from '@dxos/assistant';
+import { Alarm, HarnessControl, type PendingState, SessionStore, TrajectoryStore } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as ShellService from '@dxos/compute/ShellService';
+import * as SqlService from '@dxos/compute/SqlService';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database, Feed, Registry } from '@dxos/echo';
@@ -69,8 +70,10 @@ export const make = (options: Options): AgentProcessDefinition =>
     output: Schema.Void,
     // Typed queries match nothing for an unregistered type: `SessionStore` reads the queue with them,
     // the agent's subscription token is found with one, and the chat's MCP connections with others.
-    types: [Chat.Chat, Feed.Feed, Message.Message, Alarm.Alarm, ...mcpServerTypes],
+    types: [Chat.Chat, Feed.Feed, ...TrajectoryStore.types, ...mcpServerTypes],
     services: [Database.Service, Registry.Service, Credential.CredentialsService, ShellService.ShellService],
+    // Where the host has one, `TrajectoryCache` keeps its checkpoints there, shared with the chat UI on this device.
+    optionalServices: [SqlService.SqlService],
     rpcs: HarnessControl,
   }).pipe(
     Operation.withDurableHandler((ctx) =>
@@ -158,10 +161,13 @@ export const make = (options: Options): AgentProcessDefinition =>
         });
 
         const mcpContext = yield* Effect.context<Database.Service | Registry.Service | Credential.CredentialsService>();
-        const runTurn = Effect.fnUntraced(function* (prompt: readonly ContentBlock.Any[]) {
+        const runTurn = Effect.fnUntraced(function* (
+          prompt: readonly ContentBlock.Any[],
+          source: TrajectoryStore.TurnSource,
+        ) {
           yield* Trace.write(Trace.AgentRequestBegin, {});
           const mcpServers = loadMcpServers({ feed, endpointOf: options.mcpEndpoint }).pipe(Effect.provide(mcpContext));
-          yield* AcpAgent.runTurn(agent, { chat, feed }, { prompt: [...prompt], mcpServers }).pipe(
+          yield* AcpAgent.runTurn(agent, { chat, feed }, { prompt: [...prompt], source, mcpServers }).pipe(
             Effect.onExit((exit) =>
               Trace.write(Trace.AgentRequestEnd, {
                 status: Exit.isSuccess(exit) ? 'success' : Exit.hasInterrupts(exit) ? 'interrupted' : 'error',
@@ -197,9 +203,7 @@ export const make = (options: Options): AgentProcessDefinition =>
                 if (message.sender.role === 'user') {
                   yield* SelfWakesCell.set(0);
                 }
-                // The turn appends its own user message, so the queue entry leaves the queue view now.
-                yield* store.markInFlight(feed, message);
-                yield* runTurn(message.blocks);
+                yield* runTurn(message.blocks, { message: message.id });
                 unseen.delete(message.id);
                 yield* store.ack(feed, message);
               } else if (due) {
@@ -209,7 +213,7 @@ export const make = (options: Options): AgentProcessDefinition =>
                   log.warn('claude code self-wake budget spent, dropping alarm', { wakes: selfWakes });
                 } else {
                   yield* SelfWakesCell.set(selfWakes + 1);
-                  yield* runTurn([ContentBlock.Text.make({ text: due.message ?? 'Continue.' })]);
+                  yield* runTurn([ContentBlock.Text.make({ text: due.message ?? 'Continue.' })], { alarm: due.id });
                 }
                 yield* store.ack(feed, due);
               }

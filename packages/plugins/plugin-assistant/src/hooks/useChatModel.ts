@@ -15,6 +15,8 @@ import type * as Chat from '@dxos/assistant/Chat';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Credential from '@dxos/compute/Credential';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import * as SqlService from '@dxos/compute/SqlService';
+import type * as Trajectory from '@dxos/compute/Trajectory';
 import { Database, Obj, Ref, Registry } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -34,6 +36,8 @@ export type UseChatModelProps = {
   settings?: Assistant.Settings;
   /** Attributes the prompts submitted through this chat model to a person (see `ChatModelOptions.sender`). */
   sender?: AgentService.PromptSender;
+  /** The fork the chat model shows and sends into; main when absent. */
+  thread?: Trajectory.ThreadId;
 };
 
 /**
@@ -47,6 +51,7 @@ export const useChatModel = ({
   registry,
   settings,
   sender,
+  thread,
 }: UseChatModelProps): ChatModel | undefined => {
   const observableRegistry = useContext(RegistryContext);
 
@@ -98,6 +103,9 @@ export const useChatModel = ({
       Registry.Service,
       OpaqueToolkit.OpaqueToolkitProvider,
     ).pipe(Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver)));
+    const sqlLayer = ServiceResolver.provide({ space: db.spaceId }, SqlService.SqlService).pipe(
+      Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver)),
+    );
 
     log('creating chat model', { preset, model: preset?.model, settings });
     return new ChatModel(session, runtime, feed, spaceLayer, {
@@ -112,8 +120,10 @@ export const useChatModel = ({
           ? { ...(senderName ? { name: senderName } : {}), ...(senderDid ? { identityDid: senderDid } : {}) }
           : undefined,
       reportStruggles,
+      sqlLayer,
+      ...(thread !== undefined ? { thread } : {}),
     });
-  }, [runtime, session, registry, preset, chat, feed, db?.spaceId, senderName, senderDid, reportStruggles]);
+  }, [runtime, session, registry, preset, chat, feed, db?.spaceId, senderName, senderDid, reportStruggles, thread]);
 
   // A remount (e.g. the user navigated to another page mid-turn) gets a fresh chat model whose
   // active/streaming state starts empty, while the agent process for the feed keeps running;

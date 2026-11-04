@@ -106,6 +106,41 @@ describe('buildSpanTree', () => {
     expect(tree.children[0].id).not.toBe(tree.children[1].id);
   });
 
+  test('light threads of one process are concurrent sibling spans, each with its own tools', ({ expect }) => {
+    const inThread = <A, E, R>(thread: string, effect: Effect.Effect<A, E, R>) =>
+      effect.pipe(Effect.provideService(Trace.CurrentThread, thread));
+    const messages = collectTraceEvents(
+      Effect.gen(function* () {
+        yield* withMeta({ pid: 'agent-1' }, inThread('A', Trace.write(Trace.AgentRequestBegin, {})));
+        yield* withMeta({ pid: 'agent-1' }, inThread('B', Trace.write(Trace.AgentRequestBegin, {})));
+        // A tool the first thread called after the second began still nests under the first.
+        yield* withMeta(
+          { pid: 'op-1', parentPid: 'agent-1', parentThread: 'A' },
+          Effect.gen(function* () {
+            yield* Trace.write(Trace.OperationStart, { key: 'research', name: 'Research' });
+            yield* Trace.write(Trace.OperationEnd, { key: 'research', name: 'Research', outcome: 'success' });
+          }),
+        );
+        yield* withMeta({ pid: 'agent-1' }, inThread('B', Trace.write(NoteEvent, { text: 'quick answer' })));
+        yield* withMeta({ pid: 'agent-1' }, inThread('B', Trace.write(Trace.AgentRequestEnd, { status: 'success' })));
+        yield* withMeta({ pid: 'agent-1' }, inThread('A', Trace.write(Trace.AgentRequestEnd, { status: 'success' })));
+      }),
+    );
+    const tree = buildSpanTree(messages);
+    expect(tree.children.map((span) => span.meta.thread)).toEqual(['A', 'B']);
+    const [first, second] = tree.children;
+    expect(first.children.map((span) => span.meta.pid)).toEqual(['op-1']);
+    expect(second.children).toEqual([]);
+    // Each end closed its own thread's span rather than the newest one.
+    expect(first.events.map((event) => event.type)).toEqual([Trace.AgentRequestBegin.key, Trace.AgentRequestEnd.key]);
+    expect(second.events.map((event) => event.type)).toEqual([
+      Trace.AgentRequestBegin.key,
+      'note',
+      Trace.AgentRequestEnd.key,
+    ]);
+    expect(tree.events).toEqual([]);
+  });
+
   test('non-boundary events attach to the currently-open span', ({ expect }) => {
     const messages = collectTraceEvents(
       withMeta(

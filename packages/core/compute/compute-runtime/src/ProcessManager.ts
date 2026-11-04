@@ -47,6 +47,18 @@ import * as ProcessHandle from './ProcessHandle.ts';
 import * as ProcessOperationInvoker from './ProcessOperationInvoker.ts';
 import { layer as storageServiceLayer } from './storage-service-layer.ts';
 
+/** The optional services that resolve; one the runtime cannot provide is left out rather than failing the process. */
+const resolveOptional = (
+  tags: readonly Context.Key<any, unknown>[],
+  context: ServiceResolver.ResolutionContext,
+): Effect.Effect<Context.Context<never>, never, Scope.Scope | ServiceResolver.ServiceResolver> =>
+  Effect.map(
+    Effect.forEach(tags, (tag) =>
+      ServiceResolver.resolveAll([tag], context).pipe(Effect.orElseSucceed(() => Context.empty())),
+    ),
+    (contexts): Context.Context<never> => Context.mergeAll(Context.empty(), ...contexts),
+  );
+
 /**
  * The origin a process's database writes are attributed to. A process serving a conversation is an agent's work,
  * not a person's, and its children inherit the conversation; any other process takes the origin it was spawned with.
@@ -571,6 +583,13 @@ export class Impl implements Manager {
           Effect.orDie,
         );
       }
+      serviceCtx = Context.merge(
+        serviceCtx,
+        yield* resolveOptional(definition.optionalServices ?? [], resolutionContext).pipe(
+          Effect.provideService(ServiceResolver.ServiceResolver, this.#serviceResolver),
+          Effect.provideService(Scope.Scope, scope),
+        ),
+      );
       markWork('process.services-resolved');
 
       const fullCtx = Context.merge(builtinCtx, serviceCtx);
@@ -797,6 +816,13 @@ export class Impl implements Manager {
           Effect.orDie,
         );
       }
+      serviceCtx = Context.merge(
+        serviceCtx,
+        yield* resolveOptional(definition.optionalServices ?? [], resolutionContext).pipe(
+          Effect.provideService(ServiceResolver.ServiceResolver, this.#serviceResolver),
+          Effect.provideService(Scope.Scope, scope),
+        ),
+      );
 
       const fullCtx = Context.merge(builtinCtx, serviceCtx);
       const handler = yield* definition.create(ctx).pipe(Effect.provide(fullCtx as Context.Context<any>));
