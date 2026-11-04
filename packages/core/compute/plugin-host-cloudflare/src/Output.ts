@@ -28,16 +28,20 @@ export const encode = (value: unknown, options: EncodeOptions = {}, seen = new W
   if (value === null || typeof value !== 'object' || seen.has(value)) {
     return value;
   }
-  seen.add(value);
-  if (Array.isArray(value)) {
-    return value.map((entry) => encode(entry, options, seen));
-  }
   // Only plain carriers are walked: a class instance returned on purpose (a `Date`, bytes) clones as itself.
   const prototype = Object.getPrototypeOf(value);
-  if (prototype !== Object.prototype && prototype !== null) {
+  if (!Array.isArray(value) && prototype !== Object.prototype && prototype !== null) {
     return value;
   }
-  return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, encode(entry, options, seen)]));
+  // `seen` holds the ancestors only, so a cycle stops the walk while an object shared by two fields is encoded twice.
+  seen.add(value);
+  try {
+    return Array.isArray(value)
+      ? value.map((entry) => encode(entry, options, seen))
+      : Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, encode(entry, options, seen)]));
+  } finally {
+    seen.delete(value);
+  }
 };
 
 /**
@@ -62,6 +66,10 @@ export const decodeEntities = async (
   const target = Reflect.get(value, '/');
   if (typeof target === 'string' && Object.keys(value).length === 1) {
     return ref(target);
+  }
+  const prototype = Object.getPrototypeOf(value);
+  if (prototype !== Object.prototype && prototype !== null) {
+    return value;
   }
   return Object.fromEntries(
     await Promise.all(

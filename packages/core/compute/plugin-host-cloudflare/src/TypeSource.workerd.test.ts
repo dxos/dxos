@@ -12,10 +12,10 @@ import * as TypeSource from './TypeSource.ts';
 
 const PERSON = Type.getTypename(TestSchema.Person);
 
-/** A registry that holds one type, counts what it is asked, and fails while `failing` is set. */
+/** A registry that holds one type, counts what it is asked, fails while `failing` is set, and answers a record that does not decode while `malformed` is set. */
 const makeRegistry = () => {
   const requests: string[] = [];
-  const state = { failing: false };
+  const state = { failing: false, malformed: false };
   const registry: PluginProtocol.TypeRegistry = {
     resolveType: async (typename) => {
       requests.push(typename);
@@ -23,7 +23,11 @@ const makeRegistry = () => {
         throw new Error('The registry is unavailable.');
       }
       return typename === PERSON
-        ? { typename, version: '0.1.0', jsonSchema: JsonSchema.toJsonSchema(TestSchema.Person) }
+        ? {
+            typename,
+            version: '0.1.0',
+            jsonSchema: state.malformed ? { type: 42 } : JsonSchema.toJsonSchema(TestSchema.Person),
+          }
         : undefined;
     },
   };
@@ -53,6 +57,16 @@ describe('TypeSource', () => {
     state.failing = false;
     expect(await source(DXN.make(PERSON))).toBeDefined();
     expect(requests).toEqual(['org.example.type.unknown', 'org.example.type.unknown', PERSON, PERSON]);
+  });
+
+  test('a record that does not decode is not cached', async ({ expect }) => {
+    const { registry, requests, state } = makeRegistry();
+    const source = TypeSource.fromRegistry(registry, TypeSource.makeCache());
+    state.malformed = true;
+    await expect(source(DXN.make(PERSON))).rejects.toThrow();
+    state.malformed = false;
+    expect(await source(DXN.make(PERSON))).toBeDefined();
+    expect(requests).toEqual([PERSON, PERSON]);
   });
 
   test('holds a bounded number of types, dropping the least recently used', async ({ expect }) => {

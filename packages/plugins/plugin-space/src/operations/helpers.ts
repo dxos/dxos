@@ -27,7 +27,10 @@ export const resolveIdentitySpec = Effect.fnUntraced(function* (typename: string
 
 /**
  * The key filter for a type a caller names: a bare typename (`org.example.type`), or a DXN, as an encoded object
- * carries it (`dxn:org.example.type:0.1.0`), whose version pins that registration.
+ * carries it (`dxn:org.example.type:0.1.0`), whose version pins that registration. A malformed DXN is matched as
+ * written, so it finds no type rather than an unpinned version of one.
  */
-export const typeKeyFilter = (typename: string): Filter.Any =>
-  DXN.isDXN(typename) ? Filter.key(DXN.getName(typename), { version: DXN.getVersion(typename) }) : Filter.key(typename);
+export const typeKeyFilter = (typename: string): Filter.Any => {
+  const dxn = DXN.tryMake(typename);
+  return dxn === undefined ? Filter.key(typename) : Filter.key(DXN.getName(dxn), { version: DXN.getVersion(dxn) });
+};

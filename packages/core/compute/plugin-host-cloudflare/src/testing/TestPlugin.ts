@@ -132,6 +132,23 @@ const NestHandler = Nest.pipe(
   ),
 );
 
+/** Schedules another plugin's operation as a followup, then succeeds. */
+export const Followup = Operation.make({
+  meta: { key: DXN.make('com.example.operation.hostTest.followup'), name: 'Followup' },
+  services: [Operation.Service],
+  input: Schema.Struct({}),
+  output: Schema.Struct({ done: Schema.Boolean }),
+});
+
+const FollowupHandler = Followup.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(function* () {
+      yield* Operation.schedule(Fibonacci, { iterations: 3 });
+      return { done: true };
+    }),
+  ),
+);
+
 /** The typed error {@link Fails} raises. */
 export class TestFailure extends BaseError.extend('TestFailure', 'The test operation failed.') {}
 
@@ -160,6 +177,7 @@ export const TestPlugin = Plugin.define(Plugin.makeMeta({ key: DXN.make(TEST_PLU
             GreetHandler,
             DelegateHandler,
             NestHandler,
+            FollowupHandler,
             FailsHandler,
           ),
         ),

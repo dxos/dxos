@@ -6,6 +6,7 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
@@ -15,6 +16,7 @@ import { Database, Entity, Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 import { DXN, EntityId, type SpaceId, URI } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { ErrorCodec } from '@dxos/protocols';
 import type { PluginProtocol } from '@dxos/protocols';
 
@@ -264,8 +266,18 @@ export const makeOperations = ({
 
   const service: Operation.OperationService = {
     invoke: (op, ...[input, options]) => run(op, input, options),
-    // Run to completion before the invocation returns: work left running after it would be dropped by workerd.
-    schedule: (op, ...[input, options]) => run(op, input, options).pipe(Effect.asVoid),
+    // Run to completion before the invocation returns, since workerd drops work left running after it; a followup's
+    // failure does not fail the operation that emitted it, as in compute-runtime.
+    schedule: (op, ...[input, options]) =>
+      run(op, input, options).pipe(
+        Effect.exit,
+        Effect.tap((exit) =>
+          Exit.isFailure(exit)
+            ? Effect.sync(() => log.warn('scheduled operation failed', { key: op.meta.key }))
+            : Effect.void,
+        ),
+        Effect.asVoid,
+      ),
     invokePromise: (op, ...[input, options]) =>
       EffectEx.runPromise(run(op, input, options)).then(
         (data) => ({ data }),

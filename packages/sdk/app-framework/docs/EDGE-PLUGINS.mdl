@@ -206,6 +206,7 @@ type Failure = {
   message: string;
   name?: string;
   stack?: string;
+  encoded?: SerializedError; // version 2: the handler's error as `ErrorCodec` encodes it
 };
 ```
 
@@ -340,6 +341,7 @@ type PluginCatalog
     operations: PersistentOperation[]   # key, name, description, inputSchema, outputSchema, services
     skills: SkillRecord[]               # key, name, description, instructions, tools
     types: TypeRecord[]                 # typename, version, JSON Schema of each AppCapabilities.Schema entry
+    protocolVersion: number             # the PROTOCOL_VERSION of the host that produced the catalog
 ```
 
 ```mdl
@@ -466,6 +468,7 @@ service PluginEntrypoint
   ops:
     describe() → PluginProtocol.Catalog
     invoke(request: { operationKey, input, spaceId? }, scope: InvocationScope) → InvokeResult
+    protocolVersion() → number
   errors:
     OperationNotFound: the primary plugin has no handler for the key (code `operation-not-found`)
 ```

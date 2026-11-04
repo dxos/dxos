@@ -81,8 +81,10 @@ export const fromRegistry =
     if (record === undefined) {
       return undefined;
     }
+    // Converted first: a record that does not decode stays uncached, so a corrected registry answer resolves later.
+    const type = fromRecord(record);
     cache.set(key, record);
-    return fromRecord(record);
+    return type;
   };
 
 /**

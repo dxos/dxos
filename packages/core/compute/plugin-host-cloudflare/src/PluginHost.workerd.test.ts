@@ -15,6 +15,7 @@ import * as PluginHost from './PluginHost.ts';
 import {
   Delegate,
   Fails,
+  Followup,
   Greet,
   Greeter,
   Inspect,
@@ -27,33 +28,6 @@ import {
 } from './testing/index.ts';
 
 const SPACE_ID = 'B2N35FBQKXIOTC5XEOCRVORIYQZHM2IBM';
-
-/** FNV-1a of an id, as operation-service derives a nested invocation's seed. */
-const fnv1a = (id: string): number => {
-  let hash = 2166136261;
-  for (let index = 0; index < id.length; index++) {
-    hash ^= id.charCodeAt(index);
-    hash = Math.imul(hash, 16777619);
-  }
-  return hash >>> 0;
-};
-
-/** The part of a `Trace.Message` JSON the tests read. */
-const SinkMessage = Schema.Struct({
-  meta: Schema.Struct({ pid: Schema.String, parentPid: Schema.optional(Schema.String) }),
-  events: Schema.Array(Schema.Struct({ type: Schema.String })),
-});
-
-/** A trace sink that keeps what it is sent. */
-const collectingSink = () => {
-  const messages: Schema.Schema.Type<typeof SinkMessage>[] = [];
-  return {
-    messages,
-    sink: { write: (message: object) => void messages.push(Schema.decodeUnknownSync(SinkMessage)(message)) },
-  };
-};
-
-const makeHost = () => PluginHost.make(() => ({ primary: TestPlugin() }));
 
 describe('PluginHost', () => {
   test('describes what the plugin contributes', async ({ expect }) => {
@@ -256,6 +230,21 @@ describe('PluginHost', () => {
       });
     });
 
+    test("a scheduled followup's failure does not fail its caller", async ({ expect }) => {
+      const operations: PluginProtocol.OperationHost = {
+        invoke: async () => ({ ok: false, error: { code: 'failed', message: 'The followup failed.' } }),
+      };
+      const host = makeHost();
+      expect(await host.invoke({ operationKey: String(Followup.meta.key), input: {} }, {}, { operations })).toEqual({
+        ok: true,
+        output: { done: true },
+      });
+      expect(await host.invoke({ operationKey: String(Followup.meta.key), input: {} }, {})).toEqual({
+        ok: true,
+        output: { done: true },
+      });
+    });
+
     test("runs its own operations in process and other plugins' through EDGE", async ({ expect }) => {
       const invoked: unknown[] = [];
       const operations: PluginProtocol.OperationHost = {
@@ -276,3 +265,30 @@ describe('PluginHost', () => {
     });
   });
 });
+
+/** FNV-1a of an id, as operation-service derives a nested invocation's seed. */
+const fnv1a = (id: string): number => {
+  let hash = 2166136261;
+  for (let index = 0; index < id.length; index++) {
+    hash ^= id.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+};
+
+/** The part of a `Trace.Message` JSON the tests read. */
+const SinkMessage = Schema.Struct({
+  meta: Schema.Struct({ pid: Schema.String, parentPid: Schema.optional(Schema.String) }),
+  events: Schema.Array(Schema.Struct({ type: Schema.String })),
+});
+
+/** A trace sink that keeps what it is sent. */
+const collectingSink = () => {
+  const messages: Schema.Schema.Type<typeof SinkMessage>[] = [];
+  return {
+    messages,
+    sink: { write: (message: object) => void messages.push(Schema.decodeUnknownSync(SinkMessage)(message)) },
+  };
+};
+
+const makeHost = () => PluginHost.make(() => ({ primary: TestPlugin() }));
