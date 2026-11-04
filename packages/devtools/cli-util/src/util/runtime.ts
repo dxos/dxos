@@ -10,6 +10,6 @@ import { type Type } from '@dxos/echo';
 /** @deprecated Migrate to providing types via plugin capabilities. */
 export const withTypes: (...types: Type.AnyEntity[]) => Effect.Effect<void, never, ClientService> = (...types) =>
   Effect.gen(function* () {
-    const client = yield* ClientService;
+    const client = yield* ClientService.client;
     yield* Effect.promise(() => client.addTypes(types));
   });

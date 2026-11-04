@@ -32,7 +32,6 @@ export const TaskRow = ({ subject: task }: TaskRowProps) => {
       tasks={tasks}
       flush
       groupByStatus={false}
-      showAssignees
       members={members}
       getTaskActions={getTaskActions}
       getDelegateActions={getDelegateActions}

@@ -75,7 +75,7 @@ const SqlLayerSpec = LayerSpec.make(
     Layer.effect(
       ComputeSqlService.SqlService,
       Effect.gen(function* () {
-        const client = yield* ClientService;
+        const client = yield* ClientService.client;
         const rpc = client.services.rpc;
         return ComputeSqlService.SqlService.of({
           execute: ({ params, ...request }) =>
@@ -103,7 +103,7 @@ const ConfigLayerSpec = LayerSpec.make(
   () =>
     Layer.unwrap(
       Effect.gen(function* () {
-        const client = yield* ClientService;
+        const client = yield* ClientService.client;
         return Layer.succeed(ConfigService, client.config);
       }),
     ),
@@ -122,7 +122,7 @@ const EdgeHttpClientLayerSpec = LayerSpec.make(
   () =>
     Layer.unwrap(
       Effect.gen(function* () {
-        const client = yield* ClientService;
+        const client = yield* ClientService.client;
         return Layer.succeed(EdgeHttpClientService, client.edge.http);
       }),
     ),
@@ -145,7 +145,7 @@ const DatabaseLayerSpec = LayerSpec.make(
     Layer.unwrap(
       Effect.gen(function* () {
         invariant(context.space, 'space context required for Database layer');
-        const client = yield* ClientService;
+        const client = yield* ClientService.client;
         const space = client.spaces.get(context.space);
         invariant(space, `space not found on client: ${context.space}`);
         yield* Effect.promise(() => space.waitUntilReady());
@@ -169,7 +169,7 @@ const HypergraphLayerSpec = LayerSpec.make(
   () =>
     Layer.unwrap(
       Effect.gen(function* () {
-        const client = yield* ClientService;
+        const client = yield* ClientService.client;
         return Hypergraph.layer(client.graph);
       }),
     ),
@@ -216,7 +216,7 @@ const IdentityLayerSpec = LayerSpec.make(
   () =>
     Layer.unwrap(
       Effect.gen(function* () {
-        const client = yield* ClientService;
+        const client = yield* ClientService.client;
         return layerIdentity(client);
       }),
     ),
@@ -235,7 +235,7 @@ const SpaceLayerSpec = LayerSpec.make(
   () =>
     Layer.unwrap(
       Effect.gen(function* () {
-        const client = yield* ClientService;
+        const client = yield* ClientService.client;
         return layerSpace(client);
       }),
     ),

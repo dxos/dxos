@@ -18,6 +18,7 @@ import { composable, composableProps } from '../../util/slots.ts';
 import * as Icon from '../Icon/Icon.tsx';
 import { PopupScroll, popupPositioning, usePopupSize } from '../ScrollArea/PopupScroll.tsx';
 import { Separator, type SeparatorProps } from '../Separator/Separator.tsx';
+import * as Tag from '../Tag/Tag.tsx';
 import { useToolbarItem } from '../Toolbar/toolbar-context.ts';
 
 /** Gap between trigger and popup, in px (positioning takes a number, not a CSS variable). */
@@ -119,18 +120,40 @@ type SelectTriggerProps = ThemedClassName<Omit<SelectPrimitive.TriggerProps, 'ch
    * in the value's cell, which CSS sizes without measuring.
    */
   fixed?: boolean;
-  /** An outlined, fully rounded trigger that hugs its value and drops the caret (a row of field values). */
-  pill?: boolean;
+  /** Renders the trigger as a `Tag` holding the chosen option's icon and label, with no caret (a row of field values). */
+  tag?: boolean;
   /** Shown where the chosen option has no icon, or nothing is chosen: the field's own glyph. */
   icon?: string;
 };
 
 /** Shows the chosen option (its icon when exactly one is chosen; `multiple` lists the labels) and a caret. */
 const SelectTrigger = forwardRef<HTMLButtonElement, SelectTriggerProps>(
-  ({ classNames, placeholder, loading, fixed, pill, icon, ...props }, forwardedRef) => {
+  ({ classNames, placeholder, loading, fixed, tag, icon, ...props }, forwardedRef) => {
     const toolbarItem = useToolbarItem(props.disabled);
     const { selectedItems, collection } = useSelectContext();
     const selected = selectedItems.length === 1 ? selectedItems[0] : undefined;
+    const glyph = selected?.icon ? (
+      <Icon.Icon icon={selected.icon} hue={selected.iconHue} />
+    ) : (
+      icon && <Icon.Icon icon={icon} />
+    );
+    if (tag) {
+      return (
+        <SelectPrimitive.Trigger
+          {...props}
+          {...toolbarItem}
+          asChild
+          aria-busy={loading || undefined}
+          ref={forwardedRef}
+        >
+          <Tag.Tag variant='outline' classNames={classNames}>
+            {glyph}
+            <SelectPrimitive.ValueText placeholder={placeholder} />
+          </Tag.Tag>
+        </SelectPrimitive.Trigger>
+      );
+    }
+
     return (
       <SelectPrimitive.Trigger
         {...props}
@@ -141,11 +164,10 @@ const SelectTrigger = forwardRef<HTMLButtonElement, SelectTriggerProps>(
           toolbarItem?.onFocus();
         }}
         data-fixed={fixed || undefined}
-        data-pill={pill || undefined}
         className={mx(recipes.selectTrigger(), classNames)}
         ref={forwardedRef}
       >
-        {selected?.icon ? <Icon.Icon icon={selected.icon} hue={selected.iconHue} /> : icon && <Icon.Icon icon={icon} />}
+        {glyph}
         <SelectPrimitive.ValueText placeholder={placeholder} />
         {fixed && (
           <span aria-hidden data-scope='select' data-part='value-sizer' className={recipes.selectValueSizer()}>

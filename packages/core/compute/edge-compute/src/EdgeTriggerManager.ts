@@ -195,7 +195,7 @@ export const layer = (
   Layer.effect(
     RemoteTriggerManager.Service,
     Effect.gen(function* () {
-      const client = yield* ClientService;
+      const client = yield* ClientService.client;
       const registry = yield* Registry.AtomRegistry;
       let cached: EdgeClient | undefined;
       return yield* make(() => (cached ??= createEdgeClient(client)), spaceId, registry);

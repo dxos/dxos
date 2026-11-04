@@ -29,7 +29,7 @@ export const list = Command.make(
 
     // Fetch remote cron triggers to check availability
     const remoteCronIds = yield* Effect.gen(function* () {
-      const client = yield* ClientService;
+      const client = yield* ClientService.client;
       const spaceId = yield* spaceIdWithDefault(spaceIdOption);
       const result = yield* Effect.promise(() => client.edge.http.getCronTriggers(Context.default(), spaceId)).pipe(
         Effect.catch(() => Effect.succeed({ cronIds: [] })),

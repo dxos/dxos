@@ -5,9 +5,9 @@
 import * as Array from 'effect/Array';
 import * as Order from 'effect/Order';
 
-import { type Alarm, isConsumed, isInFlight, isQueued } from '@dxos/assistant';
+import { Legacy } from '@dxos/assistant';
 import { Annotation, Feed, Obj } from '@dxos/echo';
-import { DeliveryAnnotation, type DeliveryStatus } from '@dxos/react-ui-assistant/types';
+import { DeliveryAnnotation, type DeliveryStatus, type ThreadLane } from '@dxos/react-ui-assistant/types';
 import { type Actor, type ContentBlock, Message } from '@dxos/types';
 
 import { type OutboxEntry } from './outbox.ts';
@@ -53,6 +53,8 @@ export type ThreadProjection = {
   queued: number;
   /** How many rows at the end of {@link messages} are prompts not yet in the history. */
   tail: number;
+  /** The lane of each row shown in a lane's gutter, when the chat ran several requests at once. */
+  lanes?: ReadonlyMap<string, ThreadLane>;
 };
 
 /** A chat with nothing in it yet. */
@@ -79,9 +81,13 @@ export const projectThread = ({
   pendingMessages = [],
   rewindFrom,
   outbox = [],
+  discarded = [],
   sender,
+  laneOf,
 }: {
   feedMessages: readonly Message.Message[];
+  /** Messages a rewind discarded: neither they nor a prompt that became one come back as rows. */
+  discarded?: readonly Message.Message[];
   /** Messages produced by the current turn that are not in the feed yet. */
   pendingMessages?: readonly Message.Message[];
   /** Earliest message a pending rewind discards. */
@@ -90,31 +96,27 @@ export const projectThread = ({
   outbox?: readonly OutboxEntry[];
   /** Who this chat's prompts are from, for an outbox row no feed copy attributes yet. */
   sender?: Actor.Actor;
+  /** The lane of each message, when the chat runs several requests at once: a folded tool run stays in its lane. */
+  laneOf?: ReadonlyMap<string, string>;
 }): ThreadProjection => {
   const all = Array.dedupeWith([...feedMessages, ...pendingMessages], ({ id: a }, { id: b }) => a === b);
   // A turn's messages that the feed has not caught up with yet continue from the thread's head, so
   // they follow the lineage rather than join it: with no parent of their own, lineage would chain them
   // to whatever sorts before them, which after a rewind is the abandoned reply.
-  const feedIds = new Set(feedMessages.map((message) => message.id));
+  const feedIds = new Set([...feedMessages, ...discarded].map((message) => message.id));
   const unrecorded = Array.sort(
     Array.dedupeWith(
-      pendingMessages.filter((message) => !feedIds.has(message.id) && !isQueued(message)),
+      pendingMessages.filter((message) => !feedIds.has(message.id) && !Legacy.isQueued(message)),
       ({ id: a }, { id: b }) => a === b,
     ),
     byAppendOrder,
   );
-  // A queue entry is not a turn: the turn the agent runs from one appends its own user message, so an
-  // entry never joins the history. Until the agent takes it up, it is a row after the history instead.
-  const sorted = Array.sort(
-    feedMessages.filter((message) => !isQueued(message)),
-    byAppendOrder,
-  );
-  const entries = Array.sort(
-    all.filter((message) => isQueued(message)),
-    byAppendOrder,
-  );
+  // Feed messages arrive in thread order (a consumed prompt already sits where the agent took it up), so they keep
+  // it. A prompt still waiting is not part of the history yet: until the agent takes it up, it is a row after it.
+  const sorted = feedMessages.filter((message) => !Legacy.isQueued(message));
+  const entries = all.filter((message) => Legacy.isQueued(message));
 
-  const history = projectHistory(sorted, unrecorded, rewindFrom);
+  const history = projectHistory(sorted, unrecorded, rewindFrom, laneOf);
   // The turn's own user message may still be only in the streaming turn, ahead of the feed.
   const turnCandidates = [...sorted, ...unrecorded];
   const claimed = new Set<string>();
@@ -136,8 +138,11 @@ export const projectThread = ({
   for (const entry of outbox) {
     const queueEntry = claim(entries, entry);
     const turn = claim(turnCandidates, entry);
+    if (!queueEntry && !turn && claim(discarded, entry)) {
+      continue;
+    }
     const status: DeliveryStatus =
-      turn || (queueEntry && (isInFlight(queueEntry) || isConsumed(queueEntry)))
+      turn || (queueEntry && (Legacy.isInFlight(queueEntry) || Legacy.isConsumed(queueEntry)))
         ? 'read'
         : queueEntry
           ? 'delivered'
@@ -157,7 +162,7 @@ export const projectThread = ({
 
   // Waiting entries this chat did not send (another device, or a reload) — they predate the outbox.
   for (const entry of entries) {
-    if (!claimed.has(entry.id) && !isConsumed(entry) && !isInFlight(entry)) {
+    if (!claimed.has(entry.id) && !Legacy.isConsumed(entry) && !Legacy.isInFlight(entry)) {
       tail.push(deliveryRow(entry.id, entry, entry.created, 'delivered', undefined));
       delivery.set(entry.id, { status: 'delivered', entryId: entry.id });
     }
@@ -177,23 +182,24 @@ const projectHistory = (
   sorted: readonly Message.Message[],
   unrecorded: readonly Message.Message[],
   rewindFrom: string | undefined,
+  laneOf?: ReadonlyMap<string, string>,
 ): Message.Message[] => {
   if (rewindFrom !== undefined) {
     const index = sorted.findIndex((message) => message.id === rewindFrom);
     if (index === 0) {
       // Rewound to the first turn: nothing precedes it.
-      return collapseToolRuns(unrecorded);
+      return collapseToolRuns(unrecorded, laneOf);
     }
     // Once a recorded message continues from the rewind head the fork is lineage, whether or not the
     // pointer has been cleared yet.
     if (index > 0 && !sorted.slice(index + 1).some((message) => Feed.getParent(message) === sorted[index - 1].id)) {
-      return collapseToolRuns([...Feed.history(sorted, { head: sorted[index - 1].id }).items, ...unrecorded]);
+      return collapseToolRuns([...Feed.history(sorted, { head: sorted[index - 1].id }).items, ...unrecorded], laneOf);
     }
     // Not present — a stale pointer (e.g. the message never replicated) — or already continued; fall
     // through to the feed's own lineage rather than blanking the thread.
   }
 
-  return collapseToolRuns([...Feed.history(sorted).items, ...unrecorded]);
+  return collapseToolRuns([...Feed.history(sorted).items, ...unrecorded], laneOf);
 };
 
 /**
@@ -243,36 +249,6 @@ const deliveryRow = (
 };
 
 /**
- * Alarms that have woken the agent since the last prompt the user typed: the count the runtime caps at
- * `Alarm.MAX_SELF_WAKES`, read from the feed so the status can show it.
- */
-export const projectSelfWakes = ({
-  feedAlarms,
-  messages,
-}: {
-  feedAlarms: readonly Alarm.Alarm[];
-  messages: readonly Message.Message[];
-}): number => {
-  const lastPrompt = messages.findLast(
-    (message) =>
-      message.sender.role === 'user' &&
-      message.blocks.some((block) => block._tag === 'text' && block.disposition !== 'synthetic'),
-  );
-  const since = lastPrompt?.created ?? '';
-  return feedAlarms.filter((alarm) => isConsumed(alarm) && alarm.created >= since).length;
-};
-
-/**
- * The alarms still waiting to fire, earliest first: those the agent has not consumed and (for a
- * cancelled one) not removed from the feed.
- */
-export const projectAlarms = ({ feedAlarms }: { feedAlarms: readonly Alarm.Alarm[] }): Alarm.Alarm[] =>
-  Array.sort(
-    feedAlarms.filter((alarm) => !isConsumed(alarm)),
-    Order.mapInput(Order.Number, (alarm: Alarm.Alarm) => alarm.wakeAt),
-  );
-
-/**
  * Blocks that are the machinery of a turn rather than anything the reader wrote or read.
  *
  * `reasoning` and `status` are machinery too: the model explains itself and narrates what it is
@@ -317,7 +293,13 @@ const foldRun = (run: readonly Message.Message[]): Message.Message => {
  * panel's summary cannot count the run it belongs to. The run's first message supplies the identity,
  * keeping the row stable as the run grows and leaving `data-object-id` pointing at a real object.
  */
-export const collapseToolRuns = (messages: readonly Message.Message[]): Message.Message[] => {
+export const collapseToolRuns = (
+  messages: readonly Message.Message[],
+  /** The lane of each message: in a chat running several requests at once, a run never spans two lanes. */
+  laneOf?: ReadonlyMap<string, string>,
+): Message.Message[] => {
+  const sameLane = (left: Message.Message, right: Message.Message) =>
+    laneOf === undefined || laneOf.get(left.id) === laneOf.get(right.id);
   const collapsed: Message.Message[] = [];
   // The messages each entry was folded from, so a later result can join the fold that holds its call.
   const sources: (readonly Message.Message[])[] = [];
@@ -330,7 +312,7 @@ export const collapseToolRuns = (messages: readonly Message.Message[]): Message.
     }
 
     let end = index;
-    while (end + 1 < messages.length && isToolOnly(messages[end + 1])) {
+    while (end + 1 < messages.length && isToolOnly(messages[end + 1]) && sameLane(message, messages[end + 1])) {
       end++;
     }
     const run = messages.slice(index, end + 1);
@@ -341,8 +323,10 @@ export const collapseToolRuns = (messages: readonly Message.Message[]): Message.
     const results = run.flatMap((entry) => entry.blocks);
     const callIds = new Set(results.map((block) => (block._tag === 'toolResult' ? block.toolCallId : undefined)));
     const caller = results.every((block) => block._tag === 'toolResult')
-      ? collapsed.findLastIndex((earlier) =>
-          earlier.blocks.some((block) => block._tag === 'toolCall' && callIds.has(block.toolCallId)),
+      ? collapsed.findLastIndex(
+          (earlier) =>
+            sameLane(earlier, message) &&
+            earlier.blocks.some((block) => block._tag === 'toolCall' && callIds.has(block.toolCallId)),
         )
       : -1;
     if (caller >= 0) {

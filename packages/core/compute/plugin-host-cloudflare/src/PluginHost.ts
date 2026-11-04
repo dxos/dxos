@@ -15,16 +15,26 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as PluginManifest from '@dxos/app-framework/PluginManifest';
 import { wrapFunctionHandler } from '@dxos/compute-runtime';
 import type * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError, messageOf } from '@dxos/errors';
 import { ServiceContainer, createFunctionContext } from '@dxos/functions-runtime-cloudflare';
-import { DXN, SpaceId } from '@dxos/keys';
+import { DXN, EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import type { FunctionProtocol, PluginProtocol } from '@dxos/protocols';
+import { ErrorCodec, type FunctionProtocol, PluginProtocol } from '@dxos/protocols';
 
+import * as HostServices from './HostServices.ts';
+import * as Output from './Output.ts';
 import * as PluginActivation from './PluginActivation.ts';
 import * as PluginCatalog from './PluginCatalog.ts';
+import * as RequestContext from './RequestContext.ts';
 import * as TypeSource from './TypeSource.ts';
+
+/**
+ * The protocol version this host speaks. The loader's generated main module reads it from the vendored host, which a
+ * bundle keeps from its publish, so EDGE learns each bundle's version without activating it.
+ */
+export const PROTOCOL_VERSION: number = PluginProtocol.PROTOCOL_VERSION;
 
 export class OperationNotFoundError extends BaseError.extend('OperationNotFoundError', 'Operation not found') {}
 
@@ -94,27 +104,89 @@ export const make = (makePlugins: () => PluginActivation.Plugins, options: Optio
     if (spaceId !== undefined && !SpaceId.isValid(spaceId)) {
       throw new InvalidRequestError({ message: `Invalid spaceId: ${spaceId}` });
     }
+    if (scope.conversation !== undefined && spaceId === undefined) {
+      throw new InvalidRequestError({ message: 'A conversation is read from a space, and the request names none.' });
+    }
 
-    const func = wrapFunctionHandler(withCapabilities(handler, activation.capabilities), {
+    // TEST-ONLY: the seed is a static of the shared `EntityId`, so concurrent invocations on one isolate race; only
+    // trusted test harnesses set it.
+    if (scope.idSeed !== undefined) {
+      EntityId.dangerouslySetSeed(scope.idSeed.time, scope.idSeed.seed);
+    }
+
+    // A caller that minted the pid owns the start and end envelopes: only it outlives an isolate killed mid-run.
+    const callerOwnsEnvelopes = scope.pid !== undefined;
+    const pid = scope.pid ?? EntityId.random();
+    const info = { key: operationKey, name: handler.meta.name ?? operationKey };
+    const trace = new RequestContext.TraceForwarder(scope.traceSink, {
+      pid,
+      parentPid: scope.parentPid,
+      runId: scope.runId,
+      processName: operationKey,
+      space: spaceId,
+      runtimeName: Trace.CommonRuntimeName.edgeWorkerLoader,
+    });
+    const cancellation = RequestContext.listenForCancel(scope.cancellation);
+
+    // Innermost first: the nested-operation service captures the context every wrapper outside it provides.
+    const withOperations = HostServices.withOperations(handler, {
+      handlers: activation.operationHandlers,
+      host: scope.operations,
+      spaceId,
+      conversation: scope.conversation,
+      pid,
+      idSeed: scope.idSeed,
+    });
+    const contextual = RequestContext.withConversation(
+      RequestContext.withCancellation(
+        withCapabilities(HostServices.withHostServices(withOperations, scope.services), activation.capabilities),
+        cancellation.signal,
+      ),
+      scope.conversation,
+    );
+    const func = wrapFunctionHandler(contextual, {
       // Registering types needs a database, which exists only for a space-scoped invocation.
       types: spaceId === undefined ? undefined : [...activation.registeredTypes],
       toolkits: [...activation.toolkits],
       typeSource: env.TYPE_REGISTRY === undefined ? undefined : TypeSource.fromRegistry(env.TYPE_REGISTRY),
+      // Another bundle's nested call passes the objects it holds by reference.
+      resolveObjectReferences: true,
     });
 
+    if (!callerOwnsEnvelopes) {
+      trace.start(info);
+    }
     // The in-process rpc clients bridged onto the bindings live for one invocation.
     const serviceScope = Effect.runSync(Scope.make());
     try {
       const context = await makeContext(env, scope, spaceId, serviceScope);
-      return await func.handler({ context, data: request.input });
+      const output = await func.handler({
+        context: { ...context, services: { ...context.services, traceService: trace.service } },
+        data: request.input,
+      });
+      if (!callerOwnsEnvelopes) {
+        trace.end(info, undefined);
+      }
+      return output;
+    } catch (error) {
+      if (!callerOwnsEnvelopes) {
+        trace.end(info, error);
+      }
+      throw error;
     } finally {
-      await EffectEx.runPromise(Scope.close(serviceScope, Exit.void));
+      // First, before anything awaited: a pending `waitForCancel` pins the invocation until the isolate is killed.
+      cancellation.dispose();
+      try {
+        await EffectEx.runPromise(Scope.close(serviceScope, Exit.void));
+      } finally {
+        await trace.drain();
+      }
     }
   };
 
   const invoke: Host['invoke'] = async (request, env, scope = {}) => {
     try {
-      return { ok: true, output: await run(request, env, scope) };
+      return { ok: true, output: Output.encode(await run(request, env, scope)) };
     } catch (error) {
       log.error('plugin operation failed', { operationKey: request.operationKey, error });
       return { ok: false, error: toFailure(error) };
@@ -132,7 +204,7 @@ const toFailure = (error: unknown): PluginProtocol.Failure => ({
         ? 'invalid-request'
         : 'failed',
   message: messageOf(error) ?? String(error),
-  ...(error instanceof Error ? { name: error.name, stack: error.stack } : {}),
+  ...(error instanceof Error ? { name: error.name, stack: error.stack, encoded: ErrorCodec.encode(error) } : {}),
 });
 
 /**

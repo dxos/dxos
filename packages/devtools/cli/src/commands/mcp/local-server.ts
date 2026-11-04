@@ -49,7 +49,7 @@ export const makeLocalServer = Effect.fn(function* (
     readonly skills?: readonly Skill.Definition[];
   } = {},
 ) {
-  const client = yield* ClientService;
+  const client = yield* ClientService.client;
   const capabilities = yield* Capability.Service;
   // Captured so an invocation can erase its own requirements: the tool handlers this host backs
   // are invoked by the MCP server layer, which knows nothing of the CLI's services. The capability

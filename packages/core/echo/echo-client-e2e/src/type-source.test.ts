@@ -129,6 +129,17 @@ describe('type sources', () => {
     expect(typename).toBe(TYPENAME);
   });
 
+  // `db.add` is synchronous and never asks a source: an operation declares the types it writes (`Operation.make({ types })`).
+  test('adding an object of an unregistered type throws, with or without a source', async ({ expect }) => {
+    const { db } = await setup();
+    expect(() => db.add(Obj.make(Remote, { title: 'Unregistered' }))).toThrow(/Schema not registered/);
+
+    const registry = makeMockRegistry();
+    db.graph.registerTypeSource(registry.source);
+    expect(() => db.add(Obj.make(Remote, { title: 'Unregistered' }))).toThrow(/Schema not registered/);
+    expect(registry.requests).toHaveLength(0);
+  });
+
   test('loading an object of an unregistered type resolves its schema from the source', async ({ expect }) => {
     const { db } = await setup();
     db.graph.registerTypeSource(makeMockRegistry().source);

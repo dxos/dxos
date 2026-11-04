@@ -30,9 +30,13 @@
   ],
   "scripts": {},
   "dependencies": {
+    "@automerge/automerge": "catalog:",
+    "@automerge/automerge-repo": "catalog:",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
     "@dxos/edge-compute": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/plugin-host-cloudflare": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "effect": "catalog:",
