@@ -65,6 +65,11 @@ type MosaicTileProps<TData = any, TLocation = DndLocation> = Util.ThemedClassNam
      * `data-[mosaic-tile-state=dragging]`, such as one that stays on an axis, which a native drag image cannot.
      */
     nativeDragPreview?: boolean;
+    /**
+     * Gives way to a drag moving forward as soon as the pointer enters this tile, rather than at its midpoint. For a tile
+     * dragged by a handle at its leading edge, which would otherwise travel a tile and a half to swap with its neighbor.
+     */
+    reorderOnEnter?: boolean;
     /** Whether this tile is the current (aria-current) item. */
     current?: boolean;
     /** Whether this tile is selected (aria-selected). */
@@ -99,6 +104,7 @@ const MosaicTile = Util.slottable<HTMLDivElement, MosaicTileProps>(
       data: dataProp,
       draggable: draggableProp,
       nativeDragPreview = true,
+      reorderOnEnter = false,
       current,
       selected: selectedProp,
       binding,
@@ -122,9 +128,14 @@ const MosaicTile = Util.slottable<HTMLDivElement, MosaicTileProps>(
       eventHandler,
       orientation,
       scrolling,
+      activeLocation,
       setActiveLocation,
     } = useMosaicContainerContext(MOSAIC_TILE_NAME);
     const [state, setState] = useState<MosaicTileState>({ type: 'idle' });
+
+    // A ref since the drop target below would otherwise re-register each time the gap moves.
+    const activeLocationRef = useRef(activeLocation);
+    activeLocationRef.current = activeLocation;
 
     // A child `Mosaic.DragHandle` registers its element here; an explicit `dragHandle` prop wins.
     const [registeredDragHandle, setRegisteredDragHandle] = useState<HTMLElement | null>(null);
@@ -237,7 +248,13 @@ const MosaicTile = Util.slottable<HTMLDivElement, MosaicTileProps>(
 
       const handleChange = ({ self, source }: { self: DropTargetRecord; source: ElementDragPayload }) => {
         if (source.data.id !== dataProp.id) {
-          const closestEdge = extractClosestEdge(self.data);
+          const gap = activeLocationRef.current;
+          const closestEdge: Edge | null =
+            reorderOnEnter && typeof gap === 'number' && data.location > gap
+              ? orientation === 'vertical'
+                ? 'bottom'
+                : 'right'
+              : extractClosestEdge(self.data);
           const location = data.location + (closestEdge === 'top' || closestEdge === 'left' ? -0.5 : 0.5);
           setActiveLocation(location);
           setState({ type: 'target', closestEdge });
@@ -269,7 +286,18 @@ const MosaicTile = Util.slottable<HTMLDivElement, MosaicTileProps>(
           setActiveLocation(undefined);
         },
       });
-    }, [rootRef, forwardedRef, containerId, eventHandler, data, scrolling, allowedEdges, setActiveLocation]);
+    }, [
+      rootRef,
+      forwardedRef,
+      containerId,
+      eventHandler,
+      data,
+      scrolling,
+      allowedEdges,
+      orientation,
+      reorderOnEnter,
+      setActiveLocation,
+    ]);
 
     const { className, ...rest } = Util.composableProps(props, { classNames: 'relative outline-none' });
 

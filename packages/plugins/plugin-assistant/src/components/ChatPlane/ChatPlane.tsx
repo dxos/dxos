@@ -600,6 +600,7 @@ const ChatPlaneCell = ({ menu, children }: ChatPlaneCellProps) => {
       location={location}
       draggable={draggable}
       nativeDragPreview={false}
+      reorderOnEnter
       current={current}
       binding={binding}
       data-testid='chat-plane.column'
