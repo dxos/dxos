@@ -202,8 +202,7 @@ test.describe('Collaboration tests', () => {
     await expect(guestTextbox).toContainText(allParts);
   });
 
-  // TODO(wittjosiah): Fix.
-  test.skip('peers can see each others presence', { tag: ['@QA-8'] }, async () => {
+  test('peers can see each others presence', { tag: ['@QA-8'] }, async () => {
     test.setTimeout(90_000);
 
     await host.createSpace();

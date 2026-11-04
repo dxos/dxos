@@ -16,6 +16,7 @@ export type TranscriptionPipelineOptions = Omit<RunOptions, 'stages'> & {
 /** The standard transcription stage set, rebuilt per run (stages hold no cross-run state). */
 const defaultStages = (): Stage<any, any>[] => [makeCorrectionStage(), makeExtractionStage(), makeSummarizationStage()];
 
+/** Post-processes a live transcript: correction, entity extraction and summarization. */
 export const TranscriptionPipeline = Object.freeze({
   /**
    * Default assembly over {@link PipelineRuntime}: drives the standard transcription stage set off the
