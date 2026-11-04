@@ -4,7 +4,7 @@
 
 import { type JsonObject, type JsonValue } from '@bufbuild/protobuf';
 
-import { DeferredTask, Event, sleep } from '@dxos/async';
+import { DeferredTask, Event, scheduleTaskInterval, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -83,6 +83,12 @@ const readObject = (value: JsonValue | undefined): JsonObject | undefined =>
 
 const DEBOUNCE_INTERVAL = 100; // ms
 
+/**
+ * Gossip reaches only the peers connected when a message is sent, so state is re-sent for peers whose
+ * connection came up after the last change.
+ */
+const ANNOUNCE_INTERVAL = 15_000; // ms
+
 export type AwarenessProviderProps = {
   messenger: Messenger;
   channel: string;
@@ -115,8 +121,9 @@ export class SpaceAwarenessProvider implements AwarenessProvider {
   }
 
   open(): void {
-    this._ctx = new Context();
-    this._postTask = new DeferredTask(this._ctx, async () => {
+    const ctx = new Context();
+    this._ctx = ctx;
+    this._postTask = new DeferredTask(ctx, async () => {
       if (this._localState) {
         await this._messenger.postMessage(this._channel, toJson({ kind: 'post', state: this._localState }));
 
@@ -126,25 +133,39 @@ export class SpaceAwarenessProvider implements AwarenessProvider {
       }
     });
 
-    this._ctx.onDispose(
-      this._messenger.listen(this._channel, (message: GossipMessage) => {
-        const payload = fromJson(unpackJson(message.payload));
-        switch (payload?.kind) {
-          case 'query': {
-            this._handleQueryMessage();
-            break;
-          }
-          case 'post': {
-            this._handlePostMessage(payload);
-            break;
-          }
+    const listener = this._messenger.listen(this._channel, (message: GossipMessage) => {
+      const payload = fromJson(unpackJson(message.payload));
+      switch (payload?.kind) {
+        case 'query': {
+          this._handleQueryMessage();
+          break;
         }
-      }),
-    );
-
-    void this._messenger.postMessage(this._channel, toJson({ kind: 'query' })).catch((err) => {
-      log.debug('failed to query awareness', { err });
+        case 'post': {
+          this._handlePostMessage(payload);
+          break;
+        }
+      }
     });
+    ctx.onDispose(listener);
+
+    // Replies to a query sent before the listener is registered would be dropped.
+    void listener.ready
+      .then(async () => {
+        if (!ctx.disposed) {
+          await this._messenger.postMessage(this._channel, toJson({ kind: 'query' }));
+        }
+      })
+      .catch((err) => {
+        log.debug('failed to query awareness', { err });
+      });
+
+    scheduleTaskInterval(
+      ctx,
+      async () => {
+        this._postTask?.schedule();
+      },
+      ANNOUNCE_INTERVAL,
+    );
   }
 
   close(): void {
@@ -174,6 +195,11 @@ export class SpaceAwarenessProvider implements AwarenessProvider {
 
   private _handlePostMessage(message: ProtocolMessage): void {
     invariant(message.kind === 'post');
+    // A peer seen for the first time may have joined after our last post.
+    if (!this._remoteStates.has(message.state.peerId)) {
+      this._postTask?.schedule();
+    }
+
     // TODO(wittjosiah): Is it helpful or confusing to show cursors for self on other devices?
     this._remoteStates.set(message.state.peerId, message.state);
     this.remoteStateChange.emit();

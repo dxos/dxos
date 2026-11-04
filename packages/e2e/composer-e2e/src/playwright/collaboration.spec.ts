@@ -85,56 +85,44 @@ test.describe('Collaboration tests', () => {
     }
   });
 
-  // TODO(wittjosiah): Flaky -- depends on winning a race between the awareness gossip channel
-  //   becoming live and the peer's cursor-position broadcast, with no way from the test to
-  //   detect readiness (the presence indicator this used to rely on no longer exists at the
-  //   app level). Covered instead by a storybook interaction test exercising the CodeMirror
-  //   awareness extension against an in-memory two-peer transport.
-  test.skip(
-    "host and guest can see each others' cursors when same document is in focus",
-    { tag: ['@QA-8'] },
-    async () => {
-      await host.createSpace();
-      await host.createObject({ type: 'Document' });
+  test("host and guest can see each others' cursors when same document is in focus", { tag: ['@QA-8'] }, async () => {
+    await host.createSpace();
+    await host.createObject({ type: 'Document' });
 
-      // Focus on host's textbox and wait for it to be ready.
-      const hostPlank = host.deck.plank();
-      const hostTextbox = Markdown.getMarkdownTextboxWithLocator(hostPlank.locator);
-      await hostTextbox.waitFor();
-      // TODO(thure): Autofocus not working for solo mode when creating a new document.
-      await hostTextbox.focus();
+    // Focus on host's textbox and wait for it to be ready.
+    const hostPlank = host.deck.plank();
+    const hostTextbox = Markdown.getMarkdownTextboxWithLocator(hostPlank.locator);
+    await hostTextbox.waitFor();
+    // TODO(thure): Autofocus not working for solo mode when creating a new document.
+    await hostTextbox.focus();
 
-      await perfomInvitation(host, guest);
+    await perfomInvitation(host, guest);
 
-      await guest.waitForSpaceReady();
-      await guest.expandSection('spacePlugin.collectionsSection');
-      await expect(guest.getObjectLinks()).toHaveCount(1);
-      await navigateToNewDocument(guest);
+    await guest.waitForSpaceReady();
+    await guest.expandSection('spacePlugin.collectionsSection');
+    await expect(guest.getObjectLinks()).toHaveCount(1);
+    await navigateToNewDocument(guest);
 
-      // Find the plank in the guest.
-      const guestPlank = guest.deck.plank();
-      await Markdown.waitForMarkdownTextboxWithLocator(guestPlank.locator);
-      await Markdown.getMarkdownTextboxWithLocator(guestPlank.locator).blur();
+    // Find the plank in the guest.
+    const guestPlank = guest.deck.plank();
+    await Markdown.waitForMarkdownTextboxWithLocator(guestPlank.locator);
+    await Markdown.getMarkdownTextboxWithLocator(guestPlank.locator).blur();
 
-      await Promise.all([
-        expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator)).toHaveCount(0),
-        expect(Markdown.getCollaboratorCursorsWithLocator(guestPlank.locator)).toHaveCount(0),
-      ]);
+    await Promise.all([
+      expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator)).toHaveCount(0),
+      expect(Markdown.getCollaboratorCursorsWithLocator(guestPlank.locator)).toHaveCount(0),
+    ]);
 
-      // TODO(wittjosiah): Focusing too quickly causes the cursors not to show up.
-      await Promise.all([host.page.waitForTimeout(1_000), guest.page.waitForTimeout(1_000)]);
+    await Promise.all([
+      Markdown.getMarkdownTextboxWithLocator(hostPlank.locator).focus(),
+      Markdown.getMarkdownTextboxWithLocator(guestPlank.locator).focus(),
+    ]);
 
-      await Promise.all([
-        Markdown.getMarkdownTextboxWithLocator(hostPlank.locator).focus(),
-        Markdown.getMarkdownTextboxWithLocator(guestPlank.locator).focus(),
-      ]);
-
-      await Promise.all([
-        expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator).first()).toHaveText(/.+/),
-        expect(Markdown.getCollaboratorCursorsWithLocator(guestPlank.locator).first()).toHaveText(/.+/),
-      ]);
-    },
-  );
+    await Promise.all([
+      expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator).first()).toHaveText(/.+/),
+      expect(Markdown.getCollaboratorCursorsWithLocator(guestPlank.locator).first()).toHaveText(/.+/),
+    ]);
+  });
 
   test("host and guest can see each others' changes in same document", { tag: ['@QA-8'] }, async () => {
     await host.createSpace();
