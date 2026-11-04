@@ -32,6 +32,8 @@ Use `Effect.exit` around `Operation.invoke`, and `Effect.result` around `Databas
 
 ## Mistakes that cost a call
 
+- Splitting one step over several calls. Each call is a fresh program, so resolve what you need, invoke,
+  check the result and print it in the same call.
 - Calling a helper these docs do not show: it fails as `is not a function`. Read the docs instead.
 - Using `import` or `require`: the modules are already in scope.
 - Writing the `Effect.gen` wrapper yourself: your code already is its body.

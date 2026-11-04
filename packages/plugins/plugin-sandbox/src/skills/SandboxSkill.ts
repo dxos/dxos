@@ -40,6 +40,9 @@ export const make = () =>
         The sandbox service is lazily initialized: the container starts on first use.
         A command is cut off after five minutes unless you pass a longer \`timeout\` (milliseconds, at most
         fifteen minutes). A command that is cut off has not finished.
+        Each command costs a round trip, so do a step in one: write a file with a heredoc
+        (\`cat > file <<'EOF'\`), and chain build, deploy and checks with \`&&\`. Check what the image ships
+        (\`node --version\`, \`which wrangler\`) before installing anything.
         To serve something (a static site, a dev server), call ExposePort with its port and the \`command\`
         that serves it, for a public URL: the service starts the server, and starts it again whenever the
         container has slept, so the URL keeps answering. \`background: true\` starts any other command that
@@ -56,6 +59,8 @@ export const make = () =>
           and \`git pull <remote> main\` to continue from where an earlier one left off. \`$DX_REPOSITORIES\` lists
           the remote names. Initialize git in the directory you mean to keep, and ignore \`node_modules\`.
         - Branches, log, list files and read file show what a repository holds without a sandbox.
+        - If creating or attaching a repository fails, keep committing to git in the sandbox and say so in
+          your report; retrying the same call does not help.
         Only sandboxes on EDGE can reach repositories.
       `,
     }),
