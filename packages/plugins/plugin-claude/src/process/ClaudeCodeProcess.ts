@@ -163,9 +163,15 @@ export const make = (options: Options): AgentProcessDefinition =>
           const mcpServers = loadMcpServers({ feed, endpointOf: options.mcpEndpoint }).pipe(Effect.provide(mcpContext));
           yield* AcpAgent.runTurn(agent, { chat, feed }, { prompt: [...prompt], mcpServers }).pipe(
             Effect.onExit((exit) =>
-              Trace.write(Trace.AgentRequestEnd, {
-                status: Exit.isSuccess(exit) ? 'success' : Exit.hasInterrupts(exit) ? 'interrupted' : 'error',
-                error: Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined,
+              Effect.gen(function* () {
+                yield* Trace.write(Trace.AgentRequestEnd, {
+                  status: Exit.isSuccess(exit) ? 'success' : Exit.hasInterrupts(exit) ? 'interrupted' : 'error',
+                  error: Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined,
+                });
+                // A stopped turn was stopped by someone watching it; any other end is news to the space.
+                if (!Exit.hasInterrupts(exit)) {
+                  Chat.markUnread(chat);
+                }
               }),
             ),
           );

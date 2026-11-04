@@ -698,6 +698,10 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                         status: Exit.isSuccess(exit) ? 'success' : Exit.hasInterrupts(exit) ? 'interrupted' : 'error',
                         error: Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined,
                       });
+                      // A stopped turn was stopped by someone watching it; any other end is news to the space.
+                      if (!Exit.hasInterrupts(exit)) {
+                        Chat.markUnread(chat);
+                      }
                       // The failure ends the process below, skipping the reconcile, so the strategy
                       // hears of it here or not at all. A stop the reader asked for is not a failure.
                       const onTurnFailed = Option.isSome(strategy) ? strategy.value.onTurnFailed : undefined;

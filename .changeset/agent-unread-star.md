@@ -1,5 +1,5 @@
 ---
-'@dxos/plugin-assistant': minor
+'@dxos/assistant': minor
 ---
 
-A chat whose agent finishes a turn while no view of it is open shows the agent star at its navtree glyph's corner, and so does the object a companion chat works on, until the chat is opened. The new `AssistantCapabilities.ChatReads` capability tracks which chats are unread, in memory only.
+`Chat` has an `unread` flag that the agent sets as each turn ends and an open chat view clears for the whole space (`Chat.markUnread`, `Chat.markRead`). In the navtree, a chat with an unread turn, and the object a companion chat works on, show a still amber agent star until anyone opens the chat; the flag is stored on the chat, so it survives a reload.

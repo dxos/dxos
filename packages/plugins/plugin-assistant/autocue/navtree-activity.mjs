@@ -3,9 +3,9 @@
 //
 
 /**
- * A working agent marks its chat's navtree row, and a companion chat marks its subject's row, with the agent star in
- * place of presence; both stay while you look elsewhere. A turn that finishes unseen moves the star to the corner
- * until the chat is opened.
+ * A working agent marks its chat's navtree row, and a companion chat marks its subject's row, with a pulsing star in
+ * place of presence; both stay while you look elsewhere. A turn that finishes unseen leaves a still amber star, which
+ * survives a reload, until someone opens the chat.
  *
  * @mdl packages/plugins/plugin-assistant/PLUGIN.mdl test QA-5, QA-6
  * @app composer-app via `DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true moon run composer-app:serve -- --port 4173`
@@ -24,7 +24,7 @@ const row = (label) =>
 const heading = (label) => `${row(label)} [data-testid="treeItem.heading"]`;
 const glyph = (label) => `${row(label)} .dx-attention-glyph`;
 const working = (label) => `${glyph(label)}[data-mark="agent"]`;
-const unread = (label) => `${glyph(label)}[data-corner="agent-done"]`;
+const unread = (label) => `${glyph(label)}[data-mark="agent-done"]`;
 
 const caption = async (demo, value, position) => {
   await demo.caption({ value, subtitle: SUBTITLE, position });
@@ -47,6 +47,16 @@ const expand = async (page, label) => {
     await branch.locator('[data-part="branch-indicator"]').first().click();
     await page.waitForTimeout(1_000);
   }
+};
+
+/** Shows a row's glyph tooltip, then moves to the row's name so the glyph is in view. */
+const inspect = async (demo, page, label, tooltip) => {
+  await demo.hover({ selector: glyph(label), label });
+  if (tooltip) {
+    await page.getByText(tooltip, { exact: true }).first().waitFor({ timeout: 5_000 });
+  }
+  await demo.sleep({ ms: 1_800 });
+  await demo.hover({ selector: heading(label), label });
 };
 
 /** Waits out the rest of the agent's turn at speed, until the row's star clears. */
@@ -124,7 +134,7 @@ export const steps = [
       );
       await page.locator(working(CHAT)).waitFor({ timeout: 30_000 });
       await caption(demo, "While the agent works, the chat's glyph shows the agent star");
-      await demo.hover({ selector: glyph(CHAT), label: CHAT });
+      await inspect(demo, page, CHAT);
       await demo.sleep({ ms: 2_500 });
     },
   },
@@ -135,15 +145,26 @@ export const steps = [
       await page.locator('[data-testid="deck.plank"]').first().waitFor({ state: 'visible', timeout: 15_000 });
       await caption(demo, 'Open something else: the chat keeps working, and its row says so');
       await page.locator(working(CHAT)).waitFor({ timeout: 5_000 });
-      await demo.hover({ selector: glyph(CHAT), label: CHAT });
-      await page.getByText('Assistant is working', { exact: true }).first().waitFor({ timeout: 5_000 });
+      await inspect(demo, page, CHAT, 'Assistant is working');
       await demo.sleep({ ms: 3_000 });
       await awaitIdle(demo, page, CHAT);
       await page.locator(unread(CHAT)).waitFor({ timeout: 5_000 });
-      await caption(demo, 'It finished while you were away: the star moves to the corner until you read it');
-      await demo.hover({ selector: glyph(CHAT), label: CHAT });
-      await page.getByText('New reply from the assistant', { exact: true }).first().waitFor({ timeout: 5_000 });
+      await caption(demo, 'It finished while you were away: the star turns amber and holds still until it is read');
+      await inspect(demo, page, CHAT, 'New reply from the assistant');
       await demo.sleep({ ms: 3_000 });
+    },
+  },
+  {
+    name: 'Unread survives a reload',
+    run: async ({ demo, page }) => {
+      await page.mouse.move(700, 400);
+      await caption(demo, 'Unread is kept on the chat, so it survives a reload and every member sees it');
+      await page.reload();
+      await expand(page, 'Collections');
+      await expand(page, 'Sessions');
+      await page.locator(unread(CHAT)).waitFor({ timeout: 30_000 });
+      await inspect(demo, page, CHAT, 'New reply from the assistant');
+      await demo.sleep({ ms: 2_500 });
     },
   },
   {
@@ -168,7 +189,7 @@ export const steps = [
       await demo.click({ selector: tab, label: 'Assistant' });
       await send(demo, page, COMPANION_PROMPT, 'Read this plan and list three risks, each with a mitigation.');
       await page.locator(working(DOCUMENT)).waitFor({ timeout: 30_000 });
-      await demo.hover({ selector: glyph(DOCUMENT), label: DOCUMENT });
+      await inspect(demo, page, DOCUMENT);
       await demo.sleep({ ms: 2_500 });
     },
   },
@@ -180,14 +201,12 @@ export const steps = [
       await page.locator(unread(CHAT)).waitFor({ state: 'detached', timeout: 5_000 });
       await caption(demo, 'Opening the chat reads it; the document still shows its companion at work');
       await page.locator(working(DOCUMENT)).waitFor({ timeout: 5_000 });
-      await demo.hover({ selector: glyph(DOCUMENT), label: DOCUMENT });
-      await page.getByText('Assistant is working on this', { exact: true }).first().waitFor({ timeout: 5_000 });
+      await inspect(demo, page, DOCUMENT, 'Assistant is working on this');
       await demo.sleep({ ms: 3_000 });
       await awaitIdle(demo, page, DOCUMENT);
       await page.locator(unread(DOCUMENT)).waitFor({ timeout: 5_000 });
-      await caption(demo, 'The companion finished unseen, so the document gets the corner star');
-      await demo.hover({ selector: glyph(DOCUMENT), label: DOCUMENT });
-      await page.getByText('The assistant finished work on this', { exact: true }).first().waitFor({ timeout: 5_000 });
+      await caption(demo, 'The companion finished unseen, so the document gets the amber star');
+      await inspect(demo, page, DOCUMENT, 'The assistant finished work on this');
       await demo.sleep({ ms: 3_000 });
     },
   },

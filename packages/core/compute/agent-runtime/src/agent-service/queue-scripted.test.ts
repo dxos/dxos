@@ -11,6 +11,7 @@ import { expect } from 'vitest';
 
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { Alarm, SessionStore, isConsumed, isQueued } from '@dxos/assistant';
+import * as Chat from '@dxos/assistant/Chat';
 import { ProcessManager } from '@dxos/compute-runtime';
 import * as ComputeAgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
@@ -199,6 +200,23 @@ describe('AgentProcess input queue (scripted)', () => {
 
         // The prompt reached the model, carried by the turn's own user message.
         expect(promptTexts(messages)).toContain('What is a feed?');
+      },
+      Effect.provide(replyLayer()),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 30_000 },
+  );
+
+  it.effect(
+    'a finished turn leaves the chat unread',
+    Effect.fnUntraced(
+      function* (_) {
+        const session = yield* AgentService.createSession();
+        const unread = () => Obj.instanceOf(Chat.Chat, session.chat) && session.chat.unread === true;
+        expect(unread()).toBe(false);
+        yield* session.submitPrompt('What is a feed?');
+        yield* session.waitForCompletion();
+        expect(unread()).toBe(true);
       },
       Effect.provide(replyLayer()),
       TestHelpers.provideTestContext,

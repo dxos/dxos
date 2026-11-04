@@ -61,6 +61,11 @@ export class Chat extends Type.makeObject<Chat>(DXN.make('org.dxos.type.assistan
      * parented to it explicitly; see {@link addTask}.
      */
     tasks: Schema.Array(Ref.Ref(Task.Task)).pipe(Annotation.FormInputAnnotation.set(false)),
+
+    /**
+     * A turn finished that nobody has seen yet. Shared by the space, so whoever opens the chat reads it for everyone.
+     */
+    unread: Schema.Boolean.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({
@@ -124,6 +129,24 @@ export const seedSession = (chat: Chat, session: SessionConfig.SessionConfig | u
   Obj.update(chat, (chat) => {
     chat.session = { ...session };
   });
+};
+
+/** Records that a turn finished; the agent calls this as each turn ends. */
+export const markUnread = (chat: Chat): void => {
+  if (!chat.unread) {
+    Obj.update(chat, (chat) => {
+      chat.unread = true;
+    });
+  }
+};
+
+/** Records that someone has seen the chat's latest turn. */
+export const markRead = (chat: Chat): void => {
+  if (chat.unread) {
+    Obj.update(chat, (chat) => {
+      chat.unread = false;
+    });
+  }
 };
 
 /** Creates a task the chat owns and appends it to the checklist. */

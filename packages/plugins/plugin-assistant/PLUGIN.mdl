@@ -577,13 +577,13 @@ test QA-5: A working agent marks its chat and its companion's subject in the nav
 ```
 
 ```mdl
-test QA-6: A turn that finishes unseen leaves a corner star until the chat is opened
+test QA-6: A turn that finishes unseen leaves an amber star until anyone opens the chat
   desc: |
-    When an agent's turn ends while no view of its chat is open, the agent star moves from the
-    glyph's mark to its corner, on the chat's row and, for a companion chat, on its subject's row.
-    Opening the chat, in its own plank or as the companion, reads it and clears the star. A turn
-    that ends while the chat is open leaves nothing behind. Read state lives in memory, so a reload
-    clears it.
+    When an agent's turn ends while nobody has its chat open, the working star stops pulsing and
+    turns amber, on the chat's row and, for a companion chat, on its subject's row. The flag lives on
+    the chat, so it survives a reload and is shared by the space: anyone who opens the chat, in its
+    own plank or as the companion, reads it for everyone. A turn that ends while someone has the chat
+    open leaves nothing behind.
   actors: human
   status: unverified
   given:
@@ -594,18 +594,21 @@ test QA-6: A turn that finishes unseen leaves a corner star until the chat is op
   steps:
     - name: A chat that finishes unseen is unread
       do: Send "Trip ideas" a prompt, open "Launch plan" before the reply finishes, and wait for it.
-      expect: the chat's row shows the corner star; its tooltip reads "New reply from the assistant"
+      expect: the chat's row shows a still amber star; its tooltip reads "New reply from the assistant"
+    - name: Unread survives a reload
+      do: Reload the app.
+      expect: the chat's row still shows the amber star
     - name: Opening the chat reads it
       do: Open "Trip ideas" from the navtree.
-      expect: the corner star clears from the chat's row
+      expect: the amber star clears from the chat's row
     - name: A companion that finishes unseen marks its subject
       do: Send a prompt from "Launch plan"'s Assistant companion, open "Trip ideas", and wait for the
         reply.
-      expect: the document's row shows the corner star; its tooltip reads "The assistant finished work
+      expect: the document's row shows the amber star; its tooltip reads "The assistant finished work
         on this"
     - name: Opening the companion reads it
       do: Open "Launch plan" with its Assistant companion showing.
-      expect: the corner star clears from the document's row
+      expect: the amber star clears from the document's row
 ```
 
 
@@ -775,14 +778,15 @@ decision D-19: A running agent shows on the navtree as the agent star in the att
 ```
 
 ```mdl
-decision D-20: A turn that finishes while no view of its chat is open leaves the agent star in the glyph's corner until the chat is opened; an open chat view, in a plank or as a companion, counts as reading it. Read state is held in memory for now.
+decision D-20: A turn that finishes while nobody has its chat open leaves a still amber agent star in the glyph's mark until anyone opens the chat. The agent sets `Chat.unread` as each turn ends; an open chat view, in a plank or as a companion, clears it for the whole space.
   date: 2026-11-03
   by: user:wittjosiah
   affects: [QA-6]
-  why: The working star disappears when the turn ends, so without an unread mark a reply that arrived while you worked elsewhere leaves no trace in the navtree.
+  why: The working star disappears when the turn ends, so without an unread mark a reply that arrived while you worked elsewhere leaves no trace in the navtree. Kept on the chat, the mark survives a reload and reaches every member. Because anyone viewing the chat reads it, the amber star and presence never need the mark at once. White while working and amber when unread tell the two apart without motion.
   rejected:
+    - The star in the glyph's corner: it took the corner from mentions and changes when the mark is free whenever the star is shown.
     - An amber dot in the corner: it looks like the mention and changed-since-seen dots; the star names who finished.
-    - Keeping the star in the mark, still, until read: a finished chat and a working one then differ only by motion.
+    - Read state per client, in memory: a reload forgot it, and one member reading a reply left it unread for everyone else.
 ```
 
 ---

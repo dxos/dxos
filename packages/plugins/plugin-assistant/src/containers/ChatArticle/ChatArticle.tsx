@@ -7,7 +7,7 @@ import React, { forwardRef, useCallback, useEffect, useMemo, useRef } from 'reac
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import type * as Chat from '@dxos/assistant/Chat';
+import * as Chat from '@dxos/assistant/Chat';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
@@ -40,10 +40,13 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
     const atomRegistry = Hooks.useCapability(Capabilities.AtomRegistry);
     const stateAtom = Hooks.useCapability(AssistantCapabilities.State);
-    // A chat on screen is read: a turn that finishes while this view is mounted leaves no unread mark.
-    const [chatReads] = Hooks.useCapabilities(AssistantCapabilities.ChatReads);
-    const chatUri = chat && Obj.getDatabase(chat) ? String(Obj.getURI(chat)) : undefined;
-    useEffect(() => (chatUri ? chatReads?.open(chatUri) : undefined), [chatReads, chatUri]);
+    // An open chat is read, for everyone in the space: so is a turn that finishes while it is open.
+    const [unread] = useObject(chat, 'unread');
+    useEffect(() => {
+      if (chat && unread) {
+        Chat.markRead(chat);
+      }
+    }, [chat, unread]);
     // Transient (pre-submit) chats have no database; fall back to the companion's.
     const db = (chat && Obj.getDatabase(chat)) ?? (companionTo && Obj.getDatabase(companionTo));
     const runtime = useChatServices({ id: db?.spaceId });
