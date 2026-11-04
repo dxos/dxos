@@ -76,7 +76,9 @@ export class CanarySpace {
     const client = yield* ClientService.client;
     const space = yield* Effect.suspend(() => {
       const space = client.spaces.get(spaceId);
-      return space ? Effect.succeed(space) : new CanaryError({ message: `space ${spaceId} never appeared` });
+      return space
+        ? Effect.succeed(space)
+        : Effect.fail(new CanaryError({ message: `space ${spaceId} never appeared` }));
     }).pipe(Effect.retry({ schedule: Schedule.spaced('1 second') }), timeout(waits.open, `space ${spaceId} to appear`));
     return yield* new CanarySpace(client, space, waits).#ready();
   });
@@ -229,7 +231,7 @@ export const readSnapshot = Effect.fn('mail-canary.readSnapshot')(
   function* () {
     const [mailbox] = yield* Database.query(Filter.type(Mailbox.Mailbox)).run;
     if (!mailbox) {
-      return yield* new CanaryError({ message: NO_MAILBOX });
+      return yield* Effect.fail(new CanaryError({ message: NO_MAILBOX }));
     }
     const feed = yield* Database.load(mailbox.feed);
     yield* pull(feed);

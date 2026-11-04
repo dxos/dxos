@@ -134,7 +134,7 @@ export class Nightly {
   ): Effect.Effect<{ start: number; seeded: ExpectedMessage[] }, MailboxError> {
     return Effect.gen({ self: this }, function* () {
       if (!Number.isInteger(count) || count <= 0 || count > pool.length) {
-        return yield* new CanaryError({ message: `cannot seed ${count} of a pool of ${pool.length}` });
+        return yield* Effect.fail(new CanaryError({ message: `cannot seed ${count} of a pool of ${pool.length}` }));
       }
       const label = yield* this.#mailbox.ensureLabel(SEED_LABEL);
       const start = yield* this.#cursor(pool.length);

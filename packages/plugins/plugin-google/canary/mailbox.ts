@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as HttpClient from 'effect/http/HttpClient';
@@ -14,6 +13,7 @@ import * as Schema from 'effect/Schema';
 
 import { configuredCredentialsLayer } from '@dxos/compute-runtime';
 import type * as Credential from '@dxos/compute/Credential';
+import { BaseError } from '@dxos/errors';
 
 import { GoogleCredentials, GoogleMailApi, type GoogleMailApiError, type GoogleMailApiService } from '#services';
 
@@ -23,10 +23,7 @@ import { GoogleApiError } from '../src/errors.ts';
 import { LIVE_GMAIL_ACCOUNT } from '../src/testing/live-credentials.ts';
 
 /** A failure of the canary's own making: bad settings, a wrong account, a space it cannot read. */
-export class CanaryError extends Data.TaggedError('CanaryError')<{
-  readonly message: string;
-  readonly cause?: unknown;
-}> {}
+export class CanaryError extends BaseError.extend('CanaryError', 'mail canary failure') {}
 
 /** The test account's own grant (`gmail.modify`); the canary runs outside EDGE, so not the kms token. */
 export type GmailCredentials = {
@@ -72,7 +69,9 @@ export class CanaryMailbox {
     );
     const { emailAddress } = yield* retrying(api.getProfile('me'));
     if (emailAddress?.toLowerCase() !== LIVE_GMAIL_ACCOUNT) {
-      return yield* new CanaryError({ message: `the grant belongs to ${emailAddress}, not ${LIVE_GMAIL_ACCOUNT}` });
+      return yield* Effect.fail(
+        new CanaryError({ message: `the grant belongs to ${emailAddress}, not ${LIVE_GMAIL_ACCOUNT}` }),
+      );
     }
     return mailbox;
   });
@@ -182,7 +181,9 @@ export const mintAccessToken = ({
       ),
     );
     if (response.status !== 200) {
-      return yield* new CanaryError({ message: `${response.status}: ${(yield* response.text).slice(0, 300)}` });
+      return yield* Effect.fail(
+        new CanaryError({ message: `${response.status}: ${(yield* response.text).slice(0, 300)}` }),
+      );
     }
     return (yield* HttpClientResponse.schemaBodyJson(TokenResponse)(response)).access_token;
   }).pipe(
