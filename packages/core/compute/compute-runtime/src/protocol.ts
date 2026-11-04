@@ -499,34 +499,50 @@ const unavailableOperationServiceLayer = Layer.succeed(Operation.Service, {
 
 /**
  * Replaces each top-level field holding a reference envelope with the object it names, loaded from `db` (D-71), except a
- * field the input schema types `Unknown` or `Any`, whose envelope is data the caller sent as is. Only direct fields: an
- * envelope nested deeper (a draft's ref property) is a ref the handler resolves itself.
+ * field the input schema types `Unknown` or `Any` (directly, as `X | undefined`, or through a record's values), whose
+ * envelope is data the caller sent as is. Only direct fields: an envelope nested deeper (a draft's ref property) is a
+ * ref the handler resolves itself.
  */
 const loadObjectReferences = async (ast: SchemaAST.AST, value: unknown, db: DatabaseImpl): Promise<unknown> => {
-  if (value === null || typeof value !== 'object' || Object.getPrototypeOf(value) !== Object.prototype) {
+  if (
+    isOpaque(ast) ||
+    value === null ||
+    typeof value !== 'object' ||
+    Object.getPrototypeOf(value) !== Object.prototype
+  ) {
     return value;
   }
-  const dataFields = new Set(
-    ast._tag === 'Objects'
-      ? SchemaAST.getPropertySignatures(ast)
-          .filter((prop) => SchemaAST.isUnknownKeyword(prop.type) || SchemaAST.isAnyKeyword(prop.type))
-          .map((prop) => prop.name.toString())
-      : [],
-  );
+  const properties = SchemaAST.getPropertySignatures(ast);
+  const named = new Set(properties.map((prop) => prop.name.toString()));
+  const dataFields = new Set(properties.filter((prop) => isOpaque(prop.type)).map((prop) => prop.name.toString()));
+  const opaqueRest = SchemaAST.getIndexSignatures(ast).some((signature) => isOpaque(signature.type));
   const resolver = db.graph.createRefResolver({ context: { space: db.spaceId } });
   return Object.fromEntries(
     await Promise.all(
-      Object.entries(value).map(
-        async ([key, entry]) =>
-          [
-            key,
-            !dataFields.has(key) && isEncodedReference(entry)
-              ? await refFromEncodedReference(entry, resolver).load()
-              : entry,
-          ] as const,
-      ),
+      Object.entries(value).map(async ([key, entry]) => {
+        const isData = dataFields.has(key) || (opaqueRest && !named.has(key));
+        return [
+          key,
+          !isData && isEncodedReference(entry) ? await refFromEncodedReference(entry, resolver).load() : entry,
+        ] as const;
+      }),
     ),
   );
+};
+
+/** Whether a schema accepts any value as data: `Unknown`, `Any`, either `| undefined`, or a suspension of one. */
+const isOpaque = (ast: SchemaAST.AST): boolean => {
+  if (SchemaAST.isSuspend(ast)) {
+    return isOpaque(ast.thunk());
+  }
+  if (SchemaAST.isUnknownKeyword(ast) || SchemaAST.isAnyKeyword(ast)) {
+    return true;
+  }
+  if (ast._tag === 'Union') {
+    const defined = ast.types.filter((member) => !SchemaAST.isUndefinedKeyword(member));
+    return defined.length > 0 && defined.every(isOpaque);
+  }
+  return false;
 };
 
 /** The wire form of a reference, `{ '/': <uri> }`. */

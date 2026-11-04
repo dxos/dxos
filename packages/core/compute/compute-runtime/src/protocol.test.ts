@@ -443,6 +443,31 @@ describe('object references in the input', () => {
     });
     expect(result).toEqual({ payload: envelope });
   });
+
+  test('passes reference envelopes through as data in a record of Unknown values', async ({ expect }) => {
+    const EchoesRecord = Operation.make({
+      meta: { key: DXN.make('com.example.operation.echoesRecord'), name: 'Echoes Record' },
+      services: [Database.Service],
+      input: Schema.Record(Schema.String, Schema.Unknown),
+      output: Schema.Record(Schema.String, Schema.Unknown),
+    }).pipe(
+      Operation.withHandler(
+        Effect.fnUntraced(function* (input) {
+          return input;
+        }),
+      ),
+    );
+
+    const { peer, services } = await openPeer();
+    const db = await peer.createDatabase();
+    const envelope = { '/': `echo://${db.spaceId}/01J00000000000000000000000` };
+
+    const result = await wrapFunctionHandler(EchoesRecord, { resolveObjectReferences: true }).handler({
+      data: { anything: envelope },
+      context: { services, spaceId: db.spaceId, spaceKey: db.spaceKey.toHex(), spaceRootUrl: db.rootUrl },
+    });
+    expect(result).toEqual({ anything: envelope });
+  });
 });
 
 const openPeer = async () => {

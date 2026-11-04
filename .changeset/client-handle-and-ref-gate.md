@@ -4,4 +4,4 @@
 '@dxos/compute-runtime': patch
 ---
 
-`ClientService` providers built through the process manager now hand out the client capability's lazy handle (`ClientCapabilities.ClientHandle`) instead of waiting for initialization while the layer is built, so a CLI command that runs an operation before anything reads the client no longer waits out the initialization timeout. The client's teardown timeout now ends the wait for a hung `destroy()`. A bundle's input no longer loads a reference envelope in a field typed `Unknown` or `Any`; such a field reaches the handler as the data the caller sent.
+A `dx` command that runs an operation before anything reads the client no longer waits out the client's initialization timeout, and a client whose `destroy()` hangs no longer holds up shutdown past its five-second limit. An EDGE plugin operation now receives a reference envelope sent in an `Unknown` or `Any` input field as the data the caller sent, rather than the object it names.
