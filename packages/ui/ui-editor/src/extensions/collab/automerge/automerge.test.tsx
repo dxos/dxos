@@ -3,12 +3,12 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { EditorState } from '@codemirror/state';
+import { EditorState, Transaction } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { render, screen } from '@testing-library/react';
 import * as Schema from 'effect/Schema';
 import React, { useEffect, useRef } from 'react';
-import { describe, test } from 'vitest';
+import { describe, onTestFinished, test } from 'vitest';
 
 import { DXN, Obj, Type } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
@@ -80,5 +80,39 @@ describe('Automerge', () => {
     view.dispatch({ changes: { from: 0, insert: 'hi' } });
     expect(obj.note).toBe('hi');
     view.destroy();
+  });
+
+  // Records whether each transaction awareness weighs as a move (a doc change or a selection) is marked remote.
+  const createRecordedView = (obj: TestType) => {
+    const accessor = Doc.createAccessor(obj, ['text']);
+    const remote: boolean[] = [];
+    const view = new EditorView({
+      state: EditorState.create({
+        extensions: [
+          automerge(accessor),
+          EditorView.updateListener.of(({ transactions }) => {
+            for (const tr of transactions.filter((tr) => tr.docChanged || tr.selection !== undefined)) {
+              remote.push(!!tr.annotation(Transaction.remote));
+            }
+          }),
+        ],
+      }),
+      parent: document.body,
+    });
+    onTestFinished(() => view.destroy());
+    return { accessor, view, remote };
+  };
+
+  test('edits from the document are marked remote', ({ expect }) => {
+    const { accessor, view, remote } = createRecordedView(Obj.make(TestType, { text: '' }));
+    new Generator(accessor).update('hello');
+    view.dispatch({ changes: { from: 5, insert: '!' } });
+    expect(remote).toEqual([true, true, false]);
+  });
+
+  test('the attach-time sync is marked remote', async ({ expect }) => {
+    const { view, remote } = createRecordedView(Obj.make(TestType, { text: 'hello' }));
+    await expect.poll(() => view.state.doc.toString()).toBe('hello');
+    expect(remote).toEqual([true]);
   });
 });

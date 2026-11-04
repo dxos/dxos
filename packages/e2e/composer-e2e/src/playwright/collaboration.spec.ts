@@ -88,6 +88,11 @@ test.describe('Collaboration tests', () => {
   });
 
   test("host and guest can see each others' cursors when same document is in focus", { tag: ['@QA-8'] }, async () => {
+    // A query sent before the peers' connection forms is lost, so the host's state may only arrive
+    // with a 15 s re-announce; the wait covers two, in case the first also goes out before then.
+    const reAnnounceWait = 35_000;
+    test.setTimeout(90_000 + reAnnounceWait);
+
     await host.createSpace();
     await host.createObject({ type: 'Document' });
 
@@ -108,10 +113,8 @@ test.describe('Collaboration tests', () => {
     await Markdown.waitForMarkdownTextboxWithLocator(guestPlank.locator);
     await Markdown.getMarkdownTextboxWithLocator(guestPlank.locator).blur();
 
-    // A query sent before the peers' connection forms is lost, so the host's state may only arrive
-    // with its 15 s re-announce.
     await expect(Markdown.getCollaboratorNamesWithLocator(guestPlank.locator).first()).toHaveText(/.+/, {
-      timeout: 20_000,
+      timeout: reAnnounceWait,
     });
     await expect(Markdown.getCollaboratorCursorsWithLocator(guestPlank.locator).first()).toBeVisible();
     await expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator)).toHaveCount(0);

@@ -611,8 +611,8 @@ test QA-8: Two peers in one space
   status: unverified        # 2026-09-20, written from composer-e2e/src/playwright/collaboration.spec.ts
   automated:
     - composer-e2e:collaboration.spec.ts#Collaboration tests › guest joins host's space
-    - composer-e2e:collaboration.spec.ts#Collaboration tests › host and guest can see each others' cursors when same document is in focus
     - composer-e2e:collaboration.spec.ts#Collaboration tests › host and guest can see each others' changes in same document
+    - composer-e2e:collaboration.spec.ts#Collaboration tests › host and guest can see each others' cursors when same document is in focus
     - composer-e2e:collaboration.spec.ts#Collaboration tests › peers can see each others presence
   given:
     - host: a booted app with an identity and a space containing one document

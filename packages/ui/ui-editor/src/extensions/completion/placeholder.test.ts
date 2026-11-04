@@ -52,6 +52,13 @@ describe('placeholder', () => {
     expect(view.contentDOM.getAttribute('aria-placeholder')).to.eq('Enter text');
   });
 
+  test('the empty-document placeholder keeps its element across updates', ({ expect }) => {
+    const view = createView([emptyPlaceholder('Enter text')]);
+    const before = view.contentDOM.querySelector('.cm-placeholder');
+    view.dispatch({ selection: EditorSelection.cursor(0), scrollIntoView: true });
+    expect(view.contentDOM.querySelector('.cm-placeholder')).toBe(before);
+  });
+
   test('a widget at the placeholder position draws before it', ({ expect }) => {
     const view = createView([
       emptyPlaceholder('Enter text'),

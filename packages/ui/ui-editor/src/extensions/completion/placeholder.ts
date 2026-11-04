@@ -125,13 +125,12 @@ export const placeholder = ({ content, delay = 3_000, focusOnly = false }: Place
     },
   );
 
+  const label = typeof content === 'string' ? content : undefined;
   return [
     plugin,
-    transientPlaceholders.of({ plugin, label: typeof content === 'string' ? content : undefined }),
-    typeof content === 'string'
-      ? EditorView.contentAttributes.of((view) =>
-          view.plugin(plugin)?.visible ? { 'aria-placeholder': content } : null,
-        )
+    transientPlaceholders.of({ plugin, label }),
+    label !== undefined
+      ? EditorView.contentAttributes.of((view) => (view.plugin(plugin)?.visible ? { 'aria-placeholder': label } : null))
       : [],
   ];
 };
