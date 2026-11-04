@@ -142,6 +142,8 @@ export const ChatPrompt = ({
       if (ev.type === 'update-prompt' && !editorRef.current?.getText()?.length) {
         editorRef.current?.setText(ev.text);
         editorRef.current?.focus();
+      } else if (ev.type === 'focus-prompt') {
+        editorRef.current?.focus();
       }
     });
   }, [event]);
