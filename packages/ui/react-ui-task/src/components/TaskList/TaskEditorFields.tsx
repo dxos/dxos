@@ -18,6 +18,7 @@ import { Type } from '@dxos/echo';
 import { Form, type FormFieldOverride, type FormFieldRendererProps, type FormUpdateMeta } from '@dxos/react-ui-form';
 import { MarkdownEditable, type MarkdownEditableController, type MarkdownEditableProps } from '@dxos/react-ui-markdown';
 import { ActionMenu } from '@dxos/react-ui-menu';
+import * as Button from '@dxos/react-ui/Button';
 import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -246,47 +247,29 @@ const DescriptionField = ({ type, getValue, onValueChange }: FormFieldRendererPr
   );
 };
 
-const StatusTag = ({ type, jsonPath, getValue, onValueChange }: FormFieldRendererProps<Task.Status | undefined>) => (
-  <TaskField
-    field='status'
-    variant='tag'
-    value={getValue()}
-    onChange={(value) => onValueChange(type, value)}
-    testId={jsonPath}
-  />
+const StatusGlyph = ({ type, jsonPath, getValue, onValueChange }: FormFieldRendererProps<Task.Status | undefined>) => (
+  <TaskField field='status' value={getValue()} onChange={(value) => onValueChange(type, value)} testId={jsonPath} />
 );
 
-const PriorityTag = ({
+const PriorityGlyph = ({
   type,
   jsonPath,
   getValue,
   onValueChange,
 }: FormFieldRendererProps<Task.Priority | undefined>) => (
-  <TaskField
-    field='priority'
-    variant='tag'
-    value={getValue()}
-    onChange={(value) => onValueChange(type, value)}
-    testId={jsonPath}
-  />
+  <TaskField field='priority' value={getValue()} onChange={(value) => onValueChange(type, value)} testId={jsonPath} />
 );
 
-const EstimateTag = ({
+const EstimateGlyph = ({
   type,
   jsonPath,
   getValue,
   onValueChange,
 }: FormFieldRendererProps<Task.Estimate | undefined>) => (
-  <TaskField
-    field='estimate'
-    variant='tag'
-    value={getValue()}
-    onChange={(value) => onValueChange(type, value)}
-    testId={jsonPath}
-  />
+  <TaskField field='estimate' value={getValue()} onChange={(value) => onValueChange(type, value)} testId={jsonPath} />
 );
 
-/** Who has the task; inline, by their glyph alone, since the assignee track is one block wide in the rows too. */
+/** Who has the task: a labelled tag, or inline the rows' bare glyph, since the assignee track is one block wide. */
 const AssigneeTag = ({
   type,
   label,
@@ -300,6 +283,7 @@ const AssigneeTag = ({
   const current = useAssigneeDisplay(assignee);
   const worker = useAssigneeDisplay(delegate);
   const name = (assignee ? current.label : delegate && worker.label) || label;
+  const icon = assignee ? current.icon : delegate ? worker.icon : UNASSIGNED_ICON;
   const tag = (
     <ActionMenu
       deferUntilOpen
@@ -315,14 +299,18 @@ const AssigneeTag = ({
         })
       }
     >
-      <Tag.Tag
-        aria-label={inline ? name : undefined}
-        data-placeholder-shown={assignee || delegate ? undefined : ''}
-        data-testid={jsonPath}
-      >
-        <Icon.Icon icon={assignee ? current.icon : delegate ? worker.icon : UNASSIGNED_ICON} />
-        {!inline && name}
-      </Tag.Tag>
+      {inline ? (
+        <Button.Root variant='ghost' icon={icon} iconOnly label={name} data-testid={jsonPath} />
+      ) : (
+        <Tag.Tag
+          variant='outline'
+          data-placeholder-shown={assignee || delegate ? undefined : ''}
+          data-testid={jsonPath}
+        >
+          <Icon.Icon icon={icon} />
+          {name}
+        </Tag.Tag>
+      )}
     </ActionMenu>
   );
 
@@ -333,5 +321,5 @@ AssigneeTag.displayName = 'TaskList.AssigneeTag';
 
 const FIELD_MAP = { assignee: AssigneeTag, description: DescriptionField, title: TitleField };
 
-/** Status, priority and estimate as glyph tags, one block wide like the rows' tracks they sit in. */
-const INLINE_FIELD_MAP = { ...FIELD_MAP, estimate: EstimateTag, priority: PriorityTag, status: StatusTag };
+/** Status, priority and estimate as the rows' own glyphs, in the tracks the rows show them in. */
+const INLINE_FIELD_MAP = { ...FIELD_MAP, estimate: EstimateGlyph, priority: PriorityGlyph, status: StatusGlyph };

@@ -9,7 +9,6 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
-import * as Tag from '@dxos/react-ui/Tag';
 import { Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -24,35 +23,33 @@ import {
   statusTextStyle,
 } from '../../util/status-icons.ts';
 
-export type TaskFieldVariant = 'glyph' | 'tag';
-
 type TaskFieldValue =
   | { field: 'status'; value?: Task.Status; onChange?: (value: Task.Status) => void; working?: boolean }
   | { field: 'priority'; value?: Task.Priority; onChange?: (value: Task.Priority | undefined) => void }
   | { field: 'estimate'; value?: Task.Estimate; onChange?: (value: Task.Estimate | undefined) => void };
 
 export type TaskFieldProps = TaskFieldValue & {
-  /** `glyph`, a list row's bare control; `tag`, the create row's. Both are one block wide, so the two rows align. */
-  variant?: TaskFieldVariant;
   testId?: string;
   classNames?: string;
 };
 
-type FieldFace = { glyph: ReactNode; label: string; unset: boolean; actions: () => MenuAction[] };
+/** `named` when the glyph is the value's own text, so it needs no hidden label. */
+type FieldFace = { glyph: ReactNode; label: string; named: boolean; actions: () => MenuAction[] };
 
 /**
- * One property cell: status, priority or estimate, read and set where a row shows it. A list row and the create row
- * both render it, as a bare glyph or as a `Tag`, so the value reads the same and sits in the same track in either.
+ * One property cell: status, priority or estimate, read and set as a bare glyph one block wide. A list row and an
+ * inline create row both render it, so the value reads the same and sits in the same track in either.
  */
-export const TaskField = ({ variant = 'glyph', testId, classNames, ...props }: TaskFieldProps) => {
+export const TaskField = ({ testId, classNames, ...props }: TaskFieldProps) => {
   const { t } = Hooks.useTranslation(translationKey);
-  const { glyph, label, unset, actions } = fieldFace(props, t);
+  const { glyph, label, named, actions } = fieldFace(props, t);
+  const hidden = !named && <span className='sr-only'>{label}</span>;
 
   if (!props.onChange) {
     return (
       <Layout.Block aria-hidden={false} data-testid={testId} classNames={classNames}>
         {glyph}
-        <span className='sr-only'>{label}</span>
+        {hidden}
       </Layout.Block>
     );
   }
@@ -61,22 +58,17 @@ export const TaskField = ({ variant = 'glyph', testId, classNames, ...props }: T
     <Layout.Block classNames={classNames}>
       {/* Deferred: a list renders one of these per task, and the menu is opened for at most one. */}
       <ActionMenu deferUntilOpen actions={actions}>
-        {variant === 'tag' ? (
-          <Tag.Tag aria-label={label} data-placeholder-shown={unset ? '' : undefined} data-testid={testId}>
-            {glyph}
-          </Tag.Tag>
-        ) : (
-          <Button.Root
-            variant='ghost'
-            label={label}
-            data-testid={testId}
-            classNames='w-(--dx-block-size) px-0 justify-center text-xs tabular-nums'
-            // The row is the selection target; opening the menu must not also select it.
-            onClick={(event: MouseEvent) => event.stopPropagation()}
-          >
-            {glyph}
-          </Button.Root>
-        )}
+        <Button.Root
+          variant='ghost'
+          label={label}
+          data-testid={testId}
+          classNames='w-(--dx-block-size) px-0 justify-center text-xs tabular-nums'
+          // The row is the selection target; opening the menu must not also select it.
+          onClick={(event: MouseEvent) => event.stopPropagation()}
+        >
+          {glyph}
+          {hidden}
+        </Button.Root>
       </ActionMenu>
     </Layout.Block>
   );
@@ -95,7 +87,7 @@ const fieldFace = (props: TaskFieldValue, t: (key: string) => string): FieldFace
           <Icon.Icon icon={statusIcon(value)} classNames={statusTextStyle(value)} />
         ),
         label: t(`status-${value}.label`),
-        unset: false,
+        named: false,
         actions: () =>
           Task.StatusOptions.map(({ id }) =>
             createMenuAction(`status-${id}`, () => onChange?.(id), {
@@ -113,7 +105,7 @@ const fieldFace = (props: TaskFieldValue, t: (key: string) => string): FieldFace
       return {
         glyph: <Icon.Icon icon={priorityIcon(value)} classNames={priorityTextStyle(value)} />,
         label: value ? t(`priority-${value}.label`) : t('task-priority.label'),
-        unset: !value,
+        named: false,
         actions: () =>
           [Task.NullOption, ...Task.PriorityOptions].map(({ id, icon }) =>
             createMenuAction(`priority-${id}`, () => onChange?.(id === 'none' ? undefined : id), {
@@ -137,7 +129,7 @@ const fieldFace = (props: TaskFieldValue, t: (key: string) => string): FieldFace
           <Icon.Icon icon={UNSET_ICON} classNames='text-neutral-500' />
         ),
         label: value ? value.toUpperCase() : t('task-estimate.label'),
-        unset: !value,
+        named: !!value,
         actions: () =>
           [Task.NullOption, ...Task.EstimateOptions].map(({ id, title }) =>
             createMenuAction(`estimate-${id}`, () => onChange?.(id === 'none' ? undefined : id), {

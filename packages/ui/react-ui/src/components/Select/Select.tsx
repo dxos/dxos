@@ -146,7 +146,7 @@ const SelectTrigger = forwardRef<HTMLButtonElement, SelectTriggerProps>(
           aria-busy={loading || undefined}
           ref={forwardedRef}
         >
-          <Tag.Tag classNames={classNames}>
+          <Tag.Tag variant='outline' classNames={classNames}>
             {glyph}
             <SelectPrimitive.ValueText placeholder={placeholder} />
           </Tag.Tag>

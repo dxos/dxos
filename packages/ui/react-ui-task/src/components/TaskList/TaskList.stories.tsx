@@ -1676,24 +1676,25 @@ export const TestCreateWithProperties: Story = {
   },
 };
 
-/** The one-line create row sets each field from its glyph tag, named by its value. */
+/** The one-line create row sets each field from the rows' own glyph, named by its value. */
 export const TestInlineCreateWithProperties: Story = {
   args: { ...Chat.args },
   play: async ({ canvasElement }) => {
     const pane = found(canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]'), 'Create pane');
-    const tag = (field: string) => found(pane.querySelector<HTMLElement>(`[data-testid="${field}"]`), `${field} tag`);
+    const glyph = (field: string) =>
+      found(pane.querySelector<HTMLElement>(`[data-testid="${field}"]`), `${field} glyph`);
     const title = () =>
       found(pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input'), 'Title input');
     const body = within(document.body);
 
     await userEvent.click(title());
     await userEvent.keyboard('Order green beans');
-    await userEvent.click(tag('priority'));
+    await userEvent.click(glyph('priority'));
     await userEvent.click(await within(await body.findByRole('menu')).findByText('High'));
-    await userEvent.click(tag('estimate'));
+    await userEvent.click(glyph('estimate'));
     await userEvent.click(await within(await body.findByRole('menu')).findByText('M'));
-    await waitFor(async () => expect(tag('priority')).toHaveAttribute('aria-label', 'High'));
-    await expect(tag('estimate')).toHaveAttribute('aria-label', 'M');
+    await waitFor(async () => expect(glyph('priority').textContent).toContain('High'));
+    await expect(glyph('estimate').textContent).toEqual('M');
 
     await userEvent.click(title());
     await userEvent.keyboard('{Enter}');

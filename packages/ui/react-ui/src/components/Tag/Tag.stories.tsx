@@ -62,7 +62,7 @@ const InteractiveTags = ({ size }: { size?: Size }) => {
   );
 };
 
-/** A row of tags centred in a block row, clickable and deletable tags, then every valence and hue. */
+/** A row of tags centred in a block row, clickable and deletable tags, then every valence and hue, filled and outlined. */
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
     <Container layout='row' data-testid={`row-${size}`}>
@@ -77,6 +77,13 @@ const DefaultStory = ({ size }: SizeArgs) => (
     <Group>
       {[...VALENCES, ...hues].map((hue) => (
         <Tag.Tag key={hue} hue={hue} data-testid={`hue-${hue}-${size}`}>
+          {hue}
+        </Tag.Tag>
+      ))}
+    </Group>
+    <Group>
+      {[...VALENCES, ...hues].map((hue) => (
+        <Tag.Tag key={hue} hue={hue} variant='outline' data-testid={`outline-${hue}-${size}`}>
           {hue}
         </Tag.Tag>
       ))}
@@ -128,7 +135,12 @@ export const Test: Story = {
     await expect(background('success')).toBe(background('emerald'));
     await expect(background('info')).toBe(background('cyan'));
     await expect(background('neutral')).not.toBe(background('red'));
-    await expect(canvas.getByText('red')).toHaveAttribute('data-hue', 'red');
+    await expect(byTestId(canvasElement, 'hue-red-md')).toHaveAttribute('data-hue', 'red');
+
+    // An outline tag has no fill; its ring and text follow its hue.
+    const outline = getComputedStyle(byTestId(canvasElement, 'outline-red-md'));
+    await expect(outline.backgroundColor).toBe('rgba(0, 0, 0, 0)');
+    await expect(outline.boxShadow).not.toBe(getComputedStyle(byTestId(canvasElement, 'outline-neutral-md')).boxShadow);
 
     // Interactive tags keep the plain tag's height; the × fits inside the pill.
     for (const size of SIZES) {

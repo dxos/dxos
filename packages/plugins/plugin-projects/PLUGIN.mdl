@@ -2009,3 +2009,25 @@ decision D-193: `TaskList.Editor` lays the create row on the list's columns only
   supersedes: D-190
   why: One prop keeps the rows and the create row the same components in both hosts while leaving the project list's look as it was.
 ```
+
+```mdl
+decision D-194: The property tags in a task create row and the project overview's status are outlined rather than filled, so they do not stand out in dark mode.
+  date: 2026-11-04
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-195: react-ui's `Tag` takes `variant: 'outline'`, which draws the tag's hue as a ring in its border colour and text in its text colour, on no fill; a `Select` trigger rendered as a tag and the stacked create row's assignee tag use it. Fills in [D-194].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: A variant of the one component keeps a single tag style with two weights, and following the hue keeps it usable for a hued tag.
+  rejected:
+    - Recolouring the neutral hue's surface, which would change every neutral tag and callout in the app.
+```
+
+```mdl
+decision D-196: An inline create row shows status, priority, estimate and assignee as the list rows' own bare glyphs, not as tags, so it reads as one more row of the list.
+  date: 2026-11-04
+  by: user:wittjosiah
+```
