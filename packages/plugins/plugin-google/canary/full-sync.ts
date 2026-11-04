@@ -237,7 +237,7 @@ const reachedHorizon = (cursor: Cursor.Cursor, days: number): boolean => {
 /** Deletes the spaces a killed run left behind; a leftover that cannot be deleted is reported, since it keeps syncing. */
 const removeLeftovers = (waits: EdgeWaits): Effect.Effect<Failure[], never, ClientService> =>
   Effect.gen(function* () {
-    const client = yield* ClientService;
+    const client = yield* ClientService.client;
     const failures = yield* Effect.forEach(
       client.spaces.get(),
       (space) =>

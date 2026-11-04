@@ -60,7 +60,7 @@ const TYPES = [
 
 /** Signs the in-process client in as the canary identity; each run is a new device, keeping no device key. */
 export const recoverIdentity = Effect.fn('mail-canary.recoverIdentity')(function* (recoveryPhrase: string) {
-  const client = yield* ClientService;
+  const client = yield* ClientService.client;
   yield* Effect.promise(() => client.addTypes(TYPES));
   yield* Effect.tryPromise({
     try: () => client.halo.recoverIdentity({ recoveryCode: recoveryPhrase }),
@@ -73,7 +73,7 @@ export const recoverIdentity = Effect.fn('mail-canary.recoverIdentity')(function
 export class CanarySpace {
   /** Waits until a space of the signed-in identity has replicated; its spaces arrive over HALO after recovery. */
   static open = Effect.fn('mail-canary.CanarySpace.open')(function* (spaceId: SpaceId, waits: EdgeWaits) {
-    const client = yield* ClientService;
+    const client = yield* ClientService.client;
     const space = yield* Effect.suspend(() => {
       const space = client.spaces.get(spaceId);
       return space ? Effect.succeed(space) : new CanaryError({ message: `space ${spaceId} never appeared` });
@@ -83,7 +83,7 @@ export class CanarySpace {
 
   /** Creates a space owned by the signed-in identity. */
   static create = Effect.fn('mail-canary.CanarySpace.create')(function* (name: string, waits: EdgeWaits) {
-    const client = yield* ClientService;
+    const client = yield* ClientService.client;
     const space = yield* Effect.tryPromise({
       try: () => client.spaces.create({ name }),
       catch: (cause) => new CanaryError({ message: `cannot create a space: ${String(cause)}` }),
