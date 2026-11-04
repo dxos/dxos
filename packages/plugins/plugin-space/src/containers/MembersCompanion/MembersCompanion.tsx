@@ -24,7 +24,13 @@ import { SpaceCapabilities, SpaceOperation } from '#types';
 import { SpaceNamespace } from '../../namespace.ts';
 import { getFreshSessions } from '../../util/index.ts';
 import { PeerActions } from '../SpacePresence/PeerActions.tsx';
-import { type Member, PresenceItem, getPresenceOptions, toggle, useNow } from '../SpacePresence/SpacePresence.tsx';
+import {
+  type Member,
+  PresenceItems,
+  getPresenceOptions,
+  useNow,
+  useShowSessions,
+} from '../SpacePresence/SpacePresence.tsx';
 
 /** Everyone in the active space, grouped by the object they attend. */
 export const MembersCompanion = () => {
@@ -35,7 +41,7 @@ export const MembersCompanion = () => {
   const identity = useIdentity();
   const members = useMembers(space?.id);
   const now = useNow();
-  const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
+  const [showSessions, setShowSessions] = useShowSessions();
 
   // A member is listed under each object one of their sessions attends, with the sessions attending it.
   const groups = useMemo(() => {
@@ -85,6 +91,19 @@ export const MembersCompanion = () => {
         : MenuBuilder.make()
             .text('online', { label: ['members-online.heading', { ns: SpaceNamespace.key, count: online }] })
             .action(
+              'showSessions',
+              {
+                label: ['presence-show-sessions.label', { ns: SpaceNamespace.key }],
+                icon: 'ph--devices--regular',
+                iconOnly: true,
+                variant: 'toggle',
+                checked: showSessions,
+                placement: { zone: 'end' },
+                testId: 'spacePlugin.membersCompanion.showSessions',
+              },
+              () => setShowSessions(!showSessions),
+            )
+            .action(
               'invite',
               {
                 label: ['members-invite.label', { ns: SpaceNamespace.key }],
@@ -95,7 +114,7 @@ export const MembersCompanion = () => {
               () => void invokePromise(SpaceOperation.OpenMembers, { space }),
             )
             .build(),
-    [locked, space, online, invokePromise],
+    [locked, space, online, showSessions, setShowSessions, invokePromise],
   );
 
   return (
@@ -121,7 +140,7 @@ export const MembersCompanion = () => {
             <ScrollArea.Viewport asChild>
               <Layout.Container padBlock>
                 <Listbox.Root
-                  items={getPresenceOptions(listed, expanded, t)}
+                  items={getPresenceOptions(listed, showSessions, t)}
                   data-testid='spacePlugin.membersCompanion'
                 >
                   <Listbox.Content aria-label={t('members-companion.label')}>
@@ -132,8 +151,7 @@ export const MembersCompanion = () => {
                           space={space}
                           objectKey={key}
                           members={group}
-                          expanded={expanded}
-                          onExpandedChange={setExpanded}
+                          showSessions={showSessions}
                         />
                       ))}
                   </Listbox.Content>
@@ -152,12 +170,11 @@ type ObjectGroupProps = {
   space: Space;
   objectKey: EID.EID;
   members: Member[];
-  expanded: ReadonlySet<string>;
-  onExpandedChange: (expanded: ReadonlySet<string>) => void;
+  showSessions: boolean;
 };
 
 /** The members attending one object, under the object's label. */
-const ObjectGroup = ({ space, objectKey, members, expanded, onExpandedChange }: ObjectGroupProps) => {
+const ObjectGroup = ({ space, objectKey, members, showSessions }: ObjectGroupProps) => {
   const [label, setLabel] = useState<string>();
   useEffect(() => {
     let cancelled = false;
@@ -179,11 +196,10 @@ const ObjectGroup = ({ space, objectKey, members, expanded, onExpandedChange }: 
     <Listbox.ItemGroup>
       <Listbox.ItemGroupLabel>{label}</Listbox.ItemGroupLabel>
       {members.map((member) => (
-        <PresenceItem
+        <PresenceItems
           key={member.rowId}
           member={member}
-          open={expanded.has(member.rowId)}
-          onOpenChange={(open) => onExpandedChange(toggle(expanded, member.rowId, open))}
+          showSessions={showSessions}
           renderActions={(member, sessionId) =>
             member.identityKey ? (
               <PeerActions spaceId={space.id} identityKey={member.identityKey} sessionId={sessionId} />

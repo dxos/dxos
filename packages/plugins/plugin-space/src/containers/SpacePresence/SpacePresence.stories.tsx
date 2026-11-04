@@ -96,6 +96,8 @@ export const Full = (props: MemberPresenceProps) => {
   );
 };
 
+export const Sessions = () => <Full showSessions />;
+
 export const Small = () => {
   return (
     <div className='p-4'>

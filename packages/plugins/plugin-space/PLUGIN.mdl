@@ -71,6 +71,7 @@ type PluginState
     sdkMigrationRunning: Record<string, boolean>
     navigableCollections: boolean
     enabledEdgeReplication: boolean
+    showSessions?: boolean      # presence lists show a row per session; kept per device
 ```
 
 ## Components
@@ -558,11 +559,12 @@ feat F-8: Presence and Sync Status
   req F-8.9: Jump reveals the peer's selection, or the top of their viewport when they have none, moving the caret and taking focus.
   req F-8.10: Clicking an avatar in SpacePresence opens the list of the object's viewers with that peer's row highlighted; a button at the end of its header opens the Members companion. Rows are Listbox rows whose actions are labelled buttons.
   req F-8.11: The Members deck companion lists every online peer in the space, grouped by the object they view, with the same actions; an Invite members action at the end of its toolbar opens the space's members settings. It sits third in the complementary rail, after Notifications.
+  req F-8.17: A presence row's avatar sits inside the row's hover and highlight.
   req F-8.14: In a locked space the Members companion shows only a placeholder saying the space is private, since it has no other members and no members settings.
-  req F-8.12: A peer with several sessions (tabs or devices) on an object shows as one row that expands into a row per session, named by its device. Expanded, only the session rows carry actions; collapsed, the peer's row does, acting on the session whose anchor moved most recently.
+  req F-8.12: A peer with several sessions (tabs or devices) on an object shows as one row with their session count, whose actions act on the session whose anchor moved most recently. A toggle in the viewers list's header and in the Members companion's toolbar lists a row per session instead, each with its own actions, naming the peer and the session's device. Both lists share the toggle's state, kept per device.
   req F-8.13: The viewing message carries the sender's session id, its device and each attended object's location; it is sent with the heartbeat and at most once per second when a location changes.
   req F-8.15: A session row's dot shows whether its anchor moved in the last minute (active) or not (idle); the row states nothing else about the session.
-  req F-8.16: A session row names its device by the label someone gave it, else by what it runs ("Chrome on macOS", "Composer on iOS"), with an icon for its kind; sessions on one device are numbered. A placeholder label the SDK once wrote is no label.
+  req F-8.16: A session row names its device by the label someone gave it, else by what it runs ("Chrome on macOS", "Composer on iOS"); sessions on one device are numbered. A placeholder label the SDK once wrote is no label.
 ```
 
 ## Acceptance
@@ -747,12 +749,12 @@ test QA-3: Act on a peer from their avatar
 
 ```mdl
 test QA-4: Tell a peer's sessions apart
-  desc: A peer with the object open in two tabs shows as one row that expands into a row per session, each with its own Jump.
+  desc: A peer with the object open in two tabs shows as one row, and the sessions toggle lists a row per session, each with its own Jump.
   actors: human
   covers: [F-8.12, F-8.15]
   status: unverified
   automated:
-    - composer-e2e:collaboration.spec.ts#Collaboration tests › a peer's sessions list under their row, each with its own Jump
+    - composer-e2e:collaboration.spec.ts#Collaboration tests › the sessions toggle lists a row per peer's session, each with its own Jump
   given:
     - host: a booted app with a space containing one document, shared with a guest
     - guest: a second browser profile with its own identity, a member of that space
@@ -763,9 +765,9 @@ test QA-4: Tell a peer's sessions apart
     - name: Open the viewers list
       do: On the host, click the guest's avatar.
       expect: the guest's row says 2 sessions and carries a Jump action
-    - name: Expand the sessions
-      do: Click the caret at the end of the guest's row.
-      expect: a row per session appears under it, each named by its device with a dot and a Jump action, and the guest's own row no longer carries Jump
+    - name: Show each session
+      do: Click the sessions toggle in the list's header.
+      expect: the guest's row gives way to a row per session, each naming the guest and the session's device with a dot, and each carrying a Jump action
     - name: Jump to a session
       do: Click Jump on the first session's row.
       expect: the host's editor takes focus
@@ -1092,4 +1094,30 @@ ext op
     effects?: EffectList
     requires?: ServiceList
     note?: Prose
+```
+
+```mdl
+decision D-30: A toggle in the toolbar switches presence lists between a row per person and a row per session, in place of the caret that expanded a person's row; with it there is no disclosure. Replaces the disclosure of [D-18] and [D-19].
+  date: 2026-11-04
+  by: user:wittjosiah
+  supersedes: D-25
+  affects: [F-8.12]
+```
+
+```mdl
+decision D-31: A presence row's avatar must not stick out of the row's hover background.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-8.17]
+```
+
+```mdl
+decision D-32: The sessions toggle sits before See everyone in the viewers popover's header and at the end of the Members companion's toolbar, before Invite members. Both read one `showSessions` flag in the plugin's persisted state, so the choice holds across the two lists and reloads on this device. A person's row keeps one line with a small (`sm`) avatar and the session count after the name. A session row takes two lines, the peer's name over the dot and device name, with an `md` avatar, ordered by device name. Rows draw no status ring on the avatar, and the device-kind icon is gone. Fills in [D-30] and [D-31].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-28
+  affects: [F-8.10, F-8.11, F-8.12, F-8.16, F-8.17, PluginState]
+  why: An avatar a block tall fills a one-line row to its edges, and its ring's gap is painted in the surface colour, so it shows as a pale disc against the hover. On one line, a session row's name and device both truncated at the companion's width.
+  rejected: A dot badge on the avatar (its ring would show the same pale disc); one-line session rows; a separate toggle state per list.
 ```

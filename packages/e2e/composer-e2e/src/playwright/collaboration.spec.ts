@@ -283,43 +283,47 @@ test.describe('Collaboration tests', () => {
     await expect(host.page.getByTestId('membersContainer.createInvitation.more')).toBeVisible({ timeout: 15_000 });
   });
 
-  test("a peer's sessions list under their row, each with its own Jump", { tag: ['@space:QA-4'] }, async () => {
-    test.setTimeout(150_000);
+  test(
+    "the sessions toggle lists a row per peer's session, each with its own Jump",
+    { tag: ['@space:QA-4'] },
+    async () => {
+      test.setTimeout(150_000);
 
-    await host.createSpace();
-    await host.createObject({ type: 'Document' });
-    const hostPlank = host.deck.plank();
-    const hostTextbox = Markdown.getMarkdownTextboxWithLocator(hostPlank.locator);
-    await hostTextbox.waitFor();
+      await host.createSpace();
+      await host.createObject({ type: 'Document' });
+      const hostPlank = host.deck.plank();
+      const hostTextbox = Markdown.getMarkdownTextboxWithLocator(hostPlank.locator);
+      await hostTextbox.waitFor();
 
-    await perfomInvitation(host, guest);
-    await guest.expandSection('spacePlugin.collectionsSection');
-    await navigateToNewDocument(guest);
-    const guestTextbox = Markdown.getMarkdownTextboxWithLocator(guest.deck.plank().locator);
-    await guestTextbox.waitFor();
-    await guestTextbox.focus();
-    await guestTextbox.fill('Hello from the guest');
+      await perfomInvitation(host, guest);
+      await guest.expandSection('spacePlugin.collectionsSection');
+      await navigateToNewDocument(guest);
+      const guestTextbox = Markdown.getMarkdownTextboxWithLocator(guest.deck.plank().locator);
+      await guestTextbox.waitFor();
+      await guestTextbox.focus();
+      await guestTextbox.fill('Hello from the guest');
 
-    // A second tab of the guest's is a second session of the same identity.
-    const secondTab = await guest.page.context().newPage();
-    await secondTab.goto(guest.page.url());
-    const secondTextbox = Markdown.getMarkdownTextboxWithLocator(secondTab.getByTestId('deck.plank').first());
-    await secondTextbox.waitFor({ timeout: 60_000 });
-    await secondTextbox.focus();
+      // A second tab of the guest's is a second session of the same identity.
+      const secondTab = await guest.page.context().newPage();
+      await secondTab.goto(guest.page.url());
+      const secondTextbox = Markdown.getMarkdownTextboxWithLocator(secondTab.getByTestId('deck.plank').first());
+      await secondTextbox.waitFor({ timeout: 60_000 });
+      await secondTextbox.focus();
 
-    const hostPresence = hostPlank.membersPresence();
-    await expect(hostPresence).toHaveCount(1, { timeout: 45_000 });
-    await hostPresence.first().click();
+      const hostPresence = hostPlank.membersPresence();
+      await expect(hostPresence).toHaveCount(1, { timeout: 45_000 });
+      await hostPresence.first().click();
 
-    const row = host.page.getByTestId('spacePlugin.presence.row');
-    const sessions = host.page.getByTestId('spacePlugin.presence.session');
-    await expect(row).toHaveCount(1);
-    await row.getByTestId('spacePlugin.presence.sessions').click({ timeout: 45_000 });
-    await expect(sessions).toHaveCount(2);
-    // Expanded, the actions move from the person's row to their sessions' rows.
-    await expect(row.getByTestId('spacePlugin.presence.jump')).toHaveCount(0);
+      const row = host.page.getByTestId('spacePlugin.presence.row');
+      const sessions = host.page.getByTestId('spacePlugin.presence.session');
+      await expect(row).toHaveCount(1);
+      await expect(row).toContainText('2 sessions', { timeout: 45_000 });
+      await host.page.getByTestId('spacePlugin.presence.showSessions').click();
+      await expect(sessions).toHaveCount(2);
+      await expect(row).toHaveCount(0);
 
-    await sessions.first().getByTestId('spacePlugin.presence.jump').click({ timeout: 30_000 });
-    await expect(hostTextbox).toBeFocused();
-  });
+      await sessions.first().getByTestId('spacePlugin.presence.jump').click({ timeout: 30_000 });
+      await expect(hostTextbox).toBeFocused();
+    },
+  );
 });

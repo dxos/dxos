@@ -32,6 +32,8 @@ export const SettingsAtom = Capability.makeSingleton<Atom.Writable<Settings.Sett
 export const StateSchema = Schema.Struct({
   spaceNames: Schema.Record(Schema.String, Schema.String),
   enabledEdgeReplication: Schema.Boolean,
+  /** Presence lists show a row per session rather than per person. */
+  showSessions: Schema.optional(Schema.Boolean),
 }).mapFields(Struct.map(Schema.mutableKey));
 
 export type SpaceState = Schema.Schema.Type<typeof StateSchema>;

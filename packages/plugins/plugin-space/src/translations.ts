@@ -195,6 +195,7 @@ export const translations = [
         'presence-jump.label': 'Jump',
         'presence-in-object.heading': 'In this document · {{count}}',
         'presence-see-everyone.label': 'See everyone in this space',
+        'presence-show-sessions.label': 'Show each session',
         'presence-sessions.label_one': '{{count}} session',
         'presence-sessions.label_other': '{{count}} sessions',
         'presence-active.label': 'Active',

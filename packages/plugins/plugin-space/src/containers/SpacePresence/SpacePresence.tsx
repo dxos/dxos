@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type ComponentProps, type ReactNode, forwardRef, useEffect, useState } from 'react';
+import React, { type ComponentProps, type ReactNode, forwardRef, useCallback, useEffect, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -15,9 +15,7 @@ import { AttentionGlyph, type AttentionGlyphProps, useAttention } from '@dxos/re
 import { Listbox } from '@dxos/react-ui-list';
 import * as Avatar from '@dxos/react-ui/Avatar';
 import * as Button from '@dxos/react-ui/Button';
-import * as Collapsible from '@dxos/react-ui/Collapsible';
 import * as UiHooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
 import * as Popover from '@dxos/react-ui/Popover';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
 import type * as Util from '@dxos/react-ui/Util';
@@ -57,6 +55,16 @@ export const useActiveViewerCount = (viewers?: ObjectViewers) => {
   return countViewers(viewers, now);
 };
 
+/** Whether presence lists show a row per session rather than per person; kept per device. */
+export const useShowSessions = (): [boolean, (showSessions: boolean) => void] => {
+  const [state, updateState] = Hooks.useAtomCapabilityState(SpaceCapabilities.State);
+  const setShowSessions = useCallback(
+    (showSessions: boolean) => updateState((state) => ({ ...state, showSessions })),
+    [updateState],
+  );
+  return [state.showSessions ?? false, setShowSessions];
+};
+
 export type SpacePresenceProps = {
   spaceId?: Key.SpaceId;
   presenceKey?: EID.EID;
@@ -67,6 +75,7 @@ export const SpacePresence = ({ spaceId, presenceKey }: SpacePresenceProps) => {
   const identity = useIdentity();
   const spaceMembers = useMembers(spaceId);
   const now = useNow();
+  const [showSessions, setShowSessions] = useShowSessions();
 
   if (!identity || !ephemeral || !presenceKey) {
     return null;
@@ -86,12 +95,39 @@ export const SpacePresence = ({ spaceId, presenceKey }: SpacePresenceProps) => {
   return (
     <FullPresence
       members={members}
+      showSessions={showSessions}
       renderActions={(member, sessionId) =>
         spaceId && member.identityKey ? (
           <PeerActions spaceId={spaceId} identityKey={member.identityKey} sessionId={sessionId} />
         ) : null
       }
-      headerAction={<SeeEveryoneButton />}
+      headerAction={
+        <>
+          <SessionsToggle pressed={showSessions} onPressedChange={setShowSessions} />
+          <SeeEveryoneButton />
+        </>
+      }
+    />
+  );
+};
+
+const SessionsToggle = ({
+  pressed,
+  onPressedChange,
+}: {
+  pressed: boolean;
+  onPressedChange: (pressed: boolean) => void;
+}) => {
+  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
+  return (
+    <Button.Toggle
+      variant='ghost'
+      icon='ph--devices--regular'
+      iconOnly
+      label={t('presence-show-sessions.label')}
+      pressed={pressed}
+      onPressedChange={onPressedChange}
+      data-testid='spacePlugin.presence.showSessions'
     />
   );
 };
@@ -123,7 +159,7 @@ export type Member = Space.Member & {
   sessions: PeerSession[];
   /** When the sessions were read, to tell which are moving. */
   now: number;
-  /** The session the collapsed row acts on; the member's most recently moved session anywhere when unset. */
+  /** The session the member's row acts on; the member's most recently moved session anywhere when unset. */
   defaultSessionId?: string;
 };
 
@@ -135,6 +171,8 @@ export type MemberPresenceProps = Util.ThemedClassName<{
   size?: AvatarSize;
   members?: Member[];
   showCount?: boolean;
+  /** A row per session rather than per member. */
+  showSessions?: boolean;
   /** Controls on a member's row, or on one of their session's rows, e.g. its graph actions. */
   renderActions?: (member: Member, sessionId?: string) => ReactNode;
   /** A control at the end of the list's header, e.g. a link to everyone in the space. */
@@ -143,14 +181,15 @@ export type MemberPresenceProps = Util.ThemedClassName<{
 
 /** Avatars of the members on an object; clicking any opens the full list, with the clicked member's row highlighted. */
 export const FullPresence = (props: MemberPresenceProps) => {
-  const { size = 'md', renderActions, headerAction } = props;
+  const { size = 'md', showSessions, renderActions, headerAction } = props;
   const members = UiHooks.useDefaultValue(props.members, () => []);
   const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const [open, setOpen] = useState(false);
   const [highlighted, setHighlighted] = useState<string>();
-  const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
-  const openList = (identityKey?: string) => {
-    setHighlighted(identityKey);
+  const openList = (member?: Member) => {
+    setHighlighted(
+      member && (showSessions ? getSessionRowId(member, getSessionRows(member, t)[0].session) : member.rowId),
+    );
     setOpen(true);
   };
 
@@ -173,7 +212,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
                 member={member}
                 match={isAttending(member)}
                 index={members.length - i}
-                onClick={() => openList(member.identityKey)}
+                onClick={() => openList(member)}
                 size={size}
               />
             </Tooltip.Trigger>
@@ -198,17 +237,16 @@ export const FullPresence = (props: MemberPresenceProps) => {
         {/* The header keeps a gap from the panel's top edge; the list keeps the same from its bottom. */}
         <Popover.Body classNames='pb-2'>
           <Listbox.Root
-            items={getPresenceOptions(members, expanded, t)}
+            items={getPresenceOptions(members, showSessions, t)}
             value={highlighted ?? ''}
             onValueChange={setHighlighted}
           >
             <Listbox.Content aria-label={t('presence-in-object.heading', { count: members.length })}>
               {members.map((member) => (
-                <PresenceItem
+                <PresenceItems
                   key={member.rowId}
                   member={member}
-                  open={expanded.has(member.rowId)}
-                  onOpenChange={(open) => setExpanded(toggle(expanded, member.rowId, open))}
+                  showSessions={showSessions}
                   renderActions={renderActions}
                 />
               ))}
@@ -220,28 +258,9 @@ export const FullPresence = (props: MemberPresenceProps) => {
   );
 };
 
-/** Adds or removes `id` from the set of expanded rows. */
-export const toggle = (expanded: ReadonlySet<string>, id: string, open: boolean): ReadonlySet<string> => {
-  const next = new Set(expanded);
-  if (open) {
-    next.add(id);
-  } else {
-    next.delete(id);
-  }
-  return next;
-};
-
 const getSessionRowId = (member: Member, session: PeerSession) => `${member.rowId}/${session.sessionId}`;
 
 type Translate = ReturnType<typeof UiHooks.useTranslation>['t'];
-
-const DEVICE_ICONS: Record<NonNullable<SpaceSchema.SessionDevice['kind']>, string> = {
-  browser: 'ph--compass--regular',
-  native: 'ph--desktop--regular',
-  mobile: 'ph--device-mobile--regular',
-  agent: 'ph--drone--regular',
-  unknown: 'ph--devices--regular',
-};
 
 /** A device's label, else what it runs ("Chrome on macOS", or the app on its OS). */
 const getDeviceName = (device: SpaceSchema.SessionDevice | undefined, t: Translate): string => {
@@ -257,114 +276,97 @@ const getDeviceName = (device: SpaceSchema.SessionDevice | undefined, t: Transla
   return device?.platform ?? device?.os ?? t('presence-unknown-device.label');
 };
 
-/** Each session's device name, numbered where several sessions (tabs) run on the same device. */
-const getSessionNames = (sessions: PeerSession[], t: Translate): Map<string, string> => {
-  const byDevice = new Map<string, string[]>();
-  for (const session of sessions.toSorted((a, b) => a.sessionId.localeCompare(b.sessionId))) {
+type SessionRow = { session: PeerSession; name: string };
+
+/** A member's sessions by device name, numbered where several (tabs) run on the same device, in a stable order. */
+const getSessionRows = (member: Member, t: Translate): SessionRow[] => {
+  const byDevice = new Map<string, PeerSession[]>();
+  for (const session of member.sessions.toSorted((a, b) => a.sessionId.localeCompare(b.sessionId))) {
     const device = getDeviceName(session.device, t);
-    byDevice.set(device, [...(byDevice.get(device) ?? []), session.sessionId]);
+    byDevice.set(device, [...(byDevice.get(device) ?? []), session]);
   }
-  const names = new Map<string, string>();
-  for (const [device, sessionIds] of byDevice) {
-    sessionIds.forEach((sessionId, i) =>
-      names.set(
-        sessionId,
-        sessionIds.length > 1 ? t('presence-numbered-device.label', { device, index: i + 1 }) : device,
-      ),
+  return [...byDevice.entries()]
+    .toSorted(([a], [b]) => a.localeCompare(b))
+    .flatMap(([device, sessions]) =>
+      sessions.map((session, i) => ({
+        session,
+        name: sessions.length > 1 ? t('presence-numbered-device.label', { device, index: i + 1 }) : device,
+      })),
     );
-  }
-  return names;
 };
 
-/** Listbox options for members' rows, and their sessions' rows while expanded. */
-export const getPresenceOptions = (members: Member[], expanded: ReadonlySet<string>, t: Translate) =>
-  members.flatMap((member) => {
-    const names = getSessionNames(member.sessions, t);
-    return [
-      { value: member.rowId, label: getName(member) },
-      ...(member.sessions.length > 1 && expanded.has(member.rowId)
-        ? member.sessions.map((session) => ({
-            value: getSessionRowId(member, session),
-            label: names.get(session.sessionId) ?? '',
-          }))
-        : []),
-    ];
-  });
+/** Listbox options for members' rows, or their sessions' rows. */
+export const getPresenceOptions = (members: Member[], showSessions: boolean | undefined, t: Translate) =>
+  members.flatMap((member) =>
+    showSessions
+      ? getSessionRows(member, t).map(({ session, name }) => ({
+          value: getSessionRowId(member, session),
+          label: `${getName(member)} ${name}`,
+        }))
+      : [{ value: member.rowId, label: getName(member) }],
+  );
 
-export type PresenceItemProps = {
+export type PresenceItemsProps = {
   member: Member;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  /** Controls at the end of the row, e.g. the member's graph actions; `sessionId` is set on a session's row. */
+  showSessions?: boolean;
+  /** Controls at the end of a row, e.g. the member's graph actions; `sessionId` is set on a session's row. */
   renderActions?: (member: Member, sessionId?: string) => ReactNode;
 };
 
 /**
- * A member's Listbox row: avatar, name, then their actions. With more than one session the name is followed by the
- * count and the row ends in a caret that expands a row per session, under the name; the actions move to those rows,
- * and nothing else on the member's row moves.
+ * A member's Listbox row (avatar, name, how many sessions, then their actions), or with `showSessions` a row per
+ * session naming the member, whether the session moved lately, and its device.
  */
-export const PresenceItem = ({ member, open, onOpenChange, renderActions }: PresenceItemProps) => {
+export const PresenceItems = ({ member, showSessions, renderActions }: PresenceItemsProps) => {
   const { t } = UiHooks.useTranslation(SpaceNamespace.key);
-  const avatar = (
-    <Listbox.ItemIcon>
-      <PresenceAvatar member={member} size='md' match={isAttending(member)} />
-    </Listbox.ItemIcon>
-  );
-
-  if (member.sessions.length < 2) {
+  if (!showSessions) {
     return (
       <Listbox.Item id={member.rowId} data-testid='spacePlugin.presence.row'>
-        {avatar}
-        <Listbox.ItemText />
+        {/* Smaller than the row, so the row's hover and highlight frame it. */}
+        <Listbox.ItemIcon>
+          <PresenceAvatar member={member} size='sm' />
+        </Listbox.ItemIcon>
+        <Listbox.ItemText classNames='flex items-baseline gap-2'>
+          <span className='truncate'>{getName(member)}</span>
+          {member.sessions.length > 1 && (
+            <span className='shrink-0 text-sm text-fg-subtle'>
+              {t('presence-sessions.label', { count: member.sessions.length })}
+            </span>
+          )}
+        </Listbox.ItemText>
         {renderActions?.(member, member.defaultSessionId)}
       </Listbox.Item>
     );
   }
 
-  const names = getSessionNames(member.sessions, t);
-  return (
-    <Collapsible.Root open={open} onOpenChange={({ open }) => onOpenChange?.(open)} lazyMount unmountOnExit>
-      <Listbox.Item id={member.rowId} data-testid='spacePlugin.presence.row'>
-        {avatar}
-        <Listbox.ItemText classNames='flex items-baseline gap-2'>
+  return getSessionRows(member, t).map(({ session, name }) => {
+    const active = isMoving(session, member.now);
+    return (
+      <Listbox.Item
+        key={session.sessionId}
+        id={getSessionRowId(member, session)}
+        data-testid='spacePlugin.presence.session'
+      >
+        {/* Two lines tall, so the larger avatar still sits inside the row's hover and highlight. */}
+        <Listbox.ItemIcon>
+          <PresenceAvatar member={member} size='md' />
+        </Listbox.ItemIcon>
+        <Listbox.ItemText classNames='flex flex-col'>
           <span className='truncate'>{getName(member)}</span>
-          <span className='shrink-0 text-sm text-fg-subtle'>
-            {t('presence-sessions.label', { count: member.sessions.length })}
+          <span className='flex items-center gap-1.5 text-sm text-fg-subtle'>
+            <span
+              role='img'
+              aria-label={t(active ? 'presence-active.label' : 'presence-idle.label')}
+              data-active={active ? '' : undefined}
+              className='size-2 shrink-0 rounded-full bg-neutral-border data-[active]:bg-success-text'
+            />
+            <span className='truncate'>{name}</span>
           </span>
         </Listbox.ItemText>
-        {!open && renderActions?.(member, member.defaultSessionId)}
-        <Collapsible.Trigger data-testid='spacePlugin.presence.sessions' />
+        {renderActions?.(member, session.sessionId)}
       </Listbox.Item>
-      <Collapsible.Content>
-        {member.sessions.map((session) => {
-          const active = isMoving(session, member.now);
-          return (
-            <Listbox.Item
-              key={session.sessionId}
-              id={getSessionRowId(member, session)}
-              data-testid='spacePlugin.presence.session'
-            >
-              {/* The dot sits under the avatar, so the device lines up with the member's name. */}
-              <Listbox.ItemIcon>
-                <span
-                  role='img'
-                  aria-label={t(active ? 'presence-active.label' : 'presence-idle.label')}
-                  data-active={active ? '' : undefined}
-                  className='size-2 rounded-full bg-neutral-border data-[active]:bg-success-text'
-                />
-              </Listbox.ItemIcon>
-              <Listbox.ItemText classNames='flex items-center gap-2 ps-2'>
-                <Icon.Icon icon={DEVICE_ICONS[session.device?.kind ?? 'unknown']} tone='subtle' />
-                <span className='truncate'>{names.get(session.sessionId)}</span>
-              </Listbox.ItemText>
-              {renderActions?.(member, session.sessionId)}
-            </Listbox.Item>
-          );
-        })}
-      </Collapsible.Content>
-    </Collapsible.Root>
-  );
+    );
+  });
 };
 
 type PresenceAvatarProps = {
@@ -378,7 +380,8 @@ type PresenceAvatarProps = {
 
 const PresenceAvatar = forwardRef<HTMLDivElement, PresenceAvatarProps>(
   ({ member, showName, match, index, onClick, size }, forwardedRef) => {
-    const status = match ? 'current' : 'inactive';
+    // Rows leave `match` unset and draw no ring: its gap is painted in the surface colour, which shows on hover.
+    const status = match === undefined ? undefined : match ? 'current' : 'inactive';
     const fallbackValue = hexToFallback(member.identityKey ?? '0');
     const name = getName(member);
     const nameId = UiHooks.useId('presence-name');
