@@ -26,6 +26,7 @@ import {
   type ChatThreadController,
   type ChatThreadEvent,
   type ChatView,
+  type ForkMarker,
   ChatThread as NaturalChatThread,
 } from '@dxos/react-ui-assistant';
 import {
@@ -139,7 +140,7 @@ const ChatRoot = ({
 
   // The chat model folds the feed and reconciles it with the streamed turn and the outbox.
   const { messages, delivery, queued, tail, lanes } = useAtomValue(chatModelState.thread);
-  const { alarms, selfWakes } = useAtomValue(chatModelState.trajectory);
+  const { alarms, selfWakes, forks } = useAtomValue(chatModelState.trajectory);
 
   const dump = useDebug({ chatModel });
 
@@ -183,6 +184,18 @@ const ChatRoot = ({
               (err: unknown) => log.catch(err),
             );
             event.emit({ type: 'update-prompt', text: rewind.text });
+          }
+          break;
+        }
+
+        case 'fork': {
+          // A fork opens at once, so the reader goes straight to the thread they asked for.
+          if (feed && db) {
+            void EffectEx.runPromise(
+              TrajectoryStore.forkThread(feed, { from: ev.id }).pipe(Effect.provide(Database.layer(db))),
+            )
+              .then((thread) => event.emit({ type: 'open-fork', thread }))
+              .catch((err: unknown) => log.catch(err));
           }
           break;
         }
@@ -393,6 +406,7 @@ const ChatRoot = ({
         messages={messages}
         tail={tail}
         lanes={lanes}
+        forks={forks}
         alarms={alarms}
         selfWakes={selfWakes}
         requestTiming={requestTiming}
@@ -589,8 +603,21 @@ const useInPlaceUpdates = (model: FeedModel, messages: readonly Message.Message[
 const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onViewUsage }: ChatThreadProps) => {
   const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   const { chat, db, debug, event, chatModel, setController, setVisibleRange } = useChatContext(CHAT_THREAD_NAME);
-  const { messages, tail, lanes } = useChatThreadContext(CHAT_THREAD_NAME);
+  const { messages, tail, lanes, forks } = useChatThreadContext(CHAT_THREAD_NAME);
   const getLane = useCallback((message: Message.Message) => lanes?.get(message.id), [lanes]);
+  const forkMarkers = useMemo(() => {
+    const markers = new Map<string, ForkMarker[]>();
+    for (const fork of forks ?? []) {
+      if (fork.from !== undefined) {
+        markers.set(fork.from, [
+          ...(markers.get(fork.from) ?? []),
+          { id: fork.id, label: fork.purpose ?? t('fork.label') },
+        ]);
+      }
+    }
+    return markers;
+  }, [forks, t]);
+  const getForks = useCallback((message: Message.Message) => forkMarkers.get(message.id), [forkMarkers]);
   const identity = useIdentity();
   // Embedded objects resolve against the chat's database (the fallback one while it is transient).
   const objectImage = useMemo(() => objectCardWidget(db), [db]);
@@ -708,6 +735,9 @@ const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onV
         debug={debug}
         // An external agent keeps its own context, which a rewind of the transcript cannot reach.
         rewind={SessionConfig.harnessOf(chat?.session) === SessionConfig.COMPOSER_HARNESS}
+        // Forking needs the trajectory the Composer harness writes; an external agent keeps its own.
+        fork={SessionConfig.harnessOf(chat?.session) === SessionConfig.COMPOSER_HARNESS}
+        getForks={getForks}
         onEvent={handleEvent}
         onRangeChange={setVisibleRange}
         controllerRef={handleControllerRef}

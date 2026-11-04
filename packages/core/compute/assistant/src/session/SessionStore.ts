@@ -84,7 +84,12 @@ export class SessionStore {
   /**
    * Appends `message` to the feed as queued input: a user message waits until a turn consumes it.
    */
-  enqueueMessage(feed: Feed.Feed, message: Message.Message): Effect.Effect<Message.Message, never, Database.Service> {
+  enqueueMessage(
+    feed: Feed.Feed,
+    message: Message.Message,
+    /** The fork the message is queued in; main when absent. */
+    thread?: Trajectory.ThreadId,
+  ): Effect.Effect<Message.Message, never, Database.Service> {
     return TrajectoryStore.append(feed, [
       Trajectory.make({
         id: message.id,
@@ -96,6 +101,7 @@ export class SessionStore {
         },
         sender: { ...Legacy.toSender(message.sender), role: 'user' },
         created: message.created,
+        thread,
       }),
     ]).pipe(Effect.as(message));
   }

@@ -242,6 +242,8 @@ export type Lane = {
    * start.
    */
   readonly backgrounded?: boolean;
+  /** A fork's fork point: the message of main it forks at. */
+  readonly from?: Trajectory.EventId;
 };
 
 export type ThreadView = {
@@ -310,7 +312,8 @@ const openLane = (
     }
     return parentLane !== undefined;
   }
-  const running = [...view.running].flatMap((id) => {
+  // A fork runs apart from main, so it neither overlaps the lanes on main nor sends them to the background.
+  const running = (lane.kind === 'fork' ? [] : [...view.running]).flatMap((id) => {
     const index = view.laneIndex.get(id);
     return index === undefined ? [] : [view.lanes[index]];
   });
@@ -368,11 +371,18 @@ const applyThread = (view: MutableView, event: Trajectory.Event): boolean => {
     case 'threadOpen':
       return openLane(view, event, payload.from?.feed ? undefined : payload.from?.thread, {
         kind: payload.mode,
+        ...(payload.mode === 'fork' && payload.from !== undefined ? { from: payload.from.event } : {}),
         ...(payload.purpose !== undefined ? { purpose: payload.purpose } : {}),
       });
     case 'turnEnd': {
-      // A turn that is its own lane ends it; a turn inside a thread leaves the thread to its merge or close.
+      // A turn that is its own lane ends it; a turn inside a thread leaves the thread to its merge or close, except
+      // in a fork, which rests between its turns because nothing merges it on its own.
       const turn = threadOf(event);
+      const lane = laneOfThread(view, turn);
+      const laneIndex = lane === undefined ? undefined : view.laneIndex.get(lane);
+      if (turn !== undefined && lane !== turn && laneIndex !== undefined && view.lanes[laneIndex].kind === 'fork') {
+        return updateLane(view, lane, (existing) => ({ ...existing, status: 'done', waitingOn: undefined }));
+      }
       return turn !== undefined && view.laneOf[turn] === turn
         ? updateLane(view, turn, (lane) => ({
             ...lane,
@@ -488,6 +498,8 @@ export type PromptEntry = {
  */
 export type ThreadBuffer = {
   readonly parent?: Trajectory.ThreadId;
+  /** How the thread opened; absent for a turn. The session engine's merge policy is per mode. */
+  readonly mode?: Trajectory.ThreadMode;
   /** A fresh thread's prompt is its own entries only; a fork's starts with its parent's. */
   readonly fresh: boolean;
   /**
@@ -620,6 +632,16 @@ const seenAt = (state: PromptState, origin?: Trajectory.ThreadOrigin) =>
     ? Option.getOrElse(HashMap.get(state.positions, origin.event), () => state.position)
     : state.position;
 
+/**
+ * What a fork sees: main as it stood once the message it forks at was in it. A message a turn wrote joins main when
+ * the turn ends, after the message itself, so the fork sees up to where the message was placed.
+ */
+const forkSeen = (state: PromptState, from: Trajectory.ThreadOrigin | undefined): number => {
+  const seen = seenAt(state, from);
+  const placed = from === undefined ? undefined : state.entries.find((entry) => entry.source.includes(from.event));
+  return placed === undefined ? seen : Math.max(seen, placed.at);
+};
+
 const open = (state: PromptState, id: Trajectory.ThreadId | undefined, buffer: ThreadBuffer): PromptState =>
   id === undefined ? state : { ...state, threads: { ...state.threads, [id]: buffer } };
 
@@ -694,6 +716,7 @@ const openLight = (state: PromptState, event: Trajectory.Event, payload: Traject
         ]
       : [];
   return open(state, id, {
+    mode: 'light',
     fresh: false,
     seen,
     purpose: payload.purpose,
@@ -782,8 +805,11 @@ const place = (state: PromptState, event: Trajectory.Event): PromptState => {
       // A fork of another conversation has no parent in this log, so its history starts empty.
       return open(state, threadOf(event), {
         parent: payload.from?.feed ? undefined : payload.from?.thread,
+        mode: payload.mode,
+        ...(payload.purpose !== undefined ? { purpose: payload.purpose } : {}),
+        ...(event.sender.name !== undefined ? { owner: event.sender.name } : {}),
         fresh: payload.mode === 'fresh' || payload.from?.feed !== undefined,
-        seen: seenAt(state, payload.from),
+        seen: payload.mode === 'fork' ? forkSeen(state, payload.from) : seenAt(state, payload.from),
         entries: [],
       });
     case 'turnBegin':
@@ -897,6 +923,7 @@ const ThreadViewSchema = Schema.Struct({
     Schema.Struct({
       id: Trajectory.ThreadId,
       kind: Schema.Literals(['turn', 'fork', 'fresh', 'light']),
+      from: Schema.optional(Trajectory.EventId),
       status: Schema.Literals(['running', 'waiting', 'done', 'failed']),
       owner: Trajectory.Sender,
       created: Schema.String,
@@ -925,6 +952,7 @@ const PromptStateSchema = Schema.Struct({
     Schema.String,
     Schema.Struct({
       parent: Schema.optional(Trajectory.ThreadId),
+      mode: Schema.optional(Trajectory.ThreadMode),
       fresh: Schema.Boolean,
       seen: Schema.Number,
       closed: Schema.optional(Schema.Boolean),
@@ -958,11 +986,11 @@ export const session: Durable<SessionState> = {
   }),
 };
 
-export const thread: Durable<ThreadView> = { ...threadFold, id: 'thread@4', schema: ThreadViewSchema };
+export const thread: Durable<ThreadView> = { ...threadFold, id: 'thread@5', schema: ThreadViewSchema };
 
 export const prompt: Durable<PromptState> = {
   ...promptFold,
-  id: 'prompt@2',
+  id: 'prompt@3',
   schema: PromptStateSchema,
   rebind: (state, makeRef) =>
     state.origin?.feed ? { ...state, origin: { ...state.origin, feed: makeRef(state.origin.feed) } } : state,
