@@ -21,5 +21,7 @@ tasks:
       LOG_FILTER: warn,plugin-google/canary:info
     options:
       cache: false
+      # Without it moon holds the output until the task ends, and the logs of a run that hangs never show.
+      outputStyle: stream
       # A backstop above `runTimeoutMinutes` in canary/canary.yml; `test` would stop the run after 10 minutes.
       timeout: 3900

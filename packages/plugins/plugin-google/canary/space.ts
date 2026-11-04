@@ -194,22 +194,26 @@ export class CanarySpace {
         catch: (cause) => new CanaryError({ message: `EDGE ${method} ${path}: ${String(cause)}`, cause }),
       });
     const tornDown = (error: CanaryError) => error.cause instanceof EdgeCallFailedError && error.cause.status === 403;
+    // Every step is bounded: this also runs as the cleanup of an interrupted run, which cannot finish while it hangs.
     return Effect.gen({ self: this }, function* () {
       yield* Effect.tryPromise({
         try: () => this.#space.close(),
         catch: (cause) => new CanaryError({ message: `cannot close ${this.spaceId}: ${String(cause)}` }),
-      });
-      yield* request('DELETE');
-      yield* request('GET').pipe(
-        Effect.flatMap(() => Effect.fail(new CanaryError({ message: `space ${this.spaceId} is still on EDGE` }))),
-        Effect.catchIf(tornDown, () => Effect.void),
-        Effect.retry({ schedule: Schedule.spaced('15 seconds') }),
+      }).pipe(timeout(this.#waits.open, `space ${this.spaceId} to close`));
+      yield* request('DELETE').pipe(
+        Effect.andThen(
+          request('GET').pipe(
+            Effect.flatMap(() => Effect.fail(new CanaryError({ message: `space ${this.spaceId} is still on EDGE` }))),
+            Effect.catchIf(tornDown, () => Effect.void),
+            Effect.retry({ schedule: Schedule.spaced('15 seconds') }),
+          ),
+        ),
         timeout(this.#waits.delete, `EDGE to tear space ${this.spaceId} down`),
       );
       yield* Effect.tryPromise({
         try: () => this.#space.delete(),
         catch: (cause) => new CanaryError({ message: `cannot tombstone ${this.spaceId}: ${String(cause)}` }),
-      });
+      }).pipe(timeout(this.#waits.open, `space ${this.spaceId} to be tombstoned`));
     });
   }
 }
