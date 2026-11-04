@@ -133,7 +133,7 @@ describe('Availability Poll template', () => {
       expect(text).not.toMatch(/^feat F-/m);
       // The milestones and scenarios stay text: the agent plans from them.
       expect([...text.matchAll(/^\| (M-\d):/gm)].map(([, id]) => id)).toEqual(['M-1', 'M-2', 'M-3']);
-      expect([...text.matchAll(/^scenario (T-\d):/gm)].map(([, id]) => id)).toEqual(['T-1', 'T-2', 'T-3', 'T-4']);
+      expect([...text.matchAll(/^scenario (T-\d):/gm)].map(([, id]) => id)).toEqual(['T-1', 'T-2']);
     },
   );
 

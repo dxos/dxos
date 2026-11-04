@@ -5,9 +5,10 @@
 /**
  * Availability Poll: the development loop at the spec and feature level. The template holds a finished spec staged as
  * three milestones, its feature map and design docs, and no tasks. Ask the project's chat to plan a milestone from
- * the spec, delegate the tasks it files and watch the Gantt chart and the feature cards: Prototype once deployed,
- * Operational once the milestone's scenarios pass on the live Worker. Then change a requirement on its card and watch
- * the feature fail against the live Worker, get fixed and recover. Flight options stay planned for the viewer.
+ * the spec, delegate the tasks it files and watch the Gantt chart and the feature cards: Prototype as each task deploys
+ * its feature, Operational once the milestone's scenario passes on the live Worker, with a showcase holding the checks.
+ * A person accepts the reviewed tasks. Then change a requirement on its card and watch the feature fail against the
+ * live Worker, get fixed and recover. Flight options stay planned for the viewer.
  *
  * @title Availability Poll: from a spec to a Worker, milestone by milestone
  * @mdl packages/plugins/plugin-debug/PLUGIN.mdl test QA-11
@@ -101,7 +102,7 @@ const snapshot = (page) =>
     .evaluate(async (key) => {
       const space = dxos.spaces().find((candidate) => candidate.id === globalThis[key]);
       if (!space) {
-        return { tasks: [], features: {} };
+        return { tasks: [], features: {}, showcases: [] };
       }
       const query = (typename) =>
         space.db
@@ -122,9 +123,10 @@ const snapshot = (page) =>
           { status: feature.status, requirements: (feature.requirements ?? []).map(({ id, text }) => ({ id, text })) },
         ]),
       );
-      return { tasks, features };
+      const showcases = (await query('org.dxos.type.presentation')).map((deck) => deck.name ?? '');
+      return { tasks, features, showcases };
     }, TAKE_SPACE)
-    .catch(() => ({ tasks: [], features: {} }));
+    .catch(() => ({ tasks: [], features: {}, showcases: [] }));
 
 const tasksOf = (state, milestone) => state.tasks.filter((task) => task.milestone.startsWith(milestone));
 const allOperational = (state, names) => names.every((name) => state.features[name]?.status === 'operational');
@@ -249,7 +251,7 @@ const waitFor = async (demo, page, done, minutes, label) => {
   const deadline = Date.now() + minutes * 60_000;
   for (;;) {
     const state = await snapshot(page);
-    if (done(state)) {
+    if (await done(state)) {
       break;
     }
     if (Date.now() > deadline) {
@@ -263,13 +265,13 @@ const waitFor = async (demo, page, done, minutes, label) => {
 
 /**
  * Whether the agent has filed the milestone's tasks and gone quiet: the planning turn ends with its last task linked,
- * so two equal counts ten seconds apart, with the deploy-and-check task among them, mean the plan is complete.
+ * so two equal counts ten seconds apart, with the check task among them, mean the plan is complete.
  */
 const planned = (milestone) => {
   let last = -1;
   return (state) => {
     const tasks = tasksOf(state, milestone);
-    const settled = tasks.length >= 3 && tasks.length === last && tasks.some((task) => /deploy/i.test(task.title));
+    const settled = tasks.length >= 2 && tasks.length === last && tasks.some((task) => /^check/i.test(task.title));
     last = tasks.length;
     return settled;
   };
@@ -295,27 +297,90 @@ const delegateMilestone = async (demo, page, milestone) => {
   await delegate(demo, page, titles);
 };
 
-/** Holds the camera on the Gantt chart while the milestone's tasks run, then on the feature map as it lands. */
-const watchMilestone = async (demo, page, milestone, minutes) => {
+const STATUS_LABEL = { failing: 'Failing', operational: 'Operational', planned: 'Planned', prototype: 'Prototype' };
+
+/** The Tasks tab scrolled to the Gantt chart. */
+const showGantt = async (demo, page) => {
   await openProjectTab(demo, page, 'tasks');
   await page
     .getByTestId('projectsPlugin.pipeline.chart')
     .first()
     .scrollIntoViewIfNeeded()
     .catch(() => {});
+};
+
+/**
+ * Holds the camera on the Gantt chart while the milestone's tasks run. Each time one of its features changes status,
+ * cuts to the feature map at normal speed to show the card, then goes back. Ends once every task is finished and every
+ * feature operational.
+ */
+const watchMilestone = async (demo, page, milestone, minutes) => {
+  await showGantt(demo, page);
+  let seen;
   await waitFor(
     demo,
     page,
-    (state) => {
+    async (state) => {
+      const statuses = Object.fromEntries(milestone.features.map((name) => [name, state.features[name]?.status]));
+      const changed = seen ? milestone.features.filter((name) => statuses[name] !== seen[name]) : [];
+      seen = statuses;
       const tasks = tasksOf(state, milestone.id);
-      return tasks.length > 0 && tasks.every((task) => FINISHED.includes(task.status));
+      const finished = tasks.length > 0 && tasks.every((task) => FINISHED.includes(task.status));
+      if (changed.length > 0) {
+        await demo.speed({ factor: 1 });
+        await openProjectTab(demo, page, 'features');
+        await demo.caption({
+          value: changed.map((name) => `${name}: ${STATUS_LABEL[statuses[name]] ?? statuses[name]}`).join(' · '),
+          subtitle: statuses[changed[0]] === 'prototype' ? 'Deployed by its task' : 'Checked on the live Worker',
+        });
+        await page.waitForTimeout(BEAT * 2);
+        if (!finished || !allOperational(state, milestone.features)) {
+          await showGantt(demo, page);
+          await demo.speed({ factor: FAST });
+        }
+      }
+      return finished && allOperational(state, milestone.features);
     },
     minutes,
-    `${milestone.id}'s tasks`,
+    `${milestone.id}'s tasks and features`,
   );
   await openProjectTab(demo, page, 'features');
-  await waitFor(demo, page, (state) => allOperational(state, milestone.features), 10, `${milestone.id}'s features`);
-  await page.waitForTimeout(BEAT * 2);
+  await page.waitForTimeout(BEAT);
+};
+
+/** Opens the newest showcase from the feature's card: the URL the agent deployed and the checks it ran there. */
+const openShowcase = async (demo, page, feature) => {
+  const name = (await snapshot(page)).showcases.at(-1);
+  if (!name) {
+    throw new Error('the agent made no showcase');
+  }
+  await openFeature(demo, page, feature);
+  const row = `${COMPANION} :text-is("${name}") >> nth=0`;
+  await page.locator(row).scrollIntoViewIfNeeded({ timeout: 15_000 });
+  await demo.click({ selector: row, label: name });
+  await page.waitForTimeout(BEAT * 4);
+};
+
+/** A person signs off each of the milestone's tasks in review, from its status control on the Tasks tab. */
+const acceptMilestone = async (demo, page, milestone) => {
+  await openProjectTab(demo, page, 'tasks');
+  const titles = tasksOf(await snapshot(page), milestone)
+    .filter((task) => task.status === 'review')
+    .map((task) => task.title);
+  for (const title of titles) {
+    await demo.click({ selector: `${taskRow(title)} >> [data-testid="taskList.item.status"]`, label: title });
+    await demo.click({ selector: 'role=menuitem[name="Done"]', label: 'Done' });
+  }
+  await page.waitForFunction(
+    async ({ key, titles }) => {
+      const space = dxos.spaces().find((candidate) => candidate.id === globalThis[key]);
+      const tasks = await space.db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.task'))).run();
+      return tasks.filter((task) => titles.includes(task.title)).every((task) => task.status === 'done');
+    },
+    { key: TAKE_SPACE, titles },
+    { timeout: 15_000 },
+  );
+  await page.waitForTimeout(BEAT);
 };
 
 /**
@@ -481,8 +546,11 @@ export const steps = [
       await page.waitForTimeout(BEAT);
       await closeCompanion(page);
       await openProjectTab(demo, page, 'tasks');
-      await waitFor(demo, page, planned(M1.id), 20, 'the M-1 plan');
-      await demo.caption({ value: 'A milestone and its tasks, each linked to the features it moves' });
+      await waitFor(demo, page, planned(M1.id), 10, 'the M-1 plan');
+      await demo.caption({
+        value: 'One task per feature, then a check',
+        subtitle: 'Each linked to the feature it moves',
+      });
       await page.waitForTimeout(BEAT * 3);
     },
   },
@@ -505,9 +573,24 @@ export const steps = [
         // The Gantt chart fills the foot of the plank, where a caption would sit.
         position: 'top',
       });
-      await watchMilestone(demo, page, M1, 90);
+      await watchMilestone(demo, page, M1, 40);
       await demo.caption({ value: 'M-1 checked on the live Worker: three features operational' });
       await page.waitForTimeout(BEAT * 2);
+    },
+  },
+  {
+    name: 'Open the M-1 showcase',
+    run: async ({ demo, page }) => {
+      await demo.caption({ value: 'What got built: the live URL and the checks run against it' });
+      await openShowcase(demo, page, M1.features[0]);
+    },
+  },
+  {
+    name: 'Accept M-1',
+    done: async ({ page }) => tasksOf(await snapshot(page), M1.id).every((task) => task.status === 'done'),
+    run: async ({ demo, page }) => {
+      await demo.caption({ value: 'Sign off the work', subtitle: 'A delegated task waits in review for its person' });
+      await acceptMilestone(demo, page, M1.id);
     },
   },
   {
@@ -519,7 +602,7 @@ export const steps = [
       await page.waitForTimeout(BEAT);
       await closeCompanion(page);
       await openProjectTab(demo, page, 'tasks');
-      await waitFor(demo, page, planned(M2.id), 20, 'the M-2 plan');
+      await waitFor(demo, page, planned(M2.id), 10, 'the M-2 plan');
       await page.waitForTimeout(BEAT * 2);
       await demo.caption({ value: 'Hand M-2 to the agent' });
       await delegateMilestone(demo, page, M2.id);
@@ -534,9 +617,19 @@ export const steps = [
         subtitle: 'Checked against the scenario on the live Worker',
         position: 'top',
       });
-      await watchMilestone(demo, page, M2, 90);
+      await watchMilestone(demo, page, M2, 40);
       await demo.caption({ value: 'M-2 checked: five features operational' });
       await page.waitForTimeout(BEAT * 2);
+    },
+  },
+  {
+    name: 'Open the M-2 showcase and accept M-2',
+    done: async ({ page }) => tasksOf(await snapshot(page), M2.id).every((task) => task.status === 'done'),
+    run: async ({ demo, page }) => {
+      await demo.caption({ value: 'T-2 on the live Worker: every count and slot start' });
+      await openShowcase(demo, page, M2.features[1]);
+      await demo.caption({ value: 'Sign off M-2' });
+      await acceptMilestone(demo, page, M2.id);
     },
   },
   {
@@ -637,10 +730,13 @@ export const steps = [
         (state) =>
           state.features[HEATMAP]?.status === 'operational' &&
           state.tasks.filter((task) => fix.includes(task.title)).every((task) => FINISHED.includes(task.status)),
-        60,
+        20,
         'the fix',
       );
       await page.waitForTimeout(BEAT * 2);
+      await demo.caption({ value: 'The new check on the live Worker' });
+      await openShowcase(demo, page, HEATMAP);
+      await acceptMilestone(demo, page, M1.id);
     },
   },
   {

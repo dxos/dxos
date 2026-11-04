@@ -141,12 +141,12 @@ feat F-6: Flight options
 
 ## Milestones
 
-The work ships in this order; each milestone is done when its scenarios pass against the deployed Worker.
+The work ships in this order; each milestone is done when its scenario passes against the deployed Worker.
 
 | Milestone                                | Delivers                                                                                                              | Features      | Done when                                                           |
 | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------- |
-| M-1: Core poll                           | Create a poll, mark availability, see the heat map and the best slot, one Durable Object per poll. Every time is UTC. | F-1, F-2, F-3 | T-1, T-3 and T-4 pass against the deployed Worker.                  |
-| M-2: Time zones and daylight-saving time | Plan by the organizer's wall clock, mark and read by each invitee's, across a clock change.                           | F-4, F-5      | T-2 passes against the deployed Worker, and T-1 and T-3 still do.   |
+| M-1: Core poll                           | Create a poll, mark availability, see the heat map and the best slot, one Durable Object per poll. Every time is UTC. | F-1, F-2, F-3 | T-1 passes against the deployed Worker.                             |
+| M-2: Time zones and daylight-saving time | Plan by the organizer's wall clock, mark and read by each invitee's, across a clock change.                           | F-4, F-5      | T-2 passes against the deployed Worker.                             |
 | M-3: Flight options                      | Search Duffel for flights to the meeting under the poll's limits and let travelers pick. Not started.                 | F-6           | Every scenario in `FLIGHTS.mdl` passes against the deployed Worker. |
 
 ## Acceptance
@@ -180,24 +180,6 @@ scenario T-2: Three zones across a clock change
     - the best slot is s3, 10:00 on Friday in New York
     - read in `Europe/London`, the grid shows Friday's slots at 12:00 to 16:00 and Monday's at 13:00 to 17:00
     - read in `Asia/Tokyo`, the grid has four columns, 30 and 31 October and 2 and 3 November
-```
-
-```mdl
-scenario T-3: Polls are separate
-  given: two polls created from the body of T-1
-  when: Ana marks s1 on the first
-  then:
-    - the polls have different ids
-    - the second has no marks and no best slot
-```
-
-```mdl
-scenario T-4: The deployed Worker answers
-  given: the Worker is deployed
-  when: a client creates a poll through `/api/polls` on the Worker URL and opens its `url`
-  then:
-    - the page renders the grid
-    - `GET /api/polls/:id` returns the same marks on a second request a minute later
 ```
 
 ## Changelog

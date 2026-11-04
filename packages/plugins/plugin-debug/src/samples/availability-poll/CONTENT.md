@@ -13,7 +13,7 @@ A reader has a finished spec for a When2meet-style poll that runs as a Cloudflar
 
 ### Spec (`spec.ts`, `SPEC.mdl`, `FLIGHTS.mdl`)
 
-- 1 `Spec.Spec` "Availability Poll" (`@dxos/compute`) read from `SPEC.mdl`, fully written: types `Slot`, `Invitee`, `Poll`, `NewPoll`, `SlotPlan`, `LocalRange`; `feat` F-1 to F-6; a Milestones table with rows M-1 to M-3; `scenario` T-1 to T-4; decision D-1. Each `feat` block becomes an embed of its feature (below), in the block's place.
+- 1 `Spec.Spec` "Availability Poll" (`@dxos/compute`) read from `SPEC.mdl`, fully written: types `Slot`, `Invitee`, `Poll`, `NewPoll`, `SlotPlan`, `LocalRange`; `feat` F-1 to F-6; a Milestones table with rows M-1 to M-3; `scenario` T-1 and T-2; decision D-1. Each `feat` block becomes an embed of its feature (below), in the block's place.
 - Foreign key `{ source: 'github.com/dxos/dxos', id: 'availability-poll/SPEC.mdl' }`, the path the features cite.
 - 1 `Spec.Spec` "Flight options" read from `FLIGHTS.mdl`: types `Trip`, `Limits`, `Traveler`, `Offer`; `feat` F-1 to F-4; `scenario` T-1; decision D-1. It declares `uses com.example.availability-poll` and cites the poll spec's items by id (`com.example.availability-poll#F-3`, `#F-4`, `#F-5`). Its `feat` blocks become embeds of the four subfeatures below.
 - Foreign key `{ source: 'github.com/dxos/dxos', id: 'availability-poll/FLIGHTS.mdl' }`.
@@ -38,7 +38,7 @@ A reader has a finished spec for a When2meet-style poll that runs as a Cloudflar
 
 - 1 `TaskSet.TaskSet` "Availability Poll", empty: no `Milestone.Milestone` and no `Task.Task`.
 - 1 `Project.Project` "Availability Poll", `active` → the task set (`taskSet`), → its instructions (`instructions`), → the poll spec (`specs`), and → the 3 documents and 2 drawings below (`artifacts`), in that order.
-- 1 `Instructions.Instructions` binding the Markdown and Drawing skills and → the task set (`objects`), carrying how to plan a milestone from the spec (one milestone per row of the Milestones table, tasks under it each linked to the features it moves), the build recipe (one sandbox, Node 22, `wrangler deploy --temporary` with a SQLite Durable Object migration), how to check a scenario against the live URL, and when a feature is `prototype`, `operational` or `failing`.
+- 1 `Instructions.Instructions` binding the Markdown and Drawing skills and → the task set (`objects`), carrying how to plan a milestone from the spec (one milestone per row of the Milestones table, one task per feature and a check task), the build recipe (one sandbox with its own git and no repository, the image's wrangler, `wrangler deploy --temporary` with a SQLite Durable Object migration), how to check a scenario against the live URL, and when a feature is `prototype`, `operational` or `failing`.
 
 ### Design (`docs.ts`, `diagrams.ts`)
 
@@ -57,7 +57,7 @@ A reader has a finished spec for a When2meet-style poll that runs as a Cloudflar
 2. Open "Heat map and best slot" › Specs: the spec opens rendered in Composer (needs plugin-code), every feature written and M-1 to M-3 listed.
 3. Open "Flight options": its card has four subfeatures, and its spec cites the poll spec's F-3 and F-4.
 4. Ask the project's agent to plan M-1 from the spec: one milestone and its tasks appear, each linked to F-1, F-2 or F-3.
-5. Delegate M-1's tasks: the Gantt chart shows the chat working them; F-1 to F-3 turn Prototype on the deploy and Operational once T-1, T-3 and T-4 pass on the live URL (plugin-debug QA-11).
+5. Delegate M-1's tasks: the Gantt chart shows the chat working them; each task's feature turns Prototype when that task deploys it, and F-1 to F-3 turn Operational once T-1 passes on the live URL (plugin-debug QA-11).
 6. Plan and delegate M-2 the same way: F-4 and F-5 turn Operational once T-2 passes.
 7. Change F-3.2's tie-break on its card and ask the agent to revalidate: F-3 turns Failing, the agent files and works a fix, and F-3 is Operational again with T-2's best slot moved to `s8`.
 
@@ -69,5 +69,5 @@ A reader has a finished spec for a When2meet-style poll that runs as a Cloudflar
 - "Flight options" owns the flights spec, which holds its four subfeatures citing F-1 to F-4 of `availability-poll/FLIGHTS.mdl`.
 - The 11 dependencies are exactly the pairs above.
 - Each spec's foreign key is the path its features cite, and its text embeds its features in order with no `feat` block left.
-- The poll spec's text keeps the Milestones table's rows M-1 to M-3 and the scenarios T-1 to T-4.
+- The poll spec's text keeps the Milestones table's rows M-1 to M-3 and the scenarios T-1 and T-2.
 - The project's artifacts are the 3 documents and the 2 drawings, and the "Design" collection holds the same 5.
