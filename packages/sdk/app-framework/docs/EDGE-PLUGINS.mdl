@@ -1320,7 +1320,7 @@ decision D-58: A query over `Scope.registry()` that selects type entities (`Filt
 ```
 
 ```mdl
-decision D-74: `db.add` of an object whose static type the database's registry lacks registers that type when the hypergraph has a type source, and fails with `Schema not registered` when it has none. The type source is not asked: the object carries its schema, which the bundle imports from the contributing plugin's package. Fills in [D-41] and [D-52].
+decision D-59: `db.add` of an object whose static type the database's registry lacks registers that type when the hypergraph has a type source, and fails with `Schema not registered` when it has none. The type source is not asked: the object carries its schema, which the bundle imports from the contributing plugin's package. Fills in [D-41] and [D-52].
   date: 2026-11-04
   by: agent:claude-code
   for: user:dmaretskyi
