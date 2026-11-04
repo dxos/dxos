@@ -4,9 +4,11 @@
 
 // @import-as-namespace
 
+import { EditorView } from '@codemirror/view';
 import React, {
   type FocusEvent,
   type KeyboardEvent,
+  type MouseEvent,
   type PropsWithChildren,
   type ReactNode,
   type RefObject,
@@ -40,6 +42,9 @@ import { AssistantNamespace } from '../../namespace.ts';
 import { useChatContext } from '../Chat/index.ts';
 
 const COLUMN_SELECTOR = '[data-column-id]';
+const INTERACTIVE_SELECTOR = 'a, button, input, textarea, summary, [role="button"], [contenteditable="true"]';
+// How far a press may travel and still be a click; further than this it was selecting text.
+const CLICK_SLOP = 4;
 
 type ChatPlaneSide = 'start' | 'end';
 
@@ -498,6 +503,33 @@ const ChatPlaneCell = ({ menu, children }: ChatPlaneCellProps) => {
     [event],
   );
 
+  const pressRef = useRef({ x: 0, y: 0 });
+  const handleMouseDown = useCallback(({ clientX: x, clientY: y }: MouseEvent<HTMLDivElement>) => {
+    pressRef.current = { x, y };
+  }, []);
+
+  // Selecting another column already focuses its prompt, so this covers a press on the current one. On `mouseup` since
+  // a press on the thread's text does not always produce a click. A drag or double-click selected text, and the editor
+  // needs to keep focus for the copy.
+  const handleMouseUp = useCallback(
+    ({ currentTarget, target, button, detail, clientX, clientY }: MouseEvent<HTMLDivElement>) => {
+      const { x, y } = pressRef.current;
+      if (
+        current &&
+        button === 0 &&
+        detail === 1 &&
+        Math.hypot(clientX - x, clientY - y) <= CLICK_SLOP &&
+        target instanceof Element &&
+        // Containment rather than bubbling: a popup opened from here keeps its own focus.
+        currentTarget.contains(target) &&
+        !target.closest(INTERACTIVE_SELECTOR)
+      ) {
+        event.emit({ type: 'focus-prompt' });
+      }
+    },
+    [event, current],
+  );
+
   return (
     <Mosaic.Tile
       {...navigation.itemProps()}
@@ -505,7 +537,7 @@ const ChatPlaneCell = ({ menu, children }: ChatPlaneCellProps) => {
       classNames={[
         'w-(--chat-plane-width) snap-center dx-focus-group transition-opacity',
         !current && 'opacity-50',
-        // Floats over the gap the stack reserves, centered on the pointer since the handle is centered.
+        // Floats over the gap the stack reserves.
         'data-[mosaic-tile-state=dragging]:absolute data-[mosaic-tile-state=dragging]:z-10',
         'data-[mosaic-tile-state=dragging]:h-auto',
         'data-[mosaic-tile-state=dragging]:top-2 data-[mosaic-tile-state=dragging]:bottom-(--chat-plane-footer-height)',
@@ -525,7 +557,7 @@ const ChatPlaneCell = ({ menu, children }: ChatPlaneCellProps) => {
       ref={columnRef}
     >
       <Panel.Root asChild>
-        <div onKeyDown={handleKeyDown}>
+        <div onKeyDown={handleKeyDown} onMouseDown={handleMouseDown} onMouseUp={handleMouseUp}>
           <Panel.Header classNames='flex-row items-center justify-between'>
             <Mosaic.DragHandle
               icon='ph--dots-six--regular'
@@ -564,8 +596,8 @@ type ChatPlanePromptProps = PropsWithChildren;
  * Renders into the footer, and stays mounted but hidden unless its column is selected, so a draft survives moving away.
  */
 const ChatPlanePrompt = ({ children }: ChatPlanePromptProps) => {
-  const { footer } = useChatPlaneContext('ChatPlane.Prompt');
-  const { current, columnRef } = useChatPlaneColumnContext('ChatPlane.Prompt');
+  const { footer, viewport, select } = useChatPlaneContext('ChatPlane.Prompt');
+  const { value, current, columnRef } = useChatPlaneColumnContext('ChatPlane.Prompt');
 
   // React bubbles through the portal, and the strip would take Tab and focus from the prompt as its own.
   const handleKeyDown = useCallback(
@@ -574,9 +606,27 @@ const ChatPlanePrompt = ({ children }: ChatPlanePromptProps) => {
       const { currentTarget, target, key } = keyEvent;
       if (key === 'Escape' && !keyEvent.defaultPrevented && target instanceof Node && currentTarget.contains(target)) {
         columnRef.current?.focus({ preventScroll: true });
+        return;
+      }
+      // An empty prompt has no caret to move, so its arrow keys step between columns.
+      const { altKey, ctrlKey, metaKey, shiftKey, nativeEvent } = keyEvent;
+      if (
+        (key === 'ArrowLeft' || key === 'ArrowRight') &&
+        !(altKey || ctrlKey || metaKey || shiftKey || nativeEvent.isComposing) &&
+        target instanceof HTMLElement &&
+        EditorView.findFromDOM(target)?.state.doc.length === 0
+      ) {
+        const ids = Array.from(viewport?.querySelectorAll<HTMLElement>(COLUMN_SELECTOR) ?? []).map(
+          (column) => column.dataset.columnId,
+        );
+        const next = ids[ids.indexOf(value) + (key === 'ArrowLeft' ? -1 : 1)];
+        if (next) {
+          keyEvent.preventDefault();
+          select(next);
+        }
       }
     },
-    [columnRef],
+    [columnRef, viewport, select, value],
   );
   const handleFocus = useCallback((focusEvent: FocusEvent<HTMLDivElement>) => focusEvent.stopPropagation(), []);
 
