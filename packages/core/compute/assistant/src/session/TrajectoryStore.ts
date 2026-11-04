@@ -373,7 +373,7 @@ export const mergeFork = Effect.fnUntraced(function* (
   const { state: view } = yield* load(feed, Reducer.thread);
   const lane = view.lanes.find((lane) => lane.id === thread);
   const answer = finalAnswer(view, thread);
-  const text = lane?.purpose ? `Fork "${lane.purpose}" concluded:\n\n${answer}` : answer;
+  const text = `${lane?.purpose ? `Fork "${lane.purpose}"` : 'A fork'} concluded:\n\n${answer}`;
   yield* append(feed, [
     Trajectory.make({
       payload: { _tag: 'threadMerge', mode: 'summary', summary: [{ _tag: 'text', text }] },

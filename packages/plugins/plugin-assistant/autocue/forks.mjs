@@ -133,7 +133,7 @@ export const steps = [
       await demo.sleep({ ms: 1_500 });
       await demo.click({ selector: '[data-testid="assistant.fork-merge"]', label: 'Merge into main' });
       await page.locator(BAR).waitFor({ state: 'hidden', timeout: 15_000 });
-      await page.getByText('concluded', { exact: false }).last().waitFor({ state: 'visible', timeout: 15_000 });
+      await page.getByText('fork concluded', { exact: false }).last().waitFor({ state: 'visible', timeout: 15_000 });
       await caption(demo, 'Forks branch the chat’s own event log, so they sync and merge like any other branch');
       await demo.sleep({ ms: 8_000 });
     },

@@ -47,7 +47,10 @@ export const EMPTY_VIEW: TrajectoryView = {
  * fork shows main up to the message it forks at, then its own messages. Lanes are those of the selection.
  */
 export const selectThread = (view: TrajectoryView, thread?: Trajectory.ThreadId): TrajectoryView => {
-  const forks = new Set(view.lanes.filter((lane) => lane.kind === 'fork').map((lane) => lane.id));
+  // A fork merged whole is part of main now; any other fork stays out of it.
+  const forks = new Set(
+    view.lanes.filter((lane) => lane.kind === 'fork' && lane.merged !== 'raw').map((lane) => lane.id),
+  );
   if (forks.size === 0 && thread === undefined) {
     return view;
   }

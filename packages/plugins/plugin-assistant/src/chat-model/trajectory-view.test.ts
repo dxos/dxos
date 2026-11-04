@@ -141,4 +141,47 @@ describe('selectThread', () => {
     expect(main.lanes.some((lane) => lane.kind === 'fork')).toBe(false);
     expect(texts(selectThread(view, fork).messages)).toEqual(['Name a colour.', 'Blue.', 'Square.']);
   });
+
+  test('a fork merged as a summary shows its conclusion on main; merged raw, its work joins main', ({ expect }) => {
+    const id = Obj.ID.random();
+    const fork = Trajectory.ThreadId.make(id);
+    const blue = say('Blue.');
+    const events = [
+      say('Name a colour.'),
+      blue,
+      Trajectory.make({
+        id,
+        payload: { _tag: 'threadOpen', mode: 'fork', from: { event: blue.id } },
+        sender: { role: 'assistant' },
+        thread: fork,
+      }),
+      say('Square.', 'assistant', fork),
+    ];
+
+    const summary = setup();
+    summary.set([
+      ...events,
+      Trajectory.make({
+        payload: {
+          _tag: 'threadMerge',
+          mode: 'summary',
+          summary: [{ _tag: 'text', text: 'A fork concluded: Square.' }],
+        },
+        sender: { role: 'user' },
+        thread: fork,
+      }),
+    ]);
+    expect(texts(selectThread(summary.read()).messages)).toEqual([
+      'Name a colour.',
+      'Blue.',
+      'A fork concluded: Square.',
+    ]);
+
+    const raw = setup();
+    raw.set([
+      ...events,
+      Trajectory.make({ payload: { _tag: 'threadMerge', mode: 'raw' }, sender: { role: 'user' }, thread: fork }),
+    ]);
+    expect(texts(selectThread(raw.read()).messages)).toEqual(['Name a colour.', 'Blue.', 'Square.']);
+  });
 });

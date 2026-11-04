@@ -465,6 +465,13 @@ describe('light threads (scripted)', () => {
           expect(merged.slice(0, 4)).toEqual(['Name a colour.', 'Blue.', 'Name an animal.', 'Cat.']);
           expect(merged.at(-1)).toContain('Square.');
           expect(merged).not.toContain('Name a shape.');
+          // The chat shows the merge on main as one message, the fork's conclusion.
+          const shown = yield* read(session.feed, Reducer.thread);
+          const conclusion = shown.items.at(-1);
+          expect([
+            conclusion?.lane,
+            conclusion?.blocks.some((block) => block._tag === 'text' && block.text.includes('Square.')),
+          ]).toEqual([undefined, true]);
         },
         Effect.provide(forkLayer(threading)),
         TestHelpers.provideTestContext,

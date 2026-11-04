@@ -244,6 +244,8 @@ export type Lane = {
   readonly backgrounded?: boolean;
   /** A fork's fork point: the message of main it forks at. */
   readonly from?: Trajectory.EventId;
+  /** How a person merged a fork into main: its whole work (`raw`), or its conclusion (`summary`). */
+  readonly merged?: Trajectory.MergeMode;
 };
 
 export type ThreadView = {
@@ -391,9 +393,34 @@ const applyThread = (view: MutableView, event: Trajectory.Event): boolean => {
           }))
         : false;
     }
-    case 'threadMerge':
+    case 'threadMerge': {
+      const thread = threadOf(event);
+      const index = thread === undefined ? undefined : view.laneIndex.get(thread);
+      if (thread === undefined || index === undefined || view.lanes[index].kind !== 'fork') {
+        return thread !== undefined && view.laneOf[thread] === thread
+          ? updateLane(view, thread, (lane) => ({ ...lane, status: 'done', waitingOn: undefined }))
+          : false;
+      }
+      // A fork joins main only when a person merges it, so main shows the merge: its conclusion as one message.
+      const fork = view.lanes[index];
+      if (payload.mode === 'summary') {
+        items.push({
+          id: event.id,
+          sender: { role: 'assistant', name: fork.purpose ?? 'fork' },
+          blocks: payload.summary ?? [],
+          created: event.created,
+          status: 'sent',
+        });
+      }
+      return updateLane(view, thread, (lane) => ({
+        ...lane,
+        status: 'done',
+        merged: payload.mode,
+        waitingOn: undefined,
+      }));
+    }
     case 'threadClose': {
-      const failed = payload._tag === 'threadClose' && payload.status !== 'completed';
+      const failed = payload.status !== 'completed';
       const thread = threadOf(event);
       return thread !== undefined && view.laneOf[thread] === thread
         ? updateLane(view, thread, (lane) => ({
@@ -924,6 +951,7 @@ const ThreadViewSchema = Schema.Struct({
       id: Trajectory.ThreadId,
       kind: Schema.Literals(['turn', 'fork', 'fresh', 'light']),
       from: Schema.optional(Trajectory.EventId),
+      merged: Schema.optional(Trajectory.MergeMode),
       status: Schema.Literals(['running', 'waiting', 'done', 'failed']),
       owner: Trajectory.Sender,
       created: Schema.String,
