@@ -64,7 +64,7 @@ const backgroundLanes = (lanes: ReadonlyMap<string, ThreadLane>): readonly Reduc
  * cards flow down the conversation with the main thread between them, and a finished thread's answer lands below.
  */
 const ChatWithCardsStory = () => {
-  const { messages, lanes: threadLanes } = useMemo(() => createHierarchicalFeed(), []);
+  const { messages, lanes: threadLanes } = useMemo(() => createHierarchicalFeed().threads, []);
   const { messages: rows, lanes } = useMemo(
     () =>
       arrangeLanes({

@@ -13,6 +13,11 @@ export type HierarchicalFeed = {
   readonly lanes: ReadonlyMap<string, ThreadLane>;
   /** The forks that start at each message, by message id. */
   readonly forks: ReadonlyMap<string, readonly ForkMarker[]>;
+  /** The same work before any lane became a card: every row in feed order, each lane's rows named by `lanes`. */
+  readonly threads: {
+    readonly messages: readonly Message.Message[];
+    readonly lanes: ReadonlyMap<string, ThreadLane>;
+  };
 };
 
 // Recent, since a lane's header shows how long it has been running.
@@ -129,17 +134,30 @@ export const createHierarchicalFeed = (): HierarchicalFeed => {
     started,
   };
   const card = answer({
-    text: laneTag({
-      lane: signups,
-      lines: [
-        { role: 'user', name: 'Rich', text: 'Collect the beta sign-ups from the form.' },
-        { role: 'tool', text: '→ read_document' },
-        { role: 'assistant', text: 'The form has about 300 responses.' },
-        { role: 'tool', text: '→ search' },
-        { role: 'assistant', text: 'I have read 120 responses and removed 8 duplicates.' },
-      ],
-    }),
+    text: laneTag([
+      {
+        lane: signups,
+        lines: [
+          { role: 'user', name: 'Rich', text: 'Collect the beta sign-ups from the form.' },
+          { role: 'tool', text: '→ read_document' },
+          { role: 'assistant', text: 'The form has about 300 responses.' },
+          { role: 'tool', text: '→ search' },
+          { role: 'assistant', text: 'I have read 120 responses and removed 8 duplicates.' },
+        ],
+      },
+    ]),
   });
+  const signupRows = [
+    prompt('Collect the beta sign-ups from the form.'),
+    answer({
+      tools: [{ name: 'read_document', input: 'sign-up form', result: 'The form has about 300 responses.' }],
+      text: 'The form has about 300 responses.',
+    }),
+    answer({
+      tools: [{ name: 'search', input: 'duplicate sign-ups', result: 'Found 8 duplicates so far.' }],
+      text: 'I have read 120 responses and removed 8 duplicates.',
+    }),
+  ];
 
   const closingPrompt = prompt('Where does that leave the launch?');
   const closingAnswer = answer({
@@ -176,26 +194,32 @@ export const createHierarchicalFeed = (): HierarchicalFeed => {
     [announcement.draft.id, [{ id: 'fork-shorter', label: 'A shorter announcement' }]],
   ]);
 
+  const rows = (background: readonly Message.Message[]) => [
+    ...opening,
+    announcement.prompt,
+    freeze.prompt,
+    announcement.research,
+    pricing.prompt,
+    freeze.audit,
+    pricing.review,
+    ...background,
+    announcement.draft,
+    pricing.compare,
+    freeze.notes,
+    pricing.result,
+    closingPrompt,
+    closingAnswer,
+    announcement.followUp,
+    announcement.revision,
+  ];
+
   return {
-    messages: [
-      ...opening,
-      announcement.prompt,
-      freeze.prompt,
-      announcement.research,
-      pricing.prompt,
-      freeze.audit,
-      pricing.review,
-      card,
-      announcement.draft,
-      pricing.compare,
-      freeze.notes,
-      pricing.result,
-      closingPrompt,
-      closingAnswer,
-      announcement.followUp,
-      announcement.revision,
-    ],
+    messages: rows([card]),
     lanes,
     forks,
+    threads: {
+      messages: rows(signupRows),
+      lanes: new Map([...lanes, ...signupRows.map(({ id }) => [id, { ...signups, first: signupRows[0].id }] as const)]),
+    },
   };
 };

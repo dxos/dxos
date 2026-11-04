@@ -6,13 +6,19 @@ import React, { useCallback, useMemo } from 'react';
 
 import { type WidgetProps, getXmlTextChild } from '@dxos/ui-editor';
 
-import { ThreadCard } from '../components/ThreadCard/index.ts';
-import { parseLaneCard } from '../types.ts';
+import { ThreadCard, ThreadCardFlow } from '../components/ThreadCard/index.ts';
+import { parseLaneCards } from '../types.ts';
 
-/** The `<lane>` row as a {@link ThreadCard}; a host replaces this widget to dispatch the card instead. */
+/** The `<lane>` row as {@link ThreadCard}s; a host replaces this widget to dispatch the cards instead. */
 export const LaneCardWidget = ({ view, children }: WidgetProps) => {
   const text = getXmlTextChild(children ?? []);
-  const data = useMemo(() => parseLaneCard(text), [text]);
+  const cards = useMemo(() => parseLaneCards(text), [text]);
   const handleResize = useCallback(() => view?.requestMeasure(), [view]);
-  return data ? <ThreadCard {...data} onResize={handleResize} /> : null;
+  return (
+    <ThreadCardFlow>
+      {cards.map((card) => (
+        <ThreadCard key={card.lane.id} {...card} onResize={handleResize} />
+      ))}
+    </ThreadCardFlow>
+  );
 };

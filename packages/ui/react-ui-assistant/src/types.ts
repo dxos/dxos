@@ -114,19 +114,19 @@ export type LaneLine = { readonly role: string; readonly name?: string; readonly
 /** The data a `<lane>` row (a lane working in the background) carries. */
 export type LaneCardData = { readonly lane: ThreadLane; readonly lines: readonly LaneLine[] };
 
-/** The text of a row standing for a lane working in the background, which renders as its card. */
-export const laneTag = (data: LaneCardData): string =>
-  `<lane>${JSON.stringify(data).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</lane>`;
+/** The text of a row standing for lanes working in the background, which renders as their cards, side by side. */
+export const laneTag = (cards: readonly LaneCardData[]): string =>
+  `<lane>${JSON.stringify(cards).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</lane>`;
 
-/** The data of a `<lane>` row from its text; `undefined` for a malformed row. */
-export const parseLaneCard = (text: string | null | undefined): LaneCardData | undefined => {
+/** The cards of a `<lane>` row from its text; none for a malformed row. */
+export const parseLaneCards = (text: string | null | undefined): readonly LaneCardData[] => {
   if (!text) {
-    return undefined;
+    return [];
   }
   try {
-    const value: LaneCardData = JSON.parse(text);
+    const value: readonly LaneCardData[] = JSON.parse(text);
     return value;
   } catch {
-    return undefined;
+    return [];
   }
 };
