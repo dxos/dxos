@@ -16,8 +16,8 @@
  *   node .agents/skills/autocue/scripts/driver.mjs --port 7333 --url http://localhost:4173 --out /tmp/hot-demo \
  *     --action-timeout 60000
  *
- * The take edits `EXTENSION` and `src/plugin.ts` for real; restore them afterwards with
- * `git checkout -- packages/plugins/plugin-space/src`. Before recording, set the settings section's `label` in
+ * The take edits `EXTENSION` and `dx.config.ts` for real; restore them afterwards with
+ * `git checkout -- packages/plugins/plugin-space`. Before recording, set the settings section's `label` in
  * `EXTENSION` to the plain string `'Settings · v1'`, so the take starts from `v1`.
  *
  * Cut: node .agents/skills/autocue/scripts/trim-static.mjs --in /tmp/hot-demo/session.webm --out hot-reload.webm \
@@ -32,10 +32,10 @@ const TERMINAL = 'http://localhost:4180';
 const EXTENSION_DIR = 'packages/plugins/plugin-space/src/capabilities/app-graph-builder/extensions';
 const EXTENSION = 'settings.ts';
 
-/** The plugin definition, and the line that adds the app-graph builder module to it. */
-const PLUGIN = 'packages/plugins/plugin-space/src/plugin.ts';
-const PLUGIN_FROM_EXTENSION = '../../../plugin.ts';
-const MODULE_LINE = 'Plugin.addModule(AppGraphBuilder),';
+/** The plugin definition, and the line that lists the app-graph builder module in it. */
+const PLUGIN = 'packages/plugins/plugin-space/dx.config.ts';
+const PLUGIN_FROM_EXTENSION = '../../../../dx.config.ts';
+const MODULE_LINE = 'AppGraphBuilder,';
 
 /** The navtree row the settings section extension contributes. */
 const ROW = '[data-testid="spacePlugin.settings"]';

@@ -11,14 +11,15 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
 
 import { StatusBar } from '#components';
-import { meta } from '#meta';
+
+import { StatusBarNamespace } from '../../namespace.ts';
 
 export type VersionNumberProps = {};
 
 const VERSION_REGEX = /([\d.]+)/;
 
 export const VersionNumber = (_props: VersionNumberProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(StatusBarNamespace.key);
   const config = useConfig();
   const { version, timestamp } = config.values.runtime?.app?.build ?? {};
   const [_, short] = version?.match(VERSION_REGEX) ?? [];

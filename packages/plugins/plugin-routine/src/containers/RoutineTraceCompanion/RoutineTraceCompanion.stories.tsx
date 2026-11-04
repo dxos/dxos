@@ -111,7 +111,7 @@ const withCompanion = ({ empty }: { empty?: boolean } = {}) =>
             yield* seed(space, { empty });
           }),
       }),
-      RoutinePlugin(),
+      RoutinePlugin.make(),
     ],
   });
 

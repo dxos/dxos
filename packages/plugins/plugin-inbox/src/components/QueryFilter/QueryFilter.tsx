@@ -10,7 +10,7 @@ import { QueryEditor } from '@dxos/react-ui-query';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
-import { meta } from '#meta';
+import { InboxNamespace } from '../../namespace.ts';
 
 export type QueryFilterProps = {
   db?: Database.Database;
@@ -40,7 +40,7 @@ export const QueryFilter = ({
   editorRef,
   saveButtonRef,
 }: QueryFilterProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(InboxNamespace.key);
   return (
     <>
       <QueryEditor

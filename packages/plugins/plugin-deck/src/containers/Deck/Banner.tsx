@@ -11,13 +11,13 @@ import * as Layout from '@dxos/react-ui/Layout';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx, osTranslations } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
-import { DeckRole } from '#types';
+import { DeckSurface } from '#types';
 
+import { DeckNamespace } from '../../namespace.ts';
 import { CloseSidebarButton, ToggleSidebarButton } from '../Sidebar/index.ts';
 
 export const Banner = ({ variant, classNames }: Util.ThemedClassName<{ variant?: 'topbar' | 'sidebar' }>) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(DeckNamespace.key);
 
   return (
     <header
@@ -38,7 +38,7 @@ export const Banner = ({ variant, classNames }: Util.ThemedClassName<{ variant?:
         </div>
       )}
       <span className='grow' />
-      <Surface.Surface type={DeckRole.VersionInfo} limit={1} />
+      <Surface.Surface type={DeckSurface.VersionInfo} limit={1} />
     </header>
   );
 };

@@ -4,7 +4,10 @@
 
 import { describe, test } from 'vitest';
 
-import { DatabaseDirectory } from './document-structure.ts';
+import { SpaceId } from '@dxos/keys';
+
+import { DatabaseDirectory, directoryJson } from './document-structure.ts';
+import { SpaceDocVersion } from './space-doc-version.ts';
 
 describe('DatabaseDirectory.getRetiredDocuments', () => {
   test('reads entries and skips malformed ones', ({ expect }) => {
@@ -25,5 +28,21 @@ describe('DatabaseDirectory.getRetiredDocuments', () => {
       { documentId: 'b', replacedBy: 'automerge:y', reason: 'load-failed' },
       { documentId: 'c', replacedBy: 'automerge:z', reason: 'load-failed' },
     ]);
+  });
+});
+
+describe('directoryJson', () => {
+  test('carries every field but inline objects', ({ expect }) => {
+    const directory: DatabaseDirectory = {
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceId: SpaceId.random() },
+      links: { a: 'automerge:a' },
+      branches: { a: { draft: { members: { a: 'automerge:b' } } } },
+    };
+    expect(JSON.parse(directoryJson(directory)!)).toEqual(directory);
+  });
+
+  test('is undefined for a directory with inline objects', ({ expect }) => {
+    expect(directoryJson({ links: {}, objects: { a: { system: {}, data: {}, meta: { keys: [] } } } })).toBeUndefined();
   });
 });

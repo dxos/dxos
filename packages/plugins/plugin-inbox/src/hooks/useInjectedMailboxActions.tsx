@@ -38,6 +38,7 @@ export const useInjectedMailboxActions = (
     return actions.map((action) => ({
       id: action.id,
       label: action.label,
+      icon: action.icon,
       onSelect: () => {
         const { operation, input } = action.createInvocation(mailbox);
         void invoker

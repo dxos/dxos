@@ -10,8 +10,9 @@ import * as Capability from '@dxos/app-framework/Capability';
 
 import { DeckLayout } from '#containers';
 import { useDismissToast } from '#hooks';
-import { meta } from '#meta';
 import type { DeckCapabilities } from '#types';
+
+import { DeckNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ platform = 'desktop' }: DeckCapabilities.DeckPluginOptions = {}) {
@@ -24,7 +25,7 @@ export default Capability.makeModule(
 
     return Capability.contributeAll(Capabilities.ReactRoot, [
       {
-        id: meta.profile.key,
+        id: DeckNamespace.key,
         root: () => {
           const handleDismissToast = useDismissToast();
 

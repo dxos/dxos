@@ -20,7 +20,7 @@ import { type ProjectionModel, ViewModel } from '@dxos/schema';
 import { Pipeline } from '@dxos/types';
 import { arrayMove } from '@dxos/util';
 
-import { meta } from '#meta';
+import { PipelineNamespace } from '../../namespace.ts';
 
 const ColumnFormSchema = Pipeline.Column.mapFields((fields) => Struct.pick(fields, ['name'])).mapFields(
   Struct.map(Schema.mutableKey),
@@ -32,7 +32,7 @@ export type PipelinePropertiesProps = AppSurface.ObjectPropertiesProps<Pipeline.
  * Supports editing the pipeline view.
  */
 export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(PipelineNamespace.key);
   const db = Obj.getDatabase(pipeline);
   const [expandedId, setExpandedId] = useState<string>();
   const [columns, updateColumns] = useObject(pipeline, 'columns');

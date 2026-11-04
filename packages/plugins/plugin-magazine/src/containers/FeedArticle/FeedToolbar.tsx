@@ -7,7 +7,7 @@ import React from 'react';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as Panel from '@dxos/react-ui/Panel';
 
-import { meta } from '#meta';
+import { MagazineNamespace } from '../../namespace.ts';
 
 export type FeedToolbarProps = {
   attendableId?: string;
@@ -28,7 +28,7 @@ export const FeedToolbar = ({ attendableId, onSync }: FeedToolbarProps) => {
         .action(
           'sync',
           {
-            label: ['sync-feed.label', { ns: meta.profile.key }],
+            label: ['sync-feed.label', { ns: MagazineNamespace.key }],
             icon: 'ph--arrows-clockwise--regular',
             iconOnly: true,
           },

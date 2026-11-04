@@ -24,8 +24,7 @@ import { type LinkWidgetState, type WidgetProps, releaseBlockHeight, setLinkWidg
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
-import { meta } from '#meta';
-
+import { MarkdownNamespace } from '../../namespace.ts';
 import { parseEmbedLabel } from './parse-embed-label.ts';
 
 // Persisted height (px) lives in the image alt text after the label, Obsidian-style: `![label|320](eid)`.
@@ -104,7 +103,7 @@ export const PreviewComponent = ({
   onOpen,
   isSurfaceAvailable: isSurfaceAvailableProp,
 }: PreviewComponentProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(MarkdownNamespace.key);
   // Optional, not `useOperationInvoker`: that hook SUSPENDS until the capability exists, and a
   // suspending portal holds the whole editor tree un-committed — embeds never appeared on the
   // first document render. The invoker is only the open-click fallback; absence is tolerable.
@@ -114,6 +113,9 @@ export const PreviewComponent = ({
   // Fall back to the app's surface registry unless a caller injects a check (e.g. from a story).
   const defaultIsSurfaceAvailable = Surface.useIsAvailable();
   const isSurfaceAvailable = isSurfaceAvailableProp ?? defaultIsSurfaceAvailable;
+  // The check above reads without subscribing: a preview module that loads after the first render must render this again.
+  Surface.useContributions(AppSurface.Section);
+  Surface.useContributions(AppSurface.CardContent);
   const containerRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -365,7 +367,10 @@ export const PreviewComponent = ({
           <div
             className={mx(
               'grid grid-rows-[minmax(0,1fr)] overflow-hidden overscroll-contain border rounded-md',
-              hasAttention ? 'border-focus-ring-subtle' : 'border-separator-subtle',
+              // The border is kept transparent rather than removed so hovering does not shift the content.
+              hasAttention
+                ? 'border-focus-ring-subtle'
+                : 'border-transparent group-hover/embed:border-separator-subtle transition-colors',
             )}
             inert={hasAttention ? undefined : true}
           >

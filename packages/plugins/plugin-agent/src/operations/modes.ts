@@ -72,6 +72,14 @@ export const skillRef = (
     }),
   );
 
+/**
+ * The skills a new conversation with the agent starts with: its voice and the skills its instructions name.
+ */
+export const sessionSkills = Effect.fnUntraced(function* (agent: Agent.Agent) {
+  const instructions = yield* Database.load(agent.instructions).pipe(Effect.orDie);
+  return [yield* skillRef(agent, ConversationSkill.key), ...instructions.skills];
+});
+
 /** `Skill.registryURI` names a compiled skill as a DXN of its key. */
 const REGISTRY_PREFIX = 'dxn:';
 
@@ -115,8 +123,8 @@ export const findMode = (modes: readonly Mode.Mode[], name: string): Mode.Mode |
   modes.find((mode) => mode.name.trim().toLowerCase() === name.trim().toLowerCase());
 
 /**
- * Puts the chat in `mode`: unbinds the skills of every other mode (never the base skills), binds the
- * mode's skills (the agent's customized copies where they exist), and records the mode on the chat.
+ * Puts the chat in `mode`: unbinds the skills earlier switches bound that the mode does not want, binds the mode's
+ * skills the chat lacks (the agent's customized copies where they exist), and records the mode and what it bound.
  */
 export const switchChatMode = Effect.fnUntraced(function* (agent: Agent.Agent, chat: Chat.Chat, name: string) {
   const modes = yield* ensureModes(agent);
@@ -130,30 +138,35 @@ export const switchChatMode = Effect.fnUntraced(function* (agent: Agent.Agent, c
   }
 
   const wanted = new Set(mode.skills.map(skillKeyOf).filter((key) => key !== undefined));
-  const base = new Set(BASE_SKILL_KEYS);
-  const modeKeys = new Set(
-    modes.flatMap((mode) => mode.skills.map(skillKeyOf)).filter((key) => key !== undefined && !base.has(key)),
+  // A chat switched before switches were recorded: its current mode's skills, less the old base skills.
+  const previous = new Set(
+    Mode.getModeSkills(chat) ??
+      (findMode(modes, Mode.getCurrent(chat))?.skills ?? [])
+        .map(skillKeyOf)
+        .filter((key) => key !== undefined)
+        .filter((key) => !BASE_SKILL_KEYS.includes(key)),
   );
 
   const binder = yield* openBinder(chat);
   const bound = binder.getSkills();
   const unbind = bound.filter((skill) => {
     const key = Obj.getMeta(skill).key;
-    return key !== undefined && modeKeys.has(key) && !wanted.has(key);
+    return key !== undefined && previous.has(key) && !wanted.has(key);
   });
   if (unbind.length > 0) {
     yield* Effect.promise(() => binder.unbind({ skills: unbind.map(Skill.makeRef) }));
   }
 
   const boundKeys = new Set(binder.getSkills().map((skill) => Obj.getMeta(skill).key));
-  const toBind = yield* Effect.forEach(
-    [...base, ...wanted].filter((key) => !boundKeys.has(key)),
-    (key) => skillRef(agent, key),
-  );
+  const added = [...wanted].filter((key) => !boundKeys.has(key));
+  const toBind = yield* Effect.forEach(added, (key) => skillRef(agent, key));
   if (toBind.length > 0) {
     yield* Effect.promise(() => binder.bind({ skills: toBind }));
   }
 
-  Obj.update(chat, (chat) => Mode.setCurrent(chat, mode.name));
+  Obj.update(chat, (chat) => {
+    Mode.setCurrent(chat, mode.name);
+    Mode.setModeSkills(chat, [...[...previous].filter((key) => wanted.has(key)), ...added]);
+  });
   return { mode: mode.name, skills: [...wanted] };
 }, Effect.scoped);

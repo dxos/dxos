@@ -15,7 +15,7 @@ import { formatForDisplay } from '@dxos/schema';
 
 import { Ibkr } from '#types';
 
-import { meta } from '../../meta.ts';
+import { IbkrNamespace } from '../../namespace.ts';
 
 export type FundamentalsPanelProps = {
   snapshot?: Ibkr.FundamentalsSnapshot;
@@ -58,7 +58,7 @@ const formatFundamentalValue = (
 
 /** Read-only panel for SEC EDGAR fundamentals returned by {@link IbkrOperation.GetInstrumentFundamentals}. */
 export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: FundamentalsPanelProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(IbkrNamespace.key);
 
   const fieldProvider = useCallback<FormFieldProvider>(
     ({ prop, fieldProps: { label, description, getValue, format, jsonPath } }) => {

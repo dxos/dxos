@@ -26,9 +26,9 @@ import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as Typography from '@dxos/react-ui/Typography';
 import { keyToFallback } from '@dxos/util';
 
-import { meta } from '#meta';
 import { SpaceOperation } from '#types';
 
+import { SpaceNamespace } from '../../namespace.ts';
 import { collectShareScope } from '../../util/index.ts';
 import { getPluginsForTypenames } from '../../util/share-plugins.ts';
 
@@ -42,7 +42,7 @@ export type ShareObjectDialogProps = {
  * invitation writes a credential to the space's control feed.
  */
 export const ShareObjectDialog = ({ object }: ShareObjectDialogProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const manager = PluginManagerProvider.usePluginManager();
   const client = useClient();
@@ -117,9 +117,9 @@ export const ShareObjectDialog = ({ object }: ShareObjectDialogProps) => {
     } catch (error) {
       log.catch(error);
       await invokePromise(LayoutOperation.AddToast, {
-        id: `${meta.profile.key}/share-object-failed`,
+        id: `${SpaceNamespace.key}/share-object-failed`,
         icon: 'ph--warning--regular',
-        title: ['share-object-failed.title', { ns: meta.profile.key }],
+        title: ['share-object-failed.title', { ns: SpaceNamespace.key }],
         description: error instanceof Error ? error.message : String(error),
       });
     } finally {

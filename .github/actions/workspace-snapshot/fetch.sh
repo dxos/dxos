@@ -31,8 +31,16 @@ pids=()
 for i in $(seq 0 $((parts - 1))); do
   from=$((i * chunk))
   to=$((from + chunk - 1 < size - 1 ? from + chunk - 1 : size - 1))
-  (curl -fsSL -H "Authorization: Bearer $token" -r "$from-$to" "https://ghcr.io/v2/$repo/blobs/$digest" |
-    dd of="$dest" bs=4M iflag=fullblock oflag=seek_bytes seek="$from" conv=notrunc status=none) &
+  # A range rewrites the same offsets on a retry, so a dropped stream (GHCR has reset HTTP/2 mid-blob) only costs
+  # that range.
+  (
+    for attempt in 1 2 3; do
+      curl -fsSL -H "Authorization: Bearer $token" -r "$from-$to" "https://ghcr.io/v2/$repo/blobs/$digest" |
+        dd of="$dest" bs=4M iflag=fullblock oflag=seek_bytes seek="$from" conv=notrunc status=none && exit 0
+      echo "range $from-$to: attempt $attempt failed" >&2
+    done
+    exit 1
+  ) &
   pids+=($!)
 done
 for pid in "${pids[@]}"; do wait "$pid"; done

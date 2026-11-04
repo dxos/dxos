@@ -12,8 +12,8 @@ import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { File } from '@dxos/types';
 
 import { FileArticle, FileCard, FileProperties, FileSettings } from '#containers';
-import { meta } from '#meta';
 
+import { FileNamespace } from '../namespace.ts';
 import { FileAction } from '../types/FileCapabilities.ts';
 import { FileUploadField } from './FileUploadField.tsx';
 
@@ -53,7 +53,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'pluginSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
+        filter: AppSurface.settings(AppSurface.Article, FileNamespace.key),
         component: FileSettings,
         props: ({ data: { subject } }) => ({ subject }),
       }),

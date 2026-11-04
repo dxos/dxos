@@ -7,9 +7,8 @@ import React from 'react';
 import type * as Variant from '@dxos/plugin-studio/Variant';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
-import { meta } from '#meta';
-
 import { useTakeUrl } from '../../hooks/index.ts';
+import { RecorderNamespace } from '../../namespace.ts';
 
 export type TakePlayerProps = {
   /** The take to play; none shows a hint in its place. */
@@ -21,7 +20,7 @@ export type TakePlayerProps = {
 
 /** The status bar player of a Recordings companion: the current row's take, as an audio bar. */
 export const TakePlayer = ({ take, autoPlay, onEnded }: TakePlayerProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(RecorderNamespace.key);
   const src = useTakeUrl(take);
   if (!take) {
     return <span className='px-2 text-sm text-fg-subtle'>{t('no-current-take.label')}</span>;

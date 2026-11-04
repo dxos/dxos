@@ -39,7 +39,7 @@ import { Text } from '@dxos/schema';
 import { File } from '@dxos/types';
 
 import { useSlideImage } from '#hooks';
-import { PresenterPlugin } from '#plugin';
+import * as PresenterPlugin from '#meta';
 import { translations } from '#translations';
 import { Presentation, PresenterOperation } from '#types';
 
@@ -160,11 +160,11 @@ const meta = {
               yield* Effect.promise(() => space.db.flush({ indexes: true }));
             }),
         }),
-        RoutinePlugin(),
-        AssistantPlugin({ aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware(script) }),
+        RoutinePlugin.make(),
+        AssistantPlugin.make({ aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware(script) }),
         PreviewPlugin.make(),
         // The assistant advertises the space tools; without their operations the first tool turn fails.
-        SpacePlugin({}),
+        SpacePlugin.make({}),
         // Studio depends on projects, which depends on tasks.
         TasksPlugin.make(),
         ProjectsPlugin.make(),
@@ -172,7 +172,7 @@ const meta = {
         // The tool stores the generated image as a file through plugin-file (inline storage in the story).
         FilePlugin.make(),
         FakeImageProviderPlugin(),
-        PresenterPlugin(),
+        PresenterPlugin.make(),
         StorybookPlugin.make({}),
       ],
       capabilities,

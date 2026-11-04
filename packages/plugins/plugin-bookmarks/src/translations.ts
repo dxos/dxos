@@ -5,8 +5,9 @@
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Bookmark } from '#types';
+
+import { BookmarksNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -21,7 +22,7 @@ export const translations = [
         'rename-object.label': 'Rename bookmark',
         'delete-object.label': 'Delete bookmark',
       },
-      [meta.profile.key]: {
+      [BookmarksNamespace.key]: {
         'plugin.name': 'Bookmarks',
         'open-source.label': 'Open page',
         'summarize.label': 'Summarize page',

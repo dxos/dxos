@@ -4,7 +4,9 @@
 
 import { useMemo } from 'react';
 
-import { MAJOR_GRID_RATIO, type Point } from '../../model/index.ts';
+import { MAJOR_GRID_RATIO, type Point } from '@dxos/scene';
+
+import { DETENT_PX, detentOf } from '../../utils/index.ts';
 
 /**
  * Grid levels a fourfold apart, from a quarter of the minor grid to far past the major one, so the levels
@@ -25,7 +27,12 @@ export type SceneSnap = {
   snapMinor: (value: number) => number;
   /** A press that has moved less than half a minor cell with snap on: a click, which moves and resizes nothing. */
   isClick: (offset: Point) => boolean;
-  /** The offset a move applies, so the pressed node's top-left (`anchor`) lands on the major grid. */
+  /** {@link DETENT_PX} in scene units at the zoom. */
+  detent: number;
+  /**
+   * The offset a move applies: on each axis the pressed node's top-left (`anchor`) is held on the major grid while
+   * within the detent of a line, and follows the pointer otherwise.
+   */
   moveDelta: (anchor: Point, offset: Point) => Point;
 };
 
@@ -42,27 +49,28 @@ const minorLevel = (grid: number, zoom: number): number => {
   return levels.find((size) => size * zoom >= GRID_RANGE[0]) ?? levels[levels.length - 1];
 };
 
-const snapOn = (minor: number, enabled: boolean): SceneSnap => {
+const snapOn = (minor: number, enabled: boolean, detent: number): SceneSnap => {
   const major = minor * MAJOR_GRID_RATIO;
   const snap = (value: number) => (enabled ? Math.round(value / major) * major : value);
   // A link's control point is finer than a node: a bend need not sit on a major line.
   const snapMinor = (value: number) => (enabled ? Math.round(value / minor) * minor : value);
-  // A node off the major grid (a palette drop sits on the minor one) would otherwise jump up to half a major
-  // cell on a click's jitter, so a press that has not left half a minor cell does not snap.
+  // A node off the major grid (a palette drop sits on the minor one) would otherwise jump to a line on a click's
+  // jitter, so a press that has not left half a minor cell does not move.
   const isClick = (offset: Point) => enabled && Math.hypot(offset.x, offset.y) < minor / 2;
+  const hold = (value: number) => detentOf(value, snap(value), detent);
   const moveDelta = (anchor: Point, offset: Point): Point =>
     isClick(offset)
       ? { x: 0, y: 0 }
-      : { x: snap(anchor.x + offset.x) - anchor.x, y: snap(anchor.y + offset.y) - anchor.y };
-  return { minor, major, snap, snapMinor, isClick, moveDelta };
+      : { x: hold(anchor.x + offset.x) - anchor.x, y: hold(anchor.y + offset.y) - anchor.y };
+  return { minor, major, detent, snap, snapMinor, isClick, moveDelta };
 };
 
 /** The snap for a view's grid, zoom and snap toggle. */
 export const sceneSnap = (grid: number, zoom: number, enabled: boolean): SceneSnap =>
-  snapOn(minorLevel(grid, zoom), enabled);
+  snapOn(minorLevel(grid, zoom), enabled, DETENT_PX / zoom);
 
-/** `sceneSnap`, stable while the drawn level and the toggle hold, however the zoom moves within the level. */
+/** `sceneSnap`, stable while the zoom, the drawn level and the toggle hold. */
 export const useSceneSnap = (grid: number, zoom: number, enabled: boolean): SceneSnap => {
   const minor = minorLevel(grid, zoom);
-  return useMemo(() => snapOn(minor, enabled), [minor, enabled]);
+  return useMemo(() => snapOn(minor, enabled, DETENT_PX / zoom), [minor, enabled, zoom]);
 };

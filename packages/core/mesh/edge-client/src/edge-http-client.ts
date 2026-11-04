@@ -82,6 +82,17 @@ export type UploadPluginBundleRequest = {
   slug: string;
   version: string;
   files: { path: string; content: string }[];
+  /** A channel EDGE moves to this version besides `latest`, like an npm dist-tag. */
+  channel?: string;
+};
+
+/** A built plugin bundle as bytes, one entry per file by its path in the bundle (`manifest.json`, `vendor/...`). */
+export type PluginBundleUpload = {
+  slug: string;
+  version: string;
+  files: readonly { path: string; content: Uint8Array<ArrayBuffer> }[];
+  /** A channel EDGE moves to this version besides `latest`, like an npm dist-tag. */
+  channel?: string;
 };
 
 export type CreateApiTokenRequest = {
@@ -1006,21 +1017,27 @@ export class EdgeHttpClient extends BaseHttpClient {
   }
 
   /**
-   * Uploads a built plugin bundle to the registry's R2-backed hosting. Authenticated
-   * with the caller's hub identity (verifiable presentation) — `setIdentity` must
-   * have been called. Returns the canonical `moduleUrl` (the hosted `manifest.json`).
+   * Uploads a built plugin bundle to the registry's R2-backed hosting as `multipart/form-data`, one part per file named
+   * by its path; EDGE streams the parts into storage, so the bundle never has to fit in a worker's memory. Authenticated
+   * with the caller's hub identity (verifiable presentation) — `setIdentity` must have been called. Returns the
+   * canonical `moduleUrl` (the hosted `manifest.json`).
    */
   public async uploadPluginBundle(
     ctx: Context,
-    request: UploadPluginBundleRequest,
+    { slug, version, channel, files }: PluginBundleUpload,
     args?: EdgeHttpCallArgs,
   ): Promise<{ moduleUrl: string }> {
-    return this._call(ctx, new URL('/registry/upload', this.baseUrl), {
-      body: request,
-      method: 'POST',
-      auth: true,
-      ...args,
-    });
+    const url = new URL('/registry/upload/multipart', this.baseUrl);
+    url.searchParams.set('slug', slug);
+    url.searchParams.set('version', version);
+    if (channel) {
+      url.searchParams.set('channel', channel);
+    }
+    const form = new FormData();
+    for (const { path, content } of files) {
+      form.append(path, new Blob([content]), path);
+    }
+    return this._call(ctx, url, { body: form, method: 'POST', json: false, auth: true, ...args });
   }
 
   /**

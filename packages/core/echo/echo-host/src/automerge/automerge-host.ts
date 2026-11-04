@@ -42,7 +42,7 @@ import * as SqlClient from 'effect/sql/SqlClient';
 import type * as SqlError from 'effect/sql/SqlError';
 
 import { DeferredTask, Event, asyncTimeout, scheduleTask } from '@dxos/async';
-import { Context, Resource, cancelWithContext } from '@dxos/context';
+import { Context, LifecycleState, Resource, cancelWithContext } from '@dxos/context';
 import { type CollectionId, DatabaseDirectory, createIdFromSpaceKey, isEdgePeerId } from '@dxos/echo-protocol';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { invariant } from '@dxos/invariant';
@@ -1446,7 +1446,9 @@ export class AutomergeHost extends Resource {
    * Updates heads store and schedules collection sync notification.
    */
   private async _afterSave(path: StorageKey): Promise<void> {
-    if (!this.isOpen) {
+    // The flush on close saves too, and its heads must still reach the store: a space root opened from its
+    // directory snapshot trusts them as the heads its stored changes are at.
+    if (this._lifecycleState === LifecycleState.CLOSED) {
       return undefined;
     }
 
@@ -1481,6 +1483,9 @@ export class AutomergeHost extends Resource {
     // Persist heads to SQLite. Non-atomic with the chunk save but recoverable:
     // heads can be reconstructed from chunks via reIndexHeads on restart.
     await RuntimeProvider.runPromise(this._runtime)(this._headsStore.setHeads(documentId, heads));
+    if (!this.isOpen) {
+      return;
+    }
 
     this._headsUpdates.set(documentId, heads);
     invariant(this._onHeadsChangedTask, 'onHeadsChangedTask is not initialized');

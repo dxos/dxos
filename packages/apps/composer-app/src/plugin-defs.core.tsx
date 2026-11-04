@@ -57,6 +57,7 @@ export type PluginConfig = State & {
   externalPlugins?: boolean;
   isDev?: boolean;
   isLocal?: boolean;
+  isPreview?: boolean;
   isPwa?: boolean;
   isTauri?: boolean;
   isStrict?: boolean;
@@ -95,6 +96,7 @@ export const getCorePlugins = ({
   onFatalError,
   externalPlugins = true,
   isLocal,
+  isPreview,
   isPwa,
   isTauri,
   isPopover,
@@ -146,11 +148,11 @@ export const getCorePlugins = ({
       downloadLogs: () => downloadLogs(logStore),
     }),
     OnboardingPlugin.make({ generateDemoSpace: !isLocal && !shareBoot, defaultContent: !shareBoot }),
-    isTauri && !isMobile && !isPopover && NativePlugin.make(),
+    isTauri && !isMobile && !isPopover && NativePlugin.make({ defaultAutoUpdate: isPreview }),
     PreviewPlugin.make(),
     ProcessManagerPlugin.make(),
     ProgressPlugin.make(),
-    !isTauri && isPwa && PwaPlugin.make(),
+    !isTauri && PwaPlugin.make({ defaultAutoUpdate: isPreview, serviceWorker: isPwa }),
     !shareBoot && RegistryPlugin.make({ externalPlugins }),
     !shareBoot && RoutinePlugin.make(),
     !shareBoot && SearchPlugin.make(),

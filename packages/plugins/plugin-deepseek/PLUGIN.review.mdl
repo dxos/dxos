@@ -27,10 +27,10 @@ test asserts deliberately. Of 10 items: 4 done, 3 untested, 0 partial, 0 diverge
 ```mdl
 verdict DeepSeekConnector: The connector entry is contributed on connector Start and its form builds AccessToken + Connection.
   status: done
-  evidence: [github:dxos/dxos/packages/plugins/plugin-deepseek/src/capabilities/connector.ts#createDeepSeekConnectorEntry, github:dxos/dxos/packages/plugins/plugin-deepseek/src/capabilities/connector.ts#deepSeekCredentialForm, github:dxos/dxos/packages/plugins/plugin-deepseek/src/capabilities/index.ts#Connector]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-deepseek/src/capabilities/connector.ts#createDeepSeekConnectorEntry, github:dxos/dxos/packages/plugins/plugin-deepseek/src/capabilities/connector.ts#deepSeekCredentialForm, github:dxos/dxos/packages/plugins/plugin-deepseek/dx.config.ts]
   tests: [github:dxos/dxos/packages/plugins/plugin-deepseek/src/capabilities/connector.test.ts]
   walkthrough:
-    - The lazy module activates on the connector Start event. github:dxos/dxos/packages/plugins/plugin-deepseek/src/capabilities/index.ts#Connector
+    - The lazy module activates on the connector Start event. github:dxos/dxos/packages/plugins/plugin-deepseek/dx.config.ts
     - The entry carries the id, source deepseek.com, label and credential form. github:dxos/dxos/packages/plugins/plugin-deepseek/src/capabilities/connector.ts#createDeepSeekConnectorEntry
     - The form trims the key, rejects an empty one and returns the AccessToken and Connection. github:dxos/dxos/packages/plugins/plugin-deepseek/src/capabilities/connector.ts#deepSeekCredentialForm
 ```

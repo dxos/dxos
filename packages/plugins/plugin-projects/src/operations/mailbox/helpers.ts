@@ -11,10 +11,10 @@ import { invariant } from '@dxos/invariant';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Message, Task } from '@dxos/types';
 
-import { meta } from '#meta';
+import { ProjectsNamespace } from '../../namespace.ts';
 
 /** Foreign-key source for objects the mailbox-project pipelines create (tasks), for idempotent upserts. */
-export const PROJECT_PIPELINE_KEY_SOURCE = meta.profile.key;
+export const PROJECT_PIPELINE_KEY_SOURCE = ProjectsNamespace.key;
 
 /**
  * Finds the named markdown document among the project's artifacts, creating and filing it on first

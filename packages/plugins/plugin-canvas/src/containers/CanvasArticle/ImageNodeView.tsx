@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { type NodeViewProps } from '@dxos/react-ui-canvas/scene';
+import { type NodeViewProps } from '@dxos/react-ui-canvas';
 import * as Icon from '@dxos/react-ui/Icon';
 
 import { imageUrl, isImageNode } from '#model';

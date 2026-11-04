@@ -10,7 +10,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as Script from '@dxos/compute/Script';
 
-import { meta } from '#meta';
+import { ScriptNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -23,7 +23,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeCompanion({
               variant: 'execute',
-              label: ['script-test.label', { ns: meta.profile.key }],
+              label: ['script-test.label', { ns: ScriptNamespace.key }],
               icon: 'ph--terminal--regular',
               data: 'execute',
             }),
@@ -37,7 +37,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeCompanion({
               variant: 'logs',
-              label: ['script-logs.label', { ns: meta.profile.key }],
+              label: ['script-logs.label', { ns: ScriptNamespace.key }],
               icon: 'ph--clock-countdown--regular',
               data: 'logs',
             }),

@@ -388,7 +388,9 @@ test QA-1: Create a board, add a card, delete and restore it
       do: Right-click "QA Board" in the navtree and choose Delete.
       invoke: org.dxos.operation.space.removeObjects { objects: [$given.board], target: $given.collection }
       expect: the row leaves the navtree
+```
 
+```mdl
 test QA-2: Showcase clip
   desc: |
     The 10s showcase clip: Open a new kanban board. Recorded light at 60 fps with no ident, captions or

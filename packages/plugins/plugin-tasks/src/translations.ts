@@ -8,8 +8,9 @@ import { translations as taskTranslations } from '@dxos/react-ui-task/translatio
 import type * as Theme from '@dxos/react-ui/Theme';
 import { Outline, RemoteSession } from '@dxos/types';
 
-import { meta } from '#meta';
 import { Journal } from '#types';
+
+import { TasksNamespace } from './namespace.ts';
 
 export const translations = [
   ...taskTranslations,
@@ -48,7 +49,7 @@ export const translations = [
         'delete-object.label': 'Delete agent session',
         'object-deleted.label': 'Agent session deleted',
       },
-      [meta.profile.key]: {
+      [TasksNamespace.key]: {
         'plugin.name': 'Tasks',
         'task-artifacts.label': 'Artifacts',
         'task-questions.label': 'Questions',
@@ -59,6 +60,7 @@ export const translations = [
         'task-set.tasks.label': 'Tasks',
         'task-create.placeholder': 'Add task',
         'move-task-error.title': 'Could not move task',
+        'update-task-error.title': 'Could not update task',
         'close.label': 'Close',
         'filter.label': 'Filter tasks',
         'filter.placeholder': 'Filter',
@@ -66,6 +68,8 @@ export const translations = [
         'filter-status.label': 'Filter by status',
         'filter-status-all.label': 'Show all statuses',
         'filter-status-none.label': 'Hide all statuses',
+        'filter-milestone.label': 'Filter by milestone',
+        'filter-milestone-all.label': 'Show all milestones',
         'sort.label': 'Order by',
         'sort-manual.label': 'Manual',
         'sort-status.label': 'Status',

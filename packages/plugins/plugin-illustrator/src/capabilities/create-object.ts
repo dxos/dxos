@@ -27,7 +27,7 @@ export default Capability.makeModule(
       ) =>
         Effect.gen(function* () {
           const variants = yield* Capability.getAll(IllustratorCapabilities.VariantProvider);
-          const variant = variants.find((entry) => entry.id === variantId);
+          const variant = IllustratorCapabilities.findVariant(variants, variantId);
           invariant(variant, `Unknown drawing variant: ${variantId}`);
 
           // Build the canvas: variants only supply a factory when they extend the base type.

@@ -20,9 +20,9 @@ import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import { meta } from '#meta';
 import { SpaceOperation } from '#types';
 
+import { SpaceNamespace } from '../../namespace.ts';
 import { SpaceOperationError } from '../../operations/errors.ts';
 import {
   type SharePayload,
@@ -138,9 +138,9 @@ const reportFailure = (error: unknown): Effect.Effect<void, never, Operation.Ser
   Effect.gen(function* () {
     log.warn('share link not opened', { error });
     yield* Operation.invoke(LayoutOperation.AddToast, {
-      id: `${meta.profile.key}/share-link-failed`,
+      id: `${SpaceNamespace.key}/share-link-failed`,
       icon: 'ph--warning--regular',
-      title: ['share-link-failed.title', { ns: meta.profile.key }],
+      title: ['share-link-failed.title', { ns: SpaceNamespace.key }],
       description: error instanceof Error ? error.message : String(error),
     }).pipe(Effect.ignore);
   });

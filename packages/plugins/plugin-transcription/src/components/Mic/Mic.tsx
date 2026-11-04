@@ -17,8 +17,9 @@ import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 
-import { meta } from '#meta';
 import { Settings, TranscriptionCapabilities } from '#types';
+
+import { TranscriptionNamespace } from '../../namespace.ts';
 
 export type MicProps = {
   /** Attendable id of the target editor; keys the recording session. */
@@ -32,7 +33,7 @@ export type MicProps = {
  * this same control that way, rather than a copy of it.
  */
 export const Mic = ({ docId }: MicProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(TranscriptionNamespace.key);
   const [session, setSession] = Hooks.useAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
   const [settings, setSettings] = Hooks.useAtomCapabilityState(TranscriptionCapabilities.Settings);
 

@@ -18,9 +18,9 @@ import {
   RecordingOverlay,
   SlideRecordingsArticle,
 } from '#containers';
-import { meta } from '#meta';
 
 import { RECORDINGS_COMPANION } from '../constants.ts';
+import { RecorderNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -57,7 +57,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'pluginSettings',
-        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
+        filter: AppSurface.settings(AppSurface.Article, RecorderNamespace.key),
         component: RecorderSettings,
         props: ({ data: { subject } }) => ({ subject }),
       }),

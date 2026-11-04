@@ -68,6 +68,9 @@
       "path": "../../core/compute/extractor-lib"
     },
     {
+      "path": "../../core/compute/plugin-builder"
+    },
+    {
       "path": "../../core/compute/progress"
     },
     {

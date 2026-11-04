@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Bounds, type Size, fitBounds, interpolateCamera } from '@dxos/react-ui-canvas';
+import { fitBounds, interpolateCamera } from '@dxos/react-ui-canvas';
+import { type Bounds, type Size } from '@dxos/scene';
 
 import {
   type Cell,

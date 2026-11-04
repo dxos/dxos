@@ -20,6 +20,8 @@ export type WorkingSetRow = {
   objectJson?: string;
   createdAt?: number;
   updatedAt?: number;
+  /** Set on the space root's row when it holds no inline objects: the directory as JSON, read at {@link heads}. */
+  directoryJson?: string;
 };
 
 export type ExportWorkingSetOptions = {

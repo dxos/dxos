@@ -1,0 +1,165 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { describe, expect, test } from 'vitest';
+
+import { project } from '@dxos/react-ui-canvas/3d';
+import { type Resolved3D, type Scene, applyIntent } from '@dxos/scene';
+
+import { extrudeIntent, gizmoIntent } from './gizmo.ts';
+
+const BEFORE: Resolved3D = {
+  id: 'a',
+  type: 'cube',
+  center: { x: 1, y: 0, z: 0 },
+  rotation: { x: 0, y: 10, z: 0 },
+  scale: { x: 1, y: 2, z: 1 },
+};
+
+const SAME = { center: { x: 1, y: 0, z: 0 }, rotation: { x: 0, y: 10, z: 0 }, scale: { x: 1, y: 2, z: 1 } };
+
+describe('gizmoIntent', () => {
+  test('a move drag yields move with the center delta', () => {
+    expect(gizmoIntent('move', 'a', BEFORE, { ...SAME, center: { x: 1.5, y: 2, z: -1 } })).toEqual({
+      kind: 'move',
+      ids: ['a'],
+      delta: { x: 0.5, y: 2, z: -1 },
+    });
+  });
+
+  test('a rotate drag yields degrees', () => {
+    expect(gizmoIntent('rotate', 'a', BEFORE, { ...SAME, rotation: { x: 0, y: 55, z: 0 } })).toEqual({
+      kind: 'rotate',
+      ids: ['a'],
+      delta: { x: 0, y: 45, z: 0 },
+    });
+  });
+
+  test('a scale drag sets the scale it ends at', () => {
+    expect(gizmoIntent('scale', 'a', BEFORE, { ...SAME, scale: { x: 2, y: 3, z: 1 } })).toEqual({
+      kind: 'update',
+      id: 'a',
+      path: ['scale'],
+      value: { x: 2, y: 3, z: 1 },
+    });
+  });
+
+  test('scaling an element whose object supplies its scale grows it from that scale', () => {
+    // The object scales by 2 and the element sets none; the resolved element is what the gizmo started from.
+    const before: Resolved3D = { id: 'a', type: 'cube', object: 'box', scale: { x: 2, y: 2, z: 2 } };
+    const layout: Scene.LayoutRecord3D = { id: 'l', dim: '3d', elements: { a: { id: 'a', object: 'box' } } };
+    const intent = gizmoIntent('scale', 'a', before, { ...SAME, scale: { x: 3, y: 3, z: 3 } });
+    expect(intent && applyIntent(layout, intent).elements.a.scale).toEqual({ x: 3, y: 3, z: 3 });
+  });
+
+  test('an unchanged transform yields undefined', () => {
+    expect(gizmoIntent('move', 'a', BEFORE, SAME)).toBeUndefined();
+    expect(gizmoIntent('rotate', 'a', BEFORE, SAME)).toBeUndefined();
+    expect(gizmoIntent('scale', 'a', BEFORE, SAME)).toBeUndefined();
+  });
+});
+
+describe('extrudeIntent', () => {
+  const viewport = { width: 800, height: 600 };
+  const camera: Scene.Camera3D = {
+    target: { x: 0, y: 0, z: 0 },
+    yaw: -30,
+    pitch: 20,
+    distance: 10,
+    fov: 0.8,
+    projection: 'perspective',
+  };
+  const point = { x: 0, y: 0.5, z: 0 };
+  const up = { x: 0, y: 1, z: 0 };
+  // The face's normal as the screen shows it: N pixels along it should be the world length N pixels span at its depth.
+  const screenStep = (() => {
+    const from = project(camera, viewport, point);
+    const to = project(camera, viewport, { x: point.x, y: point.y + 1, z: point.z });
+    return from && to ? Math.hypot(to.x - from.x, to.y - from.y) : Number.NaN;
+  })();
+
+  test('dragging a face along its normal by N pixels extrudes by the world length of N pixels at that depth', () => {
+    const intent = extrudeIntent({ id: 'e', target: 'box', normal: up, dragPixels: 50, camera, viewport, point });
+    expect(intent).toMatchObject({ kind: 'extrude', id: 'e', target: 'box', face: up });
+    expect(intent?.kind === 'extrude' && intent.distance).toBeCloseTo(50 / screenStep, 2);
+  });
+
+  test('pushing a face in leaves at least a minor grid unit of the solid, snapping or not', () => {
+    const push = (units: number, step: number, thickness: number, landing = false) => {
+      const intent = extrudeIntent({
+        ...{ id: 'e', target: 'box', normal: up, camera, viewport, point, step, landing, thickness },
+        dragPixels: units * screenStep,
+      });
+      return intent?.kind === 'extrude' ? intent.distance : undefined;
+    };
+    expect(push(-0.5, 0, 3)).toBeCloseTo(-0.5, 2);
+    expect(push(-2.8, 0, 3)).toBeCloseTo(-2.75, 2);
+    expect(push(-5, 0, 3)).toBeCloseTo(-2.75, 2);
+    expect(push(-5, 0.25, 3, true)).toBe(-2.75);
+    // A solid a minor unit thick has nothing to give, so a push in makes nothing.
+    expect(push(-0.5, 0, 0.25)).toBeUndefined();
+    expect(push(-3, 0.25, 0.25, true)).toBeUndefined();
+  });
+
+  test('dragging against the normal gives a negative distance; a tilted normal snaps to its axis', () => {
+    const intent = extrudeIntent({
+      id: 'e',
+      target: 'box',
+      normal: { x: 0.02, y: 0.999, z: -0.01 },
+      dragPixels: -50,
+      camera,
+      viewport,
+      point,
+    });
+    expect(intent).toMatchObject({ face: up });
+    expect(intent?.kind === 'extrude' && intent.distance).toBeLessThan(0);
+  });
+
+  test('with a step, a landing drag ends on whole steps; under half a step makes no intent', () => {
+    const drag = (pixels: number) =>
+      extrudeIntent({
+        id: 'e',
+        target: 'box',
+        normal: up,
+        dragPixels: pixels,
+        camera,
+        viewport,
+        point,
+        step: 0.5,
+        landing: true,
+      });
+    const intent = drag(1.3 * screenStep);
+    expect(intent?.kind === 'extrude' && intent.distance).toBe(1.5);
+    expect(drag(-0.8 * screenStep)).toMatchObject({ distance: -1 });
+    expect(drag(0.2 * screenStep)).toBeUndefined();
+  });
+
+  test('with a step, a drag under way follows the pointer, held on a step it passes within the detent', () => {
+    const drag = (pixels: number) =>
+      extrudeIntent({ id: 'e', target: 'box', normal: up, dragPixels: pixels, camera, viewport, point, step: 1 });
+    expect(drag(1.3 * screenStep)).toMatchObject({ distance: 1.3 });
+    expect(drag(2 * screenStep - 4)).toMatchObject({ distance: 2 });
+  });
+
+  test("a face pulled near another body's side is held flush on it, ahead of the grid; a landing within the detent too", () => {
+    // The face is at y 0.5; a body above starts at y 1.6, which the face meets after 1.1.
+    const boxes = { above: { min: { x: -1, y: 1.6, z: -1 }, max: { x: 1, y: 2, z: 1 } } };
+    const pull = (units: number, landing = false) => {
+      const intent = extrudeIntent({
+        ...{ id: 'e', target: 'box', normal: up, camera, viewport, point, step: 0.25, landing, boxes, side: 0.5 },
+        dragPixels: units * screenStep,
+      });
+      return intent?.kind === 'extrude' ? intent.distance : undefined;
+    };
+    expect(pull(1.08)).toBeCloseTo(1.1, 3);
+    expect(pull(1.08, true)).toBeCloseTo(1.1, 3);
+    expect(pull(0.6, true)).toBe(0.5);
+  });
+
+  test('a drag too short to be one makes no intent', () => {
+    expect(
+      extrudeIntent({ id: 'e', target: 'box', normal: up, dragPixels: 2, camera, viewport, point }),
+    ).toBeUndefined();
+  });
+});

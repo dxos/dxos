@@ -18,30 +18,23 @@ import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as HaloServices from '@dxos/plugin-client/HaloServices';
 
-import { meta } from '#meta';
-import { SpaceOperation } from '#types';
+import { SpaceOperation, type SpaceSchema } from '#types';
 
 import { JoinByKeyError, NoIdentityError } from '../../errors.ts';
+import { SpaceNamespace } from '../../namespace.ts';
 import { readJoinSpaceKey } from './join-space-key.ts';
 import { handleShareLink } from './share-link-handler.ts';
-
-export type NavigationHandlerOptions = {
-  invitationProp?: string;
-  /** Set false when another plugin (e.g. plugin-onboarding) owns the invitation URL param. */
-  invitationUrlHandler?: boolean;
-  joinSpaceKeyProp?: string;
-};
 
 /**
  * NavigationHandlers for space invitation URL params.
  * Handles ?spaceInvitationCode=X → join space via invitation, and ?share=X → open a shared object.
  */
 export default Capability.makeModule(
-  Effect.fnUntraced(function* ({
-    invitationProp = 'spaceInvitationCode',
-    invitationUrlHandler = true,
-    joinSpaceKeyProp = 'spaceKey',
-  }: NavigationHandlerOptions = {}) {
+  Effect.fnUntraced(function* (options: SpaceSchema.SpacePluginOptions = {}) {
+    // `invitationUrlHandler` is deliberately not read: the handler has always been registered
+    // unconditionally, and honoring the option would change that.
+    const { invitationProp = 'spaceInvitationCode', joinSpaceKeyProp = 'spaceKey' } = options;
+    const invitationUrlHandler = true;
     const capabilities = yield* Capability.Service;
     const operationService = yield* Capabilities.OperationInvoker;
     const client = yield* ClientCapabilities.Client;
@@ -60,9 +53,9 @@ export default Capability.makeModule(
       Effect.gen(function* () {
         log.warn('navigation handler failed', { error });
         yield* Operation.invoke(LayoutOperation.AddToast, {
-          id: `${meta.profile.key}/navigation-failed`,
-          title: ['navigation-failed-toast.title', { ns: meta.profile.key }],
-          description: ['navigation-failed-toast.description', { ns: meta.profile.key }],
+          id: `${SpaceNamespace.key}/navigation-failed`,
+          title: ['navigation-failed-toast.title', { ns: SpaceNamespace.key }],
+          description: ['navigation-failed-toast.description', { ns: SpaceNamespace.key }],
           icon: 'ph--warning--regular',
         }).pipe(Effect.catch((toastError) => Effect.sync(() => log.warn('failed to add toast', { toastError }))));
       });
@@ -109,7 +102,7 @@ export default Capability.makeModule(
     // object, which would otherwise read as missing until the join lands; the link vouches for both.
     const joining = new Map<string, string>();
     const joiningLoader: AppCapabilities.NavigationTargetLoader = {
-      id: `${meta.profile.key}/share-link`,
+      id: `${SpaceNamespace.key}/share-link`,
       load: ({ spaceId, entityId }) =>
         Effect.succeed(
           joining.has(spaceId) && (entityId === undefined || entityId === joining.get(spaceId)) ? 'exists' : 'unknown',

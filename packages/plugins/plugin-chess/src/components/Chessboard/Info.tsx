@@ -13,8 +13,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
-
+import { ChessNamespace } from '../../namespace.ts';
 import { type ExtendedChessModel } from './types.ts';
 
 const INFO_NAME = 'Chessboard.Info';
@@ -28,7 +27,7 @@ export type InfoProps = Util.ThemedClassName<
 >;
 
 export const Info = ({ classNames, orientation = 'white', onOrientationChange, onClose, ...props }: InfoProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ChessNamespace.key);
   const { model } = useGameboardContext<ExtendedChessModel>(INFO_NAME);
 
   return (
@@ -89,7 +88,7 @@ type HistoryProps = Util.ThemedClassName<{
 }>;
 
 const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ChessNamespace.key);
   const moveIndex = useAtomValue(model.moveIndex);
   const label = model.game.isGameOver()
     ? model.game.isCheckmate()

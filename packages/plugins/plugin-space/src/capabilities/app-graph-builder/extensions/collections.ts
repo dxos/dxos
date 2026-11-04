@@ -31,9 +31,9 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ArchivedAnnotation, isArchivable } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { meta } from '#meta';
 import { SpaceCapabilities, SpaceOperation } from '#types';
 
+import { SpaceNamespace } from '../../../namespace.ts';
 import { resolveCollectionObjectPath } from '../../../util/index.ts';
 import {
   ADD_TO_COLLECTION_LABEL,
@@ -102,7 +102,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
           AppNode.makeGroup({
             id: GraphPath.GroupSegments.content,
             type: GraphPath.GroupTypes.content,
-            label: ['nav-tree-group-content.label', { ns: meta.profile.key }],
+            label: ['nav-tree-group-content.label', { ns: SpaceNamespace.key }],
             icon: 'ph--files--regular',
             space,
             position: 200,
@@ -133,7 +133,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
             type: COLLECTIONS_SECTION_TYPE,
             data: null,
             properties: {
-              label: ['collections-section.label', { ns: meta.profile.key }],
+              label: ['collections-section.label', { ns: SpaceNamespace.key }],
               icon: 'ph--folder--regular',
               iconHue: 'indigo',
               role: 'branch',
@@ -148,13 +148,11 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
       },
     }),
 
-    // Root collection objects under the Collections virtual node. Shares the `object` urlKey with the
-    // nested-collection `objects` connector below so an object is addressed the same way wherever it
-    // sits in the collection tree (the key names the *collection subgraph*, not the container's type;
-    // the database subgraph addresses the same object under `db`).
+    // Root collection objects under the Collections virtual node. Declares no URL binding: a static one
+    // over the same path would also claim nested objects, as `<collection>+<object>`, so the `objects`
+    // binding below addresses an object by its own id at every depth, the root included.
     AppGraphBuilder.createExtension({
       id: 'collections',
-      url: { key: 'object', kind: 'item', path: [GraphPath.GroupSegments.content, GraphPath.Segments.collections] },
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         return node.type === COLLECTIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();

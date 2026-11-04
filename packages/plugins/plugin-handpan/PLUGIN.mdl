@@ -223,7 +223,9 @@ test QA-1: Calibrate and play in the simulated session
     - name: Stop
       do: Click the mic button.
       expect: the button is no longer red
+```
 
+```mdl
 test QA-2: Showcase clip
   desc: |
     The 10s showcase clip: Play a melody around the handpan. Recorded light at 60 fps with no ident, captions or

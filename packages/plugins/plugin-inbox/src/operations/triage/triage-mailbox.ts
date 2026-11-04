@@ -3,10 +3,12 @@
 //
 
 import * as DecisionModel from 'effect/ai/DecisionModel';
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Semaphore from 'effect/Semaphore';
 
 import { AiService, ExtractionModel } from '@dxos/ai';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Obj, Ref, Tag } from '@dxos/echo';
@@ -237,7 +239,18 @@ const handler = InboxOperation.TriageMailbox.pipe(
           };
         }),
         { concurrency: InboxOperation.TRIAGE_MAILBOX_CONCURRENCY },
-      ).pipe(Effect.provide(AiService.decisionModel(DECISION_MODEL)));
+      ).pipe(
+        Effect.provide(AiService.decisionModel(DECISION_MODEL)),
+        // Only a terminal status ends the mailbox's meter, so a run that stops early must still send one.
+        Effect.onError((cause) =>
+          Effect.sync(() =>
+            reportStatus(
+              processed,
+              Cause.hasInterruptsOnly(cause) ? Progress.STATUS_CANCELLED : Progress.STATUS_FAILED,
+            ),
+          ),
+        ),
+      );
 
       const count = (predicate: (verdict: (typeof verdicts)[number]) => boolean) => verdicts.filter(predicate).length;
       const labelled = count((result) => result.labelled);
@@ -245,8 +258,18 @@ const handler = InboxOperation.TriageMailbox.pipe(
       const urgent = count((result) => result.urgent);
       const tasks = verdicts.reduce((sum, result) => sum + result.tasks, 0);
 
-      yield* Database.flush();
+      yield* Database.flush().pipe(
+        Effect.onError((cause) =>
+          Effect.sync(() =>
+            reportStatus(
+              processed,
+              Cause.hasInterruptsOnly(cause) ? Progress.STATUS_CANCELLED : Progress.STATUS_FAILED,
+            ),
+          ),
+        ),
+      );
       log.info('triage: done', { processed, labelled, needsReply, urgent, tasks, skipped });
+      reportStatus(processed, Progress.STATUS_COMPLETE);
 
       return { processed, labelled, needsReply, urgent, tasks, skipped };
     }),

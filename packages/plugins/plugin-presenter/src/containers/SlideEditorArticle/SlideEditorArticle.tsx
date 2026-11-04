@@ -51,9 +51,9 @@ import {
   slotBefore,
   surfaceSnippet,
 } from '#markdown';
-import { meta } from '#meta';
 import { Presentation, PresenterOperation, SlideEditorViewState, SlideViewState } from '#types';
 
+import { PresenterNamespace } from '../../namespace.ts';
 import { SlidePreview } from '../SlidePreviewArticle/SlidePreview.tsx';
 import { slideCompletion } from './slide-completion.ts';
 import { slideHighlight } from './slide-highlight.ts';
@@ -109,7 +109,7 @@ type SlideEditorContentProps = Pick<SlideEditorArticleProps, 'subject'>;
 
 /** The markdown editor; publishes its cursor and applies the preview's selection requests. */
 const SlideEditorContent = ({ subject }: SlideEditorContentProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(PresenterNamespace.key);
   const themeMode = UiHooks.useThemeMode();
   const registry = useContext(RegistryContext);
   const { controller, state: toolbarState } = useEditorContext('SlideEditorContent');

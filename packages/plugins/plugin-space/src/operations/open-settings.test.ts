@@ -15,23 +15,21 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { DXN } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { PublicKey } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Harness from '@dxos/plugin-testing/Harness';
-import { ComplexMap } from '@dxos/util';
 
-import { SpacePlugin } from '#plugin';
+import * as SpacePlugin from '#meta';
 import { SpaceCapabilities, SpaceOperation } from '#types';
 
-await Harness.preload({ plugins: [ClientPlugin.make({}), SpacePlugin({})] });
+await Harness.preload({ plugins: [ClientPlugin.make({}), SpacePlugin.make({})] });
 
 describe('SpaceOperation.OpenSettings', () => {
   test('closes the companion once the settings are open', async ({ expect }) => {
     const calls: { op: string; input: unknown }[] = [];
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), SpacePlugin({}), makeRecordingLayoutPlugin(calls)],
+      plugins: [ClientPlugin.make({}), SpacePlugin.make({}), makeRecordingLayoutPlugin(calls)],
     });
 
     const client = harness.get(ClientCapabilities.Client);
@@ -88,7 +86,6 @@ const ephemeralState = () =>
     sdkMigrationRunning: {},
     navigableCollections: false,
     viewersByObject: {},
-    viewersByIdentity: new ComplexMap<PublicKey, Set<string>>(PublicKey.hash),
     mergePreview: undefined,
     lastMergeAt: undefined,
   }).pipe(Atom.keepAlive);

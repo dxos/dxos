@@ -62,13 +62,17 @@ op DeleteTake
   input: { slide: Slide, take: Variant }
   output: { slide, take, index: number, main: boolean }
   effects: [echo:write]
+```
 
+```mdl
 op RestoreTake
   key: org.dxos.operation.recorder.restoreTake
   desc: Re-adds a deleted take and its file at its place among the slide's takes, and its main mark.
   input: { slide, take, index: number, main: boolean }
   effects: [echo:write]
+```
 
+```mdl
 op SelectTake
   key: org.dxos.operation.recorder.selectTake
   desc: Marks a take as its slide's main take.
@@ -85,20 +89,26 @@ component RecordButton
     the AudioContext and opens the microphone (processing off) and the screen or camera when set, then presents the
     deck from its first slide. Disabled while a recording starts or runs; shows why the last start failed.
   props: { subject: Presentation }
+```
 
+```mdl
 component RecordingOverlay
   desc: >
     Over a deck being recorded (PresenterSurface.Overlay): the 3-2-1 count-in, then, centered at the top, REC, the
     recording's length, the time left on the slide when it has a desired length (red once over), and a compact level
     meter that shows a readout only to warn (NO SIGNAL, CLIP).
   props: { subject: Presentation }
+```
 
+```mdl
 component LevelMeter
   desc: >
     Peak meter over -60..0 dBFS: the target band -12..-3 marked, a peak-hold marker for 1.5s, CLIP above -1 dBFS,
     and NO SIGNAL after 2s of digital silence.
   props: { peakDb?, holdDb?, rmsDb?, silent?, clip?, compact? }
+```
 
+```mdl
 component RecordingsPanel
   desc: >
     The layout both Recordings companions share: the toolbar, a full-width RecordingList (a react-ui-list Listbox with
@@ -106,7 +116,9 @@ component RecordingsPanel
     selection: a click or the arrow keys move it, Space plays or stops it, a double-click opens it), and the current
     row's player docked in the status bar, with no download menu.
   props: { toolbar, statusbar, children }
+```
 
+```mdl
 component SlideRecordingsArticle
   desc: >
     The Recordings companion of a Slide, on RecordingsPanel. The toolbar records a new take of the slide (the deck
@@ -115,7 +127,9 @@ component SlideRecordingsArticle
     slide's desired length, then a circle that a green check circle fills on the main take (it makes a take main), Play (in the status bar) and
     Delete (undoable; it discards an unsaved take).
   props: { slide: Slide }
+```
 
+```mdl
 component PresentationRecordingsArticle
   desc: >
     The Recordings companion of a Presentation, on RecordingsPanel. The toolbar records every slide (a take per
@@ -123,7 +137,9 @@ component PresentationRecordingsArticle
     columns: a circle (a green check circle when the slide has a main take), the title, take count, main take's length, desired
     length, then Play (its main take); a double-click opens the slide.
   props: { presentation: Presentation }
+```
 
+```mdl
 component RecorderSettings
   desc: The plugin settings: microphone and camera pickers, the video source, and Test microphone with the meter.
 ```
@@ -141,18 +157,24 @@ feat F-1: Record
   req F-1.7: A take that cannot be saved stays listed with Save again and Discard.
   req F-1.8: While recording, the deck shows REC, the recording's length and a level meter with NO SIGNAL and CLIP warnings, but no level readout, centered at the top.
   req F-1.9: While recording a slide with a desired length, the overlay shows the time left on it, and how far over once past.
+```
 
+```mdl
 feat F-2: Slide takes
   req F-2.1: A Slide has a Recordings companion listing its takes, newest first, with the main take marked.
   req F-2.2: A take's row has a check that makes it the main take, Play, and Delete; a delete can be undone.
   req F-2.4: Both Recordings companions share one layout: a toolbar, a keyboard-navigable list, and the current row's player in the status bar.
   req F-2.3: Each take shows its length against the slide's desired length, flagged when over.
+```
 
+```mdl
 feat F-3: Presentation voice-over
   req F-3.1: A Presentation has a Recordings companion listing each presented slide with its main take's length against its desired length.
   req F-3.2: A slide's row has Play (its main take) and a double-click opens the slide; Play all plays every main take in slide order.
   req F-3.3: Download saves the main takes, in slide order, as one WAV file.
+```
 
+```mdl
 feat F-4: Settings
   req F-4.1: The settings choose the microphone, the video source (none, screen, camera) and the camera.
   req F-4.2: Test microphone opens the chosen microphone on the level meter without recording.

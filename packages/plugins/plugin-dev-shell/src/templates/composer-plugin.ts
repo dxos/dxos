@@ -23,6 +23,8 @@ const DEV_SERVER_COMMAND = `node_modules/.bin/vite temp/plugins/${FOLDER}`;
 
 // Loading the plugin is the reader's click, not a task, so a chat can run the plan end to end on its own.
 const DEV_SHELL: Templates.Variant = {
+  id: 'org.dxos.project.composerPluginDevServer',
+  label: 'Composer Plugin (Dev Server)',
   skill: SKILL_KEY,
   instructions: `${Templates.PARENT_INSTRUCTIONS}
 

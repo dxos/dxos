@@ -7,6 +7,7 @@ import * as Actor from './Actor.ts';
 import * as AnchoredTo from './AnchoredTo.ts';
 import * as Channel from './Channel.ts';
 import * as ContentBlock from './ContentBlock.ts';
+import * as CreatedFrom from './CreatedFrom.ts';
 import * as DraftMessage from './DraftMessage.ts';
 import * as Employer from './Employer.ts';
 import * as Event from './Event.ts';
@@ -28,7 +29,6 @@ import * as PullRequest from './PullRequest.ts';
 import * as RemoteSession from './RemoteSession.ts';
 import * as Repo from './Repo.ts';
 import * as SpaceInvitationMessage from './SpaceInvitationMessage.ts';
-import * as SpecDocument from './SpecDocument.ts';
 import * as Task from './Task.ts';
 import * as TaskMigration from './TaskMigration.ts';
 import * as TaskSet from './TaskSet.ts';
@@ -59,6 +59,7 @@ export {
   AnchoredTo,
   Channel,
   ContentBlock,
+  CreatedFrom,
   DraftMessage,
   Employer,
   Event,
@@ -80,7 +81,6 @@ export {
   RemoteSession,
   Repo,
   SpaceInvitationMessage,
-  SpecDocument,
   Task,
   TaskMigration,
   TaskSet,

@@ -2,8 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as ProjectsPlugin from './ProjectsPlugin.ts';
+export * as ProjectsPlugin from '#meta';
 export * from '#operations';
 export * from '#skills';
 export * from '#types';
+export * as ProjectGraph from './ProjectGraph.ts';
+export * as ProjectHooks from './ProjectHooks.ts';
+export * as SpecCommands from './SpecCommands.ts';
 export * as Templates from './Templates.ts';

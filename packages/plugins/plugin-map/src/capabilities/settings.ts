@@ -8,9 +8,9 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as KvsStore from '@dxos/effect/KvsStore';
 
-import { meta } from '#meta';
 import { MapCapabilities } from '#types';
 
+import { MapNamespace } from '../namespace.ts';
 import { Settings } from '../types/Settings.ts';
 
 /**
@@ -21,14 +21,14 @@ import { Settings } from '../types/Settings.ts';
 export default Capability.makeModule(() =>
   Effect.sync(() => {
     const settingsAtom = KvsStore.make({
-      key: meta.profile.key,
+      key: MapNamespace.key,
       schema: Settings,
       defaultValue: (): Settings => ({}),
     });
 
     return [
       Capability.contribute(AppCapabilities.Settings, {
-        prefix: meta.profile.key,
+        prefix: MapNamespace.key,
         schema: Settings,
         atom: settingsAtom,
       }),

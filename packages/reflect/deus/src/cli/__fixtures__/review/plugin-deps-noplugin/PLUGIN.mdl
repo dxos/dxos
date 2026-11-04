@@ -1,0 +1,9 @@
+---
+id: org.example.plugin.sample
+---
+
+```mdl
+plugin SamplePlugin: Sample.
+  id: org.example.plugin.sample
+  dependsOn: [org.example.plugin.a]
+```

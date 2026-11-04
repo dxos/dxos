@@ -7,9 +7,8 @@ import { describe, test } from 'vitest';
 import { activateHeadlessPlugins } from '@dxos/app-toolkit/testing';
 import { Type } from '@dxos/echo';
 
+import * as MapPlugin from '#meta';
 import { Map, MapOperation } from '#types';
-
-import * as MapPlugin from './MapPlugin.ts';
 
 describe('MapPlugin in workerd', () => {
   test('activates headless and contributes its operations and types', async ({ expect }) => {

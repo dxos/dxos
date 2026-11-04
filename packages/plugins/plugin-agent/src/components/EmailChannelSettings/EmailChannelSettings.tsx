@@ -11,8 +11,9 @@ import * as Banner from '@dxos/react-ui/Banner';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 
-import { meta } from '#meta';
 import { AgentEmail } from '#types';
+
+import { AgentNamespace } from '../../namespace.ts';
 
 export type EmailChannelSettingsProps = {
   /** Scopes the toolbar to the host plank's attention; without one it is always enabled. */
@@ -39,21 +40,21 @@ export const EmailChannelSettings = ({
   onConnect,
   onDisconnect,
 }: EmailChannelSettingsProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AgentNamespace.key);
   const running = status?.running ?? false;
   const menuActions = useMenuBuilder(
     () =>
       MenuBuilder.make()
-        .root({ label: ['email-mailbox-actions.label', { ns: meta.profile.key }] })
+        .root({ label: ['email-mailbox-actions.label', { ns: AgentNamespace.key }] })
         // The panel's name leads and takes the free space, which keeps the actions at the end.
-        .text('title', { label: ['email-mailbox.title', { ns: meta.profile.key }] })
+        .text('title', { label: ['email-mailbox.title', { ns: AgentNamespace.key }] })
         // One toggle, as Activity's: connect while stopped, disconnect while running; reconnecting applies edits.
         .action(
           running ? 'disconnect' : 'connect',
           {
             label: [
               running ? 'email-mailbox-disconnect.label' : 'email-mailbox-connect.label',
-              { ns: meta.profile.key },
+              { ns: AgentNamespace.key },
             ],
             icon: running ? 'ph--plugs-connected--regular' : 'ph--plugs--regular',
             disabled: busy,
@@ -89,7 +90,7 @@ export const EmailChannelSettings = ({
 EmailChannelSettings.displayName = 'EmailChannelSettings';
 
 const MailboxBanner = ({ status, error }: Pick<EmailChannelSettingsProps, 'status' | 'error'>) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AgentNamespace.key);
   const message = error ?? status?.error;
   if (message) {
     return (
@@ -119,7 +120,7 @@ export type EmailChannelCreateProps = {
 
 /** The form that gives an agent its address; saving creates the email channel, which is then connected separately. */
 export const EmailChannelCreate = ({ values, onCreate }: EmailChannelCreateProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AgentNamespace.key);
   return (
     <Form.Root<AgentEmail.Properties> schema={AgentEmail.Properties} values={values} onSave={onCreate}>
       <Form.Viewport>

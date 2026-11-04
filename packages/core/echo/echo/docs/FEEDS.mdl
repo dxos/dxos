@@ -1,0 +1,1349 @@
+---
+id: org.dxos.echo.feeds
+name: Feeds
+version: 0.1.0
+---
+
+# Feeds: branches, threads and conversations
+
+Status: Rich agreed the requirements on 2026-10-25. This document also gives a review of the trajectory
+design (dxos/dxos#13782) and a counter-proposal. The counter-proposal is for discussion with Dima. The
+code implements forks, the first phase [D-2]: the fork flag on the block, the inferred branch, the
+branches table and the walk. `Feed.heads`, `Feed.branches`, partial sync, merge and close are not in the
+code.
+
+Rich and Dima reviewed the design on 2026-10-26. The decisions of
+that review are in the changelog ([D-2] to [D-20]).
+
+This document combines the previous design documents for feeds. The source documents are in
+[`feeds/`](./feeds), beside this document. Each source document gives all of its reasons:
+
+| Source                                                       | What it decided                                                                         | State                         |
+| ------------------------------------------------------------ | --------------------------------------------------------------------------------------- | ----------------------------- |
+| [soft-fork.md](./feeds/soft-fork.md)                         | Rewind in one feed, with a lineage for each item in `@meta` (`Feed.PARENT_KEY`).        | Done (#12387)                 |
+| [live-objects.md](./feeds/live-objects.md)                   | Feed items are live objects. An update appends the full object again. A scale roadmap.  | Done (#12235). Roadmap        |
+| [agent-feed-messages.md](./feeds/agent-feed-messages.md)     | The queue and the alarms of an agent are in its feed as annotated records.              | Done. #13782 replaces it      |
+| [private-threads.md](./feeds/private-threads.md)             | Four designs for hidden agent threads. It recommends a child feed for each thread.      | Analysis only                 |
+| [thread-channel-merge.md](./feeds/thread-channel-merge.md)   | `Thread` and `Channel` are one concept. It recommends one conversation type.            | Analysis only                 |
+| `plugin-review/docs/COMMENT-FEEDS.md`                        | Comment threads on a feed that the thread owns. The assistant replies in a hidden chat. | Stage 1 in #14206             |
+| `compute/trajectory` README and `LIGHT-THREADS.mdl` (#13782) | Chat feeds become a log of `Trajectory.Event`s. Threads are ids on events.              | Open PR                       |
+
+## Extensions
+
+This document uses these extension dialects.
+
+| Term       | URI                         |
+| ---------- | --------------------------- |
+| `feat`     | `org.dxos.mdl.feat@1.0`     |
+| `type`     | `org.dxos.mdl.type@1.0`     |
+| `module`   | `org.dxos.mdl.module@1.0`   |
+| `table`    | `org.dxos.mdl.table@1.0`    |
+| `decision` | `org.dxos.mdl.decision@1.0` |
+| `question` | `org.dxos.mdl.question@1.0` |
+
+## Principle
+
+Comments, AI chats and message threads are the same thing. Each is an ordered branch of messages from
+several participants. Some participants can be agents. The difference is the container object that points
+at the branch:
+
+| Container      | Adds                                    |
+| -------------- | --------------------------------------- |
+| Comment thread | an anchor on a subject, and a status    |
+| Chat           | a model, instructions, and tasks        |
+| Channel        | an external backend (Bluesky, email, …) |
+
+Thus storage needs one model, and the containers stay thin. This document has the same conclusion as
+[thread-channel-merge.md](./feeds/thread-channel-merge.md), one level down. That document merges the
+container types. This document gives the containers a common store.
+
+## Requirements
+
+```mdl
+feat F-1: Model
+
+  req F-1.1: Feed. A feed is one logical append log of ECHO objects. Usually these objects are
+    `Message` objects. A feed also holds the records that its users need (bindings, turn markers,
+    alarms).
+
+  req F-1.2: Branch tree. A feed is a tree of branches. Each branch has a parent branch and a fixed
+    fork point. A read of a branch gives the items of its ancestors up to the fork point, and then the
+    items of the branch. Branches are lightweight: they need **no additional objects in the ECHO
+    graph**. The `Feed` object can hold a map or an index of its branches, but the feed is
+    self-contained.
+
+  req F-1.3: Rewrite. You can upsert an item by id, atomically. A reader sees the old version or the
+    new version. A reader never sees the two versions, and a reader never sees no version. Use an
+    upsert to edit a message, for a reply that replaces its pending line, and to stream partial output.
+    The feed accepts an update of an object only on the branch of the object. A change on a different
+    branch is a fork, and it must merge back into the main branch [D-12].
+
+  req F-1.4: Logical removal. You can remove a branch from reads, indexes and sync. Its items stay in
+    the log until retention removes them.
+
+  req F-1.5: Rewind. A resume from an earlier item creates a branch at that point and removes the old
+    branch [F-1.4]. Rewind is not a separate mechanism.
+
+  req F-1.6: Owner. A branch has an owner [D-8].
+
+  req F-1.7: Agent branches. An agent creates a new branch when the owner of the base branch is a
+    different device [D-9].
+```
+
+```mdl
+feat F-2: Read, index and sync
+
+  req F-2.1: Index all or main. Indexing is a separate layer, and a feed can have no index. The index
+    of a feed holds all branches or only the main branch. It does not hold a selected subset of
+    branches. The default is the main branch only [D-10]. A feed of messages from people indexes all
+    branches. A feed whose items mutate objects indexes only the main branch [D-11]. A query can have a
+    scope of a set of branches and a time range. The query gives the newest items first, and it applies
+    the limit after the branch filter.
+
+  req F-2.2: Changed heads. Each branch has a head. One cheap call gives the heads that changed since
+    cursor C. The call does not scan items. Triggers use this call.
+
+  req F-2.3: Partial sync. A client syncs all branches or a subset of branches. A client can sync one
+    branch with its ancestors up to the fork point, without the remaining branches of the tree.
+
+  req F-2.4: Two orders. Readers can use the two orders. The EDGE position converges across peers.
+    The local order never changes under a reader, thus a cached fold stays valid.
+```
+
+```mdl
+feat F-3: Uses
+
+  req F-3.1: AI chat, comments and messaging all use this model.
+
+  req F-3.2: Feed kinds. There are three kinds of feed: feeds that mutate objects (upserts), feeds of
+    messages from people, and feeds of AI history (trajectories). One feed does not mix these kinds
+    [D-13].
+
+  req F-3.3: A feed for each object. At the application level, an object (a document, a spreadsheet, a
+    canvas) has a ref to a feed, as a chat has a ref to a feed. The comments plugin operates on the feed
+    of the object. The target is one feed for the comments of an object and one feed for its agent
+    operations. ECHO does not give each object a feed yet [D-14]. A feed for each object is independent
+    of the branches in a feed [D-16].
+
+  req F-3.4: One logical session. An object has one logical session, and the session has branches. The
+    application can create separate sessions, but it does not have to [D-15].
+```
+
+```mdl
+feat F-4: Cross-cutting
+
+  req F-4.1: Hidden by construction. A default read covers one branch. Thus a private branch never
+    gets to a reader that did not ask for it.
+
+  req F-4.2: Several writers. The system never misattributes concurrent appends. The view of a turn
+    is fixed when the turn starts. A reader can detect an item that arrives late.
+
+  req F-4.3: Cost. A subject can have many branches, and there can be many subjects. A new branch
+    costs approximately one record.
+
+  req F-4.4: Retention. Each branch can have its own trim policy. A trim of a branch never trims its
+    ancestors.
+
+  req F-4.5: Permissions. The design does not prevent a branch that has a smaller audience than its
+    parent. No code does this yet.
+```
+
+```mdl
+feat F-5: Walk
+
+  req F-5.1: Forward walk. A reader can walk a feed forward from the base of the root branch to a target
+    branch that it names before the walk starts. The default target is the main branch [D-40].
+
+  req F-5.2: Backward walk. A reader can walk a feed backward from an item to the base of the root
+    branch, through each base branch on the way [D-40].
+
+  req F-5.3: Cursor. A cursor encodes the position of the walk and the branch that the walk is on. Thus a
+    walk that is among interleaved items of other branches does not show those items [D-41].
+
+  req F-5.4: Fork points. A walk can include the fork points that it meets, so that the reader sees other
+    branches start from the items that it walks. Otherwise a walk shows only the items of the branches
+    that the reader asked for [D-42].
+
+  req F-5.5: Local cursor. The walk is part of the API to query a feed by local cursor [D-43].
+```
+
+Merge and close. Merges and branch cancel are out of scope of this design [D-50]. Forks come first, and
+merge and close are a follow-up [D-2]. These points are agreed for that follow-up:
+
+- Close and merge are two different operations. A branch can close without a merge. Then its parent does
+  not know that the branch closed [D-3].
+- A merge tells the parent branch that the branch was finalized into it. The core does nothing with a
+  merge. A reader sees the merge message when it iterates the parent [D-3].
+- A merge folds in one branch at a time, and the merge sits on the main line [D-4].
+
+## What exists
+
+### Feed and blocks
+
+A `Feed` is an ECHO object. The feed store (`FeedStore`, `org.dxos.feed`) keeps the items of a feed as
+blocks.
+
+```mdl
+type Block
+  desc: |
+    A feed item in the feed store. A block holds `actorId`, `sequence`, `prevActorId`,
+    `prevSequence`, a timestamp and the encrypted payload.
+  fields:
+    position: only EDGE sets it, from one counter for each space and namespace. Thus you can compare positions across the feeds of a space.
+    insertionId: local to the device. #13782 shows it as local order (`Filter.feedCursor({ order: 'local' })`, `Feed.getLocalCursor`); this spec names that field `positions` [D-55].
+```
+
+- **Upsert.** `Obj.update` on a feed item appends the full object again under its id. The index keeps
+  the latest block for each id. For concurrent writers, the last flush wins for each object. (Refer to
+  [live-objects.md](./feeds/live-objects.md). Stage 3 of its roadmap adds versions for writes.)
+- **Delete.** `Feed.remove` appends a tombstone. The index merges the tombstone onto the previous
+  snapshot.
+- **Options.** `Feed.indexing` (on or off, with no partial mode) and `Feed.retention` (`maxLength`,
+  `maxAge`) apply to one full feed (#14199, `org.dxos.echo` [F-7]).
+- **Sync.** A client pulls the full feed. (Refer to live-objects.md. Stage 2 of its roadmap is a
+  bounded tail.)
+
+### Soft fork (a lineage for each item)
+
+An item can name the item that it continues from (`Feed.PARENT_KEY` in `@meta`). `Feed.history` starts
+at the head, goes back, and removes the items that a fork abandoned. `Feed.rewindFrom` holds a pending
+rewind. The design of soft fork ([soft-fork.md](./feeds/soft-fork.md)) rejected three alternatives. These
+alternatives are important for this document:
+
+- **Lineage on the block**: two writers already fork the block chain. Thus a block parent cannot tell
+  the difference between a deliberate fork and a race. Also, this alternative is a change to the wire,
+  SQL and EDGE.
+- **Sidecar fork markers** (a `Fork` item that captures all items after it): the system misattributes a
+  writer that did not see the marker to the branch.
+- **Branch state on the `Feed` object**: the object (Automerge) and the blocks replicate on different
+  paths. Thus a fork can become visible before or after the items that it describes.
+
+The design deferred three items: a list of branches, a stored head for each branch, and a branch filter
+in queries. (A `limit` truncates before `history` resolves.)
+
+### Hard fork (`SessionLink`)
+
+`ForkChat` creates a new feed. The first record of the new feed points at a message in the source feed.
+`SessionStore.reifyHistory` prepends the source up to that message. The cutoff is fixed, the order is by
+`created`, and only the first link counts.
+
+### Private threads (analysis)
+
+[private-threads.md](./feeds/private-threads.md) compared four designs:
+
+- tags on items in one feed (A)
+- a child feed for each thread (B)
+- a hidden chat for each thread (C)
+- real branches in one feed (D).
+
+It recommended B for two reasons. A leaks by default. D needs an indexed branch column, and the index
+does not have this column. Annotations are post-filters, thus a filter of a feed by tag scans the full
+feed.
+
+### Comments (stage 1, #14206)
+
+`Thread` 0.3.0 owns a feed of `Message`s. The comment agent runs a hidden `Chat` on the same feed. The
+comment UI hides the synthetic prompts and the tool traffic of the agent with a filter on visible blocks.
+This is a small example of the failure of design A.
+
+### Trajectory (#13782)
+
+Chat feeds become an append-only log of immutable `Trajectory.Event`s:
+
+```mdl
+type Trajectory.Event
+  desc: |
+    An immutable event of a chat feed. Each event has `thread`, `prev`, `sender`, `created` and a
+    tagged `payload`.
+  fields:
+    thread?: the id of the `threadOpen` or `turnBegin` that opened its thread. It is not set for main.
+    prev: the head of that thread for the writer.
+```
+
+```mdl
+type threadOpen
+  desc: |
+    Opens a thread. `threadMerge`, `threadClose` and `threadWait` end, close or join a thread. A turn
+    is also a thread. `fork` continues a different feed up to a fixed event. `rewind` discards main
+    from an event.
+  fields:
+    mode: fork | fresh | light
+    from: { feed?, thread?, event }
+```
+
+- Reducers fold the feed in local order into the views that the UI, the agent and the prompt need.
+  SQLite keeps checkpoints of the folded state.
+- New chat feeds have indexing off.
+
+## Review of the trajectory design
+
+The table compares the trajectory design with the requirements:
+
+| Req     | Trajectory                                                                                    | Verdict |
+| ------- | --------------------------------------------------------------------------------------------- | ------- |
+| [F-1.1] | Items are `Trajectory.Event`s with the content as a payload, not arbitrary ECHO objects.      | Gap     |
+| [F-1.2] | Threads are ids on events. No extra objects. Nested. A fixed origin (`from.event`).           | Meets   |
+| [F-1.3] | Events are immutable. An edit or a replaced pending line is a new event for the reducer.      | Partial |
+| [F-1.4] | `threadClose { status: cancelled }`.                                                          | Meets   |
+| [F-1.5] | `rewind` discards main from an event. You cannot rewind a thread.                             | Partial |
+| [F-2.1] | Chat feeds have no index. The thread id is in the payload, and no index can filter by it.     | Gap     |
+| [F-2.2] | A checkpoint head for each trajectory and reducer, not for each thread.                       | Gap     |
+| [F-2.3] | The feed is the sync unit. You cannot sync one thread alone.                                  | Gap     |
+| [F-2.4] | Local order for folds. The EDGE position is also available.                                   | Meets   |
+| [F-3.1] | Agent chat only. Comments and channels hold `Message`s.                                       | Gap     |
+| [F-4.1] | `TrajectoryStore` is the only reader, and it filters by thread. A fold sees all threads.      | Partial |
+| [F-4.2] | `prev`, `from.event`, `PromptState.stale`, the first consume wins.                            | Meets   |
+| [F-4.3] | One event for each thread opener.                                                             | Meets   |
+| [F-4.4] | Retention applies to one full feed.                                                           | Gap     |
+| [F-4.5] | For each feed.                                                                                | Gap     |
+
+The concurrency model [F-4.2] and the cost model [F-1.2], [F-4.3] are the strongest parts. We recommend
+that the design keeps them.
+
+All the gaps have one cause: **the branch logic is in `@dxos/trajectory`, in the
+event payload. Thus ECHO cannot see it.** The index cannot filter by thread. Sync cannot select a thread.
+Retention cannot target a thread. Only agent chats can use it.
+
+## Proposal: branches in the feed layer
+
+Move the thread fields of the trajectory out of the payload, into the feed layer. Then all feeds have
+these fields, and each ECHO object can be in a branch. Trajectory keeps its event vocabulary and its
+reducers. ECHO gives it indexing, partial sync and a policy for each branch.
+
+1. **Branch membership on the block.** Each block has a fork flag, which is part of the sync protocol
+   and is not encrypted [D-51]. The branch is not stored. It is inferred from the fork flag and the
+   predecessor of the block [D-51], [D-53]:
+   - **Fork flag set**: the block is the base of a new branch. The predecessor of the block is the fork
+     point in the parent branch [D-28]. The branch id is the block id (`<sequence>@<actorId>`) of this
+     base block [D-27].
+   - **Fork flag not set**: the block continues the branch of its predecessor. The predecessor is the
+     head of that branch, as the writer sees it [D-30], [D-35].
+   - **No predecessor**: the first block of a feed is the base of the root branch [D-31].
+
+   The writer sets the predecessor of each block, thus a branch can fork at an earlier item [D-28]. Two
+   writers that continue the same branch at the same time give two blocks with the same predecessor.
+   This is a race, not a fork, because neither block has the fork flag [D-35]. An update of a base item
+   appends a block without the fork flag, thus the item stays on its branch [D-54]. `Feed.readBranch`
+   gives the view of one branch: the items of its ancestors up to each fork point, then its own items
+   [D-23].
+
+   The fork flag and the predecessor travel in clear with the block that they describe. Thus EDGE can
+   infer the branch of a block without decrypting it, and the system never misattributes a writer that
+   did not see a fork. There are no new ECHO objects.
+
+2. **Branch policy on the `Feed` object.** `Feed.branches` (below) extends the feed options of #14199.
+   It holds only policy. It never holds membership or heads. Thus the order problem of soft-fork.md does
+   not apply. A policy can arrive before or after an item. The policy changes how the system treats the
+   item. It does not change the branch of the item.
+
+3. **Index by branch.** The indexer stores the branch id in a column on feed items (an `echo-sqlite`
+   migration). The indexer obeys the index mode of the feed: all branches or the main branch [F-2.1],
+   [D-17]. A read of a branch that the index does not hold comes from the feed store [D-25]. A scope with
+   no branch filter reads only the main branch, and `'all'` reads all branches [D-24]. `Scope.feed` (below)
+   pushes the branch filter into SQL, thus `limit` applies after it. Newest first is an `orderBy`.
+
+4. **Heads.** The index keeps the head of each `(feed, branch)` as a position and a local cursor.
+   `Feed.heads` (below) gives the branches whose heads moved. Triggers use it. Reducers use it to decide
+   what to fold again.
+
+5. **Partial sync.** EDGE must select blocks by branch, and it must not decrypt them. The fork flag in
+   clear on the block, with the predecessor, lets EDGE infer the branch of each block [D-51]. The fork
+   flag is the only wire change. How the sync protocol carries it is open. Until this change is in the
+   code, sync stays per feed, and requirement [F-2.3] is not met.
+
+6. **Rewind is a branch.** A rewind to item X opens a branch, with a fork at the predecessor of X. It
+   also sets the old branch to `removed`. `PARENT_KEY` and `rewindFrom` continue to work for old feeds.
+   We can remove them later.
+
+7. **Upsert stays an append of the full object**, and it is atomic for each object. A change to many
+   objects is one batched append.
+
+8. **Containers point at a branch.** A comment thread, a chat or a channel holds `{ feed, branch }`. The
+   comments of a subject are branches of one feed. The turns of the comment agent are branches of the
+   branch of the comment thread. Thus the thread shows only the text that people wrote and the final
+   reply of the agent.
+
+9. **Trajectory on top.** A trajectory thread is a feed branch. `thread` and `prev` move from the event
+   into `@meta`. `threadMerge`, `threadWait` and the turn semantics stay as trajectory events. Reducers
+   read one branch and its ancestors. They do not filter the full feed.
+
+10. **Walks.** A walk is a query that reads the path from the root branch to a target branch, forward or
+    backward, from a local cursor (below). The cursor holds the branch that the walk is on and the last
+    block that the walk gave [D-7], [D-57].
+
+### API
+
+```mdl
+type BranchId
+  desc: |
+    The id of a branch: an opaque branded string. Its value is the block id (`<sequence>@<actorId>`) of
+    the base block of the branch [D-27]. The root branch is `null` in scopes and in the index [D-36].
+  fields:
+    brand: '@dxos/echo/Feed/BranchId'
+```
+
+```mdl
+type FeedItemMeta
+  desc: |
+    The foreign keys in `@meta.keys` of a feed item that the decoder stamps when it reads a block, as it
+    stamps the position [D-62]. The payload does not store them [D-53]. `feed-fork` is the fork flag of
+    the block. `feed-branch` is the inferred branch: the block id of the block for a base block, else the
+    branch of its predecessor [D-51].
+
+    The fork flag tells the same fact as "`branch` is the block id of this block" [D-44]. The flag is
+    necessary data, because the writer sets it before the block id exists.
+
+    A live object that this client wrote gets the same keys when the store confirms the write. The
+    client keeps them in a hidden property, not in `@meta.keys`, thus the write does not notify the
+    subscribers two times [D-66].
+  fields:
+    org.dxos.key.feed-block: BlockId      # the block the item was read from
+    org.dxos.key.feed-branch?: BranchId   # the inferred branch; absent for the root branch [D-36]
+    org.dxos.key.feed-fork?: BlockId      # present on a base block: the fork point, its predecessor
+    org.dxos.key.feed-prev?: BlockId      # the predecessor of the block; absent for the first block
+```
+
+```mdl
+module Feed
+  desc: The members of the Feed module for branches. `Feed.branches` and `Feed.heads` are not built yet.
+  api:
+    BranchId: Schema<BranchId>                                                     # opaque branded string; see type:BranchId.
+    LocalCursor: Schema<LocalCursor>                                               # opaque branded string; see type:LocalCursor.
+    append: (feed, items, { branch?: BranchId, parent? }) => Effect<void>         # continues `branch`, or the root branch when absent [D-63].
+    fork: (feed, items, { at: Item | BlockId }) => Effect<BranchId>               # items[0] is the base block; the predecessor is `at` [D-39], [D-63].
+    getBranch: (item) => BranchId | undefined                                     # undefined for a root item.
+    isFork: (item) => boolean                                                     # true on a base block.
+    getBlockId: (item) => BlockId | undefined                                     # `<sequence>@<actorId>` of the block it was read from.
+    getPredecessor: (item) => BlockId | undefined                                 # the predecessor block; undefined for the first block.
+    readBranch: (itemsInAppendOrder, branch?: BranchId) => { items, shallow }     # ancestors up to each fork point, then the branch.
+    query: (feed, filter, { branches?: (BranchId | null)[] | 'all' }) => QueryResult   # no branches reads the root only [D-24].
+    walk: (feed, filter, { branch?, begin?, forks?, order?: 'asc' | 'desc', limit? }) => QueryResult  # a wrapper of the core walk query [D-58].
+    getLocalCursor: (item) => LocalCursor | undefined                             # the walk resumes after this item.
+    IndexingOptions: { enabled: boolean, mode?: 'all' | 'main' }                  # mode absent is 'main' [D-10].
+    branches: Record<BranchId, { removed?, retention?, name? }>                   # not built; only branch policy, never membership or heads.
+    heads: (feed, { since?: LocalCursor }) => { branch: BranchId, head: LocalCursor }[]  # not built; reads table:branches [D-45].
+```
+
+```mdl
+type LocalCursor
+  desc: |
+    The position of a walk, as an opaque branded string [D-46]. It is local to one device, because it
+    uses the local order of blocks, which never changes under a reader [F-2.4]. Another device cannot
+    use it. The query gives the direction and the target branch, thus the cursor does not hold them
+    [D-56], [D-57].
+  fields:
+    branch: BranchId | null      # the branch that the walk is on; null is the root branch
+    block: BlockId               # the last block that the walk gave; the store finds its local order
+```
+
+```mdl
+module Scope
+  desc: The feed scope with a branch filter or a walk.
+  api:
+    feed: (uri, { branches?: (BranchId | null)[] | 'all', walk?: { branch?: BranchId | null, forks?: boolean } })  # `branches` pushes the branch filter into SQL, thus `limit` applies after it; `walk` reads the path to `branch` [D-57].
+```
+
+```mdl
+module Filter
+  desc: The feed cursor filter, with the order its positions use.
+  api:
+    feedCursor: ({ begin?: Cursor | LocalCursor, end?: Cursor, positions?: 'local' | 'edge' }) => Filter  # `begin` and `end` exclude the item that they name; `positions` defaults to `local` in a walk scope and to `edge` elsewhere [D-55], [D-61].
+```
+
+How the API reads in use:
+
+```ts
+const program = Effect.gen(function* () {
+  const feed = yield* Database.add(Feed.make({ name: 'chat' }));
+
+  // a1 is the first item, thus the base of the root branch.
+  yield* Feed.append(feed, [a1, a2]);
+
+  // b1 is the base of a new branch; its predecessor is a1. The branch id is b1's block id.
+  const branch: Feed.BranchId = yield* Feed.fork(feed, [b1], { at: a1 });
+
+  // b2 continues the branch; its predecessor is b1, the head of the branch.
+  yield* Feed.append(feed, [b2], { branch });
+
+  // a3 continues the root branch; its predecessor is a2, not b2.
+  yield* Feed.append(feed, [a3]);
+
+  const root = yield* Feed.query(feed, Filter.type(Message)).run; // a1, a2, a3
+  const own = yield* Feed.query(feed, Filter.type(Message), { branches: [branch] }).run; // b1, b2
+
+  // A branch with its ancestors.
+  const all = yield* Feed.query(feed, Filter.type(Message), { branches: 'all' }).run;
+  const { items } = Feed.readBranch(Array.sort(all, byPosition), branch); // a1, b1, b2
+});
+```
+
+A walk is a query [D-57]. The scope names the target branch, `Filter.feedCursor` gives the start, and
+`Order.natural` gives the direction [D-56]. A walk accepts only the natural order. The natural order of
+a walk scope is the walk order. `Feed.walk` is a wrapper of this query [D-58].
+
+The walk goes through the branch tree in `table:branches`, segment by segment [D-47]:
+
+- **Forward (`Order.natural('asc')`).** The walk finds the path from the root branch to the target
+  branch with the recursive query below. For each branch on the path, it gives the blocks of that branch
+  in local order. It stops at the fork point of the next branch on the path. On the target branch it
+  gives all blocks. With a cursor, it starts after the block of the cursor.
+
+- **Backward (`Order.natural('desc')`).** The walk starts at the block of the cursor, or at the head of
+  the target branch when there is no cursor. It gives the blocks of that branch in reverse local order,
+  to the base of the branch. Then it goes to the fork point in the parent branch and continues there,
+  until it gets to the base of the root branch. With no `branch` in the scope, the target is the branch
+  of the cursor.
+
+- **Fork points.** With `forks: true`, after each block, the walk also gives the base items of the
+  branches that fork at that block [D-48]. It does not give their continuations.
+
+- **Next page.** `Feed.getLocalCursor` of the last item of a page gives the cursor of the next page
+  [D-59].
+
+```ts
+const program = Effect.gen(function* () {
+  // Walk forward from the root base to the branch, 50 items at a time, with the forks met on the way.
+  let cursor: Feed.LocalCursor | undefined;
+  while (true) {
+    const page = yield* Database.query(
+      Query.select(Filter.and(Filter.type(Message), Filter.feedCursor({ begin: cursor, positions: 'local' })))
+        .from(Scope.feed(feedUri, { walk: { branch, forks: true } }))
+        .orderBy(Order.natural('asc'))
+        .limit(50),
+    ).run;
+    const last = page.at(-1);
+    if (last === undefined) {
+      break;
+    }
+    for (const item of page) {
+      if (Feed.isFork(item) && Feed.getBranch(item) !== branch) {
+        // Another branch starts at the item before this one.
+      }
+    }
+    cursor = Feed.getLocalCursor(last);
+  }
+
+  // Walk backward from b2 to the root base. The cursor excludes b2: b1, a1.
+  const back = yield* Database.query(
+    Query.select(Filter.feedCursor({ begin: Feed.getLocalCursor(b2), positions: 'local' }))
+      .from(Scope.feed(feedUri, { walk: {} }))
+      .orderBy(Order.natural('desc')),
+  ).run;
+
+  // The same reads with the wrapper.
+  const next = yield* Feed.walk(feed, Filter.type(Message), { branch, begin: cursor, forks: true, limit: 50 }).run;
+  const back2 = yield* Feed.walk(feed, Filter.everything(), { begin: Feed.getLocalCursor(b2), order: 'desc' }).run;
+});
+```
+
+### Storage
+
+The branch adds one local column to the feed store and one column to the index. The tables show the
+full schema after the change.
+
+```mdl
+table feeds: One feed of a space, in one namespace.
+  store: feed store (feed_migrations)
+  columns:
+    feedPrivateId: INTEGER PRIMARY KEY AUTOINCREMENT  # local row id; blocks reference it
+    spaceId: TEXT NOT NULL
+    feedId: TEXT NOT NULL                             # the entity id of the Feed object
+    feedNamespace?: TEXT                              # data | trace
+    options?: TEXT                                    # json FeedOptions, with IndexingOptions.mode; NULL = defaults
+  key: feedPrivateId
+  unique:
+    - (spaceId, feedId)
+```
+
+```mdl
+table blocks: One block (one version of one item) of a feed, in local append order.
+  store: feed store (feed_migrations)
+  columns:
+    insertionId: INTEGER PRIMARY KEY AUTOINCREMENT    # local append order
+    feedPrivateId: INTEGER NOT NULL REFERENCES feeds(feedPrivateId)
+    position?: INTEGER                                # EDGE order; NULL until EDGE acknowledges the block
+    sequence: INTEGER NOT NULL                        # with actorId, the block id `<sequence>@<actorId>`
+    actorId: TEXT NOT NULL
+    prevSequence?: INTEGER                            # the predecessor block: the head of the item's branch, or the fork point of a base block [D-28]
+    prevActorId?: TEXT                                # NULL for the first block of the feed
+    fork: INTEGER NOT NULL DEFAULT 0                  # 1 on the base block of a branch; replicated in clear, part of the sync protocol [D-51]
+    timestamp: INTEGER NOT NULL                       # append time, ms since epoch
+    data: BLOB NOT NULL                               # the encoded item, with its @meta.feed; ciphertext when sealed
+    encryptionKeyId?: TEXT
+    iv?: BLOB
+    branch?: TEXT                                     # the inferred branch id, kept on insert, not replicated; NULL = root [D-38], [D-53]
+  key: insertionId
+  indexes:
+    - idx_blocks_feedPrivateId_timestamp(feedPrivateId, timestamp): retention by age without a scan
+    - idx_blocks_feedPrivateId_branch(feedPrivateId, branch, insertionId): the head of one branch without a scan [D-38]
+  new: fork, branch, idx_blocks_feedPrivateId_branch
+```
+
+```mdl
+table branches: One branch of a feed. The store keeps it as blocks arrive; it is not replicated [D-45].
+  store: feed store (feed_migrations)
+  columns:
+    feedPrivateId: INTEGER NOT NULL                   # the feeds row; no foreign key, since the table is derived from the blocks
+    branchId: TEXT NOT NULL                           # the BranchId: the block id of the base block; '' for the root branch [D-64]
+    baseBranchId?: TEXT                               # the branch this branch forks from; NULL for the root branch [D-49]
+    baseInsertionId: INTEGER NOT NULL                 # local order of the base block
+    forkInsertionId?: INTEGER                         # local order of the fork point (the predecessor of the base block); NULL for the root
+    headInsertionId: INTEGER NOT NULL                 # local order of the newest block of the branch
+    headSequence: INTEGER NOT NULL                    # with headActorId, the block id of the head: the predecessor of the next continuation
+    headActorId: TEXT NOT NULL
+  key: (feedPrivateId, branchId)
+  indexes:
+    - idx_branches_feedPrivateId_head(feedPrivateId, headInsertionId): the heads that moved since a cursor, without a scan [F-2.2]
+    - idx_branches_feedPrivateId_base(feedPrivateId, baseBranchId, forkInsertionId): the forks that a walk meets in one segment [F-5.4]
+  new: table
+```
+
+The full path from a branch to the root is one recursive query over `branches` [D-49]:
+
+```sql
+WITH RECURSIVE path(branchId, baseBranchId, forkInsertionId, depth) AS (
+  SELECT branchId, baseBranchId, forkInsertionId, 0
+    FROM branches WHERE feedPrivateId = :feed AND branchId = :target
+  UNION ALL
+  SELECT b.branchId, b.baseBranchId, b.forkInsertionId, path.depth + 1
+    FROM branches b JOIN path ON b.feedPrivateId = :feed AND b.branchId = path.baseBranchId
+)
+SELECT * FROM path ORDER BY depth DESC;  -- root first, target last
+```
+
+```mdl
+table objectMeta: The latest version of one object of a space, or of one item of a feed.
+  store: index (entity_meta_migrations)
+  columns:
+    recordId: INTEGER PRIMARY KEY AUTOINCREMENT
+    objectId: TEXT NOT NULL
+    queueId: TEXT NOT NULL DEFAULT ''                 # the feed id; '' for an automerge object
+    queueNamespace: TEXT NOT NULL DEFAULT ''
+    spaceId: TEXT NOT NULL
+    documentId: TEXT NOT NULL DEFAULT ''
+    entityKind: TEXT NOT NULL
+    typeDXN: TEXT NOT NULL
+    deleted: INTEGER NOT NULL
+    source?: TEXT
+    target?: TEXT
+    parent?: TEXT
+    version: INTEGER NOT NULL
+    createdAt?: INTEGER
+    updatedAt?: INTEGER
+    queuePosition?: INTEGER                           # EDGE position of the item's latest block
+    convergenceKey?: TEXT
+    parentId?: TEXT
+    sourceId?: TEXT
+    targetId?: TEXT
+    annotations?: TEXT                                # json
+    queueInsertionId?: INTEGER                        # local order of the item's latest block
+    queueBranch?: TEXT                                # the item's BranchId; NULL = root branch and automerge objects [D-32], [D-36]
+  key: recordId
+  indexes:
+    - idx_object_index_objectId(spaceId, objectId): read by id
+    - idx_object_index_typeDXN(spaceId, typeDXN): read by type
+    - idx_object_index_version(version): reindex by version
+    - idx_object_index_parent(spaceId, parent): children of an object
+    - idx_object_index_updatedAt(updatedAt): recent changes
+    - idx_object_index_createdAt(createdAt): order by creation
+    - idx_object_index_queuePosition(queueId, queuePosition): cursor reads of a feed
+    - idx_object_index_queueObjectId(spaceId, queueId, objectId): natural reads of one feed
+    - idx_object_index_convergenceKey(spaceId, convergenceKey): merge by convergence key
+    - idx_object_index_parentId(spaceId, parentId): normalized parent ids
+    - idx_object_index_sourceId(spaceId, sourceId): normalized relation sources
+    - idx_object_index_targetId(spaceId, targetId): normalized relation targets
+    - idx_object_index_queueInsertionId(spaceId, queueId, queueInsertionId): retention row removal
+    - idx_object_index_queueBranch(spaceId, queueId, queueBranch, objectId): a bounded read of one branch
+  new: queueBranch, idx_object_index_queueBranch
+```
+
+## Questions
+
+The trajectory is a separate design, thus this spec does not ask about it [D-52]. The questions this spec asked, and the
+decisions that answer them, are in the changelog.
+
+## Changelog
+
+```mdl
+question Q-1: Chat feeds have indexing off because no code read them through the index. With a branch column and push-down, do you want an index for chat feeds again? Or do you want no index for chat feeds, and an index only for comment branches and channel branches?
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:dmaretskyi
+```
+
+```mdl
+question Q-2: Soft fork rejected block-level lineage. Is a block-level branch id (item 5 of the proposal) an acceptable wire change? The reasons are different: a lineage edge on blocks mixed races with forks, but a branch id does not.
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:dmaretskyi
+```
+
+```mdl
+question Q-3: Is merge a concept of the feed layer, or does merge stay a trajectory event?
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:dmaretskyi
+```
+
+```mdl
+question Q-4: How does the sync protocol carry the fork flag?
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.2, F-2.3]
+```
+
+```mdl
+question Q-5: Does a reader of the main line see branch messages and merge messages, but not always close messages?
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  context: Asked for user:richburdon, who owns the reader of the main line.
+```
+
+```mdl
+question Q-6: An update of an item appends a new block. Does a walk give the item at the place of its first block or of its latest block?
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.1, F-5.2]
+  options:
+    - Latest block: the walk gives each item one time, with its latest content, and the cursor of the item is a block on the walk. An item that changes after a cursor comes again on a later page.
+    - First block: the walk keeps the order in which the items started, but the content of the item is from a later block than the cursor.
+```
+
+```mdl
+decision D-1: The requirements [F-1] to [F-4] are agreed.
+  date: 2026-10-25
+  by: user:richburdon
+  affects: [F-1, F-2, F-3, F-4]
+  source: https://github.com/dxos/dxos/commit/caacb31de6bcee8329a90cafeed41a9a5fcff44a
+```
+
+```mdl
+decision D-2: Forks come first. Merge and close are a follow-up.
+  date: 2026-10-26
+  by: user:dmaretskyi
+  affects: [F-1]
+```
+
+```mdl
+decision D-3: Close and merge are two different operations. A branch can close without a merge, and then its parent does not know that it closed. A merge tells the parent branch that the branch was finalized into it. The core does nothing with a merge; a reader sees the merge message when it iterates the parent.
+  date: 2026-10-26
+  by: user:richburdon
+  answers: Q-3
+  affects: [F-1]
+```
+
+```mdl
+decision D-4: A merge folds in one branch at a time, and the merge sits on the main line.
+  date: 2026-10-26
+  by: user:dmaretskyi
+  affects: [F-1]
+```
+
+```mdl
+decision D-5: The fork point is a flag.
+  date: 2026-10-26
+  by: user:dmaretskyi
+  affects: [F-1.2]
+```
+
+```mdl
+decision D-6: The branch id is the id of the base block of the branch.
+  date: 2026-10-26
+  by: user:dmaretskyi
+  affects: [F-1.2]
+```
+
+```mdl
+decision D-7: A cursor is (branch, pos), and a cursor can contain branch points.
+  date: 2026-10-26
+  by: user:dmaretskyi
+  affects: [F-2.2, F-2.4]
+```
+
+```mdl
+decision D-8: A branch has an owner.
+  date: 2026-10-26
+  by: user:dmaretskyi
+  affects: [F-1.6]
+```
+
+```mdl
+decision D-9: An agent creates a new branch when the base branch is owned by a different device.
+  date: 2026-10-26
+  by: user:dmaretskyi
+  affects: [F-1.7]
+```
+
+```mdl
+decision D-10: The index of a feed holds either all branches or only the main branch, never a selected subset; the default is the main branch only, and a feed of messages from people indexes all branches.
+  date: 2026-10-26
+  by: user:richburdon
+  answers: Q-1
+  affects: [F-2.1]
+```
+
+```mdl
+decision D-11: Indexing all branches makes sense only for feeds of messages; a feed whose items mutate objects (upserts) indexes only the main branch.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [F-2.1]
+```
+
+```mdl
+decision D-12: The feed accepts an update of an object only on the branch of the object; a change on a different branch is a fork, which must merge back into the main branch.
+  date: 2026-10-26
+  by: user:dmaretskyi
+  affects: [F-1.3]
+```
+
+```mdl
+decision D-13: Feeds that mutate objects, feeds of messages from people and feeds of AI history (trajectories) are not mixed in one feed.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [F-3.2]
+```
+
+```mdl
+decision D-14: At the application level, an object (a document, a spreadsheet, a canvas) has a ref to a feed, as a chat session has; the comments plugin operates on the feed of the object, with one feed for comments and one for agent operations. ECHO does not give every object a feed yet.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [F-3.3]
+```
+
+```mdl
+decision D-15: An object has one logical session with branches, not many sessions; the application can still create separate sessions.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [F-3.4]
+  why: Separate sessions for one object multiply today, which is wasteful and confuses the user.
+```
+
+```mdl
+decision D-16: A feed for each object is independent of branches in a feed.
+  date: 2026-10-26
+  by: user:dmaretskyi
+  affects: [F-3.3]
+```
+
+```mdl
+decision D-17: `Feed.branches` no longer holds an `indexing` value for each branch; the indexer reads one index mode of the feed (all branches or the main branch). Fills in [D-10].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.1]
+  why: '[D-10] rules out a selected subset of branches, so a per-branch indexing flag can express a state the design forbids.'
+  rejected:
+    - Keep per-branch `indexing` and validate that it is all on or only main on; two sources of truth for one setting.
+```
+
+```mdl
+decision D-18: Approve [D-10].
+  date: 2026-10-26
+  by: user:dmaretskyi
+```
+
+```mdl
+decision D-19: Approve [D-12].
+  date: 2026-10-26
+  by: user:richburdon
+```
+
+```mdl
+decision D-20: Approve [D-16].
+  date: 2026-10-26
+  by: user:richburdon
+```
+
+```mdl
+decision D-21: The base block of a branch is the first item of the branch, thus the branch id is the id of that item. Fills in [D-6].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.2]
+  why: The block at the fork point in the parent cannot name the branch, because two branches can fork at the same item.
+```
+
+```mdl
+decision D-22: The fork-point flag is the `org.dxos.key.feed-fork` key on the first item of a branch; its value is the id of the fork item, and the parent branch is the branch of that item. Fills in [D-5].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.2]
+  why: The fork item already states its own branch, so a second copy of the parent branch id can only disagree with it.
+  rejected:
+    - Store the parent branch id and the fork item id in the key; two sources for one fact.
+```
+
+```mdl
+decision D-23: A read of a branch cuts each ancestor at its fork point by append order; `Feed.readBranch` does this over items the caller reads, and the scope filter selects by membership only.
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.2]
+  why: Append order is the order `Feed.history` already uses for soft forks, so the two reads agree.
+  rejected:
+    - A version vector of the parent branch in the fork record; more exact under concurrent writers, but nobody has decided it yet.
+```
+
+```mdl
+decision D-24: A feed scope with no branch filter reads only the main branch, in the index, in the feed store and in the unflushed writes of the client; `'all'` reads all branches, and a read of every feed of a space reads only their main branches. Fills in [F-4.1].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4.1, F-2.1]
+  why: '[F-4.1] requires that a private branch never reaches a reader that did not ask for it.'
+```
+
+```mdl
+decision D-25: A feed whose index holds only the main branch serves a read of any other branch from the feed store, and a change of the index mode backfills or deletes the rows of the other branches. Fills in [D-10].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.1]
+  why: A branch read on the default mode must not return nothing just because the index does not hold the branch.
+```
+
+```mdl
+decision D-26: The client rejects an append that moves an existing item to a different branch or fork point with `FeedBranchMismatchError`, and reverts such a change in a background update. The host does not check this yet. Fills in [D-12].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.3]
+  why: The client object core is the one place that knows the branch already written for an item.
+```
+
+```mdl
+decision D-27: The id of a branch is the block id (sequence and actor) of the base block of the branch; in the API it is an opaque branded string.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-1.2]
+  supersedes: D-21
+```
+
+```mdl
+decision D-28: The parent point of a branch is the predecessor of its base block, and the writer sets the predecessor of a block, thus a branch can fork at an earlier item.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-1.2, F-1.5]
+  supersedes: D-22
+```
+
+```mdl
+decision D-29: The fork flag and the branch of an item are fields of its meta, not foreign keys.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-1.2]
+```
+
+```mdl
+decision D-30: Each item has a fork flag: without it the item continues the branch of its predecessor; with it the item is the base of a new branch, and the branch id is the block id of that base.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-1.2]
+```
+
+```mdl
+decision D-31: The first item appended to a feed determines its base branch.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-1.2]
+```
+
+```mdl
+decision D-32: A fork returns the branch id once its base block is written; the client checks the branch of an update against `meta.feed`; the index column holds the branch id, and for a base block the indexer reads it from the block id. Fills in [D-27] and [D-29].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.3, F-2.1]
+  why: The block id of a base block exists only after the write, thus no caller can name the branch before then.
+```
+
+```mdl
+decision D-33: Approve [D-32].
+  date: 2026-10-27
+  by: user:dmaretskyi
+```
+
+```mdl
+decision D-34: An item with no `feed` meta continues the root branch, and the first item of a feed has no fork flag; only a continuation of another branch states `branch`. Fills in [D-29], [D-30] and [D-31].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.2]
+  why: A writer does not always know the block id of the first item of a feed, and the items written before branches need no rewrite.
+  rejected:
+    - Every item states its branch, the root included; a writer must then read the first block before its first append.
+```
+
+```mdl
+decision D-35: The predecessor of a continuation is the head of its branch as the writer sees it; two continuations with the same predecessor are a race, not a fork, because neither has the fork flag. Fills in [D-28] and [D-30].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4.2]
+  why: The fork flag is what tells a deliberate fork from a race, which block lineage alone cannot do (soft-fork.md).
+```
+
+```mdl
+decision D-36: Scopes and the index name the root branch `null`. Fills in [D-31].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.1, F-4.1]
+  why: The root branch has no `branch` field to copy into the index, and `null` keeps a default read on the existing index.
+```
+
+```mdl
+decision D-37: After its first write, a base block keeps `fork: true` and gains `branch` set to its own block id, so a later update of the base item stays on the branch instead of starting a new one. Fills in [D-27] and [D-30].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.3]
+  why: An update appends a new block, and a fork flag alone would make that block the base of another branch.
+```
+
+```mdl
+decision D-38: The feed store keeps a local `branch` column on blocks, not replicated, so the writer finds the head of a branch, and thus the predecessor of a continuation, without a scan. Fills in [D-35].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.2]
+  why: The store sets the predecessor at append time and cannot decrypt items or walk the chain to find a branch head.
+```
+
+```mdl
+decision D-39: A fork is its own call, `Feed.fork(feed, items, { at })`, which returns the branch id; `Feed.append` takes only `branch` and `parent`. Fills in [D-32].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.2]
+  why: The two calls return different things, and a fork names its predecessor while a continuation does not.
+```
+
+```mdl
+decision D-40: A reader can walk a feed in two directions: forward from the base to a target branch named before the walk starts (the main branch by default), or backward from a point to the base through every base branch.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-5.1, F-5.2]
+```
+
+```mdl
+decision D-41: A cursor encodes where the walk is and the branch it is on, since the walk can be in the middle of interleaved items of other branches that the reader does not want to see.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-5.3]
+```
+
+```mdl
+decision D-42: A walk can include the fork points that it meets, so the reader can observe other branches that start from the blocks it walks; otherwise the blocks of other branches are not visible, only the requested ones.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-5.4]
+```
+
+```mdl
+decision D-43: The walk is part of the API to query a feed by local cursor.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-5.5]
+```
+
+```mdl
+decision D-44: The fork flag is the same fact as "`branch` is the block id of the first block of the item"; the flag stays as data because that block id does not exist on the first write. Fills in [D-30] and [D-37].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.2]
+  rejected:
+    - A sentinel value of `branch` (for example `self`) on the first write instead of a flag; it tells the same fact with a magic value.
+```
+
+```mdl
+decision D-45: The feed store keeps a local `branches` table, one row for each branch with its parent, its fork point and its head, so `Feed.heads` and the walk read the branch tree without a scan of the blocks.
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.2, F-5.1, F-5.2, F-5.4]
+  why: A grouped read of `blocks` by branch cannot answer which heads moved since a cursor without reading every branch of every feed.
+```
+
+```mdl
+decision D-46: A local cursor encodes the direction, the target branch, the branch the walk is on and the local order of the last block it gave, as an opaque branded string. Fills in [D-7] and [D-41].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.3]
+  why: The branch and the target together tell which segment of the path the walk is in, so a resumed walk skips the interleaved blocks of other branches.
+```
+
+```mdl
+decision D-47: A forward walk gives each branch on the path in local order up to the fork point of the next branch, and a backward walk gives each branch in reverse local order down to its base, then goes to the fork point. Fills in [D-40].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.1, F-5.2]
+  why: The same cut by append order as [D-23], so `Feed.readBranch` and a walk give the same items.
+```
+
+```mdl
+decision D-48: With fork points on, a walk gives the base item of each branch that forks at a block it walks, right after that block, and not the continuations of that branch. Fills in [D-42].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.4]
+  why: The base item carries the fork flag and the branch id, which is all a reader needs to follow the branch later.
+```
+
+```mdl
+decision D-49: Each row of the branches table stores the id of its base branch, and the full path to the root, when needed, is a recursive SQL query over that table.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-5.1, F-5.2]
+```
+
+```mdl
+decision D-50: Merges and branch cancel are out of scope of this design.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  answers: Q-5
+  affects: [F-1.4]
+```
+
+```mdl
+decision D-51: The fork flag is part of the sync protocol and is not encrypted; the branch of a block is not stored, because it can be inferred from the fork flag and the predecessor.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  answers: Q-2
+  affects: [F-1.2, F-2.3]
+  supersedes: D-29
+```
+
+```mdl
+decision D-52: The trajectory is a separate design; its thread ids, and whether a `Message` can be in a trajectory feed, are outside this spec.
+  date: 2026-10-27
+  by: user:dmaretskyi
+```
+
+```mdl
+decision D-53: The decoder stamps the fork flag and the inferred branch into `@meta.feed` when it reads a block, and the feed store infers the branch of each block on insert (a base block gets its own block id, any other block the branch of its predecessor) and keeps it in `blocks.branch`. Fills in [D-51].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.2, F-2.1, F-2.2]
+  why: The index, the walk and `Feed.getBranch` then read the branch without a walk up the predecessor chain.
+```
+
+```mdl
+decision D-54: An update of a base item appends a block without the fork flag, whose predecessor is the head of the branch of the item, thus the item stays on its branch. Fills in [D-51].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.3]
+  supersedes: D-37
+  why: With the branch inferred from the chain, a fork flag on the update would start a second branch.
+```
+
+```mdl
+decision D-55: `Filter.feedCursor` keeps an explicit field that names the order of its positions, `positions: 'local' | 'edge'`, in place of `order`, because the field does not order the items. Fills in [D-43].
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-5.5]
+```
+
+```mdl
+decision D-56: The direction of a walk comes from `Order.natural('asc' | 'desc')`, thus one query form does the forward walk and the backward walk; a walk accepts only the natural order, and the natural order of a walk scope is the walk order. Fills in [D-40] and [D-46].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.1, F-5.2]
+  why: The query API already has a direction; a second direction option could disagree with it.
+```
+
+```mdl
+decision D-57: A walk is a core query: `Scope.feed(uri, { walk: { branch, forks } })` names the target and the fork points, `Filter.feedCursor({ after })` gives the start, `orderBy` gives the direction and `limit` the page. The local cursor holds only the branch and the block. Fills in [D-43] and [D-46].
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-5.3, F-5.5]
+```
+
+```mdl
+decision D-58: `Feed.walk` stays as a convenience wrapper of the walk query; the docs and the tests show the core query form first.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-5.5]
+```
+
+```mdl
+decision D-59: The cursor of the next page is `Feed.getLocalCursor` of the last item of a page, read from the block id and the branch that the store stamps on the item. Fills in [D-57].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.3]
+  why: A query result holds only items, thus the cursor must come from an item.
+```
+
+```mdl
+decision D-60: Until [Q-6] is answered, a walk gives each item one time, at the place of its latest block on the path, with the content of that block. Fills in [D-57].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.1, F-5.2]
+  why: Then the block of the cursor is the block of the item, and the index also keeps the latest block of each item.
+```
+
+```mdl
+decision D-61: The start of a walk is the existing exclusive field `begin` of `Filter.feedCursor`, not a new field `after`, and `positions` is `local` by default in a walk scope. Fills in [D-55] and [D-57].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.5]
+  why: `begin` already excludes the item that it names, and a second name for the same bound needs a rename of every caller or a shim.
+```
+
+```mdl
+decision D-62: The decoder stamps the block id, the inferred branch, the fork flag (as the fork point) and the predecessor as foreign keys in `@meta.keys`, as it stamps the position, and not as a `feed` section of `@meta`. Fills in [D-53].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.2]
+  why: The store already stamps the position and the block id as foreign keys, and `@meta` has no other section a feed owns.
+```
+
+```mdl
+decision D-63: A writer asks for a continuation with the branch key on the item, and for a fork with an `org.dxos.key.feed-fork-at` key that only `Feed.fork` writes; the host reads both and strips them, and `Feed.fork` appends the base alone first, so the rest continue the branch it returns. Fills in [D-39] and [D-54].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.2, F-1.3]
+  why: An update of a read item carries the stamped branch and so continues it, but a stamped fork flag must not fork again; the branch id of the rest exists only after the base is written.
+```
+
+```mdl
+decision D-64: The branches table names the root branch `''`, not `NULL`, and keeps no head position. Fills in [D-45].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.2]
+  why: A key column with `NULL` is not unique in SQLite, and the head position changes when EDGE orders a block, which no reader of the table needs yet.
+```
+
+```mdl
+decision D-65: Until [Q-4] is answered, the fork flag travels as an optional `fork` field of `FeedProtocol.Block`; a store that does not know the field drops it, and its blocks stay on the root branch. Fills in [D-51].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.2, F-2.3]
+  why: An optional field keeps old and new peers compatible, and EDGE gets it with the next update of `@dxos/feed`.
+```
+
+```mdl
+decision D-66: The append response gives the predecessor of each block it wrote, and the client stamps the keys of a read of that block on its own live object in a hidden property, which the `Feed` getters read first; a newer block from the store clears it. Fills in [D-62].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.3]
+  why: The client ignores the echo of its own block, so without this a walk could not resume after an item this device wrote; in `@meta.keys` the stamp would notify subscribers a second time for each write.
+```
+
+```mdl
+decision D-67: Approve [D-61].
+  date: 2026-10-27
+  by: user:dmaretskyi
+```
+
+```mdl
+decision D-68: Approve [D-65].
+  date: 2026-10-27
+  by: user:dmaretskyi
+  answers: Q-4
+```
+
+```mdl
+decision D-69: A walk gives each item one time, at the place of its first block on the path, with the content of its latest block. Answers [Q-6].
+  date: 2026-10-27
+  by: user:dmaretskyi
+  answers: Q-6
+  affects: [F-5.1, F-5.2]
+  supersedes: D-60
+```
+
+```mdl
+decision D-70: The cursor of an item still names its latest block. A walk resumes after the place of the item that holds that block, so an item that changes after a cursor does not come again. Fills in [D-69].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.5]
+  why: The cursor stays a block of the walk, as [D-57] has it, and a page reads the whole path already, so the place of each item is known.
+```
+
+```mdl
+decision D-71: The questions of this spec use the changelog dialect: each is a `question` in this changelog, and the decision that names it in `answers:` answers it.
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: The question dialect of #14321 landed first; one question format keeps the decision log and the lint consistent across specs.
+  rejected:
+    - Keep `to:`, `status:` and `answer:` on the question beside `by:` — two ways to record one answer.
+```
+
+## Appendix: Extension Definitions
+
+```mdl
+ext module
+  uri: org.dxos.mdl.module@1.0
+  desc: |
+    An ESM namespace module following the DXOS namespace-module styleguide:
+    a PascalCase file in src/, re-exported from index.ts as
+    `export * as <Name> from './<Name>'`. Callers import it as a namespace, so
+    members are unprefixed (`Obj.make`, not `makeObj`). The file path is inferred
+    from the block name (`Obj` -> `src/Obj.ts`).
+  fields:
+    desc?: Prose
+    api: ApiMap         # public members reached as `<Name>.<member>`  (name: TypeExpr # comment)
+```
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap
+    literals?: UnionList
+    extends?: TypeRef[]
+```
+
+```mdl
+ext table
+  uri: org.dxos.mdl.table@1.0
+  desc: |
+    A SQL table a component owns. The identifier is the table name; the inline prose is what one row
+    is. Columns, keys and indexes are the schema after the spec's changes.
+  fields:
+    store: Prose                # the database, and its migration-history table in parentheses
+    columns: FieldMap           # `name[?]: SQLTYPE [constraint …]  # meaning`; `?` allows NULL
+    key?: Prose                 # the primary key, as a column list
+    unique?: ProseList          # other unique keys, as column lists
+    indexes?: ProseList         # `name(columns): why a query needs it`
+    new?: Prose                 # `table`, or the columns this spec adds
+  inline-prose: true
+```
+
+```mdl
+ext question
+  uri: org.dxos.mdl.question@1.0
+  desc: |
+    A design question about the spec. The identifier is `Q-<n>`; the inline prose is the question.
+  fields:
+    to?: UserRef                # user:<handle> — the person who must answer
+    status: open | answered | moot
+    answer?: Prose              # the answer in spec terms; required when status is answered
+    decisions?: RefList         # the changelog decisions that record the answer, e.g. [D-51]
+    affects?: RefList           # block ids the question is about, e.g. [F-1.2]
+    options?: ProseList         # suggested answers
+    note?: Prose                # why the question is moot, or who works on it
+  inline-prose: true
+```

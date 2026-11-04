@@ -24,14 +24,15 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 import * as Menu from '@dxos/react-ui/Menu';
 
-import { meta } from '#meta';
 import { SpaceCapabilities, SpaceOperation, SpaceSchema } from '#types';
+
+import { SpaceNamespace } from '../../namespace.ts';
 
 const SpaceFormSchema = SpaceSchema.SpaceForm;
 
 // TODO(wittjosiah): Handle space migrations here?
 export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const client = useClient();
   const [edgeReplication, setEdgeReplication] = useState(
@@ -221,7 +222,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
         <Form.Content>
           <Form.FieldSet
             label={t('space-properties-settings-verbose.label')}
-            description={t('space-properties-settings.description', { ns: meta.profile.key })}
+            description={t('space-properties-settings.description', { ns: SpaceNamespace.key })}
           >
             <Form.Fields />
           </Form.FieldSet>

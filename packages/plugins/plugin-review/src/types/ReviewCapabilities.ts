@@ -12,7 +12,7 @@ import { ViewState } from '@dxos/react-ui-attention/types';
 import { type Text } from '@dxos/schema';
 import { AnchoredTo, Thread } from '@dxos/types';
 
-import { meta } from '#meta';
+import { ReviewNamespace } from '../namespace.ts';
 
 /** Which version of an object the local user is viewing. Never replicated. */
 export type VersionSelection =
@@ -92,7 +92,7 @@ export const defaultReviewRenderPolicy: ReviewRenderPolicyFn = (mode) =>
     : { showSuggestions: true, showComments: true, editable: true };
 
 export const ReviewRenderPolicy = Capability.make<ReviewRenderPolicyFn>()(
-  `${meta.profile.key}.capability.reviewRenderPolicy`,
+  `${ReviewNamespace.key}.capability.reviewRenderPolicy`,
 );
 
 /**
@@ -103,7 +103,7 @@ export type HistoryProvider = Readonly<{
   id: string;
   getTarget: (object: Obj.Unknown) => Text.Text | undefined;
 }>;
-export const HistoryProvider = Capability.make<HistoryProvider>()(`${meta.profile.key}.capability.historyProvider`);
+export const HistoryProvider = Capability.make<HistoryProvider>()(`${ReviewNamespace.key}.capability.historyProvider`);
 
 export interface ThreadModel {
   root: Thread.Thread;

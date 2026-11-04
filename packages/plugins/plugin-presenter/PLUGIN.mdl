@@ -32,6 +32,8 @@ type Presentation
     navtree node lists `slides`; deleting a slide deletes its `Slide` (and the slide's owned `Text`), while a
     linked object it shows is only unlinked. Deleting the Presentation deletes its slides; linked objects stay.
     Version 0.1.0 held `sections: Ref<Obj>[]` directly; its migration wraps each section in a `Slide`.
+    A plugin-projects showcase is a Presentation (see CreateShowcase); a `Showcase` 0.1.0 migrates into one in
+    place, its markdown the first slide and each artifact a linked slide, so its `Demonstrates` edges still hold.
   fields:
     name?: string
     description?: string
@@ -325,6 +327,26 @@ op TogglePresentation
   note: |
     For a document the path is `<objectPath>/~presenter`; for a Presentation it is the plank's own path.
     Keyboard shortcut: Shift+Cmd+P (macOS), Shift+Alt+P (Windows/Linux).
+```
+
+```mdl
+op CreateShowcase
+  key: org.dxos.operation.projects.createShowcase
+  desc: |
+    Declared by plugin-projects, whose project skill offers it, and implemented here. Makes a Presentation whose
+    first slide is an owned markdown `Text` holding `content` (`# <name>` when it is blank) and whose further
+    slides each link one of `artifacts` in order, such as an image or video `File`, a diagram or a `PullRequest`;
+    each renders through the slide surface fallback. A `Demonstrates` relation goes from the deck to each target.
+    Every target and artifact is loaded before anything is written.
+  input:
+    name: string
+    content: string             # markdown for the first slide
+    targets: Ref<Obj>[]         # the features and tasks it demonstrates
+    artifacts?: Ref<Obj>[]      # one linked slide each
+  output:
+    showcase: Presentation
+  effects: [echo:write]
+  requires: [Database.Service]
 ```
 
 ```mdl
@@ -709,7 +731,9 @@ test QA-1: Preview a document in the companion, then present it
       do: Right-click "QA Slides" in the navtree and choose Delete.
       invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
       expect: the row leaves the navtree and its plank closes
+```
 
+```mdl
 test QA-2: Showcase clip
   desc: |
     The 10s showcase clip: Present a document as slides and page through them. Recorded light at 60 fps with no ident, captions or
@@ -727,7 +751,9 @@ test QA-2: Showcase clip
     - name: Page through
       do: Press the right arrow three times.
       expect: each slide shows in turn
+```
 
+```mdl
 test QA-3: Build and present a Presentation
   desc: Create a Presentation, add a slide, link a markdown document, reorder in the navtree, present it fullscreen, step, exit and reload.
   actors: human
@@ -1434,6 +1460,22 @@ decision D-75: A Slide has an array of takes (plugin-studio Variants, owned by t
   date: 2026-10-26
   by: user:richburdon
   affects: [Slide]
+```
+
+```mdl
+decision D-76: A plugin-projects showcase is a Presentation: its write-up is the first slide and each artifact (an image or video, a diagram, a pull request) a linked slide after it, linked to the features it shows by `Demonstrates`.
+  date: 2026-10-28
+  by: user:dmaretskyi
+  affects: [Presentation, CreateShowcase]
+```
+
+```mdl
+decision D-77: Presenter implements plugin-projects' `CreateShowcase` operation and migrates `Showcase` 0.1.0 into a Presentation in place, so the deck keeps the showcase's id and its `Demonstrates` edges. Fills in [D-76].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [Presentation, CreateShowcase]
+  why: Presenter already depends on plugin-projects through plugin-studio, so only this side can name both the deck and the relation.
 ```
 
 ---

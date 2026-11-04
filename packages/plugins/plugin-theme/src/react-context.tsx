@@ -15,8 +15,9 @@ import * as Toast from '@dxos/react-ui/Toast';
 import { ACCENT_HUES, type AccentHue, applyAccent } from '@dxos/ui-theme';
 import { type ThemeMode } from '@dxos/ui-types';
 
-import { meta } from '#meta';
 import { Settings, ThemeCapabilities } from '#types';
+
+import { ThemeNamespace } from './namespace.ts';
 
 export type ThemePluginOptions = Partial<Pick<Theme.ProviderProps, 'tx' | 'resourceExtensions'>> & {
   appName?: string;
@@ -73,7 +74,7 @@ export default Capability.makeModule(
     // Cross-tab setting changes: `Atom.kvs` does not observe the `storage` event,
     // so re-apply from the written value to keep every tab in the same browser in sync.
     const handleStorage = (event: StorageEvent) => {
-      if (event.key !== meta.profile.key) {
+      if (event.key !== ThemeNamespace.key) {
         return;
       }
       applyTheme(parseSettings(event.newValue));
@@ -88,7 +89,7 @@ export default Capability.makeModule(
       }),
     );
     return Capability.contribute(Capabilities.ReactContext, {
-      id: meta.profile.key,
+      id: ThemeNamespace.key,
       context: ({ children }: { children?: ReactNode }) => {
         const { themeMode } = useAtomValue(themeAtom);
         // Translations are registered in the shared i18next instance by the Translator module; the

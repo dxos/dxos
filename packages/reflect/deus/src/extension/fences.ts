@@ -23,8 +23,10 @@ const BLOCK_TYPE_COLORS: Record<(typeof BLOCK_TYPES)[number], string> = {
   module: 'var(--color-indigo-400)',
   suite: 'var(--color-lime-400)',
   decision: 'var(--color-amber-400)',
+  question: 'var(--color-orange-300)',
   verdict: 'var(--color-green-400)',
   plugin: 'var(--color-fuchsia-400)',
+  uses: 'var(--color-rose-400)',
   table: 'var(--color-red-400)',
 };
 

@@ -3,14 +3,9 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import * as UrlPath from '@dxos/app-toolkit/UrlPath';
-import * as UrlResolution from '@dxos/app-toolkit/UrlResolution';
 import { type Space, SpaceMember_Role } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
@@ -29,20 +24,18 @@ const handler: Operation.WithHandler<typeof SpaceOperation.ShareObject> = SpaceO
   Operation.withHandler(
     Effect.fnUntraced(function* ({ object, access, role = 'editor' }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
-      const builder = yield* Capability.get(AppCapabilities.AppGraph);
-      const { shareableLinkOrigin } = yield* Capability.get(SpaceOperationConfig);
+      const { createObjectUrl } = yield* Capability.get(SpaceOperationConfig);
       const db = Obj.getDatabase(object);
       const space = db && client.spaces.get(db.spaceId);
       if (!space) {
         return yield* Effect.fail(new SpaceOperationError({ message: 'Only an object in a space can be shared.' }));
       }
 
-      const path = UrlResolution.getShareableLinkPath(builder, GraphPath.getObjectPathFromObject(object));
-      if (Option.isNone(path)) {
+      const link = createObjectUrl?.(object);
+      if (!link) {
         return yield* Effect.fail(new SpaceOperationError({ message: 'The object has no URL to share.' }));
       }
-      // The title lets the Composer Worker give the link a named preview in messengers.
-      const url = UrlPath.withTitle(new URL(path.value, shareableLinkOrigin), Obj.getLabel(object));
+      const url = new URL(link);
       if (access === 'restricted') {
         return { url: url.toString(), objects: [object.id], plugins: [] };
       }

@@ -4,21 +4,19 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
-import {
-  type GeneratorCompiler,
-  type GeneratorFrames,
-  GeneratorHost,
-  type GeneratorSource,
-} from '../generator/index.ts';
-import { type View, isGeneratorNode } from '../model/index.ts';
+import { type ModuleCompiler } from '@dxos/animation';
+import { isGeneratorNode } from '@dxos/scene';
+
+import { type GeneratorFrames, GeneratorHost, type GeneratorSource } from '../generator/index.ts';
+import { type RenderList2D } from '../model/index.ts';
 
 export type UseGeneratorFramesOptions = {
-  /** The scene as stored: the worker samples it per step. */
-  scene: View;
+  /** The scene as drawn: what the generators bind to. */
+  scene: RenderList2D;
   /** The clock's time. */
   time: number;
   sources: Readonly<Record<string, GeneratorSource>>;
-  compile?: GeneratorCompiler;
+  compile?: ModuleCompiler;
   createWorker?: () => Worker;
 };
 

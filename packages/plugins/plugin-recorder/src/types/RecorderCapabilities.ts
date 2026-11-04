@@ -9,14 +9,13 @@ import type * as Atom from 'effect/reactivity/Atom';
 import * as Capability from '@dxos/app-framework/Capability';
 import type * as Presentation from '@dxos/plugin-presenter/Presentation';
 
-import { meta } from '#meta';
-
+import { RecorderNamespace } from '../namespace.ts';
 import type * as RecorderSettings from './RecorderSettings.ts';
 import type * as Take from './Take.ts';
 
 /** The recorder's settings (microphone, video source). */
 export const Settings = Capability.makeSingleton<Atom.Writable<RecorderSettings.Settings>>()(
-  `${meta.profile.key}.capability.settings`,
+  `${RecorderNamespace.key}.capability.settings`,
 );
 
 /** A take that could not be saved, held in memory so it is not lost. */
@@ -80,4 +79,4 @@ export interface Recorder {
   discard(id: string): void;
 }
 
-export const Recorder = Capability.makeSingleton<Recorder>()(`${meta.profile.key}.capability.recorder`);
+export const Recorder = Capability.makeSingleton<Recorder>()(`${RecorderNamespace.key}.capability.recorder`);

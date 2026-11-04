@@ -9,17 +9,17 @@ import * as Operation from '@dxos/compute/Operation';
 import { GraphPlugin } from '@dxos/plugin-graph/testing';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
+import * as RegistryPlugin from '#meta';
 import { RegistryOperation } from '#operations';
-import { RegistryPlugin } from '#plugin';
 
-await Harness.preload({ plugins: [RegistryPlugin()] });
+await Harness.preload({ plugins: [RegistryPlugin.make()] });
 
 const graphKey = GraphPlugin.make().meta.profile.key;
 
 describe('RegistryOperation.DisablePlugins', () => {
   test('disables an enabled plugin', async ({ expect }) => {
     const key = 'org.dxos.plugin.testTarget';
-    await using harness = await Harness.createComposerTestApp({ plugins: [RegistryPlugin(), makePlugin(key)] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [RegistryPlugin.make(), makePlugin(key)] });
 
     const { disabled, rejected } = await harness.runPromise(
       Operation.invoke(RegistryOperation.DisablePlugins, { ids: [key] }),
@@ -34,7 +34,7 @@ describe('RegistryOperation.DisablePlugins', () => {
     const dependencyKey = 'org.dxos.plugin.testDependency';
     const dependentKey = 'org.dxos.plugin.testDependent';
     await using harness = await Harness.createComposerTestApp({
-      plugins: [RegistryPlugin(), makePlugin(dependencyKey), makePlugin(dependentKey, [dependencyKey])],
+      plugins: [RegistryPlugin.make(), makePlugin(dependencyKey), makePlugin(dependentKey, [dependencyKey])],
     });
 
     const { disabled, rejected } = await harness.runPromise(
@@ -50,7 +50,7 @@ describe('RegistryOperation.DisablePlugins', () => {
   });
 
   test('rejects a core plugin and leaves it enabled', async ({ expect }) => {
-    await using harness = await Harness.createComposerTestApp({ plugins: [RegistryPlugin()] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [RegistryPlugin.make()] });
 
     const { disabled, rejected } = await harness.runPromise(
       Operation.invoke(RegistryOperation.DisablePlugins, { ids: [graphKey] }),
@@ -62,7 +62,7 @@ describe('RegistryOperation.DisablePlugins', () => {
   });
 
   test('rejects a plugin the host does not have installed', async ({ expect }) => {
-    await using harness = await Harness.createComposerTestApp({ plugins: [RegistryPlugin()] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [RegistryPlugin.make()] });
 
     const { disabled, rejected } = await harness.runPromise(
       Operation.invoke(RegistryOperation.DisablePlugins, { ids: ['org.dxos.plugin.nonexistent'] }),
@@ -75,7 +75,7 @@ describe('RegistryOperation.DisablePlugins', () => {
   test('an already-disabled plugin is not a failure', async ({ expect }) => {
     const key = 'org.dxos.plugin.testTarget';
     await using harness = await Harness.createComposerTestApp({
-      plugins: [RegistryPlugin(), makePlugin(key)],
+      plugins: [RegistryPlugin.make(), makePlugin(key)],
       enabled: [],
     });
 

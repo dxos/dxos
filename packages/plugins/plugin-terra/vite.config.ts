@@ -7,12 +7,8 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     index: 'src/index.ts',
-    TerraPlugin: 'src/TerraPlugin.ts',
-    plugin: 'src/plugin.tsx',
-    capabilities: 'src/capabilities/index.ts',
     components: 'src/components/index.ts',
     containers: 'src/containers/index.ts',
-    meta: 'src/meta.ts',
     translations: 'src/translations.ts',
     Terra: 'src/types/Terra.ts',
     TerraCapabilities: 'src/types/TerraCapabilities.ts',

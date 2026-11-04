@@ -8,13 +8,14 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as KvsStore from '@dxos/effect/KvsStore';
 
-import { meta } from '#meta';
 import { ScriptCapabilities, Settings } from '#types';
+
+import { ScriptNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
     const settingsAtom = KvsStore.make({
-      key: meta.profile.key,
+      key: ScriptNamespace.key,
       schema: Settings.Settings,
       defaultValue: () => ({
         editorInputMode: 'vscode' as const,
@@ -24,7 +25,7 @@ export default Capability.makeModule(() =>
     return [
       Capability.contribute(ScriptCapabilities.Settings, settingsAtom),
       Capability.contribute(AppCapabilities.Settings, {
-        prefix: meta.profile.key,
+        prefix: ScriptNamespace.key,
         schema: Settings.Settings,
         atom: settingsAtom,
       }),

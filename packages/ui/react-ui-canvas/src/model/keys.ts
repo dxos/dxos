@@ -31,6 +31,7 @@ export type KeyAction =
   | 'copy'
   | 'cut'
   | 'paste'
+  | 'duplicate'
   | 'undo'
   | 'redo'
   | 'selectAll'
@@ -38,13 +39,7 @@ export type KeyAction =
   | 'ungroup'
   | 'snap'
   | 'guides'
-  | 'debug'
-  | 'play'
-  | 'stepBack'
-  | 'stepForward'
-  | 'previousKey'
-  | 'nextKey'
-  | 'addKey';
+  | 'debug';
 
 /** Every action's chords; the first is the one shown in labels. */
 export const KEY_BINDINGS: Record<KeyAction, KeyBinding[]> = {
@@ -60,6 +55,7 @@ export const KEY_BINDINGS: Record<KeyAction, KeyBinding[]> = {
   copy: [{ key: 'c', meta: true }],
   cut: [{ key: 'x', meta: true }],
   paste: [{ key: 'v', meta: true }],
+  duplicate: [{ key: 'd', meta: true }],
   undo: [{ key: 'z', meta: true, shift: false }],
   redo: [{ key: 'z', meta: true, shift: true }],
   selectAll: [{ key: 'a', meta: true }],
@@ -68,13 +64,6 @@ export const KEY_BINDINGS: Record<KeyAction, KeyBinding[]> = {
   snap: [{ key: 'g', shift: false }],
   guides: [{ key: ';' }],
   debug: [{ key: 'd' }],
-  // The timeline's (ANIMATION.md §5.8); the view hands them on to the tools while the scene has no timeline.
-  play: [{ key: ' ' }],
-  stepBack: [{ key: ',' }],
-  stepForward: [{ key: '.' }],
-  previousKey: [{ key: '[' }, { key: 'ArrowLeft', meta: true }],
-  nextKey: [{ key: ']' }, { key: 'ArrowRight', meta: true }],
-  addKey: [{ key: 'k', shift: false }],
 };
 
 /** The subset of a keyboard event the bindings read, so tests and non-React callers can pass a literal. */
@@ -88,6 +77,13 @@ export type KeyEventLike = {
 
 /** The command modifier, held: the same test on a pointer event reveals a node's ports for linking. */
 export const hasCommandKey = (event: { metaKey: boolean; ctrlKey: boolean }): boolean => event.metaKey || event.ctrlKey;
+
+/**
+ * A left-button press with the command key held: whatever the tool, the drag moves the view as the hand tool does
+ * (pans in 2D, orbits in 3D), and a press that does not move stays a click.
+ */
+export const isHandDrag = (event: { button: number; metaKey: boolean; ctrlKey: boolean }): boolean =>
+  event.button === 0 && hasCommandKey(event);
 
 export const matchesBinding = (event: KeyEventLike, binding: KeyBinding): boolean => {
   const key =

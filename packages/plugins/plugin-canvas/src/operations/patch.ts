@@ -9,15 +9,14 @@ import { patchSource } from '@dxos/react-ui-canvas/headless';
 
 import { CanvasOperation } from '#types';
 
-import { withCanvasStore } from './patch-store.ts';
+import { canvasSource } from '../model/layout-source.ts';
+import { canvasOf } from './canvas.ts';
 
 const handler: Operation.WithHandler<typeof CanvasOperation.Patch> = CanvasOperation.Patch.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ canvas: ref, from, to, paths }) {
-      return yield* withCanvasStore(ref, ({ canvas, versions }) => ({
-        canvas: canvas.id,
-        ...patchSource(versions, { from, to, paths }),
-      }));
+      const canvas = yield* canvasOf(ref);
+      return { canvas: canvas.id, ...patchSource(canvasSource(canvas), { from, to, paths }) };
     }),
   ),
 );

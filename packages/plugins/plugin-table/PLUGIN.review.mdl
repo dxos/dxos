@@ -90,9 +90,9 @@ verdict onCreateSpace: No onCreateSpace operation or OnCreateSpace capability ex
 ```mdl
 verdict onSchemaAdded: handleTypeAdded creates a Table for the new type, adds it to the space and opens it.
   status: untested
-  evidence: [github:dxos/dxos/packages/plugins/plugin-table/src/types/TableOperation.ts#OnTypeAdded, github:dxos/dxos/packages/plugins/plugin-table/src/operations/on-schema-added.ts, github:dxos/dxos/packages/plugins/plugin-table/src/capabilities/index.ts#OnTypeAdded]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-table/src/types/TableOperation.ts#OnTypeAdded, github:dxos/dxos/packages/plugins/plugin-table/src/operations/on-schema-added.ts, github:dxos/dxos/packages/plugins/plugin-table/dx.config.ts]
   walkthrough:
-    - The OnTypeAdded module listens for SpaceEvents.TypeAdded and invokes the operation. github:dxos/dxos/packages/plugins/plugin-table/src/capabilities/index.ts#OnTypeAdded
+    - The OnTypeAdded module listens for SpaceEvents.TypeAdded and invokes the operation. github:dxos/dxos/packages/plugins/plugin-table/dx.config.ts
     - The handler invokes Create, AddObject, then opens the navigation target. github:dxos/dxos/packages/plugins/plugin-table/src/operations/on-schema-added.ts
   note: Input field is `type`, not `schema`, and `show` is ignored. plugin.test.ts notes the event is not fired in tests.
 ```

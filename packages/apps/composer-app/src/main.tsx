@@ -646,7 +646,7 @@ const main = async () => {
   void client
     .initialize()
     // A boot-cached client initializes before its worker connects, and the worker is still to be taken then.
-    .then(() => client.waitUntilServicesOpen())
+    .then(() => client.waitUntilServicesReady())
     .catch((err) => log.error('client services failed to open', { error: err }))
     // A follower tab never takes the worker, which would otherwise hold its place on the storage lock.
     .finally(() => prespawnedWorker.dispose());
@@ -684,6 +684,7 @@ const main = async () => {
     // local `serve` keeps the lean default plugin set (see `getDefaults` in plugin-defs.tsx).
     isDev: getEnvString(config, 'DX_ENVIRONMENT') === 'dev' || isTrue(getEnvString(config, 'DX_DEV')),
     isLocal: !isTauri && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'),
+    isPreview: getEnvString(config, 'DX_ENVIRONMENT') === 'preview',
     isPwa,
     isTauri,
     isPopover,

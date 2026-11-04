@@ -6,8 +6,9 @@ import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 import { PullRequest } from '@dxos/types';
 
-import { meta } from '#meta';
 import { Walkthrough } from '#types';
+
+import { GitHubNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -32,7 +33,7 @@ export const translations = [
         'delete-object.label': 'Delete walkthrough',
         'object-deleted.label': 'Walkthrough deleted',
       },
-      [meta.profile.key]: {
+      [GitHubNamespace.key]: {
         'plugin.name': 'GitHub',
         'sync-now.label': 'Sync now',
         'sync-toast.success.label': 'Sync complete',

@@ -1,0 +1,847 @@
+---
+id: org.dxos.plugin.lighthouse
+name: LighthousePlugin
+version: 0.1.0
+---
+
+A Composer plugin that is lighthouse's web UI. Lighthouse (an agent that searches the web and keeps what it
+finds as an RDF graph) runs outside Composer, as its workspace daemon, and is reached through its API
+(`lighthouse-api`, routes under `/v1`). The plugin adds a **Research** object to a space: a goal handed to a
+lighthouse search session. Its article follows plugin-commerce's Search: the goal, budget, search engines and Run
+with the session's steering thread on the left, a ranked masonry of what the session found on the right, and the
+selected result's detail in the companion. The person steers the agent, votes on results and reads facets of a
+result on demand; what they keep (the agent's picks and the results they star) is copied into the space, so it is
+shared with the space's members and outlives the lighthouse workspace.
+
+Lighthouse's own code stays in its repository; everything this plugin knows about lighthouse's HTTP routes lives
+in one module, `LighthouseClient`.
+
+## Extensions
+
+| Term        | URI                          |
+| ----------- | ---------------------------- |
+| `type`      | `org.dxos.mdl.type@1.0`      |
+| `op`        | `org.dxos.mdl.op@1.1`        |
+| `component` | `org.dxos.mdl.component@1.0` |
+| `service`   | `org.dxos.mdl.service@1.0`   |
+| `feat`      | `org.dxos.mdl.feat@1.0`      |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`  |
+| `test`      | `org.dxos.mdl.test@1.0`      |
+| `decision`  | `org.dxos.mdl.decision@1.0`  |
+
+## Where things live
+
+| What                                                             | Where                                        |
+| ---------------------------------------------------------------- | -------------------------------------------- |
+| Sessions, trajectories, the graph, the rating model, extensions | Lighthouse (its workspace), via the API      |
+| The Research: goal, budget preset, engines, connection, run      | ECHO, in the space                           |
+| Picks and starred results, as immutable `Finding`s               | ECHO, the Research's feed                    |
+| Stars                                                            | ECHO, the Research's tag index               |
+| Votes                                                            | Lighthouse (the session's feedback)          |
+| The connection (server URL and API token)                        | ECHO, a plugin-connector Connection          |
+
+Everything else the article shows (every result, the live thread, extension sections, the rating model) is
+read live from the API and not copied.
+
+## Types
+
+```mdl
+type Research
+  desc: >
+    A goal handed to a lighthouse search session. Links to the session by run id on one lighthouse
+    connection; holds what was kept as an append-only feed of Findings.
+  fields:
+    name?:       string
+    goal:        string
+    budget?:     quick | standard | deep    # a preset; the session gets its numbers (BUDGETS)
+    engines?:    string[]                   # lighthouse engine ids; none lets the agent choose
+    connection?: Ref<Connection>            # the lighthouse server it runs on
+    run?:        string                     # the lighthouse session; set once it starts
+    feed:        Ref<Feed>                  # immutable Finding entries (SetParent)
+    tags:        Ref<TagIndex>              # the starred flag per Finding (SetParent)
+    lastRunAt?:  string                     # ISO 8601
+  annotations:
+    icon: ph--binoculars--regular
+    hue: amber
+    label: name
+```
+
+```mdl
+type Finding
+  desc: >
+    One result copied out of lighthouse into the space: the entity's identity and facts at the time it was
+    kept, with where they came from. Immutable; the feed is the Research's history of what was kept.
+  fields:
+    iri:        string                      # the lighthouse subject
+    title:      string
+    url?:       string
+    types:      string[]                    # CURIEs, e.g. schema:CafeOrCoffeeShop
+    images:     string[]
+    properties: Record<string, Value[]>     # CURIE → values, as lighthouse returns them
+    provenance: FindingSource[]
+    score?:     number                      # the rating score when kept
+    why?:       string                      # the agent's reason, for a pick
+    keptBy:     pick | person
+    keptAt:     string                      # ISO 8601
+  annotations:
+    icon: ph--push-pin--regular
+    hue: amber
+    label: title
+```
+
+```mdl
+type FindingSource
+  fields:
+    extractor: string                       # id@version
+    source?:   string                       # the page or API it read
+    at:        string
+```
+
+## Components
+
+```mdl
+component ResearchListArticle
+  desc: >
+    The space's Research as lighthouse's session list, newest first: name and goal, status (not started, running,
+    reported, failed), pages, cost and start time, read from the space's lighthouse connection every 10 s. Opens from
+    the Research type's node in the Database; New research starts one as the sidebar section's + does. The Research
+    section itself sits in the sidebar's Assistant group, its rows the space's Research newest first.
+  props:
+    db: Database
+  actions:
+    open(research)
+    new()                                   # creates a Research and opens it on its goal
+```
+
+```mdl
+component ResearchArticle
+  desc: >
+    Article surface for a Research, in plugin-commerce's SearchArticle shape. Left pane: the goal and budget
+    preset (a schema form), the search engines as checkboxes (from listEngines), Run, the session's meters
+    (pages, cost, time, status), and under them the session's trajectory as the assistant ChatThread
+    (ResearchThread) with a composer for follow-ups. Right pane: a masonry of ResultCards, the report's picks
+    first, then the rest ranked by the session's rating model with the person's overrides. The toolbar toggles
+    All results and Findings, and offers Stop while a turn runs. Selecting a tile opens ResultArticle in the
+    companion.
+  props:
+    research: Research
+  state:
+    view: all | findings
+  actions:
+    run()                                   # op:StartResearch
+    send(text)                              # op:SendToResearch
+    stop()                                  # op:StopResearch
+    vote(iri, up | down)                    # op:VoteFinding
+    star(iri)                               # op:KeepFinding
+  layout: |
+    ┌────────────────────────┬──────────────────────────────────────┐
+    │ [All | Findings] [Stop]                                        │
+    ├────────────────────────┬──────────────────────────────────────┤
+    │ Goal                   │ ┌──────┐ ┌──────┐ ┌──────┐            │
+    │ Budget  Engines ▸      │ │Pick 1│ │Pick 2│ │ card │  masonry   │
+    │ meters          [Run]  │ └──────┘ └──────┘ └──────┘            │
+    ├────────────────────────┤ ┌──────┐ ┌──────┐                     │
+    │ thread (ChatThread)    │ │ card │ │ card │                     │
+    │ [follow-up…]    [➤]   │ └──────┘ └──────┘                     │
+    └────────────────────────┴──────────────────────────────────────┘
+```
+
+```mdl
+component ResultCard
+  desc: >
+    A masonry tile in plugin-commerce's ResultCard shape: the first photo, the star in the header's leading
+    slot, the title and price (or key figure) in its centre, then the key facts as rows, the kind as a tag, the
+    rating score and thumbs up and down. Built from a lighthouse entity by toCard, or from a kept Finding.
+  props:
+    card: CardModel
+    starred: boolean
+    score?: number
+    vote?: up | down
+  emits:
+    onToggleStar()
+    onVote(vote: up | down)
+```
+
+```mdl
+component ResultArticle
+  desc: >
+    Companion to a Research (variant `result`): the selected result's detail. Its title, star, price, tags,
+    score and thumbs; its link and photos; the agent's reason when it is a pick; the rating terms; every fact;
+    where the facts came from (the graph's provenance); the extension sections already read; and "More about
+    this", which reads another extension quickly or, for a deep one, starts a research session whose items (a
+    menu's dishes) are listed by section; then its Relations, the result's one-hop graph. A kept Finding stands in
+    when the session no longer has the result, and the graph when the node is no result of the session.
+  props:
+    research: Research
+  actions:
+    extend(extension, deep)                 # op:ExtendFinding
+```
+
+```mdl
+component SubjectGraph
+  desc: >
+    The Research article's Graph mode, which an entity session ("everything about X") opens on: the session's
+    subjects and what is around them as card nodes (photo, label, kind) laid out by a deterministic force-style
+    layout, roots emphasised, edges coloured by predicate family with the predicate shown (CURIE prefix dimmed) on
+    hover or selection, "+N more" on a capped node to fetch its neighbours, pan, zoom and fit. Selecting a node opens
+    it in the result companion, which reads a node that is no result from the graph.
+  props:
+    graph: SubjectGraph
+    selectedId?: string
+```
+
+```mdl
+component TracePanel
+  desc: >
+    The Research article's Trace mode: the session's trajectory as a tree (input, agent turn, tool call, command,
+    loads, extractions, model calls), each row with its time, a bar placing it on the session's timeline, its cost
+    and what it yielded (pages, facts, results). Rows are coloured by what ran them (the LLM, System One, or no
+    model) and interleaved in time; runs of System One calls are folded into one row.
+  props:
+    tree: ExplainNode
+```
+
+```mdl
+component ModelPanel
+  desc: >
+    The session's rating model, behind the article toolbar's Rating model toggle: the score formula, then each term
+    with its formula and the session's numbers (CURIE prefixes dimmed), its coverage and share, an on/off switch, a
+    nudge and a weight slider; requirements with switches; reset. Adjustments re-rank at once and are saved to the
+    session's overrides.
+  props:
+    model: RatingModel
+    overrides?: RatingOverrides
+```
+
+```mdl
+component LighthouseMeta
+  desc: >
+    A companion to a Lighthouse connection: lighthouse's plugins and what they contribute, its vocabulary
+    (predicates with their meanings, synonyms and extractors, filterable), its issues with triage (comment, change
+    status), and its storage (bytes by area, cache namespaces with clear, snapshot prune with a dry run first).
+  props:
+    connection: Connection
+```
+
+```mdl
+component ResearchThread
+  desc: >
+    The session's trajectory as the assistant ChatThread, as lighthouse's own web UI renders it: prompts; one
+    run row per narration, collapsed to the narration, its call and result counts, failures and time, and
+    opened onto each call (tool, arguments, outcome, time, output or error) and the results it put into the
+    graph as pills; the report as pick rows. A vote's feedback prompt reads as one line naming the voted
+    results. A composer below sends follow-ups; a failed or stopped session ends with a Retry chip.
+  props:
+    messages: Message[]
+    busy: boolean
+  emits:
+    onSend(text, model?)
+```
+
+## Services
+
+```mdl
+service LighthouseClient
+  desc: >
+    The lighthouse-api client, bound to one endpoint (server URL and API token): every request the plugin makes
+    to lighthouse, and the session stream (Server-Sent Events read over fetch, so it can send the bearer
+    token, resuming with Last-Event-ID). Hosts contribute it through the ClientFactory capability, matched by
+    the connection's URL; the plugin contributes the HTTP one.
+  loading: lazy
+```
+
+## Operations
+
+The article computes the facts a Finding keeps (it holds the session's results); the operations write ECHO and
+call lighthouse.
+
+```mdl
+op StartResearch
+  key: org.dxos.operation.lighthouse.start
+  desc: Creates the lighthouse session for a Research's goal, engines and budget preset, and records its run.
+  input:
+    research: Ref<Research>
+  output: string                            # the run
+  errors:
+    ResearchGoalMissing: the Research has no goal
+    LighthouseNotConnected: the Research names no connection
+  effects: [http, echo:write]
+  requires: [LighthouseClient]
+```
+
+```mdl
+op SendToResearch
+  key: org.dxos.operation.lighthouse.send
+  desc: A follow-up into the session, sent from composer; queued while a turn runs.
+  input:
+    research: Ref<Research>
+    text: string
+    model?: string                          # "default" is the Retry path
+  effects: [http]
+  requires: [LighthouseClient]
+```
+
+```mdl
+op StopResearch
+  key: org.dxos.operation.lighthouse.stop
+  desc: Aborts the turn in flight; the session can be continued later.
+  input:
+    research: Ref<Research>
+  effects: [http]
+  requires: [LighthouseClient]
+```
+
+```mdl
+op SyncFindings
+  key: org.dxos.operation.lighthouse.sync
+  desc: >
+    Appends to the Research's feed every pick that is not kept as a pick yet, by subject, with keptBy pick.
+    The article runs it when the session reports.
+  input:
+    research: Ref<Research>
+    picks: FindingInput[]
+  output: number                            # Findings appended
+  effects: [echo:write]
+```
+
+```mdl
+op KeepFinding
+  key: org.dxos.operation.lighthouse.setStarred
+  desc: >
+    Stars a result: the first time, copies it into the feed (with the graph's provenance) as keptBy person.
+    Unstarring removes the star, never the entry.
+  input:
+    research: Ref<Research>
+    finding: FindingInput
+    starred: boolean
+  effects: [http, echo:write]
+  requires: [LighthouseClient]
+```
+
+```mdl
+op VoteFinding
+  key: org.dxos.operation.lighthouse.sendFeedback
+  desc: Sends a thumbs up or down (or clear) on a result to lighthouse, which rebuilds the rating model.
+  input:
+    research: Ref<Research>
+    iri: string
+    vote: up | down | clear
+  effects: [http]
+  requires: [LighthouseClient]
+```
+
+```mdl
+op ExtendFinding
+  key: org.dxos.operation.lighthouse.readExtension
+  desc: Reads one extension for one result; deep starts a child research session and returns its run.
+  input:
+    research: Ref<Research>
+    iri: string
+    extension: string
+    deep?: boolean
+  output: { child?: string }
+  effects: [http]
+  requires: [LighthouseClient]
+```
+
+## Features
+
+```mdl
+feat F-1: Connection
+
+  req F-1.1: The plugin registers a plugin-connector Connector for lighthouse with a credential form (server URL, default http://127.0.0.1:4319, and API token); the token is an AccessToken and the form checks it against the server's status before saving.
+  req F-1.3: A connection that does not answer leaves the article readable: the Findings view shows the kept Findings, and the stream shows reconnecting.
+```
+
+```mdl
+feat F-2: Research
+
+  req F-2.1: A Research is created from the space's create menu, with a goal and a budget preset (Quick, Standard, Deep); a space with one lighthouse connection gives the Research that connection.
+  req F-2.2: Running it creates the lighthouse session and stores its run; the article streams it from then on.
+  req F-2.3: The thread is steering only: results appear in the masonry, and the report's picks appear as pick rows in the thread and first in the masonry.
+  req F-2.4: A follow-up sent from Composer is marked from composer; follow-ups from the CLI or lighthouse's own UI appear live.
+  req F-2.5: The search engines the person checks are named in the session's goal; with none checked the agent chooses.
+```
+
+```mdl
+feat F-3: Findings in the space
+
+  req F-3.1: When the session reports, its picks are appended to the feed as Findings with keptBy pick, once each.
+  req F-3.2: Starring a result appends it as a Finding with keptBy person and stars it; unstarring removes the star, not the entry.
+  req F-3.3: Findings are immutable; the feed is the Research's history of what was kept.
+  req F-3.4: Members of the space see the Research and its Findings without a lighthouse connection of their own.
+```
+
+```mdl
+feat F-4: Ranking and facets
+
+  req F-4.1: The masonry ranks by the session's rating model with the person's adjustments, as lighthouse's web UI does.
+  req F-4.2: Votes are sent to lighthouse and shown at once, ahead of the stream.
+  req F-4.4: Extensions that apply to a result are offered in its companion; a deep one starts a child session.
+```
+
+Not built yet: the desktop sidecar that runs the daemon as the default connection (F-1.2) and the assistant skill
+(F-5).
+
+## Acceptance
+
+```mdl
+scenario T-1: Offline Research
+  given: a Research with kept Findings; its connection does not answer
+  when: a member opens it and picks Findings
+  then:
+    - the masonry shows the Findings as cards
+    - the meters show reconnecting
+```
+
+```mdl
+scenario T-2: Picks are kept once
+  given: a Research whose session reported 8 picks, 3 of them already in the feed as picks
+  when: SyncFindings runs
+  then: 5 Findings are appended, with keptBy pick
+```
+
+## QA
+
+```mdl
+test QA-1: Research a goal from Composer
+  desc: The round trip through the API, against a local lighthouse daemon.
+  actors: both
+  covers: [F-1.1, F-2.1, F-2.2, F-2.3, F-3.2, F-4.2, F-4.4]
+  status: passing            # 2026-10-28; autocue/research.mjs dry run against the live daemon, every step passed
+  given:
+    - an identity exists
+    - space: a space is open
+    - a lighthouse daemon is running locally on http://127.0.0.1:4319, with its API token at hand (`lighthouse api token`)
+    - plugin-lighthouse is enabled (it is not on by default) and the space has a Lighthouse connection
+  before:
+    - name: Connect lighthouse
+      do: In Settings → Connections, add Lighthouse with the server URL and the API token.
+      expect: the connection is saved; its test passes
+  steps:
+    - name: Open Composer
+      do: Open Composer on the space.
+      expect: the space's navtree is shown
+    - name: Create a Research with a goal
+      do: Create a Research named "Board game cafés", and write the goal "Board game cafés in Bangkok with a big game library" with the Quick budget.
+      expect: the Research opens with the goal, Quick and an enabled Run button
+    - name: Run it
+      do: Press Run.
+      expect: the thread shows the goal as the prompt and the agent's first tool calls; the meters count pages and cost
+    - name: Watch results land
+      do: Wait while the agent searches.
+      expect: result cards appear in the masonry, with photos, prices or ratings, and scores once the agent writes a rating model
+      note: A Quick session takes up to 5 minutes; the step passes when at least 3 cards are shown.
+    - name: Open a result in the companion
+      do: Click a result card.
+      expect: the companion shows the result's facts, where they came from, and More about this
+    - name: Star and vote
+      do: Star the result in the companion, and thumbs-up another card.
+      expect: the star is filled; the thumbs-up is pressed
+    - name: Show the kept Findings
+      do: Pick Findings in the toolbar.
+      expect: the starred result is shown as a card marked Kept · starred
+```
+
+```mdl
+test QA-2: Search for apartments in Warsaw, live
+  desc: A live search with the Standard budget whose results are listings with photos, kept from the companion.
+  actors: both
+  covers: [F-1.1, F-2.1, F-2.2, F-2.3, F-3.2, F-4.2, F-4.4]
+  status: passing            # 2026-10-28; autocue/apartments.mjs against the live daemon, every step passed
+  given:
+    - QA-1's given and before: the plugin is enabled and the space has a Lighthouse connection
+    - the daemon's otodom engine is configured; a run costs up to the Standard budget
+  steps:
+    - name: Create a Research with the goal and the Standard budget
+      do: Create a Research named "Warsaw apartments", write the goal "2-room apartments for rent in central Warsaw (Śródmieście, Wola, Mokotów) under 6000 PLN total with a balcony, near metro" and pick the standard budget.
+      expect: the budget reads 10 min · $0.50 · 40 pages; Run is enabled
+    - name: Run it
+      do: Press Run and wait while the agent searches.
+      expect: the agent searches otodom; listing cards land in the masonry with their photos, price, size, rooms and district
+    - name: Open a run row
+      do: Open the run row that counts results.
+      expect: its calls with arguments and time, then its results as pills
+    - name: Open a listing in the companion
+      do: Click a card with a photo.
+      expect: the companion shows the photos, the facts, where these facts came from (extractor and page), and More about this
+    - name: Read its move-in cost
+      do: Press Read next to Move-in cost.
+      expect: a Move-in cost section with the deposit, fees and move-in total, and the move-in extension among the sources
+    - name: Star and vote, then Findings
+      do: Star the listing in the companion, thumbs-up another card, and pick Findings.
+      expect: the starred listing is shown as a card marked Kept · starred
+```
+
+```mdl
+test QA-3: Everything about BlueYard
+  desc: An entity session started elsewhere, opened in Composer: its graph, a portfolio company's facts, the investments as cards, the trace.
+  actors: both
+  status: passing            # 2026-10-28; autocue/blueyard.mjs against vc-blueyard-entity, every step passed
+  given:
+    - QA-1's given and before: the plugin is enabled and the space has a Lighthouse connection
+    - the daemon holds the reported entity session vc-blueyard-entity (BlueYard, its team, funds and portfolio)
+  steps:
+    - name: Open the session
+      do: Create a Research named "BlueYard" with Existing session "vc-blueyard-entity".
+      expect: the Research opens on the Graph view, BlueYard's card at the centre with partners, funds and portfolio companies around it, people with photos and companies with logos
+    - name: Open a portfolio company
+      do: Click a portfolio company's card with a logo (IonQ, Privy, Protocol Labs or Castelion).
+      expect: the companion shows its facts, where they came from (extractor, page, date), and its relations
+    - name: Refocus on the company
+      do: Double-click the company's card, then press Back to subjects.
+      expect: the graph refocuses on the company's neighbourhood (about 30 cards); Back returns to BlueYard's graph
+    - name: The investments as cards
+      do: Pick Results in the toolbar.
+      expect: the cards with pictures lead (Castelion, BlueYard, Corintis, Privy, Groq, IonQ…); cards without one show a type icon
+    - name: The trace
+      do: Pick Trace.
+      expect: the session's turns, calls and page loads as rows with time and cost
+
+test QA-4: Areas on the map
+  desc: An apartment session opened in Composer, ranked by where its listings are: the map beside the cards, the location popover, the areas in the rating model, a circle drawn and deleted.
+  actors: both
+  status: passing            # 2026-10-29; autocue/geo.mjs against web-20261028-110009, every step passed
+  given:
+    - QA-1's given and before: the plugin is enabled and the space has a Lighthouse connection
+    - the daemon holds the session web-20261028-110009 with the areas "Around Mokotów" (require) and "Mokotów" (prefer, 400 m)
+  steps:
+    - name: Open the session
+      do: Create a Research named "Warsaw apartments" with Existing session "web-20261028-110009".
+      expect: the Research opens on the Map, OSM tiles with attribution, pins coloured by score with clusters, unrated places as small grey markers, both areas drawn with their chips (name, Prefer/Require, soft edge, count inside, zoom, delete); cards outside the areas say "outside your areas"
+    - name: Hover a card's location
+      do: Hover the location row of the first card.
+      expect: a popover with a small map, the pin and its precision ring, the address, and links to OpenStreetMap and Google Maps; Esc closes it
+    - name: The areas in the rating model
+      do: Open the Rating model.
+      expect: the preferred area as a term marked yours, `s = inside(area "Mokotów") ? 1 : max(0, 1 − dist / 400 m)`, Edit on the map; the required area as a requirement with Prefer instead; each area a chip under its term or requirement with a prefer/require switch and a delete
+    - name: Draw a circle near a point
+      do: Pick Near a point, press on the map and drag out a radius.
+      expect: a third area chip with its count inside; the cards re-rank; the areas are saved to the session through /v1
+    - name: Delete it again
+      do: Delete the new area's chip.
+      expect: the session's areas are the two it had
+    - name: Open a result
+      do: Click a card.
+      expect: the companion shows its location row with the popover, and "outside your areas" when it is
+
+test QA-5: Filters and sort
+  desc: The person's own filters and sort on a session's results, beside the agent's ranking: they cut the cards and the map's pins, keep and count unknowns, sort by any number, and are saved with the session.
+  actors: both
+  status: passing            # 2026-10-29; autocue/filters.mjs against web-20261028-110009, every step passed
+  given:
+    - QA-1's given and before: the plugin is enabled and the space has a Lighthouse connection
+    - the daemon has /v1 GET|PUT /sessions/:run/view and holds web-20261028-110009 (123 results) with its rating model; its filters and sort are cleared first
+  steps:
+    - name: Open the panel
+      do: Open the session as a Research and press Filters in the toolbar.
+      expect: controls derived from the results — ranges with a histogram and min/max (total monthly cost, floor area, rooms), checkbox lists with counts (district), toggles; "N of M"; a Sort select
+    - name: Cost and rooms
+      do: Set the total monthly cost to at most 6000 and the rooms to at least 2.
+      expect: fewer results; each range says "Include N without this"
+    - name: Has a balcony
+      do: Turn on Has a balcony (under More filters when not shown), untick Include … without this, tick it again.
+      expect: known balconies only cut the list further; ticking it again keeps the unknowns
+    - name: Sort by floor area
+      do: Pick Floor area (m²) ↓ highest first.
+      expect: 39 of 123, the cards largest first; the picks join the sorted list marked Pick #N; the map shows only the 39 kept
+    - name: Chips
+      do: Close the panel.
+      expect: the filters as chips above the cards with "incl. N unknown", the sort chip and Clear all
+    - name: Saved
+      do: Reload.
+      expect: the same chips and "39 of 123"
+
+test QA-6: Search by image
+  desc: An image search opened in Composer: the photo the person gave and what lighthouse read from it, how much each result looks like it, and attaching a photo to a follow-up.
+  actors: both
+  status: passing            # 2026-10-29; autocue/image.mjs against image-mizuno-bkk-2, every step passed
+  given:
+    - QA-1's given and before: the plugin is enabled and the space has a Lighthouse connection
+    - the daemon holds the image session image-mizuno-bkk-2 (find a Mizuno SINCE.1906 top in central Bangkok)
+  steps:
+    - name: Open the session
+      do: Create a Research named "Mizuno top" with Existing session "image-mizuno-bkk-2".
+      expect: the thread's first input shows the photo, "Read: Mizuno long-sleeve football training top", the marks and printed text with their crops (logo, "SINCE.1906", crest "C A"; no face) and the queries it suggested
+    - name: Visual match on cards
+      do: Look at the result cards.
+      expect: product results say "looks N% like your image" and a Visual match row naming the matched features
+    - name: Attach to a follow-up
+      do: Attach the photo in the composer, then remove it.
+      expect: a thumbnail above the composer with a remove button; nothing is sent
+
+test QA-7: Research in the sidebar
+  desc: Research is a top-level section of the space's sidebar, like sessions: its Research newest first, a + that starts one on its goal, and the session list with status.
+  actors: both
+  status: passing            # 2026-10-29; autocue/sidebar.mjs, the sidebar steps (the daemon was down: status read as unknown)
+  given:
+    - QA-1's given and before: the plugin is enabled (and, for status, the space has a Lighthouse connection)
+  steps:
+    - name: The section
+      do: Look at the space's sidebar.
+      expect: a Research section in the Assistant group, with a + button, even before the space has any Research
+    - name: Start one
+      do: Press the section's +.
+      expect: a new Research opens on its goal form with the keyboard in the goal; typing fills it; it is listed first in the section
+    - name: The session list
+      do: Open Research under the Database (or New research in the list).
+      expect: every Research newest first with its status (not started / running / reported / failed), pages, cost and start time
+```
+
+## Open questions
+
+- Web-only Composer users: a local daemon reached from the browser, a hosted lighthouse, or both.
+- Whether every result should be kept automatically (larger spaces, offline-complete) rather than picks and
+  the person's stars.
+- plugin-commerce: its Provider templates could become a lighthouse extractor kind, with commerce searches run by
+  lighthouse's runSearch; or this plugin replaces it.
+
+## Changelog
+
+```mdl
+decision D-1: Composer is lighthouse's web UI: a Composer plugin reaches lighthouse through its API, while lighthouse's code stays in its own repository.
+  date: 2026-10-28
+  by: user:dmaretskyi
+```
+
+```mdl
+decision D-2: The plugin adds a Research object linked to one lighthouse session; its article is lighthouse's two-pane view (the assistant ChatThread steering on the left, the ranked masonry on the right) reading the session live from the API. Fills in [D-1].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: Lighthouse's web UI is already built from the same DXOS components, so the view ports with its behavior intact.
+```
+
+```mdl
+decision D-3: The session's picks and the results a person keeps are copied into the space as immutable Findings in the Research's feed, with provenance; everything else is read live and not copied. Fills in [D-1].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: Copies are what members without a connection see and what outlives the lighthouse workspace; copying every result (hundreds per session) would fill spaces with what nobody chose.
+  rejected: Copying every result; copying nothing (a Research unreadable without the person's own lighthouse).
+```
+
+```mdl
+decision D-4: The connection is a plugin-connector Integration with the API token as an AccessToken; on the desktop app a Tauri sidecar runs the lighthouse daemon and is the default connection. Fills in [D-1].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:dmaretskyi
+  why: plugin-connector already stores credentials and renders the setup; plugin-claude's dx-agent is the precedent for a local server beside the desktop app.
+```
+
+```mdl
+decision D-5: The Research article follows plugin-commerce's Search: the left pane holds the goal, the budget preset (Quick, Standard, Deep), optionally the search engines (from listEngines, like commerce's provider checkboxes) and Run, with the session's steering thread under them; the right pane is the masonry of results in commerce's ResultCard style (image, title, price or key facts, star) ranked by the rating model, with thumbs; clicking a tile opens the detail in the companion pane: the entity's facts with provenance, its extension sections and "More about this" (quick read or research). Supersedes [D-2].
+  date: 2026-10-28
+  by: user:dmaretskyi
+  supersedes: D-2
+  affects: [ResearchArticle, ResultCard, ResultArticle]
+```
+
+```mdl
+decision D-6: Picks and starred results are copied into the Research's feed as immutable Findings, as commerce keeps Results in Search.feed; starring uses a TagIndex, as commerce's STARRED_TAG does. The connection is a plugin-connector integration with a credential form (server URL, API token), whose URL defaults to http://127.0.0.1:4319.
+  date: 2026-10-28
+  by: user:dmaretskyi
+  affects: [Research, Finding, F-1.1, F-3.2]
+```
+
+```mdl
+decision D-7: The client speaks lighthouse-api /v1 only, isolated in LighthouseClient; the session stream is read over fetch so it can send the bearer token and Last-Event-ID. Fills in [D-4].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [LighthouseClient]
+  why: EventSource cannot send an Authorization header; the daemon's TCP listener requires the token.
+  rejected: An adapter for the web server's /api routes (no CORS, no token, no entity route; /v1 shipped first).
+```
+
+```mdl
+decision D-8: The result companion's subject is a sentinel and the selected result is the Research's attention selection (its IRI), read live from the session the article streams. Fills in [D-5].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [ResultArticle]
+  why: Live results are not ECHO objects, so the companion cannot be given one as its subject; one stream per session is shared by the article and the companion.
+```
+
+```mdl
+decision D-9: Votes live in lighthouse's session feedback, not in the tag index; the tag index holds stars only. Supersedes the vote half of F-4.2 in the draft. Fills in [D-6].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4.2, op:VoteFinding]
+  why: A tag index tags ECHO objects, and most voted results are never kept; lighthouse's feedback already drives the rating model's rebuild.
+```
+
+```mdl
+decision D-10: The article computes what a Finding keeps (title, facts, images, score, the pick's reason) and hands it to KeepFinding and SyncFindings; KeepFinding adds the graph's provenance from getEntity. Fills in [D-3].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [op:KeepFinding, op:SyncFindings]
+  why: The article already holds the session's results and the pick matching; refetching them in the operation would duplicate the matching and a second read.
+```
+
+```mdl
+decision D-11: A Research stores its budget as a preset and its engines as ids; the session gets the preset's numbers, and the engines are named in its goal, since createSession takes no engine list. Fills in [D-5].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [Research, F-2.5]
+```
+
+```mdl
+decision D-12: The connection's server URL is its AccessToken's account and the API token its token; the Connector checks both against /v1/status before saving. Fills in [D-6].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.1]
+  why: A Connection holds no field for an endpoint other than an MCP one; the account is the identity the token belongs to.
+```
+
+```mdl
+decision D-13: The operation keys read verb-first (setStarred, sendFeedback, readExtension), and the plugin is in Composer's catalog but not its defaults.
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [op:KeepFinding, op:VoteFinding, op:ExtendFinding]
+  why: The repository's operation-key rule requires a known verb; a plugin that fetches localhost raises the local network prompt, so it is enabled by the person, not by default.
+```
+
+```mdl
+decision D-14: The thread shows one run row per narration, as lighthouse's own web UI now does: collapsed to the narration, its call and result counts, failures and time; opened onto each call with its arguments, outcome, time and output or error, then its results as pills.
+  date: 2026-10-28
+  by: user:dmaretskyi
+  affects: [ResearchThread]
+```
+
+```mdl
+decision D-15: A vote's feedback prompt reads in the thread as one line naming the voted results, instead of the results' JSON the server writes into it. Fills in [D-14].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [ResearchThread]
+  why: The prompt is written by lighthouse for the agent; the person only needs to see which results they voted on.
+```
+
+```mdl
+decision D-16: Record demos and screenshots in Composer with plugin-lighthouse rather than lighthouse's own web UI: an apartment search in Warsaw, everything about BlueYard with its investments, and cards with pictures.
+  date: 2026-10-28
+  by: user:dmaretskyi
+  affects: [QA-2, QA-3]
+```
+
+```mdl
+decision D-17: The Research article has Results, Graph and Trace view modes, an entity session opens on its subjects' graph, and the rating model panel, lighthouse's meta, Relations in the companion and deep extensions' research are ported from lighthouse's web UI.
+  date: 2026-10-28
+  by: user:dmaretskyi
+  affects: [ResearchArticle, SubjectGraph, TracePanel, ModelPanel, LighthouseMeta, ResultArticle]
+```
+
+```mdl
+decision D-18: The graph is DXOS Cards placed by a small deterministic layout of the plugin's own (rings by hop distance, springs, repulsion, card collision) in a pan and zoom view, not react-ui-canvas or react-ui-graph. Fills in [D-17].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [SubjectGraph]
+  why: react-ui-canvas is a scene editor with its own model; react-ui-graph draws d3-managed SVG nodes, where a card fits only as a foreignObject; a deterministic layout also keeps stories and recordings stable.
+  rejected: react-ui-canvas (an editor for a read-only view); react-ui-graph (SVG nodes, a d3 dependency).
+```
+
+```mdl
+decision D-19: Lighthouse's meta is a companion on a Lighthouse connection, the companion's extension nodes are read one by one from the graph, and a deep extension's items come from its child session (matched by the session's parent, or the run a deep read returns). Fills in [D-17].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [LighthouseMeta, ResultArticle]
+  why: A companion leaves the connection's own settings in place; /v1 results leave extension nodes and their items out.
+```
+
+```mdl
+decision D-20: A Research can be created on an existing lighthouse run (the create dialog's Existing session), so a session started from the CLI or lighthouse's web UI opens in Composer; once a Research has run, its goal reads as text with an Edit button. Fills in [D-16].
+  date: 2026-10-28
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [Research, ResearchArticle]
+  why: The demos show sessions that ran outside Composer (Fuego's menu in bkk-restaurant).
+```
+
+```mdl
+decision D-21: Areas drawn on the results map rank a Research's results exactly as lighthouse's web UI does: rating.ts and locationOf are ported (the {within: areas} value form, the lh-areas term, a required area as a requirement), the article has a Map view with lasso and circle tools and area chips saved through /v1, cards and the companion have a location popover, and the rating model panel shows the areas with their formula.
+  date: 2026-10-29
+  by: user:dmaretskyi
+  affects: [ResearchArticle, ResultsMap, LocationPopover, ResultCard, ResultDetail, ModelPanel, QA-4]
+```
+
+```mdl
+decision D-22: The map is built on react-ui-geo's Map (Leaflet and react-leaflet with OSM tiles) with the plugin's own layers for clustering, drawing and areas, ported from lighthouse's ResultsMap, rather than plain Leaflet or a Leaflet plugin. Fills in [D-21].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [ResultsMap, LocationPopover]
+  why: react-ui-geo already gives the tile layer, Leaflet's CSS, resizing and dark tiles; it has no drawing or clustering, and turns attribution off, so those are added as children reaching the map through useMap.
+```
+
+```mdl
+decision D-23: Cards and the companion have no thumbs up or down (the agent's rating model and its panel stay; star and keep stay); the rating panel lists each drawn area as its own chip under the areas term or the required area, with a prefer/require switch and a delete; cards carry up to 20 photos. Follows lighthouse 54afadb. Fills in [D-21].
+  date: 2026-10-29
+  by: user:dmaretskyi
+  affects: [ResultCard, ResultDetail, ModelPanel, ResearchArticle, ResultArticle]
+  why: Votes made the model guess preferences wrongly; areas shown only as one combined term could not be deleted from the panel.
+```
+
+```mdl
+decision D-24: A Research has the person's own filters and sort beside the agent's ranking, ported from lighthouse 1a137e8: view.ts as pure logic, a Filters panel and active-filter chips in Composer's kit, filters cutting the masonry and the map's pins while scores stay computed over every result, the picks folding into a sort of the person's, saved through /v1 /sessions/:run/view and read back from the rating state.
+  date: 2026-10-29
+  by: user:dmaretskyi
+  affects: [ResearchArticle, FiltersPanel, ResultsMap, QA-5]
+```
+
+```mdl
+decision D-25: A view save that fails is retried a few times with a growing delay instead of failing at once, and a missing `view` in the rating state reads as no filters. Fills in [D-24].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [ResearchArticle]
+  why: The daemon running when the panel was built predated the view route and answered "No such route" until it restarted.
+```
+
+```mdl
+decision D-26: Image search from Composer, ported from lighthouse 2fc6758 and 3450175: images (attach, paste, drop, up to 4) go with the goal's Run and with follow-ups as `images` on /v1; the thread shows an input's images and what lighthouse read from each (its lh:ImageQuery and lh:ImageFeature nodes, crops from the run's blobs, never a face); cards show lh:visualMatch and lh:matchedFeature; query images and features are not cards.
+  date: 2026-10-29
+  by: user:dmaretskyi
+  affects: [ResearchArticle, ResearchThread, ResultPills, ResultCard, op:StartResearch, op:SendToResearch, QA-6]
+```
+
+```mdl
+decision D-27: The thread's image widgets fetch blobs and image query nodes through the session's client, given to them by context, and show blobs as object URLs; the query node is found by the IRI lighthouse derives from the image's hash and polled until it is written. Fills in [D-26].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [ResultPills, ResearchThread]
+  why: Blobs need the API token, which an img src cannot send; the session's results leave image query nodes out.
+```
+
+```mdl
+decision D-28: "pull out Research from Database into a top-level sidebar entry with a plus button to start a new one — kinda like sessions"
+  date: 2026-10-29
+  by: user:dmaretskyi
+  affects: [Research, ResearchArticle, ResearchListArticle, QA-7]
+```
+
+```mdl
+decision D-29: Research is a type section of the space's AI group (TypeSection, as Chats, Projects and Specs are), shown even while empty, newest first, its + creating a Research and opening it on its goal without a dialog; the type stays in the Database, where its node opens the session list, since every user type is listed there (Chats and Books are too); the create menu keeps Research. Fills in [D-28].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [Research, ResearchListArticle, ResearchArticle]
+  why: A section with a URL key of its own also gets the Database's type actions, so its + hides in a menu; app-toolkit's TypeSection gained `sort` and `showEmpty` for a section that is where its objects are made. The navtree row has no place for a status line, so status, pages and cost are in the session list.
+```
+
+```mdl
+decision D-30: The goal form is seeded once per Research and per Edit instead of from every autosave, so typing is not reset by its own saves. Fills in [D-28].
+  date: 2026-10-29
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [ResearchArticle]
+  why: Typing into a new Research's goal kept only the last few words: each save fed the saved goal back into the field.
+```

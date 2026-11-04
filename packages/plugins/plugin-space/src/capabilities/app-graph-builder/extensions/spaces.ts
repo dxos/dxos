@@ -28,9 +28,9 @@ import { Expando } from '@dxos/schema';
 import { type Label } from '@dxos/ui-types/translations';
 import * as Position from '@dxos/util/Position';
 
-import { meta } from '#meta';
 import { SpaceCapabilities, SpaceOperation, SpaceSchema } from '#types';
 
+import { SpaceNamespace } from '../../../namespace.ts';
 import { getSpaceDisplayName } from '../../../util/index.ts';
 import {
   CAN_DROP_SPACE,
@@ -50,7 +50,7 @@ import {
 // The label tuple must be a module-level singleton: connectors re-evaluate whenever the matched
 // node emits, and a tuple rebuilt inline each time creates a new array reference, causing the graph
 // to re-emit the node and remount the Home article on every evaluation.
-const SPACE_HOME_NODE_LABEL = ['space-home-node.label', { ns: meta.profile.key }] as const;
+const SPACE_HOME_NODE_LABEL = ['space-home-node.label', { ns: SpaceNamespace.key }] as const;
 
 const SPACE_OPEN_TIMEOUT = 60_000;
 
@@ -118,7 +118,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: SpaceOperation.OpenCreateSpace.meta.key,
             data: () => Operation.invoke(SpaceOperation.OpenCreateSpace),
             properties: {
-              label: ['create-space.label', { ns: meta.profile.key }],
+              label: ['create-space.label', { ns: SpaceNamespace.key }],
               icon: 'ph--plus--regular',
               testId: 'spacePlugin.createSpace',
               disposition: 'menu',
@@ -128,7 +128,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: SpaceOperation.Join.meta.key,
             data: () => Operation.invoke(SpaceOperation.Join, {}),
             properties: {
-              label: ['join-space.label', { ns: meta.profile.key }],
+              label: ['join-space.label', { ns: SpaceNamespace.key }],
               icon: 'ph--sign-in--regular',
               testId: 'spacePlugin.joinSpace',
               disposition: 'menu',
@@ -138,7 +138,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: SpaceOperation.OpenImportSpace.meta.key,
             data: () => Operation.invoke(SpaceOperation.OpenImportSpace),
             properties: {
-              label: ['import-space.label', { ns: meta.profile.key }],
+              label: ['import-space.label', { ns: SpaceNamespace.key }],
               icon: 'ph--upload--regular',
               testId: 'spacePlugin.importSpace',
             },
@@ -156,7 +156,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               }
             }),
             properties: {
-              label: ['export-space-binary.label', { ns: meta.profile.key }],
+              label: ['export-space-binary.label', { ns: SpaceNamespace.key }],
               icon: 'ph--download--regular',
               testId: 'spacePlugin.exportSpaceBinary',
             },
@@ -174,7 +174,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               }
             }),
             properties: {
-              label: ['export-space-json.label', { ns: meta.profile.key }],
+              label: ['export-space-json.label', { ns: SpaceNamespace.key }],
               icon: 'ph--download--regular',
               testId: 'spacePlugin.exportSpaceJson',
             },
@@ -189,7 +189,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               }
             }),
             properties: {
-              label: ['share-space.label', { ns: meta.profile.key }],
+              label: ['share-space.label', { ns: SpaceNamespace.key }],
               icon: 'ph--users--regular',
               testId: 'spacePlugin.shareSpace',
               keyBinding: {
@@ -208,7 +208,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               }
             }),
             properties: {
-              label: ['open-current-space-settings.label', { ns: meta.profile.key }],
+              label: ['open-current-space-settings.label', { ns: SpaceNamespace.key }],
               icon: 'ph--faders--regular',
               keyBinding: {
                 macos: 'meta+shift+,',
@@ -336,7 +336,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
           AppNode.makeGroup({
             id: GraphPath.GroupSegments.communications,
             type: GraphPath.GroupTypes.communications,
-            label: ['nav-tree-group-comm.label', { ns: meta.profile.key }],
+            label: ['nav-tree-group-comm.label', { ns: SpaceNamespace.key }],
             icon: 'ph--chats--regular',
             space,
             position: 100,

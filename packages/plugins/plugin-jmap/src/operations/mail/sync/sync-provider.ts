@@ -226,20 +226,24 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSync.MailSyncProvider, n
                 if (forwardIds) {
                   onEnumerated(forwardIds.length);
                 }
-                return {
-                  additions: jmapEmails(target, folders, {
-                    windows,
+                const fetchItems = (fetchWindows: Cursor.Windows, ids: readonly string[] | undefined) =>
+                  jmapEmails(target, folders, {
+                    windows: fetchWindows,
                     filter,
                     now,
                     onEnumerated,
                     onEstimate,
                     onRetrieved,
-                    forwardIds,
+                    forwardIds: ids,
                   }).pipe(
                     Stream.map(toItem),
                     Stream.provideService(JmapMailApi, providerApi),
                     Stream.mapError(MailSync.MailSyncError.wrap()),
-                  ),
+                  );
+                // The delta's ids and the backward window are fetched apart, so the harness reads the delta first.
+                return {
+                  deltaAdditions: forwardIds ? fetchItems({}, forwardIds) : undefined,
+                  windowAdditions: fetchItems(forwardIds ? { backward: windows.backward } : windows, undefined),
                   // Empty on non-incremental runs; `jmapReconcile` re-fetches + diffs each `updated` id
                   // and resolves it to a `Change` itself (it needs the entityId to read local tags).
                   reconciles: jmapReconcile(updatedIds, target, folderTagMap, keywordTagMap, tagIndex).pipe(

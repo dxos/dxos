@@ -26,7 +26,7 @@ export const addBlocks =
       'block',
       {
         label: ['block.label', { ns: translationKey }],
-        placement: { collapse: 3 },
+        placement: { collapse: 2 },
         iconOnly: true,
         variant: 'toggleGroup',
         selectCardinality: 'single',

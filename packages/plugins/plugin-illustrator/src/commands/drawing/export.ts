@@ -12,7 +12,7 @@ import * as Option from 'effect/Option';
 
 import { CommandConfig, Common, FormBuilder, formatBytes, print, spaceLayer } from '@dxos/cli-util';
 import { SVG_SCHEMA, SvgFile } from '@dxos/diagram';
-import { Database, Filter } from '@dxos/echo';
+import { Database, Filter, Obj } from '@dxos/echo';
 
 import { DrawingFile, SvgBuilder } from '#model';
 import { Drawing } from '#types';
@@ -33,8 +33,9 @@ export const handler = Effect.fn(function* ({ id, out }: ExportArgs) {
     return yield* Effect.fail(new ExportError({ message: `No drawing ${id} in the space.` }));
   }
   const canvas = yield* Database.load(drawing.canvas);
-  if (canvas.schema !== SVG_SCHEMA) {
-    return yield* Effect.fail(new ExportError({ message: `Only SVG drawings export; this one is ${canvas.schema}.` }));
+  if (!Drawing.isCanvas(canvas) || canvas.schema !== SVG_SCHEMA) {
+    const format = Drawing.isCanvas(canvas) ? canvas.schema : Obj.getTypename(canvas);
+    return yield* Effect.fail(new ExportError({ message: `Only SVG drawings export; this one is ${format}.` }));
   }
 
   const { scene } = SvgBuilder.read(canvas);

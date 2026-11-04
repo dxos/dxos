@@ -4,7 +4,7 @@
 
 import { Event, type ReadOnlyEvent } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Entity, type Obj } from '@dxos/echo';
+import { type Entity, Feed, type Obj } from '@dxos/echo';
 import { filterMatchDoc } from '@dxos/echo-host/filter';
 import { GroupBy, QueryPlanner, queryContainsChanges } from '@dxos/echo-host/query';
 import { type EntityStructure, QueryAST } from '@dxos/echo-protocol';
@@ -12,13 +12,22 @@ import { resolveMergeRedirect } from '@dxos/echo/internal';
 import { EID, EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type DeletionMemo, type ItemsUpdatedEvent, type ObjectCore } from '../core-db/index.ts';
+import {
+  type DeletionMemo,
+  type DispatchKeys,
+  type ItemsUpdatedEvent,
+  type ObjectCore,
+  type UpdateDispatch,
+} from '../core-db/index.ts';
 import { type FeedHandle } from '../feed/feed-handle.ts';
 import { type DatabaseImpl } from '../proxy-db/index.ts';
 import { type MergePlan, createMergePlan, evaluateCore, matchesFeedSelection, ordersLocally } from './merge-plan.ts';
 import { type SourceEntry } from './query-context.ts';
 import {
-  getTargetFeedsForQuery,
+  type HierarchyScope,
+  getHierarchyScope,
+  getSelectionKeys,
+  getTargetFeedBranchesForQuery,
   getTargetSpacesForQuery,
   isSimpleSelectionQuery,
   queryAggregateNeedsIndex,
@@ -48,6 +57,12 @@ export class WorkingSetView {
   readonly #windowEvaluation = new WeakMap<QueryAST.Query, boolean>();
   /** Present when a write can be applied to cached results as a delta instead of a full recompute. */
   #delta?: { filter: QueryAST.Filter; options: QueryAST.QueryOptions | undefined } = undefined;
+  /** Present when only writes under the query's parents can change it. */
+  #hierarchy?: HierarchyScope = undefined;
+  /** Present when a simple selection only matches objects with one of these ids or typenames. */
+  #selection?: { ids: string[]; typenames: string[] } = undefined;
+  /** Delivers only the writes {@link #route} says can change the results. */
+  readonly #dispatch: UpdateDispatch;
   /** Present when the query selects from feeds: their unacknowledged writes, which no index has seen yet. */
   #feedTail?: FeedTail = undefined;
   /** Which of the feed tail's writes match, kept current one write at a time. */
@@ -66,6 +81,7 @@ export class WorkingSetView {
       areStrongDepsResolved: (core) => _database.areStrongDepsResolved(core),
     };
     this._executor = new WorkingSetQueryExecutor(provider);
+    this.#dispatch = _database._entityManager.updateDispatch;
     this._planner = new QueryPlanner({ defaultTextSearchKind: 'full-text', noIndexes: true });
   }
 
@@ -186,6 +202,9 @@ export class WorkingSetView {
     this.#feedTail = undefined;
     this.#tailMatches = undefined;
     this._results = undefined;
+    this.#hierarchy = undefined;
+    this.#selection = undefined;
+    this.#dispatch.delete(this._onUpdate);
     void this._ctx.dispose().catch((err) => log.catch(err));
   }
 
@@ -193,6 +212,9 @@ export class WorkingSetView {
     void this._ctx.dispose().catch((err) => log.catch(err));
     this._ctx = new Context();
     this._results = undefined;
+    this.#hierarchy = undefined;
+    this.#selection = undefined;
+    this.#dispatch.delete(this._onUpdate);
     // The handles were watched through the context just disposed, so each one is subscribed again.
     this.#feedTail = undefined;
     this.#tailMatches = undefined;
@@ -217,12 +239,15 @@ export class WorkingSetView {
     }
     this._query = query;
     this.#delta = deltaFor(query);
-    this._database._updateEvent.on(this._ctx, this._onUpdate);
+    this.#hierarchy = getHierarchyScope(query);
+    const simple = this.#hierarchy ? null : isSimpleSelectionQuery(query);
+    this.#selection = simple && !simple.hasQueues ? getSelectionKeys(simple.filter) : undefined;
+    this.#route();
     this.changed.emit();
   }
 
   getResults(): SourceEntry[] {
-    const space = this._query ? (this._results ??= this._compute(this._query)) : [];
+    const space = this._query ? (this._results ??= this.#computeResults(this._query)) : [];
     return this.#tailMatches ? [...space, ...this.#tailMatches.entries()] : space;
   }
 
@@ -262,16 +287,25 @@ export class WorkingSetView {
     if (allFeeds && targetSpaces.length > 0 && !targetSpaces.includes(this._database.spaceId)) {
       return undefined;
     }
-    const handles = allFeeds
-      ? [...this._database._knownFeedHandles()].filter(
-          (handle) => EID.getSpaceId(handle.uri) === this._database.spaceId,
-        )
-      : getTargetFeedsForQuery(query).flatMap((uri) => {
-          const eid = EID.tryParse(uri);
-          const handle = eid ? this._database._tryGetFeedHandle(eid) : undefined;
-          return handle ? [handle] : [];
-        });
-    return handles.length > 0 ? { filter: simple.filter, options: simple.options, handles } : undefined;
+    const branches = new Map<FeedHandle, ReadonlyArray<string | null> | undefined>();
+    if (allFeeds) {
+      // A read of every feed is a default read, so it covers only the main branch.
+      for (const handle of this._database._knownFeedHandles()) {
+        if (EID.getSpaceId(handle.uri) === this._database.spaceId) {
+          branches.set(handle, [null]);
+        }
+      }
+    } else {
+      for (const [uri, scopeBranches] of getTargetFeedBranchesForQuery(query)) {
+        const eid = EID.tryParse(uri);
+        const handle = eid ? this._database._tryGetFeedHandle(eid) : undefined;
+        if (handle) {
+          branches.set(handle, scopeBranches);
+        }
+      }
+    }
+    const handles = [...branches.keys()];
+    return handles.length > 0 ? { filter: simple.filter, options: simple.options, handles, branches } : undefined;
   }
 
   /** Loads the objects into the working set through their documents. */
@@ -306,8 +340,7 @@ export class WorkingSetView {
     }
 
     if (!updateEvent) {
-      this._results = undefined;
-      this.changed.emit();
+      this.#invalidate();
       return;
     }
 
@@ -336,10 +369,50 @@ export class WorkingSetView {
     });
 
     if (changed) {
-      this._results = undefined;
-      this.changed.emit();
+      this.#invalidate();
     }
   };
+
+  #invalidate(): void {
+    this._results = undefined;
+    this.#route();
+    this.changed.emit();
+  }
+
+  #computeResults(query: QueryAST.Query): SourceEntry<Obj.Any>[] {
+    const results = this._compute(query);
+    this.#route(results);
+    return results;
+  }
+
+  /** Registers with the dispatch the writes that can change `results`, or the query alone when nothing is cached. */
+  #route(results?: SourceEntry<Obj.Any>[]): void {
+    if (this.#hierarchy) {
+      // Uncached, any write may be one under the parents: membership is only known once computed.
+      this.#dispatch.set(this._onUpdate, results && this.#keysFor(results, this.#hierarchy));
+    } else if (this.#selection) {
+      // A member is keyed by its id as well, in case a write changes its type.
+      const ids = [...this.#selection.ids, ...(results ?? []).map((result) => result.id)];
+      this.#dispatch.set(this._onUpdate, { ids, typenames: this.#selection.typenames });
+    } else {
+      this.#dispatch.set(this._onUpdate);
+    }
+  }
+
+  /**
+   * The writes that can change `results`: the members and anchors, the strong dependencies they inherit deletion
+   * from (which include the objects between each member and its anchor), and anything that lands under an anchor.
+   */
+  #keysFor(results: SourceEntry<Obj.Any>[], { anchors, depth }: HierarchyScope): DispatchKeys {
+    const ids = new Set<string>();
+    for (const id of [...anchors, ...results.map((result) => result.id)]) {
+      if (!ids.has(id)) {
+        ids.add(id);
+        this._database._entityManager.getObjectCoreById(id, { load: false })?.addDeletionDependencies(ids);
+      }
+    }
+    return { ids, anchors: { ids: anchors, depth } };
+  }
 
   /**
    * Applies written objects to the cached results, in the natural (id) order a full recompute produces, so a
@@ -368,6 +441,7 @@ export class WorkingSetView {
           match: { rank: 1 },
           resolution: { source: 'local', time: 0 },
         });
+        this.#dispatch.addIds(this._onUpdate, [id]);
       }
     }
     if (next === results) {
@@ -477,13 +551,24 @@ type FeedTail = {
   filter: QueryAST.Filter;
   options: QueryAST.QueryOptions | undefined;
   handles: readonly FeedHandle[];
+  /** The branches each handle's scope reads, `null` naming main; `undefined` reads every branch. */
+  branches: ReadonlyMap<FeedHandle, ReadonlyArray<string | null> | undefined>;
 };
 
-const feedEntries = ({ filter, options, handles }: FeedTail): SourceEntry[] =>
-  handles.flatMap((handle) =>
-    handle
-      .localWrites()
-      .flatMap((object) => (matchesFeedSelection(filter, options, object) ? [tailEntry(object)] : [])),
+/** Whether a feed write is on one of the branches its scope reads, as the host filters indexed items. */
+const isOnBranches = (object: Entity.Unknown, branches: ReadonlyArray<string | null> | undefined): boolean => {
+  if (branches === undefined) {
+    return true;
+  }
+  return branches.includes(Feed.getBranch(object) ?? null);
+};
+
+const matchesTail = (tail: FeedTail, handle: FeedHandle, object: Entity.Unknown): boolean =>
+  isOnBranches(object, tail.branches.get(handle)) && matchesFeedSelection(tail.filter, tail.options, object);
+
+const feedEntries = (tail: FeedTail): SourceEntry[] =>
+  tail.handles.flatMap((handle) =>
+    handle.localWrites().flatMap((object) => (matchesTail(tail, handle, object) ? [tailEntry(object)] : [])),
   );
 
 const tailEntry = (object: Entity.Unknown): SourceEntry => ({
@@ -505,7 +590,7 @@ class FeedTailMatches {
     for (const handle of _tail.handles) {
       const matches = new Map<string, { object: Entity.Unknown; matched: boolean }>();
       for (const object of handle.localWrites()) {
-        matches.set(object.id, { object, matched: this.#matchesFilter(object) });
+        matches.set(object.id, { object, matched: matchesTail(_tail, handle, object) });
       }
       this.#matches.set(handle, matches);
     }
@@ -526,7 +611,7 @@ class FeedTailMatches {
         matches.delete(object.id);
         continue;
       }
-      const matched = this.#matchesFilter(written);
+      const matched = matchesTail(this._tail, handle, written);
       // Setting an existing key keeps its place, so the entries stay in write order.
       matches.set(object.id, { object: written, matched });
       changed ||= matched !== (before?.matched ?? false);
@@ -548,10 +633,6 @@ class FeedTailMatches {
     return this.entries()
       .map((entry) => entry.id)
       .join(',');
-  }
-
-  #matchesFilter(object: Entity.Unknown): boolean {
-    return matchesFeedSelection(this._tail.filter, this._tail.options, object);
   }
 }
 

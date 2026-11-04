@@ -47,6 +47,9 @@
       "path": "../../common/random"
     },
     {
+      "path": "../../common/scene"
+    },
+    {
       "path": "../../common/tracing"
     },
     {
@@ -170,6 +173,9 @@
       "path": "../plugin-client"
     },
     {
+      "path": "../plugin-code"
+    },
+    {
       "path": "../plugin-connector"
     },
     {
@@ -210,9 +216,6 @@
     },
     {
       "path": "../plugin-space"
-    },
-    {
-      "path": "../plugin-spacetime"
     },
     {
       "path": "../plugin-status-bar"

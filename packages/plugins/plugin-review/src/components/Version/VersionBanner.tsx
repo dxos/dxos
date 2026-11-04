@@ -16,8 +16,9 @@ import * as Tooltip from '@dxos/react-ui/Tooltip';
 import * as Typography from '@dxos/react-ui/Typography';
 import { type Hue } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
 import { ReviewCapabilities } from '#types';
+
+import { ReviewNamespace } from '../../namespace.ts';
 
 type BranchView = ReviewCapabilities.BranchView;
 
@@ -64,7 +65,7 @@ export const VersionBanner = ({
   onViewChange,
   onClose,
 }: VersionBannerProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ReviewNamespace.key);
   const [namingBranch, setNamingBranch] = useState(false);
 
   return (

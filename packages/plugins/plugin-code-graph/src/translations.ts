@@ -5,8 +5,9 @@
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { CodeGraph } from '#types';
+
+import { CodeGraphNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -22,7 +23,7 @@ export const translations = [
         'delete-object.label': 'Delete code graph',
         'object-deleted.label': 'Code graph deleted',
       },
-      [meta.profile.key]: {
+      [CodeGraphNamespace.key]: {
         'plugin.name': 'Code Graph',
         'layout.label': 'Layout',
         'layout-illustrator.label': 'Illustrator layout',

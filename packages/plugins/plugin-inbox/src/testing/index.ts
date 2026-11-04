@@ -3,7 +3,7 @@
 //
 
 // Eager re-export of `InboxPlugin`. See `@dxos/plugin-testing/src/core.ts` for the rationale.
-export * from '#plugin';
+export * as InboxPlugin from '#meta';
 
 export * from './builder.ts';
 export * from './contact-preview.tsx';

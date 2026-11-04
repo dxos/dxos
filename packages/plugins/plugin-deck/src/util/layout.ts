@@ -2,9 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { produce } from 'immer';
+import { produce, setAutoFreeze } from 'immer';
 
 import { DeckSchema } from '#types';
+
+// Produced values must stay unfrozen: our signal implementation adds hidden properties to them.
+setAutoFreeze(false);
 
 /** Where {@link addSubjectsToActiveDeck} puts the subjects it is given. */
 export type AddSubjectsToActiveDeckOptions = {

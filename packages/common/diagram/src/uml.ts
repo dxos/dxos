@@ -9,6 +9,8 @@
 // dialect owns placement; see `dialect.ts` for the contract.
 //
 
+import { Shape } from '@dxos/scene';
+
 import * as Layout from './layout.ts';
 import type * as Scene from './scene.ts';
 
@@ -218,7 +220,7 @@ const measure = (entry: UmlClass, maxWidth: number): ClassBox => {
   return { entry, w, h: titleH + attributesH + methodsH, titleH, attributesH, methodsH };
 };
 
-const SCENE_RELATION: Record<RelationKind, Scene.Relation | undefined> = {
+const SCENE_RELATION: Record<RelationKind, Shape.Relation | undefined> = {
   inheritance: 'inheritance',
   realization: 'implementation',
   composition: 'composition',
@@ -228,7 +230,7 @@ const SCENE_RELATION: Record<RelationKind, Scene.Relation | undefined> = {
 };
 
 /** Arrow styling per relation kind: the scene relation sets the markers; dependency and realization dash, as in UML. */
-export const relationStyle = (kind: RelationKind): Pick<Scene.Arrow, 'relation' | 'stroke'> => {
+export const relationStyle = (kind: RelationKind): Pick<Shape.Arrow, 'relation' | 'stroke'> => {
   const relation = SCENE_RELATION[kind];
   return {
     ...(relation ? { relation } : {}),
@@ -259,7 +261,7 @@ export const relationRanks = (model: UmlModel): Map<string, number> =>
 
 export type CompileOptions = {
   /** Canvas position of the diagram's top-left, in canvas px. */
-  origin?: Scene.Point;
+  origin?: Shape.Point;
   /** Canvas px per scene unit. */
   scale?: number;
   /** Gap between ranks along the flow direction, in scene units (default 90). */
@@ -299,7 +301,7 @@ export const compile = (source: string, options: CompileOptions = {}): Scene.Com
   const widest = Math.max(...[...lanes.values()].map(laneSpan), 0);
 
   // Lanes advance along the main axis by their tallest member; members center on the widest lane.
-  const positions = new Map<string, Scene.Point>();
+  const positions = new Map<string, Shape.Point>();
   let mainOffset = 0;
   for (const lane of [...lanes.keys()].sort((left, right) => left - right)) {
     const members = lanes.get(lane)!;
@@ -337,7 +339,7 @@ export const compile = (source: string, options: CompileOptions = {}): Scene.Com
     const box = boxes.get(entry.id)!;
     const point = positions.get(entry.id)!;
     const title = entry.stereotype ? `«${entry.stereotype}»\n${entry.label}` : entry.label;
-    const elements: Scene.Element[] = [
+    const elements: Shape.Element[] = [
       { kind: 'rect', id: 'title', x: 0, y: 0, w: box.w, h: box.titleH, text: title, fill: 'solid' },
     ];
     if (box.attributesH) {
