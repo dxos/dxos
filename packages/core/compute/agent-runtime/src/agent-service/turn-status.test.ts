@@ -16,28 +16,6 @@ import { Feed, Ref } from '@dxos/echo';
 
 import { agentProgressKey, withTurnStatus } from './turn-status.ts';
 
-/** The status updates a run wrote, as `[key, message]` pairs in order. */
-const collect = () => {
-  const updates: [string | undefined, string | undefined][] = [];
-  const layer = Trace.testTraceService().pipe(
-    Layer.provide(
-      Layer.succeed(Trace.TraceSink, {
-        write: (message) => {
-          for (const event of message.events) {
-            if (event.type === Trace.StatusUpdate.key) {
-              const data = event.data as Trace.PayloadType<typeof Trace.StatusUpdate>;
-              updates.push([data.progress?.key, data.message]);
-            }
-          }
-        },
-      }),
-    ),
-  );
-  return { updates, layer };
-};
-
-const makeChat = () => Chat.make({ feed: Ref.make(Feed.make()) });
-
 describe('withTurnStatus', () => {
   it.effect('reports a turn as working, then complete', () => {
     const { updates, layer } = collect();
@@ -74,7 +52,7 @@ describe('withTurnStatus', () => {
       yield* Effect.interrupt.pipe(withTurnStatus(chat), Effect.exit);
       expect(updates.map(([, message]) => message)).toEqual([
         'Assistant is working',
-        Trace.StatusFailed,
+        Trace.StatusError,
         'Assistant is working',
         Trace.StatusCancelled,
       ]);
@@ -97,3 +75,25 @@ describe('withTurnStatus', () => {
     }).pipe(Effect.provide(layer));
   });
 });
+
+/** The status updates a run wrote, as `[key, message]` pairs in order. */
+const collect = () => {
+  const updates: [string | undefined, string | undefined][] = [];
+  const layer = Trace.testTraceService().pipe(
+    Layer.provide(
+      Layer.succeed(Trace.TraceSink, {
+        write: (message) => {
+          for (const event of message.events) {
+            if (event.type === Trace.StatusUpdate.key) {
+              const data = event.data as Trace.PayloadType<typeof Trace.StatusUpdate>;
+              updates.push([data.progress?.key, data.message]);
+            }
+          }
+        },
+      }),
+    ),
+  );
+  return { updates, layer };
+};
+
+const makeChat = () => Chat.make({ feed: Ref.make(Feed.make()) });

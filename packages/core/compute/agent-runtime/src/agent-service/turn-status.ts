@@ -63,7 +63,7 @@ export const withTurnStatus =
                   ? Trace.StatusComplete
                   : Exit.hasInterrupts(exit)
                     ? Trace.StatusCancelled
-                    : Trace.StatusFailed,
+                    : Trace.StatusError,
               ),
             ),
           ),
