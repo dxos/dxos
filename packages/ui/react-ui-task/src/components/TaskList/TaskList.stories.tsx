@@ -1530,7 +1530,7 @@ export const TestCreateWithProperties: Story = {
     await userEvent.click(title());
     await userEvent.keyboard('Order green beans');
     await userEvent.click(picker('estimate'));
-    await userEvent.click(await body.findByRole('menuitem', { name: /^M$/ }));
+    await userEvent.click(await body.findByRole('menuitemradio', { name: /^M$/ }));
     await waitFor(async () => expect(picker('estimate').textContent).toEqual('M'));
 
     await userEvent.click(title());

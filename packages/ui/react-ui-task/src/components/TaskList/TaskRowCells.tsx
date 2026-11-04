@@ -229,7 +229,7 @@ TaskCheckbox.displayName = 'TaskList.Checkbox';
 
 export const TaskEstimateLabel = ({ estimate }: { estimate?: Task.Estimate }) =>
   estimate ? (
-    <Typography.Text asChild tone='muted' data-testid='taskList.item.estimate'>
+    <Typography.Text asChild tone='muted' classNames='text-sm' data-testid='taskList.item.estimate'>
       <span>{estimate.toUpperCase()}</span>
     </Typography.Text>
   ) : null;
@@ -250,7 +250,7 @@ export const TaskEstimatePicker = ({ estimate, onChange, testId, classNames }: T
   const label = estimate?.toUpperCase() ?? <Icon.Icon icon={UNSET_ICON} classNames='text-neutral-500' />;
 
   if (!onChange) {
-    return <Layout.Block classNames={mx(estimateTextStyle(estimate), classNames)}>{label}</Layout.Block>;
+    return <Layout.Block classNames={mx('text-sm', estimateTextStyle(estimate), classNames)}>{label}</Layout.Block>;
   }
 
   return (
@@ -271,7 +271,7 @@ export const TaskEstimatePicker = ({ estimate, onChange, testId, classNames }: T
           iconOnly={estimate === undefined}
           label={t('task-estimate.label')}
           data-testid={testId}
-          classNames={mx('w-8 px-0 text-xs tabular-nums', estimateTextStyle(estimate))}
+          classNames={mx('w-8 px-0 text-sm tabular-nums', estimateTextStyle(estimate))}
           onClick={(event: MouseEvent) => event.stopPropagation()}
         >
           {label}
@@ -289,8 +289,8 @@ TaskEstimatePicker.displayName = 'TaskList.EstimatePicker';
  * — it is a different kind of statement from "how much", and a filled mark carries that.
  *
  * The glyph is also the control: it opens a menu to set the level. It renders on every row —
- * including one with no priority, which shows a dot — so setting a priority never depends on
- * discovering a hover affordance.
+ * including one with no priority, which shows the neutral placeholder — so setting a priority never
+ * depends on discovering a hover affordance.
  */
 export const TaskPriorityIcon = ({ task, classNames }: { task: Task.Task; classNames?: string }) => {
   const { onTaskUpdate } = useTaskListContext('TaskList.PriorityIcon');
@@ -320,7 +320,7 @@ export const TaskPriorityPicker = ({ priority, onChange, testId, classNames }: T
   const styles = priorityTextStyle(priority);
 
   if (!onChange) {
-    // Falls back to the dot rather than rendering nothing: a readonly row still says "no priority"
+    // Falls back to the placeholder rather than rendering nothing: a readonly row still says "no priority"
     // in the same column its neighbours use, so the list reads as one column and not a ragged one.
     return (
       <Layout.Block classNames={classNames}>
@@ -339,7 +339,7 @@ export const TaskPriorityPicker = ({ priority, onChange, testId, classNames }: T
             createMenuAction(`priority-${id}`, () => onChange(id === 'none' ? undefined : id), {
               label: t(`priority-${id}.label`),
               // `None` takes the row's unset glyph, so every option has an icon and the labels align.
-              icon: optionIcon ?? UNSET_ICON,
+              icon: optionIcon ?? priorityIcon(undefined),
               iconClassNames: priorityTextStyle(id),
               checked: (priority ?? 'none') === id,
             }),
