@@ -35,7 +35,6 @@ export const COMPATIBILITY_FLAGS: readonly string[] = [
 ];
 
 const JS_FILE = /\.(mjs|js)$/;
-const VENDOR_FILE = new RegExp(`^${VENDOR_DIR}`);
 
 const decoder = new TextDecoder();
 const encoder = new TextEncoder();
@@ -135,14 +134,14 @@ export const rewriteImports = async (files: Files, imports: ImportMap): Promise<
 };
 
 /**
- * Keeps every file outside `vendor/`, the vendored `roots`, and the vendored files reachable from those by literal
- * imports: `vendor/` is built for the plugin's shared packages, and a module body reaches only some of them.
+ * Keeps the `roots` and the files reachable from them by literal imports: the isolate holds every module it is given,
+ * and the bundle's browser-only bodies, with the UI packages they pull into `vendor/`, never run on EDGE.
  */
-const pruneVendor = async (
+const prune = async (
   files: Record<string, Uint8Array>,
   roots: readonly string[],
 ): Promise<Record<string, Uint8Array>> => {
-  const kept = new Set([...Object.keys(files).filter((path) => !VENDOR_FILE.test(path)), ...roots]);
+  const kept = new Set(roots.filter((path) => files[path] !== undefined));
   const queue = [...kept].filter((path) => JS_FILE.test(path));
   for (let path = queue.pop(); path !== undefined; path = queue.pop()) {
     for (const { specifier } of await parseImports(decoder.decode(files[path]))) {
@@ -162,16 +161,26 @@ const pruneVendor = async (
 const prefixed = (prefix: string, path: string | undefined): string | undefined =>
   path === undefined ? undefined : `${prefix}${path}`;
 
+/** The runtime EDGE runs a plugin in; a module that names its environments runs here only when it names this one. */
+const RUNTIME = 'workerd';
+
 /**
- * One bundle's plugin as main-module source: its manifest, and a loader for each module body and adapter, keyed by the
- * URL the manifest gives it. The loaders import literal paths, since a computed specifier cannot resolve in Worker
- * Loader: a body or local adapter by its path under `prefix`, an adapter's bare specifier by the file the import map
- * gives it.
+ * One bundle's plugin as main-module source: its manifest, and a loader for each body and adapter of a module that runs
+ * on workerd, keyed by the URL the manifest gives it, with the paths those loaders import. The loaders import literal
+ * paths, since a computed specifier cannot resolve in Worker Loader: a body or local adapter by its path under
+ * `prefix`, an adapter's bare specifier by the file the import map gives it.
  */
-const pluginSource = (bundle: Files, prefix: string, imports: ImportMap): string => {
+const pluginSource = (
+  bundle: Files,
+  prefix: string,
+  imports: ImportMap,
+): { readonly source: string; readonly paths: readonly string[] } => {
   const manifestJson = text(bundle, MANIFEST_FILE) ?? '{}';
-  const manifest: { modules?: { url: string; adapter?: { url: string } }[] } = JSON.parse(manifestJson);
-  const loaders = (manifest.modules ?? []).flatMap(({ url, adapter }) => {
+  const manifest: { modules?: { url: string; adapter?: { url: string }; environments?: string[] }[] } =
+    JSON.parse(manifestJson);
+  const runsHere = ({ environments }: { environments?: string[] }) =>
+    environments === undefined || environments.includes(RUNTIME);
+  const loaders = (manifest.modules ?? []).filter(runsHere).flatMap(({ url, adapter }) => {
     const body = resolveRelative(MANIFEST_FILE, url);
     const adapterPath = !adapter
       ? undefined
@@ -184,7 +193,10 @@ const pluginSource = (bundle: Files, prefix: string, imports: ImportMap): string
     ];
   });
   const entries = loaders.map(([key, path]) => `${JSON.stringify(key)}: () => import(${JSON.stringify(`./${path}`)})`);
-  return `{ manifest: ${manifestJson}, loaders: { ${entries.join(', ')} } }`;
+  return {
+    source: `{ manifest: ${manifestJson}, loaders: { ${entries.join(', ')} } }`,
+    paths: loaders.map(([, path]) => path),
+  };
 };
 
 /** What Worker Loader runs for a bundle: its rewritten files, the main module's name and source. */
@@ -203,10 +215,12 @@ export type WorkerCode = {
 export const workerCode = async (files: Files): Promise<WorkerCode> => {
   const imports: Record<string, string> = { ...readVendor(files) };
   const host = imports[HOST_SPECIFIER];
-  const plugin = pluginSource(files, '', imports);
+  const { source: plugin, paths } = pluginSource(files, '', imports);
   const main = [
     "import { WorkerEntrypoint } from 'cloudflare:workers';",
     'let host;',
+    // A host that predates versioning exports no `PROTOCOL_VERSION`.
+    'let protocolVersion;',
     // Imported inside a request: module evaluation runs in global scope, where workerd disallows timers.
     'const getHost = async () => {',
     '  if (host === undefined) {',
@@ -215,6 +229,7 @@ export const workerCode = async (files: Files): Promise<WorkerCode> => {
       ? `    throw new Error(${JSON.stringify(`vendor/ does not provide ${HOST_SPECIFIER}, which EDGE starts the plugin with.`)});`
       : `    const { PluginHost } = await import('./${host}');`,
     `    const plugin = ${plugin};`,
+    '    protocolVersion = PluginHost.PROTOCOL_VERSION ?? 1;',
     '    host ??= PluginHost.make(() => ({ primary: PluginHost.fromManifest(plugin.manifest, plugin.loaders) }));',
     '  }',
     '  return host;',
@@ -229,10 +244,15 @@ export const workerCode = async (files: Files): Promise<WorkerCode> => {
     '    }',
     '  }',
     '  async invoke(request, scope) { return (await getHost()).invoke(request, this.env, scope); }',
+    // Starting the host does not activate the plugin: that happens on the first describe or invoke.
+    '  async protocolVersion() {',
+    '    await getHost();',
+    '    return protocolVersion;',
+    '  }',
     '}',
   ].join('\n');
   return {
-    files: await pruneVendor(await rewriteImports(files, imports), host === undefined ? [] : [host]),
+    files: await prune(await rewriteImports(files, imports), host === undefined ? paths : [...paths, host]),
     mainModule: MAIN_MODULE,
     main,
   };

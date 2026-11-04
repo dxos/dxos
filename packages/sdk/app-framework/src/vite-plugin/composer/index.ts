@@ -99,7 +99,8 @@ const REQUIRE_SHIM_BANNER = [
   "import * as __composerReact from 'react';",
   "import * as __composerReactDom from 'react-dom';",
   "import * as __composerReactJsxRuntime from 'react/jsx-runtime';",
-  'const __composerRequireShim = new Map([',
+  // `globalThis.Map`: a plugin chunk may declare its own top-level `Map` (an ECHO type), which shadows the global.
+  'const __composerRequireShim = new globalThis.Map([',
   "  ['react', __composerReact.default ?? __composerReact],",
   "  ['react-dom', __composerReactDom.default ?? __composerReactDom],",
   "  ['react/jsx-runtime', __composerReactJsxRuntime],",

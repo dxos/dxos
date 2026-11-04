@@ -14,7 +14,7 @@ import { type Key } from '@dxos/echo';
 export const handler = ({ spaceId }: { spaceId: Key.SpaceId }) =>
   Effect.gen(function* () {
     const { json } = yield* CommandConfig;
-    const client = yield* ClientService;
+    const client = yield* ClientService.client;
 
     const space = yield* getSpace(spaceId);
 

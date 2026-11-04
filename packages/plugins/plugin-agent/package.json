@@ -362,12 +362,16 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@automerge/automerge": "catalog:",
+    "@automerge/automerge-repo": "catalog:",
     "@dxos/agent-runtime": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo-client": "workspace:*",
+    "@dxos/echo-protocol": "workspace:*",
     "@dxos/edge-compute": "workspace:*",
+    "@dxos/plugin-builder": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-masonry": "workspace:*",
