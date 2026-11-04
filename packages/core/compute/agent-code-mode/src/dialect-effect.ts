@@ -20,6 +20,7 @@ import {
   type SandboxOperation,
   renderOperation,
   renderTypes,
+  renderTypeSummary,
 } from './Dialect.ts';
 import { type DocEntry, STATIC_DOCS, loadDocs } from './docs/index.ts';
 import { describeInput, describeTypes } from './fields.ts';
@@ -81,7 +82,7 @@ export const EffectDialect: Dialect = {
       /** Supplied by `wrap`, not by the model: the half of `DOCS` listing what this turn can resolve. */
       catalog: renderCatalog({
         operations,
-        types: describeTypes(Context.get(runtime, Database.Service).db),
+        types: describeTypes(Context.get(runtime, Database.Service).db.registry),
       }),
 
       /** Supplied by `wrap`, not by the model: runs its program against the turn's services. */
@@ -136,7 +137,7 @@ export const EffectDialect: Dialect = {
     Do not guess at a helper this prompt or \`DOCS\` does not show: an unshown name fails as \`is not
     a function\` and costs a call.
 
-    ${renderTypes(types, ({ dxn }) => dxn)}
+    ${renderTypeSummary(types, ({ dxn }) => dxn, "`DOCS['catalog/types.md']`")}
 
     ${operations.some((operation) => operation.definition) ? renderEffectOperations(operations) : NO_OPERATIONS}
 
@@ -242,7 +243,7 @@ const renderEffectOperations = (operations: readonly SandboxOperation[]): string
   reference wins. Most of what an operation does to one object is a line of \`Obj\`/\`Database\`
   code; prefer that.
 
-  ${renderOperationList(operations)}
+  ${renderOperationList(operations, briefDescription)}
 `;
 
 /** The tools no operation backs, which `Tools` binds by name; nothing when there are none. */
@@ -261,14 +262,17 @@ const renderEffectTools = (operations: readonly SandboxOperation[]): string => {
 };
 
 /** One line per operation backed by a definition, naming the DXN it resolves by. */
-const renderOperationList = (operations: readonly SandboxOperation[]): string =>
+const renderOperationList = (
+  operations: readonly SandboxOperation[],
+  describe: (description: string | undefined) => string | undefined = (description) => description,
+): string =>
   operations
     .flatMap((operation) => {
       const { definition } = operation;
       return definition
         ? [
             renderOperation(
-              operation,
+              { ...operation, description: describe(operation.description) },
               () => `yield* Database.resolve('${operationKey(definition)}')`,
               describeInput(definition.input),
             ),
@@ -276,3 +280,17 @@ const renderOperationList = (operations: readonly SandboxOperation[]): string =>
         : [];
     })
     .join('\n');
+
+/** Longest operation description the prompt carries; `catalog/operations.md` has every one in full. */
+const MAX_PROMPT_DESCRIPTION = 800;
+
+/** A description cut to {@link MAX_PROMPT_DESCRIPTION} at a paragraph or sentence end, saying where the rest is. */
+const briefDescription = (description: string | undefined): string | undefined => {
+  if (description === undefined || description.length <= MAX_PROMPT_DESCRIPTION) {
+    return description;
+  }
+  const head = description.slice(0, MAX_PROMPT_DESCRIPTION);
+  // Descriptions are hard-wrapped, so a single line break can fall mid-sentence.
+  const end = Math.max(head.lastIndexOf('\n\n'), head.lastIndexOf('. ') + 1, head.lastIndexOf('.\n') + 1);
+  return `${(end > MAX_PROMPT_DESCRIPTION / 2 ? head.slice(0, end) : head).trimEnd()} … [cut; \`DOCS['catalog/operations.md']\` has the full text]`;
+};
