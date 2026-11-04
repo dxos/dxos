@@ -14,6 +14,7 @@ import {
   draggable,
   dropTargetForElements,
 } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { disableNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/disable-native-drag-preview';
 import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import { type DropTargetRecord } from '@atlaskit/pragmatic-drag-and-drop/types';
@@ -59,6 +60,11 @@ type MosaicTileProps<TData = any, TLocation = DndLocation> = Util.ThemedClassNam
     data: TData;
     location: TLocation;
     draggable?: boolean;
+    /**
+     * Whether the browser's drag image follows the pointer. Turn it off for a tile that draws its own drag state from
+     * `data-[mosaic-tile-state=dragging]`, such as one that stays on an axis, which a native drag image cannot.
+     */
+    nativeDragPreview?: boolean;
     /** Whether this tile is the current (aria-current) item. */
     current?: boolean;
     /** Whether this tile is selected (aria-selected). */
@@ -92,6 +98,7 @@ const MosaicTile = Util.slottable<HTMLDivElement, MosaicTileProps>(
       id,
       data: dataProp,
       draggable: draggableProp,
+      nativeDragPreview = true,
       current,
       selected: selectedProp,
       binding,
@@ -162,20 +169,13 @@ const MosaicTile = Util.slottable<HTMLDivElement, MosaicTileProps>(
       [containerId, location, dataProp],
     );
 
+    // Apart from the drop target below, since scrolling suspends only that: a source unregistered by an autoscroll
+    // mid-drag never hears the drop, and a tile kept mounted (see `keepDragged`) would stay hidden.
     useLayoutEffect(() => {
       const root = rootRef.current;
-      if (!draggableProp || !root || !containerId || scrolling) {
+      if (!draggableProp || !root || !containerId) {
         return;
       }
-
-      const handleChange = ({ self, source }: { self: DropTargetRecord; source: ElementDragPayload }) => {
-        if (source.data.id !== dataProp.id) {
-          const closestEdge = extractClosestEdge(self.data);
-          const location = data.location + (closestEdge === 'top' || closestEdge === 'left' ? -0.5 : 0.5);
-          setActiveLocation(location);
-          setState({ type: 'target', closestEdge });
-        }
-      };
 
       // Mark the drag as a move at the native level. pragmatic-drag-and-drop only sets `dropEffect` (on
       // dragover via `getDropEffect`), never `effectAllowed`, so the first dragstart frame shows the
@@ -189,13 +189,18 @@ const MosaicTile = Util.slottable<HTMLDivElement, MosaicTileProps>(
 
       return combine(
         () => root.removeEventListener('dragstart', handleNativeDragStart),
-        // Source.
         draggable({
           element: root,
           dragHandle: dragHandle && state.type !== 'preview' ? dragHandle : undefined,
           canDrag: () => true,
           getInitialData: () => data,
           onGenerateDragPreview: ({ location, nativeSetDragImage }) => {
+            if (!nativeDragPreview) {
+              data.bounds = root.getBoundingClientRect();
+              disableNativeDragPreview({ nativeSetDragImage });
+              return;
+            }
+
             setCustomNativeDragPreview({
               nativeSetDragImage,
               getOffset: preserveOffsetOnSource({
@@ -221,44 +226,50 @@ const MosaicTile = Util.slottable<HTMLDivElement, MosaicTileProps>(
             setState({ type: 'idle' });
           },
         }),
-
-        // Target.
-        dropTargetForElements({
-          element: root,
-          getData: ({ input, element }) => attachClosestEdge(data, { input, element, allowedEdges }),
-          canDrop: ({ source }) => {
-            const data = getSourceData(source);
-            return (data && eventHandler.canDrop?.({ source: data })) || false;
-          },
-          // Reorder is a move, not a copy — otherwise the browser shows the green "+" copy cursor.
-          getDropEffect: () => 'move',
-          onDragEnter: ({ self, source }) => {
-            handleChange({ self, source });
-          },
-          onDragLeave: () => {
-            setState({ type: 'idle' });
-            setActiveLocation(undefined);
-          },
-          onDrag: ({ self, source }) => {
-            handleChange({ self, source });
-          },
-          onDrop: () => {
-            setState({ type: 'idle' });
-            setActiveLocation(undefined);
-          },
-        }),
       );
-    }, [
-      rootRef,
-      forwardedRef,
-      containerId,
-      dragHandle,
-      eventHandler,
-      data,
-      scrolling,
-      allowedEdges,
-      setActiveLocation,
-    ]);
+    }, [rootRef, forwardedRef, containerId, dragHandle, data, nativeDragPreview]);
+
+    useLayoutEffect(() => {
+      const root = rootRef.current;
+      if (!draggableProp || !root || !containerId || scrolling) {
+        return;
+      }
+
+      const handleChange = ({ self, source }: { self: DropTargetRecord; source: ElementDragPayload }) => {
+        if (source.data.id !== dataProp.id) {
+          const closestEdge = extractClosestEdge(self.data);
+          const location = data.location + (closestEdge === 'top' || closestEdge === 'left' ? -0.5 : 0.5);
+          setActiveLocation(location);
+          setState({ type: 'target', closestEdge });
+        }
+      };
+
+      return dropTargetForElements({
+        element: root,
+        getData: ({ input, element }) => attachClosestEdge(data, { input, element, allowedEdges }),
+        canDrop: ({ source }) => {
+          const data = getSourceData(source);
+          // A tile kept mounted during its own drag (see `keepDragged`) must not react to the pointer leaving it.
+          return (data && data.id !== id && eventHandler.canDrop?.({ source: data })) || false;
+        },
+        // Reorder is a move, not a copy — otherwise the browser shows the green "+" copy cursor.
+        getDropEffect: () => 'move',
+        onDragEnter: ({ self, source }) => {
+          handleChange({ self, source });
+        },
+        onDragLeave: () => {
+          setState({ type: 'idle' });
+          setActiveLocation(undefined);
+        },
+        onDrag: ({ self, source }) => {
+          handleChange({ self, source });
+        },
+        onDrop: () => {
+          setState({ type: 'idle' });
+          setActiveLocation(undefined);
+        },
+      });
+    }, [rootRef, forwardedRef, containerId, eventHandler, data, scrolling, allowedEdges, setActiveLocation]);
 
     const { className, ...rest } = Util.composableProps(props, { classNames: 'relative outline-none' });
 

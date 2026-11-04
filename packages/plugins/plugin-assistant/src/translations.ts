@@ -138,6 +138,7 @@ export const translations: Theme.Resource[] = [
         'no-results.message': 'No results',
 
         'cancel-queued.button': 'Remove from queue',
+        'move-thread.button': 'Move thread',
         'new-thread.button': 'New Chat',
         'rename-thread.button': 'Rename Chat',
         'chat-history.label': 'Chat History',

@@ -25,18 +25,17 @@ import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { Config } from '@dxos/react-client';
 import { useRegistry, useSpaces } from '@dxos/react-client/echo';
-import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { Dnd } from '@dxos/react-ui-dnd';
 import * as Panel from '@dxos/react-ui/Panel';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message, Task } from '@dxos/types';
-import { trim } from '@dxos/util';
+import { arrayMove, trim } from '@dxos/util';
 
 import { useChatModel, useChatServices, usePresets } from '#hooks';
 import * as AssistantPlugin from '#meta';
 import { translations } from '#translations';
 import { type Assistant, AssistantCapabilities } from '#types';
 
-import { AssistantNamespace } from '../../namespace.ts';
 import { Chat } from '../Chat/index.ts';
 import * as ChatPlane from './ChatPlane.tsx';
 
@@ -149,11 +148,13 @@ const ThreadColumn = ({ chat, current, db, runtime, registry, settings }: Thread
   return (
     <Chat.Root chat={chat} db={db} chatModel={chatModel} onSubmit={handleSubmit}>
       <ChatPlane.Column value={chat.id}>
-        <Panel.Body asChild>
-          <Chat.Content>
-            <Chat.Thread />
-          </Chat.Content>
-        </Panel.Body>
+        <ChatPlane.Cell>
+          <Panel.Body asChild>
+            <Chat.Content>
+              <Chat.Thread />
+            </Chat.Content>
+          </Panel.Body>
+        </ChatPlane.Cell>
         <ChatPlane.Prompt>
           <Chat.Activity />
           <Chat.Prompt {...chatProps} outline autoFocus={current} preset={preset?.id} />
@@ -171,13 +172,16 @@ const DefaultStory = ({ selected = 0 }: StoryArgs) => {
   const registry = useRegistry();
   const runtime = useChatServices({ id: db?.spaceId });
 
-  // Ids are time-ordered, so a thread lands at the end of the strip unless it was added on the left.
-  const [prepended, setPrepended] = useState<readonly string[]>([]);
+  // Ids are time-ordered, so a thread lands at the end of the strip unless it was added on the left or dragged.
+  const [order, setOrder] = useState<readonly string[]>([]);
   const threads = useMemo(() => {
     const sorted = chats.toSorted((a, b) => a.id.localeCompare(b.id));
-    const isPrepended = ({ id }: AssistantChat.Chat) => prepended.includes(id);
-    return [...sorted.filter(isPrepended).toReversed(), ...sorted.filter((chat) => !isPrepended(chat))];
-  }, [chats, prepended]);
+    const position = ({ id }: AssistantChat.Chat) => {
+      const index = order.indexOf(id);
+      return index === -1 ? order.length : index;
+    };
+    return sorted.toSorted((a, b) => position(a) - position(b));
+  }, [chats, order]);
   const [currentId, setCurrentId] = useState<string>();
   // A thread just created is not in the query yet, so an unknown id holds the position until it arrives.
   const lastIndexRef = useRef(selected);
@@ -196,51 +200,20 @@ const DefaultStory = ({ selected = 0 }: StoryArgs) => {
         const feed = db.add(Feed.make());
         const chat = db.add(AssistantChat.make({ name: `Thread ${threads.length + 1}`, feed: Ref.make(feed) }));
         if (side === 'start') {
-          setPrepended((ids) => [...ids, chat.id]);
+          setOrder([chat.id, ...threads.map(({ id }) => id)]);
         }
         setCurrentId(chat.id);
       }
     },
-    [db, threads.length],
+    [db, threads],
   );
 
-  const previous = threads[index - 1];
-  const next = threads[index + 1];
-  const menuActions = useMenuBuilder(
-    () =>
-      MenuBuilder.make()
-        .root({ label: 'Threads' })
-        .action(
-          'new',
-          {
-            label: ['new-thread.button', { ns: AssistantNamespace.key }],
-            icon: 'ph--plus--regular',
-            testId: 'chat-plane.new',
-          },
-          () => handleNew(),
-        )
-        .action(
-          'previous',
-          {
-            label: 'Previous thread',
-            icon: 'ph--caret-left--regular',
-            disabled: !previous,
-            testId: 'chat-plane.previous',
-          },
-          () => previous && setCurrentId(previous.id),
-        )
-        .action(
-          'next',
-          {
-            label: 'Next thread',
-            icon: 'ph--caret-right--regular',
-            disabled: !next,
-            testId: 'chat-plane.next',
-          },
-          () => next && setCurrentId(next.id),
-        )
-        .build(),
-    [handleNew, previous?.id, next?.id],
+  const handleMove = useCallback(
+    (id: string, index: number) => {
+      const next = threads.map((thread) => thread.id);
+      setOrder(arrayMove(next, next.indexOf(id), index));
+    },
+    [threads],
   );
 
   if (!db || !current) {
@@ -248,28 +221,31 @@ const DefaultStory = ({ selected = 0 }: StoryArgs) => {
   }
 
   return (
-    <ChatPlane.Root value={current.id} onValueChange={setCurrentId} onAdd={handleNew}>
-      <Panel.Header>
-        <ActionToolbar {...menuActions} attendableId={current.id} alwaysActive />
-      </Panel.Header>
-      <ChatPlane.Viewport>
-        <ChatPlane.Add side='start' />
-        <ChatPlane.Columns>
-          {threads.map((chat) => (
-            <ThreadColumn
-              key={chat.id}
-              chat={chat}
-              current={chat.id === current.id}
-              db={db}
-              runtime={runtime}
-              registry={registry}
-              settings={settings}
-            />
-          ))}
-        </ChatPlane.Columns>
-        <ChatPlane.Add side='end' />
-      </ChatPlane.Viewport>
-    </ChatPlane.Root>
+    <Dnd.Root>
+      <ChatPlane.Root value={current.id} onValueChange={setCurrentId} onAdd={handleNew} onMove={handleMove}>
+        <ChatPlane.Viewport>
+          <ChatPlane.Add side='start' />
+          <ChatPlane.Columns items={threads}>
+            {(id) => {
+              const chat = threads.find((thread) => thread.id === id);
+              return (
+                chat && (
+                  <ThreadColumn
+                    chat={chat}
+                    current={id === current.id}
+                    db={db}
+                    runtime={runtime}
+                    registry={registry}
+                    settings={settings}
+                  />
+                )
+              );
+            }}
+          </ChatPlane.Columns>
+          <ChatPlane.Add side='end' />
+        </ChatPlane.Viewport>
+      </ChatPlane.Root>
+    </Dnd.Root>
   );
 };
 
