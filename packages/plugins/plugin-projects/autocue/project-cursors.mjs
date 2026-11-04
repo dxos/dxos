@@ -81,6 +81,9 @@ const expectCaret = (scope, name, what) =>
     what: `${name}'s caret in ${what}`,
   });
 
+const hold = ({ page }) => page.waitForTimeout(HOLD);
+
+/** Expands a navtree row unless it is already open; a row with no children yet keeps its caret disabled. */
 const expandRow = async (row) => {
   const toggle = row.locator('[data-part="branch-trigger"]').first();
   await toggle.waitFor({ state: 'attached', timeout: TIMEOUT });
