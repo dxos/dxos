@@ -230,18 +230,27 @@ describe('report-session', () => {
       const taskSet = yield* Database.add(TaskSet.make({ name: 'Backlog' }));
       const open = yield* Database.add(Task.make({ title: 'Ship the thing', status: 'started', assignee }));
       const closed = yield* Database.add(Task.make({ title: 'Already done', status: 'done', assignee }));
+      const reviewed = yield* Database.add(
+        Task.make({
+          title: 'Awaiting sign-off',
+          status: 'review',
+          assignee: { name: 'Riley', identityDid: 'did:key:riley' },
+          delegate: assignee,
+        }),
+      );
+      const held = yield* Database.add(Task.make({ title: 'Awaiting the vendor', status: 'review', assignee }));
       const project = yield* Database.add(Project.make({ name: 'Voyage', taskSet: Ref.make(taskSet) }));
       Obj.update(taskSet, (taskSet) => {
-        taskSet.tasks = [Ref.make(open), Ref.make(closed)];
+        taskSet.tasks = [Ref.make(open), Ref.make(closed), Ref.make(reviewed), Ref.make(held)];
       });
       yield* Database.flush();
 
       const reported = yield* report({ sessionId: 'session_tasks' });
       const titles = (reported.tasks ?? []).map((task) => task.title);
       // Closed work is not a reminder.
-      expect(titles).toEqual(['Ship the thing']);
+      expect(titles).toEqual(['Ship the thing', 'Awaiting the vendor']);
 
-      expect(reported.tasks).toHaveLength(1);
+      expect(reported.tasks).toHaveLength(2);
       const [row] = reported.tasks ?? [];
       expect(row.dxn).toBe(Obj.getURI(open).toString());
       expect(row.status).toBe('started');

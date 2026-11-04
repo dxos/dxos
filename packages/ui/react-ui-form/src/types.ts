@@ -38,9 +38,15 @@ export type FormFieldOverride = {
   label?: string;
   /** Draw no label: the control names itself, or the section heading above it already does. */
   hideLabel?: boolean;
+  /** Overrides the form's `layout` for this field alone. */
+  presentation?: FormPresentation;
   description?: string;
   placeholder?: string;
+  /** The field's glyph, shown where its value has none of its own (an unset tag, an option without an icon). */
+  icon?: string;
   readonly?: boolean;
+  /** This use of the form always holds a value, though the schema allows none: a select offers no "None". */
+  required?: boolean;
   hidden?: boolean;
   /**
    * Numeric bounds and step for this use of the field, narrower than the schema's: e.g. a range the editor
@@ -52,6 +58,15 @@ export type FormFieldOverride = {
   /** A nested object's group: whether it is open, for a host that keeps the state (unset, it starts open). */
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  /** A button at the end of a text control that sets its value. */
+  action?: FormFieldAction;
+};
+
+export type FormFieldAction = {
+  label: string;
+  icon: string;
+  /** The field's new value from its current one; `undefined` keeps the current value. */
+  run: (value: string | undefined) => Promise<string | undefined>;
 };
 
 /**
@@ -60,8 +75,13 @@ export type FormFieldOverride = {
  * - compact: Show label and control.
  * - inline: Control only.
  * - static: Plain DOM; omit all undefined values.
+ * - tag: Control only, as a `Tag` sized to its value, for a wrapping row of fields.
+ * - title: A text control only, edited in place as the page's heading, with no well until it is focused.
+ * - plain: A text control only, edited in place as body text, with no well until it is focused.
+ * - section: An array as a section of its own, its label the heading and its add button on the heading's row; other
+ *   fields show as `compact`.
  */
-export type FormPresentation = 'full' | 'compact' | 'inline' | 'static';
+export type FormPresentation = 'full' | 'compact' | 'inline' | 'static' | 'tag' | 'title' | 'plain' | 'section';
 
 /** When a typed value commits: as each value parses, or only on blur and Enter. */
 export type CommitOn = 'change' | 'blur';
@@ -99,9 +119,12 @@ export type FormFieldRendererProps<T = any> = {
    */
   jsonPath?: string;
   placeholder?: string;
+  /** The field's glyph (see `FormFieldOverride.icon`). */
+  icon?: string;
   autoFocus?: boolean;
   /** Presentation mode for the field (full/compact/inline/static); see {@link FormPresentation}. */
   presentation?: FormPresentation;
+  action?: FormFieldAction;
   /** Whether the field is required AND still unfilled; surfaces a trailing asterisk on the label. */
   required?: boolean;
   /** The field shows no value until it is edited (see `FormFieldOverride.indeterminate`). */

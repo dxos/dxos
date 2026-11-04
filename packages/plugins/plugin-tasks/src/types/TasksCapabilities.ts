@@ -20,5 +20,8 @@ import { TasksNamespace } from '../namespace.ts';
  */
 export type TaskAction = ObjectAction.ObjectAction<Task.Task>;
 
+/** A {@link TaskAction} in this group hands the task to an agent: the assignee picker lists it, not the row's menu. */
+export const DELEGATE_GROUP = 'delegate';
+
 // Multi: one menu item per contributed action, and more than one plugin may contribute.
 export const TaskAction = Capability.make<TaskAction>()(`${TasksNamespace.key}.capability.taskAction`);

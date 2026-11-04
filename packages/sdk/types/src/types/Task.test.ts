@@ -142,6 +142,16 @@ describe('Task derived views', () => {
     ]);
     expect(Task.subtree([root, grandchild], root).map((task) => task.title)).toEqual(['Root']);
   });
+
+  test('a dependency awaiting sign-off unblocks its dependents, as a done one does', ({ expect }) => {
+    const reviewed = Task.make({ title: 'Reviewed', status: 'review' });
+    const started = Task.make({ title: 'Started', status: 'started' });
+    const next = Task.make({ title: 'Next', dependsOn: [Ref.make(reviewed)] });
+    const blocked = Task.make({ title: 'Blocked', dependsOn: [Ref.make(started)] });
+
+    expect(Task.isTaskReady([reviewed, next], next)).toBe(true);
+    expect(Task.isTaskReady([started, blocked], blocked)).toBe(false);
+  });
 });
 
 describe('refEntityId', () => {
@@ -204,7 +214,7 @@ describe('collectRoot', () => {
 });
 
 describe('review', () => {
-  it.effect('carries reviewers and the artifacts a task produced', () =>
+  it.effect('carries the artifacts a task produced', () =>
     Effect.gen(function* () {
       // Any object can be an artifact; a second task stands in so the test registers no extra type.
       const doc = yield* Database.add(Task.make({ title: 'The poem' }));
@@ -212,15 +222,12 @@ describe('review', () => {
         Task.make({
           title: 'Write a poem',
           status: 'review',
-          reviewers: [{ name: 'Rich' }],
           artifacts: [Ref.make(doc)],
         }),
       );
       yield* Database.flush();
 
-      // `review` is a status of its own: work is finished but not closed, because someone was named.
       expect(task.status).toEqual('review');
-      expect(task.reviewers?.map((reviewer) => reviewer.name)).toEqual(['Rich']);
       // The artifact is a ref, not a child: completing the task must not cascade to what it made.
       expect(Task.refEntityId(task.artifacts?.[0])).toEqual(doc.id);
       expect(Obj.getParent(doc)?.id).not.toEqual(task.id);
@@ -229,21 +236,18 @@ describe('review', () => {
 });
 
 describe('completion', () => {
-  it.effect('goes to review when someone was named, and done when nobody was', () =>
+  it.effect('goes to review when a person answers for it, and done when nobody does', () =>
     Effect.gen(function* () {
       const reviewed = yield* Database.add(
-        Task.make({ title: 'Reviewed', status: 'started', reviewers: [{ name: 'Rich' }] }),
+        Task.make({ title: 'Reviewed', status: 'started', assignee: { name: 'Rich', role: 'user' } }),
       );
       const unreviewed = yield* Database.add(Task.make({ title: 'Unreviewed', status: 'started' }));
       yield* Database.flush();
 
-      // Every writer asks for `done` — the agent tools, the list's checkbox — and none of them know
-      // about reviewers, so the rule is on the write itself.
       Task.setStatus(reviewed, 'done');
       Task.setStatus(unreviewed, 'done');
       yield* Database.flush();
 
-      // Finished, not closed: someone was named to look at it.
       expect(reviewed.status).toEqual('review');
       expect(unreviewed.status).toEqual('done');
 
@@ -255,7 +259,7 @@ describe('completion', () => {
   it.effect('a task in review is not closed by asking again', () =>
     Effect.gen(function* () {
       const task = yield* Database.add(
-        Task.make({ title: 'Reviewed', status: 'review', reviewers: [{ name: 'Rich' }] }),
+        Task.make({ title: 'Reviewed', status: 'review', assignee: { name: 'Rich', role: 'user' } }),
       );
       yield* Database.flush();
 
@@ -267,10 +271,16 @@ describe('completion', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 
+  test('a closed task is not reopened by asking for done again', ({ expect }) => {
+    const task = Task.make({ title: 'Reviewed', status: 'done', assignee: { name: 'Rich', role: 'user' } });
+    expect(Task.setStatus(task, 'done')).toBeUndefined();
+    expect(task.status).toEqual('done');
+  });
+
   it.effect('approve is the one write that closes a reviewed task', () =>
     Effect.gen(function* () {
       const task = yield* Database.add(
-        Task.make({ title: 'Reviewed', status: 'review', reviewers: [{ name: 'Rich' }] }),
+        Task.make({ title: 'Reviewed', status: 'review', assignee: { name: 'Rich', role: 'user' } }),
       );
       yield* Database.flush();
 
@@ -283,7 +293,7 @@ describe('completion', () => {
   it.effect('an update naming a reviewed task done still records its other fields', () =>
     Effect.gen(function* () {
       const task = yield* Database.add(
-        Task.make({ title: 'Reviewed', status: 'started', reviewers: [{ name: 'Rich' }] }),
+        Task.make({ title: 'Reviewed', status: 'started', assignee: { name: 'Rich', role: 'user' } }),
       );
       yield* Database.flush();
 
@@ -340,6 +350,86 @@ describe('completion', () => {
       ]);
     }).pipe(Effect.provide(testLayer())),
   );
+});
+
+describe('delegation', () => {
+  const rich = { name: 'Rich', role: 'user' as const };
+  const scout = { name: 'Scout', role: 'assistant' as const };
+
+  it.effect('keeps the assignee, and a delegated finish waits on them', () =>
+    Effect.gen(function* () {
+      const delegated = yield* Database.add(Task.make({ title: 'Draft launch email', status: 'todo', assignee: rich }));
+      const own = yield* Database.add(Task.make({ title: 'Read the brief', status: 'todo', assignee: scout }));
+      yield* Database.flush();
+
+      const entry = Task.setDelegate(delegated, scout);
+      Task.setStatus(delegated, 'done');
+      Task.setStatus(own, 'done');
+      yield* Database.flush();
+
+      expect(entry?.description).toEqual('Delegated to Scout.');
+      expect(delegated.assignee?.name).toEqual('Rich');
+      expect(Task.worker(delegated)?.name).toEqual('Scout');
+      expect(delegated.status).toEqual('review');
+      expect(own.status).toEqual('done');
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('delegating to the assignee hands the work back', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(Task.make({ title: 'Draft launch email', assignee: rich, delegate: scout }));
+      yield* Database.flush();
+
+      const entry = Task.setDelegate(task, { ...rich });
+      yield* Database.flush();
+
+      expect(task.delegate).toBeUndefined();
+      expect(entry?.description).toEqual('Handed back from Scout.');
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('a task assigned to an agent keeps that shape on write', () =>
+    Effect.gen(function* () {
+      const task = yield* Database.add(Task.make({ title: 'Draft launch email', status: 'started', assignee: scout }));
+      yield* Database.flush();
+
+      Task.update(task, { priority: 'high', status: 'done' });
+      yield* Database.flush();
+
+      expect(task.assignee?.name).toEqual('Scout');
+      expect(task.delegate).toBeUndefined();
+      expect(task.status).toEqual('done');
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  test('the review gate reads who holds the task before and after the edit', ({ expect }) => {
+    const relay = { name: 'Relay', role: 'assistant' as const };
+    const claimedAndFinished = Task.make({ title: 'Ship', status: 'todo', assignee: rich });
+    Task.update(claimedAndFinished, { delegate: relay, status: 'done' });
+    expect(claimedAndFinished.status).toEqual('review');
+
+    const handedBackAndFinished = Task.make({ title: 'Ship', status: 'started', assignee: rich, delegate: relay });
+    Task.update(handedBackAndFinished, { delegate: null, status: 'done' });
+    expect(handedBackAndFinished.status).toEqual('review');
+  });
+
+  test('a finish waits on the person who answers for the task after the agent lets go of it', ({ expect }) => {
+    const relay = { name: 'Relay', role: 'assistant' as const };
+    const task = Task.make({ title: 'Ship', status: 'started', assignee: rich, delegate: relay });
+    Task.update(task, { delegate: null });
+    Task.update(task, { status: 'done' });
+    expect(task.status).toEqual('review');
+
+    Task.approve(task);
+    expect(task.status).toEqual('done');
+  });
+
+  test('the owner is the person who answers for the task, never an agent or a tool', ({ expect }) => {
+    expect(Task.owner(Task.make({ title: 'Mine', assignee: rich }))?.name).toEqual('Rich');
+    expect(Task.owner(Task.make({ title: "An agent's own", assignee: scout }))).toBeUndefined();
+    expect(Task.owner(Task.make({ title: 'A tool', assignee: { role: 'tool', name: 'Linter' } }))).toBeUndefined();
+    expect(Task.owner(Task.make({ title: 'Nobody' }))).toBeUndefined();
+  });
 });
 
 describe('mutations', () => {

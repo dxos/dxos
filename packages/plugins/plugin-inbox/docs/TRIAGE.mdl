@@ -150,7 +150,7 @@ test QA-2: Triage an inbox, then let the agent answer the most urgent email
       do: Back in the inbox, open the message under Urgent.
       expect: the task extracted from it is listed under its body
     - name: Assign the task to the agent
-      do: Open the task's "…" menu and choose "Assign to agent".
+      do: Open the task's assignee picker and choose "Default agent".
       expect: the Assistant companion opens on a new chat that starts working on the task
     - name: The agent asks before it sends
       expect: the chat shows a permission card asking to send an email reply
@@ -277,4 +277,12 @@ decision D-13: Triage needs no TypeSafe plugin: the default decision model and C
   by: user:dmaretskyi
   affects: [F-1.1, F-4.1, QA-1, QA-2]
   why: With the resolvers in the opt-in TypeSafe plugin, triage failed with AiModelNotAvailableError on a default install.
+```
+
+```mdl
+decision D-14: The triage QA assigns the extracted task to the agent by picking "Default agent" in its assignee picker, where plugin-projects now lists agents, instead of "Assign to agent" in its "…" menu.
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: dxos/dxos#14378 moved delegation from a task's menu into its assignee picker, so the old entries no longer exist.
 ```

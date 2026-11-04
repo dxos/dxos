@@ -86,6 +86,10 @@ const config: Plugin.PluginConfig = Plugin.config({
       },
       () => import('./src/capabilities/tldraw-converter.ts', { with: { type: 'module-url' } }),
     ),
+    // Where the canvas variant is: only a drawing of that variant can be exported.
+    AppCapability.exporter(() => import('./src/capabilities/exporter.ts', { with: { type: 'module-url' } }), {
+      activatesOn: IllustratorEvents.Start,
+    }),
     // Migration providers stay eager: a migration missing when a space opens is a data hazard.
     Capability.lazyModule(
       'CanvasMigrations',

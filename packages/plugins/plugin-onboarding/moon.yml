@@ -4,3 +4,8 @@ tags:
   - composer-plugin
   - ts-vite-build
   - ts-test
+
+tasks:
+  build:
+    inputs:
+      - assets/**/*

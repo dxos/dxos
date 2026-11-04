@@ -26,20 +26,15 @@ describe('getAssigneeDisplay', () => {
     expect(result).toMatchObject({ label: 'Rich', icon: PERSON_ICON, agent: false });
   });
 
-  test('an agent is named by its session title, then its harness', ({ expect }) => {
+  test('an agent is named by its harness, not its session title', ({ expect }) => {
     const titled = makeSession('Fix the assignee label');
     const assignee: Actor.Actor = { role: 'assistant', name: 'Scout', subject: Ref.make(titled) };
     expect(display(assignee, { subject: titled })).toMatchObject({
-      label: 'Fix the assignee label',
+      label: 'Claude Code',
       icon: RemoteSession.harnessIcon(titled),
       agent: true,
       session: titled,
     });
-
-    const untitled = makeSession();
-    expect(display({ role: 'assistant', subject: Ref.make(untitled) }, { subject: untitled }).label).toEqual(
-      'Claude Code',
-    );
   });
 
   test('without a session the actor falls back through name, email and DID', ({ expect }) => {
