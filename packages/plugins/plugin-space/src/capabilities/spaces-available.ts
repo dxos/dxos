@@ -204,7 +204,8 @@ export default Capability.makeModule(
       const current = attention.getCurrent();
       const active = layout.active;
       // Switching workspace swaps the whole layout, so what left `active` is in neither list; report it as removed.
-      const inactive = [...layout.inactive, ...previousActive.filter((id) => !active.includes(id))];
+      // Receivers apply `removed` after `added`, so nothing still active may appear in it.
+      const inactive = [...layout.inactive, ...previousActive].filter((id) => !active.includes(id));
       previousActive = active;
 
       const send = () => {
