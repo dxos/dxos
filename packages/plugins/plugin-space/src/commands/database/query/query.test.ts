@@ -19,7 +19,7 @@ describe('spaces query', () => {
   it('should query empty space', () =>
     Effect.gen(function* () {
       // TODO(wittjosiah): Create test runtime so that client service can be shared with `beforeEach`.
-      const client = yield* ClientService;
+      const client = yield* ClientService.client;
       yield* Effect.tryPromise(() => client.halo.createIdentity());
       const space = yield* Effect.tryPromise(() => client.spaces.create());
       yield* Effect.tryPromise(() => space.waitUntilReady());
@@ -34,7 +34,7 @@ describe('spaces query', () => {
 
   it('should query space for objects', () =>
     Effect.gen(function* () {
-      const client = yield* ClientService;
+      const client = yield* ClientService.client;
       yield* Effect.tryPromise(() => client.addTypes([Task.Task]));
       yield* Effect.tryPromise(() => client.halo.createIdentity());
       const space = yield* Effect.tryPromise(() => client.spaces.create());

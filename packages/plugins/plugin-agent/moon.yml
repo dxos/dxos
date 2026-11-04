@@ -7,3 +7,11 @@ tags:
   - ts-test
   - ts-test-storybook
   - storybook
+
+tasks:
+  test:
+    deps:
+      # `edge-bundle.test.ts` builds this plugin's bundle, which resolves the plugin's own `#` imports from its dist and
+      # vendors the host from the host's dist.
+      - plugin-agent:build
+      - plugin-host-cloudflare:build
