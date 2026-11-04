@@ -7,6 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { type Database, EID, Filter, Obj, Relation } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
+import { useAttention } from '@dxos/react-ui-attention';
 import { Form, type FormFieldOverride, ObjectMultiPicker, type RefOption } from '@dxos/react-ui-form';
 import * as Card from '@dxos/react-ui/Card';
 import * as UiHooks from '@dxos/react-ui/Hooks';
@@ -26,18 +27,20 @@ const entityId = (uri: string) => EID.getEntityId(EID.parse(uri)) ?? uri;
 export type FeatureSectionProps = {
   subject: Feature.Feature;
   /**
-   * Whether the host gives the section attention; until it does, all but the fold toggle is inert, and empty fields
-   * and the add actions hide.
+   * The attendable id of the embed the section is drawn in. Until it has attention, all but the fold toggle is inert,
+   * and empty fields and the add actions hide.
    */
-  attended?: boolean;
+  attendableId?: string;
 };
 
 /**
  * A feature's spec block, edited in place where the feature is embedded; folded, only its header row shows. Its card
  * is the read-only version; dependents, tasks and showcases are in its article and the companion.
  */
-export const FeatureSection = ({ subject, attended = true }: FeatureSectionProps) => {
+export const FeatureSection = ({ subject, attendableId }: FeatureSectionProps) => {
   const { t } = UiHooks.useTranslation(CodeNamespace.key);
+  const { hasAttention } = useAttention(attendableId);
+  const attended = !attendableId || hasAttention;
   const { values, collaboration, onValuesChanged } = useFeatureValues(subject);
   // Read through the object, so a block id set by an import shows without a remount.
   const [snapshot] = useObject(subject);

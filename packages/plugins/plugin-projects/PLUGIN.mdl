@@ -60,7 +60,10 @@ feat F-4: A project's specs
   req F-4.11: The project's overview is one form over the `Project` schema, in which the specs are a list the project
               owns: each spec is a row folded under its name that unfolds to edit its name and description in place,
               and the list's `+` creates a spec, its row open for the name.
-  req F-4.12: A spec's text, and each feature section embedded in it, shows the carets of the other peers editing it,
+  req F-4.12: A spec's text draws object links and embeds as a Markdown document does, and takes the editor extensions
+              other plugins give Markdown documents (`MarkdownCapabilities.ExtensionProvider`), such as diagrams. Its
+              packages add their own editing on top.
+  req F-4.13: A spec's text, and each feature section embedded in it, shows the carets of the other peers editing it,
               each with the peer's name.
 ```
 
@@ -2098,25 +2101,33 @@ decision D-197: A task's estimate with no value shows the estimate's ruler glyph
 ```
 
 ```mdl
-decision D-198: Every CodeMirror editor in a project that edits shared text shows the other peers' carets. A plain string field shows them too, edited in place through an accessor on the live object, with no `Text` object or schema change.
+decision D-198: The spec editor draws object embeds with plugin-markdown's extension, `MarkdownCapabilities.ObjectEmbeds`, and takes every `MarkdownCapabilities.ExtensionProvider`, so a spec is Markdown with what other plugins add to it, plus its packages' editing. The software package no longer draws feature embeds itself.
   date: 2026-11-04
   by: user:wittjosiah
-  affects: [F-4.12, F-5.8]
+  affects: [F-4.12]
+  why: A spec should inherit what Markdown documents gain, such as a diagram, rather than a stricter editor redrawing each addition; one embed definition then serves both editors.
 ```
 
 ```mdl
-decision D-199: The editors with carets are a spec's text, the feature sections embedded in it (the feature's description), the overview's Notes and the agent's instructions. The project's description is a plain text area, not a CodeMirror editor, so it shows no carets. Fills in [D-198].
+decision D-199: Every CodeMirror editor in a project that edits shared text shows the other peers' carets. A plain string field shows them too, edited in place through an accessor on the live object, with no `Text` object or schema change.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-4.13, F-5.8]
+```
+
+```mdl
+decision D-200: The editors with carets are a spec's text, the feature sections embedded in it (the feature's description), the overview's Notes and the agent's instructions. The project's description is a plain text area, not a CodeMirror editor, so it shows no carets. Fills in [D-199].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
-  affects: [F-4.12, F-5.8]
+  affects: [F-4.13, F-5.8]
   why: These are the CodeMirror editors a project's views mount over shared text. A task's description is left out because it commits through `UpdateTask` on blur to write the task's history, which editing in place would bypass.
   rejected:
     - Turning the project's description into a markdown editor so it carries carets, which changes how the field looks and behaves.
 ```
 
 ```mdl
-decision D-200: QA-9 checks carets in the overview's Notes between two peers, the host's caret set before the guest opens the project, automated by a collaboration e2e spec. Fills in [D-198].
+decision D-201: QA-9 checks carets in the overview's Notes between two peers, the host's caret set before the guest opens the project, automated by a collaboration e2e spec. Fills in [D-199].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
@@ -2125,7 +2136,7 @@ decision D-200: QA-9 checks carets in the overview's Notes between two peers, th
 ```
 
 ```mdl
-decision D-201: QA-10 walks two peers through every editor with carets ([D-199]) in one take, recorded side by side by an autocue flow. Fills in [D-198].
+decision D-202: QA-10 walks two peers through every editor with carets ([D-200]) in one take, recorded side by side by an autocue flow. Fills in [D-199].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
