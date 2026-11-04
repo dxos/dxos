@@ -130,6 +130,9 @@ const fakeAiServiceMiddleware = () => {
   return (upstream: AiService.Service): AiService.Service => ({ ...upstream, languageModel: () => layer });
 };
 
+// The prompt floats over the thread, whose last lines must still scroll clear of it.
+const PROMPT_CLEARANCE_LINES = 6;
+
 type ThreadColumnProps = {
   chat: AssistantChat.Chat;
   current: boolean;
@@ -200,7 +203,7 @@ const ThreadColumn = ({
         <ChatPlane.Cell menu={menu}>
           <Panel.Body asChild>
             <Chat.Content>
-              <Chat.Thread />
+              <Chat.Thread tailLines={PROMPT_CLEARANCE_LINES} />
             </Chat.Content>
           </Panel.Body>
         </ChatPlane.Cell>
