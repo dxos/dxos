@@ -18,7 +18,11 @@ import { useTrajectoryEvents } from './use-trajectory-events.ts';
  */
 export const TrajectoryOverviewModule = (_props: Surface.ComponentProps<Record<string, unknown>>) => {
   const events = useTrajectoryEvents();
-  const commits = useMemo(() => toOverview(Reducer.run(Reducer.thread, events).state), [events]);
+  const commits = useMemo(
+    () =>
+      toOverview(Reducer.run(Reducer.thread, events).state, { session: Reducer.run(Reducer.session, events).state }),
+    [events],
+  );
   const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
 
   return (

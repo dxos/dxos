@@ -22,6 +22,11 @@ const SHIMMER = 'effect:shimmer';
 export type OverviewOptions = {
   /** How many finished tasks the trunk shows; earlier ones are only counted. */
   readonly history?: number;
+  /**
+   * The session state, which tells a fork at rest between its turns (open until a person merges it) from a merged
+   * one; the thread view marks both done. Without it, every fork that is not running counts as finished.
+   */
+  readonly session?: Reducer.SessionState;
 };
 
 /** A unit of work the graph shows: what a lane was asked to do. */
@@ -33,8 +38,15 @@ type Task = { readonly id: string; readonly title: string; readonly created: str
  * a last branch lists the prompts still queued. Messages and tool calls never show; a finished thread collapses into
  * one commit on the trunk (or on the thread that delegated it, while that one runs).
  */
-export const toOverview = (view: Reducer.ThreadView, { history = 5 }: OverviewOptions = {}): Commit[] => {
+export const toOverview = (view: Reducer.ThreadView, { history = 5, session }: OverviewOptions = {}): Commit[] => {
   const lanes = new Map(view.lanes.map((lane) => [lane.id, lane]));
+  const openForks = new Set(
+    (session?.threads ?? []).flatMap((thread) =>
+      thread.mode === 'fork' && thread.status === 'open' ? [thread.id] : [],
+    ),
+  );
+  /** Unmerged: running or waiting, or a fork no one has merged yet. */
+  const isOpen = (lane: Reducer.Lane) => isRunning(lane) || openForks.has(lane.id);
   const delegator = delegators(view, lanes);
   const children = new Map<Trajectory.ThreadId, Reducer.Lane[]>();
   for (const lane of view.lanes) {
@@ -55,8 +67,6 @@ export const toOverview = (view: Reducer.ThreadView, { history = 5 }: OverviewOp
     });
   };
   const titleOf = (lane: Reducer.Lane) => clip(lane.purpose ?? tasksOf(lane)[0]?.title ?? lane.kind);
-  const queuedIn = (lane: Reducer.Lane) =>
-    view.items.some((item) => item.thread === lane.id && item.status === 'queued');
 
   const commits: Commit[] = [];
   const push = (commit: Commit) => {
@@ -69,10 +79,10 @@ export const toOverview = (view: Reducer.ThreadView, { history = 5 }: OverviewOp
   const nested = (lane: Reducer.Lane) => {
     const parent = delegator.get(lane.id);
     const parentLane = parent === undefined ? undefined : lanes.get(parent);
-    return parentLane !== undefined && (isRunning(parentLane) || !isRunning(lane));
+    return parentLane !== undefined && (isOpen(parentLane) || !isOpen(lane));
   };
-  const finished = view.lanes.filter((lane) => !isRunning(lane) && !nested(lane));
-  const running = view.lanes.filter((lane) => isRunning(lane) && !nested(lane));
+  const finished = view.lanes.filter((lane) => !isOpen(lane) && !nested(lane));
+  const running = view.lanes.filter((lane) => isOpen(lane) && !nested(lane));
   const queued = view.items.filter((item) => item.status === 'queued' && item.thread === undefined);
   const shown = finished.slice(Math.max(0, finished.length - history));
   const earlier = finished.length - shown.length;
@@ -81,23 +91,32 @@ export const toOverview = (view: Reducer.ThreadView, { history = 5 }: OverviewOp
     id: 'overview',
     branch: TRUNK,
     icon: 'ph--path--regular',
-    message: summary(finished.length, earlier, running.length, queued.length),
+    message: summary({
+      finished: finished.length,
+      earlier,
+      running: running.filter(isRunning).length,
+      forks: running.length - running.filter(isRunning).length,
+      queued: queued.length,
+    }),
   });
   for (const lane of shown) {
     trunk = push(finishedCommit(lane, titleOf(lane), TRUNK, trunk));
   }
 
-  /** A running lane as a branch off `from`: its tasks, then the subagents it delegated. */
+  /** An open lane as a branch off `from`: its tasks, the prompts queued in it, then the subagents it delegated. */
   const branch = (lane: Reducer.Lane, from: string, seen: Set<Trajectory.ThreadId>) => {
     seen.add(lane.id);
     const name = lane.id;
     const owner = lane.owner.name !== undefined && lane.kind !== 'fresh' ? `${lane.owner.name} · ` : '';
     const tasks = tasksOf(lane);
+    const pending = view.items.filter((item) => item.thread === lane.id && item.status === 'queued');
+    // A subagent waiting for a slot has only its queued brief, which its purpose already names.
+    const notStarted = tasks.length === 0 && pending.length > 0;
     const steps: Task[] = tasks.length > 0 ? tasks : [{ id: lane.id, title: titleOf(lane), created: lane.created }];
     let head = from;
     steps.forEach((task, index) => {
       const current = index === steps.length - 1;
-      const status = current ? statusOf(lane, queuedIn(lane) && tasks.length === 0, lanes, titleOf) : undefined;
+      const status = current ? statusOf(lane, notStarted, lanes, titleOf) : undefined;
       head = push({
         id: `${lane.id}:${task.id}`,
         branch: name,
@@ -108,11 +127,14 @@ export const toOverview = (view: Reducer.ThreadView, { history = 5 }: OverviewOp
         ...(status?.working ? { tags: [SHIMMER] } : {}),
       });
     });
+    for (const item of notStarted ? [] : pending) {
+      head = push(queuedCommit(item, name, head));
+    }
     for (const child of children.get(lane.id) ?? []) {
       if (seen.has(child.id)) {
         continue;
       }
-      if (isRunning(child)) {
+      if (isOpen(child)) {
         branch(child, head, seen);
       } else {
         head = push(finishedCommit(child, titleOf(child), name, head));
@@ -127,14 +149,7 @@ export const toOverview = (view: Reducer.ThreadView, { history = 5 }: OverviewOp
 
   let next = trunk;
   for (const item of queued) {
-    next = push({
-      id: `queued:${item.id}`,
-      branch: QUEUE,
-      parents: [next],
-      timestamp: new Date(item.created),
-      icon: 'ph--clock--regular',
-      message: clip(textOf(item.blocks)),
-    });
+    next = push(queuedCommit(item, QUEUE, next));
   }
 
   return commits;
@@ -167,6 +182,15 @@ const delegators = (view: Reducer.ThreadView, lanes: ReadonlyMap<Trajectory.Thre
   return result;
 };
 
+const queuedCommit = (item: Reducer.ThreadItem, branch: string, parent: string): Commit => ({
+  id: `queued:${item.id}`,
+  branch,
+  parents: [parent],
+  timestamp: new Date(item.created),
+  icon: 'ph--clock--regular',
+  message: clip(textOf(item.blocks)),
+});
+
 const finishedCommit = (lane: Reducer.Lane, title: string, branch: string, parent: string): Commit => ({
   id: `${lane.id}:done`,
   branch,
@@ -175,7 +199,7 @@ const finishedCommit = (lane: Reducer.Lane, title: string, branch: string, paren
   ...(lane.status === 'failed'
     ? { icon: 'ph--x-circle--regular', level: LogLevel.ERROR }
     : { icon: 'ph--check-circle--regular', level: LogLevel.INFO }),
-  message: lane.kind === 'fresh' ? `subagent: ${title}` : title,
+  message: lane.kind === 'fresh' ? `subagent: ${title}` : lane.kind === 'fork' ? `fork: ${title}` : title,
 });
 
 type Status = { readonly icon: string; readonly note: string; readonly working: boolean };
@@ -188,6 +212,9 @@ const statusOf = (
 ): Status => {
   if (notStarted) {
     return { icon: 'ph--clock--regular', note: ' · queued', working: false };
+  }
+  if (!isRunning(lane)) {
+    return { icon: 'ph--git-fork--regular', note: ' · open fork', working: false };
   }
   if (lane.status === 'waiting') {
     const on = lane.waitingOn === undefined ? undefined : lanes.get(lane.waitingOn);
@@ -204,10 +231,19 @@ const statusOf = (
   };
 };
 
-const summary = (finished: number, earlier: number, running: number, queued: number): string =>
+type Counts = {
+  readonly finished: number;
+  readonly earlier: number;
+  readonly running: number;
+  readonly forks: number;
+  readonly queued: number;
+};
+
+const summary = ({ finished, earlier, running, forks, queued }: Counts): string =>
   [
     `${finished} done${earlier > 0 ? ` (${earlier} earlier not shown)` : ''}`,
     `${running} running`,
+    ...(forks > 0 ? [`${forks} open ${forks === 1 ? 'fork' : 'forks'}`] : []),
     ...(queued > 0 ? [`${queued} queued`] : []),
   ].join(' · ');
 

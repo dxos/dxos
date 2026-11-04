@@ -48,6 +48,8 @@ const delegated = (subagentThread: Trajectory.ThreadId, thread: Trajectory.Threa
 
 const view = (events: readonly Trajectory.Event[]) => Reducer.run(Reducer.thread, events).state;
 
+const session = (events: readonly Trajectory.Event[]) => Reducer.run(Reducer.session, events).state;
+
 const rows = (commits: ReturnType<typeof toOverview>) => commits.map((commit) => [commit.branch, commit.message]);
 
 describe('toOverview', () => {
@@ -151,6 +153,37 @@ describe('toOverview', () => {
     expect(commits.filter((commit) => commit.tags?.includes('effect:shimmer')).map((commit) => commit.branch)).toEqual([
       turn.thread,
       planB.thread,
+    ]);
+  });
+
+  test('a fork at rest stays a branch until a person merges it, then collapses', ({ expect }) => {
+    const prompt = say('Draft the launch post.', user);
+    const fork = opener({ _tag: 'threadOpen', mode: 'fork', purpose: 'Shorter draft', from: { event: prompt.id } });
+    const ask = say('Make it half as long.', user, fork.thread);
+    const turn = opener({ _tag: 'turnBegin', from: { thread: fork.thread, event: ask.id } });
+    const end = Trajectory.make({
+      payload: { _tag: 'turnEnd', finishReason: 'stop' },
+      sender: assistant,
+      thread: turn.thread,
+    });
+    const next = say('Now in French.', user, fork.thread);
+    const atRest = [prompt, fork.event, ask, turn.event, consume(ask, turn.thread), end, next];
+    expect(rows(toOverview(view(atRest), { session: session(atRest) }))).toEqual([
+      [TRUNK, '0 done · 0 running · 1 open fork · 1 queued'],
+      [fork.thread, 'Shorter draft · open fork'],
+      [fork.thread, 'Now in French.'],
+      [QUEUE, 'Draft the launch post.'],
+    ]);
+
+    const merge = Trajectory.make({
+      payload: { _tag: 'threadMerge', mode: 'summary' },
+      sender: assistant,
+      thread: fork.thread,
+    });
+    const merged = [...atRest, merge];
+    expect(rows(toOverview(view(merged), { session: session(merged) })).slice(0, 2)).toEqual([
+      [TRUNK, '1 done · 0 running · 1 queued'],
+      [TRUNK, 'fork: Shorter draft'],
     ]);
   });
 

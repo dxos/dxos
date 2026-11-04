@@ -319,6 +319,11 @@ feat F-11: See what the agent is doing at a glance
       for which lane) or queued; a subagent branches off the lane that delegated it, and once it finishes it collapses
       into one commit on that lane
 
+  req F-11.4:
+    when: a fork is open, between its turns or running one
+    then: it stays a branch, marked an open fork while it rests, with the prompts queued in it; it collapses into one
+      commit on the trunk only once a person merges it (F-9.5)
+
   req F-11.3:
     when: prompts are queued and no lane has taken them yet
     then: they show on a branch of their own after the running lanes, oldest first, as what the agent will do next
@@ -952,11 +957,13 @@ decision D-40: The overview graph draws tasks, not events: a finished lane is on
   date: 2026-11-04
   by: agent:claude-code
   for: user:dmaretskyi
-  affects: [F-11]
+  affects: [F-11, F-11.4]
   why: The reader asked to see at a glance what the agent did, what runs in parallel and what it will do; the event
     graph answers that only after reading every commit.
   rejected:
     - A todo list the agent keeps; the trajectory records none, so it would need a new event and a tool the model
       may not call.
     - Every turn as a commit; a lane that waits and resumes runs several turns, which tell the reader nothing new.
+    - A fork that rests as finished; the thread view marks it done between turns, yet it stays apart from main until a
+      person merges it, so the overview reads the session state's thread statuses to keep it open.
 ```
