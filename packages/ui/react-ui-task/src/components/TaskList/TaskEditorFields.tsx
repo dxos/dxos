@@ -17,12 +17,13 @@ import { Type } from '@dxos/echo';
 import { Form, type FormFieldOverride, type FormFieldRendererProps, type FormUpdateMeta } from '@dxos/react-ui-form';
 import { MarkdownEditable, type MarkdownEditableController, type MarkdownEditableProps } from '@dxos/react-ui-markdown';
 import { ActionMenu } from '@dxos/react-ui-menu';
-import * as Button from '@dxos/react-ui/Button';
 import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Tag from '@dxos/react-ui/Tag';
 import { type Actor, type Person, Task } from '@dxos/types';
 
 import { translationKey } from '#translations';
@@ -125,7 +126,7 @@ export const TaskEditorForm = ({
         <Form.Fields include={textFields} sort={textFields} />
         {children}
         <Layout.Flex wrap align='center' gap='xs' classNames='min-w-0' data-testid='taskList.edit.properties'>
-          <Form.Fields include={propertyFields} sort={propertyFields} layout='pill' />
+          <Form.Fields include={propertyFields} sort={propertyFields} layout='tag' />
           {end}
         </Layout.Flex>
       </Form.Root>
@@ -201,7 +202,7 @@ const DescriptionField = ({ type, getValue, onValueChange }: FormFieldRendererPr
   );
 };
 
-const AssigneePill = ({
+const AssigneeTag = ({
   type,
   label,
   jsonPath,
@@ -228,15 +229,12 @@ const AssigneePill = ({
         })
       }
     >
-      <Button.Root
-        pill
-        icon={assignee ? current.icon : delegate ? worker.icon : UNASSIGNED_ICON}
-        label={(assignee ? current.label : delegate && worker.label) || label}
-        data-placeholder-shown={assignee || delegate ? undefined : ''}
-        data-testid={jsonPath}
-      />
+      <Tag.Tag data-placeholder-shown={assignee || delegate ? undefined : ''} data-testid={jsonPath}>
+        <Icon.Icon icon={assignee ? current.icon : delegate ? worker.icon : UNASSIGNED_ICON} />
+        {(assignee ? current.label : delegate && worker.label) || label}
+      </Tag.Tag>
     </ActionMenu>
   );
 };
 
-const FIELD_MAP = { assignee: AssigneePill, description: DescriptionField, title: TitleField };
+const FIELD_MAP = { assignee: AssigneeTag, description: DescriptionField, title: TitleField };

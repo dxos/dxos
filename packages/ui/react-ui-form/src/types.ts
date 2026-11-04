@@ -42,7 +42,7 @@ export type FormFieldOverride = {
   presentation?: FormPresentation;
   description?: string;
   placeholder?: string;
-  /** The field's glyph, shown where its value has none of its own (an unset pill, an option without an icon). */
+  /** The field's glyph, shown where its value has none of its own (an unset tag, an option without an icon). */
   icon?: string;
   readonly?: boolean;
   /** This use of the form always holds a value, though the schema allows none: a select offers no "None". */
@@ -75,13 +75,13 @@ export type FormFieldAction = {
  * - compact: Show label and control.
  * - inline: Control only.
  * - static: Plain DOM; omit all undefined values.
- * - pill: Control only, as an outlined pill sized to its value, for a wrapping row of fields.
+ * - tag: Control only, as a `Tag` sized to its value, for a wrapping row of fields.
  * - title: A text control only, edited in place as the page's heading, with no well until it is focused.
  * - plain: A text control only, edited in place as body text, with no well until it is focused.
  * - section: An array as a section of its own, its label the heading and its add button on the heading's row; other
  *   fields show as `compact`.
  */
-export type FormPresentation = 'full' | 'compact' | 'inline' | 'static' | 'pill' | 'title' | 'plain' | 'section';
+export type FormPresentation = 'full' | 'compact' | 'inline' | 'static' | 'tag' | 'title' | 'plain' | 'section';
 
 /** When a typed value commits: as each value parses, or only on blur and Enter. */
 export type CommitOn = 'change' | 'blur';
