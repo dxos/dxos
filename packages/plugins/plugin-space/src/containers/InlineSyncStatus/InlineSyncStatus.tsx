@@ -4,6 +4,7 @@
 
 import React from 'react';
 
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
@@ -13,8 +14,11 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
 
 import { useEdgeStatus } from '#hooks';
+import { SpaceCapabilities } from '#types';
 
 import { SpaceNamespace } from '../../namespace.ts';
+import { getPresenceKeyFromSpace } from '../../util/index.ts';
+import { useActiveViewerCount } from '../SpacePresence/index.ts';
 
 export const InlineSyncStatus = ({ space, open }: { space: Space; open?: boolean }) => {
   const { t } = Hooks.useTranslation(SpaceNamespace.key);
@@ -27,11 +31,14 @@ export const InlineSyncStatus = ({ space, open }: { space: Space; open?: boolean
   const edgeSyncEnabled = space.internal.data.edgeReplication === EdgeReplicationSetting.ENABLED;
   const syncState = useSpaceSyncState(space);
   const syncing = connectedToEdge && edgeSyncEnabled && syncState && syncState.missingOnLocal > 0;
+  const ephemeral = AppHooks.useAtomCapability(SpaceCapabilities.EphemeralState);
+  const count = useActiveViewerCount(ephemeral.viewersByObject[getPresenceKeyFromSpace(space.id)]);
 
   return (
-    <Tooltip.Trigger asChild content={t('syncing.label')} side='bottom'>
+    <Tooltip.Trigger asChild content={syncing ? t('syncing.label') : t('presence.label', { count })} side='bottom'>
       <AttentionGlyph
         syncing={syncing}
+        presence={count > 1 ? 'many' : count === 1 ? 'one' : 'none'}
         attended={attended}
         containsAttended={containsAttended}
         classNames='self-center mx-1'

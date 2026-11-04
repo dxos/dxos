@@ -40,6 +40,12 @@ const useNow = () => {
   return now;
 };
 
+/** Counts the viewers whose heartbeat has not lapsed, re-checking on an interval. */
+export const useActiveViewerCount = (viewers?: Record<string, SpaceSchema.ObjectViewerProps>) => {
+  const now = useNow();
+  return viewers ? Object.values(viewers).filter((viewer) => isActive(viewer, now)).length : 0;
+};
+
 export type SpacePresenceProps = {
   spaceId?: Key.SpaceId;
   /** The EID peers report while viewing the object or space (see `getPresenceKeyFrom*`). */
@@ -208,8 +214,7 @@ export type SmallPresenceLiveProps = {
 
 export const SmallPresenceLive = ({ id, open, viewers }: SmallPresenceLiveProps) => {
   const { hasAttention, isAncestor, isRelated } = useAttention(id);
-  const now = useNow();
-  const count = viewers ? Object.values(viewers).filter((viewer) => isActive(viewer, now)).length : 0;
+  const count = useActiveViewerCount(viewers);
 
   return <SmallPresence count={count} attended={hasAttention || isRelated} containsAttended={isAncestor && !open} />;
 };

@@ -196,13 +196,16 @@ export default Capability.makeModule(
 
     // Broadcast active node to other peers in the space - subscribe to both layout and attention.
     let broadcastCleanup: (() => void) | undefined;
+    let previousActive: readonly string[] = [];
     const setupBroadcast = () => {
       broadcastCleanup?.();
 
       const layout = registry.get(layoutAtom);
       const current = attention.getCurrent();
       const active = layout.active;
-      const inactive = layout.inactive;
+      // Switching workspace swaps the whole layout, so what left `active` is in neither list; report it as removed.
+      const inactive = [...layout.inactive, ...previousActive.filter((id) => !active.includes(id))];
+      previousActive = active;
 
       const send = () => {
         const spaces = client.spaces.get();

@@ -539,6 +539,7 @@ feat F-8: Presence and Sync Status
   req F-8.4: Peers report and look up presence by object EID. A graph path resolves to its innermost object, or to the space's own EID when it names no object.
   req F-8.5: SpacePresence shows peers in an order that is the same on every client for a given set of peers and changes only when the set changes.
   req F-8.6: A viewer whose heartbeat has lapsed for two broadcast intervals drops out of both presence indicators.
+  req F-8.7: A space's navtree row counts the peers viewing the space itself, alongside its sync status.
 ```
 
 ## Acceptance
@@ -741,6 +742,26 @@ decision D-5: Remove `viewersByIdentity` from the ephemeral state.
   for: user:wittjosiah
   affects: [PluginState, F-8.3]
   why: Nothing read it.
+```
+
+```mdl
+decision D-6: A space's navtree row shows how many peers view the space, as the navbar already does.
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.7, SpacePresence]
+  why: Space rows render the sync-status glyph, which took no presence, so a space with viewers always showed none.
+  rejected: Let the presence surface claim space rows; the navtree renders one end surface per row, so the sync status would be lost.
+```
+
+```mdl
+decision D-7: When the deck switches workspace, the planks that left `active` are reported as removed.
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.3]
+  why: The new workspace's layout lists none of the old planks, so peers in the old space kept the viewer until its heartbeat lapsed.
+  rejected: Treat an empty heartbeat as clearing the peer; heartbeats are not complete updates, so an empty one cannot be told from a partial one.
 ```
 
 ## Appendix: Extension Definitions
