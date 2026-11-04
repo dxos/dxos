@@ -266,7 +266,7 @@ test.describe('Collaboration tests', () => {
 
     const row = host.page.getByTestId('spacePlugin.presence.row');
     await expect(row).toHaveCount(1);
-    await expect(row).toHaveAttribute('data-highlighted', '');
+    await expect(row).toHaveAttribute('aria-selected', 'true');
 
     // The guest's document is open on the host, so the action is Jump rather than Go to.
     await row.getByTestId('spacePlugin.presence.jump').click({ timeout: 30_000 });

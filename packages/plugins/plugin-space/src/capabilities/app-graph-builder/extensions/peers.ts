@@ -54,6 +54,8 @@ export const createPeerExtensions = Effect.fnUntraced(function* () {
             label: ['members-companion.label', { ns: SpaceNamespace.key }],
             icon: 'ph--users--regular',
             data: null,
+            // After Notifications (-2), ahead of the unordered companions.
+            position: -1,
           }),
         ]),
     }),

@@ -23,6 +23,7 @@ Design: `agents/superpowers/specs/2026-10-04-plugin-messenger-design.md`.
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.1`         |
 | `test`      | `org.dxos.mdl.test@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
 
 ## Types
 
@@ -107,7 +108,8 @@ component MessengerCompanion
   desc: |
     Deck companion `messenger` (icon ph--envelope--regular). Renders invitations through
     `AppSurface.SpaceInvitation` (plugin-client) and opens the first attachment with
-    `LayoutOperation.Open`. The companion's `badge` atom is the unread count.
+    `LayoutOperation.Open`. The companion's `badge` atom is the unread count. It sits second in the
+    complementary rail (position -2), ahead of plugin-space's Members companion.
 ```
 
 ## Operations
@@ -199,4 +201,13 @@ test QA-1: A contact's notification reaches the panel
     - name: Read
       do: Click the tile.
       expect: the badge clears
+```
+
+## Changelog
+
+```mdl
+decision D-1: Notifications comes second in the complementary rail, ahead of Members.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [MessengerCompanion]
 ```

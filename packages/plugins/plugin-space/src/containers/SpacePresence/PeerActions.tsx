@@ -44,9 +44,7 @@ export const PeerActions = ({ spaceId, identityKey }: PeerActionsProps) => {
       {actions.filter(AppGraphNode.isAction).map((action) => (
         <Button.Root
           key={action.id}
-          variant='ghost'
           icon={action.properties.icon}
-          iconOnly
           label={Theme.toLocalizedString(action.properties.label, t)}
           data-testid={action.properties.testId}
           onClick={() => void runAction(action)}
