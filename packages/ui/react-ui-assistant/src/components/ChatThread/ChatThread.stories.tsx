@@ -615,20 +615,26 @@ const HierarchicalStory = ({ viewType = 'normal' }: StoryArgs) => {
   );
 };
 
-/** A main thread with its branches: lanes in full wear a colored gutter, a background lane is a card, forks are markers. */
+/**
+ * A main thread with its branches: lanes in full wear a colored gutter, a background lane is a card, forks are markers.
+ * The pricing lane converges: its gutter ends, and the main thread answers from its result.
+ */
 export const Hierarchical: Story = {
   render: (args) => <HierarchicalStory {...args} />,
-  args: { viewType: 'normal' },
+  args: { viewType: 'thinking' },
   play: async ({ canvasElement }) => {
-    const count = (selector: string) => canvasElement.querySelectorAll(selector).length;
-    // Four headers: the card carries its lane's header too.
+    // The thread opens at its tail, where the pricing lane has ended and the announcement lane carries on.
+    const lanes = () =>
+      [...canvasElement.querySelectorAll<HTMLElement>('[data-lane]')].map((element) => element.dataset.lane);
+    await waitFor(() => expect(lanes().at(-1)).toBe('announcement'));
+    const row = canvasElement.querySelector('[data-lane]');
+    let scroller = row?.parentElement;
+    while (scroller && scroller.scrollHeight <= scroller.clientHeight) {
+      scroller = scroller.parentElement;
+    }
+    scroller?.scrollTo({ top: 0 });
     await waitFor(() =>
-      expect({
-        laneRows: count('[data-lane]'),
-        laneHeaders: count('[data-testid="chat.lane-header"]'),
-        laneCards: count('[data-testid="chat.lane-card"]'),
-        forkMarkers: count('[data-testid="chat.fork-marker"]'),
-      }).toEqual({ laneRows: 6, laneHeaders: 4, laneCards: 1, forkMarkers: 2 }),
+      expect(canvasElement.querySelector('[data-testid="chat.fork-marker"]')?.textContent).toContain('Thursday'),
     );
   },
 };
