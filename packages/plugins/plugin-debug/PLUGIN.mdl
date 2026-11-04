@@ -558,10 +558,10 @@ test QA-11: Availability Poll — plan from the spec, ship by milestone, change 
       expect: the Gantt chart opens with a lane for each task
     - name: Watch M-1 ship
       do: Wait for M-1's tasks.
-      expect: each feature turns prototype as its task deploys it; once T-1 passes on the live URL, the three M-1 features are operational with a showcase holding the URL and the checks
-    - name: Open the M-1 showcase
-      do: Open the showcase on "Create a poll".
-      expect: the Worker URL and T-1's checks as a table of expected against actual
+      expect: each feature turns prototype as its task runs it in the sandbox; once T-1 passes there, the Worker is deployed, the three M-1 features are operational, and the check task records the preview and Worker URLs
+    - name: Open the M-1 preview
+      do: Open the check task's preview URL, create T-1's poll and marks on it, and open its page.
+      expect: the poll page with T-1's counts and best slot s3
     - name: Accept M-1
       do: On Tasks, set each M-1 task in review to Done.
       expect: every M-1 task done
@@ -570,10 +570,10 @@ test QA-11: Availability Poll — plan from the spec, ship by milestone, change 
       expect: a milestone "M-2" with its tasks linked to "Time zones" and "Daylight-saving time", and the Gantt chart running them
     - name: Watch M-2 ship
       do: Wait for M-2's tasks.
-      expect: "Time zones" and "Daylight-saving time" operational, with T-2's counts and best slot s3 checked on the live URL
-    - name: Open the M-2 showcase and accept M-2
-      do: Open the showcase on "Daylight-saving time", then set each M-2 task in review to Done.
-      expect: T-2's checks on the live URL, and every M-2 task done
+      expect: "Time zones" and "Daylight-saving time" operational, with T-2's counts and best slot s3 checked before the deploy
+    - name: Open the M-2 preview and accept M-2
+      do: Open the preview with T-2's poll, then set each M-2 task in review to Done.
+      expect: the poll page with T-2's slots across the clock change, and every M-2 task done
     - name: Change the tie-break
       do: On "Heat map and best slot", change F-3.2 so a tie goes to the slot whose next slot keeps the most of the same invitees free, then the earliest.
       expect: the card and the spec show the new F-3.2
@@ -582,7 +582,7 @@ test QA-11: Availability Poll — plan from the spec, ship by milestone, change 
       expect: the feature turns failing, T-2's best slot in the spec becomes s8, a Changelog decision records the change, and one fix task is filed
     - name: Ship the fix
       do: Delegate the fix task and wait for it.
-      expect: the Worker is redeployed, "Heat map and best slot" is operational again with a showcase of the new check, and the fix task is accepted
+      expect: T-2 passes in the sandbox with best slot s8, the Worker is redeployed, "Heat map and best slot" is operational again, the preview shows s8 as the best slot, and the fix task is accepted
     - name: Hold on the feature map
       do: Open the Features tab.
       expect: five operational features and "Flight options" planned
@@ -637,4 +637,14 @@ decision D-5: [QA-11] checks one scenario per milestone, plans one task per feat
   affects: [QA-11]
   why: The first take ran 80 minutes with no feature moving until each milestone's last task; a short take can be re-recorded and tried by others, and the showcase shows what was deployed.
   rejected: Opening the Worker in the take, which a Cloudflare challenge can block on the recording machine.
+```
+
+```mdl
+decision D-6: [QA-11] has the agent check each task and scenario on `wrangler dev` in its sandbox, exposed as a preview, and deploy only once the milestone's scenario passes; the take opens the preview on the scenario's poll instead of a showcase. Amends [D-5].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-11]
+  why: A local check is faster than a deploy per task, and the preview is served from the sandbox, so the take shows the running poll without the bot challenge a temporary account's `workers.dev` host can raise.
+  rejected: A showcase slide of the checks, which shows a table about the poll rather than the poll.
 ```

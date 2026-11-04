@@ -48,7 +48,7 @@ one task \`Check M-n\` linked to all of them. Each depends on the one before.
 Building. Work the tasks you are given in order:
 - Use one sandbox named \`availability-poll\`: find it before creating one, and keep the code in \`/workspace/poll\`. \
 Keep it in git there; do not create or attach a repository.
-- The image ships Node 22, git and wrangler 4. Do not run \`npm install\`, \`tsc\` or \`wrangler dev\`.
+- The image ships Node 22, git and wrangler 4. Do not run \`npm install\` or \`tsc\`.
 - The code is plain JavaScript modules: \`worker.js\` (the fetch handler and the \`Poll\` Durable Object, created with \
 \`newUniqueId()\`, its state one storage key) and \`page.js\` (the pages as HTML strings with their own script). \
 \`wrangler.jsonc\` binds \`Poll\` and declares it in a migration with \`new_sqlite_classes\`, which a temporary account \
@@ -61,25 +61,30 @@ lines it touches. Never print or rewrite a whole file you already wrote. Each ca
 assign in one is there in the next.
 - Time zone math uses \`Intl.DateTimeFormat\` with \`timeZone\`, which the Workers runtime ships in full. Compute every \
 offset on the slot's own date and hour, never once per poll; the spec's F-5 and T-2 say exactly what that means.
-- Work one task at a time, and end each deployed: in one command, write that feature's code, deploy, \`curl\` the \
-requirements it adds, and commit. Then set its feature to \`prototype\` and the task to \`review\` before starting the next. \
-Never write a later task's code early: F-1's deploy serves only what F-1 requires.
-- \`Check M-n\` runs the milestone's scenario against the live URL in one command, a Node script with \`fetch\`, and \
+- Check your work on the Worker running locally, never on the deployed one. In the first task, once \
+\`wrangler.jsonc\` exists, serve it with ExposePort \`{ sandbox, port: 8787, command: 'wrangler dev --ip 0.0.0.0 \
+--port 8787', cwd: '/workspace/poll' }\`. It reloads when a file changes, so later tasks only edit files; its URL is \
+the preview, and from the sandbox the same Worker answers at \`http://localhost:8787\`.
+- Work one task at a time: in one command, write that feature's code, \`curl\` the requirements it adds on \
+\`localhost:8787\`, and commit. Then set its feature to \`prototype\` and the task to \`review\` before starting the \
+next. Never write a later task's code early: F-1 serves only what F-1 requires.
+- \`Check M-n\` runs the milestone's scenario on \`localhost:8787\` in one command, a Node script with \`fetch\`, and \
 prints a table of expected against actual for every count, slot start and best slot the scenario states. When it all \
-matches, set the milestone's features to \`operational\` and make one showcase for them whose content is a heading, \
-the Worker URL and that table, nothing else, so it fits on one slide.
+matches, deploy, set the milestone's features to \`operational\`, and set the task's description to two lines, \
+\`Preview: <preview URL>\` and \`Worker: <Worker URL>\`. Make no showcase: the preview is how this project shows its \
+work.
 
 Deploying. \`cd /workspace/poll && wrangler deploy --temporary\` mints a temporary account and prints the Worker URL and \
 a claim URL. The claim URL is a bearer credential for the account: give it to me directly and file it nowhere. \
 Redeploy from the same sandbox to keep the account and the URL, which the redeploy prints again; the account expires \
 after about an hour, and if it has, deploy again and use the new URL.
 
-Changes. When I change a feature's requirements and ask you to revalidate, run the affected scenario against the live \
-Worker under the changed requirement before touching any code. If it fails, set the feature to \`failing\`, update every \
+Changes. When I change a feature's requirements and ask you to revalidate, run the affected scenario on \
+\`localhost:8787\` under the changed requirement before touching any code. If it fails, set the feature to \`failing\`, update every \
 line of the spec's scenarios that the change moves (a count, a best slot), add a decision to the spec's Changelog saying \
 what changed, and file one task for the fix under the milestone that shipped the feature, linked to it. Then stop. \
-When I delegate the fix, change the code, redeploy, rerun the scenarios, and set the feature back to \`operational\` \
-with a showcase of the new check.
+When I delegate the fix, change the code, rerun the scenario on \`localhost:8787\`, deploy, and set the feature back to \
+\`operational\`.
 
 M-3, flight options, is for me to build later. Do not plan or build it unless I ask. This project needs no Cloudflare \
 login and no API keys; if a step seems to need either, it is the wrong step.`;

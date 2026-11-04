@@ -6,9 +6,9 @@
  * Availability Poll: the development loop at the spec and feature level. The template holds a finished spec staged as
  * three milestones, its feature map and design docs, and no tasks. Ask the project's chat to plan a milestone from
  * the spec, delegate the tasks it files and watch the Gantt chart and the feature cards: Prototype as each task deploys
- * its feature, Operational once the milestone's scenario passes on the live Worker, with a showcase holding the checks.
- * A person accepts the reviewed tasks. Then change a requirement on its card and watch the feature fail against the
- * live Worker, get fixed and recover. Flight options stay planned for the viewer.
+ * its feature, Operational once the milestone's scenario passes on the Worker the agent runs in its sandbox and deploys.
+ * The take opens that Worker's preview and runs the scenario on it. A person accepts the reviewed tasks. Then change a
+ * requirement on its card and watch the feature fail, get fixed and recover. Flight options stay planned for the viewer.
  *
  * @title Availability Poll: from a spec to a Worker, milestone by milestone
  * @mdl packages/plugins/plugin-debug/PLUGIN.mdl test QA-11
@@ -16,9 +16,10 @@
  *   composer-app:serve`), talking to EDGE preview, whose AI and sandbox services serve the model below
  * @template Availability Poll
  *
- * The agent deploys with `wrangler deploy --temporary`, so no Cloudflare login is needed; the claim URL it prints is a
- * bearer credential, so the take never opens the chats. A temporary account lasts about an hour, and the take runs
- * longer, so the agent may redeploy to a new URL partway; the feature map is what the take follows, not the URL.
+ * The agent checks its work on `wrangler dev`, exposed from the sandbox as the preview, and deploys with
+ * `wrangler deploy --temporary` once a milestone's scenario passes, so no Cloudflare login is needed; the claim URL it
+ * prints is a bearer credential, so the take never opens the chats. The take opens the preview rather than the deployed
+ * Worker, which a temporary account's `workers.dev` host can answer with a bot challenge.
  *
  * To keep the build off EDGE's sandboxes, serve local ones with `serve()` from `plugin-sandbox/src/local/server.ts`,
  * allowing `*.workers.dev` and `*.cloudflare.com` beside the default registries, and give the driver `DX_SANDBOX_URL`
@@ -41,7 +42,7 @@ const NEW_TIE_BREAK =
   'The best slot is the one the most invitees are free for; on a tie, the one whose next slot keeps the most of the same invitees free, so the meeting can run over; then the earliest. With no marks there is no best slot.';
 
 const planPrompt = (milestone) => `Plan ${milestone} from the spec.`;
-const REVALIDATE_PROMPT = `I changed ${TIE_BREAK} on "${HEATMAP}". Revalidate it against the live Worker.`;
+const REVALIDATE_PROMPT = `I changed ${TIE_BREAK} on "${HEATMAP}". Revalidate it.`;
 
 const FINISHED = ['done', 'review'];
 
@@ -102,7 +103,7 @@ const snapshot = (page) =>
     .evaluate(async (key) => {
       const space = dxos.spaces().find((candidate) => candidate.id === globalThis[key]);
       if (!space) {
-        return { tasks: [], features: {}, showcases: [] };
+        return { tasks: [], features: {} };
       }
       const query = (typename) =>
         space.db
@@ -113,6 +114,7 @@ const snapshot = (page) =>
         (await query('org.dxos.type.task')).map(async (task) => ({
           title: task.title,
           status: task.status,
+          description: task.description ?? '',
           milestone: (await task.milestone?.load?.().catch(() => undefined))?.name ?? '',
           assigned: task.assignee !== undefined,
         })),
@@ -123,10 +125,9 @@ const snapshot = (page) =>
           { status: feature.status, requirements: (feature.requirements ?? []).map(({ id, text }) => ({ id, text })) },
         ]),
       );
-      const showcases = (await query('org.dxos.type.presentation')).map((deck) => deck.name ?? '');
-      return { tasks, features, showcases };
+      return { tasks, features };
     }, TAKE_SPACE)
-    .catch(() => ({ tasks: [], features: {}, showcases: [] }));
+    .catch(() => ({ tasks: [], features: {} }));
 
 const tasksOf = (state, milestone) => state.tasks.filter((task) => task.milestone.startsWith(milestone));
 const allOperational = (state, names) => names.every((name) => state.features[name]?.status === 'operational');
@@ -331,7 +332,7 @@ const watchMilestone = async (demo, page, milestone, minutes) => {
         await openProjectTab(demo, page, 'features');
         await demo.caption({
           value: changed.map((name) => `${name}: ${STATUS_LABEL[statuses[name]] ?? statuses[name]}`).join(' · '),
-          subtitle: statuses[changed[0]] === 'prototype' ? 'Deployed by its task' : 'Checked on the live Worker',
+          subtitle: statuses[changed[0]] === 'prototype' ? 'Running in its sandbox' : 'Checked, then deployed',
         });
         await page.waitForTimeout(BEAT * 2);
         if (!finished || !allOperational(state, milestone.features)) {
@@ -348,29 +349,97 @@ const watchMilestone = async (demo, page, milestone, minutes) => {
   await page.waitForTimeout(BEAT);
 };
 
+/** Each scenario's poll and marks, as the API takes them, so the preview opens on the scenario the agent checked. */
+const SCENARIOS = {
+  'T-1': {
+    poll: {
+      title: 'Design review',
+      slots: ['2026-06-01', '2026-06-02'].flatMap((date) =>
+        [9, 10, 11, 12].map((hour) => `${date}T${String(hour).padStart(2, '0')}:00:00Z`),
+      ),
+      minutes: 60,
+      invitees: ['Ana', 'Ben', 'Chika'],
+    },
+    marks: {
+      Ana: { slots: ['s1', 's2', 's3'] },
+      Ben: { slots: ['s2', 's3', 's6', 's7'] },
+      Chika: { slots: ['s3', 's6', 's7'] },
+    },
+  },
+  'T-2': {
+    poll: {
+      title: 'Launch review',
+      zone: 'America/New_York',
+      slots: { dates: ['2026-10-30', '2026-11-02'], hours: [8, 9, 10, 11, 12] },
+      minutes: 60,
+      invitees: ['Ana', 'Ben', 'Chika'],
+    },
+    marks: {
+      Ana: {
+        zone: 'America/New_York',
+        ranges: ['2026-10-30', '2026-11-02'].map((date) => ({ date, from: '09:00', to: '12:00' })),
+      },
+      Ben: {
+        zone: 'Europe/London',
+        ranges: ['2026-10-30', '2026-11-02'].map((date) => ({ date, from: '14:00', to: '17:00' })),
+      },
+      Chika: {
+        zone: 'Asia/Tokyo',
+        ranges: [
+          { date: '2026-10-30', from: '23:00', to: '24:00' },
+          { date: '2026-11-03', from: '00:00', to: '02:00' },
+        ],
+      },
+    },
+  },
+};
+
+/** The preview URL the newest check task records as its `Preview:` line. */
+const previewOf = (state) =>
+  state.tasks
+    .map((task) => /^Preview:\s*(\S+)/m.exec(task.description)?.[1])
+    .filter(Boolean)
+    .at(-1);
+
 /**
- * Opens the newest showcase from the feature's card and presents its slide full screen, uncaptioned: the URL the agent
- * deployed and the checks it ran there. The Worker itself is not opened, since a temporary account's Worker can answer
- * a browser with a bot challenge.
+ * Opens the Worker's preview in the recorded tab, creates the scenario's poll on it and holds on its page, then
+ * returns to Composer and cuts the reload.
  */
-const openShowcase = async (demo, page, feature) => {
-  const name = (await snapshot(page)).showcases.at(-1);
-  if (!name) {
-    throw new Error('the agent made no showcase');
+const openPreview = async (demo, page, scenario, caption) => {
+  const preview = previewOf(await snapshot(page));
+  if (!preview) {
+    throw new Error('no check task records a Preview line');
   }
-  await openFeature(demo, page, feature);
-  // The card's sections re-render as its tasks and showcases load, so the row is found again for the click. A showcase
-  // may share its milestone's name, which a task row also shows; Showcases is the last section that lists names.
-  const row = `${COMPANION} :text-is("${name}") >> nth=-1`;
-  await page.locator(row).waitFor({ state: 'visible', timeout: 15_000 });
-  await page.waitForTimeout(BEAT);
-  await demo.click({ selector: row, label: name });
-  await page.waitForTimeout(BEAT * 2);
-  await demo.clearCaption();
-  await demo.click({ selector: '[data-testid="presenter.play"] >> nth=0', label: 'Present' });
-  await page.waitForTimeout(BEAT * 4);
-  await page.keyboard.press('Escape');
-  await page.locator('[data-testid="presenter.play"]').first().waitFor({ state: 'visible', timeout: 10_000 });
+  const base = preview.endsWith('/') ? preview : `${preview}/`;
+  const home = page.url();
+  const space = await page.evaluate((key) => globalThis[key], TAKE_SPACE);
+  await demo.goto({ url: base });
+  const { poll, marks } = SCENARIOS[scenario];
+  const id = await page.evaluate(
+    async ({ base, poll, marks }) => {
+      const send = (method, path, body) =>
+        fetch(new URL(path, base), {
+          method,
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+      const created = await (await send('POST', 'api/polls', poll)).json();
+      for (const [name, mark] of Object.entries(marks)) {
+        await send('PUT', `api/polls/${created.id}/marks/${name}`, mark);
+      }
+      return created.id;
+    },
+    { base, poll, marks },
+  );
+  await demo.goto({ url: new URL(`p/${id}`, base).href });
+  await demo.caption({ value: caption, subtitle: `${scenario} on the preview` });
+  await page.waitForTimeout(BEAT * 5);
+  await demo.goto({ url: home });
+  await page.getByTestId('org.dxos.type.project.section').first().waitFor({ state: 'visible', timeout: 300_000 });
+  await page.evaluate(({ key, space }) => (globalThis[key] = space), { key: TAKE_SPACE, space });
+  await useLocalSandbox(page);
+  await closeCompanion(page);
+  await demo.cut();
 };
 
 /** A person signs off each of the milestone's tasks in review, from its status control on the Tasks tab. */
@@ -586,15 +655,14 @@ export const steps = [
         position: 'top',
       });
       await watchMilestone(demo, page, M1, 40);
-      await demo.caption({ value: 'M-1 checked on the live Worker: three features operational' });
+      await demo.caption({ value: 'M-1 checked and deployed: three features operational' });
       await page.waitForTimeout(BEAT * 2);
     },
   },
   {
-    name: 'Open the M-1 showcase',
+    name: 'Open the M-1 preview',
     run: async ({ demo, page }) => {
-      await demo.caption({ value: 'What got built: the live URL and the checks run against it' });
-      await openShowcase(demo, page, M1.features[0]);
+      await openPreview(demo, page, 'T-1', 'What got built: the poll, with T-1 marked');
     },
   },
   {
@@ -626,7 +694,7 @@ export const steps = [
     run: async ({ demo, page }) => {
       await demo.caption({
         value: 'Three invitees, three zones, two clock changes',
-        subtitle: 'Checked against the scenario on the live Worker',
+        subtitle: 'Checked against the scenario before it deploys',
         position: 'top',
       });
       await watchMilestone(demo, page, M2, 40);
@@ -635,11 +703,10 @@ export const steps = [
     },
   },
   {
-    name: 'Open the M-2 showcase and accept M-2',
+    name: 'Open the M-2 preview and accept M-2',
     done: async ({ page }) => tasksOf(await snapshot(page), M2.id).every((task) => task.status === 'done'),
     run: async ({ demo, page }) => {
-      await demo.caption({ value: 'T-2 on the live Worker: every count and slot start' });
-      await openShowcase(demo, page, M2.features[1]);
+      await openPreview(demo, page, 'T-2', 'Three zones across a clock change');
       await demo.caption({ value: 'Sign off M-2' });
       await acceptMilestone(demo, page, M2.id);
     },
@@ -702,13 +769,13 @@ export const steps = [
       return state.features[HEATMAP]?.status === 'failing' && state.tasks.some((task) => !task.assigned);
     },
     run: async ({ demo, page }) => {
-      await demo.caption({ value: 'Ask the agent to revalidate it against the live Worker' });
+      await demo.caption({ value: 'Ask the agent to revalidate it' });
       await ask(demo, page, REVALIDATE_PROMPT);
       await page.waitForTimeout(BEAT);
       await closeCompanion(page);
       await openProjectTab(demo, page, 'features');
       await waitFor(demo, page, (state) => state.features[HEATMAP]?.status === 'failing', 20, 'the revalidation');
-      await demo.caption({ value: 'The live Worker no longer meets it: failing' });
+      await demo.caption({ value: 'The Worker no longer meets it: failing' });
       await page.waitForTimeout(BEAT * 2);
       // The fix task is the one filed after the change, unassigned until it is delegated.
       await waitFor(demo, page, (state) => state.tasks.some((task) => !task.assigned), 15, 'the fix task');
@@ -731,7 +798,7 @@ export const steps = [
       const fix = (await snapshot(page)).tasks.filter((task) => !task.assigned).map((task) => task.title);
       await delegate(demo, page, fix);
       await demo.caption({
-        value: 'It changes the code, redeploys and checks again',
+        value: 'It changes the code, checks again and redeploys',
         subtitle: 'Fast-forwarded',
         position: 'top',
       });
@@ -746,14 +813,13 @@ export const steps = [
         'the fix',
       );
       await page.waitForTimeout(BEAT * 2);
-      await demo.caption({ value: 'The new check on the live Worker' });
-      await openShowcase(demo, page, HEATMAP);
+      await openPreview(demo, page, 'T-2', 'The tie now goes to s8');
       await acceptMilestone(demo, page, M1.id);
     },
   },
   {
     name: 'Hold on the feature map',
-    narration: 'Five features operational, checked on the live Worker; flight options are left to build.',
+    narration: 'Five features operational, checked before each deploy; flight options are left to build.',
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'Five features operational; flight options are yours to build' });
       await openProjectTab(demo, page, 'features');

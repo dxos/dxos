@@ -141,13 +141,13 @@ feat F-6: Flight options
 
 ## Milestones
 
-The work ships in this order; each milestone is done when its scenario passes against the deployed Worker.
+The work ships in this order; each milestone is done when its scenario passes on the Worker run locally, which is then deployed.
 
-| Milestone                                | Delivers                                                                                                              | Features      | Done when                                                           |
-| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------- |
-| M-1: Core poll                           | Create a poll, mark availability, see the heat map and the best slot, one Durable Object per poll. Every time is UTC. | F-1, F-2, F-3 | T-1 passes against the deployed Worker.                             |
-| M-2: Time zones and daylight-saving time | Plan by the organizer's wall clock, mark and read by each invitee's, across a clock change.                           | F-4, F-5      | T-2 passes against the deployed Worker.                             |
-| M-3: Flight options                      | Search Duffel for flights to the meeting under the poll's limits and let travelers pick. Not started.                 | F-6           | Every scenario in `FLIGHTS.mdl` passes against the deployed Worker. |
+| Milestone                                | Delivers                                                                                                              | Features      | Done when                                                            |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------- | -------------------------------------------------------------------- |
+| M-1: Core poll                           | Create a poll, mark availability, see the heat map and the best slot, one Durable Object per poll. Every time is UTC. | F-1, F-2, F-3 | T-1 passes, then the Worker is deployed.                             |
+| M-2: Time zones and daylight-saving time | Plan by the organizer's wall clock, mark and read by each invitee's, across a clock change.                           | F-4, F-5      | T-2 passes, then the Worker is deployed.                             |
+| M-3: Flight options                      | Search Duffel for flights to the meeting under the poll's limits and let travelers pick. Not started.                 | F-6           | Every scenario in `FLIGHTS.mdl` passes, then the Worker is deployed. |
 
 ## Acceptance
 
@@ -187,7 +187,7 @@ scenario T-2: Three zones across a clock change
 Every change to this spec adds a decision, newest last. See `lang/changelog.mdl` for the attribution rules.
 
 ```mdl
-decision D-1: The Availability Poll template seeds this spec written in full, with its feature map and the flight options spec, and no milestones or tasks; the assistant plans each milestone from the spec, works the tasks it files and sets each feature's status from the deployed Worker.
+decision D-1: The Availability Poll template seeds this spec written in full, with its feature map and the flight options spec, and no milestones or tasks; the assistant plans each milestone from the spec, works the tasks it files and sets each feature's status from the Worker it runs and deploys.
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
