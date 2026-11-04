@@ -118,13 +118,13 @@ export const Unattended: Story = {
   },
 };
 
-/** Folded to its header row: the requirement count beside the status, and the features it needs after the name. */
+/** Folded to its header row: the block ids of the features it needs and the requirement count, beside the status. */
 export const Collapsed: Story = {
   play: async ({ canvasElement }) => {
     await setCollapsed(canvasElement, true);
     const canvas = within(canvasElement);
     await expect(canvas.queryByTestId('requirement-editor')).toBeNull();
     await expect(canvas.getByTestId('feature-section.requirement-count').textContent).toBe('3 requirements');
-    await expect(canvas.getByTestId('feature-section.dependency').textContent).toBe('OAuth tokens');
+    await expect(canvas.getByTestId('feature-section.dependency').textContent).toBe('F-2');
   },
 };

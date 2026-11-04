@@ -7,7 +7,7 @@
  * description of a new feature, drawn in place as the feature's editable section. The section moves like a line, and
  * Backspace deletes it, and its feature, until undo brings both back. Each feature, and each requirement added to it,
  * is numbered as its `feat` block will be. A section's "Needs" picker adds the features it depends on, one pick after
- * another, and a section folds to its header row, which then counts its requirements and names what it needs.
+ * another, and a section folds to its header row, which then shows the ids of what it needs and its requirement count.
  *
  * @mdl packages/plugins/plugin-code/PLUGIN.mdl test QA-4
  * @app storybook-react, narrowed to plugin-code, on :9009
@@ -254,7 +254,7 @@ export const steps = [
         .locator(`${SECTION} >> nth=1 >> [data-testid="feature-section.dependency"]`)
         .nth(1)
         .waitFor({ state: 'visible', timeout: 5_000 });
-      await caption(demo, 12, 'Folded, a section counts its requirements and names the features it needs');
+      await caption(demo, 12, 'Folded: the ids of the features it needs, and its requirement count');
       await demo.sleep({ ms: LOOK });
     },
   },

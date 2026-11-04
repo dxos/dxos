@@ -32,8 +32,8 @@ export type FeatureSectionProps = {
 /**
  * What a feature's spec block says, edited in place where the feature is embedded: a header row of its block id, name
  * and status, then its description, requirements and the features it needs. Icons sit in the card's start rail, so
- * every text starts at one edge. Folded, only the header row shows, with the requirement count and the needed
- * features. Its card is the read-only version; the rest of how it relates (dependents, tasks, showcases) is in its
+ * every text starts at one edge. Folded, only the header row shows, with the block ids of the features it needs and
+ * the requirement count. Its card is the read-only version; the rest of how it relates (dependents, tasks, showcases) is in its
  * article and the companion.
  */
 export const FeatureSection = ({ subject, attended = true }: FeatureSectionProps) => {
@@ -54,7 +54,7 @@ export const FeatureSection = ({ subject, attended = true }: FeatureSectionProps
   const fieldOverrides = useMemo<Record<string, FormFieldOverride>>(
     () => ({
       name: { presentation: 'title' },
-      // A status once picked is never cleared, so the pill offers no "None".
+      // A status once picked is never cleared, so the tag offers no "None".
       status: { required: true },
       // The schema's guidance wraps at a section's width; the placeholder is one line.
       description: {
@@ -97,12 +97,21 @@ export const FeatureSection = ({ subject, attended = true }: FeatureSectionProps
               }
               trailing={
                 <Layout.Flex align='center' gap='sm'>
+                  {collapsed &&
+                    dependsOn.map((id) => {
+                      const dependency = graph.lookup(id);
+                      return (
+                        <Tag.Tag key={id} title={dependency?.name} data-testid='feature-section.dependency'>
+                          {dependency?.blockId ?? dependency?.name ?? id}
+                        </Tag.Tag>
+                      );
+                    })}
                   {collapsed && requirements.length > 0 && (
                     <Card.Text variant='muted' data-testid='feature-section.requirement-count'>
                       {t('feature-section.requirement-count.label', { count: requirements.length })}
                     </Card.Text>
                   )}
-                  <Form.Fields include={['status']} layout='pill' />
+                  <Form.Fields include={['status']} layout='tag' />
                 </Layout.Flex>
               }
             >
@@ -115,12 +124,6 @@ export const FeatureSection = ({ subject, attended = true }: FeatureSectionProps
                 <Layout.Flex column grow>
                   <Form.Fields include={['name']} />
                 </Layout.Flex>
-                {collapsed &&
-                  dependsOn.map((id) => (
-                    <Tag.Tag key={id} data-testid='feature-section.dependency'>
-                      {graph.lookup(id)?.name ?? id}
-                    </Tag.Tag>
-                  ))}
               </Layout.Flex>
             </Card.Row>
             {!collapsed && (

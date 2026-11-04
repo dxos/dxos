@@ -963,8 +963,9 @@ feat F-20: Feature embeds in the editor
   req F-20.11: A section is compact. Its header row reads a fold toggle, the block id, the name and, at its end, the
               status. Under it are the description, the requirements, and a "Needs" row that picks the features it
               depends on, never one that depends on it. Empty rows and the add and remove actions show only while the
-              section has attention. Folded, a section shows only its header row, with its requirement count and the
-              features it needs. Each reader's device keeps which sections are folded; it is not synced.
+              section has attention. Folded, a section shows only its header row, with the block ids of the features
+              it needs and its requirement count. Each reader's device keeps which sections are folded; it is not
+              synced.
 ```
 
 ```mdl
@@ -1381,8 +1382,8 @@ test QA-4: Grow a spec from prose
       expect: the section's "Needs" row shows "Search" and "Snooze"
     - name: Fold the sections
       do: In each section, click its fold chevron.
-      expect: each section shows only its header row; "Search" reads "1 requirement" and "Instant inbox" names
-        "Search" and "Snooze"
+      expect: each section shows only its header row; "Search" reads "1 requirement" and "Instant inbox" shows the
+        block ids of "Search" and "Snooze"
 ```
 
 ```mdl
@@ -1990,6 +1991,14 @@ decision D-62: The "Needs" row is an `ObjectMultiPicker` over the feature's `Dep
   why: Dependencies are relations edited through operations, not a field of the feature, so the picker is mounted beside the form rather than through it. Leaving out the features that would close a cycle means the operation never has to refuse a pick.
   rejected:
     - Read-only tags while the section lacks attention, which replaced the picker as soon as attention moved and hid how to add another feature.
+```
+
+```mdl
+decision D-63: A folded section names the features it needs by block id (`F-2`), not by name. The ids sit with the requirement count at the end of the header row, spaced as the ids are from each other. Fills in [D-59].
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-20.11]
+  why: Names made a folded row long; block ids keep it compact.
 ```
 
 ## Appendix: Extension Definitions
