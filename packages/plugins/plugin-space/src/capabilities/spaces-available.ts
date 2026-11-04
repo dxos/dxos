@@ -204,8 +204,7 @@ export default Capability.makeModule(
       const current = attention.getCurrent();
       const active = layout.active;
       // Switching workspace swaps the whole layout, so what left `active` is in neither list; report it as removed.
-      // Receivers apply `removed` after `added`, so nothing still active may appear in it.
-      const inactive = [...layout.inactive, ...previousActive].filter((id) => !active.includes(id));
+      const inactive = [...layout.inactive, ...previousActive.filter((id) => !active.includes(id))];
       previousActive = active;
 
       const send = () => {
@@ -219,12 +218,15 @@ export default Capability.makeModule(
 
           // Every space is messaged, so a peer that left all of a space's objects still sends its `removed`.
           for (const space of spaces) {
+            const added = addedBySpace.get(space.id) ?? [];
+            // Receivers apply `removed` after `added`, and two paths can share an EID, so drop any key still active.
+            const removed = (removedBySpace.get(space.id) ?? []).filter((key) => !added.includes(key));
             void space
               .postMessage('viewing', {
                 identityKey: identity.identityKey ?? '',
                 attended: attendedBySpace.get(space.id) ?? [],
-                added: addedBySpace.get(space.id) ?? [],
-                removed: removedBySpace.get(space.id) ?? [],
+                added,
+                removed,
               })
               // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
               .catch((err) => {
