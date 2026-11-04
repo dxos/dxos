@@ -27,6 +27,7 @@ import {
   useListNavigation,
   useListSelection,
 } from '@dxos/react-ui-list';
+import { ActionMenu, type MenuActions } from '@dxos/react-ui-menu';
 import { Mosaic, type MosaicStackTileComponent, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
@@ -446,13 +447,16 @@ ChatPlaneColumn.displayName = 'ChatPlane.Column';
 // Cell
 //
 
-type ChatPlaneCellProps = PropsWithChildren;
+type ChatPlaneCellProps = PropsWithChildren<{
+  /** The column's menu, on the right of its header; no menu without it. */
+  menu?: MenuActions;
+}>;
 
 /**
  * The column's tile: a header with the drag handle, over the thread. Focusable as one unit. Escape from its thread or
  * prompt lands here, where the arrow keys move between columns and Enter goes back into the prompt.
  */
-const ChatPlaneCell = ({ children }: ChatPlaneCellProps) => {
+const ChatPlaneCell = ({ menu, children }: ChatPlaneCellProps) => {
   const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   const { event } = useChatContext('ChatPlane.Cell');
   const { navigation } = useChatPlaneContext('ChatPlane.Cell');
@@ -507,12 +511,24 @@ const ChatPlaneCell = ({ children }: ChatPlaneCellProps) => {
     >
       <Panel.Root asChild>
         <div onKeyDown={handleKeyDown}>
-          <Panel.Header classNames='justify-center'>
+          <Panel.Header classNames='flex-row items-center justify-between'>
             <Mosaic.DragHandle
               icon='ph--dots-six--regular'
               label={t('move-thread.button')}
               testId='chat-plane.drag-handle'
             />
+            {menu && (
+              <ActionMenu {...menu}>
+                <Button.Root
+                  icon='ph--dots-three--regular'
+                  iconOnly
+                  showTooltip={false}
+                  label={t('thread-menu.button')}
+                  variant='ghost'
+                  data-testid='chat-plane.menu'
+                />
+              </ActionMenu>
+            )}
           </Panel.Header>
           {children}
         </div>

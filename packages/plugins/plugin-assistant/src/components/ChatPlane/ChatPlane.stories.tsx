@@ -26,6 +26,7 @@ import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { Config } from '@dxos/react-client';
 import { useRegistry, useSpaces } from '@dxos/react-client/echo';
 import { Dnd } from '@dxos/react-ui-dnd';
+import { MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as Panel from '@dxos/react-ui/Panel';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message, Task } from '@dxos/types';
@@ -136,19 +137,67 @@ type ThreadColumnProps = {
   runtime?: Capabilities.ProcessManagerRuntime;
   registry: Registry.Registry;
   settings: Assistant.Settings;
+  /** The thread's place in the strip, which decides what its menu offers. */
+  index: number;
+  count: number;
+  onMove: (id: string, index: number) => void;
+  onDelete: (chat: AssistantChat.Chat) => void;
 };
 
 /** One thread with its own chat model, so a turn keeps running after the reader moves to another thread. */
-const ThreadColumn = ({ chat, current, db, runtime, registry, settings }: ThreadColumnProps) => {
+const ThreadColumn = ({
+  chat,
+  current,
+  db,
+  runtime,
+  registry,
+  settings,
+  index,
+  count,
+  onMove,
+  onDelete,
+}: ThreadColumnProps) => {
   const { preset, ...chatProps } = usePresets(settings, chat);
   const chatModel = useChatModel({ db, chat, preset, runtime, registry, settings });
   // Sending before the new chat reaches the database would leave the agent unable to resolve it.
   const handleSubmit = useCallback(() => db.flush(), [db]);
+  const menu = useMenuBuilder(
+    () =>
+      MenuBuilder.make()
+        .root({ label: 'Thread' })
+        .action(
+          'move-left',
+          {
+            label: 'Move left',
+            icon: 'ph--arrow-left--regular',
+            disabled: index === 0,
+            testId: 'chat-plane.move-left',
+          },
+          () => onMove(chat.id, index - 1),
+        )
+        .action(
+          'move-right',
+          {
+            label: 'Move right',
+            icon: 'ph--arrow-right--regular',
+            disabled: index === count - 1,
+            testId: 'chat-plane.move-right',
+          },
+          () => onMove(chat.id, index + 1),
+        )
+        .action(
+          'delete',
+          { label: 'Delete', icon: 'ph--trash--regular', disabled: count === 1, testId: 'chat-plane.delete' },
+          () => onDelete(chat),
+        )
+        .build(),
+    [chat, index, count, onMove, onDelete],
+  );
 
   return (
     <Chat.Root chat={chat} db={db} chatModel={chatModel} onSubmit={handleSubmit}>
       <ChatPlane.Column value={chat.id}>
-        <ChatPlane.Cell>
+        <ChatPlane.Cell menu={menu}>
           <Panel.Body asChild>
             <Chat.Content>
               <Chat.Thread />
@@ -216,6 +265,8 @@ const DefaultStory = ({ selected = 0 }: StoryArgs) => {
     [threads],
   );
 
+  const handleDelete = useCallback((chat: AssistantChat.Chat) => db?.remove(chat), [db]);
+
   if (!db || !current) {
     return <Loading />;
   }
@@ -227,11 +278,16 @@ const DefaultStory = ({ selected = 0 }: StoryArgs) => {
           <ChatPlane.Add side='start' />
           <ChatPlane.Columns items={threads}>
             {(id) => {
-              const chat = threads.find((thread) => thread.id === id);
+              const position = threads.findIndex((thread) => thread.id === id);
+              const chat = threads[position];
               return (
                 chat && (
                   <ThreadColumn
                     chat={chat}
+                    index={position}
+                    count={threads.length}
+                    onMove={handleMove}
+                    onDelete={handleDelete}
                     current={id === current.id}
                     db={db}
                     runtime={runtime}

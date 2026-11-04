@@ -141,6 +141,7 @@ export const translations: Theme.Resource[] = [
         'move-thread.button': 'Move thread',
         'new-thread.button': 'New Chat',
         'rename-thread.button': 'Rename Chat',
+        'thread-menu.button': 'Thread options',
         'chat-history.label': 'Chat History',
         'chat-update-name.label': 'Update AI Chat name',
         'create-chat.label': 'New AI Chat',
