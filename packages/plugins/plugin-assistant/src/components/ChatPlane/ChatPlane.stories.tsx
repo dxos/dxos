@@ -29,6 +29,7 @@ import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu'
 import * as Panel from '@dxos/react-ui/Panel';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message, Task } from '@dxos/types';
+import { trim } from '@dxos/util';
 
 import { useChatModel, useChatServices, usePresets } from '#hooks';
 import * as AssistantPlugin from '#meta';
@@ -48,6 +49,71 @@ type StoryArgs = {
   selected?: number;
 };
 
+/** Replies long enough to read like a real answer. Each paragraph is one line, since the renderer keeps line breaks. */
+const FAKE_REPLIES = [
+  trim`
+    Here is how I would approach this, starting with what we know and then what is still open.
+
+    ## What we know
+
+    The request touches three areas, and each one can change on its own:
+
+    - **Data:** what is stored, and who is allowed to change it.
+    - **Behavior:** the rules that run when the data changes.
+    - **Presentation:** how the result reads on screen.
+
+    Keeping these apart means a change in one rarely forces a change in the others.
+
+    ## What to do next
+
+    Start with the smallest change that shows the idea working from end to end. A narrow version exposes the awkward cases early, while they are still cheap to fix. Once it holds up, widen it one case at a time and test as you go.
+
+    ## What could go wrong
+
+    The main risk is two writers changing the same thing at once. Decide up front which one wins, and record that decision, so that nobody has to work it out again later.
+  `,
+  trim`
+    There are a few ways to do this. They differ mostly in where the work happens.
+
+    ## Option one: do it up front
+
+    Compute the result once and store it. Reads are fast and simple, but every write costs more, and the stored copy can go stale if something changes underneath it.
+
+    ## Option two: do it on demand
+
+    Compute the result each time it is needed:
+
+    \`\`\`ts
+    const total = items.reduce((sum, item) => sum + item.value, 0);
+    \`\`\`
+
+    This is always correct and needs no extra storage, but it gets slower as the data grows.
+
+    ## Which to choose
+
+    For a small collection, compute on demand. It is less code, and nothing can go stale. Move to a stored result only when a measurement shows that reads are too slow, and keep the on-demand version as the check that the stored copy is right.
+
+    Either way, write the test first, because it stays valid when the implementation changes.
+  `,
+  trim`
+    I looked through this, and the short version is that it mostly works, with one real problem and a couple of smaller ones.
+
+    ## The real problem
+
+    The result depends on the order things arrive in. When they arrive in the expected order everything looks fine, so the fault is easy to miss, and it shows up only under load. Making the step independent of order fixes it at the source, which is better than retrying around it.
+
+    ## Smaller points
+
+    1. Two of the names say the same thing in different words. Pick one and use it everywhere.
+    2. An error is caught and then dropped, so a failure looks like an empty result. It should reach the caller.
+    3. One value is computed twice on the same path. This does no harm, but it is easy to remove.
+
+    ## How to check it
+
+    Run the same input in several different orders and compare the results. If they all match, the problem is gone. Keep that as a regression test, since nothing else would catch this if it came back.
+  `,
+];
+
 /**
  * Replaces the AI service with a model that answers every turn, however many are sent.
  *
@@ -56,7 +122,7 @@ type StoryArgs = {
 const fakeAiServiceMiddleware = () => {
   const model = Effect.runSync(
     ScriptedLanguageModel.makeScriptedLanguageModel((_request, index) => ({
-      parts: [ScriptedLanguageModel.text(`Fake reply ${index + 1}.`)],
+      parts: [ScriptedLanguageModel.text(`**Fake reply ${index + 1}.** ${FAKE_REPLIES[index % FAKE_REPLIES.length]}`)],
       delay: '1 second',
     })),
   );
@@ -261,16 +327,119 @@ export const FakeModel: Story = {
   args: { fake: true },
 };
 
+/** Long enough to overflow a column, so its scrolling and the prompt floating over it both show. */
+const FOUR_THREADS: StoryArgs['seed'] = [
+  {
+    prompt: 'What is the capital of Australia?',
+    reply: trim`
+      The capital of Australia is **Canberra**, in the Australian Capital Territory. It is often mistaken for Sydney or Melbourne, which are much larger, and that confusion has a history behind it.
+
+      ## Why Canberra
+
+      When the Australian colonies federated in 1901, Sydney and Melbourne both claimed to be the natural capital. The constitution settled the rivalry with a compromise:
+
+      - The capital would be a new city, in New South Wales.
+      - It would sit at least 100 miles from Sydney.
+      - Melbourne would host Parliament until the new city was ready.
+
+      ## How it was built
+
+      The site was chosen in 1908, and an international design competition followed. Walter Burley Griffin and Marion Mahony Griffin won it in 1912 with a plan built around geometric avenues and a central lake.
+
+      Building was slow, interrupted by two world wars and the Depression. Parliament moved from Melbourne in 1927, but Lake Burley Griffin was not filled until the 1960s.
+
+      ## Today
+
+      Canberra is home to Parliament House, the High Court, the National Gallery and the Australian War Memorial. Its economy leans heavily on government, along with universities and research.
+    `,
+  },
+  {
+    prompt: 'What is 17 × 23?',
+    reply: trim`
+      The answer is **391**. There are several ways to get there without a calculator.
+
+      ## Split one factor
+
+      Break 23 into 20 and 3, then multiply each part by 17:
+
+      - 17 × 20 gives 340.
+      - 17 × 3 gives 51.
+      - 340 + 51 gives 391.
+
+      ## Use a difference of squares
+
+      The factors sit either side of 20, three below and three above, so they fit the pattern \`(a - b)(a + b) = a² - b²\`:
+
+      - Here a is 20 and b is 3.
+      - 20² is 400 and 3² is 9.
+      - 400 - 9 gives 391.
+
+      This is usually the fastest route when two factors are equally far from a round number.
+
+      ## Check the result
+
+      Casting out nines is a quick test. The digits of 17 add up to 8, and the digits of 23 add up to 5, so the product should match 8 × 5 = 40, which reduces to 4. The digits of 391 add up to 13, which also reduces to 4.
+
+      The test can miss some mistakes, such as swapped digits, but it catches most slips in arithmetic.
+    `,
+  },
+  {
+    prompt: 'Name a prime number above 100.',
+    reply: trim`
+      For example, **101** is prime, and it is the smallest prime above 100.
+
+      ## Why it is prime
+
+      To test a number, you only need to try dividing by primes up to its square root. The square root of 101 is just over 10, so the candidates are 2, 3, 5 and 7:
+
+      - It is odd, so 2 does not divide it.
+      - Its digits add up to 2, so 3 does not divide it.
+      - It does not end in 0 or 5, so 5 does not divide it.
+      - Dividing by 7 leaves a remainder of 3.
+
+      No candidate divides it, so 101 is prime.
+
+      ## Nearby primes
+
+      The next few are 103, 107, 109 and 113. Between 113 and 127 there is a gap of 14, the first gap that large.
+
+      ## Twin primes
+
+      Pairs that differ by 2 are called twin primes. 101 and 103 form one such pair, as do 107 and 109. Whether there are infinitely many of these pairs remains an open question in number theory.
+    `,
+  },
+  {
+    prompt: 'How many sides does a hexagon have?',
+    reply: trim`
+      A hexagon has **six** sides, along with six corners. The name comes from the Greek for "six" and "angle".
+
+      ## Angles
+
+      The interior angles of any simple hexagon add up to 720 degrees. In a regular hexagon, where every side and angle is equal, each interior angle is 120 degrees.
+
+      ## Tiling
+
+      Only three regular polygons can cover a flat surface with no gaps: triangles, squares and hexagons. Of those three, hexagons enclose a given area with the least perimeter, which makes them an efficient way to divide up a plane.
+
+      ## Where they appear
+
+      - **Honeycomb:** the cells use little wax for the space they hold.
+      - **Chemistry:** the benzene molecule is drawn as a ring of six carbon atoms.
+      - **Geology:** cooling lava can crack into hexagonal columns, as at the Giant's Causeway.
+      - **Board games:** hex grids make every neighbouring cell the same distance away.
+
+      ## Construction
+
+      With a compass, draw a circle, then step its radius around the edge. Six steps return to the start, and joining the marks gives a regular hexagon.
+    `,
+  },
+];
+
 /** Starts on the second of four threads that already hold a conversation; replies come from the scripted model. */
 export const FourThreads: Story = {
   args: {
     fake: true,
     selected: 1,
-    seed: [
-      { prompt: 'What is the capital of Australia?', reply: 'Canberra.' },
-      { prompt: 'What is 17 × 23?', reply: 'The answer is 391.' },
-      { prompt: 'Name a prime number above 100.', reply: 'For example, 101.' },
-      { prompt: 'How many sides does a hexagon have?', reply: 'Six.' },
-    ],
+    seed: FOUR_THREADS,
   },
 };
