@@ -4,7 +4,7 @@
 spaceId: BPHV54FP4JB3TVSTCBZE3OFYGSCOGICBD
 
 # The whole run's budget: past it the run stops, deletes its fresh space and still writes its report.
-runTimeoutMinutes: 110
+runTimeoutMinutes: 60
 
 # Stage 1: insert this many Enron pool messages into the inbox as new mail; 0 skips the stage.
 seed:
@@ -12,7 +12,8 @@ seed:
 
 # Stage 2: wait for the canary space to sync the seeded mail, then check every sync run of the window.
 monitor:
-  timeoutMinutes: 30
+  # Counted from the start of the stage: the first read of the space (up to `edge.readMinutes`) plus the copies' sync.
+  timeoutMinutes: 25
   pollSeconds: 60
   windowHours: 24
   # A sync invocation still open after this long counts as hung.
@@ -22,7 +23,8 @@ monitor:
 fullSync:
   enabled: true
   days: 730
-  timeoutMinutes: 60
+  # The 1,044-message mailbox took 7 minutes; the mailbox grows by `seed.count` a night, so this needs raising with it.
+  timeoutMinutes: 15
   pollSeconds: 60
   # A Google access token lasts an hour.
   tokenRefreshMinutes: 30
@@ -30,6 +32,7 @@ fullSync:
 # How long to wait on EDGE before failing a step with a reason instead of hanging the run.
 edge:
   openMinutes: 5
-  readMinutes: 15
+  # Replication of the canary space to the run's new device.
+  readMinutes: 10
   triggerMinutes: 3
-  deleteMinutes: 10
+  deleteMinutes: 5
