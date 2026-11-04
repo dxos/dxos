@@ -2,4 +2,4 @@
 '@dxos/echo-client': patch
 ---
 
-An index hit waiting for this client's space root to link its object now stops when the database closes, rather than letting its timer fire against the released space root handle and throw `Database was not initialized with root object`.
+An index hit whose database closes while it waits for the space root to link its object now resolves to no result, instead of throwing `Database was not initialized with root object` from a timer that outlived the database, or rejecting the load with `ContextDisposedError`.
