@@ -34,7 +34,13 @@ import { type TaskPlacement } from './hierarchy.ts';
 import { TaskDescription, type TaskDescriptionProps } from './TaskDescription.tsx';
 import { TaskListProvider, useTaskListContext } from './TaskListContext.ts';
 import { TaskListEditor, type TaskListEditorProps } from './TaskListEditor.tsx';
-import { TaskCheckbox, TaskEstimateLabel, TaskMnemonic, TaskPriorityIcon, TaskStatusControl } from './TaskRowCells.tsx';
+import {
+  TaskCheckbox,
+  TaskEstimateControl,
+  TaskMnemonic,
+  TaskPriorityIcon,
+  TaskStatusControl,
+} from './TaskRowCells.tsx';
 import { type TaskItemProps, type TaskSelectModifiers, TaskTreeNode } from './TaskTreeNode.tsx';
 import { TRACK } from './tracks.ts';
 import {
@@ -582,9 +588,7 @@ const TaskListItem = ({
         </Layout.Grid>
       )}
       <TaskPriorityIcon task={task} classNames={TRACK.priority} />
-      <Layout.Grid center classNames={TRACK.estimate}>
-        <TaskEstimateLabel estimate={current.estimate} />
-      </Layout.Grid>
+      <TaskEstimateControl task={task} classNames={TRACK.estimate} />
       <TaskListItemActions task={task} classNames={TRACK.actions} />
 
       {/* The row's second line, under the title and inset as it is; it takes no height when the task has no chips. */}

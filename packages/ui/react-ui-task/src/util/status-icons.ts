@@ -15,14 +15,17 @@ import { getStyles } from '@dxos/ui-theme';
 export const STATUS_ORDER: Task.Status[] = Task.StatusOptions.map(({ id }) => id);
 
 /**
- * The glyph for a field with no value set, whatever the field.
+ * The glyph for a field with no value set, unless the field has a placeholder of its own.
  *
- * A dot rather than a dash or an empty cell: every trailing control renders on every row so setting
+ * A glyph rather than a dash or an empty cell: every trailing control renders on every row so setting
  * a value never depends on discovering a hover affordance, which means an unset one still has to
- * occupy its column and read as a control. One glyph across estimate and anything added later is
- * what keeps a column of unset rows reading as one column; priority has its own placeholder.
+ * occupy its column and read as a control. One glyph across fields is what keeps a column of unset rows
+ * reading as one column; priority and estimate have their own placeholders.
  */
 export const UNSET_ICON = 'ph--asterisk--regular';
+
+/** An unset estimate's glyph: a quiet mark, since the column's values are short text rather than icons. */
+export const ESTIMATE_UNSET_ICON = 'ph--dot--regular';
 
 export const ESTIMATE_ICON = 'ph--ruler--regular';
 

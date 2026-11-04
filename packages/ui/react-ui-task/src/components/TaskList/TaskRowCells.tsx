@@ -16,13 +16,13 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
-import * as Typography from '@dxos/react-ui/Typography';
 import { Task } from '@dxos/types';
 import { getHashHue, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
 import {
+  ESTIMATE_UNSET_ICON,
   UNSET_ICON,
   estimateTextStyle,
   priorityIcon,
@@ -227,14 +227,21 @@ export const TaskCheckbox = ({ task, checked, onCheckedChange, classNames }: Tas
 
 TaskCheckbox.displayName = 'TaskList.Checkbox';
 
-export const TaskEstimateLabel = ({ estimate }: { estimate?: Task.Estimate }) =>
-  estimate ? (
-    <Typography.Text asChild tone='muted' classNames='text-sm' data-testid='taskList.item.estimate'>
-      <span>{estimate.toUpperCase()}</span>
-    </Typography.Text>
-  ) : null;
+/** The row's estimate, editable in place as its priority is, so sizing a task never means opening it. */
+export const TaskEstimateControl = ({ task, classNames }: { task: Task.Task; classNames?: string }) => {
+  const { onTaskUpdate } = useTaskListContext('TaskList.EstimateControl');
+  const [estimate] = useObject(task, 'estimate');
+  return (
+    <TaskEstimatePicker
+      estimate={estimate ?? undefined}
+      onChange={onTaskUpdate && ((estimate) => onTaskUpdate(task, { estimate: estimate ?? null }))}
+      testId='taskList.item.estimate'
+      classNames={classNames}
+    />
+  );
+};
 
-TaskEstimateLabel.displayName = 'TaskList.EstimateLabel';
+TaskEstimateControl.displayName = 'TaskList.EstimateControl';
 
 export type TaskEstimatePickerProps = {
   estimate?: Task.Estimate;
@@ -247,10 +254,18 @@ export type TaskEstimatePickerProps = {
 /** The estimate label and its menu over a bare value, for a task or a draft that has none yet. */
 export const TaskEstimatePicker = ({ estimate, onChange, testId, classNames }: TaskEstimatePickerProps) => {
   const { t } = Hooks.useTranslation(translationKey);
-  const label = estimate?.toUpperCase() ?? <Icon.Icon icon={UNSET_ICON} classNames='text-neutral-500' />;
+  const label = estimate?.toUpperCase() ?? <Icon.Icon icon={ESTIMATE_UNSET_ICON} classNames='text-neutral-500' />;
 
   if (!onChange) {
-    return <Layout.Block classNames={mx('text-sm', estimateTextStyle(estimate), classNames)}>{label}</Layout.Block>;
+    return (
+      <Layout.Block
+        aria-hidden={false}
+        data-testid={testId}
+        classNames={mx('text-sm', estimateTextStyle(estimate), classNames)}
+      >
+        {label}
+      </Layout.Block>
+    );
   }
 
   return (
