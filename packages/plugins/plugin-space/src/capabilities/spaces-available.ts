@@ -30,7 +30,11 @@ import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_p
 import { SpaceCapabilities } from '#types';
 
 import { migrateToSettingsSpace } from '../migrations/settings-space.ts';
-import { PRESENCE_BROADCAST_INTERVAL, groupPresenceKeysBySpace } from '../util/presence.ts';
+import {
+  PRESENCE_BROADCAST_INTERVAL,
+  groupPresenceChangesBySpace,
+  groupPresenceKeysBySpace,
+} from '../util/presence.ts';
 import { catchNonInterrupt, resolveSettingsSpace, runSettingsSpaceHealing } from '../util/settings-space.ts';
 
 /**
@@ -203,24 +207,19 @@ export default Capability.makeModule(
       const layout = registry.get(layoutAtom);
       const current = attention.getCurrent();
       const active = layout.active;
-      // Switching workspace swaps the whole layout, so what left `active` is in neither list; report it as removed.
-      const inactive = [...layout.inactive, ...previousActive.filter((id) => !active.includes(id))];
+      const departed = previousActive.filter((id) => !active.includes(id));
+      const inactive = [...layout.inactive, ...departed];
       previousActive = active;
 
       const send = () => {
         const spaces = client.spaces.get();
         const identity = Option.getOrUndefined(haloIdentity.getSnapshot());
         if (identity) {
-          // Per space, so one space's members never learn what this peer attends in another.
           const attendedBySpace = groupPresenceKeysBySpace([...current]);
-          const addedBySpace = groupPresenceKeysBySpace(active);
-          const removedBySpace = groupPresenceKeysBySpace(inactive);
+          const changesBySpace = groupPresenceChangesBySpace(active, inactive);
 
-          // Every space is messaged, so a peer that left all of a space's objects still sends its `removed`.
           for (const space of spaces) {
-            const added = addedBySpace.get(space.id) ?? [];
-            // Receivers apply `removed` after `added`, and two paths can share an EID, so drop any key still active.
-            const removed = (removedBySpace.get(space.id) ?? []).filter((key) => !added.includes(key));
+            const { added, removed } = changesBySpace.get(space.id) ?? { added: [], removed: [] };
             void space
               .postMessage('viewing', {
                 identityKey: identity.identityKey ?? '',

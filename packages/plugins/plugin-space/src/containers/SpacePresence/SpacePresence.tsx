@@ -9,6 +9,7 @@ import { generateName } from '@dxos/display-name';
 import { type Key } from '@dxos/echo';
 import { type Space } from '@dxos/halo';
 import { useIdentity, useMembers } from '@dxos/halo-react';
+import { type EID } from '@dxos/keys';
 import { AttentionGlyph, type AttentionGlyphProps, useAttention } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
 import * as Avatar from '@dxos/react-ui/Avatar';
@@ -28,9 +29,10 @@ const REFRESH_INTERVAL = 5000;
 // TODO(wittjosiah): Factor out?
 const getName = (member: Space.Member) => member.displayName ?? generateName(member.identityKey ?? '0');
 
+const byIdentityKey = (a: Space.Member, b: Space.Member) => (a.identityKey ?? '').localeCompare(b.identityKey ?? '');
+
 const isActive = (viewer: SpaceSchema.ObjectViewerProps, now: number) => now - viewer.lastSeen < PRESENCE_EXPIRY;
 
-/** Re-renders on an interval so viewers whose heartbeat lapsed drop out. */
 const useNow = () => {
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
@@ -40,7 +42,6 @@ const useNow = () => {
   return now;
 };
 
-/** Counts the viewers whose heartbeat has not lapsed, re-checking on an interval. */
 export const useActiveViewerCount = (viewers?: Record<string, SpaceSchema.ObjectViewerProps>) => {
   const now = useNow();
   return viewers ? Object.values(viewers).filter((viewer) => isActive(viewer, now)).length : 0;
@@ -48,8 +49,7 @@ export const useActiveViewerCount = (viewers?: Record<string, SpaceSchema.Object
 
 export type SpacePresenceProps = {
   spaceId?: Key.SpaceId;
-  /** The EID peers report while viewing the object or space (see `getPresenceKeyFrom*`). */
-  presenceKey?: string;
+  presenceKey?: EID.EID;
 };
 
 export const SpacePresence = ({ spaceId, presenceKey }: SpacePresenceProps) => {
@@ -71,9 +71,7 @@ export const SpacePresence = ({ spaceId, presenceKey }: SpacePresenceProps) => {
       }
       return [{ ...member, currentlyAttended: viewer.currentlyAttended, lastSeen: viewer.lastSeen }];
     })
-    // Ordered by identity, not recency: heartbeats refresh `lastSeen`, so sorting by it reshuffles the
-    // avatars every interval. Every client shows a given set of peers in the same order.
-    .toSorted((a, b) => (a.identityKey ?? '').localeCompare(b.identityKey ?? ''));
+    .toSorted(byIdentityKey);
 
   return <FullPresence members={members} />;
 };
@@ -174,7 +172,6 @@ type PresenceAvatarProps = {
 
 const PresenceAvatar = forwardRef<HTMLDivElement, PresenceAvatarProps>(
   ({ member, showName, match, index, onClick, size }, forwardedRef) => {
-    // Not `active`: its green means "online" on the account avatar, and every peer shown here is online.
     const status = match ? 'current' : 'inactive';
     const fallbackValue = hexToFallback(member.identityKey ?? '0');
     const name = getName(member);

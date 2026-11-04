@@ -33,13 +33,9 @@ export const InlineSyncStatus = ({ space, open }: { space: Space; open?: boolean
   const syncing = connectedToEdge && edgeSyncEnabled && syncState && syncState.missingOnLocal > 0;
   const ephemeral = AppHooks.useAtomCapability(SpaceCapabilities.EphemeralState);
   const count = useActiveViewerCount(ephemeral.viewersByObject[getPresenceKeyFromSpace(space.id)]);
-  // The spinner takes the presence mark's place while syncing, so the tooltip still carries the count.
-  const label =
-    syncing && count > 0
-      ? `${t('syncing.label')} · ${t('presence.label', { count })}`
-      : syncing
-        ? t('syncing.label')
-        : t('presence.label', { count });
+  const label = [syncing && t('syncing.label'), (!syncing || count > 0) && t('presence.label', { count })]
+    .filter(Boolean)
+    .join(' · ');
 
   return (
     <Tooltip.Trigger asChild content={label} side='bottom'>

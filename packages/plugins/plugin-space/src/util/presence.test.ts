@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { Key } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
-import { getPresenceKeyFromPath, groupPresenceKeysBySpace } from './presence.ts';
+import { getPresenceKeyFromPath, groupPresenceChangesBySpace, groupPresenceKeysBySpace } from './presence.ts';
 
 const spaceId = Key.SpaceId.random();
 const otherSpaceId = Key.SpaceId.random();
@@ -45,6 +45,21 @@ describe('groupPresenceKeysBySpace', () => {
     expect(Object.fromEntries(grouped)).toEqual({
       [spaceId]: [EID.make({ spaceId, entityId: objectId }), EID.make({ spaceId, entityId: childId })],
       [otherSpaceId]: [EID.make({ spaceId: otherSpaceId })],
+    });
+  });
+});
+
+describe('groupPresenceChangesBySpace', () => {
+  test('keeps a key added when an inactive path resolves to it too', ({ expect }) => {
+    const changes = groupPresenceChangesBySpace(
+      [`root/${spaceId}/collections/${objectId}`],
+      [`root/${spaceId}/content/${objectId}`, `root/${spaceId}/${childId}`],
+    );
+    expect(Object.fromEntries(changes)).toEqual({
+      [spaceId]: {
+        added: [EID.make({ spaceId, entityId: objectId })],
+        removed: [EID.make({ spaceId, entityId: childId })],
+      },
     });
   });
 });
