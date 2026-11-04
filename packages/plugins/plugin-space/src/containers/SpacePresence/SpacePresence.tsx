@@ -179,7 +179,8 @@ export const FullPresence = (props: MemberPresenceProps) => {
           <Popover.Title>{t('presence-in-object.heading', { count: members.length })}</Popover.Title>
           {headerAction}
         </Popover.Header>
-        <Popover.Body>
+        {/* The header keeps a gap from the panel's top edge; the list keeps the same from its bottom. */}
+        <Popover.Body classNames='pb-2'>
           <Listbox.Root items={getPresenceOptions(members)} value={highlighted ?? ''} onValueChange={setHighlighted}>
             <Listbox.Content aria-label={t('presence-in-object.heading', { count: members.length })}>
               {members.map((member) => (
@@ -207,7 +208,9 @@ export type PresenceItemProps = {
 export const PresenceItem = ({ member, renderActions }: PresenceItemProps) =>
   member.identityKey ? (
     <Listbox.Item id={member.identityKey} data-testid='spacePlugin.presence.row'>
-      <PresenceAvatar member={member} size='sm' match={member.currentlyAttended} />
+      <Listbox.ItemIcon>
+        <PresenceAvatar member={member} size='md' match={member.currentlyAttended} />
+      </Listbox.ItemIcon>
       <Listbox.ItemText />
       {renderActions?.(member)}
     </Listbox.Item>
