@@ -1,0 +1,255 @@
+---
+id: com.example.availability-poll
+name: Availability Poll
+version: 0.1.0
+---
+
+A When2meet-style poll on one Cloudflare Worker. Someone creates a poll with candidate time slots and a list of
+invitees; each invitee marks the slots they are free for, in their own time zone; the page shades a heat map of where
+people overlap and names the best slot. Each poll lives in a Durable Object of its own. The work ships in three
+milestones: the core poll, then time zones and daylight-saving time, then flight options, which `FLIGHTS.mdl`
+specifies.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                           |
+| ----------- | ----------------------------- |
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
+
+## Types
+
+```mdl
+type Slot
+  desc: One candidate meeting time, as the API returns it.
+  fields:
+    id: string             # s1, s2, … in time order
+    start: string          # UTC instant, ISO 8601 with a Z
+    minutes: number        # length
+    free: string[]         # names of the invitees free for it, in invitee order
+```
+
+```mdl
+type Invitee
+  desc: Someone asked to mark their availability.
+  fields:
+    name: string           # unique within the poll
+    zone?: string          # IANA zone, set with their marks (M-2)
+```
+
+```mdl
+type Poll
+  desc: The JSON body of `GET /api/polls/:id`.
+  fields:
+    id: string             # the Durable Object id, hex
+    title: string
+    zone: string           # the organizer's IANA zone; `UTC` until M-2
+    slots: Slot[]
+    invitees: Invitee[]
+    best?: string          # id of the best slot; absent while nobody has marked
+```
+
+```mdl
+type NewPoll
+  desc: The JSON body of `POST /api/polls`.
+  fields:
+    title: string
+    zone?: string          # IANA zone; defaults to `UTC`
+    slots: string[] | SlotPlan   # UTC instants, or (M-2) a plan in `zone`
+    minutes: number        # length of every slot, 15 to 240
+    invitees: string[]     # names
+```
+
+```mdl
+type SlotPlan
+  desc: Slots by the organizer's wall clock (M-2).
+  fields:
+    dates: string[]        # local dates, YYYY-MM-DD
+    hours: number[]        # local start hours, 0 to 23
+```
+
+```mdl
+type LocalRange
+  desc: A free stretch in an invitee's own zone (M-2).
+  fields:
+    date: string           # local date, YYYY-MM-DD
+    from: string           # HH:MM, inclusive
+    to: string             # HH:MM, exclusive; 24:00 is the end of the day
+```
+
+## Features
+
+```mdl
+feat F-1: Create a poll
+  desc: A poll is created once and lives in a Durable Object of its own.
+
+  req F-1.1: `POST /api/polls` with `type:NewPoll` creates the poll in a new Durable Object (`newUniqueId`) and answers 201 with `{ id, url }`, where `url` is the poll's page.
+  req F-1.2: A poll needs a title, 1 to 100 slots and 1 to 20 distinct invitee names; any other body is 400 with `{ error }` naming the field.
+  req F-1.3: Slots are stored as UTC instants, listed in time order, with ids `s1`, `s2`, … in that order.
+  req F-1.4: `GET /` serves a form that creates a poll from a title, slots and names, then opens its page.
+```
+
+```mdl
+feat F-2: Mark availability
+  desc: Each invitee says which slots they can make.
+
+  req F-2.1: The poll page `/p/:id` asks the reader which invitee they are, then shows a grid with one column per day and one row per start time.
+  req F-2.2: Clicking or dragging across cells toggles them, and each change is saved with `PUT /api/polls/:id/marks/:name` and `{ slots: string[] }`, which replaces that invitee's marks.
+  req F-2.3: A name not on the poll is 404; a slot id not on the poll is 400.
+```
+
+```mdl
+feat F-3: Heat map and best slot
+  desc: Where people overlap, at a glance, and the one slot to pick.
+
+  req F-3.1: Each cell is shaded by the share of invitees free for it, in five steps from none to all; hovering a cell lists who is free.
+  req F-3.2: The best slot is the one the most invitees are free for; on a tie, the earliest. With no marks there is no best slot.
+  req F-3.3: Above the grid the page names the best slot, its local time and how many are free, and outlines its cell.
+  req F-3.4: The page shows another invitee's change within 5 seconds, without a reload.
+```
+
+```mdl
+feat F-4: Time zones
+  desc: The organizer plans by their own clock, and everyone reads the grid by theirs.
+
+  req F-4.1: `NewPoll.slots` may be a `type:SlotPlan`: one slot starts at each listed hour on each listed date, by the wall clock in the poll's `zone`.
+  req F-4.2: The page lays the grid out in the reader's zone, taken from the browser, with a picker to change it; columns are local dates and rows local start times.
+  req F-4.3: An invitee's zone is saved with their marks and shown beside their name.
+```
+
+```mdl
+feat F-5: Daylight-saving time
+  desc: A poll may span a clock change in any of its zones, and every count stays right.
+
+  req F-5.1: A planned slot's instant uses the zone's offset on that slot's own date and hour, never one offset for the whole poll.
+  req F-5.2: A planned local time that a change skips makes no slot (hour 2 on 2026-03-08 in `America/New_York`); one that occurs twice takes its first occurrence (hour 1 on 2026-11-01 there is 05:00Z).
+  req F-5.3: `PUT /api/polls/:id/marks/:name` also takes `{ zone, ranges: LocalRange[] }`: a slot is marked when its start falls inside a range, read in `zone` on the range's date.
+  req F-5.4: The grid places each slot by its local date and time, so a day on which the reader's offset differs shows its slots an hour off the other days; no slot is dropped or shown twice.
+```
+
+```mdl
+feat F-6: Flight options
+  desc: Flights overlaid on the poll for invitees who travel to it. Left for the reader to build.
+
+  req F-6.1: A poll can carry a trip, search flights for it under the poll's limits and let each traveler pick one, as `FLIGHTS.mdl` specifies.
+```
+
+## Milestones
+
+The work ships in this order; each milestone is done when its scenarios pass against the deployed Worker.
+
+| Milestone                                | Delivers                                                                                                              | Features      | Done when                                                           |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------- |
+| M-1: Core poll                           | Create a poll, mark availability, see the heat map and the best slot, one Durable Object per poll. Every time is UTC. | F-1, F-2, F-3 | T-1, T-3 and T-4 pass against the deployed Worker.                  |
+| M-2: Time zones and daylight-saving time | Plan by the organizer's wall clock, mark and read by each invitee's, across a clock change.                           | F-4, F-5      | T-2 passes against the deployed Worker, and T-1 and T-3 still do.   |
+| M-3: Flight options                      | Search Duffel for flights to the meeting under the poll's limits and let travelers pick. Not started.                 | F-6           | Every scenario in `FLIGHTS.mdl` passes against the deployed Worker. |
+
+## Acceptance
+
+```mdl
+scenario T-1: One zone
+  given: a poll "Design review" with slots 2026-06-01T09:00Z, 10:00Z, 11:00Z and 12:00Z and the same hours on 2026-06-02, 60 minutes each, and invitees Ana, Ben and Chika
+  when:
+    - Ana marks s1, s2 and s3
+    - Ben marks s2, s3, s6 and s7
+    - Chika marks s3, s6 and s7
+  then:
+    - s1 to s8 have 1, 2, 3, 0, 0, 2, 2 and 0 invitees free
+    - the best slot is s3, 2026-06-01T11:00Z
+```
+
+```mdl
+scenario T-2: Three zones across a clock change
+  given:
+    - a poll "Launch review" in `America/New_York`, planned for dates 2026-10-30 and 2026-11-02 at hours 8, 9, 10, 11 and 12, 60 minutes each
+    - invitees Ana in `America/New_York`, Ben in `Europe/London` and Chika in `Asia/Tokyo`
+    - London left summer time on 2026-10-25 and New York leaves it on 2026-11-01, so New York is 4 hours behind London on the Friday and 5 on the Monday
+  when:
+    - Ana marks 09:00 to 12:00 on 2026-10-30 and on 2026-11-02, in `America/New_York`
+    - Ben marks 14:00 to 17:00 on 2026-10-30 and on 2026-11-02, in `Europe/London`
+    - Chika marks 23:00 to 24:00 on 2026-10-30 and 00:00 to 02:00 on 2026-11-03, in `Asia/Tokyo`
+  then:
+    - s1 to s5 start at 12:00Z, 13:00Z, 14:00Z, 15:00Z and 16:00Z on 2026-10-30
+    - s6 to s10 start at 13:00Z, 14:00Z, 15:00Z, 16:00Z and 17:00Z on 2026-11-02
+    - s1 to s10 have 0, 1, 3, 2, 1, 0, 2, 3, 3 and 0 invitees free
+    - the best slot is s3, 10:00 on Friday in New York
+    - read in `Europe/London`, the grid shows Friday's slots at 12:00 to 16:00 and Monday's at 13:00 to 17:00
+    - read in `Asia/Tokyo`, the grid has four columns, 30 and 31 October and 2 and 3 November
+```
+
+```mdl
+scenario T-3: Polls are separate
+  given: two polls created from the body of T-1
+  when: Ana marks s1 on the first
+  then:
+    - the polls have different ids
+    - the second has no marks and no best slot
+```
+
+```mdl
+scenario T-4: The deployed Worker answers
+  given: the Worker is deployed
+  when: a client creates a poll through `/api/polls` on the Worker URL and opens its `url`
+  then:
+    - the page renders the grid
+    - `GET /api/polls/:id` returns the same marks on a second request a minute later
+```
+
+## Changelog
+
+Every change to this spec adds a decision, newest last. See `lang/changelog.mdl` for the attribution rules.
+
+```mdl
+decision D-1: The Availability Poll template seeds this spec written in full, with its feature map and the flight options spec, and no milestones or tasks; the assistant plans each milestone from the spec, works the tasks it files and sets each feature's status from the deployed Worker.
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: The demo is the development loop at the spec and feature level; planning the tasks is part of what it shows.
+  rejected: Seeding the milestones and tasks, which would skip the step where the agent derives them from the spec.
+```
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using
+the core `ext` primitive — the only construct the base language provides.
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap        # name[?]: TypeExpr  (# inline comment)
+    literals?: UnionList     # a | b | c
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self              # feat blocks may contain feat blocks
+```
+
+```mdl
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+`decision` is defined in [`changelog.mdl`](https://github.com/dxos/dxos/blob/main/packages/reflect/deus/lang/changelog.mdl).

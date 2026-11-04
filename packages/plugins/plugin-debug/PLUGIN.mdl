@@ -524,6 +524,61 @@ test QA-10: Ride Check — spec, diagram, deploy, edit a feature card, redeploy
       expect: the verdict reads MAYBE with "Gusts up to N km/h" and a highlighted Gusts row
 ```
 
+```mdl
+test QA-11: Availability Poll — plan from the spec, ship by milestone, change a requirement, revalidate
+  desc: |
+    The Availability Poll template as the development loop at the spec and feature level. The space holds a finished
+    spec staged as three milestones, its feature map, the flight options spec its last feature owns, design docs and
+    drawings, and no tasks. The reader asks the project's chat to plan a milestone, delegates the tasks it files and
+    watches the Gantt chart and the feature cards, then changes a requirement and watches its card fail and recover.
+    Flight options stay planned. Recorded by autocue/availability-poll.mjs.
+  actors: human
+  status: unverified
+  given:
+    - an identity exists, on a fresh profile, talking to an EDGE whose AI and sandbox services serve the chosen model
+    - plugin-debug, Code and Sandbox are enabled (dev-only defaults); Illustrator and Canvas are on by default
+  steps:
+    - name: Create a space from the Availability Poll template
+      do: Add a space and pick the "Availability Poll" template.
+      expect: the space opens with the "Availability Poll" project in the navtree
+    - name: Open the feature map
+      do: Open the project's Specs tab and switch it to the map.
+      expect: six planned cards, "Create a poll" to "Flight options", and an empty Tasks tab
+    - name: Open the spec
+      do: Select "Heat map and best slot", then switch the Specs tab to the spec's text.
+      expect: the feature's requirements in the companion, and the spec's text with every feature embedded, the Milestones table's rows M-1 to M-3 and scenarios T-1 to T-4
+    - name: Open the flight options spec
+      do: Select "Flight options" and show its subfeatures on the map.
+      expect: the feature's own level, with four planned subfeatures from the flight options spec
+    - name: Plan M-1 from the spec
+      do: In the project's chat, ask the agent to plan M-1 from the spec.
+      expect: a milestone "M-1" with three to six tasks, each linked to "Create a poll", "Mark availability" or "Heat map and best slot", the last one deploying and checking M-1
+    - name: Delegate M-1
+      do: On Tasks, tick M-1's tasks and delegate them to the agent.
+      expect: the Gantt chart opens with a lane for each task
+    - name: Watch M-1 ship
+      do: Wait for M-1's tasks.
+      expect: every M-1 task done or in review, the Worker URL filed on the project, and the three M-1 features operational
+    - name: Plan and delegate M-2
+      do: Ask the chat to plan M-2, then delegate its tasks.
+      expect: a milestone "M-2" with its tasks linked to "Time zones" and "Daylight-saving time", and the Gantt chart running them
+    - name: Watch M-2 ship
+      do: Wait for M-2's tasks.
+      expect: "Time zones" and "Daylight-saving time" operational, with T-2's counts and best slot s3 checked on the live URL
+    - name: Change the tie-break
+      do: On "Heat map and best slot", change F-3.2 so a tie goes to the slot whose next slot keeps the most of the same invitees free, then the earliest.
+      expect: the card and the spec show the new F-3.2
+    - name: Revalidate
+      do: Ask the chat to revalidate "Heat map and best slot".
+      expect: the feature turns failing, T-2's best slot in the spec becomes s8, a Changelog decision records the change, and one fix task is filed
+    - name: Ship the fix
+      do: Delegate the fix task and wait for it.
+      expect: the Worker is redeployed and "Heat map and best slot" is operational again
+    - name: Hold on the feature map
+      do: Open the Features tab.
+      expect: five operational features and "Flight options" planned
+```
+
 ## Changelog
 
 Every change to this spec adds a decision, newest last. See `lang/changelog.mdl` for the attribution rules.
@@ -553,4 +608,14 @@ decision D-3: [QA-10] demos the loop with the Ride Check template, a ride-foreca
   affects: [QA-10]
   why: Every step of the loop has to change something a viewer can see; a greeting endpoint gives the deploy and the edit nothing to show.
   rejected: Rewriting Hello Worker in place, which its eval, QA-9 and the showcase speaking track still describe.
+```
+
+```mdl
+decision D-4: [QA-11] demos the development loop with the Availability Poll template: the spec is finished and no task exists, the agent plans each milestone from it, the delegated tasks run on the Gantt chart, and feature status is the validation the reader follows, including a requirement change that fails and recovers.
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-11]
+  why: Specs and features are where a person works; tasks are where the agent works, so the take plans from the spec instead of seeding tasks.
+  rejected: Showing spec-review verdicts in the spec viewer, which reads a review only from a local checkout while the agent's code lives in its sandbox.
 ```

@@ -1,0 +1,180 @@
+---
+id: com.example.availability-poll.flights
+name: Flight options
+version: 0.1.0
+---
+
+Flights overlaid on an availability poll, for invitees who travel to the meeting. The organizer sets a destination, a
+time window and the limits a flight must meet; each traveler sets where they fly from; the Worker searches Duffel for
+offers and the page shows, on the poll's own grid, when each traveler can arrive. It builds on the poll spec: the best
+slot it plans around is [F-3](com.example.availability-poll#F-3), and every time it shows is read in the
+reader's zone as [F-4](com.example.availability-poll#F-4) and
+[F-5](com.example.availability-poll#F-5) define.
+
+## Dependencies
+
+```mdl
+uses com.example.availability-poll: The poll these flights are overlaid on — its best slot, its invitees and the zone rules every time here is read by, which this spec does not restate.
+```
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term       | URI                          |
+| ---------- | ---------------------------- |
+| `type`     | `org.dxos.mdl.type@1.0`      |
+| `feat`     | `org.dxos.mdl.feat@1.0`      |
+| `scenario` | `org.dxos.mdl.scenario@1.0`  |
+| `decision` | `org.dxos.mdl.decision@1.0`  |
+
+## Types
+
+```mdl
+type Limits
+  desc: What a flight must meet to be offered.
+  fields:
+    maxPrice: number       # per traveler, in `currency`
+    currency: string       # ISO 4217
+    cabin: economy | premium_economy | business | first
+    maxConnections: number # 0 to 2
+    arriveBefore: number   # minutes between landing and the slot's start
+```
+
+```mdl
+type Trip
+  desc: The poll's trip, stored with the poll in its Durable Object.
+  fields:
+    destination: string    # IATA airport code
+    from: string           # first departure date, YYYY-MM-DD
+    to: string             # last departure date, YYYY-MM-DD
+    limits: Limits
+```
+
+```mdl
+type Traveler
+  desc: An invitee who flies in.
+  fields:
+    name: string           # an invitee of the poll
+    origin: string         # IATA airport code
+    pick?: string          # id of the offer they chose
+```
+
+```mdl
+type Offer
+  desc: One flight option as the page shows it, from a Duffel offer.
+  fields:
+    id: string             # the Duffel offer id
+    traveler: string
+    airline: string
+    departs: string        # UTC instant
+    arrives: string        # UTC instant
+    connections: number
+    price: number
+    currency: string
+    expires: string        # UTC instant; Duffel's `expires_at`
+```
+
+## Features
+
+```mdl
+feat F-1: Trip
+  desc: The organizer says where the meeting is and what a flight may cost.
+
+  req F-1.1: `PUT /api/polls/:id/trip` with `type:Trip` sets the poll's trip; the page shows it above the grid.
+  req F-1.2: Each invitee who travels sets their origin airport on the page, saved as a `type:Traveler`.
+```
+
+```mdl
+feat F-2: Offer search
+  desc: The Worker asks Duffel for flights and keeps only those within the limits.
+
+  req F-2.1: `POST /api/polls/:id/offers/:name` creates a Duffel offer request (`POST /air/offer_requests?return_offers=true`, `Duffel-Version: v2`) with one slice from the traveler's origin to the destination for each date in the window, one adult passenger, the trip's cabin and `max_connections`.
+  req F-2.2: An offer is kept when its price is within `maxPrice`, and when it lands at least `arriveBefore` minutes before the best slot's start (com.example.availability-poll#F-3.2); Duffel's `arriving_at` is local to the airport, so it is read in the destination's `time_zone`.
+  req F-2.3: The Duffel access token is the Worker secret `DUFFEL_ACCESS_TOKEN`; it never reaches the browser, and with no secret set the endpoint answers 503.
+  req F-2.4: Offers are cached in the poll's Durable Object for 15 minutes, and an offer past its `expires_at` is never shown.
+```
+
+```mdl
+feat F-3: Pick a flight
+  desc: Each traveler chooses one of their offers.
+
+  req F-3.1: `PUT /api/polls/:id/travelers/:name` with `{ pick }` records the traveler's chosen offer; picking again replaces it.
+  req F-3.2: Nothing is booked: the pick is stored on the poll and shown to everyone.
+```
+
+```mdl
+feat F-4: Arrival overlay
+  desc: The flights drawn on the poll's grid.
+
+  req F-4.1: Each traveler's picked arrival is a marker on the grid, at its local time in the reader's zone (com.example.availability-poll#F-4.2).
+  req F-4.2: With a trip set, a slot that none of a traveler's offers reaches in time is dimmed for that traveler and does not count them as free, so the heat map and the best slot (com.example.availability-poll#F-3.2) account for travel.
+```
+
+## Acceptance
+
+```mdl
+scenario T-1: Offers within the limits
+  given:
+    - a poll from the poll spec's T-2 with a trip to JFK, departures 2026-10-28 to 2026-10-29, at most 900 GBP in economy with one connection, landing 180 minutes before the slot
+    - Ben travels from LHR, and `DUFFEL_ACCESS_TOKEN` is a Duffel test-mode token
+  when: Ben searches for offers
+  then:
+    - every offer shown costs at most 900 GBP, has at most one connection and lands at JFK by 11:00Z on 2026-10-30
+    - Ben picks one, and the grid shows its arrival as a marker in each reader's zone
+```
+
+## Changelog
+
+Every change to this spec adds a decision, newest last. See `lang/changelog.mdl` for the attribution rules.
+
+```mdl
+decision D-1: Flight options are their own spec, owned by the poll spec's F-6, and cite the poll spec's items by key rather than restating them.
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: The variant is a new feature built on the poll; citing F-3 and F-4 makes a change there visible as a change here.
+  rejected: Writing the flight features into the poll spec as F-6.1 onwards, which would hide where the poll ends and the variant begins.
+```
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using
+the core `ext` primitive — the only construct the base language provides.
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap        # name[?]: TypeExpr  (# inline comment)
+    literals?: UnionList     # a | b | c
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self              # feat blocks may contain feat blocks
+```
+
+```mdl
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+`decision` is defined in [`changelog.mdl`](https://github.com/dxos/dxos/blob/main/packages/reflect/deus/lang/changelog.mdl).
