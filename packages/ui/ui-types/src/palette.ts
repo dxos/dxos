@@ -28,7 +28,7 @@ export type NeutralPalette = 'neutral';
 
 export type Palette = ChromaticPalette | PrimaryPalette | NeutralPalette;
 
-/** A colour the theme names, each with its own `--color-<hue>-*` tokens. */
+/** A color the theme names, each with its own `--color-<hue>-*` tokens. */
 export type Hue = Palette | MessageValence;
 
 /**
