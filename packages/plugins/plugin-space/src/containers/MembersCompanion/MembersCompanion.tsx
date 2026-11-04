@@ -14,6 +14,9 @@ import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { SpaceCapabilities, SpaceOperation } from '#types';
 
@@ -53,38 +56,49 @@ export const MembersCompanion = () => {
   const count = [...groups.values()].reduce((total, group) => total + group.length, 0);
 
   // A private space is locked at genesis, so it never has other members and has no members settings.
-  if (space?.membershipPolicy === MembershipPolicy.LOCKED) {
-    return (
-      <div
-        role='status'
-        className='flex flex-col items-center gap-2 p-4 text-center text-sm text-description'
-        data-testid='spacePlugin.membersCompanion.private'
-      >
-        <Icon.Icon icon='ph--lock-simple--regular' size='lg' tone='subtle' />
-        <p>{t('members-private.message')}</p>
-      </div>
-    );
-  }
+  const locked = space?.membershipPolicy === MembershipPolicy.LOCKED;
 
   return (
-    <div className='flex flex-col gap-2 p-2 overflow-y-auto' data-testid='spacePlugin.membersCompanion'>
-      <div className='px-2 text-sm'>{t('members-online.heading', { count })}</div>
-      {count === 0 && <div className='px-2 text-sm text-description'>{t('members-empty.message')}</div>}
-      {space &&
-        [...groups.entries()].map(([key, group]) => (
-          <ObjectGroup key={key} space={space} objectKey={key} members={group} />
-        ))}
-      {space && (
-        <Button.Root
-          variant='ghost'
-          icon='ph--user-plus--regular'
-          label={t('members-invite.label')}
-          classNames='w-full justify-start'
-          data-testid='spacePlugin.membersCompanion.invite'
-          onClick={() => void invokePromise(SpaceOperation.OpenMembers, { space })}
-        />
-      )}
-    </div>
+    <Panel.Root>
+      <Panel.Header>
+        <Toolbar.Root />
+      </Panel.Header>
+      <Panel.Body asChild>
+        <ScrollArea.Root>
+          <ScrollArea.Viewport>
+            {locked ? (
+              <div
+                role='status'
+                className='flex flex-col items-center gap-2 p-4 text-center text-sm text-description'
+                data-testid='spacePlugin.membersCompanion.private'
+              >
+                <Icon.Icon icon='ph--lock-simple--regular' size='lg' tone='subtle' />
+                <p>{t('members-private.message')}</p>
+              </div>
+            ) : (
+              <div className='flex flex-col gap-2 p-2' data-testid='spacePlugin.membersCompanion'>
+                <div className='px-2 text-sm'>{t('members-online.heading', { count })}</div>
+                {count === 0 && <div className='px-2 text-sm text-description'>{t('members-empty.message')}</div>}
+                {space &&
+                  [...groups.entries()].map(([key, group]) => (
+                    <ObjectGroup key={key} space={space} objectKey={key} members={group} />
+                  ))}
+                {space && (
+                  <Button.Root
+                    variant='ghost'
+                    icon='ph--user-plus--regular'
+                    label={t('members-invite.label')}
+                    classNames='w-full justify-start'
+                    data-testid='spacePlugin.membersCompanion.invite'
+                    onClick={() => void invokePromise(SpaceOperation.OpenMembers, { space })}
+                  />
+                )}
+              </div>
+            )}
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Body>
+    </Panel.Root>
   );
 };
 
