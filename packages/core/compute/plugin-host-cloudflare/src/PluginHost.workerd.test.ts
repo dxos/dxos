@@ -185,7 +185,7 @@ describe('PluginHost', () => {
     });
 
     // operation-service derives a nested invocation's seed from the parent's stream, and the parent continues on it.
-    test.fails('an in-process nested operation draws its ids as operation-service does', async ({ expect }) => {
+    test('an in-process nested operation draws its ids as operation-service does', async ({ expect }) => {
       const host = makeHost();
       const idSeed = { time: 1_700_000_000_000, seed: 7 };
       const nested = await host.invoke({ operationKey: String(Nest.meta.key), input: {} }, {}, { idSeed });

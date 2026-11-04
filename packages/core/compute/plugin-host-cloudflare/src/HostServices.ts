@@ -225,6 +225,17 @@ export const makeOperations = ({
         );
   };
 
+  /**
+   * TEST-ONLY. Re-pins the seed as operation-service does for a nested invocation, which then mints its pid: the
+   * caller's ids after the call continue the child's stream, so a replayed fixture sees the same ids on both paths.
+   */
+  const pinChildSeed = (): void => {
+    if (idSeed !== undefined) {
+      EntityId.dangerouslySetSeed(idSeed.time, childSeed(EntityId.random()));
+      EntityId.random();
+    }
+  };
+
   /** The output of a local run is the handler's value; of a remote one its encoded form, decoded here. */
   const run = <I, O>(
     op: Operation.Definition<I, O>,
@@ -241,9 +252,10 @@ export const makeOperations = ({
             ),
           )
         : // The handler's own nested operations go through this service too.
-          Effect.promise(() =>
-            Effect.runPromiseExitWith(Context.add(context, Operation.Service, service))(handler.handler(input)),
-          ).pipe(
+          Effect.promise(() => {
+            pinChildSeed();
+            return Effect.runPromiseExitWith(Context.add(context, Operation.Service, service))(handler.handler(input));
+          }).pipe(
             Effect.flatMap((exit) => exit),
             Effect.flatMap(Schema.decodeUnknownEffect(Schema.toType(op.output))),
           )
