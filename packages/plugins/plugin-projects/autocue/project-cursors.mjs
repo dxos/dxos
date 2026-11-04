@@ -33,7 +33,7 @@ const TIMEOUT = 60_000;
 const HOLD = 2_500;
 
 const NOTES = 'Draft the press kit';
-const INSTRUCTIONS = 'Keep the launch copy short and concrete.';
+const INSTRUCTIONS = '\nKeep the launch copy short and concrete.';
 const PROSE_ADDITION = ' Bob owns the press kit.';
 const DESCRIPTION_ADDITION = ' It loads in under a second.';
 
@@ -62,11 +62,11 @@ const agent = (page) => plank(page).getByTestId('projectsPlugin.config.agent');
 const instructions = (page) => agent(page).locator('.cm-content').first();
 const specDocument = (page) => plank(page).getByTestId('projectsPlugin.spec.document');
 const specLine = (page, text) => specDocument(page).locator('.cm-line', { hasText: text }).first();
+/** The feature section's description: its only field edited in CodeMirror, since the name is a plain input. */
 const descriptionField = (page) =>
   specDocument(page)
-    .getByTestId('feature-embed')
-    .first()
-    .locator('[data-scope="field"][data-part="root"]', { has: page.locator('label', { hasText: 'Description' }) });
+    .locator('[data-scope="field"][data-part="root"]', { has: page.locator('[contenteditable="true"]') })
+    .first();
 const featureDescription = (page) => descriptionField(page).locator('[contenteditable="true"]');
 
 /** A caret drawn for another peer in `scope`, labelled with that peer's name. */
