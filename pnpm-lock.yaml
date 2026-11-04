@@ -23739,6 +23739,9 @@ importers:
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../react-primitives/react-hooks
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../react-ui
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
@@ -23752,9 +23755,6 @@ importers:
         specifier: 4.0.4
         version: 4.0.4
     devDependencies:
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.3.0)(prettier@3.6.2)(react@19.3.1))(vite@8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1))

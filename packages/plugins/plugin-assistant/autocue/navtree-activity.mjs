@@ -22,7 +22,7 @@ const row = (label) =>
   `[data-testid="deck.sidebar"] [role="treeitem"]:not([aria-expanded]):has([data-testid="treeItem.heading"]:text-is("${label}"))`;
 const heading = (label) => `${row(label)} [data-testid="treeItem.heading"]`;
 const glyph = (label) => `${row(label)} .dx-attention-glyph`;
-const working = (label) => `${glyph(label)}[data-mark="agent"]`;
+const working = (label) => `${glyph(label)}[data-mark="star"]:not([data-mark-hue])`;
 
 const caption = async (demo, value, position) => {
   await demo.caption({ value, subtitle: SUBTITLE, position });

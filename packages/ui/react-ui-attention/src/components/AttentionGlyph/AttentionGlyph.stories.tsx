@@ -22,40 +22,94 @@ const sizeRow = (root: HTMLElement, size: string) => {
   return element;
 };
 
-const LABELS: Record<Activity.Treatment, string> = {
-  'attended': 'Attended',
-  'contains-attended': 'Contains attended',
-  'busy': 'Busy (tint)',
-  'typing': 'Typing',
-  'viewers-working': 'Viewers, working',
-  'viewers': 'Several viewers',
-  'viewer': 'One viewer',
-  'agent': 'Agent working',
-  'agent-done': 'Agent finished, unread',
-  'failed': 'Failed',
-  'following': 'Following someone',
-  'call': 'Live call',
-  'working': 'Working',
-  'scheduled': 'Scheduled soon',
-  'asked': 'Agent asked you',
-  'mention': 'Mention or reply',
-  'changed': 'Changed since seen',
-  'read-only': 'Read-only',
+/** Attention is not a treatment: the glyph takes it as props. */
+type AttentionName = 'attended' | 'contains-attended';
+
+type Example = {
+  readonly label: string;
+  /** What produces it in the app today; examples without one only show what a treatment can describe. */
+  readonly source?: string;
+  readonly treatment: Activity.Treatment;
 };
+
+/** Treatments in use, then examples of what other activity could draw. */
+const EXAMPLES = {
+  'viewer': {
+    label: 'One viewer',
+    source: 'presence',
+    treatment: { slot: 'mark', icon: 'dot', hue: 'primary', priority: 10 },
+  },
+  'viewers': {
+    label: 'Several viewers',
+    source: 'presence',
+    treatment: { slot: 'mark', icon: 'dots', hue: 'primary', priority: 10 },
+  },
+  'agent': {
+    label: 'Agent working',
+    source: 'assistant',
+    treatment: { slot: 'mark', icon: 'star', priority: 30, animate: true },
+  },
+  'agent-done': {
+    label: 'Agent finished, unread',
+    treatment: { slot: 'mark', icon: 'star', hue: 'amber', priority: 20 },
+  },
+  'editing': {
+    label: 'Someone editing',
+    treatment: { slot: 'mark', icon: 'ph--pencil-simple--fill', priority: 15, animate: true },
+  },
+  'warning': {
+    label: 'Needs a fix',
+    treatment: { slot: 'mark', icon: 'ph--warning--fill', hue: 'warning', priority: 25 },
+  },
+  'busy': {
+    label: 'Busy',
+    treatment: { slot: 'fill', hue: 'amber', priority: 10, animate: true },
+  },
+  'pinned': {
+    label: 'Pinned',
+    treatment: { slot: 'fill', hue: 'violet', opacity: 0.4, priority: 20 },
+  },
+  'failed': { label: 'Failed', treatment: { slot: 'edge', hue: 'error', priority: 40 } },
+  'following': { label: 'Following someone', treatment: { slot: 'edge', hue: 'violet', priority: 30 } },
+  'call': { label: 'Live call', treatment: { slot: 'edge', hue: 'green', priority: 20 } },
+  'working': { label: 'Working', treatment: { slot: 'edge', hue: 'amber', priority: 10 } },
+  'scheduled': { label: 'Scheduled soon', treatment: { slot: 'edge', hue: 'teal', dashed: true, priority: 0 } },
+  'asked': {
+    label: 'Agent asked you',
+    treatment: { slot: 'corner', hue: 'amber', priority: 40, animate: true },
+  },
+  'mention': { label: 'Mention or reply', treatment: { slot: 'corner', hue: 'rose', priority: 30 } },
+  'changed': { label: 'Changed since seen', treatment: { slot: 'corner', hue: 'primary', priority: 20 } },
+  'read-only': {
+    label: 'Read-only',
+    treatment: { slot: 'corner', hue: 'neutral', shape: 'ring', priority: 10 },
+  },
+} satisfies Record<string, Example>;
+
+type ExampleName = keyof typeof EXAMPLES;
+
+type Name = AttentionName | ExampleName;
+
+const isAttention = (name: Name): name is AttentionName => name === 'attended' || name === 'contains-attended';
+
+const nameLabel = (name: Name) =>
+  name === 'attended' ? 'Attended' : name === 'contains-attended' ? 'Contains attended' : EXAMPLES[name].label;
+
+const treatmentsOf = (names: readonly Name[]): Activity.Treatment[] =>
+  names.flatMap((name) => (isAttention(name) ? [] : [EXAMPLES[name].treatment]));
+
+const glyphProps = (names: readonly Name[]): AttentionGlyphProps => ({
+  attended: names.includes('attended'),
+  containsAttended: names.includes('contains-attended'),
+  treatments: treatmentsOf(names),
+});
 
 const SLOT_LABELS: Record<Activity.Slot, string> = {
-  fill: 'Fill: your attention, then busy work',
-  mark: 'Mark: who or what is on it',
-  edge: 'Edge: ongoing or steady state',
-  corner: 'Corner: something wants you',
+  fill: 'Fill: a hue and its opacity, under attention',
+  mark: 'Mark: a built-in shape or any icon, in a hue',
+  edge: 'Edge: a hue, solid or dashed',
+  corner: 'Corner: a hue, as a dot or a ring',
 };
-
-/** Attention arrives as props rather than treatments; everything else is a treatment. */
-const glyphProps = (treatments: readonly Activity.Treatment[]): AttentionGlyphProps => ({
-  attended: treatments.includes('attended'),
-  containsAttended: treatments.includes('contains-attended'),
-  treatments: treatments.filter((treatment) => treatment !== 'attended' && treatment !== 'contains-attended'),
-});
 
 const Section = ({ title, children }: PropsWithChildren<{ title: string }>) => (
   <section className='flex flex-col gap-2'>
@@ -64,7 +118,7 @@ const Section = ({ title, children }: PropsWithChildren<{ title: string }>) => (
   </section>
 );
 
-const Row = ({ icon, label, treatments }: { icon: string; label: string; treatments: Activity.Treatment[] }) => (
+const Row = ({ icon, label, treatments }: { icon: string; label: string; treatments: Name[] }) => (
   <div className='flex items-center gap-2 px-2 py-1 rounded-sm bg-group-surface' data-testid={label}>
     <Icon.Icon icon={icon} />
     <span className='grow truncate'>{label}</span>
@@ -73,22 +127,25 @@ const Row = ({ icon, label, treatments }: { icon: string; label: string; treatme
 );
 
 //
-// Vocabulary.
+// Examples.
 //
 
-const VocabularyStory = () => (
-  <Section title='Four slots, at most one treatment each; the number is precedence inside the slot'>
+const ExamplesStory = () => (
+  <Section title='Each treatment describes how it draws; in use first, then examples. The number is its priority'>
     <div className='grid grid-cols-4 gap-4'>
       {Activity.Slots.map((slot) => (
         <div key={slot} className='flex flex-col gap-2 p-3 rounded-md bg-group-surface' data-testid={`slot-${slot}`}>
           <h3 className='text-sm'>{SLOT_LABELS[slot]}</h3>
-          {Activity.Treatments[slot].map((treatment, index) => (
-            <div key={treatment} className='flex items-center gap-2 text-sm' data-testid={treatment}>
-              <span className='w-3 text-xs text-description'>{index + 1}</span>
-              <AttentionGlyph {...glyphProps([treatment])} classNames='mx-1' />
-              <span>{LABELS[treatment]}</span>
-            </div>
-          ))}
+          {Object.entries<Example>(EXAMPLES)
+            .filter(([, example]) => example.treatment.slot === slot)
+            .map(([name, example]) => (
+              <div key={name} className='flex items-center gap-2 text-sm' data-testid={name}>
+                <span className='w-4 text-xs text-description'>{example.treatment.priority}</span>
+                <AttentionGlyph treatments={[example.treatment]} classNames='mx-1' />
+                <span className='grow'>{example.label}</span>
+                {example.source && <span className='text-xs text-description'>{example.source}</span>}
+              </div>
+            ))}
         </div>
       ))}
     </div>
@@ -99,7 +156,7 @@ const VocabularyStory = () => (
 // Resolution.
 //
 
-const RESOLUTIONS: { slot: Activity.Slot; requested: Activity.Treatment[] }[] = [
+const RESOLUTIONS: { slot: Activity.Slot; requested: Name[] }[] = [
   { slot: 'fill', requested: ['busy', 'attended'] },
   { slot: 'mark', requested: ['agent', 'viewer', 'viewers'] },
   { slot: 'edge', requested: ['working', 'call', 'failed'] },
@@ -110,7 +167,11 @@ const ResolutionStory = () => (
   <Section title='Resolving a slot: the winner renders, the rest go to the tooltip'>
     <div className='grid grid-cols-[6rem_auto_2rem_1fr] items-center gap-x-4 gap-y-2 text-sm'>
       {RESOLUTIONS.map(({ slot, requested }) => {
-        const winner = Activity.resolve(requested)[slot];
+        const { attended, containsAttended, treatments = [] } = glyphProps(requested);
+        const resolved = Activity.resolve(treatments, { attention: attended || containsAttended })[slot];
+        const winner = requested.find((name) =>
+          isAttention(name) ? slot === 'fill' && !resolved : EXAMPLES[name].treatment === resolved,
+        );
         return (
           <React.Fragment key={slot}>
             <span className='capitalize text-description'>{slot}</span>
@@ -126,7 +187,7 @@ const ResolutionStory = () => (
             <Icon.Icon icon='ph--arrow-right--regular' />
             <div className='flex items-center gap-2'>
               <AttentionGlyph {...glyphProps(requested)} classNames='mx-1' data-testid={`resolved-${slot}`} />
-              <span>{winner && LABELS[winner]} wins</span>
+              <span>{winner && nameLabel(winner)} wins</span>
             </div>
           </React.Fragment>
         );
@@ -139,7 +200,7 @@ const ResolutionStory = () => (
 // Combinations.
 //
 
-const COMBINATIONS: { icon: string; label: string; caption: string; treatments: Activity.Treatment[] }[] = [
+const COMBINATIONS: { icon: string; label: string; caption: string; treatments: Name[] }[] = [
   { icon: 'ph--file-text--regular', label: 'Meeting notes', caption: 'Nothing happening', treatments: [] },
   { icon: 'ph--file-text--regular', label: 'Roadmap', caption: 'Attended', treatments: ['attended'] },
   {
@@ -190,7 +251,7 @@ const COMBINATIONS: { icon: string; label: string; caption: string; treatments: 
     icon: 'ph--file-text--regular',
     label: 'Spec v2',
     caption: 'One of each slot',
-    treatments: ['attended', 'typing', 'following', 'changed'],
+    treatments: ['attended', 'editing', 'following', 'changed'],
   },
 ];
 
@@ -211,12 +272,12 @@ const CombinationsStory = () => (
 // Motion.
 //
 
-const MOTIONS: { caption: string; label: string; icon: string; treatments: Activity.Treatment[] }[] = [
+const MOTIONS: { caption: string; label: string; icon: string; treatments: Name[] }[] = [
   {
-    caption: 'Typing moves; nothing competes',
+    caption: 'Editing moves; nothing competes',
     icon: 'ph--file-text--regular',
     label: 'Spec v2',
-    treatments: ['attended', 'typing', 'following', 'changed'],
+    treatments: ['attended', 'editing', 'following', 'changed'],
   },
   {
     caption: 'Asked you moves; the sparkle holds still',
@@ -225,16 +286,10 @@ const MOTIONS: { caption: string; label: string; icon: string; treatments: Activ
     treatments: ['agent', 'working', 'asked'],
   },
   {
-    caption: 'The edge never moves, so typing does',
+    caption: 'The edge never moves, so editing does',
     icon: 'ph--file-text--regular',
     label: 'Launch plan',
-    treatments: ['typing', 'working'],
-  },
-  {
-    caption: 'Busy dots move inside a working edge',
-    icon: 'ph--file-text--regular',
-    label: 'Launch plan',
-    treatments: ['viewers-working', 'working'],
+    treatments: ['editing', 'working'],
   },
   {
     caption: 'A still mark lets the busy fill move',
@@ -262,13 +317,13 @@ const MotionStory = () => (
 //
 
 /** Opening a chat reads its finished turn, so only a chat nobody has open stays unread. */
-const AGENT_VIEWERS: { title: string; treatments: Activity.Treatment[] }[] = [
+const AGENT_VIEWERS: { title: string; treatments: Name[] }[] = [
   { title: 'Nobody', treatments: [] },
   { title: 'Someone else', treatments: ['viewer'] },
   { title: 'You', treatments: ['attended'] },
 ];
 
-const AGENT_STATES: { title: string; treatments: (open: boolean) => Activity.Treatment[] }[] = [
+const AGENT_STATES: { title: string; treatments: (open: boolean) => Name[] }[] = [
   { title: 'Idle', treatments: () => [] },
   { title: 'Agent working', treatments: () => ['agent'] },
   { title: 'Turn finished', treatments: (open) => (open ? [] : ['agent-done']) },
@@ -302,7 +357,7 @@ const AgentSessionStory = () => (
 
 const AllStory = () => (
   <div className='flex flex-col gap-8 p-4'>
-    <VocabularyStory />
+    <ExamplesStory />
     <ResolutionStory />
     <CombinationsStory />
     <MotionStory />
@@ -319,11 +374,11 @@ type SizeStoryArgs = SizeArgs & Pick<AttentionGlyphProps, 'attended' | 'contains
 const SizesStory = ({ attended, containsAttended }: SizeStoryArgs) => (
   <div className='flex items-center gap-4'>
     <AttentionGlyph {...{ attended, containsAttended }} data-testid='none' />
-    <AttentionGlyph {...{ attended, containsAttended }} treatments={['viewer']} data-testid='viewer' />
-    <AttentionGlyph {...{ attended, containsAttended }} treatments={['viewers']} data-testid='viewers' />
-    <AttentionGlyph attended treatments={['viewer']} data-testid='attended' />
+    <AttentionGlyph {...{ attended, containsAttended }} treatments={treatmentsOf(['viewer'])} data-testid='viewer' />
+    <AttentionGlyph {...{ attended, containsAttended }} treatments={treatmentsOf(['viewers'])} data-testid='viewers' />
+    <AttentionGlyph attended treatments={treatmentsOf(['viewer'])} data-testid='attended' />
     <AttentionGlyph containsAttended data-testid='contains' />
-    <AttentionGlyph treatments={['viewers', 'working', 'asked']} data-testid='busy' />
+    <AttentionGlyph treatments={treatmentsOf(['viewers', 'working', 'asked'])} data-testid='busy' />
   </div>
 );
 
@@ -346,10 +401,10 @@ export const Default: StoryObj<SizeArgs> = {
   parameters: { layout: 'fullscreen' },
 };
 
-export const Vocabulary: Story = {
+export const Examples: Story = {
   render: () => (
-    <div className='p-4 w-[56rem]'>
-      <VocabularyStory />
+    <div className='p-4 w-[68rem]'>
+      <ExamplesStory />
     </div>
   ),
 };
