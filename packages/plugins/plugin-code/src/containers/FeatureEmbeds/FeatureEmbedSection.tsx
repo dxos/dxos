@@ -3,13 +3,14 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { type KeyboardEvent, type MouseEvent, useCallback, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
+import { Editor } from '@dxos/react-ui-editor';
 import * as UiHooks from '@dxos/react-ui/Hooks';
-import { type ObjectLinkProps, handleBlockWidgetKey } from '@dxos/ui-editor';
+import { type ObjectLinkProps } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
 import { Feature, FeatureEmbed } from '#types';
@@ -74,54 +75,6 @@ export const FeatureEmbedSection = ({ eid, label, view, db, attendableId, claimF
     return () => cancelAnimationFrame(frame);
   }, [hasAttention, feature]);
 
-  const handleMouseDown = useCallback(
-    (event: MouseEvent<HTMLDivElement>) => {
-      // The fold toggle works without attention; a click anywhere else gives the section attention.
-      if (!hasAttention && !(event.target instanceof Element && event.target.closest('button'))) {
-        event.currentTarget.focus();
-      }
-    },
-    [hasAttention],
-  );
-
-  // While attended, keys stay in the section rather than reaching the editor.
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLDivElement>) => {
-      if (!hasAttention) {
-        return;
-      }
-      event.stopPropagation();
-      const container = event.currentTarget;
-      if (event.defaultPrevented || !view) {
-        return;
-      }
-      if (event.target !== container) {
-        if (event.key === 'Escape') {
-          event.preventDefault();
-          container.focus();
-        }
-        return;
-      }
-      switch (event.key) {
-        case 'Enter': {
-          const name = container.querySelector<HTMLInputElement>('input[data-testid="name"]');
-          if (name) {
-            event.preventDefault();
-            name.focus();
-            name.select();
-          }
-          break;
-        }
-        default: {
-          if (handleBlockWidgetKey(view, container, event)) {
-            event.preventDefault();
-          }
-        }
-      }
-    },
-    [hasAttention, view],
-  );
-
   if (!feature) {
     return (
       <div className='p-2 text-fg-muted' data-testid='feature-embed.missing'>
@@ -131,23 +84,19 @@ export const FeatureEmbedSection = ({ eid, label, view, db, attendableId, claimF
   }
 
   return (
-    <div className='py-1 whitespace-normal'>
-      <div
+    <div className='py-1'>
+      <Editor.BlockFrame
         ref={containerRef}
-        tabIndex={0}
-        className={mx(
-          'dx-focus-item border rounded-md overflow-hidden',
-          hasAttention ? 'border-focus-ring-subtle' : 'border-separator-subtle',
-        )}
+        view={view}
+        attended={hasAttention}
+        enterTarget='input[data-testid="name"]'
+        classNames={mx('border overflow-hidden', hasAttention ? 'border-focus-ring-subtle' : 'border-separator-subtle')}
         data-testid='feature-embed'
         data-feature={feature.id}
         {...attentionAttributes}
-        onMouseDown={handleMouseDown}
-        onKeyDown={handleKeyDown}
-        onKeyUp={(event) => hasAttention && event.stopPropagation()}
       >
         <FeatureSection subject={feature} attended={hasAttention} />
-      </div>
+      </Editor.BlockFrame>
     </div>
   );
 };
