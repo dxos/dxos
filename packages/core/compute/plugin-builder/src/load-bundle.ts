@@ -20,6 +20,8 @@ export interface LoadedBundle extends AsyncDisposable {
   importModules(paths: readonly string[]): Promise<readonly ImportFailure[]>;
   /** Runs an operation through the bundle's `PluginProtocol.Entrypoint`, with the data plane as its `DATA_SERVICE`. */
   invoke(request: PluginProtocol.InvokeRequest): Promise<PluginProtocol.InvokeResult>;
+  /** The protocol version of the bundle's vendored host, as EDGE's router asks it. */
+  protocolVersion(): Promise<number>;
 }
 
 /**
@@ -38,6 +40,8 @@ export type LoadOptions = {
   readonly dataPlane?: DataPlane;
   /** Serves the bundle's `TYPE_REGISTRY`, standing in for EDGE's registry of published types. */
   readonly typeRegistry?: PluginProtocol.TypeRegistry;
+  /** Serves `scope.operations`, standing in for EDGE's router to other plugins' operations. */
+  readonly operations?: PluginProtocol.OperationHost;
 };
 
 /** The worker's name, which its own service bindings name to reach its entrypoints. */
@@ -67,7 +71,7 @@ export default {
  * bytes in base64; it answers every query with no rows, since the data plane keeps no index.
  */
 const LOADER_HOST = `
-import { WorkerEntrypoint } from 'cloudflare:workers';
+import { RpcTarget, WorkerEntrypoint } from 'cloudflare:workers';
 
 const decode = (base64) => Uint8Array.from(atob(base64), (char) => char.charCodeAt(0));
 const encode = (bytes) => btoa(Array.from(bytes, (byte) => String.fromCharCode(byte)).join(''));
@@ -100,6 +104,18 @@ export class TypeRegistry extends WorkerEntrypoint {
       throw new Error(body.error);
     }
     return body.result ?? undefined;
+  }
+}
+
+class Operations extends RpcTarget {
+  constructor(env) { super(); this.env = env; }
+  async invoke(operationKey, input, options) {
+    const response = await this.env.OPERATION_PLANE.fetch('http://operation-plane/', { method: 'POST', body: JSON.stringify({ operationKey, input, options }) });
+    const body = await response.json();
+    if (!response.ok) {
+      throw new Error(body.error);
+    }
+    return body.result;
   }
 }
 
@@ -139,7 +155,12 @@ export default {
     const { method, paths, invocation } = await request.json();
     try {
       if (method === 'invoke') {
-        const result = await load(env, 'host', env.MAIN_MODULE, env.HOST_MAIN).getEntrypoint().invoke(invocation);
+        const scope = env.OPERATION_PLANE === undefined ? undefined : { operations: new Operations(env) };
+        const result = await load(env, 'host', env.MAIN_MODULE, env.HOST_MAIN).getEntrypoint().invoke(invocation, scope);
+        return Response.json({ result });
+      }
+      if (method === 'version') {
+        const result = await load(env, 'host', env.MAIN_MODULE, env.HOST_MAIN).getEntrypoint().protocolVersion();
         return Response.json({ result });
       }
       if (method === 'import') {
@@ -163,7 +184,7 @@ export default {
  */
 export const loadBundle = async (
   files: PluginBundle.Files,
-  { dataPlane, typeRegistry }: LoadOptions = {},
+  { dataPlane, typeRegistry, operations }: LoadOptions = {},
 ): Promise<LoadedBundle> => {
   const { problems, vendor } = PluginBundle.check(files);
   if (!vendor) {
@@ -194,6 +215,7 @@ export const loadBundle = async (
             TYPE_REGISTRY: { name: LOADER_HOST_NAME, entrypoint: 'TypeRegistry' },
           }
         : {}),
+      ...(operations ? { OPERATION_PLANE: (request: Request) => serveOperations(operations, request) } : {}),
     },
     bindings: {
       COMPATIBILITY_DATE: PluginLoader.COMPATIBILITY_DATE,
@@ -208,7 +230,7 @@ export const loadBundle = async (
   });
 
   const call = async (
-    method: 'describe' | 'import' | 'invoke',
+    method: 'describe' | 'import' | 'invoke' | 'version',
     { paths, invocation }: { paths?: readonly string[]; invocation?: PluginProtocol.InvokeRequest } = {},
   ): Promise<string> => {
     const response = await miniflare.dispatchFetch('http://bundle.local/', {
@@ -233,6 +255,10 @@ export const loadBundle = async (
     },
     invoke: async (invocation) => {
       const { result }: { result: PluginProtocol.InvokeResult } = JSON.parse(await call('invoke', { invocation }));
+      return result;
+    },
+    protocolVersion: async () => {
+      const { result }: { result: number } = JSON.parse(await call('version'));
       return result;
     },
     [Symbol.asyncDispose]: () => miniflare.dispose(),
@@ -270,6 +296,26 @@ const serveTypeRegistry = async (registry: PluginProtocol.TypeRegistry, request:
     }
     const result = await registry.resolveType(typename, version ?? undefined);
     return Response.json({ result: result ?? null });
+  } catch (error) {
+    return Response.json({ error: String(error) }, { status: 500 });
+  }
+};
+
+/** Answers a bundle's call to another plugin's operation from Node, as EDGE's router answers it. */
+const serveOperations = async (operations: PluginProtocol.OperationHost, request: Request): Promise<Response> => {
+  try {
+    const body: unknown = JSON.parse(await request.text());
+    const operationKey = isRecord(body) ? body.operationKey : undefined;
+    const options = isRecord(body) && isRecord(body.options) ? body.options : {};
+    if (!isRecord(body) || !isString(operationKey)) {
+      throw new Error('Invalid operation call.');
+    }
+    const result = await operations.invoke(operationKey, body.input, {
+      ...(isString(options.spaceId) ? { spaceId: options.spaceId } : {}),
+      ...(isString(options.conversation) ? { conversation: options.conversation } : {}),
+      ...(isString(options.parentPid) ? { parentPid: options.parentPid } : {}),
+    });
+    return Response.json({ result });
   } catch (error) {
     return Response.json({ error: String(error) }, { status: 500 });
   }

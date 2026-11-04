@@ -60,12 +60,30 @@ export const call = <T>(message: string, run: () => PromiseLike<T>): Effect.Effe
  * Settles with `promise`, or rejects once `timeoutMs` passes; for a request that must finish even while its
  * effect is uninterruptible, where an Effect timeout could not cut it short.
  */
-export const withDeadline = <T>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> => {
+export const withDeadline = <T>(
+  promise: PromiseLike<T>,
+  timeoutMs: number,
+  onLate?: (value: T) => void,
+): Promise<T> => {
   let timer: ReturnType<typeof setTimeout> | undefined;
+  let expiredAt = false;
   const expired = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => reject(new Error(`No answer within ${timeoutMs} ms.`)), timeoutMs);
+    timer = setTimeout(() => {
+      expiredAt = true;
+      reject(new Error(`No answer within ${timeoutMs} ms.`));
+    }, timeoutMs);
   });
-  return Promise.race([Promise.resolve(promise), expired]).finally(() => clearTimeout(timer));
+  const settled = Promise.resolve(promise);
+  // An answer that arrives after the deadline still happened remotely, so the caller can undo it.
+  settled.then(
+    (value) => {
+      if (expiredAt) {
+        onLate?.(value);
+      }
+    },
+    () => {},
+  );
+  return Promise.race([settled, expired]).finally(() => clearTimeout(timer));
 };
 
 /** Disposes an RPC stub; a stub whose session already closed has nothing left to release. */
@@ -114,17 +132,16 @@ export const login: (credentials: {
 }, Effect.scoped);
 
 /** An authenticated session for a stored session token, closed with the scope. */
-export const authenticate = ({
-  url,
-  token,
-}: {
+export const authenticate: (account: {
   url: string;
   token: string;
-}): Effect.Effect<RpcStub<Protocol.AuthenticatedApi>, CloudflareOsError, Scope.Scope> =>
-  Effect.gen(function* () {
-    const api = yield* session(url);
-    const user = api.authenticate(token);
-    // Pipelined: the call above resolves only once the server accepts the token, which this awaits.
-    yield* call('Cloudflare OS rejected the session token. Reconnect the account.', () => user.listWorkspaces());
-    return user;
-  });
+}) => Effect.Effect<RpcStub<Protocol.AuthenticatedApi>, CloudflareOsError, Scope.Scope> = Effect.fnUntraced(function* ({
+  url,
+  token,
+}) {
+  const api = yield* session(url);
+  const user = api.authenticate(token);
+  // Pipelined: the call above resolves only once the server accepts the token, which this awaits.
+  yield* call('Cloudflare OS rejected the session token. Reconnect the account.', () => user.listWorkspaces());
+  return user;
+});

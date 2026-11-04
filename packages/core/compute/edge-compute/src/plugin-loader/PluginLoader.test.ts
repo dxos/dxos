@@ -62,6 +62,13 @@ describe('PluginLoader', () => {
     expect(main).not.toContain('deps/');
   });
 
+  // A bundle keeps the host it was published with; the main module, generated at load, reports its version.
+  test("reports the vendored host's protocol version, 1 for a host that predates versioning", async ({ expect }) => {
+    const { main } = await PluginLoader.workerCode(bundle());
+    expect(main).toContain('async protocolVersion()');
+    expect(main).toContain('PluginHost.PROTOCOL_VERSION ?? 1');
+  });
+
   test('loads a local adapter chunk by its path in the bundle', async ({ expect }) => {
     const manifest = JSON.stringify({
       key: 'org.example.plugin.sample',

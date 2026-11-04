@@ -32,6 +32,14 @@ describe('Client', () => {
     await expect(Client.withDeadline(Promise.resolve(7), 1_000)).resolves.toBe(7);
     await expect(Client.withDeadline(new Promise(() => {}), 10)).rejects.toThrow('No answer within 10 ms.');
   });
+
+  test('an answer after the deadline is handed to onLate', async ({ expect }) => {
+    const late: number[] = [];
+    const answer = new Promise<number>((resolve) => setTimeout(() => resolve(3), 30));
+    await expect(Client.withDeadline(answer, 10, (value) => late.push(value))).rejects.toThrow();
+    await answer;
+    expect(late).toEqual([3]);
+  });
 });
 
 describe('Sandbox', () => {

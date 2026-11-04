@@ -72,6 +72,12 @@ export interface FunctionWrappingOptions {
    * Resolves a type the database's registry and space do not hold, e.g. from EDGE's registry of published types.
    */
   typeSource?: TypeSource;
+
+  /**
+   * Loads a reference envelope (`{ '/': uri }`) left where the input schema takes a live object, as a plugin bundle's
+   * nested call to another plugin's operation sends one.
+   */
+  resolveObjectReferences?: boolean;
 }
 
 /**
@@ -119,10 +125,15 @@ export const wrapFunctionHandler = (
           funcContext.db.graph.registry.add(types);
         }
 
-        const dataWithDecodedRefs =
+        const decoded =
           funcContext.db && !SchemaAST.isAnyKeyword(func.input.ast)
             ? decodeRefsFromSchema(func.input.ast, data, funcContext.db)
             : data;
+        // Ref fields are decoded above, so an envelope still left in a top-level field is one that takes an object.
+        const dataWithDecodedRefs =
+          opts.resolveObjectReferences && funcContext.db && !SchemaAST.isAnyKeyword(func.input.ast)
+            ? await loadObjectReferences(decoded, funcContext.db)
+            : decoded;
 
         // Validated after ref hydration: the type side of a `Ref` field admits only a `Ref`
         // instance, and callers send the encoded `{'/': dxn}` form.
@@ -485,6 +496,25 @@ const unavailableOperationServiceLayer = Layer.succeed(Operation.Service, {
     error: new Error('Operation.Service is not available: missing functionsService in EDGE context.'),
   }),
 } as Operation.OperationService);
+
+/**
+ * Replaces each top-level field holding a reference envelope with the object it names, loaded from `db`. Only direct
+ * fields: an envelope nested deeper (a draft's ref property) is a ref the handler resolves itself.
+ */
+const loadObjectReferences = async (value: unknown, db: DatabaseImpl): Promise<unknown> => {
+  if (value === null || typeof value !== 'object' || Object.getPrototypeOf(value) !== Object.prototype) {
+    return value;
+  }
+  const resolver = db.graph.createRefResolver({ context: { space: db.spaceId } });
+  return Object.fromEntries(
+    await Promise.all(
+      Object.entries(value).map(
+        async ([key, entry]) =>
+          [key, isEncodedReference(entry) ? await refFromEncodedReference(entry, resolver).load() : entry] as const,
+      ),
+    ),
+  );
+};
 
 /** The wire form of a reference, `{ '/': <uri> }`. */
 const isEncodedReference = (value: unknown): value is Parameters<typeof refFromEncodedReference>[0] =>

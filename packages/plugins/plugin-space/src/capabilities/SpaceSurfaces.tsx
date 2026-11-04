@@ -15,9 +15,9 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as SettingsScope from '@dxos/app-toolkit/SettingsScope';
 import { Annotation, Obj, Type } from '@dxos/echo';
-import { useResolveRef, useType } from '@dxos/echo-react';
+import { useType } from '@dxos/echo-react';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { type Space, SpaceState, getSpace, isSpace, useSpaces } from '@dxos/react-client/echo';
+import { type Space, isSpace, useSpaces } from '@dxos/react-client/echo';
 import { getTypeURIFromQuery } from '@dxos/schema';
 
 import {
@@ -36,6 +36,7 @@ import {
 } from '#containers';
 import { Settings, SpaceCapabilities, SpaceOperation } from '#types';
 
+import { getPresenceKeyFromObject, getPresenceKeyFromSpace } from '../util/index.ts';
 import { tryGetViewForObject } from './try-get-view.ts';
 
 export type SpaceHomeSectionProps = {
@@ -218,29 +219,24 @@ export const ViewEditorSurface = ({ subject }: ViewEditorSurfaceProps) => {
 
 export type NavtreePresenceSurfaceProps = {
   id: string;
+  subject: Obj.Unknown;
   open?: boolean;
 };
 
-export const NavtreePresenceSurface = ({ id, open }: NavtreePresenceSurfaceProps) => {
+export const NavtreePresenceSurface = ({ id, subject, open }: NavtreePresenceSurfaceProps) => {
   const ephemeral = Hooks.useAtomCapability(SpaceCapabilities.EphemeralState);
+  const presenceKey = getPresenceKeyFromObject(subject);
 
-  return <SmallPresenceLive id={id} open={open} viewers={ephemeral.viewersByObject[id]} />;
+  return <SmallPresenceLive id={id} open={open} viewers={presenceKey && ephemeral.viewersByObject[presenceKey]} />;
 };
 
 export type NavbarPresenceSurfaceProps = {
   subject: Space | Obj.Unknown;
 };
 
-/** For a space the presence target is its root collection; for an object it is the object itself. */
 export const NavbarPresenceSurface = ({ subject }: NavbarPresenceSurfaceProps) => {
-  const space = isSpace(subject) ? subject : getSpace(subject);
-  const isSpaceReady = isSpace(subject) && subject.state.get() === SpaceState.SPACE_READY;
-  const rootCollectionRef =
-    isSpaceReady && space
-      ? Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(Option.getOrUndefined)
-      : undefined;
-  const rootCollection = useResolveRef(rootCollectionRef);
-  const object = isSpace(subject) ? (isSpaceReady ? rootCollection : undefined) : subject;
+  const spaceId = isSpace(subject) ? subject.id : Obj.getDatabase(subject)?.spaceId;
+  const presenceKey = isSpace(subject) ? getPresenceKeyFromSpace(subject.id) : getPresenceKeyFromObject(subject);
 
-  return object ? <SpacePresence object={object} /> : null;
+  return <SpacePresence spaceId={spaceId} presenceKey={presenceKey} />;
 };
