@@ -43,8 +43,8 @@
   }
 
   /*
-   * Mark, edge and corner take their treatment's hue (its text colour, so it reads on a plain surface), and the text
-   * colour when a mark names none. On the attended fill the mark and edge take the accent foreground.
+   * Mark, edge and corner take their treatment's hue (its saturated fill shade), and the text colour when a mark names
+   * none. On the attended fill the mark and edge take the accent foreground.
    */
   .dx-attention-glyph [data-part='mark'] {
     color: var(--dx-attention-glyph-mark);

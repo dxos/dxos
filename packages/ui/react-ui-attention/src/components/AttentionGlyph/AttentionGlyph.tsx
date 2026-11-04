@@ -25,7 +25,8 @@ const STAR_PATH = 'M6 2.2l1 2.8 2.8 1-2.8 1-1 2.8-1-2.8-2.8-1 2.8-1z';
 
 const DEFAULT_FILL_OPACITY = 0.25;
 
-const text = (hue: Hue) => `var(--color-${hue}-text)`;
+/** A hue's saturated fill shade, which reads on both themes at the glyph's size. */
+const solid = (hue: Hue) => `var(--color-${hue}-bg)`;
 
 const Mark = ({ icon }: { icon: string }) => {
   const href = useIconHref(icon);
@@ -60,12 +61,12 @@ export const AttentionGlyph = forwardRef<HTMLSpanElement, AttentionGlyphProps>(
     const colors = useMemo(
       (): CSSProperties & Record<`--${string}`, string> => ({
         ...(fill && {
-          '--dx-attention-glyph-fill-hue': `var(--color-${fill.hue}-bg)`,
+          '--dx-attention-glyph-fill-hue': solid(fill.hue),
           '--dx-attention-glyph-fill-opacity': `${(fill.opacity ?? DEFAULT_FILL_OPACITY) * 100}%`,
         }),
-        ...(mark && { '--dx-attention-glyph-mark': mark.hue ? text(mark.hue) : 'var(--color-fg)' }),
-        ...(edge && { '--dx-attention-glyph-edge': text(edge.hue) }),
-        ...(corner && { '--dx-attention-glyph-corner': text(corner.hue) }),
+        ...(mark && { '--dx-attention-glyph-mark': mark.hue ? solid(mark.hue) : 'var(--color-fg)' }),
+        ...(edge && { '--dx-attention-glyph-edge': solid(edge.hue) }),
+        ...(corner && { '--dx-attention-glyph-corner': solid(corner.hue) }),
       }),
       [fill, mark, edge, corner],
     );
