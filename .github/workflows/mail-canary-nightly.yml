@@ -90,5 +90,6 @@ jobs:
           if [ ! -f "$EVENTS" ]; then
             mkdir -p "$(dirname "$EVENTS")"
             echo '{"event":"ci.mail-canary","properties":{"ok":false,"failures":1}}' > "$EVENTS"
+            echo '{"event":"ci.mail-canary.failure","properties":{"check":"RUN","class":"SETUP","message":"the canary did not run; see the job log"}}' >> "$EVENTS"
           fi
           node scripts/ci-event.mjs --batch "$EVENTS"

@@ -7,8 +7,8 @@ tags:
   - ts-test-workerd
   - pack
 tasks:
-  # The nightly Gmail sync canary (canary/README.md): the `sync-e2e` suite `test` skips. It writes to a
-  # real mailbox, so it is uncached and never in `Check`.
+  # The nightly Gmail sync canary (canary/README.md): the `sync-e2e` suite `test` skips. Uncached, since it
+  # writes to a real mailbox; `Check` never names it, and `runInCI: false` would refuse its own workflow.
   mail-canary:
     extends: test
     args:
@@ -19,4 +19,3 @@ tasks:
       LOG_FILTER: warn,plugin-google/canary:info
     options:
       cache: false
-      runInCI: false
