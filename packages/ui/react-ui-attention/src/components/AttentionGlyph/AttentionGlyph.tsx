@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type ComponentPropsWithoutRef, forwardRef, useMemo } from 'react';
+import React, { type ComponentPropsWithoutRef, type CSSProperties, forwardRef, useMemo } from 'react';
 
+import { useIconHref } from '@dxos/react-ui/Icon';
 import { mx } from '@dxos/ui-theme';
-import { type ThemedClassName } from '@dxos/ui-types';
+import { type Hue, type ThemedClassName } from '@dxos/ui-types';
 
 import * as Activity from '../../types/Activity.ts';
 
@@ -20,31 +21,28 @@ export type AttentionGlyphProps = ThemedClassName<Omit<ComponentPropsWithoutRef<
 
 const VIEWERS_PATH =
   'M6.75 8.27311C7.38815 7.72296 7.79212 6.90866 7.79212 6C7.79212 5.09134 7.38815 4.27704 6.75 3.72689C7.06722 3.58122 7.42019 3.5 7.79212 3.5C9.17283 3.5 10.2921 4.61929 10.2921 6C10.2921 7.38071 9.17283 8.5 7.79212 8.5C7.42019 8.5 7.06723 8.41878 6.75 8.27311Z';
-const AGENT_PATH = 'M6 2.2l1 2.8 2.8 1-2.8 1-1 2.8-1-2.8-2.8-1 2.8-1z';
+const STAR_PATH = 'M6 2.2l1 2.8 2.8 1-2.8 1-1 2.8-1-2.8-2.8-1 2.8-1z';
 
-const Mark = ({ mark }: { mark: Activity.MarkTreatment }) => {
-  switch (mark) {
-    case 'viewer':
+const DEFAULT_FILL_OPACITY = 0.25;
+
+const text = (hue: Hue) => `var(--color-${hue}-text)`;
+
+const Mark = ({ icon }: { icon: string }) => {
+  const href = useIconHref(icon);
+  switch (icon) {
+    case 'dot':
       return <circle data-part='mark' cx='6' cy='6' r='2.5' />;
-    case 'viewers':
-    case 'viewers-working':
+    case 'dots':
       return (
         <g data-part='mark'>
           <path d={VIEWERS_PATH} />
           <circle cx='4.25' cy='6' r='2.5' />
         </g>
       );
-    case 'agent':
-    case 'agent-done':
-      return <path data-part='mark' d={AGENT_PATH} />;
-    case 'typing':
-      return (
-        <g data-part='mark'>
-          <circle cx='3' cy='6' r='1.25' />
-          <circle cx='6' cy='6' r='1.25' />
-          <circle cx='9' cy='6' r='1.25' />
-        </g>
-      );
+    case 'star':
+      return <path data-part='mark' d={STAR_PATH} />;
+    default:
+      return <use data-part='mark' href={href} x='2' y='2' width='8' height='8' />;
   }
 };
 
@@ -54,26 +52,38 @@ const Mark = ({ mark }: { mark: Activity.MarkTreatment }) => {
  * host markup.
  */
 export const AttentionGlyph = forwardRef<HTMLSpanElement, AttentionGlyphProps>(
-  ({ classNames, attended, containsAttended, treatments, ...props }, forwardedRef) => {
+  ({ classNames, style, attended, containsAttended, treatments, ...props }, forwardedRef) => {
     const { fill, mark, edge, corner, moving } = useMemo(
-      () =>
-        Activity.resolve([
-          ...(attended ? (['attended'] as const) : []),
-          ...(containsAttended ? (['contains-attended'] as const) : []),
-          ...(treatments ?? []),
-        ]),
+      () => Activity.resolve(treatments ?? [], { attention: attended || containsAttended }),
       [attended, containsAttended, treatments],
+    );
+    const colors = useMemo(
+      (): CSSProperties & Record<`--${string}`, string> => ({
+        ...(fill && {
+          '--dx-attention-glyph-fill-hue': `var(--color-${fill.hue}-bg)`,
+          '--dx-attention-glyph-fill-opacity': `${(fill.opacity ?? DEFAULT_FILL_OPACITY) * 100}%`,
+        }),
+        ...(mark && { '--dx-attention-glyph-mark': mark.hue ? text(mark.hue) : 'var(--color-fg)' }),
+        ...(edge && { '--dx-attention-glyph-edge': text(edge.hue) }),
+        ...(corner && { '--dx-attention-glyph-corner': text(corner.hue) }),
+      }),
+      [fill, mark, edge, corner],
     );
 
     return (
       <span
         {...props}
+        style={{ ...colors, ...style }}
         data-scope='attention-glyph'
         data-part='root'
-        data-fill={fill}
-        data-mark={mark}
-        data-edge={edge}
-        data-corner={corner}
+        data-fill={attended ? 'attended' : containsAttended ? 'contains-attended' : fill && 'hue'}
+        data-fill-hue={fill?.hue}
+        data-mark={mark?.icon}
+        data-mark-hue={mark?.hue}
+        data-edge={edge && (edge.dashed ? 'dashed' : 'solid')}
+        data-edge-hue={edge?.hue}
+        data-corner={corner && (corner.shape ?? 'dot')}
+        data-corner-hue={corner?.hue}
         data-moving={moving}
         className={mx('dx-attention-glyph', classNames)}
         ref={forwardedRef}
@@ -81,8 +91,8 @@ export const AttentionGlyph = forwardRef<HTMLSpanElement, AttentionGlyphProps>(
         {(mark || edge || corner) && (
           <svg viewBox='0 0 12 12' fill='none' aria-hidden data-scope='attention-glyph' data-part='overlay'>
             {edge && <rect data-part='edge' x='0.5' y='0.5' width='11' height='11' rx='1.75' pathLength='48' />}
-            {mark && <Mark mark={mark} />}
-            {corner && <circle data-part='corner' cx='12.25' cy='-0.25' r='2.5' />}
+            {mark && <Mark icon={mark.icon} />}
+            {corner && <circle data-part='corner' cx='12.25' cy='-0.25' r={corner.shape === 'ring' ? 2 : 2.5} />}
           </svg>
         )}
       </span>

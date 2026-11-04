@@ -230,6 +230,9 @@ export const SmallPresenceLive = ({ id, open, viewers, object }: SmallPresenceLi
   );
 };
 
+const ONE_VIEWER: Activity.Treatment = { slot: 'mark', icon: 'dot', hue: 'primary', priority: 10 };
+const SEVERAL_VIEWERS: Activity.Treatment = { slot: 'mark', icon: 'dots', hue: 'primary', priority: 10 };
+
 export type SmallPresenceProps = {
   count?: number;
   /** Other activity on the item; each entry is a tooltip line and may claim a glyph slot. */
@@ -240,7 +243,7 @@ export const SmallPresence = ({ count = 0, activity = [], attended, containsAtte
   const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const treatments = useMemo(
     () => [
-      ...(count > 1 ? (['viewers'] as const) : count === 1 ? (['viewer'] as const) : []),
+      ...(count > 0 ? [count > 1 ? SEVERAL_VIEWERS : ONE_VIEWER] : []),
       ...activity.flatMap((entry) => (entry.treatment ? [entry.treatment] : [])),
     ],
     [count, activity],

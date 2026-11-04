@@ -24,28 +24,34 @@ const BUSY_STATES: ReadonlySet<Process.State> = new Set([
   Process.State.HYBERNATING,
 ]);
 
+/** A pulsing star in the text colour, which takes the mark from presence (priority 10). */
+const working: Activity.Treatment = { slot: 'mark', icon: 'star', priority: 30, animate: true };
+
 const chatWorking: Activity.Entry = {
   source: 'assistant',
   label: ['activity.chat-working.label', { ns: AssistantNamespace.key }],
-  treatment: 'agent',
+  treatment: working,
 };
 
 const companionWorking: Activity.Entry = {
   source: 'assistant',
   label: ['activity.companion-working.label', { ns: AssistantNamespace.key }],
-  treatment: 'agent',
+  treatment: working,
 };
+
+/** A still amber star, under the working one and over presence. */
+const unread: Activity.Treatment = { slot: 'mark', icon: 'star', hue: 'amber', priority: 20 };
 
 const chatUnread: Activity.Entry = {
   source: 'assistant',
   label: ['activity.chat-unread.label', { ns: AssistantNamespace.key }],
-  treatment: 'agent-done',
+  treatment: unread,
 };
 
 const companionUnread: Activity.Entry = {
   source: 'assistant',
   label: ['activity.companion-unread.label', { ns: AssistantNamespace.key }],
-  treatment: 'agent-done',
+  treatment: unread,
 };
 
 /**
