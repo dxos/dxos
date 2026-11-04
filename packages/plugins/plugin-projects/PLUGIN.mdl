@@ -369,7 +369,7 @@ test QA-10: Two peers see each other's carets in every project editor
     instructions, the spec's prose, and a feature's description inside the spec. Walked by the autocue flow
     `packages/plugins/plugin-projects/autocue/project-cursors.mjs`, recorded side by side.
   actors: human
-  status: unverified
+  status: passing            # 2026-11-04, recorded by autocue/project-cursors.mjs
   given:
     - alice: a booted app named "Alice", with plugin-code on and a space holding a "Launch plan" project whose spec has
       prose and one feature, "Landing page"
