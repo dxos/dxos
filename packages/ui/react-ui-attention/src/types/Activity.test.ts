@@ -17,8 +17,9 @@ describe('Activity.resolve', () => {
     ).toEqual({ fill: 'attended', mark: 'viewers', edge: 'failed', corner: 'mention', moving: undefined });
   });
 
-  test('an agent at work takes the mark from presence', ({ expect }) => {
+  test('an agent takes the mark from presence, and moves only while it works', ({ expect }) => {
     expect(Activity.resolve(['viewers', 'typing', 'agent'])).toMatchObject({ mark: 'agent', moving: 'mark' });
+    expect(Activity.resolve(['viewer', 'agent-done'])).toEqual({ mark: 'agent-done', moving: undefined });
   });
 
   test('only the first animated slot in motion order moves', ({ expect }) => {

@@ -548,9 +548,10 @@ test QA-4: A chat's MCP servers come from connections and built-in servers
 test QA-5: A working agent marks its chat and its companion's subject in the navtree
   desc: |
     While an agent process runs for a chat, the chat's navtree row shows the agent star in its
-    attention glyph: an amber sparkle that pulses in place of the presence dots. A companion chat
-    marks the object it is a companion to instead, so a document shows that the assistant is
-    working on it. The star stays while you look at something else and clears when the turn ends.
+    attention glyph: a sparkle in the text colour that pulses in place of the presence dots (still,
+    under reduced motion). A companion chat marks the object it is a companion to instead, so a
+    document shows that the assistant is working on it. The star stays while you look at something
+    else and clears when the turn ends.
   actors: human
   status: unverified
   given:
@@ -735,7 +736,7 @@ decision D-19: A running agent shows on the navtree as the agent star in the att
   date: 2026-11-03
   by: user:wittjosiah
   affects: [QA-5]
-  why: Busy state comes from the process tree, not the chat's view model, so it holds while the chat is closed and you work elsewhere. The star says an agent is on it, where an outline only says something is busy, and it leads into the corner star a finished, unread turn will get. One treatment on both rows keeps it consistent.
+  why: Busy state comes from the process tree, not the chat's view model, so it holds while the chat is closed and you work elsewhere. The star says an agent is on it, where an outline only says something is busy, and it leads into the amber star a finished, unread turn gets. One treatment on both rows keeps it consistent.
   rejected:
     - A still amber outline on the edge: it kept presence visible but read as generic busy work and had no natural finished state.
     - The star on chats and the outline on companion subjects: kept a document's viewers visible, at the cost of two symbols for one thing.
