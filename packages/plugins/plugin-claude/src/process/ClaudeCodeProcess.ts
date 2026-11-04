@@ -178,7 +178,7 @@ export const make = (options: Options): AgentProcessDefinition =>
                 });
                 // An interrupted turn was stopped, not finished, so it leaves nothing unread.
                 if (!Exit.hasInterrupts(exit) && !options.isChatOpen?.(chat)) {
-                  Chat.markUnread(chat);
+                  Chat.setUnread(chat, true);
                 }
               }),
             ),

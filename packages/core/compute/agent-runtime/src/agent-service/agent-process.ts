@@ -618,7 +618,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                   });
                   // An interrupted turn was stopped, not finished, so it leaves nothing unread.
                   if (!Exit.hasInterrupts(exit) && !options.isChatOpen?.(chat)) {
-                    Chat.markUnread(chat);
+                    Chat.setUnread(chat, true);
                   }
                   // The failure ends the process below, skipping the reconcile, so the strategy
                   // hears of it here or not at all. A stop the reader asked for is not a failure.

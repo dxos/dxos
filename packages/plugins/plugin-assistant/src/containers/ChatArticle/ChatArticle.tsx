@@ -53,7 +53,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     const [unread] = useObject(chat, 'unread');
     useEffect(() => {
       if (chat && unread) {
-        Chat.markRead(chat);
+        Chat.setUnread(chat, false);
       }
     }, [chat, unread]);
     // Counts this view in `OpenChats`, so a turn that ends here is not marked unread.

@@ -131,20 +131,11 @@ export const seedSession = (chat: Chat, session: SessionConfig.SessionConfig | u
   });
 };
 
-/** Flags the chat's latest turn as unseen. */
-export const markUnread = (chat: Chat): void => {
-  if (!chat.unread) {
+/** Sets whether the chat's latest turn is unseen; writes only on a change. */
+export const setUnread = (chat: Chat, unread: boolean): void => {
+  if (Boolean(chat.unread) !== unread) {
     Obj.update(chat, (chat) => {
-      chat.unread = true;
-    });
-  }
-};
-
-/** Records that someone has seen the chat's latest turn. */
-export const markRead = (chat: Chat): void => {
-  if (chat.unread) {
-    Obj.update(chat, (chat) => {
-      chat.unread = false;
+      chat.unread = unread;
     });
   }
 };
