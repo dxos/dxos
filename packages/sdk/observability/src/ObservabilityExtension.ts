@@ -170,13 +170,31 @@ export type McpSession = {
   protocolVersion?: string;
 };
 
+/** Why a tool call failed, recovered from the result the server answered with. */
+export type McpToolError = {
+  /** Low-cardinality failure category, e.g. a `ToolFailure` code; also the exception's class. */
+  type: string;
+  message: string;
+  /** The call's own fault (bad input, unknown key): counted as a failed call, not reported as an exception. */
+  expected: boolean;
+};
+
+export type McpToolCall = McpSession & {
+  toolName: string;
+  parameters?: unknown;
+  durationMs: number;
+  isError: boolean;
+  /** Present only on a failed call, and only when the response said why. */
+  error?: McpToolError;
+  /** The operation a dispatch tool (`invokeOperation`) ran; failures group by it. */
+  operationKey?: string;
+};
+
 /** MCP extension API (kind-specific methods only). */
 export type Mcp = {
   /** A client connected successfully. */
   captureInitialize(session: McpSession): void;
-  captureToolCall(
-    call: McpSession & { toolName: string; parameters?: unknown; durationMs: number; isError: boolean },
-  ): void;
+  captureToolCall(call: McpToolCall): void;
 };
 
 /**
