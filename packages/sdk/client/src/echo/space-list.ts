@@ -12,7 +12,6 @@ import {
   type CreateSpaceOptions,
   type Echo,
   IMPORT_SPACE_TIMEOUT,
-  type JoinSpaceOptions,
   type Space,
   SpaceProperties,
 } from '@dxos/client-protocol';
@@ -344,13 +343,13 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     return spaceProxy;
   }
 
-  join(invitation: Invitation | string, options?: JoinSpaceOptions) {
+  join(invitation: Invitation | string) {
     if (!this._invitationProxy) {
       throw new ApiError({ message: 'Client not open.' });
     }
 
     log('accept invitation', invitation);
-    return this._invitationProxy.join(invitation, undefined, options);
+    return this._invitationProxy.join(invitation);
   }
 
   async joinBySpaceKey(spaceKey: PublicKey): Promise<Space> {

@@ -63,12 +63,6 @@ export type AcceptSpaceOptions = {
 
   /** Tags assigned to the space member. */
   tags?: string[];
-
-  /**
-   * Object ids to replicate, for a space joined through an object share link; omitted replicates the whole space.
-   * Enforced by this client only.
-   */
-  syncScope?: readonly string[];
 };
 
 export type AdmitMemberOptions = {
@@ -119,8 +113,6 @@ export interface Manager {
   admitMember(options: AdmitMemberOptions): Promise<Credential>;
   requestSpaceAdmissionCredential(ctx: Context, spaceKey: PublicKey): Promise<Credential>;
   setSpaceEdgeReplicationSetting(ctx: Context, spaceKey: PublicKey, setting: EdgeReplicationSetting): Promise<void>;
-  /** Adds objects to a partially replicated space's sync scope; a no-op for a space replicated in full. */
-  extendSpaceSyncScope(spaceKey: PublicKey, objectIds: readonly string[]): Promise<void>;
 }
 
 /** Effect service tag for {@link Manager}. */

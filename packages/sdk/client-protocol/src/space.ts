@@ -74,12 +74,6 @@ export interface SpaceInternal {
   setEdgeReplicationPreference(setting: EdgeReplicationSetting): Promise<void>;
 
   /**
-   * Adds objects to the space's sync scope when this client replicates it partially (it joined through an object
-   * share link); a no-op for a space replicated in full.
-   */
-  extendSyncScope(objectIds: readonly string[]): Promise<void>;
-
-  /**
    * Has EDGE move the space's credentials off its hypercore control feed onto a space root document,
    * and adopts that root on this device. Other members adopt the same root when they next open the
    * space. Idempotent; resolves to the root URL, which `data.spaceRootUrl` then reports.

@@ -58,7 +58,6 @@ const handler: Operation.WithHandler<typeof SpaceOperation.ShareObject> = SpaceO
       const invitation = yield* createDelegatedInvitation(space, {
         role: role === 'viewer' ? SpaceMember_Role.READER : SpaceMember_Role.EDITOR,
         target: Obj.getURI(object),
-        sharedObjectIds: objects,
       });
       url.searchParams.set(
         SpaceOperation.SHARE_PARAM,
@@ -83,7 +82,7 @@ export default handler;
  */
 const createDelegatedInvitation = (
   space: Space,
-  { role, target, sharedObjectIds }: { role: SpaceMember_Role; target: string; sharedObjectIds: string[] },
+  { role, target }: { role: SpaceMember_Role; target: string },
 ): Effect.Effect<buf.JsonValue, SpaceOperationError> =>
   Effect.gen(function* () {
     const { InvitationEncoder, Invitation_AuthMethod, Invitation_State, Invitation_Type } = yield* Effect.promise(
@@ -95,7 +94,6 @@ const createDelegatedInvitation = (
       multiUse: true,
       role,
       target,
-      sharedObjectIds,
     });
     const failed = [
       Invitation_State.ERROR,

@@ -17,8 +17,8 @@ const READ_RETRIES = 2;
 
 /**
  * The space a share link joins, as a pending space a boot-cached client opens before it has joined: the space root and
- * the shared documents, which EDGE serves to whoever proves they hold the link invitation's guest key. Needs no
- * identity or worker, so it runs while the app boots.
+ * the documents of the objects the link names, which EDGE serves to whoever proves they hold the link invitation's
+ * guest key. Needs no identity or worker, so it runs while the app boots.
  * @param payload The link's `share` query parameter.
  * @param cachedSpaceIds Spaces the boot cache already holds; EDGE is not asked for one of them.
  * @returns Nothing for a link that carries no invitation, which only members can open, or whose space is cached.
@@ -32,7 +32,7 @@ export const load = async ({
   edgeUrl: string;
   cachedSpaceIds: ReadonlySet<string>;
 }): Promise<PendingSpace[]> => {
-  const { spaceId, invitation: json } = await EffectEx.runPromise(decodeSharePayload(payload));
+  const { spaceId, invitation: json, objects } = await EffectEx.runPromise(decodeSharePayload(payload));
   if (!json || !SpaceId.isValid(spaceId) || cachedSpaceIds.has(spaceId)) {
     return [];
   }
@@ -53,6 +53,7 @@ export const load = async ({
     spaceId,
     {
       invitationId: invitation.invitationId,
+      objectIds: [...objects],
       issuedAt,
       signature: await signWithGuestKey(challenge, { secretKey, publicKey }),
     },

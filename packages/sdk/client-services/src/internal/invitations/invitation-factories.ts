@@ -40,10 +40,7 @@ export const InvitationFactoriesLayer: Layer.Layer<
     const dataSpaceManager = yield* SpacesContract.ManagerService;
     const signingContextProvider = yield* SpacesContract.SigningContextProviderService;
 
-    const factories = new Map<
-      Invitation_Kind,
-      (invitation: Partial<Invitation>, options?: InvitationsContract.InvitationHandlerOptions) => InvitationProtocol
-    >([
+    const factories = new Map<Invitation_Kind, (invitation: Partial<Invitation>) => InvitationProtocol>([
       [
         Invitation_Kind.DEVICE,
         () =>
@@ -55,24 +52,23 @@ export const InvitationFactoriesLayer: Layer.Layer<
       ],
       [
         Invitation_Kind.SPACE,
-        (invitation, options) =>
+        (invitation) =>
           new SpaceInvitationProtocol(
             dataSpaceManager,
             signingContextProvider(),
             keyring,
             toPublicKey(invitation.spaceKey),
-            options?.syncScope,
           ),
       ],
     ]);
 
-    invitationsManager.setInvitationHandlerFactory((invitation, options) => {
+    invitationsManager.setInvitationHandlerFactory((invitation) => {
       if (identityManager.identity == null && invitation.kind === Invitation_Kind.SPACE) {
         throw new Error('Identity must be created before joining a space.');
       }
       const factory = factories.get(invitation.kind);
       invariant(factory, `Unknown invitation kind: ${invitation.kind}`);
-      return factory(invitation, options);
+      return factory(invitation);
     });
   }),
 );

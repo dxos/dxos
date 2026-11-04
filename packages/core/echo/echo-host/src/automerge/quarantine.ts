@@ -5,10 +5,9 @@
 import { type DocumentId } from '@automerge/automerge-repo';
 
 /**
- * Why a document is quarantined: its bytes could not be loaded, a space directory retired it, or it lies outside the
- * sync scope of a space this peer replicates partially. Only an out-of-scope quarantine is ever released.
+ * Why a document is quarantined: its bytes could not be loaded, or a space directory retired it.
  */
-export type QuarantineReason = 'load-failed' | 'retired' | 'out-of-scope';
+export type QuarantineReason = 'load-failed' | 'retired';
 
 export type QuarantineRecord = {
   documentId: DocumentId;

@@ -35,16 +35,13 @@ import {
 /** How long a fresh browser may take to create its identity (onboarding does that for a share link). */
 const IDENTITY_TIMEOUT = 60_000;
 
-/** How long a member waits for the host to widen a partially replicated space's scope. */
-const EXTEND_TIMEOUT = 5_000;
-
 /** How long a background join may take to produce a ready space before it gives up and says so. */
 const SPACE_TIMEOUT = 180_000;
 
 /**
- * Opens an object share link (`?share=`): turns on the plugins it names, then — for a member — extends a partial space's sync scope and leaves the path to URL projection; for anyone
- * else, joins the space in the background replicating only the shared objects, then opens the object. `joining` maps
- * the link's space to its object until that attempt ends.
+ * Opens an object share link (`?share=`): turns on the plugins it names, then, for anyone not yet a member, joins the
+ * space in the background and opens the object; a member's path is left to URL projection. `joining` maps the link's
+ * space to its object until that attempt ends.
  */
 export const handleShareLink = (
   url: URL,
@@ -81,7 +78,7 @@ export const handleShareLink = (
     );
   }).pipe(Effect.catch(reportFailure));
 
-/** For a member, widens a partial space's sync scope; for anyone else, joins with the link's scope and opens the object. */
+/** For anyone not yet a member of the link's space, joins it and opens the object; a member has nothing to join. */
 const openShared = (client: Client, spaceId: SpaceId, target: ShareTarget, payload: SharePayload) =>
   Effect.gen(function* () {
     yield* Effect.tryPromise(() => client.waitUntilInitialized({ timeout: INITIALIZE_TIMEOUT }));
@@ -92,11 +89,6 @@ const openShared = (client: Client, spaceId: SpaceId, target: ShareTarget, paylo
     // A space listed from the link's cache before the join is not this client's yet, so the join below still runs.
     const existing = client.spaces.get(spaceId);
     if (existing && !existing.internal.provisional) {
-      // A member who joined through another link replicates only that link's objects; a full member is unaffected.
-      yield* Effect.tryPromise(() => existing.internal.extendSyncScope(payload.objects)).pipe(
-        Effect.timeout(EXTEND_TIMEOUT),
-        Effect.catch((error) => Effect.sync(() => log.warn('sync scope not extended', { spaceId, error }))),
-      );
       return;
     }
 
@@ -104,7 +96,7 @@ const openShared = (client: Client, spaceId: SpaceId, target: ShareTarget, paylo
     if (!invitation) {
       return yield* Effect.fail(new SpaceOperationError({ message: 'The link is only for members of its space.' }));
     }
-    yield* joinAndOpen(client, invitation, spaceId, target, payload);
+    yield* joinAndOpen(client, invitation, spaceId, target);
   });
 
 /**
@@ -190,7 +182,7 @@ const waitForIdentity = (client: Client): Effect.Effect<void> =>
   });
 
 /**
- * Joins with the link's scope and no dialog, and opens the shared object once the space is listed, so its plank loads
+ * Joins with no dialog, and opens the shared object once the space is listed, so its plank loads
  * while the space finishes opening. The space appearing is the success signal: the invitation reports a failed attempt
  * (EDGE refusing, a host timing out) while another path still goes on to admit the guest.
  */
@@ -199,11 +191,10 @@ const joinAndOpen = (
   json: NonNullable<SharePayload['invitation']>,
   spaceId: SpaceId,
   target: ShareTarget,
-  payload: SharePayload,
 ): Effect.Effect<void, SpaceOperationError, Operation.Service> =>
   Effect.gen(function* () {
     const decoded = yield* decodeInvitation(json);
-    const invitation = client.spaces.join(decoded, { syncScope: { objectIds: payload.objects } });
+    const invitation = client.spaces.join(decoded);
     const subscription = invitation.subscribe(
       (value) => log('share link invitation', { state: value.state }),
       (error) => log('share link invitation attempt failed', { error }),

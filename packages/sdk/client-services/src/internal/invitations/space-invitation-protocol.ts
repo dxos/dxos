@@ -7,7 +7,6 @@ import { create } from '@bufbuild/protobuf';
 import { type Context, cancelWithContext } from '@dxos/context';
 import {
   createCancelDelegatedSpaceInvitationCredential,
-  createDelegatedInvitationScopeCredential,
   createDelegatedSpaceInvitationCredential,
   credentialIdOf,
   credentialOfPayload,
@@ -34,10 +33,7 @@ import {
   Invitation_Type,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import {
-  DelegatedInvitationScopeSchema,
-  DelegateSpaceInvitationSchema,
-} from '@dxos/protocols/buf/dxos/halo/invitations_pb';
+import { DelegateSpaceInvitationSchema } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import {
   type AdmissionRequest,
   AdmissionRequestSchema,
@@ -60,8 +56,6 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     private readonly _signingContext: SigningContext,
     private readonly _keyring: KeyringApi,
     private readonly _spaceKey?: PublicKey,
-    /** Guest side: object ids to replicate when the space is joined through an object share link. */
-    private readonly _syncScope?: readonly string[],
   ) {}
 
   toJSON(): object {
@@ -163,20 +157,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       }),
     );
 
-    const scope =
-      invitation.sharedObjectIds.length > 0
-        ? [
-            await createDelegatedInvitationScopeCredential(
-              this._signingContext.credentialSigner,
-              space.key,
-              create(DelegatedInvitationScopeSchema, {
-                invitationId: invitation.invitationId,
-                objectIds: invitation.sharedObjectIds,
-              }),
-            ),
-          ]
-        : [];
-    await writeMessages(space.inner.controlPipeline.writer, [credential, ...scope]);
+    await writeMessages(space.inner.controlPipeline.writer, [credential]);
     return credentialIdOf(credentialOfPayload(credential));
   }
 
@@ -251,7 +232,6 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       controlTimeframe: controlTimeframe && toTimeframe(controlTimeframe),
       dataTimeframe: dataTimeframe && toTimeframe(dataTimeframe),
       tags: assertion.tags,
-      syncScope: this._syncScope,
     });
 
     await this._signingContext.recordCredential(credential);

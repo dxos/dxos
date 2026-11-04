@@ -106,7 +106,7 @@ export default Capability.makeModule(
       );
 
     // Spaces a share link is joining, each with the object it shares: the link's own URL names the workspace and the
-    // object, which would otherwise read as missing until the join lands — the invitation's scope vouches for both.
+    // object, which would otherwise read as missing until the join lands; the link vouches for both.
     const joining = new Map<string, string>();
     const joiningLoader: AppCapabilities.NavigationTargetLoader = {
       id: `${meta.profile.key}/share-link`,

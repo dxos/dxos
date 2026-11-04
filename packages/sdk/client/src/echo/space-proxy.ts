@@ -232,7 +232,6 @@ export class SpaceProxy implements Space, CustomInspectable {
       removeMember: this._removeMember.bind(this),
       migrate: this._migrate.bind(this),
       setEdgeReplicationPreference: this._setEdgeReplicationPreference.bind(this),
-      extendSyncScope: this._extendSyncScope.bind(this),
       migrateSpaceRoot: this._migrateSpaceRoot.bind(this),
       syncToEdge: this._syncToEdge.bind(this),
       export: this._export.bind(this),
@@ -839,16 +838,6 @@ export class SpaceProxy implements Space, CustomInspectable {
         migration: SpacesService.Migration.enums.FRAGMENT_AUTOMERGE_ROOT,
       });
     }
-  }
-
-  private async _extendSyncScope(objectIds: readonly string[]): Promise<void> {
-    await runServiceCall(
-      this._runtime,
-      this._clientServices.rpc,
-      'SpacesService.updateSpace',
-      { spaceKey: this.key, extendSyncScope: [...objectIds] },
-      { timeout: RPC_TIMEOUT },
-    );
   }
 
   private async _setEdgeReplicationPreference(setting: EdgeReplicationSetting): Promise<void> {

@@ -29,7 +29,6 @@ import {
   type LargeSpaceMetadata,
   LargeSpaceMetadataSchema,
   type SpaceMetadata,
-  SpaceSyncScopeSchema,
 } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type Timeframe } from '@dxos/timeframe';
 import { ComplexMap, arrayToBuffer, forEachAsync, isNonNullable } from '@dxos/util';
@@ -264,15 +263,6 @@ export class SqliteMetadataStore implements IMetadataStore {
 
   async setSpaceEdgeReplicationSetting(spaceKey: PublicKey, setting: EdgeReplicationSetting): Promise<void> {
     this.#getSpace(spaceKey).edgeReplication = setting;
-    await this._save();
-  }
-
-  getSpaceSyncScope(spaceKey: PublicKey): readonly string[] | undefined {
-    return this.hasSpace(spaceKey) ? this.#getSpace(spaceKey).syncScope?.objectIds : undefined;
-  }
-
-  async setSpaceSyncScope(spaceKey: PublicKey, objectIds: readonly string[]): Promise<void> {
-    this.#getSpace(spaceKey).syncScope = create(SpaceSyncScopeSchema, { objectIds: [...objectIds] });
     await this._save();
   }
 

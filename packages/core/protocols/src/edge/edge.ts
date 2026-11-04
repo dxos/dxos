@@ -211,11 +211,13 @@ export type JoinSpaceResponseBody = {
 };
 
 /**
- * Reads the objects a delegated invitation shares (its `DelegatedInvitationScope`) without joining the space or
- * having an identity: holding the invitation's guest key is the capability.
+ * Reads objects of a space through a delegated invitation without joining it or having an identity: holding the
+ * invitation's guest key is the capability, as it already admits its holder to the whole space.
  */
 export type ReadSharedObjectsRequest = {
   invitationId: string;
+  /** The objects to read, as the share link names them. */
+  objectIds: string[];
   /** Unix ms the signature was made at; EDGE refuses a signature older than a few minutes. */
   issuedAt: number;
   /** Base64 Ed25519 signature by the invitation's guest key over SHA-256 of {@link getSharedObjectsChallenge}. */
@@ -237,7 +239,7 @@ export type ShareCacheRow = {
 /**
  * A shared space as a client opens it before it has joined: the space root, which routes each object to its document,
  * and the documents of the shared objects. An object not indexed yet, a feed object, or one whose document also holds
- * objects outside the scope is missing rather than an error.
+ * objects not asked for is missing rather than an error.
  */
 export type ReadSharedObjectsResponseBody = {
   /** `automerge:<documentId>` of the space root, which `rows` holds. */

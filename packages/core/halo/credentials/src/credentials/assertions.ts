@@ -30,7 +30,6 @@ import {
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
   type CancelDelegatedInvitation,
-  type DelegatedInvitationScope,
   type DelegateSpaceInvitation,
 } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 
@@ -60,8 +59,7 @@ export type CredentialAssertion =
   | SpaceInvitationNotice
   | SpaceMember
   | CancelDelegatedInvitation
-  | DelegateSpaceInvitation
-  | DelegatedInvitationScope;
+  | DelegateSpaceInvitation;
 
 /** The `$typeName` of any assertion, usable as the discriminant in a narrowing comparison. */
 export type CredentialAssertionType = CredentialAssertion['$typeName'];
