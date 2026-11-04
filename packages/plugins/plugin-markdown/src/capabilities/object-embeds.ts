@@ -6,9 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import { PreviewComponent } from '#components';
 import { MarkdownCapabilities } from '#types';
 
+import { objectEmbeds } from '../extensions/object-embeds.tsx';
+
 export default Capability.makeModule(() =>
-  Effect.succeed(Capability.contribute(MarkdownCapabilities.ObjectEmbed, PreviewComponent)),
+  Effect.succeed(Capability.contribute(MarkdownCapabilities.ObjectEmbeds, objectEmbeds)),
 );

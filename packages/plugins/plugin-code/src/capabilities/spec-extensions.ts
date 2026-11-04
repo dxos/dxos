@@ -9,13 +9,14 @@ import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities'
 
 import { FeatureMap } from '#types';
 
-import { featureEmbedExtensions } from '../containers/FeatureEmbeds/feature-embed-extensions.tsx';
+import { featureEmbedExtensions } from '../containers/FeatureEmbeds/feature-embed-extensions.ts';
 import { softwareCommands } from '../containers/FeatureEmbeds/software-commands.ts';
 import { CodeNamespace } from '../namespace.ts';
 
 /**
- * The software package: a spec using it draws its feature embeds as cards in any editor of it, such as plugin-code's,
- * offers `/feature` and a slash command for each of its other blocks, and shows its features on a canvas and a board.
+ * The software package: a spec using it keeps its features in step with their embeds in any editor of it, such as
+ * plugin-code's, offers `/feature` and a slash command for each of its other blocks, and shows its features on a canvas
+ * and a board.
  */
 export default Capability.makeModule(() =>
   Effect.succeed([
@@ -36,11 +37,10 @@ export default Capability.makeModule(() =>
       label: ['software-package.label', { ns: CodeNamespace.key }],
       dialects: FeatureMap.SOFTWARE_DIALECTS,
     }),
-    Capability.contribute(ProjectCapabilities.SpecExtensions, (spec, { attendableId, dialects, t }) =>
+    Capability.contribute(ProjectCapabilities.SpecExtensions, (spec, { dialects, t }) =>
       dialects.includes(FeatureMap.DIALECT)
         ? [
             ...featureEmbedExtensions(spec, {
-              attendableId,
               newName: t('feature-map.new-feature.name', { ns: CodeNamespace.key }),
             }),
             ...softwareCommands,

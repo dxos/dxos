@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Extension } from '@codemirror/state';
 import { useAtomValue } from '@effect/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
@@ -11,32 +10,14 @@ import * as Schedule from 'effect/Schedule';
 import { useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
-import * as Spec from '@dxos/compute/Spec';
 import { type SourceKey, formatSourceKey, parseSourceKey } from '@dxos/deus/review';
-import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
-import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 
 import { resolvePath } from '#sync';
 import { CodeCapabilities } from '#types';
 
 const UNAVAILABLE = Atom.make<CodeCapabilities.SpecSyncState>({ available: false, roots: [], specs: {} });
-
-/** The editor extensions contributed for a spec's document, rebuilt when its dialects change. */
-export const useContributedExtensions = (
-  document: Spec.Spec | undefined,
-  options: Omit<ProjectCapabilities.SpecExtensionOptions, 'dialects'>,
-): Extension[] => {
-  const factories = Hooks.useCapabilities(ProjectCapabilities.SpecExtensions);
-  const [dialects] = useObject(document, 'dialects');
-  const { attendableId, t } = options;
-  return useMemo(
-    () =>
-      document && dialects ? factories.flatMap((factory) => factory(document, { attendableId, dialects, t })) : [],
-    [factories, document, attendableId, dialects, t],
-  );
-};
 
 /** The spec sync's state: whether local files are reachable, the known checkouts, and each spec's last result. */
 export const useSpecSyncState = (): CodeCapabilities.SpecSyncState & { syncNow?: () => void } => {

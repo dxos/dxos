@@ -21,7 +21,13 @@ import * as Card from '@dxos/react-ui/Card';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
-import { type LinkWidgetState, releaseBlockHeight, setLinkWidgetState } from '@dxos/ui-editor';
+import {
+  type LinkWidgetState,
+  type ObjectLinkProps,
+  objectEmbedFocus,
+  releaseBlockHeight,
+  setLinkWidgetState,
+} from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
@@ -70,11 +76,12 @@ const floatingClassNames = (position: string) =>
     position,
   );
 
-export type PreviewComponentProps = MarkdownCapabilities.ObjectEmbedProps & {
-  onOpen?: (eid: URI.URI) => void;
-  /** Checks whether the linked object has a contributed surface for a role; defaults to `Surface.useIsAvailable()`. */
-  isSurfaceAvailable?: ReturnType<typeof Surface.useIsAvailable>;
-};
+export type PreviewComponentProps = ObjectLinkProps &
+  MarkdownCapabilities.ObjectEmbedsOptions & {
+    onOpen?: (eid: URI.URI) => void;
+    /** Checks whether the linked object has a contributed surface for a role; defaults to `Surface.useIsAvailable()`. */
+    isSurfaceAvailable?: ReturnType<typeof Surface.useIsAvailable>;
+  };
 
 /**
  * Registry-backed block widget for URL-scheme preview slots (the `image` widget of `objectLinks()`).
@@ -92,7 +99,6 @@ export const PreviewComponent = ({
   range,
   unresolved,
   intrinsic,
-  claimFocus,
   onOpen,
   isSurfaceAvailable: isSurfaceAvailableProp,
 }: PreviewComponentProps) => {
@@ -170,15 +176,15 @@ export const PreviewComponent = ({
         ? 'card'
         : undefined;
 
-  // The element `claimFocus` names, until attention has followed the frame's focus and lifted the inert gate.
+  // The element an `objectEmbedFocus` claim names, until attention has followed the frame's focus and lifted the inert gate.
   const claimed = useRef<string | undefined>(undefined);
   useEffect(() => {
-    const selector = mode && object && claimFocus?.(object.id);
+    const selector = mode && object && view?.state.facet(objectEmbedFocus)(object.id);
     if (selector) {
       claimed.current = selector;
       (containerRef.current ?? cardRef.current)?.focus();
     }
-  }, [object, claimFocus, mode]);
+  }, [object, view, mode]);
   useEffect(() => {
     const selector = claimed.current;
     if (!hasAttention || !selector) {
