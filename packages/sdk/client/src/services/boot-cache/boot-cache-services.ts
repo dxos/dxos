@@ -76,9 +76,10 @@ export type BootCacheOptions = {
   servicesGate?: () => Promise<void>;
   /**
    * Spaces to list and open before this client has joined them, such as the one a share link is joining. Each stays
-   * listed until the services list it, and its database opens from the rows given.
+   * listed until the services list it, and its database opens from the rows given. Called after the store is read,
+   * with the ids of the spaces it holds, so a space this device already caches is not fetched again.
    */
-  pendingSpaces?: () => Promise<PendingSpace[]>;
+  pendingSpaces?: (cachedSpaceIds: ReadonlySet<string>) => Promise<PendingSpace[]>;
 };
 
 /** A space whose working set the boot cache persists. */
@@ -115,7 +116,7 @@ export class BootCacheServices implements ClientServicesProvider {
   readonly #store = new BootCacheStore();
   readonly #maxBytes: number;
   readonly #servicesGate?: () => Promise<void>;
-  readonly #loadPendingSpaces?: () => Promise<PendingSpace[]>;
+  readonly #loadPendingSpaces?: (cachedSpaceIds: ReadonlySet<string>) => Promise<PendingSpace[]>;
   /** Spaces listed from {@link BootCacheOptions.pendingSpaces} that the services have not listed yet, by space id. */
   readonly #pending = new Map<string, PendingSpace>();
   readonly #providerOpened = Promise.withResolvers<void>();
@@ -190,9 +191,6 @@ export class BootCacheServices implements ClientServicesProvider {
   }
 
   async open(): Promise<void> {
-    // Fetched while the store is read and the services open, which is what it is waited for alongside.
-    const pending =
-      this.#loadPendingSpaces && !this.#providerOpen ? this.#readPendingSpaces(this.#loadPendingSpaces) : undefined;
     const snapshot = this.#providerOpen
       ? undefined
       : await this.#store.read().catch((error) => {
@@ -200,6 +198,11 @@ export class BootCacheServices implements ClientServicesProvider {
           return undefined;
         });
     this.#snapshot = snapshot;
+    // Fetched while the services open, and only for spaces the store does not already hold.
+    const pending =
+      this.#loadPendingSpaces && !this.#providerOpen
+        ? this.#readPendingSpaces(this.#loadPendingSpaces, new Set(snapshot?.spaces.keys()))
+        : undefined;
     // What the store already holds needs no rewrite until the working set moves on from it.
     for (const [spaceId, rows] of snapshot?.spaces ?? []) {
       this.#written.set(spaceId, signatureOf(rows));
@@ -310,9 +313,12 @@ export class BootCacheServices implements ClientServicesProvider {
     markMilestone('boot-cache.written', JSON.stringify(written));
   }
 
-  async #readPendingSpaces(load: () => Promise<PendingSpace[]>): Promise<PendingSpace[]> {
+  async #readPendingSpaces(
+    load: (cachedSpaceIds: ReadonlySet<string>) => Promise<PendingSpace[]>,
+    cachedSpaceIds: ReadonlySet<string>,
+  ): Promise<PendingSpace[]> {
     try {
-      return await asyncTimeout(load(), PENDING_SPACES_TIMEOUT);
+      return await asyncTimeout(load(cachedSpaceIds), PENDING_SPACES_TIMEOUT);
     } catch (error) {
       log.warn('pending spaces not read, opening without them', { error });
       return [];

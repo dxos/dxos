@@ -630,9 +630,9 @@ const main = async () => {
   const shareEdgeUrl = config.values.runtime?.services?.edge?.url;
   const pendingSpaces =
     sharePayload && shareEdgeUrl
-      ? async () => {
+      ? async (cachedSpaceIds: ReadonlySet<string>) => {
           const ShareCache = await import('@dxos/plugin-space/ShareCache');
-          return ShareCache.load({ payload: sharePayload, edgeUrl: shareEdgeUrl });
+          return ShareCache.load({ payload: sharePayload, edgeUrl: shareEdgeUrl, cachedSpaceIds });
         }
       : undefined;
   const client = new Client({

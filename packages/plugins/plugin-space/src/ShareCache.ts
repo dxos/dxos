@@ -20,11 +20,20 @@ const READ_RETRIES = 2;
  * the shared documents, which EDGE serves to whoever proves they hold the link invitation's guest key. Needs no
  * identity or worker, so it runs while the app boots.
  * @param payload The link's `share` query parameter.
- * @returns Nothing for a link that carries no invitation, which only members can open.
+ * @param cachedSpaceIds Spaces the boot cache already holds; EDGE is not asked for one of them.
+ * @returns Nothing for a link that carries no invitation, which only members can open, or whose space is cached.
  */
-export const load = async ({ payload, edgeUrl }: { payload: string; edgeUrl: string }): Promise<PendingSpace[]> => {
+export const load = async ({
+  payload,
+  edgeUrl,
+  cachedSpaceIds,
+}: {
+  payload: string;
+  edgeUrl: string;
+  cachedSpaceIds: ReadonlySet<string>;
+}): Promise<PendingSpace[]> => {
   const { spaceId, invitation: json } = await EffectEx.runPromise(decodeSharePayload(payload));
-  if (!json || !SpaceId.isValid(spaceId)) {
+  if (!json || !SpaceId.isValid(spaceId) || cachedSpaceIds.has(spaceId)) {
     return [];
   }
   const { InvitationEncoder } = await import('@dxos/client/invitations');
