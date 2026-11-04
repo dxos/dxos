@@ -30,9 +30,9 @@ const CreateSpecSchema = Schema.Struct({
  * default); `ProjectOperation.Create` runs the chosen template's scaffold, which materializes the
  * owned instructions and artifacts collection.
  *
- * Also the "create Repository" entry: a project names the repository its work lands in, and a `Ref`
+ * Also the "create Repository" entry: a project names the repositories its work lands in, and a `Ref`
  * field offers inline create only for a typename some plugin can create — without this the
- * project's repository picker had no `+`.
+ * project's repository picker has no `+`.
  *
  * Specs are created with only a name; a spec's features are made on its map.
  */

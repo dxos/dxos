@@ -46,7 +46,7 @@ feat F-4: A project's specs
              Overview tab is the nesting plugin's `ProjectSurface.LevelOverview` surface, and its Specs tab shows the
              level's own spec, or offers Add spec when it has none.
   req F-4.7: The project article's toolbar holds its tabs, then the tools of the tab shown: Create artifact on the
-             Overview; the spec dropdown, the view toggle and the Extensions menu on the Specs tab; Assign to agent and
+             Overview; the spec dropdown, the view toggle and the Extensions menu on the Specs tab; Delegate to agent and
              the Gantt toggle on the Tasks tab. It has no overflow menu and no button to start a session, which is the
              assistant companion's.
   req F-4.8: A spec offers its text, and each view a plugin contributes (`ProjectCapabilities.SpecView`) for a dialect
@@ -60,6 +60,28 @@ feat F-4: A project's specs
   req F-4.11: The project's overview is one form over the `Project` schema, in which the specs are a list the project
               owns: each spec is a row folded under its name that unfolds to edit its name and description in place,
               and the list's `+` creates a spec, its row open for the name.
+```
+
+```mdl
+feat F-5: A project's overview
+  req F-5.1: The overview opens on the project's name as its title, its status as a pill in the top right corner and
+             its description below, each edited in place with no edit button. The name and description start at the
+             same left edge as the section headings. The pill shows the status's capitalized name in its colour.
+  req F-5.2: Below the header the sections are, in order: Notes, Artifacts, Milestones, Specs and Config, with more
+             space between two sections than between the rows inside one. Every section's content starts and ends on
+             the same left and right edges as its heading.
+  req F-5.3: Artifacts shows at most six, and Show all shows the rest.
+  req F-5.4: Each milestone shows how many of its tasks are done out of those not cancelled, and opens the Tasks tab
+             filtered to the tasks under it.
+  req F-5.7: The Specs heading carries the add button on its own row, and each spec is a row directly under it at the
+             same level of nesting as a Config group.
+  req F-5.5: Config holds folded groups, each showing a summary of what it holds until it is opened: first Agent (the
+             instructions, skills and context), then the groups other plugins declare.
+  req F-5.6: A plugin declares a group with `ProjectCapabilities.ConfigGroup`: its fields are each a schema and a
+             writable atom holding the project's value, which the overview's form renders and writes with no UI of the
+             plugin's own. Groups with the same id merge, their fields sorted by each field's order, and a field
+             whose `enabled` atom is false is hidden. A field may carry an action, a button at the end of its control
+             that sets its value.
 ```
 
 ## QA
@@ -90,15 +112,15 @@ test QA-1: Build a plugin with an agent in the desktop app
       do: Click + on the space, choose Project, pick the "Composer Plugin" template, title it "World Clock" and click Create.
       capture: project
       expect: a "World Clock" project opens; its Tasks tab holds "Build the World Clock plugin" over four subtasks
-    - name: Assign the parent task to the agent
-      do: Open the project's Tasks tab, tick the parent task, click "Assign selected tasks to agent", then open the companion's Assistant tab.
+    - name: Delegate the parent task to the agent
+      do: Open the project's Tasks tab, tick the parent task, click "Delegate selected tasks to agent", then open the companion's Assistant tab.
       expect: the delegated chat holds the parent and its four subtasks and is working
     - name: Wait for the agent to offer the plugin
       do: Watch the subtasks tick off.
       invoke: org.dxos.operation.space.queryObjects { typename: "org.dxos.type.sandbox", text: "World Clock" }
       capture: sandboxes
       expect: |
-        a "World Clock" sandbox exists, all five tasks are done, and the chat shows a "Load plugin" prompt whose
+        a "World Clock" sandbox exists, all five tasks are in `review`, and the chat shows a "Load plugin" prompt whose
         URL is `http://localhost:<port>/files/<key>/manifest.json`
       assert: return $result.results.length === 1
       note: |
@@ -150,8 +172,8 @@ test QA-2: Build a plugin with an agent in the browser and install it from the p
       do: Click + on the space, choose Project, pick the "Composer Plugin" template, title it "World Clock" and click Create.
       capture: project
       expect: a "World Clock" project opens; its Tasks tab holds "Build the World Clock plugin" over four subtasks
-    - name: Assign the parent task to the agent
-      do: Open the project's Tasks tab, tick the parent task, click "Assign selected tasks to agent", then open the companion's Assistant tab.
+    - name: Delegate the parent task to the agent
+      do: Open the project's Tasks tab, tick the parent task, click "Delegate selected tasks to agent", then open the companion's Assistant tab.
       expect: the delegated chat holds the parent and its four subtasks and is working
     - name: Wait for the agent to publish the plugin
       do: Watch the subtasks tick off.
@@ -224,11 +246,11 @@ test QA-3: Read a project's tasks as details
 test QA-4: Plan a project and hand its tasks to an agent
   desc: |
     The demo path — create a project from the Default template, brief its agent, break the work into tasks, fill
-    one in, and select tasks for the agent. Walked by the autocue flow
+    one in, assign one from its row, let a coding session take one, and select tasks for the agent. Walked by the autocue flow
     `packages/plugins/plugin-projects/autocue/plan-a-project.mjs`; it stops short of delegating, so no model is
     needed.
   actors: human
-  status: passing            # 2026-10-09, recorded by autocue/plan-a-project.mjs
+  status: passing            # 2026-11-02, recorded by autocue/plan-a-project.mjs
   given:
     - an identity exists, on a fresh profile
     - space: the default space is open on its Home
@@ -243,16 +265,42 @@ test QA-4: Plan a project and hand its tasks to an agent
       expect: both fields keep what was typed
     - name: Break the work into tasks
       do: Open the Tasks tab and add "Service both roasters", "Order green beans" and "Hire a roastery assistant"
-        from the Add task row, pressing Enter after each.
-      expect: the three tasks list in the order added
+        from the Add task row, pressing Enter after each. Before adding the last, set its priority to Low from the
+        row's Priority pill.
+      expect: |
+        the three tasks list in the order added. Each row shows its priority beside its status, ahead of the title,
+        and ends in an assignee placeholder; "Hire a roastery assistant" shows Low, and the Priority pill reads unset
+        again once it is added
     - name: Fill in a task
       do: Click "Service both roasters", type a description, set its priority to High and its status to Started.
       expect: |
         the task opens in a "Task" tab beside the project, and its Activity records the priority and status
-        changes
+        changes. Its row in the list shows the title only, not the description
+    - name: Assign a task from its row
+      do: Point at "Order green beans", click the assignee placeholder at the end of its row, and pick yourself.
+      expect: |
+        the picker lists the people, then a separator and the agents. The row shows your avatar in place of the
+        placeholder, and the task does not open
+    - name: A coding session takes a task
+      do: |
+        From a coding session connected over MCP, claim "Hire a roastery assistant" with `tasks-update`, passing
+        status Started, `remoteSession` with the session's id, and the person `whoami` names as `assignee`.
+      invoke: |
+        org.dxos.operation.tasks.update {
+          task: <"Hire a roastery assistant">, status: "started",
+          assignee: { identityDid: $whoami.identityDid, name: $whoami.displayName },
+          remoteSession: { sessionId: "qa-4", title: "Hire a roastery assistant" }
+        }
+      expect: |
+        the row shows you as its assignee with the agent badge on your avatar, and its status is Started. Opening the
+        task shows one Assignee row naming you, delegated to Claude Code: the agent, not the session's title
+      note: Without `assignee` the claim is refused, since no person would answer for the task.
     - name: Select tasks for the agent
-      do: Tick "Order green beans" and "Hire a roastery assistant", then point at "Assign selected tasks to agent".
-      expect: the two rows are selected and the button is enabled
+      do: |
+        Tick "Order green beans", then tick "Hire a roastery assistant", then point at "Delegate selected tasks to
+        agent".
+      expect: |
+        every row shows its checkbox, beside its mnemonic button. The two rows are selected and the button is enabled
       note: Clicking it starts a delegated chat that needs a model; QA-1 and QA-2 walk that path.
 ```
 
@@ -1202,4 +1250,704 @@ decision D-104: The `SpecView`, `Level` and `LevelOverview` surface roles are ro
   for: user:wittjosiah
   affects: [F-4.6, F-4.8]
   why: Role tokens live in `ProjectSurface`, apart from the view state in `ProjectView`, and a plugin declares the roles it renders by token rather than by string.
+```
+
+```mdl
+decision D-105: A task's assignee is the person who answers for it, and a separate delegate is the agent doing the work, as in Linear. Handing tasks to an agent sets the delegate and leaves the assignee.
+  date: 2026-11-02
+  by: user:wittjosiah
+  affects: [F-4.7, QA-1, QA-2, QA-4]
+```
+
+```mdl
+decision D-106: A coding session that picks up a task over MCP makes the person it works for the assignee and itself the delegate, and the project skill says so.
+  date: 2026-11-02
+  by: user:wittjosiah
+  affects: [QA-4]
+```
+
+```mdl
+decision D-107: The task row takes Linear as its model: priority beside status, an assignee control on every row, the estimate only when set, and selection checkboxes that show on hover.
+  date: 2026-11-02
+  by: user:wittjosiah
+  affects: [QA-4]
+```
+
+```mdl
+decision D-108: A session's claim names the person from `whoami` as `assignee`, and `tasks-update` refuses a claim that would leave no person as the task's assignee. Fills in [D-106].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-4]
+  why: The operation cannot read the identity an MCP grant was issued to, so the session has to say whom it works for.
+  rejected:
+    - Leaving the assignee empty and the session as delegate, which leaves nobody to review the work.
+```
+
+```mdl
+decision D-109: QA-4 assigns a task from its row's placeholder, has a coding session claim a task through `tasks-update`, and checks that selection checkboxes show on hover until one is ticked. "Assign to agent" is "Delegate to agent" throughout. Fills in [D-105] to [D-107].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-4.7, QA-1, QA-2, QA-4]
+  why: QA-4 walks a project's task list without a model, and both the row's assignee control and a session's claim work without one.
+```
+
+```mdl
+decision D-110: A task's assignee and its delegate are one picker, in the task row and in the task's properties: the people, then a separator and the agents. Picking an agent delegates the task to it and makes you the assignee.
+  date: 2026-11-02
+  by: user:wittjosiah
+  affects: [QA-4]
+```
+
+```mdl
+decision D-111: Picking a person in the assignee picker takes the task back from any agent, and No assignee clears both. An agent is listed by its name, with Default agent for the reader's default, and the task row's menu no longer offers delegation. Fills in [D-110].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-4]
+  why: The picker holds one answer to who has the task, so a person picked over an agent replaces it rather than sharing the task with it.
+  rejected:
+    - Keeping the delegate when a person is picked, which leaves an agent at work for someone who did not hand it the task.
+```
+
+```mdl
+decision D-112: QA-4 sets the last new task's priority from the Add task row's Priority pill before adding it, and expects the pill to read unset once the task is added.
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-4]
+  why: The Add task row's properties are pills on a schema form now, and no other step sets a property before the task exists.
+```
+
+```mdl
+decision D-113: A task delegated to an agent names the agent ("delegated to Claude"), not the title of the session or run doing the work.
+  date: 2026-11-02
+  by: user:wittjosiah
+  affects: [QA-4]
+```
+
+```mdl
+decision D-114: Rows in a task list do not show task descriptions; a description shows only in the task's detail view, as in Linear, so the list stays compact and easy to scan.
+  date: 2026-11-02
+  by: user:wittjosiah
+  affects: [QA-4]
+```
+
+```mdl
+decision D-115: The Add task row is one form to create a task: the title and description are fields of the same form as the task's other properties.
+  date: 2026-11-02
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-116: An agent is named by its harness's name, which for a coding session is "Claude Code". Fills in [D-113].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-4]
+  why: A session records the harness it runs in, not the model, and the model can change within a session.
+  rejected:
+    - The model's name, which a session does not record.
+```
+
+```mdl
+decision D-117: Show task descriptions stays a setting, off by default, for a reader who wants descriptions in rows. Fills in [D-114].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: A reader who turned the setting on keeps the rows they chose; everyone else gets title-only rows.
+  rejected:
+    - Removing the setting, which would take descriptions away from a reader who asked for them.
+```
+
+```mdl
+decision D-118: QA-4 expects the delegate to read "Claude Code", and a task given a description to keep a title-only row. Fills in [D-113], [D-114] and [D-116].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-4]
+  why: Fill in a task is the one step that gives a task a description, and A coding session takes a task the one that delegates.
+```
+
+```mdl
+decision D-119: Tasks stored with an agent as their assignee are left as they are. They are not migrated; each changes when a person reassigns it.
+  date: 2026-11-02
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-120: When an agent hands a task back and finishes it, the task goes to review, not done.
+  date: 2026-11-02
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-121: A task assigned to an agent with a person among its reviewers reads as the agent's own task, and its finish waits on that reviewer. Fills in [D-119].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: Such a task is valid as stored, and the review gate already holds its finish for the named reviewer.
+  rejected:
+    - Reading it as a delegation from the reviewer, which guessed at intent and changed how a task read after a write.
+```
+
+```mdl
+decision D-122: Picking an agent for a task a person already answers for keeps that person as the assignee; you become the assignee only of a task no person answers for. Fills in [D-110].
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-4]
+  why: Replacing the assignee would take the task away from whoever answers for it just because someone else started the agent.
+  rejected:
+    - Always making the person who picks the agent the assignee.
+```
+
+```mdl
+decision D-123: An agent that finishes a task marks it for review, not done.
+  date: 2026-11-03
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-124: A task has no reviewers. The assignee reviews the work when a delegate finishes it. A task can also be set to review while it waits on review outside the app.
+  date: 2026-11-03
+  by: user:wittjosiah
+  supersedes: D-121
+```
+
+```mdl
+decision D-125: Any finish without a person's sign-off lands in review when a person answers for the task, before or after the edit; only an agent's own task closes on its done. Fills in [D-123] and [D-124].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: A write cannot tell an agent from a person, and a person's own done already signs off through AcceptTask. Gating on the delegate alone let an agent clear it and then finish.
+  rejected:
+    - Sending every agent finish to review, which would leave an agent's own checklist items unable to close.
+```
+
+```mdl
+decision D-126: A task created already finished goes to review only when it is created delegated. Fills in [D-125].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: The create form lets a person pick Done for their own task, and creating a task cannot tell who is asking.
+```
+
+```mdl
+decision D-127: A task created already finished goes to review whenever a person answers for it, as an edit does. The create form signs off a person's own Done through AcceptTask. Fills in [D-125].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-126
+  why: Relaxing the create operation let an agent create a person's task already done; the form, not the operation, knows a person is asking.
+```
+
+```mdl
+decision D-128: A sub-task filed under a delegated task, naming no assignee or delegate of its own, joins the parent's delegation: it takes the parent's assignee and delegate. Fills in [D-125].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: A delegated tree is one unit of work; a sub-task the agent files while working it would otherwise close on the agent's done with no sign-off.
+```
+
+```mdl
+decision D-129: A task in review satisfies the tasks that depend on it, so dependents start while the person who answers for it has not yet signed off.
+  date: 2026-11-03
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-130: A sub-task filed under a delegated task, naming no assignee or delegate of its own, takes the parent's person assignee and no delegate. Fills in [D-125].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-128
+  why: The person who answers for the tree is what makes the sub-task's finish wait on sign-off. Copying the delegate wrote half a claim: a chat delegate's checklist never listed the task, and a finished parent's session got new work.
+  rejected:
+    - Running the claim cascade at creation, which would also have to add the task to a chat's checklist and decide whether a finished parent's claim is still live.
+```
+
+```mdl
+decision D-131: A sub-task filed under a delegated task with no assignee of its own takes the parent's person assignee, whether or not it names a delegate; the owner check then runs on that result. Fills in [D-130].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: A session filing a step it holds was refused for want of an assignee its parent already had, and the retry named whoever `whoami` returned, splitting the tree between two people.
+```
+
+```mdl
+decision D-132: A coding session's claim (`tasks-update` with `remoteSession`) names its person only on a task nobody answers for yet. On a task with a person assignee, a different person is ignored; clearing the assignee or naming an agent is refused. Fills in [D-124].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: A session passes the person it works for on every claim, so a claim on someone else's task reassigned it and sent its finish to the wrong reviewer.
+```
+
+```mdl
+decision D-133: A delegate must be an agent (`role: assistant`). Naming the task's own assignee as delegate stays allowed, since that hands the task back. Fills in [D-124].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: A person stored as delegate drew an agent badge on a task no agent works, and the supervisor and review gate read the field as an agent.
+```
+
+```mdl
+decision D-134: A session's check-in lists only its unfinished tasks: a task in review waits on its person, not on the session. Fills in [D-123].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: Every finish a person answers for lands in review, so the reminder of open work listed finished tasks until someone signed them off.
+```
+
+```mdl
+decision D-135: Any agent claim, a coding session's or an edit naming an agent as delegate, names its person only on a task nobody answers for yet; a session's delegate is always stored as an agent. Supersedes [D-132] and fills in [D-133].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-132
+  why: Keyed on `remoteSession` alone, the rule missed the skill's other documented claim (naming the session as delegate), and a caller's role overrode the session's.
+```
+
+```mdl
+decision D-136: A request for a sub-agent is exactly `{ role: 'assistant' }`, one predicate (`Task.isSubAgentRequest`) read by the supervisor and the planning tool's unassign. An agent named by a session, identity or contact is a concrete delegate. Fills in [D-125].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: Three readings disagreed, and the widest let a conversation's unassign release another agent's claim.
+```
+
+```mdl
+decision D-137: A sub-task filed with a delegate under any parent a person answers for takes that person as assignee when it names none. Fills in [D-131].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: Under D-130 the step below a delegated task is owned but not delegated, so a session filing a held step one level further down was refused again.
+```
+
+```mdl
+decision D-138: A session's check-in drops a task in review only when a person answers for it; the session's own task held in review stays listed, since nobody else will close it. Supersedes [D-134].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-134
+```
+
+```mdl
+decision D-139: An agent claim on a step nobody answers for takes the person who answers for its tree's root, before the person the claim names; the claim cascade then carries that person to the tree. Fills in [D-135].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: Asked of the claimed step alone, the rule kept the session's person on an unowned step of someone else's tree, so one unit of work answered to two people.
+```
+
+```mdl
+decision D-140: A step answers to its own person, else the nearest person up its tree. One `Task` helper owns that rule, and creating a task, an agent's claim, the claim cascade and a session's question each store its result on the step.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [Task]
+```
+
+```mdl
+decision D-141: A sub-task filed with no assignee takes the person its parent answers to (`Task.answerer`), whether or not the tree is delegated; one filed with a delegate takes that person over one the caller names. Fills in [D-140].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-137
+  why: Asked only under a delegated parent, a step two levels down had no person and closed without review.
+```
+
+```mdl
+decision D-142: An agent claim takes the person the claimed step answers to, so an owned middle step wins over an unowned root; the claim cascade gives each member with no person the nearest one up its own tree, and the claim's person only where there is none. Fills in [D-140].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-139
+  why: Asked of the root, a claim under an owned middle step fell through to the session's person and wrote them over the whole tree.
+```
+
+```mdl
+decision D-143: A session's question (`AskQuestion` with `remoteSession`) is a claim: the task takes the person it answers to and the session holds its tree. On a task no person answers for it is refused before anything is filed. Fills in [D-140].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: The question path delegated the task with no person behind it, so its finish closed unreviewed and the rest of the tree stayed unclaimed.
+  rejected:
+    - Filing the question without delegating, which leaves the session's check-in blind to the task it is blocked on.
+```
+
+```mdl
+decision D-144: An agent claim on a task a person answers for keeps that person and ignores a different person the edit names, for a direct delegate edit as for a session; the operation description says so, and a reassignment goes in its own edit. Fills in [D-142].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: A session also claims by naming itself as delegate and passes `whoami` every time, so the edit cannot tell a deliberate reassignment from that habit.
+  rejected:
+    - Refusing the edit when the named person differs, which fails every session working someone else's task.
+```
+
+```mdl
+decision D-145: An agent claim writes the person only on a step with no person of its own; a step that has one is left unwritten. A claim that also re-parents the step takes the person of the tree it moves into. Fills in [D-142].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: Writing the same person back on every claim raced a person's reassignment made on another replica, and a re-parenting claim read the old tree while its cascade wrote the new one.
+```
+
+```mdl
+decision D-146: Delegating a task to a chat (`DelegateTaskToChat`) and the planning tool's claim each give a step with no assignee the nearest person up its tree; the delegating person fills in only where the tree has nobody. Fills in [D-140].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: Both still read the step alone, so the delegating person, or nobody, answered for a step of someone else's tree, and the agent's finish skipped review.
+  rejected:
+    - Making `DelegateTaskToChat` claim the whole tree as `UpdateTask` does; a person delegates the tasks they chose.
+```
+
+```mdl
+decision D-147: The planning tool's claim gives the nearest person up the tree to a step another agent was left holding, as every other claim does; only a task the conversation made for itself is left as it is. Fills in [D-146].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: Keyed on any assignee, the planning tool left a legacy agent-held step unowned where `UpdateTask`, `AskQuestion` and `DelegateTaskToChat` gave it the tree's person.
+```
+
+```mdl
+decision D-148: Who a step answers to is `Task.owner`, with no second helper: a step with no person of its own takes its parent's `Task.owner`, which the stored rule has already written there.
+  date: 2026-11-03
+  by: user:wittjosiah
+  supersedes: D-140
+  affects: [Task]
+```
+
+```mdl
+decision D-149: Where [D-141], [D-142], [D-146] and [D-147] give a step the nearest person up its tree, each now gives it its parent's person. The claim cascade still runs root first, so a member reads a parent it has just written; a member whose parent has no person takes the claim's person. Fills in [D-148].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [Task]
+  why: Every writer stores the person on each step it touches, so one level up already holds the answer a walk would find.
+  rejected:
+    - Keeping a walk inside `Task.owner`, which makes every read inherit and leaves the stored person optional.
+```
+
+```mdl
+decision D-150: Selection checkboxes show on every row at all times, beside the mnemonic button, in place of the hover-only checkboxes of [D-107]. The caret and the indent guides stay ahead of them.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [QA-4]
+  supersedes: D-107
+```
+
+```mdl
+decision D-151: QA-1 expects the agent to leave its five tasks in `review`, as QA-2 does, since the delegating person answers for each of them. Fills in [D-123] and [D-125].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-1]
+```
+
+```mdl
+decision D-152: `Task` 0.7.0 holds `delegate` in place of `reviewers`. The migration from 0.6.0 makes the reviewer of a task assigned to an agent its assignee, and the agent its delegate. Fills in [D-124].
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [Task]
+  supersedes: D-119
+```
+
+```mdl
+decision D-153: The migration takes the first person among a task's reviewers, drops the reviewers of a task a person is assigned, and takes a 0.5.0 task straight to 0.7.0 with the same conversion. It runs before the 0.5.0 pass, so that pass finds every migrated task at 0.7.0. Fills in [D-152].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [Task]
+  why: The assignee of a delegated task signs it off ([D-124]), so a second person reviewing a person's own task has no field to go to.
+  rejected:
+    - Chaining 0.5.0 through a frozen 0.6.0 type, which would make the hierarchy and set passes check for two task versions.
+
+decision D-154: A project's two repository fields, `repo` and `repositories`, become one list of repositories.
+  date: 2026-11-03
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-155: The project's repositories are the `Repo.RepositoriesAnnotation` on it, an ordered list of repository refs defined beside `Repo`, and `Project` 0.8.0 has no repository field. The first repository takes over `repo`'s role: bare issue numbers resolve against it, and a cloud coding agent starts in it. plugin-claude renders the list in the project's settings. Fills in [D-154] and [D-45].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: This plugin is on by default and must migrate every project, so it writes the annotation and has to import it. plugin-github and plugin-claude are not on by default, and either one importing the other's annotation would make one depend on the other.
+  rejected:
+    - The annotation in plugin-github, which syncs repositories and resolves issue numbers. A space without plugin-github would keep its projects at 0.7.0, and plugin-claude would depend on plugin-github to check repositories out.
+    - The annotation in plugin-claude, which checks repositories out. plugin-github would depend on plugin-claude to resolve an issue number.
+    - Keeping one `repositories` field on `Project`, which leaves a coding concept in the type every project has.
+```
+
+```mdl
+decision D-156: `Project` drops `session`, so delegating a task no longer seeds the chat's session config from its project. Fills in [D-154].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: Nothing in the app wrote the field, and delegating a task was its only reader.
+  rejected:
+    - An annotation plugin-assistant owns for a per-project session default. It waits until a person wants that default and decides where it is edited.
+```
+
+```mdl
+decision D-157: The `Project` 0.7.0 migration moves `repo` and then `repositories` into the annotation, each repository once, and drops `session`. It runs after the 0.6.0 migration, and plugin-code lists both in that order before its spec migrations. Fills in [D-103] and [D-155].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: `repo` was the repository a project named first, and plugin-code's spec migrations recognize a spec's owner only as a current `Project`.
+```
+
+```mdl
+decision D-158: The project overview puts the most-used parts first: the name and description, then Notes, Artifacts, Milestones and Specs, then a Config section at the bottom. Artifacts stays a masonry but shows a limited number, with Show all once there are more; Show all should open a companion that lists every artifact, which is a to-do.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.2, F-5.3]
+```
+
+```mdl
+decision D-159: Config is a section like Milestones and Specs. Agent and Software are groups within it, each folded by default, and another plugin contributes Software, since the repositories come from an annotation.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.5]
+```
+
+```mdl
+decision D-160: A plugin contributes a group as schema and data only, with no UI of its own: the form's existing fields render it.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.6]
+```
+
+```mdl
+decision D-161: The project's name and description are edited in place, not behind an edit button.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.1]
+```
+
+```mdl
+decision D-162: A group is a `ProjectCapabilities.ConfigGroup` (id, label, order, fields), and each field a key, a schema and a function from the project to a writable atom, with an optional `enabled` atom. The overview renders a group's fields as one nested form over a struct of their schemas and writes an edit through the field's atom; contributions with one id merge, and the project's own group is `agent`. This replaces the `ProjectSurface.Settings` surface. Fills in [D-159] and [D-160].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.5, F-5.6]
+  why: A writable atom hides where a value lives, so an annotation on the project and state kept on one device are the same kind of field, and the form needs no knowledge of either.
+  rejected:
+    - A surface per group, which needs the contributor's own UI and lets only one plugin fill a group.
+    - A capability declaring the group and surfaces filling it, which still needs the contributor's own UI.
+    - Fields that name an annotation, which cannot hold a value kept on one device, such as a code folder.
+```
+
+```mdl
+decision D-163: The status sits beside the name in a four-column row, and neither shows a label. react-ui-form's field override gains `appearance`: `title` renders a text field in react-ui's new `title` input variant, and `plain` drops the input's well, as the description does. The Specs list heads its own section, and its list keeps "Specs" as its accessible name. Fills in [D-161].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.1]
+  why: The override says how one use of a field reads, which the schema cannot, and react-ui-form takes no classes of its own.
+```
+
+```mdl
+decision D-164: The overview shows six artifacts, and Show all shows the rest in place until the companion exists. Fills in [D-158].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.3]
+  why: Six fills two rows of the masonry at a plank's usual width.
+```
+
+```mdl
+decision D-165: A folded group's summary counts each list, quotes each text and skips what is empty. Fills in [D-159].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.5]
+  why: The counts are what tell a reader whether a group is worth opening.
+```
+
+```mdl
+decision D-166: A milestone's progress counts the tasks of the level the overview shows, not every task in the project. Fills in [D-158].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.4]
+  why: The overview already narrows to its level, and its Tasks tab lists the same tasks.
+```
+
+```mdl
+decision D-167: The project's status is shown as a pill in the top right corner of the overview, using the form's pill presentation.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.1]
+```
+
+```mdl
+decision D-168: The project's name and description line up with the headings of the overview's sections (Notes, Artifacts, Specs).
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.1]
+```
+
+```mdl
+decision D-169: The status pill is required, so it offers no "None", and it sits at the end of the name's row. Supersedes the four-column row of [D-163]. Fills in [D-167].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.1]
+  why: A project always has a status, and the name takes the rest of the row so a long name never pushes the pill.
+```
+
+```mdl
+decision D-170: react-ui's Input and Textarea gain a `plain` variant with no well and no inline inset, and `title` drops the inset too; the form's `plain` and `title` appearances use them. Fills in [D-168].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.1]
+  why: The inset was what pushed the text right of the headings, and react-ui-form takes no classes of its own.
+  rejected:
+    - Insetting the section headings to match, which would misalign them with every other form.
+```
+
+```mdl
+decision D-171: Each project status has a colour, and its name is capitalized wherever the UI shows it.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.1]
+```
+
+```mdl
+decision D-172: The gap between two of the overview's sections is wide enough that Artifacts, Milestones, Specs and Config never read as cramped together.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.2]
+```
+
+```mdl
+decision D-173: The Specs add button sits on the Specs heading's row, so no gap opens between the heading and the specs, and the specs line up with the Config groups at the same level of nesting.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.7]
+```
+
+```mdl
+decision D-174: The overview keeps one consistent edge down its left side and its right side.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.2]
+```
+
+```mdl
+decision D-175: `Project`'s schema annotates its status with an option table, as `Task` does: Active in green, Paused in amber, Blocked in rose and Ended in neutral, each with an icon. The form's pill takes the title, icon and hue from it. Fills in [D-171].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.1]
+  why: The form already reads option titles and hues from the schema, so every picker and pill of the status agrees with no code in the plugin.
+  rejected:
+    - Translations for the names, which the form's select does not read, and which would leave the colours in plugin code.
+```
+
+```mdl
+decision D-176: A form section after another leaves three gaps above its heading, where rows inside a section leave one. A description edited in place is as tall as its text rather than three lines. Fills in [D-172].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.2]
+  why: The rule lives on the section heading, so every form with sections gets the same rhythm without spacing of its own.
+```
+
+```mdl
+decision D-177: react-ui-form's field override takes `appearance: 'section'` for an array, which renders the array as a section of its own with its label as the heading and its add button in the heading's actions. A form's array rows drop the list row's leading inset, so a row's fields start on the section's edge. Fills in [D-173] and [D-174].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.7]
+  why: Wrapping the list in another section left the list's own header row, add button and all, under the section's heading.
+  rejected:
+    - The add button in a section's actions, written by the plugin, which would duplicate how the form creates an owned object.
+```
+
+```mdl
+decision D-178: The overview's Notes section shows no description; once the notes have content it only takes up space.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.2]
+```
+
+```mdl
+decision D-179: Opening a milestone from the overview shows the Tasks tab filtered to that milestone's tasks.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.4]
+```
+
+```mdl
+decision D-180: A milestone row ends in an open button, on the right edge where a spec row's buttons sit, and the filter is the task list's own milestone filter (its per-device view state), which keeps a task by its effective milestone and keeps the ancestors of a match. Fills in [D-179].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.4]
+  why: A button on the row's right edge keeps the name on the headings' left edge, and react-ui exports no in-app link. The effective milestone is the one the row's progress counts, so the filtered list holds the tasks the count names. A filter the task list owns can be changed or cleared from its own toolbar.
+  rejected:
+    - The whole row as a ghost button, whose inset moves the row off the headings' left edge.
+    - A `milestone:` term in the list's query, since a query value cannot name a milestone by reference and a milestone's name can hold spaces.
+    - Grouping the list by milestone, which shows every milestone rather than the one opened.
+```
+
+```mdl
+decision D-181: A config field may carry an action: a label, an icon and a function from the field's value to its new value. The form renders it as a button at the end of the field's text control and writes the value it returns, so a plugin keeps a picker, such as plugin-claude's folder picker, without UI of its own. Fills in [D-160].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.6]
+  why: An action is data the form renders, so [D-160] holds. The function returns a value and leaves the write to the form, so the field's atom stays the one write path.
+  rejected:
+    - A custom field component from the plugin, which [D-160] rules out.
+    - A function that writes the atom itself, which gives the field a second write path.
+```
+
+```mdl
+decision D-182: A config field has an `order`, and a group's fields sort by it, those with equal orders keeping contribution order. Fills in [D-159].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.6]
+  why: Contribution order follows plugin load order, which would put plugin-claude's code folder above plugin-code's repositories in Software.
+```
+
+```mdl
+decision D-183: react-ui-form's field `appearance` folds into its presentation. `title`, `plain` and `section` are presentations, a field override takes a `presentation` of its own in place of the form's layout, and `title` and `plain` hide the field's label, so the overview's name and description no longer hide theirs separately. Replaces the `appearance` of [D-163], [D-170] and [D-177].
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.1]
+```
+
+```mdl
+decision D-184: An override's presentation applies to its field alone, so an object's or an array's nested fields keep the form's layout. `section` on a field other than an array shows it as `compact`. Fills in [D-183].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.1]
+  why: An array shown as a section holds rows that are ordinary fields, and a section has no meaning for a scalar, whose label and control `compact` already show.
+```
+
+```mdl
+decision D-185: plugin-code, not plugin-claude, renders a project's repositories, in the overview's Software group, and plugin-claude adds only the code folder there. Replaces the plugin-claude rendering of [D-155].
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [F-5.6]
+```
+
+```mdl
+decision D-186: `Project.status` stays optional, so a project made without one, or migrated without one, shows an empty pill until a status is picked. The pill offers no "None", so a status once picked is never cleared. Corrects the rationale of [D-169].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-5.1]
+  why: A default status would need a schema change and a migration for every existing project, and an empty pill already reads as unset.
+  rejected:
+    - Defaulting `status` to `active` in `Project.make` and the migration, which writes a status to every project nobody chose one for.
 ```

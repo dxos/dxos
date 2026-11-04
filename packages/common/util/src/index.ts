@@ -41,6 +41,7 @@ export * from './order-keys.ts';
 export * from './order.ts';
 export * from './pick.ts';
 export * from './platform.ts';
+export * from './print.ts';
 export * as Position from './Position.ts';
 export * from './random.ts';
 export * from './range.ts';

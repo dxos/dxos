@@ -119,11 +119,15 @@ type SelectTriggerProps = ThemedClassName<Omit<SelectPrimitive.TriggerProps, 'ch
    * in the value's cell, which CSS sizes without measuring.
    */
   fixed?: boolean;
+  /** An outlined, fully rounded trigger that hugs its value and drops the caret (a row of field values). */
+  pill?: boolean;
+  /** Shown where the chosen option has no icon, or nothing is chosen: the field's own glyph. */
+  icon?: string;
 };
 
 /** Shows the chosen option (its icon when exactly one is chosen; `multiple` lists the labels) and a caret. */
 const SelectTrigger = forwardRef<HTMLButtonElement, SelectTriggerProps>(
-  ({ classNames, placeholder, loading, fixed, ...props }, forwardedRef) => {
+  ({ classNames, placeholder, loading, fixed, pill, icon, ...props }, forwardedRef) => {
     const toolbarItem = useToolbarItem(props.disabled);
     const { selectedItems, collection } = useSelectContext();
     const selected = selectedItems.length === 1 ? selectedItems[0] : undefined;
@@ -137,10 +141,11 @@ const SelectTrigger = forwardRef<HTMLButtonElement, SelectTriggerProps>(
           toolbarItem?.onFocus();
         }}
         data-fixed={fixed || undefined}
+        data-pill={pill || undefined}
         className={mx(recipes.selectTrigger(), classNames)}
         ref={forwardedRef}
       >
-        {selected?.icon && <Icon.Icon icon={selected.icon} hue={selected.iconHue} />}
+        {selected?.icon ? <Icon.Icon icon={selected.icon} hue={selected.iconHue} /> : icon && <Icon.Icon icon={icon} />}
         <SelectPrimitive.ValueText placeholder={placeholder} />
         {fixed && (
           <span aria-hidden data-scope='select' data-part='value-sizer' className={recipes.selectValueSizer()}>

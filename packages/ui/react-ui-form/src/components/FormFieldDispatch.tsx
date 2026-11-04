@@ -8,7 +8,7 @@ import * as String from 'effect/String';
 import React, { type ReactNode, useMemo } from 'react';
 
 import { Annotation, Format } from '@dxos/echo';
-import { type AnyProperties } from '@dxos/echo/internal';
+import { type AnyProperties, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -35,6 +35,7 @@ import {
   RefArrayField,
   RefField,
   SelectField,
+  type SelectFieldOption,
   TextAreaField,
   TextField,
   VectorField,
@@ -86,7 +87,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     name,
     label: labelProp,
     path,
-    required,
+    required: requiredProp,
     projection,
     fieldMap,
     fieldProvider,
@@ -113,14 +114,16 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
   const title = SchemaEx.getAnnotation<string>(SchemaAST.TitleAnnotationId)(type);
   const description = override?.description ?? SchemaEx.getAnnotation<string>(SchemaAST.DescriptionAnnotationId)(type);
   const examples = SchemaEx.getAnnotation<string[]>(SchemaAST.ExamplesAnnotationId)(type);
-  const label = useMemo(
-    () =>
-      override?.hideLabel
-        ? ''
-        : (override?.label ?? labelProp ?? title ?? (name == null ? '' : String.capitalize(name))),
-    [override?.hideLabel, override?.label, labelProp, title, name],
+  // The field's name even when its label is hidden, for a control that still needs one (a list's accessible name).
+  const accessibleLabel = useMemo(
+    () => override?.label ?? labelProp ?? title ?? (name == null ? '' : String.capitalize(name)),
+    [override?.label, labelProp, title, name],
   );
+  const label = override?.hideLabel ? '' : accessibleLabel;
   const readonly = override?.readonly ?? readonlyProp;
+  // The override's presentation applies to this field alone; nested fields keep the form's layout.
+  const presentation = override?.presentation ?? layout;
+  const required = override?.required ?? requiredProp;
   // A settings row shows its description beside the control, so the description never doubles as the placeholder.
   const placeholder = useMemo(
     () =>
@@ -146,7 +149,9 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     placeholder: indeterminate
       ? (override?.placeholder ?? t('indeterminate.placeholder'))
       : (override?.placeholder ?? placeholder),
-    presentation: layout,
+    icon: override?.icon,
+    presentation,
+    action: override?.action,
     required,
     indeterminate,
     min: override?.min,
@@ -156,7 +161,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     ...fieldState,
   };
 
-  if (override?.hidden || ((readonly || layout === 'static') && hideEmpty && fieldState.getValue() == null)) {
+  if (override?.hidden || ((readonly || presentation === 'static') && hideEmpty && fieldState.getValue() == null)) {
     return null;
   }
 
@@ -191,7 +196,16 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
   const refArray =
     refProps?.isArray && Option.isNone(Annotation.FormCreateAnnotation.getFromAst(type)) ? refProps : undefined;
   if (resolution.kind === 'array' && !refArray) {
-    return <ArrayField fieldProps={fieldState} label={label} {...props} />;
+    return (
+      <ArrayField
+        fieldProps={fieldState}
+        label={accessibleLabel}
+        hideLabel={override?.hideLabel}
+        section={presentation === 'section'}
+        {...props}
+        readonly={readonly || presentation === 'static'}
+      />
+    );
   }
   const refArrayField = refArray && (
     <RefArrayField
@@ -257,7 +271,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     indeterminate,
     required: fieldProps.required,
     readonly,
-    presentation: layout,
+    presentation,
   };
   const scalar = resolution.kind === 'scalar' ? scalarField(resolution.scalar) : undefined;
   return (
@@ -268,7 +282,9 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
       binding={binding}
       standalone={refArray ? true : scalar?.standalone}
       labelPlacement={scalar?.labelPlacement}
-      renderStatic={resolution.kind === 'select' ? renderSelectStatic(resolution.options, projection, name) : undefined}
+      renderStatic={
+        resolution.kind === 'select' ? renderSelectStatic(resolution.options, projection, name, type) : undefined
+      }
     >
       {control}
     </FormFieldRow>
@@ -288,7 +304,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
         return ScalarField ? <ScalarField {...fieldProps} /> : undefined;
       }
       case 'select':
-        return <SelectField {...fieldProps} options={selectOptions(resolution.options, projection, name)} />;
+        return <SelectField {...fieldProps} options={selectOptions(resolution.options, projection, name, type)} />;
       case 'lookup':
         return resolution.combobox ? (
           <ComboboxField {...fieldProps} lookup={resolution.lookup} />
@@ -323,23 +339,39 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
 
 FormFieldDispatch.displayName = 'Form.FieldDispatch';
 
-/** The literal options, labelled by the projection's option titles where it has them. */
+type SingleSelectOption = { id: string; title?: string; color?: string; icon?: string };
+
 const selectOptions = (
   options: Format.Options[],
   projection: FormFieldDispatchProps['projection'],
   name: string | null,
-) => {
+  type: SchemaAST.AST,
+): SelectFieldOption[] => {
   const titles = projection?.getFieldProjections().find((candidate) => candidate.field.path === name)?.props.options;
-  return options.map((option) => ({
-    value: option,
-    label: titles?.find((candidate) => candidate.id === globalThis.String(option))?.title ?? option.toString(),
-  }));
+  const annotated =
+    SchemaEx.getAnnotation<{ singleSelect?: { options?: SingleSelectOption[] } }>(PropertyMetaAnnotationId)(type)
+      ?.singleSelect?.options ?? [];
+  return options.map((option) => {
+    const id = globalThis.String(option);
+    const meta = annotated.find((candidate) => candidate.id === id);
+    return {
+      value: option,
+      label: titles?.find((candidate) => candidate.id === id)?.title ?? meta?.title ?? option.toString(),
+      icon: meta?.icon,
+      iconHue: meta?.color,
+    };
+  });
 };
 
 const renderSelectStatic =
-  (options: Format.Options[], projection: FormFieldDispatchProps['projection'], name: string | null) =>
+  (
+    options: Format.Options[],
+    projection: FormFieldDispatchProps['projection'],
+    name: string | null,
+    type: SchemaAST.AST,
+  ) =>
   (value: unknown) =>
-    selectOptions(options, projection, name).find((candidate) => candidate.value === value)?.label ??
+    selectOptions(options, projection, name, type).find((candidate) => candidate.value === value)?.label ??
     globalThis.String(value ?? '');
 
 //

@@ -180,6 +180,8 @@ export const translations = [
         'add-to-collection-dialog.placeholder': 'Search collections…',
         'add-to-collection-failed.title': 'Could not add to collection',
         'show-original.label': 'Show original',
+        'print-object.label': 'Print…',
+        'save-object.label': 'Save as file…',
         'create-object-in-system-collection.label': 'Add to system collection',
         'new-type.label': 'New type',
         'add-view-to-schema.label': 'Add view for type',

@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import * as CollectionOperation from '@dxos/app-toolkit/CollectionOperation';
+import * as ExportOperation from '@dxos/app-toolkit/ExportOperation';
 import * as SpaceInvitationOperation from '@dxos/app-toolkit/SpaceInvitationOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -13,6 +14,8 @@ import { SpaceOperation } from '#types';
 
 export const handlers = OperationHandlerSet.lazy([
   CollectionOperation.OpenAddToCollection.pipe(Operation.lazyHandler(() => import('./open-add-to-collection.ts'))),
+  ExportOperation.Print.pipe(Operation.lazyHandler(() => import('./print.ts'))),
+  ExportOperation.Save.pipe(Operation.lazyHandler(() => import('./save.ts'))),
   SpaceOperation.AddTag.pipe(Operation.lazyHandler(() => import('./add-tag.ts'))),
   SpaceOperation.GetObjects.pipe(Operation.lazyHandler(() => import('./get-objects.ts'))),
   SpaceOperation.QueryObjects.pipe(Operation.lazyHandler(() => import('./query-objects.ts'))),

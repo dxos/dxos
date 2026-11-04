@@ -198,7 +198,7 @@ export const steps = [
       await page.locator(taskRow(TASK)).first().waitFor({ state: 'visible', timeout: 15_000 });
       await page.waitForTimeout(BEAT);
       await demo.click({ selector: `${taskRow(TASK)} >> [data-testid="taskList.item.checkbox"]`, label: TASK });
-      await demo.click({ selector: '[data-testid="projectsPlugin.delegateTasks"]', label: 'Assign to agent' });
+      await demo.click({ selector: '[data-testid="projectsPlugin.delegateTasks"]', label: 'Delegate to agent' });
       await page.getByTestId('projectsPlugin.pipeline.chart').first().waitFor({ state: 'visible', timeout: 30_000 });
       await closeCompanion(page);
       await page.waitForTimeout(BEAT);
