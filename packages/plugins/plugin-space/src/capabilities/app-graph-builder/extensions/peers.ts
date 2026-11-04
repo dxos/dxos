@@ -4,8 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
 
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
@@ -31,10 +33,17 @@ import {
   getPeerSessionIds,
   getPresenceKeyFromPath,
   getSpacePeers,
+  isSameFollowTarget,
 } from '../../../util/presence.ts';
 
 const JUMP_LABEL: Label = ['presence-jump.label', { ns: SpaceNamespace.key }];
 const GO_TO_LABEL: Label = ['presence-go-to.label', { ns: SpaceNamespace.key }];
+const FOLLOW_LABEL: Label = ['presence-follow.label', { ns: SpaceNamespace.key }];
+
+/** The Members tab's dot while this session follows someone. */
+const followingBadge = Atom.family((ephemeralAtom: Atom.Atom<SpaceCapabilities.SpaceEphemeralState>) =>
+  Atom.make((get): true | undefined => (get(ephemeralAtom).following ? true : undefined)),
+);
 
 const isPeerNodeData = Schema.is(SpaceSchema.PeerNodeData);
 
@@ -55,8 +64,9 @@ export const createPeerExtensions = Effect.fnUntraced(function* () {
       id: 'membersCompanion',
       relation: AppNode.companion,
       match: GraphNodeMatcher.whenRoot,
-      connector: () =>
-        Effect.succeed([
+      connector: (_, get) => {
+        const [ephemeralAtom] = get(ephemeralCapAtom);
+        return Effect.succeed([
           AppNode.makeDeckCompanion({
             id: MEMBERS_COMPANION_ID,
             label: ['members-companion.label', { ns: SpaceNamespace.key }],
@@ -64,8 +74,10 @@ export const createPeerExtensions = Effect.fnUntraced(function* () {
             data: null,
             // After Notifications (-2), ahead of the unordered companions.
             position: -1,
+            ...(ephemeralAtom && { badge: followingBadge(ephemeralAtom) }),
           }),
-        ]),
+        ]);
+      },
     }),
 
     AppGraphBuilder.createExtension({
@@ -116,7 +128,7 @@ export const createPeerExtensions = Effect.fnUntraced(function* () {
       },
     }),
 
-    // Jump when the session's object is open in this deck; otherwise Go to opens it.
+    // Jump when the session's object is open in this deck, otherwise Go to; then Follow, unless already following them.
     AppGraphBuilder.createExtension({
       id: 'peerActions',
       match: matchPeerNode,
@@ -128,10 +140,31 @@ export const createPeerExtensions = Effect.fnUntraced(function* () {
           return Effect.succeed([]);
         }
 
-        const focus = getPeerFocus(get(ephemeralAtom).viewersByObject, spaceId, identityKey, Date.now(), sessionId);
+        const { viewersByObject, following } = get(ephemeralAtom);
+        const focus = getPeerFocus(viewersByObject, spaceId, identityKey, Date.now(), sessionId);
         if (!focus) {
           return Effect.succeed([]);
         }
+
+        const target = { spaceId, identityKey, ...(sessionId && { sessionId }) };
+        const follow = isSameFollowTarget(following, target)
+          ? []
+          : [
+              AppGraphNode.makeAction({
+                id: 'follow',
+                data: () =>
+                  Effect.gen(function* () {
+                    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+                    registry.update(ephemeralAtom, (state) => ({ ...state, following: target }));
+                  }),
+                properties: {
+                  label: FOLLOW_LABEL,
+                  icon: 'ph--eye--regular',
+                  disposition: 'list-item',
+                  testId: 'spacePlugin.presence.follow',
+                },
+              }),
+            ];
 
         const openPath = get(layoutAtom).active.find((path) => getPresenceKeyFromPath(path) === focus.key);
         if (openPath) {
@@ -139,8 +172,8 @@ export const createPeerExtensions = Effect.fnUntraced(function* () {
           const typename = node && Obj.isObject(node.data) ? Obj.getTypename(node.data) : undefined;
           const locator = get(capabilities.atom(AppCapabilities.Locator)).find(({ id }) => id === typename);
           const anchor = focus.location?.selection ?? focus.location?.viewport;
-          return Effect.succeed(
-            locator && anchor
+          return Effect.succeed([
+            ...(locator && anchor
               ? [
                   AppGraphNode.makeAction({
                     id: 'jump',
@@ -153,8 +186,9 @@ export const createPeerExtensions = Effect.fnUntraced(function* () {
                     },
                   }),
                 ]
-              : [],
-          );
+              : []),
+            ...follow,
+          ]);
         }
 
         return Effect.succeed([
@@ -182,6 +216,7 @@ export const createPeerExtensions = Effect.fnUntraced(function* () {
               testId: 'spacePlugin.presence.goTo',
             },
           }),
+          ...follow,
         ]);
       },
     }),

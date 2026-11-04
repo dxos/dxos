@@ -64,6 +64,15 @@ type SessionDevice
 ```
 
 ```mdl
+type FollowTarget
+  desc: The peer a session follows, or one session of theirs.
+  fields:
+    spaceId: SpaceId
+    identityKey: IdentityKeyHex
+    sessionId?: SessionId       # follow this session; otherwise the peer's most recently moved session
+```
+
+```mdl
 type PluginState
   fields:
     viewersByObject: Record<EID, Record<IdentityKeyHex, Record<SessionId, ObjectViewerProps>>>
@@ -72,6 +81,7 @@ type PluginState
     navigableCollections: boolean
     enabledEdgeReplication: boolean
     showSessions?: boolean      # presence lists show a row per session; kept per device
+    following?: FollowTarget & { paused?: boolean }  # ephemeral; paused while the leader views something this session cannot open
 ```
 
 ## Components
@@ -562,9 +572,14 @@ feat F-8: Presence and Sync Status
   req F-8.17: A presence row's avatar sits inside the row's hover and highlight. A person's row and their session rows hover and highlight together, as one block.
   req F-8.14: In a locked space the Members companion shows only a placeholder saying the space is private, since it has no other members and no members settings.
   req F-8.12: A peer with several sessions (tabs or devices) on an object shows as one row, whose actions act on the session whose anchor moved most recently. A toggle in the viewers list's header and in the Members companion's toolbar lists each peer's sessions under their row, each named by its device and with its own actions; the peer's row then carries none. A peer is never listed twice. Both lists share the toggle's state, kept per device.
-  req F-8.13: The viewing message carries the sender's session id, its device and each attended object's location; it is sent with the heartbeat and at most once per second when a location changes.
+  req F-8.13: The viewing message carries the sender's session id, its device and each attended object's location; it is sent with the heartbeat and at most once per second when a location changes, or every 100 ms while followed ([F-8.19]).
   req F-8.15: A session row's dot shows whether its anchor moved in the last minute (active) or not (idle); the row states nothing else about the session.
   req F-8.16: A session row names its device by the label someone gave it, else by what it runs ("Chrome on macOS", "Composer on iOS"); sessions on one device are numbered. A placeholder label the SDK once wrote is no label.
+  req F-8.18: A peer's node carries Follow, which follows whichever of their sessions moved most recently, switching as that changes; a session's node carries Follow for that session alone. Neither shows while it is already the followed target.
+  req F-8.19: A follower names its target in its viewing message. A session that sees itself named sends location changes at most every 100 ms to the whole space, instead of every second.
+  req F-8.20: While following, the follower opens the object the leader attends whenever it changes, and reveals the top of the leader's viewport, or their selection when they report no viewport, through the type's `Locator` without moving the follower's caret or focus. An object the follower cannot open pauses the follow until the leader attends one it can.
+  req F-8.21: A follow ends when the follower scrolls, clicks, touches or types in any object's plank, presses Escape, or attends another object; and when the leader has attended nothing in the space for five seconds, which their leaving the space, going offline or their heartbeat lapsing all amount to. The leader going idle ends nothing.
+  req F-8.22: While following, the Members companion's rail tab shows a dot, and its list starts with the leader's row, highlighted, carrying Stop (and Paused while paused) in place of their actions. Stopping returns the row to its object's group and clears the dot.
 ```
 
 ## Acceptance
@@ -771,6 +786,32 @@ test QA-4: Tell a peer's sessions apart
     - name: Jump to a session
       do: Click Jump on the first session's row.
       expect: the host's editor takes focus
+```
+
+```mdl
+test QA-5: Follow a peer around the space
+  desc: Following a peer from the Members companion opens what they open and keeps their top line in view without taking focus, marks the companion's tab, and Escape ends it.
+  actors: human
+  covers: [F-8.18, F-8.19, F-8.20, F-8.21, F-8.22]
+  status: unverified
+  automated:
+    - composer-e2e:collaboration.spec.ts#Collaboration tests › following a peer opens what they open and mirrors their scroll until Escape
+  given:
+    - host: a booted app with a space containing two documents, shared with a guest
+    - guest: a second browser profile with its own identity, a member of that space
+  steps:
+    - name: Both open the first document
+      do: Open the first document on both peers.
+      expect: the host's plank header shows the guest's avatar
+    - name: Follow the guest
+      do: On the host, open the Members companion and click Follow on the guest's row.
+      expect: the Members tab shows a dot, and the guest's row is first and highlighted, with Stop in place of its actions
+    - name: The guest opens the other document
+      do: On the guest, open the second document and type enough lines to scroll it, ending at the bottom.
+      expect: the host's deck opens the second document and scrolls it down with the guest's, while the host's caret and focus stay where they were
+    - name: Stop with Escape
+      do: On the host, press Escape.
+      expect: the dot clears, and the guest's row is back under their document with Follow among its actions
 ```
 
 ---
@@ -1179,4 +1220,91 @@ decision D-39: A person's row does not show how many sessions they have.
   date: 2026-11-04
   by: user:wittjosiah
   affects: [F-8.12]
+```
+
+```mdl
+decision D-40: Follow is one action among a peer's actions, next to Jump and Go to, and follows the peer across the whole space. While someone follows, the leader's location goes out every 100 ms, broadcast over gossip to the whole space, instead of every second. The follower names its leader in its own presence state, and a leader that sees itself named switches to the fast rate.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-8.13, F-8.18, F-8.19]
+```
+
+```mdl
+decision D-41: A follower opens the object the leader attends whenever it changes and reveals the leader's anchor through the type's `Locator`. Revealing while following must not take focus or move the follower's caret. On a canvas, follow adopts the leader's zoom.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-8.20]
+```
+
+```mdl
+decision D-42: A follow ends when the follower scrolls, types, changes selection, navigates or moves attention to another plank, or presses Escape, and when the leader goes offline, leaves the space or their location goes stale. The leader opening something the follower cannot open pauses the follow. The leader going idle ends nothing.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-8.20, F-8.21]
+```
+
+```mdl
+decision D-43: Following shows only in the Members companion. While following, its rail tab shows a dot, and the followed person's row moves to the top of its list, highlighted, with Stop in place of its actions. Stopping puts the row back and clears the dot. The dot widens the deck companion's existing badge rather than adding another.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-8.22]
+```
+
+```mdl
+decision D-44: Follow on a person's row follows whichever of their sessions moved most recently, switching as that changes, as Jump does. With the sessions toggle on, each session row has its own Follow, which stays on that session.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-8.18, FollowTarget]
+```
+
+```mdl
+decision D-45: The follower's input ends a follow when it is a pointer press, wheel, touch move or key press inside an element whose attendable id names an object, which covers its planks and their companions; a modifier key alone does not count. Escape ends it from anywhere, and attending an object other than the leader's counts as navigating. A leader whose sessions have attended nothing in the space for five seconds has left, gone offline or gone stale, which also catches their heartbeat lapsing. Fills in [D-42].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.21]
+  why: Input events read the same for every object type, so no view has to tell its own reveal scrolls apart from the user's, and a scroll the app makes fires no wheel or key event. Five seconds absorbs the gap between a leader leaving one object and attending the next.
+  rejected:
+    - End on any change to the followed view's reported viewport that the view did not tag as a reveal; every view would need to tag reveals, and the scroll events of a reveal arrive after its transaction.
+    - End the moment the leader attends nothing, which a plank switch does briefly.
+```
+
+```mdl
+decision D-46: A `Locator`'s reveal takes a `follow` flag. With it, markdown scrolls the anchor to the top of the view and leaves the selection and focus alone, and a sheet scrolls the anchor's cell to the top left without moving its focused cell. The follower reveals the top of the leader's viewport, else their selection, and for five seconds after opening an object reveals again every half second so a view that mounts late still lands. No canvas has a `Locator` yet, so adopting the leader's zoom waits for one. Fills in [D-41].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.20]
+  why: The viewport anchor shows what the leader sees, where the caret may be off screen. A flag keeps one reveal per type for comments, Jump and follow.
+  rejected: A second reveal operation per type for following.
+```
+
+```mdl
+decision D-47: The follower names `{ identityKey, sessionId? }` in its viewing messages to the leader's space only. The leader keeps its followers by space, identity and session, drops one whose message stops naming it or whose heartbeat lapses, and sends at once when a new one appears so the follower starts from a fresh location. The markdown editor reports its location every 100 ms instead of 250 ms, so the fast rate has moves to send. Fills in [D-40].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.13, F-8.19]
+  why: Naming the leader in the space it is followed in keeps other spaces' leaders at the slow rate. At 250 ms the editor would cap the fast tier at a quarter second.
+  rejected: A separate presence channel for followers.
+```
+
+```mdl
+decision D-48: Follow is left off the node that is already the followed target. The leader's row at the top of the Members companion lists no sessions even with the toggle on, and reads Paused before Stop while the follow is paused. The companion `badge` atom holds `number | true`, and `true` draws a dot with no text. Fills in [D-43] and [D-44].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.18, F-8.22, PluginState]
+  why: A Follow for the current target would do nothing. With Stop on the person's row, session rows under it would offer a second way to change the same follow.
+  rejected: Turn Follow into Stop on the followed node, which would put a second Stop in the viewers popover.
+```
+
+```mdl
+decision D-49: A person's group of rows also takes the highlight background while one of its rows is the list's selected value, which is how the viewers list marks the clicked peer and the Members companion marks the leader. Fills in [D-37] and [D-43].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.10, F-8.17, F-8.22]
+  why: The list's value sets `aria-selected` on the row, not `data-highlighted`, and the group made its rows transparent, so neither row showed as highlighted.
+  rejected: Move the keyboard highlight to the row instead, which the next arrow key would move away.
 ```

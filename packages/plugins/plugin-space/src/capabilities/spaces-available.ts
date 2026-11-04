@@ -33,12 +33,16 @@ import { SpaceCapabilities, type SpaceSchema } from '#types';
 
 import { migrateToSettingsSpace } from '../migrations/settings-space.ts';
 import {
+  FOLLOW_BROADCAST_INTERVAL,
   LOCATION_BROADCAST_INTERVAL,
   PRESENCE_BROADCAST_INTERVAL,
+  PRESENCE_EXPIRY,
   applyViewingMessage,
   getPresenceKeyFromPath,
   groupPresenceChangesBySpace,
   groupPresenceKeysBySpace,
+  isFollowTargetOf,
+  isSameFollowTarget,
   parseViewingMessage,
 } from '../util/presence.ts';
 import { catchNonInterrupt, resolveSettingsSpace, runSettingsSpaceHealing } from '../util/settings-space.ts';
@@ -242,6 +246,10 @@ export default Capability.makeModule(
       };
     };
 
+    // Sessions that follow this one, by space, identity and session, with when they last said so.
+    const followers = new Map<string, number>();
+    const isFollowed = (now: number) => [...followers.values()].some((lastSeen) => now - lastSeen < PRESENCE_EXPIRY);
+
     // Broadcast active node to other peers in the space - subscribe to both layout and attention.
     let broadcastCleanup: (() => void) | undefined;
     let previousActive: readonly string[] = [];
@@ -260,6 +268,7 @@ export default Capability.makeModule(
         const identity = Option.getOrUndefined(haloIdentity.getSnapshot());
         if (identity) {
           const device = getDevice();
+          const following = registry.get(ephemeralAtom).following;
           const attendedBySpace = groupPresenceKeysBySpace([...current]);
           const changesBySpace = groupPresenceChangesBySpace(active, inactive);
 
@@ -275,6 +284,12 @@ export default Capability.makeModule(
                 added,
                 removed,
                 locations: getLocations(attended),
+                ...(following?.spaceId === space.id && {
+                  following: {
+                    identityKey: following.identityKey,
+                    ...(following.sessionId && { sessionId: following.sessionId }),
+                  },
+                }),
               })
               // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
               .catch((err) => {
@@ -290,13 +305,16 @@ export default Capability.makeModule(
       // Send at interval to allow peers to expire entries if they become disconnected.
       const interval = setInterval(() => send(), PRESENCE_BROADCAST_INTERVAL);
 
-      // Moving or scrolling in an attended object re-sends, at most once per interval.
+      // Moving or scrolling in an attended object re-sends, at most once per interval, which is shorter while followed.
       let locationTimer: ReturnType<typeof setTimeout> | undefined;
       const scheduleSend = () => {
-        locationTimer ??= setTimeout(() => {
-          locationTimer = undefined;
-          send();
-        }, LOCATION_BROADCAST_INTERVAL);
+        locationTimer ??= setTimeout(
+          () => {
+            locationTimer = undefined;
+            send();
+          },
+          isFollowed(Date.now()) ? FOLLOW_BROADCAST_INTERVAL : LOCATION_BROADCAST_INTERVAL,
+        );
       };
       const locationSubscriptions = [...current].flatMap((path) => {
         const key = getPresenceKeyFromPath(path);
@@ -314,6 +332,16 @@ export default Capability.makeModule(
     subscriptions.add(registry.subscribe(layoutAtom, setupBroadcast));
     // Subscribe to attention.current changes.
     subscriptions.add(attention.subscribeCurrent(() => setupBroadcast()));
+    // Starting, retargeting or stopping a follow tells the space at once, so the leader's rate changes with it.
+    let previousFollowing = registry.get(ephemeralAtom).following;
+    subscriptions.add(
+      registry.subscribe(ephemeralAtom, ({ following }) => {
+        if (!isSameFollowTarget(following, previousFollowing)) {
+          previousFollowing = following;
+          setupBroadcast();
+        }
+      }),
+    );
     // Initial setup.
     setupBroadcast();
     // Cleanup.
@@ -333,6 +361,17 @@ export default Capability.makeModule(
             if (viewing && identityKey && currentIdentity?.identityKey !== identityKey.toHex()) {
               const peer = identityKey.toHex();
               const lastSeen = Date.now();
+              const follower = `${space.id}/${peer}/${viewing.sessionId ?? peer}`;
+              if (isFollowTargetOf(viewing.following, currentIdentity?.identityKey ?? '', sessionId)) {
+                // A new follower needs the location now, not at the next move or heartbeat.
+                const isNew = !followers.has(follower);
+                followers.set(follower, lastSeen);
+                if (isNew) {
+                  setupBroadcast();
+                }
+              } else {
+                followers.delete(follower);
+              }
               registry.update(ephemeralAtom, (ephemeral) => ({
                 ...ephemeral,
                 viewersByObject: applyViewingMessage(ephemeral.viewersByObject, peer, viewing, lastSeen),

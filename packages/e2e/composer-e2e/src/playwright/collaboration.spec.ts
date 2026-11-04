@@ -327,4 +327,47 @@ test.describe('Collaboration tests', () => {
       await expect(hostTextbox).toBeFocused();
     },
   );
+
+  test(
+    'following a peer opens what they open and mirrors their scroll until Escape',
+    { tag: ['@space:QA-5'] },
+    async () => {
+      test.setTimeout(150_000);
+
+      await host.createSpace();
+      await host.createObject({ type: 'Document' });
+      await host.createObject({ type: 'Document' });
+      await perfomInvitation(host, guest);
+      await guest.expandSection('spacePlugin.collectionsSection');
+      await navigateToNewDocument(guest);
+      await Markdown.getMarkdownTextboxWithLocator(guest.deck.plank().locator).focus();
+
+      const sidebar = host.page.locator('[data-scope="main"][data-part="complementary-sidebar"]');
+      const rows = sidebar.getByTestId('spacePlugin.presence.row');
+      await host.openCompanion('members');
+      await rows.getByTestId('spacePlugin.presence.follow').click({ timeout: 45_000 });
+      await expect(host.getCompanionTab('members')).toHaveAttribute('data-badge', '');
+      await expect(rows.first().getByTestId('spacePlugin.presence.stopFollowing')).toBeVisible();
+      await expect(rows.first()).toHaveAttribute('aria-selected', 'true');
+
+      // The guest opens the other document and scrolls to its end; the host's deck goes with them.
+      await guest.navigateToObject(1);
+      // The host reaches the object by its own path, so only the object id at the end of both URLs matches.
+      const objectId = guest.page.url().split(/[/+]/).at(-1);
+      await expect.poll(() => host.page.url(), { timeout: 30_000 }).toContain(`+${objectId}`);
+      const guestTextbox = Markdown.getMarkdownTextboxWithLocator(guest.deck.plank().locator);
+      await guestTextbox.focus();
+      await guestTextbox.fill(Array.from({ length: 120 }, (_, i) => `Line ${i + 1}`).join('\n'));
+      await guest.page.keyboard.press('ControlOrMeta+End');
+      const hostScroller = host.deck.plank().locator.locator('.cm-scroller');
+      await expect
+        .poll(() => hostScroller.evaluate((element) => element.scrollTop), { timeout: 30_000 })
+        .toBeGreaterThan(0);
+
+      await host.page.keyboard.press('Escape');
+      await expect(host.getCompanionTab('members')).not.toHaveAttribute('data-badge');
+      await expect(rows.getByTestId('spacePlugin.presence.stopFollowing')).toHaveCount(0);
+      await expect(rows.getByTestId('spacePlugin.presence.follow')).toHaveCount(1);
+    },
+  );
 });

@@ -37,6 +37,7 @@ export default Capability.makeModule(
       navigableCollections: false,
       viewersByObject: {},
       mergePreview: undefined,
+      following: undefined,
       lastMergeAt: undefined,
     }).pipe(Atom.keepAlive);
 

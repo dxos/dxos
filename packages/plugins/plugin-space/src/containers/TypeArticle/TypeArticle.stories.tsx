@@ -152,6 +152,7 @@ const ephemeralState = () =>
     navigableCollections: false,
     viewersByObject: {},
     mergePreview: undefined,
+    following: undefined,
     lastMergeAt: undefined,
   }).pipe(Atom.keepAlive);
 

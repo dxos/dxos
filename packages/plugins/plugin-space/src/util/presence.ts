@@ -25,6 +25,12 @@ export const ACTIVITY_WINDOW = 60_000;
 /** Longest a move in an attended object waits before peers hear of it. */
 export const LOCATION_BROADCAST_INTERVAL = 1_000;
 
+/** {@link LOCATION_BROADCAST_INTERVAL} while someone follows this session. */
+export const FOLLOW_BROADCAST_INTERVAL = 100;
+
+/** How long a follower waits for its leader to attend an object in the space again before it stops following. */
+export const FOLLOW_LOST_TIMEOUT = 5_000;
+
 export const getPresenceKeyFromPath = (path: string): EID.EID | undefined => {
   const spaceId = GraphPath.getSpaceIdFromPath(path);
   if (!spaceId) {
@@ -71,6 +77,9 @@ export const getPresenceKeyFromObject = (object: Obj.Unknown): EID.EID | undefin
 
 export const getPresenceKeyFromSpace = (spaceId: Key.SpaceId): EID.EID => EID.make({ spaceId });
 
+/** The peer, or one session of theirs, a session follows; carried in its {@link ViewingMessage}. */
+export type FollowingTarget = Omit<SpaceSchema.FollowTarget, 'spaceId'>;
+
 /**
  * The `viewing` gossip message: the sender's open objects as deltas, the ones it attends, and where it is in those.
  * One per session (a tab or app instance); a sender without `sessionId` counts as one session of its identity.
@@ -83,7 +92,22 @@ export type ViewingMessage = {
   removed: string[];
   attended: string[];
   locations: Record<string, SpaceSchema.PeerLocation>;
+  /** Whom the sender follows in this space; that peer sends its location faster while named here. */
+  following?: FollowingTarget;
 };
+
+/** Whether `target` names the session `sessionId` of `identityKey`, or names `identityKey` without a session. */
+export const isFollowTargetOf = (
+  target: FollowingTarget | undefined,
+  identityKey: string,
+  sessionId: string,
+): boolean =>
+  target !== undefined &&
+  target.identityKey === identityKey &&
+  (target.sessionId === undefined || target.sessionId === sessionId);
+
+export const isSameFollowTarget = (a?: SpaceSchema.FollowTarget, b?: SpaceSchema.FollowTarget): boolean =>
+  a?.spaceId === b?.spaceId && a?.identityKey === b?.identityKey && a?.sessionId === b?.sessionId;
 
 const isString = (value: unknown): value is string => typeof value === 'string';
 
@@ -97,6 +121,14 @@ const parseLocation = (value: unknown): SpaceSchema.PeerLocation | undefined => 
     ...(isString(viewport) && { viewport }),
   };
   return location.selection || location.viewport ? location : undefined;
+};
+
+const parseFollowing = (value: unknown): FollowingTarget | undefined => {
+  if (typeof value !== 'object' || value === null) {
+    return undefined;
+  }
+  const { identityKey, sessionId } = value as Record<string, unknown>;
+  return isString(identityKey) ? { identityKey, ...(isString(sessionId) && { sessionId }) } : undefined;
 };
 
 const DEVICE_KINDS: ReadonlySet<string> = new Set(['browser', 'native', 'mobile', 'agent', 'unknown']);
@@ -122,6 +154,7 @@ const parseDevice = (value: unknown): SpaceSchema.SessionDevice | undefined => {
 export const parseViewingMessage = (payload: Record<string, unknown>): ViewingMessage | undefined => {
   const { identityKey, sessionId, added, removed, attended, locations } = payload;
   const device = parseDevice(payload.device);
+  const following = parseFollowing(payload.following);
   if (!isString(identityKey) || !Array.isArray(added) || !Array.isArray(removed)) {
     return undefined;
   }
@@ -142,6 +175,7 @@ export const parseViewingMessage = (payload: Record<string, unknown>): ViewingMe
     removed: removed.filter(isString),
     attended: Array.isArray(attended) ? attended.filter(isString) : [],
     locations: parsedLocations,
+    ...(following && { following }),
   };
 };
 

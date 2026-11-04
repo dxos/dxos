@@ -60,6 +60,8 @@ export type SpaceEphemeralState = {
   /** Sessions viewing each object, keyed by the object's EID, the peer's hex identity key, then the session id. */
   viewersByObject: Record<string, Record<string, Record<string, SpaceSchema.ObjectViewerProps>>>;
   mergePreview: MergePreview | undefined;
+  /** The peer this session follows; `paused` while they view something this session cannot open. */
+  following: (SpaceSchema.FollowTarget & { paused?: boolean }) | undefined;
   /** Bumped when a merge commits, so an open duplicates review knows to rescan. */
   lastMergeAt: number | undefined;
 };

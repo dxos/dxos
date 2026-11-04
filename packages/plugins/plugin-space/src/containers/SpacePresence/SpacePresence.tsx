@@ -331,7 +331,8 @@ export const PresenceItems = ({ member, showSessions, renderActions }: PresenceI
     <div
       role='group'
       aria-label={getName(member)}
-      className='rounded-sm [&:is(:hover,:has([data-highlighted]))]:bg-hover-surface-subtle [&>.dx-row]:bg-transparent'
+      // The list's value marks a row `aria-selected`, the keys' row `data-highlighted`; either highlights the group.
+      className='rounded-sm [&:is(:hover,:has([data-highlighted]),:has([aria-selected=true]))]:bg-hover-surface-subtle [&>.dx-row]:bg-transparent'
     >
       <Listbox.Item id={member.rowId} data-testid='spacePlugin.presence.row'>
         {/* Smaller than the row, so the row's hover and highlight frame it. */}

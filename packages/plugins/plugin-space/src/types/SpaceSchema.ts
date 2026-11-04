@@ -114,6 +114,13 @@ export type SessionDevice = {
   kind?: 'browser' | 'native' | 'mobile' | 'agent' | 'unknown';
 };
 
+/** Whom a session follows: a peer's most recently moved session, or one session of theirs. */
+export type FollowTarget = {
+  spaceId: string;
+  identityKey: string;
+  sessionId?: string;
+};
+
 /** A peer's caret and top of view in an object, as anchors in the object type's own format. */
 export type PeerLocation = {
   selection?: string;

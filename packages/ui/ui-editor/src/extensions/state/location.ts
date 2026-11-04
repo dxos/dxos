@@ -17,7 +17,7 @@ export type EditorLocation = {
 };
 
 /** Longest a change waits before it is reported; later changes in the window replace it. */
-const REPORT_INTERVAL_MS = 250;
+const REPORT_INTERVAL_MS = 100;
 
 const measureKey = {};
 

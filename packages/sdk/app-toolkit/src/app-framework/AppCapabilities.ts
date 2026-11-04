@@ -426,13 +426,16 @@ export type RevealInput = {
   subject: string;
   /** Position in the type's own anchor format (the format comments and presence locations use). */
   anchor: string;
+  /** Scroll the anchor to the top of the view and leave the caret and focus alone; presence follow reveals each move this way. */
+  follow?: boolean;
   /** Comment thread to mark current, when revealing a comment. */
   thread?: Ref.Ref<Thread.Thread>;
 };
 
 /**
  * Reveals a position in an object, contributed per typename by plugins whose objects have anchors.
- * Comments and presence both reveal through it: `reveal` scrolls to the anchor, moves the caret there and focuses the view.
+ * Comments and presence both reveal through it: `reveal` scrolls to the anchor, moves the caret there and focuses the view,
+ * or with `follow` only scrolls.
  */
 export type Locator = Readonly<{
   id: string;

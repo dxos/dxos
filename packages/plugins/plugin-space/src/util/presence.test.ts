@@ -13,6 +13,7 @@ import {
   getPresenceKeyFromPath,
   groupPresenceChangesBySpace,
   groupPresenceKeysBySpace,
+  isFollowTargetOf,
   parseViewingMessage,
 } from './presence.ts';
 
@@ -96,6 +97,14 @@ describe('parseViewingMessage', () => {
     });
   });
 
+  test('keeps a well-formed follow target and drops a malformed one', ({ expect }) => {
+    const message = { identityKey: 'peer', added: [], removed: [] };
+    expect(parseViewingMessage({ ...message, following: { identityKey: 'leader', sessionId: 7 } })?.following).toEqual({
+      identityKey: 'leader',
+    });
+    expect(parseViewingMessage({ ...message, following: { sessionId: 's1' } })?.following).toBeUndefined();
+  });
+
   test('rejects a message without an identity or deltas', ({ expect }) => {
     expect(parseViewingMessage({ added: [], removed: [] })).toBeUndefined();
     expect(parseViewingMessage({ identityKey: 'peer' })).toBeUndefined();
@@ -174,5 +183,15 @@ describe('getPeerFocus', () => {
   test('follows the session that moved most recently, or the one asked for', ({ expect }) => {
     expect(getPeerFocus(viewers, spaceId, 'peer', 3)).toEqual({ key: other, sessionId: 's2', location: undefined });
     expect(getPeerFocus(viewers, spaceId, 'peer', 3, 's1')).toEqual({ key, sessionId: 's1', location: undefined });
+  });
+});
+
+describe('isFollowTargetOf', () => {
+  test('names every session of a peer followed as a person, and only the one session when pinned', ({ expect }) => {
+    expect(isFollowTargetOf({ identityKey: 'leader' }, 'leader', 's1')).toBe(true);
+    expect(isFollowTargetOf({ identityKey: 'leader', sessionId: 's1' }, 'leader', 's1')).toBe(true);
+    expect(isFollowTargetOf({ identityKey: 'leader', sessionId: 's1' }, 'leader', 's2')).toBe(false);
+    expect(isFollowTargetOf({ identityKey: 'other' }, 'leader', 's1')).toBe(false);
+    expect(isFollowTargetOf(undefined, 'leader', 's1')).toBe(false);
   });
 });
