@@ -320,7 +320,7 @@ const ChatPlaneColumn = ({ value, children }: ChatPlaneColumnProps) => {
   return (
     <ChatPlaneColumnProvider current={current} columnRef={columnRef}>
       <Panel.Root
-        classNames={['w-(--chat-plane-width) snap-center dx-focus-ring transition-opacity', !current && 'opacity-50']}
+        classNames={['w-(--chat-plane-width) snap-center dx-focus-group transition-opacity', !current && 'opacity-50']}
         asChild
       >
         <div
