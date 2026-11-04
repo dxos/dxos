@@ -180,10 +180,11 @@ export class CanarySpace {
   }
 
   /**
-   * Closes the space here, deletes it on EDGE, waits for the 403 that shows EDGE reset its credential chain along with
-   * its data, then tombstones it here. Closing stops the space's document replication, which would write it back after
-   * the teardown; the client's feed syncer still pushes its feeds, which only EDGE's deletion gate refuses. The
-   * tombstone comes last: it reaches the identity's later devices, so a space EDGE kept stays a leftover.
+   * Closes the space here, deletes it on EDGE, waits for the 403 that shows EDGE reset its membership along with its
+   * data, then tombstones it here. The DELETE has just passed the same identity and account checks, so that 403 is not
+   * an auth failure. Closing stops the space's document replication, which would write it back after the teardown; the
+   * client's feed syncer still pushes its feeds, which only EDGE's deletion gate refuses. The tombstone comes last: it
+   * reaches the identity's later devices, so a space EDGE kept stays a leftover.
    */
   delete(): Effect.Effect<void, CanaryError> {
     const path = `/data/space/${this.spaceId}`;

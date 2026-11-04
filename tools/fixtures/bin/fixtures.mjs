@@ -29,7 +29,7 @@
 //
 // CI has neither credential, so `pull` cannot succeed there; fixture-backed tests stay gated on the
 // file's presence and skip. The one exception is the mail canary's nightly workflow, which holds the
-// agents key and an R2 read token to pull the `enron-pool` agents fixture it seeds from.
+// agents key and a Cloudflare token that can read R2, to pull the `enron-pool` agents fixture it seeds from.
 //
 // `--scope agents` is the one shared exception: such fixtures (e.g. voice recordings for transcription evals) live
 // under `agents/` rather than a user's prefix and are encrypted to the team's agents key as well as the pusher's own,

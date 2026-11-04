@@ -129,7 +129,8 @@ export class CanaryMailbox {
 
   /** A write answered with the new object's id. */
   #call(path: string, init: { method: string; body: string }): Effect.Effect<string, MailboxError> {
-    return retrying(this.#request(path, init)).pipe(
+    // Only a refusal is safe to send again: Gmail may have committed a write it then answered with a 5xx.
+    return retrying(this.#request(path, init), isRefused).pipe(
       Effect.flatMap((body) => Schema.decodeUnknownEffect(Ref)(body)),
       Effect.map(({ id }) => id),
       Effect.mapError((error) =>
@@ -141,15 +142,13 @@ export class CanaryMailbox {
   }
 }
 
+const isRefused = (error: GoogleMailApiError): boolean => error instanceof GoogleApiError && error.code === 429;
+const isTransient = (error: GoogleMailApiError): boolean =>
+  isRefused(error) || (error instanceof GoogleApiError && (error.code ?? 0) >= 500);
+
 // `makeGoogleApiRequest` retries only transport failures; Gmail's quota 429s and odd 5xx clear on their own.
-const retrying = <A>(effect: Effect.Effect<A, GoogleMailApiError>) =>
-  effect.pipe(
-    Effect.retry({
-      while: (error) => error instanceof GoogleApiError && (error.code === 429 || (error.code ?? 0) >= 500),
-      schedule: Schedule.exponential('1 second'),
-      times: 6,
-    }),
-  );
+const retrying = <A>(effect: Effect.Effect<A, GoogleMailApiError>, retryable = isTransient) =>
+  effect.pipe(Effect.retry({ while: retryable, schedule: Schedule.exponential('1 second'), times: 6 }));
 
 type Requirements = HttpClient.HttpClient | GoogleCredentials | Credential.CredentialsService;
 

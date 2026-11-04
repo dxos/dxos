@@ -48,4 +48,26 @@ describe('CanaryMailbox', () => {
     const forbidden = await EffectEx.runPromise(ensure(403));
     expect([Exit.isFailure(forbidden.exit), forbidden.calls]).toEqual([true, 1]);
   });
+
+  test('sends a write again only when Gmail refused it, since a 5xx may follow a committed insert', async ({
+    expect,
+  }) => {
+    const insert = (code: number) =>
+      Effect.gen(function* () {
+        let calls = 0;
+        const api = yield* GoogleMailApi.pipe(Effect.provide(GoogleMailApi.mock(dataset)));
+        const request = () =>
+          Effect.suspend(() =>
+            ++calls === 1 ? Effect.fail(new GoogleApiError(code, 'failed')) : Effect.succeed({ id: 'm1' }),
+          );
+        const exit = yield* new CanaryMailbox(api, request)
+          .insert('Subject: one\r\n\r\nbody', ['INBOX'])
+          .pipe(Effect.exit);
+        return { exit, calls };
+      });
+    const refused = await EffectEx.runPromise(insert(429));
+    expect([Exit.isSuccess(refused.exit), refused.calls]).toEqual([true, 2]);
+    const failed = await EffectEx.runPromise(insert(503));
+    expect([Exit.isFailure(failed.exit), failed.calls]).toEqual([true, 1]);
+  });
 });
