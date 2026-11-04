@@ -16,7 +16,7 @@ types and channels in D1, and refuses activation failures, key conflicts and cha
 `dxn:` key to the bundle's Dynamic Worker, with a fallback to operation-service. Types another plugin publishes resolve
 through `TYPE_REGISTRY` and ECHO type sources. Each of these has tests in workerd or on the edge stack.
 
-Of 80 items: 39 done, 4 untested, 19 partial, 2 diverged, 16 missing. Findings:
+Of 82 items: 39 done, 4 untested, 19 partial, 2 diverged, 18 missing. Findings:
 
 - **Discovery still reads operation-service.** MCP `queryOperations`, `loadSkill` and the agents' skill list read
   operation-service's KV catalog, not bundle catalogs (F-4.2, F-5.1, F-6.8). operation-service also still serves 25 keys
@@ -638,4 +638,16 @@ verdict T-19: The suites run in plugins routing; some tests fail.
     edge's operation-fallbacks plan records the first full run: mcp-space-service (nested `Operation.invoke`, output
     encoding, a missing type, `runScript`), discord-agent and agent-sessions (uncarried `idSeed` and `conversation`)
     fail. #1461 in edge#1426 and dxos/dxos#14396 target most of them. No run on the merged branch is recorded.
+```
+
+```mdl
+verdict T-20: No test yet; edge's two sample plugins are being added.
+  status: missing
+  note: Needs dxos/dxos#14396 for a nested `Operation.invoke` in a bundle, and a `dx` binary for the publish (T-15).
+```
+
+```mdl
+verdict T-21: No test yet; edge's two sample plugins are being added.
+  status: missing
+  note: The type registry path is tested with first-party types (T-9, T-13, edge `cross-plugin-types.node.test.ts`), not between two published plugins.
 ```

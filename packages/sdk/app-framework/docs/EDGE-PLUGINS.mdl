@@ -782,6 +782,8 @@ requires; where the test expects the opposite today, the table says so ([D-62]).
 | T-17     | edge       | `edge` `operation-fallbacks.node.test.ts` › operations without a bundle in plugins mode (2 tests)                                         | Same condition as T-16.                                                                    |
 | T-18     | edge       | `edge` `plugin-isolation.node.test.ts` › operations that read another plugin’s capabilities                                               | Passes with operation-service; fails in plugins routing by [D-41] until the case is resolved. |
 | T-19     | edge       | `plugins-mode.yml`: the edge suite with `DX_TEST_OPERATION_ROUTING=plugins`                                                               | Advisory; per-test failures are recorded in edge's operation-fallbacks plan.               |
+| T-20     | edge       | `edge` `plugin-cross.node.test.ts` › two plugins published with the dx CLI › B invokes A's operation                                      | Same condition as T-15.                                                                    |
+| T-21     | edge       | `edge` `plugin-cross.node.test.ts` › two plugins published with the dx CLI › B uses A's type                                              | Same condition as T-15.                                                                    |
 
 The browser half of loading a bundle, Composer building a remote plugin from its `manifest.json` and importing a module
 body only when the module activates, is Composer's QA flow `org.dxos.app.composer#QA-17` ([D-61]).
@@ -957,6 +959,33 @@ scenario T-19: The agent and MCP suites pass with operations routed to bundles
     - each test passes as it does with operation-service
     - each operation that falls back to operation-service is reported with its reason
   tags: [edge, ci]
+```
+
+```mdl
+scenario T-20: A published plugin invokes another published plugin's operation
+  given:
+    - edge's sample plugins A (`edge-sample-notes`) and B (`edge-sample-notebook`), both published with `dx registry publish --upload-only --edge-url <stack>`, on a stack without operation-service
+    - A implements `org.dxos.operation.edgeSample.createNote`, which adds an `org.dxos.type.edgeSample.note` to the space and returns its id
+    - B implements `org.dxos.operation.edgeSample.addNoteVia`, which calls A's operation with `Operation.invoke` and returns its output
+  when: `org.dxos.operation.edgeSample.addNoteVia` is invoked in a space
+  then:
+    - A's bundle runs the nested invoke, and B returns A's output
+    - the note exists in the space, and the caller reads it as a live object of its database
+    - before A is published, the same invoke fails with A's operation key in the error
+  tags: [edge]
+```
+
+```mdl
+scenario T-21: A published plugin uses a type another published plugin owns
+  given:
+    - plugins A and B as in T-20, with a note A created in a space
+    - B does not import A and declares no `org.dxos.type.edgeSample.note`
+    - B implements `org.dxos.operation.edgeSample.listNotes`, which queries `Filter.and(Filter.type(Type.Type), Filter.key('org.dxos.type.edgeSample.note'))` from `Scope.registry()` and then the space's objects of the type it resolves
+  when: `org.dxos.operation.edgeSample.listNotes` is invoked in the space
+  then:
+    - the type resolves from A's published TypeRecord through `TYPE_REGISTRY` ([D-47])
+    - B returns the note A created, with its fields
+  tags: [edge]
 ```
 
 ## Versions
@@ -1531,7 +1560,7 @@ decision D-59: The spec includes the end-to-end flows and scenarios that existin
 ```
 
 ```mdl
-decision D-60: Each tested flow is a `scenario` (T-5 to T-19), and one table names the test that runs it by package, file and test title, with the repository it lives in. Fills in [D-59].
+decision D-60: Each tested flow is a `scenario` (T-5 to T-21), and one table names the test that runs it by package, file and test title, with the repository it lives in. Fills in [D-59].
   date: 2026-11-04
   by: agent:claude-code
   for: user:dmaretskyi
@@ -1565,4 +1594,14 @@ decision D-63: The plugins-routing run of the agent and MCP suites is one scenar
   for: user:dmaretskyi
   affects: [T-19]
   why: The seven suites share one condition and one pass criterion, and their failures change with every run.
+```
+
+```mdl
+decision D-64: Calling another plugin's operation and using another plugin's type are tested with two sample plugins edge owns and publishes with `dx` (T-20, T-21), not with first-party plugins.
+  date: 2026-11-04
+  by: user:dmaretskyi
+  affects: [T-20, T-21]
+  why: Both plugins are published the way a third party would publish them, and neither depends on a first-party bundle being built or on operation-service.
+  rejected:
+    - Only first-party plugins (T-6, T-18): those exercise the dxos build and seeding as well, and cannot show that two independently published bundles interoperate.
 ```
