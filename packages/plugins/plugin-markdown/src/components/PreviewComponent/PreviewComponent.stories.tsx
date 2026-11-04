@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
-import { expect, waitFor } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -14,6 +14,7 @@ import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
@@ -31,7 +32,9 @@ const Cell = () => (
   <div
     data-testid='cell'
     className='h-8 overflow-hidden'
-    dangerouslySetInnerHTML={{ __html: '\n      <div data-testid="cell-text">A</div>\n    ' }}
+    dangerouslySetInnerHTML={{
+      __html: '\n      <div data-testid="cell-text">A</div><input data-testid="cell-input" />\n    ',
+    }}
   />
 );
 
@@ -71,7 +74,10 @@ const DefaultStory = () => {
         id='embed'
         db={space.db}
         eid={`echo:/${doc.id}`}
+        url={`echo:/${doc.id}`}
         label='embedded'
+        block
+        suggest={false}
       />
     </div>
   );
@@ -119,5 +125,20 @@ export const Default: Story = {
       },
       { timeout: 10_000 },
     );
+  },
+};
+
+/** Outside an editor, a selected embed still takes Enter into its first field and Escape back out of it. */
+export const Keyboard: Story = {
+  play: async ({ canvasElement }) => {
+    const input = await within(canvasElement).findByTestId('cell-input', undefined, { timeout: 10_000 });
+    const frame = input.closest<HTMLElement>('[data-testid="markdown.embed"]');
+    invariant(frame, 'Missing embed.');
+    frame.focus();
+    await waitFor(() => expect(input.closest('[inert]')).toBeNull());
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(document.activeElement).toBe(input));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(document.activeElement).toBe(frame));
   },
 };

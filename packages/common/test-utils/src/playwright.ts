@@ -184,7 +184,9 @@ const webKitLaunchEnv = (workspaceRoot: string): Record<string, string> => {
 /**
  * WebKit keeps OPFS under the browser's data directory, and an ephemeral context has none, so every
  * `navigator.storage` call there fails and no app backed by OPFS boots. A persistent context has one.
- * Its temporary directory is per context, which keeps the isolation a fresh context gives.
+ * Its temporary directory is per context, which keeps the isolation a fresh context gives. On macOS
+ * WebKit puts OPFS under the home directory instead, shared by every context and kept across runs,
+ * so the home directory is pointed at the context's directory too.
  */
 const createContext = async (browser: Browser): Promise<{ context: BrowserContext; page?: Page }> => {
   const browserType = browser.browserType();
@@ -194,7 +196,10 @@ const createContext = async (browser: Browser): Promise<{ context: BrowserContex
 
   const userDataDir = mkdtempSync(join(tmpdir(), 'dxos-webkit-'));
   const context = await browserType.launchPersistentContext(userDataDir, {
-    env: webKitLaunchEnv(findWorkspaceRoot(process.cwd())),
+    env: {
+      ...webKitLaunchEnv(findWorkspaceRoot(process.cwd())),
+      ...(process.platform === 'darwin' ? { CFFIXED_USER_HOME: userDataDir } : {}),
+    },
   });
   context.once('close', () => rmSync(userDataDir, { recursive: true, force: true }));
   // A persistent context opens with a page; taking it leaves no blank page behind.

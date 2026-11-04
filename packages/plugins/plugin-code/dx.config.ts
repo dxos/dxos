@@ -67,8 +67,8 @@ const config: Plugin.PluginConfig = Plugin.config({
     icon: { key: 'ph--code--regular', hue: CODE_HUE },
     spec: 'PLUGIN.mdl',
     tags: ['labs'],
-    // Projects owns specs and the plain editor of their text; this plugin's spec page builds on that.
-    dependsOn: ['org.dxos.plugin.projects'],
+    // Markdown draws a spec's feature sections; projects owns specs and the plain editor of their text, which the spec page builds on.
+    dependsOn: ['org.dxos.plugin.markdown', 'org.dxos.plugin.projects'],
   },
   modules: [
     // Eager, as every migration provider is: a migration missing when a space opens is a data hazard.

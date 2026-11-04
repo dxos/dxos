@@ -39,7 +39,8 @@ const DefaultStory = ({ attendableId, attended }: StoryArgs) => {
 
   return (
     <AttendableContainer id={attendableId} classNames='contents'>
-      <FeatureSection subject={feature} attended={attended} />
+      {/* Unattended, the section names an embed that nothing attends. */}
+      <FeatureSection subject={feature} attendableId={attended ? undefined : `${attendableId}/${feature.id}`} />
     </AttendableContainer>
   );
 };
