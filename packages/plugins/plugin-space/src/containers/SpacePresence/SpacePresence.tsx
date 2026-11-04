@@ -2,9 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type ComponentProps, forwardRef, useCallback, useEffect, useState } from 'react';
+import React, { type ComponentProps, forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { generateName } from '@dxos/display-name';
 import { type Key, Obj } from '@dxos/echo';
 import { type Space } from '@dxos/halo';
@@ -12,12 +13,14 @@ import { useIdentity, useMembers } from '@dxos/halo-react';
 import { PublicKey } from '@dxos/keys';
 import { useSpace } from '@dxos/react-client/echo';
 import { AttentionGlyph, type AttentionGlyphProps, useAttention } from '@dxos/react-ui-attention';
+import { type Activity } from '@dxos/react-ui-attention/types';
 import { Listbox } from '@dxos/react-ui-list';
 import * as Avatar from '@dxos/react-ui/Avatar';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Popover from '@dxos/react-ui/Popover';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
 import type * as Util from '@dxos/react-ui/Util';
+import { toLocalizedString } from '@dxos/ui-types/translations';
 import { ComplexMap, hexToFallback } from '@dxos/util';
 
 import { SpaceCapabilities, SpaceSchema } from '#types';
@@ -221,9 +224,11 @@ export type SmallPresenceLiveProps = {
   id?: string;
   open?: boolean;
   viewers?: ComplexMap<PublicKey, SpaceSchema.ObjectViewerProps>;
+  /** The object the row stands for, whose activity (e.g. an agent working on it) joins its presence. */
+  object?: Obj.Unknown;
 };
 
-export const SmallPresenceLive = ({ id, open, viewers }: SmallPresenceLiveProps) => {
+export const SmallPresenceLive = ({ id, open, viewers, object }: SmallPresenceLiveProps) => {
   const { hasAttention, isAncestor, isRelated } = useAttention(id);
   const attended = hasAttention || isRelated;
   const containsAttended = isAncestor && !open;
@@ -248,22 +253,44 @@ export const SmallPresenceLive = ({ id, open, viewers }: SmallPresenceLiveProps)
     }
   }, [viewers]);
 
-  return <SmallPresence count={activeViewers.length} attended={attended} containsAttended={containsAttended} />;
+  const activity = ToolkitHooks.useActivity(object && Obj.getURI(object), object);
+
+  return (
+    <SmallPresence
+      count={activeViewers.length}
+      activity={activity}
+      attended={attended}
+      containsAttended={containsAttended}
+    />
+  );
 };
 
 export type SmallPresenceProps = {
   count?: number;
+  /** Other activity on the item; each entry is a tooltip line and may claim a glyph slot. */
+  activity?: readonly Activity.Entry[];
 } & Pick<AttentionGlyphProps, 'attended' | 'containsAttended'>;
 
-export const SmallPresence = ({ count = 0, attended, containsAttended }: SmallPresenceProps) => {
+export const SmallPresence = ({ count = 0, activity = [], attended, containsAttended }: SmallPresenceProps) => {
   const { t } = UiHooks.useTranslation(SpaceNamespace.key);
+  const treatments = useMemo(
+    () => [
+      ...(count > 1 ? (['viewers'] as const) : count === 1 ? (['viewer'] as const) : []),
+      ...activity.flatMap((entry) => (entry.treatment ? [entry.treatment] : [])),
+    ],
+    [count, activity],
+  );
+  const lines = [
+    ...(count > 0 || activity.length === 0 ? [t('presence.label', { count })] : []),
+    ...activity.map((entry) => toLocalizedString(entry.label, t)),
+  ];
 
   return (
-    <Tooltip.Trigger asChild content={t('presence.label', { count })} side='bottom'>
+    <Tooltip.Trigger asChild content={lines.join(' · ')} side='bottom'>
       <AttentionGlyph
         attended={attended}
         containsAttended={containsAttended}
-        presence={count > 1 ? 'many' : count === 1 ? 'one' : 'none'}
+        treatments={treatments}
         classNames='self-center mx-1'
       />
     </Tooltip.Trigger>

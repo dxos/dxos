@@ -219,12 +219,13 @@ export const ViewEditorSurface = ({ subject }: ViewEditorSurfaceProps) => {
 export type NavtreePresenceSurfaceProps = {
   id: string;
   open?: boolean;
+  subject: Obj.Unknown;
 };
 
-export const NavtreePresenceSurface = ({ id, open }: NavtreePresenceSurfaceProps) => {
+export const NavtreePresenceSurface = ({ id, open, subject }: NavtreePresenceSurfaceProps) => {
   const ephemeral = Hooks.useAtomCapability(SpaceCapabilities.EphemeralState);
 
-  return <SmallPresenceLive id={id} open={open} viewers={ephemeral.viewersByObject[id]} />;
+  return <SmallPresenceLive id={id} open={open} viewers={ephemeral.viewersByObject[id]} object={subject} />;
 };
 
 export type NavbarPresenceSurfaceProps = {

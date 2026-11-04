@@ -24,7 +24,6 @@ import {
   CreateSpaceDialog,
   DefaultProperties,
   ImportSpaceDialog,
-  InlineSyncStatus,
   JoinDialog,
   ObjectFormDialog,
   RecordArticle,
@@ -236,7 +235,7 @@ export default Capability.makeModule(
         id: 'navtreePresence',
         filter: AppSurface.subject(AppSurface.NavtreeItemEnd, Obj.isObject),
         component: NavtreePresenceSurface,
-        props: ({ data: { id, open } }) => ({ id, open }),
+        props: ({ data: { id, open, subject } }) => ({ id, open, subject }),
       }),
       // TODO(wittjosiah): Attention glyph for non-echo items should be handled elsewhere.
       Surface.create({
@@ -245,13 +244,6 @@ export default Capability.makeModule(
         filter: Surface.makeFilter(AppSurface.NavtreeItemEnd),
         component: SmallPresenceLive,
         props: ({ data: { id, open } }) => ({ id, open }),
-      }),
-      // TODO(wittjosiah): Broken?
-      Surface.create({
-        id: 'navtreeSyncStatus',
-        filter: AppSurface.subject(AppSurface.NavtreeItemEnd, isSpace),
-        component: InlineSyncStatus,
-        props: ({ data: { subject, open } }) => ({ space: subject, open }),
       }),
       Surface.create({
         id: 'navbarPresence',

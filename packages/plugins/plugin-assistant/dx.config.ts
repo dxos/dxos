@@ -202,6 +202,16 @@ const config: Plugin.PluginConfig<AssistantOptions.AssistantPluginOptions | void
         () => import('./src/capabilities/toolkit.ts', { with: { type: 'module-url' } }),
       ),
       Capability.lazyModule(
+        'ActivitySource',
+        {
+          requires: [Capabilities.ProcessManager],
+          provides: [AppCapabilities.ActivitySource],
+          activatesOn: AssistantEvents.Start,
+          environments: ['browser', 'tauri'],
+        },
+        () => import('./src/capabilities/activity-source.ts', { with: { type: 'module-url' } }),
+      ),
+      Capability.lazyModule(
         'AgentHydrator',
         {
           requires: [Capabilities.ProcessManagerRuntime],

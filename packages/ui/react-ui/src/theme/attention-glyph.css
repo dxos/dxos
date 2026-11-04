@@ -1,7 +1,8 @@
 /*
- * AttentionGlyph: a rounded square three quarters of the icon size (12px at md), transparent with an accent mark at
- * rest, tinted when it contains the attended item and filled with the accent when attended. The mark (presence dots
- * or the syncing spinner) fills the square; the spinner turns at half Icon's speed, as a background activity.
+ * AttentionGlyph: a rounded square three quarters of the icon size (12px at md). Its fill shows attention (tinted when
+ * it contains the attended item, filled with the accent when attended) or, failing that, busy work. Activity draws in
+ * three more slots over it: a mark inside (who or what is there), the square's edge (ongoing or steady state) and a dot
+ * at its corner (something wants you). Only the slot named by `data-moving` animates.
  */
 
 @layer dx-components {
@@ -18,22 +19,124 @@
       background-color 150ms,
       color 150ms;
   }
-  .dx-attention-glyph[data-contains-attended] {
+  .dx-attention-glyph[data-fill='contains-attended'] {
     background: var(--color-attention-contains);
   }
-  .dx-attention-glyph[data-attended] {
+  .dx-attention-glyph[data-fill='attended'] {
     background: var(--color-accent-bg);
     color: var(--color-accent-fg);
   }
+  .dx-attention-glyph[data-fill='busy'] {
+    background: color-mix(in srgb, var(--color-amber-bg) 25%, transparent);
+  }
 
-  .dx-attention-glyph-mark,
-  .dx-attention-glyph > .dx-icon {
+  .dx-attention-glyph > svg {
     width: 100%;
     height: 100%;
+    overflow: visible;
   }
-  .dx-attention-glyph[data-syncing] > .dx-icon {
-    color: var(--color-fg-subtle);
-    animation-duration: 2s;
+
+  /* Mark: accent by default; agent work in amber. On the attended fill everything takes the accent foreground. */
+  .dx-attention-glyph [data-part='mark'] {
+    fill: currentColor;
+  }
+  .dx-attention-glyph:not([data-fill='attended']):is([data-mark='agent'], [data-mark='viewers-working'])
+    [data-part='mark'] {
+    fill: var(--color-amber-bg);
+  }
+
+  /*
+   * Edge: an outline for a steady state, dashed for work that is due; work under way runs a short segment round the
+   * edge while it is the glyph's one motion, and holds the full outline otherwise.
+   */
+  .dx-attention-glyph [data-part='edge'] {
+    stroke-width: 1;
+    stroke-linecap: round;
+  }
+  .dx-attention-glyph[data-edge='scheduled'] [data-part='edge'] {
+    stroke-dasharray: 3 3;
+  }
+  .dx-attention-glyph[data-edge='failed'] [data-part='edge'] {
+    stroke: var(--color-rose-bg);
+  }
+  .dx-attention-glyph[data-edge='following'] [data-part='edge'] {
+    stroke: var(--color-violet-bg);
+  }
+  .dx-attention-glyph[data-edge='call'] [data-part='edge'] {
+    stroke: var(--color-green-bg);
+  }
+  .dx-attention-glyph[data-edge='working'] [data-part='edge'] {
+    stroke: var(--color-amber-bg);
+  }
+  .dx-attention-glyph[data-edge='scheduled'] [data-part='edge'] {
+    stroke: var(--color-teal-bg);
+  }
+  .dx-attention-glyph[data-fill='attended'] [data-part='edge'] {
+    stroke: var(--color-accent-fg);
+  }
+
+  /* Corner: a dot just outside the square's top-right corner. */
+  .dx-attention-glyph[data-corner='asked'] [data-part='corner'] {
+    fill: var(--color-amber-bg);
+  }
+  .dx-attention-glyph[data-corner='mention'] [data-part='corner'] {
+    fill: var(--color-rose-bg);
+  }
+  .dx-attention-glyph[data-corner='changed'] [data-part='corner'] {
+    fill: var(--color-accent-bg);
+  }
+  .dx-attention-glyph[data-corner='read-only'] [data-part='corner'] {
+    fill: var(--color-neutral-bg);
+  }
+
+  /* Motion: one slot at a time, and none when the user asks for reduced motion. */
+  @media (prefers-reduced-motion: no-preference) {
+    .dx-attention-glyph[data-moving='fill'] {
+      animation: dx-attention-glyph-busy 1.6s ease-in-out infinite;
+    }
+    .dx-attention-glyph[data-moving='mark']:not([data-mark='typing']) [data-part='mark'] {
+      animation: dx-attention-glyph-pulse 1.4s ease-in-out infinite;
+    }
+    .dx-attention-glyph[data-moving='mark'][data-mark='typing'] [data-part='mark'] > circle {
+      animation: dx-attention-glyph-pulse 1.2s ease-in-out infinite;
+    }
+    .dx-attention-glyph[data-moving='mark'][data-mark='typing'] [data-part='mark'] > circle:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+    .dx-attention-glyph[data-moving='mark'][data-mark='typing'] [data-part='mark'] > circle:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+    .dx-attention-glyph[data-moving='edge'] [data-part='edge'] {
+      stroke-dasharray: 10 38;
+      animation: dx-attention-glyph-run 1.6s linear infinite;
+    }
+    .dx-attention-glyph[data-moving='corner'] [data-part='corner'] {
+      animation: dx-attention-glyph-pulse 1.4s ease-in-out infinite;
+    }
+  }
+
+  @keyframes dx-attention-glyph-pulse {
+    0%,
+    100% {
+      opacity: 0.35;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+  @keyframes dx-attention-glyph-run {
+    to {
+      stroke-dashoffset: -48;
+    }
+  }
+  @keyframes dx-attention-glyph-busy {
+    0%,
+    100% {
+      background: color-mix(in srgb, var(--color-amber-bg) 12%, transparent);
+    }
+    50% {
+      background: color-mix(in srgb, var(--color-amber-bg) 45%, transparent);
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {

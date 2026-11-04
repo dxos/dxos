@@ -225,7 +225,6 @@ export const translations = [
         'disconnected.label': 'Not connected (changes not replicated)',
         'offline-persisted.label': 'Saved to disk (offline)',
         'remote-synced.label': 'Synced with peers',
-        'syncing.label': 'Space syncing',
         'show-all.label': 'Show all',
         'no-sync-status.label': 'No space with missing objects.',
         'create-space-dialog.title': 'Create Space',
