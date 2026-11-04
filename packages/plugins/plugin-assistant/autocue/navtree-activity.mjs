@@ -40,7 +40,7 @@ const expand = async (page, label) => {
   const branch = page
     .locator(`[data-testid="deck.sidebar"] [role="treeitem"]:has(> [data-part="branch-control"] :text-is("${label}"))`)
     .first();
-  await branch.waitFor({ state: 'attached', timeout: 15_000 });
+  await branch.waitFor({ state: 'attached', timeout: 60_000 });
   for (let attempt = 0; attempt < 3 && (await branch.getAttribute('aria-expanded')) !== 'true'; attempt++) {
     await branch.locator('[data-part="branch-indicator"]').first().click();
     await page.waitForTimeout(1_000);

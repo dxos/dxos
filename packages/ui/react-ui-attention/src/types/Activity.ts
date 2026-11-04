@@ -18,9 +18,9 @@ export type MarkShape = 'dot' | 'dots' | 'star';
 
 /** What every treatment carries, whatever its slot. */
 type Common = {
-  /** Within a slot the highest priority wins, and a tie goes to the first requested. Presence draws at 10. */
+  /** Within a slot the highest priority wins, and a tie goes to the first requested. */
   readonly priority: number;
-  /** Asks for the slot's motion; at most one slot moves (see {@link resolve}). The edge never moves. */
+  /** Asks for the slot's motion; at most one slot moves (see {@link resolve}). */
   readonly animate?: boolean;
 };
 
@@ -65,7 +65,7 @@ export type Entry = {
   readonly treatment?: Treatment;
 };
 
-/** Which slot keeps its motion when several animate: what asks for you first, then who is there. The edge never moves. */
+/** Which slot keeps its motion when several animate: what asks for you first, then who is there. */
 const MOTION_ORDER: readonly ('corner' | 'mark' | 'fill')[] = ['corner', 'mark', 'fill'];
 
 /** What the glyph draws: the winning treatment per slot, and the one slot whose treatment animates. */

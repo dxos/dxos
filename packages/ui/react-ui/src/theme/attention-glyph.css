@@ -1,9 +1,6 @@
 /*
- * AttentionGlyph: a rounded square three quarters of the icon size (12px at md). Its fill shows attention (tinted when
- * it contains the attended item, filled with the accent when attended) or, failing that, an activity's hue. Activity
- * draws in three more slots over it: a mark inside, the square's edge and a dot or ring at its corner. Each treatment
- * names its own hue, which the glyph passes in as a `--dx-attention-glyph-*` variable. Only the slot named by
- * `data-moving` animates.
+ * AttentionGlyph: a rounded square three quarters of the icon size (12px at md). Treatment hues arrive as
+ * `--dx-attention-glyph-*` variables; only the slot named by `data-moving` animates.
  */
 
 @layer dx-components {
@@ -27,7 +24,6 @@
     background: var(--color-accent-bg);
     color: var(--color-accent-fg);
   }
-  /* A treatment's fill: its hue's fill colour at the treatment's opacity. */
   .dx-attention-glyph[data-fill='hue'] {
     background: color-mix(
       in srgb,
@@ -42,10 +38,6 @@
     overflow: visible;
   }
 
-  /*
-   * Mark, edge and corner take their treatment's hue (its saturated fill shade), and the text colour when a mark names
-   * none. On the attended fill the mark and edge take the accent foreground.
-   */
   .dx-attention-glyph [data-part='mark'] {
     color: var(--dx-attention-glyph-mark);
     fill: currentColor;
@@ -72,7 +64,6 @@
     stroke: var(--color-accent-fg);
   }
 
-  /* Motion: one slot at a time, and none when the user asks for reduced motion. */
   @media (prefers-reduced-motion: no-preference) {
     .dx-attention-glyph[data-moving='fill'] {
       animation: dx-attention-glyph-fill 1.6s ease-in-out infinite;

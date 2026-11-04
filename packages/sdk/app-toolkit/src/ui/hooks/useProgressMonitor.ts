@@ -30,8 +30,7 @@ export const useProgressMonitor = (name: string): Progress.TaskProgress | undefi
 };
 
 /**
- * The monitors reporting on the object at `uri`: those keyed `<uri>#<suffix>`, as mail sync keys its mailbox's.
- * Pass the object's absolute URI, the form producers key by.
+ * The monitors keyed `<uri>#<suffix>` for the object at `uri`; pass its absolute URI, the form producers key by.
  */
 export const useObjectProgressMonitors = (uri: string | undefined): readonly Progress.TaskProgress[] => {
   const monitors = useProgressMonitors();

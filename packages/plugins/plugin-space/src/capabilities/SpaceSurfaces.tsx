@@ -223,7 +223,6 @@ export type NavtreePresenceSurfaceProps = {
   open?: boolean;
 };
 
-/** For a space the presence target is the space itself; for an object it is the object, whose activity joins in. */
 export const NavtreePresenceSurface = ({ id, subject, open }: NavtreePresenceSurfaceProps) => {
   const ephemeral = Hooks.useAtomCapability(SpaceCapabilities.EphemeralState);
   const presenceKey = isSpace(subject) ? getPresenceKeyFromSpace(subject.id) : getPresenceKeyFromObject(subject);

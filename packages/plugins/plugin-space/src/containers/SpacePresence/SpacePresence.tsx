@@ -211,7 +211,7 @@ export type SmallPresenceLiveProps = {
   id?: string;
   open?: boolean;
   viewers?: Record<string, SpaceSchema.ObjectViewerProps>;
-  /** The object the row stands for, whose progress (an agent working on it, a sync) joins its presence. */
+  /** The object the row stands for; its progress monitors join its presence. */
   object?: Obj.Unknown;
 };
 
@@ -236,11 +236,9 @@ export const SmallPresenceLive = ({ id, open, viewers, object }: SmallPresenceLi
 
 const ONE_VIEWER: Activity.Treatment = { slot: 'mark', icon: 'dot', hue: 'primary', priority: 10 };
 const SEVERAL_VIEWERS: Activity.Treatment = { slot: 'mark', icon: 'dots', hue: 'primary', priority: 10 };
-/** Work under way on the object, over presence. */
 const WORKING: Activity.Treatment = { slot: 'mark', icon: 'star', priority: 30, animate: true };
 const FAILED: Activity.Treatment = { slot: 'edge', hue: 'error', priority: 40 };
 
-/** How a progress monitor on the object shows: its label as a tooltip line, and its status as a treatment. */
 const toActivity = (monitor: Progress.TaskProgress): Activity.Entry[] => {
   const label = monitor.label ?? monitor.name;
   switch (monitor.status) {

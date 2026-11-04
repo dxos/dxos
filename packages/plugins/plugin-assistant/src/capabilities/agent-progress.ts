@@ -40,7 +40,6 @@ export default Capability.makeModule(
     const processManager = yield* Capabilities.ProcessManager;
     const atomRegistry = yield* Capabilities.AtomRegistry;
 
-    // Optional: a host without plugin-progress loses the indicator, not the plugin.
     const progressOption = yield* Capability.getOption(AppCapabilities.ProgressRegistry);
     if (Option.isNone(progressOption)) {
       return [];
@@ -71,7 +70,7 @@ export default Capability.makeModule(
         : undefined;
     };
 
-    // Each busy chat's subject, once its chat has loaded; `null` when it has none.
+    // Each busy chat's subject; `null` while it resolves or when it has none.
     const subjects = new Map<string, string | null>();
     const resolveSubject = (uri: string) => {
       const eid = EID.tryParse(uri);
@@ -90,7 +89,6 @@ export default Capability.makeModule(
         .catch((error) => log.warn('companion subject did not resolve', { uri, error }));
     };
 
-    // Every monitor this module holds, by key, with the label it was registered with.
     const monitors = new Map<string, { handle: AppCapabilities.ProgressMonitor; label: string }>();
 
     /** Brings the registry in line with what is running now; two companion chats on one object share its monitor. */
