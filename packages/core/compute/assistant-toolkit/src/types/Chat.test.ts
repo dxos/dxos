@@ -60,6 +60,7 @@ describe('Chat', () => {
           'remote',
           'session',
           'tasks',
+          'unread',
           'viewType',
         ]);
       },
