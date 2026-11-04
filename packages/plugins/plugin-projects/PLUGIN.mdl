@@ -1970,3 +1970,26 @@ decision D-188: The presentation is renamed `tag`. The tag stays neutral and sho
     - Hueing the whole tag with the option's colour, which turns the Add task row into a row of coloured blocks.
     - Keeping the name `pill` for a presentation that no longer draws one.
 ```
+
+```mdl
+decision D-189: The task list's create row is one line laid out on the list's own columns, each field in the track where the rows show it, and a list row and the create row are the same components in the chat's list and the project's list, configured by props.
+  date: 2026-11-04
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-190: `TaskList.Root` takes the title line's cells as one ordered `columns` list, which the rows and the create row both lay out on. Status, priority and estimate are one field component, a bare glyph in a list row and a `Tag` in the create row, one block wide in either; the create row leads with the status field. The project list keeps priority and status ahead of the title, with the estimate in a track of its own; the chat's list puts status ahead of the title and priority and estimate after it. Fills in [D-189].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: A fixed track is what lines the create row up with the rows, since the create row sits outside the scrolling tree in a grid of its own; tags in every row would fill a long list with chips.
+  rejected:
+    - Tags in the list rows too, which turns a list of hundreds of rows into a grid of filled chips.
+    - Labelled tags in the create row, whose varying widths cannot sit in the rows' tracks.
+```
+
+```mdl
+decision D-191: Approve [D-190].
+  date: 2026-11-04
+  by: user:wittjosiah
+```

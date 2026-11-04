@@ -15,6 +15,7 @@ import { type TaskPlacement } from './hierarchy.ts';
 import { type TaskDescriptionProps } from './TaskDescription.tsx';
 import { type TaskCreateHandler } from './TaskList.tsx';
 import { type TaskSelectModifiers } from './TaskTreeNode.tsx';
+import { type TaskColumn } from './tracks.ts';
 import { type TaskGroup } from './tree-model.ts';
 
 //
@@ -37,7 +38,9 @@ export type TaskListContextValue = {
   hierarchical: boolean;
   /** Whether the leading gutter is rendered at all — it holds the ordinal or the checkbox. */
   showGutter: boolean;
-  /** Render who holds each task; off collapses the assignee track. */
+  /** The title line's cells, in order, less any with nothing to hold (a gutter with no ordinal, mnemonic or checkbox). */
+  cells: readonly TaskColumn[];
+  /** Whether the list has an assignee column, and so offers people to assign. */
   showAssignees: boolean;
   members: readonly TaskMember[];
   people: readonly Person.Person[];
@@ -46,8 +49,8 @@ export type TaskListContextValue = {
   /** Rows and the edit pane run to the host's edges, with no inline inset. */
   flush: boolean;
   /**
-   * The column template, built once from the options so the tree's rows and the edit pane lay out on the same named
-   * tracks (`gutter`, `priority`, `status`, `title`, `artifacts`, `assignee`, `actions`).
+   * The column template, built once from `cells` so the tree's rows and the edit pane lay out on the same named
+   * tracks.
    */
   columns: string;
   selected?: string;

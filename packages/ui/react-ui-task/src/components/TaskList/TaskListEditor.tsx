@@ -4,6 +4,7 @@
 
 import React, {
   type ClipboardEvent,
+  type CSSProperties,
   type DragEvent,
   type KeyboardEvent,
   useCallback,
@@ -32,6 +33,7 @@ import { translationKey } from '#translations';
 import { type TaskDescriptionBehavior, TaskEditorForm, type TaskEditorValues } from './TaskEditorFields.tsx';
 import { type TaskCreateHandler, type TaskCreateResult } from './TaskList.tsx';
 import { useTaskListContext } from './TaskListContext.ts';
+import { spanFromTitle } from './tracks.ts';
 
 export type TaskListEditorProps = ComposableProps<{
   /** Placeholder for the title field when nothing is selected (the create case); translated by default. */
@@ -85,7 +87,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
     const { t } = Hooks.useTranslation(translationKey);
     const { className, ...rest } = Util.composableProps(props);
     const descriptionRef = useRef<MarkdownEditableController>(null);
-    const { tasks, selected, showAssignees, members, people, flush, onTaskCreate, onTaskUpdate, onTaskSelect } =
+    const { tasks, selected, cells, columns, members, people, flush, onTaskCreate, onTaskUpdate, onTaskSelect } =
       useTaskListContext('TaskList.Editor');
 
     const task = useMemo(
@@ -354,13 +356,18 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
       <div
         {...rest}
         className={mx(
-          'flex flex-col gap-2 w-full min-w-0 shrink-0',
+          // The rows' own template, so each field sits under the column it edits. The gap between the lines is the
+          // grid's, not a margin on each cell.
+          'grid gap-y-2 w-full min-w-0 shrink-0',
           // The drop target is the pane itself, marked while files are held over it.
           dragOver && 'ring-2 ring-inset ring-accent-bg',
           // The tree's rows pad their ends by the same gap, so the pane's fields start where the rows' cells do.
           !flush && 'px-(--dx-gap-size)',
           className,
         )}
+        // `--dx-col` is reset the way `ScrollArea.Viewport` resets it: inside a host `Column` the variable names the
+        // content track, and `Field.Root` hands it to the field it wraps, which in this grid is a different column.
+        style={{ 'gridTemplateColumns': columns, '--dx-col': 'auto' } as CSSProperties}
         data-testid='taskList.edit'
         {...(takesFiles && {
           onDragEnterCapture: handleDragEnter,
@@ -374,7 +381,7 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
         <TaskEditorForm
           key={current?.id ?? 'create'}
           values={values}
-          showAssignee={showAssignees}
+          cells={cells}
           members={members}
           people={people}
           title={{
@@ -391,7 +398,6 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
             canCancel && (
               <SystemButton.Cancel
                 variant='ghost'
-                classNames='ms-auto'
                 data-testid='taskList.edit.cancel'
                 onClick={handleCancel}
                 onMouseDown={(event) => event.preventDefault()}
@@ -401,7 +407,10 @@ export const TaskListEditor = Util.composable<HTMLDivElement, TaskListEditorProp
           onChange={handleChange}
         >
           {takesFiles && files.length > 0 && (
-            <div className='flex flex-wrap items-center gap-1 min-w-0'>
+            <div
+              className='flex flex-wrap items-center gap-1 min-w-0'
+              style={{ gridColumn: spanFromTitle(cells, ['artifacts', 'estimate']) }}
+            >
               {files.map((file, index) => (
                 <Tag.Tag
                   key={`${file.name}-${index}`}

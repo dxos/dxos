@@ -3,6 +3,7 @@
 //
 
 import React, {
+  Fragment,
   type KeyboardEvent,
   type PropsWithChildren,
   type ReactNode,
@@ -31,7 +32,8 @@ import { translationKey } from '#translations';
 import { useAssigneeDisplay } from '../../hooks/index.ts';
 import { UNASSIGNED_ICON } from '../../util/assignee.ts';
 import { type TaskMember, assigneeMenuActions, pickAssignee } from '../../util/property-menus.ts';
-import { ESTIMATE_ICON, UNSET_ICON } from '../../util/status-icons.ts';
+import { TaskField } from './TaskField.tsx';
+import { type TaskColumn, TRACK, spanFromTitle } from './tracks.ts';
 
 export type TaskEditorValues = {
   title: string;
@@ -60,23 +62,26 @@ export type TaskDescriptionBehavior = {
 
 export type TaskEditorFormProps = PropsWithChildren<{
   values: TaskEditorValues;
-  showAssignee?: boolean;
+  /** The list's cells, in order: each field takes the track its column has in the rows. */
+  cells: readonly TaskColumn[];
   members: readonly TaskMember[];
   people: readonly Person.Person[];
   title: TaskTitleBehavior;
   description?: TaskDescriptionBehavior;
+  /** In the actions track: the way out of the row. */
   end?: ReactNode;
   onChange: (patch: Task.Edit) => void;
 }>;
 
 const TASK_SCHEMA = Type.getSchema(Task.Task);
 
-const PROPERTY_FIELDS = ['status', 'priority', 'assignee', 'estimate'];
+/** The columns that are fields of the task, rendered as tags in the create row. */
+const PROPERTY_FIELDS: readonly TaskColumn[] = ['status', 'priority', 'estimate', 'assignee'];
 
 export const TaskEditorForm = ({
   children,
   values,
-  showAssignee = true,
+  cells,
   members,
   people,
   title,
@@ -87,21 +92,14 @@ export const TaskEditorForm = ({
   const { t } = Hooks.useTranslation(translationKey);
   const fieldOverrides = useMemo<Record<string, FormFieldOverride>>(
     () => ({
-      status: { required: true },
-      priority: { label: t('task-priority.label'), icon: UNSET_ICON },
       assignee: { label: t('task-assignee.label') },
-      estimate: { label: t('task-estimate.label'), icon: ESTIMATE_ICON },
+      status: { required: true },
     }),
     [t],
   );
   const context = useMemo(
     () => ({ members, people, title, description, delegate: values.delegate }),
     [members, people, title, description, values.delegate],
-  );
-  const textFields = useMemo(() => (description ? ['title', 'description'] : ['title']), [description]);
-  const propertyFields = useMemo(
-    () => (showAssignee ? PROPERTY_FIELDS : PROPERTY_FIELDS.filter((field) => field !== 'assignee')),
-    [showAssignee],
   );
 
   const handleValuesChanged = useCallback(
@@ -123,12 +121,34 @@ export const TaskEditorForm = ({
         fieldMap={FIELD_MAP}
         onValuesChanged={handleValuesChanged}
       >
-        <Form.Fields include={textFields} sort={textFields} />
+        {/* In the columns' order, so Tab crosses the row as it reads; the gutter and the artifacts stay empty. The
+            description follows the title in the DOM, though it sits below, so Tab runs from the title into it. */}
+        {cells.map((cell) =>
+          cell === 'title' ? (
+            <Fragment key={cell}>
+              <div className='row-start-1 min-w-0' style={{ gridColumn: spanFromTitle(cells, ['artifacts']) }}>
+                <Form.Fields include={['title']} />
+              </div>
+              {description && (
+                <div
+                  className='row-start-2 min-w-0'
+                  style={{ gridColumn: spanFromTitle(cells, ['artifacts', 'estimate']) }}
+                >
+                  <Form.Fields include={['description']} />
+                </div>
+              )}
+            </Fragment>
+          ) : PROPERTY_FIELDS.includes(cell) ? (
+            <div key={cell} className={TRACK[cell]}>
+              <Form.Fields include={[cell]} layout='tag' />
+            </div>
+          ) : cell === 'actions' && end ? (
+            <div key={cell} className={TRACK.actions}>
+              {end}
+            </div>
+          ) : null,
+        )}
         {children}
-        <Layout.Flex wrap align='center' gap='xs' classNames='min-w-0' data-testid='taskList.edit.properties'>
-          <Form.Fields include={propertyFields} sort={propertyFields} layout='tag' />
-          {end}
-        </Layout.Flex>
       </Form.Root>
     </TaskEditorContext.Provider>
   );
@@ -202,6 +222,47 @@ const DescriptionField = ({ type, getValue, onValueChange }: FormFieldRendererPr
   );
 };
 
+const StatusTag = ({ type, jsonPath, getValue, onValueChange }: FormFieldRendererProps<Task.Status | undefined>) => (
+  <TaskField
+    field='status'
+    variant='tag'
+    value={getValue()}
+    onChange={(value) => onValueChange(type, value)}
+    testId={jsonPath}
+  />
+);
+
+const PriorityTag = ({
+  type,
+  jsonPath,
+  getValue,
+  onValueChange,
+}: FormFieldRendererProps<Task.Priority | undefined>) => (
+  <TaskField
+    field='priority'
+    variant='tag'
+    value={getValue()}
+    onChange={(value) => onValueChange(type, value)}
+    testId={jsonPath}
+  />
+);
+
+const EstimateTag = ({
+  type,
+  jsonPath,
+  getValue,
+  onValueChange,
+}: FormFieldRendererProps<Task.Estimate | undefined>) => (
+  <TaskField
+    field='estimate'
+    variant='tag'
+    value={getValue()}
+    onChange={(value) => onValueChange(type, value)}
+    testId={jsonPath}
+  />
+);
+
+/** Who has the task, by their glyph alone: the assignee track is one block wide in the rows too. */
 const AssigneeTag = ({
   type,
   label,
@@ -215,26 +276,40 @@ const AssigneeTag = ({
   const current = useAssigneeDisplay(assignee);
   const worker = useAssigneeDisplay(delegate);
   return (
-    <ActionMenu
-      deferUntilOpen
-      actions={() =>
-        assigneeMenuActions({
-          assignee,
-          current,
-          delegate: delegate && worker,
-          members,
-          people,
-          onChange: ({ assignee }) => onValueChange(type, assignee ?? undefined),
-          t,
-        })
-      }
-    >
-      <Tag.Tag data-placeholder-shown={assignee || delegate ? undefined : ''} data-testid={jsonPath}>
-        <Icon.Icon icon={assignee ? current.icon : delegate ? worker.icon : UNASSIGNED_ICON} />
-        {(assignee ? current.label : delegate && worker.label) || label}
-      </Tag.Tag>
-    </ActionMenu>
+    <Layout.Block>
+      <ActionMenu
+        deferUntilOpen
+        actions={() =>
+          assigneeMenuActions({
+            assignee,
+            current,
+            delegate: delegate && worker,
+            members,
+            people,
+            onChange: ({ assignee }) => onValueChange(type, assignee ?? undefined),
+            t,
+          })
+        }
+      >
+        <Tag.Tag
+          aria-label={(assignee ? current.label : delegate && worker.label) || label}
+          data-placeholder-shown={assignee || delegate ? undefined : ''}
+          data-testid={jsonPath}
+        >
+          <Icon.Icon icon={assignee ? current.icon : delegate ? worker.icon : UNASSIGNED_ICON} />
+        </Tag.Tag>
+      </ActionMenu>
+    </Layout.Block>
   );
 };
 
-const FIELD_MAP = { assignee: AssigneeTag, description: DescriptionField, title: TitleField };
+AssigneeTag.displayName = 'TaskList.AssigneeTag';
+
+const FIELD_MAP = {
+  assignee: AssigneeTag,
+  description: DescriptionField,
+  estimate: EstimateTag,
+  priority: PriorityTag,
+  status: StatusTag,
+  title: TitleField,
+};

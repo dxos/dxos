@@ -34,9 +34,15 @@ import { type TaskPlacement } from './hierarchy.ts';
 import { TaskDescription, type TaskDescriptionProps } from './TaskDescription.tsx';
 import { TaskListProvider, useTaskListContext } from './TaskListContext.ts';
 import { TaskListEditor, type TaskListEditorProps } from './TaskListEditor.tsx';
-import { TaskCheckbox, TaskEstimateLabel, TaskMnemonic, TaskPriorityIcon, TaskStatusControl } from './TaskRowCells.tsx';
+import {
+  TaskCheckbox,
+  TaskEstimateControl,
+  TaskMnemonic,
+  TaskPriorityControl,
+  TaskStatusControl,
+} from './TaskRowCells.tsx';
 import { type TaskItemProps, type TaskSelectModifiers, TaskTreeNode } from './TaskTreeNode.tsx';
-import { TRACK } from './tracks.ts';
+import { DEFAULT_COLUMNS, type TaskColumn, TRACK, spanFromTitle } from './tracks.ts';
 import {
   type TaskGroup,
   buildTaskForest,
@@ -118,8 +124,11 @@ type TaskListRootProps = PropsWithChildren<{
   showGroupLabels?: boolean;
   /** Number rows 1..N down the list as rendered, so tasks can be referenced by ordinal. */
   showOrdinals?: boolean;
-  /** Render who holds each task; off collapses the assignee track. On by default. */
-  showAssignees?: boolean;
+  /**
+   * The title line's cells, in order; a cell left out has no track. The rows and the create row lay out on this one
+   * template, so a field sits under the column it edits. Defaults to {@link DEFAULT_COLUMNS}.
+   */
+  columns?: readonly TaskColumn[];
   /** The space's members, offered by each row's assignee picker beside the space's contacts. */
   members?: readonly TaskMember[];
   /** The space whose contacts the assignee pickers offer; the first task's when omitted, so an empty list has none. */
@@ -200,7 +209,7 @@ const TaskListRoot = ({
   showOrdinals = false,
   showDescription = false,
   descriptionComponents,
-  showAssignees = true,
+  columns: columnsProp = DEFAULT_COLUMNS,
   members = EMPTY_MEMBERS,
   db: dbProp,
   showMnemonics = true,
@@ -268,17 +277,17 @@ const TaskListRoot = ({
   const showGutter = showOrdinals || showMnemonics || !!onTaskCheck;
   // The menu column takes the rows' actions, and the edit pane's cancel in an editable list.
   const hasActions = !!getTaskActions || !!onTaskCreate || !!onTaskUpdate;
-  const columns = useMemo(
-    () =>
-      buildGridTemplate({
-        toggle: hierarchical || !!groups,
-        // The checkbox, and the one button that shows the number and copies the reference.
-        gutter: (onTaskCheck ? 1 : 0) + (showOrdinals || showMnemonics ? 1 : 0),
-        showAssignees,
-        hasActions,
-      }),
-    [hierarchical, groups, showOrdinals, onTaskCheck, showMnemonics, showAssignees, hasActions],
+  // The gutter and the actions take a track only when they have something to hold.
+  const gutter = (onTaskCheck ? 1 : 0) + (showOrdinals || showMnemonics ? 1 : 0);
+  const cells = useMemo(
+    () => columnsProp.filter((column) => (column !== 'gutter' || gutter > 0) && (column !== 'actions' || hasActions)),
+    [columnsProp, gutter, hasActions],
   );
+  const columns = useMemo(
+    () => buildGridTemplate({ cells, toggle: hierarchical || !!groups, gutter }),
+    [cells, hierarchical, groups, gutter],
+  );
+  const showAssignees = cells.includes('assignee');
 
   const db = dbProp ?? (tasks[0] && Obj.getDatabase(tasks[0]));
   const people = useQuery(showAssignees && (onTaskUpdate || onTaskCreate) ? db : undefined, Filter.type(Person.Person));
@@ -286,6 +295,7 @@ const TaskListRoot = ({
   return (
     <TaskListProvider
       tasks={tasks}
+      cells={cells}
       columns={columns}
       // Not gated on `!hierarchical` any more: the tree expresses a status group as a `group` node,
       // so grouping and hierarchy are a choice rather than mutually exclusive capabilities.
@@ -370,35 +380,32 @@ const MAX_ORDINAL = 99;
  * template. The disclosure is the one cell not placed by name; it flows into that first track.
  */
 const buildGridTemplate = ({
+  cells,
   toggle,
   gutter,
-  showAssignees,
-  hasActions,
 }: {
+  cells: readonly TaskColumn[];
   /** A hierarchical list has branches to disclose; a flat one holds no square for a chevron. */
   toggle: boolean;
   /** How many blocks the leading column holds: the ordinal (or the checkbox) and the mnemonic, each a block. */
   gutter: number;
-  showAssignees: boolean;
-  hasActions: boolean;
 }): string => {
-  const candidates: (readonly [name: string | undefined, size: string] | false)[] = [
-    // The tree's disclosure cell and indent step are half a block, so a guide lands under its branch's chevron.
-    [undefined, toggle ? 'var(--dx-half-block-size)' : '0px'],
-    // Fixed rather than `auto`, so the edit pane, which leaves it empty, keeps the rows' width for it.
-    gutter > 0 && ['gutter', `calc(${gutter} * var(--dx-block-size))`],
-    ['priority', 'var(--dx-block-size)'],
-    ['status', 'var(--dx-block-size)'],
-    ['title', 'minmax(0, 1fr)'],
-    ['artifacts', 'auto'],
-    // Kept, at no width, when hidden: the description spans `title / assignee` and so needs the line.
-    ['assignee', showAssignees ? 'var(--dx-block-size)' : '0px'],
-    hasActions && ['actions', 'var(--dx-block-size)'],
-  ];
-  return candidates
-    .filter((track) => track !== false)
-    .map(([name, size]) => (name ? `[${name}] ${size}` : size))
-    .join(' ');
+  const size = (cell: TaskColumn): string => {
+    switch (cell) {
+      case 'gutter':
+        return `calc(${gutter} * var(--dx-block-size))`;
+      case 'title':
+        return 'minmax(0, 1fr)';
+      case 'artifacts':
+        return 'auto';
+      default:
+        // Fixed, so the create row, which lays out in a grid of its own, keeps the rows' widths.
+        return 'var(--dx-block-size)';
+    }
+  };
+
+  // The tree's disclosure cell and indent step are half a block, so a guide lands under its branch's chevron.
+  return [toggle ? 'var(--dx-half-block-size)' : '0px', ...cells.map((cell) => `[${cell}] ${size(cell)}`)].join(' ');
 };
 
 /**
@@ -522,7 +529,7 @@ const TaskListItem = ({
   onTaskUpdate,
 }: TaskItemProps) => {
   const { t } = Hooks.useTranslation(itemTranslationKey);
-  const { showGutter, showMnemonics, showAssignees } = useTaskListContext('TaskList.Item');
+  const { cells, showGutter, showMnemonics } = useTaskListContext('TaskList.Item');
   const task = node.task;
   // Subscribed per row: the model is rebuilt from the task array, whose identity a property edit does not change, so
   // a rename made anywhere else would leave the row showing its old title. Read through the snapshot; the controls
@@ -536,53 +543,76 @@ const TaskListItem = ({
   const description = showDescription ? current.description?.trim() || undefined : undefined;
   const { assignee, delegate } = current;
 
+  // In the columns' order, so Tab crosses the row as it reads.
+  const cell = (column: TaskColumn) => {
+    switch (column) {
+      case 'gutter':
+        return (
+          showGutter && (
+            <Layout.Flex key={column} center gap='xs' classNames={TRACK.gutter}>
+              {onTaskCheck && <TaskCheckbox task={task} checked={checked} onCheckedChange={onTaskCheck} />}
+              {/* One button for the number and the reference it copies. Not beside a checkbox: a number beside a box
+                  reads as two ways to act on the row. The live task, not the snapshot: only the live object knows its
+                  space, which the copied URI names. */}
+              {(showMnemonics || ordinal !== undefined) && (
+                <TaskMnemonic task={task} ordinal={onTaskCheck ? undefined : ordinal} />
+              )}
+            </Layout.Flex>
+          )
+        );
+      case 'priority':
+        return <TaskPriorityControl key={column} task={task} classNames={TRACK.priority} />;
+      case 'status':
+        return <TaskStatusControl key={column} task={task} onTaskUpdate={onTaskUpdate} classNames={TRACK.status} />;
+      case 'title':
+        // Inset as the create row's field is, so a title reads at the x the field types it. The placeholder is drawn by
+        // CSS so the element's text stays the title itself.
+        return (
+          <span
+            key={column}
+            data-testid='taskList.item.title'
+            data-placeholder={t('task-title.placeholder')}
+            className={mx(
+              TRACK.title,
+              'min-w-0 truncate px-(--dx-gap-size) self-center',
+              'empty:before:text-placeholder empty:before:content-[attr(data-placeholder)]',
+            )}
+          >
+            {current.title}
+          </span>
+        );
+      case 'artifacts':
+        // On the title line, beside who has the task: the pull request is what the row is scanned for once work is
+        // under way, and on a line of its own it pushed the description down.
+        return (
+          <Layout.Flex
+            key={column}
+            align='center'
+            gap='xs'
+            classNames={mx(TRACK.artifacts, 'ps-1')}
+            data-testid='taskList.item.artifacts'
+          >
+            <TaskListItemArtifacts task={task} filter={(artifact) => PullRequest.instanceOf(artifact)} />
+          </Layout.Flex>
+        );
+      case 'estimate':
+        return <TaskEstimateControl key={column} task={task} classNames={TRACK.estimate} />;
+      case 'assignee':
+        return (
+          <Layout.Grid key={column} center classNames={TRACK.assignee}>
+            <TaskListAssigneeControl task={task} assignee={assignee} delegate={delegate} />
+          </Layout.Grid>
+        );
+      case 'actions':
+        return <TaskListItemActions key={column} task={task} classNames={TRACK.actions} />;
+    }
+  };
+
   return (
     <>
       {/* The one cell not placed by name: it flows into the template's unnamed first track. */}
       {indicator}
-      {showGutter && (
-        <Layout.Flex center gap='xs' classNames={TRACK.gutter}>
-          {onTaskCheck && <TaskCheckbox task={task} checked={checked} onCheckedChange={onTaskCheck} />}
-          {/* One button for the number and the reference it copies. Not beside a checkbox: a number beside a box reads
-              as two ways to act on the row. The live task, not the snapshot: only the live object knows its space,
-              which the copied URI names. */}
-          {(showMnemonics || ordinal !== undefined) && (
-            <TaskMnemonic task={task} ordinal={onTaskCheck ? undefined : ordinal} />
-          )}
-        </Layout.Flex>
-      )}
-      <TaskPriorityIcon task={task} classNames={TRACK.priority} />
-      <TaskStatusControl task={task} onTaskUpdate={onTaskUpdate} classNames={TRACK.status} />
-      {/* Inset as the editor's fields are, so a title reads at the x the field below types it. The placeholder is
-          drawn by CSS so the element's text stays the title itself. */}
-      <span
-        data-testid='taskList.item.title'
-        data-placeholder={t('task-title.placeholder')}
-        className={mx(
-          TRACK.title,
-          'min-w-0 truncate px-(--dx-gap-size) self-center',
-          'empty:before:text-placeholder empty:before:content-[attr(data-placeholder)]',
-        )}
-      >
-        {current.title}
-      </span>
-      {/* On the title line, beside who has the task: the pull request is what the row is scanned for once work is under
-          way, and on a line of its own it pushed the description down. */}
-      <Layout.Flex
-        align='center'
-        gap='xs'
-        classNames={mx(TRACK.artifacts, 'ps-1')}
-        data-testid='taskList.item.artifacts'
-      >
-        <TaskListItemArtifacts task={task} filter={(artifact) => PullRequest.instanceOf(artifact)} />
-        <TaskEstimateLabel estimate={current.estimate} />
-      </Layout.Flex>
-      {showAssignees && (
-        <Layout.Grid center classNames={TRACK.assignee}>
-          <TaskListAssigneeControl task={task} assignee={assignee} delegate={delegate} />
-        </Layout.Grid>
-      )}
-      <TaskListItemActions task={task} classNames={TRACK.actions} />
+      {cells.map(cell)}
 
       {/* The row's second line, under the title and inset as it is; it takes no height when the task has no chips. */}
       <Layout.Flex
@@ -596,12 +626,13 @@ const TaskListItem = ({
       {/* Under the title and the chips, clearing the gutter and the status control so it does not read as the row
           above's, and stopping short of the trailing controls. What the task says, and nothing the log recorded. */}
       {description && (
-        <TaskDescription
-          content={description}
-          components={descriptionComponents}
-          // A margin, not padding: the box is the clamp, three lines tall.
-          classNames='col-[title/assignee] row-start-3 min-w-0 px-(--dx-gap-size) mb-1'
-        />
+        // A margin, not padding: the description's box is the clamp, three lines tall.
+        <div
+          className='row-start-3 min-w-0 px-(--dx-gap-size) mb-1'
+          style={{ gridColumn: spanFromTitle(cells, ['artifacts', 'estimate']) }}
+        >
+          <TaskDescription content={description} components={descriptionComponents} />
+        </div>
       )}
     </>
   );

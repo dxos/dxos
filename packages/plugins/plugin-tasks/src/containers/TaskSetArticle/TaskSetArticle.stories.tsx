@@ -504,7 +504,7 @@ export const EmptySetOffersContacts: Story = {
     });
 
     await userEvent.click(
-      canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit.properties"] [data-testid="assignee"]')!,
+      canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"] [data-testid="assignee"]')!,
     );
     await expect(body.findByText('Kai Watanabe')).resolves.toBeTruthy();
   },

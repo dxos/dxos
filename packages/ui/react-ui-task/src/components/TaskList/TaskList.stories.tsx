@@ -24,6 +24,7 @@ import { translations } from '#translations';
 import { type TaskMember } from '../../util/property-menus.ts';
 import { type TaskPlacement } from './hierarchy.ts';
 import { type TaskCreateHandler, TaskList } from './TaskList.tsx';
+import { DEFAULT_COLUMNS, type TaskColumn } from './tracks.ts';
 
 random.seed(1);
 
@@ -549,7 +550,7 @@ const DefaultStory = ({
   showGroupLabels,
   showOrdinals,
   showDescription = true,
-  showAssignees,
+  columns,
   acceptFiles = false,
   members,
   agents = false,
@@ -571,7 +572,7 @@ const DefaultStory = ({
   showGroupLabels?: boolean;
   showOrdinals?: boolean;
   showDescription?: boolean;
-  showAssignees?: boolean;
+  columns?: readonly TaskColumn[];
   /** Let the create pane take dropped files, recording what each create was handed. */
   acceptFiles?: boolean;
   members?: readonly TaskMember[];
@@ -680,7 +681,7 @@ const DefaultStory = ({
       showGroupLabels={showGroupLabels}
       showOrdinals={showOrdinals}
       showDescription={showDescription}
-      showAssignees={showAssignees}
+      columns={columns}
       members={members}
       getTaskActions={readonly ? undefined : getTaskActions}
       getDelegateActions={readonly || !agents ? undefined : getDelegateActions}
@@ -695,11 +696,11 @@ const DefaultStory = ({
         <TaskList.Viewport>
           <TaskList.Content />
         </TaskList.Viewport>
-        <Layout.Flex classNames='p-trim-md'>
+        <Layout.Flex column classNames='py-2 px-[calc(var(--dx-gap-size)_-_1px)]'>
           <TaskList.Editor
             showDescription={showDescription}
             acceptFiles={acceptFiles}
-            classNames='bg-input-surface border border-separator rounded-md p-2'
+            classNames='bg-input-surface border border-separator rounded-md py-2 px-0'
           />
           {acceptFiles && <p data-testid='story.attached'>{attached.join(', ')}</p>}
         </Layout.Flex>
@@ -778,6 +779,16 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+/** The chat prompt's checklist: status ahead of the title, priority and estimate after it, and the create row on the same columns. */
+export const Chat: Story = {
+  args: {
+    showGroupLabels: false,
+    showOrdinals: true,
+    showDescription: false,
+    columns: ['gutter', 'status', 'title', 'priority', 'estimate', 'actions'],
+  },
+};
 
 /** No description line, as the chat's checklist shows it: the add row is exactly one task row tall. */
 export const WithoutDescription: Story = {
@@ -1297,10 +1308,8 @@ export const TestEditorHandsBackFromAgent: Story = {
 
     await userEvent.click(row);
     const pill = await waitFor(() => {
-      const pill = canvasElement.querySelector<HTMLElement>(
-        '[data-testid="taskList.edit.properties"] [data-testid="assignee"]',
-      );
-      if (!pill?.textContent?.includes('Rich')) {
+      const pill = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"] [data-testid="assignee"]');
+      if (!pill?.getAttribute('aria-label')?.includes('Rich')) {
         throw new Error('The editor is not editing the delegated task.');
       }
       return pill;
@@ -1315,11 +1324,11 @@ export const TestEditorHandsBackFromAgent: Story = {
 export const TestEditorWithoutAssignees: Story = {
   args: {
     showGroupLabels: false,
-    showAssignees: false,
+    columns: DEFAULT_COLUMNS.filter((column) => column !== 'assignee'),
   },
   play: async ({ canvasElement }) => {
     const pill = (field: string) =>
-      canvasElement.querySelector(`[data-testid="taskList.edit.properties"] [data-testid="${field}"]`);
+      canvasElement.querySelector(`[data-testid="taskList.edit"] [data-testid="${field}"]`);
     await waitFor(async () => expect(pill('status')).toBeTruthy());
     await expect(pill('assignee')).toBeNull();
   },
@@ -1346,10 +1355,8 @@ export const TestEditDelegateOnly: Story = {
       'Title input',
     );
     await waitFor(async () => expect(title.value).toEqual('Draft notes'));
-    const pill = canvasElement.querySelector<HTMLElement>(
-      '[data-testid="taskList.edit.properties"] [data-testid="assignee"]',
-    );
-    await expect(pill?.textContent).toContain('Scout');
+    const pill = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"] [data-testid="assignee"]');
+    await expect(pill?.getAttribute('aria-label')).toContain('Scout');
   },
 };
 
@@ -1372,10 +1379,8 @@ export const TestEditUnsetStatus: Story = {
       'Title input',
     );
     await waitFor(async () => expect(title.value).toEqual('Sort the pantry'));
-    const status = canvasElement.querySelector<HTMLElement>(
-      '[data-testid="taskList.edit.properties"] [data-testid="status"]',
-    );
-    await expect(status?.textContent).toContain('Todo');
+    const status = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"] [data-testid="status"]');
+    await expect(status?.getAttribute('aria-label')).toEqual('To Do');
   },
 };
 
@@ -1624,10 +1629,7 @@ export const TestCreateWithProperties: Story = {
   play: async ({ canvasElement }) => {
     const pane = found(canvasElement.querySelector<HTMLElement>('[data-testid="taskList.edit"]'), 'Create pane');
     const pill = (field: string) =>
-      found(
-        pane.querySelector<HTMLElement>(`[data-testid="taskList.edit.properties"] [data-testid="${field}"]`),
-        `${field} pill`,
-      );
+      found(pane.querySelector<HTMLElement>(`[data-testid="taskList.edit"] [data-testid="${field}"]`), `${field} pill`);
     const title = () =>
       found(pane.querySelector<HTMLInputElement>('[data-testid="taskList.edit.title"] input'), 'Title input');
     const body = within(document.body);
@@ -1635,13 +1637,13 @@ export const TestCreateWithProperties: Story = {
     await userEvent.click(title());
     await userEvent.keyboard('Order green beans');
     await userEvent.click(pill('priority'));
-    await userEvent.click(await body.findByRole('option', { name: /High/ }));
+    await userEvent.click(await within(await body.findByRole('menu')).findByText('High'));
     await userEvent.click(pill('assignee'));
     await userEvent.click(await body.findByText('Riley'));
     await userEvent.click(pill('estimate'));
-    await userEvent.click(await body.findByRole('option', { name: /^M$/ }));
-    await waitFor(async () => expect(pill('priority').textContent).toContain('High'));
-    await expect(pill('assignee').textContent).toContain('Riley');
+    await userEvent.click(await within(await body.findByRole('menu')).findByText('M'));
+    await waitFor(async () => expect(pill('priority')).toHaveAttribute('aria-label', 'High'));
+    await expect(pill('assignee')).toHaveAttribute('aria-label', 'Riley');
 
     await userEvent.click(title());
     await userEvent.keyboard('{Enter}');
@@ -1656,7 +1658,7 @@ export const TestCreateWithProperties: Story = {
     });
     await expect(row.querySelector('[data-testid="taskList.item.assignee"]')).toBeTruthy();
     await expect(row.querySelector('[data-testid="taskList.item.estimate"]')?.textContent).toEqual('M');
-    await waitFor(async () => expect(pill('priority').textContent).toContain('Priority'));
+    await waitFor(async () => expect(pill('priority')).toHaveAttribute('aria-label', 'Priority'));
   },
 };
 

@@ -35,7 +35,7 @@ import {
   useFeedModel,
 } from '@dxos/react-ui-feed';
 import { ActionToolbar, type ActionToolbarProps, createMenuAction } from '@dxos/react-ui-menu';
-import { TaskList, TaskQuestion } from '@dxos/react-ui-task';
+import { type TaskColumn, TaskList, TaskQuestion } from '@dxos/react-ui-task';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Toast from '@dxos/react-ui/Toast';
@@ -910,6 +910,9 @@ const CHAT_TASK_LIST_NAME = 'Chat.TaskList';
 /** Rows the chat's checklist shows before it scrolls. */
 const CHAT_TASK_ROWS = 4;
 
+/** Status ahead of the title and its size after it, so the add row reads as one line under the same columns. */
+const CHAT_TASK_COLUMNS: readonly TaskColumn[] = ['gutter', 'status', 'title', 'priority', 'estimate', 'actions'];
+
 const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
   const { chat, event } = useChatContext(CHAT_TASK_LIST_NAME);
   const { t } = UiHooks.useTranslation(AssistantNamespace.key);
@@ -990,7 +993,7 @@ const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
       showOrdinals
       // The prompt frames the list, and its rows are too narrow for who holds a task or its mnemonic.
       flush
-      showAssignees={false}
+      columns={CHAT_TASK_COLUMNS}
       showMnemonics={false}
       onTaskCreate={handleCreate}
       onTaskUpdate={handleUpdate}

@@ -33,7 +33,7 @@ const COMPANION = '[data-testid="deck.companion"]';
 const INSTRUCTIONS = `${PLANK} .cm-content[aria-placeholder="Describe what the agent should do in each session."]`;
 const ADD_TASK = `${PLANK} input[placeholder="Add task"]`;
 const TASK_ROW = `${PLANK} [data-testid="taskList.item"]`;
-const ADD_PRIORITY = `${PLANK} [data-testid="taskList.edit.properties"] [data-testid="priority"]`;
+const ADD_PRIORITY = `${PLANK} [data-testid="taskList.edit"] [data-testid="priority"]`;
 
 const DISPLAY_NAME = 'Riley';
 
@@ -134,7 +134,7 @@ export const steps = [
         await demo.type({ selector: `${ADD_TASK} >> nth=0`, value: task, label: 'Add task' });
         if (index === TASKS.length - 1) {
           await demo.click({ selector: `${ADD_PRIORITY} >> nth=0`, label: 'Priority' });
-          const low = '[role="option"]:has-text("Low")';
+          const low = '[role="menuitemradio"]:has-text("Low")';
           await page.locator(low).first().waitFor({ state: 'visible', timeout: 5_000 });
           await demo.click({ selector: `${low} >> nth=0`, label: 'Low' });
           await demo.click({ selector: `${ADD_TASK} >> nth=0`, label: 'Add task', hud: false });
