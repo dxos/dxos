@@ -679,7 +679,18 @@ export class AppManager {
     await this.#expandRow(section, timeout);
   }
 
-  async createObject({ type, name, nth }: { type: string; name?: string; nth?: number }): Promise<void> {
+  /** `typename` picks the type a type-backed object (a Table) views, from the form's type select, at any version. */
+  async createObject({
+    type,
+    name,
+    nth,
+    typename,
+  }: {
+    type: string;
+    name?: string;
+    nth?: number;
+    typename?: string;
+  }): Promise<void> {
     if (nth !== undefined) {
       const object = this.getObjectLinks().nth(nth);
       await object.hover();
@@ -724,6 +735,10 @@ export class AppManager {
 
     if (name) {
       await objectForm.getByLabel('Name').fill(name);
+    }
+    if (typename) {
+      await objectForm.getByTestId('typename').click();
+      await this.page.locator(`[role="option"][data-value^="dxn:${typename}:"]`).click();
     }
     // The form's Create sits in the dialog's footer, outside the form element.
     await openDialog.getByTestId('save-button').click();
