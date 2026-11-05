@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Obj } from '@dxos/echo';
+import { Database, Obj, Text } from '@dxos/echo';
 
 import { CodeOperation, Feature, FeatureMap, SpecText } from '#types';
 
@@ -33,21 +33,25 @@ const handler: Operation.WithHandler<typeof CodeOperation.UpdateFeature> = CodeO
         } else if (key !== undefined) {
           Obj.getMeta(feature).key = key;
         }
-        if (name !== undefined) {
-          feature.name = name;
+        // Edited in place, so comments on the name and description stay anchored.
+        if (name !== undefined && name !== feature.name) {
+          Text.update(feature, 'name', name);
         }
-        if (description !== undefined) {
-          feature.description = description;
-        }
-        if (requirements !== undefined) {
-          const blockId = Feature.getBlockId(feature);
-          const copied = requirements.map((requirement) => ({ ...requirement }));
-          feature.requirements = blockId ? Feature.numberRequirements(blockId, copied) : copied;
+        if (description !== undefined && description !== feature.description) {
+          if (typeof feature.description === 'string') {
+            Text.update(feature, 'description', description);
+          } else {
+            feature.description = description;
+          }
         }
         if (status !== undefined) {
           feature.status = status;
         }
       });
+      // Edited in place, so comments on a requirement stay anchored; numbered under the block id the new sources give.
+      if (requirements !== undefined) {
+        Feature.setRequirements(feature, requirements, { blockId: Feature.getBlockId(feature) });
+      }
       const container = FeatureMap.getContainer(feature);
       // A position belongs to the canvas it was dragged on, so a move leaves it behind; the embed moves with it.
       if (target && container?.id !== target.id) {

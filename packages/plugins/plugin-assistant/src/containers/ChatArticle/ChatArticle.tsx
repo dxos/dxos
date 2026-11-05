@@ -172,7 +172,12 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                 )}
 
                 {/* Main thread. */}
-                <ChatComponent.Thread viewType={viewType} tailLines={4} onViewUsage={handleViewUsage} />
+                <ChatComponent.Thread
+                  viewType={viewType}
+                  tailLines={4}
+                  showTokens={settings.showTokens}
+                  onViewUsage={handleViewUsage}
+                />
 
                 {/** Floating info. */}
                 {!mobile && (

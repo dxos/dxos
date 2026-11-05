@@ -5,6 +5,7 @@
 import { type Extension } from '@codemirror/state';
 import { useEffect, useMemo, useRef } from 'react';
 
+import { type Obj } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
@@ -35,9 +36,32 @@ export type FormContextValue<T extends AnyProperties = any> = {
   /** Visual variant applied across the form's parts (see Form.theme). */
   variant?: FormVariant;
 
-  /** Editor extensions for the form's markdown fields, beyond their own (what a host's plugins contribute). */
-  markdownExtensions?: Extension[];
+  /** Editor extensions for the form's editors, beyond their own (what a host's plugins contribute), by field. */
+  extensions?: FormExtensions;
+
+  /** The live object whose strings collaborative fields (see `CollaborativeAnnotation`) edit in place. */
+  object?: Obj.Unknown;
 } & FieldContext;
+
+/** The field an editor edits, for extensions that depend on it (comments anchored to its text). */
+export type FormExtensionsField = {
+  path: readonly (string | number)[];
+  jsonPath: string;
+};
+
+/** Extensions for every editor in the form, or by the field each edits. */
+export type FormExtensions = Extension[] | ((field: FormExtensionsField) => Extension[]);
+
+/** The form's extensions for one field's editor; stable while the field and the form's extensions are. */
+export const useFormExtensions = (field: FormExtensionsField | undefined): Extension[] => {
+  const { extensions } = useFormContext('useFormExtensions');
+  const jsonPath = field?.jsonPath;
+  return useMemo(
+    () => (typeof extensions === 'function' ? (field ? extensions(field) : []) : (extensions ?? [])),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [extensions, jsonPath],
+  );
+};
 
 export const [FormContextProvider, useFormContext] = createContext<FormContextValue>('Form');
 

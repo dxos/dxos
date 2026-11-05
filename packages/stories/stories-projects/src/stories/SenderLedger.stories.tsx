@@ -70,7 +70,7 @@ export const Test: Story = {
     const button = await waitFor(() => canvas.getByTestId('projects.story.setup'), { timeout: 30_000 });
     await userEvent.click(button);
 
-    await waitFor(async () => expect(canvas.getByDisplayValue(/Inbox Research — Work/)).toBeInTheDocument(), {
+    await waitFor(async () => expect(canvas.getAllByTestId('name')[0]).toHaveTextContent(/Inbox Research — Work/), {
       timeout: 30_000,
     });
 

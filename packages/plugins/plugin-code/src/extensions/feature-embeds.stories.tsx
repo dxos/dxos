@@ -18,7 +18,7 @@ import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { FeatureEditingPlugin, FeatureSeed } from '@dxos/plugin-code/testing';
+import { FeatureEditingPlugin, FeatureSeed, queryElement } from '@dxos/plugin-code/testing';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import { translations as projectsTranslations } from '@dxos/plugin-projects/translations';
@@ -180,11 +180,13 @@ export const Default: Story = {
     invariant(feature, 'Missing feature.');
 
     await userEvent.click(first);
-    const name = await within(first).findByTestId<HTMLInputElement>('name');
+    const name = await within(first).findByTestId('name');
     await waitFor(() => expect(name.closest('[inert]')).toBeNull(), { timeout: 5_000 });
-    await userEvent.clear(name);
-    await userEvent.type(name, 'Renamed');
-    await waitFor(() => expect(feature.name).toBe('Renamed'), { timeout: 5_000 });
+    const original = feature.name;
+    const content = queryElement(name, '.cm-content');
+    await userEvent.click(content);
+    await userEvent.type(content, '{End} 2');
+    await waitFor(() => expect(feature.name).toBe(`${original} 2`), { timeout: 5_000 });
   },
 };
 
@@ -242,7 +244,7 @@ export const Keyboard: Story = {
     await expect(embed.matches(':focus-visible')).toBe(true);
 
     await userEvent.keyboard('{Enter}');
-    await waitFor(() => expect(document.activeElement?.getAttribute('data-testid')).toBe('name'));
+    await waitFor(() => expect(document.activeElement?.closest('[data-testid="name"]')).not.toBeNull());
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(document.activeElement).toBe(embed));
 
@@ -459,7 +461,7 @@ export const SlashFeature: Story = {
       },
       { timeout: 5_000 },
     );
-    await expect(within(embed).getByTestId<HTMLInputElement>('name').value).toBe('Undo send');
+    await expect(within(embed).getByTestId('name')).toHaveTextContent('Undo send');
     await waitFor(() => expect(document.activeElement?.closest('[data-testid="markdown.embed"]')).toBe(embed), {
       timeout: 5_000,
     });
@@ -510,7 +512,7 @@ export const FromProse: Story = {
       await placeCursor(view, paragraph);
       await userEvent.keyboard(' /feat');
       await acceptFeature();
-      await waitFor(() => expect(document.activeElement?.getAttribute('data-testid')).toBe('name'), {
+      await waitFor(() => expect(document.activeElement?.closest('[data-testid="name"]')).not.toBeNull(), {
         timeout: 5_000,
       });
       await userEvent.keyboard(name);

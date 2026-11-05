@@ -14,11 +14,12 @@ import { CommentsArticle } from '#containers';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
+      // An object's own comments, or a scoped node's (a level of a spec), whose data may not be an object.
       Surface.create({
         id: 'comments',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'comments'),
-          AppSurface.companion(AppSurface.Article),
+          AppSurface.companion(AppSurface.Article, (value): value is unknown => value != null),
         ),
         component: CommentsArticle,
         props: ({ data: { attendableId, companionTo } }) => ({ attendableId, subject: companionTo }),
