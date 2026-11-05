@@ -4,13 +4,13 @@
 
 import { type CollectionEntry, getCollection } from 'astro:content';
 
-import { toMarkdown } from '../../lib/markdown.ts';
+import { toMarkdown } from '../lib/markdown.ts';
 
 export const getStaticPaths = async () => {
   const entries = await getCollection('docs');
   return entries
-    .filter((entry) => entry.id.startsWith('docs/'))
-    .map((entry) => ({ params: { slug: entry.id.replace(/^docs\//, '') }, props: { entry } }));
+    .filter((entry) => entry.id !== 'index' && entry.id !== '404')
+    .map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
 };
 
 export const GET = ({ props }: { props: { entry: CollectionEntry<'docs'> } }) => {

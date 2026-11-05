@@ -17,7 +17,10 @@ export const GET = ({ site }: { site?: URL }) => {
       '',
       ...pages
         .filter((page) => page.group === group)
-        .map((page) => `- [${page.label}](${new URL(`${page.route.replace(/\/$/, '')}.md`, site)}): ${page.summary}`),
+        .map(
+          (page) =>
+            `- [${page.label}](${new URL(`${import.meta.env.BASE_URL}${page.route.replace(/\/$/, '')}.md`, site)}): ${page.summary}`,
+        ),
       '',
     ]),
   ].join('\n');

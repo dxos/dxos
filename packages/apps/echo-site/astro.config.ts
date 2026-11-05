@@ -11,7 +11,8 @@ const pages = parsePages(readSpec());
 assertContentExists(pages);
 
 export default defineConfig({
-  site: 'https://echo.dxos.org',
+  site: 'https://docs.dxos.org',
+  base: '/echo',
   integrations: [
     starlight({
       title: 'ECHO',

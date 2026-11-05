@@ -110,14 +110,15 @@ template stub: A planned page
 
 ## Site map
 
-The order of these blocks is the order of the sidebar.
+The order of these blocks is the order of the sidebar. Routes are relative to the site's base path,
+`/echo`.
 
 ### Start here
 
 ```mdl
 page welcome: Welcome
   What ECHO is and how these docs are organized.
-  route: /docs/
+  route: /welcome/
   group: Start here
   template: concept
   status: planned
@@ -126,7 +127,7 @@ page welcome: Welcome
 ```mdl
 page why-echo: Why ECHO?
   The argument for a typed, local-first object graph, modeled on "Why Effect?".
-  route: /docs/why-echo/
+  route: /why-echo/
   group: Start here
   template: narrative
   status: spike
@@ -137,7 +138,7 @@ page why-echo: Why ECHO?
 ```mdl
 page the-echo-object: The ECHO object
   What a live object is: identity, type, reactive fields.
-  route: /docs/learn/the-echo-object/
+  route: /learn/the-echo-object/
   group: Learning path
   template: tutorial
   status: planned
@@ -146,7 +147,7 @@ page the-echo-object: The ECHO object
 ```mdl
 page installation: Installation
   Add the packages and open a database in Node or the browser.
-  route: /docs/learn/installation/
+  route: /learn/installation/
   group: Learning path
   template: tutorial
   status: planned
@@ -155,7 +156,7 @@ page installation: Installation
 ```mdl
 page defining-types: Defining types
   Declare an object type and a relation type, then create instances of both.
-  route: /docs/learn/defining-types/
+  route: /learn/defining-types/
   group: Learning path
   template: tutorial
   status: spike
@@ -164,7 +165,7 @@ page defining-types: Defining types
 ```mdl
 page mutating-objects: Mutating objects
   Change objects with Obj.update and observe the change.
-  route: /docs/learn/mutating-objects/
+  route: /learn/mutating-objects/
   group: Learning path
   template: tutorial
   status: planned
@@ -173,7 +174,7 @@ page mutating-objects: Mutating objects
 ```mdl
 page querying: Querying
   Select objects with Filter and Query, one-shot and live.
-  route: /docs/learn/querying/
+  route: /learn/querying/
   group: Learning path
   template: tutorial
   status: planned
@@ -182,7 +183,7 @@ page querying: Querying
 ```mdl
 page sharing: Sharing a space
   Replicate a database between two peers and watch a conflict merge.
-  route: /docs/learn/sharing/
+  route: /learn/sharing/
   group: Learning path
   template: tutorial
   status: planned
@@ -193,7 +194,7 @@ page sharing: Sharing a space
 ```mdl
 page spaces: Spaces and databases
   The unit of sharing, access and replication.
-  route: /docs/concepts/spaces/
+  route: /concepts/spaces/
   group: Core concepts
   template: concept
   status: planned
@@ -202,7 +203,7 @@ page spaces: Spaces and databases
 ```mdl
 page objects-relations: Objects and relations
   Entities, the reserved fields, and parent and child ownership.
-  route: /docs/concepts/objects-relations/
+  route: /concepts/objects-relations/
   group: Core concepts
   template: concept
   status: planned
@@ -211,7 +212,7 @@ page objects-relations: Objects and relations
 ```mdl
 page references: References and DXNs
   How objects point at each other, and how a reference resolves.
-  route: /docs/concepts/references/
+  route: /concepts/references/
   group: Core concepts
   template: concept
   status: planned
@@ -220,7 +221,7 @@ page references: References and DXNs
 ```mdl
 page query-model: The query model
   Traversal, ordering, aggregates, completeness and revalidation.
-  route: /docs/concepts/query-model/
+  route: /concepts/query-model/
   group: Core concepts
   template: concept
   status: planned
@@ -229,7 +230,7 @@ page query-model: The query model
 ```mdl
 page conflicts: Concurrency and conflicts
   What merges automatically and what the application must decide.
-  route: /docs/concepts/conflicts/
+  route: /concepts/conflicts/
   group: Core concepts
   template: concept
   status: planned
@@ -238,7 +239,7 @@ page conflicts: Concurrency and conflicts
 ```mdl
 page text-blobs: Text and blobs
   Collaborative text edits and binary attachments.
-  route: /docs/concepts/text-blobs/
+  route: /concepts/text-blobs/
   group: Core concepts
   template: concept
   status: planned
@@ -247,7 +248,7 @@ page text-blobs: Text and blobs
 ```mdl
 page feeds: Feeds
   Append-only logs, cursors, indexing and retention.
-  route: /docs/concepts/feeds/
+  route: /concepts/feeds/
   group: Core concepts
   template: concept
   status: planned
@@ -256,7 +257,7 @@ page feeds: Feeds
 ```mdl
 page schema-evolution: Schema evolution
   Versioned types and object migrations.
-  route: /docs/concepts/schema-evolution/
+  route: /concepts/schema-evolution/
   group: Core concepts
   template: concept
   status: planned
@@ -267,7 +268,7 @@ page schema-evolution: Schema evolution
 ```mdl
 page guide-react: React
   useQuery, useObject and useSchema, and the reactivity rules behind them.
-  route: /docs/guides/react/
+  route: /guides/react/
   group: Guides
   template: tutorial
   status: planned
@@ -276,7 +277,7 @@ page guide-react: React
 ```mdl
 page guide-solid: Solid
   The Solid.js bindings.
-  route: /docs/guides/solid/
+  route: /guides/solid/
   group: Guides
   template: tutorial
   status: planned
@@ -285,7 +286,7 @@ page guide-solid: Solid
 ```mdl
 page guide-effect: Effect
   The Database service, layers and typed errors.
-  route: /docs/guides/effect/
+  route: /guides/effect/
   group: Guides
   template: tutorial
   status: planned
@@ -294,7 +295,7 @@ page guide-effect: Effect
 ```mdl
 page guide-testing: Testing
   Build isolated peers with EchoTestBuilder.
-  route: /docs/guides/testing/
+  route: /guides/testing/
   group: Guides
   template: tutorial
   status: planned
@@ -303,7 +304,7 @@ page guide-testing: Testing
 ```mdl
 page guide-foreign-records: Foreign records
   Map records from another system onto ECHO types with panproto lenses.
-  route: /docs/guides/foreign-records/
+  route: /guides/foreign-records/
   group: Guides
   template: tutorial
   status: planned
@@ -314,7 +315,7 @@ page guide-foreign-records: Foreign records
 ```mdl
 page architecture: Architecture
   The packages, the processes they run in and the path of a write.
-  route: /docs/internals/architecture/
+  route: /internals/architecture/
   group: Internals
   template: concept
   status: planned
@@ -323,7 +324,7 @@ page architecture: Architecture
 ```mdl
 page query-engine: The query engine
   LocalQueryEngine, working sets and remote sources.
-  route: /docs/internals/query-engine/
+  route: /internals/query-engine/
   group: Internals
   template: concept
   status: planned
@@ -332,7 +333,7 @@ page query-engine: The query engine
 ```mdl
 page indexing: Indexing
   The host index and the SQL query plan.
-  route: /docs/internals/indexing/
+  route: /internals/indexing/
   group: Internals
   template: concept
   status: planned
@@ -341,7 +342,7 @@ page indexing: Indexing
 ```mdl
 page versioning: Versioning
   Heads, object versions and what a remote entry carries.
-  route: /docs/internals/versioning/
+  route: /internals/versioning/
   group: Internals
   template: concept
   status: planned
@@ -352,7 +353,7 @@ page versioning: Versioning
 ```mdl
 page ref-type: Type
   Declare and inspect object and relation types.
-  route: /docs/reference/type/
+  route: /reference/type/
   group: Reference
   template: reference
   status: planned
@@ -361,7 +362,7 @@ page ref-type: Type
 ```mdl
 page ref-obj: Obj
   The runtime API for objects.
-  route: /docs/reference/obj/
+  route: /reference/obj/
   group: Reference
   template: reference
   status: planned
@@ -370,7 +371,7 @@ page ref-obj: Obj
 ```mdl
 page ref-relation: Relation
   The runtime API for relations.
-  route: /docs/reference/relation/
+  route: /reference/relation/
   group: Reference
   template: reference
   status: planned
@@ -379,7 +380,7 @@ page ref-relation: Relation
 ```mdl
 page ref-ref: Ref
   Typed references between entities.
-  route: /docs/reference/ref/
+  route: /reference/ref/
   group: Reference
   template: reference
   status: planned
@@ -388,7 +389,7 @@ page ref-ref: Ref
 ```mdl
 page ref-filter: Filter
   Predicate builders that compile to a query AST.
-  route: /docs/reference/filter/
+  route: /reference/filter/
   group: Reference
   template: reference
   status: spike
@@ -397,7 +398,7 @@ page ref-filter: Filter
 ```mdl
 page ref-query: Query
   Graph-shaped selections and traversal.
-  route: /docs/reference/query/
+  route: /reference/query/
   group: Reference
   template: reference
   status: planned
@@ -406,7 +407,7 @@ page ref-query: Query
 ```mdl
 page ref-database: Database
   The imperative interface and the Effect service.
-  route: /docs/reference/database/
+  route: /reference/database/
   group: Reference
   template: reference
   status: planned
@@ -415,7 +416,7 @@ page ref-database: Database
 ```mdl
 page ref-feed: Feed
   The append-only feed object.
-  route: /docs/reference/feed/
+  route: /reference/feed/
   group: Reference
   template: reference
   status: planned
@@ -424,7 +425,7 @@ page ref-feed: Feed
 ```mdl
 page glossary: Glossary
   Every ECHO term, defined once.
-  route: /docs/reference/glossary/
+  route: /reference/glossary/
   group: Reference
   template: reference
   status: planned
@@ -449,7 +450,8 @@ feat F-1: Build and delivery
 
   req F-1.4:
     when: the site is deployed
-    then: Wrangler deploys `dist` as Workers static assets, the same way the dxos.org build deploys
+    then: it is served at `docs.dxos.org/echo`; every page, asset and agent route sits under that path, and
+          Wrangler deploys `dist` as Workers static assets, as the dxos.org build does
 ```
 
 ```mdl
@@ -571,7 +573,7 @@ feat F-5: The spec drives the site map
 feat F-6: Reading by agents
 
   req F-6.1:
-    when: an agent fetches `/llms.txt`
+    when: an agent fetches `/echo/llms.txt`
     then: it receives the site map, each page with its summary and link, in the llms.txt format
 
   req F-6.2:
@@ -873,6 +875,31 @@ decision D-21: List numbers stay in DM Sans, without a switch to DM Mono to alig
   date: 2026-11-04
   by: user:richburdon
   affects: [F-2.12]
+```
+
+```mdl
+decision D-22: The site lives at dxos.org/echo.
+  date: 2026-11-04
+  by: user:richburdon
+  answers: Q-1
+  affects: [F-1.4]
+```
+
+```mdl
+decision D-23: Routes sit directly under `/echo`, with no `docs` segment, and the landing page is `/echo/`. Fills in [D-22].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1.4, welcome]
+  why: `/echo/docs/why-echo` repeats what the path already says.
+```
+
+```mdl
+decision D-24: The site lives at docs.dxos.org/echo.
+  date: 2026-11-04
+  by: user:richburdon
+  supersedes: D-22
+  affects: [F-1.4]
 ```
 
 ## Appendix: Extension Definitions

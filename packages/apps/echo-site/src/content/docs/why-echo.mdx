@@ -3,9 +3,9 @@ title: Why ECHO?
 description: The argument for a typed, local-first object graph.
 ---
 
-import Anatomy from '../../../components/Anatomy.astro';
-import Snippet from '../../../components/Snippet.astro';
-import SpecCite from '../../../components/SpecCite.astro';
+import Anatomy from '../../components/Anatomy.astro';
+import Snippet from '../../components/Snippet.astro';
+import SpecCite from '../../components/SpecCite.astro';
 
 Most applications keep their real state on a server and spend their client code on copies of it: caches, optimistic
 updates, retry queues and conflict handling. ECHO moves the state onto the device. Your objects are CRDT documents in a
@@ -75,4 +75,4 @@ source and target endpoints, so you can query from either end. <SpecCite item="o
 ## Enjoy building
 
 Once persistence and merging are the database's job, the code that remains is your application. Start with the
-[learning path](/docs/learn/defining-types/), or look up a module in the [reference](/docs/reference/filter/).
+[learning path](/echo/learn/defining-types/), or look up a module in the [reference](/echo/reference/filter/).

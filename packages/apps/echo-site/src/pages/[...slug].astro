@@ -1,7 +1,7 @@
 ---
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 
-import { type SpecPage, parsePages, parseTemplates, readSpec } from '../../lib/spec.ts';
+import { type SpecPage, parsePages, parseTemplates, readSpec } from '../lib/spec.ts';
 
 export const getStaticPaths = () => {
   const source = readSpec();
@@ -9,7 +9,7 @@ export const getStaticPaths = () => {
   return parsePages(source)
     .filter((page) => page.status === 'planned')
     .map((page) => ({
-      params: { slug: page.route.replace(/^\/docs\/?/, '').replace(/\/$/, '') || undefined },
+      params: { slug: page.route.replace(/^\/|\/$/g, '') },
       props: { page, template: templates.find((template) => template.id === page.template) },
     }));
 };
