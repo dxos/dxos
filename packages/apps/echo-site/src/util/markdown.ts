@@ -6,10 +6,23 @@ import { snippetSource } from './snippets.ts';
 
 const attribute = (tag: string, name: string): string | undefined => tag.match(new RegExp(`${name}="([^"]*)"`))?.[1];
 
+/** Drops MDX import lines, keeping the ones a fenced code sample shows to the reader. */
+const stripImports = (body: string): string => {
+  let fenced = false;
+  return body
+    .split('\n')
+    .filter((line) => {
+      if (line.trimStart().startsWith('```')) {
+        fenced = !fenced;
+      }
+      return fenced || !line.startsWith('import ');
+    })
+    .join('\n');
+};
+
 /** Flattens an MDX page to Markdown: imports go, snippet includes become fenced code, components become plain text. */
 export const toMarkdown = (title: string, description: string | undefined, body: string): string => {
-  const content = body
-    .replace(/^import .*$/gm, '')
+  const content = stripImports(body)
     .replace(/<Snippet\b[^>]*\/>/g, (tag) => {
       const file = attribute(tag, 'file');
       if (!file) {
