@@ -603,6 +603,16 @@ feat F-8: Live playground
   req F-8.1:
     when: a reader edits a sample in the playground
     then: the code runs against an in-memory database in the page, with no server
+
+feat F-9: Diagrams as canvas applications
+
+  desc: |
+    Each diagram is a stand-alone `plugin-canvas` application. Planned; the spike renders its one
+    diagram as a static image.
+
+  req F-9.1:
+    when: a page shows a diagram
+    then: the diagram is a stand-alone `plugin-canvas` application
 ```
 
 ## Acceptance
@@ -900,6 +910,13 @@ decision D-24: The site lives at docs.dxos.org/echo.
   by: user:richburdon
   supersedes: D-22
   affects: [F-1.4]
+```
+
+```mdl
+decision D-25: Diagrams are stand-alone `plugin-canvas` applications.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-9]
 ```
 
 ## Appendix: Extension Definitions
