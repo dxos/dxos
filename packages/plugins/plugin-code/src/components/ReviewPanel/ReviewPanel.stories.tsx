@@ -56,6 +56,26 @@ export const Default: Story = {
   },
 };
 
+/** A status in the filter shows only its verdicts; the summary's first paragraph shows, the rest behind a disclosure. */
+export const Filter: Story = {
+  args: { review: REVIEW, onOpenCode: () => {} },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByTestId('review-panel.count.diverged'));
+    await waitFor(() =>
+      expect(canvas.getAllByTestId('verdict-card').map((card) => card.dataset.status)).toEqual(
+        REVIEW.verdicts.filter(({ status }) => status === 'diverged').map(() => 'diverged'),
+      ),
+    );
+    await userEvent.click(canvas.getByTestId('review-panel.count.all'));
+    await waitFor(() => expect(canvas.getAllByTestId('verdict-card')).toHaveLength(REVIEW.verdicts.length));
+
+    await expect(canvas.getByText(/Other notes/)).not.toBeVisible();
+    await userEvent.click(canvas.getByTestId('review-panel.summary.more'));
+    await waitFor(() => expect(canvas.getByText(/Other notes/)).toBeVisible());
+  },
+};
+
 /** A spec with no review yet: where the skill writes one. */
 export const NoReview: Story = {
   args: { reviewKey: 'github:dxos/dxos/packages/plugins/plugin-x/PLUGIN.review.mdl' },

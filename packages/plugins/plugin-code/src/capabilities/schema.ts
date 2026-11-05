@@ -3,6 +3,7 @@
 //
 
 import * as Spec from '@dxos/compute/Spec';
+import * as SpecReview from '@dxos/compute/SpecReview';
 
 import { CodeProject, Feature, Showcase, SourceFile } from '#types';
 
@@ -12,6 +13,7 @@ import { CodeProject, Feature, Showcase, SourceFile } from '#types';
  */
 export default [
   Spec.Spec,
+  SpecReview.SpecReview,
   CodeProject.CodeProject,
   SourceFile.SourceFile,
   Feature.Feature,

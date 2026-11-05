@@ -10,6 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import * as Spec from '@dxos/compute/Spec';
+import * as SpecReview from '@dxos/compute/SpecReview';
 import { Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
 import * as GitHubCapabilities from '@dxos/plugin-github/GitHubCapabilities';
@@ -337,6 +338,45 @@ export const ExportSpecFile = Operation.make({
   input: GitHubCapabilities.FileExportInput,
   output: GitHubCapabilities.FileExportOutput,
   services: [Capability.Service, Database.Service],
+});
+
+export const CreateSpecReview = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.code.createSpecReview'),
+    name: 'Create spec review',
+    icon: 'ph--seal-check--regular',
+    description: trim`
+      Records a compliance review of a spec from its \`.review.mdl\` text: front matter with \`commit\`, \`date\` and
+      \`by\`, a summary, then one \`verdict\` block per spec item. A review with the same commit, date and reviewer as
+      an existing one replaces it; any other is added to the spec's reviews.
+    `,
+  },
+  services: [Database.Service],
+  types: [Spec.Spec, SpecReview.SpecReview],
+  input: Schema.Struct({
+    spec: Ref.Ref(Spec.Spec).annotate({ description: 'The reviewed spec.' }),
+    content: Schema.String.annotate({ description: 'The review as `.review.mdl` text.' }),
+  }),
+  output: Schema.Struct({
+    review: Ref.Ref(SpecReview.SpecReview),
+    created: Schema.Boolean,
+  }),
+}).pipe(Operation.mutation('write'));
+
+/**
+ * \`GitHubCapabilities.FileMapping.import\` for \`.review.mdl\` files: records the review against the Spec synced from
+ * the file beside it (\`PLUGIN.review.mdl\` reviews \`PLUGIN.mdl\`).
+ */
+export const ImportSpecReviewFile = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.code.importSpecReviewFile'),
+    name: 'Import Spec Review File',
+    description: 'Records a synced repository review file as a review of the Spec synced from the file beside it.',
+    icon: 'ph--seal-check--regular',
+  },
+  input: GitHubCapabilities.FileImportInput,
+  output: GitHubCapabilities.FileImportOutput,
+  services: [Database.Service],
 });
 
 /**
