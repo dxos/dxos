@@ -504,6 +504,11 @@ feat F-2: Brand and visual style
     when: the landing page renders
     then: its hero shows the ECHO background art from `@dxos/brand`
 
+  req F-2.12:
+    when: a list renders
+    then: its text and markers set `tabular-nums` and stay in DM Sans; the brand's DM Sans has no
+          tabular figures, so digits remain proportional until the font gains them
+
 ```
 
 ```mdl
@@ -854,6 +859,20 @@ decision D-19: Expressive Code's Twoslash plugin compiles each sample at build t
   why: One step then gives both the type check and the hover cards, and each sample keeps its context through a cut marker, so a page shows only its region.
   rejected:
     - Hand-written hover text: it goes stale the way the current ECHO docs have.
+```
+
+```mdl
+decision D-20: Lists use tabular numerals.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-2.12]
+```
+
+```mdl
+decision D-21: List numbers stay in DM Sans, without a switch to DM Mono to align them.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-2.12]
 ```
 
 ## Appendix: Extension Definitions

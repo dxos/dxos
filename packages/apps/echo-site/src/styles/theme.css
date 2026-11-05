@@ -535,3 +535,10 @@ a.card:hover {
 .expressive-code .twoslash-popup-container * {
   text-indent: 0 !important;
 }
+
+/* Numbers in a list align down the column. */
+:is(ol, ul),
+:is(ol, ul) > li::marker,
+.sl-steps > li::before {
+  font-variant-numeric: tabular-nums;
+}
