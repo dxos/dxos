@@ -41,7 +41,10 @@ export type FormFieldOverride = {
   /** Overrides the form's `layout` for this field alone. */
   presentation?: FormPresentation;
   description?: string;
-  /** An input's placeholder; for an array, the text shown in place of its rows while it has none. */
+  /**
+   * An input's or a reference picker's placeholder; for an array of values or owned objects, the text shown in place
+   * of its rows while it has none.
+   */
   placeholder?: string;
   /** The field's glyph, shown where its value has none of its own (an unset tag, an option without an icon). */
   icon?: string;
