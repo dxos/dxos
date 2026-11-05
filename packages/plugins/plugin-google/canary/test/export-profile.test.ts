@@ -21,8 +21,8 @@ const OUT_DIR = join(import.meta.dirname, '../out');
 
 /**
  * Exports the canary identity's profile (README, Setup step 4): recovers the identity into a new data root as one more
- * device, waits until the canary space has replicated, and packs the data root for `fixtures push`. Run by hand with
- * `moon run plugin-google:mail-canary-profile`; tagged `sync-e2e`, which `test` excludes.
+ * device, waits until the canary space has replicated, and packs the data root for `fixtures push`. Run through
+ * `canary/upload-profile.mjs`, which uploads the archive; tagged `sync-e2e`, which `test` excludes.
  */
 describe('mail canary profile', { tags: ['sync-e2e'], timeout: 25 * 60_000, retry: 0 }, () => {
   test('exports the canary identity profile', async ({ expect }) => {
@@ -56,6 +56,6 @@ describe('mail canary profile', { tags: ['sync-e2e'], timeout: 25 * 60_000, retr
     const archive = packProfile(dataRoot, OUT_DIR);
     // The data root holds the device's private key; only the archive, pushed encrypted, should outlive the export.
     rmSync(dataRoot, { recursive: true, force: true });
-    log.info('profile exported; push it with `moon run fixtures:push -- <archive> --scope agents`', { archive });
+    log.info('profile exported', { archive });
   });
 });
