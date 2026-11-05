@@ -4,6 +4,8 @@
 
 // @import-as-namespace
 
+import * as Effect from 'effect/Effect';
+
 import { type PendingSpace } from '@dxos/client';
 import { Context } from '@dxos/context';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -68,6 +70,18 @@ export const load = async ({
     },
   ];
 };
+
+/**
+ * Whether a link's `share` query parameter carries an invitation, which admits a browser that is not a member yet; a
+ * restricted link carries none.
+ */
+export const admitsGuest = (payload: string): Promise<boolean> =>
+  EffectEx.runPromise(
+    decodeSharePayload(payload).pipe(
+      Effect.map(({ invitation }) => invitation !== undefined),
+      Effect.orElseSucceed(() => false),
+    ),
+  );
 
 /**
  * Signs SHA-256 of `message` with an invitation's guest key, a libsodium Ed25519 secret key (the 32-byte seed followed

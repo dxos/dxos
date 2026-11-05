@@ -50,17 +50,15 @@ export const ShareObjectDialog = ({ object }: ShareObjectDialogProps) => {
   const members = useMembers(spaceId);
   const label = Obj.getLabel(object) ?? t('share-object-dialog.untitled.label');
 
-  const [access, setAccess] = useState<SpaceOperation.ShareAccess>('anyone');
-  const [role, setRole] = useState<SpaceOperation.ShareRole>('editor');
-  // One link per access/role choice: a second copy reuses it rather than minting another invitation.
-  const [links, setLinks] = useState<Record<string, string>>({});
+  const [access, setAccess] = useState<SpaceOperation.ShareAccess>('restricted');
+  // One link per access choice: a second copy reuses it rather than minting another invitation.
+  const [links, setLinks] = useState<Partial<Record<SpaceOperation.ShareAccess, string>>>({});
   const [busy, setBusy] = useState(false);
-  // Keyed like `links`, so changing access or role does not keep claiming the previous link was copied.
-  const [copiedKey, setCopiedKey] = useState<string>();
+  // Keyed like `links`, so changing access does not keep claiming the previous link was copied.
+  const [copiedAccess, setCopiedAccess] = useState<SpaceOperation.ShareAccess>();
   const [scope, setScope] = useState<Obj.Unknown[]>([]);
-  const linkKey = access === 'anyone' ? `${access}:${role}` : access;
-  const link = links[linkKey];
-  const copied = copiedKey === linkKey;
+  const link = links[access];
+  const copied = copiedAccess === access;
 
   // A one-shot read of what the link would carry, shown before anything is created.
   useEffect(() => {
@@ -102,16 +100,16 @@ export const ShareObjectDialog = ({ object }: ShareObjectDialogProps) => {
     try {
       let url = link;
       if (!url) {
-        const { data, error } = await invokePromise(SpaceOperation.ShareObject, { object, access, role });
+        const { data, error } = await invokePromise(SpaceOperation.ShareObject, { object, access });
         if (error || !data) {
           throw error ?? new Error('No link was made.');
         }
         url = data.url;
-        setLinks((previous) => ({ ...previous, [linkKey]: data.url }));
+        setLinks((previous) => ({ ...previous, [access]: data.url }));
       }
       // Shown in the field either way, so a refused clipboard write still leaves the link to copy by hand.
       await navigator.clipboard.writeText(url).then(
-        () => setCopiedKey(linkKey),
+        () => setCopiedAccess(access),
         (error) => log.info('clipboard write refused', { error }),
       );
     } catch (error) {
@@ -125,7 +123,7 @@ export const ShareObjectDialog = ({ object }: ShareObjectDialogProps) => {
     } finally {
       setBusy(false);
     }
-  }, [object, access, role, link, linkKey, invokePromise]);
+  }, [object, access, link, invokePromise]);
 
   const accessItems = [
     { value: 'restricted', label: t('share-object-dialog.access.restricted.label'), icon: 'ph--lock-simple--regular' },
@@ -134,10 +132,6 @@ export const ShareObjectDialog = ({ object }: ShareObjectDialogProps) => {
       label: t('share-object-dialog.access.anyone.label'),
       icon: 'ph--globe-hemisphere-west--regular',
     },
-  ];
-  const roleItems = [
-    { value: 'editor', label: t('share-object-dialog.role.editor.label') },
-    { value: 'viewer', label: t('share-object-dialog.role.viewer.label') },
   ];
 
   return (
@@ -176,7 +170,7 @@ export const ShareObjectDialog = ({ object }: ShareObjectDialogProps) => {
           <Layout.Flex column gap='xs' asChild>
             <section>
               <Typography.Text tone='muted'>{t('share-object-dialog.access.heading')}</Typography.Text>
-              <Layout.Grid cols={['min', 'fill', 'max']} gap='sm' align='center'>
+              <Layout.Grid cols={['min', 'fill']} gap='sm' align='center'>
                 <Avatar.Root
                   icon={access === 'anyone' ? 'ph--globe-hemisphere-west--regular' : 'ph--lock-simple--regular'}
                   hue={Avatar.toAvatarHue(access === 'anyone' ? 'emerald' : 'neutral')}
@@ -198,27 +192,8 @@ export const ShareObjectDialog = ({ object }: ShareObjectDialogProps) => {
                     {t(`share-object-dialog.access.${access}.description`)}
                   </Typography.Text>
                 </Layout.Flex>
-                {access === 'anyone' && (
-                  <Select.Root
-                    items={roleItems}
-                    value={[role]}
-                    onValueChange={({ value: [value] }) => setRole(value === 'viewer' ? 'viewer' : 'editor')}
-                  >
-                    <Select.Trigger data-testid='share-object-dialog.role' />
-                    <Select.Content>
-                      {roleItems.map((item) => (
-                        <Select.Item key={item.value} item={item} />
-                      ))}
-                    </Select.Content>
-                  </Select.Root>
-                )}
               </Layout.Grid>
-              {access === 'anyone' && role === 'viewer' && (
-                <Typography.Text tone='muted' data-testid='share-object-dialog.viewer-note'>
-                  {t('share-object-dialog.role.viewer.note')}
-                </Typography.Text>
-              )}
-              {access === 'anyone' && scope.length > 0 && (
+              {scope.length > 0 && (
                 <Typography.Text tone='subtle' data-testid='share-object-dialog.scope'>
                   {t('share-object-dialog.scope.label', { count: scope.length, labels: scopeLabels.join(', ') })}
                   {pluginNames.length > 0 &&

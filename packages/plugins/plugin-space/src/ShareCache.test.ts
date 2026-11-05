@@ -5,8 +5,11 @@
 import { describe, test } from 'vitest';
 
 import { createKeyPair, verify } from '@dxos/crypto';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import { SpaceId } from '@dxos/keys';
 
 import * as ShareCache from './ShareCache.ts';
+import { encodeSharePayload } from './util/index.ts';
 
 describe('share cache', () => {
   test('signs with a guest key as the sodium code the worker uses would verify it', async ({ expect }) => {
@@ -20,5 +23,15 @@ describe('share cache', () => {
     const digest = Buffer.from(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(message)));
     expect(verify(digest, Buffer.from(signature, 'base64'), keypair.publicKey)).toBe(true);
     expect(verify(Buffer.from('another message'), Buffer.from(signature, 'base64'), keypair.publicKey)).toBe(false);
+  });
+
+  test('admits a guest only with a link that carries an invitation', async ({ expect }) => {
+    const encode = (invitation?: { invitationId: string }) =>
+      EffectEx.runPromise(
+        encodeSharePayload({ version: 1, spaceId: SpaceId.random(), invitation, plugins: [], objects: ['object'] }),
+      );
+    expect(await ShareCache.admitsGuest(await encode({ invitationId: 'invitation' }))).toBe(true);
+    expect(await ShareCache.admitsGuest(await encode())).toBe(false);
+    expect(await ShareCache.admitsGuest('not a payload')).toBe(false);
   });
 });

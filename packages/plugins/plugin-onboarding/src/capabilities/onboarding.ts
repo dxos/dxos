@@ -22,6 +22,13 @@ export default Capability.makeModule(
     const hubUrl = Account.getHubUrl(client.config);
 
     const token = searchProps.get('token') ?? undefined;
+    const sharePayload = searchProps.get(SpaceOperation.SHARE_PARAM);
+    // Only a link that carries an invitation admits a browser with no identity; a restricted one is for members.
+    const shareLink = sharePayload
+      ? yield* Effect.promise(() =>
+          import('@dxos/plugin-space/ShareCache').then((ShareCache) => ShareCache.admitsGuest(sharePayload)),
+        )
+      : false;
     const manager = new OnboardingManager({
       invokePromise,
       client,
@@ -30,7 +37,7 @@ export default Capability.makeModule(
       recoverIdentity: searchProps.get('recoverIdentity') === 'true',
       deviceInvitationCode: searchProps.get('deviceInvitationCode') ?? undefined,
       spaceInvitationCode: searchProps.get('spaceInvitationCode') ?? undefined,
-      shareLink: searchProps.has(SpaceOperation.SHARE_PARAM),
+      shareLink,
       accountInvitationCode: searchProps.get('accountInvitationCode') ?? undefined,
       email: searchProps.get('email') ?? undefined,
     });

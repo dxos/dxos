@@ -694,8 +694,12 @@ const main = async () => {
     scriptedModel:
       url.searchParams.get(PARAM_MODEL) === 'scripted' &&
       (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'),
-    // A browser that has never booted Composer: the link handler enables the plugins the link names.
-    shareBoot: url.searchParams.has(PARAM_SHARE) && !Hooks.hasSavedPlugins(),
+    // A browser that has never booted Composer, opening a link that admits it: the link handler enables the plugins
+    // the link names.
+    shareBoot:
+      !!sharePayload &&
+      !Hooks.hasSavedPlugins() &&
+      (await import('@dxos/plugin-space/ShareCache').then((ShareCache) => ShareCache.admitsGuest(sharePayload))),
   };
 
   // `getPlugins` is synchronous: each plugin's main entry exposes only

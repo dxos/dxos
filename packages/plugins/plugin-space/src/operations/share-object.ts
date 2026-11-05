@@ -22,7 +22,7 @@ import { SpaceOperationConfig } from './helpers.ts';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.ShareObject> = SpaceOperation.ShareObject.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ object, access, role = 'editor' }) {
+    Effect.fnUntraced(function* ({ object, access }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
       const { createObjectUrl } = yield* Capability.get(SpaceOperationConfig);
       const db = Obj.getDatabase(object);
@@ -36,10 +36,6 @@ const handler: Operation.WithHandler<typeof SpaceOperation.ShareObject> = SpaceO
         return yield* Effect.fail(new SpaceOperationError({ message: 'The object has no URL to share.' }));
       }
       const url = new URL(link);
-      if (access === 'restricted') {
-        return { url: url.toString(), objects: [object.id], plugins: [] };
-      }
-
       const scope = yield* collectShareScope(object);
       // SpaceProxy waits for the properties object before it reports the space ready.
       const objects = [...new Set([...scope.map((entry) => entry.id), space.properties.id])];
@@ -48,10 +44,9 @@ const handler: Operation.WithHandler<typeof SpaceOperation.ShareObject> = SpaceO
         manager,
         scope.map((entry) => Obj.getTypename(entry)).filter(isNonNullable),
       );
-      const invitation = yield* createDelegatedInvitation(space, {
-        role: role === 'viewer' ? SpaceMember_Role.READER : SpaceMember_Role.EDITOR,
-        target: Obj.getURI(object),
-      });
+      // Only members can open a restricted link, so it carries no invitation.
+      const invitation =
+        access === 'anyone' ? yield* createDelegatedInvitation(space, { target: Obj.getURI(object) }) : undefined;
       url.searchParams.set(
         SpaceOperation.SHARE_PARAM,
         yield* encodeSharePayload({
@@ -75,7 +70,7 @@ export default handler;
  */
 const createDelegatedInvitation = (
   space: Space,
-  { role, target }: { role: SpaceMember_Role; target: string },
+  { target }: { target: string },
 ): Effect.Effect<buf.JsonValue, SpaceOperationError> =>
   Effect.gen(function* () {
     const { InvitationEncoder, Invitation_AuthMethod, Invitation_State, Invitation_Type } = yield* Effect.promise(
@@ -85,7 +80,7 @@ const createDelegatedInvitation = (
       type: Invitation_Type.DELEGATED,
       authMethod: Invitation_AuthMethod.KNOWN_PUBLIC_KEY,
       multiUse: true,
-      role,
+      role: SpaceMember_Role.EDITOR,
       target,
     });
     const failed = [

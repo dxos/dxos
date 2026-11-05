@@ -356,6 +356,13 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     return this._joinBySpaceKeyInternal(this._ctx, spaceKey);
   }
 
+  async syncFirst(spaceId: SpaceId, objectIds: readonly string[]): Promise<void> {
+    await runServiceCall(this._runtime, this._serviceProvider.rpc, 'SpacesService.syncFirst', {
+      spaceId,
+      objectIds: [...objectIds],
+    });
+  }
+
   @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
   private async _joinBySpaceKeyInternal(ctx: Context, spaceKey: PublicKey): Promise<Space> {
     const response = await runServiceCall(this._runtime, this._serviceProvider.rpc, 'SpacesService.joinBySpaceKey', {

@@ -39,9 +39,9 @@ const IDENTITY_TIMEOUT = 60_000;
 const SPACE_TIMEOUT = 180_000;
 
 /**
- * Opens an object share link (`?share=`): turns on the plugins it names, then, for anyone not yet a member, joins the
- * space in the background and opens the object; a member's path is left to URL projection. `joining` maps the link's
- * space to its object until that attempt ends.
+ * Opens an object share link (`?share=`): turns on the plugins it names and replicates its objects before the rest of
+ * the space, then, for anyone not yet a member, joins the space in the background and opens the object; a member's path
+ * is left to URL projection. `joining` maps the link's space to its object until that attempt ends.
  */
 export const handleShareLink = (
   url: URL,
@@ -82,6 +82,10 @@ export const handleShareLink = (
 const openShared = (client: Client, spaceId: SpaceId, target: ShareTarget, payload: SharePayload) =>
   Effect.gen(function* () {
     yield* Effect.tryPromise(() => client.waitUntilInitialized({ timeout: INITIALIZE_TIMEOUT }));
+    // Before the join, so a joining space's first sync round already asks for the link's objects alone.
+    yield* Effect.tryPromise(() => client.spaces.syncFirst(spaceId, payload.objects)).pipe(
+      Effect.catch((error) => Effect.sync(() => log.warn('share link objects not synced first', { error }))),
+    );
     yield* waitForIdentity(client).pipe(Effect.timeout(IDENTITY_TIMEOUT));
     // Kept until now: onboarding reads it from the address bar, after this handler starts, to create the identity.
     removeQueryParam(SpaceOperation.SHARE_PARAM);

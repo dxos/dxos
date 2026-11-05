@@ -23,7 +23,7 @@ export const SharePayload = Schema.Struct({
   invitation: Schema.optional(Schema.MutableJson),
   /** Plugins that render the objects in scope. */
   plugins: Schema.Array(Schema.String),
-  /** Objects a non-member replicates: the object the link opens and what it needs. */
+  /** Objects to replicate before the rest of the space: the object the link opens and what it needs. */
   objects: Schema.Array(Schema.String),
 });
 export interface SharePayload extends Schema.Schema.Type<typeof SharePayload> {}

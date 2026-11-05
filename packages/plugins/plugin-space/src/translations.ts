@@ -143,9 +143,9 @@ export const translations = [
         'share-object-dialog.role.owner.label': 'Owner',
         'share-object-dialog.role.editor.label': 'Editor',
         'share-object-dialog.role.viewer.label': 'Viewer',
-        'share-object-dialog.role.viewer.note': 'Viewer is not enforced yet: anyone with the link can still edit.',
-        'share-object-dialog.scope.label_one': 'The link shares {{labels}}',
-        'share-object-dialog.scope.label_other': 'The link shares {{labels}} ({{count}} objects with their content)',
+        'share-object-dialog.scope.label_one': 'The link opens {{labels}} first',
+        'share-object-dialog.scope.label_other':
+          'The link opens {{labels}} first ({{count}} objects with their content)',
         'share-object-dialog.plugins.label': 'turns on {{names}}',
         'share-object-dialog.copy-link.label': 'Copy link',
         'share-object-dialog.creating-link.label': 'Creating link…',

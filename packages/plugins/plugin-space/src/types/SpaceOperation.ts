@@ -517,13 +517,9 @@ export const SHARE_PARAM = 'share';
 export const ShareAccess = Schema.Literals(['restricted', 'anyone']);
 export type ShareAccess = Schema.Schema.Type<typeof ShareAccess>;
 
-/** The role a share link admits its recipients as. */
-export const ShareRole = Schema.Literals(['editor', 'viewer']);
-export type ShareRole = Schema.Schema.Type<typeof ShareRole>;
-
 /**
- * Makes a link to one object. With `anyone` access the link carries a delegated, multi-use invitation, the objects the
- * recipient replicates and the plugins that render them, so a non-member joins in the background and sees only them.
+ * Makes a link to one object, carrying the objects to replicate before the rest of the space and the plugins that render
+ * them. With `anyone` access it also carries a delegated, multi-use invitation, so a non-member joins in the background.
  */
 export const ShareObject = Operation.make({
   meta: {
@@ -536,11 +532,12 @@ export const ShareObject = Operation.make({
   input: Schema.Struct({
     object: Obj.Unknown,
     access: ShareAccess,
-    role: Schema.optional(ShareRole),
   }),
   output: Schema.Struct({
     url: Schema.String,
-    objects: Schema.Array(Schema.String).annotate({ description: 'Objects the link lets a non-member replicate.' }),
+    objects: Schema.Array(Schema.String).annotate({
+      description: 'Objects the link replicates before the rest of the space.',
+    }),
     plugins: Schema.Array(Schema.String).annotate({ description: 'Plugins the link turns on.' }),
   }),
 });
