@@ -358,23 +358,26 @@ export const steps = [
     name: 'Both turn off Flatten deck',
     subtitle: 'QA-6: each deck now lays its planks side by side (Settings → Deck)',
     run: async ({ peers: { alice, bob } }) => {
-      // The same setting as the Deck settings switch, set in place so neither peer leaves the space.
-      for (const { page } of [alice, bob]) {
-        await page.evaluate(() => {
+      for (const peer of [alice, bob]) {
+        const { page } = peer;
+        const workspace = await page.evaluate(() => {
           const { manager } = globalThis.composer;
-          const { atom } = manager.capabilities
-            .getAll({ identifier: 'org.dxos.app-framework.capability.settings' })
-            .find(({ prefix }) => prefix === 'org.dxos.plugin.deck');
-          manager.registry.update(atom, (settings) => ({ ...settings, flatten: false }));
+          const [layout] = manager.capabilities.getAll({ identifier: 'org.dxos.app-framework.capability.layout' });
+          return manager.registry.get(layout).workspace;
         });
+        await peer.click(page.getByTestId('treeView.appSettings'));
+        await peer.click(page.getByTestId('settings.org.dxos.plugin.deck'));
+        await peer.click(page.getByTestId('flatten'));
+        await peer.click(page.locator(`[data-testid="spacePlugin.space"][data-object-id="${workspace}"]`));
         await waitFor(
           () =>
-            page.evaluate(() => {
+            page.evaluate((workspace) => {
               const { manager } = globalThis.composer;
               const [layout] = manager.capabilities.getAll({ identifier: 'org.dxos.app-framework.capability.layout' });
-              return manager.registry.get(layout).flat === false;
-            }),
-          { what: 'the deck to stop flattening' },
+              const { flat, workspace: current } = manager.registry.get(layout);
+              return flat === false && current === workspace;
+            }, workspace),
+          { what: 'the space to open with its deck unflattened' },
         );
       }
     },
