@@ -51,6 +51,8 @@ Keep it in git there; do not create or attach a repository.
 - The image ships Node 22, git and wrangler 4. Do not run \`npm install\` or \`tsc\`.
 - The code is plain JavaScript modules: \`worker.js\` (the fetch handler and the \`Poll\` Durable Object, created with \
 \`newUniqueId()\`, its state one storage key) and \`page.js\` (the pages as HTML strings with their own script). \
+The page's script builds strings by concatenation, never template literals: a \`\${}\` nested in the page's template \
+string breaks the build. \
 \`wrangler.jsonc\` binds \`Poll\` and declares it in a migration with \`new_sqlite_classes\`, which a temporary account \
 requires. M-2 adds \`zones.js\` for the time zone math, so its features add a file and touch the others only by \
 small edits.
@@ -66,7 +68,8 @@ offset on the slot's own date and hour, never once per poll; the spec's F-5 and 
 --port 8787', cwd: '/workspace/poll' }\`; from the sandbox it answers at \`http://localhost:8787\`. A reload after an \
 edit can leave it hanging, so after changing files call ExposePort again with the same input: it restarts the server. \
 Give every \`curl\` \`-m 10 --retry 5 --retry-connrefused\`, so a hung request fails at once and a restarting server \
-is waited for.
+is waited for. A request that still times out is a build error, which only the newest wrangler log shows: \
+\`grep -A8 ERROR "$(ls -t ~/.config/.wrangler/logs/*.log | head -1)"\`.
 - Work one task at a time: write that feature's code, restart the server, then in one command \`curl\` the \
 requirements it adds on \`localhost:8787\` and commit. Then set its feature to \`prototype\` and the task to \
 \`review\` before starting the next. Never write a later task's code early: F-1 serves only what F-1 requires.

@@ -59,7 +59,7 @@ const COMPANION = '[data-testid="feature-companion"]';
 const DECK_COMPANION = '[data-testid="deck.companion"]';
 const PROMPT = `${DECK_COMPANION} [data-testid="assistant.prompt"] .cm-content`;
 
-/** Where the take's own space id is kept in the page, so a replay that reuses the page still finds it. */
+/** Where the take's own space id is kept in the page, and in session storage so a reload keeps it. */
 const TAKE_SPACE = '__availabilityPollSpace';
 
 const visible = (locator, timeout) =>
@@ -100,7 +100,9 @@ const showProject = async (page) => {
 const snapshot = (page) =>
   page
     .evaluate(async (key) => {
-      const space = dxos.spaces().find((candidate) => candidate.id === globalThis[key]);
+      const space = dxos
+        .spaces()
+        .find((candidate) => candidate.id === (globalThis[key] ??= sessionStorage.getItem(key) ?? undefined));
       if (!space) {
         return { tasks: [], features: {} };
       }
@@ -134,7 +136,9 @@ const allOperational = (state, names) => names.every((name) => state.features[na
 const specText = (page) =>
   page
     .evaluate(async (key) => {
-      const space = dxos.spaces().find((candidate) => candidate.id === globalThis[key]);
+      const space = dxos
+        .spaces()
+        .find((candidate) => candidate.id === (globalThis[key] ??= sessionStorage.getItem(key) ?? undefined));
       const specs = space
         ? await space.db
             .query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.projects.spec')))
@@ -359,7 +363,9 @@ const acceptMilestone = async (demo, page, milestone) => {
   }
   await page.waitForFunction(
     async ({ key, titles }) => {
-      const space = dxos.spaces().find((candidate) => candidate.id === globalThis[key]);
+      const space = dxos
+        .spaces()
+        .find((candidate) => candidate.id === (globalThis[key] ??= sessionStorage.getItem(key) ?? undefined));
       const tasks = await space.db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.task'))).run();
       return tasks.filter((task) => titles.includes(task.title)).every((task) => task.status === 'done');
     },
@@ -448,7 +454,8 @@ export const steps = [
   },
   {
     name: 'Create a space from the Availability Poll template',
-    done: async ({ page }) => page.evaluate((key) => Boolean(globalThis[key]), TAKE_SPACE).catch(() => false),
+    done: async ({ page }) =>
+      page.evaluate((key) => Boolean(globalThis[key] ?? sessionStorage.getItem(key)), TAKE_SPACE).catch(() => false),
     run: async ({ demo, page }) => {
       await demo.title({
         value: 'Availability Poll',
@@ -473,6 +480,7 @@ export const steps = [
           const created = dxos.spaces().find((space) => !before.includes(space.id));
           if (created) {
             globalThis[key] = created.id;
+            sessionStorage.setItem(key, created.id);
           }
           return created !== undefined;
         },
@@ -648,7 +656,9 @@ export const steps = [
       await page.keyboard.press('Tab');
       await page.waitForFunction(
         async ({ key, text }) => {
-          const space = dxos.spaces().find((candidate) => candidate.id === globalThis[key]);
+          const space = dxos
+            .spaces()
+            .find((candidate) => candidate.id === (globalThis[key] ??= sessionStorage.getItem(key) ?? undefined));
           const features = await space.db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.feature'))).run();
           return features.some((feature) =>
             (feature.requirements ?? []).some((requirement) => requirement.text === text),
@@ -672,7 +682,7 @@ export const steps = [
       await page.waitForTimeout(BEAT);
       await closeCompanion(page);
       await openProjectTab(demo, page, 'features');
-      await waitFor(demo, page, (state) => state.features[HEATMAP]?.status === 'failing', 20, 'the revalidation');
+      await waitFor(demo, page, (state) => state.features[HEATMAP]?.status === 'failing', 30, 'the revalidation');
       await demo.caption({ value: 'The Worker no longer meets it: failing' });
       await page.waitForTimeout(BEAT * 2);
       // The fix task is the one filed after the change, unassigned until it is delegated.
