@@ -14,6 +14,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import type * as Spec from '@dxos/compute/Spec';
 import { mdl, mdlBlockDescription } from '@dxos/deus/extension';
 import { diagramBlockDescription, diagramPreview } from '@dxos/diagram/extension';
+import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useIdentity } from '@dxos/halo-react';
 import * as ProjectHooks from '@dxos/plugin-projects/ProjectHooks';
@@ -195,7 +196,8 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
           spec &&
             target &&
             createDataExtensions({
-              id: spec.id,
+              // The awareness channel the project's spec editor uses too, so peers in either view see each other.
+              id: Obj.getURI(spec),
               text: Doc.createAccessor(target, ['content']),
               messenger: space,
               identity,

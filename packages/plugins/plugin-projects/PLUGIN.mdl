@@ -87,8 +87,8 @@ feat F-5: A project's overview
              plugin's own. Groups with the same id merge, their fields sorted by each field's order, and a field
              whose `enabled` atom is false is hidden. A field may carry an action, a button at the end of its control
              that sets its value.
-  req F-5.8: The overview's Notes and the agent's instructions show the carets of the other peers editing them, each
-             with the peer's name.
+  req F-5.8: The project's name and description, the overview's Notes and the agent's instructions show the carets of
+             the other peers editing them, each with the peer's name.
 ```
 
 ## QA
@@ -2145,11 +2145,18 @@ decision D-202: QA-10 walks two peers through every editor with carets ([D-200])
 ```
 
 ```mdl
-decision D-203: The editors with carets are a spec's text, the feature sections embedded in it (the feature's name, description and requirement rows), the overview's Notes and the agent's instructions. The project's description is a plain text area, not a CodeMirror editor, so it shows no carets. Fills in [D-199].
+decision D-203: Every collaborative text field in a project that takes comments also shows the other peers' carets.
+  date: 2026-11-05
+  by: user:wittjosiah
+  affects: [F-4.13, F-5.8]
+```
+
+```mdl
+decision D-204: The editors with carets are the project's name and description, a spec's text in either of its views, the feature sections embedded in it (the feature's name, description and requirement rows), the overview's Notes and the agent's instructions. Each collaborative string is its own awareness channel, and a spec's two views share one. Fills in [D-199] and [D-203].
   date: 2026-11-05
   by: agent:claude-code
   for: user:wittjosiah
   supersedes: D-200
   affects: [F-4.13, F-5.8]
-  why: A feature's form now edits its name, description and requirements in place as collaborative text, each in a CodeMirror editor over the feature's own strings, so all three take the carets the same way and each string gets its own awareness channel.
+  why: These are the fields comments anchor into, plus the instructions, which already had carets. The project's name and description and a feature's fields are now collaborative strings edited in place, so they take the carets through the same binding. A spec has no editor for its own name or description, so there is nothing to add there.
 ```
