@@ -70,7 +70,11 @@ export type ContentHandler = {
   /** Clean up after deletions (e.g. drop bindings left dangling). */
   prune?: (content: ContentMap) => void;
   /** Add what a partial upsert must carry along, for a renderer that reads one record as several elements. */
-  completeElements?: (previous: ReadWorldObject, elements: readonly Shape.Element[]) => readonly Shape.Element[];
+  completeElements?: (
+    previous: ReadWorldObject,
+    elements: readonly Shape.Element[],
+    content: ContentMap,
+  ) => readonly Shape.Element[];
 };
 
 /** Apply a batch of edit commands to the canvas content (mutates `content`). */
@@ -129,7 +133,7 @@ export const applyCommands = (
       case 'upsert-elements': {
         const previous = find(command.objectId);
         invariant(previous, `unknown object: ${command.objectId} (use upsert-object to create it)`);
-        const elements = handler.completeElements?.(previous, command.elements) ?? command.elements;
+        const elements = handler.completeElements?.(previous, command.elements, content) ?? command.elements;
         const ids = new Set(elements.map((element) => element.id));
         removed += remove((identity) => identity.object === command.objectId && ids.has(identity.element));
         merge({ id: command.objectId, elements }, previous);

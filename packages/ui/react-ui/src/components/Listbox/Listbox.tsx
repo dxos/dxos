@@ -99,7 +99,7 @@ type ListboxRootProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'd
   disabled?: boolean;
   /** Arrow keys wrap from the last item to the first and back. */
   loopFocus?: boolean;
-  /** `outline` marks the selected row with a standing focus-colour outline, for a picker whose choice must stay visible. */
+  /** `outline` marks the selected row with an outline that stays after focus leaves, for a picker whose choice must stay visible. */
   selectionStyle?: 'fill' | 'outline';
   /**
    * Custom tracks for every row, declared once: rows become subgrids of these columns and place their children in

@@ -92,6 +92,31 @@ const styleOf = (element: { color?: Shape.Color; fill?: Shape.Fill; stroke?: Sha
   return Object.keys(style).length > 0 ? style : undefined;
 };
 
+/** The DSL color for a hue; a hue two colors share reads as the stronger. */
+const COLORS: Partial<Record<string, Shape.Color>> = {
+  neutral: 'grey',
+  violet: 'violet',
+  blue: 'blue',
+  sky: 'light-blue',
+  yellow: 'yellow',
+  orange: 'orange',
+  green: 'green',
+  lime: 'light-green',
+  rose: 'light-red',
+  red: 'red',
+};
+
+/** The DSL fields {@link styleOf} read, for a style a shape already has on the canvas. */
+const fieldsOf = (style: NodeStyle | undefined): { color?: Shape.Color; fill?: Shape.Fill; stroke?: Shape.Stroke } => {
+  const color = style?.hue ? COLORS[style.hue] : undefined;
+  const fill = style?.guide ? 'tint' : style?.fill === false ? 'none' : undefined;
+  return {
+    ...(color ? { color } : {}),
+    ...(fill ? { fill } : {}),
+    ...(style?.lineStyle === 'dashed' || style?.lineStyle === 'dotted' ? { stroke: style.lineStyle } : {}),
+  };
+};
+
 /** The size of a box's title (a group's name), the layout's small text. */
 const TITLE_FONT_SIZE = 14;
 
@@ -484,9 +509,16 @@ export const SceneHandler: ContentHandler = {
     return records;
   },
 
-  // `read` shows a title as its own element but it lives on the box's record, so the two are replaced together.
-  completeElements: (previous, elements) => {
+  // `read` shows a title as its own element but it lives on the box's record, so the two are replaced together; `read`
+  // omits a shape's style, so a partial update keeps whatever it does not restate.
+  completeElements: (previous, elements, content) => {
     const ids = new Set(elements.map((element) => element.id));
+    const styled = <T extends Shape.Element>(element: T): T => {
+      const record = managed(content).find(({ dsl }) => dsl?.object === previous.id && dsl.element === element.id);
+      return (element.kind === 'rect' || element.kind === 'ellipse') && record && isNodeRecord(record)
+        ? { ...fieldsOf(record.node.style), ...element }
+        : element;
+    };
     const added: Shape.Element[] = [];
     for (const box of previous.elements) {
       if (box.kind !== 'rect') {
@@ -503,7 +535,7 @@ export const SceneHandler: ContentHandler = {
         added.push(box);
       }
     }
-    return [...added, ...elements];
+    return [...added, ...elements].map(styled);
   },
 
   read: (content) => {

@@ -167,7 +167,8 @@ const DeckRoot = ({
       const command = event.metaKey || event.ctrlKey;
       if (
         isEditable(event.target) ||
-        event.altKey ||
+        // Option makes `[` and `]` on some layouts (German on a Mac), and elsewhere Alt never reports them as those keys.
+        (event.altKey && event.key !== '[' && event.key !== ']') ||
         (command && event.key !== 'ArrowLeft' && event.key !== 'ArrowRight')
       ) {
         return;

@@ -250,6 +250,29 @@ describe('SceneHandler', () => {
       expect(object.elements.map(({ id }) => id)).toEqual(['frame', 'frame-title']);
     });
 
+    test('a partial update keeps the style it does not restate', ({ expect }) => {
+      const content = titled([{ ...frame, color: 'violet', fill: 'tint', stroke: 'dashed' }, label]);
+      const [{ elements }] = SceneHandler.read(content).scene.objects;
+      const title = elements.find(({ id }) => id === 'frame-title');
+      expect(title?.kind).toBe('text');
+      if (title?.kind === 'text') {
+        applyCommands(
+          content,
+          [{ op: 'upsert-elements', objectId: 'group', elements: [{ ...title, text: 'Renamed' }] }],
+          SceneHandler,
+        );
+      }
+      expect(nodeOf(content, 'frame').style).toMatchObject({ hue: 'violet', guide: true, lineStyle: 'dashed' });
+
+      applyCommands(
+        content,
+        [{ op: 'upsert-elements', objectId: 'group', elements: [{ ...frame, x: 40, color: 'green' }] }],
+        SceneHandler,
+      );
+      expect(nodeOf(content, 'frame').style).toMatchObject({ hue: 'green', guide: true, lineStyle: 'dashed' });
+      expect(labelOf(content, 'frame')).toBe('Renamed');
+    });
+
     test('a box given its own text replaces the title', ({ expect }) => {
       const content = titled([frame, label]);
       applyCommands(
