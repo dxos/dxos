@@ -16,6 +16,8 @@ tasks:
       - build
     inputs:
       - astro.config.ts
+      - ec.config.mjs
+      - scripts/**/*
       - SPEC.mdl
       - '@group(sources)'
     outputs:

@@ -4,7 +4,7 @@
 
 // Generates the site's CSS variables from the brand palette, and fails on a contrast miss.
 
-import { readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -69,6 +69,7 @@ writeFileSync(
 
 // The browser reads the favicon outside the page's theme, so it needs a literal color.
 const icon = readFileSync(join(root, 'node_modules/@dxos/brand/assets/icons/echo.svg'), 'utf8');
+mkdirSync(join(root, 'public'), { recursive: true });
 writeFileSync(join(root, 'public/favicon.svg'), icon.replace('currentColor', THEMES.light.mark));
 
 const rgb = (hex) => [1, 3, 5].map((start) => parseInt(hex.slice(start, start + 2), 16));
