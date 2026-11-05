@@ -430,7 +430,7 @@ feat F-3: Pull
 
   req F-3.5:
     when: a path's marker names a mapping other than the one that claims the path now
-    then: the path is released as in F-3.4 and imported as in F-3.1 by the mapping that claims it, whether or not it changed
+    then: the mapping that claims it imports the path as in F-3.1, whether or not it changed, and only then is the old object released as in F-3.4; a failed import leaves the path bound to the old object for the next pass to retry, and a path renamed in the same pass is imported only at its new path
 ```
 
 ```mdl
@@ -780,4 +780,13 @@ decision D-27: A path whose marker names another mapping than the one that claim
 decision D-28: Approve [D-27].
   date: 2026-11-05
   by: user:wittjosiah
+```
+
+```mdl
+decision D-29: A re-claimed path is released from its old object only once the new mapping's import succeeds, and a path renamed in the same pass is imported only at its new path ([F-3.5]). Fills in [D-27].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-3.5]
+  why: Releasing first left a path whose import failed unbound until it changed again, and imported a renamed file's old path anew.
 ```

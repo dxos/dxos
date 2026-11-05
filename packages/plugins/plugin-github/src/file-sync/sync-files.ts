@@ -359,18 +359,16 @@ export const syncFileBinding = Effect.fn('syncFileBinding')(function* (
         }
       }
 
-      // F-3.5: a path another mapping now claims is released from its object and imported anew, changed or not.
-      for (const marker of [...markers.values()]) {
+      // F-3.5: a path another mapping now claims is imported anew, changed or not; pullChange releases it.
+      for (const marker of markers.values()) {
         const claiming = mappingFor(marker.path);
         if (!claiming || claiming.id === marker.mapping) {
           continue;
         }
-        const object = yield* Effect.option(resolveBound(marker.object));
-        if (Option.isSome(object)) {
-          dropKey(object.value, fileKey(repoId, marker.path));
-        }
-        deleteMarker(marker.path);
-        if (!changes.some((change) => change.path === marker.path)) {
+        const touched = changes.some(
+          (change) => change.path === marker.path || (change.kind === 'renamed' && change.from === marker.path),
+        );
+        if (!touched) {
           changes.push({ kind: 'added', path: marker.path, blob: marker.blob });
         }
       }
@@ -414,7 +412,9 @@ export const syncFileBinding = Effect.fn('syncFileBinding')(function* (
             setMarker({ ...previous, path: change.path });
           }
           const marker = markers.get(change.path);
-          if (marker && marker.blob === change.blob) {
+          // F-3.5: a marker another mapping wrote is replaced by a fresh import, whatever its blob.
+          const reclaimed = marker !== undefined && marker.mapping !== mapping.id;
+          if (marker && !reclaimed && marker.blob === change.blob) {
             setMarker({ ...marker, commit: head });
             return change.kind === 'renamed';
           }
@@ -427,7 +427,7 @@ export const syncFileBinding = Effect.fn('syncFileBinding')(function* (
             return false;
           }
 
-          if (!marker) {
+          if (!marker || reclaimed) {
             // F-3.1: a new file, or one a mapping claims for the first time.
             const imported = yield* Operation.invoke(mapping.import, {
               repository: Ref.make(repo),
@@ -435,6 +435,13 @@ export const syncFileBinding = Effect.fn('syncFileBinding')(function* (
               content,
             });
             const object = yield* Database.load(imported.object);
+            if (marker) {
+              // F-3.5: released only once the new import holds it, so a failed import keeps the binding to retry.
+              const released = yield* Effect.option(resolveBound(marker.object));
+              if (Option.isSome(released)) {
+                dropKey(released.value, fileKey(repoId, change.path));
+              }
+            }
             addKey(object, fileKey(repoId, change.path));
             setMarker({
               mapping: mapping.id,

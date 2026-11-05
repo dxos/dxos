@@ -137,13 +137,24 @@ const fakeFetch =
       const [base, head] = route.slice('/compare/'.length).split('...');
       const before = treeOf(git, base);
       const after = treeOf(git, head);
+      // A removed file whose blob reappears at another path is a rename, as GitHub reports it.
+      const removed = [...before].filter(([filename]) => !after.has(filename));
       const files = [
-        ...[...after].flatMap(([filename, sha]) =>
-          before.get(filename) === sha ? [] : [{ filename, sha, status: before.has(filename) ? 'modified' : 'added' }],
-        ),
-        ...[...before.keys()]
-          .filter((filename) => !after.has(filename))
-          .map((filename) => ({ filename, status: 'removed' })),
+        ...[...after].flatMap(([filename, sha]) => {
+          if (before.get(filename) === sha) {
+            return [];
+          }
+          if (before.has(filename)) {
+            return [{ filename, sha, status: 'modified' }];
+          }
+          const index = removed.findIndex(([, removedSha]) => removedSha === sha);
+          if (index < 0) {
+            return [{ filename, sha, status: 'added' }];
+          }
+          const [[previous_filename]] = removed.splice(index, 1);
+          return [{ filename, sha, status: 'renamed', previous_filename }];
+        }),
+        ...removed.map(([filename]) => ({ filename, status: 'removed' })),
       ];
       const status = base === head ? 'identical' : isAncestor(git, base, head) ? 'ahead' : 'diverged';
       return Response.json({ status, files });
@@ -228,6 +239,14 @@ const ExportText = Operation.make({
   meta: { key: DXN.make('com.example.operation.exportText'), name: 'Export text' },
   input: GitHubCapabilities.FileExportInput,
   output: GitHubCapabilities.FileExportOutput,
+  services: [Database.Service],
+});
+
+/** An import no handler answers, as an import that fails does. */
+const Unhandled = Operation.make({
+  meta: { key: DXN.make('com.example.operation.unhandled'), name: 'Unhandled' },
+  input: GitHubCapabilities.FileImportInput,
+  output: GitHubCapabilities.FileImportOutput,
   services: [Database.Service],
 });
 
@@ -553,6 +572,42 @@ describe('plugin-github file sync (spec/FILE-SYNC.mdl)', () => {
     expect(after?.id).not.toBe(before?.id);
     expect(after?.content).toBe(SPEC_V1);
     expect(before && Obj.getKeys(before, GITHUB_SOURCE)).toEqual([]);
+  });
+
+  test('F-3.5: a failed import keeps the path bound to its object, and the next pass retries it', async ({
+    expect,
+  }) => {
+    const { sync, marker, textAt } = await setup();
+    await sync();
+    const before = await textAt('spec/PLUGIN.mdl');
+    const other = { ...MAPPING, id: 'com.example.mapping.other', match: ['spec/PLUGIN.mdl'] };
+    const released = [{ ...MAPPING, exclude: ['spec/PLUGIN.mdl'] }];
+
+    const { result } = await sync([...released, { ...other, import: Unhandled }]);
+
+    expect(result.skipped).toEqual([{ path: 'spec/PLUGIN.mdl', reason: 'import failed' }]);
+    expect(marker('spec/PLUGIN.mdl')).toMatchObject({ mapping: MAPPING.id, object: before && Obj.getURI(before) });
+    expect(before && Obj.getKeys(before, GITHUB_SOURCE)).toEqual([fileKey('1234', 'spec/PLUGIN.mdl')]);
+
+    await sync([...released, other]);
+
+    expect(marker('spec/PLUGIN.mdl')).toMatchObject({ mapping: other.id });
+    expect(before && Obj.getKeys(before, GITHUB_SOURCE)).toEqual([]);
+  });
+
+  test('F-3.5: a path another mapping now claims, renamed in the same pass, is not imported at its old path', async ({
+    expect,
+  }) => {
+    const { git, sync, marker, textAt } = await setup();
+    await sync();
+    const before = await textAt('spec/PLUGIN.mdl');
+    push(git, 'main', { 'spec/PLUGIN.mdl': null, 'spec/MOVED.mdl': SPEC_V1 });
+    const other = { ...MAPPING, id: 'com.example.mapping.other', match: ['spec/PLUGIN.mdl'] };
+
+    await sync([{ ...MAPPING, exclude: ['spec/PLUGIN.mdl'] }, other]);
+
+    expect(marker('spec/PLUGIN.mdl')).toBeUndefined();
+    expect(marker('spec/MOVED.mdl')).toMatchObject({ mapping: MAPPING.id, object: before && Obj.getURI(before) });
   });
 
   test('a merged pull request is adopted without applying its own edits twice', async ({ expect }) => {

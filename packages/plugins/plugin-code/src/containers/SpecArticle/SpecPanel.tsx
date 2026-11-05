@@ -363,7 +363,7 @@ export const SpecPanel = ({ readOnly = false, ...source }: SpecPanelProps) => {
               symbol={codeTarget.fragment}
               source={codeIsLocal ? undefined : t('code-view.github-source.label', { ref: shortSha(codeRef) })}
               error={codeError}
-              onOpenExternal={codePath ? openExternal : undefined}
+              onOpenExternal={codeIsLocal ? openExternal : undefined}
             />
           ) : (
             <Status.Empty classNames='dx-fill' data-testid='code-view.empty'>
