@@ -10,3 +10,5 @@ In a presented deck, left, right, `[` and `]` move between slides past any click
 Choosing a template in the Create Space dialog no longer scrolls the list, so the press lands on the row under the pointer. The chosen template keeps an orange outline, hover is easier to see, and the dialog's scrollbar sits at its edge. `Listbox.Root` gains `selectionStyle='outline'`.
 
 Theme settings gain a hue picker for the focus color.
+
+A `Card.Header`'s Block and icon-only Button stay beside the first line of a wrapping Title. The space Home scrollbar sits at the right edge of the plank.
