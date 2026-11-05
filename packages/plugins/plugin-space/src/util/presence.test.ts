@@ -101,6 +101,17 @@ describe('parseViewingMessage', () => {
     });
   });
 
+  test("keeps a deck's front plank and drops a malformed one", ({ expect }) => {
+    const message = { identityKey: 'peer', added: [], removed: [] };
+    expect(parseViewingMessage({ ...message, deck: { planks: ['root/a'], front: 'root/a' } })?.deck).toEqual({
+      planks: ['root/a'],
+      front: 'root/a',
+    });
+    expect(parseViewingMessage({ ...message, deck: { planks: ['root/a'], front: 7 } })?.deck).toEqual({
+      planks: ['root/a'],
+    });
+  });
+
   test('keeps a well-formed follow target and drops a malformed one', ({ expect }) => {
     const message = { identityKey: 'peer', added: [], removed: [] };
     expect(parseViewingMessage({ ...message, following: { identityKey: 'leader', sessionId: 7 } })?.following).toEqual({

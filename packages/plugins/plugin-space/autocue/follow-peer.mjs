@@ -4,9 +4,11 @@
 
 /**
  * Bob follows Alice around a shared space: his deck opens what she opens and keeps her top line at the top of
- * his view, until he presses Escape. Recorded side by side.
+ * his view, until he presses Escape. Then both decks lay planks side by side, and Bob's deck holds Alice's planks
+ * and slides with hers. Recorded side by side.
  *
  * @mdl packages/plugins/plugin-space/PLUGIN.mdl test QA-5
+ * @mdl packages/plugins/plugin-space/PLUGIN.mdl test QA-6
  * @app composer-app `bundle-e2e` output, served by `vite preview` on 127.0.0.1:4173 (EDGE signaling)
  *
  * A flow for `pair.mjs`, not `driver.mjs`: every step receives both peers. Built and served from
@@ -23,6 +25,7 @@
 const SPACE = 'Launch';
 const AGENDA = 'Agenda';
 const PLAN = 'Launch plan';
+const NOTES = 'Notes';
 const TIMEOUT = 60_000;
 
 const PLAN_TEXT = [
@@ -77,6 +80,25 @@ const scrolledToEnd = (page) =>
   plank(page)
     .locator('.cm-scroller')
     .evaluate((element) => element.scrollHeight - element.clientHeight - element.scrollTop < 120);
+/** The graph paths of the deck's planks, in order. */
+const planks = (page) =>
+  page.getByTestId('deck.plank').evaluateAll((planks) => planks.map((plank) => plank.dataset.attendableId));
+/** The first plank of a sliding deck that is not folded and has at least half its width in the deck's viewport. */
+const frontPlank = (page) =>
+  page.evaluate(() =>
+    [...document.querySelectorAll('[role="listitem"][data-object-id]')]
+      .find((tile) => {
+        let viewport = tile.parentElement;
+        while (viewport && !['auto', 'scroll'].includes(getComputedStyle(viewport).overflowX)) {
+          viewport = viewport.parentElement;
+        }
+        const rect = tile.getBoundingClientRect();
+        const bounds = viewport?.getBoundingClientRect() ?? { left: 0, right: window.innerWidth };
+        const shown = Math.min(rect.right, bounds.right) - Math.max(rect.left, bounds.left);
+        return !tile.hasAttribute('data-folded') && shown >= rect.width / 2;
+      })
+      ?.getAttribute('data-object-id'),
+  );
 const sidebar = (page) => page.locator('[data-scope="main"][data-part="complementary-sidebar"]');
 const membersTab = (page) => page.locator('[id$="trigger-members"]');
 const presenceRows = (page) => sidebar(page).getByTestId('spacePlugin.presence.row');
@@ -143,9 +165,15 @@ const createDocument = async (page, name, text) => {
       .first()
       .click();
     await page.getByTestId('spacePlugin.renameObject').last().click();
-    const field = page.locator('[data-scope="popover"][data-part="content"]').getByRole('textbox', { name: 'Name' });
+    const popover = page.locator('[data-scope="popover"][data-part="content"]');
+    const field = popover.getByRole('textbox', { name: 'Name' });
     await field.fill(name);
     await field.press('Escape');
+    // Escape can land before the popover takes it; it covers the create button until it closes.
+    for (let attempt = 0; attempt < 5 && (await popover.isVisible().catch(() => false)); attempt++) {
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(300);
+    }
   }
   await objectLink(page, name).waitFor({ timeout: TIMEOUT });
   await clearChrome({ page });
@@ -173,7 +201,7 @@ export const steps = [
     },
   },
   {
-    name: `Alice creates "${SPACE}" with two documents and invites Bob`,
+    name: `Alice creates "${SPACE}" with three documents and invites Bob`,
     setup: true,
     run: async ({ peers: { alice, bob } }) => {
       const { page } = alice;
@@ -188,6 +216,7 @@ export const steps = [
 
       await createDocument(page, AGENDA, '# Agenda\n\nWalk through the launch plan together.\n');
       await createDocument(page, PLAN, `# Launch plan\n\n${PLAN_TEXT}`);
+      await createDocument(page, NOTES, '# Notes\n\nQuestions to settle before launch.\n');
       await objectLink(page, AGENDA).click();
       await waitFor(async () => (await textbox(page).innerText()).includes('Walk through'), {
         what: 'Alice to open the agenda',
@@ -324,5 +353,87 @@ export const steps = [
       }
     },
     pace: 4_000,
+  },
+  {
+    name: 'Both turn off Flatten deck',
+    subtitle: 'QA-6: each deck now lays its planks side by side (Settings → Deck)',
+    run: async ({ peers: { alice, bob } }) => {
+      // The same setting as the Deck settings switch, set in place so neither peer leaves the space.
+      for (const { page } of [alice, bob]) {
+        await page.evaluate(() => {
+          const { manager } = globalThis.composer;
+          const { atom } = manager.capabilities
+            .getAll({ identifier: 'org.dxos.app-framework.capability.settings' })
+            .find(({ prefix }) => prefix === 'org.dxos.plugin.deck');
+          manager.registry.update(atom, (settings) => ({ ...settings, flatten: false }));
+        });
+        await waitFor(
+          () =>
+            page.evaluate(() => {
+              const { manager } = globalThis.composer;
+              const [layout] = manager.capabilities.getAll({ identifier: 'org.dxos.app-framework.capability.layout' });
+              return manager.registry.get(layout).flat === false;
+            }),
+          { what: 'the deck to stop flattening' },
+        );
+      }
+    },
+    pace: 2_500,
+  },
+  {
+    name: 'Bob follows Alice again',
+    run: async ({ peers: { bob } }) => {
+      const follow = presenceRows(bob.page).getByTestId('spacePlugin.presence.follow').first();
+      // The Members companion is usually still open from the first follow; clicking its tab then would close it.
+      if ((await sidebar(bob.page).getAttribute('data-state')) !== 'expanded') {
+        await bob.click(membersTab(bob.page));
+      }
+      await follow.waitFor({ state: 'attached', timeout: TIMEOUT });
+      await presenceRows(bob.page).first().hover();
+      await bob.click(follow);
+      await presenceRows(bob.page).first().getByTestId('spacePlugin.presence.stopFollowing').waitFor();
+    },
+    pace: 2_500,
+  },
+  {
+    name: 'Alice opens the agenda and the notes beside the plan; Bob’s deck holds the same planks',
+    subtitle: 'QA-6 steps 1 and 2',
+    run: async ({ peers: { alice, bob } }) => {
+      for (const name of [AGENDA, NOTES]) {
+        await alice.click(objectLink(alice.page, name), { modifiers: ['Shift'] });
+      }
+      await waitFor(async () => (await planks(alice.page)).length === 3, { what: 'three planks in Alice’s deck' });
+      const expected = JSON.stringify(await planks(alice.page));
+      await waitFor(async () => JSON.stringify(await planks(bob.page)) === expected, {
+        what: 'Bob’s deck to hold Alice’s planks',
+      });
+    },
+    pace: 3_500,
+  },
+  {
+    name: 'Alice slides her deck back to the plan; Bob’s slides with it',
+    subtitle: 'QA-6 step 3: the plank at the front of her deck is at the front of his',
+    run: async ({ peers: { alice, bob } }) => {
+      const [plan] = await planks(alice.page);
+      await alice.page.evaluate(
+        (subject) =>
+          globalThis.composer.invoke('org.dxos.operation.appToolkit.scrollIntoView', { subject, focus: false }),
+        plan,
+      );
+      await waitFor(async () => (await frontPlank(alice.page)) === plan, { what: 'Alice’s deck to slide to the plan' });
+      await waitFor(async () => (await frontPlank(bob.page)) === plan, { what: 'Bob’s deck to slide to the plan' });
+    },
+    pace: 3_500,
+  },
+  {
+    name: 'Bob presses Escape; following stops',
+    subtitle: 'QA-6 step 4',
+    run: async ({ peers: { bob } }) => {
+      await bob.page.keyboard.press('Escape');
+      await waitFor(async () => (await membersTab(bob.page).getAttribute('data-badge')) === null, {
+        what: 'the dot to clear',
+      });
+    },
+    pace: 3_000,
   },
 ];

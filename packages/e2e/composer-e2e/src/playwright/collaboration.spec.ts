@@ -376,8 +376,11 @@ test.describe('Collaboration tests', () => {
         .poll(() => new URL(host.page.url()).pathname, { timeout: 30_000 })
         .toBe(new URL(guest.page.url()).pathname);
       const guestTextbox = Markdown.getMarkdownTextboxWithLocator(guest.deck.plank().locator);
-      await guestTextbox.focus();
-      await guestTextbox.fill(Array.from({ length: 120 }, (_, i) => `Line ${i + 1}`).join('\n'));
+      // The editor can remount while the document loads, so a fill can land on the loading one; retry it.
+      await expect(async () => {
+        await guestTextbox.focus();
+        await guestTextbox.fill(Array.from({ length: 120 }, (_, i) => `Line ${i + 1}`).join('\n'));
+      }).toPass({ timeout: 30_000 });
       await guest.page.keyboard.press('ControlOrMeta+End');
       const hostScroller = host.deck.plank().locator.locator('.cm-scroller');
       await expect
