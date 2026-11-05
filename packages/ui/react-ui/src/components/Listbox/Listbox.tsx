@@ -99,6 +99,8 @@ type ListboxRootProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'd
   disabled?: boolean;
   /** Arrow keys wrap from the last item to the first and back. */
   loopFocus?: boolean;
+  /** `outline` marks the selected row with a standing focus-colour outline, for a picker whose choice must stay visible. */
+  selectionStyle?: 'fill' | 'outline';
   /**
    * Custom tracks for every row, declared once: rows become subgrids of these columns and place their children in
    * order. Without it rows lay out by part (a leading cell, the text over its description, trailing parts).
@@ -140,6 +142,7 @@ const ListboxRoot = forwardRef<HTMLDivElement, ListboxRootProps>(
       deselectable,
       disabled,
       loopFocus,
+      selectionStyle,
       columns,
       tiles,
       tileWidth: tileWidthProp,
@@ -188,6 +191,7 @@ const ListboxRoot = forwardRef<HTMLDivElement, ListboxRootProps>(
           loopFocus={loopFocus}
           scrollToIndexFn={isWindowed(virtual) ? ({ index }) => scrollToIndexRef.current?.(index) : undefined}
           data-size={size}
+          data-selection-style={selectionStyle}
           className={mx(recipes.listbox(), classNames)}
           ref={forwardedRef}
         >
@@ -472,11 +476,12 @@ const ListboxItem = forwardRef<HTMLDivElement, ListboxItemProps>(
               if (isFromControl(event.currentTarget, event.target)) {
                 return;
               }
+              // Zag's focus scrolls a list taller than its scroller to the list's top, moving the row out from under the press,
+              // so the list is focused first and Zag's call does nothing.
+              event.currentTarget.closest<HTMLElement>('[role="listbox"]')?.focus({ preventScroll: true });
               // Zag cancels the press to keep focus on the list, which would also stop the native drag of a row that is its
-              // own drag handle (`data-drag-row`, set by useReorder); such a row moves focus to the list itself instead.
-              if (event.currentTarget.hasAttribute('data-drag-row')) {
-                event.currentTarget.closest<HTMLElement>('[role="listbox"]')?.focus({ preventScroll: true });
-              } else {
+              // own drag handle (`data-drag-row`, set by useReorder).
+              if (!event.currentTarget.hasAttribute('data-drag-row')) {
                 itemProps.onMouseDown?.(event);
               }
             }}
