@@ -273,6 +273,26 @@ describe('SceneHandler', () => {
       expect(labelOf(content, 'frame')).toBe('Renamed');
     });
 
+    test('removing a title clears it from its box and keeps the box', ({ expect }) => {
+      const content = titled([{ ...frame, color: 'violet' }, label]);
+      applyCommands(content, [{ op: 'remove-elements', objectId: 'group', elementIds: ['frame-title'] }], SceneHandler);
+      expect(labelOf(content, 'frame')).toBeUndefined();
+      expect(nodeOf(content, 'frame').style).toMatchObject({ hue: 'violet' });
+      const [object] = SceneHandler.read(content).scene.objects;
+      expect(object.elements.map(({ id }) => id)).toEqual(['frame']);
+    });
+
+    test('removing a box and its title removes both', ({ expect }) => {
+      const content = titled([frame, { ...frame, id: 'other', x: 900 }, label]);
+      applyCommands(
+        content,
+        [{ op: 'remove-elements', objectId: 'group', elementIds: ['frame', 'frame-title'] }],
+        SceneHandler,
+      );
+      const [object] = SceneHandler.read(content).scene.objects;
+      expect(object.elements.map(({ id }) => id)).toEqual(['other']);
+    });
+
     test('a box given its own text replaces the title', ({ expect }) => {
       const content = titled([frame, label]);
       applyCommands(

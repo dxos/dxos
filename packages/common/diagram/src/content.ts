@@ -75,6 +75,12 @@ export type ContentHandler = {
     elements: readonly Shape.Element[],
     content: ContentMap,
   ) => readonly Shape.Element[];
+  /** Elements to re-render after a removal, for a renderer that reads part of one record as an element of its own. */
+  rewriteOnRemove?: (
+    previous: ReadWorldObject,
+    elementIds: ReadonlySet<string>,
+    content: ContentMap,
+  ) => readonly Shape.Element[];
 };
 
 /** Apply a batch of edit commands to the canvas content (mutates `content`). */
@@ -143,7 +149,13 @@ export const applyCommands = (
 
       case 'remove-elements': {
         const ids = new Set(command.elementIds);
-        removed += remove((identity) => identity.object === command.objectId && ids.has(identity.element));
+        const previous = find(command.objectId);
+        const rewritten = (previous && handler.rewriteOnRemove?.(previous, ids, content)) || [];
+        const replaced = new Set([...ids, ...rewritten.map((element) => element.id)]);
+        removed += remove((identity) => identity.object === command.objectId && replaced.has(identity.element));
+        if (previous && rewritten.length > 0) {
+          merge({ id: command.objectId, elements: rewritten }, previous);
+        }
         break;
       }
 

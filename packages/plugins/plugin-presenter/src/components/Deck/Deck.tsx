@@ -59,6 +59,9 @@ const ACTIVATABLE =
   'button, a[href], summary, [role="button"], [role="checkbox"], [role="switch"], [role="menuitem"], [role="tab"], [role="option"]';
 
 /** Where a key moves the grid's current slide; undefined for a key the grid leaves alone. */
+/** Option makes `[` and `]` on some layouts (German on a Mac), and elsewhere Alt never reports them as those keys. */
+const isAltChord = ({ altKey, key }: { altKey: boolean; key: string }): boolean => altKey && key !== '[' && key !== ']';
+
 const gridTarget = (key: string, index: number, count: number, grid: Element): number | undefined => {
   switch (key) {
     case 'ArrowDown':
@@ -167,8 +170,7 @@ const DeckRoot = ({
       const command = event.metaKey || event.ctrlKey;
       if (
         isEditable(event.target) ||
-        // Option makes `[` and `]` on some layouts (German on a Mac), and elsewhere Alt never reports them as those keys.
-        (event.altKey && event.key !== '[' && event.key !== ']') ||
+        isAltChord(event) ||
         (command && event.key !== 'ArrowLeft' && event.key !== 'ArrowRight')
       ) {
         return;
@@ -512,7 +514,7 @@ const DeckGrid = Util.composable<HTMLDivElement, DeckGridProps>(
         // Capture, so one path handles these keys whether the grid or a listbox tile has focus.
         onKeyDownCapture={(event) => {
           onKeyDownCapture?.(event);
-          if (ownsKeysInGrid(event.target) || event.metaKey || event.ctrlKey || event.altKey) {
+          if (ownsKeysInGrid(event.target) || event.metaKey || event.ctrlKey || isAltChord(event)) {
             return;
           }
           const present =

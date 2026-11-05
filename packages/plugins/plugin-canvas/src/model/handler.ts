@@ -243,6 +243,14 @@ const placeOnLayers = (content: ContentMap, scene: string, records: ContentMap) 
   }
 };
 
+/** A shape as updated, with the style it has on the canvas where the update does not restate one. */
+const withStoredStyle = (content: ContentMap, object: string, element: Shape.Element): Shape.Element => {
+  const record = managed(content).find(({ dsl }) => dsl?.object === object && dsl.element === element.id);
+  return (element.kind === 'rect' || element.kind === 'ellipse') && record && isNodeRecord(record)
+    ? { ...fieldsOf(record.node.style), ...element }
+    : element;
+};
+
 export const SceneHandler: ContentHandler = {
   identify: (record) =>
     isElementRecord(record) && record.dsl ? { object: record.dsl.object, element: record.dsl.element } : undefined,
@@ -513,12 +521,6 @@ export const SceneHandler: ContentHandler = {
   // omits a shape's style, so a partial update keeps whatever it does not restate.
   completeElements: (previous, elements, content) => {
     const ids = new Set(elements.map((element) => element.id));
-    const styled = <T extends Shape.Element>(element: T): T => {
-      const record = managed(content).find(({ dsl }) => dsl?.object === previous.id && dsl.element === element.id);
-      return (element.kind === 'rect' || element.kind === 'ellipse') && record && isNodeRecord(record)
-        ? { ...fieldsOf(record.node.style), ...element }
-        : element;
-    };
     const added: Shape.Element[] = [];
     for (const box of previous.elements) {
       if (box.kind !== 'rect') {
@@ -535,8 +537,17 @@ export const SceneHandler: ContentHandler = {
         added.push(box);
       }
     }
-    return [...added, ...elements].map(styled);
+    return [...added, ...elements].map((element) => withStoredStyle(content, previous.id, element));
   },
+
+  // Removing a title is an update of the box it lives on, so the box goes back without it.
+  rewriteOnRemove: (previous, elementIds, content) =>
+    previous.elements.flatMap((box) => {
+      const title = box.kind === 'rect' ? titleOf(previous.elements, box) : undefined;
+      return title && elementIds.has(title.id) && !elementIds.has(box.id)
+        ? [withStoredStyle(content, previous.id, box)]
+        : [];
+    }),
 
   read: (content) => {
     const records = managed(content);
