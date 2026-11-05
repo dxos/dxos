@@ -69,7 +69,7 @@ const laneRow = (cache: LaneRowCache, key: string, created: string, text: string
 /**
  * Arranges the thread's rows for a chat that ran several requests at once (light threads). Rows keep feed order:
  * moving a row the virtual list has already placed makes it re-anchor without end. A lane a newer lane of the same
- * owner sent to the background becomes a fixed-height card at its first row, holding all of its work, so its rows
+ * owner sent to the background becomes a card at its first row, holding all of its work, so its rows
  * never interleave with the newer request's; once it has finished, its final answer shows full height where it
  * landed, at the time it completed. Every other lane that overlapped one shows in place with its gutter, which is
  * how agents talking to the reader at once stay side by side. A chat whose lanes never overlapped is returned as it is.
@@ -152,7 +152,16 @@ export const arrangeLanes = ({
   const chrome = new Map<string, ThreadLane>();
   const threadLanes = new Map<string, ThreadLane>();
   const carded = new Set<string>();
+  // Adjacent cards share one row, so they wrap across the thread rather than stacking.
+  let flow: LaneCardData[] = [];
+  const flush = () => {
+    if (flow.length > 0) {
+      arranged.push(laneRow(cache, `lane:${flow[0].lane.id}`, flow[0].lane.started, laneTag(flow)));
+      flow = [];
+    }
+  };
   const shown = (lane: Reducer.Lane, message: Message.Message) => {
+    flush();
     const threadLane = threadLanes.get(lane.id) ?? toThreadLane(lane);
     threadLanes.set(lane.id, threadLane);
     chrome.set(message.id, threadLane);
@@ -162,23 +171,25 @@ export const arrangeLanes = ({
     const id = laneOf(message.id);
     const lane = id !== undefined ? byId.get(id) : undefined;
     if (!lane) {
+      flush();
       arranged.push(message);
     } else if (!lane.backgrounded) {
       shown(lane, message);
     } else {
       if (!carded.has(lane.id)) {
         carded.add(lane.id);
-        const data: LaneCardData = {
+        flow.push({
           lane: { ...toThreadLane(lane), first: undefined },
           lines: (buckets.get(lane.id) ?? []).flatMap(toLines).slice(-CARD_LINES),
-        };
-        arranged.push(laneRow(cache, `lane:${lane.id}`, lane.created, laneTag(data)));
+        });
       }
       if (finals.get(lane.id) === message.id) {
         shown(lane, message);
       }
     }
   }
+
+  flush();
 
   // Only the lanes in this chat keep rows, so the cache is bounded by the chat rather than growing with every lane.
   const live = new Set(lanes.map((lane) => `lane:${lane.id}`));

@@ -235,15 +235,17 @@ const HIDDEN_BLOCKS = new Set(['stats']);
 /** A lane as the log names it: the first word of its title. */
 const laneName = (title: string | undefined): string => title?.split(/\s+/)[0] ?? '?';
 
-/** A background lane's card, as `card<Name:status>`; undefined for any other row. */
+/** A row of background lanes' cards, each as `card<Name:status>`; undefined for any other row. */
 const formatCard = (message: Message.Message): string | undefined => {
   const [block] = message.blocks;
   const card = block?._tag === 'text' ? /^<lane>(.*)<\/lane>$/s.exec(block.text)?.[1] : undefined;
   if (card === undefined) {
     return undefined;
   }
-  const data: LaneCardData = JSON.parse(card.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&'));
-  return `card<${laneName(data.lane.title)}:${data.lane.status}>`;
+  const cards: readonly LaneCardData[] = JSON.parse(
+    card.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&'),
+  );
+  return cards.map(({ lane }) => `card<${laneName(lane.title)}:${lane.status}>`).join(' ');
 };
 
 const formatMessage = (message: Message.Message, thread: ThreadProjection): string | undefined => {
