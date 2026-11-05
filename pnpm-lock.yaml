@@ -27098,6 +27098,9 @@ importers:
       '@dxos/react-ui-canvas':
         specifier: workspace:*
         version: link:../../packages/ui/react-ui-canvas
+      '@dxos/scene':
+        specifier: workspace:*
+        version: link:../../packages/common/scene
       '@fontsource/poiret-one':
         specifier: 'catalog:'
         version: 5.2.8
@@ -27129,9 +27132,6 @@ importers:
       '@dxos/react-ui-dnd':
         specifier: workspace:*
         version: link:../../packages/ui/react-ui-dnd
-      '@dxos/scene':
-        specifier: workspace:*
-        version: link:../../packages/common/scene
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../packages/ui/ui-theme
