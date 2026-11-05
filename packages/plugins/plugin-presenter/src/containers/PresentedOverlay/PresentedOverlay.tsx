@@ -61,6 +61,7 @@ export const PresentedOverlay = ({ presentation }: PresentedOverlayProps) => {
           new KeyboardEvent('keydown', {
             key: event.key,
             shiftKey: event.shiftKey,
+            altKey: event.altKey,
             metaKey: event.metaKey,
             ctrlKey: event.ctrlKey,
             bubbles: true,
