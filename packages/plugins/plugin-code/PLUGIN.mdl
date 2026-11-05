@@ -1478,7 +1478,7 @@ test QA-5: Switch between a project's specs
     - name: See the project's specs
       do: Open the project "Inbox" on its Overview.
       expect: the project's form lists its specs under Specs, "Inbox and agents" and then "Launch talk", each a row
-        folded under its name, with a `+` beside the label, and the toolbar offers Create artifact
+        folded under its name, with a `+` beside the label, and Artifacts carries a `+` of its own
     - name: Unfold a spec
       do: Unfold the row "Inbox and agents" and type a description.
       expect: the row shows the spec's Name and Description fields nested in the project's form, and the description
@@ -1489,7 +1489,7 @@ test QA-5: Switch between a project's specs
     - name: Open the Specs tab
       do: Click the Specs tab and scroll through the document.
       expect: the tab shows "Inbox and agents", its prose and goals with its features embedded under their headings,
-        and the toolbar holds the spec dropdown, the view toggle and Extensions instead of Create artifact
+        and the toolbar holds the spec dropdown, the view toggle and Extensions
     - name: Turn an idea into a feature
       do: At the end of the line "A morning digest of what agents did overnight", type `/feature`, press Enter and
         type a description.
@@ -2265,6 +2265,13 @@ decision D-81: A review whose front matter names another file than the one GitHu
   why: op:createSpecReview takes the spec apart from the text, so a review of another spec could be recorded on this one; and a file the check accepted was refused on import.
   rejected:
     - Matching the review's repository as well, which needs a Repo lookup for a mistake the path already catches.
+```
+
+```mdl
+decision D-82: QA-5 finds Create artifact on the overview's Artifacts heading rather than the toolbar, following plugin-projects ([org.dxos.plugin.projects#D-199]).
+  date: 2026-11-05
+  by: user:wittjosiah
+  affects: [QA-5]
 ```
 
 ## Appendix: Extension Definitions

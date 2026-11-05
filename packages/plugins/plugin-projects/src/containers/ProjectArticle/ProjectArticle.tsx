@@ -259,7 +259,6 @@ export const ProjectArticle = ({
     specActions: spec ? levelActions : undefined,
     checkedTasks: delegatableTasks,
     showPipeline,
-    onAddArtifact: () => void handleAddArtifact(),
     onDelegated: uncheck,
     onTogglePipeline: togglePipeline,
   });
@@ -297,7 +296,7 @@ export const ProjectArticle = ({
       // A status once picked is never cleared, so the pill offers no "None".
       status: { required: true },
       description: { presentation: 'plain', placeholder: t('project-description.placeholder'), collaborative: true },
-      specs: { presentation: 'section', label: t('specs.label') },
+      specs: { presentation: 'section', label: t('specs.label'), placeholder: t('specs-empty.message') },
     }),
     [t],
   );
@@ -431,21 +430,37 @@ export const ProjectArticle = ({
                     label={t('artifacts.label')}
                     data-testid='projectsPlugin.artifacts'
                     actions={
-                      artifacts.length > ARTIFACT_LIMIT && (
-                        // TODO(wittjosiah): Open a companion listing every artifact rather than growing the overview.
+                      <>
+                        {artifacts.length > ARTIFACT_LIMIT && (
+                          // TODO(wittjosiah): Open a companion listing every artifact rather than growing the overview.
+                          <Button.Root
+                            variant='ghost'
+                            data-testid='projectsPlugin.artifacts.showAll'
+                            onClick={() => setShowAllArtifacts((showAll) => !showAll)}
+                          >
+                            {showAllArtifacts
+                              ? t('show-fewer-artifacts.label')
+                              : t('show-all-artifacts.label', { count: artifacts.length })}
+                          </Button.Root>
+                        )}
                         <Button.Root
+                          iconOnly
                           variant='ghost'
-                          data-testid='projectsPlugin.artifacts.showAll'
-                          onClick={() => setShowAllArtifacts((showAll) => !showAll)}
-                        >
-                          {showAllArtifacts
-                            ? t('show-fewer-artifacts.label')
-                            : t('show-all-artifacts.label', { count: artifacts.length })}
-                        </Button.Root>
-                      )
+                          icon='ph--plus--regular'
+                          label={t('create-artifact.label')}
+                          data-testid='projectsPlugin.addArtifact'
+                          onClick={() => void handleAddArtifact()}
+                        />
+                      </>
                     }
                   >
-                    <ObjectGallery objects={shownArtifacts} onOpen={handleOpen} onDelete={handleDeleteArtifact} />
+                    {artifacts.length > 0 ? (
+                      <ObjectGallery objects={shownArtifacts} onOpen={handleOpen} onDelete={handleDeleteArtifact} />
+                    ) : (
+                      <Typography.Text tone='muted' data-testid='projectsPlugin.artifacts.empty'>
+                        {t('artifacts-empty.message')}
+                      </Typography.Text>
+                    )}
                   </Form.FieldSet>
 
                   {milestoneRefs.length > 0 && (
@@ -855,7 +870,6 @@ export type ToolbarActionsProps = {
   checkedTasks: readonly Task.Task[];
   /** Whether the pipeline chart is shown under the ledger. */
   showPipeline: boolean;
-  onAddArtifact: () => void;
   /** Called once the checked tasks are delegated, so the boxes clear with the work. */
   onDelegated: (tasks: readonly Task.Task[]) => void;
   onTogglePipeline: () => void;
@@ -872,7 +886,6 @@ const useToolbarActions = ({
   specActions,
   checkedTasks,
   showPipeline,
-  onAddArtifact,
   onDelegated,
   onTogglePipeline,
 }: ToolbarActionsProps) => {
@@ -925,21 +938,6 @@ const useToolbarActions = ({
         .separator()
         .subgraph(tab === 'spec' ? specActions : undefined)
         .subgraph(
-          tab === 'overview'
-            ? (group) =>
-                group.action(
-                  'add-artifact',
-                  {
-                    label: ['create-artifact.label', { ns: ProjectsNamespace.key }],
-                    icon: 'ph--plus--regular',
-                    disposition: 'toolbar',
-                    testId: 'projectsPlugin.addArtifact',
-                  },
-                  onAddArtifact,
-                )
-            : undefined,
-        )
-        .subgraph(
           tab === 'tasks'
             ? (group) =>
                 group
@@ -981,16 +979,6 @@ const useToolbarActions = ({
             : undefined,
         )
         .build(),
-    [
-      tab,
-      tabs,
-      onAddArtifact,
-      delegateTasks,
-      specActions,
-      checkedTasks.length,
-      delegating,
-      showPipeline,
-      onTogglePipeline,
-    ],
+    [tab, tabs, delegateTasks, specActions, checkedTasks.length, delegating, showPipeline, onTogglePipeline],
   );
 };

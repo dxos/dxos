@@ -425,15 +425,15 @@ export const WithSpec: Story = {
   },
 };
 
-/** Each tab's tools follow the tabs: Create artifact on the Overview, the agent and the chart on the Tasks tab. */
+/** Each tab's tools follow the tabs: the agent and the chart on Tasks; the Overview adds artifacts in their section. */
 export const ToolbarByTab: Story = {
   ...Default,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await seedContent();
-    await expect(
-      canvas.findByTestId('projectsPlugin.addArtifact', undefined, { timeout: 10_000 }),
-    ).resolves.toBeTruthy();
+    const artifacts = await canvas.findByTestId('projectsPlugin.artifacts', undefined, { timeout: 10_000 });
+    await expect(within(artifacts).getByTestId('projectsPlugin.addArtifact')).toBeTruthy();
+    await expect(canvas.getAllByTestId('projectsPlugin.addArtifact')).toHaveLength(1);
     await expect(canvas.queryByTestId('projectsPlugin.delegateTasks')).toBeNull();
     await expect(canvas.queryByTestId('projectsPlugin.createChat')).toBeNull();
 
@@ -602,8 +602,10 @@ export const WithoutSpec: Story = {
     await waitFor(() => expect(canvas.getAllByTestId('name')[0]).toHaveTextContent(OTHER_PROJECT_NAME), {
       timeout: 10_000,
     });
-    const specs = await canvas.findByRole('listbox', { name: 'Specs' }, { timeout: 10_000 });
-    await expect(within(specs).queryAllByRole('option')).toHaveLength(0);
+    await expect(
+      canvas.findByText('This project has no specs yet.', undefined, { timeout: 10_000 }),
+    ).resolves.toBeTruthy();
+    await expect(canvas.queryByRole('listbox', { name: 'Specs' })).toBeNull();
 
     await showTab(canvas, 'spec');
     await userEvent.click(await canvas.findByTestId('projectsPlugin.addSpec', undefined, { timeout: 10_000 }));
