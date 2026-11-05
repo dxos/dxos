@@ -4,14 +4,7 @@
 
 import React from 'react';
 
-import {
-  type SourceKey,
-  type Verdict,
-  type VerdictStatus,
-  formatSourceKey,
-  parseSourceKey,
-  walkthroughOf,
-} from '@dxos/deus/review';
+import { type SourceKey, type Verdict, formatSourceKey, parseSourceKey, walkthroughOf } from '@dxos/deus/review';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -24,15 +17,6 @@ import { CodeNamespace } from '../../namespace.ts';
 import { type SourceReader } from '../SpecEditor/snippet-card.ts';
 import { STATUS_STYLE } from '../SpecModel/index.ts';
 import { Walkthrough } from './Walkthrough.tsx';
-
-/** Status icon colours, matching the review chips in the editor's margin. */
-const STATUS_TEXT: Record<VerdictStatus, string> = {
-  done: 'text-success-text',
-  untested: 'text-info-text',
-  partial: 'text-warning-text',
-  diverged: 'text-orange-text',
-  missing: 'text-error-text',
-};
 
 export type VerdictCardProps = {
   verdict: Verdict;
@@ -71,7 +55,7 @@ export const VerdictCard = Util.composable<HTMLDivElement, VerdictCardProps>(
       >
         <Card.Header>
           <Layout.Block rail='start'>
-            <Icon.Icon icon={style.icon} classNames={STATUS_TEXT[status]} />
+            <Icon.Icon icon={style.icon} classNames={style.text} />
           </Layout.Block>
           <Card.Title truncate classNames='font-mono'>
             {id}
@@ -112,7 +96,7 @@ export const VerdictCard = Util.composable<HTMLDivElement, VerdictCardProps>(
           )}
           {note && (
             <Card.Row>
-              <Card.Text lines={4} variant='muted'>
+              <Card.Text lines={current ? undefined : 4} variant='muted'>
                 {note}
               </Card.Text>
             </Card.Row>

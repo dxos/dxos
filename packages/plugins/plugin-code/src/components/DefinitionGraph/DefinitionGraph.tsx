@@ -97,7 +97,7 @@ const DefinitionCard = ({ definition, dependents, status, change }: DefinitionCa
           </Card.Title>
           {status && (
             <Layout.Block rail='end'>
-              <Icon.Icon icon={STATUS_STYLE[status].icon} classNames={STATUS_TEXT[status]} />
+              <Icon.Icon icon={STATUS_STYLE[status].icon} classNames={STATUS_STYLE[status].text} />
             </Layout.Block>
           )}
         </Card.Header>
@@ -130,15 +130,6 @@ const DefinitionCard = ({ definition, dependents, status, change }: DefinitionCa
       </Card.Root>
     </div>
   );
-};
-
-/** Status icon colours, matching the review gutter. */
-const STATUS_TEXT: Record<VerdictStatus, string> = {
-  done: 'text-success-text',
-  untested: 'text-info-text',
-  partial: 'text-warning-text',
-  diverged: 'text-orange-text',
-  missing: 'text-error-text',
 };
 
 type KindLegendProps = {

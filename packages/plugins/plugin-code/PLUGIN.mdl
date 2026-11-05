@@ -1086,6 +1086,10 @@ feat F-24: Spec reviews in ECHO
               editor's status chip, the Review view's cards, and a chip on each requirement where a feature's page and
               its section in a spec list them. A feature card shows no verdicts.
   req F-24.6: The Review view picks a review from the spec's history; it shows the current status by default.
+  req F-24.7: The Review view shows the review's summary as markdown: its first paragraph, with the rest behind a
+              disclosure. Below it, a filter of each status with its count, worst first, stays pinned above the cards
+              and shows only that status's verdicts. The summary, filter and cards scroll together under the picker,
+              and the current card shows its note in full.
 ```
 
 ## Acceptance
@@ -2148,6 +2152,16 @@ decision D-69: A spec's reviews are ECHO objects beside the spec, one `SpecRevie
   affects: [F-16.1, F-24]
   why: A review read from the checkout is lost to anyone without that checkout, and the file holds only the latest review.
   rejected: Writing reviews back to git; a review per item rather than per review; backfilling reviews from git history.
+```
+
+```mdl
+decision D-70: The Review view leads with the review's summary, rendered as markdown and cut only at its first paragraph, with the rest behind a disclosure. The status counts become a filter pinned right above the cards they filter, each status an icon and count with its name in a tooltip, so the row fits a narrow panel. The summary scrolls with the cards rather than holding a fixed share of the panel.
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-16.4, F-24.7]
+  why: A six-line clip cut the summary mid-line, showed its source line breaks and backticks, and hid most of it; the counts looked like filters and did nothing, and as labelled tags they filled the panel's width.
+  rejected: Grouping the cards under collapsible status headers; a fixed-height summary with its own scroll.
 ```
 
 ## Appendix: Extension Definitions
