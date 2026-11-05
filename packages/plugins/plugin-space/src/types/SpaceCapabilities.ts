@@ -59,6 +59,8 @@ export type SpaceEphemeralState = {
   navigableCollections: boolean;
   /** Sessions viewing each object, keyed by the object's EID, the peer's hex identity key, then the session id. */
   viewersByObject: Record<string, Record<string, Record<string, SpaceSchema.ObjectViewerProps>>>;
+  /** Each peer session's deck as it last reported it, keyed by space id, the peer's hex identity key, then the session id. */
+  peerDecks: Record<string, Record<string, Record<string, SpaceSchema.PeerDeck>>>;
   mergePreview: MergePreview | undefined;
   /** Bumped when a merge commits, so an open duplicates review knows to rescan. */
   lastMergeAt: number | undefined;

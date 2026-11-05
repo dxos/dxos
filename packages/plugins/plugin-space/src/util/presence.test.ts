@@ -8,8 +8,10 @@ import { Key } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
 import {
+  applyPeerDeck,
   applyViewingMessage,
   getPeerFocus,
+  getPeerPlankPath,
   getPresenceKeyFromPath,
   groupPresenceChangesBySpace,
   groupPresenceKeysBySpace,
@@ -84,6 +86,7 @@ describe('parseViewingMessage', () => {
         removed: [],
         attended: [key],
         locations: { [key]: { selection: 'a:b', viewport: 3 }, [other]: {} },
+        deck: { planks: ['root/a', 7] },
       }),
     ).toEqual({
       identityKey: 'peer',
@@ -93,6 +96,7 @@ describe('parseViewingMessage', () => {
       removed: [],
       attended: [key],
       locations: { [key]: { selection: 'a:b' } },
+      deck: { planks: ['root/a'] },
     });
   });
 
@@ -174,5 +178,17 @@ describe('getPeerFocus', () => {
   test('follows the session that moved most recently, or the one asked for', ({ expect }) => {
     expect(getPeerFocus(viewers, spaceId, 'peer', 3)).toEqual({ key: other, sessionId: 's2', location: undefined });
     expect(getPeerFocus(viewers, spaceId, 'peer', 3, 's1')).toEqual({ key, sessionId: 's1', location: undefined });
+  });
+});
+
+describe('getPeerPlankPath', () => {
+  test('finds the path a session has the object open at, and nothing for a session that sent no deck', ({ expect }) => {
+    const key = EID.make({ spaceId, entityId: childId });
+    const path = `root/${spaceId}/content/collections/${objectId}/${childId}`;
+    const message = { identityKey: 'peer', sessionId: 's1', added: [key], removed: [], attended: [key], locations: {} };
+    const decks = applyPeerDeck({}, spaceId, 'peer', { ...message, deck: { planks: [`root/${spaceId}/home`, path] } });
+    expect(getPeerPlankPath(decks, spaceId, 'peer', 's1', key)).toBe(path);
+    expect(getPeerPlankPath(applyPeerDeck(decks, spaceId, 'peer', message), spaceId, 'peer', 's1', key)).toBe(path);
+    expect(getPeerPlankPath(decks, spaceId, 'peer', 's2', key)).toBeUndefined();
   });
 });
