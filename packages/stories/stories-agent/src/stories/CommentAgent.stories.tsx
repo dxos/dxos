@@ -10,9 +10,8 @@ import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type Database, type Obj, Ref } from '@dxos/echo';
-import * as CanvasType from '@dxos/plugin-canvas/Canvas';
+import { addCanvasDrawing, canvasDrawingSchemas } from '@dxos/plugin-canvas/Architecture';
 import * as CanvasPlugin from '@dxos/plugin-canvas/CanvasPlugin';
-import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as DrawingOperation from '@dxos/plugin-illustrator/DrawingOperation';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import { translations as illustratorTranslations } from '@dxos/plugin-illustrator/translations';
@@ -92,8 +91,7 @@ const commentPlugins = (agentRunner?: AppCapabilities.CommentAgentRunner) => [
 ];
 
 const commentTypes = [
-  Drawing.Drawing,
-  Drawing.Canvas,
+  ...canvasDrawingSchemas,
   MarkdownType.Document,
   Thread.Thread,
   Message.Message,
@@ -199,8 +197,7 @@ const canvasSubject: SubjectFactory = ({ trace }) =>
   makeSubject({
     trace,
     create: (space) => {
-      const canvas = space.db.add(Drawing.makeCanvas({ schema: CanvasType.SCENE_SCHEMA }));
-      return space.db.add(Drawing.make({ name: 'Architecture', canvas }));
+      return addCanvasDrawing(space.db, { name: 'Architecture', commands: [] });
     },
     prepare: async ({ db, invoker, subject }) => {
       await invoker.invokePromise(

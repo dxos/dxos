@@ -13,15 +13,16 @@
 // label goes beside its own longest run. A connector no shape can draw falls back to the A* router.
 //
 
+import { Shape } from '@dxos/scene';
+
 import * as Layout from './layout.ts';
 import * as Nudge from './nudge.ts';
 import { makeAvoidingRouter } from './ortho-router.ts';
 import * as Ports from './ports.ts';
-import type * as Scene from './scene.ts';
 import { type Side, SIDES } from './semantic.ts';
 import { GRID, type Rect, zRouter } from './uml-grid.ts';
 
-type Point = Scene.Point;
+type Point = Shape.Point;
 
 const FINE = GRID / 2;
 /** Clear space a route keeps from a box it does not attach to. */
@@ -1023,7 +1024,7 @@ const CLUTTER = 10;
  * first, above a horizontal run or right of a vertical one (where the text starts at the line).
  * When nothing is clear, the least-cluttered spot wins.
  */
-export const placeLabels = (labels: readonly LabelRequest[], options: LabelOptions): Scene.Text[] => {
+export const placeLabels = (labels: readonly LabelRequest[], options: LabelOptions): Shape.Text[] => {
   const { paths, boxes, avoid, frames = [] } = options;
   const segments = paths.flatMap((points) =>
     points.slice(0, -1).map((from, index): [Point, Point] => [from, points[index + 1]]),

@@ -85,56 +85,42 @@ test.describe('Collaboration tests', () => {
     }
   });
 
-  // TODO(wittjosiah): Flaky -- depends on winning a race between the awareness gossip channel
-  //   becoming live and the peer's cursor-position broadcast, with no way from the test to
-  //   detect readiness (the presence indicator this used to rely on no longer exists at the
-  //   app level). Covered instead by a storybook interaction test exercising the CodeMirror
-  //   awareness extension against an in-memory two-peer transport.
-  test.skip(
-    "host and guest can see each others' cursors when same document is in focus",
-    { tag: ['@QA-8'] },
-    async () => {
-      await host.createSpace();
-      await host.createObject({ type: 'Document' });
+  test("host and guest can see each others' cursors when same document is in focus", { tag: ['@QA-8'] }, async () => {
+    // A query sent before the peers' connection forms is lost, so the host's state may only arrive
+    // with a 15 s re-announce; the wait covers two, in case the first also goes out before then.
+    const reAnnounceWait = 35_000;
+    test.setTimeout(90_000 + reAnnounceWait);
 
-      // Focus on host's textbox and wait for it to be ready.
-      const hostPlank = host.deck.plank();
-      const hostTextbox = Markdown.getMarkdownTextboxWithLocator(hostPlank.locator);
-      await hostTextbox.waitFor();
-      // TODO(thure): Autofocus not working for solo mode when creating a new document.
-      await hostTextbox.focus();
+    await host.createSpace();
+    await host.createObject({ type: 'Document' });
 
-      await perfomInvitation(host, guest);
+    const hostPlank = host.deck.plank();
+    await Markdown.waitForMarkdownTextboxWithLocator(hostPlank.locator);
+    await perfomInvitation(host, guest);
 
-      await guest.waitForSpaceReady();
-      await guest.expandSection('spacePlugin.collectionsSection');
-      await expect(guest.getObjectLinks()).toHaveCount(1);
-      await navigateToNewDocument(guest);
+    // The host's cursor is set before the guest opens the document, so the guest must receive it late.
+    // TODO(thure): Autofocus not working for solo mode when creating a new document.
+    await Markdown.getMarkdownTextboxWithLocator(hostPlank.locator).focus();
 
-      // Find the plank in the guest.
-      const guestPlank = guest.deck.plank();
-      await Markdown.waitForMarkdownTextboxWithLocator(guestPlank.locator);
-      await Markdown.getMarkdownTextboxWithLocator(guestPlank.locator).blur();
+    await guest.waitForSpaceReady();
+    await guest.expandSection('spacePlugin.collectionsSection');
+    await expect(guest.getObjectLinks()).toHaveCount(1);
+    await navigateToNewDocument(guest);
 
-      await Promise.all([
-        expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator)).toHaveCount(0),
-        expect(Markdown.getCollaboratorCursorsWithLocator(guestPlank.locator)).toHaveCount(0),
-      ]);
+    const guestPlank = guest.deck.plank();
+    await Markdown.waitForMarkdownTextboxWithLocator(guestPlank.locator);
+    await Markdown.getMarkdownTextboxWithLocator(guestPlank.locator).blur();
 
-      // TODO(wittjosiah): Focusing too quickly causes the cursors not to show up.
-      await Promise.all([host.page.waitForTimeout(1_000), guest.page.waitForTimeout(1_000)]);
+    await expect(Markdown.getCollaboratorNamesWithLocator(guestPlank.locator).first()).toHaveText(/.+/, {
+      timeout: reAnnounceWait,
+    });
+    await expect(Markdown.getCollaboratorCursorsWithLocator(guestPlank.locator).first()).toBeVisible();
+    await expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator)).toHaveCount(0);
 
-      await Promise.all([
-        Markdown.getMarkdownTextboxWithLocator(hostPlank.locator).focus(),
-        Markdown.getMarkdownTextboxWithLocator(guestPlank.locator).focus(),
-      ]);
-
-      await Promise.all([
-        expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator).first()).toHaveText(/.+/),
-        expect(Markdown.getCollaboratorCursorsWithLocator(guestPlank.locator).first()).toHaveText(/.+/),
-      ]);
-    },
-  );
+    await Markdown.getMarkdownTextboxWithLocator(guestPlank.locator).focus();
+    await expect(Markdown.getCollaboratorNamesWithLocator(hostPlank.locator).first()).toHaveText(/.+/);
+    await expect(Markdown.getCollaboratorCursorsWithLocator(hostPlank.locator).first()).toBeVisible();
+  });
 
   test("host and guest can see each others' changes in same document", { tag: ['@QA-8'] }, async () => {
     await host.createSpace();
@@ -202,8 +188,7 @@ test.describe('Collaboration tests', () => {
     await expect(guestTextbox).toContainText(allParts);
   });
 
-  // TODO(wittjosiah): Fix.
-  test.skip('peers can see each others presence', { tag: ['@QA-8'] }, async () => {
+  test('peers can see each others presence', { tag: ['@QA-8'] }, async () => {
     test.setTimeout(90_000);
 
     await host.createSpace();

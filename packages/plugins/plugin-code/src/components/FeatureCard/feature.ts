@@ -41,6 +41,8 @@ export type FeatureModel = {
   requirements: readonly Feature.Requirement[];
   /** The spec blocks the requirements were extracted from. */
   specs: readonly string[];
+  /** The block id its spec numbers it with (`F-3`). */
+  blockId?: string;
   /** Ids of the specs imported into the space, by repo path without anchor; such a spec opens in place of GitHub. */
   specObjects?: Readonly<Record<string, string>>;
   /** Id of the spec whose map lists the feature. */
@@ -138,6 +140,7 @@ export type FeatureGraphInput = {
     status: FeatureStatus;
     requirements?: readonly Feature.Requirement[];
     specs?: readonly string[];
+    blockId?: string;
     spec?: string;
     parent?: string;
     link?: string;

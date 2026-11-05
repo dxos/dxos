@@ -10,17 +10,18 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as RpcTest from 'effect/rpc/RpcTest';
 
-import { AiContext, Chat } from '@dxos/assistant';
+import { AiContext, Chat, TrajectoryStore } from '@dxos/assistant';
 import { type RemoteProcessManager } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
 import * as Process from '@dxos/compute/Process';
 import * as Project from '@dxos/compute/Project';
+import * as Reducer from '@dxos/compute/Reducer';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { AccessToken } from '@dxos/link';
 import { MANAGED_ACCESS_TOKEN } from '@dxos/protocols';
-import { type ContentBlock, Message, Outline, Repo, TaskSet } from '@dxos/types';
+import { type ContentBlock, Outline, Repo, TaskSet } from '@dxos/types';
 
 import { AgentError } from '../errors.ts';
 import * as ClaudeChoices from './ClaudeChoices.ts';
@@ -142,9 +143,14 @@ const setup = Effect.fn(function* (script: Script, mode?: string) {
   return { feed, chat, edge, options };
 });
 
+/** The conversation as the thread shows it, answers to requests included. */
 const transcript = (feed: Feed.Feed) =>
-  Feed.query(feed, Filter.type(Message.Message)).run.pipe(
-    Effect.map((messages) => messages.map((message) => [message.sender.role, ...message.blocks.map(summarize)])),
+  TrajectoryStore.load(feed, Reducer.thread).pipe(
+    Effect.map(({ state }) =>
+      state.items
+        .filter((item) => item.status !== 'cancelled' && item.status !== 'rewound')
+        .map((item) => [item.sender.role, ...item.blocks.map(summarize)]),
+    ),
   );
 
 const summarize = (block: ContentBlock.Any): string => {
@@ -163,8 +169,7 @@ describe('EdgeAgent', () => {
     TestDatabaseLayer({
       types: [
         Feed.Feed,
-        Message.Message,
-        AiContext.Binding,
+        ...TrajectoryStore.types,
         Chat.Chat,
         Project.Project,
         Repo.Repo,
@@ -358,7 +363,7 @@ describe('EdgeAgent', () => {
     }).pipe(Effect.scoped, Effect.provide(TestLayer)),
   );
 
-  it.live("checks out the project's repositories in the sandbox", () =>
+  it.live("checks out the project's repositories in their order, then the chat's, each once", () =>
     Effect.gen(function* () {
       const { feed, chat, edge, options } = yield* setup((turnId) => [
         { _tag: 'turn-end', turnId, stopReason: 'end_turn' },
@@ -366,10 +371,16 @@ describe('EdgeAgent', () => {
       const dxos = yield* Database.add(Repo.make({ owner: 'dxos', name: 'dxos', defaultBranch: 'main' }));
       const edgeRepo = yield* Database.add(Repo.make({ owner: 'dxos', name: 'edge' }));
       const fork = yield* Database.add(Repo.make({ owner: 'someone', name: 'edge' }));
-      const project = yield* Database.add(
-        Project.make({ repo: Ref.make(dxos), repositories: [Ref.make(edgeRepo), Ref.make(dxos), Ref.make(fork)] }),
-      );
+      const docs = yield* Database.add(Repo.make({ owner: 'dxos', name: 'docs' }));
+      const project = yield* Database.add(Project.make());
+      Repo.setRepositories(project, [Ref.make(dxos), Ref.make(edgeRepo), Ref.make(dxos), Ref.make(fork)]);
       Obj.setParent(chat, project);
+      yield* Feed.append(feed, [
+        Obj.make(AiContext.Binding, {
+          skills: { added: [], removed: [] },
+          objects: { added: [Ref.make(docs), Ref.make(edgeRepo)], removed: [] },
+        }),
+      ]);
       yield* EdgeAgent.runTurn(options, { chat, feed }, { prompt: 'build it' });
 
       expect(edge.spawned[0]).toMatchObject({
@@ -378,6 +389,7 @@ describe('EdgeAgent', () => {
             { name: 'dxos', url: 'https://github.com/dxos/dxos.git', branch: 'main' },
             { name: 'edge', url: 'https://github.com/dxos/edge.git' },
             { name: 'someone-edge', url: 'https://github.com/someone/edge.git' },
+            { name: 'docs', url: 'https://github.com/dxos/docs.git' },
           ],
         },
       });

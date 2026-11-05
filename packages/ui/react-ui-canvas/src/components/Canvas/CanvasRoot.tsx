@@ -5,27 +5,30 @@
 //
 // Root view of the scene engine (§6–§8): owns the camera, the scene path, selection and the pointer
 // state machine; renders the current scene through `SceneLayer` under one CSS transform and drills
-// in and out of portals with a camera transition then a root swap. Every model change goes through
-// the projection as an intent; the view never writes coordinates itself (decision 11).
+// in and out of portals with a camera transition then a root swap. Every change is an edit of the draw state, which
+// reaches the host as layout intents; the view never writes the document itself (decision 11).
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import * as Atom from 'effect/reactivity/Atom';
-import React, { type MouseEvent, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { type MouseEvent, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
+import { useClock, useExposedClock } from '@dxos/react-ui-animation';
+import { DEFAULT_GRID, MAJOR_GRID_RATIO, type ViewId, findLayout } from '@dxos/scene';
 import { mx } from '@dxos/ui-theme';
 
-import { animate, createCanvasAtoms, noHistory, readonlyCapabilities } from '../../engine/index.ts';
+import { type DrawState, createCanvasAtoms, readonlyCapabilities } from '../../engine/index.ts';
 import { type GeneratorSource } from '../../generator/index.ts';
 import {
   SceneLookContext,
+  type UseDrawSceneOptions,
   useCanvasController,
   useCanvasHistory,
-  useClock,
+  useCommandHeld,
   useDocumentCommands,
+  useDocumentStore,
+  useDrawScene,
   useEditMode,
   useElementHandlers,
-  useExposedClock,
   useGeneratorFrames,
   useGesturePreview,
   useNodeDrop,
@@ -40,11 +43,9 @@ import {
   useSceneView,
   useSceneWheel,
   useViewport,
-  useViewProjection,
 } from '../../hooks/index.ts';
-import { DEFAULT_GRID, MAJOR_GRID_RATIO, defaultThemeRegistry, keyAction, nodeAnimatable } from '../../model/index.ts';
+import { type ThemeChoice, chooseTheme, defaultThemeRegistry, keyAction, neuVars } from '../../model/index.ts';
 import { fitFrame, visibleView } from '../../utils/index.ts';
-import { InspectorPanel } from '../panels/index.ts';
 import { defaultLinkRegistry, defaultNodeRegistry } from '../SceneLayer/index.ts';
 import {
   CanvasEditingProvider,
@@ -53,22 +54,91 @@ import {
   CanvasServicesProvider,
   CanvasTimeProvider,
 } from './CanvasContext.ts';
-import { useSelectionActions } from './CanvasInspectors.tsx';
-import { type CanvasRootProps } from './CanvasRootProps.ts';
+import { type CanvasRootProps, type CanvasShellProps } from './CanvasRootProps.ts';
 import { DEFAULT_MARGIN, LIGHT_MODE } from './constants.ts';
+
+/** The Neu tokens, for whichever look draws with them: a few inherited variables cost nothing to a look that does not. */
+const NEU_STYLE = neuVars();
+
+/** The view's own frame when the host gives no shell. */
+const CanvasFrame = ({ classNames, transparent, children }: CanvasShellProps) => (
+  // Clipped rather than hidden: a hidden box still scrolls, so focusing content embedded in the view (an editor's caret)
+  // would scroll the whole frame to reveal it.
+  <div className={mx('relative flex dx-fill overflow-clip', !transparent && 'bg-base-surface', classNames)}>
+    {children}
+  </div>
+);
 
 /** No generators: what a view given none reads. */
 const NO_GENERATORS: Readonly<Record<string, GeneratorSource>> = {};
 
+/**
+ * The engine over a document: its scene's layouts drawn from the draw state, each edit sent to the host as intents
+ * (COMMON-CORE C.2).
+ */
 export const CanvasRoot = ({
+  document,
+  scene,
+  constrain,
+  onIntent,
+  onModelIntent,
+  onTransaction,
+  ...props
+}: CanvasRootProps) => {
+  const registry = useRegistry();
+  // Read when a write is checked, so the view's snap toggle reaches the mode without rebuilding the store.
+  const snapRef = useRef<() => boolean>(() => true);
+  const {
+    store,
+    root,
+    constrain: preview,
+  } = useDocumentStore(registry, {
+    document,
+    scene,
+    constrain,
+    snap: () => snapRef.current(),
+    onIntent,
+    onModelIntent,
+    onTransaction,
+  });
+  const lattice = (sceneId: ViewId) => {
+    const layout = findLayout(document, sceneId);
+    return layout?.dim === '2d' ? layout.lattice : undefined;
+  };
+  return (
+    <CanvasEngine
+      key={root}
+      {...props}
+      store={store}
+      root={root}
+      snapRef={snapRef}
+      preview={preview}
+      lattice={lattice}
+    />
+  );
+};
+
+CanvasRoot.displayName = 'Canvas.Root';
+
+type CanvasEngineProps = Omit<
+  CanvasRootProps,
+  'document' | 'scene' | 'constrain' | 'onIntent' | 'onModelIntent' | 'onTransaction'
+> & {
+  store: DrawState;
+  root: ViewId;
+  snapRef: { current: () => boolean };
+} & Pick<UseDrawSceneOptions, 'lattice'> & { preview: UseDrawSceneOptions['constrain'] };
+
+const CanvasEngine = ({
   classNames,
   store,
   root,
+  snapRef,
+  preview,
+  lattice,
+  capabilities: capabilitiesProp,
   nodes: nodeRegistry = defaultNodeRegistry,
   links: linkRegistry = defaultLinkRegistry,
-  createProjection,
-  projection: projectionProp,
-  history: historyProp,
   atoms: atomsProp,
   initialCamera,
   onCameraChange,
@@ -80,8 +150,7 @@ export const CanvasRoot = ({
   readonly = false,
   onReadonlyChange,
   transparent = false,
-  inspectors = 'floating',
-  onInspectorsChange,
+  shell: Shell = CanvasFrame,
   themes = defaultThemeRegistry,
   theme,
   defaultTheme,
@@ -96,58 +165,60 @@ export const CanvasRoot = ({
   onBackgroundGridChange,
   frame,
   exportable,
+  playback,
   generators = NO_GENERATORS,
   compileGenerator,
   createGeneratorWorker,
+  hostKeys,
+  onContextMenu: onHostContextMenu,
   children,
-}: CanvasRootProps) => {
-  const { look, themeGrid } = useResolvedLook(themes, { theme, defaultTheme, styleSet, background, backgroundGrid });
+}: CanvasEngineProps) => {
+  // A host that stores no theme choice still lets the viewer pick one, for this view alone.
+  const [themeChoice, setThemeChoice] = useState<ThemeChoice>();
+  const shownTheme = chooseTheme(theme, themeChoice);
+  const handleThemeChange = useCallback(
+    (next: string | undefined) => (onThemeChange ? onThemeChange(next) : setThemeChoice({ theme: next })),
+    [onThemeChange],
+  );
+  const { look, themeGrid } = useResolvedLook(themes, {
+    theme: shownTheme,
+    defaultTheme,
+    styleSet,
+    background,
+    backgroundGrid,
+  });
   const registry = useRegistry();
   const atoms = useMemo(() => atomsProp ?? createCanvasAtoms(root), [atomsProp, root]);
   const rootRef = useRef<HTMLDivElement>(null);
   const viewport = useViewport(rootRef);
 
   const path = useAtomValue(atoms.path);
-  // A host-owned projection given no history owns its side effects, so its edits are not undone here.
-  const ownHistory = useCanvasHistory({
-    registry,
-    atoms,
+  snapRef.current = () => registry.get(atoms.snap);
+  const history = useCanvasHistory({ registry, atoms, store });
+  const draw = useDrawScene({
     store,
-    history: typeof historyProp === 'function' ? historyProp : projectionProp ? noHistory : undefined,
+    atoms,
+    capabilities: capabilitiesProp,
+    constrain: preview,
+    lattice,
+    history,
   });
-  const history = historyProp === undefined || typeof historyProp === 'function' ? ownHistory : historyProp;
-  const baseProjection = useViewProjection({ store, atoms, createProjection, projection: projectionProp, history });
-  history.view.projection = baseProjection;
-  // Sampled at the view's clock; an edit away from the start becomes keys (ANIMATION.md §5.3, §5.4).
-  const projection = useMemo(
-    () =>
-      animate(baseProjection, {
-        registry,
-        clock: atoms.clock,
-        autoKey: () => registry.get(atoms.autoKey),
-        animatable: (node) => nodeAnimatable(nodeRegistry, node),
-      }),
-    [baseProjection, registry, atoms, nodeRegistry],
-  );
-  const scene = useAtomValue(projection.scene);
-  const baseScene = useAtomValue(baseProjection.scene);
-  const timeline = baseScene.timeline;
-  // The timeline alone, so the parts that read it do not re-render on every other edit.
-  const timelineAtom = useMemo(() => Atom.make((get) => get(baseProjection.scene).timeline), [baseProjection]);
+  const scene = useAtomValue(draw.scene);
   const time = useAtomValue(atoms.clock.time);
   const generated = useGeneratorFrames({
-    scene: baseScene,
+    scene,
     time,
     sources: generators,
     compile: compileGenerator,
     createWorker: createGeneratorWorker,
   });
-  useClock(atoms.clock, { duration: timeline?.duration, loop: timeline?.loop });
+  useClock(atoms.clock, { duration: playback?.duration, loop: playback?.loop });
   const visible = useMemo(() => visibleView(scene), [scene]);
   const scenes = useAtomValue(store.views);
   const camera = useAtomValue(atoms.camera);
   const selection = useAtomValue(atoms.selection);
   const tool = useAtomValue(atoms.tool);
+  const commandHeld = useCommandHeld();
   const snapEnabled = useAtomValue(atoms.snap);
   // The margin is in major cells, taken from the model's grid rather than the level currently drawn,
   // so a fit puts the same gap around the scene whatever the zoom.
@@ -165,8 +236,8 @@ export const CanvasRoot = ({
   }, [active, selection, registry, atoms.active]);
   const sceneId = path[path.length - 1];
 
-  // Every gesture, key and control is gated on these, so a read-only view is the projection with nothing allowed.
-  const capabilities = readonly ? readonlyCapabilities : projection.capabilities;
+  // Every gesture, key and control is gated on these, so a read-only view is the scene with nothing allowed.
+  const capabilities = readonly ? readonlyCapabilities : draw.capabilities;
 
   const {
     setCamera,
@@ -183,9 +254,9 @@ export const CanvasRoot = ({
 
   // Set once the user takes the camera over; a restored camera counts as taken over, so the fit leaves it where it was.
   const interactedRef = useRef(initialCamera !== undefined);
-  const { minor, major, snap, snapMinor, isClick, moveDelta } = useSceneSnap(grid, camera.zoom, snapEnabled);
+  const { minor, major, detent, snap, snapMinor, isClick, moveDelta } = useSceneSnap(grid, camera.zoom, snapEnabled);
   const fitTarget = useMemo(() => frame ?? fitFrame(scene), [frame, scene]);
-  const { fitting, enterFit, exitFit, hasCameraTrack } = useSceneView({
+  const { fitting, enterFit, exitFit } = useSceneView({
     registry,
     atoms,
     rootRef,
@@ -194,8 +265,6 @@ export const CanvasRoot = ({
     path,
     camera,
     drag,
-    timeline,
-    time,
     fitTarget,
     inset,
     fitZoom,
@@ -217,8 +286,7 @@ export const CanvasRoot = ({
     atoms,
     store,
     live: {
-      projection,
-      baseProjection,
+      draw,
       nodeRegistry,
       readonly,
       grid: { major, snap },
@@ -227,7 +295,7 @@ export const CanvasRoot = ({
       frame,
       camera: { animateTo, target: cameraTarget, setOpening },
       fit: { enterFit, exitFit, takeOver: () => (interactedRef.current = true) },
-      look: { onThemeChange, onBackgroundGridChange },
+      look: { onThemeChange: handleThemeChange, onBackgroundGridChange },
       history,
     },
   });
@@ -262,37 +330,22 @@ export const CanvasRoot = ({
   });
   const measured = viewport.width > 0 && viewport.height > 0;
 
-  useExposedClock(registry, atoms.clock, timeline, exportable);
+  useExposedClock(registry, atoms.clock, playback, exportable);
 
   useSceneWheel({
     rootRef,
-    registry,
-    atoms,
     interactedRef,
     exitFit,
     cancelAnimation,
     touchNavigation,
-    hasCameraTrack,
     setCamera,
   });
-
-  const timelineKeys = useMemo(
-    () => ({
-      active: timeline !== undefined,
-      togglePlay: controller.time.togglePlay,
-      step: controller.time.step,
-      jumpKey: controller.time.jumpKey,
-      addKey: controller.time.addKey,
-      removeKey: controller.time.removeKey,
-    }),
-    [timeline, controller],
-  );
 
   const objectActions = useObjectActions({
     registry,
     atoms,
     store,
-    baseProjection,
+    draw,
     commit: history.commit,
     select,
     navigation,
@@ -340,7 +393,7 @@ export const CanvasRoot = ({
     // A hidden layer's elements are not hit: gestures see the scene as drawn.
     scene: visible,
     nodeRegistry,
-    projection,
+    draw,
     capabilities,
     camera,
     rootRef,
@@ -375,7 +428,7 @@ export const CanvasRoot = ({
   const documentCommands = useDocumentCommands({
     registry,
     atoms,
-    projection,
+    draw,
     history,
     readonly,
     nodeRegistry,
@@ -393,7 +446,7 @@ export const CanvasRoot = ({
     scene,
     nodeRegistry,
     linkRegistry,
-    projection,
+    draw,
     capabilities,
     navigation,
     grid,
@@ -403,6 +456,7 @@ export const CanvasRoot = ({
     toggleDebug,
     onUndo: documentCommands.undo,
     onRedo: documentCommands.redo,
+    duplicate: () => controller.document.duplicate(registry.get(atoms.selection), { x: major, y: major }),
     commit: history.commit,
     major,
     copy,
@@ -417,7 +471,6 @@ export const CanvasRoot = ({
     removeVertex,
     deleteVertex,
     setTool,
-    timeline: timelineKeys,
     editNode,
     exitEdit,
   });
@@ -426,6 +479,10 @@ export const CanvasRoot = ({
   // panel, a toolbar) bubble here too, and must not toggle debug or delete the selection.
   const onKeyDown = useCallback<typeof onSceneKey>(
     (event) => {
+      const action = keyAction(event);
+      if (action !== undefined && hostKeys?.has(action)) {
+        return;
+      }
       if (event.target === event.currentTarget) {
         onSceneKey(event);
       } else if (keyAction(event) === 'cancel' && registry.get(atoms.active) !== undefined) {
@@ -434,14 +491,24 @@ export const CanvasRoot = ({
         rootRef.current?.focus();
       }
     },
-    [onSceneKey, registry, atoms.active],
+    [onSceneKey, registry, atoms.active, hostKeys],
   );
+
+  // A host with its own context menu opens it where the view's would have, after the view picked what lies under the
+  // pointer; the view's menu never shows.
+  useLayoutEffect(() => {
+    if (menu && onHostContextMenu) {
+      onHostContextMenu(menu.at, menu.kind === 'canvas' ? 'canvas' : 'element');
+      closeMenu();
+    }
+  }, [menu, onHostContextMenu, closeMenu]);
 
   const { displayScene, blocked, landing, createFrame } = useGesturePreview({
     scene,
     drag,
-    projection,
+    draw,
     minor,
+    detent,
     createdNode,
   });
 
@@ -449,7 +516,7 @@ export const CanvasRoot = ({
     registry,
     atoms,
     nodeRegistry,
-    projection,
+    draw,
     capabilities,
     navigation,
     scene,
@@ -476,16 +543,11 @@ export const CanvasRoot = ({
   useNodeDrop({ rootRef, capabilities, nodeRegistry, cell, toScene, snapMinor, setDrag, cancelDrag, onPointerUp });
 
   // Once per atoms, so the providers' values hold still while the root re-renders.
-  const timeAtoms = useMemo(
-    () => ({ time: atoms.clock.time, playing: atoms.clock.playing, autoKey: atoms.autoKey }),
-    [atoms],
-  );
+  const timeAtoms = useMemo(() => ({ time: atoms.clock.time, playing: atoms.clock.playing }), [atoms]);
   const editingAtoms = useMemo(
     () => ({ editing: atoms.editing, active: atoms.active, clipboard: atoms.clipboard }),
     [atoms],
   );
-
-  const inspectorActions = useSelectionActions({ scene, selection, store, capabilities, readonly, controller });
 
   return (
     <CanvasServicesProvider
@@ -494,8 +556,7 @@ export const CanvasRoot = ({
       atoms={atoms}
       store={store}
       root={root}
-      projection={projection}
-      baseProjection={baseProjection}
+      draw={draw}
       capabilities={capabilities}
       readonly={readonly}
       transparent={transparent}
@@ -504,20 +565,19 @@ export const CanvasRoot = ({
       linkRegistry={linkRegistry}
       grid={grid}
       fitting={fitting}
-      timeline={timelineAtom}
       document={documentCommands}
       objectActions={objectActions}
     >
       <CanvasLookProvider
         look={look}
         themes={themes}
-        themeOverride={theme}
+        themeOverride={shownTheme}
         themeGrid={themeGrid}
-        // The pickers show only when the host takes their changes.
-        setTheme={onThemeChange && controller.look.setTheme}
+        // The grid picker shows only when the host takes its changes; the theme picker always works.
+        setTheme={controller.look.setTheme}
         setBackgroundGrid={onBackgroundGridChange && controller.look.setBackgroundGrid}
       >
-        <CanvasTimeProvider atoms={timeAtoms} commands={controller.time} timeline={timelineAtom} generated={generated}>
+        <CanvasTimeProvider atoms={timeAtoms} generated={generated}>
           <CanvasEditingProvider atoms={editingAtoms} commands={controller.editing}>
             <CanvasGestureProvider
               displayScene={displayScene}
@@ -544,49 +604,38 @@ export const CanvasRoot = ({
               menuAnchorRef={menuAnchorRef}
             >
               <SceneLookContext.Provider value={look}>
-                <InspectorPanel.Root
-                  docked={!readonly && inspectors === 'docked'}
-                  readonly={readonly}
-                  actions={inspectorActions}
-                  onDockedChange={
-                    onInspectorsChange && ((docked) => onInspectorsChange(docked ? 'docked' : 'floating'))
-                  }
-                >
-                  {/* The canvas beside the dock, which docked inspectors move into; with none docked, it takes no space.
-            Clipped rather than hidden: a hidden box still scrolls, so focusing content embedded in a node (an editor's
-            caret) would scroll the whole canvas to reveal it, out from under the camera. */}
+                <Shell classNames={classNames} transparent={transparent}>
                   <div
-                    className={mx('relative flex dx-fill overflow-clip', !transparent && 'bg-base-surface', classNames)}
+                    ref={rootRef}
+                    tabIndex={0}
+                    className={mx(
+                      '@container/canvas relative grow h-full overflow-clip outline-none touch-none select-none',
+                      !transparent && 'bg-base-surface',
+                      // A theme with a mode takes it over the app's, for everything over the canvas.
+                      look.tone === 'dark' && 'dark',
+                      (tool.kind === 'hand' || commandHeld) && 'cursor-grab',
+                      tool.kind === 'node' && !commandHeld && 'cursor-crosshair',
+                    )}
+                    style={
+                      look.tone === 'light'
+                        ? { ...LIGHT_MODE, ...NEU_STYLE, contain: 'strict' }
+                        : { ...NEU_STYLE, contain: 'strict' }
+                    }
+                    data-testid='scene-view'
+                    data-mode={look.tone === 'theme' ? undefined : look.tone}
+                    onPointerDown={onBackgroundPointerDown}
+                    onPointerMove={onPointerMove}
+                    onPointerUp={onPointerUp}
+                    // A cancelled pointer (a touch the browser took over) abandons the gesture rather than landing it.
+                    onPointerCancel={cancelDrag}
+                    onPointerLeave={() => updateHover(undefined)}
+                    onDoubleClick={onDoubleClick}
+                    onContextMenu={onContextMenu}
+                    onKeyDown={onKeyDown}
                   >
-                    <div
-                      ref={rootRef}
-                      tabIndex={0}
-                      className={mx(
-                        '@container/canvas relative grow h-full overflow-clip outline-none touch-none select-none',
-                        !transparent && 'bg-base-surface',
-                        // A theme with a mode takes it over the app's, for everything over the canvas.
-                        look.tone === 'dark' && 'dark',
-                        tool.kind === 'hand' && 'cursor-grab',
-                        tool.kind === 'node' && 'cursor-crosshair',
-                      )}
-                      style={look.tone === 'light' ? { ...LIGHT_MODE, contain: 'strict' } : { contain: 'strict' }}
-                      data-testid='scene-view'
-                      data-mode={look.tone === 'theme' ? undefined : look.tone}
-                      onPointerDown={onBackgroundPointerDown}
-                      onPointerMove={onPointerMove}
-                      onPointerUp={onPointerUp}
-                      // A cancelled pointer (a touch the browser took over) abandons the gesture rather than landing it.
-                      onPointerCancel={cancelDrag}
-                      onPointerLeave={() => updateHover(undefined)}
-                      onDoubleClick={onDoubleClick}
-                      onContextMenu={onContextMenu}
-                      onKeyDown={onKeyDown}
-                    >
-                      {children}
-                    </div>
-                    <InspectorPanel.Content />
+                    {children}
                   </div>
-                </InspectorPanel.Root>
+                </Shell>
               </SceneLookContext.Provider>
             </CanvasGestureProvider>
           </CanvasEditingProvider>
@@ -596,4 +645,4 @@ export const CanvasRoot = ({
   );
 };
 
-CanvasRoot.displayName = 'Canvas.Root';
+CanvasEngine.displayName = 'CanvasEngine';

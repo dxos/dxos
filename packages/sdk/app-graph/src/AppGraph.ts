@@ -386,7 +386,9 @@ export class GraphImpl implements WritableGraph {
         this._setNode(
           node.id,
           this._constructNode(
-            typeof node.data === 'function' ? { ...node, data: stableData(this, node.id, undefined, node.data) } : node,
+            typeof node.data === 'function'
+              ? { ...node, data: stableData(this, node.id, node.type, undefined, node.data) }
+              : node,
           ),
         ),
       );
@@ -851,12 +853,13 @@ export const addNodes = <T extends WritableGraph>(graph: T, nodes: Node.NodeArg<
 };
 
 /**
- * Builders recreate an action's closure on every run, so a function `data` is held behind a stable
+ * Builders recreate an action's closure on every run, so an action's `data` is held behind a stable
  * forwarder per node whose target is swapped: a re-offer that changes nothing else emits nothing,
- * and invoking the node still runs the latest closure.
+ * and invoking the node still runs the latest closure. Only actions: other function data (a type
+ * node's schema class) is read for its statics, which a forwarder does not carry.
  */
-const stableData = (graph: GraphImpl, id: string, existing: unknown, data: any): any => {
-  if (typeof data !== 'function') {
+const stableData = (graph: GraphImpl, id: string, type: string, existing: unknown, data: any): any => {
+  if (type !== Node.ActionType || typeof data !== 'function') {
     return data;
   }
   const owned = (forwarder: Forwarder) => forwarder[ForwardedKey].graph === graph && forwarder[ForwardedKey].id === id;
@@ -897,7 +900,7 @@ export const addNode = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg
   Option.match(existingNode, {
     onSome: (existing) => {
       const typeChanged = existing.type !== type;
-      const nextData = stableData(internal, id, existing.data, data);
+      const nextData = stableData(internal, id, type, existing.data, data);
       const dataChanged = !shallowEqual(existing.data, nextData);
       const propertiesChanged = Object.keys(properties).some(
         (key) => !Equal.equals(existing.properties[key], properties[key]),
@@ -939,7 +942,7 @@ export const addNode = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg
       const newNode = internal._constructNode({
         id,
         type,
-        data: stableData(internal, id, undefined, data),
+        data: stableData(internal, id, type, undefined, data),
         properties,
         ...rest,
       });

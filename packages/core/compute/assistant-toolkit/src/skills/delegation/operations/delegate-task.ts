@@ -15,7 +15,7 @@ import { DelegateTask } from './definitions.ts';
 
 /**
  * Delegation is the promotion moment: the unit of work becomes a durable `Task` on the
- * conversation's checklist assigned to an agent (`role: 'assistant'`), which the supervisor's
+ * conversation's checklist delegated to an agent (`role: 'assistant'`), which the supervisor's
  * reconcile loop picks up and marks done/failed on completion (see the delegation strategy).
  */
 const handler: Operation.WithHandler<typeof DelegateTask> = DelegateTask.pipe(
@@ -32,7 +32,7 @@ const handler: Operation.WithHandler<typeof DelegateTask> = DelegateTask.pipe(
       // the task started at spawn, so `started` always means a live process.
       const task = Chat.addTask(db, chat, title, {
         status: 'todo',
-        assignee: { role: 'assistant' },
+        delegate: { role: 'assistant' },
       });
       yield* Database.flush();
 

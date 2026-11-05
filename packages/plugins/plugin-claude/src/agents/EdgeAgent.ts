@@ -18,12 +18,13 @@ import type * as Scope from 'effect/Scope';
 
 import { type MakeTurnProducer, type TurnRequest } from '@dxos/agent-runtime';
 import * as Capability from '@dxos/app-framework/Capability';
-import { AiAssistantError, AiContext, type Chat } from '@dxos/assistant';
+import { AiAssistantError, AiContext, type Chat, TrajectoryStore } from '@dxos/assistant';
 import { type Client } from '@dxos/client';
 import { type RemoteProcessManager, accessTokenResolverFromEdge } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
+import * as Trajectory from '@dxos/compute/Trajectory';
 import { Annotation, Database, Feed, Obj, Query } from '@dxos/echo';
 import { EdgeProcessControl } from '@dxos/edge-compute';
 import { invariant } from '@dxos/invariant';
@@ -211,6 +212,8 @@ export const runTurn = (
       });
 
     const produced: Message.Message[] = [];
+    // The turn's branch: a picked-up turn's is found by its key, a new turn's comes from opening it below.
+    let thread = pending ? yield* TrajectoryStore.turnThread(feed, turnId) : undefined;
     const append = (messages: Message.Message[]) =>
       Effect.gen(function* () {
         if (messages.length === 0) {
@@ -226,7 +229,7 @@ export const runTurn = (
           }
         }
         produced.push(...messages);
-        yield* Feed.append(feed, messages);
+        yield* TrajectoryStore.appendMessages(feed, messages, { thread });
       });
 
     /** Adds what the agent produced, past what an earlier client already added for this turn. */
@@ -240,8 +243,13 @@ export const runTurn = (
         }
       });
 
-    if (!pending) {
-      yield* append([Message.make({ sender: 'user', blocks: promptBlocks(request.prompt) })]);
+    // A picked-up turn is already open in the feed, under the same key; a new one opens and takes its prompt in.
+    if (thread === undefined) {
+      const prompt = Message.make({ sender: 'user', blocks: promptBlocks(request.prompt) });
+      produced.push(prompt);
+      const source = yield* TrajectoryStore.postPrompt(feed, prompt, request.source);
+      thread = yield* TrajectoryStore.beginTurn(feed, { id: turnId, model: request.model, thread: request.thread });
+      yield* TrajectoryStore.append(feed, TrajectoryStore.promptEvents(prompt, thread, source));
     }
     // Recorded before the prompt goes, so a client that closes right after still leaves it behind; the
     // prompt is sent again on pick-up, since EDGE drops a repeat of the same key.
@@ -335,6 +343,20 @@ export const runTurn = (
     }
   }).pipe(
     Effect.scoped,
+    // However this client sees the turn end, it closes into the conversation.
+    Effect.onExit((exit) =>
+      Effect.gen(function* () {
+        const turnId = pendingTurnOf(chat, options.definition.id)?.turnId;
+        const feed = turnId !== undefined ? yield* Database.load(chat.feed).pipe(Effect.option) : Option.none();
+        const thread =
+          turnId !== undefined && Option.isSome(feed)
+            ? yield* TrajectoryStore.turnThread(feed.value, turnId)
+            : undefined;
+        if (thread !== undefined && Option.isSome(feed)) {
+          yield* TrajectoryStore.endTurn(feed.value, thread, exit);
+        }
+      }),
+    ),
     // However this client sees the turn end, nothing is left to pick up; only a client that vanished
     // mid-turn, which runs no finalizer, leaves the record behind.
     Effect.ensuring(
@@ -362,16 +384,19 @@ const respond = (
     const target = yield* ensureProcess(options, chat);
     const rpc = yield* target.control.rpc(target);
     const { answered } = yield* rpc.respondPermission({ requestId, optionId }).pipe(Effect.orDie);
-    Obj.update(message, (message) => {
-      for (const block of message.blocks) {
-        if (block._tag === 'request' && block.requestId === requestId && block.resolution === undefined) {
-          block.resolution = answered ? { outcome: 'selected', optionId } : { outcome: 'cancelled' };
-        }
-      }
-    });
     const feed = yield* Database.load(chat.feed).pipe(Effect.option);
     if (Option.isSome(feed)) {
-      yield* Feed.append(feed.value, [message]);
+      yield* TrajectoryStore.append(feed.value, [
+        Trajectory.make({
+          payload: {
+            _tag: 'requestResolve',
+            message: message.id,
+            requestId,
+            resolution: answered ? { outcome: 'selected', optionId } : { outcome: 'cancelled' },
+          },
+          sender: { role: 'user' },
+        }),
+      ]);
     }
     return answered;
   }).pipe(Effect.scoped);
@@ -417,9 +442,9 @@ const processOf = (chat: Chat.Chat, agent: string): Process.ID | undefined => {
 };
 
 /**
- * The repositories the chat works on, as the process checks them out: its project's `repo`, then the
- * project's `repositories`, then the repositories bound to the chat itself — the only source a chat
- * outside a project has — each once. Read when the process is spawned, so the sandbox's checkout is
+ * The repositories the chat works on, as the process checks them out: its project's repositories in
+ * their order, then the repositories bound to the chat itself — the only source a chat outside a
+ * project has — each once. Read when the process is spawned, so the sandbox's checkout is
  * the chat's at its start.
  */
 export const checkoutsOf = (
@@ -429,8 +454,7 @@ export const checkoutsOf = (
     const project = Workspace.projectOf(chat);
     const feed = yield* Database.load(chat.feed).pipe(Effect.option);
     const refs = [
-      ...(project?.repo ? [project.repo] : []),
-      ...(project?.repositories ?? []),
+      ...(project ? Repo.getRepositories(project) : []),
       ...(Option.isSome(feed) ? yield* AiContext.boundObjects(feed.value) : []),
     ];
     const objects = yield* Effect.forEach(refs, (ref) => Database.load(ref).pipe(Effect.option));

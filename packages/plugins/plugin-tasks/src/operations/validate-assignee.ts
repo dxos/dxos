@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type Actor } from '@dxos/types';
+import { type Actor, Task } from '@dxos/types';
 
 import { InvalidOperationInput } from '../errors.ts';
 
@@ -21,7 +21,36 @@ export const validateAssignee = (
     : Effect.fail(
         new InvalidOperationInput({
           message:
-            'An assignee must be a contact (`contact`), a space member (`identityDid`), or an agent session ' +
+            'An assignee or delegate must be a contact (`contact`), a space member (`identityDid`), or an agent session ' +
             '(`subject`, or pass `remoteSession`); a name or email alone does not identify anyone.',
+        }),
+      );
+
+export const validateDelegate = (
+  delegate: Actor.Actor | null | undefined,
+  assignee?: Actor.Actor,
+): Effect.Effect<void, InvalidOperationInput> =>
+  Task.isSubAgentRequest(delegate ?? undefined)
+    ? Effect.void
+    : !delegate || delegate.role === 'assistant' || Task.sameActor(delegate, assignee)
+      ? validateAssignee(delegate)
+      : Effect.fail(
+          new InvalidOperationInput({
+            message: 'A delegate must be an agent (`role: "assistant"`); name a person as the `assignee` instead.',
+          }),
+        );
+
+export const requireOwner = (
+  title: string,
+  owner: Actor.Actor | undefined,
+): Effect.Effect<void, InvalidOperationInput> =>
+  owner
+    ? Effect.void
+    : Effect.fail(
+        new InvalidOperationInput({
+          message:
+            `"${title}" has no person as its assignee. Pass \`assignee: { identityDid, name }\` ` +
+            'with the identityDid and displayName that `whoami` returns: the session is the delegate, ' +
+            'working for them.',
         }),
       );

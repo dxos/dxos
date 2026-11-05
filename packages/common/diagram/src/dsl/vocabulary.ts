@@ -10,12 +10,13 @@
 // silently stale list.
 //
 
-import * as Scene from '../scene.ts';
+import { Shape } from '@dxos/scene';
+
 import * as Semantic from '../semantic.ts';
 
 /** Element kinds as the DSL spells them; each is also the scene element's `kind`. */
 export const ELEMENT_KINDS = [
-  ...Scene.BoxKind.literals,
+  ...Shape.BoxKind.literals,
   'circle',
   'line',
   'curve',
@@ -67,15 +68,15 @@ export type AttrType =
 export type AttrSpec = AttrType & { name: string };
 
 const STYLE: readonly AttrSpec[] = [
-  { name: 'color', type: 'enum', values: Scene.Color.literals },
-  { name: 'fill', type: 'enum', values: Scene.Fill.literals },
-  { name: 'stroke', type: 'enum', values: Scene.Stroke.literals },
-  { name: 'weight', type: 'enum', values: Scene.Weight.literals },
+  { name: 'color', type: 'enum', values: Shape.Color.literals },
+  { name: 'fill', type: 'enum', values: Shape.Fill.literals },
+  { name: 'stroke', type: 'enum', values: Shape.Stroke.literals },
+  { name: 'weight', type: 'enum', values: Shape.Weight.literals },
 ];
 
 const BOX_ATTRS: readonly AttrSpec[] = [
   { name: 'rotation', type: 'number' },
-  { name: 'corners', type: 'enum', values: Scene.Corners.literals },
+  { name: 'corners', type: 'enum', values: Shape.Corners.literals },
   ...STYLE,
 ];
 
@@ -95,9 +96,9 @@ export const ELEMENT_ATTRS: Record<ElementKind, readonly AttrSpec[]> = {
   arc: STYLE,
   text: [{ name: 'w', type: 'number' }, ...STYLE],
   arrow: [
-    { name: 'head', type: 'enum', values: Scene.ArrowHead.literals },
-    { name: 'tail', type: 'enum', values: Scene.ArrowTail.literals },
-    { name: 'relation', type: 'enum', values: Scene.Relation.literals },
+    { name: 'head', type: 'enum', values: Shape.ArrowHead.literals },
+    { name: 'tail', type: 'enum', values: Shape.ArrowTail.literals },
+    { name: 'relation', type: 'enum', values: Shape.Relation.literals },
     ...STYLE,
   ],
   portal: [{ name: 'ref', type: 'string' }, ...STYLE],
@@ -123,29 +124,29 @@ export const DIAGRAM_ATTRS: readonly AttrSpec[] = [
 export const GROUP_ATTRS: readonly AttrSpec[] = [
   { name: 'gap', type: 'number' },
   { name: 'max-width', type: 'number' },
-  { name: 'color', type: 'enum', values: Scene.Color.literals },
+  { name: 'color', type: 'enum', values: Shape.Color.literals },
 ];
 
 /** `node` attributes. */
 export const NODE_ATTRS: readonly AttrSpec[] = [
   { name: 'ref', type: 'string' },
   { name: 'role', type: 'enum', values: Semantic.ROLES },
-  { name: 'shape', type: 'enum', values: Scene.BoxKind.literals },
-  { name: 'color', type: 'enum', values: Scene.Color.literals },
-  { name: 'fill', type: 'enum', values: Scene.Fill.literals },
-  { name: 'stroke', type: 'enum', values: Scene.Stroke.literals },
+  { name: 'shape', type: 'enum', values: Shape.BoxKind.literals },
+  { name: 'color', type: 'enum', values: Shape.Color.literals },
+  { name: 'fill', type: 'enum', values: Shape.Fill.literals },
+  { name: 'stroke', type: 'enum', values: Shape.Stroke.literals },
 ];
 
 /** `edge` attributes. */
 export const EDGE_ATTRS: readonly AttrSpec[] = [
-  { name: 'head', type: 'enum', values: Scene.ArrowHead.literals },
-  { name: 'tail', type: 'enum', values: Scene.ArrowTail.literals },
-  { name: 'stroke', type: 'enum', values: Scene.Stroke.literals },
-  { name: 'color', type: 'enum', values: Scene.Color.literals },
+  { name: 'head', type: 'enum', values: Shape.ArrowHead.literals },
+  { name: 'tail', type: 'enum', values: Shape.ArrowTail.literals },
+  { name: 'stroke', type: 'enum', values: Shape.Stroke.literals },
+  { name: 'color', type: 'enum', values: Shape.Color.literals },
 ];
 
 /** `note` attributes. */
-export const NOTE_ATTRS: readonly AttrSpec[] = [{ name: 'color', type: 'enum', values: Scene.Color.literals }];
+export const NOTE_ATTRS: readonly AttrSpec[] = [{ name: 'color', type: 'enum', values: Shape.Color.literals }];
 
 /** Placement relations a `node` or `group` may state; `~` before one makes it a preference. */
 export const RELATION_WORDS: readonly string[] = Semantic.RELATION_KINDS;
@@ -157,7 +158,7 @@ export const BARE_ID = /^[A-Za-z_][A-Za-z0-9_-]*$/;
 export const BARE_REF = /^[A-Za-z_][A-Za-z0-9_-]*(\/[A-Za-z_][A-Za-z0-9_-]*)?(#[A-Za-z_][A-Za-z0-9_-]*)?$/;
 
 /**
- * A structurally valid ref — `[object/]element[#port]`, as `Scene.parseRef` reads it, whose ids may
+ * A structurally valid ref — `[object/]element[#port]`, as `Shape.parseRef` reads it, whose ids may
  * not contain `/` or `#`. Separate from {@link BARE_REF} because quoting exists to carry a ref
  * whose ids cannot lex bare (`1st/box` from a numeric node id), which is well-formed all the same.
  */

@@ -28,5 +28,7 @@ export default defineConfig({
     types: 'src/types/index.ts',
   },
   jsx: 'react',
-  test: { node: true, storybook: true, workerd: true },
+  // Clears `GenerateImage`'s own waits (a scripted turn up to 30s, then four 10s checks), so a slow run fails on the
+  // wait that names what is missing rather than on the default 15s test timeout.
+  test: { node: true, storybook: { timeout: 90_000 }, workerd: true },
 });

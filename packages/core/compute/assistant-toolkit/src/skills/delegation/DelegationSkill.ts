@@ -25,8 +25,8 @@ export const make = () =>
         Delegate existing checklist tasks with the delegate-tasks tool, selecting by 1-based
         ordinal or exact title; delegate-task creates a NEW task from a title. When unsure what
         the checklist holds, read it first (get-agent-context when available). Delegated tasks
-        run in the background once their dependencies are done, and each result is reported back
-        to the conversation.
+        run in the background once their dependencies are done or in review, and each result is
+        reported back to the conversation.
       `,
     }),
   });

@@ -28,6 +28,7 @@ const setup = async () => {
     Milestone.Milestone,
     TaskMigration.LegacyTask,
     TaskMigration.LegacyTaskSet,
+    TaskMigration.ReviewedTask,
     Task.Task,
     TaskSet.TaskSet,
   ]);
@@ -249,5 +250,47 @@ describe('task hierarchy migration', () => {
     const { taskSet, get, titles } = await load(db);
     expect(titles(taskSet.tasks)).toEqual(['epic']);
     expect(titles(get('epic').subtasks ?? [])).toEqual(['step']);
+  });
+});
+
+describe('task delegate migration', () => {
+  const agent = { role: 'assistant', name: 'Agent' } as const;
+  const alice = { identityDid: 'did:key:alice', name: 'Alice' };
+  const bob = { identityDid: 'did:key:bob', name: 'Bob' };
+
+  test('makes the reviewer of an agent-held task its assignee and the agent its delegate', async ({ expect }) => {
+    const db = await setup();
+    db.add(Obj.make(TaskMigration.ReviewedTask, { title: 'delegated', assignee: agent, reviewers: [alice] }));
+    db.add(Obj.make(TaskMigration.ReviewedTask, { title: 'reviewed', assignee: bob, reviewers: [alice] }));
+    db.add(Obj.make(TaskMigration.ReviewedTask, { title: 'own', assignee: agent }));
+    await db.flush();
+
+    await db.runMigrations(TaskMigration.migrations);
+
+    expect(await db.query(Filter.type(TaskMigration.ReviewedTask)).run()).toHaveLength(0);
+    const { get } = await load(db);
+    expect(get('delegated')).toMatchObject({ assignee: alice, delegate: agent });
+    expect(get('delegated')).not.toHaveProperty('reviewers');
+    expect(Task.needsReview(get('delegated'))).toBe(true);
+    expect(get('reviewed')).toMatchObject({ assignee: bob });
+    expect(get('reviewed').delegate).toBeUndefined();
+    expect(get('own')).toMatchObject({ assignee: agent });
+    expect(Task.needsReview(get('own'))).toBe(false);
+  });
+
+  test('converts the reviewers of a task migrated from before sub-tasks moved', async ({ expect }) => {
+    const db = await setup();
+    await seedLegacy(db, [{ title: 'epic' }]);
+    const [epic] = await db.query(Filter.type(TaskMigration.LegacyTask)).run();
+    Obj.update(epic, (epic) => {
+      epic.assignee = agent;
+      epic.reviewers = [alice];
+    });
+    await db.flush();
+
+    await db.runMigrations(TaskMigration.migrations);
+
+    const { get } = await load(db);
+    expect(get('epic')).toMatchObject({ assignee: alice, delegate: agent });
   });
 });

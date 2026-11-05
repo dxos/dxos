@@ -14,7 +14,7 @@ import { toPublicKey } from '@dxos/protocols/buf';
 
 export const handler = Effect.fn(function* () {
   const { json } = yield* CommandConfig;
-  const client = yield* ClientService;
+  const client = yield* ClientService.client;
   const identity = client.halo.identity.get();
   const device = client.halo.device;
 

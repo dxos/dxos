@@ -6,6 +6,8 @@ import { type WidgetProps, type XmlWidgetRegistry, getXmlInnerText, getXmlTextCh
 
 import {
   FallbackWidget,
+  LANE_CARD_HEIGHT,
+  LaneCardWidget,
   ReasoningWidget,
   ReferenceWidget,
   RequestWidget,
@@ -137,6 +139,14 @@ export const assistantRegistry: XmlWidgetRegistry = {
     estimatedHeight: () => COLLAPSED_HEIGHT,
     heightMode: 'min',
     Component: RequestWidget,
+  },
+
+  // Light threads: a lane working in the background, as a fixed-height card in its original place.
+  lane: {
+    block: true,
+    estimatedHeight: () => LANE_CARD_HEIGHT + COLLAPSED_HEIGHT,
+    heightMode: 'min',
+    Component: LaneCardWidget,
   },
 
   // The host overrides this with a widget that can actually dispatch the surface.

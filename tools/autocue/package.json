@@ -70,6 +70,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
+    "@dxos/scene": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/vite-plugin-import-source": "workspace:*",
     "@phosphor-icons/core": "catalog:",

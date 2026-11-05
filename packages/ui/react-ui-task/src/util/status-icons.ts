@@ -24,6 +24,8 @@ export const STATUS_ORDER: Task.Status[] = Task.StatusOptions.map(({ id }) => id
  */
 export const UNSET_ICON = 'ph--asterisk--regular';
 
+export const ESTIMATE_ICON = 'ph--ruler--regular';
+
 export const priorityIcon = (priority: Task.Priority | undefined): string =>
   priority != null ? (PRIORITY_ICONS.get(priority) ?? UNSET_ICON) : UNSET_ICON;
 

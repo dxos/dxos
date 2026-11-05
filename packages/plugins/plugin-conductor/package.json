@@ -86,7 +86,6 @@
     "@dxos/echo-react": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
-    "@dxos/react-ui-canvas": "workspace:*",
     "@dxos/react-ui-canvas-compute": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"

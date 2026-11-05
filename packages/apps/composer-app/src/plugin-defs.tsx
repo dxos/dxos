@@ -11,6 +11,7 @@ import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import { type ClientServicesRpc, makeHandlersFromRpc } from '@dxos/client-protocol';
 import * as AgentPlugin from '@dxos/plugin-agent/AgentPlugin';
+import * as AnimatorPlugin from '@dxos/plugin-animator/AnimatorPlugin';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as AutocuePlugin from '@dxos/plugin-autocue/AutocuePlugin';
 import * as BloggerPlugin from '@dxos/plugin-blogger/BloggerPlugin';
@@ -24,6 +25,7 @@ import * as ChessComPlugin from '@dxos/plugin-chess-com/ChessComPlugin';
 import * as ChessPlugin from '@dxos/plugin-chess/ChessPlugin';
 import * as ClaudePlugin from '@dxos/plugin-claude/ClaudePlugin';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as CloudflareOsPlugin from '@dxos/plugin-cloudflare-os/CloudflareOsPlugin';
 import * as CloudflarePlugin from '@dxos/plugin-cloudflare/CloudflarePlugin';
 import * as CodeGraphPlugin from '@dxos/plugin-code-graph/CodeGraphPlugin';
 import * as CodePlugin from '@dxos/plugin-code/CodePlugin';
@@ -83,7 +85,6 @@ import * as SequencerPlugin from '@dxos/plugin-sequencer/SequencerPlugin';
 import * as SheetPlugin from '@dxos/plugin-sheet/SheetPlugin';
 import * as SidekickPlugin from '@dxos/plugin-sidekick/SidekickPlugin';
 import * as SlackPlugin from '@dxos/plugin-slack/SlackPlugin';
-import * as SpacetimePlugin from '@dxos/plugin-spacetime/SpacetimePlugin';
 import * as StackPlugin from '@dxos/plugin-stack/StackPlugin';
 import * as StePlugin from '@dxos/plugin-ste/StePlugin';
 import * as StreamDeckPlugin from '@dxos/plugin-stream-deck/StreamDeckPlugin';
@@ -156,6 +157,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       BloggerPlugin.meta.profile.key,
       BookmarksPlugin.meta.profile.key,
       CallsPlugin.meta.profile.key,
+      CloudflareOsPlugin.meta.profile.key,
       CodePlugin.meta.profile.key,
       CodeGraphPlugin.meta.profile.key,
       CommercePlugin.meta.profile.key,
@@ -277,6 +279,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     ChessComPlugin.make(),
     ClaudePlugin.make(),
     CloudflarePlugin.make(),
+    CloudflareOsPlugin.make(),
     CodePlugin.make(),
     // Reads code-index through a `vite dev` route (see its vite plugin below in vite.config.ts); inert in a build.
     CodeGraphPlugin.make(),
@@ -346,6 +349,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
  */
 // TODO(wittjosiah): Consider factoring these out as standalone plugins published through the registry.
 const experimental: Plugin.Plugin[] = [
+  AnimatorPlugin.make(),
   BloggerPlugin.make(),
   BlueskyPlugin.make(),
   BrainPlugin.make(),
@@ -367,7 +371,6 @@ const experimental: Plugin.Plugin[] = [
   S3Plugin.make(),
   SequencerPlugin.make(),
   SlackPlugin.make(),
-  SpacetimePlugin.make(),
   StreamDeckPlugin.make(),
   StudioPlugin.make(),
   TerraPlugin.make(),

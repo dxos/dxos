@@ -142,8 +142,7 @@ export const Default: Story = {};
 /**
  * Two in-memory ECHO peers (no real networking, see `withMultiClientProvider`) sharing a
  * document, exercising the `Space.postMessage`/`listen` gossip channel and the CodeMirror
- * `awareness` extension end to end. This covers the same wiring as the (currently skipped,
- * flaky) composer-app e2e collaboration cursor test, deterministically and without a browser.
+ * `awareness` extension end to end, the same wiring the composer-e2e collaboration cursor test covers.
  */
 export const WithEcho: Story = {
   decorators: [

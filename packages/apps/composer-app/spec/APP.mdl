@@ -479,7 +479,6 @@ test QA-5: First run and logout
     - composer-e2e:basic.spec.ts#Basic tests › create identity, space is created by default
     - composer-e2e:basic.spec.ts#Basic tests › create space, which is displayed in tree
     - composer-e2e:basic.spec.ts#Basic tests › logout
-    - composer-e2e:basic.spec.ts#Basic tests › recover identity
   given:
     - no identity exists — a first run, not a reset of an existing profile
   steps:
@@ -613,6 +612,8 @@ test QA-8: Two peers in one space
   automated:
     - composer-e2e:collaboration.spec.ts#Collaboration tests › guest joins host's space
     - composer-e2e:collaboration.spec.ts#Collaboration tests › host and guest can see each others' changes in same document
+    - composer-e2e:collaboration.spec.ts#Collaboration tests › host and guest can see each others' cursors when same document is in focus
+    - composer-e2e:collaboration.spec.ts#Collaboration tests › peers can see each others presence
   given:
     - host: a booted app with an identity and a space containing one document
     - guest: a SECOND browser profile with its own, different identity
@@ -623,6 +624,14 @@ test QA-8: Two peers in one space
     - name: Both open the document
       do: Open the same document on both peers.
       expect: each peer's editor shows the same text
+    - name: See each other
+      do: Keep the document open on both peers.
+      expect: each peer's plank header shows the other peer's avatar, marked as currently viewing
+    - name: Focus the document on both peers
+      do: Put the cursor in the document's editor on the host and on the guest.
+      expect: |
+        each peer's editor shows the other's cursor with the other's name. The guest opened the
+        document after the host's last cursor move, so this checks that state reaches a late joiner.
     - name: Type on the host
       do: Type into the document on the host.
       expect: the guest's editor shows the host's text without a reload
@@ -793,7 +802,7 @@ test QA-13: Plugin showcase
       do: Create a Map, zoom into Europe and drag across it.
       expect: map tiles render and follow the drag
     - name: Spin a planet, a scene and a voxel world
-      do: Create a Terra world, a Spacetime scene and a Voxel world in turn, dragging across each.
+      do: Create a Terra world, a 3D canvas and a Voxel world in turn, dragging across each.
       expect: each renders in 3D and the view orbits with the drag
     - name: Fill a sheet
       do: Create a sheet and type three rows of a label, a number and a formula doubling it.
@@ -1055,6 +1064,30 @@ test QA-16: Hot-reload a plugin capability
       expect: the Settings row returns, and the page does not reload
 ```
 
+```mdl
+test QA-17: Load a plugin from its manifest
+  desc: |
+    A plugin served from another origin loads from its `manifest.json`: Composer builds it from the modules
+    the manifest lists and imports a module body only when the module activates, never the bundle's
+    `index.mjs`. The fixture plugin (`composer-e2e/__fixtures__/remote-plugin`) contributes one operation.
+  actors: human
+  status: passing
+  automated:
+    - composer-e2e:remote-plugin.spec.ts#Remote plugin › loads a plugin from its manifest and runs its operation
+  given:
+    - the fixture plugin is built to its `dist/` and served from another origin
+  steps:
+    - name: Load the plugin
+      do: Invoke org.dxos.operation.registry.loadPlugin with the URL of the fixture's manifest.json.
+      expect: it answers with the plugin's id, org.dxos.plugin.e2eRemote
+    - name: Run its operation
+      do: Invoke org.dxos.operation.e2eRemotePlugin.getEcho with { text: "hello" }.
+      expect: it answers { text: "hello", from: "e2e-remote-plugin" }
+    - name: Check what was fetched
+      do: List the requests made to the plugin's origin.
+      expect: manifest.json and the operation module's body were fetched, and index.mjs never was
+```
+
 ## Changelog
 
 ```mdl
@@ -1114,4 +1147,59 @@ decision D-7: A document's tour ends when the reader leaves the document, and QA
   by: user:wittjosiah
   affects: [QA-9]
   why: The toolbar its steps point at unmounts with the document, so the card fell back to the window's top-left corner.
+```
+
+```mdl
+decision D-8: plugin-spacetime is deleted, so the 3D step creates a 3D canvas (plugin-canvas) in place of a Spacetime scene.
+  date: 2026-10-29
+  by: user:richburdon
+```
+
+```mdl
+decision D-9: QA-17 covers loading a plugin from its `manifest.json`, the format every host now loads a plugin from, with an end-to-end spec that fails if Composer imports the bundle's `index.mjs`.
+  date: 2026-10-30
+  by: user:dmaretskyi
+  affects: [QA-17]
+```
+
+```mdl
+decision D-10: QA-17 uses a human actor because request inspection has no invocable operation.
+  date: 2026-11-02
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-17]
+  why: Listing the requests made to the plugin's origin has no operation behind it, so the agent cannot run that step.
+```
+
+```mdl
+decision D-11: QA-5 lists no automated test for recovering an identity until `recover identity` runs again.
+  date: 2026-11-03
+  by: user:dmaretskyi
+  affects: [QA-5]
+  why: The test fails on main since 2026-11-02 and is skipped, so naming it would claim coverage it does not give.
+```
+
+```mdl
+decision D-12: Each peer sees which other members are viewing the same object.
+  date: 2026-11-03
+  by: user:wittjosiah
+  affects: [QA-8]
+```
+
+```mdl
+decision D-13: QA-8 checks presence with a step where each peer's plank header shows the other's avatar as currently viewing, automated by the presence e2e spec. Fills in [D-12].
+  date: 2026-11-03
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-8]
+  why: QA-8 already brings two peers onto one document, which is the state presence needs.
+```
+
+```mdl
+decision D-14: QA-8 checks that each peer sees the other's cursor once both focus the document, automated by the collaboration cursor e2e spec.
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-8]
+  why: The cursor spec is enabled again now that awareness state reaches a peer that joins after the last cursor move.
 ```

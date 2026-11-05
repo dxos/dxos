@@ -2,15 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import { readFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
 import { type Rollup, type Plugin as VitePlugin } from 'vite';
 
 import { Plugin, PluginManifest } from '../../core/index.ts';
-import { findDxConfigFile, loadDxConfig, loadDxConfigWithVite } from '../load.ts';
+import { PLUGIN_HOST_ENTRY_ENV, PLUGIN_HOST_SPECIFIER } from '../config.ts';
+import { findDxConfigFile, loadDxConfig } from '../load.ts';
 import { type BuildMeta, ENTRY_FILENAME, MANIFEST_ASSET_NAME, serializeManifest, toBuildMeta } from '../manifest.ts';
 import { DEFAULT_PACKAGES, isSharedPackage } from '../packages.ts';
 import { type LibraryModule, moduleBodyAttributePlugin, pluginConfigPlugin } from '../plugin-config/index.ts';
+import { loadDxConfigWithVite } from './load-with-vite.ts';
 import { type VendorSpecifier, buildVendor } from './vendor.ts';
 
 export { ENTRY_FILENAME, MANIFEST_ASSET_NAME, serializeManifest };
@@ -97,7 +99,8 @@ const REQUIRE_SHIM_BANNER = [
   "import * as __composerReact from 'react';",
   "import * as __composerReactDom from 'react-dom';",
   "import * as __composerReactJsxRuntime from 'react/jsx-runtime';",
-  'const __composerRequireShim = new Map([',
+  // `globalThis.Map`: a plugin chunk may declare its own top-level `Map` (an ECHO type), which shadows the global.
+  'const __composerRequireShim = new globalThis.Map([',
   "  ['react', __composerReact.default ?? __composerReact],",
   "  ['react-dom', __composerReactDom.default ?? __composerReactDom],",
   "  ['react/jsx-runtime', __composerReactJsxRuntime],",
@@ -113,14 +116,25 @@ const REQUIRE_SHIM_BANNER = [
   '// --- end CJS require shim ---',
 ].join('\n');
 
-/** The package EDGE starts a plugin with; `vendor/` carries it when the build is given its entry. */
-export const PLUGIN_HOST_SPECIFIER = '@dxos/plugin-host-cloudflare';
+export { PLUGIN_HOST_ENTRY_ENV, PLUGIN_HOST_SPECIFIER };
 
 /**
- * Names the EDGE plugin host's entry file for a build whose config the publisher does not control (`dx registry
- * publish` runs the plugin's own build command), so `vendor/` carries the host.
+ * The EDGE host's entry file as the plugin at `root` installs it, read from the package's `import` export; Node's
+ * resolver cannot do this, since `require.resolve` ignores an `import`-only export.
  */
-export const PLUGIN_HOST_ENTRY_ENV = 'DX_PLUGIN_HOST_ENTRY';
+const resolveHost = (root: string): string | undefined => {
+  for (let dir = root; ; dir = dirname(dir)) {
+    const packageDir = join(dir, 'node_modules', PLUGIN_HOST_SPECIFIER);
+    if (existsSync(join(packageDir, 'package.json'))) {
+      const { exports } = JSON.parse(readFileSync(join(packageDir, 'package.json'), 'utf8'));
+      const entry = exports?.['.']?.import;
+      return typeof entry === 'string' ? join(packageDir, entry) : undefined;
+    }
+    if (dirname(dir) === dir) {
+      return undefined;
+    }
+  }
+};
 
 type OutputChunk = Extract<Rollup.OutputBundle[string], { type: 'chunk' }>;
 
@@ -503,7 +517,7 @@ export const composerPlugin = (options?: ComposerPluginOptions): VitePlugin[] =>
         }
       },
       async closeBundle() {
-        const hostEntry = process.env[PLUGIN_HOST_ENTRY_ENV];
+        const hostEntry = process.env[PLUGIN_HOST_ENTRY_ENV] ?? resolveHost(root);
         const configured = vendor === true ? [] : (vendor.extra ?? []);
         const extra = [
           ...configured,

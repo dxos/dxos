@@ -75,14 +75,13 @@ export const TaskSlashCommands: SlashCommand.SlashCommand[] = [
         return { summary: 'Nothing to run: every named task is already done, cancelled, or running.' };
       }
 
-      // An agent assignee on a `todo` task is what the supervisor's reconcile picks up.
       for (const task of runnable) {
         const failure = await run(
           invoke,
           TaskOperation.UpdateTask,
           {
             task: Ref.make(task),
-            assignee: { role: 'assistant' as const },
+            delegate: { role: 'assistant' as const },
             status: 'todo' as const,
           },
           db.spaceId,

@@ -61,6 +61,9 @@ const config: Plugin.PluginConfig = Plugin.config({
       requires: [AppCapabilities.AppGraph],
       activatesOn: MarkdownEvents.Start,
     }),
+    AppCapability.exporter(() => import('./src/capabilities/exporter.ts', { with: { type: 'module-url' } }), {
+      activatesOn: MarkdownEvents.Start,
+    }),
     AppCapability.commentConfig(
       () => import('./src/capabilities/comment-config.ts', { with: { type: 'module-url' } }),
       {
@@ -85,6 +88,11 @@ const config: Plugin.PluginConfig = Plugin.config({
         environments: ['browser', 'tauri'],
       },
       () => import('./src/capabilities/state.ts', { with: { type: 'module-url' } }),
+    ),
+    Capability.lazyModule(
+      'ObjectEmbeds',
+      { provides: [MarkdownCapabilities.ObjectEmbeds], environments: ['browser', 'tauri'] },
+      () => import('./src/capabilities/object-embeds.ts', { with: { type: 'module-url' } }),
     ),
     AppCapability.operationHandler(
       () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),

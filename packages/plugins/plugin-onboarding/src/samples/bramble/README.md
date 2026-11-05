@@ -21,7 +21,7 @@ What still needs to happen before we can ship the Spring Blend?
 
 ### Hand a task to the agent
 
-Every project has a task or two with no one assigned and a description written as a brief: draft the product page, write a pre-trip brief for each farm, fill in the welcome packet, write a roaster maintenance checklist. Select one in the project's task list and choose **Assign selected tasks to agent**. The agent works in a session filed under the project and saves what it writes as a new artifact there.
+Every project has a task or two with no one assigned and a description written as a brief: draft the product page, write a pre-trip brief for each farm, fill in the welcome packet, write a roaster maintenance checklist. Select one in the project's task list and choose **Delegate selected tasks to agent**. The agent works in a session filed under the project and saves what it writes as a new artifact there.
 
 Roastery Ops also owns a **Weekly roast report** routine. It's off. Turn it on and every Monday morning the agent reads the past week's roast log and writes a report into the project.
 

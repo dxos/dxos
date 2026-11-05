@@ -326,7 +326,17 @@ export class EchoClient extends Resource {
       throw err;
     }
 
+    if (db.isClosing) {
+      return undefined;
+    }
+
     const objectDocId = db.getObjectDocumentId(objectId) ?? (await this._waitForObjectLink(db, objectId));
+    // A close settles the wait with `undefined`, which an undefined `documentId` would match,
+    // carrying a closing database into the load below.
+    if (db.isClosing) {
+      return undefined;
+    }
+
     if (objectDocId !== documentId) {
       // Dropping the hit makes the result short, which reads to a caller as "no such object".
       log.warn('index hit dropped: the space root does not route the object to the indexed document', {
@@ -351,16 +361,26 @@ export class EchoClient extends Resource {
    */
   private _waitForObjectLink(db: DatabaseImpl, objectId: string): Promise<string | undefined> {
     return new Promise((resolve) => {
-      const settle = () => {
+      const stop = () => {
         clearTimeout(timer);
-        unsubscribe();
-        resolve(db.getObjectDocumentId(objectId));
+        unsubscribeFromLinks();
+        unsubscribeFromClose();
+      };
+      const settle = () => {
+        stop();
+        // A close releases the space root handle, which `getObjectDocumentId` asserts on.
+        resolve(db.isClosing ? undefined : db.getObjectDocumentId(objectId));
       };
       // Links reach a loaded root by its change events and a passive one by its JSON; both report here.
-      const unsubscribe = db.linksAdded.on((added) => {
+      const unsubscribeFromLinks = db.linksAdded.on((added) => {
         if (added.includes(objectId)) {
           settle();
         }
+      });
+      // Without this the timer outlives the database and settles against a released root handle.
+      const unsubscribeFromClose = db.lifetimeEnded.on(() => {
+        stop();
+        resolve(undefined);
       });
       const timer = setTimeout(settle, ROOT_LINK_WAIT_TIMEOUT);
     });
