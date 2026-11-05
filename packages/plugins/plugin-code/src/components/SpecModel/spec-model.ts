@@ -150,6 +150,12 @@ export const parseField = (line: string): FieldModel | undefined => {
     : undefined;
 };
 
+/** An op's `input` as one field per line, whether written as indented lines or inline as `{ a: A, b?: B }`. */
+const inputLines = (field?: { inline?: string; lines: string[] }): string[] => {
+  const inline = field?.inline?.trim().match(/^\{(.*)\}$/)?.[1];
+  return [...(inline ? splitTopLevel(inline).map((part) => part.trim()) : []), ...(field?.lines ?? [])];
+};
+
 const parseList = (value?: string): string[] =>
   value
     ?.replace(/^\[|\]$/g, '')
@@ -477,7 +483,7 @@ export const buildApiModel = (text: string): ApiModel => {
               name: block.id,
               ...(key && { key }),
               ...(desc && { desc }),
-              inputs: (fields.get('input')?.lines ?? [])
+              inputs: inputLines(fields.get('input'))
                 .map(parseField)
                 .filter((field): field is FieldModel => field !== undefined),
               ...(output && { output }),

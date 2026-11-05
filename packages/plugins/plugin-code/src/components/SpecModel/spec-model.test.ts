@@ -143,6 +143,15 @@ describe('spec model', () => {
     expect(join.inputs.map(({ name, type }) => `${name}: ${type}`)).toEqual(['peers: Map<string, Peer>', 'id: string']);
     expect(join.output).toBe('Peer[]');
   });
+
+  test('reads an inline input record as parameters', ({ expect }) => {
+    const spec = ['```mdl', 'op listFiles', '  input:  { project: Ref<CodeProject>, path?: string }', '```'].join('\n');
+    const [listFiles] = buildApiModel(spec).groups[0].endpoints;
+    expect(listFiles.inputs).toEqual([
+      { name: 'project', optional: false, type: 'Ref<CodeProject>' },
+      { name: 'path', optional: true, type: 'string' },
+    ]);
+  });
 });
 
 describe('spec references', () => {
