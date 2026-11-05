@@ -1505,6 +1505,12 @@ decision D-80: Ctrl acts as Cmd on the jump keys, and Shift with left or right, 
   why: Only Macs have Cmd, and the other jump keys do not conflict with the new bindings.
 ```
 
+```mdl
+decision D-81: Approve [D-80].
+  date: 2026-11-04
+  by: user:richburdon
+```
+
 ---
 
 ## Appendix: Extension Definitions
