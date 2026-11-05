@@ -2,17 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useMemo } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';
-import { Obj } from '@dxos/echo';
+import { Annotation, Obj } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { useResolveRef } from '@dxos/echo-react';
-import { useMembers } from '@dxos/halo-react';
+import { useIdentity, useMembers } from '@dxos/halo-react';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
 import { getSpace } from '@dxos/react-client/echo';
@@ -26,6 +27,7 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Tabs from '@dxos/react-ui/Tabs';
 import * as Theme from '@dxos/react-ui/Theme';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
+import { Subscription } from '@dxos/types';
 import { createComment } from '@dxos/ui-editor/headless';
 import { toHue } from '@dxos/ui-theme';
 import { hexToHue } from '@dxos/util';
@@ -50,6 +52,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   const { t } = UiHooks.useTranslation(ReviewNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const subjectId = Obj.getURI(subject);
+  const identity = useIdentity();
   const space = getSpace(subject);
   const members = useMembers(space?.id);
   // Author display names for suggestion tiles, keyed by DID; absent ⇒ the tile falls back to the DID.
@@ -98,6 +101,18 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     );
     return branch?.key;
   }, [markdownDoc, versionSelection]);
+
+  const subscription = useAtomValue(
+    useMemo(
+      () => Annotation.atomProperty(subject, Subscription.Subscription, identity?.did ?? ''),
+      [subject, identity],
+    ),
+  );
+  const subscribed = Subscription.isSubscribed(subscription, 'comments');
+  const handleToggleSubscription = useCallback(
+    () => invokePromise(CommentOperation.SetSubscription, { subject, subscribed: !subscribed }),
+    [invokePromise, subject, subscribed],
+  );
 
   // A comment on the whole object: no anchor, which the editors' comment sync and anchor sorts already pass over. An
   // object edited in fields (a feature) comments on the text selected in one instead, since its editors leave Mod-'
@@ -231,6 +246,17 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
               </Tabs.Trigger>
             </Tabs.List>
             <Toolbar.Separator variant='gap' />
+            {identity && (
+              <Button.Root
+                variant='ghost'
+                iconOnly
+                icon={subscribed ? 'ph--bell-ringing--regular' : 'ph--bell-slash--regular'}
+                label={t('subscribe-comments.label')}
+                aria-pressed={subscribed}
+                onClick={handleToggleSubscription}
+                data-testid='comments.subscription.toggle'
+              />
+            )}
             <Button.Root
               variant='ghost'
               iconOnly

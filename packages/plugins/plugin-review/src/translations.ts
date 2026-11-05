@@ -60,6 +60,7 @@ export const translations = [
         'no-comments-fields.message':
           'Select text and click <addIcon></addIcon> to comment on it, or click it with nothing selected to comment on the whole object.',
         'add-object-comment.label': 'Add comment',
+        'subscribe-comments.label': 'Notify me of comments',
         'comments.label': 'Comments',
         'comment-count.label_one': '{{count}} open thread',
         'comment-count.label_other': '{{count}} open threads',
