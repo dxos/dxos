@@ -433,6 +433,7 @@ export const ToolbarByTab: Story = {
     await seedContent();
     const artifacts = await canvas.findByTestId('projectsPlugin.artifacts', undefined, { timeout: 10_000 });
     await expect(within(artifacts).getByTestId('projectsPlugin.addArtifact')).toBeTruthy();
+    await expect(canvas.getAllByTestId('projectsPlugin.addArtifact')).toHaveLength(1);
     await expect(canvas.queryByTestId('projectsPlugin.delegateTasks')).toBeNull();
     await expect(canvas.queryByTestId('projectsPlugin.createChat')).toBeNull();
 

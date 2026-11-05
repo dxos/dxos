@@ -152,51 +152,52 @@ export const ArrayField = ({
       data-testid={`${SchemaEx.createJsonPath(path ?? [])}.add`}
     />
   );
-  const list = count === 0 && placeholder ? (
-    <Typography.Text tone='muted'>{placeholder}</Typography.Text>
-  ) : (
-    <OrderedList.Root
-      items={items}
-      getId={(item) => item.id}
-      getLabel={(item) => `${label} ${item.index + 1}`}
-      columns={columns}
-      onMove={handleMove}
-      readonly={!editable}
-    >
-      {({ items }) => (
-        <OrderedList.Content gutter='inherit' gap='sm' aria-label={label}>
-          {items.map((item) => (
-            <OrderedList.Item key={item.id} id={item.id} canDrag={ordered && editable}>
-              {ordered && editable && <OrderedList.DragHandle />}
-              {/* A cell holding a nested group must be a template root, so the group's subgrid finds `content`. */}
-              <Layout.Container gutter='none'>
-                <FormFieldDispatch
-                  {...props}
-                  type={elementType}
-                  name={null}
-                  label={asObject || owned ? undefined : label}
-                  path={[...(path ?? []), item.index]}
-                  readonly={!editable}
-                  layout={asObject ? layout : 'inline'}
-                  refInline={owned || undefined}
-                  defaultOpen={owned ? createdRef.current.has(item.id) : undefined}
-                />
-              </Layout.Container>
-              {editable && (
-                <Button.Root
-                  iconOnly
-                  variant='ghost'
-                  icon='ph--x--regular'
-                  label={t('remove-item.button')}
-                  onClick={() => handleRemove(item.index)}
-                />
-              )}
-            </OrderedList.Item>
-          ))}
-        </OrderedList.Content>
-      )}
-    </OrderedList.Root>
-  );
+  const list =
+    count === 0 && placeholder ? (
+      <Typography.Text tone='muted'>{placeholder}</Typography.Text>
+    ) : (
+      <OrderedList.Root
+        items={items}
+        getId={(item) => item.id}
+        getLabel={(item) => `${label} ${item.index + 1}`}
+        columns={columns}
+        onMove={handleMove}
+        readonly={!editable}
+      >
+        {({ items }) => (
+          <OrderedList.Content gutter='inherit' gap='sm' aria-label={label}>
+            {items.map((item) => (
+              <OrderedList.Item key={item.id} id={item.id} canDrag={ordered && editable}>
+                {ordered && editable && <OrderedList.DragHandle />}
+                {/* A cell holding a nested group must be a template root, so the group's subgrid finds `content`. */}
+                <Layout.Container gutter='none'>
+                  <FormFieldDispatch
+                    {...props}
+                    type={elementType}
+                    name={null}
+                    label={asObject || owned ? undefined : label}
+                    path={[...(path ?? []), item.index]}
+                    readonly={!editable}
+                    layout={asObject ? layout : 'inline'}
+                    refInline={owned || undefined}
+                    defaultOpen={owned ? createdRef.current.has(item.id) : undefined}
+                  />
+                </Layout.Container>
+                {editable && (
+                  <Button.Root
+                    iconOnly
+                    variant='ghost'
+                    icon='ph--x--regular'
+                    label={t('remove-item.button')}
+                    onClick={() => handleRemove(item.index)}
+                  />
+                )}
+              </OrderedList.Item>
+            ))}
+          </OrderedList.Content>
+        )}
+      </OrderedList.Root>
+    );
 
   // A section with no name has no heading to carry its add button, so it keeps the plain header.
   if (section && label) {
