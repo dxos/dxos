@@ -165,6 +165,11 @@
       "types": "./dist/types/src/types/SpecText.d.ts",
       "import": "./dist/lib/SpecText.mjs"
     },
+    "./State": {
+      "source": "./src/types/State.ts",
+      "types": "./dist/types/src/types/State.d.ts",
+      "import": "./dist/lib/State.mjs"
+    },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
@@ -199,6 +204,9 @@
       ],
       "Spec": [
         "dist/types/src/types/Spec.d.ts"
+      ],
+      "State": [
+        "dist/types/src/types/State.d.ts"
       ]
     }
   },

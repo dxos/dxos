@@ -87,7 +87,7 @@ export const login = Command.make(
   },
   Effect.fn(function* ({ method, input }) {
     const { json } = yield* CommandConfig;
-    const client = yield* ClientService;
+    const client = yield* ClientService.client;
     const manager = yield* Plugin.Service;
     const { invoke } = manager.capabilities.get(Capabilities.OperationInvoker);
     // TODO(wittjosiah): How to surface this error to the user cleanly?

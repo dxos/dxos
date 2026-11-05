@@ -10,14 +10,13 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterAll, beforeAll, describe, test, vi } from 'vitest';
 
-import { Chat } from '@dxos/assistant';
+import { Chat, TrajectoryStore } from '@dxos/assistant';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, Feed, Filter, Ref } from '@dxos/echo';
+import { Database, Feed, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as AcpAgent from '@dxos/plugin-claude/AcpAgent';
 import * as HelperClient from '@dxos/plugin-claude/HelperClient';
-import { Message } from '@dxos/types';
 
 import { Shell } from '#shell';
 
@@ -38,7 +37,7 @@ const MODEL = process.env.DX_E2E_CLAUDE_MODEL ?? 'claude-haiku-4-5-20251001';
 const TURN_TIMEOUT = 4 * 60_000;
 
 const TestLayer = Layer.mergeAll(
-  TestDatabaseLayer({ types: [Feed.Feed, Message.Message, Chat.Chat] }),
+  TestDatabaseLayer({ types: [Feed.Feed, Chat.Chat, ...TrajectoryStore.types] }),
   Layer.succeed(Trace.TraceService, { write: () => {} }),
 );
 
@@ -94,7 +93,7 @@ describe.runIf(ENABLED && (OAUTH_TOKEN || API_KEY))('dev shell agent host with C
             { chat, feed },
             { prompt: 'Create a file named hello.txt containing exactly: hello from vite dev. Then reply DONE.' },
           );
-          const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
+          const messages = yield* TrajectoryStore.history(feed);
           return messages.some((message) => message.sender.role === 'assistant');
         }).pipe(Effect.scoped, Effect.provide(TestLayer)),
       );

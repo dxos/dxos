@@ -48,7 +48,7 @@ export interface ProcessTraceServiceOptions {
 export const createProcessTraceService = (
   opts: ProcessTraceServiceOptions,
 ): Context.Service.Shape<typeof Trace.TraceService> => ({
-  write: (event, data) => {
+  write: (event, data, fiberMeta) => {
     try {
       // TODO(dmaretskyi): Batching.
       // Detach `data` from any ECHO proxy state — nested reactive
@@ -60,6 +60,7 @@ export const createProcessTraceService = (
         meta: {
           runtimeName: opts.runtimeName,
           ...(opts.traceMeta ?? {}),
+          ...fiberMeta,
           pid: opts.pid,
           parentPid: opts.parentPid,
           processName: opts.processName,

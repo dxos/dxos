@@ -33,7 +33,7 @@ export const connect = Command.make(
   },
   Effect.fn(function* ({ url, spaceId, haloSpaceId }) {
     const { json, profile } = yield* CommandConfig;
-    const client = yield* ClientService;
+    const client = yield* ClientService.client;
 
     const identity = client.halo.identity.get();
     if (!identity) {

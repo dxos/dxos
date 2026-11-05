@@ -3,28 +3,25 @@
 //
 
 import { type ViewUpdate } from '@codemirror/view';
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 
 import { debounceAndThrottle } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { type Identity } from '@dxos/halo';
-import { EID } from '@dxos/keys';
 import { getSpace } from '@dxos/react-client/echo';
 import { Selection, ViewLocation, ViewState } from '@dxos/react-ui-attention/types';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import { Text } from '@dxos/schema';
 import { Domino } from '@dxos/ui';
 import {
-  AnchorWidget,
   Cursor,
   EditorState,
   type EditorStateStore,
   EditorView,
   type Extension,
   InputModeExtensions,
-  type ObjectLinkProps,
   type WidgetHostOptions,
   createDataExtensions,
   decorateMarkdown,
@@ -33,7 +30,6 @@ import {
   folding,
   formattingKeymap,
   listener,
-  objectLinks,
   selectionState,
   snippets,
   substitutions,
@@ -44,8 +40,7 @@ import { isTruthy, safeUrl } from '@dxos/util';
 
 import { Markdown } from '#types';
 
-import { parseEmbedLabel } from '../components/PreviewComponent/parse-embed-label.ts';
-import { PreviewComponent } from '../components/PreviewComponent/PreviewComponent.tsx';
+import { objectEmbeds } from '../extensions/object-embeds.tsx';
 import { setFallbackName } from '../util.tsx';
 import { type DocumentContent } from './useDocumentContent.ts';
 
@@ -216,29 +211,7 @@ const createBaseExtensions = ({
           renderLinkButton: onSelectLink && createRenderLink(onSelectLink),
         }),
         widgetHost({ setWidgets }),
-        objectLinks({
-          link: {
-            factory: ({ label, eid }: ObjectLinkProps) => {
-              // TODO(burdon): Why support both "#" or "@"?
-              // A bare `#`/`@` label is a name-less link; resolve the object's actual label once
-              // loaded. The resolver is only created when a db exists so `AnchorWidget.eq` sees the
-              // db's arrival as a change and rebuilds the chip.
-              const resolver =
-                ['#', '@'].indexOf(label) !== -1 && space?.db ? createAnchorLabelResolver(space.db, eid) : undefined;
-
-              return new AnchorWidget(label, eid, undefined, resolver);
-            },
-          },
-          image: {
-            // Reserve the persisted height (`![label|404](…)`) up front so the block does not collapse
-            // to the placeholder minimum while the embed resolves (prevents scroll jitter / blank).
-            estimatedHeight: ({ label }: ObjectLinkProps) => (label ? parseEmbedLabel(label).height : undefined),
-            // An embed that released its reserved height (a card) must still keep its element across
-            // rebuilds, or a click that reconfigures the editor remounts it out from under the user.
-            keepAlive: true,
-            Component: (props) => <PreviewComponent {...props} db={space?.db} attendableId={attendableId} />,
-          },
-        }),
+        objectEmbeds({ db: space?.db, attendableId }),
         substitutions(),
       ],
     );
@@ -280,20 +253,6 @@ const selectionChange = (viewState: ViewState.Manager) => {
       debouncedHandler(update);
     }
   });
-};
-
-/** Resolves an anchor's display label from the linked object (for name-less `#`/`@` links). */
-const createAnchorLabelResolver = (db: Space['db'], eid: string) => async () => {
-  const parsed = EID.tryParse(eid);
-  if (!parsed) {
-    return undefined;
-  }
-  try {
-    const object = await db.makeRef(parsed).load();
-    return Obj.getLabel(object as Obj.Unknown) ?? undefined;
-  } catch {
-    return undefined;
-  }
 };
 
 const createRenderLink =

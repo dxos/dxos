@@ -21,7 +21,7 @@ export const query = Command.make(
   },
   Effect.fnUntraced(function* ({ dxn }) {
     const { json } = yield* CommandConfig;
-    const client = yield* ClientService;
+    const client = yield* ClientService.client;
     const echoUri = EID.tryParse(dxn);
     if (!echoUri) {
       yield* Console.error(`Not a valid feed identifier: ${dxn}`);

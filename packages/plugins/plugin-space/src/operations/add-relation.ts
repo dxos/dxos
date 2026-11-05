@@ -10,6 +10,8 @@ import { invariant } from '@dxos/invariant';
 
 import { SpaceOperation } from '#types';
 
+import { typeKeyFilter } from './helpers.ts';
+
 const handler: Operation.WithHandler<typeof SpaceOperation.AddRelation> = SpaceOperation.AddRelation.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
@@ -52,7 +54,7 @@ const resolveRelationType = Effect.fnUntraced(function* (db: Database.Database, 
   const [schema] = yield* Effect.promise(() =>
     db
       .query(
-        Query.select(Filter.and(Filter.type(Type.Type), Filter.key(typename))).from(Scope.space(), Scope.registry()),
+        Query.select(Filter.and(Filter.type(Type.Type), typeKeyFilter(typename))).from(Scope.space(), Scope.registry()),
       )
       .run(),
   );

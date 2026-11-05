@@ -37,6 +37,7 @@ import {
   LOCATION_BROADCAST_INTERVAL,
   PRESENCE_BROADCAST_INTERVAL,
   PRESENCE_EXPIRY,
+  applyPeerDeck,
   applyViewingMessage,
   getPresenceKeyFromPath,
   groupPresenceChangesBySpace,
@@ -290,6 +291,7 @@ export default Capability.makeModule(
                     ...(following.sessionId && { sessionId: following.sessionId }),
                   },
                 }),
+                deck: { planks: active.filter((path) => GraphPath.getSpaceIdFromPath(path) === space.id) },
               })
               // TODO(burdon): This seems defensive; why would this fail? Backoff interval.
               .catch((err) => {
@@ -375,6 +377,7 @@ export default Capability.makeModule(
               registry.update(ephemeralAtom, (ephemeral) => ({
                 ...ephemeral,
                 viewersByObject: applyViewingMessage(ephemeral.viewersByObject, peer, viewing, lastSeen),
+                peerDecks: applyPeerDeck(ephemeral.peerDecks, space.id, peer, viewing),
               }));
             }
           }),

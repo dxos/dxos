@@ -8,15 +8,16 @@ by: agent:claude-code
 # Review: EdgePlugins
 
 Reviewed against dxos `main` (fe33761, with #14334 and #14389) and dxos/edge#1426 (`claude/edge-plugin-releases` at
-6b89e06). Code that is only on open PRs (dxos/dxos#14396 host gaps, #14395 bundle fixes, #14393 CLI) counts as not done.
+6b89e06), updated for dxos/dxos#14396 (host gaps), which now counts as done. Code that is only on other open PRs (#14395
+bundle fixes, #14393 CLI) counts as not done.
 
-The publish-and-run path works on each side, but not yet across them: a bundle built from the reviewed dxos revision cannot run under edge#1426, whose router calls `protocolVersion()`, which main's entrypoint does not export (PluginEntrypoint; dxos/dxos#14396 adds it). `composerPlugin` builds one bundle with `vendor/`. `check-edge-release` loads every
+The publish-and-run path works on each side and, with dxos/dxos#14396, across them: edge#1426's router calls `protocolVersion()`, which the entrypoint now exports (PluginEntrypoint). `composerPlugin` builds one bundle with `vendor/`. `check-edge-release` loads every
 `edge-release` bundle alone in workerd. registry-service describes each upload in Worker Loader, indexes operations,
 types and channels in D1, and refuses activation failures, key conflicts and changed versions. compute-service routes a
 `dxn:` key to the bundle's Dynamic Worker, with a fallback to operation-service. Types another plugin publishes resolve
 through `TYPE_REGISTRY` and ECHO type sources. Each of these has tests in workerd or on the edge stack.
 
-Of 82 items: 37 done, 3 untested, 20 partial, 4 diverged, 18 missing. Findings:
+Of 87 items: 41 done, 3 untested, 22 partial, 4 diverged, 17 missing. Findings:
 
 - **Discovery still reads operation-service.** MCP `queryOperations`, `loadSkill` and the agents' skill list read
   operation-service's KV catalog, not bundle catalogs (F-4.2, F-5.1, F-6.8). operation-service also still serves 25 keys
@@ -24,10 +25,9 @@ Of 82 items: 37 done, 3 untested, 20 partial, 4 diverged, 18 missing. Findings:
 - **Versions: half done.** Channels and revocation work in the store. But compute-service always resolves on `latest`
   (`channelOf` is a TODO), a `dxn:<key>@<version>` target is not honoured, and `dx` has no `channel set` command
   (F-2.2, F-2.3, F-2.6, F-2.7, SpacePluginChannel).
-- **The host contract is behind the target.** `InvocationScope` carries only the access token service. Output is not
-  encoded as ECHO JSON (T-7 is `test.fails`). Nested `Operation.invoke` fails in a bundle. edge#1426 calls
-  `protocolVersion()`, which main's entrypoint does not export. dxos/dxos#14396 closes these (P2, P3, P4, P10) but is
-  open. Durable facets (F-8, PluginSupervisor) and release publishing from dxos CI (F-9) have not started.
+- **The host contract has caught up.** dxos/dxos#14396 carries the request context and host services in `InvocationScope`,
+  encodes output as ECHO JSON (T-7 passes), runs nested `Operation.invoke` in a bundle, and exports `protocolVersion()`
+  (P2, P3, P4, P10). Some operation-service services are still missing (F-5.7). Durable facets (F-8, PluginSupervisor) and release publishing from dxos CI (F-9) have not started.
 
 ## Extensions
 
@@ -325,6 +325,13 @@ verdict F-3.7: Not enforced; the spec says so.
 ```
 
 ```mdl
+verdict F-3.8: The type source caches settled records per isolate in a bounded LRU; unknown types and failures are asked again.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/TypeSource.ts#makeCache, github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/TypeSource.ts#fromRegistry]
+  tests: [github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/TypeSource.workerd.test.ts, github:dxos/dxos/packages/plugins/plugin-space/src/edge-bundle.test.ts]
+```
+
+```mdl
 verdict F-4.1: The catalog lists each skill with its instructions and tool keys.
   status: done
   evidence: [github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/PluginCatalog.ts#make]
@@ -357,13 +364,11 @@ verdict F-5.2: A key a bundle implements runs in its Dynamic Worker in the given
 ```
 
 ```mdl
-verdict F-5.3: A nested Operation.invoke in a bundle has no operation service on main.
-  status: missing
-  evidence: [github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/PluginHost.ts#make, github:dxos/edge/packages/services/compute-service/src/plugins/invocation-scope.ts#invocationScope]
-  note: |
-    Main's host builds the context without a functions service, so `Operation.invoke` dies (edge's
-    operation-fallbacks plan lists the affected operations). edge#1426 passes an `invoke` back to compute-service in the
-    scope. The dxos half, `scope.operations`, is in dxos/dxos#14396 (P4, open).
+verdict F-5.3: A nested Operation.invoke runs the bundle's own operation in process and any other through scope.operations.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/HostServices.ts#makeOperations, github:dxos/edge/packages/services/compute-service/src/plugins/invocation-scope.ts#invocationScope]
+  tests: [github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/PluginHost.workerd.test.ts, github:dxos/dxos/packages/plugins/plugin-projects/src/edge-bundle.test.ts]
+  note: The plugin-projects test runs `projects.create` against the plugin-space bundle through a relayed `scope.operations`.
 ```
 
 ```mdl
@@ -371,6 +376,29 @@ verdict F-5.4: An operation key another plugin key owns fails with KeyConflict.
   status: done
   evidence: [github:dxos/edge/packages/services/registry-service/src/plugin-store/PluginStore.ts#KeyConflictError, github:dxos/edge/packages/services/registry-service/src/plugin-store/PluginStore.ts#PluginStore.upload]
   tests: [github:dxos/edge/packages/services/registry-service/test/plugin-store.workerd.test.ts, github:dxos/edge/packages/services/edge/test/plugin-store.node.test.ts]
+```
+
+```mdl
+verdict F-5.5: The host returns each live ECHO object as its JSON form with `@uri` and each ref as `{ '/': uri }`.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/Output.ts#encode, github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/PluginHost.ts#make]
+  tests: [github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/Output.workerd.test.ts, github:dxos/dxos/packages/plugins/plugin-space/src/edge-bundle.test.ts]
+```
+
+```mdl
+verdict F-5.6: Trace envelopes, cancellation and id seeding are consumed and tested; the conversation's HarnessService is not tested end to end.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/RequestContext.ts#TraceForwarder, github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/RequestContext.ts#listenForCancel, github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/RequestContext.ts#withConversation]
+  tests: [github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/PluginHost.workerd.test.ts]
+  note: No test runs a conversation-scoped invocation against a real chat.
+```
+
+```mdl
+verdict F-5.7: Host services and nested operations reach the handler; some operation-service services are still missing.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/HostServices.ts#withHostServices, github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/HostServices.ts#makeOperations, github:dxos/edge/packages/services/compute-service/src/plugins/invocation-scope.ts#invocationScope]
+  tests: [github:dxos/dxos/packages/core/compute/plugin-host-cloudflare/src/PluginHost.workerd.test.ts, github:dxos/dxos/packages/plugins/plugin-projects/src/edge-bundle.test.ts]
+  note: The Host services inventory lists the gaps — BrainService methods that carry ECHO objects, `DiscordSource.Endpoint`, blob backends and the OTEL tracer.
 ```
 
 ```mdl
@@ -430,6 +458,13 @@ verdict F-6.8: The KV operation catalog is still operation-service's.
   status: missing
   evidence: [github:dxos/edge/packages/services/compute-service/src/plugins/plugin-router.ts#operationService]
   note: Upload and revoke update D1 only. Searched registry-service `plugin-store` for a KV write.
+```
+
+```mdl
+verdict F-6.9: The loader reports the vendored host's protocol version and the router trims the scope to it.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/protocols/src/PluginProtocol.ts#scopeFor, github:dxos/dxos/packages/core/protocols/src/PluginProtocol.ts#isSupported, github:dxos/dxos/packages/core/compute/edge-compute/src/plugin-loader/PluginLoader.ts#workerCode]
+  tests: [github:dxos/dxos/packages/core/protocols/src/PluginProtocol.test.ts, github:dxos/dxos/packages/plugins/plugin-space/src/edge-bundle.test.ts]
 ```
 
 ```mdl

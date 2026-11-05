@@ -15,6 +15,9 @@ export type ObjectViewers = Record<string, Record<string, SpaceSchema.ObjectView
 /** {@link ObjectViewers}, per presence key. */
 export type ViewersByObject = Record<string, ObjectViewers>;
 
+/** Space → identity → session → that session's deck in the space. */
+export type PeerDecks = Record<string, Record<string, Record<string, SpaceSchema.PeerDeck>>>;
+
 export const PRESENCE_BROADCAST_INTERVAL = 30_000;
 
 export const PRESENCE_EXPIRY = 2 * PRESENCE_BROADCAST_INTERVAL;
@@ -94,6 +97,7 @@ export type ViewingMessage = {
   locations: Record<string, SpaceSchema.PeerLocation>;
   /** Whom the sender follows in this space; that peer sends its location faster while named here. */
   following?: FollowingTarget;
+  deck?: SpaceSchema.PeerDeck;
 };
 
 /** Whether `target` names the session `sessionId` of `identityKey`, or names `identityKey` without a session. */
@@ -131,6 +135,14 @@ const parseFollowing = (value: unknown): FollowingTarget | undefined => {
   return isString(identityKey) ? { identityKey, ...(isString(sessionId) && { sessionId }) } : undefined;
 };
 
+const parseDeck = (value: unknown): SpaceSchema.PeerDeck | undefined => {
+  if (typeof value !== 'object' || value === null) {
+    return undefined;
+  }
+  const { planks } = value as Record<string, unknown>;
+  return Array.isArray(planks) ? { planks: planks.filter(isString) } : undefined;
+};
+
 const DEVICE_KINDS: ReadonlySet<string> = new Set(['browser', 'native', 'mobile', 'agent', 'unknown']);
 
 const isDeviceKind = (value: unknown): value is NonNullable<SpaceSchema.SessionDevice['kind']> =>
@@ -155,6 +167,7 @@ export const parseViewingMessage = (payload: Record<string, unknown>): ViewingMe
   const { identityKey, sessionId, added, removed, attended, locations } = payload;
   const device = parseDevice(payload.device);
   const following = parseFollowing(payload.following);
+  const deck = parseDeck(payload.deck);
   if (!isString(identityKey) || !Array.isArray(added) || !Array.isArray(removed)) {
     return undefined;
   }
@@ -176,6 +189,7 @@ export const parseViewingMessage = (payload: Record<string, unknown>): ViewingMe
     attended: Array.isArray(attended) ? attended.filter(isString) : [],
     locations: parsedLocations,
     ...(following && { following }),
+    ...(deck && { deck }),
   };
 };
 
@@ -223,6 +237,30 @@ export const applyViewingMessage = (
   }
   return next;
 };
+
+/** Records the deck `peer`'s session reported in `spaceId`, replacing the one it reported before. */
+export const applyPeerDeck = (
+  peerDecks: PeerDecks,
+  spaceId: string,
+  peer: string,
+  { sessionId = peer, deck }: ViewingMessage,
+): PeerDecks =>
+  deck
+    ? {
+        ...peerDecks,
+        [spaceId]: { ...peerDecks[spaceId], [peer]: { ...peerDecks[spaceId]?.[peer], [sessionId]: deck } },
+      }
+    : peerDecks;
+
+/** The graph path a session of `peer` has the object `key` open at in its deck, when it reported one. */
+export const getPeerPlankPath = (
+  peerDecks: PeerDecks,
+  spaceId: string,
+  peer: string,
+  sessionId: string,
+  key: EID.EID,
+): string | undefined =>
+  peerDecks[spaceId]?.[peer]?.[sessionId]?.planks.find((path) => getPresenceKeyFromPath(path) === key);
 
 export const isFresh = (viewer: SpaceSchema.ObjectViewerProps, now: number) => now - viewer.lastSeen < PRESENCE_EXPIRY;
 
