@@ -458,7 +458,7 @@ export const ForeignKeyEditable: Story = {
 /** Each requirement shows its newest verdict across the spec's reviews, naming that review on hover. */
 export const Reviewed: Story = {
   render: ReviewedStory,
-  args: { name: 'Source files in ECHO' },
+  args: { name: 'Stub operations' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await canvas.findByTestId('name', undefined, { timeout: 10_000 });

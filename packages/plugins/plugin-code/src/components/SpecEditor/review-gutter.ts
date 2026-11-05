@@ -204,10 +204,14 @@ class ReviewWidget extends WidgetType {
       this.hover.attach(
         view,
         statusTag,
-        (dark) => walkthroughCard(steps, { read, onOpen, dark }),
-        [`${STATUS_STYLE[status].label}: ${summary ?? id}`, ...steps.map((step) => `${step.text} ${step.key}`)].join(
-          '. ',
-        ),
+        (dark) => walkthroughCard(steps, { read, onOpen, dark }, reviewed),
+        [
+          `${STATUS_STYLE[status].label}: ${summary ?? id}`,
+          ...steps.map((step) => `${step.text} ${step.key}`),
+          reviewed,
+        ]
+          .filter(Boolean)
+          .join('. '),
       );
     }
 

@@ -119,6 +119,14 @@ export const Reviews: Story = {
     await waitFor(() => expect(canvas.getAllByTestId('spec-review.gutter-chip').length).toBeGreaterThan(0), {
       timeout: 10_000,
     });
+    // A chip with a walkthrough shows a hover card, whose description names the review as the tooltip would.
+    const carded = canvas
+      .getAllByTestId('spec-review.gutter-chip')
+      .filter((chip) => chip.hasAttribute('aria-description'));
+    await expect(carded.length).toBeGreaterThan(0);
+    for (const chip of carded) {
+      await expect(chip.getAttribute('aria-description')).toMatch(/Reviewed 2026-10-2\d at [0-9a-f]{7}$/);
+    }
     await userEvent.click(canvas.getByTestId('spec-article.view.review'));
     await waitFor(() => expect(canvas.getAllByTestId('verdict-card').length).toBeGreaterThan(100));
     await expect(canvas.getByTestId('review-panel.summary')).toHaveTextContent(/^136 items/);
