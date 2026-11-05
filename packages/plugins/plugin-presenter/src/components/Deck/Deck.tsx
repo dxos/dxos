@@ -57,8 +57,17 @@ const KEY_OWNERS = [
 const ACTIVATABLE =
   'button, a[href], summary, [role="button"], [role="checkbox"], [role="switch"], [role="menuitem"], [role="tab"], [role="option"]';
 
+/** The grid's own controls keep Space; a thumbnail tile (`role="option"`) does not, so Space presents from it. */
+const GRID_CONTROLS = 'button, a[href]';
+
 /** Keys typed into slide content (inputs, editors, arrow-driven widgets) must not turn the page. */
 const isEditable = (target: EventTarget) => target instanceof Element && target.closest(KEY_OWNERS) !== null;
+
+/** As `isEditable`, for a thumbnail grid: the grid's own listbox gives way, while a control inside a thumbnail does not. */
+const ownsKeysInGrid = (target: EventTarget) => {
+  const owner = target instanceof Element ? target.closest(KEY_OWNERS) : null;
+  return owner !== null && owner.getAttribute('role') !== 'listbox';
+};
 
 //
 // Root
@@ -473,8 +482,8 @@ type DeckGridProps = {
  * Every slide as a thumbnail; the current one is selected, and a double-click opens it (or presents from it).
  */
 const DeckGrid = Util.composable<HTMLDivElement, DeckGridProps>(
-  ({ size, onMove, onOpen, onAddSlide, contextMenuId, ...props }, forwardedRef) => {
-    const { slides, index, setIndex, setFullscreen, themeSettings, focusRef } = useDeckContext('Deck.Grid');
+  ({ size, onMove, onOpen, onAddSlide, contextMenuId, onKeyDownCapture, ...props }, forwardedRef) => {
+    const { slides, count, index, setIndex, setFullscreen, themeSettings, focusRef } = useDeckContext('Deck.Grid');
     const ref = useComposedRefs<HTMLDivElement>(forwardedRef, focusRef);
     return (
       <div
@@ -482,6 +491,25 @@ const DeckGrid = Util.composable<HTMLDivElement, DeckGridProps>(
         ref={ref}
         tabIndex={-1}
         data-testid='presenter.deck'
+        // Capture, because a focused listbox would take Space to select its tile and Up and Down to move by a row.
+        onKeyDownCapture={(event) => {
+          onKeyDownCapture?.(event);
+          if (ownsKeysInGrid(event.target) || event.metaKey || event.ctrlKey || event.altKey) {
+            return;
+          }
+          const delta = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0;
+          const present =
+            event.key === ' ' && !(event.target instanceof Element && event.target.closest(GRID_CONTROLS));
+          if (delta !== 0 || present) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (present) {
+              setFullscreen(true);
+            } else {
+              setIndex(SlideViewState.clamp(index + delta, count));
+            }
+          }
+        }}
       >
         <SlideThemeProvider settings={themeSettings}>
           <SlideGrid

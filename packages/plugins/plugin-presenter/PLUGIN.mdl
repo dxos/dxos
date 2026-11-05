@@ -439,7 +439,7 @@ feat F-4: Presentation Deck
   req F-4.8: Only an attended deck takes focus on mount.
   req F-4.9: A linked object with no slide surface renders as a title slide rather than failing.
   req F-4.10: A section whose target was deleted is omitted from the deck; one whose target has not loaded shows a pending slide.
-  req F-4.11: Inline, a Presentation shows every slide as a fully revealed thumbnail in a vertically scrolling grid with no pager; the current slide is selected, and arrow keys or a click move it.
+  req F-4.11: Inline, a Presentation shows every slide as a fully revealed thumbnail in a vertically scrolling grid with no pager; the current slide is selected, and arrow keys or a click move it. Up and Down move one slide past its click steps wherever focus is in the grid, Space presents from the current slide, and the current slide is the one outlined tile.
   req F-4.12:
     when: user drags a thumbnail before or after another
     then: the section moves there, and the moved slide stays current
@@ -1526,6 +1526,40 @@ decision D-83: Space, `[`, `]`, and Cmd with left or right keep their bindings f
   for: user:richburdon
   affects: [F-12.4]
   why: The request named only the arrow keys, and stopping at a slide's last step would leave Down and Space disagreeing.
+```
+
+```mdl
+decision D-84: In the inline grid, Up and Down move between slides directly, and Space starts the presentation.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-4.11]
+```
+
+```mdl
+decision D-85: Space presents from the current slide, including from a clicked thumbnail; the grid's buttons keep Space, and an inline document preview still steps with it. With focus on a thumbnail the listbox keeps moving Up and Down by a row of the grid. Fills in [D-84].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-4.11]
+  why: A row is what Up and Down mean in a wrapped grid once a tile has focus, and a preview has no grid to start from.
+```
+
+```mdl
+decision D-86: In the inline grid the current slide and the focused tile are the same tile, so only one border shows.
+  date: 2026-11-04
+  by: user:richburdon
+  affects: [F-4.11]
+```
+
+```mdl
+decision D-87: Up and Down move one slide wherever focus is in the grid, including on a clicked thumbnail, and the pointer tints the tile under it without outlining it. Fills in [D-86].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  supersedes: D-85
+  affects: [F-4.11]
+  why: With a thumbnail focused, the listbox moved Up and Down by a row, which does nothing in a one-row grid; Space, the buttons and the document preview stay as [D-85] has them.
+  rejected: Moving by a row, which needs the rendered column count and leaves the two focus paths behaving differently.
 ```
 
 ---

@@ -100,6 +100,28 @@ const EditedSlideStory = () => {
   );
 };
 
+/** The thumbnail grid as `PresentationArticle` composes it, over a first slide with click steps. */
+const GridStory = () => {
+  const slides = useMemo(() => createClickSlides(), []);
+  const [index, setIndex] = useState(0);
+  const [fullscreen, setFullscreen] = useState(false);
+  return (
+    <Deck.Root
+      slides={slides}
+      index={index}
+      onIndexChange={setIndex}
+      fullscreen={fullscreen}
+      onFullscreenChange={setFullscreen}
+    >
+      <Panel.Root asChild>
+        <Deck.Content>
+          <Panel.Body asChild>{fullscreen ? <Deck.Viewport /> : <Deck.Grid />}</Panel.Body>
+        </Deck.Content>
+      </Panel.Root>
+    </Deck.Root>
+  );
+};
+
 const DefaultStory = ({ count = 5, ...props }: Partial<DeckPanelProps> & { count?: number }) => {
   const slides = useMemo(() => createTextSlides(count), [count]);
   const [index, setIndex] = useState(0);
@@ -366,6 +388,71 @@ export const ClickSteps: Story = {
     await userEvent.keyboard('{End}{Home}{ArrowDown}');
     await waitFor(() => expect(hidden()).toBe(2));
     await expect(canvas.getByText('1 / 2')).toBeVisible();
+  },
+};
+
+/** In the grid Up and Down move the selection past a slide's click steps, and stop at the deck's ends. */
+export const GridKeys: Story = {
+  render: GridStory,
+  decorators: [withEmptyPlugins],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const selected = (index: number) =>
+      waitFor(() =>
+        expect(canvas.getByTestId(`presenter.slide-grid.${index}`)).toHaveAttribute('aria-selected', 'true'),
+      );
+    const deck = await canvas.findByTestId('presenter.deck');
+    await canvas.findByTestId('presenter.slide-grid.1');
+    deck.focus();
+    await selected(0);
+    await userEvent.keyboard('{ArrowUp}');
+    await selected(0);
+    await userEvent.keyboard('{ArrowDown}');
+    await selected(1);
+    await userEvent.keyboard('{ArrowDown}');
+    await selected(1);
+    await userEvent.keyboard('{ArrowUp}');
+    await selected(0);
+    await userEvent.keyboard(' ');
+    await expect(await canvas.findByTestId('presenter.overlay')).toBeInTheDocument();
+  },
+};
+
+/** With a clicked thumbnail holding focus, every arrow moves the one current tile, and no other tile stays marked. */
+export const GridKeysOnTile: Story = {
+  render: GridStory,
+  decorators: [withEmptyPlugins],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const selected = (index: number) =>
+      waitFor(() =>
+        expect(canvas.getByTestId(`presenter.slide-grid.${index}`)).toHaveAttribute('aria-selected', 'true'),
+      );
+    await userEvent.click(await canvas.findByTestId('presenter.slide-grid.0'));
+    await selected(0);
+    await userEvent.keyboard('{ArrowDown}');
+    await selected(1);
+    await userEvent.keyboard('{ArrowLeft}');
+    await selected(0);
+    await userEvent.keyboard('{ArrowRight}');
+    await selected(1);
+    await expect(canvasElement.querySelectorAll('[data-highlighted]:not([aria-selected="true"])')).toHaveLength(0);
+    await userEvent.keyboard('{ArrowUp}');
+    await selected(0);
+  },
+};
+
+/** Space on a clicked thumbnail presents from it, rather than the listbox selecting it again. */
+export const GridSpaceOnTile: Story = {
+  render: GridStory,
+  decorators: [withEmptyPlugins],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByTestId('presenter.slide-grid.1'));
+    await waitFor(() => expect(canvas.getByTestId('presenter.slide-grid.1')).toHaveAttribute('aria-selected', 'true'));
+    await userEvent.keyboard(' ');
+    await expect(await canvas.findByRole('heading', { name: 'Plain' })).toBeInTheDocument();
+    await expect(canvas.queryByTestId('presenter.slide-grid.1')).toBeNull();
   },
 };
 

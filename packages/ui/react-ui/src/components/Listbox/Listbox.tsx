@@ -90,6 +90,8 @@ type ListboxRootProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'd
   value?: string[];
   defaultValue?: string[];
   onValueChange?: (value: string[]) => void;
+  /** The row the keyboard cursor is on (controlled), for a list whose cursor follows state held outside it. */
+  highlightedValue?: string | null;
   /** The row keyboard or pointer navigation moved to (null when none). */
   onHighlightChange?: (value: string | null) => void;
   /** Clicking the selected item of a single-selection list clears it. */
