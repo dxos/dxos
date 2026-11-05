@@ -1,8 +1,8 @@
 name: Mail canary nightly
 
 # End-to-end canary for Gmail sync on preview EDGE (packages/plugins/plugin-google/canary/README.md).
-# It signs in to the canary identity with its recovery phrase on every run, so no device key ever sits
-# in an Actions cache a fork could read.
+# It opens the canary identity's profile, an encrypted agents fixture, and recovers the identity with its phrase
+# only when the profile is missing; no device key ever sits in an Actions cache a fork could read.
 
 on:
   schedule:

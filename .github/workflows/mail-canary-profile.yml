@@ -1,0 +1,59 @@
+name: Mail canary profile
+
+# Exports the mail canary identity's client profile and pushes it as the encrypted `mail-canary-profile` agents
+# fixture, which every nightly run unpacks (packages/plugins/plugin-google/canary/README.md, Setup step 4). A manual
+# step: run it again only when catching up from the current profile gets slow. Each export adds one device.
+
+on:
+  workflow_dispatch:
+  # Adding the `mail-canary-profile` label to a PR exports from that PR's code: `workflow_dispatch` reaches a
+  # workflow only once it is on the default branch.
+  pull_request:
+    types: [labeled]
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
+  MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+  MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
+
+jobs:
+  export:
+    if: github.event_name != 'pull_request' || github.event.label.name == 'mail-canary-profile'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    # The nightly canary's group: an export beside a run would replicate the space while the run writes to it.
+    concurrency:
+      group: Mail canary nightly
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+      - uses: ./.github/actions/setup
+
+      - name: Export the profile
+        env:
+          DX_CANARY_RECOVERY_PHRASE: ${{ secrets.MAIL_CANARY_RECOVERY_PHRASE }}
+        run: moon run plugin-google:mail-canary-profile
+
+      # The archive holds the device's private key: it is pushed encrypted to the agents key and never uploaded as
+      # an artifact.
+      - name: Push the profile
+        env:
+          AGE_KEY: ${{ secrets.MAIL_CANARY_FIXTURES_AGE_KEY }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # The shared deploy token, which can write R2; only this step sees it.
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends age
+          KEY_FILE="$RUNNER_TEMP/fixtures.key"
+          trap 'rm -f "$KEY_FILE" packages/plugins/plugin-google/canary/out/mail-canary-profile-*.tgz' EXIT
+          (umask 077 && printf '%s\n' "$AGE_KEY" > "$KEY_FILE")
+          for archive in packages/plugins/plugin-google/canary/out/mail-canary-profile-*.tgz; do
+            DX_FIXTURES_AGE_KEY="$KEY_FILE" node tools/fixtures/bin/fixtures.mjs push "$archive" --scope agents
+          done

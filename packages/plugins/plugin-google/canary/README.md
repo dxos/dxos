@@ -81,10 +81,12 @@ Everything below exists for preview already. Repeat a step only to rebuild or re
    exported once. Every run unpacks a fresh copy, opens the client on it and deletes the copy afterwards. The identity
    therefore gains no device per run, and EDGE replicates only what changed since the export, the canary's own writes
    of earlier nights included. A run without it recovers the identity as a new device. Export it again when catching
-   up from it gets slow:
-   `op run --env-file canary/canary.env.tpl -- moon run plugin-google:mail-canary-profile`, then
-   `moon run fixtures:push -- canary/out/mail-canary-profile-<stamp>.tgz --scope agents`. The archive holds the
-   device's private key, so delete it once pushed; the fixture is encrypted.
+   up from it gets slow: run the "Mail canary profile" workflow from the Actions tab, or add the `mail-canary-profile`
+   label to a PR to export from its code. The workflow runs `moon run plugin-google:mail-canary-profile` and pushes
+   the archive, which holds the device's private key, only as the encrypted fixture. A local export works the same
+   way (`op run --env-file canary/canary.env.tpl -- moon run plugin-google:mail-canary-profile`, then
+   `moon run fixtures:push -- canary/out/mail-canary-profile-<stamp>.tgz --scope agents`), but only where the
+   client keeps a live connection to preview EDGE.
 5. **Enron pool.** The `enron-pool` agents fixture in the private `test-fixtures` R2 bucket
    (`agents/enron-pool-20261104-185144.mbox.age`, 39 MB). It is encrypted to the agents key only. It holds 10,000
    distinct messages from three mailboxes of the public CMU Enron corpus (`dasovich-j`, `kaminski-v`, `kean-s`):
