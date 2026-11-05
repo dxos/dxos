@@ -3,16 +3,16 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';
 import { Annotation, Obj } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
-import { useResolveRef } from '@dxos/echo-react';
+import { useObject, useResolveRef } from '@dxos/echo-react';
 import { useIdentity, useMembers } from '@dxos/halo-react';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
@@ -41,14 +41,47 @@ import { ReviewNamespace } from '../../namespace.ts';
 import { findCommentConfig, findFieldEditor } from '../../util/index.ts';
 import { CommentThreadList, useCommentAnchors } from './CommentThreadList.tsx';
 
-/**
- * Subject is the host object being commented on (e.g. a Markdown.Document),
- * not a Thread — the threads anchored to that host are discovered via the
- * `AnchoredTo` query inside the component.
- */
-export type CommentsArticleProps = AppSurface.ObjectArticleProps<Obj.Any>;
+export type CommentsArticleProps = {
+  attendableId?: string;
+  /** The companion's node data: an object that takes comments, or data a `CommentScope` covers (a level of a spec). */
+  subject: unknown;
+};
 
-export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps) => {
+/**
+ * The comments companion. For an object, the threads anchored to it; for a scoped node, the threads on each of the
+ * objects its scopes cover, under that object's type and name. The first scope's subject takes whole-node comments.
+ */
+export const CommentsArticle = ({ attendableId, subject: data }: CommentsArticleProps) => {
+  const scopes = Hooks.useCapabilities(AppCapabilities.CommentScope);
+  const scopeAtom = useMemo(
+    () =>
+      Atom.make((get) => {
+        const resolved = scopes.flatMap((scope) => scope.resolve(data, get) ?? []);
+        if (resolved.length === 0) {
+          return undefined;
+        }
+        const targets = [
+          ...new Map(resolved.flatMap(({ targets }) => targets).map((target) => [target.id, target])).values(),
+        ];
+        return { subject: resolved[0].subject, targets };
+      }),
+    [scopes, data],
+  );
+  const scope = useAtomValue(scopeAtom);
+  const subject = scope?.subject ?? (Obj.isObject(data) ? data : undefined);
+  return subject ? <CommentsPanel attendableId={attendableId} subject={subject} targets={scope?.targets} /> : null;
+};
+
+CommentsArticle.displayName = 'CommentsArticle';
+
+type CommentsPanelProps = {
+  attendableId?: string;
+  subject: Obj.Unknown;
+  /** The scope's objects, each listed under its own heading; absent for a single object. */
+  targets?: readonly Obj.Unknown[];
+};
+
+const CommentsPanel = ({ attendableId, subject, targets }: CommentsPanelProps) => {
   const { t } = UiHooks.useTranslation(ReviewNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const subjectId = Obj.getURI(subject);
@@ -118,13 +151,15 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   // object edited in fields (a feature) comments on the text selected in one instead, since its editors leave Mod-'
   // to the deck; a Markdown document has its own toolbar action for that.
   const handleAddObjectComment = useCallback(async () => {
-    const fieldView = markdownDoc ? undefined : await findFieldEditor([subjectId]);
+    const fieldView = markdownDoc
+      ? undefined
+      : await findFieldEditor(targets ? targets.map((target) => Obj.getURI(target)) : [subjectId]);
     if (fieldView) {
       createComment(fieldView);
       return;
     }
     await invokePromise(CommentOperation.Create, { subject, branch: reviewBranch });
-  }, [invokePromise, subject, subjectId, markdownDoc, reviewBranch]);
+  }, [invokePromise, subject, subjectId, targets, markdownDoc, reviewBranch]);
 
   const anchors = useCommentAnchors(subject, { branch: reviewBranch, showResolvedThreads });
 
@@ -201,32 +236,55 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     (branch) => branch.status === 'active' && branch.kind === 'suggestion',
   );
 
-  const comments =
-    anchors.length > 0 ? (
-      <CommentThreadList subject={subject} attendableId={attendableId} anchors={anchors} reviewBranch={reviewBranch} />
-    ) : hasSuggestions ? null : (
-      <Banner.Root>
-        <Banner.Body>
-          <span>
-            <Theme.Trans
-              {...{
-                t,
-                i18nKey: unanchored ? 'no-comments-unanchored.message' : 'no-comments.message',
-                components: {
-                  commentIcon: (
-                    <Icon.Icon icon='ph--chat-text--regular' size='md' classNames='inline-block align-[-0.125em]' />
-                  ),
-                  versionsIcon: (
-                    <Icon.Icon icon='ph--git-branch--regular' size='md' classNames='inline-block align-[-0.125em]' />
-                  ),
-                  addIcon: <Icon.Icon icon='ph--plus--regular' size='md' classNames='inline-block align-[-0.125em]' />,
-                },
-              }}
-            />
-          </span>
-        </Banner.Body>
-      </Banner.Root>
-    );
+  const emptyBanner = (
+    <Banner.Root classNames={targets ? 'hidden peer-empty:flex' : undefined}>
+      <Banner.Body>
+        <span>
+          <Theme.Trans
+            {...{
+              t,
+              i18nKey: targets
+                ? 'no-comments-fields.message'
+                : unanchored
+                  ? 'no-comments-unanchored.message'
+                  : 'no-comments.message',
+              components: {
+                commentIcon: (
+                  <Icon.Icon icon='ph--chat-text--regular' size='md' classNames='inline-block align-[-0.125em]' />
+                ),
+                versionsIcon: (
+                  <Icon.Icon icon='ph--git-branch--regular' size='md' classNames='inline-block align-[-0.125em]' />
+                ),
+                addIcon: <Icon.Icon icon='ph--plus--regular' size='md' classNames='inline-block align-[-0.125em]' />,
+              },
+            }}
+          />
+        </span>
+      </Banner.Body>
+    </Banner.Root>
+  );
+
+  const comments = targets ? (
+    <>
+      {/* Groups with no threads render nothing, so an empty list shows the banner after it. */}
+      <div className='peer'>
+        {targets.map((target) => (
+          <TargetComments
+            key={target.id}
+            target={target}
+            subject={subject}
+            attendableId={attendableId}
+            showResolvedThreads={showResolvedThreads}
+          />
+        ))}
+      </div>
+      {emptyBanner}
+    </>
+  ) : anchors.length > 0 ? (
+    <CommentThreadList subject={subject} attendableId={attendableId} anchors={anchors} reviewBranch={reviewBranch} />
+  ) : hasSuggestions ? null : (
+    emptyBanner
+  );
 
   return (
     <Panel.Root asChild>
@@ -246,7 +304,8 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
               </Tabs.Trigger>
             </Tabs.List>
             <Toolbar.Separator variant='gap' />
-            {identity && (
+            {/* A subscription covers the subject's own threads, not those on the scope's other objects. */}
+            {identity && !targets && (
               <Button.Root
                 variant='ghost'
                 iconOnly
@@ -293,3 +352,38 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
 };
 
 CommentsArticle.displayName = 'CommentsArticle';
+
+type TargetCommentsProps = {
+  target: Obj.Unknown;
+  /** The object the scope is for. */
+  subject: Obj.Unknown;
+  attendableId?: string;
+  showResolvedThreads?: boolean;
+};
+
+/**
+ * The threads on one of the scope's objects, headed by its type and name; nothing when it has none.
+ * The name is dropped where it adds nothing: on the scope's subject, and on an owned object named after it.
+ */
+const TargetComments = ({ target, subject, attendableId, showResolvedThreads }: TargetCommentsProps) => {
+  const { t } = UiHooks.useTranslation();
+  const [snapshot] = useObject(target);
+  const [subjectSnapshot] = useObject(subject);
+  const anchors = useCommentAnchors(target, { showResolvedThreads });
+  if (anchors.length === 0) {
+    return null;
+  }
+
+  const typename = Obj.getTypename(target);
+  const type = typename ? t('typename.label', { ns: typename, defaultValue: '' }) : '';
+  const name = snapshot ? Obj.getLabel(snapshot) : undefined;
+  const sameName = target.id === subject.id || !name || name === (subjectSnapshot && Obj.getLabel(subjectSnapshot));
+  const heading = !type ? name : sameName ? type : `${type} · ${name}`;
+
+  return (
+    <section data-testid='comments.scope-group'>
+      <h3 className='px-3 pt-3 pb-1 text-sm text-description truncate'>{heading}</h3>
+      <CommentThreadList subject={target} attendableId={attendableId} anchors={anchors} />
+    </section>
+  );
+};

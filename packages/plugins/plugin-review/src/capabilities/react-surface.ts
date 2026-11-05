@@ -10,7 +10,7 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 
-import { CommentCount, CommentsCompanion } from '#containers';
+import { CommentCount, CommentsArticle } from '#containers';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -22,8 +22,8 @@ export default Capability.makeModule(() =>
           AppSurface.literal(AppSurface.Article, 'comments'),
           AppSurface.companion(AppSurface.Article, (value): value is unknown => value != null),
         ),
-        component: CommentsCompanion,
-        props: ({ data: { attendableId, companionTo } }) => ({ attendableId, data: companionTo }),
+        component: CommentsArticle,
+        props: ({ data: { attendableId, companionTo } }) => ({ attendableId, subject: companionTo }),
       }),
       Surface.create({
         id: 'commentCount',
