@@ -561,7 +561,7 @@ feat F-8: Presence and Sync Status
   req F-8.11: The Members deck companion lists every online peer in the space, grouped by the object they view, with the same actions; an Invite members action at the end of its toolbar opens the space's members settings. It sits third in the complementary rail, after Notifications.
   req F-8.17: A presence row's avatar sits inside the row's hover and highlight. A person's row and their session rows hover and highlight together, as one block.
   req F-8.14: In a locked space the Members companion shows only a placeholder saying the space is private, since it has no other members and no members settings.
-  req F-8.12: A peer with several sessions (tabs or devices) on an object shows as one row, whose actions act on the session whose anchor moved most recently. A toggle in the viewers list's header and in the Members companion's toolbar lists each peer's sessions under their row, each named by its device and with its own actions; the peer's row then carries none. A peer is never listed twice. Both lists share the toggle's state, kept per device.
+  req F-8.12: A peer with several sessions (tabs or devices) on an object shows as one row, whose actions act on whichever of those sessions moved its anchor most recently, never on a session attending another object; with none attending the object, the row has no actions. A toggle in the viewers list's header and in the Members companion's toolbar lists each peer's sessions under their row, each named by its device and with its own actions; the peer's row then carries none. A peer is never listed twice. Both lists share the toggle's state, kept per device.
   req F-8.13: The viewing message carries the sender's session id, its device and each attended object's location; it is sent with the heartbeat and at most once per second when a location changes.
   req F-8.15: A session row's dot shows whether its anchor moved in the last minute (active) or not (idle); the row states nothing else about the session.
   req F-8.16: A session row names its device by the label someone gave it, else by what it runs ("Chrome on macOS", "Composer on iOS"); sessions on one device are numbered. A placeholder label the SDK once wrote is no label.
@@ -1032,70 +1032,6 @@ decision D-29: Each running app picks a random session id and sends it, with its
   rejected: Send a preformatted name string; rename existing devices with a new profile credential.
 ```
 
-## Appendix: Extension Definitions
-
-```mdl
-ext type
-  uri: org.dxos.mdl.type@1.0
-  desc: A named data structure with typed fields and optional literals.
-  fields:
-    desc?: Prose
-    fields?: FieldMap
-    literals?: UnionList
-    extends?: TypeRef[]
-```
-
-```mdl
-ext feat
-  uri: org.dxos.mdl.feat@1.0
-  desc: A named feature grouping one or more requirements.
-  fields:
-    desc?: Prose
-    req: RequirementList
-  nesting: self
-```
-
-```mdl
-ext scenario
-  uri: org.dxos.mdl.scenario@1.0
-  desc: An acceptance scenario expressed as given / when / then steps.
-  fields:
-    given?: Step | Step[]
-    when?: Step | Step[]
-    then: Step | Step[]
-    tags?: TagList
-```
-
-```mdl
-ext component
-  uri: org.dxos.mdl.component@1.0
-  desc: A UI component with props, internal state, slots, actions, and events.
-  fields:
-    desc?: Prose
-    props?: FieldMap
-    state?: FieldMap
-    slots?: FieldMap
-    actions?: ActionMap
-    emits?: EventMap
-    layout?: CodeBlock
-```
-
-```mdl
-ext op
-  uri: org.dxos.mdl.op@1.0
-  desc: |
-    A named operation with typed inputs, outputs, and declared errors.
-    Pure ops have no effects or requires. Effectful ops declare both.
-  fields:
-    desc?: Prose
-    input?: FieldMap
-    output?: TypeExpr
-    errors?: ErrorMap
-    effects?: EffectList
-    requires?: ServiceList
-    note?: Prose
-```
-
 ```mdl
 decision D-30: A toggle in the toolbar switches presence lists between a row per person and a row per session, in place of the caret that expanded a person's row; with it there is no disclosure. Replaces the disclosure of [D-18] and [D-19].
   date: 2026-11-04
@@ -1179,4 +1115,78 @@ decision D-39: A person's row does not show how many sessions they have.
   date: 2026-11-04
   by: user:wittjosiah
   affects: [F-8.12]
+```
+
+```mdl
+decision D-40: In the viewers list, a person's row acts on the most recently moved of their sessions attending that object, and has no actions when none is. It used to act on their most recently moved session anywhere in the space, so its Jump or Go to could target another object. Fills in [D-20].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.12, SpacePresence]
+  why: The list is titled "In this document", so its actions must act on that document; the Members companion already picks its row's session this way.
+  rejected: Fall back to the person's first session, which can attend another object.
+```
+
+## Appendix: Extension Definitions
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap
+    literals?: UnionList
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+```
+
+```mdl
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap
+    state?: FieldMap
+    slots?: FieldMap
+    actions?: ActionMap
+    emits?: EventMap
+    layout?: CodeBlock
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap
+    output?: TypeExpr
+    errors?: ErrorMap
+    effects?: EffectList
+    requires?: ServiceList
+    note?: Prose
 ```

@@ -99,7 +99,9 @@ export const SpacePresence = ({ spaceId, presenceKey }: SpacePresenceProps) => {
       if (!member.online || member.identityKey === identity.identityKey || sessions.length === 0) {
         return [];
       }
-      return [{ ...member, rowId: member.identityKey ?? '', sessions, now }];
+      // A person's row acts on their most recently moved session here, never on one attending another object.
+      const attending = sessions.find((session) => session.currentlyAttended);
+      return [{ ...member, rowId: member.identityKey ?? '', sessions, now, defaultSessionId: attending?.sessionId }];
     })
     .toSorted(byIdentityKey);
 
@@ -108,7 +110,7 @@ export const SpacePresence = ({ spaceId, presenceKey }: SpacePresenceProps) => {
       members={members}
       showSessions={showSessions}
       renderActions={(member, sessionId) =>
-        spaceId && member.identityKey ? (
+        spaceId && member.identityKey && sessionId ? (
           <PeerActions spaceId={spaceId} identityKey={member.identityKey} sessionId={sessionId} />
         ) : null
       }
