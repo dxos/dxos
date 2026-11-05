@@ -11,7 +11,6 @@ import type * as Spec from '@dxos/compute/Spec';
 import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useResolveRef } from '@dxos/echo-react';
-import { useIdentity } from '@dxos/halo-react';
 import { getSpace } from '@dxos/react-client/echo';
 import {
   type EditorToolbarState,
@@ -23,6 +22,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Util from '@dxos/react-ui/Util';
 import { type WidgetState, formattingListener, widgetHost } from '@dxos/ui-editor';
 
+import { useCaretIdentity } from '../../hooks/index.ts';
 import { createMdlExtensions } from './extensions.ts';
 
 const SPEC_DOCUMENT_EDITOR_NAME = 'SpecDocumentEditor';
@@ -45,7 +45,7 @@ export const SpecDocumentEditor = Util.composable<HTMLDivElement, SpecDocumentEd
     const [widgets, setWidgets] = useState<WidgetState[]>([]);
     // The live text rather than a snapshot, so an edit does not rebuild the editor; it initializes once the ref resolves.
     const text = useResolveRef(spec.content);
-    const identity = useIdentity();
+    const identity = useCaretIdentity();
     const space = getSpace(spec);
     const { parentRef, view } = useTextEditor(() => {
       if (!text) {

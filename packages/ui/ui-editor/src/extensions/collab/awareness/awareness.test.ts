@@ -64,9 +64,25 @@ describe('awareness', () => {
     expect(Doc.getValue(accessor)).toBe('abx\ncd');
     expect(cursorConverter(accessor).fromCursor(positions.at(-1)?.head ?? '')).toBe(3);
   });
+
+  test('a caret in an unset string is published at its start', ({ expect }) => {
+    const accessor = Doc.createAccessor(Obj.make(TestType, { text: '' }), ['note']);
+    const positions: (AwarenessPosition | undefined)[] = [];
+    const view = new EditorView({
+      state: EditorState.create({
+        extensions: [awareness(createProvider((position) => positions.push(position))), automerge(accessor)],
+      }),
+      parent: document.body,
+    });
+    onTestFinished(() => view.destroy());
+    view.focus();
+    view.dispatch({ selection: EditorSelection.cursor(0), userEvent: 'select' });
+    expect(positions.at(-1)).toEqual({ anchor: 'end', head: 'end' });
+    expect(cursorConverter(accessor).fromCursor(positions.at(-1)?.head ?? '')).toBe(0);
+  });
 });
 
-const TestType = Schema.Struct({ text: Schema.String }).pipe(
+const TestType = Schema.Struct({ text: Schema.String, note: Schema.optional(Schema.String) }).pipe(
   Type.makeObject(DXN.make('com.example.test.awareness', '0.1.0')),
 );
 

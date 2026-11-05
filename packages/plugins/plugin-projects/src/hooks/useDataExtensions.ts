@@ -3,14 +3,27 @@
 //
 
 import { type Extension } from '@codemirror/state';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useIdentity } from '@dxos/halo-react';
 import { getSpace } from '@dxos/react-client/echo';
 import { type FormExtensionsField } from '@dxos/react-ui-form';
-import { createDataExtensions } from '@dxos/ui-editor';
+import { type DataExtensionsIdentity, createDataExtensions } from '@dxos/ui-editor';
+
+/**
+ * The local identity as the carets label it, compared by value: `useIdentity` gives its snapshot and then the same
+ * identity again from its stream, and a new object would rebuild every editor it is passed to.
+ */
+export const useCaretIdentity = (): DataExtensionsIdentity | undefined => {
+  const { identityKey, displayName, data } = useIdentity() ?? {};
+  const hue = data?.hue;
+  return useMemo(
+    () => (identityKey ? { identityKey, displayName, data: { hue } } : undefined),
+    [identityKey, displayName, hue],
+  );
+};
 
 export type UseDataExtensionsOptions = {
   /** Binds each editor to its field's string; `false` where the editor binds itself, as a `Ref<Text>` field's does. */
@@ -25,7 +38,7 @@ export const useDataExtensions = (
   subject: Obj.Unknown | undefined,
   { text = true }: UseDataExtensionsOptions = {},
 ): ((field: Pick<FormExtensionsField, 'path'>) => Extension[]) => {
-  const identity = useIdentity();
+  const identity = useCaretIdentity();
   const space = subject && getSpace(subject);
   return useCallback(
     ({ path }) =>
