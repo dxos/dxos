@@ -29,6 +29,12 @@ describe('redactSharePayload', () => {
     });
   });
 
+  test('empties a share payload whose name is percent-encoded', ({ expect }) => {
+    expect(redactSharePayload({ url: 'https://composer.space/?s%68are=abc&x=1' })).toEqual({
+      url: 'https://composer.space/?s%68are=&x=1',
+    });
+  });
+
   test('passes a dropped event through', ({ expect }) => {
     expect(redactSharePayload(null)).toBeNull();
   });
