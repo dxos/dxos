@@ -374,7 +374,8 @@ export const PresenceItems = ({ member, showSessions, renderActions }: PresenceI
                 />
               </Listbox.ItemIcon>
               <Listbox.ItemText classNames='ps-2'>{name}</Listbox.ItemText>
-              {renderActions?.(member, session.sessionId)}
+              {/* A session that moved to another object stays listed until it lapses, but must not act on it. */}
+              {session.currentlyAttended && renderActions?.(member, session.sessionId)}
             </Listbox.Item>
           );
         })}
