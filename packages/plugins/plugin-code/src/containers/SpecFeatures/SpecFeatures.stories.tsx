@@ -212,7 +212,6 @@ export const EditInCompanion: Story = {
     await showCanvas(canvasElement);
     const node = await findNode(canvasElement, 'Smart triage');
     await userEvent.click(node);
-    // The name is an editor bound to the feature, so each keystroke reaches the card without a commit.
     const name = await (await companion()).findByTestId('name', undefined, { timeout: 5_000 });
     await expect(name).toHaveTextContent('Smart triage');
     const content = name.querySelector<HTMLElement>('.cm-content');

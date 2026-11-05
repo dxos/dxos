@@ -11,7 +11,7 @@ import * as Spec from '@dxos/compute/Spec';
 import { Obj, Relation, Type } from '@dxos/echo';
 import { getRangeFromCursor, getTextInAnchorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
-import { type AnchoredTo } from '@dxos/types';
+import { type AnchoredTo, Outline } from '@dxos/types';
 
 import { ProjectOperation } from '#types';
 
@@ -20,22 +20,24 @@ import * as FieldAnchor from '../util/field-anchor.ts';
 
 const projectType = Type.getTypename(Project.Project);
 const specType = Type.getTypename(Spec.Spec);
+const outlineType = Type.getTypename(Outline.Outline);
 
-/** Whether the object takes comments here: a project, or a spec. */
-const isSubject = (object: unknown): object is Project.Project | Spec.Spec =>
-  Obj.instanceOf(Project.Project, object) || Spec.instanceOf(object);
+type Subject = Project.Project | Spec.Spec | Outline.Outline;
 
-/** The accessor of a spec's text, when it is loaded. */
-const textOf = (spec: Spec.Spec) => {
-  const text = spec.content.peek();
+const isSubject = (object: unknown): object is Subject =>
+  Obj.instanceOf(Project.Project, object) || Spec.instanceOf(object) || Obj.instanceOf(Outline.Outline, object);
+
+/** The accessor of a spec's or an outline's text, when it is loaded; a project has none. */
+const textOf = (object: Subject) => {
+  const text = Obj.instanceOf(Project.Project, object) ? undefined : object.content.peek();
   return text && Doc.createAccessor(text, ['content']);
 };
 
 /**
- * Where an anchor reads in its object: whole-object threads first, then by field, then (in a spec) by position in its
- * text, after the fields; an anchor that no longer resolves last.
+ * Where an anchor reads in its object: whole-object threads first, then by field, then (in a spec or an outline) by
+ * position in its text, after the fields; an anchor that no longer resolves last.
  */
-const getPosition = (object: Project.Project | Spec.Spec, anchor?: string): [order: number, start: number] => {
+const getPosition = (object: Subject, anchor?: string): [order: number, start: number] => {
   if (!anchor) {
     return [-1, 0];
   }
@@ -43,7 +45,7 @@ const getPosition = (object: Project.Project | Spec.Spec, anchor?: string): [ord
   if (field) {
     return field;
   }
-  const accessor = Spec.instanceOf(object) ? textOf(object) : undefined;
+  const accessor = textOf(object);
   try {
     const range = accessor && getRangeFromCursor(accessor, anchor);
     return range ? [2, range.start] : [Number.MAX_SAFE_INTEGER, 0];
@@ -52,27 +54,38 @@ const getPosition = (object: Project.Project | Spec.Spec, anchor?: string): [ord
   }
 };
 
-/** The text an anchor spans: in a field of the object, else in a spec's text. */
-const getText = (object: Project.Project | Spec.Spec, anchor: string): string | undefined => {
+/** The text an anchor spans: in a field of the object, else in a spec's or an outline's text. */
+export const getText = (object: Subject, anchor: string): string | undefined => {
   if (FieldAnchor.resolve(anchor)) {
     return FieldAnchor.getText(object, anchor);
   }
-  const accessor = Spec.instanceOf(object) ? textOf(object) : undefined;
+  const accessor = textOf(object);
   return accessor && getTextInAnchorRange(accessor, anchor);
 };
 
+/** A project's comments: its own, its notes' and each of its specs'. */
+export const resolveScope: AppCapabilities.CommentScope['resolve'] = (data, get) => {
+  if (!Obj.instanceOf(Project.Project, data)) {
+    return undefined;
+  }
+  const { outline, specs } = get(Obj.atom(data));
+  const notes = outline && get(Obj.atomReactive(outline));
+  const loaded: (Obj.Unknown | undefined)[] = get(Obj.atomReactive(specs));
+  return { subject: data, targets: [data, ...(notes ? [notes] : []), ...loaded.filter(Obj.isObject)] };
+};
+
 /**
- * Comments on projects and their specs, anchored into a project's or a spec's name and description and into a spec's
- * text. A project's comments companion lists the threads on the project and on each of its specs.
+ * Comments on projects, their specs and their notes, anchored into a project's or a spec's name and description and
+ * into a spec's or an outline's text.
  */
 export default Capability.makeModule(() =>
   Effect.succeed([
-    ...[projectType, specType].flatMap((key) => [
+    ...[outlineType, projectType, specType].flatMap((key) => [
       Capability.contribute(AppCapabilities.CommentConfig, {
         id: key,
         comments: 'anchored',
         scrollToAnchor: ProjectOperation.ScrollToAnchor,
-        // Anchors are field paths the field editors write, never a selection on a map or list.
+        // Anchors are field paths or text cursors the editors write, never a selection on a map or list.
         anchorFromSelection: () => undefined,
       }),
       Capability.contribute(AppCapabilities.AnchorSort, {
@@ -89,20 +102,13 @@ export default Capability.makeModule(() =>
       }),
       Capability.contribute(AppCapabilities.AnchorResolver, {
         key,
-        getText: (object: Project.Project | Spec.Spec, anchor: string) => getText(object, anchor),
+        getText: (object: Subject, anchor: string) => getText(object, anchor),
       }),
     ]),
     // Plugins that draw a spec's contents, such as its features, add their own objects through scopes of their own.
     Capability.contribute(AppCapabilities.CommentScope, {
       id: `${ProjectsNamespace.key}.project`,
-      resolve: (data, get) => {
-        if (!Obj.instanceOf(Project.Project, data)) {
-          return undefined;
-        }
-        const { specs } = get(Obj.atom(data));
-        const loaded: (Obj.Unknown | undefined)[] = get(Obj.atomReactive(specs));
-        return { subject: data, targets: [data, ...loaded.filter(Obj.isObject)] };
-      },
+      resolve: resolveScope,
     }),
   ]),
 );

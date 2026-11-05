@@ -15,7 +15,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { FeatureEditingPlugin, FeatureSeed } from '@dxos/plugin-code/testing';
+import { FeatureEditingPlugin, FeatureSeed, queryElement } from '@dxos/plugin-code/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -130,8 +130,8 @@ const PeerAppendStory = (args: StoryArgs) => {
         onClick={() =>
           feature &&
           Obj.update(feature, (feature) => {
-            feature.requirements!['F-9.9'] = { text: 'Written by another client.' };
-            feature.requirementOrder!.push('F-9.9');
+            (feature.requirements ??= {})['F-9.9'] = { text: 'Written by another client.' };
+            (feature.requirementOrder ??= []).push('F-9.9');
           })
         }
       >
@@ -341,7 +341,7 @@ export const EnterLeavesField: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const name = await canvas.findByTestId('name', undefined, { timeout: 10_000 });
-    const content = name.querySelector<HTMLElement>('.cm-content')!;
+    const content = queryElement(name, '.cm-content');
     await userEvent.click(content);
     await waitFor(() => expect(name.contains(document.activeElement)).toBe(true));
     await userEvent.keyboard('{Enter}');
@@ -360,7 +360,7 @@ export const EmptyRequirementRemoved: Story = {
     await waitFor(() => expect(canvas.getAllByTestId(/^requirement-editor\.\d+\.text$/)).toHaveLength(4));
     const added = canvas.getByTestId('requirement-editor.3.text');
     await waitFor(() => expect(added.contains(document.activeElement)).toBe(true));
-    await userEvent.click(canvas.getByTestId('name').querySelector<HTMLElement>('.cm-content')!);
+    await userEvent.click(queryElement(canvas.getByTestId('name'), '.cm-content'));
     await waitFor(() => expect(canvas.getAllByTestId(/^requirement-editor\.\d+\.text$/)).toHaveLength(3));
   },
 };
@@ -373,7 +373,7 @@ export const ViewWritesNothing: Story = {
     const canvas = within(canvasElement);
     const description = await canvas.findByTestId('description', undefined, { timeout: 10_000 });
     await expect(canvas.getByTestId('probe.description')).toHaveTextContent('undefined');
-    await userEvent.click(description.querySelector<HTMLElement>('.cm-content')!);
+    await userEvent.click(queryElement(description, '.cm-content'));
     await userEvent.keyboard('Polls');
     await waitFor(() => expect(canvas.getByTestId('probe.description')).toHaveTextContent('string'));
     await waitFor(() => expect(description).toHaveTextContent('Polls'));
@@ -391,7 +391,7 @@ export const AppendKeepsFocus: Story = {
     await waitFor(() =>
       expect(canvas.getByTestId('requirement-editor.3.text').contains(document.activeElement)).toBe(true),
     );
-    await userEvent.click(name.querySelector<HTMLElement>('.cm-content')!);
+    await userEvent.click(queryElement(name, '.cm-content'));
     await waitFor(() => expect(canvas.getAllByTestId(/^requirement-editor\.\d+\.text$/)).toHaveLength(3));
     await userEvent.click(canvas.getByTestId('probe.append'));
     await waitFor(() => expect(canvas.getAllByTestId(/^requirement-editor\.\d+\.text$/)).toHaveLength(4));
@@ -412,7 +412,7 @@ export const MultiLineRequirementEditable: Story = {
     await userEvent.click(canvas.getByTestId('probe.multiline'));
     const row = canvas.getByTestId('requirement-editor.0.text');
     await waitFor(() => expect(row).toHaveTextContent('then: it shows'));
-    await userEvent.click(row.querySelector<HTMLElement>('.cm-content')!);
+    await userEvent.click(queryElement(row, '.cm-content'));
     await userEvent.keyboard('Z');
     await waitFor(() => expect(row).toHaveTextContent('Z'));
   },
@@ -426,10 +426,10 @@ export const RebuildKeepsFocus: Story = {
     const canvas = within(canvasElement);
     const name = await canvas.findByTestId('name', undefined, { timeout: 10_000 });
     const description = canvas.getByTestId('description');
-    await userEvent.click(description.querySelector<HTMLElement>('.cm-content')!);
+    await userEvent.click(queryElement(description, '.cm-content'));
     await waitFor(() => expect(canvas.getByTestId('probe.description')).toHaveTextContent('string'));
     await waitFor(() => expect(description.contains(document.activeElement)).toBe(true));
-    await userEvent.click(name.querySelector<HTMLElement>('.cm-content')!);
+    await userEvent.click(queryElement(name, '.cm-content'));
     await waitFor(() => expect(name.contains(document.activeElement)).toBe(true));
     const before = description.querySelector('.cm-content');
     await userEvent.click(canvas.getByTestId('probe.theme'));
@@ -449,7 +449,7 @@ export const ForeignKeyEditable: Story = {
     await waitFor(() => expect(canvas.getAllByTestId(/^requirement-editor\.\d+\.text$/)).toHaveLength(4));
     const row = canvas.getByTestId('requirement-editor.3.text');
     await waitFor(() => expect(row).toHaveTextContent('Written by another client.'));
-    await userEvent.click(row.querySelector<HTMLElement>('.cm-content')!);
+    await userEvent.click(queryElement(row, '.cm-content'));
     await userEvent.keyboard('Z');
     // The record itself, not only the editor, takes the edit.
     await waitFor(() => expect(canvas.getByTestId('probe.foreign.text').textContent).toContain('Z'));

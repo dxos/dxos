@@ -40,9 +40,9 @@ export type RequirementEditorProps = {
 };
 
 /**
- * A feature's requirements, each an editor bound to its text that wraps to the whole of it, with the spec id it came
- * from before it and a remove action after. Typing edits the requirement in place, so comments on it stay anchored. A
- * requirement that loses focus without text is removed. Render it inside a grid `Card.Root`; its icons sit in that card's rail.
+ * A feature's requirements, each an editor bound to its text, with the spec id it came from before it and a remove
+ * action after. Typing edits the requirement in place, so comments on it stay anchored; one that loses focus without
+ * text is removed. Render it inside a grid `Card.Root`; its icons sit in that card's rail.
  */
 export const RequirementEditor = ({
   feature,
@@ -103,7 +103,6 @@ export const RequirementEditor = ({
           {/* The spec id leads the text, as it does in the read-only list; the field takes the rest of the row. */}
           <Layout.Flex gap='sm' classNames='items-baseline min-w-0'>
             {requirement.id && <RequirementId id={requirement.id} />}
-            {/* A requirement left without text is removed, as one cleared of its text is. */}
             <div
               className='grow min-w-0'
               onFocus={() => setFocusIndex(undefined)}
@@ -173,7 +172,6 @@ type RequirementTextProps = {
   testId?: string;
 };
 
-/** One requirement's text, edited as collaborative text. */
 const RequirementText = ({ feature, requirementKey, extensions, ...props }: RequirementTextProps) => {
   const path = useMemo(() => FeatureAnchor.getPath({ field: 'requirement', key: requirementKey }), [requirementKey]);
   const fieldExtensions = useMemo(() => extensions?.({ path }), [extensions, path]);

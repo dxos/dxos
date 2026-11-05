@@ -289,7 +289,6 @@ export const ProjectArticle = ({
     [invokePromise, db, subject.id, attendableId],
   );
 
-  // The form follows the live project, so it shows what changes elsewhere, such as a spec added from the Specs tab.
   const extensions = useFieldExtensions(subject);
   const handleCreate = useCreateObject(db);
   const fieldOverrides = useMemo<Record<string, FormFieldOverride>>(

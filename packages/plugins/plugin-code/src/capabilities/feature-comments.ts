@@ -27,14 +27,12 @@ const getMapFeatures = (spec: Spec.Spec, get: Atom.AtomContext): Feature.Feature
   return get(Obj.atomReactive(refs)).filter(Feature.instanceOf);
 };
 
-/** A spec with the features on its map. */
 const withFeatures = (spec: Spec.Spec | undefined, get: Atom.AtomContext): Obj.Unknown[] =>
   spec ? [spec, ...getMapFeatures(spec, get)] : [];
 
 /**
- * Comments anchored into a feature's name, description and requirements, read and ordered by the anchor module; and,
- * for a project, a spec or a feature's level, the threads on the features on each map it shows. Deeper levels keep
- * their own.
+ * Comments anchored into a feature's name, description and requirements; and, for a project, a spec or a feature's
+ * level, the threads on the features on each map it shows. Deeper levels keep their own.
  */
 export default Capability.makeModule(() =>
   Effect.succeed([

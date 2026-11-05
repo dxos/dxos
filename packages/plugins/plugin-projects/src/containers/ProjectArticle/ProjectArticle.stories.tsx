@@ -637,8 +637,7 @@ export const Sections: Story = {
     const canvas = within(canvasElement);
     await seedContent();
 
-    // Header form: the project name renders in the editable name field, an editor bound to the project. Identity/space
-    // setup runs async, so allow more than testing-library's default 1s timeout.
+    // Header form: identity/space setup runs async, so allow more than testing-library's default 1s timeout.
     // The project's name comes first; each spec row has a name of its own.
     await waitFor(() => expect(canvas.getAllByTestId('name')[0]).toHaveTextContent(PROJECT_NAME), { timeout: 10_000 });
 

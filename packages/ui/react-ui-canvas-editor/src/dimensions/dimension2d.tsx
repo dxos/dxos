@@ -488,6 +488,7 @@ export const createDimension2D =
           theme={display.theme}
           backgroundGrid={editing ? drawnGrid(look, display) : 'none'}
           readonly={readonly}
+          wheelFocusRequired={picture}
           transparent={picture}
           margin={picture ? PICTURE_MARGIN : undefined}
           initialCamera={initialCamera}

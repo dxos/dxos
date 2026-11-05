@@ -51,11 +51,14 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
 
       <Panel.Body asChild>
         <Layout.Container gutter={gutter} style={{ gridTemplateRows: 'minmax(0,1fr) auto' }}>
-          <ScrollArea.Root orientation='vertical'>
-            <ScrollArea.Viewport>
-              <Layout.Flex column gap='lg' classNames='dx-document pb-trim-2xl'>
-                <Surface.Surface type={SpaceSurface.SpaceHomeContent} data={{ space }} />
-              </Layout.Flex>
+          {/* Spans the gutters so the scrollbar sits at the plank's edge. */}
+          <ScrollArea.Root data-place='full' orientation='vertical'>
+            <ScrollArea.Viewport asChild>
+              <Layout.Container gutter={gutter}>
+                <Layout.Flex column gap='lg' classNames='dx-document pb-trim-2xl'>
+                  <Surface.Surface type={SpaceSurface.SpaceHomeContent} data={{ space }} />
+                </Layout.Flex>
+              </Layout.Container>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
           <div className='dx-document pb-4'>

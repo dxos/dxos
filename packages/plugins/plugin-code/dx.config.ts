@@ -190,6 +190,19 @@ const config: Plugin.PluginConfig = Plugin.config({
       () => import('./src/capabilities/feature-comments.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
+      'FeatureComments',
+      {
+        provides: [
+          AppCapabilities.AnchorResolver,
+          AppCapabilities.AnchorSort,
+          AppCapabilities.CommentConfig,
+          AppCapabilities.CommentScope,
+        ],
+        activatesOn: ProjectsEvents.Start,
+      },
+      () => import('./src/capabilities/feature-comments.ts', { with: { type: 'module-url' } }),
+    ),
+    Capability.lazyModule(
       'FeatureSubjectContext',
       { provides: [AssistantCapabilities.SubjectContext], activatesOn: AssistantEvents.Start },
       () => import('./src/capabilities/feature-subject-context.ts', { with: { type: 'module-url' } }),

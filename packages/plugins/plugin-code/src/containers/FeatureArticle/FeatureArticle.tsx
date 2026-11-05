@@ -64,11 +64,7 @@ const makeFieldMap = (feature: Feature.Feature, extensions: RequirementEditorExt
   return { requirements: RequirementsField };
 };
 
-/**
- * The form of a feature: its snapshot as the values and the live feature as the object, whose name and description are
- * collaborative and whose requirements edit it in place, so only the status is handed back. `extensions` adds what other plugins give
- * the feature's text, such as comments.
- */
+/** A feature's form: name, description and requirements edit the live feature in place; only the status comes back. */
 export const useFeatureValues = (subject: Feature.Feature) => {
   const [values, updateFeature] = useObject(subject);
   const extensions = useFieldExtensions(subject);

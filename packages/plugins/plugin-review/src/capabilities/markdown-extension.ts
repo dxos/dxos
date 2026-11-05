@@ -39,10 +39,8 @@ export default Capability.makeModule(
         const registry = capabilities.get(Capabilities.AtomRegistry);
         const stateAtom = capabilities.get(CommentCapabilities.State);
 
-        // Anchors are cursors within whichever text the editor is bound to: the branch content in Branch view,
-        // else main; or, off a markdown document, the string it is bound to. A string of the subject's own (a
-        // feature's name) carries its path in the anchor; a text the subject references (a spec's document) is the
-        // whole of it, as a document's content is.
+        // Anchors are cursors within the text the editor is bound to: the branch content in Branch view, else main,
+        // else the bound string. Only a string of the subject's own (a feature's name) carries its path in the anchor.
         const text = branchText ?? doc?.content.peek();
         const target = doc
           ? { subject: doc, accessor: text && Doc.createAccessor(text, ['content']) }
