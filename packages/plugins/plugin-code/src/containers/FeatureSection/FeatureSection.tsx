@@ -18,7 +18,7 @@ import * as Tag from '@dxos/react-ui/Tag';
 import { CodeCapabilities, Feature } from '#types';
 
 import { type FeatureLookup, RequirementEditor, RequirementId, RowIcon } from '../../components/FeatureCard/index.ts';
-import { useFeatureEditing, useFeatureGraph } from '../../hooks/index.ts';
+import { useFeatureEditing, useFeatureGraph, useRequirementVerdicts } from '../../hooks/index.ts';
 import { CodeNamespace } from '../../namespace.ts';
 import { FeatureValues, useFeatureValues } from '../FeatureArticle/index.ts';
 
@@ -47,6 +47,7 @@ export const FeatureSection = ({ subject, attendableId }: FeatureSectionProps) =
   const blockId = snapshot && Feature.getBlockId(snapshot);
   const db = Obj.getDatabase(subject);
   const graph = useFeatureGraph(db, [subject.id], { neighbours: true });
+  const verdicts = useRequirementVerdicts(subject);
   const feature = graph.lookup(subject.id);
   const dependsOn = useMemo(() => feature?.dependsOn ?? [], [feature]);
   const editing = useFeatureEditing(db);
@@ -57,12 +58,13 @@ export const FeatureSection = ({ subject, attendableId }: FeatureSectionProps) =
 
   const fieldOverrides = useMemo<Record<string, FormFieldOverride>>(
     () => ({
-      name: { presentation: 'title' },
+      name: { presentation: 'title', collaborative: true },
       // A status once picked is never cleared, so the tag offers no "None".
       status: { required: true },
       // The schema's guidance wraps at a section's width; the placeholder is one line.
       description: {
         presentation: 'plain',
+        collaborative: true,
         hideLabel: true,
         placeholder: t('feature-section.description.placeholder'),
       },
@@ -83,7 +85,6 @@ export const FeatureSection = ({ subject, attendableId }: FeatureSectionProps) =
       db={db}
       schema={FeatureValues}
       values={snapshot}
-      object={subject}
       extensions={extensions}
       fieldOverrides={fieldOverrides}
       onValuesChanged={onValuesChanged}
@@ -149,6 +150,7 @@ export const FeatureSection = ({ subject, attendableId }: FeatureSectionProps) =
                   variant='plain'
                   actions={attended}
                   inert={inert}
+                  verdicts={verdicts}
                 />
                 {(attended || dependsOn.length > 0) && (
                   <Card.Row

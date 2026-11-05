@@ -4,11 +4,13 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import * as SpecReview from '@dxos/compute/SpecReview';
+import { parseReview } from '@dxos/deus/review';
 import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
@@ -23,9 +25,14 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Theme from '@dxos/react-ui/Theme';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
+import { SpecReviews } from '#sync';
 import { translations } from '#translations';
-import { Feature } from '#types';
+import { Feature, FeatureSpec } from '#types';
 
+import PLUGIN_CODE_MDL from '../../../PLUGIN.mdl?raw';
+import { type FeatureModel } from '../../components/FeatureCard/index.ts';
+import PLUGIN_CODE_EARLIER_REVIEW from '../SpecArticle/__fixtures__/plugin-code.review-2026-10-23.mdl?raw';
+import PLUGIN_CODE_REVIEW from '../SpecArticle/__fixtures__/plugin-code.review-2026-10-27.mdl?raw';
 import { FeatureArticle } from './FeatureArticle.tsx';
 
 const FEATURE_NAME = 'Provider sync';
@@ -135,6 +142,46 @@ const PeerAppendStory = (args: StoryArgs) => {
   );
 };
 
+/** plugin-code's own features, read from its spec. */
+const PLUGIN_CODE_FEATURES: FeatureModel[] = FeatureSpec.parse(FeatureSpec.split(PLUGIN_CODE_MDL)).map(
+  ({ id, name, description, status, requirements }) => ({
+    id,
+    name,
+    description,
+    status: status ?? 'planned',
+    active: false,
+    requirements,
+    specs: [`packages/plugins/plugin-code/PLUGIN.mdl#${id}`],
+    subfeatures: [],
+    code: [],
+    dependsOn: [],
+    tasks: [],
+    showcases: [],
+  }),
+);
+
+/** The article over plugin-code's features, with two of the spec's reviews from the repository recorded against it. */
+const ReviewedStory = (args: StoryArgs) => {
+  const [space] = useSpaces();
+  const [seeded, setSeeded] = useState(false);
+  const seeding = useRef(false);
+  useEffect(() => {
+    if (space && !seeding.current) {
+      seeding.current = true;
+      const spec = FeatureSeed.seed(space.db, { name: 'plugin-code', features: PLUGIN_CODE_FEATURES });
+      for (const text of [PLUGIN_CODE_EARLIER_REVIEW, PLUGIN_CODE_REVIEW]) {
+        const fields = SpecReviews.fromText(text);
+        if (typeof fields === 'string') {
+          throw new Error(fields);
+        }
+        space.db.add(SpecReview.make({ spec, ...fields }));
+      }
+      setSeeded(true);
+    }
+  }, [space]);
+  return seeded ? <DefaultStory {...args} /> : <Loading data={{ seeded }} />;
+};
+
 /** Stands in for Inbox: a plugin whose profile says it bundles the spec the seeded feature cites. */
 const SpecSourcePlugin = Plugin.define(
   Plugin.makeMeta({
@@ -154,7 +201,7 @@ const meta = {
       plugins: [
         ...CorePlugins.make(),
         ClientPlugin.make({
-          types: FeatureSeed.types,
+          types: [...FeatureSeed.types, SpecReview.SpecReview],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { defaultSpace } = yield* initializeIdentity(client);
@@ -318,7 +365,7 @@ export const EmptyRequirementRemoved: Story = {
   },
 };
 
-/** Viewing a feature without a description writes nothing; focusing the field creates it, and typing fills it. */
+/** Viewing a feature without a description writes nothing, nor does focusing the field; the first edit creates it. */
 export const ViewWritesNothing: Story = {
   render: DescriptionProbeStory,
   args: { name: 'IMAP' },
@@ -327,6 +374,8 @@ export const ViewWritesNothing: Story = {
     const description = await canvas.findByTestId('description', undefined, { timeout: 10_000 });
     await expect(canvas.getByTestId('probe.description')).toHaveTextContent('undefined');
     await userEvent.click(queryElement(description, '.cm-content'));
+    await waitFor(() => expect(description.contains(document.activeElement)).toBe(true));
+    await expect(canvas.getByTestId('probe.description')).toHaveTextContent('undefined');
     await userEvent.keyboard('Polls');
     await waitFor(() => expect(canvas.getByTestId('probe.description')).toHaveTextContent('string'));
     await waitFor(() => expect(description).toHaveTextContent('Polls'));
@@ -371,7 +420,7 @@ export const MultiLineRequirementEditable: Story = {
   },
 };
 
-/** A field created by focusing it does not take the focus back when a theme change rebuilds it. */
+/** A field created by its first edit does not take the focus back when a theme change rebuilds it. */
 export const RebuildKeepsFocus: Story = {
   render: ThemeToggleStory,
   args: { name: 'IMAP' },
@@ -380,6 +429,7 @@ export const RebuildKeepsFocus: Story = {
     const name = await canvas.findByTestId('name', undefined, { timeout: 10_000 });
     const description = canvas.getByTestId('description');
     await userEvent.click(queryElement(description, '.cm-content'));
+    await userEvent.keyboard('P');
     await waitFor(() => expect(canvas.getByTestId('probe.description')).toHaveTextContent('string'));
     await waitFor(() => expect(description.contains(document.activeElement)).toBe(true));
     await userEvent.click(queryElement(name, '.cm-content'));
@@ -406,5 +456,21 @@ export const ForeignKeyEditable: Story = {
     await userEvent.keyboard('Z');
     // The record itself, not only the editor, takes the edit.
     await waitFor(() => expect(canvas.getByTestId('probe.foreign.text').textContent).toContain('Z'));
+  },
+};
+
+/** Each requirement shows its newest verdict across the spec's reviews, naming that review on hover. */
+export const Reviewed: Story = {
+  render: ReviewedStory,
+  args: { name: 'Stub operations' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByTestId('name', undefined, { timeout: 10_000 });
+    const chips = await canvas.findAllByTestId('requirement-editor.verdict', undefined, { timeout: 10_000 });
+    await expect(chips.length).toBeGreaterThan(0);
+    const { date, commit } = parseReview(PLUGIN_CODE_REVIEW);
+    await waitFor(() =>
+      expect(chips[0].getAttribute('aria-description')).toContain(`${date} · ${commit?.slice(0, 7)}`),
+    );
   },
 };

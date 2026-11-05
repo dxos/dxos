@@ -14,6 +14,12 @@ not need part 3, which only makes it react sooner.
 plugin-github owns change detection, sync markers, merging and commits. The mapping plugin owns the
 file format, and nothing else: it never imports plugin-github and never calls GitHub.
 
+## Dependencies
+
+```mdl
+uses org.dxos.plugin.code: Its `.mdl` spec and review mappings are the FileMappings this sync is designed around.
+```
+
 ## Extensions
 
 The following extension dialects are used in this document.
@@ -87,6 +93,8 @@ export type FileMapping = {
   readonly id: string;
   /** Repository-relative globs the mapping claims, e.g. `['**\/*.mdl']`: `**` spans directories, `*` and `?` stay within one. */
   readonly match: readonly string[];
+  /** Globs within `match` the mapping leaves to others, e.g. `['**' + '/*.review.mdl']`. */
+  readonly exclude?: readonly string[];
   /** The ECHO type a matched file becomes. */
   readonly type: Type.AnyObj;
   /** Pull: create the object, or apply a remote change to it. */
@@ -379,6 +387,8 @@ feat F-1: Mapping contract
   req F-1.2: When two mappings match one path, the one contributed first wins and the conflict is logged once per pass.
 
   req F-1.3: A mapping without `export` is pull-only; local edits to its objects are never pushed and are overwritten only where the remote changed the same text.
+
+  req F-1.4: A mapping's `exclude` globs carve paths out of its `match`, so a more specific mapping can claim them without a conflict.
 ```
 
 ```mdl
@@ -408,7 +418,7 @@ feat F-3: Pull
 
   req F-3.2:
     when: a matched path is modified
-    then: import runs with base = the blob at marker.blob, the marker's object and heads; the change lands as of those heads and Automerge merges it with local edits made since
+    then: import runs with base = the blob at marker.blob, the marker's object and heads; the change lands as of those heads and Automerge merges it with local edits made since. When import returns another object, the marker and the foreign key move to it
 
   req F-3.3:
     when: a path is renamed
@@ -417,6 +427,10 @@ feat F-3: Pull
   req F-3.4:
     when: a path is removed
     then: the marker is dropped and the object is kept, without its foreign key; deleting a remote file never deletes local content
+
+  req F-3.5:
+    when: a path's marker names a mapping other than the one that claims the path now
+    then: the mapping that claims it imports the path as in F-3.1, whether or not it changed, and only then is the old object released as in F-3.4; a failed import leaves the path bound to the old object, which no longer exports it, for the next pass to retry with the head's content; a path renamed in the same pass is imported only at its new path
 ```
 
 ```mdl
@@ -729,4 +743,63 @@ decision D-24: ImportSpecFile and ExportSpecFile merge only the text after a fil
   why: The text holds what follows the front matter, so the merge runs on that part of each version of the file.
   rejected:
     - Merging whole files and stripping the front matter afterwards, which would merge front matter the text never holds.
+```
+
+```mdl
+decision D-25: A FileMapping takes `exclude` globs, and plugin-code's spec mapping excludes `**/*.review.mdl`, which its review mapping claims. Fills in [org.dxos.plugin.code#D-69].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [FileMapping, F-1.4]
+  why: A review file is a `.mdl` file but becomes a SpecReview, not a Spec; the glob syntax has no negation.
+  rejected:
+    - Contributing the review mapping first so it wins F-1.2's tie, which logs a conflict for every review file on every pass.
+```
+
+```mdl
+decision D-26: An import may answer a modified path with another object than the marker's, and the marker and the file's foreign key then move to that object. Fills in [D-25].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [FileMarker, F-3.2]
+  why: A review file whose front matter changes is a new review, a new SpecReview; a marker left on the old one would rename and remove the wrong review.
+  rejected:
+    - Updating the old review in place, which loses the review history the reviews are kept for.
+```
+
+```mdl
+decision D-27: A path whose marker names another mapping than the one that claims it now is released and imported again by that mapping, changed or not, on every pass ([F-3.5]). Fills in [D-25].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [FileMarker, F-3.5]
+  why: A mapping that starts excluding paths another claims (D-25) would otherwise leave each unchanged file bound to the old mapping's object, still exported through it.
+  rejected:
+    - A migration in the plugin that changed its mapping, which every mapping change would need again.
+```
+
+```mdl
+decision D-28: Approve [D-27].
+  date: 2026-11-05
+  by: user:wittjosiah
+```
+
+```mdl
+decision D-29: A re-claimed path is released from its old object only once the new mapping's import succeeds, and a path renamed in the same pass is imported only at its new path ([F-3.5]). Fills in [D-27].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-3.5]
+  why: Releasing first left a path whose import failed unbound until it changed again, and imported a renamed file's old path anew.
+```
+
+```mdl
+decision D-30: While a re-claimed path's import keeps failing, the old mapping does not export it, and each retry reads the path's content from the head's tree ([F-3.5]). Fills in [D-27].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-3.5, F-4.1]
+  why: The kept marker names the old mapping and holds the blob of its last good pull, so exporting through it pushes through a mapping that no longer claims the file, and retrying its blob imports stale content.
+  rejected:
+    - A pending-blob field on the marker, which changes FileMarker for a state one tree read recovers.
 ```

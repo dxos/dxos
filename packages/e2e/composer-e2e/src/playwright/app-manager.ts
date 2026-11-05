@@ -696,12 +696,27 @@ export class AppManager {
     const option = this.page.getByTestId(`create-object-form.type.${OBJECT_TYPENAMES[type]}`);
     await option.click({ timeout: 15_000 });
 
-    // A type either shows its form or creates at once and closes the dialog; wait for whichever happens.
+    // A type shows its form, shows a panel of its own (a project's template picker), or creates at once and closes
+    // the dialog; wait for whichever happens.
     const objectForm = this.page.getByTestId('create-object-form');
+    const projectName = this.page.getByTestId('create-project-panel.name-input');
     const openDialog = this.page.locator('[data-scope="dialog"][data-part="content"][data-state="open"]');
     await expect
-      .poll(async () => (await objectForm.isVisible()) || !(await openDialog.isVisible()), { timeout: 30_000 })
+      .poll(
+        async () =>
+          (await objectForm.isVisible()) || (await projectName.isVisible()) || !(await openDialog.isVisible()),
+        { timeout: 30_000 },
+      )
       .toBe(true);
+    if (await projectName.isVisible()) {
+      // The Default template is preselected.
+      if (name) {
+        await projectName.fill(name);
+      }
+      await openDialog.getByTestId('save-button').click();
+      await projectName.waitFor({ state: 'detached', timeout: 30_000 });
+      return;
+    }
     if (!(await objectForm.isVisible())) {
       return;
     }
