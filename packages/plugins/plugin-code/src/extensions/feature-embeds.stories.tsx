@@ -180,7 +180,6 @@ export const Default: Story = {
     invariant(feature, 'Missing feature.');
 
     await userEvent.click(first);
-    // The name is an editor bound to the feature, so each keystroke reaches it without a commit.
     const name = await within(first).findByTestId('name');
     await waitFor(() => expect(name.closest('[inert]')).toBeNull(), { timeout: 5_000 });
     const original = feature.name;

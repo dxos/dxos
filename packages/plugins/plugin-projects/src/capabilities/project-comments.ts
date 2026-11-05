@@ -24,7 +24,6 @@ const outlineType = Type.getTypename(Outline.Outline);
 
 type Subject = Project.Project | Spec.Spec | Outline.Outline;
 
-/** Whether the object takes comments here: a project, a spec, or an outline (a project's notes). */
 const isSubject = (object: unknown): object is Subject =>
   Obj.instanceOf(Project.Project, object) || Spec.instanceOf(object) || Obj.instanceOf(Outline.Outline, object);
 
@@ -77,8 +76,7 @@ export const resolveScope: AppCapabilities.CommentScope['resolve'] = (data, get)
 
 /**
  * Comments on projects, their specs and their notes, anchored into a project's or a spec's name and description and
- * into a spec's or an outline's text. A project's comments companion lists the threads on the project, its notes and
- * each of its specs.
+ * into a spec's or an outline's text.
  */
 export default Capability.makeModule(() =>
   Effect.succeed([

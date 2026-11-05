@@ -64,7 +64,6 @@ const config: Plugin.PluginConfig = Plugin.config({
         environments: ['browser', 'tauri'],
       },
     ),
-    // Comments on projects and specs (their fields, a spec's text, a level's objects), which plugin-review reads.
     Capability.lazyModule(
       'ProjectComments',
       {

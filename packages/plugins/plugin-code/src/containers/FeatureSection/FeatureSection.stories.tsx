@@ -150,7 +150,6 @@ export const Wrapped: Story = {
     const canvas = within(canvasElement);
     const frame = await canvas.findByTestId('requirement-editor.0.text', undefined, { timeout: 10_000 });
     const editor = frame.querySelector<HTMLElement>('.cm-editor')!;
-    // The first requirement wraps at this width, so its editor is more than one line tall.
     const lineHeight = parseFloat(getComputedStyle(editor.querySelector('.cm-line')!).lineHeight);
     await waitFor(() => expect(editor.offsetHeight).toBeGreaterThan(lineHeight * 1.5));
     await expectRequirementLayout(canvasElement);

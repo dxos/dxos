@@ -11,10 +11,7 @@ import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilitie
 import { type FormExtensionsField } from '@dxos/react-ui-form';
 import { isTruthy } from '@dxos/util';
 
-/**
- * What other plugins give Markdown, for the editors of `subject`'s own strings, by the field each edits: the form's
- * `extensions` for a form whose collaborative fields edit `subject` (comments on a feature's name, say).
- */
+/** A form's `extensions` for the collaborative fields of `subject`: what plugins give Markdown, bound to each field. */
 export const useFieldExtensions = (
   subject: Obj.Unknown,
 ): ((field: Pick<FormExtensionsField, 'path'>) => Extension[]) => {

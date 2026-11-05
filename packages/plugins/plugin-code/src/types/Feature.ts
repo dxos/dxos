@@ -107,8 +107,8 @@ export class Feature extends Type.makeObject<Feature>(DXN.make('org.dxos.type.fe
     ),
 
     /**
-     * Each requirement under a key that never changes, as a sheet holds its cells, so comments anchored into one find
-     * it however the list is edited; `requirementOrder` holds the order.
+     * Each requirement under a key that never changes, so comments anchored into one find it however the list is
+     * edited; `requirementOrder` holds the order.
      */
     requirements: Schema.optional(
       Schema.Record(Schema.String, RequirementRecord).pipe(
