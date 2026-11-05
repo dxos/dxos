@@ -4,7 +4,6 @@
 
 import React, { type MouseEvent, type PropsWithChildren, createContext, forwardRef, useContext } from 'react';
 
-import { type Verdict } from '@dxos/deus/review';
 import { log } from '@dxos/log';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -17,7 +16,6 @@ import * as Util from '@dxos/react-ui/Util';
 import { Feature } from '#types';
 
 import { CodeNamespace } from '../../namespace.ts';
-import { STATUS_STYLE } from '../SpecModel/review.ts';
 import {
   type FeatureLookup,
   type FeatureModel,
@@ -501,12 +499,7 @@ const FeatureCardRequirements = (_: FeatureCardRequirementsProps) => {
   return feature.requirements.length > 0 ? (
     <Card.Section title={t('feature-card.requirements.title')}>
       {feature.requirements.map((requirement, index) => (
-        <Card.Row
-          key={requirement.id ?? index}
-          leading={<RequirementIcon />}
-          trailing={<RequirementVerdict verdict={requirement.id ? feature.verdicts?.[requirement.id] : undefined} />}
-          data-testid='feature-card.requirement'
-        >
+        <Card.Row key={requirement.id ?? index} leading={<RequirementIcon />} data-testid='feature-card.requirement'>
           {/* A structured requirement keeps each field (`when:`, `then:`) on a line of its own. */}
           <Card.Text classNames='whitespace-pre-line'>
             {requirement.id && (
@@ -523,26 +516,6 @@ const FeatureCardRequirements = (_: FeatureCardRequirementsProps) => {
 };
 
 FeatureCardRequirements.displayName = 'FeatureCard.Requirements';
-
-/** A requirement's newest review verdict, naming its review on hover; nothing for an unreviewed requirement. */
-const RequirementVerdict = ({ verdict }: { verdict?: Verdict }) => {
-  if (!verdict) {
-    return null;
-  }
-  const { label, hue, icon } = STATUS_STYLE[verdict.status];
-  const reviewed = [verdict.review?.date, verdict.review?.commit?.slice(0, 7)].filter(Boolean).join(' · ');
-  return (
-    <Tag.Tag
-      hue={hue}
-      title={[verdict.summary, verdict.note, reviewed].filter(Boolean).join('\n\n')}
-      data-testid='feature-card.requirement-verdict'
-      data-status={verdict.status}
-    >
-      <Icon.Icon icon={icon} size='xs' />
-      {label}
-    </Tag.Tag>
-  );
-};
 
 FeatureCardSubfeatures.displayName = 'FeatureCard.Subfeatures';
 

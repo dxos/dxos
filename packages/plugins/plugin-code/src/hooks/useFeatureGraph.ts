@@ -8,13 +8,10 @@ import * as Atom from 'effect/reactivity/Atom';
 import { useMemo } from 'react';
 
 import * as Spec from '@dxos/compute/Spec';
-import * as SpecReview from '@dxos/compute/SpecReview';
-import { type Verdict } from '@dxos/deus/review';
 import { Annotation, type Database, EID, Filter, Obj, Query, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { Task } from '@dxos/types';
 
-import { SpecReviews } from '#sync';
 import { Feature, FeatureMap, Showcase } from '#types';
 
 import {
@@ -129,33 +126,11 @@ export const useFeatureGraph = (
     [specs],
   );
 
-  // The reviews of the specs listing the scope's features, for each requirement's newest verdict.
-  const containers = useScope(
-    members.filter(Feature.instanceOf).flatMap((feature) => FeatureMap.getContainer(feature)?.id ?? []),
-  );
-  const reviews = useQuery(
-    containers && db,
-    (containers ?? Query.select(Filter.nothing())).referencedBy(SpecReview.SpecReview, 'spec'),
-  );
-
   // An atom rather than a memo: query results keep their identity when a member's field changes, so each object is
   // read through `Obj.atom` to re-derive the graph when a status, name or task changes.
   const graphAtom = useMemo(
     () =>
       Atom.make((get): FeatureGraph => {
-        const bySpec = new Map<string, SpecReview.SpecReview[]>();
-        for (const review of reviews) {
-          // Subscribes, so a review recorded again with new verdicts re-derives the graph.
-          get(Obj.atom(review));
-          const spec = entityId(review.spec.uri);
-          bySpec.set(spec, [...(bySpec.get(spec) ?? []), review]);
-        }
-        const verdicts = new Map(
-          [...bySpec].map(([spec, own]) => [
-            spec,
-            new Map((SpecReviews.currentModel(own)?.verdicts ?? []).map((verdict) => [verdict.id, verdict])),
-          ]),
-        );
         const input: FeatureGraphInput = {
           features: features.filter(Feature.instanceOf).map((feature) => {
             const snapshot = get(Obj.atom(feature));
@@ -163,21 +138,11 @@ export const useFeatureGraph = (
             // The feature this one breaks down: the owner of the spec that lists it.
             const container = FeatureMap.getContainer(feature);
             const parent = container && FeatureMap.getOwner(container);
-            const requirements = Feature.getRequirements(snapshot);
-            const reviewed = container && verdicts.get(container.id);
             return {
               id,
               name,
               description,
-              requirements,
-              verdicts: reviewed
-                ? Object.fromEntries(
-                    requirements.flatMap(({ id }): [string, Verdict][] => {
-                      const verdict = id && reviewed.get(id);
-                      return verdict ? [[id, verdict]] : [];
-                    }),
-                  )
-                : undefined,
+              requirements: Feature.getRequirements(snapshot),
               status,
               specs: Feature.getSources(snapshot),
               blockId: Feature.getBlockId(snapshot),
@@ -239,7 +204,7 @@ export const useFeatureGraph = (
         const models = buildFeatureModels(input);
         return { features: models, lookup: makeFeatureLookup(models) };
       }),
-    [features, edges, implementsTasks, demonstrates, specObjects, reviews],
+    [features, edges, implementsTasks, demonstrates, specObjects],
   );
   return useAtomValue(graphAtom);
 };

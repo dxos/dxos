@@ -4,16 +4,20 @@
 
 import React, { useState } from 'react';
 
+import { type Verdict } from '@dxos/deus/review';
 import { useObject } from '@dxos/echo-react';
 import { BoundTextEditor } from '@dxos/react-ui-form';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
+import * as Tag from '@dxos/react-ui/Tag';
 
 import { Feature } from '#types';
 
 import { CodeNamespace } from '../../namespace.ts';
 import * as FeatureAnchor from '../../util/feature-anchor.ts';
+import { STATUS_STYLE } from '../SpecModel/review.ts';
 import { RequirementIcon, RequirementId, RowIcon } from './fields.tsx';
 
 export type RequirementEditorProps = {
@@ -24,6 +28,8 @@ export type RequirementEditorProps = {
   /** Whether the remove and add actions show; the rows stay editable either way. */
   actions?: boolean;
   inert?: boolean;
+  /** Each requirement's newest review verdict, by requirement id (`F-3.2`). */
+  verdicts?: Readonly<Record<string, Verdict>>;
 };
 
 /**
@@ -32,7 +38,7 @@ export type RequirementEditorProps = {
  * comment marks reach the editors through `EditorExtensionsProvider`, by the requirement's key. A requirement
  * that loses focus without text is removed. Render it inside a grid `Card.Root`; its icons sit in that card's rail.
  */
-export const RequirementEditor = ({ feature, variant, actions = true, inert }: RequirementEditorProps) => {
+export const RequirementEditor = ({ feature, variant, actions = true, inert, verdicts }: RequirementEditorProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
   const [snapshot] = useObject(feature);
   const requirements = snapshot ? Feature.getRequirements(snapshot) : [];
@@ -49,6 +55,7 @@ export const RequirementEditor = ({ feature, variant, actions = true, inert }: R
   // The row just added takes focus once, so a new requirement is written before anything else; a row that later
   // mounts at that index, or is rebuilt there, leaves the focus where it is.
   const [focusIndex, setFocusIndex] = useState<number>();
+  const reviewed = verdicts && Object.keys(verdicts).length > 0;
   return (
     <Card.Section inert={inert} data-testid='requirement-editor'>
       {requirements.map((requirement, index) => (
@@ -58,14 +65,24 @@ export const RequirementEditor = ({ feature, variant, actions = true, inert }: R
           classNames='[&_.dx-card-row-content]:overflow-visible'
           leading={<RequirementIcon />}
           trailing={
-            actions ? (
-              <Card.Action
-                icon='ph--x--regular'
-                label={t('requirement-editor.remove.label')}
-                data-testid={`requirement-editor.${index}.remove`}
-                onClick={() => onRemove(requirement.key)}
-              />
-            ) : undefined
+            <Layout.Flex gap='sm' classNames='items-center'>
+              {/* One width for every row's verdict, so the fields end on one line whatever their status. */}
+              {reviewed && (
+                <span className='flex justify-end w-20'>
+                  {requirement.id && verdicts[requirement.id] && (
+                    <RequirementVerdict verdict={verdicts[requirement.id]} />
+                  )}
+                </span>
+              )}
+              {actions && (
+                <Card.Action
+                  icon='ph--x--regular'
+                  label={t('requirement-editor.remove.label')}
+                  data-testid={`requirement-editor.${index}.remove`}
+                  onClick={() => onRemove(requirement.key)}
+                />
+              )}
+            </Layout.Flex>
           }
         >
           {/* The spec id leads the text, as it does in the read-only list; the field takes the rest of the row. */}
@@ -108,5 +125,22 @@ export const RequirementEditor = ({ feature, variant, actions = true, inert }: R
         </Card.Row>
       )}
     </Card.Section>
+  );
+};
+
+/** A requirement's newest review verdict, naming its review on hover. */
+const RequirementVerdict = ({ verdict }: { verdict: Verdict }) => {
+  const { label, hue, icon } = STATUS_STYLE[verdict.status];
+  const reviewed = [verdict.review?.date, verdict.review?.commit?.slice(0, 7)].filter(Boolean).join(' · ');
+  return (
+    <Tag.Tag
+      hue={hue}
+      title={[verdict.summary, verdict.note, reviewed].filter(Boolean).join('\n\n')}
+      data-testid='requirement-editor.verdict'
+      data-status={verdict.status}
+    >
+      <Icon.Icon icon={icon} size='xs' />
+      {label}
+    </Tag.Tag>
   );
 };

@@ -18,7 +18,7 @@ import * as Tag from '@dxos/react-ui/Tag';
 import { CodeCapabilities, Feature } from '#types';
 
 import { type FeatureLookup, RequirementEditor, RequirementId, RowIcon } from '../../components/FeatureCard/index.ts';
-import { useFeatureEditing, useFeatureGraph } from '../../hooks/index.ts';
+import { useFeatureEditing, useFeatureGraph, useRequirementVerdicts } from '../../hooks/index.ts';
 import { CodeNamespace } from '../../namespace.ts';
 import { FeatureValues, useFeatureValues } from '../FeatureArticle/index.ts';
 
@@ -47,6 +47,7 @@ export const FeatureSection = ({ subject, attendableId }: FeatureSectionProps) =
   const blockId = snapshot && Feature.getBlockId(snapshot);
   const db = Obj.getDatabase(subject);
   const graph = useFeatureGraph(db, [subject.id], { neighbours: true });
+  const verdicts = useRequirementVerdicts(subject);
   const feature = graph.lookup(subject.id);
   const dependsOn = useMemo(() => feature?.dependsOn ?? [], [feature]);
   const editing = useFeatureEditing(db);
@@ -142,7 +143,13 @@ export const FeatureSection = ({ subject, attendableId }: FeatureSectionProps) =
                     <Form.Fields include={['description']} />
                   </Card.Row>
                 )}
-                <RequirementEditor feature={subject} variant='plain' actions={attended} inert={inert} />
+                <RequirementEditor
+                  feature={subject}
+                  variant='plain'
+                  actions={attended}
+                  inert={inert}
+                  verdicts={verdicts}
+                />
                 {(attended || dependsOn.length > 0) && (
                   <Card.Row
                     leading={<RowIcon icon='ph--arrow-right--regular' />}

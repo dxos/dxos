@@ -1082,8 +1082,9 @@ feat F-24: Spec reviews in ECHO
               it to `SpecReview` and excludes it from the spec mapping.
   req F-24.4: An agent records a review with op:createSpecReview from the Spec Review skill, given the spec and the
               review file's text.
-  req F-24.5: Each item shows its newest verdict across the spec's reviews. The editor's status chip, the Review view's
-              cards and a requirement's chip on a feature card show it, with the review's date and commit.
+  req F-24.5: Each item shows its newest verdict across the spec's reviews, with the review's date and commit: in the
+              editor's status chip, the Review view's cards, and a chip on each requirement where a feature's page and
+              its section in a spec list them. A feature card shows no verdicts.
   req F-24.6: The Review view picks a review from the spec's history; it shows the current status by default.
 ```
 
@@ -2140,7 +2141,7 @@ decision D-68: A feature embed in a spec is the editor's object embed, plugin-ma
 ```
 
 ```mdl
-decision D-69: A spec's reviews are ECHO objects beside the spec, one `SpecReview` per review, so a spec in a space keeps its review history. Each item's current status is its newest verdict in any review. Reviews come from git only: the `.review.mdl` file in the checkout or repository is imported and nothing writes one back, and only the current file is imported, with no backfill of earlier commits. The same front matter updates a review in place; new front matter makes a new review. The one way in for an agent is op:createSpecReview, which the Spec Review skill declares and the MCP server exposes. Amends [F-16.1] for a spec in a space, whose review is read from ECHO instead of the checkout.
+decision D-69: A spec's reviews are ECHO objects beside the spec, one `SpecReview` per review, so a spec in a space keeps its review history. Each item's current status is its newest verdict in any review. Reviews come from git only: the `.review.mdl` file in the checkout or repository is imported and nothing writes one back, and only the current file is imported, with no backfill of earlier commits. The same front matter updates a review in place; new front matter makes a new review. The one way in for an agent is op:createSpecReview, which the Spec Review skill declares and the MCP server exposes. Requirement verdicts show where a feature's requirements are listed, its page and its section, and never on a feature card, which stays small. Amends [F-16.1] for a spec in a space, whose review is read from ECHO instead of the checkout.
   date: 2026-11-05
   by: agent:claude-code
   for: user:wittjosiah

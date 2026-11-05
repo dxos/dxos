@@ -6,18 +6,13 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type ReactNode, useMemo } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
-import { mergeReviews, parseReview } from '@dxos/deus/review';
 import * as Card from '@dxos/react-ui/Card';
 import * as Layout from '@dxos/react-ui/Layout';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
 import { translations } from '#translations';
-import { FeatureSpec } from '#types';
 
-import PLUGIN_CODE_MDL from '../../../PLUGIN.mdl?raw';
-import REVIEW from '../../../PLUGIN.review.mdl?raw';
-import EARLIER_REVIEW from '../../containers/SpecArticle/__fixtures__/plugin-code.review-2026-10-23.mdl?raw';
 import {
   type FeatureLookup,
   type FeatureModel,
@@ -258,51 +253,5 @@ export const LongLists: Story = {
       throw new Error('the tasks section does not scroll');
     }
     await expect(viewport.scrollHeight).toBeGreaterThan(viewport.clientHeight);
-  },
-};
-
-/**
- * plugin-code's own features with the verdicts of its two latest reviews: each requirement shows its newest verdict,
- * and names that verdict's review on hover.
- */
-const REVIEWED_FEATURES: FeatureModel[] = (() => {
-  const current = mergeReviews([parseReview(EARLIER_REVIEW), parseReview(REVIEW)]);
-  const verdicts = new Map((current?.verdicts ?? []).map((verdict) => [verdict.id, verdict]));
-  return FeatureSpec.parse(FeatureSpec.split(PLUGIN_CODE_MDL)).map(
-    ({ id, name, description, status, requirements }) => ({
-      id,
-      name,
-      description,
-      status: status ?? 'planned',
-      active: false,
-      requirements,
-      verdicts: Object.fromEntries(
-        requirements.flatMap((requirement) => {
-          const verdict = requirement.id && verdicts.get(requirement.id);
-          return verdict ? [[requirement.id, verdict]] : [];
-        }),
-      ),
-      specs: [`packages/plugins/plugin-code/PLUGIN.mdl#${id}`],
-      subfeatures: [],
-      code: [],
-      dependsOn: [],
-      tasks: [],
-      showcases: [],
-    }),
-  );
-})();
-
-/** Requirements with their newest review verdict, from plugin-code's spec and its reviews in the repository. */
-export const Reviewed: Story = {
-  args: {
-    ids: ['F-11', 'F-17', 'F-4'],
-    features: REVIEWED_FEATURES,
-    variant: 'detail',
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const chips = await canvas.findAllByTestId('feature-card.requirement-verdict');
-    await expect(chips.length).toBeGreaterThan(0);
-    await expect(chips[0].getAttribute('title')).toMatch(/2026-10-2\d · [0-9a-f]{7}/);
   },
 };
