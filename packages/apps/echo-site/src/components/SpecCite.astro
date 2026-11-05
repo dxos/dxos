@@ -1,0 +1,17 @@
+---
+const SPECS: Record<string, string> = {
+  'org.dxos.echo': 'packages/core/echo/echo/SPEC.mdl',
+  'org.dxos.echo.query': 'packages/core/echo/echo-client/spec/QUERY.mdl',
+};
+
+interface Props {
+  item: string;
+}
+
+const { item } = Astro.props;
+const path = SPECS[item.split('#')[0]];
+if (!path) {
+  throw new Error(`Unknown spec in citation: ${item}`);
+}
+---
+<a class="spec-cite" href={`https://github.com/dxos/dxos/blob/main/${path}`}>{item}</a>

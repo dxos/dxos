@@ -1,0 +1,78 @@
+---
+title: Why ECHO?
+description: The argument for a typed, local-first object graph.
+---
+
+import Anatomy from '../../../components/Anatomy.astro';
+import Snippet from '../../../components/Snippet.astro';
+import SpecCite from '../../../components/SpecCite.astro';
+
+Most applications keep their real state on a server and spend their client code on copies of it: caches, optimistic
+updates, retry queues and conflict handling. ECHO moves the state onto the device. Your objects are CRDT documents in a
+local database, so a write is finished when the call returns, and peers merge their changes when they connect.
+
+## The ECHO pattern
+
+An ECHO type is a class that declares one schema. The class is the runtime schema and the TypeScript type of its instances.
+
+<Snippet file="why-pattern" region="declare" />
+
+Reading the signature left to right:
+
+<Anatomy parts={[
+  { code: 'class Task extends ' },
+  { code: 'Type.makeObject', label: 'an object type' },
+  { code: '<Task>', label: 'instance type' },
+  { code: '(dxn)', label: 'global type name and version' },
+  { code: '(schema)', label: 'Effect Schema of the fields' },
+  { code: ' {}' },
+]} />
+
+Instances are live objects. You add them to a database, change them with `Obj.update`, and select them with a typed query.
+
+<Snippet file="why-pattern" region="use" />
+
+Nothing here waits on a network. `db.add` and `Obj.update` apply locally and return, and `finished` already contains the
+task. <SpecCite item="org.dxos.echo.query#F-2" />
+
+## Don't rebuild the data layer
+
+Here is one task, marking an item as done, written against a REST API and against ECHO. The REST version is not careless. It
+is the minimum that handles a slow network, an offline user and a concurrent edit, and it still has two open questions in
+its comments.
+
+<div class="compare">
+  <Snippet file="why-without" title="REST, cache and queue" />
+  <Snippet file="why-with" title="ECHO" />
+</div>
+
+The ECHO version has no error branches for these cases because the failures do not reach it. There is no request to fail,
+the local write cannot conflict with itself, and a concurrent edit from a peer merges as a CRDT change.
+
+## Solving practical problems
+
+### Your UI never shows stale local state
+
+Each query reads one local engine, which answers from the objects this tab holds. A subscriber sees your own write in the
+same call that made it, so a list does not need an optimistic copy of itself. <SpecCite item="org.dxos.echo.query#F-2" />
+
+### A query can see more than this device holds
+
+Queries also read the host index and EDGE, which hold objects this tab has not loaded. ECHO treats those answers as evidence.
+It re-evaluates each remote entry against the local document and drops the entry when local state contradicts it, so a slow
+server cannot bring back an object you deleted. <SpecCite item="org.dxos.echo.query#F-5" />
+
+### Your types can change after you ship
+
+Every type carries a version in its DXN. An object migration declares how objects of an old version become the new one, so
+data written by last year's build still opens. <SpecCite item="org.dxos.echo#Migration" />
+
+### Your graph is not limited to one document
+
+A `Ref` field stores a DXN and resolves lazily, across objects and across spaces. Relations are objects too, with typed
+source and target endpoints, so you can query from either end. <SpecCite item="org.dxos.echo#F-4" />
+
+## Enjoy building
+
+Once persistence and merging are the database's job, the code that remains is your application. Start with the
+[learning path](/docs/learn/defining-types/), or look up a module in the [reference](/docs/reference/filter/).

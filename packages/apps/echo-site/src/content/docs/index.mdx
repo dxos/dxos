@@ -1,0 +1,39 @@
+---
+title: ECHO
+description: The typed, local-first object graph.
+head:
+  - tag: title
+    content: ECHO, the typed local-first object graph
+template: splash
+hero:
+  title: ECHO
+---
+
+import { guarantees, routes } from '../../lib/home.ts';
+import SpecCite from '../../components/SpecCite.astro';
+import Diagram from '../../components/Diagram.astro';
+
+<div class="card-grid not-content">
+  {guarantees.map(({ title, body, cite }) => (
+    <div class="card">
+      <h3>{title}</h3>
+      <p>{body}</p>
+      <span class="cite"><SpecCite item={cite} /></span>
+    </div>
+  ))}
+</div>
+
+## How the packages fit
+
+<Diagram name="packages" alt="The @dxos packages in your process, echo-react, echo and echo-client, reach echo-host, index-core and EDGE through QueryService." />
+
+## Where to go
+
+<div class="card-grid not-content">
+  {routes.map(({ title, body, href }) => (
+    <a class="card" href={href}>
+      <h3>{title}</h3>
+      <p>{body}</p>
+    </a>
+  ))}
+</div>

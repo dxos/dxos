@@ -429,6 +429,7 @@ catalog:
   execa: ^5.1.1
   expect: ^27.0.2
   express: ^4.21.0
+  expressive-code-twoslash: ^0.6.1
   extendable-media-recorder: ^9.2.19
   extendable-media-recorder-wav-encoder: ^7.0.123
   extensionless: ^1.9.9
@@ -655,6 +656,7 @@ catalog:
   tsx: ^4.21.0
   tty-browserify: ~0.0.1
   turndown: ^7.2.1
+  twoslash: ^0.3.9
   typedoc: 0.28.1
   types-package-json: ^2.0.39
   typescript: ^7.0.2

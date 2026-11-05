@@ -1,0 +1,37 @@
+layer: application
+language: typescript
+tags:
+  - typecheck
+tasks:
+  build:
+    deps:
+      - ~:#prebuild
+    options:
+      mergeOutputs: replace
+    outputs: []
+  bundle:
+    command: pnpm run bundle
+    deps:
+      - ^:build
+      - build
+    inputs:
+      - astro.config.ts
+      - SPEC.mdl
+      - '@group(sources)'
+    outputs:
+      - .astro
+      - dist
+  prebuild:
+    command: pnpm exec astro sync
+    inputs:
+      - astro.config.ts
+      - '@group(sources)'
+    outputs:
+      - .astro
+    tags:
+      - prebuild
+  serve:
+    command: pnpm run dev
+    deps:
+      - ^:build
+    preset: server

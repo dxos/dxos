@@ -1,0 +1,38 @@
+---
+import Default from '@astrojs/starlight/components/Footer.astro';
+
+import logoBlack from '../../node_modules/@dxos/brand/assets/logotypes/dxos-horizontal-block.svg?url';
+import logoWhite from '../../node_modules/@dxos/brand/assets/logotypes/dxos-horizontal-white.svg?url';
+---
+<Default />
+<footer class="echo-footer">
+  <div>
+    <a href="https://dxos.org" aria-label="DXOS">
+      <img class="logo on-light" src={logoBlack} alt="DXOS" />
+      <img class="logo on-dark" src={logoWhite} alt="DXOS" />
+    </a>
+  </div>
+  <div>
+    <h4 class="label-mono">DXOS</h4>
+    <ul>
+      <li><a href="https://dxos.org">dxos.org</a></li>
+      <li><a href="https://dxos.org/composer">Composer</a></li>
+      <li><a href="https://dxos.org/docs/halo/introduction">HALO</a></li>
+    </ul>
+  </div>
+  <div>
+    <h4 class="label-mono">Community</h4>
+    <ul>
+      <li><a href="https://github.com/dxos/dxos">GitHub</a></li>
+      <li><a href="https://dxos.org/discord">Discord</a></li>
+    </ul>
+  </div>
+  <div>
+    <h4 class="label-mono">For agents</h4>
+    <ul>
+      <li><a href="/llms.txt">llms.txt</a></li>
+      <li><a href="/llms-full.txt">llms-full.txt</a></li>
+    </ul>
+  </div>
+  <div class="legal">FSL-1.1-Apache-2.0. Copyright DXOS.org.</div>
+</footer>

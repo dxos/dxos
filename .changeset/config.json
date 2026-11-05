@@ -73,6 +73,7 @@
       "@dxos/echo-protocol",
       "@dxos/echo-query",
       "@dxos/echo-react",
+      "@dxos/echo-site",
       "@dxos/echo-solid",
       "@dxos/echo-sqlite",
       "@dxos/edge-client",

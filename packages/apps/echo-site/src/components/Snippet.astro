@@ -1,0 +1,15 @@
+---
+import { Code } from '@astrojs/starlight/components';
+
+import { snippetSource, snippetWithContext } from '../lib/snippets.ts';
+
+interface Props {
+  file: string;
+  region?: string;
+  title?: string;
+  lang?: string;
+}
+
+const { file, region, title, lang = 'ts' } = Astro.props;
+---
+<Code code={snippetWithContext(file, region)} lang={lang} title={title} meta="twoslash" />

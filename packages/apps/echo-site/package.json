@@ -1,0 +1,35 @@
+{
+  "name": "@dxos/echo-site",
+  "version": "0.0.0",
+  "private": true,
+  "description": "ECHO developer site.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "type": "module",
+  "scripts": {
+    "astro": "astro",
+    "bundle": "node scripts/gen-theme.mjs && astro build",
+    "dev": "node scripts/gen-theme.mjs && astro dev --port 4321",
+    "preview": "astro preview --port 4321",
+    "theme": "node scripts/gen-theme.mjs"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "catalog:",
+    "@dxos/brand": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "astro": "catalog:",
+    "effect": "catalog:",
+    "sharp": "catalog:"
+  },
+  "devDependencies": {
+    "expressive-code-twoslash": "catalog:",
+    "twoslash": "catalog:",
+    "typescript": "catalog:"
+  }
+}
