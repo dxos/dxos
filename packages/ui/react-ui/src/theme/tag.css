@@ -145,6 +145,12 @@
   .dx-tag-delete-trigger:hover {
     background: color-mix(in srgb, currentColor 15%, transparent);
   }
+  :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='primary'],
+  .dx-tag.dx-tag-primary {
+    --dx-hue-bg: var(--color-primary-surface);
+    --dx-hue-fg: var(--color-primary-fg);
+    --dx-hue-fill: var(--color-primary-bg);
+  }
   :is(.dx-tag, .dx-button, .dx-icon, .dx-avatar, .dx-card-tile)[data-hue='red'],
   .dx-tag.dx-tag-red {
     --dx-hue-bg: var(--color-red-surface);
@@ -321,6 +327,9 @@
    */
   .dx-icon[data-hue] {
     color: var(--dx-hue-fg);
+  }
+  .dx-icon[data-hue='primary'] {
+    color: var(--color-primary-text);
   }
   .dx-icon[data-hue='red'] {
     color: var(--color-red-text);

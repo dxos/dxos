@@ -13,6 +13,7 @@ import { makeRegistry } from './progress-registry.ts';
 import {
   STATUS_CANCELLED,
   STATUS_COMPLETE,
+  STATUS_ERROR,
   STATUS_FAILED,
   STATUS_STALLED,
   makeTraceSink,
@@ -242,6 +243,20 @@ describe('makeTraceSink', () => {
     expect(task?.status).toBe('error');
     expect(task?.error).toBe(STATUS_FAILED);
     expect(task?.current).toBe(1);
+  });
+
+  test('a failure that is not a sync keeps its own message', () => {
+    const registry = Registry.make();
+    const progress = makeRegistry(registry);
+    const sink = makeTraceSink(progress);
+    const key = 'chat-uri#agent';
+
+    sink.write(statusMessage({ message: 'Assistant is working', progress: { key } }));
+    sink.write(statusMessage({ message: STATUS_ERROR, progress: { key } }));
+
+    const task = registry.get(progress.monitorAtom(key));
+    expect(task?.status).toBe('error');
+    expect(task?.error).toBe(STATUS_ERROR);
   });
 
   test('a later run clears the failed run state', () => {
