@@ -2,16 +2,27 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type ComponentProps, type ReactNode, forwardRef, useCallback, useEffect, useState } from 'react';
+import React, {
+  type ComponentProps,
+  type ReactNode,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { generateName } from '@dxos/display-name';
-import { type Key } from '@dxos/echo';
+import { type Key, Obj } from '@dxos/echo';
 import { type Space } from '@dxos/halo';
 import { useIdentity, useMembers } from '@dxos/halo-react';
 import { type EID } from '@dxos/keys';
+import { type Progress } from '@dxos/progress';
 import { AttentionGlyph, type AttentionGlyphProps, useAttention } from '@dxos/react-ui-attention';
+import { type Activity } from '@dxos/react-ui-attention/types';
 import { Listbox } from '@dxos/react-ui-list';
 import * as Avatar from '@dxos/react-ui/Avatar';
 import * as Button from '@dxos/react-ui/Button';
@@ -19,6 +30,7 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Popover from '@dxos/react-ui/Popover';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
 import type * as Util from '@dxos/react-ui/Util';
+import { toLocalizedString } from '@dxos/ui-types/translations';
 import { hexToFallback } from '@dxos/util';
 
 import { SpaceCapabilities, type SpaceSchema } from '#types';
@@ -52,7 +64,7 @@ export const useNow = () => {
   return now;
 };
 
-export const useActiveViewerCount = (viewers?: ObjectViewers) => {
+const useActiveViewerCount = (viewers?: ObjectViewers) => {
   const now = useNow();
   return countViewers(viewers, now);
 };
@@ -417,28 +429,73 @@ export type SmallPresenceLiveProps = {
   id?: string;
   open?: boolean;
   viewers?: ObjectViewers;
+  /** The object the row stands for; its progress monitors join its presence. */
+  object?: Obj.Unknown;
 };
 
-export const SmallPresenceLive = ({ id, open, viewers }: SmallPresenceLiveProps) => {
+export const SmallPresenceLive = ({ id, open, viewers, object }: SmallPresenceLiveProps) => {
   const { hasAttention, isAncestor, isRelated } = useAttention(id);
   const count = useActiveViewerCount(viewers);
 
-  return <SmallPresence count={count} attended={hasAttention || isRelated} containsAttended={isAncestor && !open} />;
+  const monitors = ToolkitHooks.useObjectProgressMonitors(
+    object && Obj.getURI(object, { prefer: 'absolute' }).toString(),
+  );
+  const activity = useMemo(() => monitors.flatMap(toActivity), [monitors]);
+
+  return (
+    <SmallPresence
+      count={count}
+      activity={activity}
+      attended={hasAttention || isRelated}
+      containsAttended={isAncestor && !open}
+    />
+  );
+};
+
+const ONE_VIEWER: Activity.Treatment = { slot: 'mark', icon: 'dot', hue: 'primary', priority: 10 };
+const SEVERAL_VIEWERS: Activity.Treatment = { slot: 'mark', icon: 'dots', hue: 'primary', priority: 10 };
+const WORKING: Activity.Treatment = { slot: 'mark', icon: 'star', priority: 30, animate: true };
+const FAILED: Activity.Treatment = { slot: 'edge', hue: 'error', priority: 40 };
+
+const toActivity = (monitor: Progress.TaskProgress): Activity.Entry[] => {
+  const label = monitor.label ?? monitor.name;
+  switch (monitor.status) {
+    case 'pending':
+    case 'running':
+      return [{ source: monitor.name, label, treatment: WORKING }];
+    case 'error':
+      return [{ source: monitor.name, label: monitor.error ? `${label}: ${monitor.error}` : label, treatment: FAILED }];
+    default:
+      return [];
+  }
 };
 
 export type SmallPresenceProps = {
   count?: number;
+  /** Other activity on the item; each entry is a tooltip line and may claim a glyph slot. */
+  activity?: readonly Activity.Entry[];
 } & Pick<AttentionGlyphProps, 'attended' | 'containsAttended'>;
 
-export const SmallPresence = ({ count = 0, attended, containsAttended }: SmallPresenceProps) => {
+export const SmallPresence = ({ count = 0, activity = [], attended, containsAttended }: SmallPresenceProps) => {
   const { t } = UiHooks.useTranslation(SpaceNamespace.key);
+  const treatments = useMemo(
+    () => [
+      ...(count > 0 ? [count > 1 ? SEVERAL_VIEWERS : ONE_VIEWER] : []),
+      ...activity.flatMap((entry) => (entry.treatment ? [entry.treatment] : [])),
+    ],
+    [count, activity],
+  );
+  const lines = [
+    ...(count > 0 || activity.length === 0 ? [t('presence.label', { count })] : []),
+    ...activity.map((entry) => toLocalizedString(entry.label, t)),
+  ];
 
   return (
-    <Tooltip.Trigger asChild content={t('presence.label', { count })} side='bottom'>
+    <Tooltip.Trigger asChild content={lines.join(' · ')} side='bottom'>
       <AttentionGlyph
         attended={attended}
         containsAttended={containsAttended}
-        presence={count > 1 ? 'many' : count === 1 ? 'one' : 'none'}
+        treatments={treatments}
         classNames='self-center mx-1'
       />
     </Tooltip.Trigger>

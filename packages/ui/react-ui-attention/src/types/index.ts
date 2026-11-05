@@ -6,6 +6,7 @@
 // operation handlers and app-graph builders running under node or bun can use them without pulling
 // the components.
 
+export * as Activity from './Activity.ts';
 export * as Attention from './Attention.ts';
 export * as Selection from './Selection.ts';
 export * as ViewLocation from './ViewLocation.ts';

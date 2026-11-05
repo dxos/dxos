@@ -21,6 +21,8 @@ export type MarkdownBundleOptions = {
   /** Additional fenced-code languages prepended to the standard language-data list. */
   codeLanguages?: LanguageDescription[];
   extensions?: MarkdownConfig[];
+  /** Renders headings at the body text size, so every text row has the same height. */
+  fixedHeight?: boolean;
   indentWithTab?: boolean;
   setextHeading?: boolean;
 };
@@ -73,7 +75,7 @@ export const createMarkdownExtensions = (options: MarkdownBundleOptions = {}): E
     // Custom styles.
     // Fenced mermaid uses custom tags, so it needs its own style alongside markdown's.
     mermaidHighlighting(),
-    syntaxHighlighting(markdownHighlightStyle()),
+    syntaxHighlighting(markdownHighlightStyle({ fixedHeight: options.fixedHeight })),
 
     keymap.of(
       [

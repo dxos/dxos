@@ -23,6 +23,7 @@ import {
   AgentArticle,
   AgentProperties,
   ChatArticle,
+  ChatCard,
   ChatCompanion,
   ChatDialog,
   IntegrationPrompt,
@@ -32,6 +33,7 @@ import {
   QuestionSurface,
   SpaceAssistantSettings,
   SpaceHomePrompt,
+  ThreadCard,
 } from '#containers';
 import { AssistantSurface } from '#types';
 
@@ -188,6 +190,18 @@ export default Capability.makeModule(() =>
         ),
         component: ObjectCardSurface,
         props: ({ data }) => ({ id: nonBlank(data.data?.id) }),
+      }),
+      Surface.create({
+        id: 'card.chat',
+        filter: AppSurface.object(AppSurface.CardContent, Chat.Chat),
+        component: ChatCard,
+        props: ({ role, data: { subject } }) => ({ role, subject }),
+      }),
+      Surface.create({
+        id: 'threadCard',
+        filter: Surface.makeFilter(AssistantSurface.ThreadCard),
+        component: ThreadCard,
+        props: ({ data }) => data,
       }),
       Surface.create({
         id: 'question',

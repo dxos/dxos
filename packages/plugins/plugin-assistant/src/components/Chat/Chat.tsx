@@ -28,6 +28,7 @@ import {
   type ChatView,
   type ForkMarker,
   ChatThread as NaturalChatThread,
+  assistantRegistry,
 } from '@dxos/react-ui-assistant';
 import {
   type FeedModel,
@@ -73,6 +74,7 @@ import {
   useChatThreadContext,
 } from './context.ts';
 import { type ChatDrawer, type ChatEvent } from './events.ts';
+import { LaneSurfaceWidget } from './LaneSurfaceWidget.tsx';
 import { objectCardWidget } from './ObjectCardWidget.tsx';
 import { SurfaceWidget } from './SurfaceWidget.tsx';
 
@@ -569,11 +571,15 @@ const buildMarkers = (messages: Message.Message[]): OutlineMarker[] => {
 
 const CHAT_THREAD_NAME = 'Chat.Thread';
 
-/** The plugin's `surface` widget layered over the package registry: it can dispatch a Surface. */
+/** The plugin's `surface` and `lane` widgets layered over the package registry: they can dispatch a Surface. */
 const chatRegistry = {
   surface: {
     block: true,
     Component: SurfaceWidget,
+  },
+  lane: {
+    ...assistantRegistry.lane,
+    Component: LaneSurfaceWidget,
   },
 } as const;
 
@@ -1020,8 +1026,7 @@ const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
     <TaskList.Root
       tasks={tasks}
       showGroupLabels={false}
-      showOrdinals
-      // The prompt frames the list, and its rows are too narrow for who holds a task or its mnemonic.
+      // The prompt frames the list, and its rows are too narrow for who holds a task or its reference.
       flush
       columns={CHAT_TASK_COLUMNS}
       showMnemonics={false}
@@ -1029,7 +1034,8 @@ const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
       onTaskUpdate={handleUpdate}
       getTaskActions={getTaskActions}
     >
-      <div {...Util.composableProps(props, { classNames: 'flex flex-col dx-grow' })} ref={forwardedRef}>
+      {/* The inset puts the list's outer columns on the same lines as the context drawer's icons and carets. */}
+      <div {...Util.composableProps(props, { classNames: 'flex flex-col dx-grow px-1' })} ref={forwardedRef}>
         {/* Sized to its rows up to four tasks; only a longer list scrolls, never showing a partial row. */}
         <TaskList.Viewport rows={CHAT_TASK_ROWS}>
           <TaskList.Content />
