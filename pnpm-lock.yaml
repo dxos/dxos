@@ -16852,6 +16852,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/observability':
+        specifier: workspace:*
+        version: link:../../sdk/observability
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/compute/operation
