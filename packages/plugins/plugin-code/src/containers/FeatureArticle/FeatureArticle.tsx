@@ -32,12 +32,7 @@ import {
   getDependents,
 } from '../../components/FeatureCard/index.ts';
 import { ObjectAddPicker } from '../../components/ObjectAddPicker/index.ts';
-import {
-  useFeatureEditing,
-  useFeatureGraph,
-  useOpenFeatureTarget,
-  useRequirementVerdicts,
-} from '../../hooks/index.ts';
+import { useFeatureEditing, useFeatureGraph, useOpenFeatureTarget, useRequirementVerdicts } from '../../hooks/index.ts';
 import { CodeNamespace } from '../../namespace.ts';
 
 // The editable fields, picked from the schema on the AST as ProjectArticle does: `Type.getSchema` erases to
