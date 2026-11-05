@@ -61,24 +61,27 @@ each feature with \`Database.query(Filter.id(id)).run\`, and set \
 Building. Work the tasks you are given in order:
 - Use one sandbox named \`availability-poll\`: find it before creating one, and keep the code in \`/workspace/poll\`. \
 Keep it in git there; do not create or attach a repository.
-- The image ships Node 22, git and wrangler 4. Run \`npm install\` once, in the first task, and never \`tsc\`.
+- The image ships Node 22, git and wrangler 4. Install once, in the first task, as below, and never run \`tsc\`.
 - The spec builds every page with DXOS UI, so the pages are a React app bundled by Vite into the Worker's static \
 assets. \`package.json\` (\`"type": "module"\`) depends on \`@dxos/react-ui\` and \`@dxos/ui-theme\` \`^0.16.0\`, \
 \`react\` and \`react-dom\` \`^19.2.9\`, \`@vitejs/plugin-react\` \`^6.1.2\` and \`vite\` \`^8.3.5\`. \
-\`vite.config.js\`: \`plugins: [ThemePlugin({}), react()]\` (\`import { ThemePlugin } from \
-'@dxos/ui-theme/plugin'\`), \`build: { outDir: 'dist' }\`. \`index.html\` (\`<html class="dark">\`) loads \
-\`/src/main.jsx\`, which starts \`import '@dxos-theme'; import '@dxos/react-ui/theme.css';\`, renders \
-\`<Theme>\` around the page for \`location.pathname\` (\`/\` is F-1's form in \`src/Home.jsx\`, \`/p/:id\` the \
-poll in \`src/Poll.jsx\`), and builds pages from \`Button\` (\`label\`, \`variant: 'primary'\`), \`Input\`, \
-\`Field.Root\` and \`Field.Label\`, all from \`@dxos/react-ui\`; it has no \`Textarea\`, so a list is one \
-\`Input\` per item. Plain elements are fine inside them for the grid, its cells shaded with an inline \
+\`vite.config.js\`: \`plugins: [ThemePlugin({ content: ['node_modules/@dxos/react-ui/src/theme/*.css'] }), \
+react()]\` (\`import { ThemePlugin } from '@dxos/ui-theme/plugin'\`; the \`content\` keeps the components' \
+theme tokens), \`build: { outDir: 'dist' }\`. \`index.html\` (\`<html class="dark">\`) loads \`/src/main.jsx\`, \
+which starts \`import '@dxos-theme'; import '@dxos/react-ui/theme.css';\` and renders \
+\`<Theme.Provider tx={Theme.defaultTx} themeMode='dark'>\` around the page for \`location.pathname\` (\`/\` is \
+F-1's form in \`src/Home.jsx\`, \`/p/:id\` the poll in \`src/Poll.jsx\`). Pages use \`Button.Root\` (\`label\`, \
+\`variant: 'primary'\`, \`onClick\`), \`Input.Root\` (an input), \`Input.Textarea\` (a list, one item per line), \
+\`Field.Root\` and \`Field.Label\`, all from \`@dxos/react-ui\`, whose \`Theme\`, \`Button\` and \`Input\` are \
+namespaces, not components. These names are checked against the published package in a browser: use them without \
+reading \`node_modules\`. Plain elements are fine inside them for the grid, its cells shaded with an inline \
 \`background\`. \
 \`worker.js\` holds the \`/api\` routes and the \`Poll\` Durable Object, created with \`newUniqueId()\`; it keeps \
 one storage key, \`poll\`: \`{ title, minutes, slots: [{ id, start }], invitees, marks: { [name]: [slotId] } }\`, \
 and \`GET /api/polls/:id\` answers it with each slot's \`free\` names and, once F-3 adds it, \`best\`. \
 \`wrangler.jsonc\` declares \`assets: { directory: './dist', not_found_handling: 'single-page-application', \
 run_worker_first: ['/api/*'] }\`, binds \`Poll\`, and declares it in a migration with \`new_sqlite_classes\`, which \
-a temporary account requires. \`.gitignore\` holds \`node_modules\` and \`dist\`. M-2 adds \`zones.js\` for the \
+a temporary account requires. \`.gitignore\` holds \`.wrangler\`, \`dist\`, \`node_modules\` and \`npm.*\`. M-2 adds \`zones.js\` for the \
 time zone math, so its features add a file and touch the others only by small edits.
 - Do each task in one call: one program that writes the task's files, restarts the server, checks the \
 requirements the task adds, commits, and, when every check passed, sets the task's feature to \`prototype\` and the \
@@ -92,7 +95,10 @@ const write = (name, text) => sh('echo ' + Buffer.from(text).toString('base64') 
 The first task creates the sandbox instead, with \`dxn:org.dxos.operation.sandbox.create\` \
 \`{ name: 'availability-poll', accountAccess: false }\`, which returns \`{ sandboxId }\` to load with \`Filter.id\`, \
 and runs, once and without \`cwd\`, \`mkdir -p /workspace/poll/src && cd /workspace/poll && git init -q && git config \
-user.email agent@poll.test && git config user.name Agent\`. Find the task with \
+user.email agent@poll.test && git config user.name Agent\`; in the same program it writes \`package.json\` and \
+starts \`npm install --no-audit --no-fund > npm.log 2>&1; echo $? > npm.exit\` with \`background: true\`, so the \
+install runs while you write the code. F-1's program waits for it with \`until [ -f npm.exit ]; do sleep 2; done\` \
+before its first \`npx vite build\`. Find the task with \
 \`Filter.type(Task, { title })\` (\`dxn:org.dxos.type.task:0.7.0\`) and the feature by its name; set statuses with \
 \`dxn:org.dxos.operation.code.updateFeature\` \`{ feature, status }\` and \`dxn:org.dxos.operation.tasks.update\` \
 \`{ task, status }\`.
