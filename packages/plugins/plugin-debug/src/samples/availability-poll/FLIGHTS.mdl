@@ -8,8 +8,8 @@ Flights overlaid on an availability poll, for respondents who travel to the meet
 time window and the limits a flight must meet; each traveler sets where they fly from; the Worker searches Duffel for
 offers and the page shows, on the poll's own grid, when each traveler can arrive. It builds on the poll spec: the best
 slot it plans around is [F-3](com.example.availability-poll#F-3), and every time it shows is read in the
-reader's zone as [F-4](com.example.availability-poll#F-4) and
-[F-5](com.example.availability-poll#F-5) define.
+reader's zone as [F-6](com.example.availability-poll#F-6) and
+[F-7](com.example.availability-poll#F-7) define.
 
 ## Dependencies
 
@@ -108,7 +108,7 @@ feat F-3: Pick a flight
 feat F-4: Arrival overlay
   desc: The flights drawn on the poll's grid.
 
-  req F-4.1: Each traveler's picked arrival is a marker on the grid, at its local time in the reader's zone (com.example.availability-poll#F-4.2).
+  req F-4.1: Each traveler's picked arrival is a marker on the grid, at its local time in the reader's zone (com.example.availability-poll#F-6.2).
   req F-4.2: With a trip set, a slot that none of a traveler's offers reaches in time is dimmed for that traveler and does not count them as free, so the heat map and the best slot (com.example.availability-poll#F-3.2) account for travel.
 ```
 
@@ -117,7 +117,7 @@ feat F-4: Arrival overlay
 ```mdl
 scenario T-1: Offers within the limits
   given:
-    - a poll from the poll spec's T-2 with a trip to JFK, departures 2026-10-28 to 2026-10-29, at most 900 GBP in economy with one connection, landing 180 minutes before the slot
+    - a poll from the poll spec's T-3 with a trip to JFK, departures 2026-10-28 to 2026-10-29, at most 900 GBP in economy with one connection, landing 180 minutes before the slot
     - Ben travels from LHR, and `DUFFEL_ACCESS_TOKEN` is a Duffel test-mode token
   when: Ben searches for offers
   then:
@@ -136,6 +136,13 @@ decision D-1: Flight options are their own spec, owned by the poll spec's F-6, a
   for: user:wittjosiah
   why: The variant is a new feature built on the poll; citing F-3 and F-4 makes a change there visible as a change here.
   rejected: Writing the flight features into the poll spec as F-6.1 onwards, which would hide where the poll ends and the variant begins.
+
+decision D-2: The citations follow the poll spec's renumbering: its time zone and daylight-saving features are now F-6 and F-7, flight options F-8, and the three-zone scenario T-3.
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  why: The poll spec gave its page design a milestone of its own (its decision D-5), which moved the later features and scenarios up by two and one.
+  rejected: Keeping the old numbers here, which would cite the wrong blocks.
 ```
 
 ---

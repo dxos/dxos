@@ -32,7 +32,7 @@ const PROJECT = 'Availability Poll';
 const MODEL = process.env.DX_MODEL ?? 'Claude Sonnet 5';
 
 const M1 = { id: 'M-1', features: ['Create a poll', 'Mark availability', 'Heat map and best slot'] };
-const M2 = { id: 'M-2', features: ['Time zones', 'Daylight-saving time'] };
+const M2 = { id: 'M-2', features: ['New poll page', 'Poll page'] };
 const HEATMAP = 'Heat map and best slot';
 const FLIGHTS = 'Flight options';
 
@@ -509,13 +509,13 @@ export const steps = [
   {
     name: 'Open the spec',
     run: async ({ demo, page }) => {
-      await demo.caption({ value: 'Each feature is a block of the spec', subtitle: 'Staged as milestones M-1 to M-3' });
+      await demo.caption({ value: 'Each feature is a block of the spec', subtitle: 'Staged as milestones M-1 to M-4' });
       await openFeature(demo, page, HEATMAP);
       await page.waitForTimeout(BEAT * 2);
       await openProjectTab(demo, page, 'document');
       await page.waitForTimeout(BEAT * 2);
       // Down to the milestones and the DST scenario, the part a reader checks the build against.
-      for (const heading of ['M-1: Core poll', 'scenario T-2']) {
+      for (const heading of ['M-1: Core poll', 'scenario T-3']) {
         await scrollDocumentTo(page, heading);
         await page.waitForTimeout(BEAT * 2);
       }
@@ -603,7 +603,7 @@ export const steps = [
     done: async ({ page }) => allOperational(await snapshot(page), M2.features),
     run: async ({ demo, page }) => {
       await demo.caption({
-        value: 'Three respondents, three zones, two clock changes',
+        value: 'Both pages laid out to the spec',
         subtitle: 'Checked against the scenario before it deploys',
         position: 'top',
       });
@@ -692,7 +692,7 @@ export const steps = [
       await waitFor(demo, page, (state) => state.tasks.some((task) => !task.assigned), 15, 'the fix task');
       const text = await specText(page);
       if (!/best slot is s8/.test(text)) {
-        throw new Error("the revalidation left T-2's best slot at s3");
+        throw new Error("the revalidation left T-3's best slot at s3");
       }
     },
   },
@@ -734,7 +734,7 @@ export const steps = [
       await demo.caption({ value: 'Five features operational; flight options are yours to build' });
       await openProjectTab(demo, page, 'features');
       await page.waitForTimeout(BEAT * 3);
-      await demo.caption({ value: 'The spec records the change', subtitle: "T-2's best slot is now s8" });
+      await demo.caption({ value: 'The spec records the change', subtitle: "T-3's best slot is now s8" });
       await openProjectTab(demo, page, 'document');
       await scrollDocumentTo(page, 'decision D-2');
       await page.waitForTimeout(BEAT * 4);

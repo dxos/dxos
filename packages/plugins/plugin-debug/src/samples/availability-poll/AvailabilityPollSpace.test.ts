@@ -79,7 +79,7 @@ describe('Availability Poll template', () => {
       // Planning from the spec is what the reader watches, so nothing is planned yet.
       expect(countOf('type.milestone')).toBe(0);
       expect(countOf('type.task:')).toBe(0);
-      expect(countOf('type.feature:')).toBe(10);
+      expect(countOf('type.feature:')).toBe(12);
       expect(countOf('type.projects.spec:')).toBe(2);
       expect(countOf('type.document')).toBe(3);
       expect(countOf('type.drawing')).toBe(2);
@@ -101,7 +101,7 @@ describe('Availability Poll template', () => {
   });
 
   test(
-    'the project owns the poll spec, whose six features are read from its blocks',
+    'the project owns the poll spec, whose eight features are read from its blocks',
     { timeout: 120_000 },
     async ({ expect }) => {
       const { ofType, byRef, featuresOf, textOf } = await load();
@@ -114,6 +114,8 @@ describe('Availability Poll template', () => {
         'Create a poll',
         'Mark availability',
         'Heat map and best slot',
+        'New poll page',
+        'Poll page',
         'Time zones',
         'Daylight-saving time',
         'Flight options',
@@ -121,7 +123,7 @@ describe('Availability Poll template', () => {
       expect(features.every((feature) => feature.status === 'planned')).toBe(true);
       expect(features.map(sourcesOf)).toEqual(Object.values(FEATURES).map((block) => [`${SPEC_PATH}#${block}`]));
       // The requirements are the spec's own `req` lines, numbered as the spec numbers them.
-      expect(features.map((feature) => feature.requirements?.length)).toEqual([6, 5, 5, 3, 4, 1]);
+      expect(features.map((feature) => feature.requirements?.length)).toEqual([4, 3, 4, 3, 6, 3, 4, 1]);
       expect(features[2].requirements?.[1]).toEqual({
         id: 'F-3.2',
         text: 'The best slot is the one the most respondents are free for; on a tie, the earliest. With no marks there is no best slot.',
@@ -132,8 +134,8 @@ describe('Availability Poll template', () => {
       expect(FeatureEmbed.parse(text).map(({ id }) => id)).toEqual(features.map(({ id }) => id));
       expect(text).not.toMatch(/^feat F-/m);
       // The milestones and scenarios stay text: the agent plans from them.
-      expect([...text.matchAll(/^\| (M-\d):/gm)].map(([, id]) => id)).toEqual(['M-1', 'M-2', 'M-3']);
-      expect([...text.matchAll(/^scenario (T-\d):/gm)].map(([, id]) => id)).toEqual(['T-1', 'T-2']);
+      expect([...text.matchAll(/^\| (M-\d):/gm)].map(([, id]) => id)).toEqual(['M-1', 'M-2', 'M-3', 'M-4']);
+      expect([...text.matchAll(/^scenario (T-\d):/gm)].map(([, id]) => id)).toEqual(['T-1', 'T-2', 'T-3']);
     },
   );
 
@@ -162,7 +164,7 @@ describe('Availability Poll template', () => {
       expect(FeatureEmbed.parse(text).map(({ id }) => id)).toEqual(subfeatures.map(({ id }) => id));
       // It cites the poll spec rather than restating it.
       expect(text).toContain('com.example.availability-poll#F-3');
-      expect(text).toContain('com.example.availability-poll#F-4');
+      expect(text).toContain('com.example.availability-poll#F-6');
     },
   );
 
@@ -176,7 +178,7 @@ describe('Availability Poll template', () => {
       ...Object.fromEntries(Object.entries(FLIGHT_FEATURES).map(([key, block]) => [key, byBlock(FLIGHTS_PATH, block)])),
     };
 
-    expect(DEPENDENCIES).toHaveLength(11);
+    expect(DEPENDENCIES).toHaveLength(13);
     expect(
       ofType('relation.dependsOn').map((relation) => [relation['@relationSource'], relation['@relationTarget']]),
     ).toEqual(DEPENDENCIES.map(([source, target]) => [ref(keyed[source]), ref(keyed[target])]));

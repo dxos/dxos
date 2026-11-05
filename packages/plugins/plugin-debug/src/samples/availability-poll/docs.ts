@@ -46,7 +46,7 @@ the first clock change inside it, and then every later slot is an hour out.
 
 ## The scenario that pins it down
 
-T-2 in the spec spans both changes that autumn: London on 25 October, New York on 1 November. So the gap between
+T-3 in the spec spans both changes that autumn: London on 25 October, New York on 1 November. So the gap between
 London and New York is four hours on the Friday and five on the Monday, and Tokyo, which has no summer time, moves
 against both.
 

@@ -71,18 +71,23 @@ theme tokens), \`build: { outDir: 'dist' }\`. \`index.html\` (\`<html class="dar
 which starts \`import '@dxos-theme'; import '@dxos/react-ui/theme.css';\` and renders \
 \`<Theme.Provider tx={Theme.defaultTx} themeMode='dark'>\` around the page for \`location.pathname\` (\`/\` is \
 F-1's form, the default export of \`src/Home.jsx\`; \`/p/:id\` the poll, the default export of \`src/Poll.jsx\`, \
-given \`id\` as a prop). Pages use \`Button.Root\` (\`label\`, \
+given \`id\` as a prop and taking optional \`poll\` and \`name\` props as its first state, so a check can render it \
+with data). Pages use \`Button.Root\` (\`label\`, \
 \`variant: 'primary'\`, \`onClick\`), \`Input.Root\` (the \`<input>\` itself, with \`value\` and \`onChange\` and no children), \`Input.Textarea\` (a list, one item per line), \
-\`Field.Root\` and \`Field.Label\`, all from \`@dxos/react-ui\`, whose \`Theme\`, \`Button\` and \`Input\` are \
-namespaces, not components. These names are checked against the published package in a browser: use them without \
-reading \`node_modules\`. Plain elements are fine inside them for the grid, its cells shaded with an inline \
-\`background\`. \
+\`Field.Root\`, \`Field.Label\` and \`Field.ErrorText\`, \`Card.Root\`, \`Card.Header\`, \`Card.Title\` and \
+\`Card.Body\` (which lays out its own children, so put a \`<div>\` with your flex or grid classes inside it), \
+\`Tag.Tag\` (\`hue\`: \`'neutral'\`, \`'sky'\` or \`'emerald'\`) and \`Tooltip.Trigger\` (\`asChild\`, \
+\`content\`), all from \`@dxos/react-ui\`, whose \`Theme\`, \`Button\`, \`Input\`, \`Card\`, \`Tag\` and \`Tooltip\` \
+are namespaces, not components. Tailwind classes work in \`className\`; cells take \`var(--color-accent-bg)\` when \
+marked, \`var(--color-input-bg)\` when not, and \`var(--color-separator)\` for an edge. These names are checked against the published package in a browser: use them without \
+reading \`node_modules\`. The spec's Interface section and each feature's \
+requirements say what each page holds; a grid's cells are plain elements with an inline \`background\`. \
 \`worker.js\` holds the \`/api\` routes and the \`Poll\` Durable Object, created with \`newUniqueId()\`; it keeps \
 one storage key, \`poll\`: \`{ title, minutes, slots: [{ id, start }], marks: { [name]: [slotId] } }\`, whose key order is the respondents' order, \
 and \`GET /api/polls/:id\` answers it with each slot's \`free\` names and, once F-3 adds it, \`best\`. \
 \`wrangler.jsonc\` declares \`assets: { directory: './dist', not_found_handling: 'single-page-application', \
 run_worker_first: ['/api/*'] }\`, binds \`Poll\`, and declares it in a migration with \`new_sqlite_classes\`, which \
-a temporary account requires. \`.gitignore\` holds \`.wrangler\`, \`dist\`, \`node_modules\`, \`npm.*\` and \`ssr\`. M-2 adds \`zones.js\` for the \
+a temporary account requires. \`.gitignore\` holds \`.wrangler\`, \`dist\`, \`node_modules\`, \`npm.*\` and \`ssr\`. M-3 adds \`zones.js\` for the \
 time zone math, so its features add a file and touch the others only by small edits.
 - Do each task in one call: one program that writes the task's files, restarts the server, checks the \
 requirements the task adds, commits, and, when every check passed, sets the task's feature to \`prototype\` and the \
@@ -111,11 +116,12 @@ render, so when the front end changed the same command ends with \`npx vite buil
 --logLevel error && npx vite build --ssr src/Poll.jsx --outDir ssr --emptyOutDir false --logLevel error && node \
 render-check.mjs\`, where F-1 writes \`render-check.mjs\` as exactly: \`import React from 'react'; import { \
 prerenderToNodeStream } from 'react-dom/static'; globalThis.location = new URL('http://localhost/p/x'); \
-globalThis.localStorage = { getItem: () => null, setItem: () => {} }; for (const \
-name of ['Home', 'Poll']) { const fail = (error) => { console.log(name, 'does not render:', \
-error.message.slice(0, 200)); process.exitCode = 1; }; try { const { default: Page } = await \
-import('./ssr/' + name + '.js'); const { prelude } = await prerenderToNodeStream(React.createElement(Page, { id: \
-'x' }), { onError: fail }); for await (const chunk of prelude); } catch (error) { fail(error); } }\`; then, only if \`checks.exitCode === 0\`, \`git add -A && git commit -qm \
+globalThis.localStorage = { getItem: () => null, setItem: () => {} }; const pages = { Home: (await \
+import('./ssr/Home.js')).default, Poll: (await import('./ssr/Poll.js')).default }; globalThis.document = { \
+getElementById: () => null, querySelector: () => null, body: null }; for (const [name, Page] of \
+Object.entries(pages)) { const fail = (error) => { console.log(name, 'does not render:', error.message.slice(0, \
+200)); process.exitCode = 1; }; try { const { prelude } = await prerenderToNodeStream(React.createElement(Page, { \
+id: 'x' }), { onError: fail }); for await (const chunk of prelude); } catch (error) { fail(error); } }\`; then, only if \`checks.exitCode === 0\`, \`git add -A && git commit -qm \
 'F-n: …'\`, the two status updates and one \`print\` saying what passed; otherwise \`print(checks.stdout, \
 checks.stderr)\`. Do not split it into separate calls for writing, restarting, checking, committing and statuses, and \
 do not read the feature's requirements again: they are in the spec.
@@ -126,7 +132,7 @@ Error(name + ': not exactly once: ' + from.slice(0, 60)); text = text.replace(fr
 text); };\` then \`yield* edit('src/Poll.jsx', [[before, after]])\`. Never print a file. The code has no comments, and \
 the pages keep their CSS to a few lines.
 - Time zone math uses \`Intl.DateTimeFormat\` with \`timeZone\`, which the Workers runtime ships in full. Compute every \
-offset on the slot's own date and hour, never once per poll; the spec's F-5 and T-2 say exactly what that means.
+offset on the slot's own date and hour, never once per poll; the spec's F-7 and T-3 say exactly what that means.
 - Check your work on the Worker running in the sandbox, never on the deployed one. In the first task, once \
 \`wrangler.jsonc\` exists, serve it with ExposePort (\`dxn:org.dxos.operation.sandbox.exposePort\`) \`{ sandbox, port: 8787, command: 'wrangler dev --ip 0.0.0.0 \
 --port 8787', cwd: '/workspace/poll' }\`; from the sandbox it answers at \`http://localhost:8787\`. A reload after an \
@@ -139,7 +145,10 @@ is waited for. A request that still times out is a build error, which only the n
 \`fetch\` has \`signal: AbortSignal.timeout(10_000)\`, runs it on \`localhost:8787\`, and builds a table of expected \
 against actual for every count, slot start and best slot the scenario states. When it all matches, the same program \
 deploys, sets the milestone's features to \`operational\`, sets the task's description to the Worker URL and that \
-table, and sets the task to \`review\`. Make no showcase.
+table, and sets the task to \`review\`. Make no showcase. \`Check M-2\` reads pages rather than the API: its \
+\`check.mjs\` builds both pages for SSR as the render check does, creates T-1's poll and marks on \`localhost:8787\`, \
+prerenders \`Home\` and \`Poll\` with \`{ id, poll, name: 'Ben' }\` under the render check's stubs, reads each \
+page's text as \`html.replace(/<!-- -->/g, '').replace(/<[^>]+>/g, ' ')\`, and checks each line of T-2 against it.
 
 Deploying. \`cd /workspace/poll && wrangler deploy --temporary\` mints a temporary account and prints the Worker URL and \
 a claim URL. The claim URL is a bearer credential for the account: give it to me directly and file it nowhere. \
@@ -153,7 +162,7 @@ what changed, and file one task for the fix under the milestone that shipped the
 When I delegate the fix, change the code, rerun the scenario on \`localhost:8787\`, deploy, and set the feature back to \
 \`operational\`.
 
-M-3, flight options, is for me to build later. Do not plan or build it unless I ask. This project needs no Cloudflare \
+M-4, flight options, is for me to build later. Do not plan or build it unless I ask. This project needs no Cloudflare \
 login and no API keys; if a step seems to need either, it is the wrong step.`;
 
 /**

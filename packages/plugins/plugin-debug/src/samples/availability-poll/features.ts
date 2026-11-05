@@ -23,9 +23,11 @@ export const FEATURES = {
   create: 'F-1',
   mark: 'F-2',
   heatmap: 'F-3',
-  zones: 'F-4',
-  dst: 'F-5',
-  flights: 'F-6',
+  newPage: 'F-4',
+  pollPage: 'F-5',
+  zones: 'F-6',
+  dst: 'F-7',
+  flights: 'F-8',
 } as const;
 
 export const FLIGHT_FEATURES = { trip: 'F-1', search: 'F-2', pick: 'F-3', overlay: 'F-4' } as const;
@@ -40,6 +42,8 @@ type AnyKey = FeatureKey | FlightFeatureKey;
 export const DEPENDENCIES: ReadonlyArray<readonly [AnyKey, AnyKey]> = [
   ['mark', 'create'],
   ['heatmap', 'mark'],
+  ['newPage', 'create'],
+  ['pollPage', 'heatmap'],
   ['zones', 'create'],
   ['dst', 'zones'],
   ['flights', 'heatmap'],
