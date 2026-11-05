@@ -102,7 +102,7 @@ const EditedSlideStory = () => {
 
 /** The thumbnail grid as `PresentationArticle` composes it, over a first slide with click steps. */
 const GridStory = () => {
-  const slides = useMemo(() => createClickSlides(), []);
+  const slides = useMemo(() => [...createClickSlides(), ...createTextSlides(8)], []);
   const [index, setIndex] = useState(0);
   const [fullscreen, setFullscreen] = useState(false);
   return (
@@ -391,54 +391,72 @@ export const ClickSteps: Story = {
   },
 };
 
-/** In the grid Up and Down move the selection past a slide's click steps, and stop at the deck's ends. */
+/** The columns the grid laid out, read as a row move does; a tile grid measures itself a frame after it mounts. */
+const gridColumns = (canvasElement: HTMLElement) =>
+  waitFor(async () => {
+    const tiles = Array.from(canvasElement.querySelectorAll<HTMLElement>('[role="option"]'));
+    const columns = tiles.filter((tile) => tile.offsetTop === tiles[0].offsetTop).length;
+    await expect(columns).toBeGreaterThan(1);
+    return columns;
+  });
+
+const expectSelected = (canvas: ReturnType<typeof within>, index: number) =>
+  waitFor(() => expect(canvas.getByTestId(`presenter.slide-grid.${index}`)).toHaveAttribute('aria-selected', 'true'));
+
+/** In the grid Up and Down move between rows and stop at the first and last, and the keys survive presenting. */
 export const GridKeys: Story = {
   render: GridStory,
   decorators: [withEmptyPlugins],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const selected = (index: number) =>
-      waitFor(() =>
-        expect(canvas.getByTestId(`presenter.slide-grid.${index}`)).toHaveAttribute('aria-selected', 'true'),
-      );
     const deck = await canvas.findByTestId('presenter.deck');
-    await canvas.findByTestId('presenter.slide-grid.1');
+    await canvas.findByTestId('presenter.slide-grid.9');
+    const columns = await gridColumns(canvasElement);
     deck.focus();
-    await selected(0);
+    await expectSelected(canvas, 0);
     await userEvent.keyboard('{ArrowUp}');
-    await selected(0);
+    await expectSelected(canvas, 0);
     await userEvent.keyboard('{ArrowDown}');
-    await selected(1);
-    await userEvent.keyboard('{ArrowDown}');
-    await selected(1);
+    await expectSelected(canvas, columns);
     await userEvent.keyboard('{ArrowUp}');
-    await selected(0);
+    await expectSelected(canvas, 0);
+    await userEvent.keyboard('{End}{ArrowDown}');
+    await expectSelected(canvas, 9);
+    await userEvent.keyboard('{Home}');
+    await expectSelected(canvas, 0);
     await userEvent.keyboard(' ');
     await expect(await canvas.findByTestId('presenter.overlay')).toBeInTheDocument();
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(canvas.getByTestId('presenter.deck')).toHaveFocus());
+    const columnsAfterExit = await gridColumns(canvasElement);
+    await userEvent.keyboard('{ArrowDown}');
+    await expectSelected(canvas, columnsAfterExit);
   },
 };
 
-/** With a clicked thumbnail holding focus, every arrow moves the one current tile, and no other tile stays marked. */
+/** With a clicked thumbnail holding focus, every key moves the one current tile, and no other tile stays marked. */
 export const GridKeysOnTile: Story = {
   render: GridStory,
   decorators: [withEmptyPlugins],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const selected = (index: number) =>
-      waitFor(() =>
-        expect(canvas.getByTestId(`presenter.slide-grid.${index}`)).toHaveAttribute('aria-selected', 'true'),
-      );
     await userEvent.click(await canvas.findByTestId('presenter.slide-grid.0'));
-    await selected(0);
+    await canvas.findByTestId('presenter.slide-grid.9');
+    const columns = await gridColumns(canvasElement);
+    await expectSelected(canvas, 0);
     await userEvent.keyboard('{ArrowDown}');
-    await selected(1);
-    await userEvent.keyboard('{ArrowLeft}');
-    await selected(0);
-    await userEvent.keyboard('{ArrowRight}');
-    await selected(1);
-    await expect(canvasElement.querySelectorAll('[data-highlighted]:not([aria-selected="true"])')).toHaveLength(0);
+    await expectSelected(canvas, columns);
     await userEvent.keyboard('{ArrowUp}');
-    await selected(0);
+    await expectSelected(canvas, 0);
+    await userEvent.keyboard('{ArrowRight}');
+    await expectSelected(canvas, 1);
+    await expect(canvasElement.querySelectorAll('[data-highlighted]:not([aria-selected="true"])')).toHaveLength(0);
+    await userEvent.keyboard('{ArrowLeft}');
+    await expectSelected(canvas, 0);
+    await userEvent.keyboard(']');
+    await expectSelected(canvas, 1);
+    await userEvent.keyboard('[[');
+    await expectSelected(canvas, 0);
   },
 };
 
@@ -508,6 +526,15 @@ export const SlideKeysAtEnd: Story = {
     await userEvent.keyboard('{ArrowRight}');
     await expect(canvas.getByText('2 / 2')).toBeVisible();
     await expect(hidden()).toBe(2);
+
+    // The brackets land on a slide fully built, and Right at its first step.
+    await userEvent.keyboard('[[');
+    await expect(await canvas.findByText('1 / 2')).toBeVisible();
+    await userEvent.keyboard(']');
+    await expect(await canvas.findByText('2 / 2')).toBeVisible();
+    await waitFor(() => expect(hidden()).toBe(0));
+    await userEvent.keyboard('{ArrowLeft}{ArrowRight}');
+    await waitFor(() => expect(hidden()).toBe(3));
   },
 };
 

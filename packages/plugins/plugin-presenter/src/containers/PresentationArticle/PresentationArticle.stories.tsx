@@ -112,8 +112,6 @@ export const Fullscreen: Story = {
     await waitFor(() => expect(canvas.getByTestId('presenter.deck')).toHaveFocus());
     await userEvent.keyboard('{ArrowRight}');
     await waitFor(async () => expect(await tile(canvas, 1)).toHaveAttribute('aria-selected', 'true'));
-    await userEvent.keyboard('{ArrowDown}');
-    await waitFor(async () => expect(await tile(canvas, 2)).toHaveAttribute('aria-selected', 'true'));
   },
 };
 

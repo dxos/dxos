@@ -113,8 +113,8 @@ component Deck
     and wakes on pointer movement. Keys are scoped to the deck's focus scope, never `window`: Cmd (or Ctrl) with
     left or right, Shift with left or right, and Home and End jump to first and last, `f` toggles fullscreen,
     Escape exits fullscreen. Space and Down advance a click step, else the slide; Up retreats a click step,
-    else lands on the previous slide fully revealed. Right and `]` move to the next slide at its first step, and Left
-    and `[` to the previous slide fully revealed, past any remaining click steps; neither acts at the deck's end.
+    else lands on the previous slide fully revealed. Right moves to the next slide at its first step, `]` to the next slide fully revealed, and Left and `[` to the
+    previous slide fully revealed, past any remaining click steps; none of them acts at the deck's end.
     Click steps are ephemeral and reset on slide change; Space
     does not act on a focused button or link. While the focused (or fullscreen) deck prints, it renders every
     slide into a print-only container, one 16:9 page each with every click step shown, and drops the rest of the
@@ -439,7 +439,7 @@ feat F-4: Presentation Deck
   req F-4.8: Only an attended deck takes focus on mount.
   req F-4.9: A linked object with no slide surface renders as a title slide rather than failing.
   req F-4.10: A section whose target was deleted is omitted from the deck; one whose target has not loaded shows a pending slide.
-  req F-4.11: Inline, a Presentation shows every slide as a fully revealed thumbnail in a vertically scrolling grid with no pager; the current slide is selected, and arrow keys or a click move it. Up and Down move one slide past its click steps wherever focus is in the grid, Space presents from the current slide, and the current slide is the one outlined tile.
+  req F-4.11: Inline, a Presentation shows every slide as a fully revealed thumbnail in a vertically scrolling grid with no pager; the current slide is selected, and arrow keys or a click move it. Up and Down move between rows wherever focus is in the grid, Space presents from the current slide, and the current slide is the one outlined tile.
   req F-4.12:
     when: user drags a thumbnail before or after another
     then: the section moves there, and the moved slide stays current
@@ -1560,6 +1560,31 @@ decision D-87: Up and Down move one slide wherever focus is in the grid, includi
   affects: [F-4.11]
   why: With a thumbnail focused, the listbox moved Up and Down by a row, which does nothing in a one-row grid; Space, the buttons and the document preview stay as [D-85] has them.
   rejected: Moving by a row, which needs the rendered column count and leaves the two focus paths behaving differently.
+```
+
+```mdl
+decision D-88: In the inline grid, Up and Down move between rows.
+  date: 2026-11-04
+  by: user:richburdon
+  supersedes: D-87
+  affects: [F-4.11]
+```
+
+```mdl
+decision D-89: Moving between slides with `[` and `]` lands on the end of each slide's click steps.
+  date: 2026-11-04
+  by: user:richburdon
+  supersedes: D-79
+  affects: [F-12.4]
+```
+
+```mdl
+decision D-90: A row move from a column the last row does not reach lands on the last slide, and stays put at the first and last rows. Right still starts the next slide at its first step and Left lands fully revealed, and the pointer only tints a tile as [D-87] had it. `[` and `]` move one slide in the grid. Fills in [D-88] and [D-89].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-4.11, F-12.4]
+  why: Stopping short of a shorter last row would leave a tile unreachable by Down, and the request named only the brackets.
 ```
 
 ---

@@ -33,6 +33,7 @@ import { PresentationShell } from '../PresentationShell/index.ts';
 import { Slide } from '../Slide/index.ts';
 import { SlideGrid, type SlideGridProps } from '../SlideGrid/index.ts';
 import { SlideThemeProvider } from '../SlideTheme/index.ts';
+import { countColumns, moveByRow } from './grid-rows.ts';
 
 // TODO(burdon): Factor the Deck and Slide families out to a react-ui-presenter package.
 
@@ -56,6 +57,20 @@ const KEY_OWNERS = [
 /** Controls that Space activates natively. */
 const ACTIVATABLE =
   'button, a[href], summary, [role="button"], [role="checkbox"], [role="switch"], [role="menuitem"], [role="tab"], [role="option"]';
+
+/** Where a key moves the grid's current slide; undefined for a key the grid leaves alone. */
+const gridTarget = (key: string, index: number, count: number, grid: Element): number | undefined => {
+  switch (key) {
+    case 'ArrowDown':
+      return moveByRow(index, count, countColumns(grid), 1);
+    case 'ArrowUp':
+      return moveByRow(index, count, countColumns(grid), -1);
+    case ']':
+      return index + 1;
+    case '[':
+      return index - 1;
+  }
+};
 
 /** The grid's own controls keep Space; a thumbnail tile (`role="option"`) does not, so Space presents from it. */
 const GRID_CONTROLS = 'button, a[href]';
@@ -169,9 +184,11 @@ const DeckRoot = ({
         setStepState({ index: clamped, step: 0 });
         onIndexChange(clamped);
       };
-      const nextSlide = () => {
+      const nextSlide = (nextStep = 0) => {
         if (index < count - 1) {
-          go(index + 1);
+          event.preventDefault();
+          setStepState({ index: index + 1, step: nextStep });
+          onIndexChange(index + 1);
         } else {
           // Past the last slide there is nowhere to go, and its revealed steps must stay revealed.
           event.preventDefault();
@@ -223,7 +240,7 @@ const DeckRoot = ({
         case '[':
           return previousSlide();
         case ']':
-          return nextSlide();
+          return nextSlide(Number.POSITIVE_INFINITY);
         case 'Home':
           return go(0);
         case 'End':
@@ -491,22 +508,22 @@ const DeckGrid = Util.composable<HTMLDivElement, DeckGridProps>(
         ref={ref}
         tabIndex={-1}
         data-testid='presenter.deck'
-        // Capture, because a focused listbox would take Space to select its tile and Up and Down to move by a row.
+        // Capture, so one path handles these keys whether the grid or a listbox tile has focus.
         onKeyDownCapture={(event) => {
           onKeyDownCapture?.(event);
           if (ownsKeysInGrid(event.target) || event.metaKey || event.ctrlKey || event.altKey) {
             return;
           }
-          const delta = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0;
           const present =
             event.key === ' ' && !(event.target instanceof Element && event.target.closest(GRID_CONTROLS));
-          if (delta !== 0 || present) {
+          const next = gridTarget(event.key, index, count, event.currentTarget);
+          if (present || next !== undefined) {
             event.preventDefault();
             event.stopPropagation();
             if (present) {
               setFullscreen(true);
-            } else {
-              setIndex(SlideViewState.clamp(index + delta, count));
+            } else if (next !== undefined) {
+              setIndex(SlideViewState.clamp(next, count));
             }
           }
         }}
