@@ -321,6 +321,17 @@ feat F-8: Agent Struggle Reports
   req F-8.4: A review that fails is logged and dropped; it never surfaces to the user.
 ```
 
+```mdl
+feat F-9: Token Labels
+
+  req F-9.1: Labels are opt-in via `Settings.showTokens`, off by default.
+  req F-9.2:
+    when: labels are on
+    then: each block of the thread (a prompt, a paragraph of the answer, a tool run) shows its estimated token count in
+          a gutter beside it, level with its first line
+  req F-9.3: The count is an estimate (tokenx, the estimator the preprocessor budgets with), since per-request usage covers a whole turn and cannot be attributed to one block; status and stats blocks count zero.
+```
+
 ## Acceptance
 
 ```mdl
@@ -577,6 +588,27 @@ test QA-5: A working agent marks its chat and its companion's subject in the nav
 ```
 
 
+```mdl
+test QA-6: Token labels beside each block
+  desc: The opt-in gutter that shows the estimated token count of each block in the thread.
+  actors: human
+  covers: [F-9.1, F-9.2, F-9.3]
+  status: unverified
+  given:
+    - a chat thread with prompts, answers and a tool run
+  steps:
+    - name: Labels are off by default
+      do: Open the chat with `showTokens` unset.
+      expect: no token labels; the blocks use the full width of the column
+    - name: Turn the labels on
+      do: Turn on "Show token counts" in the assistant settings.
+      expect: a muted count shows in a right-hand gutter beside every prompt, answer paragraph and tool run, level
+        with its first line
+    - name: Labels follow a streaming turn
+      do: Send a prompt and let the answer stream.
+      expect: each block of the answer gets its label as it arrives, and the labels never move a row
+```
+
 ## Changelog
 
 ```mdl
@@ -757,6 +789,13 @@ decision D-21: Each turn sends a status update keyed `<uri>#agent` on the chat a
     - A still amber outline on the edge: it kept presence visible but read as generic busy work and had no natural finished state.
     - The star on chats and the outline on companion subjects: kept a document's viewers visible, at the cost of two symbols for one thing.
     - An `ActivitySource` capability the glyph merges: a second channel beside the progress registry for the same signal.
+```
+
+```mdl
+decision D-22: The thread can show the estimated token count of each block in a gutter beside it, opt-in via `Settings.showTokens`. The count is estimated per block, since provider usage covers a whole request.
+  date: 2026-11-04
+  by: user:dmaretskyi
+  affects: [F-9.1, F-9.2, F-9.3, QA-6]
 ```
 
 ---

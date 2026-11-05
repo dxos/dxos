@@ -85,6 +85,8 @@ type ChatThreadRootProps = PropsWithChildren<
     rewind?: boolean;
     /** Offers forking the conversation at each answer. */
     fork?: boolean;
+    /** Shows each block's estimated token count in a gutter beside it. */
+    showTokens?: boolean;
     onEvent?: (event: ChatThreadEvent) => void;
     /** The visible index range, as the reader scrolls — what an outline rail tracks. */
     onRangeChange?: (range: MessageRange) => void;
@@ -117,11 +119,15 @@ const ChatThreadRoot = ({
   debug,
   rewind = true,
   fork = false,
+  showTokens = false,
   onEvent,
   onRangeChange,
   controllerRef,
 }: ChatThreadRootProps) => {
-  const renderer = useMemo(() => createRenderer(viewType, { getObjectLabel }), [viewType, getObjectLabel]);
+  const renderer = useMemo(
+    () => createRenderer(viewType, { getObjectLabel, showTokens }),
+    [viewType, getObjectLabel, showTokens],
+  );
   // Debug shows the raw document: an empty registry renders no widgets, so the tags stay visible as
   // the text they are, but still highlighted as tags.
   const merged = useMemo(
@@ -161,6 +167,7 @@ const ChatThreadRoot = ({
         showAuthors={showAuthors}
         getAuthor={getAuthor}
         getLane={getLane}
+        showTokens={showTokens && viewType !== 'debug'}
       >
         <MessageList.Root
           model={model}

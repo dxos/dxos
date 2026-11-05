@@ -1509,6 +1509,9 @@ catalogs:
     todomvc-common:
       specifier: ^1.0.5
       version: 1.0.5
+    tokenx:
+      specifier: ^1.3.0
+      version: 1.3.0
     tone:
       specifier: ^15.1.22
       version: 15.1.22
@@ -4578,7 +4581,7 @@ importers:
         specifier: 'catalog:'
         version: 1.18.1
       tokenx:
-        specifier: ^1.3.0
+        specifier: 'catalog:'
         version: 1.3.0
     devDependencies:
       '@bufbuild/protobuf':
@@ -23747,6 +23750,9 @@ importers:
       effect:
         specifier: 4.0.4
         version: 4.0.4
+      tokenx:
+        specifier: 'catalog:'
+        version: 1.3.0
     devDependencies:
       '@dxos/effect':
         specifier: workspace:*
