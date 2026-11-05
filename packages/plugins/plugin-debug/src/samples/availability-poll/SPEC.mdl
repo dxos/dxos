@@ -141,7 +141,7 @@ feat F-6: Flight options
 
 ## Milestones
 
-The work ships in this order; each milestone is done when its scenario passes on the Worker run locally, which is then deployed.
+The work ships in this order; each milestone is done when its scenario passes on the Worker run in a sandbox, which is then deployed.
 
 | Milestone                                | Delivers                                                                                                              | Features      | Done when                                                            |
 | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------- | -------------------------------------------------------------------- |

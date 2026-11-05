@@ -38,7 +38,7 @@ A reader has a finished spec for a When2meet-style poll that runs as a Cloudflar
 
 - 1 `TaskSet.TaskSet` "Availability Poll", empty: no `Milestone.Milestone` and no `Task.Task`.
 - 1 `Project.Project` "Availability Poll", `active` → the task set (`taskSet`), → its instructions (`instructions`), → the poll spec (`specs`), and → the 3 documents and 2 drawings below (`artifacts`), in that order.
-- 1 `Instructions.Instructions` binding the Markdown and Drawing skills and → the task set (`objects`), carrying how to plan a milestone from the spec (one milestone per row of the Milestones table, one task per feature and a check task), the build recipe (one sandbox with its own git and no repository, the image's wrangler, `wrangler deploy --temporary` with a SQLite Durable Object migration), how to check each task and scenario on `wrangler dev` exposed as a preview and deploy once the scenario passes, and when a feature is `prototype`, `operational` or `failing`.
+- 1 `Instructions.Instructions` binding the Markdown and Drawing skills and → the task set (`objects`), carrying how to plan a milestone from the spec (one milestone per row of the Milestones table, one task per feature and a check task), the build recipe (one sandbox with its own git and no repository, the image's wrangler, `wrangler deploy --temporary` with a SQLite Durable Object migration), how to check each task and scenario on `wrangler dev` in the sandbox and deploy once the scenario passes, and when a feature is `prototype`, `operational` or `failing`.
 
 ### Design (`docs.ts`, `diagrams.ts`)
 
@@ -57,7 +57,7 @@ A reader has a finished spec for a When2meet-style poll that runs as a Cloudflar
 2. Open "Heat map and best slot" › Specs: the spec opens rendered in Composer (needs plugin-code), every feature written and M-1 to M-3 listed.
 3. Open "Flight options": its card has four subfeatures, and its spec cites the poll spec's F-3 and F-4.
 4. Ask the project's agent to plan M-1 from the spec: one milestone and its tasks appear, each linked to F-1, F-2 or F-3.
-5. Delegate M-1's tasks: the Gantt chart shows the chat working them; each task's feature turns Prototype when that task runs it in the sandbox, and F-1 to F-3 turn Operational once T-1 passes there and the Worker is deployed; the check task records the preview URL, where T-1's poll opens (plugin-debug QA-11).
+5. Delegate M-1's tasks: the Gantt chart shows the chat working them; each task's feature turns Prototype when that task runs it in the sandbox, and F-1 to F-3 turn Operational once T-1 passes there and the Worker is deployed; the check task records the Worker URL and T-1's checks (plugin-debug QA-11).
 6. Plan and delegate M-2 the same way: F-4 and F-5 turn Operational once T-2 passes.
 7. Change F-3.2's tie-break on its card and ask the agent to revalidate: F-3 turns Failing, the agent files and works a fix, and F-3 is Operational again with T-2's best slot moved to `s8`.
 

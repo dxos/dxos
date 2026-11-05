@@ -5,10 +5,10 @@
 /**
  * Availability Poll: the development loop at the spec and feature level. The template holds a finished spec staged as
  * three milestones, its feature map and design docs, and no tasks. Ask the project's chat to plan a milestone from
- * the spec, delegate the tasks it files and watch the Gantt chart and the feature cards: Prototype as each task deploys
- * its feature, Operational once the milestone's scenario passes on the Worker the agent runs in its sandbox and deploys.
- * The take opens that Worker's preview and runs the scenario on it. A person accepts the reviewed tasks. Then change a
- * requirement on its card and watch the feature fail, get fixed and recover. Flight options stay planned for the viewer.
+ * the spec, delegate the tasks it files and watch the Gantt chart and the feature cards: Prototype as each task runs
+ * its feature in the sandbox, Operational once the milestone's scenario passes there and the Worker is deployed. A
+ * person accepts the reviewed tasks. Then change a requirement on its card and watch the feature fail, get fixed and
+ * recover. Flight options stay planned for the viewer. The take does not open the Worker itself.
  *
  * @title Availability Poll: from a spec to a Worker, milestone by milestone
  * @mdl packages/plugins/plugin-debug/PLUGIN.mdl test QA-11
@@ -16,10 +16,9 @@
  *   composer-app:serve`), talking to EDGE preview, whose AI and sandbox services serve the model below
  * @template Availability Poll
  *
- * The agent checks its work on `wrangler dev`, exposed from the sandbox as the preview, and deploys with
- * `wrangler deploy --temporary` once a milestone's scenario passes, so no Cloudflare login is needed; the claim URL it
- * prints is a bearer credential, so the take never opens the chats. The take opens the preview rather than the deployed
- * Worker, which a temporary account's `workers.dev` host can answer with a bot challenge.
+ * The agent checks its work on `wrangler dev` in the sandbox and deploys with `wrangler deploy --temporary` once a
+ * milestone's scenario passes, so no Cloudflare login is needed; the claim URL it prints is a bearer credential, so the
+ * take never opens the chats.
  *
  * To keep the build off EDGE's sandboxes, serve local ones with `serve()` from `plugin-sandbox/src/local/server.ts`,
  * allowing `*.workers.dev` and `*.cloudflare.com` beside the default registries, and give the driver `DX_SANDBOX_URL`
@@ -114,7 +113,6 @@ const snapshot = (page) =>
         (await query('org.dxos.type.task')).map(async (task) => ({
           title: task.title,
           status: task.status,
-          description: task.description ?? '',
           milestone: (await task.milestone?.load?.().catch(() => undefined))?.name ?? '',
           assigned: task.assignee !== undefined,
         })),
@@ -349,99 +347,6 @@ const watchMilestone = async (demo, page, milestone, minutes) => {
   await page.waitForTimeout(BEAT);
 };
 
-/** Each scenario's poll and marks, as the API takes them, so the preview opens on the scenario the agent checked. */
-const SCENARIOS = {
-  'T-1': {
-    poll: {
-      title: 'Design review',
-      slots: ['2026-06-01', '2026-06-02'].flatMap((date) =>
-        [9, 10, 11, 12].map((hour) => `${date}T${String(hour).padStart(2, '0')}:00:00Z`),
-      ),
-      minutes: 60,
-      invitees: ['Ana', 'Ben', 'Chika'],
-    },
-    marks: {
-      Ana: { slots: ['s1', 's2', 's3'] },
-      Ben: { slots: ['s2', 's3', 's6', 's7'] },
-      Chika: { slots: ['s3', 's6', 's7'] },
-    },
-  },
-  'T-2': {
-    poll: {
-      title: 'Launch review',
-      zone: 'America/New_York',
-      slots: { dates: ['2026-10-30', '2026-11-02'], hours: [8, 9, 10, 11, 12] },
-      minutes: 60,
-      invitees: ['Ana', 'Ben', 'Chika'],
-    },
-    marks: {
-      Ana: {
-        zone: 'America/New_York',
-        ranges: ['2026-10-30', '2026-11-02'].map((date) => ({ date, from: '09:00', to: '12:00' })),
-      },
-      Ben: {
-        zone: 'Europe/London',
-        ranges: ['2026-10-30', '2026-11-02'].map((date) => ({ date, from: '14:00', to: '17:00' })),
-      },
-      Chika: {
-        zone: 'Asia/Tokyo',
-        ranges: [
-          { date: '2026-10-30', from: '23:00', to: '24:00' },
-          { date: '2026-11-03', from: '00:00', to: '02:00' },
-        ],
-      },
-    },
-  },
-};
-
-/** The preview URL the newest check task records as its `Preview:` line. */
-const previewOf = (state) =>
-  state.tasks
-    .map((task) => /^Preview:\s*(\S+)/m.exec(task.description)?.[1])
-    .filter(Boolean)
-    .at(-1);
-
-/**
- * Opens the Worker's preview in the recorded tab, creates the scenario's poll on it and holds on its page, then
- * returns to Composer and cuts the reload.
- */
-const openPreview = async (demo, page, scenario, caption) => {
-  const preview = previewOf(await snapshot(page));
-  if (!preview) {
-    throw new Error('no check task records a Preview line');
-  }
-  const base = preview.endsWith('/') ? preview : `${preview}/`;
-  const home = page.url();
-  const space = await page.evaluate((key) => globalThis[key], TAKE_SPACE);
-  await demo.goto({ url: base });
-  const { poll, marks } = SCENARIOS[scenario];
-  const id = await page.evaluate(
-    async ({ base, poll, marks }) => {
-      const send = (method, path, body) =>
-        fetch(new URL(path, base), {
-          method,
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-      const created = await (await send('POST', 'api/polls', poll)).json();
-      for (const [name, mark] of Object.entries(marks)) {
-        await send('PUT', `api/polls/${created.id}/marks/${name}`, mark);
-      }
-      return created.id;
-    },
-    { base, poll, marks },
-  );
-  await demo.goto({ url: new URL(`p/${id}`, base).href });
-  await demo.caption({ value: caption, subtitle: `${scenario} on the preview` });
-  await page.waitForTimeout(BEAT * 5);
-  await demo.goto({ url: home });
-  await page.getByTestId('org.dxos.type.project.section').first().waitFor({ state: 'visible', timeout: 300_000 });
-  await page.evaluate(({ key, space }) => (globalThis[key] = space), { key: TAKE_SPACE, space });
-  await useLocalSandbox(page);
-  await closeCompanion(page);
-  await demo.cut();
-};
-
 /** A person signs off each of the milestone's tasks in review, from its status control on the Tasks tab. */
 const acceptMilestone = async (demo, page, milestone) => {
   await openProjectTab(demo, page, 'tasks');
@@ -660,12 +565,6 @@ export const steps = [
     },
   },
   {
-    name: 'Open the M-1 preview',
-    run: async ({ demo, page }) => {
-      await openPreview(demo, page, 'T-1', 'What got built: the poll, with T-1 marked');
-    },
-  },
-  {
     name: 'Accept M-1',
     done: async ({ page }) => tasksOf(await snapshot(page), M1.id).every((task) => task.status === 'done'),
     run: async ({ demo, page }) => {
@@ -703,10 +602,9 @@ export const steps = [
     },
   },
   {
-    name: 'Open the M-2 preview and accept M-2',
+    name: 'Accept M-2',
     done: async ({ page }) => tasksOf(await snapshot(page), M2.id).every((task) => task.status === 'done'),
     run: async ({ demo, page }) => {
-      await openPreview(demo, page, 'T-2', 'Three zones across a clock change');
       await demo.caption({ value: 'Sign off M-2' });
       await acceptMilestone(demo, page, M2.id);
     },
@@ -813,7 +711,6 @@ export const steps = [
         'the fix',
       );
       await page.waitForTimeout(BEAT * 2);
-      await openPreview(demo, page, 'T-2', 'The tie now goes to s8');
       await acceptMilestone(demo, page, M1.id);
     },
   },
