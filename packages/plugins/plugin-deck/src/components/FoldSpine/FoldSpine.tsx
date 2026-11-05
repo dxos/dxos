@@ -38,9 +38,11 @@ export const FoldSpine = ({ icon, label, onClick, classNames }: FoldSpineProps) 
     aria-label={label}
     // `.dx-button` supplies `justify-center`, which in this column would centre the sigil vertically
     // instead of aligning it with the plank heading, and `px-3`/`rounded-xs`/`font-medium`, which the
-    // utilities layer overrides here to keep the spine's own geometry and label weight.
+    // utilities layer overrides here to keep the spine's own geometry and label weight. `.dx-control` adds
+    // a control-sized `height` and `align-self: center`, which would shrink the spine to a tile floating at
+    // the plank's mid-height; `h-auto self-stretch` lets the insets span it top to bottom.
     classNames={mx(
-      'dx-fold-spine absolute inset-y-0 left-0 z-[1] flex w-11 flex-col items-center justify-start gap-0 rounded-none p-0',
+      'dx-fold-spine absolute inset-y-0 left-0 z-[1] flex h-auto w-11 flex-col items-center justify-start gap-0 self-stretch rounded-none p-0',
       'border-e border-separator bg-base-surface',
       'opacity-0 pointer-events-none transition-opacity duration-200 ease-out',
       'group-data-[folded]/tile:pointer-events-auto group-data-[folded]/tile:opacity-100',
