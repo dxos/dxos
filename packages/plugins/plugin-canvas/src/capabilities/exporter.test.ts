@@ -24,7 +24,7 @@ import {
   flattenPath,
   viewLinkGeometry,
 } from '@dxos/react-ui-canvas';
-import { fromEcho } from '@dxos/scene';
+import { type NodeStyle, fromEcho } from '@dxos/scene';
 
 import {
   CanvasLayoutBuilder,
@@ -110,6 +110,38 @@ describe('canvas exporter', () => {
     const { content } = await save(drawingOf(canvas));
     expect(content).toContain('Drawn by hand');
     expect(content).not.toContain('In a child view');
+  });
+
+  test('a titled box draws its label at its top-left corner, and a plain box in its centre', async () => {
+    const canvas = await run(addCanvas());
+    const root = canvasRecordOf(readCanvasContent(canvas))?.root ?? '';
+    const box = (id: string, label: string, style?: NodeStyle) => ({
+      kind: 'node' as const,
+      scene: root,
+      node: {
+        ...createNode({
+          type: 'rect',
+          id,
+          z: 'a0',
+          center: { x: 0, y: 0 },
+          size: { width: 400, height: 300 },
+          scene: root,
+        }),
+        label,
+        style,
+      },
+    });
+    editCanvasContent(canvas, (content) => {
+      content[nodeKey('group')] = box('group', 'Container', { alignHorizontal: 'left', alignVertical: 'top' });
+      content[nodeKey('plain')] = box('plain', 'Plain');
+    });
+
+    const { content } = await save(drawingOf(canvas));
+    const svg = String(content);
+    const label = (text: string) => svg.match(new RegExp(`<text[^>]*>(?:(?!</text>).)*${text}`))?.[0] ?? '';
+    expect(label('Plain')).toContain('text-anchor="middle"');
+    expect(label('Container')).toContain('<text');
+    expect(label('Container')).not.toContain('text-anchor="middle"');
   });
 
   const linked =

@@ -138,6 +138,10 @@
     height: var(--dx-control-size);
     margin: var(--dx-control-inset);
   }
+  /* A wrapping Title grows the row, so its squares stay beside the first line, which Typography's padding centres in a block. */
+  .dx-card-header > :is(.dx-block, .dx-button[data-square]) {
+    align-self: flex-start;
+  }
   .dx-card-header > .dx-card-title:first-child {
     margin-inline-start: var(--dx-card-title-inset);
   }
