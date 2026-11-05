@@ -52,6 +52,19 @@ const isInObject = (target: EventTarget | null): boolean => {
   return !!id && getPresenceKeyFromPath(id) !== undefined;
 };
 
+/** Whether an event selects an object's navtree row, opening it or scrolling the deck to it, not a row control. */
+const isTreeNavigation = (target: EventTarget | null): boolean => {
+  if (!(target instanceof Element) || target.closest('button, input, textarea, [data-part="branch-trigger"]')) {
+    return false;
+  }
+  const id = target.closest('[data-tree-row]')?.getAttribute('data-object-id');
+  return !!id && getPresenceKeyFromPath(id) !== undefined;
+};
+
+/** Whether an event lands in the deck's main area, which holds and scrolls the planks, or in an object's companion. */
+const isInDeck = (target: EventTarget | null): boolean =>
+  (target instanceof Element && !!target.closest('main')) || isInObject(target);
+
 const isSamePlanks = (a?: readonly string[], b?: readonly string[]) =>
   a === b || (a?.length === b?.length && !!a?.every((path, index) => path === b?.[index]));
 
@@ -59,8 +72,8 @@ const isSamePlanks = (a?: readonly string[], b?: readonly string[]) =>
  * Follows the peer named by the ephemeral `following` state. A deck that lays planks side by side mirrors the leader's
  * deck: its planks, the plank it is scrolled to, and the anchor in each plank. A flat deck opens the plank the leader
  * attends, at the leader's path. Anchors are revealed through each type's `Locator` without moving the caret or focus.
- * The local user's own input in an object, Escape, attending an object outside the leader's deck, leaving the space's
- * workspace, or the leader leaving the space ends it.
+ * The local user's own input in the deck or an object's companion, selecting an object in the navtree, Escape, attending an
+ * object outside the leader's deck, leaving the space's workspace, or the leader leaving the space ends it.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -240,12 +253,16 @@ export default Capability.makeModule(
     });
 
     const onPointer = (event: Event) => {
-      if (isFollowing() && isInObject(event.target)) {
+      if (isFollowing() && (isInDeck(event.target) || isTreeNavigation(event.target))) {
         stop();
       }
     };
     const onKeyDown = (event: KeyboardEvent) => {
-      if (isFollowing() && !MODIFIER_KEYS.has(event.key) && (event.key === 'Escape' || isInObject(event.target))) {
+      if (
+        isFollowing() &&
+        !MODIFIER_KEYS.has(event.key) &&
+        (event.key === 'Escape' || isInDeck(event.target) || (event.key === 'Enter' && isTreeNavigation(event.target)))
+      ) {
         stop();
       }
     };

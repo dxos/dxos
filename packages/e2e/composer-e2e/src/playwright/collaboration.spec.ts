@@ -410,7 +410,7 @@ test.describe('Collaboration tests', () => {
   );
 
   test(
-    "a follower whose deck lays planks side by side mirrors the leader's planks and scroll",
+    "a follower whose deck lays planks side by side mirrors the leader's planks and scroll until it scrolls or navigates",
     { tag: ['@space:QA-6'] },
     async () => {
       test.setTimeout(150_000);
@@ -452,8 +452,18 @@ test.describe('Collaboration tests', () => {
         await expect.poll(() => getShownPlanks(host), { timeout: 30_000 }).toContain(subject);
       }
 
-      await host.page.keyboard.press('Escape');
-      await expect(host.getCompanionTab('members')).not.toHaveAttribute('data-badge');
+      // Scrolling the deck itself, outside any plank, ends the follow.
+      const follow = rows.getByTestId('spacePlugin.presence.follow');
+      const badge = host.getCompanionTab('members');
+      await host.page.getByTestId('deck.viewport').dispatchEvent('wheel', { deltaX: 200 });
+      await expect(badge).not.toHaveAttribute('data-badge');
+
+      // So does selecting a document the deck already shows in the navtree, which scrolls the deck to it.
+      await follow.click({ timeout: 30_000 });
+      await expect(badge).toHaveAttribute('data-badge', '');
+      await host.expandSection('spacePlugin.collectionsSection');
+      await host.getObjectLinks().first().click();
+      await expect(badge).not.toHaveAttribute('data-badge');
     },
   );
 });
