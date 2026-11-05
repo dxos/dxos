@@ -20,7 +20,8 @@ type Archived = {
   'id': string;
   'name'?: string;
   'status'?: string;
-  'requirements'?: Array<{ id?: string; text: string }>;
+  'requirements'?: Record<string, { id?: string; text: string }>;
+  'requirementOrder'?: string[];
   'content'?: string | { '/': string };
   'spec'?: { '/': string };
   'specs'?: Array<{ '/': string }>;
@@ -37,6 +38,9 @@ type Archived = {
 };
 
 const ref = (entity: Archived | undefined) => `echo:///${entity?.id}`;
+
+/** An archived feature's requirements in their order. */
+const requirementsOf = (entity: Archived) => (entity.requirementOrder ?? []).map((key) => entity.requirements?.[key]);
 
 /** The spec blocks an archived feature was read in from, as its foreign keys. */
 const sourcesOf = (entity: Archived): string[] =>
@@ -123,8 +127,8 @@ describe('Availability Poll template', () => {
       expect(features.every((feature) => feature.status === 'planned')).toBe(true);
       expect(features.map(sourcesOf)).toEqual(Object.values(FEATURES).map((block) => [`${SPEC_PATH}#${block}`]));
       // The requirements are the spec's own `req` lines, numbered as the spec numbers them.
-      expect(features.map((feature) => feature.requirements?.length)).toEqual([4, 3, 4, 3, 6, 3, 4, 1]);
-      expect(features[2].requirements?.[1]).toEqual({
+      expect(features.map((feature) => requirementsOf(feature).length)).toEqual([4, 3, 4, 3, 6, 3, 4, 1]);
+      expect(requirementsOf(features[2])[1]).toEqual({
         id: 'F-3.2',
         text: 'The best slot is the one the most respondents are free for; on a tie, the earliest. With no marks there is no best slot.',
       });
@@ -158,7 +162,7 @@ describe('Availability Poll template', () => {
       expect(subfeatures.map(sourcesOf)).toEqual(
         Object.values(FLIGHT_FEATURES).map((block) => [`${FLIGHTS_PATH}#${block}`]),
       );
-      expect(subfeatures.map((feature) => feature.requirements?.length)).toEqual([2, 4, 2, 2]);
+      expect(subfeatures.map((feature) => requirementsOf(feature).length)).toEqual([2, 4, 2, 2]);
       expect(spec?.['@meta']?.keys).toEqual([{ source: Feature.SPEC_KEY_SOURCE, id: FLIGHTS_PATH }]);
       const text = textOf(spec);
       expect(FeatureEmbed.parse(text).map(({ id }) => id)).toEqual(subfeatures.map(({ id }) => id));

@@ -26,11 +26,18 @@ export type ProjectResult = {
   taskSet: TaskSet.TaskSet;
 };
 
-/** plugin-code's feature map skill, which it exports no subpath for. */
+/** plugin-code's feature map and spec review skills, which it exports no subpaths for. */
 const FEATURE_MAP_SKILL = 'org.dxos.skill.code.featureMap';
+const SPEC_REVIEW_SKILL = 'org.dxos.skill.code.specReview';
 
 /** Bound to every chat the project delegates, so planning, building and setting feature status never wait on the agent enabling a skill. */
-const SKILL_KEYS = [FEATURE_MAP_SKILL, MarkdownSkill.key, ProjectSkill.key, SandboxSkill.key] as const;
+const SKILL_KEYS = [
+  FEATURE_MAP_SKILL,
+  MarkdownSkill.key,
+  ProjectSkill.key,
+  SandboxSkill.key,
+  SPEC_REVIEW_SKILL,
+] as const;
 
 /** What the agent needs to plan from the spec, build, deploy, check and report; each line saves it a rediscovery. */
 const INSTRUCTIONS = `This project builds the availability poll its spec (\`Availability Poll\`, in this space) describes: one \
@@ -145,7 +152,14 @@ is waited for. A request that still times out is a build error, which only the n
 \`fetch\` has \`signal: AbortSignal.timeout(10_000)\`, runs it on \`localhost:8787\`, and builds a table of expected \
 against actual for every count, slot start and best slot the scenario states. When it all matches, the same program \
 deploys, sets the milestone's features to \`operational\`, sets the task's description to the Worker URL and that \
-table, and sets the task to \`review\`. Make no showcase. \`Check M-2\` reads pages rather than the API: its \
+table, records a spec review, and sets the task to \`review\`. The review is \
+\`dxn:org.dxos.operation.code.createSpecReview\` \`{ spec: project.specs[0], content }\`, \`content\` a \`.review.mdl\`: \
+front matter \`commit:\` (\`git rev-parse HEAD\` in \`/workspace/poll\`), \`date:\` (now, \`YYYY-MM-DDTHH:MMZ\` in UTC) \
+and \`by: agent:claude\`; a \`# Review: Availability Poll\` title and one paragraph naming the milestone, its scenario \
+and the result; then, in an \`mdl\` fence, one \`verdict <id>: <the item's text>\` block for each requirement of the \
+milestone's features and one for its scenario, each with \`status:\` (\`done\` when the scenario or the render check \
+covers it, \`untested\` when only the code does it), a \`note:\` naming the file and function that does it, \
+\`evidence: []\` and \`tests: []\`. Make no showcase. \`Check M-2\` reads pages rather than the API: its \
 \`check.mjs\` builds both pages for SSR as the render check does, creates T-1's poll and marks on \`localhost:8787\`, \
 prerenders \`Home\` and \`Poll\` with \`{ id, poll, name: 'Ben' }\` under the render check's stubs, reads each \
 page's text as \`html.replace(/<!-- -->/g, '').replace(/<[^>]+>/g, ' ')\`, and checks each line of T-2 against it.

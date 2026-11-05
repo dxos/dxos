@@ -141,7 +141,14 @@ const snapshot = (page) =>
       const features = Object.fromEntries(
         (await query('org.dxos.type.feature')).map((feature) => [
           feature.name,
-          { status: feature.status, requirements: (feature.requirements ?? []).map(({ id, text }) => ({ id, text })) },
+          {
+            status: feature.status,
+            // Requirements are stored by key, in `requirementOrder`'s order.
+            requirements: (feature.requirementOrder ?? []).map((key) => {
+              const { id, text } = feature.requirements[key];
+              return { id, text };
+            }),
+          },
         ]),
       );
       return { tasks, features };
@@ -1030,7 +1037,7 @@ export const steps = [
             .find((candidate) => candidate.id === (globalThis[key] ??= sessionStorage.getItem(key) ?? undefined));
           const features = await space.db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.feature'))).run();
           return features.some((feature) =>
-            (feature.requirements ?? []).some((requirement) => requirement.text === text),
+            Object.values(feature.requirements ?? {}).some((requirement) => requirement.text === text),
           );
         },
         { key: TAKE_SPACE, text: NEW_TIE_BREAK },
