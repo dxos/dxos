@@ -6,6 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo } from 'react';
 
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';
@@ -34,11 +35,11 @@ import { hexToHue } from '@dxos/util';
 
 import { Suggestions } from '#components';
 import { type SuggestionGroup } from '#hooks';
-import { CommentOperation, ReviewCapabilities } from '#types';
+import { CommentCapabilities, CommentOperation, ReviewCapabilities } from '#types';
 
 import { commentsViewAspect } from '../../capabilities/comments-view-state.ts';
 import { ReviewNamespace } from '../../namespace.ts';
-import { findCommentConfig, findFieldEditor } from '../../util/index.ts';
+import { findCommentConfig, getFocusedEditor } from '../../util/index.ts';
 import { CommentThreadList, useCommentAnchors } from './CommentThreadList.tsx';
 
 export type CommentsArticleProps = {
@@ -147,19 +148,24 @@ const CommentsPanel = ({ attendableId, subject, targets }: CommentsPanelProps) =
     [invokePromise, subject, subscribed],
   );
 
+  const registry = Hooks.useCapability(Capabilities.AtomRegistry);
+  const stateAtom = Hooks.useCapability(CommentCapabilities.State);
+
   // A comment on the whole object: no anchor, which the editors' comment sync and anchor sorts already pass over. An
-  // object edited in fields (a feature) comments on the text selected in one instead, since its editors leave Mod-'
-  // to the deck; a Markdown document has its own toolbar action for that.
+  // object edited in fields (a feature) comments on the text selected in the field focused last instead, since its
+  // editors leave Mod-' to the deck; a Markdown document has its own toolbar action for that.
   const handleAddObjectComment = useCallback(async () => {
     const fieldView = markdownDoc
       ? undefined
-      : await findFieldEditor(targets ? targets.map((target) => Obj.getURI(target)) : [subjectId]);
+      : getFocusedEditor(registry.get(stateAtom), targets ? targets.map((target) => Obj.getURI(target)) : [subjectId], {
+          selected: true,
+        });
     if (fieldView) {
       createComment(fieldView);
       return;
     }
     await invokePromise(CommentOperation.Create, { subject, branch: reviewBranch });
-  }, [invokePromise, subject, subjectId, targets, markdownDoc, reviewBranch]);
+  }, [invokePromise, registry, stateAtom, subject, subjectId, targets, markdownDoc, reviewBranch]);
 
   const anchors = useCommentAnchors(subject, { branch: reviewBranch, showResolvedThreads });
 

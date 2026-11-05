@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
@@ -17,12 +18,12 @@ import { Selection } from '@dxos/react-ui-attention/types';
 import { createComment } from '@dxos/ui-editor/headless';
 import * as Position from '@dxos/util/Position';
 
-import { CommentOperation } from '#types';
+import { CommentCapabilities, CommentOperation } from '#types';
 
 import { ReviewNamespace } from '../namespace.ts';
 // Not the `../util` barrel: it re-exports `author-hue`, whose palette lookup is UI-only.
 import { findCommentConfig, getCommentConfig } from '../util/commentable.ts';
-import { findCommentEditor } from '../util/field-editor.ts';
+import { getFocusedEditor } from '../util/focused-editor.ts';
 import { getAnchor } from '../util/message.ts';
 
 export default Capability.makeModule(
@@ -59,10 +60,17 @@ export default Capability.makeModule(
         id: 'commentToolbar',
         match: (node, get) =>
           findCommentConfig(get(commentConfigsAtom), node.data) ? Option.some(node) : Option.none(),
-        actions: (matched) => {
+        actions: (matched, get) => {
           const object = matched.data;
           const objectUri = Obj.getURI(object);
           const viewState = capabilities.get(AttentionCapabilities.ViewState);
+          // The texts the node's comments cover: the object's, and those of the objects its scopes add (a spec's features).
+          const uris = [
+            objectUri,
+            ...get(commentScopesAtom).flatMap(
+              (scope) => scope.resolve(object, get)?.targets.map((target) => Obj.getURI(target)) ?? [],
+            ),
+          ];
 
           return Effect.succeed([
             {
@@ -84,8 +92,11 @@ export default Capability.makeModule(
                   return;
                 }
 
-                // Else the editor holding the caret in the plank: the text of a spec, say, or a feature field drawn in it.
-                const fieldView = yield* Effect.promise(() => findCommentEditor(matched.id));
+                // Else the comment editor focused last on one of the node's texts: a spec's, or a feature field drawn in it.
+                const state = capabilities
+                  .get(Capabilities.AtomRegistry)
+                  .get(capabilities.get(CommentCapabilities.State));
+                const fieldView = getFocusedEditor(state, uris);
                 if (fieldView) {
                   createComment(fieldView);
                   return;

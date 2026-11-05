@@ -73,6 +73,8 @@ export const RequirementEditor = ({
       {requirements.map((requirement, index) => (
         <Card.Row
           key={requirement.key}
+          // A requirement that wraps keeps its icon and remove action on its first line, beside its id.
+          align='start'
           // The column's content clips overflow (for truncation), which would cut off the field's box.
           classNames='[&_.dx-card-row-content]:overflow-visible'
           leading={<RequirementIcon />}

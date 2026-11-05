@@ -4,32 +4,23 @@
 
 import { EditorState, type Extension, Prec } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 
-import { Obj } from '@dxos/echo';
-import { Doc } from '@dxos/echo-doc';
+import { type Obj } from '@dxos/echo';
+import { type Doc } from '@dxos/echo-doc';
 import { Editor } from '@dxos/react-ui-editor';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
-import {
-  createBasicExtensions,
-  createDataExtensions,
-  createMarkdownExtensions,
-  createThemeExtensions,
-  decorateMarkdown,
-} from '@dxos/ui-editor';
-import { getDeep } from '@dxos/util';
+import { createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 
-/** A markdown field's minimum height in lines. */
-const ROWS = 6;
+import { useCollaborativeText } from '../../hooks/index.ts';
 
 /** A text area's minimum height in lines. */
 const TEXT_AREA_ROWS = 3;
 
-const fieldTheme = EditorView.theme({
+const multilineTheme = EditorView.theme({
   '&': { minHeight: '100%' },
   '.cm-content': { overflowWrap: 'anywhere' },
-  '& .cm-content .cm-code-inline': { whiteSpace: 'break-spaces', height: 'auto', overflow: 'visible' },
 });
 
 /**
@@ -52,9 +43,7 @@ export type CollaborativeTextEditorProps = {
   path: Doc.KeyPath;
   /** Added once the editor is bound to the string, such as comments on it. */
   extensions?: Extension[];
-  /** Multi-line markdown, framed like a text area; otherwise one line of plain text, framed like an input. */
-  markdown?: boolean;
-  /** Multi-line plain text, framed like a text area. */
+  /** Multi-line, framed like a text area; otherwise one line, framed like an input. */
   multiline?: boolean;
   placeholder?: string;
   readonly?: boolean;
@@ -65,14 +54,13 @@ export type CollaborativeTextEditorProps = {
 };
 
 /**
- * Edits a string of an ECHO object as collaborative text: keystrokes splice the object's string, so concurrent edits
- * merge and cursors into it (comment anchors) survive. The string is read once; later changes arrive through the binding.
+ * Edits a plain-text string of an ECHO object as collaborative text (see `useCollaborativeText`), where a form's text
+ * input or text area would otherwise take a value. A markdown string is `MarkdownField`'s.
  */
 export const CollaborativeTextEditor = ({
   object,
   path,
   extensions: extensionsProp,
-  markdown,
   multiline,
   placeholder,
   readonly,
@@ -80,53 +68,32 @@ export const CollaborativeTextEditor = ({
   autoFocus,
   testId,
 }: CollaborativeTextEditorProps) => {
-  // Callers pass a fresh path array each render; rebinding on its identity would rebuild the editor per keystroke.
-  const pathKey = JSON.stringify(path);
-  // The editor splices into an existing string. A missing one is created when the field takes focus, not when it is
-  // shown, so viewing an object never writes to it; the editor then rebinds to the new string, keeping the focus until
-  // the field is left, so a later rebuild does not take it back.
-  const [created, setCreated] = useState<string>();
-  // Read key by key, since `Obj.getValue`'s JSON path refuses record keys such as `F-1.1`.
-  const value = getDeep<unknown>(object, path);
-  const ready = typeof value === 'string';
-  const handleFocus = useCallback(() => {
-    if (!readonly && typeof getDeep(object, path) !== 'string') {
-      Obj.update(object, (object) => Obj.setValue(object, path, ''));
-      setCreated(pathKey);
-    }
-  }, [readonly, object, pathKey]);
-
+  const binding = useCollaborativeText({ object, path, extensions: extensionsProp, readonly });
   const themeMode = Hooks.useThemeMode();
   const extensions = useMemo(
     () => [
       createBasicExtensions({ placeholder, readOnly: readonly, lineWrapping: true }),
-      createThemeExtensions({ syntaxHighlighting: markdown, themeMode }),
-      markdown ? [createMarkdownExtensions(), decorateMarkdown(), fieldTheme] : multiline ? fieldTheme : singleLine,
-      ready
-        ? [
-            createDataExtensions({ id: Obj.getURI(object), text: Doc.createAccessor(object, [...path]) }),
-            EditorView.domEventHandlers({ blur: () => setCreated(undefined) }),
-            extensionsProp ?? [],
-          ]
-        : EditorView.domEventHandlers({ focus: () => handleFocus() }),
+      createThemeExtensions({ themeMode }),
+      multiline ? multilineTheme : singleLine,
+      binding.extensions,
     ],
-    [ready, placeholder, readonly, markdown, multiline, themeMode, object, pathKey, extensionsProp, handleFocus],
+    [placeholder, readonly, multiline, themeMode, binding.extensions],
   );
 
   const inPlace = variant === 'title' || variant === 'plain';
   return (
+    // Rows, so the frame grows as the text wraps, which even one line does; a title's frame grows already.
     <Input.Frame
-      rows={markdown || multiline ? (inPlace ? 1 : markdown ? ROWS : TEXT_AREA_ROWS) : undefined}
+      rows={multiline && !inPlace ? TEXT_AREA_ROWS : variant === 'title' ? undefined : 1}
       variant={variant}
       disabled={readonly}
       data-testid={testId}
     >
       <Editor.Root>
-        {/* Seeded with the string, so the editor holds it from its first frame rather than once the binding syncs. */}
         <Editor.View
           extensions={extensions}
-          initialValue={typeof value === 'string' ? value : ''}
-          autoFocus={autoFocus || created === pathKey}
+          initialValue={binding.initialValue}
+          autoFocus={autoFocus || binding.autoFocus}
         />
       </Editor.Root>
     </Input.Frame>

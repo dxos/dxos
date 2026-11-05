@@ -3,7 +3,7 @@
 //
 
 import { type Extension } from '@codemirror/state';
-import { EditorView } from '@codemirror/view';
+import { EditorView, ViewPlugin } from '@codemirror/view';
 import type * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 
@@ -45,6 +45,22 @@ export type CommentSyncOptions = {
   // entirely (e.g. a distraction-free reading mode). Defaults to shown.
   showComments?: boolean;
 };
+
+/** Records the editor as the comment editor focused last (`CommentState.focused`), until it is destroyed. */
+export const trackFocus = ({ registry, stateAtom }: CommentSyncStore, subject: string): Extension =>
+  ViewPlugin.define((view) => ({
+    update: (update) => {
+      if (update.focusChanged && view.hasFocus && registry.get(stateAtom).focused?.view !== view) {
+        registry.set(stateAtom, { ...registry.get(stateAtom), focused: { subject, view } });
+      }
+    },
+    destroy: () => {
+      const { focused, ...state } = registry.get(stateAtom);
+      if (focused?.view === view) {
+        registry.set(stateAtom, state);
+      }
+    },
+  }));
 
 /**
  * Construct comment-sync editor extensions for the string an editor binds.
@@ -130,6 +146,8 @@ export const commentSync = (
       );
 
   return [
+    trackFocus(store, objectId),
+
     EditorView.updateListener.of((update) => {
       if (update.docChanged) {
         getAnchors().forEach((anchor) => {
@@ -191,7 +209,14 @@ export const commentSync = (
             sink();
           }
         });
-        const unsubStore = registry.subscribe(stateAtom, sink);
+        // Only the subject's drafts are read from the store; other writes (the focused editor) leave the marks alone.
+        let drafts = registry.get(stateAtom).drafts[objectId];
+        const unsubStore = registry.subscribe(stateAtom, (state) => {
+          if (state.drafts[objectId] !== drafts) {
+            drafts = state.drafts[objectId];
+            sink();
+          }
+        });
         return () => {
           unsubAnchors.forEach((unsubscribe) => unsubscribe());
           unsubQuery();
