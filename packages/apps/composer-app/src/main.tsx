@@ -265,7 +265,7 @@ const main = async () => {
   }
 
   // Before anything reads the address bar or a request leaves: a share link's payload moves into session storage.
-  const shareUrl = stashShareFragment(window.location.href, sessionStorage);
+  const shareUrl = stashShareFragment(window.location.href);
   if (shareUrl) {
     history.replaceState(history.state, '', shareUrl);
   }
@@ -634,7 +634,7 @@ const main = async () => {
   // has to not reject unhandled.
   performance.mark('milestone:client-initialize:start');
   // A share link's space opens from what EDGE serves for the link's invitation, before the guest has joined it.
-  const sharePayload = url.searchParams.get(PARAM_SHARE) ?? readStashedShare(sessionStorage);
+  const sharePayload = url.searchParams.get(PARAM_SHARE) ?? readStashedShare();
   const shareEdgeUrl = config.values.runtime?.services?.edge?.url;
   const pendingSpaces =
     sharePayload && shareEdgeUrl

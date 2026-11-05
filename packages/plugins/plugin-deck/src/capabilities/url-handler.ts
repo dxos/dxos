@@ -139,7 +139,9 @@ const installLeaveTrap = (): string | undefined => {
 const isRedirectPath = (pathname: string): boolean => pathname.startsWith('/redirect/');
 
 /** A share link's payload can carry a space invitation, so a logged URL keeps the parameter but not its value. */
-const redactShare = (url: string): string => url.replace(/([?&#]share=)[^&#]*/gi, '$1');
+const redactShare = (url: string): string =>
+  // Each letter may be percent-encoded, as `URLSearchParams` still reads `s%68are` as `share`.
+  url.replace(/([?&#](?:s|%73)(?:h|%68)(?:a|%61)(?:r|%72)(?:e|%65)=)[^&#]*/gi, '$1');
 
 /** Handle a deep link URL string. Merges query params into window.location and navigates. */
 const handleDeepLink = Effect.fn(function* (urlString: string, navigate: (url?: URL) => Effect.Effect<void, any>) {

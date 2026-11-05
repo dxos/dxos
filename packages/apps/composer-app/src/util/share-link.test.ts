@@ -50,24 +50,25 @@ describe('stashShareFragment', () => {
   test('moves the payload from the fragment into storage, keeping the rest of the URL', ({ expect }) => {
     const storage = new Map<string, string>();
     const setItem = (key: string, value: string) => void storage.set(key, value);
-    expect(stashShareFragment('https://composer.space/space/doc+01J?x=1#share=abc&y=2', { setItem })).toBe(
+    expect(stashShareFragment('https://composer.space/space/doc+01J?x=1#share=abc&y=2', () => ({ setItem }))).toBe(
       '/space/doc+01J?x=1#y=2',
     );
-    expect(readStashedShare({ getItem: (key) => storage.get(key) ?? null })).toBe('abc');
+    expect(readStashedShare(() => ({ getItem: (key) => storage.get(key) ?? null }))).toBe('abc');
   });
 
-  test('leaves the payload in the query when storage refuses it', ({ expect }) => {
-    const setItem = () => {
-      throw new Error('storage unavailable');
+  test('leaves the payload in the query when storage is blocked', ({ expect }) => {
+    const blocked = () => {
+      throw new Error('SecurityError');
     };
-    expect(stashShareFragment('https://composer.space/space/doc+01J#share=abc', { setItem })).toBe(
+    expect(stashShareFragment('https://composer.space/space/doc+01J#share=abc', blocked)).toBe(
       '/space/doc+01J?share=abc',
     );
+    expect(readStashedShare(blocked)).toBeNull();
   });
 
   test('is undefined for a URL whose fragment carries no payload', ({ expect }) => {
-    const setItem = () => {};
-    expect(stashShareFragment('https://composer.space/space/doc+01J?share=abc', { setItem })).toBeUndefined();
-    expect(stashShareFragment('https://composer.space/space/doc+01J#section', { setItem })).toBeUndefined();
+    const storage = () => ({ setItem: () => {} });
+    expect(stashShareFragment('https://composer.space/space/doc+01J?share=abc', storage)).toBeUndefined();
+    expect(stashShareFragment('https://composer.space/space/doc+01J#section', storage)).toBeUndefined();
   });
 });

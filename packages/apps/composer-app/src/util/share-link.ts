@@ -13,7 +13,10 @@ export const SHARE_STORAGE_KEY = 'dxos.share';
  * reload keeps it, and no request or `Referer` carries the invitation it may hold.
  * @returns The path, query and fragment to show once the payload is out; undefined for a URL whose fragment carries none.
  */
-export const stashShareFragment = (href: string, storage: Pick<Storage, 'setItem'>): string | undefined => {
+export const stashShareFragment = (
+  href: string,
+  getStorage: () => Pick<Storage, 'setItem'> = () => sessionStorage,
+): string | undefined => {
   const url = new URL(href);
   const fragment = new URLSearchParams(url.hash.slice(1));
   const payload = fragment.get(PARAM_SHARE);
@@ -21,8 +24,9 @@ export const stashShareFragment = (href: string, storage: Pick<Storage, 'setItem
     return undefined;
   }
   fragment.delete(PARAM_SHARE);
+  // Reading `sessionStorage` itself throws where the browser blocks storage.
   try {
-    storage.setItem(SHARE_STORAGE_KEY, payload);
+    getStorage().setItem(SHARE_STORAGE_KEY, payload);
   } catch {
     // Without storage the link still has to open, so its readers find the payload in the query.
     url.searchParams.set(PARAM_SHARE, payload);
@@ -32,9 +36,9 @@ export const stashShareFragment = (href: string, storage: Pick<Storage, 'setItem
 };
 
 /** The share payload boot stashed; null when there is none or storage is unavailable. */
-export const readStashedShare = (storage: Pick<Storage, 'getItem'>): string | null => {
+export const readStashedShare = (getStorage: () => Pick<Storage, 'getItem'> = () => sessionStorage): string | null => {
   try {
-    return storage.getItem(SHARE_STORAGE_KEY);
+    return getStorage().getItem(SHARE_STORAGE_KEY);
   } catch {
     return null;
   }

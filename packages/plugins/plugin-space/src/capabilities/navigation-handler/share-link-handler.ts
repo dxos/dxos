@@ -47,13 +47,13 @@ const SPACE_TIMEOUT = 180_000;
 export const handleShareLink = (
   url: URL,
   joining: Map<string, string>,
-): Effect.Effect<void, never, Capability.Service | Operation.Service> =>
-  Effect.gen(function* () {
-    const encoded = url.searchParams.get(SpaceOperation.SHARE_PARAM) ?? readStashedShare();
-    if (!encoded) {
-      return;
-    }
+): Effect.Effect<void, never, Capability.Service | Operation.Service> => {
+  const encoded = url.searchParams.get(SpaceOperation.SHARE_PARAM) ?? readStashedShare();
+  if (!encoded) {
+    return Effect.void;
+  }
 
+  return Effect.gen(function* () {
     const payload = yield* decodeSharePayload(encoded);
     const spaceId = payload.spaceId;
     if (!SpaceId.isValid(spaceId)) {
@@ -81,7 +81,7 @@ export const handleShareLink = (
         Effect.ensuring(
           Effect.sync(() => {
             joining.delete(spaceId);
-            clearStashedShare();
+            dropShareLink(encoded);
           }),
         ),
         Effect.catch(reportFailure),
@@ -89,8 +89,17 @@ export const handleShareLink = (
     );
   }).pipe(
     // A link that cannot open is dropped, or every later navigation would report it again.
-    Effect.catch((error) => Effect.sync(clearStashedShare).pipe(Effect.andThen(reportFailure(error)))),
+    Effect.catch((error) => Effect.sync(() => dropShareLink(encoded)).pipe(Effect.andThen(reportFailure(error)))),
   );
+};
+
+/** Forgets a share link's payload, in storage and in the address bar if it still carries this one. */
+const dropShareLink = (encoded: string) => {
+  clearStashedShare();
+  if (new URL(window.location.href).searchParams.get(SpaceOperation.SHARE_PARAM) === encoded) {
+    removeQueryParam(SpaceOperation.SHARE_PARAM);
+  }
+};
 
 /** For anyone not yet a member of the link's space, joins it and opens the object; a member has nothing to join. */
 const openShared = (client: Client, spaceId: SpaceId, target: ShareTarget, payload: SharePayload) =>
