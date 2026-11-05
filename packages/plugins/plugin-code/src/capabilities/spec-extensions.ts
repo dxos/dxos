@@ -12,26 +12,33 @@ import { FeatureMap } from '#types';
 import { featureEmbedExtensions } from '../extensions/feature-embed-extensions.ts';
 import { softwareCommands } from '../extensions/software-commands.ts';
 import { CodeNamespace } from '../namespace.ts';
+import { FEATURE_VIEWS, SPEC_VIEWS } from '../spec-views.ts';
 
 /**
- * The software package: a spec using it keeps its features in step with their embeds in any editor of it, such as
- * plugin-code's, offers `/feature` and a slash command for each of its other blocks, and shows its features on a canvas
- * and a board.
+ * The views this plugin draws in a spec's companion tabs, and the software package: a spec using it keeps its features
+ * in step with their embeds in any editor of it, such as plugin-code's, offers `/feature` and a slash command for each
+ * of its other blocks, and shows its features on a canvas and a board.
  */
 export default Capability.makeModule(() =>
   Effect.succeed([
-    Capability.contribute(ProjectCapabilities.SpecView, {
-      id: 'canvas',
-      label: ['feature-map.mode.canvas.label', { ns: CodeNamespace.key }],
-      icon: 'ph--graph--regular',
-      dialects: [FeatureMap.DIALECT],
-    }),
-    Capability.contribute(ProjectCapabilities.SpecView, {
-      id: 'kanban',
-      label: ['feature-map.mode.kanban.label', { ns: CodeNamespace.key }],
-      icon: 'ph--kanban--regular',
-      dialects: [FeatureMap.DIALECT],
-    }),
+    ...SPEC_VIEWS.map(({ id, group, icon }) =>
+      Capability.contribute(ProjectCapabilities.SpecView, {
+        id,
+        group,
+        icon,
+        label: [`spec-view.${id}.label`, { ns: CodeNamespace.key }],
+        dialects: [],
+      }),
+    ),
+    ...FEATURE_VIEWS.map(({ id, icon }) =>
+      Capability.contribute(ProjectCapabilities.SpecView, {
+        id,
+        group: 'structure',
+        icon,
+        label: [`feature-map.mode.${id}.label`, { ns: CodeNamespace.key }],
+        dialects: [FeatureMap.DIALECT],
+      }),
+    ),
     Capability.contribute(ProjectCapabilities.SpecPackage, {
       id: 'software',
       label: ['software-package.label', { ns: CodeNamespace.key }],

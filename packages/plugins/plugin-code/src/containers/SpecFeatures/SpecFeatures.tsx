@@ -7,13 +7,10 @@ import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { Fragment, useCallback, useMemo } from 'react';
 
-import * as Surface from '@dxos/app-framework/Surface';
-import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Spec from '@dxos/compute/Spec';
 import { Annotation, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
-import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as Breadcrumb from '@dxos/react-ui/Breadcrumb';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
@@ -28,7 +25,8 @@ import { Feature, FeatureMap, FeatureMapView } from '#types';
 import { FeatureCanvas } from '../../components/FeatureCanvas/index.ts';
 import { useFeatureEditing, useFeatureGraph } from '../../hooks/index.ts';
 import { CodeNamespace } from '../../namespace.ts';
-import { useAddFeature, useFeatureSelection, useLevelIds, useSpecMapActions } from './spec-map-actions.ts';
+import { type FeatureViewId } from '../../spec-views.ts';
+import { useAddFeature, useFeatureSelection, useLevelIds } from './spec-map-actions.ts';
 
 type Point = FeatureMap.Position;
 
@@ -36,7 +34,7 @@ const nothing = Query.select(Filter.nothing());
 
 export type SpecMapProps = {
   spec: Spec.Spec;
-  mode: FeatureMapView.Mode;
+  mode: FeatureViewId;
   attendableId?: string;
   /** Not offered when adding an existing feature, besides the map's own features: the features above it. */
   exclude?: readonly string[];
@@ -44,10 +42,7 @@ export type SpecMapProps = {
   onZoom: (id: string) => void;
 };
 
-/**
- * One level of a feature map — the features on `spec`, on a canvas or by status — or the spec's `.mdl` text. A
- * click selects a feature and shows it in the plank's feature companion.
- */
+/** One level of a feature map: the features on `spec`, on a canvas or by status. A click selects a feature. */
 export const SpecMap = ({ spec, mode, attendableId, exclude, onZoom }: SpecMapProps) => {
   const { t } = UiHooks.useTranslation(CodeNamespace.key);
   const db = Obj.getDatabase(spec);
@@ -92,19 +87,6 @@ export const SpecMap = ({ spec, mode, attendableId, exclude, onZoom }: SpecMapPr
     },
     [spec, ids, positions],
   );
-
-  if (mode === 'document') {
-    // A section rather than an article: the spec's own page (plugin-code's, when enabled) is for opening it.
-    return (
-      <div className='grid min-h-0 h-full' data-testid='feature-map.document'>
-        <Surface.Surface
-          type={AppSurface.Section}
-          data={{ subject: spec, attendableId: attendableId ?? spec.id }}
-          limit={1}
-        />
-      </div>
-    );
-  }
 
   // The canvas shows even when empty: its empty cells are where features are added.
   if (mode === 'kanban' && ids.length === 0) {
@@ -166,16 +148,15 @@ const useTrail = (root: Spec.Spec, feature: Feature.Feature | undefined): { id: 
 export type SpecFeaturesProps = {
   role?: string;
   spec: Spec.Spec;
+  mode: FeatureViewId;
   attendableId?: string;
 };
 
 /**
- * A spec's feature map in a plank of its own, zooming within the plank: a double-click zooms into the spec that breaks
- * the feature down, and the trail above zooms back out.
- *
- * @deprecated Serves the top-level Specs section; a project shows its spec's levels as nodes of their own.
+ * The feature map of a spec no project tracks, zooming in place: a double-click zooms into the spec that breaks the
+ * feature down, and the trail above zooms back out. A project's specs open each level as a node of its own instead.
  */
-export const SpecFeatures = ({ role, spec, attendableId }: SpecFeaturesProps) => {
+export const SpecFeatures = ({ role, spec, mode, attendableId }: SpecFeaturesProps) => {
   const { t } = UiHooks.useTranslation(CodeNamespace.key);
   const { focus } = useViewState(FeatureMapView.aspect, spec.id);
   const { update: updateView } = useViewStateActions(FeatureMapView.aspect, spec.id);
@@ -200,15 +181,11 @@ export const SpecFeatures = ({ role, spec, attendableId }: SpecFeaturesProps) =>
     [updateView],
   );
 
-  const { mode, actions } = useSpecMapActions({ spec: level ?? spec, viewId: spec.id });
-  const menu = useMenuBuilder(() => MenuBuilder.make().subgraph(actions).build(), [actions]);
-
   return (
     <Panel.Root role={role}>
       <Panel.Header>
-        <ActionToolbar {...menu} attendableId={attendableId} />
-        {/* The trail is a second row: the map's level, with every step above it a way back out. */}
-        {zoomed && mode !== 'document' && (
+        {/* The map's level, with every step above it a way back out. */}
+        {zoomed && (
           <Toolbar.Root>
             <Button.Root
               variant='ghost'
@@ -258,14 +235,3 @@ export const SpecFeatures = ({ role, spec, attendableId }: SpecFeaturesProps) =>
     </Panel.Root>
   );
 };
-
-export type FeatureMapArticleProps = AppSurface.ObjectArticleProps<Spec.Spec>;
-
-/**
- * Article surface for a {@link Spec.Spec} no project owns: its feature map.
- *
- * @deprecated Serves the top-level Specs section; see {@link SpecFeatures}.
- */
-export const FeatureMapArticle = ({ role, subject, attendableId }: FeatureMapArticleProps) => (
-  <SpecFeatures role={role} spec={subject} attendableId={attendableId} />
-);

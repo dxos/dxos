@@ -12,6 +12,7 @@ import { type SourceKey, formatSourceKey, isSpecKey } from '@dxos/deus/review';
 import { Doc } from '@dxos/echo-doc';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
+import * as SpecSession from '@dxos/plugin-projects/SpecSession';
 import { getSpace } from '@dxos/react-client/echo';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -40,22 +41,20 @@ import { SpecReviews } from '#sync';
 import { CodeOperation } from '#types';
 
 import { CodeNamespace } from '../../namespace.ts';
-import { type View, VIEWS, getEditor, isView, reveal } from './spec-session.ts';
+import { SPEC_VIEWS, type SpecViewId, isSpecView } from '../../spec-views.ts';
 import { useGitHubText } from './useGitHubText.ts';
 import { type SpecModel, type SpecSource, useSpecModel } from './useSpecModel.ts';
-import { type DiffAgainst, fileKey, useSpecSyncState } from './useSpecSources.ts';
+import { fileKey, useSpecSyncState } from './useSpecSources.ts';
 
-const VIEW_ICON: Record<View, string> = {
-  definitions: 'ph--tree-structure--regular',
-  review: 'ph--seal-check--regular',
-  code: 'ph--file-code--regular',
-  log: 'ph--users-three--regular',
-  decisions: 'ph--graph--regular',
-  data: 'ph--database--regular',
-  api: 'ph--plugs-connected--regular',
-};
+const { getEditor, reveal } = SpecSession;
 
-const isDiffAgainst = (value: string): value is DiffAgainst => value === 'base' || value === 'head';
+const VIEWS = SPEC_VIEWS;
+
+type View = SpecViewId;
+
+const groupOf = (view: View): SpecSession.Group => VIEWS.find(({ id }) => id === view)!.group;
+
+const isDiffAgainst = (value: string): value is SpecSession.DiffAgainst => value === 'base' || value === 'head';
 
 /** A commit as people quote it; a branch name is kept whole. */
 const shortSha = (ref: string): string => (/^[0-9a-f]{40}$/.test(ref) ? ref.slice(0, 7) : ref);
@@ -77,7 +76,13 @@ export const useOpenSource = ({
   const { invokePromise } = AppHooks.useOperationInvoker();
   const setPendingReveal = useAtomSet(pendingReveal);
   const showCode = useCallback(
-    (target: SourceKey) => setSession((current) => ({ ...current, codeTarget: target, view: 'code' })),
+    (target: SourceKey) =>
+      setSession((current) => ({
+        ...current,
+        evidence: target,
+        focus: 'review',
+        views: { ...current.views, review: 'code' },
+      })),
     [setSession],
   );
   return useCallback(
@@ -113,16 +118,17 @@ export const useOpenSource = ({
   );
 };
 
-export type SpecPanelProps = SpecSource & {
+export type SpecViewContentProps = SpecSource & {
+  view: View;
   /** Whether answers to the changelog's questions are taken; an ECHO spec takes them unless read-only. */
   readOnly?: boolean;
 };
 
 /**
- * The views of a spec beside its text: its definitions, review, cited code, decision log and graph, data model and
- * API. It shares its session with the spec's editor, wherever that is open, so either moves the other to an item.
+ * One view of a spec: its definitions, review, cited code, decision log or graph, data model or API. It shares its
+ * session with the spec's editor, wherever that is open, so either moves the other to an item.
  */
-export const SpecPanel = ({ readOnly = false, ...source }: SpecPanelProps) => {
+export const SpecViewContent = ({ view, readOnly = false, ...source }: SpecViewContentProps) => {
   const { spec } = source;
   const { t } = Hooks.useTranslation(CodeNamespace.key);
   const identity = useIdentity();
@@ -130,9 +136,8 @@ export const SpecPanel = ({ readOnly = false, ...source }: SpecPanelProps) => {
   const model = useSpecModel(source);
   const { id, session, setSession, target, key, reviewKey, text, texts, reviews, review, read, specs, changelog } =
     model;
-  const { codePath, git, baseText, diffAvailable } = model;
-  const { view, codeTarget, selectedVerdict, selectedReview, selectedDecision, diff, fold } = session;
-
+  const { codePath, baseText } = model;
+  const { evidence, selectedVerdict, selectedReview, selectedDecision } = session;
   // The review view shows the current status or one review; the editor's chips always show the current status.
   const history = useMemo(
     () => reviews.map(({ id, date, by, commit }) => ({ id, label: `${date} · ${by} · ${commit.slice(0, 7)}` })),
@@ -194,8 +199,6 @@ export const SpecPanel = ({ readOnly = false, ...source }: SpecPanelProps) => {
   // Only an editable spec bound to ECHO takes answers; a static or read-only one lists its questions.
   const canAnswer = !readOnly && spec !== undefined && identity !== undefined;
 
-  const syncEntry = spec ? sync.specs[spec.id] : undefined;
-  const pullRequest = git?.pullRequest;
   // A local checkout holds today's code, so an earlier review's evidence, like any without a checkout, is read from
   // GitHub at the commit that was reviewed: the selected verdict's own, since the current status merges several.
   const verdictCommit = shownReview?.verdicts.find(({ id }) => id === selectedVerdict)?.review?.commit;
@@ -205,9 +208,9 @@ export const SpecPanel = ({ readOnly = false, ...source }: SpecPanelProps) => {
     shownReview === review &&
     (verdictCommit === undefined || verdictCommit === review?.commit);
   const codeRef = verdictCommit ?? shownReview?.commit ?? 'main';
-  const remoteCode = useGitHubText(codeIsLocal ? undefined : codeTarget, codeRef);
+  const remoteCode = useGitHubText(codeIsLocal ? undefined : evidence, codeRef);
   const codeText = codeIsLocal
-    ? codeTarget && texts.get(fileKey(codeTarget))
+    ? evidence && texts.get(fileKey(evidence))
     : remoteCode.status === 'ready'
       ? remoteCode.text
       : undefined;
@@ -224,162 +227,209 @@ export const SpecPanel = ({ readOnly = false, ...source }: SpecPanelProps) => {
   );
 
   return (
+    <>
+      {view === 'definitions' && (
+        <DefinitionGraph
+          content={text}
+          base={baseText}
+          specs={specs}
+          index={SPEC_INDEX}
+          review={review}
+          onActivate={activate}
+        />
+      )}
+      {view === 'review' && (
+        <ReviewPanel
+          review={shownReview}
+          history={history}
+          selectedReview={shownReview === review ? undefined : selectedReview}
+          onSelectReview={(next) => update({ selectedReview: next })}
+          reviewKey={reviewKey}
+          selected={selectedVerdict}
+          onSelect={selectVerdict}
+          onOpenCode={(target) => void open(target)}
+          read={read}
+        />
+      )}
+      {view === 'code' &&
+        (evidence ? (
+          <CodeView
+            label={formatSourceKey(evidence)}
+            path={evidence.path}
+            content={codeText}
+            symbol={evidence.fragment}
+            source={codeIsLocal ? undefined : t('code-view.github-source.label', { ref: shortSha(codeRef) })}
+            error={codeError}
+            onOpenExternal={codeIsLocal ? openExternal : undefined}
+          />
+        ) : (
+          <Status.Empty classNames='dx-fill' data-testid='code-view.empty'>
+            {t('code-view.empty.label')}
+          </Status.Empty>
+        ))}
+      {view === 'log' && (
+        <DecisionLog content={changelog} selected={selectedDecision} onAnswer={canAnswer ? handleAnswer : undefined} />
+      )}
+      {view === 'decisions' && <ChangelogGraph content={changelog} selected={selectedDecision} />}
+      {view === 'data' && <DataModelGraph content={text} />}
+      {view === 'api' && <ApiSurface content={text} />}
+    </>
+  );
+};
+
+/**
+ * Where a spec comes from and what diff mode compares it with: the diff and fold switches, its pull request or branch,
+ * its file and its sync state, for a host toolbar to place.
+ */
+export const SpecSourceToolbar = (source: SpecSource) => {
+  const { spec } = source;
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
+  const sync = useSpecSyncState();
+  const { session, setSession, key, git, diffAvailable } = useSpecModel(source);
+  const { diff, fold } = session;
+  const update = useCallback(
+    (patch: Partial<SpecSession.State>) => setSession((current) => ({ ...current, ...patch })),
+    [setSession],
+  );
+  const syncEntry = spec ? sync.specs[spec.id] : undefined;
+  const pullRequest = git?.pullRequest;
+  return (
+    <>
+      {diffAvailable && (
+        <>
+          <Toolbar.Separator />
+          <Toolbar.ToggleGroup
+            type='single'
+            value={diff ?? ''}
+            onValueChange={(value) => update({ diff: isDiffAgainst(value) ? value : undefined })}
+            aria-label={t('spec-diff.label')}
+          >
+            <ToggleGroup.Item
+              value='base'
+              icon='ph--git-diff--regular'
+              label={t('spec-diff.base.label', { base: shortRef(git?.base ?? 'base') })}
+              disabled={git !== undefined && !git.mergeBase}
+              iconOnly
+              data-testid='spec-article.diff.base'
+            />
+            {git && (
+              <ToggleGroup.Item
+                value='head'
+                icon='ph--git-commit--regular'
+                label={t('spec-diff.head.label')}
+                iconOnly
+                data-testid='spec-article.diff.head'
+              />
+            )}
+          </Toolbar.ToggleGroup>
+          {diff && (
+            <Toolbar.ToggleGroup
+              type='single'
+              value={fold ? 'fold' : ''}
+              onValueChange={(value) => update({ fold: value === 'fold' })}
+              aria-label={t('spec-diff.fold.label')}
+            >
+              <ToggleGroup.Item
+                value='fold'
+                icon='ph--arrows-in-line-vertical--regular'
+                label={t('spec-diff.fold.label')}
+                iconOnly
+                data-testid='spec-article.diff.fold'
+              />
+            </Toolbar.ToggleGroup>
+          )}
+        </>
+      )}
+      {pullRequest ? (
+        <Toolbar.Link
+          href={pullRequest.url}
+          title={`${pullRequest.title} (${git?.branch} → ${pullRequest.base})`}
+          onClick={(event) => {
+            event.preventDefault();
+            void openExternalUrl(pullRequest.url);
+          }}
+          data-testid='spec-article.pull-request'
+        >
+          <Tag.Tag hue='info'>
+            <Icon.Icon icon='ph--git-pull-request--regular' size='xs' />#{pullRequest.number}
+          </Tag.Tag>
+        </Toolbar.Link>
+      ) : (
+        git?.branch && (
+          <Tag.Tag title={`${git.branch} → ${shortRef(git.base)}`} data-testid='spec-article.branch'>
+            <Icon.Icon icon='ph--git-branch--regular' size='xs' />
+            {git.branch}
+          </Tag.Tag>
+        )
+      )}
+      {key && (
+        <Toolbar.Text classNames='font-mono text-xs'>
+          <span title={formatSourceKey(key)}>{key.path.split('/').slice(-2).join('/')}</span>
+        </Toolbar.Text>
+      )}
+      {syncEntry && (
+        <Tag.Tag
+          hue={syncEntry.status === 'error' || syncEntry.status === 'conflict' ? 'warning' : 'neutral'}
+          title={syncEntry.error ?? syncEntry.path}
+          data-testid='spec-article.sync-status'
+          data-status={syncEntry.status}
+        >
+          <Icon.Icon icon='ph--arrows-clockwise--regular' size='xs' />
+          {t(`spec-sync.${syncEntry.status}.label`)}
+        </Tag.Tag>
+      )}
+    </>
+  );
+};
+
+export type SpecPanelProps = SpecSource & {
+  readOnly?: boolean;
+};
+
+/**
+ * Every view of a spec in one panel, for a spec with no node to give companions (a bundled plugin spec): it shows the
+ * view of the group last asked for.
+ */
+export const SpecPanel = ({ readOnly = false, ...source }: SpecPanelProps) => {
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
+  const { session, setSession } = useSpecModel(source);
+  const group = session.focus ?? 'structure';
+  const view =
+    VIEWS.find(({ id }) => id === session.views[group])?.id ?? VIEWS.find((view) => view.group === group)!.id;
+  return (
     <Panel.Root>
       <Panel.Header>
         <Toolbar.Root>
           <Toolbar.ToggleGroup
             type='single'
             value={view}
-            onValueChange={(value) => isView(value) && update({ view: value })}
+            onValueChange={(value) =>
+              isSpecView(value) &&
+              setSession((current) => ({
+                ...current,
+                focus: groupOf(value),
+                views: { ...current.views, [groupOf(value)]: value },
+              }))
+            }
             aria-label={t('spec-view.label')}
           >
-            {VIEWS.map((value) => (
+            {VIEWS.map(({ id, icon }) => (
               <ToggleGroup.Item
-                key={value}
-                value={value}
-                icon={VIEW_ICON[value]}
-                label={t(`spec-view.${value}.label`)}
+                key={id}
+                value={id}
+                icon={icon}
+                label={t(`spec-view.${id}.label`)}
                 // Only the open view is labelled, so the toolbar fits a narrow panel.
-                iconOnly={value !== view}
-                data-testid={`spec-article.view.${value}`}
+                iconOnly={id !== view}
+                data-testid={`spec-article.view.${id}`}
               />
             ))}
           </Toolbar.ToggleGroup>
-          {diffAvailable && (
-            <>
-              <Toolbar.Separator />
-              <Toolbar.ToggleGroup
-                type='single'
-                value={diff ?? ''}
-                onValueChange={(value) => update({ diff: isDiffAgainst(value) ? value : undefined })}
-                aria-label={t('spec-diff.label')}
-              >
-                <ToggleGroup.Item
-                  value='base'
-                  icon='ph--git-diff--regular'
-                  label={t('spec-diff.base.label', { base: shortRef(git?.base ?? 'base') })}
-                  disabled={git !== undefined && !git.mergeBase}
-                  iconOnly
-                  data-testid='spec-article.diff.base'
-                />
-                {git && (
-                  <ToggleGroup.Item
-                    value='head'
-                    icon='ph--git-commit--regular'
-                    label={t('spec-diff.head.label')}
-                    iconOnly
-                    data-testid='spec-article.diff.head'
-                  />
-                )}
-              </Toolbar.ToggleGroup>
-              {diff && (
-                <Toolbar.ToggleGroup
-                  type='single'
-                  value={fold ? 'fold' : ''}
-                  onValueChange={(value) => update({ fold: value === 'fold' })}
-                  aria-label={t('spec-diff.fold.label')}
-                >
-                  <ToggleGroup.Item
-                    value='fold'
-                    icon='ph--arrows-in-line-vertical--regular'
-                    label={t('spec-diff.fold.label')}
-                    iconOnly
-                    data-testid='spec-article.diff.fold'
-                  />
-                </Toolbar.ToggleGroup>
-              )}
-            </>
-          )}
-          {pullRequest ? (
-            <Toolbar.Link
-              href={pullRequest.url}
-              title={`${pullRequest.title} (${git?.branch} → ${pullRequest.base})`}
-              onClick={(event) => {
-                event.preventDefault();
-                void openExternalUrl(pullRequest.url);
-              }}
-              data-testid='spec-article.pull-request'
-            >
-              <Tag.Tag hue='info'>
-                <Icon.Icon icon='ph--git-pull-request--regular' size='xs' />#{pullRequest.number}
-              </Tag.Tag>
-            </Toolbar.Link>
-          ) : (
-            git?.branch && (
-              <Tag.Tag title={`${git.branch} → ${shortRef(git.base)}`} data-testid='spec-article.branch'>
-                <Icon.Icon icon='ph--git-branch--regular' size='xs' />
-                {git.branch}
-              </Tag.Tag>
-            )
-          )}
-          {key && (
-            <Toolbar.Text classNames='font-mono text-xs'>
-              <span title={formatSourceKey(key)}>{key.path.split('/').slice(-2).join('/')}</span>
-            </Toolbar.Text>
-          )}
-          {syncEntry && (
-            <Tag.Tag
-              hue={syncEntry.status === 'error' || syncEntry.status === 'conflict' ? 'warning' : 'neutral'}
-              title={syncEntry.error ?? syncEntry.path}
-              data-testid='spec-article.sync-status'
-              data-status={syncEntry.status}
-            >
-              <Icon.Icon icon='ph--arrows-clockwise--regular' size='xs' />
-              {t(`spec-sync.${syncEntry.status}.label`)}
-            </Tag.Tag>
-          )}
+          <SpecSourceToolbar {...source} />
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body classNames='relative' data-testid='spec-article.panel' data-view={view}>
-        {view === 'definitions' && (
-          <DefinitionGraph
-            content={text}
-            base={baseText}
-            specs={specs}
-            index={SPEC_INDEX}
-            review={review}
-            onActivate={activate}
-          />
-        )}
-        {view === 'review' && (
-          <ReviewPanel
-            review={shownReview}
-            history={history}
-            selectedReview={shownReview === review ? undefined : selectedReview}
-            onSelectReview={(next) => update({ selectedReview: next })}
-            reviewKey={reviewKey}
-            selected={selectedVerdict}
-            onSelect={selectVerdict}
-            onOpenCode={(target) => void open(target)}
-            read={read}
-          />
-        )}
-        {view === 'code' &&
-          (codeTarget ? (
-            <CodeView
-              label={formatSourceKey(codeTarget)}
-              path={codeTarget.path}
-              content={codeText}
-              symbol={codeTarget.fragment}
-              source={codeIsLocal ? undefined : t('code-view.github-source.label', { ref: shortSha(codeRef) })}
-              error={codeError}
-              onOpenExternal={codeIsLocal ? openExternal : undefined}
-            />
-          ) : (
-            <Status.Empty classNames='dx-fill' data-testid='code-view.empty'>
-              {t('code-view.empty.label')}
-            </Status.Empty>
-          ))}
-        {view === 'log' && (
-          <DecisionLog
-            content={changelog}
-            selected={selectedDecision}
-            onAnswer={canAnswer ? handleAnswer : undefined}
-          />
-        )}
-        {view === 'decisions' && <ChangelogGraph content={changelog} selected={selectedDecision} />}
-        {view === 'data' && <DataModelGraph content={text} />}
-        {view === 'api' && <ApiSurface content={text} />}
+        <SpecViewContent {...source} view={view} readOnly={readOnly} />
       </Panel.Body>
     </Panel.Root>
   );

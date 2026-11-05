@@ -69,7 +69,6 @@ const HeaderValues = Schema.make<Schema.Codec<HeaderValues, any>>(
 const ARTIFACT_LIMIT = 6;
 
 /** The Specs tab's own view of its spec: the text. */
-const DOCUMENT_VIEW = 'document';
 
 /** The pipeline pane's initial height in rem: a handful of lanes and the axis. */
 const PIPELINE_SIZE = 14;
@@ -153,7 +152,6 @@ export const ProjectArticle = ({
     },
     [updateView, levelSpec, db, invokePromise, subject.id, attendableId],
   );
-  const { view, actions: viewActions } = useSpecViewActions({ spec, viewId: subject.id });
   const dialectActions = useSpecPackageActions(spec);
   // The rows the embedded `TaskSetArticle` has checked; the toolbar arms its delegate action on them.
   const { tasks, delegatableTasks, uncheck } = useCheckedTasks(taskSet, scope);
@@ -238,18 +236,17 @@ export const ProjectArticle = ({
     onSelect: selectSpec,
     onAdd: () => void handleAddSpec(),
   });
-  // The Specs tab's tools: which spec, its views, and its dialects. A nested level is inside one spec already.
+  // The Specs tab's tools: which spec, and its dialects. A nested level is inside one spec already.
   const levelActions = useCallback<ActionGroupBuilderFn>(
     (group) => {
       if (!level) {
         pickerActions(group);
       }
       if (spec) {
-        viewActions(group);
         dialectActions(group);
       }
     },
-    [level, spec, pickerActions, viewActions, dialectActions],
+    [level, spec, pickerActions, dialectActions],
   );
 
   const menuActions = useToolbarActions({
@@ -477,20 +474,12 @@ export const ProjectArticle = ({
           )}
 
           {tab === 'spec' &&
-            spec &&
-            view === DOCUMENT_VIEW && (
-              // A section rather than an article: the spec's own page is for opening it.
+            spec && (
+              // A section rather than an article: the spec's own page is for opening it. Its other views are companions.
               <div className='grid min-h-0 h-full' data-testid='projectsPlugin.spec.document'>
                 <Surface.Surface type={AppSurface.Section} data={{ subject: spec, attendableId }} limit={1} />
               </div>
             )}
-          {tab === 'spec' && spec && view !== DOCUMENT_VIEW && (
-            <Surface.Surface
-              type={ProjectSurface.SpecView}
-              data={{ subject: spec, view, project: subject, level, attendableId }}
-              limit={1}
-            />
-          )}
           {tab === 'spec' && !spec && <AddSpec nested={!!level} onAdd={onAddSpec ?? (() => void handleAddSpec())} />}
 
           {/* The ledger gets the whole panel here, so the list scrolls on its own rather than inside the form's viewport. */}
@@ -637,57 +626,8 @@ const useSpecPickerActions = ({ specs, selected, onSelect, onAdd }: SpecPickerAc
 };
 
 /**
- * The Specs tab's view toggle for a host toolbar: the spec's text, then each view other plugins offer for the dialects
- * the spec uses. Offered only when there is more than the text; a view the spec does not offer reads as its text.
- */
-const useSpecViewActions = ({ spec, viewId }: { spec?: Spec.Spec; viewId: string }) => {
-  const contributed = Hooks.useCapabilities(ProjectCapabilities.SpecView);
-  const [dialects] = useObject(spec, 'dialects');
-  const { view: chosen } = useViewState(ProjectView.aspect, viewId);
-  const { update } = useViewStateActions(ProjectView.aspect, viewId);
-  const views = useMemo(
-    () => contributed.filter((view) => view.dialects.every((id) => dialects?.includes(id))),
-    [contributed, dialects],
-  );
-  const view = views.find(({ id }) => id === chosen)?.id ?? DOCUMENT_VIEW;
-  const setView = useCallback((view: string | undefined) => update((prev) => ({ ...prev, view })), [update]);
-  const actions = useCallback<ActionGroupBuilderFn>(
-    (group) => {
-      if (views.length === 0) {
-        return;
-      }
-      group.group(
-        'view',
-        {
-          label: ['spec-view.label', { ns: ProjectsNamespace.key }],
-          variant: 'toggleGroup',
-          selectCardinality: 'single',
-          value: view,
-        },
-        (viewGroup) => {
-          viewGroup.action(
-            DOCUMENT_VIEW,
-            {
-              label: ['spec-view.document.label', { ns: ProjectsNamespace.key }],
-              icon: 'ph--file-text--regular',
-              testId: `projectsPlugin.specView.${DOCUMENT_VIEW}`,
-            },
-            () => setView(undefined),
-          );
-          views.forEach(({ id, label, icon }) =>
-            viewGroup.action(id, { label, icon, testId: `projectsPlugin.specView.${id}` }, () => setView(id)),
-          );
-        },
-      );
-    },
-    [view, views, setView],
-  );
-  return { view, actions };
-};
-
-/**
  * A multi-select of the extension packages plugins offer, checking those whose dialects the spec all uses; checking one
- * adds its dialects, whose views then show, and unchecking removes them.
+ * adds its dialects, whose companion views then show, and unchecking removes them.
  */
 const useSpecPackageActions = (spec: Spec.Spec | undefined) => {
   const packages = Hooks.useCapabilities(ProjectCapabilities.SpecPackage);

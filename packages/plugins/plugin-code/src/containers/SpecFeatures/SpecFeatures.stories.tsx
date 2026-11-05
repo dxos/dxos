@@ -26,12 +26,13 @@ import { translations as reactUiTranslations } from '@dxos/react-ui/translations
 import { translations } from '#translations';
 import { FeatureMap } from '#types';
 
+import { type FeatureViewId } from '../../spec-views.ts';
 import { FeatureCompanion } from '../FeatureCompanion/index.ts';
 import { SpecFeatures } from './SpecFeatures.tsx';
 
-type StoryArgs = { attendableId: string };
+type StoryArgs = { attendableId: string; mode: FeatureViewId };
 
-const DefaultStory = ({ attendableId }: StoryArgs) => {
+const DefaultStory = ({ attendableId, mode }: StoryArgs) => {
   const [space] = useSpaces();
   // The seeded spec is the project's; the subfeatures' specs are owned by their features.
   const spec = useQuery(space?.db, Filter.type(Spec.Spec)).find((spec) => !FeatureMap.getOwner(spec));
@@ -44,24 +45,11 @@ const DefaultStory = ({ attendableId }: StoryArgs) => {
   return (
     <AttendableContainer id={attendableId} classNames='contents'>
       <Layout.Grid classNames='dx-fill grid-cols-[1fr_24rem] divide-x divide-separator'>
-        <SpecFeatures spec={spec} attendableId={attendableId} />
+        <SpecFeatures spec={spec} mode={mode} attendableId={attendableId} />
         <FeatureCompanion spec={spec} attendableId={attendableId} />
       </Layout.Grid>
     </AttendableContainer>
   );
-};
-
-/** The element a pointer at the centre of `element` would hit, so a covered control fails even when `click` would not. */
-const expectHittable = async (element: HTMLElement) => {
-  const { x, y, width, height } = element.getBoundingClientRect();
-  const hit = document.elementFromPoint(x + width / 2, y + height / 2);
-  await expect(hit && element.contains(hit)).toBe(true);
-};
-
-/** Switches the map from its default, the spec's document, to the canvas. */
-const showCanvas = async (canvasElement: HTMLElement) => {
-  const canvas = within(canvasElement);
-  await userEvent.click(await canvas.findByTestId('projectsPlugin.featureMap.canvas', undefined, { timeout: 10_000 }));
 };
 
 /** The canvas box that holds a feature's card; its frame takes the presses that select and zoom. */
@@ -161,7 +149,7 @@ const meta = {
     controls: { disable: true },
     translations: [...translations, ...reactUiTranslations, ...formTranslations],
   },
-  args: { attendableId: 'test' },
+  args: { attendableId: 'test', mode: 'canvas' },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -171,19 +159,15 @@ type Story = StoryObj<typeof meta>;
 /** The canvas: one box per top-level feature, laid out by dependency with an arrow per `DependsOn`. */
 export const Canvas: Story = {
   play: async ({ canvasElement }) => {
-    await showCanvas(canvasElement);
     const canvas = within(canvasElement);
     await waitFor(() => expect(canvas.getAllByTestId('feature-canvas-node')).toHaveLength(8), { timeout: 10_000 });
     await expect(canvas.getByTestId('feature-companion.empty')).toBeInTheDocument();
-    // The body must sit below the toolbar, not over it.
-    await expectHittable(canvas.getByTestId('projectsPlugin.featureMap.kanban'));
   },
 };
 
 /** A click selects a feature and the companion shows it in full: the ideal, its requirements and its subfeatures. */
 export const SelectShowsCompanion: Story = {
   play: async ({ canvasElement }) => {
-    await showCanvas(canvasElement);
     await userEvent.click(await findNode(canvasElement, 'Provider sync'));
     const detail = await companion();
     await expect(await detail.findAllByTestId(/^requirement-editor\.\d+\.text$/)).toHaveLength(3);
@@ -194,7 +178,6 @@ export const SelectShowsCompanion: Story = {
 /** A double-click zooms into the feature's subfeatures; the trail above the map zooms back out. */
 export const ZoomIn: Story = {
   play: async ({ canvasElement }) => {
-    await showCanvas(canvasElement);
     const canvas = within(canvasElement);
     doubleClick(await findNode(canvasElement, 'Provider sync'));
     await waitFor(() => expect(canvas.getAllByTestId('feature-canvas-node')).toHaveLength(2), { timeout: 10_000 });
@@ -209,7 +192,6 @@ export const ZoomIn: Story = {
 /** Fields are edited in the companion, where they have room; the card follows. */
 export const EditInCompanion: Story = {
   play: async ({ canvasElement }) => {
-    await showCanvas(canvasElement);
     const node = await findNode(canvasElement, 'Smart triage');
     await userEvent.click(node);
     const name = await (await companion()).findByTestId('name', undefined, { timeout: 5_000 });
@@ -227,7 +209,6 @@ export const EditInCompanion: Story = {
 /** A `+` in an empty cell adds a new feature there and selects it, so it is named in the companion. */
 export const NewFeature: Story = {
   play: async ({ canvasElement }) => {
-    await showCanvas(canvasElement);
     const canvas = within(canvasElement);
     await waitFor(() => expect(canvas.getAllByTestId('feature-canvas-node')).toHaveLength(8), { timeout: 10_000 });
     await userEvent.click(await showAdd(canvasElement));
@@ -241,7 +222,6 @@ export const NewFeature: Story = {
 /** Selecting a box and pressing Delete deletes the feature, with the spec that breaks it down. */
 export const CanvasRemove: Story = {
   play: async ({ canvasElement }) => {
-    await showCanvas(canvasElement);
     const canvas = within(canvasElement);
     await userEvent.click(await findNode(canvasElement, 'Smart triage'));
     await userEvent.keyboard('{Delete}');
@@ -251,11 +231,9 @@ export const CanvasRemove: Story = {
 
 /** Kanban: a column per status, and dragging a card to another column sets the feature's status. */
 export const Kanban: Story = {
+  args: { mode: 'kanban' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(
-      await canvas.findByTestId('projectsPlugin.featureMap.kanban', undefined, { timeout: 10_000 }),
-    );
     await waitFor(() => expect(canvas.getAllByTestId('board-column')).toHaveLength(4), { timeout: 10_000 });
     await waitFor(() => expect(canvas.getAllByTestId('feature-kanban.card')).toHaveLength(8), { timeout: 10_000 });
 

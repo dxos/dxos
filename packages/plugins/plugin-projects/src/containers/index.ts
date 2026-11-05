@@ -8,6 +8,7 @@ import { lazy } from 'react';
 import { type MoveTaskDialogProps } from './MoveTaskDialog/index.ts';
 import { type LevelArticleProps, type SpecLevelArticleProps } from './ProjectArticle/index.ts';
 import { type ProjectBranchArticleProps } from './ProjectBranchArticle/index.ts';
+import { type SpecCompanionPanelProps, type SpecCompanionProps } from './SpecCompanion/index.ts';
 import { type SpecDocumentArticleProps } from './SpecDocumentArticle/index.ts';
 
 export const LevelArticle: ComponentType<LevelArticleProps> = lazy(() =>
@@ -17,6 +18,13 @@ export const LevelArticle: ComponentType<LevelArticleProps> = lazy(() =>
 // Lazy: the editor engine is large, and only an opened spec document needs it.
 export const SpecDocumentArticle: ComponentType<SpecDocumentArticleProps> = lazy(() =>
   import('./SpecDocumentArticle/index.ts').then((module) => ({ default: module.SpecDocumentArticle })),
+);
+
+export const SpecCompanion: ComponentType<SpecCompanionProps> = lazy(() =>
+  import('./SpecCompanion/index.ts').then((module) => ({ default: module.SpecCompanion })),
+);
+export const SpecCompanionPanel: ComponentType<SpecCompanionPanelProps> = lazy(() =>
+  import('./SpecCompanion/index.ts').then((module) => ({ default: module.SpecCompanionPanel })),
 );
 
 export const SpecLevelArticle: ComponentType<SpecLevelArticleProps> = lazy(() =>

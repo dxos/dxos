@@ -19,6 +19,7 @@ import * as Project from '@dxos/compute/Project';
 import * as Spec from '@dxos/compute/Spec';
 import { Annotation, Filter, Obj, Type } from '@dxos/echo';
 import * as ProjectGraph from '@dxos/plugin-projects/ProjectGraph';
+import * as SpecSession from '@dxos/plugin-projects/SpecSession';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { Feature, FeatureMap } from '#types';
@@ -174,7 +175,26 @@ export const createFeatureLevelExtension = () =>
       match: matchSpecLevel,
       connector: ({ level }, get) => Effect.succeed(getLevelSpec(level, get) ? [makeFeatureCompanion()] : []),
     }),
+    // A feature's level shows its breakdown on the Specs tab, so it has that spec's companion tabs; a spec's level has
+    // them as a spec.
+    AppGraphBuilder.createExtension({
+      id: 'featureLevelSpecCompanions',
+      relation: AppNode.companion,
+      match: matchSpecLevel,
+      connector: ({ level }, get) =>
+        Effect.succeed(Feature.instanceOf(level) && getLevelSpec(level, get) ? makeSpecCompanions() : []),
+    }),
   ]).pipe(Effect.map((extensions) => extensions.flat()));
+
+const makeSpecCompanions = () =>
+  SpecSession.GROUPS.map((group) =>
+    AppNode.makeCompanion({
+      variant: SpecSession.companionVariant(group),
+      label: SpecSession.companionLabel(group),
+      icon: SpecSession.companionIcon[group],
+      data: SpecSession.companionVariant(group),
+    }),
+  );
 
 const makeFeatureCompanion = () =>
   AppNode.makeCompanion({

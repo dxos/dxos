@@ -24,9 +24,6 @@ export const ADD_FEATURE_DIALOG = DXN.make(`${CodeNamespace.key}.addFeatureDialo
 /** The spec plank's companion that shows the feature selected on its feature map. */
 export const FEATURE_COMPANION = 'feature';
 
-/** Companion variant of a spec's panel of views: its definitions, review, decisions and the rest. */
-export const SPEC_COMPANION = 'spec';
-
 /** Registry key of the built-in introspect-mcp server behind the Coder skill. */
 export const INTROSPECT_MCP_KEY = 'org.dxos.mcp.introspect';
 

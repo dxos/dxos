@@ -15,6 +15,7 @@
 const STORYBOOK = 'http://localhost:9009';
 const SUBTITLE = 'from plugin-code/PLUGIN.mdl QA-3';
 const MAP = `${STORYBOOK}/iframe.html?id=plugins-plugin-code-containers-specfeatures--canvas&viewMode=story`;
+const BOARD = `${STORYBOOK}/iframe.html?id=plugins-plugin-code-containers-specfeatures--kanban&viewMode=story`;
 
 /** A beat for the viewer after a visible change. */
 const BEAT = 1_500;
@@ -107,8 +108,8 @@ export const steps = [
     name: 'View the map by status',
     narration: 'Specs, features and their breakdowns are ECHO objects, so agents edit the same map people do.',
     run: async ({ demo, page }) => {
-      await caption(demo, 6, 'Click the Kanban toggle');
-      await demo.click({ selector: '[data-testid="projectsPlugin.featureMap.kanban"]', label: 'Kanban' });
+      await caption(demo, 6, 'Switch the Structure tab to the board');
+      await page.goto(BOARD);
       await page.getByTestId('board-column').first().waitFor({ state: 'visible', timeout: 10_000 });
       await demo.sleep({ ms: 6_000 });
     },

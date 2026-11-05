@@ -28,6 +28,7 @@ export default defineConfig({
     'ProjectView': 'src/types/ProjectView.ts',
     'ProjectsEvents': 'src/types/ProjectsEvents.ts',
     'Settings': 'src/types/Settings.ts',
+    'SpecSession': 'src/types/SpecSession.ts',
     'types': 'src/types/index.ts',
   },
   jsx: 'react',

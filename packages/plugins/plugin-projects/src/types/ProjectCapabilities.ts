@@ -17,6 +17,7 @@ import type { Database, Obj } from '@dxos/echo';
 import type { FormFieldAction } from '@dxos/react-ui-form';
 
 import { ProjectsNamespace } from '../namespace.ts';
+import type * as SpecSession from './SpecSession.ts';
 
 /**
  * Id of the built-in default template. Declared here (rather than on the template itself) so callers
@@ -106,14 +107,16 @@ export type SpecPackage = {
 export const SpecPackage = Capability.make<SpecPackage>()(`${ProjectsNamespace.key}.capability.specPackage`);
 
 /**
- * A view of a spec beside its text, such as a map of what it describes, offered on a project's Specs tab for the specs
- * using all its `dialects`; the contributor renders it through the `ProjectSurface.SpecView` surface.
+ * A view of a spec in one of its companion tabs, offered for the specs using all its `dialects`; the contributor
+ * renders it through the `ProjectSurface.SpecView` surface.
  */
 export type SpecView = {
   id: string;
   label: Translations.Label;
   icon: string;
   dialects: readonly string[];
+  /** The companion tab the view is one of. */
+  group: SpecSession.Group;
 };
 
 export const SpecView = Capability.make<SpecView>()(`${ProjectsNamespace.key}.capability.specView`);

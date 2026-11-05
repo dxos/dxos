@@ -19,10 +19,12 @@ import {
   ProjectArticle,
   ProjectArtifactsArticle,
   ProjectChatsArticle,
+  SpecCompanion,
+  SpecCompanionPanel,
   SpecDocumentArticle,
   SpecLevelArticle,
 } from '#containers';
-import { ProjectSurface } from '#types';
+import { ProjectSurface, SpecSession } from '#types';
 
 import { isArtifactsBranch, isChatsBranch } from '../capabilities/app-graph-builder.ts';
 import { MOVE_TASK_DIALOG } from '../constants.ts';
@@ -53,6 +55,27 @@ export default Capability.makeModule(() =>
         filter: AppSurface.object(AppSurface.Article, Spec.Spec, ({ subject }) => isProjectSpec(subject)),
         component: SpecLevelArticle,
         props: ({ role, data }) => ({ role, ...data }),
+      }),
+      // A spec's companion tabs, beside the spec and beside a project showing one.
+      ...SpecSession.GROUPS.map((group) =>
+        Surface.create({
+          id: `spec.companion.${group}`,
+          filter: AppSurface.allOf(
+            AppSurface.literal(AppSurface.Article, SpecSession.companionVariant(group)),
+            AppSurface.oneOf(
+              AppSurface.companion(AppSurface.Article, Spec.Spec),
+              AppSurface.companion(AppSurface.Article, Project.Project),
+            ),
+          ),
+          component: SpecCompanion,
+          props: ({ data: { companionTo, attendableId } }) => ({ companionTo, group, attendableId }),
+        }),
+      ),
+      Surface.create({
+        id: 'spec.companion.panel',
+        filter: Surface.makeFilter(ProjectSurface.SpecCompanion),
+        component: SpecCompanionPanel,
+        props: ({ data }) => data,
       }),
       // The virtual branches show what they contain, the way a database type node does: selecting
       // one is a request to see the set, not only to expand the tree.
