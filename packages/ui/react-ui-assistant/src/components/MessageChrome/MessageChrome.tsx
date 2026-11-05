@@ -19,7 +19,7 @@ import { stringToFallback } from '@dxos/util';
 
 import { translationKey } from '../../translations.ts';
 import { type DeliveryStatus, type ForkMarker, type ThreadLane, getDelivery, isUnread } from '../../types.ts';
-import { LaneHeader } from '../../widgets/index.ts';
+import { LaneHeader } from '../ThreadCard/index.ts';
 
 //
 // Context
