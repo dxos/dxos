@@ -49,10 +49,6 @@ const EXAMPLES = {
     source: 'assistant',
     treatment: { slot: 'mark', icon: 'star', priority: 30, animate: true },
   },
-  'agent-done': {
-    label: 'Agent finished, unread',
-    treatment: { slot: 'mark', icon: 'star', hue: 'amber', priority: 20 },
-  },
   'editing': {
     label: 'Someone editing',
     treatment: { slot: 'mark', icon: 'ph--pencil-simple--fill', priority: 15, animate: true },
@@ -218,12 +214,6 @@ const COMBINATIONS: { icon: string; label: string; caption: string; treatments: 
     treatments: ['agent'],
   },
   {
-    icon: 'ph--file-text--regular',
-    label: 'Launch plan',
-    caption: 'Companion finished, unread',
-    treatments: ['agent-done'],
-  },
-  {
     icon: 'ph--sparkle--regular',
     label: 'Chat: book travel',
     caption: 'Agent and asked you',
@@ -316,21 +306,20 @@ const MotionStory = () => (
 // Agent session.
 //
 
-/** Opening a chat reads its finished turn, so only a chat nobody has open stays unread. */
 const AGENT_VIEWERS: { title: string; treatments: Name[] }[] = [
   { title: 'Nobody', treatments: [] },
   { title: 'Someone else', treatments: ['viewer'] },
   { title: 'You', treatments: ['attended'] },
 ];
 
-const AGENT_STATES: { title: string; treatments: (open: boolean) => Name[] }[] = [
-  { title: 'Idle', treatments: () => [] },
-  { title: 'Agent working', treatments: () => ['agent'] },
-  { title: 'Turn finished', treatments: (open) => (open ? [] : ['agent-done']) },
+const AGENT_STATES: { title: string; treatments: Name[] }[] = [
+  { title: 'Idle', treatments: [] },
+  { title: 'Agent working', treatments: ['agent'] },
+  { title: 'Turn failed', treatments: ['failed'] },
 ];
 
 const AgentSessionStory = () => (
-  <Section title='An agent session: the star pulses while it works, then turns amber until anyone opens the chat'>
+  <Section title='An agent session: the star pulses while it works, and a failed turn leaves a red edge'>
     <div className='grid grid-cols-[8rem_repeat(3,minmax(0,1fr))] items-center gap-x-3 gap-y-2 text-sm'>
       <span className='text-description'>Open by</span>
       {AGENT_STATES.map(({ title }) => (
@@ -346,7 +335,7 @@ const AgentSessionStory = () => (
               key={state.title}
               icon='ph--sparkle--regular'
               label='Trip ideas'
-              treatments={[...viewers.treatments, ...state.treatments(viewers.treatments.length > 0)]}
+              treatments={[...viewers.treatments, ...state.treatments]}
             />
           ))}
         </React.Fragment>

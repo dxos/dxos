@@ -751,7 +751,7 @@ decision D-21: Each turn sends a status update keyed `<uri>#agent` on the chat a
   by: agent:claude-code
   for: user:wittjosiah
   affects: [QA-5]
-  why: A turn's own trace reaches the progress registry wherever it runs (the local sink, or swarm broadcasts from EDGE), so nothing in the app has to watch for agents. The sink fails a meter that hears nothing for 90 seconds, which a long model call can outlast, hence the heartbeat. The star says an agent is on it, where an outline only says something is busy, and it leads into the amber star a finished, unread turn gets. One treatment on both rows keeps it consistent.
+  why: A turn's own trace reaches the progress registry wherever it runs (the local sink, or swarm broadcasts from EDGE), so nothing in the app has to watch for agents. The sink fails a meter that hears nothing for 90 seconds, which a long model call can outlast, hence the heartbeat. The star says an agent is on it, where an outline only says something is busy. One treatment on both rows keeps it consistent.
   rejected:
     - Project busy chats from the process tree in plugin-assistant: a second source beside the trace for the same signal, tied to the app watching processes.
     - A still amber outline on the edge: it kept presence visible but read as generic busy work and had no natural finished state.
