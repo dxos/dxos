@@ -10,6 +10,7 @@ import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as SpecReview from '@dxos/compute/SpecReview';
+import { parseReview } from '@dxos/deus/review';
 import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
@@ -29,9 +30,9 @@ import { translations } from '#translations';
 import { Feature, FeatureSpec } from '#types';
 
 import PLUGIN_CODE_MDL from '../../../PLUGIN.mdl?raw';
-import PLUGIN_CODE_REVIEW from '../../../PLUGIN.review.mdl?raw';
 import { type FeatureModel } from '../../components/FeatureCard/index.ts';
 import PLUGIN_CODE_EARLIER_REVIEW from '../SpecArticle/__fixtures__/plugin-code.review-2026-10-23.mdl?raw';
+import PLUGIN_CODE_REVIEW from '../SpecArticle/__fixtures__/plugin-code.review-2026-10-27.mdl?raw';
 import { FeatureArticle } from './FeatureArticle.tsx';
 
 const FEATURE_NAME = 'Provider sync';
@@ -464,6 +465,9 @@ export const Reviewed: Story = {
     await canvas.findByTestId('name', undefined, { timeout: 10_000 });
     const chips = await canvas.findAllByTestId('requirement-editor.verdict', undefined, { timeout: 10_000 });
     await expect(chips.length).toBeGreaterThan(0);
-    await expect(chips[0].getAttribute('title')).toMatch(/2026-10-2\d · [0-9a-f]{7}/);
+    const { date, commit } = parseReview(PLUGIN_CODE_REVIEW);
+    await waitFor(() =>
+      expect(chips[0].getAttribute('aria-description')).toContain(`${date} · ${commit?.slice(0, 7)}`),
+    );
   },
 };

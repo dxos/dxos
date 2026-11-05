@@ -13,11 +13,20 @@ export type ReviewFields = Omit<SpecReview.MakeProps, 'spec'>;
 /** What the editor and panel read of a review: a live object or its snapshot. */
 export type ReviewData = Pick<SpecReview.SpecReview, 'id' | 'commit' | 'date' | 'by' | 'summary' | 'verdicts'>;
 
-/** The review a `.review.mdl` text holds; a string naming what is missing when its front matter is incomplete. */
+/** Whether `value` is a calendar date written `YYYY-MM-DD`, the form reviews are ordered by. */
+const isDate = (value: string) => {
+  const time = Date.parse(`${value}T00:00:00Z`);
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(time) && new Date(time).toISOString().startsWith(value);
+};
+
+/** The review a `.review.mdl` text holds; a string naming what is wrong when its front matter is incomplete. */
 export const fromText = (text: string): ReviewFields | string => {
   const { commit, date, by, summary, verdicts } = parseReview(text);
   if (!commit || !date || !by) {
     return 'A review needs `commit`, `date` and `by` in its front matter.';
+  }
+  if (!isDate(date)) {
+    return 'A review `date` must be a calendar date written `YYYY-MM-DD`.';
   }
   return {
     commit,

@@ -444,16 +444,24 @@ export const syncFileBinding = Effect.fn('syncFileBinding')(function* (
             const base = yield* GitHubApi.fetchBlob(owner, name, baseBlob);
             requests++;
             cacheBlob(baseBlob, base);
+            const bound = yield* resolveBound(marker.object);
             const imported = yield* Operation.invoke(mapping.import, {
               repository: Ref.make(repo),
               path: change.path,
               content,
               base,
-              object: Ref.make(yield* resolveBound(marker.object)),
+              object: Ref.make(bound),
               heads: baseHeads,
             });
+            // F-3.2: an import may answer with another object (a review with new front matter); the file is its now.
+            const object = yield* Database.load(imported.object);
+            if (object.id !== bound.id) {
+              dropKey(bound, fileKey(repoId, change.path));
+              addKey(object, fileKey(repoId, change.path));
+            }
             setMarker({
               ...marker,
+              object: Obj.getURI(object),
               mapping: mapping.id,
               blob: change.blob,
               commit: head,

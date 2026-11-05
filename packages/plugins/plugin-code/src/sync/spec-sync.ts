@@ -212,5 +212,6 @@ export const syncReview = Effect.fnUntraced(
       db.add(review);
     }
   },
-  Effect.catch((error) => Effect.sync(() => log.warn('review not recorded', { error }))),
+  // A defect too, since a review must not stop the spec's sync.
+  Effect.catchCause((cause) => Effect.sync(() => log.warn('review not recorded', { cause }))),
 );

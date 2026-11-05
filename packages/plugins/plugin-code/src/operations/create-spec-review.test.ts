@@ -14,10 +14,10 @@ import { Text } from '@dxos/schema';
 
 import { SpecReviews } from '#sync';
 
-import REVIEW from '../../PLUGIN.review.mdl?raw';
+import REVIEW from '../containers/SpecArticle/__fixtures__/plugin-code.review-2026-10-27.mdl?raw';
 import createSpecReview from './create-spec-review.ts';
 
-/** The repository's review with its front matter changed, as a later review of the same spec. */
+/** The review of 2026-10-27 with its front matter changed, as a later review of the same spec. */
 const later = (date: string, commit: string) =>
   REVIEW.replace(/^date: .*$/m, `date: ${date}`).replace(/^commit: .*$/m, `commit: ${commit}`);
 
@@ -76,8 +76,9 @@ describe('CreateSpecReview', () => {
     expect(verdict).toMatchObject({ status: 'diverged', review: { commit: 'fedcba9876543210' } });
   });
 
-  test('a review without its front matter is refused', async ({ expect }) => {
+  test('a review without its front matter, or with a date not written `YYYY-MM-DD`, is refused', async ({ expect }) => {
     const { record } = await setup();
     await expect(record(REVIEW.replace(/^---[\s\S]*?---\n/, ''))).rejects.toThrow(/front matter/);
+    await expect(record(later('2026-11-5', 'fedcba9876543210'))).rejects.toThrow(/YYYY-MM-DD/);
   });
 });

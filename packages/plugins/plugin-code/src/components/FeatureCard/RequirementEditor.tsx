@@ -13,6 +13,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 
 import { Feature } from '#types';
 
@@ -141,20 +142,24 @@ export const RequirementEditor = ({
   );
 };
 
-/** A requirement's newest review verdict, naming its review on hover. */
+/** A requirement's newest review verdict, naming its review in a tooltip on hover or keyboard focus. */
 const RequirementVerdict = ({ verdict }: { verdict: Verdict }) => {
   const { label, hue, icon } = STATUS_STYLE[verdict.status];
   const reviewed = [verdict.review?.date, verdict.review?.commit?.slice(0, 7)].filter(Boolean).join(' · ');
+  const details = [verdict.summary, verdict.note, reviewed].filter(Boolean).join('\n\n');
   return (
-    <Tag.Tag
-      hue={hue}
-      title={[verdict.summary, verdict.note, reviewed].filter(Boolean).join('\n\n')}
-      data-testid='requirement-editor.verdict'
-      data-status={verdict.status}
-    >
-      <Icon.Icon icon={icon} size='xs' />
-      {label}
-    </Tag.Tag>
+    <Tooltip.Trigger asChild content={<span className='whitespace-pre-line'>{details}</span>}>
+      <Tag.Tag
+        hue={hue}
+        tabIndex={0}
+        aria-description={details}
+        data-testid='requirement-editor.verdict'
+        data-status={verdict.status}
+      >
+        <Icon.Icon icon={icon} size='xs' />
+        {label}
+      </Tag.Tag>
+    </Tooltip.Trigger>
   );
 };
 

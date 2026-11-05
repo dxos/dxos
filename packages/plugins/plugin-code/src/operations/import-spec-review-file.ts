@@ -23,9 +23,13 @@ const handler: Operation.WithHandler<typeof CodeOperation.ImportSpecReviewFile> 
         // File sync keys each object it imports `<repo id>:<path>`; the review's spec is the file beside it.
         const specPath = path.replace(/\.review\.mdl$/, '.mdl');
         const repo = yield* Database.load(repository);
+        // Without the repository's id a path alone could match a spec of another repository.
         const repoId = Obj.getMeta(repo).keys.find(({ source }) => source === GITHUB_SOURCE)?.id;
+        if (!repoId) {
+          return yield* Effect.fail(new CodeOperationError({ message: `No GitHub id on the repository of ${path}` }));
+        }
         const isSpecKey = ({ source, id }: { source: string; id: string }) =>
-          source === GITHUB_SOURCE && (repoId ? id === `${repoId}:${specPath}` : id.endsWith(`:${specPath}`));
+          source === GITHUB_SOURCE && id === `${repoId}:${specPath}`;
         const spec = (yield* Database.query(Filter.type(Spec.Spec)).run.pipe(Effect.orDie)).find((spec) =>
           Obj.getMeta(spec).keys.some(isSpecKey),
         );

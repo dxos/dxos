@@ -24,7 +24,11 @@ export const useRequirementVerdicts = (feature: Feature.Feature): Readonly<Recor
       () =>
         Atom.make((get) => {
           const current = SpecReviews.currentModel(reviews.map((review) => get(Obj.atom(review))));
-          return Object.fromEntries((current?.verdicts ?? []).map((verdict) => [verdict.id, verdict]));
+          // Null-prototype, so a requirement id such as `constructor` reads no inherited value.
+          return Object.assign(
+            Object.create(null) as Record<string, Verdict>,
+            Object.fromEntries((current?.verdicts ?? []).map((verdict) => [verdict.id, verdict])),
+          );
         }),
       [reviews],
     ),

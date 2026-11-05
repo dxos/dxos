@@ -196,9 +196,11 @@ export const SpecPanel = ({ readOnly = false, ...source }: SpecPanelProps) => {
 
   const syncEntry = spec ? sync.specs[spec.id] : undefined;
   const pullRequest = git?.pullRequest;
-  // Without a local checkout the code is read from GitHub at the reviewed commit, so evidence shows what was reviewed.
-  const codeIsLocal = sync.available && codePath !== undefined;
-  const codeRef = shownReview?.commit ?? 'main';
+  // A local checkout holds today's code, so an earlier review's evidence, like any without a checkout, is read from
+  // GitHub at the commit that was reviewed: the selected verdict's own, since the current status merges several.
+  const codeIsLocal = sync.available && codePath !== undefined && shownReview === review;
+  const verdictCommit = shownReview?.verdicts.find(({ id }) => id === selectedVerdict)?.review?.commit;
+  const codeRef = verdictCommit ?? shownReview?.commit ?? 'main';
   const remoteCode = useGitHubText(codeIsLocal ? undefined : codeTarget, codeRef);
   const codeText = codeIsLocal
     ? codeTarget && texts.get(fileKey(codeTarget))

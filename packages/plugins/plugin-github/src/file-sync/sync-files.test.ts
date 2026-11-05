@@ -231,8 +231,11 @@ const ExportText = Operation.make({
   services: [Database.Service],
 });
 
+/** A file that starts with this is a new object on every change, as a review with new front matter is. */
+const NEW_OBJECT = '# new\n';
+
 const importText = Effect.fn(function* (input: GitHubCapabilities.FileImportInput) {
-  if (!input.object || !input.heads || input.base === undefined) {
+  if (!input.object || !input.heads || input.base === undefined || input.content.startsWith(NEW_OBJECT)) {
     const text = yield* Database.add(Text.make({ content: input.content }));
     return { object: Ref.make(text), heads: TextMerge.currentHeads(text) };
   }
@@ -519,6 +522,20 @@ describe('plugin-github file sync (spec/FILE-SYNC.mdl)', () => {
     expect(text && Obj.getKeys(text, GITHUB_SOURCE)).toEqual([]);
     const all = await run(Database.query(Filter.type(Text.Text)).run);
     expect(all.map((object) => object.id)).toContain(text?.id);
+  });
+
+  test('an import that answers with another object moves the marker and the key to it', async ({ expect }) => {
+    const { git, sync, textAt } = await setup();
+    await sync();
+    const before = await textAt('spec/PLUGIN.mdl');
+    push(git, 'main', { 'spec/PLUGIN.mdl': NEW_OBJECT + SPEC_V1 });
+
+    await sync();
+
+    const after = await textAt('spec/PLUGIN.mdl');
+    expect(after?.id).not.toBe(before?.id);
+    expect(after && Obj.getKeys(after, GITHUB_SOURCE)).toEqual([fileKey('1234', 'spec/PLUGIN.mdl')]);
+    expect(before && Obj.getKeys(before, GITHUB_SOURCE)).toEqual([]);
   });
 
   test('a merged pull request is adopted without applying its own edits twice', async ({ expect }) => {

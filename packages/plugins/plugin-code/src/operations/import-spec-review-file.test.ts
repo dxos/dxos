@@ -13,7 +13,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { Text } from '@dxos/schema';
 import { Repo } from '@dxos/types';
 
-import REVIEW from '../../PLUGIN.review.mdl?raw';
+import REVIEW from '../containers/SpecArticle/__fixtures__/plugin-code.review-2026-10-27.mdl?raw';
 import importSpecReviewFile from './import-spec-review-file.ts';
 
 const SPEC_PATH = 'packages/plugins/plugin-code/PLUGIN.mdl';
@@ -56,10 +56,20 @@ describe('ImportSpecReviewFile (plugin-github spec/FILE-SYNC.mdl F-1.4)', () => 
     expect(SpecReview.instanceOf(review) && review.spec.uri).toBe(Ref.make(spec).uri);
   });
 
-  test('a review whose spec is not synced is refused', async ({ expect }) => {
-    const { repo, run } = await setup();
+  test('a review whose spec is not synced, or whose repository has no GitHub id, is refused', async ({ expect }) => {
+    const { db, repo, run } = await setup();
     await expect(
       run(importSpecReviewFile.handler({ repository: Ref.make(repo), path: REVIEW_PATH, content: REVIEW })),
     ).rejects.toThrow(/No synced spec/);
+
+    // A spec of another repository at the same path is not this review's.
+    const other = db.add(Repo.make({ owner: 'dxos', name: 'other' }));
+    const spec = db.add(Spec.make({ name: 'plugin-code/PLUGIN.mdl' }));
+    Obj.update(spec, (spec) => {
+      Obj.getMeta(spec).keys.push({ source: 'github.com', id: `5678:${SPEC_PATH}` });
+    });
+    await expect(
+      run(importSpecReviewFile.handler({ repository: Ref.make(other), path: REVIEW_PATH, content: REVIEW })),
+    ).rejects.toThrow(/No GitHub id/);
   });
 });

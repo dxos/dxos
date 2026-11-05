@@ -153,6 +153,8 @@ class ReviewWidget extends WidgetType {
       other.verdict.status === this.verdict.status &&
       other.verdict.summary === this.verdict.summary &&
       other.verdict.note === this.verdict.note &&
+      other.verdict.review?.commit === this.verdict.review?.commit &&
+      other.verdict.review?.date === this.verdict.review?.date &&
       other.verdict.walkthrough === this.verdict.walkthrough &&
       other.annotation?.testing === this.annotation?.testing &&
       keysEqual(other.annotation?.keys, this.annotation?.keys) &&

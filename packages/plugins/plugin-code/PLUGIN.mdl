@@ -19,8 +19,8 @@ plugin CodePlugin: Authors, reviews and syncs DEUS specs, and scaffolds the code
     - ReactSurface: the spec article surface, and the code project's article and section surfaces
     - Schema: the Spec and CodeProject types
     - Settings: repos to sync and build settings
-    - SkillDefinition: the Coder, Feature Map and Project Repositories skills
-    - SpecFileMapping: the GitHubCapabilities.FileMapping for `**/*.mdl`, so a GitHub file binding syncs specs (org.dxos.plugin.github.file-sync#F-6)
+    - SkillDefinition: the Coder, Feature Map, Project Repositories and Spec Review skills
+    - SpecFileMapping: the GitHubCapabilities.FileMappings for `**/*.mdl` and `**/*.review.mdl`, so a GitHub file binding syncs specs and imports their reviews (org.dxos.plugin.github.file-sync#F-6)
     - SpecSync: two-way sync of specs with files on disk (plugin-file-system's FileSystem)
     - Translations: the plugin's strings
 ```
@@ -886,8 +886,9 @@ feat F-16: Compliance review annotations
     The `spec-review` skill writes `<SPEC>.review.mdl` beside a spec: one verdict
     per item, in the review dialect (`org.dxos.spec.review`).
 
-  req F-16.1: SpecArticle reads the review beside the spec from the checkout and
-              re-reads it every 3 seconds.
+  req F-16.1: SpecArticle reads a spec's reviews: a spec in a space reads its SpecReviews from
+              ECHO; a spec read from a checkout reads the review beside it there and re-reads it
+              every 3 seconds.
   req F-16.2: Each reviewed item's declaration line gets a status bar and chip in
               the margin; a chip opens the verdict in the Review view.
   req F-16.3: Each definitions-graph box gets a status badge; a feature shows the
@@ -1088,7 +1089,7 @@ feat F-24: Spec reviews in ECHO
   req F-24.6: The Review view picks a review from the spec's history; it shows the current status by default.
   req F-24.7: The Review view shows the review's summary as markdown: its first paragraph, with the rest behind a
               disclosure. Below it, a filter of each status with its count, worst first, stays pinned above the cards
-              and shows only that status's verdicts. The summary, filter and cards scroll together under the picker,
+              and shows only that status's verdicts; each status is a button of its own, its icon beside its count. The summary, filter and cards scroll together under the picker,
               and the current card shows its note in full.
 ```
 
@@ -2145,7 +2146,28 @@ decision D-68: A feature embed in a spec is the editor's object embed, plugin-ma
 ```
 
 ```mdl
-decision D-69: A spec's reviews are ECHO objects beside the spec, one `SpecReview` per review, so a spec in a space keeps its review history. Each item's current status is its newest verdict in any review. Reviews come from git only: the `.review.mdl` file in the checkout or repository is imported and nothing writes one back, and only the current file is imported, with no backfill of earlier commits. The same front matter updates a review in place; new front matter makes a new review. The one way in for an agent is op:createSpecReview, which the Spec Review skill declares and the MCP server exposes. Requirement verdicts show where a feature's requirements are listed, its page and its section, and never on a feature card, which stays small. Amends [F-16.1] for a spec in a space, whose review is read from ECHO instead of the checkout.
+decision D-69: A spec's reviews are structured data. A SpecReview type sits beside the Spec type, and each review holds its verdicts keyed by the spec items they judge. The feature component draws the verdicts on requirements and a CodeMirror extension draws them on other items. An operation creates a review, with no UI of its own, as a tool for agents over MCP and in the app. GitHub file sync imports reviews into structured data. Reviews have a fixed format and are not extensible. A view of a whole review sits beside the spec, in its companion. An item's current status is its newest verdict, and old verdicts are kept.
+  date: 2026-11-05
+  by: user:wittjosiah
+  affects: [F-16, F-24]
+```
+
+```mdl
+decision D-70: Each review is a separate ECHO object. Reviews are only imported from git, never written back for now, and only the most recent review is imported, with no backfill.
+  date: 2026-11-05
+  by: user:wittjosiah
+  affects: [F-16.1]
+```
+
+```mdl
+decision D-71: Feature cards stay small and show no requirement verdicts; a feature's requirements and their verdicts are seen by going to the feature.
+  date: 2026-11-05
+  by: user:wittjosiah
+  affects: [F-24]
+```
+
+```mdl
+decision D-72: A spec's reviews are ECHO objects beside the spec, one `SpecReview` per review, so a spec in a space keeps its review history. Each item's current status is its newest verdict in any review. Reviews come from git only: the `.review.mdl` file in the checkout or repository is imported and nothing writes one back, and only the current file is imported, with no backfill of earlier commits. The same front matter updates a review in place; new front matter makes a new review. The one way in for an agent is op:createSpecReview, which the Spec Review skill declares and the MCP server exposes. Requirement verdicts show where a feature's requirements are listed, its page and its section, and never on a feature card, which stays small. Fills in [D-69], [D-70] and [D-71], and amends [F-16.1] for a spec in a space, whose review is read from ECHO instead of the checkout.
   date: 2026-11-05
   by: agent:claude-code
   for: user:wittjosiah
@@ -2155,13 +2177,37 @@ decision D-69: A spec's reviews are ECHO objects beside the spec, one `SpecRevie
 ```
 
 ```mdl
-decision D-70: The Review view leads with the review's summary, rendered as markdown and cut only at its first paragraph, with the rest behind a disclosure. The status counts become a filter pinned right above the cards they filter, each status an icon and count with its name in a tooltip, so the row fits a narrow panel. The summary scrolls with the cards rather than holding a fixed share of the panel.
+decision D-73: The Review view does not clip the summary, which made it cluttered. The summary leads the view, and the status counts become filters right above the cards they filter. The view is built from react-ui components only, and the proportion bar may be left out.
+  date: 2026-11-05
+  by: user:wittjosiah
+  affects: [F-16.4, F-24.7]
+```
+
+```mdl
+decision D-74: The Review view leads with the review's summary, rendered as markdown and cut only at its first paragraph, with the rest behind a disclosure. The status counts become a filter pinned right above the cards they filter, each status an icon and count with its name in a tooltip, so the row fits a narrow panel. The summary scrolls with the cards rather than holding a fixed share of the panel. Fills in [D-73].
   date: 2026-11-05
   by: agent:claude-code
   for: user:wittjosiah
   affects: [F-16.4, F-24.7]
   why: A six-line clip cut the summary mid-line, showed its source line breaks and backticks, and hid most of it; the counts looked like filters and did nothing, and as labelled tags they filled the panel's width.
   rejected: Grouping the cards under collapsible status headers; a fixed-height summary with its own scroll.
+```
+
+```mdl
+decision D-75: The filter's statuses are delineated as a button group, so each count sits with its own icon rather than nearer the next one.
+  date: 2026-11-05
+  by: user:wittjosiah
+  affects: [F-24.7]
+```
+
+```mdl
+decision D-76: Each status in the filter is a filled toggle-group button with the button's standard padding, which matches the gap between its icon and count. Fills in [D-75].
+  date: 2026-11-05
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-24.7]
+  why: react-ui has no joined button group; filled buttons with standard padding delineate each status from react-ui parts alone, as [D-73] asks.
+  rejected: A custom segmented control joining the buttons.
 ```
 
 ## Appendix: Extension Definitions

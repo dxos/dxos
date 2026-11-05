@@ -25,10 +25,10 @@ import CONNECTOR_EVENTS_MDL from '../../../../plugin-connector/spec/EVENTS.mdl?r
 import GITHUB_FILE_SYNC_MDL from '../../../../plugin-github/spec/FILE-SYNC.mdl?raw';
 import GITHUB_SYNC_MDL from '../../../../plugin-github/spec/SYNC.mdl?raw';
 import PLUGIN_CODE_MDL from '../../../PLUGIN.mdl?raw';
-import PLUGIN_CODE_REVIEW from '../../../PLUGIN.review.mdl?raw';
 import { useSpecTexts } from '../../testing/index.ts';
 import PLUGIN_CODE_BASE_MDL from './__fixtures__/plugin-code.base.mdl?raw';
 import PLUGIN_CODE_EARLIER_REVIEW from './__fixtures__/plugin-code.review-2026-10-23.mdl?raw';
+import PLUGIN_CODE_REVIEW from './__fixtures__/plugin-code.review-2026-10-27.mdl?raw';
 import { SpecArticle } from './SpecArticle.tsx';
 import { SpecPanel } from './SpecPanel.tsx';
 
