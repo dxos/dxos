@@ -14,7 +14,7 @@ import * as Schema from 'effect/Schema';
 import type * as SchemaRepresentation from 'effect/SchemaRepresentation';
 import * as Stream from 'effect/Stream';
 
-import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
+import { AiToolNotFoundError, PromptDefinition, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { OpaqueToolkit } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import { todo } from '@dxos/debug';
@@ -25,7 +25,7 @@ import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { RefFromLLM } from '../util/index.ts';
+import { refFromLLM } from '../util/index.ts';
 
 export const makeToolResolverFromOperations = <R = never>({
   toolkit: extraToolkit = OpaqueToolkit.empty,
@@ -265,7 +265,8 @@ export const projectFunctionToTool = (fn: Operation.Definition.Any): Tool.Any =>
     return toolCache.get(fn)!;
   }
 
-  const fields = createStructFieldsFromSchema(fn.input);
+  const definitions: PromptDefinition.PromptDefinition[] = [];
+  const fields = createStructFieldsFromSchema(fn.input, definitions);
   const parametersSchema = Object.keys(fields).length === 0 ? EMPTY_PARAMETERS_SCHEMA : Schema.Struct(fields);
   const tool = Tool.dynamic(Operation.toolName(fn), {
     description: fn.meta.description,
@@ -280,6 +281,8 @@ export const projectFunctionToTool = (fn: Operation.Definition.Any): Tool.Any =>
     failure: Schema.Any,
   })
     .annotate(FunctionToolAnnotation, { definition: fn, parameters: parametersSchema })
+    // Read after the JSON Schema is emitted: a recursive body is mapped, and its definitions met, only then.
+    .annotate(PromptDefinition.ToolAnnotation, PromptDefinition.merge(definitions))
     // The schema above states open records and omissible optional keys, which a provider's strict tool
     // mode forbids (it demands `additionalProperties: false` and every key in `required`). Operations
     // accept arbitrary input, so strict is off for all of them rather than per-operation — one
@@ -392,10 +395,12 @@ const withoutNull = (value: unknown): unknown => {
 /**
  * Projects an operation input struct into the LLM-facing tool parameter fields, mapping each
  * property through {@link mapSchemaTypeForLLM} (so refs become the model-friendly `RefFromLLM`).
+ * Every prompt definition the projected fields refer to is appended to `definitions`.
  * Exported for testing.
  */
 export const createStructFieldsFromSchema = (
   schema: Schema.Codec<unknown, unknown>,
+  definitions: PromptDefinition.PromptDefinition[] = [],
 ): Record<string, Schema.Codec<unknown, unknown>> => {
   switch (schema.ast._tag) {
     case 'Objects': {
@@ -404,7 +409,7 @@ export const createStructFieldsFromSchema = (
       return Object.fromEntries(
         schema.ast.propertySignatures.map((prop) => [
           prop.name,
-          Schema.make(mapSchemaTypeForLLM(prop.type, expansions)),
+          Schema.make(mapSchemaTypeForLLM(prop.type, expansions, definitions)),
         ]),
       );
     }
@@ -427,16 +432,24 @@ export const createStructFieldsFromSchema = (
  */
 const mapSchemaTypeForLLM = (
   ast: SchemaAST.AST,
-  expansions: Map<SchemaAST.AST, SchemaAST.AST> = new Map(),
+  expansions: Map<SchemaAST.AST, SchemaAST.AST>,
+  definitions: PromptDefinition.PromptDefinition[],
 ): SchemaAST.AST => {
+  const definition = PromptDefinition.fromAst(ast);
+  if (definition) {
+    definitions.push(definition);
+  }
+
   if (Ref.isRefType(ast)) {
     // v4's element and property nodes carry their own modifiers, so the wrapper types are gone and
     // the annotations record is optional.
-    const own = SchemaAST.resolveAnnotations(ast)?.description;
-    const fallback = SchemaAST.resolveAnnotations(RefFromLLM.ast)?.description as string;
-    const description = own ? `${own}\n${fallback}` : fallback;
+    const replacement = refFromLLM(SchemaAST.resolveAnnotations(ast)?.description).ast;
+    const replacementDefinition = PromptDefinition.fromAst(replacement);
+    if (replacementDefinition) {
+      definitions.push(replacementDefinition);
+    }
     // `optionalKey` puts the modifier on the ref node itself, so the rewrite must carry it across.
-    return SchemaEx.retainContext(ast, RefFromLLM.annotate({ description }).ast);
+    return SchemaEx.retainContext(ast, replacement);
   }
 
   // `mapAst` evaluates a suspended body eagerly, so a recursive schema would walk its own cycle
@@ -448,7 +461,7 @@ const mapSchemaTypeForLLM = (
     if (!mapped) {
       let expanded: SchemaAST.AST | undefined;
       mapped = new SchemaAST.Suspend(
-        () => (expanded ??= mapSchemaTypeForLLM(body, expansions)),
+        () => (expanded ??= mapSchemaTypeForLLM(body, expansions, definitions)),
         ast.annotations,
         undefined,
         ast.encoding,
@@ -461,7 +474,7 @@ const mapSchemaTypeForLLM = (
 
   // `mapAst` carries annotations, checks, encoding and `context` across every rebuilt node; in v4
   // optionality rides on `context`, so rebuilding by hand silently makes an optional key required.
-  return SchemaEx.mapAst(ast, (child) => mapSchemaTypeForLLM(child, expansions));
+  return SchemaEx.mapAst(ast, (child) => mapSchemaTypeForLLM(child, expansions, definitions));
 };
 
 /** Narrows `value` to {@link Toolkit.WithHandler} when it carries a non-null `tools` object and a `handle` function. */

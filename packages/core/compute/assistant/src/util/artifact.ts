@@ -6,9 +6,9 @@ import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import * as SchemaTransformation from 'effect/SchemaTransformation';
 
+import { PromptDefinition } from '@dxos/ai';
 import { Database, type Error as EchoError, Obj, Ref, type Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
-import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
@@ -16,6 +16,26 @@ import { trim } from '@dxos/util';
  * @deprecated
  */
 export const createArtifactElement = (id: EntityId) => `<artifact id=${id} />`;
+
+/**
+ * States the object reference format once in the system prompt; every ref parameter of every tool
+ * points here instead of carrying the format in its own JSON Schema.
+ */
+export const ObjectReferenceDefinition = PromptDefinition.make({
+  id: 'org.dxos.assistant.object-reference',
+  title: 'Object reference',
+  text: trim`
+    A parameter described as an object reference takes the object's URI exactly as it appears in Context Objects
+    or in a tool result, e.g. echo://<spaceId>/<objectId>.
+    Also accepted: <spaceId>:<objectId>; a bare <objectId> for an object in the current space; and
+    dxn:<typename>:<version> for a type that exists in the registry. A leading @ is ignored.
+  `,
+});
+
+/**
+ * What a ref parameter's JSON Schema says about its format.
+ */
+const OBJECT_REFERENCE_HINT = `An object reference (see "${ObjectReferenceDefinition.title}" in Definitions).`;
 
 /**
  * A model-friendly way to reference an object.
@@ -29,26 +49,7 @@ const ArtifactURI: Schema.Schema<string> & {
     schema: S,
     ref: ArtifactURI,
   ) => Effect.Effect<Type.InstanceType<S>, EchoError.EntityNotFoundError, Database.Service>;
-} = class extends Schema.String.annotate({
-  // TODO(dmaretskyi): This section gets overriden.
-  description: trim`
-    The URI of the referenced object. Protocols accepted:
-    - echo://01KG7R1ZXWFMWQ4DA1Q6TN1DG4. 
-    - space ID, object ID tuple (spaceID:objectID)
-    - Only object ID that is assumed to be in the current space (01KG7R1ZXWFMWQ4DA1Q6TN1DG4)
-    - dxn:org.dxos.type.calendar:0.1.0 -- named entity from the registry. Absoutely make sure it actually exists in the registry.
-
-    URIs can be prepended with an @ symbol for compatibility with in-text references.
-  `,
-  examples: [
-    'echo://01KG7R1ZXWFMWQ4DA1Q6TN1DG4',
-    '@echo://01KG7R1ZXWFMWQ4DA1Q6TN1DG4',
-    'BM3FSHFOMJCHCG5QW7JTVKGYABD2GAA7G:01KG7R1ZXWFMWQ4DA1Q6TN1DG4',
-    '01KG7R1ZXWFMWQ4DA1Q6TN1DG4',
-    'dxn:org.dxos.type.calendar:0.1.0',
-    '@dxn:org.dxos.type.calendar:0.1.0',
-  ],
-}) {
+} = class extends Schema.String.annotate({ description: OBJECT_REFERENCE_HINT }) {
   static toEchoURI(reference: ArtifactURI, owningSpaceId?: SpaceId): EID.EID {
     // Allow @ prefix for compatibility with in-text references.
     const stripped = reference.startsWith('@') ? reference.slice(1) : reference;
@@ -86,24 +87,34 @@ const ArtifactURI: Schema.Schema<string> & {
 
 type ArtifactURI = Schema.Schema.Type<typeof ArtifactURI>;
 
+const refFromUri = SchemaTransformation.transform({
+  decode: (fromA: string) => {
+    const eid = ArtifactURI.toEchoURI(fromA);
+    // Normalize to local form: strip any space authority so the ref resolves within the current
+    // space context. The AI commonly sends echo://SPACE/ENTITY format (mirroring what it sees in
+    // the database context), but cross-space resolution is not yet supported and the space ID
+    // encoded in the URI is always the current space anyway.
+    return EncodedReference.fromURI(EID.toLocal(eid));
+  },
+  encode: (toI: EncodedReference) => EncodedReference.toURI(toI),
+});
+
 /**
  * Schema that decodes ECHO reference object from an LLM-friendly input.
  */
-export const RefFromLLM = ArtifactURI.pipe(
-  Schema.decodeTo(
-    Ref.Ref(Obj.Unknown),
-    SchemaTransformation.transform({
-      decode: (fromA) => {
-        const eid = ArtifactURI.toEchoURI(fromA);
-        // Normalize to local form: strip any space authority so the ref resolves within the current
-        // space context. The AI commonly sends echo://SPACE/ENTITY format (mirroring what it sees in
-        // the database context), but cross-space resolution is not yet supported and the space ID
-        // encoded in the URI is always the current space anyway.
-        return EncodedReference.fromURI(EID.toLocal(eid));
-      },
-      encode: (toI) => EncodedReference.toURI(toI) as never,
-    }),
-  ),
-).annotate({
-  description: SchemaAST.getDescriptionAnnotation(ArtifactURI.ast) as string,
-});
+export const RefFromLLM = ArtifactURI.pipe(Schema.decodeTo(Ref.Ref(Obj.Unknown), refFromUri)).annotate(
+  PromptDefinition.annotations(ObjectReferenceDefinition),
+);
+
+/**
+ * {@link RefFromLLM} advertised with the parameter's own description ahead of the format hint.
+ *
+ * The description goes on the encoded string because the model is shown the encoded side's JSON Schema;
+ * an annotation on the decoded `Ref` never reaches it.
+ */
+export const refFromLLM = (description: string | undefined) =>
+  description === undefined
+    ? RefFromLLM
+    : Schema.String.annotate({ description: `${description}\n${OBJECT_REFERENCE_HINT}` })
+        .pipe(Schema.decodeTo(Ref.Ref(Obj.Unknown), refFromUri))
+        .annotate(PromptDefinition.annotations(ObjectReferenceDefinition));
