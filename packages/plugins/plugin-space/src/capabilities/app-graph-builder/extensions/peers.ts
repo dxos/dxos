@@ -17,6 +17,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
+import { EID } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { type Label } from '@dxos/ui-types/translations';
 
@@ -162,6 +163,12 @@ export const createPeerExtensions = Effect.fnUntraced(function* () {
             id: 'goTo',
             data: () =>
               Effect.gen(function* () {
+                // A peer on the space's Home attends the space itself, whose key names no object.
+                if (!EID.getEntityId(focus.key)) {
+                  yield* Operation.invoke(LayoutOperation.Open, { subject: [GraphPath.getSpaceHomePath(spaceId)] });
+                  return;
+                }
+
                 const client = yield* Capability.get(ClientCapabilities.Client);
                 const space = client.spaces.get().find((space) => space.id === spaceId);
                 if (!space) {

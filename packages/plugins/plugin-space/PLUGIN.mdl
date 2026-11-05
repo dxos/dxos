@@ -556,7 +556,7 @@ feat F-8: Presence and Sync Status
   req F-8.6: A viewer whose heartbeat has lapsed for two broadcast intervals drops out of both presence indicators.
   req F-8.7: A space's navtree row counts the peers viewing the space itself.
   req F-8.8: An object's navtree row shows the progress monitors keyed to it (`<object uri>#<suffix>`): a pulsing star while one runs, over presence, and a red edge when one fails. Each monitor's label is a line of the row's tooltip.
-  req F-8.9: Each peer in a space has a hidden app-graph node whose actions act on that peer: Jump when the object the peer views is open in the deck, Go to otherwise.
+  req F-8.9: Each peer in a space has a hidden app-graph node whose actions act on that peer: Jump when the object the peer views is open in the deck, Go to otherwise. A peer on the space's Home views the space itself, so Go to opens that Home, and the Members companion lists them under Home.
   req F-8.10: Jump reveals the peer's selection, or the top of their viewport when they have none, moving the caret and taking focus.
   req F-8.11: Clicking an avatar in SpacePresence opens the list of the object's viewers with that peer's row highlighted; a button at the end of its header opens the Members companion. Rows are Listbox rows whose actions are labelled buttons.
   req F-8.12: The Members deck companion lists every online peer in the space, grouped by the object they view, with the same actions; an Invite members action at the end of its toolbar opens the space's members settings. It sits third in the complementary rail, after Notifications.
@@ -1156,6 +1156,15 @@ decision D-43: With the sessions toggle on, a session row in the viewers list ha
   affects: [F-8.13, SpacePresence]
   why: Jump and Go to on such a row would act on the other object, the case [D-42] rules out for the person's row.
   rejected: Drop such sessions from the list, which would hide that the peer still has the object open.
+```
+
+```mdl
+decision D-44: A peer on a space's Home attends the space's own key, which names no object. Go to then opens the space's Home, and the Members companion heads their group "Home". Fills in [D-10].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.9, MembersCompanion]
+  why: Loading a key with no entity id as an object fails, which left Go to doing nothing and the group without a heading.
 ```
 
 ## Appendix: Extension Definitions
