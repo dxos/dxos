@@ -156,7 +156,7 @@ export const ReviewPanel = ({
               classNames='sticky top-0 z-[1] w-full py-1 bg-base-surface flex-wrap'
               data-testid='review-panel.filter'
             >
-              <ToggleGroup.Item value={ALL} variant='ghost' compact data-testid='review-panel.count.all'>
+              <ToggleGroup.Item value={ALL} data-testid='review-panel.count.all'>
                 {t('review-panel.filter.all.label', { count: review.verdicts.length })}
               </ToggleGroup.Item>
               {counts.map(({ status, count }) => (
@@ -164,8 +164,6 @@ export const ReviewPanel = ({
                   <Tooltip.Trigger asChild>
                     <ToggleGroup.Item
                       value={status}
-                      variant='ghost'
-                      compact
                       icon={STATUS_STYLE[status].icon}
                       iconClassNames={STATUS_STYLE[status].text}
                       data-testid={`review-panel.count.${status}`}
