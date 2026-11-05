@@ -8,7 +8,9 @@
  * the spec, delegate the tasks it files and watch the Gantt chart and the feature cards: Prototype as each task runs
  * its feature in the sandbox, Operational once the milestone's scenario passes there and the Worker is deployed. A
  * person accepts the reviewed tasks. Then change a requirement on its card and watch the feature fail, get fixed and
- * recover. Flight options stay planned for the viewer. The take does not open the Worker itself.
+ * recover. Flight options stay planned for the viewer. After each milestone the take pulls the agent's code from the
+ * sandbox, serves it on this machine with `wrangler dev`, runs the milestone's scenario against it and shows its pages,
+ * all in windows drawn over the app, before the person signs off.
  *
  * @title Availability Poll: from a spec to a Worker, milestone by milestone
  * @mdl packages/plugins/plugin-debug/PLUGIN.mdl test QA-11
@@ -18,12 +20,19 @@
  *
  * The agent checks its work on `wrangler dev` in the sandbox and deploys with `wrangler deploy --temporary` once a
  * milestone's scenario passes, so no Cloudflare login is needed; the claim URL it prints is a bearer credential, so the
- * take never opens the chats.
+ * take never opens a chat after the first deploy. `DX_POLL_BUILDS` is where the pulled code is built (default
+ * `~/.cache/availability-poll-builds`), and `DX_POLL_NODE_MODULES` an installed `node_modules` to seed each build with.
  *
  * To keep the build off EDGE's sandboxes, serve local ones with `serve()` from `plugin-sandbox/src/local/server.ts`,
  * allowing `*.workers.dev` and `*.cloudflare.com` beside the default registries, and give the driver `DX_SANDBOX_URL`
  * and `DX_SANDBOX_TOKEN` (see `useLocalSandbox`).
  */
+
+import { execFile, spawn } from 'node:child_process';
+import { cpSync, existsSync, mkdirSync, openSync, rmSync, writeFileSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
+import { promisify } from 'node:util';
 
 const TEMPLATE = 'Availability Poll';
 const PROJECT = 'Availability Poll';
@@ -460,6 +469,265 @@ const useLocalSandbox = async (page) => {
   return true;
 };
 
+const BUILDS = process.env.DX_POLL_BUILDS ?? join(homedir(), '.cache', 'availability-poll-builds');
+const LOCAL_PORT = 8799;
+const LOCAL = `http://127.0.0.1:${LOCAL_PORT}`;
+
+/** The take's environment without the Cloudflare account, so nothing local can reach it. */
+const localEnv = () => {
+  const env = { ...process.env };
+  delete env.CLOUDFLARE_API_TOKEN;
+  delete env.CLOUDFLARE_ACCOUNT_ID;
+  return env;
+};
+
+const run = (command, args, cwd) =>
+  promisify(execFile)(command, args, { cwd, env: localEnv(), maxBuffer: 64 * 1024 * 1024, timeout: 600_000 });
+
+/** Runs a shell command in the take's sandbox, through the same operation the agent uses. */
+const sandboxExec = (page, command) =>
+  page.evaluate(
+    async ({ key, command }) => {
+      const space = dxos
+        .spaces()
+        .find((candidate) => candidate.id === (globalThis[key] ??= sessionStorage.getItem(key) ?? undefined));
+      const sandboxes = await space.db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.sandbox'))).run();
+      const sandbox = sandboxes.find((candidate) => candidate.name === 'availability-poll');
+      return composer.invoke(
+        'org.dxos.operation.sandbox.exec',
+        { sandbox: dxos.Ref.make(sandbox), command, timeout: 290_000 },
+        { spaceId: space.id },
+      );
+    },
+    { key: TAKE_SPACE, command },
+  );
+
+/** Copies the agent's working tree out of the sandbox, without its installs and builds, into a fresh directory. */
+const pullBuild = async (page, milestone) => {
+  const { stdout, exitCode } = await sandboxExec(
+    page,
+    'cd /workspace/poll && tar czf - --exclude=./node_modules --exclude=./.wrangler --exclude=./dist . | base64 -w0',
+  );
+  if (exitCode !== 0) {
+    throw new Error(`The sandbox's working tree could not be copied (${exitCode})`);
+  }
+  const dir = join(BUILDS, `${milestone}-${Date.now()}`);
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(`${dir}.tgz`, Buffer.from(stdout.trim(), 'base64'));
+  await run('tar', ['xzf', `${dir}.tgz`, '-C', dir]);
+  rmSync(`${dir}.tgz`);
+  if (!existsSync(join(dir, 'package.json'))) {
+    throw new Error(`The sandbox's /workspace/poll has no package.json; see ${dir}`);
+  }
+  return dir;
+};
+
+/** The local `wrangler dev`, kept between steps so the next milestone's build replaces it. */
+let served;
+
+const stopServing = () => {
+  if (served) {
+    try {
+      process.kill(-served.pid, 'SIGTERM');
+    } catch {}
+    served = undefined;
+  }
+};
+process.on('exit', stopServing);
+
+/** Installs and builds the pulled code, then serves it with `wrangler dev` until it answers. */
+const serveBuild = async (dir) => {
+  stopServing();
+  const seed = process.env.DX_POLL_NODE_MODULES;
+  if (seed && existsSync(seed) && !existsSync(join(dir, 'node_modules'))) {
+    cpSync(seed, join(dir, 'node_modules'), { recursive: true, verbatimSymlinks: true });
+  }
+  await run('npm', ['install', '--prefer-offline', '--no-audit', '--no-fund'], dir);
+  await run('npm', ['run', 'build', '--if-present'], dir);
+  const log = openSync(join(dir, 'wrangler-dev.log'), 'a');
+  served = spawn('npx', ['wrangler', 'dev', '--port', String(LOCAL_PORT), '--ip', '127.0.0.1'], {
+    cwd: dir,
+    env: localEnv(),
+    detached: true,
+    stdio: ['ignore', log, log],
+  });
+  for (let attempt = 0; attempt < 120; attempt++) {
+    if (
+      await fetch(LOCAL, { signal: AbortSignal.timeout(2_000) }).then(
+        (response) => response.ok,
+        () => false,
+      )
+    ) {
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
+  }
+  throw new Error(`wrangler dev did not answer on ${LOCAL}; see ${join(dir, 'wrangler-dev.log')}`);
+};
+
+const T1 = {
+  title: 'Design review',
+  minutes: 60,
+  slots: ['2026-06-01', '2026-06-02'].flatMap((date) => ['09', '10', '11', '12'].map((hour) => `${date}T${hour}:00Z`)),
+  marks: { Ana: ['s1', 's2', 's3'], Ben: ['s2', 's3', 's6', 's7'], Chika: ['s3', 's6', 's7'] },
+  free: [1, 2, 3, 0, 0, 2, 2, 0],
+  best: { id: 's3', start: '2026-06-01T11:00Z' },
+};
+
+/**
+ * Runs scenario T-1 against the local Worker as terminal lines, each a request or a check; `passed` says whether every
+ * check held, and `id` is the poll it made.
+ */
+const checkT1 = async () => {
+  const api = async (path, method = 'GET', body) => {
+    const response = await fetch(`${LOCAL}${path}`, {
+      method,
+      headers: body ? { 'content-type': 'application/json' } : undefined,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    return { status: response.status, body: await response.json().catch(() => undefined) };
+  };
+  const lines = [];
+  const created = await api('/api/polls', 'POST', { title: T1.title, minutes: T1.minutes, slots: T1.slots });
+  const id = created.body?.id;
+  lines.push({ text: `POST /api/polls  "${T1.title}", 8 slots  → ${created.status}` });
+  for (const [name, slots] of Object.entries(T1.marks)) {
+    const saved = await api(`/api/polls/${id}/marks/${name}`, 'PUT', { slots });
+    lines.push({ text: `PUT  marks/${name.padEnd(6)}${slots.join(' ').padEnd(13)}→ ${saved.status}` });
+  }
+  const poll = (await api(`/api/polls/${id}`)).body ?? {};
+  const best = poll.slots?.find((slot) => slot.id === poll.best);
+  const checks = [
+    ['respondents', poll.respondents?.map((respondent) => respondent.name).join(', '), 'Ana, Ben, Chika'],
+    ['free counts', poll.slots?.map((slot) => slot.free.length).join(' '), T1.free.join(' ')],
+    ['best slot', best && `${best.id}, ${best.start}`, `${T1.best.id}, ${T1.best.start}`],
+  ];
+  for (const [label, actual, expected] of checks) {
+    lines.push({ text: `${label.padEnd(12)} ${actual ?? '—'}`, ok: actual === expected });
+  }
+  const passed = checks.every(([, actual, expected]) => actual === expected);
+  return { id, passed, lines };
+};
+
+const WINDOW = 'autocue-window';
+
+/**
+ * Draws a window over the app, below the captions and cursor: a terminal of `lines` typed in one by one, or a browser
+ * on `url`. Its title bar names what it shows.
+ */
+const openWindow = (page, { title, url }) =>
+  page.evaluate(
+    ({ id, title, url }) => {
+      document.getElementById(id)?.remove();
+      const frame = document.createElement('div');
+      frame.id = id;
+      frame.style.cssText =
+        'position:fixed;inset:7% 9% 16% 9%;z-index:2147483000;display:flex;flex-direction:column;border-radius:12px;' +
+        'overflow:hidden;background:#0d1117;box-shadow:0 24px 80px rgba(0,0,0,.6);border:1px solid #30363d;' +
+        'font:15px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;color:#e6edf3';
+      const bar = document.createElement('div');
+      bar.style.cssText =
+        'display:flex;align-items:center;gap:8px;padding:10px 14px;background:#161b22;border-bottom:1px solid #30363d;' +
+        'font:13px system-ui,sans-serif;color:#8b949e';
+      for (const color of ['#ff5f57', '#febc2e', '#28c840']) {
+        const dot = document.createElement('span');
+        dot.style.cssText = `width:12px;height:12px;border-radius:50%;background:${color}`;
+        bar.append(dot);
+      }
+      const label = document.createElement('span');
+      label.style.cssText = 'margin-left:10px';
+      label.textContent = title;
+      bar.append(label);
+      frame.append(bar);
+      if (url) {
+        const iframe = document.createElement('iframe');
+        iframe.src = url;
+        iframe.style.cssText = 'flex:1;border:0;background:#fff';
+        frame.append(iframe);
+      } else {
+        const body = document.createElement('pre');
+        body.dataset.part = 'lines';
+        body.style.cssText = 'flex:1;margin:0;padding:18px 22px;overflow:hidden;white-space:pre';
+        frame.append(body);
+      }
+      document.body.append(frame);
+    },
+    { id: WINDOW, title, url },
+  );
+
+/** Adds a line to the open terminal window; `ok` marks it passed or failed. */
+const printLine = (page, { text, ok }) =>
+  page.evaluate(
+    ({ id, text, ok }) => {
+      const line = document.createElement('div');
+      if (ok !== undefined) {
+        const mark = document.createElement('span');
+        mark.style.color = ok ? '#3fb950' : '#f85149';
+        mark.textContent = ok ? '✓ ' : '✗ ';
+        line.append(mark);
+      }
+      line.append(text);
+      if (text.startsWith('$')) {
+        line.style.color = '#79c0ff';
+      }
+      document.querySelector(`#${id} [data-part="lines"]`)?.append(line);
+    },
+    { id: WINDOW, text, ok },
+  );
+
+const closeWindow = (page) => page.evaluate((id) => document.getElementById(id)?.remove(), WINDOW);
+
+/** The browser window's page, for driving the served build. */
+const inWindow = (selector) => `#${WINDOW} iframe >> internal:control=enter-frame >> ${selector}`;
+
+/**
+ * Pulls the milestone's build from the sandbox and serves it here, fast-forwarded; then runs T-1 against it in a
+ * terminal, and shows its new poll page and the T-1 poll as Ben in a browser.
+ */
+const tryLocally = async (demo, page, milestone) => {
+  await demo.caption({
+    value: `Try ${milestone} on this machine`,
+    subtitle: "The agent's code, pulled from its sandbox",
+  });
+  await demo.speed({ factor: FAST });
+  const dir = await pullBuild(page, milestone);
+  await serveBuild(dir);
+  await demo.speed({ factor: 1 });
+  await openWindow(page, { title: `Terminal — ${milestone} on wrangler dev, ${LOCAL}` });
+  await demo.caption({ value: 'Scenario T-1, run against the local Worker', subtitle: 'Three respondents, six slots' });
+  await printLine(page, { text: "$ wrangler dev  # the agent's Worker, built here" });
+  await printLine(page, { text: `Ready on ${LOCAL}` });
+  await page.waitForTimeout(BEAT);
+  await printLine(page, { text: '$ check scenario T-1' });
+  const { id, passed, lines } = await checkT1();
+  for (const line of lines) {
+    await printLine(page, line);
+    await page.waitForTimeout(line.ok === undefined ? 400 : 700);
+  }
+  await printLine(page, { text: passed ? 'T-1 passed' : 'T-1 FAILED', ok: passed });
+  await page.waitForTimeout(BEAT * 3);
+  await openWindow(page, { title: `${LOCAL}/  —  the new poll page`, url: `${LOCAL}/` });
+  await demo.caption({ value: 'The new poll page', subtitle: 'Served from the build on this machine' });
+  await page.waitForTimeout(BEAT * 3);
+  if (id) {
+    await openWindow(page, { title: `${LOCAL}/p/${id.slice(0, 12)}…  —  the T-1 poll`, url: `${LOCAL}/p/${id}` });
+    await demo.caption({ value: 'The T-1 poll, as Ben', subtitle: 'The heat map and the best slot' });
+    await page.waitForTimeout(BEAT);
+    // The page asks a visitor's name first; the agent builds the form, so the first text field is the best guess.
+    const name = page.locator(inWindow('input:not([type]), input[type="text"]')).first();
+    if (await visible(name, 5_000)) {
+      await demo.click({ selector: inWindow('input:not([type]), input[type="text"]') + ' >> nth=0', label: 'Name' });
+      await page.keyboard.type('Ben', { delay: 60 });
+      await page.keyboard.press('Enter');
+    }
+    await page.waitForTimeout(BEAT * 4);
+  }
+  await closeWindow(page);
+  if (!passed) {
+    throw new Error(`T-1 failed against ${milestone}'s local build: ${JSON.stringify(lines)}`);
+  }
+};
+
 export const steps = [
   {
     name: 'Prep (off camera): dismiss notices, hide help panels, pick the model',
@@ -653,6 +921,12 @@ export const steps = [
     },
   },
   {
+    name: 'Try M-1 locally',
+    run: async ({ demo, page }) => {
+      await tryLocally(demo, page, M1.id);
+    },
+  },
+  {
     name: 'Accept M-1',
     done: async ({ page }) => tasksOf(await snapshot(page), M1.id).every((task) => task.status === 'done'),
     run: async ({ demo, page }) => {
@@ -695,6 +969,12 @@ export const steps = [
         subtitle: 'Both pages checked, then deployed',
       });
       await page.waitForTimeout(BEAT * 2);
+    },
+  },
+  {
+    name: 'Try M-2 locally',
+    run: async ({ demo, page }) => {
+      await tryLocally(demo, page, M2.id);
     },
   },
   {
