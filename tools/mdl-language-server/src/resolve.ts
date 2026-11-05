@@ -56,6 +56,13 @@ const isLocal = (workspace: Workspace, key: SourceKey): boolean =>
     ? workspace.repo.owner === key.owner && workspace.repo.repo === key.repo
     : workspace.read(key.path) !== undefined;
 
+/**
+ * The open checkout a key names: the document's own, else a sibling workspace folder that checks out the key's
+ * repository — a `dxos/edge` key resolves to the edge checkout when both repos are open in one window.
+ */
+export const checkoutOf = (workspace: Workspace, key: SourceKey): Workspace | undefined =>
+  isLocal(workspace, key) ? workspace : workspace.peers?.find((peer) => isLocal(peer, key));
+
 /** The GitHub page of a key, at its line when known. */
 export const githubUrl = (key: SourceKey, line?: number): string =>
   `https://github.com/${key.owner}/${key.repo}/blob/HEAD/${key.path}${line === undefined ? '' : `#L${line + 1}`}`;
@@ -72,16 +79,17 @@ export const fragmentLine = (path: string, text: string, fragment: string | unde
   return line === undefined ? undefined : line - 1;
 };
 
-/** Resolves a `github:` key to the local file at its fragment, else to its GitHub page. */
+/** Resolves a `github:` key to the file of an open checkout at its fragment, else to its GitHub page. */
 export const keyTarget = (workspace: Workspace, key: SourceKey): Target => {
-  const text = isLocal(workspace, key) ? workspace.read(key.path) : undefined;
-  if (text === undefined) {
+  const checkout = checkoutOf(workspace, key);
+  const text = checkout?.read(key.path);
+  if (checkout === undefined || text === undefined) {
     return { kind: 'url', url: githubUrl(key), key };
   }
   return {
     kind: 'file',
     path: key.path,
-    uri: uriOfPath(workspace, key.path),
+    uri: uriOfPath(checkout, key.path),
     line: fragmentLine(key.path, text, key.fragment),
     key,
   };

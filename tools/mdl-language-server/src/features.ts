@@ -36,6 +36,7 @@ import { keyCard, specCard, verdictCard } from './hover.ts';
 import {
   type Reference,
   type Target,
+  checkoutOf,
   declarations,
   findReferences,
   githubUrl,
@@ -92,12 +93,14 @@ export const diagnostics = (workspace: Workspace, { path, text, lines }: Documen
     found.push({ range: lines.range(from, to), severity: DiagnosticSeverity.Warning, source, message });
 
   for (const { from, to, key } of findSourceKeys(text)) {
-    if (!workspace.repo || workspace.repo.owner !== key.owner || workspace.repo.repo !== key.repo) {
+    // Only a checkout of the key's own repository can say whether its file is there.
+    const checkout = checkoutOf(workspace, key);
+    if (!checkout?.repo) {
       continue;
     }
-    const file = workspace.read(key.path);
+    const file = checkout.read(key.path);
     if (file === undefined) {
-      warn(from, to, 'mdl/key', `No file \`${key.path}\` in this checkout.`);
+      warn(from, to, 'mdl/key', `No file \`${key.path}\` in the \`${key.owner}/${key.repo}\` checkout.`);
     } else if (key.fragment) {
       const missing = key.path.endsWith('.mdl')
         ? itemLine(file, key.fragment) === undefined
