@@ -31,7 +31,13 @@ import {
   getDependents,
 } from '../../components/FeatureCard/index.ts';
 import { ObjectAddPicker } from '../../components/ObjectAddPicker/index.ts';
-import { useFeatureEditing, useFeatureGraph, useFieldExtensions, useOpenFeatureTarget } from '../../hooks/index.ts';
+import {
+  useFeatureEditing,
+  useFeatureGraph,
+  useFieldExtensions,
+  useOpenFeatureTarget,
+  useRequirementVerdicts,
+} from '../../hooks/index.ts';
 import { CodeNamespace } from '../../namespace.ts';
 
 // The editable fields, picked from the schema on the AST as ProjectArticle does: `Type.getSchema` erases to
@@ -45,13 +51,16 @@ export const FeatureValues = Schema.make<Schema.Codec<FeatureValues, any>>(
 
 /** Requirements render as rows that wrap to their whole text rather than the generic list of nested forms. */
 const makeFieldMap = (feature: Feature.Feature, extensions: RequirementEditorExtensions): FormFieldMap => {
-  const RequirementsField: FormFieldRenderer = ({ label }) => (
-    <Form.Field label={label} standalone>
-      <Card.Root grid border={false}>
-        <RequirementEditor feature={feature} extensions={extensions} />
-      </Card.Root>
-    </Form.Field>
-  );
+  const RequirementsField: FormFieldRenderer = ({ label }) => {
+    const verdicts = useRequirementVerdicts(feature);
+    return (
+      <Form.Field label={label} standalone>
+        <Card.Root grid border={false}>
+          <RequirementEditor feature={feature} extensions={extensions} verdicts={verdicts} />
+        </Card.Root>
+      </Form.Field>
+    );
+  };
   return { requirements: RequirementsField };
 };
 

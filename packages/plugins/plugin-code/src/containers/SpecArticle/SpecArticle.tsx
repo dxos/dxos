@@ -178,7 +178,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
             ),
           review &&
             reviewGutter(review, {
-              onSelect: (verdict) => show({ selectedVerdict: verdict, view: 'review' }),
+              onSelect: (verdict) => show({ selectedVerdict: verdict, selectedReview: undefined, view: 'review' }),
               onOpen: (target) => void open(target),
               read: readLatest,
             }),

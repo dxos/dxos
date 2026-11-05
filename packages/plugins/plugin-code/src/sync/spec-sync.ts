@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import * as Spec from '@dxos/compute/Spec';
-import { type SourceKey, isSpecKey } from '@dxos/deus/review';
+import * as SpecReview from '@dxos/compute/SpecReview';
+import { type SourceKey, isSpecKey, reviewKeyOf } from '@dxos/deus/review';
 import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { log } from '@dxos/log';
@@ -15,6 +16,7 @@ import type * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabili
 import * as FrontMatter from './front-matter.ts';
 import { resolvePath } from './repo-roots.ts';
 import { fromMetaKey } from './spec-key.ts';
+import * as SpecReviews from './spec-review.ts';
 
 /** What a sync pass did to one spec. */
 export type SyncStatus =
@@ -173,4 +175,43 @@ export const syncSpec = Effect.fnUntraced(
     return { status, path } satisfies SyncResult;
   },
   Effect.catch((error) => Effect.succeed<SyncResult>({ status: 'error', error: error.message })),
+);
+
+/**
+ * Records the review beside a linked spec (`PLUGIN.review.mdl` beside `PLUGIN.mdl`) as one of the spec's reviews.
+ * `seen` holds the review text last recorded per spec, so an unchanged file is not parsed again.
+ */
+export const syncReview = Effect.fnUntraced(
+  function* (
+    spec: Spec.Spec,
+    {
+      fs,
+      roots,
+      seen,
+    }: { fs: FileSystem.FileSystem; roots: readonly FileSystem.RepoRoot[]; seen: Map<string, string> },
+  ) {
+    const key = getSpecKey(spec);
+    const path = key && resolvePath(roots, reviewKeyOf(key));
+    const db = Obj.getDatabase(spec);
+    if (!path || !db) {
+      return;
+    }
+    const text = yield* fs.read(path);
+    if (text === undefined || seen.get(spec.id) === text) {
+      return;
+    }
+    seen.set(spec.id, text);
+    const fields = SpecReviews.fromText(text);
+    if (typeof fields === 'string') {
+      log.warn('review not recorded', { path, reason: fields });
+      return;
+    }
+    const reviews = yield* Effect.promise(() => db.query(SpecReview.query(spec)).run());
+    const { review, created } = SpecReviews.applyReview(spec, reviews, fields);
+    if (created) {
+      db.add(review);
+    }
+  },
+  // A defect too, since a review must not stop the spec's sync.
+  Effect.catchCause((cause) => Effect.sync(() => log.warn('review not recorded', { cause }))),
 );
