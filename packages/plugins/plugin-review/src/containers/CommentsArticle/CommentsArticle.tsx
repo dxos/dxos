@@ -12,7 +12,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { Annotation, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
@@ -32,7 +32,7 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Tabs from '@dxos/react-ui/Tabs';
 import * as Theme from '@dxos/react-ui/Theme';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
-import { AnchoredTo, type Message as MessageType, Thread } from '@dxos/types';
+import { AnchoredTo, type Message as MessageType, Subscription, Thread } from '@dxos/types';
 import { hoverableControls, hoverableFocusedWithinControls, mx, toHue } from '@dxos/ui-theme';
 import { hexToHue } from '@dxos/util';
 
@@ -209,6 +209,18 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     return branch?.key;
   }, [markdownDoc, versionSelection]);
   const activeBranch = reviewBranch ?? 'main';
+
+  const subscription = useAtomValue(
+    useMemo(
+      () => Annotation.atomProperty(subject, Subscription.Subscription, identity?.did ?? ''),
+      [subject, identity],
+    ),
+  );
+  const subscribed = Subscription.isSubscribed(subscription, 'comments');
+  const handleToggleSubscription = useCallback(
+    () => invokePromise(CommentOperation.SetSubscription, { subject, subscribed: !subscribed }),
+    [invokePromise, subject, subscribed],
+  );
 
   // A comment on the whole object: no anchor, which the editors' comment sync and anchor sorts already pass over.
   const handleAddObjectComment = useCallback(
@@ -574,6 +586,17 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
               </Tabs.Trigger>
             </Tabs.List>
             <Toolbar.Separator variant='gap' />
+            {identity && (
+              <Button.Root
+                variant='ghost'
+                iconOnly
+                icon={subscribed ? 'ph--bell-ringing--regular' : 'ph--bell-slash--regular'}
+                label={t('subscribe-comments.label')}
+                aria-pressed={subscribed}
+                onClick={handleToggleSubscription}
+                data-testid='comments.subscription.toggle'
+              />
+            )}
             <Button.Root
               variant='ghost'
               iconOnly

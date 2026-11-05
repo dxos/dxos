@@ -8,6 +8,7 @@
 // host renders portals from, widget state and context effects, and bookmark navigation. What is
 // matched is a matcher's business: `xmlTags` claims XML elements, `objectLinks` object links.
 
+import { redo, undo } from '@codemirror/commands';
 import { ensureSyntaxTree, syntaxTree } from '@codemirror/language';
 import {
   type EditorState,
@@ -35,7 +36,7 @@ import { log } from '@dxos/log';
 import { type Range } from '../../types/index.ts';
 import { decorationSetToArray } from '../../util/index.ts';
 import { crawlerLineEffect } from '../streaming/index.ts';
-import { StubWidget, type WidgetNotifier } from './stub.ts';
+import { StubWidget, WIDGET_ROOT_ATTRIBUTE, type WidgetNotifier } from './stub.ts';
 
 //
 // Types
@@ -689,6 +690,266 @@ const keyHandlers = Prec.highest(
   ]),
 );
 
+/** The element a widget marks as its focus stop with `tabindex="0"`. */
+const focusTarget = (root: Element): HTMLElement | undefined =>
+  root.querySelector<HTMLElement>('[tabindex="0"]') ?? undefined;
+
+/** The focus target of the first block widget drawn within `[from, to]`. */
+const focusableBlock = (view: EditorView, from: number, to: number): HTMLElement | undefined => {
+  for (const root of view.contentDOM.querySelectorAll<HTMLElement>(`[${WIDGET_ROOT_ATTRIBUTE}]`)) {
+    const pos = view.posAtDOM(root);
+    if (pos >= from && pos <= to) {
+      return focusTarget(root);
+    }
+  }
+};
+
+/** The element to focus for a block widget, or undefined when it takes none. */
+type FocusBlock = (block: Range) => HTMLElement | undefined;
+
+const focusBlockIn =
+  (view: EditorView): FocusBlock =>
+  (block) =>
+    focusableBlock(view, block.from, block.to);
+
+/** The block widget whose range covers the whole of `line`, so the line has no text of its own. */
+const blockOnLine = (state: EditorState, line: Range): Range | undefined =>
+  decorationSetToArray(state.field(widgetDecorationsField).decorations).find(
+    (range) => range.value.spec.block && range.from <= line.from && range.to >= line.to,
+  );
+
+/**
+ * The first stop at or past `pos` in one direction: `pos` unless its line is a block's, else the near edge of the next
+ * text line, or a block on the way that `focus` takes. Undefined when only blocks are left.
+ */
+const nextStop = (
+  state: EditorState,
+  pos: number,
+  forward: boolean,
+  focus?: FocusBlock,
+): number | HTMLElement | undefined => {
+  const { doc } = state;
+  let line = doc.lineAt(pos);
+  for (let block = blockOnLine(state, line); block; block = blockOnLine(state, line)) {
+    const element = focus?.(block);
+    if (element) {
+      return element;
+    }
+    const edge = doc.lineAt(forward ? block.to : block.from);
+    if (forward ? edge.to >= doc.length : edge.from === 0) {
+      return undefined;
+    }
+    line = doc.lineAt(forward ? edge.to + 1 : edge.from - 1);
+  }
+  return line.number === doc.lineAt(pos).number ? pos : forward ? line.from : line.to;
+};
+
+/** The first stop past `range` in one direction: text beside it on its own line, else `nextStop` from the next line. */
+const stopPast = (
+  state: EditorState,
+  range: Range,
+  forward: boolean,
+  focus?: FocusBlock,
+): number | HTMLElement | undefined => {
+  const { doc } = state;
+  const line = doc.lineAt(forward ? range.to : range.from);
+  if (forward ? range.to < line.to : range.from > line.from) {
+    return forward ? range.to : range.from;
+  }
+  if (forward ? line.to >= doc.length : line.from === 0) {
+    return undefined;
+  }
+  return nextStop(state, forward ? line.to + 1 : line.from - 1, forward, focus);
+};
+
+/**
+ * Arrowing off a text line onto a block widget that takes focus focuses it: up or down from the line's edge visual
+ * line, right from its end, left from its start. Blocks that take no focus are passed. `handleBlockWidgetKey` leads
+ * back out.
+ */
+const enterBlock =
+  (forward: boolean, vertical: boolean) =>
+  (view: EditorView): boolean => {
+    const { main } = view.state.selection;
+    if (!main.empty) {
+      return false;
+    }
+    const line = view.state.doc.lineAt(main.head);
+    if (vertical) {
+      // Within a wrapped line the caret moves as usual.
+      if (view.state.doc.lineAt(view.moveVertically(main, forward).head).number === line.number) {
+        return false;
+      }
+    } else if (main.head !== (forward ? line.to : line.from)) {
+      return false;
+    }
+    const stop = stopPast(view.state, line, forward, focusBlockIn(view));
+    if (stop === undefined || typeof stop === 'number') {
+      return false;
+    }
+    stop.focus();
+    return true;
+  };
+
+const blockFocusKeys = Prec.high(
+  keymap.of([
+    { key: 'ArrowDown', run: enterBlock(true, true) },
+    { key: 'ArrowUp', run: enterBlock(false, true) },
+    { key: 'ArrowRight', run: enterBlock(true, false) },
+    { key: 'ArrowLeft', run: enterBlock(false, false) },
+  ]),
+);
+
+/** Focuses block widget `id` once its content mounts, or the editor when it does not. */
+const refocusBlock = (view: EditorView, id: string, frames = 5) => {
+  const root = view.contentDOM.querySelector(`[${WIDGET_ROOT_ATTRIBUTE}="${CSS.escape(id)}"]`);
+  const element = root ? focusTarget(root) : undefined;
+  element?.focus();
+  if (element && document.activeElement === element) {
+    return;
+  }
+  if (frames > 0) {
+    requestAnimationFrame(() => refocusBlock(view, id, frames - 1));
+  } else {
+    view.focus();
+  }
+};
+
+/** The range of the block widget drawn by a widget root. */
+const blockRangeOf = (view: EditorView, root: Element): Range | undefined => {
+  const pos = view.posAtDOM(root);
+  const { decorations } = view.state.field(widgetDecorationsField);
+  return decorationSetToArray(decorations).find(
+    (range) => range.value.spec.block && pos >= range.from && pos <= range.to,
+  );
+};
+
+const focusText = (view: EditorView, anchor: number) => {
+  view.dispatch({ selection: { anchor }, scrollIntoView: true });
+  view.focus();
+};
+
+/**
+ * Leaves a block widget on one side, for the next block there that takes focus or else the text past it. Without
+ * `intoBlock` it goes straight to the text. False when there is neither on that side.
+ */
+const leaveBlock = (view: EditorView, range: Range, forward: boolean, intoBlock = true): boolean => {
+  const stop = stopPast(view.state, range, forward, intoBlock ? focusBlockIn(view) : undefined);
+  if (stop === undefined) {
+    return false;
+  }
+  if (typeof stop === 'number') {
+    focusText(view, stop);
+  } else {
+    stop.focus();
+  }
+  return true;
+};
+
+/** Swaps the lines of a block widget with the line on one side, leaving the cursor in the text beside it. */
+const moveBlock = (view: EditorView, range: Range, forward: boolean) => {
+  const { state } = view;
+  const { doc } = state;
+  const start = doc.lineAt(range.from);
+  const end = doc.lineAt(range.to);
+  if (forward ? end.to >= doc.length : start.from === 0) {
+    return;
+  }
+  const other = doc.lineAt(forward ? end.to + 1 : start.from - 1);
+  const lines = doc.sliceString(start.from, end.to);
+  const changes = forward
+    ? { from: start.from, to: other.to, insert: `${other.text}\n${lines}` }
+    : { from: other.from, to: end.to, insert: `${lines}\n${other.text}` };
+  const shift = (forward ? 1 : -1) * (other.length + 1);
+  const moved = { from: range.from + shift, to: range.to + shift };
+  const next = state.update({ changes }).state;
+  const anchor = stopPast(next, moved, !forward) ?? stopPast(next, moved, forward);
+  view.dispatch({
+    changes,
+    selection: typeof anchor === 'number' ? { anchor } : undefined,
+    scrollIntoView: true,
+    userEvent: 'move.line',
+  });
+};
+
+export type BlockWidgetKey = Pick<KeyboardEvent, 'key' | 'altKey' | 'ctrlKey' | 'metaKey' | 'shiftKey'>;
+
+/**
+ * The keys of a block widget whose own element has focus, so it is selected as a whole: the arrows move to the next
+ * block on their side that takes focus or the text there, Escape to the text after it (or before it when none follows),
+ * Alt with Up or Down moves it as a line, undo and redo act on the document, and Backspace or Delete removes it; a
+ * read-only document neither moves nor removes it. True when the key was handled. The editor's cursor stays in text.
+ */
+export const handleBlockWidgetKey = (view: EditorView, element: Element, event: BlockWidgetKey): boolean => {
+  const root = element.closest(`[${WIDGET_ROOT_ATTRIBUTE}]`);
+  const id = root?.getAttribute(WIDGET_ROOT_ATTRIBUTE);
+  const range = root ? blockRangeOf(view, root) : undefined;
+  if (!id || !range) {
+    return false;
+  }
+  if (event.ctrlKey || event.metaKey) {
+    const key = event.key.toLowerCase();
+    const command = key === 'z' ? (event.shiftKey ? redo : undo) : key === 'y' && !event.shiftKey ? redo : undefined;
+    if (!command || event.altKey) {
+      return false;
+    }
+    if (command(view)) {
+      refocusBlock(view, id);
+    }
+    return true;
+  }
+  if (event.shiftKey) {
+    return false;
+  }
+  switch (event.key) {
+    case 'ArrowLeft':
+    case 'ArrowRight': {
+      leaveBlock(view, range, event.key === 'ArrowRight');
+      return true;
+    }
+    case 'ArrowUp':
+    case 'ArrowDown': {
+      const forward = event.key === 'ArrowDown';
+      if (event.altKey) {
+        if (!view.state.readOnly) {
+          moveBlock(view, range, forward);
+          refocusBlock(view, id);
+        }
+      } else {
+        leaveBlock(view, range, forward);
+      }
+      return true;
+    }
+    case 'Escape': {
+      if (!leaveBlock(view, range, true, false) && !leaveBlock(view, range, false, false)) {
+        view.focus();
+      }
+      return true;
+    }
+    case 'Backspace':
+    case 'Delete': {
+      const { state } = view;
+      if (state.readOnly) {
+        return true;
+      }
+      // A block on a line of its own goes with one line break; one with text beside it goes alone.
+      const { doc } = state;
+      const alone =
+        (range.from === 0 || doc.sliceString(range.from - 1, range.from) === '\n') &&
+        (range.to === doc.length || doc.sliceString(range.to, range.to + 1) === '\n');
+      const from = alone && range.from > 0 ? range.from - 1 : range.from;
+      const to = alone && range.from === 0 && range.to < doc.length ? range.to + 1 : range.to;
+      const next = state.update({ changes: { from, to } }).state;
+      const stop = nextStop(next, from, false) ?? nextStop(next, from, true);
+      const anchor = typeof stop === 'number' ? stop : from;
+      view.dispatch({ changes: { from, to }, selection: { anchor }, scrollIntoView: true, userEvent: 'delete' });
+      view.focus();
+      return true;
+    }
+  }
+  return false;
+};
+
 /**
  * Effect processing plugin for navigation.
  * Handles navigation up/down effects.
@@ -802,5 +1063,6 @@ export const widgetsCore: Extension = [
   parseProgressPlugin,
   navigationEffectPlugin,
   keyHandlers,
+  blockFocusKeys,
   scrollJumpMonitor,
 ];

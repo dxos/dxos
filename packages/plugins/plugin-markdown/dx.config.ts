@@ -89,6 +89,11 @@ const config: Plugin.PluginConfig = Plugin.config({
       },
       () => import('./src/capabilities/state.ts', { with: { type: 'module-url' } }),
     ),
+    Capability.lazyModule(
+      'ObjectEmbeds',
+      { provides: [MarkdownCapabilities.ObjectEmbeds], environments: ['browser', 'tauri'] },
+      () => import('./src/capabilities/object-embeds.ts', { with: { type: 'module-url' } }),
+    ),
     AppCapability.operationHandler(
       () => import('./src/capabilities/operation-handler.ts', { with: { type: 'module-url' } }),
     ),

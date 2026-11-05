@@ -79,5 +79,7 @@ describe.skipIf(!fixtureExists('voice-pauses', { extension: 'wav' }))('pauses', 
 ```
 
 CI has neither credential, so every fixture-backed suite must gate on `fixtureExists` and skip: a
-private corpus must never be able to fail the build. Never copy a pulled fixture into the repo, a PR,
+private corpus must never be able to fail the build. The one exception is the mail canary's nightly
+workflow (`.github/workflows/mail-canary-nightly.yml`), which pulls the `enron-pool` agents fixture
+with its own secrets; it is not part of the build. Never copy a pulled fixture into the repo, a PR,
 a log or an artifact.

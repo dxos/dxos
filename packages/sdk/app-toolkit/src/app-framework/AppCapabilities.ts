@@ -441,6 +441,19 @@ export const CommentAgentRunner = Capability$.make<CommentAgentRunner>()(
 );
 
 /**
+ * Signs a message and relays it to another identity's inbox, addressed by their identity DID; resolves once
+ * the relay accepts it. Contributed by the messenger, so plugins can notify people without depending on it.
+ */
+export type InboxSender<E extends Error = Error> = Readonly<{
+  send: (recipientDid: string, message: Message.Message) => Effect$.Effect<void, E>;
+}>;
+
+/**
+ * @category Capability
+ */
+export const InboxSender = Capability$.makeSingleton<InboxSender>()('org.dxos.app-framework.capability.inboxSender');
+
+/**
  * Where an object of a tagged type goes when it is created without a target. Keyed by a tag on the
  * type's `Annotation.UserType`; see `DefaultParent.resolve`, which asks the matching rules in `position`
  * order and takes the first parent one returns.
