@@ -82,7 +82,8 @@ export const FeatureSection = ({ subject, attendableId }: FeatureSectionProps) =
     <Form.Root
       db={db}
       schema={FeatureValues}
-      values={subject}
+      values={snapshot}
+      object={subject}
       extensions={extensions}
       fieldOverrides={fieldOverrides}
       onValuesChanged={onValuesChanged}

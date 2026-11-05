@@ -56,12 +56,12 @@ const makeFieldMap = (feature: Feature.Feature, extensions: RequirementEditorExt
 };
 
 /**
- * The form of a feature, given the live feature as its values: its name and description are collaborative and its
- * requirements edit the feature in place, so only the status is handed back. `extensions` adds what other plugins give
+ * The form of a feature: its snapshot as the values and the live feature as the object, whose name and description are
+ * collaborative and whose requirements edit it in place, so only the status is handed back. `extensions` adds what other plugins give
  * the feature's text, such as comments.
  */
 export const useFeatureValues = (subject: Feature.Feature) => {
-  const [, updateFeature] = useObject(subject);
+  const [values, updateFeature] = useObject(subject);
   const extensions = useFieldExtensions(subject);
   const fieldMap = useMemo(() => makeFieldMap(subject, extensions), [subject, extensions]);
 
@@ -77,7 +77,7 @@ export const useFeatureValues = (subject: Feature.Feature) => {
     [subject, updateFeature],
   );
 
-  return { extensions, fieldMap, onValuesChanged, updateFeature };
+  return { extensions, fieldMap, onValuesChanged, updateFeature, values };
 };
 
 export type FeatureDetailProps = {
@@ -94,7 +94,7 @@ export type FeatureDetailProps = {
  */
 export const FeatureDetail = ({ feature: subject, attendableId, onSelectSubfeature }: FeatureDetailProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
-  const { extensions, fieldMap, onValuesChanged, updateFeature } = useFeatureValues(subject);
+  const { extensions, fieldMap, onValuesChanged, updateFeature, values } = useFeatureValues(subject);
   const db = Obj.getDatabase(subject);
   const graph = useFeatureGraph(db, [subject.id], { neighbours: true });
   const feature = graph.lookup(subject.id);
@@ -155,7 +155,8 @@ export const FeatureDetail = ({ feature: subject, attendableId, onSelectSubfeatu
     <Form.Root
       db={db}
       schema={FeatureValues}
-      values={subject}
+      values={values}
+      object={subject}
       extensions={extensions}
       fieldMap={fieldMap}
       onValuesChanged={onValuesChanged}

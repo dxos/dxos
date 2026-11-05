@@ -94,7 +94,7 @@ export const NumberLayoutAnnotation = createAnnotationHelper<NumberLayout>(Numbe
 export const VectorAnnotation = createAnnotationHelper<boolean>(VectorAnnotationId);
 
 /**
- * Marks a string field as collaborative text. Given a live object as its `values`, the form binds the field to the
- * object's string: it reads `values` only once, and its edits reach the object directly rather than `onValuesChanged`.
+ * Marks a string field as collaborative text. Given a live `object`, the form binds the field to the object's string:
+ * it reads the string only once, and its edits reach the object directly rather than `onValuesChanged`.
  */
 export const CollaborativeAnnotation = createAnnotationHelper<boolean>(CollaborativeAnnotationId);

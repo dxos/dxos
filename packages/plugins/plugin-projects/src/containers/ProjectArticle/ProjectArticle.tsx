@@ -398,7 +398,8 @@ export const ProjectArticle = ({
             <Form.Root
               db={db}
               schema={HeaderValues}
-              values={subject}
+              values={project}
+              object={subject}
               extensions={extensions}
               fieldOverrides={fieldOverrides}
               onValuesChanged={handleValuesChanged}

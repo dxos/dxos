@@ -39,7 +39,7 @@ export type FormContextValue<T extends AnyProperties = any> = {
   /** Editor extensions for the form's editors, beyond their own (what a host's plugins contribute), by field. */
   extensions?: FormExtensions;
 
-  /** The live object the form was given as its values, which collaborative fields bind to. */
+  /** The live object whose strings collaborative fields (see `CollaborativeAnnotation`) edit in place. */
   object?: Obj.Unknown;
 } & FieldContext;
 
