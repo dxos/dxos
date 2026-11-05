@@ -426,7 +426,8 @@ export const UpdateFeature = Operation.make({
     icon: 'ph--pencil-simple--regular',
     description: trim`
       Changes a feature's key, name, description, requirements or status, or moves it to another spec; fields left out
-      are kept. Requirements replace the whole list when given. A spec moves the feature onto that spec's map, which
+      are kept. Requirements replace the whole list when given; give each one back with the key it was read with, so
+      comments on it stay anchored. A spec moves the feature onto that spec's map, which
       may be another spec's or a feature's own; a move into the feature's own breakdown is refused.
       Status says how far the feature has come, not whether anyone is working on it (that is read from its linked
       tasks): planned until it works, prototype when it works in a demo, operational when people can rely on it,

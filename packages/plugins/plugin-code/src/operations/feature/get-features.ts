@@ -56,7 +56,7 @@ const handler: Operation.WithHandler<typeof CodeOperation.GetFeatures> = CodeOpe
           name: feature.name,
           description: feature.description,
           status: feature.status,
-          requirements: (feature.requirements ?? []).map((requirement) => ({ ...requirement })),
+          requirements: Feature.getRequirements(feature),
           specs: Feature.getSources(feature),
           spec: spec.id,
           parent: parent?.id,

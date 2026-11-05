@@ -6,6 +6,7 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
@@ -173,6 +174,19 @@ const config: Plugin.PluginConfig = Plugin.config({
         environments: ['browser', 'tauri'],
       },
       () => import('./src/capabilities/spec-sync.ts', { with: { type: 'module-url' } }),
+    ),
+    Capability.lazyModule(
+      'FeatureComments',
+      {
+        provides: [
+          AppCapabilities.AnchorResolver,
+          AppCapabilities.AnchorSort,
+          AppCapabilities.CommentConfig,
+          AppCapabilities.CommentScope,
+        ],
+        activatesOn: ProjectsEvents.Start,
+      },
+      () => import('./src/capabilities/feature-comments.ts', { with: { type: 'module-url' } }),
     ),
     Capability.lazyModule(
       'FeatureSubjectContext',

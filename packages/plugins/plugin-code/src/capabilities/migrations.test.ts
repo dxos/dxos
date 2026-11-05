@@ -26,6 +26,7 @@ import {
 
 import {
   documentRename,
+  featureRequirements,
   featureSources,
   featureSubfeatures,
   makeFeatureSpecs,
@@ -63,6 +64,7 @@ describe('feature migrations', () => {
       LegacyFeature.Feature,
       LegacyFeature.FeatureV2,
       LegacyFeature.FeatureV3,
+      LegacyFeature.FeatureV4,
       Feature.Feature,
       Spec.Spec,
     ]);
@@ -170,6 +172,34 @@ describe('feature migrations', () => {
       `Mail.\n\n${SpecText.makeEmbed(byName('Sync'))}\n\nMore prose.\n\n${SpecText.makeEmbed(byName('Archive'))}\n`,
     );
     expect(FeatureEmbed.parse(content)).toHaveLength(2);
+  });
+
+  test('0.4.0 requirements are stored under their key, else spec id, else position, in the order they had', async ({
+    expect,
+  }) => {
+    const db = await open();
+    db.add(
+      Obj.make(LegacyFeature.FeatureV4, {
+        name: 'Sync',
+        status: 'planned',
+        requirements: [
+          { key: 'k', text: 'New mail shows within a minute.' },
+          { id: 'F-1.2', text: 'Sync resumes after sleep.' },
+          { id: 'F-1.2', text: 'Sync stops when offline.' },
+          { text: 'Undo restores it.' },
+        ],
+      }),
+    );
+    await db.flush();
+    await db.runMigrations([featureRequirements]);
+
+    const [feature] = await db.query(Filter.type(Feature.Feature)).run();
+    expect(Feature.getRequirements(feature)).toEqual([
+      { key: 'k', text: 'New mail shows within a minute.' },
+      { key: 'F_1_2', id: 'F-1.2', text: 'Sync resumes after sleep.' },
+      { key: 'F_1_2_1', id: 'F-1.2', text: 'Sync stops when offline.' },
+      { key: 'r3', text: 'Undo restores it.' },
+    ]);
   });
 
   test('a nested spec left by an earlier run is reused rather than made again', async ({ expect }) => {

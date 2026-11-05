@@ -75,11 +75,12 @@ export const OutlineArticle = ({
   const handleSelectLink = useCallback((url: string) => setSelected(URI.make(url)), []);
   const handleBack = useCallback(() => setSelected(undefined), []);
 
-  const extensions = useMarkdownExtensions(outline);
-
   // Reactive: on a cold load (or a story that seeds during client init) the content ref's target
   // is not yet in memory, and a `.target` read would leave the editor permanently unmounted.
   const text = useResolveRef(outline.content);
+  // Comments on the outline anchor into its text.
+  const binding = useMemo(() => (text ? { object: text, path: ['content'] } : undefined), [text]);
+  const extensions = useMarkdownExtensions(outline, binding);
 
   const outlineRef = useRef<OutlineController>(null);
   const handleConvertCurrent = useCallback(() => outlineRef.current?.convertToTask(), []);
@@ -160,7 +161,8 @@ export const OutlineArticle = ({
       {(text) => (
         <Outline.Root
           ref={outlineRef}
-          id={text.id}
+          // The outline's URI, which keys the editor's comments as it does a Markdown document's.
+          id={Obj.getURI(outline)}
           text={text}
           onConvertToTask={taskSet ? handleConvertToTask : undefined}
           onConvertibleChange={setConvertible}
