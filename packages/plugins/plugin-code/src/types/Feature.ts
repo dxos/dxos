@@ -12,6 +12,7 @@ import { Annotation, DXN, Format, Obj, Ref, Relation, Text, Type } from '@dxos/e
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { EntityId } from '@dxos/keys';
 import { Task } from '@dxos/types';
+import { CollaborativeAnnotationId } from '@dxos/ui-types';
 
 //
 // Status
@@ -85,7 +86,13 @@ export type RequirementRecord = Schema.Schema.Type<typeof RequirementRecord>;
  */
 export class Feature extends Type.makeObject<Feature>(DXN.make('org.dxos.type.feature', '0.5.0'))(
   Schema.Struct({
-    name: Schema.String.pipe(Schema.annotate({ title: 'Name', description: 'A noun phrase of two to five words.' })),
+    name: Schema.String.pipe(
+      Schema.annotate({
+        title: 'Name',
+        description: 'A noun phrase of two to five words.',
+        [CollaborativeAnnotationId]: true,
+      }),
+    ),
 
     description: Schema.optional(
       Schema.String.pipe(
@@ -94,6 +101,7 @@ export class Feature extends Type.makeObject<Feature>(DXN.make('org.dxos.type.fe
           title: 'Description',
           description:
             'One or two short sentences: the ideal, what the feature does when complete, in the present tense. Not its current state.',
+          [CollaborativeAnnotationId]: true,
         }),
       ),
     ),

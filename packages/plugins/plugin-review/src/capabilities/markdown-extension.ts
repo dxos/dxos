@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Doc } from '@dxos/echo-doc';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { type EditorState, commentsState, documentId, overlap } from '@dxos/ui-editor';
@@ -15,6 +16,7 @@ import { CommentCapabilities } from '#types';
 
 import { commentSync } from '../extensions/index.ts';
 import { ReviewNamespace } from '../namespace.ts';
+import { findCommentConfig } from '../util/commentable.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -32,15 +34,27 @@ export default Capability.makeModule(
     });
 
     const extensions = Capability.contribute(MarkdownCapabilities.ExtensionProvider, [
-      ({ document: doc, reviewBranch, branchText, suggestionBranch, showComments }) => {
+      ({ document: doc, subject, binding, reviewBranch, branchText, suggestionBranch, showComments }) => {
         const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
         const registry = capabilities.get(Capabilities.AtomRegistry);
         const stateAtom = capabilities.get(CommentCapabilities.State);
 
         // Anchors are cursors within whichever text the editor is bound to: the branch content in Branch view,
-        // else main.
+        // else main; or, off a markdown document, the string it is bound to. A string of the subject's own (a
+        // feature's name) carries its path in the anchor; a text the subject references (a spec's document) is the
+        // whole of it, as a document's content is.
         const text = branchText ?? doc?.content.peek();
-        const target = doc && { subject: doc, accessor: text && Doc.createAccessor(text, ['content']) };
+        const target = doc
+          ? { subject: doc, accessor: text && Doc.createAccessor(text, ['content']) }
+          : binding &&
+              subject &&
+              findCommentConfig(capabilities.getAll(AppCapabilities.CommentConfig), subject)?.comments === 'anchored'
+            ? {
+                subject,
+                accessor: Doc.createAccessor(binding.object, [...binding.path]),
+                path: binding.object === subject ? binding.path : undefined,
+              }
+            : undefined;
         return commentSync({ registry, stateAtom }, target, invokePromise, {
           reviewBranch,
           suggestionBranch,

@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useState } from 'react';
+import { type Extension } from '@codemirror/state';
+import React, { useMemo, useState } from 'react';
 
 import { type Verdict } from '@dxos/deus/review';
 import { useObject } from '@dxos/echo-react';
-import { BoundTextEditor } from '@dxos/react-ui-form';
+import { CollaborativeTextEditor } from '@dxos/react-ui-form';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -20,9 +21,14 @@ import * as FeatureAnchor from '../../util/feature-anchor.ts';
 import { STATUS_STYLE } from '../SpecModel/review.ts';
 import { RequirementIcon, RequirementId, RowIcon } from './fields.tsx';
 
+/** Extensions for the editor of the feature's string at `path`, such as comments on it. */
+export type RequirementEditorExtensions = (field: { path: readonly (string | number)[] }) => Extension[];
+
 export type RequirementEditorProps = {
   /** The live feature, whose requirement texts the rows edit in place. */
   feature: Feature.Feature;
+  /** Added to each row's editor, by the requirement text's path (the feature form's `extensions`). */
+  extensions?: RequirementEditorExtensions;
   /** `plain` rows read as text until a row is focused. */
   variant?: 'default' | 'plain';
   /** Whether the remove and add actions show; the rows stay editable either way. */
@@ -34,11 +40,17 @@ export type RequirementEditorProps = {
 
 /**
  * A feature's requirements, each an editor bound to its text that wraps to the whole of it, with the spec id it came
- * from before it and a remove action after. Typing edits the requirement in place, so comments on it stay anchored;
- * comment marks reach the editors through `EditorExtensionsProvider`, by the requirement's key. A requirement
- * that loses focus without text is removed. Render it inside a grid `Card.Root`; its icons sit in that card's rail.
+ * from before it and a remove action after. Typing edits the requirement in place, so comments on it stay anchored. A
+ * requirement that loses focus without text is removed. Render it inside a grid `Card.Root`; its icons sit in that card's rail.
  */
-export const RequirementEditor = ({ feature, variant, actions = true, inert, verdicts }: RequirementEditorProps) => {
+export const RequirementEditor = ({
+  feature,
+  extensions,
+  variant,
+  actions = true,
+  inert,
+  verdicts,
+}: RequirementEditorProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
   const [snapshot] = useObject(feature);
   const requirements = snapshot ? Feature.getRequirements(snapshot) : [];
@@ -98,11 +110,10 @@ export const RequirementEditor = ({ feature, variant, actions = true, inert, ver
                 }
               }}
             >
-              <BoundTextEditor
-                binding={{
-                  object: feature,
-                  path: FeatureAnchor.getPath({ field: 'requirement', key: requirement.key }),
-                }}
+              <RequirementText
+                feature={feature}
+                requirementKey={requirement.key}
+                extensions={extensions}
                 placeholder={t('requirement-editor.text.label')}
                 variant={variant}
                 autoFocus={index === focusIndex}
@@ -143,4 +154,21 @@ const RequirementVerdict = ({ verdict }: { verdict: Verdict }) => {
       {label}
     </Tag.Tag>
   );
+};
+
+type RequirementTextProps = {
+  feature: Feature.Feature;
+  requirementKey: string;
+  extensions?: RequirementEditorExtensions;
+  placeholder?: string;
+  variant?: RequirementEditorProps['variant'];
+  autoFocus?: boolean;
+  testId?: string;
+};
+
+/** One requirement's text, edited as collaborative text. */
+const RequirementText = ({ feature, requirementKey, extensions, ...props }: RequirementTextProps) => {
+  const path = useMemo(() => FeatureAnchor.getPath({ field: 'requirement', key: requirementKey }), [requirementKey]);
+  const fieldExtensions = useMemo(() => extensions?.({ path }), [extensions, path]);
+  return <CollaborativeTextEditor object={feature} path={path} extensions={fieldExtensions} {...props} />;
 };

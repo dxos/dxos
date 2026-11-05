@@ -2,11 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import * as Atom from 'effect/reactivity/Atom';
+import React, { useMemo } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import type * as Spec from '@dxos/compute/Spec';
-import { Editor, useCommentActions, useEditorContext } from '@dxos/react-ui-editor';
+import { useResolveRef } from '@dxos/echo-react';
+import { Editor, useEditorContext } from '@dxos/react-ui-editor';
+import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 
@@ -23,7 +27,10 @@ export type SpecDocumentArticleProps = AppSurface.ObjectArticleProps<Spec.Spec>;
  */
 export const SpecDocumentArticle = ({ role, subject, attendableId }: SpecDocumentArticleProps) => {
   const { t } = UiHooks.useTranslation(ProjectsNamespace.key);
-  const extensions = useSpecExtensions(subject, { attendableId, t });
+  // The spec's text, which comments on the document anchor into.
+  const text = useResolveRef(subject.content);
+  const binding = useMemo(() => (text ? { object: text, path: ['content'] } : undefined), [text]);
+  const extensions = useSpecExtensions(subject, { attendableId, t, binding });
 
   return (
     <Editor.Root>
@@ -44,10 +51,20 @@ export const SpecDocumentArticle = ({ role, subject, attendableId }: SpecDocumen
   );
 };
 
-/** The editor's formatting toolbar and, while another plugin adds comments to the editor, its comment action. */
+/**
+ * The editor's formatting toolbar, with the toolbar actions other plugins give the attended node (the project the
+ * section is drawn in), such as commenting.
+ */
 const SpecDocumentToolbar = ({ attendableId }: { attendableId?: string }) => {
   const { controller } = useEditorContext('SpecDocumentToolbar');
-  const customActions = useCommentActions();
+  const { graph } = ToolkitHooks.useAppGraph();
+  const customActions = useMemo(
+    () =>
+      attendableId
+        ? Atom.make((get) => graphActions(graph, get, attendableId, { filter: isToolbarAction }))
+        : undefined,
+    [graph, attendableId],
+  );
 
   // The toolbar's actions act on the editor, so it waits for the editor to mount.
   return controller?.view ? (

@@ -6,6 +6,7 @@ import type * as Effect from 'effect/Effect';
 
 import { createAnnotationHelper } from '@dxos/echo/internal';
 import {
+  CollaborativeAnnotationId,
   HueAnnotationId,
   type NumberLayout,
   NumberLayoutAnnotationId,
@@ -91,3 +92,9 @@ export const NumberLayoutAnnotation = createAnnotationHelper<NumberLayout>(Numbe
  * group. A model schema sets `[VectorAnnotationId]: true` directly, without depending on this package.
  */
 export const VectorAnnotation = createAnnotationHelper<boolean>(VectorAnnotationId);
+
+/**
+ * Marks a string field as collaborative text. Given a live object as its `values`, the form binds the field to the
+ * object's string: it reads `values` only once, and its edits reach the object directly rather than `onValuesChanged`.
+ */
+export const CollaborativeAnnotation = createAnnotationHelper<boolean>(CollaborativeAnnotationId);

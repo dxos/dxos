@@ -4,7 +4,6 @@
 
 export * from './Editor/index.ts';
 
-export * from './EditorExtensionsProvider/index.ts';
 export * from './EditorMenuProvider/index.ts';
 export * from './EditorPreviewProvider/index.ts';
 export * from './EditorToolbar/view-mode.ts';

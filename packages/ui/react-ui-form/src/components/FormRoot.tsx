@@ -4,6 +4,8 @@
 
 import React, { type PropsWithChildren } from 'react';
 
+import { Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { type Merge } from '@dxos/util';
 
@@ -21,7 +23,7 @@ import { type FormFieldsProps } from './property-walk.ts';
 //
 
 export type FormRootProps<T extends AnyProperties = AnyProperties> = Merge<
-  Omit<FormContextValue<T>, 'form'>,
+  Omit<FormContextValue<T>, 'form' | 'object'>,
   Pick<
     FormHandlerProps<T>,
     | 'schema'
@@ -47,18 +49,25 @@ export type FormRootProps<T extends AnyProperties = AnyProperties> = Merge<
   }>
 >;
 
+/**
+ * Given a live ECHO object as its `values`, the form follows the object's changes itself and binds its collaborative
+ * fields (see `CollaborativeAnnotation`) to the object's strings.
+ */
 export const FormRoot = <T extends AnyProperties = AnyProperties>({
   children,
   schema,
-  values,
+  values: valuesProp,
   onSave,
   onCancel,
   ...props
 }: FormRootProps<T>) => {
+  const object = Obj.isObject(valuesProp) ? valuesProp : undefined;
+  const [snapshot] = useObject(object);
+  const values = object ? (snapshot as Partial<T> | undefined) : valuesProp;
   const form = useFormHandler({ schema, values, onSave, onCancel, ...props });
 
   return (
-    <FormContextProvider form={form} {...props}>
+    <FormContextProvider form={form} object={object} {...props}>
       {children}
     </FormContextProvider>
   );

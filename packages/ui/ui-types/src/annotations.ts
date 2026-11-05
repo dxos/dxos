@@ -26,3 +26,9 @@ export const VECTOR_AXIS_LAYOUT: NumberLayout = { align: 'end', stepperOnHover: 
  * per axis rather than nesting a group. Here so a model schema can declare it without depending on React.
  */
 export const VectorAnnotationId = '@dxos/schema/annotation/Vector';
+
+/**
+ * Marks a string a form edits as collaborative text: bound to the object's string, so edits merge and cursors into it
+ * (comment anchors) survive. Here so a model schema can declare it without depending on React.
+ */
+export const CollaborativeAnnotationId = '@dxos/schema/annotation/Collaborative';

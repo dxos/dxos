@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useMemo } from 'react';
@@ -19,9 +20,9 @@ import { createDataExtensions } from '@dxos/ui-editor';
 import { translationKey } from '#translations';
 import { type FormFieldRendererProps } from '#types';
 
-import { useFormContext } from '../../hooks/index.ts';
+import { useFormContext, useFormExtensions } from '../../hooks/index.ts';
 import { presentationFor } from '../presentation.tsx';
-import { BoundTextEditor } from './BoundTextEditor.tsx';
+import { CollaborativeTextEditor } from './CollaborativeTextEditor.tsx';
 
 /** The editor's minimum height in lines, as the current field's `min-h-[6lh]`. */
 const ROWS = 6;
@@ -50,10 +51,12 @@ export const MarkdownField = ({
   db,
   jsonPath,
   path,
+  collaborative,
   getValue,
   onValueChange,
 }: FormFieldRendererProps) => {
   const { object } = useFormContext('MarkdownField');
+  const extensions = useFormExtensions(path && jsonPath !== undefined ? { path, jsonPath } : undefined);
   const value: unknown = getValue();
   const isStatic = presentationFor(presentation).isStatic;
   // Edited in place, as a TextField's title and plain text are: no well, and one line until the text grows.
@@ -64,7 +67,13 @@ export const MarkdownField = ({
       return isStatic ? (
         <RefStaticText reference={reference} />
       ) : (
-        <RefMarkdownEditor reference={reference} placeholder={placeholder} readonly={!!readonly} variant={variant} />
+        <RefMarkdownEditor
+          reference={reference}
+          placeholder={placeholder}
+          readonly={!!readonly}
+          variant={variant}
+          extensions={extensions}
+        />
       );
     }
 
@@ -74,10 +83,12 @@ export const MarkdownField = ({
   }
 
   const text = typeof value === 'string' ? value : '';
-  if (object && path && !isStatic) {
+  if (collaborative && object && path && !isStatic) {
     return (
-      <BoundTextEditor
-        binding={{ object, path }}
+      <CollaborativeTextEditor
+        object={object}
+        path={path}
+        extensions={extensions}
         markdown
         placeholder={placeholder}
         readonly={!!readonly}
@@ -94,6 +105,7 @@ export const MarkdownField = ({
       placeholder={placeholder}
       readonly={!!readonly}
       variant={variant}
+      extensions={extensions}
       onChange={(next) => onValueChange(type, next)}
     />
   );
@@ -106,13 +118,20 @@ type StringMarkdownEditorProps = {
   placeholder?: string;
   readonly?: boolean;
   variant?: InPlaceVariant;
+  extensions: Extension[];
   onChange: (value: string) => void;
 };
 
-const StringMarkdownEditor = ({ value, placeholder, readonly, variant, onChange }: StringMarkdownEditorProps) => {
-  const { markdownExtensions } = useFormContext('MarkdownField');
+const StringMarkdownEditor = ({
+  value,
+  placeholder,
+  readonly,
+  variant,
+  extensions: formExtensions,
+  onChange,
+}: StringMarkdownEditorProps) => {
   // Memoised: a new list each render would reconfigure the editor on every keystroke and drop its focus.
-  const fieldExtensions = useMemo(() => [fieldTheme, ...(markdownExtensions ?? [])], [markdownExtensions]);
+  const fieldExtensions = useMemo(() => [fieldTheme, ...formExtensions], [formExtensions]);
   const extensions = useBasicMarkdownExtensions({ placeholder, readonly, extensions: fieldExtensions });
   return (
     <Input.Frame rows={variant ? 1 : ROWS} variant={variant} disabled={readonly}>
@@ -135,19 +154,25 @@ type RefMarkdownEditorProps = {
   placeholder?: string;
   readonly?: boolean;
   variant?: InPlaceVariant;
+  extensions: Extension[];
 };
 
-const RefMarkdownEditor = ({ reference, placeholder, readonly, variant }: RefMarkdownEditorProps) => {
+const RefMarkdownEditor = ({
+  reference,
+  placeholder,
+  readonly,
+  variant,
+  extensions: formExtensions,
+}: RefMarkdownEditorProps) => {
   const target = useAtomValue(useMemo(() => reference.atom, [reference]));
   const text = Obj.instanceOf(Text.Text, target) ? target : undefined;
   const dataExtensions = useMemo(
     () => (text ? [createDataExtensions({ id: reference.uri, text: Doc.createAccessor(text, ['content']) })] : []),
     [text, reference],
   );
-  const { markdownExtensions } = useFormContext('MarkdownField');
   const fieldExtensions = useMemo(
-    () => [fieldTheme, ...dataExtensions, ...(markdownExtensions ?? [])],
-    [dataExtensions, markdownExtensions],
+    () => [fieldTheme, ...dataExtensions, ...formExtensions],
+    [dataExtensions, formExtensions],
   );
   const extensions = useBasicMarkdownExtensions({ placeholder, readonly, extensions: fieldExtensions });
   if (!text) {

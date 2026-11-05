@@ -22,7 +22,7 @@ import { CommentOperation } from '#types';
 import { ReviewNamespace } from '../namespace.ts';
 // Not the `../util` barrel: it re-exports `author-hue`, whose palette lookup is UI-only.
 import { findCommentConfig, getCommentConfig } from '../util/commentable.ts';
-import { findFieldEditor } from '../util/field-editor.ts';
+import { findCommentEditor } from '../util/field-editor.ts';
 import { getAnchor } from '../util/message.ts';
 
 export default Capability.makeModule(
@@ -84,8 +84,8 @@ export default Capability.makeModule(
                   return;
                 }
 
-                // A live-bound field of the object (a feature's name, say) holding a selection takes the comment.
-                const fieldView = yield* Effect.promise(() => findFieldEditor([objectUri]));
+                // Else the editor holding the caret in the plank: the text of a spec, say, or a feature field drawn in it.
+                const fieldView = yield* Effect.promise(() => findCommentEditor(matched.id));
                 if (fieldView) {
                   createComment(fieldView);
                   return;
