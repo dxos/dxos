@@ -5,3 +5,4 @@
 export * from './useOpenObject.ts';
 export * from './useProjectSpecs.ts';
 export * from './useRefTargets.ts';
+export * from './useSpecExtensions.ts';

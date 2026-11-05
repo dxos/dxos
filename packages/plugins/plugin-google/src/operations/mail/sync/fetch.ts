@@ -173,6 +173,9 @@ const fetchMessageIds = (config: FetchMessageIdsProps) =>
     }),
   );
 
+/** The Gmail search the sync's `'all'` label lists: every mailbox but Spam, Trash, Drafts and Chats. */
+export const ALL_MAIL_SCOPE = 'in:anywhere -in:spam -in:trash -in:drafts -in:chats';
+
 const fetchMessagesForDateRange = (api: GoogleMailApiService, dateChunk: DateChunk, config: FetchMessageIdsProps) =>
   Stream.unwrap(
     Effect.gen(function* () {
@@ -180,8 +183,7 @@ const fetchMessagesForDateRange = (api: GoogleMailApiService, dateChunk: DateChu
 
       // `'all'` → All Mail (incl. Sent) minus Spam/Trash/Drafts/Chats, so conversations are complete;
       // any other value restricts to that Gmail label.
-      const folderScope =
-        label === 'all' ? 'in:anywhere -in:spam -in:trash -in:drafts -in:chats' : `in:anywhere label:${label}`;
+      const folderScope = label === 'all' ? ALL_MAIL_SCOPE : `in:anywhere label:${label}`;
       // `before:` is day-granular and excludes the day it names. Forward internal chunk boundaries are
       // safe (covered by the older chunk's inclusive `after:`). But the backward window's `end` is
       // `low`'s exact timestamp when resuming backfill, so a mid-day `before:` would drop same-day
