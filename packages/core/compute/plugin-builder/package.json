@@ -34,9 +34,7 @@
     "@automerge/automerge": "catalog:",
     "@automerge/automerge-repo": "catalog:",
     "@dxos/app-framework": "workspace:*",
-    "@dxos/context": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
-    "@dxos/edge-client": "workspace:*",
     "@dxos/edge-compute": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -48,6 +46,8 @@
     "vite": "catalog:"
   },
   "devDependencies": {
+    "@dxos/context": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
     "vitest": "catalog:"
   }
 }
