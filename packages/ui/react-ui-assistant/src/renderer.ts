@@ -321,6 +321,9 @@ const LINE_HEIGHT = 24;
 const LINE_CHARS = 90;
 /** A collapsed panel: reasoning, a tool run, a summary. */
 const PANEL_HEIGHT = 50;
+/** A collapsed thread card with the gap below it, and how many fit across a typical thread. */
+const LANE_CARD_HEIGHT = 190;
+const LANE_CARDS_PER_LINE = 2;
 
 /**
  * What a row will measure, from the message alone. Rough on purpose — its only job is to be close
@@ -334,6 +337,12 @@ export const estimateRow = (message: Message.Message): number => {
         if (block.disposition === 'synthetic') {
           // Rendered by the chrome as a collapsed context panel, not as text.
           height += PANEL_HEIGHT;
+          break;
+        }
+        if (block.text.startsWith('<lane>')) {
+          // A card collapses to its tail, so the payload's length says nothing about its height.
+          const cards = block.text.match(/\{"lane":/g)?.length ?? 1;
+          height += Math.ceil(cards / LANE_CARDS_PER_LINE) * LANE_CARD_HEIGHT;
           break;
         }
         for (const paragraph of block.text.split('\n\n')) {

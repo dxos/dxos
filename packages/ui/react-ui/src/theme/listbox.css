@@ -37,6 +37,15 @@
     outline: none;
   }
 
+  /* A picker's choice stays marked after focus leaves the list, and is drawn inside the row so no viewport clips it. */
+  .dx-listbox[data-selection-style='outline'] .dx-row:is([aria-selected='true'], [data-selected]) {
+    outline: 2px solid var(--color-focus);
+    outline-offset: -2px;
+  }
+  .dx-listbox[data-selection-style='outline'] .dx-row[data-selectable]:hover:not([aria-selected='true']) {
+    background: var(--color-hover-surface);
+  }
+
   /*
    * Tiles (Root `tiles`; `data-tiles`, since the Container owns `data-layout`): equal columns inside the content's
    * gutters, the count from zag's `--column-count`; each tile

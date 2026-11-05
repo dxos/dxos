@@ -86,7 +86,7 @@ const checkPackage = (demo, label) =>
 const hasFeature = (page, name) =>
   page.evaluate(
     ([name]) =>
-      [...document.querySelectorAll('[data-testid="feature-embed"] input')].some((input) => input.value === name),
+      [...document.querySelectorAll('[data-testid="markdown.embed"] input')].some((input) => input.value === name),
     [name],
   );
 
@@ -185,7 +185,7 @@ export const steps = [
       await caption(demo, 4, "The Specs tab: the spec's prose, its features among it");
       await demo.click({ selector: '[data-testid="projectsPlugin.tab.spec"]', label: 'Specs' });
       await waitForDocument(page, MAP_SPEC);
-      await page.locator('[data-testid="feature-embed"]').first().waitFor({ state: 'visible', timeout: 10_000 });
+      await page.locator('[data-testid="markdown.embed"]').first().waitFor({ state: 'visible', timeout: 10_000 });
       await expectCount(page, ADD_ARTIFACT, 0, 'Create artifact buttons');
       await expectCount(page, CANVAS_TOGGLE, 1, 'view toggles');
       await expectCount(page, EXTENSIONS, 1, 'Extensions menus');
@@ -211,7 +211,7 @@ export const steps = [
       await demo.press({ key: 'Enter' });
       await page.waitForFunction(
         ([name]) =>
-          [...document.querySelectorAll('[data-testid="feature-embed"] input')].some((input) => input.value === name),
+          [...document.querySelectorAll('[data-testid="markdown.embed"] input')].some((input) => input.value === name),
         [IDEA],
         { timeout: 5_000 },
       );
@@ -235,7 +235,7 @@ export const steps = [
       await caption(demo, 7, `"${TALK_SPEC}" is prose, so it has no other views`);
       await demo.click({ selector: `[role="menu"] >> [role^="menuitem"]:has-text("${TALK_SPEC}")`, label: TALK_SPEC });
       await waitForDocument(page, TALK_SPEC);
-      await expectCount(page, '[data-testid="feature-embed"]', 0, 'feature sections');
+      await expectCount(page, '[data-testid="markdown.embed"]', 0, 'feature sections');
       await expectCount(page, CANVAS_TOGGLE, 0, 'view toggles');
       await demo.sleep({ ms: LOOK });
     },

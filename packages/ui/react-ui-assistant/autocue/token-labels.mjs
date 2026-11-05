@@ -7,7 +7,7 @@
  * setting is on: prompts, answer paragraphs and tool runs, including the blocks of a turn as it streams.
  *
  * @title Token labels
- * @mdl packages/plugins/plugin-assistant/PLUGIN.mdl test QA-5
+ * @mdl packages/plugins/plugin-assistant/PLUGIN.mdl test QA-6
  * @app storybook-react, narrowed to react-ui-assistant, as a static build:
  *
  *   cd tools/storybook-react && DX_STORIES=ui/react-ui-assistant VITE_DX_DISABLE_ANIMATIONS=true \
@@ -17,7 +17,7 @@
  *     --url 'http://127.0.0.1:9019/iframe.html?id=ui-react-ui-assistant-components-chatthread--tokens&viewMode=story&args=showTokens:!false'
  */
 
-const SUBTITLE = 'plugin-assistant/PLUGIN.mdl · QA-5';
+const SUBTITLE = 'plugin-assistant/PLUGIN.mdl · QA-6';
 const STORY_ID = 'ui-react-ui-assistant-components-chatthread--tokens';
 const LABEL = '[data-testid="assistant.tokens"]';
 const PROMPT = 'input[data-testid="assistant.prompt"]';

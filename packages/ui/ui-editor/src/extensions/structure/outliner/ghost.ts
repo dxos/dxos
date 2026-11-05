@@ -15,7 +15,7 @@ import {
 import { type CleanupFn, addEventListener } from '@dxos/async';
 import { Domino } from '@dxos/ui';
 
-import { PlaceholderWidget } from '../../completion/placeholder.ts';
+import { placeholderWidget } from '../../completion/placeholder.ts';
 import { GUTTER_WIDTH } from '../blocks/index.ts';
 import { treeFacet } from './tree.ts';
 
@@ -101,7 +101,7 @@ export const ghost = (options: GhostOptions = {}): Extension => {
           if (!EMPTY_ITEM_REGEX.test(line.text) || !view.state.facet(treeFacet).find(line.from)) {
             return Decoration.none;
           }
-          return Decoration.set([Decoration.widget({ widget: new PlaceholderWidget(item), side: 1 }).range(line.to)]);
+          return Decoration.set([placeholderWidget(item).range(line.to)]);
         }
       },
       { decorations: (plugin) => plugin.decorations },

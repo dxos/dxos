@@ -20,7 +20,8 @@ import { stringToFallback } from '@dxos/util';
 import { estimateTokens, formatTokens } from '../../tokens.ts';
 import { translationKey } from '../../translations.ts';
 import { type DeliveryStatus, type ForkMarker, type ThreadLane, getDelivery, isUnread } from '../../types.ts';
-import { LaneHeader, TOKENS_GUTTER } from '../../widgets/index.ts';
+import { TOKENS_GUTTER } from '../../widgets/index.ts';
+import { LaneHeader } from '../ThreadCard/index.ts';
 
 //
 // Context

@@ -85,6 +85,10 @@ export type ChatEvent =
       type: 'update-prompt';
       text: string;
     }
+  /** Put the cursor in the prompt. */
+  | {
+      type: 'focus-prompt';
+    }
   | {
       type: 'scroll-to-bottom';
     }

@@ -68,7 +68,7 @@ export const Default: Story = {
     await waitFor(() => expect(canvas.getByTestId('presenter.deck')).toHaveFocus());
     await userEvent.keyboard('{ArrowRight}');
     await expect(await canvas.findByText('2 / 3')).toBeVisible();
-    await userEvent.keyboard('{ArrowRight}');
+    await userEvent.keyboard('{ArrowDown}');
     await expect(await canvas.findByText('alpha')).toBeVisible();
     await expect(canvas.getByText('2 / 3')).toBeVisible();
     await userEvent.keyboard('f');

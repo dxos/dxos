@@ -31,8 +31,17 @@ const scrollsWithin = (target: Element, overlay: Element): boolean => {
   return false;
 };
 
-/** Non-passive wheel listener with the pointer in element coordinates, so the page never scrolls. */
-export const useWheel = (ref: RefObject<HTMLElement | null>, handler: WheelHandler) => {
+export type UseWheelOptions = {
+  /** Leaves the wheel to the page until focus is inside the element, so a picture does not trap a scroll passing over it. */
+  focusRequired?: boolean;
+};
+
+/** Non-passive wheel listener with the pointer in element coordinates, so the page does not scroll under a handled wheel. */
+export const useWheel = (
+  ref: RefObject<HTMLElement | null>,
+  handler: WheelHandler,
+  { focusRequired = false }: UseWheelOptions = {},
+) => {
   useEffect(() => {
     const element = ref.current;
     if (!element) {
@@ -49,11 +58,18 @@ export const useWheel = (ref: RefObject<HTMLElement | null>, handler: WheelHandl
         }
         return;
       }
+      if (focusRequired && !element.contains(element.ownerDocument.activeElement)) {
+        // A pinch still must not zoom the page; a scroll carries on to whatever scrolls behind.
+        if (event.ctrlKey || event.metaKey) {
+          event.preventDefault();
+        }
+        return;
+      }
       event.preventDefault();
       const rect = element.getBoundingClientRect();
       handler(event, { x: event.clientX - rect.left, y: event.clientY - rect.top });
     };
     element.addEventListener('wheel', onWheel, { passive: false });
     return () => element.removeEventListener('wheel', onWheel);
-  }, [ref, handler]);
+  }, [ref, handler, focusRequired]);
 };
