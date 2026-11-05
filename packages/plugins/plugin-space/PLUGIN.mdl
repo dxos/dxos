@@ -573,22 +573,23 @@ feat F-8: Presence and Sync Status
   req F-8.4: Peers report and look up presence by object EID. A graph path resolves to its innermost object, or to the space's own EID when it names no object.
   req F-8.5: SpacePresence shows peers in an order that is the same on every client for a given set of peers and changes only when the set changes.
   req F-8.6: A viewer whose heartbeat has lapsed for two broadcast intervals drops out of both presence indicators.
-  req F-8.7: A space's navtree row counts the peers viewing the space itself, alongside its sync status.
-  req F-8.8: Each peer in a space has a hidden app-graph node whose actions act on that peer: Jump when the object the peer views is open in the deck, Go to otherwise. Go to opens the object at the graph path the peer's session has it open at, so the navtree shows it where the peer does.
-  req F-8.9: Jump reveals the peer's selection, or the top of their viewport when they have none, moving the caret and taking focus.
-  req F-8.10: Clicking an avatar in SpacePresence opens the list of the object's viewers with that peer's row highlighted; a button at the end of its header opens the Members companion. Rows are Listbox rows whose actions are labelled buttons.
-  req F-8.11: The Members deck companion lists every online peer in the space, grouped by the object they view, with the same actions; an Invite members action at the end of its toolbar opens the space's members settings. It sits third in the complementary rail, after Notifications.
-  req F-8.17: A presence row's avatar sits inside the row's hover and highlight. A person's row and their session rows hover and highlight together, as one block.
-  req F-8.14: In a locked space the Members companion shows only a placeholder saying the space is private, since it has no other members and no members settings.
-  req F-8.12: A peer with several sessions (tabs or devices) on an object shows as one row, whose actions act on the session whose anchor moved most recently. A toggle in the viewers list's header and in the Members companion's toolbar lists each peer's sessions under their row, each named by its device and with its own actions; the peer's row then carries none. A peer is never listed twice. Both lists share the toggle's state, kept per device.
-  req F-8.13: The viewing message carries the sender's session id, its device, the location in each object its deck holds, and the graph paths of its deck's planks in the space with the one it is scrolled to; it is sent with the heartbeat and at most once per second when a location changes, or every 100 ms while followed ([F-8.19]).
-  req F-8.15: A session row's dot shows whether its anchor moved in the last minute (active) or not (idle); the row states nothing else about the session.
-  req F-8.16: A session row names its device by the label someone gave it, else by what it runs ("Chrome on macOS", "Composer on iOS"); sessions on one device are numbered. A placeholder label the SDK once wrote is no label.
-  req F-8.18: A peer's node carries Follow, which follows whichever of their sessions moved most recently, switching as that changes; a session's node carries Follow for that session alone. Neither shows while it is already the followed target.
-  req F-8.19: A follower names its target in its viewing message. A session that sees itself named sends location changes at most every 100 ms to the whole space, instead of every second.
-  req F-8.20: While following, a follower whose deck lays planks side by side shows the leader's deck: the planks it holds in the space, in order, scrolled to the plank at its front, each revealing the top of the leader's viewport there, or their selection when they report no viewport. A follower whose deck is flat opens the object the leader attends, at the leader's path, whenever it changes, and reveals their anchor in it. Reveals go through the type's `Locator` without moving the follower's caret or focus. An object the follower cannot open pauses the follow until the leader attends one it can.
-  req F-8.21: A follow ends when the follower scrolls, clicks, touches or types in any object's plank, presses Escape, or attends an object outside what it shows of the leader; and when the leader has attended nothing in the space for five seconds, which their leaving the space, going offline or their heartbeat lapsing all amount to. The leader going idle ends nothing.
-  req F-8.22: While following, the Members companion's rail tab shows a dot, and its list starts with the leader's row, highlighted, carrying Stop (and Paused while paused) in place of their actions. Stopping returns the row to its object's group and clears the dot.
+  req F-8.7: A space's navtree row counts the peers viewing the space itself.
+  req F-8.8: An object's navtree row shows the progress monitors keyed to it (`<object uri>#<suffix>`): a pulsing star while one runs, over presence, and a red edge when one fails. Each monitor's label is a line of the row's tooltip.
+  req F-8.9: Each peer in a space has a hidden app-graph node whose actions act on that peer: Jump when the object the peer views is open in the deck, Go to otherwise. Go to opens the object at the graph path the peer's session has it open at, so the navtree shows it where the peer does.
+  req F-8.10: Jump reveals the peer's selection, or the top of their viewport when they have none, moving the caret and taking focus.
+  req F-8.11: Clicking an avatar in SpacePresence opens the list of the object's viewers with that peer's row highlighted; a button at the end of its header opens the Members companion. Rows are Listbox rows whose actions are labelled buttons.
+  req F-8.12: The Members deck companion lists every online peer in the space, grouped by the object they view, with the same actions; an Invite members action at the end of its toolbar opens the space's members settings. It sits third in the complementary rail, after Notifications.
+  req F-8.18: A presence row's avatar sits inside the row's hover and highlight. A person's row and their session rows hover and highlight together, as one block.
+  req F-8.15: In a locked space the Members companion shows only a placeholder saying the space is private, since it has no other members and no members settings.
+  req F-8.13: A peer with several sessions (tabs or devices) on an object shows as one row, whose actions act on whichever of those sessions moved its anchor most recently, never on a session attending another object; with none attending the object, the row has no actions. A toggle in the viewers list's header and in the Members companion's toolbar lists each peer's sessions under their row, each named by its device and with its own actions while it attends the object; the peer's row then carries none. A peer is never listed twice. Both lists share the toggle's state, kept per device.
+  req F-8.14: The viewing message carries the sender's session id, its device, the location in each object its deck holds, and the graph paths of its deck's planks in the space with the one it is scrolled to; it is sent with the heartbeat and at most once per second when a location changes, or every 100 ms while followed ([F-8.20]).
+  req F-8.16: A session row's dot shows whether its anchor moved in the last minute (active) or not (idle); the row states nothing else about the session.
+  req F-8.17: A session row names its device by the label someone gave it, else by what it runs ("Chrome on macOS", "Composer on iOS"); sessions on one device are numbered. A placeholder label the SDK once wrote is no label.
+  req F-8.19: A peer's node carries Follow, which follows whichever of their sessions moved most recently, switching as that changes; a session's node carries Follow for that session alone. Neither shows while it is already the followed target.
+  req F-8.20: A follower names its target in its viewing message. A session that sees itself named sends location changes at most every 100 ms to the whole space, instead of every second.
+  req F-8.21: While following, a follower whose deck lays planks side by side shows the leader's deck: the planks it holds in the space, in order, scrolled to the plank at its front, each revealing the top of the leader's viewport there, or their selection when they report no viewport. A follower whose deck is flat opens the object the leader attends, at the leader's path, whenever it changes, and reveals their anchor in it. Reveals go through the type's `Locator` without moving the follower's caret or focus. An object the follower cannot open pauses the follow until the leader attends one it can.
+  req F-8.22: A follow ends when the follower scrolls, clicks, touches or types in any object's plank, presses Escape, or attends an object outside what it shows of the leader; and when the leader has attended nothing in the space for five seconds, which their leaving the space, going offline or their heartbeat lapsing all amount to. The leader going idle ends nothing.
+  req F-8.23: While following, the Members companion's rail tab shows a dot, and its list starts with the leader's row, highlighted, carrying Stop (and Paused while paused) in place of their actions. Stopping returns the row to its object's group and clears the dot.
 ```
 
 ## Acceptance
@@ -746,7 +747,7 @@ test QA-2: Register a schema and add a typed relation
 test QA-3: Act on a peer from their avatar
   desc: A peer's avatar opens the object's viewers, Jump reveals what they are looking at, and the Members companion lists everyone in the space.
   actors: human
-  covers: [F-8.8, F-8.9, F-8.10, F-8.11]
+  covers: [F-8.9, F-8.10, F-8.11, F-8.12]
   status: unverified
   automated:
     - composer-e2e:collaboration.spec.ts#Collaboration tests › a peer's avatar opens the viewers list and jumps to their selection
@@ -775,7 +776,7 @@ test QA-3: Act on a peer from their avatar
 test QA-4: Tell a peer's sessions apart
   desc: A peer with the object open in two tabs shows as one row, and the sessions toggle lists their sessions under it, each with its own Jump.
   actors: human
-  covers: [F-8.12, F-8.15]
+  covers: [F-8.13, F-8.16]
   status: unverified
   automated:
     - composer-e2e:collaboration.spec.ts#Collaboration tests › the sessions toggle lists a peer's sessions under their row, each with its own Jump
@@ -801,7 +802,7 @@ test QA-4: Tell a peer's sessions apart
 test QA-5: Follow a peer around the space
   desc: Following a peer from the Members companion opens what they open and keeps their top line in view without taking focus, marks the companion's tab, and Escape ends it.
   actors: human
-  covers: [F-8.18, F-8.19, F-8.20, F-8.21, F-8.22]
+  covers: [F-8.19, F-8.20, F-8.21, F-8.22, F-8.23]
   status: unverified
   automated:
     - composer-e2e:collaboration.spec.ts#Collaboration tests › following a peer opens what they open and mirrors their scroll until Escape
@@ -827,7 +828,7 @@ test QA-5: Follow a peer around the space
 test QA-6: Follow a peer's deck side by side
   desc: A follower whose deck is not flattened shows the leader's planks in the leader's order and scrolls its deck with theirs.
   actors: human
-  covers: [F-8.20]
+  covers: [F-8.21]
   status: unverified
   automated:
     - composer-e2e:collaboration.spec.ts#Collaboration tests › a follower whose deck lays planks side by side mirrors the leader's planks and scroll
@@ -921,191 +922,432 @@ decision D-7: When the deck switches workspace, the planks that left `active` ar
 ```
 
 ```mdl
-decision D-8: Peers get Go to and Jump actions in the app graph; Jump moves the caret and takes focus, as revealing a comment does.
-  date: 2026-11-04
-  by: user:wittjosiah
-  affects: [F-8.8, F-8.9]
-```
-
-```mdl
-decision D-9: Clicking an avatar opens the member list with its row highlighted. The list shows only that object's viewers and ends with a "See everyone in this space" button that opens a People companion in the complementary sidebar listing everyone in the space.
-  date: 2026-11-04
-  by: user:wittjosiah
-  affects: [F-8.10, F-8.11, SpacePresence]
-```
-
-```mdl
-decision D-10: A peer on several devices shows as one row, using the latest device. The navtree presence indicators stay as they are.
-  date: 2026-11-04
-  by: user:wittjosiah
-  affects: [F-8.12, F-8.7]
-```
-
-```mdl
-decision D-11: Each peer is a hidden graph node under its space, `peer-<identityKey>`, so actions can depend on what the peer views. Fills in [D-8].
+decision D-8: The navtree presence surface claims space rows, which no longer carry a sync-status glyph.
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
-  affects: [F-8.8]
+  supersedes: D-6
+  affects: [F-8.7, SpacePresence]
+  why: Sync status moved to the status bar, so nothing on a space row is lost when presence takes it, and space rows draw the same glyph, with the same treatments, as object rows.
+```
+
+```mdl
+decision D-9: Activity on an object reaches its navtree glyph through the progress registry, not a capability of its own.
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.8, SpacePresence]
+  why: The progress registry is already the app's channel for work under way, keyed per object by convention; reading it means any producer (an agent turn, a mailbox sync) shows on the row without plugin-space knowing about it.
+  rejected: An `ActivitySource` capability that each plugin contributes per object; a second channel for the same signal.
+```
+
+```mdl
+decision D-10: Peers get Go to and Jump actions in the app graph; Jump moves the caret and takes focus, as revealing a comment does.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-8.9, F-8.10]
+```
+
+```mdl
+decision D-11: Clicking an avatar opens the member list with its row highlighted. The list shows only that object's viewers and ends with a "See everyone in this space" button that opens a People companion in the complementary sidebar listing everyone in the space.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-8.11, F-8.12, SpacePresence]
+```
+
+```mdl
+decision D-12: A peer on several devices shows as one row, using the latest device. The navtree presence indicators stay as they are.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-8.13, F-8.7]
+```
+
+```mdl
+decision D-13: Each peer is a hidden graph node under its space, `peer-<identityKey>`, so actions can depend on what the peer views. Fills in [D-10].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.9]
   why: Actions differ per object type and per whether the object is open, so a fixed per-member menu cannot express them.
   rejected: One static action set per member, chosen in the component.
 ```
 
 ```mdl
-decision D-12: Jump is offered only when the peer's object is open in the deck and its type contributes a `Locator`; Go to only when it is not open. Fills in [D-8].
+decision D-14: Jump is offered only when the peer's object is open in the deck and its type contributes a `Locator`; Go to only when it is not open. Fills in [D-10].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
-  affects: [F-8.8, F-8.9]
+  affects: [F-8.9, F-8.10]
   why: Offering both on an open object duplicates one outcome; Go to cannot reveal yet because the target opens after the action returns.
 ```
 
 ```mdl
-decision D-13: Locations ride the existing `viewing` message, sent with the heartbeat and throttled to one per second on change. Fills in [D-8].
+decision D-15: Locations ride the existing `viewing` message, sent with the heartbeat and throttled to one per second on change. Fills in [D-10].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
-  affects: [F-8.13]
+  affects: [F-8.14]
   why: Jump needs only a recent location; the faster rate belongs to following, which raises it only while someone follows.
   rejected: A separate location message; two messages per peer would need their own expiry.
 ```
 
 ```mdl
-decision D-14: The companion is named Members, matching the members settings, and links to the members settings to invite more people. In a locked space it shows a placeholder, since there are no other members and no members settings.
+decision D-16: The companion is named Members, matching the members settings, and links to the members settings to invite more people. In a locked space it shows a placeholder, since there are no other members and no members settings.
   date: 2026-11-04
   by: user:wittjosiah
-  supersedes: D-9
-  affects: [F-8.10, F-8.11, F-8.14]
+  supersedes: D-11
+  affects: [F-8.11, F-8.12, F-8.15]
 ```
 
 ```mdl
-decision D-15: The invite link opens the members settings through `SpaceOperation.OpenMembers` and shows even when no one else is online; the locked placeholder replaces the whole list. Fills in [D-14].
+decision D-17: The invite link opens the members settings through `SpaceOperation.OpenMembers` and shows even when no one else is online; the locked placeholder replaces the whole list. Fills in [D-16].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
-  affects: [F-8.11, F-8.14]
+  affects: [F-8.12, F-8.15]
   why: An empty space is when inviting matters most; a locked space can list no one but you.
 ```
 
 ```mdl
-decision D-16: Invite members is a button at the end of the companion's toolbar. Presence rows are built on the react-ui Listbox, so spacing and keyboard navigation come from it, and their actions are visible buttons rather than ghost icons. Notifications comes second in the complementary rail and Members third.
+decision D-18: Invite members is a button at the end of the companion's toolbar. Presence rows are built on the react-ui Listbox, so spacing and keyboard navigation come from it, and their actions are visible buttons rather than ghost icons. Notifications comes second in the complementary rail and Members third.
   date: 2026-11-04
   by: user:wittjosiah
-  affects: [F-8.10, F-8.11]
+  affects: [F-8.11, F-8.12]
 ```
 
 ```mdl
-decision D-17: The popover opens the companion from a button at the end of its header, and labels its action "Jump"; Notifications and Members take rail positions -2 and -1. Fills in [D-16].
+decision D-19: The popover opens the companion from a button at the end of its header, and labels its action "Jump"; Notifications and Members take rail positions -2 and -1. Fills in [D-18].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
-  affects: [F-8.10, F-8.11]
+  affects: [F-8.11, F-8.12]
   why: A full-width footer label overflowed the popover; the header's trailing slot is where a popover's own controls go. Explicit positions keep the rail order from depending on plugin load order.
   rejected: Keep the footer button and widen the popover to fit it.
 ```
 
 ```mdl
-decision D-18: Viewers are tracked per session (a tab or app instance), not per identity. A peer with several sessions on an object is one row that expands, behind a disclosure, into a row per session naming its device.
+decision D-20: Viewers are tracked per session (a tab or app instance), not per identity. A peer with several sessions on an object is one row that expands, behind a disclosure, into a row per session naming its device.
   date: 2026-11-04
   by: user:wittjosiah
-  supersedes: D-10
-  affects: [F-8.12, ObjectViewerProps, PluginState]
+  supersedes: D-12
+  affects: [F-8.13, ObjectViewerProps, PluginState]
 ```
 
 ```mdl
-decision D-19: Expanded, only the session rows carry actions. Collapsed, the peer's row carries them, acting on the peer's default session.
+decision D-21: Expanded, only the session rows carry actions. Collapsed, the peer's row carries them, acting on the peer's default session.
   date: 2026-11-04
   by: user:wittjosiah
-  affects: [F-8.12]
+  affects: [F-8.13]
 ```
 
 ```mdl
-decision D-20: The default session is the one whose anchor (selection or viewport) changed most recently, from typing, scrolling or any other move. A session is active while its anchor changed recently and idle otherwise, shown by a dot alone with no text; editing is not told apart from viewing.
+decision D-22: The default session is the one whose anchor (selection or viewport) changed most recently, from typing, scrolling or any other move. A session is active while its anchor changed recently and idle otherwise, shown by a dot alone with no text; editing is not told apart from viewing.
   date: 2026-11-04
   by: user:wittjosiah
-  affects: [F-8.12, F-8.15]
+  affects: [F-8.13, F-8.16]
 ```
 
 ```mdl
-decision D-21: Each running app picks a random session id and sends it, with its device name, in every `viewing` message. The name is the HALO device profile's label, else its platform and OS, matching the devices settings. A message without a session id counts as one session keyed by the identity. Fills in [D-18].
+decision D-23: Each running app picks a random session id and sends it, with its device name, in every `viewing` message. The name is the HALO device profile's label, else its platform and OS, matching the devices settings. A message without a session id counts as one session keyed by the identity. Fills in [D-20].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
-  affects: [F-8.13, ObjectViewerProps]
+  affects: [F-8.14, ObjectViewerProps]
   why: A peer cannot read another identity's device profiles, so the sender names its own device. Keying old clients by identity keeps them listed as one session.
   rejected: Look the device up by the gossip envelope's peer id, which only works for one's own devices.
 ```
 
 ```mdl
-decision D-22: Receivers derive when a session moved by comparing each message's location with the one before; opening an object or coming back to it counts as a move. Active means moved within the last 60 s. Fills in [D-20].
+decision D-24: Receivers derive when a session moved by comparing each message's location with the one before; opening an object or coming back to it counts as a move. Active means moved within the last 60 s. Fills in [D-22].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
-  affects: [F-8.15, ObjectViewerProps]
+  affects: [F-8.16, ObjectViewerProps]
   why: Locations already travel on change, so the receiver sees every move without a new field, and its own clock judges the window, so clock skew between devices does not matter.
   rejected: A sender-side `idleFor` field counting seconds since the last input.
 ```
 
 ```mdl
-decision D-23: Each session is a hidden graph node, `session-<sessionId>`, under its peer's node and carries the same Jump and Go to actions for that session. Fills in [D-19].
+decision D-25: Each session is a hidden graph node, `session-<sessionId>`, under its peer's node and carries the same Jump and Go to actions for that session. Fills in [D-21].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
-  affects: [F-8.8, F-8.12]
-  why: Keeps the actions in the app graph, as [D-11] does for peers, so a session's Jump depends on what that session views.
+  affects: [F-8.9, F-8.13]
+  why: Keeps the actions in the app graph, as [D-13] does for peers, so a session's Jump depends on what that session views.
 ```
 
 ```mdl
-decision D-24: Sessions on the same device are numbered after its name, the session count sits on a description line under the peer's name, and the caret is the row's trailing Collapsible trigger. The popover takes its 24rem maximum width. The Members companion lists a peer under each object one of their sessions attends, with only those sessions, and its collapsed row acts on the most recently moved of them. Fills in [D-18].
+decision D-26: Sessions on the same device are numbered after its name, the session count sits on a description line under the peer's name, and the caret is the row's trailing Collapsible trigger. The popover takes its 24rem maximum width. The Members companion lists a peer under each object one of their sessions attends, with only those sessions, and its collapsed row acts on the most recently moved of them. Fills in [D-20].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
-  affects: [F-8.10, F-8.11, F-8.12]
+  affects: [F-8.11, F-8.12, F-8.13]
   why: Two tabs on one device carry the same name. The count beside the name truncated next to Jump in a 20rem popover. The trailing caret is how Listbox rows collapse elsewhere.
   rejected: A leading caret before the avatar, as first mocked.
 ```
 
 ```mdl
-decision D-25: On a peer's row the session count follows the name as plain text, not a tag, and the caret is a separate control fixed at the row's end. Expanding the row moves nothing on it; only its Jump goes away.
+decision D-27: On a peer's row the session count follows the name as plain text, not a tag, and the caret is a separate control fixed at the row's end. Expanding the row moves nothing on it; only its Jump goes away.
   date: 2026-11-04
   by: user:wittjosiah
-  affects: [F-8.12]
+  affects: [F-8.13]
 ```
 
 ```mdl
-decision D-26: Devices get proper names in the UI. The SDK stops writing a placeholder device label, and every place that names a device treats that placeholder as no label.
+decision D-28: Devices get proper names in the UI. The SDK stops writing a placeholder device label, and every place that names a device treats that placeholder as no label.
   date: 2026-11-04
   by: user:wittjosiah
-  affects: [F-8.16]
+  affects: [F-8.17]
 ```
 
 ```mdl
-decision D-27: Two sessions on the same device each get their own row.
+decision D-29: Two sessions on the same device each get their own row.
   date: 2026-11-04
   by: user:wittjosiah
-  affects: [F-8.12, F-8.16]
+  affects: [F-8.13, F-8.17]
 ```
 
 ```mdl
-decision D-28: Session rows sit under the peer's name: the dot in the cell under the avatar, then a device icon for its kind and the device's name, then Jump at the row's end, in line with single-session rows' Jump. The popover takes the Members companion's size (`md`) and its 24rem maximum width. Rows on one device are numbered after its name. The Members companion lists a peer under each object one of their sessions attends, with only those sessions, and its collapsed row acts on the most recently moved of them. Fills in [D-25] and [D-27].
+decision D-30: Session rows sit under the peer's name: the dot in the cell under the avatar, then a device icon for its kind and the device's name, then Jump at the row's end, in line with single-session rows' Jump. The popover takes the Members companion's size (`md`) and its 24rem maximum width. Rows on one device are numbered after its name. The Members companion lists a peer under each object one of their sessions attends, with only those sessions, and its collapsed row acts on the most recently moved of them. Fills in [D-27] and [D-29].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
-  supersedes: D-24
-  affects: [F-8.10, F-8.11, F-8.12, F-8.16]
+  supersedes: D-26
+  affects: [F-8.11, F-8.12, F-8.13, F-8.17]
   why: At the plank header's `lg` size, Jump and a trailing dot left device names too little room to show their numbers; the cell under the avatar was empty.
   rejected: Keep the count on a description line under the name; keep the dot beside Jump.
 ```
 
 ```mdl
-decision D-29: Each running app picks a random session id and sends it, with its device as label, platform, OS and kind, in every `viewing` message; a message without a session id counts as one session keyed by the identity. A shared `getDeviceLabel` in the client SDK drops the placeholders `initial identity device` and `additional device`, for the presence sender, the devices settings and the device CLI alike. The receiver names a device by its label, else "Composer on <os>" for the native and mobile apps, else "<platform> on <os>". Fills in [D-26].
+decision D-31: Each running app picks a random session id and sends it, with its device as label, platform, OS and kind, in every `viewing` message; a message without a session id counts as one session keyed by the identity. A shared `getDeviceLabel` in the client SDK drops the placeholders `initial identity device` and `additional device`, for the presence sender, the devices settings and the device CLI alike. The receiver names a device by its label, else "Composer on <os>" for the native and mobile apps, else "<platform> on <os>". Fills in [D-28].
   date: 2026-11-04
   by: agent:claude-code
   for: user:wittjosiah
-  supersedes: D-21
-  affects: [F-8.13, F-8.16, SessionDevice]
+  supersedes: D-23
+  affects: [F-8.14, F-8.17, SessionDevice]
   why: Devices already written with a placeholder keep it in their HALO credentials, so readers must ignore it as well as the SDK no longer writing it. Sending the parts lets the receiver localize the name and pick the icon.
   rejected: Send a preformatted name string; rename existing devices with a new profile credential.
+```
+
+```mdl
+decision D-32: A toggle in the toolbar switches presence lists between a row per person and a row per session, in place of the caret that expanded a person's row; with it there is no disclosure. Replaces the disclosure of [D-20] and [D-21].
+  date: 2026-11-04
+  by: user:wittjosiah
+  supersedes: D-27
+  affects: [F-8.13]
+```
+
+```mdl
+decision D-33: A presence row's avatar must not stick out of the row's hover background.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-8.18]
+```
+
+```mdl
+decision D-34: The sessions toggle sits before See everyone in the viewers popover's header and at the end of the Members companion's toolbar, before Invite members. Both read one `showSessions` flag in the plugin's persisted state, so the choice holds across the two lists and reloads on this device. A person's row keeps one line with a small (`sm`) avatar and the session count after the name. A session row takes two lines, the peer's name over the dot and device name, with an `md` avatar, ordered by device name. Rows draw no status ring on the avatar, and the device-kind icon is gone. Fills in [D-32] and [D-33].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  supersedes: D-30
+  affects: [F-8.11, F-8.12, F-8.13, F-8.17, F-8.18, PluginState]
+  why: An avatar a block tall fills a one-line row to its edges, and its ring's gap is painted in the surface colour, so it shows as a pale disc against the hover. On one line, a session row's name and device both truncated at the companion's width.
+  rejected: A dot badge on the avatar (its ring would show the same pale disc); one-line session rows; a separate toggle state per list.
+```
+
+```mdl
+decision D-35: With the sessions toggle on, a person is still one row and their sessions are listed under it; the same identity is never shown more than once. The toggle in the toolbar only picks whether the sessions are listed.
+  date: 2026-11-04
+  by: user:wittjosiah
+  supersedes: D-34
+  affects: [F-8.13]
+```
+
+```mdl
+decision D-36: Every presence row uses the same, smaller avatar.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-8.18]
+```
+
+```mdl
+decision D-37: A person's row keeps one line with an `sm` avatar and the session count after the name. With the toggle on, every listed person's sessions follow their row, a person with one session included, and the person's row drops its actions for theirs. A session row has the dot in the cell under the avatar and the device's name lined up with the person's name, then Jump; rows on a device are ordered by its name. Rows draw no status ring on the avatar, and there is no device-kind icon. The toggle and its persisted `showSessions` flag stay as in [D-34]. Fills in [D-35] and [D-36].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.11, F-8.12, F-8.13, F-8.17, F-8.18, PluginState]
+  why: Listing single-session people's sessions too keeps the toggle's meaning the same for every row and still shows which device they are on. One-line session rows fit once the person's name is not repeated on them.
+  rejected: List sessions only for people with several; keep two-line session rows with the larger avatar.
+```
+
+```mdl
+decision D-38: A person's row and the session rows listed under it are one block: hovering or highlighting any of them shows the hover across all of them.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-8.18]
+```
+
+```mdl
+decision D-39: A person's rows sit in one group that takes the hover and highlight background while any of its rows is hovered or highlighted; the rows inside paint none of their own. The keyboard's ring still marks the one row the keys act on, so the row theme rings a highlighted row nested two levels under its list as well as one. Fills in [D-38].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.18]
+  why: Listbox rows cannot nest, so the person's row and its session rows stay siblings and their shared state has to come from a wrapper. In the Members companion the wrapper sits inside the object's group, one level deeper than the row theme rang.
+  rejected: Highlight the person's row alone and hover each session row separately, as Listbox does by default.
+```
+
+```mdl
+decision D-40: The plank header's avatars expand the graph nodes of their peers and those peers' sessions, so the viewers list's Jump and Go to are there when it opens. Expanding them only when the list rendered left the person's Jump to appear about a second later.
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.11]
+  why: Peer and session nodes are hidden, so nothing else expands them, and expanding a node builds its actions asynchronously.
+  rejected: Reserve the Jump's space in the row while its actions load.
+```
+
+```mdl
+decision D-41: A person's row does not show how many sessions they have.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-8.13]
+```
+
+```mdl
+decision D-42: In the viewers list, a person's row acts on the most recently moved of their sessions attending that object, and has no actions when none is. It used to act on their most recently moved session anywhere in the space, so its Jump or Go to could target another object. Fills in [D-22].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.13, SpacePresence]
+  why: The list is titled "In this document", so its actions must act on that document; the Members companion already picks its row's session this way.
+  rejected: Fall back to the person's first session, which can attend another object.
+```
+
+```mdl
+decision D-43: With the sessions toggle on, a session row in the viewers list has actions only while its session attends that object. A session that moved to another object stays listed until its heartbeat lapses. Fills in [D-42].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.13, SpacePresence]
+  why: Jump and Go to on such a row would act on the other object, the case [D-42] rules out for the person's row.
+  rejected: Drop such sessions from the list, which would hide that the peer still has the object open.
+```
+
+```mdl
+decision D-44: The viewing message carries the sender's deck in that space as the graph paths of its planks, in order. Go to opens the peer's object at the path the peer's session has it open at, and falls back to the object's path under the space's database section when the session sent no deck.
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.9, F-8.14, PeerDeck, PluginState]
+  why: Presence keys name an object, not where it sits in the tree. Opening the object's database path expanded the Database section in the follower's navtree, though the peer had opened it from a collection.
+  rejected: Resolve a collection that holds the object on the receiving side, which can pick a different collection than the peer's, or the wrong section entirely.
+```
+
+```mdl
+decision D-45: Follow is one action among a peer's actions, next to Jump and Go to, and follows the peer across the whole space. While someone follows, the leader's location goes out every 100 ms, broadcast over gossip to the whole space, instead of every second. The follower names its leader in its own presence state, and a leader that sees itself named switches to the fast rate.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-8.14, F-8.19, F-8.20]
+```
+
+```mdl
+decision D-46: A follower opens the object the leader attends whenever it changes and reveals the leader's anchor through the type's `Locator`. Revealing while following must not take focus or move the follower's caret. On a canvas, follow adopts the leader's zoom.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-8.21]
+```
+
+```mdl
+decision D-47: A follow ends when the follower scrolls, types, changes selection, navigates or moves attention to another plank, or presses Escape, and when the leader goes offline, leaves the space or their location goes stale. The leader opening something the follower cannot open pauses the follow. The leader going idle ends nothing.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-8.21, F-8.22]
+```
+
+```mdl
+decision D-48: Following shows only in the Members companion. While following, its rail tab shows a dot, and the followed person's row moves to the top of its list, highlighted, with Stop in place of its actions. Stopping puts the row back and clears the dot. The dot widens the deck companion's existing badge rather than adding another.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-8.23]
+```
+
+```mdl
+decision D-49: Follow on a person's row follows whichever of their sessions moved most recently, switching as that changes, as Jump does. With the sessions toggle on, each session row has its own Follow, which stays on that session.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-8.19, FollowTarget]
+```
+
+```mdl
+decision D-50: The follower's input ends a follow when it is a pointer press, wheel, touch move or key press inside an element whose attendable id names an object, which covers its planks and their companions; a modifier key alone does not count. Escape ends it from anywhere, and attending an object other than the leader's counts as navigating. A leader whose sessions have attended nothing in the space for five seconds has left, gone offline or gone stale, which also catches their heartbeat lapsing. Fills in [D-47].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.22]
+  why: Input events read the same for every object type, so no view has to tell its own reveal scrolls apart from the user's, and a scroll the app makes fires no wheel or key event. Five seconds absorbs the gap between a leader leaving one object and attending the next.
+  rejected:
+    - End on any change to the followed view's reported viewport that the view did not tag as a reveal; every view would need to tag reveals, and the scroll events of a reveal arrive after its transaction.
+    - End the moment the leader attends nothing, which a plank switch does briefly.
+```
+
+```mdl
+decision D-51: A `Locator`'s reveal takes a `follow` flag. With it, markdown scrolls the anchor to the top of the view and leaves the selection and focus alone, and a sheet scrolls the anchor's cell to the top left without moving its focused cell. The follower reveals the top of the leader's viewport, else their selection, and for five seconds after opening an object reveals again every half second so a view that mounts late still lands. No canvas has a `Locator` yet, so adopting the leader's zoom waits for one. Fills in [D-46].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.21]
+  why: The viewport anchor shows what the leader sees, where the caret may be off screen. A flag keeps one reveal per type for comments, Jump and follow.
+  rejected: A second reveal operation per type for following.
+```
+
+```mdl
+decision D-52: The follower names `{ identityKey, sessionId? }` in its viewing messages to the leader's space only. The leader keeps its followers by space, identity and session, drops one whose message stops naming it or whose heartbeat lapses, and sends at once when a new one appears so the follower starts from a fresh location. The markdown editor reports its location every 100 ms instead of 250 ms, so the fast rate has moves to send. Fills in [D-45].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.14, F-8.20]
+  why: Naming the leader in the space it is followed in keeps other spaces' leaders at the slow rate. At 250 ms the editor would cap the fast tier at a quarter second.
+  rejected: A separate presence channel for followers.
+```
+
+```mdl
+decision D-53: Follow is left off the node that is already the followed target. The leader's row at the top of the Members companion lists no sessions even with the toggle on, and reads Paused before Stop while the follow is paused. The companion `badge` atom holds `number | true`, and `true` draws a dot with no text. Fills in [D-48] and [D-49].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.19, F-8.23, PluginState]
+  why: A Follow for the current target would do nothing. With Stop on the person's row, session rows under it would offer a second way to change the same follow.
+  rejected: Turn Follow into Stop on the followed node, which would put a second Stop in the viewers popover.
+```
+
+```mdl
+decision D-54: A person's group of rows also takes the highlight background while one of its rows is the list's selected value, which is how the viewers list marks the clicked peer and the Members companion marks the leader. Fills in [D-39] and [D-48].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.11, F-8.18, F-8.23]
+  why: The list's value sets `aria-selected` on the row, not `data-highlighted`, and the group made its rows transparent, so neither row showed as highlighted.
+  rejected: Move the keyboard highlight to the row instead, which the next arrow key would move away.
+```
+
+```mdl
+decision D-55: Following mirrors the leader's whole deck: the planks it holds, how far it is scrolled, and the scroll within each plank. A follower whose own deck is flat navigates by the plank the leader attends.
+  date: 2026-11-04
+  by: user:wittjosiah
+  affects: [F-8.21]
+```
+
+```mdl
+decision D-56: The deck's scroll travels as its front plank, the first one not folded with at least half its width in view; a flat deck's front is its current plank. The follower switches to the space's workspace, sets its deck to the leader's planks, and scrolls the front plank to just past its own left pile without focusing it. Every plank's location goes out, not only the attended one's, and each mirrored plank reveals its own. A follower deck wider than the leader's can show more planks, so its own front plank may differ; it shows the leader's. For five seconds after its deck changes the follower sends the scroll and the reveals again on every tick. Attending any plank of the mirrored deck keeps the follow. A leader that sent no deck is followed as a flat deck follows. Stopping leaves the follower's deck as it is. Fills in [D-55].
+  date: 2026-11-04
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.14, F-8.21, F-8.22, ObjectViewerProps, PeerDeck, QA-6]
+  why: A plank, unlike a scroll offset, means the same thing in a viewport of another width. The deck moves attention to a visible plank when the attended one folds, so a scroll the follow makes can move attention inside the mirrored deck.
+  rejected:
+    - Send the deck's scroll offset in pixels, which lands elsewhere in a deck of another width or with other plank sizes.
+    - Restore the follower's own planks when the follow stops; each mirrored deck is a browser history entry, so Back walks back to them.
 ```
 
 ## Appendix: Extension Definitions
@@ -1170,205 +1412,4 @@ ext op
     effects?: EffectList
     requires?: ServiceList
     note?: Prose
-```
-
-```mdl
-decision D-30: A toggle in the toolbar switches presence lists between a row per person and a row per session, in place of the caret that expanded a person's row; with it there is no disclosure. Replaces the disclosure of [D-18] and [D-19].
-  date: 2026-11-04
-  by: user:wittjosiah
-  supersedes: D-25
-  affects: [F-8.12]
-```
-
-```mdl
-decision D-31: A presence row's avatar must not stick out of the row's hover background.
-  date: 2026-11-04
-  by: user:wittjosiah
-  affects: [F-8.17]
-```
-
-```mdl
-decision D-32: The sessions toggle sits before See everyone in the viewers popover's header and at the end of the Members companion's toolbar, before Invite members. Both read one `showSessions` flag in the plugin's persisted state, so the choice holds across the two lists and reloads on this device. A person's row keeps one line with a small (`sm`) avatar and the session count after the name. A session row takes two lines, the peer's name over the dot and device name, with an `md` avatar, ordered by device name. Rows draw no status ring on the avatar, and the device-kind icon is gone. Fills in [D-30] and [D-31].
-  date: 2026-11-04
-  by: agent:claude-code
-  for: user:wittjosiah
-  supersedes: D-28
-  affects: [F-8.10, F-8.11, F-8.12, F-8.16, F-8.17, PluginState]
-  why: An avatar a block tall fills a one-line row to its edges, and its ring's gap is painted in the surface colour, so it shows as a pale disc against the hover. On one line, a session row's name and device both truncated at the companion's width.
-  rejected: A dot badge on the avatar (its ring would show the same pale disc); one-line session rows; a separate toggle state per list.
-```
-
-```mdl
-decision D-33: With the sessions toggle on, a person is still one row and their sessions are listed under it; the same identity is never shown more than once. The toggle in the toolbar only picks whether the sessions are listed.
-  date: 2026-11-04
-  by: user:wittjosiah
-  supersedes: D-32
-  affects: [F-8.12]
-```
-
-```mdl
-decision D-34: Every presence row uses the same, smaller avatar.
-  date: 2026-11-04
-  by: user:wittjosiah
-  affects: [F-8.17]
-```
-
-```mdl
-decision D-35: A person's row keeps one line with an `sm` avatar and the session count after the name. With the toggle on, every listed person's sessions follow their row, a person with one session included, and the person's row drops its actions for theirs. A session row has the dot in the cell under the avatar and the device's name lined up with the person's name, then Jump; rows on a device are ordered by its name. Rows draw no status ring on the avatar, and there is no device-kind icon. The toggle and its persisted `showSessions` flag stay as in [D-32]. Fills in [D-33] and [D-34].
-  date: 2026-11-04
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-8.10, F-8.11, F-8.12, F-8.16, F-8.17, PluginState]
-  why: Listing single-session people's sessions too keeps the toggle's meaning the same for every row and still shows which device they are on. One-line session rows fit once the person's name is not repeated on them.
-  rejected: List sessions only for people with several; keep two-line session rows with the larger avatar.
-```
-
-```mdl
-decision D-36: A person's row and the session rows listed under it are one block: hovering or highlighting any of them shows the hover across all of them.
-  date: 2026-11-04
-  by: user:wittjosiah
-  affects: [F-8.17]
-```
-
-```mdl
-decision D-37: A person's rows sit in one group that takes the hover and highlight background while any of its rows is hovered or highlighted; the rows inside paint none of their own. The keyboard's ring still marks the one row the keys act on, so the row theme rings a highlighted row nested two levels under its list as well as one. Fills in [D-36].
-  date: 2026-11-04
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-8.17]
-  why: Listbox rows cannot nest, so the person's row and its session rows stay siblings and their shared state has to come from a wrapper. In the Members companion the wrapper sits inside the object's group, one level deeper than the row theme rang.
-  rejected: Highlight the person's row alone and hover each session row separately, as Listbox does by default.
-```
-
-```mdl
-decision D-38: The plank header's avatars expand the graph nodes of their peers and those peers' sessions, so the viewers list's Jump and Go to are there when it opens. Expanding them only when the list rendered left the person's Jump to appear about a second later.
-  date: 2026-11-04
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-8.10]
-  why: Peer and session nodes are hidden, so nothing else expands them, and expanding a node builds its actions asynchronously.
-  rejected: Reserve the Jump's space in the row while its actions load.
-```
-
-```mdl
-decision D-39: A person's row does not show how many sessions they have.
-  date: 2026-11-04
-  by: user:wittjosiah
-  affects: [F-8.12]
-```
-
-```mdl
-decision D-40: Follow is one action among a peer's actions, next to Jump and Go to, and follows the peer across the whole space. While someone follows, the leader's location goes out every 100 ms, broadcast over gossip to the whole space, instead of every second. The follower names its leader in its own presence state, and a leader that sees itself named switches to the fast rate.
-  date: 2026-11-04
-  by: user:wittjosiah
-  affects: [F-8.13, F-8.18, F-8.19]
-```
-
-```mdl
-decision D-41: A follower opens the object the leader attends whenever it changes and reveals the leader's anchor through the type's `Locator`. Revealing while following must not take focus or move the follower's caret. On a canvas, follow adopts the leader's zoom.
-  date: 2026-11-04
-  by: user:wittjosiah
-  affects: [F-8.20]
-```
-
-```mdl
-decision D-42: A follow ends when the follower scrolls, types, changes selection, navigates or moves attention to another plank, or presses Escape, and when the leader goes offline, leaves the space or their location goes stale. The leader opening something the follower cannot open pauses the follow. The leader going idle ends nothing.
-  date: 2026-11-04
-  by: user:wittjosiah
-  affects: [F-8.20, F-8.21]
-```
-
-```mdl
-decision D-43: Following shows only in the Members companion. While following, its rail tab shows a dot, and the followed person's row moves to the top of its list, highlighted, with Stop in place of its actions. Stopping puts the row back and clears the dot. The dot widens the deck companion's existing badge rather than adding another.
-  date: 2026-11-04
-  by: user:wittjosiah
-  affects: [F-8.22]
-```
-
-```mdl
-decision D-44: Follow on a person's row follows whichever of their sessions moved most recently, switching as that changes, as Jump does. With the sessions toggle on, each session row has its own Follow, which stays on that session.
-  date: 2026-11-04
-  by: user:wittjosiah
-  affects: [F-8.18, FollowTarget]
-```
-
-```mdl
-decision D-45: The follower's input ends a follow when it is a pointer press, wheel, touch move or key press inside an element whose attendable id names an object, which covers its planks and their companions; a modifier key alone does not count. Escape ends it from anywhere, and attending an object other than the leader's counts as navigating. A leader whose sessions have attended nothing in the space for five seconds has left, gone offline or gone stale, which also catches their heartbeat lapsing. Fills in [D-42].
-  date: 2026-11-04
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-8.21]
-  why: Input events read the same for every object type, so no view has to tell its own reveal scrolls apart from the user's, and a scroll the app makes fires no wheel or key event. Five seconds absorbs the gap between a leader leaving one object and attending the next.
-  rejected:
-    - End on any change to the followed view's reported viewport that the view did not tag as a reveal; every view would need to tag reveals, and the scroll events of a reveal arrive after its transaction.
-    - End the moment the leader attends nothing, which a plank switch does briefly.
-```
-
-```mdl
-decision D-46: A `Locator`'s reveal takes a `follow` flag. With it, markdown scrolls the anchor to the top of the view and leaves the selection and focus alone, and a sheet scrolls the anchor's cell to the top left without moving its focused cell. The follower reveals the top of the leader's viewport, else their selection, and for five seconds after opening an object reveals again every half second so a view that mounts late still lands. No canvas has a `Locator` yet, so adopting the leader's zoom waits for one. Fills in [D-41].
-  date: 2026-11-04
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-8.20]
-  why: The viewport anchor shows what the leader sees, where the caret may be off screen. A flag keeps one reveal per type for comments, Jump and follow.
-  rejected: A second reveal operation per type for following.
-```
-
-```mdl
-decision D-47: The follower names `{ identityKey, sessionId? }` in its viewing messages to the leader's space only. The leader keeps its followers by space, identity and session, drops one whose message stops naming it or whose heartbeat lapses, and sends at once when a new one appears so the follower starts from a fresh location. The markdown editor reports its location every 100 ms instead of 250 ms, so the fast rate has moves to send. Fills in [D-40].
-  date: 2026-11-04
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-8.13, F-8.19]
-  why: Naming the leader in the space it is followed in keeps other spaces' leaders at the slow rate. At 250 ms the editor would cap the fast tier at a quarter second.
-  rejected: A separate presence channel for followers.
-```
-
-```mdl
-decision D-48: Follow is left off the node that is already the followed target. The leader's row at the top of the Members companion lists no sessions even with the toggle on, and reads Paused before Stop while the follow is paused. The companion `badge` atom holds `number | true`, and `true` draws a dot with no text. Fills in [D-43] and [D-44].
-  date: 2026-11-04
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-8.18, F-8.22, PluginState]
-  why: A Follow for the current target would do nothing. With Stop on the person's row, session rows under it would offer a second way to change the same follow.
-  rejected: Turn Follow into Stop on the followed node, which would put a second Stop in the viewers popover.
-```
-
-```mdl
-decision D-49: A person's group of rows also takes the highlight background while one of its rows is the list's selected value, which is how the viewers list marks the clicked peer and the Members companion marks the leader. Fills in [D-37] and [D-43].
-  date: 2026-11-04
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-8.10, F-8.17, F-8.22]
-  why: The list's value sets `aria-selected` on the row, not `data-highlighted`, and the group made its rows transparent, so neither row showed as highlighted.
-  rejected: Move the keyboard highlight to the row instead, which the next arrow key would move away.
-```
-
-```mdl
-decision D-50: The viewing message carries the sender's deck in that space as the graph paths of its planks, in order. Go to opens the peer's object at the path the peer's session has it open at, and falls back to the object's path under the space's database section when the session sent no deck.
-  date: 2026-11-04
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-8.8, F-8.13, PeerDeck, PluginState]
-  why: Presence keys name an object, not where it sits in the tree. Opening the object's database path expanded the Database section in the follower's navtree, though the peer had opened it from a collection.
-  rejected: Resolve a collection that holds the object on the receiving side, which can pick a different collection than the peer's, or the wrong section entirely.
-```
-
-```mdl
-decision D-51: Following mirrors the leader's whole deck: the planks it holds, how far it is scrolled, and the scroll within each plank. A follower whose own deck is flat navigates by the plank the leader attends.
-  date: 2026-11-04
-  by: user:wittjosiah
-  affects: [F-8.20]
-```
-
-```mdl
-decision D-52: The deck's scroll travels as its front plank, the first one not folded with at least half its width in view; a flat deck's front is its current plank. The follower switches to the space's workspace, sets its deck to the leader's planks, and scrolls the front plank to just past its own left pile without focusing it. Every plank's location goes out, not only the attended one's, and each mirrored plank reveals its own. A follower deck wider than the leader's can show more planks, so its own front plank may differ; it shows the leader's. For five seconds after its deck changes the follower sends the scroll and the reveals again on every tick. Attending any plank of the mirrored deck keeps the follow. A leader that sent no deck is followed as a flat deck follows. Stopping leaves the follower's deck as it is. Fills in [D-51].
-  date: 2026-11-04
-  by: agent:claude-code
-  for: user:wittjosiah
-  affects: [F-8.13, F-8.20, F-8.21, ObjectViewerProps, PeerDeck, QA-6]
-  why: A plank, unlike a scroll offset, means the same thing in a viewport of another width. The deck moves attention to a visible plank when the attended one folds, so a scroll the follow makes can move attention inside the mirrored deck.
-  rejected:
-    - Send the deck's scroll offset in pixels, which lands elsewhere in a deck of another width or with other plank sizes.
-    - Restore the follower's own planks when the follow stops; each mirrored deck is a browser history entry, so Back walks back to them.
 ```

@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
-import { expect } from 'storybook/test';
+import { expect, waitFor } from 'storybook/test';
 
 import { Annotation, Obj } from '@dxos/echo';
 import { FeedModel, MessageList, Outline, type OutlineMarker, useMessageList } from '@dxos/react-ui-feed';
@@ -18,6 +18,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { type Actor, Message } from '@dxos/types';
 
+import { createHierarchicalFeed } from '../../testing/index.ts';
 import { translations } from '../../translations.ts';
 import { type ChatThreadEvent, type ChatView, DeliveryAnnotation, type DeliveryStatus } from '../../types.ts';
 import { type MessageAuthor } from '../MessageChrome/index.ts';
@@ -598,5 +599,44 @@ export const Authors: Story = {
       avatars: canvasElement.querySelectorAll('[data-testid="chat.avatar"]').length,
       names,
     }).toEqual({ avatars: 4, names: ['Alice Park', 'Bob Okafor'] });
+  },
+};
+
+const HierarchicalStory = ({ viewType = 'normal' }: StoryArgs) => {
+  const { messages, lanes, forks } = useMemo(() => createHierarchicalFeed(), []);
+  const model = useMemo(() => new FeedModel({ messages: [...messages], stops: 'prompt' }), [messages]);
+  const getLane = useCallback((message: Message.Message) => lanes.get(message.id), [lanes]);
+  const getForks = useCallback((message: Message.Message) => forks.get(message.id), [forks]);
+
+  return (
+    <ChatThread.Root model={model} viewType={viewType} getLane={getLane} getForks={getForks}>
+      <ChatThread.Viewport />
+    </ChatThread.Root>
+  );
+};
+
+/**
+ * A main thread with its branches: lanes in full wear a colored gutter, a background lane is a card, forks are markers.
+ * The pricing lane converges: its gutter ends, and the main thread answers from its result.
+ */
+export const Hierarchical: Story = {
+  render: (args) => <HierarchicalStory {...args} />,
+  args: { viewType: 'thinking' },
+  play: async ({ canvasElement }) => {
+    // The thread opens at its tail, where the pricing lane has ended and the announcement lane carries on.
+    const lanes = () =>
+      [...canvasElement.querySelectorAll<HTMLElement>('[data-lane]')].map((element) => element.dataset.lane);
+    await waitFor(() => expect(lanes().at(-1)).toBe('announcement'));
+    const row = canvasElement.querySelector('[data-lane]');
+    let scroller = row?.parentElement;
+    while (scroller && scroller.scrollHeight <= scroller.clientHeight) {
+      scroller = scroller.parentElement;
+    }
+    // The follow only withdraws for a scroll a gesture preceded, and would otherwise pull this one back to the tail.
+    scroller?.dispatchEvent(new WheelEvent('wheel'));
+    scroller?.scrollTo({ top: 0 });
+    await waitFor(() =>
+      expect(canvasElement.querySelector('[data-testid="chat.fork-marker"]')?.textContent).toContain('Thursday'),
+    );
   },
 };

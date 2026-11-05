@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type MessageValence } from './message.ts';
+
 export type ChromaticPalette =
   | 'red'
   | 'orange'
@@ -25,6 +27,9 @@ export type PrimaryPalette = 'primary';
 export type NeutralPalette = 'neutral';
 
 export type Palette = ChromaticPalette | PrimaryPalette | NeutralPalette;
+
+/** A colour the theme names, each with its own `--color-<hue>-*` tokens. */
+export type Hue = Palette | MessageValence;
 
 /**
  * Available color hues for UI components.

@@ -10,6 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
+import { Thread } from '@dxos/types';
 
 import * as Sheet from './Sheet.ts';
 
@@ -64,7 +65,7 @@ export const ScrollToAnchor = Operation.make({
     follow: Schema.optional(
       Schema.Boolean.annotate({ description: 'Scroll the range into view without moving the focused cell.' }),
     ),
-    thread: Schema.optional(Schema.Any.annotate({ description: 'Active refs for highlighting.' })),
+    thread: Schema.optional(Ref.Ref(Thread.Thread).annotate({ description: 'The comment thread to highlight.' })),
   }),
   output: Schema.Void,
 });

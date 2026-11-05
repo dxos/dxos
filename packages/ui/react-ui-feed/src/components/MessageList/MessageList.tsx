@@ -691,7 +691,7 @@ const MessageListViewport = Util.composable<HTMLDivElement, MessageListViewportE
           // Off deliberately: the browser adjusting the scroll as well would be a second party
           // anchoring the same thing, and the defect this design exists to remove is exactly that.
           style={{ position: 'relative', overflowAnchor: 'none' }}
-          classNames='dx-document'
+          classNames='dx-document dx-focus-ring'
           ref={handleViewportRef}
         >
           {/* Holds no rows: it exists only to give the thumb something to measure. */}

@@ -216,7 +216,7 @@ export const createPeerExtensions = Effect.fnUntraced(function* () {
                   return;
                 }
 
-                const object = yield* Effect.promise(() => space.db.makeRef(focus.key).load());
+                const object = yield* Effect.promise(() => space.db.makeRef(focus.key).tryLoad());
                 if (!Obj.isObject(object)) {
                   return;
                 }
