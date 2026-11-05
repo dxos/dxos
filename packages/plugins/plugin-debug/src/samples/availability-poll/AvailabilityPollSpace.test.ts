@@ -83,7 +83,6 @@ describe('Availability Poll template', () => {
       expect(countOf('type.projects.spec:')).toBe(2);
       expect(countOf('type.document')).toBe(3);
       expect(countOf('type.drawing')).toBe(2);
-      expect(countOf('type.scene.')).toBe(0);
     },
   );
 

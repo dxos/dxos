@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Scene } from '@dxos/diagram';
+import * as Architecture from '@dxos/plugin-canvas/Architecture';
 
 import compiled from './diagrams/compiled.json?raw';
 import flightsSource from './diagrams/flights.dx?raw';
@@ -21,10 +21,6 @@ export const DIAGRAM_NAMES: Record<DiagramKey, string> = {
 };
 
 /** The diagrams' scene commands, laid out ahead of time: laying one out at template time keeps the space waiting. */
-/** Scene commands by diagram id, the shape of `compiled.json`. */
-export const CompiledDiagrams = Schema.Record(Schema.String, Schema.Array(Scene.Command));
-
-export const DIAGRAM_COMMANDS = Schema.decodeUnknownSync(CompiledDiagrams)(JSON.parse(compiled)) as Record<
-  DiagramKey,
-  readonly Scene.Command[]
->;
+export const DIAGRAM_COMMANDS: Record<DiagramKey, Architecture.CompiledDiagrams[string]> = Schema.decodeUnknownSync(
+  Architecture.CompiledDiagrams,
+)(JSON.parse(compiled)) as Record<DiagramKey, Architecture.CompiledDiagrams[string]>;
