@@ -64,6 +64,7 @@ jobs:
   #   bundle   — build the shared Composer bundle (Composer in the set).
   #   tauri    — signed native build (Composer in the set — every environment ships a desktop app).
   #   ios      — also build iOS (`dev` only — see the `ios` input on deploy-tauri.yaml).
+  #   plugins  — publish the `edge-release` plugins to the preview EDGE (`preview` + Composer in the set).
   plan:
     if: github.repository == 'dxos/dxos'
     runs-on: ubuntu-24.04
@@ -74,6 +75,7 @@ jobs:
       bundle: ${{ steps.plan.outputs.bundle }}
       tauri: ${{ steps.plan.outputs.tauri }}
       ios: ${{ steps.plan.outputs.ios }}
+      plugins: ${{ steps.plan.outputs.plugins }}
     steps:
       - id: plan
         env:
@@ -91,6 +93,7 @@ jobs:
           bundle="$composer"
           tauri="$composer"
           ios=false;     if [ "$composer" = true ] && [ "$env" = dev ]; then ios=true; fi
+          plugins=false; if [ "$composer" = true ] && [ "$env" = preview ]; then plugins=true; fi
 
           {
             echo "env=$env"
@@ -99,8 +102,9 @@ jobs:
             echo "bundle=$bundle"
             echo "tauri=$tauri"
             echo "ios=$ios"
+            echo "plugins=$plugins"
           } >> "$GITHUB_OUTPUT"
-          echo "plan → env=$env app=$app composer=$composer | release=$release bundle=$bundle tauri=$tauri ios=$ios"
+          echo "plan → env=$env app=$app composer=$composer | release=$release bundle=$bundle tauri=$tauri ios=$ios plugins=$plugins"
 
   # PRODUCTION ONLY — cut a versioned Composer release: bump composer-app/crx, record it on main, tag
   # composer-v<x>. The bumped commit is what the rest of the run builds + deploys (needs.release.outputs.sha).
@@ -461,6 +465,60 @@ jobs:
         run: |
           payload=$(jq -nc --arg env "$DEPLOY_ENV" --arg app "$DEPLOY_APP" --arg url "$RUN_URL" \
             '{content: (":x: Deploy of **" + $app + "** to `" + $env + "` failed\nRun: " + $url)}')
+          curl -sS --fail-with-body -X POST "$DX_DISCORD_WEBHOOK_URL" -H "Content-Type: application/json" -d "$payload"
+
+  # The first-party plugins EDGE runs (every package tagged `edge-release`), published to the preview EDGE after the
+  # Composer deploy so preview's registry tracks the same `main` snapshot. The admin key makes them first-party
+  # (`realm:dxos`). A version EDGE already holds with other content is a warning, not a failure: versions are
+  # immutable there and only move on a release. See packages/core/compute/plugin-builder/README.md.
+  publish-plugins:
+    needs: [plan, deploy]
+    if: ${{ !cancelled() && needs.plan.outputs.plugins == 'true' && needs.deploy.result == 'success' }}
+    runs-on: ubuntu-24.04
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      # Built from source like every other released artifact here, not trusted from the shared remote cache.
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          remote-cache: 'false'
+
+      # Built and checked before the admin key is in the environment, so the build never sees it.
+      - name: Build and check EDGE plugin bundles
+        run: moon run :check-edge-release plugin-builder:build
+
+      - name: Publish EDGE plugins to preview
+        env:
+          DX_EDGE_BASE_URL: https://preview.dxos.network/
+          DX_HUB_API_KEY: ${{ secrets.EDGE_PREVIEW_ADMIN_KEY }}
+        run: |
+          if [ -z "$DX_HUB_API_KEY" ]; then
+            echo "::error::EDGE_PREVIEW_ADMIN_KEY is unset - cannot publish first-party plugins to preview."
+            exit 1
+          fi
+          # Every plugin is attempted; the step still fails when any one did.
+          moon exec --on-failure continue :publish-edge-release
+
+      - name: Notify Discord — plugin publish failed
+        if: failure() && !cancelled()
+        continue-on-error: true
+        env:
+          DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          payload=$(jq -nc --arg url "$RUN_URL" \
+            '{content: (":x: Publishing EDGE plugins to `preview` failed\nRun: " + $url)}')
           curl -sS --fail-with-body -X POST "$DX_DISCORD_WEBHOOK_URL" -H "Content-Type: application/json" -d "$payload"
 
   # A run that breaks before `deploy` must still say so: a prep failure (release, version, build-bundle)

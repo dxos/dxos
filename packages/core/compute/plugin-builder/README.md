@@ -20,6 +20,21 @@ moon run plugin-markdown:check-edge-release
 It builds the package's bundle into `dist/plugin` (the same build `dx registry publish` uploads) and runs the bundle
 check below on it. The plugin runs alone on EDGE, so no other plugin's bundle is built beside it.
 
+## Publishing a plugin to EDGE
+
+The same packages inherit `publish-edge-release`, which runs `check-edge-release` and then uploads `dist/plugin` to the
+EDGE registry at `DX_EDGE_BASE_URL` as a first-party plugin, authenticated with the EDGE admin key in `DX_HUB_API_KEY`:
+
+```bash
+DX_EDGE_BASE_URL=https://preview.dxos.network DX_HUB_API_KEY=... moon run plugin-markdown:publish-edge-release
+moon run plugin-markdown:publish-edge-release -- --dry-run
+```
+
+It prints one line per plugin: `✓` published (or the same content was already there), `!` stale (the version already
+holds other content on EDGE, and only a version bump publishes it; a warning, not a failure), or `✗` failed. The
+nightly Deploy Apps run publishes every `edge-release` plugin to preview with
+`moon exec --on-failure continue :publish-edge-release`.
+
 ## Checking a plugin bundle
 
 `check-bundle` checks a built plugin bundle, laid out as the EDGE plugins spec describes (plugin files at the root,

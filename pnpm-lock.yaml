@@ -5943,9 +5943,15 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../../sdk/app-framework
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../../common/context
       '@dxos/echo-protocol':
         specifier: workspace:*
         version: link:../../echo/echo-protocol
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../mesh/edge-client
       '@dxos/edge-compute':
         specifier: workspace:*
         version: link:../edge-compute

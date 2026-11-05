@@ -22,7 +22,8 @@
   },
   "bin": {
     "check-bundle": "dist/lib/bin/check-bundle.mjs",
-    "check-release": "dist/lib/bin/check-release.mjs"
+    "check-release": "dist/lib/bin/check-release.mjs",
+    "publish-release": "dist/lib/bin/publish-release.mjs"
   },
   "files": [
     "dist",
@@ -33,7 +34,9 @@
     "@automerge/automerge": "catalog:",
     "@automerge/automerge-repo": "catalog:",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
     "@dxos/edge-compute": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
