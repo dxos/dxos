@@ -18,7 +18,8 @@ const handler: Operation.WithHandler<typeof SheetOperation.ScrollToAnchor> = She
         return;
       }
 
-      entry.setActiveRefs(thread);
+      // Cells mark their threads by URI, so the grid highlights the cells whose `data-refs` hold this one.
+      entry.setActiveRefs(thread?.uri.toString() ?? '');
       const range = SheetUtil.rangeFromAnchor(entry.sheet, anchor);
       if (range) {
         entry.grid.setFocus({ ...range.to, plane: 'grid' }, true);
