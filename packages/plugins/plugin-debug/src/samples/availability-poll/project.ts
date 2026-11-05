@@ -70,8 +70,9 @@ react()]\` (\`import { ThemePlugin } from '@dxos/ui-theme/plugin'\`; the \`conte
 theme tokens), \`build: { outDir: 'dist' }\`. \`index.html\` (\`<html class="dark">\`) loads \`/src/main.jsx\`, \
 which starts \`import '@dxos-theme'; import '@dxos/react-ui/theme.css';\` and renders \
 \`<Theme.Provider tx={Theme.defaultTx} themeMode='dark'>\` around the page for \`location.pathname\` (\`/\` is \
-F-1's form in \`src/Home.jsx\`, \`/p/:id\` the poll in \`src/Poll.jsx\`). Pages use \`Button.Root\` (\`label\`, \
-\`variant: 'primary'\`, \`onClick\`), \`Input.Root\` (an input), \`Input.Textarea\` (a list, one item per line), \
+F-1's form, the default export of \`src/Home.jsx\`; \`/p/:id\` the poll, the default export of \`src/Poll.jsx\`, \
+given \`id\` as a prop). Pages use \`Button.Root\` (\`label\`, \
+\`variant: 'primary'\`, \`onClick\`), \`Input.Root\` (the \`<input>\` itself, with \`value\` and \`onChange\` and no children), \`Input.Textarea\` (a list, one item per line), \
 \`Field.Root\` and \`Field.Label\`, all from \`@dxos/react-ui\`, whose \`Theme\`, \`Button\` and \`Input\` are \
 namespaces, not components. These names are checked against the published package in a browser: use them without \
 reading \`node_modules\`. Plain elements are fine inside them for the grid, its cells shaded with an inline \
@@ -81,7 +82,7 @@ one storage key, \`poll\`: \`{ title, minutes, slots: [{ id, start }], invitees,
 and \`GET /api/polls/:id\` answers it with each slot's \`free\` names and, once F-3 adds it, \`best\`. \
 \`wrangler.jsonc\` declares \`assets: { directory: './dist', not_found_handling: 'single-page-application', \
 run_worker_first: ['/api/*'] }\`, binds \`Poll\`, and declares it in a migration with \`new_sqlite_classes\`, which \
-a temporary account requires. \`.gitignore\` holds \`.wrangler\`, \`dist\`, \`node_modules\` and \`npm.*\`. M-2 adds \`zones.js\` for the \
+a temporary account requires. \`.gitignore\` holds \`.wrangler\`, \`dist\`, \`node_modules\`, \`npm.*\` and \`ssr\`. M-2 adds \`zones.js\` for the \
 time zone math, so its features add a file and touch the others only by small edits.
 - Do each task in one call: one program that writes the task's files, restarts the server, checks the \
 requirements the task adds, commits, and, when every check passed, sets the task's feature to \`prototype\` and the \
@@ -105,8 +106,16 @@ before its first \`npx vite build\`. Find the task with \
 - After the setup lines, a task's program is: \`yield* write('worker.js', ...)\` for each file it adds or changes; \
 \`yield* sh('npx vite build')\` when the front end changed, printing its output only if it failed; ExposePort to \
 restart the server; \`const checks = yield* sh('...')\`, one command of \`curl -sf\` and \`grep -q\` that exits \
-non-zero when a requirement fails, checking the API's JSON and that \`/\` and \`/p/:id\` answer, since the pages \
-render in the browser; then, only if \`checks.exitCode === 0\`, \`git add -A && git commit -qm \
+non-zero when a requirement fails, checking the API's JSON and that \`/\` and \`/p/:id\` answer; \`curl\` cannot see a page that fails to \
+render, so when the front end changed the same command ends with \`npx vite build --ssr src/Home.jsx --outDir ssr \
+--logLevel error && npx vite build --ssr src/Poll.jsx --outDir ssr --emptyOutDir false --logLevel error && node \
+render-check.mjs\`, where F-1 writes \`render-check.mjs\` as exactly: \`import React from 'react'; import { \
+prerenderToNodeStream } from 'react-dom/static'; globalThis.location = new URL('http://localhost/p/x'); \
+globalThis.localStorage = { getItem: () => null, setItem: () => {} }; for (const \
+name of ['Home', 'Poll']) { const fail = (error) => { console.log(name, 'does not render:', \
+error.message.slice(0, 200)); process.exitCode = 1; }; try { const { default: Page } = await \
+import('./ssr/' + name + '.js'); const { prelude } = await prerenderToNodeStream(React.createElement(Page, { id: \
+'x' }), { onError: fail }); for await (const chunk of prelude); } catch (error) { fail(error); } }\`; then, only if \`checks.exitCode === 0\`, \`git add -A && git commit -qm \
 'F-n: …'\`, the two status updates and one \`print\` saying what passed; otherwise \`print(checks.stdout, \
 checks.stderr)\`. Do not split it into separate calls for writing, restarting, checking, committing and statuses, and \
 do not read the feature's requirements again: they are in the spec.
