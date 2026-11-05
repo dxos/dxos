@@ -345,10 +345,6 @@ export const EmbedKeyboard: Story = {
   },
 };
 
-/**
- * Arrowing onto a sketch leaves focus on the embed, so the arrows keep moving through the document.
- * Enter and a click on the canvas each take focus into the sketch.
- */
 export const EmbedKeyboardSketch: Story = {
   args: WithObjects.args,
   play: async ({ canvasElement }) => {
@@ -368,14 +364,11 @@ export const EmbedKeyboardSketch: Story = {
     view.dispatch({ selection: { anchor: view.state.doc.toString().indexOf('This is object #3') } });
     view.focus();
     await userEvent.keyboard('{ArrowDown}{ArrowDown}');
-    await waitFor(() => expect(document.activeElement).toBe(embed));
-    // The sketch takes attention with the selection; it must not take focus with it.
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    await expect(document.activeElement).toBe(embed);
-    // Still focused as far as tldraw is concerned: the wheel pans the sketch.
     const sketch = embed.querySelector<HTMLElement>('.tl-container');
     invariant(sketch, 'Missing sketch.');
-    await expect(sketch).toHaveClass('tl-container__focused');
+    // tldraw marks itself focused (so the wheel pans the sketch) only after it would have moved DOM focus.
+    await waitFor(() => expect(sketch).toHaveClass('tl-container__focused'));
+    await expect(document.activeElement).toBe(embed);
     await userEvent.keyboard('{Enter}');
     await waitFor(() => expect(sketch.contains(document.activeElement)).toBe(true));
     await userEvent.keyboard('{Escape}');

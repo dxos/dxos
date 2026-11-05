@@ -36,7 +36,6 @@ export type CanvasProps = {
   readonly?: boolean;
   autoCenter?: boolean;
   hideUi?: boolean;
-  /** Showing the UI moves DOM focus into the canvas; an embed keeps it on its frame so the host's keys still work. */
   focusContainer?: boolean;
   assetsBaseUrl?: string | null;
   settings?: Settings.Settings;
