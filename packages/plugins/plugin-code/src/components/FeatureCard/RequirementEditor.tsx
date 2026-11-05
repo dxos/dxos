@@ -2,107 +2,65 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type FocusEvent, type KeyboardEvent, useEffect, useRef, useState } from 'react';
+import { type Extension } from '@codemirror/state';
+import React, { useMemo, useState } from 'react';
 
+import { useObject } from '@dxos/echo-react';
+import { CollaborativeTextEditor } from '@dxos/react-ui-form';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { type Feature } from '#types';
+import { Feature } from '#types';
 
 import { CodeNamespace } from '../../namespace.ts';
+import * as FeatureAnchor from '../../util/feature-anchor.ts';
 import { RequirementIcon, RequirementId, RowIcon } from './fields.tsx';
 
-type CommitFieldProps = {
-  value: string;
-  label: string;
-  testId: string;
-  autoFocus?: boolean;
-  variant?: 'default' | 'plain';
-  onCommit: (value: string) => void;
-};
-
-/**
- * A wrapping field committed when it loses focus (Enter does that; Shift+Enter breaks the line). Uncontrolled, so a
- * newer value from another peer replaces the text only while the reader has not changed it.
- */
-const CommitField = ({ value, label, testId, autoFocus, variant, onCommit }: CommitFieldProps) => {
-  const fieldRef = useRef<HTMLTextAreaElement>(null);
-  const shownRef = useRef(value);
-  useEffect(() => {
-    const field = fieldRef.current;
-    if (field && field.value === shownRef.current) {
-      field.value = value;
-    }
-    shownRef.current = value;
-  }, [value]);
-  useEffect(() => {
-    if (autoFocus) {
-      fieldRef.current?.focus();
-    }
-  }, [autoFocus]);
-
-  const handleBlur = (event: FocusEvent<HTMLTextAreaElement>) => {
-    const next = event.currentTarget.value.trim();
-    if (next !== value) {
-      onCommit(next);
-    }
-  };
-  const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
-    // An IME's Enter confirms a composition candidate, not the field.
-    if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
-      event.preventDefault();
-      event.currentTarget.blur();
-    }
-  };
-  return (
-    // Sized by its content, so a one-line requirement takes one line.
-    <Input.Textarea
-      ref={fieldRef}
-      defaultValue={value}
-      variant={variant}
-      aria-label={label}
-      data-testid={testId}
-      onBlur={handleBlur}
-      onKeyDown={handleKeyDown}
-      classNames='-ms-1 my-1 px-1 py-0 w-[calc(100%+0.25rem)] min-h-0 [field-sizing:content] resize-none'
-    />
-  );
-};
+/** Extensions for the editor of the feature's string at `path`, such as comments on it. */
+export type RequirementEditorExtensions = (field: { path: readonly (string | number)[] }) => Extension[];
 
 export type RequirementEditorProps = {
-  requirements: readonly Feature.Requirement[];
+  /** The live feature, whose requirement texts the rows edit in place. */
+  feature: Feature.Feature;
+  /** Added to each row's editor, by the requirement text's path (the feature form's `extensions`). */
+  extensions?: RequirementEditorExtensions;
   /** `plain` rows read as text until a row is focused. */
   variant?: 'default' | 'plain';
   /** Whether the remove and add actions show; the rows stay editable either way. */
   actions?: boolean;
   inert?: boolean;
-  onChange: (requirements: Feature.Requirement[]) => void;
 };
 
 /**
- * A feature's requirements, each a field that wraps to its whole text, with the spec id it came from before it and a
- * remove action after. Every edit hands back the whole list, since requirements are records inside their feature; a
- * requirement cleared of its text is removed. Render it inside a grid `Card.Root`; its icons sit in that card's rail.
+ * A feature's requirements, each an editor bound to its text, with the spec id it came from before it and a remove
+ * action after. Typing edits the requirement in place, so comments on it stay anchored; one that loses focus without
+ * text is removed. Render it inside a grid `Card.Root`; its icons sit in that card's rail.
  */
-export const RequirementEditor = ({
-  requirements,
-  variant,
-  actions = true,
-  inert,
-  onChange,
-}: RequirementEditorProps) => {
+export const RequirementEditor = ({ feature, extensions, variant, actions = true, inert }: RequirementEditorProps) => {
   const { t } = Hooks.useTranslation(CodeNamespace.key);
-  // The row just added takes focus, so a new requirement is written before anything else.
+  const [snapshot] = useObject(feature);
+  const requirements = snapshot ? Feature.getRequirements(snapshot) : [];
+  // Numbered under the feature's block id, as the spec would number it.
+  const onAdd = () =>
+    Feature.setRequirements(feature, [...Feature.getRequirements(feature), { text: '' }], {
+      blockId: Feature.getBlockId(feature),
+    });
+  const onRemove = (key: string) =>
+    Feature.setRequirements(
+      feature,
+      Feature.getRequirements(feature).filter((requirement) => requirement.key !== key),
+    );
+  // The row just added takes focus once, so a new requirement is written before anything else; a row that later
+  // mounts at that index, or is rebuilt there, leaves the focus where it is.
   const [focusIndex, setFocusIndex] = useState<number>();
-  const copy = () => requirements.map((requirement) => ({ ...requirement }));
-  const remove = (index: number) => copy().filter((_, candidate) => candidate !== index);
   return (
     <Card.Section inert={inert} data-testid='requirement-editor'>
       {requirements.map((requirement, index) => (
         <Card.Row
-          key={index}
+          key={requirement.key}
+          // A requirement that wraps keeps its icon and remove action on its first line, beside its id.
+          align='start'
           // The column's content clips overflow (for truncation), which would cut off the field's box.
           classNames='[&_.dx-card-row-content]:overflow-visible'
           leading={<RequirementIcon />}
@@ -112,7 +70,7 @@ export const RequirementEditor = ({
                 icon='ph--x--regular'
                 label={t('requirement-editor.remove.label')}
                 data-testid={`requirement-editor.${index}.remove`}
-                onClick={() => onChange(remove(index))}
+                onClick={() => onRemove(requirement.key)}
               />
             ) : undefined
           }
@@ -120,22 +78,23 @@ export const RequirementEditor = ({
           {/* The spec id leads the text, as it does in the read-only list; the field takes the rest of the row. */}
           <Layout.Flex gap='sm' classNames='items-baseline min-w-0'>
             {requirement.id && <RequirementId id={requirement.id} />}
-            <div className='grow min-w-0'>
-              <CommitField
-                value={requirement.text}
-                label={t('requirement-editor.text.label')}
-                testId={`requirement-editor.${index}.text`}
-                autoFocus={index === focusIndex}
-                variant={variant}
-                onCommit={(text) =>
-                  onChange(
-                    text
-                      ? copy().map((candidate, candidateIndex) =>
-                          candidateIndex === index ? { ...candidate, text } : candidate,
-                        )
-                      : remove(index),
-                  )
+            <div
+              className='grow min-w-0'
+              onFocus={() => setFocusIndex(undefined)}
+              onBlur={() => {
+                if (!feature.requirements?.[requirement.key]?.text.trim()) {
+                  onRemove(requirement.key);
                 }
+              }}
+            >
+              <RequirementText
+                feature={feature}
+                requirementKey={requirement.key}
+                extensions={extensions}
+                placeholder={t('requirement-editor.text.label')}
+                variant={variant}
+                autoFocus={index === focusIndex}
+                testId={`requirement-editor.${index}.text`}
               />
             </div>
           </Layout.Flex>
@@ -147,7 +106,7 @@ export const RequirementEditor = ({
           data-testid='requirement-editor.add'
           onClick={() => {
             setFocusIndex(requirements.length);
-            onChange([...copy(), { text: '' }]);
+            onAdd();
           }}
         >
           <Card.Text variant='muted'>{t('requirement-editor.add.label')}</Card.Text>
@@ -155,4 +114,20 @@ export const RequirementEditor = ({
       )}
     </Card.Section>
   );
+};
+
+type RequirementTextProps = {
+  feature: Feature.Feature;
+  requirementKey: string;
+  extensions?: RequirementEditorExtensions;
+  placeholder?: string;
+  variant?: RequirementEditorProps['variant'];
+  autoFocus?: boolean;
+  testId?: string;
+};
+
+const RequirementText = ({ feature, requirementKey, extensions, ...props }: RequirementTextProps) => {
+  const path = useMemo(() => FeatureAnchor.getPath({ field: 'requirement', key: requirementKey }), [requirementKey]);
+  const fieldExtensions = useMemo(() => extensions?.({ path }), [extensions, path]);
+  return <CollaborativeTextEditor object={feature} path={path} extensions={fieldExtensions} {...props} />;
 };

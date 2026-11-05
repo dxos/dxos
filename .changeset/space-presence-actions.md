@@ -3,7 +3,9 @@
 '@dxos/app-toolkit': minor
 '@dxos/client': patch
 '@dxos/plugin-client': patch
+'@dxos/plugin-code': patch
 '@dxos/plugin-markdown': patch
+'@dxos/plugin-projects': patch
 '@dxos/plugin-review': patch
 '@dxos/plugin-sheet': patch
 '@dxos/plugin-space': patch

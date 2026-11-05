@@ -7,11 +7,14 @@ import { type MessageRenderer, isPrompt } from '@dxos/react-ui-feed';
 import { type ContentBlock, type Message } from '@dxos/types';
 import { safeParseJson } from '@dxos/util';
 
+import { estimateBlockTokens, estimateTokens } from './tokens.ts';
 import { type ChatView } from './types.ts';
 
 export type CreateRendererOptions = {
   /** Resolves a reference's display label; the tag carries the DXN either way. */
   getObjectLabel?: (uri: URI.URI) => string;
+  /** Precedes each answer block with a `<tokens>` tag carrying its estimated token count. */
+  showTokens?: boolean;
 };
 
 /**
@@ -30,18 +33,28 @@ export type CreateRendererOptions = {
  */
 export const createRenderer = (
   viewType: ChatView | undefined,
-  { getObjectLabel = () => 'Object' }: CreateRendererOptions = {},
+  { getObjectLabel = () => 'Object', showTokens = false }: CreateRendererOptions = {},
 ): MessageRenderer => {
   return (message) => {
     const blocks = message.blocks.filter((block) => isBlockVisible(viewType, block));
     const segments: string[] = [];
     let run: ContentBlock.Any[] = [];
 
+    // Debug shows the raw tags, and a prompt's count is the chrome's: its document sits inside the
+    // bubble, away from the gutter.
+    const labelTokens = showTokens && viewType !== 'debug' && !isPrompt(message);
+    const pushTokens = (count: number) => {
+      if (labelTokens && count > 0) {
+        segments.push(`<tokens>${count}</tokens>`);
+      }
+    };
+
     // Emitted after the run they interleave with, so the panel stays whole.
     let deferred: string[] = [];
 
     const flushRun = () => {
       if (run.length) {
+        pushTokens(estimateTokens(run));
         segments.push(toolkitTag(run, viewType === 'debug'));
         run = [];
       }
@@ -96,6 +109,10 @@ export const createRenderer = (
       }
 
       flushRun();
+      // Chips flow on one line, so a label between them would break the row.
+      if (block._tag !== 'suggestion') {
+        pushTokens(estimateBlockTokens(block));
+      }
       segments.push(rendered);
     }
     flushRun();

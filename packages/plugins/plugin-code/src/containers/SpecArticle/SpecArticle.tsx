@@ -4,10 +4,12 @@
 
 import { ViewPlugin } from '@codemirror/view';
 import { useAtomSet, useAtomValue } from '@effect/atom-react';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { forwardRef, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import * as AppHooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import type * as Spec from '@dxos/compute/Spec';
 import { mdl, mdlBlockDescription } from '@dxos/deus/extension';
@@ -18,6 +20,7 @@ import * as ProjectHooks from '@dxos/plugin-projects/ProjectHooks';
 import { getSpace } from '@dxos/react-client/echo';
 import { Attention } from '@dxos/react-ui-attention';
 import { Editor } from '@dxos/react-ui-editor';
+import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -100,8 +103,6 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
     const identity = useIdentity();
     const space = spec ? getSpace(spec) : undefined;
     const { invokePromise } = AppHooks.useOperationInvoker();
-    // Objects the text embeds render as their own plugin's widgets, through the editor's widget host.
-    const contributed = ProjectHooks.useSpecExtensions(spec, { attendableId, t });
     const [widgets, setWidgets] = useState<WidgetState[]>([]);
 
     const source = { spec, content, sourceKey, base, review: staticReview };
@@ -109,6 +110,10 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
       useSpecModel(source);
     const { fold } = session;
     const open = useOpenSource({ ...source, id, key, setSession });
+    // Objects the text embeds render as their own plugin's widgets, through the editor's widget host; comments on the
+    // spec anchor into the text the editor is bound to.
+    const binding = useMemo(() => (target ? { object: target, path: ['content'] } : undefined), [target]);
+    const contributed = ProjectHooks.useSpecExtensions(spec, { attendableId, t, binding });
 
     useEffect(() => {
       if (defaultDiff) {
@@ -226,7 +231,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
     return (
       <Editor.Root extensions={extensions} widgets={widgets}>
         <Panel.Root role={role} ref={forwardedRef}>
-          <Panel.Header>{!readOnly && <Editor.Toolbar role={role} attendableId={attendableId} />}</Panel.Header>
+          <Panel.Header>{!readOnly && <SpecToolbar role={role} attendableId={attendableId} />}</Panel.Header>
           <Panel.Body>
             {/* Inside the body: a portal anchor beside the panel would be a row of the host's grid. */}
             <Editor.Blocks />
@@ -272,3 +277,16 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
 );
 
 SpecArticle.displayName = 'SpecArticle';
+
+/** The editor's toolbar, with the toolbar actions other plugins give the spec's node, such as commenting. */
+const SpecToolbar = ({ role, attendableId }: Pick<SpecArticleProps, 'role' | 'attendableId'>) => {
+  const { graph } = ToolkitHooks.useAppGraph();
+  const customActions = useMemo(
+    () =>
+      attendableId
+        ? Atom.make((get) => graphActions(graph, get, attendableId, { filter: isToolbarAction }))
+        : undefined,
+    [graph, attendableId],
+  );
+  return <Editor.Toolbar role={role} attendableId={attendableId} customActions={customActions} />;
+};
